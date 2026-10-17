@@ -17,13 +17,13 @@ export const clearAurumInclusions=(target:Object3D)=>{
   remove.forEach((child)=>{child.parent?.remove(child);const renderable=child as Object3D & {geometry?:{dispose?:()=>void};material?:{dispose?:()=>void};};renderable.geometry?.dispose?.();renderable.material?.dispose?.();});
 };
 
-export const setAurumInclusionsVisible=(target:any,visible:boolean)=>{
+export const setAurumInclusionsVisible=(target:Object3D,visible:boolean)=>{
   target.traverse((child)=>{
     if(child.userData?.aurumInternalInclusion) child.visible=visible;
   });
 };
 
-const addEmeraldInclusions=(THREE:typeof import("three"),target:any,config:AurumInclusionConfig,size:Vector3)=>{
+const addEmeraldInclusions=(THREE:typeof import("three"),target:Object3D,config:AurumInclusionConfig,size:Vector3)=>{
   let s=(config.seed>>>0)||1;
   const rnd=()=>{s=(1664525*s+1013904223)>>>0;return s/4294967296;};
   const strength=Math.max(0,Math.min(1,config.density));
@@ -87,7 +87,7 @@ const addEmeraldInclusions=(THREE:typeof import("three"),target:any,config:Aurum
   }
 };
 
-const addPeridotInclusions=(THREE:any,target:any,config:any,size:any)=>{
+const addPeridotInclusions=(THREE:typeof import("three"),target:Object3D,config:AurumInclusionConfig,size:Vector3)=>{
   let s=(config.seed>>>0)||1; const rnd=()=>{s=(1664525*s+1013904223)>>>0;return s/4294967296;};
   const strength=Math.max(0,Math.min(1,config.density));
   const scale=Math.min(size.x,size.y,size.z);
@@ -108,7 +108,7 @@ const addPeridotInclusions=(THREE:any,target:any,config:any,size:any)=>{
   }
 };
 
-const addTourmalineInclusions=(THREE:any,target:any,config:any,size:any)=>{
+const addTourmalineInclusions=(THREE:typeof import("three"),target:Object3D,config:AurumInclusionConfig,size:Vector3)=>{
   let s=(config.seed>>>0)||1; const rnd=()=>{s=(1664525*s+1013904223)>>>0;return s/4294967296;};
   const strength=Math.max(0,Math.min(1,config.density)); const scale=Math.min(size.x,size.y,size.z);
   const count=Math.max(3,Math.round(3+strength*9));
@@ -128,7 +128,7 @@ const addTourmalineInclusions=(THREE:any,target:any,config:any,size:any)=>{
   }
 };
 
-const addAlexandriteInclusions=(THREE:any,target:any,config:any,size:any)=>{
+const addAlexandriteInclusions=(THREE:typeof import("three"),target:Object3D,config:AurumInclusionConfig,size:Vector3)=>{
   let s=(config.seed>>>0)||1; const rnd=()=>{s=(1664525*s+1013904223)>>>0;return s/4294967296;};
   const strength=Math.max(0,Math.min(1,config.density)); const scale=Math.min(size.x,size.y,size.z);
   const count=Math.max(8,Math.round(8+strength*18));
@@ -144,7 +144,7 @@ const addAlexandriteInclusions=(THREE:any,target:any,config:any,size:any)=>{
   }
 };
 
-const addChrysoberylPhenomenalInclusions=(THREE:any,target:any,config:any,size:any,phenomenon:"chatoyancy"|"asterism")=>{
+const addChrysoberylPhenomenalInclusions=(THREE:typeof import("three"),target:Object3D,config:AurumInclusionConfig,size:Vector3,phenomenon:"chatoyancy"|"asterism")=>{
   let seed=(config.seed>>>0)||1; const rnd=()=>{seed=(1664525*seed+1013904223)>>>0;return seed/4294967296;};
   const strength=Math.max(0,Math.min(1,config.density)); const scale=Math.min(size.x,size.y,size.z);
   const count=Math.max(18,Math.round(18+strength*34));
@@ -166,7 +166,7 @@ const addChrysoberylPhenomenalInclusions=(THREE:any,target:any,config:any,size:a
   }
 };
 
-const addSunstoneCopperInclusions=(THREE:any,target:any,config:any,size:any)=>{
+const addSunstoneCopperInclusions=(THREE:typeof import("three"),target:Object3D,config:AurumInclusionConfig,size:Vector3)=>{
   let seed=(config.seed>>>0)||7; const rnd=()=>{seed=(1664525*seed+1013904223)>>>0;return seed/4294967296;};
   const strength=Math.max(0,Math.min(1,config.density)); const scale=Math.min(size.x,size.y,size.z);
   const count=Math.max(12,Math.round(16+strength*38));
@@ -184,7 +184,7 @@ const addSunstoneCopperInclusions=(THREE:any,target:any,config:any,size:any)=>{
   }
 };
 
-const addPhenomenalPlates=(THREE:any,target:any,config:any,size:any,phenomenon:"schiller"|"peristerescence"|"iridescence"|"orient")=>{
+const addPhenomenalPlates=(THREE:typeof import("three"),target:Object3D,config:AurumInclusionConfig,size:Vector3,phenomenon:"schiller"|"peristerescence"|"iridescence"|"orient")=>{
   let seed=(config.seed>>>0)||1; const rnd=()=>{seed=(1664525*seed+1013904223)>>>0;return seed/4294967296;};
   const strength=Math.max(0,Math.min(1,config.density)); const scale=Math.min(size.x,size.y,size.z);
   const count=Math.max(10,Math.round(10+strength*24));
@@ -200,7 +200,7 @@ const addPhenomenalPlates=(THREE:any,target:any,config:any,size:any,phenomenon:"
   }
 };
 
-const addPhenomenalNeedles=(THREE:any,target:any,config:any,size:any,phenomenon:"chatoyancy"|"asterism",host:string)=>{
+const addPhenomenalNeedles=(THREE:typeof import("three"),target:Object3D,config:AurumInclusionConfig,size:Vector3,phenomenon:"chatoyancy"|"asterism",host:string)=>{
   let seed=(config.seed>>>0)||1; const rnd=()=>{seed=(1664525*seed+1013904223)>>>0;return seed/4294967296;};
   const strength=Math.max(0,Math.min(1,config.density)); const scale=Math.min(size.x,size.y,size.z);
   const count=Math.max(14,Math.round(14+strength*30));
@@ -218,7 +218,7 @@ const addPhenomenalNeedles=(THREE:any,target:any,config:any,size:any,phenomenon:
   else { addSet(0,.05,0); addSet(Math.PI/3,.05,1); addSet(2*Math.PI/3,.05,2); }
 };
 
-const addParaibaInclusions=(THREE:any,target:any,config:any,size:any)=>{
+const addParaibaInclusions=(THREE:typeof import("three"),target:Object3D,config:AurumInclusionConfig,size:Vector3)=>{
   let s=(config.seed>>>0)||1; const rnd=()=>{s=(1664525*s+1013904223)>>>0;return s/4294967296;};
   const strength=Math.max(0,Math.min(1,config.density)); const scale=Math.min(size.x,size.y,size.z);
   const count=Math.max(4,Math.round(5+strength*12));
@@ -246,7 +246,7 @@ const addParaibaInclusions=(THREE:any,target:any,config:any,size:any)=>{
   }
 };
 
-const addMorganiteInclusions=(THREE:any,target:any,config:any,size:any)=>{
+const addMorganiteInclusions=(THREE:typeof import("three"),target:Object3D,config:AurumInclusionConfig,size:Vector3)=>{
   let s=(config.seed>>>0)||1; const rnd=()=>{s=(1664525*s+1013904223)>>>0;return s/4294967296;};
   const strength=Math.max(0,Math.min(1,config.density)); const scale=Math.min(size.x,size.y,size.z);
   // Multiphase pockets are documented in morganite. The newer Madagascar
@@ -273,7 +273,7 @@ const addMorganiteInclusions=(THREE:any,target:any,config:any,size:any)=>{
   }
 };
 
-export const renderAurumInclusions=(THREE:any,target:any,g:AurumGemInclusionInput,seed=9173,providedPreset?:ReturnType<typeof getAurumGemPreset>)=>{
+export const renderAurumInclusions=(THREE:typeof import("three"),target:Object3D,g:AurumGemInclusionInput,seed=9173,providedPreset?:ReturnType<typeof getAurumGemPreset>)=>{
   clearAurumInclusions(target);
   const preset=providedPreset ?? getAurumGemPreset(g.id);
   const config=createAurumInclusionConfig(preset,seed);
@@ -306,7 +306,7 @@ export const renderAurumInclusions=(THREE:any,target:any,g:AurumGemInclusionInpu
     return;
   }
   if((String(g.id)==="crisoberilo_gato"||String(g.id)==="crisoberilo_estrella") && g.fenomenoOptico){
-    addChrysoberylPhenomenalInclusions(THREE,target,config,size,(g as any).fenomenoOptico);
+    addChrysoberylPhenomenalInclusions(THREE,target,config,size,g.fenomenoOptico);
     return;
   }
   if(String(g.id)==="sunstone_aventurescencia" || String(g.id)==="sunstone_schiller"){
@@ -314,8 +314,8 @@ export const renderAurumInclusions=(THREE:any,target:any,g:AurumGemInclusionInpu
     if(String(g.id)==="sunstone_schiller") addPhenomenalPlates(THREE,target,config,size,"schiller");
     return;
   }
-  if((g as any).fenomenoOptico){
-    const phenomenon=(g as any).fenomenoOptico;
+  if(g.fenomenoOptico){
+    const phenomenon=g.fenomenoOptico;
     if(phenomenon==="chatoyancy" || phenomenon==="asterism"){
       addPhenomenalNeedles(THREE,target,config,size,phenomenon,String(g.familia??"gem"));
     } else if(phenomenon==="schiller" || phenomenon==="peristerescence" || phenomenon==="iridescence" || phenomenon==="orient"){
