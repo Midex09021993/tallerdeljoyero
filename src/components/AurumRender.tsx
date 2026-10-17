@@ -1199,10 +1199,8 @@ export function AurumRender() {
               for(let sample=0;sample<32;sample++){
                 diamondBvhRuntime?.update();
                 composer.render();
-                reportProgress("Renderizando imagen",10+Math.round(((sample+1)/32)*72));
-                // Yield each sample so the progress UI stays responsive while TAA accumulates.
-                await new Promise<void>(resolve=>requestAnimationFrame(()=>resolve()));
               }
+              reportProgress("Renderizando imagen",82);
             }else{
               renderer.render(escena,camara);
             }
@@ -1228,7 +1226,6 @@ export function AurumRender() {
               },
             });
             reportProgress("Preparando imagen final",85);
-            await new Promise<void>(resolve=>requestAnimationFrame(()=>resolve()));
             context.fillStyle="#ffffff";
             context.fillRect(0,0,width,height);
             context.imageSmoothingEnabled=true;
@@ -1237,7 +1234,6 @@ export function AurumRender() {
             // requested file dimensions while benefiting from extra facet samples.
             context.drawImage(renderer.domElement,0,0,width,height);
             reportProgress("Generando archivo",92);
-            await new Promise<void>(resolve=>requestAnimationFrame(()=>resolve()));
             dataUrl=output.toDataURL(mime,0.94);
           } finally {
             // Restore the interactive diamond ray budget before returning to
