@@ -63,7 +63,7 @@ function Inicio() {
     const q=supabase.from("clientes").select("id,nombre,fecha_nacimiento,sede_id,participante_id").not("fecha_nacimiento","is",null);
     const {data,error}=esDueno?await q:await q.eq("participante_id",sesion!.participante!.id);if(error)throw error;
     const t=new Date();t.setHours(0,0,0,0);const leap=(y:number)=>y%4===0&&(y%100!==0||y%400===0);
-    return (data??[]).filter(c=>!sedeContextoId||c.sede_id===sedeContextoId).map(c=>{const [y,m,d]=String(c.fecha_nacimiento).slice(0,10).split("-").map(Number);const yearOfBirth=y??2000;const monthOfBirth=m??1;let day=d??1;if(monthOfBirth===2&&day===29&&!leap(t.getFullYear()))day=28;let f=new Date(t.getFullYear(),monthOfBirth-1,day);if(f<t){const year=t.getFullYear()+1;day=monthOfBirth===2&&day===29&&!leap(year)?28:day;f=new Date(year,monthOfBirth-1,day)}return{id:c.id,nombre:c.nombre,fecha:f,dias:Math.round((f.getTime()-t.getTime())/86400000)}}).filter(c=>c.dias<=30).sort((a,b)=>a.dias-b.dias).slice(0,5)
+    return (data??[]).filter(c=>!sedeContextoId||c.sede_id===sedeContextoId).map(c=>{const [,m,d]=String(c.fecha_nacimiento).slice(0,10).split("-").map(Number);const monthOfBirth=m??1;let day=d??1;if(monthOfBirth===2&&day===29&&!leap(t.getFullYear()))day=28;let f=new Date(t.getFullYear(),monthOfBirth-1,day);if(f<t){const year=t.getFullYear()+1;day=monthOfBirth===2&&day===29&&!leap(year)?28:day;f=new Date(year,monthOfBirth-1,day)}return{id:c.id,nombre:c.nombre,fecha:f,dias:Math.round((f.getTime()-t.getTime())/86400000)}}).filter(c=>c.dias<=30).sort((a,b)=>a.dias-b.dias).slice(0,5)
   }});
 
   const { data: preparacion, isLoading: cargandoPreparacion } = useQuery({
