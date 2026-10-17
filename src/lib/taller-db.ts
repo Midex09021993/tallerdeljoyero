@@ -1821,6 +1821,7 @@ export function useSedes() {
     // La clave se conserva para compatibilidad con componentes existentes.
     // La fuente real ya es Ecosistema.
     queryKey: ["sedes"],
+    staleTime: 15_000,
     queryFn: async (): Promise<Sede[]> => {
       const { data, error } = await supabase
         .from("ecosistema_participantes")
@@ -1858,6 +1859,7 @@ export type Usuario = {
 export function useUsuarios() {
   return useQuery({
     queryKey: ["usuarios"],
+    staleTime: 15_000,
     queryFn: async (): Promise<Usuario[]> => {
       const [{ data: perfiles, error }, { data: roles }, { data: areas }] = await Promise.all([
         supabase
@@ -1944,6 +1946,7 @@ export type Gasto = {
 export function useGastos() {
   return useQuery({
     queryKey: ["gastos"],
+    staleTime: 15_000,
     queryFn: async (): Promise<Gasto[]> => {
       const { data, error } = await supabase
         .from("gastos")
@@ -1993,6 +1996,7 @@ export type ConfigSistema = {
 export function useConfigAreas() {
   return useQuery({
     queryKey: ["config_areas"],
+    staleTime: 60_000,
     queryFn: async (): Promise<ConfigArea[]> => {
       const { data, error } = await supabase
         .from("config_areas")
@@ -2024,6 +2028,7 @@ export function useGuardarConfigArea() {
 export function useConfigSistema(clave: string) {
   return useQuery({
     queryKey: ["config_sistema", clave],
+    staleTime: 60_000,
     queryFn: async (): Promise<ConfigSistema | null> => {
       const { data, error } = await supabase
         .from("config_sistema")
