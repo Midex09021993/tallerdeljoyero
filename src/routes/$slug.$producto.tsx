@@ -132,7 +132,7 @@ export function CatalogoProductoPublicoPage() {
         nombre: item.nombre + (tallaFinal ? " · Talla " + tallaFinal : ""),
         precio: item.mostrar_precio && item.precio_desde != null ? item.precio_desde : null,
         moneda: item.moneda ?? "PEN",
-        imagen: item.imagen_principal_url,
+        imagen: item.imagen_principal_url ?? undefined,
         talla: tallaFinal || null,
         tipoEnvio,
         plazoEntrega: tipoEnvio === "rapido" ? "3–5 días hábiles" : "7–15 días hábiles",
