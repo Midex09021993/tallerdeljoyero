@@ -4,3 +4,5 @@
 
 ## Visualizador 3D
 - [x] Mejorar iluminación, reflejos, exposición y sombra de exhibición
+
+- [x] Perfil fotográfico (environment + metal calibrado) como predeterminado en Aurum Render

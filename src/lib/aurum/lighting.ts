@@ -126,7 +126,7 @@ export function createAurumLightingController(
         Object.values(lights).forEach((light:any) => {
           if (light) light.visible = false;
         });
-        console.info("[AURUM][LIGHTING][DIAGNOSTIC]", {
+        if (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("aurumDiag")) console.info("[AURUM][LIGHTING][DIAGNOSTIC]", {
           mode: diagnosticMode,
           rig: activeRigId,
           environmentUuid: scene.environment?.uuid ?? null,
