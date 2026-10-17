@@ -1173,6 +1173,8 @@ export function AurumRender() {
             let captureComposerBuffer: { width: number; height: number } | null = null;
             let captureTaaPass: any = null;
             let capturePassStates: Array<{pass:any;enabled:boolean}> = [];
+            // Snapshot live pass state before capture quality changes any flags.
+            capturePassStates = (composer?.passes ?? []).map((pass:any)=>({pass,enabled:Boolean(pass?.enabled)}));
             if(composer && applyPostQuality){
               // Capture-only photographic pass: enable temporal AA and size the
               // composer to the supersampled target, not the small viewer CSS box.
@@ -1187,7 +1189,6 @@ export function AurumRender() {
               // Keep the PNG beauty aligned with the direct live viewer. The still
               // capture needs temporal AA, but must not add AO, bloom, LUT, grading,
               // depth-of-field or vignette that can change polished-metal appearance.
-              capturePassStates = (composer.passes ?? []).map((pass:any)=>({pass,enabled:Boolean(pass?.enabled)}));
               for(const pass of composer.passes ?? []){
                 const passName=String(pass?.constructor?.name ?? "");
                 const keepForCapture=passName==="RenderPass" || pass===captureTaaPass || passName==="OutputPass";
