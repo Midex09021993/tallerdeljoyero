@@ -105,7 +105,7 @@ export function AurumRender() {
   const [lightingOpen, setLightingOpen] = useState(false);
   const [metalHdriId, setMetalHdriId] = useState("ijewelMetal");
   const [gemHdriId, setGemHdriId] = useState("ijewelGem");
-  const [ambienteId, setAmbienteId] = useState("ambiente01");
+  const [ambienteId, setAmbienteId] = useState<string|null>(null);
   const [fondoId, setFondoId] = useState("escena");
   const [qualityOpen, setQualityOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
@@ -1751,7 +1751,7 @@ export function AurumRender() {
               </label>
             </section>
             <div className="mx-4 mt-3 mb-2 grid grid-cols-3 gap-1 rounded-xl border border-black/[.07] bg-[#eeede8] p-1" role="tablist" aria-label="Biblioteca de joyería">
-              {([{id:"materiales",label:"Materiales",count:MATERIALES.length},{id:"gemas",label:"Gemas",count:GEMAS.length},{id:"escena",label:"Escenas",count:ESCENARIOS.length},{id:"ambientes",label:"Ambientes",count:0},{id:"hdrMetales",label:"HDR Metales",count:Object.keys(AURUM_HDRI_URLS).length},{id:"hdrGemas",label:"HDR Gemas",count:Object.keys(AURUM_GEM_HDRI_URLS).length},{id:"fondos",label:"Fondos",count:8}] as const).map(tab=><button key={tab.id} type="button" role="tab" aria-selected={uxSection===tab.id} onClick={()=>setUxSection(tab.id)} className={"min-w-0 rounded-lg px-1.5 py-2 text-[11px] font-medium transition-all "+(uxSection===tab.id?"bg-white text-[#292824] shadow-sm":"text-[#77756f] hover:text-[#292824]")}><span className="block truncate">{tab.label}</span><span className={"mt-0.5 block text-[9px] "+(uxSection===tab.id?"text-[#92743b]":"text-[#99968d]")}>{tab.count}</span></button>)}
+              {([{id:"materiales",label:"Materiales",count:MATERIALES.length},{id:"gemas",label:"Gemas",count:GEMAS.length},{id:"escena",label:"Escenas",count:ESCENARIOS.length},{id:"ambientes",label:"Ambientes",count:Object.keys(AURUM_AMBIENT_PRESETS).length},{id:"hdrMetales",label:"HDR Metales",count:Object.keys(AURUM_HDRI_URLS).length},{id:"hdrGemas",label:"HDR Gemas",count:Object.keys(AURUM_GEM_HDRI_URLS).length},{id:"fondos",label:"Fondos",count:8}] as const).map(tab=><button key={tab.id} type="button" role="tab" aria-selected={uxSection===tab.id} onClick={()=>setUxSection(tab.id)} className={"min-w-0 rounded-lg px-1.5 py-2 text-[11px] font-medium transition-all "+(uxSection===tab.id?"bg-white text-[#292824] shadow-sm":"text-[#77756f] hover:text-[#292824]")}><span className="block truncate">{tab.label}</span><span className={"mt-0.5 block text-[9px] "+(uxSection===tab.id?"text-[#92743b]":"text-[#99968d]")}>{tab.count}</span></button>)}
             </div>
             <section className="px-4 py-1">
               {uxSection==="materiales"&&<div className="pb-5">
