@@ -116,6 +116,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId }: 
         const blob = await response.blob();
         if (cancelled) return;
         model = await parseAurumInput(new File([blob], modelName || "modelo.3dm", { type: "application/octet-stream" }), "3dm", fallbackMaterial);
+        if (!model) throw new Error("No se pudo interpretar la geometría del modelo 3D.");
         await preprocessAurumModel(model);
         if (cancelled) return;
         // Give each mesh its own material instance so changing a profile in the
@@ -176,7 +177,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId }: 
         const materials = Array.isArray(object.material) ? object.material : [object.material];
         materials.forEach((material: any) => material?.dispose?.());
       });
-      if (renderer) disposeAurumViewer({ node: host, renderer, controls, observer: resizeObserver });
+      if (renderer) disposeAurumViewer({ node: host, renderer, controls, observer: resizeObserver ?? undefined });
       if (environment && environment !== roomEnvironmentTexture) environment.dispose?.();
       if (gemEnvironment && gemEnvironment !== environment && gemEnvironment !== roomEnvironmentTexture) gemEnvironment.dispose?.();
       roomEnvironmentTexture?.dispose?.();
