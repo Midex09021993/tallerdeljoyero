@@ -107,6 +107,7 @@ function TrabajoOperativoPage() {
 
   const { data: archivosTecnicos = [] } = useQuery({
     queryKey: ["trabajo-archivos", id],
+    staleTime: 30_000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("trabajo_archivos")
@@ -122,6 +123,7 @@ function TrabajoOperativoPage() {
 
   const { data: incidencias = [] } = useQuery({
     queryKey: ["incidencias-trabajo", id],
+    staleTime: 30_000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("incidencias_trabajo")
