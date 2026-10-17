@@ -4,7 +4,7 @@ import { getAurumModelParts } from "./model-parts";
 import { toCreasedNormals } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
 type AurumNormalMode = "authored" | "diagnostic" | "recompute-metal" | "crease-metal";
-type RhinoLayer = { [key: string]: unknown; capa?:unknown; categoria?:unknown; attributes?:unknown; layerIndex?:unknown; LayerIndex?:unknown; layerName?:unknown; LayerName?:unknown; mode?:unknown; Mode?:unknown; objectMode?:unknown; ObjectMode?:unknown; visible?:unknown; Visible?:unknown; isVisible?:unknown; visibility?:unknown; visibilityMode?:unknown; VisibilityMode?:unknown; parentLayerId?:unknown; parentId?:unknown; parentLayerID?:unknown; ParentLayerId?:unknown; capa?:unknown; categoria?:unknown; attributes?:unknown; layerIndex?:unknown; LayerIndex?:unknown; layerName?:unknown; LayerName?:unknown; id?: unknown; Id?: unknown; name?: unknown; Name?: unknown; color?: unknown; Color?: unknown; mode?: unknown; Mode?: unknown; objectMode?: unknown; ObjectMode?: unknown; visible?: unknown; Visible?: unknown; isVisible?: unknown; visibility?: unknown; visibilityMode?: unknown; VisibilityMode?: unknown; parentLayerId?: unknown; parentId?: unknown; parentLayerID?: unknown; ParentLayerId?: unknown; };
+type RhinoLayer = { [key: string]: unknown; capa?:unknown; categoria?:unknown; attributes?:unknown; layerIndex?:unknown; LayerIndex?:unknown; layerName?:unknown; LayerName?:unknown; mode?:unknown; Mode?:unknown; objectMode?:unknown; ObjectMode?:unknown; visible?:unknown; Visible?:unknown; isVisible?:unknown; visibility?:unknown; visibilityMode?:unknown; VisibilityMode?:unknown; parentLayerId?:unknown; parentId?:unknown; parentLayerID?:unknown; ParentLayerId?:unknown; id?:unknown; Id?:unknown; name?:unknown; Name?:unknown; color?:unknown; Color?:unknown; };
 type RhinoObject = THREE.Object3D & { isMesh?: boolean; isLine?: boolean; isLineSegments?: boolean; isPoints?: boolean; geometry?: THREE.BufferGeometry; material?: THREE.Material | THREE.Material[]; castShadow?: boolean; receiveShadow?: boolean };
 type RhinoGeometryData = { objects?: Array<{ objectType?: string; geometry?: { xform?: { array?: unknown } }; attributes?: Record<string, unknown> }> };
 
@@ -71,9 +71,9 @@ function inspectMeshNormals(geometry: THREE.BufferGeometry) {
 
 function isRhinoObjectHiddenForExport(attributes: Record<string, unknown> | null | undefined): boolean {
   if (!attributes) return false;
-  const mode = attributes.mode ?? attributes.Mode ?? attributes.objectMode ?? attributes.ObjectMode;
+  const mode = attributes["mode"] ?? attributes["Mode"] ?? attributes["objectMode"] ?? attributes["ObjectMode"];
   const modeText = typeof mode === "string" ? mode.toLowerCase() : "";
-  return attributes.visible === false || attributes.Visible === false || attributes.isVisible === false
+  return attributes["visible"] === false || attributes["Visible"] === false || attributes["isVisible"] === false
     || mode === 1 || modeText === "hidden" || modeText === "hidden_object" || modeText === "hiddenobject";
 }
 
@@ -390,8 +390,8 @@ export async function convertAurumToGlb(
         layerIndex: index,
         layerId: sourceLayer?.id ?? sourceLayer?.Id ?? attrs["layerId"] ?? attrs["LayerId"] ?? x.userData?.["layerId"] ?? x.userData?.["LayerId"] ?? null,
         layerName: sourceLayer?.name ?? sourceLayer?.Name ?? attrs["layerName"] ?? attrs["LayerName"] ?? x.userData?.["layerName"] ?? x.userData?.["LayerName"] ?? null,
-        layerColor: sourceLayer?.color ?? sourceLayer?.Color ?? attrs.layerColor ?? attrs.LayerColor ?? null,
-        materialIndex: attrs.materialIndex ?? attrs.MaterialIndex ?? null,
+        layerColor: sourceLayer?.color ?? sourceLayer?.Color ?? attrs["layerColor"] ?? attrs["LayerColor"] ?? null,
+        materialIndex: attrs["materialIndex"] ?? attrs["MaterialIndex"] ?? null,
         objectId: attrs["id"] ?? attrs["Id"] ?? null,
         objectName: x.name ?? null,
         rawLayerIndex: rawIndex ?? null,

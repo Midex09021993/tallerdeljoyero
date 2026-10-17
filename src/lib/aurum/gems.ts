@@ -205,7 +205,7 @@ const addPhenomenalNeedles=(THREE:typeof import("three"),target:Object3D,config:
   let seed=(config.seed>>>0)||1; const rnd=()=>{seed=(1664525*seed+1013904223)>>>0;return seed/4294967296;};
   const strength=Math.max(0,Math.min(1,config.density)); const scale=Math.min(size.x,size.y,size.z);
   const count=Math.max(14,Math.round(14+strength*30));
-  const crystal=target?.userData?.aurumGemPhysicalModel?.crystal;
+  const crystal=target?.userData?.["aurumGemPhysicalModel"]?.crystal;
   const axes=[crystal?.axisA,crystal?.axisB,crystal?.axisC].map((a)=>Array.isArray(a)?new THREE.Vector3().fromArray(a as number[]):null);
   const addSet=(angle:number,spread:number,axisIndex=0)=>{for(let i=0;i<count;i++){
     const n=new THREE.Mesh(new THREE.CylinderGeometry(scale*.0008,scale*.0014,scale*(.18+rnd()*.34),5),new THREE.MeshPhysicalMaterial({color:host==="esmeralda"?0x8ba58f:0x887b69,roughness:.22,transmission:.06,transparent:true,opacity:.04+strength*.05,depthWrite:false,envMapIntensity:.38}));
@@ -336,9 +336,9 @@ export const renderAurumInclusions=(THREE:typeof import("three"),target:Object3D
     inclusion.position.set(p.x*size.x*.46,p.y*size.y*.46,p.z*size.z*.46);
     inclusion.rotation.set(p.y*3.1,p.z*4.7,p.x*5.3);
     if(config.type==="silk"||config.type==="needle")inclusion.scale.set(1,1,.35);
-    inclusion.userData.aurumInternalInclusion=true;
-    inclusion.userData.aurumInclusionType=config.type;
-    inclusion.userData.aurumInclusionSeed=config.seed;
+    inclusion.userData["aurumInternalInclusion"]=true;
+    inclusion.userData["aurumInclusionType"]=config.type;
+    inclusion.userData["aurumInclusionSeed"]=config.seed;
     inclusion.renderOrder=12;
     target.add(inclusion);
   });
