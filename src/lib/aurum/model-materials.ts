@@ -48,25 +48,30 @@ function createAurumNeutralMaterial(){
   return m;
 }
 
-export function applyAurumInitialModelMaterials(
-  model:any,
+type AurumGemChoice = { id: string; familia?: string };
+type AurumMetalChoice = { id: string };
+type AurumMeshObject = THREE.Object3D & { isMesh?: boolean; material: THREE.Material | THREE.Material[]; castShadow?: boolean; receiveShadow?: boolean };
+
+export function applyAurumInitialModelMaterials<TGem extends AurumGemChoice, TMetal extends AurumMetalChoice, TPreset>(
+  model:THREE.Object3D,
   options:{
-    gems:any[];
-    metals:any[];
+    gems:TGem[];
+    metals:TMetal[];
     initialMetalId?:string;
     initialGemId?:string;
     initialGemByLayer?:Record<string,string>;
-    fallbackMaterial:any;
-    applyGem:(material:any,preset:any,thickness:number)=>void;
-    gemPresetFromConfig:(gem:any)=>any;
-    configureMetal:(material:any,metal:any)=>void;
+    fallbackMaterial:THREE.Material;
+    applyGem:(material:THREE.MeshPhysicalMaterial,preset:TPreset,thickness:number)=>void;
+    gemPresetFromConfig:(gem:TGem)=>TPreset;
+    configureMetal:(material:THREE.MeshPhysicalMaterial,metal:TMetal)=>void;
     presentation?:{metalEnvironmentScale?:number; metalClearcoatScale?:number};
-    createInclusions:(target:any,gem:any)=>void;
+    createInclusions:(target:THREE.Object3D,gem:TGem)=>void;
     applyGemEnvironment:()=>void;
   }
 ){
   const categoryDiagnostic=getAurumCategoryDiagnostic();
-  model?.traverse?.((x:any)=>{
+  model.traverse((node)=>{
+    const x = node as AurumMeshObject;
     if(!x.isMesh) return;
     const meta=x.userData?.aurumRhino;
     const category=meta?.categoria ?? "otro";
@@ -99,7 +104,7 @@ export function applyAurumInitialModelMaterials(
       const savedAssignments=model.userData?.aurumGemLayerAssignments??{};
       const assignedGemId=String(savedAssignments[layerKey]?.gemId??options.initialGemByLayer?.[layerKey]??meta?.gemId??"");
       const initialGemId=assignedGemId||options.initialGemId||"diamante_natural";
-      const gem=options.gems.find((g:any)=>g.id===initialGemId)??options.gems.find((g:any)=>g.id==="diamante_natural")??options.gems[0];
+      const gem=options.gems.find((g)=>g.id===initialGemId)??options.gems.find((g:any)=>g.id==="diamante_natural")??options.gems[0];
       if(!gem) return;
       const m=new THREE.MeshPhysicalMaterial();
       const box=new THREE.Box3().setFromObject(x);
@@ -132,7 +137,7 @@ export function applyAurumInitialModelMaterials(
       // Only source-material names that explicitly identify green gold or white
       // gold override the uniform first-load silver fallback.
       const sourceMaterials=Array.isArray(x.material)?x.material:[x.material];
-      const resolveInitialMetal=(source:any,mesh:any)=>{
+      const resolveInitialMetal=(source:THREE.Material,mesh:AurumMeshObject)=>{
         // Alloy identity may be stored on the imported material, mesh, or CAD
         // layer. Inspect all explicit labels so a generic material name does
         // not hide a more useful source-layer name.
@@ -154,7 +159,7 @@ export function applyAurumInitialModelMaterials(
           attributes?.LayerName,
           meshMeta?.layerName,
           meshMeta?.LayerName,
-        ].filter((value:any)=>typeof value==="string"&&value.trim())
+        ].filter((value): value is string => typeof value==="string"&&Boolean(value.trim()))
           .join(" ")
           .toLowerCase()
           .normalize("NFD")
@@ -165,15 +170,15 @@ export function applyAurumInitialModelMaterials(
           : key.includes("whitegold")||key.includes("oroblanco")
             ? "oro18b_pulido"
             : options.initialMetalId ?? "plata925_pulida";
-        return options.metals.find((m:any)=>m.id===sourceId)
+        return options.metals.find((m)=>m.id===sourceId)
           ?? options.metals.find((m:any)=>m.id===(options.initialMetalId ?? "plata925_pulida"))
           ?? options.metals.find((m:any)=>m.id==="plata925_pulida")
           ?? options.metals[0];
       };
-      const configureSourceMaterial=(source:any)=>{
+      const configureSourceMaterial=(source:THREE.Material)=>{
         const metal=resolveInitialMetal(source,x);
         if(!metal)return source?.clone?source.clone():new THREE.MeshPhysicalMaterial();
-        const mat=source?.clone?source.clone():new THREE.MeshPhysicalMaterial();
+        const mat=(source?.clone?source.clone():new THREE.MeshPhysicalMaterial()) as THREE.MeshPhysicalMaterial;
         options.configureMetal(mat,metal);
         const envScale=options.presentation?.metalEnvironmentScale??1;
         const coatScale=options.presentation?.metalClearcoatScale??1;
