@@ -1175,7 +1175,7 @@ export function AurumRender() {
               if(!captureComposerBuffer || captureComposerBuffer.width!==renderWidth || captureComposerBuffer.height!==renderHeight){
                 throw new Error("El búfer interno del compositor no coincide con la resolución de captura solicitada.");
               }
-              captureTaaPass = composer.passes?.find((pass:any)=>pass?.constructor?.name==="TAARenderPass") ?? null;
+              captureTaaPass = composer.passes?.find((pass:any)=>pass && "sampleLevel" in pass && "accumulateIndex" in pass && "accumulate" in pass) ?? null;
               if(captureTaaPass){
                 // A previous viewer frame may have left TAA halfway through its
                 // accumulation sequence. Every still capture must start clean.
