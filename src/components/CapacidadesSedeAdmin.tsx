@@ -24,6 +24,7 @@ export function CapacidadesSedeAdmin({ sedeId, sedeNombre, esDueno = false }: { 
 
   const { data: especialidades = [], isLoading: loadingEspecialidades } = useQuery({
     queryKey: ["capacidades-catalogo"],
+    staleTime: 60_000,
     queryFn: async () => {
       const { data, error } = await supabase.from("especialidades").select("id,nombre,categoria,activa").eq("activa", true).order("categoria").order("nombre");
       if (error) throw error;
@@ -34,6 +35,7 @@ export function CapacidadesSedeAdmin({ sedeId, sedeNombre, esDueno = false }: { 
 
   const { data: actuales = [], isLoading: loadingActuales } = useQuery({
     queryKey: ["sede-especialidades", sedeId],
+    staleTime: 60_000,
     queryFn: async () => {
       const { data, error } = await supabase.from("sede_especialidades").select("sede_id,especialidad_id").eq("sede_id", sedeId!);
       if (error) throw error;
@@ -44,6 +46,7 @@ export function CapacidadesSedeAdmin({ sedeId, sedeNombre, esDueno = false }: { 
 
   const { data: modalidadesActuales, isLoading: loadingModalidades } = useQuery({
     queryKey: ["sede-modalidades", sedeId],
+    staleTime: 60_000,
     queryFn: async () => {
       const { data, error } = await supabase.from("sede_modalidades").select("produccion_activa,servicios_externos_activos").eq("sede_id", sedeId!).maybeSingle();
       if (error) throw error;
