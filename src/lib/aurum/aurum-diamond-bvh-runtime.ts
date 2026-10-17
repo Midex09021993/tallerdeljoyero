@@ -127,7 +127,7 @@ export async function createAurumDiamondBvhRuntime(options: {
           transmission: isImperialTopaz ? 0.88 : isParaibaTourmaline ? 0.91 : 0,
           environmentMap,
           camera: options.camera,
-          quality: options.quality ?? "interactive",
+          quality: family === "diamante" ? "high" : (options.quality ?? "interactive"),
           environmentIntensity: isEmerald ? 1.5 : isRuby ? 1.0 : isSapphire ? 1.2 : isAmethyst ? 1.35 : isAquamarine ? 1.25 : isCitrine ? 1.2 : isBlueTopaz ? 1.25 : isImperialTopaz ? 1.22 : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 1.55 : 1.3) : isTanzanite ? 1.25 : isMoissanite ? 1.35 : 1.14,
           dispersion: isEmerald ? 0.0005 : isRuby ? 0.001 : isSapphire ? 0.001 : isAmethyst ? 0.0002 : isAquamarine ? 0.0002 : isCitrine ? 0.0002 : isBlueTopaz ? 0.0002 : isImperialTopaz ? 0.0002 : isParaibaTourmaline ? 0.0002 : isTanzanite ? 0.0002 : isMoissanite ? 0.009 : 0.006,
           ior: isEmerald ? 1.58 : isRuby ? 1.762 : isSapphire ? 1.762 : isAmethyst ? 1.55 : isAquamarine ? 1.577 : isCitrine ? 1.54 : isBlueTopaz ? 1.63 : isImperialTopaz ? 1.63 : isParaibaTourmaline ? 1.64 : isTanzanite ? 1.695 : isMoissanite ? 2.65 : 2.417,
@@ -145,7 +145,7 @@ export async function createAurumDiamondBvhRuntime(options: {
             // Higher bounce counts are needed only for a still image; keep the
             // interactive budget low to avoid adding cost to orbiting.
             packageApi.setDiamondOptions(prepared.material, {
-              rayBounces: quality === "final" ? 8 : 3,
+              rayBounces: quality === "final" ? 8 : 4,
             });
           },
           dispose: prepared.dispose,
