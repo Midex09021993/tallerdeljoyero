@@ -1098,22 +1098,23 @@ export function AurumRender() {
         },
         exportPNG:(options:{width?:number;height?:number;format?:"png"|"jpeg"|"webp";onCapture?:(dataUrl:string)=>void}={})=>{
           if(!modelo) throw new Error("Carga un modelo antes de crear el snapshot.");
-          // Re-render the current live scene and read it synchronously in the same
-          // task. With preserveDrawingBuffer:false, reading a previously displayed
-          // frame can return white/empty after the browser has composited it.
-          // Keep the current camera, materials, lighting, HDRs and live render path.
-          renderer.render(escena,camara);
           const liveCanvas=renderer.domElement as HTMLCanvasElement | null;
           if(!liveCanvas || liveCanvas.width<2 || liveCanvas.height<2) {
             throw new Error("El visor todavía no tiene una imagen disponible para capturar.");
           }
           const isPoster=Boolean(options.onCapture);
+          const originalBufferWidth=liveCanvas.width;
+          const originalBufferHeight=liveCanvas.height;
+          const originalPixelRatio=renderer.getPixelRatio?.()||1;
+          const originalCssWidth=originalBufferWidth/originalPixelRatio;
+          const originalCssHeight=originalBufferHeight/originalPixelRatio;
+          const originalAspect=camara.aspect;
           const width=isPoster
             ? Math.max(1,Math.min(640,Math.round(Number(options.width)||640)))
             : Math.max(320,Math.min(4096,Math.round(Number(options.width)||3840)));
           const requestedHeight=Math.max(320,Math.min(4096,Math.round(Number(options.height)||2160)));
           const height=isPoster
-            ? Math.max(1,Math.round(width*liveCanvas.height/liveCanvas.width))
+            ? Math.max(1,Math.round(width*originalBufferHeight/originalBufferWidth))
             : requestedHeight;
           if(!isPoster && width*height>12_000_000) {
             throw new Error("La imagen supera 12 megapíxeles. Usa una resolución menor para proteger la memoria.");
@@ -1125,19 +1126,40 @@ export function AurumRender() {
           output.height=height;
           const context=output.getContext("2d");
           if(!context) throw new Error("No se pudo preparar la imagen de salida.");
-          // Preserve the viewer's exact aspect ratio and appearance. If the requested
-          // output ratio differs, keep the image undistorted on a white studio canvas.
-          context.fillStyle="#ffffff";
-          context.fillRect(0,0,width,height);
-          const scale=Math.min(width/liveCanvas.width,height/liveCanvas.height);
-          const drawWidth=Math.round(liveCanvas.width*scale);
-          const drawHeight=Math.round(liveCanvas.height*scale);
-          const drawX=Math.round((width-drawWidth)/2);
-          const drawY=Math.round((height-drawHeight)/2);
-          context.imageSmoothingEnabled=true;
-          context.imageSmoothingQuality="high";
-          context.drawImage(liveCanvas,drawX,drawY,drawWidth,drawHeight);
-          const dataUrl=output.toDataURL(mime,0.94);
+          let dataUrl="";
+          try {
+            // Render the scene itself at the requested output dimensions. Merely
+            // scaling the live canvas to 4K enlarges pixels without adding detail.
+            // Keep camera, materials, lights, HDRs and the active live render path.
+            renderer.setPixelRatio(1);
+            renderer.setSize(width,height,false);
+            if(typeof camara.aspect==="number") {
+              camara.aspect=width/height;
+              camara.updateProjectionMatrix?.();
+            }
+            renderer.render(escena,camara);
+            context.fillStyle="#ffffff";
+            context.fillRect(0,0,width,height);
+            const scale=Math.min(width/renderer.domElement.width,height/renderer.domElement.height);
+            const drawWidth=Math.round(renderer.domElement.width*scale);
+            const drawHeight=Math.round(renderer.domElement.height*scale);
+            const drawX=Math.round((width-drawWidth)/2);
+            const drawY=Math.round((height-drawHeight)/2);
+            context.imageSmoothingEnabled=true;
+            context.imageSmoothingQuality="high";
+            context.drawImage(renderer.domElement,drawX,drawY,drawWidth,drawHeight);
+            dataUrl=output.toDataURL(mime,0.94);
+          } finally {
+            // Restore the interactive viewport immediately, including DPR and
+            // camera projection, even if capture or encoding fails.
+            renderer.setPixelRatio(originalPixelRatio);
+            renderer.setSize(originalCssWidth,originalCssHeight,false);
+            if(typeof originalAspect==="number") {
+              camara.aspect=originalAspect;
+              camara.updateProjectionMatrix?.();
+            }
+            invalidateRenderRef.current?.();
+          }
           if(!dataUrl||dataUrl.length<1000) {
             throw new Error("La captura del visor está vacía. Espera a que termine de dibujarse y vuelve a intentar.");
           }
