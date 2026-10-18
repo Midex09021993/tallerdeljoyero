@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { BookOpen, ExternalLink, Grid2X2, Image as ImageIcon, LayoutList, Pencil, Plus, Search, Share2, Sparkles, Settings, Tags, X } from "lucide-react";
+import { BookOpen, ExternalLink, Grid2X2, Image as ImageIcon, LayoutList, MoreHorizontal, Pencil, Plus, Search, Share2, Sparkles, Settings, Tags, X } from "lucide-react";
 import { AppShell, Panel } from "@/components/AppShell";
 import { CatalogoCategoriasDialog } from "@/components/CatalogoCategoriasDialog";
 import { CatalogoColeccionesDialog } from "@/components/CatalogoColeccionesDialog";
@@ -81,6 +81,7 @@ function CatalogoPage() {
   const [proyectoDesdeMiNube, setProyectoDesdeMiNube] = useState<ProyectoNubeInicial | null>(null);
   const [pdfDesdeMiNube, setPdfDesdeMiNube] = useState<{ nombre: string; ruta: string } | null>(null);
   const [guardandoAccion, setGuardandoAccion] = useState<string | null>(null);
+  const [menuProductoAbierto, setMenuProductoAbierto] = useState<string | null>(null);
   const puedeGestionar = Boolean(sesion?.esAdmin);
 
   useEffect(() => {
@@ -349,6 +350,7 @@ function CatalogoPage() {
                   <div className="grid size-full place-items-center"><ImageIcon className="size-10 text-muted-foreground" /></div>
                 )}
                 <span className="absolute left-3 top-3 rounded-full border border-border/60 bg-background/90 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider">{p.estado}</span>
+                {vista === "grid" ? <div className="absolute right-3 top-3 flex gap-1.5"><button type="button" onClick={() => abrirEdicion(p)} aria-label="Editar ficha" title="Editar ficha" className="grid size-9 place-items-center rounded-full border border-border/60 bg-background/85 shadow-sm backdrop-blur hover:bg-background"><Pencil className="size-4" /></button><button type="button" onClick={() => setMenuProductoAbierto(menuProductoAbierto === p.id ? null : p.id)} aria-label="Más acciones" aria-expanded={menuProductoAbierto === p.id} title="Más acciones" className="grid size-9 place-items-center rounded-full border border-border/60 bg-background/85 shadow-sm backdrop-blur hover:bg-background"><MoreHorizontal className="size-4" /></button></div> : null}
               </div>
               <div className={vista === "grid" ? "flex min-w-0 flex-1 flex-col p-5" : "flex min-w-0 flex-1 flex-col justify-center gap-3 sm:flex-row sm:items-center sm:justify-between"}>
                 <div className={vista === "grid" ? "min-w-0" : "min-w-0 flex-1"}>
