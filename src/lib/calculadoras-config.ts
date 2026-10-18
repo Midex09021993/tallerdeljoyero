@@ -146,10 +146,10 @@ export function leerConfigAleacion(valor: unknown): ConfigAleacion {
   const d = DEFAULT_CONFIG_ALEACION.recetas;
   return {
     recetas: {
-      amarillo: { metales: leerMetales(objeto(recetas["amarillo"]).metales, d.amarillo.metales) },
-      blanco: { metales: leerMetales(objeto(recetas["blanco"]).metales, d.blanco.metales) },
-      rosa: { metales: leerMetales(objeto(recetas["rosa"]).metales, d.rosa.metales) },
-      naranja: { metales: leerMetales(objeto(recetas["naranja"]).metales, d.naranja.metales) },
+      amarillo: { metales: leerMetales(objeto(recetas["amarillo"])["metales"], d.amarillo.metales) },
+      blanco: { metales: leerMetales(objeto(recetas["blanco"])["metales"], d.blanco.metales) },
+      rosa: { metales: leerMetales(objeto(recetas["rosa"])["metales"], d.rosa.metales) },
+      naranja: { metales: leerMetales(objeto(recetas["naranja"])["metales"], d.naranja.metales) },
     },
     factorCalculo: numero(root["factorCalculo"], DEFAULT_CONFIG_ALEACION.factorCalculo),
   };
