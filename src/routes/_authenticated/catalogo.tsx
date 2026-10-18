@@ -146,7 +146,7 @@ function CatalogoPage() {
         else setPdfDesdeMiNube(null);
         const proyecto = parsed?.proyecto_nube;
         if (proyecto && typeof proyecto.carpeta === "string" && Array.isArray(proyecto.archivos)) {
-          const archivos = proyecto.archivos.map(normalizarArchivoProyectoNube).filter((archivo): archivo is ProyectoNubeInicial["archivos"][number] => archivo !== null);
+          const archivos = (proyecto.archivos as unknown[]).map(normalizarArchivoProyectoNube).filter((archivo): archivo is ProyectoNubeInicial["archivos"][number] => archivo !== null);
           setProyectoDesdeMiNube({ carpeta: proyecto.carpeta, archivos });
         } else setProyectoDesdeMiNube(null);
         setModeloEditando(null);
