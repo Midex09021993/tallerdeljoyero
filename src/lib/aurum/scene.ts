@@ -13,17 +13,14 @@ export function createAurumSceneController(
   groundController: any,
   environmentController: any,
   loadEnvironment: (id: string) => void,
-  backgroundElement?: { style: { backgroundColor: string; backgroundImage?: string; backgroundSize?: string; backgroundPosition?: string }; dataset?: Record<string, string | undefined> }
+  backgroundElement?: { style: { backgroundColor: string; backgroundImage?: string; backgroundSize?: string; backgroundPosition?: string } }
 ): AurumSceneController {
   let currentPreset = getAurumScenePreset("ijewelReference");
   let backgroundOverride: string | null = null;
-  const studioBackground = "radial-gradient(ellipse at 50% 38%, rgba(255,255,255,.92) 0%, rgba(250,244,234,.76) 26%, rgba(240,228,212,.22) 55%, transparent 72%), linear-gradient(180deg, #d7c8b8 0%, #f1e6d8 49%, #cfc0ad 50%, #e8ded0 100%)";
   const applyBackground = (color:string | null) => {
     if (backgroundElement?.style) {
       backgroundElement.style.backgroundColor = color ?? ("#" + Number(currentPreset.background).toString(16).padStart(6, "0"));
-      backgroundElement.style.backgroundImage = color === null && backgroundElement.dataset?.aurumHasModel !== "true" ? studioBackground : "none";
-      backgroundElement.style.backgroundSize = "cover";
-      backgroundElement.style.backgroundPosition = "center";
+      backgroundElement.style.backgroundImage = "none";
     }
     renderer.setClearColor(0x000000, 0);
   };
@@ -45,8 +42,6 @@ export function createAurumSceneController(
       renderer.toneMappingExposure = photo.exposure;
       environmentController?.setIntensity?.(photo.environmentIntensity);
       environmentController?.setRotation?.(Math.PI * photo.environmentRotation);
-      // The studio sweep is a CSS backdrop behind the transparent WebGL canvas.
-      // It does not enter the Three.js scene, HDRI lighting, gem refraction or render targets.
       scene.background = null;
       if (backgroundOverride !== null) {
         applyBackground(backgroundOverride);
