@@ -21,7 +21,7 @@ export type AurumGemInclusionInput = {
 export const clearAurumInclusions = (target: import("three").Object3D) => {
   const remove: InclusionObject[] = [];
   target.traverse((child) => {
-    if (child.userData?.aurumInternalInclusion) remove.push(child as InclusionObject);
+    if (child.userData?.["aurumInternalInclusion"]) remove.push(child as InclusionObject);
   });
   remove.forEach((child) => {
     child.parent?.remove(child);
@@ -69,7 +69,8 @@ const addEmeraldInclusions=(THREE: typeof import("three"),target: import("three"
     if(rnd()<.30+strength*.25){
       const crystalSize=Math.min(size.x,size.y,size.z)*(.006+rnd()*.012);
       const crystal=new THREE.Mesh(new THREE.OctahedronGeometry(crystalSize,0),new THREE.MeshPhysicalMaterial({color:rnd()<.65?0x7f8a79:0x3f4d42,roughness:.30,transmission:.18,transparent:true,opacity:.16+strength*.12,depthWrite:false,envMapIntensity:.45}));
-      crystal.position.copy(points[Math.floor(rnd()*points.length)]);
+      const crystalPoint = points[Math.floor(rnd()*points.length)];
+      if (crystalPoint) crystal.position.copy(crystalPoint);
       crystal.rotation.set(rnd()*3,rnd()*3,rnd()*3);
       crystal.userData={aurumInternalInclusion:true,aurumInclusionType:"emerald-crystal"};
       target.add(crystal);
@@ -218,7 +219,7 @@ const addPhenomenalNeedles=(THREE: typeof import("three"),target: import("three"
   let seed=(config.seed>>>0)||1; const rnd=()=>{seed=(1664525*seed+1013904223)>>>0;return seed/4294967296;};
   const strength=Math.max(0,Math.min(1,config.density)); const scale=Math.min(size.x,size.y,size.z);
   const count=Math.max(14,Math.round(14+strength*30));
-  const crystal=target?.userData?.aurumGemPhysicalModel?.crystal;
+  const crystal=target.userData["aurumGemPhysicalModel"]?.crystal;
   const axes = [crystal?.axisA, crystal?.axisB, crystal?.axisC].map((axis) =>
     Array.isArray(axis) && axis.every((value): value is number => typeof value === "number")
       ? new THREE.Vector3().fromArray(axis)
@@ -323,7 +324,7 @@ export const renderAurumInclusions=(THREE: typeof import("three"),target: import
     addAlexandriteInclusions(THREE,target,config,size);
     return;
   }
-  if((String(g.id)==="crisoberilo_gato"||String(g.id)==="crisoberilo_estrella") && g.fenomenoOptico){
+  if((String(g.id)==="crisoberilo_gato"||String(g.id)==="crisoberilo_estrella") && (g.fenomenoOptico === "chatoyancy" || g.fenomenoOptico === "asterism")){
     addChrysoberylPhenomenalInclusions(THREE,target,config,size,g.fenomenoOptico);
     return;
   }
@@ -353,9 +354,9 @@ export const renderAurumInclusions=(THREE: typeof import("three"),target: import
     inclusion.position.set(p.x*size.x*.46,p.y*size.y*.46,p.z*size.z*.46);
     inclusion.rotation.set(p.y*3.1,p.z*4.7,p.x*5.3);
     if(config.type==="silk"||config.type==="needle")inclusion.scale.set(1,1,.35);
-    inclusion.userData.aurumInternalInclusion=true;
-    inclusion.userData.aurumInclusionType=config.type;
-    inclusion.userData.aurumInclusionSeed=config.seed;
+    inclusion.userData["aurumInternalInclusion"]=true;
+    inclusion.userData["aurumInclusionType"]=config.type;
+    inclusion.userData["aurumInclusionSeed"]=config.seed;
     inclusion.renderOrder=12;
     target.add(inclusion);
   });
