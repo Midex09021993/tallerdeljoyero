@@ -116,7 +116,8 @@ function InventarioPage() {
     const [a, b, c] = await Promise.all([
       supabase.from("inventario").select("id,sede_id,codigo,material,categoria,unidad,stock,minimo,lote,ubicacion,proveedor,costo_unitario,activo").eq("sede_id", sedeId).order("material"),
       supabase.from("inventario_movimientos")
-        .select("id,material_id,tipo,cantidad,stock_anterior,stock_posterior,motivo,referencia_externa,pedido_id,created_at,inventario(material,unidad)")
+        .select("id,material_id,tipo,cantidad,stock_anterior,stock_posterior,motivo,referencia_externa,pedido_id,created_at,inventario!inner(material,unidad)")
+        .eq("inventario.sede_id", sedeId)
         .order("created_at", { ascending: false }).limit(100),
       supabase.from("inventario_joyas")
         .select("id,qr_token,codigo,nombre,metal,ley,peso,talla,piedras,cantidad,estado,created_at")
