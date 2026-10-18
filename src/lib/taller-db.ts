@@ -2397,20 +2397,19 @@ export function useInventarioReal() {
     queryKey: ["inventario-real"],
     staleTime: 60_000,
     queryFn: async (): Promise<MaterialInventarioReal[]> => {
-      const [{ data, error }, { data: asignaciones, error: areasError }] = await Promise.all([
-        supabase.from("inventario").select(CAMPOS_INVENTARIO_REAL).eq("activo", true).order("material"),
-        supabase.from("material_areas").select("material_id, area"),
-      ]);
+      const { data, error } = await supabase
+        .from("inventario")
+        .select(`${CAMPOS_INVENTARIO_REAL}, material_areas(area)`)
+        .eq("activo", true)
+        .order("material");
       if (error) throw error;
-      if (areasError) throw areasError;
+
       return (data ?? []).map((m) => ({
         ...m,
         stock: Number(m.stock),
         minimo: Number(m.minimo),
         costo_unitario: Number(m.costo_unitario),
-        areas: (asignaciones ?? [])
-          .filter((a) => a.material_id === m.id)
-          .map((a) => a.area),
+        areas: (m.material_areas ?? []).map((asignacion) => asignacion.area),
       })) as MaterialInventarioReal[];
     },
   });
