@@ -111,8 +111,8 @@ function leerMetales(valor: unknown, fallback: { nombre: string; porcentaje: num
   const resultado = lista(valor)
     .map((item) => {
       const o = objeto(item);
-      const nombre = typeof o.nombre === "string" ? o.nombre : "";
-      const porcentaje = numero(o.porcentaje, NaN);
+      const nombre = typeof o["nombre"] === "string" ? o["nombre"] : "";
+      const porcentaje = numero(o["porcentaje"], NaN);
       return nombre && Number.isFinite(porcentaje) ? { nombre, porcentaje } : null;
     })
     .filter((item): item is { nombre: string; porcentaje: number } => item !== null);
@@ -121,61 +121,61 @@ function leerMetales(valor: unknown, fallback: { nombre: string; porcentaje: num
 
 export function leerConfigVisualizador(valor: unknown): ConfigVisualizador3D {
   const root = objeto(valor);
-  const densidades = objeto(root.densidades);
+  const densidades = objeto(root["densidades"]);
   const d = DEFAULT_CONFIG_VISUALIZADOR.densidades;
   return {
     densidades: {
-      oro18a: numero(densidades.oro18a, d.oro18a),
-      oro18b: numero(densidades.oro18b, d.oro18b),
-      oro18r: numero(densidades.oro18r, d.oro18r),
-      oro14: numero(densidades.oro14, d.oro14),
-      plata925: numero(densidades.plata925, d.plata925),
-      plata950: numero(densidades.plata950, d.plata950),
-      plata970: numero(densidades.plata970, d.plata970),
-      platino: numero(densidades.platino, d.platino),
+      oro18a: numero(densidades["oro18a"], d.oro18a),
+      oro18b: numero(densidades["oro18b"], d.oro18b),
+      oro18r: numero(densidades["oro18r"], d.oro18r),
+      oro14: numero(densidades["oro14"], d.oro14),
+      plata925: numero(densidades["plata925"], d.plata925),
+      plata950: numero(densidades["plata950"], d.plata950),
+      plata970: numero(densidades["plata970"], d.plata970),
+      platino: numero(densidades["platino"], d.platino),
     },
-    factorEmpuje: numero(root.factorEmpuje, DEFAULT_CONFIG_VISUALIZADOR.factorEmpuje),
-    modoEmpuje: root.modoEmpuje === "porcentaje" ? "porcentaje" : "gramos",
-    factorSeguridad: numero(root.factorSeguridad, DEFAULT_CONFIG_VISUALIZADOR.factorSeguridad),
+    factorEmpuje: numero(root["factorEmpuje"], DEFAULT_CONFIG_VISUALIZADOR.factorEmpuje),
+    modoEmpuje: root["modoEmpuje"] === "porcentaje" ? "porcentaje" : "gramos",
+    factorSeguridad: numero(root["factorSeguridad"], DEFAULT_CONFIG_VISUALIZADOR.factorSeguridad),
   };
 }
 
 export function leerConfigAleacion(valor: unknown): ConfigAleacion {
   const root = objeto(valor);
-  const recetas = objeto(root.recetas);
+  const recetas = objeto(root["recetas"]);
   const d = DEFAULT_CONFIG_ALEACION.recetas;
   return {
     recetas: {
-      amarillo: { metales: leerMetales(objeto(recetas.amarillo).metales, d.amarillo.metales) },
-      blanco: { metales: leerMetales(objeto(recetas.blanco).metales, d.blanco.metales) },
-      rosa: { metales: leerMetales(objeto(recetas.rosa).metales, d.rosa.metales) },
-      naranja: { metales: leerMetales(objeto(recetas.naranja).metales, d.naranja.metales) },
+      amarillo: { metales: leerMetales(objeto(recetas["amarillo"]).metales, d.amarillo.metales) },
+      blanco: { metales: leerMetales(objeto(recetas["blanco"]).metales, d.blanco.metales) },
+      rosa: { metales: leerMetales(objeto(recetas["rosa"]).metales, d.rosa.metales) },
+      naranja: { metales: leerMetales(objeto(recetas["naranja"]).metales, d.naranja.metales) },
     },
-    factorCalculo: numero(root.factorCalculo, DEFAULT_CONFIG_ALEACION.factorCalculo),
+    factorCalculo: numero(root["factorCalculo"], DEFAULT_CONFIG_ALEACION.factorCalculo),
   };
 }
 
 export function leerConfigYeso(valor: unknown): ConfigYeso {
   const root = objeto(valor);
-  const props = lista(root.proporciones);
+  const props = lista(root["proporciones"]);
   const proporciones = props
     .map((item) => {
       const o = objeto(item);
-      const agua = numero(o.agua, NaN);
-      const yeso = numero(o.yeso, NaN);
+      const agua = numero(o["agua"], NaN);
+      const yeso = numero(o["yeso"], NaN);
       if (!Number.isFinite(agua) || !Number.isFinite(yeso)) return null;
-      return { agua, yeso, recomendada: Boolean(o.recomendada) };
+      return { agua, yeso, recomendada: Boolean(o["recomendada"]) };
     })
     .filter((item): item is { agua: number; yeso: number; recomendada: boolean } => item !== null);
   const d = DEFAULT_CONFIG_YESO;
-  const tolerancias = objeto(root.tolerancias);
+  const tolerancias = objeto(root["tolerancias"]);
   return {
     proporciones: proporciones.length ? proporciones : d.proporciones,
-    volumenPorGramo: numero(root.volumenPorGramo, d.volumenPorGramo),
-    factorCorreccion: numero(root.factorCorreccion, d.factorCorreccion),
+    volumenPorGramo: numero(root["volumenPorGramo"], d.volumenPorGramo),
+    factorCorreccion: numero(root["factorCorreccion"], d.factorCorreccion),
     tolerancias: {
-      liso: numero(tolerancias.liso, d.tolerancias.liso),
-      perforado: numero(tolerancias.perforado, d.tolerancias.perforado),
+      liso: numero(tolerancias["liso"], d.tolerancias["liso"]),
+      perforado: numero(tolerancias["perforado"], d.tolerancias["perforado"]),
     },
   };
 }
@@ -284,14 +284,14 @@ export function formatearTallaAmericana(valor: unknown): string | null {
 
 export function leerConfigTallasAnillo(valor: unknown): ConfigTallasAnillo {
   const root = objeto(valor);
-  const filas = lista(root.tabla)
+  const filas = lista(root["tabla"])
     .map((item) => {
       const o = objeto(item);
-      const diametroMm = numero(o.diametroMm, NaN);
+      const diametroMm = numero(o["diametroMm"], NaN);
       // Compatibilidad con la configuración anterior: "europea" era en realidad la talla española.
-      const espanola = numero(o.espanola, numero(o.europea, NaN));
-      const europeaIso = numero(o.europeaIso, Number.isFinite(diametroMm) ? Math.round(diametroMm * Math.PI) : NaN);
-      const americana = formatearTallaAmericana(o.americana);
+      const espanola = numero(o["espanola"], numero(o["europea"], NaN));
+      const europeaIso = numero(o["europeaIso"], Number.isFinite(diametroMm) ? Math.round(diametroMm * Math.PI) : NaN);
+      const americana = formatearTallaAmericana(o["americana"]);
       if (!Number.isFinite(diametroMm) || !Number.isFinite(espanola) || !Number.isFinite(europeaIso)) return null;
       return { diametroMm, espanola, europeaIso, americana };
     })
@@ -302,8 +302,8 @@ export function leerConfigTallasAnillo(valor: unknown): ConfigTallasAnillo {
 
 export function leerConfigPesoGemas(valor: unknown): ConfigPesoGemas {
   const root = objeto(valor);
-  const piedras = lista(root.piedras).map((item) => { const o=objeto(item); const nombre=typeof o.nombre==="string"?o.nombre:""; const sg=numero(o.sg,NaN); return nombre&&Number.isFinite(sg)?{nombre,sg}:null; }).filter((x): x is {nombre:string;sg:number}=>x!==null);
-  const factoresRoot=objeto(root.factores); const d=DEFAULT_CONFIG_PESO_GEMAS.factores;
+  const piedras = lista(root["piedras"]).map((item) => { const o=objeto(item); const nombre=typeof o["nombre"]==="string"?o["nombre"]:""; const sg=numero(o["sg"],NaN); return nombre&&Number.isFinite(sg)?{nombre,sg}:null; }).filter((x): x is {nombre:string;sg:number}=>x!==null);
+  const factoresRoot=objeto(root["factores"]); const d=DEFAULT_CONFIG_PESO_GEMAS.factores;
   const factores = Object.fromEntries((Object.keys(d) as TallaGema[]).map(k=>[k,numero(factoresRoot[k],d[k])])) as Record<TallaGema,number>;
-  return { piedras:piedras.length?piedras:DEFAULT_CONFIG_PESO_GEMAS.piedras, factores, margenEstimacion:Math.max(0,numero(root.margenEstimacion,DEFAULT_CONFIG_PESO_GEMAS.margenEstimacion)) };
+  return { piedras:piedras.length?piedras:DEFAULT_CONFIG_PESO_GEMAS.piedras, factores, margenEstimacion:Math.max(0,numero(root["margenEstimacion"],DEFAULT_CONFIG_PESO_GEMAS.margenEstimacion)) };
 }
