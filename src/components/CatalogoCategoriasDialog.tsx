@@ -63,7 +63,7 @@ export function CatalogoCategoriasDialog({ open, participanteId, onClose, onChan
     const maxOrden = categorias.filter((item) => item.parent_id === (parent?.id ?? null)).reduce((max, item) => Math.max(max, item.orden), 0);
     const slugBase = slugify(limpio);
     const slug = parent ? `${parent.slug}-${slugBase}`.slice(0, 80).replace(/-+$/g, "") : slugBase;
-    const { error: insertError } = await (supabase as any).from("catalogo_categorias").insert({
+    const { error: insertError } = await supabase.from("catalogo_categorias").insert({
       participante_id: participanteId,
       nombre: limpio,
       slug,

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Panel } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,8 +9,8 @@ export function ConfiguracionFiscal() {
   const [items,setItems]=useState<Fiscal[]>([]);
   const [form,setForm]=useState<Fiscal>({pais_codigo:"PE",pais_nombre:"Perú",impuesto_nombre:"IGV",tasa:18,activo:true});
   const [guardando,setGuardando]=useState(false);
-  const cargar=async()=>{ const {data,error}=await (supabase as any).from("configuracion_fiscal").select("pais_codigo,pais_nombre,impuesto_nombre,tasa,activo").order("pais_nombre"); if(error) toast.error(error.message); else setItems(data??[]); };
-  useEffect(()=>{void cargar()},[]);
+  const cargar=useCallback(async()=>{ const {data,error}=await (supabase as any).from("configuracion_fiscal").select("pais_codigo,pais_nombre,impuesto_nombre,tasa,activo").order("pais_nombre"); if(error) toast.error(error.message); else setItems(data??[]); },[]);
+  useEffect(()=>{void cargar()},[cargar]);
   const guardar=async()=>{ setGuardando(true); const {error}=await (supabase as any).rpc("guardar_configuracion_fiscal",{_pais_codigo:form.pais_codigo,_pais_nombre:form.pais_nombre,_impuesto_nombre:form.impuesto_nombre,_tasa:Number(form.tasa),_activo:form.activo}); if(error) toast.error(error.message); else {toast.success("Configuración fiscal guardada"); await cargar();} setGuardando(false); };
   return <div className="grid gap-6 lg:grid-cols-[380px_1fr]">
     <Panel titulo="Nueva / editar país"><div className="space-y-3 p-6">
