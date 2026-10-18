@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { BookOpen, ExternalLink, Grid2X2, Image as ImageIcon, LayoutList, MoreHorizontal, Pencil, Plus, Search, Share2, Sparkles, Settings, Tags, X } from "lucide-react";
@@ -35,6 +35,47 @@ type ProductoRow = {
 type ColeccionRow = {
   producto_id: string; coleccion_id: string; coleccion: { nombre: string } | null;
 };
+type EnlaceCarrusel = {
+  imagen_url: string;
+  url_imagen_externa: string;
+  enlace_url: string;
+  texto: string;
+  nueva_pestana: boolean;
+  tipo_media: "imagen" | "video";
+};
+type CatalogoConfiguracionDialogProps = {
+  open: boolean;
+  participanteId: string;
+  initial: { nombre_publico: string | null; slug: string | null; visible: boolean | null } | null | undefined;
+  onClose: () => void;
+  onSaved: () => void;
+};
+
+function esArchivoProyectoNube(value: unknown): value is ProyectoNubeInicial["archivos"][number] {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const archivo = value as Record<string, unknown>;
+  return typeof archivo["nombre"] === "string" &&
+    typeof archivo["ruta"] === "string" &&
+    typeof archivo["categoria"] === "string" &&
+    typeof archivo["bytes"] === "number" &&
+    (archivo["origen"] === "nas" || archivo["origen"] === "supabase") &&
+    (typeof archivo["actualizado"] === "string" || archivo["actualizado"] === null);
+}
+
+function normalizarEnlaceCarrusel(value: unknown): EnlaceCarrusel | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const slide = value as Record<string, unknown>;
+  const imagenUrl = slide["imagen_url"];
+  if (typeof imagenUrl !== "string") return null;
+  return {
+    imagen_url: imagenUrl,
+    url_imagen_externa: typeof slide["url_imagen_externa"] === "string" ? slide["url_imagen_externa"] : "",
+    enlace_url: typeof slide["enlace_url"] === "string" ? slide["enlace_url"] : "",
+    texto: typeof slide["texto"] === "string" ? slide["texto"] : "",
+    nueva_pestana: slide["nueva_pestana"] !== false,
+    tipo_media: slide["tipo_media"] === "video" || /\.(mp4|webm|ogg|mov)(\?|#|$)/i.test(imagenUrl) ? "video" : "imagen",
+  };
+}
 function formatBytesUpload(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -96,11 +137,7 @@ function CatalogoPage() {
         else setPdfDesdeMiNube(null);
         const proyecto = parsed?.proyecto_nube;
         if (proyecto && typeof proyecto.carpeta === "string" && Array.isArray(proyecto.archivos)) {
-          const archivos = proyecto.archivos.filter((archivo: any) =>
-            archivo && typeof archivo.nombre === "string" && typeof archivo.ruta === "string" &&
-            typeof archivo.categoria === "string" && typeof archivo.bytes === "number" &&
-            (archivo.origen === "nas" || archivo.origen === "supabase"),
-          );
+          const archivos = proyecto.archivos.filter(esArchivoProyectoNube);
           setProyectoDesdeMiNube({ carpeta: proyecto.carpeta, archivos });
         } else setProyectoDesdeMiNube(null);
         setModeloEditando(null);
@@ -400,7 +437,7 @@ function CatalogoPage() {
   );
 }
 
-function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, onSaved }: any) {
+function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, onSaved }: CatalogoConfiguracionDialogProps) {
   const [nombre, setNombre] = useState("");
   const [slug, setSlug] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
@@ -415,7 +452,7 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
   const [subiendoLogo, setSubiendoLogo] = useState(false);
   const [imagenesPortada, setImagenesPortada] = useState<string[]>([]);
   const [intervaloPortada, setIntervaloPortada] = useState(5);
-  const [enlacesCarrusel, setEnlacesCarrusel] = useState<{ imagen_url: string; url_imagen_externa: string; enlace_url: string; texto: string; nueva_pestana: boolean; tipo_media: "imagen" | "video" }[]>([]);
+  const [enlacesCarrusel, setEnlacesCarrusel] = useState<EnlaceCarrusel[]>([]);
   const [subiendoCarrusel, setSubiendoCarrusel] = useState(false);
   const [progresoCarrusel, setProgresoCarrusel] = useState("");
   const [progresoCarruselPorcentaje, setProgresoCarruselPorcentaje] = useState(0);
@@ -466,13 +503,13 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
       setLogoUrl(configResult.data?.logo_url ?? identidadResult.data?.logo_url ?? null);
       setImagenesPortada(Array.isArray(configResult.data?.imagenes_portada) ? configResult.data.imagenes_portada.filter((url: unknown) => typeof url === "string").slice(0, 10) : []);
       setIntervaloPortada(Math.min(30, Math.max(2, Number(configResult.data?.intervalo_portada_segundos ?? 5))));
-      setEnlacesCarrusel(Array.isArray(configResult.data?.enlaces_carrusel) ? configResult.data.enlaces_carrusel.filter((slide: any) => slide && typeof slide.imagen_url === "string").slice(0, 10).map((slide: any) => ({ imagen_url: slide.imagen_url, url_imagen_externa: typeof slide.url_imagen_externa === "string" ? slide.url_imagen_externa : "", enlace_url: typeof slide.enlace_url === "string" ? slide.enlace_url : "", texto: typeof slide.texto === "string" ? slide.texto : "", nueva_pestana: slide.nueva_pestana !== false, tipo_media: slide.tipo_media === "video" || /\.(mp4|webm|ogg|mov)(\?|#|$)/i.test(slide.imagen_url) ? "video" : "imagen" })) : []);
+      setEnlacesCarrusel(Array.isArray(configResult.data?.enlaces_carrusel) ? configResult.data.enlaces_carrusel.map(normalizarEnlaceCarrusel).filter((slide): slide is EnlaceCarrusel => slide !== null).slice(0, 10) : []);
     });
   }, [open, initial, participanteId]);
 
   if (!open) return null;
 
-  async function subirImagenesPortada(event: any) {
+  async function subirImagenesPortada(event: ChangeEvent<HTMLInputElement>) {
     const input = event.currentTarget as HTMLInputElement;
     const formulario = input.closest("form");
     const files = Array.from(input.files ?? []) as File[];
@@ -521,7 +558,7 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
     setError(null);
   }
 
-  async function subirImagenesCarrusel(event: any) {
+  async function subirImagenesCarrusel(event: ChangeEvent<HTMLInputElement>) {
     const files = Array.from(event.target.files ?? []) as File[];
     event.target.value = "";
     if (!files.length) return;
@@ -592,7 +629,7 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
       setProgresoCarruselPorcentaje(0);
     } finally { setSubiendoCarrusel(false); }
   }
-  async function subirLogoShowroom(event: any) {
+  async function subirLogoShowroom(event: ChangeEvent<HTMLInputElement>) {
     const file = (event.target.files?.[0] ?? null) as File | null;
     event.target.value = "";
     if (!file) return;
@@ -639,7 +676,7 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
     }
   }
 
-  async function guardar(event: any) {
+  async function guardar(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!participanteId || !nombre.trim()) return setError("El nombre público es obligatorio.");
     setGuardando(true); setError(null);
