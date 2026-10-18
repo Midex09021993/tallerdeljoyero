@@ -2272,8 +2272,9 @@ export type ArchivoPedido = {
 export function useArchivosPedidos() {
   return useQuery({
     queryKey: ["archivos-pedidos"],
-    // La biblioteca se reutiliza entre visitas; las subidas invalidan esta caché.
-    staleTime: 60_000,
+    // Cinco minutos evitan releer hasta 300 archivos y volver a firmar miniaturas al volver a la biblioteca.
+    // Las subidas conocidas invalidan esta clave; las URLs firmadas duran una hora.
+    staleTime: 5 * 60_000,
     queryFn: async (): Promise<ArchivoPedido[]> => {
       const { data, error } = await supabase
         .from("pedido_archivos")
