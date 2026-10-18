@@ -140,19 +140,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   onCatalogApiReadyRef.current = onCatalogApiReady;
   const [archivo, setArchivo] = useState<string|null>(null), [cargando, setCargando] = useState(false), [error, setError] = useState<string|null>(null), [paso, setPaso] = useState<string|null>(null), [formatoInterno, setFormatoInterno] = useState<string|null>(null);
 
-  // El fondo de portada solo existe mientras no hay una joya cargada.
-  useEffect(() => {
-    const nodo = visorRef.current;
-    if (!nodo) return;
-    nodo.dataset.aurumHasModel = archivo ? "true" : "false";
-    if (archivo || cargando) {
-      nodo.style.backgroundImage = "none";
-    } else {
-      nodo.style.backgroundImage = "radial-gradient(ellipse at 50% 38%, rgba(255,255,255,.92) 0%, rgba(250,244,234,.76) 26%, rgba(240,228,212,.22) 55%, transparent 72%), linear-gradient(180deg, #d7c8b8 0%, #f1e6d8 49%, #cfc0ad 50%, #e8ded0 100%)";
-      nodo.style.backgroundSize = "cover";
-      nodo.style.backgroundPosition = "center";
-    }
-  }, [archivo, cargando]);
   const [materialId, setMaterialId] = useState<MaterialId>("plata925_pulida"), [gemaId, setGemaId] = useState<GemaId>("diamante_natural"), [escenarioId, setEscenarioId] = useState<EscenarioId>("ijewelReference"), [iluminacionId, setIluminacionId] = useState<IluminacionId>("studioSoft"), [vista, setVista] = useState<VistaId>("frontal");
   const [nombreProyecto, setNombreProyecto] = useState("Diseño de joyería");
   const [categoriaProyecto, setCategoriaProyecto] = useState("Anillo");
