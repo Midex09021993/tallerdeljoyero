@@ -3,7 +3,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AlertTriangle, ArrowRight, CalendarClock, ClipboardList, Factory, PackageCheck, Plus, Search, Trash2, UserRound } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
-import { useBorrarPedido, usePedidos, esEstadoFinalPedido, pedidoPendienteAutorizacionProduccion, estadoClases } from "@/lib/taller-db";
+import { useBorrarPedido, usePedidos, esEstadoFinalPedido, pedidoPendienteAutorizacionProduccion, estadoClases, type Pedido } from "@/lib/taller-db";
 import { fmtFecha } from "@/lib/utils";
 import { useSesion } from "@/lib/auth";
 
@@ -124,7 +124,7 @@ function PedidosPage() {
   );
 }
 
-function PedidoRow({ pedido: p, esDueno, onOpen, onDelete }: { pedido: any; esDueno: boolean; onOpen: () => void; onDelete: () => void }) {
+function PedidoRow({ pedido: p, esDueno, onOpen, onDelete }: { pedido: Pedido; esDueno: boolean; onOpen: () => void; onDelete: () => void }) {
   const dias = diasEntrega(p.fecha_entrega ?? p.entrega);
   return <tr onClick={onOpen} className="cursor-pointer hover:bg-surface-muted/60"><td className="px-5 py-4"><span className="font-semibold text-sm">{p.referencia}</span>{p.contrato ? <span className="block text-[10px] text-muted-foreground">Contrato {p.contrato}</span> : null}</td><td className="px-5 py-4 text-sm">{p.cliente || "Cliente pendiente"}</td><td className="px-5 py-4 text-sm text-muted-foreground">{p.trabajo || p.pieza || "Sin descripción"}</td><td className="px-5 py-4"><Status estado={p.estado} /></td><td className="px-5 py-4"><span className="rounded-full border border-border bg-surface-muted px-2.5 py-1 text-[10px] font-semibold">{p.sede_nombre || "Taller no asignado"}</span></td><td className="px-5 py-4"><span className="rounded-full bg-surface-muted px-2.5 py-1 text-[10px] font-semibold">{p.area_actual || "Sin ubicación"}</span></td><td className="px-5 py-4 text-xs">{fmtFecha(p.fecha_entrega ?? p.entrega) || "Sin fecha"}{dias !== null && dias < 0 && !esEstadoFinalPedido(p.estado) ? <span className="ml-2 text-[10px] font-semibold text-danger">Atrasado</span> : null}</td><td className="px-5 py-4 text-right" onClick={(e) => e.stopPropagation()}>{esDueno ? <div className="flex items-center justify-end gap-2"><button type="button" onClick={onDelete} className="inline-flex items-center gap-1.5 rounded-lg border border-danger/25 px-2.5 py-1.5 text-xs font-semibold text-danger hover:bg-danger/10" aria-label={`Eliminar pedido ${p.referencia}`}><Trash2 className="size-3.5" /> Eliminar</button><ArrowRight className="size-4 text-muted-foreground" /></div> : <ArrowRight className="ml-auto size-4 text-muted-foreground" />}</td></tr>;
 }
