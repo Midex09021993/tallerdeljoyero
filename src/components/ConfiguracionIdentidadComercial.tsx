@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import type { Json } from "@/integrations/supabase/types";
 import { Palette, Plus, Save, Upload, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Panel } from "@/components/AppShell";
@@ -12,7 +13,7 @@ type Identidad = {
   direccion: string | null; ciudad: string | null; sitio_web: string | null; color_principal: string | null;
   pie_documento: string | null; pais_codigo: string; pais_nombre: string; moneda_codigo: string; moneda_simbolo: string;
   impuesto_activo: boolean; impuesto_nombre: string; impuesto_tasa: number; impuesto_incluido: boolean;
-  identificador_fiscal_label: string; zona_horaria: string; rnp_bienes: string | null; rpp_servicios: string | null; metadata: Record<string, unknown> | null;
+  identificador_fiscal_label: string; zona_horaria: string; rnp_bienes: string | null; rpp_servicios: string | null; metadata: Json;
 };
 
 type CuentaBancaria = { banco: string; tipo: string; moneda: string; cuenta: string; cci: string; titular: string; activa: boolean };
@@ -21,13 +22,25 @@ type ConfigCotizacion = { introduccion: string; terminos: string[]; atendido_por
 
 const DEFAULT_COTIZACION: ConfigCotizacion = { introduccion: "Es grato dirigirnos a usted, con la finalidad de remitir la siguiente cotización.", terminos: ["Precios y condiciones sujetos a la vigencia indicada en la cotización.", "La fecha de entrega será coordinada según disponibilidad y alcance del servicio.", "La forma de pago y cualquier condición especial se detallan en la propuesta comercial."], atendido_por: "", responsable_cargo: "", firma_nombre: "", firma_cargo: "", mostrar_bancos: true, cuentas_bancarias: [] };
 
-function obtenerConfigCotizacion(metadata: Record<string, any> | null | undefined): ConfigCotizacion {
-  const raw = metadata?.["cotizacion"];
+function obtenerConfigCotizacion(metadata: Json | null | undefined): ConfigCotizacion {
+  const valor = metadata && typeof metadata === "object" && !Array.isArray(metadata)
+    ? metadata["cotizacion"]
+    : undefined;
+  const raw = valor && typeof valor === "object" && !Array.isArray(valor)
+    ? valor as Record<string, Json | undefined>
+    : {};
   return {
     ...DEFAULT_COTIZACION,
-    ...(raw && typeof raw === "object" ? raw : {}),
-    terminos: Array.isArray(raw?.terminos) ? raw.terminos : DEFAULT_COTIZACION.terminos,
-    cuentas_bancarias: Array.isArray(raw?.cuentas_bancarias) ? raw.cuentas_bancarias : [],
+    introduccion: typeof raw.introduccion === "string" ? raw.introduccion : DEFAULT_COTIZACION.introduccion,
+    terminos: Array.isArray(raw.terminos)
+      ? raw.terminos.filter((termino): termino is string => typeof termino === "string")
+      : DEFAULT_COTIZACION.terminos,
+    atendido_por: typeof raw.atendido_por === "string" ? raw.atendido_por : "",
+    responsable_cargo: typeof raw.responsable_cargo === "string" ? raw.responsable_cargo : "",
+    firma_nombre: typeof raw.firma_nombre === "string" ? raw.firma_nombre : "",
+    firma_cargo: typeof raw.firma_cargo === "string" ? raw.firma_cargo : "",
+    mostrar_bancos: typeof raw.mostrar_bancos === "boolean" ? raw.mostrar_bancos : DEFAULT_COTIZACION.mostrar_bancos,
+    cuentas_bancarias: Array.isArray(raw.cuentas_bancarias) ? raw.cuentas_bancarias as CuentaBancaria[] : [],
   };
 }
 
