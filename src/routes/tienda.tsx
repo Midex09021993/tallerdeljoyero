@@ -18,6 +18,9 @@ export const Route = createFileRoute("/tienda")({
 type Tienda = { id: string; nombre_publico: string; descripcion: string | null; whatsapp: string | null; moneda: string };
 type Producto = { id: string; nombre: string; categoria: string; descripcion: string | null; imagen_url: string | null; precio: number | null; moneda: string; stock: number | null; unidad: string; destacado: boolean };
 
+const PRODUCTOS_VACIOS: Producto[] = [];
+const CATEGORIAS_BASE = ["Resinas", "Cubiletes", "Yesos e inversiones", "Ceras", "Herramientas", "PC para diseño 3D", "Componentes y hardware", "UPS y protección eléctrica", "NAS y almacenamiento", "Monitores y periféricos", "Impresión 3D y fabricación", "Software y licencias", "Consumibles", "Otros"];
+
 function TiendaInsumosPage() {
   const [busqueda, setBusqueda] = useState("");
   const [categoria, setCategoria] = useState("Todos");
@@ -45,9 +48,8 @@ function TiendaInsumosPage() {
     },
     staleTime: 60_000,
   });
-  const productos = data?.productos ?? [];
-  const categoriasBase = ["Resinas", "Cubiletes", "Yesos e inversiones", "Ceras", "Herramientas", "PC para diseño 3D", "Componentes y hardware", "UPS y protección eléctrica", "NAS y almacenamiento", "Monitores y periféricos", "Impresión 3D y fabricación", "Software y licencias", "Consumibles", "Otros"];
-  const categorias = useMemo(() => ["Todos", ...categoriasBase, ...productos.map((p) => p.categoria).filter((c) => !categoriasBase.includes(c)).filter((c, i, a) => a.indexOf(c) === i)], [productos]);
+  const productos = data?.productos ?? PRODUCTOS_VACIOS;
+  const categorias = useMemo(() => ["Todos", ...CATEGORIAS_BASE, ...productos.map((p) => p.categoria).filter((c) => !CATEGORIAS_BASE.includes(c)).filter((c, i, a) => a.indexOf(c) === i)], [productos]);
   const visibles = useMemo(() => {
     const q = busqueda.trim().toLocaleLowerCase("es");
     return productos.filter((p) => (categoria === "Todos" || p.categoria === categoria) && (!q || [p.nombre, p.categoria, p.descripcion ?? ""].join(" ").toLocaleLowerCase("es").includes(q)));
