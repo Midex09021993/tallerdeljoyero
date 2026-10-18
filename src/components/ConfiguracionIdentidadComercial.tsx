@@ -22,25 +22,29 @@ type ConfigCotizacion = { introduccion: string; terminos: string[]; atendido_por
 
 const DEFAULT_COTIZACION: ConfigCotizacion = { introduccion: "Es grato dirigirnos a usted, con la finalidad de remitir la siguiente cotización.", terminos: ["Precios y condiciones sujetos a la vigencia indicada en la cotización.", "La fecha de entrega será coordinada según disponibilidad y alcance del servicio.", "La forma de pago y cualquier condición especial se detallan en la propuesta comercial."], atendido_por: "", responsable_cargo: "", firma_nombre: "", firma_cargo: "", mostrar_bancos: true, cuentas_bancarias: [] };
 
+function metadataObjeto(metadata: Json | null | undefined): Record<string, Json | undefined> {
+  return metadata && typeof metadata === "object" && !Array.isArray(metadata)
+    ? metadata as Record<string, Json | undefined>
+    : {};
+}
+
 function obtenerConfigCotizacion(metadata: Json | null | undefined): ConfigCotizacion {
-  const valor = metadata && typeof metadata === "object" && !Array.isArray(metadata)
-    ? metadata["cotizacion"]
-    : undefined;
+  const valor = metadataObjeto(metadata)["cotizacion"];
   const raw = valor && typeof valor === "object" && !Array.isArray(valor)
     ? valor as Record<string, Json | undefined>
     : {};
   return {
     ...DEFAULT_COTIZACION,
-    introduccion: typeof raw.introduccion === "string" ? raw.introduccion : DEFAULT_COTIZACION.introduccion,
-    terminos: Array.isArray(raw.terminos)
-      ? raw.terminos.filter((termino): termino is string => typeof termino === "string")
+    introduccion: typeof raw["introduccion"] === "string" ? raw["introduccion"] : DEFAULT_COTIZACION.introduccion,
+    terminos: Array.isArray(raw["terminos"])
+      ? raw["terminos"].filter((termino): termino is string => typeof termino === "string")
       : DEFAULT_COTIZACION.terminos,
-    atendido_por: typeof raw.atendido_por === "string" ? raw.atendido_por : "",
-    responsable_cargo: typeof raw.responsable_cargo === "string" ? raw.responsable_cargo : "",
-    firma_nombre: typeof raw.firma_nombre === "string" ? raw.firma_nombre : "",
-    firma_cargo: typeof raw.firma_cargo === "string" ? raw.firma_cargo : "",
-    mostrar_bancos: typeof raw.mostrar_bancos === "boolean" ? raw.mostrar_bancos : DEFAULT_COTIZACION.mostrar_bancos,
-    cuentas_bancarias: Array.isArray(raw.cuentas_bancarias) ? raw.cuentas_bancarias as CuentaBancaria[] : [],
+    atendido_por: typeof raw["atendido_por"] === "string" ? raw["atendido_por"] : "",
+    responsable_cargo: typeof raw["responsable_cargo"] === "string" ? raw["responsable_cargo"] : "",
+    firma_nombre: typeof raw["firma_nombre"] === "string" ? raw["firma_nombre"] : "",
+    firma_cargo: typeof raw["firma_cargo"] === "string" ? raw["firma_cargo"] : "",
+    mostrar_bancos: typeof raw["mostrar_bancos"] === "boolean" ? raw["mostrar_bancos"] : DEFAULT_COTIZACION.mostrar_bancos,
+    cuentas_bancarias: Array.isArray(raw["cuentas_bancarias"]) ? raw["cuentas_bancarias"] as CuentaBancaria[] : [],
   };
 }
 
@@ -415,7 +419,7 @@ export function ConfiguracionIdentidadComercial() {
       moneda_simbolo: form.moneda_simbolo.trim(), impuesto_activo: Boolean(form.impuesto_activo), impuesto_nombre: form.impuesto_nombre.trim(),
       impuesto_tasa: tasa, impuesto_incluido: Boolean(form.impuesto_incluido), identificador_fiscal_label: form.identificador_fiscal_label.trim(),
       zona_horaria: form.zona_horaria.trim(),
-      metadata: { ...(form.metadata ?? {}), cotizacion: obtenerConfigCotizacion(form.metadata) },
+      metadata: { ...metadataObjeto(form.metadata), cotizacion: obtenerConfigCotizacion(form.metadata) },
     };
     const { error } = await supabase.from("identidades_comerciales").update(payload).eq("id", form.id);
     if (error) toast.error(error.message);
@@ -528,7 +532,7 @@ export function ConfiguracionIdentidadComercial() {
 
 function CotizacionConfigEditor({ form, campo }: { form: Identidad; campo: <K extends keyof Identidad>(key: K, value: Identidad[K]) => void }) {
   const config = obtenerConfigCotizacion(form.metadata);
-  const actualizar = (cambios: Partial<ConfigCotizacion>) => campo("metadata", { ...(form.metadata ?? {}), cotizacion: { ...config, ...cambios } });
+  const actualizar = (cambios: Partial<ConfigCotizacion>) => campo("metadata", { ...metadataObjeto(form.metadata), cotizacion: { ...config, ...cambios } });
   const actualizarTermino = (index: number, value: string) => actualizar({ terminos: config.terminos.map((x, i) => i === index ? value : x) });
   const actualizarCuenta = (index: number, cambios: Partial<CuentaBancaria>) => actualizar({ cuentas_bancarias: config.cuentas_bancarias.map((x, i) => i === index ? { ...x, ...cambios } : x) });
   return <Panel titulo="Configuración de cotizaciones">
