@@ -188,7 +188,7 @@ export function ConfiguracionContratos() {
     return () => {
       activo = false;
     };
-  }, [identidadId]);
+  }, [identidadId, db]);
 
   const identidad = useMemo(
     () => identidades.find((item) => item.id === identidadId) ?? null,
