@@ -33,7 +33,7 @@ export const clearAurumInclusions = (target: import("three").Object3D) => {
 
 export const setAurumInclusionsVisible = (target: import("three").Object3D, visible: boolean) => {
   target.traverse((child) => {
-    if (child.userData?.aurumInternalInclusion) child.visible = visible;
+    if (child.userData?.["aurumInternalInclusion"]) child.visible = visible;
   });
 };
 
