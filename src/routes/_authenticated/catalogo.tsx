@@ -356,14 +356,14 @@ function CatalogoPage() {
                 <div className={vista === "grid" ? "min-w-0" : "min-w-0 flex-1"}>
                   <p className="truncate text-[9px] font-bold uppercase tracking-[.16em] text-gold" title={`${p.codigo} · ${p.coleccion}`}>{p.codigo} · {p.coleccion}</p>
                   <h3 className={vista === "grid" ? "mt-2 line-clamp-2 min-h-[3.5rem] text-lg font-semibold leading-7" : "mt-1 line-clamp-2 text-lg font-semibold"}>{p.nombre}</h3>
-                  {<p className={vista === "grid" ? "mt-4 text-sm font-semibold" : "mt-3 text-sm font-semibold"}>{p.precioDesde ?? "Consultar"}</p>
+                  <p className={vista === "grid" ? "mt-4 text-sm font-semibold" : "mt-3 text-sm font-semibold"}>{p.precioDesde ?? "Consultar"}</p>
                   {vista === "grid" && menuProductoAbierto === p.id ? <div className="mt-4 grid grid-cols-2 gap-2 border-t border-border pt-3">
                     {p.estado === "Publicado" && catalogoConfig?.slug ? <a href={`/${catalogoConfig.slug}/${p.slug}`} target="_blank" rel="noreferrer" onClick={() => setMenuProductoAbierto(null)} className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border px-3 py-2.5 text-xs font-semibold hover:bg-surface-muted"><ExternalLink className="size-3.5" /> Público</a> : null}
                     {puedeGestionar ? <button type="button" onClick={() => { setMenuProductoAbierto(null); void cambiarFlag(p.id, "publicado", p.estado !== "Publicado"); }} disabled={Boolean(guardandoAccion)} className="rounded-lg bg-surface-muted px-3 py-2.5 text-xs font-semibold disabled:opacity-50">{p.estado === "Publicado" ? "Retirar" : "Publicar"}</button> : null}
                     {puedeGestionar ? <button type="button" onClick={() => { setMenuProductoAbierto(null); void cambiarFlag(p.id, "destacado", !p.destacado); }} disabled={Boolean(guardandoAccion)} className="rounded-lg bg-surface-muted px-3 py-2.5 text-xs font-semibold disabled:opacity-50">{p.destacado ? "Quitar destacado" : "Destacar"}</button> : null}
                     <button type="button" onClick={() => { setMenuProductoAbierto(null); void compartir(p); }} className="rounded-lg bg-surface-muted px-3 py-2.5 text-xs font-semibold">Compartir</button>
                     {puedeGestionar ? <button type="button" onClick={() => { setMenuProductoAbierto(null); void eliminarProducto(p); }} disabled={Boolean(guardandoAccion)} className="col-span-2 rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-2.5 text-xs font-semibold text-destructive disabled:opacity-50">{guardandoAccion === "eliminar:" + p.id ? "Eliminando…" : "Eliminar"}</button> : null}
-                  </div> : null}}
+                  </div> : null}
                 </div>
                 <div className={vista === "grid" ? "hidden" : "grid grid-cols-2 gap-2 sm:w-[min(100%,22rem)] sm:shrink-0"}>
                   {p.estado === "Publicado" && catalogoConfig?.slug ? <a href={`/${catalogoConfig.slug}/${p.slug}`} target="_blank" rel="noreferrer" className="inline-flex min-w-0 items-center justify-center gap-1.5 rounded-lg border border-border px-2.5 py-2.5 text-center text-xs font-semibold transition-colors hover:border-gold/40 hover:bg-gold/5"><ExternalLink className="size-3.5 shrink-0" /> Público</a> : null}
