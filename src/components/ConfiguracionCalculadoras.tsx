@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
+import type { Json } from "@/integrations/supabase/types";
 import { RotateCcw, Save, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Panel } from "@/components/AppShell";
@@ -211,7 +212,7 @@ function ConfiguracionCalculadorasAdmin() {
 
   async function guardarSeccion<T>(clave: string, valor: T, nombre: string) {
     try {
-      await guardar.mutateAsync({ clave, valor });
+      await guardar.mutateAsync({ clave, valor: valor as Json });
       toast.success(`${nombre} guardada`);
     } catch {
       toast.error(`No se pudo guardar ${nombre.toLowerCase()}`);
@@ -221,7 +222,7 @@ function ConfiguracionCalculadorasAdmin() {
   async function restaurarSeccion<T>(clave: string, valor: T, setter: (v: T) => void, nombre: string) {
     setter(clonar(valor));
     try {
-      await guardar.mutateAsync({ clave, valor });
+      await guardar.mutateAsync({ clave, valor: valor as Json });
       toast.success(`${nombre} restaurada`);
     } catch {
       toast.error(`No se pudo restaurar ${nombre.toLowerCase()}`);
