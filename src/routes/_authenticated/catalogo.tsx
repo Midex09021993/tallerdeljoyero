@@ -354,8 +354,7 @@ function CatalogoPage() {
                 <div className={vista === "grid" ? "min-w-0" : "min-w-0 flex-1"}>
                   <p className="truncate text-[9px] font-bold uppercase tracking-[.16em] text-gold" title={`${p.codigo} · ${p.coleccion}`}>{p.codigo} · {p.coleccion}</p>
                   <h3 className={vista === "grid" ? "mt-2 line-clamp-2 min-h-[3.5rem] text-lg font-semibold leading-7" : "mt-1 line-clamp-2 text-lg font-semibold"}>{p.nombre}</h3>
-                  <p className={vista === "grid" ? "mt-2 line-clamp-3 min-h-[4.5rem] text-sm leading-6 text-muted-foreground" : "mt-2 line-clamp-2 text-sm leading-6 text-muted-foreground"}>{p.descripcion || "Consulta los detalles de este modelo."}</p>
-                  {p.precioDesde ? <p className="mt-3 text-sm font-semibold">{p.precioDesde}</p> : null}
+                  {p.precioDesde ? <p className={vista === "grid" ? "mt-4 text-sm font-semibold" : "mt-3 text-sm font-semibold"}>{p.precioDesde}</p> : null}
                 </div>
                 <div className={vista === "grid" ? "mt-auto grid grid-cols-2 gap-2 pt-5" : "grid grid-cols-2 gap-2 sm:w-[min(100%,22rem)] sm:shrink-0"}>
                   {p.estado === "Publicado" && catalogoConfig?.slug ? <a href={`/${catalogoConfig.slug}/${p.slug}`} target="_blank" rel="noreferrer" className="inline-flex min-w-0 items-center justify-center gap-1.5 rounded-lg border border-border px-2.5 py-2.5 text-center text-xs font-semibold transition-colors hover:border-gold/40 hover:bg-gold/5"><ExternalLink className="size-3.5 shrink-0" /> Público</a> : null}
