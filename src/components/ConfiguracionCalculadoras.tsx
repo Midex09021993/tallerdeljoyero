@@ -22,6 +22,7 @@ import {
 } from "@/lib/calculadoras-config";
 import { useConfigSistema, useGuardarConfigSistema } from "@/lib/taller-db";
 import { useSesion } from "@/lib/auth";
+import type { Json } from "@/integrations/supabase/types";
 
 const inputCls =
   "h-10 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-primary";
@@ -209,19 +210,19 @@ function ConfiguracionCalculadorasAdmin() {
 
   const [abierta, setAbierta] = useState<string | null>(null);
 
-  async function guardarSeccion(clave: string, valor: any, nombre: string) {
+  async function guardarSeccion<T>(clave: string, valor: T, nombre: string) {
     try {
-      await guardar.mutateAsync({ clave, valor });
+      await guardar.mutateAsync({ clave, valor: JSON.parse(JSON.stringify(valor)) as Json });
       toast.success(`${nombre} guardada`);
     } catch {
       toast.error(`No se pudo guardar ${nombre.toLowerCase()}`);
     }
   }
 
-  async function restaurarSeccion(clave: string, valor: any, setter: (v: any) => void, nombre: string) {
+  async function restaurarSeccion<T>(clave: string, valor: T, setter: (v: T) => void, nombre: string) {
     setter(clonar(valor));
     try {
-      await guardar.mutateAsync({ clave, valor });
+      await guardar.mutateAsync({ clave, valor: JSON.parse(JSON.stringify(valor)) as Json });
       toast.success(`${nombre} restaurada`);
     } catch {
       toast.error(`No se pudo restaurar ${nombre.toLowerCase()}`);

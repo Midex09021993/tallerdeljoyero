@@ -38,6 +38,17 @@ export type CatalogoProductoEditor = {
   mostrar_ficha_tecnica: boolean;
 };
 
+type CatalogoNubeArchivo = { nombre: string; ruta: string; categoria: string; bytes: number; origen: "supabase" | "nas"; actualizado: string | null };
+
+function esCatalogoNubeArchivo(value: unknown): value is CatalogoNubeArchivo {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const archivo = value as Record<string, unknown>;
+  return typeof archivo["nombre"] === "string" && typeof archivo["ruta"] === "string"
+    && typeof archivo["categoria"] === "string" && typeof archivo["bytes"] === "number"
+    && (archivo["origen"] === "supabase" || archivo["origen"] === "nas")
+    && (archivo["actualizado"] === null || typeof archivo["actualizado"] === "string");
+}
+
 type Props = {
   open: boolean;
   producto: CatalogoProductoEditor | null;
@@ -177,14 +188,14 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
     setProyectoNube(initialProject ?? null);
     if (producto?.id) {
       void (async () => {
-        const { data, error: projectError } = await (supabase as any).from("catalogo_proyectos_nube")
+        const { data, error: projectError } = await supabase.from("catalogo_proyectos_nube")
           .select("carpeta, archivos").eq("producto_id", producto.id).maybeSingle();
         if (projectError) {
           console.warn("[Catálogo] No se pudo consultar el proyecto vinculado de Mi Nube.", projectError.message);
           return;
         }
         if (data && typeof data.carpeta === "string" && Array.isArray(data.archivos)) {
-          setProyectoNube({ carpeta: data.carpeta, archivos: data.archivos });
+          setProyectoNube({ carpeta: data.carpeta, archivos: data.archivos.filter(esCatalogoNubeArchivo) });
         }
       })();
     }
@@ -382,7 +393,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
       if (proyectoNube && productoIdGuardado) {
         const { data: authData, error: authError } = await supabase.auth.getUser();
         if (authError || !authData.user) throw new Error("La ficha se guardó, pero no se pudo verificar la sesión para vincular Mi Nube.");
-        const { error: linkError } = await (supabase as any).from("catalogo_proyectos_nube").upsert({
+        const { error: linkError } = await supabase.from("catalogo_proyectos_nube").upsert({
           producto_id: productoIdGuardado, participante_id: participanteId, usuario_id: authData.user.id,
           carpeta: proyectoNube.carpeta, archivos: proyectoNube.archivos,
         }, { onConflict: "producto_id" });

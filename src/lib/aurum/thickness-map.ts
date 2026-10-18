@@ -50,19 +50,21 @@ const cellKey=(x:number,y:number,z:number,nx:number,ny:number)=>x+y*nx+z*nx*ny;
 
 const AURUM_THICKNESS_CACHE=new Map<string,ThicknessMapResult>();
 const AURUM_THICKNESS_CACHE_LIMIT=16;
-const geometryCacheIdentity=(target:any)=>String(target?.uuid??target?.geometry?.uuid??"anonymous");
+type ThicknessTarget = THREE.Object3D & { geometry?: THREE.BufferGeometry };
+const geometryCacheIdentity=(target:ThicknessTarget | null | undefined)=>String(target?.uuid??target?.geometry?.uuid??"anonymous");
 
-export const disposeAurumThicknessCacheForTarget=(target:any)=>{
+export const disposeAurumThicknessCacheForTarget=(target:THREE.Object3D | null | undefined)=>{
   // Cache keys are created per mesh UUID, but cleanup is invoked with the model
   // root UUID. Collect every descendant mesh identity so unloading a model also
   // releases its cached GPU textures instead of leaving them until eviction.
   const identities=new Set<string>();
-  const collect=(item:any)=>{
-    if(item?.uuid)identities.add(String(item.uuid));
-    if(item?.geometry?.uuid)identities.add(String(item.geometry.uuid));
+  const collect=(item:THREE.Object3D)=>{
+    if(item.uuid)identities.add(String(item.uuid));
+    const geometry=(item as ThicknessTarget).geometry;
+    if(geometry?.uuid)identities.add(String(geometry.uuid));
   };
-  collect(target);
-  target?.traverse?.((child:any)=>collect(child));
+  if (target) collect(target);
+  target?.traverse((child)=>collect(child));
   if(!identities.size)return;
   for(const [key,result] of AURUM_THICKNESS_CACHE){
     const identity=key.slice(0,key.indexOf(":"));
@@ -161,7 +163,7 @@ const gridRayDistance=(origin:THREE.Vector3,direction:THREE.Vector3,grid:CellGri
   return best;
 };
 
-export const buildAurumThicknessMap=(target:any,thicknessScale=1,size=96):ThicknessMapResult|null=>{
+export const buildAurumThicknessMap=(target:ThicknessTarget,thicknessScale=1,size=96):ThicknessMapResult|null=>{
   const cacheKey=`${geometryCacheIdentity(target)}:${size}:${Number(thicknessScale??1).toFixed(4)}`;
   const cached=AURUM_THICKNESS_CACHE.get(cacheKey);
   if(cached)return cached;
@@ -176,8 +178,9 @@ export const buildAurumThicknessMap=(target:any,thicknessScale=1,size=96):Thickn
   }
   const positions:Array<THREE.Vector3>=Array.from({length:position.count},(_,i)=>new THREE.Vector3().fromBufferAttribute(position,i));
   const normals:Array<THREE.Vector3>=Array.from({length:position.count},(_,i)=>new THREE.Vector3().fromBufferAttribute(normal,i).normalize());
-  const triangles:Tri[]=geometry.index
-    ? Array.from({length:Math.floor(geometry.index.count/3)},(_,i)=>[geometry.index.getX(i*3),geometry.index.getX(i*3+1),geometry.index.getX(i*3+2)])
+  const index = geometry.index;
+  const triangles:Tri[]=index
+    ? Array.from({length:Math.floor(index.count/3)},(_,i)=>[index.getX(i*3),index.getX(i*3+1),index.getX(i*3+2)])
     : Array.from({length:Math.floor(position.count/3)},(_,i)=>[i*3,i*3+1,i*3+2]);
   // Spatial thickness baking is intentionally skipped for very dense gems.
   // The scalar local-bounds thickness remains active, so a large CAD stone never

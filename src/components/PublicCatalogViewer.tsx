@@ -11,10 +11,11 @@ import { MATERIALES, GEMAS } from "@/lib/aurum/catalog";
 import { getAurumHdriUrl, getAurumGemHdriUrl } from "@/lib/aurum-photographic-scene-engine";
 
 type Props = { modelUrl: string; modelName: string; materialId: string; gemId: string };
-const classifyMesh = (mesh: any): "metal" | "gema" | "otro" => {
-  const attrs = mesh?.userData?.attributes ?? {};
-  const rhino = mesh?.userData?.aurumRhino ?? {};
-  const text = [mesh?.name, rhino?.capa, attrs?.layerName, attrs?.LayerName, mesh?.material?.name]
+const classifyMesh = (mesh: THREE.Mesh): "metal" | "gema" | "otro" => {
+  const attrs = mesh?.userData?.["attributes"] ?? {};
+  const rhino = mesh?.userData?.["aurumRhino"] ?? {};
+  const materialName = Array.isArray(mesh.material) ? mesh.material.map((material) => material.name).join(" ") : mesh.material?.name;
+  const text = [mesh?.name, rhino?.capa, attrs?.layerName, attrs?.LayerName, materialName]
     .map((value) => String(value ?? "")).join(" ").toLowerCase();
   if (rhino?.categoria === "gema" || /(gema|piedra|gem|diamond|diamante|esmeralda|emerald|rubi|rubí|ruby|zafiro|sapphire|amatista|moissanita)/.test(text)) return "gema";
   if (rhino?.categoria === "metal" || /(metal|oro|gold|plata|silver|platino|platinum|acero|steel)/.test(text)) return "metal";
@@ -36,12 +37,12 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId }: 
     const host = hostRef.current;
     if (!host) return;
     let cancelled = false;
-    let renderer: any = null;
-    let scene: any = null;
-    let camera: any = null;
-    let controls: any = null;
+    let renderer: THREE.WebGLRenderer | null = null;
+    let scene: THREE.Scene | null = null;
+    let camera: THREE.PerspectiveCamera | null = null;
+    let controls: OrbitControls | null = null;
     let model: THREE.Object3D | null = null;
-    let loop: any = null;
+    let loop: ReturnType<typeof startAurumViewerLoop> | null = null;
     let resizeObserver: ResizeObserver | null = null;
     let environment: THREE.Texture | null = null;
     let gemEnvironment: THREE.Texture | null = null;
@@ -53,24 +54,25 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId }: 
       if (!model) return;
       const metal = MATERIALES.find((item) => item.id === materialIdRef.current) ?? MATERIALES.find((item) => item.id === "oro18a_pulido")!
       const gem = GEMAS.find((item) => item.id === gemIdRef.current) ?? GEMAS.find((item) => item.id === "diamante_natural")!
-      model.traverse((object: any) => {
+      model.traverse((node) => {
+        const object = node as THREE.Mesh;
         if (!object.isMesh || !object.material) return;
         const family = classifyMesh(object);
         const originalMaterials = Array.isArray(object.material) ? object.material : [object.material];
-        const next = originalMaterials.map((original: any) => {
-          const material = original;
+        const next = originalMaterials.map((original) => {
+          const material = original as THREE.MeshPhysicalMaterial;
           if (family === "metal") {
             applyAurumMetal(material, metalPresetFromConfig(metal));
             material.envMap = environment;
           } else if (family === "gema") {
-            applyAurumGem(material, gemPresetFromConfig(gem), Math.max(.015, Number(object.userData?.aurumOpticalProfile?.thickness ?? 1)));
+            applyAurumGem(material, gemPresetFromConfig(gem), Math.max(.015, Number(object.userData?.["aurumOpticalProfile"]?.thickness ?? 1)));
             material.envMap = gemEnvironment ?? environment;
             material.userData = { ...(material.userData ?? {}), aurumOpticalProfile: gemPresetFromConfig(gem), aurumGemFamily: gem.familia, aurumGemEnvIntensity: gem.envMapIntensity };
           }
           material.needsUpdate = true;
           return material;
         });
-        object.material = Array.isArray(object.material) ? next : next[0];
+        object.material = Array.isArray(object.material) ? next : next[0]!;
       });
       renderRef.current?.();
     };
@@ -79,6 +81,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId }: 
       try {
         const viewer = createAurumWebGLViewer(THREE, host, { pixelRatio: Math.min(window.devicePixelRatio || 1, 1.75), controlsClass: OrbitControls, maxDistance: 100 });
         ({ scene, camera, renderer, controls } = viewer);
+      if (!scene || !camera || !renderer || !controls) throw new Error("No se pudo inicializar la vista pública del modelo.");
         scene.background = new THREE.Color("#f7f6f2");
         scene.add(new THREE.HemisphereLight(0xffffff, 0x77716a, 1.5));
         const key = new THREE.DirectionalLight(0xffffff, 2.1); key.position.set(4, 7, 5); scene.add(key);
@@ -121,15 +124,16 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId }: 
         if (cancelled) return;
         // Give each mesh its own material instance so changing a profile in the
         // public viewer cannot mutate a shared CAD material or another family.
-        model.traverse((object: any) => {
+        model.traverse((node) => {
+          const object = node as THREE.Mesh;
           if (!object.isMesh || !object.material) return;
           object.material = Array.isArray(object.material)
-            ? object.material.map((material: any) => material?.clone ? material.clone() : material)
+            ? object.material.map((material) => material?.clone ? material.clone() : material)
             : (object.material?.clone ? object.material.clone() : object.material);
         });
         model.updateMatrixWorld(true);
         const bounds = new THREE.Box3();
-        model.traverse((object: any) => { if (object.isMesh && object.geometry && object.visible) bounds.expandByObject(object); });
+        model.traverse((node) => { const object = node as THREE.Mesh; if (object.isMesh && object.geometry && object.visible) bounds.expandByObject(object); });
         if (bounds.isEmpty()) throw new Error("El 3DM no contiene mallas visibles para mostrar.");
         const center = bounds.getCenter(new THREE.Vector3());
         model.position.sub(center);
@@ -143,17 +147,17 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId }: 
         camera.far = Math.max(distance + radius * 20, 100);
         camera.lookAt(0, 0, 0);
         camera.updateProjectionMatrix();
-        controls.target.set(0, 0, 0);
-        controls.minDistance = radius * .6;
-        controls.maxDistance = radius * 12;
-        controls.enablePan = false;
-        controls.enableRotate = true;
-        controls.enableZoom = true;
-        controls.update();
+        controls!.target.set(0, 0, 0);
+        controls!.minDistance = radius * .6;
+        controls!.maxDistance = radius * 12;
+        controls!.enablePan = false;
+        controls!.enableRotate = true;
+        controls!.enableZoom = true;
+        controls!.update();
         scene.add(model);
         modelRef.current = model;
         applyProfiles();
-        loop = startAurumViewerLoop({ node: host, camera, renderer, controls }, () => renderer.render(scene, camera), { progressiveFrames: 3 });
+        loop = startAurumViewerLoop({ node: host, camera: camera!, renderer: renderer!, controls: controls! }, () => renderer!.render(scene!, camera!), { progressiveFrames: 3 });
         renderRef.current = () => loop?.converge?.(3);
         resizeObserver = new ResizeObserver(() => {
           if (!host || !camera || !renderer) return;
@@ -172,10 +176,11 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId }: 
       cancelled = true;
       loop?.stop?.();
       resizeObserver?.disconnect();
-      if (model) model.traverse((object: any) => {
+      if (model) model.traverse((node) => {
+        const object = node as THREE.Mesh;
         object.geometry?.dispose?.();
         const materials = Array.isArray(object.material) ? object.material : [object.material];
-        materials.forEach((material: any) => material?.dispose?.());
+        materials.forEach((material) => material?.dispose?.());
       });
       if (renderer) disposeAurumViewer({ node: host, renderer, controls, ...(resizeObserver ? { observer: resizeObserver } : {}) });
       if (environment && environment !== roomEnvironmentTexture) environment.dispose?.();
@@ -192,13 +197,14 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId }: 
     if (!model) return;
     const metal = MATERIALES.find((item) => item.id === materialId) ?? MATERIALES.find((item) => item.id === "oro18a_pulido")!;
     const gem = GEMAS.find((item) => item.id === gemId) ?? GEMAS.find((item) => item.id === "diamante_natural")!;
-    model.traverse((object: any) => {
+    model.traverse((node) => {
+        const object = node as THREE.Mesh;
       if (!object.isMesh || !object.material) return;
       const family = classifyMesh(object);
       const materials = Array.isArray(object.material) ? object.material : [object.material];
-      materials.forEach((material: any) => {
+      materials.forEach((material) => {
         if (family === "metal") applyAurumMetal(material, metalPresetFromConfig(metal));
-        if (family === "gema") applyAurumGem(material, gemPresetFromConfig(gem), Math.max(.015, Number(object.userData?.aurumOpticalProfile?.thickness ?? 1)));
+        if (family === "gema") applyAurumGem(material, gemPresetFromConfig(gem), Math.max(.015, Number(object.userData?.["aurumOpticalProfile"]?.thickness ?? 1)));
         material.needsUpdate = true;
       });
     });

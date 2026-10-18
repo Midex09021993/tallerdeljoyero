@@ -128,6 +128,7 @@ export type Database = {
           id: string
           nombre: string
           orden: number
+          parent_id: string | null
           participante_id: string
           slug: string
           updated_at: string
@@ -138,6 +139,7 @@ export type Database = {
           id?: string
           nombre: string
           orden?: number
+          parent_id?: string | null
           participante_id: string
           slug: string
           updated_at?: string
@@ -148,6 +150,7 @@ export type Database = {
           id?: string
           nombre?: string
           orden?: number
+          parent_id?: string | null
           participante_id?: string
           slug?: string
           updated_at?: string
