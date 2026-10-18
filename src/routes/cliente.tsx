@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation } from "@tanstack/react-query";
 import { supabasePublic } from "@/integrations/supabase/client";
 import { fmtFecha } from "@/lib/utils";
-import { FichaCotizacionA4 } from "@/components/FichaCotizacionA4";
+import { FichaCotizacionA4, type FichaCotizacionIdentidad } from "@/components/FichaCotizacionA4";
 
 export const Route = createFileRoute("/cliente")({
   head: () => ({
@@ -311,7 +311,7 @@ function SeguimientoCliente() {
                 moneda: cotizacion.moneda,
                 cliente: { nombre: cotizacion.cliente },
                 tallerNombre: nombreTaller || cotizacion.sede,
-                identidad: (cotizacion.identidad_comercial ?? null) as any,
+                identidad: (cotizacion.identidad_comercial ?? null) as FichaCotizacionIdentidad | null,
                 detalles: cotizacion.detalles.map((detalle) => ({ tipo: detalle.tipo, descripcion: detalle.descripcion, cantidad: detalle.cantidad, unidad: detalle.unidad, precio_unitario: detalle.precio_unitario, total_precio: detalle.total_precio })),
                 subtotal: cotizacion.subtotal,
                 descuento: cotizacion.descuento,
