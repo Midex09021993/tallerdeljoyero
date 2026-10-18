@@ -13,7 +13,7 @@ export function createAurumSceneController(
   groundController: any,
   environmentController: any,
   loadEnvironment: (id: string) => void,
-  backgroundElement?: { style: { backgroundColor: string; backgroundImage?: string; backgroundSize?: string; backgroundPosition?: string } }
+  backgroundElement?: { style: { backgroundColor: string; backgroundImage?: string; backgroundSize?: string; backgroundPosition?: string }; dataset?: Record<string, string | undefined> }
 ): AurumSceneController {
   let currentPreset = getAurumScenePreset("ijewelReference");
   let backgroundOverride: string | null = null;
@@ -21,7 +21,7 @@ export function createAurumSceneController(
   const applyBackground = (color:string | null) => {
     if (backgroundElement?.style) {
       backgroundElement.style.backgroundColor = color ?? ("#" + Number(currentPreset.background).toString(16).padStart(6, "0"));
-      backgroundElement.style.backgroundImage = color === null ? studioBackground : "none";
+      backgroundElement.style.backgroundImage = color === null && backgroundElement.dataset?.aurumHasModel !== "true" ? studioBackground : "none";
       backgroundElement.style.backgroundSize = "cover";
       backgroundElement.style.backgroundPosition = "center";
     }
