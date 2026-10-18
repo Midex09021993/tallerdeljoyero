@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Check, ChevronDown, ClipboardList, Factory, ImagePlus, Trash2, Upload, UserRound } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -225,7 +225,7 @@ function NuevoPedido() {
         .eq("especialidades.categoria", "Producción");
       if (error) throw error;
       return (data ?? [])
-        .map((row: any) => Array.isArray(row.especialidades) ? row.especialidades[0]?.nombre : row.especialidades?.nombre)
+        .map((row: { especialidades: { nombre: string } | { nombre: string }[] | null }) => Array.isArray(row.especialidades) ? row.especialidades[0]?.nombre : row.especialidades?.nombre)
         .filter(Boolean);
     },
   });
@@ -278,12 +278,12 @@ function NuevoPedido() {
   }, [clienteBusqueda, clienteId, clientes]);
 
   const hayVariasCoincidencias = !clienteId && clienteBusqueda.trim().length >= 2 && clientes.length > 1;
-  const set = (key: keyof typeof form, value: string) => setForm((f) => ({ ...f, [key]: value }));
+  const set = useCallback((key: keyof typeof form, value: string) => setForm((f) => ({ ...f, [key]: value })), []);
 
   useEffect(() => {
     setCotizacionId("");
     set("contrato", "");
-  }, [sedeId]);
+  }, [sedeId, set]);
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
