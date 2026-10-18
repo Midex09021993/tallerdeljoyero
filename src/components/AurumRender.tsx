@@ -1950,12 +1950,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 <div className="grid grid-cols-4 gap-2.5 pb-1">
                   {materialesVisibles.map(m=><button key={m.id} type="button" title={m.nombre} aria-label={m.nombre}
                     onClick={()=>{setBibliotecaTipo("metales");setMaterialId(m.id);apiRef.current?.material(m)}}
-                    className={"group relative flex flex-col items-center rounded-2xl border p-2 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b99642]/45 "+(materialId===m.id?"border-[#b99642]/55 bg-white shadow-[0_3px_12px_rgba(50,42,20,.09)]":"border-transparent bg-white/25 hover:border-[#d8d1c2] hover:bg-white/80")}>
-                    <span className={"relative grid size-12 place-items-center rounded-full border-2 transition "+(materialId===m.id?"border-[#92743b] shadow-[0_0_10px_rgba(146,116,59,.16)]":"border-black/10 group-hover:border-black/20")}>
-                      <span className="size-10 rounded-full shadow-[inset_-5px_-6px_9px_rgba(0,0,0,.45),inset_5px_4px_8px_rgba(255,255,255,.35),0_3px_8px_rgba(0,0,0,.45)]"
+                    className={"group relative flex flex-col items-center rounded-2xl border p-2.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b99642]/45 "+(materialId===m.id?"border-[#b99642]/60 bg-white shadow-[0_4px_14px_rgba(50,42,20,.10)]":"border-transparent bg-white/25 hover:border-[#d8d1c2] hover:bg-white/85")}>
+                    <span className={"relative grid size-14 place-items-center rounded-full border transition "+(materialId===m.id?"border-[#b99642] shadow-[0_0_0_3px_rgba(185,150,66,.10)]":"border-black/10 group-hover:border-black/20")}>
+                      <span className="size-12 rounded-full shadow-[inset_-5px_-6px_9px_rgba(0,0,0,.45),inset_5px_4px_8px_rgba(255,255,255,.35),0_3px_8px_rgba(0,0,0,.45)]"
                         style={{background:`radial-gradient(circle at 32% 27%,rgba(255,255,255,.78) 0 6%,rgba(255,255,255,.18) 17%,transparent 34%),linear-gradient(145deg,rgba(255,255,255,.42),transparent 34%),${hexColor(m.color)}`}}/>
                     </span>
-                    <span className="mt-2 w-full truncate text-center text-[10px] leading-tight text-[#55534d]">{m.nombre}</span>
+                    {materialId===m.id&&<span className="absolute right-1.5 top-1.5 grid size-4 place-items-center rounded-full bg-[#92743b] text-[9px] font-bold text-white shadow-sm" aria-label="Material seleccionado">✓</span>}
+                    <span className="mt-2.5 w-full truncate text-center text-[11px] font-medium leading-tight text-[#45433e]">{m.nombre}</span>
                   </button>)}
                 </div>
                 <button type="button" aria-expanded={mostrarTodosMateriales} onClick={()=>setMostrarTodosMateriales(v=>!v)} className="mt-3 w-full rounded-lg border border-black/10 bg-black/[.025] px-3 py-2 text-[10px] font-semibold text-[#55534d] transition hover:border-[#92743b]/45 hover:text-[#292824]">
@@ -1971,12 +1972,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 <div className="grid grid-cols-4 gap-2.5 pb-1">
                   {gemasVisibles.map(g=><button key={g.id} type="button" title={g.nombre} aria-label={g.nombre}
                     onClick={()=>{setBibliotecaTipo("gemas");setGemaId(g.id);apiRef.current?.gema(g)}}
-                    className={"group relative flex flex-col items-center rounded-2xl border p-2 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b99642]/45 "+(gemaId===g.id?"border-[#b99642]/55 bg-white shadow-[0_3px_12px_rgba(50,42,20,.09)]":"border-transparent bg-white/25 hover:border-[#d8d1c2] hover:bg-white/80")}>
-                    <span className={"relative grid size-12 place-items-center rounded-full border-2 transition "+(gemaId===g.id?"border-[#92743b] shadow-[0_0_10px_rgba(146,116,59,.16)]":"border-black/10 group-hover:border-white/30")}>
-                      <span className="relative size-10 overflow-hidden rounded-full shadow-[inset_-4px_-5px_9px_rgba(0,0,0,.5),inset_4px_3px_8px_rgba(255,255,255,.28),0_3px_8px_rgba(0,0,0,.5)]"
+                    className={"group relative flex flex-col items-center rounded-2xl border p-2.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b99642]/45 "+(gemaId===g.id?"border-[#b99642]/60 bg-white shadow-[0_4px_14px_rgba(50,42,20,.10)]":"border-transparent bg-white/25 hover:border-[#d8d1c2] hover:bg-white/85")}>
+                    <span className={"relative grid size-14 place-items-center rounded-full border transition "+(gemaId===g.id?"border-[#b99642] shadow-[0_0_0_3px_rgba(185,150,66,.10)]":"border-black/10 group-hover:border-black/20")}>
+                      <span className="relative size-12 overflow-hidden rounded-full shadow-[inset_-4px_-5px_9px_rgba(0,0,0,.5),inset_4px_3px_8px_rgba(255,255,255,.28),0_3px_8px_rgba(0,0,0,.5)]"
                         style={{background:`radial-gradient(circle at 30% 24%,rgba(255,255,255,.82) 0 5%,rgba(255,255,255,.18) 12%,transparent 28%),conic-gradient(from 20deg,rgba(255,255,255,.28),transparent 12%,rgba(0,0,0,.18) 25%,rgba(255,255,255,.22) 38%,transparent 52%,rgba(0,0,0,.2) 67%,rgba(255,255,255,.24) 82%,transparent),${hexColor(g.color)}`}}/>
                     </span>
-                    <span className="mt-1.5 w-full truncate text-center text-[10px] text-[#292824]/70">{g.nombre}</span>
+                    {gemaId===g.id&&<span className="absolute right-1.5 top-1.5 grid size-4 place-items-center rounded-full bg-[#92743b] text-[9px] font-bold text-white shadow-sm" aria-label="Gema seleccionada">✓</span>}
+                    <span className="mt-2.5 w-full truncate text-center text-[11px] font-medium leading-tight text-[#45433e]">{g.nombre}</span>
                   </button>)}
                 </div>
                 <button type="button" aria-expanded={mostrarTodasGemas} onClick={()=>setMostrarTodasGemas(v=>!v)} className="mt-3 w-full rounded-lg border border-black/10 bg-black/[.025] px-3 py-2 text-[10px] font-semibold text-[#55534d] transition hover:border-[#92743b]/45 hover:text-[#292824]">
