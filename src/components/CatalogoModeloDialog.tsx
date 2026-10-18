@@ -188,7 +188,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
         }
       })();
     }
-  }, [open, producto, categorias, initialProject, initialPdf]);
+  }, [open, producto, categorias, initialProject, initialPdf, initialImageUrl, initialName]);
 
   if (!open) return null;
 

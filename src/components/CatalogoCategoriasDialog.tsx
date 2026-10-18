@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Plus, Tags, Trash2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -30,7 +30,7 @@ export function CatalogoCategoriasDialog({ open, participanteId, onClose, onChan
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function cargar() {
+  const cargar = useCallback(async () => {
     if (!participanteId) return;
     setCargando(true);
     setError(null);
@@ -43,11 +43,11 @@ export function CatalogoCategoriasDialog({ open, participanteId, onClose, onChan
     if (queryError) setError(queryError.message);
     else setCategorias((data ?? []) as Categoria[]);
     setCargando(false);
-  }
+  }, [participanteId]);
 
   useEffect(() => {
     if (open) void cargar();
-  }, [open, participanteId]);
+  }, [open, cargar]);
 
   async function crear() {
     const limpio = nombre.trim();
