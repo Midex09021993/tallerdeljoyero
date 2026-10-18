@@ -149,8 +149,9 @@ function InventarioPage() {
 
   useEffect(() => { void cargar(); }, [sedeId, esAdmin]);
 
+  const joyaSeleccionadaId = joyaSeleccionada?.id;
   useEffect(() => {
-    if (!joyaSeleccionada) {
+    if (!joyaSeleccionadaId) {
       setJoyaEventos([]);
       return;
     }
@@ -159,7 +160,7 @@ function InventarioPage() {
     void supabase
       .from("inventario_joya_eventos")
       .select("id,tipo,estado_anterior,estado_nuevo,nota,created_at")
-      .eq("joya_id", joyaSeleccionada.id)
+      .eq("joya_id", joyaSeleccionadaId)
       .eq("sede_id", sedeId ?? "")
       .order("created_at", { ascending: false })
       .limit(50)
@@ -170,7 +171,7 @@ function InventarioPage() {
         setCargandoEventos(false);
       });
     return () => { activo = false; };
-  }, [joyaSeleccionada?.id, sedeId]);
+  }, [joyaSeleccionadaId, sedeId]);
 
   const visibles = useMemo(() => {
     const q = busqueda.trim().toLowerCase();

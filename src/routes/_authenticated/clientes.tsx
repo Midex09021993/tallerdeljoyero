@@ -137,19 +137,20 @@ function ClientesPage() {
     return () => { cargaClientesRef.current += 1; };
   }, [puedeVer, sesion?.participante?.id, esDueno, sedeContextoId]);
 
+  const seleccionadoId = seleccionado?.id;
   useEffect(() => {
-    if (!seleccionado) { setPedidos([]); setCotizaciones([]); return; }
+    if (!seleccionadoId) { setPedidos([]); setCotizaciones([]); return; }
     void (async () => {
       const [ped, cot] = await Promise.all([
-        supabase.from("pedidos").select("id,referencia,estado,importe,fecha_entrega").eq("cliente_id", seleccionado.id).order("created_at", { ascending: false }).limit(8),
+        supabase.from("pedidos").select("id,referencia,estado,importe,fecha_entrega").eq("cliente_id", seleccionadoId).order("created_at", { ascending: false }).limit(8),
         cotizacionesHabilitadas
-          ? supabase.from("cotizaciones").select("id,numero,estado,total").eq("cliente_id", seleccionado.id).order("created_at", { ascending: false }).limit(8)
+          ? supabase.from("cotizaciones").select("id,numero,estado,total").eq("cliente_id", seleccionadoId).order("created_at", { ascending: false }).limit(8)
           : Promise.resolve({ data: [], error: null }),
       ]);
       setPedidos((ped.data ?? []) as PedidoRef[]);
       setCotizaciones((cot.data ?? []) as CotRef[]);
     })();
-  }, [seleccionado?.id, seleccionado?.nombre, cotizacionesHabilitadas]);
+  }, [seleccionadoId, cotizacionesHabilitadas]);
 
   const filtrados = useMemo(() => {
     const q = busca.trim().toLowerCase();

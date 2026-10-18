@@ -12,7 +12,7 @@ type Identidad = {
   direccion: string | null; ciudad: string | null; sitio_web: string | null; color_principal: string | null;
   pie_documento: string | null; pais_codigo: string; pais_nombre: string; moneda_codigo: string; moneda_simbolo: string;
   impuesto_activo: boolean; impuesto_nombre: string; impuesto_tasa: number; impuesto_incluido: boolean;
-  identificador_fiscal_label: string; zona_horaria: string; rnp_bienes: string | null; rpp_servicios: string | null; metadata: Record<string, any> | null;
+  identificador_fiscal_label: string; zona_horaria: string; rnp_bienes: string | null; rpp_servicios: string | null; metadata: Record<string, unknown> | null;
 };
 
 type CuentaBancaria = { banco: string; tipo: string; moneda: string; cuenta: string; cci: string; titular: string; activa: boolean };

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { FileText, Save } from "lucide-react";
 import { toast } from "sonner";
 import { Panel } from "@/components/AppShell";
@@ -125,7 +125,7 @@ export function ConfiguracionContratos() {
 
   const puedeEditar = Boolean(sesion?.esDueno || sesion?.roles.includes("gerente"));
 
-  async function cargarIdentidades() {
+  const cargarIdentidades = useCallback(async () => {
     setCargando(true);
     setErrorTabla(false);
     let query = supabase
@@ -145,13 +145,13 @@ export function ConfiguracionContratos() {
     }
     const filas = (data ?? []) as Identidad[];
     setIdentidades(filas);
-    if (!identidadId && filas[0]) setIdentidadId(filas[0].id);
+    setIdentidadId((actual) => actual || filas[0]?.id || "");
     setCargando(false);
-  }
+  }, [sesion?.esDueno, sesion?.participante?.id]);
 
   useEffect(() => {
     if (puedeEditar) void cargarIdentidades();
-  }, [puedeEditar]);
+  }, [puedeEditar, cargarIdentidades]);
 
   useEffect(() => {
     if (!identidadId) return;

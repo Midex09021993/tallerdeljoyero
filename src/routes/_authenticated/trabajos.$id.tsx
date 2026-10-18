@@ -316,7 +316,7 @@ function TrabajoOperativoPage() {
     },
   });
 
-  const archivosPedido = fichaArchivos.archivos ?? [];
+  const archivosPedido = useMemo(() => fichaArchivos.archivos ?? [], [fichaArchivos.archivos]);
   const imagenesReferencia = useMemo(() => archivosPedido.filter((archivo) => {
     const nombre = String(archivo.nombre ?? "").toLowerCase();
     const tipo = String(archivo.tipo ?? "").toLowerCase();

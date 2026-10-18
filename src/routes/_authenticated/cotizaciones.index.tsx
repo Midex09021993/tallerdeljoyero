@@ -255,7 +255,7 @@ function CotizacionesPage() {
     }, termino ? 250 : 0);
 
     return () => window.clearTimeout(timer);
-  }, [busquedaCliente, puedeGestionarCotizaciones, sesion?.participante?.id, form.cliente_id, esDueno, sedeFiltro]);
+  }, [busquedaCliente, puedeGestionarCotizaciones, sesion?.participante?.id, sesion?.participante?.sede_id, form.cliente_id, esDueno, sedeFiltro]);
 
   // Una cotización es una entidad comercial; sus versiones son historial.
   // El listado muestra únicamente la versión vigente (la de mayor número)
