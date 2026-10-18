@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Camera, ChevronRight, Gem, Layers3, Lightbulb, SlidersHorizontal, Sparkles, Boxes } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { AURUM_PHOTOGRAPHIC_PROFILES } from "@/lib/aurum-photographic-scene-engine";
 import { AURUM_LIGHTING_RENDER_PRESETS } from "@/lib/aurum-lighting-engine";
 import { AURUM_RENDER_QUALITY, AURUM_HDRI_LIBRARY } from "@/lib/aurum-scene-engine";
@@ -8,7 +9,7 @@ import "@/lib/aurum/latin-gem-catalog";
 
 type Section = "escenas" | "hdri" | "iluminacion" | "materiales" | "gemas" | "camara" | "post" | "calidad";
 
-const sections: {id:Section; label:string; description:string; icon:any}[] = [
+const sections: {id:Section; label:string; description:string; icon:LucideIcon}[] = [
   {id:"escenas",label:"Escenas",description:"Ambientes fotográficos",icon:Layers3},
   {id:"hdri",label:"HDRI",description:"Entornos de reflexión",icon:Sparkles},
   {id:"iluminacion",label:"Iluminación",description:"Fuentes y rigs",icon:Lightbulb},
