@@ -51,15 +51,24 @@ type CatalogoConfiguracionDialogProps = {
   onSaved: () => void;
 };
 
-function esArchivoProyectoNube(value: unknown): value is ProyectoNubeInicial["archivos"][number] {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+function normalizarArchivoProyectoNube(value: unknown): ProyectoNubeInicial["archivos"][number] | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const archivo = value as Record<string, unknown>;
-  return typeof archivo["nombre"] === "string" &&
-    typeof archivo["ruta"] === "string" &&
-    typeof archivo["categoria"] === "string" &&
-    typeof archivo["bytes"] === "number" &&
-    (archivo["origen"] === "nas" || archivo["origen"] === "supabase") &&
-    (typeof archivo["actualizado"] === "string" || archivo["actualizado"] === null);
+  if (
+    typeof archivo["nombre"] !== "string" ||
+    typeof archivo["ruta"] !== "string" ||
+    typeof archivo["categoria"] !== "string" ||
+    typeof archivo["bytes"] !== "number" ||
+    (archivo["origen"] !== "nas" && archivo["origen"] !== "supabase")
+  ) return null;
+  return {
+    nombre: archivo["nombre"],
+    ruta: archivo["ruta"],
+    categoria: archivo["categoria"],
+    bytes: archivo["bytes"],
+    origen: archivo["origen"],
+    actualizado: typeof archivo["actualizado"] === "string" ? archivo["actualizado"] : null,
+  };
 }
 
 function normalizarEnlaceCarrusel(value: unknown): EnlaceCarrusel | null {
@@ -137,7 +146,7 @@ function CatalogoPage() {
         else setPdfDesdeMiNube(null);
         const proyecto = parsed?.proyecto_nube;
         if (proyecto && typeof proyecto.carpeta === "string" && Array.isArray(proyecto.archivos)) {
-          const archivos = proyecto.archivos.filter(esArchivoProyectoNube);
+          const archivos = proyecto.archivos.map(normalizarArchivoProyectoNube).filter((archivo): archivo is ProyectoNubeInicial["archivos"][number] => archivo !== null);
           setProyectoDesdeMiNube({ carpeta: proyecto.carpeta, archivos });
         } else setProyectoDesdeMiNube(null);
         setModeloEditando(null);
