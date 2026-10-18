@@ -13,12 +13,18 @@ export function createAurumSceneController(
   groundController: any,
   environmentController: any,
   loadEnvironment: (id: string) => void,
-  backgroundElement?: { style: { backgroundColor: string } }
+  backgroundElement?: { style: { backgroundColor: string; backgroundImage?: string; backgroundSize?: string; backgroundPosition?: string } }
 ): AurumSceneController {
   let currentPreset = getAurumScenePreset("ijewelReference");
   let backgroundOverride: string | null = null;
+  const studioBackground = "radial-gradient(ellipse at 50% 38%, rgba(255,255,255,.92) 0%, rgba(250,244,234,.76) 26%, rgba(240,228,212,.22) 55%, transparent 72%), linear-gradient(180deg, #d7c8b8 0%, #f1e6d8 49%, #cfc0ad 50%, #e8ded0 100%)";
   const applyBackground = (color:string | null) => {
-    if (backgroundElement?.style) backgroundElement.style.backgroundColor = color ?? ("#" + Number(currentPreset.background).toString(16).padStart(6, "0"));
+    if (backgroundElement?.style) {
+      backgroundElement.style.backgroundColor = color ?? ("#" + Number(currentPreset.background).toString(16).padStart(6, "0"));
+      backgroundElement.style.backgroundImage = color === null ? studioBackground : "none";
+      backgroundElement.style.backgroundSize = "cover";
+      backgroundElement.style.backgroundPosition = "center";
+    }
     renderer.setClearColor(0x000000, 0);
   };
 
@@ -37,32 +43,28 @@ export function createAurumSceneController(
       // SceneController es la única autoridad para exposición, intensidad y rotación del environment.
       renderer.toneMapping = id === "ijewelReference" ? THREE.ACESFilmicToneMapping : THREE.AgXToneMapping;
       renderer.toneMappingExposure = photo.exposure;
-      // El controlador de Environment es la autoridad para orientación e intensidad.
-      // Mantenemos el mismo resultado visual y evitamos duplicar estado en Scene.
       environmentController?.setIntensity?.(photo.environmentIntensity);
       environmentController?.setRotation?.(Math.PI * photo.environmentRotation);
-      // Keep the photographic background outside the AgX/composer response.
-      // iJewel separates background tonemapping from the metal/gem response;
-      // this preserves a true white product sweep while the jewelry keeps its
-      // HDR reflections, LUT and tone mapping.
+      // The studio sweep is a CSS backdrop behind the transparent WebGL canvas.
+      // It does not enter the Three.js scene, HDRI lighting, gem refraction or render targets.
       scene.background = null;
       if (backgroundOverride !== null) {
         applyBackground(backgroundOverride);
       } else if (opts?.transparent || id === "transparente") {
-        if (backgroundElement?.style) backgroundElement.style.backgroundColor = "transparent";
+        if (backgroundElement?.style) {
+          backgroundElement.style.backgroundColor = "transparent";
+          backgroundElement.style.backgroundImage = "none";
+        }
         renderer.setClearColor(0x000000, 0);
       } else {
-        const hex = Number(preset.background).toString(16).padStart(6, "0");
-        if (backgroundElement?.style) backgroundElement.style.backgroundColor = "#" + hex;
-        renderer.setClearColor(0x000000, 0);
+        applyBackground(null);
       }
 
       groundController.updateFromPreset(preset);
       if (id !== "transparente") {
         loadEnvironment(photo.environmentKey);
       } else {
-        // La escena transparente conserva el último environment válido
-        // para mantener reflejos de producto en los materiales.
+        // Keep the last valid environment for product reflections in transparent mode.
       }
       return preset;
     },
