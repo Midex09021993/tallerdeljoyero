@@ -44,7 +44,10 @@ export function AnaliticaAurumLab() {
   const { data, isLoading, error, refetch, isFetching } = useQuery<AnalyticsSummary>({
     queryKey: ["analitica-aurum-lab", 30],
     queryFn: async () => {
-      const { data, error } = await (supabase as any).rpc("obtener_analitica_aurum_lab", { _dias: 30 });
+      const analyticsClient = supabase as unknown as {
+        rpc: (name: string, args: { _dias: number }) => Promise<{ data: unknown; error: { message: string } | null }>;
+      };
+      const { data, error } = await analyticsClient.rpc("obtener_analitica_aurum_lab", { _dias: 30 });
       if (error) throw new Error(error.message);
       return data as AnalyticsSummary;
     },

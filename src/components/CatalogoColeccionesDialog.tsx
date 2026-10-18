@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ChangeEvent } from "react";
 import { ImagePlus, Pencil, Plus, Trash2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -44,7 +44,7 @@ export function CatalogoColeccionesDialog({
   const [subiendoImagen, setSubiendoImagen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function cargar() {
+  const cargar = useCallback(async () => {
     if (!participanteId) return;
     const { data, error: collectionError } = await supabase
       .from("catalogo_colecciones")
@@ -73,13 +73,13 @@ export function CatalogoColeccionesDialog({
     }
     setColecciones((data ?? []) as Coleccion[]);
     setAsignaciones(next);
-  }
+  }, [participanteId]);
 
   useEffect(() => {
     if (!open) return;
     setError(null);
     void cargar().catch((e) => setError(e instanceof Error ? e.message : "No se pudieron cargar las colecciones."));
-  }, [open, participanteId]);
+  }, [open, cargar]);
 
   function resetForm() {
     setEditando(null);
@@ -103,7 +103,7 @@ export function CatalogoColeccionesDialog({
     setError(null);
   }
 
-  async function subirImagenPortada(event: any) {
+  async function subirImagenPortada(event: ChangeEvent<HTMLInputElement>) {
     const file = (event.target.files?.[0] ?? null) as File | null;
     event.target.value = "";
     if (!file) return;
