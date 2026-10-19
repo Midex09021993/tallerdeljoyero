@@ -1559,10 +1559,15 @@ function MiNubePage() {
                                   try {
                                     const { data, error: urlError } = await supabase.storage.from(BUCKET).createSignedUrl(archivo.ruta, 3 * 24 * 60 * 60);
                                     if (urlError || !data?.signedUrl) throw urlError ?? new Error("No se pudo crear el enlace del visor.");
-                                    const destino = new URL("/aurum-render-public", window.location.origin);
-                                    destino.searchParams.set("modeloCompartido", data.signedUrl);
-                                    destino.searchParams.set("nombre", nombreVisible(archivo.nombre));
-                                    const url = destino.toString();
+                                    const tokenBytes = crypto.getRandomValues(new Uint8Array(12));
+                                    const token = Array.from(tokenBytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+                                    const { error: saveError } = await supabase.rpc("crear_enlace_visor_3d", {
+                                      _token: token,
+                                      _modelo_url: data.signedUrl,
+                                      _nombre: nombreVisible(archivo.nombre),
+                                    });
+                                    if (saveError) throw saveError;
+                                    const url = new URL(`/v/${token}`, window.location.origin).toString();
                                     setEnlaceVisorArchivo({ ruta: archivo.ruta, url });
                                     try {
                                       await navigator.clipboard.writeText(url);
