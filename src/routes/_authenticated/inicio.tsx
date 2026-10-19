@@ -312,24 +312,24 @@ function Inicio() {
       titulo="Centro de control"
       subtitulo={sesion?.sede?.nombre ? `Sede ${sesion.sede.nombre} · ${rolEtiqueta[sesion.rolPrincipal]}` : "Visión general del taller"}
       encabezadoMovilCompacto
-      acciones={
-        <>
-          {sesion?.esAdmin ? (
-            <button
-              type="button"
-              onClick={abrirBienvenida}
-              className="inline-flex min-h-11 items-center justify-center rounded-xl border border-gold/30 bg-card px-3 py-2.5 text-center text-xs font-semibold text-gold-deep shadow-card transition hover:bg-gold/5 hover:shadow-raised max-lg:w-[calc(50%-0.25rem)]"
-            >
-              Ver inducción
-            </button>
-          ) : null}
-          <Link to="/pedidos" className="inline-flex min-h-11 items-center justify-center rounded-xl border border-gold/30 bg-gold px-3 py-2.5 text-center text-xs font-semibold text-gold-foreground shadow-card transition hover:shadow-raised max-lg:w-[calc(50%-0.25rem)]">Ver pedidos</Link>
-          <Link to="/pedidos/nuevo" className="inline-flex min-h-11 items-center justify-center rounded-xl border border-gold/30 bg-card px-3 py-2.5 text-center text-xs font-semibold text-gold-deep shadow-card transition hover:bg-gold/5 hover:shadow-raised max-lg:w-[calc(50%-0.25rem)]">Nuevo pedido</Link>
-          {capacidadesSet.has("Cotizaciones") ? <Link to="/cotizaciones" className="rounded-xl border border-gold/30 bg-card px-4 py-2.5 text-xs font-semibold text-gold-deep shadow-card transition hover:bg-gold/5 hover:shadow-raised">Nueva cotización</Link> : null}
-        </>
-      }
     >
       <div className="space-y-6">
+        <section aria-label="Accesos del taller" className="rounded-2xl border border-gold/20 bg-card p-3 shadow-card sm:p-4">
+          <div className="flex flex-wrap items-center gap-2">
+            {sesion?.esAdmin ? (
+              <button
+                type="button"
+                onClick={abrirBienvenida}
+                className="inline-flex min-h-11 items-center justify-center rounded-xl border border-gold/30 bg-gold px-4 py-2.5 text-center text-xs font-semibold text-gold-foreground shadow-card transition hover:shadow-raised max-lg:flex-1"
+              >
+                Estado del taller
+              </button>
+            ) : null}
+            <Link to="/pedidos" className="inline-flex min-h-11 items-center justify-center rounded-xl border border-gold/30 bg-card px-4 py-2.5 text-center text-xs font-semibold text-gold-deep shadow-card transition hover:bg-gold/5 hover:shadow-raised max-lg:flex-1">Ver pedidos</Link>
+            <Link to="/pedidos/nuevo" className="inline-flex min-h-11 items-center justify-center rounded-xl border border-gold/30 bg-card px-4 py-2.5 text-center text-xs font-semibold text-gold-deep shadow-card transition hover:bg-gold/5 hover:shadow-raised max-lg:flex-1">Nuevo pedido</Link>
+            {capacidadesSet.has("Cotizaciones") ? <Link to="/cotizaciones" className="inline-flex min-h-11 items-center justify-center rounded-xl border border-gold/30 bg-card px-4 py-2.5 text-center text-xs font-semibold text-gold-deep shadow-card transition hover:bg-gold/5 hover:shadow-raised max-lg:flex-1">Nueva cotización</Link> : null}
+          </div>
+        </section>
         <section className="rounded-3xl border border-gold/20 bg-card shadow-card">
           <div className="flex flex-col gap-3 border-b border-border p-4 lg:flex-row lg:items-center lg:justify-between lg:gap-4 lg:p-6">
             <div className="min-w-0">
