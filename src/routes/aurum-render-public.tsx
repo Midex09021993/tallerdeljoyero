@@ -1,30 +1,102 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { AurumRenderShell } from "@/components/AurumRenderShell";
-import { AurumRender } from "@/components/AurumRender";
+import { Box, AlertCircle } from "lucide-react";
+import { PublicCatalogViewer } from "@/components/PublicCatalogViewer";
 
 export const Route = createFileRoute("/aurum-render-public")({
   head: () => ({
     meta: [
-      { title: "AURUM RENDER — Estudio de Joyería 3D" },
+      { title: "Visor 3D compartido — Taller del Joyero" },
       {
         name: "description",
-        content: "Estudio profesional de visualización 3D de joyería de Aurum Lab.",
+        content: "Visualizador 3D público para revisar una joya compartida.",
       },
-      { property: "og:title", content: "AURUM RENDER — Estudio de Joyería 3D" },
+      { property: "og:title", content: "Visor 3D compartido — Taller del Joyero" },
       {
         property: "og:description",
-        content: "Visualiza tu diseño de joyería con materiales y ambientes profesionales.",
+        content: "Abre y gira el modelo 3D compartido sin entrar a Aurum Render.",
       },
     ],
   }),
-  component: AurumRenderPublicPage,
+  component: VisorJoyaCompartidaPage,
 });
 
-function AurumRenderPublicPage() {
-  const [shared, setShared] = useState(false);
+function VisorJoyaCompartidaPage() {
+  const [modelUrl, setModelUrl] = useState<string | null>(null);
+  const [modelName, setModelName] = useState("joya-compartida");
+  const [linkInvalido, setLinkInvalido] = useState(false);
+
   useEffect(() => {
-    setShared(new URLSearchParams(window.location.search).has("modeloCompartido"));
+    const params = new URLSearchParams(window.location.search);
+    const sharedUrl = params.get("modeloCompartido");
+    const name = (params.get("nombre") || "joya-compartida")
+      .replace(/[^a-z0-9-_]/gi, "-")
+      .slice(0, 80) || "joya-compartida";
+
+    if (!sharedUrl) {
+      setLinkInvalido(true);
+      return;
+    }
+
+    try {
+      const target = new URL(sharedUrl);
+      const configured = (import.meta.env as { VITE_SUPABASE_URL?: string }).VITE_SUPABASE_URL;
+      if (
+        !configured ||
+        target.origin !== new URL(configured).origin ||
+        !target.pathname.includes("/storage/v1/object/sign/mi-nube/")
+      ) {
+        setLinkInvalido(true);
+        return;
+      }
+      setModelName(name.endsWith(".glb") ? name : `${name}.glb`);
+      setModelUrl(sharedUrl);
+    } catch {
+      setLinkInvalido(true);
+    }
   }, []);
-  return shared ? <AurumRender embedded /> : <AurumRenderShell />;
+
+  return (
+    <main className="min-h-screen bg-[#f7f6f2] text-[#292824]">
+      <header className="flex min-h-[68px] items-center justify-between gap-3 border-b border-[#e7e2d8] bg-white px-4 py-3 sm:px-7">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#d4af37]/15 text-[#8b6b16]">
+            <Box className="size-5" />
+          </span>
+          <div className="min-w-0">
+            <h1 className="truncate text-sm font-semibold sm:text-base">{modelName.replace(/\.glb$/i, "")}</h1>
+            <p className="text-[11px] text-[#77756f]">Visor 3D compartido · Taller del Joyero</p>
+          </div>
+        </div>
+        <span className="shrink-0 rounded-full border border-[#e7e2d8] px-3 py-1 text-[10px] font-medium uppercase tracking-wider text-[#77756f]">
+          Solo visualización
+        </span>
+      </header>
+      <section className="mx-auto max-w-7xl p-3 sm:p-5">
+        {linkInvalido ? (
+          <div className="mx-auto mt-12 max-w-lg rounded-2xl border border-[#e7e2d8] bg-white p-6 text-center shadow-sm">
+            <AlertCircle className="mx-auto size-8 text-[#a66b26]" />
+            <h2 className="mt-3 text-base font-semibold">Enlace no válido</h2>
+            <p className="mt-2 text-sm text-[#77756f]">Este enlace no contiene un modelo compartido válido. Pide a quien te lo envió que genere uno nuevo desde Mi Nube.</p>
+          </div>
+        ) : modelUrl ? (
+          <div className="h-[calc(100vh-112px)] min-h-[420px] overflow-hidden rounded-2xl border border-[#e7e2d8] bg-white shadow-sm">
+            <PublicCatalogViewer
+              modelUrl={modelUrl}
+              modelName={modelName}
+              materialId="oro18a_pulido"
+              gemId="diamante_natural"
+            />
+          </div>
+        ) : (
+          <div className="grid h-[65vh] min-h-[360px] place-items-center rounded-2xl border border-[#e7e2d8] bg-white text-sm text-[#77756f]">
+            Preparando el visor 3D…
+          </div>
+        )}
+      </section>
+      <footer className="px-4 pb-4 text-center text-[11px] text-[#8a857c]">
+        Visualización independiente · No necesitas acceder a Aurum Render
+      </footer>
+    </main>
+  );
 }
