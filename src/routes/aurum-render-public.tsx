@@ -58,6 +58,13 @@ function VisorJoyaCompartidaPage() {
     }
   }, []);
 
+  const displayName = modelName
+    .replace(/\\.(glb|gltf|3dm|obj|stl|fbx)$/i, "")
+    .replace(/^[0-9a-f]{8}-[0-9a-f-]{27,}[-_]?/i, "")
+    .replace(/[-_]+/g, " ")
+    .replace(/\\s+/g, " ")
+    .trim() || "Joya compartida";
+
   return (
     <main className="min-h-screen bg-[#f7f6f2] text-[#292824]">
       <header className="flex min-h-[68px] items-center justify-between gap-3 border-b border-[#e7e2d8] bg-white px-4 py-3 sm:px-7">
