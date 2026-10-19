@@ -29,6 +29,7 @@ export function CatalogoCategoriasDialog({ open, participanteId, onClose, onChan
   const [cargando, setCargando] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [categoriaPendienteEliminar, setCategoriaPendienteEliminar] = useState<Categoria | null>(null);
 
   const cargar = useCallback(async () => {
     if (!participanteId) return;
@@ -108,7 +109,6 @@ export function CatalogoCategoriasDialog({ open, participanteId, onClose, onChan
       setError(`No puedes eliminar "${item.nombre}" porque tiene ${count} modelo(s) asociado(s). Ocúltala para conservar el historial.`);
       return;
     }
-    if (!window.confirm(`¿Eliminar la categoría "${item.nombre}"?`)) return;
     const { error: deleteError } = await supabase
       .from("catalogo_categorias")
       .delete()
@@ -169,7 +169,7 @@ export function CatalogoCategoriasDialog({ open, participanteId, onClose, onChan
                   <button type="button" onClick={() => void cambiarActivo(item)} className="rounded-lg bg-surface-muted px-2.5 py-1.5 text-[10px] font-semibold">
                     {item.activo ? "Activa" : "Oculta"}
                   </button>
-                  <button type="button" onClick={() => void eliminar(item)} className="rounded-lg p-2 text-muted-foreground hover:bg-destructive/5 hover:text-destructive" aria-label={`Eliminar ${item.nombre}`}>
+                  <button type="button" onClick={() => setCategoriaPendienteEliminar(item)} className="rounded-lg p-2 text-muted-foreground hover:bg-destructive/5 hover:text-destructive" aria-label={`Eliminar ${item.nombre}`}>
                     <Trash2 className="size-4" />
                   </button>
                 </div>
@@ -179,6 +179,18 @@ export function CatalogoCategoriasDialog({ open, participanteId, onClose, onChan
             <p className="rounded-2xl border border-border p-6 text-center text-sm text-muted-foreground">Todavía no hay categorías.</p>
           )}
 
+          {categoriaPendienteEliminar && (
+            <div className="fixed inset-0 z-[80] grid place-items-center bg-black/50 p-4" role="dialog" aria-modal="true" aria-labelledby="categoria-eliminar-title">
+              <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-5 shadow-2xl">
+                <h3 id="categoria-eliminar-title" className="text-base font-semibold">Eliminar categoría</h3>
+                <p className="mt-2 text-sm text-muted-foreground">¿Eliminar la categoría “{categoriaPendienteEliminar.nombre}”? Esta acción no se puede deshacer.</p>
+                <div className="mt-5 flex justify-end gap-2">
+                  <button type="button" onClick={() => setCategoriaPendienteEliminar(null)} className="rounded-xl border border-border px-4 py-2 text-sm font-semibold">Cancelar</button>
+                  <button type="button" onClick={() => { const item = categoriaPendienteEliminar; setCategoriaPendienteEliminar(null); void eliminar(item); }} className="rounded-xl bg-destructive px-4 py-2 text-sm font-semibold text-white">Eliminar</button>
+                </div>
+              </div>
+            </div>
+          )}
           <p className="text-[11px] text-muted-foreground">
             Las categorías principales pueden tener subcategorías. Ocultar una categoría no borra los modelos existentes; cada subcategoría usa la ruta de su categoría principal.
           </p>
