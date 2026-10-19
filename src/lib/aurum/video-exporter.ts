@@ -48,7 +48,7 @@ export async function recordAurumCanvasVideo(
   const stream = output.captureStream(fps);
   let recorder: MediaRecorder;
   try {
-    recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: Math.max(4_000_000, Math.min(100_000_000, width * height * fps * 0.06)) });
+    recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: Math.max(8_000_000, Math.min(100_000_000, width * height * fps * 0.18)) });
   } catch {
     stream.getTracks().forEach((track) => track.stop());
     throw new Error("El navegador detecta MP4, pero no pudo iniciar el codificador.");
