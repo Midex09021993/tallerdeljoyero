@@ -760,7 +760,7 @@ function ControlLine({ label, value, ok }: { label: string; value: string; ok: b
   return <div className="flex items-center justify-between gap-3 rounded-xl bg-surface-muted px-3 py-2.5"><div><p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">{label}</p><p className="mt-0.5 text-xs font-semibold">{value}</p></div><span className={`size-2 rounded-full ${ok ? "bg-emerald-500" : "bg-gold"}`} /></div>;
 }
 
-function calidadFinalResumen(controles: any[]) {
+function calidadFinalResumen(controles: { tipo: string; resultado: string }[]) {
   const final = controles.find((c) => c.tipo === "inspeccion_final");
   return final?.resultado || "Pendiente";
 }
