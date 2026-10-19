@@ -97,7 +97,11 @@ export async function recordAurumCanvasVideo(
       context.fillRect(0, 0, width, height);
       context.imageSmoothingEnabled = true;
       context.imageSmoothingQuality = "high";
-      context.drawImage(source, 0, 0, width, height);
+      const sourceAspect = source.width / Math.max(1, source.height);
+      const outputAspect = width / height;
+      const drawWidth = sourceAspect > outputAspect ? width : height * sourceAspect;
+      const drawHeight = sourceAspect > outputAspect ? width / sourceAspect : height;
+      context.drawImage(source, (width - drawWidth) / 2, (height - drawHeight) / 2, drawWidth, drawHeight);
       options.onProgress?.(Math.min(elapsed, duration), duration);
       if (elapsed >= duration) {
         if (recorder.state !== "inactive") recorder.stop();
