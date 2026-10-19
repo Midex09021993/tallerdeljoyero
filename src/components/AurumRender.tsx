@@ -1200,9 +1200,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           // Render video frames at their requested pixel dimensions, with a small
           // temporal-AA budget per frame. Avoid 32-sample still-image accumulation
           // here: it would make real-time recording drop frames on typical GPUs.
-          const videoRenderScale=Math.min(1.25,Math.sqrt(8_000_000/(videoWidth*videoHeight)));
-          const renderWidth=Math.max(videoWidth,Math.floor(videoWidth*videoRenderScale));
-          const renderHeight=Math.max(videoHeight,Math.floor(videoHeight*videoRenderScale));
+          // Preserve the live viewer's aspect ratio and camera framing. The video
+          // exporter letterboxes this canvas into the requested output dimensions;
+          // resizing the camera to 16:9 was squeezing the jewelry in the live render.
+          const liveAspect=originalAspect>0?originalAspect:originalBufferWidth/Math.max(1,originalBufferHeight);
+          const fitScale=Math.min(videoWidth/originalBufferWidth,videoHeight/originalBufferHeight,1.25);
+          const renderWidth=Math.max(2,Math.floor(originalBufferWidth*fitScale));
+          const renderHeight=Math.max(2,Math.floor(renderWidth/liveAspect));
           const previousFastPath=liveFastPathRef.current;
           const passStates:Array<{pass:any;enabled:boolean}>=(composer?.passes??[]).map((pass:any)=>({pass,enabled:Boolean(pass?.enabled)}));
           let videoTaaPass:any=null;
@@ -1215,8 +1219,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             renderer.setPixelRatio(1);
             (renderer as any).transmissionResolutionScale=1;
             renderer.setSize(renderWidth,renderHeight,false);
-            camara.aspect=renderWidth/renderHeight;
-            camara.updateProjectionMatrix?.();
+            // Keep camera.aspect unchanged: render dimensions are fitted to the
+            // viewer ratio, not forced to the output video's aspect ratio.
             if(composer){
               // Match the live viewer: do not switch to capture/ultra post quality
               // and do not disable live grading/LUT/SSAO/reflection passes for video.
