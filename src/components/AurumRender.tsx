@@ -1188,36 +1188,96 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           const automatic=options.mode!=="manual";
           const duration=Math.max(1,Math.min(20,Number(options.duration)||5));
           const loop:any=viewerLoopRef.current;
+          const originalBufferWidth=sourceCanvas.width;
+          const originalBufferHeight=sourceCanvas.height;
+          const originalPixelRatio=renderer.getPixelRatio?.()||1;
+          const originalCssWidth=originalBufferWidth/originalPixelRatio;
+          const originalCssHeight=originalBufferHeight/originalPixelRatio;
+          const originalAspect=camara.aspect;
+          const originalTransmissionScale=Number((renderer as any).transmissionResolutionScale??1);
+          const videoWidth=Math.max(320,Math.min(3840,Math.round(Number(options.width)||1280)));
+          const videoHeight=Math.max(320,Math.min(2160,Math.round(Number(options.height)||720)));
+          // Render video frames at their requested pixel dimensions, with a small
+          // temporal-AA budget per frame. Avoid 32-sample still-image accumulation
+          // here: it would make real-time recording drop frames on typical GPUs.
+          const videoRenderScale=Math.min(1.25,Math.sqrt(8_000_000/(videoWidth*videoHeight)));
+          const renderWidth=Math.max(videoWidth,Math.floor(videoWidth*videoRenderScale));
+          const renderHeight=Math.max(videoHeight,Math.floor(videoHeight*videoRenderScale));
+          const previousFastPath=liveFastPathRef.current;
+          const passStates:Array<{pass:any;enabled:boolean}>=(composer?.passes??[]).map((pass:any)=>({pass,enabled:Boolean(pass?.enabled)}));
+          let videoTaaPass:any=null;
           try{
             const { recordAurumCanvasVideo } = await import("../lib/aurum/video-exporter");
-            // Use elapsed recording time, not OrbitControls' frame-based autoRotateSpeed.
-            // This makes the automatic turn exactly one revolution at any display refresh rate.
             controles.autoRotate=false;
+            loop?.pause?.();
+            liveFastPathRef.current=false;
+            aplicarPerfilLive();
+            renderer.setPixelRatio(1);
+            (renderer as any).transmissionResolutionScale=1;
+            renderer.setSize(renderWidth,renderHeight,false);
+            camara.aspect=renderWidth/renderHeight;
+            camara.updateProjectionMatrix?.();
+            if(composer && applyPostQuality){
+              applyPostQuality({...renderQuality,pixelRatio:1,qualityId:"ultra"},{capture:true,width:renderWidth,height:renderHeight});
+              videoTaaPass=(composer.passes??[]).find((pass:any)=>pass&&"sampleLevel" in pass&&"accumulateIndex" in pass&&"accumulate" in pass)??null;
+              for(const pass of composer.passes??[]){
+                const name=String(pass?.constructor?.name??"");
+                const keep=name==="RenderPass"||pass===videoTaaPass||name==="OutputPass";
+                if("enabled" in (pass??{})) pass.enabled=keep;
+              }
+              if(videoTaaPass){
+                videoTaaPass.enabled=true;
+                videoTaaPass.accumulate=true;
+                videoTaaPass.sampleLevel=1; // 2 spatial jitter samples per video frame
+                videoTaaPass.accumulateIndex=-1;
+              }
+            }
             loop?.setContinuousRendering?.(true);
-            loop?.converge?.(2);
-            loop?.invalidate?.();
             await recordAurumCanvasVideo(sourceCanvas,{
               width:options.width,height:options.height,fps:options.fps,duration:duration,
               signal:options.signal,onProgress:options.onProgress,
               onFrame:(elapsed,total)=>{
-                if(!automatic || !controlsTarget) return;
-                const angle=(Math.PI*2)*(elapsed/total);
-                const dx=cameraPosition.x-controlsTarget.x;
-                const dz=cameraPosition.z-controlsTarget.z;
-                const cos=Math.cos(angle),sin=Math.sin(angle);
-                camara.position.set(
-                  controlsTarget.x+dx*cos+dz*sin,
-                  cameraPosition.y,
-                  controlsTarget.z-dx*sin+dz*cos,
-                );
-                if(controlsTarget && controles.target) controles.target.copy(controlsTarget);
-                camara.lookAt(controlsTarget);
-                controles.update?.();
-                loop?.renderNow?.();
+                if(automatic && controlsTarget){
+                  const angle=(Math.PI*2)*(elapsed/total);
+                  const dx=cameraPosition.x-controlsTarget.x;
+                  const dz=cameraPosition.z-controlsTarget.z;
+                  const cos=Math.cos(angle),sin=Math.sin(angle);
+                  camara.position.set(
+                    controlsTarget.x+dx*cos+dz*sin,
+                    cameraPosition.y,
+                    controlsTarget.z-dx*sin+dz*cos,
+                  );
+                  controles.target.copy(controlsTarget);
+                  camara.lookAt(controlsTarget);
+                  controles.update?.();
+                }
+                if(videoTaaPass){
+                  videoTaaPass.accumulate=true;
+                  videoTaaPass.accumulateIndex=-1;
+                  // A fresh short AA accumulation for this exact camera pose.
+                  composer.render();
+                  composer.render();
+                }else if(composer){
+                  composer.render();
+                }else{
+                  renderer.render(escena,camara);
+                }
               },
             });
           }finally{
             loop?.setContinuousRendering?.(false);
+            liveFastPathRef.current=previousFastPath;
+            renderer.setPixelRatio(originalPixelRatio);
+            (renderer as any).transmissionResolutionScale=originalTransmissionScale;
+            renderer.setSize(originalCssWidth,originalCssHeight,false);
+            camara.aspect=originalAspect;
+            camara.updateProjectionMatrix?.();
+            if(composer && applyPostQuality){
+              applyPostQuality({...renderQuality,pixelRatio:originalPixelRatio,qualityId:measuredQualityId});
+            }
+            for(const state of passStates){
+              if(state.pass&&"enabled" in state.pass) state.pass.enabled=state.enabled;
+            }
             controles.autoRotate=previousAutoRotate;
             controles.autoRotateSpeed=previousAutoRotateSpeed;
             if(automatic){
@@ -1226,8 +1286,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               if(controlsTarget && controles.target) controles.target.copy(controlsTarget);
               controles.update?.();
             }
+            diamondBvhRuntime?.update();
+            aplicarPerfilLive();
             loop?.invalidate?.();
             loop?.resume?.();
+            loop?.resize?.();
           }
         },
         exportPNG:(options:{width?:number;height?:number;format?:"png"|"jpeg"|"webp";onCapture?:(dataUrl:string)=>void}={})=>{
