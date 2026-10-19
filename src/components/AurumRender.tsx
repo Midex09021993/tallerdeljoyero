@@ -1186,22 +1186,35 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           const previousAutoRotate=Boolean(controles.autoRotate);
           const previousAutoRotateSpeed=Number(controles.autoRotateSpeed ?? 0.65);
           const automatic=options.mode!=="manual";
+          const duration=Math.max(1,Math.min(20,Number(options.duration)||5));
           const loop:any=viewerLoopRef.current;
           try{
             const { recordAurumCanvasVideo } = await import("../lib/aurum/video-exporter");
-            // Automatic mode rotates the live scene; manual mode records the user's camera movements.
-            controles.autoRotate=automatic;
-            // OrbitControls completes one revolution in roughly 60 / speed seconds at 60 Hz.
-            // Match one full 360-degree turn to the selected recording duration.
-            if(automatic) controles.autoRotateSpeed=60/Math.max(1,Math.min(20,Number(options.duration)||5));
-            // The viewer normally sleeps when idle; keep its render loop alive
-            // so auto-rotation advances and each captured frame is different.
+            // Use elapsed recording time, not OrbitControls' frame-based autoRotateSpeed.
+            // This makes the automatic turn exactly one revolution at any display refresh rate.
+            controles.autoRotate=false;
             loop?.setContinuousRendering?.(true);
             loop?.converge?.(2);
             loop?.invalidate?.();
             await recordAurumCanvasVideo(sourceCanvas,{
-              width:options.width,height:options.height,fps:options.fps,duration:options.duration,
+              width:options.width,height:options.height,fps:options.fps,duration:duration,
               signal:options.signal,onProgress:options.onProgress,
+              onFrame:(elapsed,total)=>{
+                if(!automatic || !controlsTarget) return;
+                const angle=(Math.PI*2)*(elapsed/total);
+                const dx=cameraPosition.x-controlsTarget.x;
+                const dz=cameraPosition.z-controlsTarget.z;
+                const cos=Math.cos(angle),sin=Math.sin(angle);
+                camara.position.set(
+                  controlsTarget.x+dx*cos+dz*sin,
+                  cameraPosition.y,
+                  controlsTarget.z-dx*sin+dz*cos,
+                );
+                if(controlsTarget && controles.target) controles.target.copy(controlsTarget);
+                camara.lookAt(controlsTarget);
+                controles.update?.();
+                loop?.renderNow?.();
+              },
             });
           }finally{
             loop?.setContinuousRendering?.(false);
