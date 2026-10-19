@@ -259,9 +259,11 @@ export async function createAurumPostPipeline(
       // Keep bloom restrained on polished jewelry: broad bright halos wash out
       // metal edges and can make gold/silver appear milky. Only applies when bloom
       // is explicitly enabled by the active profile; the default remains disabled.
-      bloomPass.strength=Math.min(0.025,Math.max(0,Number(config.bloomIntensity??.025)));
-      bloomPass.threshold=Math.max(1.8,Number(config.bloomThreshold??1.8));
-      bloomPass.radius=Math.min(0.25,Math.max(0,Number(config.bloomRadius??.25)));
+      // Very restrained bloom for jewelry: prevent broad white fringes on metal.
+      // The default remains off; this only caps intensity when an active profile enables it.
+      bloomPass.strength=Math.min(0.008,Math.max(0,Number(config.bloomIntensity??.008)));
+      bloomPass.threshold=Math.max(2.2,Number(config.bloomThreshold??2.2));
+      bloomPass.radius=Math.min(0.12,Math.max(0,Number(config.bloomRadius??.12)));
     }
     if(gradingPass){
       gradingPass.enabled=!options.capture && Boolean(config.gradeEnabled);
