@@ -64,7 +64,50 @@ function ClientesPage() {
   const [eliminando, setEliminando] = useState(false);
   const [confirmarEliminacion, setConfirmarEliminacion] = useState(false);
   const [form, setForm] = useState({ nombre: "", telefono: "", email: "", fecha_nacimiento: "", notas: "" });
+  const [paisPredeterminadoTelefono, setPaisPredeterminadoTelefono] = useState("PE");
   const [vista, setVista] = useState<"clientes" | "cumpleanos" | "campanas">("clientes");
+
+  useEffect(() => {
+    let vigente = true;
+
+    async function cargarPaisDelTaller() {
+      let participanteId = seleccionado?.participante_id ?? sesion?.participante?.id ?? null;
+
+      // Al crear desde la vista de propietario, la sede debe tener un único participante
+      // activo (la misma regla que aplica el guardado del cliente).
+      if (!seleccionado && esDueno && sedeContextoId) {
+        const { data, error } = await supabase
+          .from("ecosistema_participantes")
+          .select("id")
+          .eq("sede_id", sedeContextoId)
+          .eq("estado", "activo")
+          .limit(2);
+        if (error || !data || data.length !== 1) participanteId = null;
+        else participanteId = data[0].id;
+      }
+
+      if (!participanteId) {
+        if (vigente) setPaisPredeterminadoTelefono("PE");
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("identidades_comerciales")
+        .select("pais_codigo")
+        .eq("participante_id", participanteId)
+        .eq("activa", true)
+        .order("nombre_comercial")
+        .limit(1)
+        .maybeSingle();
+
+      if (!vigente) return;
+      const codigo = !error && typeof data?.pais_codigo === "string" ? data.pais_codigo.toUpperCase() : "";
+      setPaisPredeterminadoTelefono(/^[A-Z]{2}$/.test(codigo) ? codigo : "PE");
+    }
+
+    void cargarPaisDelTaller();
+    return () => { vigente = false; };
+  }, [esDueno, sedeContextoId, seleccionado?.id, seleccionado?.participante_id, sesion?.participante?.id]);
   const cargaClientesRef = useRef(0);
 
   const cargar = async () => {
@@ -434,7 +477,7 @@ function ClientesPage() {
           <div className="flex items-start justify-between"><div><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-gold">Ficha comercial</p><h2 className="mt-1 text-xl font-semibold">{seleccionado ? "Editar cliente" : "Nuevo cliente"}</h2></div><button type="button" onClick={() => setModal(false)} className="rounded-lg px-2 py-1 text-muted-foreground">✕</button></div>
           <div className="mt-5 space-y-4">
             <Field label="Nombre completo" value={form.nombre} onChange={(v) => setForm({ ...form, nombre: v })} required />
-            <TelefonoInternacional id="cliente-telefono" value={form.telefono} onChange={(telefono) => setForm((actual) => ({ ...actual, telefono }))} />
+            <TelefonoInternacional id="cliente-telefono" value={form.telefono} defaultCountry={paisPredeterminadoTelefono} onChange={(telefono) => setForm((actual) => ({ ...actual, telefono }))} />
             <Field label="Correo electrónico" type="email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} />
             <Field label="Fecha de nacimiento (opcional)" type="date" value={form.fecha_nacimiento} onChange={v=>setForm({...form,fecha_nacimiento:v})}/><label className="block text-xs font-medium">Observaciones<textarea value={form.notas} onChange={e=>setForm({...form,notas:e.target.value})} rows={3} className="mt-1.5 w-full rounded-xl border border-border bg-background p-3 text-sm"/></label>
           </div>
