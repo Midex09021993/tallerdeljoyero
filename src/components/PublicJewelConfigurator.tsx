@@ -131,7 +131,7 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
 
   return (
     <section className="mx-auto w-full min-w-0 overflow-hidden rounded-xl border border-[#e8e1d5] bg-white shadow-[0_10px_30px_-24px_rgba(35,28,18,.25)] sm:mt-4 sm:rounded-2xl md:mt-0 md:flex md:h-full md:max-h-full md:flex-col lg:mx-auto lg:max-w-[1440px]">
-      <header className="flex flex-col items-stretch justify-between gap-2 border-b border-[#eee9e0] bg-white px-3 py-2.5 sm:flex-row sm:items-center sm:gap-4 sm:px-5 sm:py-3">
+      <header className="flex flex-col items-stretch justify-between gap-2 border-b border-[#eee9e0] bg-white px-3 py-2 sm:flex-row sm:items-center sm:gap-4 sm:px-5 sm:py-2.5">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-lg bg-[#f6efe0] text-[#92702f]">
@@ -140,7 +140,7 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
             <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#92702f]">Visor interactivo</p>
           </div>
           <h2 className="mt-1 truncate font-display text-lg leading-tight text-[#28231d] sm:text-xl lg:text-2xl">Configura tu joya en 3D</h2>
-          <p className="mt-1 max-w-xl truncate text-xs text-[#82796e]">{displayName}</p>
+
         </div>
         <div className="flex items-center justify-between gap-2 sm:justify-end">
           <span className="inline-flex rounded-full border border-[#e9e2d7] px-2.5 py-1.5 text-[9px] font-semibold uppercase tracking-[.1em] text-[#81786c] sm:px-3 sm:text-[10px]">Solo visualización</span>
