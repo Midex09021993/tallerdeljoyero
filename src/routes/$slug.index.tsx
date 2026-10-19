@@ -186,7 +186,12 @@ function CatalogoPublicoPage() {
       const rawCarrusel = carruselResult.error ? null : carruselResult.data;
       const carruselCandidate = Array.isArray(rawCarrusel) ? rawCarrusel[0] : rawCarrusel;
       const carruselData = carruselCandidate && typeof carruselCandidate === "object" ? carruselCandidate as Record<string, unknown> : {};
-      const carrusel = Array.isArray(carruselData['enlaces_carrusel']) ? carruselData['enlaces_carrusel'].filter((slide: any) => slide && ((typeof slide.url_imagen_externa === "string" && /^https?:\/\//i.test(slide.url_imagen_externa)) || (typeof slide.imagen_url === "string" && /^https?:\/\//i.test(slide.imagen_url)))).slice(0, 10) : [];
+      const carrusel = Array.isArray(carruselData['enlaces_carrusel']) ? carruselData['enlaces_carrusel'].filter((slide: unknown) => {
+        if (!slide || typeof slide !== "object") return false;
+        const item = slide as Record<string, unknown>;
+        return (typeof item.url_imagen_externa === "string" && /^https?:\/\//i.test(item.url_imagen_externa))
+          || (typeof item.imagen_url === "string" && /^https?:\/\//i.test(item.imagen_url));
+      }).slice(0, 10) : [];
       const rawContacto = contactoResult.error ? null : contactoResult.data;
       const contactoCandidate = Array.isArray(rawContacto) ? rawContacto[0] : rawContacto;
       const contacto = contactoCandidate && typeof contactoCandidate === "object" ? contactoCandidate as Record<string, unknown> : {};
