@@ -66,9 +66,9 @@ function VisorJoyaCompartidaPage() {
     .trim() || "Joya compartida";
 
   return (
-    <main className="min-h-screen bg-[#f7f6f2] text-[#292824]">
+    <main className="min-h-screen bg-[#f7f6f2] text-[#292824] md:h-[100svh] md:min-h-0 md:overflow-hidden">
 
-      <section className="mx-auto w-full max-w-none p-0">
+      <section className="mx-auto w-full max-w-none p-0 md:h-full">
         {linkInvalido ? (
           <div className="mx-auto mt-12 max-w-lg rounded-2xl border border-[#e7e2d8] bg-white p-6 text-center shadow-sm">
             <AlertCircle className="mx-auto size-8 text-[#a66b26]" />
