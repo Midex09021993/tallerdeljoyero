@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AurumRenderShell } from "@/components/AurumRenderShell";
+import { AurumRender } from "@/components/AurumRender";
 
 export const Route = createFileRoute("/aurum-render-public")({
   head: () => ({
@@ -20,5 +21,6 @@ export const Route = createFileRoute("/aurum-render-public")({
 });
 
 function AurumRenderPublicPage() {
-  return <AurumRenderShell />;
+  const shared = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("modeloCompartido");
+  return shared ? <AurumRender embedded /> : <AurumRenderShell />;
 }
