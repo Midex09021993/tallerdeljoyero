@@ -128,7 +128,7 @@ function GestionPage() {
   const { data: sesion } = useSesion();
   const { data: pedidos = [], isLoading } = usePedidos();
   const { sedeFiltro, setSedeFiltro, sedes, filtrarPedidos, etiquetaSede } = useSedeFiltroDueno();
-  const [modulo, setModulo] = useState<Modulo>("comercial");
+  const [modulo, setModulo] = useState<Modulo | null>(null);
   const [sedeAbierta, setSedeAbierta] = useState(true);
   const [plataformaAbierta, setPlataformaAbierta] = useState(false);
 
@@ -282,6 +282,13 @@ function GestionPage() {
               <p className="text-sm font-semibold">{moduloActivo.label}</p>
               <p className="text-xs text-muted-foreground">{moduloActivo.descripcion}</p>
             </div>
+          </div>
+        ) : null}
+
+        {!modulo ? (
+          <div className="rounded-2xl border border-dashed border-border bg-surface-muted/20 px-6 py-12 text-center">
+            <p className="text-sm font-medium text-foreground">Selecciona una opción de gestión</p>
+            <p className="mt-1 text-xs text-muted-foreground">El contenido aparecerá aquí cuando elijas una tarjeta.</p>
           </div>
         ) : null}
 
