@@ -124,7 +124,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [exportBusy, setExportBusy] = useState(false);
   const [videoOpen, setVideoOpen] = useState(false);
   const [videoBusy, setVideoBusy] = useState(false);
-  const [videoMode, setVideoMode] = useState<"manual"|"automatic">("automatic");
+  const [videoMode, setVideoMode] = useState<"manual"|"automatic"|"orbit180-return">("automatic");
   const [videoWidth, setVideoWidth] = useState("1280");
   const [videoFps, setVideoFps] = useState("30");
   const [videoDuration, setVideoDuration] = useState("5");
@@ -2097,7 +2097,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 </label>
               </div>
               {videoBusy&&<div role="status" aria-live="polite" className="rounded-lg border border-[#d4af37]/25 bg-white p-2.5">
-                <div className="mb-2 flex justify-between text-[10px]"><span>{videoMode==="automatic"?"Grabando giro automático":"Grabando movimientos manuales"}</span><span>{Math.round(videoProgress)}%</span></div>
+                <div className="mb-2 flex justify-between text-[10px]"><span>{videoMode==="automatic"?"Grabando giro automático":videoMode==="orbit180-return"?"Grabando órbita 180° de ida y vuelta":"Grabando movimientos manuales"}</span><span>{Math.round(videoProgress)}%</span></div>
                 <div className="h-2 overflow-hidden rounded-full bg-[#eee8d8]"><div className="h-full rounded-full bg-[#b99642] transition-[width]" style={{width:Math.max(0,Math.min(100,videoProgress))+"%"}}/></div>
                 <button type="button" onClick={()=>videoAbortRef.current?.abort()} className="mt-2 w-full rounded-lg border border-black/15 px-3 py-2 text-xs font-semibold">Cancelar grabación</button>
               </div>}
