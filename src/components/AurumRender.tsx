@@ -1254,10 +1254,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 if(videoTaaPass){
                   videoTaaPass.accumulate=true;
                   videoTaaPass.accumulateIndex=-1;
-                  // Refresh diamond-only optical uniforms for this camera pose,
-                  // then accumulate two jitter samples without changing gem materials.
-                  diamondBvhRuntime?.update();
-                  composer.render();
+                  // TAARenderPass with sampleLevel=1 accumulates its two jitter
+                  // samples inside a single composer.render() call. Reset once per
+                  // camera pose, then render once to avoid duplicate GPU work.
                   diamondBvhRuntime?.update();
                   composer.render();
                 }else if(composer){
