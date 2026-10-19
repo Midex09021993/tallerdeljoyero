@@ -1254,8 +1254,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 if(videoTaaPass){
                   videoTaaPass.accumulate=true;
                   videoTaaPass.accumulateIndex=-1;
-                  // A fresh short AA accumulation for this exact camera pose.
+                  // Refresh diamond-only optical uniforms for this camera pose,
+                  // then accumulate two jitter samples without changing gem materials.
+                  diamondBvhRuntime?.update();
                   composer.render();
+                  diamondBvhRuntime?.update();
                   composer.render();
                 }else if(composer){
                   composer.render();
