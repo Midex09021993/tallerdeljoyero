@@ -34,9 +34,9 @@ export async function recordAurumCanvasVideo(
     throw new Error("Este navegador no ofrece un formato de vídeo compatible. Actualiza el navegador o prueba con Chrome o Edge.");
   }
 
-  const width = Math.max(320, Math.min(1920, Math.round(options.width ?? 1280)));
-  const height = Math.max(320, Math.min(1080, Math.round(options.height ?? 720)));
-  const fps = Math.max(15, Math.min(60, Math.round(options.fps ?? 30)));
+  const width = Math.max(320, Math.min(3840, Math.round(options.width ?? 1280)));
+  const height = Math.max(320, Math.min(2160, Math.round(options.height ?? 720)));
+  const fps = Math.max(15, Math.min(120, Math.round(options.fps ?? 30)));
   const duration = Math.max(1, Math.min(20, Number(options.duration ?? 5)));
   const output = document.createElement("canvas");
   output.width = width;
@@ -47,7 +47,7 @@ export async function recordAurumCanvasVideo(
   const stream = output.captureStream(fps);
   let recorder: MediaRecorder;
   try {
-    recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: Math.max(4_000_000, width * height * fps * 0.12) });
+    recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: Math.max(4_000_000, Math.min(100_000_000, width * height * fps * 0.06)) });
   } catch {
     stream.getTracks().forEach((track) => track.stop());
     throw new Error("El navegador detecta MP4, pero no pudo iniciar el codificador.");
