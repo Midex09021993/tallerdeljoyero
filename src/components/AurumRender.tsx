@@ -124,6 +124,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [exportBusy, setExportBusy] = useState(false);
   const [videoOpen, setVideoOpen] = useState(false);
   const [videoBusy, setVideoBusy] = useState(false);
+  const [videoCountdown, setVideoCountdown] = useState<number | null>(null);
   const [videoMode, setVideoMode] = useState<"manual"|"automatic"|"orbit180-return"|"cinematic-zoom"|"vertical-sweep"|"slow360"|"catalog">("automatic");
   const [videoWidth, setVideoWidth] = useState("1280");
   const [videoFps, setVideoFps] = useState("30");
@@ -2127,19 +2128,40 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 </label>
               </div>
               {videoBusy&&<div role="status" aria-live="polite" className="rounded-lg border border-[#d4af37]/25 bg-white p-2.5">
-                <div className="mb-2 flex justify-between text-[10px]"><span>{videoMode==="automatic"?"Grabando giro automático":videoMode==="orbit180-return"?"Grabando órbita 180° de ida y vuelta":videoMode==="cinematic-zoom"?"Grabando acercamiento cinematográfico":videoMode==="vertical-sweep"?"Grabando recorrido vertical":videoMode==="slow360"?"Grabando giro 360° lento":videoMode==="catalog"?"Grabando presentación de catálogo":"Grabando movimientos manuales"}</span><span>{Math.round(videoProgress)}%</span></div>
-                <div className="h-2 overflow-hidden rounded-full bg-[#eee8d8]"><div className="h-full rounded-full bg-[#b99642] transition-[width]" style={{width:Math.max(0,Math.min(100,videoProgress))+"%"}}/></div>
-                <button type="button" onClick={()=>videoAbortRef.current?.abort()} className="mt-2 w-full rounded-lg border border-black/15 px-3 py-2 text-xs font-semibold">Cancelar grabación</button>
+                {videoCountdown!==null?<>
+                  <div className="text-center">
+                    <div className="text-[10px] font-medium text-[#77756f]">PREPARA LA JOYA Y LA CÁMARA</div>
+                    <div className="my-1 text-4xl font-semibold tabular-nums text-[#b99642]">{videoCountdown}</div>
+                    <div className="text-[10px] text-[#66645e]">La grabación manual comenzará en {videoCountdown} s</div>
+                  </div>
+                </>:<>
+                  <div className="mb-2 flex justify-between text-[10px]"><span>{videoMode==="automatic"?"Grabando giro automático":videoMode==="orbit180-return"?"Grabando órbita 180° de ida y vuelta":videoMode==="cinematic-zoom"?"Grabando acercamiento cinematográfico":videoMode==="vertical-sweep"?"Grabando recorrido vertical":videoMode==="slow360"?"Grabando giro 360° lento":videoMode==="catalog"?"Grabando presentación de catálogo":"Grabando movimientos manuales"}</span><span>{Math.round(videoProgress)}%</span></div>
+                  <div className="h-2 overflow-hidden rounded-full bg-[#eee8d8]"><div className="h-full rounded-full bg-[#b99642] transition-[width]" style={{width:Math.max(0,Math.min(100,videoProgress))+"%"}}/></div>
+                </>}
+                <button type="button" onClick={()=>videoAbortRef.current?.abort()} className="mt-2 w-full rounded-lg border border-black/15 px-3 py-2 text-xs font-semibold">{videoCountdown!==null?"Cancelar cuenta atrás":"Cancelar grabación"}</button>
               </div>}
               {!videoBusy&&<button type="button" disabled={!archivo||exportBusy||!!ptProgress} onClick={async()=>{
                 if(videoExportLockRef.current) return;
                 videoExportLockRef.current=true;
                 const controller=new AbortController();videoAbortRef.current=controller;setVideoBusy(true);setExportBusy(true);setVideoProgress(0);setError(null);
                 try{
+                  if(videoMode==="manual"){
+                    for(let remaining=10;remaining>0;remaining--){
+                      if(controller.signal.aborted) throw new DOMException("Grabación cancelada","AbortError");
+                      setVideoCountdown(remaining);
+                      await new Promise<void>((resolve,reject)=>{
+                        const timer=window.setTimeout(()=>{controller.signal.removeEventListener("abort",onAbort);resolve();},1000);
+                        const onAbort=()=>{window.clearTimeout(timer);controller.signal.removeEventListener("abort",onAbort);reject(new DOMException("Cuenta atrás cancelada","AbortError"));};
+                        controller.signal.addEventListener("abort",onAbort,{once:true});
+                      });
+                    }
+                    setVideoCountdown(null);
+                  }
+                  if(controller.signal.aborted) throw new DOMException("Grabación cancelada","AbortError");
                   await apiRef.current?.exportVideo({width:Number(videoWidth),height:Math.round(Number(videoWidth)*9/16),fps:Number(videoFps),duration:Number(videoDuration),mode:videoMode,signal:controller.signal,onProgress:(elapsed:number,total:number)=>setVideoProgress(total>0?elapsed/total*100:0)});
                   setVideoProgress(100);
                 }catch(e:any){if(e?.name!=="AbortError")setError(e instanceof Error?e.message:"No se pudo exportar el vídeo MP4.");}
-                finally{videoAbortRef.current=null;videoExportLockRef.current=false;setVideoBusy(false);setExportBusy(false);}
+                finally{videoAbortRef.current=null;videoExportLockRef.current=false;setVideoCountdown(null);setVideoBusy(false);setExportBusy(false);}
               }} className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#d4af37] px-3 py-2.5 text-xs font-semibold text-black disabled:cursor-not-allowed disabled:opacity-40"><Download className="size-4"/>Grabar y descargar .mp4</button>}
               <p className="text-[10px] leading-relaxed text-[#77756f]">En modo manual, mueve la cámara mientras se graba; en automático, la joya gira sola 360°. 4K depende de la resolución real del visor. 120 FPS es experimental. El giro automático restaura la cámara al terminar; la grabación manual conserva el encuadre final.</p>
             </div>}
