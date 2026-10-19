@@ -104,7 +104,7 @@ function HerramientasPage() {
         <section aria-label="Seleccionar herramienta" className="rounded-2xl border border-border bg-card p-2 shadow-card">
           <div className="scrollbar-hidden flex gap-2 overflow-x-auto">
             <Link
-              to="/aurum-render-public"
+              to="/aurum-render"
               className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border border-border px-3.5 text-sm font-medium text-muted-foreground transition hover:border-gold/50 hover:text-foreground"
             >
               <Gem className="size-4 text-gold" /> Aurum Render
