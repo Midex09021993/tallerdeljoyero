@@ -1899,6 +1899,38 @@ export type Database = {
           },
         ]
       }
+      mensajes_automaticos_taller: {
+        Row: {
+          actualizado_por: string | null
+          created_at: string
+          mensaje_cumpleanos: string
+          participante_id: string
+          updated_at: string
+        }
+        Insert: {
+          actualizado_por?: string | null
+          created_at?: string
+          mensaje_cumpleanos?: string
+          participante_id: string
+          updated_at?: string
+        }
+        Update: {
+          actualizado_por?: string | null
+          created_at?: string
+          mensaje_cumpleanos?: string
+          participante_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mensajes_automaticos_taller_participante_id_fkey"
+            columns: ["participante_id"]
+            isOneToOne: true
+            referencedRelation: "ecosistema_participantes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mi_nube_compartidas: {
         Row: {
           carpeta: string
