@@ -159,6 +159,7 @@ function MiNubePage() {
   const usuarioId = sesion?.user.id ?? null;
   const [busqueda, setBusqueda] = useState("");
   const [proyectoAbierto, setProyectoAbierto] = useState<string | null>(null);
+  const [proyectoPendienteEliminar, setProyectoPendienteEliminar] = useState<{ nombre: string; archivos: ArchivoNube[] } | null>(null);
   const [modoEdicion, setModoEdicion] = useState<string | null>(null);
   const [compartiendo, setCompartiendo] = useState<string | null>(null);
   const [progresoCompartir, setProgresoCompartir] = useState("");
@@ -1061,14 +1062,6 @@ function MiNubePage() {
         }
       }
 
-      const resumenNas = nasPendiente
-        ? "El NAS no está disponible: sus archivos se conservarán y no se eliminarán."
-        : `${archivosNas.length} vídeo(s) del NAS`;
-      const confirmacion = window.confirm(
-        `¿Eliminar los archivos web del proyecto “${proyecto.nombre}” (${rutasWeb.length}) y ${nasPendiente ? "continuar sin tocar los archivos del NAS" : `también ${resumenNas}`}? Esta acción no se puede deshacer para los archivos eliminados.`,
-      );
-      if (!confirmacion) return;
-
       // Limpiar el NAS solo cuando está disponible. Un fallo del NAS no bloquea
       // la eliminación web; se detiene únicamente el lote NAS y se informa al final.
       let videosNasEliminados = 0;
@@ -1492,7 +1485,7 @@ function MiNubePage() {
                     <button type="button" disabled={compartiendo !== null} onClick={() => setOpcionesCompartir(proyecto)} className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-semibold leading-tight text-foreground transition-colors hover:border-gold/40 disabled:opacity-50">
                       <Share2 className="size-3.5 shrink-0" /> {compartiendo === proyecto.nombre ? "Preparando transferencia…" : "Compartir proyecto"}
                     </button>
-                    <button type="button" onClick={() => void eliminarProyectoCompleto(proyecto)} disabled={subiendo || compartiendo !== null} className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-destructive/50 px-3 py-2 text-xs font-semibold text-destructive transition-colors hover:bg-destructive/5 disabled:opacity-50">
+                    <button type="button" onClick={() => setProyectoPendienteEliminar(proyecto)} disabled={subiendo || compartiendo !== null} className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-destructive/50 px-3 py-2 text-xs font-semibold text-destructive transition-colors hover:bg-destructive/5 disabled:opacity-50">
                       <X className="size-3.5 shrink-0" /> Eliminar todo el proyecto
                     </button>
                     {compartiendo === proyecto.nombre && <p role="status" className="rounded-lg bg-gold/10 px-3 py-2 text-xs text-muted-foreground">{progresoCompartir || "Preparando transferencia…"}</p>}
@@ -1713,6 +1706,25 @@ function MiNubePage() {
                 <button type="button" disabled={!tallerDestino || guardandoComparticion || cargandoTalleres} onClick={() => void confirmarCompartirEcosistema()} className="flex-1 rounded-xl bg-gold px-3 py-2.5 text-sm font-semibold text-black disabled:opacity-50">{guardandoComparticion ? "Compartiendo…" : "Compartir carpeta"}</button>
               </div>
               {compartidas.filter((s) => s.carpeta === proyectoParaCompartir).length > 0 && <div className="mt-5 border-t border-border pt-4"><p className="text-xs font-semibold">Accesos concedidos</p>{compartidas.filter((s) => s.carpeta === proyectoParaCompartir).map((s) => <div key={s.id} className="mt-2 flex items-center justify-between gap-2 text-xs"><span className="truncate">{s.destinatario_nombre ?? "Taller del ecosistema"}</span><button type="button" onClick={() => void revocarComparticion(s)} className="shrink-0 rounded-lg border border-destructive/40 px-2 py-1.5 font-semibold text-destructive">Revocar acceso</button></div>)}</div>}
+            </div>
+          </div>
+        )}
+
+        {proyectoPendienteEliminar && (
+          <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true" aria-labelledby="mi-nube-eliminar-proyecto-title">
+            <div className="w-full max-w-md rounded-2xl border border-border bg-card p-5 shadow-2xl">
+              <div className="flex items-start gap-3">
+                <div className="grid size-10 shrink-0 place-items-center rounded-full bg-destructive/10 text-destructive"><AlertCircle className="size-5" /></div>
+                <div className="min-w-0">
+                  <h3 id="mi-nube-eliminar-proyecto-title" className="text-base font-semibold">Eliminar proyecto</h3>
+                  <p className="mt-1 break-words text-sm text-muted-foreground">Vas a eliminar los archivos web del proyecto “{proyectoPendienteEliminar.nombre}”. Esta acción no se puede deshacer.</p>
+                  <p className="mt-2 text-sm text-muted-foreground">{estadoNas === "online" && !nasPausado ? "Si el NAS está disponible, también intentaremos limpiar sus archivos. Si falla, te indicaremos qué quedó pendiente." : "El NAS no está disponible o está pausado. Sus archivos se conservarán; la eliminación de los archivos web podrá continuar."}</p>
+                </div>
+              </div>
+              <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <button type="button" onClick={() => setProyectoPendienteEliminar(null)} className="rounded-xl border border-border px-4 py-2.5 text-sm font-semibold">Cancelar</button>
+                <button type="button" onClick={() => { const proyecto = proyectoPendienteEliminar; setProyectoPendienteEliminar(null); void eliminarProyectoCompleto(proyecto); }} className="rounded-xl bg-destructive px-4 py-2.5 text-sm font-semibold text-white hover:bg-destructive/90">Eliminar proyecto</button>
+              </div>
             </div>
           </div>
         )}
