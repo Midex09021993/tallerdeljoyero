@@ -1239,8 +1239,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                   if(options.mode==="orbit180-return"){
                     angle=Math.PI*(1-Math.cos(Math.PI*2*progress))/2;
                   }else if(options.mode==="slow360"){
-                    // Constant-speed full orbit, deliberately spread over the selected duration.
-                    angle=Math.PI*2*progress;
+                    // Ease into and out of the full orbit for a calmer product presentation.
+                    angle=Math.PI*2*smooth;
                   }else if(options.mode==="cinematic-zoom"){
                     // Gentle push-in to the gemstone, then return to the original distance.
                     zoomFactor=1-0.28*Math.sin(Math.PI*progress);
