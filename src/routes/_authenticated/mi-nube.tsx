@@ -94,7 +94,7 @@ function FichaProyecto({ portada, nombre, children }: { portada: string | null; 
 
 type Categoria = "fotos" | "videos" | "documentos" | "modelos-3d" | "otros";
 type CarpetaCompartida = { id: string; propietario_participante_id: string; propietario_usuario_id: string; carpeta: string; destinatario_participante_id: string; created_at: string; destinatario_nombre?: string };
-type TallerCompartir = { id: string; nombre: string; ciudad: string | null };
+type TallerCompartir = { id: string; nombre: string; ciudad?: string | null };
 type CarpetaRecibida = { id: string; nombre: string; propietarioNombre: string; ruta: string; archivos: ArchivoNube[]; portada: string | null; archivosCargados: boolean; cargandoArchivos: boolean };
 type ArchivoNube = {
   nombre: string;
@@ -572,13 +572,13 @@ function MiNubePage() {
     cargaCompartidasEnCurso.current = true;
     setCargandoCompartidas(true);
     try {
-      const { data: recibidas, error: errorRecibidas } = await (supabase as any)
+      const { data: recibidas, error: errorRecibidas } = await supabase
         .from("mi_nube_compartidas")
         .select("id, propietario_participante_id, propietario_usuario_id, carpeta, destinatario_participante_id, created_at")
         .eq("destinatario_participante_id", participanteId)
         .is("revoked_at", null);
       if (errorRecibidas) throw errorRecibidas;
-      const { data: enviadas, error: errorEnviadas } = await (supabase as any).from("mi_nube_compartidas")
+      const { data: enviadas, error: errorEnviadas } = await supabase.from("mi_nube_compartidas")
         .select("id, propietario_participante_id, propietario_usuario_id, carpeta, destinatario_participante_id, created_at")
         .eq("propietario_usuario_id", usuarioId)
         .is("revoked_at", null);
@@ -586,24 +586,24 @@ function MiNubePage() {
 
       // Resolver nombres de los talleres receptores para que el propietario
       // identifique cada permiso sin mostrar solo el UUID.
-      const idsDestinatarios = [...new Set((enviadas ?? []).map((s: CarpetaCompartida) => s.destinatario_participante_id).filter(Boolean))];
+      const idsDestinatarios = [...new Set((enviadas ?? []).map((s) => s.destinatario_participante_id).filter(Boolean))];
       let nombresDestinatarios = new Map<string, string>();
       if (idsDestinatarios.length > 0) {
-        const { data: destinatarios, error: errorDestinatarios } = await (supabase as any)
+        const { data: destinatarios, error: errorDestinatarios } = await supabase
           .from("ecosistema_participantes")
           .select("id, nombre")
           .in("id", idsDestinatarios);
         if (errorDestinatarios) throw errorDestinatarios;
-        nombresDestinatarios = new Map((destinatarios ?? []).map((t: { id: string; nombre: string | null }) => [t.id, t.nombre?.trim() || "Taller sin nombre"]));
+        nombresDestinatarios = new Map((destinatarios ?? []).map((t) => [t.id, t.nombre?.trim() || "Taller sin nombre"]));
       }
-      setCompartidas(((enviadas ?? []) as CarpetaCompartida[]).map((s) => ({
+      setCompartidas((enviadas ?? []).map((s) => ({
         ...s,
         destinatario_nombre: nombresDestinatarios.get(s.destinatario_participante_id) ?? "Taller del ecosistema",
       })));
 
       // Resolver los propietarios de todas las carpetas recibidas en una sola
       // consulta, en vez de ejecutar una consulta por cada carpeta compartida.
-      const idsPropietarios = [...new Set(((recibidas ?? []) as CarpetaCompartida[])
+      const idsPropietarios = [...new Set((recibidas ?? [])
         .map((share) => share.propietario_participante_id)
         .filter(Boolean))];
       const nombresPropietarios = new Map<string, string>();
@@ -622,7 +622,7 @@ function MiNubePage() {
       }
       // Solo cargar metadatos de las carpetas compartidas al entrar en Mi Nube.
       // El contenido de Storage y las URLs firmadas se solicitan al abrir cada carpeta.
-      const recibidasNormalizadas = (recibidas ?? []) as CarpetaCompartida[];
+      const recibidasNormalizadas = recibidas ?? [];
       setCarpetasRecibidas(recibidasNormalizadas.map((share) => ({
         id: share.id,
         nombre: share.carpeta,
@@ -724,10 +724,10 @@ function MiNubePage() {
     setCargandoTalleres(true);
     const participanteConsultado = participanteId;
     try {
-      const { data, error } = await (supabase as any).rpc("listar_talleres_para_compartir_mi_nube");
+      const { data, error } = await supabase.rpc("listar_talleres_para_compartir_mi_nube");
       if (error) throw error;
       if (participanteId === participanteConsultado) {
-        setTalleresDisponibles((data ?? []) as TallerCompartir[]);
+        setTalleresDisponibles(data ?? []);
         setTalleresDisponiblesParaParticipante(participanteConsultado);
       }
     } catch (cause) {
@@ -744,7 +744,7 @@ function MiNubePage() {
     }
     setGuardandoComparticion(true);
     try {
-      const { error } = await (supabase as any).from("mi_nube_compartidas").upsert({
+      const { error } = await supabase.from("mi_nube_compartidas").upsert({
         propietario_participante_id: participanteId,
         propietario_usuario_id: usuarioId,
         carpeta: proyectoParaCompartir,
@@ -762,7 +762,7 @@ function MiNubePage() {
   };
 
   const revocarComparticion = async (share: CarpetaCompartida) => {
-    const { error } = await (supabase as any).from("mi_nube_compartidas").update({ revoked_at: new Date().toISOString() }).eq("id", share.id);
+    const { error } = await supabase.from("mi_nube_compartidas").update({ revoked_at: new Date().toISOString() }).eq("id", share.id);
     if (error) { toast.error(error.message); return; }
     toast.success("Se revocó el acceso a la carpeta.");
     await cargarCompartidas();
@@ -1088,7 +1088,7 @@ function MiNubePage() {
 
       setProyectoAbierto(null);
       setModoEdicion(null);
-      const { error: errorRevocarComparticiones } = await (supabase as any)
+      const { error: errorRevocarComparticiones } = await supabase
         .from("mi_nube_compartidas")
         .update({ revoked_at: new Date().toISOString() })
         .eq("propietario_usuario_id", usuarioId)
