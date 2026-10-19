@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSesion } from "@/lib/auth";
+import { toast } from "sonner";
 import {
   applyAurumMetal, applyAurumGem, metalPresetFromConfig, gemPresetFromConfig,
 } from "../lib/aurum-material-engine";
@@ -1988,7 +1989,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               shareUrl.searchParams.set("nombre",cleanName);
               await navigator.clipboard.writeText(shareUrl.toString());
               setError(null);
-              window.alert("Enlace copiado. La joya está guardada en Mi Nube y el enlace vence en 7 días.");
+              toast.success("Enlace copiado. La joya está guardada en Mi Nube y el enlace vence en 7 días.");
             }catch(e){setError(e instanceof Error?e.message:"No se pudo compartir la joya.");}
             finally{setExportBusy(false);}
           }} className="flex w-full items-center gap-2.5 rounded-xl border border-[#d4af37]/50 bg-[#d4af37]/15 px-3 py-2.5 text-left text-[13px] font-semibold text-[#292824] transition-colors hover:bg-[#d4af37]/25 disabled:cursor-not-allowed disabled:opacity-40"><Upload className="size-5"/><span><span className="block">Guardar y compartir joya</span><span className="block text-[10px] font-normal text-[#77756f]">Mi Nube · enlace válido 7 días</span></span></button>
