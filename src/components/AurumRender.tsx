@@ -1985,13 +1985,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 <div className="h-2 overflow-hidden rounded-full bg-[#eee8d8]"><div className="h-full rounded-full bg-[#b99642] transition-[width]" style={{width:Math.max(0,Math.min(100,videoProgress))+"%"}}/></div>
                 <button type="button" onClick={()=>videoAbortRef.current?.abort()} className="mt-2 w-full rounded-lg border border-black/15 px-3 py-2 text-xs font-semibold">Cancelar grabación</button>
               </div>}
-              {!videoBusy&&<button type="button" disabled={!archivo||exportBusy} onClick={async()=>{
-                const controller=new AbortController();videoAbortRef.current=controller;setVideoBusy(true);setVideoProgress(0);setError(null);
+              {!videoBusy&&<button type="button" disabled={!archivo||exportBusy||!!ptProgress} onClick={async()=>{
+                const controller=new AbortController();videoAbortRef.current=controller;setVideoBusy(true);setExportBusy(true);setVideoProgress(0);setError(null);
                 try{
                   await apiRef.current?.exportVideo({width:Number(videoWidth),height:Math.round(Number(videoWidth)*9/16),fps:Number(videoFps),duration:Number(videoDuration),signal:controller.signal,onProgress:(elapsed:number,total:number)=>setVideoProgress(total>0?elapsed/total*100:0)});
                   setVideoProgress(100);
                 }catch(e:any){if(e?.name!=="AbortError")setError(e instanceof Error?e.message:"No se pudo exportar el vídeo MP4.");}
-                finally{videoAbortRef.current=null;setVideoBusy(false);}
+                finally{videoAbortRef.current=null;setVideoBusy(false);setExportBusy(false);}
               }} className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#d4af37] px-3 py-2.5 text-xs font-semibold text-black disabled:cursor-not-allowed disabled:opacity-40"><Download className="size-4"/>Grabar y descargar .mp4</button>}
               <p className="text-[10px] leading-relaxed text-[#77756f]">La joya gira en el motor mientras se captura. La grabación no cambia la resolución ni los materiales del visor; al terminar se restaura la cámara.</p>
             </div>}
