@@ -78,7 +78,10 @@ export default {
         .eq("ecosistema_participantes.estado", "activo")
         .limit(1)
         .maybeSingle();
-      const participante = (cuenta as any)?.ecosistema_participantes;
+      const relacionParticipante = cuenta?.ecosistema_participantes;
+      const participante = Array.isArray(relacionParticipante)
+        ? relacionParticipante[0]
+        : relacionParticipante;
       if (!cuenta?.participante_id || !participante?.id || !participante?.sede_id) {
         return Response.json({ error: "El usuario no está vinculado a un taller activo" }, { status: 422, headers: corsHeaders });
       }
