@@ -981,7 +981,18 @@ function Comercial({ pedido, contrato, pagos = [] }: { pedido: any; contrato: an
   );
 }
 
-function Archivos({ pedidoId, archivos, puedeSubir, onSubido }: { pedidoId: string; archivos: any[]; puedeSubir: boolean; onSubido: () => void }) {
+type ArchivoPedidoVista = {
+  id: string;
+  nombre: string;
+  tipo: string;
+  grupo: string;
+  version: number;
+  poster: string;
+  signedUrl: string;
+  es_vigente_fabricacion: boolean;
+};
+
+function Archivos({ pedidoId, archivos, puedeSubir, onSubido }: { pedidoId: string; archivos: ArchivoPedidoVista[]; puedeSubir: boolean; onSubido: () => void }) {
   const [subiendo, setSubiendo] = useState(false);
   const [progreso, setProgreso] = useState(0);
 
