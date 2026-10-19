@@ -27,5 +27,12 @@ export default defineConfig({
       "import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY": JSON.stringify(PUBLIC_KEY),
       "import.meta.env.VITE_SUPABASE_PROJECT_ID": JSON.stringify(PUBLIC_ID),
     },
+    optimizeDeps: {
+      include: [
+        "use-sync-external-store/shim/with-selector",
+        "use-sync-external-store/shim/with-selector.js",
+        "use-sync-external-store/shim",
+      ],
+    },
   },
 });
