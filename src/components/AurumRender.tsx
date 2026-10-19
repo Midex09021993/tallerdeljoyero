@@ -1012,6 +1012,31 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         gema:aplicarGema,
         materialCatalogo:(m:MaterialConfig)=>{
           if(!modelo)return;
+          // In the public embedded viewer, GLB exports may omit Rhino layer
+          // categories. Recover only unclassified metal candidates so the
+          // client can change the whole metal finish without selecting a mesh.
+          // Positively identified gems and transmissive/diamond materials stay untouched.
+          if(embedded){
+            const gemNamePattern=/(gem|gema|diamond|diamante|emerald|esmerald|ruby|rub[ií]|sapphire|zafiro|amethyst|amatista|stone|piedra)/i;
+            modelo.traverse((x:any)=>{
+              if(!x?.isMesh||x.userData?.aurumInternalInclusion)return;
+              const meta=x.userData?.aurumRhino??{};
+              const attrs=x.userData?.attributes??{};
+              const category=String(meta.categoria??"").toLowerCase();
+              if(category==="metal"||category==="gema")return;
+              const name=[x.name,meta.capa,attrs.layerName,attrs.LayerName].filter(Boolean).join(" ");
+              const mats=Array.isArray(x.material)?x.material:[x.material];
+              const looksLikeGem=gemNamePattern.test(name)||mats.some((mat:any)=>
+                Number(mat?.transmission??0)>.12||
+                mat?.userData?.aurumDiamondShader||
+                mat?.userData?.aurumGemPhysicalModel||
+                mat?.userData?.aurumGemOpticalProfile||
+                /diamond|gem|gema|diamante|stone|piedra/i.test(String(mat?.name??""))
+              );
+              if(looksLikeGem)return;
+              x.userData={...x.userData,aurumRhino:{...meta,categoria:"otro"}};
+            });
+          }
           aplicarMaterial(m,true);
           invalidateRenderRef.current?.();
         },
