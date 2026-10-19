@@ -610,7 +610,26 @@ function PedidoDetalle() {
 
 function Dato({ label, value }: { label: string; value: string }) { return <div className="rounded-xl bg-surface-muted px-3 py-3"><p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">{label}</p><p className="mt-1 text-sm font-semibold truncate">{value}</p></div>; }
 
-function Resumen({ pedido, trabajos, ordenes, controles, piezas, dias, ruta, puedeEditarRuta, guardandoRuta, capacidadesSede, toggleRuta, guardarRuta, rutasDisponibles, capacidadesExternasRuta, capacidadesExternasRutaError }: { pedido: any; trabajos: any[]; ordenes: any[]; controles: any[]; piezas: any[]; dias: number | null; ruta: string[]; puedeEditarRuta: boolean; guardandoRuta: boolean; capacidadesSede: { id: string; nombre: string }[]; toggleRuta: (area: string) => void; guardarRuta: () => Promise<void>; rutasDisponibles: string[]; capacidadesExternasRuta: Record<string, any[]>; capacidadesExternasRutaError: string | null }) {
+type PedidoResumenVista = {
+  cantidad_piezas: number | null;
+  estado: string;
+  fecha_entrega: string | null;
+  sede_nombre: string | null;
+  trabajo: string | null;
+  pieza: string | null;
+  material: string | null;
+  piedras: string | null;
+  talla: string | null;
+  peso_estimado: number | null;
+  origen_comercial: string | null;
+};
+
+type TrabajoResumenVista = { estado: string };
+type OrdenResumenVista = { estado: string; numero: string | null };
+type ControlResumenVista = { tipo: string; resultado: string; created_at: string };
+type PiezaResumenVista = { estado: string; cantidad: number | null };
+
+function Resumen({ pedido, trabajos, ordenes, controles, piezas, dias, ruta, puedeEditarRuta, guardandoRuta, capacidadesSede, toggleRuta, guardarRuta, rutasDisponibles, capacidadesExternasRuta, capacidadesExternasRutaError }: { pedido: PedidoResumenVista; trabajos: TrabajoResumenVista[]; ordenes: OrdenResumenVista[]; controles: ControlResumenVista[]; piezas: PiezaResumenVista[]; dias: number | null; ruta: string[]; puedeEditarRuta: boolean; guardandoRuta: boolean; capacidadesSede: { id: string; nombre: string }[]; toggleRuta: (area: string) => void; guardarRuta: () => Promise<void>; rutasDisponibles: string[]; capacidadesExternasRuta: Record<string, unknown[]>; capacidadesExternasRutaError: string | null }) {
   const rutas = ["Diseño 3D", "Impresión 3D", "Casting", "Corte Láser", "Taller"];
   const completados = trabajos.filter((t) => t.estado === "completado").length;
   const rechazadas = piezas.filter((p) => p.estado === "rechazada").length;
