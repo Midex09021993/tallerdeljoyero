@@ -5,7 +5,7 @@ import { AurumRender } from "@/components/AurumRender";
 import type { AurumCatalogApi } from "@/lib/aurum/api";
 import { GEMAS, MATERIALES } from "@/lib/aurum/catalog";
 
-type Props = { slug: string; producto: string };
+type Props = { slug?: string; producto?: string; sharedModelUrl?: string; sharedModelName?: string };
 const metales = [
   { id: "oro-amarillo", label: "Oro amarillo", color: 0xd5a63d, materialId: "oro18a_pulido" },
   { id: "oro-blanco", label: "Oro blanco", color: 0xd7d9dc, materialId: "oro18b_rodinado" },
@@ -20,11 +20,11 @@ const gemas = [
   { id: "amatista", label: "Amatista", color: 0x8952c8, gemId: "amatista_natural" },
 ] as const;
 
-export function PublicJewelConfigurator({ slug, producto }: Props) {
+export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, sharedModelName }: Props) {
   const [metalId, setMetalId] = useState<string>("oro-amarillo");
   const [gemaId, setGemaId] = useState<string>("diamante");
   const [modelUrl, setModelUrl] = useState<string | null>(null);
-  const [modelName, setModelName] = useState("modelo.3dm");
+  const [modelName, setModelName] = useState(sharedModelName || "modelo.3dm");
   const [status, setStatus] = useState("Preparando modelo 3D…");
   const [loadError, setLoadError] = useState<string | null>(null);
   const [catalogApi, setCatalogApi] = useState<AurumCatalogApi | null>(null);
@@ -36,12 +36,23 @@ export function PublicJewelConfigurator({ slug, producto }: Props) {
       setModelUrl(null);
       setLoadedModelUrl(null);
       setLoadError(null);
+      if (sharedModelUrl) {
+        setModelName(sharedModelName || "joya-compartida.glb");
+        setModelUrl(sharedModelUrl);
+        setStatus("");
+        return;
+      }
+      if (!slug || !producto) {
+        setLoadError("No se ha indicado un modelo válido para visualizar.");
+        setStatus("");
+        return;
+      }
       setStatus("Buscando el modelo 3D del catálogo…");
       try {
         const { data, error } = await supabasePublic.functions.invoke("catalogo-modelo-3d-publico", { body: { slug, producto } });
         if (error || !data?.ok || typeof data.url !== "string") throw new Error(data?.error || error?.message || "No hay modelo 3D disponible para este producto.");
         if (cancelled) return;
-        setModelName(typeof data.nombre === "string" && data.nombre.toLowerCase().endsWith(".3dm") ? data.nombre : "modelo.3dm");
+        setModelName(typeof data.nombre === "string" && /\\.3dm$/i.test(data.nombre) ? data.nombre : "modelo.3dm");
         setModelUrl(data.url);
         setStatus("");
       } catch (cause) {
@@ -53,7 +64,7 @@ export function PublicJewelConfigurator({ slug, producto }: Props) {
     };
     void loadModelReference();
     return () => { cancelled = true; };
-  }, [slug, producto]);
+  }, [slug, producto, sharedModelUrl, sharedModelName]);
 
   const selectedMetal = metales.find((item) => item.id === metalId) ?? metales[0];
   const selectedGem = gemas.find((item) => item.id === gemaId) ?? gemas[0];
@@ -64,7 +75,7 @@ export function PublicJewelConfigurator({ slug, producto }: Props) {
     let cancelled = false;
     if (!modelUrl || !catalogApi?.cargar || loadedModelUrl === modelUrl) return;
     const loadIntoAurum = async () => {
-      setStatus("Abriendo modelo en Aurum Render…");
+      setStatus("Preparando el visor interactivo…");
       setLoadError(null);
       try {
         const response = await fetch(modelUrl);
