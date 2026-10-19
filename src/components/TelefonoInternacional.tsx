@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type PaisTelefono = { iso: string; nombre: string; prefijo: string; bandera: string };
 
@@ -68,9 +68,16 @@ export function TelefonoInternacional({ value, onChange, defaultCountry = "PE", 
   const [paisIso, setPaisIso] = useState(() => interpretarNumero(value, defaultCountry).pais);
   const [nacional, setNacional] = useState(() => interpretarNumero(value, defaultCountry).nacional);
   const [tocado, setTocado] = useState(false);
+  const ultimoValorEmitido = useRef<string | null>(null);
   const pais = PAISES.find((item) => item.iso === paisIso) ?? PAISES[0];
 
   useEffect(() => {
+    // No volver a inferir un valor que este mismo control acaba de emitir: los prefijos
+    // compartidos (por ejemplo +1) no permiten distinguir por sí solos el país elegido.
+    if (ultimoValorEmitido.current === value) {
+      ultimoValorEmitido.current = null;
+      return;
+    }
     const interpretado = interpretarNumero(value, defaultCountry);
     setPaisIso(interpretado.pais);
     setNacional(interpretado.nacional);
@@ -79,6 +86,7 @@ export function TelefonoInternacional({ value, onChange, defaultCountry = "PE", 
   function emitir(siguientePais: PaisTelefono, siguienteNacional: string) {
     const numeros = digitos(siguienteNacional);
     const internacional = numeros ? `+${siguientePais.prefijo}${numeros}` : "";
+    ultimoValorEmitido.current = internacional;
     onChange(internacional);
   }
 
