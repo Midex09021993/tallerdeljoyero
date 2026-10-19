@@ -916,7 +916,7 @@ function Comercial({ pedido, contrato, pagos = [] }: { pedido: any; contrato: an
   const totalSnapshot = comercialNumero(especificaciones["total"], comercialNumero(pedido.importe));
   const total = contrato ? comercialNumero(contrato.total, totalSnapshot) : totalSnapshot;
   const pagosTotal = pagos.reduce((suma, pago) => suma + comercialNumero(pago.monto), 0);
-  const pagado = pagos.length > 0 ? pagosTotal : contrato ? comercialNumero(contrato.abonado) : comercialNumero(especificaciones["anticipo"], comercialNumero(pedido.a_cuenta));
+  const pagado = pagos.length > 0 ? pagosTotal : contrato ? comercialNumero(contrato.abonado) : comercialNumero(pedido.a_cuenta);
   const saldo = Math.max(0, total - pagado);
   const estadoPago = saldo <= 0 && total > 0 ? "Pagado" : pagado > 0 ? "Pago parcial" : "Pendiente";
   const cotizacion = typeof especificaciones["cotizacion_numero"] === "string"
