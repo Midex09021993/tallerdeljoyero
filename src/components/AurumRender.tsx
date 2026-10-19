@@ -1209,7 +1209,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           const renderHeight=Math.max(2,Math.floor(renderWidth/liveAspect));
           const previousFastPath=liveFastPathRef.current;
           const passStates:Array<{pass:any;enabled:boolean}>=(composer?.passes??[]).map((pass:any)=>({pass,enabled:Boolean(pass?.enabled)}));
-          let videoTaaPass:any=null;
           try{
             const { recordAurumCanvasVideo } = await import("../lib/aurum/video-exporter");
             controles.autoRotate=false;
