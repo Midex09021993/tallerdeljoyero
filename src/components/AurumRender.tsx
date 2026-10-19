@@ -130,6 +130,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [videoDuration, setVideoDuration] = useState("5");
   const [videoProgress, setVideoProgress] = useState(0);
   const videoAbortRef = useRef<AbortController | null>(null);
+  const videoExportLockRef = useRef(false);
   const [snapshotOpen, setSnapshotOpen] = useState(false);
   const [snapshotWidth, setSnapshotWidth] = useState("3840");
   const [snapshotHeight, setSnapshotHeight] = useState("2160");
@@ -1190,7 +1191,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             const { recordAurumCanvasVideo } = await import("../lib/aurum/video-exporter");
             // Automatic mode rotates the live scene; manual mode records the user's camera movements.
             controles.autoRotate=automatic;
-            if(automatic) controles.autoRotateSpeed=0.65;
+            // OrbitControls completes one revolution in roughly 60 / speed seconds at 60 Hz.
+            // Match one full 360-degree turn to the selected recording duration.
+            if(automatic) controles.autoRotateSpeed=60/Math.max(1,Math.min(20,Number(options.duration)||5));
             // The viewer normally sleeps when idle; keep its render loop alive
             // so auto-rotation advances and each captured frame is different.
             loop?.setContinuousRendering?.(true);
@@ -2075,12 +2078,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 <button type="button" onClick={()=>videoAbortRef.current?.abort()} className="mt-2 w-full rounded-lg border border-black/15 px-3 py-2 text-xs font-semibold">Cancelar grabación</button>
               </div>}
               {!videoBusy&&<button type="button" disabled={!archivo||exportBusy||!!ptProgress} onClick={async()=>{
+                if(videoExportLockRef.current) return;
+                videoExportLockRef.current=true;
                 const controller=new AbortController();videoAbortRef.current=controller;setVideoBusy(true);setExportBusy(true);setVideoProgress(0);setError(null);
                 try{
                   await apiRef.current?.exportVideo({width:Number(videoWidth),height:Math.round(Number(videoWidth)*9/16),fps:Number(videoFps),duration:Number(videoDuration),mode:videoMode,signal:controller.signal,onProgress:(elapsed:number,total:number)=>setVideoProgress(total>0?elapsed/total*100:0)});
                   setVideoProgress(100);
                 }catch(e:any){if(e?.name!=="AbortError")setError(e instanceof Error?e.message:"No se pudo exportar el vídeo MP4.");}
-                finally{videoAbortRef.current=null;setVideoBusy(false);setExportBusy(false);}
+                finally{videoAbortRef.current=null;videoExportLockRef.current=false;setVideoBusy(false);setExportBusy(false);}
               }} className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#d4af37] px-3 py-2.5 text-xs font-semibold text-black disabled:cursor-not-allowed disabled:opacity-40"><Download className="size-4"/>Grabar y descargar .mp4</button>}
               <p className="text-[10px] leading-relaxed text-[#77756f]">En modo manual, mueve la cámara mientras se graba; en automático, la joya gira sola 360°. 4K depende de la resolución real del visor. 120 FPS es experimental. El giro automático restaura la cámara al terminar; la grabación manual conserva el encuadre final.</p>
             </div>}
