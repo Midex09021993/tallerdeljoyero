@@ -160,6 +160,8 @@ function MiNubePage() {
   const [busqueda, setBusqueda] = useState("");
   const [proyectoAbierto, setProyectoAbierto] = useState<string | null>(null);
   const [proyectoPendienteEliminar, setProyectoPendienteEliminar] = useState<{ nombre: string; archivos: ArchivoNube[] } | null>(null);
+  const [archivoPendienteEliminar, setArchivoPendienteEliminar] = useState<ArchivoNube | null>(null);
+  const [comparticionPendienteRevocar, setComparticionPendienteRevocar] = useState<CarpetaCompartida | null>(null);
   const [modoEdicion, setModoEdicion] = useState<string | null>(null);
   const [compartiendo, setCompartiendo] = useState<string | null>(null);
   const [progresoCompartir, setProgresoCompartir] = useState("");
@@ -944,10 +946,6 @@ function MiNubePage() {
     if (!participanteId || !usuarioId) { toast.error("No se encontró tu taller activo."); return; }
     const nombreLogico = nombreVisible(archivo.nombre).toLocaleLowerCase("es");
     const esVideo = archivo.categoria === "videos";
-    if (!window.confirm(esVideo
-      ? `¿Eliminar definitivamente “${nombreVisible(archivo.nombre)}” de Mi Nube y del NAS si existe una copia?`
-      : `¿Eliminar definitivamente “${nombreVisible(archivo.nombre)}”?`)) return;
-
     try {
       // Para vídeos, localizar la copia hermana antes de borrar nada. Si el NAS
       // no responde, abortar para no dejar una copia huérfana sin avisar.
@@ -1570,7 +1568,7 @@ function MiNubePage() {
                                 Abrir / descargar
                               </button>
                               {modoEdicion === proyecto.nombre && (
-                                <button type="button" onClick={() => void eliminarArchivoProyecto(archivo)} className="inline-flex items-center gap-1 rounded-lg border border-destructive/40 px-2.5 py-1.5 text-[11px] font-semibold text-destructive hover:bg-destructive/5">
+                                <button type="button" onClick={() => setArchivoPendienteEliminar(archivo)} className="inline-flex items-center gap-1 rounded-lg border border-destructive/40 px-2.5 py-1.5 text-[11px] font-semibold text-destructive hover:bg-destructive/5">
                                   Eliminar archivo
                                 </button>
                               )}
@@ -1659,7 +1657,7 @@ function MiNubePage() {
                             <p className="truncate text-xs font-semibold">{share.destinatario_nombre ?? "Taller del ecosistema"}</p>
                             <p className="text-[10px] text-muted-foreground">Acceso activo · carpeta compartida</p>
                           </div>
-                          <button type="button" disabled={guardandoComparticion} onClick={() => { if (window.confirm("¿Quitar el acceso de " + (share.destinatario_nombre ?? "este taller") + " a la carpeta “" + share.carpeta + "”?")) void revocarComparticion(share); }} className="shrink-0 rounded-lg border border-destructive/40 px-2.5 py-1.5 text-[11px] font-semibold text-destructive hover:bg-destructive/5 disabled:opacity-50">Quitar acceso</button>
+                          <button type="button" disabled={guardandoComparticion} onClick={() => setComparticionPendienteRevocar(share)} className="shrink-0 rounded-lg border border-destructive/40 px-2.5 py-1.5 text-[11px] font-semibold text-destructive hover:bg-destructive/5 disabled:opacity-50">Quitar acceso</button>
                         </div>
                       ))}
                     </div>
@@ -1743,6 +1741,30 @@ function MiNubePage() {
         )}
         <p className="flex items-start gap-2 px-1 text-xs leading-5 text-muted-foreground"><LockKeyhole className="mt-0.5 size-3.5 shrink-0" /> El acceso a carpetas compartidas se mantiene hasta que el propietario lo revoque. Las vistas y descargas usan enlaces temporales; los archivos no se hacen públicos.</p>
       </div>
+      {archivoPendienteEliminar && (
+        <div className="fixed inset-0 z-[80] grid place-items-center bg-black/50 p-4" role="dialog" aria-modal="true" aria-labelledby="mi-nube-eliminar-archivo-title">
+          <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-5 shadow-2xl">
+            <h3 id="mi-nube-eliminar-archivo-title" className="text-base font-semibold">Eliminar archivo</h3>
+            <p className="mt-2 break-words text-sm text-muted-foreground">¿Eliminar definitivamente “{nombreVisible(archivoPendienteEliminar.nombre)}” de Mi Nube{archivoPendienteEliminar.categoria === "videos" ? " y de su copia del NAS si está disponible" : ""}?</p>
+            <div className="mt-5 flex justify-end gap-2">
+              <button type="button" onClick={() => setArchivoPendienteEliminar(null)} className="rounded-xl border border-border px-4 py-2 text-sm font-semibold">Cancelar</button>
+              <button type="button" onClick={() => { const archivo = archivoPendienteEliminar; setArchivoPendienteEliminar(null); void eliminarArchivoProyecto(archivo); }} className="rounded-xl bg-destructive px-4 py-2 text-sm font-semibold text-white">Eliminar</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {comparticionPendienteRevocar && (
+        <div className="fixed inset-0 z-[80] grid place-items-center bg-black/50 p-4" role="dialog" aria-modal="true" aria-labelledby="mi-nube-revocar-title">
+          <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-5 shadow-2xl">
+            <h3 id="mi-nube-revocar-title" className="text-base font-semibold">Revocar acceso</h3>
+            <p className="mt-2 text-sm text-muted-foreground">¿Quitar el acceso de {comparticionPendienteRevocar.destinatario_nombre ?? "este taller"} a la carpeta “{comparticionPendienteRevocar.carpeta}”?</p>
+            <div className="mt-5 flex justify-end gap-2">
+              <button type="button" onClick={() => setComparticionPendienteRevocar(null)} className="rounded-xl border border-border px-4 py-2 text-sm font-semibold">Cancelar</button>
+              <button type="button" onClick={() => { const share = comparticionPendienteRevocar; setComparticionPendienteRevocar(null); void revocarComparticion(share); }} className="rounded-xl bg-destructive px-4 py-2 text-sm font-semibold text-white">Revocar acceso</button>
+            </div>
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 }
