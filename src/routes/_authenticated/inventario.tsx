@@ -350,8 +350,10 @@ function InventarioPage() {
     setGuardando(false);
   }
 
+  const [materialPendienteEliminar, setMaterialPendienteEliminar] = useState<Material | null>(null);
+
   async function borrarMaterial(m: Material) {
-    if (!esAdmin || !window.confirm(`¿Eliminar “${m.material}”? Esta acción solo será posible si no tiene movimientos.`)) return;
+    if (!esAdmin) return;
     const r = await supabase.from("inventario").delete().eq("id", m.id);
     if (r.error) toast.error(r.error.message); else { toast.success("Material eliminado"); await cargar(); }
   }
@@ -527,7 +529,7 @@ function InventarioPage() {
                       <td className="px-5 py-4 text-xs text-muted-foreground">{m.ubicacion || "—"}</td>
                       <td className="px-5 py-4 text-xs text-muted-foreground">{m.proveedor || "—"}</td>
                       <td className="px-5 py-4">{bajo ? <Badge text="Stock bajo" warning /> : <Badge text={m.activo ? "Activo" : "Inactivo"} />}</td>
-                      <td className="px-5 py-4"><div className="flex justify-end gap-1"><button type="button" onClick={() => editarMaterial(m)} className="grid size-8 place-items-center rounded-lg border border-border transition hover:border-gold/30 hover:bg-gold/[.03] hover:text-gold" title="Editar"><Pencil className="size-3.5" /></button><button type="button" disabled={!esAdmin} onClick={() => void borrarMaterial(m)} className="grid size-8 place-items-center rounded-lg border border-border text-muted-foreground transition hover:border-danger/25 hover:text-danger disabled:opacity-30" title="Eliminar"><Trash2 className="size-3.5" /></button></div></td>
+                      <td className="px-5 py-4"><div className="flex justify-end gap-1"><button type="button" onClick={() => editarMaterial(m)} className="grid size-8 place-items-center rounded-lg border border-border transition hover:border-gold/30 hover:bg-gold/[.03] hover:text-gold" title="Editar"><Pencil className="size-3.5" /></button><button type="button" disabled={!esAdmin} onClick={() => setMaterialPendienteEliminar(m)} className="grid size-8 place-items-center rounded-lg border border-border text-muted-foreground transition hover:border-danger/25 hover:text-danger disabled:opacity-30" title="Eliminar"><Trash2 className="size-3.5" /></button></div></td>
                     </tr>;
                   })}
                 </tbody>
@@ -758,6 +760,18 @@ function InventarioPage() {
           <Actions saving={guardando} cancel={() => setModal(null)} />
         </form> : null}
       </Modal> : null}
+      {materialPendienteEliminar && (
+        <div className="fixed inset-0 z-[80] grid place-items-center bg-black/50 p-4" role="dialog" aria-modal="true" aria-labelledby="inventario-eliminar-title">
+          <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-5 shadow-2xl">
+            <h3 id="inventario-eliminar-title" className="text-base font-semibold">Eliminar material</h3>
+            <p className="mt-2 text-sm text-muted-foreground">¿Eliminar “{materialPendienteEliminar.material}”? Solo se podrá eliminar si no tiene movimientos.</p>
+            <div className="mt-5 flex justify-end gap-2">
+              <button type="button" onClick={() => setMaterialPendienteEliminar(null)} className="rounded-xl border border-border px-4 py-2 text-sm font-semibold">Cancelar</button>
+              <button type="button" onClick={() => { const m = materialPendienteEliminar; setMaterialPendienteEliminar(null); void borrarMaterial(m); }} className="rounded-xl bg-destructive px-4 py-2 text-sm font-semibold text-white">Eliminar</button>
+            </div>
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 }
