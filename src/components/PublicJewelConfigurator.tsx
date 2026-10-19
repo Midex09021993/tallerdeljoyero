@@ -130,8 +130,8 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
     .trim() || "Joya compartida";
 
   return (
-    <section className="mt-4 overflow-hidden rounded-[26px] border border-[#e8e1d5] bg-white shadow-[0_24px_70px_-42px_rgba(35,28,18,.32)] sm:mt-6">
-      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-[#eee9e0] bg-white px-5 py-4 sm:px-6">
+    <section className="mx-auto mt-2 w-full min-w-0 overflow-hidden rounded-2xl border border-[#e8e1d5] bg-white shadow-[0_18px_48px_-34px_rgba(35,28,18,.32)] sm:mt-6 sm:rounded-[26px]">
+      <header className="flex flex-col items-stretch justify-between gap-3 border-b border-[#eee9e0] bg-white px-3.5 py-3.5 sm:flex-row sm:items-center sm:gap-4 sm:px-6 sm:py-4">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-lg bg-[#f6efe0] text-[#92702f]">
@@ -139,16 +139,16 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
             </span>
             <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#92702f]">Visor interactivo</p>
           </div>
-          <h2 className="mt-1 truncate font-display text-xl text-[#28231d] sm:text-2xl">Configura tu joya en 3D</h2>
+          <h2 className="mt-1 truncate font-display text-lg leading-tight text-[#28231d] sm:text-2xl">Configura tu joya en 3D</h2>
           <p className="mt-1 max-w-xl truncate text-xs text-[#82796e]">{displayName}</p>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="hidden rounded-full border border-[#e9e2d7] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[.12em] text-[#81786c] sm:inline-flex">Solo visualización</span>
+        <div className="flex items-center justify-between gap-2 sm:justify-end">
+          <span className="inline-flex rounded-full border border-[#e9e2d7] px-2.5 py-1.5 text-[9px] font-semibold uppercase tracking-[.1em] text-[#81786c] sm:px-3 sm:text-[10px]">Solo visualización</span>
           <button type="button" onClick={() => { setMetalId("oro-amarillo"); setGemaId("diamante"); }} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-[#e4ddd1] bg-white px-3.5 py-2 text-xs font-semibold text-[#41382d] transition hover:border-[#b28b45] hover:bg-[#fbf8f1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45] focus-visible:ring-offset-2"><RotateCcw className="size-3.5" /> Restablecer</button>
         </div>
       </header>
-      <div className="isolate grid lg:grid-cols-[minmax(0,1fr)_270px]">
-        <div className="relative z-0 min-h-[360px] overflow-hidden bg-[radial-gradient(ellipse_at_50%_42%,#ffffff_0%,#fbfaf7_60%,#f4f0e8_100%)] sm:min-h-[480px] lg:min-h-[540px]">
+      <div className="isolate grid min-w-0 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_270px]">
+        <div className="relative z-0 h-[clamp(320px,54svh,520px)] min-h-[320px] min-w-0 overflow-hidden bg-[radial-gradient(ellipse_at_50%_42%,#ffffff_0%,#fbfaf7_60%,#f4f0e8_100%)] sm:h-auto sm:min-h-[480px] lg:min-h-[540px]">
           {modelUrl && <div className="absolute inset-0"><AurumRender embedded onCatalogApiReady={(api) => setCatalogApi(api)} /></div>}
           {(!modelUrl || loadError || status) && <div className={"absolute inset-0 z-50 grid place-items-center p-6 text-center transition-opacity " + (isReady ? "pointer-events-none opacity-0" : "bg-white/90 backdrop-blur-[2px]")}>
             <div className="max-w-sm">
@@ -157,9 +157,9 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
               {!loadError && <p className="mt-1 text-xs text-[#8a8175]">Estamos preparando la experiencia interactiva.</p>}
             </div>
           </div>}
-          <div className="pointer-events-none absolute bottom-3 left-3 z-10 rounded-full border border-white/80 bg-white/80 px-3 py-1.5 text-[10px] text-[#766d61] shadow-sm backdrop-blur">Arrastra para girar · Rueda para acercar</div>
+          <div className="pointer-events-none absolute bottom-2 left-2 z-10 max-w-[calc(100%-1rem)] rounded-full border border-white/80 bg-white/85 px-2.5 py-1.5 text-[9px] text-[#766d61] shadow-sm backdrop-blur sm:bottom-3 sm:left-3 sm:px-3 sm:text-[10px]">Toca y arrastra para girar · Pellizca para acercar</div>
         </div>
-        <aside className="relative z-10 border-t border-[#eee9e0] bg-white p-4 sm:p-5 lg:border-l lg:border-t-0">
+        <aside className="relative z-10 min-w-0 border-t border-[#eee9e0] bg-white p-3.5 sm:p-5 lg:border-l lg:border-t-0">
           <div className="mb-5">
             <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#92702f]">01 · Metal</p>
             <p className="mt-1 text-xs text-[#8a8175]">Elige el acabado de tu joya</p>
@@ -168,7 +168,7 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#92702f]">02 · Piedra</p>
             <p className="mt-1 text-xs text-[#8a8175]">Selecciona una gema</p>
-            <div className="mt-3 space-y-1.5">{gemas.map((gem) => <button key={gem.id} type="button" aria-pressed={gemaId === gem.id} onClick={() => setGemaId(gem.id)} className={"flex min-h-10 w-full items-center gap-2.5 rounded-xl border px-3 py-2 text-left text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45] focus-visible:ring-offset-1 " + (gemaId === gem.id ? "border-[#a7833d] bg-[#f7f0e2] text-[#342e26]" : "border-[#ece7df] bg-white text-[#5f574d] hover:border-[#d1bd96] hover:bg-[#fcfaf5]")}><span className="size-3.5 shrink-0 rounded-full border border-black/10" style={{ backgroundColor: "#" + gem.color.toString(16).padStart(6,"0") }} /><span className="flex-1 font-medium">{gem.label}</span>{gemaId === gem.id && <span className="text-[9px] font-bold uppercase tracking-wide text-[#8b6b36]">Activo</span>}</button>)}</div>
+            <div className="mt-3 grid grid-cols-2 gap-1.5 sm:grid-cols-1">{gemas.map((gem) => <button key={gem.id} type="button" aria-pressed={gemaId === gem.id} onClick={() => setGemaId(gem.id)} className={"flex min-h-10 w-full items-center gap-2 rounded-xl border px-2.5 py-2 text-left text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45] focus-visible:ring-offset-1 " + (gemaId === gem.id ? "border-[#a7833d] bg-[#f7f0e2] text-[#342e26]" : "border-[#ece7df] bg-white text-[#5f574d] hover:border-[#d1bd96] hover:bg-[#fcfaf5]")}><span className="size-3.5 shrink-0 rounded-full border border-black/10" style={{ backgroundColor: "#" + gem.color.toString(16).padStart(6,"0") }} /><span className="min-w-0 flex-1 truncate font-medium">{gem.label}</span>{gemaId === gem.id && <span className="text-[9px] font-bold uppercase tracking-wide text-[#8b6b36]">Activo</span>}</button>)}</div>
           </div>
           <div className="mt-5 rounded-xl border border-[#eee6d8] bg-[#fcfaf6] p-3">
             <p className="text-[10px] font-bold uppercase tracking-[.14em] text-[#92702f]">Vista previa</p>
@@ -176,7 +176,7 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
           </div>
         </aside>
       </div>
-      <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-[#eee9e0] bg-[#fdfcf9] px-5 py-3 text-[10px] text-[#8a8175] sm:px-6">
+      <footer className="flex flex-col items-start justify-between gap-1.5 border-t border-[#eee9e0] bg-[#fdfcf9] px-3.5 py-3 text-[10px] leading-4 text-[#8a8175] sm:flex-row sm:items-center sm:gap-2 sm:px-6">
         <span>Taller del Joyero · Visualizador independiente</span>
         <span>Los cambios son una vista previa y no modifican el archivo original.</span>
       </footer>
