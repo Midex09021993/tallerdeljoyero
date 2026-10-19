@@ -51,6 +51,9 @@ function ClientesPage() {
   const [seleccionado, setSeleccionado] = useState<Cliente | null>(null);
   const [pedidos, setPedidos] = useState<PedidoRef[]>([]);
   const [cotizaciones, setCotizaciones] = useState<CotRef[]>([]);
+  const [cargandoHistorial, setCargandoHistorial] = useState(false);
+  const [errorHistorial, setErrorHistorial] = useState<string | null>(null);
+  const cargaHistorialRef = useRef(0);
   const [busca, setBusca] = useState("");
   const [estadoFiltro, setEstadoFiltro] = useState("todos");
   const [modal, setModal] = useState(false);
@@ -139,17 +142,46 @@ function ClientesPage() {
 
   const seleccionadoId = seleccionado?.id;
   useEffect(() => {
-    if (!seleccionadoId) { setPedidos([]); setCotizaciones([]); return; }
+    const cargaId = ++cargaHistorialRef.current;
+    if (!seleccionadoId) {
+      setPedidos([]);
+      setCotizaciones([]);
+      setCargandoHistorial(false);
+      setErrorHistorial(null);
+      return;
+    }
+
+    setPedidos([]);
+    setCotizaciones([]);
+    setCargandoHistorial(true);
+    setErrorHistorial(null);
     void (async () => {
-      const [ped, cot] = await Promise.all([
-        supabase.from("pedidos").select("id,referencia,estado,importe,fecha_entrega").eq("cliente_id", seleccionadoId).order("created_at", { ascending: false }).limit(8),
-        cotizacionesHabilitadas
-          ? supabase.from("cotizaciones").select("id,numero,estado,total").eq("cliente_id", seleccionadoId).order("created_at", { ascending: false }).limit(8)
-          : Promise.resolve({ data: [], error: null }),
-      ]);
-      setPedidos((ped.data ?? []) as PedidoRef[]);
-      setCotizaciones((cot.data ?? []) as CotRef[]);
+      try {
+        const [ped, cot] = await Promise.all([
+          supabase.from("pedidos").select("id,referencia,estado,importe,fecha_entrega").eq("cliente_id", seleccionadoId).order("created_at", { ascending: false }).limit(8),
+          cotizacionesHabilitadas
+            ? supabase.from("cotizaciones").select("id,numero,estado,total").eq("cliente_id", seleccionadoId).order("created_at", { ascending: false }).limit(8)
+            : Promise.resolve({ data: [], error: null }),
+        ]);
+        if (cargaId !== cargaHistorialRef.current) return;
+        if (ped.error || cot.error) {
+          setErrorHistorial("No se pudo cargar todo el historial comercial. Inténtalo de nuevo.");
+          return;
+        }
+        setPedidos((ped.data ?? []) as PedidoRef[]);
+        setCotizaciones((cot.data ?? []) as CotRef[]);
+      } catch (error) {
+        if (cargaId !== cargaHistorialRef.current) return;
+        console.error("[clientes] error al cargar historial", error);
+        setErrorHistorial("No se pudo cargar el historial comercial. Inténtalo de nuevo.");
+      } finally {
+        if (cargaId === cargaHistorialRef.current) setCargandoHistorial(false);
+      }
     })();
+
+    return () => {
+      cargaHistorialRef.current += 1;
+    };
   }, [seleccionadoId, cotizacionesHabilitadas]);
 
   const filtrados = useMemo(() => {
@@ -353,13 +385,13 @@ function ClientesPage() {
                 <div className="mt-7">
                   <SectionTitle title="Cotizaciones recientes" />
                   <div className="mt-2 divide-y divide-border rounded-xl border border-border">
-                    {cotizaciones.length ? cotizaciones.map((q) => <div key={q.id} className="flex items-center justify-between gap-3 px-3 py-2.5 text-xs"><span><b>{q.numero}</b><span className="ml-2 text-muted-foreground">{q.estado}</span></span><b>{money(Number(q.total) || 0)}</b></div>) : <p className="p-4 text-xs text-muted-foreground">Sin cotizaciones registradas.</p>}
+                    {errorHistorial ? <p role="alert" className="p-4 text-xs text-destructive">{errorHistorial}</p> : cargandoHistorial ? <p role="status" className="p-4 text-xs text-muted-foreground">Cargando historial…</p> : cotizaciones.length ? cotizaciones.map((q) => <div key={q.id} className="flex items-center justify-between gap-3 px-3 py-2.5 text-xs"><span><b>{q.numero}</b><span className="ml-2 text-muted-foreground">{q.estado}</span></span><b>{money(Number(q.total) || 0)}</b></div>) : <p className="p-4 text-xs text-muted-foreground">Sin cotizaciones registradas.</p>}
                   </div>
                 </div>
                 <div className="mt-6">
                   <SectionTitle title="Pedidos recientes" />
                   <div className="mt-2 divide-y divide-border rounded-xl border border-border">
-                    {pedidos.length ? pedidos.map((p) => <div key={p.id} className="flex items-center justify-between gap-3 px-3 py-2.5 text-xs"><span><b>{p.referencia}</b><span className="ml-2 text-muted-foreground">{p.estado}</span></span><b>{p.importe == null ? "—" : money(Number(p.importe))}</b></div>) : <p className="p-4 text-xs text-muted-foreground">Sin pedidos registrados.</p>}
+                    {errorHistorial ? <p role="alert" className="p-4 text-xs text-destructive">{errorHistorial}</p> : cargandoHistorial ? <p role="status" className="p-4 text-xs text-muted-foreground">Cargando historial…</p> : pedidos.length ? pedidos.map((p) => <div key={p.id} className="flex items-center justify-between gap-3 px-3 py-2.5 text-xs"><span><b>{p.referencia}</b><span className="ml-2 text-muted-foreground">{p.estado}</span></span><b>{p.importe == null ? "—" : money(Number(p.importe))}</b></div>) : <p className="p-4 text-xs text-muted-foreground">Sin pedidos registrados.</p>}
                   </div>
                 </div>
               </div>
