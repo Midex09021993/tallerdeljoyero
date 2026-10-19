@@ -430,13 +430,13 @@ function LoginPage() {
               {seccionPlataforma === "ecosistema" ? (
                 <>
                   <div className="rounded-2xl border border-gold/20 bg-gold/[0.05] p-5 sm:p-7">
-                    <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-gold">Aurum Lab · infraestructura digital</p>
-                    <h3 className="mt-2 max-w-4xl font-display text-2xl italic text-white sm:text-4xl">Todo el recorrido de una joya, conectado.</h3>
+                    <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-gold">Aurum Lab · Plataforma SaaS para joyeros</p>
+                    <h3 className="mt-2 max-w-4xl font-display text-2xl italic text-white sm:text-4xl">La excelencia de tu taller, conectada.</h3>
                     <p className="mt-3 max-w-3xl text-sm leading-relaxed text-white/65">
-                      Aurum Lab reúne herramientas técnicas gratuitas y módulos para organizar el trabajo del taller: clientes, cotizaciones, pedidos, archivos, catálogo y seguimiento de producción. Cada módulo muestra las funciones disponibles para el taller y los permisos de cada usuario.
+                      Una plataforma diseñada para la industria joyera que conecta la gestión comercial, la operación del taller y las herramientas especializadas para diseñar, visualizar y presentar tus joyas con una experiencia de trabajo integrada.
                     </p>
                     <div className="mt-5 flex flex-wrap gap-2 text-[10px] font-semibold uppercase tracking-wider">
-                      {["Cliente","Cotización","Pedido","Producción","Calidad","Entrega"].map((item,i) => <span key={item} className="rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-white/65">{item}{i < 5 ? " →" : ""}</span>)}
+                      {["Gestión comercial","Operación del taller","Diseño 3D","Presentación de joyas"].map((item) => <span key={item} className="rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-white/65">{item}</span>)}
                     </div>
                   </div>
 
