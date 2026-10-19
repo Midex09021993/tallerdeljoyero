@@ -163,6 +163,8 @@ function ClientesPage() {
   const activos = clientes.filter((c) => c.estado === "activo").length;
 
   function nuevoCliente() {
+    // Crear una ficha nueva nunca debe reutilizar la selección anterior como destino de edición.
+    setSeleccionado(null);
     setForm({ nombre: "", telefono: "", email: "", fecha_nacimiento: "", notas: "" });
     setModal(true);
   }
