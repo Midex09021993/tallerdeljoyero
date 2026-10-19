@@ -1182,6 +1182,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // Rotate the actual live scene while the dedicated output canvas records it.
             controles.autoRotate=true;
             controles.autoRotateSpeed=0.65;
+            // The viewer normally sleeps when idle; keep its render loop alive
+            // so auto-rotation advances and each captured frame is different.
+            loop?.setContinuousRendering?.(true);
             loop?.converge?.(2);
             loop?.invalidate?.();
             await recordAurumCanvasVideo(sourceCanvas,{
@@ -1189,6 +1192,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               signal:options.signal,onProgress:options.onProgress,
             });
           }finally{
+            loop?.setContinuousRendering?.(false);
             controles.autoRotate=previousAutoRotate;
             controles.autoRotateSpeed=previousAutoRotateSpeed;
             camara.position.copy(cameraPosition);
