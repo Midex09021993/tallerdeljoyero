@@ -124,6 +124,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [exportBusy, setExportBusy] = useState(false);
   const [videoOpen, setVideoOpen] = useState(false);
   const [videoBusy, setVideoBusy] = useState(false);
+  const [videoMode, setVideoMode] = useState<"manual"|"automatic">("automatic");
   const [videoWidth, setVideoWidth] = useState("1280");
   const [videoFps, setVideoFps] = useState("30");
   const [videoDuration, setVideoDuration] = useState("5");
@@ -1174,7 +1175,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             loop?.resize?.();
           }
         },
-        exportVideo:async(options:{width?:number;height?:number;fps?:number;duration?:number;signal?:AbortSignal;onProgress?:(elapsed:number,total:number)=>void}={})=>{
+        exportVideo:async(options:{width?:number;height?:number;fps?:number;duration?:number;mode?:"manual"|"automatic";signal?:AbortSignal;onProgress?:(elapsed:number,total:number)=>void}={})=>{
           if(!modelo) throw new Error("Carga una joya antes de grabar el vídeo.");
           const sourceCanvas=renderer.domElement as HTMLCanvasElement;
           if(!sourceCanvas || sourceCanvas.width<2 || sourceCanvas.height<2) throw new Error("El visor todavía no tiene una imagen para grabar.");
@@ -1183,12 +1184,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           const controlsTarget=controles.target?.clone?.();
           const previousAutoRotate=Boolean(controles.autoRotate);
           const previousAutoRotateSpeed=Number(controles.autoRotateSpeed ?? 0.65);
+          const automatic=options.mode!=="manual";
           const loop:any=viewerLoopRef.current;
           try{
             const { recordAurumCanvasVideo } = await import("../lib/aurum/video-exporter");
-            // Rotate the actual live scene while the dedicated output canvas records it.
-            controles.autoRotate=true;
-            controles.autoRotateSpeed=0.65;
+            // Automatic mode rotates the live scene; manual mode records the user's camera movements.
+            controles.autoRotate=automatic;
+            if(automatic) controles.autoRotateSpeed=0.65;
             // The viewer normally sleeps when idle; keep its render loop alive
             // so auto-rotation advances and each captured frame is different.
             loop?.setContinuousRendering?.(true);
@@ -1202,10 +1204,12 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             loop?.setContinuousRendering?.(false);
             controles.autoRotate=previousAutoRotate;
             controles.autoRotateSpeed=previousAutoRotateSpeed;
-            camara.position.copy(cameraPosition);
-            camara.quaternion.copy(cameraQuaternion);
-            if(controlsTarget && controles.target) controles.target.copy(controlsTarget);
-            controles.update?.();
+            if(automatic){
+              camara.position.copy(cameraPosition);
+              camara.quaternion.copy(cameraQuaternion);
+              if(controlsTarget && controles.target) controles.target.copy(controlsTarget);
+              controles.update?.();
+            }
             loop?.invalidate?.();
             loop?.resume?.();
           }
@@ -2046,6 +2050,12 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               <ChevronDown className={"size-4 transition-transform "+(videoOpen?"rotate-180":"")}/>
             </button>
             {videoOpen&&<div className="mt-3 space-y-2.5 border-t border-black/10 pt-3">
+              <label className="block text-[10px] text-[#66645e]">Modo de grabación
+                <select value={videoMode} disabled={videoBusy} onChange={e=>setVideoMode(e.target.value as "manual"|"automatic")} className="mt-1 w-full rounded-lg border border-black/15 bg-white px-2 py-2 text-xs text-[#292824]">
+                  <option value="manual">Manual · mover la cámara durante la grabación</option>
+                  <option value="automatic">Automático · giro 360°</option>
+                </select>
+              </label>
               <label className="block text-[10px] text-[#66645e]">Resolución
                 <select value={videoWidth} disabled={videoBusy} onChange={e=>setVideoWidth(e.target.value)} className="mt-1 w-full rounded-lg border border-black/15 bg-white px-2 py-2 text-xs text-[#292824]">
                   <option value="1280">HD · 1280 × 720</option><option value="1920">Full HD · 1920 × 1080</option><option value="2560">QHD · 2560 × 1440</option><option value="3840">4K UHD · 3840 × 2160</option>
@@ -2060,19 +2070,19 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 </label>
               </div>
               {videoBusy&&<div role="status" aria-live="polite" className="rounded-lg border border-[#d4af37]/25 bg-white p-2.5">
-                <div className="mb-2 flex justify-between text-[10px]"><span>Grabando giro en tiempo real</span><span>{Math.round(videoProgress)}%</span></div>
+                <div className="mb-2 flex justify-between text-[10px]"><span>{videoMode==="automatic"?"Grabando giro automático":"Grabando movimientos manuales"}</span><span>{Math.round(videoProgress)}%</span></div>
                 <div className="h-2 overflow-hidden rounded-full bg-[#eee8d8]"><div className="h-full rounded-full bg-[#b99642] transition-[width]" style={{width:Math.max(0,Math.min(100,videoProgress))+"%"}}/></div>
                 <button type="button" onClick={()=>videoAbortRef.current?.abort()} className="mt-2 w-full rounded-lg border border-black/15 px-3 py-2 text-xs font-semibold">Cancelar grabación</button>
               </div>}
               {!videoBusy&&<button type="button" disabled={!archivo||exportBusy||!!ptProgress} onClick={async()=>{
                 const controller=new AbortController();videoAbortRef.current=controller;setVideoBusy(true);setExportBusy(true);setVideoProgress(0);setError(null);
                 try{
-                  await apiRef.current?.exportVideo({width:Number(videoWidth),height:Math.round(Number(videoWidth)*9/16),fps:Number(videoFps),duration:Number(videoDuration),signal:controller.signal,onProgress:(elapsed:number,total:number)=>setVideoProgress(total>0?elapsed/total*100:0)});
+                  await apiRef.current?.exportVideo({width:Number(videoWidth),height:Math.round(Number(videoWidth)*9/16),fps:Number(videoFps),duration:Number(videoDuration),mode:videoMode,signal:controller.signal,onProgress:(elapsed:number,total:number)=>setVideoProgress(total>0?elapsed/total*100:0)});
                   setVideoProgress(100);
                 }catch(e:any){if(e?.name!=="AbortError")setError(e instanceof Error?e.message:"No se pudo exportar el vídeo MP4.");}
                 finally{videoAbortRef.current=null;setVideoBusy(false);setExportBusy(false);}
               }} className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#d4af37] px-3 py-2.5 text-xs font-semibold text-black disabled:cursor-not-allowed disabled:opacity-40"><Download className="size-4"/>Grabar y descargar .mp4</button>}
-              <p className="text-[10px] leading-relaxed text-[#77756f]">La joya gira en el motor mientras se captura. 4K aumenta el tamaño del vídeo, pero el detalle depende de la resolución real del visor. 120 FPS es experimental y depende del navegador, la pantalla y la GPU; al terminar se restaura la cámara.</p>
+              <p className="text-[10px] leading-relaxed text-[#77756f]">En modo manual, mueve la cámara mientras se graba; en automático, la joya gira sola 360°. 4K depende de la resolución real del visor. 120 FPS es experimental. El giro automático restaura la cámara al terminar; la grabación manual conserva el encuadre final.</p>
             </div>}
           </div>
           <button type="button" onClick={()=>apiRef.current?.exportSceneSettings()} className="flex w-full items-center gap-3 rounded-xl border border-black/10 bg-black/[.025] px-3 py-3 text-left text-sm text-[#292824] hover:bg-black/[.05]"><FileJson className="size-5"/><span><span className="block">Configuración .vjson</span><span className="block text-[10px] text-[#77756f]">Escena, cámara, calidad y selección</span></span></button>
