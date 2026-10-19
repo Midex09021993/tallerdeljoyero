@@ -177,7 +177,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
     setProyectoNube(initialProject ?? null);
     if (producto?.id) {
       void (async () => {
-        const { data, error: projectError } = await (supabase as any).from("catalogo_proyectos_nube")
+        const { data, error: projectError } = await supabase.from("catalogo_proyectos_nube")
           .select("carpeta, archivos").eq("producto_id", producto.id).maybeSingle();
         if (projectError) {
           console.warn("[Catálogo] No se pudo consultar el proyecto vinculado de Mi Nube.", projectError.message);
@@ -382,7 +382,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
       if (proyectoNube && productoIdGuardado) {
         const { data: authData, error: authError } = await supabase.auth.getUser();
         if (authError || !authData.user) throw new Error("La ficha se guardó, pero no se pudo verificar la sesión para vincular Mi Nube.");
-        const { error: linkError } = await (supabase as any).from("catalogo_proyectos_nube").upsert({
+        const { error: linkError } = await supabase.from("catalogo_proyectos_nube").upsert({
           producto_id: productoIdGuardado, participante_id: participanteId, usuario_id: authData.user.id,
           carpeta: proyectoNube.carpeta, archivos: proyectoNube.archivos,
         }, { onConflict: "producto_id" });
