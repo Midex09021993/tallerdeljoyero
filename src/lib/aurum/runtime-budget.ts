@@ -41,5 +41,5 @@ export function getAurumRuntimeBudget(triangleCount:number):AurumRuntimeBudget {
   if(triangles<=900_000){
     return {triangleCount:triangles,tier:"very-dense",pixelRatioCap:1.10,transmissionScaleCap:.25,interactionTransmissionScale:.09,interactionPixelRatio:.82};
   }
-  return {triangleCount:triangles,tier:"extreme",pixelRatioCap:1.0,transmissionScaleCap:.20,interactionTransmissionScale:.07,interactionPixelRatio:.75};
+  return {triangleCount:triangles,tier:"extreme",pixelRatioCap:1.0,transmissionScaleCap:.20,interactionTransmissionScale:.10,interactionPixelRatio:.75};
 }
