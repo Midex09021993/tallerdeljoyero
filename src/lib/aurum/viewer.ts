@@ -246,6 +246,8 @@ export function startAurumViewerLoop(
     observer,
     get frame() { return frame; },
     invalidate: requestRender,
+    // Render synchronously after an export updates the camera, before capturing that frame.
+    renderNow: () => { if (!stopped && !paused) render(); },
     // Keep rendering every frame for time-based exports such as turntable video.
     // Always disable this in a finally block so the editor returns to demand rendering.
     setContinuousRendering: (active: boolean) => {
