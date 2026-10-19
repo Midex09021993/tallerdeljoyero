@@ -39,11 +39,11 @@ function digitos(valor: string) {
   return valor.replace(/\D/g, "");
 }
 
-function interpretarNumero(valor: string) {
+function interpretarNumero(valor: string, paisPredeterminado = "PE") {
   const limpio = valor.trim();
-  if (!limpio) return { pais: "PE", nacional: "" };
+  if (!limpio) return { pais: PAISES.some((pais) => pais.iso === paisPredeterminado) ? paisPredeterminado : "PE", nacional: "" };
   const numeros = digitos(limpio);
-  if (!numeros) return { pais: "PE", nacional: "" };
+  if (!numeros) return { pais: PAISES.some((pais) => pais.iso === paisPredeterminado) ? paisPredeterminado : "PE", nacional: "" };
   const paisCoincidente = limpio.startsWith("+")
     ? [...PAISES].sort((a, b) => b.prefijo.length - a.prefijo.length).find((pais) => numeros.startsWith(pais.prefijo))
     : numeros.startsWith("00")
@@ -53,27 +53,28 @@ function interpretarNumero(valor: string) {
     const internacional = limpio.startsWith("+") ? numeros : numeros.slice(2);
     return { pais: paisCoincidente.iso, nacional: internacional.slice(paisCoincidente.prefijo.length) };
   }
-  // Compatibilidad temporal: los teléfonos heredados sin prefijo se muestran como Perú.
-  return { pais: "PE", nacional: numeros };
+  // Los números antiguos sin prefijo se interpretan con el país configurado para el taller.
+  return { pais: PAISES.some((pais) => pais.iso === paisPredeterminado) ? paisPredeterminado : "PE", nacional: numeros };
 }
 
 type Props = {
   value: string;
   onChange: (value: string) => void;
+  defaultCountry?: string;
   id?: string;
 };
 
-export function TelefonoInternacional({ value, onChange, id }: Props) {
-  const [paisIso, setPaisIso] = useState(() => interpretarNumero(value).pais);
-  const [nacional, setNacional] = useState(() => interpretarNumero(value).nacional);
+export function TelefonoInternacional({ value, onChange, defaultCountry = "PE", id }: Props) {
+  const [paisIso, setPaisIso] = useState(() => interpretarNumero(value, defaultCountry).pais);
+  const [nacional, setNacional] = useState(() => interpretarNumero(value, defaultCountry).nacional);
   const [tocado, setTocado] = useState(false);
   const pais = PAISES.find((item) => item.iso === paisIso) ?? PAISES[0];
 
   useEffect(() => {
-    const interpretado = interpretarNumero(value);
+    const interpretado = interpretarNumero(value, defaultCountry);
     setPaisIso(interpretado.pais);
     setNacional(interpretado.nacional);
-  }, [value]);
+  }, [value, defaultCountry]);
 
   function emitir(siguientePais: PaisTelefono, siguienteNacional: string) {
     const numeros = digitos(siguienteNacional);
