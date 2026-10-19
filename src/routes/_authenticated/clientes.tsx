@@ -386,7 +386,7 @@ function ClientesPage() {
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
               <div className="flex-1">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-gold">Directorio</p>
-                <h2 className="mt-1 text-lg font-semibold">Clientes del taller</h2>
+                <div className="flex flex-wrap items-center gap-2"><h2 className="mt-1 text-lg font-semibold">Clientes del taller</h2><span className="rounded-full border border-border bg-surface-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">{filtrados.length} {filtrados.length === 1 ? "resultado" : "resultados"}</span></div>
               </div>
               <div className="flex gap-2">
                 <select aria-label="Filtrar por tipo de cliente" value={tipoFiltro} onChange={(e) => setTipoFiltro(e.target.value)} className="h-10 min-w-0 rounded-xl border border-border bg-background px-3 text-sm">
