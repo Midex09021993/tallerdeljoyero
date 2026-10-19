@@ -13,8 +13,13 @@ import { TODAS_LAS_SEDES, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-due
 type Cliente = {
   id: string;
   nombre: string;
+  tipo: "persona" | "empresa";
+  documento: string | null;
   telefono: string | null;
+  whatsapp: string | null;
   email: string | null;
+  ciudad: string | null;
+  direccion: string | null;
   estado: string;
   created_at: string;
   fecha_nacimiento: string | null;
@@ -63,7 +68,7 @@ function ClientesPage() {
   const [guardando, setGuardando] = useState(false);
   const [eliminando, setEliminando] = useState(false);
   const [confirmarEliminacion, setConfirmarEliminacion] = useState(false);
-  const [form, setForm] = useState({ nombre: "", telefono: "", email: "", fecha_nacimiento: "", notas: "" });
+  const [form, setForm] = useState({ nombre: "", tipo: "persona" as "persona" | "empresa", documento: "", telefono: "", whatsapp: "", email: "", ciudad: "", direccion: "", fecha_nacimiento: "", notas: "" });
   const [paisPredeterminadoTelefono, setPaisPredeterminadoTelefono] = useState("PE");
   const [vista, setVista] = useState<"clientes" | "cumpleanos" | "campanas">("clientes");
 
@@ -142,7 +147,7 @@ function ClientesPage() {
 
     let clientesQuery = supabase
       .from("clientes")
-      .select("id,nombre,telefono,email,estado,created_at,fecha_nacimiento,notas,sede_id,participante_id")
+      .select("id,nombre,tipo,documento,telefono,whatsapp,email,ciudad,direccion,estado,created_at,fecha_nacimiento,notas,sede_id,participante_id")
       .order("nombre");
     if (esDueno) {
       if (sedeContextoId) {
@@ -233,7 +238,7 @@ function ClientesPage() {
   const filtrados = useMemo(() => {
     const q = busca.trim().toLowerCase();
     return clientes.filter((c) => {
-      const texto = [c.nombre, c.telefono ?? "", c.email ?? ""].join(" ").toLowerCase();
+      const texto = [c.nombre, c.documento ?? "", c.telefono ?? "", c.whatsapp ?? "", c.email ?? "", c.ciudad ?? ""].join(" ").toLowerCase();
       return (!q || texto.includes(q)) && (estadoFiltro === "todos" || c.estado === estadoFiltro);
     });
   }, [clientes, busca, estadoFiltro]);
@@ -243,13 +248,13 @@ function ClientesPage() {
   function nuevoCliente() {
     // Crear una ficha nueva nunca debe reutilizar la selección anterior como destino de edición.
     setSeleccionado(null);
-    setForm({ nombre: "", telefono: "", email: "", fecha_nacimiento: "", notas: "" });
+    setForm({ nombre: "", tipo: "persona", documento: "", telefono: "", whatsapp: "", email: "", ciudad: "", direccion: "", fecha_nacimiento: "", notas: "" });
     setModal(true);
   }
 
   function editarCliente() {
     if (!seleccionado) return;
-    setForm({ nombre: seleccionado.nombre, telefono: seleccionado.telefono ?? "", email: seleccionado.email ?? "", fecha_nacimiento: seleccionado.fecha_nacimiento ?? "", notas: seleccionado.notas ?? "" });
+    setForm({ nombre: seleccionado.nombre, tipo: seleccionado.tipo ?? "persona", documento: seleccionado.documento ?? "", telefono: seleccionado.telefono ?? "", whatsapp: seleccionado.whatsapp ?? "", email: seleccionado.email ?? "", ciudad: seleccionado.ciudad ?? "", direccion: seleccionado.direccion ?? "", fecha_nacimiento: seleccionado.fecha_nacimiento ?? "", notas: seleccionado.notas ?? "" });
     setModal(true);
   }
 
@@ -260,7 +265,7 @@ function ClientesPage() {
     try {
       if (!sesion?.participante?.id) throw new Error("No hay un taller activo del Ecosistema para guardar el cliente.");
       if (!seleccionado && !sedeContextoId) throw new Error("Selecciona una sede específica desde Inicio antes de crear un cliente.");
-      const payload = { nombre: form.nombre.trim(), telefono: form.telefono.trim() || null, email: form.email.trim() || null, fecha_nacimiento: form.fecha_nacimiento || null, notas: form.notas.trim() || "" };
+      const payload = { nombre: form.nombre.trim(), tipo: form.tipo, documento: form.documento.trim() || null, telefono: form.telefono.trim() || null, whatsapp: form.whatsapp.trim() || null, email: form.email.trim() || null, ciudad: form.ciudad.trim() || null, direccion: form.direccion.trim() || null, fecha_nacimiento: form.fecha_nacimiento || null, notas: form.notas.trim() || "" };
       let error: { message: string; code?: string } | null = null;
       let clienteCreadoId: string | null = null;
       if (seleccionado) {
@@ -296,7 +301,7 @@ function ClientesPage() {
       if (!seleccionado) {
         const { data } = await supabase
           .from("clientes")
-          .select("id,nombre,telefono,email,estado,created_at,fecha_nacimiento,notas,sede_id,participante_id")
+          .select("id,nombre,tipo,documento,telefono,whatsapp,email,ciudad,direccion,estado,created_at,fecha_nacimiento,notas,sede_id,participante_id")
           .eq("id", clienteCreadoId!)
           .maybeSingle();
         if (data) setSeleccionado({ ...data, sede_nombre: sesion.participante.nombre });
@@ -394,7 +399,7 @@ function ClientesPage() {
                 <span className="grid size-10 shrink-0 place-items-center rounded-full border border-gold/20 bg-gold/10 text-sm font-semibold text-gold">{cliente.nombre.charAt(0).toUpperCase()}</span>
                 <span className="min-w-0 flex-1">
                   <span className="flex min-w-0 items-center gap-1.5"><span className="truncate text-sm font-semibold">{cliente.nombre}</span>{cliente.fecha_nacimiento&&cliente.fecha_nacimiento.slice(5)===`${String(new Date().getMonth()+1).padStart(2,"0")}-${String(new Date().getDate()).padStart(2,"0")}`?<Cake className="size-3.5 shrink-0 text-gold" aria-label="Cumpleaños hoy"/>:null}{cliente.fecha_nacimiento&&Number(cliente.fecha_nacimiento.slice(5,7))===new Date().getMonth()+1?<span className="shrink-0 rounded-full bg-gold/10 px-1.5 py-0.5 text-[9px] text-gold">Cumple este mes</span>:null}</span>
-                  <span className="mt-0.5 block truncate text-xs text-muted-foreground">{cliente.sede_nombre} · {cliente.telefono || cliente.email || "Sin contacto registrado"}</span>
+                  <span className="mt-0.5 block truncate text-xs text-muted-foreground">{cliente.sede_nombre} · {cliente.tipo === "empresa" ? "Empresa" : "Particular"} · {cliente.telefono || cliente.whatsapp || cliente.email || "Sin contacto registrado"}</span>
                 </span>
                 <span className={`rounded-full px-2 py-1 text-[9px] font-semibold uppercase tracking-wider ${cliente.estado === "activo" ? "bg-success-soft text-success" : "bg-surface-muted text-muted-foreground"}`}>{cliente.estado}</span>
               </button>
@@ -411,15 +416,17 @@ function ClientesPage() {
                 <div className="relative flex items-start justify-between gap-4">
                   <div className="flex items-center gap-3">
                     <span className="grid size-14 shrink-0 place-items-center rounded-2xl border border-gold/30 bg-gold/10 text-lg font-semibold text-gold shadow-[0_10px_30px_-15px_hsl(var(--gold)/0.8)]">{seleccionado.nombre.charAt(0).toUpperCase()}</span>
-                    <div className="min-w-0"><p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-gold/80">Ficha de cliente</p><h2 className="mt-1 truncate text-xl font-semibold tracking-tight">{seleccionado.nombre}</h2><p className="mt-1 text-[11px] text-muted-foreground">Relación comercial · Aurum Lab</p><p className="mt-1 text-[11px] font-medium text-gold/80">Sede · {seleccionado.sede_nombre}</p></div>
+                    <div className="min-w-0"><p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-gold/80">Ficha de cliente</p><h2 className="mt-1 truncate text-xl font-semibold tracking-tight">{seleccionado.nombre}</h2><p className="mt-1 text-[11px] text-muted-foreground">{seleccionado.tipo === "empresa" ? "Cliente empresa" : "Cliente particular"} · Relación comercial · Aurum Lab</p><p className="mt-1 text-[11px] font-medium text-gold/80">Sede · {seleccionado.sede_nombre}</p></div>
                   </div>
                   <span className={`rounded-full border px-2.5 py-1 text-[9px] font-semibold uppercase tracking-wider ${seleccionado.estado === "activo" ? "border-success/30 bg-success/10 text-success" : "border-border bg-surface-muted text-muted-foreground"}`}>{seleccionado.estado}</span>
                 </div>
               </div>
               <div className="p-5">
                 <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-2xl border border-border bg-surface-muted/45 p-4"><span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">{seleccionado.tipo === "empresa" ? "Razón social / Empresa" : "Nombre del cliente"}</span><p className="mt-2 truncate text-sm font-medium">{seleccionado.nombre}</p></div>
+                  <div className="rounded-2xl border border-border bg-surface-muted/45 p-4"><span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">{seleccionado.tipo === "empresa" ? "RUC / Documento fiscal" : "DNI / Documento"}</span><p className="mt-2 truncate text-sm font-medium">{seleccionado.documento || "No registrado"}</p></div>
                   <div className="group rounded-2xl border border-border bg-surface-muted/45 p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-gold/25 hover:shadow-[0_12px_28px_-20px_hsl(var(--gold)/0.5)]"><div className="flex items-center justify-between"><span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Teléfono</span><Phone className="size-4 text-gold/60" strokeWidth={1.6} /></div><p className="mt-2 truncate text-sm font-medium">{seleccionado.telefono || "No registrado"}</p></div>
-                  <div className="group rounded-2xl border border-border bg-surface-muted/45 p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-gold/25 hover:shadow-[0_12px_28px_-20px_hsl(var(--gold)/0.5)]"><div className="flex items-center justify-between"><span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Correo electrónico</span><Mail className="size-4 text-gold/60" strokeWidth={1.6} /></div><p className="mt-2 truncate text-sm font-medium">{seleccionado.email || "No registrado"}</p></div><div className="rounded-2xl border border-border bg-surface-muted/45 p-4"><span className="text-[9px] font-semibold uppercase text-muted-foreground">Fecha de nacimiento</span><p className="mt-2 text-sm">{seleccionado.fecha_nacimiento?new Date(`${seleccionado.fecha_nacimiento}T12:00:00`).toLocaleDateString("es-PE",{day:"2-digit",month:"long",year:"numeric"}):"No registrada"}</p></div>
+                  <div className="group rounded-2xl border border-border bg-surface-muted/45 p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-gold/25 hover:shadow-[0_12px_28px_-20px_hsl(var(--gold)/0.5)]"><div className="flex items-center justify-between"><span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Correo electrónico</span><Mail className="size-4 text-gold/60" strokeWidth={1.6} /></div><p className="mt-2 truncate text-sm font-medium">{seleccionado.email || "No registrado"}</p></div><div className="rounded-2xl border border-border bg-surface-muted/45 p-4"><span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">WhatsApp</span><p className="mt-2 truncate text-sm font-medium">{seleccionado.whatsapp || "No registrado"}</p></div><div className="rounded-2xl border border-border bg-surface-muted/45 p-4"><span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Ciudad</span><p className="mt-2 truncate text-sm font-medium">{seleccionado.ciudad || "No registrada"}</p></div><div className="rounded-2xl border border-border bg-surface-muted/45 p-4"><span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Dirección</span><p className="mt-2 line-clamp-2 text-sm font-medium">{seleccionado.direccion || "No registrada"}</p></div><div className="rounded-2xl border border-border bg-surface-muted/45 p-4"><span className="text-[9px] font-semibold uppercase text-muted-foreground">Fecha de nacimiento</span><p className="mt-2 text-sm">{seleccionado.fecha_nacimiento?new Date(`${seleccionado.fecha_nacimiento}T12:00:00`).toLocaleDateString("es-PE",{day:"2-digit",month:"long",year:"numeric"}):"No registrada"}</p></div>
                 </div>{seleccionado.notas?<p className="mt-3 whitespace-pre-wrap rounded-xl border border-border p-3 text-xs text-muted-foreground">{seleccionado.notas}</p>:null}
                 <div className="mt-5 grid grid-cols-2 gap-3">
                   <Link to="/pedidos" className="group rounded-2xl border border-border bg-card p-4 text-left transition-all duration-300 hover:-translate-y-1 hover:border-gold/35 hover:shadow-[0_16px_34px_-22px_hsl(var(--gold)/0.7)]"><div className="flex items-center justify-between"><span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Pedidos</span><ShoppingBag className="size-4 text-gold/65" strokeWidth={1.6} /></div><div className="mt-5 flex items-end justify-between"><span className="text-3xl font-semibold tabular-nums tracking-tight">{pedidos.length}</span><ChevronRight className="size-4 text-muted-foreground/40 group-hover:translate-x-1 group-hover:text-gold" /></div><span className="mt-1 block text-[10px] text-muted-foreground">Pedidos registrados</span></Link>
@@ -476,9 +483,13 @@ function ClientesPage() {
         <form onSubmit={guardar} className="w-full max-w-lg rounded-2xl border border-border bg-card p-5 shadow-raised">
           <div className="flex items-start justify-between"><div><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-gold">Ficha comercial</p><h2 className="mt-1 text-xl font-semibold">{seleccionado ? "Editar cliente" : "Nuevo cliente"}</h2></div><button type="button" onClick={() => setModal(false)} className="rounded-lg px-2 py-1 text-muted-foreground">✕</button></div>
           <div className="mt-5 space-y-4">
-            <Field label="Nombre completo" value={form.nombre} onChange={(v) => setForm({ ...form, nombre: v })} required />
+            <label className="block text-xs font-medium text-foreground">Tipo de cliente<select value={form.tipo} onChange={(e) => setForm({ ...form, tipo: e.target.value as "persona" | "empresa" })} className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm"><option value="persona">Particular</option><option value="empresa">Empresa</option></select></label>
+            <Field label={form.tipo === "empresa" ? "Razón social / Nombre de empresa" : "Nombre completo"} value={form.nombre} onChange={(v) => setForm({ ...form, nombre: v })} required />
+            <Field label={form.tipo === "empresa" ? "RUC / Documento fiscal (opcional)" : "DNI / Documento (opcional)"} value={form.documento} onChange={(v) => setForm({ ...form, documento: v })} />
             <TelefonoInternacional id="cliente-telefono" value={form.telefono} defaultCountry={paisPredeterminadoTelefono} onChange={(telefono) => setForm((actual) => ({ ...actual, telefono }))} />
+            <Field label="WhatsApp (opcional)" type="tel" value={form.whatsapp} onChange={(v) => setForm({ ...form, whatsapp: v })} />
             <Field label="Correo electrónico" type="email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} />
+            <div className="grid gap-4 sm:grid-cols-2"><Field label="Ciudad" value={form.ciudad} onChange={(v) => setForm({ ...form, ciudad: v })} /><Field label="Dirección" value={form.direccion} onChange={(v) => setForm({ ...form, direccion: v })} /></div>
             <Field label="Fecha de nacimiento (opcional)" type="date" value={form.fecha_nacimiento} onChange={v=>setForm({...form,fecha_nacimiento:v})}/><label className="block text-xs font-medium">Observaciones<textarea value={form.notas} onChange={e=>setForm({...form,notas:e.target.value})} rows={3} className="mt-1.5 w-full rounded-xl border border-border bg-background p-3 text-sm"/></label>
           </div>
           <div className="mt-6 flex justify-end gap-2"><button type="button" onClick={() => setModal(false)} className="rounded-xl border border-border px-4 py-2 text-sm">Cancelar</button><button type="submit" disabled={guardando} className="rounded-xl border border-gold/25 bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-gold/5 disabled:opacity-50">{guardando ? "Guardando..." : "Guardar cliente"}</button></div>
