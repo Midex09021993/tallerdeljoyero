@@ -114,6 +114,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [fondoId, setFondoId] = useState("escena");
   const [sombraContactoVisible, setSombraContactoVisible] = useState(true);
   const [qualityOpen, setQualityOpen] = useState(false);
+  const [libraryMenuOpen, setLibraryMenuOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
   const [exportBusy, setExportBusy] = useState(false);
   const [snapshotOpen, setSnapshotOpen] = useState(false);
@@ -2185,12 +2186,16 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             </div>}
 
             {!embedded && <div className="absolute right-5 top-1/2 z-30 -translate-y-1/2">
-              <div className="flex flex-col items-center gap-1 rounded-2xl border border-black/[.08] bg-white/90 p-1.5 shadow-[0_8px_28px_rgba(0,0,0,.12)] backdrop-blur-2xl">
-                <button type="button" title="Calidad de render" onClick={()=>setQualityOpen(v=>!v)} className={"grid size-10 place-items-center rounded-xl "+(qualityOpen?"bg-[#d4af37]/15 text-[#d4af37]":"text-black/70 hover:bg-black/5")}><Sparkles className="size-[18px]"/></button>
-                <button type="button" title="Reiniciar cámara" onClick={()=>apiRef.current?.reset()} className="grid size-10 place-items-center rounded-xl text-black/70 hover:bg-black/5"><RotateCcw className="size-[18px]"/></button>
-                <button type="button" title="Pantalla completa" onClick={()=>apiRef.current?.fullscreen()} className="grid size-10 place-items-center rounded-xl text-black/70 hover:bg-black/5"><Expand className="size-[18px]"/></button>
-                <div className="my-0.5 h-px w-6 bg-black/10"/>
+              <div className="flex flex-col items-center gap-1 rounded-2xl border border-white/70 bg-white/65 p-1.5 shadow-[0_8px_28px_rgba(36,32,20,.10)] backdrop-blur-2xl">
+                <button type="button" title="Biblioteca de ambientes y materiales" aria-label="Abrir biblioteca" aria-expanded={libraryMenuOpen} onClick={()=>{setLibraryMenuOpen(v=>!v);setQualityOpen(false);}} className={"grid size-9 place-items-center rounded-xl transition-colors "+(libraryMenuOpen?"bg-[#d4af37]/15 text-[#92743b]":"text-black/70 hover:bg-white/70")}><SlidersHorizontal className="size-[17px]"/></button>
+                <button type="button" title="Calidad de render" onClick={()=>{setQualityOpen(v=>!v);setLibraryMenuOpen(false);}} className={"grid size-9 place-items-center rounded-xl "+(qualityOpen?"bg-[#d4af37]/15 text-[#d4af37]":"text-black/70 hover:bg-white/70")}><Sparkles className="size-[17px]"/></button>
+                <button type="button" title="Reiniciar cámara" onClick={()=>apiRef.current?.reset()} className="grid size-9 place-items-center rounded-xl text-black/70 hover:bg-white/70"><RotateCcw className="size-[17px]"/></button>
+                <button type="button" title="Pantalla completa" onClick={()=>apiRef.current?.fullscreen()} className="grid size-9 place-items-center rounded-xl text-black/70 hover:bg-white/70"><Expand className="size-[17px]"/></button>
               </div>
+            </div>}
+            {!embedded && libraryMenuOpen&&<div className="absolute right-[70px] top-1/2 z-40 w-[min(260px,calc(100%-6rem))] -translate-y-1/2 rounded-2xl border border-white/75 bg-[#fbfaf7]/75 p-2.5 text-[#292824] shadow-[0_12px_36px_rgba(35,32,24,.14)] backdrop-blur-2xl">
+              <div className="px-2 pb-2 text-[9px] font-semibold uppercase tracking-[.16em] text-[#92743b]">Biblioteca de joyería</div>
+              {([{id:"materiales",label:"Materiales",detail:"Metales y acabados",count:MATERIALES.length},{id:"gemas",label:"Gemas",detail:"Piedras y variedades",count:GEMAS.length},{id:"escena",label:"Escenas",detail:"Presentación de producto",count:ESCENARIOS.length},{id:"hdrMetales",label:"HDR Metales",detail:"Reflejos para metales",count:Object.keys(AURUM_HDRI_URLS).length},{id:"hdrGemas",label:"HDR Gemas",detail:"Iluminación de piedras",count:Object.keys(AURUM_GEM_HDRI_URLS).length+Object.keys(AURUM_AMBIENT_PRESETS).length},{id:"fondos",label:"Fondos",detail:"Fondos y estudio",count:8}] as const).map(item=><button key={item.id} type="button" onClick={()=>{setUxSection(item.id);setLibraryMenuOpen(false);}} className={"mb-1 flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors "+(uxSection===item.id?"border-[#d4af37]/40 bg-[#d4af37]/10":"border-transparent hover:border-white/80 hover:bg-white/65")}><span className={"grid size-8 shrink-0 place-items-center rounded-lg "+(uxSection===item.id?"bg-[#d4af37]/15 text-[#92743b]":"bg-black/[.035] text-[#77756f]")}>{item.id==="materiales"?"◈":item.id==="gemas"?"◇":item.id==="escena"?"▧":item.id==="hdrMetales"?"◉":item.id==="hdrGemas"?"✧":"▱"}</span><span className="min-w-0 flex-1"><span className="block text-[11px] font-medium">{item.label}</span><span className="block text-[9px] text-[#858178]">{item.detail}</span></span><span className="text-[9px] tabular-nums text-[#99968d]">{item.count}</span></button>)}
             </div>}
 
             {!embedded && qualityOpen&&<div className="absolute right-[78px] top-1/2 z-40 w-48 -translate-y-1/2 rounded-2xl border border-black/10 bg-[#fbfaf7]/95 p-2 text-[#292824] shadow-xl backdrop-blur-2xl">
