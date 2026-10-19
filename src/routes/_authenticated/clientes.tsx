@@ -189,10 +189,18 @@ function ClientesPage() {
         const result = await supabase.from("clientes").update(payload).eq("id", seleccionado.id);
         error = result.error;
       } else {
-        const participanteId = esDueno
-          ? (await supabase.from("ecosistema_participantes").select("id").eq("sede_id", sedeContextoId!).eq("estado", "activo").limit(1).maybeSingle()).data?.id
-          : sesion.participante.id;
-        if (!participanteId) throw new Error("No se encontró un participante activo para la sede seleccionada.");
+        let participanteId = sesion.participante.id;
+        if (esDueno) {
+          const { data: participantesSede, error: errorParticipantes } = await supabase
+            .from("ecosistema_participantes")
+            .select("id")
+            .eq("sede_id", sedeContextoId!)
+            .eq("estado", "activo");
+          if (errorParticipantes) throw errorParticipantes;
+          if (!participantesSede?.length) throw new Error("No hay un participante activo para la sede seleccionada.");
+          if (participantesSede.length > 1) throw new Error("Hay varios participantes activos en esta sede. No se creó el cliente para evitar una asociación incorrecta.");
+          participanteId = participantesSede[0].id;
+        }
         const result = await supabase.from("clientes").insert({ ...payload, sede_id: sedeContextoId, participante_id: participanteId });
         error = result.error;
       }
