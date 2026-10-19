@@ -11,12 +11,12 @@ export type ProyectoNubeInicial = {
 
 function esArchivoProyectoNube(value: Json): value is ProyectoNubeInicial["archivos"][number] {
   if (typeof value !== "object" || value === null || Array.isArray(value)) return false;
-  return typeof value.nombre === "string"
-    && typeof value.ruta === "string"
-    && typeof value.categoria === "string"
-    && typeof value.bytes === "number"
-    && (value.origen === "supabase" || value.origen === "nas")
-    && (typeof value.actualizado === "string" || value.actualizado === null);
+  return typeof value["nombre"] === "string"
+    && typeof value["ruta"] === "string"
+    && typeof value["categoria"] === "string"
+    && typeof value["bytes"] === "number"
+    && (value["origen"] === "supabase" || value["origen"] === "nas")
+    && (typeof value["actualizado"] === "string" || value["actualizado"] === null);
 }
 
 export type CatalogoProductoEditor = {
