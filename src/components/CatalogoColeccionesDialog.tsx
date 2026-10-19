@@ -43,6 +43,7 @@ export function CatalogoColeccionesDialog({
   const [guardando, setGuardando] = useState(false);
   const [subiendoImagen, setSubiendoImagen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [coleccionPendienteEliminar, setColeccionPendienteEliminar] = useState<Coleccion | null>(null);
 
   const cargar = useCallback(async () => {
     if (!participanteId) return;
@@ -156,7 +157,6 @@ export function CatalogoColeccionesDialog({
   }
 
   async function eliminar(collection: Coleccion) {
-    if (!window.confirm(`¿Eliminar la colección "${collection.nombre}"? Los modelos no se eliminarán.`)) return;
     setGuardando(true);
     setError(null);
     try {
@@ -230,7 +230,7 @@ export function CatalogoColeccionesDialog({
                 <article key={collection.id} className="rounded-2xl border border-border p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div><p className="text-[10px] font-bold uppercase tracking-wider text-gold">{collection.publicado ? "Publicada" : "Borrador"} · /{collection.slug}</p><h3 className="mt-1 font-semibold">{collection.nombre}</h3><p className="mt-1 text-xs text-muted-foreground">{selected.size} modelo(s) asignado(s)</p></div>
-                    <div className="flex gap-1"><button type="button" onClick={() => editar(collection)} className="rounded-lg p-2 hover:bg-surface-muted" aria-label="Editar colección"><Pencil className="size-4" /></button><button type="button" onClick={() => void eliminar(collection)} className="rounded-lg p-2 text-destructive hover:bg-destructive/5" aria-label="Eliminar colección"><Trash2 className="size-4" /></button></div>
+                    <div className="flex gap-1"><button type="button" onClick={() => editar(collection)} className="rounded-lg p-2 hover:bg-surface-muted" aria-label="Editar colección"><Pencil className="size-4" /></button><button type="button" onClick={() => setColeccionPendienteEliminar(collection)} className="rounded-lg p-2 text-destructive hover:bg-destructive/5" aria-label="Eliminar colección"><Trash2 className="size-4" /></button></div>
                   </div>
                   <div className="mt-4 grid gap-2 sm:grid-cols-2">
                     {productos.length ? productos.map((producto) => (
@@ -246,6 +246,18 @@ export function CatalogoColeccionesDialog({
           </section>
         </div>
       </div>
+      {coleccionPendienteEliminar && (
+        <div className="fixed inset-0 z-[80] grid place-items-center bg-black/50 p-4" role="dialog" aria-modal="true" aria-labelledby="coleccion-eliminar-title">
+          <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-5 shadow-2xl">
+            <h3 id="coleccion-eliminar-title" className="text-base font-semibold">Eliminar colección</h3>
+            <p className="mt-2 text-sm text-muted-foreground">¿Eliminar “{coleccionPendienteEliminar.nombre}”? Los modelos no se eliminarán.</p>
+            <div className="mt-5 flex justify-end gap-2">
+              <button type="button" onClick={() => setColeccionPendienteEliminar(null)} className="rounded-xl border border-border px-4 py-2 text-sm font-semibold">Cancelar</button>
+              <button type="button" onClick={() => { const collection = coleccionPendienteEliminar; setColeccionPendienteEliminar(null); void eliminar(collection); }} className="rounded-xl bg-destructive px-4 py-2 text-sm font-semibold text-white">Eliminar</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
