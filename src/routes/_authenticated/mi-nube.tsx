@@ -1071,6 +1071,7 @@ function MiNubePage() {
 
       // Limpiar el NAS solo cuando está disponible. Un fallo del NAS no bloquea
       // la eliminación web; se detiene únicamente el lote NAS y se informa al final.
+      let videosNasEliminados = 0;
       if (!nasPendiente) {
         for (const archivo of archivosNas) {
           try {
@@ -1081,6 +1082,7 @@ function MiNubePage() {
               nasPendiente = true;
               break;
             }
+            videosNasEliminados += 1;
           } catch {
             nasPendiente = true;
             break;
@@ -1113,7 +1115,7 @@ function MiNubePage() {
       if (errorRevocarComparticiones) {
         toast.warning(`Archivos web eliminados, pero no se pudo revocar automáticamente el permiso compartido de “${proyecto.nombre}”. Revisa Compartir proyecto.`);
       } else if (nasPendiente) {
-        toast.warning(`Archivos web del proyecto “${proyecto.nombre}” eliminados. Los archivos del NAS se conservaron porque no se pudo completar su limpieza. Cuando el NAS vuelva a estar disponible, elimínalos desde Mi Nube.`);
+        toast.warning(`Archivos web eliminados. Limpieza del NAS incompleta: ${videosNasEliminados} de ${archivosNas.length} vídeo(s) eliminados. Revisa Mi Nube cuando el NAS vuelva a estar disponible.`);
       } else {
         toast.success(`Proyecto “${proyecto.nombre}” eliminado: ${rutasWeb.length} archivo(s) web y ${archivosNas.length} vídeo(s) del NAS.`);
       }
