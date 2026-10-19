@@ -7,9 +7,12 @@ export type AurumVideoOptions = {
   onProgress?: (elapsedSeconds: number, durationSeconds: number) => void;
 };
 
-const MP4_MIME_CANDIDATES = [
+const VIDEO_MIME_CANDIDATES = [
   "video/mp4;codecs=avc1.42E01E",
   "video/mp4",
+  "video/webm;codecs=vp9",
+  "video/webm;codecs=vp8",
+  "video/webm",
 ];
 
 /**
@@ -26,9 +29,9 @@ export async function recordAurumCanvasVideo(
   if (typeof source.captureStream !== "function") {
     throw new Error("Este navegador no permite capturar el canvas WebGL.");
   }
-  const mimeType = MP4_MIME_CANDIDATES.find((type) => MediaRecorder.isTypeSupported(type));
+  const mimeType = VIDEO_MIME_CANDIDATES.find((type) => MediaRecorder.isTypeSupported(type));
   if (!mimeType) {
-    throw new Error("Este navegador no ofrece grabación MP4 compatible. Prueba con una versión actualizada de Chrome o Edge.");
+    throw new Error("Este navegador no ofrece un formato de vídeo compatible. Actualiza el navegador o prueba con Chrome o Edge.");
   }
 
   const width = Math.max(320, Math.min(1920, Math.round(options.width ?? 1280)));
@@ -80,7 +83,8 @@ export async function recordAurumCanvasVideo(
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = "aurum-giro-" + new Date().toISOString().replace(/[:.]/g, "-") + ".mp4";
+      const extension = (recorder.mimeType || mimeType).toLowerCase().includes("mp4") ? "mp4" : "webm";
+      link.download = "aurum-giro-" + new Date().toISOString().replace(/[:.]/g, "-") + "." + extension;
       link.click();
       window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
       resolve();
