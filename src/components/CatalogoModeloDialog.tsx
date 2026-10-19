@@ -1,12 +1,23 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { FileText, Sparkles, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 import { nombreSeguro, subirConProgreso } from "@/lib/subir-archivo";
 
 export type ProyectoNubeInicial = {
   carpeta: string;
   archivos: Array<{ nombre: string; ruta: string; categoria: string; bytes: number; origen: "supabase" | "nas"; actualizado: string | null }>;
 };
+
+function esArchivoProyectoNube(value: Json): value is ProyectoNubeInicial["archivos"][number] {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return false;
+  return typeof value.nombre === "string"
+    && typeof value.ruta === "string"
+    && typeof value.categoria === "string"
+    && typeof value.bytes === "number"
+    && (value.origen === "supabase" || value.origen === "nas")
+    && (typeof value.actualizado === "string" || value.actualizado === null);
+}
 
 export type CatalogoProductoEditor = {
   id: string;
@@ -183,7 +194,12 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
           console.warn("[Catálogo] No se pudo consultar el proyecto vinculado de Mi Nube.", projectError.message);
           return;
         }
-        if (data && typeof data.carpeta === "string" && Array.isArray(data.archivos)) {
+        if (
+          data
+          && typeof data.carpeta === "string"
+          && Array.isArray(data.archivos)
+          && data.archivos.every(esArchivoProyectoNube)
+        ) {
           setProyectoNube({ carpeta: data.carpeta, archivos: data.archivos });
         }
       })();
