@@ -440,11 +440,38 @@ function LoginPage() {
                     </div>
                   </div>
 
-                  <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  <section className="mt-6 overflow-hidden rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/[0.10] via-white/[0.035] to-black/20 p-5 sm:p-6">
+                    <div className="grid gap-5 md:grid-cols-[1fr_auto] md:items-start">
+                      <div className="max-w-3xl">
+                        <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-gold">Producto insignia · tecnología propia</p>
+                        <div className="mt-2 flex items-center gap-3">
+                          <Sparkles className="size-7 shrink-0 text-gold"/>
+                          <h3 className="font-display text-2xl italic text-white sm:text-3xl">AURUM Render</h3>
+                        </div>
+                        <p className="mt-3 text-sm leading-relaxed text-white/75">
+                          Nuestro motor de visualización 3D está desarrollado para las necesidades de la joyería. Permite explorar modelos con materiales configurables, metales, gemas e iluminación de estudio, directamente en el visor interactivo.
+                        </p>
+                        <p className="mt-2 text-xs leading-relaxed text-white/55">
+                          Construido sobre WebGL y Three.js, Aurum Render incorpora una capa propia de materiales y renderizado, con entornos HDR diferenciados para metales y gemas y un tratamiento especializado para las facetas y la refracción del diamante.
+                        </p>
+                        <div className="mt-4 flex flex-wrap gap-2 text-[9px] font-semibold uppercase tracking-wider">
+                          {["Motor 3D especializado","Metales y gemas","Iluminación HDR","Captura de producto"].map((item) => <span key={item} className="rounded-lg border border-gold/20 bg-black/20 px-2.5 py-1.5 text-white/70">{item}</span>)}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 rounded-xl border border-gold/20 bg-black/20 p-3 md:max-w-48 md:flex-col md:items-start">
+                        <Gem className="size-6 shrink-0 text-gold"/>
+                        <div>
+                          <p className="text-xs font-semibold text-white">Diseñado para joyería</p>
+                          <p className="mt-1 text-[10px] leading-relaxed text-white/50">Del modelo 3D a una presentación visual cuidada.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     {[
                       { icon: Boxes, title: "Gestión comercial", text: "Registra clientes, prepara proyectos y cotizaciones, gestiona pedidos, ventas y contratos, manteniendo separados los datos internos y los documentos para clientes." },
                       { icon: PackageCheck, title: "Operación del taller", text: "Organiza órdenes de producción, trabajos y piezas; consulta avances, responsables, materiales, inventario y control de calidad según los módulos habilitados." },
-                      { icon: Sparkles, title: "Diseño y presentación 3D", text: "AURUM Render permite visualizar modelos de joyería en 3D y explorar materiales, metales, gemas e iluminación para presentar diseños." },
                       { icon: Calculator, title: "Herramientas técnicas", text: "Calculadoras de yeso y agua, aleación de oro, conversión de tallas y Visualizador y peso 3D para apoyar cálculos y revisión de piezas." },
                     ].map(({icon:Icon,title,text}) => (
                       <article key={title} className="rounded-2xl border border-white/10 bg-white/[0.025] p-4 transition hover:border-gold/35">
