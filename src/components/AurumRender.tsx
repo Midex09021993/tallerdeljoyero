@@ -1368,9 +1368,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             }
             let captureComposerBuffer: { width: number; height: number } | null = null;
             let captureTaaPass: any = null;
-            let capturePassStates: Array<{pass:any;enabled:boolean}> = [];
-            // Snapshot live pass state before capture quality changes any flags.
-            capturePassStates = (composer?.passes ?? []).map((pass:any)=>({pass,enabled:Boolean(pass?.enabled)}));
+            // Snapshot the original pass state so finally restores the actual live pipeline.
+            capturePassStates.splice(0,capturePassStates.length,...(composer?.passes ?? []).map((pass:any)=>({pass,enabled:Boolean(pass?.enabled)})));
             if(composer){
               // Preserve the live pipeline's active pass configuration. Do not
               // call applyPostQuality(capture:true): that mode deliberately disables
