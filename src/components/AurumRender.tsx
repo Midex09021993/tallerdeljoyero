@@ -117,6 +117,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [libraryMenuOpen, setLibraryMenuOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
   const [exportBusy, setExportBusy] = useState(false);
+  const [videoOpen, setVideoOpen] = useState(false);
+  const [videoBusy, setVideoBusy] = useState(false);
+  const [videoWidth, setVideoWidth] = useState("1280");
+  const [videoFps, setVideoFps] = useState("30");
+  const [videoDuration, setVideoDuration] = useState("5");
+  const [videoProgress, setVideoProgress] = useState(0);
+  const videoAbortRef = useRef<AbortController | null>(null);
   const [snapshotOpen, setSnapshotOpen] = useState(false);
   const [snapshotWidth, setSnapshotWidth] = useState("3840");
   const [snapshotHeight, setSnapshotHeight] = useState("2160");
@@ -1160,6 +1167,38 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             loop?.resize?.();
           }
         },
+        exportVideo:async(options:{width?:number;height?:number;fps?:number;duration?:number;signal?:AbortSignal;onProgress?:(elapsed:number,total:number)=>void}={})=>{
+          if(!modelo) throw new Error("Carga una joya antes de grabar el vídeo.");
+          const sourceCanvas=renderer.domElement as HTMLCanvasElement;
+          if(!sourceCanvas || sourceCanvas.width<2 || sourceCanvas.height<2) throw new Error("El visor todavía no tiene una imagen para grabar.");
+          const cameraPosition=camara.position.clone();
+          const cameraQuaternion=camara.quaternion.clone();
+          const controlsTarget=controles.target?.clone?.();
+          const previousAutoRotate=Boolean(controles.autoRotate);
+          const previousAutoRotateSpeed=Number(controles.autoRotateSpeed ?? 0.65);
+          const loop:any=viewerLoopRef.current;
+          try{
+            const { recordAurumCanvasVideo } = await import("../lib/aurum/video-exporter");
+            // Rotate the actual live scene while the dedicated output canvas records it.
+            controles.autoRotate=true;
+            controles.autoRotateSpeed=0.65;
+            loop?.converge?.(2);
+            loop?.invalidate?.();
+            await recordAurumCanvasVideo(sourceCanvas,{
+              width:options.width,height:options.height,fps:options.fps,duration:options.duration,
+              signal:options.signal,onProgress:options.onProgress,
+            });
+          }finally{
+            controles.autoRotate=previousAutoRotate;
+            controles.autoRotateSpeed=previousAutoRotateSpeed;
+            camara.position.copy(cameraPosition);
+            camara.quaternion.copy(cameraQuaternion);
+            if(controlsTarget && controles.target) controles.target.copy(controlsTarget);
+            controles.update?.();
+            loop?.invalidate?.();
+            loop?.resume?.();
+          }
+        },
         exportPNG:(options:{width?:number;height?:number;format?:"png"|"jpeg"|"webp";onCapture?:(dataUrl:string)=>void}={})=>{
           if(!modelo) throw new Error("Carga un modelo antes de crear el snapshot.");
           const liveCanvas=renderer.domElement as HTMLCanvasElement | null;
@@ -1921,6 +1960,42 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               :<button type="button" disabled={!archivo||exportBusy} onClick={async()=>{const ac=new AbortController();ptAbortRef.current=ac;setPtProgress("preparando…");setError(null);try{await apiRef.current?.exportPathTraced({width:Number(snapshotWidth),height:Number(snapshotHeight),format:snapshotFormat,samples:Number(ptSamples),signal:ac.signal,onProgress:(d:number,t:number)=>setPtProgress(d+" / "+t)});}catch(e:any){if(e?.name!=="AbortError")setError(e instanceof Error?e.message+" Se mantiene el render actual.":"No se pudo completar el render final.");}finally{ptAbortRef.current=null;setPtProgress(null);}}} className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-[#d4af37] px-3 py-2.5 text-xs font-semibold text-black disabled:cursor-not-allowed disabled:opacity-40"><Download className="size-4"/>Render final con ray tracing</button>}
             </div>
           </div>}
+          <div className="rounded-xl border border-[#d4af37]/35 bg-[#fffaf0]/70 p-3">
+            <button type="button" aria-expanded={videoOpen} onClick={()=>setVideoOpen(v=>!v)} className="flex w-full items-center gap-2.5 text-left">
+              <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-[#d4af37]/15 text-[#92743b]"><RotateCw className="size-4"/></span>
+              <span className="min-w-0 flex-1"><span className="block text-[13px] font-semibold">Vídeo de giro de joya</span><span className="block text-[10px] text-[#77756f]">Captura en vivo · MP4</span></span>
+              <ChevronDown className={"size-4 transition-transform "+(videoOpen?"rotate-180":"")}/>
+            </button>
+            {videoOpen&&<div className="mt-3 space-y-2.5 border-t border-black/10 pt-3">
+              <label className="block text-[10px] text-[#66645e]">Resolución
+                <select value={videoWidth} disabled={videoBusy} onChange={e=>setVideoWidth(e.target.value)} className="mt-1 w-full rounded-lg border border-black/15 bg-white px-2 py-2 text-xs text-[#292824]">
+                  <option value="1280">HD · 1280 × 720</option><option value="1920">Full HD · 1920 × 1080</option>
+                </select>
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <label className="text-[10px] text-[#66645e]">Fotogramas por segundo
+                  <select value={videoFps} disabled={videoBusy} onChange={e=>setVideoFps(e.target.value)} className="mt-1 w-full rounded-lg border border-black/15 bg-white px-2 py-2 text-xs text-[#292824]"><option value="24">24 FPS</option><option value="30">30 FPS</option><option value="60">60 FPS</option></select>
+                </label>
+                <label className="text-[10px] text-[#66645e]">Duración
+                  <select value={videoDuration} disabled={videoBusy} onChange={e=>setVideoDuration(e.target.value)} className="mt-1 w-full rounded-lg border border-black/15 bg-white px-2 py-2 text-xs text-[#292824]"><option value="5">5 segundos</option><option value="10">10 segundos</option><option value="15">15 segundos</option><option value="20">20 segundos</option></select>
+                </label>
+              </div>
+              {videoBusy&&<div role="status" aria-live="polite" className="rounded-lg border border-[#d4af37]/25 bg-white p-2.5">
+                <div className="mb-2 flex justify-between text-[10px]"><span>Grabando giro en tiempo real</span><span>{Math.round(videoProgress)}%</span></div>
+                <div className="h-2 overflow-hidden rounded-full bg-[#eee8d8]"><div className="h-full rounded-full bg-[#b99642] transition-[width]" style={{width:Math.max(0,Math.min(100,videoProgress))+"%"}}/></div>
+                <button type="button" onClick={()=>videoAbortRef.current?.abort()} className="mt-2 w-full rounded-lg border border-black/15 px-3 py-2 text-xs font-semibold">Cancelar grabación</button>
+              </div>}
+              {!videoBusy&&<button type="button" disabled={!archivo||exportBusy} onClick={async()=>{
+                const controller=new AbortController();videoAbortRef.current=controller;setVideoBusy(true);setVideoProgress(0);setError(null);
+                try{
+                  await apiRef.current?.exportVideo({width:Number(videoWidth),height:Math.round(Number(videoWidth)*9/16),fps:Number(videoFps),duration:Number(videoDuration),signal:controller.signal,onProgress:(elapsed:number,total:number)=>setVideoProgress(total>0?elapsed/total*100:0)});
+                  setVideoProgress(100);
+                }catch(e:any){if(e?.name!=="AbortError")setError(e instanceof Error?e.message:"No se pudo exportar el vídeo MP4.");}
+                finally{videoAbortRef.current=null;setVideoBusy(false);}
+              }} className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#d4af37] px-3 py-2.5 text-xs font-semibold text-black disabled:cursor-not-allowed disabled:opacity-40"><Download className="size-4"/>Grabar y descargar .mp4</button>}
+              <p className="text-[10px] leading-relaxed text-[#77756f]">La joya gira en el motor mientras se captura. La grabación no cambia la resolución ni los materiales del visor; al terminar se restaura la cámara.</p>
+            </div>}
+          </div>
           <button type="button" onClick={()=>apiRef.current?.exportSceneSettings()} className="flex w-full items-center gap-3 rounded-xl border border-black/10 bg-black/[.025] px-3 py-3 text-left text-sm text-[#292824] hover:bg-black/[.05]"><FileJson className="size-5"/><span><span className="block">Configuración .vjson</span><span className="block text-[10px] text-[#77756f]">Escena, cámara, calidad y selección</span></span></button>
         </div>
         <p className="mt-3 text-[10px] leading-relaxed text-[#77756f]">El GLB exporta el modelo y sus materiales compatibles con glTF. Los shaders personalizados, el HDRI y los efectos de pantalla pueden no reproducirse idénticos en otros visores.</p>
