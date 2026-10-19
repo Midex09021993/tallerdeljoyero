@@ -5,6 +5,7 @@ export type AurumVideoOptions = {
   duration?: number;
   signal?: AbortSignal;
   onProgress?: (elapsedSeconds: number, durationSeconds: number) => void;
+  onFrame?: (elapsedSeconds: number, durationSeconds: number) => void;
 };
 
 const VIDEO_MIME_CANDIDATES = [
@@ -97,6 +98,7 @@ export async function recordAurumCanvasVideo(
         return;
       }
       const elapsed = Math.max(0, (now - startedAt) / 1000);
+      options.onFrame?.(Math.min(elapsed, duration), duration);
       context.fillStyle = "#ffffff";
       context.fillRect(0, 0, width, height);
       context.imageSmoothingEnabled = true;
