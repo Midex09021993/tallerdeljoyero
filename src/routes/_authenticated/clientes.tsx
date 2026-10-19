@@ -47,6 +47,8 @@ function ClientesPage() {
   const { data: capacidades = [] } = useCapacidadesMenu(sesion);
   const cotizacionesHabilitadas = capacidades.includes("Cotizaciones");
   const puedeVer = Boolean(sesion?.esAdmin) || Boolean(sesion?.areas.some((area) => areaCoincide(area, "Área ventas")));
+  // RLS de clientes permite escrituras al dueño o gerente autorizado para la sede; el área ventas consulta, pero no escribe por sí sola.
+  const puedeGestionarClientes = Boolean(sesion?.esAdmin);
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [seleccionado, setSeleccionado] = useState<Cliente | null>(null);
   const [pedidos, setPedidos] = useState<PedidoRef[]>([]);
@@ -315,13 +317,13 @@ function ClientesPage() {
             disabled
             icono={<UserRound className="size-5" strokeWidth={1.7} />}
           />
-          <button type="button" onClick={nuevoCliente} className="group relative min-h-[150px] overflow-hidden rounded-2xl border border-gold/25 bg-card px-5 py-5 text-left text-foreground shadow-[0_18px_45px_-28px_rgba(0,0,0,0.65)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_48px_-24px_rgba(0,0,0,0.75)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60">
+          {puedeGestionarClientes ? <button type="button" onClick={nuevoCliente} className="group relative min-h-[150px] overflow-hidden rounded-2xl border border-gold/25 bg-card px-5 py-5 text-left text-foreground shadow-[0_18px_45px_-28px_rgba(0,0,0,0.65)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_48px_-24px_rgba(0,0,0,0.75)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60">
             <span className="pointer-events-none absolute -right-8 -top-8 size-28 rounded-full bg-gold/10 blur-2xl transition-all duration-500 group-hover:bg-gold/20" />
             <span className="relative flex h-full flex-col justify-between">
               <span className="grid size-10 place-items-center rounded-xl border border-gold/25 bg-gold/10 text-gold transition-transform duration-300 group-hover:-translate-y-1 group-hover:scale-110">+</span>
               <span><span className="block text-[10px] font-semibold uppercase tracking-[0.18em] text-gold/80">Acción</span><span className="mt-1 block text-lg font-semibold">Nuevo cliente</span></span>
             </span>
-          </button>
+          </button> : null}
         </>
       }
     >
@@ -378,8 +380,8 @@ function ClientesPage() {
                   {cotizacionesHabilitadas ? <Link to="/cotizaciones" className="group rounded-2xl border border-border bg-card p-4 text-left transition-all duration-300 hover:-translate-y-1 hover:border-gold/35 hover:shadow-[0_16px_34px_-22px_hsl(var(--gold)/0.7)]"><div className="flex items-center justify-between"><span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Cotizaciones</span><FileText className="size-4 text-gold/65" strokeWidth={1.6} /></div><div className="mt-5 flex items-end justify-between"><span className="text-3xl font-semibold tabular-nums tracking-tight">{cotizaciones.length}</span><ChevronRight className="size-4 text-muted-foreground/40 group-hover:translate-x-1 group-hover:text-gold" /></div><span className="mt-1 block text-[10px] text-muted-foreground">Ver cotizaciones</span></Link> : null}
                 </div>
                 <div className="mt-6 flex flex-wrap gap-2">
-                  <button type="button" onClick={editarCliente} className="group inline-flex items-center gap-2 rounded-xl border border-gold/25 bg-card px-4 py-2.5 text-xs font-semibold text-foreground hover:bg-gold/5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_26px_-16px_rgba(0,0,0,0.65)]">Editar ficha <ChevronRight className="size-3.5 group-hover:translate-x-0.5" /></button>
-                  <button type="button" onClick={cambiarEstado} className="rounded-xl border border-border px-4 py-2.5 text-xs font-medium transition-all duration-300 hover:-translate-y-0.5 hover:border-gold/30 hover:bg-gold/5">{seleccionado.estado === "activo" ? "Desactivar" : "Activar"}</button>
+                  {puedeGestionarClientes ? <button type="button" onClick={editarCliente} className="group inline-flex items-center gap-2 rounded-xl border border-gold/25 bg-card px-4 py-2.5 text-xs font-semibold text-foreground hover:bg-gold/5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_26px_-16px_rgba(0,0,0,0.65)]">Editar ficha <ChevronRight className="size-3.5 group-hover:translate-x-0.5" /></button> : null}
+                  {puedeGestionarClientes ? <button type="button" onClick={cambiarEstado} className="rounded-xl border border-border px-4 py-2.5 text-xs font-medium transition-all duration-300 hover:-translate-y-0.5 hover:border-gold/30 hover:bg-gold/5">{seleccionado.estado === "activo" ? "Desactivar" : "Activar"}</button> : null}
                   {sesion?.esDueno ? <button type="button" onClick={() => setConfirmarEliminacion(true)} disabled={guardando || eliminando} className="inline-flex items-center gap-2 rounded-xl border border-danger/25 px-4 py-2.5 text-xs font-semibold text-danger transition-all duration-300 hover:-translate-y-0.5 hover:bg-danger/5 disabled:opacity-50"><Trash2 className="size-3.5" /> Eliminar cliente</button> : null}
                 </div>
                 <div className="mt-7">
