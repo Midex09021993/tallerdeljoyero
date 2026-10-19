@@ -479,20 +479,25 @@ function ClientesPage() {
         </div>
       </div> : null}
 
-      {modal ? <div className="fixed inset-0 z-50 grid place-items-center bg-foreground/10 p-4" role="dialog" aria-modal="true">
-        <form onSubmit={guardar} className="w-full max-w-lg rounded-2xl border border-border bg-card p-5 shadow-raised">
-          <div className="flex items-start justify-between"><div><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-gold">Ficha comercial</p><h2 className="mt-1 text-xl font-semibold">{seleccionado ? "Editar cliente" : "Nuevo cliente"}</h2></div><button type="button" onClick={() => setModal(false)} className="rounded-lg px-2 py-1 text-muted-foreground">✕</button></div>
-          <div className="mt-5 space-y-4">
-            <label className="block text-xs font-medium text-foreground">Tipo de cliente<select value={form.tipo} onChange={(e) => setForm({ ...form, tipo: e.target.value as "persona" | "empresa" })} className="mt-1.5 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm"><option value="persona">Particular</option><option value="empresa">Empresa</option></select></label>
+      {modal ? <div className="fixed inset-0 z-50 grid place-items-center bg-foreground/10 p-3 sm:p-5" role="dialog" aria-modal="true">
+        <form onSubmit={guardar} className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-border bg-card p-4 shadow-raised sm:p-5">
+          <div className="sticky top-0 z-10 -mx-1 flex items-start justify-between gap-3 bg-card px-1 pb-3">
+            <div><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-gold">Ficha comercial</p><h2 className="mt-1 text-xl font-semibold">{seleccionado ? "Editar cliente" : "Nuevo cliente"}</h2></div>
+            <button type="button" onClick={() => setModal(false)} aria-label="Cerrar formulario" className="rounded-lg px-2 py-1 text-muted-foreground">✕</button>
+          </div>
+          <div className="grid gap-x-4 gap-y-3 sm:grid-cols-2">
+            <label className="block text-xs font-medium text-foreground">Tipo de cliente<select value={form.tipo} onChange={(e) => setForm({ ...form, tipo: e.target.value as "persona" | "empresa" })} className="mt-1 h-10 w-full rounded-xl border border-border bg-background px-3 text-sm"><option value="persona">Particular</option><option value="empresa">Empresa</option></select></label>
             <Field label={form.tipo === "empresa" ? "Razón social / Nombre de empresa" : "Nombre completo"} value={form.nombre} onChange={(v) => setForm({ ...form, nombre: v })} required />
             <Field label={form.tipo === "empresa" ? "RUC / Documento fiscal (opcional)" : "DNI / Documento (opcional)"} value={form.documento} onChange={(v) => setForm({ ...form, documento: v })} />
-            <TelefonoInternacional id="cliente-telefono" value={form.telefono} defaultCountry={paisPredeterminadoTelefono} onChange={(telefono) => setForm((actual) => ({ ...actual, telefono }))} />
+            <div className="sm:col-span-2"><TelefonoInternacional id="cliente-telefono" value={form.telefono} defaultCountry={paisPredeterminadoTelefono} onChange={(telefono) => setForm((actual) => ({ ...actual, telefono }))} /></div>
             <Field label="WhatsApp (opcional)" type="tel" value={form.whatsapp} onChange={(v) => setForm({ ...form, whatsapp: v })} />
             <Field label="Correo electrónico" type="email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} />
-            <div className="grid gap-4 sm:grid-cols-2"><Field label="Ciudad" value={form.ciudad} onChange={(v) => setForm({ ...form, ciudad: v })} /><Field label="Dirección" value={form.direccion} onChange={(v) => setForm({ ...form, direccion: v })} /></div>
-            <Field label="Fecha de nacimiento (opcional)" type="date" value={form.fecha_nacimiento} onChange={v=>setForm({...form,fecha_nacimiento:v})}/><label className="block text-xs font-medium">Observaciones<textarea value={form.notas} onChange={e=>setForm({...form,notas:e.target.value})} rows={3} className="mt-1.5 w-full rounded-xl border border-border bg-background p-3 text-sm"/></label>
+            <Field label="Ciudad" value={form.ciudad} onChange={(v) => setForm({ ...form, ciudad: v })} />
+            <Field label="Dirección" value={form.direccion} onChange={(v) => setForm({ ...form, direccion: v })} />
+            <Field label="Fecha de nacimiento (opcional)" type="date" value={form.fecha_nacimiento} onChange={v=>setForm({...form,fecha_nacimiento:v})}/>
+            <label className="block text-xs font-medium sm:col-span-2">Observaciones<textarea value={form.notas} onChange={e=>setForm({...form,notas:e.target.value})} rows={2} className="mt-1 w-full rounded-xl border border-border bg-background p-3 text-sm"/></label>
           </div>
-          <div className="mt-6 flex justify-end gap-2"><button type="button" onClick={() => setModal(false)} className="rounded-xl border border-border px-4 py-2 text-sm">Cancelar</button><button type="submit" disabled={guardando} className="rounded-xl border border-gold/25 bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-gold/5 disabled:opacity-50">{guardando ? "Guardando..." : "Guardar cliente"}</button></div>
+          <div className="sticky bottom-0 mt-4 flex justify-end gap-2 border-t border-border bg-card pt-3"><button type="button" onClick={() => setModal(false)} className="rounded-xl border border-border px-4 py-2 text-sm">Cancelar</button><button type="submit" disabled={guardando} className="rounded-xl border border-gold/25 bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-gold/5 disabled:opacity-50">{guardando ? "Guardando..." : "Guardar cliente"}</button></div>
         </form>
       </div> : null}
     </AppShell>
