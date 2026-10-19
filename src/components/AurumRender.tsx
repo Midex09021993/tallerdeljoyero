@@ -1176,7 +1176,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             loop?.resize?.();
           }
         },
-        exportVideo:async(options:{width?:number;height?:number;fps?:number;duration?:number;mode?:"manual"|"automatic";signal?:AbortSignal;onProgress?:(elapsed:number,total:number)=>void}={})=>{
+        exportVideo:async(options:{width?:number;height?:number;fps?:number;duration?:number;mode?:"manual"|"automatic"|"orbit180-return";signal?:AbortSignal;onProgress?:(elapsed:number,total:number)=>void}={})=>{
           if(!modelo) throw new Error("Carga una joya antes de grabar el vídeo.");
           const sourceCanvas=renderer.domElement as HTMLCanvasElement;
           if(!sourceCanvas || sourceCanvas.width<2 || sourceCanvas.height<2) throw new Error("El visor todavía no tiene una imagen para grabar.");
@@ -1228,7 +1228,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               signal:options.signal,onProgress:options.onProgress,
               onFrame:(elapsed,total)=>{
                 if(automatic && controlsTarget){
-                  const angle=(Math.PI*2)*(elapsed/total);
+                  const progress=Math.max(0,Math.min(1,elapsed/total));
+                  // Smoothly travel 180 degrees, then return to the exact start angle.
+                  const angle=options.mode==="orbit180-return"
+                    ? Math.PI*(1-Math.cos(Math.PI*2*progress))/2
+                    : Math.PI*2*progress;
                   const dx=cameraPosition.x-controlsTarget.x;
                   const dz=cameraPosition.z-controlsTarget.z;
                   const cos=Math.cos(angle),sin=Math.sin(angle);
@@ -2073,9 +2077,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             </button>
             {videoOpen&&<div className="mt-3 space-y-2.5 border-t border-black/10 pt-3">
               <label className="block text-[10px] text-[#66645e]">Modo de grabación
-                <select value={videoMode} disabled={videoBusy} onChange={e=>setVideoMode(e.target.value as "manual"|"automatic")} className="mt-1 w-full rounded-lg border border-black/15 bg-white px-2 py-2 text-xs text-[#292824]">
+                <select value={videoMode} disabled={videoBusy} onChange={e=>setVideoMode(e.target.value as "manual"|"automatic"|"orbit180-return")} className="mt-1 w-full rounded-lg border border-black/15 bg-white px-2 py-2 text-xs text-[#292824]">
                   <option value="manual">Manual · mover la cámara durante la grabación</option>
                   <option value="automatic">Automático · giro 360°</option>
+                  <option value="orbit180-return">Órbita 180° · ida y vuelta</option>
                 </select>
               </label>
               <label className="block text-[10px] text-[#66645e]">Resolución
