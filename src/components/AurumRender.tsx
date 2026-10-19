@@ -1315,6 +1315,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           const originalCssHeight=originalBufferHeight/originalPixelRatio;
           const originalAspect=camara.aspect;
           const originalTransmissionResolutionScale=Number((renderer as any).transmissionResolutionScale ?? 1);
+          const originalFastPath=liveFastPathRef.current;
           const width=isPoster
             ? Math.max(1,Math.min(640,Math.round(Number(options.width)||640)))
             : Math.max(320,Math.min(4096,Math.round(Number(options.width)||3840)));
@@ -1351,18 +1352,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // supersampling; the final file still uses exactly width x height.
             // Camera, materials, lights and both independent HDR environments stay unchanged.
             renderer.setPixelRatio(1);
-            // Gems can inherit a low transmission buffer scale from the live
-            // interaction budget. Restore full-resolution refraction only for
-            // this isolated capture, without changing the interactive preview.
-            (renderer as any).transmissionResolutionScale=1;
+            // Fidelity-first capture: use the same direct WebGL path as the live viewer.
+            // Do not change transmission scale or accumulate a different post-processing/TAA pipeline.
+            liveFastPathRef.current=true;
             renderer.setSize(renderWidth,renderHeight,false);
             if(typeof camara.aspect==="number") {
               camara.aspect=renderWidth/renderHeight;
               camara.updateProjectionMatrix?.();
             }
-            // Keep the same diamond optical budget in the PNG and live viewer.
-            // A higher capture-only bounce count changed the stone's appearance
-            // without a verified visual gain, so capture only increases spatial AA.
             diamondBvhRuntime?.update();
             if(renderer.domElement.width!==renderWidth || renderer.domElement.height!==renderHeight) {
               throw new Error("El canvas WebGL no alcanzó la resolución interna de captura solicitada.");
@@ -1371,39 +1368,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             if(Math.round(drawingBufferSize.x)!==renderWidth || Math.round(drawingBufferSize.y)!==renderHeight){
               throw new Error("El búfer de dibujo WebGL no coincide con la resolución interna solicitada.");
             }
-            let captureComposerBuffer: { width: number; height: number } | null = null;
-            let captureTaaPass: any = null;
-            // Snapshot the original pass state so finally restores the actual live pipeline.
-            capturePassStates.splice(0,capturePassStates.length,...(composer?.passes ?? []).map((pass:any)=>({pass,enabled:Boolean(pass?.enabled)})));
-            if(composer){
-              // Preserve the live pipeline's active pass configuration. Do not
-              // call applyPostQuality(capture:true): that mode deliberately disables
-              // effects and can make polished metal look different from the viewer.
-              composer.setPixelRatio?.(1);
-              composer.setSize?.(renderWidth,renderHeight);
-              for(const pass of composer.passes ?? []){
-                pass.setSize?.(renderWidth,renderHeight);
-              }
-              captureComposerBuffer = composer.readBuffer
-                ? { width: Number(composer.readBuffer.width), height: Number(composer.readBuffer.height) }
-                : null;
-              if(!captureComposerBuffer || captureComposerBuffer.width!==renderWidth || captureComposerBuffer.height!==renderHeight){
-                throw new Error("El búfer interno del compositor no coincide con la resolución de captura solicitada.");
-              }
-              captureTaaPass = composer.passes?.find((pass:any)=>pass && "sampleLevel" in pass && "accumulateIndex" in pass && "accumulate" in pass) ?? null;
-              if(captureTaaPass){
-                captureTaaPass.enabled=true;
-                captureTaaPass.accumulate=true;
-                captureTaaPass.sampleLevel=5;
-                captureTaaPass.accumulateIndex=-1;
-              }
-              for(let sample=0;sample<(captureTaaPass?32:1);sample++){
-                diamondBvhRuntime?.update();
-                composer.render();
-              }
-            }else{
-              renderer.render(escena,camara);
-            }
+            // A single direct render preserves the live renderer's color/tone-mapping path.
+            renderer.render(escena,camara);
+            const captureComposerBuffer = null;
+            const captureTaaPass = null;
             console.info("[AURUM][PNG CAPTURE DIAGNOSTICS]", {
               requestedOutput: { width, height },
               internalRender: { width: renderer.domElement.width, height: renderer.domElement.height },
@@ -1440,6 +1408,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // camera projection, even if capture or encoding fails.
             renderer.setPixelRatio(originalPixelRatio);
             (renderer as any).transmissionResolutionScale=originalTransmissionResolutionScale;
+            liveFastPathRef.current=originalFastPath;
             renderer.setSize(originalCssWidth,originalCssHeight,false);
             if(composer && applyPostQuality){
               applyPostQuality({...renderQuality,pixelRatio:originalPixelRatio,qualityId:measuredQualityId});
