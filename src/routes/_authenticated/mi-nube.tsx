@@ -1018,18 +1018,12 @@ function MiNubePage() {
       toast.error("Espera a que termine la operación en curso.");
       return;
     }
-    // La lista visible puede estar filtrada o incompleta. Exigimos que el NAS
-    // responda antes de borrar para descubrir también vídeos no visibles.
-    if (estadoNas !== "online" || nasPausado) {
-      toast.error("Conecta el NAS antes de eliminar un proyecto. Así podemos verificar todos los archivos y evitar copias huérfanas.");
-      return;
-    }
 
     try {
       const raizProyecto = `${participanteId}/${usuarioId}/${proyecto.nombre}`;
       const rutasWeb: string[] = [];
-      // Storage admite paginación; no limitar la eliminación a los archivos
-      // que estén cargados en pantalla o que sobrevivan a los filtros.
+      // Supabase se verifica y gestiona de forma independiente del NAS.
+      // La operación web nunca debe quedar bloqueada por la disponibilidad de Nextcloud.
       for (let offset = 0; ; offset += 1000) {
         const { data, error } = await supabase.storage.from(BUCKET).list(raizProyecto, {
           limit: 1000,
@@ -1047,30 +1041,50 @@ function MiNubePage() {
         if (entradas.length < 1000) break;
       }
 
-      const { data: nasData, error: nasError } = await supabase.functions.invoke("nextcloud-video-files", {
-        body: { action: "list", participantId: participanteId },
-      });
-      if (nasError || nasData?.error || !Array.isArray(nasData?.files)) {
-        toast.error("No se pudo verificar el contenido completo del NAS. No se eliminó ningún archivo.");
-        return;
+      // Consultar el NAS es opcional para completar la operación web.
+      // Si no responde, se preservan sus archivos y se informa claramente al usuario.
+      let archivosNas: Array<{ name: string; folder: string }> = [];
+      let nasPendiente = estadoNas !== "online" || nasPausado;
+      if (!nasPendiente) {
+        try {
+          const { data: nasData, error: nasError } = await supabase.functions.invoke("nextcloud-video-files", {
+            body: { action: "list", participantId: participanteId },
+          });
+          if (nasError || nasData?.error || !Array.isArray(nasData?.files)) {
+            nasPendiente = true;
+          } else {
+            archivosNas = (nasData.files as Array<{ name: string; folder: string }>)
+              .filter((archivo) => archivo.folder === proyecto.nombre);
+          }
+        } catch {
+          nasPendiente = true;
+        }
       }
-      const archivosNas = (nasData.files as Array<{ name: string; folder: string }>)
-        .filter((archivo) => archivo.folder === proyecto.nombre);
 
+      const resumenNas = nasPendiente
+        ? "El NAS no está disponible: sus archivos se conservarán y no se eliminarán."
+        : `${archivosNas.length} vídeo(s) del NAS`;
       const confirmacion = window.confirm(
-        `¿Eliminar TODO el proyecto “${proyecto.nombre}”, incluidos ${rutasWeb.length} archivo(s) web y ${archivosNas.length} vídeo(s) del NAS? Esta acción no se puede deshacer.`,
+        `¿Eliminar los archivos web del proyecto “${proyecto.nombre}” (${rutasWeb.length}) y ${nasPendiente ? "continuar sin tocar los archivos del NAS" : `también ${resumenNas}`}? Esta acción no se puede deshacer para los archivos eliminados.`,
       );
       if (!confirmacion) return;
 
-      // Eliminar primero el NAS. Si falla una operación, conservamos Storage.
-      for (const archivo of archivosNas) {
-        const { data, error } = await supabase.functions.invoke("nextcloud-video-files", {
-          body: { action: "delete", folder: proyecto.nombre, name: archivo.name, participantId: participanteId },
-        });
-        if (error || data?.error || data?.ok !== true) {
-          toast.error(data?.error ?? error?.message ?? `No se pudo eliminar “${archivo.name}” del NAS. Los archivos web se conservaron.`);
-          await cargarBiblioteca();
-          return;
+      // Limpiar el NAS solo cuando está disponible. Un fallo del NAS no bloquea
+      // la eliminación web; se detiene únicamente el lote NAS y se informa al final.
+      if (!nasPendiente) {
+        for (const archivo of archivosNas) {
+          try {
+            const { data, error } = await supabase.functions.invoke("nextcloud-video-files", {
+              body: { action: "delete", folder: proyecto.nombre, name: archivo.name, participantId: participanteId },
+            });
+            if (error || data?.error || data?.ok !== true) {
+              nasPendiente = true;
+              break;
+            }
+          } catch {
+            nasPendiente = true;
+            break;
+          }
         }
       }
 
@@ -1079,7 +1093,7 @@ function MiNubePage() {
         for (let i = 0; i < rutasWeb.length; i += 100) {
           const { error } = await supabase.storage.from(BUCKET).remove(rutasWeb.slice(i, i + 100));
           if (error) {
-            toast.error("El NAS se limpió, pero quedaron archivos web sin eliminar. Detalle: " + error.message);
+            toast.error("No se pudieron eliminar todos los archivos web. Detalle: " + error.message);
             await cargarBiblioteca();
             return;
           }
@@ -1095,8 +1109,11 @@ function MiNubePage() {
         .eq("propietario_participante_id", participanteId)
         .eq("carpeta", proyecto.nombre)
         .is("revoked_at", null);
+
       if (errorRevocarComparticiones) {
-        toast.warning(`Proyecto eliminado, pero no se pudo revocar automáticamente el permiso compartido de “${proyecto.nombre}”. Revisa Compartir proyecto.`);
+        toast.warning(`Archivos web eliminados, pero no se pudo revocar automáticamente el permiso compartido de “${proyecto.nombre}”. Revisa Compartir proyecto.`);
+      } else if (nasPendiente) {
+        toast.warning(`Archivos web del proyecto “${proyecto.nombre}” eliminados. Los archivos del NAS se conservaron porque no se pudo completar su limpieza. Cuando el NAS vuelva a estar disponible, elimínalos desde Mi Nube.`);
       } else {
         toast.success(`Proyecto “${proyecto.nombre}” eliminado: ${rutasWeb.length} archivo(s) web y ${archivosNas.length} vídeo(s) del NAS.`);
       }
