@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 type PaisTelefono = { iso: string; nombre: string; prefijo: string; bandera: string };
 
@@ -64,9 +64,8 @@ type Props = {
 };
 
 export function TelefonoInternacional({ value, onChange, id }: Props) {
-  const inicial = useMemo(() => interpretarNumero(value), []);
-  const [paisIso, setPaisIso] = useState(inicial.pais);
-  const [nacional, setNacional] = useState(inicial.nacional);
+  const [paisIso, setPaisIso] = useState(() => interpretarNumero(value).pais);
+  const [nacional, setNacional] = useState(() => interpretarNumero(value).nacional);
   const [tocado, setTocado] = useState(false);
   const pais = PAISES.find((item) => item.iso === paisIso) ?? PAISES[0];
 
@@ -113,9 +112,23 @@ export function TelefonoInternacional({ value, onChange, id }: Props) {
           onChange={(event) => {
             const siguiente = event.target.value;
             setNacional(siguiente);
+            event.currentTarget.setCustomValidity("");
             emitir(pais, siguiente);
           }}
-          onBlur={() => setTocado(true)}
+          onBlur={(event) => {
+            setTocado(true);
+            const digitosNumero = digitos(nacional).length;
+            const errorNumero = nacional.trim() && (digitosNumero < 4 || digitosNumero + pais.prefijo.length > 15 || (nacional.startsWith(pais.prefijo) && nacional.length > pais.prefijo.length + 4))
+              ? "Revisa el número y el código de país."
+              : "";
+            event.currentTarget.setCustomValidity(errorNumero);
+          }}
+          onInvalid={(event) => {
+            const digitosNumero = digitos(nacional).length;
+            if (nacional.trim() && (digitosNumero < 4 || digitosNumero + pais.prefijo.length > 15 || (nacional.startsWith(pais.prefijo) && nacional.length > pais.prefijo.length + 4))) {
+              event.currentTarget.setCustomValidity("Revisa el número y el código de país.");
+            }
+          }}
           aria-invalid={invalido}
           aria-describedby={invalido && id ? `${id}-ayuda` : undefined}
           placeholder="Número nacional"
