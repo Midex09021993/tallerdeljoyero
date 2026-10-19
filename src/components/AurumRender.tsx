@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useSesion } from "@/lib/auth";
 import {
   applyAurumMetal, applyAurumGem, metalPresetFromConfig, gemPresetFromConfig,
 } from "../lib/aurum-material-engine";
@@ -105,6 +107,7 @@ const GemSwatch = ({ g, selected, onClick }: { g:GemaConfig; selected:boolean; o
 type AurumRenderProps = { embedded?: boolean; onCatalogApiReady?: (api: AurumCatalogApi | null) => void };
 
 export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRenderProps = {}) {
+  const { data: sesion } = useSesion();
   const visorRef = useRef<HTMLDivElement>(null), fileRef = useRef<HTMLInputElement>(null);
   const [lightingOpen, setLightingOpen] = useState(false);
   const [metalHdriId, setMetalHdriId] = useState("ijewelMetal");
@@ -1127,7 +1130,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         fullscreen:()=>nodo.requestFullscreen?.(),
         vista:(id:VistaId)=>{ camaraVista(id); invalidateRenderRef.current?.(); },
         calidad:aplicarCalidadRender,
-        exportGLB:async()=>{
+        exportGLB:async(options:{download?:boolean}={})=>{
           if(!modelo) throw new Error("Carga un modelo antes de exportar.");
           const exporter=new GLTFExporter();
           const result=await new Promise<ArrayBuffer>((resolve,reject)=>{
@@ -1137,12 +1140,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             },(error:any)=>reject(error),{binary:true,onlyVisible:true,trs:false,animations:[]});
           });
           const blob=new Blob([result],{type:"model/gltf-binary"});
+          if(options.download===false) return blob;
           const url=URL.createObjectURL(blob);
           const link=document.createElement("a");
           link.href=url;
           link.download=(nombreProyecto||"aurum-modelo").trim().replace(/[^a-z0-9-_]+/gi,"-")+".glb";
           link.click();
-          URL.revokeObjectURL(url);
+          window.setTimeout(()=>URL.revokeObjectURL(url),60_000);
+          return blob;
         },
         exportPathTraced:async(options:{width?:number;height?:number;format?:"png"|"jpeg"|"webp";samples?:number;signal?:AbortSignal;onProgress?:(d:number,t:number)=>void}={})=>{
           if(!modelo) throw new Error("Carga un modelo antes del render final.");
@@ -1839,6 +1844,36 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
     }
   },[]);
   useEffect(() => {
+    const params=new URLSearchParams(window.location.search);
+    const sharedUrl=params.get("modeloCompartido");
+    if(!sharedUrl) return;
+    let cancelled=false;
+    let timer:number|undefined;
+    let attempts=0;
+    const loadShared=async()=>{
+      if(cancelled)return;
+      if(typeof apiRef.current?.cargar!=="function"){
+        if(attempts++>=80){setError("El visor tardó demasiado en iniciar. Recarga el enlace compartido.");return;}
+        timer=window.setTimeout(loadShared,250);return;
+      }
+      try{
+        const target=new URL(sharedUrl);
+        const configured=(import.meta.env as {VITE_SUPABASE_URL?:string}).VITE_SUPABASE_URL;
+        if(!configured||target.origin!==new URL(configured).origin||!target.pathname.includes("/storage/v1/object/sign/mi-nube/")) throw new Error("El enlace de la joya no es válido.");
+        const response=await fetch(target.toString());
+        if(!response.ok) throw new Error(response.status===400||response.status===404?"El enlace venció o la joya ya no está disponible. Pide un enlace nuevo.":"No se pudo descargar la joya compartida.");
+        const blob=await response.blob();
+        if(cancelled)return;
+        const name=(params.get("nombre")||"joya-compartida").replace(/[^a-z0-9-_]/gi,"-").slice(0,80)+".glb";
+        await cargarArchivo(new File([blob],name,{type:"model/gltf-binary"}));
+        const cleanUrl=new URL(window.location.href);cleanUrl.searchParams.delete("modeloCompartido");cleanUrl.searchParams.delete("nombre");
+        window.history.replaceState({},"",cleanUrl.pathname+cleanUrl.search+cleanUrl.hash);
+      }catch(cause){if(!cancelled)setError(cause instanceof Error?cause.message:"No se pudo abrir la joya compartida.");}
+    };
+    void loadShared();
+    return()=>{cancelled=true;if(timer)window.clearTimeout(timer);};
+  },[cargarArchivo]);
+  useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("desde-mi-nube") !== "1") return;
     const key = "aurum-render-archivo-pendiente";
@@ -1936,6 +1971,27 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       {!embedded && exportOpen&&<div className="absolute right-3 top-[72px] z-[80] max-h-[calc(100%-6rem)] w-[min(272px,calc(100%-1.5rem))] overflow-y-auto rounded-2xl border border-white/70 bg-[#fbfaf7]/75 p-3 text-[#292824] shadow-[0_12px_36px_rgba(35,32,24,.13)] backdrop-blur-2xl sm:right-4 sm:top-[76px] sm:p-3.5">
         <div className="mb-2.5 flex items-center justify-between"><div><div className="text-[13px] font-semibold tracking-tight text-[#292824]">Exportación AURUM</div><div className="mt-0.5 text-[10px] text-[#77756f]">Descarga para comparar con iJewel</div></div><button type="button" aria-label="Cerrar exportación" onClick={()=>setExportOpen(false)} className="rounded-lg p-1 text-[#77756f] hover:bg-black/[.05]"><X className="size-4"/></button></div>
         <div className="space-y-1.5">
+          <button type="button" disabled={!archivo||exportBusy} onClick={async()=>{
+            setExportBusy(true);
+            try{
+              if(!sesion?.user?.id||!sesion?.participante?.id) throw new Error("Inicia sesión con un taller activo para compartir la joya en la nube.");
+              const blob=await apiRef.current?.exportGLB({download:false}) as Blob|undefined;
+              if(!blob||blob.size<1024) throw new Error("No se pudo preparar el modelo 3D para compartir.");
+              const cleanName=(nombreProyecto||"joya-aurum").trim().replace(/[^a-z0-9-_]+/gi,"-").slice(0,80)||"joya-aurum";
+              const path=sesion.participante.id+"/"+sesion.user.id+"/aurum-compartidos/"+crypto.randomUUID()+"-"+cleanName+".glb";
+              const {error:uploadError}=await supabase.storage.from("mi-nube").upload(path,blob,{contentType:"model/gltf-binary",upsert:false,cacheControl:"3600"});
+              if(uploadError) throw uploadError;
+              const {data:signed,error:signedError}=await supabase.storage.from("mi-nube").createSignedUrl(path,7*24*60*60);
+              if(signedError||!signed?.signedUrl) throw signedError??new Error("No se pudo crear el enlace temporal.");
+              const shareUrl=new URL("/aurum-render-public",window.location.origin);
+              shareUrl.searchParams.set("modeloCompartido",signed.signedUrl);
+              shareUrl.searchParams.set("nombre",cleanName);
+              await navigator.clipboard.writeText(shareUrl.toString());
+              setError(null);
+              window.alert("Enlace copiado. La joya está guardada en Mi Nube y el enlace vence en 7 días.");
+            }catch(e){setError(e instanceof Error?e.message:"No se pudo compartir la joya.");}
+            finally{setExportBusy(false);}
+          }} className="flex w-full items-center gap-2.5 rounded-xl border border-[#d4af37]/50 bg-[#d4af37]/15 px-3 py-2.5 text-left text-[13px] font-semibold text-[#292824] transition-colors hover:bg-[#d4af37]/25 disabled:cursor-not-allowed disabled:opacity-40"><Upload className="size-5"/><span><span className="block">Guardar y compartir joya</span><span className="block text-[10px] font-normal text-[#77756f]">Mi Nube · enlace válido 7 días</span></span></button>
           <button type="button" disabled={!archivo||exportBusy} onClick={async()=>{setExportBusy(true);try{await apiRef.current?.exportGLB();}catch(e){setError(e instanceof Error?e.message:"No se pudo exportar el GLB.");}finally{setExportBusy(false);}}} className="flex w-full items-center gap-2.5 rounded-xl border border-[#7168f4]/20 bg-[#7168f4]/85 px-3 py-2.5 text-left text-[13px] font-semibold text-[#292824] shadow-sm transition-colors hover:bg-[#7168f4]/95 disabled:cursor-not-allowed disabled:opacity-40"><Gem className="size-5"/><span><span className="block">Descargar modelo .glb</span><span className="block text-[10px] font-normal text-[#292824]/85">Geometría y materiales exportables</span></span></button>
           <button type="button" onClick={()=>setSnapshotOpen(v=>!v)} aria-expanded={snapshotOpen} className="flex w-full items-center gap-2.5 rounded-xl border border-white/80 bg-white/35 px-3 py-2.5 text-left text-[13px] text-[#292824] transition-colors hover:bg-white/60"><ImageIcon className="size-5"/><span className="min-w-0 flex-1"><span className="block">Snapshot de producto</span><span className="block text-[10px] text-[#77756f]">Resolución y formato de imagen</span></span><ChevronDown className={"size-4 transition-transform "+(snapshotOpen?"rotate-180":"")}/></button>
           {snapshotOpen&&<div className="rounded-xl border border-black/10 bg-black/[.025] p-3">
