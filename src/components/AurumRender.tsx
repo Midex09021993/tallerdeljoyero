@@ -1975,11 +1975,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           <button type="button" disabled={!archivo||exportBusy} onClick={async()=>{
             setExportBusy(true);
             try{
-              if(!sesion?.user?.id||!sesion?.participante?.id) throw new Error("Inicia sesión con un taller activo para compartir la joya en la nube.");
+              const userId=sesion?.user?.id;
+              const participanteId=sesion?.participante?.id;
+              if(!userId||!participanteId) throw new Error("Inicia sesión con un taller activo para compartir la joya en la nube.");
               const blob=await apiRef.current?.exportGLB({download:false}) as Blob|undefined;
               if(!blob||blob.size<1024) throw new Error("No se pudo preparar el modelo 3D para compartir.");
               const cleanName=(nombreProyecto||"joya-aurum").trim().replace(/[^a-z0-9-_]+/gi,"-").slice(0,80)||"joya-aurum";
-              const path=sesion.participante.id+"/"+sesion.user.id+"/aurum-compartidos/"+crypto.randomUUID()+"-"+cleanName+".glb";
+              const path=participanteId+"/"+userId+"/aurum-compartidos/"+crypto.randomUUID()+"-"+cleanName+".glb";
               const {error:uploadError}=await supabase.storage.from("mi-nube").upload(path,blob,{contentType:"model/gltf-binary",upsert:false,cacheControl:"3600"});
               if(uploadError) throw uploadError;
               const {data:signed,error:signedError}=await supabase.storage.from("mi-nube").createSignedUrl(path,7*24*60*60);
