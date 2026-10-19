@@ -1746,7 +1746,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // collapse as aggressively on dense CAD models. This changes only
             // the raster sampling density; material settings for other gems/metals
             // and the live transmission budget remain untouched.
-            const interactionDpr = 1.0;
+            const interactionDpr = 1.1;
       viewerLoopRef.current = viewerLoop;
             renderer.setPixelRatio(interactionDpr);
             composer?.setPixelRatio?.(interactionDpr);
