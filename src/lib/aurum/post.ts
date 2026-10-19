@@ -256,9 +256,12 @@ export async function createAurumPostPipeline(
     if(bloomPass){
       // Bloom creates colored fringes around high-contrast jewelry edges; keep it out of PNG AA-only capture.
       bloomPass.enabled=!options.capture && Boolean(config.bloom) && high;
-      bloomPass.strength=config.bloomIntensity??.035;
-      bloomPass.threshold=config.bloomThreshold??1.5;
-      bloomPass.radius=Math.max(0,Math.min(1,Number(config.bloomRadius??.35)));
+      // Keep bloom restrained on polished jewelry: broad bright halos wash out
+      // metal edges and can make gold/silver appear milky. Only applies when bloom
+      // is explicitly enabled by the active profile; the default remains disabled.
+      bloomPass.strength=Math.min(0.025,Math.max(0,Number(config.bloomIntensity??.025)));
+      bloomPass.threshold=Math.max(1.8,Number(config.bloomThreshold??1.8));
+      bloomPass.radius=Math.min(0.25,Math.max(0,Number(config.bloomRadius??.25)));
     }
     if(gradingPass){
       gradingPass.enabled=!options.capture && Boolean(config.gradeEnabled);
