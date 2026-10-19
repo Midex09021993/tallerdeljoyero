@@ -1254,10 +1254,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 if(videoTaaPass){
                   videoTaaPass.accumulate=true;
                   videoTaaPass.accumulateIndex=-1;
-                  // TAARenderPass with sampleLevel=1 accumulates its two jitter
-                  // samples inside a single composer.render() call. Reset once per
-                  // camera pose, then render once to avoid duplicate GPU work.
+                  // TAARenderPass accumulates one jitter sample per composer.render()
+                  // call. Render twice at the same camera pose to complete the
+                  // sampleLevel=1 (2-sample) budget used for each video frame.
                   diamondBvhRuntime?.update();
+                  composer.render();
                   composer.render();
                 }else if(composer){
                   composer.render();
