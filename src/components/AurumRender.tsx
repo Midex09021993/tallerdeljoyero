@@ -1214,29 +1214,15 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             const { recordAurumCanvasVideo } = await import("../lib/aurum/video-exporter");
             controles.autoRotate=false;
             loop?.pause?.();
-            liveFastPathRef.current=false;
+            // Record with the same direct renderer path as the live viewer.
+            liveFastPathRef.current=true;
             aplicarPerfilLive();
             renderer.setPixelRatio(1);
-            (renderer as any).transmissionResolutionScale=1;
             renderer.setSize(renderWidth,renderHeight,false);
             // Keep camera.aspect unchanged: render dimensions are fitted to the
             // viewer ratio, not forced to the output video's aspect ratio.
-            if(composer){
-              // Match the live viewer: do not switch to capture/ultra post quality
-              // and do not disable live grading/LUT/SSAO/reflection passes for video.
-              composer.setPixelRatio?.(1);
-              composer.setSize?.(renderWidth,renderHeight);
-              for(const pass of composer.passes??[]){
-                pass.setSize?.(renderWidth,renderHeight);
-              }
-              videoTaaPass=(composer.passes??[]).find((pass:any)=>pass&&"sampleLevel" in pass&&"accumulateIndex" in pass&&"accumulate" in pass)??null;
-              if(videoTaaPass){
-                videoTaaPass.enabled=true;
-                videoTaaPass.accumulate=true;
-                videoTaaPass.sampleLevel=1;
-                videoTaaPass.accumulateIndex=-1;
-              }
-            }
+            // Do not resize or activate the post-processing composer for video.
+            // The live fast path renders the scene directly, preserving its color response.
             loop?.setContinuousRendering?.(true);
             await recordAurumCanvasVideo(sourceCanvas,{
               width:options.width,height:options.height,fps:options.fps,duration:duration,
@@ -1256,22 +1242,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                   camara.lookAt(controlsTarget);
                   controles.update?.();
                 }
-                if(videoTaaPass){
-                  videoTaaPass.accumulate=true;
-                  videoTaaPass.accumulateIndex=-1;
-                  // TAARenderPass accumulates one jitter sample per composer.render()
-                  // call. Render twice at the same camera pose to complete the
-                  // sampleLevel=1 (2-sample) budget used for each video frame.
-                  diamondBvhRuntime?.update();
-                  composer.render();
-                  composer.render();
-                }else if(composer){
-                  composer.render();
-                }else{
-                  renderer.render(escena,camara);
-                }
-              },
-            });
+                // Draw each frame through the exact direct path used by live view.
+                diamondBvhRuntime?.update();
+                renderer.render(escena,camara);
+              }            });
           }finally{
             loop?.setContinuousRendering?.(false);
             liveFastPathRef.current=previousFastPath;
