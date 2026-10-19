@@ -104,6 +104,23 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
     catalogApi.gemaCatalogo?.(aurumGem);
   }, [catalogApi, loadedModelUrl, modelUrl, aurumMaterial, aurumGem]);
 
+  const handleMetalSelect = (id: string) => {
+    setMetalId(id);
+    const selected = metales.find((item) => item.id === id) ?? metales[0];
+    const material = MATERIALES.find((item) => item.id === selected.materialId)
+      ?? MATERIALES.find((item) => item.id === "oro18a_pulido");
+    if (catalogApi && loadedModelUrl === modelUrl && material) {
+      console.info("[PUBLIC VIEWER] Metal seleccionado", { id, materialId: material.id });
+      catalogApi.materialCatalogo?.(material);
+    } else {
+      console.warn("[PUBLIC VIEWER] El motor todavía no está listo para cambiar el metal", {
+        hasCatalogApi: Boolean(catalogApi),
+        modelReady: loadedModelUrl === modelUrl,
+        requestedMetal: id,
+      });
+    }
+  };
+
   const isReady = Boolean(modelUrl && loadedModelUrl === modelUrl && !loadError && !status);
   const displayName = (sharedModelName || modelName || "Joya compartida")
     .replace(/\\.(glb|gltf|3dm|obj|stl|fbx)$/i, "")
@@ -146,7 +163,7 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
           <div className="mb-5">
             <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#92702f]">01 · Metal</p>
             <p className="mt-1 text-xs text-[#8a8175]">Elige el acabado de tu joya</p>
-            <div className="mt-3 grid grid-cols-2 gap-2">{metales.map((metal) => <button key={metal.id} type="button" aria-pressed={metalId === metal.id} onClick={() => setMetalId(metal.id)} className={"group min-h-[76px] rounded-xl border p-3 text-left text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45] focus-visible:ring-offset-1 " + (metalId === metal.id ? "border-[#a7833d] bg-[#f7f0e2] shadow-[inset_0_0_0_1px_rgba(167,131,61,.12)]" : "border-[#ece7df] bg-white hover:border-[#d1bd96] hover:bg-[#fcfaf5]")}><span className="mb-2 flex items-center justify-between"><span className="size-5 rounded-full border border-black/10 shadow-sm" style={{ backgroundColor: "#" + metal.color.toString(16).padStart(6,"0") }} />{metalId === metal.id && <span className="text-[9px] font-bold uppercase tracking-wide text-[#8b6b36]">Activo</span>}</span><span className="font-medium text-[#342e26]">{metal.label}</span></button>)}</div>
+            <div className="mt-3 grid grid-cols-2 gap-2">{metales.map((metal) => <button key={metal.id} type="button" aria-pressed={metalId === metal.id} onClick={() => handleMetalSelect(metal.id)} className={"group min-h-[76px] rounded-xl border p-3 text-left text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45] focus-visible:ring-offset-1 " + (metalId === metal.id ? "border-[#a7833d] bg-[#f7f0e2] shadow-[inset_0_0_0_1px_rgba(167,131,61,.12)]" : "border-[#ece7df] bg-white hover:border-[#d1bd96] hover:bg-[#fcfaf5]")}><span className="mb-2 flex items-center justify-between"><span className="size-5 rounded-full border border-black/10 shadow-sm" style={{ backgroundColor: "#" + metal.color.toString(16).padStart(6,"0") }} />{metalId === metal.id && <span className="text-[9px] font-bold uppercase tracking-wide text-[#8b6b36]">Activo</span>}</span><span className="font-medium text-[#342e26]">{metal.label}</span></button>)}</div>
           </div>
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#92702f]">02 · Piedra</p>
