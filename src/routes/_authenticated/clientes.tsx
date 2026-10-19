@@ -443,6 +443,22 @@ function ClientesPage() {
                   {puedeGestionarClientes ? <button type="button" onClick={cambiarEstado} className="rounded-xl border border-border px-4 py-2.5 text-xs font-medium transition-all duration-300 hover:-translate-y-0.5 hover:border-gold/30 hover:bg-gold/5">{seleccionado.estado === "activo" ? "Desactivar" : "Activar"}</button> : null}
                   {sesion?.esDueno ? <button type="button" onClick={() => setConfirmarEliminacion(true)} disabled={guardando || eliminando} className="inline-flex items-center gap-2 rounded-xl border border-danger/25 px-4 py-2.5 text-xs font-semibold text-danger transition-all duration-300 hover:-translate-y-0.5 hover:bg-danger/5 disabled:opacity-50"><Trash2 className="size-3.5" /> Eliminar cliente</button> : null}
                 </div>
+                <div className="mt-6 rounded-2xl border border-border bg-surface-muted/25 p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div><h3 className="text-sm font-semibold">Resumen comercial</h3><p className="mt-1 text-[11px] text-muted-foreground">Basado en los últimos registros cargados de esta ficha.</p></div>
+                    {cargandoHistorial ? <span className="text-[10px] text-muted-foreground">Actualizando…</span> : null}
+                  </div>
+                  {errorHistorial ? <p className="mt-3 text-xs text-destructive">Resumen no disponible hasta recuperar el historial.</p> : <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    {cotizacionesHabilitadas ? <>
+                      <div className="rounded-xl border border-border bg-card p-3"><p className="text-[10px] text-muted-foreground">Cotizaciones aprobadas</p><p className="mt-1 text-2xl font-semibold tabular-nums">{cotizaciones.filter((q) => q.estado === "aprobada").length}</p></div>
+                      <div className="rounded-xl border border-border bg-card p-3"><p className="text-[10px] text-muted-foreground">Pendientes de respuesta</p><p className="mt-1 text-2xl font-semibold tabular-nums">{cotizaciones.filter((q) => ["borrador", "enviada", "requiere_revision"].includes(q.estado)).length}</p></div>
+                      <div className="rounded-xl border border-border bg-card p-3"><p className="text-[10px] text-muted-foreground">Cotizaciones rechazadas</p><p className="mt-1 text-2xl font-semibold tabular-nums">{cotizaciones.filter((q) => q.estado === "rechazada").length}</p></div>
+                    </> : null}
+                    <div className="rounded-xl border border-border bg-card p-3"><p className="text-[10px] text-muted-foreground">Pedidos en curso</p><p className="mt-1 text-2xl font-semibold tabular-nums">{pedidos.filter((p) => !["Entregado", "Cancelado"].includes(p.estado)).length}</p></div>
+                    <div className="rounded-xl border border-border bg-card p-3"><p className="text-[10px] text-muted-foreground">Pedidos entregados</p><p className="mt-1 text-2xl font-semibold tabular-nums">{pedidos.filter((p) => p.estado === "Entregado").length}</p></div>
+                    <div className="rounded-xl border border-border bg-card p-3"><p className="text-[10px] text-muted-foreground">Pedidos cancelados</p><p className="mt-1 text-2xl font-semibold tabular-nums">{pedidos.filter((p) => p.estado === "Cancelado").length}</p></div>
+                  </div>}
+                </div>
                 <div className="mt-7">
                   <SectionTitle title="Cotizaciones recientes" />
                   <p className="mt-1 text-[11px] text-muted-foreground">Se muestran como máximo las 8 más recientes.</p>
