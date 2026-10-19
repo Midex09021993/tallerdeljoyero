@@ -451,9 +451,6 @@ function LoginPage() {
                         <p className="mt-3 text-sm leading-relaxed text-white/75">
                           Nuestro motor de visualización 3D está desarrollado para las necesidades de la joyería. Permite explorar modelos con materiales configurables, metales, gemas e iluminación de estudio, directamente en el visor interactivo.
                         </p>
-                        <p className="mt-2 text-xs leading-relaxed text-white/55">
-                          Construido sobre WebGL y Three.js, Aurum Render incorpora una capa propia de materiales y renderizado, con entornos HDR diferenciados para metales y gemas y un tratamiento especializado para las facetas y la refracción del diamante.
-                        </p>
                         <div className="mt-4 flex flex-wrap gap-2 text-[9px] font-semibold uppercase tracking-wider">
                           {["Motor 3D especializado","Metales y gemas","Iluminación HDR","Captura de producto"].map((item) => <span key={item} className="rounded-lg border border-gold/20 bg-black/20 px-2.5 py-1.5 text-white/70">{item}</span>)}
                         </div>
@@ -470,9 +467,12 @@ function LoginPage() {
 
                   <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     {[
-                      { icon: Boxes, title: "Gestión comercial", text: "Registra clientes, prepara proyectos y cotizaciones, gestiona pedidos, ventas y contratos, manteniendo separados los datos internos y los documentos para clientes." },
-                      { icon: PackageCheck, title: "Operación del taller", text: "Organiza órdenes de producción, trabajos y piezas; consulta avances, responsables, materiales, inventario y control de calidad según los módulos habilitados." },
-                      { icon: Calculator, title: "Herramientas técnicas", text: "Calculadoras de yeso y agua, aleación de oro, conversión de tallas y Visualizador y peso 3D para apoyar cálculos y revisión de piezas." },
+                      { icon: Boxes, title: "Gestión comercial", text: "Centraliza clientes, proyectos, cotizaciones, pedidos, ventas y contratos para organizar la relación comercial con cada cliente." },
+                      { icon: PackageCheck, title: "Operación y producción", text: "Da seguimiento a órdenes, trabajos y piezas, con información de fabricación, materiales, avances y control de calidad según los módulos habilitados." },
+                      { icon: Sparkles, title: "AURUM Render · Visualización 3D", text: "Nuestro producto insignia para visualizar joyas en 3D, explorar materiales, metales, gemas e iluminación y preparar presentaciones visuales." },
+                      { icon: ShoppingBag, title: "Catálogo digital", text: "Organiza modelos y colecciones, administra imágenes y vídeos y prepara una vitrina digital para presentar las joyas de tu taller." },
+                      { icon: Network, title: "Mi Nube y documentos", text: "Organiza modelos 3D, fotografías, vídeos y documentos técnicos; las opciones para compartir dependen de los permisos y funciones disponibles." },
+                      { icon: Calculator, title: "Herramientas técnicas", text: "Utiliza calculadoras de yeso y agua, aleaciones de oro, conversión de tallas y herramientas de visualización y peso 3D." },
                     ].map(({icon:Icon,title,text}) => (
                       <article key={title} className="rounded-2xl border border-white/10 bg-white/[0.025] p-4 transition hover:border-gold/35">
                         <Icon className="size-6 text-gold"/>
