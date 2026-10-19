@@ -131,6 +131,7 @@ function CatalogoPage() {
   const [proyectoDesdeMiNube, setProyectoDesdeMiNube] = useState<ProyectoNubeInicial | null>(null);
   const [pdfDesdeMiNube, setPdfDesdeMiNube] = useState<{ nombre: string; ruta: string } | null>(null);
   const [guardandoAccion, setGuardandoAccion] = useState<string | null>(null);
+  const [productoPendienteEliminar, setProductoPendienteEliminar] = useState<Producto | null>(null);
   const [menuProductoAbierto, setMenuProductoAbierto] = useState<string | null>(null);
   const puedeGestionar = Boolean(sesion?.esAdmin);
 
@@ -173,11 +174,6 @@ function CatalogoPage() {
   };
   const eliminarProducto = async (producto: Producto) => {
     if (!puedeGestionar || guardandoAccion) return;
-    const confirmado = window.confirm(
-      `¿Eliminar el modelo "${producto.nombre}"? Esta acción elimina el registro del catálogo y no se puede deshacer.`,
-    );
-    if (!confirmado) return;
-
     setGuardandoAccion("eliminar:" + producto.id);
     try {
       const { error } = await supabase
@@ -416,7 +412,7 @@ function CatalogoPage() {
                   {puedeGestionar ? <><button type="button" onClick={() => void cambiarFlag(p.id, "publicado", p.estado !== "Publicado")} disabled={guardandoAccion === "publicado:" + p.id || Boolean(guardandoAccion)} className="inline-flex min-w-0 items-center justify-center rounded-lg bg-surface-muted px-2.5 py-2.5 text-xs font-semibold transition-colors hover:bg-gold/10 disabled:opacity-50">{p.estado === "Publicado" ? "Retirar" : "Publicar"}</button><button type="button" onClick={() => void cambiarFlag(p.id, "destacado", !p.destacado)} disabled={guardandoAccion === "destacado:" + p.id || Boolean(guardandoAccion)} className="inline-flex min-w-0 items-center justify-center rounded-lg bg-surface-muted px-2.5 py-2.5 text-xs font-semibold transition-colors hover:bg-gold/10 disabled:opacity-50">{p.destacado ? "Quitar destacado" : "Destacar"}</button></> : null}
                   <button type="button" onClick={() => abrirEdicion(p)} className="inline-flex min-w-0 items-center justify-center gap-1.5 rounded-lg bg-surface-muted px-2.5 py-2.5 text-xs font-semibold transition-colors hover:bg-gold/10"><Pencil className="size-3.5 shrink-0" /> Editar</button>
                   <button type="button" onClick={() => void compartir(p)} className="inline-flex min-w-0 items-center justify-center gap-1.5 rounded-lg bg-surface-muted px-2.5 py-2.5 text-xs font-semibold transition-colors hover:bg-gold/10"><Share2 className="size-3.5 shrink-0" /> Compartir</button>
-                  {puedeGestionar ? <button type="button" onClick={() => void eliminarProducto(p)} disabled={guardandoAccion === "eliminar:" + p.id || Boolean(guardandoAccion)} className="col-span-2 inline-flex min-w-0 items-center justify-center gap-1.5 rounded-lg border border-destructive/20 bg-destructive/5 px-2.5 py-2.5 text-xs font-semibold text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50">{guardandoAccion === "eliminar:" + p.id ? "Eliminando…" : "Eliminar"}</button> : null}
+                  {puedeGestionar ? <button type="button" onClick={() => setProductoPendienteEliminar(p)} disabled={guardandoAccion === "eliminar:" + p.id || Boolean(guardandoAccion)} className="col-span-2 inline-flex min-w-0 items-center justify-center gap-1.5 rounded-lg border border-destructive/20 bg-destructive/5 px-2.5 py-2.5 text-xs font-semibold text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50">{guardandoAccion === "eliminar:" + p.id ? "Eliminando…" : "Eliminar"}</button> : null}
                 </div>
               </div>
             </article>
@@ -442,6 +438,18 @@ function CatalogoPage() {
           <Arch label="Externo" text="Solo información comercial publicada, con CTA a cotización, WhatsApp y enlace compartible." />
         </div>
       </Panel>
+      {productoPendienteEliminar && (
+        <div className="fixed inset-0 z-[80] grid place-items-center bg-black/50 p-4" role="dialog" aria-modal="true" aria-labelledby="catalogo-eliminar-title">
+          <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-5 shadow-2xl">
+            <h3 id="catalogo-eliminar-title" className="text-base font-semibold">Eliminar modelo</h3>
+            <p className="mt-2 text-sm text-muted-foreground">¿Eliminar “{productoPendienteEliminar.nombre}”? Se eliminará el registro del catálogo y no se puede deshacer.</p>
+            <div className="mt-5 flex justify-end gap-2">
+              <button type="button" onClick={() => setProductoPendienteEliminar(null)} className="rounded-xl border border-border px-4 py-2 text-sm font-semibold">Cancelar</button>
+              <button type="button" onClick={() => { const p = productoPendienteEliminar; setProductoPendienteEliminar(null); void eliminarProducto(p); }} className="rounded-xl bg-destructive px-4 py-2 text-sm font-semibold text-white">Eliminar</button>
+            </div>
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 }
