@@ -168,6 +168,7 @@ export function startAurumViewerLoop(
   let interactionActive = false;
   let interactionEnding = false;
   let idleFramesRemaining = 0;
+  let continuousRendering = false;
   const progressiveFrames = Math.max(0, Math.min(32, Math.floor(interaction?.progressiveFrames ?? 32)));
 
   const requestRender = () => {
@@ -224,7 +225,7 @@ export function startAurumViewerLoop(
       dirty = true;
     }
 
-    const shouldRender = dirty || changedByControls || interactionActive || idleFramesRemaining > 0;
+    const shouldRender = dirty || changedByControls || interactionActive || idleFramesRemaining > 0 || continuousRendering;
     if (shouldRender) {
       dirty = false;
       render();
@@ -233,7 +234,7 @@ export function startAurumViewerLoop(
 
     // During idle convergence, request a bounded number of frames, then stop.
     ticking = false;
-    if (!stopped && !paused && (dirty || changedByControls || interactionActive || interactionEnding || idleFramesRemaining > 0)) {
+    if (!stopped && !paused && (dirty || changedByControls || interactionActive || interactionEnding || idleFramesRemaining > 0 || continuousRendering)) {
       frame = requestAnimationFrame(tick);
     }
   };
@@ -245,6 +246,12 @@ export function startAurumViewerLoop(
     observer,
     get frame() { return frame; },
     invalidate: requestRender,
+    // Keep rendering every frame for time-based exports such as turntable video.
+    // Always disable this in a finally block so the editor returns to demand rendering.
+    setContinuousRendering: (active: boolean) => {
+      continuousRendering = active;
+      if (active) requestRender();
+    },
     // Run a bounded set of frames after switching to the photographic pipeline
     // so TAA/SSR/SSAO can settle without leaving a permanent animation loop.
     converge: (count = progressiveFrames) => {
