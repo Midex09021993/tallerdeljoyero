@@ -33,7 +33,7 @@ import { createAurumApi, createAurumCatalogApi, type AurumCatalogApi } from "../
 import { createAurumConfiguratorState } from "../lib/aurum/configurator-state";
 import { countAurumTriangles, getAurumRuntimeBudget, type AurumRuntimeBudget } from "../lib/aurum/runtime-budget";
 import { prepareAurumLiveGeometry, setAurumLiveGeometryQuality, disposeAurumLiveGeometry } from "../lib/aurum/live-geometry-lod";
-import { ChevronDown, Download, Expand, FileJson, Gem, Image as ImageIcon, Maximize2, RotateCcw, RotateCw, SlidersHorizontal, Sparkles, Upload, X } from "lucide-react";
+import { ChevronDown, Copy, Download, Expand, FileJson, Gem, Image as ImageIcon, Maximize2, RotateCcw, RotateCw, SlidersHorizontal, Sparkles, Upload, X } from "lucide-react";
 
 import { GEMAS, MATERIALES, ESCENARIOS, VISTAS, ILUMINACIONES, type MaterialId, type EscenarioId, type VistaId, type IluminacionId, type MaterialGrupo, type CategoriaParte, type GemaId, type GemaConfig, type MaterialConfig, type ParteModelo } from "../lib/aurum/catalog";
 
@@ -120,6 +120,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [qualityOpen, setQualityOpen] = useState(false);
   const [libraryMenuOpen, setLibraryMenuOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
+  const [sharedLink, setSharedLink] = useState<string | null>(null);
   const [exportBusy, setExportBusy] = useState(false);
   const [videoOpen, setVideoOpen] = useState(false);
   const [videoBusy, setVideoBusy] = useState(false);
@@ -1989,14 +1990,25 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               const shareUrl=new URL("/aurum-render-public",window.location.origin);
               shareUrl.searchParams.set("modeloCompartido",signed.signedUrl);
               shareUrl.searchParams.set("nombre",cleanName);
-              await navigator.clipboard.writeText(shareUrl.toString());
+              const generatedLink=shareUrl.toString();
+              setSharedLink(generatedLink);
               setError(null);
-              toast.success("Enlace copiado. La joya está guardada en Mi Nube y el enlace vence en 7 días.");
+              try {
+                await navigator.clipboard.writeText(generatedLink);
+                toast.success("Enlace copiado. La joya está guardada en Mi Nube y el enlace vence en 7 días.");
+              } catch {
+                toast.info("La joya está guardada. Copia el enlace que aparece debajo del botón.");
+              }
             }catch(e){setError(e instanceof Error?e.message:"No se pudo compartir la joya.");}
             finally{setExportBusy(false);}
           }} className="flex w-full items-center gap-2.5 rounded-xl border border-[#d4af37]/50 bg-[#d4af37]/15 px-3 py-2.5 text-left text-[13px] font-semibold text-[#292824] transition-colors hover:bg-[#d4af37]/25 disabled:cursor-not-allowed disabled:opacity-40"><Upload className="size-5"/><span><span className="block">Guardar y compartir joya</span><span className="block text-[10px] font-normal text-[#77756f]">Mi Nube · enlace válido 7 días</span></span></button>
           <button type="button" disabled={!archivo||exportBusy} onClick={async()=>{setExportBusy(true);try{await apiRef.current?.exportGLB();}catch(e){setError(e instanceof Error?e.message:"No se pudo exportar el GLB.");}finally{setExportBusy(false);}}} className="flex w-full items-center gap-2.5 rounded-xl border border-[#7168f4]/20 bg-[#7168f4]/85 px-3 py-2.5 text-left text-[13px] font-semibold text-[#292824] shadow-sm transition-colors hover:bg-[#7168f4]/95 disabled:cursor-not-allowed disabled:opacity-40"><Gem className="size-5"/><span><span className="block">Descargar modelo .glb</span><span className="block text-[10px] font-normal text-[#292824]/85">Geometría y materiales exportables</span></span></button>
           <button type="button" onClick={()=>setSnapshotOpen(v=>!v)} aria-expanded={snapshotOpen} className="flex w-full items-center gap-2.5 rounded-xl border border-white/80 bg-white/35 px-3 py-2.5 text-left text-[13px] text-[#292824] transition-colors hover:bg-white/60"><ImageIcon className="size-5"/><span className="min-w-0 flex-1"><span className="block">Snapshot de producto</span><span className="block text-[10px] text-[#77756f]">Resolución y formato de imagen</span></span><ChevronDown className={"size-4 transition-transform "+(snapshotOpen?"rotate-180":"")}/></button>
+          {sharedLink&&<div className="rounded-xl border border-[#d4af37]/30 bg-white/60 p-2.5">
+            <div className="mb-1.5 text-[10px] font-semibold text-[#92743b]">Enlace para compartir · vence en 7 días</div>
+            <input aria-label="Enlace de la joya compartida" readOnly value={sharedLink} onFocus={e=>e.currentTarget.select()} className="w-full rounded-lg border border-black/10 bg-white px-2 py-2 text-[10px] text-[#55534d]"/>
+            <button type="button" onClick={async()=>{try{await navigator.clipboard.writeText(sharedLink);toast.success("Enlace copiado.");}catch{toast.error("No se pudo copiar automáticamente. Selecciona el enlace y cópialo manualmente.");}}} className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg border border-black/10 bg-white px-2 py-2 text-[11px] font-medium hover:bg-black/[.025]"><Copy className="size-3.5"/>Copiar enlace</button>
+          </div>}
           {snapshotOpen&&<div className="rounded-xl border border-black/10 bg-black/[.025] p-3">
             <div className="mb-2 text-[10px] font-semibold uppercase tracking-[.14em] text-[#77756f]">Salida de imagen</div>
             <div className="grid grid-cols-2 gap-2">
