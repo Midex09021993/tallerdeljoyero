@@ -433,7 +433,7 @@ function LoginPage() {
                     <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-gold">Aurum Lab · infraestructura digital</p>
                     <h3 className="mt-2 max-w-4xl font-display text-2xl italic text-white sm:text-4xl">Todo el recorrido de una joya, conectado.</h3>
                     <p className="mt-3 max-w-3xl text-sm leading-relaxed text-white/65">
-                      Aurum Lab reúne herramientas técnicas gratuitas y módulos de gestión del taller: clientes, proyectos, cotizaciones, pedidos, documentos, archivos, catálogo y seguimiento de producción. Las funciones disponibles dependen de cada módulo y de los permisos del usuario.
+                      Aurum Lab reúne herramientas técnicas gratuitas y módulos para organizar el trabajo del taller: clientes, cotizaciones, pedidos, archivos, catálogo y seguimiento de producción. Cada módulo muestra las funciones disponibles para el taller y los permisos de cada usuario.
                     </p>
                     <div className="mt-5 flex flex-wrap gap-2 text-[10px] font-semibold uppercase tracking-wider">
                       {["Cliente","Cotización","Pedido","Producción","Calidad","Entrega"].map((item,i) => <span key={item} className="rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-white/65">{item}{i < 5 ? " →" : ""}</span>)}
@@ -444,7 +444,7 @@ function LoginPage() {
                     {[
                       { icon: Boxes, title: "Gestión comercial", text: "Registra clientes, prepara proyectos y cotizaciones, gestiona pedidos, ventas y contratos, manteniendo separados los datos internos y los documentos para clientes." },
                       { icon: PackageCheck, title: "Operación del taller", text: "Organiza órdenes de producción, trabajos y piezas; consulta avances, responsables, materiales, inventario y control de calidad según los módulos habilitados." },
-                      { icon: Sparkles, title: "Diseño y presentación 3D", text: "AURUM Render (beta) permite cargar modelos de joyería y probar materiales, metales, gemas, iluminación y escenas para presentar diseños." },
+                      { icon: Sparkles, title: "Diseño y presentación 3D", text: "AURUM Render permite visualizar modelos de joyería en 3D y explorar materiales, metales, gemas e iluminación para presentar diseños." },
                       { icon: Calculator, title: "Herramientas técnicas", text: "Calculadoras de yeso y agua, aleación de oro, conversión de tallas y Visualizador y peso 3D para apoyar cálculos y revisión de piezas." },
                     ].map(({icon:Icon,title,text}) => (
                       <article key={title} className="rounded-2xl border border-white/10 bg-white/[0.025] p-4 transition hover:border-gold/35">
@@ -459,17 +459,17 @@ function LoginPage() {
                     <div className="mb-4 max-w-3xl">
                       <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-gold">Tu trabajo, organizado y listo para mostrar</p>
                       <h3 className="mt-2 font-display text-2xl italic text-white sm:text-3xl">De los archivos del taller a la presentación de tus joyas.</h3>
-                      <p className="mt-2 text-sm leading-relaxed text-white/55">Dos espacios conectados con tu entorno de trabajo: conserva tus recursos y prepara una vitrina digital para tus modelos.</p>
+                      <p className="mt-2 text-sm leading-relaxed text-white/55">Organiza los archivos de trabajo y prepara una vitrina digital para presentar tus modelos, cada espacio con su propósito.</p>
                     </div>
                     <div className="grid gap-3 sm:grid-cols-2">
                       <article className="rounded-2xl border border-white/10 bg-white/[0.025] p-5 transition hover:border-gold/35">
                         <div className="flex items-center gap-3"><div className="rounded-xl border border-gold/25 bg-gold/10 p-2.5"><Boxes className="size-6 text-gold" /></div><div><p className="text-[9px] font-bold uppercase tracking-[0.18em] text-gold">Espacio de trabajo</p><h4 className="mt-1 text-base font-semibold text-white">Mi Nube</h4></div></div>
-                        <p className="mt-3 text-xs leading-relaxed text-white/55">Guarda y organiza archivos del taller, como modelos 3D, fotografías, vídeos y documentos técnicos. Conserva recursos y comparte archivos cuando la función correspondiente esté disponible para tu usuario.</p>
+                        <p className="mt-3 text-xs leading-relaxed text-white/55">Organiza recursos del taller —modelos 3D, fotografías, vídeos y documentos técnicos— en un espacio de trabajo. Las opciones para compartir dependen de las funciones habilitadas para tu usuario.</p>
                         <p className="mt-3 text-[10px] leading-relaxed text-white/35">Disponible dentro del entorno de trabajo para usuarios autorizados.</p>
                       </article>
                       <article className="rounded-2xl border border-white/10 bg-white/[0.025] p-5 transition hover:border-gold/35">
                         <div className="flex items-center gap-3"><div className="rounded-xl border border-gold/25 bg-gold/10 p-2.5"><ShoppingBag className="size-6 text-gold" /></div><div><p className="text-[9px] font-bold uppercase tracking-[0.18em] text-gold">Vitrina comercial</p><h4 className="mt-1 text-base font-semibold text-white">Catálogo digital</h4></div></div>
-                        <p className="mt-3 text-xs leading-relaxed text-white/55">Configura modelos y colecciones, administra imágenes y vídeos para el carrusel de cada joya y prepara una página pública para mostrar el catálogo digital del taller.</p>
+                        <p className="mt-3 text-xs leading-relaxed text-white/55">Organiza modelos y colecciones, administra imágenes y vídeos y prepara una página pública para presentar el catálogo digital del taller.</p>
                         <p className="mt-3 text-[10px] leading-relaxed text-white/35">La publicación depende de la configuración del catálogo de cada taller.</p>
                       </article>
                     </div>
@@ -480,14 +480,14 @@ function LoginPage() {
                       <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-gold">Producción y trazabilidad</p>
                       <h3 className="mt-2 text-base font-semibold text-white">Cada trabajo puede seguir su recorrido.</h3>
                       <p className="mt-1.5 text-xs leading-relaxed text-white/55">
-                        El flujo conecta pedidos con la preparación de producción, órdenes, trabajos y piezas. Los módulos de operación permiten registrar información y dar seguimiento al trabajo, según las funciones habilitadas.
+                        Cuando los módulos correspondientes están habilitados, la información del pedido puede acompañar la preparación de producción, las órdenes, los trabajos y las piezas.
                       </p>
                     </article>
                     <article className="rounded-2xl border border-white/10 bg-white/[0.025] p-5">
                       <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-gold">Ficha técnica</p>
                       <h3 className="mt-2 text-base font-semibold text-white">La información acompaña a la pieza.</h3>
                       <p className="mt-1.5 text-xs leading-relaxed text-white/55">
-                        Materiales, talla, piedras, peso estimado, cantidades, instrucciones y archivos técnicos relevantes para preparar y consultar el trabajo de fabricación.
+                        Reúne referencias como materiales, talla, piedras, peso estimado, cantidades, instrucciones y archivos técnicos para consultar la información de fabricación disponible.
                       </p>
                     </article>
                   </div>
@@ -496,19 +496,19 @@ function LoginPage() {
                     <article className="rounded-2xl border border-white/10 bg-white/[0.025] p-5">
                       <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-gold">Comercial y producción</p>
                       <h3 className="mt-2 text-base font-semibold text-white">Del acuerdo con el cliente al trabajo del taller.</h3>
-                      <p className="mt-1.5 text-xs leading-relaxed text-white/55">Clientes, proyectos, cotizaciones y pedidos se conectan con la preparación de producción, las órdenes, los trabajos y las piezas. Los documentos para clientes mantienen separados los costos y las notas internas.</p>
+                      <p className="mt-1.5 text-xs leading-relaxed text-white/55">La información comercial puede acompañar el pedido hacia la preparación de producción, las órdenes, los trabajos y las piezas. Los documentos para clientes deben distinguirse de los costos y las notas internas del taller.</p>
                     </article>
                     <article className="rounded-2xl border border-white/10 bg-white/[0.025] p-5">
                       <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-gold">Talleres, áreas y responsables</p>
                       <h3 className="mt-2 text-base font-semibold text-white">Una operación adaptada a cada taller.</h3>
-                      <p className="mt-1.5 text-xs leading-relaxed text-white/55">Un equipo pequeño puede trabajar de forma conjunta; una organización más grande puede distribuir tareas por áreas y sedes. Cada usuario accede a las funciones e información que le corresponden, sin exponer la administración interna de Aurum Lab.</p>
+                      <p className="mt-1.5 text-xs leading-relaxed text-white/55">El trabajo puede organizarse entre integrantes, áreas y sedes según la configuración del taller. El acceso a la información depende del rol y los permisos asignados a cada usuario.</p>
                     </article>
                   </div>
 
                   <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-4">
                     <p className="text-xs font-semibold text-white">También puedes empezar sin ser cliente del sistema.</p>
                     <p className="mt-1 text-[11px] leading-relaxed text-white/50">
-                      Las herramientas gratuitas permiten conocer Aurum Lab y resolver necesidades técnicas antes de dar el siguiente paso.
+                      Puedes empezar con las herramientas técnicas gratuitas y explorar los módulos de gestión según las necesidades de tu taller.
                     </p>
                   </div>
                 </>
