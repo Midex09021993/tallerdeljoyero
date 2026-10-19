@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Box, AlertCircle } from "lucide-react";
-import { PublicCatalogViewer } from "@/components/PublicCatalogViewer";
+import { PublicJewelConfigurator } from "@/components/PublicJewelConfigurator";
 
 export const Route = createFileRoute("/aurum-render-public")({
   head: () => ({
@@ -80,12 +80,10 @@ function VisorJoyaCompartidaPage() {
             <p className="mt-2 text-sm text-[#77756f]">Este enlace no contiene un modelo compartido válido. Pide a quien te lo envió que genere uno nuevo desde Mi Nube.</p>
           </div>
         ) : modelUrl ? (
-          <div className="h-[calc(100vh-112px)] min-h-[420px] overflow-hidden rounded-2xl border border-[#e7e2d8] bg-white shadow-sm">
-            <PublicCatalogViewer
-              modelUrl={modelUrl}
-              modelName={modelName}
-              materialId="oro18a_pulido"
-              gemId="diamante_natural"
+          <div className="mx-auto max-w-5xl">
+            <PublicJewelConfigurator
+              sharedModelUrl={modelUrl}
+              sharedModelName={modelName}
             />
           </div>
         ) : (
