@@ -671,13 +671,60 @@ function LoginPage() {
 
               {seccionPlataforma === "flujo" ? (
                 <>
-                  <div className="rounded-2xl border border-gold/20 bg-gold/[0.06] p-5">
+                  <section className="rounded-2xl border border-white/10 bg-white/[0.02] p-3 sm:p-5">
+                    <div className="mb-4 px-1">
+                      <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-gold">Arquitectura funcional</p>
+                      <h3 className="mt-2 font-display text-2xl italic text-white sm:text-3xl">Un ecosistema. Cada etapa conectada.</h3>
+                      <p className="mt-2 max-w-3xl text-xs leading-relaxed text-white/55">Así se organiza el trabajo en Aurum Lab: desde la relación comercial y la producción hasta los recursos digitales y la presentación de las joyas.</p>
+                    </div>
+
+                    <div className="rounded-xl border border-gold/50 bg-gold/[0.055] p-4 text-center sm:p-5">
+                      <UsersRound className="mx-auto size-5 text-gold" />
+                      <h4 className="mt-2 text-sm font-semibold text-white">Gestión comercial</h4>
+                      <p className="mt-1 text-[11px] text-white/55">Cliente · Cotización · Pedido · Contrato</p>
+                    </div>
+
+                    <div className="flex justify-center py-2.5" aria-hidden="true"><ArrowRight className="size-4 rotate-90 text-gold/80" /></div>
+
+                    <div className="rounded-xl border border-white/10 bg-white/[0.025] p-4 text-center sm:p-5">
+                      <PackageCheck className="mx-auto size-5 text-gold" />
+                      <h4 className="mt-2 text-sm font-semibold text-white">Operación y producción</h4>
+                      <p className="mt-1 text-[11px] text-white/55">Órdenes · Trabajos · Piezas · Calidad · Inventario</p>
+                    </div>
+
+                    <div className="flex justify-center py-2.5" aria-hidden="true"><ArrowRight className="size-4 rotate-90 text-gold/80" /></div>
+
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <article className="rounded-xl border border-gold/50 bg-gold/[0.055] p-4 text-center">
+                        <Gem className="mx-auto size-5 text-gold" />
+                        <h4 className="mt-2 text-sm font-semibold text-white">AURUM Render</h4>
+                        <p className="mt-1 text-[11px] text-white/55">Diseño visual y modelo 3D</p>
+                      </article>
+                      <article className="rounded-xl border border-white/10 bg-white/[0.025] p-4 text-center">
+                        <Home className="mx-auto size-5 text-gold" />
+                        <h4 className="mt-2 text-sm font-semibold text-white">Mi Nube</h4>
+                        <p className="mt-1 text-[11px] text-white/55">Archivos y documentación</p>
+                      </article>
+                    </div>
+
+                    <div className="flex justify-center py-2.5" aria-hidden="true"><ArrowRight className="size-4 rotate-90 text-gold/80" /></div>
+
+                    <div className="rounded-xl border border-white/10 bg-white/[0.025] p-4 text-center sm:p-5">
+                      <ShoppingBag className="mx-auto size-5 text-gold" />
+                      <h4 className="mt-2 text-sm font-semibold text-white">Catálogo y presentación comercial</h4>
+                      <p className="mt-1 text-[11px] text-white/55">Modelos · Imágenes · Colecciones · Visor público</p>
+                    </div>
+                    <p className="mt-4 px-1 text-center text-[10px] leading-relaxed text-white/35">Mapa funcional del ecosistema. Algunas conexiones dependen de los módulos habilitados, la configuración y los permisos del usuario.</p>
+                  </section>
+
+                  <div className="mt-5 rounded-2xl border border-gold/20 bg-gold/[0.04] p-5">
                     <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-gold">Flujo principal</p>
                     <div className="mt-4 flex flex-wrap items-center gap-2">
                       {["Cliente","Gestión comercial","Producción","Control de calidad","Entrega"].map((item,i)=><span key={item} className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-semibold text-white">{item}{i<4?<ArrowRight className="size-3 text-gold"/>:null}</span>)}
                     </div>
-                    <p className="mt-5 text-xs leading-relaxed text-white/55">La gestión comercial conecta clientes, cotizaciones y pedidos con el seguimiento de producción, el control de calidad y la entrega. Los detalles de fabricación se gestionan en los módulos operativos disponibles.</p>
+                    <p className="mt-4 text-xs leading-relaxed text-white/55">La gestión comercial conecta clientes, cotizaciones y pedidos con el seguimiento de producción, el control de calidad y la entrega. Los detalles de fabricación se gestionan en los módulos operativos disponibles.</p>
                   </div>
+
                   <div className="mt-4 grid gap-3 sm:grid-cols-3">
                     {[
                       {title:"Preparar",text:"Reunir especificaciones de la joya, archivos de diseño, cálculos técnicos y referencias visuales."},
