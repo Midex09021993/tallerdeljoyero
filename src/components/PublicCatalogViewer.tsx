@@ -29,7 +29,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId }: 
   const gemIdRef = useRef(gemId);
   materialIdRef.current = materialId;
   gemIdRef.current = gemId;
-  const [status, setStatus] = useState("Cargando diseño 3D…");
+  const [status, setStatus] = useState("Preparando el visor 3D…");
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -112,10 +112,21 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId }: 
         if (gemUrl !== metalUrl) loadHdr(gemUrl, (texture) => { gemEnvironment = texture; applyProfiles(); renderRef.current?.(); });
 
         const response = await fetch(modelUrl);
-        if (!response.ok) throw new Error("No se pudo descargar el 3DM del catálogo.");
+        if (!response.ok) {
+          if (response.status === 401 || response.status === 403 || response.status === 404) {
+            throw new Error("El enlace ha caducado o el modelo ya no está disponible. Solicita un enlace nuevo al remitente.");
+          }
+          throw new Error("No se pudo descargar el modelo 3D.");
+        }
         const blob = await response.blob();
         if (cancelled) return;
-        model = await parseAurumInput(new File([blob], modelName || "modelo.3dm", { type: "application/octet-stream" }), "3dm", fallbackMaterial);
+        const sourceName = modelName || (() => {
+          try { return decodeURIComponent(new URL(modelUrl).pathname.split("/").pop() || "modelo.glb"); }
+          catch { return "modelo.glb"; }
+        })();
+        const extension = sourceName.split(".").pop()?.toLowerCase() || "glb";
+        const supportedExtension = ["glb", "gltf", "3dm", "obj", "stl", "fbx"].includes(extension) ? extension : "glb";
+        model = await parseAurumInput(new File([blob], sourceName.includes(".") ? sourceName : `${sourceName}.${supportedExtension}`, { type: blob.type || "application/octet-stream" }), supportedExtension, fallbackMaterial);
         if (!model) throw new Error("No se pudo interpretar la geometría del modelo 3D.");
         await preprocessAurumModel(model);
         if (cancelled) return;
@@ -130,7 +141,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId }: 
         model.updateMatrixWorld(true);
         const bounds = new THREE.Box3();
         model.traverse((object: any) => { if (object.isMesh && object.geometry && object.visible) bounds.expandByObject(object); });
-        if (bounds.isEmpty()) throw new Error("El 3DM no contiene mallas visibles para mostrar.");
+        if (bounds.isEmpty()) throw new Error("El modelo no contiene mallas visibles para mostrar.");
         const center = bounds.getCenter(new THREE.Vector3());
         model.position.sub(center);
         model.updateMatrixWorld(true);
