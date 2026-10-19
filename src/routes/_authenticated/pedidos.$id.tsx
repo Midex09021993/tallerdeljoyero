@@ -1087,6 +1087,24 @@ function Archivos({ pedidoId, archivos, puedeSubir, onSubido }: { pedidoId: stri
     </section>
   );
 }
-function Historial({ eventos, movimientos }: { eventos: any[]; movimientos: any[] }) { const items = useMemo(() => [...eventos.map((e) => ({ id: e.id, fecha: e.created_at, tipo: "Producción", titulo: e.tipo, detalle: e.estado_anterior && e.estado_nuevo ? `${e.estado_anterior} → ${e.estado_nuevo}` : "Evento registrado", usuario: e.usuario_id })), ...movimientos.map((m) => ({ id: m.id, fecha: m.created_at, tipo: "Área", titulo: m.accion || "Movimiento", detalle: m.area_origen ? `${m.area_origen} → ${m.area_destino}` : m.area_destino, usuario: m.usuario_id }))].sort((a,b) => new Date(b.fecha).getTime()-new Date(a.fecha).getTime()), [eventos,movimientos]); return <section className="rounded-2xl border border-border bg-card p-5"><h3 className="text-xs font-bold uppercase tracking-[.16em]">Trazabilidad</h3><div className="mt-5 space-y-0">{items.length ? items.map((e) => <div key={`${e.tipo}-${e.id}`} className="relative border-l border-border pb-5 pl-5 last:pb-0"><span className="absolute -left-1.5 top-1 size-3 rounded-full bg-gold ring-4 ring-card" /><p className="text-sm font-semibold">{e.titulo}</p><p className="mt-1 text-xs text-muted-foreground">{e.detalle}</p><p className="mt-1 text-[10px] text-muted-foreground">{new Date(e.fecha).toLocaleString("es-PE")} · {e.usuario ? e.usuario.slice(0,8).toUpperCase() : "Sistema"}</p></div>) : <Empty text="Aún no hay eventos registrados." />}</div></section>; }
+type ProduccionEventoHistorial = {
+  id: string;
+  created_at: string;
+  tipo: string;
+  estado_anterior: string | null;
+  estado_nuevo: string | null;
+  usuario_id: string | null;
+};
+
+type PedidoMovimientoHistorial = {
+  id: string;
+  created_at: string;
+  area_origen: string | null;
+  area_destino: string | null;
+  accion: string | null;
+  usuario_id: string | null;
+};
+
+function Historial({ eventos, movimientos }: { eventos: ProduccionEventoHistorial[]; movimientos: PedidoMovimientoHistorial[] }) { const items = useMemo(() => [...eventos.map((e) => ({ id: e.id, fecha: e.created_at, tipo: "Producción", titulo: e.tipo, detalle: e.estado_anterior && e.estado_nuevo ? `${e.estado_anterior} → ${e.estado_nuevo}` : "Evento registrado", usuario: e.usuario_id })), ...movimientos.map((m) => ({ id: m.id, fecha: m.created_at, tipo: "Área", titulo: m.accion || "Movimiento", detalle: m.area_origen ? `${m.area_origen} → ${m.area_destino}` : m.area_destino, usuario: m.usuario_id }))].sort((a,b) => new Date(b.fecha).getTime()-new Date(a.fecha).getTime()), [eventos,movimientos]); return <section className="rounded-2xl border border-border bg-card p-5"><h3 className="text-xs font-bold uppercase tracking-[.16em]">Trazabilidad</h3><div className="mt-5 space-y-0">{items.length ? items.map((e) => <div key={`${e.tipo}-${e.id}`} className="relative border-l border-border pb-5 pl-5 last:pb-0"><span className="absolute -left-1.5 top-1 size-3 rounded-full bg-gold ring-4 ring-card" /><p className="text-sm font-semibold">{e.titulo}</p><p className="mt-1 text-xs text-muted-foreground">{e.detalle}</p><p className="mt-1 text-[10px] text-muted-foreground">{new Date(e.fecha).toLocaleString("es-PE")} · {e.usuario ? e.usuario.slice(0,8).toUpperCase() : "Sistema"}</p></div>) : <Empty text="Aún no hay eventos registrados." />}</div></section>; }
 function Empty({ text }: { text: string }) { return <div className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">{text}</div>; }
 function money(value: number | null | undefined, currency = "PEN") { if (value == null || Number.isNaN(Number(value))) return "—"; return new Intl.NumberFormat("es-PE", { style: "currency", currency }).format(Number(value)); }
