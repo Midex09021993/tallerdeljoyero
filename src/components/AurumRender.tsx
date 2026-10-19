@@ -124,7 +124,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [exportBusy, setExportBusy] = useState(false);
   const [videoOpen, setVideoOpen] = useState(false);
   const [videoBusy, setVideoBusy] = useState(false);
-  const [videoMode, setVideoMode] = useState<"manual"|"automatic"|"orbit180-return">("automatic");
+  const [videoMode, setVideoMode] = useState<"manual"|"automatic"|"orbit180-return"|"cinematic-zoom"|"vertical-sweep"|"slow360"|"catalog">("automatic");
   const [videoWidth, setVideoWidth] = useState("1280");
   const [videoFps, setVideoFps] = useState("30");
   const [videoDuration, setVideoDuration] = useState("5");
@@ -1176,7 +1176,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             loop?.resize?.();
           }
         },
-        exportVideo:async(options:{width?:number;height?:number;fps?:number;duration?:number;mode?:"manual"|"automatic"|"orbit180-return";signal?:AbortSignal;onProgress?:(elapsed:number,total:number)=>void}={})=>{
+        exportVideo:async(options:{width?:number;height?:number;fps?:number;duration?:number;mode?:"manual"|"automatic"|"orbit180-return"|"cinematic-zoom"|"vertical-sweep"|"slow360"|"catalog";signal?:AbortSignal;onProgress?:(elapsed:number,total:number)=>void}={})=>{
           if(!modelo) throw new Error("Carga una joya antes de grabar el vídeo.");
           const sourceCanvas=renderer.domElement as HTMLCanvasElement;
           if(!sourceCanvas || sourceCanvas.width<2 || sourceCanvas.height<2) throw new Error("El visor todavía no tiene una imagen para grabar.");
@@ -1229,20 +1229,46 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               onFrame:(elapsed,total)=>{
                 if(automatic && controlsTarget){
                   const progress=Math.max(0,Math.min(1,elapsed/total));
-                  // Smoothly travel 180 degrees, then return to the exact start angle.
-                  const angle=options.mode==="orbit180-return"
-                    ? Math.PI*(1-Math.cos(Math.PI*2*progress))/2
-                    : Math.PI*2*progress;
+                  const smooth=progress*progress*(3-2*progress);
                   const dx=cameraPosition.x-controlsTarget.x;
                   const dz=cameraPosition.z-controlsTarget.z;
+                  const radius=Math.hypot(dx,dz);
+                  let angle= Math.PI*2*progress;
+                  let zoomFactor=1;
+                  let targetY=controlsTarget.y;
+                  if(options.mode==="orbit180-return"){
+                    angle=Math.PI*(1-Math.cos(Math.PI*2*progress))/2;
+                  }else if(options.mode==="slow360"){
+                    // Constant-speed full orbit, deliberately spread over the selected duration.
+                    angle=Math.PI*2*progress;
+                  }else if(options.mode==="cinematic-zoom"){
+                    // Gentle push-in to the gemstone, then return to the original distance.
+                    zoomFactor=1-0.28*Math.sin(Math.PI*progress);
+                    angle=0;
+                  }else if(options.mode==="vertical-sweep"){
+                    // Move the framing vertically and return, preserving the camera orientation.
+                    targetY=controlsTarget.y+Math.sin(Math.PI*progress)*radius*0.22;
+                    angle=0;
+                  }else if(options.mode==="catalog"){
+                    // Product sequence: partial orbit plus a restrained push-in, ending at the start.
+                    angle=(Math.PI/3)*Math.sin(Math.PI*progress);
+                    zoomFactor=1-0.18*Math.sin(Math.PI*progress);
+                  }else{
+                    angle=Math.PI*2*progress;
+                  }
                   const cos=Math.cos(angle),sin=Math.sin(angle);
                   camara.position.set(
-                    controlsTarget.x+dx*cos+dz*sin,
-                    cameraPosition.y,
-                    controlsTarget.z-dx*sin+dz*cos,
+                    controlsTarget.x+dx*cos*zoomFactor,
+                    cameraPosition.y+(targetY-controlsTarget.y),
+                    controlsTarget.z-dx*sin*zoomFactor+dz*zoomFactor,
                   );
-                  controles.target.copy(controlsTarget);
-                  camara.lookAt(controlsTarget);
+                  // Keep the horizontal orbit mathematically anchored around the original target.
+                  if(options.mode==="automatic"||options.mode==="orbit180-return"||options.mode==="slow360"||options.mode==="catalog"){
+                    camara.position.x=controlsTarget.x+dx*cos*zoomFactor+dz*sin*zoomFactor;
+                    camara.position.z=controlsTarget.z-dx*sin*zoomFactor+dz*cos*zoomFactor;
+                  }
+                  controles.target.set(controlsTarget.x,targetY,controlsTarget.z);
+                  camara.lookAt(controles.target);
                   controles.update?.();
                 }
                 // Draw each frame through the exact direct path used by live view.
@@ -2077,10 +2103,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             </button>
             {videoOpen&&<div className="mt-3 space-y-2.5 border-t border-black/10 pt-3">
               <label className="block text-[10px] text-[#66645e]">Modo de grabación
-                <select value={videoMode} disabled={videoBusy} onChange={e=>setVideoMode(e.target.value as "manual"|"automatic"|"orbit180-return")} className="mt-1 w-full rounded-lg border border-black/15 bg-white px-2 py-2 text-xs text-[#292824]">
+                <select value={videoMode} disabled={videoBusy} onChange={e=>setVideoMode(e.target.value as "manual"|"automatic"|"orbit180-return"|"cinematic-zoom"|"vertical-sweep"|"slow360"|"catalog")} className="mt-1 w-full rounded-lg border border-black/15 bg-white px-2 py-2 text-xs text-[#292824]">
                   <option value="manual">Manual · mover la cámara durante la grabación</option>
                   <option value="automatic">Automático · giro 360°</option>
                   <option value="orbit180-return">Órbita 180° · ida y vuelta</option>
+                  <option value="cinematic-zoom">Acercamiento cinematográfico</option>
+                  <option value="vertical-sweep">Recorrido vertical · diamante y aro</option>
+                  <option value="slow360">Órbita 360° lenta</option>
+                  <option value="catalog">Presentación automática de catálogo</option>
                 </select>
               </label>
               <label className="block text-[10px] text-[#66645e]">Resolución
@@ -2097,7 +2127,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 </label>
               </div>
               {videoBusy&&<div role="status" aria-live="polite" className="rounded-lg border border-[#d4af37]/25 bg-white p-2.5">
-                <div className="mb-2 flex justify-between text-[10px]"><span>{videoMode==="automatic"?"Grabando giro automático":videoMode==="orbit180-return"?"Grabando órbita 180° de ida y vuelta":"Grabando movimientos manuales"}</span><span>{Math.round(videoProgress)}%</span></div>
+                <div className="mb-2 flex justify-between text-[10px]"><span>{videoMode==="automatic"?"Grabando giro automático":videoMode==="orbit180-return"?"Grabando órbita 180° de ida y vuelta":videoMode==="cinematic-zoom"?"Grabando acercamiento cinematográfico":videoMode==="vertical-sweep"?"Grabando recorrido vertical":videoMode==="slow360"?"Grabando giro 360° lento":videoMode==="catalog"?"Grabando presentación de catálogo":"Grabando movimientos manuales"}</span><span>{Math.round(videoProgress)}%</span></div>
                 <div className="h-2 overflow-hidden rounded-full bg-[#eee8d8]"><div className="h-full rounded-full bg-[#b99642] transition-[width]" style={{width:Math.max(0,Math.min(100,videoProgress))+"%"}}/></div>
                 <button type="button" onClick={()=>videoAbortRef.current?.abort()} className="mt-2 w-full rounded-lg border border-black/15 px-3 py-2 text-xs font-semibold">Cancelar grabación</button>
               </div>}
