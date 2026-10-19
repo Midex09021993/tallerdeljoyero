@@ -237,9 +237,10 @@ function ClientesPage() {
   }, [seleccionadoId, cotizacionesHabilitadas]);
 
   const filtrados = useMemo(() => {
-    const q = busca.trim().toLowerCase();
+    const normalizarBusqueda = (valor: string) => valor.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    const q = normalizarBusqueda(busca.trim());
     return clientes.filter((c) => {
-      const texto = [c.nombre, c.documento ?? "", c.telefono ?? "", c.whatsapp ?? "", c.email ?? "", c.ciudad ?? "", c.direccion ?? "", c.notas ?? "", c.sede_nombre ?? ""].join(" ").toLowerCase();
+      const texto = normalizarBusqueda([c.nombre, c.documento ?? "", c.telefono ?? "", c.whatsapp ?? "", c.email ?? "", c.ciudad ?? "", c.direccion ?? "", c.notas ?? "", c.sede_nombre ?? ""].join(" "));
       return (!q || texto.includes(q)) && (estadoFiltro === "todos" || c.estado === estadoFiltro) && (tipoFiltro === "todos" || c.tipo === tipoFiltro);
     });
   }, [clientes, busca, estadoFiltro, tipoFiltro]);
