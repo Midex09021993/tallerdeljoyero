@@ -53,6 +53,10 @@ export function createAurumApi(options:any){
     cargar: options.cargar,
     material: options.material,
     gema: options.gema,
+    // Public catalog configurator hooks must be forwarded through the API
+    // factory; otherwise the embedded viewer silently drops metal/gem changes.
+    materialCatalogo: options.materialCatalogo,
+    gemaCatalogo: options.gemaCatalogo,
     escenario: options.escenario,
     hdriGround: options.hdriGround,
     sombraContacto: options.sombraContacto,
