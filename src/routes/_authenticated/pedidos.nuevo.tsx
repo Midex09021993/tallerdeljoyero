@@ -168,14 +168,16 @@ function NuevoPedido() {
     queryKey: ["pedidos-nuevo-clientes", clienteBusquedaDebounced, sedeId],
     enabled: clienteBusquedaDebounced.length >= 2 && Boolean(sedeId),
     queryFn: async () => {
-      const termino = clienteBusquedaDebounced.replace(/[%_,]/g, "");
+      // Evita que caracteres de sintaxis del filtro PostgREST alteren la búsqueda.
+      const termino = clienteBusquedaDebounced.replace(/[%,_().]/g, "").trim();
+      if (termino.length < 2) return [];
       const patron = "%" + termino + "%";
       const { data, error } = await supabase
         .from("clientes")
         .select("id,nombre,telefono,ciudad")
         .eq("estado", "activo")
         .eq("sede_id", sedeId)
-        .or("nombre.ilike." + patron + ",telefono.ilike." + patron)
+        .or("nombre.ilike." + patron + ",telefono.ilike." + patron + ",ciudad.ilike." + patron)
         .order("nombre")
         .limit(8);
       if (error) throw error;
