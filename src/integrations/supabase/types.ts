@@ -647,45 +647,6 @@ export type Database = {
           },
         ]
       }
-      mensajes_automaticos_taller: {
-        Row: {
-          actualizado_por: string | null
-          created_at: string
-          mensaje_cumpleanos: string
-          participante_id: string
-          updated_at: string
-        }
-        Insert: {
-          actualizado_por?: string | null
-          created_at?: string
-          mensaje_cumpleanos?: string
-          participante_id: string
-          updated_at?: string
-        }
-        Update: {
-          actualizado_por?: string | null
-          created_at?: string
-          mensaje_cumpleanos?: string
-          participante_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "mensajes_automaticos_taller_actualizado_por_fkey"
-            columns: ["actualizado_por"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "mensajes_automaticos_taller_participante_id_fkey"
-            columns: ["participante_id"]
-            isOneToOne: true
-            referencedRelation: "ecosistema_participantes"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       compra_detalles: {
         Row: {
           cantidad: number
@@ -1934,6 +1895,38 @@ export type Database = {
             columns: ["material_id"]
             isOneToOne: false
             referencedRelation: "inventario"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mensajes_automaticos_taller: {
+        Row: {
+          actualizado_por: string | null
+          created_at: string
+          mensaje_cumpleanos: string
+          participante_id: string
+          updated_at: string
+        }
+        Insert: {
+          actualizado_por?: string | null
+          created_at?: string
+          mensaje_cumpleanos?: string
+          participante_id: string
+          updated_at?: string
+        }
+        Update: {
+          actualizado_por?: string | null
+          created_at?: string
+          mensaje_cumpleanos?: string
+          participante_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mensajes_automaticos_taller_participante_id_fkey"
+            columns: ["participante_id"]
+            isOneToOne: true
+            referencedRelation: "ecosistema_participantes"
             referencedColumns: ["id"]
           },
         ]
