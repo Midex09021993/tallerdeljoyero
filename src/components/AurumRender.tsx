@@ -1217,18 +1217,19 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             renderer.setSize(renderWidth,renderHeight,false);
             camara.aspect=renderWidth/renderHeight;
             camara.updateProjectionMatrix?.();
-            if(composer && applyPostQuality){
-              applyPostQuality({...renderQuality,pixelRatio:1,qualityId:"ultra"},{capture:true,width:renderWidth,height:renderHeight});
-              videoTaaPass=(composer.passes??[]).find((pass:any)=>pass&&"sampleLevel" in pass&&"accumulateIndex" in pass&&"accumulate" in pass)??null;
+            if(composer){
+              // Match the live viewer: do not switch to capture/ultra post quality
+              // and do not disable live grading/LUT/SSAO/reflection passes for video.
+              composer.setPixelRatio?.(1);
+              composer.setSize?.(renderWidth,renderHeight);
               for(const pass of composer.passes??[]){
-                const name=String(pass?.constructor?.name??"");
-                const keep=name==="RenderPass"||pass===videoTaaPass||name==="OutputPass";
-                if("enabled" in (pass??{})) pass.enabled=keep;
+                pass.setSize?.(renderWidth,renderHeight);
               }
+              videoTaaPass=(composer.passes??[]).find((pass:any)=>pass&&"sampleLevel" in pass&&"accumulateIndex" in pass&&"accumulate" in pass)??null;
               if(videoTaaPass){
                 videoTaaPass.enabled=true;
                 videoTaaPass.accumulate=true;
-                videoTaaPass.sampleLevel=1; // 2 spatial jitter samples per video frame
+                videoTaaPass.sampleLevel=1;
                 videoTaaPass.accumulateIndex=-1;
               }
             }
