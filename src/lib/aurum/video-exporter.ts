@@ -1,0 +1,131 @@
+export type AurumVideoOptions = {
+  width?: number;
+  height?: number;
+  fps?: number;
+  duration?: number;
+  signal?: AbortSignal;
+  onProgress?: (elapsedSeconds: number, durationSeconds: number) => void;
+};
+
+const MP4_MIME_CANDIDATES = [
+  "video/mp4;codecs=avc1.42E01E",
+  "video/mp4",
+];
+
+/**
+ * Records the live WebGL canvas through a dedicated output canvas. It never
+ * resizes the live renderer or changes its materials/rendering pipeline.
+ */
+export async function recordAurumCanvasVideo(
+  source: HTMLCanvasElement,
+  options: AurumVideoOptions = {},
+): Promise<void> {
+  if (typeof MediaRecorder === "undefined") {
+    throw new Error("Este navegador no dispone de MediaRecorder para exportar vídeo.");
+  }
+  if (typeof source.captureStream !== "function") {
+    throw new Error("Este navegador no permite capturar el canvas WebGL.");
+  }
+  const mimeType = MP4_MIME_CANDIDATES.find((type) => MediaRecorder.isTypeSupported(type));
+  if (!mimeType) {
+    throw new Error("Este navegador no ofrece grabación MP4 compatible. Prueba con una versión actualizada de Chrome o Edge.");
+  }
+
+  const width = Math.max(320, Math.min(1920, Math.round(options.width ?? 1280)));
+  const height = Math.max(320, Math.min(1080, Math.round(options.height ?? 720)));
+  const fps = Math.max(15, Math.min(60, Math.round(options.fps ?? 30)));
+  const duration = Math.max(1, Math.min(20, Number(options.duration ?? 5)));
+  const output = document.createElement("canvas");
+  output.width = width;
+  output.height = height;
+  const context = output.getContext("2d", { alpha: false });
+  if (!context) throw new Error("No se pudo preparar el canvas de vídeo.");
+
+  const stream = output.captureStream(fps);
+  let recorder: MediaRecorder;
+  try {
+    recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: Math.max(4_000_000, width * height * fps * 0.12) });
+  } catch {
+    stream.getTracks().forEach((track) => track.stop());
+    throw new Error("El navegador detecta MP4, pero no pudo iniciar el codificador.");
+  }
+
+  const chunks: BlobPart[] = [];
+  let raf = 0;
+  let startedAt = 0;
+  let settled = false;
+  let abortHandler: (() => void) | undefined;
+
+  await new Promise<void>((resolve, reject) => {
+    const cleanup = () => {
+      if (raf) cancelAnimationFrame(raf);
+      if (abortHandler) options.signal?.removeEventListener("abort", abortHandler);
+      stream.getTracks().forEach((track) => track.stop());
+    };
+    const fail = (error: Error) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      reject(error);
+    };
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      const blob = new Blob(chunks, { type: recorder.mimeType || "video/mp4" });
+      if (blob.size < 1024) {
+        reject(new Error("La grabación terminó sin datos de vídeo suficientes."));
+        return;
+      }
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "aurum-giro-" + new Date().toISOString().replace(/[:.]/g, "-") + ".mp4";
+      link.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      resolve();
+    };
+    const drawFrame = (now: number) => {
+      if (settled) return;
+      if (options.signal?.aborted) {
+        if (recorder.state !== "inactive") recorder.stop();
+        fail(new DOMException("Exportación cancelada.", "AbortError"));
+        return;
+      }
+      const elapsed = Math.max(0, (now - startedAt) / 1000);
+      context.fillStyle = "#ffffff";
+      context.fillRect(0, 0, width, height);
+      context.imageSmoothingEnabled = true;
+      context.imageSmoothingQuality = "high";
+      context.drawImage(source, 0, 0, width, height);
+      options.onProgress?.(Math.min(elapsed, duration), duration);
+      if (elapsed >= duration) {
+        if (recorder.state !== "inactive") recorder.stop();
+        return;
+      }
+      raf = requestAnimationFrame(drawFrame);
+    };
+
+    recorder.ondataavailable = (event) => {
+      if (event.data.size) chunks.push(event.data);
+    };
+    recorder.onerror = () => fail(new Error("Falló la codificación del vídeo MP4."));
+    recorder.onstop = finish;
+    abortHandler = () => {
+      if (recorder.state !== "inactive") recorder.stop();
+      fail(new DOMException("Exportación cancelada.", "AbortError"));
+    };
+    options.signal?.addEventListener("abort", abortHandler, { once: true });
+    if (options.signal?.aborted) {
+      fail(new DOMException("Exportación cancelada.", "AbortError"));
+      return;
+    }
+    try {
+      recorder.start(250);
+      startedAt = performance.now();
+      raf = requestAnimationFrame(drawFrame);
+    } catch {
+      fail(new Error("No se pudo iniciar la grabación MP4."));
+    }
+  });
+}
