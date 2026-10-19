@@ -1012,47 +1012,53 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         gema:aplicarGema,
         materialCatalogo:(m:MaterialConfig)=>{
           if(!modelo)return;
-          // The public GLB configurator must not depend on the source CAD mesh
-          // being explicitly picked or on perfectly preserved Rhino categories.
-          // Apply the selected metal to every mesh except positively identified gems.
           if(embedded){
             const gemNamePattern=/(gem|gema|diamond|diamante|emerald|esmerald|ruby|rub[ií]|sapphire|zafiro|amethyst|amatista|stone|piedra)/i;
             let metalCandidates=0;
             let protectedGemMeshes=0;
+            let ignoredMeshes=0;
             modelo.traverse((x:any)=>{
-              if(!x?.isMesh||x.userData?.aurumInternalInclusion)return;
+              if(!x?.isMesh||x.userData?.aurumInternalInclusion){ignoredMeshes++;return;}
               const meta=x.userData?.aurumRhino??{};
               const attrs=x.userData?.attributes??{};
               const name=[x.name,meta.capa,attrs.layerName,attrs.LayerName].filter(Boolean).join(" ");
               const mats=Array.isArray(x.material)?x.material:[x.material];
-              const looksLikeGem=gemNamePattern.test(name)||mats.some((mat:any)=>
-                Number(mat?.transmission??0)>.12||
-                Boolean(mat?.userData?.aurumDiamondShader)||
-                Boolean(mat?.userData?.aurumGemPhysicalModel)||
-                Boolean(mat?.userData?.aurumGemOpticalProfile)||
-                /diamond|gem|gema|diamante|emerald|ruby|sapphire|amethyst|stone|piedra/i.test(String(mat?.name??""))
-              );
-              if(looksLikeGem){
+              const hasExplicitGemSignal=gemNamePattern.test(name)||mats.some((mat:any)=>{
+                const materialName=String(mat?.name??"");
+                const metalness=Number(mat?.metalness??0);
+                return Boolean(mat?.userData?.aurumDiamondShader)||
+                  Boolean(mat?.userData?.aurumGemPhysicalModel)||
+                  Boolean(mat?.userData?.aurumGemOpticalProfile)||
+                  /diamond|gem|gema|diamante|emerald|ruby|sapphire|amethyst|stone|piedra/i.test(materialName)||
+                  (metalness<.5&&Number(mat?.transmission??0)>.12);
+              });
+              const sourceCategory=String(meta.categoria??"").toLowerCase();
+              if(hasExplicitGemSignal||(sourceCategory==="gema"&&mats.some((mat:any)=>Number(mat?.metalness??0)<.5))){
                 protectedGemMeshes++;
-                // Repair missing category only when the mesh is positively identified as a gem.
-                if(String(meta.categoria??"").toLowerCase()!=="gema"){
-                  x.userData={...x.userData,aurumRhino:{...meta,categoria:"gema"}};
-                }
+                if(sourceCategory!=="gema")x.userData={...x.userData,aurumRhino:{...meta,categoria:"gema"}};
                 return;
               }
-              // GLB exporters can leave every body mesh as "gema" or "otro"
-              // from stale CAD metadata. In this isolated public mode, positive
-              // gem detection wins; remaining meshes are safe metal candidates.
+              // Metal bodies in exported GLBs may have stale "other" or "gem"
+              // categories. In public mode, a positive gem signal is required
+              // before excluding a mesh from the global metal selector.
               x.userData={...x.userData,aurumRhino:{...meta,categoria:"metal"}};
               metalCandidates++;
             });
-            const applied=aplicarMaterial(m,true);
+            const applied=applyAurumMaterialToModel(modelo,null,m,material,true);
             console.info("[AURUM][PUBLIC METAL SELECTION]",{
               profileId:String(m?.id??""),
               metalCandidates,
               protectedGemMeshes,
+              ignoredMeshes,
               applied,
             });
+            if(!applied){
+              console.warn("[AURUM][PUBLIC METAL SELECTION] No se aplicó el material; revisar mallas y perfil.",{
+                modelMeshes:metalCandidates,
+                profileId:String(m?.id??""),
+              });
+            }
+            aplicarPerfilLive();
           } else {
             aplicarMaterial(m,true);
           }
