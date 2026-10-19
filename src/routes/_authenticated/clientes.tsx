@@ -239,7 +239,7 @@ function ClientesPage() {
   const filtrados = useMemo(() => {
     const q = busca.trim().toLowerCase();
     return clientes.filter((c) => {
-      const texto = [c.nombre, c.documento ?? "", c.telefono ?? "", c.whatsapp ?? "", c.email ?? "", c.ciudad ?? ""].join(" ").toLowerCase();
+      const texto = [c.nombre, c.documento ?? "", c.telefono ?? "", c.whatsapp ?? "", c.email ?? "", c.ciudad ?? "", c.direccion ?? "", c.notas ?? "", c.sede_nombre ?? ""].join(" ").toLowerCase();
       return (!q || texto.includes(q)) && (estadoFiltro === "todos" || c.estado === estadoFiltro) && (tipoFiltro === "todos" || c.tipo === tipoFiltro);
     });
   }, [clientes, busca, estadoFiltro, tipoFiltro]);
