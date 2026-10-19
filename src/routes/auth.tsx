@@ -436,7 +436,7 @@ function LoginPage() {
                       Aurum Lab reúne herramientas técnicas gratuitas y módulos de gestión del taller: clientes, proyectos, cotizaciones, pedidos, documentos, archivos, catálogo y seguimiento de producción. Las funciones disponibles dependen de cada módulo y de los permisos del usuario.
                     </p>
                     <div className="mt-5 flex flex-wrap gap-2 text-[10px] font-semibold uppercase tracking-wider">
-                      {["Cliente","Proyecto","Cotización","Pedido","Producción","Calidad","Entrega"].map((item,i) => <span key={item} className="rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-white/65">{item}{i < 6 ? " →" : ""}</span>)}
+                      {["Cliente","Cotización","Pedido","Producción","Calidad","Entrega"].map((item,i) => <span key={item} className="rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-white/65">{item}{i < 5 ? " →" : ""}</span>)}
                     </div>
                   </div>
 
