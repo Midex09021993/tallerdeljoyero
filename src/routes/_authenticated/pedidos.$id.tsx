@@ -880,7 +880,7 @@ function comercialNumero(valor: unknown, fallback = 0) {
   return Number.isFinite(numero) ? numero : fallback;
 }
 
-function Comercial({ pedido, contrato, pagos = [] }: { pedido: any; contrato: any; pagos?: any[] }) {
+function Comercial({ pedido, contrato, pagos = [] }: { pedido: any; contrato: any; pagos?: { monto: unknown }[] }) {
   const especificaciones = comercialObjeto(pedido.especificaciones_comerciales);
   const detalles = comercialLista(pedido.cotizacion_detalles);
   const subtotal = comercialNumero(especificaciones["subtotal"], comercialNumero(pedido.importe));
@@ -888,7 +888,7 @@ function Comercial({ pedido, contrato, pagos = [] }: { pedido: any; contrato: an
   const impuestos = comercialNumero(especificaciones["impuestos"]);
   const totalSnapshot = comercialNumero(especificaciones["total"], comercialNumero(pedido.importe));
   const total = contrato ? comercialNumero(contrato.total, totalSnapshot) : totalSnapshot;
-  const pagosTotal = pagos.reduce((suma: number, pago: any) => suma + comercialNumero(pago.monto), 0);
+  const pagosTotal = pagos.reduce((suma, pago) => suma + comercialNumero(pago.monto), 0);
   const pagado = pagos.length > 0 ? pagosTotal : contrato ? comercialNumero(contrato.abonado) : comercialNumero(especificaciones["anticipo"], comercialNumero(pedido.a_cuenta));
   const saldo = Math.max(0, total - pagado);
   const estadoPago = saldo <= 0 && total > 0 ? "Pagado" : pagado > 0 ? "Pago parcial" : "Pendiente";
