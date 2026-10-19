@@ -184,6 +184,7 @@ function ClientesPage() {
       if (!seleccionado && !sedeContextoId) throw new Error("Selecciona una sede específica desde Inicio antes de crear un cliente.");
       const payload = { nombre: form.nombre.trim(), telefono: form.telefono.trim() || null, email: form.email.trim() || null, fecha_nacimiento: form.fecha_nacimiento || null, notas: form.notas.trim() || "" };
       let error: { message: string; code?: string } | null = null;
+      let clienteCreadoId: string | null = null;
       if (seleccionado) {
         // Editar un cliente no debe reasignarlo silenciosamente al participante predeterminado del propietario.
         const result = await supabase.from("clientes").update(payload).eq("id", seleccionado.id);
@@ -201,8 +202,13 @@ function ClientesPage() {
           if (participantesSede.length > 1) throw new Error("Hay varios participantes activos en esta sede. No se creó el cliente para evitar una asociación incorrecta.");
           participanteId = participantesSede[0].id;
         }
-        const result = await supabase.from("clientes").insert({ ...payload, sede_id: sedeContextoId, participante_id: participanteId });
+        const result = await supabase
+          .from("clientes")
+          .insert({ ...payload, sede_id: sedeContextoId, participante_id: participanteId })
+          .select("id")
+          .single();
         error = result.error;
+        clienteCreadoId = result.data?.id ?? null;
       }
       if (error) throw error;
       setModal(false);
@@ -211,10 +217,7 @@ function ClientesPage() {
         const { data } = await supabase
           .from("clientes")
           .select("id,nombre,telefono,email,estado,created_at,fecha_nacimiento,notas,sede_id,participante_id")
-          .eq("sede_id", sedeContextoId!)
-          .eq("nombre", payload.nombre)
-          .order("created_at", { ascending: false })
-          .limit(1)
+          .eq("id", clienteCreadoId!)
           .maybeSingle();
         if (data) setSeleccionado({ ...data, sede_nombre: sesion.participante.nombre });
       }
