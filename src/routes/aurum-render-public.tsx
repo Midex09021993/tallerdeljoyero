@@ -33,6 +33,8 @@ function VisorJoyaCompartidaPage() {
       .replace(/[^a-z0-9-_]/gi, "-")
       .slice(0, 80) || "joya-compartida";
 
+    // This route is a dedicated viewer, not the Aurum Render editor.
+    // A model can only be loaded when the full share URL includes its signed storage URL.
     if (!sharedUrl) {
       setLinkInvalido(true);
       return;
@@ -41,16 +43,16 @@ function VisorJoyaCompartidaPage() {
     try {
       const target = new URL(sharedUrl);
       const configured = (import.meta.env as { VITE_SUPABASE_URL?: string }).VITE_SUPABASE_URL;
-      if (
-        !configured ||
-        target.origin !== new URL(configured).origin ||
-        !target.pathname.includes("/storage/v1/object/sign/mi-nube/")
-      ) {
+      const expectedOrigin = configured ? new URL(configured).origin : null;
+      const validStoragePath = target.pathname.includes("/storage/v1/object/sign/mi-nube/");
+      const hasSignature = target.searchParams.has("token") || target.searchParams.has("signature");
+      if (!expectedOrigin || target.origin !== expectedOrigin || !validStoragePath || !hasSignature) {
         setLinkInvalido(true);
         return;
       }
-      setModelName(name.endsWith(".glb") ? name : `${name}.glb`);
+      setModelName(name.toLowerCase().endsWith(".glb") ? name : `${name}.glb`);
       setModelUrl(sharedUrl);
+      setLinkInvalido(false);
     } catch {
       setLinkInvalido(true);
     }
@@ -77,7 +79,7 @@ function VisorJoyaCompartidaPage() {
           <div className="mx-auto mt-12 max-w-lg rounded-2xl border border-[#e7e2d8] bg-white p-6 text-center shadow-sm">
             <AlertCircle className="mx-auto size-8 text-[#a66b26]" />
             <h2 className="mt-3 text-base font-semibold">Enlace no válido</h2>
-            <p className="mt-2 text-sm text-[#77756f]">Este enlace no contiene un modelo compartido válido. Pide a quien te lo envió que genere uno nuevo desde Mi Nube.</p>
+            <p className="mt-2 text-sm text-[#77756f]">Abriste la dirección general del visor, sin el enlace privado de una joya. Entra a Mi Nube, pulsa “Crear enlace del visor 3D” en el archivo GLB y abre o copia ese enlace completo. Aurum Render y este visualizador son independientes.</p>
           </div>
         ) : modelUrl ? (
           <div className="mx-auto max-w-5xl">
