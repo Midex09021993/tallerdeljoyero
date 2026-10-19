@@ -137,8 +137,8 @@ function PedidoDetalle() {
         .eq("especialidades.categoria", "Producción");
       if (error) throw error;
       return (data ?? [])
-        .map((row: any) => ({
-          id: row.especialidad_id as string,
+        .map((row) => ({
+          id: row.especialidad_id,
           nombre: Array.isArray(row.especialidades)
             ? row.especialidades[0]?.nombre
             : row.especialidades?.nombre,
