@@ -2044,12 +2044,12 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             {videoOpen&&<div className="mt-3 space-y-2.5 border-t border-black/10 pt-3">
               <label className="block text-[10px] text-[#66645e]">Resolución
                 <select value={videoWidth} disabled={videoBusy} onChange={e=>setVideoWidth(e.target.value)} className="mt-1 w-full rounded-lg border border-black/15 bg-white px-2 py-2 text-xs text-[#292824]">
-                  <option value="1280">HD · 1280 × 720</option><option value="1920">Full HD · 1920 × 1080</option>
+                  <option value="1280">HD · 1280 × 720</option><option value="1920">Full HD · 1920 × 1080</option><option value="2560">QHD · 2560 × 1440</option><option value="3840">4K UHD · 3840 × 2160</option>
                 </select>
               </label>
               <div className="grid grid-cols-2 gap-2">
                 <label className="text-[10px] text-[#66645e]">Fotogramas por segundo
-                  <select value={videoFps} disabled={videoBusy} onChange={e=>setVideoFps(e.target.value)} className="mt-1 w-full rounded-lg border border-black/15 bg-white px-2 py-2 text-xs text-[#292824]"><option value="24">24 FPS</option><option value="30">30 FPS</option><option value="60">60 FPS</option></select>
+                  <select value={videoFps} disabled={videoBusy} onChange={e=>setVideoFps(e.target.value)} className="mt-1 w-full rounded-lg border border-black/15 bg-white px-2 py-2 text-xs text-[#292824]"><option value="24">24 FPS</option><option value="30">30 FPS</option><option value="60">60 FPS</option><option value="120">120 FPS · experimental</option></select>
                 </label>
                 <label className="text-[10px] text-[#66645e]">Duración
                   <select value={videoDuration} disabled={videoBusy} onChange={e=>setVideoDuration(e.target.value)} className="mt-1 w-full rounded-lg border border-black/15 bg-white px-2 py-2 text-xs text-[#292824]"><option value="5">5 segundos</option><option value="10">10 segundos</option><option value="15">15 segundos</option><option value="20">20 segundos</option></select>
@@ -2068,7 +2068,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 }catch(e:any){if(e?.name!=="AbortError")setError(e instanceof Error?e.message:"No se pudo exportar el vídeo MP4.");}
                 finally{videoAbortRef.current=null;setVideoBusy(false);setExportBusy(false);}
               }} className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#d4af37] px-3 py-2.5 text-xs font-semibold text-black disabled:cursor-not-allowed disabled:opacity-40"><Download className="size-4"/>Grabar y descargar .mp4</button>}
-              <p className="text-[10px] leading-relaxed text-[#77756f]">La joya gira en el motor mientras se captura. La grabación no cambia la resolución ni los materiales del visor; al terminar se restaura la cámara.</p>
+              <p className="text-[10px] leading-relaxed text-[#77756f]">La joya gira en el motor mientras se captura. 4K aumenta el tamaño del vídeo, pero el detalle depende de la resolución real del visor. 120 FPS es experimental y depende del navegador, la pantalla y la GPU; al terminar se restaura la cámara.</p>
             </div>}
           </div>
           <button type="button" onClick={()=>apiRef.current?.exportSceneSettings()} className="flex w-full items-center gap-3 rounded-xl border border-black/10 bg-black/[.025] px-3 py-3 text-left text-sm text-[#292824] hover:bg-black/[.05]"><FileJson className="size-5"/><span><span className="block">Configuración .vjson</span><span className="block text-[10px] text-[#77756f]">Escena, cámara, calidad y selección</span></span></button>
