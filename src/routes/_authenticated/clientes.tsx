@@ -234,8 +234,9 @@ function ClientesPage() {
           if (errorParticipantes) throw errorParticipantes;
           if (!participantesSede?.length) throw new Error("No hay un participante activo para la sede seleccionada.");
           if (participantesSede.length > 1) throw new Error("Hay varios participantes activos en esta sede. No se creó el cliente para evitar una asociación incorrecta.");
-          participanteId = participantesSede[0]?.id;
-          if (!participanteId) throw new Error("No se pudo determinar el participante activo de la sede.");
+          const participanteEncontrado = participantesSede[0]?.id;
+          if (!participanteEncontrado) throw new Error("No se pudo determinar el participante activo de la sede.");
+          participanteId = participanteEncontrado;
         }
         const result = await supabase
           .from("clientes")
