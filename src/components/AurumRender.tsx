@@ -1217,20 +1217,18 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             renderer.setSize(renderWidth,renderHeight,false);
             camara.aspect=renderWidth/renderHeight;
             camara.updateProjectionMatrix?.();
-            if(composer){
-              // Video must preserve the live viewer's post-processing state.
-              // Do not force capture/ultra mode or disable photographic passes:
-              // doing so changes polished-metal highlights and the overall look.
-              composer.setPixelRatio?.(1);
-              composer.setSize?.(renderWidth,renderHeight);
-              for(const pass of composer.passes??[]){
-                pass.setSize?.(renderWidth,renderHeight);
-              }
+            if(composer && applyPostQuality){
+              applyPostQuality({...renderQuality,pixelRatio:1,qualityId:"ultra"},{capture:true,width:renderWidth,height:renderHeight});
               videoTaaPass=(composer.passes??[]).find((pass:any)=>pass&&"sampleLevel" in pass&&"accumulateIndex" in pass&&"accumulate" in pass)??null;
+              for(const pass of composer.passes??[]){
+                const name=String(pass?.constructor?.name??"");
+                const keep=name==="RenderPass"||pass===videoTaaPass||name==="OutputPass";
+                if("enabled" in (pass??{})) pass.enabled=keep;
+              }
               if(videoTaaPass){
                 videoTaaPass.enabled=true;
                 videoTaaPass.accumulate=true;
-                videoTaaPass.sampleLevel=1;
+                videoTaaPass.sampleLevel=1; // 2 spatial jitter samples per video frame
                 videoTaaPass.accumulateIndex=-1;
               }
             }
