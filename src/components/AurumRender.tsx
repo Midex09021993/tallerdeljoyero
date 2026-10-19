@@ -1686,7 +1686,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // Interaction path: cap raster resolution and gem transmission cost.
             // These changes happen only at interaction boundaries, never per frame.
             liveFastPathRef.current = true;
-            const interactionDpr = Math.max(0.75, Math.min(1, runtimeBudget.interactionPixelRatio));
+            // Keep a 0.9 DPR floor during orbit so small diamond facets do not
+            // collapse as aggressively on dense CAD models. This changes only
+            // the raster sampling density; material settings for other gems/metals
+            // and the live transmission budget remain untouched.
+            const interactionDpr = Math.max(0.9, Math.min(1, runtimeBudget.interactionPixelRatio));
       viewerLoopRef.current = viewerLoop;
             renderer.setPixelRatio(interactionDpr);
             composer?.setPixelRatio?.(interactionDpr);
