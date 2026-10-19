@@ -258,7 +258,6 @@ function LoginPage() {
                   <Gem className="size-6 text-gold" />
                   <p className="mt-4 text-sm font-semibold tracking-tight text-[#f5f0e7]">{titulo}</p>
                   <p className="mt-2 text-[11px] leading-relaxed text-[#c6c0b5]/60">{descripcion}</p>
-                  {id === "render" ? <span className="mt-3 inline-flex rounded border border-gold/60 px-1.5 py-0.5 text-[8px] font-semibold uppercase tracking-wider text-gold">Beta</span> : null}
                 </button>
               ))}
             </div>
