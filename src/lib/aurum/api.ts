@@ -74,6 +74,7 @@ export function createAurumApi(options:any){
     exportGLB: options.exportGLB,
     exportPNG: options.exportPNG,
     exportPathTraced: options.exportPathTraced,
+    exportVideo: options.exportVideo,
     exportSceneSettings: options.exportSceneSettings,
   };
 }
