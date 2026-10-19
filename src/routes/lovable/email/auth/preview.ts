@@ -8,15 +8,6 @@ import { RecoveryEmail } from '@/lib/email-templates/recovery'
 import { EmailChangeEmail } from '@/lib/email-templates/email-change'
 import { ReauthenticationEmail } from '@/lib/email-templates/reauthentication'
 
-const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
-  signup: SignupEmail,
-  invite: InviteEmail,
-  magiclink: MagicLinkEmail,
-  recovery: RecoveryEmail,
-  email_change: EmailChangeEmail,
-  reauthentication: ReauthenticationEmail,
-}
-
 // Configuration
 const SITE_NAME = "tallerdeljoyero"
 const ROOT_DOMAIN = "tallerdeljoyero.com"
@@ -28,36 +19,55 @@ const ROOT_DOMAIN = "tallerdeljoyero.com"
 // even if the project's domain has changed since the template was scaffolded.
 const SAMPLE_PROJECT_URL = "https://tallerdeljoyero.lovable.app"
 const SAMPLE_EMAIL = "user@example.test"
-const SAMPLE_DATA: Record<string, object> = {
+const SAMPLE_DATA = {
   signup: {
     siteName: SITE_NAME,
     siteUrl: SAMPLE_PROJECT_URL,
     recipient: SAMPLE_EMAIL,
     confirmationUrl: SAMPLE_PROJECT_URL,
-  },
+  } satisfies React.ComponentProps<typeof SignupEmail>,
   magiclink: {
     siteName: SITE_NAME,
     confirmationUrl: SAMPLE_PROJECT_URL,
-  },
+  } satisfies React.ComponentProps<typeof MagicLinkEmail>,
   recovery: {
     siteName: SITE_NAME,
     confirmationUrl: SAMPLE_PROJECT_URL,
-  },
+  } satisfies React.ComponentProps<typeof RecoveryEmail>,
   invite: {
     siteName: SITE_NAME,
     siteUrl: SAMPLE_PROJECT_URL,
     confirmationUrl: SAMPLE_PROJECT_URL,
-  },
+  } satisfies React.ComponentProps<typeof InviteEmail>,
   email_change: {
     siteName: SITE_NAME,
     oldEmail: SAMPLE_EMAIL,
     email: SAMPLE_EMAIL,
     newEmail: SAMPLE_EMAIL,
     confirmationUrl: SAMPLE_PROJECT_URL,
-  },
+  } satisfies React.ComponentProps<typeof EmailChangeEmail>,
   reauthentication: {
     token: '123456',
-  },
+  } satisfies React.ComponentProps<typeof ReauthenticationEmail>,
+}
+
+async function renderEmailPreview(type: string): Promise<string | null> {
+  switch (type) {
+    case 'signup':
+      return render(React.createElement(SignupEmail, SAMPLE_DATA.signup))
+    case 'invite':
+      return render(React.createElement(InviteEmail, SAMPLE_DATA.invite))
+    case 'magiclink':
+      return render(React.createElement(MagicLinkEmail, SAMPLE_DATA.magiclink))
+    case 'recovery':
+      return render(React.createElement(RecoveryEmail, SAMPLE_DATA.recovery))
+    case 'email_change':
+      return render(React.createElement(EmailChangeEmail, SAMPLE_DATA.email_change))
+    case 'reauthentication':
+      return render(React.createElement(ReauthenticationEmail, SAMPLE_DATA.reauthentication))
+    default:
+      return null
+  }
 }
 
 export const Route = createFileRoute("/lovable/email/auth/preview")({
@@ -81,7 +91,18 @@ export const Route = createFileRoute("/lovable/email/auth/preview")({
 
         let type: string
         try {
-          const body = await request.json()
+          const body: unknown = await request.json()
+          if (
+            typeof body !== 'object' ||
+            body === null ||
+            !('type' in body) ||
+            typeof body.type !== 'string'
+          ) {
+            return Response.json(
+              { error: 'Invalid email type in request body' },
+              { status: 400 }
+            )
+          }
           type = body.type
         } catch {
           return Response.json(
@@ -90,17 +111,14 @@ export const Route = createFileRoute("/lovable/email/auth/preview")({
           )
         }
 
-        const EmailTemplate = EMAIL_TEMPLATES[type]
+        const html = await renderEmailPreview(type)
 
-        if (!EmailTemplate) {
+        if (html === null) {
           return Response.json(
             { error: `Unknown email type: ${type}` },
             { status: 400 }
           )
         }
-
-        const sampleData = SAMPLE_DATA[type] || {}
-        const html = await render(React.createElement(EmailTemplate, sampleData))
 
         return new Response(html, {
           status: 200,
