@@ -67,21 +67,8 @@ function VisorJoyaCompartidaPage() {
 
   return (
     <main className="min-h-screen bg-[#f7f6f2] text-[#292824]">
-      <header className="flex min-h-[68px] items-center justify-between gap-3 border-b border-[#e7e2d8] bg-white px-4 py-3 sm:px-7">
-        <div className="flex min-w-0 items-center gap-3">
-          <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#d4af37]/15 text-[#8b6b16]">
-            <Box className="size-5" />
-          </span>
-          <div className="min-w-0">
-            <h1 className="truncate text-sm font-semibold sm:text-base">{modelName.replace(/\.glb$/i, "")}</h1>
-            <p className="text-[11px] text-[#77756f]">Visor 3D compartido · Taller del Joyero</p>
-          </div>
-        </div>
-        <span className="shrink-0 rounded-full border border-[#e7e2d8] px-3 py-1 text-[10px] font-medium uppercase tracking-wider text-[#77756f]">
-          Solo visualización
-        </span>
-      </header>
-      <section className="mx-auto max-w-7xl p-3 sm:p-5">
+
+      <section className="mx-auto w-full max-w-none p-0">
         {linkInvalido ? (
           <div className="mx-auto mt-12 max-w-lg rounded-2xl border border-[#e7e2d8] bg-white p-6 text-center shadow-sm">
             <AlertCircle className="mx-auto size-8 text-[#a66b26]" />
@@ -89,14 +76,14 @@ function VisorJoyaCompartidaPage() {
             <p className="mt-2 text-sm text-[#77756f]">Abriste la dirección general del visor, sin el enlace privado de una joya. Entra a Mi Nube, pulsa “Crear enlace del visor 3D” en el archivo GLB y abre o copia ese enlace completo. Aurum Render y este visualizador son independientes.</p>
           </div>
         ) : modelUrl ? (
-          <div className="mx-auto max-w-5xl">
+          <div className="mx-auto w-full max-w-none">
             <PublicJewelConfigurator
               sharedModelUrl={modelUrl}
               sharedModelName={modelName}
             />
           </div>
         ) : (
-          <div className="grid h-[65vh] min-h-[360px] place-items-center rounded-2xl border border-[#e7e2d8] bg-white text-sm text-[#77756f]">
+          <div className="grid h-[80svh] min-h-[360px] place-items-center bg-white text-sm text-[#77756f]">
             Preparando el visor 3D…
           </div>
         )}
