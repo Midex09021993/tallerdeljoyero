@@ -167,6 +167,8 @@ function MiNubePage() {
   const [progresoCompartir, setProgresoCompartir] = useState("");
   const [errorCompartir, setErrorCompartir] = useState<{ proyecto: string; mensaje: string } | null>(null);
   const [enlaceCompartido, setEnlaceCompartido] = useState<{ proyecto: string; url: string } | null>(null);
+  const [enlaceVisorArchivo, setEnlaceVisorArchivo] = useState<{ ruta: string; url: string } | null>(null);
+  const [generandoEnlaceVisor, setGenerandoEnlaceVisor] = useState<string | null>(null);
   const [seccionActiva, setSeccionActiva] = useState<Categoria | "todos">("todos");
   const [carpeta, setCarpeta] = useState("");
   const [carpetas, setCarpetas] = useState<string[]>([]);
@@ -1550,6 +1552,42 @@ function MiNubePage() {
                                 }} className="rounded-lg border border-gold/40 px-2.5 py-1.5 text-[11px] font-semibold hover:bg-gold/10">
                                   Abrir en Visualizador y peso 3D
                                 </button>
+                              )}
+                              {archivo.nombre.toLowerCase().endsWith(".glb") && archivo.origen === "supabase" && (
+                                <button type="button" disabled={generandoEnlaceVisor === archivo.ruta} onClick={async () => {
+                                  setGenerandoEnlaceVisor(archivo.ruta);
+                                  try {
+                                    const { data, error: urlError } = await supabase.storage.from(BUCKET).createSignedUrl(archivo.ruta, 3 * 24 * 60 * 60);
+                                    if (urlError || !data?.signedUrl) throw urlError ?? new Error("No se pudo crear el enlace del visor.");
+                                    const destino = new URL("/aurum-render-public", window.location.origin);
+                                    destino.searchParams.set("modeloCompartido", data.signedUrl);
+                                    destino.searchParams.set("nombre", nombreVisible(archivo.nombre));
+                                    const url = destino.toString();
+                                    setEnlaceVisorArchivo({ ruta: archivo.ruta, url });
+                                    try {
+                                      await navigator.clipboard.writeText(url);
+                                      toast.success("Enlace del visor copiado. Vence en 3 días.");
+                                    } catch {
+                                      toast.info("Enlace preparado. Puedes copiarlo desde la tarjeta del archivo.");
+                                    }
+                                  } catch (cause) {
+                                    toast.error(cause instanceof Error ? cause.message : "No se pudo crear el enlace del visor.");
+                                  } finally {
+                                    setGenerandoEnlaceVisor(null);
+                                  }
+                                }} className="rounded-lg border border-gold/40 bg-gold/5 px-2.5 py-1.5 text-[11px] font-semibold hover:bg-gold/10 disabled:opacity-50">
+                                  {generandoEnlaceVisor === archivo.ruta ? "Preparando visor…" : "Crear enlace del visor 3D"}
+                                </button>
+                              )}
+                              {enlaceVisorArchivo?.ruta === archivo.ruta && (
+                                <div className="mt-2 w-full space-y-2 rounded-lg border border-gold/30 bg-gold/5 p-2.5">
+                                  <p className="text-[11px] font-semibold">Enlace del visor · válido durante 3 días</p>
+                                  <input aria-label="Enlace público del visor 3D" readOnly value={enlaceVisorArchivo.url} onFocus={(event) => event.currentTarget.select()} className="w-full rounded-lg border border-border bg-background px-2.5 py-2 text-[11px]" />
+                                  <div className="flex flex-wrap gap-2">
+                                    <button type="button" onClick={async () => { try { await navigator.clipboard.writeText(enlaceVisorArchivo.url); toast.success("Enlace copiado."); } catch { toast.error("No se pudo copiar automáticamente. Selecciona el enlace y cópialo."); } }} className="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-2 text-[11px] font-medium"><Copy className="size-3.5" /> Copiar enlace</button>
+                                    <button type="button" onClick={() => window.open(enlaceVisorArchivo.url, "_blank", "noopener,noreferrer")} className="rounded-lg border border-gold/40 px-2.5 py-2 text-[11px] font-semibold">Abrir visor</button>
+                                  </div>
+                                </div>
                               )}
                               {archivo.nombre.toLowerCase().endsWith(".3dm") && (
                                 <button type="button" onClick={async () => {
