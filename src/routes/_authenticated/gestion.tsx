@@ -150,7 +150,6 @@ function GestionPage() {
     : (sesion?.sede?.nombre ?? "tu sede");
 
   const modulosSede: { id: Modulo; label: string; descripcion: string }[] = [
-    { id: "flujo", label: "Operación", descripcion: "Carga y tiempos por área" },
     { id: "comercial", label: "Comercial", descripcion: "Identidad y documentos comerciales" },
     { id: "usuarios", label: "Equipo", descripcion: "Usuarios, roles y accesos" },
     { id: "capacidades", label: "Capacidades", descripcion: "Configura las capacidades y modalidades de trabajo de la sede" },
