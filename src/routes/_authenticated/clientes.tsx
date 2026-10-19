@@ -6,6 +6,7 @@ import { Mail, Phone, ShoppingBag, FileText, UserRound, ChevronRight, Trash2, Ca
 import { supabase } from "@/integrations/supabase/client";
 import { areaCoincide, useSesion } from "@/lib/auth";
 import { CumpleanosClientes } from "@/components/CumpleanosClientes";
+import { TelefonoInternacional } from "@/components/TelefonoInternacional";
 import { CentroCampanasClientes } from "@/components/CentroCampanasClientes";
 import { TODAS_LAS_SEDES, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 
@@ -433,7 +434,7 @@ function ClientesPage() {
           <div className="flex items-start justify-between"><div><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-gold">Ficha comercial</p><h2 className="mt-1 text-xl font-semibold">{seleccionado ? "Editar cliente" : "Nuevo cliente"}</h2></div><button type="button" onClick={() => setModal(false)} className="rounded-lg px-2 py-1 text-muted-foreground">✕</button></div>
           <div className="mt-5 space-y-4">
             <Field label="Nombre completo" value={form.nombre} onChange={(v) => setForm({ ...form, nombre: v })} required />
-            <Field label="Teléfono" value={form.telefono} onChange={(v) => setForm({ ...form, telefono: v })} />
+            <TelefonoInternacional id="cliente-telefono" value={form.telefono} onChange={(telefono) => setForm((actual) => ({ ...actual, telefono }))} />
             <Field label="Correo electrónico" type="email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} />
             <Field label="Fecha de nacimiento (opcional)" type="date" value={form.fecha_nacimiento} onChange={v=>setForm({...form,fecha_nacimiento:v})}/><label className="block text-xs font-medium">Observaciones<textarea value={form.notas} onChange={e=>setForm({...form,notas:e.target.value})} rows={3} className="mt-1.5 w-full rounded-xl border border-border bg-background p-3 text-sm"/></label>
           </div>
