@@ -128,6 +128,7 @@ export type Database = {
           id: string
           nombre: string
           orden: number
+          parent_id: string | null
           participante_id: string
           slug: string
           updated_at: string
@@ -138,6 +139,7 @@ export type Database = {
           id?: string
           nombre: string
           orden?: number
+          parent_id?: string | null
           participante_id: string
           slug: string
           updated_at?: string
@@ -148,11 +150,19 @@ export type Database = {
           id?: string
           nombre?: string
           orden?: number
+          parent_id?: string | null
           participante_id?: string
           slug?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "catalogo_categorias_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "catalogo_categorias"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "catalogo_categorias_participante_id_fkey"
             columns: ["participante_id"]
@@ -633,45 +643,6 @@ export type Database = {
             columns: ["sede_id"]
             isOneToOne: false
             referencedRelation: "sedes"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      mensajes_automaticos_taller: {
-        Row: {
-          actualizado_por: string | null
-          created_at: string
-          mensaje_cumpleanos: string
-          participante_id: string
-          updated_at: string
-        }
-        Insert: {
-          actualizado_por?: string | null
-          created_at?: string
-          mensaje_cumpleanos?: string
-          participante_id: string
-          updated_at?: string
-        }
-        Update: {
-          actualizado_por?: string | null
-          created_at?: string
-          mensaje_cumpleanos?: string
-          participante_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "mensajes_automaticos_taller_actualizado_por_fkey"
-            columns: ["actualizado_por"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "mensajes_automaticos_taller_participante_id_fkey"
-            columns: ["participante_id"]
-            isOneToOne: true
-            referencedRelation: "ecosistema_participantes"
             referencedColumns: ["id"]
           },
         ]
