@@ -1012,35 +1012,53 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         gema:aplicarGema,
         materialCatalogo:(m:MaterialConfig)=>{
           if(!modelo)return;
-          // In the public embedded viewer, GLB exports may omit Rhino layer
-          // categories. Recover only unclassified metal candidates so the
-          // client can change the whole metal finish without selecting a mesh.
-          // Positively identified gems and transmissive/diamond materials stay untouched.
+          // The public GLB configurator must not depend on the source CAD mesh
+          // being explicitly picked or on perfectly preserved Rhino categories.
+          // Apply the selected metal to every mesh except positively identified gems.
           if(embedded){
             const gemNamePattern=/(gem|gema|diamond|diamante|emerald|esmerald|ruby|rub[ií]|sapphire|zafiro|amethyst|amatista|stone|piedra)/i;
+            let metalCandidates=0;
+            let protectedGemMeshes=0;
             modelo.traverse((x:any)=>{
               if(!x?.isMesh||x.userData?.aurumInternalInclusion)return;
               const meta=x.userData?.aurumRhino??{};
               const attrs=x.userData?.attributes??{};
-              const category=String(meta.categoria??"").toLowerCase();
-              if(category==="metal"||category==="gema")return;
               const name=[x.name,meta.capa,attrs.layerName,attrs.LayerName].filter(Boolean).join(" ");
               const mats=Array.isArray(x.material)?x.material:[x.material];
               const looksLikeGem=gemNamePattern.test(name)||mats.some((mat:any)=>
                 Number(mat?.transmission??0)>.12||
-                mat?.userData?.aurumDiamondShader||
-                mat?.userData?.aurumGemPhysicalModel||
-                mat?.userData?.aurumGemOpticalProfile||
-                /diamond|gem|gema|diamante|stone|piedra/i.test(String(mat?.name??""))
+                Boolean(mat?.userData?.aurumDiamondShader)||
+                Boolean(mat?.userData?.aurumGemPhysicalModel)||
+                Boolean(mat?.userData?.aurumGemOpticalProfile)||
+                /diamond|gem|gema|diamante|emerald|ruby|sapphire|amethyst|stone|piedra/i.test(String(mat?.name??""))
               );
-              if(looksLikeGem)return;
-              x.userData={...x.userData,aurumRhino:{...meta,categoria:"otro"}};
+              if(looksLikeGem){
+                protectedGemMeshes++;
+                // Repair missing category only when the mesh is positively identified as a gem.
+                if(String(meta.categoria??"").toLowerCase()!=="gema"){
+                  x.userData={...x.userData,aurumRhino:{...meta,categoria:"gema"}};
+                }
+                return;
+              }
+              // GLB exporters can leave every body mesh as "gema" or "otro"
+              // from stale CAD metadata. In this isolated public mode, positive
+              // gem detection wins; remaining meshes are safe metal candidates.
+              x.userData={...x.userData,aurumRhino:{...meta,categoria:"metal"}};
+              metalCandidates++;
             });
+            const applied=aplicarMaterial(m,true);
+            console.info("[AURUM][PUBLIC METAL SELECTION]",{
+              profileId:String(m?.id??""),
+              metalCandidates,
+              protectedGemMeshes,
+              applied,
+            });
+          } else {
+            aplicarMaterial(m,true);
           }
-          aplicarMaterial(m,true);
           invalidateRenderRef.current?.();
         },
-        gemaCatalogo:(g:GemaConfig)=>{
+                gemaCatalogo:(g:GemaConfig)=>{
           if(!modelo)return;
           const visited=new Set<string>();
           let gemMeshes=0;
