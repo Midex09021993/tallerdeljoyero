@@ -64,6 +64,7 @@ function ClientesPage() {
   const cargaHistorialRef = useRef(0);
   const [busca, setBusca] = useState("");
   const [estadoFiltro, setEstadoFiltro] = useState("todos");
+  const [tipoFiltro, setTipoFiltro] = useState("todos");
   const [modal, setModal] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [eliminando, setEliminando] = useState(false);
@@ -239,9 +240,9 @@ function ClientesPage() {
     const q = busca.trim().toLowerCase();
     return clientes.filter((c) => {
       const texto = [c.nombre, c.documento ?? "", c.telefono ?? "", c.whatsapp ?? "", c.email ?? "", c.ciudad ?? ""].join(" ").toLowerCase();
-      return (!q || texto.includes(q)) && (estadoFiltro === "todos" || c.estado === estadoFiltro);
+      return (!q || texto.includes(q)) && (estadoFiltro === "todos" || c.estado === estadoFiltro) && (tipoFiltro === "todos" || c.tipo === tipoFiltro);
     });
-  }, [clientes, busca, estadoFiltro]);
+  }, [clientes, busca, estadoFiltro, tipoFiltro]);
 
   const activos = clientes.filter((c) => c.estado === "activo").length;
 
@@ -387,11 +388,16 @@ function ClientesPage() {
                 <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-gold">Directorio</p>
                 <h2 className="mt-1 text-lg font-semibold">Clientes del taller</h2>
               </div>
-              <select value={estadoFiltro} onChange={(e) => setEstadoFiltro(e.target.value)} className="h-10 rounded-xl border border-border bg-background px-3 text-sm">
-                <option value="todos">Todos</option><option value="activo">Activos</option><option value="inactivo">Inactivos</option>
-              </select>
+              <div className="flex gap-2">
+                <select aria-label="Filtrar por tipo de cliente" value={tipoFiltro} onChange={(e) => setTipoFiltro(e.target.value)} className="h-10 min-w-0 rounded-xl border border-border bg-background px-3 text-sm">
+                  <option value="todos">Todos los tipos</option><option value="persona">Particulares</option><option value="empresa">Empresas</option>
+                </select>
+                <select aria-label="Filtrar por estado" value={estadoFiltro} onChange={(e) => setEstadoFiltro(e.target.value)} className="h-10 rounded-xl border border-border bg-background px-3 text-sm">
+                  <option value="todos">Todos los estados</option><option value="activo">Activos</option><option value="inactivo">Inactivos</option>
+                </select>
+              </div>
             </div>
-            <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar por nombre, teléfono o correo..." className="mt-4 h-11 w-full rounded-xl border border-border bg-background px-4 text-sm outline-none focus:border-gold/40 focus:ring-1 focus:ring-gold/15" />
+            <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar nombre, documento, teléfono, WhatsApp, correo o ciudad..." className="mt-4 h-11 w-full rounded-xl border border-border bg-background px-4 text-sm outline-none focus:border-gold/40 focus:ring-1 focus:ring-gold/15" />
           </div>
           <div className="divide-y divide-border">
             {filtrados.length === 0 ? <p className="p-8 text-center text-sm text-muted-foreground">No encontramos clientes con esos filtros.</p> : filtrados.map((cliente) => (
