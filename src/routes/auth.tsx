@@ -37,6 +37,10 @@ function LoginPage() {
   const { data: estado } = useQuery({
     queryKey: ["sistema-vacio"],
     queryFn: () => sistemaSinDuenos(),
+    // Evita repetir la consulta administrativa en cada visita al login.
+    // El alta del primer dueño invalida esta caché explícitamente.
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
     retry: false,
   });
 
