@@ -37,8 +37,6 @@ import { ChevronDown, Copy, Download, Expand, FileJson, Gem, Image as ImageIcon,
 
 import { GEMAS, MATERIALES, ESCENARIOS, VISTAS, ILUMINACIONES, type MaterialId, type EscenarioId, type VistaId, type IluminacionId, type MaterialGrupo, type CategoriaParte, type GemaId, type GemaConfig, type MaterialConfig, type ParteModelo } from "../lib/aurum/catalog";
 
-const diagnosticoSeleccionHabilitado = true;
-
 const normalizarTexto = (v:any) => String(v ?? "").trim().toLowerCase();
 const colorRhinoHex = (c:any): string | undefined => {
   if (!c) return undefined;
@@ -171,6 +169,20 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [parteSeleccionadaCapa, setParteSeleccionadaCapa] = useState<string | null>(null);
   const [parteSeleccionadaCategoria, setParteSeleccionadaCategoria] = useState<"metal" | "gema" | "otro">("otro");
   const [diagnosticoSeleccion, setDiagnosticoSeleccion] = useState<any | null>(null);
+  const [diagnosticoSeleccionHabilitado, setDiagnosticoSeleccionHabilitado] = useState(false);
+
+  useEffect(() => {
+    const handleDiagnosticShortcut = (event: KeyboardEvent) => {
+      if (!(event.ctrlKey && event.shiftKey && event.key.toLowerCase() === "d")) return;
+      const target = event.target as HTMLElement | null;
+      const tagName = target?.tagName?.toLowerCase();
+      if (tagName === "input" || tagName === "textarea" || target?.isContentEditable) return;
+      event.preventDefault();
+      setDiagnosticoSeleccionHabilitado(value => !value);
+    };
+    window.addEventListener("keydown", handleDiagnosticShortcut);
+    return () => window.removeEventListener("keydown", handleDiagnosticShortcut);
+  }, []);
   const [panel, setPanel] = useState<"materiales" | "escenas" | "iluminacion">("materiales");
   const [uxSection, setUxSection] = useState<"materiales"|"gemas"|"escena"|"hdrMetales"|"hdrGemas"|"fondos">("materiales");
   const exportSettingsRef = useRef({nombreProyecto,categoriaProyecto,archivo,materialId,gemaId,escenarioId,iluminacionId,vista,renderQualityId});
@@ -2404,7 +2416,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             {parteSeleccionada&&diagnosticoSeleccion&&diagnosticoSeleccionHabilitado&&<div className="absolute left-3 top-3 z-30 w-[min(430px,calc(100%-24px))] max-h-[78%] overflow-y-auto rounded-xl border border-[#d4af37]/50 bg-[#101214]/95 p-3 text-[10px] leading-relaxed text-white shadow-2xl backdrop-blur-xl">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <div className="text-[9px] uppercase tracking-[.16em] text-[#d4af37]">Diagnóstico de selección</div>
+                  <div className="text-[9px] uppercase tracking-[.16em] text-[#d4af37]">Diagnóstico de selección <span className="ml-2 text-white/40">Ctrl+Shift+D</span></div>
                   <div className="break-words text-xs font-semibold text-white">{parteSeleccionadaNombre||"Componente"}</div>
                   <div className="mt-1 break-all text-[9px] text-white/45">{diagnosticoSeleccion.selected.uuid}</div>
                 </div>
