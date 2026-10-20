@@ -1075,16 +1075,19 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             const meta=x.userData?.aurumRhino??{};
             const attrs=x.userData?.attributes??{};
             const layerName=String(meta.capa??attrs.layerName??attrs.LayerName??x.name??"").trim();
-            // Some public 3DM exports preserve the source layer name but omit
-            // the normalized category. Recover only positively identified gem
-            // layers; never guess from color or recolor the whole model.
-            const category=String(meta.categoria??clasificarCapa(layerName,colorRhinoHex(meta.colorCapa))).toLowerCase();
+            // Prefer an explicit gem category. If metadata is absent or only
+            // says "otro", recover the category from a clearly named source layer.
+            // Never infer gem identity from color or recolor the whole model.
+            const sourceCategory=String(meta.categoria??"").toLowerCase();
+            const layerCategory=clasificarCapa(layerName,colorRhinoHex(meta.colorCapa));
+            const category=sourceCategory==="gema" ? "gema" :
+              (!sourceCategory || sourceCategory==="otro") ? layerCategory : sourceCategory;
             if(category!=="gema")return;
             gemMeshes++;
             const layer=layerName.toLocaleLowerCase();
             const key=layer||String(meta.layerKey??x.uuid);
-            if(visited.has(key))return;
             visited.add(key);
+            // Apply to every matching mesh, not just the first mesh in a layer.
             aplicarGema(g,x);
           });
           console.info("[AURUM][CATALOG GEM] Selección aplicada", {gemId:g.id, gemMeshes, layers:visited.size});
