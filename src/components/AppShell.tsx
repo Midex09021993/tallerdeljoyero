@@ -55,6 +55,7 @@ type Seccion = {
     | "/mi-nube"
     | "/migracion"
     | "/catalogo"
+    | "/cursos-formacion"
     | "/servicios-externos"
     | "/tienda-admin";
   label: string;
@@ -90,6 +91,7 @@ const secciones: Seccion[] = [
   { to: "/gestion", label: "Gestión", roles: ["dueno", "gerente"], icono: LayoutDashboard, grupo: "administracion" },
   { to: "/migracion", label: "Migración", roles: ["dueno", "gerente"], icono: FileSpreadsheet, grupo: "administracion" },
   { to: "/catalogo", label: "Catálogo", icono: BookOpen, grupo: "comercial" },
+  { to: "/cursos-formacion", label: "Cursos y formación", icono: BookOpen, grupo: "comercial" },
   { to: "/tienda-admin", label: "Tienda FADILAB", roles: ["dueno", "gerente"], icono: ShoppingBag, grupo: "administracion" },
   { to: "/perfil", label: "Perfil", roles: ["operario"], icono: UserRound, grupo: "administracion" },
 ];
@@ -113,6 +115,7 @@ const CAPACIDADES_COMERCIALES_MENU: Record<string, string> = {
   "/clientes": "Clientes",
   "/ventas": "Ventas",
   "/catalogo": "Catálogo",
+  "/cursos-formacion": "Cursos y formación",
 };
 
 const CAPACIDADES_SISTEMA_MENU: Record<string, string> = {
@@ -254,6 +257,7 @@ const ORDEN_MENU: Record<string, number> = {
   "/inicio": 0,
   "/clientes": 5,
   "/catalogo": 35,
+  "/cursos-formacion": 36,
   "/cotizaciones": 10,
   "/contratos": 15,
   "/pedidos": 20,
@@ -338,6 +342,7 @@ export function AppShell({
   const capacidadesPorRuta: Record<string, string> = {
     "/clientes": "Clientes", "/cotizaciones": "Cotizaciones", "/contratos": "Contratos",
     "/pedidos": "Pedidos", "/ventas": "Ventas", "/catalogo": "Catálogo",
+    "/cursos-formacion": "Cursos y formación",
     "/inventario": "Inventario", "/compras": "Compras", "/herramientas": "Herramientas",
     "/mi-nube": "Mi nube", "/diseno-3d": "Diseño 3D", "/impresion-3d": "Impresión 3D",
     "/casting": "Casting", "/corte-laser": "Corte Láser", "/taller": "Taller",
