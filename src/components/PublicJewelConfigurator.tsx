@@ -162,8 +162,8 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
           <button type="button" onClick={() => { setMetalId("oro-amarillo"); setGemaId("diamante"); catalogApi?.reset?.(); const defaultMetal = MATERIALES.find((item) => item.id === "oro18a_pulido"); const defaultGem = GEMAS.find((item) => item.id === "diamante_natural"); if (defaultMetal) catalogApi?.materialCatalogo?.(defaultMetal); if (defaultGem) catalogApi?.gemaCatalogo?.(defaultGem); }} className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[#e4ddd1] bg-white px-3.5 py-2 text-xs font-semibold text-[#41382d] shadow-sm transition hover:border-[#b28b45] hover:bg-[#fbf8f1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45] focus-visible:ring-offset-2"><RotateCcw className="size-3.5" /> Restablecer</button>
         </div>
       </header>
-      <div className="isolate grid min-w-0 grid-cols-1 md:min-h-0 md:flex-1 md:grid-rows-[minmax(0,1fr)] md:grid-cols-[minmax(0,1fr)_250px] lg:grid-cols-[minmax(0,1fr)_270px]">
-        <div className="relative z-0 h-[clamp(300px,48svh,430px)] min-h-[300px] min-w-0 overflow-hidden bg-[radial-gradient(ellipse_at_50%_42%,#ffffff_0%,#fbfaf7_60%,#f4f0e8_100%)] sm:h-[clamp(360px,58vh,520px)] sm:min-h-[360px] md:h-full md:min-h-0">
+      <div className="isolate grid min-w-0 grid-cols-1 lg:min-h-0 lg:flex-1 lg:grid-rows-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)_270px]">
+        <div className="relative z-0 h-[clamp(340px,56svh,500px)] min-h-[340px] min-w-0 overflow-hidden bg-[radial-gradient(ellipse_at_50%_42%,#ffffff_0%,#fbfaf7_60%,#f4f0e8_100%)] sm:h-[clamp(400px,62vh,600px)] sm:min-h-[400px] lg:h-full lg:min-h-0">
           {modelUrl && <div className="absolute inset-0"><AurumRender embedded onCatalogApiReady={(api) => setCatalogApi(api)} /></div>}
           {(!modelUrl || loadError || status) && <div className={"absolute inset-0 z-50 grid place-items-center p-6 text-center transition-opacity " + (isReady ? "pointer-events-none opacity-0" : "bg-white/90 backdrop-blur-[2px]")}>
             <div className="max-w-sm">
@@ -174,7 +174,7 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
           </div>}
           <div className="pointer-events-none absolute bottom-2 left-2 z-10 max-w-[calc(100%-1rem)] rounded-full border border-white/80 bg-white/85 px-2.5 py-1.5 text-[9px] text-[#766d61] shadow-sm backdrop-blur sm:bottom-3 sm:left-3 sm:px-3 sm:text-[10px]">Toca y arrastra para girar · Pellizca para acercar</div>
         </div>
-        <aside className="relative z-10 min-w-0 border-t border-[#eee9e0] bg-[#fffefa] p-2.5 sm:p-4 md:h-full md:min-h-0 md:max-h-full md:overflow-x-hidden md:overflow-y-auto md:border-l md:border-t-0 lg:p-4 [@media(max-height:800px)]:p-2">
+        <aside className="relative z-10 min-w-0 border-t border-[#eee9e0] bg-[#fffefa] p-2.5 sm:p-4 lg:h-full lg:min-h-0 lg:max-h-full lg:overflow-x-hidden lg:overflow-y-auto lg:border-l lg:border-t-0 lg:p-4 [@media(max-height:800px)]:p-2">
           <div className="mb-2.5 sm:mb-4 [@media(max-height:800px)]:mb-2">
             <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#92702f]">01 · Metal</p>
             <p className="mt-0.5 hidden text-xs text-[#8a8175] sm:block">Elige el acabado de tu joya</p>
