@@ -1,4 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { registrarEvento } from "@/lib/analytics";
 import { ArrowLeft, CircleDot, Coins, FlaskConical, Gem, Ruler, Scale, Sparkles } from "lucide-react";
 import { CalculadoraAleacionOro } from "@/components/CalculadoraAleacionOro";
 import { ConversorTallasAnillo } from "@/components/ConversorTallasAnillo";
@@ -75,6 +77,15 @@ export const Route = createFileRoute("/herramientas/$herramienta")({
 function HerramientaPublicaPage() {
   const { herramienta } = Route.useParams();
   const pagina = paginas[herramienta as HerramientaSlug];
+
+  useEffect(() => {
+    if (!pagina) return;
+    registrarEvento("tool_opened", {
+      tool_id: pagina.id,
+      tool_name: pagina.titulo,
+      source: "public_tool_route",
+    });
+  }, [herramienta, pagina]);
 
   if (!pagina) {
     return (
