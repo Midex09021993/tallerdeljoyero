@@ -263,6 +263,10 @@ export type Database = {
           direccion_contacto: string | null
           email_contacto: string | null
           enlaces_carrusel: Json
+          formacion_descripcion: string | null
+          formacion_imagen_url: string | null
+          formacion_titulo: string | null
+          formacion_visible: boolean
           frase_portada: string | null
           id: string
           imagenes_portada: Json
@@ -284,6 +288,10 @@ export type Database = {
           direccion_contacto?: string | null
           email_contacto?: string | null
           enlaces_carrusel?: Json
+          formacion_descripcion?: string | null
+          formacion_imagen_url?: string | null
+          formacion_titulo?: string | null
+          formacion_visible?: boolean
           frase_portada?: string | null
           id?: string
           imagenes_portada?: Json
@@ -305,6 +313,10 @@ export type Database = {
           direccion_contacto?: string | null
           email_contacto?: string | null
           enlaces_carrusel?: Json
+          formacion_descripcion?: string | null
+          formacion_imagen_url?: string | null
+          formacion_titulo?: string | null
+          formacion_visible?: boolean
           frase_portada?: string | null
           id?: string
           imagenes_portada?: Json
@@ -3873,6 +3885,10 @@ export type Database = {
         Args: { _responsable_user_id: string; _trabajo_id: string }
         Returns: Json
       }
+      aurum_contar_productos_catalogo_owner: {
+        Args: { p_participante_id: string }
+        Returns: number
+      }
       cambiar_estado_cotizacion: {
         Args: { _cotizacion_id: string; _nuevo_estado: string }
         Returns: undefined
@@ -4173,6 +4189,19 @@ export type Database = {
       obtener_ficha_servicio_externo: {
         Args: { _trabajo_id: string }
         Returns: Json
+      }
+      obtener_publicidad_formacion: {
+        Args: { _slug: string }
+        Returns: {
+          descripcion: string
+          formacion_descripcion: string
+          formacion_imagen_url: string
+          formacion_titulo: string
+          logo_url: string
+          nombre_publico: string
+          slug: string
+          whatsapp: string
+        }[]
       }
       obtener_redes_sociales_catalogo_publico: {
         Args: { _slug: string }
