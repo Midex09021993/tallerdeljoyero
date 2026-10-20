@@ -45,6 +45,7 @@ function MensajesPage() {
   const [borrador, setBorrador] = useState("");
   const [busqueda, setBusqueda] = useState("");
   const [mostrarDirectorio, setMostrarDirectorio] = useState(false);
+  const [usuariosEnLinea, setUsuariosEnLinea] = useState<Set<string>>(new Set());
   const finalMensajes = useRef<HTMLDivElement>(null);
   const userId = sesion?.user.id;
 
@@ -106,7 +107,7 @@ function MensajesPage() {
     if (!seleccionada || !userId || !mensajes.data) return;
     finalMensajes.current?.scrollIntoView({ behavior: "smooth", block: "end" });
     const ultimo = mensajes.data[mensajes.data.length - 1];
-    if (!ultimo || ultimo.remitente_id === userId) return;
+    if (!ultimo) return;
     void db.from("chat_conversacion_miembros")
       .update({ ultimo_leido_at: new Date().toISOString() })
       .eq("conversacion_id", seleccionada)
@@ -115,6 +116,20 @@ function MensajesPage() {
         if (!error) void qc.invalidateQueries({ queryKey: ["chat-resumen", userId] });
       });
   }, [seleccionada, userId, mensajes.data, qc]);
+
+  useEffect(() => {
+    if (!userId) return;
+    const channel = supabase.channel("aurum-lab-presence", { config: { private: true, presence: { key: userId } } });
+    channel.on("presence", { event: "sync" }, () => {
+      const state = channel.presenceState() as Record<string, Array<{ user_id?: string }>>;
+      const ids = Object.values(state).flat().map((entry) => entry.user_id).filter((id): id is string => Boolean(id));
+      setUsuariosEnLinea(new Set(ids));
+    });
+    channel.subscribe((status) => {
+      if (status === "SUBSCRIBED") void channel.track({ user_id: userId, online_at: new Date().toISOString() });
+    });
+    return () => { void supabase.removeChannel(channel); };
+  }, [userId]);
 
   const chats = conversaciones.data ?? [];
   const chatActual = chats.find((chat) => chat.conversacion_id === seleccionada) ?? null;
@@ -197,7 +212,7 @@ function MensajesPage() {
             ) : null}
             <div className="max-h-[62vh] overflow-y-auto p-2">
               {chats.map((chat) => <button key={chat.conversacion_id} type="button" onClick={() => setSeleccionada(chat.conversacion_id)} className={`flex w-full items-start gap-3 rounded-xl p-3 text-left transition ${seleccionada === chat.conversacion_id ? "bg-accent ring-1 ring-gold/40" : "hover:bg-accent/60"}`}>
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-gold/15 text-sm font-bold text-gold-deep">{chat.nombre_persona.charAt(0).toUpperCase()}</span>
+                <span className="relative flex size-10 shrink-0 items-center justify-center rounded-full bg-gold/15 text-sm font-bold text-gold-deep">{chat.nombre_persona.charAt(0).toUpperCase()}<span className={usuariosEnLinea.has(chat.otro_usuario_id) ? "absolute bottom-0 right-0 size-2.5 rounded-full border-2 border-card bg-success" : "absolute bottom-0 right-0 size-2.5 rounded-full border-2 border-card bg-muted-foreground/35"} /></span>
                 <span className="min-w-0 flex-1"><span className="flex items-center justify-between gap-2"><span className="truncate text-sm font-semibold">{chat.nombre_persona}</span>{Number(chat.no_leidos) > 0 ? <span className="flex min-w-5 items-center justify-center rounded-full bg-gold px-1.5 py-0.5 text-[10px] font-bold text-ink">{chat.no_leidos}</span> : null}</span><span className="block truncate text-xs text-muted-foreground">{chat.nombre_taller ?? "Participante del ecosistema"}</span><span className="mt-1 block truncate text-xs text-muted-foreground">{chat.ultimo_mensaje ?? "Inicia la conversación"}</span></span>
               </button>)}
               {conversaciones.isLoading ? <p className="p-4 text-sm text-muted-foreground">Cargando conversaciones…</p> : null}
@@ -211,7 +226,7 @@ function MensajesPage() {
                 <button type="button" onClick={() => setSeleccionada(null)} className="rounded-lg border px-2 py-1 text-xs lg:hidden">Volver</button>
                 <span className="flex size-10 items-center justify-center rounded-full bg-gold/15 font-bold text-gold-deep">{chatActual.nombre_persona.charAt(0).toUpperCase()}</span>
                 <div className="min-w-0"><h2 className="truncate font-semibold">{chatActual.nombre_persona}</h2><p className="truncate text-xs text-muted-foreground">{chatActual.nombre_taller ?? "Participante activo"} · {rolEtiqueta[chatActual.rol as Rol] ?? chatActual.rol ?? "Miembro"}</p></div>
-                <span className="ml-auto inline-flex items-center gap-1 text-[11px] text-success"><span className="size-2 rounded-full bg-success" /> Ecosistema activo</span>
+                <span className={usuariosEnLinea.has(chatActual.otro_usuario_id) ? "ml-auto inline-flex items-center gap-1 text-[11px] text-success" : "ml-auto inline-flex items-center gap-1 text-[11px] text-muted-foreground"}><span className={usuariosEnLinea.has(chatActual.otro_usuario_id) ? "size-2 rounded-full bg-success" : "size-2 rounded-full bg-muted-foreground/40"} /> {usuariosEnLinea.has(chatActual.otro_usuario_id) ? "En línea" : "Desconectado"}</span>
               </div>
               <div className="flex-1 space-y-3 overflow-y-auto bg-surface-muted/30 p-4 md:p-6">
                 {mensajes.data?.map((mensaje) => {
