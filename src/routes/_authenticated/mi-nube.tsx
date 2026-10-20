@@ -1048,7 +1048,7 @@ function MiNubePage() {
   };
   const guardarNombreCarpeta = async (proyecto: { nombre: string; archivos: ArchivoNube[] }) => {
     if (!participanteId || !usuarioId) { toast.error("No se encontró tu taller activo."); return; }
-    const nombreNuevo = nuevoNombreCarpeta.trim().normalize("NFKC").replace(/[\\/\\\\]/g, "-").replace(/[\\u0000-\\u001f]/g, "").replace(/\\s+/g, " ").slice(0, 60);
+    const nombreNuevo = nuevoNombreCarpeta.trim().normalize("NFKC").replace(/[\/\\]/g, "-").replace(/[\u0000-\u001f]/g, "").replace(/\s+/g, " ").slice(0, 60);
     if (!nombreNuevo) { toast.error("Escribe un nombre para la carpeta."); return; }
     if (nombreNuevo === proyecto.nombre) { setProyectoRenombrando(null); return; }
     if (archivos.some((archivo) => archivo.carpeta === nombreNuevo)) { toast.error("Ya existe una carpeta con ese nombre."); return; }
