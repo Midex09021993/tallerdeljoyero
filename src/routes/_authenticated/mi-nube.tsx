@@ -1100,9 +1100,12 @@ function MiNubePage() {
           body: { action: "rename-folder", oldFolder: proyecto.nombre, newFolder: nombreNuevo, participantId: participanteId },
         });
         if (nasRenameError || nasRename?.error || nasRename?.ok !== true) {
-          throw new Error(nasRename?.error || nasRenameError?.message || "No se pudo renombrar la carpeta de vídeos del NAS.");
+          // El NAS es complementario: no revertir el renombrado web si Nextcloud falla.
+          nasNoVerificado = true;
+          console.warn("[Mi Nube] Se renombró la carpeta web, pero no se pudo sincronizar el nombre en el NAS.", nasRename?.error ?? nasRenameError?.message);
+        } else {
+          nasRenombrado = true;
         }
-        nasRenombrado = true;
       }
 
       const { error: errorCompartidas } = await supabase.from("mi_nube_compartidas")
