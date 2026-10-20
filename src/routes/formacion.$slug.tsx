@@ -33,7 +33,11 @@ function PublicidadFormacionPage() {
     const url = window.location.href;
     try {
       if (navigator.share) {
-        await navigator.share({ title: document.title, text: "Conoce esta propuesta de cursos y formación en joyería.", url });
+        await navigator.share({
+          title: `${data.formacion_titulo || "Cursos y formación"} | ${data.nombre_publico}`,
+          text: `${data.formacion_descripcion || "Conoce esta propuesta de formación para la comunidad joyera."} ${data.nombre_publico}`,
+          url,
+        });
         setMensajeCompartir("Enlace compartido.");
         return;
       }
