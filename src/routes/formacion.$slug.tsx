@@ -27,7 +27,8 @@ type Publicacion = {
 };
 
 function PublicidadFormacionPage() {
-  const { slug } = Route.useParams();  const [mensajeCompartir, setMensajeCompartir] = useState("");
+  const { slug } = Route.useParams();
+  const [mensajeCompartir, setMensajeCompartir] = useState("");
   const compartirPagina = async () => {
     const url = window.location.href;
     try {
@@ -101,7 +102,7 @@ function PublicidadFormacionPage() {
   return (
     <main className="min-h-screen bg-background text-foreground">
       <header className="border-b border-border bg-card/80">
-        <div className="mx-auto flex max-w-5xl items-center gap-4 px-5 py-5 sm:px-8">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-3 px-4 py-4 sm:flex-nowrap sm:gap-4 sm:px-8 sm:py-5">
           {data.logo_url ? (
             <img src={data.logo_url} alt={data.nombre_publico} className="size-16 shrink-0 rounded-2xl border border-border bg-background object-cover" />
           ) : (
@@ -118,29 +119,29 @@ function PublicidadFormacionPage() {
         </div>
       </header>
 
-      <div className="mx-auto max-w-5xl space-y-10 px-5 py-8 sm:px-8 sm:py-12">
+      <div className="mx-auto max-w-5xl space-y-8 px-4 py-6 sm:space-y-10 sm:px-8 sm:py-12">
         <section className="relative overflow-hidden rounded-3xl border border-gold/20 bg-gradient-to-br from-gold/10 via-card to-card shadow-sm">
           {data.formacion_imagen_url ? (
-            <img src={data.formacion_imagen_url} alt="" className="max-h-[380px] w-full object-cover" />
+            <img src={data.formacion_imagen_url} alt={`Imagen promocional de ${data.nombre_publico}`} loading="eager" fetchPriority="high" className="aspect-[16/9] max-h-[420px] w-full bg-surface-muted object-cover sm:aspect-[2/1]" />
           ) : null}
           <div aria-hidden="true" className="pointer-events-none absolute -right-16 -top-20 size-64 rounded-full bg-gold/10 blur-3xl" />
-          <div className="relative p-6 sm:p-10">
+          <div className="relative p-5 sm:p-10">
             <span className="inline-flex items-center gap-2 rounded-full border border-gold/25 bg-gold/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.18em] text-gold-deep">
               <Sparkles className="size-3.5" /> Propuesta formativa
             </span>
-            <h2 className="mt-5 max-w-3xl text-2xl font-semibold leading-tight sm:text-4xl">
+            <h2 className="mt-5 max-w-3xl break-words text-2xl font-semibold leading-tight sm:text-4xl">
               {data.formacion_titulo || "Aprende, crea y desarrolla tu talento joyero"}
             </h2>
             <p className="mt-4 max-w-3xl whitespace-pre-line text-sm leading-7 text-muted-foreground sm:text-base">
               {data.formacion_descripcion || "Descubre nuevas técnicas, desarrolla tus habilidades y explora herramientas digitales para el diseño y la creación de joyería."}
             </p>
-            <div className="mt-7 flex flex-wrap gap-3">
+            <div className="mt-7 grid grid-cols-1 gap-3 sm:flex sm:flex-wrap">
               {contactoUrl ? (
-                <a href={contactoUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-gold px-5 text-sm font-semibold text-black transition hover:brightness-105">
+                <a href={contactoUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-gold px-5 text-sm font-semibold text-black transition hover:brightness-105 sm:w-auto">
                   <MessageCircle className="size-4" /> Solicitar información
                 </a>
               ) : null}
-              <a href="#herramientas" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border bg-background/70 px-5 text-sm font-semibold transition hover:bg-surface-muted">
+              <a href="#herramientas" className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-border bg-background/70 px-5 text-sm font-semibold transition hover:bg-surface-muted sm:w-auto">
                 <BookOpen className="size-4" /> Recursos para estudiantes
               </a>
             </div>
