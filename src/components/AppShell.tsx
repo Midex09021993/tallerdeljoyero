@@ -91,7 +91,7 @@ const secciones: Seccion[] = [
   { to: "/gestion", label: "Gestión", roles: ["dueno", "gerente"], icono: LayoutDashboard, grupo: "administracion" },
   { to: "/migracion", label: "Migración", roles: ["dueno", "gerente"], icono: FileSpreadsheet, grupo: "administracion" },
   { to: "/catalogo", label: "Catálogo", icono: BookOpen, grupo: "comercial" },
-  { to: "/cursos-formacion", label: "Cursos y formación", icono: BookOpen, grupo: "comercial" },
+  { to: "/cursos-formacion", label: "Cursos y formación", area: "Cursos y formación", icono: BookOpen, grupo: "comercial" },
   { to: "/tienda-admin", label: "Tienda FADILAB", roles: ["dueno", "gerente"], icono: ShoppingBag, grupo: "administracion" },
   { to: "/perfil", label: "Perfil", roles: ["operario"], icono: UserRound, grupo: "administracion" },
 ];
