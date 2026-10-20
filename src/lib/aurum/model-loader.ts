@@ -246,7 +246,24 @@ export async function preprocessAurumModel(object: THREE.Object3D) {
 
 export async function parseAurumInput(file: File, ext: string, fallbackMaterial: THREE.Material) {
   const buffer = await file.arrayBuffer();
-  if (ext === "stl") { const { STLLoader } = await import("three/examples/jsm/loaders/STLLoader.js"); const geo = new STLLoader().parse(buffer); return new THREE.Mesh(geo, fallbackMaterial); }
+  if (ext === "stl") {
+    const { STLLoader } = await import("three/examples/jsm/loaders/STLLoader.js");
+    const geometry = new STLLoader().parse(buffer);
+    geometry.computeBoundingBox();
+    const size = geometry.boundingBox?.getSize(new THREE.Vector3()) ?? new THREE.Vector3();
+    const model = new THREE.Mesh(geometry, fallbackMaterial);
+    // STL has no up-axis metadata. Correct only a clearly thin Y-axis model.
+    const yIsClearlyThin = size.y > 0 && size.y < size.x * 0.65 && size.y < size.z * 0.65;
+    if (yIsClearlyThin) {
+      model.rotation.x = Math.PI / 2;
+      model.userData.aurumStlOrientation = "heuristic-xz-to-xy";
+    } else {
+      model.userData.aurumStlOrientation = "unchanged";
+    }
+    model.userData.aurumSourceFormat = "stl";
+    model.userData.aurumStlDimensions = { x: size.x, y: size.y, z: size.z };
+    return model;
+  }
   if (ext === "obj") { const { OBJLoader } = await import("three/examples/jsm/loaders/OBJLoader.js"); return new OBJLoader().parse(new TextDecoder().decode(buffer)); }
   if (ext === "fbx") { const { FBXLoader } = await import("three/examples/jsm/loaders/FBXLoader.js"); return new FBXLoader().parse(buffer, ""); }
   if (ext === "glb") { const { GLTFLoader } = await import("three/examples/jsm/loaders/GLTFLoader.js"); return (await new GLTFLoader().parseAsync(buffer, "")).scene; }
