@@ -142,18 +142,6 @@ function AnalyticsSync() {
 
       const text = (element.textContent || "").replace(/\s+/g, " ").trim();
       const href = element instanceof HTMLAnchorElement ? element.getAttribute("href") || "" : "";
-      const analyticsToolId = element.getAttribute("data-analytics-tool-id");
-      const analyticsToolName = element.getAttribute("data-analytics-tool-name");
-
-      if (analyticsToolId) {
-        registrarEvento("tool_opened", {
-          tool_id: analyticsToolId,
-          tool_name: analyticsToolName || analyticsToolId,
-          source: "public_tools_catalog",
-        });
-        return;
-      }
-
       if (href.includes("wa.me") || href.includes("whatsapp")) {
         registrarEvento("whatsapp_clicked", { href });
         return;
