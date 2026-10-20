@@ -307,8 +307,10 @@ export function GeneradorSTLIA() {
     if (!next) return;
     if (!/\.stl$/i.test(next.name) && next.type !== "model/stl" && next.type !== "application/sla") { setMensajeCAD("Selecciona un archivo STL exportado desde Text-to-CAD."); return; }
     if (next.size > 100 * 1024 * 1024) { setMensajeCAD("El STL debe pesar 100 MB o menos para esta prueba."); return; }
+    registrarEvento("tool_started", { tool_id: "stl", mode: "text_cad_import" });
     if (urlCAD) URL.revokeObjectURL(urlCAD);
     setArchivoCAD(next); setUrlCAD(URL.createObjectURL(next)); setMensajeCAD("STL importado. Revisa escala, espesores y cierre de malla antes de fabricar.");
+    registrarEvento("tool_completed", { tool_id: "stl", mode: "text_cad_import" });
   };
 
   const copiarInstruccionCAD = async () => {
