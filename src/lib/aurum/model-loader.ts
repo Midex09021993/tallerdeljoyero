@@ -261,6 +261,7 @@ export async function parseAurumInput(file: File, ext: string, fallbackMaterial:
       model.userData.aurumStlOrientation = "unchanged";
     }
     model.userData.aurumSourceFormat = "stl";
+    model.userData.aurumRhino = { categoria: "otro", capa: "STL sin capas", layerKey: "stl-unclassified" };
     model.userData.aurumStlDimensions = { x: size.x, y: size.y, z: size.z };
     return model;
   }
