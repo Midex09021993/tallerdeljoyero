@@ -58,6 +58,7 @@ function PublicidadFormacionPage() {
   const [mensajeCompartir, setMensajeCompartir] = useState("");
   const compartirPagina = async () => {
     const url = window.location.href;
+    if (!data) return;
     try {
       if (navigator.share) {
         await navigator.share({
