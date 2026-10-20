@@ -32,9 +32,12 @@ export function EcosistemaParticipantesOwner(){
   queries: talleresConCatalogo.map(p => ({
    queryKey: ["owner-catalogo-consumo", p.id],
    queryFn: async () => {
-    const { count, error } = await supabase.from("catalogo_productos").select("id", { count: "exact", head: true }).eq("participante_id", p.id);
+    const { data, error } = await supabase.rpc("aurum_contar_productos_catalogo_owner", { p_participante_id: p.id });
     if (error) throw error;
-    return count ?? 0;
+    if (typeof data !== "number" || !Number.isInteger(data) || data < 0) {
+     throw new Error("El contador seguro del catálogo no está disponible. Aplica la migración de medición de cuotas.");
+    }
+    return data;
    },
    staleTime: 60_000,
   })),
