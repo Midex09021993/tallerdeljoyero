@@ -39,6 +39,7 @@ function CursosFormacionPage() {
   const [guardando, setGuardando] = useState(false);
   const [subiendoImagen, setSubiendoImagen] = useState(false);
   const [eliminandoImagen, setEliminandoImagen] = useState(false);
+  const [imagenPendienteEliminar, setImagenPendienteEliminar] = useState<string | null>(null);
   const [mensaje, setMensaje] = useState<string | null>(null);
 
   const configQuery = useQuery({
@@ -85,8 +86,21 @@ function CursosFormacionPage() {
         })
         .eq("participante_id", participanteId);
       if (error) throw error;
+      let avisoLimpieza = "";
+      if (imagenPendienteEliminar) {
+        const marcador = "/storage/v1/object/public/catalogo-joyas/";
+        const posicion = imagenPendienteEliminar.indexOf(marcador);
+        if (posicion >= 0) {
+          const ruta = decodeURIComponent(imagenPendienteEliminar.slice(posicion + marcador.length).split("?")[0]);
+          if (ruta) {
+            const { error: errorEliminar } = await supabase.storage.from("catalogo-joyas").remove([ruta]);
+            if (errorEliminar) avisoLimpieza = " La publicación se guardó, pero no se pudo borrar el archivo anterior del almacenamiento.";
+          }
+        }
+        setImagenPendienteEliminar(null);
+      }
       await queryClient.invalidateQueries({ queryKey: ["formacion-publicidad-config", participanteId] });
-      setMensaje(visible ? "Configuración guardada. Abre Vista pública para comprobar que el enlace ya muestra tu publicación." : "Configuración guardada. La publicidad está desactivada y el enlace público permanecerá oculto.");
+      setMensaje((visible ? "Configuración guardada. Abre Vista pública para comprobar que el enlace ya muestra tu publicación." : "Configuración guardada. La publicidad está desactivada y el enlace público permanecerá oculto.") + avisoLimpieza);
     } catch (error) {
       setMensaje(error instanceof Error ? error.message : "No se pudo guardar. Comprueba que hayas aplicado el SQL de publicidad formativa.");
     } finally {
@@ -134,27 +148,14 @@ function CursosFormacionPage() {
 
   const eliminarImagenPromocional = async () => {
     if (!imagenUrl.trim()) return;
-    const confirmar = window.confirm("¿Quieres quitar la imagen promocional? Si está guardada en el almacenamiento de Taller del Joyero, también intentaremos eliminar ese archivo.");
+    const confirmar = window.confirm("¿Quieres quitar la imagen promocional? El cambio se aplicará a la publicación al guardar la configuración.");
     if (!confirmar) return;
     setEliminandoImagen(true);
     setMensaje(null);
-    try {
-      const marcador = "/storage/v1/object/public/catalogo-joyas/";
-      const posicion = imagenUrl.indexOf(marcador);
-      if (posicion >= 0) {
-        const ruta = decodeURIComponent(imagenUrl.slice(posicion + marcador.length).split("?")[0]);
-        if (ruta) {
-          const { error } = await supabase.storage.from("catalogo-joyas").remove([ruta]);
-          if (error) throw error;
-        }
-      }
-      setImagenUrl("");
-      setMensaje("Imagen quitada. Guarda la configuración para actualizar la publicación.");
-    } catch (error) {
-      setMensaje(error instanceof Error ? "No se pudo eliminar el archivo del almacenamiento: " + error.message : "No se pudo eliminar la imagen.");
-    } finally {
-      setEliminandoImagen(false);
-    }
+    setImagenPendienteEliminar(imagenUrl);
+    setImagenUrl("");
+    setMensaje("Imagen retirada de la vista previa. Guarda la configuración para actualizar la página pública y eliminar el archivo anterior.");
+    setEliminandoImagen(false);
   };
 
   if (!participanteId) {
