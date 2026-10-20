@@ -1063,7 +1063,7 @@ function MiNubePage() {
       // Confirmar el contenido del NAS antes de cambiar rutas: los vídeos deben
       // seguir disponibles bajo el mismo nombre lógico para todos los talleres.
       const { data: nasData, error: nasError } = await supabase.functions.invoke("nextcloud-video-files", {
-        body: { action: "list", participantId },
+        body: { action: "list", participantId: participanteId },
       });
       if (nasError || nasData?.error || !Array.isArray(nasData?.files)) {
         throw new Error("No se pudo verificar el NAS. Por seguridad, no se renombró la carpeta.");
@@ -1094,7 +1094,7 @@ function MiNubePage() {
 
       if (videosDeCarpeta.length > 0) {
         const { data: nasRename, error: nasRenameError } = await supabase.functions.invoke("nextcloud-video-files", {
-          body: { action: "rename-folder", oldFolder: proyecto.nombre, newFolder: nombreNuevo, participantId },
+          body: { action: "rename-folder", oldFolder: proyecto.nombre, newFolder: nombreNuevo, participantId: participanteId },
         });
         if (nasRenameError || nasRename?.error || nasRename?.ok !== true) {
           throw new Error(nasRename?.error || nasRenameError?.message || "No se pudo renombrar la carpeta de vídeos del NAS.");
@@ -1118,7 +1118,7 @@ function MiNubePage() {
       let rollbackFallido = false;
       if (nasRenombrado) {
         const { data, error } = await supabase.functions.invoke("nextcloud-video-files", {
-          body: { action: "rename-folder", oldFolder: nombreNuevo, newFolder: proyecto.nombre, participantId },
+          body: { action: "rename-folder", oldFolder: nombreNuevo, newFolder: proyecto.nombre, participantId: participanteId },
         });
         if (error || data?.error || data?.ok !== true) rollbackFallido = true;
       }
