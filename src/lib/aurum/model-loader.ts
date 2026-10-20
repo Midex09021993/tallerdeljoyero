@@ -3,12 +3,12 @@ import { inspectAurumMesh } from "./mesh-preflight";
 import { getAurumModelParts } from "./model-parts";
 import { toCreasedNormals } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
-type AurumNormalMode = "authored" | "diagnostic" | "recompute-metal" | "crease-metal" | "crease-layer-metal-02";
+type AurumNormalMode = "authored" | "diagnostic" | "recompute-metal" | "crease-metal";
 
 function getAurumNormalExperimentMode(): AurumNormalMode {
   try {
     const value = new URLSearchParams(window.location.search).get("aurumNormals");
-    if (value === "authored" || value === "diagnostic" || value === "recompute-metal" || value === "crease-metal" || value === "crease-layer-metal-02") return value;
+    if (value === "authored" || value === "diagnostic" || value === "recompute-metal" || value === "crease-metal") return value;
   } catch {
     // URL diagnostics are optional; preserve the authored CAD normals by default.
   }
@@ -188,28 +188,12 @@ export async function preprocessAurumModel(object: THREE.Object3D) {
         if (gem) x.userData = { ...x.userData, aurumNeedsFacetNormals: true };
       }
       normalsBuilt++;
-    } else if (
-      (
-        (experimentMode === "crease-metal" || experimentMode === "recompute-metal") &&
-        getAurumMeshFamily(x) === "metal"
-      ) ||
-      (
-        experimentMode === "crease-layer-metal-02" &&
-        getAurumMeshFamily(x) === "metal" &&
-        String(
-          x?.userData?.aurumRhino?.capa ??
-          x?.userData?.aurumRhinoSource?.layerName ??
-          x?.userData?.attributes?.layerName ??
-          x?.userData?.attributes?.LayerName ??
-          ""
-        ).trim().toLocaleLowerCase() === "metal 02"
-      )
-    ) {
+    } else if ((experimentMode === "crease-metal" || experimentMode === "recompute-metal") && getAurumMeshFamily(x) === "metal") {
       // Controlled repair experiment: touch only meshes positively identified as
       // metal, never gemstones or unknown/ornamental geometry. Clone first so
       // shared CAD geometries and other layer instances remain unchanged.
       geometry = geometry.clone();
-      if (experimentMode === "crease-metal" || experimentMode === "crease-layer-metal-02") {
+      if (experimentMode === "crease-metal") {
         geometry = toCreasedNormals(geometry, 35 * Math.PI / 180);
         creasedNormalsForTest++;
       } else {
@@ -238,7 +222,7 @@ export async function preprocessAurumModel(object: THREE.Object3D) {
     x.userData = { ...x.userData, aurumPreprocessed: true, aurumNormalsGenerated: generated, aurumMeshPreflight: preflight, aurumNormalExperiment: experimentMode, aurumNormalDiagnostics: normalInspection };
   }
   removeQueue.forEach((x: any) => x.parent?.remove(x)); geometryRefs.forEach((count) => { if (count > 1) repeatedGeometryRefs += count; }); object.updateMatrixWorld(true);
-  object.userData = { ...object.userData, aurumPreprocess: { version: 9, experimentMode, meshes, triangles, normalsBuilt, normalsRepaired, normalsRecomputedForTest, creasedNormalsForTest, windingFacesFlipped, meshesWithoutNormals, meshesWithSuspiciousNormals, meshesWithBoundaryEdges, meshesWithNonManifoldEdges, meshesWithDegenerateTriangles, lineObjectsRemoved, pointObjectsRemoved, repeatedGeometryRefs, preserveAuthoredNormals: experimentMode === "authored" || experimentMode === "diagnostic", autoRepairNormals: false, metalNormalsExperimentOnly: experimentMode === "crease-metal" || experimentMode === "recompute-metal" || experimentMode === "crease-layer-metal-02", creaseAngleDegrees: 60, facetNormalsRequiredForGems: true, renderReadyChecks: { constructionLinesRemoved: lineObjectsRemoved > 0, constructionPointsRemoved: pointObjectsRemoved > 0, normalsAvailable: meshesWithoutNormals === 0, geometryStatsAvailable: true } } };
+  object.userData = { ...object.userData, aurumPreprocess: { version: 9, experimentMode, meshes, triangles, normalsBuilt, normalsRepaired, normalsRecomputedForTest, creasedNormalsForTest, windingFacesFlipped, meshesWithoutNormals, meshesWithSuspiciousNormals, meshesWithBoundaryEdges, meshesWithNonManifoldEdges, meshesWithDegenerateTriangles, lineObjectsRemoved, pointObjectsRemoved, repeatedGeometryRefs, preserveAuthoredNormals: experimentMode === "authored" || experimentMode === "diagnostic", autoRepairNormals: false, metalNormalsExperimentOnly: experimentMode === "crease-metal" || experimentMode === "recompute-metal", creaseAngleDegrees: 60, facetNormalsRequiredForGems: true, renderReadyChecks: { constructionLinesRemoved: lineObjectsRemoved > 0, constructionPointsRemoved: pointObjectsRemoved > 0, normalsAvailable: meshesWithoutNormals === 0, geometryStatsAvailable: true } } };
   if (experimentMode === "diagnostic") {
     const suspiciousMeshes: any[] = [];
     object.traverse((x: any) => {
