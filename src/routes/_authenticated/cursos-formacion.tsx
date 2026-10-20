@@ -1,6 +1,6 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Copy, ExternalLink, Eye, EyeOff, GraduationCap, Save, MessageCircle, Smartphone, Upload, Image as ImageIcon } from "lucide-react";
+import { Copy, ExternalLink, Eye, EyeOff, GraduationCap, Save, MessageCircle, Smartphone, Upload, Image as ImageIcon, Trash2, Link2 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppShell, Panel } from "@/components/AppShell";
 import { useSesion } from "@/lib/auth";
@@ -38,6 +38,7 @@ function CursosFormacionPage() {
   const [visible, setVisible] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [subiendoImagen, setSubiendoImagen] = useState(false);
+  const [eliminandoImagen, setEliminandoImagen] = useState(false);
   const [mensaje, setMensaje] = useState<string | null>(null);
 
   const configQuery = useQuery({
@@ -130,6 +131,32 @@ function CursosFormacionPage() {
     } finally { setSubiendoImagen(false); }
   };
 
+
+  const eliminarImagenPromocional = async () => {
+    if (!imagenUrl.trim()) return;
+    const confirmar = window.confirm("¿Quieres quitar la imagen promocional? Si está guardada en el almacenamiento de Taller del Joyero, también intentaremos eliminar ese archivo.");
+    if (!confirmar) return;
+    setEliminandoImagen(true);
+    setMensaje(null);
+    try {
+      const marcador = "/storage/v1/object/public/catalogo-joyas/";
+      const posicion = imagenUrl.indexOf(marcador);
+      if (posicion >= 0) {
+        const ruta = decodeURIComponent(imagenUrl.slice(posicion + marcador.length).split("?")[0]);
+        if (ruta) {
+          const { error } = await supabase.storage.from("catalogo-joyas").remove([ruta]);
+          if (error) throw error;
+        }
+      }
+      setImagenUrl("");
+      setMensaje("Imagen quitada. Guarda la configuración para actualizar la publicación.");
+    } catch (error) {
+      setMensaje(error instanceof Error ? "No se pudo eliminar el archivo del almacenamiento: " + error.message : "No se pudo eliminar la imagen.");
+    } finally {
+      setEliminandoImagen(false);
+    }
+  };
+
   if (!participanteId) {
     return <AppShell titulo="Cursos y formación" subtitulo="Página publicitaria de tu taller">
       <Panel titulo="Cuenta de taller requerida"><p className="p-5 text-sm text-muted-foreground">Esta sección necesita una cuenta vinculada a un participante del ecosistema.</p></Panel>
@@ -179,7 +206,7 @@ function CursosFormacionPage() {
                     {imagenUrl.trim() ? (
                       <div className="overflow-hidden rounded-xl border border-border">
                         <img src={imagenUrl.trim()} alt="Vista previa de la imagen promocional" className="max-h-64 w-full object-cover" />
-                        <div className="flex flex-wrap items-center justify-between gap-2 p-3"><span className="text-xs text-muted-foreground">Imagen seleccionada</span><button type="button" onClick={() => setImagenUrl("")} className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-surface-muted">Quitar imagen</button></div>
+                        <div className="flex flex-wrap items-center justify-between gap-2 p-3"><span className="text-xs text-muted-foreground">Imagen seleccionada</span><button type="button" onClick={() => void eliminarImagenPromocional()} disabled={eliminandoImagen || subiendoImagen} className="inline-flex items-center gap-1.5 rounded-lg border border-destructive/30 px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/5 disabled:opacity-50"><Trash2 className="size-3.5" />{eliminandoImagen ? "Eliminando…" : "Eliminar imagen"}</button></div>
                       </div>
                     ) : (
                       <div className="flex flex-col items-center rounded-xl border border-dashed border-gold/40 bg-gold/5 px-5 py-7 text-center">
@@ -191,7 +218,17 @@ function CursosFormacionPage() {
                       <Upload className="size-4" />{subiendoImagen ? "Subiendo imagen…" : imagenUrl.trim() ? "Cambiar imagen desde el equipo" : "Subir imagen desde el equipo"}
                       <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" disabled={subiendoImagen} onChange={subirImagenPromocional} />
                     </label>
-                    <label className="block space-y-1.5"><span className="text-xs text-muted-foreground">O utiliza una URL de imagen</span><input type="url" value={imagenUrl} onChange={e => setImagenUrl(e.target.value)} placeholder="https://…" className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm" /></label>
+                    {subiendoImagen ? (
+                      <div role="status" aria-live="polite" className="space-y-2 rounded-lg border border-border p-3">
+                        <div className="flex items-center justify-between gap-3 text-xs"><span className="font-medium">Subiendo imagen al almacenamiento…</span><span className="text-muted-foreground">En curso</span></div>
+                        <div className="h-2 w-full overflow-hidden rounded-full bg-muted"><div className="h-full w-1/3 animate-pulse rounded-full bg-gold" /></div>
+                        <p className="text-xs text-muted-foreground">No cierres esta pantalla hasta que termine la carga.</p>
+                      </div>
+                    ) : null}
+                    <details className="rounded-lg border border-border px-3 py-2.5">
+                      <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-medium"><Link2 className="size-4" /> Usar URL de imagen en su lugar</summary>
+                      <div className="pt-3"><input type="url" value={imagenUrl} onChange={e => setImagenUrl(e.target.value)} placeholder="https://…" className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm" /><p className="mt-2 text-xs text-muted-foreground">Pega aquí una URL pública de imagen si no quieres subir un archivo.</p></div>
+                    </details>
                     <p className="text-xs text-muted-foreground">Opcional. Si no añades una imagen, se mostrará el logo del taller. Guarda la configuración después de subir o cambiar la imagen.</p>
                   </div>
                   <button type="submit" disabled={guardando} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-gold px-5 text-sm font-semibold text-black disabled:opacity-50"><Save className="size-4" />{guardando ? "Guardando…" : "Guardar configuración"}</button>
