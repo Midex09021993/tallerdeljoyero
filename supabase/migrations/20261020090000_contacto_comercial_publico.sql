@@ -35,3 +35,4 @@ create policy "consultas_comerciales_owner_update"
   with check (public.has_role((select auth.uid()), 'dueno'::app_role));
 
 grant select, update on public.consultas_comerciales to authenticated;
+grant insert, select on public.consultas_comerciales to service_role;
