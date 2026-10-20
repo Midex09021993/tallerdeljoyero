@@ -87,18 +87,21 @@ function CursosFormacionPage() {
         .eq("participante_id", participanteId);
       if (error) throw error;
       let avisoLimpieza = "";
-      if (imagenPendienteEliminar) {
+      const imagenGuardada = imagenUrl.trim();
+      const imagenAnterior = imagenPendienteEliminar?.trim();
+      // Nunca borrar un archivo si la publicación guardada todavía lo referencia.
+      if (imagenAnterior && imagenGuardada !== imagenAnterior) {
         const marcador = "/storage/v1/object/public/catalogo-joyas/";
-        const posicion = imagenPendienteEliminar.indexOf(marcador);
+        const posicion = imagenAnterior.indexOf(marcador);
         if (posicion >= 0) {
-          const ruta = decodeURIComponent(imagenPendienteEliminar.slice(posicion + marcador.length).split("?")[0]);
+          const ruta = decodeURIComponent(imagenAnterior.slice(posicion + marcador.length).split("?")[0]);
           if (ruta) {
             const { error: errorEliminar } = await supabase.storage.from("catalogo-joyas").remove([ruta]);
             if (errorEliminar) avisoLimpieza = " La publicación se guardó, pero no se pudo borrar el archivo anterior del almacenamiento.";
           }
         }
-        setImagenPendienteEliminar(null);
       }
+      setImagenPendienteEliminar(null);
       await queryClient.invalidateQueries({ queryKey: ["formacion-publicidad-config", participanteId] });
       setMensaje((visible ? "Configuración guardada. Abre Vista pública para comprobar que el enlace ya muestra tu publicación." : "Configuración guardada. La publicidad está desactivada y el enlace público permanecerá oculto.") + avisoLimpieza);
     } catch (error) {
