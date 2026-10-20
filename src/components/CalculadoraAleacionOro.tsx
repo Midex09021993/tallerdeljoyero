@@ -72,15 +72,15 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
       <header className="relative mb-5 flex items-start justify-between gap-4 sm:mb-7">
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/25 to-gold/5 shadow-inner">
-            <Gem className="size-5 text-gold" aria-hidden="true" />
+            <Gem className="size-5 text-gold-deep" aria-hidden="true" />
           </div>
           <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-gold">Taller del Joyero</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-gold-deep">Taller del Joyero</p>
             <h2 className="mt-0.5 text-xl font-semibold tracking-tight text-foreground sm:text-2xl">Aleación de oro</h2>
             <p className="mt-1 text-xs leading-relaxed text-muted-foreground">Calcula cuánto metal de liga necesitas agregar.</p>
           </div>
         </div>
-        <div className="hidden rounded-full border border-gold/15 bg-gold/5 px-2.5 py-1.5 text-[10px] font-medium text-gold sm:flex sm:items-center sm:gap-1.5">
+        <div className="hidden rounded-full border border-gold/15 bg-gold/5 px-2.5 py-1.5 text-[10px] font-medium text-gold-deep sm:flex sm:items-center sm:gap-1.5">
           <Sparkles className="size-3" aria-hidden="true" /> Cálculo automático
         </div>
       </header>
@@ -88,7 +88,7 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
       <div className="space-y-4">
         <section className="rounded-3xl border border-border bg-card/60 p-4 sm:p-5">
           <div className="mb-4 flex items-center gap-2">
-            <div className="flex size-8 items-center justify-center rounded-xl bg-gold/10 text-gold">
+            <div className="flex size-8 items-center justify-center rounded-xl bg-gold/10 text-gold-deep">
               <Scale className="size-4" aria-hidden="true" />
             </div>
             <div>
@@ -140,7 +140,7 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
         <section className="rounded-3xl border border-border bg-card/60 p-4 sm:p-5">
           <div className="mb-4 flex items-start justify-between gap-3">
             <div className="flex min-w-0 items-start gap-2">
-              <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-gold/10 text-gold">
+              <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-gold/10 text-gold-deep">
                 <Target className="size-4" aria-hidden="true" />
               </div>
               <div>
@@ -148,7 +148,7 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
                 <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">Elige una ley habitual o escribe una específica.</p>
               </div>
             </div>
-            <span className="shrink-0 rounded-full border border-gold/25 bg-gold/10 px-2.5 py-1 text-[10px] font-bold text-gold">
+            <span className="shrink-0 rounded-full border border-gold/25 bg-gold/10 px-2.5 py-1 text-[10px] font-bold text-gold-deep">
               {final ? `${final}K · ${Math.round((Number(final) / 24) * 1000)}‰` : "—"}
             </span>
           </div>
@@ -160,7 +160,7 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
                 <button key={ley} type="button" onClick={() => { setLeyPersonalizada(false); setFinal(String(ley)); }} aria-pressed={seleccionado}
                   className={`relative h-11 rounded-2xl border text-sm font-semibold transition active:scale-[0.98] ${seleccionado ? "border-gold bg-gradient-to-b from-gold/25 to-gold/10 text-foreground shadow-[0_6px_18px_rgba(180,140,50,0.12)]" : "border-input bg-background text-muted-foreground hover:border-gold/60 hover:text-foreground"}`}>
                   {ley}K
-                  {seleccionado ? <Check className="absolute right-1.5 top-1.5 size-3 text-gold" aria-hidden="true" /> : null}
+                  {seleccionado ? <Check className="absolute right-1.5 top-1.5 size-3 text-gold-deep" aria-hidden="true" /> : null}
                 </button>
               );
             })}
@@ -184,7 +184,7 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
 
           {kiNum > 0 && kfNum > 0 ? (
             <div className="mt-3 flex items-center justify-center gap-2 text-[11px] font-medium text-muted-foreground">
-              <span>{kiNum}K</span><span className="text-gold">→</span><span className="text-foreground">{kfNum}K</span>
+              <span>{kiNum}K</span><span className="text-gold-deep">→</span><span className="text-foreground">{kfNum}K</span>
             </div>
           ) : null}
         </section>
@@ -193,7 +193,7 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
       <fieldset className="rounded-3xl border border-border bg-card/60 p-4 sm:p-5">
         <legend className="sr-only">Color de la aleación</legend>
         <div className="mb-4 flex items-center gap-2">
-          <div className="flex size-8 items-center justify-center rounded-xl bg-gold/10 text-gold">
+          <div className="flex size-8 items-center justify-center rounded-xl bg-gold/10 text-gold-deep">
             <Palette className="size-4" aria-hidden="true" />
           </div>
           <div>
@@ -218,7 +218,7 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
               >
                 <span className={`size-2.5 shrink-0 rounded-full ${c === "amarillo" ? "bg-[#d9ad35]" : c === "blanco" ? "bg-slate-200" : c === "rosa" ? "bg-[#d7967f]" : "bg-orange-500"}`} aria-hidden="true" />
                 {ETIQUETAS_COLOR[c]}
-                {seleccionado ? <Check className="size-3.5 text-gold" aria-hidden="true" /> : null}
+                {seleccionado ? <Check className="size-3.5 text-gold-deep" aria-hidden="true" /> : null}
               </button>
             );
           })}
@@ -228,7 +228,7 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
       {resultado ? (
         <div className="space-y-4">
           <article className="relative overflow-hidden rounded-[24px] border border-gold/40 bg-gradient-to-br from-gold/20 via-gold/8 to-transparent p-5 shadow-[0_14px_40px_rgba(180,140,50,0.12)]">
-            <div className="flex items-center justify-between gap-3"><p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gold">Aleación a agregar</p><Sparkles className="size-4 text-gold/70" aria-hidden="true" /></div>
+            <div className="flex items-center justify-between gap-3"><p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gold-deep">Aleación a agregar</p><Sparkles className="size-4 text-gold/70" aria-hidden="true" /></div>
             <p className="mt-2 text-3xl font-semibold leading-none text-foreground">
               {formatearNumero(resultado.aleacion)}{" "}
               <span className="ml-1 text-base font-medium text-muted-foreground">g</span>
@@ -236,7 +236,7 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
           </article>
 
           <div className="space-y-3">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gold">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gold-deep">
               Composición de la aleación · Oro {ETIQUETAS_COLOR[color]}
             </p>
             <div
@@ -268,7 +268,7 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
 
           <article className="relative overflow-hidden rounded-[24px] border border-gold/40 bg-gradient-to-br from-gold/20 via-gold/8 to-transparent p-5 shadow-[0_14px_40px_rgba(180,140,50,0.12)]">
             <div className="absolute inset-x-0 top-0 h-1 bg-gold" aria-hidden="true" />
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gold">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gold-deep">
               Resultado final
             </p>
             <div className="mt-3 flex flex-col gap-1 sm:flex-row sm:items-baseline sm:gap-3">
@@ -283,7 +283,7 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
               {formatearNumero(masaNum)} g de oro + {formatearNumero(resultado.aleacion)} g de aleación
             </p>
             <div className="mt-4 flex items-start gap-2 rounded-xl border border-gold/15 bg-background/40 p-3">
-              <Info className="mt-0.5 size-3.5 shrink-0 text-gold" aria-hidden="true" />
+              <Info className="mt-0.5 size-3.5 shrink-0 text-gold-deep" aria-hidden="true" />
               <p className="text-[11px] leading-relaxed text-muted-foreground">Resultado calculado con la receta configurada para esta aleación.</p>
             </div>
           </article>
