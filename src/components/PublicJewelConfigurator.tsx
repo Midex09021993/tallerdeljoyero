@@ -29,6 +29,7 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
   const [loadError, setLoadError] = useState<string | null>(null);
   const [catalogApi, setCatalogApi] = useState<AurumCatalogApi | null>(null);
   const [loadedModelUrl, setLoadedModelUrl] = useState<string | null>(null);
+  const [aplicacionEstado, setAplicacionEstado] = useState<string>("");
 
   useEffect(() => {
     let cancelled = false;
@@ -99,9 +100,23 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
   }, [modelUrl, modelName, catalogApi, loadedModelUrl]);
 
   useEffect(() => {
-    if (!catalogApi || loadedModelUrl !== modelUrl) return;
-    catalogApi.materialCatalogo?.(aurumMaterial);
-    catalogApi.gemaCatalogo?.(aurumGem);
+    if (!catalogApi || loadedModelUrl !== modelUrl) {
+      setAplicacionEstado("");
+      return;
+    }
+    const metalAplicado = catalogApi.materialCatalogo?.(aurumMaterial);
+    const gemaAplicada = catalogApi.gemaCatalogo?.(aurumGem);
+    if (metalAplicado === false && gemaAplicada === false) {
+      setAplicacionEstado("No se identificaron piezas de metal ni de gema compatibles en este modelo.");
+    } else if (metalAplicado === false) {
+      setAplicacionEstado("La gema se aplicó, pero no se identificaron piezas de metal para cambiar el acabado.");
+    } else if (gemaAplicada === false) {
+      setAplicacionEstado("El metal se aplicó, pero no se identificaron piezas de gema para cambiar la piedra.");
+    } else if (metalAplicado === true && gemaAplicada === true) {
+      setAplicacionEstado("Metal y gema aplicados al modelo 3D.");
+    } else {
+      setAplicacionEstado("No se pudo confirmar la aplicación de todos los cambios en el modelo.");
+    }
   }, [catalogApi, loadedModelUrl, modelUrl, aurumMaterial, aurumGem]);
 
   const handleMetalSelect = (id: string) => {
@@ -189,7 +204,8 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
                 <p className="truncate text-xs font-semibold text-[#342e26]">{selectedGem.label}</p>
               </div>
             </div>
-            <p className="mt-3 border-t border-[#eee6d8] pt-2 text-[10px] leading-4 text-[#746b62]">La apariencia final depende de la geometría y de las piezas identificadas en el modelo 3D.</p>
+            {aplicacionEstado && <p className={"mt-3 border-t border-[#eee6d8] pt-2 text-[10px] leading-4 " + (aplicacionEstado.startsWith("Metal y gema aplicados") ? "text-emerald-700" : "text-amber-700")} role="status">{aplicacionEstado}</p>}
+            <p className="mt-2 text-[10px] leading-4 text-[#746b62]">La apariencia final depende de la geometría y de las piezas identificadas en el modelo 3D.</p>
           </div>
         </aside>
       </div>
