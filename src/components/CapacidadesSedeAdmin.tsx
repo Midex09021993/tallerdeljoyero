@@ -9,7 +9,7 @@ type Especialidad = { id: string; nombre: string; categoria: string | null; acti
 type Relacion = { sede_id: string; especialidad_id: string };
 
 const CAPACIDADES_PRODUCCION = ["Diseño 3D", "Impresión 3D", "Casting", "Corte Láser", "Taller"] as const;
-const CAPACIDADES_COMERCIALES = ["Pedidos", "Cotizaciones", "Contratos", "Clientes", "Ventas", "Catálogo"] as const;
+const CAPACIDADES_COMERCIALES = ["Pedidos", "Cotizaciones", "Contratos", "Clientes", "Ventas", "Catálogo", "Cursos y formación"] as const;
 const CAPACIDADES_INVENTARIO = ["Inventario", "Compras"] as const;
 const CAPACIDADES_HERRAMIENTAS = ["Herramientas", "Mi nube"] as const;
 const CAPACIDADES_ADMINISTRACION = ["Migración"] as const;
