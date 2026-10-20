@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Copy, ExternalLink, Eye, EyeOff, GraduationCap, Save } from "lucide-react";
+import { Copy, ExternalLink, Eye, EyeOff, GraduationCap, Save, MessageCircle, Smartphone } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppShell, Panel } from "@/components/AppShell";
 import { useSesion } from "@/lib/auth";
@@ -102,6 +102,12 @@ function CursosFormacionPage() {
     }
   };
 
+  const compartirWhatsApp = () => {
+    if (!urlPublica) return;
+    const texto = `Te comparto nuestra propuesta de cursos y formación en joyería: ${urlPublica}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, "_blank", "noopener,noreferrer");
+  };
+
   if (!participanteId) {
     return <AppShell titulo="Cursos y formación" subtitulo="Página publicitaria de tu taller">
       <Panel titulo="Cuenta de taller requerida"><p className="p-5 text-sm text-muted-foreground">Esta sección necesita una cuenta vinculada a un participante del ecosistema.</p></Panel>
@@ -137,6 +143,7 @@ function CursosFormacionPage() {
                 <span className="min-w-0 flex-1 break-all text-sm">{urlPublica}</span>
                 <button type="button" onClick={() => void copiarEnlace()} className="inline-flex items-center gap-2 rounded-lg bg-gold px-3 py-2 text-sm font-semibold text-black"><Copy className="size-4" /> Copiar enlace</button>
                 <a href={urlPublica} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm"><ExternalLink className="size-4" /> Vista pública</a>
+                <button type="button" onClick={compartirWhatsApp} className="inline-flex items-center gap-2 rounded-lg border border-emerald-600/30 px-3 py-2 text-sm text-emerald-700 transition hover:bg-emerald-500/10"><MessageCircle className="size-4" /> Compartir WhatsApp</button>
               </div>}
             </section>
 
@@ -165,6 +172,25 @@ function CursosFormacionPage() {
                 </div>
               </Panel>
             </form>
+
+            <Panel titulo="Vista previa de la publicación">
+              <div className="overflow-hidden rounded-xl border border-gold/20 bg-gradient-to-br from-gold/10 via-card to-card">
+                {imagenUrl.trim() ? <img src={imagenUrl.trim()} alt="" className="max-h-72 w-full object-cover" /> : null}
+                <div className="p-5 sm:p-7">
+                  <div className="flex items-center gap-3">
+                    {config.logo_url ? <img src={config.logo_url} alt="" className="size-12 rounded-xl border border-border object-cover" /> : <div className="flex size-12 items-center justify-center rounded-xl border border-gold/25 bg-gold/10 text-gold-deep"><GraduationCap className="size-6" /></div>}
+                    <div className="min-w-0"><p className="text-xs font-semibold uppercase tracking-widest text-gold-deep">Cursos y formación</p><p className="font-semibold">{config.nombre_publico}</p></div>
+                  </div>
+                  <h3 className="mt-5 text-xl font-semibold sm:text-2xl">{titulo.trim() || "Aprende, crea y desarrolla tu talento joyero"}</h3>
+                  <p className="mt-3 whitespace-pre-line text-sm leading-6 text-muted-foreground">{descripcion.trim() || "Aquí aparecerá la descripción de tu propuesta formativa."}</p>
+                  <div className="mt-5 flex flex-wrap gap-2">
+                    {config.whatsapp ? <span className="inline-flex items-center gap-2 rounded-lg bg-gold px-3 py-2 text-sm font-semibold text-black"><MessageCircle className="size-4" /> Solicitar información</span> : null}
+                    <span className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm"><Smartphone className="size-4" /> Recursos para estudiantes</span>
+                  </div>
+                  <p className="mt-4 text-xs text-muted-foreground">Vista previa: los cambios se reflejan en la página pública después de guardar.</p>
+                </div>
+              </div>
+            </Panel>
           </>
         )}
       </div>
