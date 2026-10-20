@@ -1,4 +1,5 @@
 import type { ComponentType } from 'react'
+import { ContactoAdminEmail, ContactoVisitanteEmail } from './contacto-comercial'
 
 export interface TemplateEntry {
   component: ComponentType<Record<string, unknown>>
@@ -18,6 +19,19 @@ export interface TemplateEntry {
  *   // then add to TEMPLATES: 'welcome': welcomeTemplate
  */
 export const TEMPLATES: Record<string, TemplateEntry> = {
+  'contacto-admin': {
+    component: ContactoAdminEmail,
+    subject: (data) => `Nueva consulta web: ${String(data.nombre || 'visitante')}`,
+    displayName: 'Nueva consulta comercial',
+    to: 'mgld_09@hotmail.com',
+    previewData: { nombre: 'María', email: 'maria@example.com', interes: 'aurum_lab', mensaje: 'Quisiera conocer más información.' },
+  },
+  'contacto-visitante': {
+    component: ContactoVisitanteEmail,
+    subject: 'Hemos recibido tu consulta | Taller del Joyero',
+    displayName: 'Confirmación de consulta comercial',
+    previewData: { nombre: 'María', interes: 'aurum_lab' },
+  },
   // Add templates here as they are created, e.g.:
   // 'welcome': welcomeTemplate,
 }
