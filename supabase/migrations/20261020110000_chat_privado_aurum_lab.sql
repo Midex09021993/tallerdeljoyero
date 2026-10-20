@@ -38,7 +38,9 @@ revoke all on public.chat_conversaciones from anon, public;
 revoke all on public.chat_conversacion_miembros from anon, public;
 revoke all on public.chat_mensajes from anon, public;
 grant select on public.chat_conversaciones to authenticated;
-grant select, update on public.chat_conversacion_miembros to authenticated;
+grant select on public.chat_conversacion_miembros to authenticated;
+revoke update on public.chat_conversacion_miembros from authenticated;
+grant update (ultimo_leido_at) on public.chat_conversacion_miembros to authenticated;
 grant select, insert on public.chat_mensajes to authenticated;
 
 drop policy if exists chat_conversaciones_leer_miembro on public.chat_conversaciones;
@@ -184,13 +186,7 @@ drop policy if exists chat_miembros_actualizar_lectura_propia on public.chat_con
 create policy chat_miembros_actualizar_lectura_propia on public.chat_conversacion_miembros
 for update to authenticated
 using (user_id = (select auth.uid()))
-with check (
-  user_id = (select auth.uid())
-  and conversacion_id in (
-    select m.conversacion_id from public.chat_conversacion_miembros m
-    where m.user_id = (select auth.uid())
-  )
-);
+with check (user_id = (select auth.uid()));
 
 -- Realtime necesita que mensajes esté en la publicación de cambios; hacerlo condicional evita fallar si ya está añadida.
 do $$
