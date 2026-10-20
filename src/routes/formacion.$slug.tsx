@@ -5,20 +5,39 @@ import { useQuery } from "@tanstack/react-query";
 import { supabasePublic } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/formacion/$slug")({
-  head: ({ params }) => ({
-    meta: [
-      { title: "Cursos y formación | Taller del Joyero" },
-      { name: "description", content: "Conoce cursos y propuestas formativas para la comunidad joyera. Explora herramientas digitales y contacta con el taller." },
-      { name: "robots", content: "index, follow" },
-      { property: "og:title", content: "Cursos y formación | Taller del Joyero" },
-      { property: "og:description", content: "Conoce cursos y propuestas formativas para la comunidad joyera. Explora herramientas digitales y contacta con el taller." },
-      { property: "og:type", content: "website" },
-      { property: "og:url", content: `https://www.tallerdeljoyero.com/formacion/${params.slug}` },
-      { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Cursos y formación | Taller del Joyero" },
-      { name: "twitter:description", content: "Conoce cursos y propuestas formativas para la comunidad joyera." },
-    ],
-  }),
+  loader: async ({ params }) => {
+    const { data, error } = await supabasePublic.rpc(
+      "obtener_publicidad_formacion" as never,
+      { _slug: params.slug } as never,
+    );
+    if (error) return null;
+    const result = data as unknown as Publicacion | Publicacion[] | null;
+    return Array.isArray(result) ? result[0] ?? null : result;
+  },
+  head: ({ params, loaderData }) => {
+    const publicacion = loaderData as Publicacion | null | undefined;
+    const titulo = publicacion?.formacion_titulo?.trim() || "Cursos y formación";
+    const descripcion = publicacion?.formacion_descripcion?.trim()
+      || "Conoce cursos y propuestas formativas para la comunidad joyera.";
+    const imagen = publicacion?.formacion_imagen_url || publicacion?.logo_url;
+    const url = `https://www.tallerdeljoyero.com/formacion/${params.slug}`;
+    return {
+      meta: [
+        { title: `${titulo} | ${publicacion?.nombre_publico || "Taller del Joyero"}` },
+        { name: "description", content: descripcion },
+        { name: "robots", content: "index, follow" },
+        { property: "og:title", content: `${titulo} | ${publicacion?.nombre_publico || "Taller del Joyero"}` },
+        { property: "og:description", content: descripcion },
+        { property: "og:type", content: "website" },
+        { property: "og:url", content: url },
+        ...(imagen ? [{ property: "og:image", content: imagen }, { property: "og:image:alt", content: titulo }] : []),
+        { name: "twitter:card", content: imagen ? "summary_large_image" : "summary" },
+        { name: "twitter:title", content: `${titulo} | ${publicacion?.nombre_publico || "Taller del Joyero"}` },
+        { name: "twitter:description", content: descripcion },
+        ...(imagen ? [{ name: "twitter:image", content: imagen }] : []),
+      ],
+    };
+  },
   component: PublicidadFormacionPage,
 });
 
