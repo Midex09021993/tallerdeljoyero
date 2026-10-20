@@ -6,6 +6,7 @@ import {
   Gauge,
   Hammer,
   Landmark,
+  MessageCircle,
   LayoutDashboard,
   LayoutGrid,
   PackageCheck,
@@ -48,6 +49,7 @@ type Seccion = {
     | "/monitor"
     | "/operario"
     | "/perfil"
+    | "/mensajes"
     | "/aurum-render"
     | "/herramientas"
     | "/mi-nube"
@@ -66,6 +68,7 @@ type AtrasMovil = false | { to?: string; onClick?: () => void };
 
 const secciones: Seccion[] = [
   { to: "/inicio", label: "Inicio", roles: ["dueno", "gerente"], icono: LayoutDashboard, grupo: "principal" },
+  { to: "/mensajes", label: "Mensajes", icono: MessageCircle, grupo: "principal" },
   { to: "/operario", label: "Mi trabajo", roles: ["operario"], icono: LayoutDashboard, grupo: "principal" },
   { to: "/pedidos", label: "Pedidos", area: "Pedidos", icono: ClipboardList, grupo: "comercial" },
   { to: "/cotizaciones", label: "Cotizaciones", icono: ClipboardList, grupo: "comercial" },
@@ -206,7 +209,7 @@ function seccionesVisibles(
     | undefined,
 ): Seccion[] {
   if (!roles) return [];
-  if (roles.includes("monitor")) return secciones.filter((s) => s.to === "/monitor");
+  if (roles.includes("monitor")) return secciones.filter((s) => s.to === "/monitor" || s.to === "/mensajes");
   // El monitor no es un área: solo es visible para usuarios con rol "monitor".
   if (esAdmin) {
     if (!capacidades) return secciones.filter((s) => !["/monitor", "/operario", "/perfil"].includes(s.to));
@@ -238,6 +241,7 @@ function seccionesVisibles(
   const inicio = secciones.filter(
     (s) =>
       s.to === "/operario" ||
+      s.to === "/mensajes" ||
       (s.to === "/servicios-externos" && Boolean(modalidades?.serviciosExternosActivos)),
   );
   const perfil = secciones.filter((s) => s.to === "/perfil");
