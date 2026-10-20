@@ -402,8 +402,8 @@ export function VisorPesoJoyeria({ compacto = false, archivoInicial = null }: { 
       <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <Boxes className="size-4 text-gold" aria-hidden="true" />
-            <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gold">
+            <Boxes className="size-4 text-gold-deep" aria-hidden="true" />
+            <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gold-deep">
               Visualizador y peso 3D
             </span>
           </div>
@@ -439,7 +439,7 @@ export function VisorPesoJoyeria({ compacto = false, archivoInicial = null }: { 
           <button
             type="button"
             onClick={() => api.current?.reset()}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-viewer/70 text-viewer-foreground/80 backdrop-blur transition hover:text-gold"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-viewer/70 text-viewer-foreground/80 backdrop-blur transition hover:text-gold-deep"
             aria-label="Reencuadrar cámara"
           >
             <RotateCcw className="size-4" aria-hidden="true" />
@@ -547,7 +547,7 @@ export function VisorPesoJoyeria({ compacto = false, archivoInicial = null }: { 
               Introduce el peso adicional real de esta fabricación: tronco, ramas y botón/reservorio.
             </p>
           </div>
-          <span className="rounded-full bg-accent px-2.5 py-1 text-[10px] font-semibold text-gold">{empujeEsPorcentaje ? "%" : "g"}</span>
+          <span className="rounded-full bg-accent px-2.5 py-1 text-[10px] font-semibold text-gold-deep">{empujeEsPorcentaje ? "%" : "g"}</span>
         </div>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <label className="space-y-1.5">
@@ -566,7 +566,7 @@ export function VisorPesoJoyeria({ compacto = false, archivoInicial = null }: { 
           <article className="relative overflow-hidden rounded-3xl border border-gold/35 bg-gradient-to-br from-accent via-card to-card p-5 shadow-card sm:p-6">
             <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold">
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold-deep">
                   Peso final estimado
                 </p>
                 <p className="mt-2 text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
