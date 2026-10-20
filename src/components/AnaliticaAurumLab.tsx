@@ -9,6 +9,7 @@ type AnalyticsSummary = {
   total_eventos: number;
   sesiones: number;
   eventos: Record<string, number>;
+  herramientas: Array<{ tool_id: string; eventos: number }>;
   diario: Array<{ fecha: string; eventos: number; sesiones: number }>;
 };
 
@@ -106,6 +107,31 @@ export function AnaliticaAurumLab() {
               <div className="grid gap-3 p-5 sm:grid-cols-2">
                 <Conversion label="Visita → solicitud" value={conversionSolicitud + "%"} detail={`${solicitudes} solicitudes enviadas`} />
                 <Conversion label="Visita → acceso" value={conversionLogin + "%"} detail={`${logins} accesos completados`} />
+              </div>
+            </Panel>
+
+            <Panel titulo="Herramientas más abiertas">
+              <div className="divide-y divide-border">
+                {(data.herramientas ?? []).length === 0 ? (
+                  <p className="p-5 text-sm text-muted-foreground">Aún no hay aperturas de herramientas del catálogo registradas.</p>
+                ) : (
+                  data.herramientas.map((item) => {
+                    const nombres: Record<string, string> = {
+                      yeso: "Yeso / Agua",
+                      oro: "Aleación de oro",
+                      tallas: "Conversor de tallas",
+                      peso: "Visualizador y peso 3D",
+                      gemas: "Peso de gemas",
+                      stl: "Generador STL con IA",
+                    };
+                    return (
+                      <div key={item.tool_id} className="flex items-center justify-between gap-3 px-5 py-3">
+                        <span className="text-xs">{nombres[item.tool_id] ?? item.tool_id}</span>
+                        <span className="text-xs font-semibold tabular-nums">{item.eventos}</span>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </Panel>
 
