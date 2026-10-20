@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Check, Copy, ExternalLink, Eye, EyeOff, GraduationCap, Save, Share2 } from "lucide-react";
+import { Copy, ExternalLink, Eye, EyeOff, GraduationCap, Save } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppShell, Panel } from "@/components/AppShell";
 import { useSesion } from "@/lib/auth";
@@ -84,7 +84,7 @@ function CursosFormacionPage() {
         .eq("participante_id", participanteId);
       if (error) throw error;
       await queryClient.invalidateQueries({ queryKey: ["formacion-publicidad-config", participanteId] });
-      setMensaje(visible ? "Publicidad guardada. La página estará disponible cuando el SQL esté aplicado." : "Configuración guardada. La publicidad está desactivada.");
+      setMensaje(visible ? "Configuración guardada. Abre Vista pública para comprobar que el enlace ya muestra tu publicación." : "Configuración guardada. La publicidad está desactivada y el enlace público permanecerá oculto.");
     } catch (error) {
       setMensaje(error instanceof Error ? error.message : "No se pudo guardar. Comprueba que hayas aplicado el SQL de publicidad formativa.");
     } finally {
