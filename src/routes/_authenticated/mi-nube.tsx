@@ -628,7 +628,7 @@ function MiNubePage() {
       // Solo cargar metadatos de las carpetas compartidas al entrar en Mi Nube.
       // El contenido de Storage y las URLs firmadas se solicitan al abrir cada carpeta.
       const recibidasNormalizadas = recibidas ?? [];
-      setCarpetasRecibidas(recibidasNormalizadas.map((share) => ({
+      const carpetasIniciales: CarpetaRecibida[] = recibidasNormalizadas.map((share) => ({
         id: share.id,
         nombre: share.carpeta,
         propietarioNombre: nombresPropietarios.get(share.propietario_participante_id) ?? "Taller del ecosistema",
@@ -637,7 +637,38 @@ function MiNubePage() {
         portada: null,
         archivosCargados: false,
         cargandoArchivos: false,
-      })));
+      }));
+      setCarpetasRecibidas(carpetasIniciales);
+
+      // Cargar únicamente la portada de cada carpeta compartida.
+      // El resto de archivos continúa bajo demanda para no cargar toda la nube.
+      void Promise.all(carpetasIniciales.map(async (carpeta) => {
+        try {
+          const { data: entradas, error: listaError } = await supabase.storage.from(BUCKET).list(carpeta.ruta, {
+            limit: 1000,
+            sortBy: { column: "name", order: "asc" },
+          });
+          if (listaError) throw listaError;
+          const primeraFoto = (entradas ?? []).find((entrada) =>
+            Boolean(entrada.name)
+            && !entrada.name.endsWith("/")
+            && clasificarArchivo(entrada.name) === "fotos"
+            && Boolean(entrada.id || entrada.metadata || entrada.name.includes(".")),
+          );
+          if (!primeraFoto) return;
+          const rutaPortada = `${carpeta.ruta}/${primeraFoto.name}`;
+          const { data: urlFirmada, error: errorFirma } = await supabase.storage.from(BUCKET).createSignedUrl(rutaPortada, 60 * 60);
+          if (errorFirma || !urlFirmada?.signedUrl) throw errorFirma ?? new Error("No se pudo generar la URL de portada.");
+          setCarpetasRecibidas((actuales) => actuales.map((actual) =>
+            actual.id === carpeta.id ? { ...actual, portada: urlFirmada.signedUrl } : actual,
+          ));
+        } catch (cause) {
+          console.warn("[Mi Nube] No se pudo cargar la portada de una carpeta compartida.", {
+            carpeta: carpeta.nombre,
+            error: cause instanceof Error ? cause.message : String(cause),
+          });
+        }
+      }));
     } catch (cause) {
       toast.error(cause instanceof Error ? cause.message : "No se pudieron cargar las carpetas compartidas.");
     } finally {
