@@ -102,6 +102,17 @@ function HerramientasPublicasPage() {
           </p>
         </section>
 
+        <section className="mb-8 rounded-2xl border border-[#d8bd7b]/25 bg-[#d8bd7b]/[.055] p-5 sm:flex sm:items-center sm:justify-between sm:gap-6 sm:p-6">
+          <div className="max-w-2xl">
+            <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#d8bd7b]">Formación en joyería</p>
+            <h2 className="mt-2 text-xl font-semibold text-white">¿Estás aprendiendo Diseño 3D para Joyería?</h2>
+            <p className="mt-2 text-sm leading-6 text-white/55">Explora recursos y herramientas digitales que pueden acompañarte en tus prácticas y proyectos.</p>
+          </div>
+          <Link to="/cursos-diseno-3d" className="mt-4 inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#d8bd7b] px-4 text-sm font-semibold text-[#17140d] transition hover:bg-[#e5ca8a] sm:mt-0">
+            Recursos para estudiantes <ArrowRight className="size-4" />
+          </Link>
+        </section>
+
         <section aria-label="Catálogo de herramientas" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {herramientas.map(({ id, ruta, titulo, descripcion, Icono }) => (
             <Link
