@@ -213,7 +213,7 @@ language sql
 stable
 security definer
 set search_path = public
-as $
+as $$
   select
     conv.id,
     otro.user_id,
@@ -253,7 +253,7 @@ as $
   ) ultimo on true
   where auth.uid() is not null
   order by coalesce(ultimo.created_at, conv.updated_at, conv.created_at) desc;
-$;
+$$;
 revoke all on function public.chat_resumen_conversaciones() from public, anon;
 grant execute on function public.chat_resumen_conversaciones() to authenticated;
 
