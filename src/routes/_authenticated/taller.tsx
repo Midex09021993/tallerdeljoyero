@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Calculator, Droplets, RotateCcw, Check } from "lucide-react";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { AppShell, Panel, StatCard } from "@/components/AppShell";
 import { PedidosArea } from "@/components/PedidosArea";
 import { usePedidosDeArea } from "@/hooks/use-pedidos-area";
@@ -9,6 +9,7 @@ import { useConfigSistema } from "@/lib/taller-db";
 import { useSesion } from "@/lib/auth";
 import { CLAVES_CALCULADORAS, calcularMezclaYeso, leerConfigYeso } from "@/lib/calculadoras-config";
 import { FichaCilindrosTallerA4, type CilindroFicha } from "@/components/FichaCilindrosTallerA4";
+import { registrarEvento } from "@/lib/analytics";
 
 export const Route = createFileRoute("/_authenticated/taller")({
   head: () => ({
@@ -196,6 +197,23 @@ const [precisionResultados, setPrecisionResultados] = useState<0 | 1 | 2>(0);
   }, [tipoTarro, configuracion.tolerancias, volumenBase]);
 
   const medidasCompletas = validarMedida(diametro) && validarMedida(altura) && volumenBase > 0;
+
+  const inicioAnalitica = useRef(false);
+  const resultadoAnalitica = useRef(false);
+  useEffect(() => {
+    if (diametro.trim() && altura.trim() && !inicioAnalitica.current) {
+      inicioAnalitica.current = true;
+      registrarEvento("tool_started", { tool_id: "yeso" });
+    }
+  }, [diametro, altura]);
+  useEffect(() => {
+    if (medidasCompletas && !resultadoAnalitica.current) {
+      resultadoAnalitica.current = true;
+      registrarEvento("tool_completed", { tool_id: "yeso" });
+    } else if (!medidasCompletas) {
+      resultadoAnalitica.current = false;
+    }
+  }, [medidasCompletas]);
   const limpiar = () => {
     setDiametro("");
     setAltura("");
