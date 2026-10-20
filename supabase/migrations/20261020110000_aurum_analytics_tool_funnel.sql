@@ -3,10 +3,7 @@
 -- No cambia RLS ni permisos; amplía únicamente los nombres de evento permitidos.
 
 ALTER TABLE public.aurum_analytics_events
-  DROP CONSTRAINT IF EXISTS aurum_analytics_events_event_name_check;
-
-ALTER TABLE public.aurum_analytics_events
-  ADD CONSTRAINT aurum_analytics_events_event_name_check
+  ADD CONSTRAINT aurum_analytics_events_event_name_funnel_check
   CHECK (
     event_name IN (
       'page_view',
@@ -25,6 +22,9 @@ ALTER TABLE public.aurum_analytics_events
     )
   );
 
-COMMENT ON CONSTRAINT aurum_analytics_events_event_name_check
+ALTER TABLE public.aurum_analytics_events
+  DROP CONSTRAINT IF EXISTS aurum_analytics_events_event_name_check;
+
+COMMENT ON CONSTRAINT aurum_analytics_events_event_name_funnel_check
 ON public.aurum_analytics_events
 IS 'Eventos permitidos para la analítica agregada de Aurum Lab.';
