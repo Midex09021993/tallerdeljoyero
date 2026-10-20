@@ -206,7 +206,9 @@ function MensajesPage() {
                     <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-gold/20 text-sm font-bold text-gold-deep">{persona.nombre_persona.charAt(0).toUpperCase()}</span>
                     <span className="min-w-0"><span className="block truncate text-sm font-semibold">{persona.nombre_persona}</span><span className="block truncate text-xs text-muted-foreground">{persona.nombre_taller}</span><span className="block text-[11px] text-muted-foreground">{rolEtiqueta[persona.rol] ?? persona.rol}</span></span>
                   </button>)}
-                  {!directorio.isLoading && contactos.length === 0 ? <p className="p-3 text-sm text-muted-foreground">No hay participantes que coincidan con la búsqueda.</p> : null}
+                  {directorio.isLoading ? <p className="p-3 text-sm text-muted-foreground">Cargando participantes…</p> : null}
+                  {directorio.isError ? <div className="p-3"><p className="text-sm text-destructive">No se pudo cargar el directorio.</p><p className="mt-1 break-words text-xs text-muted-foreground">{directorio.error instanceof Error ? directorio.error.message : "Error desconocido."}</p><button type="button" onClick={() => void directorio.refetch()} className="mt-2 rounded-lg border bg-card px-3 py-2 text-xs font-semibold">Reintentar</button></div> : null}
+                  {!directorio.isLoading && !directorio.isError && contactos.length === 0 ? <p className="p-3 text-sm text-muted-foreground">No hay participantes que coincidan con la búsqueda.</p> : null}
                 </div>
               </div>
             ) : null}
@@ -216,7 +218,8 @@ function MensajesPage() {
                 <span className="min-w-0 flex-1"><span className="flex items-center justify-between gap-2"><span className="truncate text-sm font-semibold">{chat.nombre_persona}</span>{Number(chat.no_leidos) > 0 ? <span className="flex min-w-5 items-center justify-center rounded-full bg-gold px-1.5 py-0.5 text-[10px] font-bold text-ink">{chat.no_leidos}</span> : null}</span><span className="block truncate text-xs text-muted-foreground">{chat.nombre_taller ?? "Participante del ecosistema"}</span><span className="mt-1 block truncate text-xs text-muted-foreground">{chat.ultimo_mensaje ?? "Inicia la conversación"}</span></span>
               </button>)}
               {conversaciones.isLoading ? <p className="p-4 text-sm text-muted-foreground">Cargando conversaciones…</p> : null}
-              {!conversaciones.isLoading && chats.length === 0 && !mostrarDirectorio ? <div className="px-5 py-10 text-center"><Users className="mx-auto size-8 text-muted-foreground/50" /><p className="mt-3 text-sm font-medium">Todavía no tienes chats</p><p className="mt-1 text-xs text-muted-foreground">Pulsa “Nuevo chat” para contactar a un taller.</p></div> : null}
+              {conversaciones.isError ? <div className="m-3 rounded-xl border border-destructive/30 bg-destructive/5 p-3"><p className="text-sm font-medium">No se pudieron cargar las conversaciones.</p><p className="mt-1 break-words text-xs text-muted-foreground">{conversaciones.error instanceof Error ? conversaciones.error.message : "Error desconocido al consultar el chat."}</p><button type="button" onClick={() => void conversaciones.refetch()} className="mt-3 rounded-lg border bg-card px-3 py-2 text-xs font-semibold hover:bg-accent">Reintentar</button></div> : null}
+              {!conversaciones.isLoading && !conversaciones.isError && chats.length === 0 && !mostrarDirectorio ? <div className="px-5 py-10 text-center"><Users className="mx-auto size-8 text-muted-foreground/50" /><p className="mt-3 text-sm font-medium">Todavía no tienes chats</p><p className="mt-1 text-xs text-muted-foreground">Pulsa “Nuevo chat” para contactar a un taller.</p></div> : null}
             </div>
           </aside>
 
