@@ -255,8 +255,10 @@ export async function parseAurumInput(file: File, ext: string, fallbackMaterial:
     // STL has no up-axis metadata. Correct only a clearly thin Y-axis model.
     const yIsClearlyThin = size.y > 0 && size.y < size.x * 0.65 && size.y < size.z * 0.65;
     if (yIsClearlyThin) {
-      model.rotation.x = Math.PI / 2;
-      model.userData.aurumStlOrientation = "heuristic-xz-to-xy";
+      // Convert a flat XZ ring into an upright XY-facing presentation, then
+      // flip the ring 180 degrees in its own plane so the setting faces up.
+      model.rotation.set(Math.PI / 2, 0, Math.PI);
+      model.userData.aurumStlOrientation = "heuristic-upright-setting-up";
     } else {
       model.userData.aurumStlOrientation = "unchanged";
     }
