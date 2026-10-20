@@ -185,11 +185,15 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
             <p className="mt-0.5 hidden text-xs text-[#8a8175] sm:block">Selecciona una gema</p>
             <div className="mt-2 grid grid-cols-3 gap-1 sm:grid-cols-2 sm:gap-1.5 md:grid-cols-1 [@media(max-height:800px)]:mt-1">{gemas.map((gem) => <button key={gem.id} type="button" aria-pressed={gemaId === gem.id} onClick={() => setGemaId(gem.id)} className={"flex min-h-9 w-full items-center gap-1.5 rounded-lg border px-2 py-1.5 text-left text-[11px] transition sm:min-h-10 sm:gap-2 sm:rounded-xl sm:px-2.5 sm:py-2 sm:text-xs [@media(max-height:800px)]:min-h-8 [@media(max-height:800px)]:py-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45] focus-visible:ring-offset-1 " + (gemaId === gem.id ? "border-[#a7833d] bg-[#f7f0e2] text-[#342e26]" : "border-[#ece7df] bg-white text-[#5f574d] hover:border-[#d1bd96] hover:bg-[#fcfaf5]")}><span className="size-3 shrink-0 rounded-full border border-black/10 sm:size-3.5" style={{ backgroundColor: "#" + gem.color.toString(16).padStart(6,"0") }} /><span className="min-w-0 flex-1 truncate font-medium">{gem.label}</span>{gemaId === gem.id && <span className="text-[9px] font-bold uppercase tracking-wide text-[#8b6b36]">Activo</span>}</button>)}</div>
           </div>
-          <div className="mt-2.5 rounded-lg border border-[#eee6d8] bg-[linear-gradient(135deg,#fcfaf6_0%,#fffdf9_100%)] p-2.5 sm:mt-4 sm:rounded-xl sm:p-3 [@media(max-height:800px)]:mt-2 [@media(max-height:800px)]:p-2.5" aria-live="polite">
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-[10px] font-bold uppercase tracking-[.14em] text-[#92702f]">Tu combinación</p>
-              <span className="rounded-full bg-[#f2ead9] px-2 py-1 text-[9px] font-semibold text-[#85672f]">Vista previa</span>
-            </div>
+          <details className="mt-2.5 rounded-lg border border-[#eee6d8] bg-[linear-gradient(135deg,#fcfaf6_0%,#fffdf9_100%)] p-2.5 sm:mt-4 sm:rounded-xl sm:p-3 [@media(max-height:800px)]:mt-2 [@media(max-height:800px)]:p-2.5" aria-live="polite">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 text-xs font-semibold text-[#6f572d] [&::-webkit-details-marker]:hidden">
+              <span className="truncate">Tu combinación</span>
+              <span className="flex shrink-0 items-center gap-1.5">
+                <span className="size-3 rounded-full border border-black/10" style={{ backgroundColor: "#" + selectedMetal.color.toString(16).padStart(6, "0") }} />
+                <span className="size-3 rounded-full border border-black/10" style={{ backgroundColor: "#" + selectedGem.color.toString(16).padStart(6, "0") }} />
+                <span className="text-[10px]">Detalles⌄</span>
+              </span>
+            </summary>
             <div className="mt-2 flex items-center gap-2 sm:mt-3 sm:gap-2.5">
               <span className="size-5 shrink-0 rounded-full border border-black/10 shadow-sm sm:size-7" style={{ backgroundColor: "#" + selectedMetal.color.toString(16).padStart(6, "0") }} />
               <div className="min-w-0">
@@ -206,7 +210,7 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
             </div>
             {aplicacionEstado && <p className={"mt-3 border-t border-[#eee6d8] pt-2 text-[10px] leading-4 " + (aplicacionEstado.startsWith("Metal y gema aplicados") ? "text-emerald-700" : "text-amber-700")} role="status">{aplicacionEstado}</p>}
             <p className="mt-2 hidden text-[10px] leading-4 text-[#746b62] sm:block">La apariencia final depende de la geometría y de las piezas identificadas en el modelo 3D.</p>
-          </div>
+          </details>
         </aside>
       </div>
       <footer className="hidden border-t border-[#eee9e0] bg-[#fdfcf9] px-4 py-2 text-[10px] leading-4 text-[#8a8175] md:flex md:items-center md:justify-between">
