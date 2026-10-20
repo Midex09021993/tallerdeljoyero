@@ -293,4 +293,101 @@ with check (
   )
 );
 
+
+-- Revalida pertenencia activa también en cada lectura/escritura; revocar un taller
+-- corta el acceso al chat existente, no sólo la creación de conversaciones nuevas.
+drop policy if exists chat_conversaciones_leer_miembro on public.chat_conversaciones;
+create policy chat_conversaciones_leer_miembro on public.chat_conversaciones
+for select to authenticated
+using (
+  exists (
+  select 1
+  from public.participante_cuentas pc
+  join public.ecosistema_participantes ep on ep.id = pc.participante_id
+  join public.user_roles ur on ur.user_id = pc.user_id
+  where pc.user_id = (select auth.uid())
+    and pc.estado = 'activo'
+    and ep.estado = 'activo'
+)
+  and exists (
+    select 1 from public.chat_conversacion_miembros m
+    where m.conversacion_id = chat_conversaciones.id and m.user_id = (select auth.uid())
+  )
+);
+
+drop policy if exists chat_miembros_leer_misma_conversacion on public.chat_conversacion_miembros;
+create policy chat_miembros_leer_misma_conversacion on public.chat_conversacion_miembros
+for select to authenticated
+using (user_id = (select auth.uid()) and exists (
+  select 1
+  from public.participante_cuentas pc
+  join public.ecosistema_participantes ep on ep.id = pc.participante_id
+  join public.user_roles ur on ur.user_id = pc.user_id
+  where pc.user_id = (select auth.uid())
+    and pc.estado = 'activo'
+    and ep.estado = 'activo'
+));
+
+drop policy if exists chat_miembros_actualizar_lectura_propia on public.chat_conversacion_miembros;
+create policy chat_miembros_actualizar_lectura_propia on public.chat_conversacion_miembros
+for update to authenticated
+using (user_id = (select auth.uid()) and exists (
+  select 1
+  from public.participante_cuentas pc
+  join public.ecosistema_participantes ep on ep.id = pc.participante_id
+  join public.user_roles ur on ur.user_id = pc.user_id
+  where pc.user_id = (select auth.uid())
+    and pc.estado = 'activo'
+    and ep.estado = 'activo'
+))
+with check (user_id = (select auth.uid()) and exists (
+  select 1
+  from public.participante_cuentas pc
+  join public.ecosistema_participantes ep on ep.id = pc.participante_id
+  join public.user_roles ur on ur.user_id = pc.user_id
+  where pc.user_id = (select auth.uid())
+    and pc.estado = 'activo'
+    and ep.estado = 'activo'
+));
+
+drop policy if exists chat_mensajes_leer_miembro on public.chat_mensajes;
+create policy chat_mensajes_leer_miembro on public.chat_mensajes
+for select to authenticated
+using (
+  exists (
+  select 1
+  from public.participante_cuentas pc
+  join public.ecosistema_participantes ep on ep.id = pc.participante_id
+  join public.user_roles ur on ur.user_id = pc.user_id
+  where pc.user_id = (select auth.uid())
+    and pc.estado = 'activo'
+    and ep.estado = 'activo'
+)
+  and exists (
+    select 1 from public.chat_conversacion_miembros m
+    where m.conversacion_id = chat_mensajes.conversacion_id and m.user_id = (select auth.uid())
+  )
+);
+
+drop policy if exists chat_mensajes_enviar_como_remitente on public.chat_mensajes;
+create policy chat_mensajes_enviar_como_remitente on public.chat_mensajes
+for insert to authenticated
+with check (
+  exists (
+  select 1
+  from public.participante_cuentas pc
+  join public.ecosistema_participantes ep on ep.id = pc.participante_id
+  join public.user_roles ur on ur.user_id = pc.user_id
+  where pc.user_id = (select auth.uid())
+    and pc.estado = 'activo'
+    and ep.estado = 'activo'
+)
+  and remitente_id = (select auth.uid())
+  and char_length(btrim(contenido)) between 1 and 4000
+  and exists (
+    select 1 from public.chat_conversacion_miembros m
+    where m.conversacion_id = chat_mensajes.conversacion_id and m.user_id = (select auth.uid())
+  )
+);
+
 commit;
