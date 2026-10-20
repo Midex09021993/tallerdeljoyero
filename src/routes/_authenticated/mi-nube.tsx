@@ -1086,13 +1086,39 @@ function MiNubePage() {
 
       const { data: entradas, error: errorLista } = await supabase.storage.from(BUCKET).list(raizAnterior, { limit: 1000, sortBy: { column: "name", order: "asc" } });
       if (errorLista) throw new Error("No se pudo verificar el contenido de la carpeta. No se cambió el nombre.");
-      const archivosWeb = (entradas ?? []).filter((entrada) => Boolean(entrada.id || entrada.metadata || entrada.name.includes(".")));
+      // Solo mover objetos reales. Una carpeta puede contener un punto en el nombre
+      // sin ser un archivo; el fallback por extensión provocaba falsos positivos.
+      const archivosWeb = (entradas ?? []).filter((entrada) => Boolean(entrada.id || entrada.metadata));
       for (const entrada of archivosWeb) {
         const origen = `${raizAnterior}/${entrada.name}`;
         const destino = `${raizNueva}/${entrada.name}`;
         const { error: moveError } = await supabase.storage.from(BUCKET).move(origen, destino);
-        if (moveError) throw new Error(`No se pudo mover “${entrada.name}”: ${moveError.message}`);
-        movidos.push({ origen, destino });
+        if (!moveError) {
+          movidos.push({ origen, destino });
+          continue;
+        }
+
+        // Si el origen desapareció entre el listado y el movimiento, comprobar si
+        // ya quedó en destino antes de decidir si la operación debe revertirse.
+        if (/object not found|not found|404/i.test(moveError.message)) {
+          const [{ data: origenActual, error: errorOrigenActual }, { data: destinoActual, error: errorDestinoActual }] = await Promise.all([
+            supabase.storage.from(BUCKET).list(raizAnterior, { limit: 1000 }),
+            supabase.storage.from(BUCKET).list(raizNueva, { limit: 1000 }),
+          ]);
+          if (errorOrigenActual || errorDestinoActual) {
+            throw new Error(`No se pudo verificar el estado de “${entrada.name}” tras el movimiento fallido. No vuelvas a intentarlo hasta revisar la carpeta.`);
+          }
+          const sigueEnOrigen = (origenActual ?? []).some((item) => item.name === entrada.name && Boolean(item.id || item.metadata));
+          const yaEstaEnDestino = (destinoActual ?? []).some((item) => item.name === entrada.name && Boolean(item.id || item.metadata));
+          if (!sigueEnOrigen && yaEstaEnDestino) {
+            movidos.push({ origen, destino });
+            continue;
+          }
+          if (!sigueEnOrigen && !yaEstaEnDestino) {
+            throw new Error(`El archivo “${entrada.name}” ya no aparece ni en el origen ni en el destino. No se completó el renombrado; revisa la carpeta antes de volver a intentarlo.`);
+          }
+        }
+        throw new Error(`No se pudo mover “${entrada.name}”: ${moveError.message}`);
       }
 
       if (!nasNoVerificado && videosDeCarpeta.length > 0) {
