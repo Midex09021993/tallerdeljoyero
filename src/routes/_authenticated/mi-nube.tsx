@@ -82,7 +82,7 @@ function FichaProyecto({ portada, nombre, children, portadaModo = "cover" }: { p
     <article className="group overflow-hidden rounded-[1.35rem] border border-border/80 bg-card shadow-[0_2px_8px_rgba(20,20,20,0.035)] transition-all duration-200 hover:-translate-y-0.5 hover:border-gold/35 hover:shadow-[0_12px_32px_rgba(20,20,20,0.075)]">
       {portada ? (
         <div className="grid h-36 w-full place-items-center overflow-hidden bg-[#f5f4f1]">
-          <img src={portada} alt={`Portada del proyecto ${nombre}`} className={portadaModo === "contain" ? "h-full w-full object-contain p-2" : "h-36 w-full object-cover object-center transition-transform duration-300 group-hover:scale-[1.02]"} loading="lazy" />
+          <img src={portada} alt={`Portada del proyecto ${nombre}`} className={portadaModo === "contain" ? "h-full w-full object-contain" : "h-36 w-full object-cover object-center transition-transform duration-300 group-hover:scale-[1.02]"} loading="lazy" />
         </div>
       ) : (
         <div className="grid h-36 place-items-center bg-[#f5f4f1] text-muted-foreground">
