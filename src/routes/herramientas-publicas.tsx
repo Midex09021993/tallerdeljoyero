@@ -122,8 +122,8 @@ function HerramientasPublicasPage() {
           >
             <span className="grid size-11 place-items-center rounded-xl border border-[#d8bd7b]/25 bg-[#d8bd7b]/[.08] text-[#d8bd7b]"><Gem className="size-5" /></span>
             <span className="mt-4 text-base font-semibold">AURUM Render</span>
-            <span className="mt-2 flex-1 text-sm leading-6 text-white/55">Explora tus diseños 3D con materiales y ambientes de presentación.</span>
-            <span className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-[#d8bd7b]">Abrir estudio 3D <ArrowRight className="size-3.5 transition group-hover:translate-x-1" /></span>
+            <span className="mt-2 flex-1 text-sm leading-6 text-white/70">Explora la vista previa de tus diseños 3D. Para usar la primera versión estable de AURUM Render, registra tu taller e inicia sesión.</span>
+            <span className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-[#d8bd7b]">Abrir visor público <ArrowRight className="size-3.5 transition group-hover:translate-x-1" /></span>
           </Link>
           <Link
             to="/transfer"
