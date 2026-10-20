@@ -21,7 +21,7 @@ export const Route = createFileRoute("/_authenticated/herramientas")({
 
 function ProximamenteCard({ titulo, descripcion }: { titulo: string; descripcion: string }) {
   return (
-    <article className="rounded-2xl border border-border bg-card p-5 opacity-75 shadow-card">
+    <article className="rounded-2xl border border-border bg-card p-5 shadow-card">
       <div className="flex items-start justify-between gap-4">
         <div>
           <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
