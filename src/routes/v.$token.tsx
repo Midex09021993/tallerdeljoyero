@@ -24,7 +24,7 @@ function VisorCortoPage() {
 
   useEffect(() => {
     let activo = true;
-    void supabase.rpc("resolver_enlace_visor_3d", { _token: token })
+    void Promise.resolve(supabase.rpc("resolver_enlace_visor_3d", { _token: token }))
       .then(({ data, error: rpcError }) => {
         if (!activo) return;
         const fila = Array.isArray(data) ? (data[0] as EnlaceVisor | undefined) : undefined;

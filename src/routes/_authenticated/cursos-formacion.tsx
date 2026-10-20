@@ -97,7 +97,7 @@ function CursosFormacionPage() {
       for (const url of imagenesParaLimpiar) {
         const posicion = url.indexOf(marcador);
         if (posicion < 0) continue;
-        const ruta = decodeURIComponent(url.slice(posicion + marcador.length).split("?")[0]);
+        const ruta = decodeURIComponent(url.slice(posicion + marcador.length).split("?")[0] ?? "");
         // Solo limpiar archivos del espacio de formación de este participante.
         if (ruta.startsWith(`${participanteId}/formacion/`)) rutasParaLimpiar.push(ruta);
       }

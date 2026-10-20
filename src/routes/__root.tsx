@@ -126,7 +126,7 @@ function ContactoFlotante() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const { data: sesion, isLoading: sesionCargando } = useSesion();
   const segmentos = pathname.split("/").filter(Boolean);
-  const slugCatalogo = segmentos.length === 1 ? segmentos[0].toLowerCase() : "";
+  const slugCatalogo = segmentos.length === 1 ? (segmentos[0] ?? "").toLowerCase() : "";
   const rutasInternas = new Set([
     "auth", "inicio", "perfil", "pedidos", "pedidos-2", "cotizaciones", "contratos",
     "gestion", "operario", "taller", "herramientas", "catalogo", "catalogo-publico",
