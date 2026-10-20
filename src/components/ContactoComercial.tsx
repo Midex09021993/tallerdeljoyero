@@ -5,7 +5,6 @@ import { enviarConsultaComercial } from "@/lib/contacto.functions";
 const INTERESES = [
   { value: "aurum_lab", label: "AURUM LAB", detail: "La plataforma para talleres de joyería" },
   { value: "aurum_render", label: "Aurum Render", detail: "Visualización y renderizado 3D de joyas" },
-  { value: "joya_personalizada", label: "Diseño de una joya", detail: "Consultar por una pieza personalizada" },
   { value: "otra_consulta", label: "Otra consulta", detail: "Quiero conocer más sobre ustedes" },
 ] as const;
 
