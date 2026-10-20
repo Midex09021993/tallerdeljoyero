@@ -13,12 +13,11 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AurumRenderPublicRouteImport } from './routes/aurum-render-public'
-import { Route as VTokenRouteImport } from './routes/v.$token'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CatalogoPublicoRouteImport } from './routes/catalogo-publico'
 import { Route as ClienteRouteImport } from './routes/cliente'
-import { Route as HerramientasPublicasRouteImport } from './routes/herramientas-publicas'
 import { Route as CursosDiseno3dRouteImport } from './routes/cursos-diseno-3d'
+import { Route as HerramientasPublicasRouteImport } from './routes/herramientas-publicas'
 import { Route as RecuperarContrasenaRouteImport } from './routes/recuperar-contrasena'
 import { Route as TiendaRouteImport } from './routes/tienda'
 import { Route as SlugIndexRouteImport } from './routes/$slug.index'
@@ -30,14 +29,15 @@ import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedComprasRouteImport } from './routes/_authenticated/compras'
 import { Route as AuthenticatedCorteLaserRouteImport } from './routes/_authenticated/corte-laser'
 import { Route as AuthenticatedCotizacionesRouteImport } from './routes/_authenticated/cotizaciones'
+import { Route as AuthenticatedCursosFormacionRouteImport } from './routes/_authenticated/cursos-formacion'
 import { Route as AuthenticatedDiseno3dRouteImport } from './routes/_authenticated/diseno-3d'
 import { Route as AuthenticatedGestionRouteImport } from './routes/_authenticated/gestion'
 import { Route as AuthenticatedHerramientasRouteImport } from './routes/_authenticated/herramientas'
 import { Route as AuthenticatedImpresion3dRouteImport } from './routes/_authenticated/impresion-3d'
 import { Route as AuthenticatedInicioRouteImport } from './routes/_authenticated/inicio'
 import { Route as AuthenticatedInventarioRouteImport } from './routes/_authenticated/inventario'
-import { Route as AuthenticatedMiNubeRouteImport } from './routes/_authenticated/mi-nube'
 import { Route as AuthenticatedMensajesRouteImport } from './routes/_authenticated/mensajes'
+import { Route as AuthenticatedMiNubeRouteImport } from './routes/_authenticated/mi-nube'
 import { Route as AuthenticatedMigracionRouteImport } from './routes/_authenticated/migracion'
 import { Route as AuthenticatedMonitorRouteImport } from './routes/_authenticated/monitor'
 import { Route as AuthenticatedOperarioRouteImport } from './routes/_authenticated/operario'
@@ -49,10 +49,12 @@ import { Route as AuthenticatedTiendaAdminRouteImport } from './routes/_authenti
 import { Route as AuthenticatedVectorizadorLaserRouteImport } from './routes/_authenticated/vectorizador-laser'
 import { Route as AuthenticatedVentasRouteImport } from './routes/_authenticated/ventas'
 import { Route as CCodigoRouteImport } from './routes/c/$codigo'
+import { Route as FormacionSlugRouteImport } from './routes/formacion.$slug'
 import { Route as HerramientasHerramientaRouteImport } from './routes/herramientas/$herramienta'
 import { Route as JoyaTokenRouteImport } from './routes/joya/$token'
 import { Route as TransferIndexRouteImport } from './routes/transfer.index'
 import { Route as TransferTokenRouteImport } from './routes/transfer/$token'
+import { Route as VTokenRouteImport } from './routes/v.$token'
 import { Route as SlugColeccionColeccionRouteImport } from './routes/$slug/coleccion/$coleccion'
 import { Route as AuthenticatedContratosIndexRouteImport } from './routes/_authenticated/contratos.index'
 import { Route as AuthenticatedContratosIdRouteImport } from './routes/_authenticated/contratos.$id'
@@ -88,11 +90,6 @@ const AurumRenderPublicRoute = AurumRenderPublicRouteImport.update({
   path: '/aurum-render-public',
   getParentRoute: () => rootRouteImport,
 } as any)
-const VTokenRoute = VTokenRouteImport.update({
-  id: '/v/$token',
-  path: '/v/$token',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -108,14 +105,14 @@ const ClienteRoute = ClienteRouteImport.update({
   path: '/cliente',
   getParentRoute: () => rootRouteImport,
 } as any)
-const HerramientasPublicasRoute = HerramientasPublicasRouteImport.update({
-  id: '/herramientas-publicas',
-  path: '/herramientas-publicas',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const CursosDiseno3dRoute = CursosDiseno3dRouteImport.update({
   id: '/cursos-diseno-3d',
   path: '/cursos-diseno-3d',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HerramientasPublicasRoute = HerramientasPublicasRouteImport.update({
+  id: '/herramientas-publicas',
+  path: '/herramientas-publicas',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RecuperarContrasenaRoute = RecuperarContrasenaRouteImport.update({
@@ -175,6 +172,12 @@ const AuthenticatedCotizacionesRoute =
     path: '/cotizaciones',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedCursosFormacionRoute =
+  AuthenticatedCursosFormacionRouteImport.update({
+    id: '/cursos-formacion',
+    path: '/cursos-formacion',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedDiseno3dRoute = AuthenticatedDiseno3dRouteImport.update({
   id: '/diseno-3d',
   path: '/diseno-3d',
@@ -207,14 +210,14 @@ const AuthenticatedInventarioRoute = AuthenticatedInventarioRouteImport.update({
   path: '/inventario',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedMiNubeRoute = AuthenticatedMiNubeRouteImport.update({
-  id: '/mi-nube',
-  path: '/mi-nube',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedMensajesRoute = AuthenticatedMensajesRouteImport.update({
   id: '/mensajes',
   path: '/mensajes',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMiNubeRoute = AuthenticatedMiNubeRouteImport.update({
+  id: '/mi-nube',
+  path: '/mi-nube',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedMigracionRoute = AuthenticatedMigracionRouteImport.update({
@@ -275,6 +278,11 @@ const CCodigoRoute = CCodigoRouteImport.update({
   path: '/c/$codigo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FormacionSlugRoute = FormacionSlugRouteImport.update({
+  id: '/formacion/$slug',
+  path: '/formacion/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HerramientasHerramientaRoute = HerramientasHerramientaRouteImport.update({
   id: '/herramientas/$herramienta',
   path: '/herramientas/$herramienta',
@@ -293,6 +301,11 @@ const TransferIndexRoute = TransferIndexRouteImport.update({
 const TransferTokenRoute = TransferTokenRouteImport.update({
   id: '/transfer/$token',
   path: '/transfer/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VTokenRoute = VTokenRouteImport.update({
+  id: '/v/$token',
+  path: '/v/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SlugColeccionColeccionRoute = SlugColeccionColeccionRouteImport.update({
@@ -383,12 +396,11 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$slug': typeof SlugRouteWithChildren
   '/aurum-render-public': typeof AurumRenderPublicRoute
-  '/v/$token': typeof VTokenRoute
   '/auth': typeof AuthRoute
   '/catalogo-publico': typeof CatalogoPublicoRoute
   '/cliente': typeof ClienteRoute
-  '/herramientas-publicas': typeof HerramientasPublicasRoute
   '/cursos-diseno-3d': typeof CursosDiseno3dRoute
+  '/herramientas-publicas': typeof HerramientasPublicasRoute
   '/recuperar-contrasena': typeof RecuperarContrasenaRoute
   '/tienda': typeof TiendaRoute
   '/$slug/$producto': typeof SlugProductoRoute
@@ -399,14 +411,15 @@ export interface FileRoutesByFullPath {
   '/compras': typeof AuthenticatedComprasRoute
   '/corte-laser': typeof AuthenticatedCorteLaserRoute
   '/cotizaciones': typeof AuthenticatedCotizacionesRouteWithChildren
+  '/cursos-formacion': typeof AuthenticatedCursosFormacionRoute
   '/diseno-3d': typeof AuthenticatedDiseno3dRoute
   '/gestion': typeof AuthenticatedGestionRoute
   '/herramientas': typeof AuthenticatedHerramientasRoute
   '/impresion-3d': typeof AuthenticatedImpresion3dRoute
   '/inicio': typeof AuthenticatedInicioRoute
   '/inventario': typeof AuthenticatedInventarioRoute
-  '/mi-nube': typeof AuthenticatedMiNubeRoute
   '/mensajes': typeof AuthenticatedMensajesRoute
+  '/mi-nube': typeof AuthenticatedMiNubeRoute
   '/migracion': typeof AuthenticatedMigracionRoute
   '/monitor': typeof AuthenticatedMonitorRoute
   '/operario': typeof AuthenticatedOperarioRoute
@@ -418,9 +431,11 @@ export interface FileRoutesByFullPath {
   '/vectorizador-laser': typeof AuthenticatedVectorizadorLaserRoute
   '/ventas': typeof AuthenticatedVentasRouteWithChildren
   '/c/$codigo': typeof CCodigoRouteWithChildren
+  '/formacion/$slug': typeof FormacionSlugRoute
   '/herramientas/$herramienta': typeof HerramientasHerramientaRoute
   '/joya/$token': typeof JoyaTokenRoute
   '/transfer/$token': typeof TransferTokenRoute
+  '/v/$token': typeof VTokenRoute
   '/$slug/': typeof SlugIndexRoute
   '/transfer/': typeof TransferIndexRoute
   '/$slug/coleccion/$coleccion': typeof SlugColeccionColeccionRoute
@@ -442,12 +457,11 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/aurum-render-public': typeof AurumRenderPublicRoute
-  '/v/$token': typeof VTokenRoute
   '/auth': typeof AuthRoute
   '/catalogo-publico': typeof CatalogoPublicoRoute
   '/cliente': typeof ClienteRoute
-  '/herramientas-publicas': typeof HerramientasPublicasRoute
   '/cursos-diseno-3d': typeof CursosDiseno3dRoute
+  '/herramientas-publicas': typeof HerramientasPublicasRoute
   '/recuperar-contrasena': typeof RecuperarContrasenaRoute
   '/tienda': typeof TiendaRoute
   '/$slug/$producto': typeof SlugProductoRoute
@@ -457,14 +471,15 @@ export interface FileRoutesByTo {
   '/clientes': typeof AuthenticatedClientesRoute
   '/compras': typeof AuthenticatedComprasRoute
   '/corte-laser': typeof AuthenticatedCorteLaserRoute
+  '/cursos-formacion': typeof AuthenticatedCursosFormacionRoute
   '/diseno-3d': typeof AuthenticatedDiseno3dRoute
   '/gestion': typeof AuthenticatedGestionRoute
   '/herramientas': typeof AuthenticatedHerramientasRoute
   '/impresion-3d': typeof AuthenticatedImpresion3dRoute
   '/inicio': typeof AuthenticatedInicioRoute
   '/inventario': typeof AuthenticatedInventarioRoute
-  '/mi-nube': typeof AuthenticatedMiNubeRoute
   '/mensajes': typeof AuthenticatedMensajesRoute
+  '/mi-nube': typeof AuthenticatedMiNubeRoute
   '/migracion': typeof AuthenticatedMigracionRoute
   '/monitor': typeof AuthenticatedMonitorRoute
   '/operario': typeof AuthenticatedOperarioRoute
@@ -475,9 +490,11 @@ export interface FileRoutesByTo {
   '/vectorizador-laser': typeof AuthenticatedVectorizadorLaserRoute
   '/ventas': typeof AuthenticatedVentasRouteWithChildren
   '/c/$codigo': typeof CCodigoRouteWithChildren
+  '/formacion/$slug': typeof FormacionSlugRoute
   '/herramientas/$herramienta': typeof HerramientasHerramientaRoute
   '/joya/$token': typeof JoyaTokenRoute
   '/transfer/$token': typeof TransferTokenRoute
+  '/v/$token': typeof VTokenRoute
   '/$slug': typeof SlugIndexRoute
   '/transfer': typeof TransferIndexRoute
   '/$slug/coleccion/$coleccion': typeof SlugColeccionColeccionRoute
@@ -502,12 +519,11 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/$slug': typeof SlugRouteWithChildren
   '/aurum-render-public': typeof AurumRenderPublicRoute
-  '/v/$token': typeof VTokenRoute
   '/auth': typeof AuthRoute
   '/catalogo-publico': typeof CatalogoPublicoRoute
   '/cliente': typeof ClienteRoute
-  '/herramientas-publicas': typeof HerramientasPublicasRoute
   '/cursos-diseno-3d': typeof CursosDiseno3dRoute
+  '/herramientas-publicas': typeof HerramientasPublicasRoute
   '/recuperar-contrasena': typeof RecuperarContrasenaRoute
   '/tienda': typeof TiendaRoute
   '/$slug/$producto': typeof SlugProductoRoute
@@ -518,14 +534,15 @@ export interface FileRoutesById {
   '/_authenticated/compras': typeof AuthenticatedComprasRoute
   '/_authenticated/corte-laser': typeof AuthenticatedCorteLaserRoute
   '/_authenticated/cotizaciones': typeof AuthenticatedCotizacionesRouteWithChildren
+  '/_authenticated/cursos-formacion': typeof AuthenticatedCursosFormacionRoute
   '/_authenticated/diseno-3d': typeof AuthenticatedDiseno3dRoute
   '/_authenticated/gestion': typeof AuthenticatedGestionRoute
   '/_authenticated/herramientas': typeof AuthenticatedHerramientasRoute
   '/_authenticated/impresion-3d': typeof AuthenticatedImpresion3dRoute
   '/_authenticated/inicio': typeof AuthenticatedInicioRoute
   '/_authenticated/inventario': typeof AuthenticatedInventarioRoute
-  '/_authenticated/mi-nube': typeof AuthenticatedMiNubeRoute
   '/_authenticated/mensajes': typeof AuthenticatedMensajesRoute
+  '/_authenticated/mi-nube': typeof AuthenticatedMiNubeRoute
   '/_authenticated/migracion': typeof AuthenticatedMigracionRoute
   '/_authenticated/monitor': typeof AuthenticatedMonitorRoute
   '/_authenticated/operario': typeof AuthenticatedOperarioRoute
@@ -537,9 +554,11 @@ export interface FileRoutesById {
   '/_authenticated/vectorizador-laser': typeof AuthenticatedVectorizadorLaserRoute
   '/_authenticated/ventas': typeof AuthenticatedVentasRouteWithChildren
   '/c/$codigo': typeof CCodigoRouteWithChildren
+  '/formacion/$slug': typeof FormacionSlugRoute
   '/herramientas/$herramienta': typeof HerramientasHerramientaRoute
   '/joya/$token': typeof JoyaTokenRoute
   '/transfer/$token': typeof TransferTokenRoute
+  '/v/$token': typeof VTokenRoute
   '/$slug/': typeof SlugIndexRoute
   '/transfer/': typeof TransferIndexRoute
   '/$slug/coleccion/$coleccion': typeof SlugColeccionColeccionRoute
@@ -567,8 +586,8 @@ export interface FileRouteTypes {
     | '/auth'
     | '/catalogo-publico'
     | '/cliente'
-    | '/herramientas-publicas'
     | '/cursos-diseno-3d'
+    | '/herramientas-publicas'
     | '/recuperar-contrasena'
     | '/tienda'
     | '/$slug/$producto'
@@ -579,14 +598,15 @@ export interface FileRouteTypes {
     | '/compras'
     | '/corte-laser'
     | '/cotizaciones'
+    | '/cursos-formacion'
     | '/diseno-3d'
     | '/gestion'
     | '/herramientas'
     | '/impresion-3d'
     | '/inicio'
     | '/inventario'
-    | '/mi-nube'
     | '/mensajes'
+    | '/mi-nube'
     | '/migracion'
     | '/monitor'
     | '/operario'
@@ -598,9 +618,11 @@ export interface FileRouteTypes {
     | '/vectorizador-laser'
     | '/ventas'
     | '/c/$codigo'
+    | '/formacion/$slug'
     | '/herramientas/$herramienta'
     | '/joya/$token'
     | '/transfer/$token'
+    | '/v/$token'
     | '/$slug/'
     | '/transfer/'
     | '/$slug/coleccion/$coleccion'
@@ -625,6 +647,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/catalogo-publico'
     | '/cliente'
+    | '/cursos-diseno-3d'
     | '/herramientas-publicas'
     | '/recuperar-contrasena'
     | '/tienda'
@@ -635,12 +658,14 @@ export interface FileRouteTypes {
     | '/clientes'
     | '/compras'
     | '/corte-laser'
+    | '/cursos-formacion'
     | '/diseno-3d'
     | '/gestion'
     | '/herramientas'
     | '/impresion-3d'
     | '/inicio'
     | '/inventario'
+    | '/mensajes'
     | '/mi-nube'
     | '/migracion'
     | '/monitor'
@@ -652,9 +677,11 @@ export interface FileRouteTypes {
     | '/vectorizador-laser'
     | '/ventas'
     | '/c/$codigo'
+    | '/formacion/$slug'
     | '/herramientas/$herramienta'
     | '/joya/$token'
     | '/transfer/$token'
+    | '/v/$token'
     | '/$slug'
     | '/transfer'
     | '/$slug/coleccion/$coleccion'
@@ -681,6 +708,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/catalogo-publico'
     | '/cliente'
+    | '/cursos-diseno-3d'
     | '/herramientas-publicas'
     | '/recuperar-contrasena'
     | '/tienda'
@@ -692,12 +720,14 @@ export interface FileRouteTypes {
     | '/_authenticated/compras'
     | '/_authenticated/corte-laser'
     | '/_authenticated/cotizaciones'
+    | '/_authenticated/cursos-formacion'
     | '/_authenticated/diseno-3d'
     | '/_authenticated/gestion'
     | '/_authenticated/herramientas'
     | '/_authenticated/impresion-3d'
     | '/_authenticated/inicio'
     | '/_authenticated/inventario'
+    | '/_authenticated/mensajes'
     | '/_authenticated/mi-nube'
     | '/_authenticated/migracion'
     | '/_authenticated/monitor'
@@ -710,9 +740,11 @@ export interface FileRouteTypes {
     | '/_authenticated/vectorizador-laser'
     | '/_authenticated/ventas'
     | '/c/$codigo'
+    | '/formacion/$slug'
     | '/herramientas/$herramienta'
     | '/joya/$token'
     | '/transfer/$token'
+    | '/v/$token'
     | '/$slug/'
     | '/transfer/'
     | '/$slug/coleccion/$coleccion'
@@ -740,14 +772,16 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CatalogoPublicoRoute: typeof CatalogoPublicoRoute
   ClienteRoute: typeof ClienteRoute
-  HerramientasPublicasRoute: typeof HerramientasPublicasRoute
   CursosDiseno3dRoute: typeof CursosDiseno3dRoute
+  HerramientasPublicasRoute: typeof HerramientasPublicasRoute
   RecuperarContrasenaRoute: typeof RecuperarContrasenaRoute
   TiendaRoute: typeof TiendaRoute
   CCodigoRoute: typeof CCodigoRouteWithChildren
+  FormacionSlugRoute: typeof FormacionSlugRoute
   HerramientasHerramientaRoute: typeof HerramientasHerramientaRoute
   JoyaTokenRoute: typeof JoyaTokenRoute
   TransferTokenRoute: typeof TransferTokenRoute
+  VTokenRoute: typeof VTokenRoute
   TransferIndexRoute: typeof TransferIndexRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
@@ -805,18 +839,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClienteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/herramientas-publicas': {
-      id: '/herramientas-publicas'
-      path: '/herramientas-publicas'
-      fullPath: '/herramientas-publicas'
-      preLoaderRoute: typeof HerramientasPublicasRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/cursos-diseno-3d': {
       id: '/cursos-diseno-3d'
       path: '/cursos-diseno-3d'
       fullPath: '/cursos-diseno-3d'
       preLoaderRoute: typeof CursosDiseno3dRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/herramientas-publicas': {
+      id: '/herramientas-publicas'
+      path: '/herramientas-publicas'
+      fullPath: '/herramientas-publicas'
+      preLoaderRoute: typeof HerramientasPublicasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/recuperar-contrasena': {
@@ -896,6 +930,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCotizacionesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/cursos-formacion': {
+      id: '/_authenticated/cursos-formacion'
+      path: '/cursos-formacion'
+      fullPath: '/cursos-formacion'
+      preLoaderRoute: typeof AuthenticatedCursosFormacionRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/diseno-3d': {
       id: '/_authenticated/diseno-3d'
       path: '/diseno-3d'
@@ -938,18 +979,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedInventarioRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/mi-nube': {
-      id: '/_authenticated/mi-nube'
-      path: '/mi-nube'
-      fullPath: '/mi-nube'
-      preLoaderRoute: typeof AuthenticatedMiNubeRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/mensajes': {
       id: '/_authenticated/mensajes'
       path: '/mensajes'
       fullPath: '/mensajes'
       preLoaderRoute: typeof AuthenticatedMensajesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/mi-nube': {
+      id: '/_authenticated/mi-nube'
+      path: '/mi-nube'
+      fullPath: '/mi-nube'
+      preLoaderRoute: typeof AuthenticatedMiNubeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/migracion': {
@@ -1029,6 +1070,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CCodigoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/formacion/$slug': {
+      id: '/formacion/$slug'
+      path: '/formacion/$slug'
+      fullPath: '/formacion/$slug'
+      preLoaderRoute: typeof FormacionSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/herramientas/$herramienta': {
       id: '/herramientas/$herramienta'
       path: '/herramientas/$herramienta'
@@ -1055,6 +1103,13 @@ declare module '@tanstack/react-router' {
       path: '/transfer/$token'
       fullPath: '/transfer/$token'
       preLoaderRoute: typeof TransferTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/v/$token': {
+      id: '/v/$token'
+      path: '/v/$token'
+      fullPath: '/v/$token'
+      preLoaderRoute: typeof VTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/$slug/coleccion/$coleccion': {
@@ -1215,14 +1270,15 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedComprasRoute: typeof AuthenticatedComprasRoute
   AuthenticatedCorteLaserRoute: typeof AuthenticatedCorteLaserRoute
   AuthenticatedCotizacionesRoute: typeof AuthenticatedCotizacionesRouteWithChildren
+  AuthenticatedCursosFormacionRoute: typeof AuthenticatedCursosFormacionRoute
   AuthenticatedDiseno3dRoute: typeof AuthenticatedDiseno3dRoute
   AuthenticatedGestionRoute: typeof AuthenticatedGestionRoute
   AuthenticatedHerramientasRoute: typeof AuthenticatedHerramientasRoute
   AuthenticatedImpresion3dRoute: typeof AuthenticatedImpresion3dRoute
   AuthenticatedInicioRoute: typeof AuthenticatedInicioRoute
   AuthenticatedInventarioRoute: typeof AuthenticatedInventarioRoute
-  AuthenticatedMiNubeRoute: typeof AuthenticatedMiNubeRoute
   AuthenticatedMensajesRoute: typeof AuthenticatedMensajesRoute
+  AuthenticatedMiNubeRoute: typeof AuthenticatedMiNubeRoute
   AuthenticatedMigracionRoute: typeof AuthenticatedMigracionRoute
   AuthenticatedMonitorRoute: typeof AuthenticatedMonitorRoute
   AuthenticatedOperarioRoute: typeof AuthenticatedOperarioRoute
@@ -1247,14 +1303,15 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedComprasRoute: AuthenticatedComprasRoute,
   AuthenticatedCorteLaserRoute: AuthenticatedCorteLaserRoute,
   AuthenticatedCotizacionesRoute: AuthenticatedCotizacionesRouteWithChildren,
+  AuthenticatedCursosFormacionRoute: AuthenticatedCursosFormacionRoute,
   AuthenticatedDiseno3dRoute: AuthenticatedDiseno3dRoute,
   AuthenticatedGestionRoute: AuthenticatedGestionRoute,
   AuthenticatedHerramientasRoute: AuthenticatedHerramientasRoute,
   AuthenticatedImpresion3dRoute: AuthenticatedImpresion3dRoute,
   AuthenticatedInicioRoute: AuthenticatedInicioRoute,
   AuthenticatedInventarioRoute: AuthenticatedInventarioRoute,
-  AuthenticatedMiNubeRoute: AuthenticatedMiNubeRoute,
   AuthenticatedMensajesRoute: AuthenticatedMensajesRoute,
+  AuthenticatedMiNubeRoute: AuthenticatedMiNubeRoute,
   AuthenticatedMigracionRoute: AuthenticatedMigracionRoute,
   AuthenticatedMonitorRoute: AuthenticatedMonitorRoute,
   AuthenticatedOperarioRoute: AuthenticatedOperarioRoute,
@@ -1304,18 +1361,19 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   SlugRoute: SlugRouteWithChildren,
   AurumRenderPublicRoute: AurumRenderPublicRoute,
-  VTokenRoute: VTokenRoute,
   AuthRoute: AuthRoute,
   CatalogoPublicoRoute: CatalogoPublicoRoute,
   ClienteRoute: ClienteRoute,
-  HerramientasPublicasRoute: HerramientasPublicasRoute,
   CursosDiseno3dRoute: CursosDiseno3dRoute,
+  HerramientasPublicasRoute: HerramientasPublicasRoute,
   RecuperarContrasenaRoute: RecuperarContrasenaRoute,
   TiendaRoute: TiendaRoute,
   CCodigoRoute: CCodigoRouteWithChildren,
+  FormacionSlugRoute: FormacionSlugRoute,
   HerramientasHerramientaRoute: HerramientasHerramientaRoute,
   JoyaTokenRoute: JoyaTokenRoute,
   TransferTokenRoute: TransferTokenRoute,
+  VTokenRoute: VTokenRoute,
   TransferIndexRoute: TransferIndexRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
