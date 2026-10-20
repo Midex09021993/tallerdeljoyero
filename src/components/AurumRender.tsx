@@ -2238,7 +2238,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
 
         </div>
         <p className="mt-4 rounded-xl border border-black/[.06] bg-black/[.025] p-3 text-xs leading-relaxed text-[#77756f] md:col-span-2">Antes de compartir un modelo 3D, ten en cuenta que los materiales compatibles con glTF se conservan mejor; los shaders personalizados, el HDRI y los efectos de pantalla pueden variar según el visor.</p>
-      </div>}
+      </div></div>}
       <div className={embedded ? "flex min-h-0 flex-1 overflow-hidden bg-[#090b0e]" : "flex min-h-0 flex-1 gap-3 bg-[#eeede8] p-3"}>
         {!embedded && <aside className="w-[336px] shrink-0 overflow-hidden rounded-2xl border border-black/[.07] bg-[#f9f8f5] text-[#292824] shadow-[0_8px_28px_rgba(36,32,20,.045)]">
           <div className="h-full overflow-y-auto">
