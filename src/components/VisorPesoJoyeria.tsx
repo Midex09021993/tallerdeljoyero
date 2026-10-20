@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { registrarEvento } from "@/lib/analytics";
 import { Boxes, RotateCcw, Trash2, Upload } from "lucide-react";
 import { CLAVES_CALCULADORAS, DEFAULT_CONFIG_VISUALIZADOR, leerConfigVisualizador } from "@/lib/calculadoras-config";
 import { useConfigSistema } from "@/lib/taller-db";
@@ -354,12 +355,14 @@ export function VisorPesoJoyeria({ compacto = false, archivoInicial = null }: { 
 
   /* -------- Carga de archivo (solo en memoria) -------- */
   const cargarArchivo = useCallback(async (file: File) => {
+    registrarEvento("tool_started", { tool_id: "peso", file_type: file.name.split(".").pop()?.toLowerCase() || "unknown" });
     setError(null);
     setCargando(true);
     try {
       const volumen = await api.current!.cargar(file);
       setVolumenUnidades(volumen);
       setNombreArchivo(file.name);
+      registrarEvento("tool_completed", { tool_id: "peso" });
     } catch (e) {
       setVolumenUnidades(null);
       setNombreArchivo(null);
