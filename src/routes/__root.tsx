@@ -16,6 +16,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { useSincronizarSesion } from "@/lib/auth";
 import { registrarServiceWorker } from "@/lib/pwa-push";
 import { consumirInicioLogin, marcarInicioLogin, registrarEvento } from "@/lib/analytics";
+import { ContactoComercial } from "@/components/ContactoComercial";
 
 function NotFoundComponent() {
   return (
@@ -108,11 +109,15 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
   return (
     <QueryClientProvider client={queryClient}>
       <SesionSync />
       <AnalyticsSync />
       <Outlet />
+      {pathname !== "/auth" ? (
+        <ContactoComercial className="fixed bottom-5 right-5 z-[80] inline-flex min-h-12 items-center gap-2 rounded-full border border-[#d8bd7b]/70 bg-[#171815] px-5 py-3 text-xs font-bold uppercase tracking-wider text-[#d8bd7b] shadow-[0_10px_35px_rgba(0,0,0,.35)] transition hover:bg-[#d8bd7b] hover:text-[#211c12]" />
+      ) : null}
       <Toaster />
     </QueryClientProvider>
   );
