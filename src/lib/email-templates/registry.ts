@@ -21,7 +21,7 @@ export interface TemplateEntry {
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'contacto-admin': {
     component: ContactoAdminEmail,
-    subject: (data) => `Nueva consulta web: ${String(data.nombre || 'visitante')}`,
+    subject: (data) => `Nueva consulta web: ${String(data['nombre'] || 'visitante')}`,
     displayName: 'Nueva consulta comercial',
     to: 'mgld_09@hotmail.com',
     previewData: { nombre: 'María', email: 'maria@example.com', interes: 'aurum_lab', mensaje: 'Quisiera conocer más información.' },

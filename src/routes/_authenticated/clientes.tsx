@@ -89,7 +89,7 @@ function ClientesPage() {
           .eq("estado", "activo")
           .limit(2);
         if (error || !data || data.length !== 1) participanteId = null;
-        else participanteId = data[0].id;
+        else participanteId = data[0]!.id;
       }
 
       if (!participanteId) {
@@ -306,7 +306,7 @@ function ClientesPage() {
           .select("id,nombre,tipo,documento,telefono,whatsapp,email,ciudad,direccion,estado,created_at,fecha_nacimiento,notas,sede_id,participante_id")
           .eq("id", clienteCreadoId!)
           .maybeSingle();
-        if (data) setSeleccionado({ ...data, sede_nombre: sesion.participante.nombre });
+        if (data) setSeleccionado({ ...data, tipo: data.tipo === "empresa" ? "empresa" : "persona", sede_nombre: sesion.participante.nombre });
       }
     } catch (error) {
       console.error(error);

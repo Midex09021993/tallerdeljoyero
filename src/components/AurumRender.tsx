@@ -1424,7 +1424,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // A single direct render preserves the live renderer's color/tone-mapping path.
             renderer.render(escena,camara);
             const captureComposerBuffer = null;
-            const captureTaaPass = null;
+            const captureTaaPass = null as null | { enabled?: boolean; accumulate?: boolean; sampleLevel?: number; accumulateIndex?: number };
             console.info("[AURUM][PNG CAPTURE DIAGNOSTICS]", {
               requestedOutput: { width, height },
               internalRender: { width: renderer.domElement.width, height: renderer.domElement.height },

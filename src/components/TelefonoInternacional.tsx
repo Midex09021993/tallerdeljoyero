@@ -69,7 +69,7 @@ export function TelefonoInternacional({ value, onChange, defaultCountry = "PE", 
   const [nacional, setNacional] = useState(() => interpretarNumero(value, defaultCountry).nacional);
   const [tocado, setTocado] = useState(false);
   const ultimoValorEmitido = useRef<string | null>(null);
-  const pais = PAISES.find((item) => item.iso === paisIso) ?? PAISES[0];
+  const pais = PAISES.find((item) => item.iso === paisIso) ?? PAISES[0]!;
 
   useEffect(() => {
     // No volver a inferir un valor que este mismo control acaba de emitir: los prefijos
@@ -101,7 +101,7 @@ export function TelefonoInternacional({ value, onChange, defaultCountry = "PE", 
         id={id ? `${id}-pais` : undefined}
         value={paisIso}
         onChange={(event) => {
-          const siguiente = PAISES.find((item) => item.iso === event.target.value) ?? PAISES[0];
+          const siguiente = PAISES.find((item) => item.iso === event.target.value) ?? PAISES[0]!;
           setPaisIso(siguiente.iso);
           emitir(siguiente, nacional);
         }}

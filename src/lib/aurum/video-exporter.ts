@@ -1,10 +1,10 @@
 export type AurumVideoOptions = {
-  width?: number;
-  height?: number;
-  fps?: number;
-  duration?: number;
-  signal?: AbortSignal;
-  onProgress?: (elapsedSeconds: number, durationSeconds: number) => void;
+  width?: number | undefined;
+  height?: number | undefined;
+  fps?: number | undefined;
+  duration?: number | undefined;
+  signal?: AbortSignal | undefined;
+  onProgress?: ((elapsedSeconds: number, durationSeconds: number) => void) | undefined;
   onFrame?: (elapsedSeconds: number, durationSeconds: number) => void;
 };
 
