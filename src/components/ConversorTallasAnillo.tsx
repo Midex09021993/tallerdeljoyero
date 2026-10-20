@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { registrarEvento } from "@/lib/analytics";
 import { Check, CircleDot, Ruler, Search } from "lucide-react";
 import { CLAVES_CALCULADORAS, leerConfigTallasAnillo, formatearTallaAmericana, type TallaAnillo } from "@/lib/calculadoras-config";
 import { useConfigSistema } from "@/lib/taller-db";
@@ -79,7 +80,28 @@ export function ConversorTallasAnillo({ compacto = false }: { compacto?: boolean
     [calibrada, configuracion.tabla, diametroMedido],
   );
 
-    const cambiarVista = (nueva: ModoVista) => {
+    const inicioRegistrado = useRef(false);
+  const resultadoRegistrado = useRef(false);
+  const resultadoValido = vista === "buscar" ? Boolean(resultadoBusqueda) : Boolean(calibrada && resultadoMedicion);
+
+  useEffect(() => {
+    const iniciado = valor.trim().length > 0 || vista === "medir";
+    if (iniciado && !inicioRegistrado.current) {
+      inicioRegistrado.current = true;
+      registrarEvento("tool_started", { tool_id: "tallas" });
+    }
+  }, [valor, vista]);
+
+  useEffect(() => {
+    if (resultadoValido && !resultadoRegistrado.current) {
+      resultadoRegistrado.current = true;
+      registrarEvento("tool_completed", { tool_id: "tallas" });
+    } else if (!resultadoValido) {
+      resultadoRegistrado.current = false;
+    }
+  }, [resultadoValido]);
+
+  const cambiarVista = (nueva: ModoVista) => {
     setVista(nueva);
     if (nueva === "buscar") {
       setValor("");
