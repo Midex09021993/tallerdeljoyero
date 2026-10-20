@@ -8,8 +8,15 @@ export const Route = createFileRoute("/formacion/$slug")({
   head: ({ params }) => ({
     meta: [
       { title: "Cursos y formación | Taller del Joyero" },
-      { name: "description", content: "Conoce la propuesta formativa y las herramientas para estudiantes de joyería." },
+      { name: "description", content: "Conoce cursos y propuestas formativas para la comunidad joyera. Explora herramientas digitales y contacta con el taller." },
       { name: "robots", content: "index, follow" },
+      { property: "og:title", content: "Cursos y formación | Taller del Joyero" },
+      { property: "og:description", content: "Conoce cursos y propuestas formativas para la comunidad joyera. Explora herramientas digitales y contacta con el taller." },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: `https://www.tallerdeljoyero.com/formacion/${params.slug}` },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Cursos y formación | Taller del Joyero" },
+      { name: "twitter:description", content: "Conoce cursos y propuestas formativas para la comunidad joyera." },
     ],
   }),
   component: PublicidadFormacionPage,
