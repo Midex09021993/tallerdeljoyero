@@ -257,4 +257,40 @@ $;
 revoke all on function public.chat_resumen_conversaciones() from public, anon;
 grant execute on function public.chat_resumen_conversaciones() to authenticated;
 
+
+-- Presencia en línea: canal privado, sólo cuentas activas del ecosistema.
+drop policy if exists chat_presence_aurum_read on realtime.messages;
+create policy chat_presence_aurum_read on realtime.messages
+for select to authenticated
+using (
+  (select realtime.topic()) = 'aurum-lab-presence'
+  and extension = 'presence'
+  and exists (
+    select 1
+    from public.participante_cuentas pc
+    join public.ecosistema_participantes ep on ep.id = pc.participante_id
+    join public.user_roles ur on ur.user_id = pc.user_id
+    where pc.user_id = (select auth.uid())
+      and pc.estado = 'activo'
+      and ep.estado = 'activo'
+  )
+);
+
+drop policy if exists chat_presence_aurum_write on realtime.messages;
+create policy chat_presence_aurum_write on realtime.messages
+for insert to authenticated
+with check (
+  (select realtime.topic()) = 'aurum-lab-presence'
+  and extension = 'presence'
+  and exists (
+    select 1
+    from public.participante_cuentas pc
+    join public.ecosistema_participantes ep on ep.id = pc.participante_id
+    join public.user_roles ur on ur.user_id = pc.user_id
+    where pc.user_id = (select auth.uid())
+      and pc.estado = 'activo'
+      and ep.estado = 'activo'
+  )
+);
+
 commit;
