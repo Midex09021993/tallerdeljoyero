@@ -191,9 +191,29 @@ export function applyAurumInitialModelMaterials(
         ? sourceMaterials.map(configureSourceMaterial)
         : configureSourceMaterial(x.material);
     }else{
-      // Neutral placeholder for all remaining layers (purple, cream, yellow,
-      // decorative objects, etc.). It is deliberately NOT a gemstone.
-      x.material=createAurumNeutralMaterial();
+      // STL has no reliable layer/material metadata. Use neutral gray for
+      // unclassified STL meshes; preserve the established 3DM fallback.
+      if (model.userData?.aurumSourceFormat === "stl") {
+        const stlNeutral = new THREE.MeshPhysicalMaterial({
+          color: 0xb8b8b8,
+          metalness: 0,
+          roughness: 0.42,
+          envMapIntensity: 0.5,
+          clearcoat: 0.04,
+          clearcoatRoughness: 0.12,
+        });
+        stlNeutral.userData = {
+          ...(stlNeutral.userData ?? {}),
+          aurumNeutralMaterial: true,
+          aurumMaterialAssigned: false,
+          aurumSourceFormat: "stl",
+        };
+        x.material = stlNeutral;
+        x.userData = { ...(x.userData ?? {}), aurumSourceFormat: "stl", aurumDetectedCategory: "otro" };
+      } else {
+        // Keep the existing fallback unchanged for 3DM and other formats.
+        x.material=createAurumNeutralMaterial();
+      }
     }
   });
 }
