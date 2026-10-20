@@ -54,11 +54,7 @@ using (exists (
 drop policy if exists chat_miembros_leer_misma_conversacion on public.chat_conversacion_miembros;
 create policy chat_miembros_leer_misma_conversacion on public.chat_conversacion_miembros
 for select to authenticated
-using (exists (
-  select 1 from public.chat_conversacion_miembros propio
-  where propio.conversacion_id = chat_conversacion_miembros.conversacion_id
-    and propio.user_id = (select auth.uid())
-));
+using (user_id = (select auth.uid()));
 
 drop policy if exists chat_miembros_actualizar_lectura_propia on public.chat_conversacion_miembros;
 create policy chat_miembros_actualizar_lectura_propia on public.chat_conversacion_miembros
