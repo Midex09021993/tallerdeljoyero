@@ -456,6 +456,7 @@ export interface FileRoutesByTo {
   '/inicio': typeof AuthenticatedInicioRoute
   '/inventario': typeof AuthenticatedInventarioRoute
   '/mi-nube': typeof AuthenticatedMiNubeRoute
+  '/mensajes': typeof AuthenticatedMensajesRoute
   '/migracion': typeof AuthenticatedMigracionRoute
   '/monitor': typeof AuthenticatedMonitorRoute
   '/operario': typeof AuthenticatedOperarioRoute
