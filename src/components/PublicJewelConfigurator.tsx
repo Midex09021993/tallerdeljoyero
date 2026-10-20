@@ -174,30 +174,30 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
           </div>}
           <div className="pointer-events-none absolute bottom-2 left-2 z-10 max-w-[calc(100%-1rem)] rounded-full border border-white/80 bg-white/85 px-2.5 py-1.5 text-[9px] text-[#766d61] shadow-sm backdrop-blur sm:bottom-3 sm:left-3 sm:px-3 sm:text-[10px]">Toca y arrastra para girar · Pellizca para acercar</div>
         </div>
-        <aside className="relative z-10 min-w-0 border-t border-[#eee9e0] bg-[#fffefa] p-3.5 sm:p-4 md:h-full md:min-h-0 md:max-h-full md:overflow-x-hidden md:overflow-y-auto md:border-l md:border-t-0 lg:p-4 [@media(max-height:800px)]:p-2">
-          <div className="mb-3 sm:mb-4 [@media(max-height:800px)]:mb-2">
+        <aside className="relative z-10 min-w-0 border-t border-[#eee9e0] bg-[#fffefa] p-2.5 sm:p-4 md:h-full md:min-h-0 md:max-h-full md:overflow-x-hidden md:overflow-y-auto md:border-l md:border-t-0 lg:p-4 [@media(max-height:800px)]:p-2">
+          <div className="mb-2.5 sm:mb-4 [@media(max-height:800px)]:mb-2">
             <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#92702f]">01 · Metal</p>
-            <p className="mt-1 text-xs text-[#8a8175]">Elige el acabado de tu joya</p>
-            <div className="mt-3 grid grid-cols-2 gap-2 [@media(max-height:800px)]:mt-2">{metales.map((metal) => <button key={metal.id} type="button" aria-pressed={metalId === metal.id} onClick={() => handleMetalSelect(metal.id)} className={"group min-h-[76px] rounded-xl border p-3 text-left text-xs transition [@media(max-height:800px)]:min-h-[60px] [@media(max-height:800px)]:p-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45] focus-visible:ring-offset-1 " + (metalId === metal.id ? "border-[#a7833d] bg-[#f7f0e2] shadow-[inset_0_0_0_1px_rgba(167,131,61,.12)]" : "border-[#ece7df] bg-white hover:border-[#d1bd96] hover:bg-[#fcfaf5]")}><span className="mb-2 flex items-center justify-between"><span className="size-5 rounded-full border border-black/10 shadow-sm" style={{ backgroundColor: "#" + metal.color.toString(16).padStart(6,"0") }} />{metalId === metal.id && <span className="text-[9px] font-bold uppercase tracking-wide text-[#8b6b36]">Activo</span>}</span><span className="font-medium text-[#342e26]">{metal.label}</span></button>)}</div>
+            <p className="mt-0.5 hidden text-xs text-[#8a8175] sm:block">Elige el acabado de tu joya</p>
+            <div className="mt-2 grid grid-cols-4 gap-1.5 sm:mt-3 sm:grid-cols-2 sm:gap-2 [@media(max-height:800px)]:mt-2">{metales.map((metal) => <button key={metal.id} type="button" aria-pressed={metalId === metal.id} onClick={() => handleMetalSelect(metal.id)} className={"group flex min-h-11 items-center gap-1.5 rounded-lg border px-2 py-2 text-left text-[11px] transition sm:min-h-[76px] sm:block sm:rounded-xl sm:p-3 sm:text-xs [@media(max-height:800px)]:min-h-[60px] [@media(max-height:800px)]:p-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45] focus-visible:ring-offset-1 " + (metalId === metal.id ? "border-[#a7833d] bg-[#f7f0e2] shadow-[inset_0_0_0_1px_rgba(167,131,61,.12)]" : "border-[#ece7df] bg-white hover:border-[#d1bd96] hover:bg-[#fcfaf5]")}><span className="flex shrink-0 items-center justify-between sm:mb-2"><span className="size-4 rounded-full border border-black/10 shadow-sm sm:size-5" style={{ backgroundColor: "#" + metal.color.toString(16).padStart(6,"0") }} />{metalId === metal.id && <span className="text-[9px] font-bold uppercase tracking-wide text-[#8b6b36]">Activo</span>}</span><span className="min-w-0 truncate font-medium text-[#342e26] sm:whitespace-normal">{metal.label}</span></button>)}</div>
           </div>
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#92702f]">02 · Piedra</p>
-            <p className="mt-1 text-xs text-[#8a8175]">Selecciona una gema</p>
-            <div className="mt-2 grid grid-cols-2 gap-1.5 sm:grid-cols-2 md:grid-cols-1 [@media(max-height:800px)]:mt-1">{gemas.map((gem) => <button key={gem.id} type="button" aria-pressed={gemaId === gem.id} onClick={() => setGemaId(gem.id)} className={"flex min-h-10 w-full items-center gap-2 rounded-xl border px-2.5 py-2 text-left text-xs transition [@media(max-height:800px)]:min-h-8 [@media(max-height:800px)]:py-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45] focus-visible:ring-offset-1 " + (gemaId === gem.id ? "border-[#a7833d] bg-[#f7f0e2] text-[#342e26]" : "border-[#ece7df] bg-white text-[#5f574d] hover:border-[#d1bd96] hover:bg-[#fcfaf5]")}><span className="size-3.5 shrink-0 rounded-full border border-black/10" style={{ backgroundColor: "#" + gem.color.toString(16).padStart(6,"0") }} /><span className="min-w-0 flex-1 truncate font-medium">{gem.label}</span>{gemaId === gem.id && <span className="text-[9px] font-bold uppercase tracking-wide text-[#8b6b36]">Activo</span>}</button>)}</div>
+            <p className="mt-0.5 hidden text-xs text-[#8a8175] sm:block">Selecciona una gema</p>
+            <div className="mt-2 grid grid-cols-3 gap-1 sm:grid-cols-2 sm:gap-1.5 md:grid-cols-1 [@media(max-height:800px)]:mt-1">{gemas.map((gem) => <button key={gem.id} type="button" aria-pressed={gemaId === gem.id} onClick={() => setGemaId(gem.id)} className={"flex min-h-9 w-full items-center gap-1.5 rounded-lg border px-2 py-1.5 text-left text-[11px] transition sm:min-h-10 sm:gap-2 sm:rounded-xl sm:px-2.5 sm:py-2 sm:text-xs [@media(max-height:800px)]:min-h-8 [@media(max-height:800px)]:py-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45] focus-visible:ring-offset-1 " + (gemaId === gem.id ? "border-[#a7833d] bg-[#f7f0e2] text-[#342e26]" : "border-[#ece7df] bg-white text-[#5f574d] hover:border-[#d1bd96] hover:bg-[#fcfaf5]")}><span className="size-3 shrink-0 rounded-full border border-black/10 sm:size-3.5" style={{ backgroundColor: "#" + gem.color.toString(16).padStart(6,"0") }} /><span className="min-w-0 flex-1 truncate font-medium">{gem.label}</span>{gemaId === gem.id && <span className="text-[9px] font-bold uppercase tracking-wide text-[#8b6b36]">Activo</span>}</button>)}</div>
           </div>
-          <div className="mt-3 rounded-xl border border-[#eee6d8] bg-[linear-gradient(135deg,#fcfaf6_0%,#fffdf9_100%)] p-3 sm:mt-4 [@media(max-height:800px)]:mt-2 [@media(max-height:800px)]:p-2.5" aria-live="polite">
+          <div className="mt-2.5 rounded-lg border border-[#eee6d8] bg-[linear-gradient(135deg,#fcfaf6_0%,#fffdf9_100%)] p-2.5 sm:mt-4 sm:rounded-xl sm:p-3 [@media(max-height:800px)]:mt-2 [@media(max-height:800px)]:p-2.5" aria-live="polite">
             <div className="flex items-center justify-between gap-2">
               <p className="text-[10px] font-bold uppercase tracking-[.14em] text-[#92702f]">Tu combinación</p>
               <span className="rounded-full bg-[#f2ead9] px-2 py-1 text-[9px] font-semibold text-[#85672f]">Vista previa</span>
             </div>
-            <div className="mt-3 flex items-center gap-2.5">
-              <span className="size-7 shrink-0 rounded-full border border-black/10 shadow-sm" style={{ backgroundColor: "#" + selectedMetal.color.toString(16).padStart(6, "0") }} />
+            <div className="mt-2 flex items-center gap-2 sm:mt-3 sm:gap-2.5">
+              <span className="size-5 shrink-0 rounded-full border border-black/10 shadow-sm sm:size-7" style={{ backgroundColor: "#" + selectedMetal.color.toString(16).padStart(6, "0") }} />
               <div className="min-w-0">
                 <p className="text-[10px] text-[#8a8175]">Metal</p>
                 <p className="truncate text-xs font-semibold text-[#342e26]">{selectedMetal.label}</p>
               </div>
             </div>
-            <div className="mt-2.5 flex items-center gap-2.5">
+            <div className="mt-2 flex items-center gap-2 sm:mt-2.5 sm:gap-2.5">
               <span className="size-7 shrink-0 rounded-full border border-black/10 shadow-sm" style={{ backgroundColor: "#" + selectedGem.color.toString(16).padStart(6, "0") }} />
               <div className="min-w-0">
                 <p className="text-[10px] text-[#8a8175]">Piedra</p>
@@ -205,7 +205,7 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
               </div>
             </div>
             {aplicacionEstado && <p className={"mt-3 border-t border-[#eee6d8] pt-2 text-[10px] leading-4 " + (aplicacionEstado.startsWith("Metal y gema aplicados") ? "text-emerald-700" : "text-amber-700")} role="status">{aplicacionEstado}</p>}
-            <p className="mt-2 text-[10px] leading-4 text-[#746b62]">La apariencia final depende de la geometría y de las piezas identificadas en el modelo 3D.</p>
+            <p className="mt-2 hidden text-[10px] leading-4 text-[#746b62] sm:block">La apariencia final depende de la geometría y de las piezas identificadas en el modelo 3D.</p>
           </div>
         </aside>
       </div>
