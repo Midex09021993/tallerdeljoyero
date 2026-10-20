@@ -1,6 +1,10 @@
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { AurumRender } from "@/components/AurumRender";
+
+// Mantiene el motor 3D fuera del paquete inicial de rutas públicas, incluido /auth.
+const AurumRender = lazy(() =>
+  import("@/components/AurumRender").then((module) => ({ default: module.AurumRender })),
+);
 
 export function AurumRenderShell() {
   const navigate = useNavigate();
@@ -73,5 +77,15 @@ export function AurumRenderShell() {
     };
   }, [navigate]);
 
-  return <AurumRender />;
+  return (
+    <Suspense
+      fallback={
+        <div className="grid min-h-screen place-items-center bg-[#050608] text-sm text-white/65">
+          Preparando Aurum Render…
+        </div>
+      }
+    >
+      <AurumRender />
+    </Suspense>
+  );
 }
