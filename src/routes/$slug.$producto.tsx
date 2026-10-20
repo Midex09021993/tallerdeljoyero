@@ -106,6 +106,7 @@ export function CatalogoProductoPublicoPage() {
   const [tipoEnvio, setTipoEnvio] = useState<"rapido" | "fabricacion">("rapido");
   const [anadidoAlCarrito, setAnadidoAlCarrito] = useState(false);
   const [errorCarrito, setErrorCarrito] = useState("");
+  const [vistaVisual, setVistaVisual] = useState<"fotos" | "3d">("fotos");
   const disponibilidadNormalizada = (item?.disponibilidad ?? "Consultar").trim().toLocaleLowerCase("es");
   const esNoDisponible = disponibilidadNormalizada === "no disponible";
   const esPorEncargo = disponibilidadNormalizada === "por encargo";
@@ -174,12 +175,19 @@ export function CatalogoProductoPublicoPage() {
       </header>
 
       <section className="mx-auto grid max-w-6xl gap-8 px-5 py-8 sm:px-8 lg:grid-cols-[1.05fr_.95fr] lg:py-14">
-        <div>
-          <div className="group relative aspect-square overflow-hidden rounded-[32px] bg-[#e9e3da] shadow-[0_30px_80px_-50px_rgba(31,27,24,.5)] ring-1 ring-[#1f1b1815]">
-            {item.imagen_principal_url ? <img draggable={false} onContextMenu={(event) => event.preventDefault()} onDragStart={(event) => event.preventDefault()} src={item.imagen_principal_url} alt={item.nombre} className="size-full object-cover transition duration-700 group-hover:scale-[1.025]" onError={(event) => { event.currentTarget.style.display = "none"; }} /> : <div className="grid size-full place-items-center"><Box className="size-14 text-[#8a6b36]" /></div>}
+        <div className="min-w-0">
+          <div className="mb-3 flex items-center gap-1 rounded-full border border-[#1f1b1815] bg-white/70 p-1" role="tablist" aria-label="Vista de la joya">
+            <button type="button" role="tab" aria-selected={vistaVisual === "fotos"} onClick={() => setVistaVisual("fotos")} className={"flex-1 rounded-full px-4 py-2.5 text-xs font-semibold transition " + (vistaVisual === "fotos" ? "bg-[#1f1b18] text-white shadow-sm" : "text-[#625b54] hover:bg-white")}>Fotografías</button>
+            <button type="button" role="tab" aria-selected={vistaVisual === "3d"} onClick={() => setVistaVisual("3d")} className={"flex-1 rounded-full px-4 py-2.5 text-xs font-semibold transition " + (vistaVisual === "3d" ? "bg-[#1f1b18] text-white shadow-sm" : "text-[#625b54] hover:bg-white")}>Configurar en 3D</button>
           </div>
-          {imagenes.length ? <div className="mt-3 grid grid-cols-4 gap-2">{imagenes.slice(0, 8).map((url, index) => <img draggable={false} onContextMenu={(event) => event.preventDefault()} onDragStart={(event) => event.preventDefault()} key={url + index} src={url} alt={item.nombre + " " + (index + 1)} className="aspect-square rounded-xl object-cover" onError={(event) => { event.currentTarget.style.display = "none"; }} />)}</div> : null}
-          <PublicJewelConfigurator slug={slug} producto={productoSlug} />
+          <div role="tabpanel" aria-label={vistaVisual === "fotos" ? "Fotografías del producto" : "Configurador 3D"} className="min-w-0">
+            {vistaVisual === "fotos" ? <>
+              <div className="group relative aspect-square overflow-hidden rounded-[32px] bg-[#e9e3da] shadow-[0_30px_80px_-50px_rgba(31,27,24,.5)] ring-1 ring-[#1f1b1815]">
+                {item.imagen_principal_url ? <img draggable={false} onContextMenu={(event) => event.preventDefault()} onDragStart={(event) => event.preventDefault()} src={item.imagen_principal_url} alt={item.nombre} className="size-full object-cover transition duration-700 group-hover:scale-[1.025]" onError={(event) => { event.currentTarget.style.display = "none"; }} /> : <div className="grid size-full place-items-center"><Box className="size-14 text-[#8a6b36]" /></div>}
+              </div>
+              {imagenes.length ? <div className="mt-3 grid grid-cols-4 gap-2">{imagenes.slice(0, 8).map((url, index) => <img draggable={false} onContextMenu={(event) => event.preventDefault()} onDragStart={(event) => event.preventDefault()} key={url + index} src={url} alt={item.nombre + " " + (index + 1)} className="aspect-square rounded-xl object-cover" onError={(event) => { event.currentTarget.style.display = "none"; }} />)}</div> : null}
+            </> : <div className="overflow-hidden rounded-[28px] border border-[#1f1b1815] bg-white shadow-[0_24px_60px_-45px_rgba(31,27,24,.35)]"><PublicJewelConfigurator slug={slug} producto={productoSlug} /></div>}
+          </div>
         </div>
 
         <div className="self-start">
