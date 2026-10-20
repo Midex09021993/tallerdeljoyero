@@ -43,7 +43,7 @@ function CursosFormacionPage() {
     queryKey: ["formacion-publicidad-config", participanteId],
     enabled: Boolean(participanteId),
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("catalogo_configuracion")
         .select("slug,nombre_publico,descripcion,logo_url,whatsapp,formacion_visible,formacion_titulo,formacion_descripcion,formacion_imagen_url")
         .eq("participante_id", participanteId!)
@@ -72,7 +72,7 @@ function CursosFormacionPage() {
     setGuardando(true);
     setMensaje(null);
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("catalogo_configuracion")
         .update({
           formacion_titulo: titulo.trim() || null,
