@@ -42,25 +42,6 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
   const kiNum = clampQuilataje(Number(inicial));
   const kfNum = clampQuilataje(Number(final));
 
-  const inicioRegistrado = useRef(false);
-  const resultadoRegistrado = useRef(false);
-
-  useEffect(() => {
-    if (masa.trim() && !inicioRegistrado.current) {
-      inicioRegistrado.current = true;
-      registrarEvento("tool_started", { tool_id: "oro" });
-    }
-  }, [masa]);
-
-  useEffect(() => {
-    if (resultado && !resultadoRegistrado.current) {
-      resultadoRegistrado.current = true;
-      registrarEvento("tool_completed", { tool_id: "oro" });
-    } else if (!resultado) {
-      resultadoRegistrado.current = false;
-    }
-  }, [resultado]);
-
   const resultado = useMemo(() => {
     if (!Number.isFinite(masaNum) || masaNum <= 0) return null;
     if (kfNum <= 0 || kfNum >= 24) return null;
@@ -86,6 +67,25 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
       metales,
     };
   }, [kiNum, kfNum, masaNum, color, configuracion]);
+
+  const inicioRegistrado = useRef(false);
+  const resultadoRegistrado = useRef(false);
+
+  useEffect(() => {
+    if (masa.trim() && !inicioRegistrado.current) {
+      inicioRegistrado.current = true;
+      registrarEvento("tool_started", { tool_id: "oro" });
+    }
+  }, [masa]);
+
+  useEffect(() => {
+    if (resultado && !resultadoRegistrado.current) {
+      resultadoRegistrado.current = true;
+      registrarEvento("tool_completed", { tool_id: "oro" });
+    } else if (!resultado) {
+      resultadoRegistrado.current = false;
+    }
+  }, [resultado]);
 
   return (
     <div className={`relative overflow-hidden rounded-[28px] border border-gold/20 bg-background shadow-[0_18px_60px_rgba(0,0,0,0.10)] ${compacto ? "p-1" : "p-4 sm:p-6 lg:p-8"}`}>
