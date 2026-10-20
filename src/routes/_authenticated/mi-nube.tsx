@@ -162,6 +162,9 @@ function MiNubePage() {
   const [busqueda, setBusqueda] = useState("");
   const [proyectoAbierto, setProyectoAbierto] = useState<string | null>(null);
   const [proyectoPendienteEliminar, setProyectoPendienteEliminar] = useState<{ nombre: string; archivos: ArchivoNube[] } | null>(null);
+  const [proyectoRenombrando, setProyectoRenombrando] = useState<string | null>(null);
+  const [nuevoNombreCarpeta, setNuevoNombreCarpeta] = useState("");
+  const [guardandoNombreCarpeta, setGuardandoNombreCarpeta] = useState(false);
   const [archivoPendienteEliminar, setArchivoPendienteEliminar] = useState<ArchivoNube | null>(null);
   const [comparticionPendienteRevocar, setComparticionPendienteRevocar] = useState<CarpetaCompartida | null>(null);
   const [modoEdicion, setModoEdicion] = useState<string | null>(null);
@@ -1043,6 +1046,94 @@ function MiNubePage() {
       toast.error(cause instanceof Error ? cause.message : "No se pudo completar la eliminación.");
     }
   };
+  const guardarNombreCarpeta = async (proyecto: { nombre: string; archivos: ArchivoNube[] }) => {
+    if (!participanteId || !usuarioId) { toast.error("No se encontró tu taller activo."); return; }
+    const nombreNuevo = nuevoNombreCarpeta.trim().normalize("NFKC").replace(/[\\/\\\\]/g, "-").replace(/[\\u0000-\\u001f]/g, "").replace(/\\s+/g, " ").slice(0, 60);
+    if (!nombreNuevo) { toast.error("Escribe un nombre para la carpeta."); return; }
+    if (nombreNuevo === proyecto.nombre) { setProyectoRenombrando(null); return; }
+    if (archivos.some((archivo) => archivo.carpeta === nombreNuevo)) { toast.error("Ya existe una carpeta con ese nombre."); return; }
+    if (subiendo || compartiendo !== null || guardandoNombreCarpeta) { toast.error("Espera a que termine la operación en curso."); return; }
+
+    setGuardandoNombreCarpeta(true);
+    const raizAnterior = `${participanteId}/${usuarioId}/${proyecto.nombre}`;
+    const raizNueva = `${participanteId}/${usuarioId}/${nombreNuevo}`;
+    const movidos: Array<{ origen: string; destino: string }> = [];
+    let nasRenombrado = false;
+    try {
+      // Confirmar el contenido del NAS antes de cambiar rutas: los vídeos deben
+      // seguir disponibles bajo el mismo nombre lógico para todos los talleres.
+      const { data: nasData, error: nasError } = await supabase.functions.invoke("nextcloud-video-files", {
+        body: { action: "list", participantId },
+      });
+      if (nasError || nasData?.error || !Array.isArray(nasData?.files)) {
+        throw new Error("No se pudo verificar el NAS. Por seguridad, no se renombró la carpeta.");
+      }
+      const videosDeCarpeta = (nasData.files as Array<{ name: string; folder: string }>)
+        .filter((archivo) => archivo.folder === proyecto.nombre);
+      const videosDestino = (nasData.files as Array<{ name: string; folder: string }>)
+        .filter((archivo) => archivo.folder === nombreNuevo);
+      if (videosDestino.length) throw new Error("Ya existe una carpeta de vídeos con ese nombre en el NAS.");
+
+      // Verificar colisiones en Storage antes de mover cualquier archivo.
+      const { data: carpetasRaiz, error: errorRaiz } = await supabase.storage.from(BUCKET).list(`${participanteId}/${usuarioId}`, { limit: 1000 });
+      if (errorRaiz) throw new Error("No se pudo verificar el nombre de destino en Mi Nube.");
+      if ((carpetasRaiz ?? []).some((entrada) => entrada.name === nombreNuevo)) {
+        throw new Error("Ya existe una carpeta con ese nombre en Mi Nube.");
+      }
+
+      const { data: entradas, error: errorLista } = await supabase.storage.from(BUCKET).list(raizAnterior, { limit: 1000, sortBy: { column: "name", order: "asc" } });
+      if (errorLista) throw new Error("No se pudo verificar el contenido de la carpeta. No se cambió el nombre.");
+      const archivosWeb = (entradas ?? []).filter((entrada) => Boolean(entrada.id || entrada.metadata || entrada.name.includes(".")));
+      for (const entrada of archivosWeb) {
+        const origen = `${raizAnterior}/${entrada.name}`;
+        const destino = `${raizNueva}/${entrada.name}`;
+        const { error: moveError } = await supabase.storage.from(BUCKET).move(origen, destino);
+        if (moveError) throw new Error(`No se pudo mover “${entrada.name}”: ${moveError.message}`);
+        movidos.push({ origen, destino });
+      }
+
+      if (videosDeCarpeta.length > 0) {
+        const { data: nasRename, error: nasRenameError } = await supabase.functions.invoke("nextcloud-video-files", {
+          body: { action: "rename-folder", oldFolder: proyecto.nombre, newFolder: nombreNuevo, participantId },
+        });
+        if (nasRenameError || nasRename?.error || nasRename?.ok !== true) {
+          throw new Error(nasRename?.error || nasRenameError?.message || "No se pudo renombrar la carpeta de vídeos del NAS.");
+        }
+        nasRenombrado = true;
+      }
+
+      const { error: errorCompartidas } = await supabase.from("mi_nube_compartidas")
+        .update({ carpeta: nombreNuevo })
+        .eq("propietario_usuario_id", usuarioId)
+        .eq("propietario_participante_id", participanteId)
+        .eq("carpeta", proyecto.nombre)
+        .is("revoked_at", null);
+      if (errorCompartidas) throw new Error("Los archivos se movieron, pero no se pudo actualizar el nombre compartido. Se intentará revertir el cambio.");
+
+      toast.success(`Carpeta renombrada a “${nombreNuevo}”. El nombre actualizado se mostrará también a los talleres con acceso.`);
+      setProyectoRenombrando(null);
+      setProyectoAbierto(null);
+      await Promise.all([cargarBiblioteca(), cargarCompartidas()]);
+    } catch (cause) {
+      let rollbackFallido = false;
+      if (nasRenombrado) {
+        const { data, error } = await supabase.functions.invoke("nextcloud-video-files", {
+          body: { action: "rename-folder", oldFolder: nombreNuevo, newFolder: proyecto.nombre, participantId },
+        });
+        if (error || data?.error || data?.ok !== true) rollbackFallido = true;
+      }
+      for (const movido of [...movidos].reverse()) {
+        const { error } = await supabase.storage.from(BUCKET).move(movido.destino, movido.origen);
+        if (error) rollbackFallido = true;
+      }
+      const mensaje = cause instanceof Error ? cause.message : "No se pudo renombrar la carpeta.";
+      toast.error(rollbackFallido ? `${mensaje} Además, la reversión quedó incompleta; revisa Mi Nube antes de volver a intentarlo.` : mensaje);
+      await Promise.all([cargarBiblioteca(), cargarCompartidas()]);
+    } finally {
+      setGuardandoNombreCarpeta(false);
+    }
+  };
+
   const eliminarProyectoCompleto = async (proyecto: { nombre: string; archivos: ArchivoNube[] }) => {
     if (!participanteId || !usuarioId) {
       toast.error("No se encontró tu taller activo.");
@@ -1501,11 +1592,25 @@ function MiNubePage() {
                   <div className="space-y-3 p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <h4 className="truncate text-[14px] font-semibold tracking-[-0.015em]">{proyecto.nombre}</h4>
-                        <p className="mt-1 text-[11px] text-muted-foreground">{proyecto.archivos.length} archivos <span className="px-1 text-border">·</span> proyecto</p>
+                        {proyectoRenombrando === proyecto.nombre ? (
+                          <form onSubmit={(event) => { event.preventDefault(); void guardarNombreCarpeta(proyecto); }} className="space-y-2">
+                            <label className="sr-only" htmlFor={`nombre-carpeta-${proyecto.nombre}`}>Nuevo nombre de carpeta</label>
+                            <input id={`nombre-carpeta-${proyecto.nombre}`} autoFocus value={nuevoNombreCarpeta} onChange={(event) => setNuevoNombreCarpeta(event.target.value)} maxLength={60} disabled={guardandoNombreCarpeta} className="h-9 w-full rounded-lg border border-input bg-background px-2.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-gold" />
+                            <div className="flex gap-2">
+                              <button type="submit" disabled={guardandoNombreCarpeta} className="rounded-lg border border-gold/50 bg-gold/10 px-2.5 py-1.5 text-[11px] font-semibold disabled:opacity-50">{guardandoNombreCarpeta ? "Guardando…" : "Guardar nombre"}</button>
+                              <button type="button" disabled={guardandoNombreCarpeta} onClick={() => setProyectoRenombrando(null)} className="rounded-lg border border-border px-2.5 py-1.5 text-[11px] font-medium disabled:opacity-50">Cancelar</button>
+                            </div>
+                          </form>
+                        ) : (
+                          <>
+                            <h4 className="truncate text-[14px] font-semibold tracking-[-0.015em]">{proyecto.nombre}</h4>
+                            <p className="mt-1 text-[11px] text-muted-foreground">{proyecto.archivos.length} archivos <span className="px-1 text-border">·</span> proyecto</p>
+                          </>
+                        )}
                       </div>
                       <span className="shrink-0 rounded-full border border-border/80 px-2.5 py-1 text-[9px] font-medium uppercase tracking-[0.12em] text-muted-foreground">Mi nube</span>
                     </div>
+                    {proyectoRenombrando !== proyecto.nombre && <button type="button" onClick={() => { setNuevoNombreCarpeta(proyecto.nombre); setProyectoRenombrando(proyecto.nombre); }} disabled={guardandoNombreCarpeta || subiendo || compartiendo !== null} className="inline-flex min-h-9 w-full items-center justify-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:border-gold/45 disabled:opacity-50"><Pencil className="size-3.5" /> Editar nombre de carpeta</button>}
                     <div className="flex flex-wrap gap-1">
                       {proyecto.archivos.some(a => a.categoria === "fotos") && <span className="rounded-md bg-muted/70 px-2 py-0.5 text-[9px] font-medium text-muted-foreground">Imagen</span>}
                       {proyecto.tiene3dm && <span className="rounded-md bg-muted/70 px-2 py-1 text-[10px] font-medium text-muted-foreground">3DM</span>}
