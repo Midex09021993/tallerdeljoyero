@@ -1,6 +1,6 @@
-const CACHE_NAME = "taller-del-joyero-pwa-v1";
+const CACHE_NAME = "taller-del-joyero-pwa-v2";
 const CACHE_PREFIX = "taller-del-joyero-pwa-";
-const APP_SHELL = ["/", "/manifest.webmanifest", "/pwa-icon.svg", "/favicon.ico"];
+const APP_SHELL = ["/", "/manifest.webmanifest", "/pwa-icon.svg"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
