@@ -2107,7 +2107,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       {!embedded && exportOpen&&<div className="absolute right-3 top-[72px] z-[80] max-h-[calc(100%-6rem)] w-[min(420px,calc(100%-1.5rem))] overflow-y-auto rounded-2xl border border-white/80 bg-[#fbfaf7]/95 p-3 text-[#292824] shadow-[0_16px_44px_rgba(35,32,24,.18)] backdrop-blur-2xl sm:right-4 sm:top-[76px] sm:p-4">
       <div>
         <div className="mb-5 flex items-start justify-between gap-4"><div><div id="aurum-export-title" className="text-xl font-semibold tracking-tight text-[#292824]">Centro de exportación</div><div className="mt-1 text-sm text-[#77756f]">Prepara tu joya para presentar, compartir o fabricar.</div></div><button type="button" aria-label="Cerrar exportación" onClick={()=>setExportOpen(false)} className="rounded-lg p-1 text-[#77756f] hover:bg-black/[.05]"><X className="size-4"/></button></div>
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+        <div className="flex flex-col gap-3">
           <button type="button" disabled={!archivo||exportBusy} onClick={async()=>{
             setExportBusy(true);
             try{
@@ -2244,7 +2244,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           {false&&(<button type="button" onClick={()=>apiRef.current?.exportSceneSettings()} className="flex w-full items-center gap-3 rounded-xl border border-black/10 bg-black/[.025] px-3 py-3 text-left text-sm text-[#292824] hover:bg-black/[.05]"><FileJson className="size-5"/><span><span className="block">Configuración .vjson</span><span className="block text-[10px] text-[#77756f]">Escena, cámara, calidad y selección</span></span></button>)}
 
         </div>
-        <p className="mt-4 rounded-xl border border-black/[.06] bg-black/[.025] p-3 text-xs leading-relaxed text-[#77756f] md:col-span-2">Antes de compartir un modelo 3D, ten en cuenta que los materiales compatibles con glTF se conservan mejor; los shaders personalizados, el HDRI y los efectos de pantalla pueden variar según el visor.</p>
+        <p className="mt-3 rounded-xl border border-black/[.06] bg-black/[.025] p-3 text-[11px] leading-relaxed text-[#77756f]">Antes de compartir un modelo 3D, ten en cuenta que los materiales compatibles con glTF se conservan mejor; los shaders personalizados, el HDRI y los efectos de pantalla pueden variar según el visor.</p>
       </div></div>}
       <div className={embedded ? "flex min-h-0 flex-1 overflow-hidden bg-[#090b0e]" : "flex min-h-0 flex-1 gap-3 bg-[#eeede8] p-3"}>
         {!embedded && <aside className="w-[336px] shrink-0 overflow-hidden rounded-2xl border border-black/[.07] bg-[#f9f8f5] text-[#292824] shadow-[0_8px_28px_rgba(36,32,20,.045)]">
