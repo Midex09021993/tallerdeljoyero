@@ -54,6 +54,7 @@ type Publicacion = {
 
 function PublicidadFormacionPage() {
   const { slug } = Route.useParams();
+  const publicacionInicial = Route.useLoaderData();
   const [mensajeCompartir, setMensajeCompartir] = useState("");
   const compartirPagina = async () => {
     const url = window.location.href;
@@ -85,6 +86,7 @@ function PublicidadFormacionPage() {
       const result = data as unknown as Publicacion | Publicacion[] | null;
       return Array.isArray(result) ? result[0] ?? null : result;
     },
+    initialData: publicacionInicial,
     retry: 1,
   });
 
