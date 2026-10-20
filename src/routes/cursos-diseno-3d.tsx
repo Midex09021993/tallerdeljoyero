@@ -65,7 +65,7 @@ const recursos = [
     enlace: "/herramientas-publicas",
     accion: "Explorar recursos",
   },
-];
+] as const;
 
 function CursosDiseno3DPage() {
   return (
