@@ -168,13 +168,13 @@ export function CatalogoProductoPublicoPage() {
   return (
     <main className="min-h-screen bg-[#f7f4ef] text-[#1f1b18]">
       <header className="border-b border-[#1f1b1815] bg-[#f7f4ef]/95 px-5 py-5 backdrop-blur sm:px-8">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4">
+        <div className="mx-auto flex max-w-[1720px] items-center justify-between gap-4 lg:px-2 2xl:px-4">
           <Link to="/$slug" params={{ slug }} className="inline-flex items-center gap-2 text-xs font-semibold"><ArrowLeft className="size-4" /> Volver al catálogo</Link>
           <button type="button" onClick={() => void navigator.share?.({ title: item.nombre || "", url: window.location.href })} className="inline-flex items-center gap-2 rounded-full border border-[#1f1b1820] px-3 py-2 text-xs font-semibold"><Share2 className="size-3.5" /> Compartir</button>
         </div>
       </header>
 
-      <section className="mx-auto grid max-w-6xl gap-8 px-5 py-8 sm:px-8 lg:grid-cols-[1.05fr_.95fr] lg:py-14">
+      <section className="mx-auto grid w-full max-w-[1720px] gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[minmax(0,1.12fr)_minmax(0,.88fr)] lg:gap-8 lg:px-10 lg:py-10 2xl:gap-12 2xl:px-14 2xl:py-12">
         <div className="min-w-0">
           <div className="mb-3 flex items-center gap-1 rounded-full border border-[#1f1b1815] bg-white/70 p-1" role="tablist" aria-label="Vista de la joya">
             <button type="button" role="tab" aria-selected={vistaVisual === "fotos"} onClick={() => setVistaVisual("fotos")} className={"flex-1 rounded-full px-4 py-2.5 text-xs font-semibold transition " + (vistaVisual === "fotos" ? "bg-[#1f1b18] text-white shadow-sm" : "text-[#625b54] hover:bg-white")}>Fotografías</button>
