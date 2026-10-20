@@ -212,33 +212,6 @@ const selectionLayerIndex=(part:any):number|null=>{
   return null;
 };
 
-function getAurumMetalEnvironmentScale(): number {
-  try {
-    const raw = new URLSearchParams(window.location.search).get("aurumMetalEnvScale");
-    if (raw === null || raw.trim() === "") return 1;
-    const value = Number(raw);
-    return Number.isFinite(value) ? Math.max(0.5, Math.min(2, value)) : 1;
-  } catch {
-    return 1;
-  }
-}
-
-function applyAurumMetalWithDiagnosticEnvironmentScale(material: any, materialConfig: any) {
-  applyAurumMetal(material, metalPresetFromConfig(materialConfig));
-  applyAurumReferenceMetalOptics(material, String(materialConfig?.id ?? ""));
-  const scale = getAurumMetalEnvironmentScale();
-  if (scale !== 1) {
-    const baseIntensity = Number(material.envMapIntensity ?? 1);
-    material.envMapIntensity = Math.max(0, Math.min(4, baseIntensity * scale));
-    material.userData = {
-      ...(material.userData ?? {}),
-      aurumMetalDiagnosticEnvironmentScale: scale,
-      aurumMetalDiagnosticBaseEnvMapIntensity: baseIntensity,
-    };
-  }
-  return material;
-}
-
 export function applyAurumMaterialToModel(model:any,activePart:any,materialConfig:any,sharedMaterial:any,applyAll=false) {
   if (!model) return false;
   if (!activePart?.isMesh && applyAll) {
@@ -254,7 +227,8 @@ export function applyAurumMaterialToModel(model:any,activePart:any,materialConfi
   const selectedLayerId=selectedMeta.rhinoLayerId??activePart?.userData?.attributes?.layerId??activePart?.userData?.attributes?.LayerId??activePart?.userData?.layerId??activePart?.userData?.LayerId??null;
   const selectedLayerKey=resolveAurumLayerKey({layerId:selectedLayerId,layerIndex:selectedLayerIndex,layerName:selectedLayer,layerColor:selectedMeta.colorCapa,category:selectedCategory,existingKey:selectedMeta.layerKey});
   if(selectedCategory!=="metal"&&selectedCategory!=="otro") return false;
-  applyAurumMetalWithDiagnosticEnvironmentScale(sharedMaterial, materialConfig);
+  applyAurumMetal(sharedMaterial,metalPresetFromConfig(materialConfig));
+  applyAurumReferenceMetalOptics(sharedMaterial,String(materialConfig?.id??""));
   let applied=0;
   const auditedMaterials:any[]=[];
   model.traverse((x:any)=>{
@@ -270,7 +244,7 @@ export function applyAurumMaterialToModel(model:any,activePart:any,materialConfi
     const sameLayer=sameLayerIdentity&&category===selectedCategory;
     const shouldApply=applyAll ? (category==="metal"||category==="otro") : (x.uuid===activePart.uuid||(selectedCategory==="otro"&&sameLayer)||(selectedCategory==="metal"&&sameLayer));
     if(shouldApply){
-      const apply=(base:any)=>{const next=base?.clone?base.clone():sharedMaterial.clone();return applyAurumMetalWithDiagnosticEnvironmentScale(next, materialConfig);};
+      const apply=(base:any)=>{const next=base?.clone?base.clone():sharedMaterial.clone();applyAurumMetal(next,metalPresetFromConfig(materialConfig));applyAurumReferenceMetalOptics(next,String(materialConfig?.id??""));return next;};
       x.material=Array.isArray(x.material)?x.material.map(apply):apply(x.material);
       const finalMaterials=Array.isArray(x.material)?x.material:[x.material];
       auditedMaterials.push(...finalMaterials.filter(Boolean).map((m:any)=>({mesh:x.name||x.uuid,material:m})));
