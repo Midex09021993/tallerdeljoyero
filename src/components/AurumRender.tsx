@@ -37,7 +37,7 @@ import { ChevronDown, Copy, Download, Expand, FileJson, Gem, Image as ImageIcon,
 
 import { GEMAS, MATERIALES, ESCENARIOS, VISTAS, ILUMINACIONES, type MaterialId, type EscenarioId, type VistaId, type IluminacionId, type MaterialGrupo, type CategoriaParte, type GemaId, type GemaConfig, type MaterialConfig, type ParteModelo } from "../lib/aurum/catalog";
 
-const diagnosticoSeleccionHabilitado = false;
+const diagnosticoSeleccionHabilitado = true;
 
 const normalizarTexto = (v:any) => String(v ?? "").trim().toLowerCase();
 const colorRhinoHex = (c:any): string | undefined => {
