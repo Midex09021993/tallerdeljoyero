@@ -226,6 +226,27 @@ Deno.serve(async (req) => {
       }
       return json({ ok: true, verified: true, folder, name: filename, bytes: verifiedBytes });
     }
+    if (action === "rename-folder") {
+      const oldFolder = safeSegment(typeof body.oldFolder === "string" ? body.oldFolder : "");
+      const newFolder = safeSegment(typeof body.newFolder === "string" ? body.newFolder : "");
+      if (!oldFolder || !newFolder || oldFolder === newFolder
+        || oldFolder !== body.oldFolder || newFolder !== body.newFolder) {
+        return json({ error: "Nombre de carpeta no válido." }, 400);
+      }
+      const destination = dav([...root, newFolder, ""]);
+      const moved = await fetch(dav([...root, oldFolder, ""]), {
+        method: "MOVE",
+        headers: { Authorization: auth, Destination: destination.toString(), Overwrite: "F" },
+        redirect: "error",
+      });
+      if (moved.status !== 201 && moved.status !== 204) {
+        const status = moved.status;
+        await moved.body?.cancel();
+        return json({ error: status === 404 ? "No existe una carpeta de vídeos con ese nombre en el NAS." : `No se pudo renombrar la carpeta del NAS (HTTP ${status}).` }, 502);
+      }
+      await moved.body?.cancel();
+      return json({ ok: true, oldFolder, newFolder });
+    }
     if (action === "delete") {
       const folder = safeSegment(typeof body.folder === "string" ? body.folder : "");
       const filename = safeSegment(typeof body.name === "string" ? body.name : "");
