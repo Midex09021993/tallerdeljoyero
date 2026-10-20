@@ -209,12 +209,19 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [mostrarTodosMateriales, setMostrarTodosMateriales] = useState(false);
   const [mostrarTodasGemas, setMostrarTodasGemas] = useState(false);
   const [busquedaMateriales, setBusquedaMateriales] = useState("");
+  const [familiaMaterialActiva, setFamiliaMaterialActiva] = useState("Todas");
   const [busquedaGemas, setBusquedaGemas] = useState("");
+  const familiasMateriales = useMemo(() => ["Todas", ...Array.from(new Set(MATERIALES.map(m => m.grupo)))], []);
   const materialesVisibles = useMemo(() => {
     const principales = new Set<MaterialId>(["oro18a_pulido", "oro18b_rodinado", "oro18r_pulido", "oro18_verde_blanco_ijewel", "plata925_pulida", "platino_pulido"]);
     const termino = busquedaMateriales.trim().toLocaleLowerCase("es");
-    return MATERIALES.filter((m) => (mostrarTodosMateriales || principales.has(m.id) || m.id === materialId) && (!termino || (m.nombre+" "+m.id).toLocaleLowerCase("es").includes(termino))).sort((a,b)=>Number(principales.has(b.id))-Number(principales.has(a.id)));
-  }, [mostrarTodosMateriales, materialId, busquedaMateriales]);
+    return MATERIALES.filter((m) =>
+      (familiaMaterialActiva === "Todas"
+        ? (mostrarTodosMateriales || principales.has(m.id) || m.id === materialId)
+        : m.grupo === familiaMaterialActiva || m.id === materialId) &&
+      (!termino || (m.nombre+" "+m.id+" "+m.grupo).toLocaleLowerCase("es").includes(termino))
+    ).sort((a,b)=>Number(principales.has(b.id))-Number(principales.has(a.id)));
+  }, [mostrarTodosMateriales, materialId, busquedaMateriales, familiaMaterialActiva]);
   const gemasVisibles = useMemo(() => {
     const principales = new Set<GemaId>(["diamante_natural", "esmeralda_1", "rubi_natural", "zafiro_azul", "amatista_natural", "moissanita_blanca", "aguamarina_brasil", "citrino_natural", "topacio_azul"]);
     const termino = busquedaGemas.trim().toLocaleLowerCase("es");
