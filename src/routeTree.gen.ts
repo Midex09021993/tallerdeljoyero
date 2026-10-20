@@ -36,6 +36,7 @@ import { Route as AuthenticatedImpresion3dRouteImport } from './routes/_authenti
 import { Route as AuthenticatedInicioRouteImport } from './routes/_authenticated/inicio'
 import { Route as AuthenticatedInventarioRouteImport } from './routes/_authenticated/inventario'
 import { Route as AuthenticatedMiNubeRouteImport } from './routes/_authenticated/mi-nube'
+import { Route as AuthenticatedMensajesRouteImport } from './routes/_authenticated/mensajes'
 import { Route as AuthenticatedMigracionRouteImport } from './routes/_authenticated/migracion'
 import { Route as AuthenticatedMonitorRouteImport } from './routes/_authenticated/monitor'
 import { Route as AuthenticatedOperarioRouteImport } from './routes/_authenticated/operario'
@@ -203,6 +204,11 @@ const AuthenticatedInventarioRoute = AuthenticatedInventarioRouteImport.update({
 const AuthenticatedMiNubeRoute = AuthenticatedMiNubeRouteImport.update({
   id: '/mi-nube',
   path: '/mi-nube',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMensajesRoute = AuthenticatedMensajesRouteImport.update({
+  id: '/mensajes',
+  path: '/mensajes',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedMigracionRoute = AuthenticatedMigracionRouteImport.update({
@@ -393,6 +399,7 @@ export interface FileRoutesByFullPath {
   '/inicio': typeof AuthenticatedInicioRoute
   '/inventario': typeof AuthenticatedInventarioRoute
   '/mi-nube': typeof AuthenticatedMiNubeRoute
+  '/mensajes': typeof AuthenticatedMensajesRoute
   '/migracion': typeof AuthenticatedMigracionRoute
   '/monitor': typeof AuthenticatedMonitorRoute
   '/operario': typeof AuthenticatedOperarioRoute
@@ -508,6 +515,7 @@ export interface FileRoutesById {
   '/_authenticated/inicio': typeof AuthenticatedInicioRoute
   '/_authenticated/inventario': typeof AuthenticatedInventarioRoute
   '/_authenticated/mi-nube': typeof AuthenticatedMiNubeRoute
+  '/_authenticated/mensajes': typeof AuthenticatedMensajesRoute
   '/_authenticated/migracion': typeof AuthenticatedMigracionRoute
   '/_authenticated/monitor': typeof AuthenticatedMonitorRoute
   '/_authenticated/operario': typeof AuthenticatedOperarioRoute
@@ -567,6 +575,7 @@ export interface FileRouteTypes {
     | '/inicio'
     | '/inventario'
     | '/mi-nube'
+    | '/mensajes'
     | '/migracion'
     | '/monitor'
     | '/operario'
@@ -917,6 +926,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMiNubeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/mensajes': {
+      id: '/_authenticated/mensajes'
+      path: '/mensajes'
+      fullPath: '/mensajes'
+      preLoaderRoute: typeof AuthenticatedMensajesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/migracion': {
       id: '/_authenticated/migracion'
       path: '/migracion'
@@ -1187,6 +1203,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedInicioRoute: typeof AuthenticatedInicioRoute
   AuthenticatedInventarioRoute: typeof AuthenticatedInventarioRoute
   AuthenticatedMiNubeRoute: typeof AuthenticatedMiNubeRoute
+  AuthenticatedMensajesRoute: typeof AuthenticatedMensajesRoute
   AuthenticatedMigracionRoute: typeof AuthenticatedMigracionRoute
   AuthenticatedMonitorRoute: typeof AuthenticatedMonitorRoute
   AuthenticatedOperarioRoute: typeof AuthenticatedOperarioRoute
@@ -1218,6 +1235,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedInicioRoute: AuthenticatedInicioRoute,
   AuthenticatedInventarioRoute: AuthenticatedInventarioRoute,
   AuthenticatedMiNubeRoute: AuthenticatedMiNubeRoute,
+  AuthenticatedMensajesRoute: AuthenticatedMensajesRoute,
   AuthenticatedMigracionRoute: AuthenticatedMigracionRoute,
   AuthenticatedMonitorRoute: AuthenticatedMonitorRoute,
   AuthenticatedOperarioRoute: AuthenticatedOperarioRoute,
