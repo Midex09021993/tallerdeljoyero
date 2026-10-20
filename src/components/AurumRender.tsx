@@ -1010,8 +1010,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         cargar,
         material:aplicarMaterial,
         gema:aplicarGema,
-        materialCatalogo:(m:MaterialConfig)=>{
-          if(!modelo)return;
+        materialCatalogo:(m:MaterialConfig):boolean=>{
+          if(!modelo)return false;
           if(embedded){
             const gemNamePattern=/(gem|gema|diamond|diamante|emerald|esmerald|ruby|rub[ií]|sapphire|zafiro|amethyst|amatista|stone|piedra)/i;
             let metalCandidates=0;
@@ -1059,13 +1059,15 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               });
             }
             aplicarPerfilLive();
-          } else {
-            aplicarMaterial(m,true);
+            invalidateRenderRef.current?.();
+            return Boolean(applied);
           }
+          aplicarMaterial(m,true);
           invalidateRenderRef.current?.();
+          return true;
         },
-                gemaCatalogo:(g:GemaConfig)=>{
-          if(!modelo)return;
+        gemaCatalogo:(g:GemaConfig):boolean=>{
+          if(!modelo)return false;
           const visited=new Set<string>();
           let gemMeshes=0;
           modelo.traverse((x:any)=>{
@@ -1087,6 +1089,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           });
           console.info("[AURUM][CATALOG GEM] Selección aplicada", {gemId:g.id, gemMeshes, layers:visited.size});
           invalidateRenderRef.current?.();
+          return gemMeshes > 0;
         },
         escenario:aplicarEscenario,
         hdriGround:(config:any={})=>{
