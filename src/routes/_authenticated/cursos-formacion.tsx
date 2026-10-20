@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Copy, ExternalLink, Eye, EyeOff, GraduationCap, Save, MessageCircle, Smartphone, Upload, Image as ImageIcon } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -108,7 +108,7 @@ function CursosFormacionPage() {
     const texto = `Te comparto nuestra propuesta de cursos y formación en joyería: ${urlPublica}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, "_blank", "noopener,noreferrer");
   };
-  const subirImagenPromocional = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const subirImagenPromocional = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file || !participanteId) return;
