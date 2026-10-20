@@ -108,6 +108,8 @@ function HerramientasPublicasPage() {
               key={id}
               to="/herramientas/$herramienta"
               params={{ herramienta: ruta }}
+              data-analytics-tool-id={id}
+              data-analytics-tool-name={titulo}
               className="group flex min-h-52 flex-col rounded-2xl border border-white/10 bg-white/[.02] p-5 text-left transition duration-200 hover:-translate-y-0.5 hover:border-[#d8bd7b]/55 hover:bg-white/[.045] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd7b]"
             >
               <span className="grid size-11 place-items-center rounded-xl border border-[#d8bd7b]/25 bg-[#d8bd7b]/[.08] text-[#d8bd7b]"><Icono className="size-5" /></span>
