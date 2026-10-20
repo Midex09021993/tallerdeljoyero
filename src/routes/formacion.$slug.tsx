@@ -30,15 +30,48 @@ function PublicidadFormacionPage() {
   const { data, isLoading, error } = useQuery({
     queryKey: ["publicidad-formacion-publica", slug],
     queryFn: async () => {
-      const { data, error } = await supabasePublic.rpc("obtener_publicidad_formacion" as never, { _slug: slug } as never);
+      const { data, error } = await supabasePublic.rpc(
+        "obtener_publicidad_formacion" as never,
+        { _slug: slug } as never,
+      );
       if (error) throw error;
-      const rows = data as unknown as Publicacion[];
-      return Array.isArray(rows) ? rows[0] ?? null : null;
+      const result = data as unknown as Publicacion | Publicacion[] | null;
+      return Array.isArray(result) ? result[0] ?? null : result;
     },
+    retry: 1,
   });
 
-  if (isLoading) return <main className="min-h-screen bg-background px-5 py-16 text-center text-sm text-muted-foreground">Cargando publicación…</main>;
-  if (error || !data) return <main className="flex min-h-screen flex-col items-center justify-center gap-3 bg-background px-5 text-center"><GraduationCap className="size-10 text-gold-deep" /><h1 className="text-2xl font-semibold">Publicación no disponible</h1><p className="max-w-md text-sm text-muted-foreground">Esta página todavía no está publicada o el enlace no es válido.</p><Link to="/cursos-diseno-3d" className="mt-2 inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-2.5 text-sm font-semibold text-black">Conocer Cursos y formación <ArrowRight className="size-4" /></Link></main>;
+  if (isLoading) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-background px-5">
+        <div className="text-center">
+          <GraduationCap className="mx-auto size-9 animate-pulse text-gold-deep" />
+          <p className="mt-3 text-sm text-muted-foreground">Cargando publicación…</p>
+        </div>
+      </main>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-background px-5 py-16 text-center">
+        <div aria-hidden="true" className="pointer-events-none absolute -top-28 size-80 rounded-full bg-gold/10 blur-3xl" />
+        <div className="relative max-w-md">
+          <div className="mx-auto flex size-16 items-center justify-center rounded-2xl border border-gold/25 bg-gold/10 text-gold-deep">
+            <GraduationCap className="size-8" />
+          </div>
+          <p className="mt-6 text-xs font-bold uppercase tracking-[.2em] text-gold-deep">Cursos y formación</p>
+          <h1 className="mt-3 text-2xl font-semibold">Esta publicación aún no está disponible</h1>
+          <p className="mt-3 text-sm leading-6 text-muted-foreground">
+            La profesora todavía no ha activado esta página o el enlace necesita revisión. Puedes volver a intentarlo más tarde o conocer la propuesta general de formación.
+          </p>
+          <Link to="/cursos-diseno-3d" className="mt-6 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-gold px-5 text-sm font-semibold text-black transition hover:brightness-105">
+            Conocer Cursos y formación <ArrowRight className="size-4" />
+          </Link>
+        </div>
+      </main>
+    );
+  }
 
   const contacto = data.whatsapp?.replace(/[^0-9]/g, "");
   const contactoUrl = contacto ? `https://wa.me/${contacto}` : null;
@@ -46,41 +79,84 @@ function PublicidadFormacionPage() {
     { title: "AURUM Render", description: "Explora el diseño y la visualización 3D de joyería.", href: "/auth", icon: Gem },
     { title: "AURUM Transfer", description: "Comparte archivos de práctica de forma sencilla.", href: "/transfer", icon: Send },
     { title: "Calculadoras técnicas", description: "Prueba herramientas de cálculo para el oficio joyero.", href: "/herramientas-publicas", icon: Calculator },
-    { title: "Recursos y herramientas", description: "Descubre más utilidades de Taller del Joyero.", href: "/herramientas-publicas", icon: Box },
+    { title: "Recursos para practicar", description: "Descubre más utilidades de Taller del Joyero.", href: "/herramientas-publicas", icon: Box },
   ];
 
   return (
     <main className="min-h-screen bg-background text-foreground">
       <header className="border-b border-border bg-card/80">
         <div className="mx-auto flex max-w-5xl items-center gap-4 px-5 py-5 sm:px-8">
-          {data.logo_url ? <img src={data.logo_url} alt={data.nombre_publico} className="size-16 rounded-2xl border border-border object-cover" /> : <div className="flex size-16 items-center justify-center rounded-2xl border border-gold/25 bg-gold/10 text-gold-deep"><GraduationCap className="size-8" /></div>}
-          <div className="min-w-0"><p className="text-xs font-semibold uppercase tracking-widest text-gold-deep">Cursos y formación</p><h1 className="mt-1 text-xl font-semibold sm:text-2xl">{data.nombre_publico}</h1><p className="mt-1 text-sm text-muted-foreground">{data.descripcion || "Formación profesional para la comunidad joyera."}</p></div>
+          {data.logo_url ? (
+            <img src={data.logo_url} alt={data.nombre_publico} className="size-16 shrink-0 rounded-2xl border border-border bg-background object-cover" />
+          ) : (
+            <div className="flex size-16 shrink-0 items-center justify-center rounded-2xl border border-gold/25 bg-gold/10 text-gold-deep"><GraduationCap className="size-8" /></div>
+          )}
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-[.18em] text-gold-deep">Cursos y formación</p>
+            <h1 className="mt-1 text-xl font-semibold sm:text-2xl">{data.nombre_publico}</h1>
+            <p className="mt-1 text-sm text-muted-foreground">{data.descripcion || "Formación profesional para la comunidad joyera."}</p>
+          </div>
         </div>
       </header>
-      <div className="mx-auto max-w-5xl space-y-8 px-5 py-8 sm:px-8 sm:py-12">
-        <section className="overflow-hidden rounded-3xl border border-gold/20 bg-gradient-to-br from-gold/10 via-card to-card">
-          {data.formacion_imagen_url && <img src={data.formacion_imagen_url} alt="" className="max-h-[360px] w-full object-cover" />}
-          <div className="p-6 sm:p-10">
-            <span className="inline-flex items-center gap-2 rounded-full border border-gold/25 bg-gold/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-gold-deep"><Sparkles className="size-3.5" /> Propuesta formativa</span>
-            <h2 className="mt-5 text-2xl font-semibold sm:text-4xl">{data.formacion_titulo || "Aprende, crea y desarrolla tu talento joyero"}</h2>
-            <p className="mt-4 max-w-3xl whitespace-pre-line text-sm leading-7 text-muted-foreground sm:text-base">{data.formacion_descripcion || "Descubre nuevas técnicas, desarrolla tus habilidades y explora herramientas digitales para el diseño y la creación de joyería."}</p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              {contactoUrl && <a href={contactoUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-gold px-5 text-sm font-semibold text-black"><MessageCircle className="size-4" /> Solicitar información</a>}
-              <a href="#herramientas" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border px-5 text-sm font-semibold"><BookOpen className="size-4" /> Recursos para estudiantes</a>
+
+      <div className="mx-auto max-w-5xl space-y-10 px-5 py-8 sm:px-8 sm:py-12">
+        <section className="relative overflow-hidden rounded-3xl border border-gold/20 bg-gradient-to-br from-gold/10 via-card to-card shadow-sm">
+          {data.formacion_imagen_url ? (
+            <img src={data.formacion_imagen_url} alt="" className="max-h-[380px] w-full object-cover" />
+          ) : null}
+          <div aria-hidden="true" className="pointer-events-none absolute -right-16 -top-20 size-64 rounded-full bg-gold/10 blur-3xl" />
+          <div className="relative p-6 sm:p-10">
+            <span className="inline-flex items-center gap-2 rounded-full border border-gold/25 bg-gold/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.18em] text-gold-deep">
+              <Sparkles className="size-3.5" /> Propuesta formativa
+            </span>
+            <h2 className="mt-5 max-w-3xl text-2xl font-semibold leading-tight sm:text-4xl">
+              {data.formacion_titulo || "Aprende, crea y desarrolla tu talento joyero"}
+            </h2>
+            <p className="mt-4 max-w-3xl whitespace-pre-line text-sm leading-7 text-muted-foreground sm:text-base">
+              {data.formacion_descripcion || "Descubre nuevas técnicas, desarrolla tus habilidades y explora herramientas digitales para el diseño y la creación de joyería."}
+            </p>
+            <div className="mt-7 flex flex-wrap gap-3">
+              {contactoUrl ? (
+                <a href={contactoUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-gold px-5 text-sm font-semibold text-black transition hover:brightness-105">
+                  <MessageCircle className="size-4" /> Solicitar información
+                </a>
+              ) : null}
+              <a href="#herramientas" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border bg-background/70 px-5 text-sm font-semibold transition hover:bg-surface-muted">
+                <BookOpen className="size-4" /> Recursos para estudiantes
+              </a>
             </div>
           </div>
         </section>
+
         <section id="herramientas" className="space-y-4">
-          <div><h2 className="text-xl font-semibold">Recursos para estudiantes</h2><p className="mt-1 text-sm text-muted-foreground">Herramientas de Taller del Joyero para explorar y practicar.</p></div>
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[.18em] text-gold-deep">Aprende practicando</p>
+            <h2 className="mt-2 text-xl font-semibold sm:text-2xl">Recursos para estudiantes</h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">Explora las herramientas de Taller del Joyero para poner en práctica tus ideas y conocer el flujo digital del trabajo joyero.</p>
+          </div>
           <div className="grid gap-3 sm:grid-cols-2">
             {herramientas.map(item => {
               const Icon = item.icon;
-              return <a key={item.title} href={item.href} className="group rounded-2xl border border-border bg-card p-5 transition hover:border-gold/40 hover:shadow-sm"><div className="flex items-center gap-3"><Icon className="size-5 text-gold-deep" /><h3 className="font-semibold">{item.title}</h3></div><p className="mt-2 text-sm leading-6 text-muted-foreground">{item.description}</p><span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-gold-deep">Explorar <ArrowRight className="size-4 transition group-hover:translate-x-1" /></span></a>;
+              return (
+                <a key={item.title} href={item.href} className="group rounded-2xl border border-border bg-card p-5 transition hover:-translate-y-0.5 hover:border-gold/40 hover:shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <span className="flex size-10 items-center justify-center rounded-xl border border-gold/20 bg-gold/10 text-gold-deep"><Icon className="size-5" /></span>
+                    <h3 className="font-semibold">{item.title}</h3>
+                  </div>
+                  <p className="mt-3 text-sm leading-6 text-muted-foreground">{item.description}</p>
+                  <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-gold-deep">Explorar herramienta <ArrowRight className="size-4 transition group-hover:translate-x-1" /></span>
+                </a>
+              );
             })}
           </div>
         </section>
-        <footer className="border-t border-border pt-5 text-center text-xs text-muted-foreground">Publicado con Taller del Joyero · Formación y herramientas para la comunidad joyera</footer>
       </div>
+      <footer className="border-t border-border bg-card/50">
+        <div className="mx-auto flex max-w-5xl flex-col gap-2 px-5 py-6 text-center text-xs text-muted-foreground sm:px-8">
+          <span>Publicado con Taller del Joyero</span>
+          <span>Formación y herramientas para la comunidad joyera</span>
+        </div>
+      </footer>
     </main>
   );
 }
