@@ -36,6 +36,23 @@ export const enviarConsultaComercial = createServerFn({ method: "POST" })
     if (!mensaje || mensaje.length < 5 || mensaje.length > 2000) throw new Error("El mensaje debe tener entre 5 y 2000 caracteres.");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // Límite básico por correo: máximo 3 consultas en una ventana de 10 minutos.
+    // Complementa el campo trampa; no sustituye un CAPTCHA o rate limit de infraestructura.
+    const desde = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+    const { data: recientes, error: errorRecientes } = await supabaseAdmin
+      .from("consultas_comerciales")
+      .select("id")
+      .eq("email", email)
+      .gte("created_at", desde)
+      .limit(3);
+    if (errorRecientes) {
+      console.error("[contacto-comercial] No se pudo comprobar el límite de consultas:", errorRecientes);
+      throw new Error("No pudimos procesar tu consulta en este momento. Inténtalo nuevamente.");
+    }
+    if ((recientes ?? []).length >= 3) {
+      throw new Error("Ya recibimos varias consultas desde este correo. Espera unos minutos antes de intentarlo otra vez.");
+    }
+
     const { data: consulta, error } = await supabaseAdmin
       .from("consultas_comerciales")
       .insert({
