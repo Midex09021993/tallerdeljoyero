@@ -119,13 +119,13 @@ function HerramientasPublicasPage() {
             </Link>
           ))}
           <Link
-            to="/aurum-render-public"
+            to="/auth"
             className="group flex min-h-52 flex-col rounded-2xl border border-white/10 bg-white/[.02] p-5 transition duration-200 hover:-translate-y-0.5 hover:border-[#d8bd7b]/55 hover:bg-white/[.045] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd7b]"
           >
             <span className="grid size-11 place-items-center rounded-xl border border-[#d8bd7b]/25 bg-[#d8bd7b]/[.08] text-[#d8bd7b]"><Gem className="size-5" /></span>
             <span className="mt-4 text-base font-semibold">AURUM Render</span>
-            <span className="mt-2 flex-1 text-sm leading-6 text-white/70">Explora la vista previa de tus diseños 3D. Para usar la primera versión estable de AURUM Render, registra tu taller e inicia sesión.</span>
-            <span className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-[#d8bd7b]">Abrir visor público <ArrowRight className="size-3.5 transition group-hover:translate-x-1" /></span>
+            <span className="mt-2 flex-1 text-sm leading-6 text-white/70">Accede a AURUM Render desde Aurum Lab. Registra tu taller o inicia sesión para abrir la versión estable.</span>
+            <span className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-[#d8bd7b]">Crear cuenta o iniciar sesión <ArrowRight className="size-3.5 transition group-hover:translate-x-1" /></span>
           </Link>
           <Link
             to="/transfer"
