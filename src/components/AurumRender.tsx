@@ -2097,8 +2097,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         </div>
       </header>}
 
-      {!embedded && exportOpen&&<div className="absolute inset-0 z-[80] flex items-start justify-center overflow-y-auto bg-black/20 px-3 pb-5 pt-20 backdrop-blur-sm sm:pt-24" onMouseDown={e=>{if(e.target===e.currentTarget&&!exportBusy&&!videoBusy&&!ptProgress)setExportOpen(false);}}>
-      <div role="dialog" aria-modal="true" aria-labelledby="aurum-export-title" className="w-full max-w-[760px] overflow-y-auto rounded-3xl border border-white/80 bg-[#fbfaf7]/95 p-4 text-[#292824] shadow-[0_24px_80px_rgba(24,22,16,.24)] backdrop-blur-2xl sm:p-6">
+      {!embedded && exportOpen&&<div className="absolute right-3 top-[72px] z-[80] max-h-[calc(100%-6rem)] w-[min(420px,calc(100%-1.5rem))] overflow-y-auto rounded-2xl border border-white/80 bg-[#fbfaf7]/95 p-3 text-[#292824] shadow-[0_16px_44px_rgba(35,32,24,.18)] backdrop-blur-2xl sm:right-4 sm:top-[76px] sm:p-4">
+      <div>
         <div className="mb-5 flex items-start justify-between gap-4"><div><div id="aurum-export-title" className="text-xl font-semibold tracking-tight text-[#292824]">Centro de exportación</div><div className="mt-1 text-sm text-[#77756f]">Prepara tu joya para presentar, compartir o fabricar.</div></div><button type="button" aria-label="Cerrar exportación" onClick={()=>setExportOpen(false)} className="rounded-lg p-1 text-[#77756f] hover:bg-black/[.05]"><X className="size-4"/></button></div>
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           <button type="button" disabled={!archivo||exportBusy} onClick={async()=>{
@@ -2238,7 +2238,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
 
         </div>
         <p className="mt-4 rounded-xl border border-black/[.06] bg-black/[.025] p-3 text-xs leading-relaxed text-[#77756f] md:col-span-2">Antes de compartir un modelo 3D, ten en cuenta que los materiales compatibles con glTF se conservan mejor; los shaders personalizados, el HDRI y los efectos de pantalla pueden variar según el visor.</p>
-      </div></div>}
+      </div>}
       <div className={embedded ? "flex min-h-0 flex-1 overflow-hidden bg-[#090b0e]" : "flex min-h-0 flex-1 gap-3 bg-[#eeede8] p-3"}>
         {!embedded && <aside className="w-[336px] shrink-0 overflow-hidden rounded-2xl border border-black/[.07] bg-[#f9f8f5] text-[#292824] shadow-[0_8px_28px_rgba(36,32,20,.045)]">
           <div className="h-full overflow-y-auto">
