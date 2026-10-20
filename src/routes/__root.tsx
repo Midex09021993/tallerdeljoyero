@@ -8,7 +8,7 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -16,7 +16,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { useSincronizarSesion } from "@/lib/auth";
 import { registrarServiceWorker } from "@/lib/pwa-push";
 import { consumirInicioLogin, marcarInicioLogin, registrarEvento } from "@/lib/analytics";
-import { ContactoComercial } from "@/components/ContactoComercial";
+const ContactoComercial = lazy(() => import("@/components/ContactoComercial").then((module) => ({ default: module.ContactoComercial })));
 
 function NotFoundComponent() {
   return (
@@ -116,7 +116,7 @@ function RootComponent() {
       <AnalyticsSync />
       <Outlet />
       {pathname !== "/auth" ? (
-        <ContactoComercial className="fixed bottom-5 right-5 z-[80] inline-flex min-h-12 items-center gap-2 rounded-full border border-[#d8bd7b]/70 bg-[#171815] px-5 py-3 text-xs font-bold uppercase tracking-wider text-[#d8bd7b] shadow-[0_10px_35px_rgba(0,0,0,.35)] transition hover:bg-[#d8bd7b] hover:text-[#211c12]" />
+        <Suspense fallback={null}><ContactoComercial className="fixed bottom-5 right-5 z-[80] inline-flex min-h-12 items-center gap-2 rounded-full border border-[#d8bd7b]/70 bg-[#171815] px-5 py-3 text-xs font-bold uppercase tracking-wider text-[#d8bd7b] shadow-[0_10px_35px_rgba(0,0,0,.35)] transition hover:bg-[#d8bd7b] hover:text-[#211c12]" /></Suspense>
       ) : null}
       <Toaster />
     </QueryClientProvider>
