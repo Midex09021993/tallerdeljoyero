@@ -109,6 +109,14 @@ as $$
   left join public.profiles p on p.id = u.id
   where auth.uid() is not null
     and u.id <> auth.uid()
+    and exists (
+      select 1 from public.participante_cuentas pc_actual
+      join public.ecosistema_participantes ep_actual on ep_actual.id = pc_actual.participante_id
+      join public.user_roles ur_actual on ur_actual.user_id = pc_actual.user_id
+      where pc_actual.user_id = auth.uid()
+        and pc_actual.estado = 'activo'
+        and ep_actual.estado = 'activo'
+    )
   order by u.id,
     case ur.role::text
       when 'dueno' then 1 when 'gerente' then 2 when 'operario' then 3
@@ -252,6 +260,14 @@ as $$
     limit 1
   ) ultimo on true
   where auth.uid() is not null
+    and exists (
+      select 1 from public.participante_cuentas pc_actual
+      join public.ecosistema_participantes ep_actual on ep_actual.id = pc_actual.participante_id
+      join public.user_roles ur_actual on ur_actual.user_id = pc_actual.user_id
+      where pc_actual.user_id = auth.uid()
+        and pc_actual.estado = 'activo'
+        and ep_actual.estado = 'activo'
+    )
   order by coalesce(ultimo.created_at, conv.updated_at, conv.created_at) desc;
 $$;
 revoke all on function public.chat_resumen_conversaciones() from public, anon;
