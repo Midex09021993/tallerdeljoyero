@@ -3,6 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 export type AurumAnalyticsEvent =
   | "page_view"
   | "tool_opened"
+  | "tool_started"
+  | "tool_completed"
   | "render_opened"
   | "platform_opened"
   | "catalog_opened"
