@@ -16,6 +16,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { useSincronizarSesion } from "@/lib/auth";
 import { registrarServiceWorker } from "@/lib/pwa-push";
 import { consumirInicioLogin, marcarInicioLogin, registrarEvento } from "@/lib/analytics";
+
 const ContactoComercial = lazy(() => import("@/components/ContactoComercial").then((module) => ({ default: module.ContactoComercial })));
 
 function NotFoundComponent() {
