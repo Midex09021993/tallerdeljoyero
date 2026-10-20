@@ -1,3 +1,4 @@
+# CI trigger verification: comment-only change; no workflow behavior modified.
 name: Aurum Lab CI
 
 on:
