@@ -5,6 +5,7 @@ import * as THREE from "three";
 import { MarchingCubes } from "three/examples/jsm/objects/MarchingCubes.js";
 import { STLExporter } from "three/examples/jsm/exporters/STLExporter.js";
 import { VisorPesoJoyeria } from "@/components/VisorPesoJoyeria";
+import { registrarEvento } from "@/lib/analytics";
 
 const MODEL_BASE = "https://huggingface.co/cgb/triposr-onnx-webgpu/resolve/main/";
 const GRID = 64;
@@ -326,6 +327,7 @@ export function GeneradorSTLIA() {
 
   const generate = async () => {
     if (!previewUrl) return;
+    registrarEvento("tool_started", { tool_id: "stl", mode: "image" });
     setGeneratedSTL(null);
     setStage("loading");
     try {
@@ -360,6 +362,7 @@ export function GeneradorSTLIA() {
       result.dispose();
       setGeneratedSTL(outputFile);
       setStage("done");
+      registrarEvento("tool_completed", { tool_id: "stl", mode: "image" });
       setMessage("Modelo generado localmente. La vista previa usa el Visualizador y peso 3D existente. El peso es solo orientativo hasta definir la escala física en CAD.");
     } catch (error) {
       setStage("error");
