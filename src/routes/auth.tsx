@@ -7,6 +7,7 @@ import { RegistroTaller } from "@/components/RegistroTaller";
 import { ComunidadAurumLab } from "@/components/ComunidadAurumLab";
 import { ArrowRight, Boxes, Calculator, Eye, EyeOff, Gem, Grid2X2, Headphones, HelpCircle, Home, LockKeyhole, Menu, X, Monitor, Network, PackageCheck, ShieldCheck, ShoppingBag, Sparkles, UserRound, UsersRound, type LucideIcon } from "lucide-react";
 import heroJoyeria from "@/assets/diseno-corona.jpg";
+import { ContactoComercial } from "@/components/ContactoComercial";
 import { registrarPrimerDueno, resolverEmailInicioSesion, sistemaSinDuenos } from "@/lib/cuentas.functions";
 
 export const Route = createFileRoute("/auth")({
@@ -180,6 +181,7 @@ function LoginPage() {
             <Gem className="size-4" /> Conocer Aurum Lab
           </button>
         </nav>
+        <ContactoComercial className="hidden sm:inline-flex min-h-10 items-center gap-2 rounded-lg border border-[#d8bd7b]/65 px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-[#d8bd7b] transition hover:bg-[#d8bd7b] hover:text-[#211c12]" />
         <a href="#login" className="hidden rounded-lg border border-gold/70 px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-gold transition hover:bg-gold hover:text-ink md:inline-flex">
           Iniciar sesión
         </a>
@@ -191,6 +193,7 @@ function LoginPage() {
           <a onClick={() => setMenuMovilAbierto(false)} href="/herramientas-publicas" className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-white/85 hover:bg-white/[0.06]"><Grid2X2 className="size-4 text-gold" /> Herramientas gratuitas</a>
           <a onClick={() => setMenuMovilAbierto(false)} href="/tienda" className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-white/85 hover:bg-white/[0.06]"><ShoppingBag className="size-4 text-gold" /> Tienda de insumos</a>
           <button type="button" onClick={() => { setMenuMovilAbierto(false); setSeccionPlataforma("ecosistema"); setMostrarPlataforma(true); }} className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm text-white/85 hover:bg-white/[0.06]"><Gem className="size-4 text-gold" /> Conocer Aurum Lab</button>
+          <ContactoComercial className="mt-1 inline-flex min-h-11 w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm text-[#d8bd7b] transition hover:bg-white/[0.06]" />
         </nav> : null}
       </header>
 
