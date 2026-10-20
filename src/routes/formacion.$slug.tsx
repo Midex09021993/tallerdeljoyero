@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, BookOpen, Box, Calculator, Gem, GraduationCap, MessageCircle, Send, Sparkles } from "lucide-react";
+import { useState } from "react";
+import { ArrowRight, BookOpen, Box, Calculator, Gem, GraduationCap, MessageCircle, Send, Sparkles, Share2, Check } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabasePublic } from "@/integrations/supabase/client";
 
@@ -26,7 +27,22 @@ type Publicacion = {
 };
 
 function PublicidadFormacionPage() {
-  const { slug } = Route.useParams();
+  const { slug } = Route.useParams();  const [mensajeCompartir, setMensajeCompartir] = useState("");
+  const compartirPagina = async () => {
+    const url = window.location.href;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: document.title, text: "Conoce esta propuesta de cursos y formación en joyería.", url });
+        setMensajeCompartir("Enlace compartido.");
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      setMensajeCompartir("Enlace copiado. Ya puedes compartirlo.");
+    } catch (cause) {
+      if (cause instanceof Error && cause.name === "AbortError") return;
+      setMensajeCompartir("No se pudo compartir automáticamente. Copia el enlace desde la barra del navegador.");
+    }
+  };
   const { data, isLoading, error } = useQuery({
     queryKey: ["publicidad-formacion-publica", slug],
     queryFn: async () => {
@@ -96,6 +112,9 @@ function PublicidadFormacionPage() {
             <h1 className="mt-1 text-xl font-semibold sm:text-2xl">{data.nombre_publico}</h1>
             <p className="mt-1 text-sm text-muted-foreground">{data.descripcion || "Formación profesional para la comunidad joyera."}</p>
           </div>
+          <button type="button" onClick={() => void compartirPagina()} className="ml-auto inline-flex min-h-10 shrink-0 items-center gap-2 rounded-xl border border-border px-3 py-2 text-sm font-semibold transition hover:border-gold/40 hover:bg-gold/5">
+            <Share2 className="size-4" /> <span className="hidden sm:inline">Compartir página</span><span className="sm:hidden">Compartir</span>
+          </button>
         </div>
       </header>
 
@@ -151,6 +170,7 @@ function PublicidadFormacionPage() {
           </div>
         </section>
       </div>
+      {mensajeCompartir ? <div role="status" className="mx-auto max-w-5xl px-5 pb-3 text-center text-sm text-muted-foreground sm:px-8"><Check className="mr-1 inline size-4 text-gold-deep" />{mensajeCompartir}</div> : null}
       <footer className="border-t border-border bg-card/50">
         <div className="mx-auto flex max-w-5xl flex-col gap-2 px-5 py-6 text-center text-xs text-muted-foreground sm:px-8">
           <span>Publicado con Taller del Joyero</span>
