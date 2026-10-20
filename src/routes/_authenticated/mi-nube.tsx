@@ -77,11 +77,13 @@ async function optimizarImagenCatalogo(blob: Blob): Promise<Blob> {
 }
 
 /** Marco visual compartido para que las fichas propias y recibidas evolucionen juntas. */
-function FichaProyecto({ portada, nombre, children }: { portada: string | null; nombre: string; children: ReactNode }) {
+function FichaProyecto({ portada, nombre, children, portadaModo = "cover" }: { portada: string | null; nombre: string; children: ReactNode; portadaModo?: "cover" | "contain" }) {
   return (
     <article className="group overflow-hidden rounded-[1.35rem] border border-border/80 bg-card shadow-[0_2px_8px_rgba(20,20,20,0.035)] transition-all duration-200 hover:-translate-y-0.5 hover:border-gold/35 hover:shadow-[0_12px_32px_rgba(20,20,20,0.075)]">
       {portada ? (
-        <img src={portada} alt={`Portada del proyecto ${nombre}`} className="h-36 w-full bg-[#f5f4f1] object-cover object-center transition-transform duration-300 group-hover:scale-[1.02]" loading="lazy" />
+        <div className="grid h-36 w-full place-items-center overflow-hidden bg-[#f5f4f1]">
+          <img src={portada} alt={`Portada del proyecto ${nombre}`} className={portadaModo === "contain" ? "h-full w-full object-contain p-2" : "h-36 w-full object-cover object-center transition-transform duration-300 group-hover:scale-[1.02]"} loading="lazy" />
+        </div>
       ) : (
         <div className="grid h-36 place-items-center bg-[#f5f4f1] text-muted-foreground">
           <div className="text-center"><Box className="mx-auto size-8" /><p className="mt-2 text-xs">Sin imagen de portada</p></div>
@@ -1670,7 +1672,7 @@ function MiNubePage() {
                   if (a.categoria === "documentos") return "PDF";
                   return "Archivo";
                 }))];
-                return <FichaProyecto key={recibida.id} portada={recibida.portada} nombre={recibida.nombre}>
+                return <FichaProyecto key={recibida.id} portada={recibida.portada} nombre={recibida.nombre} portadaModo="contain">
                   <div className="space-y-3 p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
