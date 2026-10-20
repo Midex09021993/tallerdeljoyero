@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { registrarEvento } from "@/lib/analytics";
 import { Info, Scale } from "lucide-react";
 import { leerConfigPesoGemas } from "@/lib/calculadoras-config";
 import { useConfigSistema } from "@/lib/taller-db";
@@ -18,6 +19,27 @@ export function CalculadoraPesoGemas({ compacto=false }:{ compacto?:boolean }){
  const [modo,setModo]=useState<"peso"|"medidas">("peso"),[gramos,setGramos]=useState(""),[piedra,setPiedra]=useState("Diamante"),[talla,setTalla]=useState<Talla>("oval"),[largo,setLargo]=useState(""),[ancho,setAncho]=useState(""),[profundidad,setProfundidad]=useState(""),[correccion,setCorreccion]=useState("0");
  const peso=useMemo(()=>{const g=n(gramos);return g?g*5:0},[gramos]);
  const estimado=useMemo(()=>{const l=n(largo),a=n(ancho),p=n(profundidad),sg=config.piedras.find(x=>x.nombre===piedra)?.sg??0;if(!l||!a||!p||!sg)return null;const factor=config.factores[talla];const base=(talla==="redonda"||talla==="cuadrada"?l*l*p:l*a*p)*sg*factor;const ct=base*(1+n(correccion)/100),m=config.margenEstimacion/100;return{ct,g:ct*.2,sg,min:ct*(1-m),max:ct*(1+m)}},[largo,ancho,profundidad,piedra,talla,correccion,config]);
+ const inicioRegistrado = useRef(false);
+ const resultadoRegistrado = useRef(false);
+ const hayDatos = modo === "peso" ? gramos.trim().length > 0 : Boolean(largo.trim() || ancho.trim() || profundidad.trim());
+
+ useEffect(() => {
+  if (hayDatos && !inicioRegistrado.current) {
+   inicioRegistrado.current = true;
+   registrarEvento("tool_started", { tool_id: "gemas" });
+  }
+ }, [hayDatos]);
+
+ const resultadoValido = modo === "peso" ? peso > 0 : Boolean(estimado);
+ useEffect(() => {
+  if (resultadoValido && !resultadoRegistrado.current) {
+   resultadoRegistrado.current = true;
+   registrarEvento("tool_completed", { tool_id: "gemas" });
+  } else if (!resultadoValido) {
+   resultadoRegistrado.current = false;
+  }
+ }, [resultadoValido]);
+
  return <section className={`rounded-2xl border border-border bg-card shadow-card ${compacto?"p-3":"p-5 sm:p-6"}`}>
   <div className="flex items-start gap-3"><div className="grid size-10 shrink-0 place-items-center rounded-xl bg-gold/10 text-gold-deep"><Scale className="size-5"/></div><div><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold-deep">Gemología</p><h2 className="mt-1 text-xl font-semibold">Calculadora de Peso de Gemas</h2><p className="mt-1 text-sm text-muted-foreground">Convierte peso real o estima el quilataje por medidas.</p></div></div>
   <div className="mt-5 grid grid-cols-2 rounded-xl border border-border bg-surface-muted p-1">{([["peso","Peso real"],["medidas","Estimar por medidas"]] as const).map(([id,label])=><button key={id} type="button" onClick={()=>setModo(id)} className={`rounded-lg px-3 py-2 text-xs font-semibold ${modo===id?"bg-card text-foreground shadow-sm":"text-muted-foreground"}`}>{label}</button>)}</div>
