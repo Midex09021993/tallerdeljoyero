@@ -255,10 +255,11 @@ export async function parseAurumInput(file: File, ext: string, fallbackMaterial:
     // STL has no up-axis metadata. Correct only a clearly thin Y-axis model.
     const yIsClearlyThin = size.y > 0 && size.y < size.x * 0.65 && size.y < size.z * 0.65;
     if (yIsClearlyThin) {
-      // Convert a flat XZ ring into an upright presentation. Keep the source
-      // Z direction mapped to screen-up; an extra 180-degree roll around Z
-      // inverted this STL's setting and left the head below the shank.
-      model.rotation.set(Math.PI / 2, 0, 0);
+      // This STL's thin axis is Y, so the ring lies in the source XZ plane.
+      // Map source +Z to viewer +Y: a positive X quarter-turn maps +Z to -Y
+      // and places the head below the shank. The negative quarter-turn keeps
+      // the source's positive-Z setting above the band.
+      model.rotation.set(-Math.PI / 2, 0, 0);
       model.userData.aurumStlOrientation = "heuristic-upright-setting-up";
     } else {
       model.userData.aurumStlOrientation = "unchanged";
