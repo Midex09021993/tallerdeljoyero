@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Copy, ExternalLink, Eye, EyeOff, GraduationCap, Save, MessageCircle, Smartphone } from "lucide-react";
+import { Copy, ExternalLink, Eye, EyeOff, GraduationCap, Save, MessageCircle, Smartphone, Upload, Image as ImageIcon } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppShell, Panel } from "@/components/AppShell";
 import { useSesion } from "@/lib/auth";
@@ -37,6 +37,7 @@ function CursosFormacionPage() {
   const [imagenUrl, setImagenUrl] = useState("");
   const [visible, setVisible] = useState(false);
   const [guardando, setGuardando] = useState(false);
+  const [subiendoImagen, setSubiendoImagen] = useState(false);
   const [mensaje, setMensaje] = useState<string | null>(null);
 
   const configQuery = useQuery({
@@ -107,6 +108,27 @@ function CursosFormacionPage() {
     const texto = `Te comparto nuestra propuesta de cursos y formación en joyería: ${urlPublica}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, "_blank", "noopener,noreferrer");
   };
+  const subirImagenPromocional = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file || !participanteId) return;
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) { setMensaje("Usa una imagen JPG, PNG o WebP."); return; }
+    if (file.size > 5 * 1024 * 1024) { setMensaje("La imagen no puede superar los 5 MB."); return; }
+    setSubiendoImagen(true);
+    setMensaje(null);
+    try {
+      const extension = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
+      const ruta = participanteId + "/formacion/" + crypto.randomUUID() + "." + extension;
+      const { error: uploadError } = await supabase.storage.from("catalogo-joyas").upload(ruta, file, { contentType: file.type, cacheControl: "31536000", upsert: false });
+      if (uploadError) throw uploadError;
+      const { data } = supabase.storage.from("catalogo-joyas").getPublicUrl(ruta);
+      if (!data?.publicUrl) throw new Error("No se pudo obtener la URL pública de la imagen.");
+      setImagenUrl(data.publicUrl);
+      setMensaje("Imagen subida. Guarda la configuración para publicarla.");
+    } catch (error) {
+      setMensaje(error instanceof Error ? error.message : "No se pudo subir la imagen promocional.");
+    } finally { setSubiendoImagen(false); }
+  };
 
   if (!participanteId) {
     return <AppShell titulo="Cursos y formación" subtitulo="Página publicitaria de tu taller">
@@ -152,7 +174,26 @@ function CursosFormacionPage() {
                 <div className="space-y-4 p-5">
                   <label className="block space-y-1.5"><span className="text-sm font-medium">Título destacado</span><input maxLength={140} value={titulo} onChange={e => setTitulo(e.target.value)} placeholder="Ej. Aprende Diseño 3D para Joyería" className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm" /></label>
                   <label className="block space-y-1.5"><span className="text-sm font-medium">Descripción promocional</span><textarea maxLength={3000} rows={5} value={descripcion} onChange={e => setDescripcion(e.target.value)} placeholder="Presenta el curso, sus beneficios y a quién está dirigido…" className="w-full resize-y rounded-lg border border-border bg-background px-3 py-2.5 text-sm" /></label>
-                  <label className="block space-y-1.5"><span className="text-sm font-medium">Imagen promocional (URL)</span><input type="url" value={imagenUrl} onChange={e => setImagenUrl(e.target.value)} placeholder="https://…" className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm" /><span className="text-xs text-muted-foreground">Opcional. Si no añades una imagen, se mostrará el logo del taller.</span></label>
+                  <div className="space-y-3">
+                    <span className="block text-sm font-medium">Imagen promocional</span>
+                    {imagenUrl.trim() ? (
+                      <div className="overflow-hidden rounded-xl border border-border">
+                        <img src={imagenUrl.trim()} alt="Vista previa de la imagen promocional" className="max-h-64 w-full object-cover" />
+                        <div className="flex flex-wrap items-center justify-between gap-2 p-3"><span className="text-xs text-muted-foreground">Imagen seleccionada</span><button type="button" onClick={() => setImagenUrl("")} className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-surface-muted">Quitar imagen</button></div>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center rounded-xl border border-dashed border-gold/40 bg-gold/5 px-5 py-7 text-center">
+                        <span className="flex size-11 items-center justify-center rounded-xl bg-gold/10 text-gold-deep"><ImageIcon className="size-5" /></span>
+                        <p className="mt-3 text-sm font-medium">Añade una imagen para promocionar tu formación</p><p className="mt-1 text-xs text-muted-foreground">JPG, PNG o WebP · máximo 5 MB</p>
+                      </div>
+                    )}
+                    <label className="inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-semibold transition hover:bg-surface-muted">
+                      <Upload className="size-4" />{subiendoImagen ? "Subiendo imagen…" : imagenUrl.trim() ? "Cambiar imagen desde el equipo" : "Subir imagen desde el equipo"}
+                      <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" disabled={subiendoImagen} onChange={subirImagenPromocional} />
+                    </label>
+                    <label className="block space-y-1.5"><span className="text-xs text-muted-foreground">O utiliza una URL de imagen</span><input type="url" value={imagenUrl} onChange={e => setImagenUrl(e.target.value)} placeholder="https://…" className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm" /></label>
+                    <p className="text-xs text-muted-foreground">Opcional. Si no añades una imagen, se mostrará el logo del taller. Guarda la configuración después de subir o cambiar la imagen.</p>
+                  </div>
                   <button type="submit" disabled={guardando} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-gold px-5 text-sm font-semibold text-black disabled:opacity-50"><Save className="size-4" />{guardando ? "Guardando…" : "Guardar configuración"}</button>
                   {mensaje && <p role="status" className="break-words text-sm text-muted-foreground">{mensaje}</p>}
                 </div>
