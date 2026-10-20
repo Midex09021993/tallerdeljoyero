@@ -3803,6 +3803,33 @@ export type Database = {
           },
         ]
       }
+      visor_3d_enlaces: {
+        Row: {
+          creado_en: string
+          expira_en: string
+          modelo_url: string
+          nombre: string
+          propietario_id: string
+          token: string
+        }
+        Insert: {
+          creado_en?: string
+          expira_en: string
+          modelo_url: string
+          nombre?: string
+          propietario_id: string
+          token: string
+        }
+        Update: {
+          creado_en?: string
+          expira_en?: string
+          modelo_url?: string
+          nombre?: string
+          propietario_id?: string
+          token?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -3929,6 +3956,10 @@ export type Database = {
         }
         Returns: string
       }
+      crear_enlace_visor_3d: {
+        Args: { _modelo_url: string; _nombre: string; _token: string }
+        Returns: string
+      }
       crear_version_cotizacion: {
         Args: { _cotizacion_id: string }
         Returns: string
@@ -4053,6 +4084,7 @@ export type Database = {
         }[]
       }
       normaliza_area: { Args: { _area: string }; Returns: string }
+      obtener_analitica_aurum_lab: { Args: { _dias?: number }; Returns: Json }
       obtener_carrusel_enlaces_catalogo_publico: {
         Args: { _slug: string }
         Returns: {
@@ -4272,6 +4304,14 @@ export type Database = {
       reparar_servicios_externos_op: {
         Args: { _orden_produccion_id: string }
         Returns: Json
+      }
+      resolver_enlace_visor_3d: {
+        Args: { _token: string }
+        Returns: {
+          expira_en: string
+          modelo_url: string
+          nombre: string
+        }[]
       }
       responder_cotizacion_cliente: {
         Args: { _accion: string; _codigo: string; _comentario?: string }
