@@ -18,6 +18,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CatalogoPublicoRouteImport } from './routes/catalogo-publico'
 import { Route as ClienteRouteImport } from './routes/cliente'
 import { Route as HerramientasPublicasRouteImport } from './routes/herramientas-publicas'
+import { Route as CursosDiseno3dRouteImport } from './routes/cursos-diseno-3d'
 import { Route as RecuperarContrasenaRouteImport } from './routes/recuperar-contrasena'
 import { Route as TiendaRouteImport } from './routes/tienda'
 import { Route as SlugIndexRouteImport } from './routes/$slug.index'
@@ -110,6 +111,11 @@ const ClienteRoute = ClienteRouteImport.update({
 const HerramientasPublicasRoute = HerramientasPublicasRouteImport.update({
   id: '/herramientas-publicas',
   path: '/herramientas-publicas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CursosDiseno3dRoute = CursosDiseno3dRouteImport.update({
+  id: '/cursos-diseno-3d',
+  path: '/cursos-diseno-3d',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RecuperarContrasenaRoute = RecuperarContrasenaRouteImport.update({
@@ -382,6 +388,7 @@ export interface FileRoutesByFullPath {
   '/catalogo-publico': typeof CatalogoPublicoRoute
   '/cliente': typeof ClienteRoute
   '/herramientas-publicas': typeof HerramientasPublicasRoute
+  '/cursos-diseno-3d': typeof CursosDiseno3dRoute
   '/recuperar-contrasena': typeof RecuperarContrasenaRoute
   '/tienda': typeof TiendaRoute
   '/$slug/$producto': typeof SlugProductoRoute
@@ -440,6 +447,7 @@ export interface FileRoutesByTo {
   '/catalogo-publico': typeof CatalogoPublicoRoute
   '/cliente': typeof ClienteRoute
   '/herramientas-publicas': typeof HerramientasPublicasRoute
+  '/cursos-diseno-3d': typeof CursosDiseno3dRoute
   '/recuperar-contrasena': typeof RecuperarContrasenaRoute
   '/tienda': typeof TiendaRoute
   '/$slug/$producto': typeof SlugProductoRoute
@@ -499,6 +507,7 @@ export interface FileRoutesById {
   '/catalogo-publico': typeof CatalogoPublicoRoute
   '/cliente': typeof ClienteRoute
   '/herramientas-publicas': typeof HerramientasPublicasRoute
+  '/cursos-diseno-3d': typeof CursosDiseno3dRoute
   '/recuperar-contrasena': typeof RecuperarContrasenaRoute
   '/tienda': typeof TiendaRoute
   '/$slug/$producto': typeof SlugProductoRoute
@@ -559,6 +568,7 @@ export interface FileRouteTypes {
     | '/catalogo-publico'
     | '/cliente'
     | '/herramientas-publicas'
+    | '/cursos-diseno-3d'
     | '/recuperar-contrasena'
     | '/tienda'
     | '/$slug/$producto'
@@ -731,6 +741,7 @@ export interface RootRouteChildren {
   CatalogoPublicoRoute: typeof CatalogoPublicoRoute
   ClienteRoute: typeof ClienteRoute
   HerramientasPublicasRoute: typeof HerramientasPublicasRoute
+  CursosDiseno3dRoute: typeof CursosDiseno3dRoute
   RecuperarContrasenaRoute: typeof RecuperarContrasenaRoute
   TiendaRoute: typeof TiendaRoute
   CCodigoRoute: typeof CCodigoRouteWithChildren
@@ -799,6 +810,13 @@ declare module '@tanstack/react-router' {
       path: '/herramientas-publicas'
       fullPath: '/herramientas-publicas'
       preLoaderRoute: typeof HerramientasPublicasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cursos-diseno-3d': {
+      id: '/cursos-diseno-3d'
+      path: '/cursos-diseno-3d'
+      fullPath: '/cursos-diseno-3d'
+      preLoaderRoute: typeof CursosDiseno3dRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/recuperar-contrasena': {
@@ -1291,6 +1309,7 @@ const rootRouteChildren: RootRouteChildren = {
   CatalogoPublicoRoute: CatalogoPublicoRoute,
   ClienteRoute: ClienteRoute,
   HerramientasPublicasRoute: HerramientasPublicasRoute,
+  CursosDiseno3dRoute: CursosDiseno3dRoute,
   RecuperarContrasenaRoute: RecuperarContrasenaRoute,
   TiendaRoute: TiendaRoute,
   CCodigoRoute: CCodigoRouteWithChildren,
