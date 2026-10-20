@@ -120,6 +120,7 @@ function TransferPage() {
 
   const addFiles = (incoming: FileList | File[]) => {
     setError("");
+    if (busy) return;
     const next = [...files, ...Array.from(incoming)];
     const unique = next.filter((file, index, all) =>
       all.findIndex((item) => item.name === file.name && item.size === file.size && item.lastModified === file.lastModified) === index,
