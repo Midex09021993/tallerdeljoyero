@@ -125,6 +125,10 @@ Deno.serve(async (req) => {
     .eq("status", "processing");
   if (consumeError) {
     console.error("[aurum-transfer-download] consume", consumeError);
+    // No entregar URLs si el enlace no quedó marcado como consumido: se evita
+    // dejar una transferencia atascada en "processing" o romper el uso único.
+    await supabase.rpc("release_aurum_transfer", { _transfer_id: t.id });
+    return json({ error: "No se pudo confirmar la transferencia. El enlace sigue disponible para volver a intentarlo." }, 500);
   }
 
   // El historial se sincroniza mediante trigger sobre aurum_transfers.
