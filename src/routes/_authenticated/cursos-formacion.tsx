@@ -39,7 +39,7 @@ function CursosFormacionPage() {
   const [guardando, setGuardando] = useState(false);
   const [subiendoImagen, setSubiendoImagen] = useState(false);
   const [eliminandoImagen, setEliminandoImagen] = useState(false);
-  const [imagenPendienteEliminar, setImagenPendienteEliminar] = useState<string | null>(null);
+  const [imagenesPendientesLimpiar, setImagenesPendientesLimpiar] = useState<string[]>([]);
   const [mensaje, setMensaje] = useState<string | null>(null);
 
   const configQuery = useQuery({
@@ -88,20 +88,24 @@ function CursosFormacionPage() {
       if (error) throw error;
       let avisoLimpieza = "";
       const imagenGuardada = imagenUrl.trim();
-      const imagenAnterior = imagenPendienteEliminar?.trim();
-      // Nunca borrar un archivo si la publicación guardada todavía lo referencia.
-      if (imagenAnterior && imagenGuardada !== imagenAnterior) {
-        const marcador = "/storage/v1/object/public/catalogo-joyas/";
-        const posicion = imagenAnterior.indexOf(marcador);
-        if (posicion >= 0) {
-          const ruta = decodeURIComponent(imagenAnterior.slice(posicion + marcador.length).split("?")[0]);
-          if (ruta) {
-            const { error: errorEliminar } = await supabase.storage.from("catalogo-joyas").remove([ruta]);
-            if (errorEliminar) avisoLimpieza = " La publicación se guardó, pero no se pudo borrar el archivo anterior del almacenamiento.";
-          }
-        }
+      const marcador = "/storage/v1/object/public/catalogo-joyas/";
+      const imagenesParaLimpiar = new Set([
+        config.formacion_imagen_url?.trim() ?? "",
+        ...imagenesPendientesLimpiar.map(url => url.trim()),
+      ].filter(url => url && url !== imagenGuardada));
+      const rutasParaLimpiar: string[] = [];
+      for (const url of imagenesParaLimpiar) {
+        const posicion = url.indexOf(marcador);
+        if (posicion < 0) continue;
+        const ruta = decodeURIComponent(url.slice(posicion + marcador.length).split("?")[0]);
+        // Solo limpiar archivos del espacio de formación de este participante.
+        if (ruta.startsWith(`${participanteId}/formacion/`)) rutasParaLimpiar.push(ruta);
       }
-      setImagenPendienteEliminar(null);
+      if (rutasParaLimpiar.length) {
+        const { error: errorEliminar } = await supabase.storage.from("catalogo-joyas").remove(rutasParaLimpiar);
+        if (errorEliminar) avisoLimpieza = " La publicación se guardó, pero no se pudieron limpiar todos los archivos anteriores.";
+      }
+      setImagenesPendientesLimpiar([]);
       await queryClient.invalidateQueries({ queryKey: ["formacion-publicidad-config", participanteId] });
       setMensaje((visible ? "Configuración guardada. Abre Vista pública para comprobar que el enlace ya muestra tu publicación." : "Configuración guardada. La publicidad está desactivada y el enlace público permanecerá oculto.") + avisoLimpieza);
     } catch (error) {
@@ -141,6 +145,10 @@ function CursosFormacionPage() {
       if (uploadError) throw uploadError;
       const { data } = supabase.storage.from("catalogo-joyas").getPublicUrl(ruta);
       if (!data?.publicUrl) throw new Error("No se pudo obtener la URL pública de la imagen.");
+      const imagenSeleccionada = imagenUrl.trim();
+      if (imagenSeleccionada && imagenSeleccionada !== config?.formacion_imagen_url?.trim()) {
+        setImagenesPendientesLimpiar(actuales => [...new Set([...actuales, imagenSeleccionada])]);
+      }
       setImagenUrl(data.publicUrl);
       setMensaje("Imagen subida. Guarda la configuración para publicarla.");
     } catch (error) {
@@ -155,7 +163,7 @@ function CursosFormacionPage() {
     if (!confirmar) return;
     setEliminandoImagen(true);
     setMensaje(null);
-    setImagenPendienteEliminar(imagenUrl);
+    setImagenesPendientesLimpiar(actuales => [...new Set([...actuales, imagenUrl.trim()])]);
     setImagenUrl("");
     setMensaje("Imagen retirada de la vista previa. Guarda la configuración para actualizar la página pública y eliminar el archivo anterior.");
     setEliminandoImagen(false);
