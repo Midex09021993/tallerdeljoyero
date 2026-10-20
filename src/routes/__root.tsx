@@ -13,7 +13,7 @@ import { lazy, Suspense, useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
-import { useSincronizarSesion } from "@/lib/auth";
+import { useSesion, useSincronizarSesion } from "@/lib/auth";
 import { registrarServiceWorker } from "@/lib/pwa-push";
 import { consumirInicioLogin, marcarInicioLogin, registrarEvento } from "@/lib/analytics";
 
@@ -112,12 +112,25 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const { data: sesion, isLoading: sesionCargando } = useSesion();
+  const segmentos = pathname.split("/").filter(Boolean);
+  const slugCatalogo = segmentos.length === 1 ? segmentos[0].toLowerCase() : "";
+  const rutasInternas = new Set([
+    "auth", "inicio", "perfil", "pedidos", "pedidos-2", "cotizaciones", "contratos",
+    "gestion", "operario", "taller", "herramientas", "catalogo", "catalogo-publico",
+    "aurum-render", "aurum-render-public", "transfer", "lovable", "mensajes",
+    "cursos-formacion", "diseno-3d", "impresion-3d", "corte-laser", "ventas",
+  ]);
+  const esCatalogoPublico = Boolean(slugCatalogo) && !rutasInternas.has(slugCatalogo);
+  const esPaginaPublica = pathname === "/" || pathname === "/cursos-diseno-3d" ||
+    /^\/formacion\/[^/]+\/?$/.test(pathname) || esCatalogoPublico;
+  const mostrarContacto = !sesionCargando && !sesion && esPaginaPublica;
   return (
     <QueryClientProvider client={queryClient}>
       <SesionSync />
       <AnalyticsSync />
       <Outlet />
-      {pathname !== "/auth" && !/^\/[a-z0-9-]+\/?$/i.test(pathname) ? (
+      {mostrarContacto ? (
         <Suspense fallback={null}><ContactoComercial className="fixed bottom-5 right-5 z-[80] inline-flex min-h-12 items-center gap-2 rounded-full border border-[#d8bd7b]/70 bg-[#171815] px-5 py-3 text-xs font-bold uppercase tracking-wider text-[#d8bd7b] shadow-[0_10px_35px_rgba(0,0,0,.35)] transition hover:bg-[#d8bd7b] hover:text-[#211c12]" /></Suspense>
       ) : null}
       <Toaster />
