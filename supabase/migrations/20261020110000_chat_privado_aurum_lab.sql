@@ -201,4 +201,64 @@ begin
   end if;
 end $$;
 
+
+create or replace function public.chat_resumen_conversaciones()
+returns table (
+  conversacion_id uuid,
+  otro_usuario_id uuid,
+  nombre_persona text,
+  nombre_taller text,
+  rol text,
+  ultimo_mensaje text,
+  ultima_actividad timestamptz,
+  no_leidos bigint
+)
+language sql
+stable
+security definer
+set search_path = public
+as $
+  select
+    conv.id,
+    otro.user_id,
+    coalesce(nullif(trim(concat_ws(' ', perfil.nombre, perfil.apellidos)), ''), nullif(perfil.usuario, ''), 'Usuario'),
+    identidad.nombre_taller,
+    identidad.rol,
+    ultimo.contenido,
+    coalesce(ultimo.created_at, conv.updated_at, conv.created_at),
+    (select count(*) from public.chat_mensajes m
+      where m.conversacion_id = conv.id
+        and m.remitente_id <> auth.uid()
+        and m.created_at > coalesce(mio.ultimo_leido_at, 'epoch'::timestamptz))
+  from public.chat_conversaciones conv
+  join public.chat_conversacion_miembros mio
+    on mio.conversacion_id = conv.id and mio.user_id = auth.uid()
+  join public.chat_conversacion_miembros otro
+    on otro.conversacion_id = conv.id and otro.user_id <> auth.uid()
+  join auth.users u on u.id = otro.user_id
+  left join public.profiles perfil on perfil.id = otro.user_id
+  left join lateral (
+    select ep.nombre as nombre_taller, ur.role::text as rol
+    from public.participante_cuentas pc
+    join public.ecosistema_participantes ep on ep.id = pc.participante_id and ep.estado = 'activo'
+    join public.user_roles ur on ur.user_id = pc.user_id
+    where pc.user_id = otro.user_id and pc.estado = 'activo'
+    order by case ur.role::text
+      when 'dueno' then 1 when 'gerente' then 2 when 'operario' then 3
+      when 'monitor' then 4 when 'cliente' then 5 else 6 end, ep.nombre
+    limit 1
+  ) identidad on true
+  left join lateral (
+    select m.contenido, m.created_at
+    from public.chat_mensajes m
+    where m.conversacion_id = conv.id
+    order by m.created_at desc
+    limit 1
+  ) ultimo on true
+  where auth.uid() is not null
+  order by coalesce(ultimo.created_at, conv.updated_at, conv.created_at) desc;
+$;
+revoke all on function public.chat_resumen_conversaciones() from public, anon;
+grant execute on function public.chat_resumen_conversaciones() to authenticated;
+
 commit;
