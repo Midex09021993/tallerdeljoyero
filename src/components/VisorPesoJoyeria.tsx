@@ -569,7 +569,7 @@ export function VisorPesoJoyeria({ compacto = false, archivoInicial = null }: { 
                 <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold">
                   Peso final estimado
                 </p>
-                <p className="mt-2 text-4xl font-semibold tracking-tight sm:text-5xl">
+                <p className="mt-2 text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
                   {num(pesoFinal)}
                   <span className="ml-2 text-base font-medium text-muted-foreground">g</span>
                 </p>
@@ -579,7 +579,7 @@ export function VisorPesoJoyeria({ compacto = false, archivoInicial = null }: { 
               </div>
               <div className="rounded-2xl border border-border bg-background/60 px-4 py-3 backdrop-blur">
                 <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Material</p>
-                <p className="mt-1 text-sm font-semibold">{metal.nombre}</p>
+                <p className="mt-1 text-sm font-semibold text-foreground">{metal.nombre}</p>
                 <p className="mt-0.5 text-[11px] text-muted-foreground">Densidad {num(densidad, 2)} g/cm³</p>
               </div>
             </div>
