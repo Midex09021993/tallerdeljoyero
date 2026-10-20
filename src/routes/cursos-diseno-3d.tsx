@@ -15,17 +15,17 @@ import {
 export const Route = createFileRoute("/cursos-diseno-3d")({
   head: () => ({
     meta: [
-      { title: "Diseño 3D para Joyería | Taller del Joyero" },
+      { title: "Cursos y formación | Taller del Joyero" },
       {
         name: "description",
         content:
-          "Explora recursos y herramientas digitales para aprender, practicar y presentar diseños 3D de joyería en Taller del Joyero.",
+          "Descubre cursos y recursos de formación para joyeros, estudiantes y profesionales del sector.",
       },
-      { property: "og:title", content: "Diseño 3D para Joyería | Taller del Joyero" },
+      { property: "og:title", content: "Cursos y formación | Taller del Joyero" },
       {
         property: "og:description",
         content:
-          "Recursos de práctica, visualización 3D y herramientas técnicas para estudiantes de diseño de joyería.",
+          "Cursos, aprendizaje y herramientas complementarias para la formación profesional en joyería.",
       },
     ],
   }),
@@ -97,12 +97,10 @@ function CursosDiseno3DPage() {
               <Sparkles className="size-3.5" /> Formación y práctica digital
             </p>
             <h1 className="mt-6 max-w-3xl font-display text-4xl italic leading-tight sm:text-6xl">
-              Lleva tus ideas de joyería del concepto al <span className="text-[#e5ca8a]">diseño 3D</span>
+              Aprende, crea y desarrolla tu talento en <span className="text-[#e5ca8a]">joyería</span>
             </h1>
             <p className="mt-5 max-w-2xl text-sm leading-7 text-white/65 sm:text-base">
-              Un punto de partida para estudiantes y profesionales que quieren aprender,
-              practicar y presentar sus diseños con herramientas digitales pensadas para
-              el sector joyero.
+              Un espacio para descubrir cursos, desarrollar nuevas habilidades y encontrar recursos útiles para estudiantes y profesionales del sector joyero.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <a
@@ -119,8 +117,7 @@ function CursosDiseno3DPage() {
               </Link>
             </div>
             <p className="mt-4 max-w-xl text-xs leading-5 text-white/35">
-              Los cursos, fechas y condiciones de inscripción deben confirmarse con la
-              instructora. Esta página reúne recursos del ecosistema y no procesa matrículas.
+              La publicación de cursos estará sujeta a revisión y aprobación comercial. La inscripción se habilitará cuando cada curso tenga sus datos y condiciones confirmados.
             </p>
           </div>
 
@@ -151,7 +148,7 @@ function CursosDiseno3DPage() {
               </div>
               <div className="mt-5 flex items-center gap-2 text-xs text-white/40">
                 <CheckCircle2 className="size-4 text-[#d8bd7b]" />
-                Recursos complementarios a la formación, no sustituyen al curso.
+                Recursos complementarios para acompañar tu aprendizaje.
               </div>
             </div>
           </div>
@@ -160,10 +157,9 @@ function CursosDiseno3DPage() {
         <section id="recursos" className="scroll-mt-8 border-t border-white/10 py-12 sm:py-16">
           <div className="max-w-2xl">
             <p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#d8bd7b]">Tu espacio de práctica</p>
-            <h2 className="mt-3 font-display text-3xl italic sm:text-4xl">Herramientas útiles para estudiantes de joyería</h2>
+            <h2 className="mt-3 font-display text-3xl italic sm:text-4xl">Cursos y recursos para aprender</h2>
             <p className="mt-3 text-sm leading-7 text-white/55">
-              Prueba los recursos públicos y descubre otras herramientas que pueden acompañarte
-              durante tus prácticas y proyectos personales.
+              Explora herramientas del ecosistema que pueden complementar tu formación y tus proyectos.
             </p>
           </div>
           <div className="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
