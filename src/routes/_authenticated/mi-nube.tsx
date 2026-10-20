@@ -1059,20 +1059,23 @@ function MiNubePage() {
     const raizNueva = `${participanteId}/${usuarioId}/${nombreNuevo}`;
     const movidos: Array<{ origen: string; destino: string }> = [];
     let nasRenombrado = false;
+    let nasNoVerificado = false;
+    let videosDeCarpeta: Array<{ name: string; folder: string }> = [];
     try {
-      // Confirmar el contenido del NAS antes de cambiar rutas: los vídeos deben
-      // seguir disponibles bajo el mismo nombre lógico para todos los talleres.
+      // Mi Nube en Supabase debe poder renombrarse aunque Nextcloud esté fuera
+      // de línea. El NAS se sincroniza solo si su listado puede verificarse.
       const { data: nasData, error: nasError } = await supabase.functions.invoke("nextcloud-video-files", {
         body: { action: "list", participantId: participanteId },
       });
       if (nasError || nasData?.error || !Array.isArray(nasData?.files)) {
-        throw new Error("No se pudo verificar el NAS. Por seguridad, no se renombró la carpeta.");
+        nasNoVerificado = true;
+      } else {
+        videosDeCarpeta = (nasData.files as Array<{ name: string; folder: string }>)
+          .filter((archivo) => archivo.folder === proyecto.nombre);
+        const videosDestino = (nasData.files as Array<{ name: string; folder: string }>)
+          .filter((archivo) => archivo.folder === nombreNuevo);
+        if (videosDestino.length) throw new Error("Ya existe una carpeta de vídeos con ese nombre en el NAS.");
       }
-      const videosDeCarpeta = (nasData.files as Array<{ name: string; folder: string }>)
-        .filter((archivo) => archivo.folder === proyecto.nombre);
-      const videosDestino = (nasData.files as Array<{ name: string; folder: string }>)
-        .filter((archivo) => archivo.folder === nombreNuevo);
-      if (videosDestino.length) throw new Error("Ya existe una carpeta de vídeos con ese nombre en el NAS.");
 
       // Verificar colisiones en Storage antes de mover cualquier archivo.
       const { data: carpetasRaiz, error: errorRaiz } = await supabase.storage.from(BUCKET).list(`${participanteId}/${usuarioId}`, { limit: 1000 });
@@ -1092,7 +1095,7 @@ function MiNubePage() {
         movidos.push({ origen, destino });
       }
 
-      if (videosDeCarpeta.length > 0) {
+      if (!nasNoVerificado && videosDeCarpeta.length > 0) {
         const { data: nasRename, error: nasRenameError } = await supabase.functions.invoke("nextcloud-video-files", {
           body: { action: "rename-folder", oldFolder: proyecto.nombre, newFolder: nombreNuevo, participantId: participanteId },
         });
@@ -1110,7 +1113,11 @@ function MiNubePage() {
         .is("revoked_at", null);
       if (errorCompartidas) throw new Error("Los archivos se movieron, pero no se pudo actualizar el nombre compartido. Se intentará revertir el cambio.");
 
-      toast.success(`Carpeta renombrada a “${nombreNuevo}”. El nombre actualizado se mostrará también a los talleres con acceso.`);
+      if (nasNoVerificado) {
+        toast.success(`Carpeta renombrada a “${nombreNuevo}” en Mi Nube. El NAS no respondió; sus vídeos no se modificaron y podrían seguir bajo el nombre anterior.`);
+      } else {
+        toast.success(`Carpeta renombrada a “${nombreNuevo}”. El nombre actualizado se mostrará también a los talleres con acceso.`);
+      }
       setProyectoRenombrando(null);
       setProyectoAbierto(null);
       await Promise.all([cargarBiblioteca(), cargarCompartidas()]);
