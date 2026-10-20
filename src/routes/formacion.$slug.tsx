@@ -7,7 +7,7 @@ import { supabasePublic } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/formacion/$slug")({
   head: ({ params }) => ({
     meta: [
-      { title: `Cursos y formación | ${params.slug} · Taller del Joyero` },
+      { title: "Cursos y formación | Taller del Joyero" },
       { name: "description", content: "Conoce la propuesta formativa y las herramientas para estudiantes de joyería." },
       { name: "robots", content: "index, follow" },
     ],
@@ -91,12 +91,15 @@ function PublicidadFormacionPage() {
   }
 
   const contacto = data.whatsapp?.replace(/[^0-9]/g, "");
-  const contactoUrl = contacto ? `https://wa.me/${contacto}` : null;
+  const mensajeContacto = `Hola, vi la página de cursos y formación de ${data.nombre_publico} y quisiera recibir más información. ${window.location.href}`;
+  const contactoUrl = contacto
+    ? `https://wa.me/${contacto}?text=${encodeURIComponent(mensajeContacto)}`
+    : null;
   const herramientas = [
-    { title: "AURUM Render", description: "Explora el diseño y la visualización 3D de joyería.", href: "/auth", icon: Gem },
+    { title: "AURUM Render", description: "Explora el diseño y la visualización 3D de joyería. Puede requerir iniciar sesión.", href: "/auth", icon: Gem },
     { title: "AURUM Transfer", description: "Comparte archivos de práctica de forma sencilla.", href: "/transfer", icon: Send },
     { title: "Calculadoras técnicas", description: "Prueba herramientas de cálculo para el oficio joyero.", href: "/herramientas-publicas", icon: Calculator },
-    { title: "Recursos para practicar", description: "Descubre más utilidades de Taller del Joyero.", href: "/herramientas-publicas", icon: Box },
+    { title: "Más herramientas", description: "Explora calculadoras y utilidades gratuitas para practicar.", href: "/herramientas-publicas", icon: Box },
   ];
 
   return (
@@ -164,7 +167,7 @@ function PublicidadFormacionPage() {
                     <h3 className="font-semibold">{item.title}</h3>
                   </div>
                   <p className="mt-3 text-sm leading-6 text-muted-foreground">{item.description}</p>
-                  <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-gold-deep">Explorar herramienta <ArrowRight className="size-4 transition group-hover:translate-x-1" /></span>
+                  <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-gold-deep">Abrir herramienta <ArrowRight className="size-4 transition group-hover:translate-x-1" /></span>
                 </a>
               );
             })}
