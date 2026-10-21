@@ -88,16 +88,16 @@ const herramientas = [
 function normalizarBusqueda(valor: string) {
   return valor
     .normalize("NFD")
-    .replace(/[\\u0300-\\u036f]/g, "")
+    .replace(/[\u0300-\u036f]/g, "")
     .toLocaleLowerCase("es")
-    .replace(/[^\\p{L}\\p{N}]+/gu, " ")
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
     .trim();
 }
 
 function HerramientasPublicasPage() {
   const [busqueda, setBusqueda] = useState("");
   const termino = normalizarBusqueda(busqueda);
-  const terminos = termino.split(/\\s+/).filter(Boolean);
+  const terminos = termino.split(/\s+/).filter(Boolean);
   const herramientasFiltradas = herramientas.filter((herramienta) => {
     if (!termino) return true;
     const contenido = normalizarBusqueda([
