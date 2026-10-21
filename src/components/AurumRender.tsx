@@ -2104,9 +2104,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         </div>
       </header>}
 
-      {!embedded && exportOpen&&<div className="absolute right-3 top-[72px] z-[80] max-h-[calc(100%-6rem)] w-[min(420px,calc(100%-1.5rem))] overflow-y-auto rounded-2xl border border-white/80 bg-[#fbfaf7]/95 p-3 text-[#292824] shadow-[0_16px_44px_rgba(35,32,24,.18)] backdrop-blur-2xl sm:right-4 sm:top-[76px] sm:p-4">
+      {!embedded && exportOpen&&<div className="absolute right-3 top-[72px] z-[80] max-h-[calc(100%-5.5rem)] w-[min(440px,calc(100%-1.25rem))] overflow-y-auto rounded-2xl border border-white/80 bg-[#fbfaf7]/95 p-3 text-[#292824] shadow-[0_16px_44px_rgba(35,32,24,.18)] backdrop-blur-2xl sm:right-4 sm:top-[76px] sm:p-4">
       <div>
-        <div className="mb-5 flex items-start justify-between gap-4"><div><div id="aurum-export-title" className="text-xl font-semibold tracking-tight text-[#292824]">Centro de exportación</div><div className="mt-1 text-sm text-[#77756f]">Prepara tu joya para presentar, compartir o fabricar.</div></div><button type="button" aria-label="Cerrar exportación" onClick={()=>setExportOpen(false)} className="rounded-lg p-1 text-[#77756f] hover:bg-black/[.05]"><X className="size-4"/></button></div>
+        <div className="mb-3 flex items-start justify-between gap-3"><div><div id="aurum-export-title" className="text-lg font-semibold tracking-tight text-[#292824]">Centro de exportación</div><div className="mt-1 text-sm text-[#77756f]">Prepara tu joya para presentar, compartir o fabricar.</div></div><button type="button" aria-label="Cerrar exportación" onClick={()=>setExportOpen(false)} className="rounded-lg p-1 text-[#77756f] hover:bg-black/[.05]"><X className="size-4"/></button></div>
         <div className="flex flex-col gap-3">
           <button type="button" disabled={!archivo||exportBusy} onClick={async()=>{
             setExportBusy(true);
@@ -2139,7 +2139,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           }} className="flex w-full items-center gap-2.5 rounded-xl border border-[#d4af37]/50 bg-[#d4af37]/15 px-3 py-2.5 text-left text-[13px] font-semibold text-[#292824] transition-colors hover:bg-[#d4af37]/25 disabled:cursor-not-allowed disabled:opacity-40"><Upload className="size-5"/><span><span className="block">Guardar y compartir joya</span><span className="block text-[10px] font-normal text-[#77756f]">Mi Nube · enlace válido 7 días</span></span></button>
           {false&&(<button type="button" disabled={!archivo||exportBusy} onClick={async()=>{setExportBusy(true);try{await apiRef.current?.exportGLB();}catch(e){setError(e instanceof Error?e.message:"No se pudo exportar el GLB.");}finally{setExportBusy(false);}}} className="flex w-full items-center gap-2.5 rounded-xl border border-[#7168f4]/20 bg-[#7168f4]/85 px-3 py-2.5 text-left text-[13px] font-semibold text-[#292824] shadow-sm transition-colors hover:bg-[#7168f4]/95 disabled:cursor-not-allowed disabled:opacity-40"><Gem className="size-5"/><span><span className="block">Descargar modelo .glb</span><span className="block text-[10px] font-normal text-[#292824]/85">Geometría y materiales exportables</span></span></button>)}
 
-          <button type="button" onClick={()=>setSnapshotOpen(v=>!v)} aria-expanded={snapshotOpen} className="flex w-full items-center gap-2.5 rounded-xl border border-white/80 bg-white/35 px-3 py-2.5 text-left text-[13px] text-[#292824] transition-colors hover:bg-white/60"><ImageIcon className="size-5"/><span className="min-w-0 flex-1"><span className="block">Snapshot de producto</span><span className="block text-[10px] text-[#77756f]">Resolución y formato de imagen</span></span><ChevronDown className={"size-4 transition-transform "+(snapshotOpen?"rotate-180":"")}/></button>
+          <button type="button" onClick={()=>setSnapshotOpen(v=>{const next=!v;if(next)setVideoOpen(false);return next;})} aria-expanded={snapshotOpen} className="flex w-full items-center gap-2.5 rounded-xl border border-white/80 bg-white/35 px-3 py-2.5 text-left text-[13px] text-[#292824] transition-colors hover:bg-white/60"><ImageIcon className="size-5"/><span className="min-w-0 flex-1"><span className="block">Snapshot de producto</span><span className="block text-[10px] text-[#77756f]">Resolución y formato de imagen</span></span><ChevronDown className={"size-4 transition-transform "+(snapshotOpen?"rotate-180":"")}/></button>
           {sharedLink&&<div className="rounded-xl border border-[#d4af37]/30 bg-white/60 p-2.5">
             <div className="mb-1.5 text-[10px] font-semibold text-[#92743b]">Enlace para compartir · vence en 7 días</div>
             <input aria-label="Enlace de la joya compartida" readOnly value={sharedLink} onFocus={e=>e.currentTarget.select()} className="w-full rounded-lg border border-black/10 bg-white px-2 py-2 text-[10px] text-[#55534d]"/>
@@ -2172,7 +2172,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             </div>
           </div>}
           <div className="rounded-xl border border-[#d4af37]/35 bg-[#fffaf0]/70 p-3">
-            <button type="button" aria-expanded={videoOpen} onClick={()=>setVideoOpen(v=>!v)} className="flex w-full items-center gap-2.5 text-left">
+            <button type="button" aria-expanded={videoOpen} onClick={()=>setVideoOpen(v=>{const next=!v;if(next)setSnapshotOpen(false);return next;})} className="flex w-full items-center gap-2.5 text-left">
               <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-[#d4af37]/15 text-[#92743b]"><RotateCw className="size-4"/></span>
               <span className="min-w-0 flex-1"><span className="block text-[13px] font-semibold">Vídeo de giro de joya</span><span className="block text-[10px] text-[#77756f]">Captura en vivo · MP4</span></span>
               <ChevronDown className={"size-4 transition-transform "+(videoOpen?"rotate-180":"")}/>
@@ -2244,7 +2244,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           {false&&(<button type="button" onClick={()=>apiRef.current?.exportSceneSettings()} className="flex w-full items-center gap-3 rounded-xl border border-black/10 bg-black/[.025] px-3 py-3 text-left text-sm text-[#292824] hover:bg-black/[.05]"><FileJson className="size-5"/><span><span className="block">Configuración .vjson</span><span className="block text-[10px] text-[#77756f]">Escena, cámara, calidad y selección</span></span></button>)}
 
         </div>
-        <p className="mt-3 rounded-xl border border-black/[.06] bg-black/[.025] p-3 text-[11px] leading-relaxed text-[#77756f]">Antes de compartir un modelo 3D, ten en cuenta que los materiales compatibles con glTF se conservan mejor; los shaders personalizados, el HDRI y los efectos de pantalla pueden variar según el visor.</p>
+        {sharedLink&&<p className="mt-2 rounded-lg border border-black/[.06] bg-black/[.025] p-2.5 text-[10px] leading-relaxed text-[#77756f]">Al compartir un modelo 3D, los materiales compatibles con glTF se conservan mejor; los shaders personalizados, el HDRI y los efectos pueden variar según el visor.</p>}
       </div></div>}
       <div className={embedded ? "flex min-h-0 flex-1 overflow-hidden bg-[#090b0e]" : "flex min-h-0 flex-1 gap-3 bg-[#eeede8] p-3"}>
         {!embedded && <aside className="w-[336px] shrink-0 overflow-hidden rounded-2xl border border-black/[.07] bg-[#f9f8f5] text-[#292824] shadow-[0_8px_28px_rgba(36,32,20,.045)]">
