@@ -1501,12 +1501,11 @@ function MiNubePage() {
                     disabled={subiendo}
                   />
                 </label>
-                <div className="rounded-xl border border-dashed border-gold/40 bg-gold/5 p-2 text-center transition hover:bg-gold/10">
-                  <button type="button" onClick={() => document.getElementById("mi-nube-archivos")?.click()} disabled={subiendo || seleccionados.length >= MAX_FILES_PER_BATCH} className="flex min-h-28 w-full flex-col items-center justify-center rounded-lg p-2 disabled:cursor-not-allowed disabled:opacity-50">
+                <label className="flex min-h-32 cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-gold/40 bg-gold/5 p-4 text-center transition hover:bg-gold/10">
+
                   <UploadCloud className="size-7 text-gold" />
                   <span className="mt-2 text-sm font-semibold">{seleccionados.length > 0 ? "Agregar más archivos al proyecto" : "Elegir archivos del proyecto"}</span>
                   <span className="mt-1 text-xs text-muted-foreground">Añade archivos en varias tandas sin perder la selección anterior · máximo 30</span>
-                  </button>
                   <input
                     id="mi-nube-archivos"
                     type="file"
@@ -1542,7 +1541,7 @@ function MiNubePage() {
                       }
                     }}
                   />
-                </div>
+                </label>
                 {seleccionados.length > 0 && (
                   <div className="rounded-xl border border-border p-3">
                     <div className="flex items-center justify-between gap-2"><p className="text-xs font-semibold">{seleccionados.length} de {MAX_FILES_PER_BATCH} archivos seleccionados</p><span className="text-[11px] text-muted-foreground">{MAX_FILES_PER_BATCH - seleccionados.length} disponibles</span></div>
