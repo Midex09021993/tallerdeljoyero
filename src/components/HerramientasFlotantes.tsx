@@ -3,7 +3,6 @@ import { useNavigate } from "@tanstack/react-router";
 import { Boxes, Calculator, ChevronRight, Droplets, Gem, Ruler, Scale, Send, Wrench } from "lucide-react";
 import { CalculadoraAleacionOro } from "@/components/CalculadoraAleacionOro";
 import { ConversorTallasAnillo } from "@/components/ConversorTallasAnillo";
-import { VisorPesoJoyeria } from "@/components/VisorPesoJoyeria";
 import { CalculadoraPesoGemas } from "@/components/CalculadoraPesoGemas";
 import { CalculadoraYeso } from "@/routes/_authenticated/taller";
 
@@ -138,8 +137,10 @@ export function HerramientasFlotantes({ herramientaInicial }: { herramientaInici
             </div>
           ) : null}
           {activa === "peso3d" ? (
-            <div className="mt-4 rounded-xl bg-background p-1.5 text-foreground">
-              <VisorPesoJoyeria compacto />
+            <div className="mt-4 rounded-xl border border-gold/25 bg-background p-4 text-foreground">
+              <p className="text-sm font-semibold">Visualizador y Peso 3D</p>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">Usa el visualizador oficial dentro de Aurum Lab para trabajar con el mismo cálculo y guardar análisis en Mi Nube.</p>
+              <button type="button" onClick={() => navigate({ to: "/auth" })} className="mt-3 inline-flex min-h-10 w-full items-center justify-center rounded-xl bg-gold px-4 py-2 text-sm font-semibold text-black">Entrar a Aurum Lab</button>
             </div>
           ) : null}
         </div>
