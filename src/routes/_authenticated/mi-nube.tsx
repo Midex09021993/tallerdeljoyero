@@ -1357,50 +1357,33 @@ function MiNubePage() {
       atrasMovil={{ to: "/inicio" }}
     >
       <div className="mx-auto w-full max-w-[1440px] space-y-5">
-        <section className="relative overflow-hidden rounded-2xl border border-border bg-card px-4 py-3 shadow-card sm:px-5">
-          <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="min-w-0">
-              <p className="text-sm font-medium text-muted-foreground">Archivos privados del taller</p>
-            </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-2 rounded-xl border border-border bg-background/80 px-3 py-2">
-                <div className="grid size-8 place-items-center rounded-lg bg-gold/10 text-gold"><HardDrive className="size-4" /></div>
-                <div>
-                  <p className="text-sm font-semibold">Supabase Storage</p>
-                  <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <LockKeyhole className="size-3.5 text-emerald-600" /> Acceso privado
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 rounded-2xl border border-border bg-background/80 p-4" aria-label={`Estado del NAS: ${nasPausado ? "Conexión pausada desde Mi Nube" : mensajeNas}`}>
-                <div className="grid size-8 place-items-center rounded-lg bg-gold/10 text-gold"><Server className="size-4" /></div>
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold">Mi NAS</p>
-                  <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground" aria-live="polite">
-                    <span className={`relative flex size-2.5 shrink-0 rounded-full ${nasPausado ? "bg-amber-500" : estadoNas === "online" ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.65)]" : estadoNas === "offline" ? "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.55)]" : estadoNas === "misconfigured" ? "bg-red-500" : "bg-amber-500"}`} aria-hidden="true" />
-                    {nasPausado ? "Conexión pausada" : estadoNas === "online" ? "Conectado" : estadoNas === "offline" ? "Desconectado" : estadoNas === "misconfigured" ? "Revisar credenciales" : estadoNas === "checking" ? "Comprobando…" : estadoNas === "not_configured" ? "Pendiente de configurar" : "Estado no confirmado"}
-                  </p>
-                  <p className="mt-1 max-w-48 text-[10px] text-muted-foreground">{nasPausado ? "Los vídeos del NAS quedan ocultos y no se pueden subir nuevos." : mensajeNas}</p>
-                  <button type="button" disabled={subiendo || estadoNas === "checking"} onClick={() => {
-                    if (nasPausado) {
-                      try { window.localStorage.setItem("mi-nube-nas-pausado", "false"); } catch { /* pausa solo en memoria */ }
-                      setNasPausado(false);
-                      toast.info("Revisando la conexión con el NAS…");
-                      void comprobarNas();
-                    } else if (estadoNas !== "online") {
-                      toast.info("Reintentando la conexión con el NAS…");
-                      void comprobarNas();
-                    } else {
-                      try { window.localStorage.setItem("mi-nube-nas-pausado", "true"); } catch { /* pausa solo en memoria */ }
-                      setNasPausado(true);
-                      toast.success("Conexión con el NAS pausada en Mi Nube. El equipo sigue encendido.");
-                    }
-                  }} className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-[10px] font-semibold hover:border-gold/50 disabled:cursor-not-allowed disabled:opacity-50">
-                    <Power className="size-3" /> {nasPausado ? "Reconectar" : estadoNas === "online" ? "Desconectar" : "Reintentar"}
-                  </button>
-                </div>
-              </div>
-            </div>
+        <section className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3" aria-label="Estado rápido de Mi Nube">
+          <p className="text-sm font-medium text-muted-foreground">Archivos privados del taller</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs text-muted-foreground">
+              <HardDrive className="size-3.5 text-gold" /> Nube privada
+            </span>
+            <span className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs text-muted-foreground" aria-label={`Estado del NAS: ${nasPausado ? "Conexión pausada desde Mi Nube" : mensajeNas}`}>
+              <span className={`size-2 rounded-full ${nasPausado ? "bg-amber-500" : estadoNas === "online" ? "bg-emerald-500" : estadoNas === "offline" || estadoNas === "misconfigured" ? "bg-red-500" : "bg-amber-500"}`} aria-hidden="true" />
+              {nasPausado ? "NAS pausado" : estadoNas === "online" ? "NAS conectado" : estadoNas === "checking" ? "NAS comprobando…" : estadoNas === "misconfigured" ? "Revisar NAS" : estadoNas === "not_configured" ? "NAS sin configurar" : "NAS desconectado"}
+            </span>
+            <button type="button" disabled={subiendo || estadoNas === "checking"} onClick={() => {
+              if (nasPausado) {
+                try { window.localStorage.setItem("mi-nube-nas-pausado", "false"); } catch { /* pausa solo en memoria */ }
+                setNasPausado(false);
+                toast.info("Revisando la conexión con el NAS…");
+                void comprobarNas();
+              } else if (estadoNas !== "online") {
+                toast.info("Reintentando la conexión con el NAS…");
+                void comprobarNas();
+              } else {
+                try { window.localStorage.setItem("mi-nube-nas-pausado", "true"); } catch { /* pausa solo en memoria */ }
+                setNasPausado(true);
+                toast.success("Conexión con el NAS pausada en Mi Nube. El equipo sigue encendido.");
+              }
+            }} className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:border-gold/50 disabled:opacity-50">
+              <Power className="size-3.5" /> {nasPausado ? "Reconectar" : estadoNas === "online" ? "Pausar NAS" : "Reintentar NAS"}
+            </button>
           </div>
         </section>
 
@@ -1467,29 +1450,26 @@ function MiNubePage() {
           </div>
         )}
 
-        <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Filtrar por tipo de archivo">
-          {secciones.map(({ id, titulo, descripcion, formatos, Icono }) => {
+        <nav className="flex flex-wrap items-center gap-1.5 rounded-xl border border-border bg-card p-2" aria-label="Categorías de archivos">
+          <button type="button" onClick={() => setSeccionActiva("todos")} aria-pressed={seccionActiva === "todos"} className={`inline-flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${seccionActiva === "todos" ? "bg-gold text-black" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}>
+            <Folder className="size-4" /> Todos
+            <span className="rounded-full bg-background/70 px-1.5 py-0.5 text-[10px]">{archivos.length}</span>
+          </button>
+          {secciones.map(({ id, titulo, Icono }) => {
             const activa = seccionActiva === id;
             const cantidad = archivos.filter((archivo) => archivo.categoria === id).length;
             return (
-              <button
-                key={id}
-                type="button"
-                onClick={() => setSeccionActiva(activa ? "todos" : id)}
-                aria-pressed={activa}
-                className={`rounded-2xl border p-4 text-left shadow-card transition hover:border-gold/50 sm:p-5 ${activa ? "border-gold/60 bg-gold/5" : "border-border bg-card"}`}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className={`grid size-10 place-items-center rounded-xl ${activa ? "bg-gold/15 text-gold" : "bg-surface-muted text-muted-foreground"}`}><Icono className="size-5" /></div>
-                  <span className="rounded-full border border-border px-2 py-1 text-xs font-semibold">{cantidad}</span>
-                </div>
-                <h3 className="mt-4 text-sm font-semibold">{titulo}</h3>
-                <p className="mt-2 hidden min-h-10 text-xs leading-5 text-muted-foreground sm:block">{descripcion}</p>
-                <p className="mt-3 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">{formatos}</p>
+              <button key={id} type="button" onClick={() => setSeccionActiva(activa ? "todos" : id)} aria-pressed={activa}
+                className={`inline-flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${activa ? "bg-gold text-black" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}>
+                <Icono className="size-4" /> {titulo === "Fotos e imágenes" ? "Fotos" : titulo === "Biblioteca 3D" ? "Biblioteca 3D" : titulo}
+                <span className="rounded-full bg-background/70 px-1.5 py-0.5 text-[10px]">{cantidad}</span>
               </button>
             );
           })}
-        </section>
+          <button type="button" onClick={() => document.getElementById("mi-nube-subir-proyecto")?.scrollIntoView({ behavior: "smooth", block: "start" })} className="ml-auto inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2.5 text-sm font-semibold hover:border-gold/50">
+            <UploadCloud className="size-4" /> Subir proyecto
+          </button>
+        </nav>
 
         <section className="rounded-2xl border border-border bg-card p-4 shadow-card sm:p-6">
           <div className="mb-5 flex items-center justify-between gap-3">
