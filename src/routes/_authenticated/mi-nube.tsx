@@ -1471,7 +1471,7 @@ function MiNubePage() {
           </button>
         </nav>
 
-        <section className="rounded-2xl border border-border bg-card p-4 shadow-card sm:p-6">
+        <section id="mi-nube-subir-proyecto" className="scroll-mt-24 rounded-2xl border border-border bg-card p-4 shadow-card sm:p-6">
           <div className="mb-5 flex items-center justify-between gap-3">
             <div>
               <h3 className="font-semibold">Subir un proyecto completo</h3>
