@@ -173,7 +173,24 @@ function HerramientasPublicasPage() {
           </Link>}
             </div>
           </div>}
-          {termino && herramientasFiltradas.length === 0 && !mostrarRender && !mostrarTransfer && <p className="rounded-xl border border-white/10 p-5 text-sm text-white/60">No encontramos una tarea con “{busqueda}”. Prueba con otra palabra, como oro, peso, yeso o STL.</p>}
+          {(!termino || "cotizar cotizacion precio cobrar presupuesto cliente ficha tecnica".includes(termino)) && <div>
+            <h2 className="mb-4 text-lg font-semibold text-white sm:text-xl">Cotizar y entregar</h2>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              <Link to="/auth" className="group flex min-h-48 flex-col rounded-2xl border border-white/10 bg-white/[.02] p-5 transition duration-200 hover:-translate-y-0.5 hover:border-[#d8bd7b]/55 hover:bg-white/[.045] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd7b]">
+                <span className="grid size-11 place-items-center rounded-xl border border-[#d8bd7b]/25 bg-[#d8bd7b]/[.08] text-[#d8bd7b]"><Coins className="size-5" /></span>
+                <span className="mt-4 text-base font-semibold">¿Cuánto debo cobrar por una joya?</span>
+                <span className="mt-2 flex-1 text-sm leading-6 text-white/55">Accede a Aurum Lab para consultar las herramientas de cotización disponibles para tu taller.</span>
+                <span className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-[#d8bd7b]">Entrar a Aurum Lab <ArrowRight className="size-3.5 transition group-hover:translate-x-1" /></span>
+              </Link>
+              <Link to="/auth" className="group flex min-h-48 flex-col rounded-2xl border border-white/10 bg-white/[.02] p-5 transition duration-200 hover:-translate-y-0.5 hover:border-[#d8bd7b]/55 hover:bg-white/[.045] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd7b]">
+                <span className="grid size-11 place-items-center rounded-xl border border-[#d8bd7b]/25 bg-[#d8bd7b]/[.08] text-[#d8bd7b]"><Gem className="size-5" /></span>
+                <span className="mt-4 text-base font-semibold">¿Cómo consulto la ficha técnica de una pieza?</span>
+                <span className="mt-2 flex-1 text-sm leading-6 text-white/55">Entra a tu espacio de trabajo para revisar las funciones técnicas disponibles según tu acceso.</span>
+                <span className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-[#d8bd7b]">Entrar a Aurum Lab <ArrowRight className="size-3.5 transition group-hover:translate-x-1" /></span>
+              </Link>
+            </div>
+          </div>}
+          {termino && herramientasFiltradas.length === 0 && !mostrarRender && !mostrarTransfer && !"cotizar cotizacion precio cobrar presupuesto cliente ficha tecnica".includes(termino) && <p className="rounded-xl border border-white/10 p-5 text-sm text-white/60">No encontramos una tarea con “{busqueda}”. Prueba con otra palabra, como oro, peso, yeso o STL.</p>}
         </section>
 
         <footer className="mt-12 border-t border-white/10 py-6 text-xs text-white/35">
