@@ -5,6 +5,7 @@ import { ArrowLeft, CircleDot, Coins, FlaskConical, Gem, Ruler, Scale, Sparkles 
 import { CalculadoraAleacionOro } from "@/components/CalculadoraAleacionOro";
 import { ConversorTallasAnillo } from "@/components/ConversorTallasAnillo";
 import { CalculadoraPesoGemas } from "@/components/CalculadoraPesoGemas";
+import { VisorPesoJoyeria } from "@/components/VisorPesoJoyeria";
 import { CalculadoraYeso } from "@/routes/_authenticated/taller";
 import { GeneradorSTLIA } from "@/components/GeneradorSTLIA";
 
@@ -121,16 +122,7 @@ function HerramientaPublicaPage() {
             {pagina.id === "yeso" ? <CalculadoraYeso compacto /> : null}
             {pagina.id === "oro" ? <CalculadoraAleacionOro compacto /> : null}
             {pagina.id === "tallas" ? <ConversorTallasAnillo /> : null}
-            {pagina.id === "peso" ? (
-              <div className="rounded-2xl border border-[#d8bd7b]/25 bg-[#10110f] p-6 sm:p-8">
-                <div className="mx-auto max-w-xl text-center">
-                  <Scale className="mx-auto size-9 text-[#d8bd7b]" />
-                  <h2 className="mt-4 text-xl font-semibold text-[#f5f0e7]">Continúa en el visualizador oficial</h2>
-                  <p className="mt-2 text-sm leading-6 text-white/60">Hemos unificado el cálculo de peso 3D en la herramienta interna de Aurum Lab para mantener una sola experiencia y permitir guardar los análisis vinculados a Mi Nube.</p>
-                  <Link to="/auth" className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#d8bd7b] px-5 py-3 text-sm font-semibold text-[#171713]">Entrar a Aurum Lab <ArrowLeft className="size-4 rotate-180" /></Link>
-                </div>
-              </div>
-            ) : null}
+            {pagina.id === "peso" ? <VisorPesoJoyeria compacto modoPublico /> : null}
             {pagina.id === "gemas" ? <CalculadoraPesoGemas /> : null}
             {pagina.id === "stl" ? <GeneradorSTLIA /> : null}
           </div>
