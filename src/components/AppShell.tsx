@@ -402,7 +402,7 @@ export function AppShell({
               } as const;
               return (
                 <div key={grupo} className="pt-2 first:pt-0">
-                  <p className="px-4 pb-2 pt-2 text-[9px] font-bold uppercase tracking-[0.2em] text-ink-foreground/30">{nombres[grupo]}</p>
+                  <p className="px-4 pb-2 pt-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-foreground/50">{nombres[grupo]}</p>
                   <div className="space-y-1">
                     {items.map((s) => {
                       const Icon = s.icono;
@@ -530,7 +530,7 @@ export function AppShell({
                   } as const;
                   return (
                     <section key={grupo} className="mb-3 last:mb-0">
-                      <h2 className="mb-2 px-2 text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">{nombres[grupo]}</h2>
+                      <h2 className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{nombres[grupo]}</h2>
                       <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
                         {items.map((s) => {
                           const Icon = s.icono;
