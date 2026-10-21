@@ -4,6 +4,7 @@ import { Boxes, RotateCcw, Trash2, Upload, Save, CheckCircle2 } from "lucide-rea
 import { CLAVES_CALCULADORAS, DEFAULT_CONFIG_VISUALIZADOR, leerConfigVisualizador } from "@/lib/calculadoras-config";
 import { useConfigSistema } from "@/lib/taller-db";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 /* ------------------------------------------------------------------ */
 /* Metales y densidades (g/cm³) — editables desde Ajustes             */
@@ -436,8 +437,9 @@ export function VisorPesoJoyeria({ compacto = false, archivoInicial = null, arch
       });
       if (guardadoError) throw new Error(guardadoError.message);
       setAnalisisGuardado(true);
+      toast.success("Análisis guardado en Mi Nube.");
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "No se pudo guardar el análisis.");
+      toast.error(cause instanceof Error ? cause.message : "No se pudo guardar el análisis.");
     } finally {
       setGuardandoAnalisis(false);
     }
