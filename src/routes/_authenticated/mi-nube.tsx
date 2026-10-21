@@ -1357,21 +1357,14 @@ function MiNubePage() {
       atrasMovil={{ to: "/inicio" }}
     >
       <div className="mx-auto w-full max-w-[1440px] space-y-5">
-        <section className="relative overflow-hidden rounded-3xl border border-border bg-card p-5 shadow-card sm:p-7">
-          <div className="pointer-events-none absolute -right-16 -top-20 size-64 rounded-full bg-gold/10 blur-3xl" aria-hidden="true" />
-          <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-            <div className="max-w-2xl">
-              <span className="inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-gold">
-                <Cloud className="size-3.5" /> Biblioteca privada
-              </span>
-              <h2 className="mt-4 font-display text-3xl sm:text-4xl">Tus archivos, en un solo lugar.</h2>
-              <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
-                Sube imágenes, documentos, videos y modelos 3D. Los archivos quedan privados y separados por taller y usuario.
-              </p>
+        <section className="relative overflow-hidden rounded-2xl border border-border bg-card px-4 py-3 shadow-card sm:px-5">
+          <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-muted-foreground">Archivos privados del taller</p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-3 rounded-2xl border border-border bg-background/80 p-4">
-                <div className="grid size-11 place-items-center rounded-xl bg-gold/10 text-gold"><HardDrive className="size-5" /></div>
+              <div className="flex items-center gap-2 rounded-xl border border-border bg-background/80 px-3 py-2">
+                <div className="grid size-8 place-items-center rounded-lg bg-gold/10 text-gold"><HardDrive className="size-4" /></div>
                 <div>
                   <p className="text-sm font-semibold">Supabase Storage</p>
                   <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -1380,7 +1373,7 @@ function MiNubePage() {
                 </div>
               </div>
               <div className="flex items-center gap-3 rounded-2xl border border-border bg-background/80 p-4" aria-label={`Estado del NAS: ${nasPausado ? "Conexión pausada desde Mi Nube" : mensajeNas}`}>
-                <div className="grid size-11 place-items-center rounded-xl bg-gold/10 text-gold"><Server className="size-5" /></div>
+                <div className="grid size-8 place-items-center rounded-lg bg-gold/10 text-gold"><Server className="size-4" /></div>
                 <div className="min-w-0">
                   <p className="text-sm font-semibold">Mi NAS</p>
                   <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground" aria-live="polite">
@@ -1411,7 +1404,12 @@ function MiNubePage() {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-border bg-card p-4 shadow-card sm:p-5" aria-label="Verificación de almacenamiento">
+        <details className="rounded-xl border border-border bg-card px-4 py-3" aria-label="Verificación de almacenamiento">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium">
+            <span className="flex items-center gap-2"><HardDrive className="size-4 text-gold" /> Estado del almacenamiento</span>
+            <span className="text-xs text-muted-foreground">Ver detalles</span>
+          </summary>
+          <div className="pt-3">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h3 className="text-sm font-semibold">Ubicación de tus archivos</h3>
@@ -1450,7 +1448,8 @@ function MiNubePage() {
             </div>
           </div>
           {error && <p className="mt-3 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive"><AlertCircle className="mt-0.5 size-3.5 shrink-0" /> No se pudo completar la comprobación: {error}</p>}
-        </section>
+          </div>
+        </details>
 
         {seccionActiva !== "todos" && (
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gold/25 bg-gold/[0.045] px-4 py-3" role="status">
