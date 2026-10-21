@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowLeft,
@@ -9,6 +10,7 @@ import {
   Scale,
   Sparkles,
   FlaskConical,
+  Search,
 } from "lucide-react";
 
 export const Route = createFileRoute("/herramientas-publicas")({
@@ -78,6 +80,13 @@ const herramientas = [
 ];
 
 function HerramientasPublicasPage() {
+  const [busqueda, setBusqueda] = useState("");
+  const termino = busqueda.trim().toLocaleLowerCase("es");
+  const herramientasFiltradas = herramientas.filter((herramienta) =>
+    !termino || (herramienta.titulo + " " + herramienta.descripcion + " " + herramienta.categoria + " " + herramienta.id).toLocaleLowerCase("es").includes(termino)
+  );
+  const mostrarRender = !termino || "mostrar diseño cliente joya render aurum".includes(termino) || "aurum render".includes(termino);
+  const mostrarTransfer = !termino || "compartir enviar archivos stl pesados transferencia aurum transfer".includes(termino) || "aurum transfer".includes(termino);
   return (
     <main className="min-h-screen bg-[#10110f] text-[#f5f0e7]">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-80 bg-[radial-gradient(ellipse_at_top,rgba(216,189,123,.12),transparent_68%)]" />
@@ -107,12 +116,22 @@ function HerramientasPublicasPage() {
           </p>
         </section>
 
+        <section aria-label="Buscar una tarea" className="mb-8">
+          <label htmlFor="buscar-tarea" className="mb-2 block text-sm font-medium text-white/75">¿Qué quieres resolver?</label>
+          <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[.035] px-4 transition focus-within:border-[#d8bd7b]/60">
+            <Search className="size-4 shrink-0 text-[#d8bd7b]" />
+            <input id="buscar-tarea" type="search" value={busqueda} onChange={(event) => setBusqueda(event.target.value)} placeholder="Busca oro, peso, yeso, STL..." className="min-h-12 w-full bg-transparent text-sm text-white outline-none placeholder:text-white/35" />
+          </div>
+        </section>
         <section aria-label="Herramientas para resolver tareas del taller" className="space-y-10">
-          {(["Calcular y preparar", "Diseñar y visualizar"] as const).map((categoria) => (
+          {(["Calcular y preparar", "Diseñar y visualizar"] as const).map((categoria) => {
+            const resultados = herramientasFiltradas.filter((herramienta) => herramienta.categoria === categoria);
+            if (!resultados.length) return null;
+            return (
             <div key={categoria}>
               <h2 className="mb-4 text-lg font-semibold text-white sm:text-xl">{categoria}</h2>
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {herramientas.filter((herramienta) => herramienta.categoria === categoria).map(({ id, ruta, titulo, descripcion, Icono }) => (
+                {resultados.map(({ id, ruta, titulo, descripcion, Icono }) => (
                   <Link
                     key={id}
                     to="/herramientas/$herramienta"
@@ -129,30 +148,32 @@ function HerramientasPublicasPage() {
                 ))}
               </div>
             </div>
-          ))}
-          <div>
+            );
+          })}
+          {(!termino || mostrarRender || mostrarTransfer) && <div>
             <h2 className="mb-4 text-lg font-semibold text-white sm:text-xl">Compartir y coordinar</h2>
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          <Link
+          {mostrarRender && <Link
             to="/auth"
             className="group flex min-h-52 flex-col rounded-2xl border border-white/10 bg-white/[.02] p-5 transition duration-200 hover:-translate-y-0.5 hover:border-[#d8bd7b]/55 hover:bg-white/[.045] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd7b]"
           >
             <span className="grid size-11 place-items-center rounded-xl border border-[#d8bd7b]/25 bg-[#d8bd7b]/[.08] text-[#d8bd7b]"><Gem className="size-5" /></span>
-            <span className="mt-4 text-base font-semibold">AURUM Render</span>
-            <span className="mt-2 flex-1 text-sm leading-6 text-white/70">Accede a AURUM Render desde Aurum Lab. Registra tu taller o inicia sesión para abrir la versión estable.</span>
-            <span className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-[#d8bd7b]">Crear cuenta o iniciar sesión <ArrowRight className="size-3.5 transition group-hover:translate-x-1" /></span>
-          </Link>
-          <Link
+            <span className="mt-4 text-base font-semibold">¿Cómo puedo mostrar mi diseño a un cliente?</span>
+            <span className="mt-2 flex-1 text-sm leading-6 text-white/70">Abre Aurum Render para visualizar y presentar tu joya en 3D.</span>
+            <span className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-[#d8bd7b]">Abrir visor 3D <ArrowRight className="size-3.5 transition group-hover:translate-x-1" /></span>
+          </Link>}
+          {mostrarTransfer && <Link
             to="/transfer"
             className="group flex min-h-52 flex-col rounded-2xl border border-white/10 bg-white/[.02] p-5 transition duration-200 hover:-translate-y-0.5 hover:border-[#d8bd7b]/55 hover:bg-white/[.045] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd7b]"
           >
             <span className="grid size-11 place-items-center rounded-xl border border-[#d8bd7b]/25 bg-[#d8bd7b]/[.08] text-[#d8bd7b]"><Sparkles className="size-5" /></span>
-            <span className="mt-4 text-base font-semibold">AURUM Transfer</span>
-            <span className="mt-2 flex-1 text-sm leading-6 text-white/55">Prepara un enlace privado para compartir modelos y archivos de fabricación.</span>
-            <span className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-[#d8bd7b]">Abrir transferencia <ArrowRight className="size-3.5 transition group-hover:translate-x-1" /></span>
-          </Link>
+            <span className="mt-4 text-base font-semibold">¿Cómo comparto un archivo 3D pesado?</span>
+            <span className="mt-2 flex-1 text-sm leading-6 text-white/55">Prepara un enlace privado para enviar modelos y archivos de fabricación.</span>
+            <span className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-[#d8bd7b]">Compartir archivo <ArrowRight className="size-3.5 transition group-hover:translate-x-1" /></span>
+          </Link>}
             </div>
-          </div>
+          </div>}
+          {termino && herramientasFiltradas.length === 0 && !mostrarRender && !mostrarTransfer && <p className="rounded-xl border border-white/10 p-5 text-sm text-white/60">No encontramos una tarea con “{busqueda}”. Prueba con otra palabra, como oro, peso, yeso o STL.</p>}
         </section>
 
         <footer className="mt-12 border-t border-white/10 py-6 text-xs text-white/35">
