@@ -35,7 +35,7 @@ const herramientas = [
     categoria: "Calcular y preparar",
     titulo: "¿Cuánto yeso y agua debo preparar?",
     descripcion: "Prepara la mezcla de revestimiento con las proporciones que necesitas.",
-    palabrasClave: "revestimiento fundicion cilindro agua mezcla",
+    palabrasClave: "revestimiento fundicion cilindro agua mezcla preparar yeso polvo molde cera vaciado colada",
     Icono: FlaskConical,
   },
   {
@@ -44,7 +44,7 @@ const herramientas = [
     categoria: "Calcular y preparar",
     titulo: "¿Cuánto metal necesito para mi aleación?",
     descripcion: "Calcula las cantidades para ajustar la ley del oro que buscas.",
-    palabrasClave: "oro quilates ley liga aleacion gramos metal",
+    palabrasClave: "oro quilates ley liga aleacion gramos metal fundir fundicion mezclar calcular pureza 18k 14k 24k amarillo blanco rosa",
     Icono: Coins,
   },
   {
@@ -53,7 +53,7 @@ const herramientas = [
     categoria: "Calcular y preparar",
     titulo: "¿A qué talla equivale este anillo?",
     descripcion: "Consulta equivalencias entre distintas escalas de tallas.",
-    palabrasClave: "anillo medida talla equivalencia",
+    palabrasClave: "anillo anillos medida talla tallas equivalencia dedo circunferencia diametro aro numero medir",
     Icono: Ruler,
   },
   {
@@ -62,7 +62,7 @@ const herramientas = [
     categoria: "Diseñar y visualizar",
     titulo: "¿Cuánto pesará mi modelo 3D?",
     descripcion: "Carga un modelo compatible y estima su peso antes de producirlo.",
-    palabrasClave: "stl archivo modelo imprimir gramos peso metal",
+    palabrasClave: "stl archivo modelo imprimir imprimirlo impresion 3d gramos peso metal volumen diseno cad fabricar fabricar pieza",
     Icono: Scale,
   },
   {
@@ -71,7 +71,7 @@ const herramientas = [
     categoria: "Calcular y preparar",
     titulo: "¿Cuánto puede pesar esta gema?",
     descripcion: "Obtén una estimación de peso para gemas de joyería.",
-    palabrasClave: "piedra diamante gema quilates peso medidas",
+    palabrasClave: "piedra piedras diamante gema gemas quilates peso medidas talla largo ancho alto esmeralda rubi zafiro ct",
     Icono: CircleDot,
   },
   {
@@ -80,21 +80,42 @@ const herramientas = [
     categoria: "Diseñar y visualizar",
     titulo: "¿Cómo convierto una imagen en un modelo 3D?",
     descripcion: "Genera un modelo 3D desde una imagen con procesamiento local y descarga el STL.",
-    palabrasClave: "imagen inteligencia artificial ia generar diseño archivo stl",
+    palabrasClave: "imagen inteligencia artificial ia generar diseno archivo stl modelo modelar imprimir impresion 3d foto dibujo convertir crear",
     Icono: Sparkles,
   },
 ];
 
+function normalizarBusqueda(valor: string) {
+  return valor
+    .normalize("NFD")
+    .replace(/[\\u0300-\\u036f]/g, "")
+    .toLocaleLowerCase("es")
+    .replace(/[^\\p{L}\\p{N}]+/gu, " ")
+    .trim();
+}
+
 function HerramientasPublicasPage() {
   const [busqueda, setBusqueda] = useState("");
-  const termino = busqueda.trim().toLocaleLowerCase("es");
-  const herramientasFiltradas = herramientas.filter((herramienta) =>
-    !termino || (herramienta.titulo + " " + herramienta.descripcion + " " + herramienta.categoria + " " + herramienta.id + " " + herramienta.palabrasClave).toLocaleLowerCase("es").includes(termino)
+  const termino = normalizarBusqueda(busqueda);
+  const terminos = termino.split(/\\s+/).filter(Boolean);
+  const herramientasFiltradas = herramientas.filter((herramienta) => {
+    if (!termino) return true;
+    const contenido = normalizarBusqueda([
+      herramienta.titulo,
+      herramienta.descripcion,
+      herramienta.categoria,
+      herramienta.id,
+      herramienta.palabrasClave,
+    ].join(" "));
+    // Cada palabra puede coincidir con el nombre, la descripción o un sinónimo cotidiano.
+    return terminos.every((palabra) => contenido.includes(palabra));
+  });
+  const palabrasRender = ["mostrar", "diseno", "cliente", "joya", "joyas", "render", "aurum", "visualizar", "presentar", "3d", "ver", "ensenar"];
+  const palabrasTransfer = ["compartir", "enviar", "archivo", "archivos", "stl", "pesado", "pesados", "transferencia", "transfer", "mandar", "pasar"];
+  const palabrasCotizar = ["cotizar", "cotizacion", "precio", "cobrar", "presupuesto", "cliente", "ficha", "tecnica", "tecnico"];
+  const coincideConPalabras = (palabras: string[]) => terminos.some((terminoBuscado) =>
+    palabras.some((palabra) => palabra.includes(terminoBuscado) || terminoBuscado.includes(palabra))
   );
-  const palabrasRender = ["mostrar", "diseño", "cliente", "joya", "render", "aurum", "visualizar", "presentar", "3d"];
-  const palabrasTransfer = ["compartir", "enviar", "archivo", "archivos", "stl", "pesado", "pesados", "transferencia", "transfer"];
-  const palabrasCotizar = ["cotizar", "cotizacion", "cotización", "precio", "cobrar", "presupuesto", "cliente", "ficha", "tecnica", "técnica", "tecnico", "técnico"];
-  const coincideConPalabras = (palabras: string[]) => palabras.some((palabra) => palabra.includes(termino) || termino.includes(palabra));
   const mostrarRender = !termino || coincideConPalabras(palabrasRender);
   const mostrarTransfer = !termino || coincideConPalabras(palabrasTransfer);
   const mostrarCotizar = !termino || coincideConPalabras(palabrasCotizar);
