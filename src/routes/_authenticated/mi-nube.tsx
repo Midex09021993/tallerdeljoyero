@@ -1540,7 +1540,7 @@ function MiNubePage() {
                       }
                     }}
                   />
-                  </button>\n                </div>
+                </div>
                 {seleccionados.length > 0 && (
                   <div className="rounded-xl border border-border p-3">
                     <div className="flex items-center justify-between gap-2"><p className="text-xs font-semibold">{seleccionados.length} de {MAX_FILES_PER_BATCH} archivos seleccionados</p><span className="text-[11px] text-muted-foreground">{MAX_FILES_PER_BATCH - seleccionados.length} disponibles</span></div>
