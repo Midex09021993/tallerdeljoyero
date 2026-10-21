@@ -249,23 +249,39 @@ function LoginPage() {
               </div>
             </div>
 
-            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 [@media(max-height:800px)]:mt-3">
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 [@media(max-height:800px)]:mt-3">
               {[
                 ["yeso", "Yeso / Agua", "Calcula las proporciones ideales para tus mezclas."],
                 ["oro", "Aleación de Oro", "Obtén la aleación perfecta para tu diseño."],
                 ["tallas", "Conversor de Tallas", "Convierte tallas de anillos entre diferentes escalas."],
                 ["transfer", "AURUM Transfer", "Envía modelos y archivos de fabricación con un enlace privado de un solo uso."],
-                ["render", "AURUM RENDER", "Visualiza tus diseños 3D con materiales realistas."],
+                ["visor", "Visor 3D de Joyas", "Explora y gira un modelo 3D desde el navegador. Acceso público, sin iniciar sesión."],
+                ["render", "AURUM RENDER", "Estudio profesional de joyería 3D. Requiere iniciar sesión."],
               ].map(([id, titulo, descripcion]) => (
                 <button
                   key={id}
                   type="button"
-                  onClick={() => navigate({ to: "/herramientas-publicas" })}
+                  onClick={() => {
+                    if (id === "visor") {
+                      navigate({ to: "/aurum-render-public" });
+                      return;
+                    }
+                    if (id === "render") {
+                      window.location.assign("/auth#login");
+                      return;
+                    }
+                    navigate({ to: "/herramientas-publicas" });
+                  }}
                   className="group rounded-2xl border border-white/[0.09] bg-white/[0.025] p-4 text-left transition duration-200 hover:-translate-y-0.5 hover:border-[#d8bd7b]/40 hover:bg-white/[0.055] [@media(max-height:800px)]:p-3"
                 >
                   <Gem className="size-6 text-gold" />
                   <p className="mt-4 text-sm font-semibold tracking-tight text-[#f5f0e7]">{titulo}</p>
                   <p className="mt-2 text-[11px] leading-relaxed text-[#c6c0b5]/60">{descripcion}</p>
+                  {id === "visor" ? (
+                    <span className="mt-3 inline-flex rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-1 text-[9px] font-semibold uppercase tracking-wider text-emerald-200">Público · sin login</span>
+                  ) : id === "render" ? (
+                    <span className="mt-3 inline-flex rounded-full border border-[#d8bd7b]/30 bg-[#d8bd7b]/10 px-2 py-1 text-[9px] font-semibold uppercase tracking-wider text-[#e4c987]">Con inicio de sesión</span>
+                  ) : null}
                 </button>
               ))}
             </div>
