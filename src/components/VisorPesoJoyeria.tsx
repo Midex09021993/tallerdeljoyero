@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { registrarEvento } from "@/lib/analytics";
-import { Boxes, RotateCcw, Trash2, Upload } from "lucide-react";
+import { Boxes, RotateCcw, Trash2, Upload, Save, CheckCircle2 } from "lucide-react";
 import { CLAVES_CALCULADORAS, DEFAULT_CONFIG_VISUALIZADOR, leerConfigVisualizador } from "@/lib/calculadoras-config";
 import { useConfigSistema } from "@/lib/taller-db";
+import { supabase } from "@/integrations/supabase/client";
 
 /* ------------------------------------------------------------------ */
 /* Metales y densidades (g/cm³) — editables desde Ajustes             */
@@ -56,7 +57,7 @@ function num(valor: number, decimales = 2) {
 /* Componente                                                          */
 /* ------------------------------------------------------------------ */
 
-export function VisorPesoJoyeria({ compacto = false, archivoInicial = null }: { compacto?: boolean; archivoInicial?: File | null }) {
+export function VisorPesoJoyeria({ compacto = false, archivoInicial = null, archivoOrigen = null }: { compacto?: boolean; archivoInicial?: File | null; archivoOrigen?: { ruta: string; proyecto: string } | null }) {
   const contenedor = useRef<HTMLDivElement>(null);
   const inputArchivo = useRef<HTMLInputElement>(null);
   const api = useRef<{
@@ -71,6 +72,8 @@ export function VisorPesoJoyeria({ compacto = false, archivoInicial = null }: { 
   const [error, setError] = useState<string | null>(null);
   const [nombreArchivo, setNombreArchivo] = useState<string | null>(null);
   const [volumenUnidades, setVolumenUnidades] = useState<number | null>(null);
+  const [guardandoAnalisis, setGuardandoAnalisis] = useState(false);
+  const [analisisGuardado, setAnalisisGuardado] = useState(false);
 
   const [metalId, setMetalId] = useState<MetalId>("oro18a");
   const [pesoArbol, setPesoArbol] = useState<number | null>(null);
@@ -362,6 +365,7 @@ export function VisorPesoJoyeria({ compacto = false, archivoInicial = null }: { 
       const volumen = await api.current!.cargar(file);
       setVolumenUnidades(volumen);
       setNombreArchivo(file.name);
+      setAnalisisGuardado(false);
       registrarEvento("tool_completed", { tool_id: "peso" });
     } catch (e) {
       setVolumenUnidades(null);
@@ -396,6 +400,48 @@ export function VisorPesoJoyeria({ compacto = false, archivoInicial = null }: { 
     : pesoArbolEfectivo;
   const pesoConEmpuje = pesoTeorico != null ? pesoTeorico + pesoArbolCalculado : null;
   const pesoFinal = pesoConEmpuje;
+
+  const guardarAnalisis = async () => {
+    if (!archivoOrigen?.ruta || volumenUnidades == null || volumenCm3 == null || pesoTeorico == null || pesoFinal == null) return;
+    setGuardandoAnalisis(true);
+    try {
+      const { data: usuarioData, error: usuarioError } = await supabase.auth.getUser();
+      if (usuarioError) throw usuarioError;
+      const usuario = usuarioData.user;
+      if (!usuario) throw new Error("Inicia sesión para guardar el análisis en Mi Nube.");
+
+      const cliente = supabase as unknown as {
+        from: (tabla: string) => {
+          insert: (valores: Record<string, string | number>) => Promise<{ error: { message: string } | null }>;
+        };
+      };
+      const { error: guardadoError } = await cliente.from("analisis_peso_joyeria").insert({
+        user_id: usuario.id,
+        archivo_ruta: archivoOrigen.ruta,
+        archivo_nombre: nombreArchivo ?? archivoInicial?.name ?? "modelo.stl",
+        proyecto_nombre: archivoOrigen.proyecto,
+        volumen_archivo: volumenUnidades,
+        unidad_archivo: unidad,
+        volumen_cm3: volumenCm3,
+        metal_id: metalId,
+        metal_nombre: metal.nombre,
+        densidad_g_cm3: densidad,
+        factor_seguridad: factorNum,
+        peso_joya_g: pesoTeorico,
+        modo_arbol: empujeEsPorcentaje ? "porcentaje" : "gramos",
+        valor_arbol: pesoArbol ?? pesoArbolPorDefecto,
+        peso_arbol_g: pesoArbolCalculado,
+        peso_final_g: pesoFinal,
+        version_calculo: 1,
+      });
+      if (guardadoError) throw new Error(guardadoError.message);
+      setAnalisisGuardado(true);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "No se pudo guardar el análisis.");
+    } finally {
+      setGuardandoAnalisis(false);
+    }
+  };
 
   const inputCls =
     "h-12 w-full rounded-2xl border border-input bg-background px-3 text-sm text-foreground outline-none transition focus:border-gold focus:ring-4 focus:ring-gold/10";
@@ -587,6 +633,26 @@ export function VisorPesoJoyeria({ compacto = false, archivoInicial = null }: { 
               </div>
             </div>
           </article>
+
+          {archivoOrigen?.ruta ? (
+            <div className="flex flex-col gap-3 rounded-2xl border border-gold/30 bg-accent/30 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold">Guardar análisis en Mi Nube</p>
+                <p className="mt-1 break-words text-xs text-muted-foreground">
+                  {archivoOrigen.proyecto ? "Proyecto: " + archivoOrigen.proyecto + " · " : ""}Se guardarán los resultados y la referencia al STL original, sin duplicar el archivo.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => void guardarAnalisis()}
+                disabled={guardandoAnalisis || analisisGuardado}
+                className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-xl bg-gold px-4 py-2 text-sm font-semibold text-black transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {analisisGuardado ? <CheckCircle2 className="size-4" /> : <Save className="size-4" />}
+                {guardandoAnalisis ? "Guardando…" : analisisGuardado ? "Análisis guardado" : "Guardar análisis"}
+              </button>
+            </div>
+          ) : null}
 
           <div className="grid gap-3 sm:grid-cols-3">
             <article className="rounded-2xl border border-border bg-card p-4 shadow-card">
