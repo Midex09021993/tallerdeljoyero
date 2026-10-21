@@ -402,6 +402,10 @@ export function VisorPesoJoyeria({ compacto = false, archivoInicial = null, arch
   const pesoConEmpuje = pesoTeorico != null ? pesoTeorico + pesoArbolCalculado : null;
   const pesoFinal = pesoConEmpuje;
 
+  useEffect(() => {
+    setAnalisisGuardado(false);
+  }, [volumenUnidades, unidad, metalId, pesoArbol, configuracion.factorSeguridad, configuracion.factorEmpuje, configuracion.modoEmpuje]);
+
   const guardarAnalisis = async () => {
     if (!archivoOrigen?.ruta || volumenUnidades == null || volumenCm3 == null || pesoTeorico == null || pesoFinal == null) return;
     setGuardandoAnalisis(true);
@@ -469,6 +473,28 @@ export function VisorPesoJoyeria({ compacto = false, archivoInicial = null, arch
           </span>
         ) : null}
       </div>
+
+      {nombreArchivo ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-gold/25 bg-accent/20 px-4 py-3">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold">Guardar cálculo de peso</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {archivoOrigen?.ruta
+                ? "Guarda los resultados vinculados al STL original de Mi Nube, sin duplicar el archivo."
+                : "Para vincular el cálculo a Mi Nube, abre el STL desde tu carpeta en Mi Nube."}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => void guardarAnalisis()}
+            disabled={!archivoOrigen?.ruta || pesoFinal == null || guardandoAnalisis || analisisGuardado}
+            className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-xl bg-gold px-4 py-2 text-sm font-semibold text-black transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {analisisGuardado ? <CheckCircle2 className="size-4" /> : <Save className="size-4" />}
+            {guardandoAnalisis ? "Guardando…" : analisisGuardado ? "Cálculo guardado" : "Guardar cálculo"}
+          </button>
+        </div>
+      ) : null}
 
       {/* Visor */}
       <div className="relative overflow-hidden rounded-3xl border border-border bg-viewer shadow-card">
@@ -635,26 +661,6 @@ export function VisorPesoJoyeria({ compacto = false, archivoInicial = null, arch
               </div>
             </div>
           </article>
-
-          {archivoOrigen?.ruta ? (
-            <div className="flex flex-col gap-3 rounded-2xl border border-gold/30 bg-accent/30 p-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="min-w-0">
-                <p className="text-sm font-semibold">Guardar análisis en Mi Nube</p>
-                <p className="mt-1 break-words text-xs text-muted-foreground">
-                  {archivoOrigen.proyecto ? "Proyecto: " + archivoOrigen.proyecto + " · " : ""}Se guardarán los resultados y la referencia al STL original, sin duplicar el archivo.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => void guardarAnalisis()}
-                disabled={guardandoAnalisis || analisisGuardado}
-                className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-xl bg-gold px-4 py-2 text-sm font-semibold text-black transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {analisisGuardado ? <CheckCircle2 className="size-4" /> : <Save className="size-4" />}
-                {guardandoAnalisis ? "Guardando…" : analisisGuardado ? "Análisis guardado" : "Guardar análisis"}
-              </button>
-            </div>
-          ) : null}
 
           <div className="grid gap-3 sm:grid-cols-3">
             <article className="rounded-2xl border border-border bg-card p-4 shadow-card">
