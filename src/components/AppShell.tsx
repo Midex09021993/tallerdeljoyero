@@ -327,6 +327,7 @@ export function AppShell({
   const inicial = nombreVisible.charAt(0).toUpperCase();
   const mostrarAtrasMovil = atrasMovil !== false;
   const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const seccionActual = visiblesOrdenadas.find((s) => pathname === s.to || pathname.startsWith(`${s.to}/`));
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [pathname]);
@@ -375,9 +376,10 @@ export function AppShell({
     <div className="flex min-h-screen bg-background text-foreground">
       {sesion?.esAdmin ? <AlertaAutorizacionProduccion /> : null}
       {!ocultarNavegacion ? (
-        <aside className="sticky top-0 hidden h-screen max-h-screen w-64 shrink-0 flex-col overflow-hidden bg-ink text-ink-foreground lg:flex">
-          <div className="p-8">
+        <aside className="sticky top-0 hidden h-screen max-h-screen w-64 shrink-0 flex-col overflow-hidden border-r border-ink-foreground/10 bg-ink text-ink-foreground lg:flex xl:w-72">
+          <div className="border-b border-ink-foreground/10 px-6 py-7 xl:px-7">
             <p className="font-display text-2xl italic text-gold">Aurum Lab</p>
+            <p className="mt-1 text-[9px] font-semibold uppercase tracking-[0.24em] text-ink-foreground/50">Taller del Joyero</p>
             <p className="mt-1 truncate text-[10px] uppercase tracking-[0.2em] text-ink-foreground/40">
               {sesion?.participante?.nombre ?? sesion?.sede?.nombre ?? ""}
             </p>
@@ -406,8 +408,8 @@ export function AppShell({
                       const Icon = s.icono;
                       return (
                         <Link key={s.to} to={s.to}
-                          className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-ink-foreground/60 transition-colors hover:bg-ink-foreground/5 hover:text-ink-foreground"
-                          activeProps={{ className: "bg-ink-foreground/10 text-gold-bright" }}>
+                          className="flex min-h-11 items-center gap-3 rounded-xl border border-transparent px-3.5 py-2.5 text-sm font-medium text-ink-foreground/65 transition-colors hover:border-ink-foreground/10 hover:bg-ink-foreground/5 hover:text-ink-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/70 xl:px-4"
+                          activeProps={{ className: "border-gold/25 bg-gold/10 text-gold-bright shadow-[inset_3px_0_0_0_hsl(var(--gold))]" }}>
                           {Icon ? <Icon className="size-4 shrink-0 opacity-70" /> : null}
                           {s.label}
                         </Link>
@@ -445,7 +447,7 @@ export function AppShell({
       ) : null}
 
       <main
-        className={`min-w-0 flex-1 overflow-y-auto px-4 py-4 pb-8 sm:px-5 lg:p-10 ${
+        className={`min-w-0 flex-1 overflow-y-auto px-3 py-4 pb-8 sm:px-5 lg:p-8 xl:p-10 ${
           encabezadoMovilCompacto ? "max-lg:px-3 max-lg:pt-0 max-lg:pb-5" : ""
         }`}
       >
@@ -495,6 +497,7 @@ export function AppShell({
                     {sesion ? rolEtiqueta[sesion.rolPrincipal] : ""}
                     {tallerVisible && nombrePersonal ? ` · ${tallerVisible}` : ""}
                   </p>
+                  {seccionActual ? <p className="mt-0.5 truncate text-[10px] font-semibold text-gold-deep">{seccionActual.label}</p> : null}
                 </div>
               </div>
               <div className="flex shrink-0 items-center gap-2">
