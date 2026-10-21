@@ -452,7 +452,7 @@ export function AppShell({
         }`}
       >
         <header
-          className={`mb-4 flex flex-wrap items-end justify-between gap-3 lg:mb-10 lg:gap-4 ${
+          className={`mb-4 flex flex-wrap items-end justify-between gap-3 lg:mb-8 lg:gap-4 ${
             encabezadoMovilCompacto
               ? "max-lg:sticky max-lg:top-0 max-lg:z-30 max-lg:-mx-3 max-lg:mb-2 max-lg:justify-end max-lg:bg-background/95 max-lg:px-3 max-lg:py-2 max-lg:backdrop-blur"
               : ""
@@ -462,7 +462,7 @@ export function AppShell({
             <div
               className={`min-w-0 max-lg:flex-1 ${encabezadoMovilCompacto ? "max-lg:hidden" : ""}`}
             >
-              <h1 className="mb-0.5 truncate font-display text-2xl sm:text-3xl lg:mb-2 max-lg:hidden">
+              <h1 className="mb-1 truncate font-display text-2xl leading-tight tracking-tight sm:text-3xl lg:mb-2 max-lg:hidden">
                 {titulo}
               </h1>
               {subtitulo ? (
