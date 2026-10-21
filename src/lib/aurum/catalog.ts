@@ -160,10 +160,10 @@ export const MATERIALES: MaterialConfig[] = [
   { id:"oro14r_pulido", grupo:"Oro Rosa", nombre:"Oro 14K Rosa · Pulido", color:0xc77c69, metalness:1, roughness:.115, envMapIntensity:1.76, clearcoat:.14, anisotropy:.05 },
   { id:"oro14r_satinado", grupo:"Oro Rosa", nombre:"Oro 14K Rosa · Satinado", color:0xc27868, metalness:1, roughness:.28, envMapIntensity:1.52, clearcoat:.09, anisotropy:.18 },
   { id:"oro14r_mate", grupo:"Oro Rosa", nombre:"Oro 14K Rosa · Mate", color:0xb76f62, metalness:1, roughness:.51, envMapIntensity:1.32, clearcoat:.05, anisotropy:.30 },
-  { id:"oro18b_rodinado", grupo:"Oro Blanco", nombre:"Rodinado", color:0xe7ebee, metalness:1, roughness:.075, envMapIntensity:1.92, clearcoat:.18, anisotropy:.04 },
+  { id:"oro18b_rodinado", grupo:"Oro Blanco", nombre:"Rodinado", color:0xe7ebee, metalness:1, roughness:.075, envMapIntensity:1.92, clearcoat:.18, anisotropy:0 }, // PRUEBA TEMPORAL: aislar anisotropía en oro blanco rodinado.
   { id:"oro18b_pulido", grupo:"Oro Blanco", nombre:"Pulido", color:0xdce1e5, metalness:1, roughness:.11, envMapIntensity:1.80, clearcoat:.15, anisotropy:.05 },
   { id:"oro18b_mate", grupo:"Oro Blanco", nombre:"Mate", color:0xcbd0d5, metalness:1, roughness:.5, envMapIntensity:1.75, clearcoat:.08 },
-  { id:"oro18r_pulido", grupo:"Oro Rosa", nombre:"Pulido", color:0xd68f79, metalness:1, roughness:.11, envMapIntensity:1.84, clearcoat:.16, anisotropy:.05 },
+  { id:"oro18r_pulido", grupo:"Oro Rosa", nombre:"Pulido", color:0xd68f79, metalness:1, roughness:.11, envMapIntensity:1.84, clearcoat:.16, anisotropy:0 }, // PRUEBA TEMPORAL: aislar anisotropía en oro rosa pulido.
   { id:"oro18r_satinado", grupo:"Oro Rosa", nombre:"Satinado", color:0xd18b76, metalness:1, roughness:.27, envMapIntensity:1.56, clearcoat:.10, anisotropy:.18 },
   { id:"oro18r_mate", grupo:"Oro Rosa", nombre:"Mate", color:0xc98573, metalness:1, roughness:.5, envMapIntensity:1.35, clearcoat:.06 },
   // 9K / 375: perfiles visuales basados en aleaciones típicas de la industria.
