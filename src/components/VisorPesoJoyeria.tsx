@@ -58,7 +58,7 @@ function num(valor: number, decimales = 2) {
 /* Componente                                                          */
 /* ------------------------------------------------------------------ */
 
-export function VisorPesoJoyeria({ compacto = false, archivoInicial = null, archivoOrigen = null }: { compacto?: boolean; archivoInicial?: File | null; archivoOrigen?: { ruta: string; proyecto: string } | null }) {
+export function VisorPesoJoyeria({ compacto = false, archivoInicial = null, archivoOrigen = null, modoPublico = false }: { compacto?: boolean; archivoInicial?: File | null; archivoOrigen?: { ruta: string; proyecto: string } | null; modoPublico?: boolean }) {
   const contenedor = useRef<HTMLDivElement>(null);
   const inputArchivo = useRef<HTMLInputElement>(null);
   const api = useRef<{
@@ -484,15 +484,21 @@ export function VisorPesoJoyeria({ compacto = false, archivoInicial = null, arch
                 : "Para vincular el cálculo a Mi Nube, abre el STL desde tu carpeta en Mi Nube."}
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => void guardarAnalisis()}
-            disabled={!archivoOrigen?.ruta || pesoFinal == null || guardandoAnalisis || analisisGuardado}
-            className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-xl bg-gold px-4 py-2 text-sm font-semibold text-black transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {analisisGuardado ? <CheckCircle2 className="size-4" /> : <Save className="size-4" />}
-            {guardandoAnalisis ? "Guardando…" : analisisGuardado ? "Cálculo guardado" : "Guardar cálculo"}
-          </button>
+          {modoPublico ? (
+            <a href="/auth" className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-xl bg-gold px-4 py-2 text-sm font-semibold text-black transition hover:brightness-105">
+              <Save className="size-4" /> Crear cuenta para guardar
+            </a>
+          ) : (
+            <button
+              type="button"
+              onClick={() => void guardarAnalisis()}
+              disabled={!archivoOrigen?.ruta || pesoFinal == null || guardandoAnalisis || analisisGuardado}
+              className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-xl bg-gold px-4 py-2 text-sm font-semibold text-black transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {analisisGuardado ? <CheckCircle2 className="size-4" /> : <Save className="size-4" />}
+              {guardandoAnalisis ? "Guardando…" : analisisGuardado ? "Cálculo guardado" : "Guardar cálculo"}
+            </button>
+          )}
         </div>
       ) : null}
 
