@@ -77,18 +77,21 @@ async function optimizarImagenCatalogo(blob: Blob): Promise<Blob> {
 }
 
 /** Marco visual compartido para que las fichas propias y recibidas evolucionen juntas. */
-function FichaProyecto({ portada, nombre, children, portadaModo = "cover" }: { portada: string | null; nombre: string; children: ReactNode; portadaModo?: "cover" | "contain" }) {
+function FichaProyecto({ portada, nombre, children, portadaModo = "cover", accionesPortada }: { portada: string | null; nombre: string; children: ReactNode; portadaModo?: "cover" | "contain"; accionesPortada?: ReactNode }) {
   return (
     <article className="group overflow-hidden rounded-[1.35rem] border border-border/80 bg-card shadow-[0_2px_8px_rgba(20,20,20,0.035)] transition-all duration-200 hover:-translate-y-0.5 hover:border-gold/35 hover:shadow-[0_12px_32px_rgba(20,20,20,0.075)]">
-      {portada ? (
-        <div className="grid h-36 w-full place-items-center overflow-hidden bg-[#f5f4f1]">
-          <img src={portada} alt={`Portada del proyecto ${nombre}`} className={portadaModo === "contain" ? "h-full w-full object-contain" : "h-36 w-full object-cover object-center transition-transform duration-300 group-hover:scale-[1.02]"} loading="lazy" />
-        </div>
-      ) : (
-        <div className="grid h-36 place-items-center bg-[#f5f4f1] text-muted-foreground">
-          <div className="text-center"><Box className="mx-auto size-8" /><p className="mt-2 text-xs">Sin imagen de portada</p></div>
-        </div>
-      )}
+      <div className="relative">
+        {portada ? (
+          <div className="grid h-36 w-full place-items-center overflow-hidden bg-[#f5f4f1]">
+            <img src={portada} alt={`Portada del proyecto ${nombre}`} className={portadaModo === "contain" ? "h-full w-full object-contain" : "h-36 w-full object-cover object-center transition-transform duration-300 group-hover:scale-[1.02]"} loading="lazy" />
+          </div>
+        ) : (
+          <div className="grid h-36 place-items-center bg-[#f5f4f1] text-muted-foreground">
+            <div className="text-center"><Box className="mx-auto size-8" /><p className="mt-2 text-xs">Sin imagen de portada</p></div>
+          </div>
+        )}
+        {accionesPortada && <div className="absolute inset-x-2 bottom-2 flex justify-end gap-2 opacity-100 transition-opacity duration-200 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100">{accionesPortada}</div>}
+      </div>
       {children}
     </article>
   );
@@ -1624,8 +1627,19 @@ function MiNubePage() {
           {proyectos.length > 0 && (
             <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
               {proyectos.map((proyecto) => (
-                <FichaProyecto key={proyecto.nombre} portada={proyecto.portada} nombre={proyecto.nombre}>
-                  <div className="space-y-3 p-4">
+                <FichaProyecto
+                  key={proyecto.nombre}
+                  portada={proyecto.portada}
+                  nombre={proyecto.nombre}
+                  accionesPortada={
+                    <>
+                      <button type="button" title="Editar nombre de carpeta" aria-label={`Editar nombre de carpeta ${proyecto.nombre}`} onClick={() => { setNuevoNombreCarpeta(proyecto.nombre); setProyectoRenombrando(proyecto.nombre); }} disabled={guardandoNombreCarpeta || subiendo || compartiendo !== null} className="grid size-9 place-items-center rounded-full border border-white/80 bg-white/90 text-gray-800 shadow-sm transition hover:bg-white disabled:opacity-50"><Pencil className="size-4" /></button>
+                      <button type="button" title="Compartir proyecto" aria-label={`Compartir proyecto ${proyecto.nombre}`} disabled={compartiendo !== null} onClick={() => setOpcionesCompartir(proyecto)} className="grid size-9 place-items-center rounded-full border border-white/80 bg-white/90 text-gray-800 shadow-sm transition hover:bg-white disabled:opacity-50"><Share2 className="size-4" /></button>
+                      <button type="button" title="Eliminar proyecto" aria-label={`Eliminar proyecto ${proyecto.nombre}`} onClick={() => setProyectoPendienteEliminar(proyecto)} disabled={subiendo || compartiendo !== null} className="grid size-9 place-items-center rounded-full border border-white/80 bg-white/90 text-red-600 shadow-sm transition hover:bg-red-50 disabled:opacity-50"><X className="size-4" /></button>
+                    </>
+                  }
+                >
+                  <div className="space-y-2.5 p-3.5">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         {proyectoRenombrando === proyecto.nombre ? (
@@ -1646,7 +1660,6 @@ function MiNubePage() {
                       </div>
                       <span className="shrink-0 rounded-full border border-border/80 px-2.5 py-1 text-[9px] font-medium uppercase tracking-[0.12em] text-muted-foreground">Mi nube</span>
                     </div>
-                    {proyectoRenombrando !== proyecto.nombre && <button type="button" onClick={() => { setNuevoNombreCarpeta(proyecto.nombre); setProyectoRenombrando(proyecto.nombre); }} disabled={guardandoNombreCarpeta || subiendo || compartiendo !== null} className="inline-flex min-h-9 w-full items-center justify-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:border-gold/45 disabled:opacity-50"><Pencil className="size-3.5" /> Editar nombre de carpeta</button>}
                     <div className="flex flex-wrap gap-1">
                       {proyecto.archivos.some(a => a.categoria === "fotos") && <span className="rounded-md bg-muted/70 px-2 py-0.5 text-[9px] font-medium text-muted-foreground">Imagen</span>}
                       {proyecto.tiene3dm && <span className="rounded-md bg-muted/70 px-2 py-1 text-[10px] font-medium text-muted-foreground">3DM</span>}
@@ -1655,12 +1668,6 @@ function MiNubePage() {
                     </div>
                     <button type="button" onClick={() => void anadirImagenAlCatalogo(proyecto.archivos.find((item) => item.categoria === "fotos") ?? null, proyecto, proyecto.archivos.find((item) => item.nombre.toLowerCase().endsWith(".pdf") && item.origen === "supabase") ?? null)} disabled={anadiendoCatalogo !== null} className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-[#c5a15d]/60 bg-[#c5a15d]/[0.10] px-3 py-2 text-xs font-semibold leading-tight text-foreground transition-colors hover:bg-[#c5a15d]/[0.17] disabled:opacity-50">
                       {anadiendoCatalogo === proyecto.nombre ? "Preparando ficha…" : "Crear ficha en catálogo"}
-                    </button>
-                    <button type="button" disabled={compartiendo !== null} onClick={() => setOpcionesCompartir(proyecto)} className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-semibold leading-tight text-foreground transition-colors hover:border-gold/40 disabled:opacity-50">
-                      <Share2 className="size-3.5 shrink-0" /> {compartiendo === proyecto.nombre ? "Preparando transferencia…" : "Compartir proyecto"}
-                    </button>
-                    <button type="button" onClick={() => setProyectoPendienteEliminar(proyecto)} disabled={subiendo || compartiendo !== null} className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-destructive/50 px-3 py-2 text-xs font-semibold text-destructive transition-colors hover:bg-destructive/5 disabled:opacity-50">
-                      <X className="size-3.5 shrink-0" /> Eliminar todo el proyecto
                     </button>
                     {compartiendo === proyecto.nombre && <p role="status" className="rounded-lg bg-gold/10 px-3 py-2 text-xs text-muted-foreground">{progresoCompartir || "Preparando transferencia…"}</p>}
                     {errorCompartir?.proyecto === proyecto.nombre && <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">{errorCompartir.mensaje}<button type="button" onClick={() => setErrorCompartir(null)} className="ml-2 underline">Cerrar</button></div>}
