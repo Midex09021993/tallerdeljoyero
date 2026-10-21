@@ -1525,7 +1525,7 @@ function MiNubePage() {
                 <label className="flex min-h-32 cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-gold/40 bg-gold/5 p-4 text-center transition hover:bg-gold/10">
                   <UploadCloud className="size-7 text-gold" />
                   <span className="mt-2 text-sm font-semibold">{seleccionados.length > 0 ? "Agregar más archivos al proyecto" : "Elegir archivos del proyecto"}</span>
-                  <span className="mt-1 text-xs text-muted-foreground">Puedes seleccionarlos en varias tandas. Se conservarán los anteriores · máximo 30 archivos</span>
+                  <span className="mt-1 text-xs text-muted-foreground">Añade archivos en varias tandas sin perder la selección anterior · máximo 30</span>
                   <input
                     id="mi-nube-archivos"
                     type="file"
