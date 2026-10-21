@@ -1524,24 +1524,47 @@ function MiNubePage() {
                 </label>
                 <label className="flex min-h-32 cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-gold/40 bg-gold/5 p-4 text-center transition hover:bg-gold/10">
                   <UploadCloud className="size-7 text-gold" />
-                  <span className="mt-2 text-sm font-semibold">Elegir todos los archivos del proyecto</span>
-                  <span className="mt-1 text-xs text-muted-foreground">Selecciona juntos los archivos del proyecto. El nombre se toma del archivo más descriptivo · hasta 30 archivos</span>
+                  <span className="mt-2 text-sm font-semibold">{seleccionados.length > 0 ? "Agregar más archivos al proyecto" : "Elegir archivos del proyecto"}</span>
+                  <span className="mt-1 text-xs text-muted-foreground">Puedes seleccionarlos en varias tandas. Se conservarán los anteriores · máximo 30 archivos</span>
                   <input
                     id="mi-nube-archivos"
                     type="file"
                     multiple
                     className="sr-only"
-                    disabled={subiendo}
+                    disabled={subiendo || seleccionados.length >= MAX_FILES_PER_BATCH}
                     onChange={(event) => {
-                                          const files = Array.from(event.target.files ?? []);
-                                          setSeleccionados(files);
-                                          if (files.length > 0) setCarpeta(sugerirNombreProyecto(files));
-                                        }}
+                      const filesNuevos = Array.from(event.currentTarget.files ?? []);
+                      event.currentTarget.value = "";
+                      if (filesNuevos.length === 0) return;
+
+                      const existentes = new Set(seleccionados.map((file) => `${file.name}::${file.size}::${file.lastModified}`));
+                      const unicos = filesNuevos.filter((file) => {
+                        const clave = `${file.name}::${file.size}::${file.lastModified}`;
+                        if (existentes.has(clave)) return false;
+                        existentes.add(clave);
+                        return true;
+                      });
+                      const disponibles = MAX_FILES_PER_BATCH - seleccionados.length;
+                      const agregados = unicos.slice(0, disponibles);
+                      const combinados = [...seleccionados, ...agregados];
+
+                      if (unicos.length === 0) {
+                        toast.info("Los archivos seleccionados ya están en la lista.");
+                        return;
+                      }
+                      if (unicos.length > disponibles) {
+                        toast.warning(`Solo se agregaron ${disponibles} archivo(s): el límite del proyecto es ${MAX_FILES_PER_BATCH}.`);
+                      }
+                      setSeleccionados(combinados);
+                      if (seleccionados.length === 0 && !carpeta.trim() && combinados.length > 0) {
+                        setCarpeta(sugerirNombreProyecto(combinados));
+                      }
+                    }}
                   />
                 </label>
                 {seleccionados.length > 0 && (
                   <div className="rounded-xl border border-border p-3">
-                    <p className="text-xs font-semibold">{seleccionados.length} archivo(s) seleccionados</p>
+                    <div className="flex items-center justify-between gap-2"><p className="text-xs font-semibold">{seleccionados.length} de {MAX_FILES_PER_BATCH} archivos seleccionados</p><span className="text-[11px] text-muted-foreground">{MAX_FILES_PER_BATCH - seleccionados.length} disponibles</span></div>
                     <ul className="mt-2 max-h-24 space-y-1 overflow-auto text-xs text-muted-foreground">
                       {seleccionados.map((file, index) => <li key={`${file.name}-${index}`} className="truncate">{file.name} · {etiquetaTamano(file.size)}</li>)}
                     </ul>
