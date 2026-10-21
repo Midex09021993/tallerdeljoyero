@@ -35,6 +35,7 @@ const herramientas = [
     categoria: "Calcular y preparar",
     titulo: "¿Cuánto yeso y agua debo preparar?",
     descripcion: "Prepara la mezcla de revestimiento con las proporciones que necesitas.",
+    palabrasClave: "revestimiento fundicion cilindro agua mezcla",
     Icono: FlaskConical,
   },
   {
@@ -43,6 +44,7 @@ const herramientas = [
     categoria: "Calcular y preparar",
     titulo: "¿Cuánto metal necesito para mi aleación?",
     descripcion: "Calcula las cantidades para ajustar la ley del oro que buscas.",
+    palabrasClave: "oro quilates ley liga aleacion gramos metal",
     Icono: Coins,
   },
   {
@@ -51,6 +53,7 @@ const herramientas = [
     categoria: "Calcular y preparar",
     titulo: "¿A qué talla equivale este anillo?",
     descripcion: "Consulta equivalencias entre distintas escalas de tallas.",
+    palabrasClave: "anillo medida talla equivalencia",
     Icono: Ruler,
   },
   {
@@ -59,6 +62,7 @@ const herramientas = [
     categoria: "Diseñar y visualizar",
     titulo: "¿Cuánto pesará mi modelo 3D?",
     descripcion: "Carga un modelo compatible y estima su peso antes de producirlo.",
+    palabrasClave: "stl archivo modelo imprimir gramos peso metal",
     Icono: Scale,
   },
   {
@@ -67,6 +71,7 @@ const herramientas = [
     categoria: "Calcular y preparar",
     titulo: "¿Cuánto puede pesar esta gema?",
     descripcion: "Obtén una estimación de peso para gemas de joyería.",
+    palabrasClave: "piedra diamante gema quilates peso medidas",
     Icono: CircleDot,
   },
   {
@@ -75,6 +80,7 @@ const herramientas = [
     categoria: "Diseñar y visualizar",
     titulo: "¿Cómo convierto una imagen en un modelo 3D?",
     descripcion: "Genera un modelo 3D desde una imagen con procesamiento local y descarga el STL.",
+    palabrasClave: "imagen inteligencia artificial ia generar diseño archivo stl",
     Icono: Sparkles,
   },
 ];
@@ -83,10 +89,15 @@ function HerramientasPublicasPage() {
   const [busqueda, setBusqueda] = useState("");
   const termino = busqueda.trim().toLocaleLowerCase("es");
   const herramientasFiltradas = herramientas.filter((herramienta) =>
-    !termino || (herramienta.titulo + " " + herramienta.descripcion + " " + herramienta.categoria + " " + herramienta.id).toLocaleLowerCase("es").includes(termino)
+    !termino || (herramienta.titulo + " " + herramienta.descripcion + " " + herramienta.categoria + " " + herramienta.id + " " + herramienta.palabrasClave).toLocaleLowerCase("es").includes(termino)
   );
-  const mostrarRender = !termino || "mostrar diseño cliente joya render aurum".includes(termino) || "aurum render".includes(termino);
-  const mostrarTransfer = !termino || "compartir enviar archivos stl pesados transferencia aurum transfer".includes(termino) || "aurum transfer".includes(termino);
+  const palabrasRender = ["mostrar", "diseño", "cliente", "joya", "render", "aurum", "visualizar", "presentar", "3d"];
+  const palabrasTransfer = ["compartir", "enviar", "archivo", "archivos", "stl", "pesado", "pesados", "transferencia", "transfer"];
+  const palabrasCotizar = ["cotizar", "cotizacion", "cotización", "precio", "cobrar", "presupuesto", "cliente", "ficha", "tecnica", "técnica", "tecnico", "técnico"];
+  const coincideConPalabras = (palabras: string[]) => palabras.some((palabra) => palabra.includes(termino) || termino.includes(palabra));
+  const mostrarRender = !termino || coincideConPalabras(palabrasRender);
+  const mostrarTransfer = !termino || coincideConPalabras(palabrasTransfer);
+  const mostrarCotizar = !termino || coincideConPalabras(palabrasCotizar);
   return (
     <main className="min-h-screen bg-[#10110f] text-[#f5f0e7]">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-80 bg-[radial-gradient(ellipse_at_top,rgba(216,189,123,.12),transparent_68%)]" />
@@ -173,24 +184,24 @@ function HerramientasPublicasPage() {
           </Link>}
             </div>
           </div>}
-          {(!termino || "cotizar cotizacion precio cobrar presupuesto cliente ficha tecnica".includes(termino)) && <div>
+          {mostrarCotizar && <div>
             <h2 className="mb-4 text-lg font-semibold text-white sm:text-xl">Cotizar y entregar</h2>
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              <Link to="/auth" className="group flex min-h-48 flex-col rounded-2xl border border-white/10 bg-white/[.02] p-5 transition duration-200 hover:-translate-y-0.5 hover:border-[#d8bd7b]/55 hover:bg-white/[.045] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd7b]">
+              <Link to="/cotizaciones/" className="group flex min-h-48 flex-col rounded-2xl border border-white/10 bg-white/[.02] p-5 transition duration-200 hover:-translate-y-0.5 hover:border-[#d8bd7b]/55 hover:bg-white/[.045] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd7b]">
                 <span className="grid size-11 place-items-center rounded-xl border border-[#d8bd7b]/25 bg-[#d8bd7b]/[.08] text-[#d8bd7b]"><Coins className="size-5" /></span>
                 <span className="mt-4 text-base font-semibold">¿Cuánto debo cobrar por una joya?</span>
                 <span className="mt-2 flex-1 text-sm leading-6 text-white/55">Accede a Aurum Lab para consultar las herramientas de cotización disponibles para tu taller.</span>
                 <span className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-[#d8bd7b]">Entrar a Aurum Lab <ArrowRight className="size-3.5 transition group-hover:translate-x-1" /></span>
               </Link>
-              <Link to="/auth" className="group flex min-h-48 flex-col rounded-2xl border border-white/10 bg-white/[.02] p-5 transition duration-200 hover:-translate-y-0.5 hover:border-[#d8bd7b]/55 hover:bg-white/[.045] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd7b]">
+              <Link to="/catalogo" className="group flex min-h-48 flex-col rounded-2xl border border-white/10 bg-white/[.02] p-5 transition duration-200 hover:-translate-y-0.5 hover:border-[#d8bd7b]/55 hover:bg-white/[.045] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd7b]">
                 <span className="grid size-11 place-items-center rounded-xl border border-[#d8bd7b]/25 bg-[#d8bd7b]/[.08] text-[#d8bd7b]"><Gem className="size-5" /></span>
                 <span className="mt-4 text-base font-semibold">¿Cómo consulto la ficha técnica de una pieza?</span>
-                <span className="mt-2 flex-1 text-sm leading-6 text-white/55">Entra a tu espacio de trabajo para revisar las funciones técnicas disponibles según tu acceso.</span>
-                <span className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-[#d8bd7b]">Entrar a Aurum Lab <ArrowRight className="size-3.5 transition group-hover:translate-x-1" /></span>
+                <span className="mt-2 flex-1 text-sm leading-6 text-white/55">Abre el catálogo de tu taller para consultar y preparar fichas técnicas de tus piezas.</span>
+                <span className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-[#d8bd7b]">Abrir catálogo <ArrowRight className="size-3.5 transition group-hover:translate-x-1" /></span>
               </Link>
             </div>
           </div>}
-          {termino && herramientasFiltradas.length === 0 && !mostrarRender && !mostrarTransfer && !"cotizar cotizacion precio cobrar presupuesto cliente ficha tecnica".includes(termino) && <p className="rounded-xl border border-white/10 p-5 text-sm text-white/60">No encontramos una tarea con “{busqueda}”. Prueba con otra palabra, como oro, peso, yeso o STL.</p>}
+          {termino && herramientasFiltradas.length === 0 && !mostrarRender && !mostrarTransfer && !mostrarCotizar && <p className="rounded-xl border border-white/10 p-5 text-sm text-white/60">No encontramos una tarea con “{busqueda}”. Prueba con otra palabra, como oro, peso, yeso o STL.</p>}
         </section>
 
         <footer className="mt-12 border-t border-white/10 py-6 text-xs text-white/35">
