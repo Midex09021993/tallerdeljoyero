@@ -53,12 +53,16 @@ const tarjetaBase =
 function HerramientasPage() {
   const [herramientaActiva, setHerramientaActiva] = useState<HerramientaInterna>(null);
   const [archivoInicial, setArchivoInicial] = useState<File | null>(null);
+  const [archivoOrigen, setArchivoOrigen] = useState<{ ruta: string; proyecto: string } | null>(null);
   const [errorArchivoInicial, setErrorArchivoInicial] = useState<string | null>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const url = params.get("archivoUrl");
     const nombre = params.get("archivoNombre") || "modelo.stl";
+    const ruta = params.get("archivoRuta");
+    const proyecto = params.get("proyectoNombre") || "";
+    if (ruta) setArchivoOrigen({ ruta, proyecto });
     if (!url) return;
     let cancelado = false;
     setHerramientaActiva("peso");
@@ -158,7 +162,7 @@ function HerramientasPage() {
             <div className="mx-auto min-h-[560px] w-full min-w-0 max-w-full [&>*]:!mx-auto [&>*]:!w-full [&>*]:!max-w-full">
               {herramientaActiva === "yeso" ? <CalculadoraYeso /> : null}
               {herramientaActiva === "aleacion" ? <CalculadoraAleacionOro /> : null}
-              {herramientaActiva === "peso" ? <><VisorPesoJoyeria archivoInicial={archivoInicial} />{errorArchivoInicial && <p role="alert" className="mt-3 text-sm text-destructive">{errorArchivoInicial}</p>}</> : null}
+              {herramientaActiva === "peso" ? <><VisorPesoJoyeria archivoInicial={archivoInicial} archivoOrigen={archivoOrigen} />{errorArchivoInicial && <p role="alert" className="mt-3 text-sm text-destructive">{errorArchivoInicial}</p>}</> : null}
               {herramientaActiva === "gemas" ? <CalculadoraPesoGemas /> : null}
               {herramientaActiva === "tallas" ? <ConversorTallasAnillo /> : null}
               {herramientaActiva === "stl" ? <GeneradorSTLIA /> : null}
