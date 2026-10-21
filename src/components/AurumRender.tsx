@@ -211,17 +211,27 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [busquedaMateriales, setBusquedaMateriales] = useState("");
   const [familiaMaterialActiva, setFamiliaMaterialActiva] = useState("Todas");
   const [busquedaGemas, setBusquedaGemas] = useState("");
-  const familiasMateriales = useMemo(() => ["Todas", ...Array.from(new Set(MATERIALES.map(m => m.grupo)))], []);
+  const familiaPrincipalMaterial = (grupo: string) => {
+    const normalizado = grupo.toLocaleLowerCase("es");
+    if (normalizado.includes("oro")) return "Oro";
+    if (normalizado.includes("plata")) return "Plata";
+    if (normalizado.includes("platino")) return "Platino";
+    if (normalizado.includes("rodio")) return "Rodio";
+    return "Otros";
+  };
+  const familiasMateriales = useMemo(() => ["Todas", ...Array.from(new Set(MATERIALES.map(m => familiaPrincipalMaterial(m.grupo))))], []);
+  const subfamiliasMateriales = useMemo(() => Array.from(new Set(MATERIALES.filter(m => familiaMaterialActiva === "Todas" || familiaPrincipalMaterial(m.grupo) === familiaMaterialActiva).map(m => m.grupo))), [familiaMaterialActiva]);
+  const [acabadoMaterialActivo, setAcabadoMaterialActivo] = useState("Todos");
   const materialesVisibles = useMemo(() => {
     const principales = new Set<MaterialId>(["oro18a_pulido", "oro18b_rodinado", "oro18r_pulido", "oro18_verde_blanco_ijewel", "plata925_pulida", "platino_pulido"]);
     const termino = busquedaMateriales.trim().toLocaleLowerCase("es");
     return MATERIALES.filter((m) =>
-      (familiaMaterialActiva === "Todas"
-        ? (mostrarTodosMateriales || principales.has(m.id) || m.id === materialId)
-        : m.grupo === familiaMaterialActiva || m.id === materialId) &&
+      (familiaMaterialActiva === "Todas" || familiaPrincipalMaterial(m.grupo) === familiaMaterialActiva) &&
+      (acabadoMaterialActivo === "Todos" || m.grupo === acabadoMaterialActivo) &&
+      (mostrarTodosMateriales || familiaMaterialActiva !== "Todas" || principales.has(m.id) || m.id === materialId || !!termino) &&
       (!termino || (m.nombre+" "+m.id+" "+m.grupo).toLocaleLowerCase("es").includes(termino))
     ).sort((a,b)=>Number(principales.has(b.id))-Number(principales.has(a.id)));
-  }, [mostrarTodosMateriales, materialId, busquedaMateriales, familiaMaterialActiva]);
+  }, [mostrarTodosMateriales, materialId, busquedaMateriales, familiaMaterialActiva, acabadoMaterialActivo]);
   const gemasVisibles = useMemo(() => {
     const principales = new Set<GemaId>(["diamante_natural", "esmeralda_1", "rubi_natural", "zafiro_azul", "amatista_natural", "moissanita_blanca", "aguamarina_brasil", "citrino_natural", "topacio_azul"]);
     const termino = busquedaGemas.trim().toLocaleLowerCase("es");
@@ -2269,8 +2279,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             <section className="px-4 py-1">
               {uxSection==="materiales"&&<div className="pb-5">
                 <label className="mb-3 flex h-9 items-center gap-2 rounded-xl border border-black/[.08] bg-white px-3 text-[#77756f] focus-within:border-[#92743b]/50"><ImageIcon className="size-3.5 shrink-0"/><input value={busquedaMateriales} onChange={e=>{setBusquedaMateriales(e.target.value);if(e.target.value.trim())setMostrarTodosMateriales(true);}} placeholder="Buscar material o acabado…" className="min-w-0 flex-1 bg-transparent text-xs text-[#292824] outline-none placeholder:text-[#99968d]"/></label>
-                <div className="mb-3 flex gap-1.5 overflow-x-auto pb-1" role="group" aria-label="Filtrar materiales por familia">{familiasMateriales.map(familia=><button key={familia} type="button" onClick={()=>{setFamiliaMaterialActiva(familia);setMostrarTodosMateriales(familia!=="Todas");}} aria-pressed={familiaMaterialActiva===familia} className={"shrink-0 rounded-full border px-3 py-1.5 text-[10px] font-medium transition "+(familiaMaterialActiva===familia?"border-[#b99642]/60 bg-[#b99642]/15 text-[#6d5523]":"border-black/10 bg-white/50 text-[#77756f] hover:bg-white")}>{familia}</button>)}</div>
-                {familiaMaterialActiva!=="Todas"&&<div className="mb-2 text-[10px] font-semibold uppercase tracking-[.14em] text-[#77756f]">{familiaMaterialActiva} · {materialesVisibles.length} acabados</div>}
+                <div className="mb-2 grid grid-cols-3 gap-1.5" role="group" aria-label="Familias principales de materiales">{familiasMateriales.map(familia=><button key={familia} type="button" onClick={()=>{setFamiliaMaterialActiva(familia);setAcabadoMaterialActivo("Todos");setMostrarTodosMateriales(familia!=="Todas");}} aria-pressed={familiaMaterialActiva===familia} className={"min-w-0 rounded-xl border px-2 py-2 text-[11px] font-semibold transition "+(familiaMaterialActiva===familia?"border-[#b99642]/55 bg-[#b99642]/12 text-[#6d5523] shadow-[0_2px_8px_rgba(50,42,20,.06)]":"border-black/[.07] bg-white/65 text-[#77756f] hover:border-[#d8d1c2] hover:bg-white")}><span className="block truncate">{familia}</span><span className="mt-0.5 block text-[9px] font-normal opacity-70">{familia==="Todas"?MATERIALES.length:MATERIALES.filter(m=>familiaPrincipalMaterial(m.grupo)===familia).length} materiales</span></button>)}</div>
+                {familiaMaterialActiva!=="Todas"&&<div className="mb-2 flex gap-1.5 overflow-x-auto pb-1" role="group" aria-label="Variantes de la familia">{["Todos",...subfamiliasMateriales].map(subfamilia=><button key={subfamilia} type="button" onClick={()=>{setAcabadoMaterialActivo(subfamilia);setMostrarTodosMateriales(true);}} aria-pressed={acabadoMaterialActivo===subfamilia} className={"shrink-0 rounded-full border px-3 py-1.5 text-[10px] font-medium transition "+(acabadoMaterialActivo===subfamilia?"border-[#b99642]/60 bg-[#b99642]/15 text-[#6d5523]":"border-black/10 bg-white/50 text-[#77756f] hover:bg-white")}>{subfamilia}</button>)}</div>}
+                <div className="mb-2 flex items-center justify-between gap-2"><div className="text-[10px] font-semibold uppercase tracking-[.12em] text-[#77756f]">{familiaMaterialActiva==="Todas"?"Selección de materiales":familiaMaterialActiva+" · "+materialesVisibles.length+" disponibles"}</div><span className="text-[9px] text-[#99968d]">Muestras de acabado</span></div>
                 <div className="grid grid-cols-4 gap-2.5 pb-1">
                   {materialesVisibles.map(m=><button key={m.id} type="button" title={m.nombre} aria-label={m.nombre}
                     onClick={()=>{setBibliotecaTipo("metales");setMaterialId(m.id);apiRef.current?.material(m)}}
@@ -2284,7 +2295,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                   </button>)}
                 </div>
                 <button type="button" aria-expanded={mostrarTodosMateriales} onClick={()=>setMostrarTodosMateriales(v=>!v)} className="mt-3 w-full rounded-lg border border-black/10 bg-black/[.025] px-3 py-2 text-[10px] font-semibold text-[#55534d] transition hover:border-[#92743b]/45 hover:text-[#292824]">
-                  {mostrarTodosMateriales ? "Mostrar menos materiales" : `Ver más materiales (${MATERIALES.length})`}
+                  {mostrarTodosMateriales ? "Mostrar selección principal" : `Explorar catálogo completo (${MATERIALES.length})`}
                 </button>
                 <div className="mt-2 flex items-center gap-2 rounded-lg border border-black/10 bg-black/[.02] p-2">
                   <span className="size-8 shrink-0 rounded-full border border-black/15 shadow-inner" style={{background:hexColor(materialActivo.color)}}/>
