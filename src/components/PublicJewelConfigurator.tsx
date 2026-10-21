@@ -5,7 +5,7 @@ import { AurumRender } from "@/components/AurumRender";
 import type { AurumCatalogApi } from "@/lib/aurum/api";
 import { GEMAS, MATERIALES } from "@/lib/aurum/catalog";
 
-type Props = { slug?: string; producto?: string; sharedModelUrl?: string; sharedModelName?: string };
+type Props = { slug?: string; producto?: string; sharedModelUrl?: string; sharedModelName?: string; localFile?: File };
 const metales = [
   { id: "oro-amarillo", label: "Oro amarillo", color: 0xd5a63d, materialId: "oro18a_pulido" },
   { id: "oro-blanco", label: "Oro blanco", color: 0xd7d9dc, materialId: "oro18b_rodinado" },
@@ -20,7 +20,7 @@ const gemas = [
   { id: "amatista", label: "Amatista", color: 0x8952c8, gemId: "amatista_natural" },
 ] as const;
 
-export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, sharedModelName }: Props) {
+export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, sharedModelName, localFile }: Props) {
   const [metalId, setMetalId] = useState<string>("oro-amarillo");
   const [gemaId, setGemaId] = useState<string>("diamante");
   const [modelUrl, setModelUrl] = useState<string | null>(null);
@@ -29,6 +29,7 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
   const [loadError, setLoadError] = useState<string | null>(null);
   const [catalogApi, setCatalogApi] = useState<AurumCatalogApi | null>(null);
   const [loadedModelUrl, setLoadedModelUrl] = useState<string | null>(null);
+  const modelKey = localFile ? `local:${localFile.name}:${localFile.size}:${localFile.lastModified}` : modelUrl;
   const [aplicacionEstado, setAplicacionEstado] = useState<string>("");
 
   useEffect(() => {
@@ -37,6 +38,11 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
       setModelUrl(null);
       setLoadedModelUrl(null);
       setLoadError(null);
+      if (localFile) {
+        setModelName(localFile.name);
+        setStatus("");
+        return;
+      }
       if (sharedModelUrl) {
         setModelName(sharedModelName || "joya-compartida.glb");
         setModelUrl(sharedModelUrl);
@@ -65,7 +71,7 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
     };
     void loadModelReference();
     return () => { cancelled = true; };
-  }, [slug, producto, sharedModelUrl, sharedModelName]);
+  }, [slug, producto, sharedModelUrl, sharedModelName, localFile]);
 
   const selectedMetal = metales.find((item) => item.id === metalId) ?? metales[0];
   const selectedGem = gemas.find((item) => item.id === gemaId) ?? gemas[0];
@@ -74,19 +80,25 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
 
   useEffect(() => {
     let cancelled = false;
-    if (!modelUrl || !catalogApi?.cargar || loadedModelUrl === modelUrl) return;
+    if ((!localFile && !modelUrl) || !catalogApi?.cargar || loadedModelUrl === modelKey) return;
     const loadIntoAurum = async () => {
       setStatus("Preparando el visor interactivo…");
       setLoadError(null);
       try {
-        const response = await fetch(modelUrl);
-        if (!response.ok) throw new Error("No se pudo descargar el modelo 3D del catálogo.");
-        const blob = await response.blob();
-        if (cancelled) return;
-        const file = new File([blob], modelName || "modelo.3dm", { type: blob.type || "application/octet-stream" });
+        let file: File;
+        if (localFile) {
+          // Process the visitor's file directly in the browser; never upload it.
+          file = localFile;
+        } else {
+          const response = await fetch(modelUrl!);
+          if (!response.ok) throw new Error("No se pudo descargar el modelo 3D del catálogo.");
+          const blob = await response.blob();
+          if (cancelled) return;
+          file = new File([blob], modelName || "modelo.3dm", { type: blob.type || "application/octet-stream" });
+        }
         await catalogApi.cargar?.(file, (progress: string) => { if (!cancelled && progress) setStatus(progress); });
         if (cancelled) return;
-        setLoadedModelUrl(modelUrl);
+        setLoadedModelUrl(modelKey);
         setStatus("");
       } catch (cause) {
         if (!cancelled) {
@@ -97,10 +109,10 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
     };
     void loadIntoAurum();
     return () => { cancelled = true; };
-  }, [modelUrl, modelName, catalogApi, loadedModelUrl]);
+  }, [modelUrl, modelName, localFile, modelKey, catalogApi, loadedModelUrl]);
 
   useEffect(() => {
-    if (!catalogApi || loadedModelUrl !== modelUrl) {
+    if (!catalogApi || loadedModelUrl !== modelKey) {
       setAplicacionEstado("");
       return;
     }
@@ -117,26 +129,26 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
     } else {
       setAplicacionEstado("No se pudo confirmar la aplicación de todos los cambios en el modelo.");
     }
-  }, [catalogApi, loadedModelUrl, modelUrl, aurumMaterial, aurumGem]);
+  }, [catalogApi, loadedModelUrl, modelKey, aurumMaterial, aurumGem]);
 
   const handleMetalSelect = (id: string) => {
     setMetalId(id);
     const selected = metales.find((item) => item.id === id) ?? metales[0];
     const material = MATERIALES.find((item) => item.id === selected.materialId)
       ?? MATERIALES.find((item) => item.id === "oro18a_pulido");
-    if (catalogApi && loadedModelUrl === modelUrl && material) {
+    if (catalogApi && loadedModelUrl === modelKey && material) {
       console.info("[PUBLIC VIEWER] Metal seleccionado", { id, materialId: material.id });
       catalogApi.materialCatalogo?.(material);
     } else {
       console.warn("[PUBLIC VIEWER] El motor todavía no está listo para cambiar el metal", {
         hasCatalogApi: Boolean(catalogApi),
-        modelReady: loadedModelUrl === modelUrl,
+        modelReady: loadedModelUrl === modelKey,
         requestedMetal: id,
       });
     }
   };
 
-  const isReady = Boolean(modelUrl && loadedModelUrl === modelUrl && !loadError && !status);
+  const isReady = Boolean((modelUrl || localFile) && loadedModelUrl === modelKey && !loadError && !status);
   const displayName = (sharedModelName || modelName || "Joya compartida")
     .replace(/\\.(glb|gltf|3dm|obj|stl|fbx)$/i, "")
     .replace(/^[0-9a-f]{8}-[0-9a-f-]{27,}[-_]?/i, "")
@@ -164,8 +176,8 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
       </header>
       <div className="isolate grid min-w-0 grid-cols-1 2xl:min-h-0 2xl:flex-1 2xl:grid-rows-[minmax(0,1fr)] 2xl:grid-cols-[minmax(0,1fr)_270px]">
         <div className="relative z-0 h-[clamp(340px,56svh,500px)] min-h-[340px] min-w-0 overflow-hidden bg-[radial-gradient(ellipse_at_50%_42%,#ffffff_0%,#fbfaf7_60%,#f4f0e8_100%)] sm:h-[clamp(400px,62vh,600px)] sm:min-h-[400px] 2xl:h-full 2xl:min-h-0">
-          {modelUrl && <div className="absolute inset-0"><AurumRender embedded onCatalogApiReady={(api) => setCatalogApi(api)} /></div>}
-          {(!modelUrl || loadError || status) && <div className={"absolute inset-0 z-50 grid place-items-center p-6 text-center transition-opacity " + (isReady ? "pointer-events-none opacity-0" : "bg-white/90 backdrop-blur-[2px]")}>
+          {(modelUrl || localFile) && <div className="absolute inset-0"><AurumRender embedded onCatalogApiReady={(api) => setCatalogApi(api)} /></div>}
+          {(!(modelUrl || localFile) || loadError || status) && <div className={"absolute inset-0 z-50 grid place-items-center p-6 text-center transition-opacity " + (isReady ? "pointer-events-none opacity-0" : "bg-white/90 backdrop-blur-[2px]")}>
             <div className="max-w-sm">
               {loadError ? <div className="mx-auto mb-3 grid size-10 place-items-center rounded-full border border-[#edd6c7] bg-[#fff6f0] text-[#a85b2d]"><span className="text-lg">!</span></div> : <div className="mx-auto mb-3 size-7 animate-spin rounded-full border-2 border-[#e9dfca] border-t-[#a7833d]" />}
               <p className={"text-sm font-semibold " + (loadError ? "text-[#984a28]" : "text-[#554c40]")}>{loadError || status || "Preparando el visor 3D…"}</p>
