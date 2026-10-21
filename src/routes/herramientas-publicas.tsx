@@ -34,7 +34,7 @@ const herramientas = [
     ruta: "yeso-agua" as const,
     categoria: "Calcular y preparar",
     titulo: "¿Cuánto revestimiento y agua necesito para el molde?",
-    descripcion: "Calcula la cantidad de revestimiento y agua para preparar el cilindro de fundición."
+    descripcion: "Calcula la cantidad de revestimiento y agua para preparar el cilindro de fundición.",
     palabrasClave: "revestimiento fundicion cilindro agua mezcla preparar yeso polvo molde cera vaciado colada",
     Icono: FlaskConical,
   },
@@ -43,7 +43,7 @@ const herramientas = [
     ruta: "aleacion-oro" as const,
     categoria: "Calcular y preparar",
     titulo: "¿Cómo preparo una aleación de oro?",
-    descripcion: "Calcula cuánto oro puro y cuánto metal de liga necesitas para alcanzar los quilates deseados."
+    descripcion: "Calcula cuánto oro puro y cuánto metal de liga necesitas para alcanzar los quilates deseados.",
     palabrasClave: "oro quilates ley liga aleacion gramos metal fundir fundicion mezclar calcular pureza 18k 14k 24k amarillo blanco rosa",
     Icono: Coins,
   },
@@ -52,7 +52,7 @@ const herramientas = [
     ruta: "tallas-anillos" as const,
     categoria: "Calcular y preparar",
     titulo: "¿Qué talla de anillo necesito?",
-    descripcion: "Convierte medidas del anillo y consulta equivalencias entre sistemas de tallaje."
+    descripcion: "Convierte medidas del anillo y consulta equivalencias entre sistemas de tallaje.",
     palabrasClave: "anillo anillos medida talla tallas equivalencia dedo circunferencia diametro aro numero medir",
     Icono: Ruler,
   },
@@ -61,7 +61,7 @@ const herramientas = [
     ruta: "peso-joya-3d" as const,
     categoria: "Diseñar y visualizar",
     titulo: "¿Cuánto metal necesitaré para mi modelo 3D?",
-    descripcion: "Carga un archivo 3D compatible para estimar el peso de la pieza antes de fabricarla."
+    descripcion: "Carga un archivo 3D compatible para estimar el peso de la pieza antes de fabricarla.",
     palabrasClave: "stl archivo modelo imprimir imprimirlo impresion 3d gramos peso metal volumen diseno cad fabricar fabricar pieza",
     Icono: Scale,
   },
@@ -70,7 +70,7 @@ const herramientas = [
     ruta: "peso-gemas" as const,
     categoria: "Calcular y preparar",
     titulo: "¿Cuántos quilates tiene esta piedra?",
-    descripcion: "Estima el peso de una gema a partir de sus medidas y el tipo de piedra."
+    descripcion: "Estima el peso de una gema a partir de sus medidas y el tipo de piedra.",
     palabrasClave: "piedra piedras diamante gema gemas quilates peso medidas talla largo ancho alto esmeralda rubi zafiro ct",
     Icono: CircleDot,
   },
@@ -79,7 +79,7 @@ const herramientas = [
     ruta: "generador-stl-ia" as const,
     categoria: "Diseñar y visualizar",
     titulo: "¿Cómo creo un modelo 3D a partir de una imagen?",
-    descripcion: "Transforma una imagen en un modelo 3D y descarga el archivo STL para seguir trabajando en tu diseño."
+    descripcion: "Transforma una imagen en un modelo 3D y descarga el archivo STL para seguir trabajando en tu diseño.",
     palabrasClave: "imagen inteligencia artificial ia generar diseno archivo stl modelo modelar imprimir impresion 3d foto dibujo convertir crear",
     Icono: Sparkles,
   },
