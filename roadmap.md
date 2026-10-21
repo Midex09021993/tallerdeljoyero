@@ -8,6 +8,6 @@
 - [x] Perfil fotográfico (environment + metal calibrado) como predeterminado en Aurum Render
 
 ## Optimización de base de datos
-- [ ] Medir créditos, carga, consultas, índices y trabajos programados.
-- [ ] Aplicar ajustes puntuales respaldados por mediciones, conservando datos y permisos.
-- [ ] Verificar el flujo afectado y documentar resultados y límites del ahorro.
+- [x] Medir créditos, carga, consultas, índices y trabajos programados.
+- [x] Evaluar ajustes: no aplicar cambios especulativos; consulta probada de 1,009 ms con 12 pedidos y sin saturación.
+- [x] Documentar mediciones y límites del ahorro en docs/auditoria/optimizacion-base-datos-20261021.md; sin cambios operativos que requieran prueba comercial.
