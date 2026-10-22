@@ -387,16 +387,37 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
     const extensionOriginal = archivoOriginal.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "3dm";
     const rutaOriginal = `${rutaCarpeta}/00-original.${extensionOriginal}`;
     const rutaGlb = `${rutaCarpeta}/01-modelo.glb`;
-    const rutaPoster = `${rutaCarpeta}/00-portada-aurum.png`;
+    const rutaConfiguracion = `${rutaCarpeta}/02-configuracion-aurum.json`;
     try {
       const blobGLB = await apiRef.current.exportGLB({ download: false }) as Blob;
       if (!blobGLB || blobGLB.size < 1024) throw new Error("No se pudo preparar el GLB del visor.");
 
-      // Guardar/actualizar el modelo no debe modificar la portada automáticamente.
+      // El GLB conserva geometría y materiales compatibles; este manifiesto recupera
+      // las opciones propias del visor sin acoplarlas a la portada PNG.
+      const configuracionAurum = {
+        schemaVersion: 1,
+        nombreProyecto: nombreVisibleProyecto,
+        categoriaProyecto,
+        materialId,
+        gemaId,
+        escenarioId,
+        iluminacionId,
+        vista,
+        metalHdriId,
+        gemHdriId,
+        ambienteId,
+        ambienteMetalInfluence,
+        fondoId,
+        sombraContactoVisible,
+        guardadoEn: new Date().toISOString(),
+      };
+      const blobConfiguracion = new Blob([JSON.stringify(configuracionAurum, null, 2)], { type: "application/json" });
+
       // El póster se sube únicamente desde la acción explícita "Actualizar y guardar póster".
       const uploads: Array<{ ruta: string; blob: Blob; contentType: string }> = [
         { ruta: rutaOriginal, blob: archivoOriginal, contentType: archivoOriginal.type || "application/octet-stream" },
         { ruta: rutaGlb, blob: blobGLB, contentType: "model/gltf-binary" },
+        { ruta: rutaConfiguracion, blob: blobConfiguracion, contentType: "application/json" },
       ];
       for (const item of uploads) {
         const { error: uploadError } = await supabase.storage.from("mi-nube").upload(item.ruta, item.blob, {
