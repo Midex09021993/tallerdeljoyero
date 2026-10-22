@@ -193,7 +193,7 @@ export const MATERIALES: MaterialConfig[] = [
   { id:"plata925_pulida", grupo:"Plata", nombre:"Plata 925 Pulida", color:0xd2d7dc, metalness:1, roughness:.12, envMapIntensity:1.62, clearcoat:.10 },
   { id:"plata950_pulida", grupo:"Plata", nombre:"Plata 950 Pulida", color:0xe2e5e8, metalness:1, roughness:.12, envMapIntensity:1.66, clearcoat:.10 },
   { id:"plata970_pulida", grupo:"Plata", nombre:"Plata 970 Pulida", color:0xe9ecef, metalness:1, roughness:.105, envMapIntensity:1.72, clearcoat:.10 },
-  { id:"plata_envejecida", grupo:"Plata", nombre:"Plata Envejecida", color:0x555b61, metalness:.98, roughness:.38, envMapIntensity:1.42, clearcoat:.06, anisotropy:.10 },
+  { id:"plata_envejecida", grupo:"Plata", nombre:"Plata Envejecida", color:0x555b61, metalness:.98, roughness:.38, envMapIntensity:1.42, clearcoat:.06, anisotropy:0 },
   { id:"platino_pulido", grupo:"Platino", nombre:"Pulido", color:0xc9cdd1, metalness:1, roughness:.085, envMapIntensity:1.88, clearcoat:.18 },
   { id:"platino_mate", grupo:"Platino", nombre:"Mate", color:0xb2b7bc, metalness:1, roughness:.42, envMapIntensity:1.32, clearcoat:.06 },
   { id:"oro18a_artesanal_pulido", grupo:"Oro Amarillo", nombre:"Oro 18K Amarillo Artesanal", color:0xd5a84a, metalness:1, roughness:.19, envMapIntensity:1.68, clearcoat:.10, anisotropy:.12 },
