@@ -569,12 +569,19 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
                 float aurumGemLightDistance=length(aurumGemLightDelta);
                 vec3 aurumGemLightDir=aurumGemLightDelta/max(aurumGemLightDistance,0.0001);
                 float aurumGemLightAttenuation=1.0/(1.0+pow(aurumGemLightDistance/(aurumGemLightSafeRadius*1.8),2.0));
-                float aurumGemFacetDiffuse=max(dot(normalize(vAurumGemWorldNormal),aurumGemLightDir),0.0);
+                vec3 aurumGemN=normalize(vAurumGemWorldNormal);
                 vec3 aurumGemViewDir=normalize(cameraPosition-vAurumGemWorldPosition);
                 vec3 aurumGemHalfDir=normalize(aurumGemLightDir+aurumGemViewDir);
-                float aurumGemFacetSparkle=pow(max(dot(normalize(vAurumGemWorldNormal),aurumGemHalfDir),0.0),48.0);
+                float aurumGemNdotL=max(dot(aurumGemN,aurumGemLightDir),0.0);
+                float aurumGemNdotV=clamp(abs(dot(aurumGemN,aurumGemViewDir)),0.0,1.0);
+                // Broader facet highlight plus a restrained grazing-angle response:
+                // this keeps the gem-light control visible on cut stones without
+                // turning the whole diamond into a white emissive surface.
+                float aurumGemFacetSpecular=pow(max(dot(aurumGemN,aurumGemHalfDir),0.0),24.0);
+                float aurumGemFacetEdge=pow(1.0-aurumGemNdotV,2.0)*aurumGemNdotL;
                 float aurumGemLightEnergy=aurumGemLightIntensity*aurumGemLightAttenuation;
-                gl_FragColor.rgb+=vec3(1.0)*aurumGemLightEnergy*(aurumGemFacetDiffuse*0.10+aurumGemFacetSparkle*0.32);
+                float aurumGemLightResponse=aurumGemNdotL*0.18+aurumGemFacetSpecular*0.42+aurumGemFacetEdge*0.12;
+                gl_FragColor.rgb+=vec3(1.0)*aurumGemLightEnergy*aurumGemLightResponse;
                 #include <tonemapping_fragment>
                 #include <colorspace_fragment>
                 #include <fog_fragment>
