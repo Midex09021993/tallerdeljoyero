@@ -2469,7 +2469,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
 
       {!embedded && guardarProyectoOpen && <div className="absolute right-3 top-[72px] z-[85] max-h-[calc(100%-5.5rem)] w-[min(440px,calc(100%-1.25rem))] overflow-y-auto rounded-2xl border border-white/80 bg-[#fbfaf7]/95 p-4 text-[#292824] shadow-[0_16px_44px_rgba(35,32,24,.18)] backdrop-blur-2xl sm:right-4 sm:top-[76px]">
         <div className="mb-4 flex items-start justify-between gap-3">
-          <div><div className="text-lg font-semibold tracking-tight">{destinoProyectoGuardado?.rutaCarpeta ? "Actualizar proyecto en Mi Nube" : "Guardar proyecto en Mi Nube"}</div><p className="mt-1 text-xs leading-relaxed text-[#77756f]">Se guardarán el archivo original, el GLB del visor y la portada PNG en una misma carpeta. La carpeta se recordará para futuras actualizaciones de este archivo.</p></div>
+          <div><div className="text-lg font-semibold tracking-tight">{destinoProyectoGuardado?.rutaCarpeta ? "Actualizar proyecto en Mi Nube" : "Guardar proyecto en Mi Nube"}</div><p className="mt-1 text-xs leading-relaxed text-[#77756f]">Se guardarán el archivo original y el GLB actualizado en la carpeta del proyecto. La portada PNG solo se actualizará cuando pulses «Actualizar y guardar póster».</p></div>
           <button type="button" aria-label="Cerrar guardado de proyecto" disabled={guardandoProyectoNube} onClick={() => setGuardarProyectoOpen(false)} className="rounded-lg p-1 text-[#77756f] hover:bg-black/[.05] disabled:opacity-40"><X className="size-4"/></button>
         </div>
         <label className="mb-3 block text-xs font-medium text-[#55534d]">Nombre del proyecto
@@ -2487,7 +2487,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           <div className="space-y-2 text-xs">
             <div className="flex items-center gap-2"><span className="grid size-6 place-items-center rounded-md bg-[#f0eee7]"><FileJson className="size-3.5"/></span><span className="min-w-0 flex-1 truncate">{archivoOriginal?.name ?? "Archivo original"}</span><span className="text-[#77756f]">Original</span></div>
             <div className="flex items-center gap-2"><span className="grid size-6 place-items-center rounded-md bg-[#f0eee7]"><Gem className="size-3.5"/></span><span className="flex-1">Modelo GLB actualizado</span><span className="text-[#77756f]">3D</span></div>
-            <div className="flex items-center gap-2"><span className="grid size-6 place-items-center rounded-md bg-[#f0eee7]"><ImageIcon className="size-3.5"/></span><span className="flex-1">Portada del proyecto</span><span className="text-[#77756f]">PNG</span></div>
+            <div className="flex items-center gap-2"><span className="grid size-6 place-items-center rounded-md bg-[#f0eee7]"><ImageIcon className="size-3.5"/></span><span className="flex-1">Portada del proyecto</span><span className="text-[#77756f]">Solo con su botón</span></div>
           </div>
         </div>
         <div className="flex gap-2">
