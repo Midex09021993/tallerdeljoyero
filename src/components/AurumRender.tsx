@@ -2092,10 +2092,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   },[cargarArchivo]);
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get("desde-mi-nube") !== "1") return;
     const key = "aurum-render-archivo-pendiente";
+    if (params.get("desde-mi-nube") !== "1") {
+      sessionStorage.removeItem("aurum-render-poster-destino");
+      return;
+    }
     const pending = sessionStorage.getItem(key);
     if (!pending) {
+      sessionStorage.removeItem("aurum-render-poster-destino");
       setError("No se encontró el archivo pendiente de Mi Nube. Vuelve a seleccionarlo desde la nube.");
       return;
     }
