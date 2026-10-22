@@ -1828,7 +1828,7 @@ function MiNubePage() {
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <h4 className="truncate text-[14px] font-semibold tracking-[-0.015em]">{recibida.nombre}</h4>
-                        <p className="mt-1 text-[11px] text-muted-foreground">{recibida.archivosCargados ? `${recibida.archivos.length} archivos` : "Contenido bajo demanda"} <span className="px-1 text-border">·</span> Compartida por {recibida.propietarioNombre}</p>
+
                       </div>
                       <span className="shrink-0 rounded-full border border-border/80 px-2.5 py-1 text-[9px] font-medium uppercase tracking-[0.12em] text-muted-foreground">Compartida</span>
                     </div>
