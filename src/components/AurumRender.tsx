@@ -2258,12 +2258,15 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
     }
     try {
       await apiRef.current?.cargar(file,(p:string)=>setPaso(p));
-      // Aplicar el perfil inicial solo a las mallas metálicas, preservando gemas.
-      const plataInicial = MATERIALES.find((material) => material.id === "plata950_pulida");
-      if (plataInicial) {
-        const aplicado = apiRef.current?.materialCatalogo?.(plataInicial);
-        if (aplicado === false) {
-          console.warn("[AURUM] No se encontró una malla metálica para aplicar Plata 950 Pulida.");
+      // El GLB guardado ya contiene los materiales del visor: no aplicar el perfil inicial
+      // al reabrirlo, porque sobrescribiría el acabado que el usuario había guardado.
+      if (!file.name.toLowerCase().endsWith(".glb")) {
+        const plataInicial = MATERIALES.find((material) => material.id === "plata950_pulida");
+        if (plataInicial) {
+          const aplicado = apiRef.current?.materialCatalogo?.(plataInicial);
+          if (aplicado === false) {
+            console.warn("[AURUM] No se encontró una malla metálica para aplicar Plata 950 Pulida.");
+          }
         }
       }
       invalidateRenderRef.current?.();
@@ -2339,7 +2342,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         return;
       }
       try {
-        const datos = JSON.parse(pending) as { url?: string; nombre?: string; rutaCarpeta?: string; archivoTamano?: number };
+        const datos = JSON.parse(pending) as { url?: string; glbUrl?: string | null; nombre?: string; rutaCarpeta?: string; archivoTamano?: number };
         if (typeof datos.url !== "string" || typeof datos.nombre !== "string") throw new Error("La referencia del archivo no es válida.");
         setPosterPreview(null);
         if (typeof datos.rutaCarpeta === "string" && datos.rutaCarpeta.trim()) {
@@ -2360,16 +2363,36 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             setPosterPreview(posterUrlData.signedUrl);
           }
         }
-        const response = await fetch(datos.url);
-        if (!response.ok) throw new Error("No se pudo descargar el 3DM privado desde Mi Nube.");
-        const blob = await response.blob();
+        const responseOriginal = await fetch(datos.url);
+        if (!responseOriginal.ok) throw new Error("No se pudo descargar el 3DM privado desde Mi Nube.");
+        const originalBlob = await responseOriginal.blob();
         if (cancelado) return;
-        const file = new File([blob], datos.nombre, { type: blob.type || "application/octet-stream" });
+        const originalFile = new File([originalBlob], datos.nombre, { type: originalBlob.type || "application/octet-stream" });
+        let archivoParaAbrir = originalFile;
+        if (typeof datos.glbUrl === "string" && datos.glbUrl) {
+          try {
+            const responseGlb = await fetch(datos.glbUrl);
+            if (responseGlb.ok) {
+              const glbBlob = await responseGlb.blob();
+              if (glbBlob.size > 1024 && !cancelado) {
+                archivoParaAbrir = new File([glbBlob], datos.nombre.replace(/\\.3dm$/i, ".glb"), { type: "model/gltf-binary" });
+              }
+            }
+          } catch (glbError) {
+            console.warn("[AURUM] No se pudo cargar el GLB guardado; se abrirá el 3DM original.", glbError);
+          }
+        }
         sessionStorage.removeItem(key);
         const url = new URL(window.location.href);
         url.searchParams.delete("desde-mi-nube");
         window.history.replaceState({}, "", url.pathname + url.search + url.hash);
-        await cargarArchivo(file);
+        await cargarArchivo(archivoParaAbrir);
+        if (archivoParaAbrir !== originalFile) {
+          // El visor usa el GLB, pero las próximas actualizaciones deben conservar el 3DM original.
+          setArchivoOriginal(originalFile);
+          setArchivo(datos.nombre);
+          setFormatoInterno("GLB");
+        }
       } catch (cause) {
         if (!cancelado) {
           sessionStorage.removeItem(key);
