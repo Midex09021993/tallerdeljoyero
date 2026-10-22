@@ -22,7 +22,7 @@ export type MaterialId =
   | "plata925_pulida" | "plata950_pulida" | "plata970_pulida" | "plata_envejecida"
   | "platino_pulido" | "platino_mate"
   | "oro24_pulido" | "oro18_champan" | "oro18_verde" | "oro18_verde_blanco_ijewel" | "oro18_verde_blanco_glb"
-  | "oro18a_artesanal_pulido" | "oro18a_calido" | "oro18_naranja" | "oro18_rojo" | "oro18_martillado"
+  | "oro18a_artesanal_pulido" | "oro18a_calido" | "oro18_naranja" | "oro18_rojo" | "oro18_purpura" | "oro18_azul" | "oro18_gris" | "oro18_martillado"
   | "paladio_pulido" | "rodio_negro" | "titanio_pulido";
 export type EscenarioId = "oscuro" | "claro" | "luxury" | "marmol" | "transparente" | "producto" | "galeria" | "oroCalido" | "gemaClara" | "ijewelReference";
 export type VistaId = "perspectiva" | "frontal" | "superior" | "lateral";
@@ -200,6 +200,10 @@ export const MATERIALES: MaterialConfig[] = [
   { id:"oro18a_calido", grupo:"Oro Amarillo", nombre:"Oro 18K Amarillo Cálido", color:0xddad45, metalness:1, roughness:.12, envMapIntensity:1.84, clearcoat:.14, anisotropy:0 },
   { id:"oro18_naranja", grupo:"Especiales", nombre:"Oro 18K Naranja", color:0xd2863f, metalness:1, roughness:.13, envMapIntensity:1.82, clearcoat:.14, anisotropy:.05 },
   { id:"oro18_rojo", grupo:"Especiales", nombre:"Oro 18K Rojo", color:0xc66f58, metalness:1, roughness:.14, envMapIntensity:1.78, clearcoat:.13, anisotropy:.06 },
+  // Perfiles cromáticos especiales: azul y púrpura son aleaciones raras/frágiles; se ofrecen como perfiles visuales experimentales.
+  { id:"oro18_purpura", grupo:"Especiales", nombre:"Oro Púrpura · Experimental", color:0x80508f, metalness:1, roughness:.16, envMapIntensity:1.72, clearcoat:.10, anisotropy:0 },
+  { id:"oro18_azul", grupo:"Especiales", nombre:"Oro Azul · Experimental", color:0x527f9b, metalness:1, roughness:.17, envMapIntensity:1.76, clearcoat:.11, anisotropy:0 },
+  { id:"oro18_gris", grupo:"Especiales", nombre:"Oro Gris 18K", color:0x92979d, metalness:1, roughness:.12, envMapIntensity:1.82, clearcoat:.14, anisotropy:0 },
   { id:"oro18_martillado", grupo:"Oro Amarillo", nombre:"Oro 18K Martillado Artesanal", color:0xc9a04e, metalness:1, roughness:.27, envMapIntensity:1.48, clearcoat:.06, anisotropy:0 },
   { id:"oro24_pulido", grupo:"Especiales", nombre:"Oro 24K Pulido", color:0xe9bb3f, metalness:1, roughness:.075, envMapIntensity:2.35, clearcoat:.20 },
   { id:"oro18_champan", grupo:"Especiales", nombre:"Oro Champán", color:0xd6b875, metalness:1, roughness:.12, envMapIntensity:2.05, clearcoat:.16 },
