@@ -200,7 +200,7 @@ function MiNubePage() {
     const glb = opcionesCompartir?.archivos.filter((archivo) => archivo.origen === "supabase" && archivo.nombre.toLowerCase().endsWith(".glb")) ?? [];
     if (!glb.length) return;
     void Promise.all(glb.map(async (archivo) => {
-      const { data, error } = await supabase.rpc("obtener_enlace_visor_3d", { _modelo_ruta: archivo.ruta });
+      const { data, error } = await supabase.rpc("obtener_enlace_visor_3d", { _modelo_ruta: archivo.ruta, _nombre: nombreVisible(archivo.nombre) });
       if (error || !Array.isArray(data) || !data[0]?.token || !data[0]?.expira_en || new Date(data[0].expira_en).getTime() <= Date.now()) return null;
       return { ruta: archivo.ruta, url: new URL("/v/" + data[0].token, window.location.origin).toString() };
     })).then((enlaces) => {
@@ -1332,7 +1332,7 @@ function MiNubePage() {
     }
     setGenerandoEnlaceVisor(archivo.ruta);
     try {
-      const { data: existente, error: existenteError } = await supabase.rpc("obtener_enlace_visor_3d", { _modelo_ruta: archivo.ruta });
+      const { data: existente, error: existenteError } = await supabase.rpc("obtener_enlace_visor_3d", { _modelo_ruta: archivo.ruta, _nombre: nombreVisible(archivo.nombre) });
       if (existenteError) throw existenteError;
       if (Array.isArray(existente) && existente[0]?.token && existente[0]?.expira_en && new Date(existente[0].expira_en).getTime() > Date.now()) {
         const urlExistente = new URL("/v/" + existente[0].token, window.location.origin).toString();
