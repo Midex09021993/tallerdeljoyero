@@ -107,6 +107,7 @@ export function CatalogoProductoPublicoPage() {
   const [anadidoAlCarrito, setAnadidoAlCarrito] = useState(false);
   const [errorCarrito, setErrorCarrito] = useState("");
   const [vistaVisual, setVistaVisual] = useState<"fotos" | "3d">("fotos");
+  const [imagenSeleccionada, setImagenSeleccionada] = useState<string | null>(null);
   const disponibilidadNormalizada = (item?.disponibilidad ?? "Consultar").trim().toLocaleLowerCase("es");
   const esNoDisponible = disponibilidadNormalizada === "no disponible";
   const esPorEncargo = disponibilidadNormalizada === "por encargo";
@@ -187,9 +188,9 @@ export function CatalogoProductoPublicoPage() {
           <div role="tabpanel" aria-label={vistaVisual === "fotos" ? "Fotografías del producto" : "Configurador 3D"} className="min-w-0">
             {vistaVisual === "fotos" ? <>
               <div className="group relative aspect-square overflow-hidden rounded-[32px] bg-[#e9e3da] shadow-[0_30px_80px_-50px_rgba(31,27,24,.5)] ring-1 ring-[#1f1b1815]">
-                {item.imagen_principal_url ? <img draggable={false} onContextMenu={(event) => event.preventDefault()} onDragStart={(event) => event.preventDefault()} src={item.imagen_principal_url} alt={item.nombre} className="size-full object-cover transition duration-700 group-hover:scale-[1.025]" onError={(event) => { event.currentTarget.style.display = "none"; }} /> : <div className="grid size-full place-items-center"><Box className="size-14 text-[#8a6b36]" /></div>}
+                {(imagenSeleccionada || item.imagen_principal_url) ? <img draggable={false} onContextMenu={(event) => event.preventDefault()} onDragStart={(event) => event.preventDefault()} src={imagenSeleccionada || item.imagen_principal_url || ""} alt={item.nombre} className="size-full object-contain transition duration-300" onError={(event) => { event.currentTarget.style.display = "none"; }} /> : <div className="grid size-full place-items-center"><Box className="size-14 text-[#8a6b36]" /></div>}
               </div>
-              {imagenes.length ? <div className="mt-3 grid grid-cols-4 gap-2">{imagenes.slice(0, 8).map((url, index) => <img draggable={false} onContextMenu={(event) => event.preventDefault()} onDragStart={(event) => event.preventDefault()} key={url + index} src={url} alt={item.nombre + " " + (index + 1)} className="aspect-square rounded-xl object-cover" onError={(event) => { event.currentTarget.style.display = "none"; }} />)}</div> : null}
+              {imagenes.length ? <div className="mt-3 grid grid-cols-[repeat(auto-fill,minmax(76px,1fr))] gap-2">{imagenes.slice(0, 8).map((url, index) => <button type="button" key={url + index} onClick={() => setImagenSeleccionada(url)} aria-label={`Ver fotografía ${index + 1}`} aria-pressed={imagenSeleccionada === url} className={"overflow-hidden rounded-xl border bg-white transition " + ((imagenSeleccionada || item.imagen_principal_url) === url ? "border-[#8a6b36] ring-2 ring-[#8a6b36]/20" : "border-transparent hover:border-[#d6c6a1]")}><img draggable={false} onContextMenu={(event) => event.preventDefault()} onDragStart={(event) => event.preventDefault()} src={url} alt={item.nombre + " " + (index + 1)} className="aspect-square w-full object-contain" onError={(event) => { event.currentTarget.style.display = "none"; }} /></button>)}</div> : null}
             </> : <div className="overflow-hidden rounded-[28px] border border-[#1f1b1815] bg-white shadow-[0_24px_60px_-45px_rgba(31,27,24,.35)]"><PublicJewelConfigurator slug={slug} producto={productoSlug} /></div>}
           </div>
         </div>
