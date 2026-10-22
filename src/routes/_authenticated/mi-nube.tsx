@@ -77,9 +77,9 @@ async function optimizarImagenCatalogo(blob: Blob): Promise<Blob> {
 }
 
 /** Marco visual compartido para que las fichas propias y recibidas evolucionen juntas. */
-function FichaProyecto({ portada, nombre, children, portadaModo = "cover", accionesPortada }: { portada: string | null; nombre: string; children: ReactNode; portadaModo?: "cover" | "contain"; accionesPortada?: ReactNode }) {
+function FichaProyecto({ portada, nombre, children, portadaModo = "cover", accionesPortada, superpuesto = false }: { portada: string | null; nombre: string; children: ReactNode; portadaModo?: "cover" | "contain"; accionesPortada?: ReactNode; superpuesto?: boolean }) {
   return (
-    <article className="group overflow-hidden rounded-[1.35rem] border border-border/80 bg-card shadow-[0_2px_8px_rgba(20,20,20,0.035)] transition-all duration-200 hover:-translate-y-0.5 hover:border-gold/35 hover:shadow-[0_12px_32px_rgba(20,20,20,0.075)]">
+    <article className={`group relative overflow-hidden rounded-[1.35rem] border border-border/80 bg-card shadow-[0_2px_8px_rgba(20,20,20,0.035)] transition-all duration-200 hover:-translate-y-0.5 hover:border-gold/35 hover:shadow-[0_12px_32px_rgba(20,20,20,0.075)] ${superpuesto ? "z-30" : ""}`}>
       <div className="relative">
         {portada ? (
           <div className="grid h-36 w-full place-items-center overflow-hidden bg-[#f5f4f1]">
@@ -1688,6 +1688,7 @@ function MiNubePage() {
                   key={proyecto.nombre}
                   portada={proyecto.portada}
                   nombre={proyecto.nombre}
+                  superpuesto={proyectoAbierto === proyecto.nombre}
                   accionesPortada={
                     <>
                       <button type="button" title="Editar nombre de carpeta" aria-label={`Editar nombre de carpeta ${proyecto.nombre}`} onClick={() => { setNuevoNombreCarpeta(proyecto.nombre); setProyectoRenombrando(proyecto.nombre); }} disabled={guardandoNombreCarpeta || subiendo || compartiendo !== null} className="grid size-9 place-items-center rounded-full border border-white/80 bg-white/90 text-gray-800 shadow-sm transition hover:bg-white disabled:opacity-50"><Pencil className="size-4" /></button>
@@ -1737,7 +1738,12 @@ function MiNubePage() {
                       {proyectoAbierto === proyecto.nombre ? "Ocultar archivos del proyecto" : "Ver archivos del proyecto"}
                     </button>
                     {proyectoAbierto === proyecto.nombre && (
-                      <div className="space-y-2 border-t border-border pt-3">
+                      <div className="absolute inset-0 z-20 flex flex-col overflow-hidden rounded-[1.35rem] border border-gold/40 bg-card shadow-xl">
+                        <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border px-3 py-2.5">
+                          <div className="flex min-w-0 items-center gap-2"><Folder className="size-4 shrink-0 text-gold" /><div className="min-w-0"><h4 className="truncate text-sm font-semibold">{proyecto.nombre}</h4><p className="text-[10px] text-muted-foreground">{proyecto.archivos.length} archivos</p></div></div>
+                          <button type="button" aria-label={`Cerrar archivos de ${proyecto.nombre}`} title="Cerrar ficha" onClick={() => setProyectoAbierto(null)} className="grid size-7 shrink-0 place-items-center rounded-lg border border-border hover:bg-muted"><X className="size-4" /></button>
+                        </div>
+                        <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-3">
                       <button type="button" onClick={() => { setModoEdicion((actual) => actual === proyecto.nombre ? null : proyecto.nombre); setProyectoAbierto(proyecto.nombre); setCarpetaDestinoEdicion(null); setSeleccionados([]); }} className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border px-3 py-2 text-xs font-semibold hover:border-gold/50">
                         <Pencil className="size-3.5" /> {modoEdicion === proyecto.nombre ? "Terminar edición" : "Editar archivos de la carpeta"}
                       </button>
@@ -1830,6 +1836,7 @@ function MiNubePage() {
                             </div>
                           </div>
                         ))}</div>
+                        </div>
                       </div>
                     )}
 
