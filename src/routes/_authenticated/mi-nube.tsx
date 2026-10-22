@@ -1846,7 +1846,7 @@ function MiNubePage() {
                   </div>
                   </FichaProyecto>
                   {proyectoAbierto === "compartida:" + recibida.id && (
-            <section className={"absolute top-full z-40 mt-3 max-h-[65vh] w-[min(88vw,960px)] overflow-y-auto overflow-x-hidden rounded-2xl border border-gold/40 bg-card shadow-2xl " + (indiceRecibida % 2 === 1 ? "right-0" : "left-0") + " " + (indiceRecibida % 4 >= 2 ? "xl:right-0 xl:left-auto" : "xl:left-0 xl:right-auto") + " " + (indiceRecibida % 5 >= 2 ? "2xl:right-0 2xl:left-auto" : "2xl:left-0 2xl:right-auto")} aria-label={"Archivos de " + recibida.nombre}>
+            <section className={"absolute top-full z-40 mt-3 max-h-[60vh] w-full min-w-0 overflow-y-auto overflow-x-hidden rounded-2xl border border-gold/40 bg-card shadow-2xl " + (indiceRecibida % 2 === 1 ? "right-0" : "left-0") + " " + (indiceRecibida % 4 >= 2 ? "xl:right-0 xl:left-auto" : "xl:left-0 xl:right-auto") + " " + (indiceRecibida % 5 >= 2 ? "2xl:right-0 2xl:left-auto" : "2xl:left-0 2xl:right-auto")} aria-label={"Archivos de " + recibida.nombre}>
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-muted/25 px-5 py-4">
                 <div className="flex items-start gap-3">
                   <div className="grid size-10 shrink-0 place-items-center rounded-xl border border-gold/30 bg-gold/10 text-gold"><Folder className="size-5" /></div>
@@ -1855,7 +1855,7 @@ function MiNubePage() {
                 <button type="button" onClick={() => setProyectoAbierto(null)} className="rounded-lg border border-border bg-background px-3 py-2 text-xs font-semibold hover:bg-muted/60">Cerrar ficha <X className="ml-1 inline size-3.5" /></button>
               </div>
               <div className="p-4 sm:p-5">
-                <div className={recibida.archivos.length <= 1 ? "grid grid-cols-1 gap-3" : recibida.archivos.length === 2 ? "grid gap-3 sm:grid-cols-2" : "grid gap-3 sm:grid-cols-2 xl:grid-cols-3"}>
+                <div className="grid grid-cols-1 gap-2">
                           {recibida.archivos.map((archivo) => <div key={archivo.ruta} className="rounded-xl border border-border/70 bg-background p-3 transition-colors hover:border-border">
                             <div className="flex min-w-0 items-start gap-2.5">
                               <div className="grid size-9 shrink-0 place-items-center rounded-lg bg-muted/70 text-muted-foreground">{archivo.categoria === "fotos" ? <ImageIcon className="size-4" /> : archivo.categoria === "modelos-3d" ? <Box className="size-4" /> : archivo.categoria === "documentos" ? <FileText className="size-4" /> : <FileIcon className="size-4" />}</div>
