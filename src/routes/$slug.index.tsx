@@ -462,7 +462,7 @@ function CatalogoPublicoPage() {
                   to="/$slug/$producto"
                   params={{ slug: slugNormalizado, producto: producto.slug }}
                   aria-label={`Ver joya: ${producto.nombre}`}
-                  className="relative block aspect-[4/5] overflow-hidden rounded-[24px] bg-white ring-1 ring-[#1f1b18]/[0.06] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_45px_-28px_rgba(31,27,24,.38)]"
+                  className="relative block aspect-square overflow-hidden rounded-[24px] bg-white ring-1 ring-[#1f1b18]/[0.06] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_45px_-28px_rgba(31,27,24,.38)]"
                 >
                   {producto.imagen ? (
                     <img draggable={false} onContextMenu={(event) => event.preventDefault()} onDragStart={(event) => event.preventDefault()} src={producto.imagen} alt={producto.nombre} loading="lazy" className="size-full scale-[1.4] object-contain p-0 transition-transform duration-500 group-hover:scale-[1.46] sm:p-1" onError={(event) => { event.currentTarget.style.display = "none"; }} />
