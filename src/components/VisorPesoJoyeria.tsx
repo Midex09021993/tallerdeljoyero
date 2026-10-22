@@ -75,6 +75,7 @@ export function VisorPesoJoyeria({ compacto = false, archivoInicial = null, arch
   const [volumenUnidades, setVolumenUnidades] = useState<number | null>(null);
   const [guardandoAnalisis, setGuardandoAnalisis] = useState(false);
   const [analisisGuardado, setAnalisisGuardado] = useState(false);
+  const [analisisPendiente, setAnalisisPendiente] = useState<{ nombre: string; pesoFinal: number; volumenCm3: number; metal: string; unidad: string; guardadoEn: number } | null>(null);
 
   const [metalId, setMetalId] = useState<MetalId>("oro18a");
   const [pesoArbol, setPesoArbol] = useState<number | null>(null);
@@ -403,6 +404,20 @@ export function VisorPesoJoyeria({ compacto = false, archivoInicial = null, arch
   const pesoFinal = pesoConEmpuje;
 
   useEffect(() => {
+    if (modoPublico || typeof window === "undefined") return;
+    try {
+      const raw = window.sessionStorage.getItem("aurum_peso_draft");
+      if (!raw) return;
+      const draft = JSON.parse(raw) as { nombre?: unknown; pesoFinal?: unknown; volumenCm3?: unknown; metal?: unknown; unidad?: unknown; guardadoEn?: unknown };
+      if (typeof draft.nombre === "string" && typeof draft.pesoFinal === "number" && typeof draft.volumenCm3 === "number" && typeof draft.metal === "string" && typeof draft.unidad === "string" && typeof draft.guardadoEn === "number") {
+        setAnalisisPendiente({ nombre: draft.nombre, pesoFinal: draft.pesoFinal, volumenCm3: draft.volumenCm3, metal: draft.metal, unidad: draft.unidad, guardadoEn: draft.guardadoEn });
+      }
+    } catch {
+      window.sessionStorage.removeItem("aurum_peso_draft");
+    }
+  }, [modoPublico]);
+
+  useEffect(() => {
     setAnalisisGuardado(false);
   }, [volumenUnidades, unidad, metalId, pesoArbol, configuracion.factorSeguridad, configuracion.factorEmpuje, configuracion.modoEmpuje]);
 
@@ -474,6 +489,19 @@ export function VisorPesoJoyeria({ compacto = false, archivoInicial = null, arch
         ) : null}
       </div>
 
+      {analisisPendiente ? (
+        <div className="mb-3 rounded-2xl border border-gold/35 bg-accent/30 p-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-semibold">Recuperamos tu cálculo anterior</p>
+              <p className="mt-1 text-xs text-muted-foreground">{analisisPendiente.nombre} · {analisisPendiente.metal} · {num(analisisPendiente.pesoFinal)} g estimados · {num(analisisPendiente.volumenCm3, 4)} cm³</p>
+              <p className="mt-1 text-xs text-muted-foreground">Conservamos el resultado durante el registro. Para guardarlo permanentemente, carga el STL en Mi Nube y ábrelo desde allí.</p>
+            </div>
+            <button type="button" onClick={() => { window.sessionStorage.removeItem("aurum_peso_draft"); setAnalisisPendiente(null); }} className="inline-flex min-h-9 shrink-0 items-center justify-center rounded-xl border border-border px-3 py-2 text-xs font-semibold">Cerrar aviso</button>
+          </div>
+        </div>
+      ) : null}
+
       {nombreArchivo ? (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-gold/25 bg-accent/20 px-4 py-3">
           <div className="min-w-0">
@@ -485,7 +513,14 @@ export function VisorPesoJoyeria({ compacto = false, archivoInicial = null, arch
             </p>
           </div>
           {modoPublico ? (
-            <a href="/auth" className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-xl bg-gold px-4 py-2 text-sm font-semibold text-black transition hover:brightness-105">
+            <a href="/auth" onClick={() => {
+              if (pesoFinal == null || volumenCm3 == null || !nombreArchivo) return;
+              try {
+                window.sessionStorage.setItem("aurum_peso_draft", JSON.stringify({ nombre: nombreArchivo, pesoFinal, volumenCm3, metal: metal.nombre, unidad, guardadoEn: Date.now() }));
+              } catch {
+                toast.error("No se pudo conservar el cálculo en este navegador. Mantén esta página abierta mientras te registras.");
+              }
+            }} className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-xl bg-gold px-4 py-2 text-sm font-semibold text-black transition hover:brightness-105">
               <Save className="size-4" /> Crear cuenta para guardar
             </a>
           ) : (
