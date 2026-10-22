@@ -108,6 +108,30 @@ export function CatalogoProductoPublicoPage() {
   const [errorCarrito, setErrorCarrito] = useState("");
   const [vistaVisual, setVistaVisual] = useState<"fotos" | "3d">("fotos");
   const [imagenSeleccionada, setImagenSeleccionada] = useState<string | null>(null);
+  const [modelo3dPublico, setModelo3dPublico] = useState<{ url: string; nombre: string } | null>(null);
+  const [comprobandoModelo3d, setComprobandoModelo3d] = useState(true);
+  useEffect(() => {
+    let cancelled = false;
+    const comprobarModelo3d = async () => {
+      setComprobandoModelo3d(true);
+      setModelo3dPublico(null);
+      try {
+        const { data, error } = await supabase.functions.invoke("catalogo-modelo-3d-publico", {
+          body: { slug, producto: productoSlug },
+        });
+        if (cancelled) return;
+        if (!error && data?.ok && typeof data.url === "string" && data.url.length > 0) {
+          setModelo3dPublico({ url: data.url, nombre: typeof data.nombre === "string" ? data.nombre : "modelo.glb" });
+        }
+      } catch {
+        if (!cancelled) setModelo3dPublico(null);
+      } finally {
+        if (!cancelled) setComprobandoModelo3d(false);
+      }
+    };
+    void comprobarModelo3d();
+    return () => { cancelled = true; };
+  }, [slug, productoSlug]);
   const disponibilidadNormalizada = (item?.disponibilidad ?? "Consultar").trim().toLocaleLowerCase("es");
   const esNoDisponible = disponibilidadNormalizada === "no disponible";
   const esPorEncargo = disponibilidadNormalizada === "por encargo";
@@ -184,7 +208,7 @@ export function CatalogoProductoPublicoPage() {
         <div className="min-w-0">
           <div className="mb-3 flex items-center gap-1 rounded-full border border-[#1f1b1815] bg-white/70 p-1" role="tablist" aria-label="Vista de la joya">
             <button type="button" role="tab" aria-selected={vistaVisual === "fotos"} onClick={() => setVistaVisual("fotos")} className={"flex-1 rounded-full px-4 py-2.5 text-xs font-semibold transition " + (vistaVisual === "fotos" ? "bg-[#1f1b18] text-white shadow-sm" : "text-[#625b54] hover:bg-white")}>Fotografías</button>
-            <button type="button" role="tab" aria-selected={vistaVisual === "3d"} onClick={() => setVistaVisual("3d")} className={"flex-1 rounded-full px-4 py-2.5 text-xs font-semibold transition " + (vistaVisual === "3d" ? "bg-[#1f1b18] text-white shadow-sm" : "text-[#625b54] hover:bg-white")}>Configurar en 3D</button>
+            {modelo3dPublico ? <button type="button" role="tab" aria-selected={vistaVisual === "3d"} onClick={() => setVistaVisual("3d")} className={"flex-1 rounded-full px-4 py-2.5 text-xs font-semibold transition " + (vistaVisual === "3d" ? "bg-[#1f1b18] text-white shadow-sm" : "text-[#625b54] hover:bg-white")}>Configurar en 3D</button> : null}
           </div>
           <div role="tabpanel" aria-label={vistaVisual === "fotos" ? "Fotografías del producto" : "Configurador 3D"} className="min-w-0">
             {vistaVisual === "fotos" ? <>
@@ -194,7 +218,7 @@ export function CatalogoProductoPublicoPage() {
                   {(imagenSeleccionada || item.imagen_principal_url) ? <img draggable={false} onContextMenu={(event) => event.preventDefault()} onDragStart={(event) => event.preventDefault()} src={imagenSeleccionada || item.imagen_principal_url || ""} alt={item.nombre} className="size-full scale-[1.9] object-contain p-0 transition duration-300 sm:scale-[1.65] lg:scale-[1.72]" onError={(event) => { event.currentTarget.style.display = "none"; }} /> : <div className="grid size-full place-items-center"><Box className="size-14 text-[#8a6b36]" /></div>}
                 </div>
               </div>
-            </> : <div className="overflow-hidden rounded-[28px] border border-[#1f1b1815] bg-white shadow-[0_24px_60px_-45px_rgba(31,27,24,.35)]"><PublicJewelConfigurator slug={slug} producto={productoSlug} /></div>}
+            </> : modelo3dPublico ? <div className="overflow-hidden rounded-[28px] border border-[#1f1b1815] bg-white shadow-[0_24px_60px_-45px_rgba(31,27,24,.35)]"><PublicJewelConfigurator slug={slug} producto={productoSlug} sharedModelUrl={modelo3dPublico.url} sharedModelName={modelo3dPublico.nombre} /></div> : null}
           </div>
         </div>
 
