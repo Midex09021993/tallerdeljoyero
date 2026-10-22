@@ -37,3 +37,18 @@ with check (public.has_role((select auth.uid()), 'dueno'::public.app_role));
 
 comment on table public.aurum_plan_quotas is
 'Cuotas mensuales configurables de Aurum Lab por plan. -1 significa sin límite. Solo configuración; no aplica bloqueos por sí sola.';
+
+
+-- Cuota independiente para el número de carpetas/proyectos de Mi Nube.
+alter table public.aurum_plan_quotas
+  add column if not exists carpetas_mi_nube_max integer not null default -1
+  check (carpetas_mi_nube_max >= -1);
+
+update public.aurum_plan_quotas
+set carpetas_mi_nube_max = case plan_id
+  when 'emprendedor' then 10
+  when 'taller' then 50
+  when 'profesional' then 200
+  else -1
+end
+where carpetas_mi_nube_max = -1;
