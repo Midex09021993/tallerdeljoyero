@@ -1938,7 +1938,39 @@ function MiNubePage() {
                       })}
                     </div>
                   ) : (
-                    <p className="mt-3 rounded-lg border border-dashed border-border p-3 text-xs leading-5 text-muted-foreground">Esta carpeta no tiene archivos GLB guardados en la nube. Para crear un enlace del visor, exporta o guarda la joya como GLB y súbela a esta carpeta.</p>
+                    <div className="mt-3 space-y-3">
+                      <p className="rounded-lg border border-dashed border-border p-3 text-xs leading-5 text-muted-foreground">Esta carpeta aún no tiene un GLB para el visor. Puedes conservar el 3DM original y preparar una copia GLB desde Aurum Render; el archivo original no se modifica.</p>
+                      {opcionesCompartir.archivos.filter((archivo) => archivo.origen === "supabase" && archivo.nombre.toLowerCase().endsWith(".3dm")).length > 0 ? (
+                        <div className="space-y-2">
+                          <p className="text-xs font-semibold">Preparar visor desde un archivo 3DM</p>
+                          {opcionesCompartir.archivos.filter((archivo) => archivo.origen === "supabase" && archivo.nombre.toLowerCase().endsWith(".3dm")).map((archivo) => (
+                            <div key={archivo.ruta} className="flex items-center justify-between gap-3 rounded-lg border border-border/70 bg-background p-3">
+                              <div className="min-w-0">
+                                <p className="truncate text-xs font-semibold">{nombreVisible(archivo.nombre)}</p>
+                                <p className="mt-0.5 text-[10px] text-muted-foreground">Se abrirá en Aurum Render para preparar el GLB</p>
+                              </div>
+                              <button type="button" onClick={async () => {
+                                try {
+                                  const { data, error: urlError } = await supabase.storage.from(BUCKET).createSignedUrl(archivo.ruta, 600);
+                                  if (urlError || !data?.signedUrl) throw urlError ?? new Error("No se pudo preparar el 3DM para Aurum Render.");
+                                  sessionStorage.setItem("aurum-render-archivo-pendiente", JSON.stringify({
+                                    url: data.signedUrl,
+                                    nombre: nombreVisible(archivo.nombre),
+                                    rutaCarpeta: archivo.ruta.slice(0, archivo.ruta.lastIndexOf("/")),
+                                  }));
+                                  setOpcionesCompartir(null);
+                                  window.location.assign("/aurum-render?desde-mi-nube=1");
+                                } catch (cause) {
+                                  toast.error(cause instanceof Error ? cause.message : "No se pudo abrir el 3DM en Aurum Render.");
+                                }
+                              }} className="shrink-0 rounded-lg border border-gold/45 bg-gold/5 px-2.5 py-2 text-[11px] font-semibold hover:bg-gold/10">Preparar GLB</button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-xs leading-5 text-muted-foreground">No hay archivos 3DM en esta carpeta. Guarda un GLB o abre un 3DM desde Mi Nube para preparar el visor.</p>
+                      )}
+                    </div>
                   )}
                 </section>
                 <button type="button" onClick={() => { const proyecto = opcionesCompartir; setOpcionesCompartir(null); void abrirCompartirEcosistema(proyecto); }} className="flex items-start gap-3 rounded-xl border border-[#c5a15d]/50 bg-[#c5a15d]/[0.08] p-4 text-left transition-colors hover:bg-[#c5a15d]/[0.14]">
