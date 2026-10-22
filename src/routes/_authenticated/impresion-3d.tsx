@@ -1,7 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { Printer } from "lucide-react";
-import { AsistenteImpresion3D } from "@/components/AsistenteImpresion3D";
 import { AreaOperario, PedidosArea } from "@/components/PedidosArea";
 import { AppShell, StatCard } from "@/components/AppShell";
 import { usePedidosDeArea } from "@/hooks/use-pedidos-area";
@@ -31,10 +28,6 @@ function Impresion3D() {
 }
 
 function Impresion3DCompleta() {
-  const [mostrarAsistente, setMostrarAsistente] = useState(false);
-  useEffect(() => {
-    if (new URLSearchParams(window.location.search).get("asistente") === "1") setMostrarAsistente(true);
-  }, []);
   const { pedidos, enTrabajo } = usePedidosDeArea("Impresión 3D");
   const { data: inventario = [] } = useInventario();
   const { esDueno, sedeFiltro, setSedeFiltro, sedes, etiquetaSede, sedeSeleccionada } =
@@ -61,21 +54,6 @@ function Impresion3DCompleta() {
         </>
       }
     >
-      <section className="mb-6 rounded-2xl border border-border bg-card p-4 shadow-card sm:p-5">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <span className="grid size-11 shrink-0 place-items-center rounded-xl border border-gold/25 bg-gold/10 text-gold"><Printer className="size-5" /></span>
-            <div>
-              <h2 className="font-semibold">Asistente de impresión para joyería</h2>
-              <p className="mt-1 max-w-2xl text-sm text-muted-foreground">Inspecciona modelos STL y estima consumo de resina calcinable y coste de máquina antes de preparar la microfusión.</p>
-            </div>
-          </div>
-          <button type="button" onClick={() => setMostrarAsistente((actual) => !actual)} aria-expanded={mostrarAsistente} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-gold/50 bg-gold/[0.08] px-4 py-2 text-sm font-semibold transition hover:bg-gold/[0.14]">
-            <Printer className="size-4" /> {mostrarAsistente ? "Ocultar asistente" : "Abrir asistente"}
-          </button>
-        </div>
-        {mostrarAsistente && <div className="mt-5 border-t border-border pt-5"><AsistenteImpresion3D /></div>}
-      </section>
       <PedidosArea area="Impresión 3D" titulo="Pedidos asignados a Impresión 3D" />
     </AppShell>
   );
