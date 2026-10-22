@@ -1738,7 +1738,7 @@ function MiNubePage() {
                       {proyecto.tienePdf && <span className="rounded-md bg-muted/70 px-2 py-1 text-[10px] font-medium text-muted-foreground">PDF</span>}
                     </div>
                     <button type="button" onClick={() => void anadirImagenAlCatalogo(proyecto.archivos.find((item) => item.categoria === "fotos") ?? null, proyecto, proyecto.archivos.find((item) => item.nombre.toLowerCase().endsWith(".pdf") && item.origen === "supabase") ?? null)} disabled={anadiendoCatalogo !== null} className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-[#c5a15d]/60 bg-[#c5a15d]/[0.10] px-3 py-2 text-xs font-semibold leading-tight text-foreground transition-colors hover:bg-[#c5a15d]/[0.17] disabled:opacity-50">
-                      {anadiendoCatalogo === proyecto.nombre ? "Preparando ficha…" : "Crear ficha en catálogo"}
+                      {anadiendoCatalogo === proyecto.nombre ? "Preparando ficha…" : "Crear ficha para catálogo"}
                     </button>
                     {compartiendo === proyecto.nombre && <p role="status" className="rounded-lg bg-gold/10 px-3 py-2 text-xs text-muted-foreground">{progresoCompartir || "Preparando transferencia…"}</p>}
                     {errorCompartir?.proyecto === proyecto.nombre && <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">{errorCompartir.mensaje}<button type="button" onClick={() => setErrorCompartir(null)} className="ml-2 underline">Cerrar</button></div>}
@@ -2034,6 +2034,27 @@ function MiNubePage() {
                     </div>
                   )}
                 </section>
+                <button
+                  type="button"
+                  disabled={anadiendoCatalogo !== null}
+                  onClick={() => {
+                    const proyecto = opcionesCompartir;
+                    if (!proyecto) return;
+                    setOpcionesCompartir(null);
+                    void anadirImagenAlCatalogo(
+                      proyecto.archivos.find((item) => item.categoria === "fotos") ?? null,
+                      proyecto,
+                      proyecto.archivos.find((item) => item.nombre.toLowerCase().endsWith(".pdf") && item.origen === "supabase") ?? null,
+                    );
+                  }}
+                  className="flex items-start gap-3 rounded-xl border border-[#c5a15d]/50 bg-[#c5a15d]/[0.08] p-4 text-left transition-colors hover:bg-[#c5a15d]/[0.14] disabled:opacity-50"
+                >
+                  <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#c5a15d]/15 text-gold"><FileText className="size-5" /></div>
+                  <div>
+                    <span className="block text-sm font-semibold">{anadiendoCatalogo === opcionesCompartir.nombre ? "Preparando ficha…" : "Crear ficha para catálogo"}</span>
+                    <span className="mt-1 block text-xs leading-5 text-muted-foreground">Preparar este proyecto para el catálogo con su imagen y archivos disponibles. Podrás revisar y completar la ficha antes de guardarla.</span>
+                  </div>
+                </button>
                 <button type="button" onClick={() => { const proyecto = opcionesCompartir; setOpcionesCompartir(null); void abrirCompartirEcosistema(proyecto); }} className="flex items-start gap-3 rounded-xl border border-[#c5a15d]/50 bg-[#c5a15d]/[0.08] p-4 text-left transition-colors hover:bg-[#c5a15d]/[0.14]">
                   <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#c5a15d]/15 text-gold"><Share2 className="size-5" /></div>
                   <div><span className="block text-sm font-semibold">Compartir con un taller registrado</span><span className="mt-1 block text-xs leading-5 text-muted-foreground">La carpeta original aparecerá en “Compartidas conmigo” de su Mi Nube. Sin duplicar archivos; puedes revocar el acceso.</span></div>
