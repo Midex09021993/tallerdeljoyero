@@ -59,7 +59,7 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
         const { data, error } = await supabasePublic.functions.invoke("catalogo-modelo-3d-publico", { body: { slug, producto } });
         if (error || !data?.ok || typeof data.url !== "string") throw new Error(data?.error || error?.message || "No hay modelo 3D disponible para este producto.");
         if (cancelled) return;
-        setModelName(typeof data.nombre === "string" && /\\.3dm$/i.test(data.nombre) ? data.nombre : "modelo.3dm");
+        setModelName(typeof data.nombre === "string" && /\.(glb|3dm)$/i.test(data.nombre) ? data.nombre : "modelo.glb");
         setModelUrl(data.url);
         setStatus("");
       } catch (cause) {
