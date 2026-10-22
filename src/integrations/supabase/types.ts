@@ -47,6 +47,7 @@ export type Database = {
       aurum_plan_quotas: {
         Row: {
           almacenamiento_mib: number
+          carpetas_mi_nube_max: number
           operaciones_comerciales_mes: number
           plan_id: string
           productos_catalogo_max: number
