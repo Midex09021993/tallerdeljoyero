@@ -49,7 +49,14 @@ export function createAurumLightingController(
         if (!material?.userData?.aurumGemFamily) return;
         material.userData.aurumGemLightState = { enabled, intensity, position, radius };
         const uniforms = material.userData.aurumGemLightUniforms;
-        if (!uniforms) return;
+        if (!uniforms) {
+          // The light panel can be changed before Three.js has compiled this
+          // gemstone's custom shader. Keep the state above and request a fresh
+          // material program so onBeforeCompile can register the live uniforms.
+          // This runs only on lighting updates, never in the animation loop.
+          material.needsUpdate = true;
+          return;
+        }
         uniforms.position.value.set(position[0], position[1], position[2]);
         uniforms.intensity.value = enabled ? intensity : 0;
         uniforms.radius.value = radius;
