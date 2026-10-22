@@ -2255,7 +2255,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       const rawDestino = sessionStorage.getItem("aurum-render-poster-destino");
       if (rawDestino) {
         const destino = JSON.parse(rawDestino) as Partial<AurumProjectDestination>;
-        if (destino.archivoNombre && destino.archivoNombre !== file.name) {
+        if ((destino.archivoNombre && destino.archivoNombre !== file.name) || (typeof destino.archivoTamano === "number" && destino.archivoTamano !== file.size)) {
           sessionStorage.removeItem("aurum-render-poster-destino");
           setDestinoProyectoGuardado(null);
         }
@@ -2347,10 +2347,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         return;
       }
       try {
-        const datos = JSON.parse(pending) as { url?: string; nombre?: string; rutaCarpeta?: string };
+        const datos = JSON.parse(pending) as { url?: string; nombre?: string; rutaCarpeta?: string; archivoTamano?: number };
         if (typeof datos.url !== "string" || typeof datos.nombre !== "string") throw new Error("La referencia del archivo no es válida.");
         if (typeof datos.rutaCarpeta === "string" && datos.rutaCarpeta.trim()) {
-          sessionStorage.setItem("aurum-render-poster-destino", JSON.stringify({ rutaCarpeta: datos.rutaCarpeta, nombre: datos.nombre, archivoNombre: datos.nombre }));
+          sessionStorage.setItem("aurum-render-poster-destino", JSON.stringify({ rutaCarpeta: datos.rutaCarpeta, nombre: datos.nombre, archivoNombre: datos.nombre, archivoTamano: datos.archivoTamano }));
         }
         const response = await fetch(datos.url);
         if (!response.ok) throw new Error("No se pudo descargar el 3DM privado desde Mi Nube.");
