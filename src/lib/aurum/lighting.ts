@@ -309,9 +309,16 @@ export function createAurumLightingController(
           light.lookAt?.(0, targetY, 0);
           return;
         }
-        if (light.distance !== undefined) light.distance = distance;
+        // Keep the gem source close to the stone, above and slightly in front
+        // of the product. A distant point light loses most of its useful energy
+        // through inverse-square falloff and can appear to do nothing on diamonds.
+        if (light.distance !== undefined) light.distance = name === "gem"
+          ? Math.max(safeRadius * 4, 0.05)
+          : distance;
         const source = config?.[name]?.position;
-        if (source) {
+        if (name === "gem") {
+          light.position.set(0, targetY + safeRadius * 1.15, safeRadius * 0.7);
+        } else if (source) {
           const n = normalizedPosition(source);
           light.position.set(n[0] * rigScale, targetY + n[1] * rigScale, n[2] * rigScale);
         }
