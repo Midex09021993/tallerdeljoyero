@@ -143,6 +143,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [snapshotWidth, setSnapshotWidth] = useState("3840");
   const [snapshotHeight, setSnapshotHeight] = useState("2160");
   const [snapshotFormat, setSnapshotFormat] = useState<"png"|"jpeg"|"webp">("png");
+  const [snapshotTransparent, setSnapshotTransparent] = useState(false);
   const [renderQualityId, setRenderQualityId] = useState<AurumRenderQualityId>("high");
   const composerRef = useRef<any>(null);
   const frameRef = useRef<number | null>(null);
@@ -1665,13 +1666,17 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             loop?.resize?.();
           }
         },
-        exportPNG:(options:{width?:number;height?:number;format?:"png"|"jpeg"|"webp";onCapture?:(dataUrl:string)=>void}={})=>{
+        exportPNG:(options:{width?:number;height?:number;format?:"png"|"jpeg"|"webp";transparent?:boolean;onCapture?:(dataUrl:string)=>void}={})=>{
           if(!modelo) throw new Error("Carga un modelo antes de crear el snapshot.");
           const liveCanvas=renderer.domElement as HTMLCanvasElement | null;
           if(!liveCanvas || liveCanvas.width<2 || liveCanvas.height<2) {
             throw new Error("El visor todavía no tiene una imagen disponible para capturar.");
           }
           const isPoster=Boolean(options.onCapture);
+          const transparent=Boolean(options.transparent) && !isPoster && (options.format === undefined || options.format === "png");
+          if (transparent && !renderer.getContext().getContextAttributes()?.alpha) {
+            throw new Error("El renderizador actual no admite canal alfa. No se generó un PNG falso con fondo blanco.");
+          }
           const originalBufferWidth=liveCanvas.width;
           const originalBufferHeight=liveCanvas.height;
           const originalPixelRatio=renderer.getPixelRatio?.()||1;
@@ -1680,6 +1685,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           const originalAspect=camara.aspect;
           const originalTransmissionResolutionScale=Number((renderer as any).transmissionResolutionScale ?? 1);
           const originalFastPath=liveFastPathRef.current;
+          const originalBackground=escena.background;
+          const originalClearColor=renderer.getClearColor(new THREE.Color()).clone();
+          const originalClearAlpha=renderer.getClearAlpha();
           const width=isPoster
             ? Math.max(1,Math.min(640,Math.round(Number(options.width)||640)))
             : Math.max(320,Math.min(4096,Math.round(Number(options.width)||3840)));
@@ -1743,6 +1751,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               throw new Error("El búfer de dibujo WebGL no coincide con la resolución interna solicitada.");
             }
             // A single direct render preserves the live renderer's color/tone-mapping path.
+            if (transparent) {
+              escena.background=null;
+              renderer.setClearColor(0x000000,0);
+            }
             renderer.render(escena,camara);
             const captureComposerBuffer = null;
             const captureTaaPass = null as null | { enabled?: boolean; accumulate?: boolean; sampleLevel?: number; accumulateIndex?: number };
@@ -1767,8 +1779,12 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 enabled: false,
               },
             });
-            context.fillStyle="#ffffff";
-            context.fillRect(0,0,width,height);
+            if (!transparent) {
+              context.fillStyle="#ffffff";
+              context.fillRect(0,0,width,height);
+            } else {
+              context.clearRect(0,0,width,height);
+            }
             context.imageSmoothingEnabled=true;
             context.imageSmoothingQuality="high";
             // Downsample only once. The output canvas preserves the exact
@@ -1776,6 +1792,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             context.drawImage(renderer.domElement,0,0,width,height);
             dataUrl=output.toDataURL(mime,0.94);
           } finally {
+            escena.background=originalBackground;
+            renderer.setClearColor(originalClearColor,originalClearAlpha);
             // Refresh diamond camera uniforms after restoring the live camera.
             diamondBvhRuntime?.update();
             // Restore the interactive viewport immediately, including DPR and
@@ -2692,8 +2710,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 <option value="png">PNG · máxima compatibilidad</option><option value="jpeg">JPEG · fotografía ligera</option><option value="webp">WebP · archivo optimizado</option>
               </select>
             </label>
-            <div className="mt-2 text-[10px] leading-relaxed text-[#858178]">La captura vuelve a renderizar la joya a la resolución elegida y usa fondo blanco.</div>
-            <button type="button" disabled={!archivo||exportBusy} onClick={()=>{setExportBusy(true);setError(null);window.setTimeout(()=>{try{apiRef.current?.exportPNG({width:Number(snapshotWidth),height:Number(snapshotHeight),format:snapshotFormat});setSnapshotOpen(false);}catch(e){setError(e instanceof Error?e.message:"No se pudo generar la imagen.");}finally{setExportBusy(false);}},50);}} className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-[#7168f4] px-3 py-2.5 text-xs font-semibold text-[#292824] disabled:cursor-not-allowed disabled:opacity-40"><Download className="size-4"/>{exportBusy?"Procesando imagen…":`Descargar ${snapshotFormat.toUpperCase()} · ${snapshotWidth||"3840"} × ${snapshotHeight||"2160"}`}</button>
+            {snapshotFormat === "png" && <label className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-black/10 bg-white p-3 text-xs text-[#292824]"><span><span className="block font-semibold">Fondo transparente</span><span className="mt-1 block text-[10px] text-[#77756f]">PNG con canal alfa, sin cambiar el visor ni el póster.</span></span><input type="checkbox" checked={snapshotTransparent} onChange={e=>setSnapshotTransparent(e.target.checked)} className="size-4 accent-[#b99642]"/></label>}
+            <div className="mt-2 text-[10px] leading-relaxed text-[#858178]">{snapshotTransparent && snapshotFormat === "png" ? "Se intentará exportar con canal alfa real; si el renderizador no lo admite, se mostrará un error." : "La captura vuelve a renderizar la joya a la resolución elegida y usa fondo blanco."}</div>
+            <button type="button" disabled={!archivo||exportBusy} onClick={()=>{setExportBusy(true);setError(null);window.setTimeout(()=>{try{apiRef.current?.exportPNG({width:Number(snapshotWidth),height:Number(snapshotHeight),format:snapshotFormat,transparent:snapshotFormat==="png"&&snapshotTransparent});setSnapshotOpen(false);}catch(e){setError(e instanceof Error?e.message:"No se pudo generar la imagen.");}finally{setExportBusy(false);}},50);}} className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-[#7168f4] px-3 py-2.5 text-xs font-semibold text-[#292824] disabled:cursor-not-allowed disabled:opacity-40"><Download className="size-4"/>{exportBusy?"Procesando imagen…":`Descargar ${snapshotFormat.toUpperCase()} · ${snapshotWidth||"3840"} × ${snapshotHeight||"2160"}`}</button>
             {exportBusy&&<div className="mt-3 rounded-lg border border-[#7168f4]/20 bg-white p-3" role="status" aria-live="polite"><div className="mb-2 flex items-center justify-between gap-2 text-[11px]"><span className="font-medium text-[#292824]">Renderizando imagen de alta resolución</span><RotateCw className="size-4 animate-spin" /><span className="text-[#7168f4]">En proceso</span></div><div className="h-2 overflow-hidden rounded-full bg-[#e8e6f8]"><div className="h-full w-1/3 rounded-full bg-[#7168f4]"/></div><p className="mt-2 text-[10px] leading-relaxed text-[#77756f]">La captura está procesando las facetas del diamante. La interfaz puede quedar temporalmente ocupada.</p></div>}
             <div className="mt-3 border-t border-black/10 pt-3">
               <div className="mb-1 text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Render final · Ray tracing real</div>
