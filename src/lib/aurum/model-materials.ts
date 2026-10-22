@@ -209,7 +209,20 @@ export function applyAurumInitialModelMaterials(
           aurumSourceFormat: "stl",
         };
         x.material = stlNeutral;
-        x.userData = { ...(x.userData ?? {}), aurumSourceFormat: "stl", aurumDetectedCategory: "otro" };
+        // STL has no CAD layer metadata, but it must still be eligible for
+        // the same catalog metal assignment flow as a 3DM mesh. Mark it as
+        // "otro" (not metal/gem) so material-application can target it safely.
+        // No shared layer key is added: applying one metal to a selected STL
+        // mesh will not unintentionally recolor unrelated meshes.
+        x.userData = {
+          ...(x.userData ?? {}),
+          aurumSourceFormat: "stl",
+          aurumDetectedCategory: "otro",
+          aurumRhino: {
+            ...(x.userData?.aurumRhino ?? {}),
+            categoria: "otro",
+          },
+        };
       } else {
         // Keep the existing fallback unchanged for 3DM and other formats.
         x.material=createAurumNeutralMaterial();
