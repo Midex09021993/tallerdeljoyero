@@ -1857,7 +1857,7 @@ function MiNubePage() {
                 <button type="button" onClick={() => setProyectoAbierto(null)} className="rounded-lg border border-border bg-background px-3 py-2 text-xs font-semibold hover:bg-muted/60">Cerrar ficha <X className="ml-1 inline size-3.5" /></button>
               </div>
               <div className="p-4 sm:p-5">
-                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+                <div className={recibida.archivos.length <= 1 ? "grid grid-cols-1 gap-3" : recibida.archivos.length === 2 ? "grid gap-3 sm:grid-cols-2" : "grid gap-3 sm:grid-cols-2 xl:grid-cols-3"}>
                           {recibida.archivos.map((archivo) => <div key={archivo.ruta} className="rounded-xl border border-border/70 bg-background p-3 transition-colors hover:border-border">
                             <div className="flex min-w-0 items-start gap-2.5">
                               <div className="grid size-9 shrink-0 place-items-center rounded-lg bg-muted/70 text-muted-foreground">{archivo.categoria === "fotos" ? <ImageIcon className="size-4" /> : archivo.categoria === "modelos-3d" ? <Box className="size-4" /> : archivo.categoria === "documentos" ? <FileText className="size-4" /> : <FileIcon className="size-4" />}</div>
