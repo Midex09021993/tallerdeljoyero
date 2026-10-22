@@ -150,7 +150,7 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
 
   const isReady = Boolean((modelUrl || localFile) && loadedModelUrl === modelKey && !loadError && !status);
   const displayName = (sharedModelName || modelName || "Joya compartida")
-    .replace(/\\.(glb|gltf|3dm|obj|stl|fbx)$/i, "")
+    .replace(/\.(glb|gltf|3dm|obj|stl|fbx)$/i, "")
     .replace(/^[0-9a-f]{8}-[0-9a-f-]{27,}[-_]?/i, "")
     .replace(/[-_]+/g, " ")
     .replace(/\\s+/g, " ")
