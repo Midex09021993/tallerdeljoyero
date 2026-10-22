@@ -1832,7 +1832,8 @@ function MiNubePage() {
                                   if (urlError || !data?.signedUrl) { toast.error("No se pudo preparar el 3DM para Aurum Render."); return; }
                                   const rutaCarpeta = archivo.ruta.slice(0, archivo.ruta.lastIndexOf("/"));
                                   const { data: glbData } = await supabase.storage.from(BUCKET).createSignedUrl(`${rutaCarpeta}/01-modelo.glb`, 600);
-                                  sessionStorage.setItem("aurum-render-archivo-pendiente", JSON.stringify({ url: data.signedUrl, glbUrl: glbData?.signedUrl ?? null, nombre: nombreVisible(archivo.nombre), rutaCarpeta, archivoTamano: archivo.bytes }));
+                                  const { data: configuracionData } = await supabase.storage.from(BUCKET).createSignedUrl(`${rutaCarpeta}/02-configuracion-aurum.json`, 600);
+                                  sessionStorage.setItem("aurum-render-archivo-pendiente", JSON.stringify({ url: data.signedUrl, glbUrl: glbData?.signedUrl ?? null, configuracionUrl: configuracionData?.signedUrl ?? null, nombre: nombreVisible(archivo.nombre), rutaCarpeta, archivoTamano: archivo.bytes }));
                                   window.location.assign("/aurum-render?desde-mi-nube=1");
                                 }} className="rounded-lg border border-gold/40 bg-gold/5 px-2.5 py-1.5 text-[11px] font-semibold hover:bg-gold/10">
                                   Abrir en Aurum Render
