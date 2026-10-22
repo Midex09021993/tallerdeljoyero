@@ -2644,7 +2644,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       <div>
         <div className="mb-3 flex items-start justify-between gap-3"><div><div id="aurum-export-title" className="text-lg font-semibold tracking-tight text-[#292824]">Centro de exportación</div><div className="mt-1 text-sm text-[#77756f]">Prepara tu joya para presentar, compartir o fabricar.</div></div><button type="button" aria-label="Cerrar exportación" onClick={()=>setExportOpen(false)} className="rounded-lg p-1 text-[#77756f] hover:bg-black/[.05]"><X className="size-4"/></button></div>
         <div className="flex flex-col gap-3">
-          {posterPreview && <div className="overflow-hidden rounded-xl border border-[#d4af37]/35 bg-white"><div className="flex items-center justify-between px-3 py-2 text-[11px] font-semibold text-[#292824]"><span>Miniatura del póster</span><span className="text-[10px] font-normal text-[#77756f]">Vista previa PNG</span></div><div className="grid h-36 place-items-center bg-[#f5f4f1]"><img src={posterPreview} alt="Vista previa del póster de la joya" className="h-full w-full object-contain" /></div></div>}
           <button type="button" disabled={!archivo||exportBusy} onClick={async()=>{
             setExportBusy(true);
             try{
