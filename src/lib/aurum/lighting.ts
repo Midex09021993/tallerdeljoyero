@@ -238,25 +238,45 @@ export function createAurumLightingController(
       }
     },
     update(patch) {
+      // Apply only the changed controls. Calling create() here resets the whole
+      // lighting rig and then runs the HDR-only visibility filter, which can
+      // immediately undo the user's toggle. Direct updates preserve independent
+      // on/off state for each light and leave unrelated sources untouched.
       Object.keys(patch ?? {}).forEach((name) => manuallyTouched.add(name));
       Object.assign(config, patch);
-      this.create();
+
+      (["key", "fill", "rim", "gem"] as const).forEach((name) => {
+        const cfg = patch?.[name];
+        const light = lights[name];
+        if (!cfg || !light) return;
+        light.visible = Boolean(cfg.enabled);
+        if (Number.isFinite(Number(cfg.intensity))) light.intensity = Number(cfg.intensity);
+        if (Array.isArray(cfg.position) && cfg.position.length >= 3) {
+          light.position.set(...cfg.position);
+          if (light.target) {
+            light.target.position.set(0, lastTargetY, 0);
+            light.target.updateMatrixWorld?.();
+          }
+        }
+        if (light.angle !== undefined && cfg.angle !== undefined) {
+          light.angle = cfg.angle;
+          light.penumbra = cfg.penumbra ?? light.penumbra;
+        }
+      });
+
+      if (patch?.front && lights.front) {
+        const rig = getAurumReflectionRigProfile(activeRigId);
+        const preset = getAurumLightingPreset(activeRigId);
+        lights.front.visible = Boolean(config.front?.enabled);
+        lights.front.intensity = rig.front.intensity * preset.front * Math.max(0, Number(config.front?.intensity) || 0);
+      }
+
+      // The environment/HDR remains independent from the manual studio rig.
       if (diagnosticEnvironmentOnly) {
         (["softbox", "strip", "kicker", "edgeLeft", "edgeRight"] as const).forEach((name) => {
           if (lights[name]) lights[name].visible = false;
         });
       }
-      if (lights.front) {
-        const rig = getAurumReflectionRigProfile(activeRigId);
-        const preset = getAurumLightingPreset(activeRigId);
-        lights.front.visible = Boolean(config.front?.enabled) && (!diagnosticEnvironmentOnly || manuallyTouched.has("front"));
-        lights.front.intensity = rig.front.intensity * preset.front * (Number(config.front?.intensity) || 0);
-      }
-      (["key", "fill", "rim", "gem"] as const).forEach((name) => {
-        if (!manuallyTouched.has(name) || !lights[name]) return;
-        lights[name].visible = Boolean(config[name]?.enabled);
-        lights[name].intensity = Number(config[name]?.intensity ?? lights[name].intensity);
-      });
     },
     scaleToModel(radius, targetY) {
       // Keep the studio rig composition proportional to the product.
