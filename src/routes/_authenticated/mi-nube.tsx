@@ -195,24 +195,7 @@ function MiNubePage() {
     setCarpetas([...new Set(archivos.map((archivo) => archivo.carpeta))]);
   }, [archivos]);
 
-  useEffect(() => {
-    let cancelado = false;
-    const glb = opcionesCompartir?.archivos.filter((archivo) => archivo.origen === "supabase" && archivo.nombre.toLowerCase().endsWith(".glb")) ?? [];
-    if (!glb.length) return;
-    void Promise.all(glb.map(async (archivo) => {
-      const { data, error } = await supabase.rpc("obtener_enlace_visor_3d", { _modelo_ruta: archivo.ruta, _nombre: nombreVisible(archivo.nombre) });
-      if (error || !Array.isArray(data) || !data[0]?.token || !data[0]?.expira_en || new Date(data[0].expira_en).getTime() <= Date.now()) return null;
-      return { ruta: archivo.ruta, url: new URL("/v/" + data[0].token, window.location.origin).toString() };
-    })).then((enlaces) => {
-      if (cancelado) return;
-      const validos = enlaces.filter((enlace): enlace is { ruta: string; url: string } => enlace !== null);
-      setEnlacesVisorArchivo((actuales) => {
-        const rutas = new Set(glb.map((archivo) => archivo.ruta));
-        return [...actuales.filter((enlace) => !rutas.has(enlace.ruta)), ...validos];
-      });
-    });
-    return () => { cancelado = true; };
-  }, [opcionesCompartir]);
+
   const [seleccionados, setSeleccionados] = useState<File[]>([]);
   const [colaLocal, setColaLocal] = useState<ArchivoEnCola[]>([]);
   const [guardandoCola, setGuardandoCola] = useState(false);
@@ -266,6 +249,25 @@ function MiNubePage() {
   const [errorSubida, setErrorSubida] = useState<string | null>(null);
   const [proyectoParaCompartir, setProyectoParaCompartir] = useState<string | null>(null);
   const [opcionesCompartir, setOpcionesCompartir] = useState<{ nombre: string; archivos: ArchivoNube[] } | null>(null);
+
+  useEffect(() => {
+    let cancelado = false;
+    const glb = opcionesCompartir?.archivos.filter((archivo) => archivo.origen === "supabase" && archivo.nombre.toLowerCase().endsWith(".glb")) ?? [];
+    if (!glb.length) return;
+    void Promise.all(glb.map(async (archivo) => {
+      const { data, error } = await supabase.rpc("obtener_enlace_visor_3d", { _modelo_ruta: archivo.ruta, _nombre: nombreVisible(archivo.nombre) });
+      if (error || !Array.isArray(data) || !data[0]?.token || !data[0]?.expira_en || new Date(data[0].expira_en).getTime() <= Date.now()) return null;
+      return { ruta: archivo.ruta, url: new URL("/v/" + data[0].token, window.location.origin).toString() };
+    })).then((enlaces) => {
+      if (cancelado) return;
+      const validos = enlaces.filter((enlace): enlace is { ruta: string; url: string } => enlace !== null);
+      setEnlacesVisorArchivo((actuales) => {
+        const rutas = new Set(glb.map((archivo) => archivo.ruta));
+        return [...actuales.filter((enlace) => !rutas.has(enlace.ruta)), ...validos];
+      });
+    });
+    return () => { cancelado = true; };
+  }, [opcionesCompartir]);
   const [talleresDisponibles, setTalleresDisponibles] = useState<TallerCompartir[]>([]);
   const [talleresDisponiblesParaParticipante, setTalleresDisponiblesParaParticipante] = useState<string | null>(null);
   const cargaTalleresEnCurso = useRef(false);
