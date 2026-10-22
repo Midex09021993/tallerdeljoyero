@@ -2623,49 +2623,37 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             {!embedded && lightingOpen && lightingPanel}
           </div>
         </main>
-        {!embedded && <aside className="hidden w-[260px] shrink-0 overflow-hidden rounded-2xl border border-[#e6e1d8] bg-[#faf9f6] text-[#292824] shadow-[0_6px_22px_rgba(36,32,20,.035)] xl:block">
-          <div className="h-full overflow-y-auto">
+        {!embedded && <aside className="hidden w-[300px] shrink-0 overflow-hidden rounded-2xl border border-[#e6e1d8] bg-[#faf9f6] text-[#292824] shadow-[0_6px_22px_rgba(36,32,20,.035)] xl:block">
+          <div className="flex h-full flex-col overflow-y-auto">
             <div className="border-b border-[#e7e2d9] bg-white/55 px-4 py-4">
-              <div className="text-[10px] font-semibold uppercase tracking-[.16em] text-[#92743b]">Inspector</div>
-              <h2 className="mt-1 text-[17px] font-semibold tracking-tight text-[#282722]">Ajustes de estudio</h2>
-              <p className="mt-1 text-xs leading-relaxed text-[#77756f]">Controla la presentación sin perder de vista tu joya.</p>
+              <div className="text-[10px] font-semibold uppercase tracking-[.16em] text-[#92743b]">Biblioteca visual</div>
+              <h2 className="mt-1 text-[17px] font-semibold tracking-tight text-[#282722]">Póster de la joya</h2>
+              <p className="mt-1 text-xs leading-relaxed text-[#77756f]">Previsualiza la captura y guárdala como portada del proyecto en Mi Nube.</p>
             </div>
-            <section className="border-b border-[#e7e2d9] px-4 py-4">
-              <div className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[.13em] text-[#81796b]">Escena activa</div>
-              <label className="block text-xs font-medium text-[#55534d]">Ambiente
-                <select value={escenarioId} onChange={e=>setEscenarioId(e.target.value as EscenarioId)} className="mt-1.5 h-10 w-full rounded-xl border border-[#e5e0d7] bg-white px-3 text-sm text-[#292824] outline-none transition focus:border-[#b99642]/70 focus:ring-2 focus:ring-[#b99642]/10">
-                  {ESCENARIOS.map(e=><option key={e.id} value={e.id}>{e.nombre}</option>)}
-                </select>
-              </label>
-              <label className="mt-3 block text-xs font-medium text-[#55534d]">Vista de cámara
-                <select value={vista} onChange={e=>setVista(e.target.value as VistaId)} className="mt-1.5 h-10 w-full rounded-xl border border-black/10 bg-white px-3 text-sm text-[#292824] outline-none focus:border-[#92743b]/60">
-                  {VISTAS.map(v=><option key={v.id} value={v.id}>{v.nombre}</option>)}
-                </select>
-              </label>
-            </section>
-            <section className="border-b border-black/10 p-4">
-              <div className="mb-3 text-[10px] font-semibold uppercase tracking-[.14em] text-[#858178]">Renderizado</div>
-              <div className="grid grid-cols-3 gap-1 rounded-xl bg-[#eeebe4] p-1">
-                {([["low","Baja"],["high","Alta"],["ultra","Ultra"]] as const).map(([id,label])=><button key={id} type="button" aria-pressed={renderQualityId===id} onClick={()=>cambiarCalidad(id)} className={"rounded-lg border px-1 py-2.5 text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b99642]/35 "+(renderQualityId===id?"border-white bg-white text-[#795e2e] shadow-[0_1px_5px_rgba(45,39,25,.10)]":"border-transparent bg-transparent text-[#777168] hover:bg-white/70 hover:text-[#39362f]")}>{label}</button>)}
+            <div className="flex flex-1 flex-col gap-4 p-4">
+              <div className="overflow-hidden rounded-xl border border-[#e5e0d7] bg-white">
+                <div className="flex items-center justify-between border-b border-[#eee9e0] px-3 py-2">
+                  <span className="text-[10px] font-semibold uppercase tracking-[.12em] text-[#81796b]">Vista previa</span>
+                  <span className="rounded-full bg-[#f2efe8] px-2 py-1 text-[9px] font-medium text-[#82704b]">PNG</span>
+                </div>
+                <div className="grid aspect-[4/3] place-items-center bg-[#f3f2ef] p-3">
+                  {posterPreview ? <img src={posterPreview} alt="Miniatura del póster capturado de la joya" className="h-full w-full object-contain" /> : <div className="flex max-w-[190px] flex-col items-center text-center">
+                    <span className="mb-3 grid size-14 place-items-center rounded-2xl border border-[#e4dfd5] bg-white text-[#a18a5c]"><ImageIcon className="size-7"/></span>
+                    <span className="text-sm font-medium text-[#55534d]">Todavía no hay póster</span>
+                    <span className="mt-1 text-xs leading-relaxed text-[#858178]">Genera una captura para ver aquí la miniatura de tu joya.</span>
+                  </div>}
+                </div>
               </div>
-              <p className="mt-2 text-[10px] leading-relaxed text-[#858178]">Ultra puede exigir más memoria y potencia gráfica.</p>
-            </section>
-            <section className="p-4">
-              <div className="mb-3 text-[10px] font-semibold uppercase tracking-[.14em] text-[#858178]">Herramientas</div>
-              <button type="button" onClick={()=>setLightingOpen(true)} className="flex w-full items-center gap-3 rounded-xl border border-[#e6e1d8] bg-white p-3 text-left transition-all hover:border-[#d2c19b] hover:bg-[#fffefa] hover:shadow-[0_2px_8px_rgba(45,39,25,.04)]">
-                <span className="grid size-9 place-items-center rounded-lg bg-[#92743b]/10 text-[#92743b]"><SlidersHorizontal className="size-4"/></span>
-                <span className="min-w-0 flex-1"><span className="block text-sm font-medium">Iluminación</span><span className="mt-0.5 block text-[10px] text-[#858178]">Key · Fill · Rim · Gem</span></span>
-                <ChevronDown className="size-4 -rotate-90 text-[#99968d]"/>
+              <button type="button" disabled={!archivo||exportBusy} onClick={()=>void actualizarPoster()} className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#c9a85d] bg-[#d4af37] px-3 py-3 text-sm font-semibold text-[#292824] shadow-sm transition-colors hover:bg-[#e1bf50] disabled:cursor-not-allowed disabled:opacity-45">
+                {exportBusy ? <><RotateCw className="size-4 animate-spin"/> Generando y guardando…</> : <><Camera className="size-4"/> Actualizar y guardar póster</>}
               </button>
-              <button type="button" onClick={()=>apiRef.current?.reset()} className="mt-2 flex w-full items-center gap-3 rounded-xl border border-[#e6e1d8] bg-white p-3 text-left transition-all hover:border-[#d2c19b] hover:bg-[#fffefa] hover:shadow-[0_2px_8px_rgba(45,39,25,.04)]">
-                <span className="grid size-9 place-items-center rounded-lg bg-black/[.035] text-[#55534d]"><RotateCcw className="size-4"/></span>
-                <span className="min-w-0 flex-1"><span className="block text-sm font-medium">Restablecer vista</span><span className="mt-0.5 block text-[10px] text-[#858178]">Volver al encuadre inicial</span></span>
-              </button>
-              <button type="button" onClick={()=>setExportOpen(true)} className="mt-2 flex w-full items-center gap-3 rounded-xl border border-[#d8c9aa] bg-[#f4efe5] p-3 text-left transition-all hover:border-[#b99642]/65 hover:bg-[#f1eadc]">
-                <span className="grid size-9 place-items-center rounded-lg bg-[#92743b]/10 text-[#92743b]"><Download className="size-4"/></span>
-                <span className="min-w-0 flex-1"><span className="block text-sm font-medium">Exportar diseño</span><span className="mt-0.5 block text-[10px] text-[#858178]">Imagen, modelo o configuración</span></span>
-              </button>
-            </section>
+              <p className="text-[10px] leading-relaxed text-[#858178]">La imagen se guarda en la carpeta del proyecto en Mi Nube. El archivo 3DM original no se modifica.</p>
+              {posterPreview && <div className="rounded-lg border border-[#d8c9aa] bg-[#f4efe5] px-3 py-2 text-[11px] text-[#795e2e]"><span className="font-semibold">Miniatura generada.</span> Comprueba el encuadre y vuelve a actualizarla cuando quieras guardar una nueva captura.</div>}
+              <div className="mt-auto rounded-xl border border-[#e6e1d8] bg-white/70 p-3">
+                <div className="flex items-center gap-2 text-xs font-medium text-[#55534d]"><Upload className="size-4 text-[#92743b]"/> Destino del póster</div>
+                <p className="mt-1 text-[11px] leading-relaxed text-[#858178]">Se vincula a la carpeta desde la que abriste este archivo en Mi Nube.</p>
+              </div>
+            </div>
           </div>
         </aside>}
       </div>
