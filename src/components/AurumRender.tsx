@@ -359,9 +359,15 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
     const carpetaNueva = nombreVisibleProyecto
       .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
       .replace(/[^a-z0-9_-]+/gi, "-").replace(/^-+|-+$/g, "").slice(0, 80);
-    const carpeta = carpetaDestinoSeleccionada === "__nueva__"
+    const carpetaVinculada = destinoProyectoGuardado?.rutaCarpeta
+      && destinoProyectoGuardado.archivoNombre === archivoOriginal.name
+      ? destinoProyectoGuardado.rutaCarpeta.split("/").filter(Boolean).pop()
+      : null;
+    // Si el archivo se abrió desde Mi Nube, actualizar siempre su carpeta vinculada.
+    // No permitir que una selección accidental cambie el destino del proyecto.
+    const carpeta = carpetaVinculada || (carpetaDestinoSeleccionada === "__nueva__"
       ? carpetaNueva
-      : carpetaDestinoSeleccionada;
+      : carpetaDestinoSeleccionada);
     if (!carpeta) {
       toast.error("El nombre de la carpeta no contiene caracteres válidos.");
       return;
@@ -2475,13 +2481,21 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         <label className="mb-3 block text-xs font-medium text-[#55534d]">Nombre del proyecto
           <input value={nombreProyectoGuardar} onChange={event => setNombreProyectoGuardar(event.target.value)} maxLength={100} placeholder="Ej. Anillo de compromiso" className="mt-1.5 w-full rounded-lg border border-black/10 bg-white px-3 py-2.5 text-sm text-[#292824] outline-none focus:border-[#b99642]" />
         </label>
-        <label className="mb-2 block text-xs font-medium text-[#55534d]">Carpeta de destino
-          <select value={carpetaDestinoSeleccionada} onChange={event => setCarpetaDestinoSeleccionada(event.target.value)} className="mt-1.5 w-full rounded-lg border border-black/10 bg-white px-3 py-2.5 text-sm text-[#292824] outline-none focus:border-[#b99642]">
-            <option value="__nueva__">Crear una carpeta nueva con este nombre</option>
-            {carpetasDestinoProyecto.map(folder => <option key={folder} value={folder}>Carpeta existente: {folder}</option>)}
-          </select>
-        </label>
-        {destinoProyectoGuardado && destinoProyectoGuardado.archivoNombre === archivoOriginal?.name && <p className="mb-3 flex items-start gap-2 rounded-lg border border-[#c5a15d]/35 bg-[#c5a15d]/[.08] p-2.5 text-[11px] leading-relaxed text-[#6d5523]"><FolderOpen className="mt-0.5 size-4 shrink-0"/> Este archivo tiene una carpeta vinculada. Si la seleccionas, se actualizarán los archivos del proyecto sin crear copias adicionales.</p>}
+        <div className="mb-2 block text-xs font-medium text-[#55534d]">Carpeta del proyecto
+          {destinoProyectoGuardado?.rutaCarpeta && destinoProyectoGuardado.archivoNombre === archivoOriginal?.name ? (
+            <div className="mt-1.5 flex items-center gap-2 rounded-lg border border-[#c5a15d]/45 bg-[#c5a15d]/[.08] px-3 py-2.5 text-sm text-[#292824]">
+              <FolderOpen className="size-4 shrink-0 text-[#92743b]"/>
+              <span className="min-w-0 flex-1 truncate">Carpeta vinculada: {destinoProyectoGuardado.rutaCarpeta.split("/").filter(Boolean).pop()}</span>
+              <span className="shrink-0 text-[10px] font-semibold text-[#92743b]">FIJA</span>
+            </div>
+          ) : (
+            <select value={carpetaDestinoSeleccionada} onChange={event => setCarpetaDestinoSeleccionada(event.target.value)} className="mt-1.5 w-full rounded-lg border border-black/10 bg-white px-3 py-2.5 text-sm text-[#292824] outline-none focus:border-[#b99642]">
+              <option value="__nueva__">Crear una carpeta nueva con este nombre</option>
+              {carpetasDestinoProyecto.map(folder => <option key={folder} value={folder}>Carpeta existente: {folder}</option>)}
+            </select>
+          )}
+        </div>
+        {destinoProyectoGuardado?.rutaCarpeta && destinoProyectoGuardado.archivoNombre === archivoOriginal?.name && <p className="mb-3 flex items-start gap-2 rounded-lg border border-[#c5a15d]/35 bg-[#c5a15d]/[.08] p-2.5 text-[11px] leading-relaxed text-[#6d5523]"><FolderOpen className="mt-0.5 size-4 shrink-0"/> Esta joya se actualizará en su carpeta vinculada. No se crearán copias ni se cambiará el destino por accidente.</p>}
         <div className="mb-3 rounded-lg border border-black/[.06] bg-white/65 p-3">
           <div className="mb-2 text-[10px] font-semibold uppercase tracking-[.12em] text-[#92743b]">Archivos incluidos</div>
           <div className="space-y-2 text-xs">
