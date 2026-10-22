@@ -1069,24 +1069,9 @@ function MiNubePage() {
     const raizAnterior = `${participanteId}/${usuarioId}/${proyecto.nombre}`;
     const raizNueva = `${participanteId}/${usuarioId}/${nombreNuevo}`;
     const movidos: Array<{ origen: string; destino: string }> = [];
-    let nasRenombrado = false;
-    let nasNoVerificado = false;
-    let videosDeCarpeta: Array<{ name: string; folder: string }> = [];
     try {
-      // Mi Nube en Supabase debe poder renombrarse aunque Nextcloud esté fuera
-      // de línea. El NAS se sincroniza solo si su listado puede verificarse.
-      const { data: nasData, error: nasError } = await supabase.functions.invoke("nextcloud-video-files", {
-        body: { action: "list", participantId: participanteId },
-      });
-      if (nasError || nasData?.error || !Array.isArray(nasData?.files)) {
-        nasNoVerificado = true;
-      } else {
-        videosDeCarpeta = (nasData.files as Array<{ name: string; folder: string }>)
-          .filter((archivo) => archivo.folder === proyecto.nombre);
-        const videosDestino = (nasData.files as Array<{ name: string; folder: string }>)
-          .filter((archivo) => archivo.folder === nombreNuevo);
-        if (videosDestino.length) throw new Error("Ya existe una carpeta de vídeos con ese nombre en el NAS.");
-      }
+      // Renombrado aislado de Mi Nube: solo Supabase Storage y sus permisos.
+      // Nextcloud/NAS no se consulta, modifica ni revierte desde esta operación.
 
       // Verificar colisiones en Storage antes de mover cualquier archivo.
       const { data: carpetasRaiz, error: errorRaiz } = await supabase.storage.from(BUCKET).list(`${participanteId}/${usuarioId}`, { limit: 1000 });
@@ -1157,19 +1142,6 @@ function MiNubePage() {
         throw new Error(`No se pudo mover “${entrada.name}”: ${moveError.message}`);
       }
 
-      if (!nasNoVerificado && videosDeCarpeta.length > 0) {
-        const { data: nasRename, error: nasRenameError } = await supabase.functions.invoke("nextcloud-video-files", {
-          body: { action: "rename-folder", oldFolder: proyecto.nombre, newFolder: nombreNuevo, participantId: participanteId },
-        });
-        if (nasRenameError || nasRename?.error || nasRename?.ok !== true) {
-          // El NAS es complementario: no revertir el renombrado web si Nextcloud falla.
-          nasNoVerificado = true;
-          console.warn("[Mi Nube] Se renombró la carpeta web, pero no se pudo sincronizar el nombre en el NAS.", nasRename?.error ?? nasRenameError?.message);
-        } else {
-          nasRenombrado = true;
-        }
-      }
-
       const { error: errorCompartidas } = await supabase.from("mi_nube_compartidas")
         .update({ carpeta: nombreNuevo })
         .eq("propietario_usuario_id", usuarioId)
@@ -1178,28 +1150,18 @@ function MiNubePage() {
         .is("revoked_at", null);
       if (errorCompartidas) throw new Error("Los archivos se movieron, pero no se pudo actualizar el nombre compartido. Se intentará revertir el cambio.");
 
-      if (nasNoVerificado) {
-        toast.success(`Carpeta renombrada a “${nombreNuevo}” en Mi Nube. El NAS no respondió; sus vídeos no se modificaron y podrían seguir bajo el nombre anterior.`);
-      } else {
-        toast.success(`Carpeta renombrada a “${nombreNuevo}”. El nombre actualizado se mostrará también a los talleres con acceso.`);
-      }
+      toast.success(`Carpeta renombrada a “${nombreNuevo}” en Mi Nube. El NAS permanece independiente y no se modificó.`);
       setProyectoRenombrando(null);
       setProyectoAbierto(null);
       await Promise.all([cargarBiblioteca(), cargarCompartidas()]);
     } catch (cause) {
       let rollbackFallido = false;
-      if (nasRenombrado) {
-        const { data, error } = await supabase.functions.invoke("nextcloud-video-files", {
-          body: { action: "rename-folder", oldFolder: nombreNuevo, newFolder: proyecto.nombre, participantId: participanteId },
-        });
-        if (error || data?.error || data?.ok !== true) rollbackFallido = true;
-      }
       for (const movido of [...movidos].reverse()) {
         const { error } = await supabase.storage.from(BUCKET).move(movido.destino, movido.origen);
         if (error) rollbackFallido = true;
       }
       const mensaje = cause instanceof Error ? cause.message : "No se pudo renombrar la carpeta.";
-      toast.error(rollbackFallido ? `${mensaje} Además, la reversión quedó incompleta; revisa Mi Nube antes de volver a intentarlo.` : mensaje);
+      toast.error(rollbackFallido ? `${mensaje} Además, la reversión en Mi Nube quedó incompleta; revisa la carpeta antes de volver a intentarlo.` : mensaje);
       await Promise.all([cargarBiblioteca(), cargarCompartidas()]);
     } finally {
       setGuardandoNombreCarpeta(false);
