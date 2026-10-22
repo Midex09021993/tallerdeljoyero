@@ -2299,11 +2299,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       setFormatoInterno("GLB");
       // El visor permanece en modo LIVE después de cargar el modelo.
       invalidateRenderRef.current?.();
+      return true;
     } catch(e) {
       setError(e instanceof Error?e.message:"No se pudo convertir el modelo");
       setArchivo(null);
       setArchivoOriginal(null);
       setFormatoInterno(null);
+      return false;
     } finally {
       setCargando(false);
       setPaso(null);
@@ -2411,8 +2413,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         const url = new URL(window.location.href);
         url.searchParams.delete("desde-mi-nube");
         window.history.replaceState({}, "", url.pathname + url.search + url.hash);
-        await cargarArchivo(archivoParaAbrir);
-        if (archivoParaAbrir !== originalFile) {
+        let cargado = await cargarArchivo(archivoParaAbrir);
+        if (!cargado && archivoParaAbrir !== originalFile) {
+          // Si el GLB no se puede interpretar, volver al 3DM fuente en vez de dejar el visor vacío.
+          console.warn("[AURUM] Falló la carga del GLB guardado; se intentará el 3DM original.");
+          cargado = await cargarArchivo(originalFile);
+        }
+        if (!cargado) throw new Error("No se pudo abrir el GLB guardado ni el 3DM original.");
+        if (archivoParaAbrir !== originalFile && cargado) {
           // El visor usa el GLB, pero las próximas actualizaciones deben conservar el 3DM original.
           setArchivoOriginal(originalFile);
           setArchivo(datos.nombre);
