@@ -269,7 +269,7 @@ export const metalPresetFromConfig=(m:any):AurumMetalPreset=>{
     roughness:green.roughness*(1-mix)+white.roughness*mix,
     envMapIntensity:(green.envMapIntensity*(1-mix)+white.envMapIntensity*mix)*.84,
     clearcoat:green.clearcoat*(1-mix)+white.clearcoat*mix,
-    anisotropy:green.anisotropy*(1-mix)+white.anisotropy*mix,
+    anisotropy:0, // Keep this polished bicolor profile isotropic; source-profile anisotropy must not leak into it.
     anisotropyRotation:0,
   };
 };
