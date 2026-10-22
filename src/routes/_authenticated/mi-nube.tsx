@@ -414,7 +414,12 @@ function MiNubePage() {
         resultados.push(...respuestas);
       }
 
-      const archivosPlanos = resultados.flat();
+      // Archivos internos de Aurum: permanecen en Supabase Storage y se usan
+      // al reabrir/actualizar proyectos, pero no se muestran como archivos del usuario.
+      const archivosPlanos = resultados.flat().filter((archivo) => {
+        const nombreInterno = archivo.nombre.toLowerCase();
+        return nombreInterno !== "01-modelo.glb" && nombreInterno !== "02-configuracion-aurum.json";
+      });
       // Preparar solo las portadas necesarias antes de firmar URLs; los demás
       // archivos no deben entrar en lotes de trabajo de vistas previas.
       const primeraFotoPorCarpeta = new Map<string, ArchivoNube>();
