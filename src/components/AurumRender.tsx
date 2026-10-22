@@ -103,7 +103,7 @@ const GemSwatch = ({ g, selected, onClick }: { g:GemaConfig; selected:boolean; o
   </button>;
 };
 
-type AurumProjectDestination = { rutaCarpeta: string; nombre: string; archivoNombre?: string; archivoTamano?: number; archivoModificado?: number; nombreProyecto?: string };
+type AurumProjectDestination = { rutaCarpeta: string; rutaArchivoOriginal?: string; nombre: string; archivoNombre?: string; archivoTamano?: number; archivoModificado?: number; nombreProyecto?: string };
 
 type AurumRenderProps = { embedded?: boolean; onCatalogApiReady?: (api: AurumCatalogApi | null) => void };
 
@@ -385,7 +385,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
       .replace(/[^a-z0-9_-]+/gi, "-").replace(/^-+|-+$/g, "").slice(0, 80) || "joya-aurum";
     const extensionOriginal = archivoOriginal.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "3dm";
-    const rutaOriginal = `${rutaCarpeta}/00-original.${extensionOriginal}`;
+    const rutaOriginal = carpetaVinculada && destinoProyectoGuardado?.rutaArchivoOriginal?.startsWith(`${rutaCarpeta}/`)
+      ? destinoProyectoGuardado.rutaArchivoOriginal
+      : `${rutaCarpeta}/00-original.${extensionOriginal}`;
     const rutaGlb = `${rutaCarpeta}/01-modelo.glb`;
     const rutaConfiguracion = `${rutaCarpeta}/02-configuracion-aurum.json`;
     try {
@@ -430,6 +432,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
 
       const destino: AurumProjectDestination = {
         rutaCarpeta,
+        rutaArchivoOriginal: rutaOriginal,
         nombre: carpeta,
         nombreProyecto: nombreVisibleProyecto,
         archivoNombre: archivoOriginal.name,
@@ -2363,15 +2366,16 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         return;
       }
       try {
-        const datos = JSON.parse(pending) as { url?: string; glbUrl?: string | null; configuracionUrl?: string | null; nombre?: string; rutaCarpeta?: string; archivoTamano?: number };
+        const datos = JSON.parse(pending) as { url?: string; glbUrl?: string | null; configuracionUrl?: string | null; nombre?: string; rutaArchivoOriginal?: string; rutaCarpeta?: string; archivoTamano?: number };
         if (typeof datos.url !== "string" || typeof datos.nombre !== "string") throw new Error("La referencia del archivo no es válida.");
         setPosterPreview(null);
         if (typeof datos.rutaCarpeta === "string" && datos.rutaCarpeta.trim()) {
-          const destino = { rutaCarpeta: datos.rutaCarpeta, nombre: datos.nombre, archivoNombre: datos.nombre, archivoTamano: datos.archivoTamano };
+          const destino = { rutaCarpeta: datos.rutaCarpeta, rutaArchivoOriginal: datos.rutaArchivoOriginal, nombre: datos.nombre, archivoNombre: datos.nombre, archivoTamano: datos.archivoTamano };
           sessionStorage.setItem("aurum-render-poster-destino", JSON.stringify(destino));
           localStorage.setItem("aurum-render-proyecto-destino", JSON.stringify(destino));
           setDestinoProyectoGuardado({
             rutaCarpeta: datos.rutaCarpeta,
+            rutaArchivoOriginal: datos.rutaArchivoOriginal,
             nombre: datos.rutaCarpeta.split("/").filter(Boolean).pop() ?? datos.nombre,
             nombreProyecto: datos.nombre.replace(/\\.[^.]+$/, ""),
             archivoNombre: datos.nombre,
@@ -2396,7 +2400,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             if (responseGlb.ok) {
               const glbBlob = await responseGlb.blob();
               if (glbBlob.size > 1024 && !cancelado) {
-                archivoParaAbrir = new File([glbBlob], datos.nombre.replace(/\\.3dm$/i, ".glb"), { type: "model/gltf-binary" });
+                archivoParaAbrir = new File([glbBlob], datos.nombre.replace(/\.3dm$/i, ".glb"), { type: "model/gltf-binary" });
               }
             }
           } catch (glbError) {
