@@ -1353,7 +1353,28 @@ function MiNubePage() {
       setEnlacesVisorArchivo((actuales) => [...actuales.filter((enlace) => enlace.ruta !== archivo.ruta), { ruta: archivo.ruta, url }]);
       try { await navigator.clipboard.writeText(url); toast.success("Enlace del visor copiado. Vence en 3 días."); }
       catch { toast.info("Enlace preparado. Puedes copiarlo desde la carpeta."); }
-    } catch (cause) { toast.error(cause instanceof Error ? cause.message : "No se pudo crear el enlace del visor."); }
+    } catch (cause) {
+      // Los errores PostgREST suelen ser objetos planos, no instancias de Error.
+      // Leer sus campos evita ocultar la causa real detrás de un mensaje genérico.
+      const detalle = cause && typeof cause === "object"
+        ? cause as { message?: unknown; code?: unknown; details?: unknown; hint?: unknown }
+        : null;
+      const codigo = typeof detalle?.code === "string" ? detalle.code : "";
+      const mensaje = cause instanceof Error
+        ? cause.message
+        : typeof detalle?.message === "string"
+          ? detalle.message
+          : "Error desconocido al preparar el enlace."; 
+      if (codigo === "PGRST202" || /could not find the function|function .* does not exist/i.test(mensaje)) {
+        toast.error("Falta actualizar en Supabase la función del enlace del visor 3D. Hay que aplicar la migración correspondiente.");
+      } else {
+        const contexto = [codigo, typeof detalle?.details === "string" ? detalle.details : "", typeof detalle?.hint === "string" ? detalle.hint : ""]
+          .filter(Boolean)
+          .join(" · ");
+        toast.error(`No se pudo crear el enlace del visor: ${mensaje}${contexto ? ` (${contexto})` : ""}`);
+      }
+      console.error("[Mi Nube] Falló la creación del enlace del visor 3D.", cause);
+    }
     finally { setGenerandoEnlaceVisor(null); }
   };
 
