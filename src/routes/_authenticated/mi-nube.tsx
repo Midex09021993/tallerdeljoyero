@@ -1819,14 +1819,15 @@ function MiNubePage() {
           <div className="flex items-end justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold">Colaboración</p><h3 className="mt-1 font-display text-2xl">Compartidas conmigo</h3><p className="mt-1 text-sm text-muted-foreground">Carpetas originales de otros talleres, sin duplicar archivos.</p></div><button type="button" onClick={() => void cargarCompartidas()} disabled={cargandoCompartidas} className="rounded-lg border border-border px-3 py-2 text-xs font-semibold">{cargandoCompartidas ? "Actualizando…" : "Actualizar"}</button></div>
           {cargandoCompartidas && carpetasRecibidas.length === 0 ? <p className="rounded-xl border border-border p-4 text-sm text-muted-foreground">Buscando carpetas compartidas…</p> : carpetasRecibidas.length === 0 ? <div className="rounded-2xl border border-dashed border-border p-6 text-center"><Folder className="mx-auto size-6 text-muted-foreground" /><p className="mt-2 text-sm font-medium">Todavía no tienes carpetas compartidas</p><p className="mt-1 text-xs text-muted-foreground">Cuando otro taller comparta una carpeta contigo, aparecerá aquí.</p></div> : (
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5">
-              {carpetasRecibidas.map((recibida) => {
+              {carpetasRecibidas.map((recibida, indiceRecibida) => {
                 const tipos = [...new Set(recibida.archivos.map((a) => {
                   if (a.categoria === "fotos") return "Imagen";
                   if (a.categoria === "modelos-3d") return a.nombre.toLowerCase().endsWith(".3dm") ? "3DM" : a.nombre.toLowerCase().endsWith(".stl") ? "STL" : "3D";
                   if (a.categoria === "documentos") return "PDF";
                   return "Archivo";
                 }))];
-                return <FichaProyecto key={recibida.id} portada={recibida.portada} nombre={recibida.nombre} portadaModo="contain">
+                return <div key={recibida.id} className="relative min-w-0">
+                  <FichaProyecto portada={recibida.portada} nombre={recibida.nombre} portadaModo="contain">
                   <div className="space-y-3 p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
@@ -1843,12 +1844,9 @@ function MiNubePage() {
 
                     <p className="border-t border-border pt-3 text-[10px] text-muted-foreground">Solo lectura · acceso vigente hasta que el propietario lo revoque.</p>
                   </div>
-                </FichaProyecto>;
-              })}
-            </div>
-          )}
-          {carpetasRecibidas.filter((recibida) => proyectoAbierto === "compartida:" + recibida.id).map((recibida) => (
-            <section key={"detalle-" + recibida.id} className={(recibida.archivos.length <= 1 ? "w-full max-w-md" : recibida.archivos.length === 2 ? "w-full max-w-3xl" : "w-full max-w-5xl") + " overflow-hidden rounded-2xl border border-gold/30 bg-card shadow-sm"} aria-label={"Archivos de " + recibida.nombre}>
+                  </FichaProyecto>
+                  {proyectoAbierto === "compartida:" + recibida.id && (
+            <section className={"absolute top-full z-40 mt-3 max-h-[65vh] w-[min(88vw,960px)] overflow-y-auto overflow-x-hidden rounded-2xl border border-gold/40 bg-card shadow-2xl " + (indiceRecibida % 5 >= 2 ? "right-0" : "left-0")} aria-label={"Archivos de " + recibida.nombre}>
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-muted/25 px-5 py-4">
                 <div className="flex items-start gap-3">
                   <div className="grid size-10 shrink-0 place-items-center rounded-xl border border-gold/30 bg-gold/10 text-gold"><Folder className="size-5" /></div>
@@ -1876,7 +1874,12 @@ function MiNubePage() {
               </div>
               <div className="border-t border-border px-5 py-3 text-[11px] text-muted-foreground"><LockKeyhole className="mr-1.5 inline size-3.5" /> Acceso de solo lectura · el propietario puede revocarlo en cualquier momento.</div>
             </section>
-          ))}
+                  )}
+                </div>;
+              })}
+            </div>
+          )}
+
         </section>
         {opcionesCompartir && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true" aria-labelledby="mi-nube-opciones-title">
