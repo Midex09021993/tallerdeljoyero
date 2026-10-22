@@ -174,7 +174,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [archivo, setArchivo] = useState<string|null>(null), [cargando, setCargando] = useState(false), [error, setError] = useState<string|null>(null), [paso, setPaso] = useState<string|null>(null), [formatoInterno, setFormatoInterno] = useState<string|null>(null);
   const [archivoOriginal, setArchivoOriginal] = useState<File | null>(null);
 
-  const [materialId, setMaterialId] = useState<MaterialId>("plata925_pulida"), [gemaId, setGemaId] = useState<GemaId>("diamante_natural"), [escenarioId, setEscenarioId] = useState<EscenarioId>("ijewelReference"), [iluminacionId, setIluminacionId] = useState<IluminacionId>("studioSoft"), [vista, setVista] = useState<VistaId>("frontal");
+  const [materialId, setMaterialId] = useState<MaterialId>("plata950_pulida"), [gemaId, setGemaId] = useState<GemaId>("diamante_natural"), [escenarioId, setEscenarioId] = useState<EscenarioId>("ijewelReference"), [iluminacionId, setIluminacionId] = useState<IluminacionId>("studioSoft"), [vista, setVista] = useState<VistaId>("frontal");
   const [nombreProyecto, setNombreProyecto] = useState("Diseño de joyería");
   const [categoriaProyecto, setCategoriaProyecto] = useState("Anillo");
   const categoriaProyectoRef = useRef("Anillo");
@@ -1311,7 +1311,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         gema:aplicarGema,
         materialCatalogo:(m:MaterialConfig):boolean=>{
           if(!modelo)return false;
-          if(embedded){
+          {
             const gemNamePattern=/(gem|gema|diamond|diamante|emerald|esmerald|ruby|rub[ií]|sapphire|zafiro|amethyst|amatista|stone|piedra)/i;
             let metalCandidates=0;
             let protectedGemMeshes=0;
@@ -1361,9 +1361,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             invalidateRenderRef.current?.();
             return Boolean(applied);
           }
-          aplicarMaterial(m,true);
-          invalidateRenderRef.current?.();
-          return true;
         },
         gemaCatalogo:(g:GemaConfig):boolean=>{
           if(!modelo)return false;
@@ -2273,6 +2270,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
     }
     try {
       await apiRef.current?.cargar(file,(p:string)=>setPaso(p));
+      // Aplicar el perfil inicial solo a las mallas metálicas, preservando gemas.
+      const plataInicial = MATERIALES.find((material) => material.id === "plata950_pulida");
+      if (plataInicial) {
+        const aplicado = apiRef.current?.materialCatalogo?.(plataInicial);
+        if (aplicado === false) {
+          console.warn("[AURUM] No se encontró una malla metálica para aplicar Plata 950 Pulida.");
+        }
+      }
       invalidateRenderRef.current?.();
       setArchivo(file.name);
       setArchivoOriginal(file);
