@@ -197,15 +197,21 @@ export function createAurumLightingController(
         if (lights.softbox) lights.softbox.visible = true;
         if (lights.strip) lights.strip.visible = true;
         if (lights.front) lights.front.visible = config.front?.enabled ?? true;
-        // Explicit user controls take precedence over the scene's default
-        // environment-only calibration without changing untouched lights.
-        (["key", "fill", "rim", "gem"] as const).forEach((name) => {
-          if (!manuallyTouched.has(name)) return;
-          const light = lights[name];
-          if (!light) return;
-          light.visible = Boolean(config[name]?.enabled);
-          light.intensity = Number(config[name]?.intensity ?? light.intensity);
-        });
+      }
+      // Reapply only controls the user explicitly touched after every scene
+      // preset. Untouched lights keep the selected preset's calibrated values.
+      (["key", "fill", "rim", "gem"] as const).forEach((name) => {
+        if (!manuallyTouched.has(name)) return;
+        const light = lights[name];
+        if (!light) return;
+        light.visible = Boolean(config[name]?.enabled);
+        light.intensity = Number(config[name]?.intensity ?? light.intensity);
+      });
+      if (lights.front && manuallyTouched.has("front")) {
+        const rig = getAurumReflectionRigProfile(activeRigId);
+        const preset = getAurumLightingPreset(activeRigId);
+        lights.front.visible = config.front?.enabled ?? true;
+        lights.front.intensity = rig.front.intensity * preset.front * (Number(config.front?.intensity) || 0);
       }
     },
     update(patch) {
