@@ -28,6 +28,8 @@ export function createAurumLightingController(
     ? new URLSearchParams(window.location.search).get("aurumDiag")
     : null) ?? "environment";
   const diagnosticEnvironmentOnly = diagnosticMode === "environment";
+  // User changes in the lighting panel explicitly opt into the direct-light rig.
+  let manualLightingOverride = false;
 
   const configureShadow = (light: any) => {
     if (!light?.castShadow) return;
@@ -114,7 +116,7 @@ export function createAurumLightingController(
       apply(lights.gem, config.gem);
       if (lights.softbox) lights.softbox.visible = true;
       if (lights.strip) lights.strip.visible = true;
-      if (lights.front) lights.front.visible = true;
+      if (lights.front) lights.front.visible = config.front?.enabled ?? true;
       if (lights.kicker) lights.kicker.visible = true;
       if (lights.edgeLeft) lights.edgeLeft.visible = true;
       if (lights.edgeRight) lights.edgeRight.visible = true;
@@ -122,7 +124,7 @@ export function createAurumLightingController(
       // Diagnostic mode: isolate the HDR/IBL contribution from every direct
       // and rectangular reflection source. Production behavior is unchanged
       // unless ?aurumDiag=environment is explicitly present in the URL.
-      if (diagnosticEnvironmentOnly) {
+      if (diagnosticEnvironmentOnly && !manualLightingOverride) {
         Object.values(lights).forEach((light:any) => {
           if (light) light.visible = false;
         });
@@ -197,7 +199,14 @@ export function createAurumLightingController(
     },
     update(patch) {
       Object.assign(config, patch);
+      manualLightingOverride = true;
       this.create();
+      if (lights.front) {
+        const rig = getAurumReflectionRigProfile(activeRigId);
+        const preset = getAurumLightingPreset(activeRigId);
+        lights.front.visible = config.front?.enabled ?? true;
+        lights.front.intensity = rig.front.intensity * preset.front * (Number(config.front?.intensity) || 0);
+      }
     },
     scaleToModel(radius, targetY) {
       // Keep the studio rig composition proportional to the product.
