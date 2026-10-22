@@ -1877,7 +1877,7 @@ function MiNubePage() {
                         </div>
                       </div>
                     )}
-              <div className="border-t border-border px-5 py-3 text-[11px] text-muted-foreground"><Lock className="mr-1.5 inline size-3.5" /> Acceso de solo lectura · el propietario puede revocarlo en cualquier momento.</div>
+              <div className="border-t border-border px-5 py-3 text-[11px] text-muted-foreground"><LockKeyhole className="mr-1.5 inline size-3.5" /> Acceso de solo lectura · el propietario puede revocarlo en cualquier momento.</div>
             </section>
           ))}
         </section>
