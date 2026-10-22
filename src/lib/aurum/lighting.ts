@@ -28,8 +28,9 @@ export function createAurumLightingController(
     ? new URLSearchParams(window.location.search).get("aurumDiag")
     : null) ?? "environment";
   const diagnosticEnvironmentOnly = diagnosticMode === "environment";
-  // User changes in the lighting panel explicitly opt into the direct-light rig.
-  let manualLightingOverride = false;
+  // Track only controls the user explicitly changed. Scene presets remain the
+  // baseline, while touched controls are reapplied after every scene change.
+  const manuallyTouched = new Set<string>();
 
   const configureShadow = (light: any) => {
     if (!light?.castShadow) return;
@@ -124,7 +125,7 @@ export function createAurumLightingController(
       // Diagnostic mode: isolate the HDR/IBL contribution from every direct
       // and rectangular reflection source. Production behavior is unchanged
       // unless ?aurumDiag=environment is explicitly present in the URL.
-      if (diagnosticEnvironmentOnly && !manualLightingOverride) {
+      if (diagnosticEnvironmentOnly && manuallyTouched.size === 0) {
         Object.values(lights).forEach((light:any) => {
           if (light) light.visible = false;
         });
@@ -194,12 +195,22 @@ export function createAurumLightingController(
           if (light) light.visible = false;
         });
         if (lights.softbox) lights.softbox.visible = true;
-        if (lights.front) lights.front.visible = true;
+        if (lights.strip) lights.strip.visible = true;
+        if (lights.front) lights.front.visible = config.front?.enabled ?? true;
+        // Explicit user controls take precedence over the scene's default
+        // environment-only calibration without changing untouched lights.
+        (["key", "fill", "rim", "gem"] as const).forEach((name) => {
+          if (!manuallyTouched.has(name)) return;
+          const light = lights[name];
+          if (!light) return;
+          light.visible = Boolean(config[name]?.enabled);
+          light.intensity = Number(config[name]?.intensity ?? light.intensity);
+        });
       }
     },
     update(patch) {
+      Object.keys(patch ?? {}).forEach((name) => manuallyTouched.add(name));
       Object.assign(config, patch);
-      manualLightingOverride = true;
       this.create();
       if (lights.front) {
         const rig = getAurumReflectionRigProfile(activeRigId);
@@ -207,6 +218,11 @@ export function createAurumLightingController(
         lights.front.visible = config.front?.enabled ?? true;
         lights.front.intensity = rig.front.intensity * preset.front * (Number(config.front?.intensity) || 0);
       }
+      (["key", "fill", "rim", "gem"] as const).forEach((name) => {
+        if (!manuallyTouched.has(name) || !lights[name]) return;
+        lights[name].visible = Boolean(config[name]?.enabled);
+        lights[name].intensity = Number(config[name]?.intensity ?? lights[name].intensity);
+      });
     },
     scaleToModel(radius, targetY) {
       // Keep the studio rig composition proportional to the product.
