@@ -194,6 +194,25 @@ function MiNubePage() {
   useEffect(() => {
     setCarpetas([...new Set(archivos.map((archivo) => archivo.carpeta))]);
   }, [archivos]);
+
+  useEffect(() => {
+    let cancelado = false;
+    const glb = opcionesCompartir?.archivos.filter((archivo) => archivo.origen === "supabase" && archivo.nombre.toLowerCase().endsWith(".glb")) ?? [];
+    if (!glb.length) return;
+    void Promise.all(glb.map(async (archivo) => {
+      const { data, error } = await supabase.rpc("obtener_enlace_visor_3d", { _modelo_ruta: archivo.ruta });
+      if (error || !Array.isArray(data) || !data[0]?.token || !data[0]?.expira_en || new Date(data[0].expira_en).getTime() <= Date.now()) return null;
+      return { ruta: archivo.ruta, url: new URL("/v/" + data[0].token, window.location.origin).toString() };
+    })).then((enlaces) => {
+      if (cancelado) return;
+      const validos = enlaces.filter((enlace): enlace is { ruta: string; url: string } => enlace !== null);
+      setEnlacesVisorArchivo((actuales) => {
+        const rutas = new Set(glb.map((archivo) => archivo.ruta));
+        return [...actuales.filter((enlace) => !rutas.has(enlace.ruta)), ...validos];
+      });
+    });
+    return () => { cancelado = true; };
+  }, [opcionesCompartir]);
   const [seleccionados, setSeleccionados] = useState<File[]>([]);
   const [colaLocal, setColaLocal] = useState<ArchivoEnCola[]>([]);
   const [guardandoCola, setGuardandoCola] = useState(false);
@@ -1313,11 +1332,20 @@ function MiNubePage() {
     }
     setGenerandoEnlaceVisor(archivo.ruta);
     try {
+      const { data: existente, error: existenteError } = await supabase.rpc("obtener_enlace_visor_3d", { _modelo_ruta: archivo.ruta });
+      if (existenteError) throw existenteError;
+      if (Array.isArray(existente) && existente[0]?.token && existente[0]?.expira_en && new Date(existente[0].expira_en).getTime() > Date.now()) {
+        const urlExistente = new URL("/v/" + existente[0].token, window.location.origin).toString();
+        setEnlacesVisorArchivo((actuales) => [...actuales.filter((enlace) => enlace.ruta !== archivo.ruta), { ruta: archivo.ruta, url: urlExistente }]);
+        try { await navigator.clipboard.writeText(urlExistente); toast.success("Enlace existente reutilizado y copiado."); }
+        catch { toast.info("Enlace existente recuperado. Puedes copiarlo desde la carpeta."); }
+        return;
+      }
       const { data, error: urlError } = await supabase.storage.from(BUCKET).createSignedUrl(archivo.ruta, 3 * 24 * 60 * 60);
       if (urlError || !data?.signedUrl) throw urlError ?? new Error("No se pudo crear el enlace del visor.");
       const tokenBytes = crypto.getRandomValues(new Uint8Array(12));
       const token = Array.from(tokenBytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
-      const { error: saveError } = await supabase.rpc("crear_enlace_visor_3d", { _token: token, _modelo_url: data.signedUrl, _nombre: nombreVisible(archivo.nombre) });
+      const { error: saveError } = await supabase.rpc("crear_enlace_visor_3d", { _token: token, _modelo_url: data.signedUrl, _nombre: nombreVisible(archivo.nombre), _modelo_ruta: archivo.ruta });
       if (saveError) throw saveError;
       const url = new URL("/v/" + token, window.location.origin).toString();
       setEnlacesVisorArchivo((actuales) => [...actuales.filter((enlace) => enlace.ruta !== archivo.ruta), { ruta: archivo.ruta, url }]);
