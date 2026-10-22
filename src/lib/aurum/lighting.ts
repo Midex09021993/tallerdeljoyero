@@ -133,9 +133,13 @@ export function createAurumLightingController(
           if (light) light.visible = false;
         });
         if (manuallyTouched.size > 0) {
-          if (lights.softbox) lights.softbox.visible = true;
-          if (lights.strip) lights.strip.visible = true;
-          if (lights.front) lights.front.visible = config.front?.enabled ?? true;
+          // In the interactive studio, every visible source must correspond to
+          // a control in the panel. Hidden auxiliary reflectors must not keep
+          // illuminating the model after the user turns a light off.
+          (["softbox", "strip", "kicker", "edgeLeft", "edgeRight"] as const).forEach((name) => {
+            if (lights[name]) lights[name].visible = false;
+          });
+          if (lights.front) lights.front.visible = manuallyTouched.has("front") && Boolean(config.front?.enabled);
           (["key", "fill", "rim", "gem"] as const).forEach((name) => {
             if (!manuallyTouched.has(name) || !lights[name]) return;
             lights[name].visible = Boolean(config[name]?.enabled);
@@ -220,10 +224,16 @@ export function createAurumLightingController(
         light.visible = Boolean(config[name]?.enabled);
         light.intensity = Number(config[name]?.intensity ?? light.intensity);
       });
+      if (diagnosticEnvironmentOnly && manuallyTouched.size > 0) {
+        (["softbox", "strip", "kicker", "edgeLeft", "edgeRight"] as const).forEach((name) => {
+          if (lights[name]) lights[name].visible = false;
+        });
+        if (lights.front) lights.front.visible = manuallyTouched.has("front") && Boolean(config.front?.enabled);
+      }
       if (lights.front && manuallyTouched.has("front")) {
         const rig = getAurumReflectionRigProfile(activeRigId);
         const preset = getAurumLightingPreset(activeRigId);
-        lights.front.visible = config.front?.enabled ?? true;
+        lights.front.visible = Boolean(config.front?.enabled);
         lights.front.intensity = rig.front.intensity * preset.front * (Number(config.front?.intensity) || 0);
       }
     },
@@ -231,10 +241,15 @@ export function createAurumLightingController(
       Object.keys(patch ?? {}).forEach((name) => manuallyTouched.add(name));
       Object.assign(config, patch);
       this.create();
+      if (diagnosticEnvironmentOnly) {
+        (["softbox", "strip", "kicker", "edgeLeft", "edgeRight"] as const).forEach((name) => {
+          if (lights[name]) lights[name].visible = false;
+        });
+      }
       if (lights.front) {
         const rig = getAurumReflectionRigProfile(activeRigId);
         const preset = getAurumLightingPreset(activeRigId);
-        lights.front.visible = config.front?.enabled ?? true;
+        lights.front.visible = Boolean(config.front?.enabled) && (!diagnosticEnvironmentOnly || manuallyTouched.has("front"));
         lights.front.intensity = rig.front.intensity * preset.front * (Number(config.front?.intensity) || 0);
       }
       (["key", "fill", "rim", "gem"] as const).forEach((name) => {
@@ -250,8 +265,12 @@ export function createAurumLightingController(
       const safeRadius = Math.max(Number(radius) || 0, 0.001);
       lastRadius = safeRadius;
       lastTargetY = Number(targetY) || 0;
-      const rigScale = Math.max(safeRadius * 2.25, 1.8);
-      const distance = Math.max(safeRadius * 6, 12);
+      // Keep positions, source dimensions and light falloff proportional to
+      // the actual model; fixed minimum world distances made small pendants
+      // appear to have studio lights too far away.
+      const rigScale = Math.max(safeRadius * 2.25, 0.01);
+      const distance = Math.max(safeRadius * 6, 0.05);
+      const sourceScale = Math.max(rigScale / 10, 0.01);
       const normalizedPosition = (position: any) => {
         if (!Array.isArray(position) || position.length < 3) return [0, 0, 0] as [number, number, number];
         const maxComponent = Math.max(...position.slice(0, 3).map((v:any) => Math.abs(Number(v) || 0)), 1);
@@ -264,6 +283,8 @@ export function createAurumLightingController(
           const source = rig[name as "softbox"|"strip"|"front"|"kicker"|"edgeLeft"|"edgeRight"].position;
           const n = normalizedPosition(source);
           light.position.set(n[0] * rigScale, targetY + n[1] * rigScale, n[2] * rigScale);
+          if (light.width !== undefined) light.width = rig[name as "softbox"|"strip"|"front"|"kicker"|"edgeLeft"|"edgeRight"].width * sourceScale;
+          if (light.height !== undefined) light.height = rig[name as "softbox"|"strip"|"front"|"kicker"|"edgeLeft"|"edgeRight"].height * sourceScale;
           light.lookAt?.(0, targetY, 0);
           return;
         }
