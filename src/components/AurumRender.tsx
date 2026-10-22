@@ -209,7 +209,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
     } catch {
       destino = null;
     }
-    if (!destino?.rutaCarpeta || !/^[^\\/]+\\/[^\\/]+\\/.+/.test(destino.rutaCarpeta)) {
+    if (!destino?.rutaCarpeta || destino.rutaCarpeta.split("/").filter(Boolean).length < 3) {
       setError("Abre primero este archivo desde Mi Nube para vincular el póster a su carpeta original.");
       return;
     }
