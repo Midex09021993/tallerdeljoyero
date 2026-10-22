@@ -2191,6 +2191,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             </select>
             <ChevronDown className="pointer-events-none -ml-1 size-4 text-[#77756f]"/>
           </label>
+          <button type="button" aria-controls="aurum-export-title" aria-expanded={exportOpen} onClick={()=>{setExportOpen(v=>!v);setLibraryMenuOpen(false);setQualityOpen(false);setLightingOpen(false);}} className={"flex h-10 items-center gap-2 rounded-xl border px-3 text-sm font-semibold shadow-sm transition-colors "+(exportOpen?"border-[#b99642]/50 bg-[#d4af37]/15 text-[#6d5523]":"border-[#d4af37]/45 bg-[#d4af37] text-[#292824] hover:bg-[#e1bf50]")}><Download className="size-4"/><span>Exportar</span></button>
           <div className="hidden text-[11px] uppercase tracking-[.12em] text-[#66645e] lg:block">Taller del Joyero</div>
           <div className="grid size-10 place-items-center rounded-full border border-white/10 text-[#55534d]"><span className="text-lg">♙</span></div>
         </div>
