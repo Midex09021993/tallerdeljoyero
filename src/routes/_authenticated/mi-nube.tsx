@@ -1959,7 +1959,7 @@ function MiNubePage() {
                                 <p className="mt-0.5 text-[10px] text-muted-foreground">{etiquetaTamano(archivo.bytes)}</p>
                               </div>
                               <button type="button" disabled={generandoEnlaceVisor !== null} onClick={() => void crearEnlaceVisorArchivo(archivo)} className="shrink-0 rounded-lg border border-gold/45 px-2.5 py-2 text-[11px] font-semibold hover:bg-gold/10 disabled:opacity-50">
-                                {generandoEnlaceVisor === archivo.ruta ? "Creando…" : enlace ? "Regenerar enlace" : "Crear enlace"}
+                                {generandoEnlaceVisor === archivo.ruta ? "Comprobando…" : enlace ? "Usar enlace existente" : "Crear enlace"}
                               </button>
                             </div>
                             {enlace && (
