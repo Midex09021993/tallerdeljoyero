@@ -1848,7 +1848,7 @@ function MiNubePage() {
             </div>
           )}
           {carpetasRecibidas.filter((recibida) => proyectoAbierto === "compartida:" + recibida.id).map((recibida) => (
-            <section key={"detalle-" + recibida.id} className="overflow-hidden rounded-2xl border border-gold/30 bg-card shadow-sm" aria-label={"Archivos de " + recibida.nombre}>
+            <section key={"detalle-" + recibida.id} className={(recibida.archivos.length <= 1 ? "w-full max-w-md" : recibida.archivos.length === 2 ? "w-full max-w-3xl" : "w-full max-w-5xl") + " overflow-hidden rounded-2xl border border-gold/30 bg-card shadow-sm"} aria-label={"Archivos de " + recibida.nombre}>
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-muted/25 px-5 py-4">
                 <div className="flex items-start gap-3">
                   <div className="grid size-10 shrink-0 place-items-center rounded-xl border border-gold/30 bg-gold/10 text-gold"><Folder className="size-5" /></div>
