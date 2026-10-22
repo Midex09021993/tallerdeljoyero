@@ -32,6 +32,31 @@ export function createAurumLightingController(
   // baseline, while touched controls are reapplied after every scene change.
   const manuallyTouched = new Set<string>();
 
+  // The gem slider is intentionally shader-local: a scene PointLight would
+  // illuminate the prongs and shank as well as the stone. Publish its state
+  // only to gemstone materials and update compiled shader uniforms in place.
+  const syncGemShaderLight = () => {
+    const light = lights.gem;
+    if (!light) return;
+    const position = [Number(light.position.x), Number(light.position.y), Number(light.position.z)];
+    const enabled = Boolean(config.gem?.enabled);
+    const intensity = Math.max(0, Number(config.gem?.intensity ?? 0));
+    const radius = Math.max(Number(lastRadius) || 0, 0.001);
+    scene.traverse?.((object: any) => {
+      if (!object?.isMesh || !object.material) return;
+      const materials = Array.isArray(object.material) ? object.material : [object.material];
+      materials.forEach((material: any) => {
+        if (!material?.userData?.aurumGemFamily) return;
+        material.userData.aurumGemLightState = { enabled, intensity, position, radius };
+        const uniforms = material.userData.aurumGemLightUniforms;
+        if (!uniforms) return;
+        uniforms.position.value.set(position[0], position[1], position[2]);
+        uniforms.intensity.value = enabled ? intensity : 0;
+        uniforms.radius.value = radius;
+      });
+    });
+  };
+
   const configureShadow = (light: any) => {
     if (!light?.castShadow) return;
     const requestedSize = Number(renderQuality?.shadowMapSize);
@@ -115,6 +140,9 @@ export function createAurumLightingController(
       apply(lights.fill, config.fill);
       apply(lights.rim, config.rim);
       apply(lights.gem, config.gem);
+      // Gem illumination is applied only by the gemstone shader, never as a
+      // scene light that could change the gold/silver reflections.
+      if (lights.gem) lights.gem.visible = false;
       // Applying a scene preset calls create() again. Restore the model-scaled
       // positions immediately after config defaults are applied, otherwise
       // the key spotlight is reset to raw coordinates and can miss the jewel.
@@ -125,6 +153,7 @@ export function createAurumLightingController(
       if (lights.kicker) lights.kicker.visible = true;
       if (lights.edgeLeft) lights.edgeLeft.visible = true;
       if (lights.edgeRight) lights.edgeRight.visible = true;
+      syncGemShaderLight();
 
       // Diagnostic mode: isolate the HDR/IBL contribution from every direct
       // and rectangular reflection source. Production behavior is unchanged
@@ -146,9 +175,10 @@ export function createAurumLightingController(
           if (lights.front) lights.front.visible = manuallyTouched.has("front") && Boolean(config.front?.enabled);
           (["key", "fill", "rim", "gem"] as const).forEach((name) => {
             if (!manuallyTouched.has(name) || !lights[name]) return;
-            lights[name].visible = Boolean(config[name]?.enabled);
+            lights[name].visible = name === "gem" ? false : Boolean(config[name]?.enabled);
             lights[name].intensity = Number(config[name]?.intensity ?? lights[name].intensity);
           });
+          syncGemShaderLight();
         }
         if (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("aurumDiag")) console.info("[AURUM][LIGHTING][DIAGNOSTIC]", {
           mode: diagnosticMode,
@@ -225,9 +255,10 @@ export function createAurumLightingController(
         if (!manuallyTouched.has(name)) return;
         const light = lights[name];
         if (!light) return;
-        light.visible = Boolean(config[name]?.enabled);
+        light.visible = name === "gem" ? false : Boolean(config[name]?.enabled);
         light.intensity = Number(config[name]?.intensity ?? light.intensity);
       });
+      syncGemShaderLight();
       if (diagnosticEnvironmentOnly && manuallyTouched.size > 0) {
         (["softbox", "strip", "kicker", "edgeLeft", "edgeRight"] as const).forEach((name) => {
           if (lights[name]) lights[name].visible = false;
@@ -253,7 +284,7 @@ export function createAurumLightingController(
         const cfg = patch?.[name];
         const light = lights[name];
         if (!cfg || !light) return;
-        light.visible = Boolean(cfg.enabled);
+        light.visible = name === "gem" ? false : Boolean(cfg.enabled);
         if (Number.isFinite(Number(cfg.intensity))) light.intensity = Number(cfg.intensity);
         // Keep the world-space position assigned by scaleToModel(). The
         // UI only edits enabled/intensity; writing config.position back here
@@ -271,6 +302,8 @@ export function createAurumLightingController(
         lights.front.visible = Boolean(config.front?.enabled);
         lights.front.intensity = rig.front.intensity * preset.front * Math.max(0, Number(config.front?.intensity) || 0);
       }
+
+      syncGemShaderLight();
 
       // The environment/HDR remains independent from the manual studio rig.
       if (diagnosticEnvironmentOnly) {
@@ -339,6 +372,7 @@ export function createAurumLightingController(
           light.target.updateMatrixWorld();
         }
       });
+      syncGemShaderLight();
     },
     dispose() {
       Object.values(lights).forEach((light: any) => {
