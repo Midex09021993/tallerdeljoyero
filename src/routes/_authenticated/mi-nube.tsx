@@ -1872,7 +1872,7 @@ function MiNubePage() {
                   </FichaProyecto>
                   {proyectoAbierto === "compartida:" + recibida.id && (
             <section className={"absolute inset-0 z-40 h-full max-h-full w-full min-w-0 overflow-y-auto overflow-x-hidden rounded-2xl border border-gold/40 bg-card shadow-2xl " + (indiceRecibida % 2 === 1 ? "right-0" : "left-0") + " " + (indiceRecibida % 4 >= 2 ? "xl:right-0 xl:left-auto" : "xl:left-0 xl:right-auto") + " " + (indiceRecibida % 5 >= 2 ? "2xl:right-0 2xl:left-auto" : "2xl:left-0 2xl:right-auto")} aria-label={"Archivos de " + recibida.nombre}>
-              <div className="flex min-w-0 items-center justify-between gap-2 border-b border-border bg-muted/25 px-3 py-2.5">
+              <div className="sticky top-0 z-20 flex min-w-0 items-center justify-between gap-2 border-b border-border bg-card/95 px-3 py-2.5 shadow-sm backdrop-blur">
                 <div className="flex min-w-0 items-center gap-2">
                   <Folder className="size-4 shrink-0 text-gold" />
                   <div className="min-w-0">
