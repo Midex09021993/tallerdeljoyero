@@ -251,13 +251,10 @@ export function createAurumLightingController(
         if (!cfg || !light) return;
         light.visible = Boolean(cfg.enabled);
         if (Number.isFinite(Number(cfg.intensity))) light.intensity = Number(cfg.intensity);
-        if (Array.isArray(cfg.position) && cfg.position.length >= 3) {
-          light.position.set(...cfg.position);
-          if (light.target) {
-            light.target.position.set(0, lastTargetY, 0);
-            light.target.updateMatrixWorld?.();
-          }
-        }
+        // Keep the world-space position assigned by scaleToModel(). The
+        // UI only edits enabled/intensity; writing config.position back here
+        // would replace model-scaled coordinates with raw defaults and make
+        // the key spotlight miss small or large products.
         if (light.angle !== undefined && cfg.angle !== undefined) {
           light.angle = cfg.angle;
           light.penumbra = cfg.penumbra ?? light.penumbra;
