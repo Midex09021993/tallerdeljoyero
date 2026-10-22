@@ -115,6 +115,10 @@ export function createAurumLightingController(
       apply(lights.fill, config.fill);
       apply(lights.rim, config.rim);
       apply(lights.gem, config.gem);
+      // Applying a scene preset calls create() again. Restore the model-scaled
+      // positions immediately after config defaults are applied, otherwise
+      // the key spotlight is reset to raw coordinates and can miss the jewel.
+      this.scaleToModel(lastRadius, lastTargetY);
       if (lights.softbox) lights.softbox.visible = true;
       if (lights.strip) lights.strip.visible = true;
       if (lights.front) lights.front.visible = config.front?.enabled ?? true;
