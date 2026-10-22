@@ -386,50 +386,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       const blobGLB = await apiRef.current.exportGLB({ download: false }) as Blob;
       if (!blobGLB || blobGLB.size < 1024) throw new Error("No se pudo preparar el GLB del visor.");
 
-      const posterBlob = await new Promise<Blob>((resolve, reject) => {
-        let terminado = false;
-        const timeout = window.setTimeout(() => {
-          if (terminado) return;
-          terminado = true;
-          reject(new Error("La captura del póster tardó demasiado. Vuelve a intentarlo."));
-        }, 45000);
-        try {
-          apiRef.current.exportPNG({
-            width: 640,
-            format: "png",
-            onCapture: (dataUrl: string) => {
-              if (terminado) return;
-              void (async () => {
-                try {
-                  const response = await fetch(dataUrl);
-                  const blob = await response.blob();
-                  if (blob.type !== "image/png" || blob.size < 1024) throw new Error("La captura PNG está vacía o no es válida.");
-                  if (terminado) return;
-                  terminado = true;
-                  window.clearTimeout(timeout);
-                  setPosterPreview(dataUrl);
-                  resolve(blob);
-                } catch (cause) {
-                  if (terminado) return;
-                  terminado = true;
-                  window.clearTimeout(timeout);
-                  reject(cause);
-                }
-              })();
-            },
-          });
-        } catch (cause) {
-          if (terminado) return;
-          terminado = true;
-          window.clearTimeout(timeout);
-          reject(cause);
-        }
-      });
-
+      // Guardar/actualizar el modelo no debe modificar la portada automáticamente.
+      // El póster se sube únicamente desde la acción explícita "Actualizar y guardar póster".
       const uploads: Array<{ ruta: string; blob: Blob; contentType: string }> = [
         { ruta: rutaOriginal, blob: archivoOriginal, contentType: archivoOriginal.type || "application/octet-stream" },
         { ruta: rutaGlb, blob: blobGLB, contentType: "model/gltf-binary" },
-        { ruta: rutaPoster, blob: posterBlob, contentType: "image/png" },
       ];
       for (const item of uploads) {
         const { error: uploadError } = await supabase.storage.from("mi-nube").upload(item.ruta, item.blob, {
@@ -454,7 +415,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       setCarpetasDestinoProyecto((actuales) => actuales.includes(carpeta) ? actuales : [...actuales, carpeta].sort((a, b) => a.localeCompare(b, "es")));
       setNombreProyecto(nombreVisibleProyecto);
       setGuardarProyectoOpen(false);
-      toast.success(destinoProyectoGuardado?.rutaCarpeta === rutaCarpeta ? "Proyecto actualizado en Mi Nube: original, GLB y póster actualizados en la misma carpeta." : "Proyecto guardado en Mi Nube: original, GLB y póster vinculados a la misma carpeta.");
+      toast.success(destinoProyectoGuardado?.rutaCarpeta === rutaCarpeta ? "Proyecto actualizado en Mi Nube. El póster no cambió." : "Proyecto guardado en Mi Nube. Puedes guardar la portada cuando pulses «Actualizar y guardar póster».");
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : "No se pudo guardar el proyecto completo en Mi Nube.";
       setError(message);
