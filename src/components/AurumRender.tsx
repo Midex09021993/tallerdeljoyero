@@ -2363,7 +2363,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         return;
       }
       try {
-        const datos = JSON.parse(pending) as { url?: string; glbUrl?: string | null; nombre?: string; rutaCarpeta?: string; archivoTamano?: number };
+        const datos = JSON.parse(pending) as { url?: string; glbUrl?: string | null; configuracionUrl?: string | null; nombre?: string; rutaCarpeta?: string; archivoTamano?: number };
         if (typeof datos.url !== "string" || typeof datos.nombre !== "string") throw new Error("La referencia del archivo no es válida.");
         setPosterPreview(null);
         if (typeof datos.rutaCarpeta === "string" && datos.rutaCarpeta.trim()) {
@@ -2413,6 +2413,37 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           setArchivoOriginal(originalFile);
           setArchivo(datos.nombre);
           setFormatoInterno("GLB");
+          if (typeof datos.configuracionUrl === "string" && datos.configuracionUrl) {
+            try {
+              const configResponse = await fetch(datos.configuracionUrl);
+              if (configResponse.ok) {
+                const config = await configResponse.json() as Record<string, unknown>;
+                if (config.schemaVersion === 1) {
+                  if (typeof config.nombreProyecto === "string") {
+                    setNombreProyecto(config.nombreProyecto);
+                    setNombreProyectoGuardar(config.nombreProyecto);
+                  }
+                  if (typeof config.categoriaProyecto === "string") {
+                    setCategoriaProyecto(config.categoriaProyecto);
+                    categoriaProyectoRef.current = config.categoriaProyecto;
+                  }
+                  if (typeof config.materialId === "string") setMaterialId(config.materialId as MaterialId);
+                  if (typeof config.gemaId === "string") setGemaId(config.gemaId as GemaId);
+                  if (typeof config.escenarioId === "string") setEscenarioId(config.escenarioId as EscenarioId);
+                  if (typeof config.iluminacionId === "string") setIluminacionId(config.iluminacionId as IluminacionId);
+                  if (typeof config.vista === "string") setVista(config.vista as VistaId);
+                  if (typeof config.fondoId === "string") setFondoId(config.fondoId);
+                  if (typeof config.sombraContactoVisible === "boolean") setSombraContactoVisible(config.sombraContactoVisible);
+                  if (typeof config.ambienteId === "string" || config.ambienteId === null) setAmbienteId(config.ambienteId as string | null);
+                  if (typeof config.ambienteMetalInfluence === "number") setAmbienteMetalInfluence(config.ambienteMetalInfluence);
+                  if (typeof config.metalHdriId === "string") apiRef.current?.metalHdri(config.metalHdriId);
+                  if (typeof config.gemHdriId === "string") apiRef.current?.gemHdri(config.gemHdriId);
+                }
+              }
+            } catch (configError) {
+              console.warn("[AURUM] No se pudo restaurar la configuración guardada; se conserva el GLB.", configError);
+            }
+          }
         }
       } catch (cause) {
         if (!cancelado) {
