@@ -454,7 +454,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       setCarpetasDestinoProyecto((actuales) => actuales.includes(carpeta) ? actuales : [...actuales, carpeta].sort((a, b) => a.localeCompare(b, "es")));
       setNombreProyecto(nombreVisibleProyecto);
       setGuardarProyectoOpen(false);
-      toast.success("Proyecto guardado en Mi Nube: original, GLB y póster vinculados a la misma carpeta.");
+      toast.success(destinoProyectoGuardado?.rutaCarpeta === rutaCarpeta ? "Proyecto actualizado en Mi Nube: original, GLB y póster actualizados en la misma carpeta." : "Proyecto guardado en Mi Nube: original, GLB y póster vinculados a la misma carpeta.");
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : "No se pudo guardar el proyecto completo en Mi Nube.";
       setError(message);
@@ -2379,6 +2379,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           const destino = { rutaCarpeta: datos.rutaCarpeta, nombre: datos.nombre, archivoNombre: datos.nombre, archivoTamano: datos.archivoTamano };
           sessionStorage.setItem("aurum-render-poster-destino", JSON.stringify(destino));
           localStorage.setItem("aurum-render-proyecto-destino", JSON.stringify(destino));
+          setDestinoProyectoGuardado({
+            rutaCarpeta: datos.rutaCarpeta,
+            nombre: datos.rutaCarpeta.split("/").filter(Boolean).pop() ?? datos.nombre,
+            nombreProyecto: datos.nombre.replace(/\\.[^.]+$/, ""),
+            archivoNombre: datos.nombre,
+            archivoTamano: datos.archivoTamano,
+          });
           // Recuperar la portada ya guardada junto al 3DM, sin generar otra captura.
           const posterPath = `${datos.rutaCarpeta}/00-portada-aurum.png`;
           const { data: posterUrlData, error: posterUrlError } = await supabase.storage.from("mi-nube").createSignedUrl(posterPath, 3600);
@@ -2492,7 +2499,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             </select>
             <ChevronDown className="pointer-events-none -ml-1 size-4 text-[#77756f]"/>
           </label>
-          <button type="button" disabled={!archivo || cargando || guardandoProyectoNube} onClick={() => void abrirGuardarEnMiNube()} className="flex h-10 items-center gap-2 rounded-xl border border-black/[.10] bg-white/90 px-3 text-sm font-semibold text-[#292824] shadow-sm transition-colors hover:border-[#b99642]/50 hover:bg-[#d4af37]/10 disabled:cursor-not-allowed disabled:opacity-45"><Upload className="size-4 text-[#92743b]"/><span>Guardar en Mi Nube</span></button>
+          <button type="button" disabled={!archivo || cargando || guardandoProyectoNube} onClick={() => void abrirGuardarEnMiNube()} className="flex h-10 items-center gap-2 rounded-xl border border-black/[.10] bg-white/90 px-3 text-sm font-semibold text-[#292824] shadow-sm transition-colors hover:border-[#b99642]/50 hover:bg-[#d4af37]/10 disabled:cursor-not-allowed disabled:opacity-45"><Upload className="size-4 text-[#92743b]"/><span>{destinoProyectoGuardado?.rutaCarpeta ? "Actualizar en Mi Nube" : "Guardar en Mi Nube"}</span></button>
           <button type="button" aria-controls="aurum-export-title" aria-expanded={exportOpen} onClick={()=>{setExportOpen(v=>!v);setLibraryMenuOpen(false);setQualityOpen(false);setLightingOpen(false);}} className={"flex h-10 items-center gap-2 rounded-xl border px-3 text-sm font-semibold shadow-sm transition-colors "+(exportOpen?"border-[#b99642]/50 bg-[#d4af37]/15 text-[#6d5523]":"border-[#d4af37]/45 bg-[#d4af37] text-[#292824] hover:bg-[#e1bf50]")}><Download className="size-4"/><span>Exportar</span></button>
           <div className="hidden text-[11px] uppercase tracking-[.12em] text-[#66645e] lg:block">Taller del Joyero</div>
           <div className="grid size-10 place-items-center rounded-full border border-white/10 text-[#55534d]"><span className="text-lg">♙</span></div>
@@ -2501,7 +2508,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
 
       {!embedded && guardarProyectoOpen && <div className="absolute right-3 top-[72px] z-[85] max-h-[calc(100%-5.5rem)] w-[min(440px,calc(100%-1.25rem))] overflow-y-auto rounded-2xl border border-white/80 bg-[#fbfaf7]/95 p-4 text-[#292824] shadow-[0_16px_44px_rgba(35,32,24,.18)] backdrop-blur-2xl sm:right-4 sm:top-[76px]">
         <div className="mb-4 flex items-start justify-between gap-3">
-          <div><div className="text-lg font-semibold tracking-tight">Guardar proyecto en Mi Nube</div><p className="mt-1 text-xs leading-relaxed text-[#77756f]">Se guardarán el archivo original, el GLB del visor y la portada PNG en una misma carpeta. La carpeta se recordará para futuras actualizaciones de este archivo.</p></div>
+          <div><div className="text-lg font-semibold tracking-tight">{destinoProyectoGuardado?.rutaCarpeta ? "Actualizar proyecto en Mi Nube" : "Guardar proyecto en Mi Nube"}</div><p className="mt-1 text-xs leading-relaxed text-[#77756f]">Se guardarán el archivo original, el GLB del visor y la portada PNG en una misma carpeta. La carpeta se recordará para futuras actualizaciones de este archivo.</p></div>
           <button type="button" aria-label="Cerrar guardado de proyecto" disabled={guardandoProyectoNube} onClick={() => setGuardarProyectoOpen(false)} className="rounded-lg p-1 text-[#77756f] hover:bg-black/[.05] disabled:opacity-40"><X className="size-4"/></button>
         </div>
         <label className="mb-3 block text-xs font-medium text-[#55534d]">Nombre del proyecto
@@ -2525,7 +2532,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         <div className="flex gap-2">
           <button type="button" disabled={guardandoProyectoNube} onClick={() => setGuardarProyectoOpen(false)} className="flex-1 rounded-xl border border-black/10 bg-white px-3 py-2.5 text-sm font-medium hover:bg-black/[.025] disabled:opacity-45">Cancelar</button>
           <button type="button" disabled={guardandoProyectoNube || !nombreProyectoGuardar.trim()} onClick={() => void guardarProyectoEnMiNube()} className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl border border-[#c5a15d]/60 bg-[#d4af37] px-3 py-2.5 text-sm font-semibold text-[#292824] hover:bg-[#e1bf50] disabled:cursor-not-allowed disabled:opacity-50">
-            {guardandoProyectoNube ? <><RotateCw className="size-4 animate-spin"/> Guardando…</> : <><Upload className="size-4"/> Guardar proyecto</>}
+            {guardandoProyectoNube ? <><RotateCw className="size-4 animate-spin"/> Guardando…</> : <><Upload className="size-4"/> {destinoProyectoGuardado?.rutaCarpeta ? "Actualizar proyecto" : "Guardar proyecto"}</>}
           </button>
         </div>
       </div>}
