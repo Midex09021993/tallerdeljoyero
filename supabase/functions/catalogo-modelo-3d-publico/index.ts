@@ -50,15 +50,37 @@ Deno.serve(async (req: Request) => {
     if (linkError) throw linkError;
     if (!link || !Array.isArray(link.archivos)) return json({ error: "Esta publicación no tiene un modelo 3D vinculado." }, 404);
 
-    // Preferir el GLB ya preparado por Aurum Render. Solo usar el 3DM como
-    // alternativa si el proyecto todavía no tiene un GLB guardado.
+    // El vínculo público puede contener solo el 3DM original. En ese caso,
+    // comprobar el GLB interno en la misma carpeta de Mi Nube sin exponerlo en la lista.
     const candidates = link.archivos.filter((file: Record<string, unknown>) =>
       file && file.origen === "supabase" &&
-      /\.(glb|3dm)$/i.test(String(file.nombre ?? file.ruta ?? "")) &&
+      /\.3dm$/i.test(String(file.nombre ?? file.ruta ?? "")) &&
       typeof file.ruta === "string"
     );
-    const file = candidates.find((candidate: Record<string, unknown>) => /\.glb$/i.test(String(candidate.nombre ?? candidate.ruta ?? "")))
-      ?? candidates.find((candidate: Record<string, unknown>) => /\.3dm$/i.test(String(candidate.nombre ?? candidate.ruta ?? "")));
+    const original3dm = candidates[0];
+    let file: Record<string, unknown> | null = null;
+    if (original3dm) {
+      const ruta3dm = String(original3dm.ruta);
+      const carpeta = ruta3dm.slice(0, ruta3dm.lastIndexOf("/"));
+      if (carpeta && !carpeta.startsWith("/") && !carpeta.split("/").some((part) => part === "..") && !carpeta.includes("\\\\")) {
+        const { data: internos, error: listaError } = await admin.storage.from("mi-nube").list(carpeta, { limit: 1000 });
+        if (listaError) throw listaError;
+        const glbGuardado = (internos ?? []).find((entry) => entry.name === "01-modelo.glb");
+        if (glbGuardado) {
+          file = { nombre: glbGuardado.name, ruta: `${carpeta}/${glbGuardado.name}`, origen: "supabase" };
+        }
+      }
+    }
+    // Compatibilidad con publicaciones antiguas que ya guardaban la ruta del GLB.
+    if (!file) {
+      file = link.archivos.find((candidate: Record<string, unknown>) =>
+        candidate && candidate.origen === "supabase" &&
+        /\.glb$/i.test(String(candidate.nombre ?? candidate.ruta ?? "")) &&
+        typeof candidate.ruta === "string"
+      ) ?? null;
+    }
+    // Sin GLB guardado, se permite usar el 3DM original como alternativa.
+    if (!file) file = original3dm ?? null;
     if (!file) return json({ error: "Esta publicación no tiene un GLB ni un 3DM compatible para el visor 3D." }, 404);
     const ruta = String(file.ruta);
     if (!ruta || ruta.startsWith("/") || ruta.split("/").some((part) => part === "..") || ruta.includes("\\") || ruta.length > 1024) {
