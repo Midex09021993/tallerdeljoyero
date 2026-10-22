@@ -384,10 +384,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
     const base = nombreVisibleProyecto
       .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
       .replace(/[^a-z0-9_-]+/gi, "-").replace(/^-+|-+$/g, "").slice(0, 80) || "joya-aurum";
-    const extensionOriginal = archivoOriginal.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "3dm";
-    const rutaOriginal = carpetaVinculada && destinoProyectoGuardado?.rutaArchivoOriginal?.startsWith(`${rutaCarpeta}/`)
-      ? destinoProyectoGuardado.rutaArchivoOriginal
-      : `${rutaCarpeta}/00-original.${extensionOriginal}`;
+    // El 3DM es la fuente original: se conserva en Mi Nube y jamás se sobrescribe.
+    // Las actualizaciones escriben solo el GLB de trabajo y el manifiesto de Aurum.
     const rutaGlb = `${rutaCarpeta}/01-modelo.glb`;
     const rutaConfiguracion = `${rutaCarpeta}/02-configuracion-aurum.json`;
     try {
@@ -417,7 +415,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
 
       // El póster se sube únicamente desde la acción explícita "Actualizar y guardar póster".
       const uploads: Array<{ ruta: string; blob: Blob; contentType: string }> = [
-        { ruta: rutaOriginal, blob: archivoOriginal, contentType: archivoOriginal.type || "application/octet-stream" },
         { ruta: rutaGlb, blob: blobGLB, contentType: "model/gltf-binary" },
         { ruta: rutaConfiguracion, blob: blobConfiguracion, contentType: "application/json" },
       ];
@@ -445,7 +442,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       setCarpetasDestinoProyecto((actuales) => actuales.includes(carpeta) ? actuales : [...actuales, carpeta].sort((a, b) => a.localeCompare(b, "es")));
       setNombreProyecto(nombreVisibleProyecto);
       setGuardarProyectoOpen(false);
-      toast.success(destinoProyectoGuardado?.rutaCarpeta === rutaCarpeta ? "Proyecto actualizado en Mi Nube. El póster no cambió." : "Proyecto guardado en Mi Nube. Puedes guardar la portada cuando pulses «Actualizar y guardar póster».");
+      toast.success(destinoProyectoGuardado?.rutaCarpeta === rutaCarpeta ? "Proyecto actualizado. El 3DM original y el póster permanecen intactos." : "Proyecto guardado en Mi Nube. El 3DM original se conserva; el póster se guarda solo con su botón.");
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : "No se pudo guardar el proyecto completo en Mi Nube.";
       setError(message);
