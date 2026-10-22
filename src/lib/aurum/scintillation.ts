@@ -266,11 +266,13 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
 
     // The gem-only studio light is evaluated inside this gemstone shader.
     // This avoids illuminating polished metal with the control intended for stones.
+    shader.vertexShader=`
+      varying vec3 vAurumGemWorldPosition;
+      varying vec3 vAurumGemWorldNormal;
+    `+shader.vertexShader;
     shader.vertexShader=shader.vertexShader.replace(
       "#include <begin_vertex>",
       `#include <begin_vertex>
-      varying vec3 vAurumGemWorldPosition;
-      varying vec3 vAurumGemWorldNormal;
       vAurumGemWorldPosition=(modelMatrix*vec4(transformed,1.0)).xyz;
       vAurumGemWorldNormal=normalize(mat3(modelMatrix)*objectNormal);`
     );
