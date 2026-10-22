@@ -123,6 +123,15 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
     shader.uniforms.aurumScintillationStrength={value:strength};
     shader.uniforms.aurumScintillationContrast={value:contrastStrength};
     shader.uniforms.aurumRuntimeDispersion={value:baseDispersion*familyDispersionScale};
+    const gemLightState=material.userData?.aurumGemLightState??{};
+    shader.uniforms.aurumGemLightPosition={value:new THREE.Vector3(...(gemLightState.position??[0,0,0]))};
+    shader.uniforms.aurumGemLightIntensity={value:gemLightState.enabled?Math.max(0,Number(gemLightState.intensity??0)):0};
+    shader.uniforms.aurumGemLightRadius={value:Math.max(.001,Number(gemLightState.radius??1))};
+    material.userData={...(material.userData??{}),aurumGemLightUniforms:{
+      position:shader.uniforms.aurumGemLightPosition,
+      intensity:shader.uniforms.aurumGemLightIntensity,
+      radius:shader.uniforms.aurumGemLightRadius,
+    }};
     if(ijewelEnabled){
       // Keep the two optical models separate:
       // MeshPhysicalMaterial.ior remains the physical diamond IOR (2.417),
@@ -254,6 +263,24 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
         `
       );
     }
+
+    // The gem-only studio light is evaluated inside this gemstone shader.
+    // This avoids illuminating polished metal with the control intended for stones.
+    shader.vertexShader=shader.vertexShader.replace(
+      "#include <begin_vertex>",
+      `#include <begin_vertex>
+      varying vec3 vAurumGemWorldPosition;
+      varying vec3 vAurumGemWorldNormal;
+      vAurumGemWorldPosition=(modelMatrix*vec4(transformed,1.0)).xyz;
+      vAurumGemWorldNormal=normalize(mat3(modelMatrix)*objectNormal);`
+    );
+    shader.fragmentShader=`
+      varying vec3 vAurumGemWorldPosition;
+      varying vec3 vAurumGemWorldNormal;
+      uniform vec3 aurumGemLightPosition;
+      uniform float aurumGemLightIntensity;
+      uniform float aurumGemLightRadius;
+    `+shader.fragmentShader;
 
     // Three.js already performs physical volume refraction and RGB dispersion
     // inside getIBLVolumeRefraction(). Replace only its dispersion input with
@@ -528,6 +555,20 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
           float aurumFluorescence=aurumFluorescenceStrength*aurumUVFalloff;
           gl_FragColor.rgb+=aurumUVColor*aurumFluorescence;
         }
+                // Controlled direct response for the gem-light slider. The
+                // contribution is restricted to gemstone materials and follows
+                // the imported facet normals; it does not light the metal meshes.
+                float aurumGemLightSafeRadius=max(aurumGemLightRadius,0.001);
+                vec3 aurumGemLightDelta=aurumGemLightPosition-vAurumGemWorldPosition;
+                float aurumGemLightDistance=length(aurumGemLightDelta);
+                vec3 aurumGemLightDir=aurumGemLightDelta/max(aurumGemLightDistance,0.0001);
+                float aurumGemLightAttenuation=1.0/(1.0+pow(aurumGemLightDistance/(aurumGemLightSafeRadius*1.8),2.0));
+                float aurumGemFacetDiffuse=max(dot(normalize(vAurumGemWorldNormal),aurumGemLightDir),0.0);
+                vec3 aurumGemViewDir=normalize(cameraPosition-vAurumGemWorldPosition);
+                vec3 aurumGemHalfDir=normalize(aurumGemLightDir+aurumGemViewDir);
+                float aurumGemFacetSparkle=pow(max(dot(normalize(vAurumGemWorldNormal),aurumGemHalfDir),0.0),48.0);
+                float aurumGemLightEnergy=aurumGemLightIntensity*aurumGemLightAttenuation;
+                gl_FragColor.rgb+=vec3(1.0)*aurumGemLightEnergy*(aurumGemFacetDiffuse*0.10+aurumGemFacetSparkle*0.32);
                 #include <tonemapping_fragment>
                 #include <colorspace_fragment>
                 #include <fog_fragment>
