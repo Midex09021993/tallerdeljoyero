@@ -498,7 +498,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
     return MATERIALES.filter((m) =>
       (familiaMaterialActiva === "Todas" || familiaPrincipalMaterial(m.grupo) === familiaMaterialActiva) &&
       (acabadoMaterialActivo === "Todos" || m.grupo === acabadoMaterialActivo) &&
-      (principales.has(m.id) || m.id === materialId || !!termino) &&
+      (familiaMaterialActiva !== "Todas" || principales.has(m.id) || m.id === materialId || !!termino) &&
       (!termino || (m.nombre+" "+m.id+" "+m.grupo).toLocaleLowerCase("es").includes(termino))
     ).sort((a,b)=>Number(principales.has(b.id))-Number(principales.has(a.id)));
   }, [materialId, busquedaMateriales, familiaMaterialActiva, acabadoMaterialActivo]);
