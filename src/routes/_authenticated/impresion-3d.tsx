@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Printer } from "lucide-react";
 import { AsistenteImpresion3D } from "@/components/AsistenteImpresion3D";
 import { AreaOperario, PedidosArea } from "@/components/PedidosArea";
@@ -32,6 +32,9 @@ function Impresion3D() {
 
 function Impresion3DCompleta() {
   const [mostrarAsistente, setMostrarAsistente] = useState(false);
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("asistente") === "1") setMostrarAsistente(true);
+  }, []);
   const { pedidos, enTrabajo } = usePedidosDeArea("Impresión 3D");
   const { data: inventario = [] } = useInventario();
   const { esDueno, sedeFiltro, setSedeFiltro, sedes, etiquetaSede, sedeSeleccionada } =
