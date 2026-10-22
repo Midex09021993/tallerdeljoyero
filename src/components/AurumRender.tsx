@@ -2374,8 +2374,17 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       try {
         const datos = JSON.parse(pending) as { url?: string; nombre?: string; rutaCarpeta?: string; archivoTamano?: number };
         if (typeof datos.url !== "string" || typeof datos.nombre !== "string") throw new Error("La referencia del archivo no es válida.");
+        setPosterPreview(null);
         if (typeof datos.rutaCarpeta === "string" && datos.rutaCarpeta.trim()) {
-          sessionStorage.setItem("aurum-render-poster-destino", JSON.stringify({ rutaCarpeta: datos.rutaCarpeta, nombre: datos.nombre, archivoNombre: datos.nombre, archivoTamano: datos.archivoTamano }));
+          const destino = { rutaCarpeta: datos.rutaCarpeta, nombre: datos.nombre, archivoNombre: datos.nombre, archivoTamano: datos.archivoTamano };
+          sessionStorage.setItem("aurum-render-poster-destino", JSON.stringify(destino));
+          localStorage.setItem("aurum-render-proyecto-destino", JSON.stringify(destino));
+          // Recuperar la portada ya guardada junto al 3DM, sin generar otra captura.
+          const posterPath = `${datos.rutaCarpeta}/00-portada-aurum.png`;
+          const { data: posterUrlData, error: posterUrlError } = await supabase.storage.from("mi-nube").createSignedUrl(posterPath, 3600);
+          if (!cancelado && !posterUrlError && posterUrlData?.signedUrl) {
+            setPosterPreview(posterUrlData.signedUrl);
+          }
         }
         const response = await fetch(datos.url);
         if (!response.ok) throw new Error("No se pudo descargar el 3DM privado desde Mi Nube.");
