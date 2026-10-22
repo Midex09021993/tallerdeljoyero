@@ -1767,7 +1767,7 @@ function MiNubePage() {
                                 </button>
                               )}
                               {archivo.nombre.toLowerCase().endsWith(".glb") && archivo.origen === "supabase" && (
-                                <button type="button" disabled={generandoEnlaceVisor === archivo.ruta} onClick={() => void crearEnlaceVisorArchivo(archivo)} className="rounded-lg border border-gold/40 bg-gold/5 px-2.5 py-1.5 text-[11px] font-semibold hover:bg-gold/10 disabled:opacity-50">
+                                <button type="button" disabled={generandoEnlaceVisor !== null} onClick={() => void crearEnlaceVisorArchivo(archivo)} className="rounded-lg border border-gold/40 bg-gold/5 px-2.5 py-1.5 text-[11px] font-semibold hover:bg-gold/10 disabled:opacity-50">
                                   {generandoEnlaceVisor === archivo.ruta ? "Preparando visor…" : "Crear enlace del visor 3D"}
                                 </button>
                               )}
@@ -1869,7 +1869,7 @@ function MiNubePage() {
         </section>
         {opcionesCompartir && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true" aria-labelledby="mi-nube-opciones-title">
-            <div className="w-full max-w-lg rounded-2xl border border-border bg-card p-5 shadow-2xl">
+            <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-border bg-card p-5 shadow-2xl">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-gold">Compartir desde Mi Nube</p>
@@ -1920,7 +1920,7 @@ function MiNubePage() {
                                 <p className="truncate text-xs font-semibold">{nombreVisible(archivo.nombre)}</p>
                                 <p className="mt-0.5 text-[10px] text-muted-foreground">{etiquetaTamano(archivo.bytes)}</p>
                               </div>
-                              <button type="button" disabled={generandoEnlaceVisor === archivo.ruta} onClick={() => void crearEnlaceVisorArchivo(archivo)} className="shrink-0 rounded-lg border border-gold/45 px-2.5 py-2 text-[11px] font-semibold hover:bg-gold/10 disabled:opacity-50">
+                              <button type="button" disabled={generandoEnlaceVisor !== null} onClick={() => void crearEnlaceVisorArchivo(archivo)} className="shrink-0 rounded-lg border border-gold/45 px-2.5 py-2 text-[11px] font-semibold hover:bg-gold/10 disabled:opacity-50">
                                 {generandoEnlaceVisor === archivo.ruta ? "Creando…" : enlace ? "Regenerar enlace" : "Crear enlace"}
                               </button>
                             </div>
