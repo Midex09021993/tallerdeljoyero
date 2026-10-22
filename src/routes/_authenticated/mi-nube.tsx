@@ -1847,14 +1847,17 @@ function MiNubePage() {
                   </FichaProyecto>
                   {proyectoAbierto === "compartida:" + recibida.id && (
             <section className={"absolute inset-0 z-40 h-full max-h-full w-full min-w-0 overflow-y-auto overflow-x-hidden rounded-2xl border border-gold/40 bg-card shadow-2xl " + (indiceRecibida % 2 === 1 ? "right-0" : "left-0") + " " + (indiceRecibida % 4 >= 2 ? "xl:right-0 xl:left-auto" : "xl:left-0 xl:right-auto") + " " + (indiceRecibida % 5 >= 2 ? "2xl:right-0 2xl:left-auto" : "2xl:left-0 2xl:right-auto")} aria-label={"Archivos de " + recibida.nombre}>
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-muted/25 px-5 py-4">
-                <div className="flex items-start gap-3">
-                  <div className="grid size-10 shrink-0 place-items-center rounded-xl border border-gold/30 bg-gold/10 text-gold"><Folder className="size-5" /></div>
-                  <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-gold">Carpeta compartida</p><h4 className="mt-0.5 text-base font-semibold">{recibida.nombre}</h4><p className="mt-0.5 text-xs text-muted-foreground">{recibida.cargandoArchivos ? "Cargando archivos…" : recibida.archivos.length + " archivo(s) · Solo lectura"}</p></div>
+              <div className="flex min-w-0 items-center justify-between gap-2 border-b border-border bg-muted/25 px-3 py-2.5">
+                <div className="flex min-w-0 items-center gap-2">
+                  <Folder className="size-4 shrink-0 text-gold" />
+                  <div className="min-w-0">
+                    <h4 className="truncate text-sm font-semibold">{recibida.nombre}</h4>
+                    <p className="text-[10px] text-muted-foreground">{recibida.cargandoArchivos ? "Cargando…" : recibida.archivos.length + " archivos"}</p>
+                  </div>
                 </div>
-                <button type="button" onClick={() => setProyectoAbierto(null)} className="rounded-lg border border-border bg-background px-3 py-2 text-xs font-semibold hover:bg-muted/60">Cerrar ficha <X className="ml-1 inline size-3.5" /></button>
+                <button type="button" aria-label="Cerrar ficha" title="Cerrar ficha" onClick={() => setProyectoAbierto(null)} className="grid size-7 shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"><X className="size-4" /></button>
               </div>
-              <div className="p-4 sm:p-5">
+              <div className="p-2.5">
                 <div className="grid grid-cols-1 gap-2">
                           {recibida.archivos.map((archivo) => <div key={archivo.ruta} className="rounded-xl border border-border/70 bg-background p-3 transition-colors hover:border-border">
                             <div className="flex min-w-0 items-start gap-2.5">
@@ -1872,7 +1875,6 @@ function MiNubePage() {
                           </div>)}
                 </div>
               </div>
-              <div className="border-t border-border px-5 py-3 text-[11px] text-muted-foreground"><LockKeyhole className="mr-1.5 inline size-3.5" /> Acceso de solo lectura · el propietario puede revocarlo en cualquier momento.</div>
             </section>
                   )}
                 </div>;
