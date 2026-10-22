@@ -1508,6 +1508,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           const loop:any=viewerLoopRef.current;
           loop?.pause?.();
           const capturePassStates: Array<{pass:any;enabled:boolean}> = [];
+          const originalCameraPosition = camara.position.clone();
+          const posterCameraTarget = isPoster && controles?.target?.clone ? controles.target.clone() : null;
           try {
             // Render slightly above the requested dimensions for spatial
             // supersampling; the final file still uses exactly width x height.
@@ -1516,6 +1518,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // Fidelity-first capture: use the same direct WebGL path as the live viewer.
             // Do not change transmission scale or accumulate a different post-processing/TAA pipeline.
             liveFastPathRef.current=true;
+            // Give Mi Nube poster captures extra breathing room without changing the live view.
+            if (isPoster && posterCameraTarget) {
+              camara.position.copy(posterCameraTarget).addScaledVector(
+                originalCameraPosition.clone().sub(posterCameraTarget),
+                1.3,
+              );
+              camara.updateMatrixWorld?.();
+            }
             renderer.setSize(renderWidth,renderHeight,false);
             if(typeof camara.aspect==="number") {
               camara.aspect=renderWidth/renderHeight;
@@ -1578,6 +1588,12 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // error/early-exit cases, so the interactive engine is left unchanged.
             for(const state of capturePassStates){
               if(state.pass && "enabled" in state.pass) state.pass.enabled=state.enabled;
+            }
+            camara.position.copy(originalCameraPosition);
+            camara.updateMatrixWorld?.();
+            if (posterCameraTarget && controles?.target) {
+              controles.target.copy(posterCameraTarget);
+              controles.update?.();
             }
             if(typeof originalAspect==="number") {
               camara.aspect=originalAspect;
