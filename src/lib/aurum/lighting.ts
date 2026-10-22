@@ -125,10 +125,23 @@ export function createAurumLightingController(
       // Diagnostic mode: isolate the HDR/IBL contribution from every direct
       // and rectangular reflection source. Production behavior is unchanged
       // unless ?aurumDiag=environment is explicitly present in the URL.
-      if (diagnosticEnvironmentOnly && manuallyTouched.size === 0) {
+      if (diagnosticEnvironmentOnly) {
+        // Keep the calibrated environment-only baseline until a user explicitly
+        // adjusts a studio control. Then enable only the baseline reflection
+        // sources and the specific direct lights the user has touched.
         Object.values(lights).forEach((light:any) => {
           if (light) light.visible = false;
         });
+        if (manuallyTouched.size > 0) {
+          if (lights.softbox) lights.softbox.visible = true;
+          if (lights.strip) lights.strip.visible = true;
+          if (lights.front) lights.front.visible = config.front?.enabled ?? true;
+          (["key", "fill", "rim", "gem"] as const).forEach((name) => {
+            if (!manuallyTouched.has(name) || !lights[name]) return;
+            lights[name].visible = Boolean(config[name]?.enabled);
+            lights[name].intensity = Number(config[name]?.intensity ?? lights[name].intensity);
+          });
+        }
         if (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("aurumDiag")) console.info("[AURUM][LIGHTING][DIAGNOSTIC]", {
           mode: diagnosticMode,
           rig: activeRigId,
