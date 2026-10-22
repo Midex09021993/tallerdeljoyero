@@ -1169,7 +1169,7 @@ function MiNubePage() {
         .is("revoked_at", null);
       if (errorCompartidas) throw new Error("Los archivos se movieron, pero no se pudo actualizar el nombre compartido. Se intentará revertir el cambio.");
 
-      toast.success(`Carpeta renombrada a “${nombreNuevo}” en Mi Nube. El NAS permanece independiente y no se modificó.`);
+      toast.success(`Carpeta renombrada a “${nombreNuevo}” en Mi Nube. El NAS no se consultó ni se modificó.`);
       setProyectoRenombrando(null);
       setProyectoAbierto(null);
       await Promise.all([cargarBiblioteca(), cargarCompartidas()]);
