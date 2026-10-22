@@ -1657,7 +1657,7 @@ function MiNubePage() {
           </div>
 
           {proyectos.length > 0 && (
-            <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5">
               {proyectos.map((proyecto) => (
                 <FichaProyecto
                   key={proyecto.nombre}
