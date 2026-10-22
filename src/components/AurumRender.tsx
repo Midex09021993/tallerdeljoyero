@@ -490,7 +490,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
     return "Otros";
   };
   const familiasMateriales = useMemo(() => ["Todas", ...Array.from(new Set(MATERIALES.map(m => familiaPrincipalMaterial(m.grupo))))], []);
-  const subfamiliasMateriales = useMemo(() => Array.from(new Set(MATERIALES.filter(m => familiaMaterialActiva === "Todas" || familiaPrincipalMaterial(m.grupo) === familiaMaterialActiva).map(m => m.grupo))), [familiaMaterialActiva]);
   const [acabadoMaterialActivo, setAcabadoMaterialActivo] = useState("Todos");
   const filtrosColorOro = [{ label: "Amarillo", grupo: "Oro Amarillo" }, { label: "Blanco", grupo: "Oro Blanco" }, { label: "Rosa", grupo: "Oro Rosa" }];
   const materialesVisibles = useMemo(() => {
