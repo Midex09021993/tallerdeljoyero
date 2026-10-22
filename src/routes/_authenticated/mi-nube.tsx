@@ -1710,7 +1710,25 @@ function MiNubePage() {
                   accionesPortada={
                     <>
                       <button type="button" title="Editar nombre de carpeta" aria-label={`Editar nombre de carpeta ${proyecto.nombre}`} onClick={() => { setNuevoNombreCarpeta(proyecto.nombre); setProyectoRenombrando(proyecto.nombre); }} disabled={guardandoNombreCarpeta || subiendo || compartiendo !== null} className="grid size-9 place-items-center rounded-full border border-white/80 bg-white/90 text-gray-800 shadow-sm transition hover:bg-white disabled:opacity-50"><Pencil className="size-4" /></button>
-                      <button type="button" title="Compartir proyecto" aria-label={`Compartir proyecto ${proyecto.nombre}`} disabled={compartiendo !== null} onClick={() => setOpcionesCompartir(proyecto)} className="grid size-9 place-items-center rounded-full border border-white/80 bg-white/90 text-gray-800 shadow-sm transition hover:bg-white disabled:opacity-50"><Share2 className="size-4" /></button>
+                      <button type="button" title="Compartir proyecto" aria-label={`Compartir proyecto ${proyecto.nombre}`} disabled={compartiendo !== null} onClick={async () => {
+                        const glbVisible = proyecto.archivos.some((archivo) => archivo.origen === "supabase" && archivo.nombre.toLowerCase().endsWith(".glb"));
+                        if (glbVisible) { setOpcionesCompartir(proyecto); return; }
+                        const original3dm = proyecto.archivos.find((archivo) => archivo.origen === "supabase" && archivo.nombre.toLowerCase().endsWith(".3dm"));
+                        if (!original3dm) { setOpcionesCompartir(proyecto); return; }
+                        try {
+                          const rutaCarpeta = original3dm.ruta.slice(0, original3dm.ruta.lastIndexOf("/"));
+                          const { data: internos, error: errorLista } = await supabase.storage.from(BUCKET).list(rutaCarpeta, { limit: 1000 });
+                          if (errorLista) throw errorLista;
+                          const glbInterno = (internos ?? []).find((entrada) => entrada.name === "01-modelo.glb");
+                          const archivos = glbInterno
+                            ? [...proyecto.archivos, { nombre: glbInterno.name, ruta: `${rutaCarpeta}/${glbInterno.name}`, carpeta: original3dm.carpeta, bytes: Number(glbInterno.metadata?.size ?? 0), actualizado: glbInterno.updated_at ?? null, categoria: "modelos-3d" as Categoria, origen: "supabase" as const }]
+                            : proyecto.archivos;
+                          setOpcionesCompartir({ ...proyecto, archivos });
+                        } catch (cause) {
+                          toast.error(cause instanceof Error ? cause.message : "No se pudo comprobar el GLB guardado.");
+                          setOpcionesCompartir(proyecto);
+                        }
+                      }} className="grid size-9 place-items-center rounded-full border border-white/80 bg-white/90 text-gray-800 shadow-sm transition hover:bg-white disabled:opacity-50"><Share2 className="size-4" /></button>
                       <button type="button" title="Eliminar proyecto" aria-label={`Eliminar proyecto ${proyecto.nombre}`} onClick={() => setProyectoPendienteEliminar(proyecto)} disabled={subiendo || compartiendo !== null} className="grid size-9 place-items-center rounded-full border border-white/80 bg-white/90 text-red-600 shadow-sm transition hover:bg-red-50 disabled:opacity-50"><X className="size-4" /></button>
                     </>
                   }
@@ -2008,7 +2026,7 @@ function MiNubePage() {
                     </div>
                   ) : (
                     <div className="mt-3 space-y-3">
-                      <p className="rounded-lg border border-dashed border-border p-3 text-xs leading-5 text-muted-foreground">Esta carpeta aún no tiene un GLB para el visor. Puedes conservar el 3DM original y preparar una copia GLB desde Aurum Render; el archivo original no se modifica.</p>
+                      <p className="rounded-lg border border-dashed border-border p-3 text-xs leading-5 text-muted-foreground">Esta carpeta aún no tiene un GLB guardado para el visor. Abre el 3DM en Aurum Render y guarda el proyecto para generar el GLB interno; después podrás crear el enlace sin prepararlo otra vez.</p>
                       {opcionesCompartir.archivos.filter((archivo) => archivo.origen === "supabase" && archivo.nombre.toLowerCase().endsWith(".3dm")).length > 0 ? (
                         <div className="space-y-2">
                           <p className="text-xs font-semibold">Preparar visor desde un archivo 3DM</p>
@@ -2016,7 +2034,7 @@ function MiNubePage() {
                             <div key={archivo.ruta} className="flex items-center justify-between gap-3 rounded-lg border border-border/70 bg-background p-3">
                               <div className="min-w-0">
                                 <p className="truncate text-xs font-semibold">{nombreVisible(archivo.nombre)}</p>
-                                <p className="mt-0.5 text-[10px] text-muted-foreground">Se abrirá en Aurum Render para preparar el GLB</p>
+                                <p className="mt-0.5 text-[10px] text-muted-foreground">Se abrirá en Aurum Render para guardar el GLB interno</p>
                               </div>
                               <button type="button" onClick={async () => {
                                 try {
