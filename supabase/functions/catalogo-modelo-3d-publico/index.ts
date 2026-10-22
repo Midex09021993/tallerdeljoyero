@@ -50,13 +50,16 @@ Deno.serve(async (req: Request) => {
     if (linkError) throw linkError;
     if (!link || !Array.isArray(link.archivos)) return json({ error: "Esta publicación no tiene un modelo 3D vinculado." }, 404);
 
+    // Preferir el GLB ya preparado por Aurum Render. Solo usar el 3DM como
+    // alternativa si el proyecto todavía no tiene un GLB guardado.
     const candidates = link.archivos.filter((file: Record<string, unknown>) =>
       file && file.origen === "supabase" &&
-      /\.3dm$/i.test(String(file.nombre ?? file.ruta ?? "")) &&
+      /\.(glb|3dm)$/i.test(String(file.nombre ?? file.ruta ?? "")) &&
       typeof file.ruta === "string"
     );
-    const file = candidates[0];
-    if (!file) return json({ error: "No encontramos un archivo 3DM compatible en el proyecto vinculado." }, 404);
+    const file = candidates.find((candidate: Record<string, unknown>) => /\.glb$/i.test(String(candidate.nombre ?? candidate.ruta ?? "")))
+      ?? candidates.find((candidate: Record<string, unknown>) => /\.3dm$/i.test(String(candidate.nombre ?? candidate.ruta ?? "")));
+    if (!file) return json({ error: "Esta publicación no tiene un GLB ni un 3DM compatible para el visor 3D." }, 404);
     const ruta = String(file.ruta);
     if (!ruta || ruta.startsWith("/") || ruta.split("/").some((part) => part === "..") || ruta.includes("\\") || ruta.length > 1024) {
       return json({ error: "La ruta del modelo no es válida." }, 400);
