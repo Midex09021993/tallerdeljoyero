@@ -197,10 +197,71 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [uxSection, setUxSection] = useState<"materiales"|"gemas"|"escena"|"hdrMetales"|"hdrGemas"|"fondos">("materiales");
   const exportSettingsRef = useRef({nombreProyecto,categoriaProyecto,archivo,materialId,gemaId,escenarioId,iluminacionId,vista,renderQualityId});
   exportSettingsRef.current={nombreProyecto,categoriaProyecto,archivo,materialId,gemaId,escenarioId,iluminacionId,vista,renderQualityId};
-  const actualizarPoster = () => {
-    // Fail safely until a truly isolated/off-screen capture path is available.
-    // Never invoke the live viewer's photographic export from this UI action.
-    setError("La actualización del póster está pausada temporalmente para proteger el visor. No se ha realizado ninguna captura.");
+  const actualizarPoster = async () => {
+    if (!archivo || !apiRef.current?.exportPNG) {
+      setError("Primero carga una joya en Aurum Render.");
+      return;
+    }
+    let destino: { rutaCarpeta?: string; nombre?: string } | null = null;
+    try {
+      const raw = sessionStorage.getItem("aurum-render-poster-destino");
+      if (raw) destino = JSON.parse(raw) as { rutaCarpeta?: string; nombre?: string };
+    } catch {
+      destino = null;
+    }
+    if (!destino?.rutaCarpeta || !/^[^\\/]+\\/[^\\/]+\\/.+/.test(destino.rutaCarpeta)) {
+      setError("Abre primero este archivo desde Mi Nube para vincular el póster a su carpeta original.");
+      return;
+    }
+    setExportBusy(true);
+    setError(null);
+    try {
+      await new Promise<void>((resolve, reject) => {
+        let terminado = false;
+        const timeout = window.setTimeout(() => {
+          if (terminado) return;
+          terminado = true;
+          reject(new Error("La captura tardó demasiado. Inténtalo de nuevo."));
+        }, 45000);
+        try {
+          apiRef.current.exportPNG({
+            width: 640,
+            format: "png",
+            onCapture: (dataUrl: string) => {
+              if (terminado) return;
+              terminado = true;
+              window.clearTimeout(timeout);
+              void (async () => {
+                try {
+                  const response = await fetch(dataUrl);
+                  const blob = await response.blob();
+                  if (blob.type !== "image/png" || blob.size < 1024) throw new Error("La captura PNG está vacía o no es válida.");
+                  const ruta = `${destino!.rutaCarpeta}/00-portada-aurum.png`;
+                  const { error: uploadError } = await supabase.storage.from("mi-nube").upload(ruta, blob, {
+                    contentType: "image/png",
+                    upsert: true,
+                    cacheControl: "3600",
+                  });
+                  if (uploadError) throw uploadError;
+                  toast.success("Póster guardado en Mi Nube. Vuelve a la carpeta para ver la portada actualizada.");
+                  resolve();
+                } catch (cause) {
+                  reject(cause);
+                }
+              })();
+            },
+          });
+        } catch (cause) {
+          window.clearTimeout(timeout);
+          reject(cause);
+        }
+      });
+      setError(null);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "No se pudo guardar el póster en Mi Nube.");
+    } finally {
+      setExportBusy(false);
+    }
   };
 
   // Estado central del configurador: una única fuente de verdad.
@@ -2052,8 +2113,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         return;
       }
       try {
-        const datos = JSON.parse(pending) as { url?: string; nombre?: string };
+        const datos = JSON.parse(pending) as { url?: string; nombre?: string; rutaCarpeta?: string };
         if (typeof datos.url !== "string" || typeof datos.nombre !== "string") throw new Error("La referencia del archivo no es válida.");
+        if (typeof datos.rutaCarpeta === "string" && datos.rutaCarpeta.trim()) {
+          sessionStorage.setItem("aurum-render-poster-destino", JSON.stringify({ rutaCarpeta: datos.rutaCarpeta, nombre: datos.nombre }));
+        }
         const response = await fetch(datos.url);
         if (!response.ok) throw new Error("No se pudo descargar el 3DM privado desde Mi Nube.");
         const blob = await response.blob();
@@ -2130,6 +2194,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       <div>
         <div className="mb-3 flex items-start justify-between gap-3"><div><div id="aurum-export-title" className="text-lg font-semibold tracking-tight text-[#292824]">Centro de exportación</div><div className="mt-1 text-sm text-[#77756f]">Prepara tu joya para presentar, compartir o fabricar.</div></div><button type="button" aria-label="Cerrar exportación" onClick={()=>setExportOpen(false)} className="rounded-lg p-1 text-[#77756f] hover:bg-black/[.05]"><X className="size-4"/></button></div>
         <div className="flex flex-col gap-3">
+          <button type="button" disabled={!archivo||exportBusy} onClick={()=>void actualizarPoster()} className="flex w-full items-center gap-2.5 rounded-xl border border-[#d4af37]/50 bg-[#d4af37]/10 px-3 py-2.5 text-left text-[13px] font-semibold text-[#292824] transition-colors hover:bg-[#d4af37]/20 disabled:cursor-not-allowed disabled:opacity-40"><Camera className="size-5"/><span><span className="block">{exportBusy?"Generando y guardando póster…":"Actualizar póster de Mi Nube"}</span><span className="block text-[10px] font-normal text-[#77756f]">Captura PNG de la joya · carpeta del proyecto</span></span></button>
           <button type="button" disabled={!archivo||exportBusy} onClick={async()=>{
             setExportBusy(true);
             try{
