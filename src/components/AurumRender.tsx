@@ -429,7 +429,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
 
       const destino: AurumProjectDestination = {
         rutaCarpeta,
-        rutaArchivoOriginal: rutaOriginal,
+        rutaArchivoOriginal: destinoProyectoGuardado?.rutaArchivoOriginal,
         nombre: carpeta,
         nombreProyecto: nombreVisibleProyecto,
         archivoNombre: archivoOriginal.name,
@@ -2436,15 +2436,41 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                     setCategoriaProyecto(config.categoriaProyecto);
                     categoriaProyectoRef.current = config.categoriaProyecto;
                   }
-                  if (typeof config.materialId === "string") setMaterialId(config.materialId as MaterialId);
-                  if (typeof config.gemaId === "string") setGemaId(config.gemaId as GemaId);
-                  if (typeof config.escenarioId === "string") setEscenarioId(config.escenarioId as EscenarioId);
-                  if (typeof config.iluminacionId === "string") setIluminacionId(config.iluminacionId as IluminacionId);
-                  if (typeof config.vista === "string") setVista(config.vista as VistaId);
-                  if (typeof config.fondoId === "string") setFondoId(config.fondoId);
-                  if (typeof config.sombraContactoVisible === "boolean") setSombraContactoVisible(config.sombraContactoVisible);
+                  if (typeof config.materialId === "string") {
+                    setMaterialId(config.materialId as MaterialId);
+                    const materialGuardado = MATERIALES.find((item) => item.id === config.materialId);
+                    if (materialGuardado) apiRef.current?.materialCatalogo?.(materialGuardado);
+                  }
+                  if (typeof config.gemaId === "string") {
+                    setGemaId(config.gemaId as GemaId);
+                    const gemaGuardada = GEMAS.find((item) => item.id === config.gemaId);
+                    if (gemaGuardada) apiRef.current?.gemaCatalogo?.(gemaGuardada);
+                  }
+                  if (typeof config.escenarioId === "string") {
+                    setEscenarioId(config.escenarioId as EscenarioId);
+                    apiRef.current?.escenario(config.escenarioId);
+                  }
+                  if (typeof config.iluminacionId === "string") {
+                    setIluminacionId(config.iluminacionId as IluminacionId);
+                    apiRef.current?.iluminacion(config.iluminacionId);
+                  }
+                  if (typeof config.vista === "string") {
+                    setVista(config.vista as VistaId);
+                    apiRef.current?.vista(config.vista);
+                  }
+                  if (typeof config.fondoId === "string") {
+                    setFondoId(config.fondoId);
+                    apiRef.current?.fondo(config.fondoId);
+                  }
+                  if (typeof config.sombraContactoVisible === "boolean") {
+                    setSombraContactoVisible(config.sombraContactoVisible);
+                    apiRef.current?.sombraContacto?.(config.sombraContactoVisible);
+                  }
                   if (typeof config.ambienteId === "string" || config.ambienteId === null) setAmbienteId(config.ambienteId as string | null);
-                  if (typeof config.ambienteMetalInfluence === "number") setAmbienteMetalInfluence(config.ambienteMetalInfluence);
+                  if (typeof config.ambienteMetalInfluence === "number") {
+                    setAmbienteMetalInfluence(config.ambienteMetalInfluence);
+                    apiRef.current?.influenciaMetalAmbiente?.(config.ambienteMetalInfluence);
+                  }
                   if (typeof config.metalHdriId === "string") apiRef.current?.metalHdri(config.metalHdriId);
                   if (typeof config.gemHdriId === "string") apiRef.current?.gemHdri(config.gemHdriId);
                 }
