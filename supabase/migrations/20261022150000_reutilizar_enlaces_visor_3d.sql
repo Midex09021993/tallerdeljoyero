@@ -57,7 +57,7 @@ returns table(token text, expira_en timestamptz, nombre text)
 language plpgsql
 security definer
 set search_path = public, pg_temp
-as $
+as $$
 declare
   v_enlaces integer;
   v_token text;
@@ -104,7 +104,7 @@ begin
       limit 1;
   end if;
 end;
-$;
+$$;
 
 revoke all on function public.crear_enlace_visor_3d(text, text, text, text) from public, anon;
 grant execute on function public.crear_enlace_visor_3d(text, text, text, text) to authenticated;
