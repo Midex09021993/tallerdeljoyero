@@ -1840,6 +1840,23 @@ function MiNubePage() {
                     </div>
                     <button type="button" disabled={anadiendoCatalogo === recibida.nombre || recibida.cargandoArchivos} onClick={() => void prepararFichaCompartida(recibida)} className="w-full rounded-lg border border-[#c5a15d]/60 bg-[#c5a15d]/[0.10] px-3 py-2 text-[11px] font-semibold hover:bg-[#c5a15d]/[0.17] disabled:opacity-50">{anadiendoCatalogo === recibida.nombre ? "Preparando ficha…" : "Crear ficha para mi catálogo"}</button>
                     <button type="button" disabled={recibida.cargandoArchivos} onClick={() => { const abierto = proyectoAbierto === "compartida:" + recibida.id; setProyectoAbierto(abierto ? null : "compartida:" + recibida.id); if (!abierto) void cargarArchivosCarpetaRecibida(recibida.id); }} className="w-full rounded-lg border border-border/80 bg-background/70 px-3 py-2 text-[11px] font-medium text-foreground/90 transition-colors hover:border-gold/45 hover:bg-muted/40 disabled:opacity-50">{recibida.cargandoArchivos ? "Cargando archivos…" : proyectoAbierto === "compartida:" + recibida.id ? "Ocultar archivos del proyecto" : recibida.archivosCargados ? "Ver archivos del proyecto" : "Cargar y ver archivos"}</button>
+
+                    <p className="border-t border-border pt-3 text-[10px] text-muted-foreground">Solo lectura · acceso vigente hasta que el propietario lo revoque.</p>
+                  </div>
+                </FichaProyecto>;
+              })}
+            </div>
+          )}
+          {carpetasRecibidas.filter((recibida) => proyectoAbierto === "compartida:" + recibida.id).map((recibida) => (
+            <section key={"detalle-" + recibida.id} className="overflow-hidden rounded-2xl border border-gold/30 bg-card shadow-sm" aria-label={"Archivos de " + recibida.nombre}>
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-muted/25 px-5 py-4">
+                <div className="flex items-start gap-3">
+                  <div className="grid size-10 shrink-0 place-items-center rounded-xl border border-gold/30 bg-gold/10 text-gold"><Folder className="size-5" /></div>
+                  <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-gold">Carpeta compartida</p><h4 className="mt-0.5 text-base font-semibold">{recibida.nombre}</h4><p className="mt-0.5 text-xs text-muted-foreground">{recibida.cargandoArchivos ? "Cargando archivos…" : recibida.archivos.length + " archivo(s) · Solo lectura"}</p></div>
+                </div>
+                <button type="button" onClick={() => setProyectoAbierto(null)} className="rounded-lg border border-border bg-background px-3 py-2 text-xs font-semibold hover:bg-muted/60">Cerrar ficha <X className="ml-1 inline size-3.5" /></button>
+              </div>
+              <div className="p-4 sm:p-5">
                     {proyectoAbierto === "compartida:" + recibida.id && (
                       <div className="space-y-2 border-t border-border pt-3">
                         <div className="grid gap-2 sm:grid-cols-2">
@@ -1860,12 +1877,9 @@ function MiNubePage() {
                         </div>
                       </div>
                     )}
-                    <p className="border-t border-border pt-3 text-[10px] text-muted-foreground">Solo lectura · acceso vigente hasta que el propietario lo revoque.</p>
-                  </div>
-                </FichaProyecto>;
-              })}
-            </div>
-          )}
+              <div className="border-t border-border px-5 py-3 text-[11px] text-muted-foreground"><Lock className="mr-1.5 inline size-3.5" /> Acceso de solo lectura · el propietario puede revocarlo en cualquier momento.</div>
+            </section>
+          ))}
         </section>
         {opcionesCompartir && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true" aria-labelledby="mi-nube-opciones-title">
