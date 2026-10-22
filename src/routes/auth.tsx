@@ -91,6 +91,10 @@ function LoginPage() {
       window.location.assign(`/mi-nube?importTransfer=${encodeURIComponent(importTransfer)}`);
       return;
     }
+    if (window.sessionStorage.getItem("aurum_peso_draft")) {
+      window.location.assign("/herramientas?recuperarPeso=1");
+      return;
+    }
     navigate({ to: inicioSegunRol(sesion, { movilTablet: esVistaMovilTablet() }) });
   }, [sesion, navigate]);
 
@@ -144,6 +148,10 @@ function LoginPage() {
       const { data: sesionActualizada, error: errorSesion } = await refetchSesion();
       if (errorSesion || !sesionActualizada) {
         throw new Error("La sesión se creó, pero no se pudo resolver el acceso al taller");
+      }
+      if (window.sessionStorage.getItem("aurum_peso_draft")) {
+        window.location.assign("/herramientas?recuperarPeso=1");
+        return;
       }
       navigate({ to: inicioSegunRol(sesionActualizada, { movilTablet: esVistaMovilTablet() }), replace: true });
     } catch (e2) {
