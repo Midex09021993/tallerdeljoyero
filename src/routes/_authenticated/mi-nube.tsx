@@ -183,7 +183,7 @@ function MiNubePage() {
   const [progresoCompartir, setProgresoCompartir] = useState("");
   const [errorCompartir, setErrorCompartir] = useState<{ proyecto: string; mensaje: string } | null>(null);
   const [enlaceCompartido, setEnlaceCompartido] = useState<{ proyecto: string; url: string } | null>(null);
-  const [enlaceVisorArchivo, setEnlaceVisorArchivo] = useState<{ ruta: string; url: string } | null>(null);
+  const [enlacesVisorArchivo, setEnlacesVisorArchivo] = useState<Array<{ ruta: string; url: string }>>([]);
   const [generandoEnlaceVisor, setGenerandoEnlaceVisor] = useState<string | null>(null);
   const [seccionActiva, setSeccionActiva] = useState<Categoria | "todos">("todos");
   const [carpeta, setCarpeta] = useState("");
@@ -1319,6 +1319,27 @@ function MiNubePage() {
   };
 
   
+  const crearEnlaceVisorArchivo = async (archivo: ArchivoNube) => {
+    if (archivo.origen !== "supabase" || !archivo.nombre.toLowerCase().endsWith(".glb")) {
+      toast.error("El visor compartido necesita un archivo GLB guardado en Mi Nube.");
+      return;
+    }
+    setGenerandoEnlaceVisor(archivo.ruta);
+    try {
+      const { data, error: urlError } = await supabase.storage.from(BUCKET).createSignedUrl(archivo.ruta, 3 * 24 * 60 * 60);
+      if (urlError || !data?.signedUrl) throw urlError ?? new Error("No se pudo crear el enlace del visor.");
+      const tokenBytes = crypto.getRandomValues(new Uint8Array(12));
+      const token = Array.from(tokenBytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+      const { error: saveError } = await supabase.rpc("crear_enlace_visor_3d", { _token: token, _modelo_url: data.signedUrl, _nombre: nombreVisible(archivo.nombre) });
+      if (saveError) throw saveError;
+      const url = new URL("/v/" + token, window.location.origin).toString();
+      setEnlacesVisorArchivo((actuales) => [...actuales.filter((enlace) => enlace.ruta !== archivo.ruta), { ruta: archivo.ruta, url }]);
+      try { await navigator.clipboard.writeText(url); toast.success("Enlace del visor copiado. Vence en 3 días."); }
+      catch { toast.info("Enlace preparado. Puedes copiarlo desde la carpeta."); }
+    } catch (cause) { toast.error(cause instanceof Error ? cause.message : "No se pudo crear el enlace del visor."); }
+    finally { setGenerandoEnlaceVisor(null); }
+  };
+
   const abrirArchivo = async (archivo: ArchivoNube) => {
     if (archivo.origen === "nas") {
       try {
@@ -1746,43 +1767,17 @@ function MiNubePage() {
                                 </button>
                               )}
                               {archivo.nombre.toLowerCase().endsWith(".glb") && archivo.origen === "supabase" && (
-                                <button type="button" disabled={generandoEnlaceVisor === archivo.ruta} onClick={async () => {
-                                  setGenerandoEnlaceVisor(archivo.ruta);
-                                  try {
-                                    const { data, error: urlError } = await supabase.storage.from(BUCKET).createSignedUrl(archivo.ruta, 3 * 24 * 60 * 60);
-                                    if (urlError || !data?.signedUrl) throw urlError ?? new Error("No se pudo crear el enlace del visor.");
-                                    const tokenBytes = crypto.getRandomValues(new Uint8Array(12));
-                                    const token = Array.from(tokenBytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
-                                    const { error: saveError } = await supabase.rpc("crear_enlace_visor_3d", {
-                                      _token: token,
-                                      _modelo_url: data.signedUrl,
-                                      _nombre: nombreVisible(archivo.nombre),
-                                    });
-                                    if (saveError) throw saveError;
-                                    const url = new URL(`/v/${token}`, window.location.origin).toString();
-                                    setEnlaceVisorArchivo({ ruta: archivo.ruta, url });
-                                    try {
-                                      await navigator.clipboard.writeText(url);
-                                      toast.success("Enlace del visor copiado. Vence en 3 días.");
-                                    } catch {
-                                      toast.info("Enlace preparado. Puedes copiarlo desde la tarjeta del archivo.");
-                                    }
-                                  } catch (cause) {
-                                    toast.error(cause instanceof Error ? cause.message : "No se pudo crear el enlace del visor.");
-                                  } finally {
-                                    setGenerandoEnlaceVisor(null);
-                                  }
-                                }} className="rounded-lg border border-gold/40 bg-gold/5 px-2.5 py-1.5 text-[11px] font-semibold hover:bg-gold/10 disabled:opacity-50">
+                                <button type="button" disabled={generandoEnlaceVisor === archivo.ruta} onClick={() => void crearEnlaceVisorArchivo(archivo)} className="rounded-lg border border-gold/40 bg-gold/5 px-2.5 py-1.5 text-[11px] font-semibold hover:bg-gold/10 disabled:opacity-50">
                                   {generandoEnlaceVisor === archivo.ruta ? "Preparando visor…" : "Crear enlace del visor 3D"}
                                 </button>
                               )}
-                              {enlaceVisorArchivo?.ruta === archivo.ruta && (
+                              {enlacesVisorArchivo.some((enlace) => enlace.ruta === archivo.ruta) && (
                                 <div className="mt-2 w-full space-y-2 rounded-lg border border-gold/30 bg-gold/5 p-2.5">
                                   <p className="text-[11px] font-semibold">Enlace del visor · válido durante 3 días</p>
-                                  <input aria-label="Enlace público del visor 3D" readOnly value={enlaceVisorArchivo.url} onFocus={(event) => event.currentTarget.select()} className="w-full rounded-lg border border-border bg-background px-2.5 py-2 text-[11px]" />
+                                  <input aria-label="Enlace público del visor 3D" readOnly value={enlacesVisorArchivo.find((enlace) => enlace.ruta === archivo.ruta)?.url ?? ""} onFocus={(event) => event.currentTarget.select()} className="w-full rounded-lg border border-border bg-background px-2.5 py-2 text-[11px]" />
                                   <div className="flex flex-wrap gap-2">
-                                    <button type="button" onClick={async () => { try { await navigator.clipboard.writeText(enlaceVisorArchivo.url); toast.success("Enlace copiado."); } catch { toast.error("No se pudo copiar automáticamente. Selecciona el enlace y cópialo."); } }} className="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-2 text-[11px] font-medium"><Copy className="size-3.5" /> Copiar enlace</button>
-                                    <button type="button" onClick={() => window.open(enlaceVisorArchivo.url, "_blank", "noopener,noreferrer")} className="rounded-lg border border-gold/40 px-2.5 py-2 text-[11px] font-semibold">Abrir visor</button>
+                                    <button type="button" onClick={async () => { try { await navigator.clipboard.writeText(enlacesVisorArchivo.find((enlace) => enlace.ruta === archivo.ruta)?.url ?? ""); toast.success("Enlace copiado."); } catch { toast.error("No se pudo copiar automáticamente. Selecciona el enlace y cópialo."); } }} className="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-2 text-[11px] font-medium"><Copy className="size-3.5" /> Copiar enlace</button>
+                                    <button type="button" onClick={() => { const enlace = enlacesVisorArchivo.find((item) => item.ruta === archivo.ruta); if (enlace) window.open(enlace.url, "_blank", "noopener,noreferrer"); }} className="rounded-lg border border-gold/40 px-2.5 py-2 text-[11px] font-semibold">Abrir visor</button>
                                   </div>
                                 </div>
                               )}
@@ -1905,7 +1900,47 @@ function MiNubePage() {
                 </div>
                 <button type="button" onClick={() => setOpcionesCompartir(null)} className="rounded-lg p-2 hover:bg-muted" aria-label="Cerrar"><X className="size-4" /></button>
               </div>
-              <div className="mt-5 grid gap-3">
+              <div className="mt-5 space-y-3">
+                <section className="rounded-xl border border-gold/35 bg-gold/[0.06] p-3.5">
+                  <div className="flex items-start gap-3">
+                    <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-gold/15 text-gold"><Box className="size-5" /></div>
+                    <div className="min-w-0 flex-1">
+                      <h4 className="text-sm font-semibold">Enlace del visor 3D</h4>
+                      <p className="mt-1 text-xs leading-5 text-muted-foreground">Crea un enlace para mostrar la joya en un visor independiente, sin dar acceso a toda la carpeta. Válido durante 3 días.</p>
+                    </div>
+                  </div>
+                  {opcionesCompartir.archivos.filter((archivo) => archivo.origen === "supabase" && archivo.nombre.toLowerCase().endsWith(".glb")).length > 0 ? (
+                    <div className="mt-3 space-y-2">
+                      {opcionesCompartir.archivos.filter((archivo) => archivo.origen === "supabase" && archivo.nombre.toLowerCase().endsWith(".glb")).map((archivo) => {
+                        const enlace = enlacesVisorArchivo.find((item) => item.ruta === archivo.ruta);
+                        return (
+                          <div key={archivo.ruta} className="rounded-lg border border-border/70 bg-background p-3">
+                            <div className="flex items-center justify-between gap-3">
+                              <div className="min-w-0">
+                                <p className="truncate text-xs font-semibold">{nombreVisible(archivo.nombre)}</p>
+                                <p className="mt-0.5 text-[10px] text-muted-foreground">{etiquetaTamano(archivo.bytes)}</p>
+                              </div>
+                              <button type="button" disabled={generandoEnlaceVisor === archivo.ruta} onClick={() => void crearEnlaceVisorArchivo(archivo)} className="shrink-0 rounded-lg border border-gold/45 px-2.5 py-2 text-[11px] font-semibold hover:bg-gold/10 disabled:opacity-50">
+                                {generandoEnlaceVisor === archivo.ruta ? "Creando…" : enlace ? "Regenerar enlace" : "Crear enlace"}
+                              </button>
+                            </div>
+                            {enlace && (
+                              <div className="mt-2 space-y-2">
+                                <input aria-label={`Enlace del visor para ${nombreVisible(archivo.nombre)}`} readOnly value={enlace.url} onFocus={(event) => event.currentTarget.select()} className="w-full rounded-lg border border-border bg-background px-2.5 py-2 text-[11px]" />
+                                <div className="flex flex-wrap gap-2">
+                                  <button type="button" onClick={async () => { try { await navigator.clipboard.writeText(enlace.url); toast.success("Enlace copiado."); } catch { toast.error("No se pudo copiar automáticamente. Selecciona el enlace y cópialo."); } }} className="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-2 text-[11px] font-medium"><Copy className="size-3.5" /> Copiar enlace</button>
+                                  <button type="button" onClick={() => window.open(enlace.url, "_blank", "noopener,noreferrer")} className="rounded-lg border border-gold/40 px-2.5 py-2 text-[11px] font-semibold">Abrir visor</button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="mt-3 rounded-lg border border-dashed border-border p-3 text-xs leading-5 text-muted-foreground">Esta carpeta no tiene archivos GLB guardados en la nube. Para crear un enlace del visor, exporta o guarda la joya como GLB y súbela a esta carpeta.</p>
+                  )}
+                </section>
                 <button type="button" onClick={() => { const proyecto = opcionesCompartir; setOpcionesCompartir(null); void abrirCompartirEcosistema(proyecto); }} className="flex items-start gap-3 rounded-xl border border-[#c5a15d]/50 bg-[#c5a15d]/[0.08] p-4 text-left transition-colors hover:bg-[#c5a15d]/[0.14]">
                   <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#c5a15d]/15 text-gold"><Share2 className="size-5" /></div>
                   <div><span className="block text-sm font-semibold">Compartir con un taller registrado</span><span className="mt-1 block text-xs leading-5 text-muted-foreground">La carpeta original aparecerá en “Compartidas conmigo” de su Mi Nube. Sin duplicar archivos; puedes revocar el acceso.</span></div>
@@ -1915,7 +1950,7 @@ function MiNubePage() {
                   <div><span className="block text-sm font-semibold">Generar enlace temporal · AURUM Transfer</span><span className="mt-1 block text-xs leading-5 text-muted-foreground">Para alguien externo al ecosistema. Enlace de un solo uso, con vencimiento de 24 horas y hasta 10 archivos.</span></div>
                 </button>
               </div>
-              <p className="mt-4 text-xs leading-5 text-muted-foreground">Elige compartir permanentemente con un taller registrado o enviar una copia descargable mediante Transfer. Los originales de Mi Nube no se eliminan.</p>
+              <p className="mt-4 text-xs leading-5 text-muted-foreground">El enlace del visor muestra únicamente el modelo GLB seleccionado. Para compartir la carpeta completa con otro taller, usa el acceso entre talleres o AURUM Transfer.</p>
               <button type="button" onClick={() => setOpcionesCompartir(null)} className="mt-4 w-full rounded-xl border border-border px-3 py-2.5 text-sm font-semibold">Cancelar</button>
             </div>
           </div>
