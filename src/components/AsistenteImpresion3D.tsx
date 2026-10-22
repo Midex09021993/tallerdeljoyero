@@ -23,7 +23,7 @@ function inspeccionarGeometria(geometria: import("three").BufferGeometry): Inspe
   const caja = geometria.boundingBox;
   if (!caja) throw new Error("No se pudieron calcular las dimensiones del modelo.");
 
-  const dimensiones = caja.getSize(new (geometria.boundingBox!.min.constructor as typeof import("three").Vector3)());
+  const dimensiones = { x: caja.max.x - caja.min.x, y: caja.max.y - caja.min.y, z: caja.max.z - caja.min.z };
   let volumenFirmado = 0;
   const conteoBordes = new Map<string, number>();
   const punto = (i: number) => [
@@ -108,7 +108,7 @@ export function AsistenteImpresion3D() {
   const calculo = useMemo(() => {
     if (!inspeccion) return null;
     const factorUnidad = unidad === "mm" ? 1 : unidad === "cm" ? 10 : 25.4;
-    const volumenMl = (inspeccion.volumenMm3 / factorUnidad ** 3);
+    const volumenMl = (inspeccion.volumenMm3 * factorUnidad ** 3) / 1000;
     const precio = Math.max(0, Number(precioMl) || 0);
     const factorDesperdicio = Math.max(0, Number(desperdicio) || 0) / 100;
     const piezas = Math.max(1, Math.floor(Number(cantidad) || 1));
@@ -125,7 +125,7 @@ export function AsistenteImpresion3D() {
       total: costeResina + costeMaquina,
       porPieza: (costeResina + costeMaquina) / piezas,
       piezas,
-      dimensiones: inspeccion.dimensionesMm.map((v) => v / factorUnidad) as [number, number, number],
+      dimensiones: inspeccion.dimensionesMm,
     };
   }, [inspeccion, unidad, precioMl, desperdicio, cantidad, horasMaquina, costeHora]);
 
