@@ -58,6 +58,9 @@ function HerramientasPage() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    if (params.get("recuperarPeso") === "1" && window.sessionStorage.getItem("aurum_peso_draft")) {
+      setHerramientaActiva("peso");
+    }
     const url = params.get("archivoUrl");
     const nombre = params.get("archivoNombre") || "modelo.stl";
     const ruta = params.get("archivoRuta");
