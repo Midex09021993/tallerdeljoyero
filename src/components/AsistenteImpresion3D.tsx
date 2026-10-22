@@ -72,6 +72,25 @@ export function AsistenteImpresion3D() {
   const [unidad, setUnidad] = useState<"mm" | "cm" | "in">("mm");
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const url = params.get("archivoUrl");
+    if (!url) return;
+    let cancelado = false;
+    const nombre = params.get("archivoNombre") || "modelo.stl";
+    (async () => {
+      try {
+        const respuesta = await fetch(url);
+        if (!respuesta.ok) throw new Error("No se pudo descargar el modelo desde Mi Nube.");
+        const blob = await respuesta.blob();
+        if (!cancelado) setArchivo(new File([blob], nombre, { type: "model/stl" }));
+      } catch (error) {
+        if (!cancelado) toast.error(error instanceof Error ? error.message : "No se pudo abrir el modelo de Mi Nube.");
+      }
+    })();
+    return () => { cancelado = true; };
+  }, []);
+
+  useEffect(() => {
     let cancelado = false;
     if (!archivo) {
       setInspeccion(null);
