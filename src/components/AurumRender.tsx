@@ -2227,22 +2227,39 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               const blob=await apiRef.current?.exportGLB({download:false}) as Blob|undefined;
               if(!blob||blob.size<1024) throw new Error("No se pudo preparar el modelo 3D para compartir.");
               const cleanName=(nombreProyecto||"joya-aurum").trim().replace(/[^a-z0-9-_]+/gi,"-").slice(0,80)||"joya-aurum";
-              const path=participanteId+"/"+userId+"/aurum-compartidos/"+crypto.randomUUID()+"-"+cleanName+".glb";
+              let destinoCarpeta: { rutaCarpeta?: string; nombre?: string } | null = null;
+              try { const rawDestino=sessionStorage.getItem("aurum-render-poster-destino"); if(rawDestino) destinoCarpeta=JSON.parse(rawDestino) as {rutaCarpeta?:string;nombre?:string}; } catch { destinoCarpeta=null; }
+              const guardarEnCarpeta=Boolean(destinoCarpeta?.rutaCarpeta && destinoCarpeta.rutaCarpeta.split("/").filter(Boolean).length >= 2);
+              const path=guardarEnCarpeta
+                ? destinoCarpeta!.rutaCarpeta!.replace(/\/$/,"")+"/"+cleanName+"-"+crypto.randomUUID()+".glb"
+                : participanteId+"/"+userId+"/aurum-compartidos/"+crypto.randomUUID()+"-"+cleanName+".glb";
               const {error:uploadError}=await supabase.storage.from("mi-nube").upload(path,blob,{contentType:"model/gltf-binary",upsert:false,cacheControl:"3600"});
               if(uploadError) throw uploadError;
-              const {data:signed,error:signedError}=await supabase.storage.from("mi-nube").createSignedUrl(path,7*24*60*60);
-              if(signedError||!signed?.signedUrl) throw signedError??new Error("No se pudo crear el enlace temporal.");
-              const shareUrl=new URL("/aurum-render-public",window.location.origin);
-              shareUrl.searchParams.set("modeloCompartido",signed.signedUrl);
-              shareUrl.searchParams.set("nombre",cleanName);
-              const generatedLink=shareUrl.toString();
+              let generatedLink: string;
+              if(guardarEnCarpeta){
+                const {data:signed,error:signedError}=await supabase.storage.from("mi-nube").createSignedUrl(path,3*24*60*60);
+                if(signedError||!signed?.signedUrl) throw signedError??new Error("El GLB se guardó, pero no se pudo preparar el enlace temporal.");
+                const tokenBytes=crypto.getRandomValues(new Uint8Array(12));
+                const token=Array.from(tokenBytes,(byte)=>byte.toString(16).padStart(2,"0")).join("");
+                const {error:linkError}=await supabase.rpc("crear_enlace_visor_3d",{_token:token,_modelo_url:signed.signedUrl,_nombre:cleanName+".glb"});
+                if(linkError) throw linkError;
+                generatedLink=new URL("/v/"+token,window.location.origin).toString();
+                sessionStorage.removeItem("aurum-render-poster-destino");
+              }else{
+                const {data:signed,error:signedError}=await supabase.storage.from("mi-nube").createSignedUrl(path,7*24*60*60);
+                if(signedError||!signed?.signedUrl) throw signedError??new Error("No se pudo crear el enlace temporal.");
+                const shareUrl=new URL("/aurum-render-public",window.location.origin);
+                shareUrl.searchParams.set("modeloCompartido",signed.signedUrl);
+                shareUrl.searchParams.set("nombre",cleanName);
+                generatedLink=shareUrl.toString();
+              }
               setSharedLink(generatedLink);
               setError(null);
               try {
                 await navigator.clipboard.writeText(generatedLink);
-                toast.success("Enlace copiado. La joya está guardada en Mi Nube y el enlace vence en 7 días.");
+                toast.success(guardarEnCarpeta ? "GLB guardado en la carpeta de Mi Nube. Enlace del visor copiado; vence en 3 días." : "Enlace copiado. La joya está guardada en Mi Nube y el enlace vence en 7 días.");
               } catch {
-                toast.info("La joya está guardada. Copia el enlace que aparece debajo del botón.");
+                toast.info(guardarEnCarpeta ? "GLB guardado en la carpeta. Copia el enlace del visor que aparece debajo del botón." : "La joya está guardada. Copia el enlace que aparece debajo del botón.");
               }
             }catch(e){setError(e instanceof Error?e.message:"No se pudo compartir la joya.");}
             finally{setExportBusy(false);}
