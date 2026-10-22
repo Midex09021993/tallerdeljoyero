@@ -741,8 +741,11 @@ function MiNubePage() {
           limit: 1000, sortBy: { column: "name", order: "asc" },
         });
         if (listaError) throw listaError;
+        // Los artefactos de Aurum se conservan en Storage, pero no se exponen
+        // en el listado de carpetas compartidas ni como documentos descargables.
         const archivos = (entradas ?? [])
           .filter((e) => Boolean(e.name) && !e.name.endsWith("/") && Boolean(e.id || e.metadata || e.name.includes(".")))
+          .filter((e) => !["01-modelo.glb", "02-configuracion-aurum.json"].includes(e.name.toLowerCase()))
           .map((e): ArchivoNube => ({
             nombre: e.name, ruta: `${carpetaActual.ruta}/${e.name}`, carpeta: carpetaActual.nombre,
             bytes: Number(e.metadata?.size ?? 0), actualizado: e.updated_at ?? e.created_at ?? null,
