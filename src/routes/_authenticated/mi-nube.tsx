@@ -1857,9 +1857,7 @@ function MiNubePage() {
                 <button type="button" onClick={() => setProyectoAbierto(null)} className="rounded-lg border border-border bg-background px-3 py-2 text-xs font-semibold hover:bg-muted/60">Cerrar ficha <X className="ml-1 inline size-3.5" /></button>
               </div>
               <div className="p-4 sm:p-5">
-                    {proyectoAbierto === "compartida:" + recibida.id && (
-                      <div className="space-y-2 border-t border-border pt-3">
-                        <div className="grid gap-2 sm:grid-cols-2">
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                           {recibida.archivos.map((archivo) => <div key={archivo.ruta} className="rounded-xl border border-border/70 bg-background p-3 transition-colors hover:border-border">
                             <div className="flex min-w-0 items-start gap-2.5">
                               <div className="grid size-9 shrink-0 place-items-center rounded-lg bg-muted/70 text-muted-foreground">{archivo.categoria === "fotos" ? <ImageIcon className="size-4" /> : archivo.categoria === "modelos-3d" ? <Box className="size-4" /> : archivo.categoria === "documentos" ? <FileText className="size-4" /> : <FileIcon className="size-4" />}</div>
@@ -1874,9 +1872,8 @@ function MiNubePage() {
                               <button type="button" onClick={() => void abrirArchivo(archivo)} className="rounded-lg border border-border/80 bg-background px-2.5 py-2 text-[11px] font-medium hover:border-gold/45">Abrir / descargar</button>
                             </div>
                           </div>)}
-                        </div>
-                      </div>
-                    )}
+                </div>
+              </div>
               <div className="border-t border-border px-5 py-3 text-[11px] text-muted-foreground"><LockKeyhole className="mr-1.5 inline size-3.5" /> Acceso de solo lectura · el propietario puede revocarlo en cualquier momento.</div>
             </section>
           ))}
