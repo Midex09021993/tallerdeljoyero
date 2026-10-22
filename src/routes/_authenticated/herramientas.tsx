@@ -8,6 +8,7 @@ import { VisorPesoJoyeria } from "@/components/VisorPesoJoyeria";
 import { CalculadoraYeso } from "@/routes/_authenticated/taller";
 import { CalculadoraPesoGemas } from "@/components/CalculadoraPesoGemas";
 import { GeneradorSTLIA } from "@/components/GeneradorSTLIA";
+import { AsistenteImpresion3D } from "@/components/AsistenteImpresion3D";
 
 export const Route = createFileRoute("/_authenticated/herramientas")({
   head: () => ({
@@ -45,6 +46,7 @@ type HerramientaInterna =
   | "gemas"
   | "tallas"
   | "stl"
+  | "impresion"
   | null;
 
 const tarjetaBase =
@@ -58,7 +60,9 @@ function HerramientasPage() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get("recuperarPeso") === "1" && window.sessionStorage.getItem("aurum_peso_draft")) {
+    if (params.get("asistente") === "1" || params.get("herramienta") === "impresion") {
+      setHerramientaActiva("impresion");
+    } else if (params.get("recuperarPeso") === "1" && window.sessionStorage.getItem("aurum_peso_draft")) {
       setHerramientaActiva("peso");
     }
     const url = params.get("archivoUrl");
@@ -68,7 +72,7 @@ function HerramientasPage() {
     if (ruta) setArchivoOrigen({ ruta, proyecto });
     if (!url) return;
     let cancelado = false;
-    setHerramientaActiva("peso");
+    if (params.get("asistente") !== "1" && params.get("herramienta") !== "impresion") setHerramientaActiva("peso");
     (async () => {
       try {
         const response = await fetch(url);
@@ -90,6 +94,7 @@ function HerramientasPage() {
     gemas: "Calculadora de peso de gemas",
     tallas: "Conversor de tallas de anillo",
     stl: "Generador STL con IA",
+    impresion: "Asistente de impresión 3D",
   };
 
   const opciones = [
@@ -99,6 +104,7 @@ function HerramientasPage() {
     { id: "gemas" as const, titulo: "Peso de gemas", Icono: CircleDot },
     { id: "tallas" as const, titulo: "Tallas de anillo", Icono: Ruler },
     { id: "stl" as const, titulo: "Generador STL con IA", Icono: Sparkles },
+    { id: "impresion" as const, titulo: "Impresión 3D", Icono: CircleDot },
   ];
 
   return (
@@ -169,6 +175,7 @@ function HerramientasPage() {
               {herramientaActiva === "gemas" ? <CalculadoraPesoGemas /> : null}
               {herramientaActiva === "tallas" ? <ConversorTallasAnillo /> : null}
               {herramientaActiva === "stl" ? <GeneradorSTLIA /> : null}
+              {herramientaActiva === "impresion" ? <AsistenteImpresion3D /> : null}
             </div>
           </section>
         ) : (
