@@ -1128,6 +1128,31 @@ function MiNubePage() {
           if (!sigueEnOrigen && !yaEstaEnDestino) {
             throw new Error(`El archivo “${entrada.name}” ya no aparece ni en el origen ni en el destino. No se completó el renombrado; revisa la carpeta antes de volver a intentarlo.`);
           }
+
+          // Storage puede devolver "Object not found" por una lectura desactualizada.
+          // Si el objeto sigue en origen y no aparece en destino, reintentar una sola vez.
+          if (sigueEnOrigen && !yaEstaEnDestino) {
+            const { error: retryMoveError } = await supabase.storage.from(BUCKET).move(origen, destino);
+            if (!retryMoveError) {
+              movidos.push({ origen, destino });
+              continue;
+            }
+
+            const [{ data: origenTrasReintento, error: errorOrigenTrasReintento }, { data: destinoTrasReintento, error: errorDestinoTrasReintento }] = await Promise.all([
+              supabase.storage.from(BUCKET).list(raizAnterior, { limit: 1000 }),
+              supabase.storage.from(BUCKET).list(raizNueva, { limit: 1000 }),
+            ]);
+            if (errorOrigenTrasReintento || errorDestinoTrasReintento) {
+              throw new Error(`No se pudo confirmar el estado de “${entrada.name}” después del reintento. No vuelvas a renombrar la carpeta hasta revisar sus archivos.`);
+            }
+            const permaneceEnOrigen = (origenTrasReintento ?? []).some((item) => item.name === entrada.name && Boolean(item.id || item.metadata));
+            const apareceEnDestino = (destinoTrasReintento ?? []).some((item) => item.name === entrada.name && Boolean(item.id || item.metadata));
+            if (!permaneceEnOrigen && apareceEnDestino) {
+              movidos.push({ origen, destino });
+              continue;
+            }
+            throw new Error(`No se pudo mover “${entrada.name}”: ${retryMoveError.message}. El archivo ${permaneceEnOrigen ? "sigue en la carpeta original" : "no aparece en el origen"}${apareceEnDestino ? " y ya está en el destino" : ""}.`);
+          }
         }
         throw new Error(`No se pudo mover “${entrada.name}”: ${moveError.message}`);
       }
