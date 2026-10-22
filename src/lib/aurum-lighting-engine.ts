@@ -16,9 +16,9 @@ export const AURUM_LIGHTING_DEFAULT:AurumLightConfig={
  key:{enabled:false,intensity:.9,position:[4,6,5],angle:.58,penumbra:.82},
  fill:{enabled:false,intensity:.32,position:[-4,3,4],angle:.82,penumbra:.9},
  rim:{enabled:false,intensity:.5,position:[2,5,-5],angle:.7,penumbra:.88},
- gem:{enabled:false,intensity:.3,position:[0,4,2]},front:{enabled:false,intensity:1},ambient:.08
+ gem:{enabled:false,intensity:1.0,position:[0,3,2]},front:{enabled:false,intensity:1},ambient:.08
 };
-export const AURUM_LIGHTING_PRESETS={joyeria:{...AURUM_LIGHTING_DEFAULT},diamante:{...AURUM_LIGHTING_DEFAULT,gem:{enabled:true,intensity:.85,position:[0,3,2]}},oro:{...AURUM_LIGHTING_DEFAULT,key:{...AURUM_LIGHTING_DEFAULT.key,intensity:1.0}},suave:{...AURUM_LIGHTING_DEFAULT,key:{...AURUM_LIGHTING_DEFAULT.key,intensity:1.15},fill:{...AURUM_LIGHTING_DEFAULT.fill,intensity:.7}}};
+export const AURUM_LIGHTING_PRESETS={joyeria:{...AURUM_LIGHTING_DEFAULT},diamante:{...AURUM_LIGHTING_DEFAULT,gem:{enabled:true,intensity:1.25,position:[0,3,2]}},oro:{...AURUM_LIGHTING_DEFAULT,key:{...AURUM_LIGHTING_DEFAULT.key,intensity:1.0}},suave:{...AURUM_LIGHTING_DEFAULT,key:{...AURUM_LIGHTING_DEFAULT.key,intensity:1.15},fill:{...AURUM_LIGHTING_DEFAULT.fill,intensity:.7}}};
 
 /** Broad source ratios. The shape of the reflection matters more than raw light power. */
 export const AURUM_LIGHTING_RENDER_PRESETS={
