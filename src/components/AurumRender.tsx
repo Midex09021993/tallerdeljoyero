@@ -1061,8 +1061,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               material:m.name||null,
               hasOwnEnvMap:Boolean(m.envMap),
               materialEnvMapUuid:m.envMap?.uuid??null,
-              sceneEnvMapUuid:scene.environment?.uuid??null,
-              materialUsesSceneEnvironment:!m.envMap||m.envMap===scene.environment,
+              sceneEnvMapUuid:escena.environment?.uuid??null,
+              materialUsesSceneEnvironment:!m.envMap||m.envMap===escena.environment,
               envMapRotation:m.envMapRotation?{
                 x:Number(m.envMapRotation.x??0),
                 y:Number(m.envMapRotation.y??0),
