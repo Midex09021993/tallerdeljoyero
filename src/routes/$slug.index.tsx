@@ -430,13 +430,37 @@ function CatalogoPublicoPage() {
 
       <section id="coleccion" className="mx-auto max-w-[1600px] px-5 py-10 sm:px-8">
         {colecciones.length ? (
-          <div className="mb-5 flex flex-wrap gap-2">
-            {colecciones.map(([collectionSlug, collectionName]) => (
-              <Link key={collectionSlug} to="/$slug/coleccion/$coleccion" params={{ slug: slugNormalizado, coleccion: collectionSlug }} className="rounded-full border border-[#1f1b1820] bg-white px-4 py-2 text-xs font-semibold hover:border-[#8a6b36]">
-                {collectionName}
-              </Link>
-            ))}
-          </div>
+          <section aria-labelledby="colecciones-publicas-titulo" className="mb-12">
+            <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[.25em] text-[#8a6b36]">Selección del taller</p>
+                <h2 id="colecciones-publicas-titulo" className="mt-1 font-display text-3xl sm:text-4xl">Nuestras colecciones</h2>
+                <p className="mt-2 max-w-xl text-sm leading-6 text-[#625b54]">Descubre nuestras joyas agrupadas por estilo e inspiración.</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+              {colecciones.map(([collectionSlug, collectionName]) => {
+                const collectionRow = rows.find((row) => row.coleccion_slug === collectionSlug && row.coleccion_nombre === collectionName && row.producto_id);
+                const collectionImage = collectionRow?.imagen_principal_url;
+                return (
+                  <Link key={collectionSlug} to="/$slug/coleccion/$coleccion" params={{ slug: slugNormalizado, coleccion: collectionSlug }} className="group overflow-hidden rounded-2xl border border-[#e9e2d8] bg-white transition duration-300 hover:-translate-y-1 hover:border-[#d3bd91] hover:shadow-[0_18px_45px_-28px_rgba(39,30,19,.38)]">
+                    <div className="relative aspect-[4/3] overflow-hidden bg-[radial-gradient(ellipse_at_50%_42%,#ffffff_0%,#fffdfa_54%,#eee7dc_100%)]">
+                      {collectionImage ? (
+                        <img src={collectionImage} alt={collectionName} loading="lazy" className="size-full object-contain p-5 transition-transform duration-500 group-hover:scale-[1.035]" onError={(event) => { event.currentTarget.style.display = "none"; }} />
+                      ) : (
+                        <div className="grid size-full place-items-center"><Gem className="size-10 text-[#b89a5b]" /></div>
+                      )}
+                      <span className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/35 to-transparent" />
+                    </div>
+                    <div className="flex items-center justify-between gap-3 p-4">
+                      <span className="min-w-0 truncate text-base font-semibold text-[#28221c]">{collectionName}</span>
+                      <span className="grid size-9 shrink-0 place-items-center rounded-full bg-[#302b28] text-white transition-transform group-hover:translate-x-0.5"><ArrowRight className="size-4" /></span>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
         ) : null}
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
