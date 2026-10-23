@@ -2919,6 +2919,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               {([["low","Baja","Vista rápida"],["high","Alta","Producción"],["ultra","Ultra","Máximo detalle"]] as const).map(([id,nombre,desc])=><button key={id} type="button" onClick={()=>cambiarCalidad(id)} className={"mb-1 w-full rounded-lg border px-2.5 py-2 text-left "+(renderQualityId===id?"border-[#d4af37]/60 bg-[#d4af37]/10":"border-white/10 bg-white/[.03]")}><span className="block text-[10px] font-semibold">{nombre}</span><span className="text-[8px] text-white/40">{desc}</span></button>)}
             </div>}
             {!embedded && lightingOpen && lightingPanel}
+            {!embedded && snapshotOpen && archivo && <div className="pointer-events-none absolute inset-0 z-[60] flex items-center justify-center overflow-hidden" aria-hidden="true"><div className="relative h-[88%] max-h-[88%] max-w-[88%] border border-[#e5c76a] shadow-[0_0_0_200vmax_rgba(0,0,0,0.55)]" style={{aspectRatio:`${Math.max(1,Number(snapshotWidth)||1)} / ${Math.max(1,Number(snapshotHeight)||1)}`}}><div className="absolute inset-0 border border-white/20"/></div></div>}
           </div>
         </main>
          {!embedded && <aside className="hidden w-[min(22vw,360px)] shrink-0 overflow-hidden rounded-2xl border border-[#e6e1d8] bg-[#faf9f6] text-[#292824] shadow-[0_6px_22px_rgba(36,32,20,.035)] xl:flex xl:flex-col">
