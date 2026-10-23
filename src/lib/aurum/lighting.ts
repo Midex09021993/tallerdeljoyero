@@ -246,26 +246,33 @@ export function createAurumLightingController(
 
       this.create();
       if (id === "ijewelReference" && !diagnosticEnvironmentOnly) {
-        // The supplied WebGi reference has no active randomized/directional light
-        // plugin; the reference illumination is environment-driven. Keep the
-        // studio lights available for every other AURUM scene, but disable them
-        // in the calibration scene so they cannot contaminate the comparison.
+        // Preserve the broad reference reflection sources, but do not leave
+        // the manual controls visually enabled while their lights are hidden.
+        // The panel remains authoritative for key/fill/rim/front in every scene.
         Object.values(lights).forEach((light:any) => {
           if (light) light.visible = false;
         });
         if (lights.softbox) lights.softbox.visible = true;
         if (lights.strip) lights.strip.visible = true;
-        if (lights.front) lights.front.visible = config.front?.enabled ?? true;
+        if (lights.kicker) lights.kicker.visible = true;
+        if (lights.edgeLeft) lights.edgeLeft.visible = true;
+        if (lights.edgeRight) lights.edgeRight.visible = true;
       }
-      // Reapply only controls the user explicitly touched after every scene
-      // preset. Untouched lights keep the selected preset's calibrated values.
+      // Reapply the panel's current enabled/intensity state after every preset,
+      // not only after an interaction in this session. Otherwise a preset can
+      // hide a checked light while the UI still reports it as enabled.
       (["key", "fill", "rim", "gem"] as const).forEach((name) => {
-        if (!manuallyTouched.has(name)) return;
         const light = lights[name];
         if (!light) return;
         light.visible = name === "gem" ? false : Boolean(config[name]?.enabled);
         light.intensity = Number(config[name]?.intensity ?? light.intensity);
       });
+      if (lights.front) {
+        lights.front.visible = Boolean(config.front?.enabled);
+        const rig = getAurumReflectionRigProfile(activeRigId);
+        const frontPreset = getAurumLightingPreset(activeRigId);
+        lights.front.intensity = rig.front.intensity * frontPreset.front * Math.max(0, Number(config.front?.intensity) || 0);
+      }
       syncGemShaderLight();
       if (diagnosticEnvironmentOnly && manuallyTouched.size > 0) {
         (["softbox", "strip", "kicker", "edgeLeft", "edgeRight"] as const).forEach((name) => {
