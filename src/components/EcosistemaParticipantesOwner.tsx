@@ -145,6 +145,24 @@ export function EcosistemaParticipantesOwner(){
      <p className="text-xs font-semibold">Mis archivos</p>
      <div className="mt-2 flex items-center justify-between gap-2 text-xs"><span className="text-muted-foreground">Carpetas propias</span><span className="font-semibold tabular-nums">{noDisponible ?? resumen?.carpetas_propias}</span></div>
      <div className="mt-1 flex items-center justify-between gap-2 text-xs"><span className="text-muted-foreground">Espacio ocupado</span><span className="font-semibold tabular-nums">{noDisponible ?? formatoEspacioMiNube(resumen!.bytes_propios)}</span></div>
+     {(() => {
+      const planId = obtenerPlanComercial(p.metadata?.["plan_comercial"])?.id ?? "emprendedor";
+      const limiteMiB = cuotaActual(planId)?.almacenamiento_mib;
+      if (noDisponible) return <p className="mt-2 text-[10px] text-muted-foreground">Capacidad disponible: {noDisponible}</p>;
+      if (limiteMiB === undefined) return <p className="mt-2 text-[10px] text-muted-foreground">Capacidad del plan no configurada.</p>;
+      if (limiteMiB < 0) return <p className="mt-2 text-[10px] text-muted-foreground">Capacidad del plan: ilimitada.</p>;
+      const limiteBytes = limiteMiB * 1024 * 1024;
+      const usadosBytes = resumen?.bytes_propios ?? 0;
+      const restanteBytes = Math.max(0, limiteBytes - usadosBytes);
+      const pct = Math.min(100, Math.round(usadosBytes / Math.max(1, limiteBytes) * 100));
+      return <>
+       <div className="mt-2 flex items-center justify-between gap-2 text-[10px]"><span className="text-muted-foreground">Capacidad del plan</span><span className="font-semibold tabular-nums">{formatoEspacioMiNube(limiteBytes)}</span></div>
+       <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-muted" role="progressbar" aria-label={`Uso de almacenamiento de ${p.nombre}`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct}>
+        <div className={`h-full rounded-full ${pct >= 90 ? "bg-amber-500" : "bg-gold"}`} style={{ width: `${pct}%` }} />
+       </div>
+       <p className="mt-1.5 text-[10px] text-muted-foreground">{pct}% utilizado · {formatoEspacioMiNube(restanteBytes)} disponibles</p>
+      </>;
+     })()}
     </section>
     <section className="rounded-lg border border-border bg-background p-3">
      <p className="text-xs font-semibold">Carpetas compartidas conmigo</p>
