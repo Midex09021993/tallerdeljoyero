@@ -619,6 +619,7 @@ function LoginPage() {
                         enfoque: "Todas las funciones de la plataforma, con límites de uso más amplios.",
                         items: ["Funciones del plan Taller", "Visualizador y peso 3D", "AURUM Render (beta) para materiales, gemas y escenas", "Órdenes de producción, trabajos y piezas", "Inventario, materiales y compras", "Procesos especializados: casting y corte láser"],
                         estilo: "featured",
+                        noDisponible: true,
                       },
                       {
                         id: "empresarial",
@@ -629,9 +630,10 @@ function LoginPage() {
                         enfoque: "Todas las funciones de la plataforma, con límites de uso para organizaciones.",
                         items: ["Funciones del plan Profesional", "Gestión de usuarios, roles y permisos", "Organización por áreas y sedes", "Seguimiento de producción y control de calidad", "Analítica e informes de operación", "Administración centralizada multi-sede"],
                         estilo: "standard",
+                        noDisponible: true,
                       },
                     ].map((plan) => (
-                      <article key={plan.id} className={"group relative flex min-w-0 flex-col overflow-hidden rounded-xl border p-3 transition duration-300 hover:-translate-y-0.5 sm:p-3.5 " + (plan.estilo === "featured" ? "border-gold/45 bg-gradient-to-b from-[#302719] via-[#1b1a16] to-[#151613] shadow-[0_12px_38px_rgba(194,161,92,.12)] hover:border-gold/70" : plan.estilo === "starter" ? "border-emerald-400/40 bg-gradient-to-b from-[#172923] via-[#14211d] to-[#111916] hover:border-emerald-300/60" : "border-white/10 bg-gradient-to-b from-[#1b1c1b] to-[#141514] hover:border-white/25")}>
+                      <article key={plan.id} className={"group relative flex min-w-0 flex-col overflow-hidden rounded-xl border p-3 transition duration-300 hover:-translate-y-0.5 sm:p-3.5 " + (plan.noDisponible ? "border-red-500/35 bg-gradient-to-b from-[#241718] via-[#191516] to-[#141314] hover:border-red-400/55" : plan.estilo === "featured" ? "border-gold/45 bg-gradient-to-b from-[#302719] via-[#1b1a16] to-[#151613] shadow-[0_12px_38px_rgba(194,161,92,.12)] hover:border-gold/70" : plan.estilo === "starter" ? "border-emerald-400/40 bg-gradient-to-b from-[#172923] via-[#14211d] to-[#111916] hover:border-emerald-300/60" : "border-white/10 bg-gradient-to-b from-[#1b1c1b] to-[#141514] hover:border-white/25")}>
                         <div aria-hidden="true" className={"absolute inset-x-0 top-0 h-px " + (plan.estilo === "featured" || plan.estilo === "starter" ? "bg-gradient-to-r from-transparent via-gold to-transparent" : "bg-gradient-to-r from-transparent via-white/20 to-transparent")} />
                         <div className="flex items-start justify-between gap-2">
                           <span className={"font-display text-2xl italic leading-none " + (plan.estilo === "featured" ? "text-gold/75" : plan.estilo === "starter" ? "text-emerald-300/80" : "text-white/20")}>{plan.numero}</span>
@@ -639,6 +641,12 @@ function LoginPage() {
                         </div>
                         <h4 className="mt-2.5 text-base font-semibold tracking-tight text-white">{plan.nombre}</h4>
                         <p className={"mt-1.5 text-[13px] font-bold " + (plan.precio === "Gratis" ? "text-emerald-300" : "text-gold")}>{plan.precio}</p>
+                        {plan.noDisponible && (
+                          <div className="mt-2 flex items-center gap-1.5 rounded-md border border-red-500/40 bg-red-500/10 px-2 py-1.5 text-[9px] font-extrabold uppercase tracking-[0.12em] text-red-300">
+                            <span className="size-1.5 rounded-full bg-red-400 shadow-[0_0_8px_rgba(248,113,113,.75)]" />
+                            No disponible todavía
+                          </div>
+                        )}
                         <p className="mt-1.5 min-h-[2.6rem] text-[10px] leading-snug text-white/55">{plan.enfoque}</p>
                         <div className="my-3 h-px bg-white/[0.08]" />
                         <p className="mb-2 text-[7px] font-bold uppercase tracking-[0.16em] text-white/35">Qué reúne esta etapa</p>
