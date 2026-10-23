@@ -575,7 +575,7 @@ function LoginPage() {
 
               {seccionPlataforma === "planes" ? (
                 <>
-                  <div className="mt-5 grid items-stretch gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                  <div className="mt-3 grid items-stretch gap-2 sm:grid-cols-2 xl:grid-cols-4">
                     {[
                       {
                         id: "emprendedor",
@@ -618,21 +618,21 @@ function LoginPage() {
                         estilo: "standard",
                       },
                     ].map((plan) => (
-                      <article key={plan.id} className={"group relative flex min-w-0 flex-col overflow-hidden rounded-[1.35rem] border p-4 transition duration-300 hover:-translate-y-1 sm:p-5 " + (plan.estilo === "featured" ? "border-gold/45 bg-gradient-to-b from-[#302719] via-[#1b1a16] to-[#151613] shadow-[0_12px_38px_rgba(194,161,92,.12)] hover:border-gold/70" : plan.estilo === "starter" ? "border-gold/30 bg-gradient-to-b from-[#242117] to-[#171815] hover:border-gold/55" : "border-white/10 bg-gradient-to-b from-[#1b1c1b] to-[#141514] hover:border-white/25")}>
+                      <article key={plan.id} className={"group relative flex min-w-0 flex-col overflow-hidden rounded-xl border p-3 transition duration-300 hover:-translate-y-0.5 sm:p-3.5 " + (plan.estilo === "featured" ? "border-gold/45 bg-gradient-to-b from-[#302719] via-[#1b1a16] to-[#151613] shadow-[0_12px_38px_rgba(194,161,92,.12)] hover:border-gold/70" : plan.estilo === "starter" ? "border-gold/30 bg-gradient-to-b from-[#242117] to-[#171815] hover:border-gold/55" : "border-white/10 bg-gradient-to-b from-[#1b1c1b] to-[#141514] hover:border-white/25")}>
                         <div aria-hidden="true" className={"absolute inset-x-0 top-0 h-px " + (plan.estilo === "featured" || plan.estilo === "starter" ? "bg-gradient-to-r from-transparent via-gold to-transparent" : "bg-gradient-to-r from-transparent via-white/20 to-transparent")} />
                         <div className="flex items-start justify-between gap-2">
-                          <span className={"font-display text-3xl italic leading-none " + (plan.estilo === "featured" || plan.estilo === "starter" ? "text-gold/75" : "text-white/20")}>{plan.numero}</span>
-                          <span className={"rounded-full border px-2 py-1 text-[8px] font-bold uppercase tracking-[0.12em] " + (plan.estilo === "featured" ? "border-gold/40 bg-gold/10 text-gold" : plan.estilo === "starter" ? "border-gold/25 text-gold/80" : "border-white/10 text-white/45")}>{plan.etiqueta}</span>
+                          <span className={"font-display text-2xl italic leading-none " + (plan.estilo === "featured" || plan.estilo === "starter" ? "text-gold/75" : "text-white/20")}>{plan.numero}</span>
+                          <span className={"rounded-full border px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-[0.1em] " + (plan.estilo === "featured" ? "border-gold/40 bg-gold/10 text-gold" : plan.estilo === "starter" ? "border-gold/25 text-gold/80" : "border-white/10 text-white/45")}>{plan.etiqueta}</span>
                         </div>
-                        <h4 className="mt-4 text-lg font-semibold tracking-tight text-white">{plan.nombre}</h4>
-                        <p className={"mt-2 text-sm font-bold " + (plan.precio === "Gratis" ? "text-emerald-300" : "text-gold")}>{plan.precio}</p>
-                        <p className="mt-2 min-h-[3.2rem] text-[11px] leading-relaxed text-white/55">{plan.enfoque}</p>
-                        <div className="my-4 h-px bg-white/[0.08]" />
-                        <p className="mb-3 text-[8px] font-bold uppercase tracking-[0.18em] text-white/35">Qué reúne esta etapa</p>
-                        <ul className="flex-1 space-y-2.5">
-                          {plan.items.map((item) => <li key={item} className="flex gap-2 text-[11px] leading-relaxed text-white/75"><ShieldCheck className={"mt-0.5 size-3.5 shrink-0 " + (plan.estilo === "featured" || plan.estilo === "starter" ? "text-gold" : "text-gold/65")} /><span>{item}</span></li>)}
+                        <h4 className="mt-2.5 text-base font-semibold tracking-tight text-white">{plan.nombre}</h4>
+                        <p className={"mt-1.5 text-[13px] font-bold " + (plan.precio === "Gratis" ? "text-emerald-300" : "text-gold")}>{plan.precio}</p>
+                        <p className="mt-1.5 min-h-[2.6rem] text-[10px] leading-snug text-white/55">{plan.enfoque}</p>
+                        <div className="my-3 h-px bg-white/[0.08]" />
+                        <p className="mb-2 text-[7px] font-bold uppercase tracking-[0.16em] text-white/35">Qué reúne esta etapa</p>
+                        <ul className="flex-1 space-y-1.5">
+                          {plan.items.map((item) => <li key={item} className="flex gap-1.5 text-[10px] leading-snug text-white/75"><ShieldCheck className={"mt-0.5 size-3.5 shrink-0 " + (plan.estilo === "featured" || plan.estilo === "starter" ? "text-gold" : "text-gold/65")} /><span>{item}</span></li>)}
                         </ul>
-                        <div className={"mt-5 rounded-lg px-3 py-2 text-[9px] font-semibold leading-relaxed " + (plan.estilo === "featured" ? "bg-gold/10 text-gold/90" : "bg-white/[0.035] text-white/40")}>{plan.id === "emprendedor" ? "Empieza sin coste con las herramientas públicas." : plan.id === "taller" ? "Para ordenar la gestión del día a día." : plan.id === "profesional" ? "Para conectar el diseño con la fabricación." : "Para operaciones con varios equipos o sedes."}</div>
+                        <div className={"mt-3 rounded-lg px-2.5 py-1.5 text-[8px] font-semibold leading-snug " + (plan.estilo === "featured" ? "bg-gold/10 text-gold/90" : "bg-white/[0.035] text-white/40")}>{plan.id === "emprendedor" ? "Empieza sin coste con las herramientas públicas." : plan.id === "taller" ? "Para ordenar la gestión del día a día." : plan.id === "profesional" ? "Para conectar el diseño con la fabricación." : "Para operaciones con varios equipos o sedes."}</div>
                       </article>
                     ))}
                   </div>
