@@ -3030,8 +3030,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                     setVideoCountdown(null);
                   }
                   if(controller.signal.aborted) throw new DOMException("Grabación cancelada","AbortError");
-                  const videoDimensions=getAurumAspectDimensions(videoAspect,"video");
-                  await apiRef.current?.exportVideo({width:videoDimensions.width,height:videoDimensions.height,fps:Number(videoFps),duration:Number(videoDuration),mode:videoMode,signal:controller.signal,onProgress:(elapsed:number,total:number)=>setVideoProgress(total>0?elapsed/total*100:0)});
+                  const selectedVideoWidth=Number(videoWidth);
+                  const selectedVideoHeight=Math.round(selectedVideoWidth/getAurumAspectRatio(videoAspect));
+                  await apiRef.current?.exportVideo({width:selectedVideoWidth,height:selectedVideoHeight,fps:Number(videoFps),duration:Number(videoDuration),mode:videoMode,signal:controller.signal,onProgress:(elapsed:number,total:number)=>setVideoProgress(total>0?elapsed/total*100:0)});
                   setVideoProgress(100);
                 }catch(e:any){if(e?.name!=="AbortError")setError(e instanceof Error?e.message:"No se pudo exportar el vídeo MP4.");}
                 finally{videoAbortRef.current=null;videoExportLockRef.current=false;setVideoCountdown(null);setVideoBusy(false);setExportBusy(false);}
