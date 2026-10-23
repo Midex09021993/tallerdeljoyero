@@ -124,3 +124,33 @@ export function applyAurumCameraView(
   camera.updateProjectionMatrix();
   controls.update();
 }
+/** Ajusta la cámara a una proporción de salida sin deformar el modelo.
+ * Conserva la dirección actual de observación y centra el volumen real.
+ */
+export function fitAurumCameraToAspect(
+  camera: THREE.PerspectiveCamera,
+  controls: { target: THREE.Vector3; update: () => void },
+  model: THREE.Object3D | null,
+  aspect: number,
+  margin = 1.18,
+) {
+  if (!Number.isFinite(aspect) || aspect <= 0) return;
+  const bounds = model ? new THREE.Box3().setFromObject(model) : null;
+  if (!bounds || bounds.isEmpty()) return;
+  const target = bounds.getCenter(new THREE.Vector3());
+  const size = bounds.getSize(new THREE.Vector3());
+  const radius = Math.max(size.length() * 0.5, 0.01);
+  const verticalHalfFov = THREE.MathUtils.degToRad(camera.fov) * 0.5;
+  const horizontalHalfFov = Math.atan(Math.tan(verticalHalfFov) * aspect);
+  const limitingHalfFov = Math.max(0.01, Math.min(verticalHalfFov, horizontalHalfFov));
+  const distance = (radius / Math.sin(limitingHalfFov)) * Math.max(1, margin);
+  const direction = camera.position.clone().sub(controls.target);
+  if (direction.lengthSq() < 1e-8) direction.set(0, 0, 1);
+  direction.normalize();
+  controls.target.copy(target);
+  camera.position.copy(target).addScaledVector(direction, distance);
+  camera.aspect = aspect;
+  camera.lookAt(target);
+  camera.updateProjectionMatrix();
+  controls.update();
+}
