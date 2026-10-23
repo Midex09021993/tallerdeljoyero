@@ -42,10 +42,25 @@ export function ResumenPlanComercial() {
         .select("id, metadata")
         .eq("id", participanteId!)
         .maybeSingle();
-      if (participanteError) throw participanteError;
+      if (participanteError) {
+        console.warn("[plan-comercial] Falló la consulta del participante", participanteError);
+        throw new Error("No se pudieron consultar los datos del taller.");
+      }
+      if (!participante) {
+        throw new Error("No se encontró el registro del taller en el ecosistema.");
+      }
 
       const metadata = participante?.metadata as Record<string, unknown> | null;
-      const planId = obtenerPlanComercial(metadata?.["plan_comercial"])?.id ?? "emprendedor";
+      const planConfigurado = obtenerPlanComercial(metadata?.["plan_comercial"]);
+      if (!planConfigurado) {
+        console.warn("[plan-comercial] Plan comercial ausente o no reconocido", {
+          participanteId,
+          tieneMetadata: Boolean(metadata),
+          planComercial: metadata?.["plan_comercial"] ?? null,
+        });
+        throw new Error("El taller no tiene un plan comercial válido configurado.");
+      }
+      const planId = planConfigurado.id;
       const [{ data: cuota, error: cuotaError }, { count, error: countError }, { data: nubeData, error: nubeError }] = await Promise.all([
         supabase
           .from("aurum_plan_quotas")
@@ -58,16 +73,32 @@ export function ResumenPlanComercial() {
           .eq("participante_id", participanteId!),
         supabase.rpc("aurum_resumen_mi_nube_owner", { p_participante_id: participanteId! }),
       ]);
-      if (cuotaError) throw cuotaError;
-      if (countError) throw countError;
-      if (nubeError) throw nubeError;
+      if (cuotaError) {
+        console.warn("[plan-comercial] Falló la consulta de cuotas", { planId, error: cuotaError });
+        throw new Error("No se pudieron consultar las cuotas del plan.");
+      }
+      if (countError) {
+        console.warn("[plan-comercial] Falló el conteo del catálogo", countError);
+        throw new Error("No se pudo consultar el catálogo de productos.");
+      }
+      if (nubeError) {
+        console.warn("[plan-comercial] Falló el resumen de Mi Nube", nubeError);
+        throw new Error("No se pudo consultar el resumen de Mi Nube.");
+      }
       const nube = Array.isArray(nubeData) ? nubeData[0] : nubeData;
-      if (!nube || !Number.isFinite(Number(nube.bytes_propios)) || !Number.isInteger(nube.carpetas_propias)) {
-        throw new Error("El resumen de Mi Nube no está disponible.");
+      const bytesPropios = Number(nube?.bytes_propios);
+      const carpetasPropias = Number(nube?.carpetas_propias);
+      if (!nube || !Number.isFinite(bytesPropios) || !Number.isInteger(carpetasPropias)) {
+        console.warn("[plan-comercial] Respuesta de Mi Nube con formato inesperado", {
+          participanteId,
+          esArray: Array.isArray(nubeData),
+          tieneDatos: Boolean(nube),
+        });
+        throw new Error("El resumen de Mi Nube devolvió datos incompletos.");
       }
       return { planId, cuota: cuota as Cuota | null, productos: count ?? 0, nube: {
-        carpetasPropias: Number(nube.carpetas_propias),
-        bytesPropios: Number(nube.bytes_propios),
+        carpetasPropias,
+        bytesPropios,
         carpetasCompartidas: Number(nube.carpetas_compartidas ?? 0),
         bytesCompartidos: Number(nube.bytes_compartidos ?? 0),
       } };
@@ -102,8 +133,17 @@ export function ResumenPlanComercial() {
           <div>
             <h2 className="text-base font-bold text-[#25231f]">Tu plan comercial</h2>
             <p className="mt-1 text-sm text-[#66645e]">
-              No se pudo cargar la información del plan. Vuelve a intentarlo más tarde.
+              {resumen.error instanceof Error
+                ? resumen.error.message
+                : "No se pudo cargar la información del plan."}
             </p>
+            <button
+              type="button"
+              className="mt-3 inline-flex min-h-9 items-center rounded-lg border border-[#d6b56d] px-3 py-1.5 text-xs font-semibold text-[#6f5216] transition hover:bg-[#f8efd9] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b99a50]"
+              onClick={() => void resumen.refetch()}
+            >
+              Reintentar
+            </button>
           </div>
         </div>
       </section>
