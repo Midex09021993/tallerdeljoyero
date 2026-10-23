@@ -62,7 +62,7 @@ type Props = {
   initialPdf?: { nombre: string; ruta: string } | null;
 };
 
-const CATEGORIAS_PREDETERMINADAS = ["Anillos", "Aretes", "Collares", "Pulseras", "Dijes", "Alianzas", "Conjuntos", "Otros"] as const;
+const CATEGORIAS_PREDETERMINADAS = ["Anillos", "Aretes", "Collares", "Pulseras", "Dijes", "Broches", "Sets / Conjuntos", "Otros"] as const;
 
 function traducirMetalEspanol(value: string | null | undefined) {
   const original = String(value ?? "").trim();
@@ -450,7 +450,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
             <label className="grid gap-1.5 text-xs font-semibold">Nombre<input required value={form.nombre} onChange={(e) => setForm(v => ({ ...v, nombre: e.target.value, slug: slugify(e.target.value) }))} className={input} placeholder="Anillo Aura" /></label>
             <label className="grid gap-1.5 text-xs font-semibold">Categoría
               <select value={form.categoria} onChange={(e) => setForm(v => ({ ...v, categoria: e.target.value }))} className={input}>
-                {[...new Set([...(categorias.length ? categorias : CATEGORIAS_PREDETERMINADAS), form.categoria].filter(Boolean))].map((categoria) => <option key={categoria} value={categoria}>{categoria}</option>)}
+                {[...new Set([...CATEGORIAS_PREDETERMINADAS, ...categorias.filter((categoria) => !["Sortijas", "Alianzas", "Conjuntos"].includes(categoria)), form.categoria].filter(Boolean))].map((categoria) => <option key={categoria} value={categoria}>{categoria}</option>)}
               </select>
               <span className="text-[10px] font-normal text-muted-foreground">Selecciona una categoría administrada por tu taller.</span>
             </label>
