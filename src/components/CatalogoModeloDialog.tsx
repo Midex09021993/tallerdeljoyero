@@ -124,6 +124,9 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
     tecnica: "", acabado: "", disponibilidad: "Consultar", tiempo_fabricacion_dias: "",
     ficha_tecnica_url: "", notas_internas: "", mostrar_precio: true, mostrar_ficha_tecnica: true,
   });
+  const [subcategoria, setSubcategoria] = useState("");
+  const [subcategorias, setSubcategorias] = useState<Array<{ id: string; nombre: string; activo: boolean }>>([]);
+  const [cargandoSubcategorias, setCargandoSubcategorias] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [analizandoPdf, setAnalizandoPdf] = useState(false);
   const [generandoDescripcion, setGenerandoDescripcion] = useState(false);
@@ -154,7 +157,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
       codigo: producto?.codigo ?? "",
       nombre: producto?.nombre ?? initialName ?? "",
       slug: producto ? slugify(producto.nombre) : "",
-      categoria: producto?.categoria ?? CATEGORIAS_PREDETERMINADAS[0],
+      categoria: producto?.categoria?.split(" / ")[0] ?? CATEGORIAS_PREDETERMINADAS[0],
       descripcion: producto?.descripcion ?? "",
       imagen_principal_url: producto?.imagen_principal_url ?? initialImageUrl ?? "",
       galeria: Array.isArray(producto?.galeria) ? producto.galeria.join("\n") : "",
@@ -179,6 +182,8 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
       mostrar_precio: producto?.mostrar_precio ?? true,
       mostrar_ficha_tecnica: producto?.mostrar_ficha_tecnica ?? true,
     });
+    const partesCategoria = (producto?.categoria ?? "").split(" / ");
+    setSubcategoria(partesCategoria.length > 1 ? partesCategoria.slice(1).join(" / ") : "");
     setCarpetaSubida(producto?.id ?? "");
     setProgresoSubida(0);
     setError(null);
@@ -205,6 +210,47 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
       })();
     }
   }, [open, producto, categorias, initialProject, initialPdf, initialImageUrl, initialName]);
+
+  useEffect(() => {
+    if (!open || !participanteId || !form.categoria) {
+      setSubcategorias([]);
+      return;
+    }
+    let cancelado = false;
+    setCargandoSubcategorias(true);
+    void (async () => {
+      const { data: padre, error: padreError } = await supabase
+        .from("catalogo_categorias")
+        .select("id")
+        .eq("participante_id", participanteId)
+        .eq("nombre", form.categoria)
+        .is("parent_id", null)
+        .maybeSingle();
+      if (padreError || !padre) {
+        if (!cancelado) {
+          setSubcategorias([]);
+          setSubcategoria("");
+          setCargandoSubcategorias(false);
+        }
+        return;
+      }
+      const { data, error: subError } = await supabase
+        .from("catalogo_categorias")
+        .select("id, nombre, activo")
+        .eq("participante_id", participanteId)
+        .eq("parent_id", padre.id)
+        .eq("activo", true)
+        .order("orden", { ascending: true })
+        .order("nombre", { ascending: true });
+      if (!cancelado) {
+        const opciones = subError ? [] : (data ?? []);
+        setSubcategorias(opciones);
+        setSubcategoria((actual) => opciones.some((item) => item.nombre === actual) ? actual : "");
+        setCargandoSubcategorias(false);
+      }
+    })();
+    return () => { cancelado = true; };
+  }, [open, participanteId, form.categoria]);
 
   if (!open) return null;
 
@@ -359,7 +405,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
         participante_id: participanteId,
         nombre,
         slug,
-        categoria: form.categoria.trim() || "Sin categoría",
+        categoria: [form.categoria.trim() || "Sin categoría", subcategoria.trim()].filter(Boolean).join(" / "),
         descripcion: form.descripcion.trim() || null,
         imagen_principal_url: form.imagen_principal_url.trim() || null,
         galeria: form.galeria.split(/\n/).map((value) => value.trim()).filter(Boolean),
@@ -448,12 +494,21 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
               <span className="text-[10px] font-normal text-muted-foreground">{producto ? "Código permanente." : "Se asignará automáticamente al crearla."}</span>
             </label>
             <label className="grid gap-1.5 text-xs font-semibold">Nombre<input required value={form.nombre} onChange={(e) => setForm(v => ({ ...v, nombre: e.target.value, slug: slugify(e.target.value) }))} className={input} placeholder="Anillo Aura" /></label>
-            <label className="grid gap-1.5 text-xs font-semibold">Categoría
-              <select value={form.categoria} onChange={(e) => setForm(v => ({ ...v, categoria: e.target.value }))} className={input}>
-                {[...new Set([...CATEGORIAS_PREDETERMINADAS, ...(form.categoria && !CATEGORIAS_PREDETERMINADAS.includes(form.categoria as (typeof CATEGORIAS_PREDETERMINADAS)[number]) ? [form.categoria] : [])])].map((categoria) => <option key={categoria} value={categoria}>{categoria}</option>)}
-              </select>
-              <span className="text-[10px] font-normal text-muted-foreground">Selecciona una categoría administrada por tu taller.</span>
-            </label>
+            <div className="grid min-w-0 gap-3 sm:grid-cols-2 sm:col-span-2">
+              <label className="grid min-w-0 gap-1.5 text-xs font-semibold">Categoría
+                <select value={form.categoria} onChange={(e) => { setForm(v => ({ ...v, categoria: e.target.value })); setSubcategoria(""); }} className={input}>
+                  {[...new Set([...CATEGORIAS_PREDETERMINADAS, ...(form.categoria && !CATEGORIAS_PREDETERMINADAS.includes(form.categoria as (typeof CATEGORIAS_PREDETERMINADAS)[number]) ? [form.categoria] : [])])].map((categoria) => <option key={categoria} value={categoria}>{categoria}</option>)}
+                </select>
+                <span className="text-[10px] font-normal text-muted-foreground">Categoría principal de la joya.</span>
+              </label>
+              <label className="grid min-w-0 gap-1.5 text-xs font-semibold">Subcategoría <span className="font-normal text-muted-foreground">(opcional)</span>
+                <select value={subcategoria} onChange={(e) => setSubcategoria(e.target.value)} disabled={cargandoSubcategorias || subcategorias.length === 0} className={input}>
+                  <option value="">{cargandoSubcategorias ? "Cargando subcategorías…" : subcategorias.length ? "Sin subcategoría" : "No hay subcategorías disponibles"}</option>
+                  {subcategorias.map((item) => <option key={item.id} value={item.nombre}>{item.nombre}</option>)}
+                </select>
+                <span className="text-[10px] font-normal text-muted-foreground">Puedes dejarla vacía o elegir una opción de esta categoría.</span>
+              </label>
+            </div>
           </section>
 
           <section className="grid gap-4 sm:grid-cols-2">
