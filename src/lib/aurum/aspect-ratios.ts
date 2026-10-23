@@ -41,8 +41,11 @@ export function getAurumAspectFrameStyle(
   // dimensions from the same limiting box so max-height cannot squash a wide
   // frame or max-width stretch a portrait frame. The result always keeps ratio.
   return {
+    // Calculate the frame width from the tighter viewport constraint, then let
+    // aspect-ratio derive height. This avoids independent width/height rounding
+    // that can make the horizontal frame look subtly taller than 16:9.
     width: `min(${limit}cqw, calc(${limit}cqh * ${safeRatio}))`,
-    height: `min(${limit}cqh, calc(${limit}cqw / ${safeRatio}))`,
+    height: "auto",
     maxWidth: "none",
     maxHeight: "none",
     aspectRatio: String(safeRatio),
