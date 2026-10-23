@@ -260,13 +260,13 @@ export async function parseAurumInput(file: File, ext: string, fallbackMaterial:
       // and places the head below the shank. The negative quarter-turn keeps
       // the source's positive-Z setting above the band.
       model.rotation.set(-Math.PI / 2, 0, 0);
-      model.userData.aurumStlOrientation = "heuristic-upright-setting-up";
+      model.userData["aurumStlOrientation"] = "heuristic-upright-setting-up";
     } else {
-      model.userData.aurumStlOrientation = "unchanged";
+      model.userData["aurumStlOrientation"] = "unchanged";
     }
-    model.userData.aurumSourceFormat = "stl";
-    model.userData.aurumRhino = { categoria: "otro", capa: "STL sin capas", layerKey: "stl-unclassified" };
-    model.userData.aurumStlDimensions = { x: size.x, y: size.y, z: size.z };
+    model.userData["aurumSourceFormat"] = "stl";
+    model.userData["aurumRhino"] = { categoria: "otro", capa: "STL sin capas", layerKey: "stl-unclassified" };
+    model.userData["aurumStlDimensions"] = { x: size.x, y: size.y, z: size.z };
     return model;
   }
   if (ext === "obj") { const { OBJLoader } = await import("three/examples/jsm/loaders/OBJLoader.js"); return new OBJLoader().parse(new TextDecoder().decode(buffer)); }

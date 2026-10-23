@@ -1,5 +1,5 @@
-// @ts-nocheck -- el tipo generado de Supabase se actualizará cuando se regenere el esquema.
 import { createServerFn } from "@tanstack/react-start";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 type ConsultaComercialInput = {
   nombre: string;
@@ -35,7 +35,9 @@ export const enviarConsultaComercial = createServerFn({ method: "POST" })
     if (!INTERESES_VALIDOS.has(interes)) throw new Error("Selecciona el tema que te interesa.");
     if (!mensaje || mensaje.length < 5 || mensaje.length > 2000) throw new Error("El mensaje debe tener entre 5 y 2000 caracteres.");
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { supabaseAdmin: adminTipado } = await import("@/integrations/supabase/client.server");
+    // consultas_comerciales aún no figura en los tipos generados.
+    const supabaseAdmin = adminTipado as unknown as SupabaseClient;
     // Límite básico por correo: máximo 3 consultas en una ventana de 10 minutos.
     // Complementa el campo trampa; no sustituye un CAPTCHA o rate limit de infraestructura.
     const desde = new Date(Date.now() - 10 * 60 * 1000).toISOString();

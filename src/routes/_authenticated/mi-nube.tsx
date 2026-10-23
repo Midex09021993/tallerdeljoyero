@@ -32,6 +32,10 @@ import { nombreSeguro, subirConProgreso } from "@/lib/subir-archivo";
 import { encolarArchivo, listarColaArchivos, quitarDeCola, type ArchivoEnCola } from "@/lib/cola-subidas-local";
 import { supabase } from "@/integrations/supabase/client";
 
+type EnlaceVisor3d = { token: string; expira_en: string; nombre: string };
+const rpcObtenerEnlaceVisor3d = (args: { _modelo_ruta: string; _nombre: string }) =>
+  (supabase.rpc as unknown as (fn: string, a: typeof args) => Promise<{ data: EnlaceVisor3d[] | null; error: Error | null }>)("obtener_enlace_visor_3d", args);
+
 export const Route = createFileRoute("/_authenticated/mi-nube")({
   head: () => ({
     meta: [
@@ -255,7 +259,7 @@ function MiNubePage() {
     const glb = opcionesCompartir?.archivos.filter((archivo) => archivo.origen === "supabase" && archivo.nombre.toLowerCase().endsWith(".glb")) ?? [];
     if (!glb.length) return;
     void Promise.all(glb.map(async (archivo) => {
-      const { data, error } = await supabase.rpc("obtener_enlace_visor_3d", { _modelo_ruta: archivo.ruta, _nombre: nombreVisible(archivo.nombre) });
+      const { data, error } = await rpcObtenerEnlaceVisor3d({ _modelo_ruta: archivo.ruta, _nombre: nombreVisible(archivo.nombre) });
       if (error || !Array.isArray(data) || !data[0]?.token || !data[0]?.expira_en || new Date(data[0].expira_en).getTime() <= Date.now()) return null;
       return { ruta: archivo.ruta, url: new URL("/v/" + data[0].token, window.location.origin).toString() };
     })).then((enlaces) => {
@@ -1088,7 +1092,7 @@ function MiNubePage() {
   };
   const guardarNombreCarpeta = async (proyecto: { nombre: string; archivos: ArchivoNube[] }) => {
     if (!participanteId || !usuarioId) { toast.error("No se encontró tu taller activo."); return; }
-    const nombreNuevo = nuevoNombreCarpeta.trim().normalize("NFKC").replace(/[\/\\]/g, "-").replace(/[\u0000-\u001f]/g, "").replace(/\s+/g, " ").slice(0, 60);
+    const nombreNuevo = nuevoNombreCarpeta.trim().normalize("NFKC").replace(/[/\\]/g, "-").split("").filter((c) => c.charCodeAt(0) > 31).join("").replace(/\s+/g, " ").slice(0, 60);
     if (!nombreNuevo) { toast.error("Escribe un nombre para la carpeta."); return; }
     if (nombreNuevo === proyecto.nombre) { setProyectoRenombrando(null); return; }
     if (archivos.some((archivo) => archivo.carpeta === nombreNuevo)) { toast.error("Ya existe una carpeta con ese nombre."); return; }
@@ -1342,7 +1346,7 @@ function MiNubePage() {
     }
     setGenerandoEnlaceVisor(archivo.ruta);
     try {
-      const { data: existente, error: existenteError } = await supabase.rpc("obtener_enlace_visor_3d", { _modelo_ruta: archivo.ruta, _nombre: nombreVisible(archivo.nombre) });
+      const { data: existente, error: existenteError } = await rpcObtenerEnlaceVisor3d({ _modelo_ruta: archivo.ruta, _nombre: nombreVisible(archivo.nombre) });
       if (existenteError) throw existenteError;
       if (Array.isArray(existente) && existente[0]?.token && existente[0]?.expira_en && new Date(existente[0].expira_en).getTime() > Date.now()) {
         const urlExistente = new URL("/v/" + existente[0].token, window.location.origin).toString();

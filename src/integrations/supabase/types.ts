@@ -57,6 +57,7 @@ export type Database = {
         }
         Insert: {
           almacenamiento_mib: number
+          carpetas_mi_nube_max?: number
           operaciones_comerciales_mes: number
           plan_id: string
           productos_catalogo_max?: number
@@ -66,6 +67,7 @@ export type Database = {
         }
         Update: {
           almacenamiento_mib?: number
+          carpetas_mi_nube_max?: number
           operaciones_comerciales_mes?: number
           plan_id?: string
           productos_catalogo_max?: number
@@ -3850,6 +3852,7 @@ export type Database = {
         Row: {
           creado_en: string
           expira_en: string
+          modelo_ruta: string | null
           modelo_url: string
           nombre: string
           propietario_id: string
@@ -3858,6 +3861,7 @@ export type Database = {
         Insert: {
           creado_en?: string
           expira_en: string
+          modelo_ruta?: string | null
           modelo_url: string
           nombre?: string
           propietario_id: string
@@ -3866,6 +3870,7 @@ export type Database = {
         Update: {
           creado_en?: string
           expira_en?: string
+          modelo_ruta?: string | null
           modelo_url?: string
           nombre?: string
           propietario_id?: string
@@ -4003,10 +4008,20 @@ export type Database = {
         }
         Returns: string
       }
-      crear_enlace_visor_3d: {
-        Args: { _modelo_url: string; _nombre: string; _token: string }
-        Returns: string
-      }
+      crear_enlace_visor_3d:
+        | {
+            Args: { _modelo_url: string; _nombre: string; _token: string }
+            Returns: string
+          }
+        | {
+            Args: {
+              _modelo_ruta: string
+              _modelo_url: string
+              _nombre: string
+              _token: string
+            }
+            Returns: string
+          }
       crear_version_cotizacion: {
         Args: { _cotizacion_id: string }
         Returns: string
@@ -4186,6 +4201,14 @@ export type Database = {
       obtener_contacto_catalogo_publico: {
         Args: { _slug: string }
         Returns: Json
+      }
+      obtener_enlace_visor_3d: {
+        Args: { _modelo_ruta: string; _nombre: string }
+        Returns: {
+          expira_en: string
+          nombre: string
+          token: string
+        }[]
       }
       obtener_ficha_servicio_externo: {
         Args: { _trabajo_id: string }

@@ -48,7 +48,7 @@ export function EcosistemaParticipantesOwner(){
    if (!cuota || [cuota.operaciones_comerciales_mes, cuota.almacenamiento_mib, cuota.usos_render_mes, cuota.productos_catalogo_max, cuota.carpetas_mi_nube_max].some(v => !Number.isInteger(v) || v < -1)) { toast.error("Usa enteros no negativos; -1 significa sin límite."); return; }
    setGuardandoCuota(id);
    try {
-     const { error } = await supabase.from("aurum_plan_quotas").update({ operaciones_comerciales_mes: cuota.operaciones_comerciales_mes, almacenamiento_mib: cuota.almacenamiento_mib, usos_render_mes: cuota.usos_render_mes, productos_catalogo_max: cuota.productos_catalogo_max, carpetas_mi_nube_max: cuota.carpetas_mi_nube_max, updated_at: new Date().toISOString() }).eq("plan_id", id);
+     const { error } = await supabase.from("aurum_plan_quotas").update({ operaciones_comerciales_mes: cuota.operaciones_comerciales_mes, almacenamiento_mib: cuota.almacenamiento_mib, usos_render_mes: cuota.usos_render_mes, productos_catalogo_max: cuota.productos_catalogo_max, carpetas_mi_nube_max: cuota.carpetas_mi_nube_max, updated_at: new Date().toISOString() } as { updated_at: string }).eq("plan_id", id);
      if (error) throw error;
      toast.success("Cuotas guardadas");
      setCuotasEdit(prev => { const next = { ...prev }; delete next[id]; return next; });
