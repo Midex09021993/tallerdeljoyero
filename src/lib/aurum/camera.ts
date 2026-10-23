@@ -149,7 +149,11 @@ export function fitAurumCameraToAspect(
   direction.normalize();
   controls.target.copy(target);
   camera.position.copy(target).addScaledVector(direction, distance);
-  camera.aspect = aspect;
+  // Do not change the live viewport's projection aspect when the user is only
+  // previewing a different output ratio. The renderer canvas may still be
+  // landscape; forcing a portrait camera aspect here visibly stretches the
+  // jewel in that landscape canvas. Exporters set their own aspect before
+  // calling this helper, so preserving camera.aspect also keeps export correct.
   camera.lookAt(target);
   camera.updateProjectionMatrix();
   controls.update();
