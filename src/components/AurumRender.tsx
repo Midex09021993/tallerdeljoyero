@@ -2640,172 +2640,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           </button>
         </div>
       </div>}
-      {!embedded && exportOpen&&<div className="absolute right-3 top-[72px] z-[80] max-h-[calc(100%-5.5rem)] w-[min(360px,calc(100%-1.25rem))] overflow-y-auto rounded-2xl border border-white/80 bg-[#fbfaf7]/95 p-3 text-[#292824] shadow-[0_16px_44px_rgba(35,32,24,.18)] backdrop-blur-2xl sm:right-4 sm:top-[76px] sm:p-4">
-      <div>
-        <div className="mb-3 flex items-start justify-between gap-3"><div><div id="aurum-export-title" className="text-lg font-semibold tracking-tight text-[#292824]">Centro de exportación</div><div className="mt-1 text-sm text-[#77756f]">Prepara tu joya para presentar, compartir o fabricar.</div></div><button type="button" aria-label="Cerrar exportación" onClick={()=>setExportOpen(false)} className="rounded-lg p-1 text-[#77756f] hover:bg-black/[.05]"><X className="size-4"/></button></div>
-        <div className="flex flex-col gap-3">
-          <button type="button" disabled={!archivo||exportBusy} onClick={async()=>{
-            setExportBusy(true);
-            try{
-              const userId=sesion?.user?.id;
-              const participanteId=sesion?.participante?.id;
-              if(!userId||!participanteId) throw new Error("Inicia sesión con un taller activo para compartir la joya en la nube.");
-              const blob=await apiRef.current?.exportGLB({download:false}) as Blob|undefined;
-              if(!blob||blob.size<1024) throw new Error("No se pudo preparar el modelo 3D para compartir.");
-              const cleanName=(nombreProyecto||"joya-aurum").trim().replace(/[^a-z0-9-_]+/gi,"-").slice(0,80)||"joya-aurum";
-              let destinoCarpeta: { rutaCarpeta?: string; nombre?: string } | null = null;
-              try { const rawDestino=sessionStorage.getItem("aurum-render-poster-destino"); if(rawDestino) destinoCarpeta=JSON.parse(rawDestino) as {rutaCarpeta?:string;nombre?:string}; } catch { destinoCarpeta=null; }
-              const guardarEnCarpeta=Boolean(destinoCarpeta?.rutaCarpeta && destinoCarpeta.rutaCarpeta.split("/").filter(Boolean).length >= 2);
-              const path=guardarEnCarpeta
-                ? destinoCarpeta!.rutaCarpeta!.replace(/\/$/,"")+"/"+cleanName+"-"+crypto.randomUUID()+".glb"
-                : participanteId+"/"+userId+"/aurum-compartidos/"+crypto.randomUUID()+"-"+cleanName+".glb";
-              const {error:uploadError}=await supabase.storage.from("mi-nube").upload(path,blob,{contentType:"model/gltf-binary",upsert:false,cacheControl:"3600"});
-              if(uploadError) throw uploadError;
-              let generatedLink: string;
-              if(guardarEnCarpeta){
-                const {data:signed,error:signedError}=await supabase.storage.from("mi-nube").createSignedUrl(path,3*24*60*60);
-                if(signedError||!signed?.signedUrl) throw signedError??new Error("El GLB se guardó, pero no se pudo preparar el enlace temporal.");
-                const tokenBytes=crypto.getRandomValues(new Uint8Array(12));
-                const token=Array.from(tokenBytes,(byte)=>byte.toString(16).padStart(2,"0")).join("");
-                const {error:linkError}=await supabase.rpc("crear_enlace_visor_3d",{_token:token,_modelo_url:signed.signedUrl,_nombre:cleanName+".glb"});
-                if(linkError) throw linkError;
-                generatedLink=new URL("/v/"+token,window.location.origin).toString();
-                sessionStorage.removeItem("aurum-render-poster-destino");
-              }else{
-                const {data:signed,error:signedError}=await supabase.storage.from("mi-nube").createSignedUrl(path,7*24*60*60);
-                if(signedError||!signed?.signedUrl) throw signedError??new Error("No se pudo crear el enlace temporal.");
-                const shareUrl=new URL("/aurum-render-public",window.location.origin);
-                shareUrl.searchParams.set("modeloCompartido",signed.signedUrl);
-                shareUrl.searchParams.set("nombre",cleanName);
-                generatedLink=shareUrl.toString();
-              }
-              setSharedLink(generatedLink);
-              setError(null);
-              try {
-                await navigator.clipboard.writeText(generatedLink);
-                toast.success(guardarEnCarpeta ? "GLB guardado en la carpeta de Mi Nube. Enlace del visor copiado; vence en 3 días." : "Enlace copiado. La joya está guardada en Mi Nube y el enlace vence en 7 días.");
-              } catch {
-                toast.info(guardarEnCarpeta ? "GLB guardado en la carpeta. Copia el enlace del visor que aparece debajo del botón." : "La joya está guardada. Copia el enlace que aparece debajo del botón.");
-              }
-            }catch(e){setError(e instanceof Error?e.message:"No se pudo compartir la joya.");}
-            finally{setExportBusy(false);}
-          }} className="flex w-full items-center gap-2.5 rounded-xl border border-[#d4af37]/50 bg-[#d4af37]/15 px-3 py-2.5 text-left text-[13px] font-semibold text-[#292824] transition-colors hover:bg-[#d4af37]/25 disabled:cursor-not-allowed disabled:opacity-40"><Upload className="size-5"/><span><span className="block">Guardar y compartir joya</span><span className="block text-[10px] font-normal text-[#77756f]">Mi Nube · enlace válido 7 días</span></span></button>
-          {false&&(<button type="button" disabled={!archivo||exportBusy} onClick={async()=>{setExportBusy(true);try{await apiRef.current?.exportGLB();}catch(e){setError(e instanceof Error?e.message:"No se pudo exportar el GLB.");}finally{setExportBusy(false);}}} className="flex w-full items-center gap-2.5 rounded-xl border border-[#7168f4]/20 bg-[#7168f4]/85 px-3 py-2.5 text-left text-[13px] font-semibold text-[#292824] shadow-sm transition-colors hover:bg-[#7168f4]/95 disabled:cursor-not-allowed disabled:opacity-40"><Gem className="size-5"/><span><span className="block">Descargar modelo .glb</span><span className="block text-[10px] font-normal text-[#292824]/85">Geometría y materiales exportables</span></span></button>)}
-
-          <button type="button" onClick={()=>setSnapshotOpen(v=>{const next=!v;if(next)setVideoOpen(false);return next;})} aria-expanded={snapshotOpen} className="flex w-full items-center gap-2.5 rounded-xl border border-white/80 bg-white/35 px-3 py-2.5 text-left text-[13px] text-[#292824] transition-colors hover:bg-white/60"><ImageIcon className="size-5"/><span className="min-w-0 flex-1"><span className="block">Snapshot de producto</span><span className="block text-[10px] text-[#77756f]">Resolución y formato de imagen</span></span><ChevronDown className={"size-4 transition-transform "+(snapshotOpen?"rotate-180":"")}/></button>
-
-          {snapshotOpen&&<div className="rounded-xl border border-black/10 bg-black/[.025] p-3">
-            <div className="mb-2 text-[10px] font-semibold uppercase tracking-[.14em] text-[#77756f]">Salida de imagen</div>
-            <div className="mb-1.5 text-[10px] font-medium text-[#66645e]">Proporción</div>
-            <div className="mb-3 grid grid-cols-2 gap-1.5 sm:grid-cols-3">
-              <button type="button" onClick={()=>{setSnapshotWidth("3840");setSnapshotHeight("2160");}} aria-pressed={Number(snapshotWidth)*9===Number(snapshotHeight)*16} className={"rounded-lg border px-2 py-2 text-left text-[10px] transition "+(Number(snapshotWidth)*9===Number(snapshotHeight)*16?"border-[#92743b] bg-[#d4af37]/15 text-[#725821]":"border-black/10 bg-white text-[#55534d] hover:bg-black/[.025]")}><span className="block font-semibold">16:9</span><span className="mt-0.5 block opacity-75">Horizontal</span></button>
-              <button type="button" onClick={()=>{setSnapshotWidth("2400");setSnapshotHeight("2400");}} aria-pressed={snapshotWidth===snapshotHeight} className={"rounded-lg border px-2 py-2 text-left text-[10px] transition "+(snapshotWidth===snapshotHeight?"border-[#92743b] bg-[#d4af37]/15 text-[#725821]":"border-black/10 bg-white text-[#55534d] hover:bg-black/[.025]")}><span className="block font-semibold">1:1</span><span className="mt-0.5 block opacity-75">Cuadrado</span></button>
-              <button type="button" onClick={()=>{setSnapshotWidth("2400");setSnapshotHeight("3000");}} aria-pressed={Number(snapshotWidth)*5===Number(snapshotHeight)*4} className={"rounded-lg border px-2 py-2 text-left text-[10px] transition "+(Number(snapshotWidth)*5===Number(snapshotHeight)*4?"border-[#92743b] bg-[#d4af37]/15 text-[#725821]":"border-black/10 bg-white text-[#55534d] hover:bg-black/[.025]")}><span className="block font-semibold">4:5</span><span className="mt-0.5 block opacity-75">Catálogo vertical</span></button>
-              <button type="button" onClick={()=>{setSnapshotWidth("2160");setSnapshotHeight("3840");}} aria-pressed={Number(snapshotWidth)*16===Number(snapshotHeight)*9} className={"rounded-lg border px-2 py-2 text-left text-[10px] transition "+(Number(snapshotWidth)*16===Number(snapshotHeight)*9?"border-[#92743b] bg-[#d4af37]/15 text-[#725821]":"border-black/10 bg-white text-[#55534d] hover:bg-black/[.025]")}><span className="block font-semibold">9:16</span><span className="mt-0.5 block opacity-75">Historias / móvil</span></button>
-              <button type="button" onClick={()=>{setSnapshotWidth("3000");setSnapshotHeight("2000");}} aria-pressed={Number(snapshotWidth)*2===Number(snapshotHeight)*3} className={"rounded-lg border px-2 py-2 text-left text-[10px] transition "+(Number(snapshotWidth)*2===Number(snapshotHeight)*3?"border-[#92743b] bg-[#d4af37]/15 text-[#725821]":"border-black/10 bg-white text-[#55534d] hover:bg-black/[.025]")}><span className="block font-semibold">3:2</span><span className="mt-0.5 block opacity-75">Fotografía clásica</span></button>
-            </div>
-            <div className="mb-1.5 text-[10px] text-[#66645e]">También puedes ajustar las dimensiones manualmente.</div>
-            <div className="grid grid-cols-2 gap-2">
-              <label className="text-[10px] text-[#66645e]">Ancho (px)<input type="number" min={320} max={4096} step={160} value={snapshotWidth} onChange={e=>setSnapshotWidth(e.target.value)} className="mt-1 w-full rounded-lg border border-black/15 bg-white px-2 py-2 text-xs text-[#292824] outline-none focus:border-[#92743b]"/></label>
-              <label className="text-[10px] text-[#66645e]">Alto (px)<input type="number" min={320} max={4096} step={120} value={snapshotHeight} onChange={e=>setSnapshotHeight(e.target.value)} className="mt-1 w-full rounded-lg border border-black/15 bg-white px-2 py-2 text-xs text-[#292824] outline-none focus:border-[#92743b]"/></label>
-            </div>
-            <label className="mt-2 block text-[10px] text-[#66645e]">Formato
-              <select value={snapshotFormat} onChange={e=>setSnapshotFormat(e.target.value as "png"|"jpeg"|"webp")} className="mt-1 w-full rounded-lg border border-black/15 bg-white px-2 py-2 text-xs text-[#292824] outline-none focus:border-[#92743b]">
-                <option value="png">PNG · máxima compatibilidad</option><option value="jpeg">JPEG · fotografía ligera</option><option value="webp">WebP · archivo optimizado</option>
-              </select>
-            </label>
-            {snapshotFormat === "png" && <label className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-black/10 bg-white p-3 text-xs text-[#292824]"><span><span className="block font-semibold">Fondo transparente</span><span className="mt-1 block text-[10px] text-[#77756f]">PNG con canal alfa, sin cambiar el visor ni el póster.</span></span><input type="checkbox" checked={snapshotTransparent} onChange={e=>setSnapshotTransparent(e.target.checked)} className="size-4 accent-[#b99642]"/></label>}
-            <div className="mt-2 text-[10px] leading-relaxed text-[#858178]">{snapshotTransparent && snapshotFormat === "png" ? "Se intentará exportar con canal alfa real; si el renderizador no lo admite, se mostrará un error." : "La captura vuelve a renderizar la joya a la resolución elegida y usa fondo blanco."}</div>
-            <button type="button" disabled={!archivo||exportBusy} onClick={()=>{setExportBusy(true);setError(null);window.setTimeout(()=>{try{apiRef.current?.exportPNG({width:Number(snapshotWidth),height:Number(snapshotHeight),format:snapshotFormat,transparent:snapshotFormat==="png"&&snapshotTransparent});setSnapshotOpen(false);}catch(e){setError(e instanceof Error?e.message:"No se pudo generar la imagen.");}finally{setExportBusy(false);}},50);}} className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-[#7168f4] px-3 py-2.5 text-xs font-semibold text-[#292824] disabled:cursor-not-allowed disabled:opacity-40"><Download className="size-4"/>{exportBusy?"Procesando imagen…":`Descargar ${snapshotFormat.toUpperCase()} · ${snapshotWidth||"3840"} × ${snapshotHeight||"2160"}`}</button>
-            {exportBusy&&<div className="mt-3 rounded-lg border border-[#7168f4]/20 bg-white p-3" role="status" aria-live="polite"><div className="mb-2 flex items-center justify-between gap-2 text-[11px]"><span className="font-medium text-[#292824]">Renderizando imagen de alta resolución</span><RotateCw className="size-4 animate-spin" /><span className="text-[#7168f4]">En proceso</span></div><div className="h-2 overflow-hidden rounded-full bg-[#e8e6f8]"><div className="h-full w-1/3 rounded-full bg-[#7168f4]"/></div><p className="mt-2 text-[10px] leading-relaxed text-[#77756f]">La captura está procesando las facetas del diamante. La interfaz puede quedar temporalmente ocupada.</p></div>}
-            <div className="mt-3 border-t border-black/10 pt-3">
-              <div className="mb-1 text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Render final · Ray tracing real</div>
-              <div className="mb-2 text-[10px] leading-relaxed text-[#77756f]">Trazado de rayos progresivo: refracción y reflejos internos reales en gemas. Más lento; la dispersión de color aún no se traza.</div>
-              <label className="block text-[10px] text-[#66645e]">Muestras
-                <select value={ptSamples} disabled={!!ptProgress} onChange={e=>setPtSamples(e.target.value)} className="mt-1 w-full rounded-lg border border-black/15 bg-white px-2 py-2 text-xs text-[#292824] outline-none">
-                  <option value="64">64 · borrador</option><option value="256">256 · alta</option><option value="1024">1024 · máxima</option>
-                </select>
-              </label>
-              {ptProgress?<button type="button" onClick={()=>ptAbortRef.current?.abort()} className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg border border-black/15 px-3 py-2.5 text-xs font-semibold text-[#292824]">Cancelar · {ptProgress}</button>
-              :<button type="button" disabled={!archivo||exportBusy} onClick={async()=>{const ac=new AbortController();ptAbortRef.current=ac;setPtProgress("preparando…");setError(null);try{await apiRef.current?.exportPathTraced({width:Number(snapshotWidth),height:Number(snapshotHeight),format:snapshotFormat,samples:Number(ptSamples),signal:ac.signal,onProgress:(d:number,t:number)=>setPtProgress(d+" / "+t)});}catch(e:any){if(e?.name!=="AbortError")setError(e instanceof Error?e.message+" Se mantiene el render actual.":"No se pudo completar el render final.");}finally{ptAbortRef.current=null;setPtProgress(null);}}} className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-[#d4af37] px-3 py-2.5 text-xs font-semibold text-black disabled:cursor-not-allowed disabled:opacity-40"><Download className="size-4"/>Render final con ray tracing</button>}
-            </div>
-          </div>}
-          <div className="rounded-xl border border-[#d4af37]/35 bg-[#fffaf0]/70 p-3">
-            <button type="button" aria-expanded={videoOpen} onClick={()=>setVideoOpen(v=>{const next=!v;if(next)setSnapshotOpen(false);return next;})} className="flex w-full items-center gap-2.5 text-left">
-              <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-[#d4af37]/15 text-[#92743b]"><RotateCw className="size-4"/></span>
-              <span className="min-w-0 flex-1"><span className="block text-[13px] font-semibold">Vídeo de giro de joya</span><span className="block text-[10px] text-[#77756f]">Captura en vivo · MP4</span></span>
-              <ChevronDown className={"size-4 transition-transform "+(videoOpen?"rotate-180":"")}/>
-            </button>
-            {videoOpen&&<div className="mt-3 space-y-2.5 border-t border-black/10 pt-3">
-              <label className="block text-[10px] text-[#66645e]">Modo de grabación
-                <select value={videoMode} disabled={videoBusy} onChange={e=>setVideoMode(e.target.value as "manual"|"automatic"|"orbit180-return"|"cinematic-zoom"|"vertical-sweep"|"slow360"|"catalog")} className="mt-1 w-full rounded-lg border border-black/15 bg-white px-2 py-2 text-xs text-[#292824]">
-                  <option value="manual">Manual · mover la cámara durante la grabación</option>
-                  <option value="automatic">Automático · giro 360°</option>
-                  <option value="orbit180-return">Órbita 180° · ida y vuelta</option>
-                  <option value="cinematic-zoom">Acercamiento cinematográfico</option>
-                  <option value="vertical-sweep">Recorrido vertical · diamante y aro</option>
-                  <option value="slow360">Órbita 360° lenta</option>
-                  <option value="catalog">Presentación automática de catálogo</option>
-                </select>
-              </label>
-              <label className="block text-[10px] text-[#66645e]">Resolución
-                <select value={videoWidth} disabled={videoBusy} onChange={e=>setVideoWidth(e.target.value)} className="mt-1 w-full rounded-lg border border-black/15 bg-white px-2 py-2 text-xs text-[#292824]">
-                  <option value="1280">HD · 1280 × 720</option><option value="1920">Full HD · 1920 × 1080</option><option value="2560">QHD · 2560 × 1440</option><option value="3840">4K UHD · 3840 × 2160</option>
-                </select>
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                <label className="text-[10px] text-[#66645e]">Fotogramas por segundo
-                  <select value={videoFps} disabled={videoBusy} onChange={e=>setVideoFps(e.target.value)} className="mt-1 w-full rounded-lg border border-black/15 bg-white px-2 py-2 text-xs text-[#292824]"><option value="24">24 FPS</option><option value="30">30 FPS</option><option value="60">60 FPS</option><option value="120">120 FPS · experimental</option></select>
-                </label>
-                <label className="text-[10px] text-[#66645e]">Duración
-                  <select value={videoDuration} disabled={videoBusy} onChange={e=>setVideoDuration(e.target.value)} className="mt-1 w-full rounded-lg border border-black/15 bg-white px-2 py-2 text-xs text-[#292824]"><option value="5">5 segundos</option><option value="10">10 segundos</option><option value="15">15 segundos</option><option value="20">20 segundos</option></select>
-                </label>
-              </div>
-              {videoBusy&&<div role="status" aria-live="polite" className="rounded-lg border border-[#d4af37]/25 bg-white p-2.5">
-                {videoCountdown!==null?<>
-                  <div className="text-center">
-                    <div className="text-[10px] font-medium text-[#77756f]">PREPARA LA JOYA Y LA CÁMARA</div>
-                    <div className="my-1 text-4xl font-semibold tabular-nums text-[#b99642]">{videoCountdown}</div>
-                    <div className="text-[10px] text-[#66645e]">La grabación manual comenzará en {videoCountdown} s</div>
-                  </div>
-                </>:<>
-                  <div className="mb-2 flex justify-between text-[10px]"><span>{videoMode==="automatic"?"Grabando giro automático":videoMode==="orbit180-return"?"Grabando órbita 180° de ida y vuelta":videoMode==="cinematic-zoom"?"Grabando acercamiento cinematográfico":videoMode==="vertical-sweep"?"Grabando recorrido vertical":videoMode==="slow360"?"Grabando giro 360° lento":videoMode==="catalog"?"Grabando presentación de catálogo":"Grabando movimientos manuales"}</span><span>{Math.round(videoProgress)}%</span></div>
-                  <div className="h-2 overflow-hidden rounded-full bg-[#eee8d8]"><div className="h-full rounded-full bg-[#b99642] transition-[width]" style={{width:Math.max(0,Math.min(100,videoProgress))+"%"}}/></div>
-                </>}
-                <button type="button" onClick={()=>videoAbortRef.current?.abort()} className="mt-2 w-full rounded-lg border border-black/15 px-3 py-2 text-xs font-semibold">{videoCountdown!==null?"Cancelar cuenta atrás":"Cancelar grabación"}</button>
-              </div>}
-              {!videoBusy&&<button type="button" disabled={!archivo||exportBusy||!!ptProgress} onClick={async()=>{
-                if(videoExportLockRef.current) return;
-                videoExportLockRef.current=true;
-                const controller=new AbortController();videoAbortRef.current=controller;setVideoBusy(true);setExportBusy(true);setVideoProgress(0);setError(null);
-                try{
-                  if(videoMode==="manual"){
-                    for(let remaining=10;remaining>0;remaining--){
-                      if(controller.signal.aborted) throw new DOMException("Grabación cancelada","AbortError");
-                      setVideoCountdown(remaining);
-                      await new Promise<void>((resolve,reject)=>{
-                        const timer=window.setTimeout(()=>{controller.signal.removeEventListener("abort",onAbort);resolve();},1000);
-                        const onAbort=()=>{window.clearTimeout(timer);controller.signal.removeEventListener("abort",onAbort);reject(new DOMException("Cuenta atrás cancelada","AbortError"));};
-                        controller.signal.addEventListener("abort",onAbort,{once:true});
-                      });
-                    }
-                    setVideoCountdown(null);
-                  }
-                  if(controller.signal.aborted) throw new DOMException("Grabación cancelada","AbortError");
-                  await apiRef.current?.exportVideo({width:Number(videoWidth),height:Math.round(Number(videoWidth)*9/16),fps:Number(videoFps),duration:Number(videoDuration),mode:videoMode,signal:controller.signal,onProgress:(elapsed:number,total:number)=>setVideoProgress(total>0?elapsed/total*100:0)});
-                  setVideoProgress(100);
-                }catch(e:any){if(e?.name!=="AbortError")setError(e instanceof Error?e.message:"No se pudo exportar el vídeo MP4.");}
-                finally{videoAbortRef.current=null;videoExportLockRef.current=false;setVideoCountdown(null);setVideoBusy(false);setExportBusy(false);}
-              }} className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#d4af37] px-3 py-2.5 text-xs font-semibold text-black disabled:cursor-not-allowed disabled:opacity-40"><Download className="size-4"/>Grabar y descargar .mp4</button>}
-              <p className="text-[10px] leading-relaxed text-[#77756f]">En modo manual, mueve la cámara mientras se graba; en automático, la joya gira sola 360°. 4K depende de la resolución real del visor. 120 FPS es experimental. El giro automático restaura la cámara al terminar; la grabación manual conserva el encuadre final.</p>
-            </div>}
-          </div>
-          {false&&(<button type="button" onClick={()=>apiRef.current?.exportSceneSettings()} className="flex w-full items-center gap-3 rounded-xl border border-black/10 bg-black/[.025] px-3 py-3 text-left text-sm text-[#292824] hover:bg-black/[.05]"><FileJson className="size-5"/><span><span className="block">Configuración .vjson</span><span className="block text-[10px] text-[#77756f]">Escena, cámara, calidad y selección</span></span></button>)}
-
-        </div>
-        {sharedLink&&<p className="mt-2 rounded-lg border border-black/[.06] bg-black/[.025] p-2.5 text-[10px] leading-relaxed text-[#77756f]">Al compartir un modelo 3D, los materiales compatibles con glTF se conservan mejor; los shaders personalizados, el HDRI y los efectos pueden variar según el visor.</p>}
-      </div></div>}
-      <div className={embedded ? "flex min-h-0 flex-1 overflow-hidden bg-[#090b0e]" : "flex min-h-0 flex-1 gap-3 bg-[#eeede8] p-3 " + (exportOpen ? "pr-[min(372px,28vw)]" : "")}>
+      
+      <div className={embedded ? "flex min-h-0 flex-1 overflow-hidden bg-[#090b0e]" : "flex min-h-0 flex-1 gap-3 bg-[#eeede8] p-3"}>
         {!embedded && <aside className="w-[min(22vw,336px)] shrink-0 overflow-hidden rounded-2xl border border-black/[.07] bg-[#f9f8f5] text-[#292824] shadow-[0_8px_28px_rgba(36,32,20,.045)]">
           <div className="h-full overflow-y-auto">
             <section className="border-b border-black/10 bg-black/[.02] px-5 py-4">
@@ -3085,7 +2921,126 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             {!embedded && lightingOpen && lightingPanel}
           </div>
         </main>
-        {!embedded && !exportOpen && <aside className="hidden w-[min(18vw,300px)] shrink-0 overflow-hidden rounded-2xl border border-[#e6e1d8] bg-[#faf9f6] text-[#292824] shadow-[0_6px_22px_rgba(36,32,20,.035)] xl:block">
+         {!embedded && <aside className="hidden w-[min(22vw,360px)] shrink-0 overflow-hidden rounded-2xl border border-[#e6e1d8] bg-[#faf9f6] text-[#292824] shadow-[0_6px_22px_rgba(36,32,20,.035)] xl:flex xl:flex-col">\n{exportOpen&&<div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-[#faf9f6] p-3 text-[#292824]">
+      <div>
+        <div className="mb-3 flex items-start justify-between gap-3"><div><div id="aurum-export-title" className="text-lg font-semibold tracking-tight text-[#292824]">Centro de exportación</div><div className="mt-1 text-sm text-[#77756f]">Prepara tu joya para presentar, compartir o fabricar.</div></div><button type="button" aria-label="Cerrar exportación" onClick={()=>setExportOpen(false)} className="rounded-lg p-1 text-[#77756f] hover:bg-black/[.05]"><X className="size-4"/></button></div>
+        <div className="flex flex-col gap-3">
+
+          {false&&(<button type="button" disabled={!archivo||exportBusy} onClick={async()=>{setExportBusy(true);try{await apiRef.current?.exportGLB();}catch(e){setError(e instanceof Error?e.message:"No se pudo exportar el GLB.");}finally{setExportBusy(false);}}} className="flex w-full items-center gap-2.5 rounded-xl border border-[#7168f4]/20 bg-[#7168f4]/85 px-3 py-2.5 text-left text-[13px] font-semibold text-[#292824] shadow-sm transition-colors hover:bg-[#7168f4]/95 disabled:cursor-not-allowed disabled:opacity-40"><Gem className="size-5"/><span><span className="block">Descargar modelo .glb</span><span className="block text-[10px] font-normal text-[#292824]/85">Geometría y materiales exportables</span></span></button>)}
+
+          <button type="button" onClick={()=>setSnapshotOpen(v=>{const next=!v;if(next)setVideoOpen(false);return next;})} aria-expanded={snapshotOpen} className="flex w-full items-center gap-2.5 rounded-xl border border-white/80 bg-white/35 px-3 py-2.5 text-left text-[13px] text-[#292824] transition-colors hover:bg-white/60"><ImageIcon className="size-5"/><span className="min-w-0 flex-1"><span className="block">Snapshot de producto</span><span className="block text-[10px] text-[#77756f]">Resolución y formato de imagen</span></span><ChevronDown className={"size-4 transition-transform "+(snapshotOpen?"rotate-180":"")}/></button>
+
+          {snapshotOpen&&<div className="rounded-xl border border-black/10 bg-black/[.025] p-3">
+            <div className="mb-2 text-[10px] font-semibold uppercase tracking-[.14em] text-[#77756f]">Salida de imagen</div>
+            <div className="mb-1.5 text-[10px] font-medium text-[#66645e]">Proporción</div>
+            <div className="mb-3 grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+              <button type="button" onClick={()=>{setSnapshotWidth("3840");setSnapshotHeight("2160");}} aria-pressed={Number(snapshotWidth)*9===Number(snapshotHeight)*16} className={"rounded-lg border px-2 py-2 text-left text-[10px] transition "+(Number(snapshotWidth)*9===Number(snapshotHeight)*16?"border-[#92743b] bg-[#d4af37]/15 text-[#725821]":"border-black/10 bg-white text-[#55534d] hover:bg-black/[.025]")}><span className="block font-semibold">16:9</span><span className="mt-0.5 block opacity-75">Horizontal</span></button>
+              <button type="button" onClick={()=>{setSnapshotWidth("2400");setSnapshotHeight("2400");}} aria-pressed={snapshotWidth===snapshotHeight} className={"rounded-lg border px-2 py-2 text-left text-[10px] transition "+(snapshotWidth===snapshotHeight?"border-[#92743b] bg-[#d4af37]/15 text-[#725821]":"border-black/10 bg-white text-[#55534d] hover:bg-black/[.025]")}><span className="block font-semibold">1:1</span><span className="mt-0.5 block opacity-75">Cuadrado</span></button>
+              <button type="button" onClick={()=>{setSnapshotWidth("2400");setSnapshotHeight("3000");}} aria-pressed={Number(snapshotWidth)*5===Number(snapshotHeight)*4} className={"rounded-lg border px-2 py-2 text-left text-[10px] transition "+(Number(snapshotWidth)*5===Number(snapshotHeight)*4?"border-[#92743b] bg-[#d4af37]/15 text-[#725821]":"border-black/10 bg-white text-[#55534d] hover:bg-black/[.025]")}><span className="block font-semibold">4:5</span><span className="mt-0.5 block opacity-75">Catálogo vertical</span></button>
+              <button type="button" onClick={()=>{setSnapshotWidth("2160");setSnapshotHeight("3840");}} aria-pressed={Number(snapshotWidth)*16===Number(snapshotHeight)*9} className={"rounded-lg border px-2 py-2 text-left text-[10px] transition "+(Number(snapshotWidth)*16===Number(snapshotHeight)*9?"border-[#92743b] bg-[#d4af37]/15 text-[#725821]":"border-black/10 bg-white text-[#55534d] hover:bg-black/[.025]")}><span className="block font-semibold">9:16</span><span className="mt-0.5 block opacity-75">Historias / móvil</span></button>
+              <button type="button" onClick={()=>{setSnapshotWidth("3000");setSnapshotHeight("2000");}} aria-pressed={Number(snapshotWidth)*2===Number(snapshotHeight)*3} className={"rounded-lg border px-2 py-2 text-left text-[10px] transition "+(Number(snapshotWidth)*2===Number(snapshotHeight)*3?"border-[#92743b] bg-[#d4af37]/15 text-[#725821]":"border-black/10 bg-white text-[#55534d] hover:bg-black/[.025]")}><span className="block font-semibold">3:2</span><span className="mt-0.5 block opacity-75">Fotografía clásica</span></button>
+            </div>
+            <div className="mb-1.5 text-[10px] text-[#66645e]">También puedes ajustar las dimensiones manualmente.</div>
+            <div className="grid grid-cols-2 gap-2">
+              <label className="text-[10px] text-[#66645e]">Ancho (px)<input type="number" min={320} max={4096} step={160} value={snapshotWidth} onChange={e=>setSnapshotWidth(e.target.value)} className="mt-1 w-full rounded-lg border border-black/15 bg-white px-2 py-2 text-xs text-[#292824] outline-none focus:border-[#92743b]"/></label>
+              <label className="text-[10px] text-[#66645e]">Alto (px)<input type="number" min={320} max={4096} step={120} value={snapshotHeight} onChange={e=>setSnapshotHeight(e.target.value)} className="mt-1 w-full rounded-lg border border-black/15 bg-white px-2 py-2 text-xs text-[#292824] outline-none focus:border-[#92743b]"/></label>
+            </div>
+            <label className="mt-2 block text-[10px] text-[#66645e]">Formato
+              <select value={snapshotFormat} onChange={e=>setSnapshotFormat(e.target.value as "png"|"jpeg"|"webp")} className="mt-1 w-full rounded-lg border border-black/15 bg-white px-2 py-2 text-xs text-[#292824] outline-none focus:border-[#92743b]">
+                <option value="png">PNG · máxima compatibilidad</option><option value="jpeg">JPEG · fotografía ligera</option><option value="webp">WebP · archivo optimizado</option>
+              </select>
+            </label>
+            {snapshotFormat === "png" && <label className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-black/10 bg-white p-3 text-xs text-[#292824]"><span><span className="block font-semibold">Fondo transparente</span><span className="mt-1 block text-[10px] text-[#77756f]">PNG con canal alfa, sin cambiar el visor ni el póster.</span></span><input type="checkbox" checked={snapshotTransparent} onChange={e=>setSnapshotTransparent(e.target.checked)} className="size-4 accent-[#b99642]"/></label>}
+            <div className="mt-2 text-[10px] leading-relaxed text-[#858178]">{snapshotTransparent && snapshotFormat === "png" ? "Se intentará exportar con canal alfa real; si el renderizador no lo admite, se mostrará un error." : "La captura vuelve a renderizar la joya a la resolución elegida y usa fondo blanco."}</div>
+            <button type="button" disabled={!archivo||exportBusy} onClick={()=>{setExportBusy(true);setError(null);window.setTimeout(()=>{try{apiRef.current?.exportPNG({width:Number(snapshotWidth),height:Number(snapshotHeight),format:snapshotFormat,transparent:snapshotFormat==="png"&&snapshotTransparent});setSnapshotOpen(false);}catch(e){setError(e instanceof Error?e.message:"No se pudo generar la imagen.");}finally{setExportBusy(false);}},50);}} className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-[#7168f4] px-3 py-2.5 text-xs font-semibold text-[#292824] disabled:cursor-not-allowed disabled:opacity-40"><Download className="size-4"/>{exportBusy?"Procesando imagen…":`Descargar ${snapshotFormat.toUpperCase()} · ${snapshotWidth||"3840"} × ${snapshotHeight||"2160"}`}</button>
+            {exportBusy&&<div className="mt-3 rounded-lg border border-[#7168f4]/20 bg-white p-3" role="status" aria-live="polite"><div className="mb-2 flex items-center justify-between gap-2 text-[11px]"><span className="font-medium text-[#292824]">Renderizando imagen de alta resolución</span><RotateCw className="size-4 animate-spin" /><span className="text-[#7168f4]">En proceso</span></div><div className="h-2 overflow-hidden rounded-full bg-[#e8e6f8]"><div className="h-full w-1/3 rounded-full bg-[#7168f4]"/></div><p className="mt-2 text-[10px] leading-relaxed text-[#77756f]">La captura está procesando las facetas del diamante. La interfaz puede quedar temporalmente ocupada.</p></div>}
+            <div className="mt-3 border-t border-black/10 pt-3">
+              <div className="mb-1 text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Render final · Ray tracing real</div>
+              <div className="mb-2 text-[10px] leading-relaxed text-[#77756f]">Trazado de rayos progresivo: refracción y reflejos internos reales en gemas. Más lento; la dispersión de color aún no se traza.</div>
+              <label className="block text-[10px] text-[#66645e]">Muestras
+                <select value={ptSamples} disabled={!!ptProgress} onChange={e=>setPtSamples(e.target.value)} className="mt-1 w-full rounded-lg border border-black/15 bg-white px-2 py-2 text-xs text-[#292824] outline-none">
+                  <option value="64">64 · borrador</option><option value="256">256 · alta</option><option value="1024">1024 · máxima</option>
+                </select>
+              </label>
+              {ptProgress?<button type="button" onClick={()=>ptAbortRef.current?.abort()} className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg border border-black/15 px-3 py-2.5 text-xs font-semibold text-[#292824]">Cancelar · {ptProgress}</button>
+              :<button type="button" disabled={!archivo||exportBusy} onClick={async()=>{const ac=new AbortController();ptAbortRef.current=ac;setPtProgress("preparando…");setError(null);try{await apiRef.current?.exportPathTraced({width:Number(snapshotWidth),height:Number(snapshotHeight),format:snapshotFormat,samples:Number(ptSamples),signal:ac.signal,onProgress:(d:number,t:number)=>setPtProgress(d+" / "+t)});}catch(e:any){if(e?.name!=="AbortError")setError(e instanceof Error?e.message+" Se mantiene el render actual.":"No se pudo completar el render final.");}finally{ptAbortRef.current=null;setPtProgress(null);}}} className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-[#d4af37] px-3 py-2.5 text-xs font-semibold text-black disabled:cursor-not-allowed disabled:opacity-40"><Download className="size-4"/>Render final con ray tracing</button>}
+            </div>
+          </div>}
+          <div className="rounded-xl border border-[#d4af37]/35 bg-[#fffaf0]/70 p-3">
+            <button type="button" aria-expanded={videoOpen} onClick={()=>setVideoOpen(v=>{const next=!v;if(next)setSnapshotOpen(false);return next;})} className="flex w-full items-center gap-2.5 text-left">
+              <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-[#d4af37]/15 text-[#92743b]"><RotateCw className="size-4"/></span>
+              <span className="min-w-0 flex-1"><span className="block text-[13px] font-semibold">Vídeo de giro de joya</span><span className="block text-[10px] text-[#77756f]">Captura en vivo · MP4</span></span>
+              <ChevronDown className={"size-4 transition-transform "+(videoOpen?"rotate-180":"")}/>
+            </button>
+            {videoOpen&&<div className="mt-3 space-y-2.5 border-t border-black/10 pt-3">
+              <label className="block text-[10px] text-[#66645e]">Modo de grabación
+                <select value={videoMode} disabled={videoBusy} onChange={e=>setVideoMode(e.target.value as "manual"|"automatic"|"orbit180-return"|"cinematic-zoom"|"vertical-sweep"|"slow360"|"catalog")} className="mt-1 w-full rounded-lg border border-black/15 bg-white px-2 py-2 text-xs text-[#292824]">
+                  <option value="manual">Manual · mover la cámara durante la grabación</option>
+                  <option value="automatic">Automático · giro 360°</option>
+                  <option value="orbit180-return">Órbita 180° · ida y vuelta</option>
+                  <option value="cinematic-zoom">Acercamiento cinematográfico</option>
+                  <option value="vertical-sweep">Recorrido vertical · diamante y aro</option>
+                  <option value="slow360">Órbita 360° lenta</option>
+                  <option value="catalog">Presentación automática de catálogo</option>
+                </select>
+              </label>
+              <label className="block text-[10px] text-[#66645e]">Resolución
+                <select value={videoWidth} disabled={videoBusy} onChange={e=>setVideoWidth(e.target.value)} className="mt-1 w-full rounded-lg border border-black/15 bg-white px-2 py-2 text-xs text-[#292824]">
+                  <option value="1280">HD · 1280 × 720</option><option value="1920">Full HD · 1920 × 1080</option><option value="2560">QHD · 2560 × 1440</option><option value="3840">4K UHD · 3840 × 2160</option>
+                </select>
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <label className="text-[10px] text-[#66645e]">Fotogramas por segundo
+                  <select value={videoFps} disabled={videoBusy} onChange={e=>setVideoFps(e.target.value)} className="mt-1 w-full rounded-lg border border-black/15 bg-white px-2 py-2 text-xs text-[#292824]"><option value="24">24 FPS</option><option value="30">30 FPS</option><option value="60">60 FPS</option><option value="120">120 FPS · experimental</option></select>
+                </label>
+                <label className="text-[10px] text-[#66645e]">Duración
+                  <select value={videoDuration} disabled={videoBusy} onChange={e=>setVideoDuration(e.target.value)} className="mt-1 w-full rounded-lg border border-black/15 bg-white px-2 py-2 text-xs text-[#292824]"><option value="5">5 segundos</option><option value="10">10 segundos</option><option value="15">15 segundos</option><option value="20">20 segundos</option></select>
+                </label>
+              </div>
+              {videoBusy&&<div role="status" aria-live="polite" className="rounded-lg border border-[#d4af37]/25 bg-white p-2.5">
+                {videoCountdown!==null?<>
+                  <div className="text-center">
+                    <div className="text-[10px] font-medium text-[#77756f]">PREPARA LA JOYA Y LA CÁMARA</div>
+                    <div className="my-1 text-4xl font-semibold tabular-nums text-[#b99642]">{videoCountdown}</div>
+                    <div className="text-[10px] text-[#66645e]">La grabación manual comenzará en {videoCountdown} s</div>
+                  </div>
+                </>:<>
+                  <div className="mb-2 flex justify-between text-[10px]"><span>{videoMode==="automatic"?"Grabando giro automático":videoMode==="orbit180-return"?"Grabando órbita 180° de ida y vuelta":videoMode==="cinematic-zoom"?"Grabando acercamiento cinematográfico":videoMode==="vertical-sweep"?"Grabando recorrido vertical":videoMode==="slow360"?"Grabando giro 360° lento":videoMode==="catalog"?"Grabando presentación de catálogo":"Grabando movimientos manuales"}</span><span>{Math.round(videoProgress)}%</span></div>
+                  <div className="h-2 overflow-hidden rounded-full bg-[#eee8d8]"><div className="h-full rounded-full bg-[#b99642] transition-[width]" style={{width:Math.max(0,Math.min(100,videoProgress))+"%"}}/></div>
+                </>}
+                <button type="button" onClick={()=>videoAbortRef.current?.abort()} className="mt-2 w-full rounded-lg border border-black/15 px-3 py-2 text-xs font-semibold">{videoCountdown!==null?"Cancelar cuenta atrás":"Cancelar grabación"}</button>
+              </div>}
+              {!videoBusy&&<button type="button" disabled={!archivo||exportBusy||!!ptProgress} onClick={async()=>{
+                if(videoExportLockRef.current) return;
+                videoExportLockRef.current=true;
+                const controller=new AbortController();videoAbortRef.current=controller;setVideoBusy(true);setExportBusy(true);setVideoProgress(0);setError(null);
+                try{
+                  if(videoMode==="manual"){
+                    for(let remaining=10;remaining>0;remaining--){
+                      if(controller.signal.aborted) throw new DOMException("Grabación cancelada","AbortError");
+                      setVideoCountdown(remaining);
+                      await new Promise<void>((resolve,reject)=>{
+                        const timer=window.setTimeout(()=>{controller.signal.removeEventListener("abort",onAbort);resolve();},1000);
+                        const onAbort=()=>{window.clearTimeout(timer);controller.signal.removeEventListener("abort",onAbort);reject(new DOMException("Cuenta atrás cancelada","AbortError"));};
+                        controller.signal.addEventListener("abort",onAbort,{once:true});
+                      });
+                    }
+                    setVideoCountdown(null);
+                  }
+                  if(controller.signal.aborted) throw new DOMException("Grabación cancelada","AbortError");
+                  await apiRef.current?.exportVideo({width:Number(videoWidth),height:Math.round(Number(videoWidth)*9/16),fps:Number(videoFps),duration:Number(videoDuration),mode:videoMode,signal:controller.signal,onProgress:(elapsed:number,total:number)=>setVideoProgress(total>0?elapsed/total*100:0)});
+                  setVideoProgress(100);
+                }catch(e:any){if(e?.name!=="AbortError")setError(e instanceof Error?e.message:"No se pudo exportar el vídeo MP4.");}
+                finally{videoAbortRef.current=null;videoExportLockRef.current=false;setVideoCountdown(null);setVideoBusy(false);setExportBusy(false);}
+              }} className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#d4af37] px-3 py-2.5 text-xs font-semibold text-black disabled:cursor-not-allowed disabled:opacity-40"><Download className="size-4"/>Grabar y descargar .mp4</button>}
+              <p className="text-[10px] leading-relaxed text-[#77756f]">En modo manual, mueve la cámara mientras se graba; en automático, la joya gira sola 360°. 4K depende de la resolución real del visor. 120 FPS es experimental. El giro automático restaura la cámara al terminar; la grabación manual conserva el encuadre final.</p>
+            </div>}
+          </div>
+          {false&&(<button type="button" onClick={()=>apiRef.current?.exportSceneSettings()} className="flex w-full items-center gap-3 rounded-xl border border-black/10 bg-black/[.025] px-3 py-3 text-left text-sm text-[#292824] hover:bg-black/[.05]"><FileJson className="size-5"/><span><span className="block">Configuración .vjson</span><span className="block text-[10px] text-[#77756f]">Escena, cámara, calidad y selección</span></span></button>)}
+
+        </div>
+        {sharedLink&&<p className="mt-2 rounded-lg border border-black/[.06] bg-black/[.025] p-2.5 text-[10px] leading-relaxed text-[#77756f]">Al compartir un modelo 3D, los materiales compatibles con glTF se conservan mejor; los shaders personalizados, el HDRI y los efectos pueden variar según el visor.</p>}
+      </div></div>}\n{!exportOpen && <>
           <div className="flex h-full flex-col overflow-y-auto">
             <div className="border-b border-[#e7e2d9] bg-white/55 px-4 py-4">
               <div className="text-[10px] font-semibold uppercase tracking-[.16em] text-[#92743b]">Biblioteca visual</div>
@@ -3117,7 +3072,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               </div>
             </div>
           </div>
-        </aside>}
+        </>}\n
       </div>
     </div>
   </>);
