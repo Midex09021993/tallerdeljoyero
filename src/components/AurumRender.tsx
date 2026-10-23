@@ -3066,7 +3066,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               <button type="button" disabled={!archivo||exportBusy} onClick={()=>void actualizarPoster()} className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#c9a85d] bg-[#d4af37] px-3 py-3 text-sm font-semibold text-[#292824] shadow-sm transition-colors hover:bg-[#e1bf50] disabled:cursor-not-allowed disabled:opacity-45">
                 {exportBusy ? <><RotateCw className="size-4 animate-spin"/> Generando y guardando…</> : <><Camera className="size-4"/> Actualizar y guardar póster</>}
               </button>
-              <p className="text-[10px] leading-relaxed text-[#858178]">La imagen se guarda en la carpeta del proyecto en Mi Nube. El archivo 3DM original no se modifica.</p>
+              
               {posterPreview && <div className="rounded-lg border border-[#d8c9aa] bg-[#f4efe5] px-3 py-2 text-[11px] text-[#795e2e]"><span className="font-semibold">Miniatura generada.</span> Comprueba el encuadre y vuelve a actualizarla cuando quieras guardar una nueva captura.</div>}
               <div className="mt-auto rounded-xl border border-[#e6e1d8] bg-white/70 p-3">
                 <div className="flex items-center gap-2 text-xs font-medium text-[#55534d]"><Upload className="size-4 text-[#92743b]"/> Destino del póster</div>
