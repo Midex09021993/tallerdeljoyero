@@ -1585,6 +1585,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           const originalCanvasStyleWidth=sourceCanvas.style.width;
           const originalCanvasStyleHeight=sourceCanvas.style.height;
           const originalCanvasStyleObjectFit=sourceCanvas.style.objectFit;
+          const originalCanvasStylePosition=sourceCanvas.style.position;
+          const originalCanvasStyleLeft=sourceCanvas.style.left;
+          const originalCanvasStyleTop=sourceCanvas.style.top;
+          const originalCanvasStyleTransform=sourceCanvas.style.transform;
           const originalAspect=camara.aspect;
           const originalTransmissionScale=Number((renderer as any).transmissionResolutionScale??1);
           const videoWidth=Math.max(320,Math.min(3840,Math.round(Number(options.width)||1280)));
@@ -1633,6 +1637,12 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               sourceCanvas.style.width=`${previewWidth}px`;
               sourceCanvas.style.height=`${previewHeight}px`;
               sourceCanvas.style.objectFit="contain";
+              // The canvas is normally anchored to the left of the wide viewer.
+              // Center its temporary portrait viewport under the centered guide.
+              sourceCanvas.style.position="absolute";
+              sourceCanvas.style.left="50%";
+              sourceCanvas.style.top="50%";
+              sourceCanvas.style.transform="translate(-50%, -50%)";
             }
             camara.aspect=renderAspect;
             camara.updateProjectionMatrix?.();
@@ -1705,6 +1715,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             sourceCanvas.style.width=originalCanvasStyleWidth;
             sourceCanvas.style.height=originalCanvasStyleHeight;
             sourceCanvas.style.objectFit=originalCanvasStyleObjectFit;
+            sourceCanvas.style.position=originalCanvasStylePosition;
+            sourceCanvas.style.left=originalCanvasStyleLeft;
+            sourceCanvas.style.top=originalCanvasStyleTop;
+            sourceCanvas.style.transform=originalCanvasStyleTransform;
             camara.aspect=originalAspect;
             camara.updateProjectionMatrix?.();
             if(composer && applyPostQuality){
