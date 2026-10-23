@@ -68,6 +68,9 @@ export function createAurumApi(options:any){
     fondo: options.fondo,
     sceneStudio: options.sceneStudio,
     reset: options.reset,
+    // Keep the viewer camera actions reachable from the toolbar API.
+    centerJewel: options.centerJewel,
+    fitAspect: options.fitAspect,
     autoRotar: options.autoRotar,
     limpiar: options.limpiar,
     partes: options.partes,
