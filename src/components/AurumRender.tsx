@@ -529,11 +529,23 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       };
       const blobConfiguracion = new Blob([JSON.stringify(configuracionAurum, null, 2)], { type: "application/json" });
 
-      // El póster se sube únicamente desde la acción explícita "Actualizar y guardar póster".
+      // Si se capturó un póster antes de guardar el proyecto, vincularlo ahora a esta carpeta.
       const uploads: Array<{ ruta: string; blob: Blob; contentType: string }> = [
         { ruta: rutaGlb, blob: blobGLB, contentType: "model/gltf-binary" },
         { ruta: rutaConfiguracion, blob: blobConfiguracion, contentType: "application/json" },
       ];
+      if (posterPreview) {
+        const posterResponse = await fetch(posterPreview);
+        const posterBlob = await posterResponse.blob();
+        if (posterBlob.type !== "image/png" || posterBlob.size < 1024) {
+          throw new Error("El póster capturado ya no está disponible. Vuelve a generarlo antes de guardar.");
+        }
+        uploads.push({
+          ruta: `${rutaCarpeta}/00-portada-aurum.png`,
+          blob: posterBlob,
+          contentType: "image/png",
+        });
+      }
       for (const item of uploads) {
         const { error: uploadError } = await supabase.storage.from("mi-nube").upload(item.ruta, item.blob, {
           contentType: item.contentType,
@@ -558,7 +570,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       setCarpetasDestinoProyecto((actuales) => actuales.includes(carpeta) ? actuales : [...actuales, carpeta].sort((a, b) => a.localeCompare(b, "es")));
       setNombreProyecto(nombreVisibleProyecto);
       setGuardarProyectoOpen(false);
-      toast.success(destinoProyectoGuardado?.rutaCarpeta === rutaCarpeta ? "Proyecto actualizado. El 3DM original y el póster permanecen intactos." : "Proyecto guardado en Mi Nube. El 3DM original se conserva; el póster se guarda solo con su botón.");
+      toast.success(posterPreview ? "Proyecto guardado en Mi Nube junto con su póster." : destinoProyectoGuardado?.rutaCarpeta === rutaCarpeta ? "Proyecto actualizado. El 3DM original y el póster existente permanecen intactos." : "Proyecto guardado en Mi Nube. El 3DM original se conserva.");
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : "No se pudo guardar el proyecto completo en Mi Nube.";
       setError(message);
