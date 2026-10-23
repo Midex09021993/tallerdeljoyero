@@ -36,7 +36,7 @@ export async function recordAurumCanvasVideo(
   }
 
   const width = Math.max(320, Math.min(3840, Math.round(options.width ?? 1280)));
-  const height = Math.max(320, Math.min(2160, Math.round(options.height ?? 720)));
+  const height = Math.max(320, Math.min(3840, Math.round(options.height ?? 720)));
   const fps = Math.max(15, Math.min(120, Math.round(options.fps ?? 30)));
   const duration = Math.max(1, Math.min(20, Number(options.duration ?? 5)));
   const output = document.createElement("canvas");
