@@ -208,11 +208,8 @@ function LoginPage() {
             <ShoppingBag className="size-4" /> Tienda
           </a>
           <a href="/catalogo-publico" className="flex items-center gap-2 text-sm text-white/75 transition hover:text-gold">
-            <Boxes className="size-4" /> Catálogos
-          </a>
-          <button type="button" onClick={() => { setSeccionPlataforma("comunidad"); setMostrarPlataforma(true); }} className="flex items-center gap-2 text-sm text-white/75 transition hover:text-gold">
             <UsersRound className="size-4" /> Comunidad
-          </button>
+          </a>
           <button type="button" onClick={() => { setSeccionPlataforma("ecosistema"); setMostrarPlataforma(true); }} className="flex items-center gap-2 text-sm text-white/75 transition hover:text-gold">
             <Gem className="size-4" /> Conocer Aurum Lab
           </button>
@@ -228,8 +225,7 @@ function LoginPage() {
           <a onClick={() => setMenuMovilAbierto(false)} href="/auth" className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-white/85 hover:bg-white/[0.06]"><Home className="size-4 text-gold" /> Inicio</a>
           <a onClick={() => setMenuMovilAbierto(false)} href="/herramientas-publicas" className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-white/85 hover:bg-white/[0.06]"><Grid2X2 className="size-4 text-gold" /> Herramientas gratuitas</a>
           <a onClick={() => setMenuMovilAbierto(false)} href="/tienda" className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-white/85 hover:bg-white/[0.06]"><ShoppingBag className="size-4 text-gold" /> Tienda de insumos</a>
-          <a onClick={() => setMenuMovilAbierto(false)} href="/catalogo-publico" className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-white/85 hover:bg-white/[0.06]"><Boxes className="size-4 text-gold" /> Catálogos activos</a>
-          <button type="button" onClick={() => { setMenuMovilAbierto(false); setSeccionPlataforma("comunidad"); setMostrarPlataforma(true); }} className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm text-white/85 hover:bg-white/[0.06]"><UsersRound className="size-4 text-gold" /> Comunidad</button>
+          <a onClick={() => setMenuMovilAbierto(false)} href="/catalogo-publico" className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-white/85 hover:bg-white/[0.06]"><UsersRound className="size-4 text-gold" /> Comunidad</a>
           <button type="button" onClick={() => { setMenuMovilAbierto(false); setSeccionPlataforma("ecosistema"); setMostrarPlataforma(true); }} className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm text-white/85 hover:bg-white/[0.06]"><Gem className="size-4 text-gold" /> Conocer Aurum Lab</button>
           <Suspense fallback={null}><ContactoComercial className="mt-1 inline-flex min-h-11 w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm text-[#d8bd7b] transition hover:bg-white/[0.06]" /></Suspense>
         </nav> : null}
