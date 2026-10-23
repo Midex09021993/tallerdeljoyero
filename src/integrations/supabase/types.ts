@@ -1410,6 +1410,7 @@ export type Database = {
       ecosistema_participantes: {
         Row: {
           ciudad: string | null
+          comunidad_visible: boolean
           created_at: string
           descripcion: string | null
           email: string | null
@@ -1426,6 +1427,7 @@ export type Database = {
         }
         Insert: {
           ciudad?: string | null
+          comunidad_visible?: boolean
           created_at?: string
           descripcion?: string | null
           email?: string | null
@@ -1442,6 +1444,7 @@ export type Database = {
         }
         Update: {
           ciudad?: string | null
+          comunidad_visible?: boolean
           created_at?: string
           descripcion?: string | null
           email?: string | null
@@ -4243,6 +4246,25 @@ export type Database = {
       obtener_contacto_catalogo_publico: {
         Args: { _slug: string }
         Returns: Json
+      }
+      obtener_directorio_comunidad_publica: {
+        Args: never
+        Returns: {
+          catalogo_visible: boolean
+          descripcion: string
+          formacion_descripcion: string
+          formacion_titulo: string
+          identidad_ciudad: string
+          identidad_logo: string
+          identidad_nombre: string
+          identidad_sitio_web: string
+          imagen_url: string
+          nombre: string
+          participante_id: string
+          productos_publicados: number
+          slug: string
+          tipo: string
+        }[]
       }
       obtener_enlace_visor_3d: {
         Args: { _modelo_ruta: string; _nombre: string }
