@@ -147,7 +147,7 @@ export function CatalogoColeccionesDialog({
       await cargar();
       onChanged();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "No se pudo guardar la colección.");
+      setError(getSupabaseErrorMessage(e, "No se pudo guardar la colección."));
     } finally {
       setGuardando(false);
     }
