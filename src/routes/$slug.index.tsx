@@ -690,7 +690,7 @@ function CatalogoPublicoPage() {
       <footer className="mx-auto max-w-7xl px-5 py-10 sm:px-8">
         <div className="flex flex-col gap-3 border-t border-[#1f1b1815] pt-6 text-xs text-[#746b62] sm:flex-row sm:items-center sm:justify-between">
           <span>© {config.nombre_publico} · Catálogo digital</span>
-          <Link to="/auth" className="font-semibold text-[#1f1b18]">Acceso al ERP</Link>
+          <a href="https://www.tallerdeljoyero.com" target="_blank" rel="noopener noreferrer" aria-label="Visitar www.tallerdeljoyero.com" className="group inline-flex items-center gap-1.5 font-semibold tracking-wide text-[#8a6b36] transition-colors hover:text-[#1f1b18]"><span className="border-b border-[#8a6b36]/40 pb-0.5 transition-colors group-hover:border-[#1f1b18]">Diseñado por www.tallerdeljoyero.com</span><span aria-hidden="true" className="text-[10px] transition-transform group-hover:translate-x-0.5">↗</span></a>
         </div>
       </footer>
     </main>
