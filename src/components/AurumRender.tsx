@@ -242,10 +242,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
     } catch {
       destino = null;
     }
-    if (!destino?.rutaCarpeta || destino.rutaCarpeta.split("/").filter(Boolean).length < 2) {
-      setError("Abre primero este archivo desde Mi Nube para vincular el póster a su carpeta original.");
-      return;
-    }
+    const rutaCarpeta = destino?.rutaCarpeta && destino.rutaCarpeta.split("/").filter(Boolean).length >= 2
+      ? destino.rutaCarpeta
+      : null;
     setExportBusy(true);
     setError(null);
     try {
@@ -266,11 +265,16 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               window.clearTimeout(timeout);
               void (async () => {
                 try {
-                  setPosterPreview(dataUrl);
                   const response = await fetch(dataUrl);
                   const blob = await response.blob();
                   if (blob.type !== "image/png" || blob.size < 1024) throw new Error("La captura PNG está vacía o no es válida.");
-                  const ruta = `${destino!.rutaCarpeta}/00-portada-aurum.png`;
+                  setPosterPreview(dataUrl);
+                  if (!rutaCarpeta) {
+                    toast.success("Póster capturado. Se conserva en esta sesión; guarda la joya en Mi Nube para vincularlo permanentemente.");
+                    resolve();
+                    return;
+                  }
+                  const ruta = `${rutaCarpeta}/00-portada-aurum.png`;
                   const { error: uploadError } = await supabase.storage.from("mi-nube").upload(ruta, blob, {
                     contentType: "image/png",
                     upsert: true,
@@ -292,7 +296,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       });
       setError(null);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "No se pudo guardar el póster en Mi Nube.");
+      setError(cause instanceof Error ? cause.message : "No se pudo generar o guardar el póster.");
     } finally {
       setExportBusy(false);
     }
@@ -3292,13 +3296,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 </div>
               </div>
               <button type="button" disabled={!archivo||exportBusy} onClick={()=>void actualizarPoster()} className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#c9a85d] bg-[#d4af37] px-3 py-3 text-sm font-semibold text-[#292824] shadow-sm transition-colors hover:bg-[#e1bf50] disabled:cursor-not-allowed disabled:opacity-45">
-                {exportBusy ? <><RotateCw className="size-4 animate-spin"/> Generando y guardando…</> : <><Camera className="size-4"/> Actualizar y guardar póster</>}
+                {exportBusy ? <><RotateCw className="size-4 animate-spin"/> Capturando póster…</> : <><Camera className="size-4"/> Actualizar póster</>}
               </button>
               
               {posterPreview && <div className="rounded-lg border border-[#d8c9aa] bg-[#f4efe5] px-3 py-2 text-[11px] text-[#795e2e]"><span className="font-semibold">Miniatura generada.</span> Comprueba el encuadre y vuelve a actualizarla cuando quieras guardar una nueva captura.</div>}
               <div className="mt-auto rounded-xl border border-[#e6e1d8] bg-white/70 p-3">
                 <div className="flex items-center gap-2 text-xs font-medium text-[#55534d]"><Upload className="size-4 text-[#92743b]"/> Destino del póster</div>
-                <p className="mt-1 text-[11px] leading-relaxed text-[#858178]">Se vincula a la carpeta desde la que abriste este archivo en Mi Nube.</p>
+                <p className="mt-1 text-[11px] leading-relaxed text-[#858178]">Si abriste la joya desde Mi Nube, el póster se guarda en su carpeta. Si aún no está guardada, puedes capturarlo ahora y vincularlo cuando guardes el proyecto.</p>
               </div>
             </div>
           </div>
