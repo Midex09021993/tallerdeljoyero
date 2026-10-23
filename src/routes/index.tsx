@@ -86,8 +86,8 @@ function PaginaPrincipal() {
               Descubre catálogos de joyería, explora diseños y conecta con talleres profesionales. Un ecosistema que une el oficio joyero con las herramientas digitales.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link to="/catalogo-publico" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#211d19] px-6 py-3.5 text-xs font-semibold text-white shadow-lg shadow-[#211d19]/10 transition hover:-translate-y-0.5 hover:bg-[#3b3329]">
-                Explorar catálogos <ArrowRight className="size-4" />
+              <Link to="/galeria-joyas" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#211d19] px-6 py-3.5 text-xs font-semibold text-white shadow-lg shadow-[#211d19]/10 transition hover:-translate-y-0.5 hover:bg-[#3b3329]">
+                Explorar joyas <ArrowRight className="size-4" />
               </Link>
               <Link to="/auth" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-[#b89b5e]/50 bg-white/70 px-6 py-3.5 text-xs font-semibold text-[#5b4930] transition hover:border-[#96733d] hover:bg-white">
                 Publicar mis productos
