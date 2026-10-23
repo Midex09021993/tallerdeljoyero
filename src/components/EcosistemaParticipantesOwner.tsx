@@ -43,6 +43,36 @@ export function EcosistemaParticipantesOwner(){
   })),
  });
  const consumoCatalogoPorParticipante = useMemo(() => new Map(talleresConCatalogo.map((p, index) => [p.id, consumoCatalogoQueries[index]])), [talleresConCatalogo, consumoCatalogoQueries]);
+ type ConsumoMiNube = { carpetas_propias: number; bytes_propios: number; carpetas_compartidas: number; bytes_compartidos: number };
+ const consumoMiNubeQueries = useQueries({
+  queries: talleresConCatalogo.map(p => ({
+   queryKey: ["owner-mi-nube-consumo", p.id],
+   queryFn: async (): Promise<ConsumoMiNube> => {
+    const { data, error } = await supabase.rpc("aurum_resumen_mi_nube_owner", { p_participante_id: p.id });
+    if (error) throw error;
+    const fila = Array.isArray(data) ? data[0] : data;
+    if (!fila || !Number.isInteger(fila.carpetas_propias) || !Number.isFinite(Number(fila.bytes_propios)) ||
+        !Number.isInteger(fila.carpetas_compartidas) || !Number.isFinite(Number(fila.bytes_compartidos)) ||
+        Number(fila.carpetas_propias) < 0 || Number(fila.bytes_propios) < 0 ||
+        Number(fila.carpetas_compartidas) < 0 || Number(fila.bytes_compartidos) < 0) {
+      throw new Error("El resumen seguro de Mi Nube no está disponible. Aplica el SQL de medición de Mi Nube.");
+    }
+    return {
+      carpetas_propias: Number(fila.carpetas_propias),
+      bytes_propios: Number(fila.bytes_propios),
+      carpetas_compartidas: Number(fila.carpetas_compartidas),
+      bytes_compartidos: Number(fila.bytes_compartidos),
+    };
+   },
+   staleTime: 60_000,
+  })),
+ });
+ const consumoMiNubePorParticipante = useMemo(() => new Map(talleresConCatalogo.map((p, index) => [p.id, consumoMiNubeQueries[index]])), [talleresConCatalogo, consumoMiNubeQueries]);
+ const formatoEspacioMiNube = (bytes: number) => bytes < 1024 * 1024
+  ? `${(bytes / (1024 * 1024)).toFixed(2)} MB`
+  : bytes < 1024 * 1024 * 1024
+   ? `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+   : `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
  async function guardarCuota(id: PlanComercialId) {
    const cuota = cuotaActual(id);
    if (!cuota || [cuota.operaciones_comerciales_mes, cuota.almacenamiento_mib, cuota.usos_render_mes, cuota.productos_catalogo_max, cuota.carpetas_mi_nube_max].some(v => !Number.isInteger(v) || v < -1)) { toast.error("Usa enteros no negativos; -1 significa sin límite."); return; }
@@ -105,7 +135,25 @@ export function EcosistemaParticipantesOwner(){
   if (limite === undefined || limite < 0) return <p className="mt-1.5 text-[10px] text-muted-foreground">{limite === undefined ? "Límite no configurado." : "Sin límite fijo de productos."}</p>;
   return <><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted" role="progressbar" aria-label={`Uso del catálogo de ${p.nombre}`} aria-valuemin={0} aria-valuemax={limite || 1} aria-valuenow={Math.min(actual, limite)}><div className={`h-full rounded-full ${pct >= 90 ? "bg-amber-500" : "bg-gold"}`} style={{ width: `${pct}%` }} /></div><p className="mt-1.5 text-[10px] text-muted-foreground">{pct}% utilizado · {Math.max(0, limite - actual)} disponibles</p></>;
  })()}
- <p className="mt-2 text-[10px] text-muted-foreground">Operaciones, almacenamiento y Render: medición pendiente.</p>
+ <div className="mt-3 grid gap-2 sm:grid-cols-2">
+  {(() => {
+   const uso = consumoMiNubePorParticipante.get(p.id);
+   const resumen = uso?.data;
+   const noDisponible = uso?.isError ? "No disponible" : uso?.isLoading || !resumen ? "Calculando…" : null;
+   return <>
+    <section className="rounded-lg border border-border bg-background p-3">
+     <p className="text-xs font-semibold">Mis archivos</p>
+     <div className="mt-2 flex items-center justify-between gap-2 text-xs"><span className="text-muted-foreground">Carpetas propias</span><span className="font-semibold tabular-nums">{noDisponible ?? resumen?.carpetas_propias}</span></div>
+     <div className="mt-1 flex items-center justify-between gap-2 text-xs"><span className="text-muted-foreground">Espacio ocupado</span><span className="font-semibold tabular-nums">{noDisponible ?? formatoEspacioMiNube(resumen!.bytes_propios)}</span></div>
+    </section>
+    <section className="rounded-lg border border-border bg-background p-3">
+     <p className="text-xs font-semibold">Carpetas compartidas conmigo</p>
+     <div className="mt-2 flex items-center justify-between gap-2 text-xs"><span className="text-muted-foreground">Carpetas recibidas</span><span className="font-semibold tabular-nums">{noDisponible ?? resumen?.carpetas_compartidas}</span></div>
+     <div className="mt-1 flex items-center justify-between gap-2 text-xs"><span className="text-muted-foreground">Espacio compartido accesible</span><span className="font-semibold tabular-nums">{noDisponible ?? formatoEspacioMiNube(resumen!.bytes_compartidos)}</span></div>
+    </section>
+   </>;
+  })()}
+ </div>
 </div></div>:null}</div><div className="flex gap-2"><span className="rounded-full bg-surface-muted px-2.5 py-1 text-[10px] font-semibold uppercase">{p.estado}</span><Button variant="outline" size="sm" onClick={()=>setCapacidades(p)}>Capacidades</Button><Button variant="outline" size="sm" onClick={()=>setVincular(p)}>Cuentas</Button><Button variant="outline" size="sm" onClick={()=>editar(p)}>Editar</Button><Button variant="ghost" size="sm" onClick={()=>void eliminar(p)}>Eliminar</Button></div></div>)}{!isLoading&&!lista.length?<p className="p-8 text-sm text-muted-foreground">No hay participantes con estos filtros.</p>:null}</div></Panel>
   {capacidades?<AsignadorEspecialidades participante={capacidades} onClose={()=>setCapacidades(null)} />:null}
   {(edit!==null||nuevo)?<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onMouseDown={e=>{if(e.target===e.currentTarget){setEdit(null);setNuevo(false)}}}><div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-border bg-card shadow-xl"><div className="border-b border-border p-5"><div className="flex justify-between"><div><p className="text-lg font-semibold">{edit?"Editar participante":"Nuevo participante"}</p><p className="text-xs text-muted-foreground">Solo visible y editable por el Dueño.</p></div><button type="button" onClick={()=>{setEdit(null);setNuevo(false)}}>Cerrar</button></div></div><div className="grid gap-4 p-5 sm:grid-cols-2"><label className="text-xs text-muted-foreground">Tipo<select value={form.tipo_participante} onChange={e=>setForm({...form,tipo_participante:e.target.value as Tipo})} className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">{Object.entries(tipos).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></label><label className="text-xs text-muted-foreground">Nombre *<Input className="mt-1" value={form.nombre} onChange={e=>setForm({...form,nombre:e.target.value})}/></label><label className="text-xs text-muted-foreground">Empresa / razón social<Input className="mt-1" value={form.razon_social} onChange={e=>setForm({...form,razon_social:e.target.value})}/></label><label className="text-xs text-muted-foreground">Correo<Input className="mt-1" value={form.email} onChange={e=>setForm({...form,email:e.target.value})}/></label><label className="text-xs text-muted-foreground">Teléfono<Input className="mt-1" value={form.telefono} onChange={e=>setForm({...form,telefono:e.target.value})}/></label><label className="text-xs text-muted-foreground">Ciudad<Input className="mt-1" value={form.ciudad} onChange={e=>setForm({...form,ciudad:e.target.value})}/></label><label className="text-xs text-muted-foreground sm:col-span-2">Descripción<textarea rows={3} value={form.descripcion} onChange={e=>setForm({...form,descripcion:e.target.value})} className="mt-1 w-full rounded-md border border-input bg-background p-3 text-sm"/></label><label className="text-xs text-muted-foreground">Estado<select value={form.estado} onChange={e=>setForm({...form,estado:e.target.value as Estado})} className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"><option value="activo">Activo</option><option value="pausado">Pausado</option><option value="inactivo">Inactivo</option></select></label><label className="text-xs text-muted-foreground">Nota interna<textarea rows={2} value={form.notas_owner} onChange={e=>setForm({...form,notas_owner:e.target.value})} className="mt-1 w-full rounded-md border border-input bg-background p-3 text-sm"/></label></div><div className="flex justify-end gap-2 border-t border-border p-5"><Button variant="outline" onClick={()=>{setEdit(null);setNuevo(false)}}>Cancelar</Button><Button disabled={saving} onClick={()=>void guardar()}>{saving?"Guardando…":"Guardar"}</Button></div></div></div>:null}
