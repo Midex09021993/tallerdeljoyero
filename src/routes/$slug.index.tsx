@@ -461,7 +461,7 @@ function CatalogoPublicoPage() {
                 const collectionRow = rows.find((row) => row.coleccion_slug === collectionSlug && row.coleccion_nombre === collectionName);
                 const collectionImage = collectionRow?.coleccion_imagen_portada_url ?? null;
                 return (
-                  <Link data-collection-card key={collectionSlug} to="/$slug/coleccion/$coleccion" params={{ slug: slugNormalizado, coleccion: collectionSlug }} className="group min-w-0 w-[78%] max-w-[320px] shrink-0 snap-start overflow-hidden rounded-2xl border border-[#e9e2d8] bg-white transition-colors duration-300 hover:border-[#d3bd91] sm:w-auto sm:max-w-none">
+                  <Link data-collection-card key={collectionSlug} to="/$slug/coleccion/$coleccion" params={{ slug: slugNormalizado, coleccion: collectionSlug }} className="group min-w-0 w-[84%] max-w-[340px] shrink-0 snap-start overflow-hidden rounded-2xl border border-[#e9e2d8] bg-white transition-colors duration-300 hover:border-[#d3bd91] sm:w-auto sm:max-w-none">
                     <div className="relative aspect-[4/5] overflow-hidden bg-[#f7f5f0]">
                       {collectionImage ? (
                         <img src={collectionImage} alt={collectionName} loading="lazy" className="size-full object-cover p-0 transition-transform duration-700 ease-out group-hover:scale-[1.045] motion-reduce:transform-none motion-reduce:transition-none" onError={(event) => { event.currentTarget.style.display = "none"; }} />
