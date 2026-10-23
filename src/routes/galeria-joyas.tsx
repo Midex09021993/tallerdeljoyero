@@ -19,12 +19,19 @@ type JoyaPublicada = {
 };
 
 const obtenerGaleriaPublica = async (): Promise<JoyaPublicada[]> => {
-  const rpc = supabasePublic.rpc as unknown as (
-    nombre: string,
-    args?: Record<string, never>,
-  ) => Promise<{ data: unknown; error: { message: string } | null }>;
-  const { data, error } = await rpc("obtener_galeria_joyas_publica");
-  if (error) throw error;
+  // Mantener la llamada ligada al cliente: separar rpc de su instancia puede
+  // perder el contexto interno que usa Supabase JS.
+  const clientePublico = supabasePublic as unknown as {
+    rpc: (nombre: string) => Promise<{
+      data: unknown;
+      error: { message: string } | null;
+    }>;
+  };
+  const { data, error } = await clientePublico.rpc("obtener_galeria_joyas_publica");
+  if (error) {
+    console.error("[Galería de Joyas] No se pudo consultar el catálogo público:", error.message);
+    throw error;
+  }
   return Array.isArray(data) ? data as JoyaPublicada[] : [];
 };
 
