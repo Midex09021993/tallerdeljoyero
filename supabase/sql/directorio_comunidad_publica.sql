@@ -24,6 +24,7 @@ returns table (
   identidad_nombre text,
   identidad_logo text,
   identidad_ciudad text,
+  identidad_pais text,
   identidad_sitio_web text
 )
 language sql
@@ -51,12 +52,13 @@ as $function$
     ic.nombre_comercial,
     ic.logo_url,
     ic.ciudad,
+    ic.pais_nombre,
     ic.sitio_web
   from public.ecosistema_participantes ep
   left join public.catalogo_configuracion c
     on c.participante_id = ep.id
   left join lateral (
-    select i.nombre_comercial, i.logo_url, i.ciudad, i.sitio_web
+    select i.nombre_comercial, i.logo_url, i.ciudad, i.pais_nombre, i.sitio_web
     from public.identidades_comerciales i
     where i.participante_id = ep.id
       and i.activa = true
@@ -89,12 +91,13 @@ as $function$
     ic.nombre_comercial,
     ic.logo_url,
     ic.ciudad,
+    ic.pais_nombre,
     ic.sitio_web
   from public.catalogo_configuracion c
   join public.ecosistema_participantes ep
     on ep.id = c.participante_id
   left join lateral (
-    select i.nombre_comercial, i.logo_url, i.ciudad, i.sitio_web
+    select i.nombre_comercial, i.logo_url, i.ciudad, i.pais_nombre, i.sitio_web
     from public.identidades_comerciales i
     where i.participante_id = ep.id
       and i.activa = true
