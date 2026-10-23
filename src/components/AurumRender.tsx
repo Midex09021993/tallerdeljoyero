@@ -407,6 +407,50 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
     const rutaGlb = `${rutaCarpeta}/01-modelo.glb`;
     const rutaConfiguracion = `${rutaCarpeta}/02-configuracion-aurum.json`;
     try {
+      // Validar la cuota de carpetas justo antes de guardar, no solo al abrir el diálogo.
+      // Actualizar una carpeta existente no consume una plaza nueva.
+      const [{ data: participantePlan, error: participantePlanError }, { data: carpetasActuales, error: carpetasError }] = await Promise.all([
+        supabase
+          .from("ecosistema_participantes")
+          .select("metadata")
+          .eq("id", participanteId)
+          .maybeSingle(),
+        supabase.storage.from("mi-nube").list(raiz, {
+          limit: 1000,
+          sortBy: { column: "name", order: "asc" },
+        }),
+      ]);
+      if (participantePlanError) throw participantePlanError;
+      if (carpetasError) throw carpetasError;
+
+      const planId = String((participantePlan?.metadata as Record<string, unknown> | null)?.plan_comercial ?? "emprendedor");
+      const { data: cuotaCarpetas, error: cuotaError } = await supabase
+        .from("aurum_plan_quotas")
+        .select("carpetas_mi_nube_max")
+        .eq("plan_id", planId)
+        .maybeSingle();
+      if (cuotaError) throw cuotaError;
+      const limiteCarpetas = cuotaCarpetas?.carpetas_mi_nube_max ?? 10;
+      const carpetasExistentes = (carpetasActuales ?? [])
+        .filter((entrada) => !entrada.id && !entrada.metadata)
+        .map((entrada) => entrada.name)
+        .filter((name): name is string => Boolean(name));
+      const actualizaCarpetaExistente = carpetasExistentes.includes(carpeta);
+
+      if (!actualizaCarpetaExistente && limiteCarpetas !== -1 && carpetasExistentes.length >= limiteCarpetas) {
+        const nombrePlan = ({
+          emprendedor: "Emprendedor",
+          taller: "Taller",
+          profesional: "Profesional",
+          empresarial: "Empresarial",
+        } as Record<string, string>)[planId] ?? planId;
+        toast.error(
+          `Límite de Mi Nube alcanzado. Tu plan ${nombrePlan} permite ${limiteCarpetas} carpetas y ya utilizas ${carpetasExistentes.length}. Actualiza un proyecto existente o amplía tu plan.`,
+          { duration: 7000 },
+        );
+        return;
+      }
+
       const blobGLB = await apiRef.current.exportGLB({ download: false }) as Blob;
       if (!blobGLB || blobGLB.size < 1024) throw new Error("No se pudo preparar el GLB del visor.");
 
