@@ -35,6 +35,27 @@ export function CatalogoCategoriasDialog({ open, participanteId, onClose, onChan
     if (!participanteId) return;
     setCargando(true);
     setError(null);
+    // Match the Fadilab master catalog for every workshop. Older catalogs may
+    // predate the standard-category seed and contain only custom categories.
+    // Upsert is idempotent and never overwrites an existing category's status/order.
+    const categoriasBase = [
+      { participante_id: participanteId, nombre: "Anillos", slug: "anillos", orden: 10 },
+      { participante_id: participanteId, nombre: "Aretes", slug: "aretes", orden: 20 },
+      { participante_id: participanteId, nombre: "Collares", slug: "collares", orden: 30 },
+      { participante_id: participanteId, nombre: "Pulseras", slug: "pulseras", orden: 40 },
+      { participante_id: participanteId, nombre: "Dijes", slug: "dijes", orden: 50 },
+      { participante_id: participanteId, nombre: "Broches", slug: "broches", orden: 60 },
+      { participante_id: participanteId, nombre: "Sets / Conjuntos", slug: "sets-conjuntos", orden: 80 },
+      { participante_id: participanteId, nombre: "Otros", slug: "otros", orden: 90 },
+    ];
+    const { error: seedError } = await supabase
+      .from("catalogo_categorias")
+      .upsert(categoriasBase, { onConflict: "participante_id,slug", ignoreDuplicates: true });
+    if (seedError) {
+      setError(seedError.message);
+      setCargando(false);
+      return;
+    }
     const { data, error: queryError } = await supabase
       .from("catalogo_categorias")
       .select("id, nombre, slug, orden, activo, parent_id")
