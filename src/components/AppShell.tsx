@@ -551,8 +551,9 @@ export function AppShell({
                   );
                 })}
                 <div className="mt-3 border-t border-border pt-3">
-                  <button type="button" onClick={() => void cerrarSesion()} className="flex min-h-11 w-full items-center rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-danger hover:bg-danger-soft">
-                    Cerrar sesión
+                  <button type="button" onClick={() => void cerrarSesion()} className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-danger transition-colors hover:bg-danger-soft">
+                    <ExternalLink className="size-4 shrink-0" aria-hidden="true" />
+                    Salir
                   </button>
                 </div>
               </div>
