@@ -446,7 +446,7 @@ function CatalogoPublicoPage() {
                   <Link key={collectionSlug} to="/$slug/coleccion/$coleccion" params={{ slug: slugNormalizado, coleccion: collectionSlug }} className="group overflow-hidden rounded-2xl border border-[#e9e2d8] bg-white transition duration-300 hover:-translate-y-1 hover:border-[#d3bd91] hover:shadow-[0_18px_45px_-28px_rgba(39,30,19,.38)]">
                     <div className="relative aspect-square overflow-hidden bg-[#f7f5f0]">
                       {collectionImage ? (
-                        <img src={collectionImage} alt={collectionName} loading="lazy" className="size-full object-contain p-5 transition-transform duration-700 ease-out group-hover:scale-[1.045] motion-reduce:transform-none motion-reduce:transition-none" onError={(event) => { event.currentTarget.style.display = "none"; }} />
+                        <img src={collectionImage} alt={collectionName} loading="lazy" className="size-full object-cover p-0 transition-transform duration-700 ease-out group-hover:scale-[1.045] motion-reduce:transform-none motion-reduce:transition-none" onError={(event) => { event.currentTarget.style.display = "none"; }} />
                       ) : (
                         <div className="grid size-full place-items-center"><Gem className="size-10 text-[#b89a5b]" /></div>
                       )}
