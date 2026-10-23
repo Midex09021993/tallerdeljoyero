@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Plus, Tags, Trash2, X } from "lucide-react";
+import { ChevronDown, ChevronRight, Plus, Tags, Trash2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 type Categoria = {
@@ -29,7 +29,7 @@ export function CatalogoCategoriasDialog({ open, participanteId, onClose, onChan
   const [cargando, setCargando] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [categoriaPendienteEliminar, setCategoriaPendienteEliminar] = useState<Categoria | null>(null);
+  const [categoriaPendienteEliminar, setCategoriaPendienteEliminar] = useState<Categoria | null>(null);\n  const [categoriasExpandidas, setCategoriasExpandidas] = useState<string[]>([]);
 
   const cargar = useCallback(async () => {
     if (!participanteId) return;
@@ -56,6 +56,53 @@ export function CatalogoCategoriasDialog({ open, participanteId, onClose, onChan
       setCargando(false);
       return;
     }
+    const { data: roots, error: rootsError } = await supabase
+      .from("catalogo_categorias")
+      .select("id, nombre, slug, orden, activo, parent_id")
+      .eq("participante_id", participanteId)
+      .is("parent_id", null)
+      .order("orden", { ascending: true });
+    if (rootsError) {
+      setError(rootsError.message);
+      setCargando(false);
+      return;
+    }
+
+    // Seed recommended jewelry subcategories under each matching parent.
+    // Stable parent-prefixed slugs make this safe to run every time the dialog opens.
+    const rootBySlug = new Map((roots ?? []).map((item) => [item.slug, item]));
+    const propuestas: Record<string, string[]> = {
+      anillos: ["Compromiso", "Matrimonio / Alianzas", "Solitarios", "Con piedras", "Sellos", "Diseño / Moda", "Eternidad"],
+      aretes: ["Studs / Topos", "Argollas", "Colgantes", "Trepadores", "Con piedras", "Perlas"],
+      collares: ["Cadenas", "Con dije", "Gargantillas", "Colgantes", "Perlas", "Statement"],
+      pulseras: ["Esclavas", "Cadena", "Tenis", "Charm / Dijes", "Brazaletes", "Con piedras"],
+      dijes: ["Nombres", "Iniciales", "Religiosos", "Corazones", "Infantiles", "Medallas", "Personalizados"],
+      broches: ["Florales", "Animales", "Geométricos", "Vintage", "Con piedras"],
+      "sets-conjuntos": ["Collar y aretes", "Anillo y aretes", "Juego completo", "Novia"],
+      otros: ["Gemelos", "Alfileres", "Accesorios", "Diseños especiales"],
+    };
+    const subcategoriasBase = Object.entries(propuestas).flatMap(([slugPadre, nombres]) => {
+      const padre = rootBySlug.get(slugPadre);
+      return padre ? nombres.map((nombreSub, index) => ({
+        participante_id: participanteId,
+        nombre: nombreSub,
+        slug: `${slugPadre}-${slugify(nombreSub)}`,
+        parent_id: padre.id,
+        orden: (index + 1) * 10,
+        activo: true,
+      })) : [];
+    });
+    if (subcategoriasBase.length) {
+      const { error: subSeedError } = await supabase
+        .from("catalogo_categorias")
+        .upsert(subcategoriasBase, { onConflict: "participante_id,slug", ignoreDuplicates: true });
+      if (subSeedError) {
+        setError(subSeedError.message);
+        setCargando(false);
+        return;
+      }
+    }
+
     const { data, error: queryError } = await supabase
       .from("catalogo_categorias")
       .select("id, nombre, slug, orden, activo, parent_id")
@@ -180,21 +227,41 @@ export function CatalogoCategoriasDialog({ open, participanteId, onClose, onChan
             <p className="text-sm text-muted-foreground">Cargando categorías…</p>
           ) : categorias.length ? (
             <div className="divide-y divide-border rounded-2xl border border-border">
-              {categorias.map((item) => (
-                <div key={item.id} className="flex items-center gap-3 p-3">
-                  <Tags className="size-4 text-gold" />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold">{item.parent_id ? <span className="text-muted-foreground">{categorias.find((parent) => parent.id === item.parent_id)?.nombre} / </span> : null}{item.nombre}</p>
-                    <p className="text-[10px] text-muted-foreground">/{item.slug}{item.parent_id ? " · Subcategoría" : " · Principal"}</p>
+              {categorias.filter((item) => !item.parent_id).map((item) => {
+                const hijas = categorias.filter((child) => child.parent_id === item.id);
+                const expandida = categoriasExpandidas.includes(item.id);
+                return (
+                  <div key={item.id}>
+                    <div className="flex min-w-0 items-center gap-2 p-3 sm:gap-3">
+                      <button type="button" onClick={() => setCategoriasExpandidas((actual) => actual.includes(item.id) ? actual.filter((id) => id !== item.id) : [...actual, item.id])} className="flex min-w-0 flex-1 items-center gap-2 text-left" aria-expanded={expandida}>
+                        {expandida ? <ChevronDown className="size-4 shrink-0 text-muted-foreground" /> : <ChevronRight className="size-4 shrink-0 text-muted-foreground" />}
+                        <Tags className="size-4 shrink-0 text-gold" />
+                        <span className="min-w-0">
+                          <span className="block truncate text-sm font-semibold">{item.nombre}</span>
+                          <span className="block text-[10px] text-muted-foreground">/{item.slug} · Principal · {hijas.length} subcategorías</span>
+                        </span>
+                      </button>
+                      <button type="button" onClick={() => { setParentId(item.id); setNombre(""); setCategoriasExpandidas((actual) => actual.includes(item.id) ? actual : [...actual, item.id]); }} className="shrink-0 rounded-lg border border-border px-2 py-1.5 text-[10px] font-semibold">+ Subcategoría</button>
+                      <button type="button" onClick={() => void cambiarActivo(item)} className="shrink-0 rounded-lg bg-surface-muted px-2 py-1.5 text-[10px] font-semibold">{item.activo ? "Activa" : "Oculta"}</button>
+                      <button type="button" onClick={() => setCategoriaPendienteEliminar(item)} className="shrink-0 rounded-lg p-2 text-muted-foreground hover:bg-destructive/5 hover:text-destructive" aria-label={`Eliminar ${item.nombre}`}><Trash2 className="size-4" /></button>
+                    </div>
+                    {expandida && (
+                      <div className="space-y-1 bg-surface-muted/30 px-3 pb-3 pl-9 sm:pl-12">
+                        {hijas.map((child) => (
+                          <div key={child.id} className="flex min-w-0 items-center gap-2 rounded-xl border border-border/70 bg-background px-3 py-2">
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate text-sm">{child.nombre}</span>
+                              <span className="block truncate text-[10px] text-muted-foreground">/{child.slug}</span>
+                            </span>
+                            <button type="button" onClick={() => void cambiarActivo(child)} className="shrink-0 rounded-lg bg-surface-muted px-2 py-1.5 text-[10px] font-semibold">{child.activo ? "Activa" : "Oculta"}</button>
+                            <button type="button" onClick={() => setCategoriaPendienteEliminar(child)} className="shrink-0 rounded-lg p-1.5 text-muted-foreground hover:bg-destructive/5 hover:text-destructive" aria-label={`Eliminar ${child.nombre}`}><Trash2 className="size-4" /></button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  <button type="button" onClick={() => void cambiarActivo(item)} className="rounded-lg bg-surface-muted px-2.5 py-1.5 text-[10px] font-semibold">
-                    {item.activo ? "Activa" : "Oculta"}
-                  </button>
-                  <button type="button" onClick={() => setCategoriaPendienteEliminar(item)} className="rounded-lg p-2 text-muted-foreground hover:bg-destructive/5 hover:text-destructive" aria-label={`Eliminar ${item.nombre}`}>
-                    <Trash2 className="size-4" />
-                  </button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <p className="rounded-2xl border border-border p-6 text-center text-sm text-muted-foreground">Todavía no hay categorías.</p>
