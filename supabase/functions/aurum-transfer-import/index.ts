@@ -107,7 +107,7 @@ Deno.serve(async (req) => {
         contentType: file.type || "application/octet-stream",
         upsert: false,
       });
-      if (uploadError) throw new Error(`No se pudo guardar ${safeName(file.name)} en Mi Nube.`);
+      if (uploadError) throw new Error(`No se pudo guardar ${safeName(file.name)} en Mi Nube: ${uploadError.message}`);
       copiedPaths.push(destination);
     }
 
