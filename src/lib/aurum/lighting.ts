@@ -253,12 +253,13 @@ export function createAurumLightingController(
         Object.values(lights).forEach((light:any) => {
           if (light) light.visible = false;
         });
-        const metalStudioEnabled = (["key", "fill", "rim", "front"] as const)
-          .some((name) => Boolean(config[name]?.enabled));
         const metalControlTouched = (["key", "fill", "rim", "front"] as const)
           .some((name) => manuallyTouched.has(name));
+        // Keep the photographic baseline only until a metal-facing panel
+        // control is first used. Then let the explicit controls be evaluated
+        // without auxiliary reflectors masking their on/off effect.
         const preserveBaseline = !metalControlTouched;
-        if (preserveBaseline || metalStudioEnabled) {
+        if (preserveBaseline) {
           if (lights.softbox) lights.softbox.visible = true;
           if (lights.strip) lights.strip.visible = true;
           if (lights.kicker) lights.kicker.visible = true;
@@ -326,17 +327,16 @@ export function createAurumLightingController(
         lights.front.intensity = rig.front.intensity * preset.front * 6 * Math.max(0, Number(config.front?.intensity) || 0);
       }
 
-      // In the iJewel reference rig, auxiliary reflection panels form the
-      // untouched baseline. Once a metal-facing control is changed, hide those
-      // panels whenever key/fill/rim/front are all disabled.
+      // In the iJewel reference rig, auxiliary reflection panels are only
+      // the untouched photographic baseline. Once the user changes any
+      // metal-facing control, hide them so each panel switch has a measurable
+      // effect instead of being masked by always-on softboxes and edge lights.
       const metalControlChanged = ["key", "fill", "rim", "front"].some((name) =>
         Object.prototype.hasOwnProperty.call(patch ?? {}, name)
       );
       if (activeRigId === "ijewelReference" && !diagnosticEnvironmentOnly && metalControlChanged) {
-        const metalStudioEnabled = (["key", "fill", "rim", "front"] as const)
-          .some((name) => Boolean(config[name]?.enabled));
         (["softbox", "strip", "kicker", "edgeLeft", "edgeRight"] as const).forEach((name) => {
-          if (lights[name]) lights[name].visible = metalStudioEnabled;
+          if (lights[name]) lights[name].visible = false;
         });
       }
 
