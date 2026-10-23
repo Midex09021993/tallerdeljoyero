@@ -204,13 +204,13 @@ export function CatalogoProductoPublicoPage() {
         </div>
       </header>
 
-      <section className="mx-auto grid w-full max-w-[1720px] gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[minmax(0,1.12fr)_minmax(0,.88fr)] lg:gap-8 lg:px-10 lg:py-10 2xl:gap-12 2xl:px-14 2xl:py-12">
+      <section className="mx-auto grid w-full max-w-[1720px] gap-4 px-4 py-4 sm:px-6 lg:grid-cols-[minmax(0,1.12fr)_minmax(0,.88fr)] lg:gap-6 lg:px-8 lg:py-5 2xl:gap-10 2xl:px-12 2xl:py-8">
         <div className="min-w-0">
           <div role="tabpanel" aria-label={vistaVisual === "fotos" ? "Fotografías del producto" : "Configurador 3D"} className="min-w-0">
             {vistaVisual === "fotos" ? <>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
                 {imagenesGaleria.length ? <div className="order-2 flex max-w-full gap-2 overflow-x-auto pb-1 sm:order-1 sm:w-[84px] sm:shrink-0 sm:flex-col sm:overflow-x-visible sm:overflow-y-auto sm:max-h-[68vh] sm:pr-1">{imagenesGaleria.slice(0, 8).map((url, index) => <button type="button" key={url + index} onClick={() => setImagenSeleccionada(url)} aria-label={index === 0 ? "Ver fotografía principal" : `Ver fotografía ${index + 1}`} aria-pressed={(imagenSeleccionada || item.imagen_principal_url) === url} className={"w-[72px] shrink-0 overflow-hidden rounded-xl border bg-white transition sm:w-full " + ((imagenSeleccionada || item.imagen_principal_url) === url ? "border-[#8a6b36] ring-2 ring-[#8a6b36]/20" : "border-transparent hover:border-[#d6c6a1]")}><img draggable={false} onContextMenu={(event) => event.preventDefault()} onDragStart={(event) => event.preventDefault()} src={url} alt={item.nombre + (index === 0 ? " fotografía principal" : " " + (index + 1))} className="aspect-square w-full object-contain" onError={(event) => { event.currentTarget.style.display = "none"; }} /></button>)}</div> : null}
-                <div className="group relative order-1 aspect-square w-full min-w-0 flex-1 overflow-hidden rounded-[24px] bg-white shadow-[0_20px_55px_-42px_rgba(31,27,24,.45)] ring-1 ring-[#1f1b1815] sm:order-2 sm:w-auto">
+                <div className="group relative order-1 aspect-square w-full min-w-0 flex-1 overflow-hidden rounded-[24px] bg-white shadow-[0_20px_55px_-42px_rgba(31,27,24,.45)] ring-1 ring-[#1f1b1815] sm:order-2 sm:w-auto lg:aspect-auto lg:h-[min(68vh,620px)] lg:flex-none">
                   {(imagenSeleccionada || item.imagen_principal_url) ? <img draggable={false} onContextMenu={(event) => event.preventDefault()} onDragStart={(event) => event.preventDefault()} src={imagenSeleccionada || item.imagen_principal_url || ""} alt={item.nombre} className="size-full scale-[1.08] object-contain p-0 transition duration-300 sm:scale-[1.1] lg:scale-[1.12]" onError={(event) => { event.currentTarget.style.display = "none"; }} /> : <div className="grid size-full place-items-center"><Box className="size-14 text-[#8a6b36]" /></div>}
                 </div>
               </div>
@@ -222,10 +222,10 @@ export function CatalogoProductoPublicoPage() {
           <p className="text-[9px] font-bold uppercase tracking-[.2em] text-[#8a6b36]">{item.codigo} · {item.categoria}</p>
           <h1 className="mt-2 font-display text-5xl tracking-tight">{item.nombre}</h1>
           <p className="mt-5 text-sm leading-7 text-[#625b54]">{item.descripcion_producto || "Consulta al taller para conocer los detalles de esta pieza."}</p>
-          <div className="mt-6 flex items-end gap-3"><p className="text-2xl font-semibold tracking-tight">{precio}</p><span className="mb-1 text-[9px] font-bold uppercase tracking-[.18em] text-[#8a6b36]">Pieza de colección</span></div>
+          <div className="mt-4 flex items-end gap-3"><p className="text-2xl font-semibold tracking-tight">{precio}</p><span className="mb-1 text-[9px] font-bold uppercase tracking-[.18em] text-[#8a6b36]">Pieza de colección</span></div>
 
           {item.mostrar_ficha_tecnica ? (
-            <div className="mt-7 grid grid-cols-2 gap-3 rounded-2xl border border-[#1f1b1820] bg-white/70 p-4 text-xs">
+            <div className="mt-5 grid grid-cols-2 gap-2.5 rounded-2xl border border-[#1f1b1820] bg-white/70 p-3.5 text-xs">
               {[
                 ["Metal", item.metal_principal],
                 ["Peso", item.peso_gramos ? item.peso_gramos + " g" : null],
