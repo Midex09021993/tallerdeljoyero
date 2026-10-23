@@ -387,7 +387,8 @@ function CatalogoPublicoPage() {
             <a onClick={() => setMenuMovilAbierto(false)} href="#coleccion" className="block border-b border-[#1f1b1810] px-2 py-3 text-sm text-[#30271e]">Colección</a>
             {config.enlaces_carrusel?.length ? <a onClick={() => setMenuMovilAbierto(false)} href="#enlaces-carrusel" className="block border-b border-[#1f1b1810] px-2 py-3 text-sm text-[#30271e]">Inspiración</a> : null}
             <a onClick={() => setMenuMovilAbierto(false)} href="#preguntas-frecuentes" className="block border-b border-[#1f1b1810] px-2 py-3 text-sm text-[#30271e]">Preguntas frecuentes</a>
-            <a onClick={() => setMenuMovilAbierto(false)} href="#contacto" className="block px-2 py-3 text-sm text-[#30271e]">Contacto</a>
+            <a onClick={() => setMenuMovilAbierto(false)} href="#contacto" className="block border-b border-[#1f1b1810] px-2 py-3 text-sm text-[#30271e]">Contacto</a>
+            <a href="/auth" className="mt-2 block rounded-xl border border-[#8a6b36]/30 px-3 py-3 text-sm font-semibold text-[#5c201f] transition-colors hover:bg-[#8a6b36]/10">Salir</a>
           </nav> : null}
         </div>
       </header>
