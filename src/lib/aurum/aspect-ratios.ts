@@ -25,3 +25,22 @@ export function getAurumAspectDimensions(
     ? { width: profile.width, height: profile.height }
     : { width: profile.videoWidth, height: profile.videoHeight };
 }
+
+/**
+ * Returns a contained frame for the selected ratio inside a viewport.
+ * Image and video overlays must share this calculation so their visible
+ * composition area is geometrically identical at the same aspect ratio.
+ */
+export function getAurumAspectFrameStyle(
+  ratio: number,
+  maxPercent = 88,
+): { width: string; height: string; aspectRatio: string; boxSizing: "border-box" } {
+  const safeRatio = Number.isFinite(ratio) && ratio > 0 ? ratio : 16 / 9;
+  const limit = Math.max(1, Math.min(100, maxPercent));
+  return {
+    width: `${Math.min(limit, limit * safeRatio)}%`,
+    height: `${Math.min(limit, limit / safeRatio)}%`,
+    aspectRatio: String(safeRatio),
+    boxSizing: "border-box",
+  };
+}
