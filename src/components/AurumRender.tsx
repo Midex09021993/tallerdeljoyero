@@ -112,6 +112,8 @@ type AurumRenderProps = { embedded?: boolean; onCatalogApiReady?: (api: AurumCat
 export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRenderProps = {}) {
   const { data: sesion } = useSesion();
   const visorRef = useRef<HTMLDivElement>(null), fileRef = useRef<HTMLInputElement>(null);
+  const orbitControlsRef = useRef<any>(null);
+  const [autoRotate360, setAutoRotate360] = useState(false);
   const [lightingOpen, setLightingOpen] = useState(false);
   const [metalHdriId, setMetalHdriId] = useState("ijewelMetal");
   const [gemHdriId, setGemHdriId] = useState("ijewelGem");
@@ -543,6 +545,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         maxDistance: 100,
         controlsClass: (await import("three/examples/jsm/controls/OrbitControls.js")).OrbitControls,
       });
+      orbitControlsRef.current = controles;
+      if (controles) controles.autoRotate = autoRotate360;
       // Orbit controls calibrated to the supplied iJewel VJSON reference.
       if (controles) {
         controles.enableDamping = true;
@@ -1488,7 +1492,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           invalidateRenderRef.current?.();
         },
         sceneStudio:(_patch:any)=>{},
-        reset:()=>{ controles.autoRotate=false; encuadrar(); invalidateRenderRef.current?.(); },
+        reset:()=>{ controles.autoRotate=false; setAutoRotate360(false); encuadrar(); invalidateRenderRef.current?.(); },
         centerJewel:()=>{
           if(!modelo) return;
           const bounds=new THREE.Box3().setFromObject(modelo);
@@ -2991,6 +2995,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 <button type="button" title="Biblioteca de ambientes y materiales" aria-label="Abrir biblioteca" aria-expanded={libraryMenuOpen} onClick={()=>{setLibraryMenuOpen(v=>!v);setQualityOpen(false);}} className={"grid size-9 place-items-center rounded-xl transition-colors "+(libraryMenuOpen?"bg-[#d4af37]/15 text-[#92743b]":"text-black/70 hover:bg-white/70")}><SlidersHorizontal className="size-[17px]"/></button>
                 <button type="button" title="Calidad de render" onClick={()=>{setQualityOpen(v=>!v);setLibraryMenuOpen(false);}} className={"grid size-9 place-items-center rounded-xl "+(qualityOpen?"bg-[#d4af37]/15 text-[#d4af37]":"text-black/70 hover:bg-white/70")}><Sparkles className="size-[17px]"/></button>
                 <button type="button" title="Reiniciar cámara" onClick={()=>apiRef.current?.reset()} className="grid size-9 place-items-center rounded-xl text-black/70 hover:bg-white/70"><RotateCcw className="size-[17px]"/></button>
+                <button type="button" title={autoRotate360 ? "Detener rotación 360°" : "Activar rotación 360°"} aria-label={autoRotate360 ? "Detener rotación 360 grados" : "Activar rotación 360 grados"} aria-pressed={autoRotate360} onClick={()=>{const next=!autoRotate360;setAutoRotate360(next);if(orbitControlsRef.current){orbitControlsRef.current.autoRotate=next;orbitControlsRef.current.autoRotateSpeed=0.8;orbitControlsRef.current.update?.();}invalidateRenderRef.current?.();}} className={"flex h-9 min-w-9 items-center justify-center gap-1 rounded-xl px-2 transition-colors "+(autoRotate360 ? "bg-[#d4af37]/20 text-[#92743b]" : "text-black/70 hover:bg-white/70")}><RotateCw className="size-[17px]"/><span className="text-[10px] font-semibold">360°</span></button>
                 <button type="button" title="Pantalla completa" onClick={()=>apiRef.current?.fullscreen()} className="grid size-9 place-items-center rounded-xl text-black/70 hover:bg-white/70"><Expand className="size-[17px]"/></button>
               </div>
             </div>}
