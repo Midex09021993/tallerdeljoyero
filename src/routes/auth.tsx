@@ -69,6 +69,10 @@ function LoginPage() {
   const [mostrarPassword, setMostrarPassword] = useState(false);
   const [mostrarAyudaPassword, setMostrarAyudaPassword] = useState(false);
   const [mostrarPlataforma, setMostrarPlataforma] = useState(false);
+  const [planDetalle, setPlanDetalle] = useState<{
+    id: string; nombre: string; precio: string; enfoque: string; items: string[];
+    noDisponible?: boolean; carpetas?: number | null; almacenamiento?: number | null; productos?: number | null;
+  } | null>(null);
   const [menuMovilAbierto, setMenuMovilAbierto] = useState(false);
   const [seccionPlataforma, setSeccionPlataforma] = useState<"ecosistema"|"participantes"|"flujo"|"comunidad"|"planes">("ecosistema");
   const modoAlta = Boolean(estado?.vacio && (estado as { disponible?: boolean } | undefined)?.disponible !== false);
@@ -633,7 +637,7 @@ function LoginPage() {
                         noDisponible: true,
                       },
                     ].map((plan) => (
-                      <article key={plan.id} className={"group relative flex min-w-0 flex-col overflow-hidden rounded-xl border p-3 transition duration-300 hover:-translate-y-0.5 sm:p-3.5 " + (plan.noDisponible ? "border-red-500/35 bg-gradient-to-b from-[#241718] via-[#191516] to-[#141314] hover:border-red-400/55" : plan.estilo === "featured" ? "border-gold/45 bg-gradient-to-b from-[#302719] via-[#1b1a16] to-[#151613] shadow-[0_12px_38px_rgba(194,161,92,.12)] hover:border-gold/70" : plan.estilo === "starter" ? "border-emerald-400/40 bg-gradient-to-b from-[#172923] via-[#14211d] to-[#111916] hover:border-emerald-300/60" : "border-white/10 bg-gradient-to-b from-[#1b1c1b] to-[#141514] hover:border-white/25")}>
+                      <article key={plan.id} role="button" tabIndex={0} onClick={() => { const cuota = cuotasPlanesPublicas?.find((item) => item.plan_id === plan.id); setPlanDetalle({ id: plan.id, nombre: plan.nombre, precio: plan.precio, enfoque: plan.enfoque, items: plan.items, noDisponible: plan.noDisponible, carpetas: cuota?.carpetas_mi_nube_max ?? null, almacenamiento: cuota?.almacenamiento_mib ?? null, productos: cuota?.productos_catalogo_max ?? null }); }} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); const cuota = cuotasPlanesPublicas?.find((item) => item.plan_id === plan.id); setPlanDetalle({ id: plan.id, nombre: plan.nombre, precio: plan.precio, enfoque: plan.enfoque, items: plan.items, noDisponible: plan.noDisponible, carpetas: cuota?.carpetas_mi_nube_max ?? null, almacenamiento: cuota?.almacenamiento_mib ?? null, productos: cuota?.productos_catalogo_max ?? null }); } }} aria-label={`Ver capacidades del plan ${plan.nombre}`} className={"group relative flex min-w-0 cursor-pointer flex-col overflow-hidden rounded-xl border p-3 transition duration-300 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold sm:p-3.5 " + (plan.noDisponible ? "border-red-500/35 bg-gradient-to-b from-[#241718] via-[#191516] to-[#141314] hover:border-red-400/55" : plan.estilo === "featured" ? "border-gold/45 bg-gradient-to-b from-[#302719] via-[#1b1a16] to-[#151613] shadow-[0_12px_38px_rgba(194,161,92,.12)] hover:border-gold/70" : plan.estilo === "starter" ? "border-emerald-400/40 bg-gradient-to-b from-[#172923] via-[#14211d] to-[#111916] hover:border-emerald-300/60" : "border-white/10 bg-gradient-to-b from-[#1b1c1b] to-[#141514] hover:border-white/25")}>
                         <div aria-hidden="true" className={"absolute inset-x-0 top-0 h-px " + (plan.estilo === "featured" || plan.estilo === "starter" ? "bg-gradient-to-r from-transparent via-gold to-transparent" : "bg-gradient-to-r from-transparent via-white/20 to-transparent")} />
                         <div className="flex items-start justify-between gap-2">
                           <span className={"font-display text-2xl italic leading-none " + (plan.estilo === "featured" ? "text-gold/75" : plan.estilo === "starter" ? "text-emerald-300/80" : "text-white/20")}>{plan.numero}</span>
@@ -671,9 +675,33 @@ function LoginPage() {
                         <div className={"mt-3 rounded-lg px-2.5 py-1.5 text-[8px] font-semibold leading-snug " + (plan.estilo === "featured" ? "bg-gold/10 text-gold/90" : "bg-white/[0.035] text-white/40")}>{plan.id === "emprendedor" ? "Empieza sin coste con las herramientas públicas." : plan.id === "taller" ? "Para ordenar la gestión del día a día." : plan.id === "profesional" ? "Para conectar el diseño con la fabricación." : "Para operaciones con varios equipos o sedes."}</div>
                       </article>
                     ))}
+
                   </div>
 
-
+                  {planDetalle && (
+                    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 p-3 backdrop-blur-sm" role="presentation" onClick={() => setPlanDetalle(null)}>
+                      <section role="dialog" aria-modal="true" aria-labelledby="plan-detalle-title" className="relative max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-2xl border border-gold/30 bg-[#111311] p-5 shadow-2xl sm:p-6" onClick={(event) => event.stopPropagation()}>
+                        <button type="button" onClick={() => setPlanDetalle(null)} aria-label="Cerrar capacidades del plan" className="absolute right-4 top-4 rounded-full border border-white/10 p-2 text-white/60 hover:text-white"><X className="size-4" /></button>
+                        <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-gold">Aurum Lab · Detalle del plan</p>
+                        <h3 id="plan-detalle-title" className="mt-2 pr-10 font-display text-3xl italic text-white">{planDetalle.nombre}</h3>
+                        <p className="mt-1 text-sm font-bold text-gold">{planDetalle.precio}</p>
+                        {planDetalle.noDisponible && <p className="mt-3 inline-flex items-center gap-2 rounded-md border border-red-500/40 bg-red-500/10 px-3 py-2 text-[10px] font-extrabold uppercase tracking-wider text-red-300"><span className="size-1.5 rounded-full bg-red-400" />No disponible todavía</p>}
+                        <p className="mt-3 text-sm leading-relaxed text-white/60">{planDetalle.enfoque}</p>
+                        <div className="mt-5 rounded-xl border border-white/10 bg-white/[0.025] p-4">
+                          <h4 className="text-xs font-bold uppercase tracking-wider text-white/75">Capacidades incluidas</h4>
+                          <ul className="mt-3 space-y-2.5">
+                            {planDetalle.items.map((item) => <li key={item} className="flex gap-2 text-sm leading-relaxed text-white/80"><ShieldCheck className="mt-0.5 size-4 shrink-0 text-emerald-300" /><span>{item}</span></li>)}
+                          </ul>
+                        </div>
+                        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                          <div className="rounded-lg border border-white/10 bg-black/20 p-3"><p className="text-[10px] text-white/45">Carpetas Mi Nube</p><p className="mt-1 text-base font-semibold text-white">{planDetalle.carpetas == null ? "No disponible" : planDetalle.carpetas < 0 ? "Sin límite" : planDetalle.carpetas}</p></div>
+                          <div className="rounded-lg border border-white/10 bg-black/20 p-3"><p className="text-[10px] text-white/45">Almacenamiento</p><p className="mt-1 text-base font-semibold text-white">{planDetalle.almacenamiento == null ? "No disponible" : planDetalle.almacenamiento < 0 ? "Sin límite" : planDetalle.almacenamiento >= 1024 ? `${Number((planDetalle.almacenamiento / 1024).toFixed(2))} GB` : `${planDetalle.almacenamiento} MB`}</p></div>
+                          <div className="rounded-lg border border-white/10 bg-black/20 p-3"><p className="text-[10px] text-white/45">Productos de catálogo</p><p className="mt-1 text-base font-semibold text-white">{planDetalle.productos == null ? "No disponible" : planDetalle.productos < 0 ? "Sin límite" : planDetalle.productos}</p></div>
+                        </div>
+                        <p className="mt-4 text-[10px] leading-relaxed text-white/35">Las capacidades se muestran según los límites configurados. Las funciones marcadas como no disponibles son informativas y no cambian los permisos internos.</p>
+                      </section>
+                    </div>
+                  )}
                 </>
               ) : null}
 
