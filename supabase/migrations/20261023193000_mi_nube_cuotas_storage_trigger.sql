@@ -54,7 +54,7 @@ begin
     pg_catalog.hashtextextended(v_participante_id, 0)
   );
 
-  if pg_catalog.coalesce(new.metadata->>'size', '') !~ '^[0-9]+$' then
+  if coalesce(new.metadata->>'size', '') !~ '^[0-9]+$' then
     raise exception 'No se pudo verificar el tamaño del archivo. Inténtalo nuevamente.'
       using errcode = '23514';
   end if;
@@ -62,10 +62,10 @@ begin
 
   select
     count(distinct (pg_catalog.split_part(o.name, '/', 2), pg_catalog.split_part(o.name, '/', 3)))::bigint,
-    pg_catalog.coalesce(
+    coalesce(
       sum(
         case
-          when pg_catalog.coalesce(o.metadata->>'size', '') ~ '^[0-9]+$'
+          when coalesce(o.metadata->>'size', '') ~ '^[0-9]+$'
             then (o.metadata->>'size')::bigint
           else 0::bigint
         end
@@ -92,7 +92,7 @@ begin
   into v_carpeta_existe;
 
   select
-    pg_catalog.coalesce(ep.metadata->>'plan_comercial', 'emprendedor')
+    coalesce(ep.metadata->>'plan_comercial', 'emprendedor')
   into v_plan_id
   from public.ecosistema_participantes ep
   where ep.id::text = v_participante_id
@@ -132,7 +132,7 @@ $function$;
 drop trigger if exists aurum_validar_cuotas_mi_nube_storage on storage.objects;
 
 create trigger aurum_validar_cuotas_mi_nube_storage
-before insert or update of bucket_id, name, metadata
+before insert or update
 on storage.objects
 for each row
 execute function public.aurum_validar_cuotas_mi_nube_storage();
