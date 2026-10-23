@@ -1,5 +1,5 @@
 -- Directorio público de Comunidad para Taller del Joyero.
--- Requiere aplicar primero comunidad_visibilidad_owner.sql para crear comunidad_visible.
+-- Requiere aplicar primero comunidad_visibilidad_owner.sql para crear comunidad_visible.\n-- Incluye solo campos públicos de identidad comercial; no expone RUC ni datos fiscales.
 -- Expone solo datos comerciales mínimos de participantes activos y publicaciones habilitadas.
 -- Aplicar manualmente en Lovable Cloud > Supabase SQL Editor.
 
