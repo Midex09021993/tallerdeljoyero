@@ -321,8 +321,8 @@ function LoginPage() {
 
           <div id="crear-taller" className="mt-5 flex flex-col gap-3 rounded-2xl border border-[#d8bd7b]/20 bg-gradient-to-r from-[#c8a85f]/[0.07] to-transparent p-4 scroll-mt-8 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm font-semibold text-white">Tu taller merece herramientas profesionales para crecer.</p>
-              <p className="mt-1 max-w-2xl text-xs leading-relaxed text-white/65">Diseña y visualiza joyas, organiza tu operación, prepara cotizaciones y presenta tus creaciones en tu catálogo. Forma parte de la comunidad AURUM LAB y descubre nuevas oportunidades de aprendizaje y encuentros para el sector joyero.</p>
+              <p className="text-sm font-semibold text-white">Impulsa tu taller con AURUM LAB.</p>
+              <p className="mt-1 max-w-2xl text-xs leading-relaxed text-white/65">Gestiona tu negocio, diseña tus creaciones y conecta con la comunidad joyera.</p>
             </div>
             <Suspense fallback={null}><RegistroTaller className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-gold px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-ink transition hover:-translate-y-0.5 hover:opacity-90" /></Suspense>
           </div>
