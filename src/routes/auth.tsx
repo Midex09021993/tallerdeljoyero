@@ -430,9 +430,9 @@ function LoginPage() {
       </div>
 
       {mostrarPlataforma ? (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-3 sm:p-5 backdrop-blur-md" role="dialog" aria-modal="true" aria-labelledby="plataforma-title">
-          <div className="relative flex max-h-[94vh] w-full max-w-6xl flex-col overflow-hidden rounded-3xl border border-gold/25 bg-[#101214] shadow-2xl">
-            <div className="flex shrink-0 items-center justify-between border-b border-white/10 px-5 py-4 sm:px-7">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-2 sm:p-3 lg:p-4 backdrop-blur-md" role="dialog" aria-modal="true" aria-labelledby="plataforma-title">
+          <div className="relative flex max-h-[96vh] w-full max-w-[1400px] flex-col overflow-hidden rounded-2xl border border-gold/25 bg-[#101214] shadow-2xl">
+            <div className="flex shrink-0 items-center justify-between border-b border-white/10 px-4 py-3 sm:px-5 sm:py-3.5">
               <div>
                 <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-gold">Aurum Lab · Ecosistema profesional</p>
                 <h2 id="plataforma-title" className="mt-1 font-display text-2xl italic text-white sm:text-3xl">Conoce cómo funciona</h2>
@@ -440,7 +440,7 @@ function LoginPage() {
               <button type="button" onClick={() => setMostrarPlataforma(false)} aria-label="Cerrar" className="rounded-full border border-white/10 p-2 text-white/60 hover:text-gold"><EyeOff className="size-4" /></button>
             </div>
 
-            <div className="border-b border-white/10 px-4 pt-3 sm:px-7">
+            <div className="border-b border-white/10 px-3 pt-2.5 sm:px-5">
               <p className="mb-2 text-[10px] text-white/35">Explora la plataforma por área</p>
               <div className="flex gap-1 overflow-x-auto">
               {([
@@ -458,7 +458,7 @@ function LoginPage() {
               </div>
             </div>
 
-            <div className="min-h-0 overflow-y-auto p-5 sm:p-7">
+            <div className="min-h-0 overflow-y-auto p-3 sm:p-4 lg:p-5">
               {seccionPlataforma === "ecosistema" ? (
                 <>
                   <div className="rounded-2xl border border-gold/20 bg-gold/[0.05] p-5 sm:p-7">
