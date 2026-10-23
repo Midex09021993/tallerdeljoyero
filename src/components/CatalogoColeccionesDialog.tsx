@@ -18,6 +18,23 @@ function slugify(value: string) {
   return value.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
 }
 
+function getSupabaseErrorMessage(error: unknown, fallback: string) {
+  if (error && typeof error === "object") {
+    const detail = error as { message?: unknown; details?: unknown; code?: unknown };
+    const message = typeof detail.message === "string" ? detail.message.trim() : "";
+    const details = typeof detail.details === "string" ? detail.details.trim() : "";
+    if (detail.code === "23505") return "Ya existe una colección con ese nombre o slug. Elige otro nombre.";
+    if (detail.code === "42501" || /row-level security|permission denied/i.test(message)) {
+      return "Supabase rechazó el guardado por permisos. Hay que revisar las políticas RLS de catalogo_colecciones.";
+    }
+    if (/imagen_url.*does not exist|schema cache/i.test(message)) {
+      return "La base de datos no tiene actualizada la estructura de colecciones. Hay que revisar la migración SQL.";
+    }
+    if (message) return details ? message + " (" + details + ")" : message;
+  }
+  return error instanceof Error && error.message ? error.message : fallback;
+}
+
 export function CatalogoColeccionesDialog({
   open,
   participanteId,
