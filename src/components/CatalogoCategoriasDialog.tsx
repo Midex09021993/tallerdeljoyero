@@ -145,9 +145,9 @@ export function CatalogoCategoriasDialog({ open, participanteId, onClose, onChan
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[55] grid place-items-center bg-background/70 p-4 backdrop-blur-sm">
-      <div className="max-h-[88vh] w-full max-w-xl overflow-y-auto rounded-3xl border border-gold/20 bg-card shadow-2xl">
-        <div className="flex items-center justify-between border-b border-border px-6 py-5">
+    <div className="fixed inset-0 z-[55] grid place-items-center bg-background/70 p-3 sm:p-5 backdrop-blur-sm">
+      <div className="flex max-h-[92dvh] w-full max-w-4xl flex-col overflow-hidden rounded-3xl border border-gold/20 bg-card shadow-2xl">
+        <div className="flex shrink-0 items-center justify-between gap-4 border-b border-border px-5 py-4 sm:px-7 sm:py-5">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[.2em] text-gold">Catálogo maestro</p>
             <h2 className="mt-1 text-xl font-semibold">Categorías</h2>
@@ -156,9 +156,9 @@ export function CatalogoCategoriasDialog({ open, participanteId, onClose, onChan
           <button type="button" onClick={onClose} className="rounded-xl p-2 text-muted-foreground hover:bg-surface-muted" aria-label="Cerrar"><X className="size-5" /></button>
         </div>
 
-        <div className="grid gap-5 p-6">
-          <div className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
-            <select value={parentId} onChange={(e) => setParentId(e.target.value)} className="h-11 rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-gold/40">
+        <div className="grid min-h-0 gap-5 overflow-y-auto overflow-x-hidden p-4 sm:p-6">
+          <div className="grid min-w-0 grid-cols-1 gap-2 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.2fr)_auto] md:items-center">
+            <select value={parentId} onChange={(e) => setParentId(e.target.value)} className="h-11 w-full min-w-0 rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-gold/40">
               <option value="">Categoría principal</option>
               {categorias.filter((item) => !item.parent_id).map((item) => <option key={item.id} value={item.id}>Subcategoría de: {item.nombre}</option>)}
             </select>
@@ -167,9 +167,9 @@ export function CatalogoCategoriasDialog({ open, participanteId, onClose, onChan
               onChange={(e) => setNombre(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); void crear(); } }}
               placeholder={parentId ? "Nueva subcategoría, por ejemplo: Compromiso" : "Nueva categoría, por ejemplo: Brazaletes"}
-              className="h-11 flex-1 rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-gold/40"
+              className="h-11 w-full min-w-0 rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-gold/40"
             />
-            <button type="button" onClick={() => void crear()} disabled={guardando} className="inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-2 text-xs font-semibold text-gold-foreground disabled:opacity-50">
+            <button type="button" onClick={() => void crear()} disabled={guardando} className="inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-gold px-4 py-2 text-xs font-semibold text-gold-foreground disabled:opacity-50">
               <Plus className="size-4" /> Agregar
             </button>
           </div>
