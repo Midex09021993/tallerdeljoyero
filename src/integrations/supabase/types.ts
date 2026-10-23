@@ -3928,6 +3928,15 @@ export type Database = {
         Args: { p_participante_id: string }
         Returns: number
       }
+      aurum_resumen_mi_nube_owner: {
+        Args: { p_participante_id: string }
+        Returns: {
+          bytes_compartidos: number
+          bytes_propios: number
+          carpetas_compartidas: number
+          carpetas_propias: number
+        }[]
+      }
       cambiar_estado_cotizacion: {
         Args: { _cotizacion_id: string; _nuevo_estado: string }
         Returns: undefined
@@ -4246,6 +4255,14 @@ export type Database = {
       obtener_ficha_servicio_externo: {
         Args: { _trabajo_id: string }
         Returns: Json
+      }
+      obtener_portadas_colecciones_publicas: {
+        Args: { _slug: string }
+        Returns: {
+          coleccion_nombre: string
+          coleccion_slug: string
+          imagen_portada_url: string
+        }[]
       }
       obtener_publicidad_formacion: {
         Args: { _slug: string }
