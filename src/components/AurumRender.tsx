@@ -428,7 +428,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       if (participantePlanError) throw participantePlanError;
       if (carpetasError) throw carpetasError;
 
-      const planId = String((participantePlan?.metadata as Record<string, unknown> | null)?.plan_comercial ?? "emprendedor");
+      const planId = String((participantePlan?.metadata as Record<string, unknown> | null)?.["plan_comercial"] ?? "emprendedor");
       const { data: cuotaCarpetas, error: cuotaError } = await supabase
         .from("aurum_plan_quotas")
         .select("carpetas_mi_nube_max")
@@ -2704,7 +2704,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                       const cambio: { enabled?: boolean; intensity?: number } = {};
                       if (typeof luz.enabled === "boolean") cambio.enabled = luz.enabled;
                       if (typeof luz.intensity === "number" && Number.isFinite(luz.intensity)) {
-                        cambio.intensity = Math.max(0, Math.min(limites[nombre], luz.intensity));
+                        cambio.intensity = Math.max(0, Math.min(limites[nombre] ?? 4, luz.intensity));
                       }
                       if (Object.keys(cambio).length) patch[nombre] = cambio;
                     });
