@@ -11,7 +11,7 @@ import { getAurumShadowConfig } from "../lib/aurum-shadow-engine";
 import { getAurumPostConfig } from "../lib/aurum-post-engine";
 import { getAurumSsaoConfig } from "../lib/aurum-ssao-engine";
 import { AURUM_LIGHTING_DEFAULT } from "../lib/aurum-lighting-engine";
-import { applyAurumCameraView, applyAurumIJEWELPresentationCamera } from "../lib/aurum/camera";
+import { applyAurumCameraView, applyAurumIJEWELPresentationCamera, fitAurumCameraToAspect } from "../lib/aurum/camera";
 import { prepareAurumModel } from "../lib/aurum/model-prep";
 import { createAurumPostPipeline } from "../lib/aurum/post";
 import { createAurumEnvironment } from "../lib/aurum/environment";
@@ -1489,6 +1489,26 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         },
         sceneStudio:(_patch:any)=>{},
         reset:()=>{ controles.autoRotate=false; encuadrar(); invalidateRenderRef.current?.(); },
+        centerJewel:()=>{
+          if(!modelo) return;
+          const bounds=new THREE.Box3().setFromObject(modelo);
+          if(bounds.isEmpty()) return;
+          const target=bounds.getCenter(new THREE.Vector3());
+          const delta=target.clone().sub(controles.target);
+          camara.position.add(delta);
+          controles.target.copy(target);
+          camara.lookAt(target);
+          camara.updateProjectionMatrix?.();
+          controles.update?.();
+          diamondBvhRuntime?.update();
+          invalidateRenderRef.current?.();
+        },
+        fitAspect:(aspect?:number)=>{
+          if(!modelo) return;
+          fitAurumCameraToAspect(camara,controles,modelo,Number(aspect)||camara.aspect,1.18);
+          diamondBvhRuntime?.update();
+          invalidateRenderRef.current?.();
+        },
         autoRotar:(activo:boolean)=>{ controles.autoRotate=activo; controles.autoRotateSpeed=0.65; invalidateRenderRef.current?.(); },
         limpiar:()=>{quitar();parteActiva=null;limpiarResaltado();setParteSeleccionada(null);setParteSeleccionadaNombre(null);},
         partes:()=>modelo?obtenerPartes(modelo):[],
@@ -1547,8 +1567,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           if(!modelo) throw new Error("Carga una joya antes de grabar el vídeo.");
           const sourceCanvas=renderer.domElement as HTMLCanvasElement;
           if(!sourceCanvas || sourceCanvas.width<2 || sourceCanvas.height<2) throw new Error("El visor todavía no tiene una imagen para grabar.");
+          const originalCameraPosition=camara.position.clone();
+          const originalCameraQuaternion=camara.quaternion.clone();
+          const originalControlsTarget=controles.target?.clone?.();
           const cameraPosition=camara.position.clone();
-          const cameraQuaternion=camara.quaternion.clone();
           const controlsTarget=controles.target?.clone?.();
           const previousAutoRotate=Boolean(controles.autoRotate);
           const previousAutoRotateSpeed=Number(controles.autoRotateSpeed ?? 0.65);
@@ -1589,6 +1611,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             renderer.setSize(renderWidth,renderHeight,false);
             camara.aspect=outputAspect;
             camara.updateProjectionMatrix?.();
+            if(modelo) fitAurumCameraToAspect(camara,controles,modelo,outputAspect,1.18);
+            cameraPosition.copy(camara.position);
+            if(controlsTarget && controles.target) controlsTarget.copy(controles.target);
             // Camera and source canvas now share the selected output ratio, matching
             // the composition frame and avoiding letterboxing in the video exporter.
             // Do not resize or activate the post-processing composer for video.
@@ -1662,12 +1687,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             }
             controles.autoRotate=previousAutoRotate;
             controles.autoRotateSpeed=previousAutoRotateSpeed;
-            if(automatic){
-              camara.position.copy(cameraPosition);
-              camara.quaternion.copy(cameraQuaternion);
-              if(controlsTarget && controles.target) controles.target.copy(controlsTarget);
-              controles.update?.();
-            }
+            camara.position.copy(originalCameraPosition);
+            camara.quaternion.copy(originalCameraQuaternion);
+            if(originalControlsTarget && controles.target) controles.target.copy(originalControlsTarget);
+            controles.update?.();
             diamondBvhRuntime?.update();
             aplicarPerfilLive();
             loop?.invalidate?.();
@@ -1729,6 +1752,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           loop?.pause?.();
           const capturePassStates: Array<{pass:any;enabled:boolean}> = [];
           const originalCameraPosition = camara.position.clone();
+          const originalCameraQuaternion = camara.quaternion.clone();
+          const originalControlsTarget = controles?.target?.clone?.() ?? null;
           const posterCameraTarget = isPoster && controles?.target?.clone ? controles.target.clone() : null;
           try {
             // Render slightly above the requested dimensions for spatial
@@ -1751,6 +1776,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               camara.aspect=renderWidth/renderHeight;
               camara.updateProjectionMatrix?.();
             }
+            // La captura usa el mismo campo de visión que la proporción del archivo.
+            // Se ajusta temporalmente la distancia para evitar recortes y luego se restaura la cámara.
+            if(!isPoster && modelo) fitAurumCameraToAspect(camara,controles,modelo,renderWidth/renderHeight,1.18);
             diamondBvhRuntime?.update();
             if(renderer.domElement.width!==renderWidth || renderer.domElement.height!==renderHeight) {
               throw new Error("El canvas WebGL no alcanzó la resolución interna de captura solicitada.");
@@ -1820,9 +1848,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               if(state.pass && "enabled" in state.pass) state.pass.enabled=state.enabled;
             }
             camara.position.copy(originalCameraPosition);
+            camara.quaternion.copy(originalCameraQuaternion);
             camara.updateMatrixWorld?.();
-            if (posterCameraTarget && controles?.target) {
-              controles.target.copy(posterCameraTarget);
+            if (originalControlsTarget && controles?.target) {
+              controles.target.copy(originalControlsTarget);
               controles.update?.();
             }
             if(typeof originalAspect==="number") {
@@ -2903,7 +2932,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               <span aria-hidden="true" className="h-5 w-px bg-white/20" />
               <span title="Usa la rueda del ratón para acercar o alejar" className="group flex items-center gap-1.5 rounded-lg px-1.5 py-1 text-[10px] text-white/90 transition-colors hover:bg-white/[.09] hover:text-white sm:px-2"><span className="grid size-6 place-items-center rounded-md border border-white/20 bg-white/[.08] text-[12px] text-white/85 transition-colors group-hover:border-[#d4af37]/40 group-hover:bg-[#d4af37]/15 group-hover:text-[#e7c766]">⌕</span><span className="font-medium">Zoom</span></span>
               <span aria-hidden="true" className="h-5 w-px bg-white/20" />
-              <button type="button" title="Restablecer el encuadre inicial" onClick={()=>apiRef.current?.reset()} className="group flex items-center gap-1.5 rounded-lg border border-[#d4af37]/25 bg-[#d4af37]/[.06] px-1.5 py-1 text-[10px] text-white/95 transition-colors hover:border-[#d4af37]/45 hover:bg-[#d4af37]/15 hover:text-white sm:px-2"><span className="grid size-6 place-items-center rounded-md bg-[#d4af37]/15 text-[12px] text-[#e7c766] transition-colors group-hover:bg-[#d4af37]/25">⌗</span><span className="font-medium">Ajustar</span></button>
+              <button type="button" title="Centrar la joya sin cambiar el zoom" onClick={()=>apiRef.current?.centerJewel()} className="group flex items-center gap-1.5 rounded-lg px-1.5 py-1 text-[10px] text-white/90 transition-colors hover:bg-white/[.09] hover:text-white sm:px-2"><span className="grid size-6 place-items-center rounded-md border border-white/20 bg-white/[.08] text-[12px]">⊙</span><span className="font-medium">Centrar joya</span></button>
+              <button type="button" title="Ajustar la cámara a la proporción seleccionada" onClick={()=>apiRef.current?.fitAspect(snapshotOpen&&snapshotAspect?Number(snapshotWidth)/Math.max(1,Number(snapshotHeight)):videoOpen?getAurumAspectRatio(videoAspect):undefined)} className="group flex items-center gap-1.5 rounded-lg border border-[#d4af37]/25 bg-[#d4af37]/[.06] px-1.5 py-1 text-[10px] text-white/95 transition-colors hover:border-[#d4af37]/45 hover:bg-[#d4af37]/15 hover:text-white sm:px-2"><span className="grid size-6 place-items-center rounded-md bg-[#d4af37]/15 text-[12px] text-[#e7c766]">⌗</span><span className="font-medium">Ajustar a proporción</span></button>
             </div>}
             {!embedded && <div className="absolute bottom-6 right-6 z-20 flex gap-1 rounded-xl border border-white/35 bg-white/75 p-1 text-black/55 shadow-sm backdrop-blur-2xl">
               <span className="rounded-lg border border-black/10 px-2 py-1 text-[9px]">HDRI</span><span className="rounded-lg border border-black/10 px-2 py-1 text-[9px]">PBR</span><span className="rounded-lg border border-black/10 px-2 py-1 text-[9px]">4K</span>
