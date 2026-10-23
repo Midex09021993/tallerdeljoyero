@@ -22,11 +22,12 @@ export function createAurumLightingController(
   let activeRigId = "jewelry";
   let lastRadius = 1;
   let lastTargetY = 0;
-  // Official default = validated "environment" profile (HDR/IBL only).
-  // "?aurumDiag=standard" restores the previous direct-light rig for A/B.
+  // Normal production mode keeps the studio rig active so the lighting panel
+  // reflects the actual enabled state of its controls. Use ?aurumDiag=environment
+  // only when deliberately isolating HDR/IBL for diagnostics.
   const diagnosticMode = (typeof window !== "undefined"
     ? new URLSearchParams(window.location.search).get("aurumDiag")
-    : null) ?? "environment";
+    : null) ?? "standard";
   const diagnosticEnvironmentOnly = diagnosticMode === "environment";
   // Track only controls the user explicitly changed. Scene presets remain the
   // baseline, while touched controls are reapplied after every scene change.
