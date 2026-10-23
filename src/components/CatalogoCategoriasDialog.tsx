@@ -29,7 +29,8 @@ export function CatalogoCategoriasDialog({ open, participanteId, onClose, onChan
   const [cargando, setCargando] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [categoriaPendienteEliminar, setCategoriaPendienteEliminar] = useState<Categoria | null>(null);\n  const [categoriasExpandidas, setCategoriasExpandidas] = useState<string[]>([]);
+  const [categoriaPendienteEliminar, setCategoriaPendienteEliminar] = useState<Categoria | null>(null);
+  const [categoriasExpandidas, setCategoriasExpandidas] = useState<string[]>([]);
 
   const cargar = useCallback(async () => {
     if (!participanteId) return;

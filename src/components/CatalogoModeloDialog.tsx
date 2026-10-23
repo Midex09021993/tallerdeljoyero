@@ -117,7 +117,7 @@ function slugify(value: string) {
 
 export function CatalogoModeloDialog({ open, producto, participanteId, categorias, onClose, onSaved, initialImageUrl, initialName, initialProject, initialPdf }: Props) {
   const [form, setForm] = useState({
-    codigo: "", nombre: "", slug: "", categoria: CATEGORIAS_PREDETERMINADAS[0], descripcion: "",
+    codigo: "", nombre: "", slug: "", categoria: CATEGORIAS_PREDETERMINADAS[0] as string, descripcion: "",
     imagen_principal_url: "", galeria: "", video_url: "", aurum_render_url: "",
     precio_desde: "", moneda: "PEN",
     metal_principal: "", peso_gramos: "", piedras: "", medidas: "", talla: "", modalidad_talla: "a_medida", sistema_tallas: "Peruana", tallas_disponibles: "",

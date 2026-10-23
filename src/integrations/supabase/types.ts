@@ -873,6 +873,39 @@ export type Database = {
         }
         Relationships: []
       }
+      consultas_comerciales: {
+        Row: {
+          created_at: string
+          email: string
+          estado: string
+          id: string
+          interes: string
+          mensaje: string
+          nombre: string
+          telefono: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          estado?: string
+          id?: string
+          interes: string
+          mensaje: string
+          nombre: string
+          telefono?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          estado?: string
+          id?: string
+          interes?: string
+          mensaje?: string
+          nombre?: string
+          telefono?: string | null
+        }
+        Relationships: []
+      }
       contrato_numeradores: {
         Row: {
           anio: number
