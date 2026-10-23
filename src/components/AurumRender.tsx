@@ -1568,10 +1568,12 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           // Preserve the live viewer's aspect ratio and camera framing. The video
           // exporter letterboxes this canvas into the requested output dimensions;
           // resizing the camera to 16:9 was squeezing the jewelry in the live render.
-          const liveAspect=originalAspect>0?originalAspect:originalBufferWidth/Math.max(1,originalBufferHeight);
+          // Render the source canvas at the selected output ratio so the framing guide
+          // and exported video share the same visible area without letterbox mismatch.
+          const outputAspect=videoWidth/videoHeight;
           const fitScale=Math.min(videoWidth/originalBufferWidth,videoHeight/originalBufferHeight,1.25);
           const renderWidth=Math.max(2,Math.floor(originalBufferWidth*fitScale));
-          const renderHeight=Math.max(2,Math.floor(renderWidth/liveAspect));
+          const renderHeight=Math.max(2,Math.floor(renderWidth/outputAspect));
           const previousFastPath=liveFastPathRef.current;
           const passStates:Array<{pass:any;enabled:boolean}>=(composer?.passes??[]).map((pass:any)=>({pass,enabled:Boolean(pass?.enabled)}));
           try{
@@ -1583,8 +1585,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             aplicarPerfilLive();
             renderer.setPixelRatio(1);
             renderer.setSize(renderWidth,renderHeight,false);
-            // Keep camera.aspect unchanged: render dimensions are fitted to the
-            // viewer ratio, not forced to the output video's aspect ratio.
+            camara.aspect=outputAspect;
+            camara.updateProjectionMatrix?.();
+            // Camera and source canvas now share the selected output ratio, matching
+            // the composition frame and avoiding letterboxing in the video exporter.
             // Do not resize or activate the post-processing composer for video.
             // The live fast path renders the scene directly, preserving its color response.
             loop?.setContinuousRendering?.(true);
