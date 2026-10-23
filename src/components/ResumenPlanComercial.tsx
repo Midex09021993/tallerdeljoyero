@@ -15,7 +15,7 @@ type Cuota = {
 
 // Ocultación temporal de la tarjeta para las cuentas existentes.
 // No modifica planes, cuotas ni permisos; se puede reactivar cambiando esta constante.
-const MOSTRAR_RESUMEN_PLAN_COMERCIAL = false;
+const MOSTRAR_RESUMEN_PLAN_COMERCIAL = true;
 
 function porcentaje(usado: number, limite: number) {
   return limite < 0 ? 0 : Math.min(100, Math.round((usado / Math.max(1, limite)) * 100));
