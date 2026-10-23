@@ -384,7 +384,11 @@ export function createAurumLightingController(
           light.shadow.camera.updateProjectionMatrix?.();
         }
         if (light.target) {
-          light.target.position.set(0, targetY, 0);
+          // Small product-photography aiming offset for the key spot:
+          // keep the source power and penumbra unchanged while moving its
+          // reflection slightly across the ring instead of aiming dead-center.
+          const keyAimOffsetX = name === "key" ? -safeRadius * 0.12 : 0;
+          light.target.position.set(keyAimOffsetX, targetY, 0);
           light.target.updateMatrixWorld();
         }
       });
