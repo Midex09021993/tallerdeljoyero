@@ -445,12 +445,12 @@ function CatalogoPublicoPage() {
                 <p className="mt-2 max-w-xl text-sm leading-6 text-[#625b54]">Descubre nuestras joyas agrupadas por estilo e inspiración.</p>
               </div>
             </div>
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="grid max-w-[1320px] grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
               {colecciones.map(([collectionSlug, collectionName]) => {
                 const collectionRow = rows.find((row) => row.coleccion_slug === collectionSlug && row.coleccion_nombre === collectionName);
                 const collectionImage = collectionRow?.coleccion_imagen_portada_url ?? null;
                 return (
-                  <Link key={collectionSlug} to="/$slug/coleccion/$coleccion" params={{ slug: slugNormalizado, coleccion: collectionSlug }} className="group overflow-hidden rounded-2xl border border-[#e9e2d8] bg-white transition duration-300 hover:-translate-y-1 hover:border-[#d3bd91] hover:shadow-[0_18px_45px_-28px_rgba(39,30,19,.38)]">
+                  <Link key={collectionSlug} to="/$slug/coleccion/$coleccion" params={{ slug: slugNormalizado, coleccion: collectionSlug }} className="group overflow-hidden rounded-2xl border border-[#e9e2d8] bg-white transition-colors duration-300 hover:border-[#d3bd91]">
                     <div className="relative aspect-[4/5] overflow-hidden bg-[#f7f5f0]">
                       {collectionImage ? (
                         <img src={collectionImage} alt={collectionName} loading="lazy" className="size-full object-cover p-0 transition-transform duration-700 ease-out group-hover:scale-[1.045] motion-reduce:transform-none motion-reduce:transition-none" onError={(event) => { event.currentTarget.style.display = "none"; }} />
