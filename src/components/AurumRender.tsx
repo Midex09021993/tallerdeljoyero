@@ -1059,6 +1059,15 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             metalReflectionAudit.push({
               mesh:x.name||x.uuid,
               material:m.name||null,
+              hasOwnEnvMap:Boolean(m.envMap),
+              materialEnvMapUuid:m.envMap?.uuid??null,
+              sceneEnvMapUuid:scene.environment?.uuid??null,
+              materialUsesSceneEnvironment:!m.envMap||m.envMap===scene.environment,
+              envMapRotation:m.envMapRotation?{
+                x:Number(m.envMapRotation.x??0),
+                y:Number(m.envMapRotation.y??0),
+                z:Number(m.envMapRotation.z??0),
+              }:null,
               baseEnvironmentIntensity:m.userData?.aurumMetalBaseEnvMapIntensity??null,
               finalEnvironmentIntensity:m.envMapIntensity??null,
               roughness:m.roughness??null,
