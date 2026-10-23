@@ -114,6 +114,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const visorRef = useRef<HTMLDivElement>(null), fileRef = useRef<HTMLInputElement>(null);
   const orbitControlsRef = useRef<any>(null);
   const [autoRotate360, setAutoRotate360] = useState(false);
+  const [isViewerFullscreen, setIsViewerFullscreen] = useState(false);
   const [lightingOpen, setLightingOpen] = useState(false);
   const [metalHdriId, setMetalHdriId] = useState("ijewelMetal");
   const [gemHdriId, setGemHdriId] = useState("ijewelGem");
@@ -143,6 +144,15 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [videoDuration, setVideoDuration] = useState("5");
   const [videoProgress, setVideoProgress] = useState(0);
   const videoAbortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    const syncFullscreenState = () => {
+      setIsViewerFullscreen(Boolean(visorRef.current && document.fullscreenElement === visorRef.current));
+    };
+    document.addEventListener("fullscreenchange", syncFullscreenState);
+    syncFullscreenState();
+    return () => document.removeEventListener("fullscreenchange", syncFullscreenState);
+  }, []);
   const videoExportLockRef = useRef(false);
   const [snapshotOpen, setSnapshotOpen] = useState(false);
   const [snapshotWidth, setSnapshotWidth] = useState("3840");
@@ -3027,7 +3037,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               <button type="button" onClick={()=>apiRef.current?.fullscreen()} className="grid size-7 place-items-center rounded-lg bg-[#17191c] text-white"><Expand className="size-3.5"/></button>
             </div>}
 
-            {!embedded && <div className="absolute right-5 top-1/2 z-30 -translate-y-1/2">
+            {!embedded && <div className={"absolute right-5 top-1/2 z-30 -translate-y-1/2 transition-opacity duration-200 "+(isViewerFullscreen?"opacity-0 hover:opacity-100 focus-within:opacity-100":"opacity-100")}>
               <div className="flex flex-col items-center gap-1 rounded-2xl border border-white/70 bg-white/65 p-1.5 shadow-[0_8px_28px_rgba(36,32,20,.10)] backdrop-blur-2xl">
                 <button type="button" title="Biblioteca de ambientes y materiales" aria-label="Abrir biblioteca" aria-expanded={libraryMenuOpen} onClick={()=>{setLibraryMenuOpen(v=>!v);setQualityOpen(false);}} className={"grid size-9 place-items-center rounded-xl transition-colors "+(libraryMenuOpen?"bg-[#d4af37]/15 text-[#92743b]":"text-black/70 hover:bg-white/70")}><SlidersHorizontal className="size-[17px]"/></button>
                 <button type="button" title="Calidad de render" onClick={()=>{setQualityOpen(v=>!v);setLibraryMenuOpen(false);}} className={"grid size-9 place-items-center rounded-xl "+(qualityOpen?"bg-[#d4af37]/15 text-[#d4af37]":"text-black/70 hover:bg-white/70")}><Sparkles className="size-[17px]"/></button>
