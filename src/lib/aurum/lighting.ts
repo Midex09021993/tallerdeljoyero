@@ -387,7 +387,7 @@ export function createAurumLightingController(
           // Small product-photography aiming offset for the key spot:
           // keep the source power and penumbra unchanged while moving its
           // reflection slightly across the ring instead of aiming dead-center.
-          const keyAimOffsetX = name === "key" ? -safeRadius * 0.12 : 0;
+          const keyAimOffsetX = name === "key" ? -safeRadius * 0.16 : 0;
           light.target.position.set(keyAimOffsetX, targetY, 0);
           light.target.updateMatrixWorld();
         }
