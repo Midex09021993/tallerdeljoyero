@@ -444,13 +444,13 @@ function CatalogoPublicoPage() {
                 const collectionImage = collectionRow?.imagen_principal_url;
                 return (
                   <Link key={collectionSlug} to="/$slug/coleccion/$coleccion" params={{ slug: slugNormalizado, coleccion: collectionSlug }} className="group overflow-hidden rounded-2xl border border-[#e9e2d8] bg-white transition duration-300 hover:-translate-y-1 hover:border-[#d3bd91] hover:shadow-[0_18px_45px_-28px_rgba(39,30,19,.38)]">
-                    <div className="relative aspect-[4/3] overflow-hidden bg-[radial-gradient(ellipse_at_50%_42%,#ffffff_0%,#fffdfa_54%,#eee7dc_100%)]">
+                    <div className="relative aspect-[4/3] overflow-hidden bg-[#f7f5f0]">
                       {collectionImage ? (
                         <img src={collectionImage} alt={collectionName} loading="lazy" className="size-full object-contain p-5 transition-transform duration-700 ease-out group-hover:scale-[1.045] motion-reduce:transform-none motion-reduce:transition-none" onError={(event) => { event.currentTarget.style.display = "none"; }} />
                       ) : (
                         <div className="grid size-full place-items-center"><Gem className="size-10 text-[#b89a5b]" /></div>
                       )}
-                      <span className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/35 to-transparent" />
+
                     </div>
                     <div className="flex items-center justify-between gap-3 p-4">
                       <span className="min-w-0 truncate text-base font-semibold text-[#28221c]">{collectionName}</span>
