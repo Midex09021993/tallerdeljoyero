@@ -3046,7 +3046,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           <div className="flex h-full flex-col overflow-y-auto">
             <div className="border-b border-[#e7e2d9] bg-white/55 px-4 py-4">
               <div className="text-[10px] font-semibold uppercase tracking-[.16em] text-[#92743b]">Biblioteca visual</div>
-              <h2 className="mt-1 text-[17px] font-semibold tracking-tight text-[#282722]">Póster de la joya</h2>
+              
               
             </div>
             <div className="flex flex-1 flex-col gap-4 p-4">
