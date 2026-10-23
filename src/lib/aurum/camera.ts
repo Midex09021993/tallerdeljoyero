@@ -76,19 +76,27 @@ export function applyAurumCameraView(
   view: AurumCameraView,
   category: string = "Otro"
 ) {
-  const target = model
-    ? new THREE.Box3().setFromObject(model).getCenter(new THREE.Vector3())
+  const bounds = model ? new THREE.Box3().setFromObject(model) : null;
+  const target = bounds
+    ? bounds.getCenter(new THREE.Vector3())
     : new THREE.Vector3(0, 0, 0);
-  const size = model
-    ? new THREE.Box3().setFromObject(model).getSize(new THREE.Vector3())
+  const size = bounds
+    ? bounds.getSize(new THREE.Vector3())
     : new THREE.Vector3(2.6, 2.6, 2.6);
-  const radius = Math.max(size.length() * 0.5, 1.3);
+  const radius = Math.max(size.length() * 0.5, 0.01);
   const profile = getAurumProductCameraProfile(category);
 
-  // Encuadre de presentación: un poco más de aire alrededor de la pieza.
-  // El mismo factor base se aplica a todas las vistas para conservar
-  // proporcionalidad visual entre frontal, perspectiva, superior y lateral.
-  const distance = Math.max(radius * 4.2 * profile.distance, 4.0);
+  // Encuadre automático por volumen real y campo de visión. La esfera que
+  // envuelve la pieza debe caber tanto en vertical como en horizontal; esto
+  // evita que modelos altos/anchos se recorten en visores con otra proporción.
+  const aspect = Number.isFinite(camera.aspect) && camera.aspect > 0 ? camera.aspect : 1;
+  const verticalHalfFov = THREE.MathUtils.degToRad(camera.fov) * 0.5;
+  const horizontalHalfFov = Math.atan(Math.tan(verticalHalfFov) * aspect);
+  const limitingHalfFov = Math.max(0.01, Math.min(verticalHalfFov, horizontalHalfFov));
+  const fitDistance = radius / Math.sin(limitingHalfFov);
+  // 18% de margen fotográfico, ajustado por categoría para conservar aire
+  // adicional en collares, aretes y piezas alargadas.
+  const distance = Math.max(fitDistance * 1.18 * profile.distance, 0.1);
   const verticalBias = radius * profile.vertical;
 
   controls.target.copy(target);
