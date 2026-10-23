@@ -247,25 +247,14 @@ export function createAurumLightingController(
 
       this.create();
       if (id === "ijewelReference" && !diagnosticEnvironmentOnly) {
-        // Keep the reference reflection rig as the untouched baseline.
-        // After the user operates the studio panel, auxiliary reflectors must
-        // not keep lighting the product when all metal-facing controls are off.
-        Object.values(lights).forEach((light:any) => {
-          if (light) light.visible = false;
-        });
-        const metalControlTouched = (["key", "fill", "rim", "front"] as const)
-          .some((name) => manuallyTouched.has(name));
-        // Keep the photographic baseline only until a metal-facing panel
-        // control is first used. Then let the explicit controls be evaluated
-        // without auxiliary reflectors masking their on/off effect.
-        const preserveBaseline = !metalControlTouched;
-        if (preserveBaseline) {
-          if (lights.softbox) lights.softbox.visible = true;
-          if (lights.strip) lights.strip.visible = true;
-          if (lights.kicker) lights.kicker.visible = true;
-          if (lights.edgeLeft) lights.edgeLeft.visible = true;
-          if (lights.edgeRight) lights.edgeRight.visible = true;
-        }
+        // Keep the photographic reflection rig active as a stable scene
+        // baseline. Manual key/fill/rim/front controls add to that baseline;
+        // they must not abruptly remove the broad reflections shaping polished metal.
+        if (lights.softbox) lights.softbox.visible = true;
+        if (lights.strip) lights.strip.visible = true;
+        if (lights.kicker) lights.kicker.visible = true;
+        if (lights.edgeLeft) lights.edgeLeft.visible = true;
+        if (lights.edgeRight) lights.edgeRight.visible = true;
       }
       // Reapply the panel's current enabled/intensity state after every preset,
       // not only after an interaction in this session. Otherwise a preset can
@@ -280,7 +269,7 @@ export function createAurumLightingController(
         lights.front.visible = Boolean(config.front?.enabled);
         const rig = getAurumReflectionRigProfile(activeRigId);
         const frontPreset = getAurumLightingPreset(activeRigId);
-        lights.front.intensity = rig.front.intensity * frontPreset.front * 6 * Math.max(0, Number(config.front?.intensity) || 0);
+        lights.front.intensity = rig.front.intensity * frontPreset.front * Math.max(0, Number(config.front?.intensity) || 0);
       }
       syncGemShaderLight();
       if (diagnosticEnvironmentOnly && manuallyTouched.size > 0) {
@@ -293,7 +282,7 @@ export function createAurumLightingController(
         const rig = getAurumReflectionRigProfile(activeRigId);
         const preset = getAurumLightingPreset(activeRigId);
         lights.front.visible = Boolean(config.front?.enabled);
-        lights.front.intensity = rig.front.intensity * preset.front * 6 * (Number(config.front?.intensity) || 0);
+        lights.front.intensity = rig.front.intensity * preset.front * (Number(config.front?.intensity) || 0);
       }
     },
     update(patch) {
@@ -324,21 +313,11 @@ export function createAurumLightingController(
         const rig = getAurumReflectionRigProfile(activeRigId);
         const preset = getAurumLightingPreset(activeRigId);
         lights.front.visible = Boolean(config.front?.enabled);
-        lights.front.intensity = rig.front.intensity * preset.front * 6 * Math.max(0, Number(config.front?.intensity) || 0);
+        lights.front.intensity = rig.front.intensity * preset.front * Math.max(0, Number(config.front?.intensity) || 0);
       }
 
-      // In the iJewel reference rig, auxiliary reflection panels are only
-      // the untouched photographic baseline. Once the user changes any
-      // metal-facing control, hide them so each panel switch has a measurable
-      // effect instead of being masked by always-on softboxes and edge lights.
-      const metalControlChanged = ["key", "fill", "rim", "front"].some((name) =>
-        Object.prototype.hasOwnProperty.call(patch ?? {}, name)
-      );
-      if (activeRigId === "ijewelReference" && !diagnosticEnvironmentOnly && metalControlChanged) {
-        (["softbox", "strip", "kicker", "edgeLeft", "edgeRight"] as const).forEach((name) => {
-          if (lights[name]) lights[name].visible = false;
-        });
-      }
+      // Auxiliary reflection sources remain the photographic baseline and
+      // are not toggled implicitly by unrelated manual light controls.
 
       syncGemShaderLight();
 
