@@ -60,7 +60,7 @@ begin
       and array_length(string_to_array(o.name, '/'), 1) >= 4
   ),
   own_summary as (
-    select count(distinct split_part(name, '/', 3))::bigint as folder_count,
+    select count(distinct (split_part(name, '/', 2), split_part(name, '/', 3)))::bigint as folder_count,
            coalesce(sum(object_bytes), 0)::bigint as total_bytes
     from own_objects
   ),
