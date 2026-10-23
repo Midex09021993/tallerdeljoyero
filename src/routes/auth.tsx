@@ -448,6 +448,7 @@ function LoginPage() {
                 ["participantes","Quién puede participar",UsersRound],
                 ["flujo","Cómo se conecta",Grid2X2],
                 ["comunidad","Comunidad Aurum Lab",Gem],
+                ["planes","Planes",Sparkles],
               ] as [string, string, LucideIcon][]).map(([id,label,Icon]) => (
                 <button key={String(id)} type="button" onClick={() => setSeccionPlataforma(id as typeof seccionPlataforma)}
                   className={`flex shrink-0 items-center gap-2 rounded-t-xl px-3 py-2.5 text-[10px] font-bold uppercase tracking-wider transition ${seccionPlataforma===id ? "bg-gold/10 text-gold" : "text-white/45 hover:text-white"}`}>
