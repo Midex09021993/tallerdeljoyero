@@ -1582,6 +1582,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           const originalPixelRatio=renderer.getPixelRatio?.()||1;
           const originalCssWidth=originalBufferWidth/originalPixelRatio;
           const originalCssHeight=originalBufferHeight/originalPixelRatio;
+          const originalCanvasStyleWidth=sourceCanvas.style.width;
+          const originalCanvasStyleHeight=sourceCanvas.style.height;
+          const originalCanvasStyleObjectFit=sourceCanvas.style.objectFit;
           const originalAspect=camara.aspect;
           const originalTransmissionScale=Number((renderer as any).transmissionResolutionScale??1);
           const videoWidth=Math.max(320,Math.min(3840,Math.round(Number(options.width)||1280)));
@@ -1614,6 +1617,23 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // The CSS viewport remains unchanged while recording.
             renderer.setPixelRatio(1);
             renderer.setSize(renderWidth,renderHeight,false);
+            // Match the visible canvas box to the recording bitmap aspect as well.
+            // Otherwise a portrait backing buffer is displayed inside the old landscape
+            // CSS box and the live preview itself makes the jewelry look stretched.
+            const canvasParent=sourceCanvas.parentElement;
+            if(canvasParent){
+              const maxCssWidth=Math.max(1,canvasParent.clientWidth);
+              const maxCssHeight=Math.max(1,canvasParent.clientHeight);
+              let previewWidth=maxCssWidth;
+              let previewHeight=previewWidth/renderAspect;
+              if(previewHeight>maxCssHeight){
+                previewHeight=maxCssHeight;
+                previewWidth=previewHeight*renderAspect;
+              }
+              sourceCanvas.style.width=`${previewWidth}px`;
+              sourceCanvas.style.height=`${previewHeight}px`;
+              sourceCanvas.style.objectFit="contain";
+            }
             camara.aspect=renderAspect;
             camara.updateProjectionMatrix?.();
             if(modelo) fitAurumCameraToAspect(camara,controles,modelo,renderAspect,1.18);
@@ -1682,6 +1702,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             renderer.setPixelRatio(originalPixelRatio);
             (renderer as any).transmissionResolutionScale=originalTransmissionScale;
             renderer.setSize(originalCssWidth,originalCssHeight,false);
+            sourceCanvas.style.width=originalCanvasStyleWidth;
+            sourceCanvas.style.height=originalCanvasStyleHeight;
+            sourceCanvas.style.objectFit=originalCanvasStyleObjectFit;
             camara.aspect=originalAspect;
             camara.updateProjectionMatrix?.();
             if(composer && applyPostQuality){
