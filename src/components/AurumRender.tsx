@@ -3061,8 +3061,12 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                     setVideoCountdown(null);
                   }
                   if(controller.signal.aborted) throw new DOMException("Grabación cancelada","AbortError");
-                  const selectedVideoWidth=Number(videoWidth);
-                  const selectedVideoHeight=Math.round(selectedVideoWidth/getAurumAspectRatio(videoAspect));
+                  const selectedVideoBase=Math.max(320,Math.min(3840,Number(videoWidth)||1280));
+                  const selectedVideoRatio=getAurumAspectRatio(videoAspect);
+                  // La resolución elegida representa el lado largo: 4K vertical usa 2160 × 3840,
+                  // manteniendo la proporción y el límite máximo de 3840 px por lado.
+                  const selectedVideoWidth=Math.round(selectedVideoBase*Math.min(1,selectedVideoRatio));
+                  const selectedVideoHeight=Math.round(selectedVideoBase*Math.min(1,1/selectedVideoRatio));
                   await apiRef.current?.exportVideo({width:selectedVideoWidth,height:selectedVideoHeight,fps:Number(videoFps),duration:Number(videoDuration),mode:videoMode,signal:controller.signal,onProgress:(elapsed:number,total:number)=>setVideoProgress(total>0?elapsed/total*100:0)});
                   setVideoProgress(100);
                 }catch(e:any){if(e?.name!=="AbortError")setError(e instanceof Error?e.message:"No se pudo exportar el vídeo MP4.");}
