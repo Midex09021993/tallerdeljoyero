@@ -214,11 +214,12 @@ export function createAurumLightingController(
       const preset = getAurumLightingPreset(id);
       // Los presets sólo ajustan la contribución relativa de las luces.
       // Environment, exposición y fondo pertenecen exclusivamente al SceneController.
-      Object.assign(config, {
-        key: {...config.key, intensity: preset.key},
-        fill: {...config.fill, intensity: preset.fill},
-        rim: {...config.rim, intensity: preset.rim},
-        gem: {...config.gem, intensity: preset.gem},
+      // A scene preset supplies defaults only for controls the user has not
+      // manually adjusted. Keep manual slider values stable when changing scenes.
+      (["key", "fill", "rim", "gem"] as const).forEach((name) => {
+        if (!manuallyTouched.has(name)) {
+          config[name] = {...config[name], intensity: preset[name]};
+        }
       });
 
       // The broad sources are the main "shape painters" for polished metal.
