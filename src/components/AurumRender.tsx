@@ -2640,7 +2640,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           </button>
         </div>
       </div>}
-      {!embedded && exportOpen&&<div className="absolute right-3 top-[72px] z-[80] max-h-[calc(100%-5.5rem)] w-[min(440px,calc(100%-1.25rem))] overflow-y-auto rounded-2xl border border-white/80 bg-[#fbfaf7]/95 p-3 text-[#292824] shadow-[0_16px_44px_rgba(35,32,24,.18)] backdrop-blur-2xl sm:right-4 sm:top-[76px] sm:p-4">
+      {!embedded && exportOpen&&<div className="absolute right-3 top-[72px] z-[80] max-h-[calc(100%-5.5rem)] w-[min(360px,calc(100%-1.25rem))] overflow-y-auto rounded-2xl border border-white/80 bg-[#fbfaf7]/95 p-3 text-[#292824] shadow-[0_16px_44px_rgba(35,32,24,.18)] backdrop-blur-2xl sm:right-4 sm:top-[76px] sm:p-4">
       <div>
         <div className="mb-3 flex items-start justify-between gap-3"><div><div id="aurum-export-title" className="text-lg font-semibold tracking-tight text-[#292824]">Centro de exportación</div><div className="mt-1 text-sm text-[#77756f]">Prepara tu joya para presentar, compartir o fabricar.</div></div><button type="button" aria-label="Cerrar exportación" onClick={()=>setExportOpen(false)} className="rounded-lg p-1 text-[#77756f] hover:bg-black/[.05]"><X className="size-4"/></button></div>
         <div className="flex flex-col gap-3">
@@ -2805,7 +2805,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         </div>
         {sharedLink&&<p className="mt-2 rounded-lg border border-black/[.06] bg-black/[.025] p-2.5 text-[10px] leading-relaxed text-[#77756f]">Al compartir un modelo 3D, los materiales compatibles con glTF se conservan mejor; los shaders personalizados, el HDRI y los efectos pueden variar según el visor.</p>}
       </div></div>}
-      <div className={embedded ? "flex min-h-0 flex-1 overflow-hidden bg-[#090b0e]" : "flex min-h-0 flex-1 gap-3 bg-[#eeede8] p-3"}>
+      <div className={embedded ? "flex min-h-0 flex-1 overflow-hidden bg-[#090b0e]" : "flex min-h-0 flex-1 gap-3 bg-[#eeede8] p-3 " + (exportOpen ? "pr-[min(372px,28vw)]" : "")}>
         {!embedded && <aside className="w-[min(22vw,336px)] shrink-0 overflow-hidden rounded-2xl border border-black/[.07] bg-[#f9f8f5] text-[#292824] shadow-[0_8px_28px_rgba(36,32,20,.045)]">
           <div className="h-full overflow-y-auto">
             <section className="border-b border-black/10 bg-black/[.02] px-5 py-4">
@@ -3085,7 +3085,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             {!embedded && lightingOpen && lightingPanel}
           </div>
         </main>
-        {!embedded && <aside className="hidden w-[min(18vw,300px)] shrink-0 overflow-hidden rounded-2xl border border-[#e6e1d8] bg-[#faf9f6] text-[#292824] shadow-[0_6px_22px_rgba(36,32,20,.035)] xl:block">
+        {!embedded && !exportOpen && <aside className="hidden w-[min(18vw,300px)] shrink-0 overflow-hidden rounded-2xl border border-[#e6e1d8] bg-[#faf9f6] text-[#292824] shadow-[0_6px_22px_rgba(36,32,20,.035)] xl:block">
           <div className="flex h-full flex-col overflow-y-auto">
             <div className="border-b border-[#e7e2d9] bg-white/55 px-4 py-4">
               <div className="text-[10px] font-semibold uppercase tracking-[.16em] text-[#92743b]">Biblioteca visual</div>
