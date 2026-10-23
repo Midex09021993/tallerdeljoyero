@@ -1592,17 +1592,15 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           // Preserve the live viewer's aspect ratio and camera framing. The video
           // exporter letterboxes this canvas into the requested output dimensions;
           // resizing the camera to 16:9 was squeezing the jewelry in the live render.
-          // Render the source canvas at the selected output ratio so the framing guide
-          // and exported video share the same visible area without letterbox mismatch.
+          // Render each video frame using the exact output dimensions and camera aspect.
+          // setSize(..., false) changes the WebGL drawing buffer without changing the
+          // canvas CSS box; the encoder reads the intrinsic bitmap, not its screen display.
+          // This avoids letterboxing the landscape viewer into portrait video, which made
+          // the jewelry appear smaller than in an image with the same 9:16 ratio.
           const outputAspect=videoWidth/videoHeight;
-          // Keep the live WebGL canvas and its CSS viewport at their native size/aspect.
-          // Resizing only the drawing buffer to a portrait ratio while the visible canvas
-          // remains landscape can stretch the rendered scene in the browser. The video
-          // exporter contains this native-aspect frame inside the requested output ratio,
-          // adding letterbox/pillarbox margins instead of ever distorting the jewelry.
-          const renderWidth=originalBufferWidth;
-          const renderHeight=originalBufferHeight;
-          const renderAspect=originalBufferWidth/Math.max(1,originalBufferHeight);
+          const renderWidth=videoWidth;
+          const renderHeight=videoHeight;
+          const renderAspect=outputAspect;
           const previousFastPath=liveFastPathRef.current;
           const passStates:Array<{pass:any;enabled:boolean}>=(composer?.passes??[]).map((pass:any)=>({pass,enabled:Boolean(pass?.enabled)}));
           try{
@@ -1612,16 +1610,17 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // Record with the same direct renderer path as the live viewer.
             liveFastPathRef.current=true;
             aplicarPerfilLive();
-            // Preserve the canvas backing size, CSS size and camera aspect as one unit.
-            // The final encoder handles the selected output ratio without stretching.
+            // Match the WebGL backing buffer and camera projection to the final MP4.
+            // The CSS viewport remains unchanged while recording.
             renderer.setPixelRatio(1);
+            renderer.setSize(renderWidth,renderHeight,false);
             camara.aspect=renderAspect;
             camara.updateProjectionMatrix?.();
             if(modelo) fitAurumCameraToAspect(camara,controles,modelo,renderAspect,1.18);
             cameraPosition.copy(camara.position);
             if(controlsTarget && controles.target) controlsTarget.copy(controles.target);
-            // Camera and source canvas now share the selected output ratio, matching
-            // the composition frame and avoiding letterboxing in the video exporter.
+            // Camera and source bitmap now share the exact output ratio, so the encoder
+            // can fill the final frame without scaling the jewelry non-uniformly.
             // Do not resize or activate the post-processing composer for video.
             // The live fast path renders the scene directly, preserving its color response.
             loop?.setContinuousRendering?.(true);
