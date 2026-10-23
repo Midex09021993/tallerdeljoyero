@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Panel } from "@/components/AppShell";
@@ -11,13 +12,13 @@ import { obtenerPlanComercial, PLANES_COMERCIALES, type PlanComercialId } from "
 
 type Tipo = "organizacion"|"profesional"|"vendedor"|"proveedor"|"servicio"|"talento"|"institucion_educativa";
 type Estado = "activo"|"pausado"|"inactivo";
-type Participante={id:string;tipo_participante:Tipo;nombre:string;razon_social:string|null;email:string|null;telefono:string|null;ciudad:string|null;descripcion:string|null;estado:Estado;notas_owner:string|null;sede_id:string|null;metadata?:Record<string,unknown>|null};
+type Participante={id:string;tipo_participante:Tipo;nombre:string;razon_social:string|null;email:string|null;telefono:string|null;ciudad:string|null;descripcion:string|null;estado:Estado;notas_owner:string|null;sede_id:string|null;metadata?:Record<string,unknown>|null;comunidad_visible:boolean};
 const tipos:Record<Tipo,string>={organizacion:"Organización",profesional:"Profesional",vendedor:"Vendedor / Comercializador",proveedor:"Proveedor",servicio:"Servicio especializado",talento:"Talento / Prácticas",institucion_educativa:"Institución educativa"};
 const empty={tipo_participante:"profesional" as Tipo,nombre:"",razon_social:"",email:"",telefono:"",ciudad:"",descripcion:"",estado:"activo" as Estado,notas_owner:""};
 
 export function EcosistemaParticipantesOwner(){
  const qc=useQueryClient(); const [vincular,setVincular]=useState<Participante|null>(null); const [capacidades,setCapacidades]=useState<Participante|null>(null); const [buscar,setBuscar]=useState(""); const [tipo,setTipo]=useState<"todos"|Tipo>("todos"); const [estado,setEstado]=useState<"todos"|Estado>("activo"); const [edit,setEdit]=useState<Participante|null>(null); const [form,setForm]=useState(empty); const [nuevo,setNuevo]=useState(false); const [saving,setSaving]=useState(false);
- const {data=[],isLoading,error}=useQuery({queryKey:["ecosistema-participantes"],staleTime:5*60_000,queryFn:async()=>{const {data,error}=await supabase.from("ecosistema_participantes").select("id,tipo_participante,nombre,razon_social,email,telefono,ciudad,descripcion,estado,notas_owner,sede_id,metadata").order("nombre");if(error)throw error;return(data??[]) as Participante[]}});
+ const {data=[],isLoading,error}=useQuery({queryKey:["ecosistema-participantes"],staleTime:5*60_000,queryFn:async()=>{const {data,error}=await supabase.from("ecosistema_participantes").select("id,tipo_participante,nombre,razon_social,email,telefono,ciudad,descripcion,estado,notas_owner,sede_id,metadata,comunidad_visible").order("nombre");if(error)throw error;return(data??[]) as Participante[]}});
  type CuotaPlan = { plan_id: PlanComercialId; operaciones_comerciales_mes: number; almacenamiento_mib: number; usos_render_mes: number; productos_catalogo_max: number; carpetas_mi_nube_max: number };
  const [cuotasEdit, setCuotasEdit] = useState<Record<string, CuotaPlan>>({});
  const [guardandoCuota, setGuardandoCuota] = useState<string | null>(null);
@@ -89,6 +90,23 @@ export function EcosistemaParticipantesOwner(){
  const lista=useMemo(()=>data.filter(p=>(tipo==="todos"||p.tipo_participante===tipo)&&(estado==="todos"||p.estado===estado)&&(!buscar.trim()||[p.nombre,p.razon_social,p.email,p.ciudad].some(v=>(v??"").toLowerCase().includes(buscar.trim().toLowerCase())))),[data,tipo,estado,buscar]);
  function abrirNuevo(){setEdit(null);setForm({...empty});setNuevo(true)}
  function editar(p:Participante){setNuevo(false);setEdit(p);setForm({tipo_participante:p.tipo_participante,nombre:p.nombre,razon_social:p.razon_social??"",email:p.email??"",telefono:p.telefono??"",ciudad:p.ciudad??"",descripcion:p.descripcion??"",estado:p.estado,notas_owner:p.notas_owner??""})}
+ async function cambiarVisibilidadComunidad(p: Participante) {
+  const nuevoValor = p.comunidad_visible === false;
+  try {
+    const { error } = await (supabase as any)
+      .from("ecosistema_participantes")
+      .update({ comunidad_visible: nuevoValor })
+      .eq("id", p.id);
+    if (error) throw error;
+    toast.success(nuevoValor ? "Participante visible en Comunidad" : "Participante oculto de Comunidad");
+    await Promise.all([
+      qc.invalidateQueries({ queryKey: ["ecosistema-participantes"] }),
+      qc.invalidateQueries({ queryKey: ["directorio-comunidad-publica"] }),
+    ]);
+  } catch (e) {
+    toast.error(e instanceof Error ? e.message : "No se pudo cambiar la visibilidad. Comprueba que hayas aplicado el SQL de Comunidad.");
+  }
+ }
  async function asignarPlan(p: Participante, planId: PlanComercialId) {
   if (p.tipo_participante !== "organizacion" || !p.sede_id) {
     toast.error("El plan comercial solo se asigna a organizaciones integradas a un taller.");
@@ -172,7 +190,7 @@ export function EcosistemaParticipantesOwner(){
    </>;
   })()}
  </div>
-</div></div>:null}</div><div className="flex gap-2"><span className="rounded-full bg-surface-muted px-2.5 py-1 text-[10px] font-semibold uppercase">{p.estado}</span><Button variant="outline" size="sm" onClick={()=>setCapacidades(p)}>Capacidades</Button><Button variant="outline" size="sm" onClick={()=>setVincular(p)}>Cuentas</Button><Button variant="outline" size="sm" onClick={()=>editar(p)}>Editar</Button><Button variant="ghost" size="sm" onClick={()=>void eliminar(p)}>Eliminar</Button></div></div>)}{!isLoading&&!lista.length?<p className="p-8 text-sm text-muted-foreground">No hay participantes con estos filtros.</p>:null}</div></Panel>
+</div></div>:null}</div><div className="flex gap-2"><span className="rounded-full bg-surface-muted px-2.5 py-1 text-[10px] font-semibold uppercase">{p.estado}</span><Button variant="outline" size="sm" onClick={()=>void cambiarVisibilidadComunidad(p)} title={p.comunidad_visible===false?"Mostrar en Comunidad":"Ocultar de Comunidad"}>{p.comunidad_visible===false?<Eye className="mr-1 size-3.5"/>:<EyeOff className="mr-1 size-3.5"/>}{p.comunidad_visible===false?"Mostrar en Comunidad":"Ocultar de Comunidad"}</Button><Button variant="outline" size="sm" onClick={()=>setCapacidades(p)}>Capacidades</Button><Button variant="outline" size="sm" onClick={()=>setVincular(p)}>Cuentas</Button><Button variant="outline" size="sm" onClick={()=>editar(p)}>Editar</Button><Button variant="ghost" size="sm" onClick={()=>void eliminar(p)}>Eliminar</Button></div></div>)}{!isLoading&&!lista.length?<p className="p-8 text-sm text-muted-foreground">No hay participantes con estos filtros.</p>:null}</div></Panel>
   {capacidades?<AsignadorEspecialidades participante={capacidades} onClose={()=>setCapacidades(null)} />:null}
   {(edit!==null||nuevo)?<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onMouseDown={e=>{if(e.target===e.currentTarget){setEdit(null);setNuevo(false)}}}><div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-border bg-card shadow-xl"><div className="border-b border-border p-5"><div className="flex justify-between"><div><p className="text-lg font-semibold">{edit?"Editar participante":"Nuevo participante"}</p><p className="text-xs text-muted-foreground">Solo visible y editable por el Dueño.</p></div><button type="button" onClick={()=>{setEdit(null);setNuevo(false)}}>Cerrar</button></div></div><div className="grid gap-4 p-5 sm:grid-cols-2"><label className="text-xs text-muted-foreground">Tipo<select value={form.tipo_participante} onChange={e=>setForm({...form,tipo_participante:e.target.value as Tipo})} className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">{Object.entries(tipos).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></label><label className="text-xs text-muted-foreground">Nombre *<Input className="mt-1" value={form.nombre} onChange={e=>setForm({...form,nombre:e.target.value})}/></label><label className="text-xs text-muted-foreground">Empresa / razón social<Input className="mt-1" value={form.razon_social} onChange={e=>setForm({...form,razon_social:e.target.value})}/></label><label className="text-xs text-muted-foreground">Correo<Input className="mt-1" value={form.email} onChange={e=>setForm({...form,email:e.target.value})}/></label><label className="text-xs text-muted-foreground">Teléfono<Input className="mt-1" value={form.telefono} onChange={e=>setForm({...form,telefono:e.target.value})}/></label><label className="text-xs text-muted-foreground">Ciudad<Input className="mt-1" value={form.ciudad} onChange={e=>setForm({...form,ciudad:e.target.value})}/></label><label className="text-xs text-muted-foreground sm:col-span-2">Descripción<textarea rows={3} value={form.descripcion} onChange={e=>setForm({...form,descripcion:e.target.value})} className="mt-1 w-full rounded-md border border-input bg-background p-3 text-sm"/></label><label className="text-xs text-muted-foreground">Estado<select value={form.estado} onChange={e=>setForm({...form,estado:e.target.value as Estado})} className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"><option value="activo">Activo</option><option value="pausado">Pausado</option><option value="inactivo">Inactivo</option></select></label><label className="text-xs text-muted-foreground">Nota interna<textarea rows={2} value={form.notas_owner} onChange={e=>setForm({...form,notas_owner:e.target.value})} className="mt-1 w-full rounded-md border border-input bg-background p-3 text-sm"/></label></div><div className="flex justify-end gap-2 border-t border-border p-5"><Button variant="outline" onClick={()=>{setEdit(null);setNuevo(false)}}>Cancelar</Button><Button disabled={saving} onClick={()=>void guardar()}>{saving?"Guardando…":"Guardar"}</Button></div></div></div>:null}
  </div>
