@@ -1646,7 +1646,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             }
             camara.aspect=renderAspect;
             camara.updateProjectionMatrix?.();
-            if(modelo) fitAurumCameraToAspect(camara,controles,modelo,renderAspect,1.18);
+            // Keep the same camera distance and target the user composed in the viewer.
+            // Fitting the entire model here pulls the camera back (especially for long
+            // chains) and makes the jewelry tiny in the video compared with the PNG.
+            // Only change the projection aspect; never rescale or refit the model for MP4.
             cameraPosition.copy(camara.position);
             if(controlsTarget && controles.target) controlsTarget.copy(controles.target);
             // Camera and source bitmap now share the exact output ratio, so the encoder
