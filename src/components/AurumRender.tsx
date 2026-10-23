@@ -2578,7 +2578,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   );
   return (<>
     <div className={(embedded ? "relative h-full min-h-0 w-full " : "fixed inset-0 z-40 ") + "flex flex-col overflow-hidden bg-[#eeede8] text-white"}>
-      {!embedded && <header className="flex h-[74px] shrink-0 items-center justify-between border-b border-black/10 bg-[#f7f6f2]/95 px-5 text-[#242424] shadow-sm backdrop-blur-xl">
+      {!embedded && <header className="flex h-[64px] shrink-0 items-center justify-between gap-2 border-b border-black/10 bg-[#f7f6f2]/95 px-3 text-[#242424] shadow-sm backdrop-blur-xl sm:h-[68px] sm:px-4 xl:h-[74px] xl:px-5">
         <div className="flex min-w-0 items-center gap-3">
           <div className="leading-none">
             <div className="font-display text-[23px] font-semibold tracking-[.16em] text-[#92743b]">AURUM <span className="tracking-normal text-[#292824]">RENDER</span></div>
@@ -2806,7 +2806,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         {sharedLink&&<p className="mt-2 rounded-lg border border-black/[.06] bg-black/[.025] p-2.5 text-[10px] leading-relaxed text-[#77756f]">Al compartir un modelo 3D, los materiales compatibles con glTF se conservan mejor; los shaders personalizados, el HDRI y los efectos pueden variar según el visor.</p>}
       </div></div>}
       <div className={embedded ? "flex min-h-0 flex-1 overflow-hidden bg-[#090b0e]" : "flex min-h-0 flex-1 gap-3 bg-[#eeede8] p-3"}>
-        {!embedded && <aside className="w-[336px] shrink-0 overflow-hidden rounded-2xl border border-black/[.07] bg-[#f9f8f5] text-[#292824] shadow-[0_8px_28px_rgba(36,32,20,.045)]">
+        {!embedded && <aside className="w-[min(22vw,336px)] shrink-0 overflow-hidden rounded-2xl border border-black/[.07] bg-[#f9f8f5] text-[#292824] shadow-[0_8px_28px_rgba(36,32,20,.045)]">
           <div className="h-full overflow-y-auto">
             <section className="border-b border-black/10 bg-black/[.02] px-5 py-4">
               <div className="mb-3 flex items-center justify-between">
@@ -3085,7 +3085,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             {!embedded && lightingOpen && lightingPanel}
           </div>
         </main>
-        {!embedded && <aside className="hidden w-[300px] shrink-0 overflow-hidden rounded-2xl border border-[#e6e1d8] bg-[#faf9f6] text-[#292824] shadow-[0_6px_22px_rgba(36,32,20,.035)] xl:block">
+        {!embedded && <aside className="hidden w-[min(18vw,300px)] shrink-0 overflow-hidden rounded-2xl border border-[#e6e1d8] bg-[#faf9f6] text-[#292824] shadow-[0_6px_22px_rgba(36,32,20,.035)] xl:block">
           <div className="flex h-full flex-col overflow-y-auto">
             <div className="border-b border-[#e7e2d9] bg-white/55 px-4 py-4">
               <div className="text-[10px] font-semibold uppercase tracking-[.16em] text-[#92743b]">Biblioteca visual</div>
