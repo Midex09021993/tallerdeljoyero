@@ -127,6 +127,8 @@ function CatalogoPublicoPage() {
   const [carritoCargadoPara, setCarritoCargadoPara] = useState("");
   const [indicePortada, setIndicePortada] = useState(0);
   const [indiceCarrusel, setIndiceCarrusel] = useState(0);
+  const [controlesColeccionesVisibles, setControlesColeccionesVisibles] = useState(false);
+  const carruselColeccionesRef = useRef<HTMLDivElement>(null);
   const carruselEnlacesRef = useRef<HTMLDivElement>(null);
   const [portadaVisible, setPortadaVisible] = useState(true);
   useEffect(() => {
@@ -445,12 +447,21 @@ function CatalogoPublicoPage() {
                 <p className="mt-2 max-w-xl text-sm leading-6 text-[#625b54]">Descubre nuestras joyas agrupadas por estilo e inspiración.</p>
               </div>
             </div>
-            <div className="grid max-w-[1320px] grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+            <div
+              className="group/colecciones relative max-w-[1320px]"
+              onMouseEnter={() => setControlesColeccionesVisibles(true)}
+              onMouseLeave={() => setControlesColeccionesVisibles(false)}
+              onTouchStart={() => setControlesColeccionesVisibles(true)}
+            >
+              <div
+                ref={carruselColeccionesRef}
+                className="flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-3 2xl:grid-cols-4"
+              >
               {colecciones.map(([collectionSlug, collectionName]) => {
                 const collectionRow = rows.find((row) => row.coleccion_slug === collectionSlug && row.coleccion_nombre === collectionName);
                 const collectionImage = collectionRow?.coleccion_imagen_portada_url ?? null;
                 return (
-                  <Link key={collectionSlug} to="/$slug/coleccion/$coleccion" params={{ slug: slugNormalizado, coleccion: collectionSlug }} className="group overflow-hidden rounded-2xl border border-[#e9e2d8] bg-white transition-colors duration-300 hover:border-[#d3bd91]">
+                  <Link data-collection-card key={collectionSlug} to="/$slug/coleccion/$coleccion" params={{ slug: slugNormalizado, coleccion: collectionSlug }} className="group min-w-0 w-[78%] max-w-[320px] shrink-0 snap-start overflow-hidden rounded-2xl border border-[#e9e2d8] bg-white transition-colors duration-300 hover:border-[#d3bd91] sm:w-auto sm:max-w-none">
                     <div className="relative aspect-[4/5] overflow-hidden bg-[#f7f5f0]">
                       {collectionImage ? (
                         <img src={collectionImage} alt={collectionName} loading="lazy" className="size-full object-cover p-0 transition-transform duration-700 ease-out group-hover:scale-[1.045] motion-reduce:transform-none motion-reduce:transition-none" onError={(event) => { event.currentTarget.style.display = "none"; }} />
@@ -468,6 +479,27 @@ function CatalogoPublicoPage() {
                   </Link>
                 );
               })}
+              </div>
+              {colecciones.length > 1 ? (
+                <>
+                  <button
+                    type="button"
+                    aria-label="Colección anterior"
+                    onClick={() => carruselColeccionesRef.current?.scrollBy({ left: -(carruselColeccionesRef.current.querySelector<HTMLElement>("[data-collection-card]")?.getBoundingClientRect().width ?? 280) - 16, behavior: "smooth" })}
+                    className={`absolute left-2 top-1/2 z-10 grid size-9 -translate-y-1/2 place-items-center rounded-full border border-white/70 bg-white/85 text-[#6f542d] shadow-md backdrop-blur-md transition-all duration-200 hover:bg-white sm:hidden ${controlesColeccionesVisibles ? "scale-100 opacity-100" : "pointer-events-none scale-90 opacity-0"}`}
+                  >
+                    <ChevronLeft className="size-4" />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Siguiente colección"
+                    onClick={() => carruselColeccionesRef.current?.scrollBy({ left: (carruselColeccionesRef.current.querySelector<HTMLElement>("[data-collection-card]")?.getBoundingClientRect().width ?? 280) + 16, behavior: "smooth" })}
+                    className={`absolute right-2 top-1/2 z-10 grid size-9 -translate-y-1/2 place-items-center rounded-full border border-white/70 bg-white/85 text-[#6f542d] shadow-md backdrop-blur-md transition-all duration-200 hover:bg-white sm:hidden ${controlesColeccionesVisibles ? "scale-100 opacity-100" : "pointer-events-none scale-90 opacity-0"}`}
+                  >
+                    <ChevronRight className="size-4" />
+                  </button>
+                </>
+              ) : null}
             </div>
           </section>
         ) : null}
