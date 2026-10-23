@@ -139,7 +139,7 @@ function ContactoFlotante() {
   const mostrarContacto = !sesionCargando && !sesion && esPaginaPublica;
   if (!mostrarContacto) return null;
   return (
-    <Suspense fallback={null}><ContactoComercial className="fixed bottom-5 right-5 z-[80] inline-flex min-h-12 items-center gap-2 rounded-full border border-[#d8bd7b]/70 bg-[#171815] px-5 py-3 text-xs font-bold uppercase tracking-wider text-[#d8bd7b] shadow-[0_10px_35px_rgba(0,0,0,.35)] transition hover:bg-[#d8bd7b] hover:text-[#211c12]" /></Suspense>
+    <Suspense fallback={null}><ContactoComercial className={`fixed bottom-5 right-5 z-[80] ${esCatalogoPublico ? "hidden sm:inline-flex" : "inline-flex"} min-h-12 items-center gap-2 rounded-full border border-[#d8bd7b]/70 bg-[#171815] px-5 py-3 text-xs font-bold uppercase tracking-wider text-[#d8bd7b] shadow-[0_10px_35px_rgba(0,0,0,.35)] transition hover:bg-[#d8bd7b] hover:text-[#211c12]`} /></Suspense>
   );
 }
 
