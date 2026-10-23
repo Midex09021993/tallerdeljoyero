@@ -70,7 +70,7 @@ export function CatalogoCategoriasDialog({ open, participanteId, onClose, onChan
 
     // Seed recommended jewelry subcategories under each matching parent.
     // Stable parent-prefixed slugs make this safe to run every time the dialog opens.
-    const rootBySlug = new Map((roots ?? []).map((item) => [item.slug, item]));
+    const rootBySlug = new Map<string, Categoria>((roots ?? []).map((item) => [item.slug, item as Categoria]));
     const propuestas: Record<string, string[]> = {
       anillos: ["Compromiso", "Matrimonio / Alianzas", "Solitarios", "Con piedras", "Sellos", "Diseño / Moda", "Eternidad"],
       aretes: ["Studs / Topos", "Argollas", "Colgantes", "Trepadores", "Con piedras", "Perlas"],
