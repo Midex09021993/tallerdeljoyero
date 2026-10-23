@@ -62,6 +62,7 @@ function PaginaPrincipal() {
             </span>
           </Link>
           <nav className="flex shrink-0 items-center gap-2 sm:gap-3" aria-label="Navegación principal">
+            <Link to="/galeria-joyas" className="hidden rounded-full px-4 py-2.5 text-xs font-semibold text-[#5f5549] transition hover:bg-white sm:inline-flex">Galería de Joyas</Link>
             <Link to="/catalogo-publico" className="hidden rounded-full px-4 py-2.5 text-xs font-semibold text-[#5f5549] transition hover:bg-white sm:inline-flex">Comunidad</Link>
             <Link to="/tienda" className="hidden rounded-full px-4 py-2.5 text-xs font-semibold text-[#5f5549] transition hover:bg-white sm:inline-flex">Tienda</Link>
             <Link to="/auth" className="inline-flex min-h-10 items-center gap-2 rounded-full bg-[#211d19] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#3b3329] sm:px-5">
@@ -162,7 +163,7 @@ function PaginaPrincipal() {
 
       <footer className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-7 text-[10px] text-[#81766a] sm:flex-row sm:items-center sm:justify-between sm:px-8">
         <span>© {new Date().getFullYear()} Taller del Joyero · AURUM LAB</span>
-        <div className="flex flex-wrap gap-4"><Link to="/catalogo-publico" className="hover:text-[#96733d]">Comunidad</Link><Link to="/tienda" className="hover:text-[#96733d]">Tienda</Link><Link to="/auth" className="hover:text-[#96733d]">Acceso al ERP</Link></div>
+        <div className="flex flex-wrap gap-4"><Link to="/galeria-joyas" className="hover:text-[#96733d]">Galería de Joyas</Link><Link to="/catalogo-publico" className="hover:text-[#96733d]">Comunidad</Link><Link to="/tienda" className="hover:text-[#96733d]">Tienda</Link><Link to="/auth" className="hover:text-[#96733d]">Acceso al ERP</Link></div>
       </footer>
     </main>
   );
