@@ -1595,9 +1595,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           // Render the source canvas at the selected output ratio so the framing guide
           // and exported video share the same visible area without letterbox mismatch.
           const outputAspect=videoWidth/videoHeight;
-          const fitScale=Math.min(videoWidth/originalBufferWidth,videoHeight/originalBufferHeight,1.25);
-          const renderWidth=Math.max(2,Math.floor(originalBufferWidth*fitScale));
-          const renderHeight=Math.max(2,Math.floor(renderWidth/outputAspect));
+          // Render the source canvas at the exact output dimensions. Scaling an
+          // independently sized source and then fitting it into the output canvas
+          // can introduce aspect-ratio drift; matching dimensions keeps geometry intact.
+          const renderWidth=videoWidth;
+          const renderHeight=videoHeight;
           const previousFastPath=liveFastPathRef.current;
           const passStates:Array<{pass:any;enabled:boolean}>=(composer?.passes??[]).map((pass:any)=>({pass,enabled:Boolean(pass?.enabled)}));
           try{
