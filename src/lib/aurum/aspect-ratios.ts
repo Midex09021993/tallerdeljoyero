@@ -38,11 +38,12 @@ export function getAurumAspectFrameStyle(
   const safeRatio = Number.isFinite(ratio) && ratio > 0 ? ratio : 16 / 9;
   const limit = Math.max(1, Math.min(100, maxPercent));
   return {
-    // Give CSS one definite dimension and let aspect-ratio derive the other.
-    // Setting width and height independently as percentages distorted the frame
-    // whenever the viewer's own shape differed from the selected output ratio.
-    width: "auto",
-    height: `${limit}%`,
+    // Use width as the preferred dimension and let aspect-ratio derive height.
+    // max-height and max-width contain the frame in both landscape and portrait
+    // viewports without assigning independent percentage dimensions (which can
+    // produce a rectangular frame for a square or portrait output).
+    width: `${limit}%`,
+    height: "auto",
     maxWidth: `${limit}%`,
     maxHeight: `${limit}%`,
     aspectRatio: String(safeRatio),
