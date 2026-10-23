@@ -134,6 +134,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [videoCountdown, setVideoCountdown] = useState<number | null>(null);
   const [videoMode, setVideoMode] = useState<"manual"|"automatic"|"orbit180-return"|"cinematic-zoom"|"vertical-sweep"|"slow360"|"catalog">("automatic");
   const [videoWidth, setVideoWidth] = useState("1280");
+  const [videoAspect, setVideoAspect] = useState<"16:9"|"1:1"|"4:5"|"9:16"|"3:2">("16:9");
   const [videoFps, setVideoFps] = useState("30");
   const [videoDuration, setVideoDuration] = useState("5");
   const [videoProgress, setVideoProgress] = useState(0);
@@ -2977,6 +2978,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                   <option value="catalog">Presentación automática de catálogo</option>
                 </select>
               </label>
+              <div><div className="mb-1 text-[10px] text-[#66645e]">Proporción del vídeo</div><div className="grid grid-cols-3 gap-1.5">{([["16:9","Horizontal"],["1:1","Cuadrado"],["4:5","Catálogo vertical"],["9:16","Historias / móvil"],["3:2","Clásica"]] as const).map(([ratio,label])=><button key={ratio} type="button" disabled={videoBusy} onClick={()=>setVideoAspect(ratio)} aria-pressed={videoAspect===ratio} className={"rounded-lg border px-2 py-1.5 text-left text-[10px] "+(videoAspect===ratio?"border-[#92743b] bg-[#d4af37]/15 text-[#725821]":"border-black/10 bg-white text-[#55534d]")}><span className="block font-semibold">{ratio}</span><span className="mt-0.5 block opacity-75">{label}</span></button>)}</div></div>
               <label className="block text-[10px] text-[#66645e]">Resolución
                 <select value={videoWidth} disabled={videoBusy} onChange={e=>setVideoWidth(e.target.value)} className="mt-1 w-full rounded-lg border border-black/15 bg-white px-2 py-2 text-xs text-[#292824]">
                   <option value="1280">HD · 1280 × 720</option><option value="1920">Full HD · 1920 × 1080</option><option value="2560">QHD · 2560 × 1440</option><option value="3840">4K UHD · 3840 × 2160</option>
@@ -3021,7 +3023,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                     setVideoCountdown(null);
                   }
                   if(controller.signal.aborted) throw new DOMException("Grabación cancelada","AbortError");
-                  await apiRef.current?.exportVideo({width:Number(videoWidth),height:Math.round(Number(videoWidth)*9/16),fps:Number(videoFps),duration:Number(videoDuration),mode:videoMode,signal:controller.signal,onProgress:(elapsed:number,total:number)=>setVideoProgress(total>0?elapsed/total*100:0)});
+                  const videoRatio:Record<typeof videoAspect,number>={"16:9":16/9,"1:1":1,"4:5":4/5,"9:16":9/16,"3:2":3/2};
+                  await apiRef.current?.exportVideo({width:Number(videoWidth),height:Math.round(Number(videoWidth)/videoRatio[videoAspect]),fps:Number(videoFps),duration:Number(videoDuration),mode:videoMode,signal:controller.signal,onProgress:(elapsed:number,total:number)=>setVideoProgress(total>0?elapsed/total*100:0)});
                   setVideoProgress(100);
                 }catch(e:any){if(e?.name!=="AbortError")setError(e instanceof Error?e.message:"No se pudo exportar el vídeo MP4.");}
                 finally{videoAbortRef.current=null;videoExportLockRef.current=false;setVideoCountdown(null);setVideoBusy(false);setExportBusy(false);}
