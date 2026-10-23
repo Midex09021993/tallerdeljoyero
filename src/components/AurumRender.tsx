@@ -129,6 +129,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [guardandoProyectoNube, setGuardandoProyectoNube] = useState(false);
   const [nombreProyectoGuardar, setNombreProyectoGuardar] = useState("");
   const [carpetasDestinoProyecto, setCarpetasDestinoProyecto] = useState<string[]>([]);
+  const [limiteMiNubeModal, setLimiteMiNubeModal] = useState<{ plan: string; limite: number; usadas: number } | null>(null);
   const [carpetaDestinoSeleccionada, setCarpetaDestinoSeleccionada] = useState("__nueva__");
   const [destinoProyectoGuardado, setDestinoProyectoGuardado] = useState<AurumProjectDestination | null>(null);
   const [sharedLink, setSharedLink] = useState<string | null>(null);
@@ -444,10 +445,12 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           profesional: "Profesional",
           empresarial: "Empresarial",
         } as Record<string, string>)[planId] ?? planId;
-        toast.error(
-          `Límite de Mi Nube alcanzado. Tu plan ${nombrePlan} permite ${limiteCarpetas} carpetas y ya utilizas ${carpetasExistentes.length}. Actualiza un proyecto existente o amplía tu plan.`,
-          { duration: 7000 },
-        );
+        setGuardarProyectoOpen(false);
+        setLimiteMiNubeModal({
+          plan: nombrePlan,
+          limite: limiteCarpetas,
+          usadas: carpetasExistentes.length,
+        });
         return;
       }
 
@@ -3263,6 +3266,28 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         </>}
         </aside>}
       </div>
+      {limiteMiNubeModal && <div className="fixed inset-0 z-[120] flex items-center justify-center bg-[#171613]/55 p-4 backdrop-blur-md" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setLimiteMiNubeModal(null); }}>
+        <section role="dialog" aria-modal="true" aria-labelledby="aurum-nube-limit-title" aria-describedby="aurum-nube-limit-description" className="relative w-full max-w-[440px] overflow-hidden rounded-[26px] border border-[#d7c18b]/60 bg-[#fbfaf7] text-[#292824] shadow-[0_28px_100px_rgba(0,0,0,.34)]">
+          <div className="h-1.5 w-full bg-gradient-to-r from-[#9a7832] via-[#e1c36d] to-[#9a7832]" />
+          <button type="button" aria-label="Cerrar aviso" onClick={() => setLimiteMiNubeModal(null)} className="absolute right-4 top-4 grid size-9 place-items-center rounded-full border border-[#e9e3d7] bg-white/80 text-[#777166] transition hover:bg-[#f0ece3]"><X className="size-4"/></button>
+          <div className="px-7 pb-7 pt-8 text-center sm:px-9">
+            <div className="mx-auto mb-5 grid size-[68px] place-items-center rounded-[22px] border border-[#d7c18b]/70 bg-gradient-to-br from-[#fffdf7] to-[#eee4ca] text-[#9a7832] shadow-[inset_0_1px_0_rgba(255,255,255,.9)]"><Cloud className="size-8 stroke-[1.5]"/></div>
+            <p className="text-[10px] font-semibold uppercase tracking-[.24em] text-[#9a7832]">AURUM LAB · MI NUBE</p>
+            <h2 id="aurum-nube-limit-title" className="mt-3 text-[23px] font-semibold tracking-[-.035em]">Tu espacio está completo</h2>
+            <p id="aurum-nube-limit-description" className="mx-auto mt-2 max-w-[330px] text-sm leading-6 text-[#777166]">Has alcanzado el máximo de carpetas de tu plan. Puedes actualizar un proyecto guardado o revisar las opciones de tu plan.</p>
+            <div className="mt-6 rounded-2xl border border-[#e8e0d0] bg-white/80 p-4 text-left">
+              <div className="flex items-center justify-between gap-3"><span className="text-xs text-[#827b6f]">Plan actual</span><span className="rounded-full border border-[#d7c18b]/70 bg-[#f7f0dc] px-3 py-1 text-xs font-semibold text-[#7f6329]">{limiteMiNubeModal.plan}</span></div>
+              <div className="mt-4 flex items-end justify-between gap-3"><div><p className="text-xs text-[#827b6f]">Carpetas utilizadas</p><p className="mt-1 text-2xl font-semibold tabular-nums">{limiteMiNubeModal.usadas}<span className="mx-1 text-base font-normal text-[#aaa293]">/</span><span className="text-base font-medium text-[#827b6f]">{limiteMiNubeModal.limite}</span></p></div><span className="pb-1 text-[11px] font-semibold text-[#9a7832]">100% ocupado</span></div>
+              <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[#eee9df]"><div className="h-full w-full rounded-full bg-gradient-to-r from-[#b99a50] to-[#e0c46d]"/></div>
+            </div>
+            <div className="mt-6 grid gap-2 sm:grid-cols-2">
+              <button type="button" onClick={() => { setLimiteMiNubeModal(null); window.location.assign("/mi-nube"); }} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#d7c18b] bg-gradient-to-b from-[#e5c95f] to-[#d4af37] px-4 py-3 text-xs font-semibold text-[#302819] shadow-[0_4px_12px_rgba(154,120,50,.18)] transition hover:brightness-[1.03]"><FolderOpen className="size-4"/> Abrir Mi Nube</button>
+              <button type="button" onClick={() => setLimiteMiNubeModal(null)} className="min-h-11 rounded-xl border border-[#e3ded4] bg-white px-4 py-3 text-xs font-semibold text-[#625d53] transition hover:bg-[#f4f1eb]">Volver al proyecto</button>
+            </div>
+            <p className="mt-4 text-[10px] leading-relaxed text-[#9a9386]">Tus proyectos existentes siguen disponibles. Actualizar una carpeta no ocupa una plaza adicional.</p>
+          </div>
+        </section>
+      </div>}
     </div>
   </>);
 }
