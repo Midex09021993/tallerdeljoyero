@@ -1,6 +1,7 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { Gauge, Package, Sparkles, Cloud, FolderOpen } from "lucide-react";
+import { Gauge, Package, Sparkles, Cloud, FolderOpen, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { obtenerPlanComercial } from "@/lib/planes-comerciales";
 import { useSesion } from "@/lib/auth";
@@ -29,6 +30,7 @@ function formatoBytes(bytes: number) {
 }
 
 export function ResumenPlanComercial() {
+  const [expandido, setExpandido] = useState(false);
   const { data: sesion } = useSesion();
   const participanteId = sesion?.participante?.id ?? null;
   const resumen = useQuery({
@@ -119,27 +121,37 @@ export function ResumenPlanComercial() {
       className="mx-4 mb-4 overflow-hidden rounded-2xl border border-[#d6b56d] bg-[#fffdf8] text-[#25231f] shadow-card"
       aria-label="Resumen del plan comercial"
     >
-      <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
-        <div className="flex min-w-0 items-start gap-3">
+      <button
+        type="button"
+        className="flex w-full flex-col gap-4 p-4 text-left transition hover:bg-[#fbf7ee] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#b99a50] sm:flex-row sm:items-center sm:justify-between sm:p-5"
+        onClick={() => setExpandido((actual) => !actual)}
+        aria-expanded={expandido}
+        aria-controls="resumen-plan-comercial-detalle"
+      >
+        <span className="flex min-w-0 items-start gap-3">
           <span className="grid size-11 shrink-0 place-items-center rounded-xl border border-[#d6b56d] bg-[#f8efd9] text-[#946b18]">
             <Gauge className="size-5" />
           </span>
-          <div className="min-w-0">
-            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#66645e]">
+          <span className="min-w-0">
+            <span className="block text-[11px] font-bold uppercase tracking-[0.16em] text-[#66645e]">
               Suscripción y consumo
-            </p>
-            <h2 className="mt-1 text-xl font-bold leading-tight text-[#25231f]">
+            </span>
+            <span className="mt-1 block text-xl font-bold leading-tight text-[#25231f]">
               Plan {plan?.nombre ?? "Emprendedor"}
-            </h2>
-            <p className="mt-1 text-sm font-semibold text-[#946b18]">{precio}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2 self-start rounded-full border border-[#dfc98f] bg-[#f8efd9] px-3 py-1.5 text-xs font-semibold text-[#25231f] sm:self-center">
-          <Sparkles className="size-3.5 text-[#946b18]" />
-          Plan asignado
-        </div>
-      </div>
+            </span>
+            <span className="mt-1 block text-sm font-semibold text-[#946b18]">{precio}</span>
+          </span>
+        </span>
+        <span className="flex items-center gap-3 self-start sm:self-center">
+          <span className="flex items-center gap-2 rounded-full border border-[#dfc98f] bg-[#f8efd9] px-3 py-1.5 text-xs font-semibold text-[#25231f]">
+            <Sparkles className="size-3.5 text-[#946b18]" />
+            Plan asignado
+          </span>
+          <ChevronDown className={`size-5 shrink-0 text-[#946b18] transition-transform duration-200 ${expandido ? "rotate-180" : ""}`} aria-hidden="true" />
+        </span>
+      </button>
 
+      {expandido && <div id="resumen-plan-comercial-detalle">
       <div className="border-t border-[#e5dfd2] bg-[#f5f2eb] px-4 py-4 sm:px-5">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-sm font-medium text-[#25231f]">
@@ -196,6 +208,7 @@ export function ResumenPlanComercial() {
         </div>
         <div className="mt-3 flex items-center justify-between gap-3 text-xs text-[#66645e]"><span>Carpetas compartidas contigo</span><span className="font-semibold tabular-nums">{nube.carpetasCompartidas} · {formatoBytes(nube.bytesCompartidos)} accesibles</span></div>
       </div>
+      </div>}
     </section>
   );
 }
