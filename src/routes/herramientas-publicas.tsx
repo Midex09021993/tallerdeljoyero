@@ -223,7 +223,7 @@ function HerramientasPublicasPage() {
           {mostrarCotizar && <div>
             <h2 className="mb-4 text-lg font-semibold text-white sm:text-xl">Cotizar y entregar</h2>
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              <Link to="/cotizaciones/" className="group flex min-h-48 flex-col rounded-2xl border border-white/10 bg-white/[.02] p-5 transition duration-200 hover:-translate-y-0.5 hover:border-[#d8bd7b]/55 hover:bg-white/[.045] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd7b]">
+              <Link to="/cotizaciones" className="group flex min-h-48 flex-col rounded-2xl border border-white/10 bg-white/[.02] p-5 transition duration-200 hover:-translate-y-0.5 hover:border-[#d8bd7b]/55 hover:bg-white/[.045] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd7b]">
                 <span className="grid size-11 place-items-center rounded-xl border border-[#d8bd7b]/25 bg-[#d8bd7b]/[.08] text-[#d8bd7b]"><Coins className="size-5" /></span>
                 <span className="mt-4 text-base font-semibold">¿Cuánto debo cobrar por una joya?</span>
                 <span className="mt-2 flex-1 text-sm leading-6 text-white/55">Accede a Aurum Lab para consultar las herramientas de cotización disponibles para tu taller.</span>
