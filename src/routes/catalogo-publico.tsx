@@ -90,7 +90,8 @@ function ComunidadPublicaPage() {
       : entradas.length===0 ? <div className="mt-8 rounded-2xl border border-[#211d1915] bg-white/75 px-6 py-12 text-center"><BookOpen className="mx-auto size-8 text-[#96733d]" /><h3 className="mt-4 text-lg font-semibold">Aún no hay resultados para mostrar</h3><p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#746b62]">{busqueda?"Prueba con otro término de búsqueda.":"Los talleres y profesores aparecerán aquí cuando haya información pública disponible."}</p></div>
       : <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{entradas.map(item=>{
         const esCurso=item.tipo==="curso";
-        const titulo=esCurso?(item.formacion_titulo||"Cursos y formación"):item.nombre;\n        const identidadNombre = item.identidad_nombre?.trim() || null;
+        const titulo=esCurso?(item.formacion_titulo||"Cursos y formación"):item.nombre;
+        const identidadNombre = item.identidad_nombre?.trim() || null;
         const descripcion=esCurso?(item.formacion_descripcion||item.descripcion):item.descripcion;
         const href=esCurso&&item.slug?`/formacion/${encodeURIComponent(item.slug)}`:item.catalogo_visible&&item.slug?`/${encodeURIComponent(item.slug)}`:null;
         return <article key={`${item.tipo}-${item.participante_id}`} className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[#211d1915] bg-white shadow-[0_8px_30px_rgba(40,30,20,.035)] transition duration-300 hover:-translate-y-1 hover:border-[#a8895255] hover:shadow-[0_18px_45px_rgba(40,30,20,.09)]">
