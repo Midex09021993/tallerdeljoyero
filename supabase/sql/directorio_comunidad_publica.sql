@@ -21,6 +21,7 @@ returns table (
   formacion_titulo text,
   formacion_descripcion text,
   productos_publicados bigint,
+  productos_destacados jsonb,
   identidad_nombre text,
   identidad_logo text,
   identidad_ciudad text,
@@ -49,6 +50,21 @@ as $function$
       where p.participante_id = ep.id
         and p.publicado = true
     ) else 0::bigint end,
+    case when coalesce(c.visible, false) then coalesce((
+      select jsonb_agg(jsonb_build_object(
+        'nombre', destacados.nombre,
+        'imagen_url', destacados.imagen_url,
+        'slug', destacados.slug
+      ))
+      from (
+        select p.nombre, p.imagen_principal_url as imagen_url, p.slug
+        from public.catalogo_productos p
+        where p.participante_id = ep.id
+          and p.publicado = true
+        order by p.destacado desc, p.orden asc, p.nombre asc
+        limit 3
+      ) destacados
+    ), '[]'::jsonb) else '[]'::jsonb end,
     ic.nombre_comercial,
     ic.logo_url,
     ic.ciudad,
@@ -88,6 +104,7 @@ as $function$
     coalesce(nullif(btrim(c.formacion_titulo), ''), 'Cursos y formación'),
     c.formacion_descripcion,
     0::bigint,
+    '[]'::jsonb,
     ic.nombre_comercial,
     ic.logo_url,
     ic.ciudad,
