@@ -3068,11 +3068,17 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                   }
                   if(controller.signal.aborted) throw new DOMException("Grabación cancelada","AbortError");
                   const selectedVideoBase=Math.max(320,Math.min(3840,Number(videoWidth)||1280));
-                  const selectedVideoRatio=getAurumAspectRatio(videoAspect??"16:9");
-                  // La resolución elegida representa el lado largo: 4K vertical usa 2160 × 3840,
-                  // manteniendo la proporción y el límite máximo de 3840 px por lado.
-                  const selectedVideoWidth=Math.round(selectedVideoBase*Math.min(1,selectedVideoRatio));
-                  const selectedVideoHeight=Math.round(selectedVideoBase*Math.min(1,1/selectedVideoRatio));
+                  const selectedVideoId=videoAspect??"16:9";
+                  const selectedVideoProfile=AURUM_ASPECT_RATIOS[selectedVideoId];
+                  // Scale the canonical integer ratio, not a floating-point ratio.
+                  // This keeps all five formats exact (including 3:2) and dimensions even.
+                  const profileGcd=(a:number,b:number):number=>b===0?a:profileGcd(b,a%b);
+                  const ratioUnit=profileGcd(selectedVideoProfile.videoWidth,selectedVideoProfile.videoHeight);
+                  const ratioWidth=selectedVideoProfile.videoWidth/ratioUnit;
+                  const ratioHeight=selectedVideoProfile.videoHeight/ratioUnit;
+                  const ratioScale=Math.max(1,Math.floor(selectedVideoBase/Math.max(ratioWidth,ratioHeight)));
+                  const selectedVideoWidth=ratioWidth*ratioScale;
+                  const selectedVideoHeight=ratioHeight*ratioScale;
                   await apiRef.current?.exportVideo({width:selectedVideoWidth,height:selectedVideoHeight,fps:Number(videoFps),duration:Number(videoDuration),mode:videoMode,signal:controller.signal,onProgress:(elapsed:number,total:number)=>setVideoProgress(total>0?elapsed/total*100:0)});
                   setVideoProgress(100);
                 }catch(e:any){if(e?.name!=="AbortError")setError(e instanceof Error?e.message:"No se pudo exportar el vídeo MP4.");}
