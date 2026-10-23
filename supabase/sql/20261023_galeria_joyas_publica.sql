@@ -5,7 +5,6 @@ begin;
 
 create or replace function public.obtener_galeria_joyas_publica()
 returns table (
-  participante_id uuid,
   catalogo_slug text,
   taller text,
   producto_id uuid,
@@ -24,7 +23,6 @@ security definer
 set search_path = ''
 as $$
   select
-    c.participante_id,
     c.slug,
     c.nombre_publico,
     p.id,
