@@ -2921,7 +2921,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             {!embedded && lightingOpen && lightingPanel}
           </div>
         </main>
-         {!embedded && <aside className="hidden w-[min(22vw,360px)] shrink-0 overflow-hidden rounded-2xl border border-[#e6e1d8] bg-[#faf9f6] text-[#292824] shadow-[0_6px_22px_rgba(36,32,20,.035)] xl:flex xl:flex-col">\n{exportOpen&&<div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-[#faf9f6] p-3 text-[#292824]">
+         {!embedded && <aside className="hidden w-[min(22vw,360px)] shrink-0 overflow-hidden rounded-2xl border border-[#e6e1d8] bg-[#faf9f6] text-[#292824] shadow-[0_6px_22px_rgba(36,32,20,.035)] xl:flex xl:flex-col">
+{exportOpen&&<div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-[#faf9f6] p-3 text-[#292824]">
       <div>
         <div className="mb-3 flex items-start justify-between gap-3"><div><div id="aurum-export-title" className="text-lg font-semibold tracking-tight text-[#292824]">Centro de exportación</div><div className="mt-1 text-sm text-[#77756f]">Prepara tu joya para presentar, compartir o fabricar.</div></div><button type="button" aria-label="Cerrar exportación" onClick={()=>setExportOpen(false)} className="rounded-lg p-1 text-[#77756f] hover:bg-black/[.05]"><X className="size-4"/></button></div>
         <div className="flex flex-col gap-3">
@@ -3040,7 +3041,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
 
         </div>
         {sharedLink&&<p className="mt-2 rounded-lg border border-black/[.06] bg-black/[.025] p-2.5 text-[10px] leading-relaxed text-[#77756f]">Al compartir un modelo 3D, los materiales compatibles con glTF se conservan mejor; los shaders personalizados, el HDRI y los efectos pueden variar según el visor.</p>}
-      </div></div>}\n{!exportOpen && <>
+      </div></div>}
+{!exportOpen && <>
           <div className="flex h-full flex-col overflow-y-auto">
             <div className="border-b border-[#e7e2d9] bg-white/55 px-4 py-4">
               <div className="text-[10px] font-semibold uppercase tracking-[.16em] text-[#92743b]">Biblioteca visual</div>
