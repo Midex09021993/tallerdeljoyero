@@ -13,7 +13,7 @@ export type AurumLightConfig={
 export const AURUM_LIGHTING_DEFAULT:AurumLightConfig={
  // Start with the manual studio sources disabled. The scene HDR remains active;
  // users can enable each added light independently from the lighting panel.
- key:{enabled:false,intensity:.9,position:[4,6,5],angle:.58,penumbra:.82},
+ key:{enabled:false,intensity:.9,position:[6,6,4],angle:.58,penumbra:.82},
  fill:{enabled:false,intensity:.32,position:[-4,3,4],angle:.82,penumbra:.9},
  rim:{enabled:false,intensity:.5,position:[2,5,-5],angle:.7,penumbra:.88},
  gem:{enabled:false,intensity:1.0,position:[0,3,2]},front:{enabled:false,intensity:1},ambient:.08
