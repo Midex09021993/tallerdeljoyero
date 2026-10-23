@@ -575,36 +575,6 @@ function LoginPage() {
 
               {seccionPlataforma === "planes" ? (
                 <>
-                  <section className="relative overflow-hidden rounded-[1.6rem] border border-gold/25 bg-[#151511] p-5 shadow-[0_18px_60px_rgba(0,0,0,.22)] sm:p-7">
-                    <div aria-hidden="true" className="pointer-events-none absolute -right-16 -top-24 size-72 rounded-full bg-gold/[0.10] blur-3xl" />
-                    <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-                      <div className="max-w-3xl">
-                        <p className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.24em] text-gold"><Sparkles className="size-3.5" /> Planes comerciales · Aurum Lab</p>
-                        <h3 className="mt-3 font-display text-3xl italic leading-tight text-white sm:text-4xl">Tu taller tiene una próxima versión.</h3>
-                        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/65">Empieza con herramientas útiles. Después conecta clientes, diseño, producción y equipo en un mismo ecosistema joyero.</p>
-                      </div>
-                      <div className="relative shrink-0 rounded-xl border border-white/10 bg-black/25 px-4 py-3">
-                        <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/40">Una plataforma</p>
-                        <p className="mt-1 text-sm font-semibold text-white">Cuatro etapas de crecimiento</p>
-                      </div>
-                    </div>
-                    <div className="relative mt-6 grid grid-cols-4 gap-1.5 sm:gap-2">
-                      {[
-                        { n: "01", label: "Empezar" },
-                        { n: "02", label: "Organizar" },
-                        { n: "03", label: "Producir" },
-                        { n: "04", label: "Escalar" },
-                      ].map((etapa, i) => (
-                        <div key={etapa.n} className="min-w-0">
-                          <div className={"h-1 rounded-full " + (i === 0 ? "bg-gold" : "bg-white/15")} />
-                          <p className="mt-2 text-[8px] font-bold tracking-[0.12em] text-gold/70 sm:text-[9px]">{etapa.n}</p>
-                          <p className="mt-0.5 truncate text-[10px] font-semibold text-white/70 sm:text-xs">{etapa.label}</p>
-                        </div>
-                      ))}
-                    </div>
-                    <p className="relative mt-5 border-t border-white/[0.08] pt-3 text-[10px] leading-relaxed text-white/40">Emprendedor es gratis. Taller cuesta S/ 29 al mes y Profesional S/ 79 al mes. El precio de Empresarial está por definir. Todos los planes comparten las mismas funciones; solo cambian los límites de uso.</p>
-                  </section>
-
                   <div className="mt-5 grid items-stretch gap-3 sm:grid-cols-2 xl:grid-cols-4">
                     {[
                       {
