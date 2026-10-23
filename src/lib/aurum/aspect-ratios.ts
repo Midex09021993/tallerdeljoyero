@@ -34,12 +34,17 @@ export function getAurumAspectDimensions(
 export function getAurumAspectFrameStyle(
   ratio: number,
   maxPercent = 88,
-): { width: string; height: string; aspectRatio: string; boxSizing: "border-box" } {
+): { width: string; height: string; maxWidth: string; maxHeight: string; aspectRatio: string; boxSizing: "border-box" } {
   const safeRatio = Number.isFinite(ratio) && ratio > 0 ? ratio : 16 / 9;
   const limit = Math.max(1, Math.min(100, maxPercent));
   return {
-    width: `${Math.min(limit, limit * safeRatio)}%`,
-    height: `${Math.min(limit, limit / safeRatio)}%`,
+    // Give CSS one definite dimension and let aspect-ratio derive the other.
+    // Setting width and height independently as percentages distorted the frame
+    // whenever the viewer's own shape differed from the selected output ratio.
+    width: "auto",
+    height: `${limit}%`,
+    maxWidth: `${limit}%`,
+    maxHeight: `${limit}%`,
     aspectRatio: String(safeRatio),
     boxSizing: "border-box",
   };
