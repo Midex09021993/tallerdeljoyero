@@ -246,17 +246,22 @@ export function createAurumLightingController(
 
       this.create();
       if (id === "ijewelReference" && !diagnosticEnvironmentOnly) {
-        // Preserve the broad reference reflection sources, but do not leave
-        // the manual controls visually enabled while their lights are hidden.
-        // The panel remains authoritative for key/fill/rim/front in every scene.
+        // Keep the reference reflection rig as the untouched baseline.
+        // After the user operates the studio panel, auxiliary reflectors must
+        // not keep lighting the product when all metal-facing controls are off.
         Object.values(lights).forEach((light:any) => {
           if (light) light.visible = false;
         });
-        if (lights.softbox) lights.softbox.visible = true;
-        if (lights.strip) lights.strip.visible = true;
-        if (lights.kicker) lights.kicker.visible = true;
-        if (lights.edgeLeft) lights.edgeLeft.visible = true;
-        if (lights.edgeRight) lights.edgeRight.visible = true;
+        const metalStudioEnabled = (["key", "fill", "rim", "front"] as const)
+          .some((name) => Boolean(config[name]?.enabled));
+        const preserveBaseline = manuallyTouched.size === 0;
+        if (preserveBaseline || metalStudioEnabled) {
+          if (lights.softbox) lights.softbox.visible = true;
+          if (lights.strip) lights.strip.visible = true;
+          if (lights.kicker) lights.kicker.visible = true;
+          if (lights.edgeLeft) lights.edgeLeft.visible = true;
+          if (lights.edgeRight) lights.edgeRight.visible = true;
+        }
       }
       // Reapply the panel's current enabled/intensity state after every preset,
       // not only after an interaction in this session. Otherwise a preset can
@@ -271,7 +276,7 @@ export function createAurumLightingController(
         lights.front.visible = Boolean(config.front?.enabled);
         const rig = getAurumReflectionRigProfile(activeRigId);
         const frontPreset = getAurumLightingPreset(activeRigId);
-        lights.front.intensity = rig.front.intensity * frontPreset.front * Math.max(0, Number(config.front?.intensity) || 0);
+        lights.front.intensity = rig.front.intensity * frontPreset.front * 6 * Math.max(0, Number(config.front?.intensity) || 0);
       }
       syncGemShaderLight();
       if (diagnosticEnvironmentOnly && manuallyTouched.size > 0) {
@@ -315,7 +320,7 @@ export function createAurumLightingController(
         const rig = getAurumReflectionRigProfile(activeRigId);
         const preset = getAurumLightingPreset(activeRigId);
         lights.front.visible = Boolean(config.front?.enabled);
-        lights.front.intensity = rig.front.intensity * preset.front * Math.max(0, Number(config.front?.intensity) || 0);
+        lights.front.intensity = rig.front.intensity * preset.front * 6 * Math.max(0, Number(config.front?.intensity) || 0);
       }
 
       syncGemShaderLight();
