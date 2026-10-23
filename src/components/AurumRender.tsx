@@ -1818,9 +1818,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               camara.aspect=renderWidth/renderHeight;
               camara.updateProjectionMatrix?.();
             }
-            // La captura usa el mismo campo de visión que la proporción del archivo.
-            // Se ajusta temporalmente la distancia para evitar recortes y luego se restaura la cámara.
-            if(!isPoster && modelo) fitAurumCameraToAspect(camara,controles,modelo,renderWidth/renderHeight,1.18);
+            // Keep the user's exact live camera framing for product snapshots.
+            // The on-screen composition frame represents a crop of this view; auto-fitting
+            // the whole model here would pull the camera back and export extra whitespace,
+            // so the PNG would no longer match what the user composed in the viewer.
             diamondBvhRuntime?.update();
             if(renderer.domElement.width!==renderWidth || renderer.domElement.height!==renderHeight) {
               throw new Error("El canvas WebGL no alcanzó la resolución interna de captura solicitada.");
