@@ -1595,11 +1595,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           // Render the source canvas at the selected output ratio so the framing guide
           // and exported video share the same visible area without letterbox mismatch.
           const outputAspect=videoWidth/videoHeight;
-          // Render the source canvas at the exact output dimensions. Scaling an
-          // independently sized source and then fitting it into the output canvas
-          // can introduce aspect-ratio drift; matching dimensions keeps geometry intact.
-          const renderWidth=videoWidth;
-          const renderHeight=videoHeight;
+          // Keep the live WebGL canvas and its CSS viewport at their native size/aspect.
+          // Resizing only the drawing buffer to a portrait ratio while the visible canvas
+          // remains landscape can stretch the rendered scene in the browser. The video
+          // exporter contains this native-aspect frame inside the requested output ratio,
+          // adding letterbox/pillarbox margins instead of ever distorting the jewelry.
+          const renderWidth=originalBufferWidth;
+          const renderHeight=originalBufferHeight;
+          const renderAspect=originalBufferWidth/Math.max(1,originalBufferHeight);
           const previousFastPath=liveFastPathRef.current;
           const passStates:Array<{pass:any;enabled:boolean}>=(composer?.passes??[]).map((pass:any)=>({pass,enabled:Boolean(pass?.enabled)}));
           try{
@@ -1609,11 +1612,12 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // Record with the same direct renderer path as the live viewer.
             liveFastPathRef.current=true;
             aplicarPerfilLive();
+            // Preserve the canvas backing size, CSS size and camera aspect as one unit.
+            // The final encoder handles the selected output ratio without stretching.
             renderer.setPixelRatio(1);
-            renderer.setSize(renderWidth,renderHeight,false);
-            camara.aspect=outputAspect;
+            camara.aspect=renderAspect;
             camara.updateProjectionMatrix?.();
-            if(modelo) fitAurumCameraToAspect(camara,controles,modelo,outputAspect,1.18);
+            if(modelo) fitAurumCameraToAspect(camara,controles,modelo,renderAspect,1.18);
             cameraPosition.copy(camara.position);
             if(controlsTarget && controles.target) controlsTarget.copy(controles.target);
             // Camera and source canvas now share the selected output ratio, matching
