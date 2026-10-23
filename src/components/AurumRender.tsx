@@ -1560,7 +1560,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           const originalAspect=camara.aspect;
           const originalTransmissionScale=Number((renderer as any).transmissionResolutionScale??1);
           const videoWidth=Math.max(320,Math.min(3840,Math.round(Number(options.width)||1280)));
-          const videoHeight=Math.max(320,Math.min(2160,Math.round(Number(options.height)||720)));
+          const videoHeight=Math.max(320,Math.min(3840,Math.round(Number(options.height)||720)));
           // Render video frames at their requested pixel dimensions, with a small
           // temporal-AA budget per frame. Avoid 32-sample still-image accumulation
           // here: it would make real-time recording drop frames on typical GPUs.
