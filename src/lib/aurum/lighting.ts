@@ -389,6 +389,40 @@ export function createAurumLightingController(
         }
       });
       syncGemShaderLight();
+
+      // Opt-in diagnostic for measuring the actual world-space studio rig
+      // after model scaling. It logs measurements only and does not change light behavior.
+      if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("aurumDiag") === "lights") {
+        const vector = (v:any) => v ? {
+          x: Number(v.x.toFixed?.(4) ?? v.x),
+          y: Number(v.y.toFixed?.(4) ?? v.y),
+          z: Number(v.z.toFixed?.(4) ?? v.z),
+        } : null;
+        const distanceToTarget = (v:any) => v
+          ? Math.sqrt(Number(v.x) ** 2 + (Number(v.y) - lastTargetY) ** 2 + Number(v.z) ** 2)
+          : null;
+        console.info("[AURUM][LIGHTING][WORLD-RIG]", {
+          rig: activeRigId,
+          modelRadius: lastRadius,
+          targetY: lastTargetY,
+          rigScale: Math.max(lastRadius * 2.25, 0.01),
+          sources: Object.entries(lights).map(([name, light]:any) => ({
+            name,
+            type: light?.type ?? light?.constructor?.name ?? "unknown",
+            visible: Boolean(light?.visible),
+            intensity: Number.isFinite(Number(light?.intensity)) ? Number(light.intensity) : null,
+            position: vector(light?.getWorldPosition ? light.getWorldPosition(new THREE.Vector3()) : light?.position),
+            target: light?.target
+              ? vector(light.target.getWorldPosition ? light.target.getWorldPosition(new THREE.Vector3()) : light.target.position)
+              : null,
+            distanceToModelCenter: distanceToTarget(light?.getWorldPosition ? light.getWorldPosition(new THREE.Vector3()) : light?.position),
+            width: Number.isFinite(Number(light?.width)) ? Number(light.width) : null,
+            height: Number.isFinite(Number(light?.height)) ? Number(light.height) : null,
+            angleRadians: Number.isFinite(Number(light?.angle)) ? Number(light.angle) : null,
+            penumbra: Number.isFinite(Number(light?.penumbra)) ? Number(light.penumbra) : null,
+          })),
+        });
+      }
     },
     dispose() {
       Object.values(lights).forEach((light: any) => {
