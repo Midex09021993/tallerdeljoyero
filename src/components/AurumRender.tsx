@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSesion } from "@/lib/auth";
+import { PLANES_COMERCIALES, type PlanComercialId } from "@/lib/planes-comerciales";
 import { toast } from "sonner";
 import {
   applyAurumMetal, applyAurumGem, metalPresetFromConfig, gemPresetFromConfig,
@@ -129,7 +130,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [guardandoProyectoNube, setGuardandoProyectoNube] = useState(false);
   const [nombreProyectoGuardar, setNombreProyectoGuardar] = useState("");
   const [carpetasDestinoProyecto, setCarpetasDestinoProyecto] = useState<string[]>([]);
-  const [limiteMiNubeModal, setLimiteMiNubeModal] = useState<{ plan: string; limite: number; usadas: number } | null>(null);
+  const [limiteMiNubeModal, setLimiteMiNubeModal] = useState<{
+    plan: string; limite: number; usadas: number;
+    siguientePlan?: { nombre: string; precio: string; carpetas: number; almacenamientoMiB: number } | null;
+  } | null>(null);
   const [carpetaDestinoSeleccionada, setCarpetaDestinoSeleccionada] = useState("__nueva__");
   const [destinoProyectoGuardado, setDestinoProyectoGuardado] = useState<AurumProjectDestination | null>(null);
   const [sharedLink, setSharedLink] = useState<string | null>(null);
@@ -446,10 +450,45 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           empresarial: "Empresarial",
         } as Record<string, string>)[planId] ?? planId;
         setGuardarProyectoOpen(false);
+        const ordenPlanes: PlanComercialId[] = ["emprendedor", "taller", "profesional", "empresarial"];
+        const indicePlanActual = ordenPlanes.indexOf(planId as PlanComercialId);
+        let siguientePlan: { nombre: string; precio: string; carpetas: number; almacenamientoMiB: number } | null = null;
+        if (indicePlanActual >= 0) {
+          const { data: cuotasPlanesSuperiores, error: cuotasPlanesError } = await supabase
+            .from("aurum_plan_quotas")
+            .select("plan_id,carpetas_mi_nube_max,almacenamiento_mib");
+          if (!cuotasPlanesError && cuotasPlanesSuperiores) {
+            for (const candidatoId of ordenPlanes.slice(indicePlanActual + 1)) {
+              const cuotaSuperior = cuotasPlanesSuperiores.find((q) => q.plan_id === candidatoId);
+              const definicion = PLANES_COMERCIALES.find((p) => p.id === candidatoId);
+              if (cuotaSuperior && definicion &&
+                  cuotaSuperior.carpetas_mi_nube_max > limiteCarpetas &&
+                  cuotaSuperior.carpetas_mi_nube_max !== -1) {
+                siguientePlan = {
+                  nombre: definicion.nombre,
+                  precio: definicion.precioEtiqueta,
+                  carpetas: cuotaSuperior.carpetas_mi_nube_max,
+                  almacenamientoMiB: cuotaSuperior.almacenamiento_mib,
+                };
+                break;
+              }
+              if (cuotaSuperior && definicion && cuotaSuperior.carpetas_mi_nube_max === -1) {
+                siguientePlan = {
+                  nombre: definicion.nombre,
+                  precio: definicion.precioEtiqueta,
+                  carpetas: -1,
+                  almacenamientoMiB: cuotaSuperior.almacenamiento_mib,
+                };
+                break;
+              }
+            }
+          }
+        }
         setLimiteMiNubeModal({
           plan: nombrePlan,
           limite: limiteCarpetas,
           usadas: carpetasExistentes.length,
+          siguientePlan,
         });
         return;
       }
@@ -3280,9 +3319,23 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               <div className="mt-4 flex items-end justify-between gap-3"><div><p className="text-xs text-[#827b6f]">Carpetas utilizadas</p><p className="mt-1 text-2xl font-semibold tabular-nums">{limiteMiNubeModal.usadas}<span className="mx-1 text-base font-normal text-[#aaa293]">/</span><span className="text-base font-medium text-[#827b6f]">{limiteMiNubeModal.limite}</span></p></div><span className="pb-1 text-[11px] font-semibold text-[#9a7832]">100% ocupado</span></div>
               <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[#eee9df]"><div className="h-full w-full rounded-full bg-gradient-to-r from-[#b99a50] to-[#e0c46d]"/></div>
             </div>
-            <div className="mt-6 grid gap-2 sm:grid-cols-2">
-              <button type="button" onClick={() => { setLimiteMiNubeModal(null); window.location.assign("/mi-nube"); }} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#d7c18b] bg-gradient-to-b from-[#e5c95f] to-[#d4af37] px-4 py-3 text-xs font-semibold text-[#302819] shadow-[0_4px_12px_rgba(154,120,50,.18)] transition hover:brightness-[1.03]"><FolderOpen className="size-4"/> Abrir Mi Nube</button>
-              <button type="button" onClick={() => setLimiteMiNubeModal(null)} className="min-h-11 rounded-xl border border-[#e3ded4] bg-white px-4 py-3 text-xs font-semibold text-[#625d53] transition hover:bg-[#f4f1eb]">Volver al proyecto</button>
+            {limiteMiNubeModal.siguientePlan && <div className="mt-5 rounded-2xl border border-[#d7c18b]/80 bg-gradient-to-br from-[#fffaf0] to-[#f4ead0] p-4 text-left">
+              <p className="text-[10px] font-semibold uppercase tracking-[.16em] text-[#9a7832]">Un siguiente paso para tu taller</p>
+              <div className="mt-2 flex items-start justify-between gap-3">
+                <div><p className="text-base font-semibold text-[#302819]">Plan {limiteMiNubeModal.siguientePlan.nombre}</p><p className="mt-1 text-xs leading-relaxed text-[#777166]">Más espacio para guardar los nuevos proyectos de tu taller.</p></div>
+                <span className="shrink-0 rounded-lg border border-[#d7c18b]/70 bg-white/75 px-2.5 py-1.5 text-xs font-semibold text-[#7f6329]">{limiteMiNubeModal.siguientePlan.precio}</span>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <span className="rounded-full bg-white/80 px-2.5 py-1 text-[10px] font-medium text-[#6d5a32]">{limiteMiNubeModal.siguientePlan.carpetas < 0 ? "Carpetas ilimitadas" : `${limiteMiNubeModal.siguientePlan.carpetas} carpetas`}</span>
+                <span className="rounded-full bg-white/80 px-2.5 py-1 text-[10px] font-medium text-[#6d5a32]">{limiteMiNubeModal.siguientePlan.almacenamientoMiB < 0 ? "Almacenamiento ilimitado" : `${(limiteMiNubeModal.siguientePlan.almacenamientoMiB / 1024).toFixed(1)} GB de almacenamiento`}</span>
+              </div>
+            </div>}
+            <div className="mt-5 grid gap-2">
+              <button type="button" onClick={() => { setLimiteMiNubeModal(null); window.location.assign("/auth"); }} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#d7c18b] bg-gradient-to-b from-[#e5c95f] to-[#d4af37] px-4 py-3 text-xs font-semibold text-[#302819] shadow-[0_4px_12px_rgba(154,120,50,.18)] transition hover:brightness-[1.03]"><ArrowUpRight className="size-4"/> Ver planes comerciales</button>
+              <div className="grid gap-2 sm:grid-cols-2">
+                <button type="button" onClick={() => { setLimiteMiNubeModal(null); window.location.assign("/mi-nube"); }} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-[#e3ded4] bg-white px-3 py-2.5 text-xs font-semibold text-[#625d53] transition hover:bg-[#f4f1eb]"><FolderOpen className="size-4"/> Abrir Mi Nube</button>
+                <button type="button" onClick={() => setLimiteMiNubeModal(null)} className="min-h-10 rounded-xl border border-[#e3ded4] bg-white px-3 py-2.5 text-xs font-semibold text-[#625d53] transition hover:bg-[#f4f1eb]">Volver al proyecto</button>
+              </div>
             </div>
             <p className="mt-4 text-[10px] leading-relaxed text-[#9a9386]">Tus proyectos existentes siguen disponibles. Actualizar una carpeta no ocupa una plaza adicional.</p>
           </div>
