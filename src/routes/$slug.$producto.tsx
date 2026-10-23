@@ -206,10 +206,6 @@ export function CatalogoProductoPublicoPage() {
 
       <section className="mx-auto grid w-full max-w-[1720px] gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[minmax(0,1.12fr)_minmax(0,.88fr)] lg:gap-8 lg:px-10 lg:py-10 2xl:gap-12 2xl:px-14 2xl:py-12">
         <div className="min-w-0">
-          <div className="mb-3 flex items-center gap-1 rounded-full border border-[#1f1b1815] bg-white/70 p-1" role="tablist" aria-label="Vista de la joya">
-            <button type="button" role="tab" aria-selected={vistaVisual === "fotos"} onClick={() => setVistaVisual("fotos")} className={"flex-1 rounded-full px-4 py-2.5 text-xs font-semibold transition " + (vistaVisual === "fotos" ? "bg-[#1f1b18] text-white shadow-sm" : "text-[#625b54] hover:bg-white")}>Fotografías</button>
-            {modelo3dPublico ? <button type="button" role="tab" aria-selected={vistaVisual === "3d"} onClick={() => setVistaVisual("3d")} className={"flex-1 rounded-full px-4 py-2.5 text-xs font-semibold transition " + (vistaVisual === "3d" ? "bg-[#1f1b18] text-white shadow-sm" : "text-[#625b54] hover:bg-white")}>Configurar en 3D</button> : null}
-          </div>
           <div role="tabpanel" aria-label={vistaVisual === "fotos" ? "Fotografías del producto" : "Configurador 3D"} className="min-w-0">
             {vistaVisual === "fotos" ? <>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
