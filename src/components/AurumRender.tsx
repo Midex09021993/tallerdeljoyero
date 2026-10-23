@@ -417,6 +417,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         ambienteMetalInfluence,
         fondoId,
         sombraContactoVisible,
+        // Guardar los controles visibles del estudio sin acoplarlos a posiciones internas del motor.
+        lucesEstudio: {
+          key: { enabled: lightingStudio.key.enabled, intensity: lightingStudio.key.intensity },
+          fill: { enabled: lightingStudio.fill.enabled, intensity: lightingStudio.fill.intensity },
+          rim: { enabled: lightingStudio.rim.enabled, intensity: lightingStudio.rim.intensity },
+          gem: { enabled: lightingStudio.gem.enabled, intensity: lightingStudio.gem.intensity },
+          front: { enabled: lightingStudio.front.enabled, intensity: lightingStudio.front.intensity },
+        },
         guardadoEn: new Date().toISOString(),
       };
       const blobConfiguracion = new Blob([JSON.stringify(configuracionAurum, null, 2)], { type: "application/json" });
@@ -2531,16 +2539,20 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           cargado = await cargarArchivo(originalFile);
         }
         if (!cargado) throw new Error("No se pudo abrir el GLB guardado ni el 3DM original.");
-        if (archivoParaAbrir !== originalFile && cargado) {
-          // El visor usa el GLB, pero las próximas actualizaciones deben conservar el 3DM original.
-          setArchivoOriginal(originalFile);
-          setArchivo(datos.nombre);
-          setFormatoInterno("GLB");
+        if (cargado) {
+          if (archivoParaAbrir !== originalFile) {
+            // El visor usa el GLB, pero las próximas actualizaciones deben conservar el 3DM original.
+            setArchivoOriginal(originalFile);
+            setArchivo(datos.nombre);
+            setFormatoInterno("GLB");
+          }
+          // La configuración pertenece al proyecto, no al formato de archivo cargado:
+          // restaurarla también si el GLB falta y se abre el 3DM original.
           if (typeof datos.configuracionUrl === "string" && datos.configuracionUrl) {
             try {
               const configResponse = await fetch(datos.configuracionUrl);
               if (configResponse.ok) {
-                const config = await configResponse.json() as { schemaVersion?: unknown; nombreProyecto?: unknown; categoriaProyecto?: unknown; materialId?: unknown; gemaId?: unknown; escenarioId?: unknown; iluminacionId?: unknown; vista?: unknown; fondoId?: unknown; sombraContactoVisible?: unknown; ambienteId?: unknown; ambienteMetalInfluence?: unknown; metalHdriId?: unknown; gemHdriId?: unknown };
+                const config = await configResponse.json() as { schemaVersion?: unknown; nombreProyecto?: unknown; categoriaProyecto?: unknown; materialId?: unknown; gemaId?: unknown; escenarioId?: unknown; iluminacionId?: unknown; vista?: unknown; fondoId?: unknown; sombraContactoVisible?: unknown; ambienteId?: unknown; ambienteMetalInfluence?: unknown; metalHdriId?: unknown; gemHdriId?: unknown; lucesEstudio?: unknown };
                 if (config.schemaVersion === 1) {
                   if (typeof config.nombreProyecto === "string") {
                     setNombreProyecto(config.nombreProyecto);
@@ -2560,15 +2572,15 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                     const gemaGuardada = GEMAS.find((item) => item.id === config.gemaId);
                     if (gemaGuardada) apiRef.current?.gemaCatalogo?.(gemaGuardada);
                   }
-                  if (typeof config.escenarioId === "string") {
+                  if (typeof config.escenarioId === "string" && ESCENARIOS.some((item) => item.id === config.escenarioId)) {
                     setEscenarioId(config.escenarioId as EscenarioId);
                     apiRef.current?.escenario(config.escenarioId);
                   }
-                  if (typeof config.iluminacionId === "string") {
+                  if (typeof config.iluminacionId === "string" && ILUMINACIONES.some((item) => item.id === config.iluminacionId)) {
                     setIluminacionId(config.iluminacionId as IluminacionId);
                     apiRef.current?.iluminacion(config.iluminacionId);
                   }
-                  if (typeof config.vista === "string") {
+                  if (typeof config.vista === "string" && VISTAS.some((item) => item.id === config.vista)) {
                     setVista(config.vista as VistaId);
                     apiRef.current?.vista(config.vista);
                   }
@@ -2585,12 +2597,29 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                     setAmbienteMetalInfluence(config.ambienteMetalInfluence);
                     apiRef.current?.influenciaMetalAmbiente?.(config.ambienteMetalInfluence);
                   }
-                  if (typeof config.metalHdriId === "string") apiRef.current?.metalHdri(config.metalHdriId);
-                  if (typeof config.gemHdriId === "string") apiRef.current?.gemHdri(config.gemHdriId);
+                  if (config.lucesEstudio && typeof config.lucesEstudio === "object") {
+                    const guardadas = config.lucesEstudio as Record<string, unknown>;
+                    const patch: Record<string, { enabled?: boolean; intensity?: number }> = {};
+                    const limites: Record<string, number> = { key: 4, fill: 3, rim: 3, gem: 2, front: 2 };
+                    (["key", "fill", "rim", "gem", "front"] as const).forEach((nombre) => {
+                      const valor = guardadas[nombre];
+                      if (!valor || typeof valor !== "object") return;
+                      const luz = valor as { enabled?: unknown; intensity?: unknown };
+                      const cambio: { enabled?: boolean; intensity?: number } = {};
+                      if (typeof luz.enabled === "boolean") cambio.enabled = luz.enabled;
+                      if (typeof luz.intensity === "number" && Number.isFinite(luz.intensity)) {
+                        cambio.intensity = Math.max(0, Math.min(limites[nombre], luz.intensity));
+                      }
+                      if (Object.keys(cambio).length) patch[nombre] = cambio;
+                    });
+                    if (Object.keys(patch).length) actualizarLucesAurum(patch);
+                  }
+                  if (typeof config.metalHdriId === "string" && Object.prototype.hasOwnProperty.call(AURUM_HDRI_URLS, config.metalHdriId)) apiRef.current?.metalHdri(config.metalHdriId);
+                  if (typeof config.gemHdriId === "string" && Object.prototype.hasOwnProperty.call(AURUM_GEM_HDRI_URLS, config.gemHdriId)) apiRef.current?.gemHdri(config.gemHdriId);
                 }
               }
             } catch (configError) {
-              console.warn("[AURUM] No se pudo restaurar la configuración guardada; se conserva el GLB.", configError);
+              console.warn("[AURUM] No se pudo restaurar la configuración guardada; se conserva el modelo cargado.", configError);
             }
           }
         }
