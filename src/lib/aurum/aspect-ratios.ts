@@ -37,15 +37,14 @@ export function getAurumAspectFrameStyle(
 ): { width: string; height: string; maxWidth: string; maxHeight: string; aspectRatio: string; boxSizing: "border-box" } {
   const safeRatio = Number.isFinite(ratio) && ratio > 0 ? ratio : 16 / 9;
   const limit = Math.max(1, Math.min(100, maxPercent));
+  // cqw/cqh are relative to the overlay's size-query container. Derive both
+  // dimensions from the same limiting box so max-height cannot squash a wide
+  // frame or max-width stretch a portrait frame. The result always keeps ratio.
   return {
-    // Use width as the preferred dimension and let aspect-ratio derive height.
-    // max-height and max-width contain the frame in both landscape and portrait
-    // viewports without assigning independent percentage dimensions (which can
-    // produce a rectangular frame for a square or portrait output).
-    width: `${limit}%`,
-    height: "auto",
-    maxWidth: `${limit}%`,
-    maxHeight: `${limit}%`,
+    width: `min(${limit}cqw, calc(${limit}cqh * ${safeRatio}))`,
+    height: `min(${limit}cqh, calc(${limit}cqw / ${safeRatio}))`,
+    maxWidth: "none",
+    maxHeight: "none",
     aspectRatio: String(safeRatio),
     boxSizing: "border-box",
   };
