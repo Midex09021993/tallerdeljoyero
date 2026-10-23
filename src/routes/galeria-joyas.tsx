@@ -114,7 +114,6 @@ function GaleriaJoyasPage() {
               const imagenes = Array.isArray(joya.galeria) ? joya.galeria : [];
               const imagenSecundaria = imagenes.find((value): value is string => typeof value === "string" && /^https?:\/\//i.test(value));
               const imagen = joya.imagen_principal_url || imagenSecundaria || null;
-              const href = `/${encodeURIComponent(joya.catalogo_slug)}/${encodeURIComponent(joya.producto_id)}`;
               return (
                 <article key={joya.producto_id} className="group overflow-hidden rounded-2xl border border-[#b89b5e]/25 bg-white/80 shadow-sm transition duration-200 hover:-translate-y-1 hover:border-[#b89b5e]/60 hover:shadow-xl">
                   <Link to="/$slug/$producto" params={{ slug: joya.catalogo_slug, producto: joya.producto_id }} className="block">
