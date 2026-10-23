@@ -133,7 +133,7 @@ export function CatalogoColeccionesDialog({
       const payload = {
         participante_id: participanteId,
         nombre: nombre.trim(),
-        slug: slugify(slug || nombre),
+        slug: slugify(nombre),
         descripcion: descripcion.trim() || null,
         imagen_url: imagenUrl.trim() || null,
         orden: editando ? editando.orden : colecciones.reduce((maximo, item) => Math.max(maximo, item.orden), 0) + 1,
@@ -207,8 +207,8 @@ export function CatalogoColeccionesDialog({
               {editando ? <button type="button" onClick={resetForm} className="text-xs font-semibold text-muted-foreground">Nueva</button> : null}
             </div>
             <div className="mt-4 grid gap-3">
-              <label className="grid gap-1.5 text-xs font-semibold">Nombre<input value={nombre} onChange={(e) => { const value = e.target.value; setNombre(value); if (!editando || !slug || slug === slugify(nombre)) setSlug(slugify(value)); }} placeholder="Pareja" className="h-10 rounded-xl border border-border bg-background px-3 text-sm font-normal" /></label>
-              <label className="grid gap-1.5 text-xs font-semibold">Slug público<input value={slug} onChange={(e) => setSlug(slugify(e.target.value))} placeholder="pareja" className="h-10 rounded-xl border border-border bg-background px-3 text-sm font-normal" /><span className="text-[10px] font-normal text-muted-foreground">Se genera desde el nombre y puedes personalizarlo.</span></label>
+              <label className="grid gap-1.5 text-xs font-semibold">Nombre<input value={nombre} onChange={(e) => { const value = e.target.value; setNombre(value); setSlug(slugify(value)); }} placeholder="Pareja" className="h-10 rounded-xl border border-border bg-background px-3 text-sm font-normal" /></label>
+              <label className="grid gap-1.5 text-xs font-semibold">Slug público<input value={slugify(nombre)} readOnly aria-readonly="true" placeholder="pareja" className="h-10 cursor-not-allowed rounded-xl border border-border bg-surface-muted px-3 text-sm font-normal text-muted-foreground" /><span className="text-[10px] font-normal text-muted-foreground">Se genera automáticamente a partir del nombre.</span></label>
               <label className="grid gap-1.5 text-xs font-semibold">Descripción<textarea rows={3} value={descripcion} onChange={(e) => setDescripcion(e.target.value)} className="rounded-xl border border-border bg-background px-3 py-2 text-sm font-normal" /></label>
               <div className="grid gap-2"><span className="text-xs font-semibold">Imagen de portada</span>{imagenUrl ? <div className="relative overflow-hidden rounded-xl border border-border"><img src={imagenUrl} alt="Vista previa de portada" className="h-36 w-full object-cover" /><button type="button" onClick={() => setImagenUrl("")} className="absolute right-2 top-2 rounded-lg bg-background/90 px-2 py-1 text-[10px] font-semibold">Quitar imagen</button></div> : null}<label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-gold/40 bg-background px-3 py-3 text-xs font-semibold hover:bg-surface-muted"><ImagePlus className="size-4" />{subiendoImagen ? "Subiendo imagen…" : imagenUrl ? "Cambiar imagen" : "Subir imagen desde el dispositivo"}<input type="file" accept="image/*" className="sr-only" disabled={subiendoImagen || guardando} onChange={(event) => void subirImagenPortada(event)} /></label><span className="text-[10px] font-normal text-muted-foreground">JPG, PNG o WebP · máximo 8 MB.</span></div>
               <div className="rounded-xl border border-border bg-surface-muted/40 px-3 py-2 text-[11px] text-muted-foreground">
