@@ -38,7 +38,6 @@ export function CatalogoColeccionesDialog({
   const [slug, setSlug] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [imagenUrl, setImagenUrl] = useState("");
-  const [orden, setOrden] = useState("0");
   const [publicado, setPublicado] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [subiendoImagen, setSubiendoImagen] = useState(false);
@@ -88,7 +87,6 @@ export function CatalogoColeccionesDialog({
     setSlug("");
     setDescripcion("");
     setImagenUrl("");
-    setOrden("0");
     setPublicado(false);
     setError(null);
   }
@@ -99,7 +97,6 @@ export function CatalogoColeccionesDialog({
     setSlug(collection.slug);
     setDescripcion(collection.descripcion ?? "");
     setImagenUrl(collection.imagen_url ?? "");
-    setOrden(String(collection.orden));
     setPublicado(collection.publicado);
     setError(null);
   }
@@ -139,7 +136,7 @@ export function CatalogoColeccionesDialog({
         slug: slugify(slug || nombre),
         descripcion: descripcion.trim() || null,
         imagen_url: imagenUrl.trim() || null,
-        orden: Number(orden) || 0,
+        orden: editando ? editando.orden : colecciones.reduce((maximo, item) => Math.max(maximo, item.orden), 0) + 1,
         publicado,
       };
       const result = editando
@@ -214,10 +211,10 @@ export function CatalogoColeccionesDialog({
               <label className="grid gap-1.5 text-xs font-semibold">Slug público<input value={slug} onChange={(e) => setSlug(slugify(e.target.value))} placeholder="pareja" className="h-10 rounded-xl border border-border bg-background px-3 text-sm font-normal" /><span className="text-[10px] font-normal text-muted-foreground">Se genera desde el nombre y puedes personalizarlo.</span></label>
               <label className="grid gap-1.5 text-xs font-semibold">Descripción<textarea rows={3} value={descripcion} onChange={(e) => setDescripcion(e.target.value)} className="rounded-xl border border-border bg-background px-3 py-2 text-sm font-normal" /></label>
               <div className="grid gap-2"><span className="text-xs font-semibold">Imagen de portada</span>{imagenUrl ? <div className="relative overflow-hidden rounded-xl border border-border"><img src={imagenUrl} alt="Vista previa de portada" className="h-36 w-full object-cover" /><button type="button" onClick={() => setImagenUrl("")} className="absolute right-2 top-2 rounded-lg bg-background/90 px-2 py-1 text-[10px] font-semibold">Quitar imagen</button></div> : null}<label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-gold/40 bg-background px-3 py-3 text-xs font-semibold hover:bg-surface-muted"><ImagePlus className="size-4" />{subiendoImagen ? "Subiendo imagen…" : imagenUrl ? "Cambiar imagen" : "Subir imagen desde el dispositivo"}<input type="file" accept="image/*" className="sr-only" disabled={subiendoImagen || guardando} onChange={(event) => void subirImagenPortada(event)} /></label><span className="text-[10px] font-normal text-muted-foreground">JPG, PNG o WebP · máximo 8 MB.</span></div>
-              <div className="grid grid-cols-2 gap-3">
-                <label className="grid gap-1.5 text-xs font-semibold">Orden<input type="number" min="0" value={orden} onChange={(e) => setOrden(e.target.value)} className="h-10 rounded-xl border border-border bg-background px-3 text-sm font-normal" /></label>
-                <label className="flex items-center gap-2 self-end rounded-xl border border-border p-3 text-xs font-semibold"><input type="checkbox" checked={publicado} onChange={(e) => setPublicado(e.target.checked)} /> Publicar</label>
+              <div className="rounded-xl border border-border bg-surface-muted/40 px-3 py-2 text-[11px] text-muted-foreground">
+                El orden se asigna automáticamente al crear la colección.
               </div>
+              <label className="flex items-center gap-2 rounded-xl border border-border p-3 text-xs font-semibold"><input type="checkbox" checked={publicado} onChange={(e) => setPublicado(e.target.checked)} /> Publicar</label>
               {error ? <p className="text-xs text-destructive">{error}</p> : null}
               <button type="button" disabled={guardando || subiendoImagen} onClick={() => void guardar()} className="inline-flex items-center justify-center gap-2 rounded-xl bg-gold px-4 py-2.5 text-xs font-semibold disabled:opacity-50"><Plus className="size-4" /> {guardando ? "Guardando…" : editando ? "Guardar cambios" : "Crear colección"}</button>
             </div>
