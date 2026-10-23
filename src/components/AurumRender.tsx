@@ -3072,7 +3072,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               </div>
             </div>
           </div>
-        </>}\n
+        </>}
+        </aside>}
       </div>
     </div>
   </>);
