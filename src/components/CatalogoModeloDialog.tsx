@@ -478,7 +478,12 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
               <span className="text-xs font-semibold">Galería de imágenes</span>
               {form.galeria.split(/\\n/).map((url) => url.trim()).filter(Boolean).length > 0 ? (
                 <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
-                  {form.galeria.split(/\\n/).map((url) => url.trim()).filter(Boolean).map((url, index) => <img key={url + index} src={url} alt={`Imagen de galería ${index + 1}`} className="aspect-square w-full rounded-lg border border-border object-cover" />)}
+                  {form.galeria.split(/\\n/).map((url) => url.trim()).filter(Boolean).map((url, index) => (
+                    <div key={url + index} className="group relative aspect-square overflow-hidden rounded-lg border border-border bg-white">
+                      <img src={url} alt={`Imagen de galería ${index + 1}`} className="size-full object-cover" />
+                      <button type="button" title={`Quitar imagen ${index + 1} de la galería`} aria-label={`Quitar imagen ${index + 1} de la galería`} disabled={subiendo || guardando} onClick={() => setForm(actual => ({ ...actual, galeria: actual.galeria.split(/\\n/).map(value => value.trim()).filter(Boolean).filter((_, i) => i !== index).join("\\n") }))} className="absolute right-1 top-1 grid size-7 place-items-center rounded-full bg-black/75 text-white shadow transition hover:bg-red-600 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100"><X className="size-4" /></button>
+                    </div>
+                  ))}
                 </div>
               ) : <div className="rounded-xl border border-dashed border-border p-4 text-center text-xs text-muted-foreground">Aún no hay imágenes en la galería.</div>}
               <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-border px-4 py-3 text-xs font-semibold transition hover:bg-surface-muted">
