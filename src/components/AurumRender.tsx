@@ -546,7 +546,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         controlsClass: (await import("three/examples/jsm/controls/OrbitControls.js")).OrbitControls,
       });
       orbitControlsRef.current = controles;
-      if (controles) controles.autoRotate = autoRotate360;
       // Orbit controls calibrated to the supplied iJewel VJSON reference.
       if (controles) {
         controles.enableDamping = true;
