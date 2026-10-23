@@ -240,7 +240,18 @@ function HerramientasPublicasPage() {
           {termino && herramientasFiltradas.length === 0 && !mostrarRender && !mostrarTransfer && !mostrarCotizar && <p className="rounded-xl border border-white/10 p-5 text-sm text-white/60">No encontramos una tarea con “{busqueda}”. Prueba con otra palabra, como oro, peso, yeso o STL.</p>}
         </section>
 
-        <footer className="mt-12 border-t border-white/10 py-6 text-xs text-white/35">
+        <section aria-labelledby="crear-taller-publico" className="mt-12 overflow-hidden rounded-2xl border border-[#d8bd7b]/25 bg-gradient-to-br from-[#d8bd7b]/[.10] via-white/[.025] to-transparent p-5 sm:p-7">
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="max-w-2xl">
+              <p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#d8bd7b]">Da el siguiente paso</p>
+              <h2 id="crear-taller-publico" className="mt-2 text-xl font-semibold text-[#f5f0e7] sm:text-2xl">Lleva las herramientas de tu taller a un solo lugar.</h2>
+              <p className="mt-2 text-sm leading-6 text-white/60">Crea tu taller en AURUM LAB para explorar sus capacidades de gestión, diseño, cotización y catálogo digital. También podrás seguir las novedades de la comunidad joyera.</p>
+            </div>
+            <Link to="/auth#crear-taller" className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-lg bg-[#d8bd7b] px-5 py-3 text-xs font-bold uppercase tracking-wider text-[#211c12] transition hover:-translate-y-0.5 hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd7b] focus-visible:ring-offset-2 focus-visible:ring-offset-[#10110f]">Crear mi taller <ArrowRight className="size-4" /></Link>
+          </div>
+        </section>
+
+        <footer className="mt-8 border-t border-white/10 py-6 text-xs text-white/35">
           Aurum Lab · Herramientas técnicas para el sector joyero
         </footer>
       </div>
