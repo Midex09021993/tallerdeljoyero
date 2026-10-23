@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Box, Gem, Globe2, Layers3, ShieldCheck, Sparkles, Store } from "lucide-react";
+import { ArrowRight, Box, Gem, Layers3, ShieldCheck, Sparkles, Store } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
