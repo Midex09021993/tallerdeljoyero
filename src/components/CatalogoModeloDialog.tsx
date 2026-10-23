@@ -117,7 +117,7 @@ function slugify(value: string) {
 
 export function CatalogoModeloDialog({ open, producto, participanteId, categorias, onClose, onSaved, initialImageUrl, initialName, initialProject, initialPdf }: Props) {
   const [form, setForm] = useState({
-    codigo: "", nombre: "", slug: "", categoria: categorias[0] ?? CATEGORIAS_PREDETERMINADAS[0], descripcion: "",
+    codigo: "", nombre: "", slug: "", categoria: CATEGORIAS_PREDETERMINADAS[0], descripcion: "",
     imagen_principal_url: "", galeria: "", video_url: "", aurum_render_url: "",
     precio_desde: "", moneda: "PEN",
     metal_principal: "", peso_gramos: "", piedras: "", medidas: "", talla: "", modalidad_talla: "a_medida", sistema_tallas: "Peruana", tallas_disponibles: "",
@@ -154,7 +154,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
       codigo: producto?.codigo ?? "",
       nombre: producto?.nombre ?? initialName ?? "",
       slug: producto ? slugify(producto.nombre) : "",
-      categoria: producto?.categoria ?? categorias[0] ?? CATEGORIAS_PREDETERMINADAS[0],
+      categoria: producto?.categoria ?? CATEGORIAS_PREDETERMINADAS[0],
       descripcion: producto?.descripcion ?? "",
       imagen_principal_url: producto?.imagen_principal_url ?? initialImageUrl ?? "",
       galeria: Array.isArray(producto?.galeria) ? producto.galeria.join("\n") : "",
@@ -450,7 +450,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
             <label className="grid gap-1.5 text-xs font-semibold">Nombre<input required value={form.nombre} onChange={(e) => setForm(v => ({ ...v, nombre: e.target.value, slug: slugify(e.target.value) }))} className={input} placeholder="Anillo Aura" /></label>
             <label className="grid gap-1.5 text-xs font-semibold">Categoría
               <select value={form.categoria} onChange={(e) => setForm(v => ({ ...v, categoria: e.target.value }))} className={input}>
-                {[...new Set([...CATEGORIAS_PREDETERMINADAS, ...categorias.filter((categoria) => !["Sortijas", "Alianzas", "Conjuntos"].includes(categoria)), form.categoria].filter(Boolean))].map((categoria) => <option key={categoria} value={categoria}>{categoria}</option>)}
+                {[...new Set([...CATEGORIAS_PREDETERMINADAS, ...(form.categoria && !CATEGORIAS_PREDETERMINADAS.includes(form.categoria as (typeof CATEGORIAS_PREDETERMINADAS)[number]) ? [form.categoria] : [])])].map((categoria) => <option key={categoria} value={categoria}>{categoria}</option>)}
               </select>
               <span className="text-[10px] font-normal text-muted-foreground">Selecciona una categoría administrada por tu taller.</span>
             </label>
