@@ -405,11 +405,6 @@ function CatalogoPublicoPage() {
                 Explora los modelos publicados por {config.nombre_publico} y solicita una propuesta personalizada directamente con el taller.
               </p>
             )}
-            <div className="mt-7 flex flex-wrap gap-2">
-              <a href="#coleccion" className="rounded-full bg-[#1f1b18] px-5 py-3 text-xs font-semibold text-white">
-                Explorar colección <ArrowRight className="ml-1 inline size-3.5" />
-              </a>
-            </div>
           </div>
 
           <div className="group relative aspect-[4/3] w-full min-w-0 overflow-hidden rounded-[26px] border border-white/70 bg-[radial-gradient(ellipse_at_50%_42%,#ffffff_0%,#fffdfa_54%,#eee7dc_100%)] shadow-[0_24px_70px_-30px_rgba(39,30,19,0.35)] sm:rounded-[32px]">
