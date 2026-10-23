@@ -103,11 +103,10 @@ export async function recordAurumCanvasVideo(
       context.fillRect(0, 0, width, height);
       context.imageSmoothingEnabled = true;
       context.imageSmoothingQuality = "high";
-      const sourceAspect = source.width / Math.max(1, source.height);
-      const outputAspect = width / height;
-      const drawWidth = sourceAspect > outputAspect ? width : height * sourceAspect;
-      const drawHeight = sourceAspect > outputAspect ? width / sourceAspect : height;
-      context.drawImage(source, (width - drawWidth) / 2, (height - drawHeight) / 2, drawWidth, drawHeight);
+      // exportVideo ajusta la cámara y el canvas de origen a la proporción final.
+      // Llenar el lienzo evita bandas blancas introducidas por diferencias de redondeo
+      // de uno o dos píxeles entre las dimensiones internas y las del archivo final.
+      context.drawImage(source, 0, 0, width, height);
       options.onProgress?.(Math.min(elapsed, duration), duration);
       if (elapsed >= duration) {
         if (recorder.state !== "inactive") recorder.stop();
