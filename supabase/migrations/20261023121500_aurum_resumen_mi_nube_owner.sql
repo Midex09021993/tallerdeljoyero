@@ -70,22 +70,33 @@ begin
     where s.destinatario_participante_id = p_participante_id
       and s.revoked_at is null
   ),
-  received_summary as (
-    select count(*)::bigint as folder_count,
-           coalesce(sum(
-             case
-               when coalesce(o.metadata->>'size', '') ~ '^[0-9]+$'
-                 then (o.metadata->>'size')::bigint
-               else 0::bigint
-             end
-           ), 0)::bigint as total_bytes
+  received_bytes as (
+    select
+      coalesce(
+        sum(
+          case
+            when coalesce(o.metadata->>'size', '') ~ '^[0-9]+$'
+              then (o.metadata->>'size')::bigint
+            else 0::bigint
+          end
+        ),
+        0
+      )::bigint as total_bytes
     from received_folders f
     left join storage.objects o
       on o.bucket_id = 'mi-nube'
-     and split_part(o.name, '/', 1) = f.propietario_participante_id::text
-     and split_part(o.name, '/', 2) = f.propietario_usuario_id::text
+     and split_part(o.name, '/', 1) =
+         f.propietario_participante_id::text
+     and split_part(o.name, '/', 2) =
+         f.propietario_usuario_id::text
      and split_part(o.name, '/', 3) = f.carpeta
      and array_length(string_to_array(o.name, '/'), 1) >= 4
+  ),
+  received_summary as (
+    select
+      (select count(*)::bigint from received_folders) as folder_count,
+      rb.total_bytes
+    from received_bytes rb
   )
   select os.folder_count, os.total_bytes, rs.folder_count, rs.total_bytes
   from own_summary os cross join received_summary rs;
