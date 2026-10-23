@@ -1,4 +1,5 @@
 -- Directorio público de Comunidad para Taller del Joyero.
+-- Requiere aplicar primero comunidad_visibilidad_owner.sql para crear comunidad_visible.
 -- Expone solo datos comerciales mínimos de participantes activos y publicaciones habilitadas.
 -- Aplicar manualmente en Lovable Cloud > Supabase SQL Editor.
 
@@ -41,6 +42,7 @@ as $function$
   from public.ecosistema_participantes ep
   left join public.catalogo_configuracion c on c.participante_id = ep.id
   where ep.estado = 'activo'
+    and coalesce(ep.comunidad_visible, true) = true
     and ep.tipo_participante in ('organizacion', 'profesional')
     and (
       c.id is null
@@ -64,6 +66,7 @@ as $function$
   from public.catalogo_configuracion c
   join public.ecosistema_participantes ep on ep.id = c.participante_id
   where ep.estado = 'activo'
+    and coalesce(ep.comunidad_visible, true) = true
     and c.formacion_visible = true
   order by 3, 1;
 $function$;
