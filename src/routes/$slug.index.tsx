@@ -452,9 +452,9 @@ function CatalogoPublicoPage() {
                       )}
                       <div className="absolute inset-0 bg-gradient-to-t from-[#17130f]/65 via-transparent to-transparent opacity-75 transition-opacity duration-500 group-hover:opacity-90 motion-reduce:transition-none" />
                       <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-5 text-white">
-                        <span className="min-w-0 translate-y-0.5 text-left text-base font-semibold tracking-wide drop-shadow-sm transition-transform duration-500 group-hover:-translate-y-0.5 motion-reduce:transform-none motion-reduce:transition-none">{collectionName}</span>
-                        <span className="inline-flex shrink-0 items-center gap-2 translate-y-2 rounded-full border border-white/35 bg-white/10 px-3 py-2 text-[10px] font-semibold uppercase tracking-[.16em] opacity-0 backdrop-blur-sm transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100 motion-reduce:transform-none motion-reduce:transition-none">
-                          Ver ahora <ArrowRight className="size-3.5 transition-transform duration-300 group-hover:translate-x-0.5 motion-reduce:transform-none" />
+                        <span className="min-w-0 text-left text-base font-semibold tracking-wide drop-shadow-sm">{collectionName}</span>
+                        <span className="inline-flex shrink-0 items-center gap-2 rounded-full border border-white/35 bg-white/10 px-3 py-2 text-[10px] font-semibold uppercase tracking-[.16em] opacity-0 backdrop-blur-sm transition-opacity duration-300 group-hover:opacity-100 motion-reduce:transition-none">
+                          Ver ahora <ArrowRight className="size-3.5" />
                         </span>
                       </div>
                     </div>
