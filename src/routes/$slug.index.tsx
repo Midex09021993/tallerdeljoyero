@@ -62,6 +62,7 @@ type CatalogoRow = {
   mostrar_ficha_tecnica: boolean;
   coleccion_slug: string | null;
   coleccion_nombre: string | null;
+  coleccion_imagen_portada_url?: string | null;
 };
 
 type Producto = {
@@ -162,16 +163,21 @@ function CatalogoPublicoPage() {
     queryKey: ["portal-publico", slugNormalizado],
     enabled: !slugReservado,
     queryFn: async () => {
-      const [catalogoResult, portadaResult, textoSuperiorResult, redesResult, contactoResult, carruselResult] = await Promise.all([
+      const [catalogoResult, portadaResult, textoSuperiorResult, redesResult, contactoResult, carruselResult, coleccionesPortadasResult] = await Promise.all([
         supabase.rpc("obtener_catalogo_publico", { _slug: slugNormalizado }),
         supabase.rpc("obtener_configuracion_portada_publica", { _slug: slugNormalizado }),
         supabase.rpc("obtener_texto_superior_portada_publica", { _slug: slugNormalizado }),
         supabase.rpc("obtener_redes_sociales_catalogo_publico", { _slug: slugNormalizado }),
         supabase.rpc("obtener_contacto_catalogo_publico", { _slug: slugNormalizado }),
         supabase.rpc("obtener_carrusel_enlaces_catalogo_publico", { _slug: slugNormalizado }),
+        (supabase as any).rpc("obtener_portadas_colecciones_publicas", { _slug: slugNormalizado }),
       ]);
       if (catalogoResult.error) throw catalogoResult.error;
       const productosCatalogo = (catalogoResult.data ?? []) as CatalogoRow[];
+      const portadasPorColeccion = new Map<string, string>();
+      for (const portadaColeccion of (coleccionesPortadasResult.error ? [] : (coleccionesPortadasResult.data ?? [])) as { coleccion_slug?: string; coleccion_nombre?: string; imagen_portada_url?: string | null }[]) {
+        if (portadaColeccion.coleccion_slug) portadasPorColeccion.set(portadaColeccion.coleccion_slug, portadaColeccion.imagen_portada_url ?? "");
+      }
       // Si la migración de portada aún no se ha aplicado, el catálogo existente sigue funcionando.
       const portada = portadaResult.error ? undefined : ((portadaResult.data ?? [])[0] as {
         frase_portada: string | null;
@@ -212,6 +218,7 @@ function CatalogoPublicoPage() {
       }
       return productosCatalogo.map((row) => ({
         ...row,
+        coleccion_imagen_portada_url: row.coleccion_slug ? (portadasPorColeccion.get(row.coleccion_slug) || null) : null,
         frase_portada: portada?.frase_portada ?? null,
         texto_superior_portada: textoSuperiorPortada,
         imagenes_portada: portada?.imagenes_portada ?? [],
@@ -440,8 +447,8 @@ function CatalogoPublicoPage() {
             </div>
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
               {colecciones.map(([collectionSlug, collectionName]) => {
-                const collectionRow = rows.find((row) => row.coleccion_slug === collectionSlug && row.coleccion_nombre === collectionName && row.producto_id);
-                const collectionImage = collectionRow?.imagen_principal_url;
+                const collectionRow = rows.find((row) => row.coleccion_slug === collectionSlug && row.coleccion_nombre === collectionName);
+                const collectionImage = collectionRow?.coleccion_imagen_portada_url ?? null;
                 return (
                   <Link key={collectionSlug} to="/$slug/coleccion/$coleccion" params={{ slug: slugNormalizado, coleccion: collectionSlug }} className="group overflow-hidden rounded-2xl border border-[#e9e2d8] bg-white transition duration-300 hover:-translate-y-1 hover:border-[#d3bd91] hover:shadow-[0_18px_45px_-28px_rgba(39,30,19,.38)]">
                     <div className="relative aspect-[4/5] overflow-hidden bg-[#f7f5f0]">
