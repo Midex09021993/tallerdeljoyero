@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, CloudUpload, FilePlus2 } from "lucide-react";
+import { ArrowLeft, FilePlus2 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { useSesion } from "@/lib/auth";
@@ -36,7 +36,8 @@ function PublicarArchivoPage() {
       const valor = Number(precio);
       if (!Number.isFinite(valor) || valor <= 0) throw new Error("Indica un precio mayor que cero.");
       if (!ruta.trim() || !nombreArchivo.trim()) throw new Error("Indica la ruta privada de Mi Nube y el nombre del archivo.");
-      const { error } = await supabase.from("archivos_digitales_marketplace").insert({
+      const marketplaceClient = supabase as unknown as { from: (table: string) => { insert: (values: Record<string, unknown>) => Promise<{ error: { message: string } | null }> } };
+      const { error } = await marketplaceClient.from("archivos_digitales_marketplace").insert({
         participante_id: participanteId,
         vendedor_usuario_id: user.id,
         titulo: titulo.trim(),
