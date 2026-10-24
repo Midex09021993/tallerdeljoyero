@@ -193,7 +193,7 @@ language sql
 stable
 security definer
 set search_path = ''
-as $
+as $$
   select
     c.id,
     c.archivo_id,
@@ -208,7 +208,7 @@ as $
   join public.archivos_digitales_marketplace a on a.id = c.archivo_id
   where c.comprador_usuario_id = (select auth.uid())
   order by c.created_at desc;
-$;
+$$;
 
 revoke all on function public.obtener_mis_compras_archivos() from public;
 grant execute on function public.obtener_mis_compras_archivos() to authenticated;
