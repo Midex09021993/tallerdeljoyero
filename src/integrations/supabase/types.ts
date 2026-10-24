@@ -4257,10 +4257,12 @@ export type Database = {
           identidad_ciudad: string
           identidad_logo: string
           identidad_nombre: string
+          identidad_pais: string
           identidad_sitio_web: string
           imagen_url: string
           nombre: string
           participante_id: string
+          productos_destacados: Json
           productos_publicados: number
           slug: string
           tipo: string
@@ -4277,6 +4279,22 @@ export type Database = {
       obtener_ficha_servicio_externo: {
         Args: { _trabajo_id: string }
         Returns: Json
+      }
+      obtener_galeria_joyas_publica: {
+        Args: never
+        Returns: {
+          catalogo_slug: string
+          categoria: string
+          descripcion: string
+          destacado: boolean
+          galeria: Json
+          imagen_principal_url: string
+          moneda: string
+          nombre: string
+          precio_desde: number
+          producto_id: string
+          taller: string
+        }[]
       }
       obtener_portadas_colecciones_publicas: {
         Args: { _slug: string }
