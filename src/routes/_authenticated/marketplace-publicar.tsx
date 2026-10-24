@@ -63,7 +63,7 @@ function PublicarArchivoPage() {
   });
 
   return (
-    <AppShell>
+    <AppShell titulo="Publicar archivo">
       <main className="mx-auto max-w-4xl space-y-6 p-4 sm:p-6">
         <Link to="/mi-nube" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" /> Volver a Mi Nube</Link>
         <header className="rounded-2xl border border-border bg-card p-6 sm:p-8">
