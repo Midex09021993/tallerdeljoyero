@@ -12,18 +12,15 @@ export const Route = createFileRoute("/_authenticated/marketplace-mis-compras")(
 });
 
 type Compra = {
-  id: string;
+  compra_id: string;
   archivo_id: string;
+  titulo: string;
+  nombre_archivo: string;
+  formatos: string[];
   precio_pagado: number;
   moneda: string;
   estado_pago: string;
-  created_at: string;
-  archivos_digitales_marketplace: {
-    titulo: string;
-    nombre_archivo: string;
-    formatos: string[];
-    estado: string;
-  } | null;
+  creado_en: string;
 };
 
 function MisComprasPage() {
@@ -32,12 +29,10 @@ function MisComprasPage() {
     queryKey: ["marketplace-mis-compras", sesion.data?.user.id],
     enabled: Boolean(sesion.data?.user.id),
     queryFn: async (): Promise<Compra[]> => {
-      const { data, error } = await supabase.from("compras_archivos_digitales")
-        .select("id, archivo_id, precio_pagado, moneda, estado_pago, created_at, archivos_digitales_marketplace(titulo,nombre_archivo,formatos,estado)")
-        .order("created_at", { ascending: false });
+      const { data, error } = await supabase.rpc("obtener_mis_compras_archivos");
       if (error) throw error;
-      return (data ?? []) as unknown as Compra[];
-    },
+      return (data ?? []) as Compra[];
+    },,
   });
 
   const descargar = useMutation({
@@ -59,7 +54,7 @@ function MisComprasPage() {
         {compras.isLoading ? <div className="flex items-center gap-2 p-6 text-sm text-muted-foreground"><RefreshCw className="size-4 animate-spin" /> Cargando compras...</div> : null}
         {compras.isError ? <div className="rounded-xl border border-destructive/30 p-5 text-sm">No se pudieron cargar las compras. Comprueba que el SQL del marketplace se haya ejecutado.</div> : null}
         {compras.data?.length === 0 ? <div className="rounded-2xl border border-border bg-card p-10 text-center"><ShoppingBag className="mx-auto size-9 text-gold" /><h2 className="mt-3 font-semibold">Todavía no tienes compras</h2><p className="mt-2 text-sm text-muted-foreground">Cuando compres un archivo, aparecerá aquí.</p><Link to="/galeria-joyas" className="mt-4 inline-flex rounded-full bg-primary px-4 py-2.5 text-sm text-primary-foreground">Explorar archivos</Link></div> : null}
-        <div className="space-y-3">{(compras.data ?? []).map((compra) => <article key={compra.id} className="flex flex-col justify-between gap-4 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-center"><div><h2 className="font-semibold">{compra.archivos_digitales_marketplace?.titulo ?? "Archivo digital"}</h2><p className="mt-1 text-xs text-muted-foreground">{new Date(compra.created_at).toLocaleDateString("es-PE")} · {compra.archivos_digitales_marketplace?.formatos?.join(", ")}</p><p className="mt-2 text-sm">{new Intl.NumberFormat("es-PE", { style: "currency", currency: compra.moneda }).format(compra.precio_pagado)} · <span className="capitalize">{compra.estado_pago}</span></p></div><button type="button" disabled={compra.estado_pago !== "pagado" || descargar.isPending} onClick={() => descargar.mutate(compra.id)} className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"><Download className="size-4" /> {compra.estado_pago === "pagado" ? "Descargar" : "Pago pendiente"}</button></article>)}</div>
+        <div className="space-y-3">{(compras.data ?? []).map((compra) => <article key={compra.compra_id} className="flex flex-col justify-between gap-4 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-center"><div><h2 className="font-semibold">{compra.titulo || "Archivo digital"}</h2><p className="mt-1 text-xs text-muted-foreground">{new Date(compra.creado_en).toLocaleDateString("es-PE")} · {compra.formatos?.join(", ")}</p><p className="mt-2 text-sm">{new Intl.NumberFormat("es-PE", { style: "currency", currency: compra.moneda }).format(compra.precio_pagado)} · <span className="capitalize">{compra.estado_pago}</span></p></div><button type="button" disabled={compra.estado_pago !== "pagado" || descargar.isPending} onClick={() => descargar.mutate(compra.compra_id)} className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-40"><Download className="size-4" /> {compra.estado_pago === "pagado" ? "Descargar" : "Pago pendiente"}</button></article>)}</div>
       </main>
     </AppShell>
   );
