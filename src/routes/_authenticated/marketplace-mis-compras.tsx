@@ -33,7 +33,7 @@ function MisComprasPage() {
       const { data, error } = await marketplaceClient.rpc("obtener_mis_compras_archivos");
       if (error) throw error;
       return (data ?? []) as Compra[];
-    },,
+    },
   });
 
   const descargar = useMutation({
