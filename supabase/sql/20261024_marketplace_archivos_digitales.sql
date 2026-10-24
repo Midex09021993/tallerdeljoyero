@@ -24,6 +24,7 @@ create table if not exists public.archivos_digitales_marketplace (
   estado text not null default 'borrador' check (estado in ('borrador','publicado','pausado','retirado')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
+  constraint archivos_digitales_ruta_pertenece_vendedor check (ruta_archivo like participante_id::text || '/' || vendedor_usuario_id::text || '/%'),
   constraint archivos_digitales_vendedor_ruta_uq unique (vendedor_usuario_id, ruta_archivo)
 );
 
