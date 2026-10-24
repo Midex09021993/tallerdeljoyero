@@ -126,7 +126,7 @@ const secciones: Array<{
   { id: "fotos", titulo: "Fotos e imágenes", descripcion: "Fotografías de joyas y trabajos terminados.", formatos: "JPG · PNG · WEBP · HEIC", Icono: ImageIcon },
   { id: "videos", titulo: "Videos", descripcion: "Procesos de fabricación y material comercial.", formatos: "MP4 · MOV · WEBM", Icono: Video },
   { id: "documentos", titulo: "Documentos", descripcion: "Contratos, fichas técnicas y PDF.", formatos: "PDF · DOCX · XLSX · TXT", Icono: FileText },
-  { id: "modelos-3d", titulo: "Biblioteca 3D", descripcion: "Diseños CAD y modelos para visualizar o renderizar.", formatos: "3DM · STL · OBJ · GLB", Icono: Box },
+  { id: "modelos-3d", titulo: "Biblioteca 3D", descripcion: "Diseños CAD y modelos para visualizar o renderizar.", formatos: "3DM · STL · OBJ · GLB · STEP", Icono: Box },
 ];
 
 function clasificarArchivo(nombre: string): Categoria {
@@ -134,7 +134,7 @@ function clasificarArchivo(nombre: string): Categoria {
   if (["jpg", "jpeg", "png", "webp", "avif", "gif", "heic", "heif"].includes(ext)) return "fotos";
   if (["mp4", "mov", "webm", "m4v", "avi", "mkv"].includes(ext)) return "videos";
   if (["pdf", "doc", "docx", "xls", "xlsx", "csv", "txt", "rtf", "odt"].includes(ext)) return "documentos";
-  if (["3dm", "stl", "obj", "glb", "gltf", "3mf", "ply", "fbx"].includes(ext)) return "modelos-3d";
+  if (["3dm", "stl", "obj", "glb", "gltf", "3mf", "ply", "fbx", "step", "stp"].includes(ext)) return "modelos-3d";
   return "otros";
 }
 
