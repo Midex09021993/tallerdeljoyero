@@ -52,7 +52,7 @@ Deno.serve(async (req: Request) => {
 
     const { data: archivo, error: archivoError } = await admin
       .from("archivos_digitales_marketplace")
-      .select("id, titulo, bucket_archivo, ruta_archivo, nombre_archivo, estado")
+      .select("id, titulo, participante_id, vendedor_usuario_id, bucket_archivo, ruta_archivo, nombre_archivo, estado")
       .eq("id", compra.archivo_id)
       .maybeSingle();
     if (archivoError) throw archivoError;
@@ -61,6 +61,10 @@ Deno.serve(async (req: Request) => {
     }
     if (archivo.bucket_archivo !== "mi-nube") return json({ error: "El origen del archivo no es válido." }, 400);
     const ruta = String(archivo.ruta_archivo ?? "");
+    const prefijoVendedor = String(archivo.participante_id) + "/" + String(archivo.vendedor_usuario_id) + "/";
+    if (!archivo.participante_id || !archivo.vendedor_usuario_id || !ruta.startsWith(prefijoVendedor)) {
+      return json({ error: "El archivo no pertenece a la carpeta privada del vendedor." }, 403);
+    }
     if (!ruta || ruta.startsWith("/") || ruta.split("/").some((part) => part === "..") || ruta.includes("\\") || ruta.length > 1024) {
       return json({ error: "La ruta del archivo no es válida." }, 400);
     }
