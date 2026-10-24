@@ -37,3 +37,6 @@ verify_jwt = true
 
 [functions.catalogo-generar-descripcion]
 verify_jwt = true
+
+[functions.marketplace-descargar-archivo]
+verify_jwt = true
