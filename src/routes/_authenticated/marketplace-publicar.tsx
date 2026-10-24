@@ -32,6 +32,16 @@ function PublicarArchivoPage() {
   const [archivosDisponibles, setArchivosDisponibles] = useState<ArchivoDisponible[]>([]);
   const [cargandoArchivos, setCargandoArchivos] = useState(false);
   const [errorArchivos, setErrorArchivos] = useState<string | null>(null);
+  const [carpetaProyecto, setCarpetaProyecto] = useState("");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setCarpetaProyecto(params.get("carpeta") ?? "");
+  }, []);
+
+  const archivosVisibles = carpetaProyecto
+    ? archivosDisponibles.filter((item) => item.ruta.split("/").slice(-2, -1)[0] === carpetaProyecto)
+    : archivosDisponibles;
 
   useEffect(() => {
     let cancelado = false;
@@ -142,9 +152,9 @@ function PublicarArchivoPage() {
             <select value={moneda} onChange={(e) => setMoneda(e.target.value as typeof moneda)} className="w-full rounded-lg border border-input bg-background px-3 py-2.5 font-normal"><option value="PEN">Soles (PEN)</option><option value="USD">Dólares (USD)</option></select>
           </label>
           <label className="space-y-2 text-sm font-medium sm:col-span-2">Archivo de Mi Nube
-            <select required value={ruta} onChange={(e) => { const elegido = archivosDisponibles.find((item) => item.ruta === e.target.value); setRuta(e.target.value); setNombreArchivo(elegido?.nombre ?? ""); const ext = elegido?.nombre.split(".").pop()?.toLowerCase() ?? ""; if (EXTENSIONES[ext]) setFormato(EXTENSIONES[ext]); }} disabled={cargandoArchivos || archivosDisponibles.length === 0} className="w-full rounded-lg border border-input bg-background px-3 py-2.5 font-normal">
-              <option value="">{cargandoArchivos ? "Cargando archivos de Mi Nube…" : archivosDisponibles.length ? "Selecciona un archivo…" : "No hay archivos compatibles en tus carpetas"}</option>
-              {archivosDisponibles.map((item) => <option key={item.ruta} value={item.ruta}>{item.nombre} · {EXTENSIONES[item.nombre.split(".").pop()?.toLowerCase() ?? ""]} · {item.bytes ? (item.bytes / 1048576).toFixed(2) + " MB" : "tamaño no disponible"}</option>)}
+            <select required value={ruta} onChange={(e) => { const elegido = archivosDisponibles.find((item) => item.ruta === e.target.value); setRuta(e.target.value); setNombreArchivo(elegido?.nombre ?? ""); const ext = elegido?.nombre.split(".").pop()?.toLowerCase() ?? ""; if (EXTENSIONES[ext]) setFormato(EXTENSIONES[ext]); }} disabled={cargandoArchivos || archivosVisibles.length === 0} className="w-full rounded-lg border border-input bg-background px-3 py-2.5 font-normal">
+              <option value="">{cargandoArchivos ? "Cargando archivos de Mi Nube…" : archivosVisibles.length ? "Selecciona un archivo…" : carpetaProyecto ? "No hay archivos compatibles en este proyecto" : "No hay archivos compatibles en tus carpetas"}</option>
+              {archivosVisibles.map((item) => <option key={item.ruta} value={item.ruta}>{item.nombre} · {EXTENSIONES[item.nombre.split(".").pop()?.toLowerCase() ?? ""]} · {item.bytes ? (item.bytes / 1048576).toFixed(2) + " MB" : "tamaño no disponible"}</option>)}
             </select>
             <span className="block text-xs font-normal text-muted-foreground">Solo aparecen archivos compatibles dentro de tus carpetas privadas. El original no se mueve ni se modifica.</span>
             {errorArchivos ? <span className="block text-xs font-normal text-destructive">No se pudo cargar Mi Nube: {errorArchivos}</span> : null}
