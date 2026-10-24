@@ -47,7 +47,7 @@ function MisComprasPage() {
   });
 
   return (
-    <AppShell>
+    <AppShell titulo="Mis compras">
       <main className="mx-auto max-w-5xl space-y-6 p-4 sm:p-6">
         <Link to="/galeria-joyas" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" /> Volver al marketplace</Link>
         <header><p className="text-xs font-semibold uppercase tracking-[.2em] text-gold">Tu biblioteca digital</p><h1 className="mt-2 text-3xl font-semibold">Mis compras</h1><p className="mt-2 text-sm text-muted-foreground">Los archivos se habilitan cuando el pago queda confirmado por el servidor.</p></header>
