@@ -175,6 +175,43 @@ comment on table public.archivos_digitales_marketplace is
 comment on table public.compras_archivos_digitales is
   'Registro de compras digitales. Solo un backend de pago confiable debe cambiar estado_pago a pagado.';
 
+
+create or replace function public.obtener_mis_compras_archivos()
+returns table (
+  compra_id uuid,
+  archivo_id uuid,
+  titulo text,
+  nombre_archivo text,
+  formatos text[],
+  precio_pagado numeric,
+  moneda text,
+  estado_pago text,
+  creado_en timestamptz
+)
+language sql
+stable
+security definer
+set search_path = ''
+as $
+  select
+    c.id,
+    c.archivo_id,
+    a.titulo,
+    a.nombre_archivo,
+    a.formatos,
+    c.precio_pagado,
+    c.moneda,
+    c.estado_pago,
+    c.created_at
+  from public.compras_archivos_digitales c
+  join public.archivos_digitales_marketplace a on a.id = c.archivo_id
+  where c.comprador_usuario_id = (select auth.uid())
+  order by c.created_at desc;
+$;
+
+revoke all on function public.obtener_mis_compras_archivos() from public;
+grant execute on function public.obtener_mis_compras_archivos() to authenticated;
+
 notify pgrst, 'reload schema';
 commit;
 
