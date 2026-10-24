@@ -1773,6 +1773,22 @@ function MiNubePage() {
                       {proyecto.tieneStl && <span className="rounded-md bg-muted/70 px-2 py-1 text-[10px] font-medium text-muted-foreground">STL</span>}
                       {proyecto.tienePdf && <span className="rounded-md bg-muted/70 px-2 py-1 text-[10px] font-medium text-muted-foreground">PDF</span>}
                     </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const proyecto = opcionesCompartir;
+                    if (!proyecto) return;
+                    setOpcionesCompartir(null);
+                    window.location.assign("/marketplace-publicar?carpeta=" + encodeURIComponent(proyecto.nombre));
+                  }}
+                  className="flex items-start gap-3 rounded-xl border border-[#c5a15d]/60 bg-[#c5a15d]/[0.10] p-4 text-left transition-colors hover:bg-[#c5a15d]/[0.16]"
+                >
+                  <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#c5a15d]/15 text-gold"><ShoppingBag className="size-5" /></div>
+                  <div>
+                    <span className="block text-sm font-semibold">Vender archivos digitales</span>
+                    <span className="mt-1 block text-xs leading-5 text-muted-foreground">Seleccionar archivos de este proyecto, fijar un precio y preparar su publicación en el marketplace. No modifica los originales.</span>
+                  </div>
+                </button>
                     <button type="button" onClick={() => void anadirImagenAlCatalogo(proyecto.archivos.find((item) => item.categoria === "fotos") ?? null, proyecto, proyecto.archivos.find((item) => item.nombre.toLowerCase().endsWith(".pdf") && item.origen === "supabase") ?? null)} disabled={anadiendoCatalogo !== null} className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-[#c5a15d]/60 bg-[#c5a15d]/[0.10] px-3 py-2 text-xs font-semibold leading-tight text-foreground transition-colors hover:bg-[#c5a15d]/[0.17] disabled:opacity-50">
                       {anadiendoCatalogo === proyecto.nombre ? "Preparando ficha…" : "Crear ficha para catálogo"}
                     </button>
