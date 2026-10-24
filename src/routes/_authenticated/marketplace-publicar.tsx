@@ -28,7 +28,6 @@ function PublicarArchivoPage() {
   const [moneda, setMoneda] = useState<"PEN" | "USD">("PEN");
   const [ruta, setRuta] = useState("");
   const [nombreArchivo, setNombreArchivo] = useState("");
-  const [portada, setPortada] = useState("");
   const [archivosDisponibles, setArchivosDisponibles] = useState<ArchivoDisponible[]>([]);
   const [cargandoArchivos, setCargandoArchivos] = useState(false);
   const [errorArchivos, setErrorArchivos] = useState<string | null>(null);
@@ -88,6 +87,24 @@ function PublicarArchivoPage() {
       if (!user || !participanteId) throw new Error("Tu cuenta no tiene un taller activo vinculado.");
       const valor = Number(precio);
       if (!Number.isFinite(valor) || valor <= 0) throw new Error("Indica un precio mayor que cero.");
+      let imagenPortadaUrl: string | null = null;
+      const carpetaRuta = ruta.split("/").slice(0, -1).join("/");
+      const imagenProyecto = archivosDisponibles.find((item) => item.ruta.startsWith(carpetaRuta + "/") && /\.(jpe?g|png|webp)$/i.test(item.nombre));
+      if (imagenProyecto) {
+        const { data: imagenFirmada, error: errorFirma } = await supabase.storage.from("mi-nube").createSignedUrl(imagenProyecto.ruta, 600);
+        if (!errorFirma && imagenFirmada?.signedUrl) {
+          const respuestaImagen = await fetch(imagenFirmada.signedUrl);
+          if (respuestaImagen.ok) {
+            const blobImagen = await respuestaImagen.blob();
+            const extensionImagen = imagenProyecto.nombre.split(".").pop()?.toLowerCase() ?? "jpg";
+            const rutaPortada = "marketplace-portadas/" + user.id + "/" + crypto.randomUUID() + "." + extensionImagen;
+            const { error: errorSubida } = await supabase.storage.from("catalogo-joyas").upload(rutaPortada, blobImagen, { contentType: blobImagen.type || "image/jpeg", upsert: false });
+            if (!errorSubida) {
+              imagenPortadaUrl = supabase.storage.from("catalogo-joyas").getPublicUrl(rutaPortada).data.publicUrl;
+            }
+          }
+        }
+      }
       const seleccionado = archivosDisponibles.find((item) => item.ruta === ruta);
       const prefijoPrivado = participanteId + "/" + user.id + "/";
       if (!seleccionado || !seleccionado.ruta.startsWith(prefijoPrivado) || seleccionado.ruta.split("/").some((parte) => parte === "..")) throw new Error("Selecciona un archivo válido de tu propia Mi Nube.");
@@ -103,7 +120,7 @@ function PublicarArchivoPage() {
         formatos: [formato],
         precio: valor,
         moneda,
-        imagen_portada_url: portada.trim() || null,
+        imagen_portada_url: imagenPortadaUrl,
         bucket_archivo: "mi-nube",
         ruta_archivo: seleccionado.ruta,
         nombre_archivo: seleccionado.nombre,
@@ -114,7 +131,6 @@ function PublicarArchivoPage() {
     },
     onSuccess: async () => {
       toast.success("Borrador guardado. Revisa el archivo y publícalo cuando esté listo.");
-      setTitulo(""); setDescripcion(""); setRuta(""); setNombreArchivo(""); setPortada(""); setPrecio("");
       await queryClient.invalidateQueries({ queryKey: ["marketplace-mis-publicaciones"] });
     },
     onError: (error) => toast.error(error instanceof Error ? error.message : "No se pudo guardar el borrador."),
@@ -159,9 +175,10 @@ function PublicarArchivoPage() {
             <span className="block text-xs font-normal text-muted-foreground">Solo aparecen archivos compatibles dentro de tus carpetas privadas. El original no se mueve ni se modifica.</span>
             {errorArchivos ? <span className="block text-xs font-normal text-destructive">No se pudo cargar Mi Nube: {errorArchivos}</span> : null}
           </label>
-          <label className="space-y-2 text-sm font-medium sm:col-span-2">URL de imagen de muestra (opcional)
-            <input type="url" value={portada} onChange={(e) => setPortada(e.target.value)} className="w-full rounded-lg border border-input bg-background px-3 py-2.5 font-normal" placeholder="https://..." />
-          </label>
+          <div className="space-y-2 text-sm sm:col-span-2">
+            <p className="font-medium">Imagen de portada del proyecto</p>
+            <p className="text-xs text-muted-foreground">Usaremos automáticamente una imagen que ya esté guardada en la misma carpeta de Mi Nube. No necesitas introducir una URL ni volver a cargarla.</p>
+          </div>
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5 sm:col-span-2">
             <p className="max-w-md text-xs leading-5 text-muted-foreground">El borrador no aparece públicamente y no activa ningún cobro.</p>
             <button disabled={publicar.isPending || !sesion.data?.participante || !archivoSeleccionado} type="submit" className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50"><FilePlus2 className="size-4" /> {publicar.isPending ? "Guardando..." : "Guardar borrador"}</button>
