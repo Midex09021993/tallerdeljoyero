@@ -8,6 +8,13 @@
       "when": 1791555298956,
       "tag": "0000_contratos_documento_pdf",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792805770629,
+      "tag": "0001_especialidades_lectura_activas",
+      "breakpoints": true
     }
   ]
 }
