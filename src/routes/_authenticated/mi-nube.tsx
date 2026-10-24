@@ -17,6 +17,7 @@ import {
   RefreshCw,
   Search,
   Share2,
+  ShoppingBag,
   Server,
   Copy,
   Pencil,
