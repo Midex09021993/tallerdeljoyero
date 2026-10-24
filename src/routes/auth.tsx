@@ -211,7 +211,7 @@ function LoginPage() {
             <UsersRound className="size-4" /> Comunidad
           </a>
           <a href="/galeria-joyas" className="flex items-center gap-2 text-sm text-white/75 transition hover:text-gold">
-            <Gem className="size-4" /> Galería de Joyas
+            <Gem className="size-4" /> Marketplace de Archivos
           </a>
           <button type="button" onClick={() => { setSeccionPlataforma("ecosistema"); setMostrarPlataforma(true); }} className="flex items-center gap-2 text-sm text-white/75 transition hover:text-gold">
             <Gem className="size-4" /> Conocer Aurum Lab
@@ -229,7 +229,7 @@ function LoginPage() {
           <a onClick={() => setMenuMovilAbierto(false)} href="/herramientas-publicas" className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-white/85 hover:bg-white/[0.06]"><Grid2X2 className="size-4 text-gold" /> Herramientas gratuitas</a>
           <a onClick={() => setMenuMovilAbierto(false)} href="/tienda" className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-white/85 hover:bg-white/[0.06]"><ShoppingBag className="size-4 text-gold" /> Tienda de insumos</a>
           <a onClick={() => setMenuMovilAbierto(false)} href="/catalogo-publico" className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-white/85 hover:bg-white/[0.06]"><UsersRound className="size-4 text-gold" /> Comunidad</a>
-          <a onClick={() => setMenuMovilAbierto(false)} href="/galeria-joyas" className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-white/85 hover:bg-white/[0.06]"><Gem className="size-4 text-gold" /> Galería de Joyas</a>
+          <a onClick={() => setMenuMovilAbierto(false)} href="/galeria-joyas" className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-white/85 hover:bg-white/[0.06]"><Gem className="size-4 text-gold" /> Marketplace de Archivos</a>
           <button type="button" onClick={() => { setMenuMovilAbierto(false); setSeccionPlataforma("ecosistema"); setMostrarPlataforma(true); }} className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm text-white/85 hover:bg-white/[0.06]"><Gem className="size-4 text-gold" /> Conocer Aurum Lab</button>
           <Suspense fallback={null}><ContactoComercial className="mt-1 inline-flex min-h-11 w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm text-[#d8bd7b] transition hover:bg-white/[0.06]" /></Suspense>
         </nav> : null}
