@@ -29,7 +29,8 @@ function MisComprasPage() {
     queryKey: ["marketplace-mis-compras", sesion.data?.user.id],
     enabled: Boolean(sesion.data?.user.id),
     queryFn: async (): Promise<Compra[]> => {
-      const { data, error } = await supabase.rpc("obtener_mis_compras_archivos");
+      const marketplaceClient = supabase as unknown as { rpc: (name: string) => Promise<{ data: unknown; error: { message: string } | null }> };
+      const { data, error } = await marketplaceClient.rpc("obtener_mis_compras_archivos");
       if (error) throw error;
       return (data ?? []) as Compra[];
     },,
