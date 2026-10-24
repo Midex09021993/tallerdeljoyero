@@ -247,7 +247,7 @@ function HerramientasPublicasPage() {
               <h2 id="crear-taller-publico" className="mt-2 text-xl font-semibold text-[#f5f0e7] sm:text-2xl">Lleva las herramientas de tu taller a un solo lugar.</h2>
               <p className="mt-2 text-sm leading-6 text-white/60">Crea tu taller en AURUM LAB para explorar sus capacidades de gestión, diseño, cotización y catálogo digital. También podrás seguir las novedades de la comunidad joyera.</p>
             </div>
-            <Link to="/auth#crear-taller" className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-lg bg-[#d8bd7b] px-5 py-3 text-xs font-bold uppercase tracking-wider text-[#211c12] transition hover:-translate-y-0.5 hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd7b] focus-visible:ring-offset-2 focus-visible:ring-offset-[#10110f]">Crear mi taller <ArrowRight className="size-4" /></Link>
+            <Link to="/auth" hash="crear-taller" className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-lg bg-[#d8bd7b] px-5 py-3 text-xs font-bold uppercase tracking-wider text-[#211c12] transition hover:-translate-y-0.5 hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd7b] focus-visible:ring-offset-2 focus-visible:ring-offset-[#10110f]">Crear mi taller <ArrowRight className="size-4" /></Link>
           </div>
         </section>
 
