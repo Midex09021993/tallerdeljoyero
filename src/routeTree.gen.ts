@@ -17,6 +17,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CatalogoPublicoRouteImport } from './routes/catalogo-publico'
 import { Route as ClienteRouteImport } from './routes/cliente'
 import { Route as CursosDiseno3dRouteImport } from './routes/cursos-diseno-3d'
+import { Route as GaleriaJoyasRouteImport } from './routes/galeria-joyas'
 import { Route as HerramientasPublicasRouteImport } from './routes/herramientas-publicas'
 import { Route as RecuperarContrasenaRouteImport } from './routes/recuperar-contrasena'
 import { Route as TiendaRouteImport } from './routes/tienda'
@@ -36,6 +37,8 @@ import { Route as AuthenticatedHerramientasRouteImport } from './routes/_authent
 import { Route as AuthenticatedImpresion3dRouteImport } from './routes/_authenticated/impresion-3d'
 import { Route as AuthenticatedInicioRouteImport } from './routes/_authenticated/inicio'
 import { Route as AuthenticatedInventarioRouteImport } from './routes/_authenticated/inventario'
+import { Route as AuthenticatedMarketplaceMisComprasRouteImport } from './routes/_authenticated/marketplace-mis-compras'
+import { Route as AuthenticatedMarketplacePublicarRouteImport } from './routes/_authenticated/marketplace-publicar'
 import { Route as AuthenticatedMensajesRouteImport } from './routes/_authenticated/mensajes'
 import { Route as AuthenticatedMiNubeRouteImport } from './routes/_authenticated/mi-nube'
 import { Route as AuthenticatedMigracionRouteImport } from './routes/_authenticated/migracion'
@@ -108,6 +111,11 @@ const ClienteRoute = ClienteRouteImport.update({
 const CursosDiseno3dRoute = CursosDiseno3dRouteImport.update({
   id: '/cursos-diseno-3d',
   path: '/cursos-diseno-3d',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GaleriaJoyasRoute = GaleriaJoyasRouteImport.update({
+  id: '/galeria-joyas',
+  path: '/galeria-joyas',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HerramientasPublicasRoute = HerramientasPublicasRouteImport.update({
@@ -210,6 +218,18 @@ const AuthenticatedInventarioRoute = AuthenticatedInventarioRouteImport.update({
   path: '/inventario',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedMarketplaceMisComprasRoute =
+  AuthenticatedMarketplaceMisComprasRouteImport.update({
+    id: '/marketplace-mis-compras',
+    path: '/marketplace-mis-compras',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMarketplacePublicarRoute =
+  AuthenticatedMarketplacePublicarRouteImport.update({
+    id: '/marketplace-publicar',
+    path: '/marketplace-publicar',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMensajesRoute = AuthenticatedMensajesRouteImport.update({
   id: '/mensajes',
   path: '/mensajes',
@@ -400,6 +420,7 @@ export interface FileRoutesByFullPath {
   '/catalogo-publico': typeof CatalogoPublicoRoute
   '/cliente': typeof ClienteRoute
   '/cursos-diseno-3d': typeof CursosDiseno3dRoute
+  '/galeria-joyas': typeof GaleriaJoyasRoute
   '/herramientas-publicas': typeof HerramientasPublicasRoute
   '/recuperar-contrasena': typeof RecuperarContrasenaRoute
   '/tienda': typeof TiendaRoute
@@ -418,6 +439,8 @@ export interface FileRoutesByFullPath {
   '/impresion-3d': typeof AuthenticatedImpresion3dRoute
   '/inicio': typeof AuthenticatedInicioRoute
   '/inventario': typeof AuthenticatedInventarioRoute
+  '/marketplace-mis-compras': typeof AuthenticatedMarketplaceMisComprasRoute
+  '/marketplace-publicar': typeof AuthenticatedMarketplacePublicarRoute
   '/mensajes': typeof AuthenticatedMensajesRoute
   '/mi-nube': typeof AuthenticatedMiNubeRoute
   '/migracion': typeof AuthenticatedMigracionRoute
@@ -461,6 +484,7 @@ export interface FileRoutesByTo {
   '/catalogo-publico': typeof CatalogoPublicoRoute
   '/cliente': typeof ClienteRoute
   '/cursos-diseno-3d': typeof CursosDiseno3dRoute
+  '/galeria-joyas': typeof GaleriaJoyasRoute
   '/herramientas-publicas': typeof HerramientasPublicasRoute
   '/recuperar-contrasena': typeof RecuperarContrasenaRoute
   '/tienda': typeof TiendaRoute
@@ -478,6 +502,8 @@ export interface FileRoutesByTo {
   '/impresion-3d': typeof AuthenticatedImpresion3dRoute
   '/inicio': typeof AuthenticatedInicioRoute
   '/inventario': typeof AuthenticatedInventarioRoute
+  '/marketplace-mis-compras': typeof AuthenticatedMarketplaceMisComprasRoute
+  '/marketplace-publicar': typeof AuthenticatedMarketplacePublicarRoute
   '/mensajes': typeof AuthenticatedMensajesRoute
   '/mi-nube': typeof AuthenticatedMiNubeRoute
   '/migracion': typeof AuthenticatedMigracionRoute
@@ -523,6 +549,7 @@ export interface FileRoutesById {
   '/catalogo-publico': typeof CatalogoPublicoRoute
   '/cliente': typeof ClienteRoute
   '/cursos-diseno-3d': typeof CursosDiseno3dRoute
+  '/galeria-joyas': typeof GaleriaJoyasRoute
   '/herramientas-publicas': typeof HerramientasPublicasRoute
   '/recuperar-contrasena': typeof RecuperarContrasenaRoute
   '/tienda': typeof TiendaRoute
@@ -541,6 +568,8 @@ export interface FileRoutesById {
   '/_authenticated/impresion-3d': typeof AuthenticatedImpresion3dRoute
   '/_authenticated/inicio': typeof AuthenticatedInicioRoute
   '/_authenticated/inventario': typeof AuthenticatedInventarioRoute
+  '/_authenticated/marketplace-mis-compras': typeof AuthenticatedMarketplaceMisComprasRoute
+  '/_authenticated/marketplace-publicar': typeof AuthenticatedMarketplacePublicarRoute
   '/_authenticated/mensajes': typeof AuthenticatedMensajesRoute
   '/_authenticated/mi-nube': typeof AuthenticatedMiNubeRoute
   '/_authenticated/migracion': typeof AuthenticatedMigracionRoute
@@ -587,6 +616,7 @@ export interface FileRouteTypes {
     | '/catalogo-publico'
     | '/cliente'
     | '/cursos-diseno-3d'
+    | '/galeria-joyas'
     | '/herramientas-publicas'
     | '/recuperar-contrasena'
     | '/tienda'
@@ -605,6 +635,8 @@ export interface FileRouteTypes {
     | '/impresion-3d'
     | '/inicio'
     | '/inventario'
+    | '/marketplace-mis-compras'
+    | '/marketplace-publicar'
     | '/mensajes'
     | '/mi-nube'
     | '/migracion'
@@ -648,6 +680,7 @@ export interface FileRouteTypes {
     | '/catalogo-publico'
     | '/cliente'
     | '/cursos-diseno-3d'
+    | '/galeria-joyas'
     | '/herramientas-publicas'
     | '/recuperar-contrasena'
     | '/tienda'
@@ -665,6 +698,8 @@ export interface FileRouteTypes {
     | '/impresion-3d'
     | '/inicio'
     | '/inventario'
+    | '/marketplace-mis-compras'
+    | '/marketplace-publicar'
     | '/mensajes'
     | '/mi-nube'
     | '/migracion'
@@ -709,6 +744,7 @@ export interface FileRouteTypes {
     | '/catalogo-publico'
     | '/cliente'
     | '/cursos-diseno-3d'
+    | '/galeria-joyas'
     | '/herramientas-publicas'
     | '/recuperar-contrasena'
     | '/tienda'
@@ -727,6 +763,8 @@ export interface FileRouteTypes {
     | '/_authenticated/impresion-3d'
     | '/_authenticated/inicio'
     | '/_authenticated/inventario'
+    | '/_authenticated/marketplace-mis-compras'
+    | '/_authenticated/marketplace-publicar'
     | '/_authenticated/mensajes'
     | '/_authenticated/mi-nube'
     | '/_authenticated/migracion'
@@ -773,6 +811,7 @@ export interface RootRouteChildren {
   CatalogoPublicoRoute: typeof CatalogoPublicoRoute
   ClienteRoute: typeof ClienteRoute
   CursosDiseno3dRoute: typeof CursosDiseno3dRoute
+  GaleriaJoyasRoute: typeof GaleriaJoyasRoute
   HerramientasPublicasRoute: typeof HerramientasPublicasRoute
   RecuperarContrasenaRoute: typeof RecuperarContrasenaRoute
   TiendaRoute: typeof TiendaRoute
@@ -844,6 +883,13 @@ declare module '@tanstack/react-router' {
       path: '/cursos-diseno-3d'
       fullPath: '/cursos-diseno-3d'
       preLoaderRoute: typeof CursosDiseno3dRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/galeria-joyas': {
+      id: '/galeria-joyas'
+      path: '/galeria-joyas'
+      fullPath: '/galeria-joyas'
+      preLoaderRoute: typeof GaleriaJoyasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/herramientas-publicas': {
@@ -977,6 +1023,20 @@ declare module '@tanstack/react-router' {
       path: '/inventario'
       fullPath: '/inventario'
       preLoaderRoute: typeof AuthenticatedInventarioRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/marketplace-mis-compras': {
+      id: '/_authenticated/marketplace-mis-compras'
+      path: '/marketplace-mis-compras'
+      fullPath: '/marketplace-mis-compras'
+      preLoaderRoute: typeof AuthenticatedMarketplaceMisComprasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/marketplace-publicar': {
+      id: '/_authenticated/marketplace-publicar'
+      path: '/marketplace-publicar'
+      fullPath: '/marketplace-publicar'
+      preLoaderRoute: typeof AuthenticatedMarketplacePublicarRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/mensajes': {
@@ -1277,6 +1337,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedImpresion3dRoute: typeof AuthenticatedImpresion3dRoute
   AuthenticatedInicioRoute: typeof AuthenticatedInicioRoute
   AuthenticatedInventarioRoute: typeof AuthenticatedInventarioRoute
+  AuthenticatedMarketplaceMisComprasRoute: typeof AuthenticatedMarketplaceMisComprasRoute
+  AuthenticatedMarketplacePublicarRoute: typeof AuthenticatedMarketplacePublicarRoute
   AuthenticatedMensajesRoute: typeof AuthenticatedMensajesRoute
   AuthenticatedMiNubeRoute: typeof AuthenticatedMiNubeRoute
   AuthenticatedMigracionRoute: typeof AuthenticatedMigracionRoute
@@ -1310,6 +1372,9 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedImpresion3dRoute: AuthenticatedImpresion3dRoute,
   AuthenticatedInicioRoute: AuthenticatedInicioRoute,
   AuthenticatedInventarioRoute: AuthenticatedInventarioRoute,
+  AuthenticatedMarketplaceMisComprasRoute:
+    AuthenticatedMarketplaceMisComprasRoute,
+  AuthenticatedMarketplacePublicarRoute: AuthenticatedMarketplacePublicarRoute,
   AuthenticatedMensajesRoute: AuthenticatedMensajesRoute,
   AuthenticatedMiNubeRoute: AuthenticatedMiNubeRoute,
   AuthenticatedMigracionRoute: AuthenticatedMigracionRoute,
@@ -1365,6 +1430,7 @@ const rootRouteChildren: RootRouteChildren = {
   CatalogoPublicoRoute: CatalogoPublicoRoute,
   ClienteRoute: ClienteRoute,
   CursosDiseno3dRoute: CursosDiseno3dRoute,
+  GaleriaJoyasRoute: GaleriaJoyasRoute,
   HerramientasPublicasRoute: HerramientasPublicasRoute,
   RecuperarContrasenaRoute: RecuperarContrasenaRoute,
   TiendaRoute: TiendaRoute,
