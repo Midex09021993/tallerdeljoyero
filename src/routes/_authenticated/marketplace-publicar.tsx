@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, FilePlus2 } from "lucide-react";
 import { toast } from "sonner";
@@ -14,6 +14,8 @@ export const Route = createFileRoute("/_authenticated/marketplace-publicar")({
 
 const FORMATOS = ["STL", "3DM", "GLB", "OBJ", "STEP", "IMAGEN", "PDF", "PLANO"] as const;
 const CATEGORIAS = ["Anillos", "Pendientes", "Collares", "Dijes", "Pulseras", "Modelos 3D", "Planos técnicos", "Imágenes", "Otros"] as const;
+const EXTENSIONES: Record<string, (typeof FORMATOS)[number]> = { stl: "STL", "3dm": "3DM", glb: "GLB", obj: "OBJ", step: "STEP", stp: "STEP", jpg: "IMAGEN", jpeg: "IMAGEN", png: "IMAGEN", webp: "IMAGEN", pdf: "PDF", dxf: "PLANO", dwg: "PLANO" };
+type ArchivoDisponible = { ruta: string; nombre: string; bytes: number };
 
 function PublicarArchivoPage() {
   const sesion = useSesion();
@@ -27,6 +29,47 @@ function PublicarArchivoPage() {
   const [ruta, setRuta] = useState("");
   const [nombreArchivo, setNombreArchivo] = useState("");
   const [portada, setPortada] = useState("");
+  const [archivosDisponibles, setArchivosDisponibles] = useState<ArchivoDisponible[]>([]);
+  const [cargandoArchivos, setCargandoArchivos] = useState(false);
+  const [errorArchivos, setErrorArchivos] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelado = false;
+    const cargar = async () => {
+      const userId = sesion.data?.user.id;
+      const participanteId = sesion.data?.participante?.id;
+      if (!userId || !participanteId) { setArchivosDisponibles([]); return; }
+      setCargandoArchivos(true);
+      setErrorArchivos(null);
+      try {
+        const raiz = participanteId + "/" + userId;
+        const { data: entradas, error } = await supabase.storage.from("mi-nube").list(raiz, { limit: 1000, sortBy: { column: "name", order: "asc" } });
+        if (error) throw error;
+        const carpetas = (entradas ?? []).filter((item) => !item.id && !item.metadata && item.name).map((item) => item.name);
+        const encontrados: ArchivoDisponible[] = [];
+        for (let inicio = 0; inicio < carpetas.length; inicio += 2) {
+          const lote = carpetas.slice(inicio, inicio + 2);
+          const resultados = await Promise.all(lote.map(async (carpeta) => {
+            const { data, error: listaError } = await supabase.storage.from("mi-nube").list(raiz + "/" + carpeta, { limit: 1000, sortBy: { column: "name", order: "asc" } });
+            if (listaError) throw listaError;
+            return (data ?? []).filter((item) => Boolean(item.id || item.metadata || item.name.includes("."))).flatMap((item) => {
+              const extension = item.name.split(".").pop()?.toLowerCase() ?? "";
+              if (!EXTENSIONES[extension] || item.name.startsWith(".")) return [];
+              return [{ ruta: raiz + "/" + carpeta + "/" + item.name, nombre: item.name, bytes: Number(item.metadata?.size ?? 0) }];
+            });
+          }));
+          encontrados.push(...resultados.flat());
+        }
+        if (!cancelado) setArchivosDisponibles(encontrados.sort((a, b) => a.nombre.localeCompare(b.nombre, "es")));
+      } catch (error) {
+        if (!cancelado) { setArchivosDisponibles([]); setErrorArchivos(error instanceof Error ? error.message : "No se pudo leer Mi Nube."); }
+      } finally { if (!cancelado) setCargandoArchivos(false); }
+    };
+    void cargar();
+    return () => { cancelado = true; };
+  }, [sesion.data?.user.id, sesion.data?.participante?.id]);
+
+  const archivoSeleccionado = archivosDisponibles.find((item) => item.ruta === ruta);
 
   const publicar = useMutation({
     mutationFn: async () => {
@@ -35,7 +78,11 @@ function PublicarArchivoPage() {
       if (!user || !participanteId) throw new Error("Tu cuenta no tiene un taller activo vinculado.");
       const valor = Number(precio);
       if (!Number.isFinite(valor) || valor <= 0) throw new Error("Indica un precio mayor que cero.");
-      if (!ruta.trim() || !nombreArchivo.trim()) throw new Error("Indica la ruta privada de Mi Nube y el nombre del archivo.");
+      const seleccionado = archivosDisponibles.find((item) => item.ruta === ruta);
+      const prefijoPrivado = participanteId + "/" + user.id + "/";
+      if (!seleccionado || !seleccionado.ruta.startsWith(prefijoPrivado) || seleccionado.ruta.split("/").some((parte) => parte === "..")) throw new Error("Selecciona un archivo válido de tu propia Mi Nube.");
+      const extension = seleccionado.nombre.split(".").pop()?.toLowerCase() ?? "";
+      if (EXTENSIONES[extension] !== formato) throw new Error("El formato seleccionado no coincide con el archivo.");
       const marketplaceClient = supabase as unknown as { from: (table: string) => { insert: (values: Record<string, unknown>) => Promise<{ error: { message: string } | null }> } };
       const { error } = await marketplaceClient.from("archivos_digitales_marketplace").insert({
         participante_id: participanteId,
@@ -48,8 +95,9 @@ function PublicarArchivoPage() {
         moneda,
         imagen_portada_url: portada.trim() || null,
         bucket_archivo: "mi-nube",
-        ruta_archivo: ruta.trim(),
-        nombre_archivo: nombreArchivo.trim(),
+        ruta_archivo: seleccionado.ruta,
+        nombre_archivo: seleccionado.nombre,
+        bytes_archivo: seleccionado.bytes,
         estado: "borrador",
       });
       if (error) throw error;
@@ -93,19 +141,20 @@ function PublicarArchivoPage() {
           <label className="space-y-2 text-sm font-medium">Moneda
             <select value={moneda} onChange={(e) => setMoneda(e.target.value as typeof moneda)} className="w-full rounded-lg border border-input bg-background px-3 py-2.5 font-normal"><option value="PEN">Soles (PEN)</option><option value="USD">Dólares (USD)</option></select>
           </label>
-          <label className="space-y-2 text-sm font-medium sm:col-span-2">Ruta exacta del archivo dentro de Mi Nube
-            <input required value={ruta} onChange={(e) => setRuta(e.target.value)} className="w-full rounded-lg border border-input bg-background px-3 py-2.5 font-normal" placeholder="Ej. modelos/anillo-sello.stl" />
-            <span className="block text-xs font-normal text-muted-foreground">No pegues una URL pública. Usa la ruta interna exacta del objeto en el bucket privado.</span>
-          </label>
-          <label className="space-y-2 text-sm font-medium sm:col-span-2">Nombre del archivo descargable
-            <input required maxLength={255} value={nombreArchivo} onChange={(e) => setNombreArchivo(e.target.value)} className="w-full rounded-lg border border-input bg-background px-3 py-2.5 font-normal" placeholder="anillo-sello.stl" />
+          <label className="space-y-2 text-sm font-medium sm:col-span-2">Archivo de Mi Nube
+            <select required value={ruta} onChange={(e) => { const elegido = archivosDisponibles.find((item) => item.ruta === e.target.value); setRuta(e.target.value); setNombreArchivo(elegido?.nombre ?? ""); const ext = elegido?.nombre.split(".").pop()?.toLowerCase() ?? ""; if (EXTENSIONES[ext]) setFormato(EXTENSIONES[ext]); }} disabled={cargandoArchivos || archivosDisponibles.length === 0} className="w-full rounded-lg border border-input bg-background px-3 py-2.5 font-normal">
+              <option value="">{cargandoArchivos ? "Cargando archivos de Mi Nube…" : archivosDisponibles.length ? "Selecciona un archivo…" : "No hay archivos compatibles en tus carpetas"}</option>
+              {archivosDisponibles.map((item) => <option key={item.ruta} value={item.ruta}>{item.nombre} · {EXTENSIONES[item.nombre.split(".").pop()?.toLowerCase() ?? ""]} · {item.bytes ? (item.bytes / 1048576).toFixed(2) + " MB" : "tamaño no disponible"}</option>)}
+            </select>
+            <span className="block text-xs font-normal text-muted-foreground">Solo aparecen archivos compatibles dentro de tus carpetas privadas. El original no se mueve ni se modifica.</span>
+            {errorArchivos ? <span className="block text-xs font-normal text-destructive">No se pudo cargar Mi Nube: {errorArchivos}</span> : null}
           </label>
           <label className="space-y-2 text-sm font-medium sm:col-span-2">URL de imagen de muestra (opcional)
             <input type="url" value={portada} onChange={(e) => setPortada(e.target.value)} className="w-full rounded-lg border border-input bg-background px-3 py-2.5 font-normal" placeholder="https://..." />
           </label>
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5 sm:col-span-2">
             <p className="max-w-md text-xs leading-5 text-muted-foreground">El borrador no aparece públicamente y no activa ningún cobro.</p>
-            <button disabled={publicar.isPending || !sesion.data?.participante} type="submit" className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50"><FilePlus2 className="size-4" /> {publicar.isPending ? "Guardando..." : "Guardar borrador"}</button>
+            <button disabled={publicar.isPending || !sesion.data?.participante || !archivoSeleccionado} type="submit" className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50"><FilePlus2 className="size-4" /> {publicar.isPending ? "Guardando..." : "Guardar borrador"}</button>
           </div>
         </form>
       </main>
