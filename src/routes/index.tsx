@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Boxes, Calculator, Check, ChevronDown, Cloud, Gem, Layers3, MonitorSmartphone, PackageCheck, Sparkles, Sprout, ChartNoAxesCombined } from "lucide-react";
 
@@ -55,6 +56,95 @@ const soluciones = [
     accion: "Ver catálogo",
   },
 ];
+
+
+type PeriodicidadPlan = "mensual" | "trimestral" | "anual";
+
+function PlanesPublicos() {
+  const [periodicidad, setPeriodicidad] = useState<PeriodicidadPlan>("mensual");
+  const planes = [
+    {
+      nombre: "Emprendedor",
+      precioMensual: "Gratis",
+      descripcion: "Para empezar y explorar las herramientas de AURUM LAB.",
+      funciones: ["Herramientas técnicas públicas", "Primeros pasos digitales", "Acceso sin coste"],
+      destacado: false,
+      accion: "Empezar gratis",
+      href: "/herramientas-publicas" as const,
+    },
+    {
+      nombre: "Taller",
+      precioMensual: "S/ 29",
+      descripcion: "Para organizar el trabajo diario de tu taller.",
+      funciones: ["Clientes y cotizaciones", "Pedidos y ventas", "Catálogo digital"],
+      destacado: false,
+      accion: "Consultar plan",
+      href: "/auth" as const,
+    },
+    {
+      nombre: "Profesional",
+      precioMensual: "S/ 79",
+      descripcion: "Para conectar más procesos y capacidades productivas.",
+      funciones: ["Gestión comercial", "Diseño e impresión 3D", "Inventario y compras"],
+      destacado: true,
+      accion: "Consultar plan",
+      href: "/auth" as const,
+    },
+    {
+      nombre: "Empresarial",
+      precioMensual: "A medida",
+      descripcion: "Para equipos y operaciones con necesidades avanzadas.",
+      funciones: ["Gestión de equipo", "Múltiples sedes", "Analítica y crecimiento"],
+      destacado: false,
+      accion: "Contactar",
+      href: "/#contacto" as const,
+    },
+  ];
+  const etiquetaPeriodo = periodicidad === "mensual" ? "al mes" : periodicidad === "trimestral" ? "por trimestre" : "al año";
+  return (
+    <>
+      <div className="mx-auto mt-7 flex w-fit max-w-full flex-wrap items-center justify-center gap-1 rounded-xl bg-slate-200/70 p-1">
+        {([
+          { id: "mensual", label: "Mensual" },
+          { id: "trimestral", label: "Trimestral" },
+          { id: "anual", label: "Anual" },
+        ] as const).map((opcion) => (
+          <button key={opcion.id} type="button" aria-pressed={periodicidad === opcion.id} onClick={() => setPeriodicidad(opcion.id)} className={`min-h-10 rounded-lg px-4 text-xs font-semibold transition sm:px-5 ${periodicidad === opcion.id ? "bg-[#17232d] text-white shadow-sm" : "text-slate-600 hover:bg-white hover:text-[#17232d]"}`}>
+            {opcion.label}
+          </button>
+        ))}
+      </div>
+      <p className="mt-3 text-center text-xs text-slate-500">
+        {periodicidad === "mensual" ? "Precios mensuales de referencia del catálogo actual." : "Las tarifas y descuentos de esta modalidad están pendientes de confirmación."}
+      </p>
+      <div className="mt-7 grid items-stretch gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {planes.map((plan) => {
+          const precio = periodicidad === "mensual" ? plan.precioMensual : plan.nombre === "Emprendedor" ? "Gratis" : plan.nombre === "Empresarial" ? "A medida" : "Por confirmar";
+          const periodo = precio === "Gratis" || precio === "A medida" || precio === "Por confirmar" ? "" : etiquetaPeriodo;
+          return (
+            <article key={plan.nombre} className={`relative flex h-full flex-col rounded-2xl border bg-white p-5 shadow-[0_4px_18px_rgba(15,23,42,.035)] sm:p-6 ${plan.destacado ? "border-[#d4aa19] ring-1 ring-[#d4aa19]" : "border-slate-200"}`}>
+              {plan.destacado && <span className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-[#f8c928] px-3 py-1 text-[10px] font-bold text-[#17232d]">Más capacidades</span>}
+              <h3 className="mt-1 text-lg font-bold text-[#17232d]">{plan.nombre}</h3>
+              <p className="mt-2 min-h-10 text-xs leading-5 text-slate-500">{plan.descripcion}</p>
+              <div className="mt-5 min-h-[76px]">
+                {periodicidad !== "mensual" && precio === "Por confirmar" && <p className="text-xs text-slate-400">Tarifa mensual de referencia: <span className="line-through">{plan.precioMensual}</span></p>}
+                <p className="mt-1 text-2xl font-extrabold tracking-tight text-[#17232d]">{precio}{periodo && <span className="ml-1 text-xs font-medium text-slate-500">{periodo}</span>}</p>
+                {periodicidad !== "mensual" && precio === "Por confirmar" && <p className="mt-1 text-[10px] leading-4 text-slate-500">Total y descuentos por definir.</p>}
+              </div>
+              <ul className="mt-4 flex-1 space-y-3 border-t border-slate-100 pt-4">
+                {plan.funciones.map((funcion) => <li key={funcion} className="flex items-start gap-2 text-xs leading-5 text-slate-600"><Check className="mt-0.5 size-4 shrink-0 text-emerald-600" />{funcion}</li>)}
+              </ul>
+              <Link to={plan.href} className={`mt-6 inline-flex min-h-10 items-center justify-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19] ${plan.destacado ? "bg-[#17232d] text-white hover:bg-[#293b49]" : "border border-slate-300 text-[#17232d] hover:border-[#d4aa19] hover:bg-[#fffbee]"}`}>
+                {plan.accion} <ArrowRight className="size-3.5" />
+              </Link>
+            </article>
+          );
+        })}
+      </div>
+      <p className="mx-auto mt-5 max-w-3xl text-center text-[11px] leading-5 text-slate-500">Las capacidades finales dependen del plan y los módulos habilitados para cada taller. Las tarifas promocionales, los precios tachados y los descuentos se mostrarán cuando sus condiciones comerciales estén confirmadas.</p>
+    </>
+  );
+}
 
 function InicioPublico() {
   return (
@@ -213,6 +303,17 @@ function InicioPublico() {
             </article>
           </div>
           <p className="mt-5 text-center text-xs leading-5 text-slate-500">Las funciones disponibles dependen del plan y de los módulos habilitados para cada taller.</p>
+        </div>
+      </section>
+
+      <section id="planes" className="border-y border-slate-200 bg-[#f8fafc]">
+        <div className="mx-auto max-w-[1440px] px-5 py-14 sm:px-8 sm:py-16 lg:px-12">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#987400]">Planes para cada etapa</p>
+            <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-[#17232d] sm:text-3xl">Elige cómo quieres crecer.</h2>
+            <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base">Empieza con lo esencial y amplía las capacidades de tu taller cuando lo necesites.</p>
+          </div>
+          <PlanesPublicos />
         </div>
       </section>
 
