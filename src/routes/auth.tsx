@@ -235,10 +235,10 @@ function LoginPage() {
                 <input required name="username" maxLength={120} autoComplete="username" value={usuario} onChange={(e) => setUsuario(e.target.value)} aria-invalid={Boolean(error)} aria-describedby={error ? "auth-error" : undefined} className="w-full rounded-xl border border-slate-300 bg-white py-3.5 pl-10 pr-3 text-sm text-[#17232d] outline-none transition placeholder:text-slate-400 focus:border-[#c7a52d] focus:ring-2 focus:ring-[#f5d85c]/30" />
               </span>
             </label>
-            <label className="mb-5 block text-[10px] uppercase tracking-wider text-white/50">
+            <label className="mb-5 block text-xs font-medium text-slate-600">
               Contraseña
               <span className="relative mt-2 block">
-                <LockKeyhole className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-white/45" />
+                <LockKeyhole className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
                 <input required name="password" minLength={6} maxLength={256} type={mostrarPassword ? "text" : "password"} autoComplete={modoAlta ? "new-password" : "current-password"} value={password} onChange={(e) => setPassword(e.target.value)} aria-invalid={Boolean(error)} aria-describedby={error ? "auth-error" : undefined} className="w-full rounded-xl border border-slate-300 bg-white py-3.5 pl-10 pr-10 text-sm text-[#17232d] outline-none transition placeholder:text-slate-400 focus:border-[#c7a52d] focus:ring-2 focus:ring-[#f5d85c]/30" />
                 <button type="button" onClick={() => setMostrarPassword((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#a27b00]" aria-label={mostrarPassword ? "Ocultar contraseña" : "Mostrar contraseña"}>
                   {mostrarPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -248,21 +248,21 @@ function LoginPage() {
 
             {modoAlta ? (
               <>
-                <label className="mb-4 block text-[10px] uppercase tracking-wider text-white/50">
+                <label className="mb-4 block text-xs font-medium text-slate-600">
                   Correo electrónico de recuperación
                   <input required type="email" name="email" autoComplete="email" maxLength={254} value={emailRegistro} onChange={(e) => setEmailRegistro(e.target.value)} className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-sm text-[#17232d] outline-none focus:border-[#c7a52d]" />
                 </label>
-                <label className="mb-4 block text-[10px] uppercase tracking-wider text-white/50">
+                <label className="mb-4 block text-xs font-medium text-slate-600">
                   Nombre
-                  <input required name="given-name" maxLength={80} autoComplete="given-name" value={nombre} onChange={(e) => setNombre(e.target.value)} className="mt-2 w-full rounded-lg border border-white/15 bg-black/25 px-3 py-3 text-sm text-white outline-none focus:border-gold" />
+                  <input required name="given-name" maxLength={80} autoComplete="given-name" value={nombre} onChange={(e) => setNombre(e.target.value)} className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-sm text-[#17232d] outline-none focus:border-[#c7a52d]" />
                 </label>
-                <label className="mb-4 block text-[10px] uppercase tracking-wider text-white/50">
+                <label className="mb-4 block text-xs font-medium text-slate-600">
                   Apellidos
-                  <input required name="family-name" maxLength={120} autoComplete="family-name" value={apellidos} onChange={(e) => setApellidos(e.target.value)} className="mt-2 w-full rounded-lg border border-white/15 bg-black/25 px-3 py-3 text-sm text-white outline-none focus:border-gold" />
+                  <input required name="family-name" maxLength={120} autoComplete="family-name" value={apellidos} onChange={(e) => setApellidos(e.target.value)} className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-sm text-[#17232d] outline-none focus:border-[#c7a52d]" />
                 </label>
-                <label className="mb-4 block text-[10px] uppercase tracking-wider text-white/50">
+                <label className="mb-4 block text-xs font-medium text-slate-600">
                   DNI
-                  <input required name="dni" maxLength={30} autoComplete="off" value={dni} onChange={(e) => setDni(e.target.value)} className="mt-2 w-full rounded-lg border border-white/15 bg-black/25 px-3 py-3 text-sm text-white outline-none focus:border-gold" />
+                  <input required name="dni" maxLength={30} autoComplete="off" value={dni} onChange={(e) => setDni(e.target.value)} className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-sm text-[#17232d] outline-none focus:border-[#c7a52d]" />
                 </label>
               </>
             ) : null}
