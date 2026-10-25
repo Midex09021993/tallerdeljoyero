@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, BookOpen, Gem, GraduationCap, Layers3, Ruler, Sparkles } from "lucide-react";
+import { ArrowRight, Gem, Ruler, Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/comunidad")({
   head: () => ({
