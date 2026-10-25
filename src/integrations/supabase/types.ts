@@ -14,6 +14,74 @@ export type Database = {
   }
   public: {
     Tables: {
+      archivos_digitales_marketplace: {
+        Row: {
+          bucket_archivo: string
+          bytes_archivo: number | null
+          categoria: string
+          created_at: string
+          descripcion: string
+          estado: string
+          formatos: string[]
+          id: string
+          imagen_portada_url: string | null
+          moneda: string
+          nombre_archivo: string
+          participante_id: string
+          precio: number
+          ruta_archivo: string
+          titulo: string
+          updated_at: string
+          vendedor_usuario_id: string
+        }
+        Insert: {
+          bucket_archivo?: string
+          bytes_archivo?: number | null
+          categoria?: string
+          created_at?: string
+          descripcion?: string
+          estado?: string
+          formatos: string[]
+          id?: string
+          imagen_portada_url?: string | null
+          moneda?: string
+          nombre_archivo: string
+          participante_id: string
+          precio: number
+          ruta_archivo: string
+          titulo: string
+          updated_at?: string
+          vendedor_usuario_id: string
+        }
+        Update: {
+          bucket_archivo?: string
+          bytes_archivo?: number | null
+          categoria?: string
+          created_at?: string
+          descripcion?: string
+          estado?: string
+          formatos?: string[]
+          id?: string
+          imagen_portada_url?: string | null
+          moneda?: string
+          nombre_archivo?: string
+          participante_id?: string
+          precio?: number
+          ruta_archivo?: string
+          titulo?: string
+          updated_at?: string
+          vendedor_usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "archivos_digitales_marketplace_participante_id_fkey"
+            columns: ["participante_id"]
+            isOneToOne: false
+            referencedRelation: "ecosistema_participantes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       aurum_analytics_events: {
         Row: {
           created_at: string
@@ -810,6 +878,59 @@ export type Database = {
             columns: ["sede_id"]
             isOneToOne: false
             referencedRelation: "sedes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      compras_archivos_digitales: {
+        Row: {
+          archivo_id: string
+          comprador_usuario_id: string
+          created_at: string
+          estado_pago: string
+          id: string
+          moneda: string
+          pagado_en: string | null
+          precio_pagado: number
+          proveedor_pago: string | null
+          referencia_pago: string | null
+          updated_at: string
+          vendedor_usuario_id: string
+        }
+        Insert: {
+          archivo_id: string
+          comprador_usuario_id: string
+          created_at?: string
+          estado_pago?: string
+          id?: string
+          moneda: string
+          pagado_en?: string | null
+          precio_pagado: number
+          proveedor_pago?: string | null
+          referencia_pago?: string | null
+          updated_at?: string
+          vendedor_usuario_id: string
+        }
+        Update: {
+          archivo_id?: string
+          comprador_usuario_id?: string
+          created_at?: string
+          estado_pago?: string
+          id?: string
+          moneda?: string
+          pagado_en?: string | null
+          precio_pagado?: number
+          proveedor_pago?: string | null
+          referencia_pago?: string | null
+          updated_at?: string
+          vendedor_usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compras_archivos_digitales_archivo_id_fkey"
+            columns: ["archivo_id"]
+            isOneToOne: false
+            referencedRelation: "archivos_digitales_marketplace"
             referencedColumns: ["id"]
           },
         ]
@@ -4294,6 +4415,35 @@ export type Database = {
           precio_desde: number
           producto_id: string
           taller: string
+        }[]
+      }
+      obtener_marketplace_archivos_publico: {
+        Args: never
+        Returns: {
+          archivo_id: string
+          categoria: string
+          creado_en: string
+          descripcion: string
+          formatos: string[]
+          imagen_portada_url: string
+          moneda: string
+          nombre_vendedor: string
+          precio: number
+          titulo: string
+        }[]
+      }
+      obtener_mis_compras_archivos: {
+        Args: never
+        Returns: {
+          archivo_id: string
+          compra_id: string
+          creado_en: string
+          estado_pago: string
+          formatos: string[]
+          moneda: string
+          nombre_archivo: string
+          precio_pagado: number
+          titulo: string
         }[]
       }
       obtener_portadas_colecciones_publicas: {
