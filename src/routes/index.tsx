@@ -106,7 +106,7 @@ function PlanesPublicos() {
     },
     {
       nombre: "Profesional",
-      precioMensual: 79,
+      precioMensual: 59,
       gratis: false,
       descripcion: "Conecta la gestión con el trabajo productivo.",
       funciones: ["Gestión comercial integrada", "Inventario y compras", "Aurum Render y diseño 3D", "Capacidades de fabricación", "Catálogo y archivos ampliados"],
