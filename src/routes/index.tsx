@@ -30,28 +30,28 @@ const soluciones = [
   {
     icon: Calculator,
     titulo: "Herramientas para joyeros",
-    texto: "Calcula aleaciones, peso de gemas, tallas y materiales con utilidades prácticas.",
+    texto: "Calcula oro, gemas y materiales.",
     enlace: "/herramientas-publicas" as const,
     accion: "Probar gratis",
   },
   {
     icon: Gem,
     titulo: "Aurum Render y visor 3D",
-    texto: "Visualiza tus diseños y comparte una presentación digital de tus piezas.",
+    texto: "Visualiza y presenta tus joyas en 3D.",
     enlace: "/aurum-render-public" as const,
     accion: "Explorar visor 3D",
   },
   {
     icon: Cloud,
     titulo: "Mi Nube",
-    texto: "Mantén organizados los archivos y recursos digitales de tu taller.",
+    texto: "Guarda y organiza tus archivos.",
     enlace: "/auth" as const,
     accion: "Conocer Mi Nube",
   },
   {
     icon: Layers3,
     titulo: "Catálogo digital",
-    texto: "Organiza tus joyas y prepara una presentación clara para tus clientes.",
+    texto: "Prepara tu catálogo para clientes.",
     enlace: "/catalogo" as const,
     accion: "Ver catálogo",
   },
@@ -90,17 +90,17 @@ function InicioPublico() {
           <div className="relative z-10 max-w-[650px]">
             <span className="inline-flex items-center gap-2 rounded-full border border-[#e5c04a]/50 bg-[#fff9df] px-3.5 py-2 text-[10px] font-bold uppercase tracking-[.16em] text-[#785b00]"><Sparkles className="size-3.5" /> AURUM LAB · TECNOLOGÍA PARA JOYEROS</span>
             <h1 className="mt-6 text-[2.65rem] font-extrabold leading-[1.06] tracking-[-.045em] text-[#17232d] sm:text-5xl lg:text-[3.8rem]"><span className="block">El arte de crear.</span><span className="mt-2 block text-[#9a7400]">La inteligencia de gestionar.</span></h1>
-            <p className="mt-6 max-w-xl text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">La tecnología que acompaña tu oficio: calcula, diseña, organiza y presenta tus joyas con herramientas digitales creadas para las necesidades reales de tu taller.</p>
+            <p className="mt-6 max-w-xl text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">Todo lo que tu taller necesita para calcular, diseñar y organizar mejor.</p>
             <ul className="mt-7 space-y-4 text-sm font-medium text-[#25323b] sm:text-[15px]">
               <li className="flex items-start gap-3"><span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-lg bg-[#fff4c4] text-[#9b7600]"><Check className="size-4" /></span>Herramientas técnicas gratuitas para el día a día.</li>
               <li className="flex items-start gap-3"><span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-lg bg-[#fff4c4] text-[#9b7600]"><Check className="size-4" /></span>Visualización 3D y recursos para presentar tus diseños.</li>
               <li className="flex items-start gap-3"><span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-lg bg-[#fff4c4] text-[#9b7600]"><Check className="size-4" /></span>Archivos y catálogo de tu taller en un ecosistema digital.</li>
             </ul>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link to="/herramientas-publicas" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#17232d] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-slate-900/10 transition hover:-translate-y-0.5 hover:bg-[#293b49]">Prueba las herramientas <ArrowRight className="size-4" /></Link>
-              <Link to="/auth" target="_blank" rel="noreferrer" className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-300 bg-white/80 px-6 py-3 text-sm font-semibold text-[#17232d] transition hover:border-[#d4aa19] hover:bg-[#fffbee]">Conoce AURUM LAB</Link>
+              <Link to="/herramientas-publicas" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#17232d] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-slate-900/10 transition hover:-translate-y-0.5 hover:bg-[#293b49]">Explorar herramientas <ArrowRight className="size-4" /></Link>
+              <Link to="/auth" target="_blank" rel="noreferrer" className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-300 bg-white/80 px-6 py-3 text-sm font-semibold text-[#17232d] transition hover:border-[#d4aa19] hover:bg-[#fffbee]">Entrar a AURUM LAB</Link>
             </div>
-            <p className="mt-4 text-xs text-slate-500">Empieza explorando las herramientas públicas, sin crear una cuenta.</p>
+            <p className="mt-4 text-xs text-slate-500">Empieza gratis. Sin registro para las herramientas públicas.</p>
           </div>
 
           <div className="relative mx-auto w-full max-w-[720px] pb-7 sm:pb-10">
@@ -128,7 +128,7 @@ function InicioPublico() {
                 </aside>
                 <div className="min-w-0 p-3 sm:p-5">
                   <div className="flex items-start justify-between gap-2">
-                    <div><p className="text-[9px] text-slate-400 sm:text-[10px]">TU TALLER DIGITAL</p><h2 className="mt-1 text-sm font-bold text-[#17232d] sm:text-lg">Tus ideas, mejor organizadas</h2></div>
+                    <div><p className="text-[9px] text-slate-400 sm:text-[10px]">TU TALLER DIGITAL</p><h2 className="mt-1 text-sm font-bold text-[#17232d] sm:text-lg">Todo para tu taller, en un lugar</h2></div>
                     <span className="rounded-full bg-[#e9f8ef] px-2 py-1 text-[8px] font-semibold text-[#27834d] sm:text-[9px]">Espacio de trabajo</span>
                   </div>
                   <div className="mt-4 grid grid-cols-2 gap-2 sm:mt-5 sm:gap-3">
@@ -155,7 +155,7 @@ function InicioPublico() {
           <div className="mx-auto max-w-2xl text-center">
             <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#987400]">Una plataforma. Varias soluciones.</p>
             <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-[#17232d] sm:text-3xl">Todo empieza con lo que necesitas resolver hoy.</h2>
-            <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base">Explora recursos concretos y descubre las herramientas que pueden acompañar el crecimiento de tu taller.</p>
+            <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base">Cuatro soluciones para el trabajo diario de tu taller.</p>
           </div>
           <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {soluciones.map(({ icon: Icono, titulo, texto, enlace, accion }) => (
@@ -173,8 +173,8 @@ function InicioPublico() {
       <section id="como-funciona" className="mx-auto grid max-w-[1440px] gap-8 px-5 py-14 sm:px-8 sm:py-16 md:grid-cols-[1fr_auto] md:items-center lg:px-12">
         <div className="max-w-3xl">
           <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#987400]">Empieza a tu ritmo</p>
-          <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-[#17232d] sm:text-3xl">Primero prueba. Después, haz crecer tu espacio de trabajo.</h2>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">Puedes explorar las herramientas públicas sin registrarte. Cuando quieras acceder a las funciones de la plataforma, ingresa o crea tu taller.</p>
+          <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-[#17232d] sm:text-3xl">Empieza gratis. Crece a tu ritmo.</h2>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">Prueba las herramientas sin registrarte. Crea tu cuenta cuando quieras dar el siguiente paso.</p>
         </div>
         <div className="flex flex-col gap-3 sm:flex-row md:flex-col">
           <Link to="/herramientas-publicas" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#17232d] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#293b49]">Probar gratis <ArrowRight className="size-4" /></Link>
