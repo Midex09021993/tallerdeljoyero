@@ -149,8 +149,10 @@ function HerramientasPublicasPage() {
           <label htmlFor="buscar-tarea" className="mb-2 block text-sm font-medium text-white/75">¿Qué quieres resolver?</label>
           <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[.035] px-4 transition focus-within:border-[#d8bd7b]/60">
             <Search className="size-4 shrink-0 text-[#d8bd7b]" />
-            <input id="buscar-tarea" type="search" value={busqueda} onChange={(event) => setBusqueda(event.target.value)} placeholder="Busca oro, peso, yeso, gemas..." className="min-h-12 w-full bg-transparent text-sm text-white outline-none placeholder:text-white/35" />
+            <input id="buscar-tarea" type="search" value={busqueda} onChange={(event) => setBusqueda(event.target.value)} placeholder="Busca oro, peso, yeso, gemas..." aria-describedby="ayuda-busqueda" className="min-h-12 w-full bg-transparent text-sm text-white outline-none placeholder:text-white/35" />
+            {busqueda && <button type="button" onClick={() => setBusqueda("")} className="shrink-0 rounded-md px-2 py-1 text-xs font-medium text-white/55 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd7b]" aria-label="Limpiar búsqueda">Limpiar</button>}
           </div>
+          <p id="ayuda-busqueda" className="mt-2 text-xs text-white/40">Busca por material, medida o tarea. Por ejemplo: oro, talla, archivo 3D o quilates.</p>
         </section>
         <section aria-label="Herramientas para resolver tareas del taller" className="space-y-10">
           {(["Calcular y preparar", "Diseñar y visualizar"] as const).map((categoria) => {
@@ -180,7 +182,7 @@ function HerramientasPublicasPage() {
             );
           })}
           {(!termino || ["visor", "3d", "joya", "joyas", "modelo", "visualizar", "ver", "rhino"].some((palabra) => termino.includes(palabra))) && <div>
-            <h2 className="mb-4 text-lg font-semibold text-white sm:text-xl">Diseñar y visualizar</h2>
+            <h2 className="mb-4 text-lg font-semibold text-white sm:text-xl">Visor 3D público</h2>
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               <Link
                 to="/aurum-render-public"
@@ -233,7 +235,7 @@ function HerramientasPublicasPage() {
               </Link>
             </div>
           </div>}
-          {termino && herramientasFiltradas.length === 0 && !mostrarRender && !mostrarTransfer && !mostrarCotizar && <p className="rounded-xl border border-white/10 p-5 text-sm text-white/60">No encontramos una tarea con “{busqueda}”. Prueba con otra palabra, como oro, peso, yeso o gemas.</p>}
+          {termino && herramientasFiltradas.length === 0 && !mostrarRender && !mostrarTransfer && !mostrarCotizar && <div className="rounded-2xl border border-white/10 bg-white/[.025] p-6 text-center"><Search className="mx-auto size-6 text-white/35" /><p className="mt-3 text-sm font-medium text-white/80">No encontramos una tarea con “{busqueda}”.</p><p className="mt-1 text-sm text-white/50">Prueba con oro, peso, yeso, gemas o visor 3D.</p><button type="button" onClick={() => setBusqueda("")} className="mt-4 inline-flex min-h-10 items-center justify-center rounded-lg border border-[#d8bd7b]/35 px-4 text-xs font-semibold text-[#d8bd7b] transition hover:bg-[#d8bd7b]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8bd7b]">Ver todas las herramientas</button></div>}
         </section>
 
         <section aria-labelledby="crear-taller-publico" className="mt-12 overflow-hidden rounded-2xl border border-[#d8bd7b]/25 bg-gradient-to-br from-[#d8bd7b]/[.10] via-white/[.025] to-transparent p-5 sm:p-7">
