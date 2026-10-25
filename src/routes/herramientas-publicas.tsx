@@ -80,7 +80,6 @@ const herramientas = [
     palabrasClave: "piedra piedras diamante gema gemas quilates peso medidas talla largo ancho alto esmeralda rubi zafiro ct",
     Icono: CircleDot,
   },
-  {
 ];
 
 function normalizarBusqueda(valor: string) {
