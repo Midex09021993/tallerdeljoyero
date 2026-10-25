@@ -73,7 +73,7 @@ function InicioPublico() {
             <Link to="/herramientas-publicas" className="inline-flex items-center gap-1 transition hover:text-[#a77a00]">Herramientas <ChevronDown className="size-3.5" /></Link>
             <a href="#soluciones" className="inline-flex items-center gap-1 transition hover:text-[#a77a00]">Soluciones <ChevronDown className="size-3.5" /></a>
             <a href="#como-funciona" className="transition hover:text-[#a77a00]">Cómo funciona</a>
-            <Link to="/catalogo-publico" className="transition hover:text-[#a77a00]">Comunidad</Link>
+            <Link to="/comunidad" className="transition hover:text-[#a77a00]">Comunidad</Link>
             <a href="#contacto" className="transition hover:text-[#a77a00]">Contacto</a>
           </nav>
           <div className="flex items-center gap-2">
