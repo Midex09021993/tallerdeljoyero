@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { CalculadoraAleacionOro } from "@/components/CalculadoraAleacionOro";
 import { ConversorTallasAnillo } from "@/components/ConversorTallasAnillo";
 import { AppShell } from "@/components/AppShell";
-import { ArrowLeft, ChevronLeft, ChevronRight, Calculator, Gem, Ruler, ScanLine, Scale, Sparkles, Send, CircleDot } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Calculator, Gem, Ruler, ScanLine, Scale, Send, CircleDot } from "lucide-react";
 import { VisorPesoJoyeria } from "@/components/VisorPesoJoyeria";
 import { CalculadoraYeso } from "@/routes/_authenticated/taller";
 import { CalculadoraPesoGemas } from "@/components/CalculadoraPesoGemas";
