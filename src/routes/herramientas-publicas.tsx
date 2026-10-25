@@ -81,14 +81,6 @@ const herramientas = [
     Icono: CircleDot,
   },
   {
-    id: "stl" as const,
-    ruta: "generador-stl-ia" as const,
-    categoria: "Diseñar y visualizar",
-    titulo: "¿Cómo creo un modelo 3D a partir de una imagen?",
-    descripcion: "Transforma una imagen en un modelo 3D y descarga el archivo STL para seguir trabajando en tu diseño.",
-    palabrasClave: "imagen inteligencia artificial ia generar diseno archivo stl modelo modelar imprimir impresion 3d foto dibujo convertir crear",
-    Icono: Sparkles,
-  },
 ];
 
 function normalizarBusqueda(valor: string) {
@@ -158,7 +150,7 @@ function HerramientasPublicasPage() {
           <label htmlFor="buscar-tarea" className="mb-2 block text-sm font-medium text-white/75">¿Qué quieres resolver?</label>
           <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[.035] px-4 transition focus-within:border-[#d8bd7b]/60">
             <Search className="size-4 shrink-0 text-[#d8bd7b]" />
-            <input id="buscar-tarea" type="search" value={busqueda} onChange={(event) => setBusqueda(event.target.value)} placeholder="Busca oro, peso, yeso, STL..." className="min-h-12 w-full bg-transparent text-sm text-white outline-none placeholder:text-white/35" />
+            <input id="buscar-tarea" type="search" value={busqueda} onChange={(event) => setBusqueda(event.target.value)} placeholder="Busca oro, peso, yeso, gemas..." className="min-h-12 w-full bg-transparent text-sm text-white outline-none placeholder:text-white/35" />
           </div>
         </section>
         <section aria-label="Herramientas para resolver tareas del taller" className="space-y-10">
@@ -242,7 +234,7 @@ function HerramientasPublicasPage() {
               </Link>
             </div>
           </div>}
-          {termino && herramientasFiltradas.length === 0 && !mostrarRender && !mostrarTransfer && !mostrarCotizar && <p className="rounded-xl border border-white/10 p-5 text-sm text-white/60">No encontramos una tarea con “{busqueda}”. Prueba con otra palabra, como oro, peso, yeso o STL.</p>}
+          {termino && herramientasFiltradas.length === 0 && !mostrarRender && !mostrarTransfer && !mostrarCotizar && <p className="rounded-xl border border-white/10 p-5 text-sm text-white/60">No encontramos una tarea con “{busqueda}”. Prueba con otra palabra, como oro, peso, yeso o gemas.</p>}
         </section>
 
         <section aria-labelledby="crear-taller-publico" className="mt-12 overflow-hidden rounded-2xl border border-[#d8bd7b]/25 bg-gradient-to-br from-[#d8bd7b]/[.10] via-white/[.025] to-transparent p-5 sm:p-7">
