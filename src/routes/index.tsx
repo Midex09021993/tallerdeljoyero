@@ -97,7 +97,7 @@ function PlanesPublicos() {
       funciones: ["Gestión de equipo", "Múltiples sedes", "Analítica y crecimiento"],
       destacado: false,
       accion: "Contactar",
-      href: "/#contacto" as const,
+      href: "/auth" as const,
     },
   ];
   const etiquetaPeriodo = periodicidad === "mensual" ? "al mes" : periodicidad === "trimestral" ? "por trimestre" : "al año";
