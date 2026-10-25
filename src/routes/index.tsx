@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Boxes, Calculator, Check, ChevronDown, Cloud, Gem, Layers3, MonitorSmartphone, PackageCheck, Sparkles, Sprout, ChartNoAxesCombined } from "lucide-react";
+import heroJoyeria from "@/assets/diseno-corona.jpg";
+import heroColgante from "@/assets/diseno-colgante.jpg";
+import heroFloral from "@/assets/diseno-floral.jpg";
+import heroGemelos from "@/assets/diseno-gemelos.jpg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
