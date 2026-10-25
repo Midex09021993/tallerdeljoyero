@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Boxes, Calculator, Check, ChevronDown, Cloud, Gem, Layers3, MonitorSmartphone, PackageCheck, Sparkles, Sprout, ChartNoAxesCombined } from "lucide-react";
-import heroJoyeria from "@/assets/diseno-corona.jpg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -134,9 +133,23 @@ function InicioPublico() {
                     <div className="rounded-xl border border-slate-100 bg-white p-2 shadow-sm sm:p-3"><span className="grid size-7 place-items-center rounded-lg bg-[#fff4c4] text-[#967300]"><Calculator className="size-3.5" /></span><p className="mt-2 text-[9px] font-semibold text-slate-700 sm:text-[11px]">Herramientas técnicas</p><p className="mt-1 text-[8px] text-slate-400 sm:text-[9px]">Cálculos para tu oficio</p></div>
                     <div className="rounded-xl border border-slate-100 bg-white p-2 shadow-sm sm:p-3"><span className="grid size-7 place-items-center rounded-lg bg-[#eaf1ff] text-[#4d6ba5]"><Cloud className="size-3.5" /></span><p className="mt-2 text-[9px] font-semibold text-slate-700 sm:text-[11px]">Mi Nube</p><p className="mt-1 text-[8px] text-slate-400 sm:text-[9px]">Tus archivos organizados</p></div>
                   </div>
-                  <div className="mt-3 overflow-hidden rounded-xl border border-slate-100 bg-slate-50 sm:mt-4">
-                    <div className="flex items-center justify-between px-3 py-2"><p className="text-[9px] font-semibold text-slate-700 sm:text-[10px]">Inspiración y diseño</p><span className="text-[8px] text-slate-400">AURUM Render</span></div>
-                    <img src={heroJoyeria} alt="Detalle ornamental de una pieza de joyería" className="h-[118px] w-full object-cover object-center sm:h-[155px]" />
+                  <div className="mt-3 overflow-hidden rounded-xl border border-slate-200 bg-gradient-to-br from-white via-[#fffdf6] to-[#f2f5f8] sm:mt-4">
+                    <div className="flex items-center justify-between border-b border-slate-100 px-3 py-2">
+                      <p className="text-[9px] font-semibold text-slate-700 sm:text-[10px]">Diseña y visualiza tus joyas</p>
+                      <span className="text-[8px] font-semibold tracking-wide text-[#987400]">AURUM RENDER</span>
+                    </div>
+                    <div className="flex min-h-[118px] items-center gap-3 p-3 sm:min-h-[155px] sm:gap-4 sm:p-5">
+                      <div className="grid size-12 shrink-0 place-items-center rounded-2xl border border-[#eadca7] bg-[#fff5ce] text-[#8d6b00] sm:size-16">
+                        <Gem className="size-6 sm:size-8" strokeWidth={1.6} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-bold text-[#17232d] sm:text-sm">Estudio profesional de joyería 3D</p>
+                        <p className="mt-1 text-[10px] leading-4 text-slate-500 sm:text-xs sm:leading-5">Explora el visor público y carga un modelo compatible para visualizar tu diseño.</p>
+                        <Link to="/aurum-render-public" className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-[#17232d] px-3 py-2 text-[10px] font-semibold text-white transition hover:bg-[#293b49] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19] sm:text-xs">
+                          Abrir visor 3D <ArrowRight className="size-3.5" />
+                        </Link>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
