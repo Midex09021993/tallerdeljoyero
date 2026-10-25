@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Boxes, Calculator, Check, ChevronDown, Cloud, Gem, Layers3, Menu, MonitorSmartphone, PackageCheck, Sparkles } from "lucide-react";
+import { ArrowRight, Boxes, Calculator, Check, ChevronDown, Cloud, Gem, Layers3, MonitorSmartphone, PackageCheck, Sparkles } from "lucide-react";
 import heroJoyeria from "@/assets/diseno-corona.jpg";
 
 export const Route = createFileRoute("/")({
