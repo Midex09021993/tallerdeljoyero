@@ -19,7 +19,6 @@ export const Route = createFileRoute("/")({
       },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://www.tallerdeljoyero.com/" },
-      { property: "og:image", content: "https://www.tallerdeljoyero.com/og-aurum-lab.jpg" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [{ rel: "canonical", href: "https://www.tallerdeljoyero.com/" }],
