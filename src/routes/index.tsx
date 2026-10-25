@@ -329,36 +329,69 @@ function InicioPublico() {
         </div>
       </section>
 
-      <section id="crece-con-tu-taller" className="border-y border-slate-200 bg-white">
+      <section id="crece-con-tu-taller" className="border-y border-slate-200 bg-[#f7f9fc]">
         <div className="mx-auto max-w-[1440px] px-5 py-14 sm:px-8 sm:py-16 lg:px-12">
-          <div className="mx-auto max-w-2xl text-center">
-            <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#987400]">Una plataforma que crece contigo</p>
-            <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-[#17232d] sm:text-3xl">Empieza con lo que necesitas. Crece con tu taller.</h2>
-            <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base">Activa nuevas capacidades a medida que tu negocio evoluciona. Tú marcas el ritmo; AURUM LAB te acompaña.</p>
+          <div className="mx-auto max-w-3xl text-center">
+            <p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#987400]">Un ecosistema para el oficio joyero</p>
+            <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-[#17232d] sm:text-3xl lg:text-4xl">Cada taller es diferente. AURUM LAB crece contigo.</h2>
+            <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">Encuentra las herramientas que se adaptan a tu forma de trabajar y activa nuevas capacidades cuando las necesites.</p>
           </div>
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <article className="group rounded-2xl border border-slate-200 bg-white p-5 transition hover:-translate-y-1 hover:border-[#e5c04a] hover:shadow-[0_12px_30px_rgba(15,23,42,.07)]">
-              <span className="grid size-11 place-items-center rounded-xl bg-[#fff4c4] text-[#8f6b00]"><Sprout className="size-5" /></span>
-              <h3 className="mt-4 text-base font-bold text-[#17232d]">Empieza</h3>
-              <p className="mt-2 text-sm leading-6 text-slate-600">Resuelve tareas del día a día con herramientas técnicas.</p>
+          <div className="mt-9 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+            <article className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_5px_20px_rgba(23,35,45,.035)] transition duration-200 hover:-translate-y-1 hover:border-[#dfbd4b] hover:shadow-[0_18px_40px_rgba(23,35,45,.09)]">
+              <div className="aspect-[5/3] overflow-hidden bg-[#f5f2eb]">
+                <img src={heroJoyeria} alt="Diseño de joyería con detalles ornamentales" loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
+              </div>
+              <div className="flex flex-1 flex-col p-5">
+                <p className="text-[9px] font-bold tracking-[.18em] text-[#987400]">PRECISIÓN Y OFICIO</p>
+                <h3 className="mt-2 text-lg font-bold leading-snug text-[#17232d]">Taller artesanal</h3>
+                <p className="mt-2 flex-1 text-sm leading-6 text-slate-600">Calcula aleaciones, peso de gemas, tallas y materiales con herramientas técnicas.</p>
+                <Link to="/herramientas-publicas" className="mt-5 inline-flex min-h-9 items-center gap-2 text-xs font-bold text-[#765900] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19] focus-visible:ring-offset-2">Explorar herramientas <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" /></Link>
+              </div>
             </article>
-            <article className="group rounded-2xl border border-slate-200 bg-white p-5 transition hover:-translate-y-1 hover:border-[#e5c04a] hover:shadow-[0_12px_30px_rgba(15,23,42,.07)]">
-              <span className="grid size-11 place-items-center rounded-xl bg-[#fff4c4] text-[#8f6b00]"><Gem className="size-5" /></span>
-              <h3 className="mt-4 text-base font-bold text-[#17232d]">Diseña</h3>
-              <p className="mt-2 text-sm leading-6 text-slate-600">Visualiza y presenta tus joyas con herramientas 3D.</p>
+            <article className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_5px_20px_rgba(23,35,45,.035)] transition duration-200 hover:-translate-y-1 hover:border-[#dfbd4b] hover:shadow-[0_18px_40px_rgba(23,35,45,.09)]">
+              <div className="aspect-[5/3] overflow-hidden bg-[#f5f2eb]">
+                <img src={heroColgante} alt="Diseño de colgante de joyería" loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
+              </div>
+              <div className="flex flex-1 flex-col p-5">
+                <p className="text-[9px] font-bold tracking-[.18em] text-[#987400]">DISEÑO DIGITAL</p>
+                <h3 className="mt-2 text-lg font-bold leading-snug text-[#17232d]">Diseño y fabricación 3D</h3>
+                <p className="mt-2 flex-1 text-sm leading-6 text-slate-600">Visualiza diseños y prepara presentaciones de tus piezas con herramientas 3D.</p>
+                <Link to="/aurum-render-public" className="mt-5 inline-flex min-h-9 items-center gap-2 text-xs font-bold text-[#765900] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19] focus-visible:ring-offset-2">Descubrir el visor 3D <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" /></Link>
+              </div>
             </article>
-            <article className="group rounded-2xl border border-slate-200 bg-white p-5 transition hover:-translate-y-1 hover:border-[#e5c04a] hover:shadow-[0_12px_30px_rgba(15,23,42,.07)]">
-              <span className="grid size-11 place-items-center rounded-xl bg-[#fff4c4] text-[#8f6b00]"><Cloud className="size-5" /></span>
-              <h3 className="mt-4 text-base font-bold text-[#17232d]">Organiza</h3>
-              <p className="mt-2 text-sm leading-6 text-slate-600">Centraliza archivos y recursos de tu taller.</p>
+            <article className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_5px_20px_rgba(23,35,45,.035)] transition duration-200 hover:-translate-y-1 hover:border-[#dfbd4b] hover:shadow-[0_18px_40px_rgba(23,35,45,.09)]">
+              <div className="aspect-[5/3] overflow-hidden bg-[#f5f2eb]">
+                <img src={heroFloral} alt="Detalle ornamental de una pieza de joyería" loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
+              </div>
+              <div className="flex flex-1 flex-col p-5">
+                <p className="text-[9px] font-bold tracking-[.18em] text-[#987400]">ORGANIZACIÓN</p>
+                <h3 className="mt-2 text-lg font-bold leading-snug text-[#17232d]">Gestión del taller</h3>
+                <p className="mt-2 flex-1 text-sm leading-6 text-slate-600">Accede a archivos, clientes y capacidades de gestión según las necesidades de tu operación.</p>
+                <Link to="/auth" className="mt-5 inline-flex min-h-9 items-center gap-2 text-xs font-bold text-[#765900] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19] focus-visible:ring-offset-2">Conocer la plataforma <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" /></Link>
+              </div>
             </article>
-            <article className="group rounded-2xl border border-slate-200 bg-white p-5 transition hover:-translate-y-1 hover:border-[#e5c04a] hover:shadow-[0_12px_30px_rgba(15,23,42,.07)]">
-              <span className="grid size-11 place-items-center rounded-xl bg-[#fff4c4] text-[#8f6b00]"><ChartNoAxesCombined className="size-5" /></span>
-              <h3 className="mt-4 text-base font-bold text-[#17232d]">Crece</h3>
-              <p className="mt-2 text-sm leading-6 text-slate-600">Incorpora módulos de gestión según las necesidades de tu negocio.</p>
+            <article className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_5px_20px_rgba(23,35,45,.035)] transition duration-200 hover:-translate-y-1 hover:border-[#dfbd4b] hover:shadow-[0_18px_40px_rgba(23,35,45,.09)]">
+              <div className="aspect-[5/3] overflow-hidden bg-[#f5f2eb]">
+                <img src={heroGemelos} alt="Diseño de gemelos de joyería" loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
+              </div>
+              <div className="flex flex-1 flex-col p-5">
+                <p className="text-[9px] font-bold tracking-[.18em] text-[#987400]">PRESENTACIÓN COMERCIAL</p>
+                <h3 className="mt-2 text-lg font-bold leading-snug text-[#17232d]">Comercialización de joyas</h3>
+                <p className="mt-2 flex-1 text-sm leading-6 text-slate-600">Organiza tus piezas y prepara una presentación digital para tus clientes.</p>
+                <Link to="/auth" className="mt-5 inline-flex min-h-9 items-center gap-2 text-xs font-bold text-[#765900] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19] focus-visible:ring-offset-2">Acceder al catálogo <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" /></Link>
+              </div>
             </article>
           </div>
-          <p className="mt-5 text-center text-xs leading-5 text-slate-500">Las funciones disponibles dependen del plan y de los módulos habilitados para cada taller.</p>
+          <div className="mt-6 flex flex-col gap-3 rounded-2xl border border-[#eadca8] bg-[#fffdf5] p-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+            <div className="flex items-start gap-3">
+              <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#ffefad] text-[#8f6b00]"><Layers3 className="size-5" /></span>
+              <div>
+                <h3 className="text-sm font-bold text-[#17232d]">Empieza con lo que necesitas. Amplía cuando estés listo.</h3>
+                <p className="mt-1 max-w-3xl text-xs leading-5 text-slate-600">Las capacidades disponibles dependen de tu plan y de los módulos habilitados para tu taller.</p>
+              </div>
+            </div>
+            <a href="#planes" className="inline-flex min-h-9 shrink-0 items-center gap-2 self-start text-xs font-bold text-[#765900] transition hover:text-[#17232d] sm:self-center">Conocer los planes <ArrowRight className="size-3.5" /></a>
+          </div>
         </div>
       </section>
 
