@@ -28,32 +28,44 @@ export const Route = createFileRoute("/")({
 
 const soluciones = [
   {
+    numero: "01",
+    etiqueta: "CALCULAR",
     icon: Calculator,
-    titulo: "Herramientas para joyeros",
-    texto: "Calcula oro, gemas y materiales.",
+    titulo: "Calcula con precisión",
+    texto: "Resuelve cálculos de aleaciones, peso de gemas, tallas y materiales para tomar mejores decisiones en tu trabajo.",
+    beneficio: "Menos dudas en el banco de trabajo",
     enlace: "/herramientas-publicas" as const,
-    accion: "Probar gratis",
+    accion: "Explorar herramientas",
   },
   {
+    numero: "02",
+    etiqueta: "DISEÑAR",
     icon: Gem,
-    titulo: "Aurum Render y visor 3D",
-    texto: "Visualiza y presenta tus joyas en 3D.",
+    titulo: "Visualiza tu joya en 3D",
+    texto: "Presenta diseños con una visualización profesional antes de llevarlos a la siguiente etapa.",
+    beneficio: "Una presentación más clara para tus clientes",
     enlace: "/aurum-render-public" as const,
-    accion: "Explorar visor 3D",
+    accion: "Abrir visor 3D",
   },
   {
+    numero: "03",
+    etiqueta: "ORGANIZAR",
     icon: Cloud,
-    titulo: "Mi Nube",
-    texto: "Guarda y organiza tus archivos.",
+    titulo: "Ten tus archivos organizados",
+    texto: "Centraliza modelos y recursos digitales para mantener el trabajo de tu taller más ordenado.",
+    beneficio: "Tus recursos en un solo espacio",
     enlace: "/auth" as const,
     accion: "Conocer Mi Nube",
   },
   {
+    numero: "04",
+    etiqueta: "PRESENTAR",
     icon: Layers3,
-    titulo: "Catálogo digital",
-    texto: "Prepara tu catálogo para clientes.",
-    enlace: "/catalogo" as const,
-    accion: "Ver catálogo",
+    titulo: "Muestra tus piezas con claridad",
+    texto: "Organiza las joyas que quieres compartir y prepara una presentación digital para tus clientes.",
+    beneficio: "Una vitrina digital para tu trabajo",
+    enlace: "/auth" as const,
+    accion: "Acceder al catálogo",
   },
 ];
 
@@ -280,22 +292,39 @@ function InicioPublico() {
         </div>
       </section>
 
-      <section id="soluciones" className="border-y border-slate-200 bg-[#f8fafc]">
+      <section id="soluciones" className="border-y border-slate-200 bg-[#f7f9fc]">
         <div className="mx-auto max-w-[1440px] px-5 py-14 sm:px-8 sm:py-16 lg:px-12">
-          <div className="mx-auto max-w-2xl text-center">
-            <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#987400]">Una plataforma. Varias soluciones.</p>
-            <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-[#17232d] sm:text-3xl">Todo empieza con lo que necesitas resolver hoy.</h2>
-            <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base">Cuatro soluciones para el trabajo diario de tu taller.</p>
+          <div className="mx-auto max-w-3xl text-center">
+            <p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#987400]">Tecnología pensada para el oficio joyero</p>
+            <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-[#17232d] sm:text-3xl lg:text-4xl">¿Qué necesitas resolver en tu taller?</h2>
+            <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">Soluciones concretas para diseñar, organizar y presentar tu trabajo, en un solo ecosistema.</p>
           </div>
           <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {soluciones.map(({ icon: Icono, titulo, texto, enlace, accion }) => (
-              <article key={titulo} className="group flex min-h-56 flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_4px_18px_rgba(15,23,42,.035)] transition duration-200 hover:-translate-y-1 hover:border-[#e5c04a] hover:shadow-[0_15px_35px_rgba(15,23,42,.08)]">
-                <span className="grid size-11 place-items-center rounded-xl bg-[#fff4c4] text-[#8f6b00]"><Icono className="size-5" /></span>
-                <h3 className="mt-5 text-base font-bold text-[#17232d]">{titulo}</h3>
+            {soluciones.map(({ numero, etiqueta, icon: Icono, titulo, texto, beneficio, enlace, accion }) => (
+              <article key={titulo} className="group relative flex min-h-[290px] flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-5 shadow-[0_5px_20px_rgba(23,35,45,.035)] transition duration-200 hover:-translate-y-1 hover:border-[#dfbd4b] hover:shadow-[0_18px_40px_rgba(23,35,45,.09)] sm:p-6">
+                <div className="flex items-start justify-between gap-3">
+                  <span className="grid size-12 place-items-center rounded-xl bg-[#fff3c1] text-[#8f6b00] transition-colors group-hover:bg-[#ffdf65]"><Icono className="size-5" strokeWidth={1.8} /></span>
+                  <span className="text-[11px] font-semibold tracking-[.16em] text-slate-300">{numero}</span>
+                </div>
+                <p className="mt-5 text-[9px] font-bold tracking-[.18em] text-[#9a7600]">{etiqueta}</p>
+                <h3 className="mt-2 text-lg font-bold leading-snug text-[#17232d]">{titulo}</h3>
                 <p className="mt-2 flex-1 text-sm leading-6 text-slate-600">{texto}</p>
-                <Link to={enlace} className="mt-5 inline-flex items-center gap-2 text-xs font-bold text-[#806100] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19]">{accion} <ArrowRight className="size-3.5 transition group-hover:translate-x-1" /></Link>
+                <div className="mt-4 border-t border-slate-100 pt-3">
+                  <p className="text-[11px] leading-5 text-slate-500"><span className="mr-1.5 text-[#b58b00]">✓</span>{beneficio}</p>
+                  <Link to={enlace} className="mt-4 inline-flex min-h-9 items-center gap-2 text-xs font-bold text-[#765900] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19] focus-visible:ring-offset-2">{accion}<ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" /></Link>
+                </div>
               </article>
             ))}
+          </div>
+          <div className="mt-6 flex flex-col gap-3 rounded-2xl border border-[#eadca8] bg-[#fffdf5] p-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+            <div className="flex items-start gap-3">
+              <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#ffefad] text-[#8f6b00]"><Layers3 className="size-5" /></span>
+              <div>
+                <h3 className="text-sm font-bold text-[#17232d]">Un ecosistema que crece contigo</h3>
+                <p className="mt-1 max-w-3xl text-xs leading-5 text-slate-600">Empieza con lo que necesitas y habilita nuevas capacidades conforme evoluciona tu taller. Las funciones disponibles dependen de tu plan y de los módulos activados.</p>
+              </div>
+            </div>
+            <a href="#planes" className="inline-flex min-h-9 shrink-0 items-center gap-2 self-start text-xs font-bold text-[#765900] transition hover:text-[#17232d] sm:self-center">Conocer los planes<ArrowRight className="size-3.5" /></a>
           </div>
         </div>
       </section>
