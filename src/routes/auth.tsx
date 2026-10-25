@@ -334,6 +334,8 @@ function LoginPage() {
             <a href="/cliente" className="text-[#967100] underline-offset-2 hover:underline">Consulta tu pedido aquí</a>
           </p>
         </section>
+          </div>
+        </section>
       </div>
 
       {mostrarPlataforma ? (
