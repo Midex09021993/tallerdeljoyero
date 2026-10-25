@@ -39,9 +39,11 @@ function PublicarArchivoPage() {
     if (carpeta) setTitulo(carpeta);
   }, []);
 
-  const archivosVisibles = carpetaProyecto
-    ? archivosDisponibles.filter((item) => item.ruta.split("/").slice(-2, -1)[0] === carpetaProyecto)
-    : archivosDisponibles;
+  const archivosVisibles = archivosDisponibles.filter((item) => {
+    const esPortada = item.nombre.toLowerCase() === "00-portada-aurum.png";
+    const perteneceAlProyecto = !carpetaProyecto || item.ruta.split("/").slice(-2, -1)[0] === carpetaProyecto;
+    return !esPortada && perteneceAlProyecto;
+  });
 
   useEffect(() => {
     let cancelado = false;
@@ -64,7 +66,7 @@ function PublicarArchivoPage() {
             if (listaError) throw listaError;
             return (data ?? []).filter((item) => Boolean(item.id || item.metadata || item.name.includes("."))).flatMap((item) => {
               const extension = item.name.split(".").pop()?.toLowerCase() ?? "";
-              if (!EXTENSIONES[extension] || item.name.startsWith(".") || item.name.toLowerCase() === "00-portada-aurum.png") return [];
+              if (!EXTENSIONES[extension] || item.name.startsWith(".")) return [];
               return [{ ruta: raiz + "/" + carpeta + "/" + item.name, nombre: item.name, bytes: Number(item.metadata?.size ?? 0) }];
             });
           }));
