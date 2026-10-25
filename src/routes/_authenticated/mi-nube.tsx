@@ -2007,7 +2007,7 @@ function MiNubePage() {
                     <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-gold/15 text-gold"><Box className="size-5" /></div>
                     <div className="min-w-0 flex-1">
                       <h4 className="text-sm font-semibold">Enlace del visor 3D</h4>
-                      <p className="mt-1 text-xs leading-5 text-muted-foreground">Crea un enlace para mostrar la joya en un visor independiente, sin dar acceso a toda la carpeta. Válido durante 3 días.</p>
+                      <p className="mt-1 text-xs leading-5 text-muted-foreground">Comparte solo la joya mediante un enlace válido por 3 días.</p>
                     </div>
                   </div>
                   {opcionesCompartir.archivos.filter((archivo) => archivo.origen === "supabase" && archivo.nombre.toLowerCase().endsWith(".glb")).length > 0 ? (
@@ -2040,15 +2040,15 @@ function MiNubePage() {
                     </div>
                   ) : (
                     <div className="mt-3 space-y-3">
-                      <p className="rounded-lg border border-dashed border-border p-3 text-xs leading-5 text-muted-foreground">Esta carpeta aún no tiene un GLB guardado para el visor. Abre el 3DM en Aurum Render y guarda el proyecto para generar el GLB interno; después podrás crear el enlace sin prepararlo otra vez.</p>
+                      <p className="rounded-lg border border-dashed border-border p-3 text-xs leading-5 text-muted-foreground">Aún no hay un modelo listo para compartir. Guarda el proyecto desde Aurum Render.</p>
                       {opcionesCompartir.archivos.filter((archivo) => archivo.origen === "supabase" && archivo.nombre.toLowerCase().endsWith(".3dm")).length > 0 ? (
                         <div className="space-y-2">
-                          <p className="text-xs font-semibold">Preparar visor desde un archivo 3DM</p>
+                          <p className="text-xs font-semibold">Preparar desde 3DM</p>
                           {opcionesCompartir.archivos.filter((archivo) => archivo.origen === "supabase" && archivo.nombre.toLowerCase().endsWith(".3dm")).map((archivo) => (
                             <div key={archivo.ruta} className="flex items-center justify-between gap-3 rounded-lg border border-border/70 bg-background p-3">
                               <div className="min-w-0">
                                 <p className="truncate text-xs font-semibold">{nombreVisible(archivo.nombre)}</p>
-                                <p className="mt-0.5 text-[10px] text-muted-foreground">Se abrirá en Aurum Render para guardar el GLB interno</p>
+                                <p className="mt-0.5 text-[10px] text-muted-foreground">Abrir en Aurum Render y guardar GLB</p>
                               </div>
                               <button type="button" onClick={async () => {
                                 try {
@@ -2069,7 +2069,7 @@ function MiNubePage() {
                           ))}
                         </div>
                       ) : (
-                        <p className="text-xs leading-5 text-muted-foreground">No hay archivos 3DM en esta carpeta. Guarda un GLB o abre un 3DM desde Mi Nube para preparar el visor.</p>
+                        <p className="text-xs leading-5 text-muted-foreground">No hay archivos 3DM en esta carpeta.</p>
                       )}
                     </div>
                   )}
