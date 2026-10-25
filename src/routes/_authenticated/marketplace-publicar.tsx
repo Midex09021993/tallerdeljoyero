@@ -39,11 +39,7 @@ function PublicarArchivoPage() {
     if (carpeta) setTitulo(carpeta);
   }, []);
 
-  const archivosVisibles = archivosDisponibles.filter((item) => {
-    const esPortada = item.nombre.toLowerCase() === "00-portada-aurum.png";
-    const perteneceAlProyecto = !carpetaProyecto || item.ruta.split("/").slice(-2, -1)[0] === carpetaProyecto;
-    return !esPortada && perteneceAlProyecto;
-  });
+  const archivosVisibles = archivosDisponibles.filter((item) => item.nombre.toLowerCase() !== "00-portada-aurum.png");
 
   useEffect(() => {
     let cancelado = false;
@@ -165,7 +161,7 @@ function PublicarArchivoPage() {
           </label>
           <label className="space-y-2 text-sm font-medium sm:col-span-2">Archivo de Mi Nube
             <select required value={ruta} onChange={(e) => { const elegido = archivosDisponibles.find((item) => item.ruta === e.target.value); setRuta(e.target.value); setNombreArchivo(elegido?.nombre ?? ""); const ext = elegido?.nombre.split(".").pop()?.toLowerCase() ?? ""; if (EXTENSIONES[ext]) { const nuevoFormato = EXTENSIONES[ext]; setFormato(nuevoFormato); setCategoria(nuevoFormato === "IMAGEN" ? "Imágenes" : nuevoFormato === "PDF" || nuevoFormato === "PLANO" ? "Planos técnicos" : "Modelos 3D"); } if (elegido) setTitulo(elegido.nombre.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ").trim()); }} disabled={cargandoArchivos || archivosVisibles.length === 0} className="w-full rounded-lg border border-input bg-background px-3 py-2.5 font-normal">
-              <option value="">{cargandoArchivos ? "Cargando archivos de Mi Nube…" : archivosVisibles.length ? "Selecciona un archivo…" : carpetaProyecto ? "No hay archivos compatibles en este proyecto" : "No hay archivos compatibles en tus carpetas"}</option>
+              <option value="">{cargandoArchivos ? "Cargando archivos de Mi Nube…" : archivosVisibles.length ? "Selecciona un archivo…" : carpetaProyecto ? "No hay archivos compatibles en tus carpetas" : "No hay archivos compatibles en tus carpetas"}</option>
               {archivosVisibles.map((item) => <option key={item.ruta} value={item.ruta}>{item.nombre} · {EXTENSIONES[item.nombre.split(".").pop()?.toLowerCase() ?? ""]} · {item.bytes ? (item.bytes / 1048576).toFixed(2) + " MB" : "tamaño no disponible"}</option>)}
             </select>
             <span className="block text-xs font-normal text-muted-foreground">Solo aparecen archivos compatibles dentro de tus carpetas privadas. El original no se mueve ni se modifica.</span>
