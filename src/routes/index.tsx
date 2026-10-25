@@ -77,7 +77,6 @@ function InicioPublico() {
             <a href="#contacto" className="transition hover:text-[#a77a00]">Contacto</a>
           </nav>
           <div className="flex items-center gap-2">
-            <Link to="/herramientas-publicas" className="hidden min-h-10 items-center rounded-lg px-3 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 sm:inline-flex">Probar gratis</Link>
             <Link to="/auth" target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-[#17232d] px-4 text-xs font-semibold text-white shadow-sm transition hover:bg-[#293b49] sm:text-sm"><MonitorSmartphone className="size-4" /> Ingresar</Link>
           </div>
         </div>
