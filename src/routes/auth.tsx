@@ -179,186 +179,68 @@ function LoginPage() {
   }
 
   return (
-    <main className="relative flex min-h-screen flex-col overflow-hidden bg-[#11110f] text-ink-foreground selection:bg-[#d5b66f]/30">
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_12%_28%,rgba(199,164,91,.16),transparent_38%),radial-gradient(ellipse_at_82%_16%,rgba(255,245,220,.055),transparent_30%),linear-gradient(135deg,#1b1a17_0%,#111210_48%,#0d0e0d_100%)]" />
-        <div
-          className="absolute inset-y-0 left-0 w-full bg-cover bg-center opacity-35 mix-blend-screen"
-          style={{ backgroundImage: `linear-gradient(90deg,rgba(15,15,13,.10) 0%,rgba(15,15,13,.58) 44%,rgba(15,15,13,.94) 78%,rgba(15,15,13,.99) 100%), linear-gradient(180deg,rgba(15,15,13,.12),rgba(15,15,13,.68)), url(${heroJoyeria})` }}
-        />
-        <div className="absolute inset-y-0 right-0 w-[48%] bg-gradient-to-l from-[#0d0e0d]/65 to-transparent" />
-      </div>
-
-      <header className="relative z-30 flex h-16 shrink-0 items-center justify-between border-b border-[#d8bd7b]/25 bg-[#11110f]/95 px-4 shadow-[0_8px_30px_rgba(0,0,0,0.22)] lg:h-[76px] lg:px-10">
-        <div className="flex items-center gap-3">
-          <img src="/icon-512.png" alt="Aurum Lab" className="h-12 w-12 rounded-2xl object-cover ring-1 ring-[#d8bd7b]/60 shadow-[0_0_28px_rgba(203,169,98,.12)]" />
-          <div>
-            <p className="font-display text-xl font-semibold tracking-[0.04em] text-[#d9bd7b]">AURUM LAB</p>
-            <p className="text-[9px] uppercase tracking-[0.25em] text-[#d5d0c4]/50">Sistema del taller de joyería</p>
-          </div>
-        </div>
-        <nav className="hidden items-center gap-8 md:flex">
-          <a href="/auth" className="flex items-center gap-2 text-sm text-gold">
-            <Home className="size-4" /> Inicio
-          </a>
-          <a href="/herramientas-publicas" className="flex items-center gap-2 text-sm text-white/75 transition hover:text-gold">
-            <Grid2X2 className="size-4" /> Herramientas
-          </a>
-          <a href="/tienda" className="flex items-center gap-2 text-sm text-white/75 transition hover:text-gold">
-            <ShoppingBag className="size-4" /> Tienda
-          </a>
-          <a href="/catalogo-publico" className="flex items-center gap-2 text-sm text-white/75 transition hover:text-gold">
-            <UsersRound className="size-4" /> Comunidad
-          </a>
-          <a href="/galeria-joyas" className="flex items-center gap-2 text-sm text-white/75 transition hover:text-gold">
-            <Gem className="size-4" /> Marketplace de Archivos
-          </a>
-          <button type="button" onClick={() => { setSeccionPlataforma("ecosistema"); setMostrarPlataforma(true); }} className="flex items-center gap-2 text-sm text-white/75 transition hover:text-gold">
-            <Gem className="size-4" /> Conocer Aurum Lab
-          </button>
-        </nav>
-        <Suspense fallback={null}><ContactoComercial className="hidden sm:inline-flex min-h-10 items-center gap-2 rounded-lg border border-[#d8bd7b]/65 px-4 py-2 text-[10px] font-bold uppercase tracking-wider text-[#d8bd7b] transition hover:bg-[#d8bd7b] hover:text-[#211c12]" /></Suspense>
-        <a href="#login" className="hidden rounded-lg border border-gold/70 px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-gold transition hover:bg-gold hover:text-ink md:inline-flex">
-          Iniciar sesión
-        </a>
-        <button type="button" aria-label={menuMovilAbierto ? "Cerrar menú" : "Abrir menú"} aria-expanded={menuMovilAbierto} onClick={() => setMenuMovilAbierto((abierto) => !abierto)} className="inline-flex size-11 items-center justify-center rounded-xl border border-[#d8bd7b]/35 bg-white/[0.04] text-[#d9bd7b] transition hover:bg-white/[0.09] md:hidden">
-          {menuMovilAbierto ? <X className="size-5" /> : <Menu className="size-5" />}
+    <main className="min-h-screen bg-white text-[#17232d]">
+      <header className="absolute right-4 top-4 z-30 sm:right-6 sm:top-5">
+        <button type="button" className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 shadow-sm">
+          <span aria-hidden="true">◎</span> Español <span aria-hidden="true">⌄</span>
         </button>
-        {menuMovilAbierto ? <nav aria-label="Menú móvil" className="absolute inset-x-3 top-[calc(100%+8px)] rounded-2xl border border-[#d8bd7b]/25 bg-[#171815] p-2 shadow-[0_20px_60px_rgba(0,0,0,.55)] md:hidden">
-          <a onClick={() => setMenuMovilAbierto(false)} href="/auth" className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-white/85 hover:bg-white/[0.06]"><Home className="size-4 text-gold" /> Inicio</a>
-          <a onClick={() => setMenuMovilAbierto(false)} href="/herramientas-publicas" className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-white/85 hover:bg-white/[0.06]"><Grid2X2 className="size-4 text-gold" /> Herramientas gratuitas</a>
-          <a onClick={() => setMenuMovilAbierto(false)} href="/tienda" className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-white/85 hover:bg-white/[0.06]"><ShoppingBag className="size-4 text-gold" /> Tienda de insumos</a>
-          <a onClick={() => setMenuMovilAbierto(false)} href="/catalogo-publico" className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-white/85 hover:bg-white/[0.06]"><UsersRound className="size-4 text-gold" /> Comunidad</a>
-          <a onClick={() => setMenuMovilAbierto(false)} href="/galeria-joyas" className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-white/85 hover:bg-white/[0.06]"><Gem className="size-4 text-gold" /> Marketplace de Archivos</a>
-          <button type="button" onClick={() => { setMenuMovilAbierto(false); setSeccionPlataforma("ecosistema"); setMostrarPlataforma(true); }} className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm text-white/85 hover:bg-white/[0.06]"><Gem className="size-4 text-gold" /> Conocer Aurum Lab</button>
-          <Suspense fallback={null}><ContactoComercial className="mt-1 inline-flex min-h-11 w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm text-[#d8bd7b] transition hover:bg-white/[0.06]" /></Suspense>
-        </nav> : null}
       </header>
-
-      <div className="relative z-10 mx-auto grid min-h-0 w-full flex-1 max-w-[1500px] items-center gap-6 px-5 py-7 sm:px-8 sm:py-9 lg:gap-12 lg:px-10 lg:py-8 lg:grid-cols-[minmax(0,1fr)_minmax(360px,430px)] [@media(max-height:800px)]:gap-5 [@media(max-height:800px)]:py-3 max-[767px]:grid-cols-1 max-[767px]:justify-items-center max-[767px]:px-4 max-[767px]:py-6">
-        <section className="order-2 min-w-0 pb-8 lg:order-none lg:pb-16 [@media(max-height:800px)]:pb-1 max-[767px]:hidden">
-          <div className="max-w-4xl">
-            <p className="text-[9px] font-bold uppercase tracking-[0.24em] text-[#d8bd7b]">Plataforma digital creada para el trabajo real del sector joyero</p>
-            <h1 className="mt-4 max-w-4xl font-display text-3xl italic leading-[1.12] tracking-[-0.035em] text-[#f7f1e6] sm:text-4xl lg:text-[3.55rem] [@media(max-height:800px)]:lg:text-[2.55rem]">
-              El arte de crear. La inteligencia de gestionar.
-            </h1>
-            <p className="mt-5 max-w-2xl text-sm leading-7 text-[#d0cbc0]/75 sm:text-base sm:leading-7 [@media(max-height:800px)]:mt-3">
-              Conecta cada etapa de tu taller: desde el diseño y los cálculos técnicos hasta la producción, tus archivos y la presentación de tus joyas.
-            </p>
-            <div className="mt-7 flex flex-wrap items-center gap-3 [@media(max-height:800px)]:mt-4">
-              <a href="/herramientas-publicas" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-gradient-to-b from-[#dfc583] to-[#c2a15c] px-5 py-3 text-[10px] font-bold uppercase tracking-[0.1em] text-[#211c12] shadow-[0_8px_24px_rgba(194,161,92,.14)] transition duration-200 hover:-translate-y-0.5 hover:brightness-105">
-                Probar herramientas <ArrowRight className="size-3.5" />
-              </a>
-              <button type="button" onClick={() => { setSeccionPlataforma("ecosistema"); setMostrarPlataforma(true); }} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/15 bg-white/[0.035] px-5 py-3 text-[10px] font-bold uppercase tracking-[0.1em] text-[#d7d1c5]/80 transition hover:border-[#d8bd7b]/45 hover:bg-white/[0.06] hover:text-[#e5ca8a]">
-                Conocer la plataforma
-              </button>
+      <div className="grid min-h-screen lg:grid-cols-[40%_60%]">
+        <section className="relative hidden min-h-screen flex-col items-center justify-center overflow-hidden bg-[#fff1bf] px-8 py-16 text-center md:flex lg:px-12">
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_20%_20%,rgba(255,255,255,.7),transparent_45%),radial-gradient(ellipse_at_90%_75%,rgba(255,210,48,.18),transparent_38%)]" />
+          <div className="relative z-10 mx-auto w-full max-w-[510px]">
+            <div className="mx-auto grid size-14 place-items-center rounded-2xl bg-[#ffcf24] text-[#17232d] shadow-sm"><Gem className="size-7" /></div>
+            <p className="mt-4 text-lg font-extrabold tracking-tight text-[#17232d]">AURUM LAB</p>
+            <p className="mt-1 text-[10px] font-semibold uppercase tracking-[.22em] text-[#7d650d]">Tecnología para joyeros</p>
+            <div className="mt-10 overflow-hidden rounded-2xl border border-white/80 bg-white/70 p-2 shadow-[0_18px_50px_rgba(91,73,13,.12)]">
+              <img src={heroJoyeria} alt="Diseño ornamental de joyería" className="aspect-[4/3] w-full rounded-xl object-cover" />
             </div>
+            <h1 className="mt-6 text-2xl font-extrabold leading-tight tracking-tight text-[#17232d] sm:text-3xl">El arte de crear.</h1>
+            <h2 className="mt-1 text-2xl font-extrabold leading-tight tracking-tight text-[#967100] sm:text-3xl">La inteligencia de gestionar.</h2>
+            <p className="mx-auto mt-4 max-w-md text-sm leading-6 text-slate-700">Herramientas técnicas, diseño 3D y recursos digitales para impulsar cada etapa de tu taller joyero.</p>
+            <div className="mt-6 flex flex-wrap justify-center gap-2 text-xs font-medium text-[#4b4b42]">
+              <span className="rounded-full border border-[#dfc45f]/70 bg-white/60 px-3 py-2">Herramientas para joyeros</span>
+              <span className="rounded-full border border-[#dfc45f]/70 bg-white/60 px-3 py-2">Aurum Render</span>
+              <span className="rounded-full border border-[#dfc45f]/70 bg-white/60 px-3 py-2">Mi Nube y catálogo</span>
+            </div>
+            <div className="mt-8 flex justify-center gap-1.5" aria-label="AURUM LAB"><span className="h-1 w-5 rounded-full bg-[#e5c54d]" /><span className="h-1 w-5 rounded-full bg-[#967100]" /><span className="h-1 w-5 rounded-full bg-[#e5c54d]" /></div>
           </div>
-
-          <section className="mt-9 grid max-w-5xl gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 [@media(max-height:800px)]:mt-4">
-            {[
-              [Boxes, "Comercial", "Clientes, proyectos, cotizaciones y pedidos conectados."],
-              [PackageCheck, "Producción", "Órdenes, trabajos, piezas, responsables y calidad."],
-              [Eye, "Visualización", "AURUM Render para explorar y presentar tus diseños 3D."],
-              [Boxes, "Mi Nube", "Organiza archivos, fotografías, vídeos y documentos del taller."],
-              [ShoppingBag, "Catálogo digital", "Prepara y publica modelos para mostrar tu trabajo a clientes."],
-              [Network, "Ecosistema", "Conecta talleres, profesionales, proveedores y servicios."],
-            ].map(([Icon, title, text]) => {
-              const FeatureIcon = Icon as LucideIcon;
-              return <article key={String(title)} className="group rounded-2xl border border-white/[0.075] bg-[#1b1b17]/65 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,.045)] backdrop-blur-md transition duration-200 hover:-translate-y-0.5 hover:border-[#d8bd7b]/35 hover:bg-[#24231e]/85"><FeatureIcon className="size-5 text-gold" /><h2 className="mt-3 text-[11px] font-semibold uppercase tracking-[0.09em] text-[#f1ece2]">{String(title)}</h2><p className="mt-1.5 text-[10px] leading-relaxed text-[#c3bdb1]/55">{String(text)}</p></article>;
-            })}
-          </section>
-
-          <section id="herramientas" className="mt-8 max-w-5xl rounded-[1.5rem] border border-[#d8bd7b]/20 bg-[#181915]/85 p-4 shadow-[0_28px_80px_rgba(0,0,0,.28),inset_0_1px_0_rgba(255,255,255,.035)] backdrop-blur-2xl sm:p-6 [@media(max-height:800px)]:mt-4 [@media(max-height:800px)]:p-3">
-            <div className="flex items-center gap-3">
-              <Gem className="size-7 text-gold" />
-              <div>
-                <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-gold sm:text-base">
-                  Herramientas gratuitas para joyeros
-                </h2>
-                <p className="mt-1 text-xs text-white/60 sm:text-sm">
-                  Calcula, visualiza y optimiza tus proyectos desde cualquier dispositivo.
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 [@media(max-height:800px)]:mt-3">
-              {[
-                ["yeso", "Yeso / Agua", "Calcula las proporciones ideales para tus mezclas."],
-                ["oro", "Aleación de Oro", "Obtén la aleación perfecta para tu diseño."],
-                ["tallas", "Conversor de Tallas", "Convierte tallas de anillos entre diferentes escalas."],
-                ["transfer", "AURUM Transfer", "Envía modelos y archivos de fabricación con un enlace privado de un solo uso."],
-                ["visor", "Visor 3D de Joyas", "Explora y gira un modelo 3D desde el navegador. Acceso público, sin iniciar sesión."],
-                ["render", "AURUM RENDER", "Estudio profesional de joyería 3D. Requiere iniciar sesión."],
-              ].map(([id, titulo, descripcion]) => (
-                <button
-                  key={id}
-                  type="button"
-                  onClick={() => {
-                    if (id === "visor") {
-                      navigate({ to: "/aurum-render-public" });
-                      return;
-                    }
-                    if (id === "render") {
-                      window.location.assign("/auth#login");
-                      return;
-                    }
-                    navigate({ to: "/herramientas-publicas" });
-                  }}
-                  className="group rounded-2xl border border-white/[0.09] bg-white/[0.025] p-4 text-left transition duration-200 hover:-translate-y-0.5 hover:border-[#d8bd7b]/40 hover:bg-white/[0.055] [@media(max-height:800px)]:p-3"
-                >
-                  <Gem className="size-6 text-gold" />
-                  <p className="mt-4 text-sm font-semibold tracking-tight text-[#f5f0e7]">{titulo}</p>
-                  <p className="mt-2 text-[11px] leading-relaxed text-[#c6c0b5]/60">{descripcion}</p>
-                  {id === "visor" ? (
-                    <span className="mt-3 inline-flex rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-1 text-[9px] font-semibold uppercase tracking-wider text-emerald-200">Público · sin login</span>
-                  ) : id === "render" ? (
-                    <span className="mt-3 inline-flex rounded-full border border-[#d8bd7b]/30 bg-[#d8bd7b]/10 px-2 py-1 text-[9px] font-semibold uppercase tracking-wider text-[#e4c987]">Con inicio de sesión</span>
-                  ) : null}
-                </button>
-              ))}
-            </div>
-
-          </section>
-
-
-
-          <div id="crear-taller" className="mt-5 flex flex-col gap-3 rounded-2xl border border-[#d8bd7b]/20 bg-gradient-to-r from-[#c8a85f]/[0.07] to-transparent p-4 scroll-mt-8 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm font-semibold text-white">Impulsa tu taller con AURUM LAB.</p>
-              <p className="mt-1 max-w-2xl text-xs leading-relaxed text-white/65">Gestiona tu negocio, diseña tus creaciones y conecta con la comunidad joyera.</p>
-            </div>
-            <Suspense fallback={null}><RegistroTaller className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-gold px-5 py-3 text-[10px] font-bold uppercase tracking-wider text-ink transition hover:-translate-y-0.5 hover:opacity-90" /></Suspense>
-          </div>
-
         </section>
-
-        <section id="login" className="order-1 mx-auto w-full max-w-[430px] translate-y-0 lg:order-none lg:-translate-y-6 [@media(max-height:800px)]:lg:-translate-y-2 max-[767px]:max-w-[430px]">
+        <section className="relative flex min-h-screen items-center justify-center px-4 pb-10 pt-20 sm:px-8 lg:px-12">
+          <div className="w-full max-w-[520px]">
+            <div className="mb-8 text-center">
+              <div className="mx-auto flex items-center justify-center gap-3">
+                <span className="grid size-11 place-items-center rounded-xl bg-[#ffcf24] text-[#17232d]"><Gem className="size-6" /></span>
+                <span className="text-2xl font-extrabold tracking-tight text-[#17232d]">AURUM <span className="text-[#a27b00]">LAB</span></span>
+              </div>
+              <p className="mt-3 text-sm text-slate-600">{modoAlta ? "Configura el acceso inicial de tu plataforma" : "Bienvenido de nuevo a tu espacio de trabajo"}</p>
+            </div>
+        <section id="login" className="w-full">
           <div className="mb-7 text-center md:hidden">
             <p className="font-display text-4xl italic leading-none tracking-tight text-[#d9bd7b]">Aurum Lab</p>
           </div>
-          <form onSubmit={entrar} className="rounded-[1.7rem] border border-[#d7c18d]/[0.16] bg-[#171815]/90 p-7 shadow-[0_30px_100px_rgba(0,0,0,.42),inset_0_1px_0_rgba(255,255,255,.055)] backdrop-blur-2xl sm:p-9 [@media(max-height:800px)]:p-5 max-[767px]:w-full">
+          <form onSubmit={entrar} className="rounded-2xl border-0 bg-white p-2 shadow-none sm:p-3">
             <div className="mb-7 flex items-center gap-3">
-              <LockKeyhole className="size-7 text-gold" />
+              <LockKeyhole className="size-6 text-[#a27b00]" />
               <div>
-                <h1 className="text-xl font-semibold text-white">{modoAlta ? "Crear el primer dueño general" : "Ingreso interno"}</h1>
-                {!modoAlta ? <p className="mt-1 text-xs text-white/50">Accede a tu taller. Todo en un solo lugar.</p> : null}
+                <h1 className="text-xl font-semibold text-[#17232d]">{modoAlta ? "Crear el primer dueño general" : "Ingreso interno"}</h1>
+                {!modoAlta ? <p className="mt-1 text-xs text-slate-500">Accede a tu taller. Todo en un solo lugar.</p> : null}
               </div>
             </div>
 
-            <label className="mb-5 block text-[10px] uppercase tracking-wider text-white/50">
+            <label className="mb-5 block text-xs font-medium text-slate-600">
               Usuario
               <span className="relative mt-2 block">
-                <UserRound className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-white/45" />
-                <input required name="username" maxLength={120} autoComplete="username" value={usuario} onChange={(e) => setUsuario(e.target.value)} aria-invalid={Boolean(error)} aria-describedby={error ? "auth-error" : undefined} className="w-full rounded-xl border border-white/[0.12] bg-[#0d0e0c]/70 py-3.5 pl-10 pr-3 text-sm text-[#f5f0e7] outline-none transition placeholder:text-white/30 focus:border-[#d8bd7b]/65 focus:ring-2 focus:ring-[#d8bd7b]/10" />
+                <UserRound className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                <input required name="username" maxLength={120} autoComplete="username" value={usuario} onChange={(e) => setUsuario(e.target.value)} aria-invalid={Boolean(error)} aria-describedby={error ? "auth-error" : undefined} className="w-full rounded-xl border border-slate-300 bg-white py-3.5 pl-10 pr-3 text-sm text-[#17232d] outline-none transition placeholder:text-slate-400 focus:border-[#c7a52d] focus:ring-2 focus:ring-[#f5d85c]/30" />
               </span>
             </label>
             <label className="mb-5 block text-[10px] uppercase tracking-wider text-white/50">
               Contraseña
               <span className="relative mt-2 block">
                 <LockKeyhole className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-white/45" />
-                <input required name="password" minLength={6} maxLength={256} type={mostrarPassword ? "text" : "password"} autoComplete={modoAlta ? "new-password" : "current-password"} value={password} onChange={(e) => setPassword(e.target.value)} aria-invalid={Boolean(error)} aria-describedby={error ? "auth-error" : undefined} className="w-full rounded-xl border border-white/[0.12] bg-[#0d0e0c]/70 py-3.5 pl-10 pr-10 text-sm text-[#f5f0e7] outline-none transition placeholder:text-white/30 focus:border-[#d8bd7b]/65 focus:ring-2 focus:ring-[#d8bd7b]/10" />
-                <button type="button" onClick={() => setMostrarPassword((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/45 hover:text-gold" aria-label={mostrarPassword ? "Ocultar contraseña" : "Mostrar contraseña"}>
+                <input required name="password" minLength={6} maxLength={256} type={mostrarPassword ? "text" : "password"} autoComplete={modoAlta ? "new-password" : "current-password"} value={password} onChange={(e) => setPassword(e.target.value)} aria-invalid={Boolean(error)} aria-describedby={error ? "auth-error" : undefined} className="w-full rounded-xl border border-slate-300 bg-white py-3.5 pl-10 pr-10 text-sm text-[#17232d] outline-none transition placeholder:text-slate-400 focus:border-[#c7a52d] focus:ring-2 focus:ring-[#f5d85c]/30" />
+                <button type="button" onClick={() => setMostrarPassword((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#a27b00]" aria-label={mostrarPassword ? "Ocultar contraseña" : "Mostrar contraseña"}>
                   {mostrarPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                 </button>
               </span>
@@ -368,7 +250,7 @@ function LoginPage() {
               <>
                 <label className="mb-4 block text-[10px] uppercase tracking-wider text-white/50">
                   Correo electrónico de recuperación
-                  <input required type="email" name="email" autoComplete="email" maxLength={254} value={emailRegistro} onChange={(e) => setEmailRegistro(e.target.value)} className="mt-2 w-full rounded-lg border border-white/15 bg-black/25 px-3 py-3 text-sm text-white outline-none focus:border-gold" />
+                  <input required type="email" name="email" autoComplete="email" maxLength={254} value={emailRegistro} onChange={(e) => setEmailRegistro(e.target.value)} className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-sm text-[#17232d] outline-none focus:border-[#c7a52d]" />
                 </label>
                 <label className="mb-4 block text-[10px] uppercase tracking-wider text-white/50">
                   Nombre
@@ -387,7 +269,7 @@ function LoginPage() {
 
             {error ? <p id="auth-error" role="alert" aria-live="polite" className="mb-4 text-xs text-danger">{error}</p> : null}
 
-            <button type="submit" disabled={cargando} className="w-full rounded-lg bg-gold py-3.5 text-xs font-semibold uppercase tracking-wider text-ink transition hover:opacity-90 disabled:opacity-50">
+            <button type="submit" disabled={cargando} className="w-full rounded-xl bg-[#17232d] py-3.5 text-sm font-semibold text-white transition hover:bg-[#293b49] disabled:opacity-50">
               {cargando ? "Entrando..." : modoAlta ? "Crear y entrar" : "Entrar"}
             </button>
 
@@ -396,7 +278,7 @@ function LoginPage() {
                 <button
                   type="button"
                   onClick={() => { window.location.href = "/recuperar-contrasena"; }}
-                  className="mt-4 inline-flex w-full items-center justify-center gap-2 text-xs text-white/45 transition hover:text-gold"
+                  className="mt-4 inline-flex w-full items-center justify-center gap-2 text-xs text-slate-500 transition hover:text-[#a27b00]"
                 >
                   <HelpCircle className="size-3.5" />
                   ¿Olvidaste tu contraseña?
@@ -447,9 +329,9 @@ function LoginPage() {
             </div>
           ) : null}
 
-          <p className="mt-5 hidden text-center text-xs text-white/55 md:block max-[767px]:block">
+          <p className="mt-5 text-center text-xs text-slate-500">
             ¿Eres cliente?{" "}
-            <a href="/cliente" className="text-gold underline-offset-2 hover:underline">Consulta tu pedido aquí</a>
+            <a href="/cliente" className="text-[#967100] underline-offset-2 hover:underline">Consulta tu pedido aquí</a>
           </p>
         </section>
       </div>
