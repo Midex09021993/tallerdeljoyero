@@ -21,9 +21,14 @@ export const Route = createFileRoute("/herramientas-publicas")({
       {
         name: "description",
         content:
-          "Calculadoras técnicas y herramientas gratuitas para el trabajo diario de joyería.",
+          "Calculadoras técnicas y herramientas gratuitas para joyeros: aleación de oro, peso de gemas, tallas de anillos, peso de modelos 3D y preparación de fundición.",
       },
+      { name: "robots", content: "index, follow, max-image-preview:large" },
+      { property: "og:title", content: "Herramientas gratuitas para joyeros | Aurum Lab" },
+      { property: "og:description", content: "Calcula aleaciones, estima el peso de gemas y modelos 3D, convierte tallas y prepara tus trabajos de joyería." },
+      { property: "og:type", content: "website" },
     ],
+    links: [{ rel: "canonical", href: "https://www.tallerdeljoyero.com/herramientas-publicas" }],
   }),
   component: HerramientasPublicasPage,
 });
