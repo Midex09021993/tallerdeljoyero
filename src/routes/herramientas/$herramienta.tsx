@@ -7,7 +7,6 @@ import { ConversorTallasAnillo } from "@/components/ConversorTallasAnillo";
 import { CalculadoraPesoGemas } from "@/components/CalculadoraPesoGemas";
 import { VisorPesoJoyeria } from "@/components/VisorPesoJoyeria";
 import { CalculadoraYeso } from "@/routes/_authenticated/taller";
-import { GeneradorSTLIA } from "@/components/GeneradorSTLIA";
 
 const paginas = {
   "aleacion-oro": {
@@ -44,13 +43,6 @@ const paginas = {
     descripcion: "Estima el peso de gemas para trabajos de joyería a partir de sus medidas y parámetros disponibles.",
     contenido: "La estimación depende de la forma, las dimensiones y la densidad de la gema. En piedras talladas, las proporciones de la talla pueden alterar el resultado; usa el valor como orientación y confirma el peso con una balanza cuando sea necesario.",
     id: "gemas",
-  },
-  "generador-stl-ia": {
-    titulo: "Generador STL con IA",
-    metaTitulo: "Generador de modelos STL con IA | Taller del Joyero",
-    descripcion: "Explora la herramienta para generar un modelo 3D descargable en formato STL a partir de una imagen.",
-    contenido: "El modelo generado debe revisarse antes de utilizarlo en diseño o fabricación. Comprueba escala, geometría, espesores y malla en tu programa 3D antes de imprimir o enviar a producción.",
-    id: "stl",
   },
 } as const;
 
@@ -124,7 +116,6 @@ function HerramientaPublicaPage() {
             {pagina.id === "tallas" ? <ConversorTallasAnillo /> : null}
             {pagina.id === "peso" ? <VisorPesoJoyeria compacto modoPublico /> : null}
             {pagina.id === "gemas" ? <CalculadoraPesoGemas /> : null}
-            {pagina.id === "stl" ? <GeneradorSTLIA /> : null}
           </div>
         </section>
 
