@@ -60,12 +60,22 @@ const soluciones = [
 
 type PeriodicidadPlan = "mensual" | "trimestral" | "anual";
 
+function formatoSoles(valor: number) {
+  return new Intl.NumberFormat("es-PE", {
+    style: "currency",
+    currency: "PEN",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(valor);
+}
+
 function PlanesPublicos() {
   const [periodicidad, setPeriodicidad] = useState<PeriodicidadPlan>("mensual");
   const planes = [
     {
       nombre: "Emprendedor",
-      precioMensual: "Gratis",
+      precioMensual: 0,
+      gratis: true,
       descripcion: "Para empezar y explorar las herramientas de AURUM LAB.",
       funciones: ["Herramientas técnicas públicas", "Primeros pasos digitales", "Acceso sin coste"],
       destacado: false,
@@ -74,7 +84,8 @@ function PlanesPublicos() {
     },
     {
       nombre: "Taller",
-      precioMensual: "S/ 29",
+      precioMensual: 29,
+      gratis: false,
       descripcion: "Para organizar el trabajo diario de tu taller.",
       funciones: ["Clientes y cotizaciones", "Pedidos y ventas", "Catálogo digital"],
       destacado: false,
@@ -83,7 +94,8 @@ function PlanesPublicos() {
     },
     {
       nombre: "Profesional",
-      precioMensual: "S/ 79",
+      precioMensual: 79,
+      gratis: false,
       descripcion: "Para conectar más procesos y capacidades productivas.",
       funciones: ["Gestión comercial", "Diseño e impresión 3D", "Inventario y compras"],
       destacado: true,
@@ -92,44 +104,59 @@ function PlanesPublicos() {
     },
     {
       nombre: "Empresarial",
-      precioMensual: "A medida",
+      precioMensual: null,
+      gratis: false,
       descripcion: "Para equipos y operaciones con necesidades avanzadas.",
       funciones: ["Gestión de equipo", "Múltiples sedes", "Analítica y crecimiento"],
       destacado: false,
-      accion: "Contactar",
+      accion: "Consultar plan",
       href: "/auth" as const,
     },
   ];
-  const etiquetaPeriodo = periodicidad === "mensual" ? "al mes" : periodicidad === "trimestral" ? "por trimestre" : "al año";
+  const meses = periodicidad === "mensual" ? 1 : periodicidad === "trimestral" ? 3 : 12;
+  const descuento = periodicidad === "trimestral" ? 0.1 : periodicidad === "anual" ? 0.25 : 0;
+  const nombrePeriodo = periodicidad === "mensual" ? "mes" : periodicidad === "trimestral" ? "trimestre" : "año";
+  const etiquetaPrecioMensual = periodicidad === "mensual" ? "al mes" : "al mes";
   return (
     <>
       <div className="mx-auto mt-7 flex w-fit max-w-full flex-wrap items-center justify-center gap-1 rounded-xl bg-slate-200/70 p-1">
         {([
-          { id: "mensual", label: "Mensual" },
-          { id: "trimestral", label: "Trimestral" },
-          { id: "anual", label: "Anual" },
+          { id: "mensual", label: "Mensual", descuento: "" },
+          { id: "trimestral", label: "Trimestral", descuento: "-10%" },
+          { id: "anual", label: "Anual", descuento: "-25%" },
         ] as const).map((opcion) => (
-          <button key={opcion.id} type="button" aria-pressed={periodicidad === opcion.id} onClick={() => setPeriodicidad(opcion.id)} className={`min-h-10 rounded-lg px-4 text-xs font-semibold transition sm:px-5 ${periodicidad === opcion.id ? "bg-[#17232d] text-white shadow-sm" : "text-slate-600 hover:bg-white hover:text-[#17232d]"}`}>
+          <button key={opcion.id} type="button" aria-pressed={periodicidad === opcion.id} onClick={() => setPeriodicidad(opcion.id)} className={`flex min-h-10 items-center justify-center gap-2 rounded-lg px-3 text-xs font-semibold transition sm:px-5 ${periodicidad === opcion.id ? "bg-[#17232d] text-white shadow-sm" : "text-slate-600 hover:bg-white hover:text-[#17232d]"}`}>
             {opcion.label}
+            {opcion.descuento && <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${periodicidad === opcion.id ? "bg-emerald-600 text-white" : "bg-emerald-700 text-white"}`}>{opcion.descuento}</span>}
           </button>
         ))}
       </div>
       <p className="mt-3 text-center text-xs text-slate-500">
-        {periodicidad === "mensual" ? "Precios mensuales de referencia del catálogo actual." : "Las tarifas y descuentos de esta modalidad están pendientes de confirmación."}
+        {periodicidad === "mensual" ? "Tarifa mensual de referencia." : `Ahorra ${Math.round(descuento * 100)}% frente al pago mensual.`}
       </p>
       <div className="mt-7 grid items-stretch gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {planes.map((plan) => {
-          const precio = periodicidad === "mensual" ? plan.precioMensual : plan.nombre === "Emprendedor" ? "Gratis" : plan.nombre === "Empresarial" ? "A medida" : "Por confirmar";
-          const periodo = precio === "Gratis" || precio === "A medida" || precio === "Por confirmar" ? "" : etiquetaPeriodo;
+          const tienePrecio = typeof plan.precioMensual === "number";
+          const precioMensual = plan.precioMensual ?? 0;
+          const totalOriginal = precioMensual * meses;
+          const totalFinal = totalOriginal * (1 - descuento);
+          const equivalenteMensual = totalFinal / meses;
           return (
             <article key={plan.nombre} className={`relative flex h-full flex-col rounded-2xl border bg-white p-5 shadow-[0_4px_18px_rgba(15,23,42,.035)] sm:p-6 ${plan.destacado ? "border-[#d4aa19] ring-1 ring-[#d4aa19]" : "border-slate-200"}`}>
               {plan.destacado && <span className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-[#f8c928] px-3 py-1 text-[10px] font-bold text-[#17232d]">Más capacidades</span>}
               <h3 className="mt-1 text-lg font-bold text-[#17232d]">{plan.nombre}</h3>
               <p className="mt-2 min-h-10 text-xs leading-5 text-slate-500">{plan.descripcion}</p>
-              <div className="mt-5 min-h-[76px]">
-                {periodicidad !== "mensual" && precio === "Por confirmar" && <p className="text-xs text-slate-400">Tarifa mensual de referencia: <span className="line-through">{plan.precioMensual}</span></p>}
-                <p className="mt-1 text-2xl font-extrabold tracking-tight text-[#17232d]">{precio}{periodo && <span className="ml-1 text-xs font-medium text-slate-500">{periodo}</span>}</p>
-                {periodicidad !== "mensual" && precio === "Por confirmar" && <p className="mt-1 text-[10px] leading-4 text-slate-500">Total y descuentos por definir.</p>}
+              <div className="mt-5 min-h-[108px]">
+                {!tienePrecio && <p className="mt-2 text-2xl font-extrabold tracking-tight text-[#17232d]">A medida</p>}
+                {tienePrecio && plan.gratis && <p className="mt-2 text-2xl font-extrabold tracking-tight text-[#17232d]">Gratis</p>}
+                {tienePrecio && !plan.gratis && (
+                  <>
+                    {descuento > 0 && <p className="text-xs text-slate-400 line-through">{formatoSoles(precioMensual)} / mes</p>}
+                    <p className="mt-1 text-2xl font-extrabold tracking-tight text-[#17232d]">{formatoSoles(equivalenteMensual)}<span className="ml-1 text-xs font-medium text-slate-500">{etiquetaPrecioMensual}</span></p>
+                    {descuento > 0 && <p className="mt-1 text-[11px] font-medium text-emerald-700">Ahorras {formatoSoles(totalOriginal - totalFinal)} en este período</p>}
+                    {periodicidad !== "mensual" && <p className="mt-1 text-xs leading-5 text-slate-500">Total a pagar por {nombrePeriodo}: <strong className="text-[#17232d]">{formatoSoles(totalFinal)}</strong></p>}
+                  </>
+                )}
               </div>
               <ul className="mt-4 flex-1 space-y-3 border-t border-slate-100 pt-4">
                 {plan.funciones.map((funcion) => <li key={funcion} className="flex items-start gap-2 text-xs leading-5 text-slate-600"><Check className="mt-0.5 size-4 shrink-0 text-emerald-600" />{funcion}</li>)}
@@ -141,7 +168,7 @@ function PlanesPublicos() {
           );
         })}
       </div>
-      <p className="mx-auto mt-5 max-w-3xl text-center text-[11px] leading-5 text-slate-500">Las capacidades finales dependen del plan y los módulos habilitados para cada taller. Las tarifas promocionales, los precios tachados y los descuentos se mostrarán cuando sus condiciones comerciales estén confirmadas.</p>
+      <p className="mx-auto mt-5 max-w-3xl text-center text-[11px] leading-5 text-slate-500">Los descuentos del 10% trimestral y 25% anual son cálculos de presentación sobre las tarifas mensuales de referencia. Antes de cobrar estas modalidades, deben configurarse y confirmarse en el sistema comercial. Las capacidades dependen del plan y de los módulos habilitados.</p>
     </>
   );
 }
