@@ -54,7 +54,11 @@ function PublicarArchivoPage() {
         const { data: entradas, error } = await supabase.storage.from("mi-nube").list(raiz, { limit: 1000, sortBy: { column: "name", order: "asc" } });
         if (error) throw error;
         const carpetas = (entradas ?? []).filter((item) => !item.id && !item.metadata && item.name).map((item) => item.name);
-        const encontrados: ArchivoDisponible[] = [];
+        const encontrados: ArchivoDisponible[] = (entradas ?? []).filter((item) => Boolean(item.id || item.metadata || item.name.includes("."))).flatMap((item) => {
+          const extension = item.name.split(".").pop()?.toLowerCase() ?? "";
+          if (!EXTENSIONES[extension] || item.name.startsWith(".")) return [];
+          return [{ ruta: raiz + "/" + item.name, nombre: item.name, bytes: Number(item.metadata?.size ?? 0) }];
+        });
         for (let inicio = 0; inicio < carpetas.length; inicio += 2) {
           const lote = carpetas.slice(inicio, inicio + 2);
           const resultados = await Promise.all(lote.map(async (carpeta) => {
