@@ -76,40 +76,40 @@ function PlanesPublicos() {
       nombre: "Emprendedor",
       precioMensual: 0,
       gratis: true,
-      descripcion: "Para empezar y explorar las herramientas de AURUM LAB.",
-      funciones: ["Herramientas técnicas públicas", "Primeros pasos digitales", "Acceso sin coste"],
+      descripcion: "Empieza con herramientas útiles para joyería.",
+      funciones: ["Calculadoras y herramientas técnicas", "Visor 3D público", "Explora antes de crecer"],
       destacado: false,
-      accion: "Empezar gratis",
+      accion: "Explorar herramientas",
       href: "/herramientas-publicas" as const,
     },
     {
       nombre: "Taller",
       precioMensual: 29,
       gratis: false,
-      descripcion: "Para organizar el trabajo diario de tu taller.",
-      funciones: ["Clientes y cotizaciones", "Pedidos y ventas", "Catálogo digital"],
+      descripcion: "Ordena la gestión diaria de tu negocio.",
+      funciones: ["Clientes y cotizaciones", "Pedidos, ventas y contratos", "Catálogo digital", "Mi Nube para tus archivos"],
       destacado: false,
-      accion: "Consultar plan",
+      accion: "Acceder a la plataforma",
       href: "/auth" as const,
     },
     {
       nombre: "Profesional",
       precioMensual: 79,
       gratis: false,
-      descripcion: "Para conectar más procesos y capacidades productivas.",
-      funciones: ["Gestión comercial", "Diseño e impresión 3D", "Inventario y compras"],
+      descripcion: "Conecta la gestión con el trabajo productivo.",
+      funciones: ["Gestión comercial integrada", "Inventario y compras", "Aurum Render y diseño 3D", "Capacidades de fabricación", "Catálogo y archivos ampliados"],
       destacado: true,
-      accion: "Consultar plan",
+      accion: "Acceder a la plataforma",
       href: "/auth" as const,
     },
     {
       nombre: "Empresarial",
       precioMensual: null,
       gratis: false,
-      descripcion: "Para equipos y operaciones con necesidades avanzadas.",
-      funciones: ["Gestión de equipo", "Múltiples sedes", "Analítica y crecimiento"],
+      descripcion: "Para operaciones que necesitan crecer.",
+      funciones: ["Configuración para equipos", "Organización de varias sedes", "Capacidades por taller", "Acompañamiento para definir necesidades"],
       destacado: false,
-      accion: "Consultar plan",
+      accion: "Consultar solución",
       href: "/auth" as const,
     },
   ];
@@ -168,7 +168,7 @@ function PlanesPublicos() {
           );
         })}
       </div>
-      <p className="mx-auto mt-5 max-w-3xl text-center text-[11px] leading-5 text-slate-500">Los descuentos del 10% trimestral y 25% anual son cálculos de presentación sobre las tarifas mensuales de referencia. Antes de cobrar estas modalidades, deben configurarse y confirmarse en el sistema comercial. Las capacidades dependen del plan y de los módulos habilitados.</p>
+      <p className="mx-auto mt-5 max-w-3xl text-center text-[11px] leading-5 text-slate-500">Los descuentos del 10% trimestral y 25% anual son cálculos de presentación sobre las tarifas mensuales de referencia; las modalidades de cobro deben confirmarse comercialmente. Cada taller puede habilitar capacidades según sus procesos. Los límites y módulos incluidos deben verificarse en las condiciones de cada plan.</p>
     </>
   );
 }
