@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Boxes, Calculator, Check, ChevronDown, Cloud, Gem, Layers3, MonitorSmartphone, PackageCheck, Sparkles } from "lucide-react";
+import { ArrowRight, Boxes, Calculator, ChevronDown, Cloud, Gem, Layers3, MonitorSmartphone, PackageCheck, Sparkles, Sprout, ChartNoAxesCombined } from "lucide-react";
 import heroJoyeria from "@/assets/diseno-corona.jpg";
 
 export const Route = createFileRoute("/")({
@@ -167,6 +167,39 @@ function InicioPublico() {
               </article>
             ))}
           </div>
+        </div>
+      </section>
+
+      <section id="crece-con-tu-taller" className="border-y border-slate-200 bg-white">
+        <div className="mx-auto max-w-[1440px] px-5 py-14 sm:px-8 sm:py-16 lg:px-12">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#987400]">Una plataforma que crece contigo</p>
+            <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-[#17232d] sm:text-3xl">Empieza con lo que necesitas. Crece con tu taller.</h2>
+            <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base">Activa nuevas capacidades a medida que tu negocio evoluciona. Tú marcas el ritmo; AURUM LAB te acompaña.</p>
+          </div>
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <article className="group rounded-2xl border border-slate-200 bg-white p-5 transition hover:-translate-y-1 hover:border-[#e5c04a] hover:shadow-[0_12px_30px_rgba(15,23,42,.07)]">
+              <span className="grid size-11 place-items-center rounded-xl bg-[#fff4c4] text-[#8f6b00]"><Sprout className="size-5" /></span>
+              <h3 className="mt-4 text-base font-bold text-[#17232d]">Empieza</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-600">Resuelve tareas del día a día con herramientas técnicas.</p>
+            </article>
+            <article className="group rounded-2xl border border-slate-200 bg-white p-5 transition hover:-translate-y-1 hover:border-[#e5c04a] hover:shadow-[0_12px_30px_rgba(15,23,42,.07)]">
+              <span className="grid size-11 place-items-center rounded-xl bg-[#fff4c4] text-[#8f6b00]"><Gem className="size-5" /></span>
+              <h3 className="mt-4 text-base font-bold text-[#17232d]">Diseña</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-600">Visualiza y presenta tus joyas con herramientas 3D.</p>
+            </article>
+            <article className="group rounded-2xl border border-slate-200 bg-white p-5 transition hover:-translate-y-1 hover:border-[#e5c04a] hover:shadow-[0_12px_30px_rgba(15,23,42,.07)]">
+              <span className="grid size-11 place-items-center rounded-xl bg-[#fff4c4] text-[#8f6b00]"><Cloud className="size-5" /></span>
+              <h3 className="mt-4 text-base font-bold text-[#17232d]">Organiza</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-600">Centraliza archivos y recursos de tu taller.</p>
+            </article>
+            <article className="group rounded-2xl border border-slate-200 bg-white p-5 transition hover:-translate-y-1 hover:border-[#e5c04a] hover:shadow-[0_12px_30px_rgba(15,23,42,.07)]">
+              <span className="grid size-11 place-items-center rounded-xl bg-[#fff4c4] text-[#8f6b00]"><ChartNoAxesCombined className="size-5" /></span>
+              <h3 className="mt-4 text-base font-bold text-[#17232d]">Crece</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-600">Incorpora módulos de gestión según las necesidades de tu negocio.</p>
+            </article>
+          </div>
+          <p className="mt-5 text-center text-xs leading-5 text-slate-500">Las funciones disponibles dependen del plan y de los módulos habilitados para cada taller.</p>
         </div>
       </section>
 
