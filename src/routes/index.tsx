@@ -78,7 +78,7 @@ function InicioPublico() {
           </nav>
           <div className="flex items-center gap-2">
             <Link to="/herramientas-publicas" className="hidden min-h-10 items-center rounded-lg px-3 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 sm:inline-flex">Probar gratis</Link>
-            <Link to="/auth" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-[#17232d] px-4 text-xs font-semibold text-white shadow-sm transition hover:bg-[#293b49] sm:text-sm"><MonitorSmartphone className="size-4" /> Ingresar</Link>
+            <Link to="/auth" target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-[#17232d] px-4 text-xs font-semibold text-white shadow-sm transition hover:bg-[#293b49] sm:text-sm"><MonitorSmartphone className="size-4" /> Ingresar</Link>
           </div>
         </div>
       </header>
@@ -98,7 +98,7 @@ function InicioPublico() {
             </ul>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link to="/herramientas-publicas" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#17232d] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-slate-900/10 transition hover:-translate-y-0.5 hover:bg-[#293b49]">Prueba las herramientas <ArrowRight className="size-4" /></Link>
-              <Link to="/auth" className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-300 bg-white/80 px-6 py-3 text-sm font-semibold text-[#17232d] transition hover:border-[#d4aa19] hover:bg-[#fffbee]">Conoce AURUM LAB</Link>
+              <Link to="/auth" target="_blank" rel="noreferrer" className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-300 bg-white/80 px-6 py-3 text-sm font-semibold text-[#17232d] transition hover:border-[#d4aa19] hover:bg-[#fffbee]">Conoce AURUM LAB</Link>
             </div>
             <p className="mt-4 text-xs text-slate-500">Empieza explorando las herramientas públicas, sin crear una cuenta.</p>
           </div>
@@ -178,7 +178,7 @@ function InicioPublico() {
         </div>
         <div className="flex flex-col gap-3 sm:flex-row md:flex-col">
           <Link to="/herramientas-publicas" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#17232d] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#293b49]">Probar gratis <ArrowRight className="size-4" /></Link>
-          <Link to="/auth" className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-[#17232d] transition hover:border-[#d4aa19] hover:bg-[#fffbee]">Crear cuenta o ingresar</Link>
+          <Link to="/auth" target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-[#17232d] transition hover:border-[#d4aa19] hover:bg-[#fffbee]">Crear cuenta o ingresar</Link>
         </div>
       </section>
 
@@ -188,7 +188,7 @@ function InicioPublico() {
           <div className="flex flex-wrap gap-x-5 gap-y-2 font-medium">
             <Link to="/herramientas-publicas" className="transition hover:text-[#806100]">Herramientas gratuitas</Link>
             <Link to="/aurum-render-public" className="transition hover:text-[#806100]">Visor 3D</Link>
-            <Link to="/auth" className="transition hover:text-[#806100]">Acceso a la plataforma</Link>
+            <Link to="/auth" target="_blank" rel="noreferrer" className="transition hover:text-[#806100]">Acceso a la plataforma</Link>
           </div>
           <span>© {new Date().getFullYear()} AURUM LAB</span>
         </div>
