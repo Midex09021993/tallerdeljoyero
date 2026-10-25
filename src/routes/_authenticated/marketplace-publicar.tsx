@@ -21,7 +21,6 @@ function PublicarArchivoPage() {
   const sesion = useSesion();
   const queryClient = useQueryClient();
   const [titulo, setTitulo] = useState("");
-  const [descripcion, setDescripcion] = useState("");
   const [categoria, setCategoria] = useState<(typeof CATEGORIAS)[number]>("Modelos 3D");
   const [formato, setFormato] = useState<(typeof FORMATOS)[number]>("STL");
   const [precio, setPrecio] = useState("");
@@ -35,7 +34,9 @@ function PublicarArchivoPage() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    setCarpetaProyecto(params.get("carpeta") ?? "");
+    const carpeta = params.get("carpeta") ?? "";
+    setCarpetaProyecto(carpeta);
+    if (carpeta) setTitulo(carpeta);
   }, []);
 
   const archivosVisibles = carpetaProyecto
@@ -63,7 +64,7 @@ function PublicarArchivoPage() {
             if (listaError) throw listaError;
             return (data ?? []).filter((item) => Boolean(item.id || item.metadata || item.name.includes("."))).flatMap((item) => {
               const extension = item.name.split(".").pop()?.toLowerCase() ?? "";
-              if (!EXTENSIONES[extension] || item.name.startsWith(".")) return [];
+              if (!EXTENSIONES[extension] || item.name.startsWith(".") || item.name.toLowerCase() === "00-portada-aurum.png") return [];
               return [{ ruta: raiz + "/" + carpeta + "/" + item.name, nombre: item.name, bytes: Number(item.metadata?.size ?? 0) }];
             });
           }));
@@ -115,7 +116,7 @@ function PublicarArchivoPage() {
         participante_id: participanteId,
         vendedor_usuario_id: user.id,
         titulo: titulo.trim(),
-        descripcion: descripcion.trim(),
+        descripcion: "",
         categoria,
         formatos: [formato],
         precio: valor,
@@ -143,24 +144,17 @@ function PublicarArchivoPage() {
         <header className="rounded-2xl border border-border bg-card p-6 sm:p-8">
           <p className="text-xs font-semibold uppercase tracking-[.2em] text-gold">Marketplace digital</p>
           <h1 className="mt-2 text-2xl font-semibold sm:text-3xl">Preparar publicación</h1>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">Selecciona un archivo que ya esté guardado en Mi Nube. Por seguridad, esta primera versión guarda publicaciones como borrador; no cobra ni libera descargas todavía.</p>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">Elegimos los datos que ya existen en Mi Nube automáticamente. Solo confirma el archivo y define el precio; esta primera versión guarda la publicación como borrador, sin cobros ni descargas.</p>
         </header>
 
         {!sesion.isLoading && !sesion.data?.participante ? <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm">Tu cuenta todavía no tiene un taller activo vinculado. Vincula el taller para poder publicar.</div> : null}
 
         <form className="grid gap-5 rounded-2xl border border-border bg-card p-5 sm:grid-cols-2 sm:p-7" onSubmit={(event) => { event.preventDefault(); publicar.mutate(); }}>
-          <label className="space-y-2 text-sm font-medium sm:col-span-2">Título del archivo
-            <input required minLength={3} maxLength={140} value={titulo} onChange={(e) => setTitulo(e.target.value)} className="w-full rounded-lg border border-input bg-background px-3 py-2.5 font-normal" placeholder="Ej. Anillo sello modelo 3D" />
+          <label className="space-y-2 text-sm font-medium sm:col-span-2">Nombre de publicación
+            <input required minLength={3} maxLength={140} value={titulo} onChange={(e) => setTitulo(e.target.value)} className="w-full rounded-lg border border-input bg-background px-3 py-2.5 font-normal" placeholder="Se completará con el proyecto o archivo" />
+            <span className="block text-xs font-normal text-muted-foreground">Se completa automáticamente con el nombre del proyecto o archivo. Puedes ajustarlo si lo necesitas.</span>
           </label>
-          <label className="space-y-2 text-sm font-medium sm:col-span-2">Descripción
-            <textarea value={descripcion} onChange={(e) => setDescripcion(e.target.value)} maxLength={5000} rows={3} className="w-full rounded-lg border border-input bg-background px-3 py-2.5 font-normal" placeholder="Qué incluye y para qué sirve el archivo" />
-          </label>
-          <label className="space-y-2 text-sm font-medium">Categoría
-            <select value={categoria} onChange={(e) => setCategoria(e.target.value as typeof categoria)} className="w-full rounded-lg border border-input bg-background px-3 py-2.5 font-normal">{CATEGORIAS.map((item) => <option key={item}>{item}</option>)}</select>
-          </label>
-          <label className="space-y-2 text-sm font-medium">Formato del archivo
-            <select value={formato} onChange={(e) => setFormato(e.target.value as typeof formato)} className="w-full rounded-lg border border-input bg-background px-3 py-2.5 font-normal">{FORMATOS.map((item) => <option key={item}>{item}</option>)}</select>
-          </label>
+          <div className="space-y-1 text-sm sm:col-span-2"><p className="font-medium">Categoría y formato</p><p className="rounded-lg border border-border bg-muted/30 px-3 py-3 text-sm font-normal">{categoria} · {formato} <span className="text-xs text-muted-foreground">· detectados automáticamente</span></p></div>
           <label className="space-y-2 text-sm font-medium">Precio
             <input required type="number" min="0.01" step="0.01" value={precio} onChange={(e) => setPrecio(e.target.value)} className="w-full rounded-lg border border-input bg-background px-3 py-2.5 font-normal" placeholder="25.00" />
           </label>
@@ -168,17 +162,14 @@ function PublicarArchivoPage() {
             <select value={moneda} onChange={(e) => setMoneda(e.target.value as typeof moneda)} className="w-full rounded-lg border border-input bg-background px-3 py-2.5 font-normal"><option value="PEN">Soles (PEN)</option><option value="USD">Dólares (USD)</option></select>
           </label>
           <label className="space-y-2 text-sm font-medium sm:col-span-2">Archivo de Mi Nube
-            <select required value={ruta} onChange={(e) => { const elegido = archivosDisponibles.find((item) => item.ruta === e.target.value); setRuta(e.target.value); setNombreArchivo(elegido?.nombre ?? ""); const ext = elegido?.nombre.split(".").pop()?.toLowerCase() ?? ""; if (EXTENSIONES[ext]) setFormato(EXTENSIONES[ext]); }} disabled={cargandoArchivos || archivosVisibles.length === 0} className="w-full rounded-lg border border-input bg-background px-3 py-2.5 font-normal">
+            <select required value={ruta} onChange={(e) => { const elegido = archivosDisponibles.find((item) => item.ruta === e.target.value); setRuta(e.target.value); setNombreArchivo(elegido?.nombre ?? ""); const ext = elegido?.nombre.split(".").pop()?.toLowerCase() ?? ""; if (EXTENSIONES[ext]) { const nuevoFormato = EXTENSIONES[ext]; setFormato(nuevoFormato); setCategoria(nuevoFormato === "IMAGEN" ? "Imágenes" : nuevoFormato === "PDF" || nuevoFormato === "PLANO" ? "Planos técnicos" : "Modelos 3D"); } if (elegido) setTitulo(elegido.nombre.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ").trim()); }} disabled={cargandoArchivos || archivosVisibles.length === 0} className="w-full rounded-lg border border-input bg-background px-3 py-2.5 font-normal">
               <option value="">{cargandoArchivos ? "Cargando archivos de Mi Nube…" : archivosVisibles.length ? "Selecciona un archivo…" : carpetaProyecto ? "No hay archivos compatibles en este proyecto" : "No hay archivos compatibles en tus carpetas"}</option>
               {archivosVisibles.map((item) => <option key={item.ruta} value={item.ruta}>{item.nombre} · {EXTENSIONES[item.nombre.split(".").pop()?.toLowerCase() ?? ""]} · {item.bytes ? (item.bytes / 1048576).toFixed(2) + " MB" : "tamaño no disponible"}</option>)}
             </select>
             <span className="block text-xs font-normal text-muted-foreground">Solo aparecen archivos compatibles dentro de tus carpetas privadas. El original no se mueve ni se modifica.</span>
             {errorArchivos ? <span className="block text-xs font-normal text-destructive">No se pudo cargar Mi Nube: {errorArchivos}</span> : null}
           </label>
-          <div className="space-y-2 text-sm sm:col-span-2">
-            <p className="font-medium">Imagen de portada del proyecto</p>
-            <p className="text-xs text-muted-foreground">Usaremos automáticamente una imagen que ya esté guardada en la misma carpeta de Mi Nube. No necesitas introducir una URL ni volver a cargarla.</p>
-          </div>
+          <div className="space-y-1 text-sm sm:col-span-2"><p className="font-medium">Imagen de portada</p><p className="text-xs text-muted-foreground">Se reutiliza automáticamente la portada guardada en la carpeta. No necesitas cargarla otra vez.</p></div>
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5 sm:col-span-2">
             <p className="max-w-md text-xs leading-5 text-muted-foreground">El borrador no aparece públicamente y no activa ningún cobro.</p>
             <button disabled={publicar.isPending || !sesion.data?.participante || !archivoSeleccionado} type="submit" className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50"><FilePlus2 className="size-4" /> {publicar.isPending ? "Guardando..." : "Guardar borrador"}</button>
