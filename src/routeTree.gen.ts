@@ -18,6 +18,7 @@ import { Route as CatalogoPublicoRouteImport } from './routes/catalogo-publico'
 import { Route as ClienteRouteImport } from './routes/cliente'
 import { Route as CursosDiseno3dRouteImport } from './routes/cursos-diseno-3d'
 import { Route as GaleriaJoyasRouteImport } from './routes/galeria-joyas'
+import { Route as HerramientasRouteImport } from './routes/herramientas'
 import { Route as HerramientasPublicasRouteImport } from './routes/herramientas-publicas'
 import { Route as RecuperarContrasenaRouteImport } from './routes/recuperar-contrasena'
 import { Route as TiendaRouteImport } from './routes/tienda'
@@ -34,7 +35,7 @@ import { Route as AuthenticatedCotizacionesRouteImport } from './routes/_authent
 import { Route as AuthenticatedCursosFormacionRouteImport } from './routes/_authenticated/cursos-formacion'
 import { Route as AuthenticatedDiseno3dRouteImport } from './routes/_authenticated/diseno-3d'
 import { Route as AuthenticatedGestionRouteImport } from './routes/_authenticated/gestion'
-import { Route as AuthenticatedHerramientasRouteImport } from './routes/_authenticated/herramientas'
+import { Route as AuthenticatedTallerHerramientasRouteImport } from './routes/_authenticated/taller.herramientas'
 import { Route as AuthenticatedImpresion3dRouteImport } from './routes/_authenticated/impresion-3d'
 import { Route as AuthenticatedInicioRouteImport } from './routes/_authenticated/inicio'
 import { Route as AuthenticatedInventarioRouteImport } from './routes/_authenticated/inventario'
@@ -117,6 +118,11 @@ const CursosDiseno3dRoute = CursosDiseno3dRouteImport.update({
 const GaleriaJoyasRoute = GaleriaJoyasRouteImport.update({
   id: '/galeria-joyas',
   path: '/galeria-joyas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HerramientasRoute = HerramientasRouteImport.update({
+  id: '/herramientas',
+  path: '/herramientas',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HerramientasPublicasRoute = HerramientasPublicasRouteImport.update({
@@ -203,10 +209,10 @@ const AuthenticatedGestionRoute = AuthenticatedGestionRouteImport.update({
   path: '/gestion',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedHerramientasRoute =
-  AuthenticatedHerramientasRouteImport.update({
-    id: '/herramientas',
-    path: '/herramientas',
+const AuthenticatedTallerHerramientasRoute =
+  AuthenticatedTallerHerramientasRouteImport.update({
+    id: '/taller/herramientas',
+    path: '/taller/herramientas',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedImpresion3dRoute =
@@ -442,7 +448,7 @@ export interface FileRoutesByFullPath {
   '/cursos-formacion': typeof AuthenticatedCursosFormacionRoute
   '/diseno-3d': typeof AuthenticatedDiseno3dRoute
   '/gestion': typeof AuthenticatedGestionRoute
-  '/herramientas': typeof AuthenticatedHerramientasRoute
+  '/taller/herramientas': typeof AuthenticatedTallerHerramientasRoute
   '/impresion-3d': typeof AuthenticatedImpresion3dRoute
   '/inicio': typeof AuthenticatedInicioRoute
   '/inventario': typeof AuthenticatedInventarioRoute
@@ -505,7 +511,7 @@ export interface FileRoutesByTo {
   '/cursos-formacion': typeof AuthenticatedCursosFormacionRoute
   '/diseno-3d': typeof AuthenticatedDiseno3dRoute
   '/gestion': typeof AuthenticatedGestionRoute
-  '/herramientas': typeof AuthenticatedHerramientasRoute
+  '/taller/herramientas': typeof AuthenticatedTallerHerramientasRoute
   '/impresion-3d': typeof AuthenticatedImpresion3dRoute
   '/inicio': typeof AuthenticatedInicioRoute
   '/inventario': typeof AuthenticatedInventarioRoute
@@ -571,7 +577,7 @@ export interface FileRoutesById {
   '/_authenticated/cursos-formacion': typeof AuthenticatedCursosFormacionRoute
   '/_authenticated/diseno-3d': typeof AuthenticatedDiseno3dRoute
   '/_authenticated/gestion': typeof AuthenticatedGestionRoute
-  '/_authenticated/herramientas': typeof AuthenticatedHerramientasRoute
+  '/_authenticated/taller/herramientas': typeof AuthenticatedTallerHerramientasRoute
   '/_authenticated/impresion-3d': typeof AuthenticatedImpresion3dRoute
   '/_authenticated/inicio': typeof AuthenticatedInicioRoute
   '/_authenticated/inventario': typeof AuthenticatedInventarioRoute
@@ -766,7 +772,7 @@ export interface FileRouteTypes {
     | '/_authenticated/cursos-formacion'
     | '/_authenticated/diseno-3d'
     | '/_authenticated/gestion'
-    | '/_authenticated/herramientas'
+    | '/_authenticated/taller/herramientas'
     | '/_authenticated/impresion-3d'
     | '/_authenticated/inicio'
     | '/_authenticated/inventario'
@@ -819,6 +825,7 @@ export interface RootRouteChildren {
   ClienteRoute: typeof ClienteRoute
   CursosDiseno3dRoute: typeof CursosDiseno3dRoute
   GaleriaJoyasRoute: typeof GaleriaJoyasRoute
+  HerramientasRoute: typeof HerramientasRoute
   HerramientasPublicasRoute: typeof HerramientasPublicasRoute
   RecuperarContrasenaRoute: typeof RecuperarContrasenaRoute
   TiendaRoute: typeof TiendaRoute
@@ -897,6 +904,13 @@ declare module '@tanstack/react-router' {
       path: '/galeria-joyas'
       fullPath: '/galeria-joyas'
       preLoaderRoute: typeof GaleriaJoyasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/herramientas': {
+      id: '/herramientas'
+      path: '/herramientas'
+      fullPath: '/herramientas'
+      preLoaderRoute: typeof HerramientasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/herramientas-publicas': {
@@ -1004,11 +1018,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedGestionRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/herramientas': {
-      id: '/_authenticated/herramientas'
-      path: '/herramientas'
-      fullPath: '/herramientas'
-      preLoaderRoute: typeof AuthenticatedHerramientasRouteImport
+    '/_authenticated/taller/herramientas': {
+      id: '/_authenticated/taller/herramientas'
+      path: '/taller/herramientas'
+      fullPath: '/taller/herramientas'
+      preLoaderRoute: typeof AuthenticatedTallerHerramientasRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/impresion-3d': {
@@ -1341,7 +1355,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCursosFormacionRoute: typeof AuthenticatedCursosFormacionRoute
   AuthenticatedDiseno3dRoute: typeof AuthenticatedDiseno3dRoute
   AuthenticatedGestionRoute: typeof AuthenticatedGestionRoute
-  AuthenticatedHerramientasRoute: typeof AuthenticatedHerramientasRoute
+  AuthenticatedTallerHerramientasRoute: typeof AuthenticatedTallerHerramientasRoute
   AuthenticatedImpresion3dRoute: typeof AuthenticatedImpresion3dRoute
   AuthenticatedInicioRoute: typeof AuthenticatedInicioRoute
   AuthenticatedInventarioRoute: typeof AuthenticatedInventarioRoute
@@ -1377,7 +1391,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCursosFormacionRoute: AuthenticatedCursosFormacionRoute,
   AuthenticatedDiseno3dRoute: AuthenticatedDiseno3dRoute,
   AuthenticatedGestionRoute: AuthenticatedGestionRoute,
-  AuthenticatedHerramientasRoute: AuthenticatedHerramientasRoute,
+  AuthenticatedTallerHerramientasRoute: AuthenticatedTallerHerramientasRoute,
   AuthenticatedImpresion3dRoute: AuthenticatedImpresion3dRoute,
   AuthenticatedInicioRoute: AuthenticatedInicioRoute,
   AuthenticatedInventarioRoute: AuthenticatedInventarioRoute,
@@ -1440,6 +1454,7 @@ const rootRouteChildren: RootRouteChildren = {
   ClienteRoute: ClienteRoute,
   CursosDiseno3dRoute: CursosDiseno3dRoute,
   GaleriaJoyasRoute: GaleriaJoyasRoute,
+  HerramientasRoute: HerramientasRoute,
   HerramientasPublicasRoute: HerramientasPublicasRoute,
   RecuperarContrasenaRoute: RecuperarContrasenaRoute,
   TiendaRoute: TiendaRoute,
