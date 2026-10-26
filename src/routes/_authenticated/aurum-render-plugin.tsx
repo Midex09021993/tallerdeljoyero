@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ArrowLeft, Download, ExternalLink, Info, MonitorDown } from "lucide-react";
 
-const scriptUrl =
-  "https://github.com/Midex09021993/tallerdeljoyero/raw/refs/heads/main/integrations/rhino7-aurum-prototype/AurumRenderBridge.py";
+const installerUrl = "https://github.com/Midex09021993/tallerdeljoyero/raw/refs/heads/main/integrations/rhino7-aurum-prototype/Instalar-AURUM-Render-Bridge.bat";
+const scriptUrl = "https://github.com/Midex09021993/tallerdeljoyero/raw/refs/heads/main/integrations/rhino7-aurum-prototype/AurumRenderBridge.py";
 const sourceUrl =
   "https://github.com/Midex09021993/tallerdeljoyero/blob/main/integrations/rhino7-aurum-prototype/AurumRenderBridge.py";
 const guideUrl =
@@ -50,12 +50,20 @@ function AurumRenderPluginPage() {
             </div>
 
             <div>
-              <h2 className="font-semibold">Descargar el script</h2>
+              <h2 className="font-semibold">Instalador para Windows</h2>
+              <p className="mt-1 text-sm leading-6 text-white/60">Descarga el instalador y ejecútalo en Windows. Instala el script en una carpeta de AURUM LAB y crea un acceso directo para encontrarlo fácilmente.</p>
+              <a href={installerUrl} download="Instalar-AURUM-Render-Bridge.bat" className="mt-4 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#c7a45b] px-5 py-3 text-sm font-semibold text-[#17130b] transition hover:bg-[#d9bb79]">
+                <Download className="size-4" /> Descargar instalador (.bat)
+              </a>
+            </div>
+
+            <div>
+              <h2 className="font-semibold">Descargar el script por separado</h2>
               <p className="mt-1 text-sm leading-6 text-white/60">Guarda el archivo Python y ejecútalo desde el editor de scripts de Rhino 7. El documento original no debería modificarse; el prototipo crea una copia temporal.</p>
               <a
                 href={scriptUrl}
                 download="AurumRenderBridge.py"
-                className="mt-4 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#c7a45b] px-5 py-3 text-sm font-semibold text-[#17130b] transition hover:bg-[#d9bb79]"
+                className="mt-4 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-white/15 px-5 py-3 text-sm font-semibold text-white/80 transition hover:bg-white/5"
               >
                 <Download className="size-4" /> Descargar script (.py)
               </a>
