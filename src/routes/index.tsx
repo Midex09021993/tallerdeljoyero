@@ -191,6 +191,7 @@ function PlanesPublicos() {
 function InicioPublico() {
   return (
     <main className="min-h-screen bg-white text-[#17232d]">
+      <a href="#contenido-principal" className="sr-only z-50 rounded-md bg-white px-4 py-2 font-semibold text-[#17232d] focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:ring-2 focus:ring-[#d4aa19]">Saltar al contenido principal</a>
       <header className="sticky top-0 z-30 border-b border-slate-200/90 bg-white/95 shadow-[0_2px_8px_rgba(15,23,42,.05)] backdrop-blur">
         <div className="mx-auto flex min-h-[68px] max-w-[1440px] flex-wrap items-center justify-between gap-4 px-5 sm:px-8 lg:px-12">
           <Link to="/" className="flex shrink-0 items-center gap-2.5" aria-label="AURUM LAB, inicio">
@@ -222,7 +223,7 @@ function InicioPublico() {
         </div>
       </header>
 
-      <section className="relative isolate overflow-hidden">
+      <section id="contenido-principal" className="relative isolate scroll-mt-24 overflow-hidden">
         <div className="pointer-events-none absolute -left-32 top-12 -z-10 size-[28rem] rounded-full bg-[#ffe99b]/70 blur-[90px]" />
         <div className="pointer-events-none absolute right-[28%] top-20 -z-10 size-64 rounded-full bg-[#e9f1ff]/80 blur-[80px]" />
         <div className="mx-auto grid max-w-[1440px] items-center gap-12 px-5 pb-16 pt-12 sm:px-8 sm:pb-20 sm:pt-16 lg:grid-cols-[.92fr_1.08fr] lg:gap-8 lg:px-12 lg:pb-24 lg:pt-20">
@@ -249,8 +250,8 @@ function InicioPublico() {
                 <span className="size-2.5 rounded-full bg-[#ff6b63]" /><span className="size-2.5 rounded-full bg-[#ffce45]" /><span className="size-2.5 rounded-full bg-[#4ac58b]" />
                 <div className="mx-auto mr-12 rounded-full bg-slate-100 px-14 py-1 text-[9px] text-slate-400">TU ESPACIO DIGITAL</div>
               </div>
-              <div className="grid min-h-[310px] grid-cols-[126px_1fr] overflow-hidden rounded-b-xl sm:min-h-[365px] sm:grid-cols-[155px_1fr]">
-                <aside className="border-r border-slate-100 bg-[#f8fafc] p-3 sm:p-4">
+              <div className="grid min-h-[310px] grid-cols-[108px_minmax(0,1fr)] overflow-hidden rounded-b-xl sm:min-h-[365px] sm:grid-cols-[155px_minmax(0,1fr)]">
+                <aside className="min-w-0 border-r border-slate-100 bg-[#f8fafc] p-2.5 sm:p-4">
                   <div className="mb-5 flex items-center gap-2 text-[10px] font-extrabold text-[#17232d] sm:text-xs"><span className="grid size-6 place-items-center rounded-md bg-[#ffcf24]"><Gem className="size-3.5" /></span>AURUM LAB</div>
                   <p className="mb-2 text-[8px] font-bold uppercase tracking-wider text-slate-400 sm:text-[9px]">Tu espacio</p>
                   <div className="space-y-1.5 text-[9px] text-slate-600 sm:text-[11px]">
@@ -265,7 +266,7 @@ function InicioPublico() {
                     <div className="mt-2 h-1.5 rounded-full bg-[#ffcf24]" />
                   </div>
                 </aside>
-                <div className="min-w-0 p-3 sm:p-5">
+                <div className="min-w-0 p-2.5 sm:p-5">
                   <div className="flex items-start justify-between gap-2">
                     <div><p className="text-[9px] text-slate-400 sm:text-[10px]">TU TALLER DIGITAL</p><h2 className="mt-1 text-sm font-bold text-[#17232d] sm:text-lg">Tu taller, en orden</h2></div>
                     <span className="rounded-full bg-[#e9f8ef] px-2 py-1 text-[8px] font-semibold text-[#27834d] sm:text-[9px]">Espacio de trabajo</span>
