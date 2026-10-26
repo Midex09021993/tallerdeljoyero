@@ -158,3 +158,88 @@ export function fitAurumCameraToAspect(
   camera.updateProjectionMatrix();
   controls.update();
 }
+
+
+/**
+ * Calcula una distancia focal en espacio de cámara para DOF.
+ * Prioriza la superficie visible de la gema de mayor tamaño y, si no hay
+ * una gema visible, sondea varias zonas de la pieza para evitar enfocar el fondo.
+ */
+export function calculateAurumFocalDepth(
+  camera: THREE.PerspectiveCamera,
+  controls: { target?: THREE.Vector3 } | null | undefined,
+  model: THREE.Object3D,
+): number {
+  camera.updateMatrixWorld(true);
+  model.updateWorldMatrix(true, true);
+
+  const meshes: THREE.Mesh[] = [];
+  const gemMeshes: THREE.Mesh[] = [];
+  model.traverse((object) => {
+    const mesh = object as THREE.Mesh;
+    if (!mesh.isMesh || !mesh.geometry) return;
+    meshes.push(mesh);
+    const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+    const materialGem = materials.some((material) =>
+      Boolean((material as THREE.Material & { userData?: Record<string, unknown> })?.userData?.aurumGemFamily
+        || (material as THREE.Material & { userData?: Record<string, unknown> })?.userData?.aurumOpticalProfile),
+    );
+    const meta = mesh.userData ?? {};
+    const layer = String(meta.capa ?? meta.layerName ?? meta.nombreCapa ?? mesh.name ?? "").toLowerCase();
+    if (materialGem || meta.aurumGemFamily || meta.aurumOpticalProfile || String(meta.categoria ?? "").toLowerCase() === "gema"
+      || /(gem|stone|gema|piedra|diamante|diamond|zafiro|sapphire|rubi|ruby|esmeralda|emerald|moissanita)/.test(layer)) {
+      gemMeshes.push(mesh);
+    }
+  });
+
+  const raycaster = new THREE.Raycaster();
+  const projectAndHit = (object: THREE.Object3D): THREE.Intersection | null => {
+    const bounds = new THREE.Box3().setFromObject(object);
+    if (bounds.isEmpty()) return null;
+    const center = bounds.getCenter(new THREE.Vector3());
+    const screen = center.project(camera);
+    if (!Number.isFinite(screen.x) || !Number.isFinite(screen.y) || screen.z < -1 || screen.z > 1
+      || Math.abs(screen.x) > 1 || Math.abs(screen.y) > 1) return null;
+    raycaster.setFromCamera(new THREE.Vector2(screen.x, screen.y), camera);
+    return raycaster.intersectObject(object, true)[0] ?? null;
+  };
+
+  if (gemMeshes.length) {
+    gemMeshes.sort((a, b) => {
+      const size = (mesh: THREE.Mesh) => {
+        const bounds = new THREE.Box3().setFromObject(mesh);
+        const dimensions = bounds.getSize(new THREE.Vector3());
+        return dimensions.x * dimensions.y * dimensions.z;
+      };
+      return size(b) - size(a);
+    });
+    for (const gem of gemMeshes) {
+      const hit = projectAndHit(gem);
+      if (hit) {
+        const viewPoint = hit.point.clone().applyMatrix4(camera.matrixWorldInverse);
+        const depth = -viewPoint.z;
+        if (Number.isFinite(depth) && depth > camera.near) return depth;
+      }
+    }
+  }
+
+  const probes: Array<[number, number]> = [[0, 0], [0, 0.25], [0, -0.2], [-0.2, 0], [0.2, 0]];
+  const hits: THREE.Intersection[] = [];
+  for (const [x, y] of probes) {
+    raycaster.setFromCamera(new THREE.Vector2(x, y), camera);
+    hits.push(...raycaster.intersectObjects(meshes, false));
+  }
+  hits.sort((a, b) => a.distance - b.distance);
+  if (hits.length) {
+    const viewPoint = hits[0].point.clone().applyMatrix4(camera.matrixWorldInverse);
+    const depth = -viewPoint.z;
+    if (Number.isFinite(depth) && depth > camera.near) return depth;
+  }
+
+  const bounds = new THREE.Box3().setFromObject(model);
+  const sphere = bounds.getBoundingSphere(new THREE.Sphere());
+  const radius = Number.isFinite(sphere.radius) && sphere.radius > 0 ? sphere.radius : 1.3;
+  const target = controls?.target ?? sphere.center;
+  const fallback = camera.position.distanceTo(target) - radius * 0.7;
+  return Math.max(camera.near + 0.001, Math.min(camera.far - 0.001, Number.isFinite(fallback) ? fallback : 4));
+}
