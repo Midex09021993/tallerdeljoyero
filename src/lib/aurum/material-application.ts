@@ -468,6 +468,7 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
       ...part.userData,
       aurumGemApplicationToken:applicationToken,
       aurumActiveGemId:activeGemId,
+      aurumActiveGemFamily:String(gemConfig?.familia??"").toLocaleLowerCase(),
       aurumFacetNormalsApplied:true,
       aurumFacetNormalMode:part.geometry?.attributes?.normal?"authored-or-crease":"flat-fallback",
       aurumOpticalThickness:thickness,
