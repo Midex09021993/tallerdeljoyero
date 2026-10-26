@@ -835,9 +835,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             url: requestedEnvironmentUrl,
             camera: camara,
             quality: "interactive",
-            // Experimental BVH across gem families, using the runtime's family-specific optical profiles.
-            // Mixed-material meshes are still skipped by the runtime to protect metals and unrelated parts.
-            targetFamilies: ["Diamante", "Esmeralda", "Rubí", "Rubi", "Zafiro", "Sapphire", "Amatista", "Amethyst", "Aguamarina", "Aquamarine", "Citrino", "Citrine", "Topacio", "Topacio Azul", "topacio_azul", "Blue Topaz", "BlueTopaz", "Moissanita", "Moissanite", "Turmalina Paraíba", "Turmalina Paraiba", "turmalina_paraiba", "Paraiba Tourmaline", "Paraiba", "Tanzanita", "Tanzanite"],
+            // BVH for diamonds and other gemstone families; emeralds stay on the native physical material
+            // until their dedicated optical adaptation is ready. Mixed-material meshes remain protected.
+            targetFamilies: ["Diamante", "Rubí", "Rubi", "Zafiro", "Sapphire", "Amatista", "Amethyst", "Aguamarina", "Aquamarine", "Citrino", "Citrine", "Topacio", "Topacio Azul", "topacio_azul", "Blue Topaz", "BlueTopaz", "Moissanita", "Moissanite", "Turmalina Paraíba", "Turmalina Paraiba", "turmalina_paraiba", "Paraiba Tourmaline", "Paraiba", "Tanzanita", "Tanzanite"],
             onError: (error) => console.warn("[AURUM][GEM BVH] Se conserva el shader anterior para esta malla:", error),
           });
           if (!vivo || requestedEnvironmentUrl !== gemEnvironmentUrl) {
