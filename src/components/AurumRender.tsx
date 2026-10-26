@@ -1127,6 +1127,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               meshes.push({
                 mesh:node.name||node.uuid,
                 meshUuid:node.uuid,
+                category:node.userData?.attributes?.categoria??node.userData?.attributes?.category??node.userData?.categoria??node.userData?.category??null,
+                layer:node.userData?.attributes?.layerName??node.userData?.attributes?.LayerName??node.userData?.layerName??null,
+                activeGemId:node.userData?.aurumActiveGemId??null,
+                applicationToken:node.userData?.aurumGemApplicationToken??null,
+                internalInclusion:Boolean(node.userData?.aurumInternalInclusion),
                 materialCount:list.filter(Boolean).length,
                 materials:list.filter(Boolean).map((m:any)=>({
                   uuid:m.uuid??null,
