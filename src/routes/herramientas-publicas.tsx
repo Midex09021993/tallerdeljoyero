@@ -165,7 +165,7 @@ function HerramientasPublicasPage() {
                 {resultados.map(({ id, ruta, titulo, descripcion, Icono }) => (
                   <Link
                     key={id}
-                    to="/herramientas/$herramienta"
+                    to="/herramientas-publicas/$herramienta"
                     params={{ herramienta: ruta }}
                     data-analytics-tool-id={id}
                     data-analytics-tool-name={titulo}
