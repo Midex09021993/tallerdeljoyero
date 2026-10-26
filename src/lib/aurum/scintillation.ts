@@ -629,12 +629,13 @@ export const setAurumGemShaderQuality=(target:any,quality:AurumGemShaderQuality)
   const apply=(material:any)=>{
     if(!material?.isMeshPhysicalMaterial || !material.userData?.aurumBeautyOnBeforeCompile)return;
     const ud=material.userData;
-    // Preserve advanced optics for diamonds and catalog-grade emeralds in
-    // the interactive viewer. Emerald quality is encoded in the authored
-    // shader response as well as in PBR properties; stripping that shader
-    // collapses the visible differences between the three catalog grades.
-    // Other gemstone families retain the lightweight live path.
-    if(quality==="live" && (ud.aurumGemFamily==="Diamante" || ud.aurumGemFamily==="Esmeralda")){
+    // Keep the dedicated spectral path for diamonds. Colored gems, including
+    // emeralds, use Three.js' native physical shader in LIVE: the photographic
+    // custom shader bypasses the normal tone-mapping/color-space output path,
+    // which can flatten catalog hue and absorption differences under HDR.
+    // Authored MeshPhysicalMaterial properties remain intact; CAPTURE restores
+    // the full custom shader from aurumBeautyOnBeforeCompile.
+    if(quality==="live" && ud.aurumGemFamily==="Diamante"){
       return;
     }
     if(quality==="live"){
