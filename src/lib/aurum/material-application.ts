@@ -431,8 +431,13 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
       next.iridescence=Math.max(0,Math.min(1,Number(gemConfig?.iridescence??preset.iridescence)));
       next.userData={
         ...(next.userData??{}),
+        aurumGemFamily:"Esmeralda",
         aurumEmeraldCatalogGrade:String(gemConfig?.id??""),
         aurumEmeraldCatalogProfileApplied:true,
+        // The live renderer caches authored transmission once per material.
+        // Refresh that cache whenever a new emerald grade is applied, otherwise
+        // switching grades can keep using the previous grade's transmission.
+        aurumLiveTransmissionStored:Math.max(0,Math.min(1,Number(gemConfig?.transmission??preset.transmission))),
       };
       next.needsUpdate=true;
     }
