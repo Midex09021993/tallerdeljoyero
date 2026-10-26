@@ -52,23 +52,23 @@ const soluciones = [
   },
   {
     numero: "03",
-    etiqueta: "ORGANIZAR",
-    icon: Cloud,
-    titulo: "Ten tus archivos organizados",
-    texto: "Centraliza modelos y recursos digitales para mantener el trabajo de tu taller más ordenado.",
-    beneficio: "Tus recursos en un solo espacio",
+    etiqueta: "GESTIONAR",
+    icon: ChartNoAxesCombined,
+    titulo: "Gestiona el área comercial de tu taller",
+    texto: "Organiza clientes, cotizaciones, contratos y pedidos desde la plataforma para dar seguimiento al trabajo comercial.",
+    beneficio: "Del primer contacto al pedido",
     enlace: "/auth" as const,
-    accion: "Conocer Mi Nube",
+    accion: "Entrar al área comercial",
   },
   {
     numero: "04",
-    etiqueta: "PRESENTAR",
-    icon: Layers3,
-    titulo: "Muestra tus piezas con claridad",
-    texto: "Organiza las joyas que quieres compartir y prepara una presentación digital para tus clientes.",
-    beneficio: "Una vitrina digital para tu trabajo",
+    etiqueta: "ORGANIZAR Y PRESENTAR",
+    icon: Cloud,
+    titulo: "Mi Nube y catálogo, conectados a tu trabajo",
+    texto: "Organiza tus archivos y prepara un catálogo digital para compartir tus piezas y presentarlas a tus clientes.",
+    beneficio: "Archivos y presentación en un mismo ecosistema",
     enlace: "/auth" as const,
-    accion: "Acceder al catálogo",
+    accion: "Acceder a la plataforma",
   },
 ];
 
@@ -230,11 +230,11 @@ function InicioPublico() {
           <div className="relative z-10 max-w-[650px]">
             <span className="inline-flex items-center gap-2 rounded-full border border-[#e5c04a]/50 bg-[#fff9df] px-3.5 py-2 text-[10px] font-bold uppercase tracking-[.16em] text-[#785b00]"><Sparkles className="size-3.5" /> AURUM LAB · TECNOLOGÍA PARA JOYEROS</span>
             <h1 className="mt-6 text-[2.65rem] font-extrabold leading-[1.06] tracking-[-.045em] text-[#17232d] sm:text-5xl lg:text-[3.8rem]"><span className="block">Tu taller, más organizado.</span><span className="mt-2 block text-[#9a7400]">Tu talento, sin límites.</span></h1>
-            <p className="mt-6 max-w-xl text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">Herramientas para joyeros, gestión del taller y visualización 3D. Todo conectado en un espacio pensado para tu oficio.</p>
+            <p className="mt-6 max-w-xl text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">Un ecosistema digital para el oficio joyero: herramientas técnicas, gestión comercial integral y AURUM RENDER, nuestro estudio premium de visualización 3D.</p>
             <ul className="mt-7 space-y-4 text-sm font-medium text-[#25323b] sm:text-[15px]">
               <li className="flex items-start gap-3"><span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-lg bg-[#fff4c4] text-[#9b7600]"><Check className="size-4" /></span>Calculadoras y herramientas técnicas para trabajar con más claridad.</li>
               <li className="flex items-start gap-3"><span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-lg bg-[#fff4c4] text-[#9b7600]"><Check className="size-4" /></span>AURUM RENDER para explorar materiales y presentar tus diseños en 3D.</li>
-              <li className="flex items-start gap-3"><span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-lg bg-[#fff4c4] text-[#9b7600]"><Check className="size-4" /></span>Mi Nube y catálogo digital para organizar y compartir tus recursos.</li>
+              <li className="flex items-start gap-3"><span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-lg bg-[#fff4c4] text-[#9b7600]"><Check className="size-4" /></span>Clientes, cotizaciones, contratos, pedidos y catálogo; con Mi Nube para organizar tus archivos.</li>
             </ul>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link to="/herramientas" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#17232d] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-slate-900/10 transition hover:-translate-y-0.5 hover:bg-[#293b49]">Empezar con herramientas <ArrowRight className="size-4" /></Link>
@@ -354,7 +354,7 @@ function InicioPublico() {
           <div className="mx-auto max-w-3xl text-center">
             <p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#987400]">Tecnología pensada para el oficio joyero</p>
             <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-[#17232d] sm:text-3xl lg:text-4xl">¿Qué necesitas resolver en tu taller?</h2>
-            <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">Soluciones concretas para diseñar, organizar y presentar tu trabajo, en un solo ecosistema.</p>
+            <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">Desde la gestión comercial del taller hasta la visualización premium de tus diseños: herramientas conectadas para acompañar cada etapa del oficio.</p>
           </div>
           <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {soluciones.map(({ numero, etiqueta, icon: Icono, titulo, texto, beneficio, enlace, accion }) => (
@@ -377,8 +377,8 @@ function InicioPublico() {
             <div className="flex items-start gap-3">
               <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#ffefad] text-[#8f6b00]"><Layers3 className="size-5" /></span>
               <div>
-                <h3 className="text-sm font-bold text-[#17232d]">Un ecosistema que crece contigo</h3>
-                <p className="mt-1 max-w-3xl text-xs leading-5 text-slate-600">Empieza con lo que necesitas y habilita nuevas capacidades conforme evoluciona tu taller. Las funciones disponibles dependen de tu plan y de los módulos activados.</p>
+                <h3 className="text-sm font-bold text-[#17232d]">Más que un software de gestión: un ecosistema para joyeros</h3>
+                <p className="mt-1 max-w-3xl text-xs leading-5 text-slate-600">Combina herramientas técnicas, gestión comercial, archivos, catálogo y visualización 3D en un entorno pensado para la joyería. Las funciones disponibles dependen de tu plan y de los módulos activados.</p>
               </div>
             </div>
             <a href="#planes" className="inline-flex min-h-9 shrink-0 items-center gap-2 self-start text-xs font-bold text-[#765900] transition hover:text-[#17232d] sm:self-center">Conocer los planes<ArrowRight className="size-3.5" /></a>
@@ -446,7 +446,7 @@ function InicioPublico() {
           <div className="mx-auto max-w-2xl text-center">
             <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#987400]">Planes para cada etapa</p>
             <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-[#17232d] sm:text-3xl">Elige cómo quieres crecer.</h2>
-            <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base">Empieza con lo esencial y amplía las capacidades de tu taller cuando lo necesites.</p>
+            <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base">Elige las capacidades que acompañan a tu taller: gestión comercial, herramientas especializadas y visualización 3D premium, según el plan y los módulos habilitados.</p>
           </div>
           <PlanesPublicos />
         </div>
@@ -460,7 +460,7 @@ function InicioPublico() {
                 <span className="grid size-8 place-items-center rounded-lg bg-[#f8c928] text-[#17232d]"><Gem className="size-4" /></span>
                 <span className="text-lg font-extrabold tracking-tight">AURUM<span className="text-[#f8c928]"> LAB</span></span>
               </Link>
-              <p className="mt-3 max-w-xs text-xs leading-5 text-slate-300">Tecnología digital para talleres de joyería. Crece a tu ritmo.</p>
+              <p className="mt-3 max-w-xs text-xs leading-5 text-slate-300">Un ecosistema digital para el oficio joyero: gestión comercial, herramientas técnicas y visualización 3D premium.</p>
               <a href="mailto:noreply@tallerdeljoyero.com" className="mt-4 inline-flex items-center gap-2 text-xs font-medium text-white transition hover:text-[#f8c928]">noreply@tallerdeljoyero.com <ArrowRight className="size-3.5" /></a>
             </div>
             <div>
