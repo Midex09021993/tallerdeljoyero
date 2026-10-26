@@ -164,6 +164,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [snapshotHeight, setSnapshotHeight] = useState("2160");
   const [snapshotFormat, setSnapshotFormat] = useState<"png"|"jpeg"|"webp">("png");
   const [snapshotTransparent, setSnapshotTransparent] = useState(false);
+  const [snapshotDof, setSnapshotDof] = useState(false);
+  const [snapshotDofStrength, setSnapshotDofStrength] = useState<"soft"|"medium"|"strong">("soft");
   const [snapshotGuide, setSnapshotGuide] = useState<"none"|"thirds"|"complete">("none");
   const [snapshotAspect, setSnapshotAspect] = useState<"16:9"|"1:1"|"4:5"|"9:16"|"3:2"|null>(null);
   const [renderQualityId, setRenderQualityId] = useState<AurumRenderQualityId>("high");
@@ -1875,7 +1877,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             loop?.resize?.();
           }
         },
-        exportPNG:(options:{width?:number;height?:number;format?:"png"|"jpeg"|"webp";transparent?:boolean;onCapture?:(dataUrl:string)=>void}={})=>{
+        exportPNG:(options:{width?:number;height?:number;format?:"png"|"jpeg"|"webp";transparent?:boolean;depthOfField?:boolean;dofStrength?:"soft"|"medium"|"strong";onCapture?:(dataUrl:string)=>void}={})=>{
           if(!modelo) throw new Error("Carga un modelo antes de crear el snapshot.");
           const liveCanvas=renderer.domElement as HTMLCanvasElement | null;
           if(!liveCanvas || liveCanvas.width<2 || liveCanvas.height<2) {
@@ -1894,6 +1896,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           const originalAspect=camara.aspect;
           const originalTransmissionResolutionScale=Number((renderer as any).transmissionResolutionScale ?? 1);
           const originalFastPath=liveFastPathRef.current;
+          const originalDofConfig = { dof: postRuntimeConfig.dof, dofAperture: postRuntimeConfig.dofAperture, dofMaxBlur: postRuntimeConfig.dofMaxBlur };
           const originalBackground=escena.background;
           const originalClearColor=renderer.getClearColor(new THREE.Color()).clone();
           const originalClearAlpha=renderer.getClearAlpha();
@@ -1965,13 +1968,19 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             if(Math.round(drawingBufferSize.x)!==renderWidth || Math.round(drawingBufferSize.y)!==renderHeight){
               throw new Error("El búfer de dibujo WebGL no coincide con la resolución interna solicitada.");
             }
-            // A single direct render preserves the live renderer's color/tone-mapping path.
+            // The established direct-render path remains the default. The compositor is opt-in for photographic DOF captures only.
+            if (options.depthOfField) {
+              const strength = options.dofStrength === "strong" ? { aperture: 0.0011, maxBlur: 0.012 } : options.dofStrength === "medium" ? { aperture: 0.0008, maxBlur: 0.008 } : { aperture: 0.0005, maxBlur: 0.004 };
+              Object.assign(postRuntimeConfig, { dof: true, dofAperture: strength.aperture, dofMaxBlur: strength.maxBlur });
+              applyPostQuality?.({ ...renderQuality, pixelRatio: 1, qualityId: "ultra" }, { capture: true, width: renderWidth, height: renderHeight });
+            }
             if (transparent) {
               escena.background=null;
               renderer.setClearColor(0x000000,0);
             }
-            renderer.render(escena,camara);
-            const captureComposerBuffer = null;
+            if (options.depthOfField && composer) composer.render();
+            else renderer.render(escena,camara);
+            const captureComposerBuffer = options.depthOfField && composer ? { width: renderer.domElement.width, height: renderer.domElement.height } : null;
             const captureTaaPass = null as null | { enabled?: boolean; accumulate?: boolean; sampleLevel?: number; accumulateIndex?: number };
             console.info("[AURUM][PNG CAPTURE DIAGNOSTICS]", {
               requestedOutput: { width, height },
@@ -2008,6 +2017,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             dataUrl=output.toDataURL(mime,0.94);
           } finally {
             escena.background=originalBackground;
+            Object.assign(postRuntimeConfig, originalDofConfig);
             renderer.setClearColor(originalClearColor,originalClearAlpha);
             // Refresh diamond camera uniforms after restoring the live camera.
             diamondBvhRuntime?.update();
