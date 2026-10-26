@@ -705,7 +705,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       renderer.domElement.className = "block h-full w-full";
       nodo.appendChild(renderer.domElement);
       const postRuntimeConfig = { ...ssaoConfig, ...postConfig };
-      const { composer, ssaoPass, setSSRSelects, applyQuality: applyPostQuality, updateTemporal } = await createAurumPostPipeline(
+      const { composer, ssaoPass, setSSRSelects, applyQuality: applyPostQuality, updateTemporal, dofPass } = await createAurumPostPipeline(
         renderer,
         escena,
         camara,
@@ -1889,6 +1889,18 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               ? { aperture: 0.007, maxBlur: 0.009 }
               : { aperture: 0.0035, maxBlur: 0.005 };
           Object.assign(postRuntimeConfig,{dof:Boolean(enabled),dofAperture:settings.aperture,dofMaxBlur:settings.maxBlur});
+          // Apply the toggle to the actual pass immediately, then reconcile the full
+          // post-processing profile. This avoids a UI/runtime state mismatch.
+          if (dofPass) dofPass.enabled = Boolean(enabled);
+          if (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("aurumDofDiag")) {
+            console.info("[AURUM][DOF] setDepthOfField", {
+              requested: Boolean(enabled),
+              passFound: Boolean(dofPass),
+              passEnabled: Boolean(dofPass?.enabled),
+              aperture: dofPass?.uniforms?.aperture?.value ?? null,
+              maxblur: dofPass?.uniforms?.maxblur?.value ?? null,
+            });
+          }
           applyPostQuality?.({...renderQuality,pixelRatio:renderQuality.pixelRatio,qualityId:measuredQualityId});
           updateTemporal?.(controles?.target ? camara.position.distanceTo(controles.target) : undefined);
           invalidateRenderRef.current?.();
@@ -3206,7 +3218,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             </div>}
             {!embedded && liveDofOpen&&<div className="absolute right-[70px] top-[calc(50%+52px)] z-40 w-[min(270px,calc(100%-5rem))] rounded-2xl border border-black/10 bg-[#fbfaf7]/95 p-3 text-[#292824] shadow-xl backdrop-blur-2xl">
               <div className="mb-2 text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Profundidad de campo · visor</div>
-              <label className="flex items-center justify-between gap-3 rounded-lg border border-black/10 bg-white p-3 text-xs"><span><span className="block font-semibold">Previsualizar desenfoque</span><span className="mt-1 block text-[10px] text-[#77756f]">Se aplica al visor al terminar la órbita.</span></span><input type="checkbox" checked={liveDof} onChange={e=>{const enabled=e.target.checked;setLiveDof(enabled);apiRef.current?.setDepthOfField?.(enabled,liveDofStrength);}} className="size-4 accent-[#b99642]"/></label>
+              <label className="flex items-center justify-between gap-3 rounded-lg border border-black/10 bg-white p-3 text-xs"><span><span className="block font-semibold">Previsualizar desenfoque</span><span className="mt-1 block text-[10px] text-[#77756f]">Se aplica al visor al terminar la órbita.</span></span><input type="checkbox" checked={liveDof} onChange={e=>{const enabled=e.target.checked;setLiveDof(enabled);if(typeof window!=="undefined"&&new URLSearchParams(window.location.search).has("aurumDofDiag"))console.info("[AURUM][DOF] UI toggle",{requested:enabled,apiAvailable:Boolean(apiRef.current?.setDepthOfField)});apiRef.current?.setDepthOfField?.(enabled,liveDofStrength);}} className="size-4 accent-[#b99642]"/></label>
               <label className="mt-2 block text-[10px] text-[#66645e]">Intensidad<select value={liveDofStrength} onChange={e=>{const strength=e.target.value as "soft"|"medium"|"strong";setLiveDofStrength(strength);apiRef.current?.setDepthOfField?.(liveDof,strength);}} className="mt-1 w-full rounded-lg border border-black/15 bg-white px-2 py-2 text-xs text-[#292824]"><option value="soft">Suave · recomendado</option><option value="medium">Medio</option><option value="strong">Intenso</option></select></label>
               <p className="mt-2 text-[10px] leading-relaxed text-[#858178]">El efecto se pausa durante el movimiento para conservar fluidez y se recupera al estabilizar la cámara.</p>
             </div>}
