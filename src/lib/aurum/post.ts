@@ -405,5 +405,5 @@ export async function createAurumPostPipeline(
     if(!ssrPass)return;
     ssrPass.selects=Array.isArray(objects)?objects:[];
   };
-  return {composer,ssaoPass,ssrPass,setSSRSelects,applyQuality,updateTemporal,dofPass,taaPass};
+  return {composer,renderPass,ssaoPass,ssrPass,setSSRSelects,applyQuality,updateTemporal,dofPass,taaPass};
 }
