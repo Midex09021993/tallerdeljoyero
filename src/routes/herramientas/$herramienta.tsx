@@ -85,7 +85,7 @@ function HerramientaPublicaPage() {
         <section className="max-w-lg">
           <h1 className="font-display text-3xl">Herramienta no encontrada</h1>
           <p className="mt-3 text-sm leading-6 text-white/65">El enlace puede estar incompleto o la herramienta ya no estar disponible.</p>
-          <Link to="/herramientas-publicas" className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#d8bd7b] px-5 py-3 text-sm font-semibold text-[#171713]"><ArrowLeft className="size-4" /> Ver todas las herramientas</Link>
+          <Link to="/herramientas" className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#d8bd7b] px-5 py-3 text-sm font-semibold text-[#171713]"><ArrowLeft className="size-4" /> Ver todas las herramientas</Link>
         </section>
       </main>
     );
@@ -98,7 +98,7 @@ function HerramientaPublicaPage() {
       <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-80 bg-[radial-gradient(ellipse_at_top,rgba(216,189,123,.12),transparent_68%)]" />
       <div className="relative mx-auto w-full max-w-6xl px-4 py-6 sm:px-7 lg:px-10">
         <header className="flex flex-wrap items-center justify-between gap-4 border-b border-[#d8bd7b]/20 pb-5">
-          <Link to="/herramientas-publicas" className="inline-flex min-h-11 items-center gap-2 text-sm text-white/65 transition hover:text-[#e5ca8a]"><ArrowLeft className="size-4" /> Todas las herramientas</Link>
+          <Link to="/herramientas" className="inline-flex min-h-11 items-center gap-2 text-sm text-white/65 transition hover:text-[#e5ca8a]"><ArrowLeft className="size-4" /> Todas las herramientas</Link>
           <Link to="/auth" className="text-xs font-semibold uppercase tracking-[.18em] text-[#d8bd7b]">Aurum Lab</Link>
         </header>
 
