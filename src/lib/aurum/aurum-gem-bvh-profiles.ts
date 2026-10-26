@@ -32,11 +32,13 @@ export function resolveAurumEmeraldBvhProfile(
     optical.absorptionDistance,
     readFinite(physical.attenuationDistance, 0),
   );
-  // Keep absorption in a restrained range. The BVH shader does not implement
-  // Beer-Lambert attenuation, so this is only a visual approximation.
+  // The upstream shader skips its attenuation branch unless absorption > 1.001.
+  // Previous values (0.54–0.96) therefore had no effect at all. Use a modest
+  // active range; the shader applies exp(-0.04 * (absorption - 1) * pathLength),
+  // so aggressive values would unnecessarily darken small emeralds.
   const absorption = attenuationDistance > 0
-    ? THREE.MathUtils.clamp(0.35 + 0.35 / attenuationDistance, 0.35, 0.8)
-    : 0.45;
+    ? THREE.MathUtils.clamp(1.15 + 0.025 / attenuationDistance, 1.15, 1.65)
+    : 1.35;
 
   const nativeColor = physical.color?.isColor
     ? physical.color.getHex()
@@ -57,9 +59,9 @@ export function resolveAurumEmeraldBvhProfile(
     // This package's shader clamps dispersion to 0.02; emerald dispersion is
     // intentionally kept subtle rather than inheriting exaggerated catalog values.
     dispersion: THREE.MathUtils.clamp(readFinite(physical.dispersion, readFinite(optical.dispersion, 0.0005)), 0, 0.002),
-    // Slightly stronger absorption counters the washed-out center without
-    // changing the catalog hue; this is a visual control, not Beer-Lambert.
-    absorption: THREE.MathUtils.clamp(absorption + 0.22, 0.54, 0.96),
+    // Keep absorption above the upstream shader's 1.001 activation threshold.
+    // This controls luminance through the stone; hue remains authored by color.
+    absorption,
     // The diamond shader can wash out colored gems at high HDR intensity.
     // Keep emerald reflections restrained while preserving the native color.
     environmentIntensity: THREE.MathUtils.clamp(readFinite(physical.envMapIntensity, 0.82), 0.6, 0.92),
