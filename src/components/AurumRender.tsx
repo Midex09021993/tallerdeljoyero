@@ -1449,7 +1449,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         // dozens of transparent draw calls and are not required for the base
         // product preview. CAPTURE enables them temporarily for the final image.
         setAurumInclusionsVisible(modelo, false);
-        setAurumEmeraldInclusionsVisible(modelo, true);
+        // Keep procedural emerald inclusions out of the live BVH pass: their
+        // intersecting transparent meshes produce unstable speckles while the
+        // camera moves and can visually contaminate nearby secondary stones.
+        // They can be enabled separately for a controlled still/capture pass.
+        setAurumEmeraldInclusionsVisible(modelo, false);
         liveFastPathRef.current=true;
         aplicarPerfilLive();
 
