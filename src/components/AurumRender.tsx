@@ -1886,10 +1886,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           // Keep the real BokehPass effect photographic, not destructive: once the
           // pass is actually active, the previous aperture values blurred the whole jewel.
           const settings = strength === "strong"
-            ? { aperture: 0.0014, maxBlur: 0.012 }
+            ? { aperture: 0.0030, maxBlur: 0.014 }
             : strength === "medium"
-              ? { aperture: 0.0010, maxBlur: 0.008 }
-              : { aperture: 0.0007, maxBlur: 0.004 };
+              ? { aperture: 0.0020, maxBlur: 0.010 }
+              : { aperture: 0.0012, maxBlur: 0.006 };
           Object.assign(postRuntimeConfig,{dof:Boolean(enabled),dofAperture:settings.aperture,dofMaxBlur:settings.maxBlur});
           // Apply the toggle to the actual pass immediately, then reconcile the full
           // post-processing profile. This avoids a UI/runtime state mismatch.
