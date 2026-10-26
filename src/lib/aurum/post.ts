@@ -381,6 +381,7 @@ export async function createAurumPostPipeline(
   };
 
   let lastPX=NaN,lastPY=NaN,lastPZ=NaN,lastQX=NaN,lastQY=NaN,lastQZ=NaN,lastQW=NaN;
+  let lastLoggedFocus=NaN;
   const updateTemporal=(focusDistance?:number)=>{
     const p=camera.position, q=camera.quaternion;
     const moved=!Number.isFinite(lastPX)
@@ -403,7 +404,12 @@ export async function createAurumPostPipeline(
       const far=Math.max(near+0.0001,Number(camera.far)||1000);
       const safeDistance=Math.max(near+0.0001,Math.min(far,distance));
       dofPass.uniforms.focus.value=safeDistance;
-      if (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("aurumDofDiag")) {
+      if (
+        typeof window !== "undefined"
+        && new URLSearchParams(window.location.search).has("aurumDofDiag")
+        && (!Number.isFinite(lastLoggedFocus) || Math.abs(safeDistance - lastLoggedFocus) >= 0.02)
+      ) {
+        lastLoggedFocus = safeDistance;
         console.info("[AURUM][DOF] focus plane", {
           worldDistance: distance,
           cameraNear: near,
