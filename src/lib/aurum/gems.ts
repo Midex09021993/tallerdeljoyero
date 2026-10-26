@@ -75,7 +75,7 @@ const addEmeraldInclusions=(THREE: typeof import("three"),target: import("three"
   // CAD meshes keep the jardin embedded within the gemstone.
   for(let i=0;i<branchCount;i++){
     const points: import("three").Vector3[]=[];
-    const start=new THREE.Vector3((rnd()-.5)*size.x*.28,(rnd()-.5)*size.y*.28,(rnd()-.5)*size.z*.28);
+    const start=new THREE.Vector3(center.x+(rnd()-.5)*safeSize.x*.45,center.y+(rnd()-.5)*safeSize.y*.45,center.z+(rnd()-.5)*safeSize.z*.45);
     const dir=new THREE.Vector3(rnd()-.5,rnd()-.5,rnd()-.5).normalize();
     const length=scale*(quality===1?.12+rnd()*.13:quality===2?.16+rnd()*.20:.18+rnd()*.26);
     const steps=4+Math.floor(rnd()*4);
