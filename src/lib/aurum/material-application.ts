@@ -481,6 +481,33 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
     part.userData={...part.userData,aurumGemPhysicalModel:{...physicalModel,crystal:{...physicalModel.crystal,axisA:physicalModel.crystal.axisA.toArray(),axisB:physicalModel.crystal.axisB.toArray(),axisC:physicalModel.crystal.axisC.toArray()}}};
     renderAurumInclusions(THREE,part,gemConfig,9173,preset);
     applyAurumLatinGemProfile(part,gemConfig);
+    if(String(gemConfig?.familia??"")==="Esmeralda"){
+      const finalMaterials=Array.isArray(part.material)?part.material:[part.material];
+      const textureFields=["map","normalMap","roughnessMap","metalnessMap","alphaMap","aoMap","bumpMap","emissiveMap","displacementMap","thicknessMap"];
+      const inclusionSummary:any[]=[];
+      part.traverse?.((node:any)=>{
+        if(node?.userData?.aurumInternalInclusion){
+          inclusionSummary.push({
+            type:String(node.userData?.aurumInclusionType??"unknown"),
+            visible:Boolean(node.visible),
+            materialOpacity:Number(node.material?.opacity??1),
+          });
+        }
+      });
+      console.info("[AURUM][EMERALD PROFILE TRACE]",{
+        stage:"after-application-and-inclusions",
+        requested:{id:String(gemConfig?.id??""),name:String(gemConfig?.nombre??""),family:String(gemConfig?.familia??"")},
+        catalog:{color:Number(gemConfig?.color??0).toString(16).padStart(6,"0"),transmission:gemConfig?.transmission,ior:gemConfig?.ior,roughness:gemConfig?.roughness,envMapIntensity:gemConfig?.envMapIntensity,attenuationDistance:gemConfig?.attenuationDistance,dispersion:gemConfig?.dispersion,iridescence:gemConfig?.iridescence,inclusionStrength:gemConfig?.inclusionStrength},
+        materials:finalMaterials.filter(Boolean).map((m:any)=>({
+          color:m.color?.getHexString?.()??null,transmission:m.transmission,ior:m.ior,roughness:m.roughness,envMapIntensity:m.envMapIntensity,
+          attenuationColor:m.attenuationColor?.getHexString?.()??null,attenuationDistance:m.attenuationDistance,dispersion:m.dispersion,iridescence:m.iridescence,
+          userDataGrade:m.userData?.aurumEmeraldCatalogGrade??null,
+          textures:Object.fromEntries(textureFields.map((field)=>[field,{present:Boolean(m[field]),name:m[field]?.name||null}])),
+        })),
+        inclusionCount:inclusionSummary.length,
+        inclusions:inclusionSummary.slice(0,24),
+      });
+    }
     const expectedMaterials=Array.isArray(part.material)?[...part.material]:[part.material];
     setTimeout(()=>{
       try{
