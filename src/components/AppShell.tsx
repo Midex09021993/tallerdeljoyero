@@ -412,6 +412,20 @@ export function AppShell({
                           ? "border-gold/25 bg-gold/10 text-gold-bright shadow-[inset_3px_0_0_0_hsl(var(--gold))]"
                           : "border-transparent text-ink-foreground/65 hover:border-ink-foreground/10 hover:bg-ink-foreground/5 hover:text-ink-foreground"
                       }`;
+                      if (s.to === "/mensajes") {
+                        return (
+                          <div
+                            key={s.to}
+                            aria-disabled="true"
+                            title="Próximamente"
+                            className="flex min-h-11 cursor-not-allowed items-center gap-3 rounded-xl border border-transparent px-3.5 py-2.5 text-sm font-medium text-ink-foreground/30 opacity-60 xl:px-4"
+                          >
+                            {Icon ? <Icon className="size-4 shrink-0 opacity-70" /> : null}
+                            <span>{s.label}</span>
+                            <span className="ml-auto rounded-md border border-ink-foreground/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-ink-foreground/35">Próximamente</span>
+                          </div>
+                        );
+                      }
                       if (s.to === "/taller/herramientas") {
                         return (
                           <a key={s.to} href={s.to} className={clases} aria-current={activo ? "page" : undefined}>
@@ -552,6 +566,20 @@ export function AppShell({
                       <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
                         {items.map((s) => {
                           const Icon = s.icono;
+                          if (s.to === "/mensajes") {
+                            return (
+                              <div
+                                key={s.to}
+                                aria-disabled="true"
+                                title="Próximamente"
+                                className="flex min-h-11 cursor-not-allowed items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-foreground/35 opacity-60"
+                              >
+                                {Icon ? <Icon className="size-4 shrink-0" aria-hidden="true" /> : null}
+                                <span className="min-w-0">{s.label}</span>
+                                <span className="ml-auto rounded-md border border-current/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide">Próximamente</span>
+                              </div>
+                            );
+                          }
                           return (
                             <Link
                               key={s.to}
