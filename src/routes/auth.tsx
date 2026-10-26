@@ -82,6 +82,7 @@ function LoginPage() {
     noDisponible?: boolean; carpetas?: number | null; almacenamiento?: number | null; productos?: number | null;
   } | null>(null);
   const [diapositivaActual, setDiapositivaActual] = useState(0);
+  const [diapositivasFallidas, setDiapositivasFallidas] = useState<number[]>([]);
   const diapositivaVisible = diapositivasAcceso[diapositivaActual] ?? diapositivasAcceso[0];
   const [menuMovilAbierto, setMenuMovilAbierto] = useState(false);
   const [seccionPlataforma, setSeccionPlataforma] = useState<"ecosistema"|"participantes"|"flujo"|"comunidad"|"planes">("ecosistema");
@@ -89,10 +90,17 @@ function LoginPage() {
 
   useEffect(() => {
     const intervalo = window.setInterval(() => {
-      setDiapositivaActual((actual) => (actual + 1) % diapositivasAcceso.length);
+      setDiapositivaActual((actual) => {
+        const disponibles = diapositivasAcceso
+          .map((_, indice) => indice)
+          .filter((indice) => !diapositivasFallidas.includes(indice));
+        if (disponibles.length < 2) return actual;
+        const posicionActual = disponibles.indexOf(actual);
+        return disponibles[(posicionActual + 1 + disponibles.length) % disponibles.length];
+      });
     }, 5000);
     return () => window.clearInterval(intervalo);
-  }, []);
+  }, [diapositivasFallidas]);
 
   useEffect(() => {
     if (window.location.hash === "#conoce-plataforma") {
@@ -198,9 +206,9 @@ function LoginPage() {
   return (
     <main className="min-h-screen bg-white text-[#17232d]">
       <header className="absolute right-4 top-4 z-30 sm:right-6 sm:top-5">
-        <button type="button" className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-xs font-semibold text-slate-700 shadow-sm">
-          <span aria-hidden="true">◎</span> Español <span aria-hidden="true">⌄</span>
-        </button>
+        <span lang="es" aria-label="Idioma de la interfaz: español" className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-slate-200 bg-white/90 px-3 text-xs font-semibold text-slate-600 shadow-sm">
+          <span aria-hidden="true">◎</span> Español
+        </span>
       </header>
       <div className="grid min-h-screen lg:grid-cols-[40%_60%]">
         <section className="relative hidden min-h-screen flex-col items-center justify-center overflow-hidden bg-[#fff1bf] px-8 py-16 text-center md:flex lg:px-12">
@@ -210,15 +218,34 @@ function LoginPage() {
             <p className="mt-4 text-lg font-extrabold tracking-tight text-[#17232d]">AURUM LAB</p>
             <p className="mt-1 text-[10px] font-semibold uppercase tracking-[.22em] text-[#7d650d]">Tecnología para joyeros</p>
             <div className="mt-10 overflow-hidden rounded-2xl border border-white/80 bg-white/70 p-2 shadow-[0_18px_50px_rgba(91,73,13,.12)]">
-              <img key={diapositivaVisible.imagen} src={diapositivaVisible.imagen} alt={diapositivaVisible.alt} className="aspect-[4/3] w-full rounded-xl bg-[#fffaf0] object-cover transition-opacity duration-500" loading="eager" decoding="async" />
+              {diapositivasFallidas.length < diapositivasAcceso.length ? (
+                <img
+                  key={diapositivaVisible.imagen}
+                  src={diapositivaVisible.imagen}
+                  alt={diapositivaVisible.alt}
+                  onError={() => {
+                    setDiapositivasFallidas((actuales) => actuales.includes(diapositivaActual) ? actuales : [...actuales, diapositivaActual]);
+                    const siguiente = diapositivasAcceso.findIndex((_, indice) => indice !== diapositivaActual && !diapositivasFallidas.includes(indice));
+                    if (siguiente >= 0) setDiapositivaActual(siguiente);
+                  }}
+                  className="aspect-[4/3] w-full rounded-xl bg-[#fffaf0] object-cover transition-opacity duration-500"
+                  loading="eager"
+                  decoding="async"
+                />
+              ) : (
+                <div className="flex aspect-[4/3] w-full flex-col items-center justify-center gap-3 rounded-xl bg-gradient-to-br from-[#fffaf0] via-white to-[#f6e7b2] text-[#967100]" role="status">
+                  <Gem className="size-12" aria-hidden="true" />
+                  <span className="text-xs font-semibold uppercase tracking-[0.18em]">Diseño y tecnología joyera</span>
+                </div>
+              )}
             </div>
             <h1 className="mt-6 text-2xl font-extrabold leading-tight tracking-tight text-[#17232d] sm:text-3xl">El arte de crear.</h1>
             <h2 className="mt-1 text-2xl font-extrabold leading-tight tracking-tight text-[#967100] sm:text-3xl">La inteligencia de gestionar.</h2>
             <p className="mx-auto mt-4 max-w-md text-sm leading-6 text-slate-700">Herramientas técnicas, diseño 3D y recursos digitales para impulsar cada etapa de tu taller joyero.</p>
             <div className="mt-6 flex flex-wrap justify-center gap-2 text-xs font-medium text-[#4b4b42]">
-              <span className="rounded-full border border-[#dfc45f]/70 bg-white/60 px-3 py-2">Herramientas para joyeros</span>
-              <span className="rounded-full border border-[#dfc45f]/70 bg-white/60 px-3 py-2">Aurum Render</span>
-              <span className="rounded-full border border-[#dfc45f]/70 bg-white/60 px-3 py-2">Mi Nube y catálogo</span>
+              <button type="button" onClick={() => { setSeccionPlataforma("ecosistema"); setMostrarPlataforma(true); }} className="rounded-full border border-[#dfc45f]/70 bg-white/60 px-3 py-2 transition hover:border-[#b99642] hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#967100]">Herramientas para joyeros</button>
+              <button type="button" onClick={() => { setSeccionPlataforma("flujo"); setMostrarPlataforma(true); }} className="rounded-full border border-[#dfc45f]/70 bg-white/60 px-3 py-2 transition hover:border-[#b99642] hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#967100]">Aurum Render</button>
+              <button type="button" onClick={() => { setSeccionPlataforma("flujo"); setMostrarPlataforma(true); }} className="rounded-full border border-[#dfc45f]/70 bg-white/60 px-3 py-2 transition hover:border-[#b99642] hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#967100]">Mi Nube y catálogo</button>
             </div>
             <div className="mt-6 flex justify-center gap-2" role="group" aria-label="Seleccionar imagen de presentación">
               {diapositivasAcceso.map((diapositiva, indice) => (
