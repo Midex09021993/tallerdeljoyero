@@ -4,7 +4,7 @@ import { Boxes, Calculator, ChevronRight, Droplets, Gem, Ruler, Scale, Send, Wre
 import { CalculadoraAleacionOro } from "@/components/CalculadoraAleacionOro";
 import { ConversorTallasAnillo } from "@/components/ConversorTallasAnillo";
 import { CalculadoraPesoGemas } from "@/components/CalculadoraPesoGemas";
-import { CalculadoraYeso } from "@/routes/_authenticated/taller";
+import { CalculadoraYeso } from "@/components/CalculadoraYesoAgua";
 
 type Herramienta = {
   id: string;

@@ -6,7 +6,7 @@ import { CalculadoraAleacionOro } from "@/components/CalculadoraAleacionOro";
 import { ConversorTallasAnillo } from "@/components/ConversorTallasAnillo";
 import { CalculadoraPesoGemas } from "@/components/CalculadoraPesoGemas";
 import { VisorPesoJoyeria } from "@/components/VisorPesoJoyeria";
-import { CalculadoraYeso } from "@/routes/_authenticated/taller";
+import { CalculadoraYeso } from "@/components/CalculadoraYesoAgua";
 
 const paginas = {
   "aleacion-oro": {

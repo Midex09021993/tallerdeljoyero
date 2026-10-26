@@ -82,6 +82,7 @@ function LoginPage() {
     noDisponible?: boolean; carpetas?: number | null; almacenamiento?: number | null; productos?: number | null;
   } | null>(null);
   const [diapositivaActual, setDiapositivaActual] = useState(0);
+  const diapositivaVisible = diapositivasAcceso[diapositivaActual] ?? diapositivasAcceso[0];
   const [menuMovilAbierto, setMenuMovilAbierto] = useState(false);
   const [seccionPlataforma, setSeccionPlataforma] = useState<"ecosistema"|"participantes"|"flujo"|"comunidad"|"planes">("ecosistema");
   const modoAlta = Boolean(estado?.vacio && (estado as { disponible?: boolean } | undefined)?.disponible !== false);
@@ -209,7 +210,7 @@ function LoginPage() {
             <p className="mt-4 text-lg font-extrabold tracking-tight text-[#17232d]">AURUM LAB</p>
             <p className="mt-1 text-[10px] font-semibold uppercase tracking-[.22em] text-[#7d650d]">Tecnología para joyeros</p>
             <div className="mt-10 overflow-hidden rounded-2xl border border-white/80 bg-white/70 p-2 shadow-[0_18px_50px_rgba(91,73,13,.12)]">
-              <img key={diapositivasAcceso[diapositivaActual].imagen} src={diapositivasAcceso[diapositivaActual].imagen} alt={diapositivasAcceso[diapositivaActual].alt} className="aspect-[4/3] w-full rounded-xl bg-[#fffaf0] object-cover transition-opacity duration-500" loading="eager" decoding="async" />
+              <img key={diapositivaVisible.imagen} src={diapositivaVisible.imagen} alt={diapositivaVisible.alt} className="aspect-[4/3] w-full rounded-xl bg-[#fffaf0] object-cover transition-opacity duration-500" loading="eager" decoding="async" />
             </div>
             <h1 className="mt-6 text-2xl font-extrabold leading-tight tracking-tight text-[#17232d] sm:text-3xl">El arte de crear.</h1>
             <h2 className="mt-1 text-2xl font-extrabold leading-tight tracking-tight text-[#967100] sm:text-3xl">La inteligencia de gestionar.</h2>

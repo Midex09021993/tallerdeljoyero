@@ -5,7 +5,7 @@ import { ConversorTallasAnillo } from "@/components/ConversorTallasAnillo";
 import { AppShell } from "@/components/AppShell";
 import { ArrowLeft, ChevronLeft, ChevronRight, Calculator, Gem, Ruler, ScanLine, Scale, Send, CircleDot, Download } from "lucide-react";
 import { VisorPesoJoyeria } from "@/components/VisorPesoJoyeria";
-import { CalculadoraYeso } from "@/routes/_authenticated/taller";
+import { CalculadoraYeso } from "@/components/CalculadoraYesoAgua";
 import { CalculadoraPesoGemas } from "@/components/CalculadoraPesoGemas";
 import { AsistenteImpresion3D } from "@/components/AsistenteImpresion3D";
 
