@@ -34,7 +34,7 @@ type Entrada = {
   identidad_sitio_web: string | null;
 };
 
-function ComunidadPublicaPage() {
+export function ComunidadPublicaPage() {
   const [busqueda, setBusqueda] = useState("");
   const [filtro, setFiltro] = useState<"talleres" | "cursos">("talleres");
   const { data = [], isLoading, isError } = useQuery({
