@@ -96,7 +96,14 @@ export async function createAurumDiamondBvhRuntime(options: {
       // unrelated CAD groups as diamond. Leave those meshes on the proven
       // MeshPhysicalMaterial pipeline until per-group BVH support is available.
       const activeGemId = String(mesh.userData?.["aurumActiveGemId"] ?? "").toLocaleLowerCase();
-      const targetFamilies = (options.targetFamilies ?? ["Diamante"]).map((family) => family.toLocaleLowerCase());
+      const requestedFamilies = (options.targetFamilies ?? ["Diamante"]).map((family) => family.toLocaleLowerCase());
+      // Diagnostic isolation for the opt-in emerald BVH experiment: when emerald is
+      // targeted, keep diamonds on their existing native shader. This tests whether
+      // secondary diamond BVH rays cause the moving-pixel artifact without changing
+      // default production behavior (the default target list does not include emerald).
+      const targetFamilies = requestedFamilies.includes("esmeralda")
+        ? requestedFamilies.filter((family) => family !== "diamante")
+        : requestedFamilies;
       const materialFamilies = materials.map((material) => getGemFamily(material));
       const uniqueFamilies = [...new Set(materialFamilies)];
       const family = uniqueFamilies.length === 1 ? uniqueFamilies[0] : "";
