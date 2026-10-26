@@ -705,6 +705,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       renderer.domElement.className = "block h-full w-full";
       nodo.appendChild(renderer.domElement);
       const postRuntimeConfig = { ...ssaoConfig, ...postConfig };
+      // Preserve the original scene background while the live Bokeh preview is active.
+      let dofSavedSceneBackground: THREE.Scene["background"] | undefined;
+      let dofHasSavedSceneBackground = false;
       const { composer, ssaoPass, setSSRSelects, applyQuality: applyPostQuality, updateTemporal, dofPass, renderPass } = await createAurumPostPipeline(
         renderer,
         escena,
@@ -1888,12 +1891,26 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           // BokehShader multiplies the difference between focus distance and
           // scene depth by aperture. Values near 0.001 barely change the image
           // at typical jewelry viewing distances, so use a calibrated progression.
+          // Keep the depth effect visible but restrained at jewelry-scale camera distances.
           const settings = strength === "strong"
-            ? { aperture: 0.040, maxBlur: 0.012 }
+            ? { aperture: 0.008, maxBlur: 0.007 }
             : strength === "medium"
-              ? { aperture: 0.025, maxBlur: 0.009 }
-              : { aperture: 0.012, maxBlur: 0.006 };
+              ? { aperture: 0.005, maxBlur: 0.005 }
+              : { aperture: 0.0025, maxBlur: 0.003 };
           Object.assign(postRuntimeConfig,{dof:Boolean(enabled),dofAperture:settings.aperture,dofMaxBlur:settings.maxBlur});
+          if (enabled) {
+            if (!dofHasSavedSceneBackground) {
+              dofSavedSceneBackground = escena.background;
+              dofHasSavedSceneBackground = true;
+            }
+            // RenderPass/Bokeh may clear transparent scenes to black; use an actual
+            // white scene background so the blur pass receives the intended studio backdrop.
+            escena.background = new THREE.Color(0xffffff);
+          } else if (dofHasSavedSceneBackground) {
+            escena.background = dofSavedSceneBackground ?? null;
+            dofSavedSceneBackground = undefined;
+            dofHasSavedSceneBackground = false;
+          }
           // Apply the toggle to the actual pass immediately, then reconcile the full
           // post-processing profile. This avoids a UI/runtime state mismatch.
           if (dofPass) dofPass.enabled = Boolean(enabled);
@@ -2458,6 +2475,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // The direct canvas is transparent over the white studio shell. Once the
             // composer is used, make that same studio background explicit; otherwise
             // RenderPass clears to black and the preview appears on a black field.
+            if (postRuntimeConfig.dof === true) {
+              if (!dofHasSavedSceneBackground) {
+                dofSavedSceneBackground = escena.background;
+                dofHasSavedSceneBackground = true;
+              }
+              escena.background = new THREE.Color(0xffffff);
+            }
             if (renderPass) {
               renderPass.clearColor = postRuntimeConfig.dof ? new THREE.Color(0xffffff) : null;
               renderPass.clearAlpha = postRuntimeConfig.dof ? 1 : 0;
