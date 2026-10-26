@@ -2400,7 +2400,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         { node:nodo, camera:camara, renderer, composer, ssaoPass, controls:controles },
         () => {
           diamondBvhRuntime?.update();
-          updateTemporal?.(controles?.target ? camara.position.distanceTo(controles.target) : undefined);
+          updateTemporal?.(modelo ? calculateAurumFocalDepth(camara, controles, modelo) : undefined);
           // Keep the direct renderer during orbit, but use the photographic
           // EffectComposer pipeline once settled so configured TAA/SSR/SSAO
           // actually reach the interactive preview.
