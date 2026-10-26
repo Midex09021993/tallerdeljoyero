@@ -54,7 +54,7 @@ const recursos = [
     titulo: "Calculadoras técnicas",
     descripcion:
       "Accede a utilidades para estimar peso 3D, peso de gemas, tallas de anillos y aleaciones.",
-    enlace: "/herramientas-publicas",
+    enlace: "/herramientas",
     accion: "Ver herramientas",
   },
   {
@@ -62,7 +62,7 @@ const recursos = [
     titulo: "Biblioteca de práctica",
     descripcion:
       "Organiza tus propios modelos, referencias y materiales de trabajo. Los recursos de clase se publicarán cuando estén autorizados.",
-    enlace: "/herramientas-publicas",
+    enlace: "/herramientas",
     accion: "Explorar recursos",
   },
 ] as const;
@@ -77,7 +77,7 @@ function CursosDiseno3DPage() {
       <div className="relative mx-auto max-w-7xl px-4 py-5 sm:px-7 lg:px-10">
         <header className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-5">
           <Link
-            to="/herramientas-publicas"
+            to="/herramientas"
             className="inline-flex min-h-11 items-center gap-2 text-sm text-white/65 transition hover:text-[#e5ca8a]"
           >
             <Gem className="size-5 text-[#d8bd7b]" />
@@ -110,7 +110,7 @@ function CursosDiseno3DPage() {
                 Explorar recursos gratuitos <ArrowRight className="size-4" />
               </a>
               <Link
-                to="/herramientas-publicas"
+                to="/herramientas"
                 className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-white/15 px-5 text-sm font-semibold text-white/80 transition hover:border-[#d8bd7b]/50"
               >
                 Ver herramientas
