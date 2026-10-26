@@ -49,13 +49,15 @@ export function AurumRenderShell() {
       pluginLink.href = "/aurum-render-plugin";
       pluginLink.textContent = "Complemento Rhino";
       pluginLink.setAttribute("aria-label", "Descargar complemento para Rhino 7");
-      pluginLink.className = "inline-flex items-center justify-center rounded-lg border border-[#b28b45]/50 px-3 py-2 text-xs font-semibold text-[#d6bd86] transition hover:bg-[#b28b45]/10";
-      pluginLink.style.marginLeft = "12px";
+      pluginLink.className = "inline-flex h-10 shrink-0 items-center justify-center rounded-xl border border-[#b28b45]/50 bg-white/90 px-4 text-xs font-semibold text-[#8a6a2e] shadow-sm transition hover:border-[#b28b45] hover:bg-[#d4af37]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45]/30";
       pluginLink.style.whiteSpace = "nowrap";
-      root.appendChild(pluginLink);
+      pluginLink.title = "Descargar el complemento de Rhino 7";
 
       const select = root.querySelector("select");
       const label = select?.closest("label");
+      const controls = label?.parentElement;
+      if (controls) controls.insertBefore(pluginLink, controls.firstChild);
+      else root.insertBefore(pluginLink, root.firstChild?.nextSibling ?? null);
       const extraChevron = label?.querySelector("svg.lucide-chevron-down") as SVGElement | null;
       const previousDisplay = extraChevron?.style.display ?? "";
       if (extraChevron) extraChevron.style.display = "none";
