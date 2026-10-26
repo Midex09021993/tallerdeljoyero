@@ -835,9 +835,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             url: requestedEnvironmentUrl,
             camera: camara,
             quality: "interactive",
-            // BVH for diamonds and other gemstone families; emeralds stay on the native physical material
-            // until their dedicated optical adaptation is ready. Mixed-material meshes remain protected.
-            targetFamilies: ["Diamante", "Rubí", "Rubi", "Zafiro", "Sapphire", "Amatista", "Amethyst", "Aguamarina", "Aquamarine", "Citrino", "Citrine", "Topacio", "Topacio Azul", "topacio_azul", "Blue Topaz", "BlueTopaz", "Moissanita", "Moissanite", "Turmalina Paraíba", "Turmalina Paraiba", "turmalina_paraiba", "Paraiba Tourmaline", "Paraiba", "Tanzanita", "Tanzanite"],
+            // Emerald BVH is an opt-in prototype until its optical behavior is visually validated.
+            // Add ?aurumEmeraldBvh=1 to test the emerald-specific profile without changing the default viewer.
+            // Mixed-material meshes remain protected by the runtime.
+            targetFamilies: ["Diamante", "Rubí", "Rubi", "Zafiro", "Sapphire", "Amatista", "Amethyst", "Aguamarina", "Aquamarine", "Citrino", "Citrine", "Topacio", "Topacio Azul", "topacio_azul", "Blue Topaz", "BlueTopaz", "Moissanita", "Moissanite", "Turmalina Paraíba", "Turmalina Paraiba", "turmalina_paraiba", "Paraiba Tourmaline", "Paraiba", "Tanzanita", "Tanzanite", ...(typeof window !== "undefined" && new URLSearchParams(window.location.search).get("aurumEmeraldBvh") === "1" ? ["Esmeralda"] : [])],
             onError: (error) => console.warn("[AURUM][GEM BVH] Se conserva el shader anterior para esta malla:", error),
           });
           if (!vivo || requestedEnvironmentUrl !== gemEnvironmentUrl) {
