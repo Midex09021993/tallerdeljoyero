@@ -909,7 +909,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         renderer.shadowMap.needsUpdate = true;
         if (modelo) {
           setAurumInclusionsVisible(modelo, false);
-          setAurumEmeraldInclusionsVisible(modelo, true);
+          // Keep procedural emerald inclusions disabled during interactive
+          // quality changes too; otherwise the moving transparent micro-meshes
+          // reappear and create flickering speckles over the emerald and nearby stones.
+          setAurumEmeraldInclusionsVisible(modelo, false);
           aplicarPerfilLive();
         }
         invalidateRenderRef.current?.();
