@@ -629,10 +629,12 @@ export const setAurumGemShaderQuality=(target:any,quality:AurumGemShaderQuality)
   const apply=(material:any)=>{
     if(!material?.isMeshPhysicalMaterial || !material.userData?.aurumBeautyOnBeforeCompile)return;
     const ud=material.userData;
-    // Preserve the advanced optical shader for diamonds in the interactive
-    // viewer: switching it off removes the spectral fire and facet response.
+    // Preserve advanced optics for diamonds and catalog-grade emeralds in
+    // the interactive viewer. Emerald quality is encoded in the authored
+    // shader response as well as in PBR properties; stripping that shader
+    // collapses the visible differences between the three catalog grades.
     // Other gemstone families retain the lightweight live path.
-    if(quality==="live" && ud.aurumGemFamily==="Diamante"){
+    if(quality==="live" && (ud.aurumGemFamily==="Diamante" || ud.aurumGemFamily==="Esmeralda")){
       return;
     }
     if(quality==="live"){
