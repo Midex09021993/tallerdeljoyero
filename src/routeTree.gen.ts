@@ -499,6 +499,7 @@ export interface FileRoutesByTo {
   '/cliente': typeof ClienteRoute
   '/cursos-diseno-3d': typeof CursosDiseno3dRoute
   '/galeria-joyas': typeof GaleriaJoyasRoute
+  '/herramientas': typeof HerramientasRoute
   '/herramientas-publicas': typeof HerramientasPublicasRoute
   '/recuperar-contrasena': typeof RecuperarContrasenaRoute
   '/tienda': typeof TiendaRoute
