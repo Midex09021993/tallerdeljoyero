@@ -602,6 +602,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [busquedaMateriales, setBusquedaMateriales] = useState("");
   const [familiaMaterialActiva, setFamiliaMaterialActiva] = useState("Todas");
   const [busquedaGemas, setBusquedaGemas] = useState("");
+  const [familiaGemaActiva, setFamiliaGemaActiva] = useState("Todas");
   const familiaPrincipalMaterial = (grupo: string) => {
     const normalizado = grupo.toLocaleLowerCase("es");
     if (normalizado.includes("oro")) return "Oro";
@@ -644,11 +645,20 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       return Number(principales.has(b.id)) - Number(principales.has(a.id));
     });
   }, [materialId, busquedaMateriales, familiaMaterialActiva, acabadoMaterialActivo]);
+  const familiasGemas = useMemo(() => ["Todas", ...Array.from(new Set(GEMAS.map(g => g.familia))).sort((a, b) => a.localeCompare(b, "es"))], []);
+  const conteoGemasPorFamilia = useMemo(() => GEMAS.reduce<Record<string, number>>((conteos, gema) => {
+    conteos[gema.familia] = (conteos[gema.familia] ?? 0) + 1;
+    return conteos;
+  }, {}), []);
   const gemasVisibles = useMemo(() => {
     const principales = new Set<GemaId>(["diamante_natural", "esmeralda_1", "rubi_natural", "zafiro_azul", "amatista_natural", "moissanita_blanca", "aguamarina_brasil", "citrino_natural", "topacio_azul"]);
     const termino = busquedaGemas.trim().toLocaleLowerCase("es");
-    return GEMAS.filter((g) => (mostrarTodasGemas || principales.has(g.id) || g.id === gemaId) && (!termino || (g.nombre+" "+g.id).toLocaleLowerCase("es").includes(termino))).sort((a,b)=>Number(principales.has(b.id))-Number(principales.has(a.id)));
-  }, [mostrarTodasGemas, gemaId, busquedaGemas]);
+    return GEMAS.filter((g) =>
+      (familiaGemaActiva === "Todas" || g.familia === familiaGemaActiva) &&
+      (mostrarTodasGemas || termino.length > 0 || principales.has(g.id) || g.id === gemaId) &&
+      (!termino || (g.nombre + " " + g.id + " " + g.familia + " " + (g.origen ?? "")).toLocaleLowerCase("es").includes(termino))
+    ).sort((a, b) => Number(principales.has(b.id)) - Number(principales.has(a.id)) || a.nombre.localeCompare(b.nombre, "es"));
+  }, [mostrarTodasGemas, gemaId, busquedaGemas, familiaGemaActiva]);
 
   useEffect(() => {
     let vivo = true;
@@ -3044,6 +3054,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               </div>}
               {uxSection==="gemas"&&<div className="pb-5">
                 <label className="mb-3 flex h-9 items-center gap-2 rounded-xl border border-black/[.08] bg-white px-3 text-[#77756f] focus-within:border-[#92743b]/50"><Gem className="size-3.5 shrink-0"/><input value={busquedaGemas} onChange={e=>{setBusquedaGemas(e.target.value);if(e.target.value.trim())setMostrarTodasGemas(true);}} placeholder="Buscar gema por nombre…" className="min-w-0 flex-1 bg-transparent text-xs text-[#292824] outline-none placeholder:text-[#99968d]"/></label>
+                <div className="mb-2 grid grid-cols-3 gap-1.5" role="group" aria-label="Familias de gemas">
+                  {familiasGemas.map(familia=><button key={familia} type="button" onClick={()=>{setFamiliaGemaActiva(familia);setMostrarTodasGemas(false);}} aria-pressed={familiaGemaActiva===familia} className={"min-w-0 rounded-xl border px-2 py-2 text-[10px] font-semibold transition "+(familiaGemaActiva===familia?"border-[#b99642]/55 bg-[#b99642]/12 text-[#6d5523] shadow-[0_2px_8px_rgba(50,42,20,.06)]":"border-black/[.07] bg-white/65 text-[#77756f] hover:border-[#d8d1c2] hover:bg-white")}><span className="block truncate">{familia}</span><span className="mt-0.5 block text-[9px] font-normal opacity-70">{familia==="Todas"?GEMAS.length:conteoGemasPorFamilia[familia]??0} gemas</span></button>)}
+                </div>
+                <div className="mb-2 flex items-center justify-between gap-2"><div className="text-[10px] font-semibold uppercase tracking-[.12em] text-[#77756f]">{familiaGemaActiva==="Todas"?"Familias de gemas":familiaGemaActiva+" · "+GEMAS.filter(g=>g.familia===familiaGemaActiva).length+" disponibles"}</div><span className="text-[9px] text-[#99968d]">Perfiles gemológicos</span></div>
                 <div className="grid grid-cols-4 gap-2.5 pb-1">
                   {gemasVisibles.map(g=><button key={g.id} type="button" title={g.nombre} aria-label={g.nombre}
                     onClick={()=>{setBibliotecaTipo("gemas");setGemaId(g.id);apiRef.current?.gema(g)}}
@@ -3057,7 +3071,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                   </button>)}
                 </div>
                 <button type="button" aria-expanded={mostrarTodasGemas} onClick={()=>setMostrarTodasGemas(v=>!v)} className="mt-3 w-full rounded-lg border border-black/10 bg-black/[.025] px-3 py-2 text-[10px] font-semibold text-[#55534d] transition hover:border-[#92743b]/45 hover:text-[#292824]">
-                  {mostrarTodasGemas ? "Mostrar menos gemas" : `Ver más gemas (${GEMAS.length})`}
+                  {mostrarTodasGemas ? "Mostrar menos gemas" : `Ver más gemas (${familiaGemaActiva==="Todas"?GEMAS.length:GEMAS.filter(g=>g.familia===familiaGemaActiva).length})`}
                 </button>
                 <div className="mt-2 flex items-center gap-2 rounded-lg border border-black/10 bg-black/[.02] p-2">
                   <span className="size-8 shrink-0 rounded-full border border-black/15 shadow-inner" style={{background:hexColor(gemaActiva.color)}}/>
