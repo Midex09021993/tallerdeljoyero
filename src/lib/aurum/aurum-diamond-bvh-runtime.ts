@@ -144,12 +144,22 @@ export async function createAurumDiamondBvhRuntime(options: {
           experimentalMaterial: prepared.material,
           family,
           setQuality: (quality) => {
-            if (family !== "diamante" || !packageApi.setDiamondOptions) return;
-            // Higher bounce counts are needed only for a still image; keep the
-            // interactive budget low to avoid adding cost to orbiting.
-            packageApi.setDiamondOptions(prepared.material, {
-              rayBounces: quality === "final" ? 8 : 4,
-            });
+            if (!packageApi.setDiamondOptions) return;
+            if (family === "diamante") {
+              // Preserve the existing diamond quality policy unchanged.
+              packageApi.setDiamondOptions(prepared.material, {
+                rayBounces: quality === "final" ? 8 : 4,
+              });
+              return;
+            }
+            if (isEmerald) {
+              // Emerald prototype: preserve the native catalog color and use
+              // restrained internal ray bounces (3 interactive, 4 high, 5 final).
+              // Avoid the diamond's 8-bounce final setting for colored stones.
+              packageApi.setDiamondOptions(prepared.material, {
+                rayBounces: quality === "final" ? 5 : quality === "high" ? 4 : 3,
+              });
+            }
           },
           dispose: prepared.dispose,
         });
