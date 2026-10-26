@@ -1044,8 +1044,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                   // comparison; other gem families keep their existing live cap.
                   // Dispersion and clearcoat remain disabled while orbiting.
                   const authoredTransmission=Number(m.userData?.aurumLiveTransmissionStored??m.transmission);
-                  const liveTransmissionCap=m.userData?.aurumGemFamily==="Diamante" ? 0.35 : 0.35;
-                  m.transmission=Math.min(authoredTransmission,liveTransmissionCap);
+                  const gemFamily=String(m.userData?.aurumGemFamily??"");
+                  const isEmerald=gemFamily==="Esmeralda";
+                  const liveTransmissionCap=0.35;
+                  // Keep emerald grades visibly distinct during orbit: a shared
+                  // hard cap made .86/.79/.70 all become .35 in live preview.
+                  m.transmission=isEmerald
+                    ? Math.min(liveTransmissionCap,authoredTransmission*0.4)
+                    : Math.min(authoredTransmission,liveTransmissionCap);
                 }
                 m.needsUpdate=true;
               }
