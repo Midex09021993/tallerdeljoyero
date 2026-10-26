@@ -275,7 +275,9 @@ export async function createAurumPostPipeline(
       lutPass.intensity=Math.max(0,Math.min(1,(config.lutIntensity??.08)*(ultra?1:high?.82:.62)));
     }
     if(dofPass){
-      dofPass.enabled=config.dof===true && (Boolean(options.capture) || high);
+      // DOF is explicitly opt-in and should work at every viewer quality tier;
+      // the viewer's direct-render interaction path keeps it off during orbit/zoom.
+      dofPass.enabled=config.dof===true;
       if(dofPass.uniforms){
         dofPass.uniforms.aperture.value=Math.max(0,Number(config.dofAperture??0.00065));
         dofPass.uniforms.maxblur.value=Math.max(0,Number(config.dofMaxBlur??0.006));
