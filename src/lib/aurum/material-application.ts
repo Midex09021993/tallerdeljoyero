@@ -415,7 +415,27 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
     // Apply the emerald reference calibration last: a matching source .dmat
     // can otherwise overwrite the selected catalog hue and environment level.
     // Keep the diamond path and its ordering unchanged.
-    if(preset.familia==="Esmeralda")applyAurumReferenceGemOptics(next,preset.familia);
+    if(preset.familia==="Esmeralda"){
+      applyAurumReferenceGemOptics(next,preset.familia);
+      // The catalog grade is the source of truth for emerald appearance. The
+      // generic engine preset above contains one shared emerald profile and
+      // otherwise makes Quality 1/2/3 look alike, especially in the live view.
+      next.color?.setHex(Number(gemConfig?.color??preset.color));
+      next.transmission=Math.max(0,Math.min(1,Number(gemConfig?.transmission??preset.transmission)));
+      next.ior=Math.max(1.01,Math.min(2.65,Number(gemConfig?.ior??preset.ior)));
+      next.roughness=Math.max(0,Math.min(1,Number(gemConfig?.roughness??preset.roughness)));
+      next.envMapIntensity=Math.max(0,Number(gemConfig?.envMapIntensity??preset.envMapIntensity));
+      next.attenuationColor?.setHex(Number(gemConfig?.attenuationColor??gemConfig?.color??preset.attenuationColor));
+      next.attenuationDistance=Math.max(.1,Number(gemConfig?.attenuationDistance??preset.attenuationDistance));
+      next.dispersion=Math.max(0,Number(gemConfig?.dispersion??preset.dispersion));
+      next.iridescence=Math.max(0,Math.min(1,Number(gemConfig?.iridescence??preset.iridescence)));
+      next.userData={
+        ...(next.userData??{}),
+        aurumEmeraldCatalogGrade:String(gemConfig?.id??""),
+        aurumEmeraldCatalogProfileApplied:true,
+      };
+      next.needsUpdate=true;
+    }
     if(preset.familia==="Diamante"){
       // Applying a gem to a MatrixGold layer must use the same dedicated
       // spectral shader as the initial diamond preview. Do this after the
