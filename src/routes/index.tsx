@@ -387,17 +387,6 @@ function InicioPublico() {
         </div>
       </section>
 
-      <section id="planes" className="border-y border-slate-200 bg-[#f8fafc]">
-        <div className="mx-auto max-w-[1440px] px-5 py-14 sm:px-8 sm:py-16 lg:px-12">
-          <div className="mx-auto max-w-2xl text-center">
-            <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#987400]">Planes para cada etapa</p>
-            <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-[#17232d] sm:text-3xl">Elige cómo quieres crecer.</h2>
-            <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base">Empieza con lo esencial y amplía las capacidades de tu taller cuando lo necesites.</p>
-          </div>
-          <PlanesPublicos />
-        </div>
-      </section>
-
       <section id="como-funciona" className="scroll-mt-24 border-y border-slate-200 bg-gradient-to-b from-white to-[#f8fafc]">
         <div className="mx-auto max-w-[1440px] px-5 py-14 sm:px-8 sm:py-16 lg:px-12">
           <div className="mx-auto max-w-3xl text-center">
@@ -450,6 +439,17 @@ function InicioPublico() {
               <Link to="/auth" target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-[#17232d] transition hover:border-[#d4aa19]">Ingresar o crear cuenta</Link>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section id="planes" className="border-y border-slate-200 bg-[#f8fafc]">
+        <div className="mx-auto max-w-[1440px] px-5 py-14 sm:px-8 sm:py-16 lg:px-12">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#987400]">Planes para cada etapa</p>
+            <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-[#17232d] sm:text-3xl">Elige cómo quieres crecer.</h2>
+            <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base">Empieza con lo esencial y amplía las capacidades de tu taller cuando lo necesites.</p>
+          </div>
+          <PlanesPublicos />
         </div>
       </section>
 
