@@ -131,8 +131,8 @@ function PublicidadFormacionPage() {
   const herramientas = [
     { title: "AURUM Render", description: "Para usar el visor 3D, inicia sesión con tu cuenta o regístrate si todavía no tienes una.", href: "/auth", icon: Gem },
     { title: "AURUM Transfer", description: "Comparte archivos de práctica de forma sencilla.", href: "/transfer", icon: Send },
-    { title: "Calculadoras técnicas", description: "Prueba herramientas de cálculo para el oficio joyero.", href: "/herramientas-publicas", icon: Calculator },
-    { title: "Más herramientas", description: "Explora calculadoras y utilidades gratuitas para practicar.", href: "/herramientas-publicas", icon: Box },
+    { title: "Calculadoras técnicas", description: "Prueba herramientas de cálculo para el oficio joyero.", href: "/herramientas", icon: Calculator },
+    { title: "Más herramientas", description: "Explora calculadoras y utilidades gratuitas para practicar.", href: "/herramientas", icon: Box },
   ];
 
   return (
