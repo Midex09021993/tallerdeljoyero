@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Boxes, Calculator, Check, ChevronDown, Cloud, Gem, Layers3, MonitorSmartphone, PackageCheck, Sparkles, Sprout, ChartNoAxesCombined } from "lucide-react";
 import heroColgante from "@/assets/diseno-colgante.jpg";
@@ -73,8 +72,6 @@ const soluciones = [
 ];
 
 
-type PeriodicidadPlan = "mensual" | "trimestral" | "anual";
-
 function formatoSoles(valor: number) {
   return new Intl.NumberFormat("es-PE", {
     style: "currency",
@@ -85,7 +82,6 @@ function formatoSoles(valor: number) {
 }
 
 function PlanesPublicos() {
-  const [periodicidad, setPeriodicidad] = useState<PeriodicidadPlan>("mensual");
   const planes = [
     {
       nombre: "Emprendedor",
@@ -109,7 +105,7 @@ function PlanesPublicos() {
     },
     {
       nombre: "Profesional",
-      precioMensual: 59,
+      precioMensual: 79,
       gratis: false,
       descripcion: "Conecta la gestión con el trabajo productivo.",
       funciones: ["Gestión comercial integrada", "Inventario y compras", "Aurum Render y diseño 3D", "Capacidades de fabricación", "Catálogo y archivos ampliados"],
@@ -128,34 +124,15 @@ function PlanesPublicos() {
       href: "/auth" as const,
     },
   ];
-  const meses = periodicidad === "mensual" ? 1 : periodicidad === "trimestral" ? 3 : 12;
-  const descuento = periodicidad === "trimestral" ? 0.1 : periodicidad === "anual" ? 0.25 : 0;
-  const nombrePeriodo = periodicidad === "mensual" ? "mes" : periodicidad === "trimestral" ? "trimestre" : "año";
-  const etiquetaPrecioMensual = periodicidad === "mensual" ? "al mes" : "al mes";
   return (
     <>
-      <div className="mx-auto mt-7 flex w-fit max-w-full flex-wrap items-center justify-center gap-1 rounded-xl bg-slate-200/70 p-1">
-        {([
-          { id: "mensual", label: "Mensual", descuento: "" },
-          { id: "trimestral", label: "Trimestral", descuento: "-10%" },
-          { id: "anual", label: "Anual", descuento: "-25%" },
-        ] as const).map((opcion) => (
-          <button key={opcion.id} type="button" aria-pressed={periodicidad === opcion.id} onClick={() => setPeriodicidad(opcion.id)} className={`flex min-h-10 items-center justify-center gap-2 rounded-lg px-3 text-xs font-semibold transition sm:px-5 ${periodicidad === opcion.id ? "bg-[#17232d] text-white shadow-sm" : "text-slate-600 hover:bg-white hover:text-[#17232d]"}`}>
-            {opcion.label}
-            {opcion.descuento && <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${periodicidad === opcion.id ? "bg-emerald-600 text-white" : "bg-emerald-700 text-white"}`}>{opcion.descuento}</span>}
-          </button>
-        ))}
-      </div>
       <p className="mt-3 text-center text-xs text-slate-500">
-        {periodicidad === "mensual" ? "Tarifa mensual de referencia." : `Ahorra ${Math.round(descuento * 100)}% frente al pago mensual.`}
+        Precios mensuales de referencia en soles peruanos.
       </p>
       <div className="mt-7 grid items-stretch gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {planes.map((plan) => {
           const tienePrecio = typeof plan.precioMensual === "number";
           const precioMensual = plan.precioMensual ?? 0;
-          const totalOriginal = precioMensual * meses;
-          const totalFinal = totalOriginal * (1 - descuento);
-          const equivalenteMensual = totalFinal / meses;
           return (
             <article key={plan.nombre} className={`relative flex h-full flex-col rounded-2xl border bg-white p-5 shadow-[0_4px_18px_rgba(15,23,42,.035)] sm:p-6 ${plan.destacado ? "border-[#d4aa19] ring-1 ring-[#d4aa19]" : "border-slate-200"}`}>
               {plan.destacado && <span className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-[#f8c928] px-3 py-1 text-[10px] font-bold text-[#17232d]">Más capacidades</span>}
@@ -166,10 +143,7 @@ function PlanesPublicos() {
                 {tienePrecio && plan.gratis && <p className="mt-2 text-2xl font-extrabold tracking-tight text-[#17232d]">Gratis</p>}
                 {tienePrecio && !plan.gratis && (
                   <>
-                    {descuento > 0 && <p className="text-xs text-slate-400 line-through">{formatoSoles(precioMensual)} / mes</p>}
-                    <p className="mt-1 text-2xl font-extrabold tracking-tight text-[#17232d]">{formatoSoles(equivalenteMensual)}<span className="ml-1 text-xs font-medium text-slate-500">{etiquetaPrecioMensual}</span></p>
-                    {descuento > 0 && <p className="mt-1 text-[11px] font-medium text-emerald-700">Ahorras {formatoSoles(totalOriginal - totalFinal)} en este período</p>}
-                    {periodicidad !== "mensual" && <p className="mt-1 text-xs leading-5 text-slate-500">Total a pagar por {nombrePeriodo}: <strong className="text-[#17232d]">{formatoSoles(totalFinal)}</strong></p>}
+                    <p className="mt-1 text-2xl font-extrabold tracking-tight text-[#17232d]">{formatoSoles(precioMensual)}<span className="ml-1 text-xs font-medium text-slate-500">al mes</span></p>
                   </>
                 )}
               </div>
@@ -183,7 +157,7 @@ function PlanesPublicos() {
           );
         })}
       </div>
-      <p className="mx-auto mt-5 max-w-3xl text-center text-[11px] leading-5 text-slate-500">Los descuentos del 10% trimestral y 25% anual son cálculos de presentación sobre las tarifas mensuales de referencia; las modalidades de cobro deben confirmarse comercialmente. Cada taller puede habilitar capacidades según sus procesos. Los límites y módulos incluidos deben verificarse en las condiciones de cada plan.</p>
+      <p className="mx-auto mt-5 max-w-3xl text-center text-[11px] leading-5 text-slate-500">Los precios mostrados son tarifas mensuales de referencia. Las modalidades de cobro y renovación se comunicarán cuando estén implementadas y confirmadas. Las capacidades y límites dependen de las condiciones de cada plan.</p>
     </>
   );
 }
