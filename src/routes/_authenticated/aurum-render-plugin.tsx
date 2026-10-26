@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { ArrowLeft, Download, ExternalLink, Info, MonitorDown } from "lucide-react";
 
 const scriptUrl =
-  "https://raw.githubusercontent.com/Midex09021993/tallerdeljoyero/main/integrations/rhino7-aurum-prototype/AurumRenderBridge.py";
+  "https://github.com/Midex09021993/tallerdeljoyero/raw/refs/heads/main/integrations/rhino7-aurum-prototype/AurumRenderBridge.py";
 const sourceUrl =
   "https://github.com/Midex09021993/tallerdeljoyero/blob/main/integrations/rhino7-aurum-prototype/AurumRenderBridge.py";
 const guideUrl =
@@ -54,6 +54,7 @@ function AurumRenderPluginPage() {
               <p className="mt-1 text-sm leading-6 text-white/60">Guarda el archivo Python y ejecútalo desde el editor de scripts de Rhino 7. El documento original no debería modificarse; el prototipo crea una copia temporal.</p>
               <a
                 href={scriptUrl}
+                download="AurumRenderBridge.py"
                 className="mt-4 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#c7a45b] px-5 py-3 text-sm font-semibold text-[#17130b] transition hover:bg-[#d9bb79]"
               >
                 <Download className="size-4" /> Descargar script (.py)
