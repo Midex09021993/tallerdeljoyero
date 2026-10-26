@@ -2404,8 +2404,22 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           // Keep the direct renderer during orbit, but use the photographic
           // EffectComposer pipeline once settled so configured TAA/SSR/SSAO
           // actually reach the interactive preview.
-          if (liveFastPathRef.current || !composer) renderer.render(escena,camara);
-          else composer.render();
+          if (liveFastPathRef.current || !composer) {
+            renderer.render(escena,camara);
+          } else {
+            // BokehPass renders into its own intermediate targets. Reassert the
+            // opaque studio backdrop immediately before the composer starts so
+            // a prior transparent/direct frame cannot leave a black DOF background.
+            if (postRuntimeConfig.dof === true) {
+              escena.background = new THREE.Color(0xffffff);
+              renderer.setClearColor(0xffffff, 1);
+              if (renderPass) {
+                renderPass.clearColor = new THREE.Color(0xffffff);
+                renderPass.clearAlpha = 1;
+              }
+            }
+            composer.render();
+          }
           perfTick();
         },
         {
