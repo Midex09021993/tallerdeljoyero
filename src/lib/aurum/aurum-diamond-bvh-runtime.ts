@@ -165,6 +165,18 @@ export async function createAurumDiamondBvhRuntime(options: {
         });
         mesh.material = prepared.material;
         found.add(mesh);
+        if (isEmerald && targetFamilies.includes("esmeralda")) {
+          console.info("[AURUM][EMERALD BVH] Prototipo aplicado", {
+            mesh: mesh.name || mesh.uuid,
+            activeGemId,
+            family,
+            triangles: prepared.diagnostics.triangleCount,
+            ior: prepared.diagnostics.ior,
+            rayBounces: prepared.diagnostics.rayBounces,
+            originalColor: materials[0]?.color?.getHexString?.() ?? null,
+            transmission: emeraldProfile?.transmission ?? null,
+          });
+        }
       } catch (error) {
         // Keep the current physical/scintillation material if BVH setup fails.
         options.onError?.(error);
