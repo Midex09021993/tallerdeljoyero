@@ -12,7 +12,7 @@ import { getAurumShadowConfig } from "../lib/aurum-shadow-engine";
 import { getAurumPostConfig } from "../lib/aurum-post-engine";
 import { getAurumSsaoConfig } from "../lib/aurum-ssao-engine";
 import { AURUM_LIGHTING_DEFAULT } from "../lib/aurum-lighting-engine";
-import { applyAurumCameraView, applyAurumIJEWELPresentationCamera, fitAurumCameraToAspect } from "../lib/aurum/camera";
+import { applyAurumCameraView, applyAurumIJEWELPresentationCamera, fitAurumCameraToAspect, calculateAurumFocalDepth } from "../lib/aurum/camera";
 import { prepareAurumModel } from "../lib/aurum/model-prep";
 import { createAurumPostPipeline } from "../lib/aurum/post";
 import { createAurumEnvironment } from "../lib/aurum/environment";
@@ -1924,11 +1924,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             });
           }
           applyPostQuality?.({...renderQuality,pixelRatio:renderQuality.pixelRatio,qualityId:measuredQualityId});
-          updateTemporal?.(controles?.target ? camara.position.distanceTo(controles.target) : undefined);
+          updateTemporal?.(modelo ? calculateAurumFocalDepth(camara, controles, modelo) : undefined);
           invalidateRenderRef.current?.();
           viewerLoopRef.current?.invalidate?.();
         },
-        exportPNG:(options:{width?:number;height?:number;format?:"png"|"jpeg"|"webp";transparent?:boolean;depthOfField?:boolean;dofStrength?:"soft"|"medium"|"strong";onCapture?:(dataUrl:string)=>void}={})=>{
+        exportPNG:(options:{width?:number;height?:number;format?:"png"|"jpeg"|"webp";transparent?:boolean;depthOfField?:boolean;dofStrength?:"soft"|"medium"|"strong";focusDistance?:number;onCapture?:(dataUrl:string)=>void}={})=>{
           if(!modelo) throw new Error("Carga un modelo antes de crear el snapshot.");
           const liveCanvas=renderer.domElement as HTMLCanvasElement | null;
           if(!liveCanvas || liveCanvas.width<2 || liveCanvas.height<2) {
@@ -2024,7 +2024,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               const strength = options.dofStrength === "strong" ? { aperture: 0.0011, maxBlur: 0.012 } : options.dofStrength === "medium" ? { aperture: 0.0008, maxBlur: 0.008 } : { aperture: 0.0005, maxBlur: 0.004 };
               Object.assign(postRuntimeConfig, { dof: true, dofAperture: strength.aperture, dofMaxBlur: strength.maxBlur });
               applyPostQuality?.({ ...renderQuality, pixelRatio: 1, qualityId: "ultra" }, { capture: true, width: renderWidth, height: renderHeight });
-              updateTemporal?.(Number.isFinite(options.focusDistance) ? Number(options.focusDistance) : 4);
+              updateTemporal?.(Number.isFinite(options.focusDistance) ? Number(options.focusDistance) : calculateAurumFocalDepth(camara, controles, modelo));
             }
             if (transparent) {
               escena.background=null;
