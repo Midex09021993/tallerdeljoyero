@@ -335,7 +335,12 @@ function LoginPage() {
             ) : null}
           </form>
 
-
+          <div className="mt-6 border-t border-slate-100 pt-5 text-center">
+            <p className="mb-3 text-xs text-slate-500">¿Todavía no tienes una cuenta para tu taller?</p>
+            <Suspense fallback={<span className="text-xs text-slate-400">Cargando registro…</span>}>
+              <RegistroTaller className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-[#c7a52d] bg-[#fffbee] px-5 py-3 text-sm font-semibold text-[#735800] transition hover:bg-[#fff3bd] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#967100]" />
+            </Suspense>
+          </div>
 
           {mostrarAyudaPassword ? (
             <div
