@@ -156,8 +156,9 @@ export async function createAurumPostPipeline(
       const { BokehPass }=await import("three/examples/jsm/postprocessing/BokehPass.js");
       dofPass=new BokehPass(scene,camera,{focus:4.0,aperture:0.00065,maxblur:0.006});
       composer.addPass(dofPass);
-    } catch {
+    } catch (error) {
       dofPass=null;
+      console.error("[AURUM][DOF] BokehPass initialization failed", error);
     }
 
     const { ShaderPass }=await import("three/examples/jsm/postprocessing/ShaderPass.js");
@@ -281,6 +282,19 @@ export async function createAurumPostPipeline(
       if(dofPass.uniforms){
         dofPass.uniforms.aperture.value=Math.max(0,Number(config.dofAperture??0.00065));
         dofPass.uniforms.maxblur.value=Math.max(0,Number(config.dofMaxBlur??0.006));
+      }
+      if (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("aurumDofDiag")) {
+        console.info("[AURUM][DOF] applyQuality", {
+          enabled: dofPass.enabled,
+          qualityId,
+          high,
+          ultra,
+          aperture: dofPass.uniforms?.aperture?.value,
+          maxblur: dofPass.uniforms?.maxblur?.value,
+          focus: dofPass.uniforms?.focus?.value,
+          passIndex: composer?.passes?.indexOf(dofPass) ?? -1,
+          passCount: composer?.passes?.length ?? 0,
+        });
       }
     }
     if(vignettePass){
