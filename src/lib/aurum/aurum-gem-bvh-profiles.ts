@@ -57,11 +57,14 @@ export function resolveAurumEmeraldBvhProfile(
     // This package's shader clamps dispersion to 0.02; emerald dispersion is
     // intentionally kept subtle rather than inheriting exaggerated catalog values.
     dispersion: THREE.MathUtils.clamp(readFinite(physical.dispersion, readFinite(optical.dispersion, 0.0005)), 0, 0.002),
-    absorption,
-    // Preserve the authored HDR response as far as this shader permits.
-    environmentIntensity: THREE.MathUtils.clamp(readFinite(physical.envMapIntensity, 1.5), 0, 2.5),
+    // Slightly stronger absorption counters the washed-out center without
+    // changing the catalog hue; this is a visual control, not Beer-Lambert.
+    absorption: THREE.MathUtils.clamp(absorption + 0.08, 0.4, 0.88),
+    // The diamond shader can wash out colored gems at high HDR intensity.
+    // Keep emerald reflections restrained while preserving the native color.
+    environmentIntensity: THREE.MathUtils.clamp(readFinite(physical.envMapIntensity, 1.15), 0.85, 1.25),
     color,
-    reflectivity: THREE.MathUtils.clamp(readFinite(physical.reflectivity, 0.26), 0, 1),
+    reflectivity: THREE.MathUtils.clamp(readFinite(physical.reflectivity, 0.22), 0.12, 0.3),
     transmission: THREE.MathUtils.clamp(authoredTransmission, 0.65, 0.95),
   };
 }
