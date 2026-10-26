@@ -285,6 +285,7 @@ export async function createAurumPostPipeline(
       }
       if (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("aurumDofDiag")) {
         console.info("[AURUM][DOF] applyQuality", {
+          requested: config.dof === true,
           enabled: dofPass.enabled,
           qualityId,
           high,
