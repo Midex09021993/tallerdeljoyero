@@ -1050,12 +1050,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                   const gemFamily=String(m.userData?.aurumGemFamily??"");
                   const isEmerald=gemFamily==="Esmeralda";
                   const liveTransmissionCap=0.35;
-                  // Emeralds need a stronger body-color/absorption response in the
-                  // live viewer; near-full transmission washes catalog grades into
-                  // a similar bright green. Keep authored differences ordered while
-                  // applying this live-only scale (beauty/export values stay intact).
+                  // Preserve each emerald catalog profile's authored transmission in LIVE.
+                  // The BVH shader previously supplied a translucent appearance but
+                  // flattened all emerald grades to one fixed green. Native physical
+                  // transmission must not be reduced so aggressively or the gem reads
+                  // as an opaque faceted solid. Other gem families keep their existing cap.
                   m.transmission=isEmerald
-                    ? Math.min(0.68,authoredTransmission*0.72)
+                    ? Math.min(0.95,authoredTransmission)
                     : Math.min(authoredTransmission,liveTransmissionCap);
                 }
                 m.needsUpdate=true;
