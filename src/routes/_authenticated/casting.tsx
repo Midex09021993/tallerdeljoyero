@@ -1,49 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AreaOperario, PedidosArea } from "@/components/PedidosArea";
-import { AppShell, StatCard } from "@/components/AppShell";
-import { usePedidosDeArea } from "@/hooks/use-pedidos-area";
-import { useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
-import { useSesion } from "@/lib/auth";
+import { AppShell } from "@/components/AppShell";
 
 export const Route = createFileRoute("/_authenticated/casting")({
   head: () => ({
-    meta: [
-      { title: "Casting - Aurum Lab" },
-      {
-        name: "description",
-        content: "Pedidos reales asignados al proceso de casting dentro del flujo del taller.",
-      },
-      { property: "og:title", content: "Casting - Aurum Lab" },
-      { property: "og:description", content: "Pedidos reales de casting del taller." },
-    ],
+    meta: [{ title: "Casting — Aurum Lab" }],
   }),
-  component: Casting,
+  component: CastingPage,
 });
 
-function Casting() {
-  const { data: sesion } = useSesion();
-  if (sesion?.rolPrincipal === "operario") return <AreaOperario area="Casting" />;
-  return <CastingCompleto />;
-}
-
-function CastingCompleto() {
-  const { pedidos, enTrabajo } = usePedidosDeArea("Casting");
-  const { esDueno, sedeFiltro, setSedeFiltro, sedes, etiquetaSede } = useSedeFiltroDueno();
-
+function CastingPage() {
   return (
-    <AppShell
-      titulo="Casting"
-      subtitulo={`Pedidos que requieren casting o fundición · ${etiquetaSede}`}
-      ocultarAccionesCelular
-      acciones={
-        <>
-          
-          <StatCard etiqueta="Asignados" valor={String(pedidos.length)} />
-          <StatCard etiqueta="En trabajo" valor={String(enTrabajo.length)} />
-        </>
-      }
-    >
-      <PedidosArea area="Casting" titulo="Pedidos asignados a Casting" />
+    <AppShell titulo="Casting" subtitulo="Módulo en preparación">
+      <div className="min-h-24" aria-label="Contenido del módulo vacío" />
     </AppShell>
   );
 }
