@@ -62,7 +62,7 @@ function ComunidadPage() {
             </span>
           </Link>
           <nav className="flex items-center gap-4 text-sm font-medium text-slate-600 sm:gap-6" aria-label="Navegación de comunidad">
-            <Link to="/catalogo-publico" className="transition hover:text-[#987400]">Directorio</Link>
+            <Link to="/directorio" className="transition hover:text-[#987400]">Directorio</Link>
             <Link to="/cursos-diseno-3d" className="hidden transition hover:text-[#987400] sm:inline-flex">Formación</Link>
             <Link to="/" className="transition hover:text-[#987400]">Volver a AURUM LAB</Link>
           </nav>
@@ -77,7 +77,7 @@ function ComunidadPage() {
           <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base sm:leading-7">Guías técnicas, ideas de diseño y recursos para tomar mejores decisiones en tu trabajo joyero.</p>
           <div className="mt-7 flex flex-wrap gap-3">
             <a href="#guias" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#17232d] px-5 text-sm font-semibold text-white transition hover:bg-[#293b49]">Explorar guías <ArrowRight className="size-4" /></a>
-            <Link to="/catalogo-publico" className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 text-sm font-semibold text-[#17232d] transition hover:border-[#d4aa19]">Ver talleres y cursos</Link>
+            <Link to="/directorio" className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 text-sm font-semibold text-[#17232d] transition hover:border-[#d4aa19]">Ver talleres y cursos</Link>
           </div>
         </div>
       </section>
@@ -141,14 +141,14 @@ function ComunidadPage() {
             <h2 className="mt-2 text-xl font-bold">Encuentra talleres y formación.</h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">Explora el directorio público de talleres, joyerías y cursos.</p>
           </div>
-          <Link to="/catalogo-publico" className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#17232d] px-5 text-sm font-semibold text-white transition hover:bg-[#293b49]">Abrir directorio <ArrowRight className="size-4" /></Link>
+          <Link to="/directorio" className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#17232d] px-5 text-sm font-semibold text-white transition hover:bg-[#293b49]">Abrir directorio <ArrowRight className="size-4" /></Link>
         </div>
       </section>
 
       <footer className="border-t border-slate-200 bg-white">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-6 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-8">
           <span>AURUM LAB · Tecnología para joyeros</span>
-          <div className="flex flex-wrap gap-4"><Link to="/" className="hover:text-[#987400]">Inicio</Link><Link to="/herramientas" className="hover:text-[#987400]">Herramientas</Link><Link to="/catalogo-publico" className="hover:text-[#987400]">Directorio</Link></div>
+          <div className="flex flex-wrap gap-4"><Link to="/" className="hover:text-[#987400]">Inicio</Link><Link to="/herramientas" className="hover:text-[#987400]">Herramientas</Link><Link to="/directorio" className="hover:text-[#987400]">Directorio</Link></div>
         </div>
       </footer>
     </main>
