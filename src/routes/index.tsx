@@ -12,13 +12,13 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Digitaliza tu taller joyero con AURUM LAB: herramientas gratuitas, visor 3D, Mi Nube y catálogo digital. Explora soluciones prácticas para tu trabajo.",
+          "Resuelve retos reales de tu taller joyero con AURUM LAB: cálculos técnicos, visualización 3D, gestión comercial y archivos conectados en una plataforma especializada.",
       },
       { name: "robots", content: "index, follow, max-image-preview:large" },
       { property: "og:title", content: "AURUM LAB — Haz crecer tu taller joyero" },
       {
         property: "og:description",
-        content: "Herramientas técnicas y soluciones digitales para calcular, diseñar, organizar y presentar tus joyas.",
+        content: "Menos errores de cálculo, mejores presentaciones y más control del trabajo comercial de tu taller joyero con AURUM LAB.",
       },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://www.tallerdeljoyero.com/" },
@@ -32,43 +32,43 @@ export const Route = createFileRoute("/")({
 const soluciones = [
   {
     numero: "01",
-    etiqueta: "CALCULAR",
+    etiqueta: "EVITA ERRORES",
     icon: Calculator,
-    titulo: "Calcula con precisión",
-    texto: "Resuelve cálculos de aleaciones, peso de gemas, tallas y materiales para tomar mejores decisiones en tu trabajo.",
-    beneficio: "Menos dudas en el banco de trabajo",
+    titulo: "Calcula antes de trabajar el metal",
+    texto: "Calcula aleaciones, pesos y medidas con herramientas especializadas para preparar materiales y tomar decisiones con mayor seguridad.",
+    beneficio: "Más claridad antes de fabricar",
     enlace: "/herramientas" as const,
-    accion: "Explorar herramientas",
+    accion: "Calcular materiales",
   },
   {
     numero: "02",
-    etiqueta: "DISEÑAR",
+    etiqueta: "PRESENTA MEJOR",
     icon: Gem,
-    titulo: "Visualiza tu joya en 3D",
-    texto: "Presenta diseños con una visualización profesional antes de llevarlos a la siguiente etapa.",
-    beneficio: "Una presentación más clara para tus clientes",
+    titulo: "Muestra la joya antes de fabricarla",
+    texto: "Visualiza tus modelos compatibles en 3D y presenta una propuesta más clara para que tus clientes evalúen el diseño.",
+    beneficio: "Alinea expectativas antes de producir",
     enlace: "/aurum-render-public" as const,
-    accion: "Abrir visor 3D",
+    accion: "Explorar visor 3D",
   },
   {
     numero: "03",
-    etiqueta: "GESTIONAR",
+    etiqueta: "DA SEGUIMIENTO",
     icon: ChartNoAxesCombined,
-    titulo: "Gestiona el área comercial de tu taller",
-    texto: "Organiza clientes, cotizaciones, contratos y pedidos desde la plataforma para dar seguimiento al trabajo comercial.",
-    beneficio: "Del primer contacto al pedido",
+    titulo: "Que ningún pedido quede en el olvido",
+    texto: "Centraliza clientes, cotizaciones, contratos y pedidos para consultar lo acordado y dar seguimiento al trabajo comercial.",
+    beneficio: "Más continuidad entre consulta y pedido",
     enlace: "/auth" as const,
-    accion: "Entrar al área comercial",
+    accion: "Organizar mi área comercial",
   },
   {
     numero: "04",
-    etiqueta: "ORGANIZAR Y PRESENTAR",
+    etiqueta: "ENCUENTRA Y COMPARTE",
     icon: Cloud,
-    titulo: "Mi Nube y catálogo, conectados a tu trabajo",
-    texto: "Organiza tus archivos y prepara un catálogo digital para compartir tus piezas y presentarlas a tus clientes.",
-    beneficio: "Archivos y presentación en un mismo ecosistema",
+    titulo: "Tus diseños organizados y listos para compartir",
+    texto: "Centraliza tus archivos en Mi Nube y prepara un catálogo digital para presentar tus piezas sin buscar cada archivo por separado.",
+    beneficio: "Archivos y presentación conectados",
     enlace: "/auth" as const,
-    accion: "Acceder a la plataforma",
+    accion: "Organizar mis archivos",
   },
 ];
 
@@ -353,8 +353,8 @@ function InicioPublico() {
         <div className="mx-auto max-w-[1440px] px-5 py-14 sm:px-8 sm:py-16 lg:px-12">
           <div className="mx-auto max-w-3xl text-center">
             <p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#987400]">Tecnología pensada para el oficio joyero</p>
-            <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-[#17232d] sm:text-3xl lg:text-4xl">¿Qué necesitas resolver en tu taller?</h2>
-            <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">Desde la gestión comercial del taller hasta la visualización premium de tus diseños: herramientas conectadas para acompañar cada etapa del oficio.</p>
+            <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-[#17232d] sm:text-3xl lg:text-4xl">Menos tiempo resolviendo problemas. Más tiempo creando.</h2>
+            <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">Resuelve tareas técnicas, presenta tus diseños y organiza el trabajo comercial con herramientas pensadas para los retos reales de la joyería.</p>
           </div>
           <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {soluciones.map(({ numero, etiqueta, icon: Icono, titulo, texto, beneficio, enlace, accion }) => (
@@ -377,8 +377,8 @@ function InicioPublico() {
             <div className="flex items-start gap-3">
               <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#ffefad] text-[#8f6b00]"><Layers3 className="size-5" /></span>
               <div>
-                <h3 className="text-sm font-bold text-[#17232d]">Más que un software de gestión: un ecosistema para joyeros</h3>
-                <p className="mt-1 max-w-3xl text-xs leading-5 text-slate-600">Combina herramientas técnicas, gestión comercial, archivos, catálogo y visualización 3D en un entorno pensado para la joyería. Las funciones disponibles dependen de tu plan y de los módulos activados.</p>
+                <h3 className="text-sm font-bold text-[#17232d]">De la idea al trabajo organizado</h3>
+                <p className="mt-1 max-w-3xl text-xs leading-5 text-slate-600">AURUM LAB conecta herramientas técnicas, visualización 3D, gestión comercial, archivos y catálogo. La producción configurable será una evolución del ecosistema; las funciones actuales dependen de tu plan y de los módulos activados.</p>
               </div>
             </div>
             <a href="#planes" className="inline-flex min-h-9 shrink-0 items-center gap-2 self-start text-xs font-bold text-[#765900] transition hover:text-[#17232d] sm:self-center">Conocer los planes<ArrowRight className="size-3.5" /></a>
