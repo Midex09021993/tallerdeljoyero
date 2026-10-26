@@ -20,7 +20,7 @@ import { createAurumGemEnvironment } from "../lib/aurum/gem-environment";
 import { createAurumDiamondBvhRuntime, type AurumDiamondBvhRuntime } from "../lib/aurum/aurum-diamond-bvh-runtime";
 import { createAurumSceneController } from "../lib/aurum/scene";
 import { createAurumGround } from "../lib/aurum/ground";
-import { setAurumInclusionsVisible } from "../lib/aurum/gems";
+import { setAurumInclusionsVisible, setAurumEmeraldInclusionsVisible } from "../lib/aurum/gems";
 import { setAurumGemShaderQuality } from "../lib/aurum/scintillation";
 import { createAurumLightingController } from "../lib/aurum/lighting";
 import { frameAurumProduct, disposeAurumViewer, createAurumWebGLViewer, startAurumViewerLoop } from "../lib/aurum/viewer";
@@ -906,6 +906,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         renderer.shadowMap.needsUpdate = true;
         if (modelo) {
           setAurumInclusionsVisible(modelo, false);
+          setAurumEmeraldInclusionsVisible(modelo, true);
           aplicarPerfilLive();
         }
         invalidateRenderRef.current?.();
@@ -1360,6 +1361,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         // dozens of transparent draw calls and are not required for the base
         // product preview. CAPTURE enables them temporarily for the final image.
         setAurumInclusionsVisible(modelo, false);
+        setAurumEmeraldInclusionsVisible(modelo, true);
         liveFastPathRef.current=true;
         aplicarPerfilLive();
 
