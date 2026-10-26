@@ -172,7 +172,10 @@ export async function createAurumDiamondBvhRuntime(options: {
               // restrained internal ray bounces (3 interactive, 4 high, 5 final).
               // Avoid the diamond's 8-bounce final setting for colored stones.
               packageApi.setDiamondOptions(prepared.material, {
-                rayBounces: quality === "final" ? 5 : quality === "high" ? 4 : 3,
+                // Fewer live bounces reduce unstable high-frequency BVH speckles
+                // while the camera/model moves; still and final quality converge
+                // with more internal reflections.
+                rayBounces: quality === "final" ? 5 : quality === "high" ? 3 : 2,
               });
             }
           },
