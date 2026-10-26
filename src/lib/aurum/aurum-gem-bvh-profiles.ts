@@ -59,12 +59,12 @@ export function resolveAurumEmeraldBvhProfile(
     dispersion: THREE.MathUtils.clamp(readFinite(physical.dispersion, readFinite(optical.dispersion, 0.0005)), 0, 0.002),
     // Slightly stronger absorption counters the washed-out center without
     // changing the catalog hue; this is a visual control, not Beer-Lambert.
-    absorption: THREE.MathUtils.clamp(absorption + 0.08, 0.4, 0.88),
+    absorption: THREE.MathUtils.clamp(absorption + 0.16, 0.48, 0.92),
     // The diamond shader can wash out colored gems at high HDR intensity.
     // Keep emerald reflections restrained while preserving the native color.
-    environmentIntensity: THREE.MathUtils.clamp(readFinite(physical.envMapIntensity, 1.15), 0.85, 1.25),
+    environmentIntensity: THREE.MathUtils.clamp(readFinite(physical.envMapIntensity, 0.95), 0.7, 1.05),
     color,
-    reflectivity: THREE.MathUtils.clamp(readFinite(physical.reflectivity, 0.22), 0.12, 0.3),
+    reflectivity: THREE.MathUtils.clamp(readFinite(physical.reflectivity, 0.18), 0.1, 0.24),
     transmission: THREE.MathUtils.clamp(authoredTransmission, 0.65, 0.95),
   };
 }
