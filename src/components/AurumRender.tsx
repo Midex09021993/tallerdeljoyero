@@ -1119,11 +1119,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           toast.error("No se aplicó la gema: selecciona una pieza clasificada como gema.");
           return;
         }
-        if (String(g?.familia ?? "").toLocaleLowerCase() === "diamante") {
+        const selectedGemFamily = String(g?.familia ?? "").toLocaleLowerCase();
+        const emeraldBvhOptIn = typeof window !== "undefined"
+          && new URLSearchParams(window.location.search).get("aurumEmeraldBvh") === "1";
+        if (selectedGemFamily === "diamante" || (selectedGemFamily === "esmeralda" && emeraldBvhOptIn)) {
+          // Re-run refresh AFTER the new catalog material is assigned. Without
+          // this, an emerald selected after model load keeps its native material.
           void asegurarDiamanteBvh().then(() => diamondBvhRuntime?.refresh(modelo));
-        } else if (String(g?.familia ?? "").toLocaleLowerCase() !== "esmeralda") {
-          // Do not refresh the experimental diamond BVH for emerald selections:
-          // the runtime's shader is not the emerald catalog's optical material.
+        } else {
           diamondBvhRuntime?.refresh(modelo);
         }
         // Inspect every mesh material on the actual target. Do not filter by
