@@ -327,7 +327,7 @@ export function AppShell({
   const inicial = nombreVisible.charAt(0).toUpperCase();
   const mostrarAtrasMovil = atrasMovil !== false;
   const pathname = useRouterState({ select: (state) => state.location.pathname });
-  const seccionActual = visiblesOrdenadas.find((s) => pathname === s.to || pathname.startsWith(`${s.to}/`));
+  const seccionActual = [...visiblesOrdenadas].sort((a, b) => b.to.length - a.to.length).find((s) => pathname === s.to || pathname.startsWith(`${s.to}/`));
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [pathname]);
