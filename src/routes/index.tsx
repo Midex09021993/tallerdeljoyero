@@ -328,9 +328,9 @@ function InicioPublico() {
                 </div>
                 <span className="grid size-10 place-items-center rounded-xl border border-[#f8c928]/30 bg-[#f8c928]/10 text-[#f8d85b]"><Gem className="size-5" /></span>
               </div>
-              <div className="relative min-h-[270px] overflow-hidden rounded-xl sm:min-h-[340px]">
-                <img src={heroJoyeria} alt="Diseño de joyería para mostrar el potencial visual de AURUM RENDER" className="absolute inset-0 h-full w-full object-cover object-center" loading="lazy" />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#080c10]/95 via-[#080c10]/20 to-[#080c10]/10" />
+              <div className="relative min-h-[270px] overflow-hidden rounded-xl bg-white sm:min-h-[340px]">
+                <img src={heroJoyeria} alt="Anillo de oro amarillo con gema central, render de joyería" className="absolute inset-0 h-full w-full object-contain object-center p-3 sm:p-5" loading="eager" />
+                <div className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-[#080c10]/95 via-[#080c10]/55 to-transparent" />
                 <div className="absolute inset-x-0 bottom-0 p-5 sm:p-7">
                   <p className="text-[10px] font-bold uppercase tracking-[.25em] text-[#f3d66e]">Visualización profesional</p>
                   <h3 className="mt-2 text-2xl font-semibold tracking-wide text-white sm:text-3xl">AURUM RENDER</h3>
