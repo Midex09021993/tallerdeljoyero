@@ -115,7 +115,7 @@ function ComunidadPage() {
             <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#987400]">Conocimiento útil</p>
             <h2 className="mt-2 text-2xl font-bold tracking-tight">Guías breves para empezar</h2>
             <p className="mt-3 text-sm leading-6 text-slate-600">Una base clara para consultar conceptos del oficio y continuar con herramientas especializadas.</p>
-            <Link to="/herramientas-publicas" className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[#876500]">Abrir herramientas técnicas <ArrowRight className="size-4" /></Link>
+            <Link to="/herramientas" className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[#876500]">Abrir herramientas técnicas <ArrowRight className="size-4" /></Link>
           </div>
           <div className="space-y-6">
             <article id="aleaciones" className="scroll-mt-24">
@@ -148,7 +148,7 @@ function ComunidadPage() {
       <footer className="border-t border-slate-200 bg-white">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-6 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-8">
           <span>AURUM LAB · Tecnología para joyeros</span>
-          <div className="flex flex-wrap gap-4"><Link to="/" className="hover:text-[#987400]">Inicio</Link><Link to="/herramientas-publicas" className="hover:text-[#987400]">Herramientas</Link><Link to="/catalogo-publico" className="hover:text-[#987400]">Directorio</Link></div>
+          <div className="flex flex-wrap gap-4"><Link to="/" className="hover:text-[#987400]">Inicio</Link><Link to="/herramientas" className="hover:text-[#987400]">Herramientas</Link><Link to="/catalogo-publico" className="hover:text-[#987400]">Directorio</Link></div>
         </div>
       </footer>
     </main>
