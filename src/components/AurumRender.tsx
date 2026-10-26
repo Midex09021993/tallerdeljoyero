@@ -835,10 +835,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             url: requestedEnvironmentUrl,
             camera: camara,
             quality: "interactive",
-            // The experimental BVH shader is reserved for diamond-like materials.
-            // Colored translucent gems (especially emeralds) must retain their catalog
-            // MeshPhysicalMaterial so transmission and volumetric absorption remain effective.
-            targetFamilies: ["Diamante"],
+            // The emerald BVH bridge is profile-driven and isolated to emeralds.
+            // Other colored families stay on the native physical shader pending validation.
+            targetFamilies: ["Diamante", "Esmeralda"],
             onError: (error) => console.warn("[AURUM][GEM BVH] Se conserva el shader anterior para esta malla:", error),
           });
           if (!vivo || requestedEnvironmentUrl !== gemEnvironmentUrl) {
