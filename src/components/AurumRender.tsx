@@ -2430,9 +2430,12 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             }
             liveFastPathRef.current = true;
             aplicarPerfilLive();
-            // Keep the lightweight diamond material and transmission budget;
-            // only the settled raster path switches to RenderPass + TAA + OutputPass.
-            liveFastPathRef.current = !idleTaaAvailable;
+            // Re-assert the live DOF state after the live profile reapplies post quality.
+            // Without TAA, the composer can still render RenderPass -> BokehPass -> OutputPass.
+            const settledDofPass = idlePasses.find((pass) => pass?.constructor?.name === "BokehPass");
+            if (settledDofPass) settledDofPass.enabled = postRuntimeConfig.dof === true;
+            // DOF requires EffectComposer even if the TAA pass is unavailable.
+            liveFastPathRef.current = !(idleTaaAvailable || (postRuntimeConfig.dof === true && Boolean(settledDofPass)));
             renderer.shadowMap.enabled = false;
             renderer.shadowMap.needsUpdate = false;
             console.info("[AURUM][DIAMOND LIVE DIAGNOSTICS]", {
