@@ -97,13 +97,19 @@ export async function createAurumDiamondBvhRuntime(options: {
       // MeshPhysicalMaterial pipeline until per-group BVH support is available.
       const activeGemId = String(mesh.userData?.["aurumActiveGemId"] ?? "").toLocaleLowerCase();
       const targetFamilies = (options.targetFamilies ?? ["Diamante"]).map((family) => family.toLocaleLowerCase());
-      const family = materials.length > 0 && materials.every((material) => getGemFamily(material) === getGemFamily(materials[0])) ? getGemFamily(materials[0]) : "";
+      const materialFamilies = materials.map((material) => getGemFamily(material));
+      const uniqueFamilies = [...new Set(materialFamilies)];
+      const family = uniqueFamilies.length === 1 ? uniqueFamilies[0] : "";
       const isParaibaCatalogId = /^turmalina_paraiba(?:_|$)/.test(activeGemId);
       const isTargetFamily = materials.length > 0 && materials.every((material) => targetFamilies.includes(getGemFamily(material)) || (isParaibaCatalogId && getGemFamily(material) === "turmalina"));
-      if (!isTargetFamily) {
+      // Do not apply a single BVH shader to a material array containing more
+      // than one gemstone family (e.g. a CAD mesh combining emerald and small
+      // diamond stones). Even when both families are individually supported,
+      // a single shader would overwrite their distinct optical identities.
+      if (!isTargetFamily || uniqueFamilies.length !== 1) {
         if (materials.some((material) => targetFamilies.includes(getGemFamily(material)))) {
           options.onError?.(
-            new Error("[AURUM BVH] Malla con materiales mixtos omitida para proteger metales y otras gemas."),
+            new Error("[AURUM BVH] Malla con familias/materiales mixtos omitida para proteger diamantes secundarios, otras gemas y metales."),
           );
         }
         return;
