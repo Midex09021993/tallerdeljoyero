@@ -73,6 +73,18 @@ function convertMaterial(src: any, gemEnvironment?: THREE.Texture | null): THREE
       m.color.set(0xffffff);
     }
   }
+  if (src?.userData?.aurumGemFamily === "Esmeralda" || src?.userData?.aurumEmeraldCatalogGrade) {
+    const textureFields=["map","normalMap","roughnessMap","metalnessMap","alphaMap","aoMap","bumpMap","emissiveMap","displacementMap","thicknessMap"];
+    console.info("[AURUM][EMERALD PROFILE TRACE]",{
+      stage:"final-path-tracer-conversion",
+      sourceGrade:src?.userData?.aurumEmeraldCatalogGrade??src?.userData?.aurumActiveGemId??null,
+      sourceFamily:src?.userData?.aurumGemFamily??null,
+      source:{color:src?.color?.getHexString?.()??null,transmission:src?.transmission,ior:src?.ior,roughness:src?.roughness,envMapIntensity:src?.envMapIntensity,attenuationColor:src?.attenuationColor?.getHexString?.()??null,attenuationDistance:src?.attenuationDistance},
+      converted:{color:m.color?.getHexString?.()??null,transmission:m.transmission,ior:m.ior,roughness:m.roughness,envMapIntensity:m.envMapIntensity,attenuationColor:m.attenuationColor?.getHexString?.()??null,attenuationDistance:m.attenuationDistance},
+      textures:Object.fromEntries(textureFields.map((field)=>[field,{sourcePresent:Boolean(src?.[field]),convertedPresent:Boolean(m[field]),name:src?.[field]?.name||null}])),
+      note:"El render final normaliza transmission a 1 y limita IOR a 2.333; esta traza permite confirmar el efecto sin cambiar la óptica.",
+    });
+  }
   return m;
 }
 
