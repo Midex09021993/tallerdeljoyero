@@ -44,8 +44,8 @@ const addEmeraldInclusions=(THREE: typeof import("three"),target: import("three"
   const scale=Math.max(.0001,Math.min(size.x,size.y,size.z));
   const quality=gemId==="esmeralda_1"?1:gemId==="esmeralda_2"?2:gemId==="esmeralda_3"?3:4;
   const branchCount=quality===1?Math.max(3,Math.round(4+strength*5)):quality===2?Math.max(7,Math.round(8+strength*9)):Math.max(12,Math.round(12+strength*13));
-  const branchOpacity=quality===1?.075:quality===2?.14:.22;
-  const tubeRadius=scale*(quality===1?.0022:quality===2?.0032:.0040);
+  const branchOpacity=quality===1?.12:quality===2?.23:.34;
+  const tubeRadius=scale*(quality===1?.0032:quality===2?.0048:.0062);
 
   // Emerald jardin: each quality uses a visibly different density and contrast.
   // Structures remain embedded near the center of the stone volume, not on its surface.
@@ -65,7 +65,7 @@ const addEmeraldInclusions=(THREE: typeof import("three"),target: import("three"
     const curve=new THREE.CatmullRomCurve3(points);
     const geometry=new THREE.TubeGeometry(curve,Math.max(10,steps*3),tubeRadius*(.75+rnd()*.6),4,false);
     const material=new THREE.MeshPhysicalMaterial({
-      color:quality===1?0x91b5a0:quality===2?0x789d87:0x9aa99c,
+      color:quality===1?0xa9c9b5:quality===2?0x91b29e:0xc1c9c2,
       metalness:0,roughness:quality===1?.48:.36,transmission:quality===1?.08:.02,
       transparent:true,opacity:branchOpacity+(rnd()*.035),depthWrite:false,envMapIntensity:quality===1?.45:.7
     });
@@ -79,7 +79,7 @@ const addEmeraldInclusions=(THREE: typeof import("three"),target: import("three"
       const crystalColor=rnd()<.6?0x8e9a8b:0x46584b;
       const crystal=new THREE.Mesh(new THREE.OctahedronGeometry(crystalSize,0),new THREE.MeshPhysicalMaterial({
         color:crystalColor,roughness:.28,transmission:.04,transparent:true,
-        opacity:quality===1?.12:quality===2?.22:.34,depthWrite:false,envMapIntensity:.55
+        opacity:quality===1?.18:quality===2?.32:.46,depthWrite:false,envMapIntensity:.7
       }));
       const crystalPoint=points[Math.floor(rnd()*points.length)];
       if(crystalPoint)crystal.position.copy(crystalPoint);
@@ -91,13 +91,13 @@ const addEmeraldInclusions=(THREE: typeof import("three"),target: import("three"
   }
 
   // Multiphase inclusions are deliberately rare in quality 1 and more apparent in lower grades.
-  const fluidCount=quality===1?0:quality===2?Math.max(1,Math.round(1+strength*2)):Math.max(3,Math.round(3+strength*4));
+  const fluidCount=quality===1?0:quality===2?Math.max(2,Math.round(2+strength*3)):Math.max(4,Math.round(4+strength*5));
   for(let i=0;i<fluidCount;i++){
     const base=new THREE.Vector3((rnd()-.5)*size.x*.22,(rnd()-.5)*size.y*.22,(rnd()-.5)*size.z*.22);
-    const pocketSize=scale*(quality===2?.009+rnd()*.008:.012+rnd()*.014);
+    const pocketSize=scale*(quality===2?.012+rnd()*.010:.016+rnd()*.018);
     const pocket=new THREE.Mesh(new THREE.SphereGeometry(pocketSize,12,8),new THREE.MeshPhysicalMaterial({
       color:quality===2?0x9bb5a7:0xc1d1c7,roughness:.12,transmission:.22,
-      transparent:true,opacity:quality===2?.18: .28,depthWrite:false,envMapIntensity:.65
+      transparent:true,opacity:quality===2?.26: .38,depthWrite:false,envMapIntensity:.75
     }));
     pocket.position.copy(base);pocket.scale.set(1.6,.62,.82);
     pocket.userData={aurumInternalInclusion:true,aurumInclusionType:"emerald-fluid",aurumInclusionQuality:quality};
@@ -316,6 +316,10 @@ export const renderAurumInclusions=(THREE: typeof import("three"),target: import
   clearAurumInclusions(target);
   const preset=providedPreset ?? getAurumGemPreset(g.id);
   const config=createAurumInclusionConfig(preset,seed);
+  // Catalog inclusionStrength is the grade-specific source of truth for gems.
+  // The engine presets for emerald grades intentionally have lower generic
+  // densities, which previously masked the catalog differences (especially Q1).
+  if(preset.familia==="Esmeralda") config.density=Math.max(0,Math.min(1,Number(g.inclusionStrength??preset.inclusionDensity)));
   const enabled=preset.inclusions || (!!g.inclusionStrength && g.inclusionStyle!=="ninguna");
   if(!enabled || config.density<=0)return;
   const box=new THREE.Box3().setFromObject(target);
