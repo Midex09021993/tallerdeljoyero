@@ -2406,7 +2406,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             const idleOutputPass = idlePasses.find((pass) => pass?.constructor?.name === "OutputPass");
             const idleTaaAvailable = Boolean(idleRenderPass && idleTaaPass && idleOutputPass);
             idlePasses.forEach((pass) => {
-              pass.enabled = pass === idleRenderPass || pass === idleTaaPass || pass === idleOutputPass;
+              // BokehPass stays off during interaction, then returns when DOF is enabled.
+              pass.enabled = pass === idleRenderPass || pass === idleTaaPass || pass === idleOutputPass
+                || (pass?.constructor?.name === "BokehPass" && postRuntimeConfig.dof === true);
             });
             if (idleTaaAvailable) {
               idleTaaPass.enabled = true;
