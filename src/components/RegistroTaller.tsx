@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { createPortal } from "react-dom";
 import { Building2, Eye, EyeOff, MapPin, Mail, Phone, UserRound, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { registrarTaller } from "@/lib/cuentas.functions";
@@ -76,8 +77,8 @@ export function RegistroTaller({ className = "" }: Props) {
         Crear mi taller
       </button>
 
-      {abierto ? (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="registro-taller-title">
+      {abierto ? createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto bg-black/80 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="registro-taller-title">
           <div className="max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-2xl border border-gold/25 bg-[#111315] p-6 shadow-2xl sm:p-8">
             <div className="flex items-start justify-between gap-4">
               <div>
@@ -178,7 +179,8 @@ export function RegistroTaller({ className = "" }: Props) {
               </form>
             )}
           </div>
-        </div>
+        </div>,
+        document.body,
       ) : null}
     </>
   );
