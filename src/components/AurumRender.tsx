@@ -1106,7 +1106,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         } else {
           diamondBvhRuntime?.refresh(modelo);
         }
-        aplicarPerfilLive();
         // Inspect every mesh material on the actual target. Do not filter by
         // emerald metadata: the missing metadata is precisely what this audit
         // needs to reveal. Capture values before and after LIVE overrides.
