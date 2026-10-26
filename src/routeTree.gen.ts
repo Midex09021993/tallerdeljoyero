@@ -24,6 +24,7 @@ import { Route as TiendaRouteImport } from './routes/tienda'
 import { Route as SlugIndexRouteImport } from './routes/$slug.index'
 import { Route as SlugProductoRouteImport } from './routes/$slug.$producto'
 import { Route as AuthenticatedAurumRenderRouteImport } from './routes/_authenticated/aurum-render'
+import { Route as AuthenticatedAurumRenderPluginRouteImport } from './routes/_authenticated/aurum-render-plugin'
 import { Route as AuthenticatedCastingRouteImport } from './routes/_authenticated/casting'
 import { Route as AuthenticatedCatalogoRouteImport } from './routes/_authenticated/catalogo'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
@@ -147,6 +148,12 @@ const AuthenticatedAurumRenderRoute =
   AuthenticatedAurumRenderRouteImport.update({
     id: '/aurum-render',
     path: '/aurum-render',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAurumRenderPluginRoute =
+  AuthenticatedAurumRenderPluginRouteImport.update({
+    id: '/aurum-render-plugin',
+    path: '/aurum-render-plugin',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedCastingRoute = AuthenticatedCastingRouteImport.update({
@@ -1324,6 +1331,7 @@ const AuthenticatedVentasRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAurumRenderRoute: typeof AuthenticatedAurumRenderRoute
+  AuthenticatedAurumRenderPluginRoute: typeof AuthenticatedAurumRenderPluginRoute
   AuthenticatedCastingRoute: typeof AuthenticatedCastingRoute
   AuthenticatedCatalogoRoute: typeof AuthenticatedCatalogoRoute
   AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
@@ -1359,6 +1367,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAurumRenderRoute: AuthenticatedAurumRenderRoute,
+  AuthenticatedAurumRenderPluginRoute: AuthenticatedAurumRenderPluginRoute,
   AuthenticatedCastingRoute: AuthenticatedCastingRoute,
   AuthenticatedCatalogoRoute: AuthenticatedCatalogoRoute,
   AuthenticatedClientesRoute: AuthenticatedClientesRoute,
