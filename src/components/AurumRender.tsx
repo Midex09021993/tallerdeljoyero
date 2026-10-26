@@ -835,7 +835,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             url: requestedEnvironmentUrl,
             camera: camara,
             quality: "interactive",
-            targetFamilies: ["Diamante", "Esmeralda", "Rubí", "Rubi", "Zafiro", "Sapphire", "Amatista", "Amethyst", "Aguamarina", "Aquamarine", "Citrino", "Citrine", "Topacio", "Topacio Azul", "topacio_azul", "Blue Topaz", "BlueTopaz", "Moissanita", "Moissanite", "Turmalina Paraíba", "Turmalina Paraiba", "turmalina_paraiba", "Paraiba Tourmaline", "Paraiba", "Tanzanita", "Tanzanite"],
+            // The experimental BVH shader is reserved for diamond-like materials.
+            // Colored translucent gems (especially emeralds) must retain their catalog
+            // MeshPhysicalMaterial so transmission and volumetric absorption remain effective.
+            targetFamilies: ["Diamante"],
             onError: (error) => console.warn("[AURUM][GEM BVH] Se conserva el shader anterior para esta malla:", error),
           });
           if (!vivo || requestedEnvironmentUrl !== gemEnvironmentUrl) {
@@ -1117,7 +1120,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         }
         if (String(g?.familia ?? "").toLocaleLowerCase() === "diamante") {
           void asegurarDiamanteBvh().then(() => diamondBvhRuntime?.refresh(modelo));
-        } else {
+        } else if (String(g?.familia ?? "").toLocaleLowerCase() !== "esmeralda") {
+          // Do not refresh the experimental diamond BVH for emerald selections:
+          // the runtime's shader is not the emerald catalog's optical material.
           diamondBvhRuntime?.refresh(modelo);
         }
         // Inspect every mesh material on the actual target. Do not filter by
