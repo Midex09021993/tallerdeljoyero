@@ -2445,7 +2445,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               idleTaaPass.sampleLevel = 4;
               idleTaaPass.accumulateIndex = -1;
             }
-            liveFastPathRef.current = true;
+            // With live DOF enabled, the settled viewer must render through EffectComposer.
+            // Keep the direct renderer only when DOF is off; otherwise the BokehPass is bypassed.
+            liveFastPathRef.current = postRuntimeConfig.dof !== true;
             aplicarPerfilLive();
             // Re-assert the live DOF state after the live profile reapplies post quality.
             // Without TAA, the composer can still render RenderPass -> BokehPass -> OutputPass.
