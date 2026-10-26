@@ -75,7 +75,7 @@ const secciones: Seccion[] = [
   { to: "/contratos", label: "Contratos", icono: FileText, grupo: "comercial" },
   { to: "/clientes", label: "Clientes", icono: Users, grupo: "comercial" },
   { to: "/diseno-3d", label: "Diseño 3D", area: "Diseño 3D", icono: LayoutGrid, grupo: "produccion" },
-  { to: "/aurum-render", label: "AURUM RENDER", area: "Diseño 3D", icono: Gem, grupo: "aurum" },
+  { to: "/aurum-render", label: "AURUM RENDER", icono: Gem, grupo: "aurum" },
   { to: "/impresion-3d", label: "Impresión 3D", area: "Impresión 3D", icono: Boxes, grupo: "produccion" },
   { to: "/casting", label: "Casting", area: "Casting", icono: Landmark, grupo: "produccion" },
   { to: "/corte-laser", label: "Corte Láser", area: "Corte Láser", icono: Scissors, grupo: "produccion" },
@@ -218,7 +218,7 @@ function seccionesVisibles(
     return secciones.filter((s) => {
       if (["/monitor", "/operario", "/perfil"].includes(s.to)) return false;
       if (s.to === "/servicios-externos") return Boolean(modalidades?.serviciosExternosActivos);
-      if (s.grupo === "produccion" || s.to === "/aurum-render") {
+      if (s.grupo === "produccion") {
         if (!modalidades?.produccionActiva) return false;
       }
       // Catálogo es una capacidad comercial configurable de la sede.
@@ -230,7 +230,7 @@ function seccionesVisibles(
       // Gestión siempre permanece visible porque es el lugar desde donde
       // el dueño/gerente puede volver a configurar las capacidades del taller.
       if (s.to === "/gestion") return true;
-      if (s.grupo !== "produccion" && s.to !== "/aurum-render") return true;
+      if (s.grupo !== "produccion") return true;
       if (!s.area || !CAPACIDADES_MENU.some((area) => areaCoincide(area, s.area))) return true;
       return habilitadas.has(CAPACIDADES_MENU.find((area) => areaCoincide(area, s.area)) ?? "");
     });
@@ -335,7 +335,6 @@ export function AppShell({
     "/casting",
     "/corte-laser",
     "/taller",
-    "/aurum-render",
   ].includes(pathname);
   const esRutaServiciosExternos = pathname === "/servicios-externos";
   const capacidadesPorRuta: Record<string, string> = {
@@ -345,7 +344,6 @@ export function AppShell({
     "/inventario": "Inventario", "/compras": "Compras", "/herramientas": "Herramientas",
     "/mi-nube": "Mi nube", "/diseno-3d": "Diseño 3D", "/impresion-3d": "Impresión 3D",
     "/casting": "Casting", "/corte-laser": "Corte Láser", "/taller": "Taller",
-    "/aurum-render": "Diseño 3D",
   };
   const rutaCapacidad = Object.keys(capacidadesPorRuta).find(
     (ruta) => pathname === ruta || pathname.startsWith(`${ruta}/`),
