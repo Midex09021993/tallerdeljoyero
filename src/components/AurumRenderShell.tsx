@@ -45,14 +45,7 @@ export function AurumRenderShell() {
       target.addEventListener("click", goHome);
       target.addEventListener("keydown", onKeyDown);
 
-      const pluginLink = document.createElement("a");
-      pluginLink.href = "/aurum-render-plugin";
-      pluginLink.textContent = "Complemento Rhino";
-      pluginLink.setAttribute("aria-label", "Descargar complemento para Rhino 7");
-      pluginLink.className = "inline-flex h-10 shrink-0 items-center justify-center rounded-xl border border-[#b28b45]/50 bg-white/90 px-4 text-xs font-semibold text-[#8a6a2e] shadow-sm transition hover:border-[#b28b45] hover:bg-[#d4af37]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45]/30";
-      pluginLink.style.whiteSpace = "nowrap";
-      pluginLink.title = "Descargar el complemento de Rhino 7";
-
+      // Complemento Rhino desactivado temporalmente para evitar problemas de integración.
       const select = root.querySelector("select");
       const label = select?.closest("label");
       const controls = label?.parentElement;
@@ -66,7 +59,6 @@ export function AurumRenderShell() {
         target?.removeEventListener("click", goHome);
         target?.removeEventListener("keydown", onKeyDown);
         if (target) target.style.cursor = previousCursor;
-        if (pluginLink.parentElement) pluginLink.parentElement.removeChild(pluginLink);
         if (extraChevron) extraChevron.style.display = previousDisplay;
       };
       return true;
