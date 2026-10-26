@@ -1047,10 +1047,12 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                   const gemFamily=String(m.userData?.aurumGemFamily??"");
                   const isEmerald=gemFamily==="Esmeralda";
                   const liveTransmissionCap=0.35;
-                  // Emeralds preserve their authored grade differences during orbit.
-                  // Multiplying transmission by 0.4 made the four profiles converge.
+                  // Emeralds need a stronger body-color/absorption response in the
+                  // live viewer; near-full transmission washes catalog grades into
+                  // a similar bright green. Keep authored differences ordered while
+                  // applying this live-only scale (beauty/export values stay intact).
                   m.transmission=isEmerald
-                    ? Math.min(0.9,authoredTransmission)
+                    ? Math.min(0.68,authoredTransmission*0.72)
                     : Math.min(authoredTransmission,liveTransmissionCap);
                 }
                 m.needsUpdate=true;
