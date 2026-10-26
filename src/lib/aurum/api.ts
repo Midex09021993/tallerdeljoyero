@@ -83,5 +83,7 @@ export function createAurumApi(options:any){
     exportPathTraced: options.exportPathTraced,
     exportVideo: options.exportVideo,
     exportSceneSettings: options.exportSceneSettings,
+    // Forward the live viewer DOF control; omitting it makes the UI toggle a no-op.
+    setDepthOfField: options.setDepthOfField,
   };
 }
