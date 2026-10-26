@@ -1885,11 +1885,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           // Keep the focused jewelry details restrained while making depth separation visible.
           // Keep the real BokehPass effect photographic, not destructive: once the
           // pass is actually active, the previous aperture values blurred the whole jewel.
+          // BokehShader multiplies the difference between focus distance and
+          // scene depth by aperture. Values near 0.001 barely change the image
+          // at typical jewelry viewing distances, so use a calibrated progression.
           const settings = strength === "strong"
-            ? { aperture: 0.0030, maxBlur: 0.014 }
+            ? { aperture: 0.040, maxBlur: 0.012 }
             : strength === "medium"
-              ? { aperture: 0.0020, maxBlur: 0.010 }
-              : { aperture: 0.0012, maxBlur: 0.006 };
+              ? { aperture: 0.025, maxBlur: 0.009 }
+              : { aperture: 0.012, maxBlur: 0.006 };
           Object.assign(postRuntimeConfig,{dof:Boolean(enabled),dofAperture:settings.aperture,dofMaxBlur:settings.maxBlur});
           // Apply the toggle to the actual pass immediately, then reconcile the full
           // post-processing profile. This avoids a UI/runtime state mismatch.
