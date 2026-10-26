@@ -2412,9 +2412,15 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             const idleOutputPass = idlePasses.find((pass) => pass?.constructor?.name === "OutputPass");
             const idleTaaAvailable = Boolean(idleRenderPass && idleTaaPass && idleOutputPass);
             idlePasses.forEach((pass) => {
-              // BokehPass stays off during interaction, then returns when DOF is enabled.
-              pass.enabled = pass === idleRenderPass || pass === idleTaaPass || pass === idleOutputPass
-                || (pass?.constructor?.name === "BokehPass" && postRuntimeConfig.dof === true);
+              // Keep the settled photographic chain explicit. Bokeh must run after
+              // the beauty/TAA image and before OutputPass; it must not be enabled
+              // if its module failed to load or the user disabled live DOF.
+              const passName = pass?.constructor?.name;
+              const isDofPass = passName === "BokehPass";
+              pass.enabled = pass === idleRenderPass
+                || pass === idleTaaPass
+                || (isDofPass && postRuntimeConfig.dof === true)
+                || pass === idleOutputPass;
             });
             if (idleTaaAvailable) {
               idleTaaPass.enabled = true;
