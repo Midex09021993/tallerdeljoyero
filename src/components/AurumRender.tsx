@@ -1107,53 +1107,57 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           diamondBvhRuntime?.refresh(modelo);
         }
         aplicarPerfilLive();
-        // Diagnose the selected emerald after the LIVE/BEAUTY controller has
-        // applied its runtime overrides. This intentionally observes the actual
-        // mesh materials and generated inclusions; catalog values alone cannot
-        // prove what the viewer is rendering.
+        // Inspect every mesh material on the actual target. Do not filter by
+        // emerald metadata: the missing metadata is precisely what this audit
+        // needs to reveal. Capture values before and after LIVE overrides.
         if (String(g?.familia ?? "") === "Esmeralda") {
-          const runtimeMaterials:any[] = [];
-          const runtimeInclusions:any[] = [];
-          target?.traverse?.((node:any) => {
-            if (node?.userData?.aurumInternalInclusion) {
-              runtimeInclusions.push({
-                type:String(node.userData?.aurumInclusionType ?? "unknown"),
-                quality:node.userData?.aurumInclusionQuality ?? null,
-                visible:Boolean(node.visible),
-                opacity:Number(node.material?.opacity ?? 1),
+          const snapshot=(stage:string)=>{
+            const meshes:any[]=[];
+            const inclusions:any[]=[];
+            target?.traverse?.((node:any)=>{
+              if(node?.userData?.aurumInternalInclusion){
+                inclusions.push({
+                  type:String(node.userData?.aurumInclusionType??"unknown"),
+                  quality:node.userData?.aurumInclusionQuality??null,
+                  visible:Boolean(node.visible),
+                  opacity:Number(node.material?.opacity??1),
+                });
+              }
+              if(!node?.isMesh)return;
+              const list=Array.isArray(node.material)?node.material:[node.material];
+              meshes.push({
+                mesh:node.name||node.uuid,
+                meshUuid:node.uuid,
+                materialCount:list.filter(Boolean).length,
+                materials:list.filter(Boolean).map((m:any)=>({
+                  uuid:m.uuid??null,
+                  name:m.name??"",
+                  type:m.type??m.constructor?.name??"unknown",
+                  grade:m.userData?.aurumEmeraldCatalogGrade??null,
+                  family:m.userData?.aurumGemFamily??null,
+                  profileApplied:Boolean(m.userData?.aurumEmeraldCatalogProfileApplied),
+                  color:m.color?.getHexString?.()??null,
+                  transmission:Number(m.transmission??0),
+                  storedTransmission:m.userData?.aurumLiveTransmissionStored??null,
+                  roughness:Number(m.roughness??0),
+                  ior:Number(m.ior??0),
+                  envMapIntensity:Number(m.envMapIntensity??0),
+                  attenuationColor:m.attenuationColor?.getHexString?.()??null,
+                  attenuationDistance:Number(m.attenuationDistance??0),
+                })),
               });
-            }
-            if (node?.isMesh) {
-              const materials=Array.isArray(node.material) ? node.material : [node.material];
-              materials.filter(Boolean).forEach((m:any) => {
-                if (m?.userData?.aurumEmeraldCatalogGrade || m?.userData?.aurumGemFamily === "Esmeralda") {
-                  runtimeMaterials.push({
-                    mesh:node.name || node.uuid,
-                    grade:m.userData?.aurumEmeraldCatalogGrade ?? null,
-                    family:m.userData?.aurumGemFamily ?? null,
-                    color:m.color?.getHexString?.() ?? null,
-                    transmission:Number(m.transmission ?? 0),
-                    authoredTransmission:m.userData?.aurumLiveTransmissionStored ?? null,
-                    roughness:Number(m.roughness ?? 0),
-                    ior:Number(m.ior ?? 0),
-                    envMapIntensity:Number(m.envMapIntensity ?? 0),
-                    attenuationColor:m.attenuationColor?.getHexString?.() ?? null,
-                    attenuationDistance:Number(m.attenuationDistance ?? 0),
-                  });
-                }
-              });
-            }
+            });
+            return {stage,requestedId:String(g?.id??""),live:liveFastPathRef.current,meshCount:meshes.length,meshes,inclusionCount:inclusions.length,visibleInclusionCount:inclusions.filter((i:any)=>i.visible).length,inclusions:inclusions.slice(0,24)};
+          };
+          const beforeLive=snapshot("before-live-overrides");
+          aplicarPerfilLive();
+          const afterLive=snapshot("after-live-overrides");
+          console.info("[AURUM][EMERALD LIVE RUNTIME AUDIT]",{
+            requested:{id:String(g?.id??""),color:g?.color??null,transmission:g?.transmission??null,roughness:g?.roughness??null,attenuationDistance:g?.attenuationDistance??null,inclusionStrength:g?.inclusionStrength??null},
+            beforeLive,afterLive,
           });
-          console.info("[AURUM][EMERALD LIVE RUNTIME AUDIT]", {
-            requested:{id:String(g?.id ?? ""),color:g?.color ?? null,transmission:g?.transmission ?? null,roughness:g?.roughness ?? null,attenuationDistance:g?.attenuationDistance ?? null,inclusionStrength:g?.inclusionStrength ?? null},
-            live:liveFastPathRef.current,
-            materialCount:runtimeMaterials.length,
-            materials:runtimeMaterials,
-            inclusionCount:runtimeInclusions.length,
-            visibleInclusionCount:runtimeInclusions.filter((item:any)=>item.visible).length,
-            inclusionTypes:[...new Set(runtimeInclusions.map((item:any)=>item.type))],
-            inclusions:runtimeInclusions.slice(0,24),
-          });
+        } else {
+          aplicarPerfilLive();
         }
         invalidateRenderRef.current?.();
       };
