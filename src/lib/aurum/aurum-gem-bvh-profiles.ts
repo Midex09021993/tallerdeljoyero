@@ -65,6 +65,6 @@ export function resolveAurumEmeraldBvhProfile(
     environmentIntensity: THREE.MathUtils.clamp(readFinite(physical.envMapIntensity, 0.95), 0.7, 1.05),
     color,
     reflectivity: THREE.MathUtils.clamp(readFinite(physical.reflectivity, 0.18), 0.1, 0.24),
-    transmission: THREE.MathUtils.clamp(authoredTransmission, 0.65, 0.95),
+    transmission: THREE.MathUtils.clamp(authoredTransmission, 0.58, 0.84),
   };
 }
