@@ -259,7 +259,7 @@ function OperarioPage() {
           {puedeHerramientas ? (
             <button
               type="button"
-              onClick={() => void navigate({ to: "/taller/herramientas" })}
+              onClick={() => void navigate({ to: "/herramientas" })}
               className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card p-4 text-left shadow-card transition hover:border-gold focus-visible:outline-none"
             >
               <span>
