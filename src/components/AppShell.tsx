@@ -406,7 +406,11 @@ export function AppShell({
                     {items.map((s) => {
                       const Icon = s.icono;
                       return (
-                        <Link key={s.to} to={s.to}
+                        <Link
+                          key={s.to}
+                          to={s.to}
+                          reloadDocument={s.to === "/taller/herramientas"}
+                          activeOptions={{ exact: true }}
                           className="flex min-h-11 items-center gap-3 rounded-xl border border-transparent px-3.5 py-2.5 text-sm font-medium text-ink-foreground/65 transition-colors hover:border-ink-foreground/10 hover:bg-ink-foreground/5 hover:text-ink-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/70 xl:px-4"
                           activeProps={{ className: "border-gold/25 bg-gold/10 text-gold-bright shadow-[inset_3px_0_0_0_hsl(var(--gold))]" }}>
                           {Icon ? <Icon className="size-4 shrink-0 opacity-70" /> : null}
