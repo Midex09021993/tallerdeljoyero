@@ -37,6 +37,16 @@ export const setAurumInclusionsVisible = (target: import("three").Object3D, visi
   });
 };
 
+// Keep emerald jardin visible in the interactive preview while other procedural
+// inclusions remain hidden for performance. Emerald grades are defined by these
+// internal structures, so hiding them made all three look like the same clean gem.
+export const setAurumEmeraldInclusionsVisible = (target: import("three").Object3D, visible: boolean) => {
+  target.traverse((child) => {
+    const type = String(child.userData?.["aurumInclusionType"] ?? "");
+    if (child.userData?.["aurumInternalInclusion"] && type.startsWith("emerald-")) child.visible = visible;
+  });
+};
+
 const addEmeraldInclusions=(THREE: typeof import("three"),target: import("three").Object3D,config: ReturnType<typeof createAurumInclusionConfig>,size: import("three").Vector3,gemId:string)=>{
   let s=(config.seed>>>0)||1;
   const rnd=()=>{s=(1664525*s+1013904223)>>>0;return s/4294967296;};
