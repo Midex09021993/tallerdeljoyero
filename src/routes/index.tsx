@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Boxes, Calculator, Check, ChevronDown, Cloud, Gem, Layers3, MonitorSmartphone, PackageCheck, Sparkles, Sprout, ChartNoAxesCombined } from "lucide-react";
-import heroJoyeria from "@/assets/aurum-render-hero.webp";
 import heroColgante from "@/assets/diseno-colgante.jpg";
 import heroFloral from "@/assets/diseno-floral.jpg";
 import heroGemelos from "@/assets/diseno-gemelos.jpg";
@@ -328,14 +327,16 @@ function InicioPublico() {
                 </div>
                 <span className="grid size-10 place-items-center rounded-xl border border-[#f8c928]/30 bg-[#f8c928]/10 text-[#f8d85b]"><Gem className="size-5" /></span>
               </div>
-              <div className="relative min-h-[270px] overflow-hidden rounded-xl bg-white sm:min-h-[340px]">
-                <img src={heroJoyeria} alt="Anillo de oro amarillo con gema central, render de joyería" className="absolute inset-0 h-full w-full object-contain object-center p-3 sm:p-5" loading="eager" />
-                <div className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-[#080c10]/95 via-[#080c10]/55 to-transparent" />
-                <div className="absolute inset-x-0 bottom-0 p-5 sm:p-7">
-                  <p className="text-[10px] font-bold uppercase tracking-[.25em] text-[#f3d66e]">Visualización profesional</p>
-                  <h3 className="mt-2 text-2xl font-semibold tracking-wide text-white sm:text-3xl">AURUM RENDER</h3>
-                  <p className="mt-2 max-w-sm text-xs leading-5 text-slate-200 sm:text-sm">Materiales, luz y detalle para presentar tus diseños de joyería.</p>
-                </div>
+              <div className="relative flex min-h-[270px] flex-col items-center justify-center overflow-hidden rounded-xl border border-white/[.06] bg-[radial-gradient(ellipse_at_50%_38%,rgba(248,201,40,.13),transparent_48%),linear-gradient(145deg,#202b35_0%,#111820_58%,#090d11_100%)] px-6 py-10 text-center sm:min-h-[340px]">
+                <div aria-hidden="true" className="absolute inset-5 rounded-xl border border-white/[.06]" />
+                <div aria-hidden="true" className="absolute left-1/2 top-1/2 size-48 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#f8c928]/10 sm:size-60" />
+                <div aria-hidden="true" className="absolute left-1/2 top-1/2 size-36 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#f8c928]/15 sm:size-44" />
+                <span className="relative grid size-20 place-items-center rounded-2xl border border-[#f8c928]/35 bg-[#f8c928]/10 text-[#f8d85b] shadow-[0_0_55px_rgba(248,201,40,.12)] sm:size-24">
+                  <Gem className="size-10 sm:size-12" strokeWidth={1.25} />
+                </span>
+                <p className="relative mt-7 text-[10px] font-bold uppercase tracking-[.28em] text-[#f3d66e]">Estudio de visualización</p>
+                <h3 className="relative mt-2 text-2xl font-semibold tracking-wide text-white sm:text-3xl">AURUM RENDER</h3>
+                <p className="relative mt-2 max-w-sm text-xs leading-5 text-slate-300 sm:text-sm">Materiales, iluminación y detalle para presentar tus diseños de joyería.</p>
               </div>
               <div className="grid grid-cols-3 gap-2 border-t border-white/10 pt-4 text-center">
                 <div className="rounded-lg bg-white/[.04] px-2 py-3"><p className="text-[9px] uppercase tracking-wider text-slate-400">Materiales</p><p className="mt-1 text-xs font-semibold text-white">Metales</p></div>
