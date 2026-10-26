@@ -85,7 +85,7 @@ function MarketplaceArchivosPage() {
             <span><strong className="block text-xs font-extrabold tracking-[.13em] sm:text-sm">TALLER DEL JOYERO</strong><span className="mt-0.5 block text-[10px] tracking-[.1em] text-white/55">MARKETPLACE DIGITAL</span></span>
           </Link>
           <nav className="flex items-center gap-2 sm:gap-4" aria-label="Navegación principal">
-            <Link to="/catalogo-publico" className="rounded-full px-3 py-2 text-xs text-white/75 transition hover:bg-white/10 hover:text-white">Comunidad</Link>
+            <Link to="/directorio" className="rounded-full px-3 py-2 text-xs text-white/75 transition hover:bg-white/10 hover:text-white">Comunidad</Link>
             <Link to="/auth" className="rounded-full bg-[#c9ad73] px-4 py-2.5 text-xs font-semibold text-[#211d19] transition hover:bg-[#dfc994]">Acceder</Link>
           </nav>
         </div>
@@ -169,7 +169,7 @@ function MarketplaceArchivosPage() {
 
       <footer className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-7 text-[10px] text-[#81766a] sm:flex-row sm:items-center sm:justify-between sm:px-8">
         <span>© {new Date().getFullYear()} Taller del Joyero · Marketplace Digital</span>
-        <div className="flex flex-wrap gap-4"><Link to="/catalogo-publico" className="hover:text-[#96733d]">Comunidad</Link><Link to="/auth" className="hover:text-[#96733d]">Acceso al ERP</Link></div>
+        <div className="flex flex-wrap gap-4"><Link to="/directorio" className="hover:text-[#96733d]">Comunidad</Link><Link to="/auth" className="hover:text-[#96733d]">Acceso al ERP</Link></div>
       </footer>
     </main>
   );
