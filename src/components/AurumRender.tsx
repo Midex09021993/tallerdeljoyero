@@ -2427,11 +2427,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               // Keep the settled photographic chain explicit. Bokeh must run after
               // the beauty/TAA image and before OutputPass; it must not be enabled
               // if its module failed to load or the user disabled live DOF.
-              const passName = pass?.constructor?.name;
-              const isDofPass = passName === "BokehPass";
+              // Use the actual pass instance returned by the pipeline. Constructor names
+              // can be minified in production bundles, so name-based detection is unreliable.
               pass.enabled = pass === idleRenderPass
                 || pass === idleTaaPass
-                || (isDofPass && postRuntimeConfig.dof === true)
+                || (pass === dofPass && postRuntimeConfig.dof === true)
                 || pass === idleOutputPass;
             });
             if (idleTaaAvailable) {
@@ -2444,7 +2444,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             aplicarPerfilLive();
             // Re-assert the live DOF state after the live profile reapplies post quality.
             // Without TAA, the composer can still render RenderPass -> BokehPass -> OutputPass.
-            const settledDofPass = idlePasses.find((pass) => pass?.constructor?.name === "BokehPass");
+            // Keep the direct reference from createAurumPostPipeline; production
+            // minifiers may rename BokehPass.constructor.name.
+            const settledDofPass = dofPass && idlePasses.includes(dofPass) ? dofPass : null;
             if (settledDofPass) settledDofPass.enabled = postRuntimeConfig.dof === true;
             // Temporary diagnostics are opt-in via ?aurumDofDiag=1.
             if (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("aurumDofDiag")) {
@@ -2455,7 +2457,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 bokehPassIndex: settledDofPass ? idlePasses.indexOf(settledDofPass) : -1,
                 passNames: idlePasses.map((pass) => ({ name: pass?.constructor?.name ?? "unknown", enabled: Boolean(pass?.enabled) })),
                 taaAvailable: idleTaaAvailable,
-                renderPath: (idleTaaAvailable || (postRuntimeConfig.dof === true && Boolean(settledDofPass))) ? "composer" : "direct",
+                renderPath: (idleTaaAvailable || (postRuntimeConfig.dof === true && Boolean(dofPass) && idlePasses.includes(dofPass))) ? "composer" : "direct",
                 focusDistance: controles?.target ? camara.position.distanceTo(controles.target) : null,
                 aperture: settledDofPass?.uniforms?.aperture?.value ?? null,
                 maxblur: settledDofPass?.uniforms?.maxblur?.value ?? null,
