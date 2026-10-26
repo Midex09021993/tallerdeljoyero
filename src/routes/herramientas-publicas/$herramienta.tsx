@@ -60,7 +60,7 @@ export const Route = createFileRoute("/herramientas-publicas/$herramienta")({
         { property: "og:description", content: pagina?.descripcion ?? "Herramientas técnicas para joyería." },
         { property: "og:type", content: "website" },
       ],
-      links: pagina ? [{ rel: "canonical", href: "https://www.tallerdeljoyero.com/herramientas/" + encodeURIComponent(params.herramienta) }] : [],
+      links: pagina ? [{ rel: "canonical", href: "https://www.tallerdeljoyero.com/herramientas-publicas/" + encodeURIComponent(params.herramienta) }] : [],
     };
   },
   component: HerramientaPublicaPage,
