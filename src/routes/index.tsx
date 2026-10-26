@@ -304,6 +304,52 @@ function InicioPublico() {
         </div>
       </section>
 
+      <section id="aurum-render" className="overflow-hidden border-y border-[#263743] bg-[#111a22] text-white">
+        <div className="mx-auto grid max-w-[1440px] items-center gap-9 px-5 py-14 sm:px-8 sm:py-16 lg:grid-cols-[1.05fr_.95fr] lg:gap-14 lg:px-12 lg:py-20">
+          <div className="max-w-2xl">
+            <p className="inline-flex items-center gap-2 rounded-full border border-[#d4aa19]/40 bg-[#d4aa19]/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.2em] text-[#f3d66e]"><Sparkles className="size-3.5" /> Presentamos Aurum Render</p>
+            <h2 className="mt-5 text-3xl font-extrabold leading-tight tracking-tight sm:text-4xl lg:text-5xl">De un modelo 3D a una presentación de joyería profesional.</h2>
+            <p className="mt-5 max-w-xl text-sm leading-7 text-slate-300 sm:text-base">AURUM RENDER es el renderizador profesional de joyería de Taller del Joyero, creado para visualizar piezas, trabajar sus materiales y preparar imágenes que ayuden a presentar cada diseño con mayor claridad.</p>
+            <p className="mt-3 max-w-xl text-sm leading-7 text-slate-300 sm:text-base">Conoce su propuesta a través de <strong className="text-white">Nura, Joya de la Corona</strong>, una pieza protagonista que representa el potencial visual que buscamos para la joyería digital.</p>
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+              <Link to="/auth" target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#f8c928] px-5 py-3 text-sm font-bold text-[#17232d] transition hover:bg-[#ffe071] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">Conocer Aurum Render <ArrowRight className="size-4" /></Link>
+              <Link to="/aurum-render-public" className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/25 px-5 py-3 text-sm font-semibold text-white transition hover:border-[#f8c928] hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f8c928]">Probar el visor público 3D</Link>
+            </div>
+            <p className="mt-4 text-xs leading-5 text-slate-400">El visor público permite revisar modelos compatibles; el editor profesional Aurum Render es una herramienta distinta dentro de la plataforma.</p>
+          </div>
+
+          <div className="relative mx-auto w-full max-w-[560px]">
+            <div className="absolute inset-8 rounded-full bg-[#b58b00]/20 blur-3xl" />
+            <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-[#29343e] via-[#171f27] to-[#090d11] p-5 shadow-[0_25px_80px_rgba(0,0,0,.35)] sm:p-7">
+              <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                <div>
+                  <p className="text-[9px] font-bold uppercase tracking-[.24em] text-[#f3d66e]">Estudio de joyería 3D</p>
+                  <p className="mt-1 text-sm font-semibold text-white">AURUM RENDER</p>
+                </div>
+                <span className="grid size-10 place-items-center rounded-xl border border-[#f8c928]/30 bg-[#f8c928]/10 text-[#f8d85b]"><Gem className="size-5" /></span>
+              </div>
+              <div className="relative grid min-h-[230px] place-items-center overflow-hidden sm:min-h-[300px]">
+                <div className="absolute size-44 rounded-full border border-[#e8c75b]/25 sm:size-60" />
+                <div className="absolute size-32 rounded-full border border-[#e8c75b]/20 sm:size-44" />
+                <div className="absolute h-px w-full bg-gradient-to-r from-transparent via-[#e8c75b]/30 to-transparent" />
+                <div className="absolute h-full w-px bg-gradient-to-b from-transparent via-[#e8c75b]/25 to-transparent" />
+                <div className="relative flex flex-col items-center text-center">
+                  <span className="grid size-24 place-items-center rounded-[2rem] border border-[#f3d66e]/40 bg-gradient-to-br from-[#f8e8a3]/20 to-[#b58b00]/5 text-[#f3d66e] shadow-[0_0_55px_rgba(212,170,25,.15)] sm:size-32"><Gem className="size-14 sm:size-20" strokeWidth={1.1} /></span>
+                  <p className="mt-5 text-[10px] font-bold uppercase tracking-[.28em] text-[#f3d66e]">NURA</p>
+                  <h3 className="mt-1 text-xl font-semibold tracking-wide text-white sm:text-2xl">Joya de la Corona</h3>
+                  <p className="mt-2 text-[10px] uppercase tracking-[.18em] text-slate-400">Diseño · Materiales · Render</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-2 border-t border-white/10 pt-4 text-center">
+                <div className="rounded-lg bg-white/[.04] px-2 py-3"><p className="text-[9px] uppercase tracking-wider text-slate-400">Materiales</p><p className="mt-1 text-xs font-semibold text-white">Metales</p></div>
+                <div className="rounded-lg bg-white/[.04] px-2 py-3"><p className="text-[9px] uppercase tracking-wider text-slate-400">Presentación</p><p className="mt-1 text-xs font-semibold text-white">Joyería 3D</p></div>
+                <div className="rounded-lg bg-white/[.04] px-2 py-3"><p className="text-[9px] uppercase tracking-wider text-slate-400">Plataforma</p><p className="mt-1 text-xs font-semibold text-white">AURUM LAB</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section id="soluciones" className="border-y border-slate-200 bg-[#f7f9fc]">
         <div className="mx-auto max-w-[1440px] px-5 py-14 sm:px-8 sm:py-16 lg:px-12">
           <div className="mx-auto max-w-3xl text-center">
