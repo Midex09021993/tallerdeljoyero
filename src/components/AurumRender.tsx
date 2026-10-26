@@ -705,7 +705,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       renderer.domElement.className = "block h-full w-full";
       nodo.appendChild(renderer.domElement);
       const postRuntimeConfig = { ...ssaoConfig, ...postConfig };
-      const { composer, ssaoPass, setSSRSelects, applyQuality: applyPostQuality, updateTemporal, dofPass } = await createAurumPostPipeline(
+      const { composer, ssaoPass, setSSRSelects, applyQuality: applyPostQuality, updateTemporal, dofPass, renderPass } = await createAurumPostPipeline(
         renderer,
         escena,
         camara,
@@ -1883,11 +1883,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         setDepthOfField:(enabled:boolean,strength:"soft"|"medium"|"strong"="soft")=>{
           // Previous aperture values were too small for a perceptible live preview.
           // Keep the focused jewelry details restrained while making depth separation visible.
+          // Keep the real BokehPass effect photographic, not destructive: once the
+          // pass is actually active, the previous aperture values blurred the whole jewel.
           const settings = strength === "strong"
-            ? { aperture: 0.012, maxBlur: 0.014 }
+            ? { aperture: 0.0014, maxBlur: 0.012 }
             : strength === "medium"
-              ? { aperture: 0.007, maxBlur: 0.009 }
-              : { aperture: 0.0035, maxBlur: 0.005 };
+              ? { aperture: 0.0010, maxBlur: 0.008 }
+              : { aperture: 0.0007, maxBlur: 0.004 };
           Object.assign(postRuntimeConfig,{dof:Boolean(enabled),dofAperture:settings.aperture,dofMaxBlur:settings.maxBlur});
           // Apply the toggle to the actual pass immediately, then reconcile the full
           // post-processing profile. This avoids a UI/runtime state mismatch.
@@ -2448,6 +2450,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // minifiers may rename BokehPass.constructor.name.
             const settledDofPass = dofPass && idlePasses.includes(dofPass) ? dofPass : null;
             if (settledDofPass) settledDofPass.enabled = postRuntimeConfig.dof === true;
+            // The direct canvas is transparent over the white studio shell. Once the
+            // composer is used, make that same studio background explicit; otherwise
+            // RenderPass clears to black and the preview appears on a black field.
+            if (renderPass) {
+              renderPass.clearColor = postRuntimeConfig.dof ? new THREE.Color(0xffffff) : null;
+              renderPass.clearAlpha = postRuntimeConfig.dof ? 1 : 0;
+            }
             // Temporary diagnostics are opt-in via ?aurumDofDiag=1.
             if (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("aurumDofDiag")) {
               console.info("[AURUM][DOF] settled viewer", {
