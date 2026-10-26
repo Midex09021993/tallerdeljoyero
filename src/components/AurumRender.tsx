@@ -1100,7 +1100,21 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
 
       const aplicarGema = (g:GemaConfig, objetivo?:any, aplicarTodas=false) => {
         const target=objetivo||parteActiva;
-        applyAurumGemToTarget(target,g,aplicarEntornoGema,()=>invalidateRenderRef.current?.(),aplicarTodas);
+        const applied=applyAurumGemToTarget(target,g,aplicarEntornoGema,()=>invalidateRenderRef.current?.(),aplicarTodas);
+        if(!applied){
+          console.error("[AURUM][GEM APPLICATION FAILED]",{
+            requestedId:String(g?.id??""),
+            requestedFamily:String(g?.familia??""),
+            targetName:target?.name??null,
+            targetUuid:target?.uuid??null,
+            targetIsMesh:Boolean(target?.isMesh),
+            targetCategory:target?.userData?.aurumRhino?.categoria??null,
+            targetLayer:target?.userData?.aurumRhino?.capa??null,
+            reason:!target?.isMesh?"No active mesh target":"Target is not classified as a gemstone (aurumRhino.categoria !== gema)",
+          });
+          toast.error("No se aplicó la gema: selecciona una pieza clasificada como gema.");
+          return;
+        }
         if (String(g?.familia ?? "").toLocaleLowerCase() === "diamante") {
           void asegurarDiamanteBvh().then(() => diamondBvhRuntime?.refresh(modelo));
         } else {
@@ -1127,8 +1141,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               meshes.push({
                 mesh:node.name||node.uuid,
                 meshUuid:node.uuid,
-                category:node.userData?.attributes?.categoria??node.userData?.attributes?.category??node.userData?.categoria??node.userData?.category??null,
-                layer:node.userData?.attributes?.layerName??node.userData?.attributes?.LayerName??node.userData?.layerName??null,
+                category:node.userData?.aurumRhino?.categoria??node.userData?.attributes?.categoria??node.userData?.attributes?.category??node.userData?.categoria??node.userData?.category??null,
+                layer:node.userData?.aurumRhino?.capa??node.userData?.attributes?.layerName??node.userData?.attributes?.LayerName??node.userData?.layerName??null,
+                materialClassMismatch:(list.filter(Boolean).some((m:any)=>m?.isShaderMaterial)||list.filter(Boolean).some((m:any)=>!m?.isMeshPhysicalMaterial)),
                 activeGemId:node.userData?.aurumActiveGemId??null,
                 applicationToken:node.userData?.aurumGemApplicationToken??null,
                 internalInclusion:Boolean(node.userData?.aurumInternalInclusion),
