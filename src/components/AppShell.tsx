@@ -62,7 +62,7 @@ type Seccion = {
   area?: string;
   roles?: Rol[];
   icono?: typeof LayoutGrid;
-  grupo?: "principal" | "comercial" | "produccion" | "inventario" | "aurum" | "herramientas" | "administracion";
+  grupo?: "principal" | "comercial" | "produccion" | "inventario" | "aurum" | "herramientas" | "aprendizaje" | "administracion";
 };
 
 type AtrasMovil = false | { to?: string; onClick?: () => void };
@@ -91,7 +91,7 @@ const secciones: Seccion[] = [
   { to: "/gestion", label: "Gestión", roles: ["dueno", "gerente"], icono: LayoutDashboard, grupo: "administracion" },
   { to: "/migracion", label: "Migración", roles: ["dueno", "gerente"], icono: FileSpreadsheet, grupo: "administracion" },
   { to: "/catalogo", label: "Catálogo", icono: BookOpen, grupo: "comercial" },
-  { to: "/cursos-formacion", label: "Cursos y formación", area: "Cursos y formación", icono: BookOpen, grupo: "comercial" },
+  { to: "/cursos-formacion", label: "Cursos y formación", area: "Cursos y formación", icono: BookOpen, grupo: "aprendizaje" },
   { to: "/tienda-admin", label: "Tienda FADILAB", roles: ["dueno", "gerente"], icono: ShoppingBag, grupo: "administracion" },
   { to: "/perfil", label: "Perfil", roles: ["operario"], icono: UserRound, grupo: "administracion" },
 ];
@@ -387,7 +387,7 @@ export function AppShell({
           <div className="relative min-h-0 flex-1">
             <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-10 bg-gradient-to-t from-ink via-ink/85 to-transparent" aria-hidden="true" />
             <nav className="scrollbar-hidden h-full space-y-1 overflow-y-auto px-4 pb-8">
-            {(["principal", "comercial", "produccion", "inventario", "aurum", "herramientas", "administracion"] as const).map((grupo) => {
+            {(["principal", "comercial", "produccion", "inventario", "aurum", "herramientas", "aprendizaje", "administracion"] as const).map((grupo) => {
               const items = visiblesOrdenadas.filter((s) => s.grupo === grupo);
               if (items.length === 0) return null;
               const nombres = {
@@ -397,6 +397,7 @@ export function AppShell({
                 inventario: "Inventario",
                 aurum: "AURUM Studio",
                 herramientas: "Herramientas",
+                aprendizaje: "Aprendizaje",
                 administracion: "Administración",
               } as const;
               return (
