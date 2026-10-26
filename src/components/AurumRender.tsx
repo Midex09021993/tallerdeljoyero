@@ -1881,7 +1881,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           }
         },
         setDepthOfField:(enabled:boolean,strength:"soft"|"medium"|"strong"="soft")=>{
-          const settings = strength === "strong" ? { aperture: 0.0011, maxBlur: 0.012 } : strength === "medium" ? { aperture: 0.0008, maxBlur: 0.008 } : { aperture: 0.0005, maxBlur: 0.004 };
+          // Previous aperture values were too small for a perceptible live preview.
+          // Keep the focused jewelry details restrained while making depth separation visible.
+          const settings = strength === "strong"
+            ? { aperture: 0.012, maxBlur: 0.014 }
+            : strength === "medium"
+              ? { aperture: 0.007, maxBlur: 0.009 }
+              : { aperture: 0.0035, maxBlur: 0.005 };
           Object.assign(postRuntimeConfig,{dof:Boolean(enabled),dofAperture:settings.aperture,dofMaxBlur:settings.maxBlur});
           applyPostQuality?.({...renderQuality,pixelRatio:renderQuality.pixelRatio,qualityId:measuredQualityId});
           updateTemporal?.(controles?.target ? camara.position.distanceTo(controles.target) : undefined);
