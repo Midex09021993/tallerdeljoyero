@@ -51,14 +51,28 @@ const addEmeraldInclusions=(THREE: typeof import("three"),target: import("three"
   let s=(config.seed>>>0)||1;
   const rnd=()=>{s=(1664525*s+1013904223)>>>0;return s/4294967296;};
   const strength=Math.max(0,Math.min(1,config.density));
-  const scale=Math.max(.0001,Math.min(size.x,size.y,size.z));
+  // Inclusion meshes are children of target, so all generated positions must
+  // use geometry-local coordinates rather than world-space Box3 dimensions.
+  const meshTarget=target as any;
+  if(meshTarget.geometry && !meshTarget.geometry.boundingBox && typeof meshTarget.geometry.computeBoundingBox==="function"){
+    meshTarget.geometry.computeBoundingBox();
+  }
+  const bounds=meshTarget.geometry?.boundingBox;
+  const localSize=bounds?.getSize?.(new THREE.Vector3()) ?? size.clone();
+  const center=bounds?.getCenter?.(new THREE.Vector3()) ?? new THREE.Vector3();
+  const safeSize=new THREE.Vector3(
+    Math.max(.0001,localSize.x*.68),
+    Math.max(.0001,localSize.y*.68),
+    Math.max(.0001,localSize.z*.68),
+  );
+  const scale=Math.max(.0001,Math.min(safeSize.x,safeSize.y,safeSize.z));
   const quality=gemId==="esmeralda_1"?1:gemId==="esmeralda_2"?2:gemId==="esmeralda_3"?3:4;
   const branchCount=quality===1?Math.max(3,Math.round(4+strength*5)):quality===2?Math.max(7,Math.round(8+strength*9)):Math.max(12,Math.round(12+strength*13));
   const branchOpacity=quality===1?.12:quality===2?.23:.34;
   const tubeRadius=scale*(quality===1?.0032:quality===2?.0048:.0062);
 
-  // Emerald jardin: each quality uses a visibly different density and contrast.
-  // Structures remain embedded near the center of the stone volume, not on its surface.
+  // Use a conservative envelope around the local geometry center so transformed
+  // CAD meshes keep the jardin embedded within the gemstone.
   for(let i=0;i<branchCount;i++){
     const points: import("three").Vector3[]=[];
     const start=new THREE.Vector3((rnd()-.5)*size.x*.28,(rnd()-.5)*size.y*.28,(rnd()-.5)*size.z*.28);
