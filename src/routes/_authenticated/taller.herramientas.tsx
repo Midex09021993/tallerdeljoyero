@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { CalculadoraAleacionOro } from "@/components/CalculadoraAleacionOro";
 import { ConversorTallasAnillo } from "@/components/ConversorTallasAnillo";
 import { AppShell } from "@/components/AppShell";
-import { ArrowLeft, ChevronLeft, ChevronRight, Calculator, Gem, Ruler, ScanLine, Scale, Send, CircleDot } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Calculator, Gem, Ruler, ScanLine, Scale, Send, CircleDot, Download } from "lucide-react";
 import { VisorPesoJoyeria } from "@/components/VisorPesoJoyeria";
 import { CalculadoraYeso } from "@/routes/_authenticated/taller";
 import { CalculadoraPesoGemas } from "@/components/CalculadoraPesoGemas";
@@ -134,6 +134,12 @@ function HerramientasPage() {
               className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border border-border px-3.5 text-sm font-medium text-muted-foreground transition hover:border-gold/50 hover:text-foreground"
             >
               <Send className="size-4 text-gold" /> Aurum Transfer
+            </Link>
+            <Link
+              to="/aurum-render-plugin"
+              className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border border-border px-3.5 text-sm font-medium text-muted-foreground transition hover:border-gold/50 hover:text-foreground"
+            >
+              <Download className="size-4 text-gold" /> Complemento Rhino
             </Link>
             {opciones.map(({ id, titulo, Icono }) => (
               <button
