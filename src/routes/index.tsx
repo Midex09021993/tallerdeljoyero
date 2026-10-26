@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { RegistroTaller } from "@/components/RegistroTaller";
 import { ArrowRight, Boxes, Calculator, Check, ChevronDown, Cloud, Gem, Layers3, MonitorSmartphone, PackageCheck, Sparkles, Sprout, ChartNoAxesCombined } from "lucide-react";
 import heroColgante from "@/assets/diseno-colgante.jpg";
 import heroFloral from "@/assets/diseno-floral.jpg";
@@ -213,7 +214,8 @@ function InicioPublico() {
             </ul>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link to="/herramientas" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#17232d] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-slate-900/10 transition hover:-translate-y-0.5 hover:bg-[#293b49]">Empezar con herramientas <ArrowRight className="size-4" /></Link>
-              <Link to="/auth" target="_blank" rel="noreferrer" className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-300 bg-white/80 px-6 py-3 text-sm font-semibold text-[#17232d] transition hover:border-[#d4aa19] hover:bg-[#fffbee]">Entrar a AURUM LAB</Link>
+              <Link to="/auth" target="_blank" rel="noreferrer" className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-300 bg-white/80 px-6 py-3 text-sm font-semibold text-[#17232d] transition hover:border-[#d4aa19] hover:bg-[#fffbee]">Iniciar sesión</Link>
+              <RegistroTaller className="inline-flex min-h-12 items-center justify-center rounded-xl border border-[#d4aa19] bg-[#fff4c4] px-6 py-3 text-sm font-bold text-[#5f4900] transition hover:bg-[#ffe99a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19]" />
             </div>
             <p className="mt-4 text-xs text-slate-500">Prueba las herramientas públicas sin crear una cuenta.</p>
           </div>
@@ -410,7 +412,8 @@ function InicioPublico() {
             </div>
             <div className="flex flex-col gap-2 sm:flex-row">
               <Link to="/herramientas" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-[#17232d] px-4 py-2 text-xs font-bold text-white transition hover:bg-[#293b49]">Empezar gratis <ArrowRight className="size-4" /></Link>
-              <Link to="/auth" target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-[#17232d] transition hover:border-[#d4aa19]">Ingresar o crear cuenta</Link>
+              <Link to="/auth" target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-[#17232d] transition hover:border-[#d4aa19]">Iniciar sesión</Link>
+              <RegistroTaller className="inline-flex min-h-10 items-center justify-center rounded-xl border border-[#d4aa19] bg-[#fff4c4] px-4 py-2 text-xs font-bold text-[#5f4900] transition hover:bg-[#ffe99a]" />
             </div>
           </div>
         </div>
