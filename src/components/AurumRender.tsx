@@ -2434,6 +2434,22 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // Without TAA, the composer can still render RenderPass -> BokehPass -> OutputPass.
             const settledDofPass = idlePasses.find((pass) => pass?.constructor?.name === "BokehPass");
             if (settledDofPass) settledDofPass.enabled = postRuntimeConfig.dof === true;
+            // Temporary diagnostics are opt-in via ?aurumDofDiag=1.
+            if (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("aurumDofDiag")) {
+              console.info("[AURUM][DOF] settled viewer", {
+                requested: postRuntimeConfig.dof === true,
+                bokehFound: Boolean(settledDofPass),
+                bokehEnabled: Boolean(settledDofPass?.enabled),
+                bokehPassIndex: settledDofPass ? idlePasses.indexOf(settledDofPass) : -1,
+                passNames: idlePasses.map((pass) => ({ name: pass?.constructor?.name ?? "unknown", enabled: Boolean(pass?.enabled) })),
+                taaAvailable: idleTaaAvailable,
+                renderPath: (idleTaaAvailable || (postRuntimeConfig.dof === true && Boolean(settledDofPass))) ? "composer" : "direct",
+                focusDistance: controles?.target ? camara.position.distanceTo(controles.target) : null,
+                aperture: settledDofPass?.uniforms?.aperture?.value ?? null,
+                maxblur: settledDofPass?.uniforms?.maxblur?.value ?? null,
+                focus: settledDofPass?.uniforms?.focus?.value ?? null,
+              });
+            }
             // DOF requires EffectComposer even if the TAA pass is unavailable.
             liveFastPathRef.current = !(idleTaaAvailable || (postRuntimeConfig.dof === true && Boolean(settledDofPass)));
             renderer.shadowMap.enabled = false;
