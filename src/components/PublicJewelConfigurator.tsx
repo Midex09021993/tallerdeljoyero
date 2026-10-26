@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Gem, RotateCcw } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Gem, RotateCcw, Maximize, Minimize } from "lucide-react";
 import { supabasePublic } from "@/integrations/supabase/client";
 import { AurumRender } from "@/components/AurumRender";
 import type { AurumCatalogApi } from "@/lib/aurum/api";
@@ -31,6 +31,28 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
   const [loadedModelUrl, setLoadedModelUrl] = useState<string | null>(null);
   const modelKey = localFile ? `local:${localFile.name}:${localFile.size}:${localFile.lastModified}` : modelUrl;
   const [aplicacionEstado, setAplicacionEstado] = useState<string>("");
+  const visorRef = useRef<HTMLDivElement>(null);
+  const [pantallaCompleta, setPantallaCompleta] = useState(false);
+
+  useEffect(() => {
+    const actualizarPantallaCompleta = () => setPantallaCompleta(document.fullscreenElement === visorRef.current);
+    document.addEventListener("fullscreenchange", actualizarPantallaCompleta);
+    return () => document.removeEventListener("fullscreenchange", actualizarPantallaCompleta);
+  }, []);
+
+  const alternarPantallaCompleta = async () => {
+    const visor = visorRef.current;
+    if (!visor) return;
+    try {
+      if (document.fullscreenElement === visor) await document.exitFullscreen();
+      else {
+        if (document.fullscreenElement) await document.exitFullscreen();
+        await visor.requestFullscreen();
+      }
+    } catch (error) {
+      console.error("No se pudo cambiar el modo de pantalla completa del visor 3D.", error);
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -175,7 +197,15 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
         </div>
       </header>
       <div className="isolate grid min-w-0 grid-cols-1 2xl:min-h-0 2xl:flex-1 2xl:grid-rows-[minmax(0,1fr)] 2xl:grid-cols-[minmax(0,1fr)_270px]">
-        <div className="relative z-0 h-[clamp(340px,56svh,500px)] min-h-[340px] min-w-0 overflow-hidden bg-[radial-gradient(ellipse_at_50%_42%,#ffffff_0%,#fbfaf7_60%,#f4f0e8_100%)] sm:h-[clamp(400px,62vh,600px)] sm:min-h-[400px] 2xl:h-full 2xl:min-h-0">
+        <div ref={visorRef} className={"relative z-0 h-[clamp(340px,56svh,500px)] min-h-[340px] min-w-0 overflow-hidden bg-[radial-gradient(ellipse_at_50%_42%,#ffffff_0%,#fbfaf7_60%,#f4f0e8_100%)] sm:h-[clamp(400px,62vh,600px)] sm:min-h-[400px] 2xl:h-full 2xl:min-h-0 " + (pantallaCompleta ? "h-screen min-h-0 w-screen sm:h-screen sm:min-h-0 2xl:h-screen 2xl:min-h-0" : "")}>
+          <div className="absolute right-2 top-2 z-20 flex items-center gap-1 rounded-full border border-[#e8e3db] bg-white/90 p-1 shadow-sm backdrop-blur sm:right-3 sm:top-3 sm:gap-1.5 sm:p-1.5" aria-label="Controles informativos del visor">
+            <span title="Iluminación HDR" className="rounded-full border border-[#e8e3db] px-2 py-1 text-[9px] font-medium text-[#81786c] sm:text-[10px]">HDRI</span>
+            <span title="Materiales PBR" className="rounded-full border border-[#e8e3db] px-2 py-1 text-[9px] font-medium text-[#81786c] sm:text-[10px]">PBR</span>
+            <span title="Referencia de resolución 4K" className="rounded-full border border-[#e8e3db] px-2 py-1 text-[9px] font-medium text-[#81786c] sm:text-[10px]">4K</span>
+            <button type="button" onClick={() => void alternarPantallaCompleta()} aria-label={pantallaCompleta ? "Salir de pantalla completa" : "Ver en pantalla completa"} title={pantallaCompleta ? "Salir de pantalla completa" : "Pantalla completa"} className="grid size-7 place-items-center rounded-full bg-[#171717] text-white transition hover:bg-[#3a3021] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45] focus-visible:ring-offset-2 sm:size-8">
+              {pantallaCompleta ? <Minimize className="size-3.5 sm:size-4" /> : <Maximize className="size-3.5 sm:size-4" />}
+            </button>
+          </div>
           {(modelUrl || localFile) && <div className="absolute inset-0"><AurumRender embedded onCatalogApiReady={(api) => setCatalogApi(api)} /></div>}
           {(!(modelUrl || localFile) || loadError || status) && <div className={"absolute inset-0 z-50 grid place-items-center p-6 text-center transition-opacity " + (isReady ? "pointer-events-none opacity-0" : "bg-white/90 backdrop-blur-[2px]")}>
             <div className="max-w-sm">
