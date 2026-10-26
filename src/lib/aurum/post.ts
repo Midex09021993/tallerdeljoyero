@@ -395,21 +395,20 @@ export async function createAurumPostPipeline(
     lastPX=p.x; lastPY=p.y; lastPZ=p.z;
     lastQX=q.x; lastQY=q.y; lastQZ=q.z; lastQW=q.w;
     if(dofPass?.enabled && dofPass.uniforms){
-      // BokehShader's focus uniform is a normalized depth-buffer value (0..1),
-      // not a world-space distance. Convert the camera-to-subject distance to
-      // perspective depth so the focus plane aligns with the viewer target.
+      // Three.js BokehPass expects focus as a camera-space distance, not a
+      // normalized depth-buffer value. Keep the measured world-space distance
+      // so the focus plane stays on the jewelry instead of near the far plane.
       const distance=Number.isFinite(focusDistance) ? Number(focusDistance) : 4;
       const near=Math.max(0.0001,Number(camera.near)||0.1);
       const far=Math.max(near+0.0001,Number(camera.far)||1000);
       const safeDistance=Math.max(near+0.0001,Math.min(far,distance));
-      const normalizedDepth=(far/(far-near))-(far*near/((far-near)*safeDistance));
-      dofPass.uniforms.focus.value=Math.max(0.0001,Math.min(0.9999,normalizedDepth));
+      dofPass.uniforms.focus.value=safeDistance;
       if (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("aurumDofDiag")) {
         console.info("[AURUM][DOF] focus plane", {
           worldDistance: distance,
           cameraNear: near,
           cameraFar: far,
-          normalizedDepth: dofPass.uniforms.focus.value,
+          focusUniform: dofPass.uniforms.focus.value,
         });
       }
     }
