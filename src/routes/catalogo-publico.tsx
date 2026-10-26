@@ -65,21 +65,6 @@ export function ComunidadPublicaPage() {
         <Link to="/auth" className="rounded-full bg-[#211d19] px-4 py-2.5 text-xs font-semibold text-white">Acceso al ERP</Link>
       </div>
     </header>
-    <section className="relative overflow-hidden border-b border-[#a8895220]">
-      <div aria-hidden="true" className="pointer-events-none absolute -right-28 -top-36 size-[28rem] rounded-full bg-[#c5a66c]/15 blur-3xl" />
-      <div className="relative mx-auto max-w-7xl px-5 pb-12 pt-14 sm:px-8 sm:pb-20 sm:pt-24">
-        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 hidden w-1/2 bg-[radial-gradient(ellipse_at_70%_45%,rgba(184,151,91,.13),transparent_62%)] lg:block" />
-        <div className="relative max-w-4xl">
-          <p className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-[.32em] text-[#96733d]"><span className="h-px w-8 bg-[#b99a62]" />AURUM LAB <span className="text-[#b9afa1]">/</span> COMUNIDAD</p>
-          <h1 className="mt-6 max-w-4xl font-display text-5xl leading-[.99] tracking-[-.045em] sm:text-7xl lg:text-[5.5rem]">Donde el oficio<br className="hidden sm:block" /> se convierte en <span className="text-[#9a7944]">excelencia.</span></h1>
-          <p className="mt-6 max-w-2xl text-sm leading-7 text-[#746b62] sm:text-base sm:leading-8">Un espacio para descubrir talleres, casas de joyería y propuestas formativas que mantienen vivo el arte de crear.</p>
-          <div className="mt-9 flex flex-wrap items-center gap-x-7 gap-y-3 border-t border-[#a8895230] pt-5 text-[10px] font-semibold uppercase tracking-[.16em] text-[#746b62]">
-            <span className="inline-flex items-center gap-2"><Store className="size-4 text-[#96733d]" />{isLoading ? "—" : talleres} talleres y joyerías</span>
-            <span className="inline-flex items-center gap-2"><GraduationCap className="size-4 text-[#96733d]" />{isLoading ? "—" : cursos} propuestas formativas</span>
-          </div>
-        </div>
-      </div>
-    </section>
     <section className="mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-10">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div><p className="text-[10px] font-bold uppercase tracking-[.24em] text-[#96733d]">El universo AURUM</p><h2 className="mt-2 font-display text-3xl tracking-tight sm:text-4xl">Conoce a quienes crean.</h2><p className="mt-2 text-sm text-[#746b62]">Identidad, oficio y visión en cada taller.</p></div>
