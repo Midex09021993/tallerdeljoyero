@@ -68,8 +68,8 @@ const addEmeraldInclusions=(THREE: typeof import("three"),target: import("three"
   const scale=Math.max(.0001,Math.min(safeSize.x,safeSize.y,safeSize.z));
   const quality=gemId==="esmeralda_1"?1:gemId==="esmeralda_2"?2:gemId==="esmeralda_3"?3:4;
   const branchCount=quality===1?Math.max(3,Math.round(4+strength*5)):quality===2?Math.max(7,Math.round(8+strength*9)):Math.max(12,Math.round(12+strength*13));
-  const branchOpacity=quality===1?.12:quality===2?.23:.34;
-  const tubeRadius=scale*(quality===1?.0032:quality===2?.0048:.0062);
+  const branchOpacity=quality===1?.15:quality===2?.23:.34;
+  const tubeRadius=scale*(quality===1?.004:quality===2?.0048:.0062);
 
   // Use a conservative envelope around the local geometry center so transformed
   // CAD meshes keep the jardin embedded within the gemstone.
@@ -117,7 +117,7 @@ const addEmeraldInclusions=(THREE: typeof import("three"),target: import("three"
   // Multiphase inclusions are deliberately rare in quality 1 and more apparent in lower grades.
   const fluidCount=quality===1?0:quality===2?Math.max(2,Math.round(2+strength*3)):Math.max(4,Math.round(4+strength*5));
   for(let i=0;i<fluidCount;i++){
-    const base=new THREE.Vector3((rnd()-.5)*size.x*.22,(rnd()-.5)*size.y*.22,(rnd()-.5)*size.z*.22);
+    const base=new THREE.Vector3(center.x+(rnd()-.5)*safeSize.x*.22,center.y+(rnd()-.5)*safeSize.y*.22,center.z+(rnd()-.5)*safeSize.z*.22);
     const pocketSize=scale*(quality===2?.012+rnd()*.010:.016+rnd()*.018);
     const pocket=new THREE.Mesh(new THREE.SphereGeometry(pocketSize,12,8),new THREE.MeshPhysicalMaterial({
       color:quality===2?0x9bb5a7:0xc1d1c7,roughness:.12,transmission:.22,
