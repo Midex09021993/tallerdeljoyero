@@ -125,7 +125,7 @@ function LoginPage() {
       return;
     }
     if (window.sessionStorage.getItem("aurum_peso_draft")) {
-      window.location.assign("/herramientas?recuperarPeso=1");
+      window.location.assign("/taller/herramientas?recuperarPeso=1");
       return;
     }
     navigate({ to: inicioSegunRol(sesion, { movilTablet: esVistaMovilTablet() }) });
@@ -183,7 +183,7 @@ function LoginPage() {
         throw new Error("La sesión se creó, pero no se pudo resolver el acceso al taller");
       }
       if (window.sessionStorage.getItem("aurum_peso_draft")) {
-        window.location.assign("/herramientas?recuperarPeso=1");
+        window.location.assign("/taller/herramientas?recuperarPeso=1");
         return;
       }
       navigate({ to: inicioSegunRol(sesionActualizada, { movilTablet: esVistaMovilTablet() }), replace: true });
