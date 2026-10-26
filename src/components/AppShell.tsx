@@ -51,7 +51,7 @@ type Seccion = {
     | "/perfil"
     | "/mensajes"
     | "/aurum-render"
-    | "/herramientas"
+    | "/taller/herramientas"
     | "/mi-nube"
     | "/migracion"
     | "/catalogo"
@@ -85,7 +85,7 @@ const secciones: Seccion[] = [
   { to: "/ventas", label: "Ventas", area: "Área ventas", icono: PackageCheck, grupo: "comercial" },
   { to: "/inventario", label: "Inventario", area: "Taller", icono: Gauge, grupo: "inventario" },
   { to: "/compras", label: "Compras", roles: ["dueno", "gerente"], icono: Boxes, grupo: "inventario" },
-  { to: "/herramientas", label: "Herramientas", area: "Taller", icono: Wrench, grupo: "herramientas" },
+  { to: "/taller/herramientas", label: "Herramientas", area: "Taller", icono: Wrench, grupo: "herramientas" },
   { to: "/mi-nube", label: "Mi nube", icono: Cloud, grupo: "herramientas" },
   { to: "/monitor", label: "Monitor de taller", roles: ["monitor"], grupo: "principal" },
   { to: "/gestion", label: "Gestión", roles: ["dueno", "gerente"], icono: LayoutDashboard, grupo: "administracion" },
@@ -121,7 +121,7 @@ const CAPACIDADES_COMERCIALES_MENU: Record<string, string> = {
 const CAPACIDADES_SISTEMA_MENU: Record<string, string> = {
   "/inventario": "Inventario",
   "/compras": "Compras",
-  "/herramientas": "Herramientas",
+  "/taller/herramientas": "Herramientas",
   "/mi-nube": "Mi nube",
   "/migracion": "Migración",
 };
@@ -344,7 +344,7 @@ export function AppShell({
     "/clientes": "Clientes", "/cotizaciones": "Cotizaciones", "/contratos": "Contratos",
     "/pedidos": "Pedidos", "/ventas": "Ventas", "/catalogo": "Catálogo",
     "/cursos-formacion": "Cursos y formación",
-    "/inventario": "Inventario", "/compras": "Compras", "/herramientas": "Herramientas",
+    "/inventario": "Inventario", "/compras": "Compras", "/taller/herramientas": "Herramientas",
     "/mi-nube": "Mi nube", "/diseno-3d": "Diseño 3D", "/impresion-3d": "Impresión 3D",
     "/casting": "Casting", "/corte-laser": "Corte Láser", "/taller": "Taller",
     "/aurum-render": "Diseño 3D",
