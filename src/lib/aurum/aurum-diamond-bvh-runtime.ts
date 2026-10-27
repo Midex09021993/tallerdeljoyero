@@ -109,7 +109,12 @@ export async function createAurumDiamondBvhRuntime(options: {
       // The active material family below selects each mesh's optical profile;
       // mixed-family material arrays remain excluded to protect CAD groups.
       const targetFamilies = requestedFamilies;
-      const materialFamilies = materials.map((material) => getGemFamily(material));
+      // Layer assignment is the source of truth when a single material lacks
+      // family metadata. Never infer a family from a neighboring stone.
+      const activeGemFamily = String(mesh.userData?.["aurumActiveGemFamily"] ?? "").toLocaleLowerCase();
+      const rawMaterialFamilies = materials.map((material) => getGemFamily(material));
+      const canUseLayerFamilyFallback = materials.length === 1 && !rawMaterialFamilies[0] && !!activeGemFamily;
+      const materialFamilies = rawMaterialFamilies.map((family) => family || (canUseLayerFamilyFallback ? activeGemFamily : ""));
       for (const materialFamily of materialFamilies) {
         const key = materialFamily || "(sin familia)";
         familyCounts[key] = (familyCounts[key] ?? 0) + 1;
@@ -117,10 +122,7 @@ export async function createAurumDiamondBvhRuntime(options: {
       const uniqueFamilies = [...new Set(materialFamilies)];
       const family = uniqueFamilies.length === 1 ? uniqueFamilies[0] : "";
       const isParaibaCatalogId = /^turmalina_paraiba(?:_|$)/.test(activeGemId);
-      const isTargetFamily = materials.length > 0 && materials.every((material) => targetFamilies.includes(getGemFamily(material)) || (isParaibaCatalogId && getGemFamily(material) === "turmalina"));
-      // Layer assignment is the source of truth when present. Never infer a
-      // BVH family from a neighbouring stone or from a shared mesh/material.
-      const activeGemFamily = String(mesh.userData?.["aurumActiveGemFamily"] ?? "").toLocaleLowerCase();
+      const isTargetFamily = materials.length > 0 && materialFamilies.every((materialFamily) => targetFamilies.includes(materialFamily) || (isParaibaCatalogId && materialFamily === "turmalina"));
       const activeFamilyMatches = !activeGemFamily || activeGemFamily === family
         || (activeGemFamily === "rubi" && family === "rubí")
         || (activeGemFamily === "rubí" && family === "rubi")
