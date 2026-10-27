@@ -2741,8 +2741,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       // Cleanup completo del Viewer: evita listeners, RAF y contextos WebGL acumulados
       // al entrar/salir de Aurum Render o cambiar de ruta.
       cleanup = () => {
+        // Release the loaded CAD model before disposing WebGL. A page reload
+        // usually destroys the JS realm, but route changes/remounts reuse the
+        // same tab and must explicitly release large geometry and material GPU
+        // resources to avoid accumulating memory across viewer sessions.
         diamondBvhRuntime?.dispose();
         diamondBvhRuntime = null;
+        quitar();
         disposeAurumViewer({
           node:nodo,
           renderer,
