@@ -66,6 +66,9 @@ export async function createAurumDiamondBvhRuntime(options: {
   const entries = new Map<THREE.Mesh, RecordEntry>();
   let disposed = false;
 
+  const familyCounts: Record<string, number> = {};
+  const skippedTargetMeshes: Array<{ mesh: string; materialFamilies: string[]; activeGemFamily: string; reason: string }> = [];
+
   const releaseEntry = (mesh: THREE.Mesh, restore: boolean) => {
     const entry = entries.get(mesh);
     if (!entry) return;
@@ -79,8 +82,8 @@ export async function createAurumDiamondBvhRuntime(options: {
   const refresh = (model: THREE.Object3D | null | undefined) => {
     if (!model || disposed) return;
     const found = new Set<THREE.Mesh>();
-    const familyCounts: Record<string, number> = {};
-    const skippedTargetMeshes: Array<{ mesh: string; materialFamilies: string[]; activeGemFamily: string; reason: string }> = [];
+    for (const key of Object.keys(familyCounts)) delete familyCounts[key];
+    skippedTargetMeshes.length = 0;
     model.traverse((object) => {
       const mesh = object as THREE.Mesh;
       if (!mesh.isMesh || !mesh.geometry || mesh.userData?.["aurumInternalInclusion"]) return;
@@ -251,10 +254,12 @@ export async function createAurumDiamondBvhRuntime(options: {
       let triangleCount = 0;
       let diamondMeshes = 0;
       let diamondTriangleCount = 0;
+      const diagnosticFamilyCounts: Record<string, number> = {};
       const activeEntries: Array<{ mesh: THREE.Mesh; family: string; bounds: THREE.Box3 }> = [];
       for (const [mesh, entry] of entries) {
         const geometry = mesh.geometry;
         const triangles = Math.floor((geometry.getIndex()?.count ?? geometry.getAttribute("position")?.count ?? 0) / 3);
+        diagnosticFamilyCounts[entry.family || "(sin familia)"] = (diagnosticFamilyCounts[entry.family || "(sin familia)"] ?? 0) + 1;
         triangleCount += triangles;
         if (entry.family === "diamante") {
           diamondMeshes += 1;
@@ -297,8 +302,8 @@ export async function createAurumDiamondBvhRuntime(options: {
         triangleCount,
         diamondMeshes,
         diamondTriangleCount,
-        familyCounts,
-        skippedTargetMeshes,
+        familyCounts: diagnosticFamilyCounts,
+        skippedTargetMeshes: [...skippedTargetMeshes],
         overlappingGemPairs,
         enabled: entries.size > 0,
       };
