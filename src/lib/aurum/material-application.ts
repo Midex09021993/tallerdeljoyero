@@ -495,7 +495,15 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
         if(node?.userData?.aurumInternalInclusion){
           inclusionSummary.push({
             type:String(node.userData?.aurumInclusionType??"unknown"),
+            gemId:String(node.userData?.aurumInclusionGemId??""),
+            quality:node.userData?.aurumInclusionQuality??null,
             visible:Boolean(node.visible),
+            renderOrder:Number(node.renderOrder??0),
+            geometryType:node.geometry?.type??null,
+            localPosition:node.position?.toArray?.()??null,
+            localScale:node.scale?.toArray?.()??null,
+            materialType:node.material?.type??null,
+            depthTest:node.material?.depthTest??null,
             materialOpacity:Number(node.material?.opacity??1),
           });
         }
