@@ -1879,7 +1879,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             });
             const link=document.createElement("a");
             link.href=dataUrl;
-            link.download=(nombreProyecto||"aurum-render").trim().replace(/[^a-z0-9-_]+/gi,"-")+"-raytrace."+(format==="jpeg"?"jpg":format);
+            link.download="aurum-render-raytrace."+(format==="jpeg"?"jpg":format);
             link.click();
           }finally{
             loop?.resume?.();
@@ -2295,7 +2295,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           const link=document.createElement("a");
           // Use the product brand for exported still images, independent of the
           // current project/model title (which may be a generic CAD filename).
-          link.download="tallerdeljoyero-"+width+"x"+height+"."+format;
+          link.download="aurum-render-"+width+"x"+height+"."+format;
           link.href=dataUrl;
           link.click();
         },
