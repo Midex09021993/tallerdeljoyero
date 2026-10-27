@@ -1404,12 +1404,31 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       const obtenerPartes = (objeto:any):ParteModelo[] => getAurumModelParts(objeto, colorRhinoHex, clasificarCapa);
 
       const cargar = async(file:File, informar:(paso:string)=>void) => {
+        // Opt-in load diagnostics: append ?aurumLoadAudit=1 to measure each stage
+        // without changing the production rendering path or model geometry.
+        const loadAuditEnabled = typeof window !== "undefined"
+          && new URLSearchParams(window.location.search).get("aurumLoadAudit") === "1";
+        const loadAuditStarted = performance.now();
+        let loadAuditPrevious = loadAuditStarted;
+        const loadAuditStep = (stage:string, details:Record<string, unknown> = {}) => {
+          if (!loadAuditEnabled) return;
+          const now = performance.now();
+          console.info("[AURUM][LOAD AUDIT]", {
+            file: file.name,
+            stage,
+            stageMs: Number((now - loadAuditPrevious).toFixed(1)),
+            totalMs: Number((now - loadAuditStarted).toFixed(1)),
+            ...details,
+          });
+          loadAuditPrevious = now;
+        };
         const ext=file.name.split(".").pop()?.toLowerCase();
         if (!ext || !["stl","obj","glb","fbx","3dm"].includes(ext)) {
           throw new Error("Formato no compatible. Usa STL, OBJ, GLB, FBX o 3DM.");
         }
         informar("Procesando archivo...");
         const objeto = await parseAurumInput(file,ext,material);
+        loadAuditStep("parse-input-complete", { sourceFormat: ext, objectCount: (() => { let count = 0; objeto.traverse(() => count++); return count; })() });
         // Rhino trabaja con Z como eje vertical, mientras que AURUM RENDER/Three.js
         // usa Y como eje vertical. Convertimos únicamente los 3DM para conservar
         // la orientación "de pie" con la que el modelo fue diseñado en Rhino.
@@ -1428,11 +1447,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           interno = await normalizeAurumModel(
             objeto, null, ext, colorRhinoHex, clasificarCapa
           );
+          loadAuditStep("normalize-glb-complete");
         } else {
           const glb = await convertAurumToGlb(objeto, colorRhinoHex, clasificarCapa);
+          loadAuditStep("convert-to-glb-complete", { sourceFormat: ext });
           interno = await normalizeAurumModel(
             objeto, glb, ext, colorRhinoHex, clasificarCapa
           );
+          loadAuditStep("normalize-converted-model-complete");
         }
         // Runtime budget is derived from actual renderable geometry, not source file size.
         // This keeps CAD-heavy jewelry responsive without changing authored geometry.
@@ -1460,6 +1482,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           // assignments or explicit layer metadata decide the initial gem family.
           presentation:{metalEnvironmentScale:1,metalClearcoatScale:1},
         });
+        loadAuditStep("initial-materials-applied", { triangles: countAurumTriangles(interno) });
         modelo=interno;
         // Opt-in experimental per-pixel BVH ray tracing for diamond meshes only.
         // The helper leaves every other gem and every metal on the existing pipeline.
@@ -1548,6 +1571,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         parteActiva=null;
         limpiarResaltado();
         escena.add(modelo);
+        loadAuditStep("model-added-to-scene");
         // No reaplicar el metal globalmente al cargar: el paso anterior ya asignó\n        // materiales por categoría y una aplicación con parteActiva=null sobrescribiría\n        // las gemas recién configuradas. El metal se aplica después solo sobre la capa seleccionada.\n        if (ext!=="3dm" && parteActiva) aplicarMaterial(materialActivo);
         // Presentación inicial: usar la geometría real para encuadrar y
         // mostrar el anillo de frente, como referencia de catálogo de joyería.
@@ -1556,6 +1580,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         encuadrar();
         camaraVista("frontal");
         setVista("frontal");
+        loadAuditStep("load-pipeline-complete", { triangles: countAurumTriangles(modelo) });
         requestAnimationFrame(() => {
           if (modelo) {
             camaraVista("frontal");
