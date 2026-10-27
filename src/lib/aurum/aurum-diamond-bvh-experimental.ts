@@ -36,6 +36,8 @@ export type AurumDiamondBvhSetupOptions = {
   reflectivity?: number;
   /** Optical transmission for non-diamond gemstone experiments; diamond stays at 0 by default. */
   transmission?: number;
+  /** Optional per-channel radiance scale; defaults to the upstream shader setting. */
+  rgbBoost?: [number, number, number];
 };
 
 export type AurumDiamondBvhSetup = {
@@ -103,6 +105,7 @@ export function prepareAurumDiamondBvhExperiment(
     color: options.color ?? 0xffffff,
     absorption: Math.max(0, options.absorption ?? 1),
     transmission: Math.max(0, Math.min(1, options.transmission ?? 0)),
+    ...(options.rgbBoost ? { rgbBoost: options.rgbBoost } : {}),
     gamma: 1.09,
   });
 
