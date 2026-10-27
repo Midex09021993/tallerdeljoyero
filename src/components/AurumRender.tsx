@@ -2293,8 +2293,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             return;
           }
           const link=document.createElement("a");
-          const baseName=(nombreProyecto||"aurum-render").trim().replace(/[^a-z0-9-_]+/gi,"-");
-          link.download=baseName+"-"+width+"x"+height+"."+format;
+          // Use the product brand for exported still images, independent of the
+          // current project/model title (which may be a generic CAD filename).
+          link.download="tallerdeljoyero-"+width+"x"+height+"."+format;
           link.href=dataUrl;
           link.click();
         },
