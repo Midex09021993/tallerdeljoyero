@@ -19,7 +19,7 @@ export type AurumDiamondBvhRuntime = {
   /** Temporarily raise diamond-only ray bounces for a still capture. */
   setDiamondQuality: (quality: "interactive" | "high" | "final") => void;
   dispose: () => void;
-  diagnostics: () => { activeMeshes: number; triangleCount: number; diamondMeshes: number; diamondTriangleCount: number; enabled: boolean };
+  diagnostics: () => { activeMeshes: number; triangleCount: number; diamondMeshes: number; diamondTriangleCount: number; overlappingGemPairs: Array<{ meshA: string; familyA: string; meshB: string; familyB: string; overlapRatio: number }>; enabled: boolean };
 };
 
 const getGemFamily = (material: any) =>
@@ -242,6 +242,7 @@ export async function createAurumDiamondBvhRuntime(options: {
       let triangleCount = 0;
       let diamondMeshes = 0;
       let diamondTriangleCount = 0;
+      const activeEntries: Array<{ mesh: THREE.Mesh; family: string; bounds: THREE.Box3 }> = [];
       for (const [mesh, entry] of entries) {
         const geometry = mesh.geometry;
         const triangles = Math.floor((geometry.getIndex()?.count ?? geometry.getAttribute("position")?.count ?? 0) / 3);
@@ -250,12 +251,44 @@ export async function createAurumDiamondBvhRuntime(options: {
           diamondMeshes += 1;
           diamondTriangleCount += triangles;
         }
+        mesh.updateWorldMatrix(true, false);
+        activeEntries.push({ mesh, family: entry.family, bounds: new THREE.Box3().setFromObject(mesh, true) });
+      }
+
+      // Diagnostic only: detect world-space AABB overlap between separately
+      // shaded gem meshes. This does not prove triangle intersection, but helps
+      // identify CAD stones whose surfaces may compete in the depth buffer.
+      const overlappingGemPairs: Array<{ meshA: string; familyA: string; meshB: string; familyB: string; overlapRatio: number }> = [];
+      for (let i = 0; i < activeEntries.length; i += 1) {
+        const a = activeEntries[i];
+        const sizeA = a.bounds.getSize(new THREE.Vector3());
+        const volumeA = Math.max(sizeA.x * sizeA.y * sizeA.z, 1e-12);
+        for (let j = i + 1; j < activeEntries.length; j += 1) {
+          const b = activeEntries[j];
+          if (a.family === b.family || !a.bounds.intersectsBox(b.bounds)) continue;
+          const overlap = a.bounds.clone().intersect(b.bounds);
+          const size = overlap.getSize(new THREE.Vector3());
+          const overlapVolume = Math.max(0, size.x) * Math.max(0, size.y) * Math.max(0, size.z);
+          const sizeB = b.bounds.getSize(new THREE.Vector3());
+          const volumeB = Math.max(sizeB.x * sizeB.y * sizeB.z, 1e-12);
+          const overlapRatio = overlapVolume / Math.min(volumeA, volumeB);
+          if (overlapRatio > 0.02) {
+            overlappingGemPairs.push({
+              meshA: a.mesh.name || a.mesh.uuid,
+              familyA: a.family,
+              meshB: b.mesh.name || b.mesh.uuid,
+              familyB: b.family,
+              overlapRatio: Number(overlapRatio.toFixed(4)),
+            });
+          }
+        }
       }
       return {
         activeMeshes: entries.size,
         triangleCount,
         diamondMeshes,
         diamondTriangleCount,
+        overlappingGemPairs,
         enabled: entries.size > 0,
       };
     },
