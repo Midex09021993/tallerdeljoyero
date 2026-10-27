@@ -201,6 +201,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   onCatalogApiReadyRef.current = onCatalogApiReady;
   const [archivo, setArchivo] = useState<string|null>(null), [cargando, setCargando] = useState(false), [error, setError] = useState<string|null>(null), [paso, setPaso] = useState<string|null>(null), [formatoInterno, setFormatoInterno] = useState<string|null>(null);
   const [archivoOriginal, setArchivoOriginal] = useState<File | null>(null);
+  const [arrastrandoArchivo, setArrastrandoArchivo] = useState(false);
 
   const [materialId, setMaterialId] = useState<MaterialId>("plata950_pulida"), [gemaId, setGemaId] = useState<GemaId>("diamante_natural"), [escenarioId, setEscenarioId] = useState<EscenarioId>("ijewelReference"), [iluminacionId, setIluminacionId] = useState<IluminacionId>("studioSoft"), [vista, setVista] = useState<VistaId>("frontal");
   const [nombreProyecto, setNombreProyecto] = useState("Diseño de joyería");
@@ -2786,6 +2787,61 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
     }
   },[]);
   useEffect(() => {
+    const visor = visorRef.current;
+    if (!visor || embedded) return;
+    let dragDepth = 0;
+    const contieneArchivos = (event: DragEvent) =>
+      Array.from(event.dataTransfer?.types ?? []).includes("Files");
+    const alEntrar = (event: DragEvent) => {
+      if (!contieneArchivos(event)) return;
+      event.preventDefault();
+      dragDepth += 1;
+      setArrastrandoArchivo(true);
+    };
+    const alMover = (event: DragEvent) => {
+      if (!contieneArchivos(event)) return;
+      event.preventDefault();
+      if (event.dataTransfer) event.dataTransfer.dropEffect = "copy";
+      setArrastrandoArchivo(true);
+    };
+    const alSalir = (event: DragEvent) => {
+      if (!contieneArchivos(event)) return;
+      event.preventDefault();
+      dragDepth = Math.max(0, dragDepth - 1);
+      if (dragDepth === 0) setArrastrandoArchivo(false);
+    };
+    const alSoltar = (event: DragEvent) => {
+      if (!contieneArchivos(event)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      dragDepth = 0;
+      setArrastrandoArchivo(false);
+      const file = event.dataTransfer?.files?.[0];
+      if (!file) return;
+      const extension = file.name.split(".").pop()?.toLowerCase();
+      if (!extension || !["stl", "obj", "glb", "fbx", "3dm"].includes(extension)) {
+        setError("Formato no compatible. Arrastra un archivo STL, OBJ, GLB, FBX o Rhino 3DM.");
+        return;
+      }
+      if (cargando) {
+        toast.info("Espera a que termine la carga actual antes de abrir otro diseño.");
+        return;
+      }
+      if (fileRef.current) fileRef.current.value = "";
+      void cargarArchivo(file);
+    };
+    visor.addEventListener("dragenter", alEntrar);
+    visor.addEventListener("dragover", alMover);
+    visor.addEventListener("dragleave", alSalir);
+    visor.addEventListener("drop", alSoltar);
+    return () => {
+      visor.removeEventListener("dragenter", alEntrar);
+      visor.removeEventListener("dragover", alMover);
+      visor.removeEventListener("dragleave", alSalir);
+      visor.removeEventListener("drop", alSoltar);
+    };
+  }, [embedded, cargarArchivo, cargando]);
+  useEffect(() => {
     const params=new URLSearchParams(window.location.search);
     const sharedUrl=params.get("modeloCompartido");
     if(!sharedUrl) return;
@@ -3271,6 +3327,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
 
         <main className={"relative min-w-0 flex-1 overflow-hidden bg-[#090b0e] " + (embedded ? "rounded-none" : "rounded-2xl")}>
           <div ref={visorRef} className="absolute inset-0">
+            {arrastrandoArchivo && !embedded && <div className="pointer-events-none absolute inset-3 z-[60] grid place-items-center rounded-2xl border-2 border-dashed border-[#d4af37] bg-[#090b0e]/80 text-center shadow-[inset_0_0_70px_rgba(212,175,55,.10)] backdrop-blur-sm" aria-live="polite">
+              <div className="px-6 py-8">
+                <span className="mx-auto grid size-16 place-items-center rounded-2xl border border-[#d4af37]/50 bg-[#d4af37]/10 text-[#d4af37]"><Upload className="size-7"/></span>
+                <h2 className="mt-5 text-lg font-semibold text-white">Suelta tu diseño aquí</h2>
+                <p className="mt-2 text-sm text-white/65">STL · OBJ · GLB · FBX · Rhino 3DM</p>
+              </div>
+            </div>}
             {!embedded&&!archivo&&!cargando&&<div className="absolute inset-0 z-10 grid place-items-center p-8 text-center"><div><input ref={fileRef} type="file" accept=".stl,.obj,.glb,.fbx,.3dm" className="hidden" onChange={(e)=>{const file=e.target.files?.[0];if(file)cargarArchivo(file)}}/><button type="button" onClick={()=>fileRef.current?.click()} className="group rounded-2xl px-8 py-6 transition hover:bg-white/[.025]"><span className="mx-auto grid size-20 place-items-center rounded-3xl border border-[#d4af37]/30 bg-[#d4af37]/10 text-[#d4af37] shadow-[0_0_30px_rgba(212,175,55,.08)] transition group-hover:border-[#d4af37]/60 group-hover:bg-[#d4af37]/15"><Upload className="size-8"/></span><h2 className="mt-5 text-xl font-semibold text-white">Carga tu diseño de joyería</h2><p className="mt-2 text-sm text-white/40">STL · OBJ · GLB · FBX · Rhino 3DM</p><span className="mt-4 inline-flex rounded-lg bg-[#d4af37] px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-black">Seleccionar archivo</span></button></div></div>}
             {(cargando || presentationCover) && <div
               className={"absolute inset-0 z-40 overflow-hidden transition-opacity duration-700 "+((cargando || presentationVisible)?"pointer-events-auto opacity-100":"pointer-events-none opacity-0")}
