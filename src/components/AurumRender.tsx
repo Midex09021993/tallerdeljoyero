@@ -1503,8 +1503,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           createInclusions:()=>{},
           applyGemEnvironment:aplicarEntornoGema,
           initialMetalId:"plata950_pulida",
-          // Do not force all unassigned GLB gem layers to diamond. Saved per-layer
-          // assignments or explicit layer metadata decide the initial gem family.
+          // Unassigned meshes already classified as gems start with the diamond
+          // optical profile so the shared BVH is active immediately after GLB load.
+          // Saved per-layer assignments and explicit gem metadata take precedence.
+          initialGemId:"diamante_natural",
           presentation:{metalEnvironmentScale:1,metalClearcoatScale:1},
         });
         loadAuditStep("initial-materials-applied", { triangles: countAurumTriangles(interno) });
