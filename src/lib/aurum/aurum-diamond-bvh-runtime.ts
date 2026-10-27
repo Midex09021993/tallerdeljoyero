@@ -218,14 +218,21 @@ export async function createAurumDiamondBvhRuntime(options: {
               return;
             }
             if (isEmerald) {
-              // Emerald prototype: preserve the native catalog color and use
-              // restrained internal ray bounces (1 interactive, 2 high, 4 final).
-              // Avoid the diamond's 8-bounce final setting for colored stones.
+              // Keep interaction lightweight to reduce BVH speckles and preserve
+              // responsiveness. Final stills follow the four iJewel reference
+              // bounce counts where the catalog identity is known.
+              const emeraldFinalBounces =
+                activeGemId === "esmeralda_1" || activeGemId === "esmeralda_2"
+                  ? 5
+                  : activeGemId === "esmeralda_3" || activeGemId === "esmeralda_inclusiones"
+                    ? 3
+                    : 4;
               packageApi.setDiamondOptions(prepared.material, {
-                // Fewer live bounces reduce unstable high-frequency BVH speckles
-                // while the camera/model moves; still and final quality converge
-                // with more internal reflections.
-                rayBounces: quality === "final" ? 4 : quality === "high" ? 2 : 1,
+                rayBounces: quality === "final"
+                  ? emeraldFinalBounces
+                  : quality === "high"
+                    ? 2
+                    : 1,
               });
             }
           },
