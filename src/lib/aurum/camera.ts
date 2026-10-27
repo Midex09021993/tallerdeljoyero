@@ -117,8 +117,8 @@ export function applyAurumCameraView(
     // Perspectiva conserva la distancia radial de Frontal y cambia solo
     // la dirección de observación. Antes se sumaban desplazamientos en X/Y/Z
     // sin normalizar, aumentando la distancia real y reduciendo la joya.
-    // Ajuste fino: reduce la elevación y recupera algo de giro lateral para una diagonal 3/4 natural, conservando centro y distancia radial.
-    const perspectiveDirection = new THREE.Vector3(0.55, Math.max(profile.vertical * 1.2, 0.46), 1).normalize();
+    // Vista 3/4 con elevación suficiente para que el plano del aro se lea en diagonal y la corona de la gema quede visible. Dirección normalizada: no aumenta la distancia ni altera el modelo.
+    const perspectiveDirection = new THREE.Vector3(0.62, Math.max(profile.vertical * 2.1, 0.78), 1).normalize();
     camera.position.copy(target).addScaledVector(perspectiveDirection, distance);
   }
   camera.lookAt(target);
