@@ -114,11 +114,12 @@ export function applyAurumCameraView(
     camera.position.set(target.x + distance, target.y, target.z);
   } else {
     camera.up.set(0, 1, 0);
-    camera.position.set(
-      target.x + distance * 0.72,
-      target.y + distance * profile.vertical + verticalBias,
-      target.z + distance
-    );
+    // Perspectiva conserva la distancia radial de Frontal y cambia solo
+    // la dirección de observación. Antes se sumaban desplazamientos en X/Y/Z
+    // sin normalizar, aumentando la distancia real y reduciendo la joya.
+    // Dirección diagonal suave: vista 3/4 con elevación, sin alejar la cámara.
+    const perspectiveDirection = new THREE.Vector3(0.48, profile.vertical * 0.7, 1).normalize();
+    camera.position.copy(target).addScaledVector(perspectiveDirection, distance);
   }
   camera.lookAt(target);
   camera.updateProjectionMatrix();
