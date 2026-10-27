@@ -218,21 +218,17 @@ export async function createAurumDiamondBvhRuntime(options: {
               return;
             }
             if (isEmerald) {
-              // Keep interaction lightweight to reduce BVH speckles and preserve
-              // responsiveness. Final stills follow the four iJewel reference
-              // bounce counts where the catalog identity is known.
-              const emeraldFinalBounces =
+              // Match the catalog-specific iJewel bounce reference in real-time
+              // as well as high/final quality. The emerald BVH experiment keeps
+              // transmission and dispersion at zero to isolate intersection artifacts.
+              const emeraldBounces =
                 activeGemId === "esmeralda_1" || activeGemId === "esmeralda_2"
                   ? 5
                   : activeGemId === "esmeralda_3" || activeGemId === "esmeralda_inclusiones"
                     ? 3
                     : 4;
               packageApi.setDiamondOptions(prepared.material, {
-                rayBounces: quality === "final"
-                  ? emeraldFinalBounces
-                  : quality === "high"
-                    ? 2
-                    : 1,
+                rayBounces: emeraldBounces,
               });
             }
           },
