@@ -15,6 +15,10 @@ export type AurumGemBvhProfile = {
  * the experimental BVH shader. The shader's absorption input is dimensionless,
  * so do not treat MeshPhysicalMaterial.attenuationDistance (where 0 means
  * infinite attenuation distance in Three.js) as a reciprocal absorption value.
+ *
+ * Transmission is intentionally zero for this experimental profile to isolate
+ * BVH refraction artifacts. This profile is only consumed by the experimental
+ * BVH runtime; the original physical material remains untouched for fallback.
  */
 export function resolveAurumEmeraldBvhProfile(
   material: THREE.Material,
@@ -49,10 +53,6 @@ export function resolveAurumEmeraldBvhProfile(
       ? profileColor
       : 0x169b63
   );
-  const authoredTransmission = readFinite(
-    data.aurumLiveTransmissionStored ?? physical.transmission,
-    0.76,
-  );
 
   return {
     ior: THREE.MathUtils.clamp(readFinite(physical.ior, readFinite(optical.ior, 1.58)), 1, 2.8),
@@ -67,6 +67,7 @@ export function resolveAurumEmeraldBvhProfile(
     environmentIntensity: THREE.MathUtils.clamp(readFinite(physical.envMapIntensity, 0.82), 0.6, 0.92),
     color,
     reflectivity: THREE.MathUtils.clamp(readFinite(physical.reflectivity, 0.16), 0.08, 0.21),
-    transmission: THREE.MathUtils.clamp(authoredTransmission, 0.5, 0.76),
+    // Experimental BVH-only setting; do not write this back to the physical material.
+    transmission: 0,
   };
 }
