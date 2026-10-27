@@ -19,7 +19,7 @@ export type AurumDiamondBvhRuntime = {
   /** Temporarily raise diamond-only ray bounces for a still capture. */
   setDiamondQuality: (quality: "interactive" | "high" | "final") => void;
   dispose: () => void;
-  diagnostics: () => { activeMeshes: number; triangleCount: number; diamondMeshes: number; diamondTriangleCount: number; overlappingGemPairs: Array<{ meshA: string; familyA: string; meshB: string; familyB: string; overlapRatio: number }>; enabled: boolean };
+  diagnostics: () => { activeMeshes: number; triangleCount: number; diamondMeshes: number; diamondTriangleCount: number; familyCounts: Record<string, number>; skippedTargetMeshes: Array<{ mesh: string; materialFamilies: string[]; activeGemFamily: string; reason: string }>; overlappingGemPairs: Array<{ meshA: string; familyA: string; meshB: string; familyB: string; overlapRatio: number }>; enabled: boolean };
 };
 
 const getGemFamily = (material: any) =>
@@ -79,6 +79,8 @@ export async function createAurumDiamondBvhRuntime(options: {
   const refresh = (model: THREE.Object3D | null | undefined) => {
     if (!model || disposed) return;
     const found = new Set<THREE.Mesh>();
+    const familyCounts: Record<string, number> = {};
+    const skippedTargetMeshes: Array<{ mesh: string; materialFamilies: string[]; activeGemFamily: string; reason: string }> = [];
     model.traverse((object) => {
       const mesh = object as THREE.Mesh;
       if (!mesh.isMesh || !mesh.geometry || mesh.userData?.["aurumInternalInclusion"]) return;
@@ -105,6 +107,10 @@ export async function createAurumDiamondBvhRuntime(options: {
       // mixed-family material arrays remain excluded to protect CAD groups.
       const targetFamilies = requestedFamilies;
       const materialFamilies = materials.map((material) => getGemFamily(material));
+      for (const materialFamily of materialFamilies) {
+        const key = materialFamily || "(sin familia)";
+        familyCounts[key] = (familyCounts[key] ?? 0) + 1;
+      }
       const uniqueFamilies = [...new Set(materialFamilies)];
       const family = uniqueFamilies.length === 1 ? uniqueFamilies[0] : "";
       const isParaibaCatalogId = /^turmalina_paraiba(?:_|$)/.test(activeGemId);
@@ -123,7 +129,10 @@ export async function createAurumDiamondBvhRuntime(options: {
       // diamond stones). Even when both families are individually supported,
       // a single shader would overwrite their distinct optical identities.
       if (!isTargetFamily || uniqueFamilies.length !== 1 || !activeFamilyMatches) {
-        if (materials.some((material) => targetFamilies.includes(getGemFamily(material)))) {
+        if (materials.some((material) => targetFamilies.includes(getGemFamily(material)) || activeGemFamily.length > 0)) {
+          if (skippedTargetMeshes.length < 30) {
+            skippedTargetMeshes.push({ mesh: mesh.name || mesh.uuid, materialFamilies: uniqueFamilies, activeGemFamily, reason: !isTargetFamily ? "familia-no-solicitada-o-material-mixto" : uniqueFamilies.length !== 1 ? "familias-mixtas" : "familia-activa-no-coincide" });
+          }
           options.onError?.(
             new Error("[AURUM BVH] Malla con familias/materiales mixtos omitida para proteger diamantes secundarios, otras gemas y metales."),
           );
@@ -288,6 +297,8 @@ export async function createAurumDiamondBvhRuntime(options: {
         triangleCount,
         diamondMeshes,
         diamondTriangleCount,
+        familyCounts,
+        skippedTargetMeshes,
         overlappingGemPairs,
         enabled: entries.size > 0,
       };
