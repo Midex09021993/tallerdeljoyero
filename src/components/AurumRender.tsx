@@ -2329,142 +2329,150 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         setParteSeleccionadaCapa(capa);
         setParteSeleccionadaCategoria(categoria);
 
-        // Diagnostic snapshot of the selected mesh and all gem-layer identities.
-        const sourceAttrs = obj.userData?.attributes ?? {};
-        const preservedSource = obj.userData?.aurumRhinoSource ?? {};
-        const sourceLayerId = preservedSource.layerId ?? sourceAttrs.layerId ?? sourceAttrs.LayerId ?? meta.rhinoLayerId ?? null;
-        const sourceLayerIndexRaw = preservedSource.layerIndex ?? sourceAttrs.layerIndex ?? sourceAttrs.LayerIndex ?? obj.userData?.layerIndex ?? obj.userData?.LayerIndex ?? meta.layerIndex;
-        const sourceLayerIndex = sourceLayerIndexRaw !== null && sourceLayerIndexRaw !== undefined && sourceLayerIndexRaw !== "" && Number.isInteger(Number(sourceLayerIndexRaw)) && Number(sourceLayerIndexRaw) >= 0
-          ? Number(sourceLayerIndexRaw) : null;
-        const sourceLayerKey = String(meta.layerKey ?? "");
-        const sourceLayerName = String(preservedSource.layerName ?? sourceAttrs.layerName ?? sourceAttrs.LayerName ?? capa ?? "").trim();
-        const diagnosticMeshes:any[] = [];
-        modelo?.traverse((mesh:any) => {
-          if (!mesh?.isMesh || mesh.userData?.aurumInternalInclusion) return;
-          const meshMeta = mesh.userData?.aurumRhino ?? {};
-          const sourceMeta = mesh.userData?.aurumRhinoSource ?? {};
-          const meshAttrs = mesh.userData?.attributes ?? {};
-          const meshLayerName = String(sourceMeta.layerName ?? meshMeta.capa ?? meshAttrs.layerName ?? meshAttrs.LayerName ?? "").trim();
-          const meshLayerId = sourceMeta.layerId ?? meshMeta.rhinoLayerId ?? meshAttrs.layerId ?? meshAttrs.LayerId ?? null;
-          const meshLayerIndexRaw = sourceMeta.layerIndex ?? meshAttrs.layerIndex ?? meshAttrs.LayerIndex ?? mesh.userData?.layerIndex ?? mesh.userData?.LayerIndex ?? meshMeta.layerIndex;
-          const meshLayerIndex = Number.isInteger(Number(meshLayerIndexRaw)) && Number(meshLayerIndexRaw) >= 0 ? Number(meshLayerIndexRaw) : null;
-          const meshCategory = String(meshMeta.categoria ?? clasificarCapa(meshLayerName, meshMeta.colorCapa));
-          const materials = (Array.isArray(mesh.material) ? mesh.material : [mesh.material]).filter(Boolean);
-          const sameLayer = sourceLayerName
-            ? meshLayerName.toLocaleLowerCase() === sourceLayerName.toLocaleLowerCase()
-            : sourceLayerKey
-              ? String(meshMeta.layerKey ?? "") === sourceLayerKey
-              : sourceLayerId != null
-                ? String(meshLayerId ?? "") === String(sourceLayerId)
-                : sourceLayerIndex != null && meshLayerIndex === sourceLayerIndex;
-          diagnosticMeshes.push({
-            name: mesh.name || "(sin nombre)", uuid: mesh.uuid, category: meshCategory,
-            layer: meshLayerName || null, layerId: meshLayerId == null ? null : String(meshLayerId),
-            layerIndex: meshLayerIndex, layerKey: meshMeta.layerKey ?? null,
-            layerColor: meshMeta.colorCapa ?? meshAttrs.layerColor ?? meshAttrs.LayerColor ?? null,
-            rawAttributes: {
-              preservedSource: sourceMeta,
-              layerName: meshAttrs.layerName ?? meshAttrs.LayerName ?? null,
-              layerId: meshAttrs.layerId ?? meshAttrs.LayerId ?? null,
-              layerIndex: meshAttrs.layerIndex ?? meshAttrs.LayerIndex ?? null,
-              materialIndex: meshAttrs.materialIndex ?? meshAttrs.MaterialIndex ?? null,
-              materialSource: meshAttrs.materialSource ?? meshAttrs.MaterialSource ?? null,
-              drawColor: meshAttrs.drawColor ?? meshAttrs.DrawColor ?? null,
-              objectColor: meshAttrs.objectColor ?? meshAttrs.ObjectColor ?? null,
-              colorSource: meshAttrs.colorSource ?? meshAttrs.ColorSource ?? null,
-              objectType: mesh.userData?.objectType ?? meshAttrs.objectType ?? meshAttrs.ObjectType ?? null,
-              objectId: meshAttrs.id ?? meshAttrs.Id ?? null,
-              objectName: meshAttrs.name ?? meshAttrs.Name ?? null,
-              mode: meshAttrs.mode ?? meshAttrs.Mode ?? null,
-              keys: Object.keys(meshAttrs),
-            },
-            userDataKeys: Object.keys(mesh.userData ?? {}),
-            metaKeys: Object.keys(meshMeta ?? {}),
-            sameSelectedLayer: sameLayer,
-            vertices: mesh.geometry?.attributes?.position?.count ?? null,
-            triangles: mesh.geometry?.index ? Math.floor(mesh.geometry.index.count / 3) : mesh.geometry?.attributes?.position ? Math.floor(mesh.geometry.attributes.position.count / 3) : null,
-            materials: materials.map((material:any) => ({
-              name: material.name || null, type: material.type || material.constructor?.name || null,
-              color: material.color?.getHexString ? "#" + material.color.getHexString() : null,
-            })),
+        // Full selection diagnostics traverse every mesh and collect nested metadata.
+        // Keep this expensive audit opt-in so selecting one piece stays responsive
+        // on dense Rhino/CAD models.
+        const selectionAuditEnabled = typeof window !== "undefined"
+          && new URLSearchParams(window.location.search).get("aurumSelectionAudit") === "1";
+        if (selectionAuditEnabled) {
+          // Diagnostic snapshot of the selected mesh and all gem-layer identities.
+          const sourceAttrs = obj.userData?.attributes ?? {};
+          const preservedSource = obj.userData?.aurumRhinoSource ?? {};
+          const sourceLayerId = preservedSource.layerId ?? sourceAttrs.layerId ?? sourceAttrs.LayerId ?? meta.rhinoLayerId ?? null;
+          const sourceLayerIndexRaw = preservedSource.layerIndex ?? sourceAttrs.layerIndex ?? sourceAttrs.LayerIndex ?? obj.userData?.layerIndex ?? obj.userData?.LayerIndex ?? meta.layerIndex;
+          const sourceLayerIndex = sourceLayerIndexRaw !== null && sourceLayerIndexRaw !== undefined && sourceLayerIndexRaw !== "" && Number.isInteger(Number(sourceLayerIndexRaw)) && Number(sourceLayerIndexRaw) >= 0
+            ? Number(sourceLayerIndexRaw) : null;
+          const sourceLayerKey = String(meta.layerKey ?? "");
+          const sourceLayerName = String(preservedSource.layerName ?? sourceAttrs.layerName ?? sourceAttrs.LayerName ?? capa ?? "").trim();
+          const diagnosticMeshes:any[] = [];
+          modelo?.traverse((mesh:any) => {
+            if (!mesh?.isMesh || mesh.userData?.aurumInternalInclusion) return;
+            const meshMeta = mesh.userData?.aurumRhino ?? {};
+            const sourceMeta = mesh.userData?.aurumRhinoSource ?? {};
+            const meshAttrs = mesh.userData?.attributes ?? {};
+            const meshLayerName = String(sourceMeta.layerName ?? meshMeta.capa ?? meshAttrs.layerName ?? meshAttrs.LayerName ?? "").trim();
+            const meshLayerId = sourceMeta.layerId ?? meshMeta.rhinoLayerId ?? meshAttrs.layerId ?? meshAttrs.LayerId ?? null;
+            const meshLayerIndexRaw = sourceMeta.layerIndex ?? meshAttrs.layerIndex ?? meshAttrs.LayerIndex ?? mesh.userData?.layerIndex ?? mesh.userData?.LayerIndex ?? meshMeta.layerIndex;
+            const meshLayerIndex = Number.isInteger(Number(meshLayerIndexRaw)) && Number(meshLayerIndexRaw) >= 0 ? Number(meshLayerIndexRaw) : null;
+            const meshCategory = String(meshMeta.categoria ?? clasificarCapa(meshLayerName, meshMeta.colorCapa));
+            const materials = (Array.isArray(mesh.material) ? mesh.material : [mesh.material]).filter(Boolean);
+            const sameLayer = sourceLayerName
+              ? meshLayerName.toLocaleLowerCase() === sourceLayerName.toLocaleLowerCase()
+              : sourceLayerKey
+                ? String(meshMeta.layerKey ?? "") === sourceLayerKey
+                : sourceLayerId != null
+                  ? String(meshLayerId ?? "") === String(sourceLayerId)
+                  : sourceLayerIndex != null && meshLayerIndex === sourceLayerIndex;
+            diagnosticMeshes.push({
+              name: mesh.name || "(sin nombre)", uuid: mesh.uuid, category: meshCategory,
+              layer: meshLayerName || null, layerId: meshLayerId == null ? null : String(meshLayerId),
+              layerIndex: meshLayerIndex, layerKey: meshMeta.layerKey ?? null,
+              layerColor: meshMeta.colorCapa ?? meshAttrs.layerColor ?? meshAttrs.LayerColor ?? null,
+              rawAttributes: {
+                preservedSource: sourceMeta,
+                layerName: meshAttrs.layerName ?? meshAttrs.LayerName ?? null,
+                layerId: meshAttrs.layerId ?? meshAttrs.LayerId ?? null,
+                layerIndex: meshAttrs.layerIndex ?? meshAttrs.LayerIndex ?? null,
+                materialIndex: meshAttrs.materialIndex ?? meshAttrs.MaterialIndex ?? null,
+                materialSource: meshAttrs.materialSource ?? meshAttrs.MaterialSource ?? null,
+                drawColor: meshAttrs.drawColor ?? meshAttrs.DrawColor ?? null,
+                objectColor: meshAttrs.objectColor ?? meshAttrs.ObjectColor ?? null,
+                colorSource: meshAttrs.colorSource ?? meshAttrs.ColorSource ?? null,
+                objectType: mesh.userData?.objectType ?? meshAttrs.objectType ?? meshAttrs.ObjectType ?? null,
+                objectId: meshAttrs.id ?? meshAttrs.Id ?? null,
+                objectName: meshAttrs.name ?? meshAttrs.Name ?? null,
+                mode: meshAttrs.mode ?? meshAttrs.Mode ?? null,
+                keys: Object.keys(meshAttrs),
+              },
+              userDataKeys: Object.keys(mesh.userData ?? {}),
+              metaKeys: Object.keys(meshMeta ?? {}),
+              sameSelectedLayer: sameLayer,
+              vertices: mesh.geometry?.attributes?.position?.count ?? null,
+              triangles: mesh.geometry?.index ? Math.floor(mesh.geometry.index.count / 3) : mesh.geometry?.attributes?.position ? Math.floor(mesh.geometry.attributes.position.count / 3) : null,
+              materials: materials.map((material:any) => ({
+                name: material.name || null, type: material.type || material.constructor?.name || null,
+                color: material.color?.getHexString ? "#" + material.color.getHexString() : null,
+              })),
+            });
           });
-        });
-        const relatedGemMeshes = diagnosticMeshes.filter((mesh:any) => mesh.category === "gema");
-        const sameLayerMeshes = diagnosticMeshes.filter((mesh:any) => mesh.sameSelectedLayer);
-        const layerAssignments = modelo?.userData?.aurumGemLayerAssignments ?? {};
-        const relatedAssignment = Object.values(layerAssignments).find((assignment:any) =>
-          String(assignment?.layerName ?? "").trim().toLocaleLowerCase() === sourceLayerName.toLocaleLowerCase()
-        ) ?? null;
-        setDiagnosticoSeleccion({
-          selected: {
-            name: nombre, uuid: obj.uuid, category: categoria,
-            layer: sourceLayerName || null,
-            layerColor: meta.colorCapa ?? sourceAttrs.layerColor ?? sourceAttrs.LayerColor ?? null,
-            layerId: sourceLayerId == null ? null : String(sourceLayerId), layerIndex: sourceLayerIndex,
-            layerKey: meta.layerKey ?? null, matrixSlot: meta.matrixSlot ?? null,
-            metadataResolution: meta.metadataResolution ?? null,
-            preservedSource: {
-              layerIndex: preservedSource.layerIndex ?? null,
-              layerName: preservedSource.layerName ?? null,
-              layerId: preservedSource.layerId ?? null,
-              layerColor: preservedSource.layerColor ?? null,
-              rawLayerIndex: preservedSource.rawLayerIndex ?? null,
-              rawLayerName: preservedSource.rawLayerName ?? null,
-              rawLayerId: preservedSource.rawLayerId ?? null,
-              materialIndex: preservedSource.materialIndex ?? null,
-              objectId: preservedSource.objectId ?? null,
+          const relatedGemMeshes = diagnosticMeshes.filter((mesh:any) => mesh.category === "gema");
+          const sameLayerMeshes = diagnosticMeshes.filter((mesh:any) => mesh.sameSelectedLayer);
+          const layerAssignments = modelo?.userData?.aurumGemLayerAssignments ?? {};
+          const relatedAssignment = Object.values(layerAssignments).find((assignment:any) =>
+            String(assignment?.layerName ?? "").trim().toLocaleLowerCase() === sourceLayerName.toLocaleLowerCase()
+          ) ?? null;
+          setDiagnosticoSeleccion({
+            selected: {
+              name: nombre, uuid: obj.uuid, category: categoria,
+              layer: sourceLayerName || null,
+              layerColor: meta.colorCapa ?? sourceAttrs.layerColor ?? sourceAttrs.LayerColor ?? null,
+              layerId: sourceLayerId == null ? null : String(sourceLayerId), layerIndex: sourceLayerIndex,
+              layerKey: meta.layerKey ?? null, matrixSlot: meta.matrixSlot ?? null,
+              metadataResolution: meta.metadataResolution ?? null,
+              preservedSource: {
+                layerIndex: preservedSource.layerIndex ?? null,
+                layerName: preservedSource.layerName ?? null,
+                layerId: preservedSource.layerId ?? null,
+                layerColor: preservedSource.layerColor ?? null,
+                rawLayerIndex: preservedSource.rawLayerIndex ?? null,
+                rawLayerName: preservedSource.rawLayerName ?? null,
+                rawLayerId: preservedSource.rawLayerId ?? null,
+                materialIndex: preservedSource.materialIndex ?? null,
+                objectId: preservedSource.objectId ?? null,
+              },
+              resolvedLayer: { layerIndex: meta.layerIndex ?? null, layerName: meta.capa ?? null, layerId: meta.rhinoLayerId ?? null, layerKey: meta.layerKey ?? null },
+              visible: obj.visible !== false,
+              objectType: obj.type ?? null,
+              geometry: {
+                vertices: obj.geometry?.attributes?.position?.count ?? null,
+                triangles: obj.geometry?.index ? Math.floor(obj.geometry.index.count / 3) : obj.geometry?.attributes?.position ? Math.floor(obj.geometry.attributes.position.count / 3) : null,
+                indexed: Boolean(obj.geometry?.index), normals: Boolean(obj.geometry?.attributes?.normal),
+              },
+              materials: (Array.isArray(obj.material) ? obj.material : [obj.material]).filter(Boolean).map((material:any) => ({
+                name: material.name || null, type: material.type || material.constructor?.name || null,
+                color: material.color?.getHexString ? "#" + material.color.getHexString() : null,
+                transmission: material.transmission ?? null, ior: material.ior ?? null,
+              })),
+              rawAttributes: {
+                layerName: sourceAttrs.layerName ?? sourceAttrs.LayerName ?? null,
+                layerId: sourceAttrs.layerId ?? sourceAttrs.LayerId ?? null,
+                layerIndex: sourceAttrs.layerIndex ?? sourceAttrs.LayerIndex ?? null,
+                materialIndex: sourceAttrs.materialIndex ?? sourceAttrs.MaterialIndex ?? null,
+                materialSource: sourceAttrs.materialSource ?? sourceAttrs.MaterialSource ?? null,
+                drawColor: sourceAttrs.drawColor ?? sourceAttrs.DrawColor ?? null,
+                objectColor: sourceAttrs.objectColor ?? sourceAttrs.ObjectColor ?? null,
+                colorSource: sourceAttrs.colorSource ?? sourceAttrs.ColorSource ?? null,
+                objectType: obj.userData?.objectType ?? sourceAttrs.objectType ?? sourceAttrs.ObjectType ?? null,
+                objectId: sourceAttrs.id ?? sourceAttrs.Id ?? null,
+                attributesKeys: Object.keys(sourceAttrs),
+              },
             },
-            resolvedLayer: { layerIndex: meta.layerIndex ?? null, layerName: meta.capa ?? null, layerId: meta.rhinoLayerId ?? null, layerKey: meta.layerKey ?? null },
-            visible: obj.visible !== false,
-            objectType: obj.type ?? null,
-            geometry: {
-              vertices: obj.geometry?.attributes?.position?.count ?? null,
-              triangles: obj.geometry?.index ? Math.floor(obj.geometry.index.count / 3) : obj.geometry?.attributes?.position ? Math.floor(obj.geometry.attributes.position.count / 3) : null,
-              indexed: Boolean(obj.geometry?.index), normals: Boolean(obj.geometry?.attributes?.normal),
+            counts: {
+              totalMeshes: diagnosticMeshes.length, gemstoneMeshes: relatedGemMeshes.length,
+              sameLayerMeshes: sameLayerMeshes.length,
+              gemstoneMeshesOnSameLayer: sameLayerMeshes.filter((mesh:any) => mesh.category === "gema").length,
             },
-            materials: (Array.isArray(obj.material) ? obj.material : [obj.material]).filter(Boolean).map((material:any) => ({
-              name: material.name || null, type: material.type || material.constructor?.name || null,
-              color: material.color?.getHexString ? "#" + material.color.getHexString() : null,
-              transmission: material.transmission ?? null, ior: material.ior ?? null,
+            relatedGemMeshes: relatedGemMeshes.slice(0, 60),
+            sameLayerMeshes: sameLayerMeshes.slice(0, 60),
+            sourceLayerTable: (Array.isArray(modelo?.userData?.aurumRhinoSourceLayers) && modelo.userData.aurumRhinoSourceLayers.length
+              ? modelo.userData.aurumRhinoSourceLayers
+              : Array.isArray(modelo?.userData?.layers) ? modelo.userData.layers : []).map((layer:any,index:number) => ({
+              index: layer?.index ?? index,
+              name: layer?.name ?? layer?.Name ?? null,
+              id: layer?.id ?? layer?.Id ?? null,
+              color: layer?.color ? String(JSON.stringify(layer.color)) : layer?.Color ? String(JSON.stringify(layer.Color)) : null,
+              visible: layer?.visible ?? layer?.Visible ?? layer?.isVisible ?? null,
+              parentLayerId: layer?.parentLayerId ?? layer?.parentId ?? layer?.ParentLayerId ?? null,
+              keys: Object.keys(layer ?? {}),
             })),
-            rawAttributes: {
-              layerName: sourceAttrs.layerName ?? sourceAttrs.LayerName ?? null,
-              layerId: sourceAttrs.layerId ?? sourceAttrs.LayerId ?? null,
-              layerIndex: sourceAttrs.layerIndex ?? sourceAttrs.LayerIndex ?? null,
-              materialIndex: sourceAttrs.materialIndex ?? sourceAttrs.MaterialIndex ?? null,
-              materialSource: sourceAttrs.materialSource ?? sourceAttrs.MaterialSource ?? null,
-              drawColor: sourceAttrs.drawColor ?? sourceAttrs.DrawColor ?? null,
-              objectColor: sourceAttrs.objectColor ?? sourceAttrs.ObjectColor ?? null,
-              colorSource: sourceAttrs.colorSource ?? sourceAttrs.ColorSource ?? null,
-              objectType: obj.userData?.objectType ?? sourceAttrs.objectType ?? sourceAttrs.ObjectType ?? null,
-              objectId: sourceAttrs.id ?? sourceAttrs.Id ?? null,
-              attributesKeys: Object.keys(sourceAttrs),
-            },
-          },
-          counts: {
-            totalMeshes: diagnosticMeshes.length, gemstoneMeshes: relatedGemMeshes.length,
-            sameLayerMeshes: sameLayerMeshes.length,
-            gemstoneMeshesOnSameLayer: sameLayerMeshes.filter((mesh:any) => mesh.category === "gema").length,
-          },
-          relatedGemMeshes: relatedGemMeshes.slice(0, 60),
-          sameLayerMeshes: sameLayerMeshes.slice(0, 60),
-          sourceLayerTable: (Array.isArray(modelo?.userData?.aurumRhinoSourceLayers) && modelo.userData.aurumRhinoSourceLayers.length
-            ? modelo.userData.aurumRhinoSourceLayers
-            : Array.isArray(modelo?.userData?.layers) ? modelo.userData.layers : []).map((layer:any,index:number) => ({
-            index: layer?.index ?? index,
-            name: layer?.name ?? layer?.Name ?? null,
-            id: layer?.id ?? layer?.Id ?? null,
-            color: layer?.color ? String(JSON.stringify(layer.color)) : layer?.Color ? String(JSON.stringify(layer.Color)) : null,
-            visible: layer?.visible ?? layer?.Visible ?? layer?.isVisible ?? null,
-            parentLayerId: layer?.parentLayerId ?? layer?.parentId ?? layer?.ParentLayerId ?? null,
-            keys: Object.keys(layer ?? {}),
-          })),
-          sourceRootUserDataKeys: Object.keys(modelo?.userData ?? {}),
-          metadataAudit: modelo?.userData?.aurumLayerMetadataAudit ?? null,
-          instanceLayerHydration: modelo?.userData?.aurumInstanceLayerHydration ?? null,
-          selectedInstanceSource: obj.userData?.aurumRhinoInstanceSource ?? null,
-          existingAssignment: relatedAssignment,
-        });
+            sourceRootUserDataKeys: Object.keys(modelo?.userData ?? {}),
+            metadataAudit: modelo?.userData?.aurumLayerMetadataAudit ?? null,
+            instanceLayerHydration: modelo?.userData?.aurumInstanceLayerHydration ?? null,
+            selectedInstanceSource: obj.userData?.aurumRhinoInstanceSource ?? null,
+            existingAssignment: relatedAssignment,
+          });
+  
+        }
         // MatrixGold drives the library: green/metal layers open Materials,
         // blue/gem layers open Gems automatically.
         if (categoria === "metal") {
