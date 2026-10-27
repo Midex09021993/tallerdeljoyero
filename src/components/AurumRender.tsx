@@ -941,10 +941,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         renderer.shadowMap.needsUpdate = true;
         if (modelo) {
           setAurumInclusionsVisible(modelo, false);
-          // Keep procedural emerald inclusions disabled during interactive
-          // quality changes too; otherwise the moving transparent micro-meshes
-          // reappear and create flickering speckles over the emerald and nearby stones.
+          // Keep other procedural inclusions hidden during interaction, but allow
+          // the dedicated "Esmeralda · Inclusiones" profile as a controlled live test.
           setAurumEmeraldInclusionsVisible(modelo, false);
+          setAurumEmeraldInclusionsVisible(modelo, true, "esmeralda_inclusiones");
           aplicarPerfilLive();
         }
         invalidateRenderRef.current?.();
@@ -1154,6 +1154,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           toast.error("No se aplicó la gema: selecciona una pieza clasificada como gema.");
           return;
         }
+        // Diagnostic rollout: show jardin only for the explicitly selected
+        // inclusion-grade emerald; keep all other procedural emeralds hidden.
+        setAurumEmeraldInclusionsVisible(target, String(g?.id ?? "") === "esmeralda_inclusiones", "esmeralda_inclusiones");
         const selectedGemFamily = String(g?.familia ?? "").toLocaleLowerCase();
         const emeraldBvhOptIn = isEmeraldBvhEnabled();
         if (selectedGemFamily === "diamante" || (selectedGemFamily === "esmeralda" && emeraldBvhOptIn)) {
@@ -1512,15 +1515,12 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         // Opt-in experimental per-pixel BVH ray tracing for diamond meshes only.
         // The helper leaves every other gem and every metal on the existing pipeline.
         void asegurarDiamanteBvh();
-        // LIVE MODE: procedural inclusions are intentionally hidden. They add
-        // dozens of transparent draw calls and are not required for the base
-        // product preview. CAPTURE enables them temporarily for the final image.
+        // Hide procedural inclusions by default for performance. The explicit
+        // emerald-inclusions profile is re-enabled below for controlled live
+        // validation; other emerald grades stay clean.
         setAurumInclusionsVisible(modelo, false);
-        // Keep procedural emerald inclusions out of the live BVH pass: their
-        // intersecting transparent meshes produce unstable speckles while the
-        // camera moves and can visually contaminate nearby secondary stones.
-        // They can be enabled separately for a controlled still/capture pass.
         setAurumEmeraldInclusionsVisible(modelo, false);
+        setAurumEmeraldInclusionsVisible(modelo, true, "esmeralda_inclusiones");
         liveFastPathRef.current=true;
         aplicarPerfilLive();
 
