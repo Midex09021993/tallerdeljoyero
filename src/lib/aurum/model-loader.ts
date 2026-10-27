@@ -245,7 +245,24 @@ export async function preprocessAurumModel(object: THREE.Object3D) {
 }
 
 export async function parseAurumInput(file: File, ext: string, fallbackMaterial: THREE.Material) {
+  const loadAuditEnabled = typeof window !== "undefined"
+    && new URLSearchParams(window.location.search).get("aurumLoadAudit") === "1";
+  const auditStarted = performance.now();
+  let auditPrevious = auditStarted;
+  const auditStep = (stage:string, details:Record<string, unknown> = {}) => {
+    if (!loadAuditEnabled) return;
+    const now = performance.now();
+    console.info("[AURUM][3DM AUDIT]", {
+      file: file.name,
+      stage,
+      stageMs: Number((now - auditPrevious).toFixed(1)),
+      totalMs: Number((now - auditStarted).toFixed(1)),
+      ...details,
+    });
+    auditPrevious = now;
+  };
   const buffer = await file.arrayBuffer();
+  auditStep("file-arraybuffer-ready", { bytes: buffer.byteLength, format: ext });
   if (ext === "stl") {
     const { STLLoader } = await import("three/examples/jsm/loaders/STLLoader.js");
     const geometry = new STLLoader().parse(buffer);
@@ -274,6 +291,7 @@ export async function parseAurumInput(file: File, ext: string, fallbackMaterial:
   if (ext === "glb") { const { GLTFLoader } = await import("three/examples/jsm/loaders/GLTFLoader.js"); return (await new GLTFLoader().parseAsync(buffer, "")).scene; }
   if (ext === "3dm") {
     const { Rhino3dmLoader } = await import("three/examples/jsm/loaders/3DMLoader.js");
+    auditStep("rhino-loader-module-ready");
     const loader:any = new Rhino3dmLoader();
     loader.setLibraryPath("https://cdn.jsdelivr.net/npm/rhino3dm@8.32.2/");
     // Rhino3dmLoader expands block instances by cloning definition meshes, but
@@ -283,8 +301,36 @@ export async function parseAurumInput(file: File, ext: string, fallbackMaterial:
     // source InstanceReference transform and carry the reference layer onto the
     // cloned meshes before the GLB metadata snapshot is taken.
     const createGeometry = loader._createGeometry.bind(loader);
+    let geometryBuildCalls = 0;
+    let geometryBuildMs = 0;
     loader._createGeometry = (data:any) => {
+      const geometryStarted = performance.now();
       const root:THREE.Object3D = createGeometry(data);
+      const geometryElapsed = performance.now() - geometryStarted;
+      geometryBuildCalls++;
+      geometryBuildMs += geometryElapsed;
+      if (loadAuditEnabled) {
+        let meshCount = 0, triangles = 0, vertices = 0;
+        root.traverse((child:any) => {
+          if (!child.isMesh || !child.geometry) return;
+          meshCount++;
+          const position = child.geometry.getAttribute("position");
+          const index = child.geometry.getIndex();
+          vertices += position?.count ?? 0;
+          triangles += index ? Math.floor(index.count / 3) : Math.floor((position?.count ?? 0) / 3);
+        });
+        console.info("[AURUM][3DM AUDIT]", {
+          file: file.name,
+          stage: "rhino-create-geometry",
+          call: geometryBuildCalls,
+          stageMs: Number(geometryElapsed.toFixed(1)),
+          cumulativeGeometryMs: Number(geometryBuildMs.toFixed(1)),
+          objectsInPayload: Array.isArray(data?.objects) ? data.objects.length : null,
+          meshes: meshCount,
+          vertices,
+          triangles,
+        });
+      }
       const references = (Array.isArray(data?.objects) ? data.objects : []).filter((item:any) =>
         item?.objectType === "InstanceReference" && item?.geometry?.xform?.array
       );
@@ -362,8 +408,20 @@ export async function parseAurumInput(file: File, ext: string, fallbackMaterial:
     // unnecessarily serializing heavy WASM work on capable desktops while
     // preventing mobile/low-core devices from spawning excessive workers.
     const cores = typeof navigator !== "undefined" ? Number(navigator.hardwareConcurrency || 2) : 2;
-    loader.setWorkerLimit(Math.max(1, Math.min(4, Math.floor(cores / 2) || 1)));
-    return await new Promise<any>((resolve, reject) => loader.parse(buffer, resolve, reject));
+    const workerLimit = Math.max(1, Math.min(4, Math.floor(cores / 2) || 1));
+    loader.setWorkerLimit(workerLimit);
+    auditStep("rhino-parse-start", { workerLimit, hardwareConcurrency: cores });
+    return await new Promise<any>((resolve, reject) => loader.parse(buffer, (model:any) => {
+      auditStep("rhino-parse-complete", {
+        geometryBuildCalls,
+        geometryBuildMs: Number(geometryBuildMs.toFixed(1)),
+        workerLimit,
+      });
+      resolve(model);
+    }, (error:any) => {
+      auditStep("rhino-parse-error", { message: String(error?.message ?? error) });
+      reject(error);
+    }));
   }
   throw new Error("Formato no compatible.");
 }
