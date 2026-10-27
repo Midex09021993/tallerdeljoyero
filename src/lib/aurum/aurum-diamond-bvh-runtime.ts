@@ -88,7 +88,10 @@ export async function createAurumDiamondBvhRuntime(options: {
         found.add(mesh);
         return;
       }
-      if (existing) releaseEntry(mesh, false);
+      // Restore only when this mesh still uses our experimental material. If the
+      // catalog assigned a new material, preserve that assignment and dispose the
+      // stale BVH material before classifying the mesh again.
+      if (existing) releaseEntry(mesh, true);
 
       const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
       // A BVH material is assigned at mesh level. Never replace a mixed
