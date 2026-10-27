@@ -284,15 +284,15 @@ function InicioPublico() {
       <section id="aurum-render" className="overflow-hidden border-y border-[#263743] bg-[#111a22] text-white">
         <div className="mx-auto grid max-w-[1440px] items-center gap-9 px-5 py-14 sm:px-8 sm:py-16 lg:grid-cols-[1.05fr_.95fr] lg:gap-14 lg:px-12 lg:py-20">
           <div className="max-w-2xl">
-            <p className="inline-flex items-center gap-2 rounded-full border border-[#d4aa19]/40 bg-[#d4aa19]/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.2em] text-[#f3d66e]"><Sparkles className="size-3.5" /> RENDERIZADOR PROFESIONAL DE JOYERÍA</p>
-            <h2 className="mt-5 text-3xl font-extrabold leading-tight tracking-tight sm:text-4xl lg:text-5xl">Del modelo 3D a una presentación que enamora.</h2>
-            <p className="mt-5 max-w-xl text-sm leading-7 text-slate-300 sm:text-base">Visualiza tus modelos de joyería, explora materiales y ajusta la presentación de cada pieza con AURUM RENDER, el estudio 3D creado para el oficio joyero.</p>
-            <p className="mt-3 max-w-xl text-sm leading-7 text-slate-300 sm:text-base">Prepara tus diseños para compartirlos con clientes y revisa tus piezas desde el visor público compatible.</p>
+            <p className="inline-flex items-center gap-2 rounded-full border border-[#d4aa19]/40 bg-[#d4aa19]/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.2em] text-[#f3d66e]"><Sparkles className="size-3.5" /> ESTUDIO 3D PROFESIONAL PARA JOYEROS</p>
+            <h2 className="mt-5 text-3xl font-extrabold leading-tight tracking-tight sm:text-4xl lg:text-5xl">De la precisión 3D a una joya que deslumbra.</h2>
+            <p className="mt-5 max-w-xl text-sm leading-7 text-slate-300 sm:text-base">Convierte tus modelos 3D en presentaciones de joyería cuidadas al detalle. Explora oro, plata, platino y gemas; ajusta materiales e iluminación para encontrar la apariencia que mejor representa tu diseño.</p>
+            <p className="mt-3 max-w-xl text-sm leading-7 text-slate-300 sm:text-base">Controla el entorno visual, prepara imágenes y capturas para presentar tus piezas, y comparte modelos compatibles mediante el visor público 3D.</p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <Link to="/auth" target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#f8c928] px-5 py-3 text-sm font-bold text-[#17232d] transition hover:bg-[#ffe071] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">Descubrir AURUM RENDER <ArrowRight className="size-4" /></Link>
               <Link to="/aurum-render-public" className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/25 px-5 py-3 text-sm font-semibold text-white transition hover:border-[#f8c928] hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f8c928]">Probar el visor público 3D</Link>
             </div>
-            <p className="mt-4 text-xs leading-5 text-slate-400">El visor público permite revisar modelos compatibles; el editor profesional Aurum Render es una herramienta distinta dentro de la plataforma.</p>
+            <p className="mt-4 text-xs leading-5 text-slate-400">Un estudio especializado para trabajar la apariencia de tus joyas; el visor público 3D es una experiencia independiente para compartir modelos compatibles.</p>
           </div>
 
           <div className="relative mx-auto w-full max-w-[560px]">
@@ -300,7 +300,7 @@ function InicioPublico() {
             <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-[#29343e] via-[#171f27] to-[#090d11] p-5 shadow-[0_25px_80px_rgba(0,0,0,.35)] sm:p-7">
               <div className="flex items-center justify-between border-b border-white/10 pb-4">
                 <div>
-                  <p className="text-[9px] font-bold uppercase tracking-[.24em] text-[#f3d66e]">Estudio de joyería 3D</p>
+                  <p className="text-[9px] font-bold uppercase tracking-[.24em] text-[#f3d66e]">ESTUDIO DIGITAL DE JOYERÍA</p>
                   <p className="mt-1 text-sm font-semibold text-white">AURUM RENDER</p>
                 </div>
                 <span className="grid size-10 place-items-center rounded-xl border border-[#f8c928]/30 bg-[#f8c928]/10 text-[#f8d85b]"><Gem className="size-5" /></span>
@@ -312,14 +312,19 @@ function InicioPublico() {
                 <span className="relative grid size-20 place-items-center rounded-2xl border border-[#f8c928]/35 bg-[#f8c928]/10 text-[#f8d85b] shadow-[0_0_55px_rgba(248,201,40,.12)] sm:size-24">
                   <Gem className="size-10 sm:size-12" strokeWidth={1.25} />
                 </span>
-                <p className="relative mt-7 text-[10px] font-bold uppercase tracking-[.28em] text-[#f3d66e]">Estudio de visualización</p>
+                <p className="relative mt-7 text-[10px] font-bold uppercase tracking-[.28em] text-[#f3d66e]">Tu estudio de joyería digital</p>
                 <h3 className="relative mt-2 text-2xl font-semibold tracking-wide text-white sm:text-3xl">AURUM RENDER</h3>
-                <p className="relative mt-2 max-w-sm text-xs leading-5 text-slate-300 sm:text-sm">Materiales, iluminación y detalle para presentar tus diseños de joyería.</p>
+                <p className="relative mt-2 max-w-sm text-xs leading-5 text-slate-300 sm:text-sm">De los materiales al encuadre final: crea una presentación que respete la intención de tu diseño.</p>
+                <div className="relative mt-5 flex flex-wrap justify-center gap-2">
+                  <span className="rounded-full border border-white/10 bg-white/[.04] px-3 py-1.5 text-[9px] font-medium text-slate-200">Oro · Plata · Platino</span>
+                  <span className="rounded-full border border-white/10 bg-white/[.04] px-3 py-1.5 text-[9px] font-medium text-slate-200">Gemas e iluminación</span>
+                  <span className="rounded-full border border-white/10 bg-white/[.04] px-3 py-1.5 text-[9px] font-medium text-slate-200">Modo fotográfico</span>
+                </div>
               </div>
               <div className="grid grid-cols-3 gap-2 border-t border-white/10 pt-4 text-center">
-                <div className="rounded-lg bg-white/[.04] px-2 py-3"><p className="text-[9px] uppercase tracking-wider text-slate-400">Materiales</p><p className="mt-1 text-xs font-semibold text-white">Metales</p></div>
-                <div className="rounded-lg bg-white/[.04] px-2 py-3"><p className="text-[9px] uppercase tracking-wider text-slate-400">Presentación</p><p className="mt-1 text-xs font-semibold text-white">Joyería 3D</p></div>
-                <div className="rounded-lg bg-white/[.04] px-2 py-3"><p className="text-[9px] uppercase tracking-wider text-slate-400">Plataforma</p><p className="mt-1 text-xs font-semibold text-white">AURUM LAB</p></div>
+                <div className="rounded-lg bg-white/[.04] px-2 py-3"><p className="text-[9px] uppercase tracking-wider text-slate-400">Materiales</p><p className="mt-1 text-xs font-semibold text-white">Metales y gemas</p></div>
+                <div className="rounded-lg bg-white/[.04] px-2 py-3"><p className="text-[9px] uppercase tracking-wider text-slate-400">Iluminación</p><p className="mt-1 text-xs font-semibold text-white">Entornos HDR</p></div>
+                <div className="rounded-lg bg-white/[.04] px-2 py-3"><p className="text-[9px] uppercase tracking-wider text-slate-400">Captura</p><p className="mt-1 text-xs font-semibold text-white">Foto y vídeo</p></div>
               </div>
             </div>
           </div>
