@@ -944,6 +944,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           // Keep other procedural inclusions hidden during interaction, but allow
           // the dedicated "Esmeralda · Inclusiones" profile as a controlled live test.
           setAurumEmeraldInclusionsVisible(modelo, false);
+          // Both Calidad 3 and the dedicated Inclusiones profile carry jardin.
+          // Only the active profile's generated meshes exist after material application.
+          setAurumEmeraldInclusionsVisible(modelo, true, "esmeralda_3");
           setAurumEmeraldInclusionsVisible(modelo, true, "esmeralda_inclusiones");
           aplicarPerfilLive();
         }
@@ -1154,9 +1157,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           toast.error("No se aplicó la gema: selecciona una pieza clasificada como gema.");
           return;
         }
-        // Diagnostic rollout: show jardin only for the explicitly selected
-        // inclusion-grade emerald; keep all other procedural emeralds hidden.
-        setAurumEmeraldInclusionsVisible(target, String(g?.id ?? "") === "esmeralda_inclusiones", "esmeralda_inclusiones");
+        // Calidad 3 and the dedicated Inclusiones profile both define visible jardin.
+        // Hide old inclusion meshes first, then enable only the currently selected grade.
+        setAurumEmeraldInclusionsVisible(target, false);
+        const selectedEmeraldId=String(g?.id ?? "");
+        if(selectedEmeraldId==="esmeralda_3" || selectedEmeraldId==="esmeralda_inclusiones"){
+          setAurumEmeraldInclusionsVisible(target, true, selectedEmeraldId);
+        }
         const selectedGemFamily = String(g?.familia ?? "").toLocaleLowerCase();
         const emeraldBvhOptIn = isEmeraldBvhEnabled();
         if (selectedGemFamily === "diamante" || (selectedGemFamily === "esmeralda" && emeraldBvhOptIn)) {
@@ -1520,6 +1527,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         // validation; other emerald grades stay clean.
         setAurumInclusionsVisible(modelo, false);
         setAurumEmeraldInclusionsVisible(modelo, false);
+        setAurumEmeraldInclusionsVisible(modelo, true, "esmeralda_3");
         setAurumEmeraldInclusionsVisible(modelo, true, "esmeralda_inclusiones");
         liveFastPathRef.current=true;
         aplicarPerfilLive();
