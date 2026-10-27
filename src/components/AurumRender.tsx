@@ -835,22 +835,19 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       const isEmeraldBvhEnabled = () => typeof window !== "undefined"
         && (new URLSearchParams(window.location.search).get("aurumEmeraldBvh") === "1"
           || getBvhTestMode() === "emerald-only");
-      let extremeBvhSkippedForModel = false;
+      let extremeBvhBudgetNoticeLogged = false;
       const asegurarDiamanteBvh = async () => {
         if (!vivo || !modelo || diamondBvhRuntime || diamondBvhRuntimePending) return;
-        // On extreme CAD meshes, building/refeshing the specialized gem BVH
-        // competes with the live viewport and can leave the UI unresponsive.
-        // Keep the established MeshPhysicalMaterial/scintillation fallback for
-        // this model tier; do not spend CPU/GPU time on an optional BVH pass.
-        if (runtimeBudget.tier === "extreme") {
-          if (!extremeBvhSkippedForModel) {
-            extremeBvhSkippedForModel = true;
-            console.warn("[AURUM][GEM BVH] Omitido para modelo CAD extremo; se conserva el material y shader de gemas de respaldo.", {
-              triangles: runtimeBudget.triangleCount,
-              tier: runtimeBudget.tier,
-            });
-          }
-          return;
+        // Dense CAD models still need the gemstone BVH. Do not disable it
+        // solely because the triangle budget is extreme; the runtime filters
+        // mixed-material meshes and applies BVH only to consistent gem meshes.
+        // Keep a diagnostic notice so performance can be monitored on dense assets.
+        if (runtimeBudget.tier === "extreme" && !extremeBvhBudgetNoticeLogged) {
+          extremeBvhBudgetNoticeLogged = true;
+          console.info("[AURUM][GEM BVH] Modelo CAD extremo: se intenta activar BVH para las gemas compatibles.", {
+            triangles: runtimeBudget.triangleCount,
+            tier: runtimeBudget.tier,
+          });
         }
         diamondBvhRuntimePending = true;
         const requestedEnvironmentUrl = gemEnvironmentUrl;
