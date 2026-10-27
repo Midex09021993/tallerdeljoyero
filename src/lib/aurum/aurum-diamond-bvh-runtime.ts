@@ -182,8 +182,10 @@ export async function createAurumDiamondBvhRuntime(options: {
         const sapphireProfile = isSapphire ? resolveAurumSapphireBvhProfile(materials[0]) : null;
         const prepared = prepareAurumDiamondBvhExperiment(packageApi, mesh, {
           ...(emeraldProfile ?? rubyProfile ?? sapphireProfile ?? {}),
-          // Diagnostic isolation: keep emerald BVH transmission at zero to test whether refraction causes the dark front-facet artifacts.
-          transmission: (isEmerald || isRuby || isSapphire) ? 0 : (emeraldProfile?.transmission ?? rubyProfile?.transmission ?? sapphireProfile?.transmission ?? (isImperialTopaz ? 0.88 : isParaibaTourmaline ? 0.91 : 0)),
+          // Controlled test: only the inclusions emerald gets a slight BVH transmission (0.08); other emeralds remain at zero to isolate the visual difference.
+          transmission: isEmerald
+            ? (activeGemId === "esmeralda_inclusiones" ? 0.08 : 0)
+            : (isRuby || isSapphire) ? 0 : (emeraldProfile?.transmission ?? rubyProfile?.transmission ?? sapphireProfile?.transmission ?? (isImperialTopaz ? 0.88 : isParaibaTourmaline ? 0.91 : 0)),
           environmentMap,
           camera: options.camera,
           // Keep small secondary diamonds on interactive quality initially;
