@@ -2576,11 +2576,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // Interaction path: cap raster resolution and gem transmission cost.
             // These changes happen only at interaction boundaries, never per frame.
             liveFastPathRef.current = true;
-            // Keep a 0.9 DPR floor during orbit so small diamond facets do not
-            // collapse as aggressively on dense CAD models. This changes only
-            // the raster sampling density; material settings for other gems/metals
-            // and the live transmission budget remain untouched.
-            const interactionDpr = 1.1;
+            // Dense CAD models must prioritize responsive interaction over raster
+            // resolution. Respect the geometry-derived runtime budget instead of
+            // forcing DPR 1.1, which can overwhelm the GPU for multi-million-triangle
+            // Rhino meshes. This affects only the live viewport, not export quality.
+            const interactionDpr = Math.min(
+              runtimeBudget.interactionPixelRatio,
+              runtimeBudget.pixelRatioCap,
+            );
       viewerLoopRef.current = viewerLoop;
             renderer.setPixelRatio(interactionDpr);
             composer?.setPixelRatio?.(interactionDpr);
@@ -2607,6 +2610,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             const idleTaaPass = idlePasses.find((pass) => pass?.constructor?.name === "TAARenderPass");
             const idleOutputPass = idlePasses.find((pass) => pass?.constructor?.name === "OutputPass");
             const idleTaaAvailable = Boolean(idleRenderPass && idleTaaPass && idleOutputPass);
+            const extremeGeometry = runtimeBudget.tier === "extreme";
             idlePasses.forEach((pass) => {
               // Keep the settled photographic chain explicit. Bokeh must run after
               // the beauty/TAA image and before OutputPass; it must not be enabled
@@ -2618,11 +2622,17 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 || (pass === dofPass && postRuntimeConfig.dof === true)
                 || pass === idleOutputPass;
             });
-            if (idleTaaAvailable) {
+            if (idleTaaAvailable && !extremeGeometry) {
               idleTaaPass.enabled = true;
               idleTaaPass.accumulate = true;
               idleTaaPass.sampleLevel = 4;
               idleTaaPass.accumulateIndex = -1;
+            } else if (extremeGeometry && idleTaaPass) {
+              // Temporal accumulation can stall the viewer after a heavy CAD model
+              // settles. Keep TAA available for export, but bypass it in this live
+              // preview tier so orbit/material controls remain usable.
+              idleTaaPass.enabled = false;
+              idleTaaPass.accumulate = false;
             }
             // With live DOF enabled, the settled viewer must render through EffectComposer.
             // Keep the direct renderer only when DOF is off; otherwise the BokehPass is bypassed.
@@ -2665,7 +2675,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               });
             }
             // DOF requires EffectComposer even if the TAA pass is unavailable.
-            liveFastPathRef.current = !(idleTaaAvailable || (postRuntimeConfig.dof === true && Boolean(settledDofPass)));
+            liveFastPathRef.current = extremeGeometry
+              ? true
+              : !(idleTaaAvailable || (postRuntimeConfig.dof === true && Boolean(settledDofPass)));
             renderer.shadowMap.enabled = false;
             renderer.shadowMap.needsUpdate = false;
             console.info("[AURUM][DIAMOND LIVE DIAGNOSTICS]", {
