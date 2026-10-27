@@ -1455,7 +1455,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           createInclusions:()=>{},
           applyGemEnvironment:aplicarEntornoGema,
           initialMetalId:"plata950_pulida",
-          initialGemId:"diamante_natural",
+          // Do not force all unassigned GLB gem layers to diamond. Saved per-layer
+          // assignments or explicit layer metadata decide the initial gem family.
           presentation:{metalEnvironmentScale:1,metalClearcoatScale:1},
         });
         modelo=interno;
