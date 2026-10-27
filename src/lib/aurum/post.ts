@@ -226,7 +226,6 @@ export async function createAurumPostPipeline(
     const ssrEnabled=!options.capture && !diagnosticDisableSSR && Boolean(config.ssr) && high && Boolean(ssrPass) && Boolean(ssrSavePass) && Boolean(ssrCompositePass);
     if(renderPass) renderPass.enabled=true;
     if(fxaaPass){
-      fxaaPass.enabled=false;
       const width=Math.max(1,renderer.domElement.width||renderer.domElement.clientWidth||1);
       const height=Math.max(1,renderer.domElement.height||renderer.domElement.clientHeight||1);
       fxaaPass.material.uniforms.resolution.value.set(1/width,1/height);
