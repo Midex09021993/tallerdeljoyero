@@ -232,11 +232,13 @@ export async function createAurumDiamondBvhRuntime(options: {
               // as well as high/final quality. The emerald BVH experiment keeps
               // transmission and dispersion at zero to isolate intersection artifacts.
               const emeraldBounces =
-                activeGemId === "esmeralda_1" || activeGemId === "esmeralda_2"
+                activeGemId === "esmeralda_1"
                   ? 5
-                  : activeGemId === "esmeralda_3" || activeGemId === "esmeralda_inclusiones"
-                    ? 3
-                    : 4;
+                  : activeGemId === "esmeralda_2"
+                    ? 4
+                    : activeGemId === "esmeralda_3" || activeGemId === "esmeralda_inclusiones"
+                      ? 3
+                      : 4;
               packageApi.setDiamondOptions(prepared.material, {
                 rayBounces: emeraldBounces,
               });
