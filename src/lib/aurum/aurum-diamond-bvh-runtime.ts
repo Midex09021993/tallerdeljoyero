@@ -9,6 +9,8 @@ type RecordEntry = {
   originalMaterial: THREE.Material | THREE.Material[];
   experimentalMaterial: THREE.Material;
   family: string;
+  gemId: string;
+  activeGemFamily: string;
   setQuality: (quality: "interactive" | "high" | "final") => void;
   dispose: () => void;
 };
@@ -89,13 +91,19 @@ export async function createAurumDiamondBvhRuntime(options: {
       if (!mesh.isMesh || !mesh.geometry || mesh.userData?.["aurumInternalInclusion"]) return;
       const existing = entries.get(mesh);
       const currentMaterial = mesh.material as any;
-      if (existing && currentMaterial === existing.experimentalMaterial) {
+      const activeGemId = String(mesh.userData?.["aurumActiveGemId"] ?? "").toLocaleLowerCase();
+      const activeGemFamily = String(mesh.userData?.["aurumActiveGemFamily"] ?? "").toLocaleLowerCase();
+      if (existing && currentMaterial === existing.experimentalMaterial
+        && existing.gemId === activeGemId
+        && existing.activeGemFamily === activeGemFamily) {
         found.add(mesh);
         return;
       }
-      // Restore only when this mesh still uses our experimental material. If the
-      // catalog assigned a new material, preserve that assignment and dispose the
-      // stale BVH material before classifying the mesh again.
+      // A mesh may keep the experimental shader after its catalog identity changes.
+      // Never trust that cached shader across gem selections: restore the prior
+      // physical material and dispose the old BVH before classifying the new state.
+      // If the caller changed metadata without assigning a matching new material,
+      // the family/material consistency check below safely leaves BVH disabled.
       if (existing) releaseEntry(mesh, true);
 
       const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
@@ -103,7 +111,6 @@ export async function createAurumDiamondBvhRuntime(options: {
       // material array (diamond + metal/other gem), because that would repaint
       // unrelated CAD groups as diamond. Leave those meshes on the proven
       // MeshPhysicalMaterial pipeline until per-group BVH support is available.
-      const activeGemId = String(mesh.userData?.["aurumActiveGemId"] ?? "").toLocaleLowerCase();
       const requestedFamilies = (options.targetFamilies ?? ["Diamante"]).map((family) => family.toLocaleLowerCase());
       // Keep all explicitly requested BVH families eligible at the same time.
       // The active material family below selects each mesh's optical profile;
@@ -184,6 +191,8 @@ export async function createAurumDiamondBvhRuntime(options: {
           originalMaterial: mesh.material,
           experimentalMaterial: prepared.material,
           family,
+          gemId: activeGemId,
+          activeGemFamily,
           setQuality: (quality) => {
             if (!packageApi.setDiamondOptions) return;
             if (family === "diamante") {
