@@ -96,7 +96,7 @@ const addEmeraldInclusions=(THREE: typeof import("three"),target: import("three"
     const material=new THREE.MeshPhysicalMaterial({
       color,metalness:0,roughness:.82,transmission:0,
       transparent:true,opacity:gemId==="esmeralda_inclusiones"?.18+rnd()*.055:(quality===2?.075:quality===3?.095:.11)+rnd()*.045,
-      depthTest:false,depthWrite:false,side:THREE.DoubleSide,envMapIntensity:.12
+      depthTest:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1,side:THREE.DoubleSide,envMapIntensity:.12
     });
     const cloud=new THREE.Mesh(geometry,material);
     cloud.position.set(
@@ -137,7 +137,7 @@ const addEmeraldInclusions=(THREE: typeof import("three"),target: import("three"
     const material=new THREE.MeshPhysicalMaterial({
       color:quality===1?0x8fae9c:quality===2?0x7f9c8a:0xaabbb0,
       metalness:0,roughness:.68,transmission:0,
-      transparent:true,opacity:branchOpacity+(rnd()*.025),depthTest:false,depthWrite:false,envMapIntensity:.18
+      transparent:true,opacity:branchOpacity+(rnd()*.025),depthTest:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1,envMapIntensity:.18
     });
     const mesh=new THREE.Mesh(geometry,material);
     mesh.userData={aurumInternalInclusion:true,aurumInclusionType:"emerald-jardin",aurumInclusionQuality:quality,aurumInclusionGemId:gemId};
@@ -152,7 +152,7 @@ const addEmeraldInclusions=(THREE: typeof import("three"),target: import("three"
     const pocketSize=Math.max(.00001,Math.min(safeSize.x,safeSize.y,safeSize.z))*(.035+rnd()*.025);
     const pocket=new THREE.Mesh(new THREE.SphereGeometry(pocketSize,12,8),new THREE.MeshPhysicalMaterial({
       color:quality===2?0x9bb5a7:0xc1d1c7,roughness:.3,transmission:0,
-      transparent:true,opacity:quality===2?.12:.17,depthTest:false,depthWrite:false,envMapIntensity:.2
+      transparent:true,opacity:quality===2?.12:.17,depthTest:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1,envMapIntensity:.2
     }));
     pocket.position.copy(base);pocket.scale.set(1.6,.62,.82);
     pocket.userData={aurumInternalInclusion:true,aurumInclusionType:"emerald-fluid",aurumInclusionQuality:quality,aurumInclusionGemId:gemId};
@@ -162,7 +162,7 @@ const addEmeraldInclusions=(THREE: typeof import("three"),target: import("three"
       const crystalSize=pocketSize*(.3+rnd()*.25);
       const crystal=new THREE.Mesh(new THREE.OctahedronGeometry(crystalSize,0),new THREE.MeshPhysicalMaterial({
         color:rnd()<.5?0x8e9a8b:0x46584b,roughness:.4,transmission:0,transparent:true,
-        opacity:.2,depthTest:false,depthWrite:false,envMapIntensity:.25
+        opacity:.2,depthTest:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1,envMapIntensity:.25
       }));
       crystal.position.copy(base).add(new THREE.Vector3(pocketSize*.25,pocketSize*.1,pocketSize*.12));
       crystal.rotation.set(rnd()*3,rnd()*3,rnd()*3);
