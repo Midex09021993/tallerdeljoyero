@@ -664,6 +664,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   useEffect(() => {
     let vivo = true;
     let cleanup = () => {};
+    // Keep deferred shader compilation cancellable when the viewer unmounts.
+    let shaderPrecompileIdleId: number | null = null;
+    let shaderPrecompileTimeoutId: ReturnType<typeof setTimeout> | null = null;
     const frame = 0;
     (async () => {
       const THREE = await import("three");
@@ -1518,6 +1521,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         // This avoids competing with the initial interactive render.
         const shaderTarget=modelo;
         const scheduleShaderPrecompile=()=>{
+          shaderPrecompileIdleId = null;
+          shaderPrecompileTimeoutId = null;
           if (!vivo || shaderTarget!==modelo || typeof (renderer as any).compileAsync !== "function") return;
           void (renderer as any).compileAsync(shaderTarget,camara).then(() => {
             if (perfEnabled) console.info("[AURUM][SHADERS] precompile complete");
@@ -1526,9 +1531,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           });
         };
         if (typeof window !== "undefined" && "requestIdleCallback" in window) {
-          (window as any).requestIdleCallback(scheduleShaderPrecompile,{timeout:1500});
+          shaderPrecompileIdleId = (window as any).requestIdleCallback(scheduleShaderPrecompile,{timeout:1500});
         } else {
-          globalThis.setTimeout(scheduleShaderPrecompile,250);
+          shaderPrecompileTimeoutId = globalThis.setTimeout(scheduleShaderPrecompile,250);
         }
         // SSR iJewel: only authored metal meshes participate in screen-space
         // reflection. Gemstones keep their own environment/refraction path.
@@ -2741,6 +2746,15 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       // Cleanup completo del Viewer: evita listeners, RAF y contextos WebGL acumulados
       // al entrar/salir de Aurum Render o cambiar de ruta.
       cleanup = () => {
+        // Cancel deferred work so it cannot retain the model/renderer after unmount.
+        if (shaderPrecompileIdleId !== null && typeof window !== "undefined" && "cancelIdleCallback" in window) {
+          (window as any).cancelIdleCallback(shaderPrecompileIdleId);
+          shaderPrecompileIdleId = null;
+        }
+        if (shaderPrecompileTimeoutId !== null) {
+          globalThis.clearTimeout(shaderPrecompileTimeoutId);
+          shaderPrecompileTimeoutId = null;
+        }
         // Release the loaded CAD model before disposing WebGL. A page reload
         // usually destroys the JS realm, but route changes/remounts reuse the
         // same tab and must explicitly release large geometry and material GPU
