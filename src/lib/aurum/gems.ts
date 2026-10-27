@@ -73,7 +73,8 @@ const addEmeraldInclusions=(THREE: typeof import("three"),target: import("three"
     Math.max(.0001,localSize.y*.68),
     Math.max(.0001,localSize.z*.68),
   );
-  const scale=Math.max(.0001,Math.min(safeSize.x,safeSize.y,safeSize.z));
+  // Emeralds are elongated faceted stones: using the thinnest axis here made jardin branches, crystals, and fluid pockets microscopic. Scale internal features against the longest local geometry axis instead.
+  const scale=Math.max(.0001,Math.max(safeSize.x,safeSize.y,safeSize.z));
   const quality=gemId==="esmeralda_1"?1:gemId==="esmeralda_2"?2:gemId==="esmeralda_3"?3:4;
   const branchCount=quality===1?Math.max(3,Math.round(4+strength*5)):quality===2?Math.max(7,Math.round(8+strength*9)):Math.max(12,Math.round(12+strength*13));
   const branchOpacity=quality===1?.10:quality===2?.16:.22;
