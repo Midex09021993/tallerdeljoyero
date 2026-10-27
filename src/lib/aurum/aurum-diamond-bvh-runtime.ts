@@ -151,7 +151,7 @@ export async function createAurumDiamondBvhRuntime(options: {
           camera: options.camera,
           // Keep small secondary diamonds on interactive quality initially;
           // higher bounce counts are reserved for explicit high/final capture.
-          quality: family === "diamante" ? (options.quality ?? "interactive") : (options.quality ?? "interactive"),
+          quality: options.quality ?? "interactive",
           environmentIntensity: emeraldProfile?.environmentIntensity ?? (isEmerald ? 1.5 : isRuby ? 1.0 : isSapphire ? 1.2 : isAmethyst ? 1.35 : isAquamarine ? 1.25 : isCitrine ? 1.2 : isBlueTopaz ? 1.25 : isImperialTopaz ? 1.22 : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 1.55 : 1.3) : isTanzanite ? 1.25 : isMoissanite ? 1.35 : 1.14),
           // Emerald test: disable dispersion entirely while isolating BVH speckles.
           // The green color is authored by the profile; chromatic splitting is not
