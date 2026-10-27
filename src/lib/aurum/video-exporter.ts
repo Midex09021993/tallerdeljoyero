@@ -85,7 +85,7 @@ export async function recordAurumCanvasVideo(
       const link = document.createElement("a");
       link.href = url;
       const extension = (recorder.mimeType || mimeType).toLowerCase().includes("mp4") ? "mp4" : "webm";
-      link.download = "aurum-giro-" + new Date().toISOString().replace(/[:.]/g, "-") + "." + extension;
+      link.download = "aurum-render-video-" + new Date().toISOString().replace(/[:.]/g, "-") + "." + extension;
       link.click();
       window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
       resolve();
