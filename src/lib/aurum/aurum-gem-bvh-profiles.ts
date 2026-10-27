@@ -100,3 +100,33 @@ export function resolveAurumRubyBvhProfile(
     transmission: 0,
   };
 }
+
+
+/**
+ * Sapphire BVH profile: retain the variant color authored by the gem library.
+ * Applies only to the experimental BVH shader; the original physical material
+ * remains available for fallback/restoration. Transmission stays disabled
+ * during this first color-parity pass to avoid introducing unvalidated refraction.
+ */
+export function resolveAurumSapphireBvhProfile(
+  material: THREE.Material,
+): AurumGemBvhProfile {
+  const physical = material as THREE.MeshPhysicalMaterial;
+  const data = material.userData ?? {};
+  const optical = data.aurumOpticalProfile ?? {};
+  const readFinite = (value: unknown, fallback: number): number => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+  };
+  const nativeColor = physical.color?.isColor ? physical.color.getHex() : undefined;
+  const profileColor = Number(optical.color);
+  return {
+    ior: THREE.MathUtils.clamp(readFinite(physical.ior, readFinite(optical.ior, 1.762)), 1, 2.8),
+    dispersion: THREE.MathUtils.clamp(readFinite(physical.dispersion, readFinite(optical.dispersion, 0.001)), 0, 0.02),
+    absorption: 1.2,
+    environmentIntensity: THREE.MathUtils.clamp(readFinite(physical.envMapIntensity, 1.0), 0.6, 1.4),
+    color: nativeColor ?? (Number.isFinite(profileColor) && profileColor >= 0 ? profileColor : 0x123c9a),
+    reflectivity: THREE.MathUtils.clamp(readFinite(physical.reflectivity, 0.38), 0.08, 0.5),
+    transmission: 0,
+  };
+}
