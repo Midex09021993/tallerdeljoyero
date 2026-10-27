@@ -40,10 +40,18 @@ export const setAurumInclusionsVisible = (target: import("three").Object3D, visi
 // Keep emerald jardin visible in the interactive preview while other procedural
 // inclusions remain hidden for performance. Emerald grades are defined by these
 // internal structures, so hiding them made all three look like the same clean gem.
-export const setAurumEmeraldInclusionsVisible = (target: import("three").Object3D, visible: boolean) => {
+export const setAurumEmeraldInclusionsVisible = (
+  target: import("three").Object3D,
+  visible: boolean,
+  gemId?: string,
+) => {
   target.traverse((child) => {
     const type = String(child.userData?.["aurumInclusionType"] ?? "");
-    if (child.userData?.["aurumInternalInclusion"] && type.startsWith("emerald-")) child.visible = visible;
+    const inclusionGemId = String(child.userData?.["aurumInclusionGemId"] ?? "");
+    const matchesGem = !gemId || inclusionGemId === gemId;
+    if (child.userData?.["aurumInternalInclusion"] && type.startsWith("emerald-") && matchesGem) {
+      child.visible = visible;
+    }
   });
 };
 
@@ -68,8 +76,8 @@ const addEmeraldInclusions=(THREE: typeof import("three"),target: import("three"
   const scale=Math.max(.0001,Math.min(safeSize.x,safeSize.y,safeSize.z));
   const quality=gemId==="esmeralda_1"?1:gemId==="esmeralda_2"?2:gemId==="esmeralda_3"?3:4;
   const branchCount=quality===1?Math.max(3,Math.round(4+strength*5)):quality===2?Math.max(7,Math.round(8+strength*9)):Math.max(12,Math.round(12+strength*13));
-  const branchOpacity=quality===1?.15:quality===2?.23:.34;
-  const tubeRadius=scale*(quality===1?.004:quality===2?.0048:.0062);
+  const branchOpacity=quality===1?.10:quality===2?.16:.22;
+  const tubeRadius=scale*(quality===1?.0025:quality===2?.0032:.0038);
 
   // Use a conservative envelope around the local geometry center so transformed
   // CAD meshes keep the jardin embedded within the gemstone.
@@ -77,24 +85,30 @@ const addEmeraldInclusions=(THREE: typeof import("three"),target: import("three"
     const points: import("three").Vector3[]=[];
     const start=new THREE.Vector3(center.x+(rnd()-.5)*safeSize.x*.45,center.y+(rnd()-.5)*safeSize.y*.45,center.z+(rnd()-.5)*safeSize.z*.45);
     const dir=new THREE.Vector3(rnd()-.5,rnd()-.5,rnd()-.5).normalize();
-    const length=scale*(quality===1?.12+rnd()*.13:quality===2?.16+rnd()*.20:.18+rnd()*.26);
+    // Keep the jardin finer than a surface scratch and safely inside a conservative
+    // local envelope. The actual stone boundary is irregular, so this is not a
+    // substitute for mesh clipping, but it prevents long needles from crossing facets.
+    const length=scale*(quality===1?.07+rnd()*.07:quality===2?.08+rnd()*.09:.09+rnd()*.10);
     const steps=4+Math.floor(rnd()*4);
     for(let j=0;j<steps;j++){
       const t=j/(steps-1);
       const p=start.clone().add(dir.clone().multiplyScalar(length*t));
-      p.x+=Math.sin(t*Math.PI*2+rnd()*2)*length*.10;
-      p.y+=Math.cos(t*Math.PI*1.7+rnd()*2)*length*.08;
+      p.x+=Math.sin(t*Math.PI*2+rnd()*2)*length*.06;
+      p.y+=Math.cos(t*Math.PI*1.7+rnd()*2)*length*.05;
+      p.x=Math.max(center.x-safeSize.x*.34,Math.min(center.x+safeSize.x*.34,p.x));
+      p.y=Math.max(center.y-safeSize.y*.34,Math.min(center.y+safeSize.y*.34,p.y));
+      p.z=Math.max(center.z-safeSize.z*.34,Math.min(center.z+safeSize.z*.34,p.z));
       points.push(p);
     }
     const curve=new THREE.CatmullRomCurve3(points);
     const geometry=new THREE.TubeGeometry(curve,Math.max(10,steps*3),tubeRadius*(.75+rnd()*.6),4,false);
     const material=new THREE.MeshPhysicalMaterial({
-      color:quality===1?0xa9c9b5:quality===2?0x91b29e:0xc1c9c2,
-      metalness:0,roughness:quality===1?.48:.36,transmission:quality===1?.08:.02,
-      transparent:true,opacity:branchOpacity+(rnd()*.035),depthWrite:false,envMapIntensity:quality===1?.45:.7
+      color:quality===1?0x8fae9c:quality===2?0x7f9c8a:0xaabbb0,
+      metalness:0,roughness:.62,transmission:.01,
+      transparent:true,opacity:branchOpacity+(rnd()*.025),depthWrite:false,envMapIntensity:.28
     });
     const mesh=new THREE.Mesh(geometry,material);
-    mesh.userData={aurumInternalInclusion:true,aurumInclusionType:"emerald-jardin",aurumInclusionQuality:quality};
+    mesh.userData={aurumInternalInclusion:true,aurumInclusionType:"emerald-jardin",aurumInclusionQuality:quality,aurumInclusionGemId:gemId};
     mesh.renderOrder=12;
     target.add(mesh);
 
@@ -108,7 +122,7 @@ const addEmeraldInclusions=(THREE: typeof import("three"),target: import("three"
       const crystalPoint=points[Math.floor(rnd()*points.length)];
       if(crystalPoint)crystal.position.copy(crystalPoint);
       crystal.rotation.set(rnd()*3,rnd()*3,rnd()*3);
-      crystal.userData={aurumInternalInclusion:true,aurumInclusionType:"emerald-crystal",aurumInclusionQuality:quality};
+      crystal.userData={aurumInternalInclusion:true,aurumInclusionType:"emerald-crystal",aurumInclusionQuality:quality,aurumInclusionGemId:gemId};
       crystal.renderOrder=13;
       target.add(crystal);
     }
@@ -124,14 +138,14 @@ const addEmeraldInclusions=(THREE: typeof import("three"),target: import("three"
       transparent:true,opacity:quality===2?.26: .38,depthWrite:false,envMapIntensity:.75
     }));
     pocket.position.copy(base);pocket.scale.set(1.6,.62,.82);
-    pocket.userData={aurumInternalInclusion:true,aurumInclusionType:"emerald-fluid",aurumInclusionQuality:quality};
+    pocket.userData={aurumInternalInclusion:true,aurumInclusionType:"emerald-fluid",aurumInclusionQuality:quality,aurumInclusionGemId:gemId};
     pocket.renderOrder=13;target.add(pocket);
 
     const bubble=new THREE.Mesh(new THREE.SphereGeometry(pocketSize*.24,10,8),new THREE.MeshBasicMaterial({
       color:0xf0fff5,transparent:true,opacity:quality===2?.32:.46,depthWrite:false
     }));
     bubble.position.copy(base).add(new THREE.Vector3(pocketSize*.42,pocketSize*.10,pocketSize*.08));
-    bubble.userData={aurumInternalInclusion:true,aurumInclusionType:"emerald-gas-bubble",aurumInclusionQuality:quality};
+    bubble.userData={aurumInternalInclusion:true,aurumInclusionType:"emerald-gas-bubble",aurumInclusionQuality:quality,aurumInclusionGemId:gemId};
     bubble.renderOrder=14;target.add(bubble);
 
     if(quality>=3){
@@ -140,7 +154,7 @@ const addEmeraldInclusions=(THREE: typeof import("three"),target: import("three"
       }));
       crystal.position.copy(base).add(new THREE.Vector3(-pocketSize*.3,-pocketSize*.05,0));
       crystal.rotation.set(rnd()*3,rnd()*3,rnd()*3);
-      crystal.userData={aurumInternalInclusion:true,aurumInclusionType:"emerald-fluid-crystal",aurumInclusionQuality:quality};
+      crystal.userData={aurumInternalInclusion:true,aurumInclusionType:"emerald-fluid-crystal",aurumInclusionQuality:quality,aurumInclusionGemId:gemId};
       crystal.renderOrder=14;target.add(crystal);
     }
   }
