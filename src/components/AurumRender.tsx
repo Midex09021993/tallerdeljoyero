@@ -2483,14 +2483,24 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           setUxSection("gemas");
         }
         setPanel("materiales");
-        limpiarResaltado();        if (obj.geometry) {
-          const edges = new THREE.EdgesGeometry(obj.geometry, 18);
-          resaltado = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({color:0xff8a5b,transparent:true,opacity:.95,depthTest:false}));
-          resaltado.renderOrder = 20;
-          resaltado.position.copy(obj.getWorldPosition(new THREE.Vector3()));
-          resaltado.quaternion.copy(obj.getWorldQuaternion(new THREE.Quaternion()));
-          resaltado.scale.copy(obj.getWorldScale(new THREE.Vector3()));
-          escena.add(resaltado);
+        limpiarResaltado();
+        // Building EdgesGeometry duplicates/inspects every triangle. On dense
+        // Rhino meshes this can freeze the main thread right after selection.
+        // Keep the precise edge highlight for modest meshes only; material
+        // assignment remains available for larger selected components.
+        if (obj.geometry) {
+          const positionCount = Number(obj.geometry.attributes?.position?.count ?? 0);
+          const indexCount = Number(obj.geometry.index?.count ?? positionCount);
+          const triangles = Math.floor(indexCount / 3);
+          if (triangles > 0 && triangles <= 30000) {
+            const edges = new THREE.EdgesGeometry(obj.geometry, 18);
+            resaltado = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({color:0xff8a5b,transparent:true,opacity:.95,depthTest:false}));
+            resaltado.renderOrder = 20;
+            resaltado.position.copy(obj.getWorldPosition(new THREE.Vector3()));
+            resaltado.quaternion.copy(obj.getWorldQuaternion(new THREE.Quaternion()));
+            resaltado.scale.copy(obj.getWorldScale(new THREE.Vector3()));
+            escena.add(resaltado);
+          }
         }
       };
       const seleccionarPorClick = (event: MouseEvent) => {
@@ -2503,7 +2513,20 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         const raycaster = new THREE.Raycaster();
         raycaster.setFromCamera(pointer, camara);
         const objetivos:any[] = [];
-        modelo.traverse((x:any) => { if (x.isMesh && x.visible && !x.userData?.aurumInternalInclusion) objetivos.push(x); });
+        const worldSphere = new THREE.Sphere();
+        // Broad-phase filtering: only raycast meshes whose existing bounding
+        // spheres intersect the click ray. This avoids triangle-level tests
+        // against every visible part of a dense CAD assembly.
+        modelo.updateMatrixWorld(true);
+        modelo.traverse((x:any) => {
+          if (!x.isMesh || !x.visible || x.userData?.aurumInternalInclusion) return;
+          const sphere = x.geometry?.boundingSphere;
+          if (sphere) {
+            worldSphere.copy(sphere).applyMatrix4(x.matrixWorld);
+            if (!raycaster.ray.intersectsSphere(worldSphere)) return;
+          }
+          objetivos.push(x);
+        });
         const impacto = raycaster.intersectObjects(objetivos, false)[0];
         if (impacto?.object?.uuid) {
           seleccionarMalla(impacto.object);
