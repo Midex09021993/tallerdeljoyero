@@ -871,7 +871,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               if (mode === "off") return [];
               if (mode === "emerald-only") return ["Esmeralda"];
               if (mode === "diamond-only") return ["Diamante"];
-              return ["Diamante", "Rubí", "Rubi", "Zafiro", "Sapphire", "Amatista", "Amethyst", "Aguamarina", "Aquamarine", "Citrino", "Citrine", "Topacio", "Topacio Azul", "topacio_azul", "Blue Topaz", "BlueTopaz", "Moissanita", "Moissanite", "Turmalina Paraíba", "Turmalina Paraiba", "turmalina_paraiba", "Paraiba Tourmaline", "Paraiba", "Tanzanita", "Tanzanite", ...(isEmeraldBvhEnabled() ? ["Esmeralda"] : [])];
+              return ["Diamante", "Rubí", "Rubi", "Esmeralda", "Zafiro", "Sapphire", "Amatista", "Amethyst", "Aguamarina", "Aquamarine", "Citrino", "Citrine", "Topacio", "Topacio Azul", "topacio_azul", "Blue Topaz", "BlueTopaz", "Moissanita", "Moissanite", "Turmalina Paraíba", "Turmalina Paraiba", "turmalina_paraiba", "Paraiba Tourmaline", "Paraiba", "Tanzanita", "Tanzanite"];
             })(),
             onError: (error) => console.warn("[AURUM][GEM BVH] Se conserva el shader anterior para esta malla:", error),
           });
