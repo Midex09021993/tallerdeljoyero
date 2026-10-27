@@ -80,9 +80,10 @@ const addEmeraldInclusions=(THREE: typeof import("three"),target: import("three"
   const cloudCount=quality===1?2:quality===2?4:quality===3?6:Math.max(7,Math.round(7+strength*4));
   const cloudColors=[0x244f3f,0x527a68,0x8da99a,0x183e31];
   for(let i=0;i<cloudCount;i++){
-    const radiusX=safeSize.x*(.045+rnd()*.065);
-    const radiusY=safeSize.y*(.045+rnd()*.065);
-    const radiusZ=safeSize.z*(.045+rnd()*.065);
+    const cloudScale=gemId==="esmeralda_inclusiones"?1.22:1;
+    const radiusX=safeSize.x*(.045+rnd()*.065)*cloudScale;
+    const radiusY=safeSize.y*(.045+rnd()*.065)*cloudScale;
+    const radiusZ=safeSize.z*(.045+rnd()*.065)*cloudScale;
     const geometry=new THREE.IcosahedronGeometry(1,2);
     const position=geometry.attributes.position;
     for(let v=0;v<position.count;v++){
@@ -94,7 +95,7 @@ const addEmeraldInclusions=(THREE: typeof import("three"),target: import("three"
     const color=cloudColors[Math.floor(rnd()*cloudColors.length)];
     const material=new THREE.MeshPhysicalMaterial({
       color,metalness:0,roughness:.82,transmission:0,
-      transparent:true,opacity:(quality===2?.075:quality===3?.095:.11)+rnd()*.045,
+      transparent:true,opacity:gemId==="esmeralda_inclusiones"?.18+rnd()*.055:(quality===2?.075:quality===3?.095:.11)+rnd()*.045,
       depthTest:false,depthWrite:false,side:THREE.DoubleSide,envMapIntensity:.12
     });
     const cloud=new THREE.Mesh(geometry,material);
