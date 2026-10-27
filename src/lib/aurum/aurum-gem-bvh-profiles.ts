@@ -130,3 +130,23 @@ export function resolveAurumSapphireBvhProfile(
     transmission: 0,
   };
 }
+
+
+/**
+ * Shared color resolver for catalog gem families without a dedicated optical
+ * profile yet. Preserve each assigned physical-material color and fall back to
+ * aurumOpticalProfile.color only if the physical color is unavailable.
+ * This does not change IOR, transmission, dispersion, or the original material.
+ */
+export function resolveAurumCatalogGemBvhColor(
+  material: THREE.Material,
+  fallbackColor: THREE.ColorRepresentation,
+): THREE.ColorRepresentation {
+  const physical = material as THREE.MeshPhysicalMaterial;
+  const optical = material.userData?.aurumOpticalProfile ?? {};
+  if (physical.color?.isColor) return physical.color.getHex();
+  const profileColor = Number(optical.color);
+  return Number.isFinite(profileColor) && profileColor >= 0
+    ? profileColor
+    : fallbackColor;
+}
