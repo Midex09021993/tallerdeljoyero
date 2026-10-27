@@ -145,6 +145,37 @@ export async function createAurumDiamondBvhRuntime(options: {
         return;
       }
 
+      // The upstream shader traces rays in the gem's local geometry space and
+      // explicitly documents non-uniform mesh scaling as unsupported. Detect it
+      // before swapping materials; preserve the proven material for only this mesh
+      // rather than allowing localized black ray-intersection artifacts.
+      mesh.updateWorldMatrix(true, false);
+      const worldMatrix = mesh.matrixWorld.elements;
+      const worldScale = [
+        Math.hypot(worldMatrix[0], worldMatrix[1], worldMatrix[2]),
+        Math.hypot(worldMatrix[4], worldMatrix[5], worldMatrix[6]),
+        Math.hypot(worldMatrix[8], worldMatrix[9], worldMatrix[10]),
+      ];
+      const maxWorldScale = Math.max(...worldScale, 1e-12);
+      const minWorldScale = Math.min(...worldScale);
+      if ((maxWorldScale - minWorldScale) / maxWorldScale > 1e-3) {
+        if (skippedTargetMeshes.length < 30) {
+          skippedTargetMeshes.push({
+            mesh: mesh.name || mesh.uuid,
+            materialFamilies: uniqueFamilies,
+            activeGemFamily,
+            reason: "escala-mundial-no-uniforme",
+          });
+        }
+        console.warn("[AURUM][GEM BVH] Malla omitida: el shader experimental no admite escala mundial no uniforme.", {
+          mesh: mesh.name || mesh.uuid,
+          family,
+          worldScale: worldScale.map((value) => Number(value.toFixed(5))),
+          fallback: "material original conservado",
+        });
+        return;
+      }
+
       const isEmerald = family === "esmeralda";
       const isRuby = family === "rubí" || family === "rubi";
       const isSapphire = family === "zafiro" || family === "sapphire";
