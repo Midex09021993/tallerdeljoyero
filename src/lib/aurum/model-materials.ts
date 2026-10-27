@@ -91,16 +91,18 @@ export function applyAurumInitialModelMaterials(
     }
 
     if(meta?.categoria==="gema"){
-      // Capture the original imported GLB/CAD material before applying the default diamond preview.
+      // Preserve the imported GLB/CAD material unless this layer has an explicit
+      // saved/catalog gem assignment. Never guess that every unassigned gem is a diamond.
       captureAurumSourceMaterials(x);
-      // First-load presentation: only the four MatrixGold gem layers receive
-      // the default diamond preview. "Other" layers never enter this branch.
       const layerKey=String(meta?.layerKey??"");
       const savedAssignments=model.userData?.aurumGemLayerAssignments??{};
       const assignedGemId=String(savedAssignments[layerKey]?.gemId??options.initialGemByLayer?.[layerKey]??meta?.gemId??"");
-      const initialGemId=assignedGemId||options.initialGemId||"diamante_natural";
-      const gem=options.gems.find((g:any)=>g.id===initialGemId)??options.gems.find((g:any)=>g.id==="diamante_natural")??options.gems[0];
-      if(!gem) return;
+      const initialGemId=assignedGemId || String(options.initialGemId??"");
+      const gem=initialGemId ? options.gems.find((g:any)=>g.id===initialGemId) : undefined;
+      if(!gem) {
+        x.userData={...(x.userData??{}),aurumActiveGemId:"",aurumActiveGemFamily:""};
+        return;
+      }
       const m=new THREE.MeshPhysicalMaterial();
       const box=new THREE.Box3().setFromObject(x);
       const size=box.getSize(new THREE.Vector3());
@@ -121,8 +123,14 @@ export function applyAurumInitialModelMaterials(
       x.material=m;
       x.userData={
         ...(x.userData??{}),
-        aurumActiveGemId:String(gem.id??"diamante_natural"),
-        aurumInitialLayerGemId:String(gem.id??"diamante_natural"),
+        aurumActiveGemId:String(gem.id??""),
+        aurumActiveGemFamily:String(gem.familia??"").toLocaleLowerCase(),
+        aurumInitialLayerGemId:String(gem.id??""),
+      };
+      m.userData={
+        ...(m.userData??{}),
+        aurumGemFamily:String(gem.familia??"").toLocaleLowerCase(),
+        aurumActiveGemId:String(gem.id??""),
       };
       // Procedural inclusions are deferred to CAPTURE. Creating dozens of
       // transparent meshes during every model load is unnecessary for LIVE.
