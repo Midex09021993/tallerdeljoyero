@@ -2563,7 +2563,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         { node:nodo, camera:camara, renderer, composer, ssaoPass, controls:controles },
         () => {
           diamondBvhRuntime?.update();
-          updateTemporal?.(modelo ? calculateAurumFocalDepth(camara, controles, modelo) : undefined);
+          // Do not scan every mesh or raycast the product on every animation
+          // frame. Focus is calculated when DOF is enabled and for final capture;
+          // continuous per-frame geometry analysis freezes dense CAD assemblies.
           // Keep the direct renderer during orbit, but use the photographic
           // EffectComposer pipeline once settled so configured TAA/SSR/SSAO
           // actually reach the interactive preview.
