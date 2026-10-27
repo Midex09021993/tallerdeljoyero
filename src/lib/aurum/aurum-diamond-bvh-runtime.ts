@@ -302,7 +302,9 @@ export async function createAurumDiamondBvhRuntime(options: {
         triangleCount,
         diamondMeshes,
         diamondTriangleCount,
-        familyCounts: diagnosticFamilyCounts,
+        // Report all model material families seen during refresh, not only
+        // entries that successfully received a BVH material.
+        familyCounts: { ...familyCounts },
         skippedTargetMeshes: [...skippedTargetMeshes],
         overlappingGemPairs,
         enabled: entries.size > 0,
