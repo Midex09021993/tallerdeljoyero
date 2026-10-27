@@ -2632,11 +2632,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         {
           progressiveFrames: 32,
           onStart: () => {
-            // Interaction path: cap raster resolution and gem transmission cost.
-            // These changes happen only at interaction boundaries, never per frame.
-            // Lightweight interaction chain: RenderPass -> FXAA -> OutputPass.
-            // FXAA smooths high-contrast diamond facet edges without TAA accumulation.
-            liveFastPathRef.current = false;
+            // Interaction path: direct renderer, no FXAA post-process.
+            // Keep the adaptive raster/transmission budgets; isolate resolution
+            // changes from post-processing so dense CAD interaction stays light.
+            liveFastPathRef.current = true;
             const interactionDpr = Math.min(
               runtimeBudget.interactionPixelRatio,
               runtimeBudget.pixelRatioCap,
@@ -2645,15 +2644,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             renderer.setPixelRatio(interactionDpr);
             composer?.setPixelRatio?.(interactionDpr);
             const interactionPasses = ((composer as any)?.passes ?? []) as any[];
-            interactionPasses.forEach((pass) => {
-              pass.enabled = pass === renderPass || pass === fxaaPass || pass === outputPass;
-            });
-            if (fxaaPass?.material?.uniforms?.resolution?.value) {
-              const w = Math.max(1, renderer.domElement.width);
-              const h = Math.max(1, renderer.domElement.height);
-              fxaaPass.material.uniforms.resolution.value.set(1 / w, 1 / h);
-            }
-            if (fxaaPass) fxaaPass.enabled = true;
+            interactionPasses.forEach((pass) => { pass.enabled = false; });
+            if (fxaaPass) fxaaPass.enabled = false;
             liveTransmissionScaleRef.current = runtimeBudget.interactionTransmissionScale;
             (renderer as any).transmissionResolutionScale = runtimeBudget.interactionTransmissionScale;
             aplicarPerfilLive();
