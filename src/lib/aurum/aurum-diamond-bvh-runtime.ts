@@ -235,7 +235,7 @@ export async function createAurumDiamondBvhRuntime(options: {
                 activeGemId === "esmeralda_1"
                   ? 5
                   : activeGemId === "esmeralda_2"
-                    ? 4
+                    ? 2
                     : activeGemId === "esmeralda_3" || activeGemId === "esmeralda_inclusiones"
                       ? 3
                       : 4;
