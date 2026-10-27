@@ -118,7 +118,6 @@ export async function createAurumDiamondBvhRuntime(options: {
       const targetFamilies = requestedFamilies;
       // Layer assignment is the source of truth when a single material lacks
       // family metadata. Never infer a family from a neighboring stone.
-      const activeGemFamily = String(mesh.userData?.["aurumActiveGemFamily"] ?? "").toLocaleLowerCase();
       const rawMaterialFamilies = materials.map((material) => getGemFamily(material));
       const canUseLayerFamilyFallback = materials.length === 1 && !rawMaterialFamilies[0] && !!activeGemFamily;
       const materialFamilies = rawMaterialFamilies.map((family) => family || (canUseLayerFamilyFallback ? activeGemFamily : ""));
