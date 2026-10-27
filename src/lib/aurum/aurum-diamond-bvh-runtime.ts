@@ -234,6 +234,10 @@ export async function createAurumDiamondBvhRuntime(options: {
           },
           dispose: prepared.dispose,
         });
+        // Apply the catalog-specific quality immediately when the BVH material is
+        // created. Without this call, setQuality only runs during later quality
+        // transitions, leaving emeralds at the shader package's generic default.
+        entries.get(mesh)?.setQuality(options.quality ?? "interactive");
         mesh.material = prepared.material;
         found.add(mesh);
         if (isEmerald && targetFamilies.includes("esmeralda")) {
