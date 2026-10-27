@@ -105,7 +105,7 @@ const addEmeraldInclusions=(THREE: typeof import("three"),target: import("three"
     const material=new THREE.MeshPhysicalMaterial({
       color:quality===1?0x8fae9c:quality===2?0x7f9c8a:0xaabbb0,
       metalness:0,roughness:.62,transmission:.01,
-      transparent:true,opacity:branchOpacity+(rnd()*.025),depthWrite:false,envMapIntensity:.28
+      transparent:true,opacity:branchOpacity+(rnd()*.025),depthTest:false,depthWrite:false,envMapIntensity:.28
     });
     const mesh=new THREE.Mesh(geometry,material);
     mesh.userData={aurumInternalInclusion:true,aurumInclusionType:"emerald-jardin",aurumInclusionQuality:quality,aurumInclusionGemId:gemId};
@@ -117,7 +117,7 @@ const addEmeraldInclusions=(THREE: typeof import("three"),target: import("three"
       const crystalColor=rnd()<.6?0x8e9a8b:0x46584b;
       const crystal=new THREE.Mesh(new THREE.OctahedronGeometry(crystalSize,0),new THREE.MeshPhysicalMaterial({
         color:crystalColor,roughness:.28,transmission:.04,transparent:true,
-        opacity:quality===1?.18:quality===2?.32:.46,depthWrite:false,envMapIntensity:.7
+        opacity:quality===1?.18:quality===2?.32:.46,depthTest:false,depthWrite:false,envMapIntensity:.7
       }));
       const crystalPoint=points[Math.floor(rnd()*points.length)];
       if(crystalPoint)crystal.position.copy(crystalPoint);
@@ -135,14 +135,14 @@ const addEmeraldInclusions=(THREE: typeof import("three"),target: import("three"
     const pocketSize=scale*(quality===2?.012+rnd()*.010:.016+rnd()*.018);
     const pocket=new THREE.Mesh(new THREE.SphereGeometry(pocketSize,12,8),new THREE.MeshPhysicalMaterial({
       color:quality===2?0x9bb5a7:0xc1d1c7,roughness:.12,transmission:.22,
-      transparent:true,opacity:quality===2?.26: .38,depthWrite:false,envMapIntensity:.75
+      transparent:true,opacity:quality===2?.26: .38,depthTest:false,depthWrite:false,envMapIntensity:.75
     }));
     pocket.position.copy(base);pocket.scale.set(1.6,.62,.82);
     pocket.userData={aurumInternalInclusion:true,aurumInclusionType:"emerald-fluid",aurumInclusionQuality:quality,aurumInclusionGemId:gemId};
     pocket.renderOrder=13;target.add(pocket);
 
     const bubble=new THREE.Mesh(new THREE.SphereGeometry(pocketSize*.24,10,8),new THREE.MeshBasicMaterial({
-      color:0xf0fff5,transparent:true,opacity:quality===2?.32:.46,depthWrite:false
+      color:0xf0fff5,transparent:true,opacity:quality===2?.32:.46,depthTest:false,depthWrite:false
     }));
     bubble.position.copy(base).add(new THREE.Vector3(pocketSize*.42,pocketSize*.10,pocketSize*.08));
     bubble.userData={aurumInternalInclusion:true,aurumInclusionType:"emerald-gas-bubble",aurumInclusionQuality:quality,aurumInclusionGemId:gemId};
