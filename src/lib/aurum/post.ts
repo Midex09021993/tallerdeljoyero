@@ -29,6 +29,7 @@ export async function createAurumPostPipeline(
   let vignettePass:any=null;
   let dofPass:any=null;
   let outputPass:any=null;
+  let fxaaPass:any=null;
   let gradingPass:any=null;
 
   try {
@@ -169,6 +170,12 @@ export async function createAurumPostPipeline(
     });
     composer.addPass(vignettePass);
 
+    const { FXAAShader }=await import("three/examples/jsm/shaders/FXAAShader.js");
+    const { ShaderPass: FXAAShaderPass }=await import("three/examples/jsm/postprocessing/ShaderPass.js");
+    fxaaPass=new FXAAShaderPass(FXAAShader);
+    fxaaPass.enabled=false;
+    composer.addPass(fxaaPass);
+
     const { OutputPass }=await import("three/examples/jsm/postprocessing/OutputPass.js");
     outputPass=new OutputPass();
     composer.addPass(outputPass);
@@ -218,6 +225,12 @@ export async function createAurumPostPipeline(
     const taaSampleLevel=Math.max(0,Math.min(5,Math.ceil(Math.log2(progressiveFrames))));
     const ssrEnabled=!options.capture && !diagnosticDisableSSR && Boolean(config.ssr) && high && Boolean(ssrPass) && Boolean(ssrSavePass) && Boolean(ssrCompositePass);
     if(renderPass) renderPass.enabled=true;
+    if(fxaaPass){
+      fxaaPass.enabled=false;
+      const width=Math.max(1,renderer.domElement.width||renderer.domElement.clientWidth||1);
+      const height=Math.max(1,renderer.domElement.height||renderer.domElement.clientHeight||1);
+      fxaaPass.material.uniforms.resolution.value.set(1/width,1/height);
+    }
     if(taaPass){
       taaPass.enabled=taaEnabled;
       taaPass.accumulate=taaEnabled;
@@ -425,5 +438,5 @@ export async function createAurumPostPipeline(
     if(!ssrPass)return;
     ssrPass.selects=Array.isArray(objects)?objects:[];
   };
-  return {composer,renderPass,ssaoPass,ssrPass,setSSRSelects,applyQuality,updateTemporal,dofPass,taaPass};
+  return {composer,renderPass,ssaoPass,ssrPass,setSSRSelects,applyQuality,updateTemporal,dofPass,taaPass,fxaaPass,outputPass};
 }
