@@ -117,8 +117,8 @@ export function applyAurumCameraView(
     // Perspectiva conserva la distancia radial de Frontal y cambia solo
     // la dirección de observación. Antes se sumaban desplazamientos en X/Y/Z
     // sin normalizar, aumentando la distancia real y reduciendo la joya.
-    // Dirección 3/4 más legible: aumenta la rotación lateral y la elevación para mostrar la montura y la corona, sin alejar la cámara.
-    const perspectiveDirection = new THREE.Vector3(0.62, profile.vertical * 1.15, 1).normalize();
+    // Perspectiva objetivo: más frontal y con elevación suficiente para ver la corona y el interior del aro; conserva la distancia radial.
+    const perspectiveDirection = new THREE.Vector3(0.42, Math.max(profile.vertical * 1.65, 0.62), 1).normalize();
     camera.position.copy(target).addScaledVector(perspectiveDirection, distance);
   }
   camera.lookAt(target);
