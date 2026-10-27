@@ -97,14 +97,10 @@ export async function createAurumDiamondBvhRuntime(options: {
       // MeshPhysicalMaterial pipeline until per-group BVH support is available.
       const activeGemId = String(mesh.userData?.["aurumActiveGemId"] ?? "").toLocaleLowerCase();
       const requestedFamilies = (options.targetFamilies ?? ["Diamante"]).map((family) => family.toLocaleLowerCase());
-      // Colored emeralds stay on the native MeshPhysicalMaterial pipeline:
-      // the diamond-oriented BVH shader produces overly uniform, artificial facets
-      // on this cut. While the opt-in emerald experiment is requested, also isolate
-      // secondary diamonds from BVH to prevent the confirmed moving-pixel artifact.
-      // This remains opt-in and does not alter the default production target list.
-      const targetFamilies = requestedFamilies.includes("esmeralda")
-        ? requestedFamilies.filter((family) => family !== "diamante" && family !== "esmeralda")
-        : requestedFamilies;
+      // Keep all explicitly requested BVH families eligible at the same time.
+      // The active material family below selects each mesh's optical profile;
+      // mixed-family material arrays remain excluded to protect CAD groups.
+      const targetFamilies = requestedFamilies;
       const materialFamilies = materials.map((material) => getGemFamily(material));
       const uniqueFamilies = [...new Set(materialFamilies)];
       const family = uniqueFamilies.length === 1 ? uniqueFamilies[0] : "";
@@ -154,6 +150,9 @@ export async function createAurumDiamondBvhRuntime(options: {
           environmentMap,
           camera: options.camera,
           quality: family === "diamante" ? "high" : (options.quality ?? "interactive"),
+          // Bound the BVH shader's default [2,2,2] boost for the two families
+          // under investigation, while preserving diamond fire and emerald hue.
+          rgbBoost: isEmerald ? [0.85, 1.15, 0.90] : family === "diamante" ? [1.2, 1.2, 1.2] : undefined,
           environmentIntensity: emeraldProfile?.environmentIntensity ?? (isEmerald ? 1.5 : isRuby ? 1.0 : isSapphire ? 1.2 : isAmethyst ? 1.35 : isAquamarine ? 1.25 : isCitrine ? 1.2 : isBlueTopaz ? 1.25 : isImperialTopaz ? 1.22 : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 1.55 : 1.3) : isTanzanite ? 1.25 : isMoissanite ? 1.35 : 1.14),
           // Emerald test: disable dispersion entirely while isolating BVH speckles.
           // The green color is authored by the profile; chromatic splitting is not
