@@ -300,6 +300,38 @@ export async function parseAurumInput(file: File, ext: string, fallbackMaterial:
     // Patch the conversion boundary: match each generated instance group to its
     // source InstanceReference transform and carry the reference layer onto the
     // cloned meshes before the GLB metadata snapshot is taken.
+    // Break down Rhino's main-thread geometry conversion by source object.
+    // The upstream loader parses BufferGeometry JSON synchronously inside _createObject.
+    const createObject = loader._createObject.bind(loader);
+    let objectBuildCalls = 0;
+    let objectBuildMs = 0;
+    loader._createObject = (data:any, material:any) => {
+      const started = performance.now();
+      const result = createObject(data, material);
+      const elapsed = performance.now() - started;
+      objectBuildCalls++;
+      objectBuildMs += elapsed;
+      if (loadAuditEnabled && elapsed >= 25) {
+        const geometry = data?.geometry;
+        const attributes = geometry?.data?.attributes ?? geometry?.attributes ?? {};
+        const geometrySummary = Object.fromEntries(
+          Object.entries(attributes).map(([key,value]:[string,any]) => [
+            key,
+            { itemSize: value?.itemSize ?? null, count: Array.isArray(value?.array) ? value.array.length : null, componentType: value?.type ?? null },
+          ])
+        );
+        console.info("[AURUM][3DM AUDIT]", {
+          file: file.name,
+          stage: "rhino-create-object",
+          objectType: data?.objectType ?? null,
+          objectName: data?.attributes?.name ?? null,
+          stageMs: Number(elapsed.toFixed(1)),
+          cumulativeObjectMs: Number(objectBuildMs.toFixed(1)),
+          geometryAttributes: geometrySummary,
+        });
+      }
+      return result;
+    };
     const createGeometry = loader._createGeometry.bind(loader);
     let geometryBuildCalls = 0;
     let geometryBuildMs = 0;
@@ -415,6 +447,8 @@ export async function parseAurumInput(file: File, ext: string, fallbackMaterial:
       auditStep("rhino-parse-complete", {
         geometryBuildCalls,
         geometryBuildMs: Number(geometryBuildMs.toFixed(1)),
+        objectBuildCalls,
+        objectBuildMs: Number(objectBuildMs.toFixed(1)),
         workerLimit,
       });
       resolve(model);
