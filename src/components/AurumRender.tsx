@@ -822,6 +822,15 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       let modelo:any = null;
       let diamondBvhRuntime: AurumDiamondBvhRuntime | null = null;
       let diamondBvhRuntimePending = false;
+      // Diagnostic modes isolate the source of BVH speckles without changing
+      // geometry or the production defaults:
+      // ?aurumBvhTest=off | emerald-only | diamond-only
+      const getBvhTestMode = () => typeof window !== "undefined"
+        ? new URLSearchParams(window.location.search).get("aurumBvhTest")
+        : null;
+      const isEmeraldBvhEnabled = () => typeof window !== "undefined"
+        && (new URLSearchParams(window.location.search).get("aurumEmeraldBvh") === "1"
+          || getBvhTestMode() === "emerald-only");
       const asegurarDiamanteBvh = async () => {
         if (!vivo || !modelo || diamondBvhRuntime || diamondBvhRuntimePending) return;
         diamondBvhRuntimePending = true;
@@ -835,10 +844,16 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             url: requestedEnvironmentUrl,
             camera: camara,
             quality: "interactive",
-            // Emerald BVH is an opt-in prototype until its optical behavior is visually validated.
-            // Add ?aurumEmeraldBvh=1 to test the emerald-specific profile without changing the default viewer.
+            // Diagnostic modes let us isolate the emerald and diamond BVH paths.
+            // With no test parameter, preserve the existing default family selection.
             // Mixed-material meshes remain protected by the runtime.
-            targetFamilies: ["Diamante", "Rubí", "Rubi", "Zafiro", "Sapphire", "Amatista", "Amethyst", "Aguamarina", "Aquamarine", "Citrino", "Citrine", "Topacio", "Topacio Azul", "topacio_azul", "Blue Topaz", "BlueTopaz", "Moissanita", "Moissanite", "Turmalina Paraíba", "Turmalina Paraiba", "turmalina_paraiba", "Paraiba Tourmaline", "Paraiba", "Tanzanita", "Tanzanite", ...(typeof window !== "undefined" && new URLSearchParams(window.location.search).get("aurumEmeraldBvh") === "1" ? ["Esmeralda"] : [])],
+            targetFamilies: (() => {
+              const mode = getBvhTestMode();
+              if (mode === "off") return [];
+              if (mode === "emerald-only") return ["Esmeralda"];
+              if (mode === "diamond-only") return ["Diamante"];
+              return ["Diamante", "Rubí", "Rubi", "Zafiro", "Sapphire", "Amatista", "Amethyst", "Aguamarina", "Aquamarine", "Citrino", "Citrine", "Topacio", "Topacio Azul", "topacio_azul", "Blue Topaz", "BlueTopaz", "Moissanita", "Moissanite", "Turmalina Paraíba", "Turmalina Paraiba", "turmalina_paraiba", "Paraiba Tourmaline", "Paraiba", "Tanzanita", "Tanzanite", ...(isEmeraldBvhEnabled() ? ["Esmeralda"] : [])];
+            })(),
             onError: (error) => console.warn("[AURUM][GEM BVH] Se conserva el shader anterior para esta malla:", error),
           });
           if (!vivo || requestedEnvironmentUrl !== gemEnvironmentUrl) {
@@ -1123,8 +1138,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           return;
         }
         const selectedGemFamily = String(g?.familia ?? "").toLocaleLowerCase();
-        const emeraldBvhOptIn = typeof window !== "undefined"
-          && new URLSearchParams(window.location.search).get("aurumEmeraldBvh") === "1";
+        const emeraldBvhOptIn = isEmeraldBvhEnabled();
         if (selectedGemFamily === "diamante" || (selectedGemFamily === "esmeralda" && emeraldBvhOptIn)) {
           // Re-run refresh AFTER the new catalog material is assigned. Without
           // this, an emerald selected after model load keeps its native material.
