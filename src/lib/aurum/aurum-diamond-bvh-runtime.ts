@@ -149,15 +149,14 @@ export async function createAurumDiamondBvhRuntime(options: {
           transmission: emeraldProfile?.transmission ?? (isImperialTopaz ? 0.88 : isParaibaTourmaline ? 0.91 : 0),
           environmentMap,
           camera: options.camera,
-          quality: family === "diamante" ? "high" : (options.quality ?? "interactive"),
-          // Bound the BVH shader's default [2,2,2] boost for the two families
-          // under investigation, while preserving diamond fire and emerald hue.
-          rgbBoost: isEmerald ? [0.85, 1.15, 0.90] : family === "diamante" ? [1.2, 1.2, 1.2] : undefined,
+          // Keep small secondary diamonds on interactive quality initially;
+          // higher bounce counts are reserved for explicit high/final capture.
+          quality: family === "diamante" ? (options.quality ?? "interactive") : (options.quality ?? "interactive"),
           environmentIntensity: emeraldProfile?.environmentIntensity ?? (isEmerald ? 1.5 : isRuby ? 1.0 : isSapphire ? 1.2 : isAmethyst ? 1.35 : isAquamarine ? 1.25 : isCitrine ? 1.2 : isBlueTopaz ? 1.25 : isImperialTopaz ? 1.22 : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 1.55 : 1.3) : isTanzanite ? 1.25 : isMoissanite ? 1.35 : 1.14),
           // Emerald test: disable dispersion entirely while isolating BVH speckles.
           // The green color is authored by the profile; chromatic splitting is not
           // required for emerald and may amplify unstable ray/intersection artifacts.
-          dispersion: isEmerald ? 0 : (emeraldProfile?.dispersion ?? (isRuby ? 0.001 : isSapphire ? 0.001 : isAmethyst ? 0.0002 : isAquamarine ? 0.0002 : isCitrine ? 0.0002 : isBlueTopaz ? 0.0002 : isImperialTopaz ? 0.0002 : isParaibaTourmaline ? 0.0002 : isTanzanite ? 0.0002 : isMoissanite ? 0.009 : 0.01)),
+          dispersion: isEmerald ? 0 : (emeraldProfile?.dispersion ?? (family === "diamante" ? 0.004 : isRuby ? 0.001 : isSapphire ? 0.001 : isAmethyst ? 0.0002 : isAquamarine ? 0.0002 : isCitrine ? 0.0002 : isBlueTopaz ? 0.0002 : isImperialTopaz ? 0.0002 : isParaibaTourmaline ? 0.0002 : isTanzanite ? 0.0002 : isMoissanite ? 0.009 : 0.01)),
           ior: emeraldProfile?.ior ?? (isEmerald ? 1.58 : isRuby ? 1.762 : isSapphire ? 1.762 : isAmethyst ? 1.55 : isAquamarine ? 1.577 : isCitrine ? 1.54 : isBlueTopaz ? 1.63 : isImperialTopaz ? 1.63 : isParaibaTourmaline ? 1.64 : isTanzanite ? 1.695 : isMoissanite ? 2.65 : 2.6),
           absorption: emeraldProfile?.absorption ?? (isEmerald ? 0.45 : isRuby ? 1.15 : isSapphire ? 0.85 : isAmethyst ? 0.62 : isAquamarine ? 0.45 : isCitrine ? 0.5 : isBlueTopaz ? 0.42 : isImperialTopaz ? 0.48 : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 0.22 : 0.38) : isTanzanite ? 0.42 : isMoissanite ? 0.18 : 1),
           color: emeraldProfile?.color ?? (isEmerald ? 0x05683d : isRuby ? 0x9b001b : isSapphire ? 0x123c9a : isAmethyst ? 0x7650b9 : isAquamarine ? 0x72c9df : isCitrine ? 0xd49a22 : isBlueTopaz ? 0x65b9e8 : isImperialTopaz ? (activeGemId.includes("topacio_imperial_minas") ? 0xd88943 : 0xd79b4b) : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 0x00cfc3 : activeGemId.includes("mozambique") ? 0x27d4cf : activeGemId.includes("etiopia") ? 0x3ad9d1 : 0x19d6d0) : isTanzanite ? 0x5140a8 : isMoissanite ? 0xf4f8ff : 0xffffff),
@@ -173,7 +172,9 @@ export async function createAurumDiamondBvhRuntime(options: {
             if (family === "diamante") {
               // Preserve the existing diamond quality policy unchanged.
               packageApi.setDiamondOptions(prepared.material, {
-                rayBounces: quality === "final" ? 8 : 4,
+                // 3 interactive bounces are the upstream package's recommended
+                // starting point; retain 4 for high and 8 for explicit final stills.
+                rayBounces: quality === "final" ? 8 : quality === "high" ? 4 : 3,
               });
               return;
             }
