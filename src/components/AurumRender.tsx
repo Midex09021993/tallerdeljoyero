@@ -1231,35 +1231,42 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           return;
         }
         applyAurumMaterialToModel(modelo, parteActiva, m, material, aplicarTodos);
-        const materialPostApplyAudit:any[]=[];
-        modelo.traverse((x:any)=>{
-          if(!x.isMesh||!x.material)return;
-          const list=Array.isArray(x.material)?x.material:[x.material];
-          for(const mat of list){
-            if(!mat?.userData?.aurumMetalRenderProfile)continue;
-            materialPostApplyAudit.push({
-              mesh:x.name||x.uuid,
-              material:mat.name||null,
-              profileId:mat.userData?.aurumIJEWELMetalReference?.materialId??null,
-              referenceSource:mat.userData?.aurumIJEWELMetalReference?.sourceRootPath??null,
-              baseEnvironmentIntensity:mat.userData?.aurumMetalBaseEnvMapIntensity??null,
-              finalEnvironmentIntensity:mat.envMapIntensity??null,
-              roughness:mat.roughness??null,
-              metalness:mat.metalness??null,
-              clearcoat:mat.clearcoat??null,
-              clearcoatRoughness:mat.clearcoatRoughness??null,
-              calibrationMode:mat.userData?.aurumMetalCalibrationMode??"unknown",
-              effectiveOptics:mat.userData?.aurumMetalEffectiveOptics??null,
-              colorHex:mat.color?.getHexString?.()??null,
-            });
-          }
-        });
-        console.info("[AURUM][METAL POST-APPLY STATE]",{
-          requestedProfile:String(m?.id??""),
-          label:String(m?.nombre??""),
-          materialCount:materialPostApplyAudit.length,
-          materials:materialPostApplyAudit.slice(0,12),
-        });
+        // Full-model material audit is intentionally opt-in. Traversing every
+        // mesh and building diagnostic objects after each selection blocks dense
+        // CAD models even when only one piece's material changed.
+        const materialAuditEnabled = typeof window !== "undefined"
+          && new URLSearchParams(window.location.search).get("aurumMaterialAudit") === "1";
+        if (materialAuditEnabled) {
+          const materialPostApplyAudit:any[]=[];
+          modelo.traverse((x:any)=>{
+            if(!x.isMesh||!x.material)return;
+            const list=Array.isArray(x.material)?x.material:[x.material];
+            for(const mat of list){
+              if(!mat?.userData?.aurumMetalRenderProfile)continue;
+              materialPostApplyAudit.push({
+                mesh:x.name||x.uuid,
+                material:mat.name||null,
+                profileId:mat.userData?.aurumIJEWELMetalReference?.materialId??null,
+                referenceSource:mat.userData?.aurumIJEWELMetalReference?.sourceRootPath??null,
+                baseEnvironmentIntensity:mat.userData?.aurumMetalBaseEnvMapIntensity??null,
+                finalEnvironmentIntensity:mat.envMapIntensity??null,
+                roughness:mat.roughness??null,
+                metalness:mat.metalness??null,
+                clearcoat:mat.clearcoat??null,
+                clearcoatRoughness:mat.clearcoatRoughness??null,
+                calibrationMode:mat.userData?.aurumMetalCalibrationMode??"unknown",
+                effectiveOptics:mat.userData?.aurumMetalEffectiveOptics??null,
+                colorHex:mat.color?.getHexString?.()??null,
+              });
+            }
+          });
+          console.info("[AURUM][METAL POST-APPLY STATE]",{
+            requestedProfile:String(m?.id??""),
+            label:String(m?.nombre??""),
+            materialCount:materialPostApplyAudit.length,
+            materials:materialPostApplyAudit.slice(0,12),
+          });
+        }
         aplicarPerfilLive();
         renderer.shadowMap.needsUpdate = true;
         invalidateRenderRef.current?.();
