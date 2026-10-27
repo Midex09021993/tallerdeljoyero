@@ -722,7 +722,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       // Preserve the original scene background while the live Bokeh preview is active.
       let dofSavedSceneBackground: THREE.Scene["background"] | undefined;
       let dofHasSavedSceneBackground = false;
-      const { composer, ssaoPass, setSSRSelects, applyQuality: applyPostQuality, updateTemporal, dofPass, renderPass } = await createAurumPostPipeline(
+      const { composer, ssaoPass, setSSRSelects, applyQuality: applyPostQuality, updateTemporal, dofPass, renderPass, fxaaPass, outputPass } = await createAurumPostPipeline(
         renderer,
         escena,
         camara,
@@ -2634,18 +2634,26 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           onStart: () => {
             // Interaction path: cap raster resolution and gem transmission cost.
             // These changes happen only at interaction boundaries, never per frame.
-            liveFastPathRef.current = true;
-            // Dense CAD models must prioritize responsive interaction over raster
-            // resolution. Respect the geometry-derived runtime budget instead of
-            // forcing DPR 1.1, which can overwhelm the GPU for multi-million-triangle
-            // Rhino meshes. This affects only the live viewport, not export quality.
+            // Lightweight interaction chain: RenderPass -> FXAA -> OutputPass.
+            // FXAA smooths high-contrast diamond facet edges without TAA accumulation.
+            liveFastPathRef.current = false;
             const interactionDpr = Math.min(
               runtimeBudget.interactionPixelRatio,
               runtimeBudget.pixelRatioCap,
             );
-      viewerLoopRef.current = viewerLoop;
+            viewerLoopRef.current = viewerLoop;
             renderer.setPixelRatio(interactionDpr);
             composer?.setPixelRatio?.(interactionDpr);
+            const interactionPasses = ((composer as any)?.passes ?? []) as any[];
+            interactionPasses.forEach((pass) => {
+              pass.enabled = pass === renderPass || pass === fxaaPass || pass === outputPass;
+            });
+            if (fxaaPass?.material?.uniforms?.resolution?.value) {
+              const w = Math.max(1, renderer.domElement.width);
+              const h = Math.max(1, renderer.domElement.height);
+              fxaaPass.material.uniforms.resolution.value.set(1 / w, 1 / h);
+            }
+            if (fxaaPass) fxaaPass.enabled = true;
             liveTransmissionScaleRef.current = runtimeBudget.interactionTransmissionScale;
             (renderer as any).transmissionResolutionScale = runtimeBudget.interactionTransmissionScale;
             aplicarPerfilLive();
