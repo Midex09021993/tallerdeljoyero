@@ -96,7 +96,26 @@ export function applyAurumInitialModelMaterials(
       captureAurumSourceMaterials(x);
       const layerKey=String(meta?.layerKey??"");
       const savedAssignments=model.userData?.aurumGemLayerAssignments??{};
-      const assignedGemId=String(savedAssignments[layerKey]?.gemId??options.initialGemByLayer?.[layerKey]??meta?.gemId??"");
+      const layerName=String(meta?.capa??meta?.layerName??"").trim();
+      const layerNameKey=layerName ? "rhino-layer:"+encodeURIComponent(layerName.toLocaleLowerCase()) : "";
+      const layerIndex=meta?.indice??meta?.layerIndex??null;
+      const layerId=String(meta?.rhinoLayerId??meta?.layerId??"").trim();
+      const layerIndexKey=layerIndex!=null ? "rhino-index:"+String(layerIndex) : "";
+      const layerIdKey=layerId ? "rhino-id:"+layerId : "";
+      // Gem application stores assignments using a canonical layer key, while
+      // imported GLB metadata may retain a different key format. Resolve by
+      // stable layer identity before considering explicit source metadata.
+      const savedAssignment=
+        savedAssignments[layerKey] ??
+        (layerNameKey ? savedAssignments[layerNameKey] : undefined) ??
+        (layerIndexKey ? savedAssignments[layerIndexKey] : undefined) ??
+        (layerIdKey ? savedAssignments[layerIdKey] : undefined) ??
+        Object.values(savedAssignments).find((assignment:any) =>
+          (layerName && String(assignment?.layerName??"").trim().toLocaleLowerCase()===layerName.toLocaleLowerCase()) ||
+          (layerIndex!=null && assignment?.layerIndex!=null && String(assignment.layerIndex)===String(layerIndex)) ||
+          (layerId && String(assignment?.layerId??"").trim()===layerId)
+        );
+      const assignedGemId=String(savedAssignment?.gemId??options.initialGemByLayer?.[layerKey]??(layerNameKey ? options.initialGemByLayer?.[layerNameKey] : "")??meta?.gemId??"");
       const initialGemId=assignedGemId || String(options.initialGemId??"");
       const gem=initialGemId ? options.gems.find((g:any)=>g.id===initialGemId) : undefined;
       if(!gem) {
