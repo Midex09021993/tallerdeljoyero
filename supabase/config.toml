@@ -32,6 +32,9 @@ verify_jwt = true
 [functions.catalogo-modelo-3d-publico]
 verify_jwt = false
 
+[functions.resolver-enlace-visor-3d]
+verify_jwt = false
+
 [functions.catalogo-extraer-ficha-pdf]
 verify_jwt = true
 
