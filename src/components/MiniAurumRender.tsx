@@ -196,6 +196,55 @@ export function MiniAurumRender({ className = "" }: MiniAurumRenderProps) {
           diamondMeshes.push(object);
         });
 
+        if (diamondMeshes.length === 0) {
+          // Algunos GLB exportados desde CAD nombran todas las piezas de forma genérica.
+          // En ese caso, buscar una malla compacta y facetada en la zona superior central
+          // de la joya; no aplicar el shader a toda la escena ni a las piezas del aro.
+          const modelBounds = new THREE.Box3().setFromObject(model);
+          const modelSize = modelBounds.getSize(new THREE.Vector3());
+          const modelCenter = modelBounds.getCenter(new THREE.Vector3());
+          const candidates: Array<{ mesh: THREE.Mesh; score: number }> = [];
+          model.traverse((object) => {
+            if (!(object instanceof THREE.Mesh) || !object.geometry?.getAttribute("position")) return;
+            const materials = Array.isArray(object.material) ? object.material : [object.material];
+            if (materials.length !== 1) return;
+            object.updateWorldMatrix(true, false);
+            const bounds = new THREE.Box3().setFromObject(object);
+            const size = bounds.getSize(new THREE.Vector3());
+            const center = bounds.getCenter(new THREE.Vector3());
+            const heightRatio = size.y / Math.max(modelSize.y, 1e-6);
+            const xOffset = Math.abs(center.x - modelCenter.x) / Math.max(modelSize.x, 1e-6);
+            const zOffset = Math.abs(center.z - modelCenter.z) / Math.max(modelSize.z, 1e-6);
+            const topRatio = (center.y - modelBounds.min.y) / Math.max(modelSize.y, 1e-6);
+            const triangles = Math.floor(
+              (object.geometry.getIndex()?.count ?? object.geometry.getAttribute("position").count) / 3,
+            );
+            // Evitar mallas que abarquen casi toda la pieza (aro/cuerpo completo).
+            if (heightRatio > 0.48 || topRatio < 0.62 || xOffset > 0.24 || zOffset > 0.24 || triangles < 8) return;
+            const compactness = Math.max(size.x, size.y, size.z) / Math.max(Math.min(size.x, size.y, size.z), 1e-5);
+            const score = topRatio * 3 - xOffset * 2 - zOffset * 2 - Math.abs(heightRatio - 0.22) - Math.max(0, compactness - 3) * 0.08;
+            candidates.push({ mesh: object, score });
+          });
+          candidates.sort((a, b) => b.score - a.score);
+          const inferredDiamond = candidates[0]?.mesh;
+          if (inferredDiamond) {
+            const material = Array.isArray(inferredDiamond.material) ? inferredDiamond.material[0] : inferredDiamond.material;
+            material.userData = { ...(material.userData ?? {}), aurumGemFamily: "diamante" };
+            inferredDiamond.userData = {
+              ...(inferredDiamond.userData ?? {}),
+              aurumActiveGemId: "diamante_natural",
+              aurumActiveGemFamily: "diamante",
+            };
+            diamondMeshes.push(inferredDiamond);
+            console.info("[AURUM mini] Diamante identificado por geometría", {
+              mesh: inferredDiamond.name || inferredDiamond.uuid,
+              candidatos: candidates.length,
+            });
+          } else {
+            console.warn("[AURUM mini] No se encontró una malla de diamante aislada en la parte superior del GLB.");
+          }
+        }
+
         if (diamondMeshes.length > 0) {
           void (async () => {
             try {
