@@ -2700,21 +2700,22 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             const idleDpr = Math.min(idleTargetDpr, runtimeBudget.pixelRatioCap);
             renderer.setPixelRatio(idleDpr);
             composer?.setPixelRatio?.(idleDpr);
-            // TAA permanece desactivado en el visor interactivo: su acumulación
-            // puede congelar la vista en algunos equipos. La nitidez en reposo
-            // se mejora únicamente con el DPR adaptativo y limitado por el presupuesto GPU.
+            // Al detener la joya, activar TAA para acumular muestras y mejorar
+            // la nitidez en reposo. Durante el movimiento sigue desactivado.
             const idlePasses = ((composer as any)?.passes ?? []) as any[];
             const idleRenderPass = idlePasses.find((pass) => pass?.constructor?.name === "RenderPass");
             const idleTaaPass = idlePasses.find((pass) => pass?.constructor?.name === "TAARenderPass");
             const idleOutputPass = idlePasses.find((pass) => pass?.constructor?.name === "OutputPass");
             idlePasses.forEach((pass) => {
               pass.enabled = pass === idleRenderPass
+                || pass === idleTaaPass
                 || (pass === dofPass && postRuntimeConfig.dof === true)
                 || pass === idleOutputPass;
             });
             if (idleTaaPass) {
-              idleTaaPass.enabled = false;
-              idleTaaPass.accumulate = false;
+              idleTaaPass.enabled = true;
+              idleTaaPass.accumulate = true;
+              if ("sampleLevel" in idleTaaPass) idleTaaPass.sampleLevel = 0;
             }
             // With live DOF enabled, the settled viewer must render through EffectComposer.
             // Keep the direct renderer only when DOF is off; otherwise the BokehPass is bypassed.
