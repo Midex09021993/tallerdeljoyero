@@ -182,7 +182,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
       try {
         const viewer = createAurumWebGLViewer(THREE, host, { pixelRatio: Math.min(window.devicePixelRatio || 1, 1.25), controlsClass: OrbitControls, maxDistance: 100 });
         ({ scene, camera, renderer, controls } = viewer);
-        scene.background = new THREE.Color("#f7f6f2");
+        scene.background = new THREE.Color("#ffffff");
         scene.add(new THREE.HemisphereLight(0xffffff, 0x77716a, 1.5));
         const key = new THREE.DirectionalLight(0xffffff, 2.1); key.position.set(4, 7, 5); scene.add(key);
         const fill = new THREE.DirectionalLight(0xffffff, 1.0); fill.position.set(-5, 2, -3); scene.add(fill);
