@@ -524,7 +524,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
   return <div className="relative h-full min-h-[280px] w-full overflow-hidden bg-[#f7f6f2]">
     {gemOpticsLoading && !status && !error && <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-white/70 backdrop-blur-[1px]">
       <div className="rounded-full border border-[#ece5d9] bg-white/95 px-4 py-2 text-xs text-[#625b54] shadow-sm">Preparando la gema AURUM…</div>
-    </div>
+    </div>}
     <div ref={hostRef} className="absolute inset-0" />
     {(status || error) && <div className={"absolute inset-x-3 bottom-3 z-20 rounded-xl px-3 py-2 text-xs " + (error ? "border border-red-300 bg-white/95 text-red-800" : "bg-white/90 text-[#625b54]")}>{error || status}</div>}
   </div>;
