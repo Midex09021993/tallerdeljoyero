@@ -28,6 +28,61 @@ const classifyMesh = (mesh: any): "metal" | "gema" | "otro" => {
   return "otro";
 };
 
+// Fallback inspired by MiniAurumRender: CAD exports may give every part a generic
+// name. Only run geometry inference when no explicit gemstone mesh was found.
+const inferGemMeshes = (model: THREE.Object3D): number => {
+  const meshes: THREE.Mesh[] = [];
+  model.traverse((object) => {
+    if (object instanceof THREE.Mesh && object.visible && object.geometry?.getAttribute("position")) meshes.push(object);
+  });
+  if (!meshes.some((mesh) => classifyMesh(mesh) === "gema")) {
+    model.updateMatrixWorld(true);
+    const modelBounds = new THREE.Box3().setFromObject(model);
+    if (modelBounds.isEmpty()) return 0;
+    const modelSize = modelBounds.getSize(new THREE.Vector3());
+    const modelCenter = modelBounds.getCenter(new THREE.Vector3());
+    const candidates: Array<{ mesh: THREE.Mesh; score: number }> = [];
+    for (const mesh of meshes) {
+      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      if (!materials.length) continue;
+      mesh.updateWorldMatrix(true, false);
+      const bounds = new THREE.Box3().setFromObject(mesh);
+      const size = bounds.getSize(new THREE.Vector3());
+      const center = bounds.getCenter(new THREE.Vector3());
+      const heightRatio = size.y / Math.max(modelSize.y, 1e-6);
+      const xOffset = Math.abs(center.x - modelCenter.x) / Math.max(modelSize.x, 1e-6);
+      const zOffset = Math.abs(center.z - modelCenter.z) / Math.max(modelSize.z, 1e-6);
+      const topRatio = (center.y - modelBounds.min.y) / Math.max(modelSize.y, 1e-6);
+      const widthRatio = size.x / Math.max(modelSize.x, 1e-6);
+      const depthRatio = size.z / Math.max(modelSize.z, 1e-6);
+      const position = mesh.geometry.getAttribute("position");
+      const triangles = Math.floor((mesh.geometry.getIndex()?.count ?? position.count) / 3);
+      const compactness = Math.max(size.x, size.y, size.z) / Math.max(Math.min(size.x, size.y, size.z), 1e-5);
+      // Reject long prongs and the ring shank; retain small faceted stones around the setting.
+      if (heightRatio > .48 || topRatio < .62 || xOffset > .24 || zOffset > .24 ||
+          widthRatio < .012 || depthRatio < .012 || triangles < 8 || compactness > 4.2) continue;
+      const footprint = widthRatio * depthRatio;
+      const score = topRatio * 3 - xOffset * 2 - zOffset * 2 + footprint * 5 -
+        Math.abs(heightRatio - .22) - Math.max(0, compactness - 2.2) * .16;
+      candidates.push({ mesh, score });
+    }
+    if (!candidates.length) return 0;
+    candidates.sort((a, b) => b.score - a.score);
+    const bestScore = candidates[0].score;
+    // Keep the similarly positioned/compact candidates, not just the single center stone.
+    const selected = candidates.filter(({ score }) => score >= bestScore - .42);
+    selected.forEach(({ mesh }) => {
+      mesh.userData = { ...(mesh.userData ?? {}), aurumPublicInferredGem: true };
+    });
+    if (selected.length) console.info("[PUBLIC VIEWER] Gemas inferidas por geometría", {
+      count: selected.length,
+      candidates: candidates.length,
+    });
+    return selected.length;
+  }
+  return 0;
+};
+
 export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, onReady, onError }: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
   const modelRef = useRef<THREE.Object3D | null>(null);
@@ -66,7 +121,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
       const gem = GEMAS.find((item) => item.id === gemIdRef.current) ?? GEMAS.find((item) => item.id === "diamante_natural")!
       model.traverse((object: any) => {
         if (!object.isMesh || !object.material) return;
-        const family = classifyMesh(object);
+        const family = object.userData?.aurumPublicInferredGem ? "gema" : classifyMesh(object);
         const originalMaterials = Array.isArray(object.material) ? object.material : [object.material];
         const next = originalMaterials.map((original: any) => {
           const material = original;
@@ -164,6 +219,8 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
             : (object.material?.clone ? object.material.clone() : object.material);
         });
         model.updateMatrixWorld(true);
+        const inferredGemCount = inferGemMeshes(model);
+        if (inferredGemCount > 0) console.info("[PUBLIC VIEWER] Se aplicarán los perfiles del catálogo AURUM a las gemas inferidas.");
         const bounds = new THREE.Box3();
         model.traverse((object: any) => { if (object.isMesh && object.geometry && object.visible) bounds.expandByObject(object); });
         if (bounds.isEmpty()) throw new Error("El modelo no contiene mallas visibles para mostrar.");
@@ -232,7 +289,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
     const gem = GEMAS.find((item) => item.id === gemId) ?? GEMAS.find((item) => item.id === "diamante_natural")!;
     model.traverse((object: any) => {
       if (!object.isMesh || !object.material) return;
-      const family = classifyMesh(object);
+      const family = object.userData?.aurumPublicInferredGem ? "gema" : classifyMesh(object);
       const materials = Array.isArray(object.material) ? object.material : [object.material];
       materials.forEach((material: any) => {
         if (family === "metal") applyAurumMetal(material, metalPresetFromConfig(metal));
