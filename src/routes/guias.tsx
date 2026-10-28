@@ -49,7 +49,6 @@ function GuiasPage() {
           </Link>
           <nav className="flex items-center gap-4 text-sm font-medium text-slate-600 sm:gap-6" aria-label="Navegación de guías">
             <Link to="/herramientas-publicas" className="transition hover:text-[#987400]">Herramientas</Link>
-            <Link to="/directorio" className="transition hover:text-[#987400]">Directorio</Link>
             <Link to="/auth" className="rounded-full bg-[#17232d] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#293b49]">Acceder</Link>
           </nav>
         </div>
@@ -110,7 +109,7 @@ function GuiasPage() {
       <footer className="border-t border-slate-200 bg-white">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-6 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-8">
           <span>AURUM LAB · Guías técnicas para joyeros</span>
-          <div className="flex flex-wrap gap-4"><Link to="/" className="hover:text-[#987400]">Inicio</Link><Link to="/herramientas-publicas" className="hover:text-[#987400]">Herramientas</Link><Link to="/directorio" className="hover:text-[#987400]">Directorio</Link></div>
+          <div className="flex flex-wrap gap-4"><Link to="/" className="hover:text-[#987400]">Inicio</Link><Link to="/herramientas-publicas" className="hover:text-[#987400]">Herramientas</Link></div>
         </div>
       </footer>
     </main>
