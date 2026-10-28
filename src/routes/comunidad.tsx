@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Gem, Ruler, Sparkles, Printer } from "lucide-react";
+import { ArrowRight, Gem, Ruler, Sparkles, Printer, LayoutGrid, ShieldCheck, Workflow } from "lucide-react";
 
 export const Route = createFileRoute("/comunidad")({
   head: () => ({
@@ -52,6 +52,14 @@ const guias = [
     descripcion: "Prepara geometría, orientación y soportes con criterio de taller para lograr detalles limpios y una producción más predecible.",
     icon: Printer,
     lectura: "Guía de taller",
+  },
+  {
+    id: "distribucion-taller",
+    categoria: "Diseño del taller",
+    titulo: "Distribución de ambientes para un taller de joyería",
+    descripcion: "Organiza diseño 3D, impresión, lavado, curado y fundición con un plano de referencia y criterios de circulación y seguridad.",
+    icon: LayoutGrid,
+    lectura: "Plano técnico",
   },
 ] as const;
 
@@ -146,6 +154,83 @@ function ComunidadPage() {
               <div className="mt-4 flex flex-wrap gap-3 text-sm font-semibold">
                 <a href="https://formlabs.com/white-papers/introduction-to-casting-for-3d-printed-jewelry-patterns/" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[#876500] hover:text-[#5f4900]">Guía de diseño y colado <ArrowRight className="size-3.5" /></a>
                 <a href="https://formlabs.com/support/Introduction-to-casting-with-Formlabs-resins/" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[#876500] hover:text-[#5f4900]">Preparación de resinas <ArrowRight className="size-3.5" /></a>
+              </div>
+            </article>
+            <article id="distribucion-taller" className="scroll-mt-24 border-t border-slate-100 pt-6">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#987400]">Diseño del taller · Plano de referencia</p>
+                  <h3 className="mt-2 flex items-center gap-2 text-xl font-bold tracking-tight"><LayoutGrid className="size-5 text-[#987400]" /> Distribución de ambientes para un taller de joyería</h3>
+                  <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">Un taller bien organizado no depende solo de dónde cabe cada máquina. La distribución debe facilitar el recorrido del trabajo, separar procesos incompatibles y dejar espacio para operar, limpiar y mantener los equipos con seguridad. El plano de referencia recibido presenta tres ambientes diferenciados y señala las medidas en centímetros.</p>
+                </div>
+                <span className="rounded-full border border-[#eadca7] bg-[#fff9df] px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-[#876500]">Guía técnica</span>
+              </div>
+
+              <div className="mt-6 grid gap-3 lg:grid-cols-3">
+                <div className="rounded-2xl border border-slate-200 bg-[#fbfcfd] p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[10px] font-bold uppercase tracking-[.14em] text-[#987400]">01 · Producción digital</span>
+                    <span className="text-xs font-semibold text-slate-500">120 × 90 cm</span>
+                  </div>
+                  <div className="mt-4 grid grid-cols-3 gap-1.5">
+                    <div className="flex min-h-16 items-center justify-center rounded-lg border border-[#e5c04a] bg-[#fff4c4] p-2 text-center text-[10px] font-semibold text-[#604900]">Impresora</div>
+                    <div className="flex min-h-16 items-center justify-center rounded-lg border border-slate-200 bg-white p-2 text-center text-[10px] font-semibold text-slate-600">Lavado</div>
+                    <div className="flex min-h-16 items-center justify-center rounded-lg border border-slate-200 bg-white p-2 text-center text-[10px] font-semibold text-slate-600">Curado</div>
+                    <div className="col-span-3 flex min-h-9 items-center justify-center rounded-lg border border-slate-200 bg-white p-2 text-center text-[10px] font-semibold text-slate-600">Limpieza y preparación</div>
+                  </div>
+                  <p className="mt-3 text-xs leading-5 text-slate-500">Mantén ordenados los pasos de impresión y posprocesado; consulta las fichas de seguridad de resinas, disolventes y equipos.</p>
+                </div>
+                <div className="rounded-2xl border border-slate-200 bg-[#fbfcfd] p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[10px] font-bold uppercase tracking-[.14em] text-[#987400]">02 · Diseño digital</span>
+                    <span className="text-xs font-semibold text-slate-500">120 × 120 cm</span>
+                  </div>
+                  <div className="mt-4 flex min-h-[142px] flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white p-3">
+                    <div className="w-full max-w-[180px] rounded-lg border border-[#e5c04a] bg-[#fff4c4] px-3 py-3 text-center text-xs font-semibold text-[#604900]">Mesa de computadora</div>
+                    <div className="mt-2 h-4 w-24 rounded-b-lg border-x border-b border-slate-300" />
+                    <div className="mt-1 rounded-full border border-slate-300 bg-slate-100 px-5 py-2 text-[10px] text-slate-600">Silla y espacio de uso</div>
+                  </div>
+                  <p className="mt-3 text-xs leading-5 text-slate-500">Deja espacio para sentarse, levantarse y acceder al equipo sin invadir la circulación de otras áreas.</p>
+                </div>
+                <div className="rounded-2xl border border-slate-200 bg-[#fbfcfd] p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[10px] font-bold uppercase tracking-[.14em] text-[#987400]">03 · Casting / fundición</span>
+                    <span className="text-xs font-semibold text-slate-500">160 × 120 cm</span>
+                  </div>
+                  <div className="mt-4 grid min-h-[142px] grid-cols-[1.2fr_1.1fr_.7fr] gap-1.5">
+                    <div className="flex items-center justify-center rounded-lg border border-[#e5c04a] bg-[#fff4c4] p-2 text-center text-[10px] font-semibold text-[#604900]">Horno</div>
+                    <div className="flex items-center justify-center rounded-lg border border-slate-200 bg-white p-2 text-center text-[10px] font-semibold text-slate-600">Vacío</div>
+                    <div className="flex items-center justify-center rounded-lg border border-slate-200 bg-white p-2 text-center text-[10px] font-semibold text-slate-600">Fundición</div>
+                  </div>
+                  <p className="mt-3 text-xs leading-5 text-slate-500">Comprueba requisitos de instalación, extracción, distancias térmicas y acceso de mantenimiento para cada máquina.</p>
+                </div>
+              </div>
+              <p className="mt-3 text-xs leading-5 text-slate-500">Esquema editorial orientativo basado en las tres zonas del plano aportado; no sustituye el plano técnico original ni está a escala.</p>
+
+              <div className="mt-6 grid gap-4 md:grid-cols-2">
+                <div className="rounded-xl border border-slate-200 p-4">
+                  <h4 className="flex items-center gap-2 text-sm font-bold"><Workflow className="size-4 text-[#987400]" /> Diseña el recorrido antes de instalar</h4>
+                  <ol className="mt-3 space-y-2 pl-4 text-sm leading-6 text-slate-600 list-decimal">
+                    <li><strong className="text-[#17232d]">Diseño:</strong> modelado y revisión del archivo.</li>
+                    <li><strong className="text-[#17232d]">Fabricación digital:</strong> impresión, lavado y curado según el material.</li>
+                    <li><strong className="text-[#17232d]">Fundición:</strong> preparación del molde, ciclo térmico y colado cuando el proceso lo requiera.</li>
+                    <li><strong className="text-[#17232d]">Acabado:</strong> considera un puesto separado para operaciones que generen polvo, partículas o residuos.</li>
+                  </ol>
+                </div>
+                <div className="rounded-xl border border-slate-200 p-4">
+                  <h4 className="flex items-center gap-2 text-sm font-bold"><ShieldCheck className="size-4 text-[#987400]" /> Seguridad y circulación</h4>
+                  <ul className="mt-3 space-y-2 pl-4 text-sm leading-6 text-slate-600 list-disc">
+                    <li>No bloquees pasillos, puertas, salidas ni accesos a equipos de emergencia.</li>
+                    <li>Valida extracción y ventilación según las sustancias y máquinas instaladas.</li>
+                    <li>Separa las fuentes de calor de resinas, disolventes y materiales combustibles según sus fichas de seguridad y normativa local.</li>
+                    <li>Reserva espacio para abrir tapas, cargar equipos, retirar piezas y realizar mantenimiento.</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="mt-5 rounded-xl border border-[#eadca7] bg-[#fff9df] p-4 sm:p-5">
+                <h4 className="text-sm font-bold text-[#604900]">Antes de dar por aprobado el plano</h4>
+                <p className="mt-2 text-sm leading-6 text-slate-700">Las medidas 120 × 90 cm, 120 × 120 cm y 160 × 120 cm se transcriben como dimensiones recomendadas por zona en el documento de referencia. El propio plano indica que las dimensiones de maquinaria son reales y están expresadas en centímetros. No se especifican aquí el modelo exacto de cada equipo, las distancias de seguridad exigidas ni la normativa aplicable al local: confirma esos datos con los fabricantes y con un profesional competente antes de ejecutar la instalación.</p>
               </div>
             </article>
           </div>
