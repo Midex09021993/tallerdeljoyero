@@ -185,7 +185,7 @@ export function MiniAurumRender({ className = "" }: MiniAurumRenderProps) {
           const materials = Array.isArray(object.material) ? object.material : [object.material];
           if (materials.length !== 1) return;
           const material = materials[0];
-          const identity = `${object.name} ${material.name}`.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLowerCase();
+          const identity = `${object.name} ${material.name}`.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
           if (!/(diamond|diamante|brilliant|brillante|gem|gema|piedra|stone)/.test(identity)) return;
           material.userData = { ...(material.userData ?? {}), aurumGemFamily: "diamante" };
           object.userData = {
