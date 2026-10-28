@@ -133,11 +133,18 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
     return () => { cancelled = true; };
   }, [modelUrl, modelName, localFile, modelKey, catalogApi, loadedModelUrl]);
 
+  const modeloInicializadoRef = useRef<{ key: string; api: AurumCatalogApi } | null>(null);
+
   useEffect(() => {
-    if (!catalogApi || loadedModelUrl !== modelKey) {
+    if (!catalogApi || !modelKey || loadedModelUrl !== modelKey) {
       setAplicacionEstado("");
       return;
     }
+    // Aplicar los valores iniciales una sola vez por modelo/API.
+    // Los cambios posteriores se aplican directamente desde cada selector.
+    if (modeloInicializadoRef.current?.key === modelKey && modeloInicializadoRef.current.api === catalogApi) return;
+    modeloInicializadoRef.current = { key: modelKey, api: catalogApi };
+
     const metalAplicado = catalogApi.materialCatalogo?.(aurumMaterial);
     const gemaAplicada = catalogApi.gemaCatalogo?.(aurumGem);
     if (metalAplicado === false && gemaAplicada === false) {
@@ -159,13 +166,30 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
     const material = MATERIALES.find((item) => item.id === selected.materialId)
       ?? MATERIALES.find((item) => item.id === "oro18a_pulido");
     if (catalogApi && loadedModelUrl === modelKey && material) {
-      console.info("[PUBLIC VIEWER] Metal seleccionado", { id, materialId: material.id });
-      catalogApi.materialCatalogo?.(material);
+      const applied = catalogApi.materialCatalogo?.(material);
+      setAplicacionEstado(applied === true ? "Metal aplicado al modelo 3D." : applied === false ? "No se identificaron piezas de metal compatibles en este modelo." : "Cambio de metal enviado al visor.");
     } else {
       console.warn("[PUBLIC VIEWER] El motor todavía no está listo para cambiar el metal", {
         hasCatalogApi: Boolean(catalogApi),
         modelReady: loadedModelUrl === modelKey,
         requestedMetal: id,
+      });
+    }
+  };
+
+  const handleGemSelect = (id: string) => {
+    setGemaId(id);
+    const selected = gemas.find((item) => item.id === id) ?? gemas[0];
+    const gem = GEMAS.find((item) => item.id === selected.gemId)
+      ?? GEMAS.find((item) => item.id === "diamante_natural");
+    if (catalogApi && loadedModelUrl === modelKey && gem) {
+      const applied = catalogApi.gemaCatalogo?.(gem);
+      setAplicacionEstado(applied === true ? "Gema aplicada al modelo 3D." : applied === false ? "No se identificaron piezas de gema compatibles en este modelo." : "Cambio de gema enviado al visor.");
+    } else {
+      console.warn("[PUBLIC VIEWER] El motor todavía no está listo para cambiar la gema", {
+        hasCatalogApi: Boolean(catalogApi),
+        modelReady: loadedModelUrl === modelKey,
+        requestedGem: id,
       });
     }
   };
@@ -225,7 +249,7 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#92702f]">02 · Piedra</p>
             <p className="mt-0.5 hidden text-xs text-[#8a8175] sm:block">Selecciona una gema</p>
-            <div className="mt-2 grid grid-cols-3 gap-1 sm:grid-cols-2 sm:gap-1.5 md:grid-cols-1 [@media(max-height:800px)]:mt-1">{gemas.map((gem) => <button key={gem.id} type="button" aria-pressed={gemaId === gem.id} onClick={() => setGemaId(gem.id)} className={"flex min-h-9 w-full items-center gap-1.5 rounded-lg border px-2 py-1.5 text-left text-[11px] transition sm:min-h-10 sm:gap-2 sm:rounded-xl sm:px-2.5 sm:py-2 sm:text-xs [@media(max-height:800px)]:min-h-8 [@media(max-height:800px)]:py-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45] focus-visible:ring-offset-1 " + (gemaId === gem.id ? "border-[#a7833d] bg-[#f7f0e2] text-[#342e26]" : "border-[#ece7df] bg-white text-[#5f574d] hover:border-[#d1bd96] hover:bg-[#fcfaf5]")}><span className="size-3 shrink-0 rounded-full border border-black/10 sm:size-3.5" style={{ backgroundColor: "#" + gem.color.toString(16).padStart(6,"0") }} /><span className="min-w-0 flex-1 truncate font-medium">{gem.label}</span>{gemaId === gem.id && <span className="text-[9px] font-bold uppercase tracking-wide text-[#8b6b36]">Activo</span>}</button>)}</div>
+            <div className="mt-2 grid grid-cols-3 gap-1 sm:grid-cols-2 sm:gap-1.5 md:grid-cols-1 [@media(max-height:800px)]:mt-1">{gemas.map((gem) => <button key={gem.id} type="button" aria-pressed={gemaId === gem.id} onClick={() => handleGemSelect(gem.id)} className={"flex min-h-9 w-full items-center gap-1.5 rounded-lg border px-2 py-1.5 text-left text-[11px] transition sm:min-h-10 sm:gap-2 sm:rounded-xl sm:px-2.5 sm:py-2 sm:text-xs [@media(max-height:800px)]:min-h-8 [@media(max-height:800px)]:py-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45] focus-visible:ring-offset-1 " + (gemaId === gem.id ? "border-[#a7833d] bg-[#f7f0e2] text-[#342e26]" : "border-[#ece7df] bg-white text-[#5f574d] hover:border-[#d1bd96] hover:bg-[#fcfaf5]")}><span className="size-3 shrink-0 rounded-full border border-black/10 sm:size-3.5" style={{ backgroundColor: "#" + gem.color.toString(16).padStart(6,"0") }} /><span className="min-w-0 flex-1 truncate font-medium">{gem.label}</span>{gemaId === gem.id && <span className="text-[9px] font-bold uppercase tracking-wide text-[#8b6b36]">Activo</span>}</button>)}</div>
           </div>
           <details className="mt-2.5 rounded-lg border border-[#eee6d8] bg-[linear-gradient(135deg,#fcfaf6_0%,#fffdf9_100%)] p-2.5 sm:mt-4 sm:rounded-xl sm:p-3 [@media(max-height:800px)]:mt-2 [@media(max-height:800px)]:p-2.5" aria-live="polite">
             <summary className="flex cursor-pointer list-none items-center justify-between gap-2 text-xs font-semibold text-[#6f572d] [&::-webkit-details-marker]:hidden">
