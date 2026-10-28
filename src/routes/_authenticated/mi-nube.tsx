@@ -182,7 +182,7 @@ function MiNubePage() {
   const [busqueda, setBusqueda] = useState("");
   const [mostrarMisVentas, setMostrarMisVentas] = useState(false);
   const [filtroMisVentas, setFiltroMisVentas] = useState<"todas" | "borrador" | "publicado" | "pausado">("todas");
-  const [misVentas, setMisVentas] = useState<Array<{ id: string; titulo: string; categoria: string; formatos: string[]; precio: number; moneda: string; estado: string; created_at: string; nombre_archivo: string }>>([]);
+  const [misVentas, setMisVentas] = useState<Array<{ id: string; titulo: string; categoria: string; formatos: string[]; precio: number; moneda: string; estado: string; created_at: string; nombre_archivo: string; ruta_archivo: string; imagen_portada_url: string | null }>>([]);
   const [cargandoMisVentas, setCargandoMisVentas] = useState(false);
   const [errorMisVentas, setErrorMisVentas] = useState<string | null>(null);
   const [ventaEnEdicion, setVentaEnEdicion] = useState<{ id: string; titulo: string; precio: string } | null>(null);
@@ -227,7 +227,7 @@ function MiNubePage() {
         };
       };
       const { data, error } = await marketplaceClient.from("archivos_digitales_marketplace")
-        .select("id,titulo,categoria,formatos,precio,moneda,estado,created_at,nombre_archivo")
+        .select("id,titulo,categoria,formatos,precio,moneda,estado,created_at,nombre_archivo,ruta_archivo,imagen_portada_url")
         .eq("vendedor_usuario_id", usuarioId)
         .order("created_at", { ascending: false });
       if (error) throw new Error(error.message);
@@ -273,6 +273,40 @@ function MiNubePage() {
       toast.success("Publicación actualizada.");
     } catch (cause) {
       toast.error(cause instanceof Error ? cause.message : "No se pudo actualizar la publicación.");
+    } finally { setGuardandoVenta(false); }
+  };
+
+  const regenerarPortadaVenta = async (venta: { id: string; ruta_archivo: string; titulo: string }) => {
+    if (!usuarioId || !participanteId) { toast.error("Inicia sesión y verifica que tu taller esté activo."); return; }
+    const prefijoPropio = participanteId + "/" + usuarioId + "/";
+    if (!venta.ruta_archivo.startsWith(prefijoPropio)) { toast.error("El archivo de origen no pertenece a tu Mi Nube."); return; }
+    setGuardandoVenta(true);
+    try {
+      const carpetaRuta = venta.ruta_archivo.split("/").slice(0, -1).join("/");
+      const { data: entradas, error: listaError } = await supabase.storage.from("mi-nube").list(carpetaRuta, { limit: 1000, sortBy: { column: "name", order: "asc" } });
+      if (listaError) throw listaError;
+      const imagenes = (entradas ?? []).filter((item) => item.name && /\.(jpe?g|png|webp)$/i.test(item.name));
+      const portada = imagenes.find((item) => item.name.toLowerCase() === "00-portada-aurum.png")
+        ?? imagenes.find((item) => /portada|poster|cover/i.test(item.name))
+        ?? imagenes[0];
+      if (!portada) throw new Error("No encontramos una imagen en la carpeta del proyecto. Guarda primero el póster desde el visor 3D o añade una imagen JPG, PNG o WebP a esa carpeta.");
+      const rutaImagen = carpetaRuta + "/" + portada.name;
+      const { data: firmada, error: firmaError } = await supabase.storage.from("mi-nube").createSignedUrl(rutaImagen, 600);
+      if (firmaError || !firmada?.signedUrl) throw firmaError ?? new Error("No se pudo leer la imagen desde Mi Nube.");
+      const respuesta = await fetch(firmada.signedUrl);
+      if (!respuesta.ok) throw new Error("No se pudo descargar la imagen de portada.");
+      const blob = await respuesta.blob();
+      const extension = portada.name.split(".").pop()?.toLowerCase() ?? "png";
+      const destino = "marketplace-portadas/" + usuarioId + "/" + crypto.randomUUID() + "." + extension;
+      const { error: subidaError } = await supabase.storage.from("catalogo-joyas").upload(destino, blob, { contentType: blob.type || "image/png", upsert: false });
+      if (subidaError) throw new Error("No se pudo publicar la portada. Revisa los permisos del bucket catalogo-joyas en Lovable Cloud.");
+      const url = supabase.storage.from("catalogo-joyas").getPublicUrl(destino).data.publicUrl;
+      if (!url) throw new Error("No se pudo obtener la URL pública de la portada.");
+      await actualizarVentaPropia(venta.id, { imagen_portada_url: url, updated_at: new Date().toISOString() });
+      await cargarMisVentas();
+      toast.success("Portada actualizada para “" + venta.titulo + "”.");
+    } catch (cause) {
+      toast.error(cause instanceof Error ? cause.message : "No se pudo actualizar la portada.", { duration: 9000 });
     } finally { setGuardandoVenta(false); }
   };
 
@@ -1872,6 +1906,7 @@ function MiNubePage() {
                     <button type="button" disabled={guardandoVenta} onClick={() => setVentaEnEdicion({ id: venta.id, titulo: venta.titulo, precio: String(venta.precio) })} className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-muted disabled:opacity-50"><Pencil className="size-3.5" /> Editar</button>
                     {venta.estado === "borrador" || venta.estado === "pausado" ? <button type="button" disabled={guardandoVenta} onClick={() => void cambiarEstadoVenta(venta, "publicado")} className="inline-flex items-center gap-1.5 rounded-lg border border-gold/40 bg-gold/10 px-3 py-1.5 text-xs font-semibold hover:bg-gold/15 disabled:opacity-50"><Store className="size-3.5" /> Publicar</button> : null}
                     {venta.estado === "publicado" ? <button type="button" disabled={guardandoVenta} onClick={() => void cambiarEstadoVenta(venta, "pausado")} className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-muted disabled:opacity-50"><Power className="size-3.5" /> Pausar</button> : null}
+                    {!venta.imagen_portada_url ? <button type="button" disabled={guardandoVenta} onClick={() => void regenerarPortadaVenta(venta)} className="inline-flex items-center gap-1.5 rounded-lg border border-gold/40 bg-gold/10 px-3 py-1.5 text-xs font-semibold hover:bg-gold/15 disabled:opacity-50"><ImageIcon className="size-3.5" /> Recuperar portada</button> : null}
                     {venta.estado === "borrador" ? <button type="button" disabled={guardandoVenta} onClick={() => void eliminarBorradorVenta(venta)} className="inline-flex items-center gap-1.5 rounded-lg border border-destructive/30 px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/5 disabled:opacity-50"><X className="size-3.5" /> Eliminar borrador</button> : null}
                   </div> : null}
                 </article>)}
