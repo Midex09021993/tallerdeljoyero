@@ -29,6 +29,7 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
   const [loadError, setLoadError] = useState<string | null>(null);
   const [catalogApi, setCatalogApi] = useState<AurumCatalogApi | null>(null);
   const [loadedModelUrl, setLoadedModelUrl] = useState<string | null>(null);
+  const [downloadedModel, setDownloadedModel] = useState<{ key: string; file: File } | null>(null);
   const modelKey = localFile ? `local:${localFile.name}:${localFile.size}:${localFile.lastModified}` : modelUrl;
   const [aplicacionEstado, setAplicacionEstado] = useState<string>("");
   const visorRef = useRef<HTMLDivElement>(null);
@@ -100,25 +101,50 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
   const aurumMaterial = MATERIALES.find((item) => item.id === selectedMetal.materialId) ?? MATERIALES.find((item) => item.id === "oro18a_pulido")!;
   const aurumGem = GEMAS.find((item) => item.id === selectedGem.gemId) ?? GEMAS.find((item) => item.id === "diamante_natural")!;
 
+  // Descarga el GLB tan pronto está disponible, en paralelo con la inicialización del visor.
+  // Así no esperamos a que el motor termine de montar para empezar la transferencia.
   useEffect(() => {
     let cancelled = false;
-    if ((!localFile && !modelUrl) || !catalogApi?.cargar || loadedModelUrl === modelKey) return;
+    setDownloadedModel(null);
+    setLoadedModelUrl(null);
+    if (!modelKey || (!localFile && !modelUrl)) return;
+
+    const downloadModel = async () => {
+      try {
+        if (localFile) {
+          setDownloadedModel({ key: modelKey, file: localFile });
+          return;
+        }
+        setStatus("Descargando modelo 3D…");
+        const response = await fetch(modelUrl!);
+        if (!response.ok) throw new Error("No se pudo descargar el modelo 3D del catálogo.");
+        const blob = await response.blob();
+        if (cancelled) return;
+        const file = new File([blob], modelName || "modelo.glb", { type: blob.type || "model/gltf-binary" });
+        setDownloadedModel({ key: modelKey, file });
+      } catch (cause) {
+        if (!cancelled) {
+          setLoadError(cause instanceof Error ? cause.message : "No se pudo descargar el modelo 3D.");
+          setStatus("");
+        }
+      }
+    };
+    void downloadModel();
+    return () => { cancelled = true; };
+  }, [modelUrl, modelName, localFile, modelKey]);
+
+  // La carga del modelo en el motor comienza cuando están listos tanto el archivo como su API.
+  useEffect(() => {
+    let cancelled = false;
+    if (!catalogApi?.cargar || !downloadedModel || downloadedModel.key !== modelKey || loadedModelUrl === modelKey) return;
+
     const loadIntoAurum = async () => {
       setStatus("Preparando el visor interactivo…");
       setLoadError(null);
       try {
-        let file: File;
-        if (localFile) {
-          // Process the visitor's file directly in the browser; never upload it.
-          file = localFile;
-        } else {
-          const response = await fetch(modelUrl!);
-          if (!response.ok) throw new Error("No se pudo descargar el modelo 3D del catálogo.");
-          const blob = await response.blob();
-          if (cancelled) return;
-          file = new File([blob], modelName || "modelo.3dm", { type: blob.type || "application/octet-stream" });
-        }
-        await catalogApi.cargar?.(file, (progress: string) => { if (!cancelled && progress) setStatus(progress); });
+        await catalogApi.cargar?.(downloadedModel.file, (progress: string) => {
+          if (!cancelled && progress) setStatus(progress);
+        });
         if (cancelled) return;
         setLoadedModelUrl(modelKey);
         setStatus("");
@@ -131,7 +157,7 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
     };
     void loadIntoAurum();
     return () => { cancelled = true; };
-  }, [modelUrl, modelName, localFile, modelKey, catalogApi, loadedModelUrl]);
+  }, [catalogApi, downloadedModel, modelKey, loadedModelUrl]);
 
   const modeloInicializadoRef = useRef<{ key: string; api: AurumCatalogApi } | null>(null);
 
