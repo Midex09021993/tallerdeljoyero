@@ -143,6 +143,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
   gemIdRef.current = gemId;
   const [status, setStatus] = useState("Preparando el visor 3D…");
   const [error, setError] = useState<string | null>(null);
+  const [gemOpticsLoading, setGemOpticsLoading] = useState(false);
   const onReadyRef = useRef(onReady);
   const onErrorRef = useRef(onError);
   onReadyRef.current = onReady;
@@ -343,8 +344,12 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         if (visibleBounds.isEmpty()) throw new Error("El modelo no contiene mallas visibles para mostrar.");
         const visibleSphere = visibleBounds.getBoundingSphere(new THREE.Sphere());
         const radius = Math.max(visibleSphere.radius, .001);
+        const normalizedSize = visibleBounds.getSize(new THREE.Vector3());
+        const normalizedMaxDimension = Math.max(normalizedSize.x, normalizedSize.y, normalizedSize.z, .001);
         camera.fov = 35;
-        const distance = radius / Math.sin(THREE.MathUtils.degToRad(camera.fov / 2)) * 1.08;
+        // Match apparent size by the normalized largest dimension, rather than the
+        // bounding sphere whose radius varies with proportions between GLB and 3DM.
+        const distance = (normalizedMaxDimension / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)))) * 1.12;
         camera.position.copy(new THREE.Vector3(1, .62, 1).normalize().multiplyScalar(distance));
         camera.near = Math.max(radius / 100, .001);
         camera.far = Math.max(distance + radius * 20, 100);
@@ -422,8 +427,10 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
     const selectedFamily = selectedGem?.familia.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase();
     const bvhFamilies = ["diamante", "esmeralda", "rubi", "zafiro", "amatista"];
     if (!model || !camera || !selectedGem || !selectedFamily || !bvhFamilies.includes(selectedFamily)) {
+      setGemOpticsLoading(false);
       return () => { cancelled = true; };
     }
+    setGemOpticsLoading(true);
 
     // The public viewer keeps the original five choices, but each choice must
     // activate its own AURUM BVH optical family—not the diamond shader for all stones.
@@ -453,18 +460,24 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
     }).then((runtime) => {
       if (cancelled || modelRef.current !== model || gemIdRef.current !== gemId) {
         runtime.dispose();
+        setGemOpticsLoading(false);
         return;
       }
       runtime.refresh(model);
       if (!runtime.diagnostics().enabled) {
         console.warn("[PUBLIC VIEWER] BVH AURUM sin mallas compatibles para " + selectedFamily + "; se mantiene el material AURUM.");
         runtime.dispose();
+        setGemOpticsLoading(false);
         return;
       }
       diamondBvhRuntimeRef.current = runtime;
+      setGemOpticsLoading(false);
       renderRef.current?.();
     }).catch((cause) => {
-      if (!cancelled) console.warn("[PUBLIC VIEWER] No se pudo iniciar el BVH AURUM para " + selectedFamily + "; se mantiene el perfil de catálogo.", cause);
+      if (!cancelled) {
+        console.warn("[PUBLIC VIEWER] No se pudo iniciar el BVH AURUM para " + selectedFamily + "; se mantiene el perfil de catálogo.", cause);
+        setGemOpticsLoading(false);
+      }
     });
 
     return () => {
@@ -516,6 +529,9 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
   }, [materialId, gemId]);
 
   return <div className="relative h-full min-h-[280px] w-full overflow-hidden bg-[#f7f6f2]">
+    {gemOpticsLoading && !status && !error && <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-white/70 backdrop-blur-[1px]">
+      <div className="rounded-full border border-[#ece5d9] bg-white/95 px-4 py-2 text-xs text-[#625b54] shadow-sm">Preparando la gema AURUM…</div>
+    </div>
     <div ref={hostRef} className="absolute inset-0" />
     {(status || error) && <div className={"absolute inset-x-3 bottom-3 z-20 rounded-xl px-3 py-2 text-xs " + (error ? "border border-red-300 bg-white/95 text-red-800" : "bg-white/90 text-[#625b54]")}>{error || status}</div>}
   </div>;
