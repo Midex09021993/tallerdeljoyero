@@ -316,16 +316,35 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
           inferredGemCount,
           meshes: meshAudit,
         });
+        // Use only visible geometry for centering, scale and camera fit. Some 3DM
+        // exports contain hidden/helper meshes whose bounds otherwise make the jewel
+        // appear much smaller than an equivalent GLB in the public viewer.
         const bounds = new THREE.Box3();
-        model.traverse((object: any) => { if (object.isMesh && object.geometry && object.visible) bounds.expandByObject(object); });
+        model.traverse((object: any) => {
+          if (object.isMesh && object.geometry && object.visible) bounds.expandByObject(object);
+        });
         if (bounds.isEmpty()) throw new Error("El modelo no contiene mallas visibles para mostrar.");
         const center = bounds.getCenter(new THREE.Vector3());
         model.position.sub(center);
         model.updateMatrixWorld(true);
-        const sphere = new THREE.Box3().setFromObject(model).getBoundingSphere(new THREE.Sphere());
-        const radius = Math.max(sphere.radius, .001);
+
+        // Match MiniAurumRender's canonical product scale (largest visible dimension = 2.05)
+        // so direct 3DM imports and already-oriented GLB assets share a consistent scale.
+        const visibleSize = bounds.getSize(new THREE.Vector3());
+        const maxDimension = Math.max(visibleSize.x, visibleSize.y, visibleSize.z, 1e-6);
+        const fitScale = 2.05 / maxDimension;
+        model.scale.multiplyScalar(fitScale);
+        model.updateMatrixWorld(true);
+
+        const visibleBounds = new THREE.Box3();
+        model.traverse((object: any) => {
+          if (object.isMesh && object.geometry && object.visible) visibleBounds.expandByObject(object);
+        });
+        if (visibleBounds.isEmpty()) throw new Error("El modelo no contiene mallas visibles para mostrar.");
+        const visibleSphere = visibleBounds.getBoundingSphere(new THREE.Sphere());
+        const radius = Math.max(visibleSphere.radius, .001);
         camera.fov = 35;
-        const distance = radius / Math.sin(THREE.MathUtils.degToRad(camera.fov / 2)) * 1.2;
+        const distance = radius / Math.sin(THREE.MathUtils.degToRad(camera.fov / 2)) * 1.08;
         camera.position.copy(new THREE.Vector3(1, .62, 1).normalize().multiplyScalar(distance));
         camera.near = Math.max(radius / 100, .001);
         camera.far = Math.max(distance + radius * 20, 100);
