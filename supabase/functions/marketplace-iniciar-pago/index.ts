@@ -125,7 +125,12 @@ Deno.serve(async (req: Request) => {
       .eq("id", compra.id);
     if (updateError) throw updateError;
 
-    return json({ ok: true, compra_id: compra.id, init_point: preference.init_point, sandbox_init_point: preference.sandbox_init_point ?? null });
+    const esPrueba = accessToken.startsWith("TEST-");
+    const checkoutUrl = esPrueba ? preference.sandbox_init_point : preference.init_point;
+    if (typeof checkoutUrl !== "string" || !checkoutUrl.startsWith("https://")) {
+      return json({ error: "Mercado Pago no devolvió una URL de checkout válida para este entorno." }, 502);
+    }
+    return json({ ok: true, compra_id: compra.id, init_point: checkoutUrl, entorno: esPrueba ? "pruebas" : "produccion" });
   } catch (error) {
     console.error("marketplace-iniciar-pago", error);
     return json({ error: "No se pudo iniciar el pago en este momento." }, 500);
