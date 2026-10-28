@@ -61,11 +61,16 @@ const inferGemMeshes = (model: THREE.Object3D): number => {
     if (object instanceof THREE.Mesh && object.visible && object.geometry?.getAttribute("position")) meshes.push(object);
   });
 
-  // First preserve MiniAurumRender's reliable explicit-name strategy. Unlike the
-  // mini preview, the public viewer must also find unnamed side stones when only
-  // the center stone has metadata, so geometric inference runs for unclassified
-  // meshes as well—not only when the entire model has zero recognized gems.
-  const explicitlyIdentified = new Set(meshes.filter((mesh) => classifyMesh(mesh) === "gema"));
+  // Match MiniAurumRender: explicit gem names/materials are authoritative.
+  // Geometry fallback is only for models with no explicitly identified stones.
+  const explicitlyIdentified = meshes.filter((mesh) => classifyMesh(mesh) === "gema");
+  if (explicitlyIdentified.length > 0) {
+    console.info("[PUBLIC VIEWER][GEM AUDIT] Gemas identificadas por nombre/metadatos; se omite inferencia geométrica para no teñir el engaste.", {
+      explicitlyIdentified: explicitlyIdentified.length,
+    });
+    return 0;
+  }
+
   model.updateMatrixWorld(true);
   const modelBounds = new THREE.Box3().setFromObject(model);
   if (modelBounds.isEmpty()) return 0;
@@ -73,55 +78,55 @@ const inferGemMeshes = (model: THREE.Object3D): number => {
   const modelCenter = modelBounds.getCenter(new THREE.Vector3());
   const candidates: Array<{ mesh: THREE.Mesh; score: number }> = [];
 
-  for (const mesh of meshes) {
-    if (explicitlyIdentified.has(mesh)) continue;
-    const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-    if (!materials.length) continue;
-    mesh.updateWorldMatrix(true, false);
-    const bounds = new THREE.Box3().setFromObject(mesh);
+  model.traverse((object) => {
+    if (!(object instanceof THREE.Mesh) || !object.visible || !object.geometry?.getAttribute("position")) return;
+    const materials = Array.isArray(object.material) ? object.material : [object.material];
+    if (materials.length !== 1) return;
+    object.updateWorldMatrix(true, false);
+    const bounds = new THREE.Box3().setFromObject(object);
     const size = bounds.getSize(new THREE.Vector3());
     const center = bounds.getCenter(new THREE.Vector3());
     const heightRatio = size.y / Math.max(modelSize.y, 1e-6);
     const xOffset = Math.abs(center.x - modelCenter.x) / Math.max(modelSize.x, 1e-6);
     const zOffset = Math.abs(center.z - modelCenter.z) / Math.max(modelSize.z, 1e-6);
     const topRatio = (center.y - modelBounds.min.y) / Math.max(modelSize.y, 1e-6);
+    const triangles = Math.floor((object.geometry.getIndex()?.count ?? object.geometry.getAttribute("position").count) / 3);
     const widthRatio = size.x / Math.max(modelSize.x, 1e-6);
     const depthRatio = size.z / Math.max(modelSize.z, 1e-6);
-    const position = mesh.geometry.getAttribute("position");
-    const triangles = Math.floor((mesh.geometry.getIndex()?.count ?? position.count) / 3);
     const compactness = Math.max(size.x, size.y, size.z) / Math.max(Math.min(size.x, size.y, size.z), 1e-5);
 
-    // Same core geometry tests as MiniAurumRender, with a smaller footprint
-    // allowance for pavé stones. Keep the test limited to the upper setting area.
-    if (heightRatio > .48 || topRatio < .62 || xOffset > .24 || zOffset > .24 ||
-        widthRatio < .012 || depthRatio < .012 || triangles < 8 || compactness > 4.2) continue;
+    // Keep MiniAurumRender's stricter filters. The previous 0.012 threshold
+    // admitted prongs, rails and metal setting parts as supposed side gemstones.
+    if (
+      heightRatio > 0.48 ||
+      topRatio < 0.62 ||
+      xOffset > 0.24 ||
+      zOffset > 0.24 ||
+      widthRatio < 0.075 ||
+      depthRatio < 0.075 ||
+      triangles < 8 ||
+      compactness > 4.2
+    ) return;
     const footprint = widthRatio * depthRatio;
     const score = topRatio * 3 - xOffset * 2 - zOffset * 2 + footprint * 5 -
-      Math.abs(heightRatio - .22) - Math.max(0, compactness - 2.2) * .16;
-    candidates.push({ mesh, score });
-  }
+      Math.abs(heightRatio - 0.22) - Math.max(0, compactness - 2.2) * 0.16;
+    candidates.push({ mesh: object, score });
+  });
 
   candidates.sort((a, b) => b.score - a.score);
-  if (!candidates.length) {
-    console.warn("[PUBLIC VIEWER][GEM AUDIT] No se encontraron gemas por geometría.", {
+  const inferredGem = candidates[0]?.mesh;
+  if (!inferredGem) {
+    console.warn("[PUBLIC VIEWER][GEM AUDIT] No se encontró una gema aislada por geometría.", {
       meshCount: meshes.length,
-      explicitlyIdentified: explicitlyIdentified.size,
     });
     return 0;
   }
-
-  const bestScore = candidates[0].score;
-  const selected = candidates.filter(({ score }) => score >= bestScore - .42);
-  selected.forEach(({ mesh }) => {
-    mesh.userData = { ...(mesh.userData ?? {}), aurumPublicInferredGem: true };
+  inferredGem.userData = { ...(inferredGem.userData ?? {}), aurumPublicInferredGem: true };
+  console.info("[PUBLIC VIEWER][GEM AUDIT] Gema central inferida con el mismo criterio estricto de MiniAurumRender.", {
+    mesh: inferredGem.name || inferredGem.uuid,
+    candidates: candidates.length,
   });
-  console.info("[PUBLIC VIEWER][GEM AUDIT] Inferencia geométrica basada en MiniAurumRender", {
-    explicitlyIdentified: explicitlyIdentified.size,
-    inferred: selected.length,
-    candidateCount: candidates.length,
-    selectedMeshes: selected.map(({ mesh }) => mesh.name || mesh.uuid),
-  });
-  return selected.length;
+  return 1;
 };
 
 export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, onReady, onError }: Props) {
