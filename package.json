@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "check:aurum": "node scripts/check-aurum-lock.mjs"
   },
   "overrides": {
     "rolldown": "1.2.1"

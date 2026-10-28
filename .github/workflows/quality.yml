@@ -23,8 +23,6 @@ jobs:
       - name: Verify AURUM Render integrity lock
         run: node scripts/check-aurum-lock.mjs
 
-
-jobs:
   quality:
     runs-on: ubuntu-latest
     steps:
