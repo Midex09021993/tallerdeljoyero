@@ -48,6 +48,26 @@ function PublicarArchivoPage() {
   });
 
   useEffect(() => {
+    if (!raizCarpetaSeleccionada || cargandoArchivos) return;
+    const compatibles = archivosDisponibles.filter((item) => {
+      if (item.nombre.toLowerCase() === "00-portada-aurum.png") return false;
+      const partesRuta = item.ruta.split("/");
+      return partesRuta.length >= 3 && partesRuta[partesRuta.length - 2] === raizCarpetaSeleccionada;
+    });
+    if (compatibles.length !== 1) return;
+    const elegido = compatibles[0];
+    setRuta(elegido.ruta);
+    setNombreArchivo(elegido.nombre);
+    const ext = elegido.nombre.split(".").pop()?.toLowerCase() ?? "";
+    if (EXTENSIONES[ext]) {
+      const nuevoFormato = EXTENSIONES[ext];
+      setFormato(nuevoFormato);
+      setCategoria(nuevoFormato === "IMAGEN" ? "Imágenes" : nuevoFormato === "PDF" || nuevoFormato === "PLANO" ? "Planos técnicos" : "Modelos 3D");
+    }
+    setTitulo((actual) => actual.trim() ? actual : elegido.nombre.replace(/\\.[^.]+$/, "").replace(/[_-]+/g, " ").trim());
+  }, [archivosDisponibles, cargandoArchivos, raizCarpetaSeleccionada]);
+
+  useEffect(() => {
     let cancelado = false;
     const cargar = async () => {
       const userId = sesion.data?.user.id;
@@ -169,14 +189,37 @@ function PublicarArchivoPage() {
           <label className="space-y-2 text-sm font-medium">Moneda
             <select value={moneda} onChange={(e) => setMoneda(e.target.value as typeof moneda)} className="w-full rounded-lg border border-input bg-background px-3 py-2.5 font-normal"><option value="PEN">Soles (PEN)</option><option value="USD">Dólares (USD)</option></select>
           </label>
-          <label className="space-y-2 text-sm font-medium sm:col-span-2">Archivo de Mi Nube
-            <select required value={ruta} onChange={(e) => { const elegido = archivosDisponibles.find((item) => item.ruta === e.target.value); setRuta(e.target.value); setNombreArchivo(elegido?.nombre ?? ""); const ext = elegido?.nombre.split(".").pop()?.toLowerCase() ?? ""; if (EXTENSIONES[ext]) { const nuevoFormato = EXTENSIONES[ext]; setFormato(nuevoFormato); setCategoria(nuevoFormato === "IMAGEN" ? "Imágenes" : nuevoFormato === "PDF" || nuevoFormato === "PLANO" ? "Planos técnicos" : "Modelos 3D"); } if (elegido) setTitulo(elegido.nombre.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ").trim()); }} disabled={cargandoArchivos || archivosVisibles.length === 0} className="w-full rounded-lg border border-input bg-background px-3 py-2.5 font-normal">
-              <option value="">{cargandoArchivos ? "Cargando archivos de Mi Nube…" : archivosVisibles.length ? "Selecciona un archivo…" : carpetaProyecto ? "No hay archivos compatibles en tus carpetas" : "No hay archivos compatibles en tus carpetas"}</option>
-              {archivosVisibles.map((item) => <option key={item.ruta} value={item.ruta}>{item.nombre} · {EXTENSIONES[item.nombre.split(".").pop()?.toLowerCase() ?? ""]} · {item.bytes ? (item.bytes / 1048576).toFixed(2) + " MB" : "tamaño no disponible"}</option>)}
-            </select>
-            <span className="block text-xs font-normal text-muted-foreground">Solo aparecen archivos compatibles dentro de tus carpetas privadas. El original no se mueve ni se modifica.</span>
-            {errorArchivos ? <span className="block text-xs font-normal text-destructive">No se pudo cargar Mi Nube: {errorArchivos}</span> : null}
-          </label>
+          <fieldset className="space-y-3 text-sm sm:col-span-2">
+            <legend className="font-medium">Archivo de Mi Nube</legend>
+            {cargandoArchivos ? <p className="rounded-lg border border-border bg-muted/30 p-4 text-muted-foreground">Cargando archivos de Mi Nube…</p> : null}
+            {!cargandoArchivos && archivosVisibles.length === 0 ? <p className="rounded-lg border border-border bg-muted/30 p-4 text-muted-foreground">{carpetaProyecto ? `No hay archivos compatibles en la carpeta “${carpetaProyecto}”.` : "No hay archivos compatibles en tus carpetas."}</p> : null}
+            <div className="grid gap-2">
+              {archivosVisibles.map((item) => {
+                const extension = item.nombre.split(".").pop()?.toLowerCase() ?? "";
+                const seleccionado = ruta === item.ruta;
+                return <label key={item.ruta} className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 transition ${seleccionado ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "border-border hover:bg-muted/30"}`}>
+                  <input type="radio" name="archivo-mi-nube" required checked={seleccionado} onChange={() => {
+                    setRuta(item.ruta);
+                    setNombreArchivo(item.nombre);
+                    const ext = item.nombre.split(".").pop()?.toLowerCase() ?? "";
+                    if (EXTENSIONES[ext]) {
+                      const nuevoFormato = EXTENSIONES[ext];
+                      setFormato(nuevoFormato);
+                      setCategoria(nuevoFormato === "IMAGEN" ? "Imágenes" : nuevoFormato === "PDF" || nuevoFormato === "PLANO" ? "Planos técnicos" : "Modelos 3D");
+                    }
+                    setTitulo(item.nombre.replace(/\\.[^.]+$/, "").replace(/[_-]+/g, " ").trim());
+                  }} className="size-4 shrink-0 accent-current" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block break-words font-medium">{item.nombre}</span>
+                    <span className="mt-1 block text-xs text-muted-foreground">{EXTENSIONES[extension]} · {item.bytes ? (item.bytes / 1048576).toFixed(2) + " MB" : "tamaño no disponible"}</span>
+                  </span>
+                  {seleccionado ? <span className="shrink-0 text-xs font-semibold text-primary">Seleccionado</span> : null}
+                </label>;
+              })}
+            </div>
+            <p className="text-xs text-muted-foreground">{carpetaProyecto ? "Archivos compatibles de la carpeta seleccionada. Si solo hay uno, se selecciona automáticamente." : "Selecciona visualmente el archivo que quieres vender. El original no se mueve ni se modifica."}</p>
+            {errorArchivos ? <p className="text-xs text-destructive">No se pudo cargar Mi Nube: {errorArchivos}</p> : null}
+          </fieldset>
           <div className="space-y-1 text-sm sm:col-span-2"><p className="font-medium">Imagen de portada</p><p className="text-xs text-muted-foreground">Se reutiliza automáticamente la portada guardada en la carpeta. No necesitas cargarla otra vez.</p></div>
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5 sm:col-span-2">
             <p className="max-w-md text-xs leading-5 text-muted-foreground">El borrador no aparece públicamente y no activa ningún cobro.</p>
