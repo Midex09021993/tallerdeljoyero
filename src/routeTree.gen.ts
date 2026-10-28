@@ -16,9 +16,10 @@ import { Route as AurumRenderPublicRouteImport } from './routes/aurum-render-pub
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CatalogoPublicoRouteImport } from './routes/catalogo-publico'
 import { Route as ClienteRouteImport } from './routes/cliente'
+import { Route as ComunidadRouteImport } from './routes/comunidad'
 import { Route as CursosDiseno3dRouteImport } from './routes/cursos-diseno-3d'
+import { Route as DirectorioRouteImport } from './routes/directorio'
 import { Route as GaleriaJoyasRouteImport } from './routes/galeria-joyas'
-import { Route as HerramientasRouteImport } from './routes/herramientas'
 import { Route as HerramientasPublicasRouteImport } from './routes/herramientas-publicas'
 import { Route as RecuperarContrasenaRouteImport } from './routes/recuperar-contrasena'
 import { Route as TiendaRouteImport } from './routes/tienda'
@@ -35,7 +36,7 @@ import { Route as AuthenticatedCotizacionesRouteImport } from './routes/_authent
 import { Route as AuthenticatedCursosFormacionRouteImport } from './routes/_authenticated/cursos-formacion'
 import { Route as AuthenticatedDiseno3dRouteImport } from './routes/_authenticated/diseno-3d'
 import { Route as AuthenticatedGestionRouteImport } from './routes/_authenticated/gestion'
-import { Route as AuthenticatedTallerHerramientasRouteImport } from './routes/_authenticated/taller.herramientas'
+import { Route as AuthenticatedHerramientasRouteImport } from './routes/_authenticated/herramientas'
 import { Route as AuthenticatedImpresion3dRouteImport } from './routes/_authenticated/impresion-3d'
 import { Route as AuthenticatedInicioRouteImport } from './routes/_authenticated/inicio'
 import { Route as AuthenticatedInventarioRouteImport } from './routes/_authenticated/inventario'
@@ -55,7 +56,7 @@ import { Route as AuthenticatedVectorizadorLaserRouteImport } from './routes/_au
 import { Route as AuthenticatedVentasRouteImport } from './routes/_authenticated/ventas'
 import { Route as CCodigoRouteImport } from './routes/c/$codigo'
 import { Route as FormacionSlugRouteImport } from './routes/formacion.$slug'
-import { Route as HerramientasHerramientaRouteImport } from './routes/herramientas/$herramienta'
+import { Route as HerramientasPublicasHerramientaRouteImport } from './routes/herramientas-publicas/$herramienta'
 import { Route as JoyaTokenRouteImport } from './routes/joya/$token'
 import { Route as TransferIndexRouteImport } from './routes/transfer.index'
 import { Route as TransferTokenRouteImport } from './routes/transfer/$token'
@@ -110,19 +111,24 @@ const ClienteRoute = ClienteRouteImport.update({
   path: '/cliente',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ComunidadRoute = ComunidadRouteImport.update({
+  id: '/comunidad',
+  path: '/comunidad',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CursosDiseno3dRoute = CursosDiseno3dRouteImport.update({
   id: '/cursos-diseno-3d',
   path: '/cursos-diseno-3d',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DirectorioRoute = DirectorioRouteImport.update({
+  id: '/directorio',
+  path: '/directorio',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GaleriaJoyasRoute = GaleriaJoyasRouteImport.update({
   id: '/galeria-joyas',
   path: '/galeria-joyas',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HerramientasRoute = HerramientasRouteImport.update({
-  id: '/herramientas',
-  path: '/herramientas',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HerramientasPublicasRoute = HerramientasPublicasRouteImport.update({
@@ -209,10 +215,10 @@ const AuthenticatedGestionRoute = AuthenticatedGestionRouteImport.update({
   path: '/gestion',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedTallerHerramientasRoute =
-  AuthenticatedTallerHerramientasRouteImport.update({
-    id: '/taller/herramientas',
-    path: '/taller/herramientas',
+const AuthenticatedHerramientasRoute =
+  AuthenticatedHerramientasRouteImport.update({
+    id: '/herramientas',
+    path: '/herramientas',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedImpresion3dRoute =
@@ -316,11 +322,12 @@ const FormacionSlugRoute = FormacionSlugRouteImport.update({
   path: '/formacion/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
-const HerramientasHerramientaRoute = HerramientasHerramientaRouteImport.update({
-  id: '/herramientas/$herramienta',
-  path: '/herramientas/$herramienta',
-  getParentRoute: () => rootRouteImport,
-} as any)
+const HerramientasPublicasHerramientaRoute =
+  HerramientasPublicasHerramientaRouteImport.update({
+    id: '/$herramienta',
+    path: '/$herramienta',
+    getParentRoute: () => HerramientasPublicasRoute,
+  } as any)
 const JoyaTokenRoute = JoyaTokenRouteImport.update({
   id: '/joya/$token',
   path: '/joya/$token',
@@ -432,14 +439,16 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/catalogo-publico': typeof CatalogoPublicoRoute
   '/cliente': typeof ClienteRoute
+  '/comunidad': typeof ComunidadRoute
   '/cursos-diseno-3d': typeof CursosDiseno3dRoute
+  '/directorio': typeof DirectorioRoute
   '/galeria-joyas': typeof GaleriaJoyasRoute
-  '/herramientas': typeof HerramientasRoute
-  '/herramientas-publicas': typeof HerramientasPublicasRoute
+  '/herramientas-publicas': typeof HerramientasPublicasRouteWithChildren
   '/recuperar-contrasena': typeof RecuperarContrasenaRoute
   '/tienda': typeof TiendaRoute
   '/$slug/$producto': typeof SlugProductoRoute
   '/aurum-render': typeof AuthenticatedAurumRenderRoute
+  '/aurum-render-plugin': typeof AuthenticatedAurumRenderPluginRoute
   '/casting': typeof AuthenticatedCastingRoute
   '/catalogo': typeof AuthenticatedCatalogoRoute
   '/clientes': typeof AuthenticatedClientesRoute
@@ -449,7 +458,7 @@ export interface FileRoutesByFullPath {
   '/cursos-formacion': typeof AuthenticatedCursosFormacionRoute
   '/diseno-3d': typeof AuthenticatedDiseno3dRoute
   '/gestion': typeof AuthenticatedGestionRoute
-  '/taller/herramientas': typeof AuthenticatedTallerHerramientasRoute
+  '/herramientas': typeof AuthenticatedHerramientasRoute
   '/impresion-3d': typeof AuthenticatedImpresion3dRoute
   '/inicio': typeof AuthenticatedInicioRoute
   '/inventario': typeof AuthenticatedInventarioRoute
@@ -469,7 +478,7 @@ export interface FileRoutesByFullPath {
   '/ventas': typeof AuthenticatedVentasRouteWithChildren
   '/c/$codigo': typeof CCodigoRouteWithChildren
   '/formacion/$slug': typeof FormacionSlugRoute
-  '/herramientas/$herramienta': typeof HerramientasHerramientaRoute
+  '/herramientas-publicas/$herramienta': typeof HerramientasPublicasHerramientaRoute
   '/joya/$token': typeof JoyaTokenRoute
   '/transfer/$token': typeof TransferTokenRoute
   '/v/$token': typeof VTokenRoute
@@ -497,14 +506,16 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/catalogo-publico': typeof CatalogoPublicoRoute
   '/cliente': typeof ClienteRoute
+  '/comunidad': typeof ComunidadRoute
   '/cursos-diseno-3d': typeof CursosDiseno3dRoute
+  '/directorio': typeof DirectorioRoute
   '/galeria-joyas': typeof GaleriaJoyasRoute
-  '/herramientas': typeof HerramientasRoute
-  '/herramientas-publicas': typeof HerramientasPublicasRoute
+  '/herramientas-publicas': typeof HerramientasPublicasRouteWithChildren
   '/recuperar-contrasena': typeof RecuperarContrasenaRoute
   '/tienda': typeof TiendaRoute
   '/$slug/$producto': typeof SlugProductoRoute
   '/aurum-render': typeof AuthenticatedAurumRenderRoute
+  '/aurum-render-plugin': typeof AuthenticatedAurumRenderPluginRoute
   '/casting': typeof AuthenticatedCastingRoute
   '/catalogo': typeof AuthenticatedCatalogoRoute
   '/clientes': typeof AuthenticatedClientesRoute
@@ -513,7 +524,7 @@ export interface FileRoutesByTo {
   '/cursos-formacion': typeof AuthenticatedCursosFormacionRoute
   '/diseno-3d': typeof AuthenticatedDiseno3dRoute
   '/gestion': typeof AuthenticatedGestionRoute
-  '/taller/herramientas': typeof AuthenticatedTallerHerramientasRoute
+  '/herramientas': typeof AuthenticatedHerramientasRoute
   '/impresion-3d': typeof AuthenticatedImpresion3dRoute
   '/inicio': typeof AuthenticatedInicioRoute
   '/inventario': typeof AuthenticatedInventarioRoute
@@ -532,7 +543,7 @@ export interface FileRoutesByTo {
   '/ventas': typeof AuthenticatedVentasRouteWithChildren
   '/c/$codigo': typeof CCodigoRouteWithChildren
   '/formacion/$slug': typeof FormacionSlugRoute
-  '/herramientas/$herramienta': typeof HerramientasHerramientaRoute
+  '/herramientas-publicas/$herramienta': typeof HerramientasPublicasHerramientaRoute
   '/joya/$token': typeof JoyaTokenRoute
   '/transfer/$token': typeof TransferTokenRoute
   '/v/$token': typeof VTokenRoute
@@ -563,13 +574,16 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/catalogo-publico': typeof CatalogoPublicoRoute
   '/cliente': typeof ClienteRoute
+  '/comunidad': typeof ComunidadRoute
   '/cursos-diseno-3d': typeof CursosDiseno3dRoute
+  '/directorio': typeof DirectorioRoute
   '/galeria-joyas': typeof GaleriaJoyasRoute
-  '/herramientas-publicas': typeof HerramientasPublicasRoute
+  '/herramientas-publicas': typeof HerramientasPublicasRouteWithChildren
   '/recuperar-contrasena': typeof RecuperarContrasenaRoute
   '/tienda': typeof TiendaRoute
   '/$slug/$producto': typeof SlugProductoRoute
   '/_authenticated/aurum-render': typeof AuthenticatedAurumRenderRoute
+  '/_authenticated/aurum-render-plugin': typeof AuthenticatedAurumRenderPluginRoute
   '/_authenticated/casting': typeof AuthenticatedCastingRoute
   '/_authenticated/catalogo': typeof AuthenticatedCatalogoRoute
   '/_authenticated/clientes': typeof AuthenticatedClientesRoute
@@ -579,7 +593,7 @@ export interface FileRoutesById {
   '/_authenticated/cursos-formacion': typeof AuthenticatedCursosFormacionRoute
   '/_authenticated/diseno-3d': typeof AuthenticatedDiseno3dRoute
   '/_authenticated/gestion': typeof AuthenticatedGestionRoute
-  '/_authenticated/taller/herramientas': typeof AuthenticatedTallerHerramientasRoute
+  '/_authenticated/herramientas': typeof AuthenticatedHerramientasRoute
   '/_authenticated/impresion-3d': typeof AuthenticatedImpresion3dRoute
   '/_authenticated/inicio': typeof AuthenticatedInicioRoute
   '/_authenticated/inventario': typeof AuthenticatedInventarioRoute
@@ -599,7 +613,7 @@ export interface FileRoutesById {
   '/_authenticated/ventas': typeof AuthenticatedVentasRouteWithChildren
   '/c/$codigo': typeof CCodigoRouteWithChildren
   '/formacion/$slug': typeof FormacionSlugRoute
-  '/herramientas/$herramienta': typeof HerramientasHerramientaRoute
+  '/herramientas-publicas/$herramienta': typeof HerramientasPublicasHerramientaRoute
   '/joya/$token': typeof JoyaTokenRoute
   '/transfer/$token': typeof TransferTokenRoute
   '/v/$token': typeof VTokenRoute
@@ -630,13 +644,16 @@ export interface FileRouteTypes {
     | '/auth'
     | '/catalogo-publico'
     | '/cliente'
+    | '/comunidad'
     | '/cursos-diseno-3d'
+    | '/directorio'
     | '/galeria-joyas'
     | '/herramientas-publicas'
     | '/recuperar-contrasena'
     | '/tienda'
     | '/$slug/$producto'
     | '/aurum-render'
+    | '/aurum-render-plugin'
     | '/casting'
     | '/catalogo'
     | '/clientes'
@@ -666,7 +683,7 @@ export interface FileRouteTypes {
     | '/ventas'
     | '/c/$codigo'
     | '/formacion/$slug'
-    | '/herramientas/$herramienta'
+    | '/herramientas-publicas/$herramienta'
     | '/joya/$token'
     | '/transfer/$token'
     | '/v/$token'
@@ -694,13 +711,16 @@ export interface FileRouteTypes {
     | '/auth'
     | '/catalogo-publico'
     | '/cliente'
+    | '/comunidad'
     | '/cursos-diseno-3d'
+    | '/directorio'
     | '/galeria-joyas'
     | '/herramientas-publicas'
     | '/recuperar-contrasena'
     | '/tienda'
     | '/$slug/$producto'
     | '/aurum-render'
+    | '/aurum-render-plugin'
     | '/casting'
     | '/catalogo'
     | '/clientes'
@@ -728,7 +748,7 @@ export interface FileRouteTypes {
     | '/ventas'
     | '/c/$codigo'
     | '/formacion/$slug'
-    | '/herramientas/$herramienta'
+    | '/herramientas-publicas/$herramienta'
     | '/joya/$token'
     | '/transfer/$token'
     | '/v/$token'
@@ -758,13 +778,16 @@ export interface FileRouteTypes {
     | '/auth'
     | '/catalogo-publico'
     | '/cliente'
+    | '/comunidad'
     | '/cursos-diseno-3d'
+    | '/directorio'
     | '/galeria-joyas'
     | '/herramientas-publicas'
     | '/recuperar-contrasena'
     | '/tienda'
     | '/$slug/$producto'
     | '/_authenticated/aurum-render'
+    | '/_authenticated/aurum-render-plugin'
     | '/_authenticated/casting'
     | '/_authenticated/catalogo'
     | '/_authenticated/clientes'
@@ -774,7 +797,7 @@ export interface FileRouteTypes {
     | '/_authenticated/cursos-formacion'
     | '/_authenticated/diseno-3d'
     | '/_authenticated/gestion'
-    | '/_authenticated/taller/herramientas'
+    | '/_authenticated/herramientas'
     | '/_authenticated/impresion-3d'
     | '/_authenticated/inicio'
     | '/_authenticated/inventario'
@@ -794,7 +817,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ventas'
     | '/c/$codigo'
     | '/formacion/$slug'
-    | '/herramientas/$herramienta'
+    | '/herramientas-publicas/$herramienta'
     | '/joya/$token'
     | '/transfer/$token'
     | '/v/$token'
@@ -825,15 +848,15 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CatalogoPublicoRoute: typeof CatalogoPublicoRoute
   ClienteRoute: typeof ClienteRoute
+  ComunidadRoute: typeof ComunidadRoute
   CursosDiseno3dRoute: typeof CursosDiseno3dRoute
+  DirectorioRoute: typeof DirectorioRoute
   GaleriaJoyasRoute: typeof GaleriaJoyasRoute
-  HerramientasRoute: typeof HerramientasRoute
-  HerramientasPublicasRoute: typeof HerramientasPublicasRoute
+  HerramientasPublicasRoute: typeof HerramientasPublicasRouteWithChildren
   RecuperarContrasenaRoute: typeof RecuperarContrasenaRoute
   TiendaRoute: typeof TiendaRoute
   CCodigoRoute: typeof CCodigoRouteWithChildren
   FormacionSlugRoute: typeof FormacionSlugRoute
-  HerramientasHerramientaRoute: typeof HerramientasHerramientaRoute
   JoyaTokenRoute: typeof JoyaTokenRoute
   TransferTokenRoute: typeof TransferTokenRoute
   VTokenRoute: typeof VTokenRoute
@@ -894,6 +917,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClienteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/comunidad': {
+      id: '/comunidad'
+      path: '/comunidad'
+      fullPath: '/comunidad'
+      preLoaderRoute: typeof ComunidadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/cursos-diseno-3d': {
       id: '/cursos-diseno-3d'
       path: '/cursos-diseno-3d'
@@ -901,18 +931,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CursosDiseno3dRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/directorio': {
+      id: '/directorio'
+      path: '/directorio'
+      fullPath: '/directorio'
+      preLoaderRoute: typeof DirectorioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/galeria-joyas': {
       id: '/galeria-joyas'
       path: '/galeria-joyas'
       fullPath: '/galeria-joyas'
       preLoaderRoute: typeof GaleriaJoyasRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/herramientas': {
-      id: '/herramientas'
-      path: '/herramientas'
-      fullPath: '/herramientas'
-      preLoaderRoute: typeof HerramientasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/herramientas-publicas': {
@@ -955,6 +985,13 @@ declare module '@tanstack/react-router' {
       path: '/aurum-render'
       fullPath: '/aurum-render'
       preLoaderRoute: typeof AuthenticatedAurumRenderRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/aurum-render-plugin': {
+      id: '/_authenticated/aurum-render-plugin'
+      path: '/aurum-render-plugin'
+      fullPath: '/aurum-render-plugin'
+      preLoaderRoute: typeof AuthenticatedAurumRenderPluginRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/casting': {
@@ -1020,11 +1057,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedGestionRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/taller/herramientas': {
-      id: '/_authenticated/taller/herramientas'
-      path: '/taller/herramientas'
-      fullPath: '/taller/herramientas'
-      preLoaderRoute: typeof AuthenticatedTallerHerramientasRouteImport
+    '/_authenticated/herramientas': {
+      id: '/_authenticated/herramientas'
+      path: '/herramientas'
+      fullPath: '/herramientas'
+      preLoaderRoute: typeof AuthenticatedHerramientasRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/impresion-3d': {
@@ -1160,12 +1197,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FormacionSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/herramientas/$herramienta': {
-      id: '/herramientas/$herramienta'
-      path: '/herramientas/$herramienta'
-      fullPath: '/herramientas/$herramienta'
-      preLoaderRoute: typeof HerramientasHerramientaRouteImport
-      parentRoute: typeof rootRouteImport
+    '/herramientas-publicas/$herramienta': {
+      id: '/herramientas-publicas/$herramienta'
+      path: '/$herramienta'
+      fullPath: '/herramientas-publicas/$herramienta'
+      preLoaderRoute: typeof HerramientasPublicasHerramientaRouteImport
+      parentRoute: typeof HerramientasPublicasRoute
     }
     '/joya/$token': {
       id: '/joya/$token'
@@ -1357,7 +1394,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCursosFormacionRoute: typeof AuthenticatedCursosFormacionRoute
   AuthenticatedDiseno3dRoute: typeof AuthenticatedDiseno3dRoute
   AuthenticatedGestionRoute: typeof AuthenticatedGestionRoute
-  AuthenticatedTallerHerramientasRoute: typeof AuthenticatedTallerHerramientasRoute
+  AuthenticatedHerramientasRoute: typeof AuthenticatedHerramientasRoute
   AuthenticatedImpresion3dRoute: typeof AuthenticatedImpresion3dRoute
   AuthenticatedInicioRoute: typeof AuthenticatedInicioRoute
   AuthenticatedInventarioRoute: typeof AuthenticatedInventarioRoute
@@ -1393,7 +1430,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCursosFormacionRoute: AuthenticatedCursosFormacionRoute,
   AuthenticatedDiseno3dRoute: AuthenticatedDiseno3dRoute,
   AuthenticatedGestionRoute: AuthenticatedGestionRoute,
-  AuthenticatedTallerHerramientasRoute: AuthenticatedTallerHerramientasRoute,
+  AuthenticatedHerramientasRoute: AuthenticatedHerramientasRoute,
   AuthenticatedImpresion3dRoute: AuthenticatedImpresion3dRoute,
   AuthenticatedInicioRoute: AuthenticatedInicioRoute,
   AuthenticatedInventarioRoute: AuthenticatedInventarioRoute,
@@ -1435,6 +1472,17 @@ const SlugRouteChildren: SlugRouteChildren = {
 
 const SlugRouteWithChildren = SlugRoute._addFileChildren(SlugRouteChildren)
 
+interface HerramientasPublicasRouteChildren {
+  HerramientasPublicasHerramientaRoute: typeof HerramientasPublicasHerramientaRoute
+}
+
+const HerramientasPublicasRouteChildren: HerramientasPublicasRouteChildren = {
+  HerramientasPublicasHerramientaRoute: HerramientasPublicasHerramientaRoute,
+}
+
+const HerramientasPublicasRouteWithChildren =
+  HerramientasPublicasRoute._addFileChildren(HerramientasPublicasRouteChildren)
+
 interface CCodigoRouteChildren {
   CCodigoPdfRoute: typeof CCodigoPdfRoute
 }
@@ -1454,15 +1502,15 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CatalogoPublicoRoute: CatalogoPublicoRoute,
   ClienteRoute: ClienteRoute,
+  ComunidadRoute: ComunidadRoute,
   CursosDiseno3dRoute: CursosDiseno3dRoute,
+  DirectorioRoute: DirectorioRoute,
   GaleriaJoyasRoute: GaleriaJoyasRoute,
-  HerramientasRoute: HerramientasRoute,
-  HerramientasPublicasRoute: HerramientasPublicasRoute,
+  HerramientasPublicasRoute: HerramientasPublicasRouteWithChildren,
   RecuperarContrasenaRoute: RecuperarContrasenaRoute,
   TiendaRoute: TiendaRoute,
   CCodigoRoute: CCodigoRouteWithChildren,
   FormacionSlugRoute: FormacionSlugRoute,
-  HerramientasHerramientaRoute: HerramientasHerramientaRoute,
   JoyaTokenRoute: JoyaTokenRoute,
   TransferTokenRoute: TransferTokenRoute,
   VTokenRoute: VTokenRoute,
