@@ -63,7 +63,7 @@ function ComunidadPage() {
           </Link>
           <nav className="flex items-center gap-4 text-sm font-medium text-slate-600 sm:gap-6" aria-label="Navegación de comunidad">
             <Link to="/directorio" className="transition hover:text-[#987400]">Directorio</Link>
-            <Link to="/cursos-diseno-3d" className="hidden transition hover:text-[#987400] sm:inline-flex">Formación</Link>
+            <Link to="/comunidad#guias" className="hidden transition hover:text-[#987400] sm:inline-flex">Biblioteca</Link>
             <Link to="/" className="transition hover:text-[#987400]">Volver a AURUM LAB</Link>
           </nav>
         </div>
