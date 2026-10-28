@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Gem, Ruler, Sparkles } from "lucide-react";
+import { ArrowRight, Gem, Ruler, Sparkles, Printer } from "lucide-react";
 
 export const Route = createFileRoute("/comunidad")({
   head: () => ({
@@ -44,6 +44,14 @@ const guias = [
     descripcion: "Buenas prácticas para revisar el modelo y mostrar una pieza con una presentación más cuidada.",
     icon: Sparkles,
     lectura: "Flujo de trabajo",
+  },
+  {
+    id: "impresion-3d",
+    categoria: "Fabricación digital",
+    titulo: "Impresión 3D para joyería: del archivo a la pieza",
+    descripcion: "Prepara geometría, orientación y soportes con criterio de taller para lograr detalles limpios y una producción más predecible.",
+    icon: Printer,
+    lectura: "Guía de taller",
   },
 ] as const;
 
@@ -129,6 +137,16 @@ function ComunidadPage() {
             <article id="diseno-3d" className="scroll-mt-24 border-t border-slate-100 pt-5">
               <h3 className="flex items-center gap-2 font-bold"><Sparkles className="size-4 text-[#987400]" /> Presentación de modelos 3D</h3>
               <p className="mt-2 text-sm leading-6 text-slate-600">Antes de compartir un diseño, revisa que la geometría esté completa, orientada correctamente y con una escala coherente. Para comunicar mejor el diseño, elige una vista clara, un material adecuado y una iluminación que permita distinguir los detalles de la pieza.</p>
+            </article>
+            <article id="impresion-3d" className="scroll-mt-24 border-t border-slate-100 pt-5">
+              <h3 className="flex items-center gap-2 font-bold"><Printer className="size-4 text-[#987400]" /> Impresión 3D de joyería: precisión desde el diseño</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-600">Una buena impresión comienza antes de encender la máquina. Revisa la escala del archivo, la continuidad de la malla y las zonas delicadas: galerías, calados, grabados, engastes y filigranas. Evita paredes excesivamente gruesas y detalles más finos de lo que permiten tu impresora y el material. La orientación debe equilibrar la calidad de superficie, la resistencia durante la impresión y la facilidad para retirar soportes sin marcar las caras visibles.</p>
+              <p className="mt-3 text-sm leading-6 text-slate-600">Selecciona la resina según el objetivo. Para prototipos y validación visual, prioriza estabilidad y detalle; para microfundición, utiliza una resina formulada específicamente para colado y sigue su ficha técnica. Lava y seca la pieza por completo y realiza el poscurado indicado por el fabricante. Si se va a fundir, diseña la alimentación con el proceso de colado en mente y respeta el revestimiento y la curva de eliminación recomendados para esa combinación de resina, inversión y horno.</p>
+              <p className="mt-3 text-sm leading-6 text-slate-600">Antes de producir una serie, imprime una prueba de las zonas críticas y registra orientación, altura de capa, soportes, lavado y poscurado. Ese pequeño protocolo ayuda a repetir resultados, reducir marcas y proteger los detalles finos de cada diseño.</p>
+              <div className="mt-4 flex flex-wrap gap-3 text-sm font-semibold">
+                <a href="https://formlabs.com/white-papers/introduction-to-casting-for-3d-printed-jewelry-patterns/" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[#876500] hover:text-[#5f4900]">Guía de diseño y colado <ArrowRight className="size-3.5" /></a>
+                <a href="https://formlabs.com/support/Introduction-to-casting-with-Formlabs-resins/" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[#876500] hover:text-[#5f4900]">Preparación de resinas <ArrowRight className="size-3.5" /></a>
+              </div>
             </article>
           </div>
         </div>
