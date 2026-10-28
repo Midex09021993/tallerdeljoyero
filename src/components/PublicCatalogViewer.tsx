@@ -174,6 +174,8 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         const family = object.userData?.aurumPublicInferredGem ? "gema" : classifyMesh(object);
         const originalMaterials = Array.isArray(object.material) ? object.material : [object.material];
         const next = originalMaterials.map((original: any) => {
+          // Do not replace a live BVH shader when a metal selection or HDR callback reapplies profiles.
+          if (family === "gema" && diamondBvhRuntimeRef.current) return original;
           const material = family === "gema" ? ensurePhysicalGemMaterial(original) : original;
           if (family === "metal") {
             applyAurumMetal(material, metalPresetFromConfig(metal));
@@ -441,11 +443,30 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
       if (!object.isMesh || !object.material) return;
       const family = object.userData?.aurumPublicInferredGem ? "gema" : classifyMesh(object);
       const originalMaterials = Array.isArray(object.material) ? object.material : [object.material];
+      if (family === "gema") {
+        object.userData = {
+          ...(object.userData ?? {}),
+          aurumActiveGemId: gem.id,
+          aurumActiveGemFamily: gem.familia.toLocaleLowerCase(),
+        };
+        // The live diamond BVH owns the stone shader. Metal changes must never
+        // replace it with a plain physical material; the BVH effect handles
+        // teardown/recreation only when the selected gem profile changes.
+        if (diamondBvhRuntimeRef.current) return;
+      }
       const materials = originalMaterials.map((material: any) => family === "gema" ? ensurePhysicalGemMaterial(material) : material);
       object.material = Array.isArray(object.material) ? materials : materials[0];
       materials.forEach((material: any) => {
         if (family === "metal") applyAurumMetal(material, metalPresetFromConfig(metal));
-        if (family === "gema") applyAurumGem(material, gemPresetFromConfig(gem), Math.max(.015, Number(object.userData?.aurumOpticalProfile?.thickness ?? 1)));
+        if (family === "gema") {
+          applyAurumGem(material, gemPresetFromConfig(gem), Math.max(.015, Number(object.userData?.aurumOpticalProfile?.thickness ?? 1)));
+          material.userData = {
+            ...(material.userData ?? {}),
+            aurumOpticalProfile: gemPresetFromConfig(gem),
+            aurumGemFamily: gem.familia,
+            aurumGemEnvIntensity: gem.envMapIntensity,
+          };
+        }
         material.needsUpdate = true;
       });
     });
