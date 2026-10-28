@@ -4,19 +4,11 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { esVistaMovilTablet, inicioSegunRol, useSesion } from "@/lib/auth";
 import { ArrowRight, Boxes, Calculator, Eye, EyeOff, Gem, Grid2X2, Headphones, HelpCircle, Home, LockKeyhole, Menu, X, Monitor, Network, PackageCheck, ShieldCheck, ShoppingBag, Sparkles, UserRound, UsersRound, type LucideIcon } from "lucide-react";
-import heroJoyeria from "@/assets/diseno-corona.jpg";
-import heroColgante from "@/assets/diseno-colgante.jpg";
-import heroFloral from "@/assets/diseno-floral.jpg";
 import { registrarPrimerDueno, resolverEmailInicioSesion, sistemaSinDuenos } from "@/lib/cuentas.functions";
 
 const RegistroTaller = lazy(() => import("@/components/RegistroTaller").then((module) => ({ default: module.RegistroTaller })));
 const ComunidadAurumLab = lazy(() => import("@/components/ComunidadAurumLab").then((module) => ({ default: module.ComunidadAurumLab })));
-const diapositivasAcceso = [
-  { imagen: heroJoyeria, alt: "Diseño ornamental de joyería" },
-  { imagen: heroColgante, alt: "Diseño de colgante de joyería" },
-  { imagen: heroFloral, alt: "Diseño floral de joyería" },
-] as const;
-
+const MiniAurumRender = lazy(() => import("@/components/MiniAurumRender").then((module) => ({ default: module.MiniAurumRender })));
 const ContactoComercial = lazy(() => import("@/components/ContactoComercial").then((module) => ({ default: module.ContactoComercial })));
 
 export const Route = createFileRoute("/auth")({
@@ -81,26 +73,9 @@ function LoginPage() {
     id: string; nombre: string; precio: string; enfoque: string; items: string[];
     noDisponible?: boolean; carpetas?: number | null; almacenamiento?: number | null; productos?: number | null;
   } | null>(null);
-  const [diapositivaActual, setDiapositivaActual] = useState(0);
-  const [diapositivasFallidas, setDiapositivasFallidas] = useState<number[]>([]);
-  const diapositivaVisible = diapositivasAcceso[diapositivaActual] ?? diapositivasAcceso[0];
   const [menuMovilAbierto, setMenuMovilAbierto] = useState(false);
   const [seccionPlataforma, setSeccionPlataforma] = useState<"ecosistema"|"participantes"|"flujo"|"comunidad"|"planes">("ecosistema");
   const modoAlta = Boolean(estado?.vacio && (estado as { disponible?: boolean } | undefined)?.disponible !== false);
-
-  useEffect(() => {
-    const intervalo = window.setInterval(() => {
-      setDiapositivaActual((actual) => {
-        const disponibles = diapositivasAcceso
-          .map((_, indice) => indice)
-          .filter((indice) => !diapositivasFallidas.includes(indice));
-        if (disponibles.length < 2) return actual;
-        const posicionActual = disponibles.indexOf(actual);
-        return disponibles[(posicionActual + 1 + disponibles.length) % disponibles.length] ?? actual;
-      });
-    }, 5000);
-    return () => window.clearInterval(intervalo);
-  }, [diapositivasFallidas]);
 
   useEffect(() => {
     if (window.location.hash === "#conoce-plataforma") {
@@ -219,27 +194,13 @@ function LoginPage() {
               <span className="mt-4 text-lg font-extrabold tracking-tight text-[#17232d]">AURUM LAB</span>
               <span className="mt-1 text-[10px] font-semibold uppercase tracking-[.22em] text-[#7d650d]">Tecnología para joyeros</span>
             </Link>
-            <div className="mt-10 overflow-hidden rounded-2xl border border-white/80 bg-white/70 p-2 shadow-[0_18px_50px_rgba(91,73,13,.12)]">
-              {diapositivasFallidas.length < diapositivasAcceso.length ? (
-                <img
-                  key={diapositivaVisible.imagen}
-                  src={diapositivaVisible.imagen}
-                  alt={diapositivaVisible.alt}
-                  onError={() => {
-                    setDiapositivasFallidas((actuales) => actuales.includes(diapositivaActual) ? actuales : [...actuales, diapositivaActual]);
-                    const siguiente = diapositivasAcceso.findIndex((_, indice) => indice !== diapositivaActual && !diapositivasFallidas.includes(indice));
-                    if (siguiente >= 0) setDiapositivaActual(siguiente);
-                  }}
-                  className="aspect-[4/3] w-full rounded-xl bg-[#fffaf0] object-cover transition-opacity duration-500"
-                  loading="eager"
-                  decoding="async"
-                />
-              ) : (
-                <div className="flex aspect-[4/3] w-full flex-col items-center justify-center gap-3 rounded-xl bg-gradient-to-br from-[#fffaf0] via-white to-[#f6e7b2] text-[#967100]" role="status">
-                  <Gem className="size-12" aria-hidden="true" />
-                  <span className="text-xs font-semibold uppercase tracking-[0.18em]">Diseño y tecnología joyera</span>
-                </div>
-              )}
+            <div className="mt-10 overflow-hidden rounded-2xl border border-white/80 bg-[#111820] p-2 shadow-[0_18px_50px_rgba(91,73,13,.12)]">
+              <Suspense fallback={<div className="flex aspect-[4/3] w-full flex-col items-center justify-center gap-3 rounded-xl bg-[#111820] text-[#f3d66e]" role="status" aria-label="Preparando visor 3D">
+                <Gem className="size-10 animate-pulse" aria-hidden="true" />
+                <span className="text-xs font-semibold uppercase tracking-[0.18em]">Preparando AURUM RENDER…</span>
+              </div>}>
+                <MiniAurumRender className="aspect-[4/3] w-full rounded-xl" />
+              </Suspense>
             </div>
             <h1 className="mt-6 text-2xl font-extrabold leading-tight tracking-tight text-[#17232d] sm:text-3xl">El arte de crear.</h1>
             <h2 className="mt-1 text-2xl font-extrabold leading-tight tracking-tight text-[#967100] sm:text-3xl">La inteligencia de gestionar.</h2>
