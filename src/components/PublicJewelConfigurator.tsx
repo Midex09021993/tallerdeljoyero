@@ -276,10 +276,10 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
               </div>
             </div>
             <div className="mt-2 flex items-center gap-2 sm:mt-2.5 sm:gap-2.5">
-              <span className="size-7 shrink-0 rounded-full border border-black/10 shadow-sm" style={{ backgroundColor: "#" + selectedGem.color.toString(16).padStart(6, "0") }} />
+              <span className="size-7 shrink-0 rounded-full border border-black/10 shadow-sm" style={{ backgroundColor: colorHex(selectedGem.color) }} />
               <div className="min-w-0">
                 <p className="text-[10px] text-[#8a8175]">Piedra</p>
-                <p className="truncate text-xs font-semibold text-[#342e26]">{selectedGem.label}</p>
+                <p className="truncate text-xs font-semibold text-[#342e26]">{selectedGem.nombre}</p>
               </div>
             </div>
             {aplicacionEstado && <p className={"mt-3 border-t border-[#eee6d8] pt-2 text-[10px] leading-4 " + (aplicacionEstado.startsWith("Metal y gema aplicados") ? "text-emerald-700" : "text-amber-700")} role="status">{aplicacionEstado}</p>}
