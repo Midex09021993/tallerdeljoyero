@@ -52,7 +52,7 @@ Deno.serve(async (req: Request) => {
 
     const { data: archivo, error: archivoError } = await admin
       .from("archivos_digitales_marketplace")
-      .select("id, titulo, participante_id, vendedor_usuario_id, bucket_archivo, ruta_archivo, nombre_archivo, estado")
+      .select("id, titulo, participante_id, vendedor_usuario_id, bucket_archivo, ruta_archivo, nombre_archivo, estado, archivos_adjuntos")
       .eq("id", compra.archivo_id)
       .maybeSingle();
     if (archivoError) throw archivoError;
@@ -69,11 +69,20 @@ Deno.serve(async (req: Request) => {
       return json({ error: "La ruta del archivo no es válida." }, 400);
     }
 
-    const { data: signed, error: signedError } = await admin.storage
-      .from("mi-nube")
-      .createSignedUrl(ruta, 90, { download: String(archivo.nombre_archivo).slice(0, 255) });
-    if (signedError || !signed?.signedUrl) throw signedError ?? new Error("No se pudo generar el enlace de descarga.");
-    return json({ ok: true, url: signed.signedUrl, nombre: archivo.nombre_archivo, expira_en_segundos: 90 });
+    const adjuntos = Array.isArray(archivo.archivos_adjuntos) ? archivo.archivos_adjuntos : [];
+    const archivos = adjuntos.length > 0 ? adjuntos : [{ ruta, nombre: archivo.nombre_archivo }];
+    const descargas: Array<{ url: string; nombre: string }> = [];
+    for (const item of archivos) {
+      const rutaAdjunta = String(item?.ruta ?? "");
+      const nombreAdjunto = String(item?.nombre ?? "").slice(0, 255);
+      if (!rutaAdjunta || !nombreAdjunto || !rutaAdjunta.startsWith(prefijoVendedor) || rutaAdjunta.startsWith("/") || rutaAdjunta.split("/").some((part) => part === "..") || rutaAdjunta.includes("\\\\") || rutaAdjunta.length > 1024) {
+        return json({ error: "Uno de los archivos incluidos no tiene una ruta válida." }, 400);
+      }
+      const { data: signed, error: signedError } = await admin.storage.from("mi-nube").createSignedUrl(rutaAdjunta, 90, { download: nombreAdjunto });
+      if (signedError || !signed?.signedUrl) throw signedError ?? new Error("No se pudo generar un enlace de descarga.");
+      descargas.push({ url: signed.signedUrl, nombre: nombreAdjunto });
+    }
+    return json({ ok: true, url: descargas[0]?.url, nombre: descargas[0]?.nombre, archivos: descargas, expira_en_segundos: 90 });
   } catch (error) {
     console.error("marketplace-descargar-archivo", error);
     return json({ error: "No se pudo preparar la descarga en este momento." }, 500);
