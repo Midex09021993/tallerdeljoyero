@@ -34,13 +34,13 @@ const obtenerArchivosPublicos = async (): Promise<ArchivoDigital[]> => {
 export const Route = createFileRoute("/galeria-joyas")({
   head: () => ({
     meta: [
-      { title: "Marketplace de archivos digitales | Taller del Joyero" },
+      { title: "Tienda 3D · Archivos digitales para joyería | AURUM LAB" },
       {
         name: "description",
-        content: "Descubre y compra modelos 3D, archivos CAD, imágenes y planos técnicos para joyería.",
+        content: "Tienda de modelos 3D, archivos CAD, imágenes y planos técnicos para profesionales de la joyería.",
       },
       { name: "robots", content: "index, follow" },
-      { property: "og:title", content: "Marketplace de archivos digitales | Taller del Joyero" },
+      { property: "og:title", content: "Tienda 3D · Archivos digitales para joyería | AURUM LAB" },
       {
         property: "og:description",
         content: "Archivos digitales para profesionales de la joyería: modelos 3D, archivos CAD y planos técnicos.",
@@ -82,10 +82,10 @@ function MarketplaceArchivosPage() {
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4 sm:px-8">
           <Link to="/auth" className="flex items-center gap-3">
             <span className="grid size-10 place-items-center rounded-xl border border-[#b89b5e]/40 bg-white/5"><Gem className="size-5 text-[#d7bd86]" /></span>
-            <span><strong className="block text-xs font-extrabold tracking-[.13em] sm:text-sm">TALLER DEL JOYERO</strong><span className="mt-0.5 block text-[10px] tracking-[.1em] text-white/55">MARKETPLACE DIGITAL</span></span>
+            <span><strong className="block text-xs font-extrabold tracking-[.13em] sm:text-sm">TALLER DEL JOYERO</strong><span className="mt-0.5 block text-[10px] tracking-[.1em] text-white/55">TIENDA 3D · ARCHIVOS DIGITALES</span></span>
           </Link>
           <nav className="flex items-center gap-2 sm:gap-4" aria-label="Navegación principal">
-            <Link to="/directorio" className="rounded-full px-3 py-2 text-xs text-white/75 transition hover:bg-white/10 hover:text-white">Comunidad</Link>
+            <Link to="/comunidad" className="rounded-full px-3 py-2 text-xs text-white/75 transition hover:bg-white/10 hover:text-white">Biblioteca</Link><Link to="/directorio" className="rounded-full px-3 py-2 text-xs text-white/75 transition hover:bg-white/10 hover:text-white">Directorio</Link>
             <Link to="/auth" className="rounded-full bg-[#c9ad73] px-4 py-2.5 text-xs font-semibold text-[#211d19] transition hover:bg-[#dfc994]">Acceder</Link>
           </nav>
         </div>
@@ -94,8 +94,8 @@ function MarketplaceArchivosPage() {
       <section className="relative isolate overflow-hidden border-b border-[#b89b5e]/20">
         <div aria-hidden="true" className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_80%_20%,rgba(190,159,96,.2),transparent_38%),radial-gradient(ellipse_at_5%_90%,rgba(190,159,96,.1),transparent_35%)]" />
         <div className="mx-auto max-w-7xl px-5 py-14 sm:px-8 sm:py-20">
-          <p className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.26em] text-[#96733d] sm:text-xs"><ShoppingBag className="size-4" /> Archivos digitales para joyeros</p>
-          <h1 className="mt-5 max-w-3xl font-display text-4xl font-medium leading-tight tracking-[-.04em] sm:text-6xl">Modelos y recursos <span className="text-[#9a7944]">para crear</span></h1>
+          <p className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.26em] text-[#96733d] sm:text-xs"><ShoppingBag className="size-4" /> Tienda 3D · Archivos digitales para joyeros</p>
+          <h1 className="mt-5 max-w-3xl font-display text-4xl font-medium leading-tight tracking-[-.04em] sm:text-6xl">Diseños digitales <span className="text-[#9a7944]">para crear</span></h1>
           <p className="mt-5 max-w-2xl text-sm leading-7 text-[#746b62] sm:text-base sm:leading-8">Encuentra modelos 3D, archivos CAD, imágenes y planos técnicos publicados por otros profesionales. Compra cada recurso de forma individual y conserva tus archivos en un espacio privado.</p>
           <div className="mt-6 flex flex-wrap gap-2 text-xs text-[#746b62]">
             <span className="inline-flex items-center gap-2 rounded-full border border-[#b89b5e]/30 bg-white/70 px-3 py-2"><Box className="size-4 text-[#96733d]" /> STL · 3DM · GLB · OBJ · STEP</span>
@@ -107,7 +107,7 @@ function MarketplaceArchivosPage() {
 
       <section className="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14">
         <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
-          <div><p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#96733d]">Selección digital</p><h2 className="mt-2 font-display text-2xl sm:text-3xl">Archivos para descargar</h2></div>
+          <div><p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#96733d]">Selección digital</p><h2 className="mt-2 font-display text-2xl sm:text-3xl">Modelos y recursos digitales</h2></div>
           {!isLoading && !isError ? <span className="text-xs text-[#81766a]">{archivos.length} {archivos.length === 1 ? "archivo publicado" : "archivos publicados"}</span> : null}
         </div>
 
@@ -169,7 +169,7 @@ function MarketplaceArchivosPage() {
 
       <footer className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-7 text-[10px] text-[#81766a] sm:flex-row sm:items-center sm:justify-between sm:px-8">
         <span>© {new Date().getFullYear()} Taller del Joyero · Marketplace Digital</span>
-        <div className="flex flex-wrap gap-4"><Link to="/directorio" className="hover:text-[#96733d]">Comunidad</Link><Link to="/auth" className="hover:text-[#96733d]">Acceso al ERP</Link></div>
+        <div className="flex flex-wrap gap-4"><Link to="/comunidad" className="hover:text-[#96733d]">Biblioteca</Link><Link to="/directorio" className="hover:text-[#96733d]">Directorio</Link><Link to="/auth" className="hover:text-[#96733d]">Acceso al ERP</Link></div>
       </footer>
     </main>
   );
