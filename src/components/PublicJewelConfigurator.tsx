@@ -161,6 +161,8 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
   }, [catalogApi, loadedModelUrl, modelKey, aurumMaterial, aurumGem]);
 
   const handleMetalSelect = (id: string) => {
+    // Evita recalcular el material si el usuario vuelve a pulsar la opción activa.
+    if (id === metalId) return;
     setMetalId(id);
     const selected = metales.find((item) => item.id === id) ?? metales[0];
     const material = MATERIALES.find((item) => item.id === selected.materialId)
@@ -178,6 +180,8 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
   };
 
   const handleGemSelect = (id: string) => {
+    // Evita volver a aplicar la gema cuando no hay un cambio real de selección.
+    if (id === gemaId) return;
     setGemaId(id);
     const selected = gemas.find((item) => item.id === id) ?? gemas[0];
     const gem = GEMAS.find((item) => item.id === selected.gemId)
