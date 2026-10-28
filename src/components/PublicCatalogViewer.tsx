@@ -394,7 +394,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
     const model = modelRef.current;
     const camera = cameraRef.current;
     const selectedGem = GEMAS.find((item) => item.id === gemId);
-    const selectedFamily = selectedGem?.familia.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLocaleLowerCase();
+    const selectedFamily = selectedGem?.familia.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase();
     const bvhFamilies = ["diamante", "esmeralda", "rubi", "zafiro", "amatista"];
     if (!model || !camera || !selectedGem || !selectedFamily || !bvhFamilies.includes(selectedFamily)) {
       return () => { cancelled = true; };
