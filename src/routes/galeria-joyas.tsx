@@ -117,7 +117,7 @@ function MarketplaceArchivosPage() {
             <span><strong className="block text-xs font-extrabold tracking-[.13em] sm:text-sm">TALLER DEL JOYERO</strong><span className="mt-0.5 block text-[10px] tracking-[.1em] text-white/55">TIENDA 3D · ARCHIVOS DIGITALES</span></span>
           </Link>
           <nav className="flex items-center gap-2 sm:gap-4" aria-label="Navegación principal">
-            <Link to="/comunidad" className="rounded-full px-3 py-2 text-xs text-white/75 transition hover:bg-white/10 hover:text-white">Biblioteca</Link><Link to="/directorio" className="rounded-full px-3 py-2 text-xs text-white/75 transition hover:bg-white/10 hover:text-white">Directorio</Link>
+            <Link to="/guias" className="rounded-full px-3 py-2 text-xs text-white/75 transition hover:bg-white/10 hover:text-white">Guías técnicas</Link><Link to="/directorio" className="rounded-full px-3 py-2 text-xs text-white/75 transition hover:bg-white/10 hover:text-white">Directorio</Link>
             <Link to="/auth" className="rounded-full bg-[#c9ad73] px-4 py-2.5 text-xs font-semibold text-[#211d19] transition hover:bg-[#dfc994]">Acceder</Link>
           </nav>
         </div>
