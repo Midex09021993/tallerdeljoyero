@@ -6,11 +6,9 @@ import {
   ArrowDownToLine,
   Box,
   CheckCircle2,
-  Cloud,
   File as FileIcon,
   FileText,
   Folder,
-  HardDrive,
   Image as ImageIcon,
   LoaderCircle,
   LockKeyhole,
@@ -1691,12 +1689,6 @@ function MiNubePage() {
               <p className="mt-1 text-sm text-muted-foreground">{archivos.length} archivo(s) · {carpetas.length} carpeta(s)</p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Link to="/marketplace-publicar" className="inline-flex items-center gap-2 rounded-xl border border-gold/35 bg-gold/10 px-3 py-2 text-xs font-semibold text-foreground transition hover:bg-gold/15">
-                <Cloud className="size-4 text-gold" /> Vender archivo digital
-              </Link>
-              <Link to="/marketplace-mis-compras" className="inline-flex items-center gap-2 rounded-xl border border-border px-3 py-2 text-xs font-semibold text-foreground transition hover:bg-muted">
-                <HardDrive className="size-4" /> Mis compras
-              </Link>
               <label className="relative min-w-0 flex-1 sm:w-64 sm:flex-none">
                 <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <input
