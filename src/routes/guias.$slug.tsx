@@ -2,12 +2,13 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, ArrowRight, Calculator, Gem } from "lucide-react";
 
 const slugGuia = "calcular-aleaciones-oro-18k-14k-9k";
+const slugPeso = "calcular-peso-joya-modelo-3d";
 
 export const Route = createFileRoute("/guias/$slug")({
   head: ({ params }) => {
-    const valida = params.slug === slugGuia;
-    const titulo = "Cómo calcular aleaciones de oro de 18K, 14K y 9K";
-    const descripcion = "Aprende a calcular el oro fino y el metal de liga en aleaciones de 18K, 14K y 9K, con fórmulas y ejemplos prácticos para joyeros.";
+    const valida = params.slug === slugGuia || params.slug === slugPeso;
+    const titulo = params.slug === slugPeso ? "Cómo estimar el peso de una joya a partir de un modelo 3D" : "Cómo calcular aleaciones de oro de 18K, 14K y 9K";
+    const descripcion = params.slug === slugPeso ? "Aprende a preparar un modelo 3D y estimar el peso teórico de una joya según su volumen, unidades y densidad del metal." : "Aprende a calcular el oro fino y el metal de liga en aleaciones de 18K, 14K y 9K, con fórmulas y ejemplos prácticos para joyeros.";
     return {
       meta: [
         { title: valida ? `${titulo} | Guías técnicas AURUM LAB` : "Guía no encontrada | AURUM LAB" },
@@ -34,6 +35,60 @@ function GuiaTecnicaPage() {
           <p className="mt-3 text-sm leading-6 text-slate-600">Esta guía todavía no está publicada o el enlace es incorrecto.</p>
           <Link to="/guias" className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#17232d] px-5 py-3 text-sm font-semibold text-white"><ArrowLeft className="size-4" /> Volver a las guías</Link>
         </div>
+      </main>
+    );
+  }
+
+  if (slug === slugPeso) {
+    return (
+      <main className="min-h-screen bg-[#fffefa] text-[#17232d]">
+        <header className="border-b border-slate-200 bg-white">
+          <div className="mx-auto flex min-h-[68px] max-w-5xl items-center justify-between gap-4 px-5 sm:px-8">
+            <Link to="/guias" className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-slate-600 hover:text-[#987400]"><ArrowLeft className="size-4" /> Todas las guías</Link>
+            <Link to="/herramientas-publicas/peso-joya-3d" className="rounded-full bg-[#17232d] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#293b49]">Abrir herramienta 3D</Link>
+          </div>
+        </header>
+        <article className="mx-auto max-w-4xl px-5 py-10 sm:px-8 sm:py-16">
+          <nav aria-label="Ruta de navegación" className="text-xs text-slate-500"><Link to="/guias" className="hover:text-[#876500]">Guías técnicas</Link><span aria-hidden="true"> / </span><span>Diseño y fabricación</span></nav>
+          <header className="mt-6 border-b border-slate-200 pb-8">
+            <p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#987400]">Diseño y fabricación · Guía técnica</p>
+            <h1 className="mt-3 max-w-3xl text-3xl font-extrabold leading-tight tracking-tight sm:text-5xl">Cómo estimar el peso de una joya a partir de un modelo 3D</h1>
+            <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600">Un modelo 3D ayuda a anticipar el consumo de metal antes de fabricar una pieza. Para que la estimación sea útil, revisa la geometría, las unidades y el material elegido; el resultado no equivale al peso final de una pieza fundida o terminada.</p>
+          </header>
+          <div className="prose prose-slate mt-8 max-w-none prose-headings:tracking-tight prose-a:text-[#876500]">
+            <h2>1. Prepara el modelo antes de calcular</h2>
+            <ul>
+              <li>Comprueba que el archivo represente la geometría que realmente se fabricará, incluidas paredes, huecos y detalles importantes.</li>
+              <li>Verifica la unidad de medida. Un archivo interpretado en milímetros como si estuviera en centímetros puede alterar drásticamente el resultado.</li>
+              <li>Busca superficies abiertas, piezas duplicadas o geometría interna no deseada que pueda afectar el volumen calculado.</li>
+            </ul>
+            <h2>2. El peso depende del volumen y la densidad</h2>
+            <p>La relación básica es <strong>masa = volumen × densidad</strong>. El volumen y la densidad deben utilizar unidades compatibles. Si cambias de plata a oro, platino u otra aleación, el peso estimado cambia aunque la geometría sea la misma.</p>
+            <h2>3. Utiliza la herramienta de AURUM LAB</h2>
+            <ol>
+              <li>Abre el visualizador y calculadora de peso 3D.</li>
+              <li>Carga un archivo compatible y espera a que termine de procesarse.</li>
+              <li>Selecciona el metal o la densidad que corresponda al material previsto.</li>
+              <li>Revisa el resultado y confirma las unidades y la geometría antes de presupuestar.</li>
+            </ol>
+            <h2>4. Interpreta el resultado como una estimación</h2>
+            <p>El cálculo no incluye automáticamente todas las variables de fabricación. Canales de colada, soportes, acabado, piedras y otros componentes pueden afectar el peso y el consumo real. Define el margen de material según el proceso habitual de tu taller.</p>
+            <h2>Lista rápida de comprobación</h2>
+            <ul>
+              <li>¿El modelo está en la unidad correcta y tiene un volumen válido?</li>
+              <li>¿La densidad corresponde a la aleación real y no solo al nombre genérico del metal?</li>
+              <li>¿Separaste el peso del metal del peso de las gemas u otros componentes?</li>
+              <li>¿Prevés un margen de fabricación basado en tu proceso?</li>
+            </ul>
+          </div>
+          <section className="mt-10 rounded-2xl border border-[#eadca7] bg-gradient-to-br from-[#fff9df] to-white p-6 sm:p-8">
+            <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#876500]">Llévalo a la práctica</p>
+            <h2 className="mt-2 text-xl font-bold">Estima el peso de tu modelo 3D</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">Abre la herramienta pública y revisa la estimación con el archivo y el material que utilizarás.</p>
+            <Link to="/herramientas-publicas/peso-joya-3d" className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#17232d] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#293b49]"><ArrowRight className="size-4" /> Abrir calculadora de peso 3D</Link>
+          </section>
+          <div className="mt-8 border-t border-slate-200 pt-6"><Link to="/guias" className="inline-flex items-center gap-2 text-sm font-semibold text-[#876500]"><ArrowLeft className="size-4" /> Volver a las guías técnicas</Link></div>
+        </article>
       </main>
     );
   }
