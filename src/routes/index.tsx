@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { RegistroTaller } from "@/components/RegistroTaller";
+import { MiniAurumRender } from "@/components/MiniAurumRender";
 import { ArrowRight, Boxes, Calculator, Check, ChevronDown, Cloud, Gem, Layers3, MonitorSmartphone, PackageCheck, Sparkles, Sprout, ChartNoAxesCombined } from "lucide-react";
 import heroColgante from "@/assets/diseno-colgante.jpg";
 import heroFloral from "@/assets/diseno-floral.jpg";
@@ -305,21 +306,7 @@ function InicioPublico() {
                 </div>
                 <span className="grid size-10 place-items-center rounded-xl border border-[#f8c928]/30 bg-[#f8c928]/10 text-[#f8d85b]"><Gem className="size-5" /></span>
               </div>
-              <div className="relative flex min-h-[270px] flex-col items-center justify-center overflow-hidden rounded-xl border border-white/[.06] bg-[radial-gradient(ellipse_at_50%_38%,rgba(248,201,40,.13),transparent_48%),linear-gradient(145deg,#202b35_0%,#111820_58%,#090d11_100%)] px-6 py-10 text-center sm:min-h-[340px]">
-                <div aria-hidden="true" className="absolute inset-5 rounded-xl border border-white/[.06]" />
-                <div aria-hidden="true" className="absolute left-1/2 top-1/2 size-48 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#f8c928]/10 sm:size-60" />
-                <div aria-hidden="true" className="absolute left-1/2 top-1/2 size-36 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#f8c928]/15 sm:size-44" />
-                <span className="relative grid size-20 place-items-center rounded-2xl border border-[#f8c928]/35 bg-[#f8c928]/10 text-[#f8d85b] shadow-[0_0_55px_rgba(248,201,40,.12)] sm:size-24">
-                  <Gem className="size-10 sm:size-12" strokeWidth={1.25} />
-                </span>
-                <p className="relative mt-7 text-[10px] font-bold uppercase tracking-[.28em] text-[#f3d66e]">Tu estudio de joyería digital</p>
-                <h3 className="relative mt-2 text-2xl font-semibold tracking-wide text-white sm:text-3xl">AURUM RENDER</h3>
-                <p className="relative mt-2 max-w-sm text-xs leading-5 text-slate-300 sm:text-sm">De los materiales al encuadre final: crea una presentación que respete la intención de tu diseño.</p>
-                <div className="relative mt-5 flex flex-wrap justify-center gap-2">
-                  <span className="rounded-full border border-white/10 bg-white/[.04] px-3 py-1.5 text-[9px] font-medium text-slate-200">Oro · Plata · Platino</span>
-                  <span className="rounded-full border border-white/10 bg-white/[.04] px-3 py-1.5 text-[9px] font-medium text-slate-200">Gemas e iluminación</span>
-                  <span className="rounded-full border border-white/10 bg-white/[.04] px-3 py-1.5 text-[9px] font-medium text-slate-200">Modo fotográfico</span>
-                </div>
+              <MiniAurumRender className="min-h-[270px] sm:min-h-[340px]" />
               </div>
               <div className="grid grid-cols-3 gap-2 border-t border-white/10 pt-4 text-center">
                 <div className="rounded-lg bg-white/[.04] px-2 py-3"><p className="text-[9px] uppercase tracking-wider text-slate-400">Materiales</p><p className="mt-1 text-xs font-semibold text-white">Metales y gemas</p></div>
