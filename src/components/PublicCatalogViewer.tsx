@@ -27,7 +27,7 @@ const classifyMesh = (mesh: any): "metal" | "gema" | "otro" => {
     attrs?.layerName,
     attrs?.LayerName,
     ...materials.map((material: any) => material?.name),
-  ].map((value) => String(value ?? "")).join(" ").normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLowerCase();
+  ].map((value) => String(value ?? "")).join(" ").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
   const explicitGem = [rhino?.categoria, data?.aurumGemFamily, data?.aurumActiveGemFamily]
     .some((value) => String(value ?? "").toLowerCase() === "gema" || String(value ?? "").toLowerCase() === "gem" || String(value ?? "").toLowerCase() === "diamante");
   if (explicitGem || /(gema|piedra|gem|stone|diamond|diamante|esmeralda|emerald|rubi|ruby|zafiro|sapphire|amatista|amethyst|moissanita|moissanite|citrino|citrine|topacio|topaz|aguamarina|aquamarine)/.test(text)) return "gema";
