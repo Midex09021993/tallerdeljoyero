@@ -25,8 +25,7 @@ function PublicarArchivoPage() {
   const [formato, setFormato] = useState<(typeof FORMATOS)[number]>("STL");
   const [precio, setPrecio] = useState("");
   const [moneda, setMoneda] = useState<"PEN" | "USD">("PEN");
-  const [ruta, setRuta] = useState("");
-  const [nombreArchivo, setNombreArchivo] = useState("");
+  const [rutasSeleccionadas, setRutasSeleccionadas] = useState<string[]>([]);
   const [archivosDisponibles, setArchivosDisponibles] = useState<ArchivoDisponible[]>([]);
   const [cargandoArchivos, setCargandoArchivos] = useState(false);
   const [errorArchivos, setErrorArchivos] = useState<string | null>(null);
@@ -54,17 +53,7 @@ function PublicarArchivoPage() {
       const partesRuta = item.ruta.split("/");
       return partesRuta.length >= 3 && partesRuta[partesRuta.length - 2] === raizCarpetaSeleccionada;
     });
-    if (compatibles.length !== 1) return;
-    const elegido = compatibles[0];
-    setRuta(elegido.ruta);
-    setNombreArchivo(elegido.nombre);
-    const ext = elegido.nombre.split(".").pop()?.toLowerCase() ?? "";
-    if (EXTENSIONES[ext]) {
-      const nuevoFormato = EXTENSIONES[ext];
-      setFormato(nuevoFormato);
-      setCategoria(nuevoFormato === "IMAGEN" ? "Imágenes" : nuevoFormato === "PDF" || nuevoFormato === "PLANO" ? "Planos técnicos" : "Modelos 3D");
-    }
-    setTitulo((actual) => actual.trim() ? actual : elegido.nombre.replace(/\\.[^.]+$/, "").replace(/[_-]+/g, " ").trim());
+    if (compatibles.length === 1) setRutasSeleccionadas([compatibles[0].ruta]);
   }, [archivosDisponibles, cargandoArchivos, raizCarpetaSeleccionada]);
 
   useEffect(() => {
@@ -107,7 +96,7 @@ function PublicarArchivoPage() {
     return () => { cancelado = true; };
   }, [sesion.data?.user.id, sesion.data?.participante?.id]);
 
-  const archivoSeleccionado = archivosDisponibles.find((item) => item.ruta === ruta);
+  const archivosSeleccionados = archivosVisibles.filter((item) => rutasSeleccionadas.includes(item.ruta));
 
   const publicar = useMutation({
     mutationFn: async () => {
@@ -116,6 +105,8 @@ function PublicarArchivoPage() {
       if (!user || !participanteId) throw new Error("Tu cuenta no tiene un taller activo vinculado.");
       const valor = Number(precio);
       if (!Number.isFinite(valor) || valor <= 0) throw new Error("Indica un precio mayor que cero.");
+      if (archivosSeleccionados.length === 0) throw new Error("Selecciona al menos un archivo para vender.");
+      const ruta = archivosSeleccionados[0].ruta;
       let imagenPortadaUrl: string | null = null;
       const carpetaRuta = ruta.split("/").slice(0, -1).join("/");
       const imagenProyecto = archivosDisponibles.find((item) => item.ruta.startsWith(carpetaRuta + "/") && /\.(jpe?g|png|webp)$/i.test(item.nombre));
@@ -134,7 +125,7 @@ function PublicarArchivoPage() {
           }
         }
       }
-      const seleccionado = archivosDisponibles.find((item) => item.ruta === ruta);
+      const seleccionado = archivosSeleccionados[0];
       const prefijoPrivado = participanteId + "/" + user.id + "/";
       if (!seleccionado || !seleccionado.ruta.startsWith(prefijoPrivado) || seleccionado.ruta.split("/").some((parte) => parte === "..")) throw new Error("Selecciona un archivo válido de tu propia Mi Nube.");
       const extension = seleccionado.nombre.split(".").pop()?.toLowerCase() ?? "";
@@ -146,7 +137,8 @@ function PublicarArchivoPage() {
         titulo: titulo.trim(),
         descripcion: "",
         categoria,
-        formatos: [formato],
+        formatos: [...new Set(archivosSeleccionados.map((item) => EXTENSIONES[item.nombre.split(".").pop()?.toLowerCase() ?? ""]).filter(Boolean))],
+        archivos_adjuntos: archivosSeleccionados.map((item) => ({ ruta: item.ruta, nombre: item.nombre, bytes: item.bytes })),
         precio: valor,
         moneda,
         imagen_portada_url: imagenPortadaUrl,
@@ -190,40 +182,30 @@ function PublicarArchivoPage() {
             <select value={moneda} onChange={(e) => setMoneda(e.target.value as typeof moneda)} className="w-full rounded-lg border border-input bg-background px-3 py-2.5 font-normal"><option value="PEN">Soles (PEN)</option><option value="USD">Dólares (USD)</option></select>
           </label>
           <fieldset className="space-y-3 text-sm sm:col-span-2">
-            <legend className="font-medium">Archivo de Mi Nube</legend>
+            <legend className="font-medium">Archivos incluidos en la publicación</legend>
             {cargandoArchivos ? <p className="rounded-lg border border-border bg-muted/30 p-4 text-muted-foreground">Cargando archivos de Mi Nube…</p> : null}
             {!cargandoArchivos && archivosVisibles.length === 0 ? <p className="rounded-lg border border-border bg-muted/30 p-4 text-muted-foreground">{carpetaProyecto ? `No hay archivos compatibles en la carpeta “${carpetaProyecto}”.` : "No hay archivos compatibles en tus carpetas."}</p> : null}
             <div className="grid gap-2">
               {archivosVisibles.map((item) => {
                 const extension = item.nombre.split(".").pop()?.toLowerCase() ?? "";
-                const seleccionado = ruta === item.ruta;
+                const seleccionado = rutasSeleccionadas.includes(item.ruta);
                 return <label key={item.ruta} className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 transition ${seleccionado ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "border-border hover:bg-muted/30"}`}>
-                  <input type="radio" name="archivo-mi-nube" required checked={seleccionado} onChange={() => {
-                    setRuta(item.ruta);
-                    setNombreArchivo(item.nombre);
-                    const ext = item.nombre.split(".").pop()?.toLowerCase() ?? "";
-                    if (EXTENSIONES[ext]) {
-                      const nuevoFormato = EXTENSIONES[ext];
-                      setFormato(nuevoFormato);
-                      setCategoria(nuevoFormato === "IMAGEN" ? "Imágenes" : nuevoFormato === "PDF" || nuevoFormato === "PLANO" ? "Planos técnicos" : "Modelos 3D");
-                    }
-                    setTitulo(item.nombre.replace(/\\.[^.]+$/, "").replace(/[_-]+/g, " ").trim());
-                  }} className="size-4 shrink-0 accent-current" />
+                  <input type="checkbox" name="archivos-mi-nube" checked={seleccionado} onChange={(event) => setRutasSeleccionadas((actual) => event.target.checked ? [...actual, item.ruta] : actual.filter((ruta) => ruta !== item.ruta))} className="size-4 shrink-0 accent-current" />
                   <span className="min-w-0 flex-1">
                     <span className="block break-words font-medium">{item.nombre}</span>
                     <span className="mt-1 block text-xs text-muted-foreground">{EXTENSIONES[extension]} · {item.bytes ? (item.bytes / 1048576).toFixed(2) + " MB" : "tamaño no disponible"}</span>
                   </span>
-                  {seleccionado ? <span className="shrink-0 text-xs font-semibold text-primary">Seleccionado</span> : null}
+                  {seleccionado ? <span className="shrink-0 text-xs font-semibold text-primary">Incluido</span> : null}
                 </label>;
               })}
             </div>
-            <p className="text-xs text-muted-foreground">{carpetaProyecto ? "Archivos compatibles de la carpeta seleccionada. Si solo hay uno, se selecciona automáticamente." : "Selecciona visualmente el archivo que quieres vender. El original no se mueve ni se modifica."}</p>
+            <p className="text-xs text-muted-foreground">{archivosSeleccionados.length} archivo(s) seleccionado(s). El nombre de publicación no cambia al seleccionar archivos.</p>
             {errorArchivos ? <p className="text-xs text-destructive">No se pudo cargar Mi Nube: {errorArchivos}</p> : null}
           </fieldset>
           <div className="space-y-1 text-sm sm:col-span-2"><p className="font-medium">Imagen de portada</p><p className="text-xs text-muted-foreground">Se reutiliza automáticamente la portada guardada en la carpeta. No necesitas cargarla otra vez.</p></div>
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5 sm:col-span-2">
             <p className="max-w-md text-xs leading-5 text-muted-foreground">El borrador no aparece públicamente y no activa ningún cobro.</p>
-            <button disabled={publicar.isPending || !sesion.data?.participante || !archivoSeleccionado} type="submit" className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50"><FilePlus2 className="size-4" /> {publicar.isPending ? "Guardando..." : "Guardar borrador"}</button>
+            <button disabled={publicar.isPending || !sesion.data?.participante || archivosSeleccionados.length === 0} type="submit" className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50"><FilePlus2 className="size-4" /> {publicar.isPending ? "Guardando..." : "Guardar borrador"}</button>
           </div>
         </form>
       </main>
