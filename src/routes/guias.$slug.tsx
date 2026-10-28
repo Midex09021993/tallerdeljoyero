@@ -27,7 +27,7 @@ export const Route = createFileRoute("/guias/$slug")({
 
 function GuiaTecnicaPage() {
   const { slug } = Route.useParams();
-  if (slug !== slugGuia) {
+  if (slug !== slugGuia && slug !== slugPeso) {
     return (
       <main className="grid min-h-screen place-items-center bg-[#fffefa] px-5 text-center text-[#17232d]">
         <div className="max-w-lg">
