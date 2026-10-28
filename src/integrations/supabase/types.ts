@@ -4035,6 +4035,57 @@ export type Database = {
         }
         Relationships: []
       }
+      visor_3d_integraciones: {
+        Row: {
+          activa: boolean
+          actualizado_en: string
+          creado_en: string
+          dominios_autorizados: string[]
+          id: string
+          modelo_ruta: string
+          nombre: string
+          permitir_cambio_gema: boolean
+          permitir_cambio_metal: boolean
+          permitir_contacto: boolean
+          permitir_cotizacion: boolean
+          permitir_enlace_publico: boolean
+          permitir_incrustacion: boolean
+          propietario_id: string
+        }
+        Insert: {
+          activa?: boolean
+          actualizado_en?: string
+          creado_en?: string
+          dominios_autorizados?: string[]
+          id?: string
+          modelo_ruta: string
+          nombre?: string
+          permitir_cambio_gema?: boolean
+          permitir_cambio_metal?: boolean
+          permitir_contacto?: boolean
+          permitir_cotizacion?: boolean
+          permitir_enlace_publico?: boolean
+          permitir_incrustacion?: boolean
+          propietario_id: string
+        }
+        Update: {
+          activa?: boolean
+          actualizado_en?: string
+          creado_en?: string
+          dominios_autorizados?: string[]
+          id?: string
+          modelo_ruta?: string
+          nombre?: string
+          permitir_cambio_gema?: boolean
+          permitir_cambio_metal?: boolean
+          permitir_contacto?: boolean
+          permitir_cotizacion?: boolean
+          permitir_enlace_publico?: boolean
+          permitir_incrustacion?: boolean
+          propietario_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
