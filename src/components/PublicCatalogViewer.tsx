@@ -292,31 +292,36 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         });
         model.updateMatrixWorld(true);
         const inferredGemCount = inferGemMeshes(model);
-        const meshAudit: Array<Record<string, unknown>> = [];
-        const familyCounts = { metal: 0, gema: 0, otro: 0 };
-        model.traverse((object: any) => {
-          if (!object.isMesh || !object.geometry) return;
-          const family = object.userData?.aurumPublicInferredGem ? "gema" : object.userData?.aurumPublicDefaultMetal ? "metal" : classifyMesh(object);
-          familyCounts[family]++;
-          const materials = Array.isArray(object.material) ? object.material : [object.material];
-          meshAudit.push({
-            name: String(object.name || object.uuid),
-            family,
-            inferred: Boolean(object.userData?.aurumPublicInferredGem),
-            visible: object.visible,
-            triangles: Math.floor((object.geometry.getIndex()?.count ?? object.geometry.getAttribute("position")?.count ?? 0) / 3),
-            materialTypes: materials.map((material: any) => material?.type ?? "unknown"),
-            materialNames: materials.map((material: any) => material?.name ?? ""),
-            layer: object.userData?.aurumRhino?.capa ?? object.userData?.aurumRhinoSource?.layerName ?? object.userData?.aurumRhinoInstanceSource?.layerName ?? object.userData?.attributes?.layerName ?? "",
+        // Building and logging a full per-mesh audit on every public load adds
+        // allocations and console work for large jewelry models. Keep it opt-in
+        // alongside the existing ?aurumPerf=1 diagnostics.
+        if (perfEnabled) {
+          const meshAudit: Array<Record<string, unknown>> = [];
+          const familyCounts = { metal: 0, gema: 0, otro: 0 };
+          model.traverse((object: any) => {
+            if (!object.isMesh || !object.geometry) return;
+            const family = object.userData?.aurumPublicInferredGem ? "gema" : object.userData?.aurumPublicDefaultMetal ? "metal" : classifyMesh(object);
+            familyCounts[family]++;
+            const materials = Array.isArray(object.material) ? object.material : [object.material];
+            meshAudit.push({
+              name: String(object.name || object.uuid),
+              family,
+              inferred: Boolean(object.userData?.aurumPublicInferredGem),
+              visible: object.visible,
+              triangles: Math.floor((object.geometry.getIndex()?.count ?? object.geometry.getAttribute("position")?.count ?? 0) / 3),
+              materialTypes: materials.map((material: any) => material?.type ?? "unknown"),
+              materialNames: materials.map((material: any) => material?.name ?? ""),
+              layer: object.userData?.aurumRhino?.capa ?? object.userData?.aurumRhinoSource?.layerName ?? object.userData?.aurumRhinoInstanceSource?.layerName ?? object.userData?.attributes?.layerName ?? "",
+            });
           });
-        });
-        console.info("[PUBLIC VIEWER][GEM AUDIT]", {
-          modelName,
-          meshCount: meshAudit.length,
-          familyCounts,
-          inferredGemCount,
-          meshes: meshAudit,
-        });
+          console.info("[PUBLIC VIEWER][GEM AUDIT]", {
+            modelName,
+            meshCount: meshAudit.length,
+            familyCounts,
+            inferredGemCount,
+            meshes: meshAudit,
+          });
+        }
         // Use only visible geometry for centering, scale and camera fit. Some 3DM
         // exports contain hidden/helper meshes whose bounds otherwise make the jewel
         // appear much smaller than an equivalent GLB in the public viewer.
