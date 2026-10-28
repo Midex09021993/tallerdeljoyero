@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       archivos_digitales_marketplace: {
         Row: {
+          archivos_adjuntos: Json
           bucket_archivo: string
           bytes_archivo: number | null
           categoria: string
@@ -35,6 +36,7 @@ export type Database = {
           vendedor_usuario_id: string
         }
         Insert: {
+          archivos_adjuntos?: Json
           bucket_archivo?: string
           bytes_archivo?: number | null
           categoria?: string
@@ -54,6 +56,7 @@ export type Database = {
           vendedor_usuario_id: string
         }
         Update: {
+          archivos_adjuntos?: Json
           bucket_archivo?: string
           bytes_archivo?: number | null
           categoria?: string
