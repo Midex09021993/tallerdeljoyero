@@ -1855,10 +1855,10 @@ function MiNubePage() {
                               {enlacesVisorArchivo.some((enlace) => enlace.ruta === archivo.ruta) && (
                                 <div className="mt-2 w-full space-y-2 rounded-lg border border-gold/30 bg-gold/5 p-2.5">
                                   <p className="text-[11px] font-semibold">Enlace del visor · caduca en 3 días</p>
-                                  <input aria-label="Enlace público del visor 3D" readOnly value={enlacesVisorArchivo.find((enlace) => enlace.ruta === archivo.ruta)?.url ?? ""} onFocus={(event) => event.currentTarget.select()} className="w-full rounded-lg border border-border bg-background px-2.5 py-2 text-[11px]" />
+                                  <input aria-label="Enlace público del visor 3D" readOnly value={enlacesVisorArchivo.find((enlace) => enlace.ruta === archivo.ruta)?.url ?? ""} onFocus={(event) => event.currentTarget.select()} className="w-full rounded-lg border border-[#e6e0d5] bg-[#faf9f6] px-3 py-2.5 text-[11px] text-[#48453e]" />
                                   <div className="flex flex-wrap gap-2">
-                                    <button type="button" onClick={async () => { try { await navigator.clipboard.writeText(enlacesVisorArchivo.find((enlace) => enlace.ruta === archivo.ruta)?.url ?? ""); toast.success("Enlace copiado."); } catch { toast.error("No se pudo copiar automáticamente. Selecciona el enlace y cópialo."); } }} className="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-2 text-[11px] font-medium"><Copy className="size-3.5" /> Copiar enlace</button>
-                                    <button type="button" onClick={() => { const enlace = enlacesVisorArchivo.find((item) => item.ruta === archivo.ruta); if (enlace) window.open(enlace.url, "_blank", "noopener,noreferrer"); }} className="rounded-lg border border-gold/40 px-2.5 py-2 text-[11px] font-semibold">Abrir visor</button>
+                                    <button type="button" onClick={async () => { try { await navigator.clipboard.writeText(enlacesVisorArchivo.find((enlace) => enlace.ruta === archivo.ruta)?.url ?? ""); toast.success("Enlace copiado."); } catch { toast.error("No se pudo copiar automáticamente. Selecciona el enlace y cópialo."); } }} className="inline-flex items-center gap-1.5 rounded-lg border border-[#e1dbd0] bg-white px-3 py-2 text-[11px] font-semibold text-[#39372f] transition hover:border-[#c5a15d] hover:bg-[#faf6ed]"><Copy className="size-3.5" /> Copiar enlace</button>
+                                    <button type="button" onClick={() => { const enlace = enlacesVisorArchivo.find((item) => item.ruta === archivo.ruta); if (enlace) window.open(enlace.url, "_blank", "noopener,noreferrer"); }} className="rounded-lg border border-[#c5a15d] bg-[#c5a15d] px-3 py-2 text-[11px] font-semibold text-white transition hover:bg-[#ad8b4c]">Abrir visor</button>
                                   </div>
                                 </div>
                               )}
@@ -1969,13 +1969,13 @@ function MiNubePage() {
 
         </section>
         {opcionesCompartir && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true" aria-labelledby="mi-nube-opciones-title">
-            <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-border bg-card p-5 shadow-2xl">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-gold">Compartir desde Mi Nube</p>
-                  <h3 id="mi-nube-opciones-title" className="mt-1 text-lg font-semibold">Compartir proyecto</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">“{opcionesCompartir.nombre}” · elige cómo quieres compartirlo.</p>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#171612]/55 p-3 backdrop-blur-[3px] sm:p-6" role="dialog" aria-modal="true" aria-labelledby="mi-nube-opciones-title">
+            <div className="max-h-[92dvh] w-full max-w-2xl overflow-y-auto rounded-[1.4rem] border border-[#e7dfd0] bg-[#fffefa] p-4 shadow-[0_24px_80px_rgba(20,18,12,0.28)] sm:p-6">
+              <div className="sticky top-0 z-10 -mx-4 -mt-4 mb-5 flex items-start justify-between gap-4 border-b border-[#eee8dc] bg-[#fffefa]/95 px-4 pb-4 pt-4 backdrop-blur sm:-mx-6 sm:-mt-6 sm:px-6 sm:pt-6">
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#a77d35]">AURUM LAB · MI NUBE</p>
+                  <h3 id="mi-nube-opciones-title" className="mt-1 text-xl font-semibold tracking-tight text-[#24231f]">Compartir proyecto</h3>
+                  <p className="mt-1 truncate text-sm text-[#77746d]">“{opcionesCompartir.nombre}” · elige una acción.</p>
                 {compartidas.filter((share) => share.carpeta === opcionesCompartir.nombre).length > 0 && (
                   <div className="mt-3 rounded-xl border border-border bg-background p-3">
                     <div className="flex items-center justify-between gap-2">
@@ -1999,15 +1999,15 @@ function MiNubePage() {
                   <p className="mt-3 rounded-xl border border-dashed border-border p-3 text-xs text-muted-foreground">Esta carpeta todavía no está compartida con ningún taller registrado.</p>
                 )}
                 </div>
-                <button type="button" onClick={() => setOpcionesCompartir(null)} className="rounded-lg p-2 hover:bg-muted" aria-label="Cerrar"><X className="size-4" /></button>
+                <button type="button" onClick={() => setOpcionesCompartir(null)} className="shrink-0 rounded-full border border-[#e7dfd0] p-2.5 text-[#5d594f] transition hover:border-[#c5a15d] hover:bg-[#f7f1e5]" aria-label="Cerrar"><X className="size-4" /></button>
               </div>
-              <div className="mt-5 space-y-3">
-                <section className="rounded-xl border border-gold/35 bg-gold/[0.06] p-3.5">
+              <div className="space-y-3">
+                <section className="rounded-2xl border border-[#dfc99f] bg-gradient-to-br from-[#fbf7ed] to-white p-4 sm:p-5">
                   <div className="flex items-start gap-3">
-                    <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-gold/15 text-gold"><Box className="size-5" /></div>
+                    <div className="grid size-11 shrink-0 place-items-center rounded-2xl border border-[#ead9b7] bg-[#f3e8d1] text-[#9a702b]"><Box className="size-5" /></div>
                     <div className="min-w-0 flex-1">
-                      <h4 className="text-sm font-semibold">Enlace del visor 3D</h4>
-                      <p className="mt-1 text-xs leading-5 text-muted-foreground">Comparte solo la joya mediante un enlace válido por 3 días.</p>
+                      <h4 className="text-sm font-semibold text-[#292720]">Enlace del visor 3D</h4>
+                      <p className="mt-1 text-xs leading-5 text-muted-foreground">Comparte una vista privada de la joya. Los enlaces caducan a los 3 días.</p>
                     </div>
                   </div>
                   {opcionesCompartir.archivos.filter((archivo) => archivo.origen === "supabase" && archivo.nombre.toLowerCase().endsWith(".glb")).length > 0 ? (
@@ -2015,14 +2015,14 @@ function MiNubePage() {
                       {opcionesCompartir.archivos.filter((archivo) => archivo.origen === "supabase" && archivo.nombre.toLowerCase().endsWith(".glb")).map((archivo) => {
                         const enlace = enlacesVisorArchivo.find((item) => item.ruta === archivo.ruta);
                         return (
-                          <div key={archivo.ruta} className="rounded-lg border border-border/70 bg-background p-3">
+                          <div key={archivo.ruta} className="mt-3 rounded-xl border border-[#e8e2d7] bg-white p-3.5 shadow-[0_2px_8px_rgba(30,25,15,0.035)]">
                             <div className="flex items-center justify-between gap-3">
                               <div className="min-w-0">
                                 <p className="truncate text-xs font-semibold">{nombreVisible(archivo.nombre)}</p>
                                 <p className="mt-0.5 text-[10px] text-muted-foreground">{etiquetaTamano(archivo.bytes)}</p>
                               </div>
-                              <button type="button" disabled={generandoEnlaceVisor !== null} onClick={() => void crearEnlaceVisorArchivo(archivo)} className="shrink-0 rounded-lg border border-gold/45 px-2.5 py-2 text-[11px] font-semibold hover:bg-gold/10 disabled:opacity-50">
-                                {generandoEnlaceVisor === archivo.ruta ? "Comprobando…" : enlace ? "Revisar / renovar enlace" : "Crear enlace"}
+                              <button type="button" disabled={generandoEnlaceVisor !== null} onClick={() => void crearEnlaceVisorArchivo(archivo)} className="shrink-0 rounded-lg border border-[#d9c49b] bg-[#fbf7ed] px-3 py-2 text-[11px] font-semibold text-[#73531d] transition hover:bg-[#f2e6cd] disabled:opacity-50">
+                                {generandoEnlaceVisor === archivo.ruta ? "Comprobando…" : enlace ? "Revisar enlace" : "Crear / renovar enlace"}
                               </button>
                             </div>
                             {enlace && (
@@ -2082,9 +2082,9 @@ function MiNubePage() {
                     setOpcionesCompartir(null);
                     window.location.assign("/marketplace-publicar?carpeta=" + encodeURIComponent(proyecto.nombre));
                   }}
-                  className="flex items-start gap-3 rounded-xl border border-[#c5a15d]/60 bg-[#c5a15d]/[0.10] p-4 text-left transition-colors hover:bg-[#c5a15d]/[0.16]"
+                  className="flex items-start gap-3 rounded-2xl border border-[#e7dfd0] bg-white p-4 text-left transition hover:-translate-y-px hover:border-[#c5a15d]/70 hover:bg-[#fcfaf5] hover:shadow-sm"
                 >
-                  <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#c5a15d]/15 text-gold"><ShoppingBag className="size-5" /></div>
+                  <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#f4ead7] text-[#9a702b]"><ShoppingBag className="size-5" /></div>
                   <div>
                     <span className="block text-sm font-semibold">Vender archivos digitales</span>
                     <span className="mt-1 block text-xs leading-5 text-muted-foreground">Seleccionar archivos de este proyecto, fijar un precio y preparar su publicación en el marketplace. No modifica los originales.</span>
@@ -2103,7 +2103,7 @@ function MiNubePage() {
                       proyecto.archivos.find((item) => item.nombre.toLowerCase().endsWith(".pdf") && item.origen === "supabase") ?? null,
                     );
                   }}
-                  className="flex items-start gap-3 rounded-xl border border-[#c5a15d]/50 bg-[#c5a15d]/[0.08] p-4 text-left transition-colors hover:bg-[#c5a15d]/[0.14] disabled:opacity-50"
+                  className="flex items-start gap-3 rounded-2xl border border-[#e7dfd0] bg-white p-4 text-left transition hover:-translate-y-px hover:border-[#c5a15d]/70 hover:bg-[#fcfaf5] hover:shadow-sm disabled:opacity-50"
                 >
                   <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#c5a15d]/15 text-gold"><FileText className="size-5" /></div>
                   <div>
@@ -2111,7 +2111,7 @@ function MiNubePage() {
                     <span className="mt-1 block text-xs leading-5 text-muted-foreground">Preparar este proyecto para el catálogo con su imagen y archivos disponibles. Podrás revisar y completar la ficha antes de guardarla.</span>
                   </div>
                 </button>
-                <button type="button" onClick={() => { const proyecto = opcionesCompartir; setOpcionesCompartir(null); void abrirCompartirEcosistema(proyecto); }} className="flex items-start gap-3 rounded-xl border border-[#c5a15d]/50 bg-[#c5a15d]/[0.08] p-4 text-left transition-colors hover:bg-[#c5a15d]/[0.14]">
+                <button type="button" onClick={() => { const proyecto = opcionesCompartir; setOpcionesCompartir(null); void abrirCompartirEcosistema(proyecto); }} className="flex items-start gap-3 rounded-2xl border border-[#e7dfd0] bg-white p-4 text-left transition hover:-translate-y-px hover:border-[#c5a15d]/70 hover:bg-[#fcfaf5] hover:shadow-sm">
                   <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#c5a15d]/15 text-gold"><Share2 className="size-5" /></div>
                   <div><span className="block text-sm font-semibold">Compartir con un taller registrado</span><span className="mt-1 block text-xs leading-5 text-muted-foreground">La carpeta original aparecerá en “Compartidas conmigo” de su Mi Nube. Sin duplicar archivos; puedes revocar el acceso.</span></div>
                 </button>
