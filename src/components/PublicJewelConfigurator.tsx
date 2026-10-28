@@ -41,6 +41,65 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
     return () => document.removeEventListener("fullscreenchange", actualizarPantallaCompleta);
   }, []);
 
+  // Diagnóstico opcional de fluidez del visor público. Solo se activa con ?aurumPerf=1.
+  // No cambia DPR, resolución, materiales, iluminación ni el motor de renderizado.
+  useEffect(() => {
+    if (typeof window === "undefined" || new URLSearchParams(window.location.search).get("aurumPerf") !== "1") return;
+
+    let rafId = 0;
+    let previousFrame = 0;
+    let windowStartedAt = 0;
+    let frames = 0;
+    let intervalsTotal = 0;
+    let over33ms = 0;
+    let over50ms = 0;
+
+    const sampleFrame = (now: number) => {
+      if (document.visibilityState !== "visible") {
+        previousFrame = 0;
+        windowStartedAt = now;
+        frames = 0;
+        intervalsTotal = 0;
+        over33ms = 0;
+        over50ms = 0;
+        rafId = window.requestAnimationFrame(sampleFrame);
+        return;
+      }
+
+      if (previousFrame > 0) {
+        const interval = now - previousFrame;
+        intervalsTotal += interval;
+        frames += 1;
+        if (interval > 33.4) over33ms += 1;
+        if (interval > 50) over50ms += 1;
+      } else {
+        windowStartedAt = now;
+      }
+      previousFrame = now;
+
+      if (now - windowStartedAt >= 5000 && frames > 0) {
+        console.info("[PUBLIC VIEWER PERF] Cadencia RAF (no mide por separado GPU/BVH)", {
+          windowMs: Math.round(now - windowStartedAt),
+          frames,
+          averageFrameMs: Number((intervalsTotal / frames).toFixed(2)),
+          averageFps: Number((1000 * frames / intervalsTotal).toFixed(1)),
+          intervalsOver33ms: over33ms,
+          intervalsOver50ms: over50ms,
+          note: "Mide la cadencia del hilo principal; no modifica la resolución."
+        });
+        windowStartedAt = now;
+        frames = 0;
+        intervalsTotal = 0;
+        over33ms = 0;
+        over50ms = 0;
+      }
+      rafId = window.requestAnimationFrame(sampleFrame);
+    };
+
+    rafId = window.requestAnimationFrame(sampleFrame);
+    return () => window.cancelAnimationFrame(rafId);
+  }, []);
+
   const alternarPantallaCompleta = async () => {
     const visor = visorRef.current;
     if (!visor) return;
