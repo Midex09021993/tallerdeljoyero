@@ -2694,25 +2694,40 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // Diagnostic-only pass: preserve the current diamond appearance and
             // rendering path while measuring the settled preview before changing it.
             const requestedDpr = Math.max(1, Math.min(2, renderQuality.pixelRatio));
-            // Keep the settled resolution at the selected quality level.
-            // Do not raise DPR automatically after loading/interaction: this can
-            // increase GPU memory use and cause WebGL context loss on dense CAD.
-            const idleDpr = Math.min(requestedDpr, runtimeBudget.pixelRatioCap);
+            // First A/B test without TAA: increase only the settled raster resolution.
+            // Keep Low unchanged and respect the geometry-based GPU budget.
+            const idleTargetDpr = measuredQualityId === "low" ? requestedDpr : Math.max(requestedDpr, 1.5);
+            const idleDpr = Math.min(idleTargetDpr, runtimeBudget.pixelRatioCap);
             renderer.setPixelRatio(idleDpr);
             composer?.setPixelRatio?.(idleDpr);
-            // TAA permanece desactivado en el visor interactivo: su acumulación
-            // puede congelar la vista en algunos equipos. La nitidez en reposo
-            // se mejora únicamente con el DPR adaptativo y limitado por el presupuesto GPU.
+            // Controlled TAA trial: only anti-alias the settled preview.
+            // Keep all other post effects disabled so this test isolates TAA.
             const idlePasses = ((composer as any)?.passes ?? []) as any[];
             const idleRenderPass = idlePasses.find((pass) => pass?.constructor?.name === "RenderPass");
             const idleTaaPass = idlePasses.find((pass) => pass?.constructor?.name === "TAARenderPass");
             const idleOutputPass = idlePasses.find((pass) => pass?.constructor?.name === "OutputPass");
+            const idleTaaAvailable = Boolean(idleRenderPass && idleTaaPass && idleOutputPass);
+            const extremeGeometry = runtimeBudget.tier === "extreme";
             idlePasses.forEach((pass) => {
+              // Keep the settled photographic chain explicit. Bokeh must run after
+              // the beauty/TAA image and before OutputPass; it must not be enabled
+              // if its module failed to load or the user disabled live DOF.
+              // Use the actual pass instance returned by the pipeline. Constructor names
+              // can be minified in production bundles, so name-based detection is unreliable.
               pass.enabled = pass === idleRenderPass
+                || pass === idleTaaPass
                 || (pass === dofPass && postRuntimeConfig.dof === true)
                 || pass === idleOutputPass;
             });
-            if (idleTaaPass) {
+            if (idleTaaAvailable && !extremeGeometry) {
+              idleTaaPass.enabled = true;
+              idleTaaPass.accumulate = true;
+              idleTaaPass.sampleLevel = 4;
+              idleTaaPass.accumulateIndex = -1;
+            } else if (extremeGeometry && idleTaaPass) {
+              // Temporal accumulation can stall the viewer after a heavy CAD model
+              // settles. Keep TAA available for export, but bypass it in this live
+              // preview tier so orbit/material controls remain usable.
               idleTaaPass.enabled = false;
               idleTaaPass.accumulate = false;
             }
