@@ -180,6 +180,10 @@ function MiNubePage() {
   const participanteId = sesion?.participante?.id ?? null;
   const usuarioId = sesion?.user.id ?? null;
   const [busqueda, setBusqueda] = useState("");
+  const [mostrarMisVentas, setMostrarMisVentas] = useState(false);
+  const [misVentas, setMisVentas] = useState<Array<{ id: string; titulo: string; categoria: string; formatos: string[]; precio: number; moneda: string; estado: string; created_at: string; nombre_archivo: string }>>([]);
+  const [cargandoMisVentas, setCargandoMisVentas] = useState(false);
+  const [errorMisVentas, setErrorMisVentas] = useState<string | null>(null);
   const [proyectoAbierto, setProyectoAbierto] = useState<string | null>(null);
   const [proyectoPendienteEliminar, setProyectoPendienteEliminar] = useState<{ nombre: string; archivos: ArchivoNube[] } | null>(null);
   const [proyectoRenombrando, setProyectoRenombrando] = useState<string | null>(null);
@@ -204,6 +208,33 @@ function MiNubePage() {
     setCarpetas([...new Set(archivos.map((archivo) => archivo.carpeta))]);
   }, [archivos]);
 
+
+  const cargarMisVentas = useCallback(async () => {
+    if (!usuarioId) { setMisVentas([]); return; }
+    setCargandoMisVentas(true);
+    setErrorMisVentas(null);
+    try {
+      const marketplaceClient = supabase as unknown as {
+        from: (table: string) => {
+          select: (columns: string) => {
+            eq: (column: string, value: string) => {
+              order: (column: string, options: { ascending: boolean }) => Promise<{ data: unknown[] | null; error: { message: string } | null }>;
+            };
+          };
+        };
+      };
+      const { data, error } = await marketplaceClient.from("archivos_digitales_marketplace")
+        .select("id,titulo,categoria,formatos,precio,moneda,estado,created_at,nombre_archivo")
+        .eq("vendedor_usuario_id", usuarioId)
+        .order("created_at", { ascending: false });
+      if (error) throw new Error(error.message);
+      setMisVentas((data ?? []) as typeof misVentas);
+    } catch (cause) {
+      setErrorMisVentas(cause instanceof Error ? cause.message : "No se pudieron cargar tus publicaciones.");
+    } finally {
+      setCargandoMisVentas(false);
+    }
+  }, [usuarioId]);
 
   const [seleccionados, setSeleccionados] = useState<File[]>([]);
   const [colaLocal, setColaLocal] = useState<ArchivoEnCola[]>([]);
@@ -1702,6 +1733,9 @@ function MiNubePage() {
               <Link to="/marketplace-mis-compras" className="inline-flex items-center gap-2 rounded-xl border border-border px-3 py-2 text-xs font-semibold text-foreground transition hover:bg-muted">
                 <HardDrive className="size-4" /> Mis compras
               </Link>
+              <button type="button" onClick={() => { const siguiente = !mostrarMisVentas; setMostrarMisVentas(siguiente); if (siguiente) void cargarMisVentas(); }} className="inline-flex items-center gap-2 rounded-xl border border-border px-3 py-2 text-xs font-semibold text-foreground transition hover:bg-muted">
+                <Store className="size-4" /> Mis ventas
+              </button>
               <label className="relative min-w-0 flex-1 sm:w-64 sm:flex-none">
                 <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <input
@@ -1717,6 +1751,27 @@ function MiNubePage() {
               </button>
             </div>
           </div>
+
+          {mostrarMisVentas ? (
+            <section className="mt-5 rounded-xl border border-gold/25 bg-background p-4 sm:p-5" aria-label="Mis ventas">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h4 className="font-semibold">Mis ventas</h4>
+                  <p className="mt-1 text-sm text-muted-foreground">Tus publicaciones y borradores de la Tienda 3D.</p>
+                </div>
+                <button type="button" onClick={() => void cargarMisVentas()} disabled={cargandoMisVentas} className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-medium disabled:opacity-50"><RefreshCw className={`size-3.5 ${cargandoMisVentas ? "animate-spin" : ""}`} /> Actualizar</button>
+              </div>
+              {cargandoMisVentas ? <p className="py-5 text-sm text-muted-foreground">Cargando tus publicaciones…</p> : null}
+              {errorMisVentas ? <p role="alert" className="mt-3 rounded-lg border border-danger/25 bg-danger-soft p-3 text-sm text-danger">No se pudieron cargar tus ventas: {errorMisVentas}</p> : null}
+              {!cargandoMisVentas && !errorMisVentas && misVentas.length === 0 ? <div className="py-6 text-center"><Store className="mx-auto size-7 text-muted-foreground" /><p className="mt-2 text-sm font-medium">Todavía no tienes publicaciones</p><p className="mt-1 text-xs text-muted-foreground">Los borradores que guardes aparecerán aquí.</p><Link to="/marketplace-publicar" className="mt-3 inline-flex rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground">Crear publicación</Link></div> : null}
+              <div className="mt-3 space-y-2">
+                {misVentas.map((venta) => <article key={venta.id} className="flex flex-col justify-between gap-3 rounded-lg border border-border p-3 sm:flex-row sm:items-center">
+                  <div className="min-w-0"><p className="break-words text-sm font-semibold">{venta.titulo}</p><p className="mt-1 text-xs text-muted-foreground">{venta.formatos?.join(" · ") || venta.nombre_archivo} · {new Date(venta.created_at).toLocaleDateString("es-PE")}</p></div>
+                  <div className="flex shrink-0 items-center gap-3"><span className="text-sm font-semibold">{new Intl.NumberFormat("es-PE", { style: "currency", currency: venta.moneda || "PEN" }).format(Number(venta.precio))}</span><span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${venta.estado === "publicado" ? "bg-emerald-500/10 text-emerald-700" : "bg-muted text-muted-foreground"}`}>{venta.estado === "borrador" ? "Borrador" : venta.estado === "publicado" ? "Publicado" : venta.estado === "pausado" ? "Pausado" : venta.estado}</span></div>
+                </article>)}
+              </div>
+            </section>
+          ) : null}
 
           {proyectos.length > 0 && (
             <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5">
