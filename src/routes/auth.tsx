@@ -8,7 +8,6 @@ import { registrarPrimerDueno, resolverEmailInicioSesion, sistemaSinDuenos } fro
 
 const RegistroTaller = lazy(() => import("@/components/RegistroTaller").then((module) => ({ default: module.RegistroTaller })));
 const ComunidadAurumLab = lazy(() => import("@/components/ComunidadAurumLab").then((module) => ({ default: module.ComunidadAurumLab })));
-const MiniAurumRender = lazy(() => import("@/components/MiniAurumRender").then((module) => ({ default: module.MiniAurumRender })));
 const ContactoComercial = lazy(() => import("@/components/ContactoComercial").then((module) => ({ default: module.ContactoComercial })));
 
 export const Route = createFileRoute("/auth")({
@@ -194,13 +193,11 @@ function LoginPage() {
               <span className="mt-4 text-lg font-extrabold tracking-tight text-[#17232d]">AURUM LAB</span>
               <span className="mt-1 text-[10px] font-semibold uppercase tracking-[.22em] text-[#7d650d]">Tecnología para joyeros</span>
             </Link>
-            <div className="mt-10 overflow-hidden rounded-2xl border border-white/80 bg-[#111820] p-2 shadow-[0_18px_50px_rgba(91,73,13,.12)]">
-              <Suspense fallback={<div className="flex aspect-[4/3] w-full flex-col items-center justify-center gap-3 rounded-xl bg-[#111820] text-[#f3d66e]" role="status" aria-label="Preparando visor 3D">
-                <Gem className="size-10 animate-pulse" aria-hidden="true" />
-                <span className="text-xs font-semibold uppercase tracking-[0.18em]">Preparando AURUM RENDER…</span>
-              </div>}>
-                <MiniAurumRender className="aspect-[4/3] w-full rounded-xl" />
-              </Suspense>
+            <div className="mt-10 overflow-hidden rounded-2xl border border-white/80 bg-white/70 p-2 shadow-[0_18px_50px_rgba(91,73,13,.12)]">
+              <div className="flex aspect-[4/3] w-full flex-col items-center justify-center gap-4 rounded-xl bg-gradient-to-br from-[#fffaf0] via-white to-[#f6e7b2] text-[#967100]">
+                <Gem className="size-14" aria-hidden="true" />
+                <span className="text-xs font-semibold uppercase tracking-[0.18em]">Diseño y tecnología joyera</span>
+              </div>
             </div>
             <h1 className="mt-6 text-2xl font-extrabold leading-tight tracking-tight text-[#17232d] sm:text-3xl">El arte de crear.</h1>
             <h2 className="mt-1 text-2xl font-extrabold leading-tight tracking-tight text-[#967100] sm:text-3xl">La inteligencia de gestionar.</h2>
