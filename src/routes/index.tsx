@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { RegistroTaller } from "@/components/RegistroTaller";
 import { MiniAurumRender } from "@/components/MiniAurumRender";
-import { ArrowRight, Boxes, Calculator, Check, ChevronDown, Cloud, Gem, Layers3, MonitorSmartphone, PackageCheck, Sparkles, Sprout, ChartNoAxesCombined } from "lucide-react";
+import { ArrowRight, BookOpen, Boxes, Calculator, Check, ChevronDown, Cloud, Gem, Layers3, MonitorSmartphone, PackageCheck, Sparkles, Sprout, ChartNoAxesCombined } from "lucide-react";
 import heroColgante from "@/assets/diseno-colgante.jpg";
 import heroFloral from "@/assets/diseno-floral.jpg";
 import heroGemelos from "@/assets/diseno-gemelos.jpg";
@@ -412,6 +412,38 @@ function InicioPublico() {
         </div>
       </section>
 
+      <section id="guias-tecnicas" className="scroll-mt-24 border-y border-slate-200 bg-white">
+        <div className="mx-auto max-w-[1440px] px-5 py-14 sm:px-8 sm:py-16 lg:px-12">
+          <div className="grid items-start gap-8 lg:grid-cols-[.85fr_1.15fr] lg:gap-14">
+            <div className="max-w-xl">
+              <p className="inline-flex items-center gap-2 rounded-full border border-[#eadca8] bg-[#fff9df] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.2em] text-[#876500]"><BookOpen className="size-3.5" /> Biblioteca práctica del oficio</p>
+              <h2 className="mt-4 text-2xl font-extrabold leading-tight tracking-tight text-[#17232d] sm:text-3xl lg:text-4xl">Guías técnicas para tomar mejores decisiones en tu taller.</h2>
+              <p className="mt-4 text-sm leading-7 text-slate-600 sm:text-base">Resuelve dudas habituales de joyería con explicaciones claras, ejemplos prácticos y herramientas que puedes utilizar en el momento. Aprende, calcula y lleva cada conocimiento a tu trabajo diario.</p>
+              <Link to="/guias" className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-[#17232d] transition hover:border-[#d4aa19] hover:bg-[#fffbee] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19]">Explorar todas las guías <ArrowRight className="size-4" /></Link>
+            </div>
+            <article className="group overflow-hidden rounded-2xl border border-slate-200 bg-[#f8fafc] shadow-[0_8px_30px_rgba(23,35,45,.045)] transition hover:border-[#dfbd4b] hover:shadow-[0_16px_36px_rgba(23,35,45,.08)]">
+              <div className="flex items-start gap-4 p-5 sm:p-7">
+                <span className="grid size-12 shrink-0 place-items-center rounded-xl border border-[#eadca7] bg-[#fff4c4] text-[#8f6b00]"><Calculator className="size-5" /></span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#987400]">Metalurgia y materiales · Guía técnica</p>
+                  <h3 className="mt-2 text-xl font-bold leading-snug text-[#17232d] sm:text-2xl">Cómo calcular aleaciones de oro de 18K, 14K y 9K</h3>
+                  <p className="mt-3 text-sm leading-6 text-slate-600">Comprende las proporciones de oro fino, calcula la cantidad teórica de metal de liga y consulta ejemplos para una masa de 10 gramos.</p>
+                  <div className="mt-5 flex flex-wrap items-center gap-3">
+                    <Link to="/guias/$slug" params={{ slug: "calcular-aleaciones-oro-18k-14k-9k" }} className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-[#17232d] px-4 py-2.5 text-xs font-bold text-white transition hover:bg-[#293b49] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19]">Leer guía completa <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" /></Link>
+                    <Link to="/herramientas-publicas/aleacion-oro" className="inline-flex min-h-10 items-center gap-2 text-xs font-semibold text-[#765900] hover:text-[#17232d]">Abrir calculadora <Calculator className="size-3.5" /></Link>
+                  </div>
+                </div>
+              </div>
+              <div className="grid gap-3 border-t border-slate-200 bg-white px-5 py-4 text-xs text-slate-600 sm:grid-cols-3 sm:px-7">
+                <div className="flex items-center gap-2"><Check className="size-4 shrink-0 text-emerald-600" /> Fórmulas explicadas</div>
+                <div className="flex items-center gap-2"><Check className="size-4 shrink-0 text-emerald-600" /> Ejemplos en gramos</div>
+                <div className="flex items-center gap-2"><Check className="size-4 shrink-0 text-emerald-600" /> Herramienta relacionada</div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
       <section id="planes" className="border-y border-slate-200 bg-[#f8fafc]">
         <div className="mx-auto max-w-[1440px] px-5 py-14 sm:px-8 sm:py-16 lg:px-12">
           <div className="mx-auto max-w-2xl text-center">
@@ -446,6 +478,7 @@ function InicioPublico() {
               <h2 className="text-sm font-bold text-white">Recursos y contacto</h2>
               <ul className="mt-3 space-y-3 text-xs">
                 <li><Link to="/comunidad" className="transition hover:text-[#f8c928]">Comunidad</Link></li>
+                <li><Link to="/guias" className="transition hover:text-[#f8c928]">Guías técnicas</Link></li>
                 <li><a href="mailto:noreply@tallerdeljoyero.com" className="transition hover:text-[#f8c928]">Escríbenos</a></li>
                 <li><a href="#planes" className="transition hover:text-[#f8c928]">Planes</a></li>
               </ul>
