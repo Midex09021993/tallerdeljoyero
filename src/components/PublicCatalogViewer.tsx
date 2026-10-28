@@ -36,9 +36,19 @@ const classifyMesh = (mesh: any): "metal" | "gema" | "otro" => {
 
 const ensurePhysicalGemMaterial = (material: any): THREE.MeshPhysicalMaterial => {
   if (material?.isMeshPhysicalMaterial) return material as THREE.MeshPhysicalMaterial;
-  const physical = new THREE.MeshPhysicalMaterial();
-  if (material?.copy) physical.copy(material);
-  physical.name = material?.name ?? "AURUM Gem";
+
+  // CAD/GLB imports can expose non-standard material objects. Avoid Material.copy()
+  // here because it assumes every Three.js color/vector field exists on the source.
+  const color = material?.color?.isColor ? material.color.clone() : new THREE.Color(0xffffff);
+  const physical = new THREE.MeshPhysicalMaterial({
+    color,
+    roughness: Number.isFinite(material?.roughness) ? material.roughness : 0.08,
+    metalness: 0,
+    opacity: Number.isFinite(material?.opacity) ? material.opacity : 1,
+    transparent: Boolean(material?.transparent),
+    side: Number.isFinite(material?.side) ? material.side : THREE.FrontSide,
+  });
+  physical.name = typeof material?.name === "string" && material.name ? material.name : "AURUM Gem";
   physical.userData = { ...(material?.userData ?? {}) };
   return physical;
 };
