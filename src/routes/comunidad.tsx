@@ -1,11 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, BookOpen, Gem, GraduationCap, Store, UsersRound } from "lucide-react";
+import { ArrowRight, Gem, GraduationCap, Store, UsersRound } from "lucide-react";
 
 export const Route = createFileRoute("/comunidad")({
   head: () => ({
     meta: [
       { title: "Comunidad joyera | AURUM LAB" },
-      { name: "description", content: "Conecta con talleres, joyerías y propuestas formativas de la comunidad de Taller del Joyero. Explora el directorio, la tienda 3D y las guías técnicas." },
+      { name: "description", content: "Conecta con talleres, joyerías y propuestas formativas de la comunidad de Taller del Joyero. Explora el directorio, la tienda 3D y los cursos de formación." },
       { name: "robots", content: "index, follow" },
       { property: "og:title", content: "Comunidad joyera | AURUM LAB" },
       { property: "og:description", content: "Talleres, formación, recursos técnicos y modelos digitales para profesionales de la joyería." },
@@ -15,15 +15,6 @@ export const Route = createFileRoute("/comunidad")({
 });
 
 const destinos = [
-  {
-    titulo: "Guías técnicas",
-    descripcion: "Consulta explicaciones, fórmulas y procedimientos prácticos para resolver retos de metalurgia, fabricación, diseño 3D y gestión de talleres.",
-    etiqueta: "Aprender y aplicar",
-    href: "/guias" as const,
-    accion: "Explorar guías",
-    icon: BookOpen,
-    destacado: true,
-  },
   {
     titulo: "Directorio de talleres y formación",
     descripcion: "Descubre talleres, joyerías y propuestas formativas que forman parte de la comunidad.",
@@ -63,7 +54,6 @@ function ComunidadPage() {
             <span className="leading-tight"><span className="block text-[17px] font-extrabold tracking-tight">AURUM<span className="text-[#bd8d00]"> LAB</span></span><span className="block text-[9px] font-medium uppercase tracking-[.15em] text-slate-500">Comunidad joyera</span></span>
           </Link>
           <nav className="flex items-center gap-3 text-sm font-medium text-slate-600 sm:gap-6" aria-label="Navegación de comunidad">
-            <Link to="/guias" className="transition hover:text-[#987400]">Guías técnicas</Link>
             <Link to="/directorio" className="hidden transition hover:text-[#987400] sm:inline-flex">Directorio</Link>
             <Link to="/auth" className="rounded-full bg-[#17232d] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#293b49]">Acceder</Link>
           </nav>
@@ -77,8 +67,7 @@ function ComunidadPage() {
           <h1 className="mt-4 max-w-3xl text-3xl font-extrabold leading-tight tracking-tight sm:text-5xl">Conocimiento y conexiones para el oficio joyero.</h1>
           <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base sm:leading-7">Accede a recursos técnicos, encuentra profesionales y descubre herramientas y archivos digitales que acompañan el trabajo de tu taller.</p>
           <div className="mt-7 flex flex-wrap gap-3">
-            <Link to="/guias" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#17232d] px-5 text-sm font-semibold text-white transition hover:bg-[#293b49]">Explorar guías técnicas <ArrowRight className="size-4" /></Link>
-            <Link to="/directorio" className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 text-sm font-semibold text-[#17232d] transition hover:border-[#d4aa19]">Encontrar talleres</Link>
+            <Link to="/directorio" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#17232d] px-5 text-sm font-semibold text-white transition hover:bg-[#293b49]">Encontrar talleres <ArrowRight className="size-4" /></Link>
           </div>
         </div>
       </section>
@@ -89,7 +78,7 @@ function ComunidadPage() {
           <h2 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">Elige el recurso que necesitas</h2>
           <p className="mt-3 text-sm leading-6 text-slate-600">Cada espacio tiene un propósito claro: aprender una técnica, conectar con otros profesionales, formarte o encontrar archivos para tus proyectos.</p>
         </div>
-        <div className="mt-7 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-7 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {destinos.map((destino) => {
             const Icon = destino.icon;
             return (
@@ -122,7 +111,7 @@ function ComunidadPage() {
       <footer className="border-t border-slate-200 bg-white">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-6 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-8">
           <span>AURUM LAB · Comunidad profesional joyera</span>
-          <div className="flex flex-wrap gap-4"><Link to="/" className="hover:text-[#987400]">Inicio</Link><Link to="/guias" className="hover:text-[#987400]">Guías técnicas</Link><Link to="/directorio" className="hover:text-[#987400]">Directorio</Link></div>
+          <div className="flex flex-wrap gap-4"><Link to="/" className="hover:text-[#987400]">Inicio</Link><Link to="/directorio" className="hover:text-[#987400]">Directorio</Link></div>
         </div>
       </footer>
     </main>
