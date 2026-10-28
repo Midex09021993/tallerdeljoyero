@@ -12,20 +12,35 @@ import { getAurumHdriUrl, getAurumGemHdriUrl } from "@/lib/aurum-photographic-sc
 
 type Props = { modelUrl: string; modelName: string; materialId: string; gemId: string; onReady?: () => void; onError?: (message: string) => void };
 const classifyMesh = (mesh: any): "metal" | "gema" | "otro" => {
-  const attrs = mesh?.userData?.attributes ?? {};
-  const rhino = mesh?.userData?.aurumRhino ?? {};
+  const data = mesh?.userData ?? {};
+  const attrs = data?.attributes ?? {};
+  const rhino = data?.aurumRhino ?? {};
+  const source = data?.aurumRhinoSource ?? {};
+  const instanceSource = data?.aurumRhinoInstanceSource ?? {};
   const materials = Array.isArray(mesh?.material) ? mesh.material : [mesh?.material];
   const text = [
     mesh?.name,
     rhino?.capa,
+    source?.layerName,
+    instanceSource?.layerName,
     attrs?.layerName,
     attrs?.LayerName,
     ...materials.map((material: any) => material?.name),
-  ].map((value) => String(value ?? "")).join(" ").toLowerCase();
-  // CAD exports use several names for gemstone geometry; inspect all material slots.
-  if (rhino?.categoria === "gema" || /(gema|piedra|gem|stone|diamond|diamante|esmeralda|emerald|rubi|rubí|ruby|zafiro|sapphire|amatista|amethyst|moissanita|moissanite|citrino|citrine|topacio|topaz|aguamarina|aquamarine)/.test(text)) return "gema";
+  ].map((value) => String(value ?? "")).join(" ").normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLowerCase();
+  const explicitGem = [rhino?.categoria, data?.aurumGemFamily, data?.aurumActiveGemFamily]
+    .some((value) => String(value ?? "").toLowerCase() === "gema" || String(value ?? "").toLowerCase() === "gem" || String(value ?? "").toLowerCase() === "diamante");
+  if (explicitGem || /(gema|piedra|gem|stone|diamond|diamante|esmeralda|emerald|rubi|ruby|zafiro|sapphire|amatista|amethyst|moissanita|moissanite|citrino|citrine|topacio|topaz|aguamarina|aquamarine)/.test(text)) return "gema";
   if (rhino?.categoria === "metal" || /(metal|oro|gold|plata|silver|platino|platinum|acero|steel)/.test(text)) return "metal";
   return "otro";
+};
+
+const ensurePhysicalGemMaterial = (material: any): THREE.MeshPhysicalMaterial => {
+  if (material?.isMeshPhysicalMaterial) return material as THREE.MeshPhysicalMaterial;
+  const physical = new THREE.MeshPhysicalMaterial();
+  if (material?.copy) physical.copy(material);
+  physical.name = material?.name ?? "AURUM Gem";
+  physical.userData = { ...(material?.userData ?? {}) };
+  return physical;
 };
 
 // Fallback inspired by MiniAurumRender: CAD exports may give every part a generic
@@ -124,7 +139,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         const family = object.userData?.aurumPublicInferredGem ? "gema" : classifyMesh(object);
         const originalMaterials = Array.isArray(object.material) ? object.material : [object.material];
         const next = originalMaterials.map((original: any) => {
-          const material = original;
+          const material = family === "gema" ? ensurePhysicalGemMaterial(original) : original;
           if (family === "metal") {
             applyAurumMetal(material, metalPresetFromConfig(metal));
             material.envMap = environment;
@@ -290,7 +305,9 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
     model.traverse((object: any) => {
       if (!object.isMesh || !object.material) return;
       const family = object.userData?.aurumPublicInferredGem ? "gema" : classifyMesh(object);
-      const materials = Array.isArray(object.material) ? object.material : [object.material];
+      const originalMaterials = Array.isArray(object.material) ? object.material : [object.material];
+      const materials = originalMaterials.map((material: any) => family === "gema" ? ensurePhysicalGemMaterial(material) : material);
+      object.material = Array.isArray(object.material) ? materials : materials[0];
       materials.forEach((material: any) => {
         if (family === "metal") applyAurumMetal(material, metalPresetFromConfig(metal));
         if (family === "gema") applyAurumGem(material, gemPresetFromConfig(gem), Math.max(.015, Number(object.userData?.aurumOpticalProfile?.thickness ?? 1)));
