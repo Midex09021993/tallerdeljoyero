@@ -2021,8 +2021,8 @@ function MiNubePage() {
                                 <p className="truncate text-xs font-semibold">{nombreVisible(archivo.nombre)}</p>
                                 <p className="mt-0.5 text-[10px] text-muted-foreground">{etiquetaTamano(archivo.bytes)}</p>
                               </div>
-                              <button type="button" disabled={generandoEnlaceVisor !== null} onClick={() => void crearEnlaceVisorArchivo(archivo)} className="shrink-0 rounded-lg border border-[#d9c49b] bg-[#fbf7ed] px-3 py-2 text-[11px] font-semibold text-[#73531d] transition hover:bg-[#f2e6cd] disabled:opacity-50">
-                                {generandoEnlaceVisor === archivo.ruta ? "Comprobando…" : enlace ? "Revisar enlace" : "Crear / renovar enlace"}
+                              <button type="button" disabled={generandoEnlaceVisor !== null} onClick={() => void crearEnlaceVisorArchivo(archivo, Boolean(enlace))} className="shrink-0 rounded-lg border border-[#d9c49b] bg-[#fbf7ed] px-3 py-2 text-[11px] font-semibold text-[#73531d] transition hover:bg-[#f2e6cd] disabled:opacity-50">
+                                {generandoEnlaceVisor === archivo.ruta ? "Renovando…" : enlace ? "Renovar enlace" : "Crear enlace"}
                               </button>
                             </div>
                             {enlace && (
