@@ -19,7 +19,7 @@ export const Route = createFileRoute("/guias/$slug")({
         { property: "og:type", content: "article" },
         { property: "og:url", content: `https://www.tallerdeljoyero.com/guias/${params.slug}` },
       ],
-      links: valida ? [{ rel: "canonical", href: `https://www.tallerdeljoyero.com/guias/${slugGuia}` }] : [],
+      links: valida ? [{ rel: "canonical", href: `https://www.tallerdeljoyero.com/guias/${params.slug}` }] : [],
     };
   },
   component: GuiaTecnicaPage,
