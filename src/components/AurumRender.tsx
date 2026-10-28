@@ -2694,10 +2694,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // Diagnostic-only pass: preserve the current diamond appearance and
             // rendering path while measuring the settled preview before changing it.
             const requestedDpr = Math.max(1, Math.min(2, renderQuality.pixelRatio));
-            // First A/B test without TAA: increase only the settled raster resolution.
-            // Keep Low unchanged and respect the geometry-based GPU budget.
-            const idleTargetDpr = measuredQualityId === "low" ? requestedDpr : Math.max(requestedDpr, 1.5);
-            const idleDpr = Math.min(idleTargetDpr, runtimeBudget.pixelRatioCap);
+            // Keep the settled resolution at the selected quality level.
+            // Do not raise DPR automatically after loading/interaction: this can
+            // increase GPU memory use and cause WebGL context loss on dense CAD.
+            const idleDpr = Math.min(requestedDpr, runtimeBudget.pixelRatioCap);
             renderer.setPixelRatio(idleDpr);
             composer?.setPixelRatio?.(idleDpr);
             // TAA permanece desactivado en el visor interactivo: su acumulación
