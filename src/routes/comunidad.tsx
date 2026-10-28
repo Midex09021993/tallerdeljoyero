@@ -78,8 +78,9 @@ function ComunidadPage() {
             </span>
           </Link>
           <nav className="flex items-center gap-4 text-sm font-medium text-slate-600 sm:gap-6" aria-label="Navegación de comunidad">
-            <Link to="/directorio" className="transition hover:text-[#987400]">Directorio</Link>
             <Link to="/comunidad#guias" className="hidden transition hover:text-[#987400] sm:inline-flex">Biblioteca</Link>
+            <Link to="/directorio" className="transition hover:text-[#987400]">Directorio</Link>
+            <Link to="/galeria-joyas" className="rounded-full bg-[#17232d] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#293b49] sm:px-4">Tienda 3D</Link>
             <Link to="/" className="transition hover:text-[#987400]">Volver a AURUM LAB</Link>
           </nav>
         </div>
@@ -94,6 +95,7 @@ function ComunidadPage() {
           <div className="mt-7 flex flex-wrap gap-3">
             <a href="#guias" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#17232d] px-5 text-sm font-semibold text-white transition hover:bg-[#293b49]">Explorar guías <ArrowRight className="size-4" /></a>
             <Link to="/directorio" className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 text-sm font-semibold text-[#17232d] transition hover:border-[#d4aa19]">Ver talleres y cursos</Link>
+            <Link to="/galeria-joyas" className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[#d4aa19] bg-[#fff8d8] px-5 text-sm font-semibold text-[#604900] transition hover:bg-[#ffefad]">Explorar Tienda 3D <ArrowRight className="size-4" /></Link>
           </div>
         </div>
       </section>
@@ -247,8 +249,19 @@ function ComunidadPage() {
         </div>
       </section>
 
+      <section className="border-y border-[#263743] bg-[#111a22] text-white">
+        <div className="mx-auto flex max-w-7xl flex-col gap-6 px-5 py-10 sm:px-8 sm:py-12 md:flex-row md:items-center md:justify-between">
+          <div className="max-w-2xl">
+            <p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#f3d66e]">Tienda 3D · Archivos digitales</p>
+            <h2 className="mt-3 text-2xl font-extrabold tracking-tight sm:text-3xl">Diseños listos para llevar a tu taller.</h2>
+            <p className="mt-3 text-sm leading-6 text-slate-300">Explora modelos 3D, archivos CAD y planos técnicos publicados para la venta. La biblioteca sigue siendo tu espacio de aprendizaje; aquí encontrarás productos digitales con precio y formatos indicados.</p>
+          </div>
+          <Link to="/galeria-joyas" className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#f8c928] px-5 py-3 text-sm font-bold text-[#17232d] transition hover:bg-[#ffe071]">Visitar Tienda 3D <ArrowRight className="size-4" /></Link>
+        </div>
+      </section>
+
       <section className="mx-auto max-w-7xl px-5 py-12 sm:px-8 sm:py-16">
-        <div className="flex flex-col justify-between gap-5 rounded-2xl border border-[#eadca7] bg-[#fff9df] p-6 sm:flex-row sm:items-center sm:p-8">
+        <div className="flex flex-col justify-between gap-5 rounded-2xl border border-[#eadca7] bg-[#fff9df] p-6 sm:flex-row sm:items-center sm:p-8>
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#876500]">La comunidad crece contigo</p>
             <h2 className="mt-2 text-xl font-bold">Encuentra talleres y formación.</h2>
