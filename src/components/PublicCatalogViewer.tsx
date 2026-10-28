@@ -133,6 +133,9 @@ const inferGemMeshes = (model: THREE.Object3D): number => {
 export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, onReady, onError }: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
   const modelRef = useRef<THREE.Object3D | null>(null);
+  const cameraRef = useRef<THREE.Camera | null>(null);
+  const diamondBvhRuntimeRef = useRef<Awaited<ReturnType<typeof createAurumDiamondBvhRuntime>> | null>(null);
+  const [modelLoadedVersion, setModelLoadedVersion] = useState(0);
   const renderRef = useRef<(() => void) | null>(null);
   const materialIdRef = useRef(materialId);
   const gemIdRef = useRef(gemId);
@@ -160,7 +163,6 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
     let gemEnvironment: THREE.Texture | null = null;
     let pmrem: THREE.PMREMGenerator | null = null;
     let roomEnvironmentTexture: THREE.Texture | null = null;
-    let diamondBvhRuntime: Awaited<ReturnType<typeof createAurumDiamondBvhRuntime>> | null = null;
     const fallbackMaterial = new THREE.MeshPhysicalMaterial({ color: 0xdfe3e7, metalness: 1, roughness: .12 });
 
     const applyProfiles = () => {
@@ -319,56 +321,11 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         modelRef.current = model;
         applyProfiles();
 
-        // Reuse the same AURUM diamond BVH runtime as MiniAurumRender.
-        // Enable it only for the natural/VS/inclusion diamond catalog profiles;
-        // colored gems continue using their existing AURUM catalog materials.
-        const isDiamondProfile = /^diamante/.test(String(gemIdRef.current || ""));
-        if (isDiamondProfile) {
-          model.traverse((object: any) => {
-            if (!object.isMesh || !object.material) return;
-            const family = object.userData?.aurumPublicInferredGem ? "gema" : classifyMesh(object);
-            if (family !== "gema") return;
-            const materials = Array.isArray(object.material) ? object.material : [object.material];
-            if (materials.length !== 1) return;
-            const material = materials[0];
-            material.userData = { ...(material.userData ?? {}), aurumGemFamily: "diamante" };
-            object.userData = {
-              ...(object.userData ?? {}),
-              aurumActiveGemId: gemIdRef.current,
-              aurumActiveGemFamily: "diamante",
-            };
-          });
-          try {
-            diamondBvhRuntime = await createAurumDiamondBvhRuntime({
-              THREE,
-              RGBELoader,
-              EXRLoader,
-              url: getAurumGemHdriUrl("ijewelGem"),
-              camera,
-              quality: "interactive",
-              targetFamilies: ["diamante"],
-              onError: (cause) => console.warn("[PUBLIC VIEWER] BVH diamante: se conserva el material AURUM como respaldo.", cause),
-            });
-            if (cancelled) {
-              diamondBvhRuntime.dispose();
-              diamondBvhRuntime = null;
-              return;
-            }
-            diamondBvhRuntime.refresh(model);
-            if (!diamondBvhRuntime.diagnostics().enabled) {
-              console.warn("[PUBLIC VIEWER] BVH diamante sin mallas compatibles; se mantiene el material AURUM.");
-              diamondBvhRuntime.dispose();
-              diamondBvhRuntime = null;
-            }
-          } catch (cause) {
-            console.warn("[PUBLIC VIEWER] No se pudo iniciar el BVH de diamante; se mantiene el perfil de catálogo.", cause);
-            diamondBvhRuntime?.dispose();
-            diamondBvhRuntime = null;
-          }
-        }
+        cameraRef.current = camera;
+        setModelLoadedVersion((version) => version + 1);
 
         loop = startAurumViewerLoop({ node: host, camera, renderer, controls }, () => {
-          diamondBvhRuntime?.update();
+          diamondBvhRuntimeRef.current?.update();
           renderer.render(scene, camera);
         }, { progressiveFrames: 3 });
         renderRef.current = () => loop?.converge?.(3);
@@ -391,8 +348,11 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
       cancelled = true;
       loop?.stop?.();
       resizeObserver?.disconnect();
-      diamondBvhRuntime?.dispose();
-      diamondBvhRuntime = null;
+      if (diamondBvhRuntimeRef.current) {
+        diamondBvhRuntimeRef.current.dispose();
+        diamondBvhRuntimeRef.current = null;
+      }
+      cameraRef.current = null;
       if (model) model.traverse((object: any) => {
         object.geometry?.dispose?.();
         const materials = Array.isArray(object.material) ? object.material : [object.material];
@@ -407,6 +367,70 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
       modelRef.current = null; renderRef.current = null;
     };
   }, [modelUrl, modelName]);
+
+  // Keep diamond BVH lifecycle independent from metal/gem material updates.
+  // Changing a metal never reloads the model or recreates the diamond runtime.
+  useEffect(() => {
+    let cancelled = false;
+    const previousRuntime = diamondBvhRuntimeRef.current;
+    diamondBvhRuntimeRef.current = null;
+    previousRuntime?.dispose();
+
+    const model = modelRef.current;
+    const camera = cameraRef.current;
+    const selectedGem = GEMAS.find((item) => item.id === gemId);
+    if (!model || !camera || !selectedGem || selectedGem.familia.toLocaleLowerCase() !== "diamante") {
+      return () => { cancelled = true; };
+    }
+
+    model.traverse((object: any) => {
+      if (!object.isMesh || !object.material) return;
+      const family = object.userData?.aurumPublicInferredGem ? "gema" : classifyMesh(object);
+      if (family !== "gema") return;
+      const materials = Array.isArray(object.material) ? object.material : [object.material];
+      if (materials.length !== 1) return;
+      materials[0].userData = { ...(materials[0].userData ?? {}), aurumGemFamily: "diamante" };
+      object.userData = {
+        ...(object.userData ?? {}),
+        aurumActiveGemId: gemId,
+        aurumActiveGemFamily: "diamante",
+      };
+    });
+
+    void createAurumDiamondBvhRuntime({
+      THREE,
+      RGBELoader,
+      EXRLoader,
+      url: getAurumGemHdriUrl("ijewelGem"),
+      camera,
+      quality: "interactive",
+      targetFamilies: ["diamante"],
+      onError: (cause) => console.warn("[PUBLIC VIEWER] BVH diamante: se conserva el material AURUM como respaldo.", cause),
+    }).then((runtime) => {
+      if (cancelled || modelRef.current !== model || gemIdRef.current !== gemId) {
+        runtime.dispose();
+        return;
+      }
+      runtime.refresh(model);
+      if (!runtime.diagnostics().enabled) {
+        console.warn("[PUBLIC VIEWER] BVH diamante sin mallas compatibles; se mantiene el material AURUM.");
+        runtime.dispose();
+        return;
+      }
+      diamondBvhRuntimeRef.current = runtime;
+      renderRef.current?.();
+    }).catch((cause) => {
+      if (!cancelled) console.warn("[PUBLIC VIEWER] No se pudo iniciar el BVH de diamante; se mantiene el perfil de catálogo.", cause);
+    });
+
+    return () => {
+      cancelled = true;
+      if (diamondBvhRuntimeRef.current) {
+        diamondBvhRuntimeRef.current.dispose();
+        diamondBvhRuntimeRef.current = null;
+      }
+    };
+  }, [modelUrl, modelName, gemId, modelLoadedVersion]);
 
   useEffect(() => {
     const model = modelRef.current;
