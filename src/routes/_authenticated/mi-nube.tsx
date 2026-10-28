@@ -297,7 +297,7 @@ function MiNubePage() {
       if (!respuesta.ok) throw new Error("No se pudo descargar la imagen de portada.");
       const blob = await respuesta.blob();
       const extension = portada.name.split(".").pop()?.toLowerCase() ?? "png";
-      const destino = "marketplace-portadas/" + usuarioId + "/" + crypto.randomUUID() + "." + extension;
+      const destino = participanteId + "/marketplace-portadas/" + usuarioId + "/" + crypto.randomUUID() + "." + extension;
       const { error: subidaError } = await supabase.storage.from("catalogo-joyas").upload(destino, blob, { contentType: blob.type || "image/png", upsert: false });
       if (subidaError) throw new Error("No se pudo publicar la portada. Revisa los permisos del bucket catalogo-joyas en Lovable Cloud.");
       const url = supabase.storage.from("catalogo-joyas").getPublicUrl(destino).data.publicUrl;
