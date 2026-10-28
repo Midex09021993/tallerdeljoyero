@@ -80,6 +80,12 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
     };
 
     const boot = async () => {
+      const perfEnabled = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("aurumPerf") === "1";
+      const bootStartedAt = performance.now();
+      let fetchStartedAt = bootStartedAt;
+      let downloadStartedAt = bootStartedAt;
+      let parseStartedAt = bootStartedAt;
+      let preprocessStartedAt = bootStartedAt;
       try {
         const viewer = createAurumWebGLViewer(THREE, host, { pixelRatio: Math.min(window.devicePixelRatio || 1, 1.25), controlsClass: OrbitControls, maxDistance: 100 });
         ({ scene, camera, renderer, controls } = viewer);
@@ -115,14 +121,18 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         loadHdr(metalUrl, (texture) => { environment = texture; if (scene) scene.environment = texture; applyProfiles(); renderRef.current?.(); });
         if (gemUrl !== metalUrl) loadHdr(gemUrl, (texture) => { gemEnvironment = texture; applyProfiles(); renderRef.current?.(); });
 
+        fetchStartedAt = performance.now();
         const response = await fetch(modelUrl);
+        if (perfEnabled) console.info("[PUBLIC VIEWER PERF] Solicitud del modelo", { durationMs: Math.round(performance.now() - fetchStartedAt), status: response.status });
         if (!response.ok) {
           if (response.status === 401 || response.status === 403 || response.status === 404) {
             throw new Error("El enlace ha caducado o el modelo ya no está disponible. Solicita un enlace nuevo al remitente.");
           }
           throw new Error("No se pudo descargar el modelo 3D.");
         }
+        downloadStartedAt = performance.now();
         const blob = await response.blob();
+        if (perfEnabled) console.info("[PUBLIC VIEWER PERF] Descarga del modelo", { durationMs: Math.round(performance.now() - downloadStartedAt), bytes: blob.size });
         if (cancelled) return;
         const sourceName = modelName || (() => {
           try { return decodeURIComponent(new URL(modelUrl).pathname.split("/").pop() || "modelo.glb"); }
@@ -130,9 +140,13 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         })();
         const extension = sourceName.split(".").pop()?.toLowerCase() || "glb";
         const supportedExtension = ["glb", "gltf", "3dm", "obj", "stl", "fbx"].includes(extension) ? extension : "glb";
+        parseStartedAt = performance.now();
         model = await parseAurumInput(new File([blob], sourceName.includes(".") ? sourceName : `${sourceName}.${supportedExtension}`, { type: blob.type || "application/octet-stream" }), supportedExtension, fallbackMaterial);
+        if (perfEnabled) console.info("[PUBLIC VIEWER PERF] Interpretación del modelo", { durationMs: Math.round(performance.now() - parseStartedAt), format: supportedExtension });
         if (!model) throw new Error("No se pudo interpretar la geometría del modelo 3D.");
+        preprocessStartedAt = performance.now();
         await preprocessAurumModel(model);
+        if (perfEnabled) console.info("[PUBLIC VIEWER PERF] Preparación de geometría", { durationMs: Math.round(performance.now() - preprocessStartedAt) });
         if (cancelled) return;
         // Give each mesh its own material instance so changing a profile in the
         // public viewer cannot mutate a shared CAD material or another family.
@@ -178,6 +192,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         resizeObserver.observe(host);
         loop.converge(3);
         setStatus("");
+        if (perfEnabled) console.info("[PUBLIC VIEWER PERF] Tiempo hasta visor listo", { durationMs: Math.round(performance.now() - bootStartedAt) });
         onReadyRef.current?.();
       } catch (cause) {
         if (!cancelled) { const message = cause instanceof Error ? cause.message : "No se pudo abrir el diseño 3D."; setError(message); setStatus(""); onErrorRef.current?.(message); }
