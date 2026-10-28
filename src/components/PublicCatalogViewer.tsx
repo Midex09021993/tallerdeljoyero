@@ -258,6 +258,12 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         model = await parseAurumInput(new File([blob], sourceName.includes(".") ? sourceName : `${sourceName}.${supportedExtension}`, { type: blob.type || "application/octet-stream" }), supportedExtension, fallbackMaterial);
         if (perfEnabled) console.info("[PUBLIC VIEWER PERF] Interpretación del modelo", { durationMs: Math.round(performance.now() - parseStartedAt), format: supportedExtension });
         if (!model) throw new Error("No se pudo interpretar la geometría del modelo 3D.");
+        // Match AurumRender's Rhino Z-up -> Three.js Y-up correction for direct 3DM imports.
+        // GLB/GLTF and other formats keep their authored orientation.
+        if (supportedExtension === "3dm") {
+          model.rotation.x = -Math.PI / 2;
+          model.updateMatrixWorld(true);
+        }
         if (supportedExtension === "3dm") {
           // Direct Rhino imports may arrive with dark/default CAD materials and
           // incomplete layer metadata. Keep explicitly identified gemstones,
@@ -480,7 +486,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
           material.userData = {
             ...(material.userData ?? {}),
             aurumOpticalProfile: gemPresetFromConfig(gem),
-            aurumGemFamily: gem.familia,
+            aurumGemFamily: gem.familia.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase(),
             aurumGemEnvIntensity: gem.envMapIntensity,
           };
         }
