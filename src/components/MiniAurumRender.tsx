@@ -46,6 +46,8 @@ export function MiniAurumRender({ className = "" }: MiniAurumRenderProps) {
     scene.add(frontLight);
 
     const jewel = new THREE.Group();
+    jewel.rotation.x = -0.12;
+    jewel.rotation.y = -0.2;
     scene.add(jewel);
 
     let disposed = false;
