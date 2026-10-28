@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { AlertCircle, Gem } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { PublicJewelConfigurator } from "@/components/PublicJewelConfigurator";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -14,7 +14,7 @@ export const Route = createFileRoute("/v/$token")({
   component: VisorCortoPage,
 });
 
-type EnlaceVisor = { modelo_url: string; nombre: string; expira_en: string };
+type EnlaceVisor = { url: string; nombre: string; expira_en: string };
 
 function VisorCortoPage() {
   const { token } = Route.useParams();
@@ -24,14 +24,20 @@ function VisorCortoPage() {
 
   useEffect(() => {
     let activo = true;
-    void Promise.resolve(supabase.rpc("resolver_enlace_visor_3d", { _token: token }))
-      .then(({ data, error: rpcError }) => {
+    void supabase.functions.invoke("resolver-enlace-visor-3d", { body: { token } })
+      .then(({ data, error: functionError }) => {
         if (!activo) return;
-        const fila = Array.isArray(data) ? (data[0] as EnlaceVisor | undefined) : undefined;
-        if (rpcError || !fila || new Date(fila.expira_en).getTime() <= Date.now()) {
+        if (
+          functionError ||
+          !data?.ok ||
+          typeof data.url !== "string" ||
+          typeof data.nombre !== "string" ||
+          typeof data.expira_en !== "string" ||
+          new Date(data.expira_en).getTime() <= Date.now()
+        ) {
           setError(true);
         } else {
-          setEnlace(fila);
+          setEnlace({ url: data.url, nombre: data.nombre, expira_en: data.expira_en });
         }
         setCargando(false);
       })
@@ -60,7 +66,7 @@ function VisorCortoPage() {
   return (
     <main className="min-h-screen bg-[#f7f6f2] text-[#292824] md:h-[100svh] md:min-h-0 md:overflow-hidden md:p-3 lg:p-4">
       <div className="mx-auto w-full max-w-none md:h-full md:min-h-0">
-        <PublicJewelConfigurator sharedModelUrl={enlace.modelo_url} sharedModelName={enlace.nombre} />
+        <PublicJewelConfigurator sharedModelUrl={enlace.url} sharedModelName={enlace.nombre} />
       </div>
     </main>
   );
