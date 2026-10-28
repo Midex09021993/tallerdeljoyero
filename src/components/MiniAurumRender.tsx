@@ -2,6 +2,8 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
+import { EXRLoader } from "three/examples/jsm/loaders/EXRLoader.js";
 
 type MiniAurumRenderProps = {
   className?: string;
@@ -126,6 +128,9 @@ export function MiniAurumRender({ className = "" }: MiniAurumRenderProps) {
     jewel.rotation.x = -0.12;
     jewel.rotation.y = -0.2;
 
+    let disposed = false;
+    let diamondBvhRuntime: { update: () => void; dispose: () => void } | null = null;
+
     // Cargar el modelo real de la joya; la pieza procedural queda como respaldo si falla la carga.
     const gltfLoader = new GLTFLoader();
     gltfLoader.load(
@@ -171,6 +176,56 @@ export function MiniAurumRender({ className = "" }: MiniAurumRenderProps) {
           });
         });
         jewel.add(model);
+
+        // Solo activar el BVH de AURUM para mallas identificadas explícitamente como piedra.
+        // El modelo completo y los materiales del metal permanecen intactos.
+        const diamondMeshes: THREE.Mesh[] = [];
+        model.traverse((object) => {
+          if (!(object instanceof THREE.Mesh) || !object.geometry?.getAttribute("position")) return;
+          const materials = Array.isArray(object.material) ? object.material : [object.material];
+          if (materials.length !== 1) return;
+          const material = materials[0];
+          const identity = `${object.name} ${material.name}`.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLowerCase();
+          if (!/(diamond|diamante|brilliant|brillante|gem|gema|piedra|stone)/.test(identity)) return;
+          material.userData = { ...(material.userData ?? {}), aurumGemFamily: "diamante" };
+          object.userData = {
+            ...(object.userData ?? {}),
+            aurumActiveGemId: "diamante_natural",
+            aurumActiveGemFamily: "diamante",
+          };
+          diamondMeshes.push(object);
+        });
+
+        if (diamondMeshes.length > 0) {
+          void (async () => {
+            try {
+              const { createAurumDiamondBvhRuntime } = await import("../lib/aurum/aurum-diamond-bvh-runtime");
+              if (disposed) return;
+              const runtime = await createAurumDiamondBvhRuntime({
+                THREE,
+                RGBELoader,
+                EXRLoader,
+                url: "https://playground.ijewel3d.com/assetspro/hdrmaps/gem/env-gem-010.exr",
+                camera,
+                quality: "interactive",
+                targetFamilies: ["diamante"],
+                onError: (error) => console.warn("[AURUM mini] El BVH del diamante no se pudo aplicar; se conserva el material original.", error),
+              });
+              if (disposed) {
+                runtime.dispose();
+                return;
+              }
+              diamondBvhRuntime = runtime;
+              runtime.refresh(model);
+              if (!runtime.diagnostics().enabled) {
+                runtime.dispose();
+                diamondBvhRuntime = null;
+              }
+            } catch (error) {
+              console.warn("[AURUM mini] No se pudo inicializar el BVH del diamante; se conserva el material GLB.", error);
+            }
+          })();
+        }
       },
       undefined,
       (error) => {
@@ -199,11 +254,11 @@ export function MiniAurumRender({ className = "" }: MiniAurumRenderProps) {
     resizeObserver.observe(host);
 
     let frame = 0;
-    let disposed = false;
     const render = () => {
       if (disposed) return;
       frame = window.requestAnimationFrame(render);
       controls.update();
+      diamondBvhRuntime?.update();
       renderer.render(scene, camera);
     };
     render();
@@ -213,6 +268,8 @@ export function MiniAurumRender({ className = "" }: MiniAurumRenderProps) {
       window.cancelAnimationFrame(frame);
       resizeObserver.disconnect();
       controls.dispose();
+      diamondBvhRuntime?.dispose();
+      diamondBvhRuntime = null;
       scene.traverse((object) => {
         if (object instanceof THREE.Mesh) {
           object.geometry.dispose();
