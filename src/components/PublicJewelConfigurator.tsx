@@ -11,11 +11,15 @@ const metales = [
   { id: "oro-rosa", label: "Oro rosa", color: 0xc98576, materialId: "oro18r_pulido" },
   { id: "plata", label: "Plata", color: 0xe0e2e4, materialId: "plata925_pulida" },
 ] as const;
-// Keep the public configurator's original five gemstone families.
- // Reuse AURUM profiles only inside these families; do not expose the entire internal catalog here.
-const FAMILIAS_GEMAS_PUBLICAS = ["Diamante", "Esmeralda", "Rubí", "Zafiro", "Amatista"] as const;
-const gemasPublicas = GEMAS.filter((gema) => FAMILIAS_GEMAS_PUBLICAS.includes(gema.familia as typeof FAMILIAS_GEMAS_PUBLICAS[number]));
-const familiasGemas = FAMILIAS_GEMAS_PUBLICAS.filter((familia) => gemasPublicas.some((gema) => gema.familia === familia));
+// Keep the public viewer's original five gemstone choices; do not expose
+// the rest of the internal AURUM gemstone catalog in this configurator.
+const gemasPublicas = [
+  { id: "diamante_natural", label: "Diamante", color: 0xeaf4ff },
+  { id: "esmeralda_1", label: "Esmeralda", color: 0x138b54 },
+  { id: "rubi_natural", label: "Rubí", color: 0xb91c3b },
+  { id: "zafiro_azul", label: "Zafiro", color: 0x2858bd },
+  { id: "amatista_natural", label: "Amatista", color: 0x8952c8 },
+] as const;
 
 const colorHex = (color: number) => "#" + color.toString(16).padStart(6, "0");
 
@@ -153,10 +157,9 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
   }, [slug, producto, sharedModelUrl, sharedModelName, localFile]);
 
   const selectedMetal = metales.find((item) => item.id === metalId) ?? metales[0];
-  const selectedGem = gemasPublicas.find((item) => item.id === gemaId) ?? gemasPublicas.find((item) => item.id === "diamante_natural")!;
-  const gemasDeFamilia = gemasPublicas.filter((item) => item.familia === selectedGem.familia);
+  const selectedGem = gemasPublicas.find((item) => item.id === gemaId) ?? gemasPublicas[0];
   const aurumMaterial = MATERIALES.find((item) => item.id === selectedMetal.materialId) ?? MATERIALES.find((item) => item.id === "oro18a_pulido")!;
-  const aurumGem = selectedGem;
+  const aurumGem = GEMAS.find((item) => item.id === selectedGem.id) ?? GEMAS.find((item) => item.id === "diamante_natural")!;
 
   useEffect(() => {
     if (!localFile) {
@@ -240,28 +243,8 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#92702f]">02 · Piedra</p>
             <p className="mt-0.5 hidden text-xs text-[#8a8175] sm:block">Selecciona una gema</p>
-            <div className="mt-2 space-y-2 [@media(max-height:800px)]:mt-1">
-              <label className="block">
-                <span className="mb-1 block text-[10px] font-medium text-[#8a8175]">Familia de gema</span>
-                <select value={selectedGem.familia} onChange={(event) => {
-                  const nextFamily = event.target.value;
-                  const firstGem = gemasPublicas.find((item) => item.familia === nextFamily);
-                  if (firstGem) handleGemSelect(firstGem.id);
-                }} className="min-h-9 w-full rounded-lg border border-[#ece7df] bg-white px-2.5 py-2 text-xs text-[#342e26] outline-none transition focus:border-[#b28b45] focus:ring-2 focus:ring-[#b28b45]/20">
-                  {familiasGemas.map((family) => <option key={family} value={family}>{family}</option>)}
-                </select>
-              </label>
-              <label className="block">
-                <span className="mb-1 block text-[10px] font-medium text-[#8a8175]">Variedad / perfil AURUM</span>
-                <select value={selectedGem.id} onChange={(event) => handleGemSelect(event.target.value)} className="min-h-9 w-full rounded-lg border border-[#ece7df] bg-white px-2.5 py-2 text-xs text-[#342e26] outline-none transition focus:border-[#b28b45] focus:ring-2 focus:ring-[#b28b45]/20">
-                  {gemasDeFamilia.map((gem) => <option key={gem.id} value={gem.id}>{gem.nombre}</option>)}
-                </select>
-              </label>
-              <div className="flex items-center gap-2 rounded-lg border border-[#ece7df] bg-white px-2.5 py-2">
-                <span className="size-3.5 shrink-0 rounded-full border border-black/10" style={{ backgroundColor: colorHex(selectedGem.color) }} />
-                <span className="min-w-0 flex-1 truncate text-xs font-medium text-[#342e26]">{selectedGem.nombre}</span>
-                <span className="text-[9px] font-bold uppercase tracking-wide text-[#8b6b36]">AURUM</span>
-              </div>
+            <div className="mt-2 space-y-1.5 [@media(max-height:800px)]:mt-1">
+              {gemasPublicas.map((gem) => <button key={gem.id} type="button" aria-pressed={gemaId === gem.id} onClick={() => handleGemSelect(gem.id)} className={"flex min-h-9 w-full items-center gap-2 rounded-xl border px-2.5 py-2 text-left text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45] focus-visible:ring-offset-1 " + (gemaId === gem.id ? "border-[#a7833d] bg-[#f7f0e2] text-[#342e26]" : "border-[#ece7df] bg-white text-[#5f574d] hover:border-[#d1bd96] hover:bg-[#fcfaf5]")}><span className="size-3.5 shrink-0 rounded-full border border-black/10" style={{ backgroundColor: colorHex(gem.color) }} /><span className="min-w-0 flex-1 truncate font-medium">{gem.label}</span>{gemaId === gem.id && <span className="text-[9px] font-bold uppercase tracking-wide text-[#8b6b36]">Activo</span>}</button>)}
             </div>
           </div>
           <details className="mt-2.5 rounded-lg border border-[#eee6d8] bg-[linear-gradient(135deg,#fcfaf6_0%,#fffdf9_100%)] p-2.5 sm:mt-4 sm:rounded-xl sm:p-3 [@media(max-height:800px)]:mt-2 [@media(max-height:800px)]:p-2.5" aria-live="polite">
@@ -284,7 +267,7 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
               <span className="size-7 shrink-0 rounded-full border border-black/10 shadow-sm" style={{ backgroundColor: colorHex(selectedGem.color) }} />
               <div className="min-w-0">
                 <p className="text-[10px] text-[#8a8175]">Piedra</p>
-                <p className="truncate text-xs font-semibold text-[#342e26]">{selectedGem.nombre}</p>
+                <p className="truncate text-xs font-semibold text-[#342e26]">{selectedGem.label}</p>
               </div>
             </div>
             {aplicacionEstado && <p className={"mt-3 border-t border-[#eee6d8] pt-2 text-[10px] leading-4 " + (aplicacionEstado.startsWith("Metal y gema aplicados") ? "text-emerald-700" : "text-amber-700")} role="status">{aplicacionEstado}</p>}
