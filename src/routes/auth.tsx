@@ -210,11 +210,6 @@ function LoginPage() {
               <button type="button" onClick={() => { setSeccionPlataforma("flujo"); setMostrarPlataforma(true); }} className="rounded-full border border-[#dfc45f]/70 bg-white/60 px-3 py-2 transition hover:border-[#b99642] hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#967100]">Aurum Render</button>
               <button type="button" onClick={() => { setSeccionPlataforma("flujo"); setMostrarPlataforma(true); }} className="rounded-full border border-[#dfc45f]/70 bg-white/60 px-3 py-2 transition hover:border-[#b99642] hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#967100]">Mi Nube y catálogo</button>
             </div>
-            <div className="mt-6 flex justify-center gap-2" role="group" aria-label="Seleccionar imagen de presentación">
-              {diapositivasAcceso.map((diapositiva, indice) => (
-                <button key={diapositiva.alt} type="button" onClick={() => setDiapositivaActual(indice)} aria-label={`Mostrar imagen ${indice + 1}: ${diapositiva.alt}`} aria-pressed={diapositivaActual === indice} className={`h-1.5 rounded-full transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#967100] focus-visible:ring-offset-2 ${diapositivaActual === indice ? "w-7 bg-[#967100]" : "w-4 bg-[#e5c54d] hover:bg-[#c6a52a]"}`} />
-              ))}
-            </div>
           </div>
         </section>
         <section className="relative flex min-h-screen items-center justify-center px-4 pb-10 pt-20 sm:px-8 lg:px-12">
