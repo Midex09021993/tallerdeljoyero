@@ -261,7 +261,7 @@ function ComunidadPage() {
       </section>
 
       <section className="mx-auto max-w-7xl px-5 py-12 sm:px-8 sm:py-16">
-        <div className="flex flex-col justify-between gap-5 rounded-2xl border border-[#eadca7] bg-[#fff9df] p-6 sm:flex-row sm:items-center sm:p-8>
+        <div className="flex flex-col justify-between gap-5 rounded-2xl border border-[#eadca7] bg-[#fff9df] p-6 sm:flex-row sm:items-center sm:p-8">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#876500]">La comunidad crece contigo</p>
             <h2 className="mt-2 text-xl font-bold">Encuentra talleres y formación.</h2>
