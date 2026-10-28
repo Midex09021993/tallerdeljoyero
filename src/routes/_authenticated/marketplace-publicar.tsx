@@ -133,13 +133,16 @@ function PublicarArchivoPage() {
       if (!seleccionado) throw new Error("Selecciona al menos un archivo válido de tu propia Mi Nube.");
       const formatosSeleccionados = [...new Set(archivosSeleccionados.map((item) => EXTENSIONES[item.nombre.split(".").pop()?.toLowerCase() ?? ""]).filter(Boolean))];
       if (formatosSeleccionados.length === 0) throw new Error("No se detectó un formato compatible en los archivos seleccionados.");
+      const formatosPublicacion = formatosSeleccionados.includes("STL") || formatosSeleccionados.includes("3DM") || formatosSeleccionados.includes("GLB") || formatosSeleccionados.includes("OBJ") || formatosSeleccionados.includes("STEP")
+        ? "Modelos 3D"
+        : formatosSeleccionados.includes("IMAGEN") ? "Imágenes" : formatosSeleccionados.includes("PDF") || formatosSeleccionados.includes("PLANO") ? "Planos técnicos" : categoria;
       const marketplaceClient = supabase as unknown as { from: (table: string) => { insert: (values: Record<string, unknown>) => Promise<{ error: { message: string } | null }> } };
       const { error } = await marketplaceClient.from("archivos_digitales_marketplace").insert({
         participante_id: participanteId,
         vendedor_usuario_id: user.id,
         titulo: titulo.trim(),
         descripcion: "",
-        categoria,
+        categoria: formatosPublicacion,
         formatos: formatosSeleccionados,
         archivos_adjuntos: archivosSeleccionados.map((item) => ({ ruta: item.ruta, nombre: item.nombre, bytes: item.bytes })),
         precio: valor,
