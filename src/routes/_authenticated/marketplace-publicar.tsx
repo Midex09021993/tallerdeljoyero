@@ -39,7 +39,13 @@ function PublicarArchivoPage() {
     if (carpeta) setTitulo(carpeta);
   }, []);
 
-  const archivosVisibles = archivosDisponibles.filter((item) => item.nombre.toLowerCase() !== "00-portada-aurum.png");
+  const raizCarpetaSeleccionada = carpetaProyecto.trim();
+  const archivosVisibles = archivosDisponibles.filter((item) => {
+    if (item.nombre.toLowerCase() === "00-portada-aurum.png") return false;
+    if (!raizCarpetaSeleccionada) return true;
+    const partesRuta = item.ruta.split("/");
+    return partesRuta.length >= 3 && partesRuta[partesRuta.length - 2] === raizCarpetaSeleccionada;
+  });
 
   useEffect(() => {
     let cancelado = false;
