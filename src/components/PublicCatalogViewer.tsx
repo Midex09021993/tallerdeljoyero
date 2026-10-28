@@ -183,7 +183,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
           } else if (family === "gema") {
             applyAurumGem(material, gemPresetFromConfig(gem), Math.max(.015, Number(object.userData?.aurumOpticalProfile?.thickness ?? 1)));
             material.envMap = gemEnvironment ?? environment;
-            material.userData = { ...(material.userData ?? {}), aurumOpticalProfile: gemPresetFromConfig(gem), aurumGemFamily: gem.familia, aurumGemEnvIntensity: gem.envMapIntensity };
+            material.userData = { ...(material.userData ?? {}), aurumOpticalProfile: gemPresetFromConfig(gem), aurumGemFamily: gem.familia.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase(), aurumGemEnvIntensity: gem.envMapIntensity };
           }
           material.needsUpdate = true;
           return material;
@@ -464,7 +464,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         object.userData = {
           ...(object.userData ?? {}),
           aurumActiveGemId: gem.id,
-          aurumActiveGemFamily: gem.familia.toLocaleLowerCase(),
+          aurumActiveGemFamily: gem.familia.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase(),
         };
         // The live diamond BVH owns the stone shader. Metal changes must never
         // replace it with a plain physical material; the BVH effect handles
