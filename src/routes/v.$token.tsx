@@ -24,20 +24,30 @@ function VisorCortoPage() {
 
   useEffect(() => {
     let activo = true;
-    void supabase.functions.invoke("resolver-enlace-visor-3d", { body: { token } })
-      .then(({ data, error: functionError }) => {
+    void supabase.rpc("resolver_enlace_visor_3d", { _token: token })
+      .then(({ data, error: rpcError }) => {
         if (!activo) return;
+
+        // The SQL function returns SETOF rows, represented by Supabase as an array.
+        const registro = Array.isArray(data) ? data[0] : null;
+        const url = registro?.modelo_url;
+        const nombre = registro?.nombre;
+        const expiraEn = registro?.expira_en;
+        const fechaExpiracion = typeof expiraEn === "string" ? new Date(expiraEn).getTime() : NaN;
+
         if (
-          functionError ||
-          !data?.ok ||
-          typeof data.url !== "string" ||
-          typeof data.nombre !== "string" ||
-          typeof data.expira_en !== "string" ||
-          new Date(data.expira_en).getTime() <= Date.now()
+          rpcError ||
+          !registro ||
+          typeof url !== "string" ||
+          !url.startsWith("https://") ||
+          typeof nombre !== "string" ||
+          typeof expiraEn !== "string" ||
+          !Number.isFinite(fechaExpiracion) ||
+          fechaExpiracion <= Date.now()
         ) {
           setError(true);
         } else {
-          setEnlace({ url: data.url, nombre: data.nombre, expira_en: data.expira_en });
+          setEnlace({ url, nombre, expira_en: expiraEn });
         }
         setCargando(false);
       })
