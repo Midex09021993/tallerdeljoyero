@@ -122,6 +122,7 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
         if (cancelled) return;
         const file = new File([blob], modelName || "modelo.glb", { type: blob.type || "model/gltf-binary" });
         setDownloadedModel({ key: modelKey, file });
+        setStatus("Modelo descargado. Preparando el visor…");
       } catch (cause) {
         if (!cancelled) {
           setLoadError(cause instanceof Error ? cause.message : "No se pudo descargar el modelo 3D.");
