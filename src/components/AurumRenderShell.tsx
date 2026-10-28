@@ -49,8 +49,7 @@ export function AurumRenderShell() {
       const select = root.querySelector("select");
       const label = select?.closest("label");
       const controls = label?.parentElement;
-      if (controls) controls.insertBefore(pluginLink, controls.firstChild);
-      else root.insertBefore(pluginLink, root.firstChild?.nextSibling ?? null);
+      void controls;
       const extraChevron = label?.querySelector("svg.lucide-chevron-down") as SVGElement | null;
       const previousDisplay = extraChevron?.style.display ?? "";
       if (extraChevron) extraChevron.style.display = "none";
