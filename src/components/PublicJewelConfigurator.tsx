@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Gem, RotateCcw, Maximize, Minimize } from "lucide-react";
 import { supabasePublic } from "@/integrations/supabase/client";
-import { AurumRender } from "@/components/AurumRender";
-import type { AurumCatalogApi } from "@/lib/aurum/api";
+import { PublicCatalogViewer } from "@/components/PublicCatalogViewer";
 import { GEMAS, MATERIALES } from "@/lib/aurum/catalog";
 
 type Props = { slug?: string; producto?: string; sharedModelUrl?: string; sharedModelName?: string; localFile?: File };
@@ -27,11 +26,10 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
   const [modelName, setModelName] = useState(sharedModelName || "modelo.3dm");
   const [status, setStatus] = useState("Preparando modelo 3D…");
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [catalogApi, setCatalogApi] = useState<AurumCatalogApi | null>(null);
-  const [loadedModelUrl, setLoadedModelUrl] = useState<string | null>(null);
-  const [downloadedModel, setDownloadedModel] = useState<{ key: string; file: File } | null>(null);
-  const modelKey = localFile ? `local:${localFile.name}:${localFile.size}:${localFile.lastModified}` : modelUrl;
   const [aplicacionEstado, setAplicacionEstado] = useState<string>("");
+  const [localModelUrl, setLocalModelUrl] = useState<string | null>(null);
+  const viewerModelUrl = localFile ? localModelUrl : modelUrl;
+  const [loadedModelReady, setLoadedModelReady] = useState(false);
   const visorRef = useRef<HTMLDivElement>(null);
   const [pantallaCompleta, setPantallaCompleta] = useState(false);
 
@@ -160,131 +158,34 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
   const aurumMaterial = MATERIALES.find((item) => item.id === selectedMetal.materialId) ?? MATERIALES.find((item) => item.id === "oro18a_pulido")!;
   const aurumGem = GEMAS.find((item) => item.id === selectedGem.gemId) ?? GEMAS.find((item) => item.id === "diamante_natural")!;
 
-  // Descarga el GLB tan pronto está disponible, en paralelo con la inicialización del visor.
-  // Así no esperamos a que el motor termine de montar para empezar la transferencia.
   useEffect(() => {
-    let cancelled = false;
-    setDownloadedModel(null);
-    setLoadedModelUrl(null);
-    if (!modelKey || (!localFile && !modelUrl)) return;
-
-    const downloadModel = async () => {
-      try {
-        if (localFile) {
-          setDownloadedModel({ key: modelKey, file: localFile });
-          return;
-        }
-        setStatus("Descargando modelo 3D…");
-        const response = await fetch(modelUrl!);
-        if (!response.ok) throw new Error("No se pudo descargar el modelo 3D del catálogo.");
-        const blob = await response.blob();
-        if (cancelled) return;
-        const file = new File([blob], modelName || "modelo.glb", { type: blob.type || "model/gltf-binary" });
-        setDownloadedModel({ key: modelKey, file });
-        setStatus("Modelo descargado. Preparando el visor…");
-      } catch (cause) {
-        if (!cancelled) {
-          setLoadError(cause instanceof Error ? cause.message : "No se pudo descargar el modelo 3D.");
-          setStatus("");
-        }
-      }
-    };
-    void downloadModel();
-    return () => { cancelled = true; };
-  }, [modelUrl, modelName, localFile, modelKey]);
-
-  // La carga del modelo en el motor comienza cuando están listos tanto el archivo como su API.
-  useEffect(() => {
-    let cancelled = false;
-    if (!catalogApi?.cargar || !downloadedModel || downloadedModel.key !== modelKey || loadedModelUrl === modelKey) return;
-
-    const loadIntoAurum = async () => {
-      setStatus("Preparando el visor interactivo…");
-      setLoadError(null);
-      try {
-        await catalogApi.cargar?.(downloadedModel.file, (progress: string) => {
-          if (!cancelled && progress) setStatus(progress);
-        });
-        if (cancelled) return;
-        setLoadedModelUrl(modelKey);
-        setStatus("");
-      } catch (cause) {
-        if (!cancelled) {
-          setLoadError(cause instanceof Error ? cause.message : "No se pudo abrir el modelo 3D.");
-          setStatus("");
-        }
-      }
-    };
-    void loadIntoAurum();
-    return () => { cancelled = true; };
-  }, [catalogApi, downloadedModel, modelKey, loadedModelUrl]);
-
-  const modeloInicializadoRef = useRef<{ key: string; api: AurumCatalogApi } | null>(null);
-
-  useEffect(() => {
-    if (!catalogApi || !modelKey || loadedModelUrl !== modelKey) {
-      setAplicacionEstado("");
+    if (!localFile) {
+      setLocalModelUrl(null);
       return;
     }
-    // Aplicar los valores iniciales una sola vez por modelo/API.
-    // Los cambios posteriores se aplican directamente desde cada selector.
-    if (modeloInicializadoRef.current?.key === modelKey && modeloInicializadoRef.current.api === catalogApi) return;
-    modeloInicializadoRef.current = { key: modelKey, api: catalogApi };
+    const url = URL.createObjectURL(localFile);
+    setLocalModelUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [localFile]);
 
-    const metalAplicado = catalogApi.materialCatalogo?.(aurumMaterial);
-    const gemaAplicada = catalogApi.gemaCatalogo?.(aurumGem);
-    if (metalAplicado === false && gemaAplicada === false) {
-      setAplicacionEstado("No se identificaron piezas de metal ni de gema compatibles en este modelo.");
-    } else if (metalAplicado === false) {
-      setAplicacionEstado("La gema se aplicó, pero no se identificaron piezas de metal para cambiar el acabado.");
-    } else if (gemaAplicada === false) {
-      setAplicacionEstado("El metal se aplicó, pero no se identificaron piezas de gema para cambiar la piedra.");
-    } else if (metalAplicado === true && gemaAplicada === true) {
-      setAplicacionEstado("Metal y gema aplicados al modelo 3D.");
-    } else {
-      setAplicacionEstado("No se pudo confirmar la aplicación de todos los cambios en el modelo.");
-    }
-  }, [catalogApi, loadedModelUrl, modelKey, aurumMaterial, aurumGem]);
+  useEffect(() => {
+    setLoadedModelReady(false);
+    setAplicacionEstado("");
+    setLoadError(null);
+    if (localFile || modelUrl) setStatus("Preparando visor 3D…");
+  }, [modelUrl, localFile]);
 
   const handleMetalSelect = (id: string) => {
-    // Evita recalcular el material si el usuario vuelve a pulsar la opción activa.
     if (id === metalId) return;
     setMetalId(id);
-    const selected = metales.find((item) => item.id === id) ?? metales[0];
-    const material = MATERIALES.find((item) => item.id === selected.materialId)
-      ?? MATERIALES.find((item) => item.id === "oro18a_pulido");
-    if (catalogApi && loadedModelUrl === modelKey && material) {
-      const applied = catalogApi.materialCatalogo?.(material);
-      setAplicacionEstado(applied === true ? "Metal aplicado al modelo 3D." : applied === false ? "No se identificaron piezas de metal compatibles en este modelo." : "Cambio de metal enviado al visor.");
-    } else {
-      console.warn("[PUBLIC VIEWER] El motor todavía no está listo para cambiar el metal", {
-        hasCatalogApi: Boolean(catalogApi),
-        modelReady: loadedModelUrl === modelKey,
-        requestedMetal: id,
-      });
-    }
   };
 
   const handleGemSelect = (id: string) => {
-    // Evita volver a aplicar la gema cuando no hay un cambio real de selección.
     if (id === gemaId) return;
     setGemaId(id);
-    const selected = gemas.find((item) => item.id === id) ?? gemas[0];
-    const gem = GEMAS.find((item) => item.id === selected.gemId)
-      ?? GEMAS.find((item) => item.id === "diamante_natural");
-    if (catalogApi && loadedModelUrl === modelKey && gem) {
-      const applied = catalogApi.gemaCatalogo?.(gem);
-      setAplicacionEstado(applied === true ? "Gema aplicada al modelo 3D." : applied === false ? "No se identificaron piezas de gema compatibles en este modelo." : "Cambio de gema enviado al visor.");
-    } else {
-      console.warn("[PUBLIC VIEWER] El motor todavía no está listo para cambiar la gema", {
-        hasCatalogApi: Boolean(catalogApi),
-        modelReady: loadedModelUrl === modelKey,
-        requestedGem: id,
-      });
-    }
   };
 
-  const isReady = Boolean((modelUrl || localFile) && loadedModelUrl === modelKey && !loadError && !status);
+  const isReady = Boolean(viewerModelUrl && loadedModelReady && !loadError && !status);
   const displayName = (sharedModelName || modelName || "Joya compartida")
     .replace(/\.(glb|gltf|3dm|obj|stl|fbx)$/i, "")
     .replace(/^[0-9a-f]{8}-[0-9a-f-]{27,}[-_]?/i, "")
@@ -307,7 +208,7 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
         </div>
         <div className="flex items-center justify-between gap-2 sm:justify-end">
           <span className="inline-flex rounded-full border border-[#e9e2d7] px-2.5 py-1.5 text-[9px] font-semibold uppercase tracking-[.1em] text-[#81786c] sm:px-3 sm:text-[10px]">Solo visualización</span>
-          <button type="button" onClick={() => { setMetalId("oro-amarillo"); setGemaId("diamante"); catalogApi?.reset?.(); const defaultMetal = MATERIALES.find((item) => item.id === "oro18a_pulido"); const defaultGem = GEMAS.find((item) => item.id === "diamante_natural"); if (defaultMetal) catalogApi?.materialCatalogo?.(defaultMetal); if (defaultGem) catalogApi?.gemaCatalogo?.(defaultGem); }} className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[#e4ddd1] bg-white px-3.5 py-2 text-xs font-semibold text-[#41382d] shadow-sm transition hover:border-[#b28b45] hover:bg-[#fbf8f1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45] focus-visible:ring-offset-2"><RotateCcw className="size-3.5" /> Restablecer</button>
+          <button type="button" onClick={() => { setMetalId("oro-amarillo"); setGemaId("diamante"); }} className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[#e4ddd1] bg-white px-3.5 py-2 text-xs font-semibold text-[#41382d] shadow-sm transition hover:border-[#b28b45] hover:bg-[#fbf8f1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45] focus-visible:ring-offset-2"><RotateCcw className="size-3.5" /> Restablecer</button>
         </div>
       </header>
       <div className="isolate grid min-w-0 grid-cols-1 lg:min-h-0 lg:flex-1 lg:grid-rows-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)_250px] 2xl:grid-cols-[minmax(0,1fr)_270px]">
@@ -320,8 +221,8 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
               {pantallaCompleta ? <Minimize className="size-3.5 sm:size-4" /> : <Maximize className="size-3.5 sm:size-4" />}
             </button>
           </div>
-          {(modelUrl || localFile) && <div className="absolute inset-0"><AurumRender embedded onCatalogApiReady={(api) => setCatalogApi(api)} /></div>}
-          {(!(modelUrl || localFile) || loadError || status) && <div className={"absolute inset-0 z-50 grid place-items-center p-6 text-center transition-opacity " + (isReady ? "pointer-events-none opacity-0" : "bg-white/90 backdrop-blur-[2px]")}>
+          {viewerModelUrl && <div className="absolute inset-0"><PublicCatalogViewer modelUrl={viewerModelUrl} modelName={modelName || localFile?.name || "modelo.glb"} materialId={aurumMaterial.id} gemId={aurumGem.id} onReady={() => { setLoadedModelReady(true); setStatus(""); setAplicacionEstado("Visor 3D listo."); }} onError={(message) => { setLoadError(message); setStatus(""); }} /></div>}
+          {(!viewerModelUrl || loadError || status || !loadedModelReady) && <div className={"absolute inset-0 z-50 grid place-items-center p-6 text-center transition-opacity " + (isReady ? "pointer-events-none opacity-0" : "bg-white/90 backdrop-blur-[2px]")}>
             <div className="max-w-sm">
               {loadError ? <div className="mx-auto mb-3 grid size-10 place-items-center rounded-full border border-[#edd6c7] bg-[#fff6f0] text-[#a85b2d]"><span className="text-lg">!</span></div> : <div className="mx-auto mb-3 size-7 animate-spin rounded-full border-2 border-[#e9dfca] border-t-[#a7833d]" />}
               <p className={"text-sm font-semibold " + (loadError ? "text-[#984a28]" : "text-[#554c40]")}>{loadError || status || "Preparando el visor 3D…"}</p>
