@@ -394,21 +394,25 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
     const model = modelRef.current;
     const camera = cameraRef.current;
     const selectedGem = GEMAS.find((item) => item.id === gemId);
-    if (!model || !camera || !selectedGem || selectedGem.familia.toLocaleLowerCase() !== "diamante") {
+    const selectedFamily = selectedGem?.familia.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLocaleLowerCase();
+    const bvhFamilies = ["diamante", "esmeralda", "rubi", "zafiro", "amatista"];
+    if (!model || !camera || !selectedGem || !selectedFamily || !bvhFamilies.includes(selectedFamily)) {
       return () => { cancelled = true; };
     }
 
+    // The public viewer keeps the original five choices, but each choice must
+    // activate its own AURUM BVH optical family—not the diamond shader for all stones.
     model.traverse((object: any) => {
       if (!object.isMesh || !object.material) return;
       const family = object.userData?.aurumPublicInferredGem ? "gema" : object.userData?.aurumPublicDefaultMetal ? "metal" : classifyMesh(object);
       if (family !== "gema") return;
       const materials = Array.isArray(object.material) ? object.material : [object.material];
       if (materials.length !== 1) return;
-      materials[0].userData = { ...(materials[0].userData ?? {}), aurumGemFamily: "diamante" };
+      materials[0].userData = { ...(materials[0].userData ?? {}), aurumGemFamily: selectedFamily };
       object.userData = {
         ...(object.userData ?? {}),
         aurumActiveGemId: gemId,
-        aurumActiveGemFamily: "diamante",
+        aurumActiveGemFamily: selectedFamily,
       };
     });
 
@@ -419,8 +423,8 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
       url: getAurumGemHdriUrl("ijewelGem"),
       camera,
       quality: "interactive",
-      targetFamilies: ["diamante"],
-      onError: (cause) => console.warn("[PUBLIC VIEWER] BVH diamante: se conserva el material AURUM como respaldo.", cause),
+      targetFamilies: [selectedFamily],
+      onError: (cause) => console.warn("[PUBLIC VIEWER] BVH AURUM para " + selectedFamily + ": se conserva el material AURUM como respaldo.", cause),
     }).then((runtime) => {
       if (cancelled || modelRef.current !== model || gemIdRef.current !== gemId) {
         runtime.dispose();
@@ -428,14 +432,14 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
       }
       runtime.refresh(model);
       if (!runtime.diagnostics().enabled) {
-        console.warn("[PUBLIC VIEWER] BVH diamante sin mallas compatibles; se mantiene el material AURUM.");
+        console.warn("[PUBLIC VIEWER] BVH AURUM sin mallas compatibles para " + selectedFamily + "; se mantiene el material AURUM.");
         runtime.dispose();
         return;
       }
       diamondBvhRuntimeRef.current = runtime;
       renderRef.current?.();
     }).catch((cause) => {
-      if (!cancelled) console.warn("[PUBLIC VIEWER] No se pudo iniciar el BVH de diamante; se mantiene el perfil de catálogo.", cause);
+      if (!cancelled) console.warn("[PUBLIC VIEWER] No se pudo iniciar el BVH AURUM para " + selectedFamily + "; se mantiene el perfil de catálogo.", cause);
     });
 
     return () => {
