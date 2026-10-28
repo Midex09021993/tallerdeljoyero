@@ -1340,7 +1340,7 @@ function MiNubePage() {
   };
 
   
-  const crearEnlaceVisorArchivo = async (archivo: ArchivoNube) => {
+  const crearEnlaceVisorArchivo = async (archivo: ArchivoNube, forzarRenovacion = false) => {
     if (archivo.origen !== "supabase" || !archivo.nombre.toLowerCase().endsWith(".glb")) {
       toast.error("El visor compartido necesita un archivo GLB guardado en Mi Nube.");
       return;
@@ -1349,7 +1349,7 @@ function MiNubePage() {
     try {
       const { data: existente, error: existenteError } = await rpcObtenerEnlaceVisor3d({ _modelo_ruta: archivo.ruta, _nombre: nombreVisible(archivo.nombre) });
       if (existenteError) throw existenteError;
-      if (Array.isArray(existente) && existente[0]?.token && existente[0]?.expira_en && new Date(existente[0].expira_en).getTime() > Date.now()) {
+      if (!forzarRenovacion && Array.isArray(existente) && existente[0]?.token && existente[0]?.expira_en && new Date(existente[0].expira_en).getTime() > Date.now()) {
         const urlExistente = new URL("/v/" + existente[0].token, window.location.origin).toString();
         setEnlacesVisorArchivo((actuales) => [...actuales.filter((enlace) => enlace.ruta !== archivo.ruta), { ruta: archivo.ruta, url: urlExistente }]);
         try { await navigator.clipboard.writeText(urlExistente); toast.success("Enlace existente reutilizado y copiado."); }
