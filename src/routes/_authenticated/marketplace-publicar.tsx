@@ -127,9 +127,12 @@ function PublicarArchivoPage() {
       }
       const seleccionado = archivosSeleccionados[0];
       const prefijoPrivado = participanteId + "/" + user.id + "/";
-      if (!seleccionado || !seleccionado.ruta.startsWith(prefijoPrivado) || seleccionado.ruta.split("/").some((parte) => parte === "..")) throw new Error("Selecciona un archivo válido de tu propia Mi Nube.");
-      const extension = seleccionado.nombre.split(".").pop()?.toLowerCase() ?? "";
-      if (EXTENSIONES[extension] !== formato) throw new Error("El formato seleccionado no coincide con el archivo.");
+      if (archivosSeleccionados.some((item) => !item.ruta.startsWith(prefijoPrivado) || item.ruta.split("/").some((parte) => parte === ".."))) {
+        throw new Error("Todos los archivos seleccionados deben pertenecer a tu propia Mi Nube.");
+      }
+      if (!seleccionado) throw new Error("Selecciona al menos un archivo válido de tu propia Mi Nube.");
+      const formatosSeleccionados = [...new Set(archivosSeleccionados.map((item) => EXTENSIONES[item.nombre.split(".").pop()?.toLowerCase() ?? ""]).filter(Boolean))];
+      if (formatosSeleccionados.length === 0) throw new Error("No se detectó un formato compatible en los archivos seleccionados.");
       const marketplaceClient = supabase as unknown as { from: (table: string) => { insert: (values: Record<string, unknown>) => Promise<{ error: { message: string } | null }> } };
       const { error } = await marketplaceClient.from("archivos_digitales_marketplace").insert({
         participante_id: participanteId,
@@ -137,7 +140,7 @@ function PublicarArchivoPage() {
         titulo: titulo.trim(),
         descripcion: "",
         categoria,
-        formatos: [...new Set(archivosSeleccionados.map((item) => EXTENSIONES[item.nombre.split(".").pop()?.toLowerCase() ?? ""]).filter(Boolean))],
+        formatos: formatosSeleccionados,
         archivos_adjuntos: archivosSeleccionados.map((item) => ({ ruta: item.ruta, nombre: item.nombre, bytes: item.bytes })),
         precio: valor,
         moneda,
