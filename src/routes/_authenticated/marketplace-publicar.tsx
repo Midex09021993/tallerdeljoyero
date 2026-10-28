@@ -109,21 +109,33 @@ function PublicarArchivoPage() {
       const ruta = archivosSeleccionados[0].ruta;
       let imagenPortadaUrl: string | null = null;
       const carpetaRuta = ruta.split("/").slice(0, -1).join("/");
-      const imagenProyecto = archivosDisponibles.find((item) => item.ruta.startsWith(carpetaRuta + "/") && /\.(jpe?g|png|webp)$/i.test(item.nombre));
+      const imagenesCarpeta = archivosDisponibles.filter((item) => {
+        const carpetaImagen = item.ruta.split("/").slice(0, -1).join("/");
+        return carpetaImagen === carpetaRuta && /\.(jpe?g|png|webp)$/i.test(item.nombre);
+      });
+      // El póster que genera Aurum Render es la portada preferida; no se modifica el motor.
+      const imagenProyecto = imagenesCarpeta.find((item) => item.nombre.toLowerCase() === "00-portada-aurum.png")
+        ?? imagenesCarpeta.find((item) => /portada|poster|cover/i.test(item.nombre))
+        ?? imagenesCarpeta[0];
       if (imagenProyecto) {
         const { data: imagenFirmada, error: errorFirma } = await supabase.storage.from("mi-nube").createSignedUrl(imagenProyecto.ruta, 600);
-        if (!errorFirma && imagenFirmada?.signedUrl) {
-          const respuestaImagen = await fetch(imagenFirmada.signedUrl);
-          if (respuestaImagen.ok) {
-            const blobImagen = await respuestaImagen.blob();
-            const extensionImagen = imagenProyecto.nombre.split(".").pop()?.toLowerCase() ?? "jpg";
-            const rutaPortada = "marketplace-portadas/" + user.id + "/" + crypto.randomUUID() + "." + extensionImagen;
-            const { error: errorSubida } = await supabase.storage.from("catalogo-joyas").upload(rutaPortada, blobImagen, { contentType: blobImagen.type || "image/jpeg", upsert: false });
-            if (!errorSubida) {
-              imagenPortadaUrl = supabase.storage.from("catalogo-joyas").getPublicUrl(rutaPortada).data.publicUrl;
-            }
-          }
+        if (errorFirma || !imagenFirmada?.signedUrl) {
+          throw new Error("Encontramos la imagen de portada, pero no pudimos leerla desde Mi Nube. Revisa los permisos del archivo e inténtalo de nuevo.");
         }
+        const respuestaImagen = await fetch(imagenFirmada.signedUrl);
+        if (!respuestaImagen.ok) {
+          throw new Error("No se pudo descargar la imagen de portada desde Mi Nube.");
+        }
+        const blobImagen = await respuestaImagen.blob();
+        const extensionImagen = imagenProyecto.nombre.split(".").pop()?.toLowerCase() ?? "jpg";
+        const rutaPortada = "marketplace-portadas/" + user.id + "/" + crypto.randomUUID() + "." + extensionImagen;
+        const { error: errorSubida } = await supabase.storage.from("catalogo-joyas").upload(rutaPortada, blobImagen, { contentType: blobImagen.type || "image/jpeg", upsert: false });
+        if (errorSubida) {
+          throw new Error("La imagen existe, pero no se pudo publicar la portada del marketplace. Revisa los permisos de subida del bucket catalogo-joyas en Lovable Cloud.");
+        }
+        const urlPortada = supabase.storage.from("catalogo-joyas").getPublicUrl(rutaPortada).data.publicUrl;
+        if (!urlPortada) throw new Error("No se pudo generar la URL pública de la portada.");
+        imagenPortadaUrl = urlPortada;
       }
       const seleccionado = archivosSeleccionados[0];
       const prefijoPrivado = participanteId + "/" + user.id + "/";
