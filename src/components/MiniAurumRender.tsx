@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
 type MiniAurumRenderProps = {
   className?: string;
@@ -124,6 +125,58 @@ export function MiniAurumRender({ className = "" }: MiniAurumRenderProps) {
 
     jewel.rotation.x = -0.12;
     jewel.rotation.y = -0.2;
+
+    // Cargar el modelo real de la joya; la pieza procedural queda como respaldo si falla la carga.
+    const gltfLoader = new GLTFLoader();
+    gltfLoader.load(
+      "/models/diseno-de-joyeria.glb",
+      (gltf) => {
+        if (disposed) {
+          gltf.scene.traverse((object) => {
+            if (object instanceof THREE.Mesh) {
+              object.geometry.dispose();
+              const materials = Array.isArray(object.material) ? object.material : [object.material];
+              materials.forEach((material) => material.dispose());
+            }
+          });
+          return;
+        }
+
+        const model = gltf.scene;
+        model.updateMatrixWorld(true);
+        const bounds = new THREE.Box3().setFromObject(model);
+        const size = bounds.getSize(new THREE.Vector3());
+        const center = bounds.getCenter(new THREE.Vector3());
+        const maxDimension = Math.max(size.x, size.y, size.z);
+
+        if (Number.isFinite(maxDimension) && maxDimension > 0) {
+          const fitScale = 2.05 / maxDimension;
+          model.scale.setScalar(fitScale);
+          model.position.set(
+            -center.x * fitScale,
+            -center.y * fitScale,
+            -center.z * fitScale,
+          );
+        }
+
+        const oldObjects = [...jewel.children];
+        oldObjects.forEach((object) => {
+          jewel.remove(object);
+          object.traverse((child) => {
+            if (child instanceof THREE.Mesh) {
+              child.geometry.dispose();
+              const materials = Array.isArray(child.material) ? child.material : [child.material];
+              materials.forEach((material) => material.dispose());
+            }
+          });
+        });
+        jewel.add(model);
+      },
+      undefined,
+      (error) => {
+        console.warn("No se pudo cargar /models/diseno-de-joyeria.glb; se mantiene el modelo de respaldo.", error);
+      },
+    );
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
