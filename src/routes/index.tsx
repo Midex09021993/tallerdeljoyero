@@ -14,7 +14,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Resuelve retos reales de tu taller joyero con AURUM LAB: cálculos técnicos, visualización 3D, gestión comercial y archivos conectados en una plataforma especializada.",
+          "Resuelve retos de tu taller joyero con AURUM LAB: cálculos técnicos, diseño 3D, gestión comercial y archivos en una plataforma digital especializada.",
       },
       { name: "robots", content: "index, follow, max-image-preview:large" },
       { property: "og:title", content: "AURUM LAB — Haz crecer tu taller joyero" },
