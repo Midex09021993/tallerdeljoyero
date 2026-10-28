@@ -185,6 +185,8 @@ function MiNubePage() {
   const [misVentas, setMisVentas] = useState<Array<{ id: string; titulo: string; categoria: string; formatos: string[]; precio: number; moneda: string; estado: string; created_at: string; nombre_archivo: string }>>([]);
   const [cargandoMisVentas, setCargandoMisVentas] = useState(false);
   const [errorMisVentas, setErrorMisVentas] = useState<string | null>(null);
+  const [ventaEnEdicion, setVentaEnEdicion] = useState<{ id: string; titulo: string; precio: string } | null>(null);
+  const [guardandoVenta, setGuardandoVenta] = useState(false);
   const [proyectoAbierto, setProyectoAbierto] = useState<string | null>(null);
   const [proyectoPendienteEliminar, setProyectoPendienteEliminar] = useState<{ nombre: string; archivos: ArchivoNube[] } | null>(null);
   const [proyectoRenombrando, setProyectoRenombrando] = useState<string | null>(null);
@@ -236,6 +238,80 @@ function MiNubePage() {
       setCargandoMisVentas(false);
     }
   }, [usuarioId]);
+
+  const actualizarVentaPropia = async (id: string, valores: Record<string, unknown>) => {
+    if (!usuarioId) throw new Error("Inicia sesión para gestionar tus publicaciones.");
+    const client = supabase as unknown as {
+      from: (table: string) => {
+        update: (values: Record<string, unknown>) => {
+          eq: (column: string, value: string) => {
+            eq: (column: string, value: string) => Promise<{ error: { message: string } | null }>;
+          };
+        };
+        delete: () => {
+          eq: (column: string, value: string) => {
+            eq: (column: string, value: string) => Promise<{ error: { message: string } | null }>;
+          };
+        };
+      };
+    };
+    const { error } = await client.from("archivos_digitales_marketplace").update(valores).eq("id", id).eq("vendedor_usuario_id", usuarioId);
+    if (error) throw new Error(error.message);
+  };
+
+  const guardarEdicionVenta = async () => {
+    if (!ventaEnEdicion) return;
+    const titulo = ventaEnEdicion.titulo.trim();
+    const precio = Number(ventaEnEdicion.precio);
+    if (titulo.length < 3 || titulo.length > 140) { toast.error("El nombre debe tener entre 3 y 140 caracteres."); return; }
+    if (!Number.isFinite(precio) || precio <= 0) { toast.error("Introduce un precio mayor que cero."); return; }
+    setGuardandoVenta(true);
+    try {
+      await actualizarVentaPropia(ventaEnEdicion.id, { titulo, precio, updated_at: new Date().toISOString() });
+      setVentaEnEdicion(null);
+      await cargarMisVentas();
+      toast.success("Publicación actualizada.");
+    } catch (cause) {
+      toast.error(cause instanceof Error ? cause.message : "No se pudo actualizar la publicación.");
+    } finally { setGuardandoVenta(false); }
+  };
+
+  const cambiarEstadoVenta = async (venta: { id: string; titulo: string; estado: string }, estado: "publicado" | "pausado") => {
+    if (estado === "publicado" && !window.confirm("Esto hará visible la publicación en la Tienda 3D. La compra y descarga automatizada todavía no están habilitadas. ¿Quieres hacerla visible de todos modos?")) return;
+    if (estado === "pausado" && !window.confirm("La publicación dejará de aparecer en la Tienda 3D. ¿Continuar?")) return;
+    setGuardandoVenta(true);
+    try {
+      await actualizarVentaPropia(venta.id, { estado, updated_at: new Date().toISOString() });
+      await cargarMisVentas();
+      toast.success(estado === "publicado" ? "Publicación visible en la Tienda 3D. Recuerda que la compra automatizada aún no está habilitada." : "Publicación pausada.");
+    } catch (cause) {
+      toast.error(cause instanceof Error ? cause.message : "No se pudo cambiar el estado.");
+    } finally { setGuardandoVenta(false); }
+  };
+
+  const eliminarBorradorVenta = async (venta: { id: string; titulo: string; estado: string }) => {
+    if (venta.estado !== "borrador") { toast.error("Solo puedes eliminar borradores desde aquí."); return; }
+    if (!window.confirm(`¿Eliminar el borrador “${venta.titulo}”? Esto no elimina los archivos originales de Mi Nube.`)) return;
+    if (!usuarioId) return;
+    setGuardandoVenta(true);
+    try {
+      const client = supabase as unknown as {
+        from: (table: string) => {
+          delete: () => {
+            eq: (column: string, value: string) => {
+              eq: (column: string, value: string) => Promise<{ error: { message: string } | null }>;
+            };
+          };
+        };
+      };
+      const { error } = await client.from("archivos_digitales_marketplace").delete().eq("id", venta.id).eq("vendedor_usuario_id", usuarioId);
+      if (error) throw new Error(error.message);
+      await cargarMisVentas();
+      toast.success("Borrador eliminado. Los archivos originales siguen en Mi Nube.");
+    } catch (cause) {
+      toast.error(cause instanceof Error ? cause.message : "No se pudo eliminar el borrador.");
+    } finally { setGuardandoVenta(false); }
+  };
 
   const [seleccionados, setSeleccionados] = useState<File[]>([]);
   const [colaLocal, setColaLocal] = useState<ArchivoEnCola[]>([]);
@@ -1771,9 +1847,33 @@ function MiNubePage() {
               {errorMisVentas ? <p role="alert" className="mt-3 rounded-lg border border-danger/25 bg-danger-soft p-3 text-sm text-danger">No se pudieron cargar tus ventas: {errorMisVentas}</p> : null}
               {!cargandoMisVentas && !errorMisVentas && misVentas.length === 0 ? <div className="py-6 text-center"><Store className="mx-auto size-7 text-muted-foreground" /><p className="mt-2 text-sm font-medium">Todavía no tienes publicaciones</p><p className="mt-1 text-xs text-muted-foreground">Los borradores que guardes aparecerán aquí.</p><Link to="/marketplace-publicar" className="mt-3 inline-flex rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground">Crear publicación</Link></div> : null}
               <div className="mt-3 space-y-2">
-                {(filtroMisVentas === "todas" ? misVentas : misVentas.filter((venta) => venta.estado === filtroMisVentas)).map((venta) => <article key={venta.id} className="flex flex-col justify-between gap-3 rounded-lg border border-border p-3 sm:flex-row sm:items-center">
-                  <div className="min-w-0"><p className="break-words text-sm font-semibold">{venta.titulo}</p><p className="mt-1 text-xs text-muted-foreground">{venta.formatos?.join(" · ") || venta.nombre_archivo} · {new Date(venta.created_at).toLocaleDateString("es-PE")}</p></div>
-                  <div className="flex shrink-0 items-center gap-3"><span className="text-sm font-semibold">{new Intl.NumberFormat("es-PE", { style: "currency", currency: venta.moneda || "PEN" }).format(Number(venta.precio))}</span><span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${venta.estado === "publicado" ? "bg-emerald-500/10 text-emerald-700" : "bg-muted text-muted-foreground"}`}>{venta.estado === "borrador" ? "Borrador" : venta.estado === "publicado" ? "Publicado" : venta.estado === "pausado" ? "Pausado" : venta.estado}</span></div>
+                {(filtroMisVentas === "todas" ? misVentas : misVentas.filter((venta) => venta.estado === filtroMisVentas)).map((venta) => <article key={venta.id} className="rounded-lg border border-border p-3">
+                  <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
+                    <div className="min-w-0 flex-1">
+                      {ventaEnEdicion?.id === venta.id ? (
+                        <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_150px_auto]">
+                          <label className="space-y-1 text-xs text-muted-foreground">Nombre de publicación<input value={ventaEnEdicion.titulo} maxLength={140} onChange={(event) => setVentaEnEdicion((actual) => actual ? { ...actual, titulo: event.target.value } : actual)} className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm text-foreground" /></label>
+                          <label className="space-y-1 text-xs text-muted-foreground">Precio ({venta.moneda})<input type="number" min="0.01" step="0.01" value={ventaEnEdicion.precio} onChange={(event) => setVentaEnEdicion((actual) => actual ? { ...actual, precio: event.target.value } : actual)} className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm text-foreground" /></label>
+                          <div className="flex items-end gap-2"><button type="button" disabled={guardandoVenta} onClick={() => void guardarEdicionVenta()} className="h-9 rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground disabled:opacity-50">Guardar</button><button type="button" disabled={guardandoVenta} onClick={() => setVentaEnEdicion(null)} className="h-9 rounded-lg border border-border px-3 text-xs">Cancelar</button></div>
+                        </div>
+                      ) : (
+                        <>
+                          <p className="break-words text-sm font-semibold">{venta.titulo}</p>
+                          <p className="mt-1 text-xs text-muted-foreground">{venta.formatos?.join(" · ") || venta.nombre_archivo} · {new Date(venta.created_at).toLocaleDateString("es-PE")}</p>
+                        </>
+                      )}
+                    </div>
+                    <div className="flex shrink-0 items-center gap-3">
+                      <span className="text-sm font-semibold">{new Intl.NumberFormat("es-PE", { style: "currency", currency: venta.moneda || "PEN" }).format(Number(venta.precio))}</span>
+                      <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${venta.estado === "publicado" ? "bg-emerald-500/10 text-emerald-700" : "bg-muted text-muted-foreground"}`}>{venta.estado === "borrador" ? "Borrador" : venta.estado === "publicado" ? "Publicado" : venta.estado === "pausado" ? "Pausado" : venta.estado}</span>
+                    </div>
+                  </div>
+                  {ventaEnEdicion?.id !== venta.id ? <div className="mt-3 flex flex-wrap gap-2">
+                    <button type="button" disabled={guardandoVenta} onClick={() => setVentaEnEdicion({ id: venta.id, titulo: venta.titulo, precio: String(venta.precio) })} className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-muted disabled:opacity-50"><Pencil className="size-3.5" /> Editar</button>
+                    {venta.estado === "borrador" || venta.estado === "pausado" ? <button type="button" disabled={guardandoVenta} onClick={() => void cambiarEstadoVenta(venta, "publicado")} className="inline-flex items-center gap-1.5 rounded-lg border border-gold/40 bg-gold/10 px-3 py-1.5 text-xs font-semibold hover:bg-gold/15 disabled:opacity-50"><Store className="size-3.5" /> Publicar</button> : null}
+                    {venta.estado === "publicado" ? <button type="button" disabled={guardandoVenta} onClick={() => void cambiarEstadoVenta(venta, "pausado")} className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-muted disabled:opacity-50"><Power className="size-3.5" /> Pausar</button> : null}
+                    {venta.estado === "borrador" ? <button type="button" disabled={guardandoVenta} onClick={() => void eliminarBorradorVenta(venta)} className="inline-flex items-center gap-1.5 rounded-lg border border-destructive/30 px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/5 disabled:opacity-50"><X className="size-3.5" /> Eliminar borrador</button> : null}
+                  </div> : null}
                 </article>)}
               </div>
             </section>
