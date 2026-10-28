@@ -235,7 +235,31 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         });
         model.updateMatrixWorld(true);
         const inferredGemCount = inferGemMeshes(model);
-        if (inferredGemCount > 0) console.info("[PUBLIC VIEWER] Se aplicarán los perfiles del catálogo AURUM a las gemas inferidas.");
+        const meshAudit: Array<Record<string, unknown>> = [];
+        const familyCounts = { metal: 0, gema: 0, otro: 0 };
+        model.traverse((object: any) => {
+          if (!object.isMesh || !object.geometry) return;
+          const family = object.userData?.aurumPublicInferredGem ? "gema" : classifyMesh(object);
+          familyCounts[family]++;
+          const materials = Array.isArray(object.material) ? object.material : [object.material];
+          meshAudit.push({
+            name: String(object.name || object.uuid),
+            family,
+            inferred: Boolean(object.userData?.aurumPublicInferredGem),
+            visible: object.visible,
+            triangles: Math.floor((object.geometry.getIndex()?.count ?? object.geometry.getAttribute("position")?.count ?? 0) / 3),
+            materialTypes: materials.map((material: any) => material?.type ?? "unknown"),
+            materialNames: materials.map((material: any) => material?.name ?? ""),
+            layer: object.userData?.aurumRhino?.capa ?? object.userData?.aurumRhinoSource?.layerName ?? object.userData?.aurumRhinoInstanceSource?.layerName ?? object.userData?.attributes?.layerName ?? "",
+          });
+        });
+        console.info("[PUBLIC VIEWER][GEM AUDIT]", {
+          modelName,
+          meshCount: meshAudit.length,
+          familyCounts,
+          inferredGemCount,
+          meshes: meshAudit,
+        });
         const bounds = new THREE.Box3();
         model.traverse((object: any) => { if (object.isMesh && object.geometry && object.visible) bounds.expandByObject(object); });
         if (bounds.isEmpty()) throw new Error("El modelo no contiene mallas visibles para mostrar.");
