@@ -128,7 +128,7 @@ function PublicarArchivoPage() {
         }
         const blobImagen = await respuestaImagen.blob();
         const extensionImagen = imagenProyecto.nombre.split(".").pop()?.toLowerCase() ?? "jpg";
-        const rutaPortada = "marketplace-portadas/" + user.id + "/" + crypto.randomUUID() + "." + extensionImagen;
+        const rutaPortada = participanteId + "/marketplace-portadas/" + user.id + "/" + crypto.randomUUID() + "." + extensionImagen;
         const { error: errorSubida } = await supabase.storage.from("catalogo-joyas").upload(rutaPortada, blobImagen, { contentType: blobImagen.type || "image/jpeg", upsert: false });
         if (errorSubida) {
           throw new Error("La imagen existe, pero no se pudo publicar la portada del marketplace. Revisa los permisos de subida del bucket catalogo-joyas en Lovable Cloud.");
