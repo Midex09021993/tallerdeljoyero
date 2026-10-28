@@ -31,6 +31,10 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
   gemIdRef.current = gemId;
   const [status, setStatus] = useState("Preparando el visor 3D…");
   const [error, setError] = useState<string | null>(null);
+  const onReadyRef = useRef(onReady);
+  const onErrorRef = useRef(onError);
+  onReadyRef.current = onReady;
+  onErrorRef.current = onError;
 
   useEffect(() => {
     const host = hostRef.current;
@@ -174,9 +178,9 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         resizeObserver.observe(host);
         loop.converge(3);
         setStatus("");
-        onReady?.();
+        onReadyRef.current?.();
       } catch (cause) {
-        if (!cancelled) { const message = cause instanceof Error ? cause.message : "No se pudo abrir el diseño 3D."; setError(message); setStatus(""); onError?.(message); }
+        if (!cancelled) { const message = cause instanceof Error ? cause.message : "No se pudo abrir el diseño 3D."; setError(message); setStatus(""); onErrorRef.current?.(message); }
       }
     };
     void boot();
@@ -197,7 +201,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
       fallbackMaterial.dispose();
       modelRef.current = null; renderRef.current = null;
     };
-  }, [modelUrl, modelName, onReady, onError]);
+  }, [modelUrl, modelName]);
 
   useEffect(() => {
     const model = modelRef.current;
