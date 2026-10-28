@@ -38,7 +38,7 @@ const soluciones = [
     titulo: "Calcula antes de trabajar el metal",
     texto: "Calcula aleaciones, pesos y medidas con herramientas especializadas para preparar materiales y tomar decisiones con mayor seguridad.",
     beneficio: "Más claridad antes de fabricar",
-    enlace: "/herramientas-publicas" as const,
+    enlace: "/herramientas" as const,
     accion: "Calcular materiales",
   },
   {
@@ -96,7 +96,7 @@ function PlanesPublicos() {
       nombre: "Emprendedor", precioMensual: 0, gratis: true,
       descripcion: "Empieza con herramientas útiles para joyería.",
       funciones: ["Calculadoras y herramientas técnicas", "Visor 3D público", "Explora antes de crecer"],
-      destacado: false, accion: "Explorar herramientas", href: "/herramientas-publicas" as const,
+      destacado: false, accion: "Explorar herramientas", href: "/herramientas" as const,
     },
     {
       nombre: "Taller", precioMensual: 29, gratis: false,
@@ -179,7 +179,7 @@ function InicioPublico() {
           </Link>
           <nav className="hidden items-center gap-7 text-[13px] font-medium text-slate-700 lg:flex" aria-label="Navegación principal">
             <Link to="/" className="transition hover:text-[#a77a00]">Inicio</Link>
-            <Link to="/herramientas-publicas" className="inline-flex items-center gap-1 transition hover:text-[#a77a00]">Herramientas <ChevronDown className="size-3.5" /></Link>
+            <Link to="/herramientas" className="inline-flex items-center gap-1 transition hover:text-[#a77a00]">Herramientas <ChevronDown className="size-3.5" /></Link>
             <a href="#soluciones" className="inline-flex items-center gap-1 transition hover:text-[#a77a00]">Soluciones <ChevronDown className="size-3.5" /></a>
             <a href="#como-funciona" className="transition hover:text-[#a77a00]">Cómo funciona</a>
             <Link to="/comunidad" className="transition hover:text-[#a77a00]">Comunidad</Link>
@@ -187,7 +187,7 @@ function InicioPublico() {
           </nav>
           <nav className="order-3 flex w-full items-center gap-5 overflow-x-auto border-t border-slate-100 py-3 text-xs font-medium text-slate-700 lg:hidden" aria-label="Navegación móvil">
             <Link to="/" className="shrink-0">Inicio</Link>
-            <Link to="/herramientas-publicas" className="shrink-0">Herramientas</Link>
+            <Link to="/herramientas" className="shrink-0">Herramientas</Link>
             <a href="#soluciones" className="shrink-0">Soluciones</a>
             <a href="#como-funciona" className="shrink-0">Cómo funciona</a>
             <Link to="/comunidad" className="shrink-0">Comunidad</Link>
@@ -213,7 +213,7 @@ function InicioPublico() {
               <li className="flex items-start gap-3"><span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-lg bg-[#fff4c4] text-[#9b7600]"><Check className="size-4" /></span>Clientes, cotizaciones, contratos, pedidos y catálogo; con Mi Nube para organizar tus archivos.</li>
             </ul>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link to="/herramientas-publicas" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#17232d] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-slate-900/10 transition hover:-translate-y-0.5 hover:bg-[#293b49]">Empezar con herramientas <ArrowRight className="size-4" /></Link>
+              <Link to="/herramientas" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#17232d] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-slate-900/10 transition hover:-translate-y-0.5 hover:bg-[#293b49]">Empezar con herramientas <ArrowRight className="size-4" /></Link>
               <Link to="/auth" target="_blank" rel="noreferrer" className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-300 bg-white/80 px-6 py-3 text-sm font-semibold text-[#17232d] transition hover:border-[#d4aa19] hover:bg-[#fffbee]">Iniciar sesión</Link>
               <RegistroTaller className="inline-flex min-h-12 items-center justify-center rounded-xl border border-[#d4aa19] bg-[#fff4c4] px-6 py-3 text-sm font-bold text-[#5f4900] transition hover:bg-[#ffe99a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19]" />
             </div>
@@ -382,7 +382,7 @@ function InicioPublico() {
               <p className="mt-5 text-[10px] font-bold uppercase tracking-[.18em] text-[#987400]">01 · Explora</p>
               <h3 className="mt-2 text-lg font-bold">Resuelve tareas del oficio</h3>
               <p className="mt-2 flex-1 text-sm leading-6 text-slate-600">Calcula aleaciones, estima el peso de gemas o modelos 3D, convierte tallas y prepara materiales para tu trabajo.</p>
-              <Link to="/herramientas-publicas" className="mt-5 inline-flex min-h-10 items-center gap-2 text-sm font-bold text-[#765900] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19]">Explorar herramientas <ArrowRight className="size-4" /></Link>
+              <Link to="/herramientas" className="mt-5 inline-flex min-h-10 items-center gap-2 text-sm font-bold text-[#765900] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19]">Explorar herramientas <ArrowRight className="size-4" /></Link>
             </article>
 
             <article className="flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:border-[#dfbd4b] hover:shadow-lg sm:p-6">
@@ -416,7 +416,7 @@ function InicioPublico() {
               <p className="mt-1 text-xs leading-5 text-slate-600">Empieza por los recursos abiertos. Cuando quieras guardar y organizar el trabajo de tu taller, accede a tu cuenta.</p>
             </div>
             <div className="flex flex-col gap-2 sm:flex-row">
-              <Link to="/herramientas-publicas" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-[#17232d] px-4 py-2 text-xs font-bold text-white transition hover:bg-[#293b49]">Empezar gratis <ArrowRight className="size-4" /></Link>
+              <Link to="/herramientas" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-[#17232d] px-4 py-2 text-xs font-bold text-white transition hover:bg-[#293b49]">Empezar gratis <ArrowRight className="size-4" /></Link>
               <Link to="/auth" target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-[#17232d] transition hover:border-[#d4aa19]">Iniciar sesión</Link>
               <RegistroTaller className="inline-flex min-h-10 items-center justify-center rounded-xl border border-[#d4aa19] bg-[#fff4c4] px-4 py-2 text-xs font-bold text-[#5f4900] transition hover:bg-[#ffe99a]" />
             </div>
@@ -449,7 +449,7 @@ function InicioPublico() {
             <div>
               <h2 className="text-sm font-bold text-white">Plataforma</h2>
               <ul className="mt-3 space-y-3 text-xs">
-                <li><Link to="/herramientas-publicas" className="transition hover:text-[#f8c928]">Herramientas para joyeros</Link></li>
+                <li><Link to="/herramientas" className="transition hover:text-[#f8c928]">Herramientas para joyeros</Link></li>
                 <li><Link to="/aurum-render-public" className="transition hover:text-[#f8c928]">Visor 3D</Link></li>
                 <li><Link to="/auth" target="_blank" rel="noreferrer" className="transition hover:text-[#f8c928]">Ingresar a AURUM LAB</Link></li>
               </ul>
