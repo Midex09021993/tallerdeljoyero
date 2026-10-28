@@ -11,7 +11,12 @@ const metales = [
   { id: "oro-rosa", label: "Oro rosa", color: 0xc98576, materialId: "oro18r_pulido" },
   { id: "plata", label: "Plata", color: 0xe0e2e4, materialId: "plata925_pulida" },
 ] as const;
-const familiasGemas = Array.from(new Set(GEMAS.map((gema) => gema.familia))).sort((a, b) => a.localeCompare(b, "es"));
+// Keep the public configurator's original five gemstone families.
+ // Reuse AURUM profiles only inside these families; do not expose the entire internal catalog here.
+const FAMILIAS_GEMAS_PUBLICAS = ["Diamante", "Esmeralda", "Rubí", "Zafiro", "Amatista"] as const;
+const gemasPublicas = GEMAS.filter((gema) => FAMILIAS_GEMAS_PUBLICAS.includes(gema.familia as typeof FAMILIAS_GEMAS_PUBLICAS[number]));
+const familiasGemas = FAMILIAS_GEMAS_PUBLICAS.filter((familia) => gemasPublicas.some((gema) => gema.familia === familia));
+
 const colorHex = (color: number) => "#" + color.toString(16).padStart(6, "0");
 
 export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, sharedModelName, localFile }: Props) {
@@ -148,8 +153,8 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
   }, [slug, producto, sharedModelUrl, sharedModelName, localFile]);
 
   const selectedMetal = metales.find((item) => item.id === metalId) ?? metales[0];
-  const selectedGem = GEMAS.find((item) => item.id === gemaId) ?? GEMAS.find((item) => item.id === "diamante_natural")!;
-  const gemasDeFamilia = GEMAS.filter((item) => item.familia === selectedGem.familia);
+  const selectedGem = gemasPublicas.find((item) => item.id === gemaId) ?? gemasPublicas.find((item) => item.id === "diamante_natural")!;
+  const gemasDeFamilia = gemasPublicas.filter((item) => item.familia === selectedGem.familia);
   const aurumMaterial = MATERIALES.find((item) => item.id === selectedMetal.materialId) ?? MATERIALES.find((item) => item.id === "oro18a_pulido")!;
   const aurumGem = selectedGem;
 
@@ -176,7 +181,7 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
   };
 
   const handleGemSelect = (id: string) => {
-    if (id === gemaId || !GEMAS.some((gem) => gem.id === id)) return;
+    if (id === gemaId || !gemasPublicas.some((gem) => gem.id === id)) return;
     setGemaId(id);
   };
 
@@ -240,7 +245,7 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
                 <span className="mb-1 block text-[10px] font-medium text-[#8a8175]">Familia de gema</span>
                 <select value={selectedGem.familia} onChange={(event) => {
                   const nextFamily = event.target.value;
-                  const firstGem = GEMAS.find((item) => item.familia === nextFamily);
+                  const firstGem = gemasPublicas.find((item) => item.familia === nextFamily);
                   if (firstGem) handleGemSelect(firstGem.id);
                 }} className="min-h-9 w-full rounded-lg border border-[#ece7df] bg-white px-2.5 py-2 text-xs text-[#342e26] outline-none transition focus:border-[#b28b45] focus:ring-2 focus:ring-[#b28b45]/20">
                   {familiasGemas.map((family) => <option key={family} value={family}>{family}</option>)}
