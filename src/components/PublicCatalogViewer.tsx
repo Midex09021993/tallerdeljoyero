@@ -329,14 +329,9 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         model.position.sub(center);
         model.updateMatrixWorld(true);
 
-        // Match MiniAurumRender's canonical product scale (largest visible dimension = 2.05)
-        // so direct 3DM imports and already-oriented GLB assets share a consistent scale.
-        const visibleSize = bounds.getSize(new THREE.Vector3());
-        const maxDimension = Math.max(visibleSize.x, visibleSize.y, visibleSize.z, 1e-6);
-        const fitScale = 2.05 / maxDimension;
-        model.scale.multiplyScalar(fitScale);
-        model.updateMatrixWorld(true);
-
+        // Keep each source model's authored units and scale intact. Match the
+        // public viewer's proven GLB framing by fitting the camera to visible geometry;
+        // do not normalize to MiniAurumRender's separate canonical scale.
         const visibleBounds = new THREE.Box3();
         model.traverse((object: any) => {
           if (object.isMesh && object.geometry && object.visible) visibleBounds.expandByObject(object);
@@ -344,12 +339,10 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         if (visibleBounds.isEmpty()) throw new Error("El modelo no contiene mallas visibles para mostrar.");
         const visibleSphere = visibleBounds.getBoundingSphere(new THREE.Sphere());
         const radius = Math.max(visibleSphere.radius, .001);
-        const normalizedSize = visibleBounds.getSize(new THREE.Vector3());
-        const normalizedMaxDimension = Math.max(normalizedSize.x, normalizedSize.y, normalizedSize.z, .001);
         camera.fov = 35;
-        // Match apparent size by the normalized largest dimension, rather than the
-        // bounding sphere whose radius varies with proportions between GLB and 3DM.
-        const distance = (normalizedMaxDimension / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)))) * 1.12;
+        // This is the same bounding-sphere camera-fit formula used by the GLB viewer
+        // before the 3DM sizing adjustment, so GLB presentation remains unchanged.
+        const distance = radius / Math.sin(THREE.MathUtils.degToRad(camera.fov / 2)) * 1.08;
         camera.position.copy(new THREE.Vector3(1, .62, 1).normalize().multiplyScalar(distance));
         camera.near = Math.max(radius / 100, .001);
         camera.far = Math.max(distance + radius * 20, 100);
