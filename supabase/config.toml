@@ -43,3 +43,9 @@ verify_jwt = true
 
 [functions.marketplace-descargar-archivo]
 verify_jwt = true
+
+[functions.marketplace-iniciar-pago]
+verify_jwt = true
+
+[functions.marketplace-pago-webhook]
+verify_jwt = false
