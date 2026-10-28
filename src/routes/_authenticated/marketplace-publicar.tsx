@@ -160,7 +160,17 @@ function PublicarArchivoPage() {
       toast.success("Borrador guardado. Revisa el archivo y publícalo cuando esté listo.");
       await queryClient.invalidateQueries({ queryKey: ["marketplace-mis-publicaciones"] });
     },
-    onError: (error) => toast.error(error instanceof Error ? error.message : "No se pudo guardar el borrador."),
+    onError: (error) => {
+      const mensaje = error instanceof Error
+        ? error.message
+        : error && typeof error === "object" && "message" in error && typeof error.message === "string"
+          ? error.message
+          : "Error desconocido al guardar el borrador.";
+      const mensajeVisible = /archivos_adjuntos|column .* does not exist|schema cache/i.test(mensaje)
+        ? "Falta actualizar la base de datos del marketplace. Ejecuta el SQL 20261028_marketplace_archivos_adjuntos.sql en Lovable Cloud. Detalle: " + mensaje
+        : mensaje;
+      toast.error(mensajeVisible, { duration: 9000 });
+    },
   });
 
   return (
