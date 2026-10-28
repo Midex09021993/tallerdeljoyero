@@ -50,52 +50,68 @@ const inferGemMeshes = (model: THREE.Object3D): number => {
   model.traverse((object) => {
     if (object instanceof THREE.Mesh && object.visible && object.geometry?.getAttribute("position")) meshes.push(object);
   });
-  if (!meshes.some((mesh) => classifyMesh(mesh) === "gema")) {
-    model.updateMatrixWorld(true);
-    const modelBounds = new THREE.Box3().setFromObject(model);
-    if (modelBounds.isEmpty()) return 0;
-    const modelSize = modelBounds.getSize(new THREE.Vector3());
-    const modelCenter = modelBounds.getCenter(new THREE.Vector3());
-    const candidates: Array<{ mesh: THREE.Mesh; score: number }> = [];
-    for (const mesh of meshes) {
-      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-      if (!materials.length) continue;
-      mesh.updateWorldMatrix(true, false);
-      const bounds = new THREE.Box3().setFromObject(mesh);
-      const size = bounds.getSize(new THREE.Vector3());
-      const center = bounds.getCenter(new THREE.Vector3());
-      const heightRatio = size.y / Math.max(modelSize.y, 1e-6);
-      const xOffset = Math.abs(center.x - modelCenter.x) / Math.max(modelSize.x, 1e-6);
-      const zOffset = Math.abs(center.z - modelCenter.z) / Math.max(modelSize.z, 1e-6);
-      const topRatio = (center.y - modelBounds.min.y) / Math.max(modelSize.y, 1e-6);
-      const widthRatio = size.x / Math.max(modelSize.x, 1e-6);
-      const depthRatio = size.z / Math.max(modelSize.z, 1e-6);
-      const position = mesh.geometry.getAttribute("position");
-      const triangles = Math.floor((mesh.geometry.getIndex()?.count ?? position.count) / 3);
-      const compactness = Math.max(size.x, size.y, size.z) / Math.max(Math.min(size.x, size.y, size.z), 1e-5);
-      // Reject long prongs and the ring shank; retain small faceted stones around the setting.
-      if (heightRatio > .48 || topRatio < .62 || xOffset > .24 || zOffset > .24 ||
-          widthRatio < .012 || depthRatio < .012 || triangles < 8 || compactness > 4.2) continue;
-      const footprint = widthRatio * depthRatio;
-      const score = topRatio * 3 - xOffset * 2 - zOffset * 2 + footprint * 5 -
-        Math.abs(heightRatio - .22) - Math.max(0, compactness - 2.2) * .16;
-      candidates.push({ mesh, score });
-    }
-    if (!candidates.length) return 0;
-    candidates.sort((a, b) => b.score - a.score);
-    const bestScore = candidates[0].score;
-    // Keep the similarly positioned/compact candidates, not just the single center stone.
-    const selected = candidates.filter(({ score }) => score >= bestScore - .42);
-    selected.forEach(({ mesh }) => {
-      mesh.userData = { ...(mesh.userData ?? {}), aurumPublicInferredGem: true };
-    });
-    if (selected.length) console.info("[PUBLIC VIEWER] Gemas inferidas por geometría", {
-      count: selected.length,
-      candidates: candidates.length,
-    });
-    return selected.length;
+
+  // First preserve MiniAurumRender's reliable explicit-name strategy. Unlike the
+  // mini preview, the public viewer must also find unnamed side stones when only
+  // the center stone has metadata, so geometric inference runs for unclassified
+  // meshes as well—not only when the entire model has zero recognized gems.
+  const explicitlyIdentified = new Set(meshes.filter((mesh) => classifyMesh(mesh) === "gema"));
+  model.updateMatrixWorld(true);
+  const modelBounds = new THREE.Box3().setFromObject(model);
+  if (modelBounds.isEmpty()) return 0;
+  const modelSize = modelBounds.getSize(new THREE.Vector3());
+  const modelCenter = modelBounds.getCenter(new THREE.Vector3());
+  const candidates: Array<{ mesh: THREE.Mesh; score: number }> = [];
+
+  for (const mesh of meshes) {
+    if (explicitlyIdentified.has(mesh)) continue;
+    const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+    if (!materials.length) continue;
+    mesh.updateWorldMatrix(true, false);
+    const bounds = new THREE.Box3().setFromObject(mesh);
+    const size = bounds.getSize(new THREE.Vector3());
+    const center = bounds.getCenter(new THREE.Vector3());
+    const heightRatio = size.y / Math.max(modelSize.y, 1e-6);
+    const xOffset = Math.abs(center.x - modelCenter.x) / Math.max(modelSize.x, 1e-6);
+    const zOffset = Math.abs(center.z - modelCenter.z) / Math.max(modelSize.z, 1e-6);
+    const topRatio = (center.y - modelBounds.min.y) / Math.max(modelSize.y, 1e-6);
+    const widthRatio = size.x / Math.max(modelSize.x, 1e-6);
+    const depthRatio = size.z / Math.max(modelSize.z, 1e-6);
+    const position = mesh.geometry.getAttribute("position");
+    const triangles = Math.floor((mesh.geometry.getIndex()?.count ?? position.count) / 3);
+    const compactness = Math.max(size.x, size.y, size.z) / Math.max(Math.min(size.x, size.y, size.z), 1e-5);
+
+    // Same core geometry tests as MiniAurumRender, with a smaller footprint
+    // allowance for pavé stones. Keep the test limited to the upper setting area.
+    if (heightRatio > .48 || topRatio < .62 || xOffset > .24 || zOffset > .24 ||
+        widthRatio < .012 || depthRatio < .012 || triangles < 8 || compactness > 4.2) continue;
+    const footprint = widthRatio * depthRatio;
+    const score = topRatio * 3 - xOffset * 2 - zOffset * 2 + footprint * 5 -
+      Math.abs(heightRatio - .22) - Math.max(0, compactness - 2.2) * .16;
+    candidates.push({ mesh, score });
   }
-  return 0;
+
+  candidates.sort((a, b) => b.score - a.score);
+  if (!candidates.length) {
+    console.warn("[PUBLIC VIEWER][GEM AUDIT] No se encontraron gemas por geometría.", {
+      meshCount: meshes.length,
+      explicitlyIdentified: explicitlyIdentified.size,
+    });
+    return 0;
+  }
+
+  const bestScore = candidates[0].score;
+  const selected = candidates.filter(({ score }) => score >= bestScore - .42);
+  selected.forEach(({ mesh }) => {
+    mesh.userData = { ...(mesh.userData ?? {}), aurumPublicInferredGem: true };
+  });
+  console.info("[PUBLIC VIEWER][GEM AUDIT] Inferencia geométrica basada en MiniAurumRender", {
+    explicitlyIdentified: explicitlyIdentified.size,
+    inferred: selected.length,
+    candidateCount: candidates.length,
+    selectedMeshes: selected.map(({ mesh }) => mesh.name || mesh.uuid),
+  });
+  return selected.length;
 };
 
 export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, onReady, onError }: Props) {
