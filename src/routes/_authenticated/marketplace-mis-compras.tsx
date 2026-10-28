@@ -40,8 +40,24 @@ function MisComprasPage() {
     mutationFn: async (compraId: string) => {
       const { data, error } = await supabase.functions.invoke("marketplace-descargar-archivo", { body: { compra_id: compraId } });
       if (error) throw error;
-      if (!data?.url || typeof data.url !== "string") throw new Error(data?.error || "No se recibió un enlace de descarga.");
-      window.location.assign(data.url);
+      const archivos = Array.isArray(data?.archivos) ? data.archivos.filter((item: unknown) => item && typeof item === "object" && typeof (item as { url?: unknown }).url === "string") as Array<{ url: string; nombre?: string }> : [];
+      if (archivos.length > 1) {
+        archivos.forEach((item, index) => {
+          window.setTimeout(() => {
+            const enlace = document.createElement("a");
+            enlace.href = item.url;
+            enlace.download = item.nombre ?? "";
+            enlace.rel = "noopener";
+            document.body.appendChild(enlace);
+            enlace.click();
+            enlace.remove();
+          }, index * 350);
+        });
+        return;
+      }
+      const url = typeof data?.url === "string" ? data.url : archivos[0]?.url;
+      if (!url) throw new Error(data?.error || "No se recibió un enlace de descarga.");
+      window.location.assign(url);
     },
     onError: (error) => toast.error(error instanceof Error ? error.message : "No se pudo descargar el archivo."),
   });
