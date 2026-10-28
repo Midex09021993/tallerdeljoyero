@@ -10,7 +10,7 @@ import { applyAurumMetal, applyAurumGem, metalPresetFromConfig, gemPresetFromCon
 import { MATERIALES, GEMAS } from "@/lib/aurum/catalog";
 import { getAurumHdriUrl, getAurumGemHdriUrl } from "@/lib/aurum-photographic-scene-engine";
 
-type Props = { modelUrl: string; modelName: string; materialId: string; gemId: string };
+type Props = { modelUrl: string; modelName: string; materialId: string; gemId: string; onReady?: () => void; onError?: (message: string) => void };
 const classifyMesh = (mesh: any): "metal" | "gema" | "otro" => {
   const attrs = mesh?.userData?.attributes ?? {};
   const rhino = mesh?.userData?.aurumRhino ?? {};
@@ -21,7 +21,7 @@ const classifyMesh = (mesh: any): "metal" | "gema" | "otro" => {
   return "otro";
 };
 
-export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId }: Props) {
+export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, onReady, onError }: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
   const modelRef = useRef<THREE.Object3D | null>(null);
   const renderRef = useRef<(() => void) | null>(null);
@@ -77,7 +77,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId }: 
 
     const boot = async () => {
       try {
-        const viewer = createAurumWebGLViewer(THREE, host, { pixelRatio: Math.min(window.devicePixelRatio || 1, 1.75), controlsClass: OrbitControls, maxDistance: 100 });
+        const viewer = createAurumWebGLViewer(THREE, host, { pixelRatio: Math.min(window.devicePixelRatio || 1, 1.25), controlsClass: OrbitControls, maxDistance: 100 });
         ({ scene, camera, renderer, controls } = viewer);
         scene.background = new THREE.Color("#f7f6f2");
         scene.add(new THREE.HemisphereLight(0xffffff, 0x77716a, 1.5));
@@ -174,8 +174,9 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId }: 
         resizeObserver.observe(host);
         loop.converge(3);
         setStatus("");
+        onReady?.();
       } catch (cause) {
-        if (!cancelled) { setError(cause instanceof Error ? cause.message : "No se pudo abrir el diseño 3D."); setStatus(""); }
+        if (!cancelled) { const message = cause instanceof Error ? cause.message : "No se pudo abrir el diseño 3D."; setError(message); setStatus(""); onError?.(message); }
       }
     };
     void boot();
@@ -196,7 +197,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId }: 
       fallbackMaterial.dispose();
       modelRef.current = null; renderRef.current = null;
     };
-  }, [modelUrl, modelName]);
+  }, [modelUrl, modelName, onReady, onError]);
 
   useEffect(() => {
     const model = modelRef.current;
