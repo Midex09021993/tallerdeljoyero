@@ -219,10 +219,23 @@ export function MiniAurumRender({ className = "" }: MiniAurumRenderProps) {
             const triangles = Math.floor(
               (object.geometry.getIndex()?.count ?? object.geometry.getAttribute("position").count) / 3,
             );
-            // Evitar mallas que abarquen casi toda la pieza (aro/cuerpo completo).
-            if (heightRatio > 0.48 || topRatio < 0.62 || xOffset > 0.24 || zOffset > 0.24 || triangles < 8) return;
+            const widthRatio = size.x / Math.max(modelSize.x, 1e-6);
+            const depthRatio = size.z / Math.max(modelSize.z, 1e-6);
+            // Excluir garritas y alambres: el diamante debe tener volumen y anchura
+            // en ambos ejes horizontales, además de estar en la zona superior central.
+            if (
+              heightRatio > 0.48 ||
+              topRatio < 0.62 ||
+              xOffset > 0.24 ||
+              zOffset > 0.24 ||
+              widthRatio < 0.075 ||
+              depthRatio < 0.075 ||
+              triangles < 8
+            ) return;
             const compactness = Math.max(size.x, size.y, size.z) / Math.max(Math.min(size.x, size.y, size.z), 1e-5);
-            const score = topRatio * 3 - xOffset * 2 - zOffset * 2 - Math.abs(heightRatio - 0.22) - Math.max(0, compactness - 3) * 0.08;
+            if (compactness > 4.2) return;
+            const footprint = widthRatio * depthRatio;
+            const score = topRatio * 3 - xOffset * 2 - zOffset * 2 + footprint * 5 - Math.abs(heightRatio - 0.22) - Math.max(0, compactness - 2.2) * 0.16;
             candidates.push({ mesh: object, score });
           });
           candidates.sort((a, b) => b.score - a.score);
