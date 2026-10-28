@@ -540,6 +540,30 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         { ruta: rutaGlb, blob: blobGLB, contentType: "model/gltf-binary" },
         { ruta: rutaConfiguracion, blob: blobConfiguracion, contentType: "application/json" },
       ];
+
+      // El archivo fuente debe quedar en la carpeta del proyecto. Si ya existe allí,
+      // o el proyecto conserva una ruta de origen guardada, no volver a subirlo ni sobrescribirlo.
+      const nombreOriginal = archivoOriginal.name.replace(/[\\/]/g, "_");
+      const rutaOriginalEnCarpeta = `${rutaCarpeta}/${nombreOriginal}`;
+      const { data: archivosEnCarpeta, error: listarCarpetaError } = await supabase.storage
+        .from("mi-nube")
+        .list(rutaCarpeta, { limit: 1000 });
+      if (listarCarpetaError) throw listarCarpetaError;
+      const originalYaEnCarpeta = (archivosEnCarpeta ?? []).some((entrada) =>
+        entrada.name === nombreOriginal && Boolean(entrada.id || entrada.metadata)
+      );
+      const origenYaGuardado = Boolean(
+        destinoProyectoGuardado?.rutaArchivoOriginal &&
+        destinoProyectoGuardado.rutaArchivoOriginal === rutaOriginalEnCarpeta
+      );
+      if (!originalYaEnCarpeta && !origenYaGuardado) {
+        uploads.unshift({
+          ruta: rutaOriginalEnCarpeta,
+          blob: archivoOriginal,
+          contentType: archivoOriginal.type || "application/octet-stream",
+        });
+      }
+
       if (posterPreview) {
         const posterResponse = await fetch(posterPreview);
         const posterBlob = await posterResponse.blob();
@@ -563,7 +587,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
 
       const destino: AurumProjectDestination = {
         rutaCarpeta,
-        rutaArchivoOriginal: destinoProyectoGuardado?.rutaArchivoOriginal,
+        rutaArchivoOriginal: destinoProyectoGuardado?.rutaArchivoOriginal ?? rutaOriginalEnCarpeta,
         nombre: carpeta,
         nombreProyecto: nombreVisibleProyecto,
         archivoNombre: archivoOriginal.name,
@@ -576,7 +600,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       setCarpetasDestinoProyecto((actuales) => actuales.includes(carpeta) ? actuales : [...actuales, carpeta].sort((a, b) => a.localeCompare(b, "es")));
       setNombreProyecto(nombreVisibleProyecto);
       setGuardarProyectoOpen(false);
-      toast.success(posterPreview ? "Proyecto guardado en Mi Nube junto con su póster." : destinoProyectoGuardado?.rutaCarpeta === rutaCarpeta ? "Proyecto actualizado. El 3DM original y el póster existente permanecen intactos." : "Proyecto guardado en Mi Nube. El 3DM original se conserva.");
+      toast.success(posterPreview
+        ? "Proyecto guardado en Mi Nube junto con su archivo original y póster."
+        : destinoProyectoGuardado?.rutaCarpeta === rutaCarpeta
+          ? "Proyecto actualizado. El archivo original y el póster existente permanecen intactos."
+          : "Proyecto guardado en Mi Nube junto con el archivo original.");
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : "No se pudo guardar el proyecto completo en Mi Nube.";
       setError(message);
