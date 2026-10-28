@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, Box, Download, FileImage, FileText, Gem, RefreshCw, ShieldCheck, ShoppingBag } from "lucide-react";
-import { supabasePublic } from "@/integrations/supabase/client";
+import { ArrowRight, Box, CreditCard, FileImage, FileText, Gem, LoaderCircle, RefreshCw, ShieldCheck, ShoppingBag } from "lucide-react";
+import { toast } from "sonner";
+import { supabase, supabasePublic } from "@/integrations/supabase/client";
 
 type ArchivoDigital = {
   archivo_id: string;
@@ -69,12 +71,42 @@ function iconoCategoria(categoria: string) {
 }
 
 function MarketplaceArchivosPage() {
+  const [comprandoId, setComprandoId] = useState<string | null>(null);
   const { data: archivos = [], isLoading, isError, refetch, isFetching } = useQuery({
     queryKey: ["marketplace-archivos-digitales"],
     queryFn: obtenerArchivosPublicos,
     staleTime: 60_000,
     retry: 1,
   });
+
+  const iniciarCompra = async (archivo: ArchivoDigital) => {
+    if (archivo.moneda !== "PEN") {
+      toast.info("Los pagos en USD estarán disponibles cuando definamos la conversión de moneda.");
+      return;
+    }
+    setComprandoId(archivo.archivo_id);
+    try {
+      const { data: sesionData, error: sesionError } = await supabase.auth.getSession();
+      if (sesionError) throw sesionError;
+      if (!sesionData.session) {
+        toast.info("Inicia sesión para continuar con tu compra.");
+        window.location.assign("/auth");
+        return;
+      }
+      const { data, error } = await supabase.functions.invoke("marketplace-iniciar-pago", {
+        body: { archivo_id: archivo.archivo_id },
+      });
+      if (error) throw error;
+      if (typeof data?.init_point !== "string" || !data.init_point.startsWith("https://")) {
+        throw new Error(data?.error || "No se recibió un enlace seguro de pago.");
+      }
+      window.location.assign(data.init_point);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "No se pudo iniciar el pago.");
+    } finally {
+      setComprandoId(null);
+    }
+  };
 
   return (
     <main className="min-h-screen bg-[#f7f5f0] text-[#211d19]">
@@ -133,6 +165,7 @@ function MarketplaceArchivosPage() {
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {archivos.map((archivo) => {
               const Icono = iconoCategoria(archivo.categoria);
+              const comprando = comprandoId === archivo.archivo_id;
               return (
                 <article key={archivo.archivo_id} className="group overflow-hidden rounded-2xl border border-[#b89b5e]/25 bg-white/80 shadow-sm transition duration-200 hover:-translate-y-1 hover:border-[#b89b5e]/60 hover:shadow-xl">
                   <div className="relative aspect-square overflow-hidden bg-[radial-gradient(ellipse_at_50%_42%,#fff,#e7dfd1)]">
@@ -146,8 +179,13 @@ function MarketplaceArchivosPage() {
                     <div className="mt-4 flex flex-wrap gap-1.5">{archivo.formatos.map((formato) => <span key={formato} className="rounded-md border border-[#b89b5e]/30 bg-[#f7f2e8] px-2 py-1 text-[10px] font-semibold text-[#5b4930]">{formato}</span>)}</div>
                     <div className="mt-5 flex items-center justify-between gap-3 border-t border-[#b89b5e]/20 pt-4">
                       <span className="text-lg font-bold text-[#8c6c38]">{formatoPrecio(archivo.precio, archivo.moneda)}</span>
-                      <span className="inline-flex items-center gap-1.5 rounded-full border border-[#b89b5e]/35 px-3 py-2 text-[10px] font-semibold text-[#5b4930]"><Download className="size-3.5" /> Descarga digital</span>
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-[#b89b5e]/35 px-3 py-2 text-[10px] font-semibold text-[#5b4930]"><ShieldCheck className="size-3.5" /> Archivo privado</span>
                     </div>
+                    <button type="button" onClick={() => void iniciarCompra(archivo)} disabled={comprandoId !== null || archivo.moneda !== "PEN"} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#211d19] px-4 py-3 text-xs font-semibold text-[#f7f2e8] transition hover:bg-[#3b3329] disabled:cursor-not-allowed disabled:opacity-55">
+                      {comprando ? <LoaderCircle className="size-4 animate-spin" /> : <CreditCard className="size-4" />}
+                      {comprando ? "Preparando pago..." : archivo.moneda !== "PEN" ? "Pago en USD próximamente" : "Comprar ahora"}
+                    </button>
+                    {archivo.moneda === "USD" ? <p className="mt-2 text-[11px] text-[#81766a]">Los cobros están habilitados únicamente en soles (PEN).</p> : null}
                   </div>
                 </article>
               );
