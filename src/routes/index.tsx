@@ -307,7 +307,6 @@ function InicioPublico() {
                 <span className="grid size-10 place-items-center rounded-xl border border-[#f8c928]/30 bg-[#f8c928]/10 text-[#f8d85b]"><Gem className="size-5" /></span>
               </div>
               <MiniAurumRender className="min-h-[270px] sm:min-h-[340px]" />
-              </div>
               <div className="grid grid-cols-3 gap-2 border-t border-white/10 pt-4 text-center">
                 <div className="rounded-lg bg-white/[.04] px-2 py-3"><p className="text-[9px] uppercase tracking-wider text-slate-400">Materiales</p><p className="mt-1 text-xs font-semibold text-white">Metales y gemas</p></div>
                 <div className="rounded-lg bg-white/[.04] px-2 py-3"><p className="text-[9px] uppercase tracking-wider text-slate-400">Iluminación</p><p className="mt-1 text-xs font-semibold text-white">Entornos HDR</p></div>
