@@ -116,7 +116,6 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
     let cancelled = false;
     const loadModelReference = async () => {
       setModelUrl(null);
-      setLoadedModelUrl(null);
       setLoadError(null);
       if (localFile) {
         setModelName(localFile.name);
