@@ -14,9 +14,16 @@ type Props = { modelUrl: string; modelName: string; materialId: string; gemId: s
 const classifyMesh = (mesh: any): "metal" | "gema" | "otro" => {
   const attrs = mesh?.userData?.attributes ?? {};
   const rhino = mesh?.userData?.aurumRhino ?? {};
-  const text = [mesh?.name, rhino?.capa, attrs?.layerName, attrs?.LayerName, mesh?.material?.name]
-    .map((value) => String(value ?? "")).join(" ").toLowerCase();
-  if (rhino?.categoria === "gema" || /(gema|piedra|gem|diamond|diamante|esmeralda|emerald|rubi|rubí|ruby|zafiro|sapphire|amatista|moissanita)/.test(text)) return "gema";
+  const materials = Array.isArray(mesh?.material) ? mesh.material : [mesh?.material];
+  const text = [
+    mesh?.name,
+    rhino?.capa,
+    attrs?.layerName,
+    attrs?.LayerName,
+    ...materials.map((material: any) => material?.name),
+  ].map((value) => String(value ?? "")).join(" ").toLowerCase();
+  // CAD exports use several names for gemstone geometry; inspect all material slots.
+  if (rhino?.categoria === "gema" || /(gema|piedra|gem|stone|diamond|diamante|esmeralda|emerald|rubi|rubí|ruby|zafiro|sapphire|amatista|amethyst|moissanita|moissanite|citrino|citrine|topacio|topaz|aguamarina|aquamarine)/.test(text)) return "gema";
   if (rhino?.categoria === "metal" || /(metal|oro|gold|plata|silver|platino|platinum|acero|steel)/.test(text)) return "metal";
   return "otro";
 };
