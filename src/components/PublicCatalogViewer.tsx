@@ -171,7 +171,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
       const gem = GEMAS.find((item) => item.id === gemIdRef.current) ?? GEMAS.find((item) => item.id === "diamante_natural")!
       model.traverse((object: any) => {
         if (!object.isMesh || !object.material) return;
-        const family = object.userData?.aurumPublicInferredGem ? "gema" : classifyMesh(object);
+        const family = object.userData?.aurumPublicInferredGem ? "gema" : object.userData?.aurumPublicDefaultMetal ? "metal" : classifyMesh(object);
         const originalMaterials = Array.isArray(object.material) ? object.material : [object.material];
         const next = originalMaterials.map((original: any) => {
           // Do not replace a live BVH shader when a metal selection or HDR callback reapplies profiles.
@@ -258,6 +258,19 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         model = await parseAurumInput(new File([blob], sourceName.includes(".") ? sourceName : `${sourceName}.${supportedExtension}`, { type: blob.type || "application/octet-stream" }), supportedExtension, fallbackMaterial);
         if (perfEnabled) console.info("[PUBLIC VIEWER PERF] Interpretación del modelo", { durationMs: Math.round(performance.now() - parseStartedAt), format: supportedExtension });
         if (!model) throw new Error("No se pudo interpretar la geometría del modelo 3D.");
+        if (supportedExtension === "3dm") {
+          // Direct Rhino imports may arrive with dark/default CAD materials and
+          // incomplete layer metadata. Keep explicitly identified gemstones,
+          // but let the selected public metal profile drive otherwise-unclassified
+          // meshes instead of leaving them black.
+          model.userData = { ...(model.userData ?? {}), aurumPublicSourceFormat: "3dm" };
+          model.traverse((object: any) => {
+            if (!object.isMesh || !object.material) return;
+            if (classifyMesh(object) === "otro") {
+              object.userData = { ...(object.userData ?? {}), aurumPublicDefaultMetal: true };
+            }
+          });
+        }
         preprocessStartedAt = performance.now();
         await preprocessAurumModel(model);
         if (perfEnabled) console.info("[PUBLIC VIEWER PERF] Preparación de geometría", { durationMs: Math.round(performance.now() - preprocessStartedAt) });
@@ -276,7 +289,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         const familyCounts = { metal: 0, gema: 0, otro: 0 };
         model.traverse((object: any) => {
           if (!object.isMesh || !object.geometry) return;
-          const family = object.userData?.aurumPublicInferredGem ? "gema" : classifyMesh(object);
+          const family = object.userData?.aurumPublicInferredGem ? "gema" : object.userData?.aurumPublicDefaultMetal ? "metal" : classifyMesh(object);
           familyCounts[family]++;
           const materials = Array.isArray(object.material) ? object.material : [object.material];
           meshAudit.push({
@@ -387,7 +400,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
 
     model.traverse((object: any) => {
       if (!object.isMesh || !object.material) return;
-      const family = object.userData?.aurumPublicInferredGem ? "gema" : classifyMesh(object);
+      const family = object.userData?.aurumPublicInferredGem ? "gema" : object.userData?.aurumPublicDefaultMetal ? "metal" : classifyMesh(object);
       if (family !== "gema") return;
       const materials = Array.isArray(object.material) ? object.material : [object.material];
       if (materials.length !== 1) return;
@@ -441,7 +454,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
     const gem = GEMAS.find((item) => item.id === gemId) ?? GEMAS.find((item) => item.id === "diamante_natural")!;
     model.traverse((object: any) => {
       if (!object.isMesh || !object.material) return;
-      const family = object.userData?.aurumPublicInferredGem ? "gema" : classifyMesh(object);
+      const family = object.userData?.aurumPublicInferredGem ? "gema" : object.userData?.aurumPublicDefaultMetal ? "metal" : classifyMesh(object);
       const originalMaterials = Array.isArray(object.material) ? object.material : [object.material];
       if (family === "gema") {
         object.userData = {
