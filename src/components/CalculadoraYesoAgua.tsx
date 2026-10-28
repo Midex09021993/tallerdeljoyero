@@ -1,5 +1,6 @@
 import { Calculator, Check, Droplets, RotateCcw } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { Panel } from "@/components/AppShell";
 import { FichaCilindrosTallerA4, type CilindroFicha } from "@/components/FichaCilindrosTallerA4";
 import { useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";

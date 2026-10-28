@@ -96,7 +96,7 @@ function LoginPage() {
           .filter((indice) => !diapositivasFallidas.includes(indice));
         if (disponibles.length < 2) return actual;
         const posicionActual = disponibles.indexOf(actual);
-        return disponibles[(posicionActual + 1 + disponibles.length) % disponibles.length];
+        return disponibles[(posicionActual + 1 + disponibles.length) % disponibles.length] ?? actual;
       });
     }, 5000);
     return () => window.clearInterval(intervalo);
