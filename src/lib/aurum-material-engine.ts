@@ -149,9 +149,7 @@ export const applyAurumMetal=(material:any,preset:AurumMetalPreset)=>{
   material.clearcoatRoughness=0;
 
   material.anisotropy=Math.max(0,Math.min(1,preset.anisotropy??0));
-  const surfaceMicrostructure=getAurumSurfaceMicrostructure(THREE,preset);
-  // Keep the procedural texture cached for future restoration, but do not bind it
-  // while the zero-roughness test is active.
+  // Procedural microstructure is intentionally not bound during this test.
   material.roughnessMap=null;
   material.userData={...(material.userData??{}),aurumSurfaceMicrostructure:"disabled-zero-roughness-test"};
   material.anisotropyRotation=preset.anisotropyRotation??0;
