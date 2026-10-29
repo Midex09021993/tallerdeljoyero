@@ -93,7 +93,7 @@ export function PrecioOroDiario() {
           if (isValidQuote(parsed)) {
             saved = parsed;
             setQuote(parsed);
-            if (Date.now() - parsed.cachedAt < CACHE_TTL_MS && refreshKey === 0) {
+            if (Date.now() - parsed.cachedAt < CACHE_TTL_MS && refreshKey === 0 && typeof parsed.prices[country.currency] === "number") {
               setLoading(false);
               return;
             }
