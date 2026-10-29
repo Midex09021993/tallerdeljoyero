@@ -17,6 +17,8 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CatalogoPublicoRouteImport } from './routes/catalogo-publico'
 import { Route as ClienteRouteImport } from './routes/cliente'
 import { Route as ComunidadRouteImport } from './routes/comunidad'
+import { Route as GuiasRouteImport } from './routes/guias'
+import { Route as GuiasSlugRouteImport } from './routes/guias.$slug'
 import { Route as CursosDiseno3dRouteImport } from './routes/cursos-diseno-3d'
 import { Route as DirectorioRouteImport } from './routes/directorio'
 import { Route as GaleriaJoyasRouteImport } from './routes/galeria-joyas'
@@ -116,6 +118,18 @@ const ComunidadRoute = ComunidadRouteImport.update({
   path: '/comunidad',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GuiasRoute = GuiasRouteImport.update({
+  id: '/guias',
+  path: '/guias',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GuiasSlugRoute = GuiasSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => GuiasRoute,
+} as any)
+const GuiasRouteChildren = { GuiasSlugRoute }
+const GuiasRouteWithChildren = GuiasRoute._addFileChildren(GuiasRouteChildren)
 const CursosDiseno3dRoute = CursosDiseno3dRouteImport.update({
   id: '/cursos-diseno-3d',
   path: '/cursos-diseno-3d',
@@ -440,6 +454,12 @@ export interface FileRoutesByFullPath {
   '/catalogo-publico': typeof CatalogoPublicoRoute
   '/cliente': typeof ClienteRoute
   '/comunidad': typeof ComunidadRoute
+  '/guias': typeof GuiasRouteWithChildren
+  '/guias/$slug': typeof GuiasSlugRoute
+  '/guias': typeof GuiasRouteWithChildren
+  '/guias/$slug': typeof GuiasSlugRoute
+  '/guias': typeof GuiasRouteWithChildren
+  '/guias/$slug': typeof GuiasSlugRoute
   '/cursos-diseno-3d': typeof CursosDiseno3dRoute
   '/directorio': typeof DirectorioRoute
   '/galeria-joyas': typeof GaleriaJoyasRoute
@@ -849,6 +869,8 @@ export interface RootRouteChildren {
   CatalogoPublicoRoute: typeof CatalogoPublicoRoute
   ClienteRoute: typeof ClienteRoute
   ComunidadRoute: typeof ComunidadRoute
+  GuiasRoute: typeof GuiasRouteWithChildren
+  GuiasRoute: typeof GuiasRouteWithChildren
   CursosDiseno3dRoute: typeof CursosDiseno3dRoute
   DirectorioRoute: typeof DirectorioRoute
   GaleriaJoyasRoute: typeof GaleriaJoyasRoute
@@ -923,6 +945,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/comunidad'
       preLoaderRoute: typeof ComunidadRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/guias': {
+      id: '/guias'
+      path: '/guias'
+      fullPath: '/guias'
+      preLoaderRoute: typeof GuiasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guias/$slug': {
+      id: '/$slug'
+      path: '/$slug'
+      fullPath: '/guias/$slug'
+      preLoaderRoute: typeof GuiasSlugRouteImport
+      parentRoute: typeof GuiasRoute
     }
     '/cursos-diseno-3d': {
       id: '/cursos-diseno-3d'
@@ -1503,6 +1539,8 @@ const rootRouteChildren: RootRouteChildren = {
   CatalogoPublicoRoute: CatalogoPublicoRoute,
   ClienteRoute: ClienteRoute,
   ComunidadRoute: ComunidadRoute,
+  GuiasRoute: GuiasRouteWithChildren,
+  GuiasRoute: GuiasRouteWithChildren,
   CursosDiseno3dRoute: CursosDiseno3dRoute,
   DirectorioRoute: DirectorioRoute,
   GaleriaJoyasRoute: GaleriaJoyasRoute,
