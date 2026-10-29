@@ -620,14 +620,18 @@ export function VisorPesoJoyeria({ compacto = false, archivoInicial = null, arch
       </div>
 
       {/* Metales */}
-      <fieldset className="rounded-3xl border border-border bg-card/60 p-4 sm:p-5 space-y-3">
-        <legend className="flex w-full items-center justify-between gap-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-          <span>Material</span>
-          <span className="normal-case tracking-normal text-[11px] text-muted-foreground">
+      <fieldset className="space-y-3 rounded-3xl border border-border bg-card/60 p-4 sm:p-5">
+        <legend className="sr-only">Metal de la joya</legend>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold-deep">01 · Metal</p>
+            <p className="mt-1 text-xs text-muted-foreground">Elige el acabado de tu joya</p>
+          </div>
+          <span className="max-w-[48%] text-right text-[11px] leading-5 text-muted-foreground">
             {metal.nombre} · {num(densidad, 2)} g/cm³
           </span>
-        </legend>
-        <div className={`grid gap-2.5 ${compacto ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-3"}`}>
+        </div>
+        <div className="space-y-2">
           {METALES.map((m) => {
             const activo = m.id === metalId;
             return (
@@ -636,20 +640,23 @@ export function VisorPesoJoyeria({ compacto = false, archivoInicial = null, arch
                 type="button"
                 onClick={() => setMetalId(m.id)}
                 aria-pressed={activo}
-                className={`flex h-12 items-center gap-2 rounded-2xl border px-3 text-left text-xs font-medium transition ${
+                className={`flex min-h-12 w-full items-center gap-3 rounded-2xl border px-3 py-2.5 text-left text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 ${
                   activo
-                    ? "border-gold bg-accent text-foreground shadow-card"
-                    : "border-input bg-background text-muted-foreground hover:border-gold/60 hover:text-foreground"
+                    ? "border-gold bg-accent text-foreground shadow-[0_4px_14px_rgba(180,140,50,0.08)]"
+                    : "border-input bg-background text-foreground hover:border-gold/50 hover:bg-accent/30"
                 }`}
               >
                 <span
-                  className="size-3.5 shrink-0 rounded-full border border-black/10"
+                  className="size-3.5 shrink-0 rounded-full border border-black/10 shadow-sm"
                   style={{
                     background: `#${m.color.toString(16).padStart(6, "0")}`,
                   }}
                   aria-hidden="true"
                 />
-                <span className="truncate">{m.nombre}</span>
+                <span className="min-w-0 flex-1 truncate">{m.nombre}</span>
+                {activo ? (
+                  <span className="shrink-0 text-[9px] font-bold uppercase tracking-[0.14em] text-gold-deep">Activo</span>
+                ) : null}
               </button>
             );
           })}
