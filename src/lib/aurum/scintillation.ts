@@ -534,7 +534,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         gl_FragColor.rgb*=aurumContrast;
         ${family === "Diamante" ? `
         // Slightly lift diamond face brightness without raising scene exposure.
-        gl_FragColor.rgb *= 1.025;
+        gl_FragColor.rgb *= 1.04;
         // Restrained angelic diamond aura: a cool-white grazing-angle lift on the
         // gemstone surface, not a screen-space bloom or an emissive shell.
         float aurumAngelRim=pow(1.0-clamp(abs(dot(aurumN,aurumV)),0.0,1.0),3.2);
