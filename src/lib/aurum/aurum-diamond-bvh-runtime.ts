@@ -192,7 +192,7 @@ export async function createAurumDiamondBvhRuntime(options: {
           // the shader's optical response is validated; 0.08 visibly risks excess
           // see-through without adding distinct facet structure.
           transmission: family === "diamante"
-            ? (activeGemId === "diamante_inclusiones" ? 1 : 0)
+            ? (activeGemId === "diamante_inclusiones" ? 0.01 : 0)
             : (useEmeraldBvhOptics || isRuby || isSapphire)
               ? 0
               : (emeraldProfile?.transmission ?? rubyProfile?.transmission ?? sapphireProfile?.transmission ?? (isImperialTopaz ? 0.88 : isParaibaTourmaline ? 0.91 : 0)),
