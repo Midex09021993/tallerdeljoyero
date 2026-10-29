@@ -769,9 +769,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       // óptico limpio para refracción/dispersion.
       const gemEnvironmentController = createAurumGemEnvironment(environmentController, RGBELoader, EXRLoader);
       let entornoGema:any = null;
-      let gemEnvironmentUrl = getAurumGemHdriUrl("gemNeutral");
-      let gemEnvironmentRotation = .54;
-      let gemEnvironmentIntensityScale = .98;
+      // Calibración HDR de gemas con la escena de referencia iJewel:
+      // env-gem-010.exr, rotación 0 e intensidad 1 según el VJSON aportado.
+      let gemEnvironmentUrl = getAurumGemHdriUrl("ijewelGem");
+      let gemEnvironmentRotation = 0;
+      let gemEnvironmentIntensityScale = 1;
       const aplicarEntornoGema = () => {
         if (!modelo || !entornoGema) return;
         gemEnvironmentController.applyToModel(modelo, entornoGema, {
@@ -783,7 +785,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       let gemEnvironmentRequestId = 0;
       let metalHdriOverride: string | null = null;
       let gemHdriOverride: string | null = null;
-      const cargarEntornoGema = (key="gemNeutral", rotation=.54, intensityScale=.98) => {
+      const cargarEntornoGema = (key="ijewelGem", rotation=0, intensityScale=1) => {
         gemEnvironmentUrl = AURUM_AMBIENT_PRESETS[key]?.url ?? getAurumGemHdriUrl(key);
         gemEnvironmentRotation = Number.isFinite(rotation) ? rotation : .54;
         gemEnvironmentIntensityScale = Number.isFinite(intensityScale) ? intensityScale : .98;
@@ -812,7 +814,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       // Precarga el GemEnvironment una sola vez. El modelo se engancha
       // cuando termina de cargar; así las gemas no quedan negras por falta de
       // environment en el primer frame.
-      cargarEntornoGema("gemNeutral", .54, .98);
+      cargarEntornoGema("ijewelGem", 0, 1);
 
       let hdrRequestId = 0;
       const cargarHDRI = (environmentKey:string, urlOverride?:string, rotation?:number, intensity?:number) => {
