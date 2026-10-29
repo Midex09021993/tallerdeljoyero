@@ -86,7 +86,6 @@ export function VisorPesoJoyeria({ compacto = false, archivoInicial = null, arch
   const [perfilResina, setPerfilResina] = useState("siraya-1.1");
   const perfilesResina: Record<string, { nombre: string; densidad: number; nota: string }> = {
     "siraya-1.1": { nombre: "Siraya Tech Cast Royal Blue", densidad: 1.1, nota: "Valor recomendado por la guía de conversión de Siraya Tech." },
-    "siraya-1.2": { nombre: "Siraya Tech Cast Royal Blue", densidad: 1.2, nota: "Densidad sólida indicada en la ficha técnica de Siraya Tech." },
     "bluecast-xone-v2": { nombre: "BlueCast X-One V2", densidad: 1.09, nota: "Densidad de resina antes de imprimir, según BlueCast; valor de referencia." },
     "bluecast-xwax": { nombre: "BlueCast X-Wax", densidad: 1.09, nota: "Referencia general publicada por BlueCast antes de imprimir; validar para X-Wax." },
   };
@@ -844,7 +843,6 @@ export function VisorPesoJoyeria({ compacto = false, archivoInicial = null, arch
               className={inputCls}
             >
               <option value="siraya-1.1">Siraya Tech Cast Royal Blue · 1,1 g/cm³</option>
-              <option value="siraya-1.2">Siraya Tech Cast Royal Blue · 1,2 g/cm³ (sólida)</option>
               <option value="bluecast-xone-v2">BlueCast X-One V2 · 1,09 g/cm³</option>
               <option value="bluecast-xwax">BlueCast X-Wax · 1,09 g/cm³ (referencia)</option>
             </select>
