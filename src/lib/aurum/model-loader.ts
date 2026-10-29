@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { inspectAurumMesh } from "./mesh-preflight";
 import { getAurumModelParts } from "./model-parts";
+import { findAurumOverlapCandidates } from "./overlap-experiment";
 import { toCreasedNormals } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
 type AurumNormalMode = "authored" | "diagnostic" | "recompute-metal" | "crease-metal";
@@ -240,6 +241,25 @@ export async function preprocessAurumModel(object: THREE.Object3D) {
       }
     });
     console.info("[AURUM][NORMALS AUDIT]", { ...object.userData["aurumPreprocess"], suspiciousMeshes });
+  }
+  // Explicit, opt-in geometry audit. Never changes meshes; use ?aurumOverlap=1 in the viewer.
+  try {
+    if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("aurumOverlap") === "1") {
+      const overlapCandidates = findAurumOverlapCandidates(object, {
+        metalOnly: true,
+        maxTrianglesPerMesh: 12000,
+        maxTrianglePairTests: 250000,
+      });
+      console.info("[AURUM][METAL OVERLAP AUDIT]", {
+        totalCandidates: overlapCandidates.length,
+        confirmedSurfaceIntersections: overlapCandidates.filter((item) => item.status === "surface-intersection").length,
+        boundsOnly: overlapCandidates.filter((item) => item.status === "bounds-only").length,
+        budgetExceeded: overlapCandidates.filter((item) => item.status === "budget-exceeded").length,
+        candidates: overlapCandidates.slice(0, 100),
+      });
+    }
+  } catch (error) {
+    console.warn("[AURUM][METAL OVERLAP AUDIT] Diagnostic failed safely", error);
   }
   return object;
 }
