@@ -152,11 +152,10 @@ export async function createAurumDiamondBvhRuntime(options: {
       }
 
       const isEmerald = family === "esmeralda";
-      // Dedicated copy of the emerald BVH optical profile for Diamante VS.
-      // Keep it isolated to this catalog variant; natural and inclusion diamonds
-      // retain the original diamond BVH optics and emerald materials are unchanged.
-      const isVsUsingEmeraldBvh = activeGemId === "diamante_vs";
-      const useEmeraldBvhOptics = isEmerald || isVsUsingEmeraldBvh;
+      // Each diamond variant gets its own iJewel-calibrated BVH optics.
+      // Emerald optics remain exclusive to emeralds; Diamante VS no longer borrows them.
+      const isBlueDiamond = activeGemId === "diamante_azul";
+      const useEmeraldBvhOptics = isEmerald;
       const isRuby = family === "rubí" || family === "rubi";
       const isSapphire = family === "zafiro" || family === "sapphire";
       const isAmethyst = family === "amatista" || family === "amethyst";
@@ -192,22 +191,26 @@ export async function createAurumDiamondBvhRuntime(options: {
           // experiment opaque to direct refracted-environment contribution until
           // the shader's optical response is validated; 0.08 visibly risks excess
           // see-through without adding distinct facet structure.
-          transmission: (useEmeraldBvhOptics || isRuby || isSapphire)
-            ? 0
-            : (emeraldProfile?.transmission ?? rubyProfile?.transmission ?? sapphireProfile?.transmission ?? (isImperialTopaz ? 0.88 : isParaibaTourmaline ? 0.91 : 0)),
+          transmission: family === "diamante"
+            ? (activeGemId === "diamante_inclusiones" ? 1 : 0)
+            : (useEmeraldBvhOptics || isRuby || isSapphire)
+              ? 0
+              : (emeraldProfile?.transmission ?? rubyProfile?.transmission ?? sapphireProfile?.transmission ?? (isImperialTopaz ? 0.88 : isParaibaTourmaline ? 0.91 : 0)),
           environmentMap,
           camera: options.camera,
           // Keep small secondary diamonds on interactive quality initially;
           // higher bounce counts are reserved for explicit high/final capture.
           quality: family === "diamante" ? "high" : (options.quality ?? "interactive"),
           // Restore the original diamond BVH fire/brightness settings; the emerald experiment remains isolated.
-          rgbBoost: family === "diamante" ? [1.2, 1.2, 1.2] : undefined,
-          environmentIntensity: useEmeraldBvhOptics ? (isVsUsingEmeraldBvh ? 0.82 : 1) : emeraldProfile?.environmentIntensity ?? rubyProfile?.environmentIntensity ?? sapphireProfile?.environmentIntensity ?? (isEmerald ? 1.5 : isRuby ? 1.0 : isSapphire ? 1.2 : isAmethyst ? 1.35 : isAquamarine ? 1.25 : isCitrine ? 1.2 : isBlueTopaz ? 1.25 : isImperialTopaz ? 1.22 : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 1.55 : 1.3) : isTanzanite ? 1.25 : isMoissanite ? 1.35 : isZircon ? 1.2 : isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 1.18 : 1.14),
+          rgbBoost: family === "diamante" ? (isBlueDiamond ? [2, 2, 2] : [1, 1, 1]) : undefined,
+          environmentIntensity: family === "diamante" ? (isBlueDiamond ? 1.5 : 1.3) : useEmeraldBvhOptics ? 1 : emeraldProfile?.environmentIntensity ?? rubyProfile?.environmentIntensity ?? sapphireProfile?.environmentIntensity ?? (isEmerald ? 1.5 : isRuby ? 1.0 : isSapphire ? 1.2 : isAmethyst ? 1.35 : isAquamarine ? 1.25 : isCitrine ? 1.2 : isBlueTopaz ? 1.25 : isImperialTopaz ? 1.22 : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 1.55 : 1.3) : isTanzanite ? 1.25 : isMoissanite ? 1.35 : isZircon ? 1.2 : isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 1.18 : 1.14),
           // Emerald test: disable dispersion entirely while isolating BVH speckles.
           // The green color is authored by the profile; chromatic splitting is not
           // required for emerald and may amplify unstable ray/intersection artifacts.
-          dispersion: useEmeraldBvhOptics ? 0 : (emeraldProfile?.dispersion ?? rubyProfile?.dispersion ?? sapphireProfile?.dispersion ?? (family === "diamante" ? 0.004 : isRuby ? 0.001 : isSapphire ? 0.001 : isAmethyst || isAquamarine || isCitrine || isBlueTopaz || isImperialTopaz || isParaibaTourmaline || isTanzanite || isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 0.0002 : isZircon ? 0.001 : isMoissanite ? 0.009 : 0.01)),
-          ior: isVsUsingEmeraldBvh ? 1.58 : emeraldProfile?.ior ?? rubyProfile?.ior ?? sapphireProfile?.ior ?? (family === "diamante" ? 2.6 : isEmerald ? 1.58 : isRuby ? 1.762 : isSapphire ? 1.762 : isAmethyst ? 1.55 : isAquamarine ? 1.577 : isCitrine || isQuartz ? 1.544 : isBlueTopaz || isImperialTopaz ? 1.63 : isParaibaTourmaline || isOtherTourmaline ? 1.62 : isTanzanite ? 1.695 : isMoissanite ? 2.65 : isSpinel ? 1.718 : isGarnet ? 1.78 : isPeridot ? 1.65 : isMorganite ? 1.58 : isZircon ? 1.92 : isChrysoberyl ? 1.75 : 1.55),
+          dispersion: family === "diamante"
+            ? (activeGemId === "diamante_natural" ? 0.01 : isBlueDiamond ? 0.004 : 0)
+            : useEmeraldBvhOptics ? 0 : (emeraldProfile?.dispersion ?? rubyProfile?.dispersion ?? sapphireProfile?.dispersion ?? (isRuby ? 0.001 : isSapphire ? 0.001 : isAmethyst || isAquamarine || isCitrine || isBlueTopaz || isImperialTopaz || isParaibaTourmaline || isTanzanite || isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 0.0002 : isZircon ? 0.001 : isMoissanite ? 0.009 : 0.01)),
+          ior: emeraldProfile?.ior ?? rubyProfile?.ior ?? sapphireProfile?.ior ?? (family === "diamante" ? (isBlueDiamond ? 2.4 : 2.6) : isEmerald ? 1.58 : isRuby ? 1.762 : isSapphire ? 1.762 : isAmethyst ? 1.55 : isAquamarine ? 1.577 : isCitrine || isQuartz ? 1.544 : isBlueTopaz || isImperialTopaz ? 1.63 : isParaibaTourmaline || isOtherTourmaline ? 1.62 : isTanzanite ? 1.695 : isMoissanite ? 2.65 : isSpinel ? 1.718 : isGarnet ? 1.78 : isPeridot ? 1.65 : isMorganite ? 1.58 : isZircon ? 1.92 : isChrysoberyl ? 1.75 : 1.55),
           // Match the catalog's iJewel inclusion reference (absorption 1.6)
           // only for this variant; other emerald profiles remain untouched.
           absorption: useEmeraldBvhOptics
@@ -215,10 +218,11 @@ export async function createAurumDiamondBvhRuntime(options: {
             : emeraldProfile?.absorption ?? rubyProfile?.absorption ?? sapphireProfile?.absorption ?? (isEmerald ? 0.45 : isRuby ? 1.15 : isSapphire ? 0.85 : isAmethyst ? 0.62 : isAquamarine ? 0.45 : isCitrine ? 0.5 : isBlueTopaz ? 0.42 : isImperialTopaz ? 0.48 : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 0.22 : 0.38) : isTanzanite ? 0.42 : isMoissanite ? 0.18 : isSpinel || isGarnet || isPeridot || isMorganite || isZircon || isChrysoberyl || isQuartz || isOtherTourmaline ? 0.45 : 1),
           color: isEmerald
             ? (activeGemId === "esmeralda_1" ? 0x22dfa3 : activeGemId === "esmeralda_2" ? 0x4fd5b3 : activeGemId === "esmeralda_3" ? 0x19d597 : activeGemId === "esmeralda_inclusiones" ? 0x09e09d : emeraldProfile?.color ?? 0x05683d)
-            : rubyProfile?.color ?? sapphireProfile?.color ?? (family === "diamante" ? 0xffffff : resolveAurumCatalogGemBvhColor(materials[0], isEmerald ? 0x05683d : isRuby ? 0x9b001b : isSapphire ? 0x123c9a : isAmethyst ? 0x7650b9 : isAquamarine ? 0x72c9df : isCitrine ? 0xd49a22 : isBlueTopaz ? 0x65b9e8 : isImperialTopaz ? (activeGemId.includes("topacio_imperial_minas") ? 0xd88943 : 0xd79b4b) : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 0x00cfc3 : activeGemId.includes("mozambique") ? 0x27d4cf : activeGemId.includes("etiopia") ? 0x3ad9d1 : 0x19d6d0) : isTanzanite ? 0x5140a8 : isMoissanite ? 0xf4f8ff : 0xffffff)),
-          reflectivity: isEmerald
+            : rubyProfile?.color ?? sapphireProfile?.color ?? (family === "diamante" ? (isBlueDiamond ? 0xb5cbdd : 0xffffff) : resolveAurumCatalogGemBvhColor(materials[0], isEmerald ? 0x05683d : isRuby ? 0x9b001b : isSapphire ? 0x123c9a : isAmethyst ? 0x7650b9 : isAquamarine ? 0x72c9df : isCitrine ? 0xd49a22 : isBlueTopaz ? 0x65b9e8 : isImperialTopaz ? (activeGemId.includes("topacio_imperial_minas") ? 0xd88943 : 0xd79b4b) : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 0x00cfc3 : activeGemId.includes("mozambique") ? 0x27d4cf : activeGemId.includes("etiopia") ? 0x3ad9d1 : 0x19d6d0) : isTanzanite ? 0x5140a8 : isMoissanite ? 0xf4f8ff : 0xffffff)),
+          reflectivity: family === "diamante" ? (isBlueDiamond ? 0.46 : 0.5) : isEmerald
             ? (activeGemId === "esmeralda_2" ? 0.31 : activeGemId === "esmeralda_1" || activeGemId === "esmeralda_3" || activeGemId === "esmeralda_inclusiones" ? 0.5 : emeraldProfile?.reflectivity ?? 0.16)
             : rubyProfile?.reflectivity ?? sapphireProfile?.reflectivity ?? (isEmerald ? 0.26 : isRuby ? 0.38 : isSapphire ? 0.38 : isAmethyst ? 0.32 : isAquamarine ? 0.30 : isCitrine ? 0.30 : isBlueTopaz ? 0.30 : isImperialTopaz ? 0.30 : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 0.38 : 0.32) : isTanzanite ? 0.32 : isMoissanite ? 0.48 : isZircon ? 0.36 : isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 0.30 : 0.46),
+          gamma: family === "diamante" ? (isBlueDiamond ? 1.09 : 1) : 1.09,
           environmentRotationRadians: Number(currentMaterial?.userData?.aurumGemEnvironmentRotation ?? 0),
         });
         entries.set(mesh, {
@@ -230,11 +234,10 @@ export async function createAurumDiamondBvhRuntime(options: {
           setQuality: (quality) => {
             if (!packageApi.setDiamondOptions) return;
             if (family === "diamante") {
-              // Preserve the existing diamond quality policy unchanged.
+              // Match the exact iJewel ray-bounce count for each calibrated diamond.
+              // Blue uses 6; the three white references use 5 at all quality levels.
               packageApi.setDiamondOptions(prepared.material, {
-                // 3 interactive bounces are the upstream package's recommended
-                // starting point; retain 4 for high and 8 for explicit final stills.
-                rayBounces: quality === "final" ? 8 : family === "diamante" ? 4 : quality === "high" ? 4 : 3,
+                rayBounces: isBlueDiamond ? 6 : 5,
               });
               return;
             }
