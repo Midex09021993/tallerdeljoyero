@@ -72,6 +72,7 @@ export function VisorPesoJoyeria({ compacto = false, archivoInicial = null, arch
 
   const [listo, setListo] = useState(false);
   const [cargando, setCargando] = useState(false);
+  const [arrastrandoArchivo, setArrastrandoArchivo] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [nombreArchivo, setNombreArchivo] = useState<string | null>(null);
   const [volumenUnidades, setVolumenUnidades] = useState<number | null>(null);
@@ -539,23 +540,66 @@ export function VisorPesoJoyeria({ compacto = false, archivoInicial = null, arch
         </div>
       ) : null}
 
-      {/* Visor */}
-      <div className="relative overflow-hidden rounded-3xl border border-border bg-viewer shadow-card">
+      {/* Visor y zona de carga por clic o arrastre */}
+      <div
+        className={`relative overflow-hidden rounded-3xl border bg-viewer shadow-card transition-colors ${
+          arrastrandoArchivo ? "border-gold ring-2 ring-gold/40" : "border-border"
+        }`}
+        onDragEnter={(event) => {
+          event.preventDefault();
+          setArrastrandoArchivo(true);
+        }}
+        onDragOver={(event) => {
+          event.preventDefault();
+          event.dataTransfer.dropEffect = "copy";
+          setArrastrandoArchivo(true);
+        }}
+        onDragLeave={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+            setArrastrandoArchivo(false);
+          }
+        }}
+        onDrop={(event) => {
+          event.preventDefault();
+          setArrastrandoArchivo(false);
+          const file = event.dataTransfer.files?.[0];
+          if (!file) return;
+          const extension = file.name.split(".").pop()?.toLowerCase();
+          if (!["stl", "obj", "glb", "gltf", "fbx"].includes(extension ?? "")) {
+            setError("Formato no compatible. Usa STL, OBJ, GLB o FBX.");
+            return;
+          }
+          void cargarArchivo(file);
+        }}
+      >
         <div
           ref={contenedor}
           className={compacto ? "h-[480px] w-full" : "h-[560px] w-full sm:h-[680px]"}
         />
         {!nombreArchivo && !cargando ? (
-          <p className="pointer-events-none absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-viewer-foreground/50">
-            {error ?? "Sube un archivo STL, OBJ, GLB o FBX para visualizarlo."}
-          </p>
+          <button
+            type="button"
+            onClick={() => inputArchivo.current?.click()}
+            className={`absolute inset-0 flex flex-col items-center justify-center gap-3 px-6 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-gold ${
+              arrastrandoArchivo ? "bg-gold/10 text-gold" : "text-viewer-foreground/70 hover:bg-white/[0.03] hover:text-viewer-foreground"
+            }`}
+          >
+            <span className="flex size-14 items-center justify-center rounded-2xl border border-white/15 bg-white/[0.06] text-gold">
+              <Upload className="size-6" aria-hidden="true" />
+            </span>
+            <span className="text-sm font-semibold text-viewer-foreground">
+              {arrastrandoArchivo ? "Suelta el archivo para cargarlo" : "Sube o arrastra tu modelo 3D aquí"}
+            </span>
+            <span className="text-xs text-viewer-foreground/50">STL · OBJ · GLB · FBX</span>
+            {error ? <span className="text-xs text-red-300">{error}</span> : null}
+          </button>
         ) : null}
         {cargando ? (
-          <p className="pointer-events-none absolute inset-0 flex items-center justify-center text-sm text-viewer-foreground/70">
+          <p className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/35 text-sm text-viewer-foreground/90">
             Procesando modelo…
           </p>
         ) : null}
-        <div className="absolute right-3 top-3 flex gap-2">
+        <div className="absolute right-3 top-3 z-10 flex gap-2">
           <button
             type="button"
             onClick={() => api.current?.reset()}
@@ -583,14 +627,9 @@ export function VisorPesoJoyeria({ compacto = false, archivoInicial = null, arch
           <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
             Archivo 3D
           </span>
-          <button
-            type="button"
-            onClick={() => inputArchivo.current?.click()}
-            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-gold bg-accent px-4 text-sm font-semibold text-foreground shadow-sm transition hover:brightness-105"
-          >
-            <Upload className="size-4" aria-hidden="true" />
-            Subir modelo
-          </button>
+          <p className="text-xs text-muted-foreground">
+            Puedes hacer clic en el visor o arrastrar un archivo directamente al recuadro.
+          </p>
           <input
             ref={inputArchivo}
             type="file"
