@@ -67,7 +67,7 @@ export function ComunidadPublicaPage() {
     </header>
     <section className="mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-10">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div><p className="text-[10px] font-bold uppercase tracking-[.24em] text-[#987400]">El universo AURUM</p><h2 className="mt-2 font-display text-3xl tracking-tight sm:text-4xl">Conoce a quienes crean.</h2><p className="mt-2 text-sm text-slate-600">Identidad, oficio y visión en cada taller.</p></div>
+        <div><p className="text-[10px] font-bold uppercase tracking-[.24em] text-[#987400]">El universo AURUM</p><h1 className="mt-2 font-display text-3xl tracking-tight sm:text-4xl">Directorio de talleres y joyerías de la comunidad joyera</h1><p className="mt-2 text-sm text-slate-600">Identidad, oficio y visión en cada taller.</p></div>
         <label className="flex min-h-12 w-full items-center gap-3 rounded-full border border-slate-200 bg-white px-4 lg:max-w-md"><Search className="size-4 shrink-0 text-[#987400]" /><input value={busqueda} onChange={(e) => setBusqueda(e.target.value)} placeholder="Buscar talleres, joyerías o cursos…" className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-[#9a9187]" /></label>
       </div>
       <div className="mt-7 flex flex-wrap gap-2 border-b border-slate-200 pb-5" role="group" aria-label="Filtrar comunidad">
