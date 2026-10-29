@@ -16,6 +16,7 @@ export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
       { title: "Aurum Lab — Plataforma digital para talleres de joyería" },
+      { name: "robots", content: "noindex, follow" },
       {
         name: "description",
         content:
