@@ -3,11 +3,13 @@ import { ArrowLeft, ArrowRight, Calculator, Gem } from "lucide-react";
 
 const slugGuia = "calcular-aleaciones-oro-18k-14k-9k";
 const slugPeso = "calcular-peso-joya-modelo-3d";
+const slugPlano = "distribucion-taller-joyeria";
+const slugImpresion = "impresion-3d-joyeria";
 
 export const Route = createFileRoute("/guias/$slug")({
   head: ({ params }) => {
-    const valida = params.slug === slugGuia || params.slug === slugPeso;
-    const titulo = params.slug === slugPeso ? "Cómo estimar el peso de una joya a partir de un modelo 3D" : "Cómo calcular aleaciones de oro de 18K, 14K y 9K";
+    const valida = [slugGuia, slugPeso, slugPlano, slugImpresion].includes(params.slug);
+    const titulo = params.slug === slugPeso ? "Cómo estimar el peso de una joya a partir de un modelo 3D" : params.slug === slugPlano ? "Cómo organizar la distribución de un taller de joyería" : params.slug === slugImpresion ? "Impresión 3D para joyería: del archivo a la pieza" : "Cómo calcular aleaciones de oro de 18K, 14K y 9K";
     const descripcion = params.slug === slugPeso ? "Aprende a preparar un modelo 3D y estimar el peso teórico de una joya según su volumen, unidades y densidad del metal." : "Aprende a calcular el oro fino y el metal de liga en aleaciones de 18K, 14K y 9K, con fórmulas y ejemplos prácticos para joyeros.";
     return {
       meta: [
@@ -27,7 +29,7 @@ export const Route = createFileRoute("/guias/$slug")({
 
 function GuiaTecnicaPage() {
   const { slug } = Route.useParams();
-  if (slug !== slugGuia && slug !== slugPeso) {
+  if (![slugGuia, slugPeso, slugPlano, slugImpresion].includes(slug)) {
     return (
       <main className="grid min-h-screen place-items-center bg-[#fffefa] px-5 text-center text-[#17232d]">
         <div className="max-w-lg">
@@ -92,6 +94,125 @@ function GuiaTecnicaPage() {
       </main>
     );
   }
+
+
+  if (slug === slugPlano) {
+    return (
+      <main className="min-h-screen bg-[#fffefa] text-[#17232d]">
+        <header className="border-b border-slate-200 bg-white">
+          <div className="mx-auto flex min-h-[68px] max-w-5xl items-center justify-between gap-4 px-5 sm:px-8">
+            <Link to="/guias" className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-slate-600 hover:text-[#987400]"><ArrowLeft className="size-4" /> Todas las guías</Link>
+            <Link to="/auth" className="rounded-full bg-[#17232d] px-4 py-2.5 text-xs font-semibold text-white">Acceder a AURUM LAB</Link>
+          </div>
+        </header>
+        <article className="mx-auto max-w-4xl px-5 py-10 sm:px-8 sm:py-16">
+          <nav aria-label="Ruta de navegación" className="text-xs text-slate-500"><Link to="/guias">Guías técnicas</Link><span aria-hidden="true"> / </span><span>Diseño del taller</span></nav>
+          <header className="mt-6 border-b border-slate-200 pb-8">
+            <p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#987400]">Diseño del taller · Guía técnica</p>
+            <h1 className="mt-3 max-w-3xl text-3xl font-extrabold leading-tight tracking-tight sm:text-5xl">Cómo organizar la distribución de un taller de joyería</h1>
+            <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600">Una distribución clara ayuda a trabajar con orden, reduce recorridos innecesarios y permite separar tareas que requieren condiciones distintas. Adapta cualquier plano a las dimensiones reales del local y de tus equipos.</p>
+          </header>
+          <div className="prose prose-slate mt-8 max-w-none prose-headings:tracking-tight">
+            <h2>1. Define las zonas según el flujo de trabajo</h2>
+            <p>Antes de mover máquinas, dibuja el recorrido de una pieza desde el diseño hasta el acabado. Considera zonas diferenciadas para:</p>
+            <ul>
+              <li><strong>Diseño digital:</strong> computadora, modelado CAD y revisión de archivos.</li>
+              <li><strong>Producción digital:</strong> impresora 3D y el espacio necesario para retirar las piezas.</li>
+              <li><strong>Posprocesado:</strong> lavado, secado y curado, según las instrucciones de la resina y del fabricante.</li>
+              <li><strong>Fundición:</strong> equipos térmicos y auxiliares instalados de acuerdo con sus requisitos técnicos.</li>
+              <li><strong>Acabado:</strong> limado, pulido y otras operaciones que pueden generar polvo o residuos.</li>
+            </ul>
+            <h2>2. Planifica con las dimensiones reales</h2>
+            <p>Mide el local, las puertas y los pasillos. Para cada equipo registra ancho, fondo, altura, apertura de tapas, acceso para mantenimiento y espacio de trabajo del operario. No tomes las dimensiones de un esquema orientativo como medidas universales: varían según el modelo de máquina y el fabricante.</p>
+            <h2>3. Separa procesos incompatibles</h2>
+            <p>Evita ubicar fuentes de calor junto a resinas, disolventes o materiales combustibles. Las operaciones que generan polvo, vapores o partículas pueden necesitar extracción específica. Consulta las fichas de seguridad de cada producto y las instrucciones de instalación de cada equipo.</p>
+            <h2>4. Mantén libres la circulación y las salidas</h2>
+            <ul>
+              <li>No bloquees puertas, pasillos ni accesos a equipos de emergencia.</li>
+              <li>Deja espacio para cargar y descargar equipos, limpiar y hacer mantenimiento.</li>
+              <li>Organiza herramientas y consumibles cerca de su zona de uso sin invadir las rutas de circulación.</li>
+              <li>Verifica ventilación, extracción eléctrica y requisitos de seguridad con profesionales competentes.</li>
+            </ul>
+            <h2>5. Lista de comprobación antes de instalar</h2>
+            <ul>
+              <li>¿El plano incluye las medidas reales del local y de los equipos?</li>
+              <li>¿Se ha previsto espacio para operar y mantener cada máquina?</li>
+              <li>¿Están separadas las fuentes de calor de los materiales sensibles?</li>
+              <li>¿La ventilación y la extracción corresponden a los procesos que se realizarán?</li>
+              <li>¿Se mantienen libres las salidas y los accesos de emergencia?</li>
+            </ul>
+            <p>Esta guía ofrece criterios de planificación general; no sustituye un plano de instalación aprobado ni las indicaciones del fabricante o la normativa local.</p>
+          </div>
+          <section className="mt-10 rounded-2xl border border-[#eadca7] bg-gradient-to-br from-[#fff9df] to-white p-6 sm:p-8">
+            <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#876500]">Llévalo a la práctica</p>
+            <h2 className="mt-2 text-xl font-bold">Organiza el flujo de tu taller</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">Usa esta lista como punto de partida y contrasta el plano con las dimensiones de tus equipos.</p>
+            <Link to="/herramientas-publicas" className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#17232d] px-5 py-3 text-sm font-semibold text-white"><ArrowRight className="size-4" /> Ver herramientas técnicas</Link>
+          </section>
+          <div className="mt-8 border-t border-slate-200 pt-6"><Link to="/guias" className="inline-flex items-center gap-2 text-sm font-semibold text-[#876500]"><ArrowLeft className="size-4" /> Volver a las guías técnicas</Link></div>
+        </article>
+      </main>
+    );
+  }
+
+  if (slug === slugImpresion) {
+    return (
+      <main className="min-h-screen bg-[#fffefa] text-[#17232d]">
+        <header className="border-b border-slate-200 bg-white">
+          <div className="mx-auto flex min-h-[68px] max-w-5xl items-center justify-between gap-4 px-5 sm:px-8">
+            <Link to="/guias" className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-slate-600 hover:text-[#987400]"><ArrowLeft className="size-4" /> Todas las guías</Link>
+            <Link to="/auth" className="rounded-full bg-[#17232d] px-4 py-2.5 text-xs font-semibold text-white">Acceder a AURUM LAB</Link>
+          </div>
+        </header>
+        <article className="mx-auto max-w-4xl px-5 py-10 sm:px-8 sm:py-16">
+          <nav aria-label="Ruta de navegación" className="text-xs text-slate-500"><Link to="/guias">Guías técnicas</Link><span aria-hidden="true"> / </span><span>Diseño y fabricación</span></nav>
+          <header className="mt-6 border-b border-slate-200 pb-8">
+            <p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#987400]">Diseño y fabricación · Guía técnica</p>
+            <h1 className="mt-3 max-w-3xl text-3xl font-extrabold leading-tight tracking-tight sm:text-5xl">Impresión 3D para joyería: del archivo a la pieza</h1>
+            <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600">La impresión 3D puede acelerar la validación de un diseño y preparar patrones para procesos posteriores. El resultado depende del modelo, la tecnología de impresión, el material y el posprocesado indicado por el fabricante.</p>
+          </header>
+          <div className="prose prose-slate mt-8 max-w-none prose-headings:tracking-tight">
+            <h2>1. Revisa el archivo antes de imprimir</h2>
+            <ul>
+              <li>Comprueba unidades y escala del modelo.</li>
+              <li>Verifica que la geometría esté cerrada y no tenga caras duplicadas o paredes involuntariamente delgadas.</li>
+              <li>Revisa canales, cavidades, engastes y detalles que deban conservarse tras el posprocesado.</li>
+              <li>Orienta la pieza teniendo en cuenta las recomendaciones del software y de la impresora.</li>
+            </ul>
+            <h2>2. Elige una resina adecuada al objetivo</h2>
+            <p>No todas las resinas sirven para el mismo propósito. Una resina para prototipado visual no necesariamente es apta para fundición. Confirma que el material sea compatible con tu impresora, el proceso térmico y el revestimiento que utilizas.</p>
+            <h2>3. Configura y prepara la impresión</h2>
+            <p>Utiliza los parámetros recomendados para la combinación exacta de impresora y material. Revisa soportes, espesor de capa, exposición y limpieza del tanque según las instrucciones del fabricante; evita copiar perfiles de otra resina sin validarlos.</p>
+            <h2>4. Lava y cura según las instrucciones</h2>
+            <p>El lavado, secado y curado deben seguir la ficha técnica del material. Usa protección personal y ventilación adecuadas, gestiona los residuos según la normativa aplicable y no manipules resina sin curar sin las precauciones indicadas por el fabricante.</p>
+            <h2>5. Comprueba la pieza antes del siguiente proceso</h2>
+            <ul>
+              <li>Busca soportes mal retirados, deformaciones y detalles perdidos.</li>
+              <li>Confirma que la pieza esté limpia y posprocesada correctamente.</li>
+              <li>Si se utilizará para fundición, sigue el ciclo de quemado y las instrucciones del sistema de revestimiento y de la resina castable específica.</li>
+            </ul>
+            <h2>Lista rápida antes de producir</h2>
+            <ul>
+              <li>Archivo y unidades revisados.</li>
+              <li>Resina compatible con el objetivo de fabricación.</li>
+              <li>Parámetros verificados para el equipo exacto.</li>
+              <li>Lavado, secado y curado según ficha técnica.</li>
+              <li>Proceso de fundición validado por el fabricante del material.</li>
+            </ul>
+            <p>La guía es informativa. Las condiciones concretas dependen de los equipos, consumibles y normas de seguridad del taller.</p>
+          </div>
+          <section className="mt-10 rounded-2xl border border-[#eadca7] bg-gradient-to-br from-[#fff9df] to-white p-6 sm:p-8">
+            <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#876500]">Llévalo a la práctica</p>
+            <h2 className="mt-2 text-xl font-bold">Continúa con tus herramientas</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">Prepara el modelo y revisa las herramientas disponibles para acompañar tu flujo de fabricación digital.</p>
+            <Link to="/herramientas-publicas" className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#17232d] px-5 py-3 text-sm font-semibold text-white"><ArrowRight className="size-4" /> Ver herramientas técnicas</Link>
+          </section>
+          <div className="mt-8 border-t border-slate-200 pt-6"><Link to="/guias" className="inline-flex items-center gap-2 text-sm font-semibold text-[#876500]"><ArrowLeft className="size-4" /> Volver a las guías técnicas</Link></div>
+        </article>
+      </main>
+    );
+  }
+
 
   return (
     <main className="min-h-screen bg-[#fffefa] text-[#17232d]">
