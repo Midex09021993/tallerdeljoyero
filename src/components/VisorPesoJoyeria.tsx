@@ -18,6 +18,7 @@ export type MetalId =
   | "plata925"
   | "plata950"
   | "plata970"
+  | "plataPd900"
   | "platino";
 
 type Metal = {
@@ -38,6 +39,7 @@ const METALES: Metal[] = [
   { id: "plata925", nombre: "Plata 925", densidad: 10.36, color: 0xcfd2d6, metalness: 1, roughness: 0.22 },
   { id: "plata950", nombre: "Plata 950", densidad: 10.4, color: 0xd8dade, metalness: 1, roughness: 0.2 },
   { id: "plata970", nombre: "Plata 970", densidad: 10.43, color: 0xe2e4e6, metalness: 1, roughness: 0.18 },
+  { id: "plataPd900", nombre: "Plata-Paladio 900 (Ag 90 / Pd 10)", densidad: 10.6, color: 0xd9dde1, metalness: 1, roughness: 0.17 },
   { id: "platino", nombre: "Platino", densidad: 21.4, color: 0xcfd3d6, metalness: 1, roughness: 0.3 },
 ];
 
@@ -631,8 +633,16 @@ export function VisorPesoJoyeria({ compacto = false, archivoInicial = null, arch
             {metal.nombre} · {num(densidad, 2)} g/cm³
           </span>
         </div>
-        <div className="space-y-2">
-          {METALES.map((m) => {
+        <div className="space-y-4">
+          {([
+            { titulo: "Oro", ids: ["oro18a", "oro18b", "oro18r", "oro14"] },
+            { titulo: "Plata y aleaciones de plata", ids: ["plata925", "plata950", "plata970", "plataPd900"] },
+            { titulo: "Metales del grupo del platino", ids: ["platino"] },
+          ] as const).map((familia) => (
+            <section key={familia.titulo} className="space-y-2">
+              <h3 className="px-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{familia.titulo}</h3>
+              <div className="space-y-2">
+                {METALES.filter((m) => (familia.ids as readonly string[]).includes(m.id)).map((m) => {
             const activo = m.id === metalId;
             return (
               <button
@@ -660,6 +670,9 @@ export function VisorPesoJoyeria({ compacto = false, archivoInicial = null, arch
               </button>
             );
           })}
+              </div>
+            </section>
+          ))}
         </div>
       </fieldset>
 
