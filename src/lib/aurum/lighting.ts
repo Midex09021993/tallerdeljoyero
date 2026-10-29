@@ -155,12 +155,12 @@ export function createAurumLightingController(
       // positions immediately after config defaults are applied, otherwise
       // the key spotlight is reset to raw coordinates and can miss the jewel.
       this.scaleToModel(lastRadius, lastTargetY);
-      if (lights.softbox) lights.softbox.visible = true;
-      if (lights.strip) lights.strip.visible = true;
+      if (lights.softbox) lights.softbox.visible = config.reflectors?.softbox ?? true;
+      if (lights.strip) lights.strip.visible = config.reflectors?.strip ?? true;
       if (lights.front) lights.front.visible = config.front?.enabled ?? true;
-      if (lights.kicker) lights.kicker.visible = true;
-      if (lights.edgeLeft) lights.edgeLeft.visible = true;
-      if (lights.edgeRight) lights.edgeRight.visible = true;
+      if (lights.kicker) lights.kicker.visible = config.reflectors?.kicker ?? true;
+      if (lights.edgeLeft) lights.edgeLeft.visible = config.reflectors?.edgeLeft ?? true;
+      if (lights.edgeRight) lights.edgeRight.visible = config.reflectors?.edgeRight ?? true;
       syncGemShaderLight();
 
       // Diagnostic mode: isolate the HDR/IBL contribution from every direct
@@ -250,11 +250,11 @@ export function createAurumLightingController(
         // Keep the photographic reflection rig active as a stable scene
         // baseline. Manual key/fill/rim/front controls add to that baseline;
         // they must not abruptly remove the broad reflections shaping polished metal.
-        if (lights.softbox) lights.softbox.visible = true;
-        if (lights.strip) lights.strip.visible = true;
-        if (lights.kicker) lights.kicker.visible = true;
-        if (lights.edgeLeft) lights.edgeLeft.visible = true;
-        if (lights.edgeRight) lights.edgeRight.visible = true;
+        if (lights.softbox) lights.softbox.visible = config.reflectors?.softbox ?? true;
+        if (lights.strip) lights.strip.visible = config.reflectors?.strip ?? true;
+        if (lights.kicker) lights.kicker.visible = config.reflectors?.kicker ?? true;
+        if (lights.edgeLeft) lights.edgeLeft.visible = config.reflectors?.edgeLeft ?? true;
+        if (lights.edgeRight) lights.edgeRight.visible = config.reflectors?.edgeRight ?? true;
       }
       // Reapply the panel's current enabled/intensity state after every preset,
       // not only after an interaction in this session. Otherwise a preset can
@@ -308,6 +308,14 @@ export function createAurumLightingController(
           light.penumbra = cfg.penumbra ?? light.penumbra;
         }
       });
+
+      if (patch?.reflectors) {
+        (["softbox", "strip", "kicker", "edgeLeft", "edgeRight"] as const).forEach((name) => {
+          if (lights[name] && patch.reflectors[name] !== undefined) {
+            lights[name].visible = Boolean(patch.reflectors[name]);
+          }
+        });
+      }
 
       if (patch?.front && lights.front) {
         const rig = getAurumReflectionRigProfile(activeRigId);
