@@ -72,7 +72,7 @@ export function createAurumGemEnvironment(
         // Live-view calibration: avoid washing out the diamond's facet contrast
         // under bright studio HDRIs. Keep the adjustment isolated to diamond
         // reflections; do not change renderer exposure, gem IOR or metal response.
-        const familyReflectionScale = family === "Diamante" ? 0.94 : 1;
+        const familyReflectionScale = family === "Diamante" ? 1.0 : 1;
         m.envMapIntensity = Math.max(.55, Math.min(2.35, authored * intensityScale * familyReflectionScale));
         const nativeIJEWELRotation = Number(m.userData?.aurumIJEWELParameters?.environmentRotationOffset);
         const oriented = Number(m.userData?.aurumIJEWELParameters?.diamondOrientedEnvMap ?? 0) === 1;
