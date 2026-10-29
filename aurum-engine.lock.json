@@ -39,7 +39,7 @@
     "src/lib/aurum/material-application.ts": "ed43be2aae36caaa5ec3387739dd9abb1f301139ea1a8909b9d8bf85019d91a1",
     "src/lib/aurum/mesh-preflight.ts": "a3e9f4ba831106b965055a3aca635962d23637fb51fe82d4d881ca271e1de685",
     "src/lib/aurum/model-loader.ts": "28f8746afec3a1626dd62a6261e12cf665101960142df84d9a268226367e90ea",
-    "src/lib/aurum/model-materials.ts": "14da096added31791882940d7f395453bdcd6a6667be22d0c643ca82188abb3d",
+    "src/lib/aurum/model-materials.ts": "4968c71cf656d4caadafad925163fb1cabd5da54767712e1fa02b9cd24b31fa2",
     "src/lib/aurum/model-normalizer.ts": "fd60e0f16d875f19486b1ca81760aa7bf65509306d5bb5df154d92519026011c",
     "src/lib/aurum/model-parts.ts": "b5adb1dfc23f168ae551c6629df634a1b14ef9d49f7206f4b2b55bc034a94aef",
     "src/lib/aurum/model-prep.ts": "ee4f6608d1ec118e817d289b9ca88b65681af4aeba666e859320296caeba9e69",
