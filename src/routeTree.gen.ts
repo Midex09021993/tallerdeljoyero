@@ -124,12 +124,10 @@ const GuiasRoute = GuiasRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const GuiasSlugRoute = GuiasSlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => GuiasRoute,
+  id: '/guias/$slug',
+  path: '/guias/$slug',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const GuiasRouteChildren = { GuiasSlugRoute }
-const GuiasRouteWithChildren = GuiasRoute._addFileChildren(GuiasRouteChildren)
 const CursosDiseno3dRoute = CursosDiseno3dRouteImport.update({
   id: '/cursos-diseno-3d',
   path: '/cursos-diseno-3d',
@@ -454,8 +452,6 @@ export interface FileRoutesByFullPath {
   '/catalogo-publico': typeof CatalogoPublicoRoute
   '/cliente': typeof ClienteRoute
   '/comunidad': typeof ComunidadRoute
-  '/guias': typeof GuiasRouteWithChildren
-  '/guias/$slug': typeof GuiasSlugRoute
   '/cursos-diseno-3d': typeof CursosDiseno3dRoute
   '/directorio': typeof DirectorioRoute
   '/galeria-joyas': typeof GaleriaJoyasRoute
@@ -515,6 +511,8 @@ export interface FileRoutesByFullPath {
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/guias': typeof GuiasRoute
+  '/guias/$slug': typeof GuiasSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -580,7 +578,7 @@ export interface FileRoutesByTo {
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
-  '/guias': typeof GuiasRouteWithChildren
+  '/guias': typeof GuiasRoute
   '/guias/$slug': typeof GuiasSlugRoute
 }
 export interface FileRoutesById {
@@ -652,7 +650,7 @@ export interface FileRoutesById {
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
-  '/guias': typeof GuiasRouteWithChildren
+  '/guias': typeof GuiasRoute
   '/guias/$slug': typeof GuiasSlugRoute
 }
 export interface FileRouteTypes {
@@ -869,8 +867,6 @@ export interface RootRouteChildren {
   CatalogoPublicoRoute: typeof CatalogoPublicoRoute
   ClienteRoute: typeof ClienteRoute
   ComunidadRoute: typeof ComunidadRoute
-  GuiasRoute: typeof GuiasRouteWithChildren
-  GuiasRoute: typeof GuiasRouteWithChildren
   CursosDiseno3dRoute: typeof CursosDiseno3dRoute
   DirectorioRoute: typeof DirectorioRoute
   GaleriaJoyasRoute: typeof GaleriaJoyasRoute
@@ -886,10 +882,26 @@ export interface RootRouteChildren {
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
+  GuiasRoute: typeof GuiasRoute
+  GuiasSlugRoute: typeof GuiasSlugRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/guias': {
+      id: '/guias'
+      path: '/guias'
+      fullPath: '/guias'
+      preLoaderRoute: typeof GuiasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guias/$slug': {
+      id: '/guias/$slug'
+      path: '/guias/$slug'
+      fullPath: '/guias/$slug'
+      preLoaderRoute: typeof GuiasSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -945,20 +957,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/comunidad'
       preLoaderRoute: typeof ComunidadRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/guias': {
-      id: '/guias'
-      path: '/guias'
-      fullPath: '/guias'
-      preLoaderRoute: typeof GuiasRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/guias/$slug': {
-      id: '/$slug'
-      path: '/$slug'
-      fullPath: '/guias/$slug'
-      preLoaderRoute: typeof GuiasSlugRouteImport
-      parentRoute: typeof GuiasRoute
     }
     '/cursos-diseno-3d': {
       id: '/cursos-diseno-3d'
@@ -1539,8 +1537,6 @@ const rootRouteChildren: RootRouteChildren = {
   CatalogoPublicoRoute: CatalogoPublicoRoute,
   ClienteRoute: ClienteRoute,
   ComunidadRoute: ComunidadRoute,
-  GuiasRoute: GuiasRouteWithChildren,
-  GuiasRoute: GuiasRouteWithChildren,
   CursosDiseno3dRoute: CursosDiseno3dRoute,
   DirectorioRoute: DirectorioRoute,
   GaleriaJoyasRoute: GaleriaJoyasRoute,
@@ -1556,6 +1552,8 @@ const rootRouteChildren: RootRouteChildren = {
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
+  GuiasRoute: GuiasRoute,
+  GuiasSlugRoute: GuiasSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
