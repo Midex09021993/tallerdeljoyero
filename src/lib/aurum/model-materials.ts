@@ -15,6 +15,31 @@ function getAurumCategoryDiagnostic(){
   }
 }
 
+// Reversible A/B experiment: apply DoubleSide only to meshes/materials explicitly
+// named as prongs or setting components. No geometry, normals, or alloy values change.
+function isAurumProngDoubleSideDiagnostic(mesh:any, materials:any[]){
+  try {
+    if(new URLSearchParams(window.location.search).get("aurumGarrasDoubleSide")!=="on") return false;
+    const labels=[
+      mesh?.name,
+      mesh?.userData?.aurumRhino?.capa,
+      mesh?.userData?.aurumRhino?.layerName,
+      mesh?.userData?.attributes?.layerName,
+      mesh?.userData?.attributes?.LayerName,
+      ...materials.flatMap((material:any)=>[
+        material?.name,
+        material?.userData?.materialName,
+        material?.userData?.originalMaterialName,
+      ]),
+    ].filter((value:any)=>typeof value==="string"&&value.trim())
+      .join(" ").toLowerCase().normalize("NFD").replace(/[\\u0300-\\u036f]/g,"");
+    const key=labels.replace(/[^a-z0-9]+/g,"");
+    return ["setting","prong","claw","garra","garras","uneta","unetas","montura"].some(token=>key.includes(token));
+  } catch {
+    return false;
+  }
+}
+
 function diagnosticMaterial(category:string){
   const colors:{[key:string]:number}={metal:0x00ff00,gema:0x0088ff,otro:0xff00ff};
   const m=new THREE.MeshStandardMaterial({
@@ -159,6 +184,7 @@ export function applyAurumInitialModelMaterials(
       // Only source-material names that explicitly identify green gold or white
       // gold override the uniform first-load silver fallback.
       const sourceMaterials=Array.isArray(x.material)?x.material:[x.material];
+      const diagnosticDoubleSide=isAurumProngDoubleSideDiagnostic(x,sourceMaterials);
       const resolveInitialMetal=(source:any,mesh:any)=>{
         // Alloy identity may be stored on the imported material, mesh, or CAD
         // layer. Inspect all explicit labels so a generic material name does
@@ -206,10 +232,12 @@ export function applyAurumInitialModelMaterials(
         const coatScale=options.presentation?.metalClearcoatScale??1;
         if(Number.isFinite(envScale))mat.envMapIntensity=Math.max(0,(mat.envMapIntensity??1)*envScale);
         if(Number.isFinite(coatScale))mat.clearcoat=Math.max(0,(mat.clearcoat??0)*coatScale);
+        if(diagnosticDoubleSide)mat.side=THREE.DoubleSide;
         mat.userData={
           ...(mat.userData??{}),
           aurumSourceMetalMaterial:String(source?.name??""),
           aurumInitialMetalProfile:String(metal.id),
+          ...(diagnosticDoubleSide?{aurumProngDoubleSideDiagnostic:true}:{}),
         };
         mat.needsUpdate=true;
         return mat;
