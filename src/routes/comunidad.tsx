@@ -3,6 +3,7 @@ import { ArrowRight, Gem, GraduationCap, Store, UsersRound } from "lucide-react"
 
 export const Route = createFileRoute("/comunidad")({
   head: () => ({
+    links: [{ rel: "canonical", href: "https://www.tallerdeljoyero.com/comunidad" }],
     meta: [
       { title: "Comunidad joyera | AURUM LAB" },
       { name: "description", content: "Conecta con talleres, joyerías y propuestas formativas de la comunidad de Taller del Joyero. Explora el directorio, la tienda 3D y los cursos de formación." },
