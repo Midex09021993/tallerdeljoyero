@@ -5,7 +5,7 @@ export const Route = createFileRoute("/guias")({
   head: () => ({
     meta: [
       { title: "Guías técnicas de joyería | Taller del Joyero · AURUM LAB" },
-      { name: "description", content: "Guías técnicas de joyería: aleaciones de oro, peso desde modelos 3D, distribución del taller e impresión 3D para fabricación de joyas." },
+      { name: "description", content: "Guías técnicas de joyería sobre aleaciones de oro, peso de joyas desde modelos 3D, distribución del taller, impresión 3D y preparación de cilindros para fundición." },
       { name: "robots", content: "index, follow, max-image-preview:large" },
       { property: "og:title", content: "Guías técnicas de joyería | AURUM LAB" },
       { property: "og:description", content: "Conocimiento técnico aplicado al trabajo diario de los talleres de joyería." },
@@ -26,6 +26,7 @@ const guias = [
     icon: Gem,
     lectura: "6 min de lectura",
     herramienta: "Calculadora de aleación de oro",
+    herramientaHref: "/herramientas-publicas/aleacion-oro",
   },
   {
     slug: "calcular-peso-joya-modelo-3d",
@@ -35,6 +36,7 @@ const guias = [
     icon: Layers3,
     lectura: "5 min de lectura",
     herramienta: "Visualizador y calculadora de peso 3D",
+    herramientaHref: "/herramientas-publicas/peso-joya-3d",
   },
   {
     slug: "distribucion-taller-joyeria",
@@ -112,7 +114,13 @@ function GuiasPage() {
                 <p className="mt-3 flex-1 text-sm leading-6 text-slate-600">{guia.descripcion}</p>
                 <div className="mt-5 rounded-xl border border-slate-100 bg-slate-50 p-3">
                   <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Herramienta relacionada</p>
-                  <p className="mt-1 text-xs font-semibold text-slate-700">{guia.herramienta}</p>
+                  {"herramientaHref" in guia ? (
+                    <Link to={guia.herramientaHref} className="mt-1 inline-flex items-center gap-1 text-left text-xs font-semibold text-[#876500] hover:text-[#5f4900]">
+                      {guia.herramienta} <ArrowRight className="size-3.5" />
+                    </Link>
+                  ) : (
+                    <p className="mt-1 text-xs font-semibold text-slate-700">{guia.herramienta}</p>
+                  )}
                 </div>
                 <Link to="/guias/$slug" params={{ slug: guia.slug }} className="mt-5 inline-flex min-h-10 items-center gap-2 text-sm font-semibold text-[#876500] hover:text-[#5f4900]">Leer guía completa <ArrowRight className="size-4" /></Link>
               </article>
