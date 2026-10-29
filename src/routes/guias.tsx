@@ -5,7 +5,7 @@ export const Route = createFileRoute("/guias")({
   head: () => ({
     meta: [
       { title: "Guías técnicas de joyería | Taller del Joyero · AURUM LAB" },
-      { name: "description", content: "Guías prácticas para joyeros con fórmulas, ejemplos y herramientas: aleaciones de oro y estimación del peso de joyas desde modelos 3D." },
+      { name: "description", content: "Guías técnicas de joyería: aleaciones de oro, peso desde modelos 3D, distribución del taller e impresión 3D para fabricación de joyas." },
       { name: "robots", content: "index, follow, max-image-preview:large" },
       { property: "og:title", content: "Guías técnicas de joyería | AURUM LAB" },
       { property: "og:description", content: "Conocimiento técnico aplicado al trabajo diario de los talleres de joyería." },
@@ -35,6 +35,24 @@ const guias = [
     icon: Layers3,
     lectura: "5 min de lectura",
     herramienta: "Visualizador y calculadora de peso 3D",
+  },
+  {
+    slug: "distribucion-taller-joyeria",
+    categoria: "Diseño del taller",
+    titulo: "Cómo organizar la distribución de un taller de joyería",
+    descripcion: "Planifica las zonas de diseño, producción digital, fundición y acabado con criterios de circulación, instalación y seguridad.",
+    icon: Layers3,
+    lectura: "7 min de lectura",
+    herramienta: "Guía de distribución del taller",
+  },
+  {
+    slug: "impresion-3d-joyeria",
+    categoria: "Diseño y fabricación",
+    titulo: "Impresión 3D para joyería: del archivo a la pieza",
+    descripcion: "Conoce las etapas de preparación del modelo, impresión, lavado, curado y revisión antes de la fundición.",
+    icon: Gem,
+    lectura: "8 min de lectura",
+    herramienta: "Asistente de impresión 3D",
   },
 ];
 
