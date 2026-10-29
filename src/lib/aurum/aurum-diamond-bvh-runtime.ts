@@ -152,11 +152,10 @@ export async function createAurumDiamondBvhRuntime(options: {
       }
 
       const isEmerald = family === "esmeralda";
-      // Isolated experiment: reuse emerald BVH optical settings on Diamante VS only.
-      // It is opt-in by URL and never changes the catalog material or other diamonds.
-      const isVsUsingEmeraldBvh = activeGemId === "diamante_vs"
-        && typeof window !== "undefined"
-        && new URLSearchParams(window.location.search).get("aurumBvhVsEmerald") === "1";
+      // Dedicated copy of the emerald BVH optical profile for Diamante VS.
+      // Keep it isolated to this catalog variant; natural and inclusion diamonds
+      // retain the original diamond BVH optics and emerald materials are unchanged.
+      const isVsUsingEmeraldBvh = activeGemId === "diamante_vs";
       const useEmeraldBvhOptics = isEmerald || isVsUsingEmeraldBvh;
       const isRuby = family === "rubí" || family === "rubi";
       const isSapphire = family === "zafiro" || family === "sapphire";
