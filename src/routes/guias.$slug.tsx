@@ -164,6 +164,8 @@ function GuiaTecnicaPage() {
             <h3>¿El resultado de la calculadora es el peso final de la pieza?</h3>
             <p>No necesariamente. Es una estimación teórica del modelo y no contempla automáticamente todas las pérdidas de fabricación, los canales de colada, el acabado ni el peso de piedras y otros componentes.</p>
             <p>Si también necesitas estimar la composición de una aleación, consulta nuestra <a href="/guias/calcular-aleaciones-oro-18k-14k-9k">guía para calcular aleaciones de oro de 18K, 14K y 9K</a> y verifica los datos antes de preparar el lote.</p>
+            <h3>¿Por qué puede diferir el peso calculado del peso de la pieza terminada?</h3>
+            <p>El cálculo se basa en el volumen representado por el modelo y en la densidad seleccionada. La aleación real, las modificaciones del diseño, las piedras, los componentes añadidos y las etapas de fabricación pueden cambiar el resultado. Compara siempre la estimación con las condiciones reales de tu proceso.</p>
           </div>
           <section className="mt-10 rounded-2xl border border-[#eadca7] bg-gradient-to-br from-[#fff9df] to-white p-6 sm:p-8">
             <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#876500]">Llévalo a la práctica</p>
@@ -383,6 +385,8 @@ function GuiaTecnicaPage() {
             <p>No. La selección de la liga afecta el color, la dureza, la fundibilidad y otras propiedades. Utiliza una formulación adecuada para la ley, el color y el proceso previstos.</p>
             <h3>¿La calculadora garantiza la ley final después de fundir?</h3>
             <p>No. Una calculadora proporciona una estimación a partir de los datos ingresados. La ley efectiva depende de los materiales reales, el proceso y las pérdidas o contaminaciones; verifica la pieza o el lote con un método apropiado cuando corresponda.</p>
+            <h3>¿Cómo estimo el peso de la joya antes de calcular la aleación?</h3>
+            <p>Si ya tienes un diseño tridimensional, puedes estimar primero su masa teórica a partir del volumen y de la densidad del metal. Consulta también nuestra <a href="/guias/calcular-peso-joya-modelo-3d">guía para estimar el peso de una joya desde un modelo 3D</a>. Esa estimación ayuda a planificar material, pero no reemplaza la verificación de la ley ni el pesaje final.</p>
           </section>
         </div>
 
