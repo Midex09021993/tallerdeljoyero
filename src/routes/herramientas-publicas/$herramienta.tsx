@@ -119,6 +119,14 @@ function HerramientaPublicaPage() {
           </div>
         </section>
 
+        <section className="mt-8 rounded-2xl border border-[#d8bd7b]/20 bg-[#181915] p-5 sm:flex sm:items-center sm:justify-between sm:gap-6">
+          <div>
+            <h2 className="font-display text-xl text-[#f5f0e7]">Aprende más sobre técnicas de joyería</h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-white/60">Consulta nuestras guías técnicas para entender los cálculos y aplicarlos con mayor seguridad en tu taller.</p>
+          </div>
+          <Link to="/guias" className="mt-4 inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-full border border-[#d8bd7b]/40 px-5 py-3 text-sm font-semibold text-[#d8bd7b] transition hover:bg-[#d8bd7b]/10 sm:mt-0">Ver guías técnicas <ArrowLeft className="size-4 rotate-180" /></Link>
+        </section>
+
         <footer className="mt-8 border-t border-white/10 py-6 text-xs leading-6 text-white/40">Los resultados son orientativos y dependen de los datos introducidos y de la configuración de cada herramienta. Verifica las medidas y los cálculos antes de fabricar una pieza.</footer>
       </div>
     </main>
