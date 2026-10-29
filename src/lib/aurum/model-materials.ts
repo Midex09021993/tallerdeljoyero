@@ -15,26 +15,11 @@ function getAurumCategoryDiagnostic(){
   }
 }
 
-// Reversible A/B experiment: apply DoubleSide only to meshes/materials explicitly
-// named as prongs or setting components. No geometry, normals, or alloy values change.
-function isAurumProngDoubleSideDiagnostic(mesh:any, materials:any[]){
+// Reversible A/B experiment: apply DoubleSide to every mesh classified as metal.
+// Activated only by an explicit URL flag; gemstones and other objects are unchanged.
+function isAurumMetalDoubleSideDiagnostic(){
   try {
-    if(new URLSearchParams(window.location.search).get("aurumGarrasDoubleSide")!=="on") return false;
-    const labels=[
-      mesh?.name,
-      mesh?.userData?.aurumRhino?.capa,
-      mesh?.userData?.aurumRhino?.layerName,
-      mesh?.userData?.attributes?.layerName,
-      mesh?.userData?.attributes?.LayerName,
-      ...materials.flatMap((material:any)=>[
-        material?.name,
-        material?.userData?.materialName,
-        material?.userData?.originalMaterialName,
-      ]),
-    ].filter((value:any)=>typeof value==="string"&&value.trim())
-      .join(" ").toLowerCase().normalize("NFD").replace(/[\\u0300-\\u036f]/g,"");
-    const key=labels.replace(/[^a-z0-9]+/g,"");
-    return ["setting","prong","claw","garra","garras","uneta","unetas","montura"].some(token=>key.includes(token));
+    return new URLSearchParams(window.location.search).get("aurumMetalDoubleSide")==="on";
   } catch {
     return false;
   }
@@ -184,7 +169,7 @@ export function applyAurumInitialModelMaterials(
       // Only source-material names that explicitly identify green gold or white
       // gold override the uniform first-load silver fallback.
       const sourceMaterials=Array.isArray(x.material)?x.material:[x.material];
-      const diagnosticDoubleSide=isAurumProngDoubleSideDiagnostic(x,sourceMaterials);
+      const diagnosticDoubleSide=isAurumMetalDoubleSideDiagnostic();
       const resolveInitialMetal=(source:any,mesh:any)=>{
         // Alloy identity may be stored on the imported material, mesh, or CAD
         // layer. Inspect all explicit labels so a generic material name does
