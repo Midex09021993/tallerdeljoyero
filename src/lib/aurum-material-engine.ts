@@ -135,7 +135,6 @@ export const applyAurumMetal=(material:any,preset:AurumMetalPreset)=>{
   // Disable roughness maps as well; otherwise procedural texture would reintroduce
   // micro-roughness and make this test misleading.
   const requestedRoughness=Math.max(0,Math.min(1,Number(preset.roughness??.12)));
-  const baseRoughness=0;
   material.roughness=0;
   material.roughnessMap=null;
 
