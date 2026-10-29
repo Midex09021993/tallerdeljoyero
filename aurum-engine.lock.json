@@ -46,7 +46,7 @@
     "src/lib/aurum/optical-response.ts": "c66fd2c5b2e12ac7eea898a794450f2ab595f7de5ed143e6330fec2b2d0a98d7",
     "src/lib/aurum/path-traced-capture.ts": "f5a2a9dd79ae0defd006a397ae2f79692ee581ec1a12873bc8b29fe00c97ad01",
     "src/lib/aurum/path-tracer-final.ts": "6c1013603d6f4d32031086e54f06f8f8084d8bf0555f85f80c2a296865f580a9",
-    "src/lib/aurum/post.ts": "63e9c4655e9c81485080e41b2c0388e447cd2a02920a4053ce3dbc04ac19c75b",
+    "src/lib/aurum/post.ts": "66f2ab84dd80d856993f293a0c1fbfc3476607c7e97d507d6eb9e96c95e231c8",
     "src/lib/aurum/runtime-budget.ts": "98d726dd1fe15b25590d50878f60d38e7c1e1fcf9b03f99a769cbf13482cdbb6",
     "src/lib/aurum/scene.ts": "b724463240cc5f81a24a9ebbee4cf5b29620aced08b9f20662b31c5d90ca2d0f",
     "src/lib/aurum/scintillation.ts": "ff9f00830454dab9d3edbbe44ca9e186c6ed896c69e9f5bcb781e7247b7ebc8e",
