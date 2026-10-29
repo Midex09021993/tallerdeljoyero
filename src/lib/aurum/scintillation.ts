@@ -501,7 +501,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // Selective real-time glint response for very bright diamond facets.
         // This is a lightweight shader highlight, not a screen-space bloom pass.
         float ijGemGlint=smoothstep(1.8,2.8,ijHighlightPeak)*clamp(ijFresnel*2.0,0.0,1.0);
-        gl_FragColor.rgb+=gl_FragColor.rgb*ijGemGlint*0.045;\n        ` : ``}
+        gl_FragColor.rgb+=gl_FragColor.rgb*ijGemGlint*0.030;\n        ` : ``}
         #endif
         #endif
       // Use the physical surface normal and view direction already present
@@ -522,7 +522,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // Keep scintillation energy bounded: additive white flashes can clip
         // the crown facets in bright studio environments. Modulate existing
         // reflected energy instead of adding an unbounded white contribution.
-        gl_FragColor.rgb *= 1.0 + aurumFlash * 0.12;
+        gl_FragColor.rgb *= 1.0 + aurumFlash * 0.08;
 
         // Slightly broaden the facet-response transition to reduce abrupt contrast changes during orbit.
         float aurumFacetContrast=smoothstep(0.62,0.94,aurumFacing);
@@ -539,7 +539,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // gemstone surface, not a screen-space bloom or an emissive shell.
         float aurumAngelRim=pow(1.0-clamp(abs(dot(aurumN,aurumV)),0.0,1.0),3.2);
         float aurumAngelFacetGate=smoothstep(0.08,0.72,aurumFacetContrast);
-        gl_FragColor.rgb+=vec3(0.72,0.84,1.0)*aurumAngelRim*aurumAngelFacetGate*0.055;
+        gl_FragColor.rgb+=vec3(0.72,0.84,1.0)*aurumAngelRim*aurumAngelFacetGate*0.065;
         ` : ""}
 
         if(aurumPhenomenonStrength>0.0){
