@@ -85,6 +85,18 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
   // multi-bounce shader is opt-in. Physical MeshPhysicalMaterial transmission
   // remains the default path for every gemstone.
   const ijewelEnabled=Boolean(material.userData?.aurumIJEWELActive) && family==="Diamante";
+  // Reduce the experimental virtual-facet energy for standard diamond profiles
+  // to stabilize small stones during orbit. Keep the blue-diamond profile unchanged.
+  const diamondPresetId=String(
+    material.userData?.aurumDiamondPresetId ??
+    material.userData?.aurumDiamondMaterial?.presetId ??
+    ijewel?.presetId ??
+    ""
+  ).toLocaleLowerCase();
+  const isBlueDiamondProfile=diamondPresetId.includes("diamante_azul")
+    || diamondPresetId.includes("blue_diamond")
+    || diamondPresetId==="azul";
+  const virtualFacetWeight=isBlueDiamondProfile?0.10:0.06;
   material.userData={
     ...(material.userData??{}),
     aurumDynamicScintillation:{
@@ -426,7 +438,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
           vec3 ijVirtualWorldB=inverseTransformDirection(ijVirtualDirB,viewMatrix);
           vec3 ijVirtualEnvA=textureCubeUV(envMap,envMapRotation*ijVirtualWorldA,0.0).rgb;
           vec3 ijVirtualEnvB=textureCubeUV(envMap,envMapRotation*ijVirtualWorldB,0.0).rgb;
-          ijAccum+=(ijVirtualEnvA+ijVirtualEnvB)*(0.10*ijDepth);
+          ijAccum+=(ijVirtualEnvA+ijVirtualEnvB)*(${virtualFacetWeight.toFixed(2)}*ijDepth);
         }
         // The custom internal-ray samples bypass MeshPhysicalMaterial's
         // envMapIntensity uniform. Apply a restrained diamond-only energy lift
