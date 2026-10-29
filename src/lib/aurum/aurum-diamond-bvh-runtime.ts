@@ -152,6 +152,12 @@ export async function createAurumDiamondBvhRuntime(options: {
       }
 
       const isEmerald = family === "esmeralda";
+      // Isolated experiment: reuse emerald BVH optical settings on Diamante VS only.
+      // It is opt-in by URL and never changes the catalog material or other diamonds.
+      const isVsUsingEmeraldBvh = activeGemId === "diamante_vs"
+        && typeof window !== "undefined"
+        && new URLSearchParams(window.location.search).get("aurumBvhVsEmerald") === "1";
+      const useEmeraldBvhOptics = isEmerald || isVsUsingEmeraldBvh;
       const isRuby = family === "rubí" || family === "rubi";
       const isSapphire = family === "zafiro" || family === "sapphire";
       const isAmethyst = family === "amatista" || family === "amethyst";
@@ -177,7 +183,7 @@ export async function createAurumDiamondBvhRuntime(options: {
       const isQuartz = family === "cuarzo" || family === "quartz" || family === "ametrino" || family === "ametrine";
       const isOtherTourmaline = family === "turmalina" || family === "tourmaline";
       try {
-        const emeraldProfile = isEmerald ? resolveAurumEmeraldBvhProfile(materials[0]) : null;
+        const emeraldProfile = useEmeraldBvhOptics ? resolveAurumEmeraldBvhProfile(materials[0]) : null;
         const rubyProfile = isRuby ? resolveAurumRubyBvhProfile(materials[0]) : null;
         const sapphireProfile = isSapphire ? resolveAurumSapphireBvhProfile(materials[0]) : null;
         const prepared = prepareAurumDiamondBvhExperiment(packageApi, mesh, {
@@ -187,7 +193,7 @@ export async function createAurumDiamondBvhRuntime(options: {
           // experiment opaque to direct refracted-environment contribution until
           // the shader's optical response is validated; 0.08 visibly risks excess
           // see-through without adding distinct facet structure.
-          transmission: (isEmerald || isRuby || isSapphire)
+          transmission: (useEmeraldBvhOptics || isRuby || isSapphire)
             ? 0
             : (emeraldProfile?.transmission ?? rubyProfile?.transmission ?? sapphireProfile?.transmission ?? (isImperialTopaz ? 0.88 : isParaibaTourmaline ? 0.91 : 0)),
           environmentMap,
@@ -195,15 +201,15 @@ export async function createAurumDiamondBvhRuntime(options: {
           // Keep small secondary diamonds on interactive quality initially;
           // higher bounce counts are reserved for explicit high/final capture.
           quality: options.quality ?? "interactive",
-          environmentIntensity: isEmerald ? 1 : emeraldProfile?.environmentIntensity ?? rubyProfile?.environmentIntensity ?? sapphireProfile?.environmentIntensity ?? (isEmerald ? 1.5 : isRuby ? 1.0 : isSapphire ? 1.2 : isAmethyst ? 1.35 : isAquamarine ? 1.25 : isCitrine ? 1.2 : isBlueTopaz ? 1.25 : isImperialTopaz ? 1.22 : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 1.55 : 1.3) : isTanzanite ? 1.25 : isMoissanite ? 1.35 : isZircon ? 1.2 : isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 1.18 : 1.14),
+          environmentIntensity: useEmeraldBvhOptics ? (isVsUsingEmeraldBvh ? 0.82 : 1) : emeraldProfile?.environmentIntensity ?? rubyProfile?.environmentIntensity ?? sapphireProfile?.environmentIntensity ?? (isEmerald ? 1.5 : isRuby ? 1.0 : isSapphire ? 1.2 : isAmethyst ? 1.35 : isAquamarine ? 1.25 : isCitrine ? 1.2 : isBlueTopaz ? 1.25 : isImperialTopaz ? 1.22 : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 1.55 : 1.3) : isTanzanite ? 1.25 : isMoissanite ? 1.35 : isZircon ? 1.2 : isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 1.18 : 1.14),
           // Emerald test: disable dispersion entirely while isolating BVH speckles.
           // The green color is authored by the profile; chromatic splitting is not
           // required for emerald and may amplify unstable ray/intersection artifacts.
-          dispersion: isEmerald ? 0 : (emeraldProfile?.dispersion ?? rubyProfile?.dispersion ?? sapphireProfile?.dispersion ?? (family === "diamante" ? 0.004 : isRuby ? 0.001 : isSapphire ? 0.001 : isAmethyst || isAquamarine || isCitrine || isBlueTopaz || isImperialTopaz || isParaibaTourmaline || isTanzanite || isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 0.0002 : isZircon ? 0.001 : isMoissanite ? 0.009 : 0.01)),
-          ior: emeraldProfile?.ior ?? rubyProfile?.ior ?? sapphireProfile?.ior ?? (isEmerald ? 1.58 : isRuby ? 1.762 : isSapphire ? 1.762 : isAmethyst ? 1.55 : isAquamarine ? 1.577 : isCitrine || isQuartz ? 1.544 : isBlueTopaz || isImperialTopaz ? 1.63 : isParaibaTourmaline || isOtherTourmaline ? 1.62 : isTanzanite ? 1.695 : isMoissanite ? 2.65 : isSpinel ? 1.718 : isGarnet ? 1.78 : isPeridot ? 1.65 : isMorganite ? 1.58 : isZircon ? 1.92 : isChrysoberyl ? 1.75 : 1.55),
+          dispersion: useEmeraldBvhOptics ? 0 : (emeraldProfile?.dispersion ?? rubyProfile?.dispersion ?? sapphireProfile?.dispersion ?? (family === "diamante" ? 0.004 : isRuby ? 0.001 : isSapphire ? 0.001 : isAmethyst || isAquamarine || isCitrine || isBlueTopaz || isImperialTopaz || isParaibaTourmaline || isTanzanite || isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 0.0002 : isZircon ? 0.001 : isMoissanite ? 0.009 : 0.01)),
+          ior: isVsUsingEmeraldBvh ? 1.58 : emeraldProfile?.ior ?? rubyProfile?.ior ?? sapphireProfile?.ior ?? (isEmerald ? 1.58 : isRuby ? 1.762 : isSapphire ? 1.762 : isAmethyst ? 1.55 : isAquamarine ? 1.577 : isCitrine || isQuartz ? 1.544 : isBlueTopaz || isImperialTopaz ? 1.63 : isParaibaTourmaline || isOtherTourmaline ? 1.62 : isTanzanite ? 1.695 : isMoissanite ? 2.65 : isSpinel ? 1.718 : isGarnet ? 1.78 : isPeridot ? 1.65 : isMorganite ? 1.58 : isZircon ? 1.92 : isChrysoberyl ? 1.75 : 1.55),
           // Match the catalog's iJewel inclusion reference (absorption 1.6)
           // only for this variant; other emerald profiles remain untouched.
-          absorption: isEmerald
+          absorption: useEmeraldBvhOptics
             ? (activeGemId === "esmeralda_2" ? 1.8 : activeGemId === "esmeralda_1" || activeGemId === "esmeralda_3" || activeGemId === "esmeralda_inclusiones" ? 1.6 : 1.35)
             : emeraldProfile?.absorption ?? rubyProfile?.absorption ?? sapphireProfile?.absorption ?? (isEmerald ? 0.45 : isRuby ? 1.15 : isSapphire ? 0.85 : isAmethyst ? 0.62 : isAquamarine ? 0.45 : isCitrine ? 0.5 : isBlueTopaz ? 0.42 : isImperialTopaz ? 0.48 : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 0.22 : 0.38) : isTanzanite ? 0.42 : isMoissanite ? 0.18 : isSpinel || isGarnet || isPeridot || isMorganite || isZircon || isChrysoberyl || isQuartz || isOtherTourmaline ? 0.45 : 1),
           color: isEmerald
