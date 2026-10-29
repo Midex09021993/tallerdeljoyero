@@ -633,43 +633,43 @@ export function VisorPesoJoyeria({ compacto = false, archivoInicial = null, arch
             {metal.nombre} · {num(densidad, 2)} g/cm³
           </span>
         </div>
-        <div className="space-y-4">
+        <div className="space-y-3">
           {([
             { titulo: "Oro", ids: ["oro18a", "oro18b", "oro18r", "oro14"] },
             { titulo: "Plata y aleaciones de plata", ids: ["plata925", "plata950", "plata970", "plataPd900"] },
             { titulo: "Metales del grupo del platino", ids: ["platino"] },
           ] as const).map((familia) => (
-            <section key={familia.titulo} className="space-y-2">
-              <h3 className="px-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{familia.titulo}</h3>
-              <div className="space-y-2">
+            <section key={familia.titulo} className="space-y-1.5">
+              <h3 className="px-1 text-[9px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{familia.titulo}</h3>
+              <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
                 {METALES.filter((m) => (familia.ids as readonly string[]).includes(m.id)).map((m) => {
-            const activo = m.id === metalId;
-            return (
-              <button
-                key={m.id}
-                type="button"
-                onClick={() => setMetalId(m.id)}
-                aria-pressed={activo}
-                className={`flex min-h-12 w-full items-center gap-3 rounded-2xl border px-3 py-2.5 text-left text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 ${
-                  activo
-                    ? "border-gold bg-accent text-foreground shadow-[0_4px_14px_rgba(180,140,50,0.08)]"
-                    : "border-input bg-background text-foreground hover:border-gold/50 hover:bg-accent/30"
-                }`}
-              >
-                <span
-                  className="size-3.5 shrink-0 rounded-full border border-black/10 shadow-sm"
-                  style={{
-                    background: `#${m.color.toString(16).padStart(6, "0")}`,
-                  }}
-                  aria-hidden="true"
-                />
-                <span className="min-w-0 flex-1 truncate">{m.nombre}</span>
-                {activo ? (
-                  <span className="shrink-0 text-[9px] font-bold uppercase tracking-[0.14em] text-gold-deep">Activo</span>
-                ) : null}
-              </button>
-            );
-          })}
+                  const activo = m.id === metalId;
+                  return (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => setMetalId(m.id)}
+                      aria-pressed={activo}
+                      className={`flex min-h-9 w-full items-center gap-2 rounded-xl border px-2.5 py-1.5 text-left text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 ${
+                        activo
+                          ? "border-gold bg-accent text-foreground shadow-[0_3px_10px_rgba(180,140,50,0.08)]"
+                          : "border-input bg-background text-foreground hover:border-gold/50 hover:bg-accent/30"
+                      }`}
+                    >
+                      <span
+                        className="size-3 shrink-0 rounded-full border border-black/10 shadow-sm"
+                        style={{
+                          background: `#${m.color.toString(16).padStart(6, "0")}`,
+                        }}
+                        aria-hidden="true"
+                      />
+                      <span className="min-w-0 flex-1 truncate">{m.nombre}</span>
+                      {activo ? (
+                        <span className="shrink-0 text-[8px] font-bold uppercase tracking-[0.12em] text-gold-deep">Activo</span>
+                      ) : null}
+                    </button>
+                  );
+                })}
               </div>
             </section>
           ))}
