@@ -5,12 +5,13 @@ const slugGuia = "calcular-aleaciones-oro-18k-14k-9k";
 const slugPeso = "calcular-peso-joya-modelo-3d";
 const slugPlano = "distribucion-taller-joyeria";
 const slugImpresion = "impresion-3d-joyeria";
+const slugFundicion = "fundicion-joyeria-revestimiento-omni-cast";
 
 export const Route = createFileRoute("/guias/$slug")({
   head: ({ params }) => {
-    const valida = [slugGuia, slugPeso, slugPlano, slugImpresion].includes(params.slug);
-    const titulo = params.slug === slugPeso ? "Cómo estimar el peso de una joya a partir de un modelo 3D" : params.slug === slugPlano ? "Cómo organizar la distribución de un taller de joyería" : params.slug === slugImpresion ? "Impresión 3D para joyería: del archivo a la pieza" : "Cómo calcular aleaciones de oro de 18K, 14K y 9K";
-    const descripcion = params.slug === slugPeso ? "Aprende a preparar un modelo 3D y estimar el peso teórico de una joya según su volumen, unidades y densidad del metal." : params.slug === slugPlano ? "Criterios prácticos para distribuir zonas de diseño, impresión, fundición y acabado en un taller de joyería." : params.slug === slugImpresion ? "Etapas de impresión 3D para joyería, desde la preparación del archivo hasta el posprocesado y la fundición." : "Aprende a calcular el oro fino y el metal de liga en aleaciones de 18K, 14K y 9K, con fórmulas y ejemplos prácticos para joyeros.";
+    const valida = [slugGuia, slugPeso, slugPlano, slugImpresion, slugFundicion].includes(params.slug);
+    const titulo = params.slug === slugPeso ? "Cómo estimar el peso de una joya a partir de un modelo 3D" : params.slug === slugPlano ? "Cómo organizar la distribución de un taller de joyería" : params.slug === slugImpresion ? "Impresión 3D para joyería: del archivo a la pieza" : params.slug === slugFundicion ? "Fundición de joyería: guía del revestimiento y preparación del cilindro" : "Cómo calcular aleaciones de oro de 18K, 14K y 9K";
+    const descripcion = params.slug === slugPeso ? "Aprende a preparar un modelo 3D y estimar el peso teórico de una joya según su volumen, unidades y densidad del metal." : params.slug === slugPlano ? "Criterios prácticos para distribuir zonas de diseño, impresión, fundición y acabado en un taller de joyería." : params.slug === slugImpresion ? "Etapas de impresión 3D para joyería, desde la preparación del archivo hasta el posprocesado y la fundición." : params.slug === slugFundicion ? "Guía práctica en español para entender el revestimiento de fundición, la proporción agua/polvo, el calentamiento del cilindro y las referencias del manual Whip Mix Omni-Cast." : "Aprende a calcular el oro fino y el metal de liga en aleaciones de 18K, 14K y 9K, con fórmulas y ejemplos prácticos para joyeros.";
     return {
       meta: [
         { title: valida ? `${titulo} | Guías técnicas AURUM LAB` : "Guía no encontrada | AURUM LAB" },
@@ -29,7 +30,7 @@ export const Route = createFileRoute("/guias/$slug")({
 
 function GuiaTecnicaPage() {
   const { slug } = Route.useParams();
-  if (![slugGuia, slugPeso, slugPlano, slugImpresion].includes(slug)) {
+  if (![slugGuia, slugPeso, slugPlano, slugImpresion, slugFundicion].includes(slug)) {
     return (
       <main className="grid min-h-screen place-items-center bg-[#fffefa] px-5 text-center text-[#17232d]">
         <div className="max-w-lg">
@@ -37,6 +38,79 @@ function GuiaTecnicaPage() {
           <p className="mt-3 text-sm leading-6 text-slate-600">Esta guía todavía no está publicada o el enlace es incorrecto.</p>
           <Link to="/guias" className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#17232d] px-5 py-3 text-sm font-semibold text-white"><ArrowLeft className="size-4" /> Volver a las guías</Link>
         </div>
+      </main>
+    );
+  }
+
+  if (slug === slugFundicion) {
+    return (
+      <main className="min-h-screen bg-[#fffefa] text-[#17232d]">
+        <header className="border-b border-slate-200 bg-white">
+          <div className="mx-auto flex min-h-[68px] max-w-5xl items-center justify-between gap-4 px-5 sm:px-8">
+            <Link to="/guias" className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-slate-600 hover:text-[#987400]"><ArrowLeft className="size-4" /> Todas las guías</Link>
+            <Link to="/herramientas-publicas/yeso-agua" className="rounded-full bg-[#17232d] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#293b49]">Calculadora de yeso y agua</Link>
+          </div>
+        </header>
+        <article className="mx-auto max-w-4xl px-5 py-10 sm:px-8 sm:py-16">
+          <nav aria-label="Ruta de navegación" className="text-xs text-slate-500"><Link to="/guias" className="hover:text-[#876500]">Guías técnicas</Link><span aria-hidden="true"> / </span><span>Fundición y revestimientos</span></nav>
+          <header className="mt-6 border-b border-slate-200 pb-8">
+            <p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#987400]">Fundición y materiales · Guía técnica</p>
+            <h1 className="mt-3 max-w-3xl text-3xl font-extrabold leading-tight tracking-tight sm:text-5xl">Fundición de joyería: guía del revestimiento y preparación del cilindro</h1>
+            <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600">Una preparación consistente del cilindro empieza por medir correctamente, seguir la ficha del revestimiento y coordinar la mezcla, el fraguado y el ciclo de horno. Esta guía incorpora información legible de la ficha de producto Whip Mix Omni-Cast como referencia de fabricante, sin convertirla en una receta universal.</p>
+          </header>
+          <div className="prose prose-slate mt-8 max-w-none prose-headings:tracking-tight prose-a:text-[#876500]">
+            <h2>1. Qué aporta la ficha de Omni-Cast</h2>
+            <p>La ficha de Whip Mix describe Omni-Cast como un revestimiento para fundición de joyería y presenta referencias de proporción de mezcla, procedimiento de mezclado y temperaturas para distintos metales. También indica un uso para temperaturas de colado de hasta 1.350 °C. Ese dato corresponde al producto descrito en la ficha; no significa que todas las aleaciones deban colarse a esa temperatura.</p>
+            <p>El documento incluye una tabla de temperaturas del metal y del cilindro para distintas aleaciones. Antes de usar un valor concreto, comprueba que coincida con la aleación exacta, el equipo y la versión completa de las instrucciones del fabricante. No extrapoles un valor de oro amarillo a oro blanco ni de una ley a otra.</p>
+            <h2>2. Proporción de mezcla: sigue el sistema del producto</h2>
+            <p>La ficha de Omni-Cast presenta relaciones de agua respecto al polvo, mientras que la calculadora pública de Taller del Joyero conserva su propio sistema de proporciones 38/62, 40/60 y 42/58. Son formas de expresar la mezcla distintas y no deben intercambiarse automáticamente.</p>
+            <p><strong>Importante:</strong> esta guía no cambia la calculadora ni recomienda sustituir sus proporciones. Para preparar Omni-Cast, utiliza la relación agua/polvo que figure en la ficha técnica completa de ese producto y mide con precisión el agua y el polvo. No apliques la proporción de un revestimiento a otro sin autorización del fabricante.</p>
+            <h2>3. Calcula primero el volumen del cilindro</h2>
+            <p>La cantidad de revestimiento depende del volumen que debe llenarse y de las características del cilindro. Mide el diámetro interior y la altura útil con el cilindro real; no te bases únicamente en una medida nominal si el recipiente tiene paredes, base u otra geometría que reduzca el volumen disponible.</p>
+            <p>La calculadora de yeso y agua de AURUM LAB estima la mezcla a partir del diámetro, la altura y el tipo de tarro seleccionado. Sus resultados dependen de la configuración actual y deben tratarse como estimaciones para las proporciones que ofrece la herramienta, no como una dosificación validada para Omni-Cast.</p>
+            <h2>4. Mezclado y llenado del cilindro</h2>
+            <ol>
+              <li>Confirma el nombre exacto del revestimiento y consulta su ficha técnica vigente.</li>
+              <li>Pesa el polvo y mide el agua con instrumentos adecuados; respeta la relación indicada por el fabricante.</li>
+              <li>Sigue el orden de incorporación, el tiempo de mezcla y las condiciones de vacío indicados para el producto y el equipo.</li>
+              <li>Vierte de forma controlada y sigue las instrucciones para llenar y desgasificar el cilindro.</li>
+              <li>Respeta el tiempo de fraguado antes de iniciar el ciclo de calentamiento.</li>
+            </ol>
+            <p>Los tiempos de trabajo, mezclado, vacío y fraguado dependen del revestimiento, la temperatura ambiente, la cantidad preparada y el equipo. No uses tiempos de una ficha como estándar para otros productos.</p>
+            <h2>5. Calentamiento del cilindro y temperatura de colado</h2>
+            <p>La temperatura del cilindro al momento del colado y la temperatura del metal son parámetros diferentes. La tabla de Omni-Cast ofrece referencias por metal o aleación; el programa de calentamiento debe consultarse por separado y respetar las instrucciones del sistema de revestimiento, del patrón y del horno.</p>
+            <ul>
+              <li>Identifica la aleación exacta y consulta su recomendación de colado.</li>
+              <li>Comprueba el tamaño y el número de cilindros, el patrón utilizado y la capacidad del horno.</li>
+              <li>No adoptes una temperatura máxima del producto como temperatura de trabajo para todas las piezas.</li>
+              <li>Si cambias de aleación, revestimiento o resina calcinable, vuelve a validar el ciclo con las fichas de los fabricantes.</li>
+            </ul>
+            <h2>6. Lista de comprobación antes de fundir</h2>
+            <ul>
+              <li>Revestimiento identificado y ficha técnica disponible.</li>
+              <li>Diámetro y altura del cilindro comprobados.</li>
+              <li>Agua y polvo medidos según la proporción específica del producto.</li>
+              <li>Mezclado, vacío y fraguado realizados según las instrucciones aplicables.</li>
+              <li>Ciclo de calentamiento y temperatura de colado confirmados para la aleación real.</li>
+              <li>Ventilación, protección personal y manejo de equipos calientes previstos.</li>
+            </ul>
+            <h2>Preguntas frecuentes</h2>
+            <h3>¿La calculadora de Taller del Joyero está configurada para Omni-Cast?</h3>
+            <p>No. La herramienta conserva sus proporciones y su cálculo actual por medidas del cilindro. Esta guía utiliza el manual de Omni-Cast como material de consulta, sin alterar esa configuración.</p>
+            <h3>¿Puedo usar las temperaturas de Omni-Cast con cualquier revestimiento?</h3>
+            <p>No. Los datos pertenecen a la ficha del producto y no deben extrapolarse a otros revestimientos ni a todas las aleaciones. Consulta las instrucciones correspondientes al producto y al metal que vas a fundir.</p>
+            <h3>¿La temperatura máxima indicada es la temperatura que debo usar siempre?</h3>
+            <p>No. Es un límite de uso anunciado para el producto, no una temperatura única para todos los trabajos. La temperatura concreta depende de la aleación y del procedimiento validado para la pieza.</p>
+            <p>Esta guía es informativa. La ficha de una sola página adjunta no proporciona todos los detalles necesarios para definir un procedimiento completo de fundición; consulta la documentación técnica completa y vigente de Whip Mix antes de trabajar.</p>
+          </div>
+          <section className="mt-10 rounded-2xl border border-[#eadca7] bg-gradient-to-br from-[#fff9df] to-white p-6 sm:p-8">
+            <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#876500]">Llévalo a la práctica</p>
+            <h2 className="mt-2 text-xl font-bold">Calcula las cantidades para tu cilindro</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">Utiliza la herramienta para estimar cantidades según las proporciones que ofrece y verifica siempre la ficha técnica del revestimiento que vas a utilizar.</p>
+            <Link to="/herramientas-publicas/yeso-agua" className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#17232d] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#293b49]"><Calculator className="size-4" /> Abrir calculadora de yeso y agua</Link>
+          </section>
+          <div className="mt-8 border-t border-slate-200 pt-6"><Link to="/guias" className="inline-flex items-center gap-2 text-sm font-semibold text-[#876500]"><ArrowLeft className="size-4" /> Volver a las guías técnicas</Link></div>
+        </article>
       </main>
     );
   }
