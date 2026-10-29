@@ -874,10 +874,6 @@ export function VisorPesoJoyeria({ compacto = false, archivoInicial = null, arch
           )}
         </div>
 
-        <p className="text-[11px] leading-relaxed text-muted-foreground">
-          La contracción volumétrica del 6 % de Siraya se muestra solo como referencia y no se aplica a esta fórmula.
-          Es una estimación orientativa; la porosidad, el curado, los soportes o restos de resina pueden afectar el resultado.
-        </p>
       </section>
 
       <p className="text-[11px] text-muted-foreground">
