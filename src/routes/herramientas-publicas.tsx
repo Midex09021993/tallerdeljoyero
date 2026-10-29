@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import {
   ArrowLeft,
   ArrowRight,
@@ -92,7 +92,12 @@ function normalizarBusqueda(valor: string) {
 }
 
 function HerramientasPublicasPage() {
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
   const [busqueda, setBusqueda] = useState("");
+
+  if (pathname !== "/herramientas-publicas" && pathname !== "/herramientas-publicas/") {
+    return <Outlet />;
+  }
   const termino = normalizarBusqueda(busqueda);
   const terminos = termino.split(/\s+/).filter(Boolean);
   const herramientasFiltradas = herramientas.filter((herramienta) => {
