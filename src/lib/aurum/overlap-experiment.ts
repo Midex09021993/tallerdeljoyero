@@ -89,6 +89,11 @@ export function findAurumOverlapCandidates(
   const maxTests = Math.max(1, Math.floor(options.maxTrianglePairTests ?? 250000));
   const candidates: AurumOverlapCandidate[] = [];
   let remainingTests = maxTests;
+  const triangleCache = new Map<THREE.Mesh, TriangleRecord[] | null>();
+  const getTriangles = (mesh: THREE.Mesh) => {
+    if (!triangleCache.has(mesh)) triangleCache.set(mesh, trianglesFor(mesh, maxTriangles));
+    return triangleCache.get(mesh)!;
+  };
 
   for (let i = 0; i < meshes.length; i++) {
     const left = meshes[i]!;
@@ -100,8 +105,8 @@ export function findAurumOverlapCandidates(
       const volume = size.x * size.y * size.z;
       if (!Number.isFinite(volume) || volume <= minVolume) continue;
 
-      const leftTriangles = trianglesFor(left.mesh, maxTriangles);
-      const rightTriangles = trianglesFor(right.mesh, maxTriangles);
+      const leftTriangles = getTriangles(left.mesh);
+      const rightTriangles = getTriangles(right.mesh);
       if (!leftTriangles || !rightTriangles) {
         candidates.push({
           a: left.mesh.name || left.mesh.uuid, b: right.mesh.name || right.mesh.uuid,
@@ -119,7 +124,7 @@ export function findAurumOverlapCandidates(
           if (b.maxX < a.minX || !a.box.intersectsBox(b.box)) continue;
           if (remainingTests <= 0) { exceeded = true; break outer; }
           remainingTests--;
-          if (a.triangle.intersectsTriangle(b.triangle, true)) count++;
+          if (a.triangle.intersectsTriangle(b.triangle, false)) count++;
         }
       }
       candidates.push({
