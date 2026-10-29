@@ -132,7 +132,7 @@ function HerramientaPublicaPage() {
             </ul>
           </div>
           <div className="flex flex-col gap-3 p-5 pt-0 sm:min-w-52 sm:p-0">
-            <Link to="/auth" target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#f8c928] px-5 py-3 text-sm font-bold text-[#17232d] transition hover:bg-[#ffe071] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">Conocer AURUM LAB <ArrowLeft className="size-4 rotate-180" /></Link>
+            <Link to="/auth" target="_blank" rel="noreferrer" onClick={() => registrarEvento("platform_opened", { source: "public_tool_cta", tool_id: pagina.id, tool_name: pagina.titulo })} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#f8c928] px-5 py-3 text-sm font-bold text-[#17232d] transition hover:bg-[#ffe071] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">Conocer AURUM LAB <ArrowLeft className="size-4 rotate-180" /></Link>
             <Link to="/herramientas-publicas" className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/20 px-5 py-3 text-sm font-semibold text-white transition hover:border-[#f8c928]">Seguir usando herramientas</Link>
           </div>
         </section>
