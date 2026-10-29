@@ -22,7 +22,7 @@ const guias = [
     slug: "calcular-aleaciones-oro-18k-14k-9k",
     categoria: "Metalurgia y materiales",
     titulo: "Cómo calcular aleaciones de oro de 18K, 14K y 9K",
-    descripcion: "Calcula el contenido teórico de oro fino y la cantidad restante de liga, con fórmulas y ejemplos en gramos.",
+    descripcion: "Aprende cómo calcular oro fino y metal de liga para aleaciones de oro de 18 quilates, 14K y 9K, con fórmulas y ejemplos en gramos.",
     icon: Gem,
     lectura: "6 min de lectura",
     herramienta: "Calculadora de aleación de oro",
@@ -31,7 +31,7 @@ const guias = [
     slug: "calcular-peso-joya-modelo-3d",
     categoria: "Diseño y fabricación",
     titulo: "Cómo estimar el peso de una joya a partir de un modelo 3D",
-    descripcion: "Prepara el modelo, revisa las unidades y utiliza la densidad del metal para interpretar una estimación de peso.",
+    descripcion: "Descubre cómo calcular el peso aproximado de una joya en 3D con el volumen del modelo, las unidades y la densidad del oro, plata o platino.",
     icon: Layers3,
     lectura: "5 min de lectura",
     herramienta: "Visualizador y calculadora de peso 3D",
@@ -58,7 +58,7 @@ const guias = [
     slug: "fundicion-joyeria-revestimiento-omni-cast",
     categoria: "Fundición y materiales",
     titulo: "Fundición de joyería: guía del revestimiento y preparación del cilindro",
-    descripcion: "Comprende las proporciones de mezcla, la preparación del cilindro y cómo interpretar las referencias del fabricante Whip Mix Omni-Cast.",
+    descripcion: "Guía de fundición de joyería para preparar el cilindro, medir agua y revestimiento y consultar correctamente la ficha técnica de Whip Mix Omni-Cast.",
     icon: Layers3,
     lectura: "7 min de lectura",
     herramienta: "Calculadora de yeso y agua",
@@ -85,7 +85,7 @@ function GuiasPage() {
         <div className="relative mx-auto max-w-7xl px-5 py-14 sm:px-8 sm:py-20">
           <p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#987400]">Conocimiento aplicado al oficio</p>
           <h1 className="mt-4 max-w-3xl text-3xl font-extrabold leading-tight tracking-tight sm:text-5xl">Guías técnicas para trabajar mejor la joyería.</h1>
-          <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base sm:leading-7">Procedimientos, fórmulas y criterios prácticos explicados paso a paso. Cada guía está conectada con una herramienta de AURUM LAB para pasar del conocimiento a la práctica.</p>
+          <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base sm:leading-7">Resuelve dudas frecuentes del taller: cómo calcular aleaciones de oro de 18K, 14K y 9K, estimar el peso de una joya desde un modelo 3D y preparar un cilindro para fundición. Cada guía explica los conceptos paso a paso y enlaza con herramientas gratuitas para llevar el cálculo a la práctica.</p>
           <div className="mt-7 flex flex-wrap gap-3">
             <a href="#guias" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#17232d] px-5 text-sm font-semibold text-white transition hover:bg-[#293b49]">Explorar guías <ArrowRight className="size-4" /></a>
             <Link to="/herramientas-publicas" className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 text-sm font-semibold text-[#17232d] transition hover:border-[#d4aa19]"><Calculator className="size-4" /> Ver herramientas gratuitas</Link>
