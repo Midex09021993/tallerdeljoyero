@@ -7,6 +7,7 @@ export const Route = createFileRoute("/aurum-render-public")({
   head: () => ({
     meta: [
       { title: "Visor 3D compartido — Taller del Joyero" },
+      { name: "robots", content: "noindex, follow" },
       {
         name: "description",
         content: "Visualizador 3D público para revisar una joya compartida.",
