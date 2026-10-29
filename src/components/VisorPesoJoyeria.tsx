@@ -82,6 +82,8 @@ export function VisorPesoJoyeria({ compacto = false, archivoInicial = null, arch
 
   const [metalId, setMetalId] = useState<MetalId>("oro18a");
   const [pesoArbol, setPesoArbol] = useState<number | null>(null);
+  const [pesoImpresionResina, setPesoImpresionResina] = useState("");
+  const [densidadResina, setDensidadResina] = useState("1.1");
   const [unidad, setUnidad] = useState("mm");
   const { data: configVisualizador } = useConfigSistema(CLAVES_CALCULADORAS.visualizador);
   const configuracion = leerConfigVisualizador(configVisualizador?.valor);
@@ -405,6 +407,11 @@ export function VisorPesoJoyeria({ compacto = false, archivoInicial = null, arch
     : pesoArbolEfectivo;
   const pesoConEmpuje = pesoTeorico != null ? pesoTeorico + pesoArbolCalculado : null;
   const pesoFinal = pesoConEmpuje;
+  const pesoResinaNumero = Number(pesoImpresionResina);
+  const densidadResinaNumero = Number(densidadResina);
+  const pesoMetalDesdeResina = pesoImpresionResina.trim() !== "" && Number.isFinite(pesoResinaNumero) && pesoResinaNumero > 0 && Number.isFinite(densidadResinaNumero) && densidadResinaNumero > 0
+    ? (pesoResinaNumero / densidadResinaNumero) * densidad
+    : null;
 
   useEffect(() => {
     if (modoPublico || typeof window === "undefined") return;
@@ -783,6 +790,88 @@ export function VisorPesoJoyeria({ compacto = false, archivoInicial = null, arch
           <p className="mt-1 text-xs text-muted-foreground">El resultado aparecerá automáticamente al procesar el volumen.</p>
         </div>
       )}
+
+      {/* Estimación independiente a partir del peso de la resina */}
+      <section className="space-y-4 rounded-3xl border border-gold/30 bg-card/70 p-4 shadow-card sm:p-5">
+        <div className="flex items-start gap-3">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl border border-gold/25 bg-accent text-gold-deep">
+            <Boxes className="size-5" aria-hidden="true" />
+          </div>
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold-deep">Método alternativo</p>
+            <h3 className="mt-1 text-base font-semibold">Estimar metal desde el peso de la impresión</h3>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              Introduce el peso de la pieza impresa en Siraya Tech Castable, limpia, seca y sin soportes.
+              Se usará el metal seleccionado arriba: {metal.nombre}.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="space-y-1.5">
+            <span className="text-xs font-medium">Peso de la impresión</span>
+            <div className="relative">
+              <input
+                type="number"
+                min="0"
+                step="0.001"
+                inputMode="decimal"
+                value={pesoImpresionResina}
+                onChange={(event) => setPesoImpresionResina(event.target.value)}
+                placeholder="Ej. 0.220"
+                className={inputCls}
+                aria-describedby="peso-resina-ayuda"
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">g</span>
+            </div>
+            <span id="peso-resina-ayuda" className="block text-[11px] text-muted-foreground">
+              Pesa solo la pieza, sin soportes ni residuos.
+            </span>
+          </label>
+
+          <label className="space-y-1.5">
+            <span className="text-xs font-medium">Densidad de Siraya Castable</span>
+            <select
+              value={densidadResina}
+              onChange={(event) => setDensidadResina(event.target.value)}
+              className={inputCls}
+            >
+              <option value="1.1">1,1 g/cm³ · referencia de la guía</option>
+              <option value="1.2">1,2 g/cm³ · densidad sólida de la ficha técnica</option>
+            </select>
+            <span className="block text-[11px] text-muted-foreground">
+              Usa el dato que mejor corresponda a tu resina y a la impresión curada.
+            </span>
+          </label>
+        </div>
+
+        <div className="rounded-2xl border border-gold/30 bg-gradient-to-br from-accent/70 to-card p-4">
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-gold-deep">Peso estimado del metal</p>
+          {pesoMetalDesdeResina != null ? (
+            <>
+              <p className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
+                {num(pesoMetalDesdeResina, 3)} <span className="text-sm font-medium text-muted-foreground">g</span>
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {metal.nombre} · densidad {num(densidad, 2)} g/cm³
+              </p>
+              <p className="mt-3 border-t border-border/70 pt-3 text-[11px] text-muted-foreground">
+                Cálculo: {num(pesoResinaNumero, 3)} g ÷ {num(densidadResinaNumero, 2)} × {num(densidad, 2)}.
+                No incluye árbol de colada ni pérdidas de fundición.
+              </p>
+            </>
+          ) : (
+            <p className="mt-2 text-sm text-muted-foreground">
+              Introduce el peso de la impresión para ver la estimación en {metal.nombre}.
+            </p>
+          )}
+        </div>
+
+        <p className="text-[11px] leading-relaxed text-muted-foreground">
+          La contracción volumétrica del 6 % de Siraya se muestra solo como referencia y no se aplica a esta fórmula.
+          Es una estimación orientativa; la porosidad, el curado, los soportes o restos de resina pueden afectar el resultado.
+        </p>
+      </section>
 
       <p className="text-[11px] text-muted-foreground">
         Los archivos se procesan solo en tu navegador: no se guardan en el servidor y se
