@@ -124,9 +124,9 @@ const GuiasRoute = GuiasRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const GuiasSlugRoute = GuiasSlugRouteImport.update({
-  id: '/guias/$slug',
-  path: '/guias/$slug',
-  getParentRoute: () => rootRouteImport,
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => GuiasRoute,
 } as any)
 const CursosDiseno3dRoute = CursosDiseno3dRouteImport.update({
   id: '/cursos-diseno-3d',
@@ -858,7 +858,17 @@ export interface FileRouteTypes {
     | '/lovable/email/transactional/preview'
   fileRoutesById: FileRoutesById
 }
-export interface RootRouteChildren {
+export interface GuiasRouteChildren {
+  GuiasSlugRoute: typeof GuiasSlugRoute
+}
+
+const GuiasRouteChildren: GuiasRouteChildren = {
+  GuiasSlugRoute: GuiasSlugRoute,
+}
+
+const GuiasRouteWithChildren = GuiasRoute._addFileChildren(GuiasRouteChildren)
+
+interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   SlugRoute: typeof SlugRouteWithChildren
@@ -882,8 +892,7 @@ export interface RootRouteChildren {
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
-  GuiasRoute: typeof GuiasRoute
-  GuiasSlugRoute: typeof GuiasSlugRoute
+  GuiasRoute: typeof GuiasRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -897,10 +906,10 @@ declare module '@tanstack/react-router' {
     }
     '/guias/$slug': {
       id: '/guias/$slug'
-      path: '/guias/$slug'
+      path: '/$slug'
       fullPath: '/guias/$slug'
       preLoaderRoute: typeof GuiasSlugRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof GuiasRoute
     }
     '/': {
       id: '/'
@@ -1552,8 +1561,7 @@ const rootRouteChildren: RootRouteChildren = {
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
-  GuiasRoute: GuiasRoute,
-  GuiasSlugRoute: GuiasSlugRoute,
+  GuiasRoute: GuiasRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
