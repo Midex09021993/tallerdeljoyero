@@ -504,7 +504,8 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // direction. Using reflect(+V,N) here reverses the ray and suppresses
         // the facet response on crown faces that look toward the camera.
         float aurumFacing=max(dot(aurumR,aurumV),0.0);
-        float aurumFlash=smoothstep(0.985,0.9995,aurumFacing)*aurumScintillationStrength;
+        // Broader angular transition reduces abrupt sparkle popping during camera orbit.
+        float aurumFlash=smoothstep(0.94,0.997,aurumFacing)*aurumScintillationStrength;
 
         // Keep scintillation energy bounded: additive white flashes can clip
         // the crown facets in bright studio environments. Modulate existing
