@@ -2379,8 +2379,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         // Full selection diagnostics traverse every mesh and collect nested metadata.
         // Keep this expensive audit opt-in so selecting one piece stays responsive
         // on dense Rhino/CAD models.
-        const selectionAuditEnabled = typeof window !== "undefined"
-          && new URLSearchParams(window.location.search).get("aurumSelectionAudit") === "1";
+        const selectionAuditEnabled = diagnosticoSeleccionHabilitado || (typeof window !== "undefined"
+          && new URLSearchParams(window.location.search).get("aurumSelectionAudit") === "1");
         if (selectionAuditEnabled) {
           // Diagnostic snapshot of the selected mesh and all gem-layer identities.
           const sourceAttrs = obj.userData?.attributes ?? {};
