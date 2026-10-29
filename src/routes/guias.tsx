@@ -115,9 +115,9 @@ function GuiasPage() {
                 <div className="mt-5 rounded-xl border border-slate-100 bg-slate-50 p-3">
                   <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Herramienta relacionada</p>
                   {"herramientaHref" in guia ? (
-                    <Link to={guia.herramientaHref} className="mt-1 inline-flex items-center gap-1 text-left text-xs font-semibold text-[#876500] hover:text-[#5f4900]">
+                    <a href={guia.herramientaHref} className="mt-1 inline-flex items-center gap-1 text-left text-xs font-semibold text-[#876500] hover:text-[#5f4900]">
                       {guia.herramienta} <ArrowRight className="size-3.5" />
-                    </Link>
+                    </a>
                   ) : (
                     <p className="mt-1 text-xs font-semibold text-slate-700">{guia.herramienta}</p>
                   )}
