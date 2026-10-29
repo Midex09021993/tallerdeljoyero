@@ -21,11 +21,13 @@ export const Route = createFileRoute("/formacion/$slug")({
       || "Conoce cursos y propuestas formativas para la comunidad joyera.";
     const imagen = publicacion?.formacion_imagen_url || publicacion?.logo_url;
     const url = `https://www.tallerdeljoyero.com/formacion/${params.slug}`;
+    const esPublicacionDisponible = Boolean(publicacion?.slug && publicacion?.nombre_publico?.trim());
     return {
+      links: esPublicacionDisponible ? [{ rel: "canonical", href: url }] : [],
       meta: [
         { title: `${titulo} | ${publicacion?.nombre_publico || "Taller del Joyero"}` },
         { name: "description", content: descripcion },
-        { name: "robots", content: "index, follow" },
+        { name: "robots", content: esPublicacionDisponible ? "index, follow" : "noindex, follow" },
         { property: "og:title", content: `${titulo} | ${publicacion?.nombre_publico || "Taller del Joyero"}` },
         { property: "og:description", content: descripcion },
         { property: "og:type", content: "website" },
