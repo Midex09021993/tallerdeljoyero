@@ -200,13 +200,15 @@ export async function createAurumDiamondBvhRuntime(options: {
           camera: options.camera,
           // Keep small secondary diamonds on interactive quality initially;
           // higher bounce counts are reserved for explicit high/final capture.
-          quality: options.quality ?? "interactive",
+          quality: family === "diamante" ? "high" : (options.quality ?? "interactive"),
+          // Restore the original diamond BVH fire/brightness settings; the emerald experiment remains isolated.
+          rgbBoost: family === "diamante" ? [1.2, 1.2, 1.2] : isEmerald ? [0.85, 1.15, 0.90] : undefined,
           environmentIntensity: useEmeraldBvhOptics ? (isVsUsingEmeraldBvh ? 0.82 : 1) : emeraldProfile?.environmentIntensity ?? rubyProfile?.environmentIntensity ?? sapphireProfile?.environmentIntensity ?? (isEmerald ? 1.5 : isRuby ? 1.0 : isSapphire ? 1.2 : isAmethyst ? 1.35 : isAquamarine ? 1.25 : isCitrine ? 1.2 : isBlueTopaz ? 1.25 : isImperialTopaz ? 1.22 : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 1.55 : 1.3) : isTanzanite ? 1.25 : isMoissanite ? 1.35 : isZircon ? 1.2 : isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 1.18 : 1.14),
           // Emerald test: disable dispersion entirely while isolating BVH speckles.
           // The green color is authored by the profile; chromatic splitting is not
           // required for emerald and may amplify unstable ray/intersection artifacts.
           dispersion: useEmeraldBvhOptics ? 0 : (emeraldProfile?.dispersion ?? rubyProfile?.dispersion ?? sapphireProfile?.dispersion ?? (family === "diamante" ? 0.004 : isRuby ? 0.001 : isSapphire ? 0.001 : isAmethyst || isAquamarine || isCitrine || isBlueTopaz || isImperialTopaz || isParaibaTourmaline || isTanzanite || isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 0.0002 : isZircon ? 0.001 : isMoissanite ? 0.009 : 0.01)),
-          ior: isVsUsingEmeraldBvh ? 1.58 : emeraldProfile?.ior ?? rubyProfile?.ior ?? sapphireProfile?.ior ?? (isEmerald ? 1.58 : isRuby ? 1.762 : isSapphire ? 1.762 : isAmethyst ? 1.55 : isAquamarine ? 1.577 : isCitrine || isQuartz ? 1.544 : isBlueTopaz || isImperialTopaz ? 1.63 : isParaibaTourmaline || isOtherTourmaline ? 1.62 : isTanzanite ? 1.695 : isMoissanite ? 2.65 : isSpinel ? 1.718 : isGarnet ? 1.78 : isPeridot ? 1.65 : isMorganite ? 1.58 : isZircon ? 1.92 : isChrysoberyl ? 1.75 : 1.55),
+          ior: isVsUsingEmeraldBvh ? 1.58 : emeraldProfile?.ior ?? rubyProfile?.ior ?? sapphireProfile?.ior ?? (family === "diamante" ? 2.6 : isEmerald ? 1.58 : isRuby ? 1.762 : isSapphire ? 1.762 : isAmethyst ? 1.55 : isAquamarine ? 1.577 : isCitrine || isQuartz ? 1.544 : isBlueTopaz || isImperialTopaz ? 1.63 : isParaibaTourmaline || isOtherTourmaline ? 1.62 : isTanzanite ? 1.695 : isMoissanite ? 2.65 : isSpinel ? 1.718 : isGarnet ? 1.78 : isPeridot ? 1.65 : isMorganite ? 1.58 : isZircon ? 1.92 : isChrysoberyl ? 1.75 : 1.55),
           // Match the catalog's iJewel inclusion reference (absorption 1.6)
           // only for this variant; other emerald profiles remain untouched.
           absorption: useEmeraldBvhOptics
@@ -233,7 +235,7 @@ export async function createAurumDiamondBvhRuntime(options: {
               packageApi.setDiamondOptions(prepared.material, {
                 // 3 interactive bounces are the upstream package's recommended
                 // starting point; retain 4 for high and 8 for explicit final stills.
-                rayBounces: quality === "final" ? 8 : quality === "high" ? 4 : 3,
+                rayBounces: quality === "final" ? 8 : family === "diamante" ? 4 : quality === "high" ? 4 : 3,
               });
               return;
             }
@@ -257,7 +259,7 @@ export async function createAurumDiamondBvhRuntime(options: {
         // Apply the catalog-specific quality immediately when the BVH material is
         // created. Without this call, setQuality only runs during later quality
         // transitions, leaving emeralds at the shader package's generic default.
-        entries.get(mesh)?.setQuality(options.quality ?? "interactive");
+        entries.get(mesh)?.setQuality(family === "diamante" ? "high" : (options.quality ?? "interactive"));
         mesh.material = prepared.material;
         found.add(mesh);
         if (isEmerald && targetFamilies.includes("esmeralda")) {
