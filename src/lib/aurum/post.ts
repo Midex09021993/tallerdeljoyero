@@ -198,6 +198,10 @@ export async function createAurumPostPipeline(
   // and aurumSSR=off are both explicitly present in the URL.
   const diagnosticDisableSSR = diagnosticMode === "environment"
     && diagnosticParams?.get("aurumSSR") === "off";
+  // Reversible A/B diagnostic: disable only SSAO to identify artificial dark
+  // contact grooves on polished metal. Requires explicit environment mode.
+  const diagnosticDisableSSAO = diagnosticMode === "environment"
+    && diagnosticParams?.get("aurumSSAO") === "off";
   let lastDiagnosticSignature = "";
   let lastKnownQualityId = "";
   const applyQuality=(next:any, options:{capture?:boolean;width?:number;height?:number}={})=>{
@@ -256,7 +260,7 @@ export async function createAurumPostPipeline(
     }
 
     if(ssaoPass){
-      ssaoPass.enabled=!options.capture && Boolean(config.ssao) && high;
+      ssaoPass.enabled=!options.capture && Boolean(config.ssao) && high && !diagnosticDisableSSAO;
       ssaoPass.kernelSize=ultra?24:high?20:12;
       const ssaoScale=ultra?.72:high?.82:.70;
       ssaoPass.setSize?.(
@@ -376,6 +380,7 @@ export async function createAurumPostPipeline(
           ssrCompositeHasBeauty: Boolean(ssrCompositePass?.uniforms?.tBeauty?.value),
           ssrSelectedMeshCount: Array.isArray(ssrPass?.selects) ? ssrPass.selects.length : null,
           ssrDiagnosticOverride: diagnosticDisableSSR ? "forced-off" : "default",
+          ssaoDiagnosticOverride: diagnosticDisableSSAO ? "forced-off" : "default",
           ssaoKernelRadius: Number(ssaoPass?.kernelRadius ?? 0),
           ssaoClamp: Number(ssaoPass?.aoClamp ?? 0),
           ssaoMaxDistance: Number(ssaoPass?.maxDistance ?? 0),
