@@ -25,6 +25,53 @@ function categoryOf(mesh: THREE.Mesh): "metal" | "gema" | "otro" {
   return "otro";
 }
 
+function trianglesIntersectSAT(left: THREE.Triangle, right: THREE.Triangle): boolean {
+  const leftVertices = [left.a, left.b, left.c];
+  const rightVertices = [right.a, right.b, right.c];
+  const leftEdges = [
+    left.b.clone().sub(left.a),
+    left.c.clone().sub(left.b),
+    left.a.clone().sub(left.c),
+  ];
+  const rightEdges = [
+    right.b.clone().sub(right.a),
+    right.c.clone().sub(right.b),
+    right.a.clone().sub(right.c),
+  ];
+  const leftNormal = leftEdges[0]!.clone().cross(leftEdges[1]!);
+  const rightNormal = rightEdges[0]!.clone().cross(rightEdges[1]!);
+  const axes: THREE.Vector3[] = [leftNormal, rightNormal];
+
+  // Edge/edge axes separate non-coplanar triangles; edge/normal axes also
+  // separate coplanar triangles. Degenerate axes are ignored below.
+  for (const edge of leftEdges) {
+    axes.push(edge.clone().cross(leftNormal));
+    for (const otherEdge of rightEdges) axes.push(edge.clone().cross(otherEdge));
+  }
+  for (const edge of rightEdges) axes.push(edge.clone().cross(rightNormal));
+
+  for (const axis of axes) {
+    const lengthSq = axis.lengthSq();
+    if (lengthSq < 1e-20) continue;
+    axis.multiplyScalar(1 / Math.sqrt(lengthSq));
+    let leftMin = Infinity, leftMax = -Infinity;
+    let rightMin = Infinity, rightMax = -Infinity;
+    for (const point of leftVertices) {
+      const projection = point.dot(axis);
+      leftMin = Math.min(leftMin, projection);
+      leftMax = Math.max(leftMax, projection);
+    }
+    for (const point of rightVertices) {
+      const projection = point.dot(axis);
+      rightMin = Math.min(rightMin, projection);
+      rightMax = Math.max(rightMax, projection);
+    }
+    const tolerance = 1e-9 * Math.max(1, Math.abs(leftMin), Math.abs(leftMax), Math.abs(rightMin), Math.abs(rightMax));
+    if (leftMax < rightMin - tolerance || rightMax < leftMin - tolerance) return false;
+  }
+  return true;
+}
+
 function trianglesFor(mesh: THREE.Mesh, maxTriangles: number): TriangleRecord[] | null {
   const geometry = mesh.geometry;
   const position = geometry.getAttribute("position");
@@ -124,7 +171,7 @@ export function findAurumOverlapCandidates(
           if (b.maxX < a.minX || !a.box.intersectsBox(b.box)) continue;
           if (remainingTests <= 0) { exceeded = true; break outer; }
           remainingTests--;
-          if (a.triangle.intersectsTriangle(b.triangle, false)) count++;
+          if (trianglesIntersectSAT(a.triangle, b.triangle)) count++;
         }
       }
       candidates.push({
