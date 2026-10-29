@@ -35,6 +35,7 @@ const metalesVisualizador = [
   ["plata925", "Densidad Plata 925"],
   ["plata950", "Densidad Plata 950"],
   ["plata970", "Densidad Plata 970"],
+  ["plataPd900", "Densidad Plata-Paladio 900 (90% Ag / 10% Pd)"],
   ["platino", "Densidad Platino"],
 ] as const;
 
@@ -73,6 +74,11 @@ const FUENTES_DENSIDADES: Record<string, { fuente: string; detalle: string; url:
     fuente: "Estimación físico-metalúrgica",
     detalle: "≈10.44 g/cm³, calculada para 97% Ag + 3% Cu usando densidades de referencia de Ag y Cu. La aleación real puede variar.",
     url: "https://pubchem.ncbi.nlm.nih.gov/periodic-table/density/",
+  },
+  plataPd900: {
+    fuente: "Referencia técnica de aleación 90Ag–10Pd",
+    detalle: "10,6 g/cm³ como densidad de referencia publicada para 90% plata y 10% paladio. Confirmar con la ficha técnica del proveedor de la aleación concreta.",
+    url: "https://www.matweb.com/search/DataSheet.aspx?MatGUID=2f6913b90e7a4c5d9057eda91c45d441",
   },
   platino: {
     fuente: "CRC Materials Science / ASM",
