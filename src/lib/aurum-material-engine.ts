@@ -130,13 +130,13 @@ export const applyAurumMetal=(material:any,preset:AurumMetalPreset)=>{
   const isLegacyDiagnostic=diagnosticParams?.get("aurumMetalCalibrated")==="legacy";
   const calibrationMode=isLegacyDiagnostic?"legacy-attenuated":"catalog-reference";
 
-  // Temporary visual test requested: all classified metal presets render at
-  // absolute-zero surface roughness. Gem materials use applyAurumGem and are untouched.
-  // Disable roughness maps as well; otherwise procedural texture would reintroduce
-  // micro-roughness and make this test misleading.
-  const requestedRoughness=Math.max(0,Math.min(1,Number(preset.roughness??.12)));
-  material.roughness=0;
-  material.roughnessMap=null;
+  const baseRoughness=Math.max(.02,Number(preset.roughness??.12));
+  const calibratedRoughness=response.family==="yellow-gold"
+    ? Math.max(.075,Math.min(.55,baseRoughness*1.12))
+    : baseRoughness;
+  material.roughness=isLegacyDiagnostic
+    ? Math.max(.065,Math.min(.55,calibratedRoughness))
+    : baseRoughness;
 
   material.envMapIntensity=isLegacyDiagnostic
     ? response.environmentIntensity
@@ -145,14 +145,12 @@ export const applyAurumMetal=(material:any,preset:AurumMetalPreset)=>{
   material.clearcoat=isLegacyDiagnostic
     ? Math.max(.025,Math.min(.055,Number(preset.clearcoat??0)*.10+.015))
     : Number(preset.clearcoat??0);
-  material.clearcoatRoughness=0;
+  material.clearcoatRoughness=Math.max(.025,Math.min(.12,material.roughness*.7));
 
   material.anisotropy=Math.max(0,Math.min(1,preset.anisotropy??0));
-  // Keep procedural presets initialized for a clean rollback, but do not bind
-  // their texture while the zero-roughness test is active.
-  getAurumSurfaceMicrostructure(THREE,preset);
-  material.roughnessMap=null;
-  material.userData={...(material.userData??{}),aurumSurfaceMicrostructure:"disabled-zero-roughness-test"};
+  const surfaceMicrostructure=getAurumSurfaceMicrostructure(THREE,preset);
+  material.roughnessMap=surfaceMicrostructure;
+  material.userData={...(material.userData??{}),aurumSurfaceMicrostructure:surfaceMicrostructure?String(preset.id??"surface"):"polished-base"};
   material.anisotropyRotation=preset.anisotropyRotation??0;
   material.specularIntensity=preset.metalness>.9
     ? Math.max(.78,Math.min(1,response.highlightScale+.25))
@@ -171,14 +169,14 @@ export const applyAurumMetal=(material:any,preset:AurumMetalPreset)=>{
       requested:{
         color:preset.color,
         metalness:preset.metalness,
-        roughness:requestedRoughness,
+        roughness:baseRoughness,
         envMapIntensity:preset.envMapIntensity,
         clearcoat:preset.clearcoat??0,
       },
       effective:{
         color:material.color?.getHex?.()??preset.color,
         metalness:material.metalness,
-        roughness:0,
+        roughness:material.roughness,
         envMapIntensity:material.envMapIntensity,
         clearcoat:material.clearcoat,
         clearcoatRoughness:material.clearcoatRoughness,
