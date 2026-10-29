@@ -120,14 +120,30 @@ function HerramientaPublicaPage() {
           </div>
         </section>
 
-        <section className="mt-8 rounded-2xl border border-[#e8dfc7] bg-[#fffaf0] p-5 sm:flex sm:items-center sm:justify-between sm:gap-6">
+        <section className="mt-8 overflow-hidden rounded-2xl border border-[#263743] bg-[#111a22] text-white sm:grid sm:grid-cols-[1fr_auto] sm:items-center sm:gap-8 sm:p-7">
+          <div className="p-5 sm:p-0">
+            <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#f3d66e]">Lleva tu taller al siguiente nivel</p>
+            <h2 className="mt-2 font-display text-2xl leading-tight sm:text-3xl">La herramienta resuelve una tarea. AURUM LAB te ayuda a organizar el trabajo.</h2>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">Conoce las funciones para gestionar clientes, cotizaciones, pedidos, catálogo digital y archivos de tu taller. Puedes explorar las herramientas públicas sin registrarte.</p>
+            <ul className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs text-slate-200">
+              <li className="flex items-center gap-2"><span aria-hidden="true" className="size-1.5 rounded-full bg-[#f3d66e]" />Gestión comercial</li>
+              <li className="flex items-center gap-2"><span aria-hidden="true" className="size-1.5 rounded-full bg-[#f3d66e]" />Mi Nube y catálogo</li>
+              <li className="flex items-center gap-2"><span aria-hidden="true" className="size-1.5 rounded-full bg-[#f3d66e]" />Diseño y visualización 3D</li>
+            </ul>
+          </div>
+          <div className="flex flex-col gap-3 p-5 pt-0 sm:min-w-52 sm:p-0">
+            <Link to="/auth" target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#f8c928] px-5 py-3 text-sm font-bold text-[#17232d] transition hover:bg-[#ffe071] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">Conocer AURUM LAB <ArrowLeft className="size-4 rotate-180" /></Link>
+            <Link to="/herramientas-publicas" className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/20 px-5 py-3 text-sm font-semibold text-white transition hover:border-[#f8c928]">Seguir usando herramientas</Link>
+          </div>
+        </section>
+
+        <section className="mt-6 rounded-2xl border border-[#e8dfc7] bg-[#fffaf0] p-5 sm:flex sm:items-center sm:justify-between sm:gap-6">
           <div>
             <h2 className="font-display text-xl text-[#17232d]">Aprende más sobre técnicas de joyería</h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Consulta nuestras guías técnicas para entender los cálculos y aplicarlos con mayor seguridad en tu taller.</p>
           </div>
           <div className="mt-4 flex shrink-0 flex-wrap gap-3 sm:mt-0">
             <Link to="/guias" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#d8bd7b]/40 px-5 py-3 text-sm font-semibold text-[#987400] transition hover:bg-[#d8bd7b]/10">Ver guías técnicas <ArrowLeft className="size-4 rotate-180" /></Link>
-            <Link to="/auth" target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#b8860b] px-5 py-3 text-sm font-bold text-white transition hover:brightness-105">Conocer AURUM LAB <ArrowLeft className="size-4 rotate-180" /></Link>
           </div>
         </section>
 
