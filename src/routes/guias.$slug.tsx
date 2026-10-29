@@ -156,6 +156,14 @@ function GuiaTecnicaPage() {
               <li>¿Separaste el peso del metal del peso de las gemas u otros componentes?</li>
               <li>¿Prevés un margen de fabricación basado en tu proceso?</li>
             </ul>
+            <h2>Preguntas frecuentes sobre el peso de una joya en 3D</h2>
+            <h3>¿Cómo calcular el peso de una joya a partir de un archivo STL o 3D?</h3>
+            <p>Primero confirma que el modelo tenga la escala y las unidades correctas y que represente el volumen de la pieza. Después, aplica una densidad compatible con el metal elegido. La estimación depende de que la geometría y el material estén correctamente definidos.</p>
+            <h3>¿Una misma joya pesa igual en plata y en oro?</h3>
+            <p>No. Si el volumen se mantiene, la masa cambia con la densidad del material. Además, la densidad concreta puede variar según la aleación; utiliza el valor que corresponda al material que realmente vas a trabajar.</p>
+            <h3>¿El resultado de la calculadora es el peso final de la pieza?</h3>
+            <p>No necesariamente. Es una estimación teórica del modelo y no contempla automáticamente todas las pérdidas de fabricación, los canales de colada, el acabado ni el peso de piedras y otros componentes.</p>
+            <p>Si también necesitas estimar la composición de una aleación, consulta nuestra <a href="/guias/calcular-aleaciones-oro-18k-14k-9k">guía para calcular aleaciones de oro de 18K, 14K y 9K</a> y verifica los datos antes de preparar el lote.</p>
           </div>
           <section className="mt-10 rounded-2xl border border-[#eadca7] bg-gradient-to-br from-[#fff9df] to-white p-6 sm:p-8">
             <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#876500]">Llévalo a la práctica</p>
