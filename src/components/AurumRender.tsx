@@ -687,7 +687,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       (termino.length > 0 || grupoPredeterminado || g.familia === familiaGemaActiva) &&
       (!grupoPredeterminado || mostrarTodasGemas || principales.has(g.id)) &&
       (!termino || (g.nombre + " " + g.id + " " + g.familia + " " + (g.origen ?? "")).toLocaleLowerCase("es").includes(termino))
-    ).sort((a, b) => Number(principales.has(b.id)) - Number(principales.has(a.id)) || a.nombre.localeCompare(b.nombre, "es"));
+    ).sort((a, b) => {
+      // Mantener el Diamante Azul al final de la familia, sin alterar el orden de otras gemas.
+      if (a.familia === "Diamante" && b.familia === "Diamante") {
+        if (a.id === "diamante_azul") return 1;
+        if (b.id === "diamante_azul") return -1;
+      }
+      return Number(principales.has(b.id)) - Number(principales.has(a.id)) || a.nombre.localeCompare(b.nombre, "es");
+    });
   }, [mostrarTodasGemas, busquedaGemas, familiaGemaActiva]);
 
   useEffect(() => {
