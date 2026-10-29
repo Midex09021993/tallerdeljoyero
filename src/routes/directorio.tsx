@@ -3,6 +3,7 @@ import { ComunidadPublicaPage } from "@/routes/catalogo-publico";
 
 export const Route = createFileRoute("/directorio")({
   head: () => ({
+    links: [{ rel: "canonical", href: "https://www.tallerdeljoyero.com/directorio" }],
     meta: [
       { title: "Directorio de talleres y joyerías | AURUM LAB" },
       {
