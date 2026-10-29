@@ -59,6 +59,7 @@ export const Route = createFileRoute("/herramientas-publicas/$herramienta")({
         { property: "og:title", content: pagina?.metaTitulo ?? "Herramientas para joyeros | Taller del Joyero" },
         { property: "og:description", content: pagina?.descripcion ?? "Herramientas técnicas para joyería." },
         { property: "og:type", content: "website" },
+        ...(pagina ? [{ property: "og:url", content: "https://www.tallerdeljoyero.com/herramientas-publicas/" + encodeURIComponent(params.herramienta) }] : []),
       ],
       links: pagina ? [{ rel: "canonical", href: "https://www.tallerdeljoyero.com/herramientas-publicas/" + encodeURIComponent(params.herramienta) }] : [],
     };
