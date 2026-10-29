@@ -456,10 +456,6 @@ export interface FileRoutesByFullPath {
   '/comunidad': typeof ComunidadRoute
   '/guias': typeof GuiasRouteWithChildren
   '/guias/$slug': typeof GuiasSlugRoute
-  '/guias': typeof GuiasRouteWithChildren
-  '/guias/$slug': typeof GuiasSlugRoute
-  '/guias': typeof GuiasRouteWithChildren
-  '/guias/$slug': typeof GuiasSlugRoute
   '/cursos-diseno-3d': typeof CursosDiseno3dRoute
   '/directorio': typeof DirectorioRoute
   '/galeria-joyas': typeof GaleriaJoyasRoute
@@ -584,6 +580,8 @@ export interface FileRoutesByTo {
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/guias': typeof GuiasRouteWithChildren
+  '/guias/$slug': typeof GuiasSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -654,6 +652,8 @@ export interface FileRoutesById {
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/guias': typeof GuiasRouteWithChildren
+  '/guias/$slug': typeof GuiasSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
