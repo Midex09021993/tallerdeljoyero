@@ -14,7 +14,7 @@
     "src/lib/aurum/api.ts": "98e8927885b4c061ab529e0593332d5617b485cd2fcbf9e1b8d0acf3fa859c1c",
     "src/lib/aurum/aspect-ratios.ts": "dbbb8de198e9b21c5a3484dcaf793a0061e73d4c27499ba8f2021ae3ababbdd9",
     "src/lib/aurum/aurum-diamond-bvh-experimental.ts": "4ec050f52669e9bf219734e51c2a355e15c1639416da4833757a019d6a25cc49",
-    "src/lib/aurum/aurum-diamond-bvh-runtime.ts": "469b4c6a3c5c3012839e722c15ea0f6415b1d6e1309677b861f69ec73816642c",
+    "src/lib/aurum/aurum-diamond-bvh-runtime.ts": "db6bcc8c8a031d29c8a97d4f05b8e3fab12008d2c9671d0f79db9e58aae045fb",
     "src/lib/aurum/aurum-diamond-material.ts": "44137a2322b908fdc3b60884fef0c3b6d7e446dea62474356e13c2b930465b7e",
     "src/lib/aurum/aurum-diamond-pipeline.ts": "8c65f66ee83aa3bc0bb9faaf4a30929bb116a9659c2b94d96659f20189a8e259",
     "src/lib/aurum/aurum-gem-bvh-profiles.ts": "b5fdcf2ee74357f8c4917bd9a0dfed8d67ab058b3fde8ddca4cfe86bc324bb21",
