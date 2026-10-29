@@ -537,7 +537,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // gemstone surface, not a screen-space bloom or an emissive shell.
         float aurumAngelRim=pow(1.0-clamp(abs(dot(aurumN,aurumV)),0.0,1.0),3.2);
         float aurumAngelFacetGate=smoothstep(0.08,0.72,aurumFacetContrast);
-        gl_FragColor.rgb+=vec3(0.72,0.84,1.0)*aurumAngelRim*aurumAngelFacetGate*0.045;
+        gl_FragColor.rgb+=vec3(0.72,0.84,1.0)*aurumAngelRim*aurumAngelFacetGate*0.060;
         ` : ""}
 
         if(aurumPhenomenonStrength>0.0){
