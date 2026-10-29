@@ -215,7 +215,6 @@ export function PrecioOroDiario() {
                   <p className="mt-3 text-2xl font-extrabold text-slate-400">{loading ? "Consultando…" : "Precio no disponible"}</p>
                 )}
               </div>
-              </div>
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 sm:px-7">
@@ -236,7 +235,7 @@ export function PrecioOroDiario() {
             {message && <p role="status" className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900">{message}</p>}
 
             <div className="p-5 pt-4 sm:p-7 sm:pt-4">
-              <div className="flex items-start justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[.16em] text-[#9a7400]">Calculadora de taller</p><h3 className="mt-1 text-base font-extrabold text-[#17232d]">Estima el valor de tu oro</h3></div><span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold text-slate-600">Paso 1 · 2</span></div>
+              <div className="flex items-start justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[.16em] text-[#9a7400]">Calculadora de taller</p><h3 className="mt-1 text-base font-extrabold text-[#17232d]">Estima el valor de tu oro</h3></div><span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold text-slate-600">En tiempo real</span></div>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 <label className="block text-xs font-semibold text-slate-600">
                   Peso (gramos)
