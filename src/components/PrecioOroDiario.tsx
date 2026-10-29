@@ -3,15 +3,16 @@ import { Link } from "@tanstack/react-router";
 import { ArrowRight, CalendarClock, Coins, RefreshCw, ShieldCheck, Sparkles } from "lucide-react";
 
 const COUNTRIES = [
-  { code: "PE", name: "Perú", currency: "PEN", locale: "es-PE" },
-  { code: "CO", name: "Colombia", currency: "COP", locale: "es-CO" },
-  { code: "CL", name: "Chile", currency: "CLP", locale: "es-CL" },
-  { code: "AR", name: "Argentina", currency: "ARS", locale: "es-AR" },
-  { code: "BR", name: "Brasil", currency: "BRL", locale: "pt-BR" },
-  { code: "EC", name: "Ecuador", currency: "USD", locale: "es-EC" },
-  { code: "BO", name: "Bolivia", currency: "BOB", locale: "es-BO" },
-  { code: "UY", name: "Uruguay", currency: "UYU", locale: "es-UY" },
-  { code: "PY", name: "Paraguay", currency: "PYG", locale: "es-PY" },
+  { code: "PE", name: "Perú", currency: "PEN", locale: "es-PE", flag: "🇵🇪" },
+  { code: "CO", name: "Colombia", currency: "COP", locale: "es-CO", flag: "🇨🇴" },
+  { code: "CL", name: "Chile", currency: "CLP", locale: "es-CL", flag: "🇨🇱" },
+  { code: "AR", name: "Argentina", currency: "ARS", locale: "es-AR", flag: "🇦🇷" },
+  { code: "BR", name: "Brasil", currency: "BRL", locale: "pt-BR", flag: "🇧🇷" },
+  { code: "DO", name: "República Dominicana", currency: "DOP", locale: "es-DO", flag: "🇩🇴" },
+  { code: "EC", name: "Ecuador", currency: "USD", locale: "es-EC", flag: "🇪🇨" },
+  { code: "BO", name: "Bolivia", currency: "BOB", locale: "es-BO", flag: "🇧🇴" },
+  { code: "UY", name: "Uruguay", currency: "UYU", locale: "es-UY", flag: "🇺🇾" },
+  { code: "PY", name: "Paraguay", currency: "PYG", locale: "es-PY", flag: "🇵🇾" },
 ] as const;
 
 type CurrencyCode = (typeof COUNTRIES)[number]["currency"];
@@ -197,7 +198,7 @@ export function PrecioOroDiario() {
                   className="mt-2.5 min-h-12 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-semibold text-[#17232d] shadow-sm outline-none transition focus:border-[#c6a23a] focus:ring-4 focus:ring-[#f8c928]/20"
                 >
                   {COUNTRIES.map((item) => (
-                    <option key={item.code} value={item.code}>{item.name} · {item.currency}</option>
+                    <option key={item.code} value={item.code}>{item.flag} {item.name} · {item.currency}</option>
                   ))}
                 </select>
               </label>
