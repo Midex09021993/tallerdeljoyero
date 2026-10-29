@@ -319,6 +319,7 @@ export function createAurumLightingController(
       // Auxiliary reflection sources remain the photographic baseline and
       // are not toggled implicitly by unrelated manual light controls.
 
+      if (patch?.reflectorScale !== undefined) this.scaleToModel(lastRadius, lastTargetY);
       syncGemShaderLight();
 
       // The environment/HDR remains independent from the manual studio rig.
@@ -340,7 +341,8 @@ export function createAurumLightingController(
       // appear to have studio lights too far away.
       const rigScale = Math.max(safeRadius * 2.25, 0.01);
       const distance = Math.max(safeRadius * 6, 0.05);
-      const sourceScale = Math.max(rigScale / 10, 0.01);
+      const reflectorScale = Math.max(0.75, Math.min(2.0, Number(config?.reflectorScale ?? 1.35) || 1.35));
+      const sourceScale = Math.max((rigScale / 10) * reflectorScale, 0.01);
       const normalizedPosition = (position: any) => {
         if (!Array.isArray(position) || position.length < 3) return [0, 0, 0] as [number, number, number];
         const maxComponent = Math.max(...position.slice(0, 3).map((v:any) => Math.abs(Number(v) || 0)), 1);
