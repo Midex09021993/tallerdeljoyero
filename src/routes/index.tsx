@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { RegistroTaller } from "@/components/RegistroTaller";
 import { MiniAurumRender } from "@/components/MiniAurumRender";
+import { PrecioOroDiario } from "@/components/PrecioOroDiario";
 import { ArrowRight, BookOpen, Boxes, Calculator, Check, ChevronDown, Cloud, Gem, Layers3, MonitorSmartphone, PackageCheck, Sparkles, Sprout, ChartNoAxesCombined } from "lucide-react";
 import heroColgante from "@/assets/diseno-colgante.jpg";
 import heroFloral from "@/assets/diseno-floral.jpg";
@@ -283,6 +284,8 @@ function InicioPublico() {
           </div>
         </div>
       </section>
+
+      <PrecioOroDiario />
 
       <section id="aurum-render" className="overflow-hidden border-y border-[#263743] bg-[#111a22] text-white">
         <div className="mx-auto grid max-w-[1440px] items-center gap-9 px-5 py-14 sm:px-8 sm:py-16 lg:grid-cols-[1.05fr_.95fr] lg:gap-14 lg:px-12 lg:py-20">
