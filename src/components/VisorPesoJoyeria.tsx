@@ -857,7 +857,7 @@ export function VisorPesoJoyeria({ compacto = false, archivoInicial = null, arch
           {pesoMetalDesdeResina != null ? (
             <>
               <p className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
-                {num(pesoMetalDesdeResina, 3)} <span className="text-sm font-medium text-muted-foreground">g</span>
+                {num(pesoMetalDesdeResina, 2)} <span className="text-sm font-medium text-muted-foreground">g</span>
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
                 {metal.nombre} · densidad {num(densidad, 2)} g/cm³
