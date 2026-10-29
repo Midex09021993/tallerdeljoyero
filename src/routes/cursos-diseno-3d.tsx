@@ -22,12 +22,15 @@ export const Route = createFileRoute("/cursos-diseno-3d")({
           "Descubre cursos y recursos de formación para joyeros, estudiantes y profesionales del sector.",
       },
       { property: "og:title", content: "Cursos y formación | Taller del Joyero" },
+      { name: "robots", content: "index, follow, max-image-preview:large" },
+      { property: "og:url", content: "https://www.tallerdeljoyero.com/cursos-diseno-3d" },
       {
         property: "og:description",
         content:
           "Cursos, aprendizaje y herramientas complementarias para la formación profesional en joyería.",
       },
     ],
+    links: [{ rel: "canonical", href: "https://www.tallerdeljoyero.com/cursos-diseno-3d" }],
   }),
   component: CursosDiseno3DPage,
 });
