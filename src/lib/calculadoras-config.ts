@@ -18,6 +18,7 @@ export type ConfigVisualizador3D = {
     plata925: number;
     plata950: number;
     plata970: number;
+    plataPd900: number;
     platino: number;
   };
   factorEmpuje: number;
@@ -43,7 +44,7 @@ export type ConfigYeso = {
 };
 
 export const DEFAULT_CONFIG_VISUALIZADOR: ConfigVisualizador3D = {
-  densidades: { oro18a: 15.5, oro18b: 15.8, oro18r: 15.3, oro14: 13.4, plata925: 10.39, plata950: 10.41, plata970: 10.44, platino: 21.45 },
+  densidades: { oro18a: 15.5, oro18b: 15.8, oro18r: 15.3, oro14: 13.4, plata925: 10.39, plata950: 10.41, plata970: 10.44, plataPd900: 10.6, platino: 21.45 },
   factorEmpuje: 0,
   modoEmpuje: "gramos",
   factorSeguridad: 1,
@@ -132,6 +133,7 @@ export function leerConfigVisualizador(valor: unknown): ConfigVisualizador3D {
       plata925: numero(densidades["plata925"], d.plata925),
       plata950: numero(densidades["plata950"], d.plata950),
       plata970: numero(densidades["plata970"], d.plata970),
+      plataPd900: numero(densidades["plataPd900"], d.plataPd900),
       platino: numero(densidades["platino"], d.platino),
     },
     factorEmpuje: numero(root["factorEmpuje"], DEFAULT_CONFIG_VISUALIZADOR.factorEmpuje),
