@@ -512,7 +512,8 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // reflected energy instead of adding an unbounded white contribution.
         gl_FragColor.rgb *= 1.0 + aurumFlash * 0.12;
 
-        float aurumFacetContrast=smoothstep(0.68,0.96,aurumFacing);
+        // Slightly broaden the facet-response transition to reduce abrupt contrast changes during orbit.
+        float aurumFacetContrast=smoothstep(0.62,0.94,aurumFacing);
         // Stronger diamond-only facet separation addresses the washed-out crown
         // seen against the iJewel reference. This is contrast, not extra exposure:
         // preserve the colored-gem response and leave PBR refraction untouched.
