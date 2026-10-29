@@ -54,6 +54,15 @@ const guias = [
     lectura: "8 min de lectura",
     herramienta: "Asistente de impresión 3D",
   },
+  {
+    slug: "fundicion-joyeria-revestimiento-omni-cast",
+    categoria: "Fundición y materiales",
+    titulo: "Fundición de joyería: guía del revestimiento y preparación del cilindro",
+    descripcion: "Comprende las proporciones de mezcla, la preparación del cilindro y cómo interpretar las referencias del fabricante Whip Mix Omni-Cast.",
+    icon: Layers3,
+    lectura: "7 min de lectura",
+    herramienta: "Calculadora de yeso y agua",
+  },
 ];
 
 function GuiasPage() {
