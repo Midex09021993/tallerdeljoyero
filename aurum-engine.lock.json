@@ -10,7 +10,7 @@
     "scripts/check-aurum-lock.mjs": "d8b0b1e553fbfdd7faf6522482d0460b5c9803464b9fa03d34ed3bbacd18b5c4",
     "src/components/AurumRender.tsx": "adcca33ed5ac7774beb9deaf635927730f1e9795c174dbc299382b9d024c315f",
     "src/components/AurumRenderConfig.tsx": "aee6ad6ae61c5ea3ad7a6fa03453154b871c3910845656f4ef6bed3b4660ad66",
-    "src/lib/aurum-material-engine.ts": "ee394541e71aba5e44be0502343d055100b9f2d556dd80285eef315302c2d995",
+    "src/lib/aurum-material-engine.ts": "48b96fb1dd9dd3cc3d8f9e17c4f584be27d15d121a1750e690dafae750dcc268",
     "src/lib/aurum/api.ts": "98e8927885b4c061ab529e0593332d5617b485cd2fcbf9e1b8d0acf3fa859c1c",
     "src/lib/aurum/aspect-ratios.ts": "dbbb8de198e9b21c5a3484dcaf793a0061e73d4c27499ba8f2021ae3ababbdd9",
     "src/lib/aurum/aurum-diamond-bvh-experimental.ts": "4ec050f52669e9bf219734e51c2a355e15c1639416da4833757a019d6a25cc49",
