@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { inspectAurumMesh } from "./mesh-preflight";
 import { getAurumModelParts } from "./model-parts";
 import { findAurumOverlapCandidates } from "./overlap-experiment";
+import { applyAurumMetalUnionExperiment } from "./metal-union-experiment";
 import { toCreasedNormals } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
 type AurumNormalMode = "authored" | "diagnostic" | "recompute-metal" | "crease-metal";
@@ -260,6 +261,15 @@ export async function preprocessAurumModel(object: THREE.Object3D) {
     }
   } catch (error) {
     console.warn("[AURUM][METAL OVERLAP AUDIT] Diagnostic failed safely", error);
+  }
+  // Opt-in boolean union experiment. The default viewer/export pipeline is unchanged.
+  try {
+    if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("aurumUnion") === "1") {
+      const unionResult = applyAurumMetalUnionExperiment(object, 8);
+      console.info("[AURUM][METAL UNION EXPERIMENT]", unionResult);
+    }
+  } catch (error) {
+    console.warn("[AURUM][METAL UNION EXPERIMENT] Failed safely; keeping source meshes", error);
   }
   return object;
 }
