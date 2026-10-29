@@ -31,7 +31,7 @@ export type IluminacionId = "studioSoft" | "studioHard" | "jewelry" | "luxury";
 export type MaterialGrupo = "Oro Amarillo" | "Oro Blanco" | "Oro Rosa" | "Plata" | "Platino" | "Especiales";
 export type CategoriaParte = "metal" | "gema" | "otro";
 export type GemaId =
-  | "diamante_natural" | "diamante_vs" | "diamante_inclusiones"
+  | "diamante_natural" | "diamante_vs" | "diamante_inclusiones" | "diamante_azul"
   | "zafiro_azul" | "zafiro_intenso" | "zafiro_inclusiones"
   | "rubi_natural" | "rubi_sangre_pichon" | "rubi_inclusiones"
   | "esmeralda_1" | "esmeralda_2" | "esmeralda_3" | "esmeralda_inclusiones"
@@ -69,9 +69,11 @@ export type ParteModelo = { id: string; nombre: string; tipo: "grupo" | "malla";
 
 // Biblioteca gemológica existente de AURUM.
 export const GEMAS: GemaConfig[] = [
-  { id:"diamante_natural", familia:"Diamante", nombre:"Diamante Natural", color:0xffffff, transmission:1, ior:2.417, roughness:.010, envMapIntensity:1.3, attenuationColor:0xffffff, attenuationDistance:100, dispersion:.01, iridescence:0, inclusionStyle:"diamante", inclusionStrength:.08 },
-  { id:"diamante_vs", familia:"Diamante", nombre:"Diamante VS", color:0xffffff, transmission:1, ior:2.417, roughness:.010, envMapIntensity:1.3, attenuationColor:0xffffff, attenuationDistance:100, dispersion:.01, iridescence:0, inclusionStyle:"diamante", inclusionStrength:.035 },
-  { id:"diamante_inclusiones", familia:"Diamante", nombre:"Diamante · Inclusiones", color:0xf5f9ff, transmission:.995, ior:2.417, roughness:.014, envMapIntensity:1.3, attenuationColor:0xf2f7ff, attenuationDistance:60, dispersion:.01, iridescence:0, inclusionStyle:"diamante", inclusionStrength:.22 },
+  // Perfiles ópticos calibrados con los materiales de referencia iJewel exportados en diamantes.glb.
+  { id:"diamante_natural", familia:"Diamante", nombre:"Diamante Natural", color:0xffffff, transmission:0, ior:2.6, roughness:.010, envMapIntensity:1.3, attenuationColor:0xffffff, attenuationDistance:100, dispersion:.01, iridescence:0, inclusionStyle:"diamante", inclusionStrength:.08, notaGemologica:"Perfil BVH calibrado con iJewel Gem 01 (diamante blanco 1)." },
+  { id:"diamante_vs", familia:"Diamante", nombre:"Diamante VS", color:0xffffff, transmission:0, ior:2.6, roughness:.010, envMapIntensity:1.3, attenuationColor:0xffffff, attenuationDistance:100, dispersion:0, iridescence:0, inclusionStyle:"diamante", inclusionStrength:.035, notaGemologica:"Perfil BVH calibrado con iJewel Gem 02 (diamante blanco 2)." },
+  { id:"diamante_inclusiones", familia:"Diamante", nombre:"Diamante · Inclusiones", color:0xffffff, transmission:1, ior:2.6, roughness:.014, envMapIntensity:1.3, attenuationColor:0xffffff, attenuationDistance:60, dispersion:0, iridescence:0, inclusionStyle:"diamante", inclusionStrength:.22, notaGemologica:"Perfil BVH calibrado con iJewel Gem 03 (diamante blanco 3)." },
+  { id:"diamante_azul", familia:"Diamante", nombre:"Diamante Azul", color:0xb5cbdd, transmission:0, ior:2.4, roughness:.010, envMapIntensity:1.5, attenuationColor:0xb5cbdd, attenuationDistance:100, dispersion:.004, iridescence:0, inclusionStyle:"diamante", inclusionStrength:.035, notaGemologica:"Perfil BVH calibrado con iJewel Gem 04 (diamante azul); boost RGB ×2 y 6 rebotes." },
   { id:"zafiro_azul", familia:"Zafiro", nombre:"Zafiro Azul Natural", color:0x174a9e, transmission:.9, ior:1.77, roughness:.025, envMapIntensity:4.1, attenuationColor:0x123d91, attenuationDistance:2.4, dispersion:.12, iridescence:.015, inclusionStyle:"silk", inclusionStrength:.08 },
   { id:"zafiro_intenso", familia:"Zafiro", nombre:"Zafiro Azul Intenso", color:0x0d2f78, transmission:.86, ior:1.77, roughness:.03, envMapIntensity:4.3, attenuationColor:0x08265f, attenuationDistance:1.55, dispersion:.1, iridescence:.01, inclusionStyle:"silk", inclusionStrength:.05 },
   { id:"zafiro_inclusiones", familia:"Zafiro", nombre:"Zafiro · Inclusiones", color:0x194a96, transmission:.88, ior:1.77, roughness:.035, envMapIntensity:3.9, attenuationColor:0x123a82, attenuationDistance:2, dispersion:.1, iridescence:.015, inclusionStyle:"silk", inclusionStrength:.24 },
