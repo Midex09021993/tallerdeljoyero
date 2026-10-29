@@ -3,6 +3,7 @@ import { inspectAurumMesh } from "./mesh-preflight";
 import { getAurumModelParts } from "./model-parts";
 import { findAurumOverlapCandidates } from "./overlap-experiment";
 import { applyAurumMetalUnionExperiment } from "./metal-union-experiment";
+import { applyAurumVoxelRemeshExperiment } from "./voxel-remesh-experiment";
 import { toCreasedNormals } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
 type AurumNormalMode = "authored" | "diagnostic" | "recompute-metal" | "crease-metal";
@@ -261,6 +262,16 @@ export async function preprocessAurumModel(object: THREE.Object3D) {
     }
   } catch (error) {
     console.warn("[AURUM][METAL OVERLAP AUDIT] Diagnostic failed safely", error);
+  }
+  // Opt-in voxel remesh experiment. This is independent from the legacy Boolean/CSG test.
+  // Original metal meshes are only hidden after a complete voxel surface is built.
+  try {
+    if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("aurumWrap") === "1") {
+      const voxelResult = applyAurumVoxelRemeshExperiment(object, 88);
+      console.info("[AURUM][VOXEL REMESH EXPERIMENT]", voxelResult);
+    }
+  } catch (error) {
+    console.warn("[AURUM][VOXEL REMESH EXPERIMENT] Failed safely; source meshes retained", error);
   }
   // Opt-in boolean union experiment. The default viewer/export pipeline is unchanged.
   try {
