@@ -202,7 +202,7 @@ export async function createAurumDiamondBvhRuntime(options: {
           // higher bounce counts are reserved for explicit high/final capture.
           quality: family === "diamante" ? "high" : (options.quality ?? "interactive"),
           // Restore the original diamond BVH fire/brightness settings; the emerald experiment remains isolated.
-          rgbBoost: family === "diamante" ? [1.2, 1.2, 1.2] : isEmerald ? [0.85, 1.15, 0.90] : undefined,
+          rgbBoost: family === "diamante" ? [1.2, 1.2, 1.2] : undefined,
           environmentIntensity: useEmeraldBvhOptics ? (isVsUsingEmeraldBvh ? 0.82 : 1) : emeraldProfile?.environmentIntensity ?? rubyProfile?.environmentIntensity ?? sapphireProfile?.environmentIntensity ?? (isEmerald ? 1.5 : isRuby ? 1.0 : isSapphire ? 1.2 : isAmethyst ? 1.35 : isAquamarine ? 1.25 : isCitrine ? 1.2 : isBlueTopaz ? 1.25 : isImperialTopaz ? 1.22 : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 1.55 : 1.3) : isTanzanite ? 1.25 : isMoissanite ? 1.35 : isZircon ? 1.2 : isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 1.18 : 1.14),
           // Emerald test: disable dispersion entirely while isolating BVH speckles.
           // The green color is authored by the profile; chromatic splitting is not
