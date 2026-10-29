@@ -220,6 +220,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [parteSeleccionadaCategoria, setParteSeleccionadaCategoria] = useState<"metal" | "gema" | "otro">("otro");
   const [diagnosticoSeleccion, setDiagnosticoSeleccion] = useState<any | null>(null);
   const [diagnosticoSeleccionHabilitado, setDiagnosticoSeleccionHabilitado] = useState(false);
+  const diagnosticoSeleccionHabilitadoRef = useRef(false);
+
+  useEffect(() => {
+    diagnosticoSeleccionHabilitadoRef.current = diagnosticoSeleccionHabilitado;
+  }, [diagnosticoSeleccionHabilitado]);
 
   useEffect(() => {
     const handleDiagnosticShortcut = (event: KeyboardEvent) => {
@@ -228,7 +233,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       const tagName = target?.tagName?.toLowerCase();
       if (tagName === "input" || tagName === "textarea" || target?.isContentEditable) return;
       event.preventDefault();
-      setDiagnosticoSeleccionHabilitado(value => !value);
+      const nextEnabled = !diagnosticoSeleccionHabilitadoRef.current;
+      diagnosticoSeleccionHabilitadoRef.current = nextEnabled;
+      setDiagnosticoSeleccionHabilitado(nextEnabled);
+      if (!nextEnabled) setDiagnosticoSeleccion(null);
     };
     window.addEventListener("keydown", handleDiagnosticShortcut);
     return () => window.removeEventListener("keydown", handleDiagnosticShortcut);
@@ -2379,7 +2387,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         // Full selection diagnostics traverse every mesh and collect nested metadata.
         // Keep this expensive audit opt-in so selecting one piece stays responsive
         // on dense Rhino/CAD models.
-        const selectionAuditEnabled = diagnosticoSeleccionHabilitado || (typeof window !== "undefined"
+        const selectionAuditEnabled = diagnosticoSeleccionHabilitadoRef.current || (typeof window !== "undefined"
           && new URLSearchParams(window.location.search).get("aurumSelectionAudit") === "1");
         if (selectionAuditEnabled) {
           // Diagnostic snapshot of the selected mesh and all gem-layer identities.
