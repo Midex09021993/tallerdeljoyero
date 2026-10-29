@@ -179,7 +179,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [ptSamples, setPtSamples] = useState("256");
   const [ptProgress, setPtProgress] = useState<string|null>(null);
   const ptAbortRef = useRef<AbortController|null>(null);
-  const [lightingStudio, setLightingStudio] = useState<any>(() => ({...AURUM_LIGHTING_DEFAULT}));
+  const [lightingStudio, setLightingStudio] = useState<any>(() => ({...AURUM_LIGHTING_DEFAULT, reflectorScale: 1.35}));
   const lucesRef = useRef<((patch:any)=>void)|null>(null);
   const [, refrescarLuces] = useState(0);
   const actualizarLucesAurum = useCallback((patch:any) => {
@@ -3267,6 +3267,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       <label style={{display:"block",fontSize:11}}>Intensidad para gemas<input aria-label="Intensidad para gemas" style={{width:"100%"}} type="range" min="0" max="2" step=".05" value={lightingStudio.gem.intensity} onChange={e=>actualizarLucesAurum({gem:{...lightingStudio.gem,intensity:+e.target.value}})}/></label>
       <label style={{display:"flex",justifyContent:"space-between",fontSize:12}}>Luz frontal rectangular <input type="checkbox" checked={lightingStudio.front.enabled} onChange={e=>actualizarLucesAurum({front:{...lightingStudio.front,enabled:e.target.checked}})}/></label>
       <label style={{display:"block",fontSize:11}}>Intensidad frontal<input aria-label="Intensidad de luz frontal" style={{width:"100%"}} type="range" min="0" max="2" step=".05" value={lightingStudio.front.intensity} onChange={e=>actualizarLucesAurum({front:{...lightingStudio.front,intensity:+e.target.value}})}/></label>
+      <div style={{marginTop:10,paddingTop:10,borderTop:"1px solid rgba(255,255,255,.12)"}}><label style={{display:"block",fontSize:12,fontWeight:600}}>Tamaño de reflectores <span style={{float:"right",color:"#f3d66e"}}>{Math.round((lightingStudio.reflectorScale ?? 1.35)*100)}%</span><input aria-label="Tamaño de reflectores" style={{width:"100%"}} type="range" min=".75" max="2" step=".05" value={lightingStudio.reflectorScale ?? 1.35} onChange={e=>actualizarLucesAurum({reflectorScale:+e.target.value})}/></label><p style={{fontSize:10,color:"rgba(255,255,255,.62)",marginTop:3}}>Ajusta el ancho y alto de las fuentes de estudio sin aumentar su intensidad.</p></div>
     </div>
   );
   return (<>
