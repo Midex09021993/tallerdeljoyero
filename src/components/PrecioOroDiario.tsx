@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, CalendarClock, Coins, RefreshCw } from "lucide-react";
+import { ArrowRight, CalendarClock, Coins, RefreshCw, ShieldCheck, Sparkles } from "lucide-react";
 
 const COUNTRIES = [
   { code: "PE", name: "Perú", currency: "PEN", locale: "es-PE" },
@@ -163,50 +163,62 @@ export function PrecioOroDiario() {
   }, [grams, karat, price24k]);
 
   return (
-    <section id="precio-del-oro" className="scroll-mt-24 border-y border-[#eadca8] bg-gradient-to-br from-[#fffaf0] via-white to-[#fff5d6]">
-      <div className="mx-auto max-w-[1440px] px-5 py-12 sm:px-8 sm:py-16 lg:px-12">
-        <div className="grid items-center gap-8 lg:grid-cols-[1fr_.9fr] lg:gap-14">
+    <section id="precio-del-oro" className="scroll-mt-24 overflow-hidden border-y border-[#eadca8] bg-[radial-gradient(ellipse_at_top_left,_rgba(250,224,139,0.24),_transparent_44%),linear-gradient(135deg,#fffdf8_0%,#ffffff_52%,#fff8e5_100%)]">
+      <div className="mx-auto max-w-[1320px] px-5 py-12 sm:px-8 sm:py-16 lg:px-12">
+        <div className="grid items-center gap-10 lg:grid-cols-[.88fr_1.12fr] lg:gap-16">
           <div>
-            <span className="inline-flex items-center gap-2 rounded-full border border-[#eadca8] bg-white px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.18em] text-[#876500]">
+            <span className="inline-flex items-center gap-2 rounded-full border border-[#e9d79d] bg-white/90 px-3.5 py-2 text-[10px] font-bold uppercase tracking-[.17em] text-[#876500] shadow-sm">
               <Coins className="size-3.5" /> Referencia diaria · Sudamérica
             </span>
-            <h2 className="mt-4 max-w-2xl text-3xl font-extrabold leading-tight tracking-tight text-[#17232d] sm:text-4xl">
+            <h2 className="mt-5 max-w-2xl text-3xl font-extrabold leading-[1.12] tracking-[-.035em] text-[#17232d] sm:text-4xl lg:text-[2.8rem]">
               Precio del oro hoy
               <span className="block text-[#9a7400]">Calcula el valor teórico de tu metal.</span>
             </h2>
-            <p className="mt-4 max-w-xl text-sm leading-7 text-slate-600 sm:text-base">
+            <p className="mt-5 max-w-xl text-sm leading-7 text-slate-600 sm:text-base">
               Consulta la referencia internacional del oro convertida a moneda local y estima el contenido metálico de una pieza según su peso y quilataje.
             </p>
-            <p className="mt-4 text-xs leading-5 text-slate-500">
+            <p className="mt-5 max-w-xl text-xs leading-6 text-slate-500">
               Es una estimación del contenido metálico, no una oferta de compra ni una tasación comercial. No incluye piedras, mano de obra, mermas, impuestos ni márgenes del comprador. La conversión a moneda local es referencial.
             </p>
+            <div className="mt-6 flex flex-wrap gap-x-5 gap-y-3 border-t border-[#eadca8]/70 pt-5 text-xs font-medium text-slate-600">
+              <span className="inline-flex items-center gap-2"><ShieldCheck className="size-4 text-[#9a7400]" /> Sin registro</span>
+              <span className="inline-flex items-center gap-2"><CalendarClock className="size-4 text-[#9a7400]" /> Referencia diaria</span>
+              <span className="inline-flex items-center gap-2"><Sparkles className="size-4 text-[#9a7400]" /> Para joyeros de la región</span>
+            </div>
           </div>
 
-          <div className="rounded-3xl border border-[#eadca8] bg-white p-5 shadow-[0_18px_50px_rgba(91,72,10,.09)] sm:p-7">
-            <div className="grid gap-4 sm:grid-cols-[1fr_1.1fr]">
-              <label className="block text-xs font-semibold text-slate-600">
+          <div className="overflow-hidden rounded-[1.6rem] border border-[#e8d79e] bg-white shadow-[0_24px_70px_rgba(77,60,12,.12)]">
+            <div className="border-b border-slate-100 bg-gradient-to-r from-[#fffdf7] to-white p-5 sm:p-7">
+              <label className="block text-xs font-bold uppercase tracking-[.08em] text-slate-500">
                 País / moneda
                 <select
                   value={country.code}
                   onChange={(event) => setCountryCode(event.target.value)}
-                  className="mt-2 min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm font-medium text-[#17232d] outline-none transition focus:border-[#d4aa19] focus:ring-2 focus:ring-[#f8c928]/30"
+                  className="mt-2.5 min-h-12 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-semibold text-[#17232d] shadow-sm outline-none transition focus:border-[#c6a23a] focus:ring-4 focus:ring-[#f8c928]/20"
                 >
                   {COUNTRIES.map((item) => (
                     <option key={item.code} value={item.code}>{item.name} · {item.currency}</option>
                   ))}
                 </select>
               </label>
-              <div>
-                <p className="text-xs font-semibold text-slate-500">Oro puro · 24K · por gramo</p>
+              <div className="mt-5 rounded-2xl border border-[#f0e3b7] bg-[#fffaf0] p-4 sm:p-5">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[.16em] text-[#8b6b0a]">Cotización de referencia</p>
+                    <p className="mt-1 text-xs font-semibold text-slate-600">Oro puro · 24K · por gramo</p>
+                  </div>
+                  <span className="rounded-full border border-[#e9d79d] bg-white px-2.5 py-1 text-[10px] font-bold text-[#876500]">Precio indicativo</span>
+                </div>
                 {price24k !== undefined ? (
-                  <p className="mt-2 text-3xl font-extrabold tracking-tight text-[#17232d] sm:text-4xl">{formatMoney(price24k, country.currency, country.locale)}</p>
+                  <p className="mt-3 break-words text-3xl font-extrabold tracking-[-.04em] text-[#17232d] sm:text-[2.6rem]">{formatMoney(price24k, country.currency, country.locale)}</p>
                 ) : (
-                  <p className="mt-2 text-2xl font-extrabold text-slate-400">{loading ? "Consultando…" : "Precio no disponible"}</p>
+                  <p className="mt-3 text-2xl font-extrabold text-slate-400">{loading ? "Consultando…" : "Precio no disponible"}</p>
                 )}
+              </div>
               </div>
             </div>
 
-            <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 sm:px-7">
               <div className="flex items-center gap-2 text-[11px] text-slate-500">
                 <CalendarClock className="size-3.5 shrink-0" />
                 {quote ? <>Dato de origen: {formatQuoteDate(quote.asOf)} · hora de Perú</> : "La fecha aparecerá cuando la fuente responda."}
@@ -215,7 +227,7 @@ export function PrecioOroDiario() {
                 type="button"
                 onClick={() => setRefreshKey((value) => value + 1)}
                 disabled={loading}
-                className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 transition hover:border-[#d4aa19] hover:bg-[#fffbee] disabled:cursor-wait disabled:opacity-50"
+                className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600 shadow-sm transition hover:border-[#d4aa19] hover:bg-[#fffbee] disabled:cursor-wait disabled:opacity-50"
                 aria-label="Actualizar cotización del oro"
               >
                 <RefreshCw className={"size-3.5 " + (loading ? "animate-spin" : "")} /> Actualizar
@@ -223,8 +235,8 @@ export function PrecioOroDiario() {
             </div>
             {message && <p role="status" className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900">{message}</p>}
 
-            <div className="mt-6 border-t border-slate-100 pt-5">
-              <h3 className="text-sm font-bold text-[#17232d]">Calcula el valor teórico</h3>
+            <div className="p-5 pt-4 sm:p-7 sm:pt-4">
+              <div className="flex items-start justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[.16em] text-[#9a7400]">Calculadora de taller</p><h3 className="mt-1 text-base font-extrabold text-[#17232d]">Estima el valor de tu oro</h3></div><span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold text-slate-600">Paso 1 · 2</span></div>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 <label className="block text-xs font-semibold text-slate-600">
                   Peso (gramos)
@@ -254,16 +266,16 @@ export function PrecioOroDiario() {
                   </select>
                 </label>
               </div>
-              <div className="mt-4 rounded-2xl bg-[#fff8df] p-4">
+              <div className="mt-5 rounded-2xl border border-[#e9d79d] bg-gradient-to-br from-[#fff8df] to-[#fffdf6] p-4 sm:p-5">
                 <p className="text-xs font-medium text-[#765900]">Valor teórico estimado</p>
-                <p className="mt-1 text-2xl font-extrabold tracking-tight text-[#17232d]">
+                <p className="mt-1 break-words text-2xl font-extrabold tracking-tight text-[#17232d] sm:text-3xl">
                   {estimatedValue === null ? "—" : formatMoney(estimatedValue, country.currency, country.locale)}
                 </p>
                 <p className="mt-1 text-[11px] leading-5 text-slate-600">Fórmula: peso × precio de 24K × ({karat}/24).</p>
               </div>
             </div>
 
-            <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-5 py-4 sm:px-7">
               <a href="https://goldprice.corgano.com/" target="_blank" rel="noreferrer" className="text-[11px] font-medium text-slate-500 underline decoration-slate-300 underline-offset-4 hover:text-[#765900]">
                 Gold price data by Corgano
               </a>
