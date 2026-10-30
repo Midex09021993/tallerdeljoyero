@@ -1505,8 +1505,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         if (!ext || !["stl","obj","glb","fbx","3dm"].includes(ext)) {
           throw new Error("Formato no compatible. Usa STL, OBJ, GLB, FBX o 3DM.");
         }
-        informar("Procesando archivo...");
+        informar(ext === "3dm" ? "Leyendo archivo 3DM..." : "Leyendo archivo...");
         const objeto = await parseAurumInput(file,ext,material);
+        informar("Archivo leído. Preparando modelo...");
         loadAuditStep("parse-input-complete", { sourceFormat: ext, objectCount: (() => { let count = 0; objeto.traverse(() => count++); return count; })() });
         // Rhino trabaja con Z como eje vertical, mientras que AURUM RENDER/Three.js
         // usa Y como eje vertical. Convertimos únicamente los 3DM para conservar
@@ -1523,13 +1524,15 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         informar(ext==="glb" ? "Preparando visualización..." : "Convirtiendo a GLB...");
         let interno:any;
         if (ext==="glb") {
+          informar("Preparando modelo 3D para el visor...");
           interno = await normalizeAurumModel(
             objeto, null, ext, colorRhinoHex, clasificarCapa
           );
           loadAuditStep("normalize-glb-complete");
         } else {
-          const glb = await convertAurumToGlb(objeto, colorRhinoHex, clasificarCapa);
+          const glb = await convertAurumToGlb(objeto, colorRhinoHex, clasificarCapa, (stage) => informar(stage));
           loadAuditStep("convert-to-glb-complete", { sourceFormat: ext });
+          informar("Optimizando estructura para el visor...");
           interno = await normalizeAurumModel(
             objeto, glb, ext, colorRhinoHex, clasificarCapa
           );
@@ -1537,6 +1540,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         }
         // Runtime budget is derived from actual renderable geometry, not source file size.
         // This keeps CAD-heavy jewelry responsive without changing authored geometry.
+        informar("Configurando calidad de visualización...");
         runtimeBudget = getAurumRuntimeBudget(countAurumTriangles(interno));
         if (perfEnabled) {
           console.warn("[AURUM][RUNTIME BUDGET]", runtimeBudget);
