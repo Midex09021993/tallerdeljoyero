@@ -50,8 +50,7 @@ function VisorCortoPage() {
           setEnlace({ url, nombre, expira_en: expiraEn });
         }
         setCargando(false);
-      })
-      , () => {
+      }, () => {
         if (activo) { setError(true); setCargando(false); }
       });
     return () => { activo = false; };
