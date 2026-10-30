@@ -154,7 +154,7 @@ export function MiniAurumRender({ className = "" }: MiniAurumRenderProps) {
           const inferredDiamond = candidates[0]?.mesh;
           if (inferredDiamond) {
             const material = Array.isArray(inferredDiamond.material) ? inferredDiamond.material[0] : inferredDiamond.material;
-            material.userData = { ...(material.userData ?? {}), aurumGemFamily: "diamante" };
+            if (material) material.userData = { ...(material.userData ?? {}), aurumGemFamily: "diamante" };
             inferredDiamond.userData = {
               ...(inferredDiamond.userData ?? {}),
               aurumActiveGemId: "diamante_natural",
