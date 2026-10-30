@@ -206,8 +206,56 @@ function TalleresDeLaComunidad() {
 
   if (isError || (!isLoading && talleres.length === 0)) return null;
 
+  const renderTalleres = (duplicado = false) => (
+    <div className="aurum-community-marquee-group" aria-hidden={duplicado || undefined}>
+      {talleres.map((taller) => (
+        <div key={taller.id} className="flex h-24 w-36 shrink-0 flex-col items-center justify-center gap-2 px-3 sm:w-44 lg:w-48" title={duplicado ? undefined : taller.nombre}>
+          <img
+            src={taller.logo}
+            alt={duplicado ? "" : taller.nombre}
+            loading="lazy"
+            decoding="async"
+            className="max-h-14 max-w-full object-contain opacity-90 transition-opacity duration-300 hover:opacity-100 sm:max-h-16"
+          />
+          {taller.pais && (
+            <span className="text-[9px] font-medium uppercase tracking-[.17em] text-slate-400">
+              {taller.pais}
+            </span>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+
   return (
-    <section aria-labelledby="talleres-comunidad-titulo" className="border-y border-slate-100 bg-white">
+    <section aria-labelledby="talleres-comunidad-titulo" className="overflow-hidden border-y border-slate-100 bg-white">
+      <style>{`
+        @keyframes aurum-community-marquee {
+          from { transform: translateX(0); }
+          to { transform: translateX(-50%); }
+        }
+        .aurum-community-marquee-track {
+          display: flex;
+          width: max-content;
+          animation: aurum-community-marquee 38s linear infinite;
+          will-change: transform;
+        }
+        .aurum-community-marquee-group {
+          display: flex;
+          flex: 0 0 auto;
+          align-items: center;
+          gap: clamp(2.5rem, 5vw, 5rem);
+          padding-right: clamp(2.5rem, 5vw, 5rem);
+        }
+        .aurum-community-marquee-viewport:hover .aurum-community-marquee-track,
+        .aurum-community-marquee-viewport:focus-within .aurum-community-marquee-track {
+          animation-play-state: paused;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .aurum-community-marquee-track { animation: none; }
+          .aurum-community-marquee-viewport { overflow-x: auto; }
+        }
+      `}</style>
       <div className="mx-auto max-w-[1440px] px-5 py-14 sm:px-8 sm:py-[4.5rem] lg:px-12">
         <div className="mx-auto max-w-3xl text-center">
           <p className="text-[10px] font-semibold uppercase tracking-[.24em] text-[#9a7418]">AURUM LAB · COMUNIDAD</p>
@@ -221,23 +269,13 @@ function TalleresDeLaComunidad() {
             {[0, 1, 2, 3, 4, 5].map((item) => <div key={item} className="h-14 w-40 animate-pulse rounded bg-slate-100" />)}
           </div>
         ) : (
-          <div className="mx-auto mt-12 flex max-w-6xl flex-wrap items-center justify-center gap-x-12 gap-y-9 sm:gap-x-14 lg:gap-x-[4.5rem]">
-            {talleres.map((taller) => (
-              <div key={taller.id} className="flex min-h-[5.5rem] w-36 flex-col items-center justify-center gap-2 sm:w-40 lg:w-44" title={taller.nombre}>
-                <img
-                  src={taller.logo}
-                  alt={taller.nombre}
-                  loading="lazy"
-                  decoding="async"
-                  className="max-h-14 max-w-full object-contain opacity-90 transition-opacity duration-300 hover:opacity-100"
-                />
-                {taller.pais && (
-                  <span className="text-[9px] font-medium uppercase tracking-[.16em] text-slate-400">
-                    {taller.pais}
-                  </span>
-                )}
-              </div>
-            ))}
+          <div className="aurum-community-marquee-viewport relative mx-auto mt-10 max-w-[1240px] overflow-hidden py-2" aria-label="Logotipos de talleres participantes, carrusel de derecha a izquierda. Pasa el cursor para pausar.">
+            <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-white to-transparent sm:w-16" />
+            <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-white to-transparent sm:w-16" />
+            <div className="aurum-community-marquee-track">
+              {renderTalleres()}
+              {renderTalleres(true)}
+            </div>
           </div>
         )}
       </div>
