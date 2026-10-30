@@ -118,7 +118,19 @@ export function applyAurumMetalUnionExperiment(root: THREE.Object3D, maxMerges =
         visualUnion.scale.set(1, 1, 1);
         visualUnion.castShadow = left.castShadow || right.castShadow;
         visualUnion.receiveShadow = left.receiveShadow || right.receiveShadow;
+        // Keep the Rhino classification on the replacement. Without this,
+        // the exported GLB loses its metal family/layer identity and later
+        // material assignment can treat the boolean result as an unknown mesh.
+        const sourceRhino = (left.userData?.aurumRhino ?? {}) as Record<string, unknown>;
+        const sourceRhinoData = (left.userData?.aurumRhinoSource ?? {}) as Record<string, unknown>;
         visualUnion.userData = {
+          ...left.userData,
+          aurumRhino: {
+            ...sourceRhino,
+            categoria: "metal",
+            layerKey: leftLayerKey,
+          },
+          aurumRhinoSource: { ...sourceRhinoData },
           aurumMetalUnionExperiment: true,
           aurumUnionSource: [
             { uuid: left.uuid, name: left.name, layerKey: leftLayerKey },
