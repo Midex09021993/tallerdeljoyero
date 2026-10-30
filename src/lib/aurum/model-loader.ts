@@ -654,15 +654,14 @@ export async function convertAurumToGlb(
   const materialConsolidation = consolidateAurumMetalMaterialsByLayer(object);
   console.info("[AURUM][METAL MATERIAL CONSOLIDATION]", materialConsolidation);
 
-  // Known-good accumulated metal union, kept opt-in as in the version
-  // validated with gold, silver and the other metal families.
+  // Apply the validated accumulated metal union to every imported model.
+  // Rhino Mesh, SubD and unknown geometry types remain excluded by the CSG
+  // eligibility guard; their original source meshes stay intact.
   try {
-    if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("aurumUnion") === "1") {
-      const unionResult = applyAurumMetalUnionExperiment(object, 8);
-      console.info("[AURUM][METAL UNION EXPERIMENT]", unionResult);
-    }
+    const unionResult = applyAurumMetalUnionExperiment(object, 8);
+    console.info("[AURUM][METAL UNION]", unionResult);
   } catch (error) {
-    console.warn("[AURUM][METAL UNION EXPERIMENT] Failed safely; keeping source meshes", error);
+    console.warn("[AURUM][METAL UNION] Failed safely; keeping source meshes", error);
   }
   onProgress?.("Generando archivo 3D interno");
   const { GLTFExporter } = await import("three/examples/jsm/exporters/GLTFExporter.js");
