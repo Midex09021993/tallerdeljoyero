@@ -30,7 +30,6 @@ function AulaFormacionPage() {
   const [detalleSesion, setDetalleSesion] = useState("");
   const [archivo, setArchivo] = useState<File | null>(null);
   const [tituloMaterial, setTituloMaterial] = useState("");
-  const [cursoMaterial, setCursoMaterial] = useState("");
   const [publicarMaterial, setPublicarMaterial] = useState(true);
   const [mensaje, setMensaje] = useState("");
   const [ocupado, setOcupado] = useState(false);
@@ -208,7 +207,7 @@ function AulaFormacionPage() {
   }
 
   if (cargandoSesion) return <AppShell titulo="Aula de formación" subtitulo="Cargando acceso"><Panel titulo="Verificando cuenta"><p className="p-5 text-sm text-muted-foreground">Comprobando tu sesión…</p></Panel></AppShell>;
-  if (!sesion || !rolAlumno) return <AppShell titulo="Aula de formación" subtitulo="Acceso restringido"><Panel titulo="Cuenta no habilitada"><p className="p-5 text-sm text-muted-foreground">El aula de alumnos está disponible para cuentas de gerente u operario. La docencia se administra exclusivamente desde FADILAB.</p></Panel></AppShell>;
+  if (!sesion || (!rolAlumno && !esDocente)) return <AppShell titulo="Aula de formación" subtitulo="Acceso restringido"><Panel titulo="Cuenta no habilitada"><p className="p-5 text-sm text-muted-foreground">El aula de alumnos está disponible para cuentas de gerente u operario. La docencia se administra exclusivamente desde FADILAB.</p></Panel></AppShell>;
 
   return <AppShell titulo="Aula de formación" subtitulo={esDocente ? "FADILAB · Administración académica" : "Tus cursos, materiales y actividades"}>
     <div className="mx-auto max-w-6xl space-y-5">
@@ -229,7 +228,7 @@ function AulaFormacionPage() {
             </Panel>
             <Panel titulo="Cursos de FADILAB">
               <div className="space-y-2 p-5">
-                {cursosQuery.isLoading ? <p className="text-sm text-muted-foreground">Cargando cursos…</p> : cursos.length === 0 ? <p className="rounded-xl border border-dashed border-border p-5 text-sm text-muted-foreground">Todavía no hay cursos. Crea el primero desde el formulario.</p> : cursos.map(c => <button key={c.id} type="button" onClick={() => { setCursoSeleccionado(c.id); setCursoMaterial(c.id); }} className={`flex w-full items-center justify-between gap-3 rounded-xl border p-3 text-left ${cursoActivoId === c.id ? "border-gold bg-gold/10" : "border-border"}`}><span className="min-w-0"><span className="block truncate text-sm font-semibold">{c.titulo}</span><span className="text-xs text-muted-foreground">{c.duracion_horas} horas · {c.estado}</span></span><BookOpen className="size-4 shrink-0 text-gold-deep" /></button>)}
+                {cursosQuery.isLoading ? <p className="text-sm text-muted-foreground">Cargando cursos…</p> : cursos.length === 0 ? <p className="rounded-xl border border-dashed border-border p-5 text-sm text-muted-foreground">Todavía no hay cursos. Crea el primero desde el formulario.</p> : cursos.map(c => <button key={c.id} type="button" onClick={() => { setCursoSeleccionado(c.id) }} className={`flex w-full items-center justify-between gap-3 rounded-xl border p-3 text-left ${cursoActivoId === c.id ? "border-gold bg-gold/10" : "border-border"}`}><span className="min-w-0"><span className="block truncate text-sm font-semibold">{c.titulo}</span><span className="text-xs text-muted-foreground">{c.duracion_horas} horas · {c.estado}</span></span><BookOpen className="size-4 shrink-0 text-gold-deep" /></button>)}
               </div>
             </Panel>
           </div>
