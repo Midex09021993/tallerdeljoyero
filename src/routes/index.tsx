@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabasePublic } from "@/integrations/supabase/client";
 import { RegistroTaller } from "@/components/RegistroTaller";
 import { MiniAurumRender } from "@/components/MiniAurumRender";
 import { PrecioOroDiario } from "@/components/PrecioOroDiario";
@@ -163,6 +165,71 @@ function PlanesPublicos() {
       </div>
       <p className="mx-auto mt-5 max-w-3xl text-center text-[11px] leading-5 text-slate-500">Tarifas regulares: Taller S/ 29 al mes y Profesional S/ 79 al mes. Los descuentos se aplican al total del periodo elegido. Las condiciones de cobro y renovación deben confirmarse antes de activar cobros automáticos.</p>
     </>
+  );
+}
+
+
+type LogoTallerComunidad = {
+  tipo: "taller" | "curso";
+  participante_id: string;
+  nombre: string;
+  identidad_nombre: string | null;
+  identidad_logo: string | null;
+  imagen_url: string | null;
+};
+
+function TalleresDeLaComunidad() {
+  const { data = [], isLoading, isError } = useQuery({
+    queryKey: ["logos-talleres-comunidad-home"],
+    queryFn: async () => {
+      const { data, error } = await (supabasePublic as any).rpc("obtener_directorio_comunidad_publica");
+      if (error) throw error;
+      return (data ?? []) as LogoTallerComunidad[];
+    },
+    staleTime: 5 * 60_000,
+    retry: 1,
+  });
+
+  const talleres = Array.from(new Map(
+    data
+      .filter((item) => item.tipo === "taller")
+      .map((item) => ({
+        id: item.participante_id,
+        nombre: item.identidad_nombre?.trim() || item.nombre,
+        logo: item.identidad_logo?.trim() || item.imagen_url?.trim() || "",
+      }))
+      .filter((item) => Boolean(item.logo))
+      .map((item) => [item.id, item]),
+  ).values());
+
+  if (isError || (!isLoading && talleres.length === 0)) return null;
+
+  return (
+    <section aria-labelledby="talleres-comunidad-titulo" className="border-y border-slate-200 bg-white">
+      <div className="mx-auto max-w-[1440px] px-5 py-12 sm:px-8 sm:py-14 lg:px-12">
+        <div className="mx-auto max-w-2xl text-center">
+          <p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#987400]">Comunidad AURUM LAB</p>
+          <h2 id="talleres-comunidad-titulo" className="mt-3 text-2xl font-extrabold tracking-tight text-[#17232d] sm:text-3xl">Talleres de nuestra comunidad.</h2>
+          <p className="mt-3 text-sm leading-6 text-slate-600">Conoce algunos de los talleres que comparten su identidad y forman parte del ecosistema joyero.</p>
+        </div>
+        {isLoading ? (
+          <div className="mx-auto mt-9 grid max-w-5xl grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-5" aria-label="Cargando logotipos de talleres">
+            {[0, 1, 2, 3, 4].map((item) => <div key={item} className="h-20 animate-pulse rounded-xl bg-slate-100" />)}
+          </div>
+        ) : (
+          <div className="mx-auto mt-9 grid max-w-5xl grid-cols-2 items-center gap-x-6 gap-y-8 sm:grid-cols-3 lg:grid-cols-5">
+            {talleres.map((taller) => (
+              <div key={taller.id} className="flex h-20 items-center justify-center px-3" title={taller.nombre}>
+                <img src={taller.logo} alt={taller.nombre} loading="lazy" decoding="async" className="max-h-16 max-w-full object-contain grayscale opacity-65 transition duration-300 hover:grayscale-0 hover:opacity-100" />
+              </div>
+            ))}
+          </div>
+        )}
+        <div className="mt-8 text-center">
+          <Link to="/comunidad" className="inline-flex min-h-10 items-center gap-2 text-xs font-semibold text-[#765900] transition hover:text-[#17232d]">Conocer la comunidad <ArrowRight className="size-4" /></Link>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -457,6 +524,8 @@ function InicioPublico() {
           <PlanesPublicos />
         </div>
       </section>
+
+      <TalleresDeLaComunidad />
 
       <footer id="contacto" className="border-t border-[#263743] bg-[#17232d] text-slate-300">
         <div className="mx-auto max-w-[1440px] px-5 py-9 sm:px-8 sm:py-10 lg:px-12">
