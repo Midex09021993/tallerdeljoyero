@@ -138,7 +138,10 @@ function enforceRhinoLayerVisibilityBeforeExport(object: THREE.Object3D) {
   object.updateMatrixWorld(true);
 }
 
-export async function preprocessAurumModel(object: THREE.Object3D) {
+export async function preprocessAurumModel(
+  object: THREE.Object3D,
+  onProgress?: (message: string, completed: number, total: number) => void,
+) {
   object.updateMatrixWorld(true);
   const experimentMode = getAurumNormalExperimentMode();
   let meshes = 0, triangles = 0, normalsBuilt = 0, normalsRecomputedForTest = 0, creasedNormalsForTest = 0;
@@ -151,6 +154,7 @@ export async function preprocessAurumModel(object: THREE.Object3D) {
     // Yield between small batches so large CAD assemblies do not monopolize
     // the main thread for the entire preprocessing pass.
     if (objectIndex > 0 && objectIndex % 32 === 0) {
+      onProgress?.(`Preparando geometría (${objectIndex}/${queuedObjects.length})`, objectIndex, queuedObjects.length);
       await new Promise<void>((resolve) => setTimeout(resolve, 0));
     }
     const x = queuedObjects[objectIndex];
@@ -224,6 +228,7 @@ export async function preprocessAurumModel(object: THREE.Object3D) {
     x.receiveShadow = true;
     x.userData = { ...x.userData, aurumPreprocessed: true, aurumNormalsGenerated: generated, aurumMeshPreflight: preflight, aurumNormalExperiment: experimentMode, aurumNormalDiagnostics: normalInspection };
   }
+  onProgress?.("Finalizando preparación de geometría", queuedObjects.length, queuedObjects.length);
   removeQueue.forEach((x: any) => x.parent?.remove(x)); geometryRefs.forEach((count) => { if (count > 1) repeatedGeometryRefs += count; }); object.updateMatrixWorld(true);
   object.userData = { ...object.userData, aurumPreprocess: { version: 9, experimentMode, meshes, triangles, normalsBuilt, normalsRepaired, normalsRecomputedForTest, creasedNormalsForTest, windingFacesFlipped, meshesWithoutNormals, meshesWithSuspiciousNormals, meshesWithBoundaryEdges, meshesWithNonManifoldEdges, meshesWithDegenerateTriangles, lineObjectsRemoved, pointObjectsRemoved, repeatedGeometryRefs, preserveAuthoredNormals: experimentMode === "authored" || experimentMode === "diagnostic", autoRepairNormals: false, metalNormalsExperimentOnly: experimentMode === "crease-metal" || experimentMode === "recompute-metal", creaseAngleDegrees: 60, facetNormalsRequiredForGems: true, renderReadyChecks: { constructionLinesRemoved: lineObjectsRemoved > 0, constructionPointsRemoved: pointObjectsRemoved > 0, normalsAvailable: meshesWithoutNormals === 0, geometryStatsAvailable: true } } };
   if (experimentMode === "diagnostic") {
@@ -562,7 +567,8 @@ function consolidateAurumMetalMaterialsByLayer(root: THREE.Object3D): AurumMater
 export async function convertAurumToGlb(
   object: THREE.Object3D,
   colorRhinoHex?: (color:any) => string | undefined,
-  clasificarCapa?: (capa:string,colorCapa?:string) => "metal" | "gema" | "otro"
+  clasificarCapa?: (capa:string,colorCapa?:string) => "metal" | "gema" | "otro",
+  onProgress?: (message: string, completed?: number, total?: number) => void,
 ) {
   // Preserve the original Rhino layer table and each mesh's own source
   // attributes as explicit GLB extras. Do not rely on traversal order or on
@@ -628,7 +634,9 @@ export async function convertAurumToGlb(
     });
   }
   enforceRhinoLayerVisibilityBeforeExport(object);
-  await preprocessAurumModel(object);
+  onProgress?.("Preparando geometría y normales");
+  await preprocessAurumModel(object, onProgress);
+  onProgress?.("Consolidando materiales");
   const materialConsolidation = consolidateAurumMetalMaterialsByLayer(object);
   console.info("[AURUM][METAL MATERIAL CONSOLIDATION]", materialConsolidation);
 
@@ -637,11 +645,13 @@ export async function convertAurumToGlb(
   // geometry is never written back; gem and non-metal meshes are excluded by
   // the union pass. A failed CSG operation leaves its source meshes visible.
   try {
-    const unionResult = applyAurumMetalUnionExperiment(object);
+    onProgress?.("Analizando uniones metálicas");
+    const unionResult = await applyAurumMetalUnionExperiment(object, (message, completed, total) => onProgress?.(message, completed, total));
     console.info("[AURUM][METAL UNION]", unionResult);
   } catch (error) {
     console.warn("[AURUM][METAL UNION] Failed safely; keeping source meshes", error);
   }
+  onProgress?.("Generando archivo 3D interno");
   const { GLTFExporter } = await import("three/examples/jsm/exporters/GLTFExporter.js");
   return new Promise<ArrayBuffer>((resolve, reject) => {
     const exporter = new GLTFExporter();
