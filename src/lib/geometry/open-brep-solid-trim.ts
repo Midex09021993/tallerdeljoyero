@@ -52,6 +52,25 @@ function splitPolygon(poly: THREE.Vector3[], a: THREE.Vector3, b: THREE.Vector3,
   return [clean(positive), clean(negative)].filter(points => points.length >= 3);
 }
 
+function barycentricWeights(point: THREE.Vector3, a: THREE.Vector3, b: THREE.Vector3, c: THREE.Vector3): [number, number, number] {
+  const v0 = b.clone().sub(a), v1 = c.clone().sub(a), v2 = point.clone().sub(a);
+  const d00 = v0.dot(v0), d01 = v0.dot(v1), d11 = v1.dot(v1);
+  const d20 = v2.dot(v0), d21 = v2.dot(v1);
+  const denominator = d00 * d11 - d01 * d01;
+  if (Math.abs(denominator) < 1e-20) return [1, 0, 0];
+  const v = (d11 * d20 - d01 * d21) / denominator;
+  const w = (d00 * d21 - d01 * d20) / denominator;
+  return [1 - v - w, v, w];
+}
+
+function attributeComponent(attribute: THREE.BufferAttribute | THREE.InterleavedBufferAttribute, index: number, component: number): number {
+  if (component === 0) return attribute.getX(index);
+  if (component === 1) return attribute.getY(index);
+  if (component === 2) return attribute.getZ(index);
+  if (component === 3) return attribute.getW(index);
+  return 0;
+}
+
 function insideSolid(point: THREE.Vector3, probe: THREE.Mesh, raycaster: THREE.Raycaster): boolean {
   const direction = new THREE.Vector3(1, 0.371390676, 0.129837).normalize();
   raycaster.set(point, direction);
@@ -89,6 +108,10 @@ export function trimOpenBrepSurfacesAgainstSolids(root: THREE.Object3D): OpenBre
     openWorld.applyMatrix4(open.matrixWorld);
     const openBox = new THREE.Box3().setFromObject(open);
     const output: number[] = [];
+    const interpolatedAttributes = new Map<string, number[]>();
+    for (const name of ["normal", "uv", "uv1", "color", "tangent"]) {
+      if (openWorld.getAttribute(name)) interpolatedAttributes.set(name, []);
+    }
     let removed = 0, retained = 0;
     let selected = false;
 
@@ -137,7 +160,23 @@ export function trimOpenBrepSurfacesAgainstSolids(root: THREE.Object3D): OpenBre
             const center = polygon.reduce((sum, point) => sum.add(point), new THREE.Vector3()).multiplyScalar(1 / polygon.length);
             if (insideSolid(center, probe, raycaster)) { cut = true; continue; }
             for (let i = 1; i < polygon.length - 1; i++) {
-              output.push(...polygon[0]!.toArray(), ...polygon[i]!.toArray(), ...polygon[i + 1]!.toArray());
+              const vertices = [polygon[0]!, polygon[i]!, polygon[i + 1]!];
+              const sourceIds = index ? [index.getX(t * 3), index.getX(t * 3 + 1), index.getX(t * 3 + 2)] : [t * 3, t * 3 + 1, t * 3 + 2];
+              for (const vertex of vertices) {
+                output.push(...vertex.toArray());
+                const weights = barycentricWeights(vertex, a, b, c);
+                for (const [name, values] of interpolatedAttributes) {
+                  const attribute = openWorld.getAttribute(name);
+                  if (!attribute) continue;
+                  for (let component = 0; component < attribute.itemSize; component++) {
+                    values.push(
+                      attributeComponent(attribute, sourceIds[0]!, component) * weights[0]
+                      + attributeComponent(attribute, sourceIds[1]!, component) * weights[1]
+                      + attributeComponent(attribute, sourceIds[2]!, component) * weights[2],
+                    );
+                  }
+                }
+              }
               retained++;
             }
           }
@@ -153,7 +192,18 @@ export function trimOpenBrepSurfacesAgainstSolids(root: THREE.Object3D): OpenBre
     if (!selected || removed === 0 || retained === 0) { openWorld.dispose(); continue; }
     const trimmed = new THREE.BufferGeometry();
     trimmed.setAttribute("position", new THREE.Float32BufferAttribute(output, 3));
-    trimmed.computeVertexNormals(); trimmed.computeBoundingBox(); trimmed.computeBoundingSphere();
+    for (const [name, values] of interpolatedAttributes) {
+      const sourceAttribute = openWorld.getAttribute(name);
+      if (sourceAttribute && values.length) trimmed.setAttribute(name, new THREE.Float32BufferAttribute(values, sourceAttribute.itemSize));
+    }
+    const normals = trimmed.getAttribute("normal");
+    if (normals) {
+      for (let i = 0; i < normals.count; i++) {
+        const normal = new THREE.Vector3().fromBufferAttribute(normals, i).normalize();
+        normals.setXYZ(i, normal.x, normal.y, normal.z);
+      }
+    } else trimmed.computeVertexNormals();
+    trimmed.computeBoundingBox(); trimmed.computeBoundingSphere();
     if (!trimmed.boundingBox || !Number.isFinite(trimmed.boundingSphere?.radius ?? NaN)) {
       trimmed.dispose(); openWorld.dispose(); result.skippedPairs++; continue;
     }
