@@ -31,15 +31,19 @@ export type AurumUnionExperimentResult = {
   merged: number;
   skipped: number;
   errors: string[];
+  preservedSourceMeshes: number;
 };
 
 /**
- * Explicit, reversible-at-source experiment. Only merges overlapping, sibling
- * metal meshes sharing the exact same material object. Source geometries are
- * cloned before CSG. Call only with the opt-in URL flag; never used by default.
+ * Opt-in visual-union prototype. It only processes visible metal siblings that
+ * share the same Rhino layer identity and the exact same material instance.
+ * CSG receives cloned geometries; original meshes/geometries remain in the
+ * scene hidden after a successful result, so the experiment can be reversed.
  */
 export function applyAurumMetalUnionExperiment(root: THREE.Object3D, maxMerges = 8): AurumUnionExperimentResult {
-  const result: AurumUnionExperimentResult = { attempted: 0, merged: 0, skipped: 0, errors: [] };
+  const result: AurumUnionExperimentResult = {
+    attempted: 0, merged: 0, skipped: 0, errors: [], preservedSourceMeshes: 0,
+  };
   const evaluator = new Evaluator();
   const candidates: THREE.Mesh[] = [];
   root.updateMatrixWorld(true);
@@ -52,10 +56,21 @@ export function applyAurumMetalUnionExperiment(root: THREE.Object3D, maxMerges =
   for (let i = 0; i < candidates.length && result.merged < maxMerges; i++) {
     const left = candidates[i]!;
     if (!left.parent || !left.visible) continue;
+    const leftMeta = (left.userData?.aurumRhino ?? {}) as Record<string, unknown>;
+    const leftLayerKey = typeof leftMeta.layerKey === "string" ? leftMeta.layerKey : "";
+    if (!leftLayerKey) continue;
+
     for (let j = i + 1; j < candidates.length && result.merged < maxMerges; j++) {
       const right = candidates[j]!;
       if (!right.parent || left.parent !== right.parent || !right.visible || left.material !== right.material) continue;
-      if (!left.geometry || !right.geometry || !compatibleAttributes(left.geometry, right.geometry)) { result.skipped++; continue; }
+      const rightMeta = (right.userData?.aurumRhino ?? {}) as Record<string, unknown>;
+      const rightLayerKey = typeof rightMeta.layerKey === "string" ? rightMeta.layerKey : "";
+      // Never union across Rhino layers or unidentified source meshes.
+      if (!rightLayerKey || rightLayerKey !== leftLayerKey) continue;
+      if (!left.geometry || !right.geometry || !compatibleAttributes(left.geometry, right.geometry)) {
+        result.skipped++;
+        continue;
+      }
 
       root.updateMatrixWorld(true);
       const leftBox = new THREE.Box3().setFromObject(left);
@@ -64,6 +79,8 @@ export function applyAurumMetalUnionExperiment(root: THREE.Object3D, maxMerges =
       result.attempted++;
 
       try {
+        // Both source meshes are siblings, so their local matrices are expressed
+        // in the same parent coordinate system. Only detached clones enter CSG.
         const leftGeometry = left.geometry.clone();
         const rightGeometry = right.geometry.clone();
         leftGeometry.applyMatrix4(left.matrix);
@@ -78,22 +95,47 @@ export function applyAurumMetalUnionExperiment(root: THREE.Object3D, maxMerges =
         a.position.set(0, 0, 0); a.rotation.set(0, 0, 0); a.scale.set(1, 1, 1); a.updateMatrixWorld(true);
         b.position.set(0, 0, 0); b.rotation.set(0, 0, 0); b.scale.set(1, 1, 1); b.updateMatrixWorld(true);
 
-        const merged = evaluator.evaluate(a, b, ADDITION);
-        const geometry = merged.geometry;
+        const evaluated = evaluator.evaluate(a, b, ADDITION);
+        const geometry = evaluated.geometry;
         geometry.setDrawRange(0, Infinity);
         geometry.clearGroups();
         geometry.computeBoundingBox();
         geometry.computeBoundingSphere();
+        const position = geometry.getAttribute("position");
+        const normal = geometry.getAttribute("normal");
+        if (!position || position.count < 3 || !normal || normal.count !== position.count
+          || !geometry.boundingBox || geometry.boundingBox.isEmpty()
+          || !Number.isFinite(geometry.boundingSphere?.radius ?? NaN)) {
+          geometry.dispose();
+          throw new Error("CSG produjo una geometría incompleta o no válida.");
+        }
 
-        // Geometry is now expressed in the common parent's local coordinates.
-        left.geometry = geometry;
-        left.position.set(0, 0, 0);
-        left.quaternion.identity();
-        left.scale.set(1, 1, 1);
-        left.updateMatrix();
-        left.userData = { ...left.userData, aurumMetalUnionExperiment: true, aurumUnionSource: [left.name, right.name] };
-        right.parent.remove(right);
+        const parent = left.parent;
+        const visualUnion = new THREE.Mesh(geometry, left.material);
+        visualUnion.name = `AURUM · Metal visual union ${result.merged + 1}`;
+        visualUnion.position.set(0, 0, 0);
+        visualUnion.quaternion.identity();
+        visualUnion.scale.set(1, 1, 1);
+        visualUnion.castShadow = left.castShadow || right.castShadow;
+        visualUnion.receiveShadow = left.receiveShadow || right.receiveShadow;
+        visualUnion.userData = {
+          aurumMetalUnionExperiment: true,
+          aurumUnionSource: [
+            { uuid: left.uuid, name: left.name, layerKey: leftLayerKey },
+            { uuid: right.uuid, name: right.name, layerKey: rightLayerKey },
+          ],
+          aurumOriginalMeshesPreserved: true,
+        };
+
+        // Add the finished replacement before hiding sources. If anything fails
+        // before this point, the original render remains untouched.
+        parent.add(visualUnion);
+        left.visible = false;
+        right.visible = false;
+        left.userData = { ...left.userData, aurumMetalUnionSourceHidden: true };
+        right.userData = { ...right.userData, aurumMetalUnionSourceHidden: true };
         result.merged++;
+        result.preservedSourceMeshes += 2;
       } catch (error) {
         result.errors.push(`${left.name || left.uuid} + ${right.name || right.uuid}: ${error instanceof Error ? error.message : String(error)}`);
       }
