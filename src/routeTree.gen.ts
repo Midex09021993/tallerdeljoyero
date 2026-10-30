@@ -17,11 +17,10 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CatalogoPublicoRouteImport } from './routes/catalogo-publico'
 import { Route as ClienteRouteImport } from './routes/cliente'
 import { Route as ComunidadRouteImport } from './routes/comunidad'
-import { Route as GuiasRouteImport } from './routes/guias'
-import { Route as GuiasSlugRouteImport } from './routes/guias.$slug'
 import { Route as CursosDiseno3dRouteImport } from './routes/cursos-diseno-3d'
 import { Route as DirectorioRouteImport } from './routes/directorio'
 import { Route as GaleriaJoyasRouteImport } from './routes/galeria-joyas'
+import { Route as GuiasRouteImport } from './routes/guias'
 import { Route as HerramientasPublicasRouteImport } from './routes/herramientas-publicas'
 import { Route as RecuperarContrasenaRouteImport } from './routes/recuperar-contrasena'
 import { Route as TiendaRouteImport } from './routes/tienda'
@@ -58,6 +57,7 @@ import { Route as AuthenticatedVectorizadorLaserRouteImport } from './routes/_au
 import { Route as AuthenticatedVentasRouteImport } from './routes/_authenticated/ventas'
 import { Route as CCodigoRouteImport } from './routes/c/$codigo'
 import { Route as FormacionSlugRouteImport } from './routes/formacion.$slug'
+import { Route as GuiasSlugRouteImport } from './routes/guias.$slug'
 import { Route as HerramientasPublicasHerramientaRouteImport } from './routes/herramientas-publicas/$herramienta'
 import { Route as JoyaTokenRouteImport } from './routes/joya/$token'
 import { Route as TransferIndexRouteImport } from './routes/transfer.index'
@@ -118,16 +118,6 @@ const ComunidadRoute = ComunidadRouteImport.update({
   path: '/comunidad',
   getParentRoute: () => rootRouteImport,
 } as any)
-const GuiasRoute = GuiasRouteImport.update({
-  id: '/guias',
-  path: '/guias',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const GuiasSlugRoute = GuiasSlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => GuiasRoute,
-} as any)
 const CursosDiseno3dRoute = CursosDiseno3dRouteImport.update({
   id: '/cursos-diseno-3d',
   path: '/cursos-diseno-3d',
@@ -141,6 +131,11 @@ const DirectorioRoute = DirectorioRouteImport.update({
 const GaleriaJoyasRoute = GaleriaJoyasRouteImport.update({
   id: '/galeria-joyas',
   path: '/galeria-joyas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GuiasRoute = GuiasRouteImport.update({
+  id: '/guias',
+  path: '/guias',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HerramientasPublicasRoute = HerramientasPublicasRouteImport.update({
@@ -334,6 +329,11 @@ const FormacionSlugRoute = FormacionSlugRouteImport.update({
   path: '/formacion/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GuiasSlugRoute = GuiasSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => GuiasRoute,
+} as any)
 const HerramientasPublicasHerramientaRoute =
   HerramientasPublicasHerramientaRouteImport.update({
     id: '/$herramienta',
@@ -455,6 +455,7 @@ export interface FileRoutesByFullPath {
   '/cursos-diseno-3d': typeof CursosDiseno3dRoute
   '/directorio': typeof DirectorioRoute
   '/galeria-joyas': typeof GaleriaJoyasRoute
+  '/guias': typeof GuiasRouteWithChildren
   '/herramientas-publicas': typeof HerramientasPublicasRouteWithChildren
   '/recuperar-contrasena': typeof RecuperarContrasenaRoute
   '/tienda': typeof TiendaRoute
@@ -490,6 +491,7 @@ export interface FileRoutesByFullPath {
   '/ventas': typeof AuthenticatedVentasRouteWithChildren
   '/c/$codigo': typeof CCodigoRouteWithChildren
   '/formacion/$slug': typeof FormacionSlugRoute
+  '/guias/$slug': typeof GuiasSlugRoute
   '/herramientas-publicas/$herramienta': typeof HerramientasPublicasHerramientaRoute
   '/joya/$token': typeof JoyaTokenRoute
   '/transfer/$token': typeof TransferTokenRoute
@@ -511,8 +513,6 @@ export interface FileRoutesByFullPath {
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
-  '/guias': typeof GuiasRoute
-  '/guias/$slug': typeof GuiasSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -524,6 +524,7 @@ export interface FileRoutesByTo {
   '/cursos-diseno-3d': typeof CursosDiseno3dRoute
   '/directorio': typeof DirectorioRoute
   '/galeria-joyas': typeof GaleriaJoyasRoute
+  '/guias': typeof GuiasRouteWithChildren
   '/herramientas-publicas': typeof HerramientasPublicasRouteWithChildren
   '/recuperar-contrasena': typeof RecuperarContrasenaRoute
   '/tienda': typeof TiendaRoute
@@ -557,6 +558,7 @@ export interface FileRoutesByTo {
   '/ventas': typeof AuthenticatedVentasRouteWithChildren
   '/c/$codigo': typeof CCodigoRouteWithChildren
   '/formacion/$slug': typeof FormacionSlugRoute
+  '/guias/$slug': typeof GuiasSlugRoute
   '/herramientas-publicas/$herramienta': typeof HerramientasPublicasHerramientaRoute
   '/joya/$token': typeof JoyaTokenRoute
   '/transfer/$token': typeof TransferTokenRoute
@@ -578,8 +580,6 @@ export interface FileRoutesByTo {
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
-  '/guias': typeof GuiasRoute
-  '/guias/$slug': typeof GuiasSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -594,6 +594,7 @@ export interface FileRoutesById {
   '/cursos-diseno-3d': typeof CursosDiseno3dRoute
   '/directorio': typeof DirectorioRoute
   '/galeria-joyas': typeof GaleriaJoyasRoute
+  '/guias': typeof GuiasRouteWithChildren
   '/herramientas-publicas': typeof HerramientasPublicasRouteWithChildren
   '/recuperar-contrasena': typeof RecuperarContrasenaRoute
   '/tienda': typeof TiendaRoute
@@ -629,6 +630,7 @@ export interface FileRoutesById {
   '/_authenticated/ventas': typeof AuthenticatedVentasRouteWithChildren
   '/c/$codigo': typeof CCodigoRouteWithChildren
   '/formacion/$slug': typeof FormacionSlugRoute
+  '/guias/$slug': typeof GuiasSlugRoute
   '/herramientas-publicas/$herramienta': typeof HerramientasPublicasHerramientaRoute
   '/joya/$token': typeof JoyaTokenRoute
   '/transfer/$token': typeof TransferTokenRoute
@@ -650,8 +652,6 @@ export interface FileRoutesById {
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
-  '/guias': typeof GuiasRoute
-  '/guias/$slug': typeof GuiasSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -666,6 +666,7 @@ export interface FileRouteTypes {
     | '/cursos-diseno-3d'
     | '/directorio'
     | '/galeria-joyas'
+    | '/guias'
     | '/herramientas-publicas'
     | '/recuperar-contrasena'
     | '/tienda'
@@ -701,6 +702,7 @@ export interface FileRouteTypes {
     | '/ventas'
     | '/c/$codigo'
     | '/formacion/$slug'
+    | '/guias/$slug'
     | '/herramientas-publicas/$herramienta'
     | '/joya/$token'
     | '/transfer/$token'
@@ -733,6 +735,7 @@ export interface FileRouteTypes {
     | '/cursos-diseno-3d'
     | '/directorio'
     | '/galeria-joyas'
+    | '/guias'
     | '/herramientas-publicas'
     | '/recuperar-contrasena'
     | '/tienda'
@@ -766,6 +769,7 @@ export interface FileRouteTypes {
     | '/ventas'
     | '/c/$codigo'
     | '/formacion/$slug'
+    | '/guias/$slug'
     | '/herramientas-publicas/$herramienta'
     | '/joya/$token'
     | '/transfer/$token'
@@ -800,6 +804,7 @@ export interface FileRouteTypes {
     | '/cursos-diseno-3d'
     | '/directorio'
     | '/galeria-joyas'
+    | '/guias'
     | '/herramientas-publicas'
     | '/recuperar-contrasena'
     | '/tienda'
@@ -835,6 +840,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ventas'
     | '/c/$codigo'
     | '/formacion/$slug'
+    | '/guias/$slug'
     | '/herramientas-publicas/$herramienta'
     | '/joya/$token'
     | '/transfer/$token'
@@ -858,17 +864,7 @@ export interface FileRouteTypes {
     | '/lovable/email/transactional/preview'
   fileRoutesById: FileRoutesById
 }
-export interface GuiasRouteChildren {
-  GuiasSlugRoute: typeof GuiasSlugRoute
-}
-
-const GuiasRouteChildren: GuiasRouteChildren = {
-  GuiasSlugRoute: GuiasSlugRoute,
-}
-
-const GuiasRouteWithChildren = GuiasRoute._addFileChildren(GuiasRouteChildren)
-
-interface RootRouteChildren {
+export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   SlugRoute: typeof SlugRouteWithChildren
@@ -880,6 +876,7 @@ interface RootRouteChildren {
   CursosDiseno3dRoute: typeof CursosDiseno3dRoute
   DirectorioRoute: typeof DirectorioRoute
   GaleriaJoyasRoute: typeof GaleriaJoyasRoute
+  GuiasRoute: typeof GuiasRouteWithChildren
   HerramientasPublicasRoute: typeof HerramientasPublicasRouteWithChildren
   RecuperarContrasenaRoute: typeof RecuperarContrasenaRoute
   TiendaRoute: typeof TiendaRoute
@@ -892,25 +889,10 @@ interface RootRouteChildren {
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
-  GuiasRoute: typeof GuiasRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/guias': {
-      id: '/guias'
-      path: '/guias'
-      fullPath: '/guias'
-      preLoaderRoute: typeof GuiasRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/guias/$slug': {
-      id: '/guias/$slug'
-      path: '/$slug'
-      fullPath: '/guias/$slug'
-      preLoaderRoute: typeof GuiasSlugRouteImport
-      parentRoute: typeof GuiasRoute
-    }
     '/': {
       id: '/'
       path: '/'
@@ -986,6 +968,13 @@ declare module '@tanstack/react-router' {
       path: '/galeria-joyas'
       fullPath: '/galeria-joyas'
       preLoaderRoute: typeof GaleriaJoyasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guias': {
+      id: '/guias'
+      path: '/guias'
+      fullPath: '/guias'
+      preLoaderRoute: typeof GuiasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/herramientas-publicas': {
@@ -1239,6 +1228,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/formacion/$slug'
       preLoaderRoute: typeof FormacionSlugRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/guias/$slug': {
+      id: '/guias/$slug'
+      path: '/$slug'
+      fullPath: '/guias/$slug'
+      preLoaderRoute: typeof GuiasSlugRouteImport
+      parentRoute: typeof GuiasRoute
     }
     '/herramientas-publicas/$herramienta': {
       id: '/herramientas-publicas/$herramienta'
@@ -1515,6 +1511,16 @@ const SlugRouteChildren: SlugRouteChildren = {
 
 const SlugRouteWithChildren = SlugRoute._addFileChildren(SlugRouteChildren)
 
+interface GuiasRouteChildren {
+  GuiasSlugRoute: typeof GuiasSlugRoute
+}
+
+const GuiasRouteChildren: GuiasRouteChildren = {
+  GuiasSlugRoute: GuiasSlugRoute,
+}
+
+const GuiasRouteWithChildren = GuiasRoute._addFileChildren(GuiasRouteChildren)
+
 interface HerramientasPublicasRouteChildren {
   HerramientasPublicasHerramientaRoute: typeof HerramientasPublicasHerramientaRoute
 }
@@ -1549,6 +1555,7 @@ const rootRouteChildren: RootRouteChildren = {
   CursosDiseno3dRoute: CursosDiseno3dRoute,
   DirectorioRoute: DirectorioRoute,
   GaleriaJoyasRoute: GaleriaJoyasRoute,
+  GuiasRoute: GuiasRouteWithChildren,
   HerramientasPublicasRoute: HerramientasPublicasRouteWithChildren,
   RecuperarContrasenaRoute: RecuperarContrasenaRoute,
   TiendaRoute: TiendaRoute,
@@ -1561,7 +1568,6 @@ const rootRouteChildren: RootRouteChildren = {
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
-  GuiasRoute: GuiasRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
