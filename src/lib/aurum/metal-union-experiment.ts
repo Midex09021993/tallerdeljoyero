@@ -41,7 +41,7 @@ export type AurumUnionExperimentResult = {
  * after A+B succeeds, the next operation is (A+B)+C, never A+C in parallel.
  * Original Rhino meshes are kept in the scene hidden for reversibility.
  */
-export function applyAurumMetalUnionExperiment(root: THREE.Object3D, maxMerges = 8): AurumUnionExperimentResult {
+export function applyAurumMetalUnionExperiment(root: THREE.Object3D): AurumUnionExperimentResult {
   const result: AurumUnionExperimentResult = {
     attempted: 0, merged: 0, skipped: 0, errors: [], preservedSourceMeshes: 0,
   };
@@ -55,7 +55,7 @@ export function applyAurumMetalUnionExperiment(root: THREE.Object3D, maxMerges =
       && !Array.isArray(mesh.material) && mesh.material) candidates.push(mesh);
   });
 
-  for (let i = 0; i < candidates.length && result.merged < maxMerges; i++) {
+  for (let i = 0; i < candidates.length && result.merged < candidates.length - 1; i++) {
     const seed = candidates[i]!;
     if (!seed.parent || !seed.visible) continue;
     const seedMeta = (seed.userData?.aurumRhino ?? {}) as Record<string, unknown>;
@@ -67,7 +67,7 @@ export function applyAurumMetalUnionExperiment(root: THREE.Object3D, maxMerges =
       uuid: seed.uuid, name: seed.name, layerKey,
     }];
 
-    for (let j = i + 1; j < candidates.length && result.merged < maxMerges; j++) {
+    for (let j = i + 1; j < candidates.length && result.merged < candidates.length - 1; j++) {
       const right = candidates[j]!;
       if (!right.parent || accumulator.parent !== right.parent || !right.visible
         || accumulator.material !== right.material) continue;
