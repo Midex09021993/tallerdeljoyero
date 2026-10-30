@@ -8,7 +8,7 @@ export const listarDirectorioAlumnosFormacion = createServerFn({ method: "POST" 
   .inputValidator((input: DirectorioInput) => input)
   .handler(async ({ data, context }) => {
     const { participanteDocenteId, cursoId } = data;
-    const { supabase, userId } = context;
+    const { supabase } = context;
 
     if (!participanteDocenteId || !cursoId) throw new Error("Selecciona un curso válido.");
 
