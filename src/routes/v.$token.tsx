@@ -51,7 +51,7 @@ function VisorCortoPage() {
         }
         setCargando(false);
       })
-      .catch(() => {
+      , () => {
         if (activo) { setError(true); setCargando(false); }
       });
     return () => { activo = false; };
