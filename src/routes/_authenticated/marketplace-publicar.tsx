@@ -53,7 +53,7 @@ function PublicarArchivoPage() {
       const partesRuta = item.ruta.split("/");
       return partesRuta.length >= 3 && partesRuta[partesRuta.length - 2] === raizCarpetaSeleccionada;
     });
-    if (compatibles.length === 1) setRutasSeleccionadas([compatibles[0].ruta]);
+    if (compatibles.length === 1) setRutasSeleccionadas([compatibles[0]!.ruta]);
   }, [archivosDisponibles, cargandoArchivos, raizCarpetaSeleccionada]);
 
   useEffect(() => {
@@ -106,7 +106,7 @@ function PublicarArchivoPage() {
       const valor = Number(precio);
       if (!Number.isFinite(valor) || valor <= 0) throw new Error("Indica un precio mayor que cero.");
       if (archivosSeleccionados.length === 0) throw new Error("Selecciona al menos un archivo para vender.");
-      const ruta = archivosSeleccionados[0].ruta;
+      const ruta = archivosSeleccionados[0]!.ruta;
       let imagenPortadaUrl: string | null = null;
       const carpetaRuta = ruta.split("/").slice(0, -1).join("/");
       const imagenesCarpeta = archivosDisponibles.filter((item) => {
@@ -172,7 +172,7 @@ function PublicarArchivoPage() {
       toast.success("Borrador guardado. Revisa el archivo y publícalo cuando esté listo.");
       await queryClient.invalidateQueries({ queryKey: ["marketplace-mis-publicaciones"] });
     },
-    onError: (error) => {
+    onError: (error: unknown) => {
       const mensaje = error instanceof Error
         ? error.message
         : error && typeof error === "object" && "message" in error && typeof error.message === "string"
