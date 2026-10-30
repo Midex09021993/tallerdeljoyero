@@ -4,6 +4,7 @@ import { getAurumModelParts } from "./model-parts";
 import { findAurumOverlapCandidates } from "./overlap-experiment";
 import { applyAurumMetalUnionExperiment } from "./metal-union-experiment";
 import { applyAurumVoxelRemeshExperiment } from "./voxel-remesh-experiment";
+import { trimOpenBrepSurfacesAgainstSolids } from "../geometry/open-brep-solid-trim";
 import { toCreasedNormals } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
 type AurumNormalMode = "authored" | "diagnostic" | "recompute-metal" | "crease-metal";
@@ -658,6 +659,9 @@ export async function convertAurumToGlb(
   // geometry is never written back; gem and non-metal meshes are excluded by
   // the union pass. A failed CSG operation leaves its source meshes visible.
   try {
+    onProgress?.("Recortando BREP abiertos contra sólidos penetrantes");
+    const trimResult = trimOpenBrepSurfacesAgainstSolids(object);
+    console.info("[AURUM][OPEN BREP TRIM]", trimResult);
     onProgress?.("Analizando uniones metálicas");
     const unionResult = await applyAurumMetalUnionExperiment(object, (message, completed, total) => onProgress?.(message, completed, total));
     console.info("[AURUM][METAL UNION]", unionResult);
