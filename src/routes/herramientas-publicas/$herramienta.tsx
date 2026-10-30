@@ -102,7 +102,7 @@ const paginas = {
     descripcion: "Convierte tallas de anillos entre sistemas de España, Europa e internacional y consulta equivalencias a partir del diámetro interior.",
     contenido: "Introduce una talla conocida o el diámetro interior del anillo para consultar la equivalencia disponible. También puedes calibrar la pantalla y medir visualmente un anillo.",
     id: "tallas",
-    guiaSlug: null,
+    guiaSlug: "convertir-tallas-anillos-espana-europa-usa",
     secciones: [
       {
         titulo: "Cómo saber la talla de un anillo por su diámetro",
@@ -131,7 +131,7 @@ const paginas = {
     descripcion: "Convierte gramos a quilates y estima el peso de gemas por medidas, forma y gravedad específica.",
     contenido: "Convierte el peso de una piedra de gramos a quilates o estima su peso a partir de las dimensiones, la forma de talla y el material seleccionado.",
     id: "gemas",
-    guiaSlug: null,
+    guiaSlug: "calcular-peso-gemas-por-medidas",
     secciones: [
       {
         titulo: "Conversión de gramos a quilates de gemas",
