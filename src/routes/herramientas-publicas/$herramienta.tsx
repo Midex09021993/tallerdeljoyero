@@ -15,7 +15,7 @@ const paginas = {
     descripcion: "Calcula cuánta liga debes añadir para ajustar la ley del oro y preparar aleaciones de joyería.",
     contenido: "Introduce el peso y los quilates de partida, selecciona la ley final y consulta una estimación del metal de liga necesario. Puedes elegir el color de la aleación para aplicar la receta configurada.",
     id: "oro",
-    guiaHref: "/guias/calcular-aleaciones-oro-18k-14k-9k",
+    guiaSlug: "calcular-aleaciones-oro-18k-14k-9k",
     secciones: [
       {
         titulo: "Cómo calcular una aleación de oro por quilates",
@@ -44,7 +44,7 @@ const paginas = {
     descripcion: "Carga un modelo 3D compatible para estimar el peso de una joya según el metal y su densidad.",
     contenido: "Carga un archivo 3D compatible, selecciona el metal y revisa el peso teórico estimado a partir del volumen del modelo y la densidad configurada.",
     id: "peso",
-    guiaHref: "/guias/calcular-peso-joya-modelo-3d",
+    guiaSlug: "calcular-peso-joya-modelo-3d",
     secciones: [
       {
         titulo: "Cómo calcular el peso de una joya desde un archivo 3D",
@@ -73,7 +73,7 @@ const paginas = {
     descripcion: "Calcula cantidades estimadas de agua y revestimiento para preparar cilindros de fundición de joyería.",
     contenido: "Introduce el diámetro, la altura y el tipo de cilindro para estimar las cantidades de agua y revestimiento según las proporciones disponibles en la herramienta.",
     id: "yeso",
-    guiaHref: "/guias/fundicion-joyeria-revestimiento-omni-cast",
+    guiaSlug: "fundicion-joyeria-revestimiento-omni-cast",
     secciones: [
       {
         titulo: "Cómo calcular agua y revestimiento para un cilindro de fundición",
@@ -102,7 +102,7 @@ const paginas = {
     descripcion: "Convierte tallas de anillos entre sistemas de España, Europa e internacional y consulta equivalencias a partir del diámetro interior.",
     contenido: "Introduce una talla conocida o el diámetro interior del anillo para consultar la equivalencia disponible. También puedes calibrar la pantalla y medir visualmente un anillo.",
     id: "tallas",
-    guiaHref: null,
+    guiaSlug: null,
     secciones: [
       {
         titulo: "Cómo saber la talla de un anillo por su diámetro",
@@ -131,7 +131,7 @@ const paginas = {
     descripcion: "Convierte gramos a quilates y estima el peso de gemas por medidas, forma y gravedad específica.",
     contenido: "Convierte el peso de una piedra de gramos a quilates o estima su peso a partir de las dimensiones, la forma de talla y el material seleccionado.",
     id: "gemas",
-    guiaHref: null,
+    guiaSlug: null,
     secciones: [
       {
         titulo: "Conversión de gramos a quilates de gemas",
@@ -253,13 +253,13 @@ function HerramientaPublicaPage() {
               ))}
             </div>
           </div>
-          {pagina.guiaHref ? (
+          {pagina.guiaSlug ? (
             <div className="rounded-2xl border border-[#e8dfc7] bg-[#fffaf0] p-5 sm:flex sm:items-center sm:justify-between sm:gap-5">
               <div>
                 <h2 className="text-base font-semibold text-[#17232d]">Profundiza con la guía técnica relacionada</h2>
                 <p className="mt-1 text-sm leading-6 text-slate-600">Amplía los conceptos y consulta recomendaciones para aplicar el cálculo en tu taller.</p>
               </div>
-              <Link to={pagina.guiaHref} className="mt-4 inline-flex min-h-10 shrink-0 items-center gap-2 text-sm font-semibold text-[#876500] hover:text-[#5f4900] sm:mt-0">Leer guía técnica <ArrowLeft className="size-4 rotate-180" /></Link>
+              <Link to="/guias/$slug" params={{ slug: pagina.guiaSlug }} className="mt-4 inline-flex min-h-10 shrink-0 items-center gap-2 text-sm font-semibold text-[#876500] hover:text-[#5f4900] sm:mt-0">Leer guía técnica <ArrowLeft className="size-4 rotate-180" /></Link>
             </div>
           ) : null}
         </section>
