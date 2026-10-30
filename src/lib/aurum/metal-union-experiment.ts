@@ -26,6 +26,8 @@ function compatibleAttributes(a: THREE.BufferGeometry, b: THREE.BufferGeometry):
   });
 }
 
+type UnionSource = { uuid: string; name: string; layerKey: string };
+
 export type AurumUnionExperimentResult = {
   attempted: number;
   merged: number;
@@ -35,10 +37,9 @@ export type AurumUnionExperimentResult = {
 };
 
 /**
- * Opt-in visual-union prototype. It only processes visible metal siblings that
- * share the same Rhino layer identity and the exact same material instance.
- * CSG receives cloned geometries; original meshes/geometries remain in the
- * scene hidden after a successful result, so the experiment can be reversed.
+ * Opt-in GLB boolean union. Builds an accumulated union per connected group:
+ * after A+B succeeds, the next operation is (A+B)+C, never A+C in parallel.
+ * Original Rhino meshes are kept in the scene hidden for reversibility.
  */
 export function applyAurumMetalUnionExperiment(root: THREE.Object3D, maxMerges = 8): AurumUnionExperimentResult {
   const result: AurumUnionExperimentResult = {
@@ -46,6 +47,7 @@ export function applyAurumMetalUnionExperiment(root: THREE.Object3D, maxMerges =
   };
   const evaluator = new Evaluator();
   const candidates: THREE.Mesh[] = [];
+  const preserved = new Set<string>();
   root.updateMatrixWorld(true);
   root.traverse((object) => {
     const mesh = object as THREE.Mesh;
@@ -54,49 +56,54 @@ export function applyAurumMetalUnionExperiment(root: THREE.Object3D, maxMerges =
   });
 
   for (let i = 0; i < candidates.length && result.merged < maxMerges; i++) {
-    const left = candidates[i]!;
-    if (!left.parent || !left.visible) continue;
-    const leftMeta = (left.userData?.aurumRhino ?? {}) as Record<string, unknown>;
-    const leftLayerKey = typeof leftMeta.layerKey === "string" ? leftMeta.layerKey : "";
-    if (!leftLayerKey) continue;
+    const seed = candidates[i]!;
+    if (!seed.parent || !seed.visible) continue;
+    const seedMeta = (seed.userData?.aurumRhino ?? {}) as Record<string, unknown>;
+    const layerKey = typeof seedMeta.layerKey === "string" ? seedMeta.layerKey : "";
+    if (!layerKey) continue;
+
+    let accumulator: THREE.Mesh = seed;
+    let sources: UnionSource[] = [{
+      uuid: seed.uuid, name: seed.name, layerKey,
+    }];
 
     for (let j = i + 1; j < candidates.length && result.merged < maxMerges; j++) {
       const right = candidates[j]!;
-      if (!right.parent || left.parent !== right.parent || !right.visible || left.material !== right.material) continue;
+      if (!right.parent || accumulator.parent !== right.parent || !right.visible
+        || accumulator.material !== right.material) continue;
       const rightMeta = (right.userData?.aurumRhino ?? {}) as Record<string, unknown>;
       const rightLayerKey = typeof rightMeta.layerKey === "string" ? rightMeta.layerKey : "";
-      // Never union across Rhino layers or unidentified source meshes.
-      if (!rightLayerKey || rightLayerKey !== leftLayerKey) continue;
-      if (!left.geometry || !right.geometry || !compatibleAttributes(left.geometry, right.geometry)) {
+      if (!rightLayerKey || rightLayerKey !== layerKey) continue;
+      if (!accumulator.geometry || !right.geometry
+        || !compatibleAttributes(accumulator.geometry, right.geometry)) {
         result.skipped++;
         continue;
       }
 
       root.updateMatrixWorld(true);
-      const leftBox = new THREE.Box3().setFromObject(left);
+      const accumulatorBox = new THREE.Box3().setFromObject(accumulator);
       const rightBox = new THREE.Box3().setFromObject(right);
-      if (!leftBox.intersectsBox(rightBox)) continue;
+      if (!accumulatorBox.intersectsBox(rightBox)) continue;
       result.attempted++;
 
       try {
-        // Both source meshes are siblings, so their local matrices are expressed
-        // in the same parent coordinate system. Only detached clones enter CSG.
-        const leftGeometry = left.geometry.clone();
+        // Geometry is transformed into the common parent-local coordinate space.
+        // Only clones enter CSG; the source geometries remain untouched.
+        const leftGeometry = accumulator.geometry.clone();
         const rightGeometry = right.geometry.clone();
-        leftGeometry.applyMatrix4(left.matrix);
+        leftGeometry.applyMatrix4(accumulator.matrix);
         rightGeometry.applyMatrix4(right.matrix);
         leftGeometry.clearGroups();
         rightGeometry.clearGroups();
         leftGeometry.setDrawRange(0, Infinity);
         rightGeometry.setDrawRange(0, Infinity);
 
-        const a = new Brush(leftGeometry, left.material);
+        const a = new Brush(leftGeometry, accumulator.material);
         const b = new Brush(rightGeometry, right.material);
         a.position.set(0, 0, 0); a.rotation.set(0, 0, 0); a.scale.set(1, 1, 1); a.updateMatrixWorld(true);
         b.position.set(0, 0, 0); b.rotation.set(0, 0, 0); b.scale.set(1, 1, 1); b.updateMatrixWorld(true);
 
-        const evaluated = evaluator.evaluate(a, b, ADDITION);
-        const geometry = evaluated.geometry;
+        const geometry = evaluator.evaluate(a, b, ADDITION).geometry;
         geometry.setDrawRange(0, Infinity);
         geometry.clearGroups();
         geometry.computeBoundingBox();
@@ -110,49 +117,55 @@ export function applyAurumMetalUnionExperiment(root: THREE.Object3D, maxMerges =
           throw new Error("CSG produjo una geometría incompleta o no válida.");
         }
 
-        const parent = left.parent;
-        const visualUnion = new THREE.Mesh(geometry, left.material);
+        const nextSources = [...sources, {
+          uuid: right.uuid, name: right.name, layerKey: rightLayerKey,
+        }];
+        const visualUnion = new THREE.Mesh(geometry, accumulator.material);
         visualUnion.name = `AURUM · Metal visual union ${result.merged + 1}`;
         visualUnion.position.set(0, 0, 0);
         visualUnion.quaternion.identity();
         visualUnion.scale.set(1, 1, 1);
-        visualUnion.castShadow = left.castShadow || right.castShadow;
-        visualUnion.receiveShadow = left.receiveShadow || right.receiveShadow;
-        // Keep the Rhino classification on the replacement. Without this,
-        // the exported GLB loses its metal family/layer identity and later
-        // material assignment can treat the boolean result as an unknown mesh.
-        const sourceRhino = (left.userData?.aurumRhino ?? {}) as Record<string, unknown>;
-        const sourceRhinoData = (left.userData?.aurumRhinoSource ?? {}) as Record<string, unknown>;
+        visualUnion.castShadow = accumulator.castShadow || right.castShadow;
+        visualUnion.receiveShadow = accumulator.receiveShadow || right.receiveShadow;
         visualUnion.userData = {
-          ...left.userData,
+          ...seed.userData,
           aurumRhino: {
-            ...sourceRhino,
+            ...seedMeta,
             categoria: "metal",
-            layerKey: leftLayerKey,
+            layerKey,
           },
-          aurumRhinoSource: { ...sourceRhinoData },
+          aurumRhinoSource: { ...(seed.userData?.aurumRhinoSource ?? {}) },
           aurumMetalUnionExperiment: true,
-          aurumUnionSource: [
-            { uuid: left.uuid, name: left.name, layerKey: leftLayerKey },
-            { uuid: right.uuid, name: right.name, layerKey: rightLayerKey },
-          ],
+          aurumUnionSource: nextSources,
           aurumOriginalMeshesPreserved: true,
         };
 
-        // Add the finished replacement before hiding sources. If anything fails
-        // before this point, the original render remains untouched.
+        // Commit this step only after the replacement geometry is fully valid.
+        const parent = accumulator.parent;
         parent.add(visualUnion);
-        left.visible = false;
+        accumulator.visible = false;
         right.visible = false;
-        left.userData = { ...left.userData, aurumMetalUnionSourceHidden: true };
+        if (accumulator === seed) {
+          seed.userData = { ...seed.userData, aurumMetalUnionSourceHidden: true };
+          preserved.add(seed.uuid);
+        } else {
+          // Intermediate CSG output is disposable; original Rhino source meshes
+          // remain hidden and recoverable independently.
+          accumulator.parent?.remove(accumulator);
+          accumulator.geometry.dispose();
+        }
         right.userData = { ...right.userData, aurumMetalUnionSourceHidden: true };
+        preserved.add(right.uuid);
+        accumulator = visualUnion;
+        sources = nextSources;
         result.merged++;
-        result.preservedSourceMeshes += 2;
       } catch (error) {
-        result.errors.push(`${left.name || left.uuid} + ${right.name || right.uuid}: ${error instanceof Error ? error.message : String(error)}`);
+        result.errors.push(`${accumulator.name || accumulator.uuid} + ${right.name || right.uuid}: ${error instanceof Error ? error.message : String(error)}`);
       }
     }
   }
+
+  result.preservedSourceMeshes = preserved.size;
   root.updateMatrixWorld(true);
   return result;
 }
