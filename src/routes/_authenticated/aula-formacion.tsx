@@ -1,7 +1,7 @@
 import { useMemo, useState, type FormEvent, type ChangeEvent } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { BookOpen, Users, Plus, Upload, FileText, Download, CalendarDays, ShieldCheck } from "lucide-react";
+import { BookOpen, Users, Plus, Upload, FileText, Download, CalendarDays, ShieldCheck, Send } from "lucide-react";
 import { AppShell, Panel } from "@/components/AppShell";
 import { useSesion } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,6 +15,10 @@ type Curso = { id: string; participante_id: string; titulo: string; descripcion:
 type Inscripcion = { id: string; curso_id: string; email_alumno: string; nombre_alumno: string | null; estado: string; formacion_cursos: Curso | null };
 type Material = { id: string; curso_id: string; titulo: string; descripcion: string | null; nombre_archivo: string; ruta_storage: string; mime_type: string; tamano_bytes: number; created_at: string };
 type SesionCurso = { id: string; curso_id: string; numero: number; titulo: string; descripcion: string | null; duracion_horas: number; fecha_programada: string | null; publicada: boolean };
+type Examen = { id: string; curso_id: string; titulo: string; instrucciones: string | null; duracion_minutos: number | null; intentos_permitidos: number; puntaje_maximo: number; publicado: boolean; disponible_desde: string | null; disponible_hasta: string | null };
+type Pregunta = { id: string; examen_id: string; tipo: "opcion_multiple" | "verdadero_falso" | "practica"; enunciado: string; opciones: Array<{label:string;value:string}>; puntaje: number; orden: number; obligatoria: boolean };
+type ExamenAlumno = { id: string; titulo: string; instrucciones: string | null; duracion_minutos: number | null; puntaje_maximo: number; preguntas: Array<{id:string;tipo:string;enunciado:string;opciones:Array<{label:string;value:string}>;puntaje:number;orden:number;obligatoria:boolean}> };
+type Intento = { id: string; examen_id: string; numero_intento: number; calificacion: number | null; estado: string; enviado_en: string; observaciones_docente: string | null };
 
 function AulaFormacionPage() {
   const { data: sesion, isLoading: cargandoSesion } = useSesion();
@@ -32,6 +36,19 @@ function AulaFormacionPage() {
   const [tituloMaterial, setTituloMaterial] = useState("");
   const [publicarMaterial, setPublicarMaterial] = useState(true);
   const [mensaje, setMensaje] = useState("");
+  const [tituloExamen, setTituloExamen] = useState("Evaluación de la sesión");
+  const [instruccionesExamen, setInstruccionesExamen] = useState("");
+  const [duracionExamen, setDuracionExamen] = useState("30");
+  const [intentosExamen, setIntentosExamen] = useState("1");
+  const [examenSeleccionado, setExamenSeleccionado] = useState("");
+  const [tipoPregunta, setTipoPregunta] = useState<"opcion_multiple" | "verdadero_falso" | "practica">("opcion_multiple");
+  const [enunciadoPregunta, setEnunciadoPregunta] = useState("");
+  const [opcionesPregunta, setOpcionesPregunta] = useState("Opción A\\nOpción B\\nOpción C\\nOpción D");
+  const [respuestaCorrecta, setRespuestaCorrecta] = useState("Opción A");
+  const [puntajePregunta, setPuntajePregunta] = useState("1");
+  const [examenActivoAlumno, setExamenActivoAlumno] = useState<ExamenAlumno | null>(null);
+  const [respuestasAlumno, setRespuestasAlumno] = useState<Record<string, string>>({});
+  const [enviandoExamen, setEnviandoExamen] = useState(false);
   const [ocupado, setOcupado] = useState(false);
 
   const rolAlumno = Boolean(sesion?.roles.some((r) => r === "gerente" || r === "operario"));
@@ -74,6 +91,25 @@ function AulaFormacionPage() {
       return (data ?? []) as Omit<Inscripcion, "formacion_cursos">[];
     },
   });
+  const examenesQuery = useQuery({
+    queryKey: ["aula-formacion-examenes-docente", participanteId, cursoActivoId],
+    enabled: Boolean(esDocente && participanteId && cursoActivoId),
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).from("formacion_examenes").select("id,curso_id,titulo,instrucciones,duracion_minutos,intentos_permitidos,puntaje_maximo,publicado,disponible_desde,disponible_hasta").eq("participante_id", participanteId).eq("curso_id", cursoActivoId).order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as Examen[];
+    },
+  });
+  const examenActivoId = examenSeleccionado || examenesQuery.data?.[0]?.id || "";
+  const preguntasQuery = useQuery({
+    queryKey: ["aula-formacion-preguntas-docente", examenActivoId],
+    enabled: Boolean(esDocente && examenActivoId),
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).from("formacion_preguntas").select("id,examen_id,tipo,enunciado,opciones,puntaje,orden,obligatoria").eq("examen_id", examenActivoId).order("orden");
+      if (error) throw error;
+      return (data ?? []) as Pregunta[];
+    },
+  });
   const sesionesQuery = useQuery({
     queryKey: ["aula-formacion-sesiones", cursoActivoId],
     enabled: Boolean(esDocente && cursoActivoId),
@@ -102,6 +138,24 @@ function AulaFormacionPage() {
   });
   const inscripcionesAlumno = alumnoQuery.data ?? [];
   const idsCursosAlumno = useMemo(() => [...new Set(inscripcionesAlumno.map((i) => i.curso_id))], [inscripcionesAlumno]);
+  const examenesAlumnoQuery = useQuery({
+    queryKey: ["aula-formacion-examenes-alumno", sesion?.user.id, idsCursosAlumno.join(",")],
+    enabled: Boolean(!esDocente && idsCursosAlumno.length),
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).from("formacion_examenes").select("id,curso_id,titulo,instrucciones,duracion_minutos,intentos_permitidos,puntaje_maximo,publicado,disponible_desde,disponible_hasta").in("curso_id", idsCursosAlumno).eq("publicado", true).order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as Examen[];
+    },
+  });
+  const intentosAlumnoQuery = useQuery({
+    queryKey: ["aula-formacion-intentos-alumno", sesion?.user.id],
+    enabled: Boolean(!esDocente && sesion?.user.id),
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).from("formacion_intentos").select("id,examen_id,numero_intento,calificacion,estado,enviado_en,observaciones_docente").eq("alumno_user_id", sesion!.user.id).order("enviado_en", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as Intento[];
+    },
+  });
   const materialesAlumnoQuery = useQuery({
     queryKey: ["aula-formacion-materiales-alumno", sesion?.user.id, idsCursosAlumno.join(",")],
     enabled: Boolean(!esDocente && idsCursosAlumno.length),
@@ -113,6 +167,74 @@ function AulaFormacionPage() {
       return (data ?? []) as Material[];
     },
   });
+
+  async function crearExamen(e: FormEvent) {
+    e.preventDefault();
+    if (!participanteId || !cursoActivoId || !tituloExamen.trim()) return;
+    setOcupado(true); setMensaje("");
+    try {
+      const { data, error } = await (supabase as any).from("formacion_examenes").insert({
+        participante_id: participanteId, curso_id: cursoActivoId, titulo: tituloExamen.trim(),
+        instrucciones: instruccionesExamen.trim() || null, duracion_minutos: Number(duracionExamen) || null,
+        intentos_permitidos: Math.max(1, Number(intentosExamen) || 1), puntaje_maximo: 20,
+        publicado: false, creado_por: sesion?.user.id,
+      }).select("id").single();
+      if (error) throw error;
+      setExamenSeleccionado(data.id);
+      await qc.invalidateQueries({ queryKey: ["aula-formacion-examenes-docente", participanteId, cursoActivoId] });
+      setMensaje("Evaluación creada como borrador. Añade sus preguntas antes de publicarla.");
+    } catch (err) { setMensaje(err instanceof Error ? err.message : "No se pudo crear la evaluación."); }
+    finally { setOcupado(false); }
+  }
+
+  async function agregarPregunta(e: FormEvent) {
+    e.preventDefault();
+    if (!participanteId || !examenActivoId || !enunciadoPregunta.trim()) return;
+    const opciones = tipoPregunta === "opcion_multiple" ? opcionesPregunta.split("\\n").map(x => x.trim()).filter(Boolean).map(x => ({ label: x, value: x })) : tipoPregunta === "verdadero_falso" ? [{label:"Verdadero",value:"true"},{label:"Falso",value:"false"}] : [];
+    if (tipoPregunta === "opcion_multiple" && (opciones.length < 2 || !opciones.some(o => o.value === respuestaCorrecta))) { setMensaje("Añade al menos dos opciones y selecciona una respuesta correcta válida."); return; }
+    setOcupado(true); setMensaje("");
+    try {
+      const { error } = await (supabase as any).from("formacion_preguntas").insert({
+        participante_id: participanteId, examen_id: examenActivoId, tipo: tipoPregunta, enunciado: enunciadoPregunta.trim(), opciones,
+        respuesta_correcta: tipoPregunta === "practica" ? null : tipoPregunta === "verdadero_falso" ? respuestaCorrecta === "true" : respuestaCorrecta,
+        puntaje: Math.max(0.01, Number(puntajePregunta) || 1), orden: (preguntasQuery.data?.length ?? 0) + 1, obligatoria: true,
+      });
+      if (error) throw error;
+      setEnunciadoPregunta("");
+      await qc.invalidateQueries({ queryKey: ["aula-formacion-preguntas-docente", examenActivoId] });
+      setMensaje("Pregunta añadida a la evaluación.");
+    } catch (err) { setMensaje(err instanceof Error ? err.message : "No se pudo añadir la pregunta."); }
+    finally { setOcupado(false); }
+  }
+
+  async function publicarExamen(examen: Examen) {
+    if (!examen.publicado && !(preguntasQuery.data?.length)) { setMensaje("Añade al menos una pregunta antes de publicar."); return; }
+    const { error } = await (supabase as any).from("formacion_examenes").update({ publicado: !examen.publicado }).eq("id", examen.id).eq("participante_id", participanteId);
+    if (error) setMensaje(error.message);
+    else { await qc.invalidateQueries({ queryKey: ["aula-formacion-examenes-docente", participanteId, cursoActivoId] }); setMensaje(examen.publicado ? "Evaluación retirada." : "Evaluación publicada para alumnos inscritos."); }
+  }
+
+  async function abrirExamenAlumno(id: string) {
+    setMensaje("");
+    const { data, error } = await (supabase as any).rpc("obtener_examen_formacion_alumno", { _examen_id: id });
+    if (error) { setMensaje(error.message); return; }
+    setRespuestasAlumno({});
+    setExamenActivoAlumno(data as ExamenAlumno);
+  }
+
+  async function enviarExamenAlumno() {
+    if (!examenActivoAlumno) return;
+    const respuestas = examenActivoAlumno.preguntas.map(p => ({ pregunta_id: p.id, respuesta: p.tipo === "verdadero_falso" ? respuestasAlumno[p.id] === "true" : (respuestasAlumno[p.id] ?? "") })).filter(r => r.respuesta !== "");
+    setEnviandoExamen(true); setMensaje("");
+    try {
+      const { error } = await (supabase as any).rpc("enviar_intento_formacion", { _examen_id: examenActivoAlumno.id, _respuestas: respuestas });
+      if (error) throw error;
+      setExamenActivoAlumno(null);
+      await qc.invalidateQueries({ queryKey: ["aula-formacion-intentos-alumno", sesion?.user.id] });
+      setMensaje("Evaluación enviada. Las preguntas objetivas se califican automáticamente; las prácticas quedan pendientes de revisión docente.");
+    } catch (err) { setMensaje(err instanceof Error ? err.message : "No se pudo enviar la evaluación."); }
+    finally { setEnviandoExamen(false); }
+  }
 
   async function crearCurso(e: FormEvent) {
     e.preventDefault();
@@ -260,13 +382,62 @@ function AulaFormacionPage() {
               </form>
             </Panel>
           </div>}
+          {cursoActivoId && <Panel titulo="Evaluaciones y cuestionarios">
+            <div className="space-y-3 p-5">
+              <form onSubmit={(e) => void crearExamen(e)} className="space-y-3 rounded-xl border border-border p-4">
+                <p className="text-sm font-semibold">Crear evaluación</p>
+                <label className="block text-xs font-medium">Título<input value={tituloExamen} onChange={e => setTituloExamen(e.target.value)} required className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" /></label>
+                <label className="block text-xs font-medium">Instrucciones<textarea value={instruccionesExamen} onChange={e => setInstruccionesExamen(e.target.value)} rows={2} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" /></label>
+                <div className="grid grid-cols-2 gap-2">
+                  <label className="text-xs font-medium">Duración (minutos)<input type="number" min="1" value={duracionExamen} onChange={e => setDuracionExamen(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" /></label>
+                  <label className="text-xs font-medium">Intentos permitidos<input type="number" min="1" max="10" value={intentosExamen} onChange={e => setIntentosExamen(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" /></label>
+                </div>
+                <button disabled={ocupado} className="rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-black">Crear evaluación</button>
+              </form>
+              <div className="space-y-2"><p className="text-sm font-semibold">Evaluaciones del curso</p>
+                {(examenesQuery.data ?? []).map(x => <div key={x.id} className="flex items-center justify-between gap-2 rounded-lg border border-border p-3">
+                  <button type="button" onClick={() => setExamenSeleccionado(x.id)} className="min-w-0 text-left"><span className="block truncate text-sm font-medium">{x.titulo}</span><span className="text-xs text-muted-foreground">{x.duracion_minutos ?? "Sin límite"} min · {x.intentos_permitidos} intento(s)</span></button>
+                  <button type="button" onClick={() => void publicarExamen(x)} className="shrink-0 rounded-lg border border-border px-3 py-1.5 text-xs">{x.publicado ? "Retirar" : "Publicar"}</button>
+                </div>)}
+                {examenesQuery.data?.length === 0 && <p className="text-xs text-muted-foreground">Aún no hay evaluaciones.</p>}
+              </div>
+              {examenActivoId && <form onSubmit={(e) => void agregarPregunta(e)} className="space-y-3 rounded-xl border border-border p-4">
+                <p className="text-sm font-semibold">Añadir pregunta · {(examenesQuery.data ?? []).find(x => x.id === examenActivoId)?.titulo}</p>
+                <label className="block text-xs font-medium">Tipo<select value={tipoPregunta} onChange={e => setTipoPregunta(e.target.value as typeof tipoPregunta)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"><option value="opcion_multiple">Opción múltiple</option><option value="verdadero_falso">Verdadero / Falso</option><option value="practica">Práctica (revisión docente)</option></select></label>
+                <label className="block text-xs font-medium">Enunciado<textarea required value={enunciadoPregunta} onChange={e => setEnunciadoPregunta(e.target.value)} rows={3} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" /></label>
+                {tipoPregunta === "opcion_multiple" && <>
+                  <label className="block text-xs font-medium">Opciones (una por línea)<textarea value={opcionesPregunta} onChange={e => setOpcionesPregunta(e.target.value)} rows={4} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" /></label>
+                  <label className="block text-xs font-medium">Respuesta correcta<select value={respuestaCorrecta} onChange={e => setRespuestaCorrecta(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm">{opcionesPregunta.split("\\n").map(x => x.trim()).filter(Boolean).map(x => <option key={x} value={x}>{x}</option>)}</select></label>
+                </>}
+                {tipoPregunta === "verdadero_falso" && <label className="block text-xs font-medium">Respuesta correcta<select value={respuestaCorrecta === "false" ? "false" : "true"} onChange={e => setRespuestaCorrecta(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"><option value="true">Verdadero</option><option value="false">Falso</option></select></label>}
+                <label className="block text-xs font-medium">Puntaje<input type="number" min="0.01" step="0.25" value={puntajePregunta} onChange={e => setPuntajePregunta(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" /></label>
+                <button disabled={ocupado} className="rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-black">Añadir pregunta</button>
+              </form>}
+              {(preguntasQuery.data ?? []).map((p, idx) => <div key={p.id} className="rounded-lg border border-border p-3"><p className="text-xs text-muted-foreground">Pregunta {idx + 1} · {p.tipo.replaceAll("_"," ")} · {p.puntaje} pts</p><p className="mt-1 text-sm">{p.enunciado}</p></div>)}
+            </div>
+          </Panel>}
           {cursosQuery.error && <p className="rounded-xl border border-red-300 p-3 text-sm text-red-700">{cursosQuery.error.message}</p>}
         </>
       ) : (
         <>
           <section className="rounded-2xl border border-gold/20 bg-card p-5"><p className="text-sm font-semibold">Bienvenido al aula</p><p className="mt-1 text-xs text-muted-foreground">Aquí aparecen únicamente los cursos en los que FADILAB te ha inscrito. Los archivos permanecen privados.</p></section>
+          {examenActivoAlumno ? <Panel titulo={examenActivoAlumno.titulo}><div className="space-y-4 p-5">
+            {examenActivoAlumno.instrucciones && <p className="text-sm text-muted-foreground">{examenActivoAlumno.instrucciones}</p>}
+            {examenActivoAlumno.preguntas.map((p, idx) => <div key={p.id} className="space-y-2 rounded-xl border border-border p-4">
+              <p className="text-xs text-muted-foreground">Pregunta {idx + 1} · {p.puntaje} pts</p><p className="text-sm font-medium">{p.enunciado}</p>
+              {p.tipo === "practica" ? <textarea value={respuestasAlumno[p.id] ?? ""} onChange={e => setRespuestasAlumno(v => ({...v,[p.id]:e.target.value}))} rows={3} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" placeholder="Describe tu ejercicio práctico…" /> : <div className="space-y-2">{p.opciones.map(o => <label key={o.value} className="flex items-center gap-2 text-sm"><input type="radio" name={p.id} value={o.value} checked={respuestasAlumno[p.id] === o.value} onChange={e => setRespuestasAlumno(v => ({...v,[p.id]:e.target.value}))} />{o.label}</label>)}</div>}
+            </div>)}
+            <div className="flex gap-2"><button type="button" disabled={enviandoExamen} onClick={() => void enviarExamenAlumno()} className="inline-flex items-center gap-2 rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-black disabled:opacity-50"><Send className="size-4" /> Enviar evaluación</button><button type="button" onClick={() => setExamenActivoAlumno(null)} className="rounded-lg border border-border px-4 py-2 text-sm">Volver</button></div>
+          </div></Panel> : null}
           {alumnoQuery.isLoading ? <Panel titulo="Cargando tus cursos"><p className="p-5 text-sm text-muted-foreground">Vinculando tu inscripción y recuperando tus cursos…</p></Panel> : alumnoQuery.error ? <Panel titulo="No se pudo cargar el aula"><p className="p-5 text-sm text-red-700">{alumnoQuery.error.message}</p></Panel> : inscripcionesAlumno.length === 0 ? <Panel titulo="Aún no tienes cursos asignados"><p className="p-5 text-sm text-muted-foreground">Cuando FADILAB te inscriba con el correo de tu cuenta, el curso aparecerá aquí automáticamente.</p></Panel> : inscripcionesAlumno.map(i => <Panel key={i.id} titulo={i.formacion_cursos?.titulo ?? "Curso de formación"}>
             <div className="p-5"><p className="text-sm text-muted-foreground">{i.formacion_cursos?.descripcion || "Materiales y actividades de tu formación."}</p><div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground"><span>{i.formacion_cursos?.duracion_horas ?? 0} horas</span><span>Inscripción: {i.estado}</span></div>
+              <h3 className="mb-2 mt-5 text-sm font-semibold">Evaluaciones</h3>
+              {(examenesAlumnoQuery.data ?? []).filter(x => x.curso_id === i.curso_id).map(x => {
+                const intentos = (intentosAlumnoQuery.data ?? []).filter(t => t.examen_id === x.id);
+                const disponible = (!x.disponible_desde || new Date(x.disponible_desde) <= new Date()) && (!x.disponible_hasta || new Date(x.disponible_hasta) > new Date());
+                const estado = intentos[0]?.calificacion == null ? (intentos[0]?.estado ?? "Pendiente") : "Nota " + intentos[0].calificacion + "/20";
+                return <div key={x.id} className="flex flex-wrap items-center justify-between gap-3 border-t border-border py-3"><div><p className="text-sm font-medium">{x.titulo}</p><p className="text-xs text-muted-foreground">{intentos.length}/{x.intentos_permitidos} intentos · {estado}</p></div><button type="button" disabled={!disponible || intentos.length >= x.intentos_permitidos || Boolean(examenActivoAlumno)} onClick={() => void abrirExamenAlumno(x.id)} className="rounded-lg border border-border px-3 py-2 text-xs disabled:opacity-40">Rendir evaluación</button></div>;
+              })}
               <h3 className="mb-2 mt-5 text-sm font-semibold">Materiales publicados</h3>
               {(materialesAlumnoQuery.data ?? []).filter(m => m.curso_id === i.curso_id).length === 0 ? <p className="text-xs text-muted-foreground">Todavía no hay materiales publicados.</p> : (materialesAlumnoQuery.data ?? []).filter(m => m.curso_id === i.curso_id).map(m => <div key={m.id} className="flex items-center justify-between gap-3 border-t border-border py-3"><div className="flex min-w-0 items-center gap-2"><FileText className="size-4 shrink-0 text-gold-deep" /><span className="min-w-0"><span className="block truncate text-sm font-medium">{m.titulo}</span><span className="text-xs text-muted-foreground">{m.nombre_archivo} · {(m.tamano_bytes / 1024 / 1024).toFixed(1)} MB</span></span></div><button type="button" onClick={() => void descargarMaterial(m)} className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-border px-3 py-2 text-xs"><Download className="size-3.5" /> Descargar</button></div>)}
             </div>
