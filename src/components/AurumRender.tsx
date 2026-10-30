@@ -2925,6 +2925,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       clearTimeout(presentationTimerRef.current);
       presentationTimerRef.current = null;
     }
+    let cargaCorrecta = false;
     try {
       await apiRef.current?.cargar(file,(paso:string)=>{
         const etapa = String(paso ?? "").toLowerCase();
@@ -2947,6 +2948,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       setFormatoInterno("GLB");
       // El visor permanece en modo LIVE después de cargar el modelo.
       invalidateRenderRef.current?.();
+      cargaCorrecta = true;
       return true;
     } catch(e) {
       setError(e instanceof Error?e.message:"No se pudo convertir el modelo");
@@ -2955,8 +2957,12 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       setFormatoInterno(null);
       return false;
     } finally {
-      setEstadoCarga("Modelo cargado");
-      window.setTimeout(() => setCargando(false), 650);
+      if (cargaCorrecta) {
+        setEstadoCarga("Modelo cargado");
+        window.setTimeout(() => setCargando(false), 650);
+      } else {
+        setCargando(false);
+      }
     }
   },[]);
   useEffect(() => {
