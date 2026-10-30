@@ -616,6 +616,7 @@ export async function convertAurumToGlb(
         materialIndex: attrs.materialIndex ?? attrs.MaterialIndex ?? null,
         objectId: attrs.id ?? attrs.Id ?? null,
         objectName: x.name ?? null,
+        objectType: x.userData?.aurumRhinoGeometryType ?? null,
         rawLayerIndex: rawIndex ?? null,
         rawLayerName: attrs.layerName ?? attrs.LayerName ?? null,
         rawLayerId: attrs.layerId ?? attrs.LayerId ?? null,
