@@ -12,7 +12,7 @@
 export const AURUM_DIAMOND_MATERIAL_VERSION = "1.0.0";
 
 export const AURUM_DIAMOND_MATERIAL_DEFAULTS = Object.freeze({
-  refractiveIndex: 2.6,
+  refractiveIndex: 2.417,
   reflectivity: 0.5,
   rayBounces: 5,
   // Experimental virtual internal-facet PMREM sampling. Does not modify CAD geometry.
