@@ -3,6 +3,7 @@ import { inspectAurumMesh } from "./mesh-preflight";
 import { getAurumModelParts } from "./model-parts";
 import { findAurumOverlapCandidates } from "./overlap-experiment";
 import { applyAurumMetalUnionExperiment } from "./metal-union-experiment";
+import { trimAurumOpenBrepsAgainstSolids } from "./open-brep-solid-trim";
 import { applyAurumVoxelRemeshExperiment } from "./voxel-remesh-experiment";
 import { toCreasedNormals } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
@@ -653,10 +654,19 @@ export async function convertAurumToGlb(
   const materialConsolidation = consolidateAurumMetalMaterialsByLayer(object);
   console.info("[AURUM][METAL MATERIAL CONSOLIDATION]", materialConsolidation);
 
-  // Consolidate compatible overlapping metal bodies in the derived GLB
-  // after Rhino classification and material consolidation. The 3DM source
-  // geometry is never written back; gem and non-metal meshes are excluded by
-  // the union pass. A failed CSG operation leaves its source meshes visible.
+  // First trim open metal BREP sheets against penetrating closed metal BREP
+  // solids. The source 3DM is never modified; gems, Rhino Mesh objects and
+  // unrelated layers are excluded. Only a validated replacement hides a source.
+  try {
+    onProgress?.("Recortando BREP abiertos contra sólidos");
+    const trimResult = trimAurumOpenBrepsAgainstSolids(object);
+    console.info("[AURUM][OPEN BREP SOLID TRIM]", trimResult);
+  } catch (error) {
+    console.warn("[AURUM][OPEN BREP SOLID TRIM] Failed safely; keeping source meshes", error);
+  }
+
+  // Consolidate compatible overlapping closed metal bodies in the derived GLB.
+  // The 3DM source geometry is never written back; gem and non-metal meshes are excluded.
   try {
     onProgress?.("Analizando uniones metálicas");
     const unionResult = await applyAurumMetalUnionExperiment(object, (message, completed, total) => onProgress?.(message, completed, total));
