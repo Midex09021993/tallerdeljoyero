@@ -179,8 +179,7 @@ export function trimOpenBrepSurfacesAgainstSolids(root: THREE.Object3D): OpenBre
   const raycaster = new THREE.Raycaster();
 
   for (const open of openSurfaces) {
-    const layerKey = String(open.userData?.aurumRhino?.layerKey ?? "").trim();
-    if (!layerKey || !open.parent) continue;
+    if (!open.parent) continue;
 
     const openWorld = open.geometry.clone();
     openWorld.applyMatrix4(open.matrixWorld);
@@ -198,7 +197,6 @@ export function trimOpenBrepSurfacesAgainstSolids(root: THREE.Object3D): OpenBre
 
     for (const solid of solids) {
       if (!solid.parent || !solid.visible || solid === open
-        || String(solid.userData?.aurumRhino?.layerKey ?? "").trim() !== layerKey
         || !openBox.intersectsBox(new THREE.Box3().setFromObject(solid))) continue;
 
       result.testedPairs++;
