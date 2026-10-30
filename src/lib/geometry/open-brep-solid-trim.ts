@@ -144,6 +144,7 @@ export function trimOpenBrepSurfacesAgainstSolids(root: THREE.Object3D): OpenBre
           if (cut) removed++;
         }
         solidWorld.dispose(); (probe.material as THREE.Material).dispose();
+        break;
       } catch (error) {
         result.errors.push(error instanceof Error ? error.message : String(error));
       }
