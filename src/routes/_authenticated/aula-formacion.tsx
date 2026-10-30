@@ -105,7 +105,7 @@ function AulaFormacionPage() {
   const alumnosDirectorio = directorioQuery.data?.alumnos ?? [];
   const talleresDirectorio = directorioQuery.data?.talleres ?? [];
   const alumnosFiltrados = alumnosDirectorio.filter((alumno: any) => {
-    const coincideTaller = tallerAlumnoFiltro === "todos" || alumno.participanteId === tallerAlumnoFiltro;
+    const coincideTaller = tallerAlumnoFiltro === "todos" || alumno.participanteIds.includes(tallerAlumnoFiltro);
     const termino = busquedaAlumno.trim().toLocaleLowerCase();
     const coincideBusqueda = !termino || [alumno.nombre, alumno.usuario, alumno.email, alumno.taller]
       .some((valor) => String(valor ?? "").toLocaleLowerCase().includes(termino));
