@@ -2929,7 +2929,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
     try {
       await apiRef.current?.cargar(file,(paso:string)=>{
         const etapa = String(paso ?? "").toLowerCase();
-        setEstadoCarga(etapa.includes("leyendo") || etapa.includes("archivo") ? (file.name.toLowerCase().endsWith(".3dm") ? "Cargando archivo 3DM…" : "Cargando archivo…") : "Procesando modelo…");
+        setEstadoCarga(etapa.includes("leyendo") ? (file.name.toLowerCase().endsWith(".3dm") ? "Cargando archivo 3DM…" : "Cargando archivo…") : "Procesando modelo…");
       });
       // El GLB guardado ya contiene los materiales del visor: no aplicar el perfil inicial
       // al reabrirlo, porque sobrescribiría el acabado que el usuario había guardado.
