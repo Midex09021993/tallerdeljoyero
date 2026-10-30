@@ -21,12 +21,24 @@ async function getServerEntry(): Promise<ServerEntry> {
 // h3 swallows in-handler throws into a normal 500 Response with body
 // {"unhandled":true,"message":"HTTPError"} — try/catch alone never fires for those.
 function applyFrameProtection(response: Response, pathname: string): Response {
-  // Shared public 3D links (/v/:token) must remain embeddable on jewelry-store websites.
-  // All other routes are restricted to same-origin framing to reduce clickjacking risk.
-  if (/^\/v\/[^/]+\/?$/.test(pathname)) return response;
-
   const headers = new Headers(response.headers);
-  headers.set("X-Frame-Options", "SAMEORIGIN");
+
+  // Public shared viewers may be embedded by partner jewelry websites.
+  // Keep the allowlist narrow: only the dedicated public viewer is embeddable
+  // on joyerodigital.com; authenticated and application routes stay same-origin.
+  if (/^\/aurum-render-public\/?$/.test(pathname)) {
+    headers.delete("X-Frame-Options");
+    headers.set(
+      "Content-Security-Policy",
+      "frame-ancestors 'self' https://joyerodigital.com https://www.joyerodigital.com",
+    );
+  } else if (/^\/v\/[^/]+\/?$/.test(pathname)) {
+    // Existing public shared jewel links remain embeddable as before.
+    headers.delete("X-Frame-Options");
+  } else {
+    headers.set("X-Frame-Options", "SAMEORIGIN");
+  }
+
   return new Response(response.body, {
     status: response.status,
     statusText: response.statusText,
