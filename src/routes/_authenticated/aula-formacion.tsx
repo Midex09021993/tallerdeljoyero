@@ -1,6 +1,8 @@
 import { useMemo, useState, type FormEvent, type ChangeEvent } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { listarDirectorioAlumnosFormacion } from "@/lib/aula-formacion.functions";
 import { BookOpen, Users, Plus, Upload, FileText, Download, CalendarDays, ShieldCheck, Send } from "lucide-react";
 import { AppShell, Panel } from "@/components/AppShell";
 import { useSesion } from "@/lib/auth";
@@ -29,6 +31,10 @@ function AulaFormacionPage() {
   const [cursoSeleccionado, setCursoSeleccionado] = useState("");
   const [nombreAlumno, setNombreAlumno] = useState("");
   const [emailAlumno, setEmailAlumno] = useState("");
+  const [tallerAlumnoFiltro, setTallerAlumnoFiltro] = useState("todos");
+  const [busquedaAlumno, setBusquedaAlumno] = useState("");
+  const [alumnosSeleccionados, setAlumnosSeleccionados] = useState<string[]>([]);
+  const listarDirectorio = useServerFn(listarDirectorioAlumnosFormacion);
   const [numeroSesion, setNumeroSesion] = useState("1");
   const [tituloSesion, setTituloSesion] = useState("");
   const [detalleSesion, setDetalleSesion] = useState("");
@@ -90,6 +96,20 @@ function AulaFormacionPage() {
       if (error) throw error;
       return (data ?? []) as Omit<Inscripcion, "formacion_cursos">[];
     },
+  });
+  const directorioQuery = useQuery({
+    queryKey: ["aula-formacion-directorio", participanteId, cursoActivoId],
+    enabled: Boolean(esDocente && participanteId && cursoActivoId),
+    queryFn: () => listarDirectorio({ data: { participanteDocenteId: participanteId!, cursoId: cursoActivoId } }),
+  });
+  const alumnosDirectorio = directorioQuery.data?.alumnos ?? [];
+  const talleresDirectorio = directorioQuery.data?.talleres ?? [];
+  const alumnosFiltrados = alumnosDirectorio.filter((alumno: any) => {
+    const coincideTaller = tallerAlumnoFiltro === "todos" || alumno.participanteId === tallerAlumnoFiltro;
+    const termino = busquedaAlumno.trim().toLocaleLowerCase();
+    const coincideBusqueda = !termino || [alumno.nombre, alumno.usuario, alumno.email, alumno.taller]
+      .some((valor) => String(valor ?? "").toLocaleLowerCase().includes(termino));
+    return coincideTaller && coincideBusqueda;
   });
   const examenesQuery = useQuery({
     queryKey: ["aula-formacion-examenes-docente", participanteId, cursoActivoId],
@@ -286,21 +306,33 @@ function AulaFormacionPage() {
     finally { setOcupado(false); }
   }
 
-  async function matricularAlumno(e: FormEvent) {
-    e.preventDefault();
-    if (!participanteId || !cursoActivoId || !emailAlumno.trim()) return;
+  async function matricularAlumnosSeleccionados() {
+    if (!participanteId || !cursoActivoId || alumnosSeleccionados.length === 0) return;
     setOcupado(true); setMensaje("");
     try {
-      const email = emailAlumno.trim().toLowerCase();
-      const { error } = await (supabase as any).from("formacion_inscripciones").insert({
-        participante_id: participanteId, curso_id: cursoActivoId, email_alumno: email,
-        nombre_alumno: nombreAlumno.trim() || null, estado: "pendiente",
-      });
+      const seleccionados = alumnosDirectorio.filter((a: any) => alumnosSeleccionados.includes(a.userId));
+      const existentes = (inscripcionesQuery.data ?? []) as Array<{ email_alumno: string; estado: string }>;
+      const yaInscritos = new Set(existentes.map(i => i.email_alumno.toLowerCase()));
+      const nuevos = seleccionados.filter((a: any) => a.email && !yaInscritos.has(a.email.toLowerCase()));
+      if (!nuevos.length) {
+        setMensaje("Los alumnos seleccionados ya están inscritos en este curso.");
+        return;
+      }
+      const { error } = await (supabase as any).from("formacion_inscripciones").insert(
+        nuevos.map((alumno: any) => ({
+          participante_id: participanteId,
+          curso_id: cursoActivoId,
+          email_alumno: alumno.email.toLowerCase(),
+          nombre_alumno: alumno.nombre,
+          alumno_user_id: alumno.userId,
+          estado: "activo",
+        })),
+      );
       if (error) throw error;
-      setNombreAlumno(""); setEmailAlumno("");
+      setAlumnosSeleccionados([]);
       await qc.invalidateQueries({ queryKey: ["aula-formacion-inscripciones", participanteId, cursoActivoId] });
-      setMensaje("Alumno inscrito. Al ingresar con ese mismo correo, su inscripción se vinculará automáticamente.");
-    } catch (err) { setMensaje(err instanceof Error ? err.message : "No se pudo inscribir al alumno."); }
+      setMensaje(`${nuevos.length} alumno(s) inscrito(s) correctamente.`);
+    } catch (err) { setMensaje(err instanceof Error ? err.message : "No se pudo completar la inscripción."); }
     finally { setOcupado(false); }
   }
 
@@ -388,12 +420,39 @@ function AulaFormacionPage() {
           </div>
           {cursoActivoId && <div className="grid gap-5 lg:grid-cols-2">
             <Panel titulo="Inscribir alumnos">
-              <form onSubmit={(e) => void matricularAlumno(e)} className="space-y-3 p-5">
-                <label className="block text-xs font-medium">Nombre del alumno<input value={nombreAlumno} onChange={e => setNombreAlumno(e.target.value)} maxLength={120} className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm" placeholder="Nombre completo" /></label>
-                <label className="block text-xs font-medium">Correo de su cuenta<input type="email" required value={emailAlumno} onChange={e => setEmailAlumno(e.target.value)} className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm" placeholder="alumno@correo.com" /></label>
-                <button disabled={ocupado} className="inline-flex items-center gap-2 rounded-lg bg-gold px-4 py-2.5 text-sm font-semibold text-black disabled:opacity-50"><Users className="size-4" /> Inscribir alumno</button>
-                <p className="text-xs text-muted-foreground">El alumno debe ingresar con el mismo correo ya registrado en Taller del Joyero.</p>
-              </form>
+              <div className="space-y-4 p-5">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">Directorio de talleres</p>
+                  <p className="text-xs text-muted-foreground">Selecciona participantes de las cuentas existentes de Taller del Joyero. No se crean usuarios nuevos.</p>
+                </div>
+                <label className="block text-xs font-medium">Filtrar por taller
+                  <select value={tallerAlumnoFiltro} onChange={e => setTallerAlumnoFiltro(e.target.value)} className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm">
+                    <option value="todos">Todos los talleres</option>
+                    {talleresDirectorio.map((t: any) => <option key={t.id} value={t.id}>{t.nombre}</option>)}
+                  </select>
+                </label>
+                <label className="block text-xs font-medium">Buscar alumno
+                  <input value={busquedaAlumno} onChange={e => setBusquedaAlumno(e.target.value)} placeholder="Nombre, usuario, correo o taller" className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm" />
+                </label>
+                <div className="max-h-72 space-y-2 overflow-y-auto rounded-xl border border-border p-2">
+                  {directorioQuery.isLoading ? <p className="p-3 text-xs text-muted-foreground">Cargando directorio…</p>
+                    : directorioQuery.isError ? <p className="p-3 text-xs text-destructive">{directorioQuery.error instanceof Error ? directorioQuery.error.message : "No se pudo cargar el directorio."}</p>
+                    : alumnosFiltrados.length === 0 ? <p className="p-3 text-xs text-muted-foreground">No hay participantes que coincidan con la búsqueda.</p>
+                    : alumnosFiltrados.map((alumno: any) => <label key={alumno.userId} className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-3 hover:bg-muted/40">
+                      <input type="checkbox" checked={alumnosSeleccionados.includes(alumno.userId)} onChange={e => setAlumnosSeleccionados(actual => e.target.checked ? [...actual, alumno.userId] : actual.filter(id => id !== alumno.userId))} className="mt-1" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-sm font-semibold">{alumno.nombre}</span>
+                        <span className="block text-xs text-muted-foreground">Usuario: {alumno.usuario}</span>
+                        <span className="block break-all text-xs text-muted-foreground">{alumno.email}</span>
+                        <span className="mt-1 block text-xs font-medium text-gold-deep">{alumno.taller} · {alumno.roles.join(", ")}</span>
+                      </span>
+                    </label>)}
+                </div>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-xs text-muted-foreground">{alumnosSeleccionados.length} seleccionado(s)</span>
+                  <button type="button" disabled={ocupado || alumnosSeleccionados.length === 0} onClick={() => void matricularAlumnosSeleccionados()} className="inline-flex items-center gap-2 rounded-lg bg-gold px-4 py-2.5 text-sm font-semibold text-black disabled:opacity-50"><Users className="size-4" /> Inscribir seleccionados</button>
+                </div>
+              </div>
               <div className="border-t border-border p-5"><h3 className="mb-3 text-sm font-semibold">Alumnos inscritos</h3>{inscripcionesQuery.isLoading ? <p className="text-xs text-muted-foreground">Cargando…</p> : (inscripcionesQuery.data ?? []).length === 0 ? <p className="text-xs text-muted-foreground">Aún no hay alumnos inscritos.</p> : (inscripcionesQuery.data ?? []).map(i => <div key={i.id} className="flex justify-between gap-3 border-b border-border py-2 text-xs"><span>{i.nombre_alumno || i.email_alumno}<span className="block text-muted-foreground">{i.email_alumno}</span></span><span className="text-muted-foreground">{i.estado}</span></div>)}</div>
             </Panel>
             <Panel titulo="Sesiones del curso">
