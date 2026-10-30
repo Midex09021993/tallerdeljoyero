@@ -200,7 +200,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const apiRef = useRef<any>(null);
   const onCatalogApiReadyRef = useRef(onCatalogApiReady);
   onCatalogApiReadyRef.current = onCatalogApiReady;
-  const [archivo, setArchivo] = useState<string|null>(null), [cargando, setCargando] = useState(false), [error, setError] = useState<string|null>(null), [formatoInterno, setFormatoInterno] = useState<string|null>(null);
+  const [archivo, setArchivo] = useState<string|null>(null), [cargando, setCargando] = useState(false), [estadoCarga, setEstadoCarga] = useState(""), [error, setError] = useState<string|null>(null), [formatoInterno, setFormatoInterno] = useState<string|null>(null);
   const [archivoOriginal, setArchivoOriginal] = useState<File | null>(null);
   const [arrastrandoArchivo, setArrastrandoArchivo] = useState(false);
 
@@ -2916,6 +2916,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
     } catch {
       sessionStorage.removeItem("aurum-render-poster-destino");
     }
+    setEstadoCarga(file.name.toLowerCase().endsWith(".3dm") ? "Cargando archivo 3DM…" : "Cargando archivo…");
     setCargando(true);
     setError(null);
     setPresentationCover(null);
@@ -2925,7 +2926,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       presentationTimerRef.current = null;
     }
     try {
-      await apiRef.current?.cargar(file,()=>{});
+      await apiRef.current?.cargar(file,(paso:string)=>{
+        const etapa = String(paso ?? "").toLowerCase();
+        setEstadoCarga(etapa.includes("leyendo") || etapa.includes("archivo") ? (file.name.toLowerCase().endsWith(".3dm") ? "Cargando archivo 3DM…" : "Cargando archivo…") : "Procesando modelo…");
+      });
       // El GLB guardado ya contiene los materiales del visor: no aplicar el perfil inicial
       // al reabrirlo, porque sobrescribiría el acabado que el usuario había guardado.
       if (!file.name.toLowerCase().endsWith(".glb")) {
@@ -2951,7 +2955,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       setFormatoInterno(null);
       return false;
     } finally {
-      setCargando(false);
+      setEstadoCarga("Modelo cargado");
+      window.setTimeout(() => setCargando(false), 650);
     }
   },[]);
   useEffect(() => {
@@ -3530,6 +3535,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 <div className={"mx-auto mb-3 grid size-10 place-items-center rounded-full border border-black/10 bg-white/65 shadow-xl backdrop-blur-sm "+(presentationCover?"opacity-0":"opacity-100")}>
                   <div className="size-4 animate-spin rounded-full border-2 border-black/10 border-t-[#b99642]" />
                 </div>
+                <p className="text-[11px] font-medium tracking-wide text-black/60">{estadoCarga}</p>
               </div>
               <div className="absolute bottom-5 right-5 h-1 w-28 overflow-hidden rounded-full bg-black/10">
                 <div className={"h-full rounded-full bg-[#b99642] transition-all duration-[1000ms] "+(presentationCover?"w-full":"w-2/5")} />
