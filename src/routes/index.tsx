@@ -175,6 +175,7 @@ type LogoTallerComunidad = {
   nombre: string;
   identidad_nombre: string | null;
   identidad_logo: string | null;
+  identidad_pais: string | null;
   imagen_url: string | null;
 };
 
@@ -197,6 +198,7 @@ function TalleresDeLaComunidad() {
         id: item.participante_id,
         nombre: item.identidad_nombre?.trim() || item.nombre,
         logo: item.identidad_logo?.trim() || item.imagen_url?.trim() || "",
+        pais: item.identidad_pais?.trim() || "",
       }))
       .filter((item) => Boolean(item.logo))
       .map((item) => [item.id, item]),
@@ -221,7 +223,7 @@ function TalleresDeLaComunidad() {
         ) : (
           <div className="mx-auto mt-12 flex max-w-6xl flex-wrap items-center justify-center gap-x-12 gap-y-9 sm:gap-x-14 lg:gap-x-[4.5rem]">
             {talleres.map((taller) => (
-              <div key={taller.id} className="flex h-[4.5rem] w-36 items-center justify-center sm:w-40 lg:w-44" title={taller.nombre}>
+              <div key={taller.id} className="flex min-h-[5.5rem] w-36 flex-col items-center justify-center gap-2 sm:w-40 lg:w-44" title={taller.nombre}>
                 <img
                   src={taller.logo}
                   alt={taller.nombre}
@@ -229,6 +231,11 @@ function TalleresDeLaComunidad() {
                   decoding="async"
                   className="max-h-14 max-w-full object-contain opacity-90 transition-opacity duration-300 hover:opacity-100"
                 />
+                {taller.pais && (
+                  <span className="text-[9px] font-medium uppercase tracking-[.16em] text-slate-400">
+                    {taller.pais}
+                  </span>
+                )}
               </div>
             ))}
           </div>
