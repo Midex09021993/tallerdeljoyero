@@ -209,7 +209,7 @@ function InicioPublico() {
         <div className="mx-auto grid max-w-[1440px] items-center gap-12 px-5 pb-16 pt-12 sm:px-8 sm:pb-20 sm:pt-16 lg:grid-cols-[.92fr_1.08fr] lg:gap-8 lg:px-12 lg:pb-24 lg:pt-20">
           <div className="relative z-10 max-w-[650px]">
             <span className="inline-flex items-center gap-2 rounded-full border border-[#e5c04a]/50 bg-[#fff9df] px-3.5 py-2 text-[10px] font-bold uppercase tracking-[.16em] text-[#785b00]"><Sparkles className="size-3.5" /> AURUM LAB · TECNOLOGÍA PARA JOYEROS</span>
-            <h1 className="mt-6 text-[2.65rem] font-extrabold leading-[1.06] tracking-[-.045em] text-[#17232d] sm:text-5xl lg:text-[3.8rem]"><span className="block">Tu taller, más organizado.</span><span className="mt-2 block text-[#9a7400]">Tu talento, sin límites.</span></h1>
+            <h1 className="mt-6 text-[2.65rem] font-extrabold leading-[1.06] tracking-[-.045em] text-[#17232d] sm:text-5xl lg:text-[3.8rem]"><span className="block">La plataforma digital para talleres de joyería.</span><span className="mt-2 block text-[#9a7400]">Organiza, calcula y presenta tus diseños.</span></h1>
             <p className="mt-6 max-w-xl text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">Un ecosistema digital para el oficio joyero: herramientas técnicas, gestión comercial integral y AURUM RENDER, nuestro estudio premium de visualización 3D.</p>
             <ul className="mt-7 space-y-4 text-sm font-medium text-[#25323b] sm:text-[15px]">
               <li className="flex items-start gap-3"><span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-lg bg-[#fff4c4] text-[#9b7600]"><Check className="size-4" /></span>Calculadoras y herramientas técnicas para trabajar con más claridad.</li>
@@ -249,7 +249,7 @@ function InicioPublico() {
                 </aside>
                 <div className="min-w-0 p-2.5 sm:p-5">
                   <div className="flex items-start justify-between gap-2">
-                    <div><p className="text-[9px] text-slate-400 sm:text-[10px]">TU TALLER DIGITAL</p><h2 className="mt-1 text-sm font-bold text-[#17232d] sm:text-lg">Tu taller, en orden</h2></div>
+                    <div><p className="text-[9px] text-slate-400 sm:text-[10px]">TU TALLER DIGITAL</p><p className="mt-1 text-sm font-bold text-[#17232d] sm:text-lg">Tu taller, en orden</p></div>
                     <span className="rounded-full bg-[#e9f8ef] px-2 py-1 text-[8px] font-semibold text-[#27834d] sm:text-[9px]">Espacio de trabajo</span>
                   </div>
                   <div className="mt-4 grid grid-cols-2 gap-2 sm:mt-5 sm:gap-3">
