@@ -110,6 +110,19 @@ function AulaFormacionPage() {
       return (data ?? []) as Pregunta[];
     },
   });
+  const intentosDocenteQuery = useQuery({
+    queryKey: ["aula-formacion-intentos-docente", participanteId, cursoActivoId],
+    enabled: Boolean(esDocente && participanteId && cursoActivoId),
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).from("formacion_intentos")
+        .select("id,examen_id,alumno_user_id,numero_intento,respuestas,puntaje_obtenido,puntaje_maximo,calificacion,estado,observaciones_docente,enviado_en")
+        .eq("participante_id", participanteId).eq("curso_id", cursoActivoId).order("enviado_en", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as Array<{id:string;examen_id:string;alumno_user_id:string;numero_intento:number;respuestas:unknown[];puntaje_obtenido:number;puntaje_maximo:number;calificacion:number|null;estado:string;observaciones_docente:string|null;enviado_en:string}>;
+    },
+  });
+  const [notasPracticas, setNotasPracticas] = useState<Record<string,string>>({});
+  const [observacionesPracticas, setObservacionesPracticas] = useState<Record<string,string>>({});
   const sesionesQuery = useQuery({
     queryKey: ["aula-formacion-sesiones", cursoActivoId],
     enabled: Boolean(esDocente && cursoActivoId),
@@ -216,6 +229,21 @@ function AulaFormacionPage() {
     const { error } = await (supabase as any).from("formacion_examenes").update({ publicado: !examen.publicado }).eq("id", examen.id).eq("participante_id", participanteId);
     if (error) setMensaje(error.message);
     else { await qc.invalidateQueries({ queryKey: ["aula-formacion-examenes-docente", participanteId, cursoActivoId] }); setMensaje(examen.publicado ? "Evaluación retirada." : "Evaluación publicada para alumnos inscritos."); }
+  }
+
+  async function calificarPractica(intentoId: string) {
+    const nota = Number(notasPracticas[intentoId]);
+    if (!Number.isFinite(nota) || nota < 0 || nota > 20) { setMensaje("La calificación debe estar entre 0 y 20."); return; }
+    setOcupado(true); setMensaje("");
+    try {
+      const { error } = await (supabase as any).rpc("calificar_intento_formacion", {
+        _intento_id: intentoId, _calificacion_practica: nota, _observaciones: observacionesPracticas[intentoId] || null,
+      });
+      if (error) throw error;
+      await qc.invalidateQueries({ queryKey: ["aula-formacion-intentos-docente", participanteId, cursoActivoId] });
+      setMensaje("Evaluación práctica calificada y nota final del examen actualizada.");
+    } catch (err) { setMensaje(err instanceof Error ? err.message : "No se pudo calificar el ejercicio práctico."); }
+    finally { setOcupado(false); }
   }
 
   async function abrirExamenAlumno(id: string) {
@@ -418,6 +446,23 @@ function AulaFormacionPage() {
                 <button disabled={ocupado} className="rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-black">Añadir pregunta</button>
               </form>}
               {(preguntasQuery.data ?? []).map((p, idx) => <div key={p.id} className="rounded-lg border border-border p-3"><p className="text-xs text-muted-foreground">Pregunta {idx + 1} · {p.tipo.replaceAll("_"," ")} · {p.puntaje} pts</p><p className="mt-1 text-sm">{p.enunciado}</p></div>)}
+            </div>
+          </Panel>}
+          {cursoActivoId && <Panel titulo="Entregas y revisión docente">
+            <div className="space-y-3 p-5">
+              {(intentosDocenteQuery.data ?? []).length === 0 ? <p className="text-sm text-muted-foreground">Todavía no hay evaluaciones entregadas.</p> : (intentosDocenteQuery.data ?? []).map(intento => {
+                const examen = (examenesQuery.data ?? []).find(x => x.id === intento.examen_id);
+                const respuestas = Array.isArray(intento.respuestas) ? intento.respuestas as Array<{pregunta_id?:string;respuesta?:unknown}> : [];
+                return <div key={intento.id} className="space-y-3 rounded-xl border border-border p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2"><div><p className="text-sm font-semibold">{examen?.titulo ?? "Evaluación"} · Intento {intento.numero_intento}</p><p className="text-xs text-muted-foreground">Alumno: {intento.alumno_user_id.slice(0,8)} · {new Date(intento.enviado_en).toLocaleString()}</p></div><span className="rounded-full border border-border px-2 py-1 text-xs">{intento.estado}</span></div>
+                  {respuestas.map((r, idx) => <div key={r.pregunta_id ?? idx} className="border-t border-border pt-2 text-xs"><p className="font-medium">Respuesta {idx + 1}</p><p className="text-muted-foreground">{typeof r.respuesta === "string" ? r.respuesta : JSON.stringify(r.respuesta)}</p></div>)}
+                  {intento.estado === "pendiente_revision" ? <div className="grid gap-2 sm:grid-cols-[150px_1fr_auto]">
+                    <label className="text-xs font-medium">Nota práctica (0–20)<input type="number" min="0" max="20" step="0.25" value={notasPracticas[intento.id] ?? ""} onChange={e => setNotasPracticas(v => ({...v,[intento.id]:e.target.value}))} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" /></label>
+                    <label className="text-xs font-medium">Observaciones<textarea rows={2} value={observacionesPracticas[intento.id] ?? ""} onChange={e => setObservacionesPracticas(v => ({...v,[intento.id]:e.target.value}))} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" /></label>
+                    <button type="button" disabled={ocupado || notasPracticas[intento.id] === undefined || notasPracticas[intento.id] === ""} onClick={() => void calificarPractica(intento.id)} className="self-end rounded-lg bg-gold px-3 py-2 text-xs font-semibold text-black disabled:opacity-40">Guardar nota</button>
+                  </div> : <p className="text-xs text-muted-foreground">Calificación: {intento.calificacion ?? "Pendiente"}/20 {intento.observaciones_docente ? "· " + intento.observaciones_docente : ""}</p>}
+                </div>;
+              })}
             </div>
           </Panel>}
           {cursosQuery.error && <p className="rounded-xl border border-red-300 p-3 text-sm text-red-700">{cursosQuery.error.message}</p>}
