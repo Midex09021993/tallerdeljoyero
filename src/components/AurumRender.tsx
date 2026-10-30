@@ -25,6 +25,7 @@ import { setAurumGemShaderQuality } from "../lib/aurum/scintillation";
 import { createAurumLightingController } from "../lib/aurum/lighting";
 import { frameAurumProduct, disposeAurumViewer, createAurumWebGLViewer, startAurumViewerLoop } from "../lib/aurum/viewer";
 import { parseAurumInput, convertAurumToGlb } from "../lib/aurum/model-loader";
+import { getAurumRhinoGeometryType, isAurumRhinoCsgSurface } from "../lib/aurum/metal-union-experiment";
 import { getAurumModelParts } from "../lib/aurum/model-parts";
 import { applyAurumMaterialToModel, applyAurumGemToTarget, clearAurumGemFromTarget } from "../lib/aurum/material-application";
 import { normalizeAurumModel } from "../lib/aurum/model-normalizer";
@@ -2438,6 +2439,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 objectColor: meshAttrs.objectColor ?? meshAttrs.ObjectColor ?? null,
                 colorSource: meshAttrs.colorSource ?? meshAttrs.ColorSource ?? null,
                 objectType: mesh.userData?.objectType ?? meshAttrs.objectType ?? meshAttrs.ObjectType ?? null,
+                rhinoGeometryType: getAurumRhinoGeometryType(mesh) || null,
+                csgEligibility: isAurumRhinoCsgSurface(mesh) ? "ADMITIDO · superficie Rhino" : "EXCLUIDO · malla/no superficie",
                 objectId: meshAttrs.id ?? meshAttrs.Id ?? null,
                 objectName: meshAttrs.name ?? meshAttrs.Name ?? null,
                 mode: meshAttrs.mode ?? meshAttrs.Mode ?? null,
@@ -2482,6 +2485,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               resolvedLayer: { layerIndex: meta.layerIndex ?? null, layerName: meta.capa ?? null, layerId: meta.rhinoLayerId ?? null, layerKey: meta.layerKey ?? null },
               visible: obj.visible !== false,
               objectType: obj.type ?? null,
+              rhinoGeometryType: getAurumRhinoGeometryType(obj) || null,
+              csgEligibility: isAurumRhinoCsgSurface(obj) ? "ADMITIDO · superficie Rhino" : "EXCLUIDO · malla/no superficie",
               geometry: {
                 vertices: obj.geometry?.attributes?.position?.count ?? null,
                 triangles: obj.geometry?.index ? Math.floor(obj.geometry.index.count / 3) : obj.geometry?.attributes?.position ? Math.floor(obj.geometry.attributes.position.count / 3) : null,
@@ -2502,6 +2507,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 objectColor: sourceAttrs.objectColor ?? sourceAttrs.ObjectColor ?? null,
                 colorSource: sourceAttrs.colorSource ?? sourceAttrs.ColorSource ?? null,
                 objectType: obj.userData?.objectType ?? sourceAttrs.objectType ?? sourceAttrs.ObjectType ?? null,
+                rhinoGeometryType: getAurumRhinoGeometryType(obj) || null,
                 objectId: sourceAttrs.id ?? sourceAttrs.Id ?? null,
                 attributesKeys: Object.keys(sourceAttrs),
               },
@@ -3577,6 +3583,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 <div><span className="text-white/45">Color capa:</span> {String(diagnosticoSeleccion.selected.layerColor??"NO DISPONIBLE")} <span className="text-white/45">· Slot MatrixGold:</span> {String(diagnosticoSeleccion.selected.matrixSlot??"NO DISPONIBLE")}</div>
                 <div><span className="text-white/45">Resolución metadatos:</span> {String(diagnosticoSeleccion.selected.metadataResolution??"NO INDICADA")}</div>
                 <div><span className="text-white/45">Tipo de objeto:</span> {String(diagnosticoSeleccion.selected.objectType)} <span className="text-white/45">· Visible:</span> {String(diagnosticoSeleccion.selected.visible)}</div>
+                <div><span className="text-white/45">Tipo geométrico Rhino original:</span> <strong>{String(diagnosticoSeleccion.selected.rhinoGeometryType||"NO CAPTURADO")}</strong></div>
+                <div><span className="text-white/45">Filtro CSG:</span> {String(diagnosticoSeleccion.selected.csgEligibility)}</div>
               </div>
               <div className="mt-2 rounded-lg border border-white/10 p-2">
                 <div className="mb-1 font-semibold text-[#d4af37]">Geometría y material actual</div>
@@ -3593,6 +3601,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                     <div className="break-all text-white/45">key: {String(mesh.layerKey??"—")} · {String(mesh.vertices??"?")} vértices</div>
                     <div className="break-all text-white/60">UUID: {mesh.uuid}</div>
                     <div className="break-words text-white/60">{mesh.materials.map((m:any)=>String(m.type)+(m.color?" "+m.color:"")).join(", ")||"sin material"}</div>
+                    <div className="text-white/60">Rhino: {String(mesh.rawAttributes?.rhinoGeometryType||"NO CAPTURADO")} · CSG: {String(mesh.rawAttributes?.csgEligibility||"EXCLUIDO")}</div>
                     <details className="mt-1 rounded border border-white/10 p-1.5">
                       <summary className="cursor-pointer text-[#d4af37]">Atributos originales de esta gema</summary>
                       <pre className="mt-1 whitespace-pre-wrap break-all text-[9px] text-white/60">{JSON.stringify({rawAttributes:mesh.rawAttributes,userDataKeys:mesh.userDataKeys,metaKeys:mesh.metaKeys},null,2)}</pre>
