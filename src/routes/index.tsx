@@ -205,28 +205,52 @@ function TalleresDeLaComunidad() {
   if (isError || (!isLoading && talleres.length === 0)) return null;
 
   return (
-    <section aria-labelledby="talleres-comunidad-titulo" className="border-y border-slate-200 bg-white">
-      <div className="mx-auto max-w-[1440px] px-5 py-12 sm:px-8 sm:py-14 lg:px-12">
-        <div className="mx-auto max-w-2xl text-center">
-          <p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#987400]">Comunidad AURUM LAB</p>
-          <h2 id="talleres-comunidad-titulo" className="mt-3 text-2xl font-extrabold tracking-tight text-[#17232d] sm:text-3xl">Talleres de nuestra comunidad.</h2>
-          <p className="mt-3 text-sm leading-6 text-slate-600">Conoce algunos de los talleres que comparten su identidad y forman parte del ecosistema joyero.</p>
+    <section aria-labelledby="talleres-comunidad-titulo" className="relative isolate overflow-hidden border-y border-[#e8e2d4] bg-[#f8f6f0]">
+      <div className="pointer-events-none absolute -right-24 -top-32 -z-10 size-[26rem] rounded-full bg-[#ead9a8]/25 blur-3xl" />
+      <div className="mx-auto grid max-w-[1440px] gap-9 px-5 py-14 sm:px-8 sm:py-16 lg:grid-cols-[.72fr_1.28fr] lg:items-center lg:gap-14 lg:px-12 lg:py-[4.5rem]">
+        <div className="max-w-md">
+          <div className="flex items-center gap-3">
+            <span className="h-px w-8 bg-[#b18a28]" />
+            <p className="text-[10px] font-bold uppercase tracking-[.24em] text-[#8b6a19]">El ecosistema AURUM</p>
+          </div>
+          <h2 id="talleres-comunidad-titulo" className="mt-5 font-display text-3xl font-semibold leading-[1.12] tracking-[-.035em] text-[#17232d] sm:text-4xl">
+            El talento joyero que da forma a nuestra comunidad.
+          </h2>
+          <p className="mt-4 max-w-sm text-sm leading-7 text-[#667078]">
+            Talleres y profesionales que comparten el oficio, la experiencia y las ganas de llevar la joyería más lejos.
+          </p>
+          <div className="mt-7 flex flex-wrap items-center gap-4">
+            <Link to="/comunidad" className="group inline-flex min-h-11 items-center gap-2 rounded-full border border-[#b18a28]/60 bg-white/70 px-5 py-2.5 text-xs font-bold text-[#5f4a18] shadow-[0_4px_14px_rgba(42,34,18,.04)] transition hover:border-[#9b741c] hover:bg-white">
+              Explorar la comunidad <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+            </Link>
+            {!isLoading && <span className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#8b9297]">{talleres.length} {talleres.length === 1 ? "taller participante" : "talleres participantes"}</span>}
+          </div>
         </div>
-        {isLoading ? (
-          <div className="mx-auto mt-9 grid max-w-5xl grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-5" aria-label="Cargando logotipos de talleres">
-            {[0, 1, 2, 3, 4].map((item) => <div key={item} className="h-20 animate-pulse rounded-xl bg-slate-100" />)}
+
+        <div className="overflow-hidden rounded-2xl border border-[#e7e0d1] bg-white/85 shadow-[0_18px_50px_rgba(52,43,24,.055)]">
+          <div className="flex items-center justify-between border-b border-[#eee9df] px-5 py-3.5 sm:px-7">
+            <p className="text-[9px] font-bold uppercase tracking-[.2em] text-[#8b6a19]">Talleres de nuestra comunidad</p>
+            <span className="text-[9px] font-medium uppercase tracking-[.15em] text-slate-400">AURUM LAB</span>
           </div>
-        ) : (
-          <div className="mx-auto mt-9 grid max-w-5xl grid-cols-2 items-center gap-x-6 gap-y-8 sm:grid-cols-3 lg:grid-cols-5">
-            {talleres.map((taller) => (
-              <div key={taller.id} className="flex h-20 items-center justify-center px-3" title={taller.nombre}>
-                <img src={taller.logo} alt={taller.nombre} loading="lazy" decoding="async" className="max-h-16 max-w-full object-contain grayscale opacity-65 transition duration-300 hover:grayscale-0 hover:opacity-100" />
-              </div>
-            ))}
-          </div>
-        )}
-        <div className="mt-8 text-center">
-          <Link to="/comunidad" className="inline-flex min-h-10 items-center gap-2 text-xs font-semibold text-[#765900] transition hover:text-[#17232d]">Conocer la comunidad <ArrowRight className="size-4" /></Link>
+          {isLoading ? (
+            <div className="grid grid-cols-2 gap-px bg-[#eee9df] sm:grid-cols-3" aria-label="Cargando logotipos de talleres">
+              {[0, 1, 2, 3, 4, 5].map((item) => <div key={item} className="h-28 animate-pulse bg-white sm:h-32" />)}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-px bg-[#eee9df] sm:grid-cols-3">
+              {talleres.map((taller) => (
+                <div key={taller.id} className="flex h-28 items-center justify-center bg-white px-5 py-4 sm:h-32 sm:px-6" title={taller.nombre}>
+                  <img
+                    src={taller.logo}
+                    alt={taller.nombre}
+                    loading="lazy"
+                    decoding="async"
+                    className="max-h-[4.5rem] max-w-[12rem] object-contain opacity-90 transition duration-300 hover:scale-[1.04] hover:opacity-100"
+                  />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </section>
