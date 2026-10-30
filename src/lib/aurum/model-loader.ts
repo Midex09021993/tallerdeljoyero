@@ -273,15 +273,6 @@ export async function preprocessAurumModel(object: THREE.Object3D) {
   } catch (error) {
     console.warn("[AURUM][VOXEL REMESH EXPERIMENT] Failed safely; source meshes retained", error);
   }
-  // Opt-in boolean union experiment. The default viewer/export pipeline is unchanged.
-  try {
-    if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("aurumUnion") === "1") {
-      const unionResult = applyAurumMetalUnionExperiment(object, 8);
-      console.info("[AURUM][METAL UNION EXPERIMENT]", unionResult);
-    }
-  } catch (error) {
-    console.warn("[AURUM][METAL UNION EXPERIMENT] Failed safely; keeping source meshes", error);
-  }
   return object;
 }
 
@@ -640,6 +631,18 @@ export async function convertAurumToGlb(
   await preprocessAurumModel(object);
   const materialConsolidation = consolidateAurumMetalMaterialsByLayer(object);
   console.info("[AURUM][METAL MATERIAL CONSOLIDATION]", materialConsolidation);
+
+  // Run the opt-in CSG pass only after Rhino classification and material
+  // consolidation. This makes compatible same-layer metal bodies eligible
+  // without changing the default 3DM -> GLB export path.
+  try {
+    if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("aurumUnion") === "1") {
+      const unionResult = applyAurumMetalUnionExperiment(object, 8);
+      console.info("[AURUM][METAL UNION EXPERIMENT]", unionResult);
+    }
+  } catch (error) {
+    console.warn("[AURUM][METAL UNION EXPERIMENT] Failed safely; keeping source meshes", error);
+  }
   const { GLTFExporter } = await import("three/examples/jsm/exporters/GLTFExporter.js");
   return new Promise<ArrayBuffer>((resolve, reject) => {
     const exporter = new GLTFExporter();
