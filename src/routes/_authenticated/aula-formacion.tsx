@@ -43,7 +43,7 @@ function AulaFormacionPage() {
   const [examenSeleccionado, setExamenSeleccionado] = useState("");
   const [tipoPregunta, setTipoPregunta] = useState<"opcion_multiple" | "verdadero_falso" | "practica">("opcion_multiple");
   const [enunciadoPregunta, setEnunciadoPregunta] = useState("");
-  const [opcionesPregunta, setOpcionesPregunta] = useState("Opción A\\nOpción B\\nOpción C\\nOpción D");
+  const [opcionesPregunta, setOpcionesPregunta] = useState("Opción A\nOpción B\nOpción C\nOpción D");
   const [respuestaCorrecta, setRespuestaCorrecta] = useState("Opción A");
   const [puntajePregunta, setPuntajePregunta] = useState("1");
   const [examenActivoAlumno, setExamenActivoAlumno] = useState<ExamenAlumno | null>(null);
@@ -190,7 +190,7 @@ function AulaFormacionPage() {
   async function agregarPregunta(e: FormEvent) {
     e.preventDefault();
     if (!participanteId || !examenActivoId || !enunciadoPregunta.trim()) return;
-    const opciones = tipoPregunta === "opcion_multiple" ? opcionesPregunta.split("\\n").map(x => x.trim()).filter(Boolean).map(x => ({ label: x, value: x })) : tipoPregunta === "verdadero_falso" ? [{label:"Verdadero",value:"true"},{label:"Falso",value:"false"}] : [];
+    const opciones = tipoPregunta === "opcion_multiple" ? opcionesPregunta.split("\n").map(x => x.trim()).filter(Boolean).map(x => ({ label: x, value: x })) : tipoPregunta === "verdadero_falso" ? [{label:"Verdadero",value:"true"},{label:"Falso",value:"false"}] : [];
     if (tipoPregunta === "opcion_multiple" && (opciones.length < 2 || !opciones.some(o => o.value === respuestaCorrecta))) { setMensaje("Añade al menos dos opciones y selecciona una respuesta correcta válida."); return; }
     setOcupado(true); setMensaje("");
     try {
@@ -208,7 +208,11 @@ function AulaFormacionPage() {
   }
 
   async function publicarExamen(examen: Examen) {
-    if (!examen.publicado && !(preguntasQuery.data?.length)) { setMensaje("Añade al menos una pregunta antes de publicar."); return; }
+    if (!examen.publicado) {
+      const { data: preguntas, error: preguntasError } = await (supabase as any).from("formacion_preguntas").select("id").eq("examen_id", examen.id);
+      if (preguntasError) { setMensaje(preguntasError.message); return; }
+      if (!preguntas?.length) { setMensaje("Añade al menos una pregunta antes de publicar."); return; }
+    }
     const { error } = await (supabase as any).from("formacion_examenes").update({ publicado: !examen.publicado }).eq("id", examen.id).eq("participante_id", participanteId);
     if (error) setMensaje(error.message);
     else { await qc.invalidateQueries({ queryKey: ["aula-formacion-examenes-docente", participanteId, cursoActivoId] }); setMensaje(examen.publicado ? "Evaluación retirada." : "Evaluación publicada para alumnos inscritos."); }
@@ -407,7 +411,7 @@ function AulaFormacionPage() {
                 <label className="block text-xs font-medium">Enunciado<textarea required value={enunciadoPregunta} onChange={e => setEnunciadoPregunta(e.target.value)} rows={3} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" /></label>
                 {tipoPregunta === "opcion_multiple" && <>
                   <label className="block text-xs font-medium">Opciones (una por línea)<textarea value={opcionesPregunta} onChange={e => setOpcionesPregunta(e.target.value)} rows={4} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" /></label>
-                  <label className="block text-xs font-medium">Respuesta correcta<select value={respuestaCorrecta} onChange={e => setRespuestaCorrecta(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm">{opcionesPregunta.split("\\n").map(x => x.trim()).filter(Boolean).map(x => <option key={x} value={x}>{x}</option>)}</select></label>
+                  <label className="block text-xs font-medium">Respuesta correcta<select value={respuestaCorrecta} onChange={e => setRespuestaCorrecta(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm">{opcionesPregunta.split("\n").map(x => x.trim()).filter(Boolean).map(x => <option key={x} value={x}>{x}</option>)}</select></label>
                 </>}
                 {tipoPregunta === "verdadero_falso" && <label className="block text-xs font-medium">Respuesta correcta<select value={respuestaCorrecta === "false" ? "false" : "true"} onChange={e => setRespuestaCorrecta(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"><option value="true">Verdadero</option><option value="false">Falso</option></select></label>}
                 <label className="block text-xs font-medium">Puntaje<input type="number" min="0.01" step="0.25" value={puntajePregunta} onChange={e => setPuntajePregunta(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" /></label>
