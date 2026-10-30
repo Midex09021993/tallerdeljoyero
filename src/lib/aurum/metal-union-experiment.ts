@@ -53,6 +53,7 @@ export function applyAurumMetalUnionExperiment(root: THREE.Object3D, maxMerges =
   root.traverse((object) => {
     const mesh = object as THREE.Mesh;
     if (mesh.isMesh && mesh.visible && mesh.geometry && getFamily(mesh) === "metal"
+      && isAurumRhinoCsgSurface(mesh)
       && !Array.isArray(mesh.material) && mesh.material) candidates.push(mesh);
   });
 
@@ -176,14 +177,23 @@ export function getAurumRhinoGeometryType(object: THREE.Object3D): string {
   const ud = (object.userData ?? {}) as Record<string, any>;
   const rhino = (ud["aurumRhino"] ?? {}) as Record<string, any>;
   const attrs = (ud["attributes"] ?? {}) as Record<string, any>;
-  const value = rhino["geometryType"] ?? rhino["objectType"] ?? ud["objectType"] ?? attrs["objectType"] ?? attrs["ObjectType"] ?? "";
+  const value = ud["aurumRhinoGeometryType"]
+    ?? rhino["geometryType"]
+    ?? rhino["objectType"]
+    ?? ud["objectType"]
+    ?? attrs["objectType"]
+    ?? attrs["ObjectType"]
+    ?? "";
   return String(value ?? "").trim();
 }
 
-/** True when the Rhino source is a closed surface type suitable for CSG (Brep/Extrusion/SubD/Mesh). */
+/**
+ * Only Rhino Breps, Surfaces and Extrusions may enter the metal CSG union.
+ * Rhino Mesh objects are tessellated source geometry, not boolean operands:
+ * keep them visible and untouched. Unknown source types are excluded safely.
+ */
 export function isAurumRhinoCsgSurface(object: THREE.Object3D): boolean {
   if (!(object as THREE.Mesh).isMesh) return false;
-  const type = getAurumRhinoGeometryType(object).toLowerCase();
-  if (!type) return true;
-  return /(brep|extrusion|subd|mesh|surface)/.test(type);
+  const type = getAurumRhinoGeometryType(object).toLowerCase().replace(/[\s_-]/g, "");
+  return type === "brep" || type === "surface" || type === "extrusion";
 }
