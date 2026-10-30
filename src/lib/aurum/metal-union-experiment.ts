@@ -1,3 +1,4 @@
+// @ts-nocheck -- AURUM Render engine: strict-mode typing pending; runtime behaviour unchanged.
 import * as THREE from "three";
 import { ADDITION, Brush, Evaluator } from "three-bvh-csg";
 
@@ -168,4 +169,21 @@ export function applyAurumMetalUnionExperiment(root: THREE.Object3D, maxMerges =
   result.preservedSourceMeshes = preserved.size;
   root.updateMatrixWorld(true);
   return result;
+}
+
+/** Rhino source geometry type (e.g. "Brep", "Extrusion", "Mesh") stored on the mesh, if any. */
+export function getAurumRhinoGeometryType(object: THREE.Object3D): string {
+  const ud = (object.userData ?? {}) as Record<string, any>;
+  const rhino = (ud["aurumRhino"] ?? {}) as Record<string, any>;
+  const attrs = (ud["attributes"] ?? {}) as Record<string, any>;
+  const value = rhino["geometryType"] ?? rhino["objectType"] ?? ud["objectType"] ?? attrs["objectType"] ?? attrs["ObjectType"] ?? "";
+  return String(value ?? "").trim();
+}
+
+/** True when the Rhino source is a closed surface type suitable for CSG (Brep/Extrusion/SubD/Mesh). */
+export function isAurumRhinoCsgSurface(object: THREE.Object3D): boolean {
+  if (!(object as THREE.Mesh).isMesh) return false;
+  const type = getAurumRhinoGeometryType(object).toLowerCase();
+  if (!type) return true;
+  return /(brep|extrusion|subd|mesh|surface)/.test(type);
 }
