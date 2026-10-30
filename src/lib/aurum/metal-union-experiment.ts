@@ -41,7 +41,10 @@ export type AurumUnionExperimentResult = {
  * after A+B succeeds, the next operation is (A+B)+C, never A+C in parallel.
  * Original Rhino meshes are kept in the scene hidden for reversibility.
  */
-export function applyAurumMetalUnionExperiment(root: THREE.Object3D): AurumUnionExperimentResult {
+export async function applyAurumMetalUnionExperiment(
+  root: THREE.Object3D,
+  onProgress?: (message: string, completed: number, total: number) => void,
+): Promise<AurumUnionExperimentResult> {
   const result: AurumUnionExperimentResult = {
     attempted: 0, merged: 0, skipped: 0, errors: [], preservedSourceMeshes: 0,
   };
@@ -55,6 +58,7 @@ export function applyAurumMetalUnionExperiment(root: THREE.Object3D): AurumUnion
       && !Array.isArray(mesh.material) && mesh.material) candidates.push(mesh);
   });
 
+  let lastYield = performance.now();
   for (let i = 0; i < candidates.length && result.merged < candidates.length - 1; i++) {
     const seed = candidates[i]!;
     if (!seed.parent || !seed.visible) continue;
@@ -85,6 +89,11 @@ export function applyAurumMetalUnionExperiment(root: THREE.Object3D): AurumUnion
       const rightBox = new THREE.Box3().setFromObject(right);
       if (!accumulatorBox.intersectsBox(rightBox)) continue;
       result.attempted++;
+      onProgress?.(`Uniendo cuerpos metálicos (${result.attempted} operaciones)`, result.attempted, candidates.length);
+      // Yield between Boolean operations so progress can paint and input remains responsive.
+      // Each individual CSG evaluation remains synchronous and uses cloned source geometry.
+      await new Promise<void>((resolve) => setTimeout(resolve, 0));
+      lastYield = performance.now();
 
       try {
         // Geometry is transformed into the common parent-local coordinate space.
@@ -159,8 +168,13 @@ export function applyAurumMetalUnionExperiment(root: THREE.Object3D): AurumUnion
         accumulator = visualUnion;
         sources = nextSources;
         result.merged++;
+        onProgress?.(`Uniones metálicas: ${result.merged} completadas`, result.merged, candidates.length);
       } catch (error) {
         result.errors.push(`${accumulator.name || accumulator.uuid} + ${right.name || right.uuid}: ${error instanceof Error ? error.message : String(error)}`);
+      }
+      if (performance.now() - lastYield >= 80) {
+        await new Promise<void>((resolve) => setTimeout(resolve, 0));
+        lastYield = performance.now();
       }
     }
   }
