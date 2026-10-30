@@ -87,6 +87,9 @@ export function assembleOpenBrepIntersectionCurves(
       if (next === start) { closed = true; break; }
       curvePoints.push(points[next]!.clone());
       current = next;
+      // Stop at endpoints and branch vertices. A later caller can inspect the
+      // branch degree and decide how to resolve a non-manifold intersection.
+      if (adjacency[current]!.length !== 2) break;
       const nextEdge = adjacency[current]!.find((candidate) => !edges[candidate]!.used);
       if (nextEdge === undefined) break;
       edgeIndex = nextEdge;
