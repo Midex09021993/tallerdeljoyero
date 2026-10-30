@@ -3,6 +3,21 @@ import * as THREE from "three";
 export type AurumOverlapCandidate = {
   a: string;
   b: string;
+  uuidA: string;
+  uuidB: string;
+  nameA: string;
+  nameB: string;
+  layerA: string | null;
+  layerB: string | null;
+  layerKeyA: string | null;
+  layerKeyB: string | null;
+  triangleCountA: number;
+  triangleCountB: number;
+  boundsSizeA: [number, number, number];
+  boundsSizeB: [number, number, number];
+  overlapBoundsSize: [number, number, number];
+  trianglePairTests: number;
+  coplanarPairHitCount: number;
   categoryA: "metal" | "gema" | "otro";
   categoryB: "metal" | "gema" | "otro";
   intersectionVolume: number;
@@ -11,6 +26,42 @@ export type AurumOverlapCandidate = {
 };
 
 type TriangleRecord = { triangle: THREE.Triangle; box: THREE.Box3; minX: number; maxX: number };
+
+function trianglePlanesAreCoplanar(a: THREE.Triangle, b: THREE.Triangle): boolean {
+  const normalA = a.getNormal(new THREE.Vector3());
+  const normalB = b.getNormal(new THREE.Vector3());
+  if (normalA.lengthSq() < 1e-20 || normalB.lengthSq() < 1e-20) return false;
+  const parallel = Math.abs(normalA.dot(normalB));
+  if (1 - parallel > 1e-7) return false;
+  const scale = Math.max(
+    1,
+    a.a.length(), a.b.length(), a.c.length(),
+    b.a.length(), b.b.length(), b.c.length(),
+  );
+  const tolerance = scale * 1e-7;
+  return Math.abs(normalA.dot(b.a.clone().sub(a.a))) <= tolerance
+    && Math.abs(normalA.dot(b.b.clone().sub(a.a))) <= tolerance
+    && Math.abs(normalA.dot(b.c.clone().sub(a.a))) <= tolerance;
+}
+
+function meshAuditIdentity(mesh: THREE.Mesh) {
+  const meta = (mesh.userData?.aurumRhino ?? {}) as Record<string, unknown>;
+  const attrs = (mesh.userData?.attributes ?? {}) as Record<string, unknown>;
+  const geometry = mesh.geometry;
+  const position = geometry.getAttribute("position");
+  const triangleCount = Math.floor((geometry.getIndex()?.count ?? position?.count ?? 0) / 3);
+  const size = new THREE.Box3().setFromObject(mesh).getSize(new THREE.Vector3());
+  const layer = meta.capa ?? attrs.layerName ?? attrs.LayerName ?? null;
+  const layerKey = meta.layerKey ?? null;
+  return {
+    uuid: mesh.uuid,
+    name: mesh.name || "(sin nombre)",
+    layer: layer == null ? null : String(layer),
+    layerKey: layerKey == null ? null : String(layerKey),
+    triangleCount,
+    boundsSize: [size.x, size.y, size.z] as [number, number, number],
+  };
+}
 
 function categoryOf(mesh: THREE.Mesh): "metal" | "gema" | "otro" {
   const data = (mesh.userData?.aurumRhino ?? {}) as Record<string, unknown>;
@@ -115,7 +166,7 @@ export function findAurumOverlapCandidates(
     maxTrianglePairTests?: number;
   } = {},
 ): AurumOverlapCandidate[] {
-  const meshes: Array<{ mesh: THREE.Mesh; box: THREE.Box3; category: "metal" | "gema" | "otro" }> = [];
+  const meshes: Array<{ mesh: THREE.Mesh; box: THREE.Box3; category: "metal" | "gema" | "otro"; identity: ReturnType<typeof meshAuditIdentity> }> = [];
   root.updateMatrixWorld(true);
 
   root.traverse((object) => {
@@ -128,7 +179,7 @@ export function findAurumOverlapCandidates(
     if (box.isEmpty()) return;
     const category = categoryOf(mesh);
     if (options.metalOnly && category !== "metal") return;
-    meshes.push({ mesh, box, category });
+    meshes.push({ mesh, box, category, identity: meshAuditIdentity(mesh) });
   });
 
   const minVolume = Math.max(0, options.minIntersectionVolume ?? 1e-9);
@@ -164,6 +215,8 @@ export function findAurumOverlapCandidates(
       }
 
       let count = 0;
+      let coplanarCount = 0;
+      let pairTests = 0;
       let exceeded = false;
       outer: for (const a of leftTriangles) {
         for (const b of rightTriangles) {
@@ -171,12 +224,35 @@ export function findAurumOverlapCandidates(
           if (b.maxX < a.minX || !a.box.intersectsBox(b.box)) continue;
           if (remainingTests <= 0) { exceeded = true; break outer; }
           remainingTests--;
-          if (trianglesIntersectSAT(a.triangle, b.triangle)) count++;
+          pairTests++;
+          if (trianglesIntersectSAT(a.triangle, b.triangle)) {
+            count++;
+            if (trianglePlanesAreCoplanar(a.triangle, b.triangle)) coplanarCount++;
+          }
         }
       }
+      const overlapSize: [number, number, number] = [size.x, size.y, size.z];
       candidates.push({
-        a: left.mesh.name || left.mesh.uuid, b: right.mesh.name || right.mesh.uuid,
-        categoryA: left.category, categoryB: right.category, intersectionVolume: volume,
+        a: left.mesh.name || left.mesh.uuid,
+        b: right.mesh.name || right.mesh.uuid,
+        uuidA: left.identity.uuid,
+        uuidB: right.identity.uuid,
+        nameA: left.identity.name,
+        nameB: right.identity.name,
+        layerA: left.identity.layer,
+        layerB: right.identity.layer,
+        layerKeyA: left.identity.layerKey,
+        layerKeyB: right.identity.layerKey,
+        triangleCountA: left.identity.triangleCount,
+        triangleCountB: right.identity.triangleCount,
+        boundsSizeA: left.identity.boundsSize,
+        boundsSizeB: right.identity.boundsSize,
+        overlapBoundsSize: overlapSize,
+        trianglePairTests: pairTests,
+        coplanarPairHitCount: exceeded ? 0 : coplanarCount,
+        categoryA: left.category,
+        categoryB: right.category,
+        intersectionVolume: volume,
         triangleIntersectionCount: exceeded ? null : count,
         status: exceeded ? "budget-exceeded" : count > 0 ? "surface-intersection" : "bounds-only",
       });
