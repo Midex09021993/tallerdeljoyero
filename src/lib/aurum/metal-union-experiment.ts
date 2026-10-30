@@ -15,6 +15,17 @@ function getFamily(mesh: THREE.Mesh): MeshFamily {
   return "otro";
 }
 
+function isRhinoSurfaceMesh(mesh: THREE.Mesh): boolean {
+  const sourceType = String(
+    mesh.userData?.aurumRhinoGeometryType
+      ?? mesh.userData?.aurumRhinoSource?.objectType
+      ?? "",
+  ).trim().toLowerCase();
+  // Only Rhino surface-like source objects enter CSG. Rhino Mesh objects,
+  // SubD, and unknown types retain their imported geometry unchanged.
+  return sourceType === "surface" || sourceType === "brep" || sourceType === "extrusion";
+}
+
 function compatibleAttributes(a: THREE.BufferGeometry, b: THREE.BufferGeometry): boolean {
   const aNames = Object.keys(a.attributes).sort();
   const bNames = Object.keys(b.attributes).sort();
@@ -55,6 +66,7 @@ export async function applyAurumMetalUnionExperiment(
   root.traverse((object) => {
     const mesh = object as THREE.Mesh;
     if (mesh.isMesh && mesh.visible && mesh.geometry && getFamily(mesh) === "metal"
+      && isRhinoSurfaceMesh(mesh)
       && !Array.isArray(mesh.material) && mesh.material) candidates.push(mesh);
   });
 
