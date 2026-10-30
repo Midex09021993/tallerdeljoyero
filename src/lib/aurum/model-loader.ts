@@ -250,14 +250,14 @@ export async function preprocessAurumModel(object: THREE.Object3D) {
       const overlapCandidates = findAurumOverlapCandidates(object, {
         metalOnly: true,
         maxTrianglesPerMesh: 12000,
-        maxTrianglePairTests: 250000,
+        maxTrianglePairTests: 1500000,
       });
       console.info("[AURUM][METAL OVERLAP AUDIT]", {
         totalCandidates: overlapCandidates.length,
         confirmedSurfaceIntersections: overlapCandidates.filter((item) => item.status === "surface-intersection").length,
         boundsOnly: overlapCandidates.filter((item) => item.status === "bounds-only").length,
         budgetExceeded: overlapCandidates.filter((item) => item.status === "budget-exceeded").length,
-        candidates: overlapCandidates.slice(0, 100),
+        candidates: overlapCandidates,
       });
     }
   } catch (error) {
