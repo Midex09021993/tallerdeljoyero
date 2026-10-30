@@ -6,12 +6,14 @@ const slugPeso = "calcular-peso-joya-modelo-3d";
 const slugPlano = "distribucion-taller-joyeria";
 const slugImpresion = "impresion-3d-joyeria";
 const slugFundicion = "fundicion-joyeria-revestimiento-omni-cast";
+const slugGemas = "calcular-peso-gemas-por-medidas";
+const slugTallas = "convertir-tallas-anillos-espana-europa-usa";
 
 export const Route = createFileRoute("/guias/$slug")({
   head: ({ params }) => {
-    const valida = [slugGuia, slugPeso, slugPlano, slugImpresion, slugFundicion].includes(params.slug);
-    const titulo = params.slug === slugPeso ? "Cómo estimar el peso de una joya a partir de un modelo 3D" : params.slug === slugPlano ? "Cómo organizar la distribución de un taller de joyería" : params.slug === slugImpresion ? "Impresión 3D para joyería: del archivo a la pieza" : params.slug === slugFundicion ? "Fundición de joyería: guía del revestimiento y preparación del cilindro" : "Cómo calcular aleaciones de oro de 18K, 14K y 9K";
-    const descripcion = params.slug === slugPeso ? "Aprende a preparar un modelo 3D y estimar el peso teórico de una joya según su volumen, unidades y densidad del metal." : params.slug === slugPlano ? "Criterios prácticos para distribuir zonas de diseño, impresión, fundición y acabado en un taller de joyería." : params.slug === slugImpresion ? "Etapas de impresión 3D para joyería, desde la preparación del archivo hasta el posprocesado y la fundición." : params.slug === slugFundicion ? "Guía práctica en español para entender el revestimiento de fundición, la proporción agua/polvo, el calentamiento del cilindro y las referencias del manual Whip Mix Omni-Cast." : "Aprende a calcular el oro fino y el metal de liga en aleaciones de 18K, 14K y 9K, con fórmulas y ejemplos prácticos para joyeros.";
+    const valida = [slugGuia, slugPeso, slugPlano, slugImpresion, slugFundicion, slugGemas, slugTallas].includes(params.slug);
+    const titulo = params.slug === slugPeso ? "Cómo estimar el peso de una joya a partir de un modelo 3D" : params.slug === slugPlano ? "Cómo organizar la distribución de un taller de joyería" : params.slug === slugImpresion ? "Impresión 3D para joyería: del archivo a la pieza" : params.slug === slugFundicion ? "Fundición de joyería: guía del revestimiento y preparación del cilindro" : params.slug === slugGemas ? "Cómo calcular el peso de una gema por sus medidas" : params.slug === slugTallas ? "Cómo convertir tallas de anillos entre España, Europa y USA" : "Cómo calcular aleaciones de oro de 18K, 14K y 9K";
+    const descripcion = params.slug === slugPeso ? "Aprende a preparar un modelo 3D y estimar el peso teórico de una joya según su volumen, unidades y densidad del metal." : params.slug === slugPlano ? "Criterios prácticos para distribuir zonas de diseño, impresión, fundición y acabado en un taller de joyería." : params.slug === slugImpresion ? "Etapas de impresión 3D para joyería, desde la preparación del archivo hasta el posprocesado y la fundición." : params.slug === slugFundicion ? "Guía práctica en español para entender el revestimiento de fundición, la proporción agua/polvo, el calentamiento del cilindro y las referencias del manual Whip Mix Omni-Cast." : params.slug === slugGemas ? "Aprende a convertir gramos a quilates y estimar el peso de diamantes y gemas por dimensiones, forma de talla y gravedad específica." : params.slug === slugTallas ? "Aprende a medir el diámetro interior de un anillo y consultar equivalencias de tallas de España, Europa ISO y Estados Unidos." : "Aprende a calcular el oro fino y el metal de liga en aleaciones de 18K, 14K y 9K, con fórmulas y ejemplos prácticos para joyeros.";
     return {
       meta: [
         { title: valida ? `${titulo} | Guías técnicas AURUM LAB` : "Guía no encontrada | AURUM LAB" },
@@ -30,7 +32,7 @@ export const Route = createFileRoute("/guias/$slug")({
 
 function GuiaTecnicaPage() {
   const { slug } = Route.useParams();
-  if (![slugGuia, slugPeso, slugPlano, slugImpresion, slugFundicion].includes(slug)) {
+  if (![slugGuia, slugPeso, slugPlano, slugImpresion, slugFundicion, slugGemas, slugTallas].includes(slug)) {
     return (
       <main className="grid min-h-screen place-items-center bg-[#fffefa] px-5 text-center text-[#17232d]">
         <div className="max-w-lg">
@@ -38,6 +40,131 @@ function GuiaTecnicaPage() {
           <p className="mt-3 text-sm leading-6 text-slate-600">Esta guía todavía no está publicada o el enlace es incorrecto.</p>
           <Link to="/guias" className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#17232d] px-5 py-3 text-sm font-semibold text-white"><ArrowLeft className="size-4" /> Volver a las guías</Link>
         </div>
+      </main>
+    );
+  }
+
+  if (slug === slugGemas) {
+    return (
+      <main className="min-h-screen bg-[#fffefa] text-[#17232d]">
+        <header className="border-b border-slate-200 bg-white">
+          <div className="mx-auto flex min-h-[68px] max-w-5xl items-center justify-between gap-4 px-5 sm:px-8">
+            <Link to="/guias" className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-slate-600 hover:text-[#987400]"><ArrowLeft className="size-4" /> Todas las guías</Link>
+            <Link to="/herramientas-publicas/$herramienta" params={{ herramienta: "peso-gemas" }} className="rounded-full bg-[#17232d] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#293b49]">Calculadora de peso de gemas</Link>
+          </div>
+        </header>
+        <article className="mx-auto max-w-4xl px-5 py-10 sm:px-8 sm:py-16">
+          <nav aria-label="Ruta de navegación" className="text-xs text-slate-500"><Link to="/guias" className="hover:text-[#876500]">Guías técnicas</Link><span aria-hidden="true"> / </span><span>Gemología</span></nav>
+          <header className="mt-6 border-b border-slate-200 pb-8">
+            <p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#987400]">Gemología · Guía técnica</p>
+            <h1 className="mt-3 max-w-3xl text-3xl font-extrabold leading-tight tracking-tight sm:text-5xl">Cómo calcular el peso de una gema por sus medidas</h1>
+            <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600">El peso de una gema se expresa habitualmente en quilates. Si no tienes una balanza a mano, sus dimensiones, forma y gravedad específica permiten obtener una estimación, siempre que se conozcan las limitaciones del método.</p>
+          </header>
+          <div className="prose prose-slate mt-8 max-w-none prose-headings:tracking-tight prose-a:text-[#876500]">
+            <h2>1. Qué significa el quilate en gemología</h2>
+            <p>El quilate métrico (ct) es una unidad de masa, no una medida de tamaño. Un quilate equivale exactamente a 0,20 gramos o 200 miligramos, y se divide en 100 puntos. Por eso, dos piedras con el mismo diámetro pueden tener pesos diferentes si cambian su material o sus proporciones.</p>
+            <p>Para convertir un peso conocido en gramos a quilates, multiplica los gramos por cinco. Para convertir quilates a gramos, multiplica los quilates por 0,20.</p>
+            <h2>2. Qué medidas necesitas para estimar el peso</h2>
+            <p>La estimación por dimensiones requiere largo, ancho y profundidad en milímetros. También debes seleccionar el material y la forma de talla que más se aproxime a la piedra que estás evaluando.</p>
+            <ul>
+              <li>Mide la piedra en sus dimensiones máximas y utiliza milímetros.</li>
+              <li>Identifica si la forma es redonda, oval, esmeralda, rectangular, marquise, pera, cuadrada, cushion o cabujón.</li>
+              <li>Selecciona el material correcto, porque la gravedad específica influye directamente en la estimación.</li>
+              <li>Considera la profundidad y el perfil real; no todas las piedras de una misma forma tienen las mismas proporciones.</li>
+            </ul>
+            <h2>3. Por qué importa la forma de talla y la gravedad específica</h2>
+            <p>Las dimensiones por sí solas no determinan el peso. La gravedad específica representa la relación entre la densidad del material y la del agua; junto con el volumen aproximado y un factor de forma, permite estimar la masa.</p>
+            <p>Una corona alta, un pabellón profundo, una cintura gruesa o un domo pronunciado pueden cambiar el volumen real respecto al supuesto por una forma promedio. La herramienta permite aplicar una corrección manual de perfil, pero esa corrección debe basarse en una medición o criterio gemológico razonable.</p>
+            <h2>4. Cómo utilizar la calculadora de peso de gemas</h2>
+            <ol>
+              <li>Para convertir un peso conocido, abre el modo «Peso real» e introduce los gramos.</li>
+              <li>Para estimar por dimensiones, selecciona «Estimar por medidas».</li>
+              <li>Elige el material y la forma de talla más adecuados.</li>
+              <li>Introduce largo, ancho y profundidad en milímetros.</li>
+              <li>Revisa el peso estimado, el equivalente en gramos y el rango orientativo.</li>
+            </ol>
+            <h2>5. Cuándo debes confirmar el peso con una balanza</h2>
+            <p>La estimación no sustituye el pesaje directo. Para una tasación, compraventa, certificación o ficha técnica definitiva, utiliza una balanza gemológica calibrada y registra el peso real. En piedras montadas, las dimensiones visibles pueden no representar toda la geometría y el acceso para medir la profundidad puede ser limitado.</p>
+            <h2>Preguntas frecuentes sobre el peso de las gemas</h2>
+            <h3>¿Cuántos quilates equivale un gramo?</h3>
+            <p>Un gramo equivale a cinco quilates métricos, porque un quilate corresponde a 0,20 gramos.</p>
+            <h3>¿Dos diamantes del mismo diámetro pesan lo mismo?</h3>
+            <p>No necesariamente. La profundidad, las proporciones de la talla y el perfil pueden variar y modificar el volumen y el peso.</p>
+            <h3>¿Puedo estimar el peso de una esmeralda o un rubí por sus medidas?</h3>
+            <p>Puedes obtener una estimación si seleccionas el material y la forma adecuados y dispones de dimensiones fiables. La precisión dependerá de la gravedad específica configurada y de cuánto se parezca la piedra real al perfil promedio utilizado.</p>
+            <h3>¿La estimación reemplaza el peso de una balanza?</h3>
+            <p>No. Es una referencia orientativa. Para determinar el peso real, utiliza una balanza gemológica.</p>
+          </div>
+          <section className="mt-10 rounded-2xl border border-[#eadca7] bg-gradient-to-br from-[#fff9df] to-white p-6 sm:p-8">
+            <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#876500]">Llévalo a la práctica</p>
+            <h2 className="mt-2 text-xl font-bold">Convierte gramos a quilates o estima una gema</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">Utiliza las dimensiones y los parámetros de tu piedra para obtener una referencia antes de confirmar su peso real.</p>
+            <Link to="/herramientas-publicas/$herramienta" params={{ herramienta: "peso-gemas" }} className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#17232d] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#293b49]"><ArrowRight className="size-4" /> Abrir calculadora de peso de gemas</Link>
+          </section>
+          <div className="mt-8 border-t border-slate-200 pt-6"><Link to="/guias" className="inline-flex items-center gap-2 text-sm font-semibold text-[#876500]"><ArrowLeft className="size-4" /> Volver a las guías técnicas</Link></div>
+        </article>
+      </main>
+    );
+  }
+
+  if (slug === slugTallas) {
+    return (
+      <main className="min-h-screen bg-[#fffefa] text-[#17232d]">
+        <header className="border-b border-slate-200 bg-white">
+          <div className="mx-auto flex min-h-[68px] max-w-5xl items-center justify-between gap-4 px-5 sm:px-8">
+            <Link to="/guias" className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-slate-600 hover:text-[#987400]"><ArrowLeft className="size-4" /> Todas las guías</Link>
+            <Link to="/herramientas-publicas/$herramienta" params={{ herramienta: "tallas-anillos" }} className="rounded-full bg-[#17232d] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#293b49]">Conversor de tallas</Link>
+          </div>
+        </header>
+        <article className="mx-auto max-w-4xl px-5 py-10 sm:px-8 sm:py-16">
+          <nav aria-label="Ruta de navegación" className="text-xs text-slate-500"><Link to="/guias" className="hover:text-[#876500]">Guías técnicas</Link><span aria-hidden="true"> / </span><span>Medidas y tallas</span></nav>
+          <header className="mt-6 border-b border-slate-200 pb-8">
+            <p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#987400]">Medidas y tallas · Guía técnica</p>
+            <h1 className="mt-3 max-w-3xl text-3xl font-extrabold leading-tight tracking-tight sm:text-5xl">Cómo convertir tallas de anillos entre España, Europa y USA</h1>
+            <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600">Las tallas de anillos utilizan sistemas de numeración distintos según el país o la referencia comercial. Para convertir una medida correctamente, primero identifica el sistema de origen y confirma el diámetro interior o la circunferencia del aro.</p>
+          </header>
+          <div className="prose prose-slate mt-8 max-w-none prose-headings:tracking-tight prose-a:text-[#876500]">
+            <h2>1. Diferencia entre diámetro interior y circunferencia</h2>
+            <p>El diámetro interior es la distancia recta entre dos puntos opuestos de la parte interna del anillo. La circunferencia interior es la longitud del contorno. Ambos valores describen el tamaño interior, pero no son la misma medida.</p>
+            <p>Si mides el diámetro, hazlo en milímetros y evita incluir el grosor del metal. Una medición inclinada o tomada sobre el exterior del aro puede producir una talla incorrecta.</p>
+            <h2>2. Identifica el sistema de tallaje</h2>
+            <p>España, Europa ISO y Estados Unidos utilizan referencias numéricas diferentes. Antes de interpretar una talla, confirma si el dato corresponde al sistema español, europeo ISO o americano (USA). No compares números de sistemas distintos como si fueran equivalentes.</p>
+            <p>El conversor de Taller del Joyero permite buscar por diámetro interno, talla española, talla europea ISO o talla americana y muestra las equivalencias que contiene su tabla de referencia.</p>
+            <h2>3. Cómo medir un anillo que ya tienes</h2>
+            <ol>
+              <li>Elige un anillo que ajuste correctamente en el dedo correspondiente.</li>
+              <li>Colócalo sobre una superficie plana y mide el diámetro interior en milímetros.</li>
+              <li>Evita medir el borde exterior o incluir el grosor del aro.</li>
+              <li>Introduce el diámetro en el conversor y revisa las equivalencias disponibles.</li>
+              <li>Si el resultado queda entre dos referencias, confirma con un anillero físico antes de fabricar.</li>
+            </ol>
+            <h2>4. Medición visual en pantalla: calibra antes de usar</h2>
+            <p>La herramienta también permite ajustar una referencia física para calibrar la escala de la pantalla y comparar visualmente un anillo. Esta medición depende del tamaño de pantalla, el zoom del navegador y la precisión de la calibración.</p>
+            <p>Utiliza la medición en pantalla como orientación, no como patrón metrológico. Para producción, venta o ajuste final, utiliza un anillero o instrumento físico adecuado.</p>
+            <h2>5. Recomendaciones para evitar errores de talla</h2>
+            <ul>
+              <li>Confirma el país o sistema de la talla que te proporciona el cliente.</li>
+              <li>Mide el diámetro interior, no el diámetro exterior.</li>
+              <li>Comprueba que el anillo no esté deformado.</li>
+              <li>Ten en cuenta que el ancho del diseño y la comodidad de uso pueden influir en el ajuste percibido.</li>
+              <li>Verifica la talla final con herramientas físicas antes de fabricar una pieza a medida.</li>
+            </ul>
+            <h2>Preguntas frecuentes sobre tallas de anillos</h2>
+            <h3>¿Cómo convierto una talla de España a USA?</h3>
+            <p>Introduce la talla española en el modo correspondiente del conversor y consulta la equivalencia USA que devuelve la tabla. Comprueba siempre que el proveedor utilice el mismo estándar de referencia.</p>
+            <h3>¿Cómo sé mi talla de anillo midiendo el diámetro?</h3>
+            <p>Mide el diámetro interior de un anillo que ajuste bien y registra el valor en milímetros. Después, introdúcelo en el modo de diámetro interno para consultar la talla más cercana de la tabla.</p>
+            <h3>¿El conversor de tallas ofrece una medida exacta?</h3>
+            <p>Ofrece una equivalencia basada en su tabla. Las diferencias entre estándares y la precisión de la medición pueden afectar el resultado; confirma la medida con un anillero físico para fabricar.</p>
+          </div>
+          <section className="mt-10 rounded-2xl border border-[#eadca7] bg-gradient-to-br from-[#fff9df] to-white p-6 sm:p-8">
+            <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#876500]">Llévalo a la práctica</p>
+            <h2 className="mt-2 text-xl font-bold">Consulta equivalencias de tallas de anillos</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">Busca por diámetro interior o por el sistema de tallaje que ya conoces.</p>
+            <Link to="/herramientas-publicas/$herramienta" params={{ herramienta: "tallas-anillos" }} className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#17232d] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#293b49]"><ArrowRight className="size-4" /> Abrir conversor de tallas</Link>
+          </section>
+          <div className="mt-8 border-t border-slate-200 pt-6"><Link to="/guias" className="inline-flex items-center gap-2 text-sm font-semibold text-[#876500]"><ArrowLeft className="size-4" /> Volver a las guías técnicas</Link></div>
+        </article>
       </main>
     );
   }
