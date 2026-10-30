@@ -345,6 +345,18 @@ export async function parseAurumInput(file: File, ext: string, fallbackMaterial:
     loader._createObject = (data:any, material:any) => {
       const started = performance.now();
       const result = createObject(data, material);
+      // Preserve Rhino's source geometry class: THREE.Mesh is also used to
+      // represent tessellated Breps/Surfaces, so it cannot identify Rhino Mesh.
+      const sourceGeometryType = String(data?.objectType ?? "").trim();
+      if (sourceGeometryType) {
+        result.traverse((child: any) => {
+          if (!child?.isMesh) return;
+          child.userData = {
+            ...(child.userData ?? {}),
+            aurumRhinoGeometryType: sourceGeometryType,
+          };
+        });
+      }
       const elapsed = performance.now() - started;
       objectBuildCalls++;
       objectBuildMs += elapsed;
