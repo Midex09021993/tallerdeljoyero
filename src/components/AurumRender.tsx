@@ -569,8 +569,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       const origenYaGuardado = Boolean(
         destinoProyectoGuardado?.rutaCarpeta === rutaCarpeta &&
         destinoProyectoGuardado?.archivoNombre === archivoOriginal.name &&
-        destinoProyectoGuardado?.rutaArchivoOriginal &&
-        destinoProyectoGuardado.rutaArchivoOriginal === rutaOriginalEnCarpeta
+        destinoProyectoGuardado?.rutaArchivoOriginal?.startsWith(`${rutaCarpeta}/`)
       );
       if (!originalYaEnCarpeta && !origenYaGuardado) {
         uploads.unshift({
