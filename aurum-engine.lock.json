@@ -38,7 +38,7 @@
     "src/lib/aurum/live-geometry-lod.ts": "833bf23756cfd4872b4bff5d918c9b5d6ee750e15b5c322aac32d006a4b45e6a",
     "src/lib/aurum/material-application.ts": "ed43be2aae36caaa5ec3387739dd9abb1f301139ea1a8909b9d8bf85019d91a1",
     "src/lib/aurum/mesh-preflight.ts": "a3e9f4ba831106b965055a3aca635962d23637fb51fe82d4d881ca271e1de685",
-    "src/lib/aurum/model-loader.ts": "014ac66fbc0242d618fc592bc550b5ce626e63c147fec810f45fd2c119edb64a",
+    "src/lib/aurum/model-loader.ts": "b511110d2f8b4e5173e30dc92fa31558eff71d700344f8607b20c74db05a1a25",
     "src/lib/aurum/model-materials.ts": "4968c71cf656d4caadafad925163fb1cabd5da54767712e1fa02b9cd24b31fa2",
     "src/lib/aurum/model-normalizer.ts": "fd60e0f16d875f19486b1ca81760aa7bf65509306d5bb5df154d92519026011c",
     "src/lib/aurum/model-parts.ts": "b5adb1dfc23f168ae551c6629df634a1b14ef9d49f7206f4b2b55bc034a94aef",
