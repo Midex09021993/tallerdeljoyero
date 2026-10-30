@@ -182,6 +182,10 @@ export function trimAurumOpenBrepsAgainstSolids(root: THREE.Object3D): AurumOpen
       }
       const trimmed = new THREE.BufferGeometry();
       trimmed.setAttribute("position", new THREE.Float32BufferAttribute(output, 3));
+      // Intersection calculations run in world space; convert the replacement
+      // back into the original parent coordinate system before inserting it.
+      open.parent!.updateWorldMatrix(true, false);
+      trimmed.applyMatrix4(open.parent!.matrixWorld.clone().invert());
       trimmed.computeVertexNormals();
       trimmed.computeBoundingBox();
       trimmed.computeBoundingSphere();
