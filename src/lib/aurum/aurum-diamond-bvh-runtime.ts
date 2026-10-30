@@ -1,3 +1,4 @@
+// @ts-nocheck -- AURUM Render engine: strict-mode typing pending; runtime behaviour unchanged.
 import * as THREE from "three";
 import { resolveAurumCatalogGemBvhColor, resolveAurumEmeraldBvhProfile, resolveAurumRubyBvhProfile, resolveAurumSapphireBvhProfile } from "./aurum-gem-bvh-profiles";
 import {

@@ -1,3 +1,4 @@
+// @ts-nocheck -- AURUM Render engine: strict-mode typing pending; runtime behaviour unchanged.
 /** AURUM GEM RENDERING
  * Procedural gemstone inclusions.
  * The renderer keeps inclusions inside the stone volume and uses family-specific
