@@ -251,9 +251,13 @@ function TalleresDeLaComunidad() {
         .aurum-community-marquee-viewport:focus-within .aurum-community-marquee-track {
           animation-play-state: paused;
         }
-        @media (prefers-reduced-motion: reduce) {
-          .aurum-community-marquee-track { animation: none; }
-          .aurum-community-marquee-viewport { overflow-x: auto; }
+        .aurum-community-marquee-viewport {
+          overflow: hidden;
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+        }
+        .aurum-community-marquee-viewport::-webkit-scrollbar {
+          display: none;
         }
       `}</style>
       <div className="mx-auto max-w-[1440px] px-5 py-14 sm:px-8 sm:py-[4.5rem] lg:px-12">
