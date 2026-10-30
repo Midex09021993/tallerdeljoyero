@@ -36,7 +36,8 @@ export function activateAurumDiamondMaterial<T = any>(material: T, preset?: Reco
     aurumIJEWELParameters: {
       ...AURUM_DIAMOND_MATERIAL_DEFAULTS,
       ...supplied,
-      refractiveIndex: Number(supplied.refractiveIndex ?? AURUM_DIAMOND_MATERIAL_DEFAULTS.refractiveIndex),
+      // Enforce the physical diamond sodium-D refractive index; do not retain legacy 2.6 calibration metadata.
+      refractiveIndex: 2.417,
       reflectivity: Number(supplied.reflectivity ?? AURUM_DIAMOND_MATERIAL_DEFAULTS.reflectivity),
       rayBounces: Math.max(1, Math.min(8, Math.floor(Number(supplied.rayBounces ?? AURUM_DIAMOND_MATERIAL_DEFAULTS.rayBounces)))),
     },
