@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Gem, RotateCcw, Maximize, Minimize, Hand } from "lucide-react";
+import { Gem, RotateCcw, Maximize, Minimize } from "lucide-react";
 import { supabasePublic } from "@/integrations/supabase/client";
 import { PublicCatalogViewer } from "@/components/PublicCatalogViewer";
 import { GEMAS, MATERIALES } from "@/lib/aurum/catalog";
@@ -227,38 +227,7 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
               {pantallaCompleta ? <Minimize className="size-3.5 sm:size-4" /> : <Maximize className="size-3.5 sm:size-4" />}
             </button>
           </div>
-          {viewerModelUrl && <div className="absolute inset-0"><PublicCatalogViewer modelUrl={viewerModelUrl} modelName={modelName || localFile?.name || "modelo.glb"} materialId={aurumMaterial.id} gemId={aurumGem.id} onReady={() => { setLoadedModelReady(true); setStatus(""); setAplicacionEstado("Visor 3D listo."); }} onError={(message) => { setLoadError(message); setStatus(""); }} /></div>}
-          {isReady && (
-            <div className="aurum-viewer-hand-hint pointer-events-none absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2" aria-hidden="true">
-              <div className="flex items-center gap-2 rounded-full border border-white/70 bg-[#171717]/75 px-4 py-3 text-white shadow-[0_8px_28px_rgba(0,0,0,.2)] backdrop-blur-md">
-                <Hand className="aurum-viewer-hand-icon size-6 shrink-0" strokeWidth={1.6} />
-                <span className="whitespace-nowrap text-[11px] font-medium tracking-[.04em]">Arrastra para explorar</span>
-              </div>
-            </div>
-          )}
-          <style>{`
-            @keyframes aurum-viewer-hand-intro {
-              0% { opacity: 0; transform: translate3d(-50%, calc(-50% + 12px), 0) scale(.96); }
-              12% { opacity: 1; transform: translate3d(-50%, -50%, 0) scale(1); }
-              76% { opacity: 1; transform: translate3d(-50%, -50%, 0) scale(1); }
-              100% { opacity: 0; transform: translate3d(-50%, calc(-50% - 5px), 0) scale(.98); }
-            }
-            @keyframes aurum-viewer-hand-motion {
-              0%, 100% { transform: translateX(0) rotate(-8deg); }
-              35% { transform: translateX(7px) rotate(5deg); }
-              70% { transform: translateX(-4px) rotate(-3deg); }
-            }
-            .aurum-viewer-hand-hint {
-              animation: aurum-viewer-hand-intro 5.5s ease forwards;
-            }
-            .aurum-viewer-hand-icon {
-              animation: aurum-viewer-hand-motion 1.5s ease-in-out infinite;
-            }
-            @media (prefers-reduced-motion: reduce) {
-              .aurum-viewer-hand-hint, .aurum-viewer-hand-icon { animation: none; }
-              .aurum-viewer-hand-hint { opacity: .9; }
-            }
-          `}</style>
+          {viewerModelUrl && <div className="absolute inset-0 cursor-grab active:cursor-grabbing"><PublicCatalogViewer modelUrl={viewerModelUrl} modelName={modelName || localFile?.name || "modelo.glb"} materialId={aurumMaterial.id} gemId={aurumGem.id} onReady={() => { setLoadedModelReady(true); setStatus(""); setAplicacionEstado("Visor 3D listo."); }} onError={(message) => { setLoadError(message); setStatus(""); }} /></div>}
           {(!viewerModelUrl || loadError || status || !loadedModelReady) && <div className={"absolute inset-0 z-50 grid place-items-center p-6 text-center transition-opacity " + (isReady ? "pointer-events-none opacity-0" : "bg-white/90 backdrop-blur-[2px]")}>
             <div className="max-w-sm">
               {loadError ? <div className="mx-auto mb-3 grid size-10 place-items-center rounded-full border border-[#edd6c7] bg-[#fff6f0] text-[#a85b2d]"><span className="text-lg">!</span></div> : <div className="mx-auto mb-3 size-7 animate-spin rounded-full border-2 border-[#e9dfca] border-t-[#a7833d]" />}
