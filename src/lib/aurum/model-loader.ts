@@ -4,7 +4,6 @@ import { getAurumModelParts } from "./model-parts";
 import { findAurumOverlapCandidates } from "./overlap-experiment";
 import { applyAurumMetalUnionExperiment } from "./metal-union-experiment";
 import { applyAurumVoxelRemeshExperiment } from "./voxel-remesh-experiment";
-import { trimOpenBrepSurfacesAgainstSolids } from "../geometry/open-brep-solid-trim";
 import { toCreasedNormals } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
 type AurumNormalMode = "authored" | "diagnostic" | "recompute-metal" | "crease-metal";
@@ -654,19 +653,15 @@ export async function convertAurumToGlb(
   const materialConsolidation = consolidateAurumMetalMaterialsByLayer(object);
   console.info("[AURUM][METAL MATERIAL CONSOLIDATION]", materialConsolidation);
 
-  // Consolidate compatible overlapping metal bodies in the derived GLB
-  // after Rhino classification and material consolidation. The 3DM source
-  // geometry is never written back; gem and non-metal meshes are excluded by
-  // the union pass. A failed CSG operation leaves its source meshes visible.
+  // Known-good accumulated metal union, kept opt-in as in the version
+  // validated with gold, silver and the other metal families.
   try {
-    onProgress?.("Recortando BREP abiertos contra sólidos penetrantes");
-    const trimResult = trimOpenBrepSurfacesAgainstSolids(object);
-    console.info("[AURUM][OPEN BREP TRIM]", trimResult);
-    onProgress?.("Analizando uniones metálicas");
-    const unionResult = await applyAurumMetalUnionExperiment(object, (message, completed, total) => onProgress?.(message, completed, total));
-    console.info("[AURUM][METAL UNION]", unionResult);
+    if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("aurumUnion") === "1") {
+      const unionResult = applyAurumMetalUnionExperiment(object, 8);
+      console.info("[AURUM][METAL UNION EXPERIMENT]", unionResult);
+    }
   } catch (error) {
-    console.warn("[AURUM][METAL UNION] Failed safely; keeping source meshes", error);
+    console.warn("[AURUM][METAL UNION EXPERIMENT] Failed safely; keeping source meshes", error);
   }
   onProgress?.("Generando archivo 3D interno");
   const { GLTFExporter } = await import("three/examples/jsm/exporters/GLTFExporter.js");
