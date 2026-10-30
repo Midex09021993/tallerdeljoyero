@@ -18,6 +18,7 @@ import {
   FileText,
   Wrench,
   BookOpen,
+  GraduationCap,
   ShoppingBag,
   Cloud,
   Menu,
@@ -55,6 +56,7 @@ type Seccion = {
     | "/migracion"
     | "/catalogo"
     | "/cursos-formacion"
+    | "/aula-formacion"
     | "/servicios-externos"
     | "/tienda-admin";
   label: string;
@@ -90,6 +92,7 @@ const secciones: Seccion[] = [
   { to: "/migracion", label: "Migración", roles: ["dueno", "gerente"], icono: FileSpreadsheet, grupo: "administracion" },
   { to: "/catalogo", label: "Catálogo", icono: BookOpen, grupo: "comercial" },
   { to: "/cursos-formacion", label: "Cursos y formación", area: "Cursos y formación", icono: BookOpen, grupo: "aprendizaje" },
+  { to: "/aula-formacion", label: "Aula de formación", roles: ["dueno", "gerente", "operario"], icono: GraduationCap, grupo: "aprendizaje" },
   { to: "/tienda-admin", label: "Tienda FADILAB", roles: ["dueno", "gerente"], icono: ShoppingBag, grupo: "administracion" },
   { to: "/perfil", label: "Perfil", roles: ["operario"], icono: UserRound, grupo: "administracion" },
 ];
@@ -243,6 +246,7 @@ function seccionesVisibles(
     (s) =>
       s.to === "/operario" ||
       s.to === "/mensajes" ||
+      (s.to === "/aula-formacion" && (roles.includes("gerente") || roles.includes("operario") || roles.includes("dueno"))) ||
       (s.to === "/servicios-externos" && Boolean(modalidades?.serviciosExternosActivos)),
   );
   const perfil = secciones.filter((s) => s.to === "/perfil");
