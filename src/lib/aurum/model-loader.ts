@@ -501,6 +501,71 @@ export async function parseAurumInput(file: File, ext: string, fallbackMaterial:
   throw new Error("Formato no compatible.");
 }
 
+type AurumMaterialConsolidationAudit = {
+  metalMeshes: number;
+  distinctLayerKeys: number;
+  materialInstancesBefore: number;
+  materialInstancesAfter: number;
+  consolidatedMeshes: number;
+  skippedWithoutLayerIdentity: number;
+};
+
+/**
+ * Share only visually identical material instances within the same Rhino metal
+ * layer. Geometry, transforms, source materials and every non-metal mesh remain
+ * untouched. The material JSON fingerprint retains all serialized render
+ * properties; only the per-instance UUID is excluded.
+ */
+function consolidateAurumMetalMaterialsByLayer(root: THREE.Object3D): AurumMaterialConsolidationAudit {
+  const groups = new Map<string, THREE.Material>();
+  const layerKeys = new Set<string>();
+  const audit: AurumMaterialConsolidationAudit = {
+    metalMeshes: 0,
+    distinctLayerKeys: 0,
+    materialInstancesBefore: 0,
+    materialInstancesAfter: 0,
+    consolidatedMeshes: 0,
+    skippedWithoutLayerIdentity: 0,
+  };
+  const fingerprint = (material: THREE.Material): string => {
+    const serialized = material.toJSON() as Record<string, any>;
+    const normalized = { ...serialized };
+    delete normalized.uuid;
+    return JSON.stringify(normalized);
+  };
+
+  root.traverse((node: any) => {
+    if (!node?.isMesh || !node.material) return;
+    const meta = node.userData?.aurumRhino ?? {};
+    if (meta.categoria !== "metal") return;
+    audit.metalMeshes++;
+    const layerKey = String(meta.layerKey ?? "").trim();
+    if (!layerKey) {
+      audit.skippedWithoutLayerIdentity++;
+      return;
+    }
+    layerKeys.add(layerKey);
+    const materials = Array.isArray(node.material) ? node.material : [node.material];
+    const consolidated = materials.map((material: THREE.Material) => {
+      if (!material?.isMaterial) return material;
+      audit.materialInstancesBefore++;
+      const key = layerKey + "::" + fingerprint(material);
+      const existing = groups.get(key);
+      if (existing) {
+        if (existing !== material) audit.consolidatedMeshes++;
+        return existing;
+      }
+      groups.set(key, material);
+      return material;
+    });
+    node.material = Array.isArray(node.material) ? consolidated : consolidated[0];
+  });
+
+  audit.distinctLayerKeys = layerKeys.size;
+  audit.materialInstancesAfter = groups.size + audit.skippedWithoutLayerIdentity;
+  return audit;
+}
+
 export async function convertAurumToGlb(
   object: THREE.Object3D,
   colorRhinoHex?: (color:any) => string | undefined,
@@ -571,6 +636,8 @@ export async function convertAurumToGlb(
   }
   enforceRhinoLayerVisibilityBeforeExport(object);
   await preprocessAurumModel(object);
+  const materialConsolidation = consolidateAurumMetalMaterialsByLayer(object);
+  console.info("[AURUM][METAL MATERIAL CONSOLIDATION]", materialConsolidation);
   const { GLTFExporter } = await import("three/examples/jsm/exporters/GLTFExporter.js");
   return new Promise<ArrayBuffer>((resolve, reject) => {
     const exporter = new GLTFExporter();
