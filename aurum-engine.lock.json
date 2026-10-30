@@ -38,7 +38,7 @@
     "src/lib/aurum/live-geometry-lod.ts": "833bf23756cfd4872b4bff5d918c9b5d6ee750e15b5c322aac32d006a4b45e6a",
     "src/lib/aurum/material-application.ts": "ed43be2aae36caaa5ec3387739dd9abb1f301139ea1a8909b9d8bf85019d91a1",
     "src/lib/aurum/mesh-preflight.ts": "a3e9f4ba831106b965055a3aca635962d23637fb51fe82d4d881ca271e1de685",
-    "src/lib/aurum/model-loader.ts": "b511110d2f8b4e5173e30dc92fa31558eff71d700344f8607b20c74db05a1a25",
+    "src/lib/aurum/model-loader.ts": "26c7f87be2e0eb4e83273eacbadb887391c3400656c5dd663dd1dfd73b42b4b5",
     "src/lib/aurum/model-materials.ts": "4968c71cf656d4caadafad925163fb1cabd5da54767712e1fa02b9cd24b31fa2",
     "src/lib/aurum/model-normalizer.ts": "fd60e0f16d875f19486b1ca81760aa7bf65509306d5bb5df154d92519026011c",
     "src/lib/aurum/model-parts.ts": "b5adb1dfc23f168ae551c6629df634a1b14ef9d49f7206f4b2b55bc034a94aef",
@@ -54,7 +54,7 @@
     "src/lib/aurum/video-exporter.ts": "d8ea0c5c0bff1b89771beca38f60da3e36357eba8b017fd8d5a856905d16366e",
     "src/lib/aurum/viewer.ts": "ad560fd91f993fc75b762e481badb06bda8fbfed921d695f701f0d5af85bff6c",
     "src/lib/aurum/overlap-experiment.ts": "49c88781e0eae10b42a1effd2db8bbbed1dffca0739adc89932bf02df4660ac1",
-    "src/lib/aurum/metal-union-experiment.ts": "a898b1328e9e72a2dabf68a10d73250603447158d3c3c9f073c1f26b5586e773",
+    "src/lib/aurum/metal-union-experiment.ts": "d6270bab311aa008ae90a26d68f5b334457889238a3016fa5e7776e84402a3ba",
     "src/lib/aurum/voxel-remesh-experiment.ts": "018a3a59bd1066d09303fcf571bb0d8ed0e606aa86be8968e7e942cc77559ef3"
   }
 }
