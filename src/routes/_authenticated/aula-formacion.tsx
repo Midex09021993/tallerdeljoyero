@@ -1,7 +1,7 @@
 import { useMemo, useState, type FormEvent, type ChangeEvent } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { BookOpen, GraduationCap, Users, Plus, Upload, FileText, Download, CalendarDays, ShieldCheck } from "lucide-react";
+import { BookOpen, Users, Plus, Upload, FileText, Download, CalendarDays, ShieldCheck } from "lucide-react";
 import { AppShell, Panel } from "@/components/AppShell";
 import { useSesion } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
