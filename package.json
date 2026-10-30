@@ -11,7 +11,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit",
-    "check:aurum": "node scripts/check-aurum-lock.mjs"
+    "check:aurum": "node scripts/check-aurum-lock.mjs",
+    "test:open-brep-trim": "node scripts/test-open-brep-solid-trim.mjs"
   },
   "overrides": {
     "rolldown": "1.2.1"
