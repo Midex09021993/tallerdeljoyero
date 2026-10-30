@@ -15,15 +15,23 @@ function getFamily(mesh: THREE.Mesh): MeshFamily {
   return "otro";
 }
 
-function isRhinoSurfaceMesh(mesh: THREE.Mesh): boolean {
-  const sourceType = String(
+export function getAurumRhinoGeometryType(mesh: THREE.Object3D): string {
+  return String(
     mesh.userData?.aurumRhinoGeometryType
       ?? mesh.userData?.aurumRhinoSource?.objectType
       ?? "",
-  ).trim().toLowerCase();
+  ).trim();
+}
+
+export function isAurumRhinoCsgSurface(mesh: THREE.Object3D): boolean {
+  const sourceType = getAurumRhinoGeometryType(mesh).toLowerCase();
   // Only Rhino surface-like source objects enter CSG. Rhino Mesh objects,
   // SubD, and unknown types retain their imported geometry unchanged.
   return sourceType === "surface" || sourceType === "brep" || sourceType === "extrusion";
+}
+
+function isRhinoSurfaceMesh(mesh: THREE.Mesh): boolean {
+  return isAurumRhinoCsgSurface(mesh);
 }
 
 function compatibleAttributes(a: THREE.BufferGeometry, b: THREE.BufferGeometry): boolean {
