@@ -72,20 +72,28 @@ export const listarDirectorioAlumnosFormacion = createServerFn({ method: "POST" 
 
     const perfilById = new Map((perfiles ?? []).map((p: any) => [p.id, p]));
     const tallerById = new Map((talleres ?? []).map((t: any) => [t.id, t]));
-    const alumnos = await Promise.all(candidatas.map(async (m: any) => {
-      const perfil = perfilById.get(m.user_id);
-      const taller = tallerById.get(m.participante_id);
-      if (!perfil || perfil.activo === false || !taller) return null;
-      const { data: authResult, error: authError } = await supabaseAdmin.auth.admin.getUserById(m.user_id);
+    const membresiasPorUsuario = new Map<string, any[]>();
+    for (const membresia of candidatas as any[]) {
+      const lista = membresiasPorUsuario.get(membresia.user_id) ?? [];
+      lista.push(membresia);
+      membresiasPorUsuario.set(membresia.user_id, lista);
+    }
+    const alumnos = await Promise.all([...membresiasPorUsuario.entries()].map(async ([userId, membresiasUsuario]) => {
+      const perfil = perfilById.get(userId);
+      if (!perfil || perfil.activo === false) return null;
+      const { data: authResult, error: authError } = await supabaseAdmin.auth.admin.getUserById(userId);
       if (authError || !authResult.user) return null;
+      const talleresUsuario = membresiasUsuario
+        .map((m: any) => tallerById.get(m.participante_id))
+        .filter(Boolean);
       return {
-        userId: m.user_id,
-        participanteId: m.participante_id,
-        taller: taller.nombre,
+        userId,
+        participanteIds: membresiasUsuario.map((m: any) => m.participante_id),
+        taller: talleresUsuario.map((t: any) => t.nombre).join(" · "),
         nombre: [perfil.nombre, perfil.apellidos].filter(Boolean).join(" ").trim() || perfil.usuario || "Usuario",
         usuario: perfil.usuario || authResult.user.email?.split("@")[0] || "—",
         email: authResult.user.email || "",
-        roles: roleByUser.get(m.user_id) ?? [],
+        roles: roleByUser.get(userId) ?? [],
       };
     }));
 
