@@ -237,7 +237,7 @@ function TalleresDeLaComunidad() {
         .aurum-community-marquee-track {
           display: flex;
           width: max-content;
-          animation: aurum-community-marquee 38s linear infinite;
+          animation: aurum-community-marquee 55s linear infinite;
           will-change: transform;
         }
         .aurum-community-marquee-group {
