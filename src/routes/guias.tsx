@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Calculator, Gem, Layers3 } from "lucide-react";
+import { ArrowRight, Calculator, Gem, Layers3, Ruler } from "lucide-react";
 
 export const Route = createFileRoute("/guias")({
   head: () => ({
