@@ -341,9 +341,9 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // Slightly widen visible-band separation for live diamond fire.
         // Keep the change restrained: dispersion is an approximation in this
         // single-pass shader, not wavelength-resolved spectral path tracing.
-        float ijEtaR=1.0/max(ijIor-0.014,1.0001);
+        float ijEtaR=1.0/max(ijIor-0.010,1.0001);
         float ijEtaG=1.0/ijIor;
-        float ijEtaB=1.0/min(ijIor+0.040,2.65);
+        float ijEtaB=1.0/min(ijIor+0.034,2.65);
         // Preserve the last visually working direction while isolating the
         // blank-render regression from the recent view-vector change.
         vec3 ijDirR=refract(ijView,ijNormal,ijEtaR);
