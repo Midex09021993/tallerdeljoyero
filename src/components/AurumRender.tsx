@@ -560,10 +560,15 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         .from("mi-nube")
         .list(rutaCarpeta, { limit: 1000 });
       if (listarCarpetaError) throw listarCarpetaError;
+      // Dentro de la carpeta exacta, el nombre coincidente basta para reconocer el objeto.
+      // Storage puede devolver entradas sin id/metadata en algunos listados; no debemos
+      // interpretar esa ausencia como permiso para volver a cargar el 3DM.
       const originalYaEnCarpeta = (archivosEnCarpeta ?? []).some((entrada) =>
-        entrada.name === nombreOriginal && Boolean(entrada.id || entrada.metadata)
+        entrada.name === nombreOriginal
       );
       const origenYaGuardado = Boolean(
+        destinoProyectoGuardado?.rutaCarpeta === rutaCarpeta &&
+        destinoProyectoGuardado?.archivoNombre === archivoOriginal.name &&
         destinoProyectoGuardado?.rutaArchivoOriginal &&
         destinoProyectoGuardado.rutaArchivoOriginal === rutaOriginalEnCarpeta
       );
