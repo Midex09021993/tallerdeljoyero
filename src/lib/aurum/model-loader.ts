@@ -506,7 +506,7 @@ type AurumMaterialConsolidationAudit = {
   distinctLayerKeys: number;
   materialInstancesBefore: number;
   materialInstancesAfter: number;
-  consolidatedMeshes: number;
+  consolidatedMaterialReferences: number;
   skippedWithoutLayerIdentity: number;
 };
 
@@ -524,7 +524,7 @@ function consolidateAurumMetalMaterialsByLayer(root: THREE.Object3D): AurumMater
     distinctLayerKeys: 0,
     materialInstancesBefore: 0,
     materialInstancesAfter: 0,
-    consolidatedMeshes: 0,
+    consolidatedMaterialReferences: 0,
     skippedWithoutLayerIdentity: 0,
   };
   const fingerprint = (material: THREE.Material): string => {
@@ -542,6 +542,8 @@ function consolidateAurumMetalMaterialsByLayer(root: THREE.Object3D): AurumMater
     const layerKey = String(meta.layerKey ?? "").trim();
     if (!layerKey) {
       audit.skippedWithoutLayerIdentity++;
+      audit.materialInstancesBefore += Array.isArray(node.material) ? node.material.length : 1;
+      audit.materialInstancesAfter += Array.isArray(node.material) ? node.material.length : 1;
       return;
     }
     layerKeys.add(layerKey);
@@ -552,7 +554,7 @@ function consolidateAurumMetalMaterialsByLayer(root: THREE.Object3D): AurumMater
       const key = layerKey + "::" + fingerprint(material);
       const existing = groups.get(key);
       if (existing) {
-        if (existing !== material) audit.consolidatedMeshes++;
+        if (existing !== material) audit.consolidatedMaterialReferences++;
         return existing;
       }
       groups.set(key, material);
@@ -562,7 +564,7 @@ function consolidateAurumMetalMaterialsByLayer(root: THREE.Object3D): AurumMater
   });
 
   audit.distinctLayerKeys = layerKeys.size;
-  audit.materialInstancesAfter = groups.size + audit.skippedWithoutLayerIdentity;
+  audit.materialInstancesAfter += groups.size;
   return audit;
 }
 
