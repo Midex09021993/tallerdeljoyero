@@ -154,7 +154,7 @@ export const MATERIALES: MaterialConfig[] = [
   // Perfiles premium de calibración externa, separados de los acabados estándar.
   { id:"oro18a_ijewel_premium", grupo:"Oro Amarillo", nombre:"Oro Amarillo Premium", color:0xe5b377, metalness:1, roughness:0, envMapIntensity:1, clearcoat:0, anisotropy:0 },
   { id:"oro18b_ijewel_premium", grupo:"Oro Blanco", nombre:"Oro Blanco Premium", color:0xc2c2c3, metalness:1, roughness:0, envMapIntensity:1, clearcoat:0, anisotropy:0 },
-  { id:"oro18r_ijewel_premium", grupo:"Oro Rosa", nombre:"Oro Rosa Premium", color:0xf2af83, metalness:1, roughness:0, envMapIntensity:1, clearcoat:0, anisotropy:0 },
+  { id:"oro18r_ijewel_premium", grupo:"Oro Rosa", nombre:"Oro Rosa Premium", color:0xf2af83, metalness:1, roughness:0.02, envMapIntensity:1.8, clearcoat:0.15, anisotropy:0 },
   { id:"oro18a_pulido", grupo:"Oro Amarillo", nombre:"Pulido", color:0xd8ad4c, metalness:1, roughness:.10, envMapIntensity:1.82, clearcoat:.18, anisotropy:0 }, // Acabado pulido: evitar reflejos direccionales no deseados.
   { id:"oro18a_satinado", grupo:"Oro Amarillo", nombre:"Satinado", color:0xd2aa55, metalness:1, roughness:.28, envMapIntensity:1.65, clearcoat:.20, anisotropy:0 },
   { id:"oro18a_mate", grupo:"Oro Amarillo", nombre:"Mate", color:0xc7a45a, metalness:1, roughness:.52, envMapIntensity:1.35, clearcoat:.06, anisotropy:0 },
