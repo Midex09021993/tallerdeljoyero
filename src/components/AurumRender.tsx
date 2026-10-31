@@ -2771,7 +2771,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 ssrRequested: isAurumSsrDiagnosticEnabled(),
                 ssrActive: Boolean(ssrPass?.enabled && ssrSavePass?.enabled && ssrCompositePass?.enabled),
                 ssrResolutionScale: Number(ssrPass?.resolutionScale ?? 0),
-                taaActive: Boolean((composer as any)?.passes?.find((pass: any) => pass === idleTaaPass)?.enabled),
+                taaActive: Boolean((composer as any)?.passes?.find((pass: any) => pass?.constructor?.name === "TAARenderPass")?.enabled),
                 pixelRatio: renderer.getPixelRatio(),
                 transmissionResolutionScale: (renderer as any).transmissionResolutionScale,
                 runtimeTier: runtimeBudget.tier,
