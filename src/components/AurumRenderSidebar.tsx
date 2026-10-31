@@ -12,12 +12,13 @@ import {
   Timer,
   Upload,
   AudioWaveform,
+  Wallpaper,
 } from "lucide-react";
 
 const toolbarItems = [
   { id: "ambientes", label: "HDR", icon: CircleDot },
   { id: "gem-hdr", label: "HDR", icon: Diamond },
-  { id: "stripes", label: "", icon: AudioWaveform },
+  { id: "fondos", label: "Fondo", icon: Wallpaper },
   { id: "effects", label: "", icon: Sparkles },
   { id: "images", label: "", icon: Image },
   { id: "layers", label: "", icon: Layers2 },
@@ -35,7 +36,7 @@ const toolbarItems = [
  * Los accesos son deliberadamente presentacionales: sus acciones se definirán
  * después, cuando se establezca el comportamiento de cada herramienta.
  */
-export function AurumRenderSidebar({ activeToolId, onAmbientesClick, onGemHdrClick }: { activeToolId: string; onAmbientesClick: () => void; onGemHdrClick: () => void }) {
+export function AurumRenderSidebar({ activeToolId, onAmbientesClick, onGemHdrClick, onBackgroundClick }: { activeToolId: string; onAmbientesClick: () => void; onGemHdrClick: () => void; onBackgroundClick: () => void }) {
   return (
     <nav
       aria-label="Herramientas de Aurum Render"
@@ -45,7 +46,8 @@ export function AurumRenderSidebar({ activeToolId, onAmbientesClick, onGemHdrCli
         const Icon = item.icon;
         const isAmbientes = item.id === "ambientes";
         const isGemHdr = item.id === "gem-hdr";
-        const active = (isAmbientes && activeToolId === "ambientes") || (isGemHdr && activeToolId === "hdrGemas");
+        const isBackground = item.id === "fondos";
+        const active = (isAmbientes && activeToolId === "ambientes") || (isGemHdr && activeToolId === "hdrGemas") || (isBackground && activeToolId === "fondos");
         const contents = (
           <>
             {active && (
@@ -67,9 +69,9 @@ export function AurumRenderSidebar({ activeToolId, onAmbientesClick, onGemHdrCli
           </>
         );
         const className = "relative flex h-[54px] w-full flex-col items-center justify-center gap-0.5 " + (active ? "text-[#92743b]" : "text-[#45433e]");
-        if (isAmbientes || isGemHdr) {
-          const title = isAmbientes ? "HDR Ambiente" : "HDR Entorno de Gemas";
-          const onClick = isAmbientes ? onAmbientesClick : onGemHdrClick;
+        if (isAmbientes || isGemHdr || isBackground) {
+          const title = isAmbientes ? "HDR Ambiente" : isGemHdr ? "HDR Entorno de Gemas" : "Fondos de escena";
+          const onClick = isAmbientes ? onAmbientesClick : isGemHdr ? onGemHdrClick : onBackgroundClick;
           return (
             <button key={item.id} type="button" title={title} aria-label={title} aria-pressed={active} onClick={onClick} className={className}>
               {contents}
