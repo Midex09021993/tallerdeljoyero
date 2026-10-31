@@ -252,7 +252,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
     return () => window.removeEventListener("keydown", handleDiagnosticShortcut);
   }, []);
   const [panel, setPanel] = useState<"materiales" | "escenas" | "iluminacion">("materiales");
-  const previousSceneCameraFovRef = useRef<number | null>(null);
   const [uxSection, setUxSection] = useState<"materiales"|"gemas"|"ambientes"|"escenas"|"hdrMetales"|"hdrGemas"|"fondos">("materiales");
   const exportSettingsRef = useRef({nombreProyecto,categoriaProyecto,archivo,materialId,gemaId,escenarioId,iluminacionId,vista,renderQualityId});
   exportSettingsRef.current={nombreProyecto,categoriaProyecto,archivo,materialId,gemaId,escenarioId,iluminacionId,vista,renderQualityId};
@@ -1488,17 +1487,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           gemEnvironmentRotation=scenePreset.environmentRotation as number;
           aplicarEntornoGema();
         }
-        // Recuperar la dirección original de cámara sin perder el ajuste de distancia
-        // que AURUM calcula para el tamaño real del modelo normalizado.
-        if (camara?.isPerspectiveCamera && Array.isArray(scenePreset.cameraDirection) && controles?.target) {
-          const direction=new THREE.Vector3(...scenePreset.cameraDirection).normalize();
-          const distance=Math.max(camara.position.distanceTo(controles.target),0.1);
-          camara.fov=25;
-          camara.position.copy(controles.target).addScaledVector(direction,distance);
-          camara.lookAt(controles.target);
-          camara.updateProjectionMatrix();
-          controles.update?.();
-        }
+        // La galería de escenas no modifica cámara, encuadre, distancia ni FOV.
+        // Los datos cameraDirection del VJSON se conservan como referencia, no se aplican.
         // Aplicar solo los parámetros de sombra compatibles con la luz Spot de AURUM.
         if (scenePreset.shadowProfile) {
           const applied=lightingController.applyIJEWELShadowProfile(scenePreset.shadowProfile);
@@ -1511,17 +1501,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             frustumReferenceOnly:scenePreset.shadowProfile.frustumSize,
             shadowTargetReferenceOnly:scenePreset.shadowTarget,shadowOffsetReferenceOnly:scenePreset.shadowOffset,
           });
-        }
-        if (camara?.isPerspectiveCamera) {
-          if (id === "estudioRosaPremium") {
-            if (previousSceneCameraFovRef.current === null) previousSceneCameraFovRef.current = camara.fov;
-            camara.fov = 25;
-            camara.updateProjectionMatrix();
-          } else if (previousSceneCameraFovRef.current !== null) {
-            camara.fov = previousSceneCameraFovRef.current;
-            camara.updateProjectionMatrix();
-            previousSceneCameraFovRef.current = null;
-          }
         }
         renderer.shadowMap.needsUpdate = true;
         invalidateRenderRef.current?.();
