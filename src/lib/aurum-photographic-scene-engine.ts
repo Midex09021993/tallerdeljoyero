@@ -71,6 +71,17 @@ export const AURUM_AMBIENT_PRESETS:Record<string,{id:string;name:string;url:stri
 };
 
 
+/** Presets exclusivos del entorno óptico de gemas.
+ * Se proyectan desde la biblioteca de ambientes para reutilizar sus HDR,
+ * rotaciones e intensidades sin exponer ni aplicar la pareja de metales.
+ */
+export const AURUM_GEM_ENVIRONMENT_PRESETS:Record<string,{id:string;name:string;url:string;rotation:number;intensity:number;previewClass:string}>=Object.fromEntries(
+  Object.values(AURUM_AMBIENT_PRESETS).map(({id,name,url,rotation,intensity,previewClass})=>[
+    id,{id,name,url,rotation,intensity,previewClass},
+  ])
+);
+
+
 const post=(ssao:boolean,ssaoIntensity:number,lutIntensity:number,extra:any={})=>({ssao,ssaoIntensity,bloom:false,bloomIntensity:.012,bloomThreshold:1.8,lut:true,lutIntensity,taa:true,dof:false,dofAperture:.0005,dofMaxBlur:.004,vignette:true,vignetteDarkness:.035,...extra});
 
 // Post processing built from the supplied iJewel VJSON values.
