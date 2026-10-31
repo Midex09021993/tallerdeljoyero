@@ -8,7 +8,7 @@ import {
   applyAurumMetal, applyAurumGem, metalPresetFromConfig, gemPresetFromConfig,
 } from "../lib/aurum-material-engine";
 import { getAurumScenePreset, getAurumRenderQuality, AURUM_HDRI_GROUND_DEFAULT, type AurumRenderQualityId } from "../lib/aurum-scene-engine";
-import { getAurumPhotographicProfile, getAurumHdriUrl, getAurumGemHdriUrl, AURUM_HDRI_URLS, AURUM_GEM_HDRI_URLS, AURUM_AMBIENT_PRESETS } from "../lib/aurum-photographic-scene-engine";
+import { getAurumPhotographicProfile, getAurumHdriUrl, getAurumGemHdriUrl, AURUM_HDRI_URLS, AURUM_GEM_HDRI_URLS, AURUM_AMBIENT_PRESETS, AURUM_GEM_ENVIRONMENT_PRESETS } from "../lib/aurum-photographic-scene-engine";
 import { getAurumShadowConfig } from "../lib/aurum-shadow-engine";
 import { getAurumPostConfig } from "../lib/aurum-post-engine";
 import { getAurumSsaoConfig } from "../lib/aurum-ssao-engine";
@@ -827,7 +827,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       let metalHdriOverride: string | null = null;
       let gemHdriOverride: string | null = null;
       const cargarEntornoGema = (key="ijewelGem", rotation=0, intensityScale=1, onLoaded?:()=>void, onError?:()=>void) => {
-        gemEnvironmentUrl = AURUM_AMBIENT_PRESETS[key]?.url ?? getAurumGemHdriUrl(key);
+        gemEnvironmentUrl = AURUM_GEM_ENVIRONMENT_PRESETS[key]?.url ?? getAurumGemHdriUrl(key);
         gemEnvironmentRotation = Number.isFinite(rotation) ? rotation : .54;
         gemEnvironmentIntensityScale = Number.isFinite(intensityScale) ? intensityScale : .98;
         const requestId = ++gemEnvironmentRequestId;
@@ -1854,17 +1854,19 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           cargarHDRI(key);
         },
         gemHdri:(key:string)=>{
-          const ambientPreset=AURUM_AMBIENT_PRESETS[key];
-          if (ambientPreset) {
-            aplicarAmbienteCombinado(key);
-            return;
-          }
-          if (!(key in AURUM_GEM_HDRI_URLS)) return;
+          // Este control es estrictamente gem-only: nunca debe cargar ni
+          // modificar el EnvironmentController de metales.
+          const gemPreset=AURUM_GEM_ENVIRONMENT_PRESETS[key];
+          if (!gemPreset && !(key in AURUM_GEM_HDRI_URLS)) return;
           gemHdriOverride = key;
           ambienteIdRef.current = null;
           setGemHdriId(key);
           setAmbienteId(null);
-          cargarEntornoGema(key, gemEnvironmentRotation, gemEnvironmentIntensityScale);
+          cargarEntornoGema(
+            key,
+            gemPreset?.rotation ?? gemEnvironmentRotation,
+            gemPreset?.intensity ?? gemEnvironmentIntensityScale
+          );
         },
         ambiente:(key:string)=>{
           aplicarAmbienteCombinado(key);
@@ -3569,7 +3571,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               {uxSection==="ambientes"&&<div className="pb-5">
                 <div className="mb-2 px-0.5 text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Ambientes HDR · {Object.keys(AURUM_AMBIENT_PRESETS).length}</div>
                 <div className="grid grid-cols-2 gap-3">
-                  {Object.values(AURUM_AMBIENT_PRESETS).map(preset=><button key={preset.id} type="button" aria-pressed={ambienteId===preset.id} onClick={()=>apiRef.current?.ambiente(preset.id)} className={"group min-w-0 text-center "+(ambienteId===preset.id?"text-[#292824]":"text-[#45433e]")}>
+                  {Object.values(AURUM_AMBIENT_PRESETS).map(preset=><button key={preset.id} type="button" aria-pressed={ambienteId===preset.id} onClick={()=>apiRef.current?.ambiente(preset.id)} className={"group min-w-0 text-center "+(gemHdriId===preset.id?"text-[#292824]":"text-[#45433e]")}>
                     <span className={"relative block aspect-[1.18] overflow-hidden rounded-xl border-2 transition "+(ambienteId===preset.id?"border-[#b99642] shadow-[0_0_14px_rgba(185,150,66,.18)]":"border-transparent group-hover:border-[#d8d1c2]")}>
                       <span className={"block h-full w-full "+preset.previewClass}/>
                       {ambienteId===preset.id&&<span className="absolute right-2 top-2 grid size-5 place-items-center rounded-full bg-[#92743b] text-[10px] font-bold text-white">✓</span>}
@@ -3594,16 +3596,16 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                   <select value={gemHdriId} onChange={e=>apiRef.current?.gemHdri(e.target.value)} className="w-full rounded-lg border border-black/10 bg-[#f8f7f3] px-3 py-2 text-xs text-[#292824] outline-none">
                     {[
                       ...Object.keys(AURUM_GEM_HDRI_URLS).filter(key=>key!=="ijewelGem").map(key=>({key,label:({gemDiamond:"Estudio diamante",gemWhite:"Estudio blanco",gemNeutral:"Estudio neutro",gemColor:"Estudio cálido",gemLuxury:"Estudio lujo"} as Record<string,string>)[key]??key})),
-                      ...Object.values(AURUM_AMBIENT_PRESETS).map(preset=>({key:preset.id,label:preset.name})),
+                      ...Object.values(AURUM_GEM_ENVIRONMENT_PRESETS).map(preset=>({key:preset.id,label:preset.name})),
                     ].map(option=><option key={option.key} value={option.key}>{option.label}</option>)}
                   </select>
-                  <p className="mt-2 text-[10px] leading-relaxed text-[#77756f]">Selecciona HDR de gemas o presets iJewel combinados; estos últimos aplican también su HDR de metales.</p>
+                  <p className="mt-2 text-[10px] leading-relaxed text-[#77756f]">Este control modifica únicamente el entorno óptico de las gemas. No altera los reflejos ni la iluminación HDR de los metales.</p>
                 </div>
 
                 <div>
-                  <div className="mb-2 text-[10px] font-semibold uppercase tracking-[.12em] text-[#92743b]">Entornos HDR únicos · comparar gemas</div>
+                  <div className="mb-2 text-[10px] font-semibold uppercase tracking-[.12em] text-[#92743b]">Entornos HDR de gemas · comparar piedras</div>
                 <div className="grid grid-cols-3 gap-3">
-                  {Object.values(AURUM_AMBIENT_PRESETS).map((preset,index)=>{
+                  {Object.values(AURUM_GEM_ENVIRONMENT_PRESETS).map((preset,index)=>{
                     const looks=[
                       "radial-gradient(ellipse at 30% 24%,#fff9df 0 8%,transparent 32%),linear-gradient(125deg,#d9d1b7 0%,#f7f5ed 34%,#77766d 58%,#f3e5bd 78%,#343630 100%)",
                       "radial-gradient(ellipse at 70% 22%,#ffffff 0 7%,transparent 30%),linear-gradient(135deg,#f4f4f1 0%,#aeb6bd 30%,#f9fafb 47%,#5d6670 69%,#e3e7e8 100%)",
@@ -3616,12 +3618,12 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                       "radial-gradient(ellipse at 32% 22%,#ffffff 0 8%,transparent 30%),linear-gradient(130deg,#d9dedf 0%,#ffffff 26%,#7e878d 48%,#f3f3ef 70%,#454b50 100%)",
                       "radial-gradient(ellipse at 72% 24%,#fff3c9 0 8%,transparent 30%),linear-gradient(130deg,#514637 0%,#dfc58b 25%,#fff8e8 44%,#565b5e 68%,#e4dfd0 100%)"
                     ];
-                    return <button key={preset.id} type="button" title={preset.name} aria-label={preset.name} aria-pressed={ambienteId===preset.id} onClick={()=>apiRef.current?.gemHdri(preset.id)} className={"group min-w-0 text-center "+(ambienteId===preset.id?"text-[#292824]":"text-[#45433e]")}>
-                      <span className={"relative mb-1.5 block aspect-[1.12] overflow-hidden rounded-xl border-2 transition "+(ambienteId===preset.id?"border-[#92743b] shadow-[0_0_12px_rgba(146,116,59,.18)]":"border-transparent group-hover:border-black/15")}>
+                    return <button key={preset.id} type="button" title={preset.name} aria-label={preset.name} aria-pressed={gemHdriId===preset.id} onClick={()=>apiRef.current?.gemHdri(preset.id)} className={"group min-w-0 text-center "+(gemHdriId===preset.id?"text-[#292824]":"text-[#45433e]")}>
+                      <span className={"relative mb-1.5 block aspect-[1.12] overflow-hidden rounded-xl border-2 transition "+(gemHdriId===preset.id?"border-[#92743b] shadow-[0_0_12px_rgba(146,116,59,.18)]":"border-transparent group-hover:border-black/15")}>
                         <span className="absolute inset-0" style={{background:looks[index]}}/>
                         <span className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/45 to-transparent"/>
                         <span className="absolute left-1.5 top-1.5 rounded-md border border-white/35 bg-black/25 px-1.5 py-0.5 text-[8px] font-semibold text-white">HDR</span>
-                        {ambienteId===preset.id&&<span className="absolute right-1.5 top-1.5 grid size-4 place-items-center rounded-full bg-[#92743b] text-[9px] text-white">✓</span>}
+                        {gemHdriId===preset.id&&<span className="absolute right-1.5 top-1.5 grid size-4 place-items-center rounded-full bg-[#92743b] text-[9px] text-white">✓</span>}
                         <span className="absolute inset-x-0 bottom-1.5 text-[9px] font-medium tracking-wide text-white drop-shadow">{String(index+1).padStart(2,"0")}</span>
                       </span>
                       <span className="block truncate text-[10px]">{preset.name}</span>
