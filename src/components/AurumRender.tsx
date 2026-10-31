@@ -3355,7 +3355,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                   }
                   if (!ambienteGuardado) {
                     if (typeof config.metalHdriId === "string" && Object.prototype.hasOwnProperty.call(AURUM_HDRI_URLS, config.metalHdriId)) apiRef.current?.metalHdri(config.metalHdriId);
-                    if (typeof config.gemHdriId === "string" && Object.prototype.hasOwnProperty.call(AURUM_GEM_HDRI_URLS, config.gemHdriId)) apiRef.current?.gemHdri(config.gemHdriId);
+                    if (typeof config.gemHdriId === "string" && (Object.prototype.hasOwnProperty.call(AURUM_GEM_HDRI_URLS, config.gemHdriId) || Object.prototype.hasOwnProperty.call(AURUM_GEM_ENVIRONMENT_PRESETS, config.gemHdriId))) apiRef.current?.gemHdri(config.gemHdriId);
                   }
                 }
               }
