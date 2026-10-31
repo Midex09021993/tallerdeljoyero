@@ -49,7 +49,9 @@ export function createAurumSceneController(
         applyBackground(backgroundOverride, backgroundImageOverride);
       } else if (preset.preserveBackground) {
         // Scene cards own only the floor/shadow presentation; Fondos owns the backdrop.
-        renderer.setClearColor(0x000000, 0);
+        // In "Según la escena", initialize the CSS backdrop from the scene preset.
+        // The transparent WebGL canvas then reveals that backdrop instead of black.
+        applyBackground(null);
       } else if (opts?.transparent || id === "transparente") {
         if (backgroundElement?.style) {
           backgroundElement.style.backgroundColor = "transparent";
