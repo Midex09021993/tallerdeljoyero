@@ -1,6 +1,5 @@
 import {
   Blend,
-  Box,
   CircleDot,
   Code2,
   Diamond,
@@ -40,7 +39,7 @@ export function AurumRenderSidebar() {
   return (
     <nav
       aria-label="Herramientas de Aurum Render"
-      className="flex h-full w-14 shrink-0 flex-col items-center gap-1 border-r border-black/[.07] bg-[#f1f1f0] py-2 text-[#292929] shadow-[2px_0_10px_rgba(0,0,0,.035)]"
+      className="flex h-full w-14 shrink-0 flex-col items-center gap-1 border-r border-[#e7e2d9] bg-[#f9f8f5] py-2 text-[#45433e] shadow-[2px_0_10px_rgba(36,32,20,.045)]"
     >
       {toolbarItems.map((item) => {
         const Icon = item.icon;
@@ -52,17 +51,17 @@ export function AurumRenderSidebar() {
             className={
               "relative flex h-[54px] w-full flex-col items-center justify-center gap-0.5 " +
               (item.active
-                ? "text-[#5365ff]"
-                : "text-[#292929]")
+                ? "text-[#92743b]"
+                : "text-[#45433e]")
             }
           >
             {item.active && (
-              <span className="absolute bottom-2 left-0 top-2 w-[3px] rounded-r-full bg-[#6675ff]" />
+              <span className="absolute bottom-2 left-0 top-2 w-[3px] rounded-r-full bg-[#b99642]" />
             )}
             <span
               className={
                 "grid size-8 place-items-center rounded-lg " +
-                (item.active ? "bg-[#e7eaff]" : "")
+                (item.active ? "bg-[#f4efe5]" : "")
               }
             >
               <Icon strokeWidth={1.75} className="size-[19px]" />
@@ -73,7 +72,7 @@ export function AurumRenderSidebar() {
               </span>
             )}
             {item.beta && (
-              <span className="absolute bottom-[5px] right-[5px] rounded-[2px] bg-[#6574ff] px-[2px] py-[1px] text-[6px] font-bold leading-none text-white">
+              <span className="absolute bottom-[5px] right-[5px] rounded-[2px] bg-[#92743b] px-[2px] py-[1px] text-[6px] font-bold leading-none text-white">
                 BETA
               </span>
             )}
