@@ -250,6 +250,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
     return () => window.removeEventListener("keydown", handleDiagnosticShortcut);
   }, []);
   const [panel, setPanel] = useState<"materiales" | "escenas" | "iluminacion">("materiales");
+  const previousSceneCameraFovRef = useRef<number | null>(null);
   const [uxSection, setUxSection] = useState<"materiales"|"gemas"|"ambientes"|"escenas"|"hdrMetales"|"hdrGemas"|"fondos">("materiales");
   const exportSettingsRef = useRef({nombreProyecto,categoriaProyecto,archivo,materialId,gemaId,escenarioId,iluminacionId,vista,renderQualityId});
   exportSettingsRef.current={nombreProyecto,categoriaProyecto,archivo,materialId,gemaId,escenarioId,iluminacionId,vista,renderQualityId};
@@ -1393,7 +1394,17 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         // permanecen bajo sus controles independientes.
         liveFastPathRef.current = true;
         sceneController.apply(id);
-        if (id === "estudioRosaPremium" && camara?.isPerspectiveCamera) { camara.fov = 25; camara.updateProjectionMatrix(); }
+        if (camara?.isPerspectiveCamera) {
+          if (id === "estudioRosaPremium") {
+            if (previousSceneCameraFovRef.current === null) previousSceneCameraFovRef.current = camara.fov;
+            camara.fov = 25;
+            camara.updateProjectionMatrix();
+          } else if (previousSceneCameraFovRef.current !== null) {
+            camara.fov = previousSceneCameraFovRef.current;
+            camara.updateProjectionMatrix();
+            previousSceneCameraFovRef.current = null;
+          }
+        }
         renderer.shadowMap.needsUpdate = true;
         invalidateRenderRef.current?.();
       };
