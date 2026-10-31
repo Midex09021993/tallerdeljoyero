@@ -14,6 +14,7 @@ export type AurumScenePreset = {
   shadowSoftness:number;
   groundSize?:number;
   preserveBackground?:boolean;
+  groundReflection?:boolean;
 };
 
 export const AURUM_SCENE_PRESETS:Record<string,AurumScenePreset>={
@@ -36,7 +37,7 @@ export const AURUM_SCENE_PRESETS:Record<string,AurumScenePreset>={
   ijewelReference:{id:"ijewelReference",background:0xffffff,ground:0xffffff,groundRoughness:1,groundMetalness:0,groundVisible:true,shadowIntensity:.22,shadowSoftness:.985,groundSize:8,preserveBackground:true},
   // VJSON 11–12: floor reflection is authored in iJewel; AURUM keeps the
   // ground finish selectable without changing the independent HDR pipelines.
-  ijewelReflectiveReference:{id:"ijewelReflectiveReference",background:0xffffff,ground:0xffffff,groundRoughness:.24,groundMetalness:.02,groundVisible:true,shadowIntensity:.22,shadowSoftness:.985,groundSize:10,preserveBackground:true},
+  ijewelReflectiveReference:{id:"ijewelReflectiveReference",background:0xffffff,ground:0xffffff,groundRoughness:1,groundMetalness:0,groundVisible:true,shadowIntensity:.22,shadowSoftness:.985,groundSize:10,groundReflection:true,preserveBackground:true},
   ijewelEnvironmentReference:{id:"ijewelEnvironmentReference",background:0xe7e7e4,ground:0xf1f0ec,groundRoughness:.68,groundMetalness:.01,groundVisible:true,shadowIntensity:.22,shadowSoftness:.985},
   // Adaptación de scene-config (13): fondo blanco y suelo oculto. HDR doble se aplica en Ambientes.
   estudioRosaPremium:{id:"estudioRosaPremium",background:0xffffff,ground:0xffffff,groundRoughness:1,groundMetalness:0,groundVisible:false,shadowIntensity:0,shadowSoftness:.985}
