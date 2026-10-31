@@ -35,7 +35,7 @@ export const AURUM_HDRI_URLS:Record<string,string>={
   monochrome:"https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/monochrome_studio_02_2k.hdr",
   warm:"https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/story_studio_02_2k.hdr",
   white:"https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/white_studio_06_2k.hdr",
-  // Exact iJewel/WebGi environment references found in the supplied VJSON.
+  // External environment maps preserved from the supplied calibration files.
   ijewelMetal:"https://playground.ijewel3d.com/assetspro/hdrmaps/metal/env-metal-010.exr",
   ijewelMetalVjson:"https://playground.ijewel3d.com/assetspro/hdrmaps/metal/env-metal-002.exr",
   ijewelGem:"https://playground.ijewel3d.com/assetspro/hdrmaps/gem/env-gem-010.exr",
@@ -48,7 +48,7 @@ export const AURUM_GEM_HDRI_URLS:Record<string,string>={
   gemNeutral:"https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/monochrome_studio_02_2k.hdr",
   gemColor:"https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/story_studio_02_2k.hdr",
   gemLuxury:"https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/studio_small_03_2k.hdr",
-  // Exact iJewel/WebGi gem environment reference.
+  // External gem environment map preserved from the supplied calibration files.
   ijewelGem:"https://playground.ijewel3d.com/assetspro/hdrmaps/gem/env-gem-010.exr",
 };
 export const getAurumGemHdriUrl=(key:string)=>AURUM_GEM_HDRI_URLS[key]??AURUM_GEM_HDRI_URLS["gemDiamond"]!;
@@ -84,7 +84,7 @@ export const AURUM_GEM_ENVIRONMENT_PRESETS:Record<string,{id:string;name:string;
 
 const post=(ssao:boolean,ssaoIntensity:number,lutIntensity:number,extra:any={})=>({ssao,ssaoIntensity,bloom:false,bloomIntensity:.012,bloomThreshold:1.8,lut:true,lutIntensity,taa:true,dof:false,dofAperture:.0005,dofMaxBlur:.004,vignette:true,vignetteDarkness:.035,...extra});
 
-// Post processing built from the supplied iJewel VJSON values.
+// Post processing built from the supplied external VJSON calibration values.
 const ijewelReferencePost:AurumPhotographicProfile["post"] = {
   ssao:AURUM_IJEWEL_REFERENCE.ssao.enabled,
   ssaoIntensity:AURUM_IJEWEL_REFERENCE.ssao.intensity,
@@ -121,7 +121,7 @@ export const AURUM_PHOTOGRAPHIC_PROFILES:Record<string,AurumPhotographicProfile>
 
   // Existing AURUM premium reference: preserve its original environment and auxiliary rig.
   ijewelReference:{environmentKey:"ijewelMetal",gemEnvironmentKey:"ijewelGem",environmentIntensity:1,environmentRotation:0,gemEnvironmentRotation:0,gemEnvironmentIntensity:1,metalEnvironmentScale:1,highlightProtection:1,exposure:AURUM_IJEWEL_REFERENCE.toneMapping.exposure,lighting:"ijewelReference",post:ijewelReferencePost},
-  // Separate experimental profile built from the supplied iJewel VJSON values.
+  // Separate experimental profile built from the supplied external VJSON calibration values.
   // This does not overwrite the existing AURUM premium scene.
   ijewelEnvironmentReference:{environmentKey:"ijewelMetalVjson",gemEnvironmentKey:"ijewelGem",environmentIntensity:0.6,environmentRotation:0,gemEnvironmentRotation:0,gemEnvironmentIntensity:1,metalEnvironmentScale:1,highlightProtection:1,exposure:AURUM_IJEWEL_REFERENCE.toneMapping.exposure,lighting:"ijewelEnvironmentReference",post:ijewelReferencePost},
 };
