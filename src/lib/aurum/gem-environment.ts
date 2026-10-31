@@ -23,7 +23,8 @@ export interface AurumGemEnvironmentController {
     url:string,
     requestId:number,
     isCurrent:()=>boolean,
-    onLoaded:(texture:any)=>void
+    onLoaded:(texture:any)=>void,
+    onError?:()=>void
   )=>void;
   applyToModel: (
     model:any,
@@ -104,11 +105,13 @@ export function createAurumGemEnvironment(
   };
 
   return {
-    load(url, _requestId, isCurrent, onLoaded) {
+    load(url, _requestId, isCurrent, onLoaded, onError) {
       const cached = cache.get(url);
       if (cached) {
+        // Do not let an older cached request supersede a newer selection.
+        if (!isCurrent()) return;
         current = cached;
-        if (isCurrent()) onLoaded(cached);
+        onLoaded(cached);
         return;
       }
 
@@ -138,9 +141,11 @@ export function createAurumGemEnvironment(
         } catch (error) {
           hdrTexture.dispose?.();
           console.warn("[Aurum Render] No se pudo procesar el HDR de gemas:", url, error);
+          onError?.();
         }
       }, undefined, (error:any) => {
         console.warn("[Aurum Render] No se pudo cargar el HDR de gemas; se conservará el entorno anterior:", url, error);
+        if (isCurrent()) onError?.();
       });
     },
     applyToModel,
