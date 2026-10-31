@@ -208,6 +208,20 @@ export function startAurumViewerLoop(
   canvas?.addEventListener("webglcontextlost", onWebGLContextLost, false);
   canvas?.addEventListener("webglcontextrestored", onWebGLContextRestored, false);
 
+  // The browser may discard the drawing buffer while the viewer is idle
+  // (tab hidden, window blur, panel overlays). Re-emit a clean frame so the
+  // jewel never stays blank while the camera is still.
+  const onWakeUp = () => {
+    if (stopped || paused) return;
+    if (typeof document !== "undefined" && document.visibilityState === "hidden") return;
+    requestRender();
+  };
+  if (typeof document !== "undefined") document.addEventListener("visibilitychange", onWakeUp);
+  if (typeof window !== "undefined") {
+    window.addEventListener("focus", onWakeUp);
+    window.addEventListener("pageshow", onWakeUp);
+  }
+
   const onControlStart = () => {
     interactionEnding = false;
     idleFramesRemaining = 0;
@@ -319,6 +333,11 @@ export function startAurumViewerLoop(
       viewer.controls?.removeEventListener?.("end", onControlEnd);
       canvas?.removeEventListener("webglcontextlost", onWebGLContextLost);
       canvas?.removeEventListener("webglcontextrestored", onWebGLContextRestored);
+      if (typeof document !== "undefined") document.removeEventListener("visibilitychange", onWakeUp);
+      if (typeof window !== "undefined") {
+        window.removeEventListener("focus", onWakeUp);
+        window.removeEventListener("pageshow", onWakeUp);
+      }
       observer.disconnect();
     },
     resize,
