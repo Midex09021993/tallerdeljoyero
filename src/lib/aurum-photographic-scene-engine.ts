@@ -71,6 +71,30 @@ export const AURUM_AMBIENT_PRESETS:Record<string,{id:string;name:string;url:stri
 
 const post=(ssao:boolean,ssaoIntensity:number,lutIntensity:number,extra:any={})=>({ssao,ssaoIntensity,bloom:false,bloomIntensity:.012,bloomThreshold:1.8,lut:true,lutIntensity,taa:true,dof:false,dofAperture:.0005,dofMaxBlur:.004,vignette:true,vignetteDarkness:.035,...extra});
 
+// Post processing built from the supplied iJewel VJSON values.
+const ijewelReferencePost:AurumPhotographicProfile["post"] = {
+  ssao:AURUM_IJEWEL_REFERENCE.ssao.enabled,
+  ssaoIntensity:AURUM_IJEWEL_REFERENCE.ssao.intensity,
+  ssaoFalloff:AURUM_IJEWEL_REFERENCE.ssao.falloff,
+  bloom:AURUM_IJEWEL_REFERENCE.bloom.enabled,
+  bloomIntensity:AURUM_IJEWEL_REFERENCE.bloom.intensity,
+  bloomThreshold:AURUM_IJEWEL_REFERENCE.bloom.threshold,
+  bloomRadius:AURUM_IJEWEL_REFERENCE.bloom.radius,
+  lut:false,
+  lutIntensity:0,
+  gradeEnabled:true,
+  gradeContrast:AURUM_IJEWEL_REFERENCE.toneMapping.contrast,
+  gradeSaturation:AURUM_IJEWEL_REFERENCE.toneMapping.saturation,
+  taa:AURUM_IJEWEL_REFERENCE.taa.enabled,
+  progressiveFrameCount:AURUM_IJEWEL_REFERENCE.progressive.maxFrameCount,
+  ssr:AURUM_IJEWEL_REFERENCE.ssr.enabled,
+  ssrIntensity:AURUM_IJEWEL_REFERENCE.ssr.intensity,
+  ssrMaxDistance:AURUM_IJEWEL_REFERENCE.ssr.objectRadius,
+  ssrThickness:.018,
+  dof:false,
+  vignette:false
+};
+
 export const AURUM_PHOTOGRAPHIC_PROFILES:Record<string,AurumPhotographicProfile>={
   oscuro:{environmentKey:"studioHard",gemEnvironmentKey:"gemNeutral",environmentIntensity:.50,environmentRotation:.16,gemEnvironmentRotation:.34,gemEnvironmentIntensity:.86,metalEnvironmentScale:.78,highlightProtection:.91,exposure:.58,lighting:"studioHard",post:post(true,.10,.08,{vignetteDarkness:.025})},
   claro:{environmentKey:"jewelry",gemEnvironmentKey:"gemWhite",environmentIntensity:.58,environmentRotation:.24,gemEnvironmentRotation:-.16,gemEnvironmentIntensity:1.02,metalEnvironmentScale:.92,highlightProtection:.93,exposure:.80,lighting:"jewelry",post:post(true,.065,.055,{vignetteDarkness:.02})},
