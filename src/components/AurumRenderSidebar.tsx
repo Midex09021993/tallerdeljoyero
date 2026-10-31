@@ -32,7 +32,7 @@ const toolbarItems = [
 
 /**
  * Barra lateral visual de Aurum Render.
- * Escena abre el panel de presets; las demás herramientas pendientes son visuales.
+ * Escena agrupa los controles del suelo y las sombras de contacto.
  */
 export function AurumRenderSidebar({ activeToolId, onAmbientesClick, onGemHdrClick, onBackgroundClick, onSceneClick }: { activeToolId: string; onAmbientesClick: () => void; onGemHdrClick: () => void; onBackgroundClick: () => void; onSceneClick: () => void }) {
   return (
