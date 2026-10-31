@@ -8,7 +8,7 @@
   "files": {
     ".github/workflows/quality.yml": "859ec017c449181488a8fd91e854e01ae746bf1fb6bdbebeefe07906e6cfa548",
     "scripts/check-aurum-lock.mjs": "d8b0b1e553fbfdd7faf6522482d0460b5c9803464b9fa03d34ed3bbacd18b5c4",
-    "src/components/AurumRender.tsx": "98e1829d4ea1f1e691f749c1f3d47a0a326aef7628f2db9a44b4306e2a46cac7",
+    "src/components/AurumRender.tsx": "2786a9b4ee5fa3a989dd6be0634f2292b55e8a5e43dff4819dea4c0468804276",
     "src/components/AurumRenderConfig.tsx": "aee6ad6ae61c5ea3ad7a6fa03453154b871c3910845656f4ef6bed3b4660ad66",
     "src/lib/aurum-material-engine.ts": "1d4513fd9d54f3e02662b7d8145845f4e494494e9129ece33f0346a403752105",
     "src/lib/aurum/api.ts": "98e8927885b4c061ab529e0593332d5617b485cd2fcbf9e1b8d0acf3fa859c1c",
@@ -19,7 +19,7 @@
     "src/lib/aurum/aurum-diamond-pipeline.ts": "8c65f66ee83aa3bc0bb9faaf4a30929bb116a9659c2b94d96659f20189a8e259",
     "src/lib/aurum/aurum-gem-bvh-profiles.ts": "0f23c97db216d5a6855bd5fea08d0dbbe8475ce6ee3acf2eabd103566c8470a8",
     "src/lib/aurum/camera.ts": "39bbd1707ef7dc3e195ebe770e1da3e4d07556b15b55a990e659f2352cd1f4e2",
-    "src/lib/aurum/catalog.ts": "0a02c0b105628bd2986321e205fbcc7e83d0d4e43e351c9d7789130592bdbc30",
+    "src/lib/aurum/catalog.ts": "22779cc964af8a9564b7d823fd374131b5954db679daf33ef887abf6b66d4963",
     "src/lib/aurum/configurator-state.ts": "674ccd59f288be0bdd99c8aaf02d62dcfd1dc089a641c46bcc39ca3de5e35175",
     "src/lib/aurum/configurator.ts": "591aff277b730b2d3827b5b6d99bf78963378adff3eb89f7a27fa08e14f8d389",
     "src/lib/aurum/environment.ts": "71410503c63d573db901d738c3a1baa385b1438f145e9ad91777150d4e71366b",
@@ -56,6 +56,6 @@
     "src/lib/aurum/video-exporter.ts": "d8ea0c5c0bff1b89771beca38f60da3e36357eba8b017fd8d5a856905d16366e",
     "src/lib/aurum/viewer.ts": "b58321bc4f31844935506fe7c2ff39d3471183e3ee336416894f5740e76e0e43",
     "src/lib/aurum/voxel-remesh-experiment.ts": "cb0229096ab24e5cf469fa62d13fed1b7418fd895cf1e4e7451b38a9a077a2bc",
-    "src/lib/aurum-scene-engine.ts": "a321c9f76fb81d69950d0886b0d628fef82f4461ef0b802f2414389e0d5cb625"
+    "src/lib/aurum-scene-engine.ts": "09991b38e31c285823952d99ae36b25d1f73e896edcfaf2eb2ef8f5bb856f10f"
   }
 }
