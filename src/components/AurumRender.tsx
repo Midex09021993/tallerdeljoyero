@@ -1754,8 +1754,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         gemHdri:(key:string)=>{
           const ambientPreset=AURUM_AMBIENT_PRESETS[key];
           if (ambientPreset) {
-            // The ten supplied iJewel VJSON environments are first-class gem
-            // HDR options. Preserve their exact URL, rotation and intensity.
+            // Presets with a paired metalKey restore both HDR environments
+            // from the same iJewel VJSON without changing materials or post FX.
+            if (ambientPreset.metalKey && ambientPreset.metalKey in AURUM_HDRI_URLS) {
+              metalHdriOverride = ambientPreset.metalKey;
+              setMetalHdriId(ambientPreset.metalKey);
+              cargarHDRI(ambientPreset.metalKey,undefined,ambientPreset.metalRotation,ambientPreset.metalIntensity);
+            }
             setGemHdriId(key);
             setAmbienteId(key);
             cargarEntornoGema(key,ambientPreset.rotation,ambientPreset.intensity);
@@ -1771,7 +1776,12 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         ambiente:(key:string)=>{
           const preset=AURUM_AMBIENT_PRESETS[key];
           if (!preset) return;
-          // Backwards-compatible entry point for the existing Ambientes grid.
+          // Apply the metal HDR only for explicitly paired VJSON presets.
+          if (preset.metalKey && preset.metalKey in AURUM_HDRI_URLS) {
+            metalHdriOverride = preset.metalKey;
+            setMetalHdriId(preset.metalKey);
+            cargarHDRI(preset.metalKey,undefined,preset.metalRotation,preset.metalIntensity);
+          }
           setAmbienteId(key);
           setGemHdriId(key);
           cargarEntornoGema(key,preset.rotation,preset.intensity);
@@ -3495,7 +3505,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                       ...Object.values(AURUM_AMBIENT_PRESETS).map(preset=>({key:preset.id,label:preset.name})),
                     ].map(option=><option key={option.key} value={option.key}>{option.label}</option>)}
                   </select>
-                  <p className="mt-2 text-[10px] leading-relaxed text-[#77756f]">Selecciona un HDR de estudio o uno de los diez ambientes importados. Los metales permanecen independientes.</p>
+                  <p className="mt-2 text-[10px] leading-relaxed text-[#77756f]">Selecciona HDR de gemas o presets iJewel combinados; estos últimos aplican también su HDR de metales.</p>
                 </div>
 
                 <div>
