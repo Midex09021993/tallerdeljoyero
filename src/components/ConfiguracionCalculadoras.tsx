@@ -400,10 +400,9 @@ function ConfiguracionCalculadorasAdmin() {
               </div>
             </section>
           ))}
-          <label className="block max-w-xs space-y-1.5">
-            <span className="text-xs font-medium">Factor de cálculo</span>
-            <input type="number" min="0" step="0.01" className={inputCls} value={cfgAleacion.factorCalculo} onChange={(e) => setCfgAleacion((a) => ({ ...a, factorCalculo: Number(e.target.value) || 0 }))} />
-          </label>
+          <p className="rounded-lg border border-border bg-muted/30 p-3 text-xs leading-relaxed text-muted-foreground">
+            El ajuste de ley se calcula mediante balance de masa. El antiguo factor de cálculo se conserva en la configuración guardada por compatibilidad, pero ya no modifica los resultados. Las recetas de metales siguen siendo configurables.
+          </p>
         </div>
       </AccordionSection>
 
