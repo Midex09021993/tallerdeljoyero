@@ -3088,7 +3088,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
     } finally {
       if (cargaCorrecta) {
         setEstadoCarga("Modelo cargado");
-        window.setTimeout(() => setCargando(false), 650);
+        window.setTimeout(() => setCargando(false), 1100);
       } else {
         setCargando(false);
       }
