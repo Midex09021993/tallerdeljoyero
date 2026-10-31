@@ -2818,22 +2818,25 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 || (pass === dofPass && postRuntimeConfig.dof === true)
                 || pass === idleOutputPass;
             });
-            if (idleTaaAvailable && !extremeGeometry) {
-              idleTaaPass.enabled = true;
-              idleTaaPass.accumulate = true;
-              idleTaaPass.sampleLevel = 4;
-              idleTaaPass.accumulateIndex = -1;
-            } else if (extremeGeometry && idleTaaPass) {
-              // Temporal accumulation can stall the viewer after a heavy CAD model
-              // settles. Keep TAA available for export, but bypass it in this live
-              // preview tier so orbit/material controls remain usable.
+            // Keep TAA out of the interactive preview. Its temporal accumulation
+            // switches the settled viewer to EffectComposer and can leave the
+            // canvas blank on some GPU/browser combinations after orbit settles.
+            // TAA remains available to dedicated capture workflows.
+            if (idleTaaPass) {
               idleTaaPass.enabled = false;
               idleTaaPass.accumulate = false;
+              idleTaaPass.accumulateIndex = -1;
             }
-            // With live DOF enabled, the settled viewer must render through EffectComposer.
-            // Keep the direct renderer only when DOF is off; otherwise the BokehPass is bypassed.
-            liveFastPathRef.current = postRuntimeConfig.dof !== true;
+            // The live viewer stays on the known-good direct renderer by default.
+            // EffectComposer is reserved for an explicitly enabled live DOF preview.
+            liveFastPathRef.current = postRuntimeConfig.dof !== true || extremeGeometry;
             aplicarPerfilLive();
+            // aplicarPerfilLive reapplies quality gates; reassert the live TAA bypass.
+            if (idleTaaPass) {
+              idleTaaPass.enabled = false;
+              idleTaaPass.accumulate = false;
+              idleTaaPass.accumulateIndex = -1;
+            }
             // Re-assert the live DOF state after the live profile reapplies post quality.
             // Without TAA, the composer can still render RenderPass -> BokehPass -> OutputPass.
             // Keep the direct reference from createAurumPostPipeline; production
@@ -2883,10 +2886,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 focus: settledDofPass?.uniforms?.focus?.value ?? null,
               });
             }
-            // DOF requires EffectComposer even if the TAA pass is unavailable.
+            // Use EffectComposer only for an explicitly requested, available live DOF pass.
+            // TAA availability alone must never switch the idle viewer away from direct rendering.
             liveFastPathRef.current = extremeGeometry
-              ? true
-              : !(idleTaaAvailable || (postRuntimeConfig.dof === true && Boolean(settledDofPass)));
+              || !(postRuntimeConfig.dof === true && Boolean(settledDofPass));
             if (aurumEnvironmentDiagnostic) {
               console.info("[AURUM][INTERACTION][DIAGNOSTIC]", {
                 phase: "orbit-settled",
