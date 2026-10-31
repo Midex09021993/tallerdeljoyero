@@ -384,7 +384,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
           side: () => setCameraView(new THREE.Vector3(distance, 0, 0)),
           top: () => setCameraView(new THREE.Vector3(0, distance, 0.001), new THREE.Vector3(0, 0, -1)),
           zoom: (direction) => { if (direction === "in") controls.dollyIn(1.18); else controls.dollyOut(1.18); controls.update(); loop?.converge?.(3); },
-          rotate: (enabled) => { controls.autoRotate = enabled; controls.update(); loop?.converge?.(3); },
+          rotate: (enabled) => { controls.autoRotate = enabled; if (enabled) loop?.setContinuousRendering?.(true); else { loop?.setContinuousRendering?.(false); loop?.converge?.(3); } controls.update(); },
         };
         setCameraReady(true);
         scene.add(model);
