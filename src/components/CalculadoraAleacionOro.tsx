@@ -195,7 +195,7 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
           </div>
           <div className="grid grid-cols-4 gap-2">
             {LEYES_OBJETIVO.map((ley) => {
-              const seleccionado = !leyPersonalizada && final === String(ley);
+              const seleccionado = !leyPersonalizada && final === leyPreset(ley);
               return <button key={ley} type="button" onClick={() => { setLeyPersonalizada(false); setFinal(leyPreset(ley)); }} aria-pressed={seleccionado}
                 className={`relative h-11 rounded-2xl border text-sm font-semibold transition ${seleccionado ? "border-gold bg-gold/15 text-foreground" : "border-input bg-background text-muted-foreground hover:border-gold/60"}`}>
                 {unidadLey === "K" ? `${ley}K` : `${formatearNumero((ley / 24) * 1000, 3)}‰`}{seleccionado ? <Check className="absolute right-1.5 top-1.5 size-3 text-gold-deep" aria-hidden="true" /> : null}
