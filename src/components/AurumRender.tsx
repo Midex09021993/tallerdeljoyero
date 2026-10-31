@@ -40,6 +40,7 @@ import { prepareAurumLiveGeometry, setAurumLiveGeometryQuality, disposeAurumLive
 import { Camera, ChevronDown, Copy, Download, Expand, FileJson, Gem, Image as ImageIcon, Maximize2, RotateCcw, RotateCw, SlidersHorizontal, Sparkles, Upload, X, FolderOpen, Cloud, ArrowUpRight } from "lucide-react";
 
 import { GEMAS, MATERIALES, ESCENARIOS, VISTAS, ILUMINACIONES, type MaterialId, type EscenarioId, type VistaId, type IluminacionId, type MaterialGrupo, type CategoriaParte, type GemaId, type GemaConfig, type MaterialConfig, type ParteModelo } from "../lib/aurum/catalog";
+import { AurumRenderSidebar } from "./AurumRenderSidebar";
 
 const normalizarTexto = (v:any) => String(v ?? "").trim().toLowerCase();
 const colorRhinoHex = (c:any): string | undefined => {
@@ -3375,6 +3376,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       </div>}
       
       <div className={embedded ? "flex min-h-0 flex-1 overflow-hidden bg-[#090b0e]" : "flex min-h-0 flex-1 gap-3 bg-[#eeede8] p-3"}>
+        {!embedded && <AurumRenderSidebar />}
         {!embedded && <aside className="w-[min(22vw,336px)] shrink-0 overflow-hidden rounded-2xl border border-black/[.07] bg-[#f9f8f5] text-[#292824] shadow-[0_8px_28px_rgba(36,32,20,.045)]">
           <div className="h-full overflow-y-auto">
             <div className="mx-4 mt-3 mb-2 grid grid-cols-3 gap-1.5 rounded-2xl border border-[#e2ded5] bg-[#efede7] p-1.5" role="tablist" aria-label="Biblioteca de joyería">
