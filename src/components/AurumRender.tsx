@@ -2688,19 +2688,16 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       const viewerLoop = startAurumViewerLoop(
         { node:nodo, camera:camara, renderer, composer, ssaoPass, controls:controles },
         () => {
-          diamondBvhRuntime?.update();
-          // Do not scan every mesh or raycast the product on every animation
-          // frame. Focus is calculated when DOF is enabled and for final capture;
-          // continuous per-frame geometry analysis freezes dense CAD assemblies.
-          // Keep the direct renderer during orbit, but use the photographic
-          // EffectComposer pipeline once settled so configured TAA/SSR/SSAO
-          // actually reach the interactive preview.
+          try {
+            diamondBvhRuntime?.update();
+          } catch (error) {
+            console.error("[AURUM][DIAMOND][BVH_UPDATE_ERROR] Skipping BVH update for this frame.", error);
+          }
+          // Keep the interactive path lightweight; use the photographic
+          // EffectComposer pipeline only when the settled configuration needs it.
           if (liveFastPathRef.current || !composer) {
             renderer.render(escena,camara);
           } else {
-            // BokehPass renders into its own intermediate targets. Reassert the
-            // opaque studio backdrop immediately before the composer starts so
-            // a prior transparent/direct frame cannot leave a black DOF background.
             if (postRuntimeConfig.dof === true) {
               escena.background = new THREE.Color(0xffffff);
               renderer.setClearColor(0xffffff, 1);
@@ -2709,9 +2706,19 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 renderPass.clearAlpha = 1;
               }
             }
-            composer.render();
+            try {
+              composer.render();
+            } catch (error) {
+              // Preserve the jewelry preview if a post-processing pass fails.
+              liveFastPathRef.current = true;
+              ((composer as any)?.passes ?? []).forEach((pass: any) => { pass.enabled = false; });
+              renderer.shadowMap.enabled = false;
+              console.error("[AURUM][POST][COMPOSER_FALLBACK] EffectComposer failed; switched to direct WebGL rendering.", error);
+              renderer.render(escena,camara);
+            }
           }
           perfTick();
+        }
         },
         {
           progressiveFrames: 32,
