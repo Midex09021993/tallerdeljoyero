@@ -483,13 +483,53 @@ function GuiaTecnicaPage() {
           </section>
 
           <section>
-            <h2>4. ¿Qué ocurre si ya tienes oro de otra ley?</h2>
-            <p>Cuando se ajusta una aleación existente, no basta con aplicar directamente la tabla anterior: primero hay que conocer la masa y la ley real del material de partida, así como la composición y la ley del metal que se añadirá. El balance debe conservarse entre la masa total y la cantidad de oro fino.</p>
-            <p>Para un cálculo general de mezcla, se utiliza el balance:</p>
-            <div className="my-5 rounded-xl border border-slate-200 bg-white p-5 text-center">
-              <p className="font-bold">Oro fino inicial + oro fino añadido = oro fino final</p>
+            <h2>4. Ajustar una aleación existente mediante balance de masa</h2>
+            <p>Para modificar la ley de un lote, registra la masa inicial y la finura de oro de cada material. La finura se expresa como fracción másica: por ejemplo, 18K nominal equivale a 18/24 = 0,750. El balance conserva la masa de oro fino antes y después de añadir material.</p>
+            <div className="my-5 rounded-xl border border-[#eadca7] bg-[#fff9df] p-5 text-center">
+              <p className="font-bold text-[#604900]">m inicial × f inicial + m añadido × f añadido = m final × f objetivo</p>
             </div>
-            <p>Si el material de partida contiene soldaduras, recubrimientos, contaminantes o una ley desconocida, la estimación puede no representar la composición efectiva. En esos casos, solicita un análisis apropiado y evita tratar una ley supuesta como si estuviera confirmada.</p>
+            <p>En estas expresiones, <strong>m</strong> representa masa en gramos y <strong>f</strong> la fracción másica de oro fino. Las fórmulas suponen que las leyes de entrada son conocidas y que el proceso no introduce pérdidas ni contaminación.</p>
+          </section>
+
+          <section>
+            <h2>5. Cómo bajar la ley añadiendo liga sin oro</h2>
+            <p>Cuando se añade una liga que no contiene oro fino (f añadido = 0), la masa de liga necesaria es:</p>
+            <div className="my-5 rounded-xl border border-slate-200 bg-white p-5 text-center">
+              <p className="font-bold">x = m inicial × (f inicial − f objetivo) ÷ f objetivo</p>
+            </div>
+            <p><strong>Ejemplo:</strong> para bajar 100 g de oro fino 24K a 18K (f objetivo = 0,750), se necesitan 33,33 g de liga sin oro. La masa teórica final será 133,33 g.</p>
+            <p>La fórmula determina la masa total de liga. El reparto entre cobre, plata, zinc, paladio u otros componentes depende de una formulación metalúrgica apropiada para el color, las propiedades y el proceso; no debe asumirse que una receta genérica sirve para todas las aleaciones.</p>
+          </section>
+
+          <section>
+            <h2>6. Cómo subir la ley añadiendo oro fino</h2>
+            <p>Si se añade oro fino de 24K (f añadido = 1) para elevar la ley, la masa necesaria es:</p>
+            <div className="my-5 rounded-xl border border-slate-200 bg-white p-5 text-center">
+              <p className="font-bold">x = m inicial × (f objetivo − f inicial) ÷ (1 − f objetivo)</p>
+            </div>
+            <p><strong>Ejemplo:</strong> para elevar 100 g de 14K exacto (14/24 = 0,583333) a 18K (0,750), se añaden 66,67 g de oro fino. La masa teórica final será 166,67 g.</p>
+            <p>Si el material inicial está ensayado a 585‰, utiliza f = 0,585 en el cálculo en lugar de sustituirlo automáticamente por 14/24. El quilataje nominal y la finura ensayada no siempre son idénticos.</p>
+          </section>
+
+          <section>
+            <h2>7. Cómo mezclar dos aleaciones de ley conocida</h2>
+            <p>Para mezclar un lote inicial con una segunda aleación de finura conocida y alcanzar una ley intermedia:</p>
+            <div className="my-5 rounded-xl border border-slate-200 bg-white p-5 text-center">
+              <p className="font-bold">x = m inicial × (f objetivo − f inicial) ÷ (f añadido − f objetivo)</p>
+            </div>
+            <p><strong>Ejemplo:</strong> para mezclar 100 g de 14K exacto con una aleación de 18K y obtener 16K, se añaden 100 g de la aleación de 18K. El resultado teórico es 200 g a 16K (666,67‰).</p>
+            <p>La ley objetivo debe quedar estrictamente entre las leyes de ambos materiales. Esta operación calcula la ley media de oro; no garantiza por sí sola compatibilidad de color, dureza, soldabilidad ni comportamiento metalúrgico.</p>
+          </section>
+
+          <section>
+            <h2>8. Límites y controles del cálculo</h2>
+            <ul>
+              <li>Utiliza la ley ensayada o documentada de cada material siempre que esté disponible.</li>
+              <li>No asumas que piezas usadas, soldaduras, recubrimientos o lotes mezclados tienen una ley uniforme.</li>
+              <li>Las pérdidas de proceso, contaminación y cambios de composición pueden hacer que la ley real difiera del resultado teórico.</li>
+              <li>Registra las masas de entrada y verifica el lote con un método de ensayo apropiado antes de certificar o marcar su ley.</li>
+              <li>La calculadora no sustituye la ficha técnica de una liga comercial ni las indicaciones del proveedor.</li>
+            </ul>
           </section>
 
           <section>
