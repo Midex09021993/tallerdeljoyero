@@ -99,6 +99,9 @@ export function createAurumEnvironment(
 
       const cached = cache.get(url);
       if (cached) {
+        // Ignore stale cache hits before they can replace the environment
+        // selected by a newer request.
+        if (!isCurrent()) return;
         current = cached;
         currentUrl = url;
         scene.environment = cached;
