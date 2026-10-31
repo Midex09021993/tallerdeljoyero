@@ -8,7 +8,7 @@
   "files": {
     ".github/workflows/quality.yml": "859ec017c449181488a8fd91e854e01ae746bf1fb6bdbebeefe07906e6cfa548",
     "scripts/check-aurum-lock.mjs": "d8b0b1e553fbfdd7faf6522482d0460b5c9803464b9fa03d34ed3bbacd18b5c4",
-    "src/components/AurumRender.tsx": "71be1a7a7791955873134acba39a5d17644307b0d079afdd08d69efe2356f6cb",
+    "src/components/AurumRender.tsx": "9d1f4537dd5ffbfd52ce15c5fc211e249c5da6043b884c1aace79209140380c3",
     "src/components/AurumRenderConfig.tsx": "aee6ad6ae61c5ea3ad7a6fa03453154b871c3910845656f4ef6bed3b4660ad66",
     "src/lib/aurum-material-engine.ts": "1d4513fd9d54f3e02662b7d8145845f4e494494e9129ece33f0346a403752105",
     "src/lib/aurum/api.ts": "98e8927885b4c061ab529e0593332d5617b485cd2fcbf9e1b8d0acf3fa859c1c",
@@ -48,13 +48,13 @@
     "src/lib/aurum/overlap-experiment.ts": "89942dc3c2d3604d7fef97440eeafc1471cce823270c2754aaf567e853207a42",
     "src/lib/aurum/path-traced-capture.ts": "f5a2a9dd79ae0defd006a397ae2f79692ee581ec1a12873bc8b29fe00c97ad01",
     "src/lib/aurum/path-tracer-final.ts": "99e9d193f1c31aede963bbf192a4d0cb4a43ef9540fbcd2795a99bda3d9cdb5a",
-    "src/lib/aurum/post.ts": "7cbef4af9279ecb5e3599f6829a495dfbdbaf6510c54b9ceb0bf94a3e473c2d8",
+    "src/lib/aurum/post.ts": "b8e3daf6ebfe4315bf177ac3f95638a9ccb5ec38c3931b65d789d74feffe545d",
     "src/lib/aurum/runtime-budget.ts": "98d726dd1fe15b25590d50878f60d38e7c1e1fcf9b03f99a769cbf13482cdbb6",
     "src/lib/aurum/scene.ts": "8bc846ab94df6387e5c80199e291490009fff2899b30d4829d503a27f9600e8b",
     "src/lib/aurum/scintillation.ts": "b7c4531e613a818acf3f8e267b01addbeab0017891cc68f611f0c7a1b8297714",
     "src/lib/aurum/thickness-map.ts": "d99702072fbd14433a55246259af62541d9850549fe985ba12994b479f69abf7",
     "src/lib/aurum/video-exporter.ts": "d8ea0c5c0bff1b89771beca38f60da3e36357eba8b017fd8d5a856905d16366e",
-    "src/lib/aurum/viewer.ts": "fb560cfc2bbd79a892dff69307f20572232b16b9936f64d5f149f6c5fb59e03f",
+    "src/lib/aurum/viewer.ts": "11c59c529443c1d49a0745583849f586c0021ae4b6e85f9d82109f7dc2bbced7",
     "src/lib/aurum/voxel-remesh-experiment.ts": "cb0229096ab24e5cf469fa62d13fed1b7418fd895cf1e4e7451b38a9a077a2bc"
   }
 }
