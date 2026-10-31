@@ -198,7 +198,9 @@ export async function createAurumPostPipeline(
   // and aurumSSR=off are both explicitly present in the URL.
   const diagnosticSSROverride = diagnosticParams?.get("aurumSSR");
   const diagnosticDisableSSR = diagnosticMode === "environment" && diagnosticSSROverride === "off";
-  const diagnosticForceSSR = diagnosticMode === "environment" && diagnosticSSROverride === "on";
+  // SSR force-on is intentionally suspended in the primary viewer until the
+  // reflection audit is complete, including when aurumSSR=on is supplied.
+  const diagnosticForceSSR = false;
   // Reversible A/B diagnostic: disable only SSAO to identify artificial dark
   // contact grooves on polished metal. Requires explicit environment mode.
   const diagnosticDisableSSAO = diagnosticMode === "environment"
