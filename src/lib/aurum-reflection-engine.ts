@@ -60,14 +60,16 @@ export const AURUM_REFLECTION_RIG_PROFILES:Record<string,AurumReflectionRigProfi
     edgeRight:source(.9,6.4,.17,[4.6,3.8,1.0]),
   },
   ijewelReference:{
-    // Dedicated product-shot rig: broad vertical reflections on the shank,
-    // restrained frontal fill and a soft rear kicker for edge separation.
-    softbox:source(15.5,10.0,1.46,[3.6,6.0,5.4]),
-    strip:source(2.8,13.5,.62,[-4.2,3.8,3.4]),
+    // Metal calibration pass: reduce the broad frontal wash and strengthen
+    // narrow vertical/rear sources to create longer, darker reflection bands.
+    // The iJewel metal HDRI remains the primary environment; these are subtle
+    // AURUM studio reflectors, not copied iJewel lights.
+    softbox:source(10.5,8.0,1.05,[3.6,6.0,5.4]),
+    strip:source(1.8,13.5,.95,[-4.2,3.8,3.4]),
     front:source(8.5,5.5,1.44,[0,3.2,6.4]),
-    kicker:source(2.2,9.5,.42,[4.8,4.4,-3.6]),
-    edgeLeft:source(1.0,7.5,.16,[-5.2,4.0,1.4]),
-    edgeRight:source(1.0,7.5,.16,[5.2,4.0,1.4]),
+    kicker:source(1.8,9.5,.65,[4.8,4.4,-3.6]),
+    edgeLeft:source(.75,8.0,.24,[-5.2,4.0,1.4]),
+    edgeRight:source(.75,8.0,.24,[5.2,4.0,1.4]),
   },
   jewelry:{
     softbox:source(16.0,9.0,1.72,[3.8,5.8,4.8]),
