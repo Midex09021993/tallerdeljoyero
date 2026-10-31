@@ -289,7 +289,10 @@ export function applyAurumMaterialToModel(model:any,activePart:any,materialConfi
 export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironment:()=>void,requestRender?:()=>void,applyAll=false) {
   if(!target?.isMesh)return false;
   const selectedCategory=selectionCategory(target);
-  if(selectedCategory!=="gema")return false;
+  // GLB meshes without Rhino layer metadata are categorized as "otro".
+  // A manual click is an explicit target selection, so allow gem assignment
+  // to that mesh only; never infer or recolor neighboring meshes by layer.
+  if(selectedCategory!=="gema"&&selectedCategory!=="otro")return false;
   let modelRoot:any=target;
   while(modelRoot.parent)modelRoot=modelRoot.parent;
 
@@ -303,14 +306,16 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
   // MatrixGold's Gem 01–04 names are the user-visible source of truth.
   // Some 3DM/GLB metadata paths can carry a stale/shared Rhino ID, so exact
   // layer name must win whenever present; do not let a shared ID merge layers.
-  const hasStableLayerIdentity=Boolean(selectedLayerNormalized||selectedLayerIndex!=null||(selectedLayerId!=null&&String(selectedLayerId).trim()!==""));
-  const assignmentKey=selectedLayerNormalized
-    ? "rhino-layer:"+encodeURIComponent(selectedLayerNormalized)
-    : selectedLayerIndex!=null
-      ? "rhino-index:"+selectedLayerIndex
-      : selectedLayerId!=null&&String(selectedLayerId).trim()!==""
-        ? "rhino-id:"+String(selectedLayerId).trim()
-        : "mesh:"+target.uuid;
+  const hasStableLayerIdentity=selectedCategory==="gema"&&Boolean(selectedLayerNormalized||selectedLayerIndex!=null||(selectedLayerId!=null&&String(selectedLayerId).trim()!==""));
+  const assignmentKey=selectedCategory==="otro"
+    ? "mesh:"+target.uuid
+    : selectedLayerNormalized
+      ? "rhino-layer:"+encodeURIComponent(selectedLayerNormalized)
+      : selectedLayerIndex!=null
+        ? "rhino-index:"+selectedLayerIndex
+        : selectedLayerId!=null&&String(selectedLayerId).trim()!==""
+          ? "rhino-id:"+String(selectedLayerId).trim()
+          : "mesh:"+target.uuid;
   const targets:any[]=[];
   const allGemMeshes:any[]=[];
   const sameSourceLayer=(part:any):boolean=>{
@@ -329,21 +334,26 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
     if(selectedLayerId!=null&&String(selectedLayerId).trim()!=="")return partLayerId!=null&&String(partLayerId).trim()===String(selectedLayerId).trim();
     return part.uuid===target.uuid;
   };
-  modelRoot?.traverse?.((x:any)=>{
-    if(!x.isMesh||x.userData?.aurumInternalInclusion)return;
-    const category=selectionCategory(x);
-    if(category==="gema")allGemMeshes.push(x);
-    if(category==="gema"&&sameSourceLayer(x))targets.push(x);
-  });
-  if(!targets.length){
-    console.error("[AURUM][GEM LAYER ASSIGNMENT FAILED]",{
-      selectedMesh:target.name||target.uuid,
-      selectedLayer,
-      selectedLayerKey: assignmentKey,
-      reason:hasStableLayerIdentity?"No mesh matched the selected raw Rhino layer identity":"Missing stable layer identity; using clicked mesh only",
-      gemLayerMeshes:allGemMeshes.length,
-    });
+  if(selectedCategory==="otro"){
+    // Unknown GLB mesh: apply only to the exact mesh the user clicked.
     targets.push(target);
+  }else{
+    modelRoot?.traverse?.((x:any)=>{
+      if(!x.isMesh||x.userData?.aurumInternalInclusion)return;
+      const category=selectionCategory(x);
+      if(category==="gema")allGemMeshes.push(x);
+      if(category==="gema"&&sameSourceLayer(x))targets.push(x);
+    });
+    if(!targets.length){
+      console.error("[AURUM][GEM LAYER ASSIGNMENT FAILED]",{
+        selectedMesh:target.name||target.uuid,
+        selectedLayer,
+        selectedLayerKey: assignmentKey,
+        reason:hasStableLayerIdentity?"No mesh matched the selected raw Rhino layer identity":"Missing stable layer identity; using clicked mesh only",
+        gemLayerMeshes:allGemMeshes.length,
+      });
+      targets.push(target);
+    }
   }
 
   const rootUserData=modelRoot.userData??{};
