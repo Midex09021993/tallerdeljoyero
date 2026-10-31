@@ -32,7 +32,11 @@ export const AURUM_SCENE_PRESETS:Record<string,AurumScenePreset>={
   // This is a presentation preset only; the VJSON HDR values remain in the
   // independent photographic environment configuration.
   ijewelReference:{id:"ijewelReference",background:0xffffff,ground:0xffffff,groundRoughness:1,groundMetalness:0,groundVisible:true,shadowIntensity:.22,shadowSoftness:.985},
-  ijewelEnvironmentReference:{id:"ijewelEnvironmentReference",background:0xe7e7e4,ground:0xf1f0ec,groundRoughness:.68,groundMetalness:.01,groundVisible:true,shadowIntensity:.22,shadowSoftness:.985}
+  ijewelEnvironmentReference:{id:"ijewelEnvironmentReference",background:0xe7e7e4,ground:0xf1f0ec,groundRoughness:.68,groundMetalness:.01,groundVisible:true,shadowIntensity:.22,shadowSoftness:.985},
+  // iJewel VJSON red scene: polished metallic ground; values transcribed from supplied configuration.
+  ijewelRed:{id:"ijewelRed",background:0x720000,ground:0x8a1717,groundRoughness:0,groundMetalness:.404,groundVisible:true,shadowIntensity:.22,shadowSoftness:.985},
+  // iJewel VJSON blue scene: polished metallic ground; values transcribed from supplied configuration.
+  ijewelBlue:{id:"ijewelBlue",background:0x123c60,ground:0x244b68,groundRoughness:0,groundMetalness:.521,groundVisible:true,shadowIntensity:.22,shadowSoftness:.985}
 };
 
 /** iJewel/WebGi reference calibration extracted from supplied VJSON/GLB. Renderer values are not universal physical constants. */
