@@ -1393,6 +1393,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         // permanecen bajo sus controles independientes.
         liveFastPathRef.current = true;
         sceneController.apply(id);
+        if (id === "estudioRosaPremium" && camara?.isPerspectiveCamera) { camara.fov = 25; camara.updateProjectionMatrix(); }
         renderer.shadowMap.needsUpdate = true;
         invalidateRenderRef.current?.();
       };
@@ -3476,13 +3477,17 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 </div>
               </div>}
               {uxSection==="ambientes"&&<div className="pb-5">
-                <div className="mb-2 px-0.5 text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Ambientes · {ESCENARIOS.length}</div>
-                <div className="grid grid-cols-3 gap-3">
-                  {ESCENARIOS.map(e=><button key={e.id} type="button" disabled={!e.activo} aria-disabled={!e.activo} aria-pressed={e.activo && escenarioId===e.id} onClick={()=>{if(e.activo)setEscenarioId(e.id);}} className={"group min-w-0 text-center disabled:cursor-not-allowed "+(e.activo?(escenarioId===e.id?"text-[#292824]":"text-[#45433e]"):"text-[#858178] opacity-75")}>
-                    <span className={"relative block aspect-[1.18] overflow-hidden rounded-xl border-2 transition "+(e.activo && escenarioId===e.id?"border-[#b99642] shadow-[0_0_14px_rgba(185,150,66,.18)]":e.activo?"border-transparent group-hover:border-[#d8d1c2]":"border-dashed border-[#c9c4ba]")}><span className={"block h-full w-full "+e.clase+(e.activo?"":" grayscale-[.35]")}/>{!e.activo&&<span className="absolute inset-0 flex items-center justify-center bg-[#f8f6f0]/55"><span className="rounded-full border border-[#b7aa8e] bg-[#f8f6f0]/95 px-2 py-1 text-[8px] font-semibold uppercase tracking-[.08em] text-[#776b53]">En calibración</span></span>}</span>
-                    <span className="mt-2 block text-[10px] leading-tight">{e.nombre}</span>
+                <div className="mb-2 px-0.5 text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Ambientes HDR · {Object.keys(AURUM_AMBIENT_PRESETS).length}</div>
+                <div className="grid grid-cols-2 gap-3">
+                  {Object.values(AURUM_AMBIENT_PRESETS).map(preset=><button key={preset.id} type="button" aria-pressed={ambienteId===preset.id} onClick={()=>apiRef.current?.ambiente(preset.id)} className={"group min-w-0 text-center "+(ambienteId===preset.id?"text-[#292824]":"text-[#45433e]")}>
+                    <span className={"relative block aspect-[1.18] overflow-hidden rounded-xl border-2 transition "+(ambienteId===preset.id?"border-[#b99642] shadow-[0_0_14px_rgba(185,150,66,.18)]":"border-transparent group-hover:border-[#d8d1c2]")}>
+                      <span className="block h-full w-full bg-[radial-gradient(ellipse_at_50%_24%,#fff8f8_0%,#f0dce0_22%,#c7a9a8_43%,#65565a_72%,#242124_100%)]"/>
+                      {ambienteId===preset.id&&<span className="absolute right-2 top-2 grid size-5 place-items-center rounded-full bg-[#92743b] text-[10px] font-bold text-white">✓</span>}
+                    </span>
+                    <span className="mt-2 block text-[10px] leading-tight">{preset.name}</span>
                   </button>)}
                 </div>
+                <p className="mt-2 px-1 text-[10px] leading-relaxed text-[#77756f]">Ambientes combinados: HDR de metales y gemas independientes de la escena y de los materiales.</p>
               </div>}
               {uxSection==="hdrMetales"&&<div className="space-y-4 pb-5">
                 <div className="rounded-xl border border-black/[.07] bg-white p-3">
@@ -3537,7 +3542,17 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 </div>
               </div>}
               {uxSection==="escenas"&&<div className="space-y-4 pb-5">
-                <div className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Suelo de presentación</div>
+                <div>
+                  <div className="mb-2 text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Escenas de presentación · {ESCENARIOS.length}</div>
+                  <div className="grid grid-cols-2 gap-3">
+                    {ESCENARIOS.filter(e=>e.activo).map(e=><button key={e.id} type="button" aria-pressed={escenarioId===e.id} title={e.descripcion} onClick={()=>{if(e.activo){setEscenarioId(e.id);apiRef.current?.escenario(e.id);}}} className={"group min-w-0 text-center "+(escenarioId===e.id?"text-[#292824]":"text-[#45433e]")}>
+                      <span className={"relative block aspect-[1.18] overflow-hidden rounded-xl border-2 transition "+(escenarioId===e.id?"border-[#b99642] shadow-[0_0_14px_rgba(185,150,66,.18)]":"border-transparent group-hover:border-[#d8d1c2]")}><span className={"block h-full w-full "+e.clase}/></span>
+                      <span className="mt-2 block text-[10px] leading-tight">{e.nombre}</span>
+                    </button>)}
+                  </div>
+                </div>
+                <div className="border-t border-black/[.08] pt-3 text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Suelo de presentación</div>
+
                 <label className="flex items-center justify-between gap-3 rounded-xl border border-black/[.08] bg-white p-3">
                   <span><span className="block text-xs font-semibold text-[#292824]">Mostrar suelo</span><span className="mt-1 block text-[10px] text-[#77756f]">Activa o desactiva el plano que recibe la joya.</span></span>
                   <input type="checkbox" checked={sueloVisible} onChange={e=>{const visible=e.target.checked;setSueloVisible(visible);apiRef.current?.sueloVisible(visible);}} className="size-4 accent-[#92743b]"/>
