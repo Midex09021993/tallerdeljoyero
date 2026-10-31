@@ -32,7 +32,9 @@ export const AURUM_SCENE_PRESETS:Record<string,AurumScenePreset>={
   // This is a presentation preset only; the VJSON HDR values remain in the
   // independent photographic environment configuration.
   ijewelReference:{id:"ijewelReference",background:0xffffff,ground:0xffffff,groundRoughness:1,groundMetalness:0,groundVisible:true,shadowIntensity:.22,shadowSoftness:.985},
-  ijewelEnvironmentReference:{id:"ijewelEnvironmentReference",background:0xe7e7e4,ground:0xf1f0ec,groundRoughness:.68,groundMetalness:.01,groundVisible:true,shadowIntensity:.22,shadowSoftness:.985}
+  ijewelEnvironmentReference:{id:"ijewelEnvironmentReference",background:0xe7e7e4,ground:0xf1f0ec,groundRoughness:.68,groundMetalness:.01,groundVisible:true,shadowIntensity:.22,shadowSoftness:.985},
+  // Adaptación de scene-config (13): fondo blanco y suelo oculto. HDR doble se aplica en Ambientes.
+  estudioRosaPremium:{id:"estudioRosaPremium",background:0xffffff,ground:0xffffff,groundRoughness:1,groundMetalness:0,groundVisible:false,shadowIntensity:0,shadowSoftness:.985}
 };
 
 /** iJewel/WebGi reference calibration extracted from supplied VJSON/GLB. Renderer values are not universal physical constants. */
