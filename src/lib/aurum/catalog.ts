@@ -226,8 +226,8 @@ export const MATERIALES: MaterialConfig[] = [
 ];
 
 export const ESCENARIOS: { id: EscenarioId; nombre: string; clase: string; descripcion:string; iluminacion:IluminacionId; activo:boolean }[] = [
-  { id:"ijewelReference", activo:true, nombre:"Estudio Joyería Premium", descripcion:"Reflejos calibrados de joyería", iluminacion:"jewelry", clase:"bg-[radial-gradient(circle_at_50%_30%,#d8ad4c_0%,#4a3518_22%,#17130d_58%,#080808_100%)]" },
-  { id:"ijewelEnvironmentReference", activo:true, nombre:"Estudio HDR de Referencia", descripcion:"Referencia VJSON sin reflectores auxiliares", iluminacion:"jewelry", clase:"bg-[radial-gradient(circle_at_50%_30%,#f3eee4_0%,#b9a98d_24%,#4c4539_58%,#111111_100%)]" },
+  { id:"ijewelReference", activo:true, nombre:"Estudio Joyería Premium", descripcion:"Fondo blanco y superficie fotográfica", iluminacion:"jewelry", clase:"bg-[radial-gradient(circle_at_50%_30%,#d8ad4c_0%,#4a3518_22%,#17130d_58%,#080808_100%)]" },
+  { id:"ijewelEnvironmentReference", activo:true, nombre:"Estudio Neutro", descripcion:"Fondo gris claro y superficie neutra", iluminacion:"jewelry", clase:"bg-[radial-gradient(circle_at_50%_30%,#f3eee4_0%,#b9a98d_24%,#4c4539_58%,#111111_100%)]" },
   { id:"oscuro", activo:false, nombre:"Estudio Oscuro", descripcion:"Contraste elegante", iluminacion:"jewelry", clase:"bg-[radial-gradient(circle_at_50%_35%,#2b2f35_0%,#101216_48%,#050608_100%)]" },
   { id:"claro", activo:false, nombre:"Estudio Claro", descripcion:"Luz de joyería profesional", iluminacion:"jewelry", clase:"bg-[radial-gradient(circle_at_50%_30%,#ffffff_0%,#e8e6e1_58%,#c8c5bf_100%)]" },
   { id:"luxury", activo:false, nombre:"Luxury", descripcion:"Presentación cálida", iluminacion:"luxury", clase:"bg-[radial-gradient(circle_at_50%_30%,#6b4a22_0%,#2b1b0d_42%,#100a06_100%)]" },
