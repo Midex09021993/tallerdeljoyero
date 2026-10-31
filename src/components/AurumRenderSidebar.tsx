@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 
 const toolbarItems = [
-  { id: "metal-hdr", label: "HDR", icon: CircleDot, active: true },
+  { id: "ambientes", label: "HDR", icon: CircleDot },
   { id: "gem-hdr", label: "HDR", icon: Diamond },
   { id: "stripes", label: "", icon: AudioWaveform },
   { id: "effects", label: "", icon: Sparkles },
@@ -35,7 +35,7 @@ const toolbarItems = [
  * Los accesos son deliberadamente presentacionales: sus acciones se definirán
  * después, cuando se establezca el comportamiento de cada herramienta.
  */
-export function AurumRenderSidebar() {
+export function AurumRenderSidebar({ activeToolId, onAmbientesClick }: { activeToolId: string; onAmbientesClick: () => void }) {
   return (
     <nav
       aria-label="Herramientas de Aurum Render"
@@ -43,27 +43,14 @@ export function AurumRenderSidebar() {
     >
       {toolbarItems.map((item) => {
         const Icon = item.icon;
-        return (
-          <div
-            key={item.id}
-            title={item.label || item.id}
-            aria-current={item.active ? "page" : undefined}
-            className={
-              "relative flex h-[54px] w-full flex-col items-center justify-center gap-0.5 " +
-              (item.active
-                ? "text-[#92743b]"
-                : "text-[#45433e]")
-            }
-          >
-            {item.active && (
+        const isAmbientes = item.id === "ambientes";
+        const active = isAmbientes && activeToolId === "ambientes";
+        const contents = (
+          <>
+            {active && (
               <span className="absolute bottom-2 left-0 top-2 w-[3px] rounded-r-full bg-[#b99642]" />
             )}
-            <span
-              className={
-                "grid size-8 place-items-center rounded-lg " +
-                (item.active ? "bg-[#f4efe5]" : "")
-              }
-            >
+            <span className={"grid size-8 place-items-center rounded-lg " + (active ? "bg-[#f4efe5]" : "")}>
               <Icon strokeWidth={1.75} className="size-[19px]" />
             </span>
             {item.label && (
@@ -76,6 +63,16 @@ export function AurumRenderSidebar() {
                 BETA
               </span>
             )}
+          </>
+        );
+        const className = "relative flex h-[54px] w-full flex-col items-center justify-center gap-0.5 " + (active ? "text-[#92743b]" : "text-[#45433e]");
+        return isAmbientes ? (
+          <button key={item.id} type="button" title="Ambientes" aria-label="Ambientes" aria-pressed={active} onClick={onAmbientesClick} className={className}>
+            {contents}
+          </button>
+        ) : (
+          <div key={item.id} title={item.label || item.id} className={className}>
+            {contents}
           </div>
         );
       })}
