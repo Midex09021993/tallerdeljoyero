@@ -20,7 +20,7 @@ export type AurumScenePreset = {
   cameraDirection?: [number,number,number];
   shadowTarget?: [number,number,number];
   shadowOffset?: [number,number];
-  shadowProfile?: typeof AURUM_IJEWEL_BAKED_SHADOW_PROFILES.A | typeof AURUM_IJEWEL_BAKED_SHADOW_PROFILES.B;
+  shadowProfile?: {lightIntensity:number;shadowRadius:number;bias:number;frustumSize:number;focus:number;spread:number;distanceScale:number;mapWidth:number;mapHeight:number;near:number;far:number;randomizedDirectionalLight:boolean};
 };
 
 /** Parámetros de referencia del shadowBaker extraídos de los VJSON originales.
