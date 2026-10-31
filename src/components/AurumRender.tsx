@@ -3641,7 +3641,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                     <span className="mt-2 block text-[10px] leading-tight">{e.nombre}</span>
                   </button>)}
                 </div>
-                <p className="px-1 text-[10px] leading-relaxed text-[#77756f]">Cada escena aplica una configuración de suelo, encuadre del plano y sombras. Los ambientes HDR y los fondos se administran en sus apartados independientes.</p>
+                <p className="px-1 text-[10px] leading-relaxed text-[#77756f]">Cada escena aplica suelo, tamaño del plano y sombras. HDR y fondos permanecen independientes. El reflejo de suelo de iJewel requiere SSR, que sigue aislado hasta validar su estabilidad en el visor.</p>
               </div>}
               {uxSection==="fondos"&&<div className="space-y-3 pb-5">
                 <div className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Fondo de presentación</div>
