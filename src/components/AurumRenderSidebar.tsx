@@ -46,7 +46,7 @@ export function AurumRenderSidebar({ activeToolId, onAmbientesClick, onGemHdrCli
         const isGemHdr = item.id === "gem-hdr";
         const isBackground = item.id === "fondos";
         const isScene = item.id === "escenas";
-        const active = (isAmbientes && activeToolId === "ambientes") || (isGemHdr && activeToolId === "hdrGemas") || (isBackground && activeToolId === "fondos") || (isScene && activeToolId === "escenas");
+        const active = (isAmbientes && (activeToolId === "ambientes" || activeToolId === "hdrMetales")) || (isGemHdr && activeToolId === "hdrGemas") || (isBackground && activeToolId === "fondos") || (isScene && activeToolId === "escenas");
         const contents = (
           <>
             {active && (
