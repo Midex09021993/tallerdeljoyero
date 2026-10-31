@@ -116,7 +116,8 @@ export function createAurumGround(THREE: any, scene: any): AurumGroundController
     updateFromPreset(preset) {
       if (!preset) return;
       mesh.visible = preset.groundVisible !== false;
-      // Match the authored iJewel floor footprint (8 for matte, 10 for polished).
+      mesh.userData.aurumGroundReflectionRequested = preset.groundReflection === true;
+      // Match the authored iJewel floor footprint (8 for matte, 10 for reflective).
       const groundSize = Number(preset.groundSize);
       mesh.scale.setScalar(Number.isFinite(groundSize) && groundSize > 0 ? groundSize / 40 : 1);
       const shadowStrength = Number.isFinite(Number(preset.shadowIntensity)) ? Number(preset.shadowIntensity) : .22;
