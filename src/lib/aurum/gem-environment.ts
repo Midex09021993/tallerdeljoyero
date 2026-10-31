@@ -58,6 +58,9 @@ export function createAurumGemEnvironment(
       if (!x.isMesh || !x.material) return;
       const apply = (m:any) => {
         if (!m?.userData?.aurumOpticalProfile) return m;
+        // Once an environment map is installed, swapping another PMREM texture
+        // of the same type updates the uniform without recompiling the material.
+        const requiresShaderUpdate = !m.envMap;
         m.envMap = texture;
         const family = String(m.userData?.aurumGemFamily ?? m.userData?.aurumOpticalProfile?.familia ?? "default");
         const profile = getAurumGemEnvironmentProfile(family);
@@ -97,7 +100,7 @@ export function createAurumGemEnvironment(
           aurumGemBaseEnvIntensity: authored,
           aurumGemEnvironmentIntensity: m.envMapIntensity,
         };
-        m.needsUpdate = true;
+        if (requiresShaderUpdate) m.needsUpdate = true;
         return m;
       };
       x.material = Array.isArray(x.material) ? x.material.map(apply) : apply(x.material);
