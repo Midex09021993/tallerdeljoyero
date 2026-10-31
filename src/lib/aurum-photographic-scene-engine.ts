@@ -64,6 +64,7 @@ export const AURUM_AMBIENT_PRESETS:Record<string,{id:string;name:string;url:stri
   ambiente04:{id:"ambiente04",name:"Ambiente 04",url:"https://playground.ijewel3d.com/assetspro/hdrmaps/gem/env-gem-004.exr",rotation:1.615631142852238,intensity:1},
   ambiente05:{id:"ambiente05",name:"Ambiente 05",url:"https://playground.ijewel3d.com/assetspro/hdrmaps/gem/env-gem-005.exr",rotation:1.615631142852238,intensity:1},
   ijewel002:{id:"ijewel002",name:"iJewel 002 · Doble HDR",url:"https://playground.ijewel3d.com/assetspro/hdrmaps/gem/env-gem-002.exr",rotation:0,intensity:.6,metalKey:"ijewelMetalVjson",metalRotation:0,metalIntensity:.6},
+  estudioRosaPremium:{id:"estudioRosaPremium",name:"Estudio Rosa Premium",url:"https://playground.ijewel3d.com/assetspro/hdrmaps/gem/env-gem-002.exr",rotation:0,intensity:.6,metalKey:"ijewelMetalVjson",metalRotation:0,metalIntensity:.6},
 };
 
 
