@@ -247,14 +247,13 @@ export function createAurumLightingController(
 
       this.create();
       if (id === "ijewelReference" && !diagnosticEnvironmentOnly) {
-        // Keep the photographic reflection rig active as a stable scene
-        // baseline. Manual key/fill/rim/front controls add to that baseline;
-        // they must not abruptly remove the broad reflections shaping polished metal.
-        if (lights.softbox) lights.softbox.visible = config.reflectors?.softbox ?? true;
-        if (lights.strip) lights.strip.visible = config.reflectors?.strip ?? true;
-        if (lights.kicker) lights.kicker.visible = config.reflectors?.kicker ?? true;
-        if (lights.edgeLeft) lights.edgeLeft.visible = config.reflectors?.edgeLeft ?? true;
-        if (lights.edgeRight) lights.edgeRight.visible = config.reflectors?.edgeRight ?? true;
+        // The supplied iJewel VJSON has no active rectangular studio-reflector rig.
+        // Keep AURUM's six RectAreaLights available for other presets and A/B tests,
+        // but disable them in this reference profile so the HDR environment is primary.
+        (["softbox", "strip", "front", "kicker", "edgeLeft", "edgeRight"] as const)
+          .forEach((name) => {
+            if (lights[name]) lights[name].visible = false;
+          });
       }
       // Reapply the panel's current enabled/intensity state after every preset,
       // not only after an interaction in this session. Otherwise a preset can
@@ -266,7 +265,7 @@ export function createAurumLightingController(
         light.intensity = Number(config[name]?.intensity ?? light.intensity);
       });
       if (lights.front) {
-        lights.front.visible = Boolean(config.front?.enabled);
+        lights.front.visible = id === "ijewelReference" ? false : Boolean(config.front?.enabled);
         const rig = getAurumReflectionRigProfile(activeRigId);
         const frontPreset = getAurumLightingPreset(activeRigId);
         lights.front.intensity = rig.front.intensity * frontPreset.front * Math.max(0, Number(config.front?.intensity) || 0);

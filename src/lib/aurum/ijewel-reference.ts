@@ -18,7 +18,7 @@ export const AURUM_IJEWEL_REFERENCE = {
     up: [0, 1, 0] as const,
   },
   scene: {
-    environmentIntensity: 1,
+    environmentIntensity: 0.6,
     environmentRotation: [0, 0, 0] as const,
     fixedEnvironmentDirection: true,
     backgroundIntensity: 1,
