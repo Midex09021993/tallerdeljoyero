@@ -1620,6 +1620,480 @@ export type Database = {
         }
         Relationships: []
       }
+      formacion_cursos: {
+        Row: {
+          creado_por: string | null
+          created_at: string
+          descripcion: string | null
+          duracion_horas: number
+          estado: string
+          id: string
+          modalidad: string
+          participante_id: string
+          slug: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          creado_por?: string | null
+          created_at?: string
+          descripcion?: string | null
+          duracion_horas?: number
+          estado?: string
+          id?: string
+          modalidad?: string
+          participante_id: string
+          slug: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          creado_por?: string | null
+          created_at?: string
+          descripcion?: string | null
+          duracion_horas?: number
+          estado?: string
+          id?: string
+          modalidad?: string
+          participante_id?: string
+          slug?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "formacion_cursos_participante_id_fkey"
+            columns: ["participante_id"]
+            isOneToOne: false
+            referencedRelation: "ecosistema_participantes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      formacion_examenes: {
+        Row: {
+          creado_por: string | null
+          created_at: string
+          curso_id: string
+          disponible_desde: string | null
+          disponible_hasta: string | null
+          duracion_minutos: number | null
+          id: string
+          instrucciones: string | null
+          intentos_permitidos: number
+          participante_id: string
+          publicado: boolean
+          puntaje_maximo: number
+          sesion_id: string | null
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          creado_por?: string | null
+          created_at?: string
+          curso_id: string
+          disponible_desde?: string | null
+          disponible_hasta?: string | null
+          duracion_minutos?: number | null
+          id?: string
+          instrucciones?: string | null
+          intentos_permitidos?: number
+          participante_id: string
+          publicado?: boolean
+          puntaje_maximo?: number
+          sesion_id?: string | null
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          creado_por?: string | null
+          created_at?: string
+          curso_id?: string
+          disponible_desde?: string | null
+          disponible_hasta?: string | null
+          duracion_minutos?: number | null
+          id?: string
+          instrucciones?: string | null
+          intentos_permitidos?: number
+          participante_id?: string
+          publicado?: boolean
+          puntaje_maximo?: number
+          sesion_id?: string | null
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "formacion_examenes_curso_fk"
+            columns: ["curso_id", "participante_id"]
+            isOneToOne: false
+            referencedRelation: "formacion_cursos"
+            referencedColumns: ["id", "participante_id"]
+          },
+          {
+            foreignKeyName: "formacion_examenes_sesion_fk"
+            columns: ["sesion_id", "participante_id"]
+            isOneToOne: false
+            referencedRelation: "formacion_sesiones"
+            referencedColumns: ["id", "participante_id"]
+          },
+        ]
+      }
+      formacion_inscripciones: {
+        Row: {
+          alumno_user_id: string | null
+          created_at: string
+          curso_id: string
+          email_alumno: string
+          estado: string
+          fecha_inscripcion: string
+          id: string
+          nombre_alumno: string | null
+          participante_id: string
+          updated_at: string
+        }
+        Insert: {
+          alumno_user_id?: string | null
+          created_at?: string
+          curso_id: string
+          email_alumno: string
+          estado?: string
+          fecha_inscripcion?: string
+          id?: string
+          nombre_alumno?: string | null
+          participante_id: string
+          updated_at?: string
+        }
+        Update: {
+          alumno_user_id?: string | null
+          created_at?: string
+          curso_id?: string
+          email_alumno?: string
+          estado?: string
+          fecha_inscripcion?: string
+          id?: string
+          nombre_alumno?: string | null
+          participante_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "formacion_inscripciones_curso_fk"
+            columns: ["curso_id", "participante_id"]
+            isOneToOne: false
+            referencedRelation: "formacion_cursos"
+            referencedColumns: ["id", "participante_id"]
+          },
+        ]
+      }
+      formacion_intentos: {
+        Row: {
+          alumno_user_id: string
+          calificacion: number | null
+          calificado_en: string | null
+          calificado_por: string | null
+          curso_id: string
+          enviado_en: string
+          estado: string
+          examen_id: string
+          id: string
+          iniciado_en: string
+          numero_intento: number
+          observaciones_docente: string | null
+          participante_id: string
+          puntaje_maximo: number
+          puntaje_obtenido: number
+          respuestas: Json
+        }
+        Insert: {
+          alumno_user_id: string
+          calificacion?: number | null
+          calificado_en?: string | null
+          calificado_por?: string | null
+          curso_id: string
+          enviado_en?: string
+          estado?: string
+          examen_id: string
+          id?: string
+          iniciado_en?: string
+          numero_intento: number
+          observaciones_docente?: string | null
+          participante_id: string
+          puntaje_maximo: number
+          puntaje_obtenido?: number
+          respuestas?: Json
+        }
+        Update: {
+          alumno_user_id?: string
+          calificacion?: number | null
+          calificado_en?: string | null
+          calificado_por?: string | null
+          curso_id?: string
+          enviado_en?: string
+          estado?: string
+          examen_id?: string
+          id?: string
+          iniciado_en?: string
+          numero_intento?: number
+          observaciones_docente?: string | null
+          participante_id?: string
+          puntaje_maximo?: number
+          puntaje_obtenido?: number
+          respuestas?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "formacion_intentos_curso_fk"
+            columns: ["curso_id", "participante_id"]
+            isOneToOne: false
+            referencedRelation: "formacion_cursos"
+            referencedColumns: ["id", "participante_id"]
+          },
+          {
+            foreignKeyName: "formacion_intentos_examen_fk"
+            columns: ["examen_id", "participante_id"]
+            isOneToOne: false
+            referencedRelation: "formacion_examenes"
+            referencedColumns: ["id", "participante_id"]
+          },
+        ]
+      }
+      formacion_materiales: {
+        Row: {
+          created_at: string
+          curso_id: string
+          descripcion: string | null
+          id: string
+          mime_type: string
+          nombre_archivo: string
+          orden: number
+          participante_id: string
+          publicado: boolean
+          ruta_storage: string
+          sesion_id: string | null
+          subido_por: string | null
+          tamano_bytes: number
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          curso_id: string
+          descripcion?: string | null
+          id?: string
+          mime_type: string
+          nombre_archivo: string
+          orden?: number
+          participante_id: string
+          publicado?: boolean
+          ruta_storage: string
+          sesion_id?: string | null
+          subido_por?: string | null
+          tamano_bytes: number
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          curso_id?: string
+          descripcion?: string | null
+          id?: string
+          mime_type?: string
+          nombre_archivo?: string
+          orden?: number
+          participante_id?: string
+          publicado?: boolean
+          ruta_storage?: string
+          sesion_id?: string | null
+          subido_por?: string | null
+          tamano_bytes?: number
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "formacion_materiales_curso_fk"
+            columns: ["curso_id", "participante_id"]
+            isOneToOne: false
+            referencedRelation: "formacion_cursos"
+            referencedColumns: ["id", "participante_id"]
+          },
+          {
+            foreignKeyName: "formacion_materiales_sesion_fk"
+            columns: ["sesion_id", "participante_id"]
+            isOneToOne: false
+            referencedRelation: "formacion_sesiones"
+            referencedColumns: ["id", "participante_id"]
+          },
+        ]
+      }
+      formacion_notas: {
+        Row: {
+          actualizado_por: string | null
+          created_at: string
+          curso_id: string
+          estado: string
+          id: string
+          inscripcion_id: string
+          nota_final: number | null
+          observaciones: string | null
+          participante_id: string
+          updated_at: string
+        }
+        Insert: {
+          actualizado_por?: string | null
+          created_at?: string
+          curso_id: string
+          estado?: string
+          id?: string
+          inscripcion_id: string
+          nota_final?: number | null
+          observaciones?: string | null
+          participante_id: string
+          updated_at?: string
+        }
+        Update: {
+          actualizado_por?: string | null
+          created_at?: string
+          curso_id?: string
+          estado?: string
+          id?: string
+          inscripcion_id?: string
+          nota_final?: number | null
+          observaciones?: string | null
+          participante_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "formacion_notas_curso_fk"
+            columns: ["curso_id", "participante_id"]
+            isOneToOne: false
+            referencedRelation: "formacion_cursos"
+            referencedColumns: ["id", "participante_id"]
+          },
+          {
+            foreignKeyName: "formacion_notas_inscripcion_fk"
+            columns: ["inscripcion_id", "participante_id"]
+            isOneToOne: false
+            referencedRelation: "formacion_inscripciones"
+            referencedColumns: ["id", "participante_id"]
+          },
+          {
+            foreignKeyName: "formacion_notas_inscripcion_id_fkey"
+            columns: ["inscripcion_id"]
+            isOneToOne: true
+            referencedRelation: "formacion_inscripciones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      formacion_preguntas: {
+        Row: {
+          created_at: string
+          enunciado: string
+          examen_id: string
+          id: string
+          obligatoria: boolean
+          opciones: Json
+          orden: number
+          participante_id: string
+          puntaje: number
+          respuesta_correcta: Json | null
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          enunciado: string
+          examen_id: string
+          id?: string
+          obligatoria?: boolean
+          opciones?: Json
+          orden?: number
+          participante_id: string
+          puntaje?: number
+          respuesta_correcta?: Json | null
+          tipo: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          enunciado?: string
+          examen_id?: string
+          id?: string
+          obligatoria?: boolean
+          opciones?: Json
+          orden?: number
+          participante_id?: string
+          puntaje?: number
+          respuesta_correcta?: Json | null
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "formacion_preguntas_examen_fk"
+            columns: ["examen_id", "participante_id"]
+            isOneToOne: false
+            referencedRelation: "formacion_examenes"
+            referencedColumns: ["id", "participante_id"]
+          },
+        ]
+      }
+      formacion_sesiones: {
+        Row: {
+          created_at: string
+          curso_id: string
+          descripcion: string | null
+          duracion_horas: number
+          fecha_programada: string | null
+          id: string
+          numero: number
+          orden: number
+          participante_id: string
+          publicada: boolean
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          curso_id: string
+          descripcion?: string | null
+          duracion_horas?: number
+          fecha_programada?: string | null
+          id?: string
+          numero: number
+          orden?: number
+          participante_id: string
+          publicada?: boolean
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          curso_id?: string
+          descripcion?: string | null
+          duracion_horas?: number
+          fecha_programada?: string | null
+          id?: string
+          numero?: number
+          orden?: number
+          participante_id?: string
+          publicada?: boolean
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "formacion_sesiones_curso_fk"
+            columns: ["curso_id", "participante_id"]
+            isOneToOne: false
+            referencedRelation: "formacion_cursos"
+            referencedColumns: ["id", "participante_id"]
+          },
+        ]
+      }
       gastos: {
         Row: {
           categoria: string
@@ -4246,8 +4720,20 @@ export type Database = {
         Args: { _cotizacion_id: string }
         Returns: string
       }
+      enviar_intento_formacion: {
+        Args: { _examen_id: string; _respuestas: Json }
+        Returns: string
+      }
       es_admin: { Args: { _user_id: string }; Returns: boolean }
       es_interno: { Args: { _user_id: string }; Returns: boolean }
+      formacion_es_docente: {
+        Args: { _participante_id: string }
+        Returns: boolean
+      }
+      formacion_esta_inscrito: {
+        Args: { _curso_id: string; _user_id: string }
+        Returns: boolean
+      }
       get_aurum_transfer_usage_metrics: {
         Args: never
         Returns: {
@@ -4450,6 +4936,10 @@ export type Database = {
           nombre: string
           token: string
         }[]
+      }
+      obtener_examen_formacion_alumno: {
+        Args: { _examen_id: string }
+        Returns: Json
       }
       obtener_ficha_servicio_externo: {
         Args: { _trabajo_id: string }
@@ -4839,6 +5329,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      vincular_inscripciones_formacion: { Args: never; Returns: number }
     }
     Enums: {
       app_role: "dueno" | "gerente" | "operario" | "monitor" | "cliente"
