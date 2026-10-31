@@ -50,7 +50,7 @@
     "src/lib/aurum/path-tracer-final.ts": "99e9d193f1c31aede963bbf192a4d0cb4a43ef9540fbcd2795a99bda3d9cdb5a",
     "src/lib/aurum/post.ts": "3e279f14782af0a105e56b018597bbd363c194386c0bcfd9df053a335823ffe1",
     "src/lib/aurum/runtime-budget.ts": "98d726dd1fe15b25590d50878f60d38e7c1e1fcf9b03f99a769cbf13482cdbb6",
-    "src/lib/aurum/scene.ts": "52a9c1cad3ff3e74f5bbc7e1ff7524084fffea6231627c171b216308cd836b11",
+    "src/lib/aurum/scene.ts": "6a5649cf506d05bca2957840c31dc0846d7f21be22e4a824535821c8e07ff608",
     "src/lib/aurum/scintillation.ts": "b7c4531e613a818acf3f8e267b01addbeab0017891cc68f611f0c7a1b8297714",
     "src/lib/aurum/thickness-map.ts": "d99702072fbd14433a55246259af62541d9850549fe985ba12994b479f69abf7",
     "src/lib/aurum/video-exporter.ts": "d8ea0c5c0bff1b89771beca38f60da3e36357eba8b017fd8d5a856905d16366e",
