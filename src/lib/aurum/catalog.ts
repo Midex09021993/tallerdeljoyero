@@ -226,9 +226,8 @@ export const MATERIALES: MaterialConfig[] = [
 ];
 
 export const ESCENARIOS: { id: EscenarioId; nombre: string; clase: string; descripcion:string; activo:boolean }[] = [
-  { id:"ijewelReference", activo:true, nombre:"Estudio Joyería Premium", descripcion:"Presentación fotográfica de referencia", clase:"bg-[radial-gradient(circle_at_50%_30%,#d8ad4c_0%,#4a3518_22%,#17130d_58%,#080808_100%)]" },
-  { id:"ijewelEnvironmentReference", activo:true, nombre:"Estudio Neutro", descripcion:"Fondo y superficie neutros", clase:"bg-[radial-gradient(circle_at_50%_30%,#f3eee4_0%,#b9a98d_24%,#4c4539_58%,#111111_100%)]" },
-  { id:"estudioRosaPremium", activo:true, nombre:"Estudio Rosa Premium", descripcion:"Fondo blanco y suelo oculto según VJSON", clase:"bg-[radial-gradient(circle_at_50%_30%,#ffffff_0%,#f8f6f5_55%,#eee9e8_100%)]" },
+  { id:"ijewelReference", activo:true, nombre:"Suelo mate · iJewel", descripcion:"Suelo estándar de los archivos 01–10: tamaño 8 y sombras horneadas", clase:"bg-[radial-gradient(ellipse_at_50%_72%,#ffffff_0%,#e8e7e4_42%,#c8c7c3_100%)]" },
+  { id:"ijewelReflectiveReference", activo:true, nombre:"Suelo pulido · iJewel", descripcion:"Configuración de los archivos 11–12: suelo tamaño 10 y reflejo de suelo de referencia", clase:"bg-[radial-gradient(ellipse_at_50%_72%,#ffffff_0%,#e5e5e2_34%,#bfc0c0_68%,#f8f8f6_100%)]" },
 ];
 export const VISTAS: { id: VistaId; nombre: string }[] = [
   { id:"perspectiva", nombre:"Perspectiva" }, { id:"frontal", nombre:"Frontal" }, { id:"superior", nombre:"Superior" }, { id:"lateral", nombre:"Lateral" },
