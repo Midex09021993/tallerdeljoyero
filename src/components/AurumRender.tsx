@@ -1481,7 +1481,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         // Los HDR de metal/gemas, la iluminación de estudio y el postprocesado
         // permanecen bajo sus controles independientes.
         liveFastPathRef.current = true;
-        sceneController.apply(id);
+        const scenePreset = sceneController.apply(id);
+        // La rotación del entorno pertenece a cada VJSON; HDR y material siguen siendo controles independientes.
+        if (Number.isFinite(scenePreset.environmentRotation)) environmentController.setRotation(scenePreset.environmentRotation as number);
         if (camara?.isPerspectiveCamera) {
           if (id === "estudioRosaPremium") {
             if (previousSceneCameraFovRef.current === null) previousSceneCameraFovRef.current = camara.fov;
@@ -3634,14 +3636,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 </div>
               </div>}
               {uxSection==="escenas"&&<div className="space-y-4 pb-5">
-                <div className="mb-2 text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Escenas de presentación · {ESCENARIOS.length}</div>
-                <div className="grid grid-cols-2 gap-3">
-                  {ESCENARIOS.filter(e=>e.activo).map(e=><button key={e.id} type="button" aria-pressed={escenarioId===e.id} title={e.descripcion} onClick={()=>{setEscenarioId(e.id);apiRef.current?.escenario(e.id);}} className={"group min-w-0 text-center "+(escenarioId===e.id?"text-[#292824]":"text-[#45433e]")}>
-                    <span className={"relative block aspect-square overflow-hidden rounded-xl border-2 transition "+(escenarioId===e.id?"border-[#6d63ff] shadow-[0_0_14px_rgba(109,99,255,.18)]":"border-transparent group-hover:border-[#d8d1c2]")}><span className={"block h-full w-full "+e.clase}/>{escenarioId===e.id&&<span className="absolute right-2 top-2 grid size-5 place-items-center rounded-full bg-[#6d63ff] text-[10px] text-white">✓</span>}</span>
+                <div className="mb-2 flex items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]"><span>Escenas iJewel · {ESCENARIOS.length}</span><span className="font-normal tracking-normal text-[#858178]">12 referencias VJSON</span></div>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  {ESCENARIOS.filter(e=>e.activo).map(e=><button key={e.id} type="button" aria-pressed={escenarioId===e.id} title={e.descripcion} onClick={()=>{setEscenarioId(e.id);apiRef.current?.escenario(e.id);}} className={"group min-w-0 text-left "+(escenarioId===e.id?"text-[#292824]":"text-[#45433e]")}>
+                    <span className={"relative block aspect-[4/3] overflow-hidden rounded-xl border-2 transition "+(escenarioId===e.id?"border-[#b08d42] shadow-[0_0_14px_rgba(176,141,66,.20)]":"border-transparent group-hover:border-[#d8d1c2]")}><span className={"block h-full w-full "+e.clase}/><span className="absolute left-1.5 top-1.5 rounded-md border border-white/50 bg-black/35 px-1.5 py-0.5 text-[8px] font-semibold text-white">VJSON {e.numero}</span><span className="absolute bottom-1.5 left-1.5 rounded-md bg-white/85 px-1.5 py-0.5 text-[8px] font-semibold text-[#625331]">HORNEADO {e.horneado}</span>{escenarioId===e.id&&<span className="absolute right-1.5 top-1.5 grid size-5 place-items-center rounded-full bg-[#b08d42] text-[10px] text-white">✓</span>}</span>
                     <span className="mt-2 block text-[10px] leading-tight">{e.nombre}</span>
                   </button>)}
                 </div>
-                <p className="px-1 text-[10px] leading-relaxed text-[#77756f]">Cada escena aplica suelo, tamaño del plano y sombras. HDR y fondos permanecen independientes. El reflejo de suelo de iJewel requiere SSR, que sigue aislado hasta validar su estabilidad en el visor.</p>
+                <p className="px-1 text-[10px] leading-relaxed text-[#77756f]">Cada tarjeta conserva su rotación de entorno y acabado de suelo. Los perfiles A/B guardan los parámetros originales de shadowBaker como referencia; la reproducción visual del horneado y los reflejos todavía no está activada.</p>
               </div>}
               {uxSection==="fondos"&&<div className="space-y-3 pb-5">
                 <div className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Fondo de presentación</div>

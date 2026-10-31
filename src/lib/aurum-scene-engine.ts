@@ -15,7 +15,18 @@ export type AurumScenePreset = {
   groundSize?:number;
   preserveBackground?:boolean;
   groundReflection?:boolean;
+  environmentRotation?:number;
+  bakedShadowProfile?: "A" | "B";
 };
+
+/** Parámetros de referencia del shadowBaker extraídos de los VJSON originales.
+ * Se conservan como metadatos; no se convierten en sombras dinámicas ni se afirma
+ * que AURUM reproduzca todavía el bake de iJewel.
+ */
+export const AURUM_IJEWEL_BAKED_SHADOW_PROFILES = {
+  A: {"lightIntensity":10,"shadowRadius":10,"bias":0,"frustumSize":4,"focus":0.6400712089334843,"spread":1,"distanceScale":20,"mapWidth":1024,"mapHeight":1024,"near":1.5,"far":41,"randomizedDirectionalLight":false},
+  B: {"lightIntensity":41.57678074024398,"shadowRadius":6.5435290904968575,"bias":0.014228227814819916,"frustumSize":8,"focus":0,"spread":1,"distanceScale":36.758315910917325,"mapWidth":1024,"mapHeight":1024,"near":1.5,"far":81,"randomizedDirectionalLight":false},
+} as const;
 
 export const AURUM_SCENE_PRESETS:Record<string,AurumScenePreset>={
   oscuro:{id:"oscuro",background:0x090b0e,ground:0x15181c,groundRoughness:.30,groundMetalness:.05,groundVisible:true,shadowIntensity:.48,shadowSoftness:.72},
@@ -34,10 +45,19 @@ export const AURUM_SCENE_PRESETS:Record<string,AurumScenePreset>={
   // Original AURUM premium baseline, retained as a separate calibration.
   // This is a presentation preset only; the VJSON HDR values remain in the
   // independent photographic environment configuration.
-  ijewelReference:{id:"ijewelReference",background:0xffffff,ground:0xffffff,groundRoughness:1,groundMetalness:0,groundVisible:true,shadowIntensity:.22,shadowSoftness:.985,groundSize:8,preserveBackground:true},
-  // VJSON 11–12: floor reflection is authored in iJewel; AURUM keeps the
-  // ground finish selectable without changing the independent HDR pipelines.
-  ijewelReflectiveReference:{id:"ijewelReflectiveReference",background:0xffffff,ground:0xffffff,groundRoughness:1,groundMetalness:0,groundVisible:true,shadowIntensity:.22,shadowSoftness:.985,groundSize:10,groundReflection:true,preserveBackground:true},
+  // Doce escenas independientes; diez usan el perfil de horneado A y dos el B.
+  ijewel01:{id:"ijewel01",background:0xffffff,ground:0xffffff,groundRoughness:1,groundMetalness:0,groundVisible:true,shadowIntensity:.22,shadowSoftness:.985,groundSize:8,preserveBackground:true,environmentRotation:0,bakedShadowProfile:"A"},
+  ijewel02:{id:"ijewel02",background:0xffffff,ground:0xffffff,groundRoughness:1,groundMetalness:0,groundVisible:true,shadowIntensity:.22,shadowSoftness:.985,groundSize:8,preserveBackground:true,environmentRotation:0,bakedShadowProfile:"A"},
+  ijewel03:{id:"ijewel03",background:0xffffff,ground:0xffffff,groundRoughness:1,groundMetalness:0,groundVisible:true,shadowIntensity:.22,shadowSoftness:.985,groundSize:8,preserveBackground:true,environmentRotation:0,bakedShadowProfile:"A"},
+  ijewel04:{id:"ijewel04",background:0xffffff,ground:0xffffff,groundRoughness:1,groundMetalness:0,groundVisible:true,shadowIntensity:.22,shadowSoftness:.985,groundSize:8,preserveBackground:true,environmentRotation:1.615631142852238,bakedShadowProfile:"A"},
+  ijewel05:{id:"ijewel05",background:0xffffff,ground:0xffffff,groundRoughness:1,groundMetalness:0,groundVisible:true,shadowIntensity:.22,shadowSoftness:.985,groundSize:8,preserveBackground:true,environmentRotation:1.615631142852238,bakedShadowProfile:"A"},
+  ijewel06:{id:"ijewel06",background:0xffffff,ground:0xffffff,groundRoughness:1,groundMetalness:0,groundVisible:true,shadowIntensity:.22,shadowSoftness:.985,groundSize:8,preserveBackground:true,environmentRotation:1.615631142852238,bakedShadowProfile:"A"},
+  ijewel07:{id:"ijewel07",background:0xffffff,ground:0xffffff,groundRoughness:1,groundMetalness:0,groundVisible:true,shadowIntensity:.22,shadowSoftness:.985,groundSize:8,preserveBackground:true,environmentRotation:2.1541748571363173,bakedShadowProfile:"A"},
+  ijewel08:{id:"ijewel08",background:0xffffff,ground:0xffffff,groundRoughness:1,groundMetalness:0,groundVisible:true,shadowIntensity:.22,shadowSoftness:.985,groundSize:8,preserveBackground:true,environmentRotation:2.1541748571363173,bakedShadowProfile:"A"},
+  ijewel09:{id:"ijewel09",background:0xffffff,ground:0xffffff,groundRoughness:1,groundMetalness:0,groundVisible:true,shadowIntensity:.22,shadowSoftness:.985,groundSize:8,preserveBackground:true,environmentRotation:2.1541748571363173,bakedShadowProfile:"A"},
+  ijewel10:{id:"ijewel10",background:0xffffff,ground:0xffffff,groundRoughness:1,groundMetalness:0,groundVisible:true,shadowIntensity:.22,shadowSoftness:.985,groundSize:8,preserveBackground:true,environmentRotation:2.1541748571363173,bakedShadowProfile:"A"},
+  ijewel11:{id:"ijewel11",background:0xffffff,ground:0xae3737,groundRoughness:0,groundMetalness:0.4038946361818656,groundVisible:true,shadowIntensity:.22,shadowSoftness:.985,groundSize:10,preserveBackground:true,environmentRotation:2.1541748571363173,bakedShadowProfile:"B",groundReflection:true},
+  ijewel12:{id:"ijewel12",background:0xffffff,ground:0x516d8e,groundRoughness:0,groundMetalness:0.5207337216378336,groundVisible:true,shadowIntensity:.22,shadowSoftness:.985,groundSize:10,preserveBackground:true,environmentRotation:2.1541748571363173,bakedShadowProfile:"B",groundReflection:true},
   ijewelEnvironmentReference:{id:"ijewelEnvironmentReference",background:0xe7e7e4,ground:0xf1f0ec,groundRoughness:.68,groundMetalness:.01,groundVisible:true,shadowIntensity:.22,shadowSoftness:.985},
   // Adaptación de scene-config (13): fondo blanco y suelo oculto. HDR doble se aplica en Ambientes.
   estudioRosaPremium:{id:"estudioRosaPremium",background:0xffffff,ground:0xffffff,groundRoughness:1,groundMetalness:0,groundVisible:false,shadowIntensity:0,shadowSoftness:.985}
