@@ -184,12 +184,41 @@ export function startAurumViewerLoop(
   const observer = new ResizeObserver(resize);
   observer.observe(viewer.node);
 
+  const canvas = viewer.renderer?.domElement as HTMLCanvasElement | undefined;
+  const onWebGLContextLost = (event: Event) => {
+    event.preventDefault();
+    paused = true;
+    if (frame) cancelAnimationFrame(frame);
+    frame = 0;
+    dirty = true;
+    console.warn("[AURUM][VIEWER][WEBGL_CONTEXT_LOST] Rendering paused while the browser restores the GPU context.");
+  };
+  const onWebGLContextRestored = () => {
+    if (stopped) return;
+    try {
+      resizeAurumViewer(viewer);
+      paused = false;
+      dirty = true;
+      console.info("[AURUM][VIEWER][WEBGL_CONTEXT_RESTORED] Viewer render loop resumed.");
+      requestRender();
+    } catch (error) {
+      console.error("[AURUM][VIEWER][WEBGL_CONTEXT_RECOVERY_ERROR] Could not resume after context restoration.", error);
+    }
+  };
+  canvas?.addEventListener("webglcontextlost", onWebGLContextLost, false);
+  canvas?.addEventListener("webglcontextrestored", onWebGLContextRestored, false);
+
   const onControlStart = () => {
     interactionEnding = false;
     idleFramesRemaining = 0;
     if (!interactionActive) {
       interactionActive = true;
-      interaction?.onStart?.();
+      try {
+        interaction?.onStart?.();
+      } catch (error) {
+        interactionActive = false;
+        console.error("[AURUM][VIEWER][INTERACTION_START_ERROR]", error);
+      }
     }
     requestRender();
   };
@@ -209,33 +238,44 @@ export function startAurumViewerLoop(
 
   const tick = () => {
     frame = 0;
+    if (stopped || paused || ticking) return;
     ticking = true;
-    if (stopped || paused) { ticking = false; return; }
+    let changedByControls = false;
+    try {
+      changedByControls = Boolean(viewer.controls?.update?.());
 
-    const changedByControls = Boolean(viewer.controls?.update?.());
+      // Wait until OrbitControls damping has actually settled before restoring
+      // the beauty path. This prevents a progressive image accumulating while
+      // the camera is still moving.
+      if (interactionEnding && !changedByControls) {
+        interactionEnding = false;
+        interactionActive = false;
+        interaction?.onEnd?.();
+        idleFramesRemaining = progressiveFrames;
+        dirty = true;
+      }
 
-    // Wait until OrbitControls damping has actually settled before restoring
-    // the beauty path. This prevents a progressive image accumulating while
-    // the camera is still moving.
-    if (interactionEnding && !changedByControls) {
-      interactionEnding = false;
-      interactionActive = false;
-      interaction?.onEnd?.();
-      idleFramesRemaining = progressiveFrames;
-      dirty = true;
-    }
-
-    const shouldRender = dirty || changedByControls || interactionActive || idleFramesRemaining > 0 || continuousRendering;
-    if (shouldRender) {
+      const shouldRender = dirty || changedByControls || interactionActive || idleFramesRemaining > 0 || continuousRendering;
+      if (shouldRender) {
+        dirty = false;
+        render();
+        if (!interactionActive && !interactionEnding && idleFramesRemaining > 0) idleFramesRemaining--;
+      }
+    } catch (error) {
+      // Prevent one failed frame from permanently wedging the demand-driven RAF.
+      // Stop automatic retries to avoid a hot error loop; a later invalidate()
+      // or user interaction can request another frame.
       dirty = false;
-      render();
-      if (!interactionActive && !interactionEnding && idleFramesRemaining > 0) idleFramesRemaining--;
-    }
-
-    // During idle convergence, request a bounded number of frames, then stop.
-    ticking = false;
-    if (!stopped && !paused && (dirty || changedByControls || interactionActive || interactionEnding || idleFramesRemaining > 0 || continuousRendering)) {
-      frame = requestAnimationFrame(tick);
+      interactionActive = false;
+      interactionEnding = false;
+      idleFramesRemaining = 0;
+      continuousRendering = false;
+      console.error("[AURUM][VIEWER][FRAME_ERROR] Render loop suspended after an exception.", error);
+    } finally {
+      ticking = false;
+      if (!stopped && !paused && !frame && (dirty || changedByControls || interactionActive || interactionEnding || idleFramesRemaining > 0 || continuousRendering)) {
+        frame = requestAnimationFrame(tick);
+      }
     }
   };
 
@@ -277,6 +317,8 @@ export function startAurumViewerLoop(
       viewer.controls?.removeEventListener?.("start", onControlStart);
       viewer.controls?.removeEventListener?.("change", onControlChange);
       viewer.controls?.removeEventListener?.("end", onControlEnd);
+      canvas?.removeEventListener("webglcontextlost", onWebGLContextLost);
+      canvas?.removeEventListener("webglcontextrestored", onWebGLContextRestored);
       observer.disconnect();
     },
     resize,
