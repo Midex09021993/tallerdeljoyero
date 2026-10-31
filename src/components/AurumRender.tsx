@@ -3544,7 +3544,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 <div className="grid grid-cols-2 gap-3">
                   {Object.values(AURUM_AMBIENT_PRESETS).map(preset=><button key={preset.id} type="button" aria-pressed={ambienteId===preset.id} onClick={()=>apiRef.current?.ambiente(preset.id)} className={"group min-w-0 text-center "+(ambienteId===preset.id?"text-[#292824]":"text-[#45433e]")}>
                     <span className={"relative block aspect-[1.18] overflow-hidden rounded-xl border-2 transition "+(ambienteId===preset.id?"border-[#b99642] shadow-[0_0_14px_rgba(185,150,66,.18)]":"border-transparent group-hover:border-[#d8d1c2]")}>
-                      <span className="block h-full w-full bg-[radial-gradient(ellipse_at_50%_24%,#fff8f8_0%,#f0dce0_22%,#c7a9a8_43%,#65565a_72%,#242124_100%)]"/>
+                      <span className={"block h-full w-full "+preset.previewClass}/>
                       {ambienteId===preset.id&&<span className="absolute right-2 top-2 grid size-5 place-items-center rounded-full bg-[#92743b] text-[10px] font-bold text-white">✓</span>}
                     </span>
                     <span className="mt-2 block text-[10px] leading-tight">{preset.name}</span>
