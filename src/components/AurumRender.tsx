@@ -3477,10 +3477,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 </div>
               </div>}
               {uxSection==="ambientes"&&<div className="pb-5">
-                <div className="mb-2 px-0.5 text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Ambientes de estudio · {ESCENARIOS.filter(e=>e.activo).length}</div>
+                <div className="mb-2 px-0.5 text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Ambientes de estudio · {ESCENARIOS.length}</div>
                 <div className="grid grid-cols-3 gap-3">
-                  {ESCENARIOS.filter(e=>e.activo).map(e=><button key={e.id} type="button" aria-pressed={escenarioId===e.id} onClick={()=>setEscenarioId(e.id)} className={"group min-w-0 text-center "+(escenarioId===e.id?"text-[#292824]":"text-[#45433e]")}>
-                    <span className={"block aspect-[1.18] overflow-hidden rounded-xl border-2 transition "+(escenarioId===e.id?"border-[#b99642] shadow-[0_0_14px_rgba(185,150,66,.18)]":"border-transparent group-hover:border-[#d8d1c2]")}><span className={"block h-full w-full "+e.clase}/></span>
+                  {ESCENARIOS.map(e=><button key={e.id} type="button" disabled={!e.activo} aria-disabled={!e.activo} aria-pressed={e.activo && escenarioId===e.id} onClick={()=>{if(e.activo)setEscenarioId(e.id);}} className={"group min-w-0 text-center disabled:cursor-not-allowed "+(e.activo?(escenarioId===e.id?"text-[#292824]":"text-[#45433e]"):"text-[#858178] opacity-75")}>
+                    <span className={"relative block aspect-[1.18] overflow-hidden rounded-xl border-2 transition "+(e.activo && escenarioId===e.id?"border-[#b99642] shadow-[0_0_14px_rgba(185,150,66,.18)]":e.activo?"border-transparent group-hover:border-[#d8d1c2]":"border-dashed border-[#c9c4ba]")}><span className={"block h-full w-full "+e.clase+(e.activo?"":" grayscale-[.35]")}/>{!e.activo&&<span className="absolute inset-0 flex items-center justify-center bg-[#f8f6f0]/55"><span className="rounded-full border border-[#b7aa8e] bg-[#f8f6f0]/95 px-2 py-1 text-[8px] font-semibold uppercase tracking-[.08em] text-[#776b53]">En calibración</span></span>}</span>
                     <span className="mt-2 block text-[10px] leading-tight">{e.nombre}</span>
                   </button>)}
                 </div>
