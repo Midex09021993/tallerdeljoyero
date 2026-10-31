@@ -3662,7 +3662,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                     {estadoCarga.toLowerCase().includes("3dm") ? "Leyendo la geometría original de Rhino y preparando el modelo." : estadoCarga.toLowerCase().includes("procesando") ? "Analizando la geometría y preparando la visualización de tu joya." : estadoCarga.toLowerCase().includes("cargado") ? "Tu diseño está listo para entrar al estudio." : "Preparando tu diseño para el estudio visual."}
                   </p>
                   <div className="mt-6 h-[3px] w-36 overflow-hidden rounded-full bg-[#e7e3da]">
-                    <div className="h-full w-2/5 animate-[aurum-loading_1.6s_ease-in-out_infinite] rounded-full bg-gradient-to-r from-[#b99642] via-[#e4cb83] to-[#b99642]" />
+                    <div className="h-full w-2/5 animate-pulse rounded-full bg-gradient-to-r from-[#b99642] via-[#e4cb83] to-[#b99642]" />
                   </div>
                 </div>
               </div>
