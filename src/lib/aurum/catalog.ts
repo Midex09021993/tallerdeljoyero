@@ -226,17 +226,17 @@ export const MATERIALES: MaterialConfig[] = [
 ];
 
 export const ESCENARIOS: { id: EscenarioId; nombre: string; clase: string; descripcion:string; iluminacion:IluminacionId; activo:boolean }[] = [
-  { id:"ijewelReference", activo:true, nombre:"Estudio Joyería Premium", descripcion:"Fondo blanco y superficie fotográfica", iluminacion:"jewelry", clase:"bg-[radial-gradient(circle_at_50%_30%,#d8ad4c_0%,#4a3518_22%,#17130d_58%,#080808_100%)]" },
-  { id:"ijewelEnvironmentReference", activo:true, nombre:"Estudio Neutro", descripcion:"Fondo gris claro y superficie neutra", iluminacion:"jewelry", clase:"bg-[radial-gradient(circle_at_50%_30%,#f3eee4_0%,#b9a98d_24%,#4c4539_58%,#111111_100%)]" },
-  { id:"oscuro", activo:false, nombre:"Estudio Oscuro", descripcion:"Contraste elegante", iluminacion:"jewelry", clase:"bg-[radial-gradient(circle_at_50%_35%,#2b2f35_0%,#101216_48%,#050608_100%)]" },
-  { id:"claro", activo:false, nombre:"Estudio Claro", descripcion:"Luz de joyería profesional", iluminacion:"jewelry", clase:"bg-[radial-gradient(circle_at_50%_30%,#ffffff_0%,#e8e6e1_58%,#c8c5bf_100%)]" },
-  { id:"luxury", activo:false, nombre:"Luxury", descripcion:"Presentación cálida", iluminacion:"luxury", clase:"bg-[radial-gradient(circle_at_50%_30%,#6b4a22_0%,#2b1b0d_42%,#100a06_100%)]" },
-  { id:"marmol", activo:false, nombre:"Mármol", descripcion:"Superficie premium", iluminacion:"studioSoft", clase:"bg-[linear-gradient(125deg,#f2f0eb,#bdbab3_42%,#e5e3de_44%,#c5c2bc_68%,#f0eee9)]" },
-  { id:"transparente", activo:false, nombre:"Transparente", descripcion:"Fondo sin entorno", iluminacion:"studioSoft", clase:"bg-[linear-gradient(45deg,#d9d9d9_25%,transparent_25%),linear-gradient(-45deg,#d9d9d9_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#d9d9d9_75%),linear-gradient(-45deg,transparent_75%,#d9d9d9_75%)] bg-[length:14px_14px] bg-[position:0_0,0_7px,7px_-7px,-7px_0]" },
-  { id:"producto", activo:false, nombre:"Producto", descripcion:"High-key de estudio", iluminacion:"studioSoft", clase:"bg-[radial-gradient(circle_at_50%_28%,#ffffff_0%,#f4f3f0_58%,#dedbd5_100%)]" },
-  { id:"galeria", activo:false, nombre:"Galería", descripcion:"Contraste controlado", iluminacion:"studioHard", clase:"bg-[radial-gradient(circle_at_50%_30%,#34363b_0%,#18191c_55%,#0d0e10_100%)]" },
-  { id:"oroCalido", activo:false, nombre:"Oro Cálido", descripcion:"Presentación cálida", iluminacion:"luxury", clase:"bg-[radial-gradient(circle_at_50%_30%,#76532a_0%,#302216_48%,#17100a_100%)]" },
-  { id:"gemaClara", activo:false, nombre:"Gema Clara", descripcion:"Realce de piedras", iluminacion:"studioSoft", clase:"bg-[radial-gradient(circle_at_50%_30%,#ffffff_0%,#e7edf2_58%,#cfd9e1_100%)]" },
+  { id:"ijewelReference", activo:true, nombre:"Estudio Joyería Premium", descripcion:"Fondo blanco y superficie fotográfica", clase:"bg-[radial-gradient(circle_at_50%_30%,#d8ad4c_0%,#4a3518_22%,#17130d_58%,#080808_100%)]" },
+  { id:"ijewelEnvironmentReference", activo:true, nombre:"Estudio Neutro", descripcion:"Fondo gris claro y superficie neutra", clase:"bg-[radial-gradient(circle_at_50%_30%,#f3eee4_0%,#b9a98d_24%,#4c4539_58%,#111111_100%)]" },
+  { id:"oscuro", activo:false, nombre:"Estudio Oscuro", descripcion:"Contraste elegante", clase:"bg-[radial-gradient(circle_at_50%_35%,#2b2f35_0%,#101216_48%,#050608_100%)]" },
+  { id:"claro", activo:false, nombre:"Estudio Claro", descripcion:"Luz de joyería profesional", clase:"bg-[radial-gradient(circle_at_50%_30%,#ffffff_0%,#e8e6e1_58%,#c8c5bf_100%)]" },
+  { id:"luxury", activo:false, nombre:"Luxury", descripcion:"Presentación cálida", clase:"bg-[radial-gradient(circle_at_50%_30%,#6b4a22_0%,#2b1b0d_42%,#100a06_100%)]" },
+  { id:"marmol", activo:false, nombre:"Mármol", descripcion:"Superficie premium", clase:"bg-[linear-gradient(125deg,#f2f0eb,#bdbab3_42%,#e5e3de_44%,#c5c2bc_68%,#f0eee9)]" },
+  { id:"transparente", activo:false, nombre:"Transparente", descripcion:"Fondo sin entorno", clase:"bg-[linear-gradient(45deg,#d9d9d9_25%,transparent_25%),linear-gradient(-45deg,#d9d9d9_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#d9d9d9_75%),linear-gradient(-45deg,transparent_75%,#d9d9d9_75%)] bg-[length:14px_14px] bg-[position:0_0,0_7px,7px_-7px,-7px_0]" },
+  { id:"producto", activo:false, nombre:"Producto", descripcion:"High-key de estudio", clase:"bg-[radial-gradient(circle_at_50%_28%,#ffffff_0%,#f4f3f0_58%,#dedbd5_100%)]" },
+  { id:"galeria", activo:false, nombre:"Galería", descripcion:"Contraste controlado", clase:"bg-[radial-gradient(circle_at_50%_30%,#34363b_0%,#18191c_55%,#0d0e10_100%)]" },
+  { id:"oroCalido", activo:false, nombre:"Oro Cálido", descripcion:"Presentación cálida", clase:"bg-[radial-gradient(circle_at_50%_30%,#76532a_0%,#302216_48%,#17100a_100%)]" },
+  { id:"gemaClara", activo:false, nombre:"Gema Clara", descripcion:"Realce de piedras", clase:"bg-[radial-gradient(circle_at_50%_30%,#ffffff_0%,#e7edf2_58%,#cfd9e1_100%)]" },
 ];
 export const VISTAS: { id: VistaId; nombre: string }[] = [
   { id:"perspectiva", nombre:"Perspectiva" }, { id:"frontal", nombre:"Frontal" }, { id:"superior", nombre:"Superior" }, { id:"lateral", nombre:"Lateral" },
