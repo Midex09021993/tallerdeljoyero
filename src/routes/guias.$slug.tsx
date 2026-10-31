@@ -533,7 +533,7 @@ function GuiaTecnicaPage() {
           </section>
 
           <section>
-            <h2>5. Pasos recomendados antes de fundir</h2>
+            <h2>9. Pasos recomendados antes de fundir</h2>
             <ol>
               <li>Define la ley final y la masa total deseada.</li>
               <li>Verifica la masa, la ley y la procedencia de cada material de partida.</li>
