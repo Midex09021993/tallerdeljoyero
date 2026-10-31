@@ -3,6 +3,8 @@ export interface AurumGroundController {
   hdriGround?: any;
   setVisible: (visible: boolean) => void;
   setBakedShadowVisible: (visible: boolean) => void;
+  setMaterial: (config: { color?: number; roughness?: number; metalness?: number }) => void;
+  setShadowIntensity: (intensity: number) => void;
   setHdriGroundTexture: (texture:any) => void;
   setHdriGroundEnabled: (enabled:boolean) => void;
   updateFromPreset: (preset: any) => void;
@@ -74,10 +76,23 @@ export function createAurumGround(THREE: any, scene: any): AurumGroundController
   return {
     mesh,
     get hdriGround() { return hdriGround; },
-    setVisible(visible) { mesh.visible = visible; },
+    setVisible(visible) {
+      mesh.visible = visible;
+      bakedShadow.visible = visible && bakedShadowUserVisible;
+    },
     setBakedShadowVisible(visible) {
       bakedShadowUserVisible = visible;
       bakedShadow.visible = visible && mesh.visible;
+    },
+    setMaterial(config) {
+      if (config.color !== undefined) mesh.material.color.setHex(config.color);
+      if (config.roughness !== undefined) mesh.material.roughness = Math.max(0, Math.min(1, config.roughness));
+      if (config.metalness !== undefined) mesh.material.metalness = Math.max(0, Math.min(1, config.metalness));
+      mesh.material.needsUpdate = true;
+    },
+    setShadowIntensity(intensity) {
+      const strength = Math.max(0, Math.min(1, Number(intensity) || 0));
+      bakedShadowMaterial.opacity = Math.max(.12, Math.min(.32, .12 + strength * .48));
     },
     setHdriGroundTexture(texture) {
       hdriGroundTexture = texture;
