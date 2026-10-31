@@ -2720,7 +2720,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           perfTick();
         },
         {
-          progressiveFrames: 32,
+          progressiveFrames: 1,
           onStart: () => {
             // Interaction path: direct renderer, no FXAA post-process.
             // Keep the adaptive raster/transmission budgets; isolate resolution
