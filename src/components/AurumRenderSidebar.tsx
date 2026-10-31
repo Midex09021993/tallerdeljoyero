@@ -35,7 +35,7 @@ const toolbarItems = [
  * Los accesos son deliberadamente presentacionales: sus acciones se definirán
  * después, cuando se establezca el comportamiento de cada herramienta.
  */
-export function AurumRenderSidebar({ activeToolId, onAmbientesClick }: { activeToolId: string; onAmbientesClick: () => void }) {
+export function AurumRenderSidebar({ activeToolId, onAmbientesClick, onGemHdrClick }: { activeToolId: string; onAmbientesClick: () => void; onGemHdrClick: () => void }) {
   return (
     <nav
       aria-label="Herramientas de Aurum Render"
@@ -44,7 +44,8 @@ export function AurumRenderSidebar({ activeToolId, onAmbientesClick }: { activeT
       {toolbarItems.map((item) => {
         const Icon = item.icon;
         const isAmbientes = item.id === "ambientes";
-        const active = isAmbientes && activeToolId === "ambientes";
+        const isGemHdr = item.id === "gem-hdr";
+        const active = (isAmbientes && activeToolId === "ambientes") || (isGemHdr && activeToolId === "hdrGemas");
         const contents = (
           <>
             {active && (
@@ -66,11 +67,16 @@ export function AurumRenderSidebar({ activeToolId, onAmbientesClick }: { activeT
           </>
         );
         const className = "relative flex h-[54px] w-full flex-col items-center justify-center gap-0.5 " + (active ? "text-[#92743b]" : "text-[#45433e]");
-        return isAmbientes ? (
-          <button key={item.id} type="button" title="Ambientes" aria-label="Ambientes" aria-pressed={active} onClick={onAmbientesClick} className={className}>
-            {contents}
-          </button>
-        ) : (
+        if (isAmbientes || isGemHdr) {
+          const title = isAmbientes ? "HDR Ambiente" : "HDR Entorno de Gemas";
+          const onClick = isAmbientes ? onAmbientesClick : onGemHdrClick;
+          return (
+            <button key={item.id} type="button" title={title} aria-label={title} aria-pressed={active} onClick={onClick} className={className}>
+              {contents}
+            </button>
+          );
+        }
+        return (
           <div key={item.id} title={item.label || item.id} className={className}>
             {contents}
           </div>
