@@ -123,6 +123,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [metalHdriId, setMetalHdriId] = useState("ijewelMetal");
   const [gemHdriId, setGemHdriId] = useState("predeterminado");
   const [ambienteId, setAmbienteId] = useState<string|null>("predeterminado");
+  const ambienteIdRef = useRef<string|null>("predeterminado");
+  ambienteIdRef.current = ambienteId;
   const [ambienteMetalInfluence, setAmbienteMetalInfluence] = useState(45);
   const [fondoId, setFondoId] = useState("escena");
   const [sombraContactoVisible, setSombraContactoVisible] = useState(true);
@@ -911,6 +913,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           if (failed || requestId !== ambientSelectionRequestId || !metalReady || !gemReady) return;
           setMetalHdriId(preset.metalKey!);
           setGemHdriId(key);
+          ambienteIdRef.current = key;
           setAmbienteId(key);
           console.info("[AURUM][AMBIENT][ACTIVE]", {
             id: key,
@@ -926,7 +929,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           if (requestId !== ambientSelectionRequestId || failed) return;
           failed = true;
           console.error("[AURUM][AMBIENT][LOAD FAILED]", { id:key, kind, metalReady, gemReady });
-          toast.error(`No se pudo cargar el HDR de ${kind} para ${preset.name}. Se mantiene el último ambiente confirmado.`);
+          toast.error(`No se pudo completar ${preset.name}: falló el HDR de ${kind}. Se restaurará el último ambiente confirmado.`);
+          const previousKey = ambienteIdRef.current;
+          if (previousKey && previousKey !== key && AURUM_AMBIENT_PRESETS[previousKey]) {
+            // A paired selection can finish one side before the other fails.
+            // Reapply the last fully confirmed pair so the UI and renderer agree.
+            aplicarAmbienteCombinado(previousKey);
+          }
         };
 
         metalHdriOverride = preset.metalKey;
