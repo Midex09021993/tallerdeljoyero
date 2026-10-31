@@ -3634,33 +3634,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 </div>
               </div>}
               {uxSection==="escenas"&&<div className="space-y-4 pb-5">
-                <div>
-                  <div className="mb-2 text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Escenas de presentación · {ESCENARIOS.length}</div>
-                  <div className="grid grid-cols-2 gap-3">
-                    {ESCENARIOS.filter(e=>e.activo).map(e=><button key={e.id} type="button" aria-pressed={escenarioId===e.id} title={e.descripcion} onClick={()=>{if(e.activo){setEscenarioId(e.id);apiRef.current?.escenario(e.id);}}} className={"group min-w-0 text-center "+(escenarioId===e.id?"text-[#292824]":"text-[#45433e]")}>
-                      <span className={"relative block aspect-[1.18] overflow-hidden rounded-xl border-2 transition "+(escenarioId===e.id?"border-[#b99642] shadow-[0_0_14px_rgba(185,150,66,.18)]":"border-transparent group-hover:border-[#d8d1c2]")}><span className={"block h-full w-full "+e.clase}/></span>
-                      <span className="mt-2 block text-[10px] leading-tight">{e.nombre}</span>
-                    </button>)}
-                  </div>
+                <div className="mb-2 text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Escenas de presentación · {ESCENARIOS.length}</div>
+                <div className="grid grid-cols-2 gap-3">
+                  {ESCENARIOS.filter(e=>e.activo).map(e=><button key={e.id} type="button" aria-pressed={escenarioId===e.id} title={e.descripcion} onClick={()=>{setEscenarioId(e.id);apiRef.current?.escenario(e.id);}} className={"group min-w-0 text-center "+(escenarioId===e.id?"text-[#292824]":"text-[#45433e]")}>
+                    <span className={"relative block aspect-square overflow-hidden rounded-xl border-2 transition "+(escenarioId===e.id?"border-[#6d63ff] shadow-[0_0_14px_rgba(109,99,255,.18)]":"border-transparent group-hover:border-[#d8d1c2]")}><span className={"block h-full w-full "+e.clase}/>{escenarioId===e.id&&<span className="absolute right-2 top-2 grid size-5 place-items-center rounded-full bg-[#6d63ff] text-[10px] text-white">✓</span>}</span>
+                    <span className="mt-2 block text-[10px] leading-tight">{e.nombre}</span>
+                  </button>)}
                 </div>
-                <div className="border-t border-black/[.08] pt-3 text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Suelo de presentación</div>
-
-                <label className="flex items-center justify-between gap-3 rounded-xl border border-black/[.08] bg-white p-3">
-                  <span><span className="block text-xs font-semibold text-[#292824]">Mostrar suelo</span><span className="mt-1 block text-[10px] text-[#77756f]">Activa o desactiva el plano que recibe la joya.</span></span>
-                  <input type="checkbox" checked={sueloVisible} onChange={e=>{const visible=e.target.checked;setSueloVisible(visible);apiRef.current?.sueloVisible(visible);}} className="size-4 accent-[#92743b]"/>
-                </label>
-                <div className="rounded-xl border border-black/[.08] bg-white p-3">
-                  <label className="flex items-center justify-between gap-3 text-xs font-semibold text-[#292824]"><span>Color del suelo</span><input aria-label="Color del suelo" type="color" value={sueloColor} onChange={e=>{const value=e.target.value;setSueloColor(value);apiRef.current?.sueloMaterial({color:value,roughness:sueloRugosidad,metalness:sueloMetalness});}} className="h-8 w-12 cursor-pointer rounded border-0 bg-transparent"/></label>
-                  <label className="mt-4 block text-xs font-semibold text-[#292824]">Rugosidad <span className="float-right font-normal tabular-nums text-[#77756f]">{Math.round(sueloRugosidad*100)}%</span><input type="range" min="0" max="100" value={Math.round(sueloRugosidad*100)} onChange={e=>{const value=Number(e.target.value)/100;setSueloRugosidad(value);apiRef.current?.sueloMaterial({color:sueloColor,roughness:value,metalness:sueloMetalness});}} className="mt-2 w-full accent-[#92743b]"/></label>
-                  <label className="mt-4 block text-xs font-semibold text-[#292824]">Metalness <span className="float-right font-normal tabular-nums text-[#77756f]">{Math.round(sueloMetalness*100)}%</span><input type="range" min="0" max="100" value={Math.round(sueloMetalness*100)} onChange={e=>{const value=Number(e.target.value)/100;setSueloMetalness(value);apiRef.current?.sueloMaterial({color:sueloColor,roughness:sueloRugosidad,metalness:value});}} className="mt-2 w-full accent-[#92743b]"/></label>
-                </div>
-                <div className="border-t border-black/[.08] pt-3 text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Sombras de contacto</div>
-                <label className="flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-black/[.08] bg-white p-3">
-                  <span><span className="block text-xs font-semibold text-[#292824]">Sombra de contacto</span><span className="mt-1 block text-[10px] text-[#77756f]">Muestra u oculta la sombra debajo de la joya.</span></span>
-                  <input type="checkbox" checked={sombraContactoVisible} onChange={e=>{const visible=e.target.checked;setSombraContactoVisible(visible);apiRef.current?.sombraContacto(visible);}} className="size-4 accent-[#92743b]"/>
-                </label>
-                <label className="block rounded-xl border border-black/[.08] bg-white p-3 text-xs font-semibold text-[#292824]">Intensidad de sombra <span className="float-right font-normal tabular-nums text-[#77756f]">{Math.round(intensidadSombra*100)}%</span><input type="range" min="0" max="50" value={Math.round(intensidadSombra*100)} onChange={e=>{const value=Number(e.target.value)/100;setIntensidadSombra(value);apiRef.current?.intensidadSombra(value);}} className="mt-2 w-full accent-[#92743b]"/></label>
-                <p className="px-1 text-[10px] leading-relaxed text-[#77756f]">Estos controles afectan únicamente al suelo y a la sombra de contacto. No modifican HDR, materiales de la joya ni postprocesado.</p>
+                <p className="px-1 text-[10px] leading-relaxed text-[#77756f]">Cada escena aplica una configuración de suelo, encuadre del plano y sombras. Los ambientes HDR y los fondos se administran en sus apartados independientes.</p>
               </div>}
               {uxSection==="fondos"&&<div className="space-y-3 pb-5">
                 <div className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Fondo de presentación</div>
