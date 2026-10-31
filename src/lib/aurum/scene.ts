@@ -13,7 +13,7 @@ export function createAurumSceneController(
   groundController: any,
   environmentController: any,
   loadEnvironment: (id: string) => void,
-  backgroundElement?: { style: { backgroundColor: string; backgroundImage?: string; backgroundSize?: string; backgroundPosition?: string } }
+  backgroundElement?: { style: { backgroundColor: string; backgroundImage?: string; backgroundSize?: string; backgroundPosition?: string; backgroundRepeat?: string } }
 ): AurumSceneController {
   let currentPreset = getAurumScenePreset("ijewelReference");
   let backgroundOverride: string | null = null;
