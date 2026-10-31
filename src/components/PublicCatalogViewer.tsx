@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Camera, RotateCcw, Play, Pause, ZoomIn, ZoomOut } from "lucide-react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
@@ -144,6 +145,9 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
   const [status, setStatus] = useState("Preparando el visor 3D…");
   const [error, setError] = useState<string | null>(null);
   const [gemOpticsLoading, setGemOpticsLoading] = useState(false);
+  const [cameraReady, setCameraReady] = useState(false);
+  const [autoRotate, setAutoRotate] = useState(false);
+  const cameraActionsRef = useRef<{ reset: () => void; front: () => void; side: () => void; top: () => void; zoom: (direction: "in" | "out") => void; rotate: (enabled: boolean) => void } | null>(null);
   const onReadyRef = useRef(onReady);
   const onErrorRef = useRef(onError);
   onReadyRef.current = onReady;
@@ -160,6 +164,9 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
     let model: THREE.Object3D | null = null;
     let loop: any = null;
     let resizeObserver: ResizeObserver | null = null;
+    cameraActionsRef.current = null;
+    setCameraReady(false);
+    setAutoRotate(false);
     let environment: THREE.Texture | null = null;
     let gemEnvironment: THREE.Texture | null = null;
     let pmrem: THREE.PMREMGenerator | null = null;
@@ -347,7 +354,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         camera.fov = 35;
         // This is the same bounding-sphere camera-fit formula used by the GLB viewer
         // before the 3DM sizing adjustment, so GLB presentation remains unchanged.
-        const distance = radius / Math.sin(THREE.MathUtils.degToRad(camera.fov / 2)) * 1.08;
+        const distance = radius / Math.sin(THREE.MathUtils.degToRad(camera.fov / 2)) * 1.2;
         camera.position.copy(new THREE.Vector3(1, .62, 1).normalize().multiplyScalar(distance));
         camera.near = Math.max(radius / 100, .001);
         camera.far = Math.max(distance + radius * 20, 100);
@@ -359,7 +366,27 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         controls.enablePan = false;
         controls.enableRotate = true;
         controls.enableZoom = true;
+        controls.autoRotate = false;
+        controls.autoRotateSpeed = 1.25;
         controls.update();
+        const initialCameraPosition = camera.position.clone();
+        const setCameraView = (position: THREE.Vector3, up = new THREE.Vector3(0, 1, 0)) => {
+          camera.position.copy(position);
+          camera.up.copy(up);
+          controls.target.set(0, 0, 0);
+          camera.lookAt(controls.target);
+          controls.update();
+          loop?.converge?.(3);
+        };
+        cameraActionsRef.current = {
+          reset: () => { camera.up.set(0, 1, 0); setCameraView(initialCameraPosition); },
+          front: () => setCameraView(new THREE.Vector3(0, 0, distance)),
+          side: () => setCameraView(new THREE.Vector3(distance, 0, 0)),
+          top: () => setCameraView(new THREE.Vector3(0, distance, 0.001), new THREE.Vector3(0, 0, -1)),
+          zoom: (direction) => { if (direction === "in") controls.dollyIn(1.18); else controls.dollyOut(1.18); controls.update(); loop?.converge?.(3); },
+          rotate: (enabled) => { controls.autoRotate = enabled; controls.update(); loop?.converge?.(3); },
+        };
+        setCameraReady(true);
         scene.add(model);
         modelRef.current = model;
         applyProfiles();
@@ -396,6 +423,8 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         diamondBvhRuntimeRef.current = null;
       }
       cameraRef.current = null;
+      cameraActionsRef.current = null;
+      setCameraReady(false);
       if (model) model.traverse((object: any) => {
         object.geometry?.dispose?.();
         const materials = Array.isArray(object.material) ? object.material : [object.material];
@@ -526,11 +555,25 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
     renderRef.current?.();
   }, [materialId, gemId]);
 
-  return <div className="relative h-full min-h-[280px] w-full overflow-hidden bg-[#f7f6f2]">
+  const runCameraAction = (action: keyof NonNullable<typeof cameraActionsRef.current>) => cameraActionsRef.current?.[action]();
+
+  return <div className="relative h-full min-h-[280px] w-full overflow-hidden bg-[radial-gradient(ellipse_at_50%_44%,#ffffff_0%,#ffffff_58%,#f5f3ee_100%)]">
     {gemOpticsLoading && !status && !error && <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-white/70 backdrop-blur-[1px]">
       <div className="rounded-full border border-[#ece5d9] bg-white/95 px-4 py-2 text-xs text-[#625b54] shadow-sm">Preparando la gema AURUM…</div>
     </div>}
     <div ref={hostRef} className="absolute inset-0" />
+    {cameraReady && !status && !error && <div className="absolute right-3 top-3 z-20 flex flex-col gap-1.5 rounded-2xl border border-[#e8e1d5] bg-white/90 p-1.5 shadow-[0_8px_24px_-16px_rgba(45,35,20,.45)] backdrop-blur sm:right-4 sm:top-4 sm:gap-2 sm:p-2" aria-label="Controles de cámara">
+      <button type="button" onClick={() => runCameraAction("reset")} title="Restablecer cámara" aria-label="Restablecer cámara" className="grid size-8 place-items-center rounded-xl text-[#655b4c] transition hover:bg-[#f5efe3] hover:text-[#8b692f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45]"><RotateCcw className="size-4" /></button>
+      <div className="h-px bg-[#eee8dd]" />
+      <button type="button" onClick={() => { const next = !autoRotate; setAutoRotate(next); cameraActionsRef.current?.rotate(next); }} title={autoRotate ? "Pausar rotación" : "Rotación automática"} aria-label={autoRotate ? "Pausar rotación" : "Iniciar rotación automática"} aria-pressed={autoRotate} className={"grid size-8 place-items-center rounded-xl transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45] " + (autoRotate ? "bg-[#f5efe3] text-[#8b692f]" : "text-[#655b4c] hover:bg-[#f5efe3] hover:text-[#8b692f]")}>{autoRotate ? <Pause className="size-4" /> : <Play className="size-4" />}</button>
+      <div className="h-px bg-[#eee8dd]" />
+      <button type="button" onClick={() => runCameraAction("front")} title="Vista frontal" aria-label="Vista frontal" className="grid size-8 place-items-center rounded-xl text-[#655b4c] transition hover:bg-[#f5efe3] hover:text-[#8b692f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45]"><Camera className="size-4" /></button>
+      <button type="button" onClick={() => runCameraAction("side")} title="Vista lateral" aria-label="Vista lateral" className="grid size-8 place-items-center rounded-xl text-[#655b4c] transition hover:bg-[#f5efe3] hover:text-[#8b692f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45]"><span className="text-[10px] font-bold">L</span></button>
+      <button type="button" onClick={() => runCameraAction("top")} title="Vista superior" aria-label="Vista superior" className="grid size-8 place-items-center rounded-xl text-[#655b4c] transition hover:bg-[#f5efe3] hover:text-[#8b692f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45]"><span className="text-[10px] font-bold">S</span></button>
+      <div className="h-px bg-[#eee8dd]" />
+      <button type="button" onClick={() => cameraActionsRef.current?.zoom("in")} title="Acercar" aria-label="Acercar" className="grid size-8 place-items-center rounded-xl text-[#655b4c] transition hover:bg-[#f5efe3] hover:text-[#8b692f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45]"><ZoomIn className="size-4" /></button>
+      <button type="button" onClick={() => cameraActionsRef.current?.zoom("out")} title="Alejar" aria-label="Alejar" className="grid size-8 place-items-center rounded-xl text-[#655b4c] transition hover:bg-[#f5efe3] hover:text-[#8b692f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45]"><ZoomOut className="size-4" /></button>
+    </div>}
     {(status || error) && <div className={"absolute inset-x-3 bottom-3 z-20 rounded-xl px-3 py-2 text-xs " + (error ? "border border-red-300 bg-white/95 text-red-800" : "bg-white/90 text-[#625b54]")}>{error || status}</div>}
   </div>;
 }
