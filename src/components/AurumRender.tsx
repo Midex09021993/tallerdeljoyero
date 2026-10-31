@@ -3658,10 +3658,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                   </div>
                   <p className="text-[9px] font-semibold uppercase tracking-[.3em] text-[#a18443]">AURUM RENDER · ESTUDIO DIGITAL</p>
                   <h2 className="mt-3 text-lg font-semibold tracking-[-.025em] text-[#292824] sm:text-xl">{estadoCarga}</h2>
-                  <p className="mt-2 max-w-[280px] text-xs leading-relaxed text-[#77756f]">
-                    {estadoCarga.toLowerCase().includes("3dm") ? "Leyendo la geometría original de Rhino y preparando el modelo." : estadoCarga.toLowerCase().includes("procesando") ? "Analizando la geometría y preparando la visualización de tu joya." : estadoCarga.toLowerCase().includes("cargado") ? "Tu diseño está listo para entrar al estudio." : "Preparando tu diseño para el estudio visual."}
-                  </p>
-                  <div className="mt-6 h-[3px] w-36 overflow-hidden rounded-full bg-[#e7e3da]">
+                  <div className="mt-7 h-[3px] w-36 overflow-hidden rounded-full bg-[#e7e3da]">
                     <div className="h-full w-2/5 animate-pulse rounded-full bg-gradient-to-r from-[#b99642] via-[#e4cb83] to-[#b99642]" />
                   </div>
                 </div>
