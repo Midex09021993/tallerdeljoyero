@@ -145,6 +145,7 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-foreground">¿Qué operación necesitas?</p>
           <div className="flex items-center gap-2 text-xs"><span className="text-muted-foreground">Unidad de ley</span><div className="flex rounded-xl border border-input p-1"><button type="button" onClick={() => cambiarUnidadLey("K")} aria-pressed={unidadLey === "K"} className={`rounded-lg px-3 py-1.5 font-semibold ${unidadLey === "K" ? "bg-gold/20 text-foreground" : "text-muted-foreground"}`}>K</button><button type="button" onClick={() => cambiarUnidadLey("‰")} aria-pressed={unidadLey === "‰"} className={`rounded-lg px-3 py-1.5 font-semibold ${unidadLey === "‰" ? "bg-gold/20 text-foreground" : "text-muted-foreground"}`}>‰</button></div></div>
         </div>
+        <p className="mb-3 text-[10px] leading-relaxed text-muted-foreground">En partes por mil puedes introducir leyes comerciales como 585‰. 14K exactos equivalen a 583,333‰.</p>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
           {OPERACIONES.map((item) => (
             <button key={item.id} type="button" onClick={() => setOperacion(item.id)} aria-pressed={operacion === item.id}
