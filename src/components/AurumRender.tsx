@@ -770,7 +770,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       renderer.shadowMap.needsUpdate = true;
       renderer.domElement.className = "block h-full w-full";
       nodo.appendChild(renderer.domElement);
-      const postRuntimeConfig = { ...ssaoConfig, ...postConfig };
+      // SSR is intentionally disabled in the live viewer until its reflection path is validated.
+      const postRuntimeConfig = { ...ssaoConfig, ...postConfig, ssr: false };
       // Preserve the original scene background while the live Bokeh preview is active.
       let dofSavedSceneBackground: THREE.Scene["background"] | undefined;
       let dofHasSavedSceneBackground = false;
