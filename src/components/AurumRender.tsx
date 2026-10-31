@@ -2602,8 +2602,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         if (impacto?.object?.uuid) {
           seleccionarMalla(impacto.object);
         } else {
-          // Clic en espacio vacío = quitar selección y devolver la biblioteca
-          // a su estado neutro. El último material elegido no queda "pegado".
+          // Clic fuera de la geometría de la joya: limpiar selección y abrir
+          // Ambientes para cambiar la presentación sin buscar el primer icono.
+          setUxSection("ambientes");
           parteActiva = null;
           setParteSeleccionada(null);
           setParteSeleccionadaNombre(null);
