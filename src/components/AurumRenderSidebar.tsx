@@ -41,7 +41,7 @@ export function AurumRenderSidebar({ activeToolId, onAmbientesClick, onGemHdrCli
   return (
     <nav
       aria-label="Herramientas de Aurum Render"
-      className="flex h-full w-14 shrink-0 flex-col items-center gap-1 border-r border-[#e7e2d9] bg-[#f9f8f5] py-2 text-[#45433e] shadow-[2px_0_10px_rgba(36,32,20,.045)]"
+      className="flex h-full w-14 shrink-0 flex-col items-center gap-1 rounded-l-2xl border border-r-0 border-[#e7e2d9] bg-[#f9f8f5] py-2 text-[#45433e]"
     >
       {toolbarItems.map((item) => {
         const Icon = item.icon;
