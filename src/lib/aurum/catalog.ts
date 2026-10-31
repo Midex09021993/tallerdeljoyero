@@ -225,7 +225,7 @@ export const MATERIALES: MaterialConfig[] = [
   { id:"titanio_pulido", grupo:"Especiales", nombre:"Titanio Pulido", color:0x90989f, metalness:.96, roughness:.15, envMapIntensity:1.68, clearcoat:.12 },
 ];
 
-export const ESCENARIOS: { id: EscenarioId; nombre: string; clase: string; descripcion:string; iluminacion:IluminacionId; activo:boolean }[] = [
+export const ESCENARIOS: { id: EscenarioId; nombre: string; clase: string; descripcion:string; activo:boolean }[] = [
   { id:"ijewelReference", activo:true, nombre:"Estudio Joyería Premium", descripcion:"Fondo blanco y superficie fotográfica", clase:"bg-[radial-gradient(circle_at_50%_30%,#d8ad4c_0%,#4a3518_22%,#17130d_58%,#080808_100%)]" },
   { id:"ijewelEnvironmentReference", activo:true, nombre:"Estudio Neutro", descripcion:"Fondo gris claro y superficie neutra", clase:"bg-[radial-gradient(circle_at_50%_30%,#f3eee4_0%,#b9a98d_24%,#4c4539_58%,#111111_100%)]" },
   { id:"oscuro", activo:false, nombre:"Estudio Oscuro", descripcion:"Contraste elegante", clase:"bg-[radial-gradient(circle_at_50%_35%,#2b2f35_0%,#101216_48%,#050608_100%)]" },
