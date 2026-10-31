@@ -25,7 +25,7 @@ export type MaterialId =
   | "oro24_pulido" | "oro18_champan" | "oro18_verde" | "oro18_verde_blanco_ijewel" | "oro18_verde_blanco_glb"
   | "oro18a_artesanal_pulido" | "oro18a_calido" | "oro18_naranja" | "oro18_rojo" | "oro18_purpura" | "oro18_azul" | "oro18_gris" | "oro18_martillado"
   | "paladio_pulido" | "rodio_negro" | "titanio_pulido";
-export type EscenarioId = "oscuro" | "claro" | "luxury" | "marmol" | "transparente" | "producto" | "galeria" | "oroCalido" | "gemaClara" | "ijewelReference" | "ijewelEnvironmentReference" | "estudioRosaPremium";
+export type EscenarioId = "oscuro" | "claro" | "luxury" | "marmol" | "transparente" | "producto" | "galeria" | "oroCalido" | "gemaClara" | "ijewelReference" | "ijewelReflectiveReference" | "ijewelEnvironmentReference" | "estudioRosaPremium";
 export type VistaId = "perspectiva" | "frontal" | "superior" | "lateral";
 export type IluminacionId = "studioSoft" | "studioHard" | "jewelry" | "luxury";
 
