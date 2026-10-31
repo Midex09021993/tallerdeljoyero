@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { registrarEvento } from "@/lib/analytics";
 import { Gem, Sparkles, RotateCcw, Info, Scale, Target, Palette, Check } from "lucide-react";
 import { CLAVES_CALCULADORAS, leerConfigAleacion } from "@/lib/calculadoras-config";
-import { calcularAjustePorBalanceDeMasa, quilatesAFinura, validarRecetaLiga } from "@/lib/aleaciones-oro";
+import { calcularAjustePorBalanceDeMasa, validarRecetaLiga } from "@/lib/aleaciones-oro";
 import { useConfigSistema } from "@/lib/taller-db";
 
 function formatearNumero(valor: number, decimales = 2) {
@@ -38,26 +38,45 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
   const [materialAnadido, setMaterialAnadido] = useState("14");
   const [leyPersonalizada, setLeyPersonalizada] = useState(false);
   const [color, setColor] = useState<ColorAleacion>("amarillo");
+  const [unidadLey, setUnidadLey] = useState<"K" | "‰">("K");
 
-  const masaNum = Number(masa);
-  const kiNum = Number(inicial);
-  const kfNum = Number(final);
-  const kaNum = Number(materialAnadido);
-  const finuraInicial = quilatesAFinura(kiNum);
-  const finuraObjetivo = quilatesAFinura(kfNum);
-  const finuraAnadida = operacion === "bajar" ? 0 : operacion === "subir" ? 1 : quilatesAFinura(kaNum);
+  const convertirLeyEntrada = (valor: string): number | null => {
+    if (!valor.trim()) return null;
+    const numero = Number(valor);
+    if (!Number.isFinite(numero)) return null;
+    if (unidadLey === "K") return numero >= 0 && numero <= 24 ? numero / 24 : null;
+    return numero >= 0 && numero <= 1000 ? numero / 1000 : null;
+  };
+  const etiquetaUnidad = unidadLey === "K" ? "K" : "‰";
+  const cambiarUnidadLey = (nuevaUnidad: "K" | "‰") => {
+    if (nuevaUnidad === unidadLey) return;
+    const convertir = (valor: string) => {
+      if (!valor.trim()) return "";
+      const numero = Number(valor);
+      if (!Number.isFinite(numero)) return "";
+      const convertido = unidadLey === "K" ? (numero / 24) * 1000 : (numero / 1000) * 24;
+      return String(Number(convertido.toFixed(6)));
+    };
+    setInicial(convertir(inicial));
+    setFinal(convertir(final));
+    setMaterialAnadido(convertir(materialAnadido));
+    setUnidadLey(nuevaUnidad);
+  };
+  const leyPreset = (quilates: number) => unidadLey === "K" ? String(quilates) : String((quilates / 24) * 1000);
+
+  const masaNum = masa.trim() ? Number(masa) : Number.NaN;
+  const finuraInicial = convertirLeyEntrada(inicial);
+  const finuraObjetivo = convertirLeyEntrada(final);
+  const finuraAnadida = operacion === "bajar" ? 0 : operacion === "subir" ? 1 : convertirLeyEntrada(materialAnadido);
   const receta = configuracion.recetas[color];
   const validacionReceta = validarRecetaLiga(receta.metales);
 
-  const calculo = useMemo(() => {
-    if (finuraInicial === null || finuraObjetivo === null || finuraAnadida === null) return null;
-    return calcularAjustePorBalanceDeMasa({
-      masaInicial: masaNum,
-      finuraInicial,
-      finuraObjetivo,
-      finuraAnadida,
-    });
-  }, [masaNum, finuraInicial, finuraObjetivo, finuraAnadida]);
+  const calculo = useMemo(() => calcularAjustePorBalanceDeMasa({
+    masaInicial: masaNum,
+    finuraInicial: finuraInicial ?? Number.NaN,
+    finuraObjetivo: finuraObjetivo ?? Number.NaN,
+    finuraAnadida: finuraAnadida ?? Number.NaN,
+  }), [masaNum, finuraInicial, finuraObjetivo, finuraAnadida]);
 
   const resultado = calculo?.ok ? calculo.resultado : null;
   const metales = resultado && operacion === "bajar" && validacionReceta.valida
@@ -87,14 +106,21 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
     }
   }, [resultado]);
 
-  const mensajeError = !calculo || calculo.ok ? null : {
-    "masa-inicial-invalida": "Introduce una masa inicial mayor que cero.",
-    "finura-inicial-invalida": "La ley inicial debe estar entre 0 y 24K.",
-    "finura-objetivo-invalida": "La ley objetivo debe ser mayor que 0K y menor que 24K.",
-    "finura-anadida-invalida": "La ley del material añadido debe estar entre 0 y 24K.",
-    "objetivo-no-alcanzable": "No se puede alcanzar esa ley con el material seleccionado. La ley objetivo debe quedar entre las dos leyes de partida.",
-    "datos-no-finitos": "Revisa los valores introducidos.",
-  }[calculo.error];
+  const hayDatos = masa.trim() !== "" || inicial !== "24" || final !== "18" || (operacion === "mezclar" && materialAnadido !== "14");
+  const mensajeError = !hayDatos ? null
+    : !masa.trim() ? "Introduce la masa inicial en gramos."
+    : !Number.isFinite(masaNum) || masaNum <= 0 ? "La masa inicial debe ser un número mayor que cero."
+    : finuraInicial === null ? `La ley inicial debe estar entre 0 y ${unidadLey === "K" ? "24K" : "1000‰"}.`
+    : finuraObjetivo === null ? `La ley objetivo debe estar entre 0 y ${unidadLey === "K" ? "24K" : "1000‰"}.`
+    : finuraAnadida === null ? `La ley del segundo material debe estar entre 0 y ${unidadLey === "K" ? "24K" : "1000‰"}.`
+    : calculo.ok ? null : {
+      "masa-inicial-invalida": "Introduce una masa inicial mayor que cero.",
+      "finura-inicial-invalida": "La ley inicial debe estar entre 0 y 1000‰.",
+      "finura-objetivo-invalida": "La ley objetivo debe ser mayor que 0‰ y menor que 1000‰.",
+      "finura-anadida-invalida": "La ley del material añadido debe estar entre 0 y 1000‰.",
+      "objetivo-no-alcanzable": "No se puede alcanzar esa ley con el material seleccionado. La ley objetivo debe quedar estrictamente entre las dos leyes de partida.",
+      "datos-no-finitos": "Revisa los valores introducidos.",
+    }[calculo.error];
 
   return (
     <div className={`relative overflow-hidden rounded-[28px] border border-gold/20 bg-background shadow-[0_18px_60px_rgba(0,0,0,0.10)] ${compacto ? "p-1" : "p-4 sm:p-6 lg:p-8"}`}>
@@ -115,7 +141,10 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
       </header>
 
       <section className="mb-4 rounded-3xl border border-border bg-card/60 p-4 sm:p-5">
-        <p className="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-foreground">¿Qué operación necesitas?</p>
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-foreground">¿Qué operación necesitas?</p>
+          <div className="flex items-center gap-2 text-xs"><span className="text-muted-foreground">Unidad de ley</span><div className="flex rounded-xl border border-input p-1"><button type="button" onClick={() => cambiarUnidadLey("K")} aria-pressed={unidadLey === "K"} className={`rounded-lg px-3 py-1.5 font-semibold ${unidadLey === "K" ? "bg-gold/20 text-foreground" : "text-muted-foreground"}`}>K</button><button type="button" onClick={() => cambiarUnidadLey("‰")} aria-pressed={unidadLey === "‰"} className={`rounded-lg px-3 py-1.5 font-semibold ${unidadLey === "‰" ? "bg-gold/20 text-foreground" : "text-muted-foreground"}`}>‰</button></div></div>
+        </div>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
           {OPERACIONES.map((item) => (
             <button key={item.id} type="button" onClick={() => setOperacion(item.id)} aria-pressed={operacion === item.id}
@@ -148,9 +177,9 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
             <label className="min-w-0 space-y-2">
               <span className="block text-[11px] font-semibold text-muted-foreground">Ley inicial</span>
               <div className="relative">
-                <input type="number" inputMode="decimal" min="0" max="24" step="0.001" value={inicial} onChange={(e) => setInicial(e.target.value)} placeholder="14" aria-label="Ley inicial en quilates"
+                <input type="number" inputMode="decimal" min="0" max={unidadLey === "K" ? 24 : 1000} step="0.001" value={inicial} onChange={(e) => setInicial(e.target.value)} placeholder={unidadLey === "K" ? "14" : "585"} aria-label={`Ley inicial en ${etiquetaUnidad}`}
                   className="h-14 w-full rounded-2xl border border-input bg-background px-3 pr-10 text-lg font-semibold text-foreground outline-none transition placeholder:text-muted-foreground/75 focus:border-gold focus:ring-4 focus:ring-gold/10" />
-                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">K</span>
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">{etiquetaUnidad}</span>
               </div>
             </label>
           </div>
@@ -167,9 +196,9 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
           <div className="grid grid-cols-4 gap-2">
             {LEYES_OBJETIVO.map((ley) => {
               const seleccionado = !leyPersonalizada && final === String(ley);
-              return <button key={ley} type="button" onClick={() => { setLeyPersonalizada(false); setFinal(String(ley)); }} aria-pressed={seleccionado}
+              return <button key={ley} type="button" onClick={() => { setLeyPersonalizada(false); setFinal(leyPreset(ley)); }} aria-pressed={seleccionado}
                 className={`relative h-11 rounded-2xl border text-sm font-semibold transition ${seleccionado ? "border-gold bg-gold/15 text-foreground" : "border-input bg-background text-muted-foreground hover:border-gold/60"}`}>
-                {ley}K{seleccionado ? <Check className="absolute right-1.5 top-1.5 size-3 text-gold-deep" aria-hidden="true" /> : null}
+                {unidadLey === "K" ? `${ley}K` : `${formatearNumero((ley / 24) * 1000, 3)}‰`}{seleccionado ? <Check className="absolute right-1.5 top-1.5 size-3 text-gold-deep" aria-hidden="true" /> : null}
               </button>;
             })}
           </div>
@@ -178,11 +207,11 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
             {leyPersonalizada ? "Usar ley habitual" : "＋ Introducir ley personalizada"}
           </button>
           {leyPersonalizada ? <div className="relative mt-2">
-            <input type="number" inputMode="decimal" min="0" max="24" step="0.001" value={final} onChange={(e) => setFinal(e.target.value)} placeholder="Ej. 16.75" aria-label="Ley final personalizada"
+            <input type="number" inputMode="decimal" min="0" max={unidadLey === "K" ? 24 : 1000} step="0.001" value={final} onChange={(e) => setFinal(e.target.value)} placeholder={unidadLey === "K" ? "Ej. 16.75" : "Ej. 585"} aria-label={`Ley final personalizada en ${etiquetaUnidad}`}
               className="h-12 w-full rounded-2xl border border-gold/40 bg-background px-4 pr-10 text-base font-semibold text-foreground outline-none focus:border-gold focus:ring-4 focus:ring-gold/10" />
-            <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">K</span>
+            <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">{etiquetaUnidad}</span>
           </div> : null}
-          {finuraObjetivo !== null ? <p className="mt-3 text-center text-[11px] text-muted-foreground">Equivalencia matemática: {formatearNumero(finuraObjetivo * 1000, 3)}‰ de oro fino</p> : null}
+          {finuraObjetivo !== null ? <p className="mt-3 text-center text-[11px] text-muted-foreground">Equivalencia matemática: {formatearNumero(finuraObjetivo * 1000, 3)}‰ de oro fino · {formatearNumero(finuraObjetivo * 24, 3)}K</p> : <p className="mt-3 text-center text-[11px] text-muted-foreground">Introduce una ley válida para ver su equivalencia.</p>}
         </section>
 
         {operacion === "mezclar" ? <section className="rounded-3xl border border-border bg-card/60 p-4 sm:p-5">
@@ -190,9 +219,9 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
             <span className="block text-xs font-bold uppercase tracking-[0.16em] text-foreground">Ley del segundo material</span>
             <span className="block text-[11px] text-muted-foreground">Indica la ley comprobada del oro que vas a incorporar.</span>
             <div className="relative">
-              <input type="number" inputMode="decimal" min="0" max="24" step="0.001" value={materialAnadido} onChange={(e) => setMaterialAnadido(e.target.value)} aria-label="Ley del segundo material en quilates"
+              <input type="number" inputMode="decimal" min="0" max={unidadLey === "K" ? 24 : 1000} step="0.001" value={materialAnadido} onChange={(e) => setMaterialAnadido(e.target.value)} aria-label={`Ley del segundo material en ${etiquetaUnidad}`}
                 className="h-12 w-full rounded-2xl border border-input bg-background px-4 pr-10 text-base font-semibold text-foreground outline-none focus:border-gold focus:ring-4 focus:ring-gold/10" />
-              <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">K</span>
+              <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">{etiquetaUnidad}</span>
             </div>
           </label>
         </section> : null}
@@ -213,7 +242,7 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
         </fieldset> : null}
       </div>
 
-      {resultado ? <div className="mt-4 space-y-4">
+      {resultado && !mensajeError ? <div className="mt-4 space-y-4">
         <article className="rounded-[24px] border border-gold/40 bg-gradient-to-br from-gold/20 via-gold/8 to-transparent p-5">
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gold-deep">{operacion === "bajar" ? "Liga total a añadir" : operacion === "subir" ? "Oro fino a añadir" : "Segunda aleación a añadir"}</p>
           <p className="mt-2 text-3xl font-semibold leading-none text-foreground">{formatearNumero(resultado.masaAnadida)} <span className="text-base font-medium text-muted-foreground">g</span></p>
@@ -250,7 +279,7 @@ export function CalculadoraAleacionOro({ compacto = false }: { compacto?: boolea
         <div className="mx-auto flex size-14 items-center justify-center rounded-2xl border border-gold/20 bg-gold/5"><RotateCcw className="size-6 text-gold/70" aria-hidden="true" /></div>
         <p className="mt-4 text-sm font-medium text-foreground">Completa los datos para calcular</p>
         <p className="mx-auto mt-1 max-w-md text-xs leading-relaxed text-muted-foreground">El cálculo se habilita cuando la ley objetivo puede alcanzarse con los materiales seleccionados.</p>
-        {mensajeError ? <p className="mt-3 text-xs text-warning">{mensajeError}</p> : null}
+        {mensajeError ? <p role="alert" className="mt-3 text-xs text-warning">{mensajeError}</p> : null}
       </div>}
     </div>
   );
