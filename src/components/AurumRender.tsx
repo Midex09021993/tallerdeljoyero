@@ -770,14 +770,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       renderer.shadowMap.needsUpdate = true;
       renderer.domElement.className = "block h-full w-full";
       nodo.appendChild(renderer.domElement);
-      // SSR stays off unless explicitly requested for the environment A/B diagnostic.
-      const aurumDiagnosticParams = new URLSearchParams(window.location.search);
-      const aurumEnvironmentDiagnostic = (aurumDiagnosticParams.get("aurumDiag") ?? "environment") === "environment";
-      const aurumSsrOverride = aurumDiagnosticParams.get("aurumSSR");
-      const isAurumSsrDiagnosticEnabled = () => aurumEnvironmentDiagnostic && aurumSsrOverride === "on";
+      // SSR is globally disabled in the primary Aurum Render viewer until
+      // reflection audits and A/B verification are complete. URL/profile
+      // overrides cannot reactivate it during orbit or when the scene settles.
+      const aurumSsrOverride = "disabled-until-audit";
+      const isAurumSsrDiagnosticEnabled = () => false;
       const syncAurumSsrDiagnosticConfig = () => {
-        postRuntimeConfig.ssr = isAurumSsrDiagnosticEnabled();
-        return postRuntimeConfig.ssr;
+        postRuntimeConfig.ssr = false;
+        return false;
       };
       const postRuntimeConfig = { ...ssaoConfig, ...postConfig, ssr: false };
       syncAurumSsrDiagnosticConfig();
