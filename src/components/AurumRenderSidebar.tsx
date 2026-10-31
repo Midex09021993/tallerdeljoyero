@@ -4,6 +4,7 @@ import {
   Code2,
   Diamond,
   Image,
+  Gem,
   Layers2,
   ScanEye,
   SlidersHorizontal,
@@ -19,6 +20,8 @@ const toolbarItems = [
   { id: "gem-hdr", label: "HDR", icon: Diamond },
   { id: "fondos", label: "Fondo", icon: Wallpaper },
   { id: "escenas", label: "Escena", icon: Sparkles },
+  { id: "materiales", label: "Materiales", icon: Tags },
+  { id: "gemas", label: "Gemas", icon: Gem },
   { id: "images", label: "", icon: Image },
   { id: "layers", label: "", icon: Layers2 },
   { id: "timing", label: "", icon: Timer },
@@ -34,7 +37,7 @@ const toolbarItems = [
  * Barra lateral visual de Aurum Render.
  * Escena agrupa los controles del suelo y las sombras de contacto.
  */
-export function AurumRenderSidebar({ activeToolId, onAmbientesClick, onGemHdrClick, onBackgroundClick, onSceneClick }: { activeToolId: string; onAmbientesClick: () => void; onGemHdrClick: () => void; onBackgroundClick: () => void; onSceneClick: () => void }) {
+export function AurumRenderSidebar({ activeToolId, onAmbientesClick, onGemHdrClick, onBackgroundClick, onSceneClick, onMaterialsClick, onGemsClick }: { activeToolId: string; onAmbientesClick: () => void; onGemHdrClick: () => void; onBackgroundClick: () => void; onSceneClick: () => void; onMaterialsClick: () => void; onGemsClick: () => void }) {
   return (
     <nav
       aria-label="Herramientas de Aurum Render"
@@ -46,7 +49,9 @@ export function AurumRenderSidebar({ activeToolId, onAmbientesClick, onGemHdrCli
         const isGemHdr = item.id === "gem-hdr";
         const isBackground = item.id === "fondos";
         const isScene = item.id === "escenas";
-        const active = (isAmbientes && (activeToolId === "ambientes" || activeToolId === "hdrMetales")) || (isGemHdr && activeToolId === "hdrGemas") || (isBackground && activeToolId === "fondos") || (isScene && activeToolId === "escenas");
+        const isMaterials = item.id === "materiales";
+        const isGems = item.id === "gemas";
+        const active = (isAmbientes && (activeToolId === "ambientes" || activeToolId === "hdrMetales")) || (isGemHdr && activeToolId === "hdrGemas") || (isBackground && activeToolId === "fondos") || (isScene && activeToolId === "escenas") || (isMaterials && activeToolId === "materiales") || (isGems && activeToolId === "gemas");
         const contents = (
           <>
             {active && (
@@ -68,9 +73,9 @@ export function AurumRenderSidebar({ activeToolId, onAmbientesClick, onGemHdrCli
           </>
         );
         const className = "relative flex h-[54px] w-full flex-col items-center justify-center gap-0.5 " + (active ? "text-[#92743b]" : "text-[#45433e]");
-        if (isAmbientes || isGemHdr || isBackground || isScene) {
-          const title = isAmbientes ? "Ambientes" : isGemHdr ? "HDR Entorno de Gemas" : isBackground ? "Fondos de escena" : "Escenas";
-          const onClick = isAmbientes ? onAmbientesClick : isGemHdr ? onGemHdrClick : isBackground ? onBackgroundClick : onSceneClick;
+        if (isAmbientes || isGemHdr || isBackground || isScene || isMaterials || isGems) {
+          const title = isAmbientes ? "Ambientes" : isGemHdr ? "HDR Entorno de Gemas" : isBackground ? "Fondos de escena" : isScene ? "Escenas" : isMaterials ? "Materiales" : "Gemas";
+          const onClick = isAmbientes ? onAmbientesClick : isGemHdr ? onGemHdrClick : isBackground ? onBackgroundClick : isScene ? onSceneClick : isMaterials ? onMaterialsClick : onGemsClick;
           return (
             <button key={item.id} type="button" title={title} aria-label={title} aria-pressed={active} onClick={onClick} className={className}>
               {contents}
