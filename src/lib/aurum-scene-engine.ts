@@ -1,6 +1,6 @@
 /**
- * AURUM SCENE ENGINE v1.1
- * Escenas fotográficas separadas de materiales y postprocesado.
+ * AURUM SCENE ENGINE v1.2
+ * Escenas de presentación independientes de HDR, iluminación y postprocesado.
  */
 
 export type AurumScenePreset = {
@@ -10,33 +10,29 @@ export type AurumScenePreset = {
   groundRoughness:number;
   groundMetalness:number;
   groundVisible:boolean;
-  environmentIntensity:number;
-  environmentRotation:number;
   shadowIntensity:number;
   shadowSoftness:number;
-  exposure:number;
-  lighting:"studioSoft"|"studioHard"|"jewelry"|"luxury"|"productSoft"|"ijewelReference"|"ijewelEnvironmentReference";
 };
 
 export const AURUM_SCENE_PRESETS:Record<string,AurumScenePreset>={
-  oscuro:{id:"oscuro",background:0x090b0e,ground:0x15181c,groundRoughness:.30,groundMetalness:.05,groundVisible:true,environmentIntensity:.68,environmentRotation:.16,shadowIntensity:.48,shadowSoftness:.72,exposure:.62,lighting:"studioHard"},
-  claro:{id:"claro",background:0xf4f4f2,ground:0xe9e8e5,groundRoughness:.56,groundMetalness:.01,groundVisible:true,environmentIntensity:.62,environmentRotation:.20,shadowIntensity:.22,shadowSoftness:.94,exposure:.70,lighting:"jewelry"},
-  luxury:{id:"luxury",background:0x21150c,ground:0x20140b,groundRoughness:.34,groundMetalness:.03,groundVisible:true,environmentIntensity:.56,environmentRotation:.42,shadowIntensity:.46,shadowSoftness:.82,exposure:.57,lighting:"luxury"},
-  marmol:{id:"marmol",background:0xc9c6bf,ground:0xc5c2bc,groundRoughness:.24,groundMetalness:.02,groundVisible:true,environmentIntensity:.68,environmentRotation:.16,shadowIntensity:.30,shadowSoftness:.90,exposure:.62,lighting:"studioSoft"},
-  transparente:{id:"transparente",background:0x000000,ground:0x15181c,groundRoughness:.30,groundMetalness:.02,groundVisible:false,environmentIntensity:.62,environmentRotation:.16,shadowIntensity:.30,shadowSoftness:.90,exposure:.62,lighting:"studioSoft"},
+  oscuro:{id:"oscuro",background:0x090b0e,ground:0x15181c,groundRoughness:.30,groundMetalness:.05,groundVisible:true,shadowIntensity:.48,shadowSoftness:.72},
+  claro:{id:"claro",background:0xf4f4f2,ground:0xe9e8e5,groundRoughness:.56,groundMetalness:.01,groundVisible:true,shadowIntensity:.22,shadowSoftness:.94},
+  luxury:{id:"luxury",background:0x21150c,ground:0x20140b,groundRoughness:.34,groundMetalness:.03,groundVisible:true,shadowIntensity:.46,shadowSoftness:.82},
+  marmol:{id:"marmol",background:0xc9c6bf,ground:0xc5c2bc,groundRoughness:.24,groundMetalness:.02,groundVisible:true,shadowIntensity:.30,shadowSoftness:.90},
+  transparente:{id:"transparente",background:0x000000,ground:0x15181c,groundRoughness:.30,groundMetalness:.02,groundVisible:false,shadowIntensity:.30,shadowSoftness:.90},
   // Product presentation: neutral gray photographic sweep with a separate light
   // ground. The distinction makes the jewelry sit in the frame instead of
   // disappearing into a pure-white canvas.
-  producto:{id:"producto",background:0xdfdfdd,ground:0xf5f5f3,groundRoughness:.82,groundMetalness:.001,groundVisible:true,environmentIntensity:.34,environmentRotation:.54,shadowIntensity:.24,shadowSoftness:.985,exposure:.62,lighting:"productSoft"},
-  galeria:{id:"galeria",background:0x18191c,ground:0x24262a,groundRoughness:.34,groundMetalness:.025,groundVisible:true,environmentIntensity:.68,environmentRotation:.62,shadowIntensity:.36,shadowSoftness:.90,exposure:.68,lighting:"studioHard"},
-  oroCalido:{id:"oroCalido",background:0x302216,ground:0x3b2a1b,groundRoughness:.38,groundMetalness:.02,groundVisible:true,environmentIntensity:.58,environmentRotation:.42,shadowIntensity:.28,shadowSoftness:.92,exposure:.61,lighting:"luxury"},
+  producto:{id:"producto",background:0xdfdfdd,ground:0xf5f5f3,groundRoughness:.82,groundMetalness:.001,groundVisible:true,shadowIntensity:.24,shadowSoftness:.985},
+  galeria:{id:"galeria",background:0x18191c,ground:0x24262a,groundRoughness:.34,groundMetalness:.025,groundVisible:true,shadowIntensity:.36,shadowSoftness:.90},
+  oroCalido:{id:"oroCalido",background:0x302216,ground:0x3b2a1b,groundRoughness:.38,groundMetalness:.02,groundVisible:true,shadowIntensity:.28,shadowSoftness:.92},
   // Gem scene: brighter neutral set, but not a global exposure push.
-  gemaClara:{id:"gemaClara",background:0xf0f3f5,ground:0xe5eaee,groundRoughness:.48,groundMetalness:.01,groundVisible:true,environmentIntensity:.42,environmentRotation:.08,shadowIntensity:.13,shadowSoftness:.985,exposure:.66,lighting:"jewelry"},
+  gemaClara:{id:"gemaClara",background:0xf0f3f5,ground:0xe5eaee,groundRoughness:.48,groundMetalness:.01,groundVisible:true,shadowIntensity:.13,shadowSoftness:.985},
   // Original AURUM premium baseline, retained as a separate calibration.
   // The exact supplied VJSON environment values are exposed by the
   // ijewelEnvironmentReference profile below (environment intensity 0.6).
-  ijewelReference:{id:"ijewelReference",background:0xffffff,ground:0xffffff,groundRoughness:1,groundMetalness:0,groundVisible:true,environmentIntensity:1,environmentRotation:0,shadowIntensity:.22,shadowSoftness:.985,exposure:1,lighting:"ijewelReference"},
-  ijewelEnvironmentReference:{id:"ijewelEnvironmentReference",background:0xffffff,ground:0xffffff,groundRoughness:1,groundMetalness:0,groundVisible:true,environmentIntensity:.6,environmentRotation:0,shadowIntensity:.22,shadowSoftness:.985,exposure:1,lighting:"ijewelEnvironmentReference"}
+  ijewelReference:{id:"ijewelReference",background:0xffffff,ground:0xffffff,groundRoughness:1,groundMetalness:0,groundVisible:true,shadowIntensity:.22,shadowSoftness:.985},
+  ijewelEnvironmentReference:{id:"ijewelEnvironmentReference",background:0xe7e7e4,ground:0xf1f0ec,groundRoughness:.68,groundMetalness:.01,groundVisible:true,shadowIntensity:.22,shadowSoftness:.985}
 };
 
 /** iJewel/WebGi reference calibration extracted from supplied VJSON/GLB. Renderer values are not universal physical constants. */
@@ -84,12 +80,8 @@ export const AURUM_MATERIAL_CALIBRATION_SCENE: AurumScenePreset = {
   groundRoughness:.68,
   groundMetalness:.01,
   groundVisible:true,
-  environmentIntensity:.40,
-  environmentRotation:.54,
   shadowIntensity:.22,
   shadowSoftness:.985,
-  exposure:.66,
-  lighting:"productSoft",
 };
 
 export const getAurumScenePreset=(id:string)=>{
