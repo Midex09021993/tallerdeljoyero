@@ -3647,21 +3647,24 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 : <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_38%,#ffffff_0%,#f2f2f0_48%,#d8d9d7_100%)]" />
               }
               <div className="absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-black/10" />
-              <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/15 to-transparent" />
-              <div className="absolute bottom-5 left-5 flex items-center gap-2.5 rounded-full border border-black/10 bg-white/72 px-3 py-2 shadow-lg backdrop-blur-md">
-                <span className="grid size-7 place-items-center rounded-full border border-[#b99642]/40 bg-white/80">
-                  <span className="text-[11px] font-semibold tracking-[.16em] text-[#b99642]">A</span>
-                </span>
-                <span className="text-[9px] font-semibold uppercase tracking-[.24em] text-black/55">AURUM RENDER</span>
-              </div>
-              <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-center">
-                <div className={"mx-auto mb-3 grid size-10 place-items-center rounded-full border border-black/10 bg-white/65 shadow-xl backdrop-blur-sm "+(presentationCover?"opacity-0":"opacity-100")}>
-                  <div className="size-4 animate-spin rounded-full border-2 border-black/10 border-t-[#b99642]" />
+              {!presentationCover && <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_43%,rgba(255,255,255,.35)_0%,transparent_54%)]" />}
+              <div className="absolute inset-0 flex items-center justify-center px-6">
+                <div className={"flex w-full max-w-sm flex-col items-center text-center "+(presentationCover?"opacity-0":"opacity-100")}>
+                  <div className="relative mb-6 grid size-[76px] place-items-center rounded-full border border-[#b99642]/20 bg-white/75 shadow-[0_12px_36px_rgba(70,58,30,.10)] backdrop-blur-md">
+                    <div className="absolute inset-[7px] animate-spin rounded-full border-[2.5px] border-[#e8e4da] border-t-[#b99642] [animation-duration:1.15s]" />
+                    <div className="grid size-10 place-items-center rounded-full border border-[#b99642]/25 bg-gradient-to-br from-white to-[#f5f0e4]">
+                      <span className="font-display text-lg font-semibold tracking-[-.08em] text-[#a18443]">A</span>
+                    </div>
+                  </div>
+                  <p className="text-[9px] font-semibold uppercase tracking-[.3em] text-[#a18443]">AURUM RENDER · ESTUDIO DIGITAL</p>
+                  <h2 className="mt-3 text-lg font-semibold tracking-[-.025em] text-[#292824] sm:text-xl">{estadoCarga}</h2>
+                  <p className="mt-2 max-w-[280px] text-xs leading-relaxed text-[#77756f]">
+                    {estadoCarga.toLowerCase().includes("3dm") ? "Leyendo la geometría original de Rhino y preparando el modelo." : estadoCarga.toLowerCase().includes("procesando") ? "Analizando la geometría y preparando la visualización de tu joya." : estadoCarga.toLowerCase().includes("cargado") ? "Tu diseño está listo para entrar al estudio." : "Preparando tu diseño para el estudio visual."}
+                  </p>
+                  <div className="mt-6 h-[3px] w-36 overflow-hidden rounded-full bg-[#e7e3da]">
+                    <div className="h-full w-2/5 animate-[aurum-loading_1.6s_ease-in-out_infinite] rounded-full bg-gradient-to-r from-[#b99642] via-[#e4cb83] to-[#b99642]" />
+                  </div>
                 </div>
-                <p className="text-[11px] font-medium tracking-wide text-black/60">{estadoCarga}</p>
-              </div>
-              <div className="absolute bottom-5 right-5 h-1 w-28 overflow-hidden rounded-full bg-black/10">
-                <div className={"h-full rounded-full bg-[#b99642] transition-all duration-[1000ms] "+(presentationCover?"w-full":"w-2/5")} />
               </div>
             </div>}
             {error&&<div className="absolute bottom-5 left-1/2 z-30 -translate-x-1/2 rounded-xl border border-red-400/20 bg-red-950/80 px-4 py-2 text-xs text-red-200">{error}</div>}
