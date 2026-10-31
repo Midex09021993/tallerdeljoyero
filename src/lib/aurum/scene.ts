@@ -47,6 +47,9 @@ export function createAurumSceneController(
       scene.background = null;
       if (backgroundOverride !== null) {
         applyBackground(backgroundOverride, backgroundImageOverride);
+      } else if (preset.preserveBackground) {
+        // Scene cards own only the floor/shadow presentation; Fondos owns the backdrop.
+        renderer.setClearColor(0x000000, 0);
       } else if (opts?.transparent || id === "transparente") {
         if (backgroundElement?.style) {
           backgroundElement.style.backgroundColor = "transparent";
