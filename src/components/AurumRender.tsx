@@ -3577,11 +3577,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                   <p className="truncate text-[10px] text-[#55534d]">{gemaActiva.nombre}</p>
                 </div>
               </div>}
-              {uxSection==="ambientes"&&<div className="pb-5">
+              {uxSection==="ambientes"&&<div className="space-y-3 pb-5">
                 <div className="mb-2 px-0.5 text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Ambientes HDR · {Object.keys(AURUM_AMBIENT_PRESETS).length}</div>
-                <div className="grid grid-cols-2 gap-3">
-                  {Object.values(AURUM_AMBIENT_PRESETS).map(preset=><button key={preset.id} type="button" aria-pressed={ambienteId===preset.id} onClick={()=>apiRef.current?.ambiente(preset.id)} className={"group min-w-0 text-center "+(gemHdriId===preset.id?"text-[#292824]":"text-[#45433e]")}>
-                    <span className={"relative block aspect-[1.18] overflow-hidden rounded-xl border-2 transition "+(ambienteId===preset.id?"border-[#b99642] shadow-[0_0_14px_rgba(185,150,66,.18)]":"border-transparent group-hover:border-[#d8d1c2]")}>
+                <div className="grid grid-cols-2 gap-2.5">
+                  {Object.values(AURUM_AMBIENT_PRESETS).map(preset=><button key={preset.id} type="button" aria-pressed={ambienteId===preset.id} onClick={()=>apiRef.current?.ambiente(preset.id)} className={"group min-w-0 text-center "+(ambienteId===preset.id?"text-[#292824]":"text-[#45433e]")}>
+                    <span className={"relative block aspect-[4/3] overflow-hidden rounded-xl border transition "+(ambienteId===preset.id?"border-[#b99642] shadow-[0_0_14px_rgba(185,150,66,.18)]":"border-transparent group-hover:border-[#d8d1c2]")}>
                       <span className={"block h-full w-full "+preset.previewClass}/>
                       {ambienteId===preset.id&&<span className="absolute right-2 top-2 grid size-5 place-items-center rounded-full bg-[#92743b] text-[10px] font-bold text-white">✓</span>}
                     </span>
@@ -3613,7 +3613,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
 
                 <div>
                   <div className="mb-2 text-[10px] font-semibold uppercase tracking-[.12em] text-[#92743b]">Entornos HDR de gemas · comparar piedras</div>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-3 gap-2.5">
                   {Object.values(AURUM_GEM_ENVIRONMENT_PRESETS).map((preset,index)=>{
                     const looks=[
                       "radial-gradient(ellipse at 30% 24%,#fff9df 0 8%,transparent 32%),linear-gradient(125deg,#d9d1b7 0%,#f7f5ed 34%,#77766d 58%,#f3e5bd 78%,#343630 100%)",
@@ -3628,7 +3628,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                       "radial-gradient(ellipse at 72% 24%,#fff3c9 0 8%,transparent 30%),linear-gradient(130deg,#514637 0%,#dfc58b 25%,#fff8e8 44%,#565b5e 68%,#e4dfd0 100%)"
                     ];
                     return <button key={preset.id} type="button" title={preset.name} aria-label={preset.name} aria-pressed={gemHdriId===preset.id} onClick={()=>apiRef.current?.gemHdri(preset.id)} className={"group min-w-0 text-center "+(gemHdriId===preset.id?"text-[#292824]":"text-[#45433e]")}>
-                      <span className={"relative mb-1.5 block aspect-[1.12] overflow-hidden rounded-xl border-2 transition "+(gemHdriId===preset.id?"border-[#92743b] shadow-[0_0_12px_rgba(146,116,59,.18)]":"border-transparent group-hover:border-black/15")}>
+                      <span className={"relative mb-1.5 block aspect-[4/3] overflow-hidden rounded-xl border transition "+(gemHdriId===preset.id?"border-[#92743b] shadow-[0_0_12px_rgba(146,116,59,.18)]":"border-transparent group-hover:border-black/15")}>
                         <span className="absolute inset-0" style={{background:looks[index]}}/>
                         <span className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/45 to-transparent"/>
                         <span className="absolute left-1.5 top-1.5 rounded-md border border-white/35 bg-black/25 px-1.5 py-0.5 text-[8px] font-semibold text-white">HDR</span>
@@ -3644,9 +3644,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               </div>}
               {uxSection==="escenas"&&<div className="space-y-4 pb-5">
                 <div className="mb-2 flex items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]"><span>Escenas iJewel · {ESCENARIOS.length}</span><span className="font-normal tracking-normal text-[#858178]">12 referencias VJSON</span></div>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
                   {ESCENARIOS.filter(e=>e.activo).map(e=><button key={e.id} type="button" aria-pressed={escenarioId===e.id} title={e.descripcion} onClick={()=>{setEscenarioId(e.id);apiRef.current?.escenario(e.id);}} className={"group min-w-0 text-left "+(escenarioId===e.id?"text-[#292824]":"text-[#45433e]")}>
-                    <span className={"relative block aspect-[4/3] overflow-hidden rounded-xl border-2 transition "+(escenarioId===e.id?"border-[#b08d42] shadow-[0_0_14px_rgba(176,141,66,.20)]":"border-transparent group-hover:border-[#d8d1c2]")}><span className={"block h-full w-full "+e.clase}/><span className="absolute left-1.5 top-1.5 rounded-md border border-white/50 bg-black/35 px-1.5 py-0.5 text-[8px] font-semibold text-white">VJSON {e.numero}</span><span className="absolute bottom-1.5 left-1.5 rounded-md bg-white/85 px-1.5 py-0.5 text-[8px] font-semibold text-[#625331]">HORNEADO {e.horneado}</span>{escenarioId===e.id&&<span className="absolute right-1.5 top-1.5 grid size-5 place-items-center rounded-full bg-[#b08d42] text-[10px] text-white">✓</span>}</span>
+                    <span className={"relative block aspect-[4/3] overflow-hidden rounded-xl border transition "+(escenarioId===e.id?"border-[#b08d42] shadow-[0_0_14px_rgba(176,141,66,.20)]":"border-transparent group-hover:border-[#d8d1c2]")}><span className={"block h-full w-full "+e.clase}/><span className="absolute left-1.5 top-1.5 rounded-md border border-white/50 bg-black/35 px-1.5 py-0.5 text-[8px] font-semibold text-white">VJSON {e.numero}</span><span className="absolute bottom-1.5 left-1.5 rounded-md bg-white/85 px-1.5 py-0.5 text-[8px] font-semibold text-[#625331]">HORNEADO {e.horneado}</span>{escenarioId===e.id&&<span className="absolute right-1.5 top-1.5 grid size-5 place-items-center rounded-full bg-[#b08d42] text-[10px] text-white">✓</span>}</span>
                     <span className="mt-2 block text-[10px] leading-tight">{e.nombre}</span>
                   </button>)}
                 </div>
