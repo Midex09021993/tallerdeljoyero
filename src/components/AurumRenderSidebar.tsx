@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 
 const toolbarItems = [
-  { id: "ambientes", label: "HDR", icon: CircleDot },
+  { id: "ambientes", label: "Ambientes", icon: CircleDot },
   { id: "gem-hdr", label: "HDR", icon: Diamond },
   { id: "fondos", label: "Fondo", icon: Wallpaper },
   { id: "escenas", label: "Escena", icon: Sparkles },
@@ -69,7 +69,7 @@ export function AurumRenderSidebar({ activeToolId, onAmbientesClick, onGemHdrCli
         );
         const className = "relative flex h-[54px] w-full flex-col items-center justify-center gap-0.5 " + (active ? "text-[#92743b]" : "text-[#45433e]");
         if (isAmbientes || isGemHdr || isBackground || isScene) {
-          const title = isAmbientes ? "HDR Metales" : isGemHdr ? "HDR Entorno de Gemas" : isBackground ? "Fondos de escena" : "Escenas";
+          const title = isAmbientes ? "Ambientes" : isGemHdr ? "HDR Entorno de Gemas" : isBackground ? "Fondos de escena" : "Escenas";
           const onClick = isAmbientes ? onAmbientesClick : isGemHdr ? onGemHdrClick : isBackground ? onBackgroundClick : onSceneClick;
           return (
             <button key={item.id} type="button" title={title} aria-label={title} aria-pressed={active} onClick={onClick} className={className}>
