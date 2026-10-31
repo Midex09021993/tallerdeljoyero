@@ -2764,6 +2764,20 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               if (ssrPass) ssrPass.resolutionScale = 0.35;
             }
             renderer.shadowMap.enabled = false;
+            if (aurumEnvironmentDiagnostic) {
+              console.info("[AURUM][INTERACTION][DIAGNOSTIC]", {
+                phase: "orbit-start",
+                ssrOverride: aurumSsrOverride ?? "default-off",
+                ssrRequested: isAurumSsrDiagnosticEnabled(),
+                ssrActive: Boolean(ssrPass?.enabled && ssrSavePass?.enabled && ssrCompositePass?.enabled),
+                ssrResolutionScale: Number(ssrPass?.resolutionScale ?? 0),
+                taaActive: Boolean((composer as any)?.passes?.find((pass: any) => pass === idleTaaPass)?.enabled),
+                pixelRatio: renderer.getPixelRatio(),
+                transmissionResolutionScale: (renderer as any).transmissionResolutionScale,
+                runtimeTier: runtimeBudget.tier,
+                renderPath: liveFastPathRef.current ? "direct" : "composer",
+              });
+            }
             invalidateRenderRef.current?.();
           },
           onEnd: () => {
@@ -2867,6 +2881,21 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             liveFastPathRef.current = extremeGeometry
               ? true
               : !(idleTaaAvailable || (postRuntimeConfig.dof === true && Boolean(settledDofPass)));
+            if (aurumEnvironmentDiagnostic) {
+              console.info("[AURUM][INTERACTION][DIAGNOSTIC]", {
+                phase: "orbit-settled",
+                ssrOverride: aurumSsrOverride ?? "default-off",
+                ssrRequested: isAurumSsrDiagnosticEnabled(),
+                ssrActive: Boolean(ssrPass?.enabled && ssrSavePass?.enabled && ssrCompositePass?.enabled),
+                ssrResolutionScale: Number(ssrPass?.resolutionScale ?? 0),
+                taaActive: Boolean(idleTaaPass?.enabled),
+                taaSampleLevel: Number(idleTaaPass?.sampleLevel ?? 0),
+                pixelRatio: renderer.getPixelRatio(),
+                transmissionResolutionScale: (renderer as any).transmissionResolutionScale,
+                runtimeTier: runtimeBudget.tier,
+                renderPath: liveFastPathRef.current ? "direct" : "composer",
+              });
+            }
             renderer.shadowMap.enabled = false;
             renderer.shadowMap.needsUpdate = false;
             console.info("[AURUM][DIAMOND LIVE DIAGNOSTICS]", {
