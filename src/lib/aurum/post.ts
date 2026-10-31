@@ -262,6 +262,8 @@ export async function createAurumPostPipeline(
     if(ssaoPass){
       ssaoPass.enabled=!options.capture && Boolean(config.ssao) && high && !diagnosticDisableSSAO;
       ssaoPass.kernelSize=ultra?24:high?20:12;
+      // Keep the live SSAO radius synchronized with the active photographic profile.
+      ssaoPass.kernelRadius=Math.max(.01,Number(config.radius??.20));
       const ssaoScale=ultra?.72:high?.82:.70;
       ssaoPass.setSize?.(
         Math.max(1,Math.floor((renderer.domElement.width||renderer.domElement.clientWidth||1)*ssaoScale)),
