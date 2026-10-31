@@ -2718,7 +2718,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             }
           }
           perfTick();
-        }
         },
         {
           progressiveFrames: 32,
