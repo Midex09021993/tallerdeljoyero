@@ -151,10 +151,10 @@ export const GEMAS: GemaConfig[] = [
 ];
 
 export const MATERIALES: MaterialConfig[] = [
-  // Perfiles de referencia iJewel, identificados como Premium y separados de los acabados estándar.
-  { id:"oro18a_ijewel_premium", grupo:"Oro Amarillo", nombre:"Oro Amarillo · iJewel Premium", color:0xe5b377, metalness:1, roughness:0, envMapIntensity:1, clearcoat:0, anisotropy:0 },
-  { id:"oro18b_ijewel_premium", grupo:"Oro Blanco", nombre:"Oro Blanco · iJewel Premium", color:0xc2c2c3, metalness:1, roughness:0, envMapIntensity:1, clearcoat:0, anisotropy:0 },
-  { id:"oro18r_ijewel_premium", grupo:"Oro Rosa", nombre:"Oro Rosa · iJewel Premium", color:0xf2af83, metalness:1, roughness:0, envMapIntensity:1, clearcoat:0, anisotropy:0 },
+  // Perfiles premium de calibración externa, separados de los acabados estándar.
+  { id:"oro18a_ijewel_premium", grupo:"Oro Amarillo", nombre:"Oro Amarillo Premium", color:0xe5b377, metalness:1, roughness:0, envMapIntensity:1, clearcoat:0, anisotropy:0 },
+  { id:"oro18b_ijewel_premium", grupo:"Oro Blanco", nombre:"Oro Blanco Premium", color:0xc2c2c3, metalness:1, roughness:0, envMapIntensity:1, clearcoat:0, anisotropy:0 },
+  { id:"oro18r_ijewel_premium", grupo:"Oro Rosa", nombre:"Oro Rosa Premium", color:0xf2af83, metalness:1, roughness:0, envMapIntensity:1, clearcoat:0, anisotropy:0 },
   { id:"oro18a_pulido", grupo:"Oro Amarillo", nombre:"Pulido", color:0xd8ad4c, metalness:1, roughness:.10, envMapIntensity:1.82, clearcoat:.18, anisotropy:0 }, // Acabado pulido: evitar reflejos direccionales no deseados.
   { id:"oro18a_satinado", grupo:"Oro Amarillo", nombre:"Satinado", color:0xd2aa55, metalness:1, roughness:.28, envMapIntensity:1.65, clearcoat:.20, anisotropy:0 },
   { id:"oro18a_mate", grupo:"Oro Amarillo", nombre:"Mate", color:0xc7a45a, metalness:1, roughness:.52, envMapIntensity:1.35, clearcoat:.06, anisotropy:0 },
@@ -226,18 +226,18 @@ export const MATERIALES: MaterialConfig[] = [
 ];
 
 export const ESCENARIOS: { id: EscenarioId; nombre: string; clase: string; descripcion:string; activo:boolean; numero?:string; horneado?: "A"|"B" }[] = [
-  { id:"ijewel01", activo:true, numero:"01", horneado:"A", nombre:"iJewel · Escena 01", descripcion:"Referencia VJSON 01 · perfil de horneado A · rotación de entorno 0.0° · suelo blanco", clase:"bg-[radial-gradient(ellipse_at_50%_68%,#ffffff_0%,#e7e7e4_42%,#b8b8b5_100%)]" },
-  { id:"ijewel02", activo:true, numero:"02", horneado:"A", nombre:"iJewel · Escena 02", descripcion:"Referencia VJSON 02 · perfil de horneado A · rotación de entorno 0.0° · suelo blanco", clase:"bg-[radial-gradient(ellipse_at_50%_68%,#ffffff_0%,#e7e7e4_42%,#b8b8b5_100%)]" },
-  { id:"ijewel03", activo:true, numero:"03", horneado:"A", nombre:"iJewel · Escena 03", descripcion:"Referencia VJSON 03 · perfil de horneado A · rotación de entorno 0.0° · suelo blanco", clase:"bg-[radial-gradient(ellipse_at_50%_68%,#ffffff_0%,#e7e7e4_42%,#b8b8b5_100%)]" },
-  { id:"ijewel04", activo:true, numero:"04", horneado:"A", nombre:"iJewel · Escena 04", descripcion:"Referencia VJSON 04 · perfil de horneado A · rotación de entorno 92.6° · suelo blanco", clase:"bg-[radial-gradient(ellipse_at_30%_65%,#ffffff_0%,#d9e0e7_36%,#7d8994_100%)]" },
-  { id:"ijewel05", activo:true, numero:"05", horneado:"A", nombre:"iJewel · Escena 05", descripcion:"Referencia VJSON 05 · perfil de horneado A · rotación de entorno 92.6° · suelo blanco", clase:"bg-[radial-gradient(ellipse_at_30%_65%,#ffffff_0%,#d9e0e7_36%,#7d8994_100%)]" },
-  { id:"ijewel06", activo:true, numero:"06", horneado:"A", nombre:"iJewel · Escena 06", descripcion:"Referencia VJSON 06 · perfil de horneado A · rotación de entorno 92.6° · suelo blanco", clase:"bg-[radial-gradient(ellipse_at_30%_65%,#ffffff_0%,#d9e0e7_36%,#7d8994_100%)]" },
-  { id:"ijewel07", activo:true, numero:"07", horneado:"A", nombre:"iJewel · Escena 07", descripcion:"Referencia VJSON 07 · perfil de horneado A · rotación de entorno 123.4° · suelo blanco", clase:"bg-[radial-gradient(ellipse_at_70%_65%,#ffffff_0%,#d6d2c9_36%,#6d6961_100%)]" },
-  { id:"ijewel08", activo:true, numero:"08", horneado:"A", nombre:"iJewel · Escena 08", descripcion:"Referencia VJSON 08 · perfil de horneado A · rotación de entorno 123.4° · suelo blanco", clase:"bg-[radial-gradient(ellipse_at_70%_65%,#ffffff_0%,#d6d2c9_36%,#6d6961_100%)]" },
-  { id:"ijewel09", activo:true, numero:"09", horneado:"A", nombre:"iJewel · Escena 09", descripcion:"Referencia VJSON 09 · perfil de horneado A · rotación de entorno 123.4° · suelo blanco", clase:"bg-[radial-gradient(ellipse_at_70%_65%,#ffffff_0%,#d6d2c9_36%,#6d6961_100%)]" },
-  { id:"ijewel10", activo:true, numero:"10", horneado:"A", nombre:"iJewel · Escena 10", descripcion:"Referencia VJSON 10 · perfil de horneado A · rotación de entorno 123.4° · suelo blanco", clase:"bg-[radial-gradient(ellipse_at_70%_65%,#ffffff_0%,#d6d2c9_36%,#6d6961_100%)]" },
-  { id:"ijewel11", activo:true, numero:"11", horneado:"B", nombre:"iJewel · Escena 11", descripcion:"Referencia VJSON 11 · perfil de horneado B · rotación de entorno 123.4° · suelo rojo", clase:"bg-[radial-gradient(ellipse_at_50%_68%,#AE3737_0%,#AE3737bb_34%,#343434_100%)]" },
-  { id:"ijewel12", activo:true, numero:"12", horneado:"B", nombre:"iJewel · Escena 12", descripcion:"Referencia VJSON 12 · perfil de horneado B · rotación de entorno 123.4° · suelo azul", clase:"bg-[radial-gradient(ellipse_at_50%_68%,#516D8E_0%,#516D8Ebb_34%,#343434_100%)]" },
+  { id:"ijewel01", activo:true, numero:"01", horneado:"A", nombre:"AURUM · Escena 01", descripcion:"Perfil de referencia 01 · perfil de horneado A · rotación de entorno 0.0° · suelo blanco", clase:"bg-[radial-gradient(ellipse_at_50%_68%,#ffffff_0%,#e7e7e4_42%,#b8b8b5_100%)]" },
+  { id:"ijewel02", activo:true, numero:"02", horneado:"A", nombre:"AURUM · Escena 02", descripcion:"Perfil de referencia 02 · perfil de horneado A · rotación de entorno 0.0° · suelo blanco", clase:"bg-[radial-gradient(ellipse_at_50%_68%,#ffffff_0%,#e7e7e4_42%,#b8b8b5_100%)]" },
+  { id:"ijewel03", activo:true, numero:"03", horneado:"A", nombre:"AURUM · Escena 03", descripcion:"Perfil de referencia 03 · perfil de horneado A · rotación de entorno 0.0° · suelo blanco", clase:"bg-[radial-gradient(ellipse_at_50%_68%,#ffffff_0%,#e7e7e4_42%,#b8b8b5_100%)]" },
+  { id:"ijewel04", activo:true, numero:"04", horneado:"A", nombre:"AURUM · Escena 04", descripcion:"Perfil de referencia 04 · perfil de horneado A · rotación de entorno 92.6° · suelo blanco", clase:"bg-[radial-gradient(ellipse_at_30%_65%,#ffffff_0%,#d9e0e7_36%,#7d8994_100%)]" },
+  { id:"ijewel05", activo:true, numero:"05", horneado:"A", nombre:"AURUM · Escena 05", descripcion:"Perfil de referencia 05 · perfil de horneado A · rotación de entorno 92.6° · suelo blanco", clase:"bg-[radial-gradient(ellipse_at_30%_65%,#ffffff_0%,#d9e0e7_36%,#7d8994_100%)]" },
+  { id:"ijewel06", activo:true, numero:"06", horneado:"A", nombre:"AURUM · Escena 06", descripcion:"Perfil de referencia 06 · perfil de horneado A · rotación de entorno 92.6° · suelo blanco", clase:"bg-[radial-gradient(ellipse_at_30%_65%,#ffffff_0%,#d9e0e7_36%,#7d8994_100%)]" },
+  { id:"ijewel07", activo:true, numero:"07", horneado:"A", nombre:"AURUM · Escena 07", descripcion:"Perfil de referencia 07 · perfil de horneado A · rotación de entorno 123.4° · suelo blanco", clase:"bg-[radial-gradient(ellipse_at_70%_65%,#ffffff_0%,#d6d2c9_36%,#6d6961_100%)]" },
+  { id:"ijewel08", activo:true, numero:"08", horneado:"A", nombre:"AURUM · Escena 08", descripcion:"Perfil de referencia 08 · perfil de horneado A · rotación de entorno 123.4° · suelo blanco", clase:"bg-[radial-gradient(ellipse_at_70%_65%,#ffffff_0%,#d6d2c9_36%,#6d6961_100%)]" },
+  { id:"ijewel09", activo:true, numero:"09", horneado:"A", nombre:"AURUM · Escena 09", descripcion:"Perfil de referencia 09 · perfil de horneado A · rotación de entorno 123.4° · suelo blanco", clase:"bg-[radial-gradient(ellipse_at_70%_65%,#ffffff_0%,#d6d2c9_36%,#6d6961_100%)]" },
+  { id:"ijewel10", activo:true, numero:"10", horneado:"A", nombre:"AURUM · Escena 10", descripcion:"Perfil de referencia 10 · perfil de horneado A · rotación de entorno 123.4° · suelo blanco", clase:"bg-[radial-gradient(ellipse_at_70%_65%,#ffffff_0%,#d6d2c9_36%,#6d6961_100%)]" },
+  { id:"ijewel11", activo:true, numero:"11", horneado:"B", nombre:"AURUM · Escena 11", descripcion:"Perfil de referencia 11 · perfil de horneado B · rotación de entorno 123.4° · suelo rojo", clase:"bg-[radial-gradient(ellipse_at_50%_68%,#AE3737_0%,#AE3737bb_34%,#343434_100%)]" },
+  { id:"ijewel12", activo:true, numero:"12", horneado:"B", nombre:"AURUM · Escena 12", descripcion:"Perfil de referencia 12 · perfil de horneado B · rotación de entorno 123.4° · suelo azul", clase:"bg-[radial-gradient(ellipse_at_50%_68%,#516D8E_0%,#516D8Ebb_34%,#343434_100%)]" },
 ];
 export const VISTAS: { id: VistaId; nombre: string }[] = [
   { id:"perspectiva", nombre:"Perspectiva" }, { id:"frontal", nombre:"Frontal" }, { id:"superior", nombre:"Superior" }, { id:"lateral", nombre:"Lateral" },
