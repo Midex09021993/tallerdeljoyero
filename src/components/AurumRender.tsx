@@ -824,7 +824,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       let gemEnvironmentRequestId = 0;
       let metalHdriOverride: string | null = null;
       let gemHdriOverride: string | null = null;
-      const cargarEntornoGema = (key="ijewelGem", rotation=0, intensityScale=1) => {
+      const cargarEntornoGema = (key="ijewelGem", rotation=0, intensityScale=1, onLoaded?:()=>void, onError?:()=>void) => {
         gemEnvironmentUrl = AURUM_AMBIENT_PRESETS[key]?.url ?? getAurumGemHdriUrl(key);
         gemEnvironmentRotation = Number.isFinite(rotation) ? rotation : .54;
         gemEnvironmentIntensityScale = Number.isFinite(intensityScale) ? intensityScale : .98;
@@ -847,16 +847,18 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             if (modelo) {
               void asegurarDiamanteBvh();
             }
+            onLoaded?.();
+          },
+          () => {
+            console.warn("[Aurum Render] Falló la carga del HDR de gemas seleccionado:", gemEnvironmentUrl);
+            onError?.();
           }
         );
       };
-      // Precarga el GemEnvironment una sola vez. El modelo se engancha
-      // cuando termina de cargar; así las gemas no quedan negras por falta de
-      // environment en el primer frame.
-      cargarEntornoGema("predeterminado", AURUM_AMBIENT_PRESETS.predeterminado.rotation, AURUM_AMBIENT_PRESETS.predeterminado.intensity);
 
       let hdrRequestId = 0;
-      const cargarHDRI = (environmentKey:string, urlOverride?:string, rotation?:number, intensity?:number) => {
+      let ambientSelectionRequestId = 0;
+      const cargarHDRI = (environmentKey:string, urlOverride?:string, rotation?:number, intensity?:number, onLoaded?:()=>void, onError?:()=>void) => {
         const requestId = ++hdrRequestId;
         const url = urlOverride ?? getAurumHdriUrl(environmentKey);
         if (Number.isFinite(rotation)) environmentController.setRotation(rotation as number);
@@ -879,6 +881,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               usandoFallback: environmentController.currentUrl === null,
             });
             invalidateRenderRef.current?.();
+            onLoaded?.();
           },
           () => {
             console.warn("[Aurum Render][HDR metal] No se pudo cargar el HDR solicitado; se mantiene el entorno disponible", {
@@ -887,7 +890,67 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               urlActiva: environmentController.currentUrl,
               usandoFallback: environmentController.currentUrl === null,
             });
+            onError?.();
           }
+        );
+      };
+
+      const aplicarAmbienteCombinado = (key:string) => {
+        const preset = AURUM_AMBIENT_PRESETS[key];
+        if (!preset?.metalKey || !(preset.metalKey in AURUM_HDRI_URLS)) {
+          console.warn("[AURUM][AMBIENT] Preset sin pareja HDR válida:", key);
+          toast.error("Este ambiente no tiene una pareja HDR válida de metales y gemas.");
+          return;
+        }
+
+        const requestId = ++ambientSelectionRequestId;
+        let metalReady = false;
+        let gemReady = false;
+        let failed = false;
+        const finalize = () => {
+          if (failed || requestId !== ambientSelectionRequestId || !metalReady || !gemReady) return;
+          setMetalHdriId(preset.metalKey!);
+          setGemHdriId(key);
+          setAmbienteId(key);
+          console.info("[AURUM][AMBIENT][ACTIVE]", {
+            id: key,
+            metalKey: preset.metalKey,
+            metalUrl: AURUM_HDRI_URLS[preset.metalKey!],
+            gemUrl: preset.url,
+            metalReady,
+            gemReady,
+          });
+          toast.success(`${preset.name}: HDR de metales y gemas aplicado`);
+        };
+        const fail = (kind:"metales"|"gemas") => {
+          if (requestId !== ambientSelectionRequestId || failed) return;
+          failed = true;
+          console.error("[AURUM][AMBIENT][LOAD FAILED]", { id:key, kind, metalReady, gemReady });
+          toast.error(`No se pudo cargar el HDR de ${kind} para ${preset.name}. Se mantiene el último ambiente confirmado.`);
+        };
+
+        metalHdriOverride = preset.metalKey;
+        gemHdriOverride = key;
+        console.info("[AURUM][AMBIENT][REQUEST]", {
+          id:key,
+          metalKey:preset.metalKey,
+          metalUrl:AURUM_HDRI_URLS[preset.metalKey],
+          gemUrl:preset.url,
+        });
+        cargarHDRI(
+          preset.metalKey,
+          undefined,
+          preset.metalRotation ?? 0,
+          preset.metalIntensity ?? 1,
+          () => { metalReady = true; finalize(); },
+          () => fail("metales")
+        );
+        cargarEntornoGema(
+          key,
+          preset.rotation,
+          preset.intensity,
+          () => { gemReady = true; finalize(); },
+          () => fail("gemas")
         );
       };
 
@@ -1053,19 +1116,20 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       // aquí una sola vez y permanecen bajo sus controles independientes.
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
       renderer.toneMappingExposure = photoInicial.exposure;
+      const ambientInicial = AURUM_AMBIENT_PRESETS.predeterminado;
       cargarHDRI(
-        metalHdriOverride ?? photoInicial.environmentKey,
+        ambientInicial.metalKey ?? photoInicial.environmentKey,
         undefined,
-        Math.PI * photoInicial.environmentRotation,
-        photoInicial.environmentIntensity
+        ambientInicial.metalRotation ?? Math.PI * photoInicial.environmentRotation,
+        ambientInicial.metalIntensity ?? photoInicial.environmentIntensity
       );
       const presetInicial = sceneController.apply("ijewelReference");
-      // Product scene starts with the same independent Gem Environment used by
-      // the active photographic profile, rather than inheriting the metal HDRI.
+      // The initial selected UI preset is the same coordinated metal/gem pair
+      // used after the model finishes loading.
       cargarEntornoGema(
-        photoInicial.gemEnvironmentKey,
-        photoInicial.gemEnvironmentRotation,
-        photoInicial.gemEnvironmentIntensity
+        "predeterminado",
+        ambientInicial.rotation,
+        ambientInicial.intensity
       );
       Object.assign(postRuntimeConfig, {
         ssao: photoInicial.post.ssao,
@@ -1766,17 +1830,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         gemHdri:(key:string)=>{
           const ambientPreset=AURUM_AMBIENT_PRESETS[key];
           if (ambientPreset) {
-            // Presets with a paired metalKey restore both HDR environments
-            // from the same iJewel VJSON without changing materials or post FX.
-            if (ambientPreset.metalKey && ambientPreset.metalKey in AURUM_HDRI_URLS) {
-              metalHdriOverride = ambientPreset.metalKey;
-              setMetalHdriId(ambientPreset.metalKey);
-              cargarHDRI(ambientPreset.metalKey,undefined,ambientPreset.metalRotation,ambientPreset.metalIntensity);
-            }
-            setGemHdriId(key);
-            setAmbienteId(key);
-            cargarEntornoGema(key,ambientPreset.rotation,ambientPreset.intensity);
-            invalidateRenderRef.current?.();
+            aplicarAmbienteCombinado(key);
             return;
           }
           if (!(key in AURUM_GEM_HDRI_URLS)) return;
@@ -1786,18 +1840,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           cargarEntornoGema(key, gemEnvironmentRotation, gemEnvironmentIntensityScale);
         },
         ambiente:(key:string)=>{
-          const preset=AURUM_AMBIENT_PRESETS[key];
-          if (!preset) return;
-          // Apply the metal HDR only for explicitly paired VJSON presets.
-          if (preset.metalKey && preset.metalKey in AURUM_HDRI_URLS) {
-            metalHdriOverride = preset.metalKey;
-            setMetalHdriId(preset.metalKey);
-            cargarHDRI(preset.metalKey,undefined,preset.metalRotation,preset.metalIntensity);
-          }
-          setAmbienteId(key);
-          setGemHdriId(key);
-          cargarEntornoGema(key,preset.rotation,preset.intensity);
-          invalidateRenderRef.current?.();
+          aplicarAmbienteCombinado(key);
         },
         influenciaMetalAmbiente:(percent:number)=>{
           const value=Math.max(0,Math.min(100,Number.isFinite(percent)?percent:45));
