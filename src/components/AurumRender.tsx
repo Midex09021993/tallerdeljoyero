@@ -774,7 +774,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       // Preserve the original scene background while the live Bokeh preview is active.
       let dofSavedSceneBackground: THREE.Scene["background"] | undefined;
       let dofHasSavedSceneBackground = false;
-      const { composer, ssaoPass, setSSRSelects, applyQuality: applyPostQuality, updateTemporal, dofPass, renderPass, fxaaPass, outputPass } = await createAurumPostPipeline(
+      const { composer, ssaoPass, ssrPass, ssrSavePass, ssrCompositePass, setSSRSelects, applyQuality: applyPostQuality, updateTemporal, dofPass, renderPass, fxaaPass, outputPass } = await createAurumPostPipeline(
         renderer,
         escena,
         camara,
@@ -2708,7 +2708,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // Interaction path: direct renderer, no FXAA post-process.
             // Keep the adaptive raster/transmission budgets; isolate resolution
             // changes from post-processing so dense CAD interaction stays light.
-            liveFastPathRef.current = true;
+            // Keep a lightweight SSR chain alive during camera orbit so metal
+            // reflections are recalculated from the active camera every frame.
+            // Dense CAD assemblies retain the direct-render fallback.
+            const ssrInteractionEnabled = Boolean(
+              postRuntimeConfig.ssr && ssrPass && ssrSavePass && ssrCompositePass
+              && runtimeBudget.tier !== "extreme"
+            );
+            liveFastPathRef.current = !ssrInteractionEnabled;
             const interactionDpr = Math.min(
               runtimeBudget.interactionPixelRatio,
               runtimeBudget.pixelRatioCap,
@@ -2718,10 +2725,31 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             composer?.setPixelRatio?.(interactionDpr);
             const interactionPasses = ((composer as any)?.passes ?? []) as any[];
             interactionPasses.forEach((pass) => { pass.enabled = false; });
+            if (ssrInteractionEnabled) {
+              if (renderPass) renderPass.enabled = true;
+              if (ssrSavePass) ssrSavePass.enabled = true;
+              if (ssrPass) {
+                ssrPass.enabled = true;
+                ssrPass.resolutionScale = 0.35;
+              }
+              if (ssrCompositePass) {
+                ssrCompositePass.enabled = true;
+                ssrCompositePass.uniforms.intensity.value = Math.max(0, Number(postRuntimeConfig.ssrIntensity ?? 0.55));
+              }
+              if (outputPass) outputPass.enabled = true;
+            }
             if (fxaaPass) fxaaPass.enabled = false;
             liveTransmissionScaleRef.current = runtimeBudget.interactionTransmissionScale;
             (renderer as any).transmissionResolutionScale = runtimeBudget.interactionTransmissionScale;
             aplicarPerfilLive();
+            // Reassert the minimal interaction chain after the live profile applies quality gates.
+            if (ssrInteractionEnabled) {
+              interactionPasses.forEach((pass) => {
+                pass.enabled = pass === renderPass || pass === ssrSavePass || pass === ssrPass
+                  || pass === ssrCompositePass || pass === outputPass;
+              });
+              if (ssrPass) ssrPass.resolutionScale = 0.35;
+            }
             renderer.shadowMap.enabled = false;
             invalidateRenderRef.current?.();
           },
@@ -2751,6 +2779,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               // can be minified in production bundles, so name-based detection is unreliable.
               pass.enabled = pass === idleRenderPass
                 || pass === idleTaaPass
+                || (pass === ssrSavePass && Boolean(postRuntimeConfig.ssr))
+                || (pass === ssrPass && Boolean(postRuntimeConfig.ssr))
+                || (pass === ssrCompositePass && Boolean(postRuntimeConfig.ssr))
                 || (pass === dofPass && postRuntimeConfig.dof === true)
                 || pass === idleOutputPass;
             });
@@ -2776,6 +2807,18 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // minifiers may rename BokehPass.constructor.name.
             const settledDofPass = dofPass && idlePasses.includes(dofPass) ? dofPass : null;
             if (settledDofPass) settledDofPass.enabled = postRuntimeConfig.dof === true;
+            // Restore the full-resolution SSR chain after orbit; it was reduced
+            // to 0.35 resolution only for interactive camera movement.
+            const settledSsrEnabled = Boolean(
+              postRuntimeConfig.ssr && ssrPass && ssrSavePass && ssrCompositePass
+              && measuredQualityId !== "low" && runtimeBudget.tier !== "extreme"
+            );
+            if (ssrSavePass) ssrSavePass.enabled = settledSsrEnabled;
+            if (ssrPass) {
+              ssrPass.enabled = settledSsrEnabled;
+              ssrPass.resolutionScale = measuredQualityId === "ultra" ? 0.85 : 0.65;
+            }
+            if (ssrCompositePass) ssrCompositePass.enabled = settledSsrEnabled;
             // The direct canvas is transparent over the white studio shell. Once the
             // composer is used, make that same studio background explicit; otherwise
             // RenderPass clears to black and the preview appears on a black field.
@@ -3434,9 +3477,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 </div>
               </div>}
               {uxSection==="ambientes"&&<div className="pb-5">
-                <div className="mb-2 px-0.5 text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Ambientes de estudio · {ESCENARIOS.length}</div>
+                <div className="mb-2 px-0.5 text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Ambientes de estudio · {ESCENARIOS.filter(e=>e.activo).length}</div>
                 <div className="grid grid-cols-3 gap-3">
-                  {ESCENARIOS.map(e=><button key={e.id} type="button" aria-pressed={escenarioId===e.id} onClick={()=>setEscenarioId(e.id)} className={"group min-w-0 text-center "+(escenarioId===e.id?"text-[#292824]":"text-[#45433e]")}>
+                  {ESCENARIOS.filter(e=>e.activo).map(e=><button key={e.id} type="button" aria-pressed={escenarioId===e.id} onClick={()=>setEscenarioId(e.id)} className={"group min-w-0 text-center "+(escenarioId===e.id?"text-[#292824]":"text-[#45433e]")}>
                     <span className={"block aspect-[1.18] overflow-hidden rounded-xl border-2 transition "+(escenarioId===e.id?"border-[#b99642] shadow-[0_0_14px_rgba(185,150,66,.18)]":"border-transparent group-hover:border-[#d8d1c2]")}><span className={"block h-full w-full "+e.clase}/></span>
                     <span className="mt-2 block text-[10px] leading-tight">{e.nombre}</span>
                   </button>)}
