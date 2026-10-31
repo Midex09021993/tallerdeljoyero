@@ -3647,12 +3647,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 <p className="px-1 text-[10px] leading-relaxed text-[#77756f]">Cambiar el fondo no modifica los HDR ni los perfiles de materiales.</p>
               </div>}
             </section>
-            <div className="px-5 pb-6">
-              <button type="button" onClick={()=>setPanel("iluminacion")} className="flex w-full items-center justify-between rounded-xl border border-black/10 bg-black/[.025] px-3 py-3 text-left hover:border-[#92743b]/45">
-                <span><span className="block text-[9px] uppercase tracking-[.16em] text-[#858178]">Más control</span><span className="mt-1 block text-xs text-[#45433e]">Iluminación y render</span></span>
-                <SlidersHorizontal className="size-4 text-[#92743b]"/>
-              </button>
-            </div>
           </div>
         </aside>}
 
