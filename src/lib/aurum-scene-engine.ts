@@ -29,8 +29,8 @@ export const AURUM_SCENE_PRESETS:Record<string,AurumScenePreset>={
   // Gem scene: brighter neutral set, but not a global exposure push.
   gemaClara:{id:"gemaClara",background:0xf0f3f5,ground:0xe5eaee,groundRoughness:.48,groundMetalness:.01,groundVisible:true,shadowIntensity:.13,shadowSoftness:.985},
   // Original AURUM premium baseline, retained as a separate calibration.
-  // The exact supplied VJSON environment values are exposed by the
-  // ijewelEnvironmentReference profile below (environment intensity 0.6).
+  // This is a presentation preset only; the VJSON HDR values remain in the
+  // independent photographic environment configuration.
   ijewelReference:{id:"ijewelReference",background:0xffffff,ground:0xffffff,groundRoughness:1,groundMetalness:0,groundVisible:true,shadowIntensity:.22,shadowSoftness:.985},
   ijewelEnvironmentReference:{id:"ijewelEnvironmentReference",background:0xe7e7e4,ground:0xf1f0ec,groundRoughness:.68,groundMetalness:.01,groundVisible:true,shadowIntensity:.22,shadowSoftness:.985}
 };
