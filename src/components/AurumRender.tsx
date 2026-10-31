@@ -3377,20 +3377,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       <div className={embedded ? "flex min-h-0 flex-1 overflow-hidden bg-[#090b0e]" : "flex min-h-0 flex-1 gap-3 bg-[#eeede8] p-3"}>
         {!embedded && <aside className="w-[min(22vw,336px)] shrink-0 overflow-hidden rounded-2xl border border-black/[.07] bg-[#f9f8f5] text-[#292824] shadow-[0_8px_28px_rgba(36,32,20,.045)]">
           <div className="h-full overflow-y-auto">
-            <section className="border-b border-black/10 bg-black/[.02] px-5 py-4">
-              <div className="mb-3 flex items-center justify-between">
-                <div className="text-[10px] font-semibold uppercase tracking-[.16em] text-[#77756f]">Proyecto</div>
-                <span className="rounded-full border border-black/10 px-2 py-1 text-[9px] text-[#77756f]">AURUM STUDIO</span>
-              </div>
-              <label className="mb-3 block text-[10px] font-medium text-[#66645e]">Nombre del proyecto
-                <input value={nombreProyecto} onChange={e=>setNombreProyecto(e.target.value)} maxLength={100} placeholder="Nombre de tu diseño" className="mt-1.5 h-10 w-full rounded-xl border border-black/10 bg-white px-3 text-sm text-[#292824] outline-none transition placeholder:text-[#99968d] focus:border-[#92743b]/65 focus:ring-2 focus:ring-[#92743b]/10"/>
-              </label>
-              <label className="block text-[10px] font-medium text-[#66645e]">Tipo de joya
-                <select value={categoriaProyecto} onChange={e=>setCategoriaProyecto(e.target.value)} className="mt-1.5 h-10 w-full rounded-xl border border-black/10 bg-white px-3 text-sm text-[#292824] outline-none transition focus:border-[#92743b]/65">
-                  {["Anillo","Collar","Dije","Aretes","Pulsera","Brazalete","Broche","Otro"].map(c=><option key={c} value={c}>{c}</option>)}
-                </select>
-              </label>
-            </section>
             <div className="mx-4 mt-3 mb-2 grid grid-cols-3 gap-1.5 rounded-2xl border border-[#e2ded5] bg-[#efede7] p-1.5" role="tablist" aria-label="Biblioteca de joyería">
               {([{id:"materiales",label:"Materiales",count:MATERIALES.length},{id:"gemas",label:"Gemas",count:GEMAS.length},{id:"escena",label:"Escenas",count:ESCENARIOS.length},{id:"hdrMetales",label:"HDR Metales",count:Object.keys(AURUM_HDRI_URLS).length},{id:"hdrGemas",label:"HDR Gemas",count:Object.keys(AURUM_GEM_HDRI_URLS).length+Object.keys(AURUM_AMBIENT_PRESETS).length},{id:"fondos",label:"Fondos",count:8}] as const).map(tab=><button key={tab.id} type="button" role="tab" aria-selected={uxSection===tab.id} onClick={()=>{setUxSection(tab.id);if(tab.id==="gemas"){setBibliotecaTipo("gemas");setFamiliaGemaActiva("Predeterminadas");setMostrarTodasGemas(false);setBusquedaGemas("");}}} className={"group min-w-0 rounded-xl border px-1.5 py-2.5 text-[11px] font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b99642]/50 "+(uxSection===tab.id?"border-white bg-white text-[#292824] shadow-[0_2px_7px_rgba(45,39,25,.08)]":"border-transparent text-[#77756f] hover:border-white/80 hover:bg-white/55 hover:text-[#292824]")}><span className="block truncate leading-tight">{tab.label}</span><span className={"mt-1 block text-[9px] tabular-nums "+(uxSection===tab.id?"font-semibold text-[#92743b]":"text-[#99968d]")}>{tab.count}</span></button>)}
             </div>
