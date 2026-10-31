@@ -48,7 +48,7 @@
     "src/lib/aurum/overlap-experiment.ts": "89942dc3c2d3604d7fef97440eeafc1471cce823270c2754aaf567e853207a42",
     "src/lib/aurum/path-traced-capture.ts": "f5a2a9dd79ae0defd006a397ae2f79692ee581ec1a12873bc8b29fe00c97ad01",
     "src/lib/aurum/path-tracer-final.ts": "99e9d193f1c31aede963bbf192a4d0cb4a43ef9540fbcd2795a99bda3d9cdb5a",
-    "src/lib/aurum/post.ts": "5c14b411e8501ac541d4449c1d7301a13aa9038bde8f04e845c497a34ec9960b",
+    "src/lib/aurum/post.ts": "7cbef4af9279ecb5e3599f6829a495dfbdbaf6510c54b9ceb0bf94a3e473c2d8",
     "src/lib/aurum/runtime-budget.ts": "98d726dd1fe15b25590d50878f60d38e7c1e1fcf9b03f99a769cbf13482cdbb6",
     "src/lib/aurum/scene.ts": "b724463240cc5f81a24a9ebbee4cf5b29620aced08b9f20662b31c5d90ca2d0f",
     "src/lib/aurum/scintillation.ts": "f67ad4c07964e055e38f68e3a1f17050dce08ae3ce0a511c0c221b5f81235be8",
