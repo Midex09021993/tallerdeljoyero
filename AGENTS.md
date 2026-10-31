@@ -13,3 +13,7 @@
 
 - AURUM Render is frozen: never create, edit, move or delete `src/components/AurumRender.tsx`, `src/components/AurumRenderConfig.tsx`, `src/lib/aurum-material-engine.ts`, anything under `src/lib/aurum/`, `aurum-engine.lock.json`, `scripts/check-aurum-lock.mjs` or the `aurum-lock` job in `.github/workflows/quality.yml` unless the user's message contains the exact phrase `DESCONGELAR AURUM RENDER`. Why: the stable engine was restored after regressions and must stay byte-identical.
 - After an authorized change, regenerate the manifest with `node scripts/check-aurum-lock.mjs --generate` and run `npm run check:aurum`; `npm run check:aurum` must pass before finishing any task.
+
+## Interactive viewer
+
+- Keep the interactive WebGL drawing buffer preserved while the viewer uses demand-driven rendering; otherwise the browser can clear the last frame after the render loop becomes idle.

@@ -123,9 +123,9 @@ export function createAurumWebGLViewer(
   const renderer = new THREE.WebGLRenderer({
     antialias: true,
     alpha: true,
-    // Capture uses a dedicated render target; the interactive canvas does not
-    // need a preserved default framebuffer.
-    preserveDrawingBuffer: false,
+    // The demand-driven loop stops once the image settles. Preserve the last
+    // frame so browser compositing cannot clear the idle interactive canvas.
+    preserveDrawingBuffer: true,
     powerPreference: "high-performance",
   });
   const requestedPixelRatio = Math.max(1, Math.min(2, Number(options.pixelRatio ?? 2)));
