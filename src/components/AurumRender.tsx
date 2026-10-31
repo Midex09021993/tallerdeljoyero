@@ -770,8 +770,17 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       renderer.shadowMap.needsUpdate = true;
       renderer.domElement.className = "block h-full w-full";
       nodo.appendChild(renderer.domElement);
-      // SSR is intentionally disabled in the live viewer until its reflection path is validated.
+      // SSR stays off unless explicitly requested for the environment A/B diagnostic.
+      const aurumDiagnosticParams = new URLSearchParams(window.location.search);
+      const aurumEnvironmentDiagnostic = (aurumDiagnosticParams.get("aurumDiag") ?? "environment") === "environment";
+      const aurumSsrOverride = aurumDiagnosticParams.get("aurumSSR");
+      const isAurumSsrDiagnosticEnabled = () => aurumEnvironmentDiagnostic && aurumSsrOverride === "on";
+      const syncAurumSsrDiagnosticConfig = () => {
+        postRuntimeConfig.ssr = isAurumSsrDiagnosticEnabled();
+        return postRuntimeConfig.ssr;
+      };
       const postRuntimeConfig = { ...ssaoConfig, ...postConfig, ssr: false };
+      syncAurumSsrDiagnosticConfig();
       // Preserve the original scene background while the live Bokeh preview is active.
       let dofSavedSceneBackground: THREE.Scene["background"] | undefined;
       let dofHasSavedSceneBackground = false;
@@ -1448,7 +1457,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           gradeSaturation: photo.post.gradeSaturation,
           taa: photo.post.taa,
           progressiveFrameCount: photo.post.progressiveFrameCount,
-          ssr: photo.post.ssr,
+          // Do not let photographic presets override the explicit SSR A/B switch.
+          ssr: isAurumSsrDiagnosticEnabled(),
           ssrIntensity: photo.post.ssrIntensity,
           ssrMaxDistance: photo.post.ssrMaxDistance,
           ssrThickness: photo.post.ssrThickness,
@@ -2712,8 +2722,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // Keep a lightweight SSR chain alive during camera orbit so metal
             // reflections are recalculated from the active camera every frame.
             // Dense CAD assemblies retain the direct-render fallback.
+            syncAurumSsrDiagnosticConfig();
             const ssrInteractionEnabled = Boolean(
-              postRuntimeConfig.ssr && ssrPass && ssrSavePass && ssrCompositePass
+              isAurumSsrDiagnosticEnabled() && ssrPass && ssrSavePass && ssrCompositePass
               && runtimeBudget.tier !== "extreme"
             );
             liveFastPathRef.current = !ssrInteractionEnabled;
@@ -2743,6 +2754,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             liveTransmissionScaleRef.current = runtimeBudget.interactionTransmissionScale;
             (renderer as any).transmissionResolutionScale = runtimeBudget.interactionTransmissionScale;
             aplicarPerfilLive();
+            syncAurumSsrDiagnosticConfig();
             // Reassert the minimal interaction chain after the live profile applies quality gates.
             if (ssrInteractionEnabled) {
               interactionPasses.forEach((pass) => {
@@ -2780,9 +2792,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               // can be minified in production bundles, so name-based detection is unreliable.
               pass.enabled = pass === idleRenderPass
                 || pass === idleTaaPass
-                || (pass === ssrSavePass && Boolean(postRuntimeConfig.ssr))
-                || (pass === ssrPass && Boolean(postRuntimeConfig.ssr))
-                || (pass === ssrCompositePass && Boolean(postRuntimeConfig.ssr))
+                || (pass === ssrSavePass && isAurumSsrDiagnosticEnabled())
+                || (pass === ssrPass && isAurumSsrDiagnosticEnabled())
+                || (pass === ssrCompositePass && isAurumSsrDiagnosticEnabled())
                 || (pass === dofPass && postRuntimeConfig.dof === true)
                 || pass === idleOutputPass;
             });
@@ -2810,8 +2822,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             if (settledDofPass) settledDofPass.enabled = postRuntimeConfig.dof === true;
             // Restore the full-resolution SSR chain after orbit; it was reduced
             // to 0.35 resolution only for interactive camera movement.
+            syncAurumSsrDiagnosticConfig();
             const settledSsrEnabled = Boolean(
-              postRuntimeConfig.ssr && ssrPass && ssrSavePass && ssrCompositePass
+              isAurumSsrDiagnosticEnabled() && ssrPass && ssrSavePass && ssrCompositePass
               && measuredQualityId !== "low" && runtimeBudget.tier !== "extreme"
             );
             if (ssrSavePass) ssrSavePass.enabled = settledSsrEnabled;
