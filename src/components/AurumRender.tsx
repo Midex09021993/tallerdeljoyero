@@ -126,6 +126,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [ambienteMetalInfluence, setAmbienteMetalInfluence] = useState(45);
   const [fondoId, setFondoId] = useState("escena");
   const [sombraContactoVisible, setSombraContactoVisible] = useState(true);
+  const [sueloVisible, setSueloVisible] = useState(true);
+  const [sueloColor, setSueloColor] = useState("#ffffff");
+  const [sueloRugosidad, setSueloRugosidad] = useState(1);
+  const [sueloMetalness, setSueloMetalness] = useState(0);
+  const [intensidadSombra, setIntensidadSombra] = useState(.22);
   const [qualityOpen, setQualityOpen] = useState(false);
   const [libraryMenuOpen, setLibraryMenuOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
@@ -1720,6 +1725,23 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         },
         sombraContacto:(visible:boolean)=>{
           groundController.setBakedShadowVisible(visible);
+          invalidateRenderRef.current?.();
+        },
+        sueloVisible:(visible:boolean)=>{
+          groundController.setVisible(visible);
+          invalidateRenderRef.current?.();
+        },
+        sueloMaterial:(config:any)=>{
+          const color=Number.parseInt(String(config.color??"").replace("#",""),16);
+          groundController.setMaterial({
+            color:Number.isFinite(color)?color:undefined,
+            roughness:Number(config.roughness),
+            metalness:Number(config.metalness),
+          });
+          invalidateRenderRef.current?.();
+        },
+        intensidadSombra:(value:number)=>{
+          groundController.setShadowIntensity(value);
           invalidateRenderRef.current?.();
         },
         iluminacion:aplicarIluminacion,
@@ -3507,13 +3529,27 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
 
                 </div>
               </div>}
-              {uxSection==="fondos"&&<div className="space-y-3 pb-5">
-                <div className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Suelo y sombras</div>
+              {uxSection==="escenas"&&<div className="space-y-4 pb-5">
+                <div className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Suelo de presentación</div>
+                <label className="flex items-center justify-between gap-3 rounded-xl border border-black/[.08] bg-white p-3">
+                  <span><span className="block text-xs font-semibold text-[#292824]">Mostrar suelo</span><span className="mt-1 block text-[10px] text-[#77756f]">Activa o desactiva el plano que recibe la joya.</span></span>
+                  <input type="checkbox" checked={sueloVisible} onChange={e=>{const visible=e.target.checked;setSueloVisible(visible);apiRef.current?.sueloVisible(visible);}} className="size-4 accent-[#92743b]"/>
+                </label>
+                <div className="rounded-xl border border-black/[.08] bg-white p-3">
+                  <label className="flex items-center justify-between gap-3 text-xs font-semibold text-[#292824]"><span>Color del suelo</span><input aria-label="Color del suelo" type="color" value={sueloColor} onChange={e=>{const value=e.target.value;setSueloColor(value);apiRef.current?.sueloMaterial({color:value,roughness:sueloRugosidad,metalness:sueloMetalness});}} className="h-8 w-12 cursor-pointer rounded border-0 bg-transparent"/></label>
+                  <label className="mt-4 block text-xs font-semibold text-[#292824]">Rugosidad <span className="float-right font-normal tabular-nums text-[#77756f]">{Math.round(sueloRugosidad*100)}%</span><input type="range" min="0" max="100" value={Math.round(sueloRugosidad*100)} onChange={e=>{const value=Number(e.target.value)/100;setSueloRugosidad(value);apiRef.current?.sueloMaterial({color:sueloColor,roughness:value,metalness:sueloMetalness});}} className="mt-2 w-full accent-[#92743b]"/></label>
+                  <label className="mt-4 block text-xs font-semibold text-[#292824]">Metalness <span className="float-right font-normal tabular-nums text-[#77756f]">{Math.round(sueloMetalness*100)}%</span><input type="range" min="0" max="100" value={Math.round(sueloMetalness*100)} onChange={e=>{const value=Number(e.target.value)/100;setSueloMetalness(value);apiRef.current?.sueloMaterial({color:sueloColor,roughness:sueloRugosidad,metalness:value});}} className="mt-2 w-full accent-[#92743b]"/></label>
+                </div>
+                <div className="border-t border-black/[.08] pt-3 text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Sombras de contacto</div>
                 <label className="flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-black/[.08] bg-white p-3">
-                  <span><span className="block text-xs font-semibold text-[#292824]">Sombra de contacto</span><span className="mt-1 block text-[10px] text-[#77756f]">Oculta solo la sombra debajo de la joya para comprobar posibles manchas.</span></span>
+                  <span><span className="block text-xs font-semibold text-[#292824]">Sombra de contacto</span><span className="mt-1 block text-[10px] text-[#77756f]">Muestra u oculta la sombra debajo de la joya.</span></span>
                   <input type="checkbox" checked={sombraContactoVisible} onChange={e=>{const visible=e.target.checked;setSombraContactoVisible(visible);apiRef.current?.sombraContacto(visible);}} className="size-4 accent-[#92743b]"/>
                 </label>
-                <div className="pt-2 text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Fondo de presentación</div>
+                <label className="block rounded-xl border border-black/[.08] bg-white p-3 text-xs font-semibold text-[#292824]">Intensidad de sombra <span className="float-right font-normal tabular-nums text-[#77756f]">{Math.round(intensidadSombra*100)}%</span><input type="range" min="0" max="50" value={Math.round(intensidadSombra*100)} onChange={e=>{const value=Number(e.target.value)/100;setIntensidadSombra(value);apiRef.current?.intensidadSombra(value);}} className="mt-2 w-full accent-[#92743b]"/></label>
+                <p className="px-1 text-[10px] leading-relaxed text-[#77756f]">Estos controles afectan únicamente al suelo y a la sombra de contacto. No modifican HDR, materiales de la joya ni postprocesado.</p>
+              </div>}
+              {uxSection==="fondos"&&<div className="space-y-3 pb-5">
+                <div className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Fondo de presentación</div>
                 {[{id:"escena",label:"Según la escena",swatch:"linear-gradient(135deg,#fff,#e9e7df)"},{id:"estudioFotografico",label:"Estudio fotográfico",swatch:'url("https://packs.ijewel3d.com/files/bg_1_d37cf7c1d8.jpg") center / cover no-repeat'},{id:"degradadoGrisBlanco",label:"Degradado gris a blanco",swatch:"linear-gradient(135deg,#ffffff 0%,#eeeeec 48%,#bfc1c0 100%)"},{id:"blanco",label:"Blanco puro",swatch:"#ffffff"},{id:"marfil",label:"Marfil cálido",swatch:"#f4f1e9"},{id:"grisClaro",label:"Gris claro",swatch:"#e7e7e4"},{id:"grisMedio",label:"Gris medio",swatch:"#a6a6a3"},{id:"grisOscuro",label:"Gris oscuro",swatch:"#303236"},{id:"negro",label:"Negro",swatch:"#090b0e"},{id:"transparente",label:"Transparente",swatch:"linear-gradient(45deg,#ddd 25%,transparent 25%,transparent 75%,#ddd 75%),linear-gradient(45deg,#ddd 25%,#fff 25%,#fff 75%,#ddd 75%)"}].map(bg=><button key={bg.id} type="button" onClick={()=>apiRef.current?.fondo(bg.id)} className={"flex w-full items-center gap-3 rounded-xl border p-2.5 text-left transition "+(fondoId===bg.id?"border-[#92743b]/50 bg-white shadow-sm":"border-black/[.07] bg-white/60 hover:bg-white")}><span className="size-8 shrink-0 rounded-lg border border-black/10" style={{background:bg.swatch}}/><span className="flex-1 text-xs text-[#45433e]">{bg.label}</span>{fondoId===bg.id&&<span className="text-xs font-semibold text-[#92743b]">✓</span>}</button>)}
                 <p className="px-1 text-[10px] leading-relaxed text-[#77756f]">Cambiar el fondo no modifica los HDR ni los perfiles de materiales.</p>
               </div>}
