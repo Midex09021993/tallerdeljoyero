@@ -227,7 +227,7 @@ export const MATERIALES: MaterialConfig[] = [
 
 export const ESCENARIOS: { id: EscenarioId; nombre: string; clase: string; descripcion:string; activo:boolean }[] = [
   { id:"ijewelReference", activo:true, nombre:"Suelo mate · iJewel", descripcion:"Suelo estándar de los archivos 01–10: tamaño 8 y sombras horneadas", clase:"bg-[radial-gradient(ellipse_at_50%_72%,#ffffff_0%,#e8e7e4_42%,#c8c7c3_100%)]" },
-  { id:"ijewelReflectiveReference", activo:true, nombre:"Suelo pulido · iJewel", descripcion:"Configuración de los archivos 11–12: suelo tamaño 10 y reflejo de suelo de referencia", clase:"bg-[radial-gradient(ellipse_at_50%_72%,#ffffff_0%,#e5e5e2_34%,#bfc0c0_68%,#f8f8f6_100%)]" },
+  { id:"ijewelReflectiveReference", activo:true, nombre:"Suelo reflectante · iJewel", descripcion:"Configuración de los archivos 11–12: suelo tamaño 10 y solicitud de reflejo de suelo", clase:"bg-[radial-gradient(ellipse_at_50%_72%,#ffffff_0%,#e5e5e2_34%,#bfc0c0_68%,#f8f8f6_100%)]" },
 ];
 export const VISTAS: { id: VistaId; nombre: string }[] = [
   { id:"perspectiva", nombre:"Perspectiva" }, { id:"frontal", nombre:"Frontal" }, { id:"superior", nombre:"Superior" }, { id:"lateral", nombre:"Lateral" },
