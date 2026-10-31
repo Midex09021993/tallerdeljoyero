@@ -8,7 +8,7 @@
   "files": {
     ".github/workflows/quality.yml": "859ec017c449181488a8fd91e854e01ae746bf1fb6bdbebeefe07906e6cfa548",
     "scripts/check-aurum-lock.mjs": "d8b0b1e553fbfdd7faf6522482d0460b5c9803464b9fa03d34ed3bbacd18b5c4",
-    "src/components/AurumRender.tsx": "c3ae62a436faa0d2b7428ef1838fb436f19303751e9297016639b04be5655966",
+    "src/components/AurumRender.tsx": "7c5d581950c06f0e7e33cb6d2c9a2c7f476566582de260cb3c59539cab0c1a76",
     "src/components/AurumRenderConfig.tsx": "aee6ad6ae61c5ea3ad7a6fa03453154b871c3910845656f4ef6bed3b4660ad66",
     "src/lib/aurum-material-engine.ts": "1d4513fd9d54f3e02662b7d8145845f4e494494e9129ece33f0346a403752105",
     "src/lib/aurum/api.ts": "98e8927885b4c061ab529e0593332d5617b485cd2fcbf9e1b8d0acf3fa859c1c",
@@ -23,7 +23,7 @@
     "src/lib/aurum/configurator-state.ts": "674ccd59f288be0bdd99c8aaf02d62dcfd1dc089a641c46bcc39ca3de5e35175",
     "src/lib/aurum/configurator.ts": "591aff277b730b2d3827b5b6d99bf78963378adff3eb89f7a27fa08e14f8d389",
     "src/lib/aurum/environment.ts": "71410503c63d573db901d738c3a1baa385b1438f145e9ad91777150d4e71366b",
-    "src/lib/aurum/gem-environment.ts": "0a217c8b19e90b61655d398e490439aa5dad3a22779e85e9081f584e1eab03d3",
+    "src/lib/aurum/gem-environment.ts": "3cd7dac1454eb0e795f40d282fe029f6266a81bb13ee9b359ba7d73cb0bdeb5a",
     "src/lib/aurum/gem-material-baseline.ts": "f7478efb2725614bd2104cfd020852cda661b6c03794a5e4b132d6f95d36cdaa",
     "src/lib/aurum/gem-physical-core.ts": "ab3bb8adc9c7fc184492ff7bc6f956327347455d6a053e6730eaa4e05b4d0f58",
     "src/lib/aurum/gems.ts": "541adad7573e5a9a746e26f41d4a3f6031641782db82dbb47dcffc53c5788b0e",
