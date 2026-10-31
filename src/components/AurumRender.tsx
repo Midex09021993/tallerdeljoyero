@@ -3528,7 +3528,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                   <p className="truncate text-[10px] text-[#55534d]">{materialActivo.nombre}</p>
                 </div>
               </div>}
-              {uxSection==="gemas"&&<div className="pb-5">
+              {uxSection==="gemas"&&<div className="pt-3 pb-5">
                 <label className="mb-3 flex h-9 items-center gap-2 rounded-xl border border-black/[.08] bg-white px-3 text-[#77756f] focus-within:border-[#92743b]/50"><Gem className="size-3.5 shrink-0"/><input value={busquedaGemas} onChange={e=>{setBusquedaGemas(e.target.value);if(e.target.value.trim())setMostrarTodasGemas(true);}} placeholder="Buscar gema por nombre…" className="min-w-0 flex-1 bg-transparent text-xs text-[#292824] outline-none placeholder:text-[#99968d]"/></label>
                 <div className="mb-2 flex items-center justify-between gap-2"><div className="text-[10px] font-semibold uppercase tracking-[.12em] text-[#77756f]">Explorar por familia</div><span className="text-[9px] text-[#99968d]">{GEMAS.length} perfiles</span></div>
                 <div className="-mx-1 mb-3 flex gap-1.5 overflow-x-auto px-1 pb-2 [scrollbar-width:thin]" role="group" aria-label="Familias de gemas">
