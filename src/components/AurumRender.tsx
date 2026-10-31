@@ -1848,6 +1848,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         metalHdri:(key:string)=>{
           if (!(key in AURUM_HDRI_URLS)) return;
           metalHdriOverride = key;
+          ambienteIdRef.current = null;
+          setAmbienteId(null);
           setMetalHdriId(key);
           cargarHDRI(key);
         },
@@ -1859,6 +1861,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           }
           if (!(key in AURUM_GEM_HDRI_URLS)) return;
           gemHdriOverride = key;
+          ambienteIdRef.current = null;
           setGemHdriId(key);
           setAmbienteId(null);
           cargarEntornoGema(key, gemEnvironmentRotation, gemEnvironmentIntensityScale);
@@ -3319,7 +3322,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                     setSombraContactoVisible(config.sombraContactoVisible);
                     apiRef.current?.sombraContacto?.(config.sombraContactoVisible);
                   }
-                  if (typeof config.ambienteId === "string" || config.ambienteId === null) setAmbienteId(config.ambienteId as string | null);
+                  const ambienteGuardado = typeof config.ambienteId === "string"
+                    && Object.prototype.hasOwnProperty.call(AURUM_AMBIENT_PRESETS, config.ambienteId);
+                  if (ambienteGuardado) {
+                    apiRef.current?.ambiente(config.ambienteId as string);
+                  } else if (typeof config.ambienteId === "string" || config.ambienteId === null) {
+                    ambienteIdRef.current = null;
+                    setAmbienteId(null);
+                  }
                   if (typeof config.ambienteMetalInfluence === "number") {
                     setAmbienteMetalInfluence(config.ambienteMetalInfluence);
                     apiRef.current?.influenciaMetalAmbiente?.(config.ambienteMetalInfluence);
@@ -3341,8 +3351,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                     });
                     if (Object.keys(patch).length) actualizarLucesAurum(patch);
                   }
-                  if (typeof config.metalHdriId === "string" && Object.prototype.hasOwnProperty.call(AURUM_HDRI_URLS, config.metalHdriId)) apiRef.current?.metalHdri(config.metalHdriId);
-                  if (typeof config.gemHdriId === "string" && Object.prototype.hasOwnProperty.call(AURUM_GEM_HDRI_URLS, config.gemHdriId)) apiRef.current?.gemHdri(config.gemHdriId);
+                  if (!ambienteGuardado) {
+                    if (typeof config.metalHdriId === "string" && Object.prototype.hasOwnProperty.call(AURUM_HDRI_URLS, config.metalHdriId)) apiRef.current?.metalHdri(config.metalHdriId);
+                    if (typeof config.gemHdriId === "string" && Object.prototype.hasOwnProperty.call(AURUM_GEM_HDRI_URLS, config.gemHdriId)) apiRef.current?.gemHdri(config.gemHdriId);
+                  }
                 }
               }
             } catch (configError) {
