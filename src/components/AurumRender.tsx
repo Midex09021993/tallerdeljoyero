@@ -1383,88 +1383,15 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       };
 
       const aplicarEscenario = (id:EscenarioId) => {
-        // LIVE universal: ninguna escena ejecuta postprocesado pesado durante la interacción.
+        // Las escenas solo controlan la presentación: fondo, suelo y sombra de contacto.
+        // Los HDR de metal/gemas, la iluminación de estudio y el postprocesado
+        // permanecen bajo sus controles independientes.
         liveFastPathRef.current = true;
-        const preset = sceneController.apply(id);
-        const photo = getAurumPhotographicProfile(id);
-        // Cambiar la escena no selecciona ni recarga los HDRI de metal o gemas.
-        // Sus selectores conservan el control independiente del entorno activo.
-        const metalReflectionAudit:any[]=[];
-        if(modelo) modelo.traverse((x:any)=>{
-          if(!x.isMesh||!x.material)return;
-          const list=Array.isArray(x.material)?x.material:[x.material];
-          for(const m of list){
-            if(!m?.userData?.aurumMetalRenderProfile)continue;
-            metalReflectionAudit.push({
-              mesh:x.name||x.uuid,
-              material:m.name||null,
-              hasOwnEnvMap:Boolean(m.envMap),
-              materialEnvMapUuid:m.envMap?.uuid??null,
-              sceneEnvMapUuid:escena.environment?.uuid??null,
-              materialUsesSceneEnvironment:!m.envMap||m.envMap===escena.environment,
-              envMapRotation:m.envMapRotation?{
-                x:Number(m.envMapRotation.x??0),
-                y:Number(m.envMapRotation.y??0),
-                z:Number(m.envMapRotation.z??0),
-              }:null,
-              baseEnvironmentIntensity:m.userData?.aurumMetalBaseEnvMapIntensity??null,
-              finalEnvironmentIntensity:m.envMapIntensity??null,
-              roughness:m.roughness??null,
-              metalness:m.metalness??null,
-              clearcoat:m.clearcoat??null,
-              clearcoatRoughness:m.clearcoatRoughness??null,
-              calibrationMode:m.userData?.aurumMetalCalibrationMode??"unknown",
-              colorHex:m.color?.getHexString?.()??null,
-              referenceKey:m.userData?.aurumIJEWELMetalReference?.sourceRootPath??null,
-            });
-          }
-        });
-        console.info("[AURUM][METAL REFLECTION STATE]",{
-          sceneId:id,
-          activeUrl:environmentController.currentUrl,
-          fallback:environmentController.currentUrl===null,
-          environmentIntensity:environmentController.intensity,
-          environmentRotationRadians:environmentController.rotation,
-          exposure:renderer.toneMappingExposure,
-          toneMapping:renderer.toneMapping,
-          metalMaterialCount:metalReflectionAudit.length,
-          metalMaterials:metalReflectionAudit.slice(0,12),
-        });
-        // Scene, lighting and post are one photographic preset. This prevents
-        // the previous behavior where changing only the background left the
-        // same reflection rig and color response on every material.
-        lightingController.applyPreset(photo.lighting);
-        Object.assign(postRuntimeConfig, {
-          ssao: photo.post.ssao,
-          ssaoIntensity: photo.post.ssaoIntensity,
-          ssaoFalloff: photo.post.ssaoFalloff,
-          bloom: photo.post.bloom,
-          bloomIntensity: photo.post.bloomIntensity,
-          bloomThreshold: photo.post.bloomThreshold,
-          bloomRadius: photo.post.bloomRadius,
-          lut: photo.post.lut,
-          lutIntensity: photo.post.lutIntensity,
-          gradeEnabled: photo.post.gradeEnabled,
-          gradeContrast: photo.post.gradeContrast,
-          gradeSaturation: photo.post.gradeSaturation,
-          taa: photo.post.taa,
-          progressiveFrameCount: photo.post.progressiveFrameCount,
-          // Do not let photographic presets override the explicit SSR A/B switch.
-          ssr: isAurumSsrDiagnosticEnabled(),
-          ssrIntensity: photo.post.ssrIntensity,
-          ssrMaxDistance: photo.post.ssrMaxDistance,
-          ssrThickness: photo.post.ssrThickness,
-          dof: photo.post.dof,
-          dofAperture: photo.post.dofAperture,
-          dofMaxBlur: photo.post.dofMaxBlur,
-          vignette: photo.post.vignette,
-          vignetteDarkness: photo.post.vignetteDarkness,
-        });
-        applyPostQuality?.(renderQuality);
-        aplicarPerfilLive();
+        sceneController.apply(id);
+        renderer.shadowMap.needsUpdate = true;
         invalidateRenderRef.current?.();
       };
-       const encuadrar = () => {
+      const encuadrar = () => {
         if (!modelo) return;
         // ModelPreparation + Camera/Lighting se coordinan desde el adaptador de framing.
         // Mantener esta llamada como único punto de encuadre evita duplicar transformaciones.
@@ -1626,8 +1553,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         // Presentación inicial determinista: producto + studioSoft + framing.
         // iJewel separates scene, camera and material configuration; Aurum does
         // the same at load time so the user sees a finished product preview.
-        const presetInicialModelo = sceneController.apply("ijewelReference");
-        lightingController.applyPreset(presetInicialModelo.lighting);
+        sceneController.apply("ijewelReference");
         const photoInicialModelo = getAurumPhotographicProfile("ijewelReference");
         calibrarReflejosMetalEscena(photoInicialModelo);
         Object.assign(postRuntimeConfig, {
