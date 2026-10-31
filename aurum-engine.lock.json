@@ -8,7 +8,7 @@
   "files": {
     ".github/workflows/quality.yml": "859ec017c449181488a8fd91e854e01ae746bf1fb6bdbebeefe07906e6cfa548",
     "scripts/check-aurum-lock.mjs": "d8b0b1e553fbfdd7faf6522482d0460b5c9803464b9fa03d34ed3bbacd18b5c4",
-    "src/components/AurumRender.tsx": "14497c1db68c17618bdc7ab27cb8fc4f55e0a6c2bcda6fea47900b980f0e9392",
+    "src/components/AurumRender.tsx": "b772a451c52a7e1e64321741ad760907755df0d7b647772076e0f206bcb7fbbe",
     "src/components/AurumRenderConfig.tsx": "aee6ad6ae61c5ea3ad7a6fa03453154b871c3910845656f4ef6bed3b4660ad66",
     "src/lib/aurum-material-engine.ts": "1d4513fd9d54f3e02662b7d8145845f4e494494e9129ece33f0346a403752105",
     "src/lib/aurum/api.ts": "98e8927885b4c061ab529e0593332d5617b485cd2fcbf9e1b8d0acf3fa859c1c",
@@ -50,7 +50,7 @@
     "src/lib/aurum/path-tracer-final.ts": "99e9d193f1c31aede963bbf192a4d0cb4a43ef9540fbcd2795a99bda3d9cdb5a",
     "src/lib/aurum/post.ts": "3e279f14782af0a105e56b018597bbd363c194386c0bcfd9df053a335823ffe1",
     "src/lib/aurum/runtime-budget.ts": "98d726dd1fe15b25590d50878f60d38e7c1e1fcf9b03f99a769cbf13482cdbb6",
-    "src/lib/aurum/scene.ts": "a92918e2533d3b07b9a416d5370ffe494d9cf4ff818d64009cf235dc02b187d8",
+    "src/lib/aurum/scene.ts": "7f9ad66669b8016cca69d388c5898a58f3d609b1bddee472063f179c65deab47",
     "src/lib/aurum/scintillation.ts": "b7c4531e613a818acf3f8e267b01addbeab0017891cc68f611f0c7a1b8297714",
     "src/lib/aurum/thickness-map.ts": "d99702072fbd14433a55246259af62541d9850549fe985ba12994b479f69abf7",
     "src/lib/aurum/video-exporter.ts": "d8ea0c5c0bff1b89771beca38f60da3e36357eba8b017fd8d5a856905d16366e",

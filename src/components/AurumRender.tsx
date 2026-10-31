@@ -1040,13 +1040,20 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         escena,
         renderer,
         groundController,
-        environmentController,
-        (id: string) => cargarHDRI(metalHdriOverride ?? id),
         nodo
       );
-      // Aplicar el preset inicial mediante la única fuente de verdad de escena.
-      const presetInicial = sceneController.apply("ijewelReference");
       const photoInicial = getAurumPhotographicProfile("ijewelReference");
+      // La escena visual no administra los HDRI ni la exposición: se inicializan
+      // aquí una sola vez y permanecen bajo sus controles independientes.
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = photoInicial.exposure;
+      cargarHDRI(
+        metalHdriOverride ?? photoInicial.environmentKey,
+        undefined,
+        Math.PI * photoInicial.environmentRotation,
+        photoInicial.environmentIntensity
+      );
+      const presetInicial = sceneController.apply("ijewelReference");
       // Product scene starts with the same independent Gem Environment used by
       // the active photographic profile, rather than inheriting the metal HDRI.
       cargarEntornoGema(
@@ -1380,17 +1387,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         liveFastPathRef.current = true;
         const preset = sceneController.apply(id);
         const photo = getAurumPhotographicProfile(id);
-        const activeMetalHdri = metalHdriOverride ?? photo.environmentKey;
-        const activeGemHdri = gemHdriOverride ?? photo.gemEnvironmentKey;
-        setMetalHdriId(activeMetalHdri);
-        setGemHdriId(activeGemHdri);
-        // Keep metal and gemstone HDR controls independent from the scene preset.
-        cargarEntornoGema(
-          activeGemHdri,
-          photo.gemEnvironmentRotation,
-          photo.gemEnvironmentIntensity
-        );
-        calibrarReflejosMetalEscena(photo);
+        // Cambiar la escena no selecciona ni recarga los HDRI de metal o gemas.
+        // Sus selectores conservan el control independiente del entorno activo.
         const metalReflectionAudit:any[]=[];
         if(modelo) modelo.traverse((x:any)=>{
           if(!x.isMesh||!x.material)return;
@@ -1423,16 +1421,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         });
         console.info("[AURUM][METAL REFLECTION STATE]",{
           sceneId:id,
-          sceneEnvironmentKey:photo.environmentKey,
-          activeMetalHdri,
           activeUrl:environmentController.currentUrl,
           fallback:environmentController.currentUrl===null,
           environmentIntensity:environmentController.intensity,
           environmentRotationRadians:environmentController.rotation,
-          sceneEnvironmentIntensity:photo.environmentIntensity,
-          sceneEnvironmentRotation:photo.environmentRotation,
-          metalEnvironmentScale:photo.metalEnvironmentScale,
-          highlightProtection:photo.highlightProtection,
           exposure:renderer.toneMappingExposure,
           toneMapping:renderer.toneMapping,
           metalMaterialCount:metalReflectionAudit.length,

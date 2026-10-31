@@ -1,6 +1,4 @@
-import * as THREE from "three";
 import { getAurumScenePreset, type AurumScenePreset } from "../aurum-scene-engine";
-import { getAurumPhotographicProfile } from "../aurum-photographic-scene-engine";
 
 export interface AurumSceneController {
   apply: (id: string, opts?: { transparent?: boolean }) => AurumScenePreset;
@@ -11,8 +9,6 @@ export function createAurumSceneController(
   scene: any,
   renderer: any,
   groundController: any,
-  environmentController: any,
-  loadEnvironment: (id: string) => void,
   backgroundElement?: { style: { backgroundColor: string; backgroundImage?: string; backgroundSize?: string; backgroundPosition?: string; backgroundRepeat?: string } }
 ): AurumSceneController {
   let currentPreset = getAurumScenePreset("ijewelReference");
@@ -48,12 +44,6 @@ export function createAurumSceneController(
     apply(id, opts) {
       const preset = getAurumScenePreset(id);
       currentPreset = preset;
-      const photo = getAurumPhotographicProfile(id);
-      // SceneController es la única autoridad para exposición, intensidad y rotación del environment.
-      renderer.toneMapping = (id === "ijewelReference" || id === "ijewelEnvironmentReference") ? THREE.ACESFilmicToneMapping : THREE.AgXToneMapping;
-      renderer.toneMappingExposure = photo.exposure;
-      environmentController?.setIntensity?.(photo.environmentIntensity);
-      environmentController?.setRotation?.(Math.PI * photo.environmentRotation);
       scene.background = null;
       if (backgroundOverride !== null) {
         applyBackground(backgroundOverride, backgroundImageOverride);
@@ -71,11 +61,6 @@ export function createAurumSceneController(
       }
 
       groundController.updateFromPreset(preset);
-      if (id !== "transparente") {
-        loadEnvironment(photo.environmentKey);
-      } else {
-        // Keep the last valid environment for product reflections in transparent mode.
-      }
       return preset;
     },
   };
