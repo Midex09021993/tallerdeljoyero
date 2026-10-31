@@ -17,10 +17,14 @@ export function createAurumSceneController(
 ): AurumSceneController {
   let currentPreset = getAurumScenePreset("ijewelReference");
   let backgroundOverride: string | null = null;
-  const applyBackground = (color:string | null) => {
+  let backgroundImageOverride: string | null = null;
+  const applyBackground = (color:string | null, image:string | null = null) => {
     if (backgroundElement?.style) {
       backgroundElement.style.backgroundColor = color ?? ("#" + Number(currentPreset.background).toString(16).padStart(6, "0"));
-      backgroundElement.style.backgroundImage = "none";
+      backgroundElement.style.backgroundImage = image ? `url("${image}")` : "none";
+      backgroundElement.style.backgroundSize = image ? "cover" : "";
+      backgroundElement.style.backgroundPosition = image ? "center center" : "";
+      backgroundElement.style.backgroundRepeat = image ? "no-repeat" : "";
     }
     renderer.setClearColor(0x000000, 0);
   };
@@ -30,8 +34,9 @@ export function createAurumSceneController(
       const backgrounds:Record<string,string> = {
         blanco:"#ffffff", marfil:"#f4f1e9", grisClaro:"#e7e7e4", grisMedio:"#a6a6a3", grisOscuro:"#303236", negro:"#090b0e", transparente:"transparent",
       };
-      backgroundOverride = id === "escena" ? null : (backgrounds[id] ?? null);
-      applyBackground(backgroundOverride);
+      backgroundImageOverride = id === "linearGrayWhite2" ? "https://packs.ijewel3d.com/files/bg_linear_graywhite_2_7fae7b6dc5.svg" : null;
+      backgroundOverride = id === "escena" ? null : (backgrounds[id] ?? (backgroundImageOverride ? "#f4f4f2" : null));
+      applyBackground(backgroundOverride, backgroundImageOverride);
     },
     apply(id, opts) {
       const preset = getAurumScenePreset(id);
@@ -44,11 +49,14 @@ export function createAurumSceneController(
       environmentController?.setRotation?.(Math.PI * photo.environmentRotation);
       scene.background = null;
       if (backgroundOverride !== null) {
-        applyBackground(backgroundOverride);
+        applyBackground(backgroundOverride, backgroundImageOverride);
       } else if (opts?.transparent || id === "transparente") {
         if (backgroundElement?.style) {
           backgroundElement.style.backgroundColor = "transparent";
           backgroundElement.style.backgroundImage = "none";
+          backgroundElement.style.backgroundSize = "";
+          backgroundElement.style.backgroundPosition = "";
+          backgroundElement.style.backgroundRepeat = "";
         }
         renderer.setClearColor(0x000000, 0);
       } else {
