@@ -3602,7 +3602,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               {uxSection==="hdrGemas"&&<div className="space-y-4 pb-5">
                 <div>
                   <div className="mb-2 text-[10px] font-semibold uppercase tracking-[.12em] text-[#92743b]">Entornos HDR de gemas · comparar piedras</div>
-                <div className="grid grid-cols-3 gap-2.5">
+                <div className="grid grid-cols-2 gap-2.5">
                   {Object.values(AURUM_GEM_ENVIRONMENT_PRESETS).map((preset,index)=>{
                     const looks=[
                       "radial-gradient(ellipse at 30% 24%,#fff9df 0 8%,transparent 32%),linear-gradient(125deg,#d9d1b7 0%,#f7f5ed 34%,#77766d 58%,#f3e5bd 78%,#343630 100%)",
