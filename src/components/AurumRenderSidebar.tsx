@@ -11,7 +11,6 @@ import {
   Tags,
   Timer,
   Upload,
-  AudioWaveform,
   Wallpaper,
 } from "lucide-react";
 
