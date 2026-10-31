@@ -17,7 +17,7 @@ export type AurumPhotographicProfile = {
   metalEnvironmentScale:number;
   highlightProtection:number;
   exposure:number;
-  lighting:"studioSoft"|"studioHard"|"jewelry"|"luxury"|"productSoft"|"ijewelReference";
+  lighting:"studioSoft"|"studioHard"|"jewelry"|"luxury"|"productSoft"|"ijewelReference"|"ijewelEnvironmentReference";
   post:{
     ssao:boolean; ssaoIntensity:number; ssaoFalloff?:number;
     bloom:boolean; bloomIntensity:number; bloomThreshold:number; bloomRadius?:number;
@@ -36,7 +36,8 @@ export const AURUM_HDRI_URLS:Record<string,string>={
   warm:"https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/story_studio_02_2k.hdr",
   white:"https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/white_studio_06_2k.hdr",
   // Exact iJewel/WebGi environment references found in the supplied VJSON.
-  ijewelMetal:"https://playground.ijewel3d.com/assetspro/hdrmaps/metal/env-metal-002.exr",
+  ijewelMetal:"https://playground.ijewel3d.com/assetspro/hdrmaps/metal/env-metal-010.exr",
+  ijewelMetalVjson:"https://playground.ijewel3d.com/assetspro/hdrmaps/metal/env-metal-002.exr",
   ijewelGem:"https://playground.ijewel3d.com/assetspro/hdrmaps/gem/env-gem-010.exr",
 };
 export const getAurumHdriUrl=(key:string)=>AURUM_HDRI_URLS[key]??AURUM_HDRI_URLS["jewelry"]!;
@@ -80,35 +81,34 @@ export const AURUM_PHOTOGRAPHIC_PROFILES:Record<string,AurumPhotographicProfile>
   galeria:{environmentKey:"studioHard",gemEnvironmentKey:"gemNeutral",environmentIntensity:.52,environmentRotation:.62,gemEnvironmentRotation:.64,gemEnvironmentIntensity:.98,metalEnvironmentScale:.88,highlightProtection:.92,exposure:.63,lighting:"studioHard",post:post(true,.10,.07,{vignetteDarkness:.03})},
   oroCalido:{environmentKey:"warm",gemEnvironmentKey:"gemDiamond",environmentIntensity:.48,environmentRotation:.42,gemEnvironmentRotation:.46,gemEnvironmentIntensity:.96,metalEnvironmentScale:.82,highlightProtection:.90,exposure:.60,lighting:"luxury",post:post(true,.08,.09,{vignetteDarkness:.045})},
   gemaClara:{environmentKey:"studioSoft",gemEnvironmentKey:"gemWhite",environmentIntensity:.52,environmentRotation:.08,gemEnvironmentRotation:-.08,gemEnvironmentIntensity:1.16,metalEnvironmentScale:.94,highlightProtection:.93,exposure:.76,lighting:"jewelry",post:post(true,.04,.025,{vignette:false})},
-  // VJSON reference: scene environment 1.0, fixed direction, white background.
-  // Keep iJewel HDR resources exclusive to this photographic profile.
-  ijewelReference:{environmentKey:"ijewelMetal",gemEnvironmentKey:"ijewelGem",environmentIntensity:AURUM_IJEWEL_REFERENCE.scene.environmentIntensity,environmentRotation:0,gemEnvironmentRotation:0,gemEnvironmentIntensity:1,metalEnvironmentScale:1,highlightProtection:1,exposure:AURUM_IJEWEL_REFERENCE.toneMapping.exposure,lighting:"ijewelReference",
-    // INTERACTIVE VIEW: the HDRI provides the primary reflection structure.
-    // Expensive photographic accumulation is reserved for CAPTURE.
-    post:{
-      // Match the supplied iJewel VJSON rather than disabling the effects that
-      // contribute to its facet separation and stable glossy reflections.
-      ssao:AURUM_IJEWEL_REFERENCE.ssao.enabled,
-      ssaoIntensity:AURUM_IJEWEL_REFERENCE.ssao.intensity,
-      ssaoFalloff:AURUM_IJEWEL_REFERENCE.ssao.falloff,
-      bloom:AURUM_IJEWEL_REFERENCE.bloom.enabled,
-      bloomIntensity:AURUM_IJEWEL_REFERENCE.bloom.intensity,
-      bloomThreshold:AURUM_IJEWEL_REFERENCE.bloom.threshold,
-      bloomRadius:AURUM_IJEWEL_REFERENCE.bloom.radius,
-      lut:false,
-      lutIntensity:0,
-      gradeEnabled:true,
-      gradeContrast:AURUM_IJEWEL_REFERENCE.toneMapping.contrast,
-      gradeSaturation:AURUM_IJEWEL_REFERENCE.toneMapping.saturation,
-      taa:AURUM_IJEWEL_REFERENCE.taa.enabled,
-      progressiveFrameCount:AURUM_IJEWEL_REFERENCE.progressive.maxFrameCount,
-      ssr:AURUM_IJEWEL_REFERENCE.ssr.enabled,
-      ssrIntensity:AURUM_IJEWEL_REFERENCE.ssr.intensity,
-      ssrMaxDistance:AURUM_IJEWEL_REFERENCE.ssr.objectRadius,
-      ssrThickness:.018,
-      dof:false,
-      vignette:false
-    }},
+const ijewelReferencePost = {
+  ssao:AURUM_IJEWEL_REFERENCE.ssao.enabled,
+  ssaoIntensity:AURUM_IJEWEL_REFERENCE.ssao.intensity,
+  ssaoFalloff:AURUM_IJEWEL_REFERENCE.ssao.falloff,
+  bloom:AURUM_IJEWEL_REFERENCE.bloom.enabled,
+  bloomIntensity:AURUM_IJEWEL_REFERENCE.bloom.intensity,
+  bloomThreshold:AURUM_IJEWEL_REFERENCE.bloom.threshold,
+  bloomRadius:AURUM_IJEWEL_REFERENCE.bloom.radius,
+  lut:false,
+  lutIntensity:0,
+  gradeEnabled:true,
+  gradeContrast:AURUM_IJEWEL_REFERENCE.toneMapping.contrast,
+  gradeSaturation:AURUM_IJEWEL_REFERENCE.toneMapping.saturation,
+  taa:AURUM_IJEWEL_REFERENCE.taa.enabled,
+  progressiveFrameCount:AURUM_IJEWEL_REFERENCE.progressive.maxFrameCount,
+  ssr:AURUM_IJEWEL_REFERENCE.ssr.enabled,
+  ssrIntensity:AURUM_IJEWEL_REFERENCE.ssr.intensity,
+  ssrMaxDistance:AURUM_IJEWEL_REFERENCE.ssr.objectRadius,
+  ssrThickness:.018,
+  dof:false,
+  vignette:false
+};
+
+  // Existing AURUM premium reference: preserve its original environment and auxiliary rig.
+  ijewelReference:{environmentKey:"ijewelMetal",gemEnvironmentKey:"ijewelGem",environmentIntensity:1,environmentRotation:0,gemEnvironmentRotation:0,gemEnvironmentIntensity:1,metalEnvironmentScale:1,highlightProtection:1,exposure:AURUM_IJEWEL_REFERENCE.toneMapping.exposure,lighting:"ijewelReference",post:ijewelReferencePost},
+  // Separate experimental profile built from the supplied iJewel VJSON values.
+  // This does not overwrite the existing AURUM premium scene.
+  ijewelEnvironmentReference:{environmentKey:"ijewelMetalVjson",gemEnvironmentKey:"ijewelGem",environmentIntensity:0.6,environmentRotation:0,gemEnvironmentRotation:0,gemEnvironmentIntensity:1,metalEnvironmentScale:1,highlightProtection:1,exposure:AURUM_IJEWEL_REFERENCE.toneMapping.exposure,lighting:"ijewelEnvironmentReference",post:ijewelReferencePost},
 };
 
 export const getAurumPhotographicProfile=(id:string):AurumPhotographicProfile=>AURUM_PHOTOGRAPHIC_PROFILES[id]??AURUM_PHOTOGRAPHIC_PROFILES["producto"]!;

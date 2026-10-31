@@ -25,7 +25,7 @@ export type MaterialId =
   | "oro24_pulido" | "oro18_champan" | "oro18_verde" | "oro18_verde_blanco_ijewel" | "oro18_verde_blanco_glb"
   | "oro18a_artesanal_pulido" | "oro18a_calido" | "oro18_naranja" | "oro18_rojo" | "oro18_purpura" | "oro18_azul" | "oro18_gris" | "oro18_martillado"
   | "paladio_pulido" | "rodio_negro" | "titanio_pulido";
-export type EscenarioId = "oscuro" | "claro" | "luxury" | "marmol" | "transparente" | "producto" | "galeria" | "oroCalido" | "gemaClara" | "ijewelReference";
+export type EscenarioId = "oscuro" | "claro" | "luxury" | "marmol" | "transparente" | "producto" | "galeria" | "oroCalido" | "gemaClara" | "ijewelReference" | "ijewelEnvironmentReference";
 export type VistaId = "perspectiva" | "frontal" | "superior" | "lateral";
 export type IluminacionId = "studioSoft" | "studioHard" | "jewelry" | "luxury";
 
@@ -236,6 +236,7 @@ export const ESCENARIOS: { id: EscenarioId; nombre: string; clase: string; descr
   { id:"oroCalido", nombre:"Oro Cálido", descripcion:"Presentación cálida", iluminacion:"luxury", clase:"bg-[radial-gradient(circle_at_50%_30%,#76532a_0%,#302216_48%,#17100a_100%)]" },
   { id:"gemaClara", nombre:"Gema Clara", descripcion:"Realce de piedras", iluminacion:"studioSoft", clase:"bg-[radial-gradient(circle_at_50%_30%,#ffffff_0%,#e7edf2_58%,#cfd9e1_100%)]" },
   { id:"ijewelReference", nombre:"Estudio Joyería Premium", descripcion:"Reflejos calibrados de joyería", iluminacion:"jewelry", clase:"bg-[radial-gradient(circle_at_50%_30%,#d8ad4c_0%,#4a3518_22%,#17130d_58%,#080808_100%)]" },
+  { id:"ijewelEnvironmentReference", nombre:"iJewel · HDRI + SSR", descripcion:"Referencia VJSON sin reflectores auxiliares", iluminacion:"jewelry", clase:"bg-[radial-gradient(circle_at_50%_30%,#f3eee4_0%,#b9a98d_24%,#4c4539_58%,#111111_100%)]" },
 ];
 export const VISTAS: { id: VistaId; nombre: string }[] = [
   { id:"perspectiva", nombre:"Perspectiva" }, { id:"frontal", nombre:"Frontal" }, { id:"superior", nombre:"Superior" }, { id:"lateral", nombre:"Lateral" },

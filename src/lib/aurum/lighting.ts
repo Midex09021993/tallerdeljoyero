@@ -246,7 +246,7 @@ export function createAurumLightingController(
       });
 
       this.create();
-      if (id === "ijewelReference" && !diagnosticEnvironmentOnly) {
+      if (id === "ijewelEnvironmentReference" && !diagnosticEnvironmentOnly) {
         // The supplied iJewel VJSON has no active rectangular studio-reflector rig.
         // Keep AURUM's six RectAreaLights available for other presets and A/B tests,
         // but disable them in this reference profile so the HDR environment is primary.
@@ -265,7 +265,7 @@ export function createAurumLightingController(
         light.intensity = Number(config[name]?.intensity ?? light.intensity);
       });
       if (lights.front) {
-        lights.front.visible = id === "ijewelReference" ? false : Boolean(config.front?.enabled);
+        lights.front.visible = id === "ijewelEnvironmentReference" ? false : Boolean(config.front?.enabled);
         const rig = getAurumReflectionRigProfile(activeRigId);
         const frontPreset = getAurumLightingPreset(activeRigId);
         lights.front.intensity = rig.front.intensity * frontPreset.front * Math.max(0, Number(config.front?.intensity) || 0);

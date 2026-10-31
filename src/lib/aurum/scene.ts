@@ -38,7 +38,7 @@ export function createAurumSceneController(
       currentPreset = preset;
       const photo = getAurumPhotographicProfile(id);
       // SceneController es la única autoridad para exposición, intensidad y rotación del environment.
-      renderer.toneMapping = id === "ijewelReference" ? THREE.ACESFilmicToneMapping : THREE.AgXToneMapping;
+      renderer.toneMapping = (id === "ijewelReference" || id === "ijewelEnvironmentReference") ? THREE.ACESFilmicToneMapping : THREE.AgXToneMapping;
       renderer.toneMappingExposure = photo.exposure;
       environmentController?.setIntensity?.(photo.environmentIntensity);
       environmentController?.setRotation?.(Math.PI * photo.environmentRotation);

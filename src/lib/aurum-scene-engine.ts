@@ -15,7 +15,7 @@ export type AurumScenePreset = {
   shadowIntensity:number;
   shadowSoftness:number;
   exposure:number;
-  lighting:"studioSoft"|"studioHard"|"jewelry"|"luxury"|"productSoft"|"ijewelReference";
+  lighting:"studioSoft"|"studioHard"|"jewelry"|"luxury"|"productSoft"|"ijewelReference"|"ijewelEnvironmentReference";
 };
 
 export const AURUM_SCENE_PRESETS:Record<string,AurumScenePreset>={
@@ -35,7 +35,8 @@ export const AURUM_SCENE_PRESETS:Record<string,AurumScenePreset>={
   // Reference presentation reconstructed from the supplied WebGi/iJewel VJSON.
   // The VJSON contains one scene object (not a scenes[] library): white background,
   // scene environment intensity 1, fixed environment direction and FOV 25.
-  ijewelReference:{id:"ijewelReference",background:0xffffff,ground:0xffffff,groundRoughness:1,groundMetalness:0,groundVisible:true,environmentIntensity:1,environmentRotation:0,shadowIntensity:.22,shadowSoftness:.985,exposure:1,lighting:"ijewelReference"}
+  ijewelReference:{id:"ijewelReference",background:0xffffff,ground:0xffffff,groundRoughness:1,groundMetalness:0,groundVisible:true,environmentIntensity:1,environmentRotation:0,shadowIntensity:.22,shadowSoftness:.985,exposure:1,lighting:"ijewelReference"},
+  ijewelEnvironmentReference:{id:"ijewelEnvironmentReference",background:0xffffff,ground:0xffffff,groundRoughness:1,groundMetalness:0,groundVisible:true,environmentIntensity:.6,environmentRotation:0,shadowIntensity:.22,shadowSoftness:.985,exposure:1,lighting:"ijewelEnvironmentReference"}
 };
 
 /** iJewel/WebGi reference calibration extracted from supplied VJSON/GLB. Renderer values are not universal physical constants. */

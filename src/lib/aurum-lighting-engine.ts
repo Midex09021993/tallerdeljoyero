@@ -32,6 +32,7 @@ export const AURUM_LIGHTING_RENDER_PRESETS={
   // Keep the HDRI dominant; favor narrow vertical and rear reflections over
   // a broad frontal wash so polished white metal retains dark/light contrast.
   ijewelReference:{key:.42,fill:.10,rim:.18,gem:.62,softbox:.62,strip:1.0,front:.25,kicker:.75,edgeLeft:.70,edgeRight:.70},
+  ijewelEnvironmentReference:{key:.42,fill:.10,rim:.18,gem:.62,softbox:.62,strip:1.0,front:.25,kicker:.75,edgeLeft:.70,edgeRight:.70},
   luxury:{key:.36,fill:.045,rim:.30,gem:.12,softbox:.42,strip:.22,front:.09,kicker:.82,edgeLeft:.20,edgeRight:.25},
 } as const;
 export type AurumLightingRenderPresetId=keyof typeof AURUM_LIGHTING_RENDER_PRESETS;
