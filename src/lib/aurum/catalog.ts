@@ -226,6 +226,8 @@ export const MATERIALES: MaterialConfig[] = [
 ];
 
 export const ESCENARIOS: { id: EscenarioId; nombre: string; clase: string; descripcion:string; iluminacion:IluminacionId }[] = [
+  { id:"ijewelReference", nombre:"Estudio Joyería Premium", descripcion:"Reflejos calibrados de joyería", iluminacion:"jewelry", clase:"bg-[radial-gradient(circle_at_50%_30%,#d8ad4c_0%,#4a3518_22%,#17130d_58%,#080808_100%)]" },
+  { id:"ijewelEnvironmentReference", nombre:"Estudio HDR de Referencia", descripcion:"Referencia VJSON sin reflectores auxiliares", iluminacion:"jewelry", clase:"bg-[radial-gradient(circle_at_50%_30%,#f3eee4_0%,#b9a98d_24%,#4c4539_58%,#111111_100%)]" },
   { id:"oscuro", nombre:"Estudio Oscuro", descripcion:"Contraste elegante", iluminacion:"jewelry", clase:"bg-[radial-gradient(circle_at_50%_35%,#2b2f35_0%,#101216_48%,#050608_100%)]" },
   { id:"claro", nombre:"Estudio Claro", descripcion:"Luz de joyería profesional", iluminacion:"jewelry", clase:"bg-[radial-gradient(circle_at_50%_30%,#ffffff_0%,#e8e6e1_58%,#c8c5bf_100%)]" },
   { id:"luxury", nombre:"Luxury", descripcion:"Presentación cálida", iluminacion:"luxury", clase:"bg-[radial-gradient(circle_at_50%_30%,#6b4a22_0%,#2b1b0d_42%,#100a06_100%)]" },
@@ -235,8 +237,6 @@ export const ESCENARIOS: { id: EscenarioId; nombre: string; clase: string; descr
   { id:"galeria", nombre:"Galería", descripcion:"Contraste controlado", iluminacion:"studioHard", clase:"bg-[radial-gradient(circle_at_50%_30%,#34363b_0%,#18191c_55%,#0d0e10_100%)]" },
   { id:"oroCalido", nombre:"Oro Cálido", descripcion:"Presentación cálida", iluminacion:"luxury", clase:"bg-[radial-gradient(circle_at_50%_30%,#76532a_0%,#302216_48%,#17100a_100%)]" },
   { id:"gemaClara", nombre:"Gema Clara", descripcion:"Realce de piedras", iluminacion:"studioSoft", clase:"bg-[radial-gradient(circle_at_50%_30%,#ffffff_0%,#e7edf2_58%,#cfd9e1_100%)]" },
-  { id:"ijewelReference", nombre:"Estudio Joyería Premium", descripcion:"Reflejos calibrados de joyería", iluminacion:"jewelry", clase:"bg-[radial-gradient(circle_at_50%_30%,#d8ad4c_0%,#4a3518_22%,#17130d_58%,#080808_100%)]" },
-  { id:"ijewelEnvironmentReference", nombre:"iJewel · HDRI + SSR", descripcion:"Referencia VJSON sin reflectores auxiliares", iluminacion:"jewelry", clase:"bg-[radial-gradient(circle_at_50%_30%,#f3eee4_0%,#b9a98d_24%,#4c4539_58%,#111111_100%)]" },
 ];
 export const VISTAS: { id: VistaId; nombre: string }[] = [
   { id:"perspectiva", nombre:"Perspectiva" }, { id:"frontal", nombre:"Frontal" }, { id:"superior", nombre:"Superior" }, { id:"lateral", nombre:"Lateral" },
