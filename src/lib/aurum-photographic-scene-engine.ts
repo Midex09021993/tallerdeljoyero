@@ -71,17 +71,8 @@ export const AURUM_AMBIENT_PRESETS:Record<string,{id:string;name:string;url:stri
 
 const post=(ssao:boolean,ssaoIntensity:number,lutIntensity:number,extra:any={})=>({ssao,ssaoIntensity,bloom:false,bloomIntensity:.012,bloomThreshold:1.8,lut:true,lutIntensity,taa:true,dof:false,dofAperture:.0005,dofMaxBlur:.004,vignette:true,vignetteDarkness:.035,...extra});
 
-export const AURUM_PHOTOGRAPHIC_PROFILES:Record<string,AurumPhotographicProfile>={
-  oscuro:{environmentKey:"studioHard",gemEnvironmentKey:"gemNeutral",environmentIntensity:.50,environmentRotation:.16,gemEnvironmentRotation:.34,gemEnvironmentIntensity:.86,metalEnvironmentScale:.78,highlightProtection:.91,exposure:.58,lighting:"studioHard",post:post(true,.10,.08,{vignetteDarkness:.025})},
-  claro:{environmentKey:"jewelry",gemEnvironmentKey:"gemWhite",environmentIntensity:.58,environmentRotation:.24,gemEnvironmentRotation:-.16,gemEnvironmentIntensity:1.02,metalEnvironmentScale:.92,highlightProtection:.93,exposure:.80,lighting:"jewelry",post:post(true,.065,.055,{vignetteDarkness:.02})},
-  luxury:{environmentKey:"luxury",gemEnvironmentKey:"gemNeutral",environmentIntensity:.42,environmentRotation:.42,gemEnvironmentIntensity:.86,gemEnvironmentRotation:.68,metalEnvironmentScale:.84,highlightProtection:.90,exposure:.54,lighting:"luxury",post:post(true,.085,.055,{vignetteDarkness:.04})},
-  marmol:{environmentKey:"studioSoft",gemEnvironmentKey:"gemWhite",environmentIntensity:.52,environmentRotation:.16,gemEnvironmentRotation:.10,gemEnvironmentIntensity:.96,metalEnvironmentScale:.88,highlightProtection:.95,exposure:.61,lighting:"studioSoft",post:post(true,.085,.045,{vignetteDarkness:.025})},
-  transparente:{environmentKey:"studioSoft",gemEnvironmentKey:"gemNeutral",environmentIntensity:.50,environmentRotation:.16,gemEnvironmentRotation:.34,gemEnvironmentIntensity:1.00,metalEnvironmentScale:.88,highlightProtection:.95,exposure:.61,lighting:"studioSoft",post:post(false,.05,.04,{vignette:false})},
-  producto:{environmentKey:"studioSoft",gemEnvironmentKey:"gemWhite",environmentIntensity:.58,environmentRotation:.54,gemEnvironmentRotation:-.18,gemEnvironmentIntensity:1.12,metalEnvironmentScale:1.12,highlightProtection:.94,exposure:.82,lighting:"productSoft",post:post(true,.035,.025,{vignette:false})},
-  galeria:{environmentKey:"studioHard",gemEnvironmentKey:"gemNeutral",environmentIntensity:.52,environmentRotation:.62,gemEnvironmentRotation:.64,gemEnvironmentIntensity:.98,metalEnvironmentScale:.88,highlightProtection:.92,exposure:.63,lighting:"studioHard",post:post(true,.10,.07,{vignetteDarkness:.03})},
-  oroCalido:{environmentKey:"warm",gemEnvironmentKey:"gemDiamond",environmentIntensity:.48,environmentRotation:.42,gemEnvironmentRotation:.46,gemEnvironmentIntensity:.96,metalEnvironmentScale:.82,highlightProtection:.90,exposure:.60,lighting:"luxury",post:post(true,.08,.09,{vignetteDarkness:.045})},
-  gemaClara:{environmentKey:"studioSoft",gemEnvironmentKey:"gemWhite",environmentIntensity:.52,environmentRotation:.08,gemEnvironmentRotation:-.08,gemEnvironmentIntensity:1.16,metalEnvironmentScale:.94,highlightProtection:.93,exposure:.76,lighting:"jewelry",post:post(true,.04,.025,{vignette:false})},
-const ijewelReferencePost = {
+// Post processing built from the supplied iJewel VJSON values.
+const ijewelReferencePost:AurumPhotographicProfile["post"] = {
   ssao:AURUM_IJEWEL_REFERENCE.ssao.enabled,
   ssaoIntensity:AURUM_IJEWEL_REFERENCE.ssao.intensity,
   ssaoFalloff:AURUM_IJEWEL_REFERENCE.ssao.falloff,
@@ -103,6 +94,17 @@ const ijewelReferencePost = {
   dof:false,
   vignette:false
 };
+
+export const AURUM_PHOTOGRAPHIC_PROFILES:Record<string,AurumPhotographicProfile>={
+  oscuro:{environmentKey:"studioHard",gemEnvironmentKey:"gemNeutral",environmentIntensity:.50,environmentRotation:.16,gemEnvironmentRotation:.34,gemEnvironmentIntensity:.86,metalEnvironmentScale:.78,highlightProtection:.91,exposure:.58,lighting:"studioHard",post:post(true,.10,.08,{vignetteDarkness:.025})},
+  claro:{environmentKey:"jewelry",gemEnvironmentKey:"gemWhite",environmentIntensity:.58,environmentRotation:.24,gemEnvironmentRotation:-.16,gemEnvironmentIntensity:1.02,metalEnvironmentScale:.92,highlightProtection:.93,exposure:.80,lighting:"jewelry",post:post(true,.065,.055,{vignetteDarkness:.02})},
+  luxury:{environmentKey:"luxury",gemEnvironmentKey:"gemNeutral",environmentIntensity:.42,environmentRotation:.42,gemEnvironmentIntensity:.86,gemEnvironmentRotation:.68,metalEnvironmentScale:.84,highlightProtection:.90,exposure:.54,lighting:"luxury",post:post(true,.085,.055,{vignetteDarkness:.04})},
+  marmol:{environmentKey:"studioSoft",gemEnvironmentKey:"gemWhite",environmentIntensity:.52,environmentRotation:.16,gemEnvironmentRotation:.10,gemEnvironmentIntensity:.96,metalEnvironmentScale:.88,highlightProtection:.95,exposure:.61,lighting:"studioSoft",post:post(true,.085,.045,{vignetteDarkness:.025})},
+  transparente:{environmentKey:"studioSoft",gemEnvironmentKey:"gemNeutral",environmentIntensity:.50,environmentRotation:.16,gemEnvironmentRotation:.34,gemEnvironmentIntensity:1.00,metalEnvironmentScale:.88,highlightProtection:.95,exposure:.61,lighting:"studioSoft",post:post(false,.05,.04,{vignette:false})},
+  producto:{environmentKey:"studioSoft",gemEnvironmentKey:"gemWhite",environmentIntensity:.58,environmentRotation:.54,gemEnvironmentRotation:-.18,gemEnvironmentIntensity:1.12,metalEnvironmentScale:1.12,highlightProtection:.94,exposure:.82,lighting:"productSoft",post:post(true,.035,.025,{vignette:false})},
+  galeria:{environmentKey:"studioHard",gemEnvironmentKey:"gemNeutral",environmentIntensity:.52,environmentRotation:.62,gemEnvironmentRotation:.64,gemEnvironmentIntensity:.98,metalEnvironmentScale:.88,highlightProtection:.92,exposure:.63,lighting:"studioHard",post:post(true,.10,.07,{vignetteDarkness:.03})},
+  oroCalido:{environmentKey:"warm",gemEnvironmentKey:"gemDiamond",environmentIntensity:.48,environmentRotation:.42,gemEnvironmentRotation:.46,gemEnvironmentIntensity:.96,metalEnvironmentScale:.82,highlightProtection:.90,exposure:.60,lighting:"luxury",post:post(true,.08,.09,{vignetteDarkness:.045})},
+  gemaClara:{environmentKey:"studioSoft",gemEnvironmentKey:"gemWhite",environmentIntensity:.52,environmentRotation:.08,gemEnvironmentRotation:-.08,gemEnvironmentIntensity:1.16,metalEnvironmentScale:.94,highlightProtection:.93,exposure:.76,lighting:"jewelry",post:post(true,.04,.025,{vignette:false})},
 
   // Existing AURUM premium reference: preserve its original environment and auxiliary rig.
   ijewelReference:{environmentKey:"ijewelMetal",gemEnvironmentKey:"ijewelGem",environmentIntensity:1,environmentRotation:0,gemEnvironmentRotation:0,gemEnvironmentIntensity:1,metalEnvironmentScale:1,highlightProtection:1,exposure:AURUM_IJEWEL_REFERENCE.toneMapping.exposure,lighting:"ijewelReference",post:ijewelReferencePost},
