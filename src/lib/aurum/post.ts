@@ -196,8 +196,9 @@ export async function createAurumPostPipeline(
   // Controlled A/B switch: only available in environment diagnostic mode.
   // Normal Aurum Render behavior is unchanged unless aurumDiag=environment
   // and aurumSSR=off are both explicitly present in the URL.
-  const diagnosticDisableSSR = diagnosticMode === "environment"
-    && diagnosticParams?.get("aurumSSR") === "off";
+  const diagnosticSSROverride = diagnosticParams?.get("aurumSSR");
+  const diagnosticDisableSSR = diagnosticMode === "environment" && diagnosticSSROverride === "off";
+  const diagnosticForceSSR = diagnosticMode === "environment" && diagnosticSSROverride === "on";
   // Reversible A/B diagnostic: disable only SSAO to identify artificial dark
   // contact grooves on polished metal. Requires explicit environment mode.
   const diagnosticDisableSSAO = diagnosticMode === "environment"
@@ -227,7 +228,7 @@ export async function createAurumPostPipeline(
     const taaEnabled=Boolean(options.capture) || (config.temporalAA!==false && config.taa!==false && !isLowQuality);
     const progressiveFrames=Math.max(1,Math.min(32,Math.floor(Number(config.progressiveFrameCount??32))));
     const taaSampleLevel=Math.max(0,Math.min(5,Math.ceil(Math.log2(progressiveFrames))));
-    const ssrEnabled=!options.capture && !diagnosticDisableSSR && Boolean(config.ssr) && high && Boolean(ssrPass) && Boolean(ssrSavePass) && Boolean(ssrCompositePass);
+    const ssrEnabled=!options.capture && (diagnosticForceSSR || (!diagnosticDisableSSR && Boolean(config.ssr))) && high && Boolean(ssrPass) && Boolean(ssrSavePass) && Boolean(ssrCompositePass);
     if(renderPass) renderPass.enabled=true;
     if(fxaaPass){
       const width=Math.max(1,renderer.domElement.width||renderer.domElement.clientWidth||1);
@@ -381,7 +382,7 @@ export async function createAurumPostPipeline(
           ssrCompositeIntensity: Number(ssrCompositePass?.uniforms?.intensity?.value ?? 0),
           ssrCompositeHasBeauty: Boolean(ssrCompositePass?.uniforms?.tBeauty?.value),
           ssrSelectedMeshCount: Array.isArray(ssrPass?.selects) ? ssrPass.selects.length : null,
-          ssrDiagnosticOverride: diagnosticDisableSSR ? "forced-off" : "default",
+          ssrDiagnosticOverride: diagnosticDisableSSR ? "forced-off" : diagnosticForceSSR ? "forced-on" : "default-off",
           ssaoDiagnosticOverride: diagnosticDisableSSAO ? "forced-off" : "default",
           ssaoKernelRadius: Number(ssaoPass?.kernelRadius ?? 0),
           ssaoClamp: Number(ssaoPass?.aoClamp ?? 0),
