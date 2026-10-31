@@ -81,28 +81,6 @@ export const AURUM_PHOTOGRAPHIC_PROFILES:Record<string,AurumPhotographicProfile>
   galeria:{environmentKey:"studioHard",gemEnvironmentKey:"gemNeutral",environmentIntensity:.52,environmentRotation:.62,gemEnvironmentRotation:.64,gemEnvironmentIntensity:.98,metalEnvironmentScale:.88,highlightProtection:.92,exposure:.63,lighting:"studioHard",post:post(true,.10,.07,{vignetteDarkness:.03})},
   oroCalido:{environmentKey:"warm",gemEnvironmentKey:"gemDiamond",environmentIntensity:.48,environmentRotation:.42,gemEnvironmentRotation:.46,gemEnvironmentIntensity:.96,metalEnvironmentScale:.82,highlightProtection:.90,exposure:.60,lighting:"luxury",post:post(true,.08,.09,{vignetteDarkness:.045})},
   gemaClara:{environmentKey:"studioSoft",gemEnvironmentKey:"gemWhite",environmentIntensity:.52,environmentRotation:.08,gemEnvironmentRotation:-.08,gemEnvironmentIntensity:1.16,metalEnvironmentScale:.94,highlightProtection:.93,exposure:.76,lighting:"jewelry",post:post(true,.04,.025,{vignette:false})},
-const ijewelReferencePost = {
-  ssao:AURUM_IJEWEL_REFERENCE.ssao.enabled,
-  ssaoIntensity:AURUM_IJEWEL_REFERENCE.ssao.intensity,
-  ssaoFalloff:AURUM_IJEWEL_REFERENCE.ssao.falloff,
-  bloom:AURUM_IJEWEL_REFERENCE.bloom.enabled,
-  bloomIntensity:AURUM_IJEWEL_REFERENCE.bloom.intensity,
-  bloomThreshold:AURUM_IJEWEL_REFERENCE.bloom.threshold,
-  bloomRadius:AURUM_IJEWEL_REFERENCE.bloom.radius,
-  lut:false,
-  lutIntensity:0,
-  gradeEnabled:true,
-  gradeContrast:AURUM_IJEWEL_REFERENCE.toneMapping.contrast,
-  gradeSaturation:AURUM_IJEWEL_REFERENCE.toneMapping.saturation,
-  taa:AURUM_IJEWEL_REFERENCE.taa.enabled,
-  progressiveFrameCount:AURUM_IJEWEL_REFERENCE.progressive.maxFrameCount,
-  ssr:AURUM_IJEWEL_REFERENCE.ssr.enabled,
-  ssrIntensity:AURUM_IJEWEL_REFERENCE.ssr.intensity,
-  ssrMaxDistance:AURUM_IJEWEL_REFERENCE.ssr.objectRadius,
-  ssrThickness:.018,
-  dof:false,
-  vignette:false
-};
 
   // Existing AURUM premium reference: preserve its original environment and auxiliary rig.
   ijewelReference:{environmentKey:"ijewelMetal",gemEnvironmentKey:"ijewelGem",environmentIntensity:1,environmentRotation:0,gemEnvironmentRotation:0,gemEnvironmentIntensity:1,metalEnvironmentScale:1,highlightProtection:1,exposure:AURUM_IJEWEL_REFERENCE.toneMapping.exposure,lighting:"ijewelReference",post:ijewelReferencePost},
