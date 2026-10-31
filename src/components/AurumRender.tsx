@@ -121,8 +121,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [isViewerFullscreen, setIsViewerFullscreen] = useState(false);
   const [lightingOpen, setLightingOpen] = useState(false);
   const [metalHdriId, setMetalHdriId] = useState("ijewelMetal");
-  const [gemHdriId, setGemHdriId] = useState("ijewelGem");
-  const [ambienteId, setAmbienteId] = useState<string|null>(null);
+  const [gemHdriId, setGemHdriId] = useState("predeterminado");
+  const [ambienteId, setAmbienteId] = useState<string|null>("predeterminado");
   const [ambienteMetalInfluence, setAmbienteMetalInfluence] = useState(45);
   const [fondoId, setFondoId] = useState("escena");
   const [sombraContactoVisible, setSombraContactoVisible] = useState(true);
@@ -847,7 +847,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       // Precarga el GemEnvironment una sola vez. El modelo se engancha
       // cuando termina de cargar; así las gemas no quedan negras por falta de
       // environment en el primer frame.
-      cargarEntornoGema("ijewelGem", 0, 1);
+      cargarEntornoGema("predeterminado", AURUM_AMBIENT_PRESETS.predeterminado.rotation, AURUM_AMBIENT_PRESETS.predeterminado.intensity);
 
       let hdrRequestId = 0;
       const cargarHDRI = (environmentKey:string, urlOverride?:string, rotation?:number, intensity?:number) => {
@@ -3551,7 +3551,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                   <div className="mb-2 text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Entorno HDR de gemas</div>
                   <select value={gemHdriId} onChange={e=>apiRef.current?.gemHdri(e.target.value)} className="w-full rounded-lg border border-black/10 bg-[#f8f7f3] px-3 py-2 text-xs text-[#292824] outline-none">
                     {[
-                      ...Object.keys(AURUM_GEM_HDRI_URLS).map(key=>({key,label:({ijewelGem:"Estudio premium de gemas",gemDiamond:"Estudio diamante",gemWhite:"Estudio blanco",gemNeutral:"Estudio neutro",gemColor:"Estudio cálido",gemLuxury:"Estudio lujo"} as Record<string,string>)[key]??key})),
+                      ...Object.keys(AURUM_GEM_HDRI_URLS).filter(key=>key!=="ijewelGem").map(key=>({key,label:({gemDiamond:"Estudio diamante",gemWhite:"Estudio blanco",gemNeutral:"Estudio neutro",gemColor:"Estudio cálido",gemLuxury:"Estudio lujo"} as Record<string,string>)[key]??key})),
                       ...Object.values(AURUM_AMBIENT_PRESETS).map(preset=>({key:preset.id,label:preset.name})),
                     ].map(option=><option key={option.key} value={option.key}>{option.label}</option>)}
                   </select>
@@ -3559,7 +3559,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 </div>
 
                 <div>
-                  <div className="mb-2 text-[10px] font-semibold uppercase tracking-[.12em] text-[#92743b]">10 ambientes importados · comparar gemas</div>
+                  <div className="mb-2 text-[10px] font-semibold uppercase tracking-[.12em] text-[#92743b]">Entornos HDR únicos · comparar gemas</div>
                 <div className="grid grid-cols-3 gap-3">
                   {Object.values(AURUM_AMBIENT_PRESETS).map((preset,index)=>{
                     const looks=[
