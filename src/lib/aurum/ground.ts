@@ -116,6 +116,9 @@ export function createAurumGround(THREE: any, scene: any): AurumGroundController
     updateFromPreset(preset) {
       if (!preset) return;
       mesh.visible = preset.groundVisible !== false;
+      // Match the authored iJewel floor footprint (8 for matte, 10 for polished).
+      const groundSize = Number(preset.groundSize);
+      mesh.scale.setScalar(Number.isFinite(groundSize) && groundSize > 0 ? groundSize / 40 : 1);
       const shadowStrength = Number.isFinite(Number(preset.shadowIntensity)) ? Number(preset.shadowIntensity) : .22;
       // Keep a subtle photographic contact shadow in every grounded product scene,
       // not only the iJewel reference preset. Transparent scenes remain shadow-free.
