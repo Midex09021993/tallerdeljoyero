@@ -122,8 +122,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [lightingOpen, setLightingOpen] = useState(false);
   const [metalHdriId, setMetalHdriId] = useState("ijewelMetal");
   const [gemHdriId, setGemHdriId] = useState("predeterminado");
-  const [ambienteId, setAmbienteId] = useState<string|null>("predeterminado");
-  const ambienteIdRef = useRef<string|null>("predeterminado");
+  const [ambienteId, setAmbienteId] = useState<string|null>(null);
+  const ambienteIdRef = useRef<string|null>(null);
   ambienteIdRef.current = ambienteId;
   const [ambienteMetalInfluence, setAmbienteMetalInfluence] = useState(45);
   const [fondoId, setFondoId] = useState("escena");
@@ -1126,19 +1126,34 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
       renderer.toneMappingExposure = photoInicial.exposure;
       const ambientInicial = AURUM_AMBIENT_PRESETS.predeterminado;
+      let initialMetalReady = false;
+      let initialGemReady = false;
+      const confirmarAmbienteInicial = () => {
+        if (!initialMetalReady || !initialGemReady) return;
+        ambienteIdRef.current = "predeterminado";
+        setAmbienteId("predeterminado");
+        console.info("[AURUM][AMBIENT][INITIAL ACTIVE]", {
+          id:"predeterminado",
+          metalKey:ambientInicial.metalKey,
+          gemUrl:ambientInicial.url,
+        });
+      };
       cargarHDRI(
         ambientInicial.metalKey ?? photoInicial.environmentKey,
         undefined,
         ambientInicial.metalRotation ?? Math.PI * photoInicial.environmentRotation,
-        ambientInicial.metalIntensity ?? photoInicial.environmentIntensity
+        ambientInicial.metalIntensity ?? photoInicial.environmentIntensity,
+        () => { initialMetalReady = true; confirmarAmbienteInicial(); },
+        () => toast.error("No se pudo cargar el HDR inicial de metales.")
       );
       const presetInicial = sceneController.apply("ijewelReference");
-      // The initial selected UI preset is the same coordinated metal/gem pair
-      // used after the model finishes loading.
+      // The initial selected UI preset is confirmed only after both HDR maps load.
       cargarEntornoGema(
         "predeterminado",
         ambientInicial.rotation,
-        ambientInicial.intensity
+        ambientInicial.intensity,
+        () => { initialGemReady = true; confirmarAmbienteInicial(); },
+        () => toast.error("No se pudo cargar el HDR inicial de gemas.")
       );
       Object.assign(postRuntimeConfig, {
         ssao: photoInicial.post.ssao,
