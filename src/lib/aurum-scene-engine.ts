@@ -17,6 +17,10 @@ export type AurumScenePreset = {
   groundReflection?:boolean;
   environmentRotation?:number;
   bakedShadowProfile?: "A" | "B";
+  cameraDirection?: [number,number,number];
+  shadowTarget?: [number,number,number];
+  shadowOffset?: [number,number];
+  shadowProfile?: typeof AURUM_IJEWEL_BAKED_SHADOW_PROFILES.A | typeof AURUM_IJEWEL_BAKED_SHADOW_PROFILES.B;
 };
 
 /** Parámetros de referencia del shadowBaker extraídos de los VJSON originales.
@@ -26,6 +30,214 @@ export type AurumScenePreset = {
 export const AURUM_IJEWEL_BAKED_SHADOW_PROFILES = {
   A: {"lightIntensity":10,"shadowRadius":10,"bias":0,"frustumSize":4,"focus":0.6400712089334843,"spread":1,"distanceScale":20,"mapWidth":1024,"mapHeight":1024,"near":1.5,"far":41,"randomizedDirectionalLight":false},
   B: {"lightIntensity":41.57678074024398,"shadowRadius":6.5435290904968575,"bias":0.014228227814819916,"frustumSize":8,"focus":0,"spread":1,"distanceScale":36.758315910917325,"mapWidth":1024,"mapHeight":1024,"near":1.5,"far":81,"randomizedDirectionalLight":false},
+} as const;
+
+/** Referencias exactas por escena: cámara y dirección/offset originales del shadowBaker. */
+export const AURUM_IJEWEL_SCENE_REFERENCES = {
+  "ijewel01": {
+    "cameraDirection": [
+      -0.287375815,
+      0.57570319,
+      0.765493943
+    ],
+    "shadowTarget": [
+      -0.518831349,
+      -0.67976089,
+      -0.518400583
+    ],
+    "shadowOffset": [
+      -0.375,
+      -0.25
+    ],
+    "shadowProfile": "A"
+  },
+  "ijewel02": {
+    "cameraDirection": [
+      -0.287375815,
+      0.57570319,
+      0.765493943
+    ],
+    "shadowTarget": [
+      0.331665996,
+      -0.768227555,
+      -0.547561952
+    ],
+    "shadowOffset": [
+      -0.25,
+      0.375
+    ],
+    "shadowProfile": "A"
+  },
+  "ijewel03": {
+    "cameraDirection": [
+      -0.287375815,
+      0.57570319,
+      0.765493943
+    ],
+    "shadowTarget": [
+      0.540277702,
+      -0.841486732,
+      0.000291992
+    ],
+    "shadowOffset": [
+      -0.375,
+      -0.25
+    ],
+    "shadowProfile": "A"
+  },
+  "ijewel04": {
+    "cameraDirection": [
+      -0.287375815,
+      0.57570319,
+      0.765493943
+    ],
+    "shadowTarget": [
+      0.382608668,
+      -0.892881062,
+      -0.23743213
+    ],
+    "shadowOffset": [
+      -0.25,
+      0.375
+    ],
+    "shadowProfile": "A"
+  },
+  "ijewel05": {
+    "cameraDirection": [
+      -0.287375815,
+      0.57570319,
+      0.765493943
+    ],
+    "shadowTarget": [
+      0.050370096,
+      -0.902971068,
+      -0.426738918
+    ],
+    "shadowOffset": [
+      -0.375,
+      -0.25
+    ],
+    "shadowProfile": "A"
+  },
+  "ijewel06": {
+    "cameraDirection": [
+      -0.307644152,
+      0.57570319,
+      0.757575681
+    ],
+    "shadowTarget": [
+      -0.247103166,
+      -0.954176417,
+      -0.168782079
+    ],
+    "shadowOffset": [
+      -0.25,
+      0.375
+    ],
+    "shadowProfile": "A"
+  },
+  "ijewel07": {
+    "cameraDirection": [
+      -0.307644152,
+      0.57570319,
+      0.757575681
+    ],
+    "shadowTarget": [
+      -0.074052198,
+      -0.898270768,
+      -0.433158054
+    ],
+    "shadowOffset": [
+      -0.375,
+      -0.25
+    ],
+    "shadowProfile": "A"
+  },
+  "ijewel08": {
+    "cameraDirection": [
+      -0.307644152,
+      0.57570319,
+      0.757575681
+    ],
+    "shadowTarget": [
+      -0.17899533,
+      -0.983017602,
+      0.040460664
+    ],
+    "shadowOffset": [
+      -0.375,
+      -0.25
+    ],
+    "shadowProfile": "A"
+  },
+  "ijewel09": {
+    "cameraDirection": [
+      -0.307644152,
+      0.57570319,
+      0.757575681
+    ],
+    "shadowTarget": [
+      -0.528257325,
+      -0.805849027,
+      -0.267491205
+    ],
+    "shadowOffset": [
+      -0.25,
+      0.375
+    ],
+    "shadowProfile": "A"
+  },
+  "ijewel10": {
+    "cameraDirection": [
+      -0.307644152,
+      0.57570319,
+      0.757575681
+    ],
+    "shadowTarget": [
+      -0.583354224,
+      -0.778711285,
+      0.230882187
+    ],
+    "shadowOffset": [
+      -0.25,
+      0.375
+    ],
+    "shadowProfile": "A"
+  },
+  "ijewel11": {
+    "cameraDirection": [
+      -0.307644152,
+      0.57570319,
+      0.757575681
+    ],
+    "shadowTarget": [
+      0.304600612,
+      -0.892566771,
+      -0.332480115
+    ],
+    "shadowOffset": [
+      -0.25,
+      0.375
+    ],
+    "shadowProfile": "B"
+  },
+  "ijewel12": {
+    "cameraDirection": [
+      -0.307644152,
+      0.57570319,
+      0.757575681
+    ],
+    "shadowTarget": [
+      0.063044106,
+      -0.996408122,
+      0.056535787
+    ],
+    "shadowOffset": [
+      -0.25,
+      0.375
+    ],
+    "shadowProfile": "B"
+  }
 } as const;
 
 export const AURUM_SCENE_PRESETS:Record<string,AurumScenePreset>={
@@ -112,8 +324,11 @@ export const AURUM_MATERIAL_CALIBRATION_SCENE: AurumScenePreset = {
   shadowSoftness:.985,
 };
 
-export const getAurumScenePreset=(id:string)=>{
-  return AURUM_SCENE_PRESETS[id]??AURUM_SCENE_PRESETS["claro"]!;
+export const getAurumScenePreset=(id:string):AurumScenePreset=>{
+  const preset=AURUM_SCENE_PRESETS[id]??AURUM_SCENE_PRESETS["claro"]!;
+  const reference=(AURUM_IJEWEL_SCENE_REFERENCES as Record<string,any>)[id];
+  if(!reference) return preset;
+  return {...preset,...reference,shadowProfile:reference.shadowProfile==="B"?AURUM_IJEWEL_BAKED_SHADOW_PROFILES.B:AURUM_IJEWEL_BAKED_SHADOW_PROFILES.A};
 };
 
 export type AurumRenderQuality={pixelRatio:number;shadows:boolean;shadowMapSize:number;transmissionScale:number};

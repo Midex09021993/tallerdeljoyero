@@ -8,6 +8,7 @@ export interface AurumLightingController {
   applyPreset: (id: string) => void;
   update: (patch: any) => void;
   scaleToModel: (radius: number, targetY: number) => void;
+  applyIJEWELShadowProfile: (profile:any) => boolean;
   dispose: () => void;
 }
 
@@ -22,6 +23,7 @@ export function createAurumLightingController(
   let activeRigId = "jewelry";
   let lastRadius = 1;
   let lastTargetY = 0;
+  let activeIJEWELShadowProfile:any = null;
   // Normal production mode keeps the studio rig active so the lighting panel
   // reflects the actual enabled state of its controls. Use ?aurumDiag=environment
   // only when deliberately isolating HDR/IBL for diagnostics.
@@ -80,6 +82,23 @@ export function createAurumLightingController(
     light.shadow.bias = shadowConfig.bias;
     light.shadow.normalBias = shadowConfig.normalBias;
     light.shadow.radius = shadowConfig.contact ? shadowConfig.contactScale : 1;
+  };
+  const applyIJEWELShadowProfile = () => {
+    const light=lights.key;
+    const profile=activeIJEWELShadowProfile;
+    if(!light?.castShadow || !light.shadow || !profile) return false;
+    // Only map fields with a direct equivalent on AURUM's existing SpotLight.
+    // The original bake intensity/focus/spread/distance/frustum are not mapped.
+    light.shadow.mapSize.set(profile.mapWidth,profile.mapHeight);
+    light.shadow.bias=profile.bias;
+    light.shadow.radius=profile.shadowRadius;
+    if(light.shadow.camera) {
+      light.shadow.camera.near=Math.max(.01,Number(profile.near)||.01);
+      light.shadow.camera.far=Math.max(light.shadow.camera.near+1,Number(profile.far)||20);
+      light.shadow.camera.updateProjectionMatrix?.();
+    }
+    light.shadow.needsUpdate=true;
+    return true;
   };
   const apply = (light: any, cfg: any) => {
     if (!light || !cfg) return;
@@ -336,6 +355,10 @@ export function createAurumLightingController(
         });
       }
     },
+    applyIJEWELShadowProfile(profile) {
+      activeIJEWELShadowProfile=profile??null;
+      return applyIJEWELShadowProfile();
+    },
     scaleToModel(radius, targetY) {
       // Keep the studio rig composition proportional to the product.
       // The default coordinates are treated as normalized photographic offsets,
@@ -402,6 +425,7 @@ export function createAurumLightingController(
         }
       });
       syncGemShaderLight();
+      applyIJEWELShadowProfile();
 
       // Opt-in diagnostic for measuring the actual world-space studio rig
       // after model scaling. It logs measurements only and does not change light behavior.

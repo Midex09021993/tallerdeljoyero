@@ -1482,8 +1482,36 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         // permanecen bajo sus controles independientes.
         liveFastPathRef.current = true;
         const scenePreset = sceneController.apply(id);
-        // La rotación del entorno pertenece a cada VJSON; HDR y material siguen siendo controles independientes.
-        if (Number.isFinite(scenePreset.environmentRotation)) environmentController.setRotation(scenePreset.environmentRotation as number);
+        // Mantener ambos entornos sincronizados con la rotación del VJSON.
+        if (Number.isFinite(scenePreset.environmentRotation)) {
+          environmentController.setRotation(scenePreset.environmentRotation as number);
+          gemEnvironmentRotation=scenePreset.environmentRotation as number;
+          aplicarEntornoGema();
+        }
+        // Recuperar la dirección original de cámara sin perder el ajuste de distancia
+        // que AURUM calcula para el tamaño real del modelo normalizado.
+        if (camara?.isPerspectiveCamera && Array.isArray(scenePreset.cameraDirection) && controles?.target) {
+          const direction=new THREE.Vector3(...scenePreset.cameraDirection).normalize();
+          const distance=Math.max(camara.position.distanceTo(controles.target),0.1);
+          camara.fov=25;
+          camara.position.copy(controles.target).addScaledVector(direction,distance);
+          camara.lookAt(controles.target);
+          camara.updateProjectionMatrix();
+          controles.update?.();
+        }
+        // Aplicar solo los parámetros de sombra compatibles con la luz Spot de AURUM.
+        if (scenePreset.shadowProfile) {
+          const applied=lightingController.applyIJEWELShadowProfile(scenePreset.shadowProfile);
+          console.info("[AURUM][IJEWEL SCENE]",{
+            scene:id,bakeProfile:scenePreset.bakedShadowProfile,runtimeShadowApplied:applied,
+            shadowMap:[scenePreset.shadowProfile.mapWidth,scenePreset.shadowProfile.mapHeight],
+            radius:scenePreset.shadowProfile.shadowRadius,bias:scenePreset.shadowProfile.bias,
+            cameraNearFar:[scenePreset.shadowProfile.near,scenePreset.shadowProfile.far],
+            bakeIntensityReferenceOnly:scenePreset.shadowProfile.lightIntensity,
+            frustumReferenceOnly:scenePreset.shadowProfile.frustumSize,
+            shadowTargetReferenceOnly:scenePreset.shadowTarget,shadowOffsetReferenceOnly:scenePreset.shadowOffset,
+          });
+        }
         if (camara?.isPerspectiveCamera) {
           if (id === "estudioRosaPremium") {
             if (previousSceneCameraFovRef.current === null) previousSceneCameraFovRef.current = camara.fov;
@@ -3643,7 +3671,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                     <span className="mt-2 block text-[10px] leading-tight">{e.nombre}</span>
                   </button>)}
                 </div>
-                <p className="px-1 text-[10px] leading-relaxed text-[#77756f]">Cada tarjeta conserva su rotación de entorno y acabado de suelo. Los perfiles A/B guardan los parámetros originales de shadowBaker como referencia; la reproducción visual del horneado y los reflejos todavía no está activada.</p>
+                <p className="px-1 text-[10px] leading-relaxed text-[#77756f]">Cada tarjeta conserva su rotación de entorno y acabado de suelo. Cada escena aplica cámara y rotación de ambos entornos. A/B ajusta resolución, radio y bias de la sombra dinámica compatible; el horneado original y sus reflejos aún no se reproducen.</p>
               </div>}
               {uxSection==="fondos"&&<div className="space-y-3 pb-5">
                 <div className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Fondo de presentación</div>
