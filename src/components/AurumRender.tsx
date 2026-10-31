@@ -3390,7 +3390,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       </div>}
       
       <div className={embedded ? "flex min-h-0 flex-1 overflow-hidden bg-[#090b0e]" : "flex min-h-0 flex-1 gap-3 bg-[#eeede8] p-3"}>
-        {!embedded && <AurumRenderSidebar activeToolId={uxSection} onAmbientesClick={() => setUxSection("escenas")} onGemHdrClick={() => setUxSection("hdrGemas")} onBackgroundClick={() => setUxSection("fondos")} onSceneClick={() => setUxSection("escenas")} />}
+        {!embedded && <AurumRenderSidebar activeToolId={uxSection} onAmbientesClick={() => setUxSection("ambientes")} onGemHdrClick={() => setUxSection("hdrGemas")} onBackgroundClick={() => setUxSection("fondos")} onSceneClick={() => setUxSection("escenas")} />}
         {!embedded && <aside className="w-[min(22vw,336px)] shrink-0 overflow-hidden rounded-2xl border border-black/[.07] bg-[#f9f8f5] text-[#292824] shadow-[0_8px_28px_rgba(36,32,20,.045)]">
           <div className="h-full overflow-y-auto">
             <div className="mx-4 mt-3 mb-2 grid grid-cols-3 gap-1.5 rounded-2xl border border-[#e2ded5] bg-[#efede7] p-1.5" role="tablist" aria-label="Biblioteca de joyería">
@@ -3446,8 +3446,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                   <p className="truncate text-[10px] text-[#55534d]">{gemaActiva.nombre}</p>
                 </div>
               </div>}
-              {uxSection==="escenas"&&<div className="pb-5">
-                <div className="mb-2 px-0.5 text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Escenas · {ESCENARIOS.length}</div>
+              {uxSection==="ambientes"&&<div className="pb-5">
+                <div className="mb-2 px-0.5 text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Ambientes · {ESCENARIOS.length}</div>
                 <div className="grid grid-cols-3 gap-3">
                   {ESCENARIOS.map(e=><button key={e.id} type="button" disabled={!e.activo} aria-disabled={!e.activo} aria-pressed={e.activo && escenarioId===e.id} onClick={()=>{if(e.activo)setEscenarioId(e.id);}} className={"group min-w-0 text-center disabled:cursor-not-allowed "+(e.activo?(escenarioId===e.id?"text-[#292824]":"text-[#45433e]"):"text-[#858178] opacity-75")}>
                     <span className={"relative block aspect-[1.18] overflow-hidden rounded-xl border-2 transition "+(e.activo && escenarioId===e.id?"border-[#b99642] shadow-[0_0_14px_rgba(185,150,66,.18)]":e.activo?"border-transparent group-hover:border-[#d8d1c2]":"border-dashed border-[#c9c4ba]")}><span className={"block h-full w-full "+e.clase+(e.activo?"":" grayscale-[.35]")}/>{!e.activo&&<span className="absolute inset-0 flex items-center justify-center bg-[#f8f6f0]/55"><span className="rounded-full border border-[#b7aa8e] bg-[#f8f6f0]/95 px-2 py-1 text-[8px] font-semibold uppercase tracking-[.08em] text-[#776b53]">En calibración</span></span>}</span>
