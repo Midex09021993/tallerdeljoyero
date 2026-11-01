@@ -215,6 +215,10 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
       try {
         const viewer = createAurumWebGLViewer(THREE, host, { pixelRatio: Math.min(window.devicePixelRatio || 1, 1.25), controlsClass: OrbitControls, maxDistance: 100 });
         ({ scene, camera, renderer, controls } = viewer);
+        // Public viewer only: align highlight roll-off with the photographic reference.
+        // Keep this override local; createAurumWebGLViewer is shared with Aurum Render.
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.0;
         scene.background = new THREE.Color("#ffffff");
         scene.add(new THREE.HemisphereLight(0xffffff, 0x77716a, 1.5));
         const key = new THREE.DirectionalLight(0xffffff, 2.1); key.position.set(4, 7, 5); scene.add(key);
