@@ -405,7 +405,6 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         controls.autoRotate = false;
         controls.autoRotateSpeed = 1.25;
         controls.update();
-        const initialCameraPosition = camera.position.clone();
         const setCameraView = (position: THREE.Vector3, up = new THREE.Vector3(0, 1, 0)) => {
           camera.position.copy(position);
           camera.up.copy(up);
