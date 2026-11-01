@@ -111,6 +111,53 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+
+  // Recupera una sola vez por pestaña los chunks obsoletos tras un despliegue.
+  // No altera loaders, materiales ni el pipeline de AURUM Render.
+  useEffect(() => {
+    const recoveryKey = "taller:stale-chunk-reload-attempted";
+    let reloadInProgress = false;
+
+    const reloadForStaleChunk = () => {
+      if (reloadInProgress) return false;
+
+      try {
+        if (window.sessionStorage.getItem(recoveryKey) === "1") return false;
+        window.sessionStorage.setItem(recoveryKey, "1");
+      } catch {
+        // Si el almacenamiento está bloqueado, el guard en memoria evita
+        // que dos eventos simultáneos provoquen recargas duplicadas.
+      }
+
+      reloadInProgress = true;
+      window.location.reload();
+      return true;
+    };
+
+    const handleVitePreloadError = (event: Event) => {
+      if (reloadForStaleChunk()) event.preventDefault();
+    };
+
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      const reason = event.reason;
+      const message = reason instanceof Error ? reason.message : String(reason ?? "");
+      const isChunkLoadFailure =
+        /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|Loading chunk .+ failed|ChunkLoadError|Unable to preload CSS/i.test(message);
+
+      if (isChunkLoadFailure && reloadForStaleChunk()) {
+        event.preventDefault();
+      }
+    };
+
+    window.addEventListener("vite:preloadError", handleVitePreloadError);
+    window.addEventListener("unhandledrejection", handleUnhandledRejection);
+
+    return () => {
+      window.removeEventListener("vite:preloadError", handleVitePreloadError);
+      window.removeEventListener("unhandledrejection", handleUnhandledRejection);
+    };
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <SesionSync />
