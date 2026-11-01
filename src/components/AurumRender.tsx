@@ -541,6 +541,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         ambienteId,
         ambienteMetalInfluence,
         fondoId,
+        sueloVisible,
         sombraContactoVisible,
         // Guardar los controles visibles del estudio sin acoplarlos a posiciones internas del motor.
         lucesEstudio: {
@@ -3271,7 +3272,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             try {
               const configResponse = await fetch(datos.configuracionUrl);
               if (configResponse.ok) {
-                const config = await configResponse.json() as { schemaVersion?: unknown; nombreProyecto?: unknown; categoriaProyecto?: unknown; materialId?: unknown; gemaId?: unknown; escenarioId?: unknown; iluminacionId?: unknown; vista?: unknown; fondoId?: unknown; sombraContactoVisible?: unknown; ambienteId?: unknown; ambienteMetalInfluence?: unknown; metalHdriId?: unknown; gemHdriId?: unknown; lucesEstudio?: unknown };
+                const config = await configResponse.json() as { schemaVersion?: unknown; nombreProyecto?: unknown; categoriaProyecto?: unknown; materialId?: unknown; gemaId?: unknown; escenarioId?: unknown; iluminacionId?: unknown; vista?: unknown; fondoId?: unknown; sueloVisible?: unknown; sombraContactoVisible?: unknown; ambienteId?: unknown; ambienteMetalInfluence?: unknown; metalHdriId?: unknown; gemHdriId?: unknown; lucesEstudio?: unknown };
                 if (config.schemaVersion === 1) {
                   if (typeof config.nombreProyecto === "string") {
                     setNombreProyecto(config.nombreProyecto);
@@ -3306,6 +3307,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                   if (typeof config.fondoId === "string") {
                     setFondoId(config.fondoId);
                     apiRef.current?.fondo(config.fondoId);
+                  }
+                  if (typeof config.sueloVisible === "boolean") {
+                    setSueloVisible(config.sueloVisible);
+                    apiRef.current?.sueloVisible?.(config.sueloVisible);
                   }
                   if (typeof config.sombraContactoVisible === "boolean") {
                     setSombraContactoVisible(config.sombraContactoVisible);
@@ -3620,6 +3625,23 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 <p className="px-1 text-[10px] leading-relaxed text-[#77756f]">Cada tarjeta conserva su rotación de entorno y acabado de suelo. Cada escena aplica cámara y rotación de ambos entornos. A/B ajusta resolución, radio y bias de la sombra dinámica compatible; el horneado original y sus reflejos aún no se reproducen.</p>
               </div>}
               {uxSection==="fondos"&&<div className="space-y-3 pb-5">
+                <div className="rounded-xl border border-[#92743b]/20 bg-white/75 p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="text-xs font-semibold text-[#45433e]">Mostrar suelo</div>
+                      <p className="mt-1 text-[10px] leading-relaxed text-[#77756f]">Activa o desactiva el plano del estudio y su sombra de contacto.</p>
+                    </div>
+                    <button type="button" role="switch" aria-checked={sueloVisible} aria-label="Mostrar suelo"
+                      onClick={() => {
+                        const next = !sueloVisible;
+                        setSueloVisible(next);
+                        apiRef.current?.sueloVisible?.(next);
+                      }}
+                      className={"relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b99642]/60 " + (sueloVisible ? "bg-[#a88743]" : "bg-[#c9c6bf]")}>
+                      <span className={"inline-block size-4 rounded-full bg-white shadow-sm transition-transform " + (sueloVisible ? "translate-x-6" : "translate-x-1")} />
+                    </button>
+                  </div>
+                </div>
                 <div className="text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Fondo de presentación</div>
                 {[{id:"escena",label:"Según la escena",swatch:"linear-gradient(135deg,#fff,#e9e7df)"},{id:"estudioFotografico",label:"Estudio fotográfico",swatch:'url("https://packs.ijewel3d.com/files/bg_1_d37cf7c1d8.jpg") center / cover no-repeat'},{id:"degradadoGrisBlanco",label:"Degradado gris a blanco",swatch:"linear-gradient(135deg,#ffffff 0%,#eeeeec 48%,#bfc1c0 100%)"},{id:"blanco",label:"Blanco puro",swatch:"#ffffff"},{id:"marfil",label:"Marfil cálido",swatch:"#f4f1e9"},{id:"grisClaro",label:"Gris claro",swatch:"#e7e7e4"},{id:"grisMedio",label:"Gris medio",swatch:"#a6a6a3"},{id:"grisOscuro",label:"Gris oscuro",swatch:"#303236"},{id:"negro",label:"Negro",swatch:"#090b0e"},{id:"transparente",label:"Transparente",swatch:"linear-gradient(45deg,#ddd 25%,transparent 25%,transparent 75%,#ddd 75%),linear-gradient(45deg,#ddd 25%,#fff 25%,#fff 75%,#ddd 75%)"}].map(bg=><button key={bg.id} type="button" onClick={()=>apiRef.current?.fondo(bg.id)} className={"flex w-full items-center gap-3 rounded-xl border p-2.5 text-left transition "+(fondoId===bg.id?"border-[#92743b]/50 bg-white shadow-sm":"border-black/[.07] bg-white/60 hover:bg-white")}><span className="size-8 shrink-0 rounded-lg border border-black/10" style={{background:bg.swatch}}/><span className="flex-1 text-xs text-[#45433e]">{bg.label}</span>{fondoId===bg.id&&<span className="text-xs font-semibold text-[#92743b]">✓</span>}</button>)}
                 <p className="px-1 text-[10px] leading-relaxed text-[#77756f]">Cambiar el fondo no modifica los HDR ni los perfiles de materiales.</p>
