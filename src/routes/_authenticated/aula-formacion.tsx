@@ -34,8 +34,9 @@ const LECTURA_SESION_1 = [
     "Rhino trabaja principalmente con geometría NURBS, un sistema matemático para representar curvas y superficies con precisión. En esta primera sesión no dibujaremos ni construiremos geometría: aprenderemos a reconocer el entorno y a desplazarnos por el espacio de trabajo."
   ]},
   { titulo: "3. Reconocimiento de la interfaz", bloques: [
-    "Explora la imagen de MatrixGold 3.1 y selecciona los diez números para conocer cada componente. Después completa el reto de comprobación. MatrixGold es una interfaz especializada para joyería que funciona sobre Rhino; no es la interfaz estándar de Rhino 7.",
-    "Importante: en esta sesión reconoceremos los componentes, sin ejecutar herramientas de modelado ni modificar el archivo. La disposición y algunos paneles pueden variar en Rhino 7 sin MatrixGold."
+    "MatrixGold 3.1 incorpora herramientas especializadas para el diseño de joyería sobre el entorno de Rhino. Su espacio de trabajo reúne barras de herramientas, ventanas de visualización y paneles que facilitan el acceso a las funciones del programa.",
+    "En esta actividad conocerás la ubicación y función de los principales componentes mediante una imagen interactiva. Selecciona cada marcador para descubrir qué parte de la interfaz representa.",
+    "Importante: la captura corresponde a MatrixGold 3.1, no a la interfaz estándar de Rhino 7. En esta sesión solo observaremos y reconoceremos sus componentes; no ejecutaremos herramientas ni modificaremos archivos."
   ]},
   { titulo: "4. Vistas y orientación espacial", bloques: [
     "Top muestra el contenido desde arriba; Front, desde el frente; y Right, desde la derecha. Estas son vistas paralelas. Perspective permite apreciar la profundidad y observar el contenido desde una orientación tridimensional.",
@@ -90,6 +91,13 @@ const COMPONENTES_INTERFAZ = [
   ["Barra de estado", "Muestra coordenadas, unidades y ayudas de modelado activas."]
 ] as const;
 
+const COORDENADAS_INTERFAZ = [
+  { x: "50%", y: "5%" }, { x: "48%", y: "13%" }, { x: "51%", y: "52%" },
+  { x: "49%", y: "18%" }, { x: "6%", y: "19%" }, { x: "6%", y: "39%" },
+  { x: "6%", y: "67%" }, { x: "94%", y: "47%" }, { x: "48%", y: "93%" },
+  { x: "48%", y: "98%" }
+] as const;
+
 const RETO_INTERFAZ = [
   { pregunta: "¿Qué componente reúne pestañas y categorías de herramientas en la franja superior?", opciones: ["Ribbon de MatrixGold", "Barra de estado", "Panel de propiedades"], correcta: 0, explicacion: "El Ribbon organiza herramientas y funciones en pestañas." },
   { pregunta: "¿Dónde se visualiza el modelo durante el trabajo?", opciones: ["Quick Commands", "Área gráfica", "Línea de comandos"], correcta: 1, explicacion: "El área gráfica es el espacio central de visualización." },
@@ -127,6 +135,7 @@ function AulaFormacionPage() {
   const [estadoGuardadoLectura, setEstadoGuardadoLectura] = useState<{tipo:"success"|"error"|"info"; texto:string} | null>(null);
   const [seccionesLecturaActivas, setSeccionesLecturaActivas] = useState<Array<{titulo:string;bloques:string[]}>>(LECTURA_SESION_1.map(x => ({ titulo:x.titulo, bloques:[...x.bloques] })));
   const [imagenInterfazUrl, setImagenInterfazUrl] = useState("");
+  const [interfazInteractivaAbierta, setInterfazInteractivaAbierta] = useState(false);
   const [componentesExplorados, setComponentesExplorados] = useState<number[]>([]);
   const [componenteActivo, setComponenteActivo] = useState(0);
   const [preguntaInterfaz, setPreguntaInterfaz] = useState(0);
@@ -909,12 +918,33 @@ function AulaFormacionPage() {
                 <h3 className="font-display text-2xl leading-tight sm:text-3xl">{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</h3>
                 {(seccionesLecturaActivas[paginaLectura]?.bloques ?? []).map((bloque,idx) => <div key={idx}>
                   <p className="mb-5 whitespace-pre-line text-[15px] leading-8 text-foreground/90">{bloque}</p>
-                  {paginaLectura === 2 && idx === 0 && imagenInterfazUrl && <figure className="my-6 overflow-hidden rounded-2xl border border-border bg-background p-2 sm:p-3">
-                    <img src={imagenInterfazUrl} alt="Interfaz principal de MatrixGold 3.1 con diez componentes identificados" className="h-auto w-full rounded-xl object-contain" loading="lazy" />
-                    <figcaption className="mt-2 text-center text-xs leading-5 text-muted-foreground">Material de apoyo FADILAB · MatrixGold 3.1</figcaption>
+                  {paginaLectura === 2 && idx === 0 && imagenInterfazUrl && <figure className="my-3 overflow-hidden rounded-xl border border-border bg-[#171719] p-1">
+                    <div className="relative">
+                      <img src={imagenInterfazUrl} alt="Captura de la interfaz de MatrixGold 3.1 con marcadores interactivos" className="block h-auto w-full rounded-lg" loading="lazy" />
+                      {COMPONENTES_INTERFAZ.map((item, indice) => <button key={indice} type="button" onClick={() => { setComponenteActivo(indice); setComponentesExplorados(prev => prev.includes(indice) ? prev : [...prev, indice]); }} aria-label={`Explorar componente ${indice+1}: ${item[0]}`} aria-pressed={componenteActivo===indice} className={`absolute flex size-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white text-xs font-bold shadow-lg transition sm:size-9 sm:text-sm ${componenteActivo===indice ? "z-20 scale-125 bg-[#c4a15a] text-black ring-4 ring-[#c4a15a]/40" : componentesExplorados.includes(indice) ? "z-10 bg-emerald-600 text-white" : "z-10 bg-blue-600 text-white hover:scale-110 hover:bg-[#c4a15a] hover:text-black"}`} style={{left:COORDENADAS_INTERFAZ[indice].x,top:COORDENADAS_INTERFAZ[indice].y}}>{indice+1}</button>)}
+                    </div>
+                    <figcaption className="mt-2 text-center text-xs leading-5 text-white/70">Selecciona cualquiera de los diez marcadores para conocer cada componente · FADILAB · MatrixGold 3.1</figcaption>
                   </figure>}
                 </div>)}
-                {paginaLectura === 2 && <section className="space-y-6">
+                {paginaLectura === 2 && !interfazInteractivaAbierta && <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5 sm:p-6">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">Actividad guiada · FADILAB</p>
+                  <h4 className="mt-1 text-lg font-semibold">Conoce cada parte de la interfaz</h4>
+                  <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">Abre el recorrido interactivo para identificar los componentes directamente sobre la captura de MatrixGold 3.1. Al explorar los diez marcadores podrás completar un breve reto de comprobación.</p>
+                  <button type="button" disabled={!imagenInterfazUrl} onClick={() => setInterfazInteractivaAbierta(true)} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gold px-5 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50">Explorar interfaz interactiva <ChevronRight className="size-4"/></button>
+                  {!imagenInterfazUrl && <p className="mt-2 text-xs text-muted-foreground">La imagen de MatrixGold todavía no está disponible en la Biblioteca del curso.</p>}
+                      </section>
+                    </div>
+                  </div>
+                </div>}
+                {paginaLectura === 2 && interfazInteractivaAbierta && <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/70 p-2 sm:p-5" role="dialog" aria-modal="true" aria-label="Exploración interactiva de MatrixGold 3.1">
+                  <div className="flex max-h-[96vh] w-full max-w-7xl flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl">
+                    <header className="flex items-center justify-between gap-3 border-b border-border bg-gradient-to-r from-[#fbf8f0] to-background px-4 py-3 sm:px-6">
+                      <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">FADILAB · Actividad interactiva</p><h3 className="text-base font-semibold sm:text-lg">Explora la interfaz de MatrixGold 3.1</h3></div>
+                      <button type="button" onClick={() => setInterfazInteractivaAbierta(false)} className="shrink-0 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:border-gold">Cerrar ×</button>
+                    </header>
+                    <div className="min-h-0 flex-1 overflow-y-auto p-3 sm:p-5">
+                      <div className="mb-4 flex flex-wrap items-center justify-between gap-2"><p className="text-sm text-muted-foreground">Selecciona los marcadores numerados sobre la imagen.</p><span className="rounded-full bg-gold/15 px-3 py-1 text-xs font-semibold">{componentesExplorados.length} de 10 explorados</span></div>
+                      <section className="space-y-6">
                   <div className="rounded-2xl border border-border bg-background p-4 sm:p-5">
                     <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
                       <div><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Exploración interactiva</p><h4 className="mt-1 text-lg font-semibold">Explora los 10 componentes</h4></div>
@@ -963,7 +993,10 @@ function AulaFormacionPage() {
                     </div>}
                   </div>
                   <p className="text-xs leading-5 text-muted-foreground">Actividad de reconocimiento. Ribbon, Quick Commands y paneles dinámicos corresponden a MatrixGold 3.1; Rhino 7 sin MatrixGold puede presentar otra disposición.</p>
-                </section>}
+                      </section>
+                    </div>
+                  </div>
+                </div>}
                 {paginaLectura === seccionesLecturaActivas.length-1 && <div className="rounded-xl border border-gold/30 bg-gold/5 p-4"><p className="text-sm font-semibold">Has llegado al final de la lectura</p><p className="mt-1 text-sm text-muted-foreground">En el aula real, el alumno podrá finalizar y marcar la sesión como completada.</p></div>}
               </main>
               <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-border bg-background p-4 sm:p-5">
@@ -1197,12 +1230,33 @@ function AulaFormacionPage() {
                 <h3 className="font-display text-2xl leading-tight sm:text-3xl">{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</h3>
                 {(seccionesLecturaActivas[paginaLectura]?.bloques ?? []).map((bloque,idx) => <div key={idx}>
                   <p className="mb-5 whitespace-pre-line text-[15px] leading-8 text-foreground/90">{bloque}</p>
-                  {paginaLectura === 2 && idx === 0 && imagenInterfazUrl && <figure className="my-6 overflow-hidden rounded-2xl border border-border bg-background p-2 sm:p-3">
-                    <img src={imagenInterfazUrl} alt="Interfaz principal de MatrixGold 3.1 con diez componentes identificados" className="h-auto w-full rounded-xl object-contain" loading="lazy" />
-                    <figcaption className="mt-2 text-center text-xs leading-5 text-muted-foreground">Material de apoyo FADILAB · MatrixGold 3.1</figcaption>
+                  {paginaLectura === 2 && idx === 0 && imagenInterfazUrl && <figure className="my-3 overflow-hidden rounded-xl border border-border bg-[#171719] p-1">
+                    <div className="relative">
+                      <img src={imagenInterfazUrl} alt="Captura de la interfaz de MatrixGold 3.1 con marcadores interactivos" className="block h-auto w-full rounded-lg" loading="lazy" />
+                      {COMPONENTES_INTERFAZ.map((item, indice) => <button key={indice} type="button" onClick={() => { setComponenteActivo(indice); setComponentesExplorados(prev => prev.includes(indice) ? prev : [...prev, indice]); }} aria-label={`Explorar componente ${indice+1}: ${item[0]}`} aria-pressed={componenteActivo===indice} className={`absolute flex size-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white text-xs font-bold shadow-lg transition sm:size-9 sm:text-sm ${componenteActivo===indice ? "z-20 scale-125 bg-[#c4a15a] text-black ring-4 ring-[#c4a15a]/40" : componentesExplorados.includes(indice) ? "z-10 bg-emerald-600 text-white" : "z-10 bg-blue-600 text-white hover:scale-110 hover:bg-[#c4a15a] hover:text-black"}`} style={{left:COORDENADAS_INTERFAZ[indice].x,top:COORDENADAS_INTERFAZ[indice].y}}>{indice+1}</button>)}
+                    </div>
+                    <figcaption className="mt-2 text-center text-xs leading-5 text-white/70">Selecciona cualquiera de los diez marcadores para conocer cada componente · FADILAB · MatrixGold 3.1</figcaption>
                   </figure>}
                 </div>)}
-                {paginaLectura === 2 && <section className="space-y-6">
+                {paginaLectura === 2 && !interfazInteractivaAbierta && <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5 sm:p-6">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">Actividad guiada · FADILAB</p>
+                  <h4 className="mt-1 text-lg font-semibold">Conoce cada parte de la interfaz</h4>
+                  <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">Abre el recorrido interactivo para identificar los componentes directamente sobre la captura de MatrixGold 3.1. Al explorar los diez marcadores podrás completar un breve reto de comprobación.</p>
+                  <button type="button" disabled={!imagenInterfazUrl} onClick={() => setInterfazInteractivaAbierta(true)} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gold px-5 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50">Explorar interfaz interactiva <ChevronRight className="size-4"/></button>
+                  {!imagenInterfazUrl && <p className="mt-2 text-xs text-muted-foreground">La imagen de MatrixGold todavía no está disponible en la Biblioteca del curso.</p>}
+                      </section>
+                    </div>
+                  </div>
+                </div>}
+                {paginaLectura === 2 && interfazInteractivaAbierta && <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/70 p-2 sm:p-5" role="dialog" aria-modal="true" aria-label="Exploración interactiva de MatrixGold 3.1">
+                  <div className="flex max-h-[96vh] w-full max-w-7xl flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl">
+                    <header className="flex items-center justify-between gap-3 border-b border-border bg-gradient-to-r from-[#fbf8f0] to-background px-4 py-3 sm:px-6">
+                      <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">FADILAB · Actividad interactiva</p><h3 className="text-base font-semibold sm:text-lg">Explora la interfaz de MatrixGold 3.1</h3></div>
+                      <button type="button" onClick={() => setInterfazInteractivaAbierta(false)} className="shrink-0 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:border-gold">Cerrar ×</button>
+                    </header>
+                    <div className="min-h-0 flex-1 overflow-y-auto p-3 sm:p-5">
+                      <div className="mb-4 flex flex-wrap items-center justify-between gap-2"><p className="text-sm text-muted-foreground">Selecciona los marcadores numerados sobre la imagen.</p><span className="rounded-full bg-gold/15 px-3 py-1 text-xs font-semibold">{componentesExplorados.length} de 10 explorados</span></div>
+                      <section className="space-y-6">
                   <div className="rounded-2xl border border-border bg-background p-4 sm:p-5">
                     <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
                       <div><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Exploración interactiva</p><h4 className="mt-1 text-lg font-semibold">Explora los 10 componentes</h4></div>
@@ -1251,7 +1305,10 @@ function AulaFormacionPage() {
                     </div>}
                   </div>
                   <p className="text-xs leading-5 text-muted-foreground">Actividad de reconocimiento. Ribbon, Quick Commands y paneles dinámicos corresponden a MatrixGold 3.1; Rhino 7 sin MatrixGold puede presentar otra disposición.</p>
-                </section>}
+                      </section>
+                    </div>
+                  </div>
+                </div>}
                 {paginaLectura === seccionesLecturaActivas.length-1 && <div className="rounded-xl border border-gold/30 bg-gold/5 p-4"><p className="text-sm font-semibold">Has llegado al final de la lectura</p><p className="mt-1 text-sm text-muted-foreground">{lecturaModoVistaPrevia ? "En la experiencia del alumno, aquí podrá finalizar y marcar la sesión como completada." : "La lectura está registrada como leída. Puedes marcar la sesión como completada."}</p></div>}
               </main>
               <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-border p-4 sm:p-5">
