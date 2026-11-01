@@ -86,6 +86,7 @@ function AulaFormacionPage() {
   const [descripcion, setDescripcion] = useState("Formación presencial de modelado 3D para joyería.");
   const [duracion, setDuracion] = useState("20");
   const [cursoSeleccionado, setCursoSeleccionado] = useState("");
+  const [seccionDocente, setSeccionDocente] = useState("cursos");
   const [cursoEditandoId, setCursoEditandoId] = useState("");
   const [tituloCursoEditado, setTituloCursoEditado] = useState("");
   const [nombreAlumno, setNombreAlumno] = useState("");
@@ -780,9 +781,12 @@ function AulaFormacionPage() {
               {[{label:"Cursos",value:cursos.length,icon:<BookOpen className="size-4"/>},{label:"Alumnos inscritos",value:(inscripcionesQuery.data ?? []).length,icon:<Users className="size-4"/>},{label:"Sesiones",value:(sesionesQuery.data ?? []).length,icon:<CalendarDays className="size-4"/>},{label:"Materiales",value:(materialesDocenteQuery.data ?? []).length,icon:<FileText className="size-4"/>}].map(item => <div key={item.label} className="rounded-xl border border-border/80 bg-card/80 p-3"><div className="flex items-center justify-between text-muted-foreground"><span className="text-xs">{item.label}</span>{item.icon}</div><p className="mt-2 text-2xl font-semibold tabular-nums">{item.value}</p></div>)}
             </div>
           </section>
-          <nav aria-label="Secciones del panel docente" className="flex flex-wrap gap-2 rounded-xl border border-border bg-card p-2">
-            {[{id:"doc-cursos",label:"Cursos"},{id:"doc-alumnos-sesiones",label:"Alumnos y sesiones"},{id:"doc-materiales",label:"Materiales"},{id:"doc-evaluaciones",label:"Evaluaciones"},{id:"doc-entregas",label:"Entregas"}].map(item => <a key={item.id} href={"#" + item.id} className="rounded-lg px-3 py-2 text-xs font-semibold text-muted-foreground transition hover:bg-gold/10 hover:text-foreground">{item.label}</a>)}
-          </nav>
+          <section className="rounded-2xl border border-border bg-card p-3 sm:p-4">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2"><div><p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Espacios de trabajo</p><p className="mt-1 text-sm font-semibold">{cursoActivoId ? cursos.find(c => c.id === cursoActivoId)?.titulo : "Selecciona o crea un curso"}</p></div>{cursoActivoId && <span className="rounded-full bg-gold/10 px-3 py-1 text-[11px] font-semibold text-gold-deep">Curso seleccionado</span>}</div>
+            <nav aria-label="Secciones del panel docente" className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {[{id:"cursos",label:"Cursos",detail:"Crear y seleccionar",icon:<BookOpen className="size-5"/>},{id:"alumnos",label:"Alumnos y sesiones",detail:"Matrículas y programa",icon:<Users className="size-5"/>},{id:"materiales",label:"Biblioteca",detail:"Archivos y recursos",icon:<FolderOpen className="size-5"/>},{id:"evaluaciones",label:"Evaluaciones",detail:"Exámenes y entregas",icon:<ClipboardCheck className="size-5"/>}].map(item => <button key={item.id} type="button" onClick={() => setSeccionDocente(item.id)} aria-pressed={seccionDocente===item.id} className={`flex min-h-24 flex-col items-start gap-2 rounded-xl border p-3 text-left transition ${seccionDocente===item.id ? "border-gold bg-gold/10 text-gold-deep shadow-sm" : "border-border bg-background hover:border-gold/40 hover:bg-muted/40"}`}><span className="flex w-full items-center justify-between">{item.icon}{seccionDocente===item.id && <CheckCircle2 className="size-4"/>}</span><span><span className="block text-xs font-semibold">{item.label}</span><span className="mt-0.5 block text-[10px] text-muted-foreground">{item.detail}</span></span></button>)}
+            </nav>
+          </section>
 
           {vistaPreviaAlumno && cursoActivoId && (() => {
             const curso = cursos.find(item => item.id === cursoActivoId);
@@ -851,8 +855,8 @@ function AulaFormacionPage() {
               </footer>
             </div>
           </div>}
-          <div id="doc-cursos" className="grid scroll-mt-24 gap-5 lg:grid-cols-2">
-            <Panel titulo="Crear curso" colapsable defaultOpen={true}>
+          {seccionDocente === "cursos" && <div id="doc-cursos" className="grid scroll-mt-24 gap-5">
+            <Panel titulo="Nuevo curso" colapsable defaultOpen={false}>
               <form onSubmit={(e) => void crearCurso(e)} className="space-y-3 p-5">
                 <label className="block text-xs font-medium">Nombre del curso<input value={titulo} onChange={e => setTitulo(e.target.value)} required maxLength={140} className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm" /></label>
                 <label className="block text-xs font-medium">Descripción<textarea value={descripcion} onChange={e => setDescripcion(e.target.value)} rows={2} className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm" /></label>
@@ -860,7 +864,7 @@ function AulaFormacionPage() {
                 <button disabled={ocupado} className="inline-flex items-center gap-2 rounded-lg bg-gold px-4 py-2.5 text-sm font-semibold text-black disabled:opacity-50"><Plus className="size-4" /> Crear curso</button>
               </form>
             </Panel>
-            <Panel titulo="Cursos de FADILAB" colapsable defaultOpen={false}>
+            <Panel titulo="Mis cursos · FADILAB" colapsable defaultOpen={true}>
               <div className="space-y-2 p-5">
                 {cursosQuery.isLoading ? <p className="text-sm text-muted-foreground">Cargando cursos…</p> : cursos.length === 0 ? <p className="rounded-xl border border-dashed border-border p-5 text-sm text-muted-foreground">Todavía no hay cursos. Crea el primero desde el formulario.</p> : cursos.map(c => <div key={c.id} className={`rounded-xl border p-3 ${cursoActivoId === c.id ? "border-gold bg-gold/10" : "border-border"}`}>
                   <div className="flex items-center gap-3">
@@ -880,8 +884,8 @@ function AulaFormacionPage() {
                 </div>)}
               </div>
             </Panel>
-          </div>
-          {cursoActivoId && <div id="doc-alumnos-sesiones" className="grid scroll-mt-24 gap-5 lg:grid-cols-2">
+          </div>}
+          {seccionDocente === "alumnos" && cursoActivoId && <div id="doc-alumnos-sesiones" className="grid scroll-mt-24 gap-5 lg:grid-cols-2">
             <Panel titulo="Inscribir alumnos" colapsable defaultOpen={false}>
               <div className="space-y-4 p-5">
                 <div className="space-y-1">
@@ -965,7 +969,8 @@ function AulaFormacionPage() {
                 </div>
               </div>
             </div>}
-            <div id="doc-materiales" className="scroll-mt-24"><Panel titulo="Materiales de estudio" colapsable defaultOpen={false}>
+            </div>}
+          {seccionDocente === "materiales" && cursoActivoId && <div id="doc-materiales" className="scroll-mt-24"><Panel titulo="Biblioteca del curso" colapsable defaultOpen={false}>
               <form onSubmit={(e) => void subirMaterial(e)} className="space-y-3 p-5">
                 <label className="block text-xs font-medium">Título del material<input required value={tituloMaterial} onChange={e => setTituloMaterial(e.target.value)} className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm" placeholder="Ej. Guía de navegación en Rhino" /></label>
                 <label className="block text-xs font-medium">¿A qué parte del curso pertenece?
@@ -995,9 +1000,8 @@ function AulaFormacionPage() {
                   </div>)}</section>)}
                 </>}
               </div>
-            </Panel></div>
-          </div>}
-          {cursoActivoId && <div id="doc-evaluaciones" className="scroll-mt-24"><Panel titulo="Evaluaciones y cuestionarios" colapsable defaultOpen={false}>
+            </Panel></div>}
+          {seccionDocente === "evaluaciones" && cursoActivoId && <div id="doc-evaluaciones" className="scroll-mt-24"><Panel titulo="Evaluaciones y cuestionarios" colapsable defaultOpen={false}>
             <div className="space-y-3 p-5">
               <form onSubmit={(e) => void crearExamen(e)} className="space-y-3 rounded-xl border border-border p-4">
                 <p className="text-sm font-semibold">Crear evaluación</p>
@@ -1031,7 +1035,7 @@ function AulaFormacionPage() {
               {(preguntasQuery.data ?? []).map((p, idx) => <div key={p.id} className="rounded-lg border border-border p-3"><p className="text-xs text-muted-foreground">Pregunta {idx + 1} · {p.tipo.replaceAll("_"," ")} · {p.puntaje} pts</p><p className="mt-1 text-sm">{p.enunciado}</p></div>)}
             </div>
           </Panel></div>}
-          {cursoActivoId && <div id="doc-entregas" className="scroll-mt-24"><Panel titulo="Entregas y revisión docente">
+          {seccionDocente === "evaluaciones" && cursoActivoId && <div id="doc-entregas" className="scroll-mt-24"><Panel titulo="Entregas y revisión docente">
             <div className="space-y-3 p-5">
               {(intentosDocenteQuery.data ?? []).length === 0 ? <p className="text-sm text-muted-foreground">Todavía no hay evaluaciones entregadas.</p> : (intentosDocenteQuery.data ?? []).map(intento => {
                 const examen = (intento as any).formacion_examenes;
