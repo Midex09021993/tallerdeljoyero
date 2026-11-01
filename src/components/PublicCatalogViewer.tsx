@@ -438,6 +438,9 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
           if (zoomFrameId) cancelAnimationFrame(zoomFrameId);
           const offset = camera.position.clone().sub(controls.target);
           const startDistance = offset.length();
+          // The zoom direction is constant for this animation; normalize once,
+          // not with a new Vector3 allocation on every animation frame.
+          offset.normalize();
           const factor = direction === "in" ? 0.88 : 1.12;
           const endDistance = THREE.MathUtils.clamp(startDistance * factor, controls.minDistance, controls.maxDistance);
           const distanceDelta = endDistance - startDistance;
@@ -449,7 +452,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
             const progress = Math.min((now - startedAt) / duration, 1);
             const eased = 1 - Math.pow(1 - progress, 3);
             const nextDistance = startDistance + distanceDelta * eased;
-            camera.position.copy(controls.target).addScaledVector(offset.clone().normalize(), nextDistance);
+            camera.position.copy(controls.target).addScaledVector(offset, nextDistance);
             controls.update();
             if (progress < 1) {
               zoomFrameId = requestAnimationFrame(step);
