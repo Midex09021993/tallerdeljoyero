@@ -16,7 +16,7 @@ export const Route = createFileRoute("/_authenticated/aula-formacion")({
 type Curso = { id: string; participante_id: string; titulo: string; descripcion: string | null; duracion_horas: number; estado: string };
 type Inscripcion = { id: string; curso_id: string; email_alumno: string; nombre_alumno: string | null; alumno_user_id?: string | null; estado: string; formacion_cursos: Curso | null };
 type Material = { id: string; curso_id: string; sesion_id: string | null; titulo: string; descripcion: string | null; nombre_archivo: string; ruta_storage: string; mime_type: string; tamano_bytes: number; created_at: string; publicado: boolean };
-type SesionCurso = { id: string; curso_id: string; numero: number; titulo: string; descripcion: string | null; duracion_horas: number; fecha_programada: string | null; publicada: boolean };
+type SesionCurso = { id: string; curso_id: string; numero: number; titulo: string; descripcion: string | null; duracion_horas: number; fecha_programada: string | null; publicada: boolean; bloqueada: boolean };
 type Examen = { id: string; curso_id: string; sesion_id?: string | null; titulo: string; instrucciones: string | null; duracion_minutos: number | null; intentos_permitidos: number; puntaje_maximo: number; publicado: boolean; disponible_desde: string | null; disponible_hasta: string | null };
 type Pregunta = { id: string; examen_id: string; tipo: "opcion_multiple" | "verdadero_falso" | "practica"; enunciado: string; opciones: Array<{label:string;value:string}>; respuesta_correcta?: unknown; puntaje: number; orden: number; obligatoria: boolean };
 type ExamenAlumno = { id: string; titulo: string; instrucciones: string | null; duracion_minutos: number | null; puntaje_maximo: number; intento_id?: string; vence_en?: string | null; preguntas: Array<{id:string;tipo:string;enunciado:string;opciones:Array<{label:string;value:string}>;puntaje:number;orden:number;obligatoria:boolean}> };
@@ -709,7 +709,7 @@ function AulaFormacionPage() {
     enabled: Boolean(esDocente && cursoActivoId),
     queryFn: async () => {
       const { data, error } = await (supabase as any).from("formacion_sesiones")
-        .select("id,curso_id,numero,titulo,descripcion,duracion_horas,fecha_programada,publicada")
+        .select("id,curso_id,numero,titulo,descripcion,duracion_horas,fecha_programada,publicada,bloqueada")
         .eq("curso_id", cursoActivoId).order("numero");
       if (error) throw error;
       return (data ?? []) as SesionCurso[];
@@ -1302,6 +1302,7 @@ function AulaFormacionPage() {
   }
 
   async function abrirLecturaParaAlumno(s: SesionCurso, vistaPrevia = false) {
+    if (!vistaPrevia && s.bloqueada) { setMensaje("Esta sesión está bloqueada por el profesor. Puedes consultar su información, pero todavía no abrir su lectura."); return; }
     setOcupado(true);
     setMensaje("");
     try {
@@ -1326,6 +1327,12 @@ function AulaFormacionPage() {
     } catch (err) {
       setMensaje(err instanceof Error ? err.message : "No se pudo cargar la lectura. Revisa los permisos de lectura del contenido.");
     } finally { setOcupado(false); }
+  }
+
+  async function cambiarBloqueoSesion(s: SesionCurso) {
+    const { error } = await (supabase as any).from("formacion_sesiones").update({ bloqueada: !s.bloqueada }).eq("id", s.id).eq("participante_id", participanteId);
+    if (error) setMensaje(error.message);
+    else { await qc.invalidateQueries({ queryKey: ["aula-formacion-sesiones", cursoActivoId] }); await qc.invalidateQueries({ queryKey: ["aula-formacion-sesiones-alumno"] }); setMensaje(s.bloqueada ? "Sesión desbloqueada. El alumno ya puede abrirla." : "Sesión bloqueada. El alumno podrá verla, pero no abrirla."); }
   }
 
   async function publicarSesion(s: SesionCurso) {
@@ -1788,7 +1795,7 @@ function AulaFormacionPage() {
                     <div className="min-w-0"><p className="text-sm font-medium">{s.numero}. {s.titulo}</p><p className="text-xs text-muted-foreground">{s.publicada ? "Publicada · visible para alumnos" : "Borrador · solo visible para el docente"}</p>{s.descripcion && <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{s.descripcion}</p>}</div>
                     <div className="flex shrink-0 items-center gap-2">
                       <button type="button" disabled={ocupado} onClick={() => iniciarEdicionSesion(s)} aria-label={`Editar sesión ${s.numero}`} title="Editar sesión" className="rounded-md p-2 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-50"><Pencil className="size-4" /></button>
-                      <button type="button" disabled={ocupado || cargandoLecturaDocente} onClick={() => void abrirEditorLectura(s)} className="rounded-lg border border-gold/40 px-3 py-1.5 text-xs disabled:opacity-50">{cargandoLecturaDocente ? "Cargando…" : "Editar lectura"}</button>
+                      <button type="button" disabled={ocupado || cargandoLecturaDocente} onClick={() => void abrirEditorLectura(s)} className="rounded-lg border border-gold/40 px-3 py-1.5 text-xs disabled:opacity-50">{cargandoLecturaDocente ? "Cargando…" : "Editar lectura"}</button>\n                      <button type="button" disabled={ocupado} onClick={() => void cambiarBloqueoSesion(s)} title={s.bloqueada ? "Desbloquear sesión para alumnos" : "Bloquear apertura para alumnos"} aria-label={s.bloqueada ? `Desbloquear sesión ${s.numero}` : `Bloquear sesión ${s.numero}`} className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs disabled:opacity-50 ${s.bloqueada ? "border-amber-300 bg-amber-50 text-amber-800" : "border-emerald-300 bg-emerald-50 text-emerald-800"}`}><span aria-hidden="true">{s.bloqueada ? "🔒" : "🔓"}</span>{s.bloqueada ? "Bloqueada" : "Abierta"}</button>
                       <button type="button" disabled={ocupado} onClick={() => void publicarSesion(s)} className="rounded-lg border border-border px-3 py-1.5 text-xs disabled:opacity-50">{s.publicada ? "Ocultar" : "Publicar"}</button>
                     </div>
                   </div>
@@ -2074,7 +2081,7 @@ function AulaFormacionPage() {
           {alumnoQuery.isLoading ? <Panel titulo="Cargando tus cursos"><p className="p-5 text-sm text-muted-foreground">Vinculando tu inscripción y recuperando tus cursos…</p></Panel> : alumnoQuery.error ? <Panel titulo="No se pudo cargar el aula"><p className="p-5 text-sm text-red-700">{alumnoQuery.error.message}</p></Panel> : inscripcionesAlumno.length === 0 ? <Panel titulo="Aún no tienes cursos asignados"><p className="p-5 text-sm text-muted-foreground">Cuando FADILAB te inscriba con el correo de tu cuenta, el curso aparecerá aquí automáticamente.</p></Panel> : inscripcionesAlumno.map(i => <Panel key={i.id} titulo={i.formacion_cursos?.titulo ?? "Curso de formación"}>
             <div className="p-5"><p className="text-sm text-muted-foreground">{i.formacion_cursos?.descripcion || "Materiales y actividades de tu formación."}</p><div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground"><span>{i.formacion_cursos?.duracion_horas ?? 0} horas</span><span>Inscripción: {i.estado}</span></div>
               <h3 className="mb-2 mt-5 text-sm font-semibold">Sesiones</h3>
-              {(sesionesAlumnoQuery.data ?? []).filter(item => item.curso_id === i.curso_id).length === 0 ? <p className="text-xs text-muted-foreground">Todavía no hay sesiones publicadas.</p> : (sesionesAlumnoQuery.data ?? []).filter(item => item.curso_id === i.curso_id).map(item => <article key={item.id} className="flex flex-wrap items-center justify-between gap-3 border-t border-border py-3"><div className="min-w-0"><p className="text-xs text-muted-foreground">Sesión {item.numero}</p><p className="text-sm font-medium">{item.titulo}</p>{item.descripcion && <p className="mt-1 whitespace-pre-wrap text-xs text-muted-foreground">{item.descripcion}</p>}{item.numero === 1 && <p className="mt-2 text-xs leading-5 text-muted-foreground"><span className="font-semibold text-foreground">Al finalizar:</span> reconocerás la interfaz de Rhino, identificarás los ejes principales y dominarás la navegación básica en el espacio 3D.</p>}</div><div className="flex shrink-0 items-center gap-2">{sesionesCompletadas.has(item.id) && <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700"><CheckCircle2 className="size-4"/> Completada</span>}<button type="button" onClick={() => void abrirLecturaParaAlumno(item, false)} className="inline-flex items-center gap-1 rounded-lg border border-gold/40 bg-gold/10 px-3 py-2 text-xs font-semibold text-gold-deep"><BookOpenCheck className="size-4"/> {sesionesCompletadas.has(item.id) ? "Repasar lectura" : "Comenzar lectura"}</button></div></article>)}
+              {(sesionesAlumnoQuery.data ?? []).filter(item => item.curso_id === i.curso_id).length === 0 ? <p className="text-xs text-muted-foreground">Todavía no hay sesiones publicadas.</p> : (sesionesAlumnoQuery.data ?? []).filter(item => item.curso_id === i.curso_id).map(item => <article key={item.id} className="flex flex-wrap items-center justify-between gap-3 border-t border-border py-3"><div className="min-w-0"><p className="text-xs text-muted-foreground">Sesión {item.numero}</p><p className="text-sm font-medium">{item.titulo}</p>{item.descripcion && <p className="mt-1 whitespace-pre-wrap text-xs text-muted-foreground">{item.descripcion}</p>}{item.numero === 1 && <p className="mt-2 text-xs leading-5 text-muted-foreground"><span className="font-semibold text-foreground">Al finalizar:</span> reconocerás la interfaz de Rhino, identificarás los ejes principales y dominarás la navegación básica en el espacio 3D.</p>}</div><div className="flex shrink-0 items-center gap-2">{sesionesCompletadas.has(item.id) && <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700"><CheckCircle2 className="size-4"/> Completada</span>}<button type="button" disabled={item.bloqueada} onClick={() => void abrirLecturaParaAlumno(item, false)} title={item.bloqueada ? "El profesor todavía no ha habilitado esta sesión" : "Abrir lectura"} className="inline-flex items-center gap-1 rounded-lg border border-gold/40 bg-gold/10 px-3 py-2 text-xs font-semibold text-gold-deep disabled:cursor-not-allowed disabled:opacity-60">{item.bloqueada ? <><span aria-hidden="true">🔒</span> Bloqueada</> : <><BookOpenCheck className="size-4"/> {sesionesCompletadas.has(item.id) ? "Repasar lectura" : "Comenzar lectura"}</>}</button></div></article>)}
               <h3 className="mb-2 mt-5 text-sm font-semibold">Evaluaciones</h3>
               {(examenesAlumnoQuery.data ?? []).filter(x => x.curso_id === i.curso_id).length === 0 ? <p className="border-t border-border py-3 text-xs text-muted-foreground">Aún no hay evaluaciones asignadas a este curso.</p> : (examenesAlumnoQuery.data ?? []).filter(x => x.curso_id === i.curso_id).map(x => {
                 const intentos = (intentosAlumnoQuery.data ?? []).filter(t => t.examen_id === x.id);
