@@ -518,6 +518,17 @@ function AulaFormacionPage() {
   const [faseLaboratorioGeometria, setFaseLaboratorioGeometria] = useState(0);
   const [modulosGeometriaCompletados, setModulosGeometriaCompletados] = useState<number[]>([]);
   const [laboratorioGeometriaAbierto, setLaboratorioGeometriaAbierto] = useState(false);
+  const [laboratorioCapasAbierto, setLaboratorioCapasAbierto] = useState(false);
+  const [capaMetalVisible, setCapaMetalVisible] = useState(true);
+  const [capaGemVisible, setCapaGemVisible] = useState(true);
+  const [capaMetalBloqueada, setCapaMetalBloqueada] = useState(false);
+  const [capaGemBloqueada, setCapaGemBloqueada] = useState(false);
+  const [objetoSeleccionadoCapas, setObjetoSeleccionadoCapas] = useState<"aro" | "piedra" | null>(null);
+  const [capaDestinoCapas, setCapaDestinoCapas] = useState<"Metal 01" | "Gem 01">("Metal 01");
+  const [asignacionCapas, setAsignacionCapas] = useState({ aro: "Metal 01", piedra: "Gem 01" });
+  const [retoCapasCompletado, setRetoCapasCompletado] = useState(false);
+  const [respuestaRetoCapas, setRespuestaRetoCapas] = useState("");
+  const [resultadoRetoCapas, setResultadoRetoCapas] = useState<"correcto" | "incorrecto" | null>(null);
 
 
   useEffect(() => {
@@ -1482,6 +1493,66 @@ function AulaFormacionPage() {
     </section>;
   };
 
+
+  const renderLaboratorioCapas = () => {
+    if (lecturaAbierta?.numero !== 2 || paginaLectura !== 6) return null;
+    const reiniciar = () => {
+      setCapaMetalVisible(true); setCapaGemVisible(true);
+      setCapaMetalBloqueada(false); setCapaGemBloqueada(false);
+      setObjetoSeleccionadoCapas(null); setCapaDestinoCapas("Metal 01");
+      setAsignacionCapas({ aro: "Metal 01", piedra: "Gem 01" });
+      setRetoCapasCompletado(false); setRespuestaRetoCapas(""); setResultadoRetoCapas(null);
+    };
+    if (!laboratorioCapasAbierto) return <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5 sm:p-6">
+      <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-gold-deep">Laboratorio interactivo · MatrixGold</p>
+      <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0"><h4 className="text-lg font-semibold">Practica con las capas de una joya</h4><p className="mt-1 text-sm text-muted-foreground">Experimenta con la visibilidad, el bloqueo y la asignación de objetos en un modelo didáctico.</p></div>
+        <button type="button" onClick={() => setLaboratorioCapasAbierto(true)} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-gold px-5 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-105"><Layers className="size-4"/> Iniciar práctica <ArrowRight className="size-4"/></button>
+      </div>
+    </section>;
+    return <section className="fixed inset-0 z-[105] h-[100dvh] overflow-y-auto bg-background" role="dialog" aria-modal="true" aria-label="Laboratorio interactivo de capas MatrixGold">
+      <header className="sticky top-0 z-20 border-b border-border bg-background/95 px-4 py-3 backdrop-blur">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-gold-deep">FADILAB · Sesión 2</p><h3 className="text-base font-semibold sm:text-lg">Laboratorio de capas · MatrixGold</h3></div><button type="button" onClick={() => setLaboratorioCapasAbierto(false)} className="rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-muted">Cerrar ✕</button></div>
+      </header>
+      <div className="mx-auto grid max-w-6xl gap-4 p-4 lg:grid-cols-[1.05fr_0.95fr] lg:p-6">
+        <div className="space-y-3">
+          <div className="rounded-2xl border border-border bg-[#17191d] p-4 text-white">
+            <div className="mb-3 flex items-center justify-between gap-2"><span className="text-xs font-semibold text-white/80">Vista esquemática de la joya</span><span className="rounded-full bg-white/10 px-2 py-1 text-[10px]">Modelo didáctico</span></div>
+            <svg viewBox="0 0 520 390" className="h-auto max-h-[48vh] w-full" role="img" aria-label="Anillo esquemático con cuerpo metálico y piedra central controlados por capas">
+              <defs><linearGradient id="capasMetal" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stopColor="#f3d78a"/><stop offset=".48" stopColor="#b88b37"/><stop offset="1" stopColor="#f7e4aa"/></linearGradient><radialGradient id="capasGem"><stop offset="0" stopColor="#80c8ff"/><stop offset=".65" stopColor="#2865b9"/><stop offset="1" stopColor="#102e69"/></radialGradient></defs>
+              {#if capaMetalVisible}
+                <g opacity={asignacionCapas.aro === "Metal 01" ? 1 : .45}><ellipse cx="260" cy="278" rx="143" ry="76" fill="none" stroke="url(#capasMetal)" strokeWidth="29"/><path d="M117 278 Q125 365 260 355 Q395 365 403 278" fill="none" stroke="#f5df9e" strokeOpacity=".55" strokeWidth="2"/><path d="M175 213 L198 166 Q260 130 322 166 L345 213" fill="none" stroke="url(#capasMetal)" strokeWidth="19" strokeLinecap="round"/><path d="M194 184 L194 135 M326 184 L326 135" stroke="url(#capasMetal)" strokeWidth="12" strokeLinecap="round"/><path d="M185 143 L335 143" stroke="#e7c66f" strokeWidth="9" strokeLinecap="round"/><circle cx="260" cy="120" r="66" fill="none" stroke="#d8b45d" strokeWidth="9" strokeDasharray="8 5"/></g>
+              {/if}
+              {#if capaGemVisible}
+                <g opacity={asignacionCapas.piedra === "Gem 01" ? 1 : .45}><circle cx="260" cy="119" r="49" fill="url(#capasGem)" stroke="#9bcfff" strokeWidth="3"/><path d="M260 70 L285 104 L309 119 L285 143 L260 168 L235 143 L211 119 L235 104Z" fill="none" stroke="#b8ddff" strokeOpacity=".8" strokeWidth="2"/><path d="M260 70 L260 168 M211 119 L309 119 M235 104 L285 143 M285 104 L235 143" stroke="#b8ddff" strokeOpacity=".65" strokeWidth="1.5"/></g>
+              {/if}
+              {!capaMetalVisible && !capaGemVisible && <text x="260" y="205" textAnchor="middle" fill="#f4f4f5" fontSize="15">No hay objetos visibles</text>}
+              <text x="260" y="382" textAnchor="middle" fill="#cbd5e1" fontSize="11">Representación conceptual · no es un archivo 3D editable</text>
+            </svg>
+            <div className="mt-2 flex flex-wrap gap-3 text-[11px] text-white/80"><span className="flex items-center gap-1.5"><i className="size-2.5 rounded-full bg-[#d8b45d]"/> Metal 01 · cuerpo</span><span className="flex items-center gap-1.5"><i className="size-2.5 rounded-full bg-[#438bd5]"/> Gem 01 · piedra</span></div>
+          </div>
+          <div className="rounded-xl border border-border p-4">
+            <h4 className="text-sm font-semibold">Selecciona un objeto para asignarlo</h4><p className="mt-1 text-xs leading-5 text-muted-foreground">En MatrixGold real, primero seleccionas el objeto en pantalla y después pulsas el triángulo de la capa de destino.</p>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <button type="button" disabled={!capaMetalVisible || capaMetalBloqueada} onClick={() => setObjetoSeleccionadoCapas("aro")} className={`rounded-lg border p-3 text-left text-sm ${objetoSeleccionadoCapas==="aro"?"border-gold bg-gold/10":"border-border hover:border-gold/50"} disabled:cursor-not-allowed disabled:opacity-40`}><span className="block font-semibold">Cuerpo del anillo</span><span className="mt-1 block text-xs text-muted-foreground">{!capaMetalVisible?"Oculto":capaMetalBloqueada?"Capa bloqueada": "Seleccionable"}</span></button>
+              <button type="button" disabled={!capaGemVisible || capaGemBloqueada} onClick={() => setObjetoSeleccionadoCapas("piedra")} className={`rounded-lg border p-3 text-left text-sm ${objetoSeleccionadoCapas==="piedra"?"border-gold bg-gold/10":"border-border hover:border-gold/50"} disabled:cursor-not-allowed disabled:opacity-40`}><span className="block font-semibold">Piedra central</span><span className="mt-1 block text-xs text-muted-foreground">{!capaGemVisible?"Oculta":capaGemBloqueada?"Capa bloqueada":"Seleccionable"}</span></button>
+            </div>
+            <div className="mt-3 flex flex-wrap items-center gap-2"><label className="text-xs font-medium" htmlFor="destino-capa-practica">Capa destino</label><select id="destino-capa-practica" value={capaDestinoCapas} onChange={e=>setCapaDestinoCapas(e.target.value as "Metal 01"|"Gem 01")} className="rounded-lg border border-border bg-background px-3 py-2 text-xs"><option>Metal 01</option><option>Gem 01</option></select><button type="button" disabled={!objetoSeleccionadoCapas} onClick={()=>{if(objetoSeleccionadoCapas){setAsignacionCapas(prev=>({...prev,[objetoSeleccionadoCapas]:capaDestinoCapas}));setObjetoSeleccionadoCapas(null);}}} className="rounded-lg bg-gold px-3 py-2 text-xs font-semibold text-black disabled:opacity-40">Asignar (triángulo)</button></div>
+            <p className="mt-2 text-xs text-muted-foreground">Asignación actual: cuerpo → {asignacionCapas.aro}; piedra → {asignacionCapas.piedra}.</p>
+          </div>
+        </div>
+        <div className="space-y-3">
+          <div className="rounded-xl border border-border p-4"><h4 className="font-semibold">Panel Layers simulado</h4><p className="mt-1 text-xs text-muted-foreground">Prueba los controles por separado y observa el resultado en la joya.</p>
+            {[{name:"Metal 01",visible:capaMetalVisible,locked:capaMetalBloqueada,setVisible:setCapaMetalVisible,setLocked:setCapaMetalBloqueada,items:"Cuerpo del anillo"},{name:"Gem 01",visible:capaGemVisible,locked:capaGemBloqueada,setVisible:setCapaGemVisible,setLocked:setCapaGemBloqueada,items:"Piedra central"}].map(layer=><div key={layer.name} className="mt-3 rounded-lg border border-border p-3"><div className="flex items-center justify-between gap-2"><div className="flex items-center gap-2"><span className={`size-3 rounded-sm ${layer.name==="Metal 01"?"bg-[#d8b45d]":"bg-[#438bd5]"}`}/><span className="text-sm font-semibold">{layer.name}</span></div><span className="text-[10px] text-muted-foreground">{layer.items}</span></div><div className="mt-3 flex flex-wrap gap-2"><button type="button" onClick={()=>{layer.setVisible(!layer.visible);setObjetoSeleccionadoCapas(null);}} className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-medium"><Eye className="size-3.5"/>{layer.visible?"Ocultar ojo":"Mostrar ojo"}</button><button type="button" onClick={()=>{layer.setLocked(!layer.locked);setObjetoSeleccionadoCapas(null);}} className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium ${layer.locked?"border-gold bg-gold/10":"border-border"}`}><Lock className="size-3.5"/>{layer.locked?"Desbloquear":"Bloquear"}</button></div><p className="mt-2 text-[11px] text-muted-foreground">{!layer.visible?"Capa oculta: sus objetos no se muestran.":layer.locked?"Capa bloqueada: los objetos se ven, pero no se pueden seleccionar directamente.":"Capa visible y desbloqueada: sus objetos se pueden seleccionar."}</p></div>)}
+          </div>
+          <div className="rounded-xl border border-gold/30 bg-gold/5 p-4"><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gold-deep">Reto de comprobación</p><h4 className="mt-1 text-sm font-semibold">Quieres proteger la piedra central para evitar seleccionarla, pero mantenerla visible. ¿Qué control debes activar?</h4><div className="mt-3 space-y-2">{[{v:"ojo",t:"Cerrar el ojo de Gem 01"},{v:"candado",t:"Activar el candado de Gem 01"},{v:"triangulo",t:"Asignar la piedra a Metal 01"}].map(o=><button key={o.v} type="button" onClick={()=>{setRespuestaRetoCapas(o.v);setResultadoRetoCapas(null);}} className={`w-full rounded-lg border px-3 py-2 text-left text-xs ${respuestaRetoCapas===o.v?"border-gold bg-gold/10":"border-border hover:border-gold/50"}`}>{o.t}</button>)}</div><button type="button" disabled={!respuestaRetoCapas} onClick={()=>{const ok=respuestaRetoCapas==="candado";setResultadoRetoCapas(ok?"correcto":"incorrecto");if(ok)setRetoCapasCompletado(true);}} className="mt-3 w-full rounded-lg bg-gold px-4 py-2.5 text-xs font-semibold text-black disabled:opacity-40">Comprobar respuesta</button>{resultadoRetoCapas&&<div className={`mt-3 rounded-lg border p-3 text-xs ${resultadoRetoCapas==="correcto"?"border-emerald-300 bg-emerald-50 text-emerald-900":"border-amber-300 bg-amber-50 text-amber-900"}`}><p className="font-semibold">{resultadoRetoCapas==="correcto"?"¡Correcto!":"Inténtalo otra vez."}</p><p className="mt-1">{resultadoRetoCapas==="correcto"?"El candado mantiene la piedra visible y evita seleccionarla directamente. El ojo controla la visibilidad de forma independiente.":"Recuerda: el ojo oculta; el candado impide seleccionar directamente."}</p></div>}</div>
+          {retoCapasCompletado&&<div className="rounded-xl border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-900"><p className="font-semibold">¡Reto completado!</p><p className="mt-1 text-xs">Has distinguido correctamente visibilidad, bloqueo y asignación.</p></div>}
+          <div className="flex flex-wrap justify-between gap-2"><button type="button" onClick={reiniciar} className="rounded-lg border border-border px-3 py-2 text-xs font-medium hover:bg-muted">Reiniciar práctica</button><span className="self-center text-[10px] text-muted-foreground">Práctica interactiva · no modifica MatrixGold</span></div>
+        </div>
+      </div>
+    </section>;
+  };
+
   if (!sesion || (!rolAlumno && !esDocente)) return <AppShell titulo="Aula de formación" subtitulo="Acceso restringido"><Panel titulo="Cuenta no habilitada"><p className="p-5 text-sm text-muted-foreground">El aula de alumnos está disponible para cuentas de gerente u operario. La docencia se administra exclusivamente desde FADILAB.</p></Panel></AppShell>;
 
   return <AppShell titulo="Aula de formación" subtitulo={esDocente ? "FADILAB · Administración académica" : "Tus cursos, materiales y actividades"}>
@@ -1569,6 +1640,7 @@ function AulaFormacionPage() {
                   return <div key={idx}><p className="mb-4 max-w-4xl whitespace-pre-line text-[15px] leading-7 text-foreground/90">{bloque}</p></div>;
                 })}
                 {renderLaboratorioGeometria()}
+                {renderLaboratorioCapas()}
                 {lecturaAbierta?.numero === 1 && paginaLectura === 4 && <section className="mt-5 max-w-4xl rounded-xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">Recurso interactivo</p>
                   <h4 className="mt-1 text-base font-semibold">Comandos de navegación</h4>
