@@ -700,7 +700,6 @@ function AulaFormacionPage() {
   async function guardarEdicionMaterial(e: FormEvent, material: Material) {
     e.preventDefault();
     if (!participanteId || !tituloMaterialEditado.trim()) return;
-    setOcupado(true); setMensaje("");
     if (archivoMaterialReemplazo && archivoMaterialReemplazo.size > 50 * 1024 * 1024) { setMensaje("El archivo supera el límite de 50 MB."); return; }
     setOcupado(true); setMensaje("");
     let nuevaRuta: string | null = null;
@@ -784,11 +783,7 @@ function AulaFormacionPage() {
           <nav aria-label="Secciones del panel docente" className="flex flex-wrap gap-2 rounded-xl border border-border bg-card p-2">
             {[{id:"doc-cursos",label:"Cursos"},{id:"doc-alumnos-sesiones",label:"Alumnos y sesiones"},{id:"doc-materiales",label:"Materiales"},{id:"doc-evaluaciones",label:"Evaluaciones"},{id:"doc-entregas",label:"Entregas"}].map(item => <a key={item.id} href={"#" + item.id} className="rounded-lg px-3 py-2 text-xs font-semibold text-muted-foreground transition hover:bg-gold/10 hover:text-foreground">{item.label}</a>)}
           </nav>
-          {cursoActivoId && <div className="flex justify-end">
-            <button type="button" onClick={() => setVistaPreviaAlumno(true)} className="inline-flex items-center gap-2 rounded-lg border border-gold/40 bg-gold/10 px-4 py-2.5 text-sm font-semibold text-gold-deep hover:bg-gold/20">
-              <BookOpen className="size-4" /> Vista previa del alumno
-            </button>
-          </div>}
+
           {vistaPreviaAlumno && cursoActivoId && (() => {
             const curso = cursos.find(item => item.id === cursoActivoId);
             const sesionesPublicadas = (sesionesQuery.data ?? []).filter(item => item.publicada);
