@@ -79,16 +79,16 @@ const LECTURA_SESION_1 = [
 ] as const;
 
 const COMPONENTES_INTERFAZ = [
-  ["Ribbon de MatrixGold", "Franja superior con pestañas que agrupan herramientas y funciones por categorías.", "En la primera franja de pestañas de MatrixGold: donde aparecen Curve, Surface, Solid, Tools, Gems y otras categorías.", "Organiza las herramientas especializadas de joyería en grupos para encontrarlas por tipo de tarea.", "Busca una pestaña como Curve, Surface, Solid o Gems para ubicar las herramientas de esa familia."],
-  ["Barras de herramientas", "Conjuntos de iconos para acceder directamente a comandos.", "Debajo de las pestañas principales y en las filas de iconos.", "Permiten ejecutar herramientas frecuentes con un clic, sin escribir el nombre del comando.", "Reconoce los iconos de creación y edición; en esta sesión solo identifica su ubicación."],
-  ["Área gráfica", "Espacio central donde se visualiza el modelo y se trabaja con el archivo.", "Es la zona central de la ventana, donde aparece la cuadrícula o el modelo 3D.", "Es el espacio de trabajo para observar, construir y editar la geometría.", "Al abrir un archivo de joyería, el anillo o la pieza se visualiza dentro de esta zona."],
-  ["Cuatro ventanas de visualización", "Top: superior; Front: frontal; Right: lateral derecha; Perspective: vista tridimensional.", "En el área gráfica, identificadas por las etiquetas Top, Front, Right y Perspective.", "Permiten observar la pieza desde distintas direcciones: vistas ortogonales para revisar proporciones y perspectiva para comprender su volumen.", "Compara la vista Top con Front para entender cómo cambia la apariencia de una misma pieza según el punto de vista."],
-  ["Quick Commands", "Panel de accesos rápidos a herramientas frecuentes de MatrixGold.", "Panel lateral izquierdo, en la parte superior de la captura.", "Reúne accesos directos a comandos utilizados con frecuencia.", "Localiza el panel y observa que contiene varios iconos; no es necesario ejecutarlos en esta sesión."],
-  ["Panel de propiedades", "Muestra información del objeto seleccionado, como tipo, capa, material y peso.", "Panel lateral izquierdo, debajo de Quick Commands.", "Permite consultar características del objeto activo o seleccionado.", "En la captura se muestran datos de un objeto, como tipo, capa, material y peso."],
-  ["Panel de capas (Layers)", "Organiza los elementos del proyecto por capas. En esta sesión solo lo reconoceremos.", "En la zona inferior del lateral izquierdo, bajo el panel de propiedades.", "Ayuda a organizar y controlar la visibilidad de los elementos de un proyecto.", "Un proyecto puede separar elementos por grupos o función; hoy solo identifica dónde está Layers, sin crear ni modificar capas."],
-  ["Paneles dinámicos", "Agrupan herramientas y funciones contextuales o especializadas.", "En la columna lateral derecha de la interfaz.", "Ofrecen paneles que cambian según las herramientas y funciones disponibles en MatrixGold.", "Reconoce los paneles Recent Commands, Dynamic Groups y Dynamic Commands que aparecen en la captura."],
-  ["Línea de comandos", "Permite escribir comandos y leer las indicaciones y opciones de Rhino.", "Franja horizontal situada debajo de las ventanas gráficas.", "Es el canal de comunicación con Rhino: permite introducir comandos y seguir sus solicitudes.", "Cuando se escribe un comando, sus indicaciones y opciones aparecen en esta zona."],
-  ["Barra de estado", "Muestra coordenadas, unidades y ayudas de modelado activas.", "Franja inferior de la interfaz, debajo de la línea de comandos.", "Informa sobre coordenadas del cursor, unidades del documento y ayudas como Grid Snap, Ortho y Osnap.", "Observa dónde aparecen las unidades y los indicadores de ayudas activas; no cambies su configuración."]
+  ["Ribbon de MatrixGold", "Franja superior con pestañas que agrupan herramientas y funciones por categorías.", "En la primera franja de pestañas de MatrixGold: donde aparecen Curve, Surface, Solid, Tools, Gems y otras categorías.", "Organiza las herramientas especializadas de joyería en grupos para encontrarlas por tipo de tarea."],
+  ["Barras de herramientas", "Conjuntos de iconos para acceder directamente a comandos.", "Debajo de las pestañas principales y en las filas de iconos.", "Permiten ejecutar herramientas frecuentes con un clic, sin escribir el nombre del comando."],
+  ["Área gráfica", "Espacio central donde se visualiza el modelo y se trabaja con el archivo.", "Es la zona central de la ventana, donde aparece la cuadrícula o el modelo 3D.", "Es el espacio de trabajo para observar, construir y editar la geometría."],
+  ["Cuatro ventanas de visualización", "Top: superior; Front: frontal; Right: lateral derecha; Perspective: vista tridimensional.", "En el área gráfica, identificadas por las etiquetas Top, Front, Right y Perspective.", "Permiten observar la pieza desde distintas direcciones: vistas ortogonales para revisar proporciones y perspectiva para comprender su volumen."],
+  ["Quick Commands", "Panel de accesos rápidos a herramientas frecuentes de MatrixGold.", "Panel lateral izquierdo, en la parte superior de la captura.", "Reúne accesos directos a comandos utilizados con frecuencia."],
+  ["Panel de propiedades", "Muestra información del objeto seleccionado, como tipo, capa, material y peso.", "Panel lateral izquierdo, debajo de Quick Commands.", "Permite consultar características del objeto activo o seleccionado."],
+  ["Panel de capas (Layers)", "Organiza los elementos del proyecto por capas. En esta sesión solo lo reconoceremos.", "En la zona inferior del lateral izquierdo, bajo el panel de propiedades.", "Ayuda a organizar y controlar la visibilidad de los elementos de un proyecto."],
+  ["Paneles dinámicos", "Agrupan herramientas y funciones contextuales o especializadas.", "En la columna lateral derecha de la interfaz.", "Ofrecen paneles que cambian según las herramientas y funciones disponibles en MatrixGold."],
+  ["Línea de comandos", "Permite escribir comandos y leer las indicaciones y opciones de Rhino.", "Franja horizontal situada debajo de las ventanas gráficas.", "Es el canal de comunicación con Rhino: permite introducir comandos y seguir sus solicitudes."],
+  ["Barra de estado", "Muestra coordenadas, unidades y ayudas de modelado activas.", "Franja inferior de la interfaz, debajo de la línea de comandos.", "Informa sobre coordenadas del cursor, unidades del documento y ayudas como Grid Snap, Ortho y Osnap."]
 ] as const;
 
 const COORDENADAS_INTERFAZ = [
@@ -989,23 +989,28 @@ function AulaFormacionPage() {
                             <span className="mt-0.5 block text-xs leading-5 text-muted-foreground">{item[1]}</span>
                           </span>
                         </span>
-                        {componenteActivo===indice && <span className="w-full space-y-2 border-t border-gold/20 pt-3">
-                          <span className="block rounded-lg bg-muted/60 p-2.5">
-                            <span className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Dónde lo encuentras</span>
-                            <span className="mt-1 block text-sm leading-5">{item[2]}</span>
-                          </span>
-                          <span className="block rounded-lg bg-muted/60 p-2.5">
-                            <span className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Para qué sirve</span>
-                            <span className="mt-1 block text-sm leading-5">{item[3]}</span>
-                          </span>
-                          <span className="block rounded-lg border border-gold/25 bg-gold/5 p-2.5">
-                            <span className="block text-[10px] font-semibold uppercase tracking-wider text-gold-deep">Ejemplo práctico</span>
-                            <span className="mt-1 block text-sm leading-5">{item[4]}</span>
-                          </span>
-                          <span className="block text-right text-xs font-semibold text-gold-deep">Componente seleccionado · Punto {indice+1}</span>
-                        </span>}
+
                       </button>)}
                     </div>
+                    <section aria-live="polite" className="mt-4 rounded-xl border border-gold/30 bg-background p-4 sm:p-5">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-gold-deep">Información del componente</p>
+                          <h5 className="mt-1 text-base font-semibold">{COMPONENTES_INTERFAZ[componenteActivo][0]}</h5>
+                        </div>
+                        <span className="rounded-full bg-gold/15 px-3 py-1 text-xs font-semibold">Punto {componenteActivo+1} de 10</span>
+                      </div>
+                      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                        <div className="rounded-lg bg-muted/60 p-3">
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Dónde lo encuentras</p>
+                          <p className="mt-1 text-sm leading-5">{COMPONENTES_INTERFAZ[componenteActivo][2]}</p>
+                        </div>
+                        <div className="rounded-lg bg-muted/60 p-3">
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Para qué sirve</p>
+                          <p className="mt-1 text-sm leading-5">{COMPONENTES_INTERFAZ[componenteActivo][3]}</p>
+                        </div>
+                      </div>
+                    </section>
                     {componentesExplorados.length===10 && <p className="mt-4 rounded-xl bg-emerald-500/10 p-3 text-sm font-medium text-emerald-800">Recorrido completado. Ya conoces los diez componentes. Puedes repasar cualquiera de ellos cuando quieras.</p>}
                     <p className="mt-4 rounded-xl bg-background/80 p-3 text-sm leading-6"><strong>Recuerda:</strong> esta actividad es para aprender explorando. No tiene examen ni calificación. Puedes repetir el recorrido las veces que necesites.</p>
                   </div>
