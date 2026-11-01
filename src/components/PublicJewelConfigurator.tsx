@@ -26,6 +26,7 @@ const colorHex = (color: number) => "#" + color.toString(16).padStart(6, "0");
 export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, sharedModelName, localFile }: Props) {
   const [metalId, setMetalId] = useState<string>("oro-amarillo");
   const [gemaId, setGemaId] = useState<string>("diamante_natural");
+  const [activeCategory, setActiveCategory] = useState<"metal" | "gem">("metal");
   const [modelUrl, setModelUrl] = useState<string | null>(null);
   const [modelName, setModelName] = useState(sharedModelName || "modelo.3dm");
   const [status, setStatus] = useState("Preparando modelo 3D…");
@@ -217,7 +218,7 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
           <button type="button" onClick={() => { setMetalId("oro-amarillo"); setGemaId("diamante_natural"); }} className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[#e4ddd1] bg-white px-3.5 py-2 text-xs font-semibold text-[#41382d] shadow-sm transition hover:border-[#b28b45] hover:bg-[#fbf8f1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45] focus-visible:ring-offset-2"><RotateCcw className="size-3.5" /> Restablecer</button>
         </div>
       </header>
-      <div className="isolate grid min-w-0 grid-cols-1 lg:min-h-0 lg:flex-1 lg:grid-rows-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)_250px] 2xl:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="isolate grid min-w-0 grid-cols-1 lg:min-h-0 lg:flex-1 lg:grid-rows-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)] 2xl:grid-cols-[minmax(0,1fr)]">
         <div ref={visorRef} className={"relative z-0 h-[clamp(340px,56svh,500px)] min-h-[340px] min-w-0 overflow-hidden bg-white sm:h-[clamp(400px,62vh,600px)] sm:min-h-[400px] lg:h-full lg:min-h-0 2xl:min-h-[680px] " + (pantallaCompleta ? "h-screen min-h-0 w-screen sm:h-screen sm:min-h-0 2xl:h-screen 2xl:min-h-0" : "")}>
           <div className="absolute right-2 top-2 z-20 flex items-center gap-1 rounded-full border border-[#e8e3db] bg-white/90 p-1 shadow-sm backdrop-blur sm:right-3 sm:top-3 sm:gap-1.5 sm:p-1.5" aria-label="Controles informativos del visor">
             <span title="Iluminación HDR" className="rounded-full border border-[#e8e3db] px-2 py-1 text-[9px] font-medium text-[#81786c] sm:text-[10px]">HDRI</span>
@@ -235,48 +236,35 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
               {!loadError && <p className="mt-1 text-xs text-[#8a8175]">Estamos preparando la experiencia interactiva.</p>}
             </div>
           </div>}
+          <div className="absolute bottom-4 left-1/2 z-30 flex w-[min(92%,420px)] -translate-x-1/2 flex-col items-center gap-2.5 sm:bottom-5 sm:gap-3" aria-label="Selector de materiales de la joya">
+            <div className="flex max-w-full items-center justify-center gap-2 rounded-full border border-white/80 bg-white/90 px-3 py-2 shadow-[0_8px_28px_rgba(35,29,20,.12)] backdrop-blur-md sm:gap-3 sm:px-4">
+              {(activeCategory === "metal" ? metales : gemasPublicas).map((item) => {
+                const selected = activeCategory === "metal" ? metalId === item.id : gemaId === item.id;
+                const swatch = activeCategory === "metal"
+                  ? { background: `linear-gradient(135deg, #ffffff 0%, ${colorHex(item.color)} 42%, #6f6250 100%)` }
+                  : { background: `radial-gradient(circle at 32% 28%, #ffffff 0%, ${colorHex(item.color)} 38%, #25212a 100%)` };
+                return <button
+                  key={item.id}
+                  type="button"
+                  aria-label={`Seleccionar ${item.label}`}
+                  aria-pressed={selected}
+                  title={item.label}
+                  onClick={() => activeCategory === "metal" ? handleMetalSelect(item.id) : handleGemSelect(item.id)}
+                  className={"grid size-10 shrink-0 place-items-center rounded-full transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45] focus-visible:ring-offset-2 sm:size-11 " + (selected ? "ring-2 ring-[#8b9cf4] ring-offset-2 ring-offset-white" : "opacity-90 hover:scale-105 hover:opacity-100")}
+                >
+                  <span className="size-8 rounded-full border border-black/10 shadow-[inset_0_1px_2px_rgba(255,255,255,.7),0_2px_5px_rgba(0,0,0,.18)] sm:size-9" style={swatch} />
+                </button>;
+              })}
+            </div>
+            <div className="flex items-center gap-1 rounded-full border border-white/80 bg-white/90 p-1 shadow-[0_8px_28px_rgba(35,29,20,.10)] backdrop-blur-md">
+              <button type="button" aria-pressed={activeCategory === "metal"} onClick={() => setActiveCategory("metal")} className={"min-w-[76px] rounded-full px-4 py-2 text-[11px] font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45] " + (activeCategory === "metal" ? "bg-white text-[#29251f] shadow-sm" : "text-[#77716a] hover:text-[#29251f]")}>Metal</button>
+              <button type="button" aria-pressed={activeCategory === "gem"} onClick={() => setActiveCategory("gem")} className={"min-w-[76px] rounded-full px-4 py-2 text-[11px] font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45] " + (activeCategory === "gem" ? "bg-white text-[#29251f] shadow-sm" : "text-[#77716a] hover:text-[#29251f]")}>Gem</button>
+            </div>
+            <p className="rounded-full bg-white/75 px-2.5 py-1 text-[10px] font-medium text-[#756b5e] shadow-sm backdrop-blur-sm">{activeCategory === "metal" ? metales.find((item) => item.id === metalId)?.label : gemasPublicas.find((item) => item.id === gemaId)?.label}</p>
+          </div>
           <div className="pointer-events-none absolute bottom-2 left-2 z-10 max-w-[calc(100%-1rem)] rounded-full border border-white/80 bg-white/85 px-2.5 py-1.5 text-[9px] text-[#766d61] shadow-sm backdrop-blur sm:bottom-3 sm:left-3 sm:px-3 sm:text-[10px]">Toca y arrastra para girar · Pellizca para acercar</div>
         </div>
-        <aside className="relative z-10 min-w-0 border-t border-[#eee9e0] bg-[#fffefa] p-2.5 sm:p-4 lg:h-full lg:min-h-0 lg:max-h-full lg:overflow-x-hidden lg:overflow-y-auto lg:border-l lg:border-t-0 lg:p-3 2xl:p-4 [@media(max-height:800px)]:p-2">
-          <div className="mb-2.5 sm:mb-4 [@media(max-height:800px)]:mb-2">
-            <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#92702f]">01 · Metal</p>
-            <p className="mt-0.5 hidden text-xs text-[#8a8175] sm:block">Elige el acabado de tu joya</p>
-            <div className="mt-2 grid grid-cols-4 gap-1.5 sm:mt-3 sm:grid-cols-2 sm:gap-2 [@media(max-height:800px)]:mt-2">{metales.map((metal) => <button key={metal.id} type="button" aria-pressed={metalId === metal.id} onClick={() => handleMetalSelect(metal.id)} className={"group flex min-h-11 items-center gap-1.5 rounded-lg border px-2 py-2 text-left text-[11px] transition sm:min-h-[76px] sm:block sm:rounded-xl sm:p-3 sm:text-xs [@media(max-height:800px)]:min-h-[60px] [@media(max-height:800px)]:p-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45] focus-visible:ring-offset-1 " + (metalId === metal.id ? "border-[#a7833d] bg-[#f7f0e2] shadow-[inset_0_0_0_1px_rgba(167,131,61,.12)]" : "border-[#ece7df] bg-white hover:border-[#d1bd96] hover:bg-[#fcfaf5]")}><span className="flex shrink-0 items-center justify-between sm:mb-2"><span className="size-4 rounded-full border border-black/10 shadow-sm sm:size-5" style={{ backgroundColor: "#" + metal.color.toString(16).padStart(6,"0") }} />{metalId === metal.id && <span className="text-[9px] font-bold uppercase tracking-wide text-[#8b6b36]">Activo</span>}</span><span className="min-w-0 truncate font-medium text-[#342e26] sm:whitespace-normal">{metal.label}</span></button>)}</div>
-          </div>
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#92702f]">02 · Piedra</p>
-            <p className="mt-0.5 hidden text-xs text-[#8a8175] sm:block">Selecciona una gema</p>
-            <div className="mt-2 space-y-1.5 [@media(max-height:800px)]:mt-1">
-              {gemasPublicas.map((gem) => <button key={gem.id} type="button" aria-pressed={gemaId === gem.id} onClick={() => handleGemSelect(gem.id)} className={"flex min-h-9 w-full items-center gap-2 rounded-xl border px-2.5 py-2 text-left text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45] focus-visible:ring-offset-1 " + (gemaId === gem.id ? "border-[#a7833d] bg-[#f7f0e2] text-[#342e26]" : "border-[#ece7df] bg-white text-[#5f574d] hover:border-[#d1bd96] hover:bg-[#fcfaf5]")}><span className="size-3.5 shrink-0 rounded-full border border-black/10" style={{ backgroundColor: colorHex(gem.color) }} /><span className="min-w-0 flex-1 truncate font-medium">{gem.label}</span>{gemaId === gem.id && <span className="text-[9px] font-bold uppercase tracking-wide text-[#8b6b36]">Activo</span>}</button>)}
-            </div>
-          </div>
-          <details className="mt-2.5 rounded-lg border border-[#eee6d8] bg-[linear-gradient(135deg,#fcfaf6_0%,#fffdf9_100%)] p-2.5 sm:mt-4 sm:rounded-xl sm:p-3 [@media(max-height:800px)]:mt-2 [@media(max-height:800px)]:p-2.5" aria-live="polite">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-2 text-xs font-semibold text-[#6f572d] [&::-webkit-details-marker]:hidden">
-              <span className="truncate">Tu combinación</span>
-              <span className="flex shrink-0 items-center gap-1.5">
-                <span className="size-3 rounded-full border border-black/10" style={{ backgroundColor: "#" + selectedMetal.color.toString(16).padStart(6, "0") }} />
-                <span className="size-3 rounded-full border border-black/10" style={{ backgroundColor: colorHex(selectedGem.color) }} />
-                <span className="text-[10px]">Detalles⌄</span>
-              </span>
-            </summary>
-            <div className="mt-2 flex items-center gap-2 sm:mt-3 sm:gap-2.5">
-              <span className="size-5 shrink-0 rounded-full border border-black/10 shadow-sm sm:size-7" style={{ backgroundColor: "#" + selectedMetal.color.toString(16).padStart(6, "0") }} />
-              <div className="min-w-0">
-                <p className="text-[10px] text-[#8a8175]">Metal</p>
-                <p className="truncate text-xs font-semibold text-[#342e26]">{selectedMetal.label}</p>
-              </div>
-            </div>
-            <div className="mt-2 flex items-center gap-2 sm:mt-2.5 sm:gap-2.5">
-              <span className="size-7 shrink-0 rounded-full border border-black/10 shadow-sm" style={{ backgroundColor: colorHex(selectedGem.color) }} />
-              <div className="min-w-0">
-                <p className="text-[10px] text-[#8a8175]">Piedra</p>
-                <p className="truncate text-xs font-semibold text-[#342e26]">{selectedGem.label}</p>
-              </div>
-            </div>
-            {aplicacionEstado && <p className={"mt-3 border-t border-[#eee6d8] pt-2 text-[10px] leading-4 " + (aplicacionEstado.startsWith("Metal y gema aplicados") ? "text-emerald-700" : "text-amber-700")} role="status">{aplicacionEstado}</p>}
-            <p className="mt-2 hidden text-[10px] leading-4 text-[#746b62] sm:block">La apariencia final depende de la geometría y de las piezas identificadas en el modelo 3D.</p>
-          </details>
-        </aside>
+
       </div>
       <footer className="hidden border-t border-[#eee9e0] bg-[#fdfcf9] px-4 py-2 text-[10px] leading-4 text-[#8a8175] md:flex md:items-center md:justify-between">
         <span>Taller del Joyero · Visualizador independiente</span>
