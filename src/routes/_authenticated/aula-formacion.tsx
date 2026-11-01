@@ -1057,22 +1057,27 @@ function AulaFormacionPage() {
                 </div>)}
                 {paginaLectura === 1 && <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5 sm:p-6">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">Material visual de apoyo</p>
-                  <h4 className="mt-1 text-lg font-semibold">Referencias de Rhinoceros 7</h4>
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">Abre las imágenes de referencia para reconocer el espacio de trabajo y sus elementos principales.</p>
+                  <h4 className="mt-1 text-lg font-semibold">Rhinoceros 7</h4>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">Consulta la imagen de referencia general del programa.</p>
+                  {imagenRhinoUrl ? <button type="button" onClick={() => setTipoImagenApoyoAbierta(tipoImagenApoyoAbierta === "rhinoceros" ? null : "rhinoceros")} aria-expanded={tipoImagenApoyoAbierta === "rhinoceros"} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95">Ver RHINOCEROS <ChevronRight className="size-4"/></button> : <p className="mt-3 text-xs text-muted-foreground">{imagenRhinoError || "Buscando RHINOCEROS en la Biblioteca del curso…"}</p>}
+                  {tipoImagenApoyoAbierta === "rhinoceros" && <div className="mt-5 overflow-hidden rounded-xl border border-border bg-background p-3 sm:p-4">
+                    <div className="mb-3 flex items-center justify-between gap-3"><h5 className="text-sm font-semibold">Rhinoceros 7</h5><button type="button" onClick={() => setTipoImagenApoyoAbierta(null)} className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:border-gold">Cerrar ×</button></div>
+                    <img src={imagenRhinoUrl} alt="Referencia de Rhinoceros 7" className="mx-auto block h-auto max-h-[65vh] w-full rounded-lg object-contain" />
+                  </div>}
+                </section>}
+                {paginaLectura === 3 && <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5 sm:p-6">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">Material visual de apoyo</p>
+                  <h4 className="mt-1 text-lg font-semibold">Vistas y ejes de Rhinoceros 7</h4>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">Identifica las vistas de trabajo y la orientación espacial mediante los ejes de coordenadas.</p>
                   <div className="mt-4 flex flex-wrap gap-2">
-                    {imagenRhinoUrl && <button type="button" onClick={() => setTipoImagenApoyoAbierta(tipoImagenApoyoAbierta === "rhinoceros" ? null : "rhinoceros")} aria-expanded={tipoImagenApoyoAbierta === "rhinoceros"} className="inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95">Ver RHINOCEROS <ChevronRight className="size-4"/></button>}
                     {imagenesVistasUrl && <button type="button" onClick={() => setTipoImagenApoyoAbierta(tipoImagenApoyoAbierta === "vistas" ? null : "vistas")} aria-expanded={tipoImagenApoyoAbierta === "vistas"} className="inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95">Ver VISTAS <ChevronRight className="size-4"/></button>}
                     {imagenesEjesUrl && <button type="button" onClick={() => setTipoImagenApoyoAbierta(tipoImagenApoyoAbierta === "ejes" ? null : "ejes")} aria-expanded={tipoImagenApoyoAbierta === "ejes"} className="inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95">Ver EJES <ChevronRight className="size-4"/></button>}
                   </div>
-                  {tipoImagenApoyoAbierta && <div className="mt-5 overflow-hidden rounded-xl border border-border bg-background p-3 sm:p-4">
-                    <div className="mb-3 flex items-center justify-between gap-3">
-                      <h5 className="text-sm font-semibold">{tipoImagenApoyoAbierta === "rhinoceros" ? "Rhinoceros 7" : tipoImagenApoyoAbierta === "vistas" ? "Vistas de trabajo" : "Ejes de coordenadas"}</h5>
-                      <button type="button" onClick={() => setTipoImagenApoyoAbierta(null)} className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:border-gold">Cerrar ×</button>
-                    </div>
-                    <img src={tipoImagenApoyoAbierta === "rhinoceros" ? imagenRhinoUrl : tipoImagenApoyoAbierta === "vistas" ? imagenesVistasUrl : imagenesEjesUrl} alt={tipoImagenApoyoAbierta === "rhinoceros" ? "Referencia de Rhinoceros 7" : tipoImagenApoyoAbierta === "vistas" ? "Vistas de trabajo de Rhinoceros" : "Ejes de coordenadas de Rhinoceros"} className="mx-auto block h-auto max-h-[65vh] w-full rounded-lg object-contain" />
+                  {!imagenesVistasUrl && !imagenesEjesUrl && <p className="mt-3 text-xs text-muted-foreground">{errorImagenesApoyo || "Buscando VISTAS y EJES en la Biblioteca del curso…"}</p>}
+                  {(tipoImagenApoyoAbierta === "vistas" || tipoImagenApoyoAbierta === "ejes") && <div className="mt-5 overflow-hidden rounded-xl border border-border bg-background p-3 sm:p-4">
+                    <div className="mb-3 flex items-center justify-between gap-3"><h5 className="text-sm font-semibold">{tipoImagenApoyoAbierta === "vistas" ? "Vistas de trabajo" : "Ejes de coordenadas"}</h5><button type="button" onClick={() => setTipoImagenApoyoAbierta(null)} className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:border-gold">Cerrar ×</button></div>
+                    <img src={tipoImagenApoyoAbierta === "vistas" ? imagenesVistasUrl : imagenesEjesUrl} alt={tipoImagenApoyoAbierta === "vistas" ? "Vistas de trabajo de Rhinoceros" : "Ejes de coordenadas de Rhinoceros"} className="mx-auto block h-auto max-h-[65vh] w-full rounded-lg object-contain" />
                   </div>}
-                  {!imagenRhinoUrl && !imagenesVistasUrl && !imagenesEjesUrl && <p className="mt-3 text-xs text-muted-foreground">{imagenRhinoError || errorImagenesApoyo || "Buscando las imágenes en la Biblioteca del curso…"}</p>}
-                  {errorImagenesApoyo && <p className="mt-2 text-xs text-muted-foreground">{errorImagenesApoyo}</p>}
                 </section>}
                 {paginaLectura === 2 && !interfazInteractivaAbierta && <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5 sm:p-6">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">Actividad guiada · FADILAB</p>
@@ -1351,22 +1356,27 @@ function AulaFormacionPage() {
                 </div>)}
                 {paginaLectura === 1 && <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5 sm:p-6">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">Material visual de apoyo</p>
-                  <h4 className="mt-1 text-lg font-semibold">Referencias de Rhinoceros 7</h4>
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">Abre las imágenes de referencia para reconocer el espacio de trabajo y sus elementos principales.</p>
+                  <h4 className="mt-1 text-lg font-semibold">Rhinoceros 7</h4>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">Consulta la imagen de referencia general del programa.</p>
+                  {imagenRhinoUrl ? <button type="button" onClick={() => setTipoImagenApoyoAbierta(tipoImagenApoyoAbierta === "rhinoceros" ? null : "rhinoceros")} aria-expanded={tipoImagenApoyoAbierta === "rhinoceros"} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95">Ver RHINOCEROS <ChevronRight className="size-4"/></button> : <p className="mt-3 text-xs text-muted-foreground">{imagenRhinoError || "Buscando RHINOCEROS en la Biblioteca del curso…"}</p>}
+                  {tipoImagenApoyoAbierta === "rhinoceros" && <div className="mt-5 overflow-hidden rounded-xl border border-border bg-background p-3 sm:p-4">
+                    <div className="mb-3 flex items-center justify-between gap-3"><h5 className="text-sm font-semibold">Rhinoceros 7</h5><button type="button" onClick={() => setTipoImagenApoyoAbierta(null)} className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:border-gold">Cerrar ×</button></div>
+                    <img src={imagenRhinoUrl} alt="Referencia de Rhinoceros 7" className="mx-auto block h-auto max-h-[65vh] w-full rounded-lg object-contain" />
+                  </div>}
+                </section>}
+                {paginaLectura === 3 && <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5 sm:p-6">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">Material visual de apoyo</p>
+                  <h4 className="mt-1 text-lg font-semibold">Vistas y ejes de Rhinoceros 7</h4>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">Identifica las vistas de trabajo y la orientación espacial mediante los ejes de coordenadas.</p>
                   <div className="mt-4 flex flex-wrap gap-2">
-                    {imagenRhinoUrl && <button type="button" onClick={() => setTipoImagenApoyoAbierta(tipoImagenApoyoAbierta === "rhinoceros" ? null : "rhinoceros")} aria-expanded={tipoImagenApoyoAbierta === "rhinoceros"} className="inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95">Ver RHINOCEROS <ChevronRight className="size-4"/></button>}
                     {imagenesVistasUrl && <button type="button" onClick={() => setTipoImagenApoyoAbierta(tipoImagenApoyoAbierta === "vistas" ? null : "vistas")} aria-expanded={tipoImagenApoyoAbierta === "vistas"} className="inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95">Ver VISTAS <ChevronRight className="size-4"/></button>}
                     {imagenesEjesUrl && <button type="button" onClick={() => setTipoImagenApoyoAbierta(tipoImagenApoyoAbierta === "ejes" ? null : "ejes")} aria-expanded={tipoImagenApoyoAbierta === "ejes"} className="inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95">Ver EJES <ChevronRight className="size-4"/></button>}
                   </div>
-                  {tipoImagenApoyoAbierta && <div className="mt-5 overflow-hidden rounded-xl border border-border bg-background p-3 sm:p-4">
-                    <div className="mb-3 flex items-center justify-between gap-3">
-                      <h5 className="text-sm font-semibold">{tipoImagenApoyoAbierta === "rhinoceros" ? "Rhinoceros 7" : tipoImagenApoyoAbierta === "vistas" ? "Vistas de trabajo" : "Ejes de coordenadas"}</h5>
-                      <button type="button" onClick={() => setTipoImagenApoyoAbierta(null)} className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:border-gold">Cerrar ×</button>
-                    </div>
-                    <img src={tipoImagenApoyoAbierta === "rhinoceros" ? imagenRhinoUrl : tipoImagenApoyoAbierta === "vistas" ? imagenesVistasUrl : imagenesEjesUrl} alt={tipoImagenApoyoAbierta === "rhinoceros" ? "Referencia de Rhinoceros 7" : tipoImagenApoyoAbierta === "vistas" ? "Vistas de trabajo de Rhinoceros" : "Ejes de coordenadas de Rhinoceros"} className="mx-auto block h-auto max-h-[65vh] w-full rounded-lg object-contain" />
+                  {!imagenesVistasUrl && !imagenesEjesUrl && <p className="mt-3 text-xs text-muted-foreground">{errorImagenesApoyo || "Buscando VISTAS y EJES en la Biblioteca del curso…"}</p>}
+                  {(tipoImagenApoyoAbierta === "vistas" || tipoImagenApoyoAbierta === "ejes") && <div className="mt-5 overflow-hidden rounded-xl border border-border bg-background p-3 sm:p-4">
+                    <div className="mb-3 flex items-center justify-between gap-3"><h5 className="text-sm font-semibold">{tipoImagenApoyoAbierta === "vistas" ? "Vistas de trabajo" : "Ejes de coordenadas"}</h5><button type="button" onClick={() => setTipoImagenApoyoAbierta(null)} className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:border-gold">Cerrar ×</button></div>
+                    <img src={tipoImagenApoyoAbierta === "vistas" ? imagenesVistasUrl : imagenesEjesUrl} alt={tipoImagenApoyoAbierta === "vistas" ? "Vistas de trabajo de Rhinoceros" : "Ejes de coordenadas de Rhinoceros"} className="mx-auto block h-auto max-h-[65vh] w-full rounded-lg object-contain" />
                   </div>}
-                  {!imagenRhinoUrl && !imagenesVistasUrl && !imagenesEjesUrl && <p className="mt-3 text-xs text-muted-foreground">{imagenRhinoError || errorImagenesApoyo || "Buscando las imágenes en la Biblioteca del curso…"}</p>}
-                  {errorImagenesApoyo && <p className="mt-2 text-xs text-muted-foreground">{errorImagenesApoyo}</p>}
                 </section>}
                 {paginaLectura === 2 && !interfazInteractivaAbierta && <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5 sm:p-6">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">Actividad guiada · FADILAB</p>
