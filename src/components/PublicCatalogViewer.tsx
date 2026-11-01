@@ -549,16 +549,16 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
           const previous = bvhCameraStateRef.current;
           const state = previous ?? new Float64Array(10);
           const cameraChanged = previous === null
-            || Math.abs(camera.position.x - state[0]) > 1e-7
-            || Math.abs(camera.position.y - state[1]) > 1e-7
-            || Math.abs(camera.position.z - state[2]) > 1e-7
-            || Math.abs(camera.quaternion.x - state[3]) > 1e-7
-            || Math.abs(camera.quaternion.y - state[4]) > 1e-7
-            || Math.abs(camera.quaternion.z - state[5]) > 1e-7
-            || Math.abs(camera.quaternion.w - state[6]) > 1e-7
-            || Math.abs(controls.target.x - state[7]) > 1e-7
-            || Math.abs(controls.target.y - state[8]) > 1e-7
-            || Math.abs(controls.target.z - state[9]) > 1e-7;
+            || Math.abs(camera.position.x - state[0]!) > 1e-7
+            || Math.abs(camera.position.y - state[1]!) > 1e-7
+            || Math.abs(camera.position.z - state[2]!) > 1e-7
+            || Math.abs(camera.quaternion.x - state[3]!) > 1e-7
+            || Math.abs(camera.quaternion.y - state[4]!) > 1e-7
+            || Math.abs(camera.quaternion.z - state[5]!) > 1e-7
+            || Math.abs(camera.quaternion.w - state[6]!) > 1e-7
+            || Math.abs(controls.target.x - state[7]!) > 1e-7
+            || Math.abs(controls.target.y - state[8]!) > 1e-7
+            || Math.abs(controls.target.z - state[9]!) > 1e-7;
           let bvhDurationMs = 0;
           if (cameraChanged) {
             const bvhStartedAt = framePerf ? performance.now() : 0;
