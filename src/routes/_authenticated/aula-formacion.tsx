@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent, type ChangeEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent, type ChangeEvent } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -34,10 +34,18 @@ const LECTURA_SESION_1 = [
     "Rhino trabaja principalmente con geometría NURBS, un sistema matemático para representar curvas y superficies con precisión. En esta primera sesión no dibujaremos ni construiremos geometría: aprenderemos a reconocer el entorno y a desplazarnos por el espacio de trabajo."
   ]},
   { titulo: "3. Reconocimiento de la interfaz", bloques: [
-    "Área gráfica y ventanas: es la zona principal donde se visualiza el contenido del archivo. En la disposición habitual aparecen Top (superior), Front (frontal), Right (derecha) y Perspective (perspectiva).",
-    "Línea de comandos: permite escribir comandos y consultar las indicaciones de Rhino. Es importante observar sus mensajes porque allí aparecen las solicitudes y opciones de cada operación.",
-    "Barras de herramientas y paneles: reúnen accesos a herramientas y controles del programa. Su distribución puede variar según el espacio de trabajo seleccionado.",
-    "Títulos de las ventanas: identifican cada vista. Al hacer doble clic en el título de una ventana, esta se maximiza; al repetir la acción, vuelve a la distribución anterior."
+    "La imagen de apoyo muestra MatrixGold 3.1, una interfaz especializada para joyería que funciona sobre el entorno de modelado de Rhino. No es la interfaz estándar de Rhino 7: algunos nombres y paneles, como Ribbon de MatrixGold, Quick Commands y Dynamic Panels, pertenecen a MatrixGold.",
+    "1. Ribbon de MatrixGold: franja superior con pestañas que agrupan herramientas y funciones por categorías.",
+    "2. Barras de herramientas: conjuntos de iconos de acceso directo a comandos. Su distribución puede variar según la configuración del espacio de trabajo.",
+    "3. Área gráfica: espacio central donde se visualiza el modelo y se trabaja con el contenido del archivo.",
+    "4. Cuatro ventanas de visualización: Top muestra la vista superior; Front, la frontal; Right, la lateral derecha; y Perspective, una vista tridimensional en perspectiva.",
+    "5. Quick Commands: panel de accesos rápidos a herramientas frecuentes de MatrixGold.",
+    "6. Panel de propiedades: muestra información y propiedades del objeto seleccionado. En la imagen se observan datos como tipo, capa, material y peso.",
+    "7. Panel de capas (Layers): organiza los elementos del proyecto por capas. En esta primera sesión solo reconoceremos su ubicación; todavía no crearemos ni modificaremos capas.",
+    "8. Paneles dinámicos: agrupan herramientas y funciones contextuales o especializadas, como los paneles que aparecen en la captura.",
+    "9. Línea de comandos: permite escribir comandos y leer las indicaciones, solicitudes y opciones que presenta Rhino.",
+    "10. Barra de estado: muestra información del entorno, como coordenadas, unidades y ayudas de modelado activas.",
+    "Importante: esta imagen se utiliza para reconocer visualmente componentes de una instalación de MatrixGold 3.1. En Rhino 7 sin MatrixGold, la disposición, los nombres y algunos paneles pueden ser diferentes. En esta sesión no ejecutaremos herramientas de modelado ni modificaremos el archivo."
   ]},
   { titulo: "4. Vistas y orientación espacial", bloques: [
     "Top muestra el contenido desde arriba; Front, desde el frente; y Right, desde la derecha. Estas son vistas paralelas. Perspective permite apreciar la profundidad y observar el contenido desde una orientación tridimensional.",
@@ -107,6 +115,7 @@ function AulaFormacionPage() {
   const [cargandoLecturaDocente, setCargandoLecturaDocente] = useState(false);
   const [estadoGuardadoLectura, setEstadoGuardadoLectura] = useState<{tipo:"success"|"error"|"info"; texto:string} | null>(null);
   const [seccionesLecturaActivas, setSeccionesLecturaActivas] = useState<Array<{titulo:string;bloques:string[]}>>(LECTURA_SESION_1.map(x => ({ titulo:x.titulo, bloques:[...x.bloques] })));
+  const [imagenInterfazUrl, setImagenInterfazUrl] = useState("");
   const [lecturaPublicada, setLecturaPublicada] = useState(false);
   const [archivo, setArchivo] = useState<File | null>(null);
   const [tituloMaterial, setTituloMaterial] = useState("");
@@ -316,6 +325,28 @@ function AulaFormacionPage() {
       return (data ?? []) as Material[];
     },
   });
+
+  useEffect(() => {
+    const materiales = esDocente ? materialesDocenteQuery.data : materialesAlumnoQuery.data;
+    if (!lecturaAbierta || lecturaAbierta.numero !== 1 || !materiales) {
+      setImagenInterfazUrl("");
+      return;
+    }
+    const imagen = materiales.find((material) =>
+      material.sesion_id === lecturaAbierta.id &&
+      /^(interface|interfaz)\.(jpg|jpeg|png|webp)$/i.test(material.nombre_archivo)
+    );
+    if (!imagen) {
+      setImagenInterfazUrl("");
+      return;
+    }
+    let vigente = true;
+    supabase.storage.from("formacion-academica").createSignedUrl(imagen.ruta_storage, 300)
+      .then(({ data, error }) => {
+        if (vigente) setImagenInterfazUrl(error ? "" : data?.signedUrl ?? "");
+      });
+    return () => { vigente = false; };
+  }, [lecturaAbierta?.id, lecturaAbierta?.numero, esDocente, materialesDocenteQuery.data, materialesAlumnoQuery.data]);
 
   async function crearExamen(e: FormEvent) {
     e.preventDefault();
@@ -582,7 +613,12 @@ function AulaFormacionPage() {
       const { data, error } = await (supabase as any).from("formacion_contenidos_lectura").select("secciones").eq("sesion_id", s.id).maybeSingle();
       if (error) throw error;
       const guardadas = Array.isArray(data?.secciones) ? data.secciones : null;
-      setSeccionesLecturaEditadas(guardadas ?? (s.numero === 1 ? LECTURA_SESION_1.map(x => ({ titulo: x.titulo, bloques: [...x.bloques] })) : []));
+      const seccionesEditor = guardadas && s.numero === 1
+        ? guardadas.map((seccion: { titulo: string; bloques: string[] }, indice: number) => indice === 2
+          ? { ...seccion, titulo: LECTURA_SESION_1[2].titulo, bloques: [...LECTURA_SESION_1[2].bloques] }
+          : seccion)
+        : guardadas ?? (s.numero === 1 ? LECTURA_SESION_1.map(x => ({ titulo: x.titulo, bloques: [...x.bloques] })) : []);
+      setSeccionesLecturaEditadas(seccionesEditor);
       setEstadoGuardadoLectura(guardadas ? { tipo: "info", texto: "Contenido cargado desde Supabase. Los cambios aún no están guardados." } : { tipo: "info", texto: "Contenido inicial cargado. Guarda el borrador para conservarlo en Supabase." });
       setLecturaPublicada(Boolean(data?.publicado));
       setLecturaEditando(s);
@@ -643,12 +679,14 @@ function AulaFormacionPage() {
       // La sesión 1 utiliza F12, configurada previamente por el docente, para Zoom Extents.
       // Normaliza también el contenido ya guardado en Supabase, no solo el texto de respaldo.
       const secciones = seccionesOriginales && s.numero === 1
-        ? seccionesOriginales.map((seccion: { titulo: string; bloques: string[] }) => ({
-            ...seccion,
-            bloques: seccion.bloques.map((bloque: string) =>
-              bloque.replace(/Escribe Zoom Extents en la línea de comandos\.?/gi, "Pulsa F12, tecla configurada previamente por el docente para ejecutar Zoom Extents.")
-            ),
-          }))
+        ? seccionesOriginales.map((seccion: { titulo: string; bloques: string[] }, indice: number) => indice === 2
+            ? { ...seccion, titulo: LECTURA_SESION_1[2].titulo, bloques: [...LECTURA_SESION_1[2].bloques] }
+            : {
+                ...seccion,
+                bloques: seccion.bloques.map((bloque: string) =>
+                  bloque.replace(/Escribe Zoom Extents en la línea de comandos\.?/gi, "Pulsa F12, tecla configurada previamente por el docente para ejecutar Zoom Extents.")
+                ),
+              })
         : seccionesOriginales;
       if (!secciones) {
         setMensaje(vistaPrevia ? "Todavía no hay contenido de lectura guardado para esta sesión." : "La lectura de esta sesión todavía no está publicada por FADILAB.");
@@ -847,6 +885,10 @@ function AulaFormacionPage() {
               <main className="flex-1 space-y-6 bg-card/40 px-6 py-8 sm:px-12 sm:py-10">
                 <h3 className="font-display text-2xl leading-tight sm:text-3xl">{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</h3>
                 {(seccionesLecturaActivas[paginaLectura]?.bloques ?? []).map((bloque,idx) => <p key={idx} className="mb-5 whitespace-pre-line text-[15px] leading-8 text-foreground/90">{bloque}</p>)}
+                {paginaLectura === 2 && imagenInterfazUrl && <figure className="my-8 overflow-hidden rounded-2xl border border-border bg-background p-3 sm:p-4">
+                  <img src={imagenInterfazUrl} alt="Interfaz principal de MatrixGold 3.1 con diez componentes identificados" className="h-auto w-full rounded-xl object-contain" loading="lazy" />
+                  <figcaption className="mt-3 text-center text-xs leading-5 text-muted-foreground">Material de apoyo FADILAB · MatrixGold 3.1 · Reconocimiento de los componentes de la interfaz</figcaption>
+                </figure>}
                 {paginaLectura === seccionesLecturaActivas.length-1 && <div className="rounded-xl border border-gold/30 bg-gold/5 p-4"><p className="text-sm font-semibold">Has llegado al final de la lectura</p><p className="mt-1 text-sm text-muted-foreground">En el aula real, el alumno podrá finalizar y marcar la sesión como completada.</p></div>}
               </main>
               <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-border bg-background p-4 sm:p-5">
@@ -1079,6 +1121,10 @@ function AulaFormacionPage() {
               <main className="flex-1 space-y-6 bg-card/40 px-6 py-8 sm:px-12 sm:py-10">
                 <h3 className="font-display text-2xl leading-tight sm:text-3xl">{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</h3>
                 {(seccionesLecturaActivas[paginaLectura]?.bloques ?? []).map((bloque,idx) => <p key={idx} className="mb-5 whitespace-pre-line text-[15px] leading-8 text-foreground/90">{bloque}</p>)}
+                {paginaLectura === 2 && imagenInterfazUrl && <figure className="my-8 overflow-hidden rounded-2xl border border-border bg-background p-3 sm:p-4">
+                  <img src={imagenInterfazUrl} alt="Interfaz principal de MatrixGold 3.1 con diez componentes identificados" className="h-auto w-full rounded-xl object-contain" loading="lazy" />
+                  <figcaption className="mt-3 text-center text-xs leading-5 text-muted-foreground">Material de apoyo FADILAB · MatrixGold 3.1 · Reconocimiento de los componentes de la interfaz</figcaption>
+                </figure>}
                 {paginaLectura === seccionesLecturaActivas.length-1 && <div className="rounded-xl border border-gold/30 bg-gold/5 p-4"><p className="text-sm font-semibold">Has llegado al final de la lectura</p><p className="mt-1 text-sm text-muted-foreground">{lecturaModoVistaPrevia ? "En la experiencia del alumno, aquí podrá finalizar y marcar la sesión como completada." : "La lectura está registrada como leída. Puedes marcar la sesión como completada."}</p></div>}
               </main>
               <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-border p-4 sm:p-5">
