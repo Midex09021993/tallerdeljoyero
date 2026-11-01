@@ -451,6 +451,8 @@ function AulaFormacionPage() {
   const [seccionesLecturaActivas, setSeccionesLecturaActivas] = useState<Array<{titulo:string;bloques:string[]}>>(LECTURA_SESION_1.map(x => ({ titulo:x.titulo, bloques:[...x.bloques] })));
   const [imagenInterfazUrl, setImagenInterfazUrl] = useState("");
   const [imagenInterfazError, setImagenInterfazError] = useState("");
+  const [imagenLayersUrl, setImagenLayersUrl] = useState("");
+  const [imagenLayersError, setImagenLayersError] = useState("");
   const [imagenRhinoUrl, setImagenRhinoUrl] = useState("");
   const [imagenRhinoError, setImagenRhinoError] = useState("");
   const [imagenesVistasUrl, setImagenesVistasUrl] = useState("");
@@ -850,6 +852,29 @@ function AulaFormacionPage() {
         if (vigente) setImagenInterfazError(error instanceof Error ? error.message : "No se pudo recuperar la imagen del almacenamiento.");
       });
 
+    return () => { vigente = false; };
+  }, [lecturaAbierta?.id, lecturaAbierta?.numero, esDocente, materialesDocenteQuery.data, materialesAlumnoQuery.data]);
+
+  useEffect(() => {
+    const materiales = esDocente ? materialesDocenteQuery.data : materialesAlumnoQuery.data;
+    let vigente = true;
+    setImagenLayersUrl("");
+    setImagenLayersError("");
+    if (!lecturaAbierta || lecturaAbierta.numero !== 2 || !materiales) return () => { vigente = false; };
+    const normalizarNombre = (nombre: string) => nombre.trim().normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLowerCase();
+    const esImagen = (material: Material) => /\\.(jpg|jpeg|png|webp)$/i.test(material.nombre_archivo.trim()) || /^image\\//i.test(material.mime_type || "");
+    const imagen = materiales.find(material => material.sesion_id === lecturaAbierta.id && normalizarNombre(material.nombre_archivo).includes("matrixgold") && esImagen(material));
+    if (!imagen) {
+      setImagenLayersError("No se encontró una imagen MatrixGold publicada en los materiales de esta Sesión 2.");
+      return () => { vigente = false; };
+    }
+    supabase.storage.from("formacion-academica").createSignedUrl(imagen.ruta_storage, 3600)
+      .then(({ data, error }) => {
+        if (!vigente) return;
+        if (error || !data?.signedUrl) { setImagenLayersError("Se encontró «" + imagen.nombre_archivo + "», pero no se pudo abrir: " + (error?.message || "enlace no disponible")); return; }
+        setImagenLayersUrl(data.signedUrl);
+      })
+      .catch((error: unknown) => { if (vigente) setImagenLayersError(error instanceof Error ? error.message : "No se pudo recuperar la imagen de MatrixGold."); });
     return () => { vigente = false; };
   }, [lecturaAbierta?.id, lecturaAbierta?.numero, esDocente, materialesDocenteQuery.data, materialesAlumnoQuery.data]);
 
@@ -1553,6 +1578,13 @@ function AulaFormacionPage() {
 
         </main>
         <aside className="min-w-0 space-y-3">
+          <details className="overflow-hidden rounded-xl border border-border bg-card">
+            <summary className="cursor-pointer px-3 py-2.5 text-xs font-semibold">Ver captura original de MatrixGold</summary>
+            <div className="border-t border-border bg-[#171719] p-2">
+              {imagenLayersUrl ? <img src={imagenLayersUrl} alt="Captura original de MatrixGold subida a la Biblioteca de la Sesión 2" className="h-auto max-h-64 w-full rounded object-contain" loading="lazy" /> : <p className="p-2 text-xs text-white/75">{imagenLayersError || "Cargando la imagen desde la Biblioteca de la Sesión 2…"}</p>}
+            </div>
+          </details>
+
           <div className="rounded-xl border border-border p-4">
             <h4 className="text-sm font-semibold">Selecciona un objeto para asignarlo</h4><p className="mt-1 text-xs leading-5 text-muted-foreground">En MatrixGold real, primero seleccionas el objeto en pantalla y después pulsas el triángulo de la capa de destino.</p>
             <div className="mt-3 grid grid-cols-2 gap-2">
