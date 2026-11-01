@@ -694,7 +694,7 @@ function AulaFormacionPage() {
             const sesionesPublicadas = (sesionesQuery.data ?? []).filter(item => item.publicada);
             const materialesPublicados = materialesDocenteQuery.data ?? [];
             const examenesPublicados = (examenesQuery.data ?? []).filter(item => item.publicado);
-            return <div className="fixed inset-0 z-50 overflow-y-auto bg-background" role="dialog" aria-modal="true" aria-label="Vista previa del aula del alumno">
+            return <div className="fixed inset-0 left-0 z-50 overflow-y-auto bg-background lg:left-64 xl:left-72" role="dialog" aria-modal="true" aria-label="Vista previa del aula del alumno">
               <div className="min-h-full">
                 <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur sm:px-6">
                   <div><h2 className="text-sm font-semibold">Aula de formación</h2><p className="text-xs text-muted-foreground">Vista previa idéntica al área del alumno · Modo de simulación, sin guardar actividad académica</p></div>
@@ -717,7 +717,7 @@ function AulaFormacionPage() {
               </div>
             </div>;
           })()}
-          {lecturaAbierta && lecturaModoVistaPrevia && <div className="fixed inset-0 z-[60] overflow-y-auto bg-black/60 p-3 sm:p-6" role="dialog" aria-modal="true" aria-label="Lectura de prueba del alumno">
+          {lecturaAbierta && lecturaModoVistaPrevia && <div className={`fixed inset-0 z-[60] overflow-y-auto bg-black/60 p-3 sm:p-6 ${lecturaModoVistaPrevia ? "left-0 lg:left-64 xl:left-72" : ""}`} role="dialog" aria-modal="true" aria-label="Lectura de prueba del alumno">
             <div className="mx-auto my-4 flex min-h-[80vh] max-w-3xl flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl">
               <header className="border-b border-border p-4 sm:p-6">
                 <div className="flex items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-wide text-gold-deep">Aula de formación · Lectura guiada</p><h2 className="mt-1 text-lg font-semibold">{lecturaAbierta.numero}. {lecturaAbierta.titulo}</h2><p className="mt-1 text-xs text-muted-foreground">Modo de prueba docente · El avance no se guarda en la cuenta de ningún alumno.</p></div><button type="button" onClick={() => { setLecturaAbierta(null); setLecturaModoVistaPrevia(false); }} className="rounded-lg border border-border px-3 py-2 text-xs">Cerrar</button></div>
