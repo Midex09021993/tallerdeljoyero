@@ -372,8 +372,10 @@ function AulaFormacionPage() {
     const esImagen = (material: Material) =>
       /\.(jpg|jpeg|png|webp)$/i.test(material.nombre_archivo.trim()) ||
       /^image\//i.test(material.mime_type || "");
-    const esImagenLimpia = (material: Material) =>
-      normalizarNombreArchivo(material.nombre_archivo) === "interface matrixgold.png";
+    const esImagenLimpia = (material: Material) => {
+      const nombre = normalizarNombreArchivo(material.nombre_archivo);
+      return nombre.includes("interface") && nombre.includes("matrixgold") && esImagen(material);
+    };
     const esImagenExplicada = (material: Material) =>
       normalizarNombreArchivo(material.nombre_archivo) === "interface.jpg";
 
