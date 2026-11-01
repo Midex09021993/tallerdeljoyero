@@ -137,6 +137,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
   const cameraRef = useRef<THREE.Camera | null>(null);
   const diamondBvhRuntimeRef = useRef<Awaited<ReturnType<typeof createAurumDiamondBvhRuntime>> | null>(null);
   const gemEnvironmentReadyRef = useRef<Promise<THREE.Texture | null> | null>(null);
+  const bvhCameraStateRef = useRef<Float64Array | null>(null);
   const [modelLoadedVersion, setModelLoadedVersion] = useState(0);
   const renderRef = useRef<(() => void) | null>(null);
   const materialIdRef = useRef(materialId);
@@ -479,31 +480,33 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         // BVH camera uniforms only need refreshing when the camera pose/target changes.
         // This skips redundant BVH work on settled/progressive frames without throttling
         // updates during an actual drag, zoom or auto-rotation.
-        let lastBvhCameraState: {
-          px: number; py: number; pz: number;
-          qx: number; qy: number; qz: number; qw: number;
-          tx: number; ty: number; tz: number;
-        } | null = null;
+        bvhCameraStateRef.current = null;
         loop = startAurumViewerLoop({ node: host, camera, renderer, controls }, () => {
-          const previous = lastBvhCameraState;
-          const cameraChanged = previous === null
-            || Math.abs(camera.position.x - previous.px) > 1e-7
-            || Math.abs(camera.position.y - previous.py) > 1e-7
-            || Math.abs(camera.position.z - previous.pz) > 1e-7
-            || Math.abs(camera.quaternion.x - previous.qx) > 1e-7
-            || Math.abs(camera.quaternion.y - previous.qy) > 1e-7
-            || Math.abs(camera.quaternion.z - previous.qz) > 1e-7
-            || Math.abs(camera.quaternion.w - previous.qw) > 1e-7
-            || Math.abs(controls.target.x - previous.tx) > 1e-7
-            || Math.abs(controls.target.y - previous.ty) > 1e-7
-            || Math.abs(controls.target.z - previous.tz) > 1e-7;
+          // Reuse one typed buffer: no temporary object/array allocations while dragging.
+          const state = bvhCameraStateRef.current ?? (bvhCameraStateRef.current = new Float64Array(10));
+          const cameraChanged =
+            Math.abs(camera.position.x - state[0]) > 1e-7
+            || Math.abs(camera.position.y - state[1]) > 1e-7
+            || Math.abs(camera.position.z - state[2]) > 1e-7
+            || Math.abs(camera.quaternion.x - state[3]) > 1e-7
+            || Math.abs(camera.quaternion.y - state[4]) > 1e-7
+            || Math.abs(camera.quaternion.z - state[5]) > 1e-7
+            || Math.abs(camera.quaternion.w - state[6]) > 1e-7
+            || Math.abs(controls.target.x - state[7]) > 1e-7
+            || Math.abs(controls.target.y - state[8]) > 1e-7
+            || Math.abs(controls.target.z - state[9]) > 1e-7;
           if (cameraChanged) {
             diamondBvhRuntimeRef.current?.update();
-            lastBvhCameraState = {
-              px: camera.position.x, py: camera.position.y, pz: camera.position.z,
-              qx: camera.quaternion.x, qy: camera.quaternion.y, qz: camera.quaternion.z, qw: camera.quaternion.w,
-              tx: controls.target.x, ty: controls.target.y, tz: controls.target.z,
-            };
+            state[0] = camera.position.x;
+            state[1] = camera.position.y;
+            state[2] = camera.position.z;
+            state[3] = camera.quaternion.x;
+            state[4] = camera.quaternion.y;
+            state[5] = camera.quaternion.z;
+            state[6] = camera.quaternion.w;
+            state[7] = controls.target.x;
+            state[8] = controls.target.y;
+            state[9] = controls.target.z;
           }
           renderer.render(scene, camera);
         }, { progressiveFrames: 3 });
@@ -614,6 +617,8 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         return;
       }
       diamondBvhRuntimeRef.current = runtime;
+      // Force one camera-uniform refresh for the newly attached BVH runtime.
+      bvhCameraStateRef.current = null;
       setGemOpticsLoading(false);
       renderRef.current?.();
     })().catch((cause) => {
