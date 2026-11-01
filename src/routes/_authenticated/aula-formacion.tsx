@@ -1442,8 +1442,8 @@ function AulaFormacionPage() {
     const actividad = actividadesGeometria[moduloGeometria];
     const completados = modulosGeometriaCompletados.length;
     return <section className={laboratorioGeometriaAbierto ? "fixed inset-0 z-[100] h-[100dvh] w-full max-w-none overflow-y-auto rounded-none border-0 bg-background" : "mt-8 max-w-4xl overflow-hidden rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background"}>
-      <div className="border-b border-gold/20 p-5 sm:p-6">
-        <div className="flex flex-wrap items-center justify-between gap-2"><span className="text-[10px] font-bold uppercase tracking-[0.16em] text-gold-deep">Laboratorio interactivo · RHINO 7</span><span className="rounded-full border border-gold/30 bg-background px-3 py-1 text-[11px] font-semibold">{completados}/4 módulos completados</span></div>
+      <div className="sticky top-0 z-10 border-b border-gold/20 bg-background/95 p-5 backdrop-blur sm:p-6">
+        <div className="flex flex-wrap items-center justify-between gap-2"><span className="text-[10px] font-bold uppercase tracking-[0.16em] text-gold-deep">Laboratorio interactivo · RHINO 7</span><div className="flex items-center gap-2"><span className="rounded-full border border-gold/30 bg-background px-3 py-1 text-[11px] font-semibold">{completados}/4 módulos completados</span>{laboratorioGeometriaAbierto && <button type="button" onClick={() => setLaboratorioGeometriaAbierto(false)} className="rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-muted">Cerrar ✕</button>}</div></div>
         <h4 className="mt-2 text-xl font-semibold">Reconoce la geometría de una joya</h4>
         <p className="mt-1 text-sm leading-6 text-muted-foreground">Explora los cuatro conceptos fundamentales y comprueba si puedes reconocerlos antes de continuar.</p>
         <div className="mt-4 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-gold transition-all" style={{width: (completados/4*100)+"%"}}/></div>
