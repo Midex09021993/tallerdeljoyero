@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listarDirectorioAlumnosFormacion } from "@/lib/aula-formacion.functions";
-import { BookOpen, Users, Plus, Upload, FileText, Download, CalendarDays, ShieldCheck, Send } from "lucide-react";
+import { BookOpen, Users, Plus, Upload, FileText, Download, CalendarDays, ShieldCheck, Send, Pencil } from "lucide-react";
 import { AppShell, Panel } from "@/components/AppShell";
 import { useSesion } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,6 +29,8 @@ function AulaFormacionPage() {
   const [descripcion, setDescripcion] = useState("Formación presencial de modelado 3D para joyería.");
   const [duracion, setDuracion] = useState("20");
   const [cursoSeleccionado, setCursoSeleccionado] = useState("");
+  const [cursoEditandoId, setCursoEditandoId] = useState("");
+  const [tituloCursoEditado, setTituloCursoEditado] = useState("");
   const [nombreAlumno, setNombreAlumno] = useState("");
   const [emailAlumno, setEmailAlumno] = useState("");
   const [tallerAlumnoFiltro, setTallerAlumnoFiltro] = useState("todos");
@@ -288,6 +290,28 @@ function AulaFormacionPage() {
     finally { setEnviandoExamen(false); }
   }
 
+  async function guardarNombreCurso(e: FormEvent) {
+    e.preventDefault();
+    if (!participanteId || !cursoEditandoId || !tituloCursoEditado.trim()) return;
+    setOcupado(true); setMensaje("");
+    try {
+      const { error } = await (supabase as any).from("formacion_cursos")
+        .update({ titulo: tituloCursoEditado.trim() })
+        .eq("id", cursoEditandoId)
+        .eq("participante_id", participanteId);
+      if (error) throw error;
+      await qc.invalidateQueries({ queryKey: ["aula-formacion-cursos-docente", participanteId] });
+      await qc.invalidateQueries({ queryKey: ["aula-formacion-alumno"] });
+      setCursoEditandoId("");
+      setTituloCursoEditado("");
+      setMensaje("Nombre del curso actualizado correctamente.");
+    } catch (err) {
+      setMensaje(err instanceof Error ? err.message : "No se pudo actualizar el nombre del curso.");
+    } finally {
+      setOcupado(false);
+    }
+  }
+
   async function crearCurso(e: FormEvent) {
     e.preventDefault();
     if (!participanteId || !titulo.trim()) return;
@@ -414,7 +438,22 @@ function AulaFormacionPage() {
             </Panel>
             <Panel titulo="Cursos de FADILAB">
               <div className="space-y-2 p-5">
-                {cursosQuery.isLoading ? <p className="text-sm text-muted-foreground">Cargando cursos…</p> : cursos.length === 0 ? <p className="rounded-xl border border-dashed border-border p-5 text-sm text-muted-foreground">Todavía no hay cursos. Crea el primero desde el formulario.</p> : cursos.map(c => <button key={c.id} type="button" onClick={() => { setCursoSeleccionado(c.id) }} className={`flex w-full items-center justify-between gap-3 rounded-xl border p-3 text-left ${cursoActivoId === c.id ? "border-gold bg-gold/10" : "border-border"}`}><span className="min-w-0"><span className="block truncate text-sm font-semibold">{c.titulo}</span><span className="text-xs text-muted-foreground">{c.duracion_horas} horas · {c.estado}</span></span><BookOpen className="size-4 shrink-0 text-gold-deep" /></button>)}
+                {cursosQuery.isLoading ? <p className="text-sm text-muted-foreground">Cargando cursos…</p> : cursos.length === 0 ? <p className="rounded-xl border border-dashed border-border p-5 text-sm text-muted-foreground">Todavía no hay cursos. Crea el primero desde el formulario.</p> : cursos.map(c => <div key={c.id} className={`rounded-xl border p-3 ${cursoActivoId === c.id ? "border-gold bg-gold/10" : "border-border"}`}>
+                  <div className="flex items-center gap-3">
+                    <button type="button" onClick={() => setCursoSeleccionado(c.id)} className="flex min-w-0 flex-1 items-center justify-between gap-3 text-left">
+                      <span className="min-w-0"><span className="block truncate text-sm font-semibold">{c.titulo}</span><span className="text-xs text-muted-foreground">{c.duracion_horas} horas · {c.estado}</span></span>
+                      <BookOpen className="size-4 shrink-0 text-gold-deep" />
+                    </button>
+                    <button type="button" onClick={() => { setCursoEditandoId(c.id); setTituloCursoEditado(c.titulo); }} aria-label={`Editar nombre de ${c.titulo}`} title="Editar nombre del curso" className="shrink-0 rounded-lg border border-border p-2 text-muted-foreground hover:bg-muted">
+                      <Pencil className="size-4" />
+                    </button>
+                  </div>
+                  {cursoEditandoId === c.id && <form onSubmit={(e) => void guardarNombreCurso(e)} className="mt-3 flex flex-wrap gap-2 border-t border-border pt-3">
+                    <input autoFocus value={tituloCursoEditado} onChange={e => setTituloCursoEditado(e.target.value)} required maxLength={140} aria-label="Nuevo nombre del curso" className="min-w-0 flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm" />
+                    <button type="submit" disabled={ocupado || !tituloCursoEditado.trim()} className="rounded-lg bg-gold px-3 py-2 text-xs font-semibold text-black disabled:opacity-50">Guardar</button>
+                    <button type="button" onClick={() => { setCursoEditandoId(""); setTituloCursoEditado(""); }} disabled={ocupado} className="rounded-lg border border-border px-3 py-2 text-xs">Cancelar</button>
+                  </form>}
+                </div>)}
               </div>
             </Panel>
           </div>
