@@ -77,6 +77,27 @@ const LECTURA_SESION_1 = [
   ]}
 ] as const;
 
+const COMPONENTES_INTERFAZ = [
+  ["Ribbon de MatrixGold", "Franja superior con pestañas que agrupan herramientas y funciones por categorías."],
+  ["Barras de herramientas", "Conjuntos de iconos para acceder directamente a comandos."],
+  ["Área gráfica", "Espacio central donde se visualiza el modelo y se trabaja con el archivo."],
+  ["Cuatro ventanas de visualización", "Top: superior; Front: frontal; Right: lateral derecha; Perspective: vista tridimensional."],
+  ["Quick Commands", "Panel de accesos rápidos a herramientas frecuentes de MatrixGold."],
+  ["Panel de propiedades", "Muestra información del objeto seleccionado, como tipo, capa, material y peso."],
+  ["Panel de capas (Layers)", "Organiza los elementos del proyecto por capas. En esta sesión solo lo reconoceremos."],
+  ["Paneles dinámicos", "Agrupan herramientas y funciones contextuales o especializadas."],
+  ["Línea de comandos", "Permite escribir comandos y leer las indicaciones y opciones de Rhino."],
+  ["Barra de estado", "Muestra coordenadas, unidades y ayudas de modelado activas."]
+] as const;
+
+const RETO_INTERFAZ = [
+  { pregunta: "¿Qué componente reúne pestañas y categorías de herramientas en la franja superior?", opciones: ["Ribbon de MatrixGold", "Barra de estado", "Panel de propiedades"], correcta: 0, explicacion: "El Ribbon organiza herramientas y funciones en pestañas." },
+  { pregunta: "¿Dónde se visualiza el modelo durante el trabajo?", opciones: ["Quick Commands", "Área gráfica", "Línea de comandos"], correcta: 1, explicacion: "El área gráfica es el espacio central de visualización." },
+  { pregunta: "¿Qué panel muestra datos del objeto seleccionado, como tipo, capa o material?", opciones: ["Panel de propiedades", "Paneles dinámicos", "Barra de herramientas"], correcta: 0, explicacion: "El panel de propiedades presenta información del objeto seleccionado." },
+  { pregunta: "¿Dónde se escriben comandos y se leen las indicaciones de Rhino?", opciones: ["Barra de estado", "Línea de comandos", "Layers"], correcta: 1, explicacion: "La línea de comandos recibe comandos y muestra solicitudes y opciones." },
+  { pregunta: "¿Qué elemento muestra coordenadas, unidades y ayudas de modelado activas?", opciones: ["Quick Commands", "Área gráfica", "Barra de estado"], correcta: 2, explicacion: "La barra de estado reúne información del entorno y ayudas." }
+] as const;
+
 function AulaFormacionPage() {
   const { data: sesion, isLoading: cargandoSesion } = useSesion();
   const qc = useQueryClient();
