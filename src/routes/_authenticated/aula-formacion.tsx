@@ -88,14 +88,15 @@ const COMPONENTES_INTERFAZ = [
   ["Panel de capas (Layers)", "Organiza los elementos del proyecto por capas. En esta sesión solo lo reconoceremos.", "En la zona inferior del lateral izquierdo, bajo el panel de propiedades.", "Ayuda a organizar y controlar la visibilidad de los elementos de un proyecto."],
   ["Paneles dinámicos", "Agrupan herramientas y funciones contextuales o especializadas.", "En la columna lateral derecha de la interfaz.", "Ofrecen paneles que cambian según las herramientas y funciones disponibles en MatrixGold."],
   ["Línea y ventana de comandos", "Permiten escribir comandos y consultar las indicaciones, opciones, mensajes e historial de Rhino.", "En la zona inferior del área gráfica: el campo Command está abajo y, justo encima, aparecen las indicaciones y el historial de comandos.", "La línea de comandos sirve para introducir instrucciones; la ventana o área de historial permite seguir las respuestas, opciones y mensajes que Rhino muestra durante el trabajo."],
-  ["Barra de estado", "Muestra coordenadas, unidades y ayudas de modelado activas.", "Franja inferior de la interfaz, debajo de la línea de comandos.", "Informa sobre coordenadas del cursor, unidades del documento y ayudas como Grid Snap, Ortho y Osnap."]
+  ["Barra de estado", "Muestra coordenadas, unidades y ayudas de modelado activas.", "Franja inferior de la interfaz, debajo de la línea de comandos.", "Informa sobre coordenadas del cursor, unidades del documento y ayudas como Grid Snap, Ortho y Osnap."],
+  ["Modos de visualización", "Accesos visuales para cambiar la apariencia con la que se muestra el modelo en el área gráfica.", "En la columna vertical de miniaturas situada junto al panel de capas (Layers), a su derecha.", "Permiten alternar entre distintas representaciones visuales del modelo para observar su forma y apariencia durante el trabajo."]
 ] as const;
 
 const COORDENADAS_INTERFAZ = [
   { x: "50%", y: "5%" }, { x: "35%", y: "13%" }, { x: "51%", y: "52%" },
   { x: "18%", y: "18%" }, { x: "6%", y: "19%" }, { x: "6%", y: "39%" },
   { x: "6%", y: "67%" }, { x: "94%", y: "47%" }, { x: "40%", y: "93%" },
-  { x: "48%", y: "96%" }
+  { x: "48%", y: "96%" }, { x: "11%", y: "67%" }
 ] as const;
 
 function AulaFormacionPage() {
