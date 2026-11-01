@@ -87,14 +87,14 @@ const COMPONENTES_INTERFAZ = [
   ["Panel de propiedades", "Muestra información del objeto seleccionado, como tipo, capa, material y peso.", "Panel lateral izquierdo, debajo de Quick Commands.", "Permite consultar características del objeto activo o seleccionado."],
   ["Panel de capas (Layers)", "Organiza los elementos del proyecto por capas. En esta sesión solo lo reconoceremos.", "En la zona inferior del lateral izquierdo, bajo el panel de propiedades.", "Ayuda a organizar y controlar la visibilidad de los elementos de un proyecto."],
   ["Paneles dinámicos", "Agrupan herramientas y funciones contextuales o especializadas.", "En la columna lateral derecha de la interfaz.", "Ofrecen paneles que cambian según las herramientas y funciones disponibles en MatrixGold."],
-  ["Línea de comandos", "Permite escribir comandos y leer las indicaciones y opciones de Rhino.", "Franja horizontal situada debajo de las ventanas gráficas.", "Es el canal de comunicación con Rhino: permite introducir comandos y seguir sus solicitudes."],
+  ["Línea y ventana de comandos", "Permiten escribir comandos y consultar las indicaciones, opciones, mensajes e historial de Rhino.", "En la zona inferior del área gráfica: el campo Command está abajo y, justo encima, aparecen las indicaciones y el historial de comandos.", "La línea de comandos sirve para introducir instrucciones; la ventana o área de historial permite seguir las respuestas, opciones y mensajes que Rhino muestra durante el trabajo."],
   ["Barra de estado", "Muestra coordenadas, unidades y ayudas de modelado activas.", "Franja inferior de la interfaz, debajo de la línea de comandos.", "Informa sobre coordenadas del cursor, unidades del documento y ayudas como Grid Snap, Ortho y Osnap."]
 ] as const;
 
 const COORDENADAS_INTERFAZ = [
   { x: "50%", y: "5%" }, { x: "35%", y: "13%" }, { x: "51%", y: "52%" },
   { x: "18%", y: "18%" }, { x: "6%", y: "19%" }, { x: "6%", y: "39%" },
-  { x: "6%", y: "67%" }, { x: "94%", y: "47%" }, { x: "48%", y: "93%" },
+  { x: "6%", y: "67%" }, { x: "94%", y: "47%" }, { x: "44%", y: "93%" },
   { x: "48%", y: "96%" }
 ] as const;
 
