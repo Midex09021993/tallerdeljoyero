@@ -43,6 +43,10 @@ export async function createAurumDiamondBvhRuntime(options: {
   RGBELoader: new () => { load: (...args: any[]) => unknown };
   EXRLoader?: new () => { load: (...args: any[]) => unknown };
   url: string;
+  /** Shared gem HDR texture owned by the public viewer when supplied. */
+  environmentMap?: THREE.Texture;
+  /** Defaults to true for internally loaded maps; external maps remain caller-owned. */
+  ownsEnvironmentMap?: boolean;
   camera: THREE.Camera;
   quality?: "interactive" | "high" | "final";
   targetFamilies?: string[];
@@ -50,9 +54,12 @@ export async function createAurumDiamondBvhRuntime(options: {
 }): Promise<AurumDiamondBvhRuntime> {
   const THREE_NS = options.THREE;
   const packageApi = await import("realistic-diamond-shader") as unknown as AurumDiamondBvhApi;
-  const isExr = /\.exr(?:$|[?#])/i.test(options.url);
-  const Loader = isExr && options.EXRLoader ? options.EXRLoader : options.RGBELoader;
-  const environmentMap = await new Promise<THREE.Texture>((resolve, reject) => {
+  const ownsEnvironmentMap = options.environmentMap
+    ? options.ownsEnvironmentMap === true
+    : true;
+  const environmentMap = options.environmentMap ?? await new Promise<THREE.Texture>((resolve, reject) => {
+    const isExr = /\.exr(?:$|[?#])/i.test(options.url);
+    const Loader = isExr && options.EXRLoader ? options.EXRLoader : options.RGBELoader;
     new Loader().load(
       options.url,
       (texture: THREE.Texture) => {
@@ -306,7 +313,7 @@ export async function createAurumDiamondBvhRuntime(options: {
       if (disposed) return;
       disposed = true;
       for (const mesh of [...entries.keys()]) releaseEntry(mesh, true);
-      environmentMap.dispose();
+      if (ownsEnvironmentMap) environmentMap.dispose();
     },
     diagnostics() {
       let triangleCount = 0;
