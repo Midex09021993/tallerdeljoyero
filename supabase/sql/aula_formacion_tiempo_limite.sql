@@ -139,7 +139,6 @@ begin
   select e.* into v_examen
   from public.formacion_examenes e
   where e.id = _examen_id
-    and e.publicado = true
     and public.formacion_esta_inscrito(e.curso_id, (select auth.uid()))
   for update;
 
