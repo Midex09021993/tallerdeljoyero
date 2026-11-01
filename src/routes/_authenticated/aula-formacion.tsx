@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_authenticated/aula-formacion")({
 
 type Curso = { id: string; participante_id: string; titulo: string; descripcion: string | null; duracion_horas: number; estado: string };
 type Inscripcion = { id: string; curso_id: string; email_alumno: string; nombre_alumno: string | null; estado: string; formacion_cursos: Curso | null };
-type Material = { id: string; curso_id: string; titulo: string; descripcion: string | null; nombre_archivo: string; ruta_storage: string; mime_type: string; tamano_bytes: number; created_at: string };
+type Material = { id: string; curso_id: string; sesion_id: string | null; titulo: string; descripcion: string | null; nombre_archivo: string; ruta_storage: string; mime_type: string; tamano_bytes: number; created_at: string; publicado: boolean };
 type SesionCurso = { id: string; curso_id: string; numero: number; titulo: string; descripcion: string | null; duracion_horas: number; fecha_programada: string | null; publicada: boolean };
 type Examen = { id: string; curso_id: string; titulo: string; instrucciones: string | null; duracion_minutos: number | null; intentos_permitidos: number; puntaje_maximo: number; publicado: boolean; disponible_desde: string | null; disponible_hasta: string | null };
 type Pregunta = { id: string; examen_id: string; tipo: "opcion_multiple" | "verdadero_falso" | "practica"; enunciado: string; opciones: Array<{label:string;value:string}>; puntaje: number; orden: number; obligatoria: boolean };
@@ -110,6 +110,10 @@ function AulaFormacionPage() {
   const [archivo, setArchivo] = useState<File | null>(null);
   const [tituloMaterial, setTituloMaterial] = useState("");
   const [publicarMaterial, setPublicarMaterial] = useState(true);
+  const [sesionMaterialId, setSesionMaterialId] = useState("");
+  const [materialEditandoId, setMaterialEditandoId] = useState("");
+  const [tituloMaterialEditado, setTituloMaterialEditado] = useState("");
+  const [sesionMaterialEditada, setSesionMaterialEditada] = useState("");
   const [mensaje, setMensaje] = useState("");
   const [tituloExamen, setTituloExamen] = useState("Evaluación de la sesión");
   const [instruccionesExamen, setInstruccionesExamen] = useState("");
@@ -220,8 +224,8 @@ function AulaFormacionPage() {
     enabled: Boolean(esDocente && participanteId && cursoActivoId),
     queryFn: async () => {
       const { data, error } = await (supabase as any).from("formacion_materiales")
-        .select("id,curso_id,titulo,descripcion,nombre_archivo,ruta_storage,mime_type,tamano_bytes,created_at,publicado")
-        .eq("participante_id", participanteId).eq("curso_id", cursoActivoId).eq("publicado", true)
+        .select("id,curso_id,sesion_id,titulo,descripcion,nombre_archivo,ruta_storage,mime_type,tamano_bytes,created_at,publicado")
+        .eq("participante_id", participanteId).eq("curso_id", cursoActivoId)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as Material[];
@@ -304,7 +308,7 @@ function AulaFormacionPage() {
     enabled: Boolean(!esDocente && idsCursosAlumno.length),
     queryFn: async () => {
       const { data, error } = await (supabase as any).from("formacion_materiales")
-        .select("id,curso_id,titulo,descripcion,nombre_archivo,ruta_storage,mime_type,tamano_bytes,created_at")
+        .select("id,curso_id,sesion_id,titulo,descripcion,nombre_archivo,ruta_storage,mime_type,tamano_bytes,created_at,publicado")
         .in("curso_id", idsCursosAlumno).eq("publicado", true).order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as Material[];
@@ -674,7 +678,7 @@ function AulaFormacionPage() {
       const { error: uploadError } = await supabase.storage.from("formacion-academica").upload(ruta, archivo, { contentType: archivo.type || "application/octet-stream", upsert: false });
       if (uploadError) throw uploadError;
       const { error } = await (supabase as any).from("formacion_materiales").insert({
-        participante_id: participanteId, curso_id: cursoActivoId, titulo: tituloMaterial.trim(),
+        participante_id: participanteId, curso_id: cursoActivoId, sesion_id: sesionMaterialId || null, titulo: tituloMaterial.trim(),
         nombre_archivo: archivo.name, ruta_storage: ruta, mime_type: archivo.type || "application/octet-stream",
         tamano_bytes: archivo.size, publicado: publicarMaterial, subido_por: sesion?.user.id,
       });
@@ -682,11 +686,59 @@ function AulaFormacionPage() {
         await supabase.storage.from("formacion-academica").remove([ruta]);
         throw error;
       }
-      setArchivo(null); setTituloMaterial("");
+      setArchivo(null); setTituloMaterial(""); setSesionMaterialId("");
+      await qc.invalidateQueries({ queryKey: ["aula-formacion-materiales-docente", participanteId, cursoActivoId] });
+      await qc.invalidateQueries({ queryKey: ["aula-formacion-materiales-alumno"] });
       const input = document.getElementById("aula-material-file") as HTMLInputElement | null;
       if (input) input.value = "";
       setMensaje(publicarMaterial ? "Material publicado en el aula." : "Material guardado como borrador.");
     } catch (err) { setMensaje(err instanceof Error ? err.message : "No se pudo subir el material."); }
+    finally { setOcupado(false); }
+  }
+
+  async function guardarEdicionMaterial(e: FormEvent, material: Material) {
+    e.preventDefault();
+    if (!participanteId || !tituloMaterialEditado.trim()) return;
+    setOcupado(true); setMensaje("");
+    try {
+      const { error } = await (supabase as any).from("formacion_materiales").update({
+        titulo: tituloMaterialEditado.trim(), sesion_id: sesionMaterialEditada || null,
+      }).eq("id", material.id).eq("participante_id", participanteId).eq("curso_id", cursoActivoId);
+      if (error) throw error;
+      setMaterialEditandoId("");
+      await qc.invalidateQueries({ queryKey: ["aula-formacion-materiales-docente", participanteId, cursoActivoId] });
+      await qc.invalidateQueries({ queryKey: ["aula-formacion-materiales-alumno"] });
+      setMensaje("Material actualizado correctamente.");
+    } catch (err) { setMensaje(err instanceof Error ? err.message : "No se pudo actualizar el material."); }
+    finally { setOcupado(false); }
+  }
+
+  async function cambiarPublicacionMaterial(material: Material) {
+    if (!participanteId) return;
+    setOcupado(true); setMensaje("");
+    try {
+      const { error } = await (supabase as any).from("formacion_materiales").update({ publicado: !material.publicado })
+        .eq("id", material.id).eq("participante_id", participanteId).eq("curso_id", cursoActivoId);
+      if (error) throw error;
+      await qc.invalidateQueries({ queryKey: ["aula-formacion-materiales-docente", participanteId, cursoActivoId] });
+      await qc.invalidateQueries({ queryKey: ["aula-formacion-materiales-alumno"] });
+      setMensaje(material.publicado ? "Material retirado del aula; el archivo se conserva." : "Material publicado para los alumnos.");
+    } catch (err) { setMensaje(err instanceof Error ? err.message : "No se pudo cambiar la publicación."); }
+    finally { setOcupado(false); }
+  }
+
+  async function eliminarMaterial(material: Material) {
+    if (!participanteId || !window.confirm("¿Eliminar definitivamente “" + material.titulo + "” y su archivo?")) return;
+    setOcupado(true); setMensaje("");
+    try {
+      const { error } = await (supabase as any).from("formacion_materiales").delete()
+        .eq("id", material.id).eq("participante_id", participanteId).eq("curso_id", cursoActivoId);
+      if (error) throw error;
+      const { error: storageError } = await supabase.storage.from("formacion-academica").remove([material.ruta_storage]);
+      await qc.invalidateQueries({ queryKey: ["aula-formacion-materiales-docente", participanteId, cursoActivoId] });
+      await qc.invalidateQueries({ queryKey: ["aula-formacion-materiales-alumno"] });
+      setMensaje(storageError ? "Registro eliminado; no se pudo retirar el archivo del almacenamiento. Revisa Storage." : "Material y archivo eliminados.");
+    } catch (err) { setMensaje(err instanceof Error ? err.message : "No se pudo eliminar el material."); }
     finally { setOcupado(false); }
   }
 
@@ -895,12 +947,33 @@ function AulaFormacionPage() {
             </div>}
             <Panel titulo="Materiales de estudio" colapsable defaultOpen={false}>
               <form onSubmit={(e) => void subirMaterial(e)} className="space-y-3 p-5">
-                <label className="block text-xs font-medium">Título del material<input required value={tituloMaterial} onChange={e => setTituloMaterial(e.target.value)} className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm" placeholder="Guía de la sesión 1" /></label>
+                <label className="block text-xs font-medium">Título del material<input required value={tituloMaterial} onChange={e => setTituloMaterial(e.target.value)} className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm" placeholder="Ej. Guía de navegación en Rhino" /></label>
+                <label className="block text-xs font-medium">¿A qué parte del curso pertenece?
+                  <select value={sesionMaterialId} onChange={e => setSesionMaterialId(e.target.value)} className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm">
+                    <option value="">Material general del curso</option>
+                    {(sesionesQuery.data ?? []).map(s => <option key={s.id} value={s.id}>Sesión {s.numero} · {s.titulo}</option>)}
+                  </select>
+                </label>
                 <label className="block text-xs font-medium">Archivo (PDF, documentos, imágenes, ZIP o STL)<input id="aula-material-file" type="file" required onChange={(e: ChangeEvent<HTMLInputElement>) => setArchivo(e.target.files?.[0] ?? null)} className="mt-1.5 block w-full text-xs" /></label>
                 <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={publicarMaterial} onChange={e => setPublicarMaterial(e.target.checked)} /> Publicar inmediatamente para los alumnos</label>
                 <button disabled={ocupado || !archivo} className="inline-flex items-center gap-2 rounded-lg bg-gold px-4 py-2.5 text-sm font-semibold text-black disabled:opacity-50"><Upload className="size-4" /> Subir material</button>
-                <p className="text-xs text-muted-foreground">Almacenamiento privado · máximo 50 MB por archivo.</p>
+                <p className="text-xs text-muted-foreground">Almacenamiento privado · máximo 50 MB por archivo. Puedes editar, retirar, reemplazar o eliminar cada material posteriormente.</p>
               </form>
+              <div className="space-y-4 border-t border-border p-5">
+                <div><p className="text-sm font-semibold">Biblioteca del curso</p><p className="mt-1 text-xs text-muted-foreground">Administra los archivos publicados y los borradores. Los cambios se reflejan en el aula del alumno.</p></div>
+                {materialesDocenteQuery.isLoading ? <p className="text-xs text-muted-foreground">Cargando biblioteca…</p> : (materialesDocenteQuery.data ?? []).length === 0 ? <p className="rounded-xl border border-dashed border-border p-4 text-xs text-muted-foreground">Todavía no hay materiales. Los archivos que subas aparecerán aquí.</p> : <>
+                  {[{id:"general",label:"Material general del curso",items:(materialesDocenteQuery.data ?? []).filter(m => !m.sesion_id)},...(sesionesQuery.data ?? []).map(s => ({id:s.id,label:"Sesión " + s.numero + " · " + s.titulo,items:(materialesDocenteQuery.data ?? []).filter(m => m.sesion_id === s.id)}))].filter(g => g.items.length > 0).map(grupo => <section key={grupo.id} className="space-y-2"><h4 className="text-xs font-semibold text-muted-foreground">{grupo.label}</h4>{grupo.items.map(m => <div key={m.id} className="rounded-xl border border-border p-3">
+                    {materialEditandoId === m.id ? <form onSubmit={e => void guardarEdicionMaterial(e,m)} className="space-y-2">
+                      <label className="block text-xs font-medium">Título<input required value={tituloMaterialEditado} onChange={e => setTituloMaterialEditado(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"/></label>
+                      <label className="block text-xs font-medium">Sesión<select value={sesionMaterialEditada} onChange={e => setSesionMaterialEditada(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"><option value="">Material general del curso</option>{(sesionesQuery.data ?? []).map(s => <option key={s.id} value={s.id}>Sesión {s.numero} · {s.titulo}</option>)}</select></label>
+                      <div className="flex gap-2"><button disabled={ocupado} className="rounded-lg bg-gold px-3 py-2 text-xs font-semibold text-black">Guardar cambios</button><button type="button" onClick={() => setMaterialEditandoId("")} className="rounded-lg border border-border px-3 py-2 text-xs">Cancelar</button></div>
+                    </form> : <>
+                      <div className="flex flex-wrap items-start justify-between gap-2"><div className="min-w-0"><p className="text-sm font-semibold">{m.titulo}</p><p className="mt-1 break-all text-xs text-muted-foreground">{m.nombre_archivo} · {(m.tamano_bytes/1024/1024).toFixed(1)} MB</p></div><span className={`rounded-full px-2 py-1 text-[10px] font-semibold ${m.publicado ? "bg-emerald-50 text-emerald-700" : "bg-muted text-muted-foreground"}`}>{m.publicado ? "Publicado" : "Borrador"}</span></div>
+                      <div className="mt-3 flex flex-wrap gap-2"><button type="button" onClick={() => void descargarMaterial(m)} className="rounded-lg border border-border px-2.5 py-1.5 text-xs">Descargar</button><button type="button" onClick={() => {setMaterialEditandoId(m.id);setTituloMaterialEditado(m.titulo);setSesionMaterialEditada(m.sesion_id ?? "");}} className="rounded-lg border border-border px-2.5 py-1.5 text-xs">Editar</button><button type="button" disabled={ocupado} onClick={() => void cambiarPublicacionMaterial(m)} className="rounded-lg border border-border px-2.5 py-1.5 text-xs">{m.publicado ? "Retirar publicación" : "Publicar"}</button><button type="button" disabled={ocupado} onClick={() => void eliminarMaterial(m)} className="rounded-lg border border-destructive/30 px-2.5 py-1.5 text-xs text-destructive">Eliminar</button></div>
+                    </>}
+                  </div>)}</section>)}
+                </>}
+              </div>
             </Panel>
           </div>}
           {cursoActivoId && <Panel titulo="Evaluaciones y cuestionarios" colapsable defaultOpen={false}>
