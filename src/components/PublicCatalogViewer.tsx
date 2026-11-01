@@ -171,6 +171,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
     let gemEnvironment: THREE.Texture | null = null;
     let pmrem: THREE.PMREMGenerator | null = null;
     let roomEnvironmentTexture: THREE.Texture | null = null;
+    let studioShadow: THREE.Mesh | null = null;
     const fallbackMaterial = new THREE.MeshPhysicalMaterial({ color: 0xdfe3e7, metalness: 1, roughness: .12 });
 
     const applyProfiles = () => {
@@ -215,6 +216,8 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         scene.add(new THREE.HemisphereLight(0xffffff, 0x77716a, 1.5));
         const key = new THREE.DirectionalLight(0xffffff, 2.1); key.position.set(4, 7, 5); scene.add(key);
         const fill = new THREE.DirectionalLight(0xffffff, 1.0); fill.position.set(-5, 2, -3); scene.add(fill);
+        // A restrained rear rim light adds a clean edge highlight without changing material presets.
+        const rim = new THREE.DirectionalLight(0xffffff, 0.55); rim.position.set(-1, 4, -6); scene.add(rim);
         const room = new RoomEnvironment();
         pmrem = new THREE.PMREMGenerator(renderer);
         pmrem.compileEquirectangularShader();
@@ -351,6 +354,38 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         if (visibleBounds.isEmpty()) throw new Error("El modelo no contiene mallas visibles para mostrar.");
         const visibleSphere = visibleBounds.getBoundingSphere(new THREE.Sphere());
         const radius = Math.max(visibleSphere.radius, .001);
+
+        // Lightweight studio contact shadow: one transparent plane and one tiny procedural texture.
+        // This avoids real-time shadow maps and their extra render cost.
+        const shadowCanvas = document.createElement("canvas");
+        shadowCanvas.width = 256;
+        shadowCanvas.height = 256;
+        const shadowContext = shadowCanvas.getContext("2d");
+        if (shadowContext) {
+          const gradient = shadowContext.createRadialGradient(128, 128, 8, 128, 128, 124);
+          gradient.addColorStop(0, "rgba(35, 31, 25, 0.22)");
+          gradient.addColorStop(0.42, "rgba(45, 40, 34, 0.13)");
+          gradient.addColorStop(0.76, "rgba(55, 50, 44, 0.045)");
+          gradient.addColorStop(1, "rgba(55, 50, 44, 0)");
+          shadowContext.fillStyle = gradient;
+          shadowContext.fillRect(0, 0, 256, 256);
+          const shadowTexture = new THREE.CanvasTexture(shadowCanvas);
+          const shadowMaterial = new THREE.MeshBasicMaterial({
+            map: shadowTexture,
+            transparent: true,
+            opacity: 0.78,
+            depthWrite: false,
+            toneMapped: false,
+          });
+          const shadowGeometry = new THREE.PlaneGeometry(radius * 3.0, radius * 2.0);
+          studioShadow = new THREE.Mesh(shadowGeometry, shadowMaterial);
+          studioShadow.rotation.x = -Math.PI / 2;
+          const shadowCenter = visibleBounds.getCenter(new THREE.Vector3());
+          studioShadow.position.set(shadowCenter.x, visibleBounds.min.y - radius * 0.014, shadowCenter.z);
+          studioShadow.renderOrder = 1;
+          scene.add(studioShadow);
+        }
+
         camera.fov = 35;
         // This is the same bounding-sphere camera-fit formula used by the GLB viewer
         // before the 3DM sizing adjustment, so GLB presentation remains unchanged.
@@ -425,6 +460,14 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
       cameraRef.current = null;
       cameraActionsRef.current = null;
       setCameraReady(false);
+      if (studioShadow) {
+        scene?.remove(studioShadow);
+        studioShadow.geometry.dispose();
+        const shadowMaterial = studioShadow.material as THREE.MeshBasicMaterial;
+        shadowMaterial.map?.dispose();
+        shadowMaterial.dispose();
+        studioShadow = null;
+      }
       if (model) model.traverse((object: any) => {
         object.geometry?.dispose?.();
         const materials = Array.isArray(object.material) ? object.material : [object.material];
