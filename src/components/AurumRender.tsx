@@ -2020,6 +2020,59 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           window.setTimeout(()=>URL.revokeObjectURL(url),60_000);
           return {meshCount,triangleCount};
         },
+        exportRhinoNurbs3dm:async()=>{
+          if(!modelo) throw new Error("Carga un modelo antes de exportar superficies NURBS.");
+          const loadRemoteModule=(url:string)=>import(/* @vite-ignore */ url);
+          const rhinoModule:any=await loadRemoteModule("https://cdn.jsdelivr.net/npm/rhino3dm@8.32.1/rhino3dm.module.min.js");
+          const rhinoFactory=rhinoModule.default??rhinoModule;
+          const rhino:any=await rhinoFactory({locateFile:(file:string)=>"https://cdn.jsdelivr.net/npm/rhino3dm@8.32.1/"+file});
+          modelo.updateMatrixWorld(true);
+          const isWorldVisible=(object:any)=>{for(let current=object;current;current=current.parent)if(!current.visible)return false;return true;};
+          const visibleMeshes:any[]=[];
+          let totalTriangles=0;
+          modelo.traverse((object:any)=>{
+            if(!object.isMesh||!object.geometry||!isWorldVisible(object))return;
+            const positions=object.geometry.getAttribute("position");
+            if(!positions||positions.count<3)return;
+            const sourceIndex=object.geometry.index;
+            const faceCount=Math.floor((sourceIndex?sourceIndex.count:positions.count)/3);
+            if(faceCount<1)return;
+            visibleMeshes.push({object,positions,sourceIndex,faceCount});
+            totalTriangles+=faceCount;
+          });
+          if(!visibleMeshes.length) throw new Error("No se encontraron mallas visibles para convertir a NURBS.");
+          const MAX_NURBS_FACES=25000;
+          if(totalTriangles>MAX_NURBS_FACES) throw new Error("La conversión NURBS produciría "+totalTriangles.toLocaleString("es-ES")+" superficies, superando el límite seguro de "+MAX_NURBS_FACES.toLocaleString("es-ES")+". Reduce la densidad de la malla y vuelve a intentarlo.");
+          const document3dm=new rhino.File3dm();
+          document3dm.applicationName="AURUM Render";
+          document3dm.applicationDetails="Conversión MeshToNURB: una superficie NURBS planar por polígono de la malla GLB. No reconstruye superficies suaves.";
+          let brepCount=0,surfaceCount=0;
+          try{
+            for(const entry of visibleMeshes){
+              const {object,positions,sourceIndex,faceCount}=entry;
+              const mesh3dm=new rhino.Mesh(),vertices=mesh3dm.vertices(),worldVertex=new THREE.Vector3();
+              for(let i=0;i<positions.count;i++){worldVertex.fromBufferAttribute(positions,i).applyMatrix4(object.matrixWorld);vertices.add(worldVertex.x,worldVertex.y,worldVertex.z);}
+              const faces=mesh3dm.faces();
+              for(let face=0;face<faceCount;face++){const offset=face*3;faces.addTriFace(sourceIndex?sourceIndex.getX(offset):offset,sourceIndex?sourceIndex.getX(offset+1):offset+1,sourceIndex?sourceIndex.getX(offset+2):offset+2);}
+              const nurbsBrep=rhino.Brep.createFromMesh(mesh3dm,true);
+              if(!nurbsBrep||!nurbsBrep.isValid) throw new Error("Rhino no pudo construir superficies NURBS válidas para la malla "+(object.name||brepCount+1)+".");
+              const attributes=new rhino.ObjectAttributes();
+              attributes.name=(typeof object.name==="string"&&object.name.trim())?object.name.trim()+"_NURBS":"AURUM_NURBS_"+(brepCount+1);
+              document3dm.objects().add(nurbsBrep,attributes);
+              brepCount++;
+              surfaceCount+=faceCount;
+              nurbsBrep.destroy?.();
+              mesh3dm.destroy?.();
+            }
+            const bytes=document3dm.toByteArray();
+            const blob=new Blob([bytes],{type:"application/octet-stream"}),url=URL.createObjectURL(blob),link=document.createElement("a");
+            link.href=url;link.download=(nombreProyecto||"aurum-modelo").trim().replace(/[^a-z0-9-_]+/gi,"-")+"_NURBS.3dm";link.click();
+            window.setTimeout(()=>URL.revokeObjectURL(url),60_000);
+            return {brepCount,surfaceCount,triangleCount:totalTriangles};
+          }finally{
+            document3dm.destroy?.();
+          }
+        },
         exportPathTraced:async(options:{width?:number;height?:number;format?:"png"|"jpeg"|"webp";samples?:number;signal?:AbortSignal;onProgress?:(d:number,t:number)=>void}={})=>{
           if(!modelo) throw new Error("Carga un modelo antes del render final.");
           const { renderAurumPathTracedImage } = await import("../lib/aurum/path-tracer-final");
@@ -3978,11 +4031,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             <div className="mb-2 text-[10px] font-semibold uppercase tracking-[.14em] text-[#77756f]">Formato 3DM</div>
             <div className="flex flex-col gap-2">
               <div className="rounded-xl border border-[#b99642]/60 bg-[#f4efe5] p-3"><div className="flex items-center justify-between gap-2"><span className="text-xs font-semibold text-[#5e4a22]">Rhino 3DM · Malla</span><span className="rounded-full bg-[#e8ddc4] px-2 py-0.5 text-[9px] font-semibold text-[#725821]">Disponible</span></div><p className="mt-1 text-[10px] leading-relaxed text-[#766b55]">Conserva los vértices, triángulos, transformaciones y nombres de las mallas visibles del GLB.</p></div>
-              <div className="rounded-xl border border-black/[.08] bg-white/60 p-3 opacity-65"><div className="flex items-center justify-between gap-2"><span className="text-xs font-semibold text-[#55534d]">Rhino 3DM · Superficies NURBS</span><span className="rounded-full bg-[#efede8] px-2 py-0.5 text-[9px] text-[#77756f]">Fase CAD</span></div><p className="mt-1 text-[10px] leading-relaxed text-[#77756f]">Requiere reconstruir superficies matemáticas a partir de la malla. No se presenta como conversión directa.</p></div>
+              <div className="rounded-xl border border-[#b99642]/60 bg-[#f4efe5] p-3"><div className="flex items-center justify-between gap-2"><span className="text-xs font-semibold text-[#5e4a22]">Rhino 3DM · Superficies NURBS</span><span className="rounded-full bg-[#e8ddc4] px-2 py-0.5 text-[9px] font-semibold text-[#725821]">Prueba disponible</span></div><p className="mt-1 text-[10px] leading-relaxed text-[#766b55]">Conversión tipo MeshToNURB: crea una superficie NURBS planar por cada triángulo. Mantiene la forma facetada; no reconstruye superficies suaves.</p></div>
               <div className="rounded-xl border border-black/[.08] bg-white/60 p-3 opacity-65"><div className="flex items-center justify-between gap-2"><span className="text-xs font-semibold text-[#55534d]">Rhino 3DM · BREP</span><span className="rounded-full bg-[#efede8] px-2 py-0.5 text-[9px] text-[#77756f]">Fase CAD</span></div><p className="mt-1 text-[10px] leading-relaxed text-[#77756f]">Requiere reconstrucción y validación de caras, aristas y sólidos cerrados; no equivale a envolver una malla.</p></div>
             </div>
             {rhinoExportError&&<div role="alert" className="mt-3 rounded-lg border border-red-200 bg-red-50 p-2.5 text-[10px] leading-relaxed text-red-800">{rhinoExportError}</div>}
-            <div className="mt-auto pt-4"><button type="button" disabled={!archivo||rhinoExportBusy} onClick={async()=>{setRhinoExportBusy(true);setRhinoExportError(null);try{await apiRef.current?.exportRhino3dm();}catch(error){setRhinoExportError(error instanceof Error?error.message:"No se pudo generar el archivo 3DM.");}finally{setRhinoExportBusy(false);}}} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#d4af37] px-3 py-3 text-xs font-semibold text-[#292824] shadow-sm transition hover:bg-[#e1bf50] disabled:cursor-not-allowed disabled:opacity-45">{rhinoExportBusy?<><RotateCw className="size-4 animate-spin"/>Generando archivo 3DM…</>:<><Download className="size-4"/>Exportar malla .3dm</>}</button><p className="mt-2 text-[9px] leading-relaxed text-[#8a857b]">El archivo contiene mallas poligonales editables en Rhino. No contiene sólidos BREP ni superficies NURBS reconstruidas.</p></div>
+            <div className="mt-auto flex flex-col gap-2 pt-4"><button type="button" disabled={!archivo||rhinoExportBusy} onClick={async()=>{setRhinoExportBusy(true);setRhinoExportError(null);try{await apiRef.current?.exportRhinoNurbs3dm();}catch(error){setRhinoExportError(error instanceof Error?error.message:"No se pudieron generar las superficies NURBS.");}finally{setRhinoExportBusy(false);}}} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#d4af37] px-3 py-3 text-xs font-semibold text-[#292824] shadow-sm transition hover:bg-[#e1bf50] disabled:cursor-not-allowed disabled:opacity-45">{rhinoExportBusy?<><RotateCw className="size-4 animate-spin"/>Generando NURBS…</>:<><Download className="size-4"/>Exportar superficies NURBS .3dm</>}</button><button type="button" disabled={!archivo||rhinoExportBusy} onClick={async()=>{setRhinoExportBusy(true);setRhinoExportError(null);try{await apiRef.current?.exportRhino3dm();}catch(error){setRhinoExportError(error instanceof Error?error.message:"No se pudo generar el archivo 3DM.");}finally{setRhinoExportBusy(false);}}} className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#c9b989] bg-white px-3 py-2.5 text-xs font-semibold text-[#5e4a22] transition hover:bg-[#f8f4ea] disabled:cursor-not-allowed disabled:opacity-45"><Download className="size-4"/>Exportar malla .3dm</button><p className="text-[9px] leading-relaxed text-[#8a857b]">NURBS facetadas por polígono. No son superficies suaves reconstruidas ni un sólido BREP cerrado. La prueba limita la conversión a 25.000 caras para proteger el navegador.</p></div>
           </div>}{uxSection!=="rhino-export"&&<div className="flex h-full flex-col overflow-y-auto">
             <div className="border-b border-[#e7e2d9] bg-white/55 px-4 py-4">
               <div className="text-[10px] font-semibold uppercase tracking-[.16em] text-[#92743b]">Biblioteca visual</div>
