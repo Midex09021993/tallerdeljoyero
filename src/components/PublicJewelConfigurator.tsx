@@ -220,7 +220,7 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
         </div>
       </header>
       <div className="isolate grid min-w-0 grid-cols-1 lg:min-h-0 lg:flex-1 lg:grid-rows-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)] 2xl:grid-cols-[minmax(0,1fr)]">
-        <div ref={visorRef} className={"relative z-0 h-[clamp(400px,calc(100svh-230px),640px)] min-h-[400px] min-w-0 overflow-hidden bg-white sm:h-[clamp(400px,62vh,600px)] sm:min-h-[400px] lg:h-full lg:min-h-0 2xl:min-h-[680px] " + (pantallaCompleta ? "h-screen min-h-0 w-screen sm:h-screen sm:min-h-0 2xl:h-screen 2xl:min-h-0" : "")}>
+        <div ref={visorRef} className={"relative z-0 h-[clamp(520px,calc(100dvh-170px),900px)] min-h-[520px] min-w-0 overflow-hidden bg-white sm:h-[clamp(400px,62vh,600px)] sm:min-h-[400px] lg:h-full lg:min-h-0 2xl:min-h-[680px] " + (pantallaCompleta ? "h-screen min-h-0 w-screen sm:h-screen sm:min-h-0 2xl:h-screen 2xl:min-h-0" : "")}>
           <div className="absolute right-2 top-2 z-20 flex items-center gap-1 rounded-full border border-[#e8e3db] bg-white/90 p-1 shadow-sm backdrop-blur sm:right-3 sm:top-3 sm:gap-1.5 sm:p-1.5" aria-label="Controles informativos del visor">
             <span title="Iluminación HDR" className="rounded-full border border-[#e8e3db] px-2 py-1 text-[9px] font-medium text-[#81786c] sm:text-[10px]">HDRI</span>
             <span title="Materiales PBR" className="rounded-full border border-[#e8e3db] px-2 py-1 text-[9px] font-medium text-[#81786c] sm:text-[10px]">PBR</span>
@@ -237,7 +237,7 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
               {!loadError && <p className="mt-1 text-xs text-[#8a8175]">Estamos preparando la experiencia interactiva.</p>}
             </div>
           </div>}
-          <div className="absolute left-1/2 top-1/2 bottom-auto z-30 flex w-[min(92%,420px)] -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-2.5 sm:top-auto sm:bottom-5 sm:translate-y-0 sm:gap-3" aria-label="Selector de materiales de la joya">
+          <div className="absolute left-1/2 bottom-4 top-auto z-30 flex w-[min(92%,420px)] -translate-x-1/2 flex-col items-center gap-2.5 sm:top-auto sm:bottom-5 sm:gap-3" aria-label="Selector de materiales de la joya">
             <div className={"overflow-hidden rounded-full bg-transparent transition-all duration-300 ease-out " + (showMaterialOptions ? "max-h-20 translate-y-0 opacity-100" : "pointer-events-none max-h-0 -translate-y-2 opacity-0")} aria-hidden={!showMaterialOptions}>
             <div className="relative isolate flex max-w-full items-center justify-center gap-2 overflow-hidden rounded-full border border-white/45 px-3 py-2 shadow-[0_12px_34px_rgba(35,30,24,.12),inset_0_1px_0_rgba(255,255,255,.72),inset_0_-1px_0_rgba(255,255,255,.12)] sm:gap-3 sm:px-4" style={{ background: "linear-gradient(135deg, rgba(255,255,255,.24), rgba(255,255,255,.10) 48%, rgba(238,232,222,.18))", backdropFilter: "blur(28px) saturate(185%)", WebkitBackdropFilter: "blur(28px) saturate(185%)" }}>
               {(activeCategory === "metal" ? metales : gemasPublicas).map((item) => {
@@ -265,7 +265,7 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
             </div>
             
           </div>
-          <div className="pointer-events-none absolute bottom-2 left-2 z-10 max-w-[calc(100%-1rem)] rounded-full border border-white/80 bg-white/85 px-2.5 py-1.5 text-[9px] text-[#766d61] shadow-sm backdrop-blur sm:bottom-3 sm:left-3 sm:px-3 sm:text-[10px]">Toca y arrastra para girar · Pellizca para acercar</div>
+          <div className="pointer-events-none absolute bottom-2 left-2 z-10 hidden max-w-[calc(100%-1rem)] rounded-full border border-white/80 bg-white/85 px-2.5 py-1.5 text-[9px] text-[#766d61] shadow-sm backdrop-blur sm:bottom-3 sm:left-3 sm:block sm:px-3 sm:text-[10px]">Toca y arrastra para girar · Pellizca para acercar</div>
         </div>
 
       </div>
