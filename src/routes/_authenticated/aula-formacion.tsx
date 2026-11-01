@@ -247,6 +247,141 @@ const LECTURA_SESION_5 = [
   ]}
 ] as const;
 
+const LECTURA_SESION_6 = [
+  { titulo: "1. Objetivo: modelado de sólidos para joyería", bloques: [
+    "En esta sesión aprenderás a construir volúmenes tridimensionales a partir de perfiles y operaciones de modelado. Los sólidos permiten representar piezas con volumen definido y constituyen una base importante para desarrollar anillos y componentes sencillos.",
+    "Antes de comenzar, revisa las unidades del documento, la escala y la organización de las curvas que utilizarás como perfiles. Mantén copias de las geometrías originales para poder corregir el proceso sin perder el trabajo inicial."
+  ]},
+  { titulo: "2. Extrusiones", bloques: [
+    "La extrusión genera un volumen al desplazar una curva en una dirección y una distancia determinadas. El resultado depende del perfil utilizado, de su condición geométrica y de los parámetros de la operación.",
+    "Practica con perfiles cerrados y observa cómo cambia el sólido al modificar la altura o dirección. Comprueba que el contorno sea adecuado antes de extruir y revisa el resultado en distintas vistas."
+  ]},
+  { titulo: "3. Revoluciones", bloques: [
+    "La revolución crea una forma tridimensional al girar un perfil alrededor de un eje. Es especialmente útil para estudiar piezas con simetría radial, como cuerpos de anillos y elementos torneados.",
+    "Define con cuidado el eje de giro y el ángulo de revolución. Un eje mal ubicado puede producir una pieza descentrada o una forma distinta de la esperada."
+  ]},
+  { titulo: "4. Construcción de anillos y piezas básicas", bloques: [
+    "Combina perfiles y operaciones de extrusión o revolución para construir un volumen sencillo de anillo. Concéntrate en la sección del aro, el diámetro interior y la proporción general de la pieza.",
+    "Utiliza medidas coherentes y revisa el modelo desde las vistas superior, frontal y lateral. En esta etapa se busca comprender la construcción del volumen, no todavía resolver todos los detalles de fabricación."
+  ]},
+  { titulo: "5. Revisión del sólido", bloques: [
+    "Comprueba que el objeto obtenido sea realmente un sólido cerrado y que no presente superficies abiertas o partes desconectadas. La apariencia sombreada por sí sola no garantiza que la geometría esté correctamente cerrada.",
+    "Guarda una versión del archivo y realiza una revisión visual del volumen. Anota cualquier error antes de continuar con operaciones más complejas."
+  ]},
+  { titulo: "6. Práctica guiada: volumen básico de joyería", bloques: [
+    "Crea un anillo sencillo a partir de un perfil controlado y una operación de revolución o de extrusión, según la geometría propuesta por el docente. Identifica qué operación resulta más adecuada para cada forma.",
+    "Al finalizar, entrega el archivo editable y señala qué perfil y qué operación utilizaste para construir el volumen."
+  ]}
+] as const;
+
+const LECTURA_SESION_7 = [
+  { titulo: "1. Objetivo: creación y edición de superficies", bloques: [
+    "En esta sesión trabajarás con superficies para construir formas que no siempre pueden resolverse de manera directa mediante sólidos básicos. Las superficies permiten controlar con mayor libertad la transición y continuidad de una forma.",
+    "El objetivo es comprender cómo se generan superficies a partir de curvas guía y cómo se aplican estas operaciones a formas orgánicas simples utilizadas en joyería."
+  ]},
+  { titulo: "2. Preparación de curvas guía", bloques: [
+    "Antes de crear una superficie, organiza las curvas que definirán su forma. Revisa su posición, dirección y continuidad, y asegúrate de que las curvas de referencia estén correctamente ubicadas.",
+    "Una curva guía desordenada o mal orientada puede provocar resultados inesperados. Trabaja con nombres y capas claros para distinguir perfiles, secciones y carriles."
+  ]},
+  { titulo: "3. Barridos", bloques: [
+    "Los barridos generan una superficie al desplazar una o varias curvas de sección a lo largo de una curva o carril. Esta operación permite construir formas alargadas y secciones variables.",
+    "Practica identificando el perfil que define la sección y la curva que controla el recorrido. Observa cómo la orientación y la posición de las secciones afectan al resultado."
+  ]},
+  { titulo: "4. Revolución por carril", bloques: [
+    "La revolución por carril utiliza una curva de perfil y una trayectoria que controla el recorrido de la forma. Es una alternativa para crear geometrías que siguen una guía y no necesariamente giran alrededor de un eje recto.",
+    "Revisa la relación entre perfil y carril antes de ejecutar la operación. Si el resultado se tuerce o cambia de escala, comprueba la ubicación y orientación de las curvas utilizadas."
+  ]},
+  { titulo: "5. Modelado de formas orgánicas simples", bloques: [
+    "Aplica las operaciones de superficie para desarrollar una forma orgánica sencilla, como un elemento curvo o decorativo. Mantén una geometría controlada y evita añadir complejidad que no aporte al diseño.",
+    "Observa la continuidad visual de la superficie y comprueba que no existan pliegues o deformaciones no deseadas. El modelo debe ser comprensible y editable."
+  ]},
+  { titulo: "6. Práctica guiada: superficie para una pieza", bloques: [
+    "Construye una superficie sencilla utilizando curvas guía y una operación de barrido o revolución por carril. Explica qué curvas cumplen la función de perfil y cuáles controlan el recorrido.",
+    "Guarda el archivo con las curvas de construcción organizadas en capas y la superficie resultante claramente identificada."
+  ]}
+] as const;
+
+const LECTURA_SESION_8 = [
+  { titulo: "1. Objetivo: preparar modelos para fabricación", bloques: [
+    "En esta sesión revisarás un modelo tridimensional con criterios de preparación para fabricación. Un diseño que se ve correcto en pantalla todavía puede contener errores geométricos que dificulten su producción.",
+    "Trabajaremos con validación de sólidos, detección y reparación de geometrías, y revisión de espesores y detalles. La prioridad es identificar problemas antes de exportar o enviar el modelo a producción."
+  ]},
+  { titulo: "2. Validación de sólidos", bloques: [
+    "Comprueba que las piezas destinadas a fabricación sean volúmenes cerrados cuando el proceso lo requiera. Identifica bordes desnudos, superficies abiertas, objetos duplicados y elementos que no formen parte del diseño final.",
+    "Utiliza las herramientas de análisis de Rhino para inspeccionar el objeto y no te limites a su apariencia exterior. Conserva una copia del archivo antes de realizar reparaciones."
+  ]},
+  { titulo: "3. Detección de problemas geométricos", bloques: [
+    "Revisa si existen superficies solapadas, piezas desconectadas, curvas duplicadas o intersecciones que puedan generar resultados inesperados. Comprueba también que las partes que deben unirse tengan contacto geométrico correcto.",
+    "Distingue entre un problema visual y un error real de geometría. Analiza cada caso antes de modificar el modelo para evitar alterar dimensiones o proporciones necesarias."
+  ]},
+  { titulo: "4. Reparación y limpieza", bloques: [
+    "Cuando detectes una geometría defectuosa, identifica primero qué elemento la produce. Según el caso, puede ser necesario reconstruir una curva, cerrar una abertura, unir superficies compatibles o eliminar elementos duplicados.",
+    "Realiza las correcciones de manera progresiva y vuelve a validar el objeto después de cada cambio. No apliques reparaciones automáticas sin comprobar qué modifican."
+  ]},
+  { titulo: "5. Revisión de espesores y detalles", bloques: [
+    "Evalúa los espesores de las zonas principales y de los detalles pequeños. Las secciones demasiado delgadas o los elementos muy finos pueden ser difíciles de fabricar y pueden no reproducirse correctamente en el proceso elegido.",
+    "Revisa uniones, puntas, relieves y espacios internos. La viabilidad depende del material, la tecnología y los parámetros del fabricante, por lo que las medidas deben contrastarse con sus especificaciones."
+  ]},
+  { titulo: "6. Práctica guiada: control de un modelo", bloques: [
+    "Selecciona una pieza de joyería y realiza una revisión ordenada: valida su condición de sólido, inspecciona posibles defectos y comprueba espesores y detalles relevantes.",
+    "Entrega el archivo revisado junto con una breve lista de los problemas encontrados y las correcciones realizadas. Si un problema no puede resolverse con seguridad, déjalo documentado."
+  ]}
+] as const;
+
+const LECTURA_SESION_9 = [
+  { titulo: "1. Objetivo: exportación y presentación del diseño", bloques: [
+    "En esta sesión prepararás un modelo para exportarlo en formato STL, conocerás los aspectos básicos del prototipado en resina y tendrás una introducción al renderizado de joyas para presentación.",
+    "Se trabajará con dos objetivos diferentes: conservar una geometría adecuada para fabricación y generar una visualización clara del diseño. Un archivo de fabricación y una imagen de presentación no cumplen la misma función."
+  ]},
+  { titulo: "2. Preparación y exportación STL", bloques: [
+    "Antes de exportar, revisa las unidades, la escala, la orientación y la condición geométrica del modelo. Comprueba que solo estén seleccionados los objetos que forman parte de la pieza final.",
+    "Al guardar como STL, revisa las opciones de malla y la tolerancia de exportación. Una malla demasiado gruesa puede perder detalles; una excesivamente densa puede aumentar el tamaño del archivo sin aportar una mejora útil."
+  ]},
+  { titulo: "3. Comprobación del archivo exportado", bloques: [
+    "Vuelve a abrir o inspeccionar el STL exportado para comprobar que conserva la escala y la forma esperadas. Revisa especialmente detalles pequeños, superficies curvas y zonas de unión.",
+    "No des por válida la exportación únicamente porque el archivo se haya creado. La verificación posterior permite detectar errores de selección, escala o triangulación."
+  ]},
+  { titulo: "4. Introducción al prototipado en resina", bloques: [
+    "El prototipado en resina permite obtener una representación física del modelo digital mediante impresión 3D. El resultado depende de la tecnología, la resina, la orientación, los soportes y los parámetros de exposición y curado.",
+    "Conoce el flujo general desde el archivo STL hasta el laminado y la impresión. Los parámetros concretos deben ajustarse a la impresora y a la ficha técnica de la resina utilizada."
+  ]},
+  { titulo: "5. Introducción al renderizado de joyas", bloques: [
+    "El renderizado permite comunicar la apariencia del diseño mediante materiales, iluminación, entorno y encuadre. Su propósito es presentar la pieza con claridad y estudiar visualmente sus acabados antes de fabricar.",
+    "Diferencia la visualización de la validación geométrica: una imagen atractiva no demuestra que el modelo esté listo para producción. Mantén el archivo CAD como referencia del diseño."
+  ]},
+  { titulo: "6. Uso de Aurum Render", bloques: [
+    "Utiliza Aurum Render para visualizar el diseño y explorar la presentación de materiales y piedras. Selecciona una vista que permita reconocer la forma general y los detalles relevantes de la joya.",
+    "Guarda la imagen de presentación por separado del archivo de fabricación. Conserva el modelo editable y el STL verificado como entregables distintos."
+  ]}
+] as const;
+
+const LECTURA_SESION_10 = [
+  { titulo: "1. Objetivo: desarrollar y presentar el proyecto final", bloques: [
+    "Esta sesión integra los conocimientos trabajados durante el curso mediante el desarrollo o la revisión de una pieza de joyería. El proyecto debe mostrar un proceso ordenado desde la geometría inicial hasta la preparación y presentación del modelo.",
+    "El docente revisará la construcción, la organización del archivo, la calidad geométrica y la claridad de la presentación. Se valorará que puedas explicar las decisiones y herramientas utilizadas."
+  ]},
+  { titulo: "2. Desarrollo del proyecto", bloques: [
+    "Define la pieza que vas a presentar y organiza sus componentes en capas. Revisa las dimensiones principales y utiliza curvas, sólidos o superficies según las necesidades de la forma.",
+    "Construye el modelo de manera progresiva, conservando versiones o copias de seguridad en los hitos importantes. Evita añadir detalles que no puedas controlar o justificar."
+  ]},
+  { titulo: "3. Revisión del modelo", bloques: [
+    "Inspecciona el modelo desde distintas vistas y comprueba proporciones, uniones, continuidad y detalles. Verifica que los elementos estén correctamente organizados y que no existan objetos sobrantes o duplicados.",
+    "Aplica los criterios de validación y revisión de espesores trabajados en la sesión 8. Registra los aspectos que hayas corregido y aquellos que requieran una revisión posterior."
+  ]},
+  { titulo: "4. Preparación para fabricación", bloques: [
+    "Determina qué archivo corresponde al modelo editable y cuál se utilizará para fabricación. Si el proyecto requiere STL, exporta con las unidades y opciones adecuadas y comprueba el archivo resultante.",
+    "La preparación final debe considerar las limitaciones del proceso de fabricación elegido. No supongas que todos los detalles son producibles sin contrastarlos con los requisitos técnicos correspondientes."
+  ]},
+  { titulo: "5. Presentación del diseño", bloques: [
+    "Prepara vistas que expliquen la pieza con claridad y, cuando corresponda, una visualización mediante Aurum Render. Muestra la forma general y los detalles que aportan valor al diseño.",
+    "Organiza los archivos con nombres claros e incluye los entregables solicitados por el docente. La presentación debe permitir identificar el modelo final sin confundirlo con pruebas o versiones anteriores."
+  ]},
+  { titulo: "6. Evaluación y cierre", bloques: [
+    "Presenta el proyecto y explica brevemente el proceso de construcción, las herramientas principales, las revisiones realizadas y la preparación para fabricación.",
+    "La evaluación considerará el cumplimiento del objetivo, la organización del archivo, la calidad del modelo, la revisión técnica y la presentación. Utiliza las observaciones del docente para identificar los siguientes pasos de mejora."
+  ]}
+] as const;
+
 const PREGUNTAS_EXAMEN_SESION_1 = [
   { enunciado:"¿Qué significa CAD en el diseño de joyería?", opciones:["Diseño asistido por computadora","Cálculo automático de diamantes","Control de acabado digital","Creación artística decorativa"], correcta:"Diseño asistido por computadora" },
   { enunciado:"¿Para qué se utiliza principalmente Rhinoceros 7?", opciones:["Editar fotografías","Modelar objetos tridimensionales","Calcular el precio del oro","Controlar una impresora directamente"], correcta:"Modelar objetos tridimensionales" },
@@ -1107,7 +1242,7 @@ function AulaFormacionPage() {
       if (error) throw error;
       const guardadas = Array.isArray(data?.secciones) ? data.secciones : null;
       // Sesión 1 adopta el contenido revisado y aprobado; las demás sesiones conservan su contenido guardado.
-      const seccionesIniciales = s.numero === 1 ? LECTURA_SESION_1 : s.numero === 2 ? LECTURA_SESION_2 : s.numero === 3 ? LECTURA_SESION_3 : s.numero === 4 ? LECTURA_SESION_4 : s.numero === 5 ? LECTURA_SESION_5 : null;
+      const seccionesIniciales = s.numero === 1 ? LECTURA_SESION_1 : s.numero === 2 ? LECTURA_SESION_2 : s.numero === 3 ? LECTURA_SESION_3 : s.numero === 4 ? LECTURA_SESION_4 : s.numero === 5 ? LECTURA_SESION_5 : s.numero === 6 ? LECTURA_SESION_6 : s.numero === 7 ? LECTURA_SESION_7 : s.numero === 8 ? LECTURA_SESION_8 : s.numero === 9 ? LECTURA_SESION_9 : s.numero === 10 ? LECTURA_SESION_10 : null;
       const seccionesEditor = seccionesIniciales
         ? seccionesIniciales.map(x => ({ titulo: x.titulo, bloques: [...x.bloques] }))
         : guardadas ?? [];
