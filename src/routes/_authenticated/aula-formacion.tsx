@@ -135,6 +135,7 @@ function AulaFormacionPage() {
   const [estadoGuardadoLectura, setEstadoGuardadoLectura] = useState<{tipo:"success"|"error"|"info"; texto:string} | null>(null);
   const [seccionesLecturaActivas, setSeccionesLecturaActivas] = useState<Array<{titulo:string;bloques:string[]}>>(LECTURA_SESION_1.map(x => ({ titulo:x.titulo, bloques:[...x.bloques] })));
   const [imagenInterfazUrl, setImagenInterfazUrl] = useState("");
+  const [imagenInterfazError, setImagenInterfazError] = useState("");
   const [interfazInteractivaAbierta, setInterfazInteractivaAbierta] = useState(false);
   const [componentesExplorados, setComponentesExplorados] = useState<number[]>([]);
   const [componenteActivo, setComponenteActivo] = useState(0);
@@ -358,23 +359,50 @@ function AulaFormacionPage() {
 
   useEffect(() => {
     const materiales = esDocente ? materialesDocenteQuery.data : materialesAlumnoQuery.data;
-    if (!lecturaAbierta || lecturaAbierta.numero !== 1 || !materiales) {
-      setImagenInterfazUrl("");
-      return;
-    }
-    const imagen = materiales.find((material) =>
-      material.sesion_id === lecturaAbierta.id &&
-      /^(interface|interfaz)\.(jpg|jpeg|png|webp)$/i.test(material.nombre_archivo)
-    );
-    if (!imagen) {
-      setImagenInterfazUrl("");
-      return;
-    }
     let vigente = true;
-    supabase.storage.from("formacion-academica").createSignedUrl(imagen.ruta_storage, 300)
+    setImagenInterfazUrl("");
+    setImagenInterfazError("");
+
+    if (!lecturaAbierta || lecturaAbierta.numero !== 1 || !materiales) {
+      return () => { vigente = false; };
+    }
+
+    const esImagenInterfaz = (material: Material) =>
+      /\.(jpg|jpeg|png|webp)$/i.test(material.nombre_archivo.trim()) ||
+      /^image\//i.test(material.mime_type || "");
+    const nombreArchivo = (material: Material) =>
+      /^(interface|interfaz)\.(jpg|jpeg|png|webp)$/i.test(material.nombre_archivo.trim());
+    const tituloInterfaz = (material: Material) =>
+      material.titulo.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() === "reconocimiento de la interfaz";
+
+    // Primero se busca el archivo asociado directamente a la sesión 1.
+    // Si el registro quedó vinculado a "Material general" o con una sesión distinta,
+    // se permite recuperarlo por el título exacto dentro del curso activo.
+    const imagen = materiales.find(material =>
+      material.sesion_id === lecturaAbierta.id && esImagenInterfaz(material) &&
+      (nombreArchivo(material) || tituloInterfaz(material))
+    ) ?? materiales.find(material =>
+      esImagenInterfaz(material) && tituloInterfaz(material)
+    );
+
+    if (!imagen) {
+      setImagenInterfazError("No se encontró una imagen publicada titulada «Reconocimiento de la interfaz» en la biblioteca de este curso. Verifica que el material esté publicado.");
+      return () => { vigente = false; };
+    }
+
+    supabase.storage.from("formacion-academica").createSignedUrl(imagen.ruta_storage, 3600)
       .then(({ data, error }) => {
-        if (vigente) setImagenInterfazUrl(error ? "" : data?.signedUrl ?? "");
+        if (!vigente) return;
+        if (error || !data?.signedUrl) {
+          setImagenInterfazError("Se encontró «" + imagen.nombre_archivo + "», pero no se pudo abrir desde el almacenamiento: " + (error?.message || "enlace no disponible"));
+          return;
+        }
+        setImagenInterfazUrl(data.signedUrl);
+      })
+      .catch((error: unknown) => {
+        if (vigente) setImagenInterfazError(error instanceof Error ? error.message : "No se pudo recuperar la imagen del almacenamiento.");
       });
+
     return () => { vigente = false; };
   }, [lecturaAbierta?.id, lecturaAbierta?.numero, esDocente, materialesDocenteQuery.data, materialesAlumnoQuery.data]);
 
@@ -929,7 +957,7 @@ function AulaFormacionPage() {
                   <h4 className="mt-1 text-lg font-semibold">Conoce cada parte de la interfaz</h4>
                   <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">Abre el recorrido interactivo para identificar los componentes directamente sobre la captura de MatrixGold 3.1. Al explorar los diez marcadores podrás completar un breve reto de comprobación.</p>
                   <button type="button" disabled={!imagenInterfazUrl} onClick={() => setInterfazInteractivaAbierta(true)} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gold px-5 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50">Explorar interfaz interactiva <ChevronRight className="size-4"/></button>
-                  {!imagenInterfazUrl && <p className="mt-2 text-xs text-muted-foreground">La imagen de MatrixGold todavía no está disponible en la Biblioteca del curso.</p>}
+                  {!imagenInterfazUrl && <p className="mt-2 text-xs text-muted-foreground">{imagenInterfazError || "Buscando la imagen en la Biblioteca del curso…"}</p>}
                 </section>}
                 {paginaLectura === 2 && interfazInteractivaAbierta && <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/70 p-2 sm:p-5" role="dialog" aria-modal="true" aria-label="Exploración interactiva de MatrixGold 3.1">
                   <div className="flex max-h-[96vh] w-full max-w-7xl flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl">
@@ -1229,7 +1257,7 @@ function AulaFormacionPage() {
                   <h4 className="mt-1 text-lg font-semibold">Conoce cada parte de la interfaz</h4>
                   <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">Abre el recorrido interactivo para identificar los componentes directamente sobre la captura de MatrixGold 3.1. Al explorar los diez marcadores podrás completar un breve reto de comprobación.</p>
                   <button type="button" disabled={!imagenInterfazUrl} onClick={() => setInterfazInteractivaAbierta(true)} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gold px-5 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50">Explorar interfaz interactiva <ChevronRight className="size-4"/></button>
-                  {!imagenInterfazUrl && <p className="mt-2 text-xs text-muted-foreground">La imagen de MatrixGold todavía no está disponible en la Biblioteca del curso.</p>}
+                  {!imagenInterfazUrl && <p className="mt-2 text-xs text-muted-foreground">{imagenInterfazError || "Buscando la imagen en la Biblioteca del curso…"}</p>}
                 </section>}
                 {paginaLectura === 2 && interfazInteractivaAbierta && <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/70 p-2 sm:p-5" role="dialog" aria-modal="true" aria-label="Exploración interactiva de MatrixGold 3.1">
                   <div className="flex max-h-[96vh] w-full max-w-7xl flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl">
