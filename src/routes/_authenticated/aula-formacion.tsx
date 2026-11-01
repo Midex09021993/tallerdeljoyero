@@ -148,6 +148,8 @@ function AulaFormacionPage() {
   const [imagenesEjesUrl, setImagenesEjesUrl] = useState("");
   const [imagenProceso3DUrl, setImagenProceso3DUrl] = useState("");
   const [imagenProceso3DError, setImagenProceso3DError] = useState("");
+  const [comandosNavegacionAbiertos, setComandosNavegacionAbiertos] = useState(false);
+  const [comandoNavegacionActivo, setComandoNavegacionActivo] = useState("Zoom");
   const [errorImagenesApoyo, setErrorImagenesApoyo] = useState("");
   const [tipoImagenApoyoAbierta, setTipoImagenApoyoAbierta] = useState<"rhinoceros" | "vistas" | "ejes" | "proceso3d" | null>(null);
   const [interfazInteractivaAbierta, setInterfazInteractivaAbierta] = useState(false);
@@ -1067,14 +1069,39 @@ function AulaFormacionPage() {
                   if (paginaLectura === 4 && idx >= 6) return null;
                   return <div key={idx}><p className="mb-4 max-w-4xl whitespace-pre-line text-[15px] leading-7 text-foreground/90">{bloque}</p></div>;
                 })}
-                {paginaLectura === 4 && <div className="mt-5 max-w-4xl overflow-x-auto rounded-xl border border-border bg-background"><table className="w-full border-collapse text-left text-sm"><thead><tr className="bg-muted/40"><th className="border-b border-border px-4 py-3">Comando</th><th className="border-b border-border px-4 py-3">Función</th></tr></thead><tbody>
-                  <tr><td className="border-b border-border px-4 py-3 font-semibold">Zoom</td><td className="border-b border-border px-4 py-3">Control de acercamiento</td></tr>
-                  <tr><td className="border-b border-border px-4 py-3 font-semibold">ZE</td><td className="border-b border-border px-4 py-3">Zoom Extents: encuadrar todos los objetos</td></tr>
-                  <tr><td className="border-b border-border px-4 py-3 font-semibold">ZEA</td><td className="border-b border-border px-4 py-3">Zoom All Extents: encuadrar todas las vistas</td></tr>
-                  <tr><td className="border-b border-border px-4 py-3 font-semibold">ZS</td><td className="border-b border-border px-4 py-3">Zoom Selected: encuadrar objetos seleccionados</td></tr>
-                  <tr><td className="border-b border-border px-4 py-3 font-semibold">Pan</td><td className="border-b border-border px-4 py-3">Desplazamiento de la vista</td></tr>
-                  <tr><td className="px-4 py-3 font-semibold">UndoView</td><td className="px-4 py-3">Recuperar la vista anterior</td></tr>
-                </tbody></table></div>}
+                {paginaLectura === 4 && <section className="mt-5 max-w-4xl rounded-xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">Recurso interactivo</p>
+                  <h4 className="mt-1 text-base font-semibold">Comandos de navegación</h4>
+                  <p className="mt-2 text-sm text-muted-foreground">Abre la ficha para explorar los comandos y consultar la función de cada uno.</p>
+                  <button type="button" onClick={() => { setComandoNavegacionActivo("Zoom"); setComandosNavegacionAbiertos(true); }} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95">Ver comandos de navegación <ChevronRight className="size-4"/></button>
+                  {comandosNavegacionAbiertos && <div className="fixed inset-0 z-[96] flex items-center justify-center bg-black/75 p-2 sm:p-4" role="dialog" aria-modal="true" aria-label="Comandos de navegación de Rhino 7">
+                    <div className="flex max-h-[94dvh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl">
+                      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-border bg-gradient-to-r from-[#fbf8f0] to-background px-5 py-4">
+                        <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">FADILAB · Guía interactiva</p><h3 className="text-lg font-semibold">Comandos de navegación · Rhino 7</h3><p className="mt-1 text-xs text-muted-foreground">Selecciona un comando para consultar su función.</p></div>
+                        <button type="button" onClick={() => setComandosNavegacionAbiertos(false)} className="shrink-0 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:border-gold">Cerrar ×</button>
+                      </header>
+                      <div className="min-h-0 overflow-y-auto p-4 sm:p-5">
+                        <div className="overflow-hidden rounded-xl border border-border">
+                          <table className="w-full border-collapse text-left text-sm"><thead><tr className="bg-muted/40"><th className="border-b border-border px-4 py-3">Comando</th><th className="border-b border-border px-4 py-3">Función</th></tr></thead><tbody>
+                            {[
+                              {comando:"Zoom",funcion:"Control de acercamiento"},
+                              {comando:"ZE",funcion:"Zoom Extents: encuadrar todos los objetos"},
+                              {comando:"ZEA",funcion:"Zoom All Extents: encuadrar todas las vistas"},
+                              {comando:"ZS",funcion:"Zoom Selected: encuadrar objetos seleccionados"},
+                              {comando:"Pan",funcion:"Desplazamiento de la vista"},
+                              {comando:"UndoView",funcion:"Recuperar la vista anterior"}
+                            ].map(item=><tr key={item.comando}><td className="border-b border-border p-0"><button type="button" onClick={()=>setComandoNavegacionActivo(item.comando)} aria-pressed={comandoNavegacionActivo===item.comando} className={`w-full px-4 py-3 text-left font-semibold transition hover:bg-gold/10 ${comandoNavegacionActivo===item.comando?"bg-gold/15 text-gold-deep":"bg-background"}`}>{item.comando}</button></td><td className="border-b border-border px-4 py-3">{item.funcion}</td></tr>)}
+                          </tbody></table>
+                        </div>
+                        <div className="mt-4 rounded-xl border border-gold/30 bg-gold/10 p-4" aria-live="polite">
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-gold-deep">Comando seleccionado</p>
+                          <p className="mt-1 text-lg font-semibold">{comandoNavegacionActivo}</p>
+                          <p className="mt-1 text-sm text-foreground/80">{({Zoom:"Control de acercamiento",ZE:"Zoom Extents: encuadrar todos los objetos",ZEA:"Zoom All Extents: encuadrar todas las vistas",ZS:"Zoom Selected: encuadrar objetos seleccionados",Pan:"Desplazamiento de la vista",UndoView:"Recuperar la vista anterior"} as Record<string,string>)[comandoNavegacionActivo]}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>}
+                </section>}
                 {paginaLectura === 1 && <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5 sm:p-6">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">Material visual de apoyo</p>
                   <h4 className="mt-1 text-lg font-semibold">Rhinoceros 7</h4>
@@ -1405,14 +1432,39 @@ function AulaFormacionPage() {
                   if (paginaLectura === 4 && idx >= 6) return null;
                   return <div key={idx}><p className="mb-4 max-w-4xl whitespace-pre-line text-[15px] leading-7 text-foreground/90">{bloque}</p></div>;
                 })}
-                {paginaLectura === 4 && <div className="mt-5 max-w-4xl overflow-x-auto rounded-xl border border-border bg-background"><table className="w-full border-collapse text-left text-sm"><thead><tr className="bg-muted/40"><th className="border-b border-border px-4 py-3">Comando</th><th className="border-b border-border px-4 py-3">Función</th></tr></thead><tbody>
-                  <tr><td className="border-b border-border px-4 py-3 font-semibold">Zoom</td><td className="border-b border-border px-4 py-3">Control de acercamiento</td></tr>
-                  <tr><td className="border-b border-border px-4 py-3 font-semibold">ZE</td><td className="border-b border-border px-4 py-3">Zoom Extents: encuadrar todos los objetos</td></tr>
-                  <tr><td className="border-b border-border px-4 py-3 font-semibold">ZEA</td><td className="border-b border-border px-4 py-3">Zoom All Extents: encuadrar todas las vistas</td></tr>
-                  <tr><td className="border-b border-border px-4 py-3 font-semibold">ZS</td><td className="border-b border-border px-4 py-3">Zoom Selected: encuadrar objetos seleccionados</td></tr>
-                  <tr><td className="border-b border-border px-4 py-3 font-semibold">Pan</td><td className="border-b border-border px-4 py-3">Desplazamiento de la vista</td></tr>
-                  <tr><td className="px-4 py-3 font-semibold">UndoView</td><td className="px-4 py-3">Recuperar la vista anterior</td></tr>
-                </tbody></table></div>}
+                {paginaLectura === 4 && <section className="mt-5 max-w-4xl rounded-xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">Recurso interactivo</p>
+                  <h4 className="mt-1 text-base font-semibold">Comandos de navegación</h4>
+                  <p className="mt-2 text-sm text-muted-foreground">Abre la ficha para explorar los comandos y consultar la función de cada uno.</p>
+                  <button type="button" onClick={() => { setComandoNavegacionActivo("Zoom"); setComandosNavegacionAbiertos(true); }} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95">Ver comandos de navegación <ChevronRight className="size-4"/></button>
+                  {comandosNavegacionAbiertos && <div className="fixed inset-0 z-[96] flex items-center justify-center bg-black/75 p-2 sm:p-4" role="dialog" aria-modal="true" aria-label="Comandos de navegación de Rhino 7">
+                    <div className="flex max-h-[94dvh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl">
+                      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-border bg-gradient-to-r from-[#fbf8f0] to-background px-5 py-4">
+                        <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">FADILAB · Guía interactiva</p><h3 className="text-lg font-semibold">Comandos de navegación · Rhino 7</h3><p className="mt-1 text-xs text-muted-foreground">Selecciona un comando para consultar su función.</p></div>
+                        <button type="button" onClick={() => setComandosNavegacionAbiertos(false)} className="shrink-0 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:border-gold">Cerrar ×</button>
+                      </header>
+                      <div className="min-h-0 overflow-y-auto p-4 sm:p-5">
+                        <div className="overflow-hidden rounded-xl border border-border">
+                          <table className="w-full border-collapse text-left text-sm"><thead><tr className="bg-muted/40"><th className="border-b border-border px-4 py-3">Comando</th><th className="border-b border-border px-4 py-3">Función</th></tr></thead><tbody>
+                            {[
+                              {comando:"Zoom",funcion:"Control de acercamiento"},
+                              {comando:"ZE",funcion:"Zoom Extents: encuadrar todos los objetos"},
+                              {comando:"ZEA",funcion:"Zoom All Extents: encuadrar todas las vistas"},
+                              {comando:"ZS",funcion:"Zoom Selected: encuadrar objetos seleccionados"},
+                              {comando:"Pan",funcion:"Desplazamiento de la vista"},
+                              {comando:"UndoView",funcion:"Recuperar la vista anterior"}
+                            ].map(item=><tr key={item.comando}><td className="border-b border-border p-0"><button type="button" onClick={()=>setComandoNavegacionActivo(item.comando)} aria-pressed={comandoNavegacionActivo===item.comando} className={`w-full px-4 py-3 text-left font-semibold transition hover:bg-gold/10 ${comandoNavegacionActivo===item.comando?"bg-gold/15 text-gold-deep":"bg-background"}`}>{item.comando}</button></td><td className="border-b border-border px-4 py-3">{item.funcion}</td></tr>)}
+                          </tbody></table>
+                        </div>
+                        <div className="mt-4 rounded-xl border border-gold/30 bg-gold/10 p-4" aria-live="polite">
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-gold-deep">Comando seleccionado</p>
+                          <p className="mt-1 text-lg font-semibold">{comandoNavegacionActivo}</p>
+                          <p className="mt-1 text-sm text-foreground/80">{({Zoom:"Control de acercamiento",ZE:"Zoom Extents: encuadrar todos los objetos",ZEA:"Zoom All Extents: encuadrar todas las vistas",ZS:"Zoom Selected: encuadrar objetos seleccionados",Pan:"Desplazamiento de la vista",UndoView:"Recuperar la vista anterior"} as Record<string,string>)[comandoNavegacionActivo]}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>}
+                </section>}
                 {paginaLectura === 1 && <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5 sm:p-6">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">Material visual de apoyo</p>
                   <h4 className="mt-1 text-lg font-semibold">Rhinoceros 7</h4>
