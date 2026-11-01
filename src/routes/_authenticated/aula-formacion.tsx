@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent, type ChangeEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent, type ChangeEvent } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -132,6 +132,9 @@ function AulaFormacionPage() {
   const [interfazInteractivaAbierta, setInterfazInteractivaAbierta] = useState(false);
   const [componentesExplorados, setComponentesExplorados] = useState<number[]>([]);
   const [componenteActivo, setComponenteActivo] = useState<number | null>(null);
+  const [posicionInfoInterfaz, setPosicionInfoInterfaz] = useState<{ left: number; top: number } | null>(null);
+  const interfazImagenRef = useRef<HTMLDivElement | null>(null);
+  const interfazInfoRef = useRef<HTMLElement | null>(null);
   const [lecturaPublicada, setLecturaPublicada] = useState(false);
   const [archivo, setArchivo] = useState<File | null>(null);
   const [tituloMaterial, setTituloMaterial] = useState("");
@@ -165,6 +168,76 @@ function AulaFormacionPage() {
   useEffect(() => {
     if (paginaLectura !== 2) setInterfazInteractivaAbierta(false);
   }, [paginaLectura]);
+
+  useEffect(() => {
+    if (componenteActivo === null) {
+      setPosicionInfoInterfaz(null);
+      return;
+    }
+
+    const ubicarPanel = () => {
+      const contenedor = interfazImagenRef.current;
+      const panel = interfazInfoRef.current;
+      if (!contenedor || !panel) return;
+
+      const area = contenedor.getBoundingClientRect();
+      const panelRect = panel.getBoundingClientRect();
+      const anchoPanel = panelRect.width;
+      const altoPanel = panelRect.height;
+      const margen = 8;
+      const separacion = 10;
+      const marcadores = Array.from(contenedor.querySelectorAll<HTMLElement>("[data-interface-marker]"));
+      const activo = marcadores.find((marcador) => Number(marcador.dataset.interfaceMarker) === componenteActivo);
+      if (!activo || anchoPanel <= 0 || altoPanel <= 0) return;
+
+      const activoRect = activo.getBoundingClientRect();
+      const centroX = activoRect.left - area.left + activoRect.width / 2;
+      const centroY = activoRect.top - area.top + activoRect.height / 2;
+      const obstaculos = marcadores.map((marcador) => {
+        const rect = marcador.getBoundingClientRect();
+        return {
+          left: rect.left - area.left - 5,
+          right: rect.right - area.left + 5,
+          top: rect.top - area.top - 5,
+          bottom: rect.bottom - area.top + 5,
+        };
+      });
+
+      const maxLeft = Math.max(margen, area.width - anchoPanel - margen);
+      const maxTop = Math.max(margen, area.height - altoPanel - margen);
+      let mejor: { left: number; top: number; distancia: number } | null = null;
+
+      for (let top = margen; top <= maxTop; top += 8) {
+        for (let left = margen; left <= maxLeft; left += 8) {
+          const right = left + anchoPanel;
+          const bottom = top + altoPanel;
+          const tapaMarcador = obstaculos.some((obstaculo) =>
+            left < obstaculo.right &&
+            right > obstaculo.left &&
+            top < obstaculo.bottom &&
+            bottom > obstaculo.top
+          );
+          if (tapaMarcador) continue;
+
+          const dx = Math.max(left - centroX, 0, centroX - right);
+          const dy = Math.max(top - centroY, 0, centroY - bottom);
+          const distancia = Math.hypot(dx, dy);
+          if (!mejor || distancia < mejor.distancia) mejor = { left, top, distancia };
+        }
+      }
+
+      if (mejor) {
+        setPosicionInfoInterfaz({ left: mejor.left, top: mejor.top });
+      } else {
+        // Si el espacio es muy reducido, mantener el panel dentro del marco y no superponer los marcadores.
+        setPosicionInfoInterfaz(null);
+      }
+    };
+
+    ubicarPanel();
+    window.addEventListener("resize", ubicarPanel);
+    return () => window.removeEventListener("resize", ubicarPanel);
+  }, [componenteActivo]);
 
   const rolAlumno = Boolean(sesion?.roles.some((r) => r === "gerente" || r === "operario"));
   const fadilabCandidate = sesion?.participantes.find((p) => /fadilab/i.test(p.nombre)) ?? null;
@@ -963,11 +1036,11 @@ function AulaFormacionPage() {
                       <div className="flex min-h-0 min-w-0 flex-1 items-center justify-center">
                       
                       {imagenInterfazUrl && <figure className="flex max-h-full w-full items-center justify-center overflow-hidden rounded-xl border border-border bg-[#171719] p-1">
-                        <div className="relative flex max-h-full max-w-full items-center justify-center">
+                        <div ref={interfazImagenRef} className="relative flex max-h-full max-w-full items-center justify-center">
                           <img src={imagenInterfazUrl} alt="Captura de la interfaz de MatrixGold 3.1 con marcadores interactivos" className="block h-auto max-h-[calc(100dvh-5.5rem)] w-auto max-w-full rounded-lg object-contain" loading="lazy" />
-                          {COMPONENTES_INTERFAZ.map((item, indice) => <button key={indice} type="button" onClick={() => { setComponenteActivo(indice); setComponentesExplorados(prev => prev.includes(indice) ? prev : [...prev, indice]); }} aria-label={`Explorar componente ${indice+1}: ${item[0]}`} aria-pressed={componenteActivo===indice} className={`absolute flex size-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white text-xs font-bold shadow-lg transition sm:size-9 sm:text-sm ${componenteActivo===indice ? "z-40 scale-125 bg-[#c4a15a] text-black ring-4 ring-[#c4a15a]/40" : componentesExplorados.includes(indice) ? "z-20 bg-emerald-600 text-white" : "z-20 bg-blue-600 text-white hover:scale-110 hover:bg-[#c4a15a] hover:text-black"}`} style={{left:COORDENADAS_INTERFAZ[indice].x,top:COORDENADAS_INTERFAZ[indice].y}}>{indice+1}</button>)}
-                          {componenteActivo !== null && <aside aria-live="polite" className="absolute z-30 w-[min(320px,calc(100%-16px))] max-h-[calc(100%-16px)] overflow-y-auto rounded-xl border border-[#c4a15a] bg-[#fffdf8]/95 p-2.5 text-[#242424] shadow-xl backdrop-blur-sm sm:p-3" style={{left:parseFloat(COORDENADAS_INTERFAZ[componenteActivo].x)>55?"8px":"auto",right:parseFloat(COORDENADAS_INTERFAZ[componenteActivo].x)<=55?"8px":"auto",top:parseFloat(COORDENADAS_INTERFAZ[componenteActivo].y)>55?"8px":"auto",bottom:parseFloat(COORDENADAS_INTERFAZ[componenteActivo].y)<=55?"8px":"auto"}}>
-                            <p className="text-[9px] font-semibold uppercase tracking-wider text-[#98722e] sm:text-[10px]">Componente {componenteActivo+1} de 10</p>
+                          {COMPONENTES_INTERFAZ.map((item, indice) => <button key={indice} type="button" onClick={() => { setComponenteActivo(indice); setComponentesExplorados(prev => prev.includes(indice) ? prev : [...prev, indice]); }} aria-label={`Explorar componente ${indice+1}: ${item[0]}`} aria-pressed={componenteActivo===indice} data-interface-marker={indice} className={`absolute flex size-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white text-xs font-bold shadow-lg transition sm:size-9 sm:text-sm ${componenteActivo===indice ? "z-40 scale-125 bg-[#c4a15a] text-black ring-4 ring-[#c4a15a]/40" : componentesExplorados.includes(indice) ? "z-20 bg-emerald-600 text-white" : "z-20 bg-blue-600 text-white hover:scale-110 hover:bg-[#c4a15a] hover:text-black"}`} style={{left:COORDENADAS_INTERFAZ[indice].x,top:COORDENADAS_INTERFAZ[indice].y}}>{indice+1}</button>)}
+                          {componenteActivo !== null && <aside ref={interfazInfoRef} aria-live="polite" className="absolute z-30 w-[min(320px,calc(100%-16px))] max-h-[calc(100%-16px)] overflow-y-auto rounded-xl border border-[#c4a15a] bg-[#fffdf8]/95 p-2.5 text-[#242424] shadow-xl backdrop-blur-sm sm:p-3" style={{left:posicionInfoInterfaz ? `${posicionInfoInterfaz.left}px` : "8px",top:posicionInfoInterfaz ? `${posicionInfoInterfaz.top}px` : "8px",visibility:posicionInfoInterfaz ? "visible" : "hidden"}}>
+                            <p className="text-[9px] font-semibold uppercase tracking-wider text-[#98722e] sm:text-[10px]">Componente {componenteActivo+1} de {COMPONENTES_INTERFAZ.length}</p>
                             <h4 className="mt-1 text-xs font-bold leading-4 sm:text-sm sm:leading-5">{COMPONENTES_INTERFAZ[componenteActivo][0]}</h4>
                             <div className="mt-2 rounded-lg bg-black/5 p-2">
                               <p className="text-[9px] font-semibold uppercase tracking-wide text-[#777] sm:text-[10px]">Dónde lo encuentras</p>
