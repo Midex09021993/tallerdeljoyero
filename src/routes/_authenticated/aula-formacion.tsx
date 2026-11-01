@@ -95,7 +95,7 @@ const COORDENADAS_INTERFAZ = [
   { x: "50%", y: "5%" }, { x: "48%", y: "13%" }, { x: "51%", y: "52%" },
   { x: "49%", y: "18%" }, { x: "6%", y: "19%" }, { x: "6%", y: "39%" },
   { x: "6%", y: "67%" }, { x: "94%", y: "47%" }, { x: "48%", y: "93%" },
-  { x: "48%", y: "98%" }
+  { x: "48%", y: "96%" }
 ] as const;
 
 const RETO_INTERFAZ = [
@@ -171,6 +171,10 @@ function AulaFormacionPage() {
   const [lecturaModoVistaPrevia, setLecturaModoVistaPrevia] = useState(false);
   const [lecturasSimuladas, setLecturasSimuladas] = useState<Set<string>>(new Set());
   const [paginaLectura, setPaginaLectura] = useState(0);
+
+  useEffect(() => {
+    if (paginaLectura !== 2) setInterfazInteractivaAbierta(false);
+  }, [paginaLectura]);
 
   const rolAlumno = Boolean(sesion?.roles.some((r) => r === "gerente" || r === "operario"));
   const fadilabCandidate = sesion?.participantes.find((p) => /fadilab/i.test(p.nombre)) ?? null;
