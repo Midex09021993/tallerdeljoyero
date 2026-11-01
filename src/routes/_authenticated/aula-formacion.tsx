@@ -1542,7 +1542,7 @@ function AulaFormacionPage() {
       <div className="mx-auto grid max-w-[1400px] gap-3 p-3 xl:grid-cols-[230px_minmax(420px,1fr)_330px] lg:p-5">
         <aside className="rounded-xl border border-[#45464b] bg-[#292a2f] p-2 text-white">
           <div className="mb-2 flex items-center justify-between"><span className="text-xs font-semibold">Layers</span><span className="text-[10px] text-white/50">MatrixGold</span></div>
-          <div className="mb-2 grid grid-cols-2 gap-1"><button type="button" onClick={()=>{setCapaMetalVisible(false);setCapaGemVisible(false);setObjetoSeleccionadoCapas(null);}} className="rounded border border-white/15 bg-white/5 py-1 text-[10px]">Hide</button><button type="button" onClick={()=>{setCapaMetalVisible(true);setCapaGemVisible(true);}} className="rounded border border-white/15 bg-white/5 py-1 text-[10px]">Show</button></div>
+          <div className="mb-2 grid grid-cols-2 gap-1"><button type="button" onClick={()=>{setCapaMetalVisible(false);setCapaGemVisible(false);}} className="rounded border border-white/15 bg-white/5 py-1 text-[10px]">Hide</button><button type="button" onClick={()=>{setCapaMetalVisible(true);setCapaGemVisible(true);}} className="rounded border border-white/15 bg-white/5 py-1 text-[10px]">Show</button></div>
           <div className="grid grid-cols-2 gap-x-2 gap-y-2">
             {[
               {group:"Metal",name:"Metal 01",color:"#23865c",visible:capaMetalVisible,locked:capaMetalBloqueada,setVisible:setCapaMetalVisible,setLocked:setCapaMetalBloqueada},
@@ -1557,7 +1557,7 @@ function AulaFormacionPage() {
                 <span className="size-3 shrink-0 rounded-sm border border-white/20" style={{backgroundColor:layer.color}}/>
                 <span className="min-w-0 flex-1 truncate text-[10px]">{layer.name}</span>
                 {layer.setLocked&&<button type="button" title="Bloquear capa" onClick={()=>{layer.setLocked(!layer.locked);setObjetoSeleccionadoCapas(null);}} className="text-[11px] text-white/75">{layer.locked?"🔒":"♙"}</button>}
-                {layer.setVisible&&<button type="button" title="Ocultar o mostrar capa" onClick={()=>{layer.setVisible(!layer.visible);setObjetoSeleccionadoCapas(null);}} className="text-[11px] text-white/75">{layer.visible?"◉":"○"}</button>}
+                {layer.setVisible&&<button type="button" title="Ocultar o mostrar capa" onClick={()=>{layer.setVisible(!layer.visible);}} className="text-[11px] text-white/75">{layer.visible?"◉":"○"}</button>}
               </div>
             </div>)}
           </div>
