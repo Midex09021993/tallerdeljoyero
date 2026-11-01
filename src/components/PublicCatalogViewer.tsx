@@ -164,7 +164,6 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
     let model: THREE.Object3D | null = null;
     let loop: any = null;
     let zoomFrameId = 0;
-    let resizeObserver: ResizeObserver | null = null;
     cameraActionsRef.current = null;
     setCameraReady(false);
     setAutoRotate(false);
@@ -461,12 +460,6 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
           renderer.render(scene, camera);
         }, { progressiveFrames: 3 });
         renderRef.current = () => loop?.converge?.(3);
-        resizeObserver = new ResizeObserver(() => {
-          if (!host || !camera || !renderer) return;
-          const width = Math.max(host.clientWidth, 1), height = Math.max(host.clientHeight, 1);
-          camera.aspect = width / height; camera.updateProjectionMatrix(); renderer.setSize(width, height, false); loop?.converge?.(2);
-        });
-        resizeObserver.observe(host);
         loop.converge(3);
         setStatus("");
         if (perfEnabled) console.info("[PUBLIC VIEWER PERF] Tiempo hasta visor listo", { durationMs: Math.round(performance.now() - bootStartedAt) });
@@ -480,7 +473,6 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
       cancelled = true;
       if (zoomFrameId) cancelAnimationFrame(zoomFrameId);
       loop?.stop?.();
-      resizeObserver?.disconnect();
       if (diamondBvhRuntimeRef.current) {
         diamondBvhRuntimeRef.current.dispose();
         diamondBvhRuntimeRef.current = null;
@@ -501,7 +493,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         const materials = Array.isArray(object.material) ? object.material : [object.material];
         materials.forEach((material: any) => material?.dispose?.());
       });
-      if (renderer) disposeAurumViewer({ node: host, renderer, controls, ...(resizeObserver ? { observer: resizeObserver } : {}) });
+      if (renderer) disposeAurumViewer({ node: host, renderer, controls });
       if (environment && environment !== roomEnvironmentTexture) environment.dispose?.();
       if (gemEnvironment && gemEnvironment !== environment && gemEnvironment !== roomEnvironmentTexture) gemEnvironment.dispose?.();
       roomEnvironmentTexture?.dispose?.();
