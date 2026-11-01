@@ -527,7 +527,7 @@ function AulaFormacionPage() {
   const [capaGemBloqueada, setCapaGemBloqueada] = useState(false);
   const [objetoSeleccionadoCapas, setObjetoSeleccionadoCapas] = useState<"aro" | "piedra" | null>(null);
   const [capaDestinoCapas, setCapaDestinoCapas] = useState<"Metal 01" | "Gem 01">("Metal 01");
-  const [asignacionCapas, setAsignacionCapas] = useState({ aro: "Metal 01", piedra: "Gem 01" });
+  const [asignacionCapas, setAsignacionCapas] = useState<{ aro: string; piedra: string }>({ aro: "", piedra: "" });
   const [retoCapasCompletado, setRetoCapasCompletado] = useState(false);
   const [respuestaRetoCapas, setRespuestaRetoCapas] = useState("");
   const [resultadoRetoCapas, setResultadoRetoCapas] = useState<"correcto" | "incorrecto" | null>(null);
@@ -1525,7 +1525,7 @@ function AulaFormacionPage() {
       setCapaMetalVisible(true); setCapaGemVisible(true);
       setCapaMetalBloqueada(false); setCapaGemBloqueada(false);
       setObjetoSeleccionadoCapas(null); setCapaDestinoCapas("Metal 01");
-      setAsignacionCapas({ aro: "Metal 01", piedra: "Gem 01" });
+      setAsignacionCapas({ aro: "", piedra: "" });
       setRetoCapasCompletado(false); setRespuestaRetoCapas(""); setResultadoRetoCapas(null);
     };
     if (!laboratorioCapasAbierto) return <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5 sm:p-6">
@@ -1556,12 +1556,12 @@ function AulaFormacionPage() {
                 <button type="button" title="Asignar objeto seleccionado a esta capa" disabled={!layer.setVisible} onClick={()=>{if(objetoSeleccionadoCapas && layer.name){setAsignacionCapas(prev=>({...prev,[objetoSeleccionadoCapas]:layer.name}));setObjetoSeleccionadoCapas(null);}}} className="text-[11px] text-white/80 disabled:opacity-40">▶</button>
                 <span className="size-3 shrink-0 rounded-sm border border-white/20" style={{backgroundColor:layer.color}}/>
                 <span className="min-w-0 flex-1 truncate text-[10px]">{layer.name}</span>
-                {layer.setLocked&&<button type="button" title="Bloquear capa" onClick={()=>{layer.setLocked(!layer.locked);setObjetoSeleccionadoCapas(null);}} className="text-[11px] text-white/75">{layer.locked?"🔒":"♙"}</button>}
-                {layer.setVisible&&<button type="button" title="Ocultar o mostrar capa" onClick={()=>{layer.setVisible(!layer.visible);}} className="text-[11px] text-white/75">{layer.visible?"◉":"○"}</button>}
+                {layer.setLocked&&<button type="button" disabled={layer.name==="Metal 01" ? asignacionCapas.aro!=="Metal 01" : asignacionCapas.piedra!=="Gem 01"} title={layer.name==="Metal 01" ? (asignacionCapas.aro!=="Metal 01"?"Primero asigna el cuerpo del anillo a Metal 01":"Bloquear capa") : (asignacionCapas.piedra!=="Gem 01"?"Primero asigna la piedra a Gem 01":"Bloquear capa")} onClick={()=>{layer.setLocked(!layer.locked);setObjetoSeleccionadoCapas(null);}} className="text-[11px] text-white/75 disabled:cursor-not-allowed disabled:opacity-30">{layer.locked?"🔒":"♙"}</button>}
+                {layer.setVisible&&<button type="button" disabled={layer.name==="Metal 01" ? asignacionCapas.aro!=="Metal 01" : asignacionCapas.piedra!=="Gem 01"} title={layer.name==="Metal 01" ? (asignacionCapas.aro!=="Metal 01"?"Primero asigna el cuerpo del anillo a Metal 01":"Ocultar o mostrar capa") : (asignacionCapas.piedra!=="Gem 01"?"Primero asigna la piedra a Gem 01":"Ocultar o mostrar capa")} onClick={()=>{layer.setVisible(!layer.visible);}} className="text-[11px] text-white/75 disabled:cursor-not-allowed disabled:opacity-30">{layer.visible?"◉":"○"}</button>}
               </div>
             </div>)}
           </div>
-          <p className="mt-3 border-t border-white/15 pt-2 text-[10px] leading-4 text-white/55">Selecciona primero un objeto en el visor. Después pulsa ▶ junto al color de la capa de destino.</p>
+          <p className="mt-3 border-t border-white/15 pt-2 text-[10px] leading-4 text-white/55">Primero asigna el cuerpo del anillo a Metal 01 y la piedra a Gem 01. Hasta entonces, sus controles de visibilidad y bloqueo permanecerán desactivados.</p>
         </aside>
         <main className="min-w-0 space-y-3">
           <div className="rounded-2xl border border-border bg-[#17191d] p-4 text-white">
@@ -1592,7 +1592,8 @@ function AulaFormacionPage() {
               <button type="button" disabled={!capaGemVisible || capaGemBloqueada} onClick={() => setObjetoSeleccionadoCapas("piedra")} className={`rounded-lg border p-3 text-left text-sm ${objetoSeleccionadoCapas==="piedra"?"border-gold bg-gold/10":"border-border hover:border-gold/50"} disabled:cursor-not-allowed disabled:opacity-40`}><span className="block font-semibold">Piedra central</span><span className="mt-1 block text-xs text-muted-foreground">{!capaGemVisible?"Oculta":capaGemBloqueada?"Capa bloqueada":"Seleccionable"}</span></button>
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-2"><label className="text-xs font-medium" htmlFor="destino-capa-practica">Capa destino</label><select id="destino-capa-practica" value={capaDestinoCapas} onChange={e=>setCapaDestinoCapas(e.target.value as "Metal 01"|"Gem 01")} className="rounded-lg border border-border bg-background px-3 py-2 text-xs"><option>Metal 01</option><option>Gem 01</option></select><button type="button" disabled={!objetoSeleccionadoCapas} onClick={()=>{if(objetoSeleccionadoCapas){setAsignacionCapas(prev=>({...prev,[objetoSeleccionadoCapas]:capaDestinoCapas}));setObjetoSeleccionadoCapas(null);}}} className="rounded-lg bg-gold px-3 py-2 text-xs font-semibold text-black disabled:opacity-40">Asignar (triángulo)</button></div>
-            <p className="mt-2 text-xs text-muted-foreground">Asignación actual: cuerpo → {asignacionCapas.aro}; piedra → {asignacionCapas.piedra}.</p>
+            <p className="mt-2 text-xs text-muted-foreground">Asignación actual: cuerpo → {asignacionCapas.aro || "Sin asignar"}; piedra → {asignacionCapas.piedra || "Sin asignar"}.</p>
+            {((asignacionCapas.aro!=="Metal 01") || (asignacionCapas.piedra!=="Gem 01")) && <p className="mt-1 text-xs font-medium text-amber-700">Asigna cada pieza a su capa correspondiente para habilitar sus controles.</p>}
           </div>
           <div className="rounded-xl border border-gold/30 bg-gold/5 p-4"><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gold-deep">Reto de comprobación</p><h4 className="mt-1 text-sm font-semibold">Quieres proteger la piedra central para evitar seleccionarla, pero mantenerla visible. ¿Qué control debes activar?</h4><div className="mt-3 space-y-2">{[{v:"ojo",t:"Cerrar el ojo de Gem 01"},{v:"candado",t:"Activar el candado de Gem 01"},{v:"triangulo",t:"Asignar la piedra a Metal 01"}].map(o=><button key={o.v} type="button" onClick={()=>{setRespuestaRetoCapas(o.v);setResultadoRetoCapas(null);}} className={`w-full rounded-lg border px-3 py-2 text-left text-xs ${respuestaRetoCapas===o.v?"border-gold bg-gold/10":"border-border hover:border-gold/50"}`}>{o.t}</button>)}</div><button type="button" disabled={!respuestaRetoCapas} onClick={()=>{const ok=respuestaRetoCapas==="candado";setResultadoRetoCapas(ok?"correcto":"incorrecto");if(ok)setRetoCapasCompletado(true);}} className="mt-3 w-full rounded-lg bg-gold px-4 py-2.5 text-xs font-semibold text-black disabled:opacity-40">Comprobar respuesta</button>{resultadoRetoCapas&&<div className={`mt-3 rounded-lg border p-3 text-xs ${resultadoRetoCapas==="correcto"?"border-emerald-300 bg-emerald-50 text-emerald-900":"border-amber-300 bg-amber-50 text-amber-900"}`}><p className="font-semibold">{resultadoRetoCapas==="correcto"?"¡Correcto!":"Inténtalo otra vez."}</p><p className="mt-1">{resultadoRetoCapas==="correcto"?"El candado mantiene la piedra visible y evita seleccionarla directamente. El ojo controla la visibilidad de forma independiente.":"Recuerda: el ojo oculta; el candado impide seleccionar directamente."}</p></div>}</div>
           {retoCapasCompletado&&<div className="rounded-xl border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-900"><p className="font-semibold">¡Reto completado!</p><p className="mt-1 text-xs">Has distinguido correctamente visibilidad, bloqueo y asignación.</p></div>}
