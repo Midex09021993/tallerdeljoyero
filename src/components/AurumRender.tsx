@@ -3972,7 +3972,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         {sharedLink&&<p className="mt-2 rounded-lg border border-black/[.06] bg-black/[.025] p-2.5 text-[10px] leading-relaxed text-[#77756f]">Al compartir un modelo 3D, los materiales compatibles con glTF se conservan mejor; los shaders personalizados, el HDRI y los efectos pueden variar según el visor.</p>}
       </div></div>}
 {!exportOpen && <>
-          {uxSection==="rhino-export"&&<div className="absolute inset-0 z-20 flex h-full flex-col overflow-y-auto bg-[#f9f8f5] p-4">
+          {uxSection==="rhino-export"&&<div className="relative z-20 flex h-full min-h-0 w-full min-w-0 flex-col overflow-y-auto bg-[#f9f8f5] px-3 py-3">
             <div className="mb-4 flex items-start justify-between gap-3"><div><div className="text-[10px] font-semibold uppercase tracking-[.16em] text-[#92743b]">AURUM CAD</div><h2 className="mt-1 text-base font-semibold text-[#292824]">Exportación Rhinoceros</h2><p className="mt-1 text-[11px] leading-relaxed text-[#77756f]">Exporta la geometría del GLB que está cargado actualmente en el visor.</p></div><button type="button" title="Volver a la biblioteca" aria-label="Volver a la biblioteca" onClick={()=>setUxSection("ambientes")} className="rounded-lg p-1.5 text-[#77756f] hover:bg-black/[.05]"><X className="size-4"/></button></div>
             <div className="mb-3 rounded-xl border border-[#e6e1d8] bg-white p-3"><div className="flex items-center gap-2"><Gem className="size-4 text-[#92743b]"/><span className="text-xs font-semibold text-[#292824]">Modelo del visor</span></div><p className="mt-1 truncate text-[11px] text-[#77756f]">{archivo?.name??(archivo?"Modelo cargado":"No hay un archivo cargado")}</p>{!archivo&&<p className="mt-2 text-[10px] text-[#9a7832]">Carga una joya en el visor para habilitar la exportación.</p>}</div>
             <div className="mb-2 text-[10px] font-semibold uppercase tracking-[.14em] text-[#77756f]">Formato 3DM</div>
@@ -3983,7 +3983,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             </div>
             {rhinoExportError&&<div role="alert" className="mt-3 rounded-lg border border-red-200 bg-red-50 p-2.5 text-[10px] leading-relaxed text-red-800">{rhinoExportError}</div>}
             <div className="mt-auto pt-4"><button type="button" disabled={!archivo||rhinoExportBusy} onClick={async()=>{setRhinoExportBusy(true);setRhinoExportError(null);try{await apiRef.current?.exportRhino3dm();}catch(error){setRhinoExportError(error instanceof Error?error.message:"No se pudo generar el archivo 3DM.");}finally{setRhinoExportBusy(false);}}} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#d4af37] px-3 py-3 text-xs font-semibold text-[#292824] shadow-sm transition hover:bg-[#e1bf50] disabled:cursor-not-allowed disabled:opacity-45">{rhinoExportBusy?<><RotateCw className="size-4 animate-spin"/>Generando archivo 3DM…</>:<><Download className="size-4"/>Exportar malla .3dm</>}</button><p className="mt-2 text-[9px] leading-relaxed text-[#8a857b]">El archivo contiene mallas poligonales editables en Rhino. No contiene sólidos BREP ni superficies NURBS reconstruidas.</p></div>
-          </div>}<div className="flex h-full flex-col overflow-y-auto">
+          </div>}{uxSection!=="rhino-export"&&<div className="flex h-full flex-col overflow-y-auto">
             <div className="border-b border-[#e7e2d9] bg-white/55 px-4 py-4">
               <div className="text-[10px] font-semibold uppercase tracking-[.16em] text-[#92743b]">Biblioteca visual</div>
               
@@ -4013,7 +4013,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 <p className="mt-1 text-[11px] leading-relaxed text-[#858178]">Si abriste la joya desde Mi Nube, el póster se guarda en su carpeta. Si aún no está guardada, puedes capturarlo ahora y vincularlo cuando guardes el proyecto.</p>
               </div>
             </div>
-          </div>
+          </div>}
         </>}
         </aside>}
       </div>
