@@ -12,7 +12,7 @@ import { MATERIALES, GEMAS } from "@/lib/aurum/catalog";
 import { getAurumHdriUrl, getAurumGemHdriUrl } from "@/lib/aurum-photographic-scene-engine";
 import { createAurumDiamondBvhRuntime } from "@/lib/aurum/aurum-diamond-bvh-runtime";
 
-type Props = { modelUrl: string; modelName: string; materialId: string; gemId: string; onReady?: () => void; onError?: (message: string) => void };
+type Props = { modelUrl: string; modelName: string; materialId: string; gemId: string; onReady?: () => void; onError?: (message: string) => void; hideControls?: boolean };
 const classifyMesh = (mesh: any): "metal" | "gema" | "otro" => {
   const data = mesh?.userData ?? {};
   const attrs = data?.attributes ?? {};
@@ -131,7 +131,7 @@ const inferGemMeshes = (model: THREE.Object3D): number => {
   return 1;
 };
 
-export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, onReady, onError }: Props) {
+export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, onReady, onError, hideControls = false }: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
   const modelRef = useRef<THREE.Object3D | null>(null);
   const cameraRef = useRef<THREE.Camera | null>(null);
@@ -631,7 +631,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
       <div className="rounded-full border border-[#ece5d9] bg-white/95 px-4 py-2 text-xs text-[#625b54] shadow-sm">Preparando la gema AURUM…</div>
     </div>}
     <div ref={hostRef} className="absolute inset-0" />
-    {cameraReady && !status && !error && <div className="absolute right-3 top-[58%] z-20 flex -translate-y-1/2 flex-col gap-1.5 sm:top-1/2 rounded-full border border-white/65 bg-white/65 p-1.5 shadow-[0_10px_28px_-16px_rgba(45,35,20,.32),inset_0_1px_0_rgba(255,255,255,.85)] backdrop-blur-xl sm:right-4 sm:gap-2 sm:p-2" aria-label="Controles de cámara">
+    {!hideControls && cameraReady && !status && !error && <div className="absolute right-3 top-[58% z-20 flex -translate-y-1/2 flex-col gap-1.5 sm:top-1/2 rounded-full border border-white/65 bg-white/65 p-1.5 shadow-[0_10px_28px_-16px_rgba(45,35,20,.32),inset_0_1px_0_rgba(255,255,255,.85)] backdrop-blur-xl sm:right-4 sm:gap-2 sm:p-2" aria-label="Controles de cámara">
       <button type="button" onClick={() => cameraActionsRef.current?.reset()} title="Restablecer cámara" aria-label="Restablecer cámara" className="grid size-8 place-items-center rounded-xl text-[#655b4c] transition hover:bg-[#f5efe3] hover:text-[#8b692f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45]"><RotateCcw className="size-4" /></button>
       <div className="h-px bg-[#eee8dd]" />
       <button type="button" onClick={() => { const next = !autoRotate; setAutoRotate(next); cameraActionsRef.current?.rotate(next); }} title={autoRotate ? "Pausar rotación" : "Rotación automática"} aria-label={autoRotate ? "Pausar rotación" : "Iniciar rotación automática"} aria-pressed={autoRotate} className={"grid size-8 place-items-center rounded-xl transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45] " + (autoRotate ? "bg-[#f5efe3] text-[#8b692f]" : "text-[#655b4c] hover:bg-[#f5efe3] hover:text-[#8b692f]")}>{autoRotate ? <Pause className="size-4" /> : <Play className="size-4" />}</button>
@@ -641,7 +641,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
       <button type="button" onClick={() => cameraActionsRef.current?.top()} title="Vista superior" aria-label="Vista superior" className="grid size-8 place-items-center rounded-xl text-[#655b4c] transition hover:bg-[#f5efe3] hover:text-[#8b692f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45]"><span className="text-[10px] font-bold">S</span></button>
       <div className="h-px bg-[#eee8dd]" />
     </div>}
-    {cameraReady && !status && !error && <div className="absolute bottom-4 right-3 z-20 flex flex-col gap-1 rounded-full border border-white/65 bg-white/65 p-1.5 shadow-[0_10px_24px_-16px_rgba(45,35,20,.28),inset_0_1px_0_rgba(255,255,255,.85)] backdrop-blur-xl sm:bottom-5 sm:right-4" aria-label="Zoom de cámara">
+    {!hideControls && cameraReady && !status && !error && <div className="absolute bottom-4 right-3 z-20 flex flex-col gap-1 rounded-full border border-white/65 bg-white/65 p-1.5 shadow-[0_10px_24px_-16px_rgba(45,35,20,.28),inset_0_1px_0_rgba(255,255,255,.85)] backdrop-blur-xl sm:bottom-5 sm:right-4" aria-label="Zoom de cámara">
       <button type="button" onClick={() => cameraActionsRef.current?.zoom("in")} title="Acercar" aria-label="Acercar" className="grid size-8 place-items-center rounded-full text-[#655b4c] transition hover:bg-white/60 hover:text-[#8b692f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45]"><ZoomIn className="size-4" /></button>
       <button type="button" onClick={() => cameraActionsRef.current?.zoom("out")} title="Alejar" aria-label="Alejar" className="grid size-8 place-items-center rounded-full text-[#655b4c] transition hover:bg-white/60 hover:text-[#8b692f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45]"><ZoomOut className="size-4" /></button>
     </div>}
