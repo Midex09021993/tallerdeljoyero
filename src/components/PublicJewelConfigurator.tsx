@@ -27,6 +27,7 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
   const [metalId, setMetalId] = useState<string>("oro-amarillo");
   const [gemaId, setGemaId] = useState<string>("diamante_natural");
   const [activeCategory, setActiveCategory] = useState<"metal" | "gem">("metal");
+  const [showMaterialOptions, setShowMaterialOptions] = useState(true);
   const [modelUrl, setModelUrl] = useState<string | null>(null);
   const [modelName, setModelName] = useState(sharedModelName || "modelo.3dm");
   const [status, setStatus] = useState("Preparando modelo 3D…");
@@ -237,6 +238,7 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
             </div>
           </div>}
           <div className="absolute bottom-4 left-1/2 z-30 flex w-[min(92%,420px)] -translate-x-1/2 flex-col items-center gap-2.5 sm:bottom-5 sm:gap-3" aria-label="Selector de materiales de la joya">
+            <div className={"overflow-hidden transition-all duration-300 ease-out " + (showMaterialOptions ? "max-h-20 translate-y-0 opacity-100" : "pointer-events-none max-h-0 -translate-y-2 opacity-0")} aria-hidden={!showMaterialOptions}>
             <div className="flex max-w-full items-center justify-center gap-2 rounded-full border border-white/80 bg-white/90 px-3 py-2 shadow-[0_8px_28px_rgba(35,29,20,.12)] backdrop-blur-md sm:gap-3 sm:px-4">
               {(activeCategory === "metal" ? metales : gemasPublicas).map((item) => {
                 const selected = activeCategory === "metal" ? metalId === item.id : gemaId === item.id;
@@ -249,18 +251,19 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
                   aria-label={`Seleccionar ${item.label}`}
                   aria-pressed={selected}
                   title={item.label}
-                  onClick={() => activeCategory === "metal" ? handleMetalSelect(item.id) : handleGemSelect(item.id)}
+                  onClick={() => { activeCategory === "metal" ? handleMetalSelect(item.id) : handleGemSelect(item.id); setShowMaterialOptions(false); }}
                   className={"grid size-10 shrink-0 place-items-center rounded-full transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45] focus-visible:ring-offset-2 sm:size-11 " + (selected ? "ring-2 ring-[#8b9cf4] ring-offset-2 ring-offset-white" : "opacity-90 hover:scale-105 hover:opacity-100")}
                 >
                   <span className="size-8 rounded-full border border-black/10 shadow-[inset_0_1px_2px_rgba(255,255,255,.7),0_2px_5px_rgba(0,0,0,.18)] sm:size-9" style={swatch} />
                 </button>;
               })}
             </div>
-            <div className="flex items-center gap-1 rounded-full border border-white/80 bg-white/90 p-1 shadow-[0_8px_28px_rgba(35,29,20,.10)] backdrop-blur-md">
-              <button type="button" aria-pressed={activeCategory === "metal"} onClick={() => setActiveCategory("metal")} className={"min-w-[76px] rounded-full px-4 py-2 text-[11px] font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45] " + (activeCategory === "metal" ? "bg-white text-[#29251f] shadow-sm" : "text-[#77716a] hover:text-[#29251f]")}>Metal</button>
-              <button type="button" aria-pressed={activeCategory === "gem"} onClick={() => setActiveCategory("gem")} className={"min-w-[76px] rounded-full px-4 py-2 text-[11px] font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45] " + (activeCategory === "gem" ? "bg-white text-[#29251f] shadow-sm" : "text-[#77716a] hover:text-[#29251f]")}>Gem</button>
             </div>
-            <p className="rounded-full bg-white/75 px-2.5 py-1 text-[10px] font-medium text-[#756b5e] shadow-sm backdrop-blur-sm">{activeCategory === "metal" ? metales.find((item) => item.id === metalId)?.label : gemasPublicas.find((item) => item.id === gemaId)?.label}</p>
+            <div className="flex items-center gap-1 rounded-full border border-white/80 bg-white/90 p-1 shadow-[0_8px_28px_rgba(35,29,20,.10)] backdrop-blur-md">
+              <button type="button" aria-pressed={activeCategory === "metal"} onClick={() => { setActiveCategory("metal"); setShowMaterialOptions(true); }} className={"min-w-[76px] rounded-full px-4 py-2 text-[11px] font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45] " + (activeCategory === "metal" ? "bg-white text-[#29251f] shadow-sm" : "text-[#77716a] hover:text-[#29251f]")}>Metal</button>
+              <button type="button" aria-pressed={activeCategory === "gem"} onClick={() => { setActiveCategory("gem"); setShowMaterialOptions(true); }} className={"min-w-[76px] rounded-full px-4 py-2 text-[11px] font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45] " + (activeCategory === "gem" ? "bg-white text-[#29251f] shadow-sm" : "text-[#77716a] hover:text-[#29251f]")}>Gem</button>
+            </div>
+            <p className={"overflow-hidden rounded-full bg-white/75 px-2.5 text-[10px] font-medium text-[#756b5e] shadow-sm backdrop-blur-sm transition-all duration-300 " + (showMaterialOptions ? "max-h-8 py-1 opacity-100" : "max-h-0 py-0 opacity-0")}>{activeCategory === "metal" ? metales.find((item) => item.id === metalId)?.label : gemasPublicas.find((item) => item.id === gemaId)?.label}</p>
           </div>
           <div className="pointer-events-none absolute bottom-2 left-2 z-10 max-w-[calc(100%-1rem)] rounded-full border border-white/80 bg-white/85 px-2.5 py-1.5 text-[9px] text-[#766d61] shadow-sm backdrop-blur sm:bottom-3 sm:left-3 sm:px-3 sm:text-[10px]">Toca y arrastra para girar · Pellizca para acercar</div>
         </div>
