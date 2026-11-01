@@ -87,6 +87,64 @@ const LECTURA_SESION_1 = [
   ]}
 ] as const;
 
+const LECTURA_SESION_2 = [
+  { titulo: "1. Objetivos: geometría básica y organización del proyecto", bloques: [
+    "En esta sesión comenzaremos a crear geometría sencilla en Rhinoceros 7 y aprenderemos a organizar los elementos mediante capas (Layers). El propósito es comprender cómo se construyen y ordenan los objetos antes de abordar modelados más precisos.",
+    "Al finalizar podrás reconocer objetos geométricos básicos, crear líneas, polilíneas, círculos y rectángulos, distinguir curvas de superficies y sólidos, y organizar los elementos en capas con nombres y colores.",
+    "Distribución orientativa de las 2 horas: introducción y conceptos (20 min), geometría básica (35 min), capas y organización (30 min), práctica guiada (25 min) y repaso (10 min)."
+  ]},
+  { titulo: "2. ¿Qué es la geometría en Rhino?", bloques: [
+    "En Rhino, un modelo se construye mediante objetos geométricos. Cada objeto tiene una función y una estructura que debemos reconocer para trabajar de forma ordenada.",
+    "Un punto indica una posición en el espacio. Una curva representa un recorrido o contorno; puede ser abierta, como una línea, o cerrada, como un círculo. Una superficie representa una zona con área y una forma determinada. Un sólido es un volumen cerrado.",
+    "En esta sesión nos concentraremos en reconocer y crear geometría básica, principalmente curvas planas. Las superficies, los sólidos y las operaciones de modelado se estudiarán en sesiones posteriores."
+  ]},
+  { titulo: "3. Curvas básicas: línea, polilínea, círculo y rectángulo", bloques: [
+    "Línea (Line): crea un segmento recto definido por un punto inicial y uno final.",
+    "Polilínea (Polyline): crea una secuencia de segmentos conectados. Puede utilizarse para representar contornos compuestos por tramos rectos.",
+    "Círculo (Circle): crea una curva cerrada circular. En el procedimiento básico se indica el centro y después el radio mediante un segundo punto.",
+    "Rectángulo (Rectangle): crea un contorno rectangular indicando dos esquinas opuestas.",
+    "Estas herramientas permiten construir formas elementales que luego pueden servir como referencias para diseños más elaborados. Por ahora practica las formas sin buscar medidas o tolerancias de fabricación."
+  ]},
+  { titulo: "4. El plano de trabajo y la cuadrícula", bloques: [
+    "La cuadrícula ayuda a visualizar el plano de trabajo y la orientación de los objetos. En las vistas Top, Front y Right observas distintas orientaciones; la vista Top es especialmente útil para practicar geometría plana sobre el plano de trabajo habitual.",
+    "El plano de construcción determina dónde se dibuja la geometría. Para los ejercicios de esta sesión utilizaremos la vista Top y mantendremos el trabajo en un mismo plano, siguiendo las indicaciones del docente.",
+    "No cambies las unidades ni la configuración general del documento. La introducción al ingreso de medidas exactas y al modelado preciso corresponde a una etapa posterior."
+  ]},
+  { titulo: "5. Crear y reconocer objetos en el área de trabajo", bloques: [
+    "Para iniciar un comando puedes escribir su nombre en la línea de comandos o utilizar el icono correspondiente. Rhino mostrará indicaciones sobre el siguiente paso que debes realizar.",
+    "En Line, indica el primer punto y después el segundo. En Circle, indica el centro y luego define el radio con un segundo punto. En Rectangle, indica dos esquinas opuestas.",
+    "Pulsa Enter cuando el comando solicite finalizar o confirmar. Pulsa Esc para cancelar el comando activo. Lee siempre las indicaciones de la línea de comandos antes de realizar el siguiente clic.",
+    "Para seleccionar un objeto, haz clic sobre su geometría. Para quitar la selección, pulsa Esc o haz clic en un espacio vacío cuando no haya un comando activo. La selección permite identificar qué objeto vas a organizar."
+  ]},
+  { titulo: "6. ¿Qué son las capas (Layers)?", bloques: [
+    "Las capas son una herramienta de organización del archivo. Permiten agrupar objetos relacionados y controlar su presentación sin tener que tratarlos como una sola geometría.",
+    "En un proyecto de joyería pueden utilizarse, por ejemplo, capas separadas para contornos de referencia, curvas auxiliares y componentes. Esta organización facilita localizar elementos y mantener ordenado el documento.",
+    "Cada capa puede tener un nombre, un color y estados de visibilidad o bloqueo. La capa actual es aquella en la que se crearán los objetos nuevos, mientras permanezca activa."
+  ]},
+  { titulo: "7. Crear capas y organizar los objetos", bloques: [
+    "Abre el panel Layers (Capas) y localiza los controles para crear una capa nueva. Asigna nombres sencillos y descriptivos que indiquen qué tipo de elementos contendrá.",
+    "Para esta práctica crea dos capas: Contornos y Referencias. Asigna a cada una un color distinto para reconocer visualmente los grupos de objetos.",
+    "Activa la capa en la que deseas trabajar antes de dibujar. Los objetos nuevos se crearán en la capa actual. Si necesitas reorganizar un objeto existente, selecciónalo y utiliza la opción de cambio de capa del panel o del menú contextual.",
+    "El control de visibilidad permite ocultar o mostrar temporalmente los objetos de una capa. El bloqueo evita seleccionar o modificar accidentalmente los elementos que contiene. No elimines capas ni objetos durante esta práctica."
+  ]},
+  { titulo: "8. Actividad práctica: geometría básica y capas", bloques: [
+    "Objetivo: crear un conjunto sencillo de curvas planas y organizarlo en dos capas. Esta actividad es un ejercicio de familiarización con las herramientas, no el diseño de una joya terminada.",
+    "1) Abre un documento nuevo siguiendo las indicaciones del docente y trabaja en la vista Top.",
+    "2) En el panel Layers, crea las capas Contornos y Referencias. Asigna a cada una un color diferente y activa Contornos.",
+    "3) Utiliza Rectangle para dibujar un rectángulo sencillo. Después utiliza Polyline para crear un contorno compuesto por varios segmentos.",
+    "4) Activa Referencias y crea un círculo con Circle y un segmento con Line. Mantén las formas separadas y evita superponerlas deliberadamente.",
+    "5) Selecciona uno de los objetos y comprueba en el panel Layers a qué capa pertenece. Si es necesario, cámbialo a la capa correspondiente.",
+    "6) Oculta y vuelve a mostrar Referencias para observar cómo cambia la visualización. Después bloquea y desbloquea esa capa para reconocer la diferencia entre ambos estados.",
+    "7) Guarda el archivo con el nombre indicado por el docente. Antes de finalizar, comprueba que los objetos estén organizados en las capas correctas."
+  ]},
+  { titulo: "9. Repaso guiado y preparación para la siguiente sesión", bloques: [
+    "Ya reconoces la diferencia entre punto, curva, superficie y sólido, y puedes crear cuatro tipos de curvas básicas: línea, polilínea, círculo y rectángulo.",
+    "También aprendiste que las capas permiten organizar los objetos, asignarles nombres y colores, controlar su visibilidad y bloquear elementos para evitar cambios accidentales.",
+    "Antes de terminar, verifica que puedes activar una capa, crear un objeto dentro de ella, seleccionar un objeto y reconocer a qué capa pertenece.",
+    "En la siguiente sesión avanzaremos hacia el modelado preciso: trabajaremos con medidas, referencias y herramientas para controlar la construcción geométrica con mayor exactitud."
+  ]}
+] as const;
+
 const COMPONENTES_INTERFAZ = [
   ["Ribbon de MatrixGold", "Franja superior con pestañas que agrupan herramientas y funciones por categorías.", "En la primera franja de pestañas de MatrixGold: donde aparecen Curve, Surface, Solid, Tools, Gems y otras categorías.", "Organiza las herramientas especializadas de joyería en grupos para encontrarlas por tipo de tarea."],
   ["Barras de herramientas", "Conjuntos de iconos para acceder directamente a comandos.", "Debajo de las pestañas principales y en las filas de iconos.", "Permiten ejecutar herramientas frecuentes con un clic, sin escribir el nombre del comando."],
@@ -848,12 +906,13 @@ function AulaFormacionPage() {
       if (error) throw error;
       const guardadas = Array.isArray(data?.secciones) ? data.secciones : null;
       // Sesión 1 adopta el contenido revisado y aprobado; las demás sesiones conservan su contenido guardado.
-      const seccionesEditor = s.numero === 1
-        ? LECTURA_SESION_1.map(x => ({ titulo: x.titulo, bloques: [...x.bloques] }))
+      const seccionesIniciales = s.numero === 1 ? LECTURA_SESION_1 : s.numero === 2 ? LECTURA_SESION_2 : null;
+      const seccionesEditor = seccionesIniciales
+        ? seccionesIniciales.map(x => ({ titulo: x.titulo, bloques: [...x.bloques] }))
         : guardadas ?? [];
       setSeccionesLecturaEditadas(seccionesEditor);
-      setEstadoGuardadoLectura(s.numero === 1
-        ? { tipo: "info", texto: "Contenido revisado de la Sesión 1 cargado. Guarda los cambios para actualizar la lectura publicada en el aula." }
+      setEstadoGuardadoLectura(seccionesIniciales
+        ? { tipo: "info", texto: `Contenido inicial de la Sesión ${s.numero} cargado. Revisa y guarda el borrador para conservarlo en el aula.` }
         : guardadas ? { tipo: "info", texto: "Contenido cargado desde Supabase. Los cambios aún no están guardados." } : { tipo: "info", texto: "Contenido inicial cargado. Guarda el borrador para conservarlo en Supabase." });
       setLecturaPublicada(Boolean(data?.publicado));
       setLecturaEditando(s);
@@ -1111,10 +1170,10 @@ function AulaFormacionPage() {
               <main className="min-h-0 flex-1 overflow-y-auto bg-card/40 px-5 py-5 sm:px-8 sm:py-6 lg:px-10">
                 <h3 className="mb-5 max-w-4xl font-display text-2xl leading-tight sm:text-3xl">{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</h3>
                 {(seccionesLecturaActivas[paginaLectura]?.bloques ?? []).map((bloque,idx) => {
-                  if (paginaLectura === 4 && idx >= 6) return null;
+                  if (lecturaAbierta?.numero === 1 && paginaLectura === 4 && idx >= 6) return null;
                   return <div key={idx}><p className="mb-4 max-w-4xl whitespace-pre-line text-[15px] leading-7 text-foreground/90">{bloque}</p></div>;
                 })}
-                {paginaLectura === 4 && <section className="mt-5 max-w-4xl rounded-xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5">
+                {lecturaAbierta?.numero === 1 && paginaLectura === 4 && <section className="mt-5 max-w-4xl rounded-xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">Recurso interactivo</p>
                   <h4 className="mt-1 text-base font-semibold">Comandos de navegación</h4>
                   <p className="mt-2 text-sm text-muted-foreground">Abre la ficha para explorar los comandos y consultar la función de cada uno.</p>
@@ -1147,7 +1206,7 @@ function AulaFormacionPage() {
                     </div>
                   </div>}
                 </section>}
-                {paginaLectura === 1 && <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5 sm:p-6">
+                {lecturaAbierta?.numero === 1 && paginaLectura === 1 && <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5 sm:p-6">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">Material visual de apoyo</p>
                   <h4 className="mt-1 text-lg font-semibold">Rhinoceros 7</h4>
                   <p className="mt-2 text-sm leading-6 text-muted-foreground">Consulta la imagen de referencia general del programa.</p>
@@ -1164,7 +1223,7 @@ function AulaFormacionPage() {
                     </div>
                   </div>}
                 </section>}
-                {paginaLectura === 3 && <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5 sm:p-6">
+                {lecturaAbierta?.numero === 1 && paginaLectura === 3 && <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5 sm:p-6">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">Material visual de apoyo</p>
                   <h4 className="mt-1 text-lg font-semibold">Vistas y ejes de Rhinoceros 7</h4>
                   <p className="mt-2 text-sm leading-6 text-muted-foreground">Identifica las vistas de trabajo y la orientación espacial mediante los ejes de coordenadas.</p>
@@ -1185,7 +1244,7 @@ function AulaFormacionPage() {
                     </div>
                   </div>}
                 </section>}
-                {paginaLectura === 6 && <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5 sm:p-6">
+                {lecturaAbierta?.numero === 1 && paginaLectura === 6 && <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5 sm:p-6">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">Material visual de apoyo</p>
                   <h4 className="mt-1 text-lg font-semibold">Proceso de joyería con impresión 3D</h4>
                   <p className="mt-2 text-sm leading-6 text-muted-foreground">Observa la secuencia general que conecta el diseño digital con la fabricación de una pieza de joyería mediante impresión 3D.</p>
@@ -1202,14 +1261,14 @@ function AulaFormacionPage() {
                     </div>
                   </div>}
                 </section>}
-                {paginaLectura === 2 && !interfazInteractivaAbierta && <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5 sm:p-6">
+                {lecturaAbierta?.numero === 1 && paginaLectura === 2 && !interfazInteractivaAbierta && <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5 sm:p-6">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">Actividad guiada · FADILAB</p>
                   <h4 className="mt-1 text-lg font-semibold">Conoce cada parte de la interfaz</h4>
                   <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">Abre el recorrido interactivo para identificar los componentes directamente sobre la captura de MatrixGold 3.1. Explora los 14 marcadores numerados para conocer dónde se encuentra cada componente y para qué sirve.</p>
                   <button type="button" disabled={!imagenInterfazUrl} onClick={() => setInterfazInteractivaAbierta(true)} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gold px-5 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50">Explorar interfaz interactiva <ChevronRight className="size-4"/></button>
                   {!imagenInterfazUrl && <p className="mt-2 text-xs text-muted-foreground">{imagenInterfazError || "Buscando la imagen en la Biblioteca del curso…"}</p>}
                 </section>}
-                {paginaLectura === 2 && interfazInteractivaAbierta && <div className="fixed inset-0 z-[90] flex items-center justify-center overflow-hidden bg-black/75 p-1 sm:p-2" role="dialog" aria-modal="true" aria-label="Exploración interactiva de MatrixGold 3.1">
+                {lecturaAbierta?.numero === 1 && paginaLectura === 2 && interfazInteractivaAbierta && <div className="fixed inset-0 z-[90] flex items-center justify-center overflow-hidden bg-black/75 p-1 sm:p-2" role="dialog" aria-modal="true" aria-label="Exploración interactiva de MatrixGold 3.1">
                   <div className="flex h-[calc(100dvh-0.5rem)] w-[99vw] max-w-[1700px] min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-background shadow-2xl">
                     <header className="flex shrink-0 items-center justify-between gap-3 border-b border-border bg-gradient-to-r from-[#fbf8f0] to-background px-3 py-2 sm:px-5">
                       <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">FADILAB · Recorrido de aprendizaje</p><h3 className="text-base font-semibold sm:text-lg">Explora la interfaz de MatrixGold 3.1</h3></div>
@@ -1479,10 +1538,10 @@ function AulaFormacionPage() {
               <main className="min-h-0 flex-1 overflow-y-auto bg-card/40 px-5 py-5 sm:px-8 sm:py-6 lg:px-10">
                 <h3 className="mb-5 max-w-4xl font-display text-2xl leading-tight sm:text-3xl">{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</h3>
                 {(seccionesLecturaActivas[paginaLectura]?.bloques ?? []).map((bloque,idx) => {
-                  if (paginaLectura === 4 && idx >= 6) return null;
+                  if (lecturaAbierta?.numero === 1 && paginaLectura === 4 && idx >= 6) return null;
                   return <div key={idx}><p className="mb-4 max-w-4xl whitespace-pre-line text-[15px] leading-7 text-foreground/90">{bloque}</p></div>;
                 })}
-                {paginaLectura === 4 && <section className="mt-5 max-w-4xl rounded-xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5">
+                {lecturaAbierta?.numero === 1 && paginaLectura === 4 && <section className="mt-5 max-w-4xl rounded-xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">Recurso interactivo</p>
                   <h4 className="mt-1 text-base font-semibold">Comandos de navegación</h4>
                   <p className="mt-2 text-sm text-muted-foreground">Abre la ficha para explorar los comandos y consultar la función de cada uno.</p>
@@ -1515,7 +1574,7 @@ function AulaFormacionPage() {
                     </div>
                   </div>}
                 </section>}
-                {paginaLectura === 1 && <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5 sm:p-6">
+                {lecturaAbierta?.numero === 1 && paginaLectura === 1 && <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5 sm:p-6">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">Material visual de apoyo</p>
                   <h4 className="mt-1 text-lg font-semibold">Rhinoceros 7</h4>
                   <p className="mt-2 text-sm leading-6 text-muted-foreground">Consulta la imagen de referencia general del programa.</p>
@@ -1532,7 +1591,7 @@ function AulaFormacionPage() {
                     </div>
                   </div>}
                 </section>}
-                {paginaLectura === 3 && <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5 sm:p-6">
+                {lecturaAbierta?.numero === 1 && paginaLectura === 3 && <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5 sm:p-6">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">Material visual de apoyo</p>
                   <h4 className="mt-1 text-lg font-semibold">Vistas y ejes de Rhinoceros 7</h4>
                   <p className="mt-2 text-sm leading-6 text-muted-foreground">Identifica las vistas de trabajo y la orientación espacial mediante los ejes de coordenadas.</p>
@@ -1553,14 +1612,14 @@ function AulaFormacionPage() {
                     </div>
                   </div>}
                 </section>}
-                {paginaLectura === 2 && !interfazInteractivaAbierta && <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5 sm:p-6">
+                {lecturaAbierta?.numero === 1 && paginaLectura === 2 && !interfazInteractivaAbierta && <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5 sm:p-6">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">Actividad guiada · FADILAB</p>
                   <h4 className="mt-1 text-lg font-semibold">Conoce cada parte de la interfaz</h4>
                   <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">Abre el recorrido interactivo para identificar los componentes directamente sobre la captura de MatrixGold 3.1. Explora los 14 marcadores numerados para conocer dónde se encuentra cada componente y para qué sirve.</p>
                   <button type="button" disabled={!imagenInterfazUrl} onClick={() => setInterfazInteractivaAbierta(true)} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gold px-5 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50">Explorar interfaz interactiva <ChevronRight className="size-4"/></button>
                   {!imagenInterfazUrl && <p className="mt-2 text-xs text-muted-foreground">{imagenInterfazError || "Buscando la imagen en la Biblioteca del curso…"}</p>}
                 </section>}
-                {paginaLectura === 2 && interfazInteractivaAbierta && <div className="fixed inset-0 z-[90] flex items-center justify-center overflow-hidden bg-black/75 p-1 sm:p-2" role="dialog" aria-modal="true" aria-label="Exploración interactiva de MatrixGold 3.1">
+                {lecturaAbierta?.numero === 1 && paginaLectura === 2 && interfazInteractivaAbierta && <div className="fixed inset-0 z-[90] flex items-center justify-center overflow-hidden bg-black/75 p-1 sm:p-2" role="dialog" aria-modal="true" aria-label="Exploración interactiva de MatrixGold 3.1">
                   <div className="flex h-[calc(100dvh-0.5rem)] w-[99vw] max-w-[1700px] min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-background shadow-2xl">
                     <header className="flex shrink-0 items-center justify-between gap-3 border-b border-border bg-gradient-to-r from-[#fbf8f0] to-background px-3 py-2 sm:px-5">
                       <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">FADILAB · Recorrido de aprendizaje</p><h3 className="text-base font-semibold sm:text-lg">Explora la interfaz de MatrixGold 3.1</h3></div>
