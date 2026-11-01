@@ -136,6 +136,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [qualityOpen, setQualityOpen] = useState(false);
   const [libraryMenuOpen, setLibraryMenuOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
+  const [rhinoExportBusy, setRhinoExportBusy] = useState(false);
+  const [rhinoExportError, setRhinoExportError] = useState<string | null>(null);
   const [guardarProyectoOpen, setGuardarProyectoOpen] = useState(false);
   const [guardandoProyectoNube, setGuardandoProyectoNube] = useState(false);
   const [nombreProyectoGuardar, setNombreProyectoGuardar] = useState("");
@@ -1981,6 +1983,43 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           window.setTimeout(()=>URL.revokeObjectURL(url),60_000);
           return blob;
         },
+        exportRhino3dm:async()=>{
+          if(!modelo) throw new Error("Carga un modelo antes de exportar a Rhino.");
+          const loadRemoteModule=(url:string)=>import(/* @vite-ignore */ url);
+          const rhinoModule:any=await loadRemoteModule("https://cdn.jsdelivr.net/npm/rhino3dm@8.32.1/rhino3dm.module.min.js");
+          const rhinoFactory=rhinoModule.default??rhinoModule;
+          const rhino:any=await rhinoFactory({locateFile:(file:string)=>"https://cdn.jsdelivr.net/npm/rhino3dm@8.32.1/"+file});
+          const document3dm=new rhino.File3dm();
+          document3dm.applicationName="AURUM Render";
+          document3dm.applicationDetails="Exportación de malla desde el modelo GLB cargado en AURUM Render.";
+          modelo.updateMatrixWorld(true);
+          const isWorldVisible=(object:any)=>{for(let current=object;current;current=current.parent)if(!current.visible)return false;return true;};
+          let meshCount=0,triangleCount=0;
+          modelo.traverse((object:any)=>{
+            if(!object.isMesh||!object.geometry||!isWorldVisible(object))return;
+            const positions=object.geometry.getAttribute("position");
+            if(!positions||positions.count<3)return;
+            const sourceIndex=object.geometry.index;
+            const sourceCount=sourceIndex?sourceIndex.count:positions.count;
+            const faceCount=Math.floor(sourceCount/3);
+            if(faceCount<1)return;
+            const mesh3dm=new rhino.Mesh(),vertices=mesh3dm.vertices(),worldVertex=new THREE.Vector3();
+            for(let i=0;i<positions.count;i++){worldVertex.fromBufferAttribute(positions,i).applyMatrix4(object.matrixWorld);vertices.add(worldVertex.x,worldVertex.y,worldVertex.z);}
+            const faces=mesh3dm.faces();
+            for(let face=0;face<faceCount;face++){const offset=face*3;faces.addTriFace(sourceIndex?sourceIndex.getX(offset):offset,sourceIndex?sourceIndex.getX(offset+1):offset+1,sourceIndex?sourceIndex.getX(offset+2):offset+2);}
+            const attributes=new rhino.ObjectAttributes();
+            attributes.name=(typeof object.name==="string"&&object.name.trim())?object.name.trim():"AURUM_Mesh_"+(meshCount+1);
+            document3dm.objects().addMesh(mesh3dm,attributes);
+            meshCount++;triangleCount+=faceCount;
+          });
+          if(meshCount===0){document3dm.destroy?.();throw new Error("No se encontraron mallas visibles para exportar.");}
+          const bytes=document3dm.toByteArray();
+          document3dm.destroy?.();
+          const blob=new Blob([bytes],{type:"application/octet-stream"}),url=URL.createObjectURL(blob),link=document.createElement("a");
+          link.href=url;link.download=(nombreProyecto||"aurum-modelo").trim().replace(/[^a-z0-9-_]+/gi,"-")+".3dm";link.click();
+          window.setTimeout(()=>URL.revokeObjectURL(url),60_000);
+          return {meshCount,triangleCount};
+        },
         exportPathTraced:async(options:{width?:number;height?:number;format?:"png"|"jpeg"|"webp";samples?:number;signal?:AbortSignal;onProgress?:(d:number,t:number)=>void}={})=>{
           if(!modelo) throw new Error("Carga un modelo antes del render final.");
           const { renderAurumPathTracedImage } = await import("../lib/aurum/path-tracer-final");
@@ -3507,8 +3546,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       </div>}
       
       <div className={embedded ? "flex min-h-0 flex-1 overflow-hidden bg-[#090b0e]" : "flex min-h-0 flex-1 gap-3 bg-[#eeede8] p-3"}>
-        {!embedded && <AurumRenderSidebar activeToolId={uxSection} onAmbientesClick={() => setUxSection("ambientes")} onGemHdrClick={() => setUxSection("hdrGemas")} onBackgroundClick={() => setUxSection("fondos")} onSceneClick={() => setUxSection("escenas")} onMaterialsClick={() => setUxSection("materiales")} onGemsClick={() => {setUxSection("gemas");setBibliotecaTipo("gemas");setFamiliaGemaActiva("Predeterminadas");setMostrarTodasGemas(false);setBusquedaGemas("");}} />}
-        {!embedded && <aside className="-ml-3 w-[min(22vw,336px)] shrink-0 overflow-hidden rounded-r-2xl border border-l-0 border-black/[.07] bg-[#f9f8f5] text-[#292824] shadow-[0_8px_28px_rgba(36,32,20,.045)]">
+        {!embedded && <AurumRenderSidebar activeToolId={uxSection} onAmbientesClick={() => setUxSection("ambientes")} onGemHdrClick={() => setUxSection("hdrGemas")} onBackgroundClick={() => setUxSection("fondos")} onSceneClick={() => setUxSection("escenas")} onMaterialsClick={() => setUxSection("materiales")} onGemsClick={() => {setUxSection("gemas");setBibliotecaTipo("gemas");setFamiliaGemaActiva("Predeterminadas");setMostrarTodasGemas(false);setBusquedaGemas("");}} onRhinoExportClick={() => {setExportOpen(false);setRhinoExportError(null);setUxSection("rhino-export");}} />}
+        {!embedded && <aside className="relative -ml-3 w-[min(22vw,336px)] shrink-0 overflow-hidden rounded-r-2xl border border-l-0 border-black/[.07] bg-[#f9f8f5] text-[#292824] shadow-[0_8px_28px_rgba(36,32,20,.045)]">
           <div className="h-full overflow-y-auto">
             <section className="px-4 py-1">
               {uxSection==="materiales"&&<div className="pb-5">
@@ -3933,7 +3972,18 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         {sharedLink&&<p className="mt-2 rounded-lg border border-black/[.06] bg-black/[.025] p-2.5 text-[10px] leading-relaxed text-[#77756f]">Al compartir un modelo 3D, los materiales compatibles con glTF se conservan mejor; los shaders personalizados, el HDRI y los efectos pueden variar según el visor.</p>}
       </div></div>}
 {!exportOpen && <>
-          <div className="flex h-full flex-col overflow-y-auto">
+          {uxSection==="rhino-export"&&<div className="absolute inset-0 z-20 flex h-full flex-col overflow-y-auto bg-[#f9f8f5] p-4">
+            <div className="mb-4 flex items-start justify-between gap-3"><div><div className="text-[10px] font-semibold uppercase tracking-[.16em] text-[#92743b]">AURUM CAD</div><h2 className="mt-1 text-base font-semibold text-[#292824]">Exportación Rhinoceros</h2><p className="mt-1 text-[11px] leading-relaxed text-[#77756f]">Exporta la geometría del GLB que está cargado actualmente en el visor.</p></div><button type="button" title="Volver a la biblioteca" aria-label="Volver a la biblioteca" onClick={()=>setUxSection("ambientes")} className="rounded-lg p-1.5 text-[#77756f] hover:bg-black/[.05]"><X className="size-4"/></button></div>
+            <div className="mb-3 rounded-xl border border-[#e6e1d8] bg-white p-3"><div className="flex items-center gap-2"><Gem className="size-4 text-[#92743b]"/><span className="text-xs font-semibold text-[#292824]">Modelo del visor</span></div><p className="mt-1 truncate text-[11px] text-[#77756f]">{archivo?.name??(archivo?"Modelo cargado":"No hay un archivo cargado")}</p>{!archivo&&<p className="mt-2 text-[10px] text-[#9a7832]">Carga una joya en el visor para habilitar la exportación.</p>}</div>
+            <div className="mb-2 text-[10px] font-semibold uppercase tracking-[.14em] text-[#77756f]">Formato 3DM</div>
+            <div className="flex flex-col gap-2">
+              <div className="rounded-xl border border-[#b99642]/60 bg-[#f4efe5] p-3"><div className="flex items-center justify-between gap-2"><span className="text-xs font-semibold text-[#5e4a22]">Rhino 3DM · Malla</span><span className="rounded-full bg-[#e8ddc4] px-2 py-0.5 text-[9px] font-semibold text-[#725821]">Disponible</span></div><p className="mt-1 text-[10px] leading-relaxed text-[#766b55]">Conserva los vértices, triángulos, transformaciones y nombres de las mallas visibles del GLB.</p></div>
+              <div className="rounded-xl border border-black/[.08] bg-white/60 p-3 opacity-65"><div className="flex items-center justify-between gap-2"><span className="text-xs font-semibold text-[#55534d]">Rhino 3DM · Superficies NURBS</span><span className="rounded-full bg-[#efede8] px-2 py-0.5 text-[9px] text-[#77756f]">Fase CAD</span></div><p className="mt-1 text-[10px] leading-relaxed text-[#77756f]">Requiere reconstruir superficies matemáticas a partir de la malla. No se presenta como conversión directa.</p></div>
+              <div className="rounded-xl border border-black/[.08] bg-white/60 p-3 opacity-65"><div className="flex items-center justify-between gap-2"><span className="text-xs font-semibold text-[#55534d]">Rhino 3DM · BREP</span><span className="rounded-full bg-[#efede8] px-2 py-0.5 text-[9px] text-[#77756f]">Fase CAD</span></div><p className="mt-1 text-[10px] leading-relaxed text-[#77756f]">Requiere reconstrucción y validación de caras, aristas y sólidos cerrados; no equivale a envolver una malla.</p></div>
+            </div>
+            {rhinoExportError&&<div role="alert" className="mt-3 rounded-lg border border-red-200 bg-red-50 p-2.5 text-[10px] leading-relaxed text-red-800">{rhinoExportError}</div>}
+            <div className="mt-auto pt-4"><button type="button" disabled={!archivo||rhinoExportBusy} onClick={async()=>{setRhinoExportBusy(true);setRhinoExportError(null);try{await apiRef.current?.exportRhino3dm();}catch(error){setRhinoExportError(error instanceof Error?error.message:"No se pudo generar el archivo 3DM.");}finally{setRhinoExportBusy(false);}}} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#d4af37] px-3 py-3 text-xs font-semibold text-[#292824] shadow-sm transition hover:bg-[#e1bf50] disabled:cursor-not-allowed disabled:opacity-45">{rhinoExportBusy?<><RotateCw className="size-4 animate-spin"/>Generando archivo 3DM…</>:<><Download className="size-4"/>Exportar malla .3dm</>}</button><p className="mt-2 text-[9px] leading-relaxed text-[#8a857b]">El archivo contiene mallas poligonales editables en Rhino. No contiene sólidos BREP ni superficies NURBS reconstruidas.</p></div>
+          </div>}<div className="flex h-full flex-col overflow-y-auto">
             <div className="border-b border-[#e7e2d9] bg-white/55 px-4 py-4">
               <div className="text-[10px] font-semibold uppercase tracking-[.16em] text-[#92743b]">Biblioteca visual</div>
               
