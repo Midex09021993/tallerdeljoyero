@@ -516,11 +516,6 @@ function AulaFormacionPage() {
   const [resultadoGeometria, setResultadoGeometria] = useState<"correcto" | "incorrecto" | null>(null);
   const [modulosGeometriaCompletados, setModulosGeometriaCompletados] = useState<number[]>([]);
 
-  const [moduloGeometria, setModuloGeometria] = useState(0);
-  const [respuestaGeometria, setRespuestaGeometria] = useState("");
-  const [resultadoGeometria, setResultadoGeometria] = useState<"correcto" | "incorrecto" | null>(null);
-  const [modulosGeometriaCompletados, setModulosGeometriaCompletados] = useState<number[]>([]);
-
 
   useEffect(() => {
     if (paginaLectura !== 2) setInterfazInteractivaAbierta(false);
