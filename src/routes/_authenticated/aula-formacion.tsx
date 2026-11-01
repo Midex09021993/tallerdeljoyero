@@ -631,9 +631,19 @@ function AulaFormacionPage() {
       if (!vistaPrevia) consulta = consulta.eq("publicado",true);
       const { data, error } = await consulta.maybeSingle();
       if (error) throw error;
-      const secciones = data && Array.isArray(data.secciones) && data.secciones.length > 0
+      const seccionesOriginales = data && Array.isArray(data.secciones) && data.secciones.length > 0
         ? data.secciones
         : vistaPrevia && s.numero === 1 ? LECTURA_SESION_1 : null;
+      // La sesión 1 utiliza F12, configurada previamente por el docente, para Zoom Extents.
+      // Normaliza también el contenido ya guardado en Supabase, no solo el texto de respaldo.
+      const secciones = seccionesOriginales && s.numero === 1
+        ? seccionesOriginales.map((seccion: { titulo: string; bloques: string[] }) => ({
+            ...seccion,
+            bloques: seccion.bloques.map((bloque: string) =>
+              bloque.replace(/Escribe Zoom Extents en la línea de comandos\.?/gi, "Pulsa F12, tecla configurada previamente por el docente para ejecutar Zoom Extents.")
+            ),
+          }))
+        : seccionesOriginales;
       if (!secciones) {
         setMensaje(vistaPrevia ? "Todavía no hay contenido de lectura guardado para esta sesión." : "La lectura de esta sesión todavía no está publicada por FADILAB.");
         return;
