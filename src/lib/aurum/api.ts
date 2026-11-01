@@ -79,6 +79,8 @@ export function createAurumApi(options:any){
     vista: options.vista,
     calidad: options.calidad,
     exportGLB: options.exportGLB,
+    // Forward the dedicated Rhino 3DM exporter to the viewer API.
+    exportRhino3dm: options.exportRhino3dm,
     exportPNG: options.exportPNG,
     exportPathTraced: options.exportPathTraced,
     exportVideo: options.exportVideo,
