@@ -136,6 +136,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
   const modelRef = useRef<THREE.Object3D | null>(null);
   const cameraRef = useRef<THREE.Camera | null>(null);
   const diamondBvhRuntimeRef = useRef<Awaited<ReturnType<typeof createAurumDiamondBvhRuntime>> | null>(null);
+  const gemEnvironmentReadyRef = useRef<Promise<THREE.Texture | null> | null>(null);
   const [modelLoadedVersion, setModelLoadedVersion] = useState(0);
   const renderRef = useRef<(() => void) | null>(null);
   const materialIdRef = useRef(materialId);
@@ -169,6 +170,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
     setAutoRotate(false);
     let environment: THREE.Texture | null = null;
     let gemEnvironment: THREE.Texture | null = null;
+    let resolveGemEnvironmentReady: ((texture: THREE.Texture | null) => void) | null = null;
     let pmrem: THREE.PMREMGenerator | null = null;
     let roomEnvironmentTexture: THREE.Texture | null = null;
     let studioShadow: THREE.Mesh | null = null;
@@ -231,20 +233,39 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         // Use the same dedicated metal and gem HDR sources as Aurum Render when available.
         const metalUrl = getAurumHdriUrl("ijewelMetal");
         const gemUrl = getAurumGemHdriUrl("ijewelGem");
+        const gemEnvironmentReady = new Promise<THREE.Texture | null>((resolve) => {
+          resolveGemEnvironmentReady = resolve;
+        });
+        gemEnvironmentReadyRef.current = gemEnvironmentReady;
         const acceptHdr = (texture: THREE.Texture, done: (texture: THREE.Texture) => void) => {
           if (cancelled) { texture.dispose(); return; }
           texture.mapping = THREE.EquirectangularReflectionMapping;
           done(texture);
         };
-        const loadHdr = (url: string, done: (texture: THREE.Texture) => void) => {
+        const loadHdr = (url: string, done: (texture: THREE.Texture) => void, onError?: () => void) => {
+          const failed = () => onError?.();
           if (/\.exr(?:$|[?#])/i.test(url)) {
-            new EXRLoader().load(url, (texture) => acceptHdr(texture, done), undefined, () => {});
+            new EXRLoader().load(url, (texture) => acceptHdr(texture, done), undefined, failed);
           } else {
-            new RGBELoader().load(url, (texture) => acceptHdr(texture, done), undefined, () => {});
+            new RGBELoader().load(url, (texture) => acceptHdr(texture, done), undefined, failed);
           }
         };
-        loadHdr(metalUrl, (texture) => { environment = texture; if (scene) scene.environment = texture; applyProfiles(); renderRef.current?.(); });
-        if (gemUrl !== metalUrl) loadHdr(gemUrl, (texture) => { gemEnvironment = texture; applyProfiles(); renderRef.current?.(); });
+        loadHdr(metalUrl, (texture) => {
+          environment = texture;
+          if (scene) scene.environment = texture;
+          if (gemUrl === metalUrl) {
+            gemEnvironment = texture;
+            resolveGemEnvironmentReady?.(texture);
+          }
+          applyProfiles();
+          renderRef.current?.();
+        });
+        if (gemUrl !== metalUrl) loadHdr(gemUrl, (texture) => {
+          gemEnvironment = texture;
+          resolveGemEnvironmentReady?.(texture);
+          applyProfiles();
+          renderRef.current?.();
+        }, () => resolveGemEnvironmentReady?.(null));
 
         fetchStartedAt = performance.now();
         const response = await fetch(modelUrl);
@@ -471,6 +492,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
     void boot();
     return () => {
       cancelled = true;
+      resolveGemEnvironmentReady?.(null);
       if (zoomFrameId) cancelAnimationFrame(zoomFrameId);
       loop?.stop?.();
       if (diamondBvhRuntimeRef.current) {
@@ -538,16 +560,25 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
       };
     });
 
-    void createAurumDiamondBvhRuntime({
-      THREE,
-      RGBELoader,
-      EXRLoader,
-      url: getAurumGemHdriUrl("ijewelGem"),
-      camera,
-      quality: "interactive",
-      targetFamilies: [selectedFamily],
-      onError: (cause) => console.warn("[PUBLIC VIEWER] BVH AURUM para " + selectedFamily + ": se conserva el material AURUM como respaldo.", cause),
-    }).then((runtime) => {
+    void (async () => {
+      const sharedEnvironmentMap = await gemEnvironmentReadyRef.current;
+      if (cancelled || modelRef.current !== model || gemIdRef.current !== gemId) return;
+      const runtime = await createAurumDiamondBvhRuntime({
+        THREE,
+        RGBELoader,
+        EXRLoader,
+        url: getAurumGemHdriUrl("ijewelGem"),
+        ...(sharedEnvironmentMap ? { environmentMap: sharedEnvironmentMap, ownsEnvironmentMap: false } : {}),
+        camera,
+        quality: "interactive",
+        targetFamilies: [selectedFamily],
+        onError: (cause) => console.warn("[PUBLIC VIEWER] BVH AURUM para " + selectedFamily + ": se conserva el material AURUM como respaldo.", cause),
+      });
+      if (cancelled || modelRef.current !== model || gemIdRef.current !== gemId) {
+        runtime.dispose();
+        setGemOpticsLoading(false);
+        return;
+      }
       if (cancelled || modelRef.current !== model || gemIdRef.current !== gemId) {
         runtime.dispose();
         setGemOpticsLoading(false);
@@ -563,7 +594,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
       diamondBvhRuntimeRef.current = runtime;
       setGemOpticsLoading(false);
       renderRef.current?.();
-    }).catch((cause) => {
+    })().catch((cause) => {
       if (!cancelled) {
         console.warn("[PUBLIC VIEWER] No se pudo iniciar el BVH AURUM para " + selectedFamily + "; se mantiene el perfil de catálogo.", cause);
         setGemOpticsLoading(false);
