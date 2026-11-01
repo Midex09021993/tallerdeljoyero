@@ -964,22 +964,24 @@ function AulaFormacionPage() {
                   <button type="button" disabled={!imagenInterfazUrl} onClick={() => setInterfazInteractivaAbierta(true)} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gold px-5 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50">Explorar interfaz interactiva <ChevronRight className="size-4"/></button>
                   {!imagenInterfazUrl && <p className="mt-2 text-xs text-muted-foreground">{imagenInterfazError || "Buscando la imagen en la Biblioteca del curso…"}</p>}
                 </section>}
-                {paginaLectura === 2 && interfazInteractivaAbierta && <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/70 p-2 sm:p-5" role="dialog" aria-modal="true" aria-label="Exploración interactiva de MatrixGold 3.1">
-                  <div className="flex max-h-[96vh] w-full max-w-7xl flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl">
+                {paginaLectura === 2 && interfazInteractivaAbierta && <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/75 p-2 sm:p-3" role="dialog" aria-modal="true" aria-label="Exploración interactiva de MatrixGold 3.1">
+                  <div className="flex h-[92vh] max-h-[900px] w-[96vw] max-w-[1500px] flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl">
                     <header className="flex items-center justify-between gap-3 border-b border-border bg-gradient-to-r from-[#fbf8f0] to-background px-4 py-3 sm:px-6">
                       <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">FADILAB · Actividad interactiva</p><h3 className="text-base font-semibold sm:text-lg">Explora la interfaz de MatrixGold 3.1</h3></div>
                       <button type="button" onClick={() => setInterfazInteractivaAbierta(false)} className="shrink-0 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:border-gold">Cerrar ×</button>
                     </header>
-                    <div className="min-h-0 flex-1 overflow-y-auto p-3 sm:p-5">
-                      <div className="mb-4 flex flex-wrap items-center justify-between gap-2"><p className="text-sm text-muted-foreground">Selecciona los marcadores numerados sobre la imagen.</p><span className="rounded-full bg-gold/15 px-3 py-1 text-xs font-semibold">{componentesExplorados.length} de 10 explorados</span></div>
-                      {imagenInterfazUrl && <figure className="my-3 overflow-hidden rounded-xl border border-border bg-[#171719] p-1">
+                    <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-y-auto p-3 sm:p-4 lg:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.85fr)] lg:overflow-hidden">
+                      <div className="min-w-0 lg:flex lg:flex-col lg:justify-center">
+                      <div className="mb-3 flex flex-wrap items-center justify-between gap-2"><p className="text-sm text-muted-foreground">Selecciona los marcadores numerados sobre la imagen.</p><span className="rounded-full bg-gold/15 px-3 py-1 text-xs font-semibold">{componentesExplorados.length} de 10 explorados</span></div>
+                      {imagenInterfazUrl && <figure className="my-3 overflow-hidden rounded-xl border border-border bg-[#171719] p-1 lg:my-0">
                         <div className="relative">
-                          <img src={imagenInterfazUrl} alt="Captura de la interfaz de MatrixGold 3.1 con marcadores interactivos" className="block h-auto w-full rounded-lg" loading="lazy" />
+                          <img src={imagenInterfazUrl} alt="Captura de la interfaz de MatrixGold 3.1 con marcadores interactivos" className="block h-auto max-h-[58vh] w-full rounded-lg object-contain" loading="lazy" />
                           {COMPONENTES_INTERFAZ.map((item, indice) => <button key={indice} type="button" onClick={() => { setComponenteActivo(indice); setComponentesExplorados(prev => prev.includes(indice) ? prev : [...prev, indice]); }} aria-label={`Explorar componente ${indice+1}: ${item[0]}`} aria-pressed={componenteActivo===indice} className={`absolute flex size-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white text-xs font-bold shadow-lg transition sm:size-9 sm:text-sm ${componenteActivo===indice ? "z-20 scale-125 bg-[#c4a15a] text-black ring-4 ring-[#c4a15a]/40" : componentesExplorados.includes(indice) ? "z-10 bg-emerald-600 text-white" : "z-10 bg-blue-600 text-white hover:scale-110 hover:bg-[#c4a15a] hover:text-black"}`} style={{left:COORDENADAS_INTERFAZ[indice].x,top:COORDENADAS_INTERFAZ[indice].y}}>{indice+1}</button>)}
                         </div>
                         <figcaption className="mt-2 text-center text-xs leading-5 text-white/70">Selecciona cualquiera de los diez marcadores para conocer cada componente · FADILAB · MatrixGold 3.1</figcaption>
                       </figure>}
-                      <section className="space-y-6">
+                      </div>
+                      <section className="min-w-0 space-y-4 lg:row-start-1 lg:col-start-2 lg:min-h-0 lg:overflow-y-auto lg:pr-1">
                   <div className="rounded-2xl border border-border bg-background p-4 sm:p-5">
                     <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                       <div><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Componente seleccionado</p><h4 className="mt-1 text-lg font-semibold">Punto {componenteActivo+1} · {COMPONENTES_INTERFAZ[componenteActivo][0]}</h4></div>
@@ -1264,22 +1266,24 @@ function AulaFormacionPage() {
                   <button type="button" disabled={!imagenInterfazUrl} onClick={() => setInterfazInteractivaAbierta(true)} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gold px-5 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50">Explorar interfaz interactiva <ChevronRight className="size-4"/></button>
                   {!imagenInterfazUrl && <p className="mt-2 text-xs text-muted-foreground">{imagenInterfazError || "Buscando la imagen en la Biblioteca del curso…"}</p>}
                 </section>}
-                {paginaLectura === 2 && interfazInteractivaAbierta && <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/70 p-2 sm:p-5" role="dialog" aria-modal="true" aria-label="Exploración interactiva de MatrixGold 3.1">
-                  <div className="flex max-h-[96vh] w-full max-w-7xl flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl">
+                {paginaLectura === 2 && interfazInteractivaAbierta && <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/75 p-2 sm:p-3" role="dialog" aria-modal="true" aria-label="Exploración interactiva de MatrixGold 3.1">
+                  <div className="flex h-[92vh] max-h-[900px] w-[96vw] max-w-[1500px] flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl">
                     <header className="flex items-center justify-between gap-3 border-b border-border bg-gradient-to-r from-[#fbf8f0] to-background px-4 py-3 sm:px-6">
                       <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">FADILAB · Actividad interactiva</p><h3 className="text-base font-semibold sm:text-lg">Explora la interfaz de MatrixGold 3.1</h3></div>
                       <button type="button" onClick={() => setInterfazInteractivaAbierta(false)} className="shrink-0 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:border-gold">Cerrar ×</button>
                     </header>
-                    <div className="min-h-0 flex-1 overflow-y-auto p-3 sm:p-5">
-                      <div className="mb-4 flex flex-wrap items-center justify-between gap-2"><p className="text-sm text-muted-foreground">Selecciona los marcadores numerados sobre la imagen.</p><span className="rounded-full bg-gold/15 px-3 py-1 text-xs font-semibold">{componentesExplorados.length} de 10 explorados</span></div>
-                      {imagenInterfazUrl && <figure className="my-3 overflow-hidden rounded-xl border border-border bg-[#171719] p-1">
+                    <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-y-auto p-3 sm:p-4 lg:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.85fr)] lg:overflow-hidden">
+                      <div className="min-w-0 lg:flex lg:flex-col lg:justify-center">
+                      <div className="mb-3 flex flex-wrap items-center justify-between gap-2"><p className="text-sm text-muted-foreground">Selecciona los marcadores numerados sobre la imagen.</p><span className="rounded-full bg-gold/15 px-3 py-1 text-xs font-semibold">{componentesExplorados.length} de 10 explorados</span></div>
+                      {imagenInterfazUrl && <figure className="my-3 overflow-hidden rounded-xl border border-border bg-[#171719] p-1 lg:my-0">
                         <div className="relative">
-                          <img src={imagenInterfazUrl} alt="Captura de la interfaz de MatrixGold 3.1 con marcadores interactivos" className="block h-auto w-full rounded-lg" loading="lazy" />
+                          <img src={imagenInterfazUrl} alt="Captura de la interfaz de MatrixGold 3.1 con marcadores interactivos" className="block h-auto max-h-[58vh] w-full rounded-lg object-contain" loading="lazy" />
                           {COMPONENTES_INTERFAZ.map((item, indice) => <button key={indice} type="button" onClick={() => { setComponenteActivo(indice); setComponentesExplorados(prev => prev.includes(indice) ? prev : [...prev, indice]); }} aria-label={`Explorar componente ${indice+1}: ${item[0]}`} aria-pressed={componenteActivo===indice} className={`absolute flex size-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white text-xs font-bold shadow-lg transition sm:size-9 sm:text-sm ${componenteActivo===indice ? "z-20 scale-125 bg-[#c4a15a] text-black ring-4 ring-[#c4a15a]/40" : componentesExplorados.includes(indice) ? "z-10 bg-emerald-600 text-white" : "z-10 bg-blue-600 text-white hover:scale-110 hover:bg-[#c4a15a] hover:text-black"}`} style={{left:COORDENADAS_INTERFAZ[indice].x,top:COORDENADAS_INTERFAZ[indice].y}}>{indice+1}</button>)}
                         </div>
                         <figcaption className="mt-2 text-center text-xs leading-5 text-white/70">Selecciona cualquiera de los diez marcadores para conocer cada componente · FADILAB · MatrixGold 3.1</figcaption>
                       </figure>}
-                      <section className="space-y-6">
+                      </div>
+                      <section className="min-w-0 space-y-4 lg:row-start-1 lg:col-start-2 lg:min-h-0 lg:overflow-y-auto lg:pr-1">
                   <div className="rounded-2xl border border-border bg-background p-4 sm:p-5">
                     <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                       <div><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Componente seleccionado</p><h4 className="mt-1 text-lg font-semibold">Punto {componenteActivo+1} · {COMPONENTES_INTERFAZ[componenteActivo][0]}</h4></div>
