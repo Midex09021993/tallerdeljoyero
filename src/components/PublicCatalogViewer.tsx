@@ -469,7 +469,12 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
           zoomFrameId = requestAnimationFrame(step);
         };
         cameraActionsRef.current = {
-          reset: () => setCameraView(new THREE.Vector3(0, 0, distance)),
+          reset: () => {
+            controls.autoRotate = false;
+            loop?.setContinuousRendering?.(false);
+            setAutoRotate(false);
+            setCameraView(new THREE.Vector3(0, 0, distance));
+          },
           front: () => setCameraView(new THREE.Vector3(0, 0, distance)),
           side: () => setCameraView(new THREE.Vector3(distance, 0, 0)),
           top: () => setCameraView(new THREE.Vector3(0, distance, 0.001), new THREE.Vector3(0, 0, -1)),
@@ -690,6 +695,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
       <div className="rounded-full border border-[#ece5d9] bg-white/95 px-4 py-2 text-xs text-[#625b54] shadow-sm">Preparando la gema AURUM…</div>
     </div>}
     <div ref={hostRef} className="absolute inset-0" />
+    {!hideControls && cameraReady && !status && !error && <button type="button" onClick={() => cameraActionsRef.current?.reset()} title="Restablecer vista frontal" aria-label="Restablecer vista frontal" className="absolute right-3 top-3 z-20 inline-flex items-center gap-2 rounded-full border border-[#e8e1d6] bg-white/95 px-3.5 py-2 text-xs font-medium text-[#51483d] shadow-[0_2px_8px_-3px_rgba(45,35,20,.28)] backdrop-blur sm:hidden"><RotateCcw className="size-3.5" />Restablecer</button>}
     {!hideControls && cameraReady && !status && !error && <div className="hidden sm:flex absolute right-4 top-1/2 z-20 -translate-y-1/2 flex-col gap-2 rounded-full border border-white/65 bg-white/65 p-2 shadow-[0_10px_28px_-16px_rgba(45,35,20,.32),inset_0_1px_0_rgba(255,255,255,.85)] backdrop-blur-xl" aria-label="Controles de cámara">
       <button type="button" onClick={() => cameraActionsRef.current?.reset()} title="Restablecer cámara" aria-label="Restablecer cámara" className="grid size-8 place-items-center rounded-xl text-[#655b4c] transition hover:bg-[#f5efe3] hover:text-[#8b692f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45]"><RotateCcw className="size-4" /></button>
       <div className="h-px bg-[#eee8dd]" />
