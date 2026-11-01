@@ -25,40 +25,41 @@ type Intento = { id: string; examen_id: string; numero_intento: number; califica
 
 const LECTURA_SESION_1 = [
   { titulo: "1. El diseño CAD aplicado a la joyería", bloques: [
-    "CAD significa diseño asistido por computadora. En joyería permite desarrollar y revisar digitalmente una pieza antes de pasar a su fabricación.",
-    "El modelo digital ayuda a estudiar proporciones, dimensiones y la disposición de los componentes. También permite conservar un archivo que puede revisarse y continuar editándose en etapas posteriores.",
-    "El CAD complementa el conocimiento artesanal; no reemplaza el criterio del joyero sobre diseño, materiales, fabricación y acabado."
+    "CAD significa diseño asistido por computadora. En joyería permite desarrollar, revisar y modificar digitalmente una pieza antes de fabricarla.",
+    "El modelo digital ayuda a estudiar proporciones, dimensiones y la ubicación de los componentes. También permite conservar un archivo editable para continuar el trabajo.",
+    "El CAD complementa el oficio artesanal y el criterio del joyero; no los sustituye."
   ]},
   { titulo: "2. Introducción a Rhinoceros 7", bloques: [
     "Rhinoceros (Rhino) es un programa de diseño y modelado tridimensional utilizado en distintas áreas, entre ellas el diseño de joyería.",
-    "Rhino trabaja principalmente con geometría NURBS, un sistema matemático para representar curvas y superficies con precisión. En esta primera sesión no dibujaremos ni construiremos geometría: aprenderemos a reconocer el entorno y a desplazarnos por el espacio de trabajo."
+    "Rhino trabaja principalmente con geometría NURBS, que permite representar curvas y superficies con precisión. MatrixGold incorpora herramientas especializadas para el diseño de joyería sobre el entorno de Rhino.",
+    "En esta primera sesión no dibujaremos ni construiremos geometría: aprenderemos a reconocer el espacio de trabajo y a desplazarnos por él."
   ]},
   { titulo: "3. Reconocimiento de la interfaz", bloques: [
-    "MatrixGold 3.1 incorpora herramientas especializadas para el diseño de joyería sobre el entorno de Rhino. Su espacio de trabajo reúne barras de herramientas, ventanas de visualización y paneles que facilitan el acceso a las funciones del programa.",
-    "En esta actividad conocerás la ubicación y función de los principales componentes mediante una imagen interactiva. Selecciona cada marcador para descubrir qué parte de la interfaz representa.",
-    "Importante: la captura corresponde a MatrixGold 3.1, no a la interfaz estándar de Rhino 7. En esta sesión solo observaremos y reconoceremos sus componentes; no ejecutaremos herramientas ni modificaremos archivos."
+    "MatrixGold 3.1 incorpora herramientas especializadas para el diseño de joyería sobre el entorno de Rhino. Su espacio de trabajo reúne barras de herramientas, ventanas de visualización y paneles que facilitan el acceso a sus funciones.",
+    "La guía interactiva contiene 14 marcadores numerados. Selecciona cada círculo sobre la captura para conocer dónde se encuentra cada componente y para qué sirve.",
+    "Importante: la captura corresponde a MatrixGold 3.1, no a la interfaz estándar de Rhino 7. En esta sesión solo reconoceremos sus componentes; no ejecutaremos herramientas ni modificaremos archivos."
   ]},
   { titulo: "4. Vistas y orientación espacial", bloques: [
-    "Top muestra el contenido desde arriba; Front, desde el frente; y Right, desde la derecha. Estas son vistas paralelas. Perspective permite apreciar la profundidad y observar el contenido desde una orientación tridimensional.",
-    "Los ejes X, Y y Z representan las tres direcciones principales del espacio. En la orientación habitual de Rhino, Z corresponde a la altura. La apariencia de los ejes cambia según la vista desde la que se observe."
+    "Top muestra el contenido desde arriba; Front, desde el frente; y Right, desde la derecha. Estas son vistas paralelas. Perspective permite apreciar la profundidad y comprender mejor el volumen de una pieza.",
+    "Los ejes X, Y y Z representan las tres direcciones principales del espacio. En la orientación habitual de Rhino, X corresponde a la dirección horizontal, Y a la profundidad y Z a la altura. La apariencia de los ejes cambia según la vista desde la que se observen."
   ]},
   { titulo: "5. Navegación básica en Rhino 7 para Windows", bloques: [
     "Acercar y alejar (Zoom): gira la rueda del ratón hacia delante o hacia atrás sobre la ventana activa.",
     "Desplazar una vista paralela: mantén pulsado el botón derecho del ratón y arrastra.",
     "Girar la vista Perspective: mantén pulsado el botón derecho del ratón y arrastra dentro de la ventana Perspective.",
     "Desplazar la vista Perspective: mantén pulsadas las teclas Shift y el botón derecho del ratón mientras arrastras.",
-    "Maximizar y restaurar una ventana: haz doble clic sobre el título de la ventana.",
-    "Zoom Extents: pulsa F12, tecla configurada por el docente para ejecutar este comando. Rhino ajustará el encuadre para mostrar el contenido visible del archivo."
+    "Maximizar y restaurar una ventana: haz doble clic sobre el título de la vista.",
+    "Recuperar el encuadre (Zoom Extents): utiliza Vista > Zoom > Extensión de zoom. Si el docente ha configurado F12 en el equipo, también podrás utilizar esa tecla como acceso directo."
   ]},
   { titulo: "6. Configuración inicial del entorno", bloques: [
-    "Antes de comenzar, comprueba que Rhino esté mostrando las cuatro ventanas principales: Top, Front, Right y Perspective. Verifica también que la línea de comandos esté visible y que puedas leer sus indicaciones.",
-    "Comprueba las unidades del archivo en sus propiedades, siguiendo la indicación del docente. No cambies las unidades durante esta práctica: el objetivo de hoy es reconocer el entorno y practicar la navegación, no modificar el documento.",
-    "Para esta sesión todos utilizarán el archivo de práctica proporcionado por FADILAB. Ábrelo tal como se entrega y conserva su contenido original."
+    "Antes de comenzar, verifica que estén disponibles las cuatro vistas principales: Top, Front, Right y Perspective. Comprueba también que la línea de comandos esté visible y que puedas leer sus indicaciones.",
+    "Identifica cuál es la vista activa y localiza la barra de estado. Comprueba las unidades configuradas en las propiedades del archivo, siguiendo la indicación del docente.",
+    "No cambies las unidades ni modifiques el contenido del documento durante esta práctica. Abre el archivo proporcionado por FADILAB tal como se entrega y conserva su contenido original."
   ]},
   { titulo: "7. Del diseño digital a la manufactura aditiva", bloques: [
-    "En joyería, el diseño digital puede formar parte de un flujo de trabajo que continúa con la preparación del archivo, la impresión 3D y la validación del modelo obtenido.",
-    "Después de la impresión pueden existir diferentes rutas de producción, por ejemplo, utilizar un patrón para el proceso de fundición a la cera perdida o elaborar un patrón maestro destinado a fabricar un molde. En esta sesión solo identificaremos estas posibilidades de manera general.",
-    "La resina debe elegirse de acuerdo con el proceso de fabricación previsto. Una resina calcinable debe ser compatible con las condiciones del proceso recomendado; no todas las resinas de impresión son intercambiables."
+    "En joyería, el diseño digital forma parte de un flujo de trabajo que puede continuar con la preparación del modelo, la impresión 3D y el proceso de fabricación de la joya.",
+    "La impresión 3D permite obtener una pieza física a partir del modelo digital. El resultado puede utilizarse en distintas rutas de producción, según el proceso de fabricación elegido.",
+    "En esta sesión solo reconoceremos el flujo general: Diseño CAD → Preparación del modelo → Impresión 3D → Proceso de fabricación de la joya. Los materiales y parámetros específicos se estudiarán más adelante."
   ]},
   { titulo: "8. Actividad práctica: recorrido y navegación en el espacio 3D", bloques: [
     "Objetivo: practicar los movimientos de visualización en Rhino 7 utilizando únicamente el archivo TIPOS DE OBJETOS RHINOCEROS.3dm, proporcionado por FADILAB. Este archivo se utilizará como referencia visual; no debes crear, seleccionar, mover, borrar ni modificar sus objetos.",
@@ -68,12 +69,13 @@ const LECTURA_SESION_1 = [
     "4) En una vista paralela, mantén pulsado el botón derecho y arrastra para desplazar la vista.",
     "5) En Perspective, mantén pulsado el botón derecho y arrastra para girar la vista. Después, mantén Shift + botón derecho y arrastra para desplazarla.",
     "6) Haz doble clic en el título de Perspective para maximizar la ventana. Repite el doble clic para restaurar las cuatro vistas.",
-    "7) Pulsa F12 para ejecutar Zoom Extents, configurado previamente por el docente. Observa cómo Rhino encuadra el contenido del archivo.",
+    "7) Ejecuta Vista > Zoom > Extensión de zoom (Zoom Extents). Si F12 está configurada por el docente, también puedes utilizarla como acceso directo. Observa cómo Rhino encuadra el contenido del archivo.",
     "8) Repite los movimientos hasta poder realizarlos con control. Al terminar, cierra el archivo sin guardar cambios. No es necesario entregar un modelo ni modificar el archivo de práctica."
   ]},
-  { titulo: "9. Comprobación de aprendizaje", bloques: [
-    "Al finalizar, debes poder reconocer Top, Front, Right y Perspective; localizar la línea de comandos; acercar y alejar la vista; desplazar una vista paralela; girar y desplazar Perspective; maximizar y restaurar una ventana; y ejecutar Zoom Extents.",
-    "Comprueba lo aprendido: ¿qué significa CAD y cómo apoya el trabajo del joyero? ¿Cuáles son las cuatro ventanas principales de Rhino? ¿Qué movimiento permite acercar o alejar la vista? ¿Cómo se desplaza una vista paralela? ¿Cómo se gira Perspective? ¿Para qué sirve Zoom Extents?",
+  { titulo: "9. Repaso guiado y dominio del entorno", bloques: [
+    "Al finalizar esta sesión, habrás aprendido a reconocer los principales componentes de la interfaz y a diferenciar las vistas Top, Front, Right y Perspective.",
+    "También podrás identificar los ejes X, Y y Z; acercar, alejar y desplazar las vistas; girar y desplazar Perspective; maximizar y restaurar una vista; y recuperar el encuadre mediante Zoom Extents.",
+    "Ya conoces el entorno de trabajo de Rhino 7 y MatrixGold 3.1. En la siguiente sesión comenzaremos a utilizar herramientas para construir geometría básica aplicada al diseño de joyería.",
     "Recuerda: el archivo TIPOS DE OBJETOS RHINOCEROS.3dm se utiliza únicamente para practicar la navegación y los movimientos de visualización. No forma parte de un ejercicio de modelado."
   ]}
 ] as const;
@@ -739,16 +741,17 @@ function AulaFormacionPage() {
     setCargandoLecturaDocente(true);
     setMensaje("");
     try {
-      const { data, error } = await (supabase as any).from("formacion_contenidos_lectura").select("secciones").eq("sesion_id", s.id).maybeSingle();
+      const { data, error } = await (supabase as any).from("formacion_contenidos_lectura").select("secciones,publicado").eq("sesion_id", s.id).maybeSingle();
       if (error) throw error;
       const guardadas = Array.isArray(data?.secciones) ? data.secciones : null;
-      const seccionesEditor = guardadas && s.numero === 1
-        ? guardadas.map((seccion: { titulo: string; bloques: string[] }, indice: number) => indice === 2
-          ? { ...seccion, titulo: LECTURA_SESION_1[2].titulo, bloques: [...LECTURA_SESION_1[2].bloques] }
-          : seccion)
-        : guardadas ?? (s.numero === 1 ? LECTURA_SESION_1.map(x => ({ titulo: x.titulo, bloques: [...x.bloques] })) : []);
+      // Sesión 1 adopta el contenido revisado y aprobado; las demás sesiones conservan su contenido guardado.
+      const seccionesEditor = s.numero === 1
+        ? LECTURA_SESION_1.map(x => ({ titulo: x.titulo, bloques: [...x.bloques] }))
+        : guardadas ?? [];
       setSeccionesLecturaEditadas(seccionesEditor);
-      setEstadoGuardadoLectura(guardadas ? { tipo: "info", texto: "Contenido cargado desde Supabase. Los cambios aún no están guardados." } : { tipo: "info", texto: "Contenido inicial cargado. Guarda el borrador para conservarlo en Supabase." });
+      setEstadoGuardadoLectura(s.numero === 1
+        ? { tipo: "info", texto: "Contenido revisado de la Sesión 1 cargado. Guarda los cambios para actualizar la lectura publicada en el aula." }
+        : guardadas ? { tipo: "info", texto: "Contenido cargado desde Supabase. Los cambios aún no están guardados." } : { tipo: "info", texto: "Contenido inicial cargado. Guarda el borrador para conservarlo en Supabase." });
       setLecturaPublicada(Boolean(data?.publicado));
       setLecturaEditando(s);
     } catch (err) {
@@ -805,18 +808,7 @@ function AulaFormacionPage() {
       const seccionesOriginales = data && Array.isArray(data.secciones) && data.secciones.length > 0
         ? data.secciones
         : vistaPrevia && s.numero === 1 ? LECTURA_SESION_1 : null;
-      // La sesión 1 utiliza F12, configurada previamente por el docente, para Zoom Extents.
-      // Normaliza también el contenido ya guardado en Supabase, no solo el texto de respaldo.
-      const secciones = seccionesOriginales && s.numero === 1
-        ? seccionesOriginales.map((seccion: { titulo: string; bloques: string[] }, indice: number) => indice === 2
-            ? { ...seccion, titulo: LECTURA_SESION_1[2].titulo, bloques: [...LECTURA_SESION_1[2].bloques] }
-            : {
-                ...seccion,
-                bloques: seccion.bloques.map((bloque: string) =>
-                  bloque.replace(/Escribe Zoom Extents en la línea de comandos\.?/gi, "Pulsa F12, tecla configurada previamente por el docente para ejecutar Zoom Extents.")
-                ),
-              })
-        : seccionesOriginales;
+      const secciones = seccionesOriginales;
       if (!secciones) {
         setMensaje(vistaPrevia ? "Todavía no hay contenido de lectura guardado para esta sesión." : "La lectura de esta sesión todavía no está publicada por FADILAB.");
         return;
@@ -1026,7 +1018,7 @@ function AulaFormacionPage() {
                 {paginaLectura === 2 && !interfazInteractivaAbierta && <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5 sm:p-6">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">Actividad guiada · FADILAB</p>
                   <h4 className="mt-1 text-lg font-semibold">Conoce cada parte de la interfaz</h4>
-                  <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">Abre el recorrido interactivo para identificar los componentes directamente sobre la captura de MatrixGold 3.1. Al explorar los diez marcadores conocerás dónde se encuentra cada componente, para qué sirve y cómo aparece en el trabajo diario.</p>
+                  <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">Abre el recorrido interactivo para identificar los componentes directamente sobre la captura de MatrixGold 3.1. Explora los 14 marcadores numerados para conocer dónde se encuentra cada componente y para qué sirve.</p>
                   <button type="button" disabled={!imagenInterfazUrl} onClick={() => setInterfazInteractivaAbierta(true)} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gold px-5 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50">Explorar interfaz interactiva <ChevronRight className="size-4"/></button>
                   {!imagenInterfazUrl && <p className="mt-2 text-xs text-muted-foreground">{imagenInterfazError || "Buscando la imagen en la Biblioteca del curso…"}</p>}
                 </section>}
@@ -1301,7 +1293,7 @@ function AulaFormacionPage() {
                 {paginaLectura === 2 && !interfazInteractivaAbierta && <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5 sm:p-6">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">Actividad guiada · FADILAB</p>
                   <h4 className="mt-1 text-lg font-semibold">Conoce cada parte de la interfaz</h4>
-                  <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">Abre el recorrido interactivo para identificar los componentes directamente sobre la captura de MatrixGold 3.1. Al explorar los diez marcadores conocerás dónde se encuentra cada componente, para qué sirve y cómo aparece en el trabajo diario.</p>
+                  <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">Abre el recorrido interactivo para identificar los componentes directamente sobre la captura de MatrixGold 3.1. Explora los 14 marcadores numerados para conocer dónde se encuentra cada componente y para qué sirve.</p>
                   <button type="button" disabled={!imagenInterfazUrl} onClick={() => setInterfazInteractivaAbierta(true)} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gold px-5 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50">Explorar interfaz interactiva <ChevronRight className="size-4"/></button>
                   {!imagenInterfazUrl && <p className="mt-2 text-xs text-muted-foreground">{imagenInterfazError || "Buscando la imagen en la Biblioteca del curso…"}</p>}
                 </section>}
