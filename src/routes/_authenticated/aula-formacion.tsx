@@ -958,54 +958,30 @@ function AulaFormacionPage() {
                       <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">FADILAB · Recorrido de aprendizaje</p><h3 className="text-base font-semibold sm:text-lg">Explora la interfaz de MatrixGold 3.1</h3></div>
                       <button type="button" onClick={() => setInterfazInteractivaAbierta(false)} className="shrink-0 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:border-gold">Cerrar ×</button>
                     </header>
-                    <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-y-auto p-3 sm:gap-4 sm:p-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(300px,0.85fr)] xl:overflow-hidden">
+                    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-3 sm:p-4">
                       <div className="min-w-0 xl:flex xl:flex-col xl:justify-center">
                       <div className="mb-3 flex flex-wrap items-center justify-between gap-2"><p className="text-sm text-muted-foreground">Selecciona cada marcador para aprender sobre ese componente.</p><span className="rounded-full bg-gold/15 px-3 py-1 text-xs font-semibold">{componentesExplorados.length} de 10 explorados</span></div>
                       {imagenInterfazUrl && <figure className="my-3 overflow-hidden rounded-xl border border-border bg-[#171719] p-1 lg:my-0">
                         <div className="relative">
                           <img src={imagenInterfazUrl} alt="Captura de la interfaz de MatrixGold 3.1 con marcadores interactivos" className="block h-auto w-full rounded-lg" loading="lazy" />
-                          {COMPONENTES_INTERFAZ.map((item, indice) => <button key={indice} type="button" onClick={() => { setComponenteActivo(indice); setComponentesExplorados(prev => prev.includes(indice) ? prev : [...prev, indice]); }} aria-label={`Explorar componente ${indice+1}: ${item[0]}`} aria-pressed={componenteActivo===indice} className={`absolute flex size-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white text-xs font-bold shadow-lg transition sm:size-9 sm:text-sm ${componenteActivo===indice ? "z-20 scale-125 bg-[#c4a15a] text-black ring-4 ring-[#c4a15a]/40" : componentesExplorados.includes(indice) ? "z-10 bg-emerald-600 text-white" : "z-10 bg-blue-600 text-white hover:scale-110 hover:bg-[#c4a15a] hover:text-black"}`} style={{left:COORDENADAS_INTERFAZ[indice].x,top:COORDENADAS_INTERFAZ[indice].y}}>{indice+1}</button>)}
+                          {COMPONENTES_INTERFAZ.map((item, indice) => <button key={indice} type="button" onClick={() => { setComponenteActivo(indice); setComponentesExplorados(prev => prev.includes(indice) ? prev : [...prev, indice]); }} aria-label={`Explorar componente ${indice+1}: ${item[0]}`} aria-pressed={componenteActivo===indice} className={`absolute flex size-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white text-xs font-bold shadow-lg transition sm:size-9 sm:text-sm ${componenteActivo===indice ? "z-20 scale-125 bg-[#c4a15a] text-black ring-4 ring-[#c4a15a]/40" : componentesExplorados.includes(indice) ? "z-10 bg-emerald-600 text-white" : "z-10 bg-blue-600 text-white hover:scale-110 hover:bg-[#c4a15a] hover:text-black"}`} style={{left:parseFloat(COORDENADAS_INTERFAZ[componenteActivo].x)>65?"auto":`${Math.min(parseFloat(COORDENADAS_INTERFAZ[componenteActivo].x)+4,50)}%`,right:parseFloat(COORDENADAS_INTERFAZ[componenteActivo].x)>65?`${Math.max(4,100-parseFloat(COORDENADAS_INTERFAZ[componenteActivo].x)+4)}%`:"auto",top:`${Math.min(Math.max(parseFloat(COORDENADAS_INTERFAZ[componenteActivo].y),16),84)}%`,transform:"translateY(-50%)"}}>{indice+1}</button>)}
+                          <aside aria-live="polite" className="absolute z-30 w-[min(300px,48%)] max-h-[76%] overflow-y-auto rounded-xl border border-[#c4a15a] bg-[#fffdf8]/95 p-2.5 text-[#242424] shadow-xl backdrop-blur-sm sm:p-3" style={{left:parseFloat(COORDENADAS_INTERFAZ[componenteActivo].x)>65?"auto":`${Math.min(parseFloat(COORDENADAS_INTERFAZ[componenteActivo].x)+4,50)}%`,right:parseFloat(COORDENADAS_INTERFAZ[componenteActivo].x)>65?`${Math.max(4,100-parseFloat(COORDENADAS_INTERFAZ[componenteActivo].x)+4)}%`:"auto",top:`${Math.min(Math.max(parseFloat(COORDENADAS_INTERFAZ[componenteActivo].y),16),84)}%`,transform:"translateY(-50%)"}}>
+                            <p className="text-[9px] font-semibold uppercase tracking-wider text-[#98722e] sm:text-[10px]">Componente {componenteActivo+1} de 10</p>
+                            <h4 className="mt-1 text-xs font-bold leading-4 sm:text-sm sm:leading-5">{COMPONENTES_INTERFAZ[componenteActivo][0]}</h4>
+                            <div className="mt-2 rounded-lg bg-black/5 p-2">
+                              <p className="text-[9px] font-semibold uppercase tracking-wide text-[#777] sm:text-[10px]">Dónde lo encuentras</p>
+                              <p className="mt-1 text-[10px] leading-4 sm:text-xs sm:leading-5">{COMPONENTES_INTERFAZ[componenteActivo][2]}</p>
+                            </div>
+                            <div className="mt-2 rounded-lg bg-black/5 p-2">
+                              <p className="text-[9px] font-semibold uppercase tracking-wide text-[#777] sm:text-[10px]">Para qué sirve</p>
+                              <p className="mt-1 text-[10px] leading-4 sm:text-xs sm:leading-5">{COMPONENTES_INTERFAZ[componenteActivo][3]}</p>
+                            </div>
+                          </aside>
                         </div>
                         <figcaption className="mt-2 text-center text-xs leading-5 text-white/70">Selecciona cualquiera de los diez marcadores para conocer cada componente · FADILAB · MatrixGold 3.1</figcaption>
                       </figure>}
                       </div>
-                      <section className="min-w-0 space-y-3 xl:row-start-1 xl:col-start-2 xl:min-h-0 xl:overflow-y-auto xl:pr-1">
-                  <div className="rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-4 sm:p-5">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div>
-                        <div className="flex items-center gap-2"><BookOpen className="size-5 text-gold-deep"/><p className="text-xs font-semibold uppercase tracking-wider text-gold-deep">Guía de aprendizaje</p></div>
-                        <h4 className="mt-1 text-lg font-semibold">Guía para conocer los componentes</h4>
-                      </div>
-                      <span className="rounded-full bg-gold/15 px-3 py-1 text-xs font-semibold">{componentesExplorados.length} / 10 explorados</span>
-                    </div>
-                    <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-gold transition-all" style={{width:(componentesExplorados.length*10)+"%"}}/></div>
-                    <p className="mt-3 text-sm leading-6 text-muted-foreground">Selecciona un componente para consultar dónde se encuentra, para qué sirve y cómo se relaciona con el trabajo en joyería. También puedes seleccionarlo directamente en la imagen.</p>
-                    <div className="mt-4 space-y-2">
-                      {COMPONENTES_INTERFAZ.map((item, indice) => <div key={indice} className={`grid min-w-0 gap-3 rounded-xl border p-3 transition sm:grid-cols-[minmax(150px,0.85fr)_minmax(0,2fr)] sm:items-center ${componenteActivo===indice ? "border-gold bg-gold/5 ring-1 ring-gold/25" : "border-border bg-background/90"}`}>
-                        <button type="button" onClick={() => { setComponenteActivo(indice); setComponentesExplorados(prev => prev.includes(indice) ? prev : [...prev, indice]); }} aria-pressed={componenteActivo===indice} className="flex min-w-0 items-center gap-2 text-left">
-                          <span className={`flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold ${componentesExplorados.includes(indice) ? "bg-emerald-600 text-white" : "bg-gold/15 text-gold-deep"}`}>{indice+1}</span>
-                          <span className="min-w-0">
-                            <span className="block text-sm font-semibold">{item[0]}</span>
-                            <span className="mt-0.5 block text-xs leading-5 text-muted-foreground">{item[1]}</span>
-                          </span>
-                        </button>
-                        <div className="grid min-w-0 gap-2 sm:grid-cols-2">
-                          <div className="rounded-lg bg-muted/60 p-3">
-                            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Dónde lo encuentras</p>
-                            <p className="mt-1 text-sm leading-5">{item[2]}</p>
-                          </div>
-                          <div className="rounded-lg bg-muted/60 p-3">
-                            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Para qué sirve</p>
-                            <p className="mt-1 text-sm leading-5">{item[3]}</p>
-                          </div>
-                        </div>
-                      </div>)}
-                    </div>
-                    {componentesExplorados.length===10 && <p className="mt-4 rounded-xl bg-emerald-500/10 p-3 text-sm font-medium text-emerald-800">Recorrido completado. Ya conoces los diez componentes. Puedes repasar cualquiera de ellos cuando quieras.</p>}
-                    <p className="mt-4 rounded-xl bg-background/80 p-3 text-sm leading-6"><strong>Recuerda:</strong> esta actividad es para aprender explorando. No tiene examen ni calificación. Puedes repetir el recorrido las veces que necesites.</p>
-                  </div>
-                  <p className="text-xs leading-5 text-muted-foreground">Actividad de reconocimiento. Ribbon, Quick Commands y paneles dinámicos corresponden a MatrixGold 3.1; Rhino 7 sin MatrixGold puede presentar otra disposición.</p>
-                      </section>
+                      
                     </div>
                   </div>
                 </div>}
@@ -1257,59 +1233,30 @@ function AulaFormacionPage() {
                       <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">FADILAB · Recorrido de aprendizaje</p><h3 className="text-base font-semibold sm:text-lg">Explora la interfaz de MatrixGold 3.1</h3></div>
                       <button type="button" onClick={() => setInterfazInteractivaAbierta(false)} className="shrink-0 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:border-gold">Cerrar ×</button>
                     </header>
-                    <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-y-auto p-3 sm:gap-4 sm:p-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(300px,0.85fr)] xl:overflow-hidden">
+                    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-3 sm:p-4">
                       <div className="min-w-0 xl:flex xl:flex-col xl:justify-center">
                       <div className="mb-3 flex flex-wrap items-center justify-between gap-2"><p className="text-sm text-muted-foreground">Selecciona cada marcador para aprender sobre ese componente.</p><span className="rounded-full bg-gold/15 px-3 py-1 text-xs font-semibold">{componentesExplorados.length} de 10 explorados</span></div>
                       {imagenInterfazUrl && <figure className="my-3 overflow-hidden rounded-xl border border-border bg-[#171719] p-1 lg:my-0">
                         <div className="relative">
                           <img src={imagenInterfazUrl} alt="Captura de la interfaz de MatrixGold 3.1 con marcadores interactivos" className="block h-auto w-full rounded-lg" loading="lazy" />
-                          {COMPONENTES_INTERFAZ.map((item, indice) => <button key={indice} type="button" onClick={() => { setComponenteActivo(indice); setComponentesExplorados(prev => prev.includes(indice) ? prev : [...prev, indice]); }} aria-label={`Explorar componente ${indice+1}: ${item[0]}`} aria-pressed={componenteActivo===indice} className={`absolute flex size-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white text-xs font-bold shadow-lg transition sm:size-9 sm:text-sm ${componenteActivo===indice ? "z-20 scale-125 bg-[#c4a15a] text-black ring-4 ring-[#c4a15a]/40" : componentesExplorados.includes(indice) ? "z-10 bg-emerald-600 text-white" : "z-10 bg-blue-600 text-white hover:scale-110 hover:bg-[#c4a15a] hover:text-black"}`} style={{left:COORDENADAS_INTERFAZ[indice].x,top:COORDENADAS_INTERFAZ[indice].y}}>{indice+1}</button>)}
+                          {COMPONENTES_INTERFAZ.map((item, indice) => <button key={indice} type="button" onClick={() => { setComponenteActivo(indice); setComponentesExplorados(prev => prev.includes(indice) ? prev : [...prev, indice]); }} aria-label={`Explorar componente ${indice+1}: ${item[0]}`} aria-pressed={componenteActivo===indice} className={`absolute flex size-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white text-xs font-bold shadow-lg transition sm:size-9 sm:text-sm ${componenteActivo===indice ? "z-20 scale-125 bg-[#c4a15a] text-black ring-4 ring-[#c4a15a]/40" : componentesExplorados.includes(indice) ? "z-10 bg-emerald-600 text-white" : "z-10 bg-blue-600 text-white hover:scale-110 hover:bg-[#c4a15a] hover:text-black"}`} style={{left:parseFloat(COORDENADAS_INTERFAZ[componenteActivo].x)>65?"auto":`${Math.min(parseFloat(COORDENADAS_INTERFAZ[componenteActivo].x)+4,50)}%`,right:parseFloat(COORDENADAS_INTERFAZ[componenteActivo].x)>65?`${Math.max(4,100-parseFloat(COORDENADAS_INTERFAZ[componenteActivo].x)+4)}%`:"auto",top:`${Math.min(Math.max(parseFloat(COORDENADAS_INTERFAZ[componenteActivo].y),16),84)}%`,transform:"translateY(-50%)"}}>{indice+1}</button>)}
+                          <aside aria-live="polite" className="absolute z-30 w-[min(300px,48%)] max-h-[76%] overflow-y-auto rounded-xl border border-[#c4a15a] bg-[#fffdf8]/95 p-2.5 text-[#242424] shadow-xl backdrop-blur-sm sm:p-3" style={{left:parseFloat(COORDENADAS_INTERFAZ[componenteActivo].x)>65?"auto":`${Math.min(parseFloat(COORDENADAS_INTERFAZ[componenteActivo].x)+4,50)}%`,right:parseFloat(COORDENADAS_INTERFAZ[componenteActivo].x)>65?`${Math.max(4,100-parseFloat(COORDENADAS_INTERFAZ[componenteActivo].x)+4)}%`:"auto",top:`${Math.min(Math.max(parseFloat(COORDENADAS_INTERFAZ[componenteActivo].y),16),84)}%`,transform:"translateY(-50%)"}}>
+                            <p className="text-[9px] font-semibold uppercase tracking-wider text-[#98722e] sm:text-[10px]">Componente {componenteActivo+1} de 10</p>
+                            <h4 className="mt-1 text-xs font-bold leading-4 sm:text-sm sm:leading-5">{COMPONENTES_INTERFAZ[componenteActivo][0]}</h4>
+                            <div className="mt-2 rounded-lg bg-black/5 p-2">
+                              <p className="text-[9px] font-semibold uppercase tracking-wide text-[#777] sm:text-[10px]">Dónde lo encuentras</p>
+                              <p className="mt-1 text-[10px] leading-4 sm:text-xs sm:leading-5">{COMPONENTES_INTERFAZ[componenteActivo][2]}</p>
+                            </div>
+                            <div className="mt-2 rounded-lg bg-black/5 p-2">
+                              <p className="text-[9px] font-semibold uppercase tracking-wide text-[#777] sm:text-[10px]">Para qué sirve</p>
+                              <p className="mt-1 text-[10px] leading-4 sm:text-xs sm:leading-5">{COMPONENTES_INTERFAZ[componenteActivo][3]}</p>
+                            </div>
+                          </aside>
                         </div>
                         <figcaption className="mt-2 text-center text-xs leading-5 text-white/70">Selecciona cualquiera de los diez marcadores para conocer cada componente · FADILAB · MatrixGold 3.1</figcaption>
                       </figure>}
                       </div>
-                      <section className="min-w-0 space-y-3 xl:row-start-1 xl:col-start-2 xl:min-h-0 xl:overflow-y-auto xl:pr-1">
-                  <div className="rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-4 sm:p-5">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div>
-                        <div className="flex items-center gap-2"><BookOpen className="size-5 text-gold-deep"/><p className="text-xs font-semibold uppercase tracking-wider text-gold-deep">Guía de aprendizaje</p></div>
-                        <h4 className="mt-1 text-lg font-semibold">Guía para conocer los componentes</h4>
-                      </div>
-                      <span className="rounded-full bg-gold/15 px-3 py-1 text-xs font-semibold">{componentesExplorados.length} / 10 explorados</span>
-                    </div>
-                    <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-gold transition-all" style={{width:(componentesExplorados.length*10)+"%"}}/></div>
-                    <p className="mt-3 text-sm leading-6 text-muted-foreground">Selecciona un componente para consultar dónde se encuentra, para qué sirve y cómo se relaciona con el trabajo en joyería. También puedes seleccionarlo directamente en la imagen.</p>
-                    <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                      {COMPONENTES_INTERFAZ.map((item, indice) => <button key={indice} type="button" onClick={() => { setComponenteActivo(indice); setComponentesExplorados(prev => prev.includes(indice) ? prev : [...prev, indice]); }} aria-pressed={componenteActivo===indice} className={`flex min-w-0 flex-col items-start gap-2 rounded-xl border p-3 text-left transition ${componenteActivo===indice ? "border-gold bg-gold/5 ring-1 ring-gold/30" : "border-border bg-background/90 hover:border-gold/60"}`}>
-                        <span className="flex items-start gap-2">
-                          <span className={`flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${componentesExplorados.includes(indice) ? "bg-emerald-600 text-white" : "bg-gold/15 text-gold-deep"}`}>{indice+1}</span>
-                          <span className="min-w-0">
-                            <span className="block text-sm font-semibold">{item[0]}</span>
-                            <span className="mt-0.5 block text-xs leading-5 text-muted-foreground">{item[1]}</span>
-                          </span>
-                        </span>
-                        {componenteActivo===indice && <span className="w-full space-y-2 border-t border-gold/20 pt-3">
-                          <span className="block rounded-lg bg-muted/60 p-2.5">
-                            <span className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Dónde lo encuentras</span>
-                            <span className="mt-1 block text-sm leading-5">{item[2]}</span>
-                          </span>
-                          <span className="block rounded-lg bg-muted/60 p-2.5">
-                            <span className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Para qué sirve</span>
-                            <span className="mt-1 block text-sm leading-5">{item[3]}</span>
-                          </span>
-                          <span className="block rounded-lg border border-gold/25 bg-gold/5 p-2.5">
-                            <span className="block text-[10px] font-semibold uppercase tracking-wider text-gold-deep">Ejemplo práctico</span>
-                            <span className="mt-1 block text-sm leading-5">{item[4]}</span>
-                          </span>
-                          <span className="block text-right text-xs font-semibold text-gold-deep">Componente seleccionado · Punto {indice+1}</span>
-                        </span>}
-                      </button>)}
-                    </div>
-                    {componentesExplorados.length===10 && <p className="mt-4 rounded-xl bg-emerald-500/10 p-3 text-sm font-medium text-emerald-800">Recorrido completado. Ya conoces los diez componentes. Puedes repasar cualquiera de ellos cuando quieras.</p>}
-                    <p className="mt-4 rounded-xl bg-background/80 p-3 text-sm leading-6"><strong>Recuerda:</strong> esta actividad es para aprender explorando. No tiene examen ni calificación. Puedes repetir el recorrido las veces que necesites.</p>
-                  </div>
-                  <p className="text-xs leading-5 text-muted-foreground">Actividad de reconocimiento. Ribbon, Quick Commands y paneles dinámicos corresponden a MatrixGold 3.1; Rhino 7 sin MatrixGold puede presentar otra disposición.</p>
-                      </section>
+                      
                     </div>
                   </div>
                 </div>}
