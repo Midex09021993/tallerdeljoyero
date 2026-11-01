@@ -49,7 +49,7 @@ const LECTURA_SESION_1 = [
     "Girar la vista Perspective: mantén pulsado el botón derecho del ratón y arrastra dentro de la ventana Perspective.",
     "Desplazar la vista Perspective: mantén pulsadas las teclas Shift y el botón derecho del ratón mientras arrastras.",
     "Maximizar y restaurar una ventana: haz doble clic sobre el título de la ventana.",
-    "Zoom Extents: escribe Zoom Extents en la línea de comandos y pulsa Enter. Rhino ajustará el encuadre para mostrar el contenido visible del archivo."
+    "Zoom Extents: pulsa F12, tecla configurada por el docente para ejecutar este comando. Rhino ajustará el encuadre para mostrar el contenido visible del archivo."
   ]},
   { titulo: "6. Configuración inicial del entorno", bloques: [
     "Antes de comenzar, comprueba que Rhino esté mostrando las cuatro ventanas principales: Top, Front, Right y Perspective. Verifica también que la línea de comandos esté visible y que puedas leer sus indicaciones.",
@@ -69,7 +69,7 @@ const LECTURA_SESION_1 = [
     "4) En una vista paralela, mantén pulsado el botón derecho y arrastra para desplazar la vista.",
     "5) En Perspective, mantén pulsado el botón derecho y arrastra para girar la vista. Después, mantén Shift + botón derecho y arrastra para desplazarla.",
     "6) Haz doble clic en el título de Perspective para maximizar la ventana. Repite el doble clic para restaurar las cuatro vistas.",
-    "7) Escribe Zoom Extents en la línea de comandos y pulsa Enter. Observa cómo Rhino encuadra el contenido del archivo.",
+    "7) Pulsa F12 para ejecutar Zoom Extents, configurado previamente por el docente. Observa cómo Rhino encuadra el contenido del archivo.",
     "8) Repite los movimientos hasta poder realizarlos con control. Al terminar, cierra el archivo sin guardar cambios. No es necesario entregar un modelo ni modificar el archivo de práctica."
   ]},
   { titulo: "9. Comprobación de aprendizaje", bloques: [
