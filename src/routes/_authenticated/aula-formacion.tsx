@@ -245,6 +245,12 @@ function AulaFormacionPage() {
   const [intentosExamen, setIntentosExamen] = useState("1");
   const [examenSeleccionado, setExamenSeleccionado] = useState("");
   const [examenMuestraAbierto, setExamenMuestraAbierto] = useState(false);
+  const [examenEditandoId, setExamenEditandoId] = useState("");
+  const [tituloExamenEditado, setTituloExamenEditado] = useState("");
+  const [instruccionesExamenEditadas, setInstruccionesExamenEditadas] = useState("");
+  const [duracionExamenEditada, setDuracionExamenEditada] = useState("20");
+  const [intentosExamenEditados, setIntentosExamenEditados] = useState("1");
+  const [examenEliminarPendiente, setExamenEliminarPendiente] = useState<Examen | null>(null);
   const [tipoPregunta, setTipoPregunta] = useState<"opcion_multiple" | "verdadero_falso" | "practica">("opcion_multiple");
   const [enunciadoPregunta, setEnunciadoPregunta] = useState("");
   const [opcionesPregunta, setOpcionesPregunta] = useState("Opción A\nOpción B\nOpción C\nOpción D");
@@ -679,6 +685,59 @@ function AulaFormacionPage() {
       await qc.invalidateQueries({ queryKey: ["aula-formacion-preguntas-docente", examenActivoId] });
       setMensaje("Pregunta añadida a la evaluación.");
     } catch (err) { setMensaje(err instanceof Error ? err.message : "No se pudo añadir la pregunta."); }
+    finally { setOcupado(false); }
+  }
+
+  function iniciarEdicionExamen(examen: Examen) {
+    setExamenSeleccionado(examen.id);
+    setExamenEditandoId(examen.id);
+    setTituloExamenEditado(examen.titulo);
+    setInstruccionesExamenEditadas(examen.instrucciones ?? "");
+    setDuracionExamenEditada(String(examen.duracion_minutos ?? 20));
+    setIntentosExamenEditados(String(examen.intentos_permitidos ?? 1));
+  }
+
+  async function guardarEdicionExamen(examen: Examen) {
+    if (!tituloExamenEditado.trim()) { setMensaje("El título de la evaluación es obligatorio."); return; }
+    if (examen.publicado) { setMensaje("Retira la publicación antes de modificar una evaluación."); return; }
+    setOcupado(true); setMensaje("");
+    try {
+      const { error } = await (supabase as any).from("formacion_examenes").update({
+        titulo: tituloExamenEditado.trim(),
+        instrucciones: instruccionesExamenEditadas.trim() || null,
+        duracion_minutos: Math.max(1, Number(duracionExamenEditada) || 20),
+        intentos_permitidos: Math.min(10, Math.max(1, Number(intentosExamenEditados) || 1)),
+      }).eq("id", examen.id).eq("participante_id", participanteId).eq("curso_id", cursoActivoId);
+      if (error) throw error;
+      await qc.invalidateQueries({ queryKey: ["aula-formacion-examenes-docente", participanteId, cursoActivoId] });
+      setExamenEditandoId("");
+      setMensaje("Evaluación actualizada. Sigue en borrador; publícala cuando esté lista.");
+    } catch (err) { setMensaje(err instanceof Error ? err.message : "No se pudo actualizar la evaluación."); }
+    finally { setOcupado(false); }
+  }
+
+  async function eliminarExamen(examen: Examen) {
+    setOcupado(true); setMensaje("");
+    try {
+      const { count, error: intentosError } = await (supabase as any).from("formacion_intentos")
+        .select("id", { count: "exact", head: true }).eq("examen_id", examen.id);
+      if (intentosError) throw intentosError;
+      if ((count ?? 0) > 0) {
+        setMensaje("No se puede eliminar: esta evaluación ya tiene intentos registrados. Retírala de publicación para que no reciba nuevos intentos y conserva su historial.");
+        setExamenEliminarPendiente(null);
+        return;
+      }
+      const { error: preguntasError } = await (supabase as any).from("formacion_preguntas").delete().eq("examen_id", examen.id).eq("participante_id", participanteId);
+      if (preguntasError) throw preguntasError;
+      const { error } = await (supabase as any).from("formacion_examenes").delete()
+        .eq("id", examen.id).eq("participante_id", participanteId).eq("curso_id", cursoActivoId);
+      if (error) throw error;
+      if (examenActivoId === examen.id) setExamenSeleccionado("");
+      setExamenEditandoId("");
+      setExamenEliminarPendiente(null);
+      await qc.invalidateQueries({ queryKey: ["aula-formacion-examenes-docente", participanteId, cursoActivoId] });
+      setMensaje("Evaluación eliminada.");
+    } catch (err) { setMensaje(err instanceof Error ? err.message : "No se pudo eliminar la evaluación."); }
     finally { setOcupado(false); }
   }
 
@@ -1477,9 +1536,22 @@ function AulaFormacionPage() {
                 <button disabled={ocupado} className="rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-black">Crear evaluación</button>
               </form>
               <div className="space-y-2"><p className="text-sm font-semibold">Evaluaciones del curso</p>
-                {(examenesQuery.data ?? []).map(x => <div key={x.id} className="flex items-center justify-between gap-2 rounded-lg border border-border p-3">
-                  <button type="button" onClick={() => setExamenSeleccionado(x.id)} className="min-w-0 text-left"><span className="block truncate text-sm font-medium">{x.titulo}</span><span className="text-xs text-muted-foreground">{x.duracion_minutos ?? "Sin límite"} min · {x.intentos_permitidos} intento(s)</span></button>
-                  <button type="button" onClick={() => void publicarExamen(x)} className="shrink-0 rounded-lg border border-border px-3 py-1.5 text-xs">{x.publicado ? "Retirar" : "Publicar"}</button>
+                {(examenesQuery.data ?? []).map(x => <div key={x.id} className="space-y-3 rounded-lg border border-border p-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <button type="button" onClick={() => { setExamenSeleccionado(x.id); setExamenEditandoId(""); }} className="min-w-0 flex-1 text-left"><span className="block truncate text-sm font-medium">{x.titulo}</span><span className="text-xs text-muted-foreground">{x.duracion_minutos ?? "Sin límite"} min · {x.intentos_permitidos} intento(s)</span></button>
+                    <span className={x.publicado ? "rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-700" : "rounded-full bg-muted px-2 py-1 text-[10px] font-semibold text-muted-foreground"}>{x.publicado ? "Publicado · visible para alumnos" : "Borrador · no visible"}</span>
+                  </div>
+                  {examenEditandoId === x.id ? <div className="grid gap-2 rounded-lg bg-muted/30 p-3">
+                    <label className="text-xs font-medium">Título<input value={tituloExamenEditado} onChange={e=>setTituloExamenEditado(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"/></label>
+                    <label className="text-xs font-medium">Instrucciones<textarea value={instruccionesExamenEditadas} onChange={e=>setInstruccionesExamenEditadas(e.target.value)} rows={2} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"/></label>
+                    <div className="grid grid-cols-2 gap-2"><label className="text-xs font-medium">Duración (min)<input type="number" min="1" value={duracionExamenEditada} onChange={e=>setDuracionExamenEditada(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"/></label><label className="text-xs font-medium">Intentos permitidos<input type="number" min="1" max="10" value={intentosExamenEditados} onChange={e=>setIntentosExamenEditados(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"/></label></div>
+                    <div className="flex flex-wrap gap-2"><button type="button" disabled={ocupado || x.publicado} onClick={()=>void guardarEdicionExamen(x)} className="rounded-lg bg-gold px-3 py-2 text-xs font-semibold text-black disabled:opacity-40">Guardar cambios</button><button type="button" onClick={()=>setExamenEditandoId("")} className="rounded-lg border border-border px-3 py-2 text-xs">Cancelar</button></div>
+                  </div> : <div className="flex flex-wrap gap-2">
+                    <button type="button" onClick={()=>iniciarEdicionExamen(x)} disabled={x.publicado} className="rounded-lg border border-border px-3 py-1.5 text-xs disabled:opacity-40">Modificar</button>
+                    <button type="button" disabled={ocupado} onClick={()=>void publicarExamen(x)} className="rounded-lg border border-border px-3 py-1.5 text-xs">{x.publicado ? "Retirar publicación" : "Publicar / Activar"}</button>
+                    <button type="button" onClick={()=>setExamenEliminarPendiente(x)} className="rounded-lg border border-destructive/30 px-3 py-1.5 text-xs text-destructive">Eliminar</button>
+                  </div>}
+                  {examenEliminarPendiente?.id === x.id && <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3"><p className="text-xs">¿Eliminar «{x.titulo}» y sus preguntas? Esta acción no se puede deshacer. Si ya tiene intentos registrados, se conservará el historial y no se permitirá eliminarla.</p><div className="mt-2 flex gap-2"><button type="button" disabled={ocupado} onClick={()=>void eliminarExamen(x)} className="rounded-lg bg-destructive px-3 py-1.5 text-xs font-semibold text-white">Confirmar eliminación</button><button type="button" onClick={()=>setExamenEliminarPendiente(null)} className="rounded-lg border border-border px-3 py-1.5 text-xs">Cancelar</button></div></div>}
                 </div>)}
                 {examenesQuery.data?.length === 0 && <p className="text-xs text-muted-foreground">Aún no hay evaluaciones.</p>}
               </div>
