@@ -493,8 +493,51 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         // This skips redundant BVH work on settled/progressive frames without throttling
         // updates during an actual drag, zoom or auto-rotation.
         bvhCameraStateRef.current = null;
+        // Opt-in runtime profiling: zero timing calls and no diagnostic logs unless
+        // the public viewer is opened with ?aurumPerf=1.
+        const framePerf = perfEnabled ? {
+          frames: 0,
+          startedAt: 0,
+          bvhTotalMs: 0,
+          bvhMaxMs: 0,
+          renderTotalMs: 0,
+          renderMaxMs: 0,
+          lastFrameAt: 0,
+          frameIntervalTotalMs: 0,
+          frameIntervalMaxMs: 0,
+        } : null;
+        const reportFramePerf = (reason: "interaction-end" | "sample") => {
+          if (!framePerf || framePerf.frames === 0) return;
+          const elapsedMs = Math.max(1, performance.now() - framePerf.startedAt);
+          console.info("[PUBLIC VIEWER PERF] Rendimiento interactivo", {
+            reason,
+            frames: framePerf.frames,
+            elapsedMs: Math.round(elapsedMs),
+            averageFps: Number((framePerf.frames * 1000 / elapsedMs).toFixed(1)),
+            averageFrameIntervalMs: Number((framePerf.frameIntervalTotalMs / Math.max(1, framePerf.frames - 1)).toFixed(2)),
+            maxFrameIntervalMs: Number(framePerf.frameIntervalMaxMs.toFixed(2)),
+            bvhUpdateAverageMs: Number((framePerf.bvhTotalMs / framePerf.frames).toFixed(3)),
+            bvhUpdateMaxMs: Number(framePerf.bvhMaxMs.toFixed(3)),
+            renderAverageMs: Number((framePerf.renderTotalMs / framePerf.frames).toFixed(3)),
+            renderMaxMs: Number(framePerf.renderMaxMs.toFixed(3)),
+            drawCalls: renderer.info?.render?.calls ?? null,
+            triangles: renderer.info?.render?.triangles ?? null,
+            geometries: renderer.info?.memory?.geometries ?? null,
+            textures: renderer.info?.memory?.textures ?? null,
+          });
+          framePerf.frames = 0;
+          framePerf.startedAt = 0;
+          framePerf.bvhTotalMs = 0;
+          framePerf.bvhMaxMs = 0;
+          framePerf.renderTotalMs = 0;
+          framePerf.renderMaxMs = 0;
+          framePerf.lastFrameAt = 0;
+          framePerf.frameIntervalTotalMs = 0;
+          framePerf.frameIntervalMaxMs = 0;
+        };
         loop = startAurumViewerLoop({ node: host, camera, renderer, controls }, () => {
           // Reuse one typed buffer: no temporary object/array allocations while dragging.
+          const frameStartedAt = framePerf ? performance.now() : 0;
           const previous = bvhCameraStateRef.current;
           const state = previous ?? new Float64Array(10);
           const cameraChanged = previous === null
@@ -508,8 +551,11 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
             || Math.abs(controls.target.x - state[7]) > 1e-7
             || Math.abs(controls.target.y - state[8]) > 1e-7
             || Math.abs(controls.target.z - state[9]) > 1e-7;
+          let bvhDurationMs = 0;
           if (cameraChanged) {
+            const bvhStartedAt = framePerf ? performance.now() : 0;
             diamondBvhRuntimeRef.current?.update();
+            if (framePerf) bvhDurationMs = performance.now() - bvhStartedAt;
             state[0] = camera.position.x;
             state[1] = camera.position.y;
             state[2] = camera.position.z;
@@ -522,8 +568,31 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
             state[9] = controls.target.z;
             bvhCameraStateRef.current = state;
           }
+          const renderStartedAt = framePerf ? performance.now() : 0;
           renderer.render(scene, camera);
-        }, { progressiveFrames: 3 });
+          if (framePerf) {
+            const finishedAt = performance.now();
+            const renderDurationMs = finishedAt - renderStartedAt;
+            if (framePerf.frames === 0) framePerf.startedAt = frameStartedAt;
+            if (framePerf.lastFrameAt > 0) {
+              const interval = frameStartedAt - framePerf.lastFrameAt;
+              framePerf.frameIntervalTotalMs += interval;
+              framePerf.frameIntervalMaxMs = Math.max(framePerf.frameIntervalMaxMs, interval);
+            }
+            framePerf.lastFrameAt = frameStartedAt;
+            framePerf.frames += 1;
+            framePerf.bvhTotalMs += bvhDurationMs;
+            framePerf.bvhMaxMs = Math.max(framePerf.bvhMaxMs, bvhDurationMs);
+            framePerf.renderTotalMs += renderDurationMs;
+            framePerf.renderMaxMs = Math.max(framePerf.renderMaxMs, renderDurationMs);
+            if (framePerf.frames >= 120 || finishedAt - framePerf.startedAt >= 2500) {
+              reportFramePerf("sample");
+            }
+          }
+        }, {
+          progressiveFrames: 3,
+          onEnd: () => reportFramePerf("interaction-end"),
+        });
         renderRef.current = () => loop?.converge?.(3);
         loop.converge(3);
         setStatus("");
