@@ -257,6 +257,7 @@ function AulaFormacionPage() {
   const [respuestaCorrecta, setRespuestaCorrecta] = useState("Opción A");
   const [puntajePregunta, setPuntajePregunta] = useState("1");
   const [examenActivoAlumno, setExamenActivoAlumno] = useState<ExamenAlumno | null>(null);
+  const [preguntaActualAlumno, setPreguntaActualAlumno] = useState(0);
   const [respuestasAlumno, setRespuestasAlumno] = useState<Record<string, string>>({});
   const [enviandoExamen, setEnviandoExamen] = useState(false);
   const [ocupado, setOcupado] = useState(false);
@@ -494,7 +495,7 @@ function AulaFormacionPage() {
     queryKey: ["aula-formacion-examenes-alumno", sesion?.user.id, idsCursosAlumno.join(",")],
     enabled: Boolean(!esDocente && idsCursosAlumno.length),
     queryFn: async () => {
-      const { data, error } = await (supabase as any).from("formacion_examenes").select("id,curso_id,sesion_id,titulo,instrucciones,duracion_minutos,intentos_permitidos,puntaje_maximo,publicado,disponible_desde,disponible_hasta").in("curso_id", idsCursosAlumno).eq("publicado", true).order("created_at", { ascending: false });
+      const { data, error } = await (supabase as any).from("formacion_examenes").select("id,curso_id,sesion_id,titulo,instrucciones,duracion_minutos,intentos_permitidos,puntaje_maximo,publicado,disponible_desde,disponible_hasta").in("curso_id", idsCursosAlumno).order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as Examen[];
     },
@@ -792,12 +793,15 @@ function AulaFormacionPage() {
     const { data, error } = await (supabase as any).rpc("obtener_examen_formacion_alumno", { _examen_id: id });
     if (error) { setMensaje(error.message); return; }
     setRespuestasAlumno({});
+    setPreguntaActualAlumno(0);
     setExamenActivoAlumno(data as ExamenAlumno);
   }
 
   async function enviarExamenAlumno() {
     if (!examenActivoAlumno) return;
-    const respuestas = examenActivoAlumno.preguntas.map(p => ({ pregunta_id: p.id, respuesta: p.tipo === "verdadero_falso" ? respuestasAlumno[p.id] === "true" : (respuestasAlumno[p.id] ?? "") })).filter(r => r.respuesta !== "");
+    const faltante = examenActivoAlumno.preguntas.find(p => p.obligatoria && !String(respuestasAlumno[p.id] ?? "").trim());
+    if (faltante) { setMensaje("Responde todas las preguntas obligatorias antes de enviar."); return; }
+    const respuestas = examenActivoAlumno.preguntas.map(p => ({ pregunta_id: p.id, respuesta: p.tipo === "verdadero_falso" ? respuestasAlumno[p.id] === "true" : (respuestasAlumno[p.id] ?? "") }));
     setEnviandoExamen(true); setMensaje("");
     try {
       const { error } = await (supabase as any).rpc("enviar_intento_formacion", { _examen_id: examenActivoAlumno.id, _respuestas: respuestas });
@@ -1726,22 +1730,29 @@ function AulaFormacionPage() {
           </div>}
           {examenActivoAlumno ? <Panel titulo={examenActivoAlumno.titulo}><div className="space-y-4 p-5">
             {examenActivoAlumno.instrucciones && <p className="text-sm text-muted-foreground">{examenActivoAlumno.instrucciones}</p>}
-            {examenActivoAlumno.preguntas.map((p, idx) => <div key={p.id} className="space-y-2 rounded-xl border border-border p-4">
-              <p className="text-xs text-muted-foreground">Pregunta {idx + 1} · {p.puntaje} pts</p><p className="text-sm font-medium">{p.enunciado}</p>
-              {p.tipo === "practica" ? <textarea value={respuestasAlumno[p.id] ?? ""} onChange={e => setRespuestasAlumno(v => ({...v,[p.id]:e.target.value}))} rows={3} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" placeholder="Describe tu ejercicio práctico…" /> : <div className="space-y-2">{p.opciones.map(o => <label key={o.value} className="flex items-center gap-2 text-sm"><input type="radio" name={p.id} value={o.value} checked={respuestasAlumno[p.id] === o.value} onChange={e => setRespuestasAlumno(v => ({...v,[p.id]:e.target.value}))} />{o.label}</label>)}</div>}
-            </div>)}
-            <div className="flex gap-2"><button type="button" disabled={enviandoExamen} onClick={() => void enviarExamenAlumno()} className="inline-flex items-center gap-2 rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-black disabled:opacity-50"><Send className="size-4" /> Enviar evaluación</button><button type="button" onClick={() => setExamenActivoAlumno(null)} className="rounded-lg border border-border px-4 py-2 text-sm">Volver</button></div>
+            {(() => { const pregunta = examenActivoAlumno.preguntas[preguntaActualAlumno]; const total = examenActivoAlumno.preguntas.length; const respondida = Boolean(pregunta && String(respuestasAlumno[pregunta.id] ?? "").trim()); return pregunta ? <>
+              <div className="flex items-center justify-between gap-3"><p className="text-xs font-semibold text-gold-deep">Pregunta {preguntaActualAlumno+1} de {total}</p><p className="text-xs text-muted-foreground">{pregunta.puntaje} puntos</p></div>
+              <div className="h-1.5 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-gold transition-all" style={{width:`${((preguntaActualAlumno+1)/total)*100}%`}}/></div>
+              <article className="min-h-[220px] rounded-xl border border-border p-5"><p className="text-base font-semibold">{pregunta.enunciado}</p>
+                {pregunta.tipo === "practica" ? <textarea value={respuestasAlumno[pregunta.id] ?? ""} onChange={e=>setRespuestasAlumno(v=>({...v,[pregunta.id]:e.target.value}))} rows={5} className="mt-4 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" placeholder="Escribe tu respuesta…" /> : <div className="mt-4 space-y-3">{pregunta.opciones.map(o=><label key={o.value} className="flex cursor-pointer items-center gap-3 rounded-lg border border-border p-3 text-sm hover:bg-muted/40"><input type="radio" name={pregunta.id} value={o.value} checked={respuestasAlumno[pregunta.id]===o.value} onChange={e=>setRespuestasAlumno(v=>({...v,[pregunta.id]:e.target.value}))}/>{o.label}</label>)}</div>}
+              </article>
+              <div className="flex flex-wrap items-center justify-between gap-2"><button type="button" disabled={preguntaActualAlumno===0} onClick={()=>setPreguntaActualAlumno(v=>Math.max(0,v-1))} className="rounded-lg border border-border px-4 py-2 text-sm disabled:opacity-40">Anterior</button>
+                {preguntaActualAlumno < total-1 ? <button type="button" disabled={!respondida} onClick={()=>setPreguntaActualAlumno(v=>Math.min(total-1,v+1))} className="rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-black disabled:cursor-not-allowed disabled:opacity-40">Siguiente</button> : <button type="button" disabled={!respondida || enviandoExamen} onClick={()=>void enviarExamenAlumno()} className="rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-black disabled:opacity-40"><Send className="mr-1 inline size-4"/> Enviar evaluación</button>}
+              </div>
+              {!respondida && <p className="text-xs text-muted-foreground">Debes responder esta pregunta para continuar.</p>}
+            </> : <p className="text-sm text-muted-foreground">Este examen no contiene preguntas.</p>; })()}
+            <button type="button" onClick={()=>{setExamenActivoAlumno(null);setPreguntaActualAlumno(0);setRespuestasAlumno({});}} className="text-xs text-muted-foreground underline">Salir del examen</button>
           </div></Panel> : null}
           {alumnoQuery.isLoading ? <Panel titulo="Cargando tus cursos"><p className="p-5 text-sm text-muted-foreground">Vinculando tu inscripción y recuperando tus cursos…</p></Panel> : alumnoQuery.error ? <Panel titulo="No se pudo cargar el aula"><p className="p-5 text-sm text-red-700">{alumnoQuery.error.message}</p></Panel> : inscripcionesAlumno.length === 0 ? <Panel titulo="Aún no tienes cursos asignados"><p className="p-5 text-sm text-muted-foreground">Cuando FADILAB te inscriba con el correo de tu cuenta, el curso aparecerá aquí automáticamente.</p></Panel> : inscripcionesAlumno.map(i => <Panel key={i.id} titulo={i.formacion_cursos?.titulo ?? "Curso de formación"}>
             <div className="p-5"><p className="text-sm text-muted-foreground">{i.formacion_cursos?.descripcion || "Materiales y actividades de tu formación."}</p><div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground"><span>{i.formacion_cursos?.duracion_horas ?? 0} horas</span><span>Inscripción: {i.estado}</span></div>
               <h3 className="mb-2 mt-5 text-sm font-semibold">Sesiones</h3>
               {(sesionesAlumnoQuery.data ?? []).filter(item => item.curso_id === i.curso_id).length === 0 ? <p className="text-xs text-muted-foreground">Todavía no hay sesiones publicadas.</p> : (sesionesAlumnoQuery.data ?? []).filter(item => item.curso_id === i.curso_id).map(item => <article key={item.id} className="flex flex-wrap items-center justify-between gap-3 border-t border-border py-3"><div className="min-w-0"><p className="text-xs text-muted-foreground">Sesión {item.numero}</p><p className="text-sm font-medium">{item.titulo}</p>{item.descripcion && <p className="mt-1 whitespace-pre-wrap text-xs text-muted-foreground">{item.descripcion}</p>}{item.numero === 1 && <p className="mt-2 text-xs leading-5 text-muted-foreground"><span className="font-semibold text-foreground">Al finalizar:</span> reconocerás la interfaz de Rhino, identificarás los ejes principales y dominarás la navegación básica en el espacio 3D.</p>}</div><div className="flex shrink-0 items-center gap-2">{sesionesCompletadas.has(item.id) && <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700"><CheckCircle2 className="size-4"/> Completada</span>}{item.numero === 1 ? <button type="button" onClick={() => void abrirLecturaParaAlumno(item, false)} className="inline-flex items-center gap-1 rounded-lg border border-gold/40 bg-gold/10 px-3 py-2 text-xs font-semibold text-gold-deep"><BookOpenCheck className="size-4"/> {sesionesCompletadas.has(item.id) ? "Repasar lectura" : "Comenzar lectura"}</button> : <span className="text-xs text-muted-foreground">Lectura en preparación</span>}</div></article>)}
               <h3 className="mb-2 mt-5 text-sm font-semibold">Evaluaciones</h3>
-              {(examenesAlumnoQuery.data ?? []).filter(x => x.curso_id === i.curso_id).map(x => {
+              {(examenesAlumnoQuery.data ?? []).filter(x => x.curso_id === i.curso_id).length === 0 ? <p className="border-t border-border py-3 text-xs text-muted-foreground">Aún no hay evaluaciones asignadas a este curso.</p> : (examenesAlumnoQuery.data ?? []).filter(x => x.curso_id === i.curso_id).map(x => {
                 const intentos = (intentosAlumnoQuery.data ?? []).filter(t => t.examen_id === x.id);
-                const disponible = (!x.disponible_desde || new Date(x.disponible_desde) <= new Date()) && (!x.disponible_hasta || new Date(x.disponible_hasta) > new Date());
-                const estado = intentos[0]?.calificacion == null ? (intentos[0]?.estado ?? "Pendiente") : "Nota " + intentos[0].calificacion + "/20";
-                return <div key={x.id} className="flex flex-wrap items-center justify-between gap-3 border-t border-border py-3"><div><p className="text-sm font-medium">{x.titulo}</p><p className="text-xs text-muted-foreground">{intentos.length}/{x.intentos_permitidos} intentos · {estado}</p></div><button type="button" disabled={!disponible || intentos.length >= x.intentos_permitidos || Boolean(examenActivoAlumno)} onClick={() => void abrirExamenAlumno(x.id)} className="rounded-lg border border-border px-3 py-2 text-xs disabled:opacity-40">Rendir evaluación</button></div>;
+                const disponible = x.publicado && (!x.disponible_desde || new Date(x.disponible_desde) <= new Date()) && (!x.disponible_hasta || new Date(x.disponible_hasta) > new Date());
+                const estado = intentos[0]?.calificacion == null ? (intentos[0]?.estado ?? "Sin intentos") : "Nota " + intentos[0].calificacion + "/20";
+                return <div key={x.id} className="flex flex-wrap items-center justify-between gap-3 border-t border-border py-3"><div className="min-w-0"><p className="text-sm font-medium">{x.titulo}</p><p className="mt-1 text-xs text-muted-foreground">{intentos.length}/{x.intentos_permitidos} intentos · {estado}</p><span className={x.publicado ? "mt-1 inline-block rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-700" : "mt-1 inline-block rounded-full bg-muted px-2 py-1 text-[10px] font-semibold text-muted-foreground"}>{x.publicado ? (disponible ? "Activo · disponible" : "Publicado · fuera de horario") : "Desactivado · esperando al profesor"}</span></div><button type="button" disabled={!disponible || intentos.length >= x.intentos_permitidos || Boolean(examenActivoAlumno)} onClick={() => void abrirExamenAlumno(x.id)} className="rounded-lg border border-border px-3 py-2 text-xs disabled:cursor-not-allowed disabled:opacity-40">{x.publicado ? "Rendir evaluación" : "Aún no disponible"}</button></div>;
               })}
               {(sesionesAlumnoQuery.data ?? []).filter(item => item.curso_id === i.curso_id).map(item => {
                 const recursos = (materialesAlumnoQuery.data ?? []).filter(m => m.curso_id === i.curso_id && m.sesion_id === item.id);
