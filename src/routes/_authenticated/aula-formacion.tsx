@@ -40,6 +40,10 @@ function AulaFormacionPage() {
   const [numeroSesion, setNumeroSesion] = useState("1");
   const [tituloSesion, setTituloSesion] = useState("");
   const [detalleSesion, setDetalleSesion] = useState("");
+  const [sesionEditandoId, setSesionEditandoId] = useState("");
+  const [numeroSesionEditado, setNumeroSesionEditado] = useState("1");
+  const [tituloSesionEditado, setTituloSesionEditado] = useState("");
+  const [detalleSesionEditado, setDetalleSesionEditado] = useState("");
   const [archivo, setArchivo] = useState<File | null>(null);
   const [tituloMaterial, setTituloMaterial] = useState("");
   const [publicarMaterial, setPublicarMaterial] = useState(true);
@@ -399,6 +403,48 @@ function AulaFormacionPage() {
     finally { setOcupado(false); }
   }
 
+  function iniciarEdicionSesion(s: SesionCurso) {
+    setSesionEditandoId(s.id);
+    setNumeroSesionEditado(String(s.numero));
+    setTituloSesionEditado(s.titulo);
+    setDetalleSesionEditado(s.descripcion ?? "");
+    setMensaje("");
+  }
+
+  function cancelarEdicionSesion() {
+    setSesionEditandoId("");
+    setNumeroSesionEditado("1");
+    setTituloSesionEditado("");
+    setDetalleSesionEditado("");
+  }
+
+  async function guardarEdicionSesion(e: FormEvent, s: SesionCurso) {
+    e.preventDefault();
+    const numero = Number(numeroSesionEditado);
+    if (!participanteId || !cursoActivoId || !tituloSesionEditado.trim() || !Number.isInteger(numero) || numero < 1) {
+      setMensaje("Indica un número de sesión válido y un título.");
+      return;
+    }
+    setOcupado(true);
+    setMensaje("");
+    try {
+      const { error } = await (supabase as any).from("formacion_sesiones").update({
+        numero,
+        orden: numero,
+        titulo: tituloSesionEditado.trim(),
+        descripcion: detalleSesionEditado.trim() || null,
+      }).eq("id", s.id).eq("curso_id", cursoActivoId).eq("participante_id", participanteId);
+      if (error) throw error;
+      cancelarEdicionSesion();
+      await qc.invalidateQueries({ queryKey: ["aula-formacion-sesiones", cursoActivoId] });
+      setMensaje("Sesión actualizada correctamente.");
+    } catch (err) {
+      setMensaje(err instanceof Error ? err.message : "No se pudo actualizar la sesión.");
+    } finally {
+      setOcupado(false);
+    }
+  }
+
   async function publicarSesion(s: SesionCurso) {
     const { error } = await (supabase as any).from("formacion_sesiones").update({ publicada: !s.publicada }).eq("id", s.id).eq("participante_id", participanteId);
     if (error) setMensaje(error.message);
@@ -522,7 +568,29 @@ function AulaFormacionPage() {
                 <label className="block text-xs font-medium">Descripción<textarea value={detalleSesion} onChange={e => setDetalleSesion(e.target.value)} rows={2} className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm" /></label>
                 <button disabled={ocupado} className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2.5 text-sm font-semibold"><CalendarDays className="size-4" /> Añadir sesión</button>
               </form>
-              <div className="border-t border-border px-5">{sesionesQuery.isLoading ? <p className="py-4 text-xs text-muted-foreground">Cargando…</p> : (sesionesQuery.data ?? []).map(s => <div key={s.id} className="flex items-center justify-between gap-3 border-b border-border py-3"><div><p className="text-sm font-medium">{s.numero}. {s.titulo}</p><p className="text-xs text-muted-foreground">{s.publicada ? "Visible para alumnos" : "Borrador"}</p></div><button type="button" onClick={() => void publicarSesion(s)} className="rounded-lg border border-border px-3 py-1.5 text-xs">{s.publicada ? "Ocultar" : "Publicar"}</button></div>)}</div>
+              <div className="border-t border-border px-5">{sesionesQuery.isLoading ? <p className="py-4 text-xs text-muted-foreground">Cargando…</p> : (sesionesQuery.data ?? []).map(s => <div key={s.id} className="border-b border-border py-3">
+                {sesionEditandoId === s.id ? (
+                  <form onSubmit={(e) => void guardarEdicionSesion(e, s)} className="space-y-3 rounded-lg bg-muted/30 p-3">
+                    <div className="grid grid-cols-[90px_1fr] gap-2">
+                      <label className="text-xs font-medium">N.º<input type="number" min="1" required value={numeroSesionEditado} onChange={e => setNumeroSesionEditado(e.target.value)} className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" /></label>
+                      <label className="text-xs font-medium">Título<input required value={tituloSesionEditado} onChange={e => setTituloSesionEditado(e.target.value)} className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" /></label>
+                    </div>
+                    <label className="block text-xs font-medium">Descripción<textarea value={detalleSesionEditado} onChange={e => setDetalleSesionEditado(e.target.value)} rows={3} className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" /></label>
+                    <div className="flex flex-wrap gap-2">
+                      <button type="submit" disabled={ocupado} className="rounded-lg bg-gold px-3 py-2 text-xs font-semibold text-black disabled:opacity-50">Guardar cambios</button>
+                      <button type="button" disabled={ocupado} onClick={cancelarEdicionSesion} className="rounded-lg border border-border px-3 py-2 text-xs">Cancelar</button>
+                    </div>
+                  </form>
+                ) : (
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0"><p className="text-sm font-medium">{s.numero}. {s.titulo}</p><p className="text-xs text-muted-foreground">{s.publicada ? "Visible para alumnos" : "Borrador"}</p>{s.descripcion && <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{s.descripcion}</p>}</div>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <button type="button" disabled={ocupado} onClick={() => iniciarEdicionSesion(s)} aria-label={`Editar sesión ${s.numero}`} title="Editar sesión" className="rounded-md p-2 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-50"><Pencil className="size-4" /></button>
+                      <button type="button" disabled={ocupado} onClick={() => void publicarSesion(s)} className="rounded-lg border border-border px-3 py-1.5 text-xs disabled:opacity-50">{s.publicada ? "Ocultar" : "Publicar"}</button>
+                    </div>
+                  </div>
+                )}
+              </div>)}</div>
             </Panel>
             <Panel titulo="Materiales de estudio">
               <form onSubmit={(e) => void subirMaterial(e)} className="space-y-3 p-5">
