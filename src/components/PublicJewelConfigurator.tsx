@@ -27,7 +27,7 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
   const [metalId, setMetalId] = useState<string>("oro-amarillo");
   const [gemaId, setGemaId] = useState<string>("diamante_natural");
   const [activeCategory, setActiveCategory] = useState<"metal" | "gem">("metal");
-  const [showMaterialOptions, setShowMaterialOptions] = useState(true);
+  const [showMaterialOptions, setShowMaterialOptions] = useState(false);
   const [modelUrl, setModelUrl] = useState<string | null>(null);
   const [modelName, setModelName] = useState(sharedModelName || "modelo.3dm");
   const [status, setStatus] = useState("Preparando modelo 3D…");
