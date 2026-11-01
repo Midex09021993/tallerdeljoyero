@@ -909,11 +909,60 @@ function AulaFormacionPage() {
                 <h3 className="font-display text-2xl leading-tight sm:text-3xl">{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</h3>
                 {(seccionesLecturaActivas[paginaLectura]?.bloques ?? []).map((bloque,idx) => <div key={idx}>
                   <p className="mb-5 whitespace-pre-line text-[15px] leading-8 text-foreground/90">{bloque}</p>
-                  {paginaLectura === 2 && idx === 0 && imagenInterfazUrl && <figure className="my-8 overflow-hidden rounded-2xl border border-border bg-background p-3 sm:p-4">
+                  {paginaLectura === 2 && idx === 0 && imagenInterfazUrl && <figure className="my-6 overflow-hidden rounded-2xl border border-border bg-background p-2 sm:p-3">
                     <img src={imagenInterfazUrl} alt="Interfaz principal de MatrixGold 3.1 con diez componentes identificados" className="h-auto w-full rounded-xl object-contain" loading="lazy" />
-                    <figcaption className="mt-3 text-center text-xs leading-5 text-muted-foreground">Material de apoyo FADILAB · MatrixGold 3.1 · Reconocimiento de los componentes de la interfaz</figcaption>
+                    <figcaption className="mt-2 text-center text-xs leading-5 text-muted-foreground">Material de apoyo FADILAB · MatrixGold 3.1</figcaption>
                   </figure>}
                 </div>)}
+                {paginaLectura === 2 && <section className="space-y-6">
+                  <div className="rounded-2xl border border-border bg-background p-4 sm:p-5">
+                    <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                      <div><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Exploración interactiva</p><h4 className="mt-1 text-lg font-semibold">Explora los 10 componentes</h4></div>
+                      <span className="rounded-full bg-gold/15 px-3 py-1 text-xs font-semibold">{componentesExplorados.length} / 10 explorados</span>
+                    </div>
+                    <div className="mb-4 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-gold transition-all" style={{ width: (componentesExplorados.length * 10) + "%" }} /></div>
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+                      {COMPONENTES_INTERFAZ.map((item, indice) => <button key={indice} type="button" onClick={() => { setComponenteActivo(indice); setComponentesExplorados(prev => prev.includes(indice) ? prev : [...prev, indice]); }} aria-pressed={componenteActivo===indice} className={`rounded-xl border p-3 text-left transition ${componenteActivo===indice ? "border-gold bg-gold/10" : "border-border bg-card hover:border-gold/50"}`}>
+                        <span className="flex items-center justify-between text-sm font-semibold"><span>{String(indice+1).padStart(2,"0")}</span>{componentesExplorados.includes(indice) && <CheckCircle2 className="size-4 text-emerald-600"/>}</span>
+                        <span className="mt-1 block text-[11px] leading-4 text-muted-foreground">{item[0]}</span>
+                      </button>)}
+                    </div>
+                    {componenteActivo >= 0 && <div className="mt-4 rounded-xl border border-gold/30 bg-gold/5 p-4" aria-live="polite">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Componente {componenteActivo+1}</p>
+                      <h5 className="mt-1 font-semibold">{COMPONENTES_INTERFAZ[componenteActivo][0]}</h5>
+                      <p className="mt-2 text-sm leading-6 text-foreground/85">{COMPONENTES_INTERFAZ[componenteActivo][1]}</p>
+                    </div>}
+                    {componentesExplorados.length===10 && <p className="mt-3 text-sm font-medium text-emerald-700">¡Excelente! Ya exploraste los diez componentes. Ahora puedes realizar el reto.</p>}
+                  </div>
+                  <div className="rounded-2xl border border-border bg-background p-4 sm:p-5">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Reto de comprobación</p><h4 className="mt-1 text-lg font-semibold">¿Qué tanto reconoces la interfaz?</h4></div>
+                      <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold">{retoInterfazFinalizado ? "Finalizado" : `Pregunta ${preguntaInterfaz+1} de ${RETO_INTERFAZ.length}`}</span>
+                    </div>
+                    {!retoInterfazFinalizado ? <>
+                      <div className="my-4 h-1.5 overflow-hidden rounded-full bg-muted"><div className="h-full bg-gold transition-all" style={{ width: (((preguntaInterfaz+1)/RETO_INTERFAZ.length)*100) + "%" }} /></div>
+                      <p className="mb-4 text-sm font-medium leading-6">{RETO_INTERFAZ[preguntaInterfaz].pregunta}</p>
+                      <div className="space-y-2">
+                        {RETO_INTERFAZ[preguntaInterfaz].opciones.map((opcion,indice) => <button key={opcion} type="button" disabled={respuestaInterfaz!==null} onClick={() => setRespuestaInterfaz(indice)} className={`w-full rounded-xl border px-3 py-3 text-left text-sm transition ${respuestaInterfaz===indice ? "border-gold bg-gold/10 font-semibold" : "border-border bg-card hover:border-gold/50"} disabled:cursor-default`}>{opcion}</button>)}
+                      </div>
+                      {respuestaInterfaz!==null && <div className={`mt-4 rounded-xl p-3 text-sm ${respuestaInterfaz===RETO_INTERFAZ[preguntaInterfaz].correcta ? "bg-emerald-500/10 text-emerald-800" : "bg-amber-500/10 text-amber-800"}`}>
+                        <p className="font-semibold">{respuestaInterfaz===RETO_INTERFAZ[preguntaInterfaz].correcta ? "¡Respuesta correcta!" : "Revisa esta respuesta."}</p>
+                        <p className="mt-1 leading-5">{RETO_INTERFAZ[preguntaInterfaz].explicacion}</p>
+                        <button type="button" onClick={() => {
+                          const acierto = respuestaInterfaz===RETO_INTERFAZ[preguntaInterfaz].correcta;
+                          if (acierto) setAciertosInterfaz(prev => prev+1);
+                          if (preguntaInterfaz===RETO_INTERFAZ.length-1) setRetoInterfazFinalizado(true);
+                          else { setPreguntaInterfaz(prev => prev+1); setRespuestaInterfaz(null); }
+                        }} className="mt-3 rounded-lg bg-foreground px-4 py-2 text-xs font-semibold text-background">{preguntaInterfaz===RETO_INTERFAZ.length-1 ? "Ver resultado" : "Siguiente pregunta"}</button>
+                      </div>}
+                    </> : <div className="mt-4 rounded-xl border border-gold/30 bg-gold/5 p-4 text-center">
+                      <p className="text-sm text-muted-foreground">Tu resultado</p><p className="my-2 text-3xl font-bold tabular-nums">{aciertosInterfaz} / {RETO_INTERFAZ.length}</p>
+                      <p className="text-sm">{aciertosInterfaz===RETO_INTERFAZ.length ? "¡Excelente! Reconoces muy bien los componentes." : aciertosInterfaz>=3 ? "¡Buen trabajo! Repasa los componentes que te costaron." : "Vuelve a explorar los componentes y prueba otra vez."}</p>
+                      <button type="button" onClick={() => { setPreguntaInterfaz(0); setRespuestaInterfaz(null); setAciertosInterfaz(0); setRetoInterfazFinalizado(false); }} className="mt-4 rounded-lg border border-border px-4 py-2 text-sm font-semibold hover:border-gold">Repetir reto</button>
+                    </div>}
+                  </div>
+                  <p className="text-xs leading-5 text-muted-foreground">Actividad de reconocimiento. Ribbon, Quick Commands y paneles dinámicos corresponden a MatrixGold 3.1; Rhino 7 sin MatrixGold puede presentar otra disposición.</p>
+                </section>}
                 {paginaLectura === seccionesLecturaActivas.length-1 && <div className="rounded-xl border border-gold/30 bg-gold/5 p-4"><p className="text-sm font-semibold">Has llegado al final de la lectura</p><p className="mt-1 text-sm text-muted-foreground">En el aula real, el alumno podrá finalizar y marcar la sesión como completada.</p></div>}
               </main>
               <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-border bg-background p-4 sm:p-5">
@@ -1147,11 +1196,60 @@ function AulaFormacionPage() {
                 <h3 className="font-display text-2xl leading-tight sm:text-3xl">{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</h3>
                 {(seccionesLecturaActivas[paginaLectura]?.bloques ?? []).map((bloque,idx) => <div key={idx}>
                   <p className="mb-5 whitespace-pre-line text-[15px] leading-8 text-foreground/90">{bloque}</p>
-                  {paginaLectura === 2 && idx === 0 && imagenInterfazUrl && <figure className="my-8 overflow-hidden rounded-2xl border border-border bg-background p-3 sm:p-4">
+                  {paginaLectura === 2 && idx === 0 && imagenInterfazUrl && <figure className="my-6 overflow-hidden rounded-2xl border border-border bg-background p-2 sm:p-3">
                     <img src={imagenInterfazUrl} alt="Interfaz principal de MatrixGold 3.1 con diez componentes identificados" className="h-auto w-full rounded-xl object-contain" loading="lazy" />
-                    <figcaption className="mt-3 text-center text-xs leading-5 text-muted-foreground">Material de apoyo FADILAB · MatrixGold 3.1 · Reconocimiento de los componentes de la interfaz</figcaption>
+                    <figcaption className="mt-2 text-center text-xs leading-5 text-muted-foreground">Material de apoyo FADILAB · MatrixGold 3.1</figcaption>
                   </figure>}
                 </div>)}
+                {paginaLectura === 2 && <section className="space-y-6">
+                  <div className="rounded-2xl border border-border bg-background p-4 sm:p-5">
+                    <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                      <div><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Exploración interactiva</p><h4 className="mt-1 text-lg font-semibold">Explora los 10 componentes</h4></div>
+                      <span className="rounded-full bg-gold/15 px-3 py-1 text-xs font-semibold">{componentesExplorados.length} / 10 explorados</span>
+                    </div>
+                    <div className="mb-4 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-gold transition-all" style={{ width: (componentesExplorados.length * 10) + "%" }} /></div>
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+                      {COMPONENTES_INTERFAZ.map((item, indice) => <button key={indice} type="button" onClick={() => { setComponenteActivo(indice); setComponentesExplorados(prev => prev.includes(indice) ? prev : [...prev, indice]); }} aria-pressed={componenteActivo===indice} className={`rounded-xl border p-3 text-left transition ${componenteActivo===indice ? "border-gold bg-gold/10" : "border-border bg-card hover:border-gold/50"}`}>
+                        <span className="flex items-center justify-between text-sm font-semibold"><span>{String(indice+1).padStart(2,"0")}</span>{componentesExplorados.includes(indice) && <CheckCircle2 className="size-4 text-emerald-600"/>}</span>
+                        <span className="mt-1 block text-[11px] leading-4 text-muted-foreground">{item[0]}</span>
+                      </button>)}
+                    </div>
+                    {componenteActivo >= 0 && <div className="mt-4 rounded-xl border border-gold/30 bg-gold/5 p-4" aria-live="polite">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Componente {componenteActivo+1}</p>
+                      <h5 className="mt-1 font-semibold">{COMPONENTES_INTERFAZ[componenteActivo][0]}</h5>
+                      <p className="mt-2 text-sm leading-6 text-foreground/85">{COMPONENTES_INTERFAZ[componenteActivo][1]}</p>
+                    </div>}
+                    {componentesExplorados.length===10 && <p className="mt-3 text-sm font-medium text-emerald-700">¡Excelente! Ya exploraste los diez componentes. Ahora puedes realizar el reto.</p>}
+                  </div>
+                  <div className="rounded-2xl border border-border bg-background p-4 sm:p-5">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Reto de comprobación</p><h4 className="mt-1 text-lg font-semibold">¿Qué tanto reconoces la interfaz?</h4></div>
+                      <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold">{retoInterfazFinalizado ? "Finalizado" : `Pregunta ${preguntaInterfaz+1} de ${RETO_INTERFAZ.length}`}</span>
+                    </div>
+                    {!retoInterfazFinalizado ? <>
+                      <div className="my-4 h-1.5 overflow-hidden rounded-full bg-muted"><div className="h-full bg-gold transition-all" style={{ width: (((preguntaInterfaz+1)/RETO_INTERFAZ.length)*100) + "%" }} /></div>
+                      <p className="mb-4 text-sm font-medium leading-6">{RETO_INTERFAZ[preguntaInterfaz].pregunta}</p>
+                      <div className="space-y-2">
+                        {RETO_INTERFAZ[preguntaInterfaz].opciones.map((opcion,indice) => <button key={opcion} type="button" disabled={respuestaInterfaz!==null} onClick={() => setRespuestaInterfaz(indice)} className={`w-full rounded-xl border px-3 py-3 text-left text-sm transition ${respuestaInterfaz===indice ? "border-gold bg-gold/10 font-semibold" : "border-border bg-card hover:border-gold/50"} disabled:cursor-default`}>{opcion}</button>)}
+                      </div>
+                      {respuestaInterfaz!==null && <div className={`mt-4 rounded-xl p-3 text-sm ${respuestaInterfaz===RETO_INTERFAZ[preguntaInterfaz].correcta ? "bg-emerald-500/10 text-emerald-800" : "bg-amber-500/10 text-amber-800"}`}>
+                        <p className="font-semibold">{respuestaInterfaz===RETO_INTERFAZ[preguntaInterfaz].correcta ? "¡Respuesta correcta!" : "Revisa esta respuesta."}</p>
+                        <p className="mt-1 leading-5">{RETO_INTERFAZ[preguntaInterfaz].explicacion}</p>
+                        <button type="button" onClick={() => {
+                          const acierto = respuestaInterfaz===RETO_INTERFAZ[preguntaInterfaz].correcta;
+                          if (acierto) setAciertosInterfaz(prev => prev+1);
+                          if (preguntaInterfaz===RETO_INTERFAZ.length-1) setRetoInterfazFinalizado(true);
+                          else { setPreguntaInterfaz(prev => prev+1); setRespuestaInterfaz(null); }
+                        }} className="mt-3 rounded-lg bg-foreground px-4 py-2 text-xs font-semibold text-background">{preguntaInterfaz===RETO_INTERFAZ.length-1 ? "Ver resultado" : "Siguiente pregunta"}</button>
+                      </div>}
+                    </> : <div className="mt-4 rounded-xl border border-gold/30 bg-gold/5 p-4 text-center">
+                      <p className="text-sm text-muted-foreground">Tu resultado</p><p className="my-2 text-3xl font-bold tabular-nums">{aciertosInterfaz} / {RETO_INTERFAZ.length}</p>
+                      <p className="text-sm">{aciertosInterfaz===RETO_INTERFAZ.length ? "¡Excelente! Reconoces muy bien los componentes." : aciertosInterfaz>=3 ? "¡Buen trabajo! Repasa los componentes que te costaron." : "Vuelve a explorar los componentes y prueba otra vez."}</p>
+                      <button type="button" onClick={() => { setPreguntaInterfaz(0); setRespuestaInterfaz(null); setAciertosInterfaz(0); setRetoInterfazFinalizado(false); }} className="mt-4 rounded-lg border border-border px-4 py-2 text-sm font-semibold hover:border-gold">Repetir reto</button>
+                    </div>}
+                  </div>
+                  <p className="text-xs leading-5 text-muted-foreground">Actividad de reconocimiento. Ribbon, Quick Commands y paneles dinámicos corresponden a MatrixGold 3.1; Rhino 7 sin MatrixGold puede presentar otra disposición.</p>
+                </section>}
                 {paginaLectura === seccionesLecturaActivas.length-1 && <div className="rounded-xl border border-gold/30 bg-gold/5 p-4"><p className="text-sm font-semibold">Has llegado al final de la lectura</p><p className="mt-1 text-sm text-muted-foreground">{lecturaModoVistaPrevia ? "En la experiencia del alumno, aquí podrá finalizar y marcar la sesión como completada." : "La lectura está registrada como leída. Puedes marcar la sesión como completada."}</p></div>}
               </main>
               <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-border p-4 sm:p-5">
