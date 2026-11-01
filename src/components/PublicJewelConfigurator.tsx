@@ -239,7 +239,7 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
           </div>}
           <div className="absolute bottom-4 left-1/2 z-30 flex w-[min(92%,420px)] -translate-x-1/2 flex-col items-center gap-2.5 sm:bottom-5 sm:gap-3" aria-label="Selector de materiales de la joya">
             <div className={"overflow-hidden transition-all duration-300 ease-out " + (showMaterialOptions ? "max-h-20 translate-y-0 opacity-100" : "pointer-events-none max-h-0 -translate-y-2 opacity-0")} aria-hidden={!showMaterialOptions}>
-            <div className="flex max-w-full items-center justify-center gap-2 rounded-full border border-white/55 bg-white/45 px-3 py-2 shadow-[0_8px_24px_rgba(35,29,20,.09)] backdrop-blur-xl sm:gap-3 sm:px-4">
+            <div className="relative flex max-w-full items-center justify-center gap-2 overflow-hidden rounded-full border border-white/65 px-3 py-2 shadow-[0_10px_30px_rgba(45,38,29,.10),inset_0_1px_0_rgba(255,255,255,.85),inset_0_-1px_0_rgba(255,255,255,.22)] sm:gap-3 sm:px-4" style={{ background: "linear-gradient(145deg, rgba(255,255,255,.38), rgba(255,255,255,.18) 55%, rgba(245,241,234,.28))", backdropFilter: "blur(22px) saturate(175%)", WebkitBackdropFilter: "blur(22px) saturate(175%)" }}>
               {(activeCategory === "metal" ? metales : gemasPublicas).map((item) => {
                 const selected = activeCategory === "metal" ? metalId === item.id : gemaId === item.id;
                 const swatch = activeCategory === "metal"
@@ -259,9 +259,9 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
               })}
             </div>
             </div>
-            <div className="flex items-center gap-1 rounded-full border border-white/55 bg-white/45 p-1 shadow-[0_8px_24px_rgba(35,29,20,.08)] backdrop-blur-xl">
-              <button type="button" aria-pressed={activeCategory === "metal"} onClick={() => { setActiveCategory("metal"); setShowMaterialOptions(true); }} className={"min-w-[76px] rounded-full px-4 py-2 text-[11px] font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45] " + (activeCategory === "metal" ? "bg-white/65 text-[#29251f] shadow-sm backdrop-blur-md" : "text-[#77716a] hover:text-[#29251f]")}>Metal</button>
-              <button type="button" aria-pressed={activeCategory === "gem"} onClick={() => { setActiveCategory("gem"); setShowMaterialOptions(true); }} className={"min-w-[76px] rounded-full px-4 py-2 text-[11px] font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45] " + (activeCategory === "gem" ? "bg-white text-[#29251f] shadow-sm" : "text-[#77716a] hover:text-[#29251f]")}>Gem</button>
+            <div className="flex items-center gap-1 rounded-full border border-white/65 p-1 shadow-[0_10px_28px_rgba(45,38,29,.09),inset_0_1px_0_rgba(255,255,255,.9),inset_0_-1px_0_rgba(255,255,255,.2)]" style={{ background: "linear-gradient(145deg, rgba(255,255,255,.42), rgba(255,255,255,.20) 60%, rgba(245,241,234,.30))", backdropFilter: "blur(22px) saturate(175%)", WebkitBackdropFilter: "blur(22px) saturate(175%)" }}>
+              <button type="button" aria-pressed={activeCategory === "metal"} onClick={() => { setActiveCategory("metal"); setShowMaterialOptions(true); }} className={"min-w-[76px] rounded-full px-4 py-2 text-[11px] font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45] " + (activeCategory === "metal" ? "bg-white/45 text-[#29251f] shadow-[inset_0_1px_0_rgba(255,255,255,.9),0_1px_4px_rgba(45,38,29,.08)] backdrop-blur-md" : "text-[#77716a] hover:text-[#29251f]")}>Metal</button>
+              <button type="button" aria-pressed={activeCategory === "gem"} onClick={() => { setActiveCategory("gem"); setShowMaterialOptions(true); }} className={"min-w-[76px] rounded-full px-4 py-2 text-[11px] font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45] " + (activeCategory === "gem" ? "bg-white/45 text-[#29251f] shadow-[inset_0_1px_0_rgba(255,255,255,.9),0_1px_4px_rgba(45,38,29,.08)] backdrop-blur-md" : "text-[#77716a] hover:text-[#29251f]")}>Gem</button>
             </div>
             
           </div>
