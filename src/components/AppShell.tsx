@@ -730,16 +730,29 @@ export function Panel({
   accion,
   children,
   className = "",
+  colapsable = false,
+  defaultOpen = true,
 }: {
   titulo: string;
   accion?: ReactNode;
   children: ReactNode;
   className?: string;
+  colapsable?: boolean;
+  defaultOpen?: boolean;
 }) {
+  if (colapsable) {
+    return (
+      <details open={defaultOpen} className={`overflow-hidden rounded-xl border border-border bg-card shadow-card lg:rounded-2xl ${className}`}>
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 marker:hidden hover:bg-muted/40 lg:px-6 lg:py-4 [&::-webkit-details-marker]:hidden">
+          <span className="text-sm font-medium text-foreground">{titulo}</span>
+          <span aria-hidden="true" className="text-muted-foreground transition-transform [[open]>&]:rotate-180">⌄</span>
+        </summary>
+        <div className="border-t border-border">{children}</div>
+      </details>
+    );
+  }
   return (
-    <section
-      className={`overflow-hidden rounded-xl border border-border bg-card shadow-card lg:rounded-2xl ${className}`}
-    >
+    <section className={`overflow-hidden rounded-xl border border-border bg-card shadow-card lg:rounded-2xl ${className}`}>
       <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 lg:px-6 lg:py-4">
         <h2 className="text-sm font-medium text-foreground">{titulo}</h2>
         {accion}
