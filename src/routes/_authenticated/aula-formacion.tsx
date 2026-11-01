@@ -114,7 +114,8 @@ function AulaFormacionPage() {
   const [enviandoExamen, setEnviandoExamen] = useState(false);
   const [ocupado, setOcupado] = useState(false);
   const [vistaPreviaAlumno, setVistaPreviaAlumno] = useState(false);
-  const [lecturaAbierta, setLecturaAbierta] = useState<SesionCurso | null>(null);\n  const [paginaLectura, setPaginaLectura] = useState(0);
+  const [lecturaAbierta, setLecturaAbierta] = useState<SesionCurso | null>(null);
+  const [paginaLectura, setPaginaLectura] = useState(0);
 
   const rolAlumno = Boolean(sesion?.roles.some((r) => r === "gerente" || r === "operario"));
   const fadilabCandidate = sesion?.participantes.find((p) => /fadilab/i.test(p.nombre)) ?? null;
