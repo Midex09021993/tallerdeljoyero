@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listarDirectorioAlumnosFormacion } from "@/lib/aula-formacion.functions";
-import { BookOpen, Users, Plus, Upload, FileText, Download, CalendarDays, ShieldCheck, Send, Pencil, Trash2, CheckCircle2, ChevronLeft, ChevronRight, ChevronDown, ArrowRight, BookOpenCheck, FolderOpen, ClipboardCheck } from "lucide-react";
+import { BookOpen, Users, Plus, Upload, FileText, Download, CalendarDays, ShieldCheck, Send, Pencil, Trash2, CheckCircle2, ChevronLeft, ChevronRight, ChevronDown, ArrowRight, BookOpenCheck, FolderOpen, ClipboardCheck, Layers, Eye, Lock } from "lucide-react";
 import { AppShell, Panel } from "@/components/AppShell";
 import { useSesion } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -1520,12 +1520,8 @@ function AulaFormacionPage() {
             <div className="mb-3 flex items-center justify-between gap-2"><span className="text-xs font-semibold text-white/80">Vista esquemática de la joya</span><span className="rounded-full bg-white/10 px-2 py-1 text-[10px]">Modelo didáctico</span></div>
             <svg viewBox="0 0 520 390" className="h-auto max-h-[48vh] w-full" role="img" aria-label="Anillo esquemático con cuerpo metálico y piedra central controlados por capas">
               <defs><linearGradient id="capasMetal" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stopColor="#f3d78a"/><stop offset=".48" stopColor="#b88b37"/><stop offset="1" stopColor="#f7e4aa"/></linearGradient><radialGradient id="capasGem"><stop offset="0" stopColor="#80c8ff"/><stop offset=".65" stopColor="#2865b9"/><stop offset="1" stopColor="#102e69"/></radialGradient></defs>
-              {#if capaMetalVisible}
-                <g opacity={asignacionCapas.aro === "Metal 01" ? 1 : .45}><ellipse cx="260" cy="278" rx="143" ry="76" fill="none" stroke="url(#capasMetal)" strokeWidth="29"/><path d="M117 278 Q125 365 260 355 Q395 365 403 278" fill="none" stroke="#f5df9e" strokeOpacity=".55" strokeWidth="2"/><path d="M175 213 L198 166 Q260 130 322 166 L345 213" fill="none" stroke="url(#capasMetal)" strokeWidth="19" strokeLinecap="round"/><path d="M194 184 L194 135 M326 184 L326 135" stroke="url(#capasMetal)" strokeWidth="12" strokeLinecap="round"/><path d="M185 143 L335 143" stroke="#e7c66f" strokeWidth="9" strokeLinecap="round"/><circle cx="260" cy="120" r="66" fill="none" stroke="#d8b45d" strokeWidth="9" strokeDasharray="8 5"/></g>
-              {/if}
-              {#if capaGemVisible}
-                <g opacity={asignacionCapas.piedra === "Gem 01" ? 1 : .45}><circle cx="260" cy="119" r="49" fill="url(#capasGem)" stroke="#9bcfff" strokeWidth="3"/><path d="M260 70 L285 104 L309 119 L285 143 L260 168 L235 143 L211 119 L235 104Z" fill="none" stroke="#b8ddff" strokeOpacity=".8" strokeWidth="2"/><path d="M260 70 L260 168 M211 119 L309 119 M235 104 L285 143 M285 104 L235 143" stroke="#b8ddff" strokeOpacity=".65" strokeWidth="1.5"/></g>
-              {/if}
+              {capaMetalVisible && <g opacity={asignacionCapas.aro === "Metal 01" ? 1 : .45}><ellipse cx="260" cy="278" rx="143" ry="76" fill="none" stroke="url(#capasMetal)" strokeWidth="29"/><path d="M117 278 Q125 365 260 355 Q395 365 403 278" fill="none" stroke="#f5df9e" strokeOpacity=".55" strokeWidth="2"/><path d="M175 213 L198 166 Q260 130 322 166 L345 213" fill="none" stroke="url(#capasMetal)" strokeWidth="19" strokeLinecap="round"/><path d="M194 184 L194 135 M326 184 L326 135" stroke="url(#capasMetal)" strokeWidth="12" strokeLinecap="round"/><path d="M185 143 L335 143" stroke="#e7c66f" strokeWidth="9" strokeLinecap="round"/><circle cx="260" cy="120" r="66" fill="none" stroke="#d8b45d" strokeWidth="9" strokeDasharray="8 5"/></g>}
+              {capaGemVisible && <g opacity={asignacionCapas.piedra === "Gem 01" ? 1 : .45}><circle cx="260" cy="119" r="49" fill="url(#capasGem)" stroke="#9bcfff" strokeWidth="3"/><path d="M260 70 L285 104 L309 119 L285 143 L260 168 L235 143 L211 119 L235 104Z" fill="none" stroke="#b8ddff" strokeOpacity=".8" strokeWidth="2"/><path d="M260 70 L260 168 M211 119 L309 119 M235 104 L285 143 M285 104 L235 143" stroke="#b8ddff" strokeOpacity=".65" strokeWidth="1.5"/></g>}
               {!capaMetalVisible && !capaGemVisible && <text x="260" y="205" textAnchor="middle" fill="#f4f4f5" fontSize="15">No hay objetos visibles</text>}
               <text x="260" y="382" textAnchor="middle" fill="#cbd5e1" fontSize="11">Representación conceptual · no es un archivo 3D editable</text>
             </svg>
