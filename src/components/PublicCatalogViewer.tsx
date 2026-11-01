@@ -476,8 +476,23 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         cameraRef.current = camera;
         setModelLoadedVersion((version) => version + 1);
 
+        // BVH camera uniforms only need refreshing when the camera pose/target changes.
+        // This skips redundant BVH work on settled/progressive frames without throttling
+        // updates during an actual drag, zoom or auto-rotation.
+        let lastBvhCameraState: number[] | null = null;
         loop = startAurumViewerLoop({ node: host, camera, renderer, controls }, () => {
-          diamondBvhRuntimeRef.current?.update();
+          const cameraState = [
+            camera.position.x, camera.position.y, camera.position.z,
+            camera.quaternion.x, camera.quaternion.y, camera.quaternion.z, camera.quaternion.w,
+            controls.target.x, controls.target.y, controls.target.z,
+          ];
+          const cameraChanged = lastBvhCameraState === null || cameraState.some(
+            (value, index) => Math.abs(value - (lastBvhCameraState?.[index] ?? value)) > 1e-7,
+          );
+          if (cameraChanged) {
+            diamondBvhRuntimeRef.current?.update();
+            lastBvhCameraState = cameraState;
+          }
           renderer.render(scene, camera);
         }, { progressiveFrames: 3 });
         renderRef.current = () => loop?.converge?.(3);
