@@ -4037,7 +4037,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         {sharedLink&&<p className="mt-2 rounded-lg border border-black/[.06] bg-black/[.025] p-2.5 text-[10px] leading-relaxed text-[#77756f]">Al compartir un modelo 3D, los materiales compatibles con glTF se conservan mejor; los shaders personalizados, el HDRI y los efectos pueden variar según el visor.</p>}
       </div></div>}
 {!exportOpen && <>
-          {uxSection!=="rhino-export"&&<div className="flex h-full flex-col overflow-y-auto">
+          {<div className="flex h-full flex-col overflow-y-auto">
             <div className="border-b border-[#e7e2d9] bg-white/55 px-4 py-4">
               <div className="text-[10px] font-semibold uppercase tracking-[.16em] text-[#92743b]">Biblioteca visual</div>
               
