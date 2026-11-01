@@ -483,9 +483,10 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         bvhCameraStateRef.current = null;
         loop = startAurumViewerLoop({ node: host, camera, renderer, controls }, () => {
           // Reuse one typed buffer: no temporary object/array allocations while dragging.
-          const state = bvhCameraStateRef.current ?? (bvhCameraStateRef.current = new Float64Array(10));
-          const cameraChanged =
-            Math.abs(camera.position.x - state[0]) > 1e-7
+          const previous = bvhCameraStateRef.current;
+          const state = previous ?? new Float64Array(10);
+          const cameraChanged = previous === null
+            || Math.abs(camera.position.x - state[0]) > 1e-7
             || Math.abs(camera.position.y - state[1]) > 1e-7
             || Math.abs(camera.position.z - state[2]) > 1e-7
             || Math.abs(camera.quaternion.x - state[3]) > 1e-7
@@ -507,6 +508,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
             state[7] = controls.target.x;
             state[8] = controls.target.y;
             state[9] = controls.target.z;
+            bvhCameraStateRef.current = state;
           }
           renderer.render(scene, camera);
         }, { progressiveFrames: 3 });
