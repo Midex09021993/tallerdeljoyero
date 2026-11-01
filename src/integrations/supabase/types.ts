@@ -1620,6 +1620,38 @@ export type Database = {
         }
         Relationships: []
       }
+      formacion_contenidos_lectura: {
+        Row: {
+          publicado: boolean
+          secciones: Json
+          sesion_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          publicado?: boolean
+          secciones?: Json
+          sesion_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          publicado?: boolean
+          secciones?: Json
+          sesion_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "formacion_contenidos_lectura_sesion_id_fkey"
+            columns: ["sesion_id"]
+            isOneToOne: true
+            referencedRelation: "formacion_sesiones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       formacion_cursos: {
         Row: {
           creado_por: string | null
@@ -1798,13 +1830,13 @@ export type Database = {
           examen_id: string
           id: string
           iniciado_en: string
-          vence_en: string | null
           numero_intento: number
           observaciones_docente: string | null
           participante_id: string
           puntaje_maximo: number
           puntaje_obtenido: number
           respuestas: Json
+          vence_en: string | null
         }
         Insert: {
           alumno_user_id: string
@@ -1817,13 +1849,13 @@ export type Database = {
           examen_id: string
           id?: string
           iniciado_en?: string
-          vence_en?: string | null
           numero_intento: number
           observaciones_docente?: string | null
           participante_id: string
           puntaje_maximo: number
           puntaje_obtenido?: number
           respuestas?: Json
+          vence_en?: string | null
         }
         Update: {
           alumno_user_id?: string
@@ -1836,13 +1868,13 @@ export type Database = {
           examen_id?: string
           id?: string
           iniciado_en?: string
-          vence_en?: string | null
           numero_intento?: number
           observaciones_docente?: string | null
           participante_id?: string
           puntaje_maximo?: number
           puntaje_obtenido?: number
           respuestas?: Json
+          vence_en?: string | null
         }
         Relationships: [
           {
@@ -2044,8 +2076,35 @@ export type Database = {
           },
         ]
       }
+      formacion_progreso_lecturas: {
+        Row: {
+          alumno_user_id: string
+          completada_en: string
+          sesion_id: string
+        }
+        Insert: {
+          alumno_user_id: string
+          completada_en?: string
+          sesion_id: string
+        }
+        Update: {
+          alumno_user_id?: string
+          completada_en?: string
+          sesion_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "formacion_progreso_lecturas_sesion_id_fkey"
+            columns: ["sesion_id"]
+            isOneToOne: false
+            referencedRelation: "formacion_sesiones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       formacion_sesiones: {
         Row: {
+          bloqueada: boolean
           created_at: string
           curso_id: string
           descripcion: string | null
@@ -2060,6 +2119,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          bloqueada?: boolean
           created_at?: string
           curso_id: string
           descripcion?: string | null
@@ -2074,6 +2134,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          bloqueada?: boolean
           created_at?: string
           curso_id?: string
           descripcion?: string | null
@@ -4769,6 +4830,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      iniciar_intento_formacion: { Args: { _examen_id: string }; Returns: Json }
       listar_operarios_por_area: {
         Args: { _sede_id: string }
         Returns: {
