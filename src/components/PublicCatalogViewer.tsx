@@ -220,7 +220,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         renderer.toneMappingExposure = 1.0;
         scene.background = new THREE.Color("#ffffff");
-        scene.add(new THREE.HemisphereLight(0xffffff, 0x77716a, 1.5));
+        scene.add(new THREE.HemisphereLight(0xffffff, 0x77716a, 0.6));
         const key = new THREE.DirectionalLight(0xffffff, 2.1); key.position.set(4, 7, 5); scene.add(key);
         const fill = new THREE.DirectionalLight(0xffffff, 1.0); fill.position.set(-5, 2, -3); scene.add(fill);
         // A restrained rear rim light adds a clean edge highlight without changing material presets.
