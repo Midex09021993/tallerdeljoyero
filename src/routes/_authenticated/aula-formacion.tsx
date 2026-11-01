@@ -246,6 +246,7 @@ function AulaFormacionPage() {
   const [examenSeleccionado, setExamenSeleccionado] = useState("");
   const [examenMuestraAbierto, setExamenMuestraAbierto] = useState(false);
   const [examenEditandoId, setExamenEditandoId] = useState("");
+  const [preguntasAbiertasExamenId, setPreguntasAbiertasExamenId] = useState("");
   const [tituloExamenEditado, setTituloExamenEditado] = useState("");
   const [instruccionesExamenEditadas, setInstruccionesExamenEditadas] = useState("");
   const [duracionExamenEditada, setDuracionExamenEditada] = useState("20");
@@ -1545,6 +1546,12 @@ function AulaFormacionPage() {
                     <button type="button" onClick={() => { setExamenSeleccionado(x.id); setExamenEditandoId(""); }} className="min-w-0 flex-1 text-left"><span className="block truncate text-sm font-medium">{x.titulo}</span><span className="text-xs text-muted-foreground">{x.duracion_minutos ?? "Sin límite"} min · {x.intentos_permitidos} intento(s)</span></button>
                     <span className={x.publicado ? "rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-700" : "rounded-full bg-muted px-2 py-1 text-[10px] font-semibold text-muted-foreground"}>{x.publicado ? "Publicado · visible para alumnos" : "Borrador · no visible"}</span>
                   </div>
+                  <button type="button" onClick={()=>{setExamenSeleccionado(x.id);setPreguntasAbiertasExamenId(v=>v===x.id?"":x.id);}} className="flex w-full items-center justify-between rounded-lg border border-border bg-muted/20 px-3 py-2 text-xs font-medium">
+                    <span>Preguntas del examen ({x.id === examenActivoId ? (preguntasQuery.data ?? []).length : "ver"})</span><span>{preguntasAbiertasExamenId === x.id ? "Ocultar −" : "Ver preguntas +"}</span>
+                  </button>
+                  {preguntasAbiertasExamenId === x.id && <div className="space-y-2 rounded-lg bg-muted/20 p-3">
+                    {(preguntasQuery.data ?? []).length === 0 ? <p className="text-xs text-muted-foreground">Este examen todavía no tiene preguntas cargadas.</p> : (preguntasQuery.data ?? []).map((p,idx)=><div key={p.id} className="rounded-lg border border-border bg-background p-3"><p className="text-[11px] text-muted-foreground">Pregunta {idx+1} · {p.tipo.replaceAll("_"," ")} · {p.puntaje} pts</p><p className="mt-1 text-sm font-medium">{p.enunciado}</p></div>)}
+                  </div>}
                   {examenEditandoId === x.id ? <div className="grid gap-2 rounded-lg bg-muted/30 p-3">
                     <label className="text-xs font-medium">Título<input value={tituloExamenEditado} onChange={e=>setTituloExamenEditado(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"/></label>
                     <label className="text-xs font-medium">Instrucciones<textarea value={instruccionesExamenEditadas} onChange={e=>setInstruccionesExamenEditadas(e.target.value)} rows={2} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"/></label>
@@ -1560,7 +1567,6 @@ function AulaFormacionPage() {
                 {examenesQuery.data?.length === 0 && <p className="text-xs text-muted-foreground">Aún no hay evaluaciones.</p>}
               </div>
 
-              {(preguntasQuery.data ?? []).map((p, idx) => <div key={p.id} className="rounded-lg border border-border p-3"><p className="text-xs text-muted-foreground">Pregunta {idx + 1} · {p.tipo.replaceAll("_"," ")} · {p.puntaje} pts</p><p className="mt-1 text-sm">{p.enunciado}</p></div>)}
             </div>
           </Panel></div>}
           {seccionDocente === "evaluaciones" && cursoActivoId && <div id="doc-entregas" className="scroll-mt-24"><Panel titulo="Entregas y revisión docente">
