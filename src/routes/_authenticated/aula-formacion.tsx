@@ -25,51 +25,57 @@ type Intento = { id: string; examen_id: string; numero_intento: number; califica
 
 const LECTURA_SESION_1 = [
   { titulo: "1. El diseño CAD aplicado a la joyería", bloques: [
-    "CAD significa diseño asistido por computadora. En joyería permite construir, revisar y modificar digitalmente la geometría de una pieza antes de producirla.",
-    "El modelo digital facilita estudiar proporciones, dimensiones, ubicación de componentes y posibles interferencias. También permite conservar un archivo editable para continuar el trabajo.",
+    "CAD significa diseño asistido por computadora. En joyería permite desarrollar y revisar digitalmente una pieza antes de pasar a su fabricación.",
+    "El modelo digital ayuda a estudiar proporciones, dimensiones y la disposición de los componentes. También permite conservar un archivo que puede revisarse y continuar editándose en etapas posteriores.",
     "El CAD complementa el conocimiento artesanal; no reemplaza el criterio del joyero sobre diseño, materiales, fabricación y acabado."
   ]},
   { titulo: "2. Introducción a Rhinoceros 7", bloques: [
-    "Rhinoceros (Rhino) es un programa de modelado tridimensional utilizado en diseño industrial, arquitectura, producto y joyería.",
-    "Trabaja con geometría NURBS, que permite representar curvas y superficies mediante definiciones matemáticas. En esta sesión no construiremos superficies ni sólidos: primero aprenderemos a reconocer el espacio de trabajo y a navegarlo."
+    "Rhinoceros (Rhino) es un programa de diseño y modelado tridimensional utilizado en distintas áreas, entre ellas el diseño de joyería.",
+    "Rhino trabaja principalmente con geometría NURBS, un sistema matemático para representar curvas y superficies con precisión. En esta primera sesión no dibujaremos ni construiremos geometría: aprenderemos a reconocer el entorno y a desplazarnos por el espacio de trabajo."
   ]},
   { titulo: "3. Reconocimiento de la interfaz", bloques: [
-    "Área gráfica y ventanas: es la zona donde se visualiza y construye el modelo. De forma predeterminada aparecen Top (superior), Front (frontal), Right (derecha) y Perspective (perspectiva).",
-    "Línea de comandos: permite escribir comandos y consultar indicaciones del programa. Observa sus mensajes porque Rhino comunica allí las opciones y solicitudes de cada operación.",
-    "Barras y paneles: contienen herramientas y paneles de propiedades, capas y otras funciones. Su disposición puede variar según la configuración del espacio de trabajo.",
-    "Títulos de las ventanas: identifican cada vista. Haz doble clic en el título para maximizarla y repite la acción para restaurarla."
+    "Área gráfica y ventanas: es la zona principal donde se visualiza el contenido del archivo. En la disposición habitual aparecen Top (superior), Front (frontal), Right (derecha) y Perspective (perspectiva).",
+    "Línea de comandos: permite escribir comandos y consultar las indicaciones de Rhino. Es importante observar sus mensajes porque allí aparecen las solicitudes y opciones de cada operación.",
+    "Barras de herramientas y paneles: reúnen accesos a herramientas y controles del programa. Su distribución puede variar según el espacio de trabajo seleccionado.",
+    "Títulos de las ventanas: identifican cada vista. Al hacer doble clic en el título de una ventana, esta se maximiza; al repetir la acción, vuelve a la distribución anterior."
   ]},
   { titulo: "4. Vistas y orientación espacial", bloques: [
-    "Top observa desde arriba; Front desde el frente; Right desde la derecha. Son vistas paralelas. Perspective representa profundidad y permite inspeccionar el modelo desde una orientación tridimensional.",
-    "Los ejes X, Y y Z representan direcciones del espacio. En el sistema de referencia habitual, Z corresponde a la altura. La orientación visible de los ejes depende de la vista activa."
+    "Top muestra el contenido desde arriba; Front, desde el frente; y Right, desde la derecha. Estas son vistas paralelas. Perspective permite apreciar la profundidad y observar el contenido desde una orientación tridimensional.",
+    "Los ejes X, Y y Z representan las tres direcciones principales del espacio. En la orientación habitual de Rhino, Z corresponde a la altura. La apariencia de los ejes cambia según la vista desde la que se observe."
   ]},
   { titulo: "5. Navegación básica en Rhino 7 para Windows", bloques: [
-    "Zoom: gira la rueda del ratón para acercar o alejar la vista.",
-    "Desplazar una vista paralela: mantén pulsado el botón derecho y arrastra.",
-    "Girar Perspective: mantén pulsado el botón derecho y arrastra.",
-    "Desplazar Perspective: mantén pulsadas las teclas Shift y el botón derecho, y arrastra.",
-    "Maximizar/restaurar: haz doble clic en el título de la ventana.",
-    "Zoom Extents: escribe este comando en la línea de comandos para encuadrar los objetos visibles."
+    "Acercar y alejar (Zoom): gira la rueda del ratón hacia delante o hacia atrás sobre la ventana activa.",
+    "Desplazar una vista paralela: mantén pulsado el botón derecho del ratón y arrastra.",
+    "Girar la vista Perspective: mantén pulsado el botón derecho del ratón y arrastra dentro de la ventana Perspective.",
+    "Desplazar la vista Perspective: mantén pulsadas las teclas Shift y el botón derecho del ratón mientras arrastras.",
+    "Maximizar y restaurar una ventana: haz doble clic sobre el título de la ventana.",
+    "Zoom Extents: escribe Zoom Extents en la línea de comandos y pulsa Enter. Rhino ajustará el encuadre para mostrar el contenido visible del archivo."
   ]},
   { titulo: "6. Configuración inicial del entorno", bloques: [
-    "Antes de modelar, verifica que el archivo utilice las unidades indicadas por el docente. En joyería es habitual trabajar con unidades pequeñas, pero la unidad concreta debe responder a las instrucciones del ejercicio y a los requisitos del proyecto.",
-    "No cambies las unidades de un archivo sin comprender cómo afecta a sus dimensiones. Para esta sesión, todo el grupo debe utilizar una plantilla y unidades comunes. Comprueba también que las cuatro ventanas estén visibles y que la línea de comandos pueda leerse."
+    "Antes de comenzar, comprueba que Rhino esté mostrando las cuatro ventanas principales: Top, Front, Right y Perspective. Verifica también que la línea de comandos esté visible y que puedas leer sus indicaciones.",
+    "Comprueba las unidades del archivo en sus propiedades, siguiendo la indicación del docente. No cambies las unidades durante esta práctica: el objetivo de hoy es reconocer el entorno y practicar la navegación, no modificar el documento.",
+    "Para esta sesión todos utilizarán el archivo de práctica proporcionado por FADILAB. Ábrelo tal como se entrega y conserva su contenido original."
   ]},
   { titulo: "7. Del diseño digital a la manufactura aditiva", bloques: [
-    "El flujo general puede resumirse así: diseño CAD → preparación del archivo → impresión 3D → validación del modelo.",
-    "En joyería pueden existir rutas posteriores distintas, como utilizar un patrón para fundición a la cera perdida o elaborar un patrón maestro para fabricar moldes. Aquí solo reconocemos la conexión entre el modelo digital y la producción.",
-    "La elección de una resina calcinable depende del material y del proceso recomendado. No todas las resinas de impresión son intercambiables."
+    "En joyería, el diseño digital puede formar parte de un flujo de trabajo que continúa con la preparación del archivo, la impresión 3D y la validación del modelo obtenido.",
+    "Después de la impresión pueden existir diferentes rutas de producción, por ejemplo, utilizar un patrón para el proceso de fundición a la cera perdida o elaborar un patrón maestro destinado a fabricar un molde. En esta sesión solo identificaremos estas posibilidades de manera general.",
+    "La resina debe elegirse de acuerdo con el proceso de fabricación previsto. Una resina calcinable debe ser compatible con las condiciones del proceso recomendado; no todas las resinas de impresión son intercambiables."
   ]},
-  { titulo: "8. Actividad práctica: mi primer recorrido por el espacio 3D", bloques: [
-    "Realiza esta secuencia individualmente. No es necesario dibujar todavía:",
-    "1) Abre Rhino 7 y localiza la línea de comandos, las barras y los paneles.  2) Identifica Top, Front, Right y Perspective.  3) Activa cada ventana y observa cómo cambia la vista.",
-    "4) Localiza X, Y y Z.  5) En una vista paralela, acerca y aleja con la rueda.  6) En una vista paralela, mantén el botón derecho y arrastra para desplazar.",
-    "7) En Perspective, mantén el botón derecho y arrastra para girar.  8) Usa Shift + botón derecho y arrastra para desplazar.  9) Maximiza Perspective con doble clic en su título y luego restáurala.",
-    "10) Escribe Zoom Extents en la línea de comandos.  11) Guarda el archivo como Sesion_01_Primer_Recorrido.3dm en la carpeta indicada por el docente."
+  { titulo: "8. Actividad práctica: recorrido y navegación en el espacio 3D", bloques: [
+    "Objetivo: practicar los movimientos de visualización en Rhino 7 utilizando únicamente el archivo TIPOS DE OBJETOS RHINOCEROS.3dm, proporcionado por FADILAB. Este archivo se utilizará como referencia visual; no debes crear, seleccionar, mover, borrar ni modificar sus objetos.",
+    "1) Abre Rhino 7 para Windows y, desde Archivo > Abrir, carga TIPOS DE OBJETOS RHINOCEROS.3dm.",
+    "2) Reconoce las cuatro ventanas: Top, Front, Right y Perspective. Identifica también la línea de comandos.",
+    "3) En las ventanas, utiliza la rueda del ratón para acercar y alejar la vista. Repite el movimiento y observa cómo cambia el encuadre.",
+    "4) En una vista paralela, mantén pulsado el botón derecho y arrastra para desplazar la vista.",
+    "5) En Perspective, mantén pulsado el botón derecho y arrastra para girar la vista. Después, mantén Shift + botón derecho y arrastra para desplazarla.",
+    "6) Haz doble clic en el título de Perspective para maximizar la ventana. Repite el doble clic para restaurar las cuatro vistas.",
+    "7) Escribe Zoom Extents en la línea de comandos y pulsa Enter. Observa cómo Rhino encuadra el contenido del archivo.",
+    "8) Repite los movimientos hasta poder realizarlos con control. Al terminar, cierra el archivo sin guardar cambios. No es necesario entregar un modelo ni modificar el archivo de práctica."
   ]},
   { titulo: "9. Comprobación de aprendizaje", bloques: [
-    "Al terminar, debes poder identificar las cuatro ventanas principales, reconocer los ejes X/Y/Z, realizar zoom, desplazamiento y rotación, maximizar y restaurar una ventana, ejecutar Zoom Extents y guardar un archivo .3dm.",
-    "Repasa estas preguntas: ¿qué significa CAD y cómo ayuda al joyero? ¿Qué diferencia hay entre una vista paralela y Perspective? ¿Para qué sirve la línea de comandos? ¿Qué hace Zoom Extents?"
+    "Al finalizar, debes poder reconocer Top, Front, Right y Perspective; localizar la línea de comandos; acercar y alejar la vista; desplazar una vista paralela; girar y desplazar Perspective; maximizar y restaurar una ventana; y ejecutar Zoom Extents.",
+    "Comprueba lo aprendido: ¿qué significa CAD y cómo apoya el trabajo del joyero? ¿Cuáles son las cuatro ventanas principales de Rhino? ¿Qué movimiento permite acercar o alejar la vista? ¿Cómo se desplaza una vista paralela? ¿Cómo se gira Perspective? ¿Para qué sirve Zoom Extents?",
+    "Recuerda: el archivo TIPOS DE OBJETOS RHINOCEROS.3dm se utiliza únicamente para practicar la navegación y los movimientos de visualización. No forma parte de un ejercicio de modelado."
   ]}
 ] as const;
 
