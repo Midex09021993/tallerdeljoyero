@@ -659,32 +659,26 @@ function AulaFormacionPage() {
             const sesionesPublicadas = (sesionesQuery.data ?? []).filter(item => item.publicada);
             const materialesPublicados = materialesDocenteQuery.data ?? [];
             const examenesPublicados = (examenesQuery.data ?? []).filter(item => item.publicado);
-            return <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 p-3 sm:p-6" role="dialog" aria-modal="true" aria-label="Vista previa del alumno">
-              <div className="mx-auto my-4 max-w-4xl overflow-hidden rounded-2xl border border-border bg-background shadow-2xl">
-                <div className="flex items-center justify-between gap-3 border-b border-border p-4">
-                  <div><p className="text-sm font-semibold">Vista previa del alumno</p><p className="text-xs text-muted-foreground">Solo lectura · Contenido que está publicado</p></div>
-                  <button type="button" onClick={() => setVistaPreviaAlumno(false)} className="rounded-lg border border-border px-3 py-2 text-sm">Cerrar</button>
-                </div>
-                <div className="space-y-5 p-5 sm:p-7">
-                  <section className="rounded-2xl border border-gold/25 bg-gradient-to-br from-gold/10 via-card to-card p-5">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-gold-deep">Aula de formación · FADILAB</p>
-                    <h2 className="mt-2 text-xl font-semibold">{curso?.titulo ?? "Curso"}</h2>
-                    <p className="mt-2 text-sm text-muted-foreground">{curso?.descripcion || "Materiales y actividades de tu formación."}</p>
-                    <p className="mt-3 text-xs text-muted-foreground">{curso?.duracion_horas ?? 0} horas · Vista del participante</p>
-                  </section>
-                  <section className="space-y-3">
-                    <h3 className="text-base font-semibold">Sesiones</h3>
-                    {sesionesQuery.isLoading ? <p className="text-sm text-muted-foreground">Cargando sesiones…</p> : sesionesPublicadas.length === 0 ? <p className="rounded-xl border border-dashed border-border p-4 text-sm text-muted-foreground">Todavía no hay sesiones publicadas. Los borradores no son visibles para los alumnos.</p> : sesionesPublicadas.map(item => <article key={item.id} className="rounded-xl border border-border p-4"><div className="flex flex-wrap items-start justify-between gap-3"><div className="min-w-0 flex-1"><p className="text-xs text-muted-foreground">Sesión {item.numero}{item.duracion_horas ? " · "+item.duracion_horas+" horas" : ""}</p><h4 className="mt-1 text-sm font-semibold">{item.titulo}</h4>{item.descripcion && <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">{item.descripcion}</p>}</div>{item.numero === 1 && <button type="button" onClick={() => { setLecturaModoVistaPrevia(true); setLecturaAbierta(item); setPaginaLectura(0); }} className="shrink-0 inline-flex items-center gap-1 rounded-lg border border-gold/40 bg-gold/10 px-3 py-2 text-xs font-semibold text-gold-deep"><BookOpenCheck className="size-4"/> Abrir lectura</button>}</div>{item.numero === 1 && <p className="mt-2 text-xs text-muted-foreground">{lecturasSimuladas.has(item.id) ? "Lectura abierta · simulación" : "Lectura pendiente · simulación"}</p>}</article>)}
-                  </section>
-                  <section className="space-y-3">
-                    <h3 className="text-base font-semibold">Materiales publicados</h3>
-                    {materialesDocenteQuery.isLoading ? <p className="text-sm text-muted-foreground">Cargando materiales…</p> : materialesPublicados.length === 0 ? <p className="rounded-xl border border-dashed border-border p-4 text-sm text-muted-foreground">Todavía no hay materiales publicados.</p> : materialesPublicados.map(item => <div key={item.id} className="flex items-center justify-between gap-3 rounded-xl border border-border p-3"><div className="flex min-w-0 items-center gap-2"><FileText className="size-4 shrink-0 text-gold-deep"/><div className="min-w-0"><p className="truncate text-sm font-medium">{item.titulo}</p><p className="text-xs text-muted-foreground">{item.nombre_archivo}</p></div></div><button type="button" onClick={() => void descargarMaterial(item)} className="shrink-0 rounded-lg border border-border px-3 py-2 text-xs"><Download className="mr-1 inline size-3.5"/>Descargar</button></div>)}
-                  </section>
-                  <section className="space-y-3">
-                    <h3 className="text-base font-semibold">Evaluaciones</h3>
-                    {examenesPublicados.length === 0 ? <p className="rounded-xl border border-dashed border-border p-4 text-sm text-muted-foreground">Todavía no hay evaluaciones publicadas.</p> : examenesPublicados.map(item => <div key={item.id} className="rounded-xl border border-border p-3"><p className="text-sm font-medium">{item.titulo}</p><p className="mt-1 text-xs text-muted-foreground">{item.duracion_minutos ?? "Sin límite"} min · {item.intentos_permitidos} intento(s)</p>{item.instrucciones && <p className="mt-2 text-sm text-muted-foreground">{item.instrucciones}</p>}</div>)}
-                  </section>
-                </div>
+            return <div className="fixed inset-0 z-50 overflow-y-auto bg-background" role="dialog" aria-modal="true" aria-label="Vista previa del aula del alumno">
+              <div className="min-h-full">
+                <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur sm:px-6">
+                  <div><h2 className="text-sm font-semibold">Aula de formación</h2><p className="text-xs text-muted-foreground">Vista previa idéntica al área del alumno · Modo de simulación, sin guardar actividad académica</p></div>
+                  <button type="button" onClick={() => setVistaPreviaAlumno(false)} className="rounded-lg border border-border px-3 py-2 text-sm">Salir de vista previa</button>
+                </header>
+                <main className="mx-auto max-w-6xl space-y-5 p-4 sm:p-6">
+                  <Panel titulo={curso?.titulo ?? "Curso de formación"}>
+                    <div className="p-5">
+                      <p className="text-sm text-muted-foreground">{curso?.descripcion || "Materiales y actividades de tu formación."}</p>
+                      <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground"><span>{curso?.duracion_horas ?? 0} horas</span><span>Inscripción: activo</span></div>
+                      <h3 className="mb-2 mt-5 text-sm font-semibold">Sesiones</h3>
+                      {sesionesQuery.isLoading ? <p className="text-xs text-muted-foreground">Cargando sesiones…</p> : sesionesPublicadas.length === 0 ? <p className="text-xs text-muted-foreground">Todavía no hay sesiones publicadas.</p> : sesionesPublicadas.map(item => <article key={item.id} className="flex flex-wrap items-center justify-between gap-3 border-t border-border py-3"><div className="min-w-0"><p className="text-xs text-muted-foreground">Sesión {item.numero}</p><p className="text-sm font-medium">{item.titulo}</p>{item.descripcion && <p className="mt-1 whitespace-pre-wrap text-xs text-muted-foreground">{item.descripcion}</p>}</div><div className="flex shrink-0 items-center gap-2">{lecturasSimuladas.has(item.id) && <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700"><CheckCircle2 className="size-4"/> Completada</span>}{item.numero === 1 ? <button type="button" onClick={() => { setLecturaModoVistaPrevia(true); setLecturaAbierta(item); setPaginaLectura(0); }} className="inline-flex items-center gap-1 rounded-lg border border-gold/40 bg-gold/10 px-3 py-2 text-xs font-semibold text-gold-deep"><BookOpenCheck className="size-4"/> Abrir lectura</button> : <span className="text-xs text-muted-foreground">Lectura en preparación</span>}</div></article>)}
+                      <h3 className="mb-2 mt-5 text-sm font-semibold">Evaluaciones</h3>
+                      {examenesPublicados.length === 0 ? <p className="text-xs text-muted-foreground">Todavía no hay evaluaciones publicadas.</p> : examenesPublicados.map(item => <div key={item.id} className="flex flex-wrap items-center justify-between gap-3 border-t border-border py-3"><div><p className="text-sm font-medium">{item.titulo}</p><p className="text-xs text-muted-foreground">{item.duracion_minutos ?? "Sin límite"} min · {item.intentos_permitidos} intento(s) · Simulación</p></div><button type="button" onClick={() => setMensaje("La simulación de evaluación estará disponible sin registrar intentos reales.")} className="rounded-lg border border-border px-3 py-2 text-xs">Rendir evaluación</button></div>)}
+                      <h3 className="mb-2 mt-5 text-sm font-semibold">Materiales publicados</h3>
+                      {materialesDocenteQuery.isLoading ? <p className="text-xs text-muted-foreground">Cargando materiales…</p> : materialesPublicados.length === 0 ? <p className="text-xs text-muted-foreground">Todavía no hay materiales publicados.</p> : materialesPublicados.map(m => <div key={m.id} className="flex items-center justify-between gap-3 border-t border-border py-3"><div className="flex min-w-0 items-center gap-2"><FileText className="size-4 shrink-0 text-gold-deep"/><span className="min-w-0"><span className="block truncate text-sm font-medium">{m.titulo}</span><span className="text-xs text-muted-foreground">{m.nombre_archivo} · {(m.tamano_bytes / 1024 / 1024).toFixed(1)} MB</span></span></div><button type="button" onClick={() => void descargarMaterial(m)} className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-border px-3 py-2 text-xs"><Download className="size-3.5"/> Descargar</button></div>)}
+                    </div>
+                  </Panel>
+                </main>
               </div>
             </div>;
           })()}
