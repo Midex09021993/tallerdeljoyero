@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listarDirectorioAlumnosFormacion } from "@/lib/aula-formacion.functions";
-import { BookOpen, Users, Plus, Upload, FileText, Download, CalendarDays, ShieldCheck, Send, Pencil } from "lucide-react";
+import { BookOpen, Users, Plus, Upload, FileText, Download, CalendarDays, ShieldCheck, Send, Pencil, Trash2 } from "lucide-react";
 import { AppShell, Panel } from "@/components/AppShell";
 import { useSesion } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -330,6 +330,28 @@ function AulaFormacionPage() {
     finally { setOcupado(false); }
   }
 
+  async function eliminarInscripcion(inscripcion: Omit<Inscripcion, "formacion_cursos">) {
+    if (!participanteId || !cursoActivoId) return;
+    const nombre = inscripcion.nombre_alumno || inscripcion.email_alumno;
+    if (!window.confirm(`¿Eliminar a ${nombre} de este curso? Su cuenta y otras inscripciones no se modificarán.`)) return;
+    setOcupado(true); setMensaje("");
+    try {
+      const { error } = await (supabase as any).from("formacion_inscripciones")
+        .delete()
+        .eq("id", inscripcion.id)
+        .eq("participante_id", participanteId)
+        .eq("curso_id", cursoActivoId);
+      if (error) throw error;
+      await qc.invalidateQueries({ queryKey: ["aula-formacion-inscripciones", participanteId, cursoActivoId] });
+      await qc.invalidateQueries({ queryKey: ["aula-formacion-alumno"] });
+      setMensaje(`${nombre} ya no está inscrito en este curso.`);
+    } catch (err) {
+      setMensaje(err instanceof Error ? err.message : "No se pudo eliminar la inscripción. Comprueba los permisos de la tabla.");
+    } finally {
+      setOcupado(false);
+    }
+  }
+
   async function matricularAlumnosSeleccionados() {
     if (!participanteId || !cursoActivoId || alumnosSeleccionados.length === 0) return;
     setOcupado(true); setMensaje("");
@@ -492,7 +514,7 @@ function AulaFormacionPage() {
                   <button type="button" disabled={ocupado || alumnosSeleccionados.length === 0} onClick={() => void matricularAlumnosSeleccionados()} className="inline-flex items-center gap-2 rounded-lg bg-gold px-4 py-2.5 text-sm font-semibold text-black disabled:opacity-50"><Users className="size-4" /> Inscribir seleccionados</button>
                 </div>
               </div>
-              <div className="border-t border-border p-5"><h3 className="mb-3 text-sm font-semibold">Alumnos inscritos</h3>{inscripcionesQuery.isLoading ? <p className="text-xs text-muted-foreground">Cargando…</p> : (inscripcionesQuery.data ?? []).length === 0 ? <p className="text-xs text-muted-foreground">Aún no hay alumnos inscritos.</p> : (inscripcionesQuery.data ?? []).map(i => <div key={i.id} className="flex justify-between gap-3 border-b border-border py-2 text-xs"><span>{i.nombre_alumno || i.email_alumno}<span className="block text-muted-foreground">{i.email_alumno}</span></span><span className="text-muted-foreground">{i.estado}</span></div>)}</div>
+              <div className="border-t border-border p-5"><h3 className="mb-3 text-sm font-semibold">Alumnos inscritos</h3>{inscripcionesQuery.isLoading ? <p className="text-xs text-muted-foreground">Cargando…</p> : (inscripcionesQuery.data ?? []).length === 0 ? <p className="text-xs text-muted-foreground">Aún no hay alumnos inscritos.</p> : (inscripcionesQuery.data ?? []).map(i => <div key={i.id} className="flex items-center justify-between gap-3 border-b border-border py-2 text-xs"><span className="min-w-0">{i.nombre_alumno || i.email_alumno}<span className="block break-all text-muted-foreground">{i.email_alumno}</span></span><div className="flex shrink-0 items-center gap-2"><span className="text-muted-foreground">{i.estado}</span><button type="button" disabled={ocupado} onClick={() => void eliminarInscripcion(i)} aria-label={`Eliminar inscripción de ${i.nombre_alumno || i.email_alumno}`} title="Eliminar inscripción del curso" className="rounded-md p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"><Trash2 className="size-4" /></button></div></div>)}</div>
             </Panel>
             <Panel titulo="Sesiones del curso">
               <form onSubmit={(e) => void crearSesion(e)} className="space-y-3 p-5">
