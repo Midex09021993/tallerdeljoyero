@@ -1597,7 +1597,15 @@ function AulaFormacionPage() {
           </Panel></div>}
           {seccionDocente === "evaluaciones" && cursoActivoId && <div id="doc-entregas" className="scroll-mt-24"><Panel titulo="Entregas y revisión docente">
             <div className="space-y-3 p-5">
-              {(intentosDocenteQuery.data ?? []).length === 0 ? <p className="text-sm text-muted-foreground">Todavía no hay evaluaciones entregadas.</p> : (intentosDocenteQuery.data ?? []).map(intento => {
+              {(examenesQuery.data ?? []).map(examenSeguimiento => {
+                const inscritos = (inscripcionesQuery.data ?? []).filter((i: any) => ["activo", "finalizado"].includes(i.estado));
+                const intentosExamen = (intentosDocenteQuery.data ?? []).filter(i => i.examen_id === examenSeguimiento.id && i.estado !== "en_curso");
+                const usuariosConEntrega = new Set(intentosExamen.map(i => i.alumno_user_id));
+                const entregaron = inscritos.filter((i: any) => i.alumno_user_id && usuariosConEntrega.has(i.alumno_user_id)).length;
+                const pendientes = Math.max(0, inscritos.length - entregaron);
+                return <div key={examenSeguimiento.id} className="rounded-xl border border-border p-3"><p className="text-sm font-semibold">{examenSeguimiento.titulo}</p><div className="mt-2 grid grid-cols-3 gap-2 text-center"><div className="rounded-lg bg-muted/40 p-2"><p className="text-xl font-semibold tabular-nums">{inscritos.length}</p><p className="text-[10px] text-muted-foreground">Inscritos</p></div><div className="rounded-lg bg-emerald-50 p-2"><p className="text-xl font-semibold tabular-nums text-emerald-700">{entregaron}</p><p className="text-[10px] text-emerald-700">Entregaron</p></div><div className="rounded-lg bg-amber-50 p-2"><p className="text-xl font-semibold tabular-nums text-amber-700">{pendientes}</p><p className="text-[10px] text-amber-700">Pendientes</p></div></div><div className="mt-3 space-y-1.5">{inscritos.map((alumno: any) => {const entregado = Boolean(alumno.alumno_user_id && usuariosConEntrega.has(alumno.alumno_user_id));const intentosAlumno = intentosExamen.filter(i => i.alumno_user_id === alumno.alumno_user_id);return <div key={alumno.id} className="flex items-center justify-between gap-2 border-t border-border/70 pt-2 text-xs"><span className="min-w-0 truncate">{alumno.nombre_alumno || alumno.email_alumno}</span><span className={entregado ? "shrink-0 rounded-full bg-emerald-50 px-2 py-1 font-medium text-emerald-700" : "shrink-0 rounded-full bg-amber-50 px-2 py-1 font-medium text-amber-700"}>{entregado ? "Entregado · " + intentosAlumno.length + " intento(s)" : "Pendiente"}</span></div>;})}</div></div>;
+              })}
+              {(intentosDocenteQuery.data ?? []).filter(intento => intento.estado !== "en_curso").length === 0 ? <p className="text-sm text-muted-foreground">Todavía no hay evaluaciones entregadas.</p> : (intentosDocenteQuery.data ?? []).filter(intento => intento.estado !== "en_curso").map(intento => {
                 const examen = (intento as any).formacion_examenes;
                 const preguntas = (examen?.formacion_preguntas ?? []) as Array<{id:string;enunciado:string;tipo:string;puntaje:number}>;
                 const respuestas = Array.isArray(intento.respuestas) ? intento.respuestas as Array<{pregunta_id?:string;respuesta?:unknown}> : [];
