@@ -1798,6 +1798,7 @@ export type Database = {
           examen_id: string
           id: string
           iniciado_en: string
+          vence_en: string | null
           numero_intento: number
           observaciones_docente: string | null
           participante_id: string
@@ -1816,6 +1817,7 @@ export type Database = {
           examen_id: string
           id?: string
           iniciado_en?: string
+          vence_en?: string | null
           numero_intento: number
           observaciones_docente?: string | null
           participante_id: string
@@ -1834,6 +1836,7 @@ export type Database = {
           examen_id?: string
           id?: string
           iniciado_en?: string
+          vence_en?: string | null
           numero_intento?: number
           observaciones_docente?: string | null
           participante_id?: string
