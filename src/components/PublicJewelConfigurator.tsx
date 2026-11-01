@@ -211,8 +211,6 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
               <p className="mt-0.5 text-[9px] font-medium tracking-[.08em] text-[#9a907f]">EL ARTE DE CREAR · LA INTELIGENCIA DE GESTIONAR</p>
             </div>
           </div>
-          <h2 className="mt-2 truncate font-display text-lg leading-tight tracking-[-.025em] text-[#28231d] sm:text-xl lg:text-2xl [@media(max-height:800px)]:text-lg">Configura tu joya en 3D</h2>
-
         </div>
         <div className="flex items-center justify-between gap-2 sm:justify-end">
           
