@@ -1063,10 +1063,18 @@ function AulaFormacionPage() {
               </nav>
               <main className="min-h-0 flex-1 overflow-y-auto bg-card/40 px-5 py-5 sm:px-8 sm:py-6 lg:px-10">
                 <h3 className="mb-5 max-w-4xl font-display text-2xl leading-tight sm:text-3xl">{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</h3>
-                {(seccionesLecturaActivas[paginaLectura]?.bloques ?? []).map((bloque,idx) => <div key={idx}>
-                  <p className="mb-4 max-w-4xl whitespace-pre-line text-[15px] leading-7 text-foreground/90">{bloque}</p>
-
-                </div>)}
+                {(seccionesLecturaActivas[paginaLectura]?.bloques ?? []).map((bloque,idx) => {
+                  if (paginaLectura === 4 && idx >= 6) return null;
+                  return <div key={idx}><p className="mb-4 max-w-4xl whitespace-pre-line text-[15px] leading-7 text-foreground/90">{bloque}</p></div>;
+                })}
+                {paginaLectura === 4 && <div className="mt-5 max-w-4xl overflow-x-auto rounded-xl border border-border bg-background"><table className="w-full border-collapse text-left text-sm"><thead><tr className="bg-muted/40"><th className="border-b border-border px-4 py-3">Comando</th><th className="border-b border-border px-4 py-3">Función</th></tr></thead><tbody>
+                  <tr><td className="border-b border-border px-4 py-3 font-semibold">Zoom</td><td className="border-b border-border px-4 py-3">Control de acercamiento</td></tr>
+                  <tr><td className="border-b border-border px-4 py-3 font-semibold">ZE</td><td className="border-b border-border px-4 py-3">Zoom Extents: encuadrar todos los objetos</td></tr>
+                  <tr><td className="border-b border-border px-4 py-3 font-semibold">ZEA</td><td className="border-b border-border px-4 py-3">Zoom All Extents: encuadrar todas las vistas</td></tr>
+                  <tr><td className="border-b border-border px-4 py-3 font-semibold">ZS</td><td className="border-b border-border px-4 py-3">Zoom Selected: encuadrar objetos seleccionados</td></tr>
+                  <tr><td className="border-b border-border px-4 py-3 font-semibold">Pan</td><td className="border-b border-border px-4 py-3">Desplazamiento de la vista</td></tr>
+                  <tr><td className="px-4 py-3 font-semibold">UndoView</td><td className="px-4 py-3">Recuperar la vista anterior</td></tr>
+                </tbody></table></div>}
                 {paginaLectura === 1 && <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5 sm:p-6">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">Material visual de apoyo</p>
                   <h4 className="mt-1 text-lg font-semibold">Rhinoceros 7</h4>
@@ -1393,10 +1401,18 @@ function AulaFormacionPage() {
               </nav>
               <main className="min-h-0 flex-1 overflow-y-auto bg-card/40 px-5 py-5 sm:px-8 sm:py-6 lg:px-10">
                 <h3 className="mb-5 max-w-4xl font-display text-2xl leading-tight sm:text-3xl">{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</h3>
-                {(seccionesLecturaActivas[paginaLectura]?.bloques ?? []).map((bloque,idx) => <div key={idx}>
-                  <p className="mb-4 max-w-4xl whitespace-pre-line text-[15px] leading-7 text-foreground/90">{bloque}</p>
-
-                </div>)}
+                {(seccionesLecturaActivas[paginaLectura]?.bloques ?? []).map((bloque,idx) => {
+                  if (paginaLectura === 4 && idx >= 6) return null;
+                  return <div key={idx}><p className="mb-4 max-w-4xl whitespace-pre-line text-[15px] leading-7 text-foreground/90">{bloque}</p></div>;
+                })}
+                {paginaLectura === 4 && <div className="mt-5 max-w-4xl overflow-x-auto rounded-xl border border-border bg-background"><table className="w-full border-collapse text-left text-sm"><thead><tr className="bg-muted/40"><th className="border-b border-border px-4 py-3">Comando</th><th className="border-b border-border px-4 py-3">Función</th></tr></thead><tbody>
+                  <tr><td className="border-b border-border px-4 py-3 font-semibold">Zoom</td><td className="border-b border-border px-4 py-3">Control de acercamiento</td></tr>
+                  <tr><td className="border-b border-border px-4 py-3 font-semibold">ZE</td><td className="border-b border-border px-4 py-3">Zoom Extents: encuadrar todos los objetos</td></tr>
+                  <tr><td className="border-b border-border px-4 py-3 font-semibold">ZEA</td><td className="border-b border-border px-4 py-3">Zoom All Extents: encuadrar todas las vistas</td></tr>
+                  <tr><td className="border-b border-border px-4 py-3 font-semibold">ZS</td><td className="border-b border-border px-4 py-3">Zoom Selected: encuadrar objetos seleccionados</td></tr>
+                  <tr><td className="border-b border-border px-4 py-3 font-semibold">Pan</td><td className="border-b border-border px-4 py-3">Desplazamiento de la vista</td></tr>
+                  <tr><td className="px-4 py-3 font-semibold">UndoView</td><td className="px-4 py-3">Recuperar la vista anterior</td></tr>
+                </tbody></table></div>}
                 {paginaLectura === 1 && <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5 sm:p-6">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">Material visual de apoyo</p>
                   <h4 className="mt-1 text-lg font-semibold">Rhinoceros 7</h4>
