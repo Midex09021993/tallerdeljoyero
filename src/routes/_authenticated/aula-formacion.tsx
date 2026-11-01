@@ -19,7 +19,7 @@ type Material = { id: string; curso_id: string; sesion_id: string | null; titulo
 type SesionCurso = { id: string; curso_id: string; numero: number; titulo: string; descripcion: string | null; duracion_horas: number; fecha_programada: string | null; publicada: boolean };
 type Examen = { id: string; curso_id: string; sesion_id?: string | null; titulo: string; instrucciones: string | null; duracion_minutos: number | null; intentos_permitidos: number; puntaje_maximo: number; publicado: boolean; disponible_desde: string | null; disponible_hasta: string | null };
 type Pregunta = { id: string; examen_id: string; tipo: "opcion_multiple" | "verdadero_falso" | "practica"; enunciado: string; opciones: Array<{label:string;value:string}>; respuesta_correcta?: unknown; puntaje: number; orden: number; obligatoria: boolean };
-type ExamenAlumno = { id: string; titulo: string; instrucciones: string | null; duracion_minutos: number | null; puntaje_maximo: number; preguntas: Array<{id:string;tipo:string;enunciado:string;opciones:Array<{label:string;value:string}>;puntaje:number;orden:number;obligatoria:boolean}> };
+type ExamenAlumno = { id: string; titulo: string; instrucciones: string | null; duracion_minutos: number | null; puntaje_maximo: number; intento_id?: string; vence_en?: string | null; preguntas: Array<{id:string;tipo:string;enunciado:string;opciones:Array<{label:string;value:string}>;puntaje:number;orden:number;obligatoria:boolean}> };
 type Intento = { id: string; examen_id: string; numero_intento: number; calificacion: number | null; estado: string; enviado_en: string; observaciones_docente: string | null };
 
 
@@ -265,6 +265,7 @@ function AulaFormacionPage() {
   const [preguntaActualAlumno, setPreguntaActualAlumno] = useState(0);
   const [respuestasAlumno, setRespuestasAlumno] = useState<Record<string, string>>({});
   const [enviandoExamen, setEnviandoExamen] = useState(false);
+  const [segundosRestantesExamen, setSegundosRestantesExamen] = useState<number | null>(null);
   const [ocupado, setOcupado] = useState(false);
   const [vistaPreviaAlumno, setVistaPreviaAlumno] = useState(false);
   const [lecturaAbierta, setLecturaAbierta] = useState<SesionCurso | null>(null);
@@ -275,6 +276,18 @@ function AulaFormacionPage() {
   useEffect(() => {
     if (paginaLectura !== 2) setInterfazInteractivaAbierta(false);
   }, [paginaLectura]);
+
+  useEffect(() => {
+    if (!examenActivoAlumno?.vence_en) { setSegundosRestantesExamen(null); return; }
+    const actualizar = () => setSegundosRestantesExamen(Math.max(0, Math.ceil((new Date(examenActivoAlumno.vence_en!).getTime() - Date.now()) / 1000)));
+    actualizar();
+    const timer = window.setInterval(actualizar, 1000);
+    return () => window.clearInterval(timer);
+  }, [examenActivoAlumno?.id, examenActivoAlumno?.vence_en]);
+
+  useEffect(() => {
+    if (segundosRestantesExamen === 0 && examenActivoAlumno && !enviandoExamen) void enviarExamenAlumno();
+  }, [segundosRestantesExamen, examenActivoAlumno, enviandoExamen]);
 
   useEffect(() => {
     if (componenteActivo === null) {
@@ -797,15 +810,18 @@ function AulaFormacionPage() {
     setMensaje("");
     const { data, error } = await (supabase as any).rpc("obtener_examen_formacion_alumno", { _examen_id: id });
     if (error) { setMensaje(error.message); return; }
+    const { data: inicio, error: inicioError } = await (supabase as any).rpc("iniciar_intento_formacion", { _examen_id: id });
+    if (inicioError) { setMensaje(inicioError.message); return; }
     setRespuestasAlumno({});
     setPreguntaActualAlumno(0);
-    setExamenActivoAlumno(data as ExamenAlumno);
+    setExamenActivoAlumno({ ...(data as ExamenAlumno), intento_id: inicio.intento_id, vence_en: inicio.vence_en ?? null });
   }
 
   async function enviarExamenAlumno() {
-    if (!examenActivoAlumno) return;
+    if (!examenActivoAlumno || enviandoExamen) return;
+    const tiempoAgotado = segundosRestantesExamen === 0;
     const faltante = examenActivoAlumno.preguntas.find(p => p.obligatoria && !String(respuestasAlumno[p.id] ?? "").trim());
-    if (faltante) { setMensaje("Responde todas las preguntas obligatorias antes de enviar."); return; }
+    if (faltante && !tiempoAgotado) { setMensaje("Responde todas las preguntas obligatorias antes de enviar."); return; }
     const respuestas = examenActivoAlumno.preguntas.map(p => ({ pregunta_id: p.id, respuesta: p.tipo === "verdadero_falso" ? respuestasAlumno[p.id] === "true" : (respuestasAlumno[p.id] ?? "") }));
     setEnviandoExamen(true); setMensaje("");
     try {
@@ -1732,6 +1748,8 @@ function AulaFormacionPage() {
             </div>
           </div>}
           {examenActivoAlumno ? <Panel titulo={examenActivoAlumno.titulo}><div className="space-y-4 p-5">
+            {examenActivoAlumno.duracion_minutos && <div className="flex items-center justify-between rounded-lg border border-gold/30 bg-gold/5 px-3 py-2"><span className="text-xs font-medium text-muted-foreground">Tiempo restante</span><span className={`text-sm font-bold tabular-nums ${segundosRestantesExamen !== null && segundosRestantesExamen <= 60 ? "text-red-600" : "text-foreground"}`}>{segundosRestantesExamen === null ? "—" : `${Math.floor(segundosRestantesExamen/60).toString().padStart(2,"0")}:${(segundosRestantesExamen%60).toString().padStart(2,"0")}`}</span></div>}
+            {segundosRestantesExamen === 0 && <p className="rounded-lg border border-red-300 bg-red-50 p-3 text-xs text-red-800">El tiempo terminó. Estamos enviando tus respuestas registradas.</p>}
             {examenActivoAlumno.instrucciones && <p className="text-sm text-muted-foreground">{examenActivoAlumno.instrucciones}</p>}
             {(() => { const pregunta = examenActivoAlumno.preguntas[preguntaActualAlumno]; const total = examenActivoAlumno.preguntas.length; const respondida = Boolean(pregunta && String(respuestasAlumno[pregunta.id] ?? "").trim()); return pregunta ? <>
               <div className="flex items-center justify-between gap-3"><p className="text-xs font-semibold text-gold-deep">Pregunta {preguntaActualAlumno+1} de {total}</p><p className="text-xs text-muted-foreground">{pregunta.puntaje} puntos</p></div>
@@ -1740,7 +1758,7 @@ function AulaFormacionPage() {
                 {pregunta.tipo === "practica" ? <textarea value={respuestasAlumno[pregunta.id] ?? ""} onChange={e=>setRespuestasAlumno(v=>({...v,[pregunta.id]:e.target.value}))} rows={5} className="mt-4 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" placeholder="Escribe tu respuesta…" /> : <div className="mt-4 space-y-3">{pregunta.opciones.map(o=><label key={o.value} className="flex cursor-pointer items-center gap-3 rounded-lg border border-border p-3 text-sm hover:bg-muted/40"><input type="radio" name={pregunta.id} value={o.value} checked={respuestasAlumno[pregunta.id]===o.value} onChange={e=>setRespuestasAlumno(v=>({...v,[pregunta.id]:e.target.value}))}/>{o.label}</label>)}</div>}
               </article>
               <div className="flex flex-wrap items-center justify-between gap-2">
-                {preguntaActualAlumno < total-1 ? <button type="button" disabled={!respondida} onClick={()=>setPreguntaActualAlumno(v=>Math.min(total-1,v+1))} className="rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-black disabled:cursor-not-allowed disabled:opacity-40">Siguiente</button> : <button type="button" disabled={!respondida || enviandoExamen} onClick={()=>void enviarExamenAlumno()} className="rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-black disabled:opacity-40"><Send className="mr-1 inline size-4"/> Enviar evaluación</button>}
+                {preguntaActualAlumno < total-1 ? <button type="button" disabled={!respondida} onClick={()=>setPreguntaActualAlumno(v=>Math.min(total-1,v+1))} className="rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-black disabled:cursor-not-allowed disabled:opacity-40">Siguiente</button> : <button type="button" disabled={(!respondida && segundosRestantesExamen !== 0) || enviandoExamen} onClick={()=>void enviarExamenAlumno()} className="rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-black disabled:opacity-40"><Send className="mr-1 inline size-4"/> Enviar evaluación</button>}
               </div>
               {!respondida && <p className="text-xs text-muted-foreground">Debes responder esta pregunta para continuar.</p>}
             </> : <p className="text-sm text-muted-foreground">Este examen no contiene preguntas.</p>; })()}
