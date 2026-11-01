@@ -685,7 +685,7 @@ function AulaFormacionPage() {
             </div>;
           })()}
           <div className="grid gap-5 lg:grid-cols-2">
-            <Panel titulo="Crear curso">
+            <Panel titulo="Crear curso" colapsable defaultOpen={true}>
               <form onSubmit={(e) => void crearCurso(e)} className="space-y-3 p-5">
                 <label className="block text-xs font-medium">Nombre del curso<input value={titulo} onChange={e => setTitulo(e.target.value)} required maxLength={140} className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm" /></label>
                 <label className="block text-xs font-medium">Descripción<textarea value={descripcion} onChange={e => setDescripcion(e.target.value)} rows={2} className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm" /></label>
@@ -693,7 +693,7 @@ function AulaFormacionPage() {
                 <button disabled={ocupado} className="inline-flex items-center gap-2 rounded-lg bg-gold px-4 py-2.5 text-sm font-semibold text-black disabled:opacity-50"><Plus className="size-4" /> Crear curso</button>
               </form>
             </Panel>
-            <Panel titulo="Cursos de FADILAB">
+            <Panel titulo="Cursos de FADILAB" colapsable defaultOpen={false}>
               <div className="space-y-2 p-5">
                 {cursosQuery.isLoading ? <p className="text-sm text-muted-foreground">Cargando cursos…</p> : cursos.length === 0 ? <p className="rounded-xl border border-dashed border-border p-5 text-sm text-muted-foreground">Todavía no hay cursos. Crea el primero desde el formulario.</p> : cursos.map(c => <div key={c.id} className={`rounded-xl border p-3 ${cursoActivoId === c.id ? "border-gold bg-gold/10" : "border-border"}`}>
                   <div className="flex items-center gap-3">
@@ -715,7 +715,7 @@ function AulaFormacionPage() {
             </Panel>
           </div>
           {cursoActivoId && <div className="grid gap-5 lg:grid-cols-2">
-            <Panel titulo="Inscribir alumnos">
+            <Panel titulo="Inscribir alumnos" colapsable defaultOpen={false}>
               <div className="space-y-4 p-5">
                 <div className="space-y-1">
                   <p className="text-sm font-medium">Directorio de talleres</p>
@@ -751,7 +751,7 @@ function AulaFormacionPage() {
               </div>
               <div className="border-t border-border p-5"><h3 className="mb-3 text-sm font-semibold">Alumnos inscritos</h3>{inscripcionesQuery.isLoading ? <p className="text-xs text-muted-foreground">Cargando…</p> : (inscripcionesQuery.data ?? []).length === 0 ? <p className="text-xs text-muted-foreground">Aún no hay alumnos inscritos.</p> : (inscripcionesQuery.data ?? []).map(i => <div key={i.id} className="flex items-center justify-between gap-3 border-b border-border py-2 text-xs"><span className="min-w-0">{i.nombre_alumno || i.email_alumno}<span className="block break-all text-muted-foreground">{i.email_alumno}</span></span><div className="flex shrink-0 items-center gap-2"><span className="text-muted-foreground">{i.estado}</span><button type="button" disabled={ocupado} onClick={() => void eliminarInscripcion(i)} aria-label={`Eliminar inscripción de ${i.nombre_alumno || i.email_alumno}`} title="Eliminar inscripción del curso" className="rounded-md p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"><Trash2 className="size-4" /></button></div></div>)}</div>
             </Panel>
-            <Panel titulo="Sesiones del curso">
+            <Panel titulo="Sesiones del curso" colapsable defaultOpen={false}>
               <form onSubmit={(e) => void crearSesion(e)} className="space-y-3 p-5">
                 <div className="grid grid-cols-[90px_1fr] gap-2"><label className="text-xs font-medium">N.º<input type="number" min="1" value={numeroSesion} onChange={e => setNumeroSesion(e.target.value)} className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm" /></label><label className="text-xs font-medium">Título<input required value={tituloSesion} onChange={e => setTituloSesion(e.target.value)} className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm" placeholder="Interfaz y navegación" /></label></div>
                 <label className="block text-xs font-medium">Descripción<textarea value={detalleSesion} onChange={e => setDetalleSesion(e.target.value)} rows={2} className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm" /></label>
@@ -797,7 +797,7 @@ function AulaFormacionPage() {
                 </div>
               </div>
             </div>}
-            <Panel titulo="Materiales de estudio">
+            <Panel titulo="Materiales de estudio" colapsable defaultOpen={false}>
               <form onSubmit={(e) => void subirMaterial(e)} className="space-y-3 p-5">
                 <label className="block text-xs font-medium">Título del material<input required value={tituloMaterial} onChange={e => setTituloMaterial(e.target.value)} className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm" placeholder="Guía de la sesión 1" /></label>
                 <label className="block text-xs font-medium">Archivo (PDF, documentos, imágenes, ZIP o STL)<input id="aula-material-file" type="file" required onChange={(e: ChangeEvent<HTMLInputElement>) => setArchivo(e.target.files?.[0] ?? null)} className="mt-1.5 block w-full text-xs" /></label>
@@ -807,7 +807,7 @@ function AulaFormacionPage() {
               </form>
             </Panel>
           </div>}
-          {cursoActivoId && <Panel titulo="Evaluaciones y cuestionarios">
+          {cursoActivoId && <Panel titulo="Evaluaciones y cuestionarios" colapsable defaultOpen={false}>
             <div className="space-y-3 p-5">
               <form onSubmit={(e) => void crearExamen(e)} className="space-y-3 rounded-xl border border-border p-4">
                 <p className="text-sm font-semibold">Crear evaluación</p>
