@@ -145,6 +145,108 @@ const LECTURA_SESION_2 = [
   ]}
 ] as const;
 
+const LECTURA_SESION_3 = [
+  { titulo: "1. Objetivo: modelado preciso en Rhino", bloques: [
+    "En esta sesión aprenderás a introducir posiciones con precisión y a utilizar ayudas de referencia para construir geometría controlada. La meta es dejar de depender únicamente de la colocación visual con el ratón.",
+    "Trabajaremos con coordenadas absolutas y relativas, referencias a objetos (Osnap) y SmartTrack. Estas herramientas permiten definir puntos y relaciones geométricas con mayor exactitud.",
+    "Distribución orientativa de las 2 horas: coordenadas (30 min), Osnap (35 min), SmartTrack (25 min), práctica integrada (20 min) y repaso (10 min)."
+  ]},
+  { titulo: "2. Coordenadas absolutas", bloques: [
+    "Las coordenadas absolutas indican una posición respecto al origen del sistema de coordenadas del plano de trabajo. En el sistema cartesiano se expresan mediante X, Y y Z.",
+    "En Rhino puedes introducir un punto escribiendo sus valores en la línea de comandos, separados por comas. Por ejemplo, 20,10,0 indica X=20, Y=10 y Z=0 en las unidades del archivo.",
+    "Antes de introducir coordenadas, comprueba el plano de construcción y las unidades del documento. Un mismo valor numérico representa una distancia distinta si el archivo está configurado en milímetros o centímetros."
+  ]},
+  { titulo: "3. Coordenadas relativas", bloques: [
+    "Las coordenadas relativas definen una nueva posición tomando como referencia el último punto indicado, en lugar de medir desde el origen global.",
+    "En Rhino se utiliza el prefijo @ para indicar desplazamientos relativos. Por ejemplo, @10,0,0 indica avanzar 10 unidades en X desde el punto anterior, manteniendo Y y Z.",
+    "La diferencia esencial es el punto de referencia: las coordenadas absolutas parten del origen; las relativas parten del último punto. Practica ambas formas con una polilínea sencilla."
+  ]},
+  { titulo: "4. Referencias a objetos (Osnap)", bloques: [
+    "Osnap (Object Snap) permite ajustar el cursor a puntos geométricos exactos de objetos existentes. Evita seleccionar posiciones aproximadas cuando necesitas conectar o alinear geometría.",
+    "Entre las referencias habituales están End (extremo), Mid (punto medio), Cen (centro), Int (intersección), Near (cercano), Perp (perpendicular) y Quad (cuadrante). Activa solo las referencias necesarias para evitar capturas no deseadas.",
+    "Al dibujar una línea, por ejemplo, puedes activar End para comenzar exactamente en el extremo de otra curva. Para ubicar el centro de un círculo utiliza Cen. Observa el indicador de la referencia antes de confirmar el punto."
+  ]},
+  { titulo: "5. SmartTrack y ayudas de modelado", bloques: [
+    "SmartTrack muestra líneas guía temporales y relaciones de alineación a partir de puntos de referencia existentes. Ayuda a localizar posiciones alineadas o relacionadas sin tener que crear geometría auxiliar permanente.",
+    "Utiliza SmartTrack junto con Osnap: Osnap captura puntos exactos; SmartTrack ayuda a proyectar y relacionar posiciones mediante guías temporales. No sustituyen la revisión de las coordenadas ni del plano de trabajo.",
+    "Si las guías aparecen en exceso, reduce las referencias activas y verifica qué punto está utilizando Rhino como origen de la alineación."
+  ]},
+  { titulo: "6. Práctica guiada y comprobación", bloques: [
+    "Crea una polilínea introduciendo primero un punto mediante coordenadas absolutas y continúa con dos desplazamientos relativos. Comprueba las posiciones en las vistas Top y Perspective.",
+    "Dibuja un círculo y utiliza Osnap Cen para iniciar una línea desde su centro. Después activa End para terminarla exactamente en el extremo de otra curva.",
+    "Activa SmartTrack y realiza una alineación temporal respecto a puntos existentes. Guarda el archivo y comprueba que las curvas estén ubicadas en el plano de trabajo esperado.",
+    "Al finalizar debes poder explicar cuándo usar coordenadas absolutas o relativas, reconocer las referencias Osnap principales y distinguir la función de SmartTrack. La siguiente sesión abordará la edición de curvas y las transformaciones."
+  ]}
+] as const;
+
+const LECTURA_SESION_4 = [
+  { titulo: "1. Objetivo: edición y transformación de curvas", bloques: [
+    "En esta sesión aprenderás a modificar curvas existentes y a transformar objetos sin tener que dibujarlos nuevamente. Practicaremos empalmes, chaflanes, desfases, mover, copiar, rotar y escalar.",
+    "El objetivo es controlar la forma y la ubicación de perfiles que pueden servir como base para piezas de joyería. Trabaja sobre copias cuando quieras conservar la geometría original.",
+    "Distribución orientativa de las 2 horas: edición de contornos (35 min), transformaciones (35 min), práctica aplicada (40 min) y repaso (10 min)."
+  ]},
+  { titulo: "2. Empalmes de curvas (Fillet)", bloques: [
+    "El comando Fillet crea una transición redondeada entre dos curvas, utilizando un radio definido. Se emplea para suavizar una esquina o unir dos segmentos mediante un arco.",
+    "Selecciona las curvas que deseas conectar e introduce el radio solicitado. Revisa las opciones de recorte y la solución propuesta antes de confirmar, porque el resultado depende de la posición de selección y de la geometría.",
+    "En perfiles destinados a joyería, el radio debe responder al diseño y a las necesidades de fabricación. No asumas que cualquier radio es adecuado para todos los espesores o detalles."
+  ]},
+  { titulo: "3. Chaflanes y desfasados (Chamfer y Offset)", bloques: [
+    "Chamfer genera una transición recta entre dos curvas o segmentos. A diferencia de Fillet, que crea un redondeo, Chamfer construye un bisel o chaflán.",
+    "Offset crea una curva paralela a una distancia determinada respecto de una curva original. Puede utilizarse para generar contornos interiores o exteriores y conservar una separación definida.",
+    "Comprueba el lado hacia el que se genera el desfase y revisa si las curvas resultantes se cruzan o se separan. En contornos cerrados, verifica que el resultado permanezca limpio y utilizable."
+  ]},
+  { titulo: "4. Transformación: mover y copiar", bloques: [
+    "Move desplaza objetos desde un punto base hasta un punto de destino. Puedes indicar ambos puntos con el ratón, coordenadas o ayudas de precisión vistas en la sesión anterior.",
+    "Copy crea una o varias copias del objeto seleccionado. Mantén claro si estás moviendo el original o generando duplicados para no confundir las piezas del archivo.",
+    "Practica desplazando una curva una distancia definida y creando una copia separada. Comprueba su posición en las vistas Top y Front."
+  ]},
+  { titulo: "5. Transformación: rotar y escalar", bloques: [
+    "Rotate gira objetos alrededor de un centro y un ángulo definidos. Selecciona cuidadosamente el centro de rotación y revisa el sentido del giro.",
+    "Scale modifica el tamaño de los objetos respecto a un punto base. El escalado uniforme conserva las proporciones; los modos no uniformes pueden cambiar las proporciones según los ejes.",
+    "En diseño de joyería, no escales una pieza sin considerar las dimensiones funcionales. Para esta práctica utiliza geometría de prueba y compara las medidas antes y después."
+  ]},
+  { titulo: "6. Práctica: preparar un perfil", bloques: [
+    "Dibuja un contorno sencillo con segmentos y curvas. Crea una copia de seguridad del perfil antes de aplicar operaciones de edición.",
+    "Aplica Fillet a una esquina con un radio definido y Chamfer a otra para comparar una transición redondeada con una recta. Genera un Offset y revisa la separación.",
+    "Utiliza Move y Copy para organizar dos versiones del perfil. Después aplica Rotate y Scale a una copia, manteniendo intacto el original.",
+    "Guarda el archivo con nombres claros y verifica que las curvas no se hayan desplazado accidentalmente. En la siguiente sesión trabajaremos curvas avanzadas, puntos de control y optimización de perfiles."
+  ]}
+] as const;
+
+const LECTURA_SESION_5 = [
+  { titulo: "1. Objetivo: curvas avanzadas aplicadas a joyería", bloques: [
+    "Esta sesión profundiza en la construcción y edición de curvas para desarrollar perfiles más expresivos y adecuados al diseño de joyas. Aprenderás a crear curvas libres y a modificar su forma mediante puntos de control.",
+    "El propósito es obtener perfiles continuos y controlables que puedan utilizarse como guías o contornos en etapas posteriores de modelado. La calidad de una curva influye en las operaciones que se construyan a partir de ella.",
+    "Distribución orientativa de las 2 horas: curvas libres (30 min), puntos de control (35 min), optimización de perfiles (35 min), práctica y repaso (20 min)."
+  ]},
+  { titulo: "2. Curvas libres", bloques: [
+    "Las curvas libres permiten definir recorridos que no están limitados a segmentos rectos, círculos o arcos simples. En Rhino puedes utilizar Curve para dibujar una curva pasando por puntos que marcan su recorrido.",
+    "Coloca los puntos con intención: demasiados puntos pueden dificultar el control de la forma. Empieza con pocos puntos bien distribuidos y revisa la continuidad visual del perfil.",
+    "En joyería, las curvas libres pueden servir para definir siluetas orgánicas, contornos decorativos y líneas guía. Mantén el perfil limpio y evita ondulaciones involuntarias."
+  ]},
+  { titulo: "3. Puntos de control: mostrar y editar", bloques: [
+    "Los puntos de control permiten modificar la forma de determinadas curvas NURBS sin tener que redibujarlas desde cero. En Rhino puedes activar su visualización con PointsOn (F10) y ocultarlos con PointsOff (F11).",
+    "Al mover un punto de control cambia la forma de la curva en su zona de influencia. El efecto depende de la distribución y el peso de los puntos; no todos los puntos afectan la curva de la misma manera.",
+    "Realiza cambios pequeños y observa el resultado en varias vistas. Si la curva pierde la forma deseada, utiliza Undo o vuelve a una copia del perfil original."
+  ]},
+  { titulo: "4. Ajustar la forma y mantener un perfil limpio", bloques: [
+    "Distribuye los puntos de control de forma equilibrada y evita añadir puntos innecesarios. Una curva con una estructura sencilla suele ser más fácil de editar y de reutilizar.",
+    "Comprueba que el perfil no presente picos, ondulaciones o cambios bruscos que no formen parte del diseño. Revisa tanto la silueta general como las transiciones entre tramos.",
+    "Cuando el perfil deba conectarse con otras curvas, verifica los extremos y la continuidad visual. No confundas que dos curvas se toquen con que formen una transición suave."
+  ]},
+  { titulo: "5. Optimización de perfiles para fabricación", bloques: [
+    "Un perfil pensado para fabricación debe ser claro, editable y coherente con la pieza que se desea construir. Evita segmentos duplicados, puntos excesivos y pequeños tramos accidentales.",
+    "Comprueba si la curva está abierta o cerrada según la función que tendrá. Si debe formar un contorno cerrado, verifica que sus extremos coincidan y que no existan interrupciones.",
+    "La optimización en esta etapa es una revisión geométrica del perfil; todavía no sustituye la validación de espesores, volúmenes ni tolerancias de fabricación, que se abordarán en etapas posteriores."
+  ]},
+  { titulo: "6. Práctica: perfil orgánico para una joya", bloques: [
+    "Dibuja una curva libre que represente el contorno lateral de un elemento decorativo para una joya. Utiliza pocos puntos y busca una silueta equilibrada.",
+    "Activa PointsOn (F10), modifica dos o tres puntos de control y compara la forma antes y después. Evita deformaciones bruscas y conserva una copia del perfil inicial.",
+    "Revisa el perfil en Top y Perspective, comprueba sus extremos y decide si debe permanecer abierto o cerrarse según el ejercicio. Guarda el archivo con una versión inicial y otra optimizada.",
+    "Al terminar debes poder crear una curva libre, editar sus puntos de control y explicar qué hace que un perfil sea más sencillo de reutilizar. La siguiente sesión iniciará el modelado de sólidos."
+  ]}
+] as const;
+
 const PREGUNTAS_EXAMEN_SESION_1 = [
   { enunciado:"¿Qué significa CAD en el diseño de joyería?", opciones:["Diseño asistido por computadora","Cálculo automático de diamantes","Control de acabado digital","Creación artística decorativa"], correcta:"Diseño asistido por computadora" },
   { enunciado:"¿Para qué se utiliza principalmente Rhinoceros 7?", opciones:["Editar fotografías","Modelar objetos tridimensionales","Calcular el precio del oro","Controlar una impresora directamente"], correcta:"Modelar objetos tridimensionales" },
@@ -1005,7 +1107,7 @@ function AulaFormacionPage() {
       if (error) throw error;
       const guardadas = Array.isArray(data?.secciones) ? data.secciones : null;
       // Sesión 1 adopta el contenido revisado y aprobado; las demás sesiones conservan su contenido guardado.
-      const seccionesIniciales = s.numero === 1 ? LECTURA_SESION_1 : s.numero === 2 ? LECTURA_SESION_2 : null;
+      const seccionesIniciales = s.numero === 1 ? LECTURA_SESION_1 : s.numero === 2 ? LECTURA_SESION_2 : s.numero === 3 ? LECTURA_SESION_3 : s.numero === 4 ? LECTURA_SESION_4 : s.numero === 5 ? LECTURA_SESION_5 : null;
       const seccionesEditor = seccionesIniciales
         ? seccionesIniciales.map(x => ({ titulo: x.titulo, bloques: [...x.bloques] }))
         : guardadas ?? [];
