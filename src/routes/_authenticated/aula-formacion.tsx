@@ -286,7 +286,9 @@ function AulaFormacionPage() {
   }, [examenActivoAlumno?.id, examenActivoAlumno?.vence_en]);
 
   useEffect(() => {
-    if (segundosRestantesExamen === 0 && examenActivoAlumno && !enviandoExamen) void enviarExamenAlumno();
+    if (segundosRestantesExamen !== 0 || !examenActivoAlumno || enviandoExamen) return;
+    const envio = window.setTimeout(() => void enviarExamenAlumno(), 1500);
+    return () => window.clearTimeout(envio);
   }, [segundosRestantesExamen, examenActivoAlumno, enviandoExamen]);
 
   useEffect(() => {
