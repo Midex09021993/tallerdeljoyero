@@ -942,8 +942,9 @@ function AulaFormacionPage() {
                     {!retoInterfazFinalizado ? <>
                       <div className="my-4 h-1.5 overflow-hidden rounded-full bg-muted"><div className="h-full bg-gold transition-all" style={{ width: (((preguntaInterfaz+1)/RETO_INTERFAZ.length)*100) + "%" }} /></div>
                       <p className="mb-4 text-sm font-medium leading-6">{RETO_INTERFAZ[preguntaInterfaz].pregunta}</p>
+                      {componentesExplorados.length!==10 && <p className="mb-3 rounded-lg bg-muted p-3 text-xs text-muted-foreground">Explora primero los diez componentes para desbloquear las preguntas.</p>}
                       <div className="space-y-2">
-                        {RETO_INTERFAZ[preguntaInterfaz].opciones.map((opcion,indice) => <button key={opcion} type="button" disabled={respuestaInterfaz!==null} onClick={() => setRespuestaInterfaz(indice)} className={`w-full rounded-xl border px-3 py-3 text-left text-sm transition ${respuestaInterfaz===indice ? "border-gold bg-gold/10 font-semibold" : "border-border bg-card hover:border-gold/50"} disabled:cursor-default`}>{opcion}</button>)}
+                        {RETO_INTERFAZ[preguntaInterfaz].opciones.map((opcion,indice) => <button key={opcion} type="button" disabled={componentesExplorados.length!==10 || respuestaInterfaz!==null} onClick={() => setRespuestaInterfaz(indice)} className={`w-full rounded-xl border px-3 py-3 text-left text-sm transition ${respuestaInterfaz===indice ? "border-gold bg-gold/10 font-semibold" : "border-border bg-card hover:border-gold/50"} disabled:cursor-not-allowed disabled:opacity-50`}>{opcion}</button>)}
                       </div>
                       {respuestaInterfaz!==null && <div className={`mt-4 rounded-xl p-3 text-sm ${respuestaInterfaz===RETO_INTERFAZ[preguntaInterfaz].correcta ? "bg-emerald-500/10 text-emerald-800" : "bg-amber-500/10 text-amber-800"}`}>
                         <p className="font-semibold">{respuestaInterfaz===RETO_INTERFAZ[preguntaInterfaz].correcta ? "¡Respuesta correcta!" : "Revisa esta respuesta."}</p>
@@ -1229,8 +1230,9 @@ function AulaFormacionPage() {
                     {!retoInterfazFinalizado ? <>
                       <div className="my-4 h-1.5 overflow-hidden rounded-full bg-muted"><div className="h-full bg-gold transition-all" style={{ width: (((preguntaInterfaz+1)/RETO_INTERFAZ.length)*100) + "%" }} /></div>
                       <p className="mb-4 text-sm font-medium leading-6">{RETO_INTERFAZ[preguntaInterfaz].pregunta}</p>
+                      {componentesExplorados.length!==10 && <p className="mb-3 rounded-lg bg-muted p-3 text-xs text-muted-foreground">Explora primero los diez componentes para desbloquear las preguntas.</p>}
                       <div className="space-y-2">
-                        {RETO_INTERFAZ[preguntaInterfaz].opciones.map((opcion,indice) => <button key={opcion} type="button" disabled={respuestaInterfaz!==null} onClick={() => setRespuestaInterfaz(indice)} className={`w-full rounded-xl border px-3 py-3 text-left text-sm transition ${respuestaInterfaz===indice ? "border-gold bg-gold/10 font-semibold" : "border-border bg-card hover:border-gold/50"} disabled:cursor-default`}>{opcion}</button>)}
+                        {RETO_INTERFAZ[preguntaInterfaz].opciones.map((opcion,indice) => <button key={opcion} type="button" disabled={componentesExplorados.length!==10 || respuestaInterfaz!==null} onClick={() => setRespuestaInterfaz(indice)} className={`w-full rounded-xl border px-3 py-3 text-left text-sm transition ${respuestaInterfaz===indice ? "border-gold bg-gold/10 font-semibold" : "border-border bg-card hover:border-gold/50"} disabled:cursor-not-allowed disabled:opacity-50`}>{opcion}</button>)}
                       </div>
                       {respuestaInterfaz!==null && <div className={`mt-4 rounded-xl p-3 text-sm ${respuestaInterfaz===RETO_INTERFAZ[preguntaInterfaz].correcta ? "bg-emerald-500/10 text-emerald-800" : "bg-amber-500/10 text-amber-800"}`}>
                         <p className="font-semibold">{respuestaInterfaz===RETO_INTERFAZ[preguntaInterfaz].correcta ? "¡Respuesta correcta!" : "Revisa esta respuesta."}</p>
