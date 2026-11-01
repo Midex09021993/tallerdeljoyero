@@ -927,22 +927,22 @@ function AulaFormacionPage() {
               </div>
             </div>;
           })()}
-          {lecturaAbierta && lecturaModoVistaPrevia && <div className="fixed inset-0 left-0 z-[60] overflow-y-auto bg-black/60 p-3 sm:p-6 lg:left-64 xl:left-72" role="dialog" aria-modal="true" aria-label="Lectura de la sesión · vista previa">
-            <div className="mx-auto my-4 flex min-h-[82vh] max-w-5xl flex-col overflow-hidden rounded-3xl border border-border bg-background shadow-2xl">
-              <header className="border-b border-border bg-gradient-to-r from-[#fbf8f0] to-background p-5 sm:p-7">
+          {lecturaAbierta && lecturaModoVistaPrevia && <div className="fixed inset-0 left-0 z-[60] flex items-center justify-center overflow-hidden bg-black/60 p-2 sm:p-3 lg:left-64 xl:left-72" role="dialog" aria-modal="true" aria-label="Lectura de la sesión · vista previa">
+            <div className="mx-auto flex h-[calc(100dvh-1rem)] max-h-[900px] min-h-0 w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl">
+              <header className="shrink-0 border-b border-border bg-gradient-to-r from-[#fbf8f0] to-background px-4 py-3 sm:px-6 sm:py-4">
                 <div className="flex items-start justify-between gap-3"><div><p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-gold-deep">FADILAB · Aula de formación · Lectura guiada</p><h2 className="mt-1 text-lg font-semibold">{lecturaAbierta.numero}. {lecturaAbierta.titulo}</h2><p className="mt-1 text-xs text-muted-foreground">Vista previa del alumno · Modo de simulación, sin guardar actividad académica.</p></div><button type="button" onClick={() => { setLecturaAbierta(null); setLecturaModoVistaPrevia(false); }} className="rounded-lg border border-border px-3 py-2 text-xs">Cerrar</button></div>
                 <div className="mt-4 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-gold transition-all" style={{width: (seccionesLecturaActivas.length ? ((paginaLectura+1)/seccionesLecturaActivas.length)*100 : 0)+"%"}}/></div>
                 <p className="mt-2 text-xs text-muted-foreground">Apartado {paginaLectura+1} de {seccionesLecturaActivas.length}</p>
               </header>
-              <nav aria-label="Índice de la lectura" className="border-b border-border bg-background px-5 py-4 sm:px-8">
+              <nav aria-label="Índice de la lectura" className="shrink-0 border-b border-border bg-background px-4 py-3 sm:px-6 sm:py-3">
                 <div className="mb-2 flex items-center justify-between gap-3"><p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Índice de contenidos</p><p className="text-[11px] text-muted-foreground">Selecciona un apartado para navegar</p></div>
                 <div className="flex gap-2 overflow-x-auto pb-1">{seccionesLecturaActivas.map((seccion, indice) => <button key={indice} type="button" onClick={() => setPaginaLectura(indice)} aria-current={paginaLectura===indice ? "step" : undefined} className={`flex min-w-10 shrink-0 items-center justify-center rounded-lg border px-3 py-2 text-xs font-semibold transition ${paginaLectura===indice ? "border-gold bg-gold text-black shadow-sm" : "border-border bg-card text-muted-foreground hover:border-gold/50 hover:text-foreground"}`} title={seccion.titulo}>{String(indice+1).padStart(2,"0")}</button>)}</div>
                 <p className="mt-2 truncate text-xs font-medium text-foreground">{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</p>
               </nav>
-              <main className="flex-1 space-y-6 bg-card/40 px-6 py-8 sm:px-12 sm:py-10">
-                <h3 className="font-display text-2xl leading-tight sm:text-3xl">{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</h3>
+              <main className="min-h-0 flex-1 overflow-y-auto bg-card/40 px-5 py-5 sm:px-8 sm:py-6 lg:px-10">
+                <h3 className="mb-5 max-w-4xl font-display text-2xl leading-tight sm:text-3xl">{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</h3>
                 {(seccionesLecturaActivas[paginaLectura]?.bloques ?? []).map((bloque,idx) => <div key={idx}>
-                  <p className="mb-5 whitespace-pre-line text-[15px] leading-8 text-foreground/90">{bloque}</p>
+                  <p className="mb-4 max-w-4xl whitespace-pre-line text-[15px] leading-7 text-foreground/90">{bloque}</p>
 
                 </div>)}
                 {paginaLectura === 2 && !interfazInteractivaAbierta && <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5 sm:p-6">
@@ -952,24 +952,24 @@ function AulaFormacionPage() {
                   <button type="button" disabled={!imagenInterfazUrl} onClick={() => setInterfazInteractivaAbierta(true)} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gold px-5 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50">Explorar interfaz interactiva <ChevronRight className="size-4"/></button>
                   {!imagenInterfazUrl && <p className="mt-2 text-xs text-muted-foreground">{imagenInterfazError || "Buscando la imagen en la Biblioteca del curso…"}</p>}
                 </section>}
-                {paginaLectura === 2 && interfazInteractivaAbierta && <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/75 p-2 sm:p-3" role="dialog" aria-modal="true" aria-label="Exploración interactiva de MatrixGold 3.1">
-                  <div className="flex h-[92vh] max-h-[900px] w-[96vw] max-w-[1500px] flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl">
+                {paginaLectura === 2 && interfazInteractivaAbierta && <div className="fixed inset-0 z-[90] flex items-center justify-center overflow-hidden bg-black/75 p-2 sm:p-3" role="dialog" aria-modal="true" aria-label="Exploración interactiva de MatrixGold 3.1">
+                  <div className="flex h-[calc(100dvh-1rem)] max-h-[900px] w-[96vw] max-w-[1500px] min-h-0 flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl">
                     <header className="flex items-center justify-between gap-3 border-b border-border bg-gradient-to-r from-[#fbf8f0] to-background px-4 py-3 sm:px-6">
                       <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">FADILAB · Recorrido de aprendizaje</p><h3 className="text-base font-semibold sm:text-lg">Explora la interfaz de MatrixGold 3.1</h3></div>
                       <button type="button" onClick={() => setInterfazInteractivaAbierta(false)} className="shrink-0 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:border-gold">Cerrar ×</button>
                     </header>
-                    <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-y-auto p-3 sm:p-4 lg:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.85fr)] lg:overflow-hidden">
+                    <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-y-auto p-3 sm:gap-4 sm:p-4 lg:grid-cols-[minmax(0,1.45fr)_minmax(300px,0.85fr)] lg:overflow-hidden">
                       <div className="min-w-0 lg:flex lg:flex-col lg:justify-center">
                       <div className="mb-3 flex flex-wrap items-center justify-between gap-2"><p className="text-sm text-muted-foreground">Selecciona cada marcador para aprender sobre ese componente.</p><span className="rounded-full bg-gold/15 px-3 py-1 text-xs font-semibold">{componentesExplorados.length} de 10 explorados</span></div>
                       {imagenInterfazUrl && <figure className="my-3 overflow-hidden rounded-xl border border-border bg-[#171719] p-1 lg:my-0">
                         <div className="relative">
-                          <img src={imagenInterfazUrl} alt="Captura de la interfaz de MatrixGold 3.1 con marcadores interactivos" className="block h-auto max-h-[58vh] w-full rounded-lg object-contain" loading="lazy" />
+                          <img src={imagenInterfazUrl} alt="Captura de la interfaz de MatrixGold 3.1 con marcadores interactivos" className="block h-auto max-h-[min(56vh,460px)] w-full rounded-lg object-contain" loading="lazy" />
                           {COMPONENTES_INTERFAZ.map((item, indice) => <button key={indice} type="button" onClick={() => { setComponenteActivo(indice); setComponentesExplorados(prev => prev.includes(indice) ? prev : [...prev, indice]); }} aria-label={`Explorar componente ${indice+1}: ${item[0]}`} aria-pressed={componenteActivo===indice} className={`absolute flex size-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white text-xs font-bold shadow-lg transition sm:size-9 sm:text-sm ${componenteActivo===indice ? "z-20 scale-125 bg-[#c4a15a] text-black ring-4 ring-[#c4a15a]/40" : componentesExplorados.includes(indice) ? "z-10 bg-emerald-600 text-white" : "z-10 bg-blue-600 text-white hover:scale-110 hover:bg-[#c4a15a] hover:text-black"}`} style={{left:COORDENADAS_INTERFAZ[indice].x,top:COORDENADAS_INTERFAZ[indice].y}}>{indice+1}</button>)}
                         </div>
                         <figcaption className="mt-2 text-center text-xs leading-5 text-white/70">Selecciona cualquiera de los diez marcadores para conocer cada componente · FADILAB · MatrixGold 3.1</figcaption>
                       </figure>}
                       </div>
-                      <section className="min-w-0 space-y-4 lg:row-start-1 lg:col-start-2 lg:min-h-0 lg:overflow-y-auto lg:pr-1">
+                      <section className="min-w-0 space-y-3 lg:row-start-1 lg:col-start-2 lg:min-h-0 lg:overflow-y-auto lg:pr-1">
                   <div className="rounded-2xl border border-border bg-background p-4 sm:p-5">
                     <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                       <div><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Componente seleccionado</p><h4 className="mt-1 text-lg font-semibold">Punto {componenteActivo+1} · {COMPONENTES_INTERFAZ[componenteActivo][0]}</h4></div>
@@ -1003,7 +1003,7 @@ function AulaFormacionPage() {
                 </div>}
                 {paginaLectura === seccionesLecturaActivas.length-1 && <div className="rounded-xl border border-gold/30 bg-gold/5 p-4"><p className="text-sm font-semibold">Has llegado al final de la lectura</p><p className="mt-1 text-sm text-muted-foreground">En el aula real, el alumno podrá finalizar y marcar la sesión como completada.</p></div>}
               </main>
-              <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-border bg-background p-4 sm:p-5">
+              <footer className="shrink-0 flex flex-wrap items-center justify-between gap-3 border-t border-border bg-background px-4 py-3 sm:px-6 sm:py-4">
                 <button type="button" disabled={paginaLectura===0} onClick={() => setPaginaLectura(p => Math.max(0,p-1))} className="inline-flex items-center gap-1 rounded-lg border border-border px-4 py-2.5 text-sm disabled:opacity-40"><ChevronLeft className="size-4"/> Anterior</button>
                 {paginaLectura < seccionesLecturaActivas.length-1 ? <button type="button" onClick={() => setPaginaLectura(p => Math.min(seccionesLecturaActivas.length-1,p+1))} className="inline-flex items-center gap-1 rounded-lg bg-gold px-4 py-2.5 text-sm font-semibold text-black">Siguiente <ChevronRight className="size-4"/></button> : <button type="button" onClick={() => { setLecturasSimuladas(prev => new Set(prev).add(lecturaAbierta.id)); setLecturaAbierta(null); setLecturaModoVistaPrevia(false); }} className="inline-flex items-center gap-2 rounded-lg bg-gold px-4 py-2.5 text-sm font-semibold text-black"><CheckCircle2 className="size-4"/> Simular lectura completada</button>}
               </footer>
@@ -1216,24 +1216,24 @@ function AulaFormacionPage() {
       ) : (
         <>
           <section className="rounded-2xl border border-gold/20 bg-card p-5"><p className="text-sm font-semibold">Bienvenido al aula</p><p className="mt-1 text-xs text-muted-foreground">Aquí aparecen únicamente los cursos en los que FADILAB te ha inscrito. Los archivos permanecen privados.</p></section>
-          {lecturaAbierta && <div className={`fixed inset-0 z-[60] overflow-y-auto bg-black/60 p-3 sm:p-6 ${lecturaModoVistaPrevia ? "left-0 lg:left-64 xl:left-72" : ""}`} role="dialog" aria-modal="true" aria-label="Lectura de la sesión">
-            <div className="mx-auto my-4 flex min-h-[82vh] max-w-5xl flex-col overflow-hidden rounded-3xl border border-border bg-background shadow-2xl">
-              <header className="border-b border-border bg-gradient-to-r from-[#fbf8f0] to-background p-5 sm:p-7">
+          {lecturaAbierta && <div className={`fixed inset-0 z-[60] flex items-center justify-center overflow-hidden bg-black/60 p-2 sm:p-3 ${lecturaModoVistaPrevia ? "left-0 lg:left-64 xl:left-72" : ""}`} role="dialog" aria-modal="true" aria-label="Lectura de la sesión">
+            <div className="mx-auto flex h-[calc(100dvh-1rem)] max-h-[900px] min-h-0 w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl">
+              <header className="shrink-0 border-b border-border bg-gradient-to-r from-[#fbf8f0] to-background px-4 py-3 sm:px-6 sm:py-4">
                 <div className="flex items-start justify-between gap-3"><div><p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-gold-deep">FADILAB · Aula de formación · Lectura guiada</p><h2 className="mt-1 text-lg font-semibold">{lecturaAbierta.numero}. {lecturaAbierta.titulo}</h2><p className="mt-1 text-xs text-muted-foreground">{lecturaModoVistaPrevia ? "Modo de prueba docente · el avance no se guarda en la cuenta de ningún alumno." : "Al abrir esta lectura se registra como leída. Avanza por los apartados y márcala como completada al finalizar."}</p></div><button type="button" onClick={() => { setLecturaAbierta(null); setLecturaModoVistaPrevia(false); }} className="rounded-lg border border-border px-3 py-2 text-xs">Cerrar</button></div>
                 <div className="mt-4 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-gold transition-all" style={{width: (((paginaLectura+1)/seccionesLecturaActivas.length)*100)+"%"}}/></div>
                 <p className="mt-2 text-xs text-muted-foreground">Apartado {paginaLectura+1} de {seccionesLecturaActivas.length}</p>
               </header>
-              <nav aria-label="Índice de la lectura" className="border-b border-border bg-background px-5 py-4 sm:px-8">
+              <nav aria-label="Índice de la lectura" className="shrink-0 border-b border-border bg-background px-4 py-3 sm:px-6 sm:py-3">
                 <div className="mb-2 flex items-center justify-between gap-3"><p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Índice de contenidos</p><p className="text-[11px] text-muted-foreground">Selecciona un apartado para navegar</p></div>
                 <div className="flex gap-2 overflow-x-auto pb-1">
                   {seccionesLecturaActivas.map((seccion, indice) => <button key={indice} type="button" onClick={() => setPaginaLectura(indice)} aria-current={paginaLectura===indice ? "step" : undefined} className={`flex min-w-10 shrink-0 items-center justify-center rounded-lg border px-3 py-2 text-xs font-semibold transition ${paginaLectura===indice ? "border-gold bg-gold text-black shadow-sm" : "border-border bg-card text-muted-foreground hover:border-gold/50 hover:text-foreground"}`} title={seccion.titulo}>{String(indice+1).padStart(2,"0")}</button>)}
                 </div>
                 <p className="mt-2 truncate text-xs font-medium text-foreground">{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</p>
               </nav>
-              <main className="flex-1 space-y-6 bg-card/40 px-6 py-8 sm:px-12 sm:py-10">
-                <h3 className="font-display text-2xl leading-tight sm:text-3xl">{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</h3>
+              <main className="min-h-0 flex-1 overflow-y-auto bg-card/40 px-5 py-5 sm:px-8 sm:py-6 lg:px-10">
+                <h3 className="mb-5 max-w-4xl font-display text-2xl leading-tight sm:text-3xl">{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</h3>
                 {(seccionesLecturaActivas[paginaLectura]?.bloques ?? []).map((bloque,idx) => <div key={idx}>
-                  <p className="mb-5 whitespace-pre-line text-[15px] leading-8 text-foreground/90">{bloque}</p>
+                  <p className="mb-4 max-w-4xl whitespace-pre-line text-[15px] leading-7 text-foreground/90">{bloque}</p>
 
                 </div>)}
                 {paginaLectura === 2 && !interfazInteractivaAbierta && <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5 sm:p-6">
@@ -1243,24 +1243,24 @@ function AulaFormacionPage() {
                   <button type="button" disabled={!imagenInterfazUrl} onClick={() => setInterfazInteractivaAbierta(true)} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gold px-5 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50">Explorar interfaz interactiva <ChevronRight className="size-4"/></button>
                   {!imagenInterfazUrl && <p className="mt-2 text-xs text-muted-foreground">{imagenInterfazError || "Buscando la imagen en la Biblioteca del curso…"}</p>}
                 </section>}
-                {paginaLectura === 2 && interfazInteractivaAbierta && <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/75 p-2 sm:p-3" role="dialog" aria-modal="true" aria-label="Exploración interactiva de MatrixGold 3.1">
-                  <div className="flex h-[92vh] max-h-[900px] w-[96vw] max-w-[1500px] flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl">
+                {paginaLectura === 2 && interfazInteractivaAbierta && <div className="fixed inset-0 z-[90] flex items-center justify-center overflow-hidden bg-black/75 p-2 sm:p-3" role="dialog" aria-modal="true" aria-label="Exploración interactiva de MatrixGold 3.1">
+                  <div className="flex h-[calc(100dvh-1rem)] max-h-[900px] w-[96vw] max-w-[1500px] min-h-0 flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl">
                     <header className="flex items-center justify-between gap-3 border-b border-border bg-gradient-to-r from-[#fbf8f0] to-background px-4 py-3 sm:px-6">
                       <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">FADILAB · Recorrido de aprendizaje</p><h3 className="text-base font-semibold sm:text-lg">Explora la interfaz de MatrixGold 3.1</h3></div>
                       <button type="button" onClick={() => setInterfazInteractivaAbierta(false)} className="shrink-0 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:border-gold">Cerrar ×</button>
                     </header>
-                    <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-y-auto p-3 sm:p-4 lg:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.85fr)] lg:overflow-hidden">
+                    <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-y-auto p-3 sm:gap-4 sm:p-4 lg:grid-cols-[minmax(0,1.45fr)_minmax(300px,0.85fr)] lg:overflow-hidden">
                       <div className="min-w-0 lg:flex lg:flex-col lg:justify-center">
                       <div className="mb-3 flex flex-wrap items-center justify-between gap-2"><p className="text-sm text-muted-foreground">Selecciona cada marcador para aprender sobre ese componente.</p><span className="rounded-full bg-gold/15 px-3 py-1 text-xs font-semibold">{componentesExplorados.length} de 10 explorados</span></div>
                       {imagenInterfazUrl && <figure className="my-3 overflow-hidden rounded-xl border border-border bg-[#171719] p-1 lg:my-0">
                         <div className="relative">
-                          <img src={imagenInterfazUrl} alt="Captura de la interfaz de MatrixGold 3.1 con marcadores interactivos" className="block h-auto max-h-[58vh] w-full rounded-lg object-contain" loading="lazy" />
+                          <img src={imagenInterfazUrl} alt="Captura de la interfaz de MatrixGold 3.1 con marcadores interactivos" className="block h-auto max-h-[min(56vh,460px)] w-full rounded-lg object-contain" loading="lazy" />
                           {COMPONENTES_INTERFAZ.map((item, indice) => <button key={indice} type="button" onClick={() => { setComponenteActivo(indice); setComponentesExplorados(prev => prev.includes(indice) ? prev : [...prev, indice]); }} aria-label={`Explorar componente ${indice+1}: ${item[0]}`} aria-pressed={componenteActivo===indice} className={`absolute flex size-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white text-xs font-bold shadow-lg transition sm:size-9 sm:text-sm ${componenteActivo===indice ? "z-20 scale-125 bg-[#c4a15a] text-black ring-4 ring-[#c4a15a]/40" : componentesExplorados.includes(indice) ? "z-10 bg-emerald-600 text-white" : "z-10 bg-blue-600 text-white hover:scale-110 hover:bg-[#c4a15a] hover:text-black"}`} style={{left:COORDENADAS_INTERFAZ[indice].x,top:COORDENADAS_INTERFAZ[indice].y}}>{indice+1}</button>)}
                         </div>
                         <figcaption className="mt-2 text-center text-xs leading-5 text-white/70">Selecciona cualquiera de los diez marcadores para conocer cada componente · FADILAB · MatrixGold 3.1</figcaption>
                       </figure>}
                       </div>
-                      <section className="min-w-0 space-y-4 lg:row-start-1 lg:col-start-2 lg:min-h-0 lg:overflow-y-auto lg:pr-1">
+                      <section className="min-w-0 space-y-3 lg:row-start-1 lg:col-start-2 lg:min-h-0 lg:overflow-y-auto lg:pr-1">
                   <div className="rounded-2xl border border-border bg-background p-4 sm:p-5">
                     <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                       <div><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Componente seleccionado</p><h4 className="mt-1 text-lg font-semibold">Punto {componenteActivo+1} · {COMPONENTES_INTERFAZ[componenteActivo][0]}</h4></div>
@@ -1294,7 +1294,7 @@ function AulaFormacionPage() {
                 </div>}
                 {paginaLectura === seccionesLecturaActivas.length-1 && <div className="rounded-xl border border-gold/30 bg-gold/5 p-4"><p className="text-sm font-semibold">Has llegado al final de la lectura</p><p className="mt-1 text-sm text-muted-foreground">{lecturaModoVistaPrevia ? "En la experiencia del alumno, aquí podrá finalizar y marcar la sesión como completada." : "La lectura está registrada como leída. Puedes marcar la sesión como completada."}</p></div>}
               </main>
-              <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-border p-4 sm:p-5">
+              <footer className="shrink-0 flex flex-wrap items-center justify-between gap-3 border-t border-border bg-background px-4 py-3 sm:px-6 sm:py-4">
                 <button type="button" disabled={paginaLectura===0} onClick={() => setPaginaLectura(p => Math.max(0,p-1))} className="inline-flex items-center gap-1 rounded-lg border border-border px-4 py-2.5 text-sm disabled:opacity-40"><ChevronLeft className="size-4"/> Anterior</button>
                 {paginaLectura < seccionesLecturaActivas.length-1 ? <button type="button" onClick={() => setPaginaLectura(p => Math.min(Math.max(0,seccionesLecturaActivas.length-1),p+1))} className="inline-flex items-center gap-1 rounded-lg bg-gold px-4 py-2.5 text-sm font-semibold text-black">Siguiente <ChevronRight className="size-4"/></button> : lecturaModoVistaPrevia ? <button type="button" onClick={() => { setLecturasSimuladas(prev => new Set(prev).add(lecturaAbierta.id)); setLecturaAbierta(null); setLecturaModoVistaPrevia(false); }} className="inline-flex items-center gap-2 rounded-lg bg-gold px-4 py-2.5 text-sm font-semibold text-black"><CheckCircle2 className="size-4"/> Simular lectura completada</button> : sesionesCompletadas.has(lecturaAbierta.id) ? <span className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-700"><CheckCircle2 className="size-5"/> Sesión completada</span> : <button type="button" disabled={ocupado} onClick={() => void marcarLecturaCompletada(lecturaAbierta)} className="inline-flex items-center gap-2 rounded-lg bg-gold px-4 py-2.5 text-sm font-semibold text-black disabled:opacity-50"><CheckCircle2 className="size-4"/> Marcar como completada</button>}
               </footer>
