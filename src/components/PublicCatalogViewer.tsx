@@ -391,7 +391,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         // This is the same bounding-sphere camera-fit formula used by the GLB viewer
         // before the 3DM sizing adjustment, so GLB presentation remains unchanged.
         const distance = radius / Math.sin(THREE.MathUtils.degToRad(camera.fov / 2)) * 1.2;
-        camera.position.copy(new THREE.Vector3(1, .62, 1).normalize().multiplyScalar(distance));
+        camera.position.copy(new THREE.Vector3(0, 0, distance));
         camera.near = Math.max(radius / 100, .001);
         camera.far = Math.max(distance + radius * 20, 100);
         camera.lookAt(0, 0, 0);
