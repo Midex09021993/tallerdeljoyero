@@ -2020,58 +2020,53 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           window.setTimeout(()=>URL.revokeObjectURL(url),60_000);
           return {meshCount,triangleCount};
         },
-        exportRhinoNurbs3dm:async()=>{
-          if(!modelo) throw new Error("Carga un modelo antes de exportar superficies NURBS.");
+        exportRhinoNurbs3dm:async(options:{quality?:"high"|"balanced"|"light"}={})=>{
+          if(!modelo)throw new Error("Carga un modelo antes de exportar superficies NURBS.");
           const loadRemoteModule=(url:string)=>import(/* @vite-ignore */ url);
-          const rhinoModule:any=await loadRemoteModule("https://cdn.jsdelivr.net/npm/rhino3dm@8.32.1/rhino3dm.module.min.js");
-          const rhinoFactory=rhinoModule.default??rhinoModule;
+          const [{SimplifyModifier},{mergeVertices},rhinoModule]=await Promise.all([import("three/addons/modifiers/SimplifyModifier.js"),import("three/addons/utils/BufferGeometryUtils.js"),loadRemoteModule("https://cdn.jsdelivr.net/npm/rhino3dm@8.32.1/rhino3dm.module.min.js")]);
+          const rhinoFactory:any=(rhinoModule as any).default??rhinoModule;
           const rhino:any=await rhinoFactory({locateFile:(file:string)=>"https://cdn.jsdelivr.net/npm/rhino3dm@8.32.1/"+file});
           modelo.updateMatrixWorld(true);
-          const isWorldVisible=(object:any)=>{for(let current=object;current;current=current.parent)if(!current.visible)return false;return true;};
-          const visibleMeshes:any[]=[];
-          let totalTriangles=0;
-          modelo.traverse((object:any)=>{
-            if(!object.isMesh||!object.geometry||!isWorldVisible(object))return;
-            const positions=object.geometry.getAttribute("position");
-            if(!positions||positions.count<3)return;
-            const sourceIndex=object.geometry.index;
-            const faceCount=Math.floor((sourceIndex?sourceIndex.count:positions.count)/3);
-            if(faceCount<1)return;
-            visibleMeshes.push({object,positions,sourceIndex,faceCount});
-            totalTriangles+=faceCount;
-          });
-          if(!visibleMeshes.length) throw new Error("No se encontraron mallas visibles para convertir a NURBS.");
-          const MAX_NURBS_FACES=25000;
-          if(totalTriangles>MAX_NURBS_FACES) throw new Error("La conversión NURBS produciría "+totalTriangles.toLocaleString("es-ES")+" superficies, superando el límite seguro de "+MAX_NURBS_FACES.toLocaleString("es-ES")+". Reduce la densidad de la malla y vuelve a intentarlo.");
-          const document3dm=new rhino.File3dm();
-          document3dm.applicationName="AURUM Render";
-          document3dm.applicationDetails="Conversión MeshToNURB: una superficie NURBS planar por polígono de la malla GLB. No reconstruye superficies suaves.";
-          let brepCount=0,surfaceCount=0;
+          const visible=(object:any)=>{for(let node=object;node;node=node.parent)if(!node.visible)return false;return true;};
+          const meshes:any[]=[];let sourceTriangles=0;
+          modelo.traverse((object:any)=>{if(!object.isMesh||!object.geometry||!visible(object))return;const p=object.geometry.getAttribute("position");if(!p||p.count<3)return;const count=Math.floor((object.geometry.index?.count??p.count)/3);if(count<1)return;meshes.push({object,geometry:object.geometry,faceCount:count});sourceTriangles+=count;});
+          if(!meshes.length)throw new Error("No se encontraron mallas visibles para convertir a NURBS.");
+          const quality=options.quality==="light"?"light":options.quality==="high"?"high":"balanced";
+          const MAX_FACES=25000,TARGET=quality==="light"?7000:quality==="high"?20000:14000;
+          const modifier=new SimplifyModifier(),prepared:any[]=[];let reducedTriangles=0;
           try{
-            for(const entry of visibleMeshes){
-              const {object,positions,sourceIndex,faceCount}=entry;
-              const mesh3dm=new rhino.Mesh(),vertices=mesh3dm.vertices(),worldVertex=new THREE.Vector3();
-              for(let i=0;i<positions.count;i++){worldVertex.fromBufferAttribute(positions,i).applyMatrix4(object.matrixWorld);vertices.add(worldVertex.x,worldVertex.y,worldVertex.z);}
-              const faces=mesh3dm.faces();
-              for(let face=0;face<faceCount;face++){const offset=face*3;faces.addTriFace(sourceIndex?sourceIndex.getX(offset):offset,sourceIndex?sourceIndex.getX(offset+1):offset+1,sourceIndex?sourceIndex.getX(offset+2):offset+2);}
-              const nurbsBrep=rhino.Brep.createFromMesh(mesh3dm,true);
-              if(!nurbsBrep||!nurbsBrep.isValid) throw new Error("Rhino no pudo construir superficies NURBS válidas para la malla "+(object.name||brepCount+1)+".");
-              const attributes=new rhino.ObjectAttributes();
-              attributes.name=(typeof object.name==="string"&&object.name.trim())?object.name.trim()+"_NURBS":"AURUM_NURBS_"+(brepCount+1);
-              document3dm.objects().add(nurbsBrep,attributes);
-              brepCount++;
-              surfaceCount+=faceCount;
-              nurbsBrep.destroy?.();
-              mesh3dm.destroy?.();
+            for(const entry of meshes){
+              const {object,geometry,faceCount}=entry;let working=geometry.clone();
+              if(!working.index)working=mergeVertices(working);
+              if(!working.getAttribute("normal"))working.computeVertexNormals();
+              const targetFaces=Math.min(faceCount,Math.max(1,Math.floor(TARGET*faceCount/sourceTriangles)));
+              const targetVertices=Math.max(4,Math.min(working.getAttribute("position").count,Math.floor(targetFaces*1.8)));
+              const removeCount=Math.max(0,working.getAttribute("position").count-targetVertices);
+              let simplified=working;if(removeCount>0)simplified=modifier.modify(working,removeCount);
+              if(simplified!==working)working.dispose();
+              const after=Math.floor((simplified.index?.count??simplified.getAttribute("position").count)/3);
+              if(after<1){simplified.dispose();throw new Error("La simplificación produjo una malla vacía: "+(object.name||"sin nombre")+".");}
+              prepared.push({object,geometry:simplified,faceCount:after});reducedTriangles+=after;
             }
-            const bytes=document3dm.toByteArray();
-            const blob=new Blob([bytes],{type:"application/octet-stream"}),url=URL.createObjectURL(blob),link=document.createElement("a");
-            link.href=url;link.download=(nombreProyecto||"aurum-modelo").trim().replace(/[^a-z0-9-_]+/gi,"-")+"_NURBS.3dm";link.click();
-            window.setTimeout(()=>URL.revokeObjectURL(url),60_000);
-            return {brepCount,surfaceCount,triangleCount:totalTriangles};
-          }finally{
-            document3dm.destroy?.();
-          }
+            if(reducedTriangles>MAX_FACES)throw new Error("La simplificación produjo "+reducedTriangles.toLocaleString("es-ES")+" caras. Prueba el nivel ligero.");
+            const doc=new rhino.File3dm();doc.applicationName="AURUM Render";doc.applicationDetails="NURBS facetadas desde malla simplificada temporalmente. Una superficie planar por triángulo; no reconstruye superficies suaves.";
+            let brepCount=0,surfaceCount=0;
+            try{
+              for(const entry of prepared){
+                const {object,geometry,faceCount}=entry,p=geometry.getAttribute("position"),index=geometry.index;
+                const mesh=new rhino.Mesh(),vertices=mesh.vertices(),v=new THREE.Vector3();
+                for(let i=0;i<p.count;i++){v.fromBufferAttribute(p,i).applyMatrix4(object.matrixWorld);vertices.add(v.x,v.y,v.z);}
+                const faces=mesh.faces();for(let face=0;face<faceCount;face++){const j=face*3;faces.addTriFace(index.getX(j),index.getX(j+1),index.getX(j+2));}
+                const brep=rhino.Brep.createFromMesh(mesh,true);
+                if(!brep||!brep.isValid){mesh.destroy?.();throw new Error("Rhino no pudo crear NURBS válidas para "+(object.name||"una malla")+".");}
+                const attributes=new rhino.ObjectAttributes();attributes.name=(object.name||"AURUM_MESH_"+(brepCount+1))+"_NURBS";doc.objects().add(brep,attributes);
+                brepCount++;surfaceCount+=faceCount;brep.destroy?.();mesh.destroy?.();
+              }
+              const bytes=doc.toByteArray(),blob=new Blob([bytes],{type:"application/octet-stream"}),url=URL.createObjectURL(blob),link=document.createElement("a");
+              link.href=url;link.download=(nombreProyecto||"aurum-modelo").trim().replace(/[^a-z0-9-_]+/gi,"-")+"_"+quality.toUpperCase()+"_NURBS.3dm";link.click();window.setTimeout(()=>URL.revokeObjectURL(url),60000);
+              return {brepCount,surfaceCount,sourceTriangles,reducedTriangles,reductionPercent:Math.round((1-reducedTriangles/sourceTriangles)*100),quality};
+            }finally{doc.destroy?.();}
+          }finally{for(const entry of prepared)entry.geometry.dispose?.();}
         },
         exportPathTraced:async(options:{width?:number;height?:number;format?:"png"|"jpeg"|"webp";samples?:number;signal?:AbortSignal;onProgress?:(d:number,t:number)=>void}={})=>{
           if(!modelo) throw new Error("Carga un modelo antes del render final.");
