@@ -733,24 +733,6 @@ function AulaFormacionPage() {
               </div>
             </div>;
           })()}
-          {lecturaAbierta && lecturaModoVistaPrevia && <div className={`fixed inset-0 z-[60] overflow-y-auto bg-black/60 p-3 sm:p-6 ${lecturaModoVistaPrevia ? "left-0 lg:left-64 xl:left-72" : ""}`} role="dialog" aria-modal="true" aria-label="Lectura de prueba del alumno">
-            <div className="mx-auto my-4 flex min-h-[80vh] max-w-3xl flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl">
-              <header className="border-b border-border p-4 sm:p-6">
-                <div className="flex items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-wide text-gold-deep">Aula de formación · Lectura guiada</p><h2 className="mt-1 text-lg font-semibold">{lecturaAbierta.numero}. {lecturaAbierta.titulo}</h2><p className="mt-1 text-xs text-muted-foreground">Modo de prueba docente · El avance no se guarda en la cuenta de ningún alumno.</p></div><button type="button" onClick={() => { setLecturaAbierta(null); setLecturaModoVistaPrevia(false); }} className="rounded-lg border border-border px-3 py-2 text-xs">Cerrar</button></div>
-                <div className="mt-4 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-gold transition-all" style={{width: (((paginaLectura+1)/seccionesLecturaActivas.length)*100)+"%"}}/></div>
-                <p className="mt-2 text-xs text-muted-foreground">Apartado {paginaLectura+1} de {seccionesLecturaActivas.length}</p>
-              </header>
-              <main className="flex-1 space-y-4 p-5 sm:p-8">
-                <h3 className="text-xl font-semibold">{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</h3>
-                {(seccionesLecturaActivas[paginaLectura]?.bloques ?? []).map((bloque,idx) => <p key={idx} className="whitespace-pre-line text-sm leading-7 text-foreground/90">{bloque}</p>)}
-                {paginaLectura === seccionesLecturaActivas.length-1 && <div className="rounded-xl border border-gold/30 bg-gold/5 p-4"><p className="text-sm font-semibold">Has llegado al final de la lectura</p><p className="mt-1 text-sm text-muted-foreground">En la experiencia del alumno, aquí podrá finalizar y marcar la sesión como completada.</p></div>}
-              </main>
-              <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-border p-4 sm:p-5">
-                <button type="button" disabled={paginaLectura===0} onClick={() => setPaginaLectura(p => Math.max(0,p-1))} className="inline-flex items-center gap-1 rounded-lg border border-border px-4 py-2.5 text-sm disabled:opacity-40"><ChevronLeft className="size-4"/> Anterior</button>
-                {paginaLectura < seccionesLecturaActivas.length-1 ? <button type="button" onClick={() => setPaginaLectura(p => Math.min(Math.max(0,seccionesLecturaActivas.length-1),p+1))} className="inline-flex items-center gap-1 rounded-lg bg-gold px-4 py-2.5 text-sm font-semibold text-black">Siguiente <ChevronRight className="size-4"/></button> : <button type="button" onClick={() => { setLecturasSimuladas(prev => new Set(prev).add(lecturaAbierta.id)); setLecturaAbierta(null); setLecturaModoVistaPrevia(false); }} className="inline-flex items-center gap-2 rounded-lg bg-gold px-4 py-2.5 text-sm font-semibold text-black"><CheckCircle2 className="size-4"/> Simular lectura completada</button>}
-              </footer>
-            </div>
-          </div>}
           <div className="grid gap-5 lg:grid-cols-2">
             <Panel titulo="Crear curso" colapsable defaultOpen={true}>
               <form onSubmit={(e) => void crearCurso(e)} className="space-y-3 p-5">
@@ -935,8 +917,8 @@ function AulaFormacionPage() {
       ) : (
         <>
           <section className="rounded-2xl border border-gold/20 bg-card p-5"><p className="text-sm font-semibold">Bienvenido al aula</p><p className="mt-1 text-xs text-muted-foreground">Aquí aparecen únicamente los cursos en los que FADILAB te ha inscrito. Los archivos permanecen privados.</p></section>
-          {lecturaAbierta && <div className="fixed inset-0 z-[60] overflow-y-auto bg-black/60 p-3 sm:p-6" role="dialog" aria-modal="true" aria-label="Lectura de la sesión">
-            <div className="mx-auto my-4 flex min-h-[80vh] max-w-3xl flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl">
+          {lecturaAbierta && <div className={`fixed inset-0 z-[60] overflow-y-auto bg-black/60 p-3 sm:p-6 ${lecturaModoVistaPrevia ? "left-0 lg:left-64 xl:left-72" : ""}`} role="dialog" aria-modal="true" aria-label="Lectura de la sesión">
+            <div className="mx-auto my-4 flex min-h-[82vh] max-w-5xl flex-col overflow-hidden rounded-3xl border border-border bg-background shadow-2xl">
               <header className="border-b border-border p-4 sm:p-6">
                 <div className="flex items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-wide text-gold-deep">Aula de formación · Lectura guiada</p><h2 className="mt-1 text-lg font-semibold">{lecturaAbierta.numero}. {lecturaAbierta.titulo}</h2><p className="mt-1 text-xs text-muted-foreground">{lecturaModoVistaPrevia ? "Modo de prueba docente · el avance no se guarda en la cuenta de ningún alumno." : "Al abrir esta lectura se registra como leída. Avanza por los apartados y márcala como completada al finalizar."}</p></div><button type="button" onClick={() => { setLecturaAbierta(null); setLecturaModoVistaPrevia(false); }} className="rounded-lg border border-border px-3 py-2 text-xs">Cerrar</button></div>
                 <div className="mt-4 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-gold transition-all" style={{width: (((paginaLectura+1)/seccionesLecturaActivas.length)*100)+"%"}}/></div>
@@ -944,7 +926,7 @@ function AulaFormacionPage() {
               </header>
               <main className="flex-1 space-y-4 p-5 sm:p-8">
                 <h3 className="text-xl font-semibold">{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</h3>
-                {(seccionesLecturaActivas[paginaLectura]?.bloques ?? []).map((bloque,idx) => <p key={idx} className="whitespace-pre-line text-sm leading-7 text-foreground/90">{bloque}</p>)}
+                {(seccionesLecturaActivas[paginaLectura]?.bloques ?? []).map((bloque,idx) => <p key={idx} className="mb-5 whitespace-pre-line text-[15px] leading-8 text-foreground/90">{bloque}</p>)}
                 {paginaLectura === seccionesLecturaActivas.length-1 && <div className="rounded-xl border border-gold/30 bg-gold/5 p-4"><p className="text-sm font-semibold">Has llegado al final de la lectura</p><p className="mt-1 text-sm text-muted-foreground">{lecturaModoVistaPrevia ? "En la experiencia del alumno, aquí podrá finalizar y marcar la sesión como completada." : "La lectura está registrada como leída. Puedes marcar la sesión como completada."}</p></div>}
               </main>
               <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-border p-4 sm:p-5">
