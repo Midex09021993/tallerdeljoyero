@@ -368,10 +368,10 @@ function AulaFormacionPage() {
     }
 
     const normalizarNombreArchivo = (nombre: string) =>
-      nombre.trim().normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLowerCase();
+      nombre.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
     const esImagen = (material: Material) =>
-      /\\.(jpg|jpeg|png|webp)$/i.test(material.nombre_archivo.trim()) ||
-      /^image\\//i.test(material.mime_type || "");
+      /\.(jpg|jpeg|png|webp)$/i.test(material.nombre_archivo.trim()) ||
+      /^image\//i.test(material.mime_type || "");
     const esImagenLimpia = (material: Material) =>
       normalizarNombreArchivo(material.nombre_archivo) === "interface matrixgold.png";
     const esImagenExplicada = (material: Material) =>
