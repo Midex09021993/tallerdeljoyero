@@ -511,6 +511,16 @@ function AulaFormacionPage() {
   const [lecturaModoVistaPrevia, setLecturaModoVistaPrevia] = useState(false);
   const [lecturasSimuladas, setLecturasSimuladas] = useState<Set<string>>(new Set());
   const [paginaLectura, setPaginaLectura] = useState(0);
+  const [moduloGeometria, setModuloGeometria] = useState(0);
+  const [respuestaGeometria, setRespuestaGeometria] = useState("");
+  const [resultadoGeometria, setResultadoGeometria] = useState<"correcto" | "incorrecto" | null>(null);
+  const [modulosGeometriaCompletados, setModulosGeometriaCompletados] = useState<number[]>([]);
+
+  const [moduloGeometria, setModuloGeometria] = useState(0);
+  const [respuestaGeometria, setRespuestaGeometria] = useState("");
+  const [resultadoGeometria, setResultadoGeometria] = useState<"correcto" | "incorrecto" | null>(null);
+  const [modulosGeometriaCompletados, setModulosGeometriaCompletados] = useState<number[]>([]);
+
 
   useEffect(() => {
     if (paginaLectura !== 2) setInterfazInteractivaAbierta(false);
@@ -1424,6 +1434,47 @@ function AulaFormacionPage() {
   }
 
   if (cargandoSesion) return <AppShell titulo="Aula de formación" subtitulo="Cargando acceso"><Panel titulo="Verificando cuenta"><p className="p-5 text-sm text-muted-foreground">Comprobando tu sesión…</p></Panel></AppShell>;
+
+  const actividadesGeometria = [
+    { titulo: "Punto", pregunta: "¿Qué representa un punto en Rhino?", opciones: [{ valor: "volumen", texto: "Un volumen con grosor" }, { valor: "posicion", texto: "Una posición o referencia en el espacio" }, { valor: "superficie", texto: "Una cara con área" }], correcta: "posicion", explicacion: "Un punto indica una posición en el espacio. En joyería puede servir como referencia para ubicar el centro de una gema." },
+    { titulo: "Curvas", pregunta: "¿Cuál de estas geometrías es una curva cerrada circular?", opciones: [{ valor: "linea", texto: "Línea" }, { valor: "polilinea", texto: "Polilínea abierta" }, { valor: "circulo", texto: "Círculo" }], correcta: "circulo", explicacion: "El círculo es una curva cerrada. Puede utilizarse como referencia para ubicar una piedra redonda." },
+    { titulo: "Superficies", pregunta: "¿Qué diferencia a una superficie de una curva?", opciones: [{ valor: "area", texto: "La superficie representa una zona con área" }, { valor: "color", texto: "La superficie siempre tiene otro color" }, { valor: "cierre", texto: "La superficie es siempre una línea cerrada" }], correcta: "area", explicacion: "Una superficie representa una zona con área y forma. Una curva representa un recorrido o contorno." },
+    { titulo: "Sólidos", pregunta: "¿Qué característica identifica a un sólido cerrado?", opciones: [{ valor: "trazo", texto: "Está formado solo por líneas" }, { valor: "volumen", texto: "Delimita un volumen cerrado" }, { valor: "plano", texto: "Es una curva plana" }], correcta: "volumen", explicacion: "Un sólido cerrado delimita un volumen. En una joya puede representar el cuerpo de un componente." },
+  ];
+  const renderLaboratorioGeometria = () => {
+    if (lecturaAbierta?.numero !== 2 || paginaLectura !== 1) return null;
+    const actividad = actividadesGeometria[moduloGeometria];
+    const completados = modulosGeometriaCompletados.length;
+    return <section className="mt-8 max-w-4xl overflow-hidden rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background">
+      <div className="border-b border-gold/20 p-5 sm:p-6">
+        <div className="flex flex-wrap items-center justify-between gap-2"><span className="text-[10px] font-bold uppercase tracking-[0.16em] text-gold-deep">Laboratorio interactivo · RHINO 7</span><span className="rounded-full border border-gold/30 bg-background px-3 py-1 text-[11px] font-semibold">{completados}/4 módulos completados</span></div>
+        <h4 className="mt-2 text-xl font-semibold">Reconoce la geometría de una joya</h4>
+        <p className="mt-1 text-sm leading-6 text-muted-foreground">Explora los cuatro conceptos fundamentales y comprueba si puedes reconocerlos antes de continuar.</p>
+        <div className="mt-4 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-gold transition-all" style={{width: (completados/4*100)+"%"}}/></div>
+      </div>
+      <div className="grid gap-4 p-5 sm:p-6">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">{actividadesGeometria.map((item,indice) => <button key={item.titulo} type="button" onClick={() => {setModuloGeometria(indice);setRespuestaGeometria("");setResultadoGeometria(null);}} className={`rounded-xl border p-3 text-left transition ${moduloGeometria===indice ? "border-gold bg-gold/15" : "border-border bg-background hover:border-gold/50"}`}><span className="block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Módulo 0${indice+1}</span><span className="mt-1 block text-sm font-semibold">{item.titulo}</span><span className="mt-1 block text-[10px] text-muted-foreground">{modulosGeometriaCompletados.includes(indice) ? "✓ Completado" : "Por explorar"}</span></button>)}</div>
+        <div className="grid gap-4 rounded-xl border border-border bg-background p-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] sm:p-5">
+          <div className="flex min-h-44 items-center justify-center rounded-xl bg-[#17191d] p-4">
+            {moduloGeometria===0 && <svg viewBox="0 0 240 160" className="h-40 w-full" role="img" aria-label="Punto de referencia en el espacio"><path d="M35 125 L120 145 L210 105 M120 145 L120 25" stroke="#737b86" strokeWidth="1.5" fill="none"/><circle cx="120" cy="75" r="7" fill="#e7bd62"/><path d="M120 75 L120 145 M120 75 L35 125 M120 75 L210 35" stroke="#e7bd62" strokeDasharray="4 4" opacity=".7"/><text x="132" y="70" fill="#f4f4f5" fontSize="11">Punto</text><text x="214" y="108" fill="#a1a1aa" fontSize="9">X</text><text x="124" y="20" fill="#a1a1aa" fontSize="9">Z</text></svg>}
+            {moduloGeometria===1 && <svg viewBox="0 0 240 160" className="h-40 w-full" role="img" aria-label="Ejemplos de curvas"><path d="M18 40 L95 40" stroke="#e7bd62" strokeWidth="3" fill="none"/><path d="M18 95 L55 65 L95 95" stroke="#65b7e8" strokeWidth="3" fill="none"/><circle cx="155" cy="40" r="25" stroke="#6fd1a1" strokeWidth="3" fill="none"/><rect x="130" y="76" width="50" height="42" stroke="#c49ae8" strokeWidth="3" fill="none"/><g fill="#f4f4f5" fontSize="10"><text x="32" y="57">Línea</text><text x="24" y="112">Polilínea</text><text x="139" y="75">Círculo</text><text x="184" y="101">Rect.</text></g></svg>}
+            {moduloGeometria===2 && <svg viewBox="0 0 240 160" className="h-40 w-full" role="img" aria-label="Superficie curva"><path d="M35 105 Q120 5 205 105 Q120 145 35 105Z" fill="#65b7e8" fillOpacity=".32" stroke="#8bd1f2" strokeWidth="2"/><path d="M35 105 Q120 70 205 105 M65 85 Q120 115 175 85 M90 63 Q120 130 150 63" fill="none" stroke="#8bd1f2" strokeOpacity=".75"/><text x="88" y="145" fill="#f4f4f5" fontSize="11">Zona con área</text></svg>}
+            {moduloGeometria===3 && <svg viewBox="0 0 240 160" className="h-40 w-full" role="img" aria-label="Volumen sólido tridimensional"><path d="M55 55 L135 25 L200 58 L118 90Z" fill="#e7bd62" fillOpacity=".9" stroke="#f8dfa0"/><path d="M55 55 L55 112 L118 145 L118 90Z" fill="#b58b39" stroke="#f8dfa0"/><path d="M118 90 L200 58 L200 115 L118 145Z" fill="#8f6a2c" stroke="#f8dfa0"/><text x="82" y="12" fill="#f4f4f5" fontSize="10">Volumen cerrado</text></svg>}
+          </div>
+          <div className="flex flex-col justify-center">
+            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gold-deep">Módulo 0${moduloGeometria+1} · {actividad.titulo}</p>
+            <h5 className="mt-2 text-base font-semibold">{actividad.pregunta}</h5>
+            <div className="mt-3 space-y-2">{actividad.opciones.map(opcion => <button key={opcion.valor} type="button" onClick={() => {setRespuestaGeometria(opcion.valor);setResultadoGeometria(null);}} className={`w-full rounded-lg border px-3 py-2.5 text-left text-sm transition ${respuestaGeometria===opcion.valor ? "border-gold bg-gold/10" : "border-border hover:border-gold/50"}`}>{opcion.texto}</button>)}</div>
+            <button type="button" disabled={!respuestaGeometria} onClick={() => {const correcto=respuestaGeometria===actividad.correcta;setResultadoGeometria(correcto ? "correcto" : "incorrecto");if(correcto)setModulosGeometriaCompletados(prev=>prev.includes(moduloGeometria)?prev:[...prev,moduloGeometria]);}} className="mt-3 rounded-lg bg-gold px-4 py-2.5 text-sm font-semibold text-black disabled:cursor-not-allowed disabled:opacity-40">Comprobar respuesta</button>
+            {resultadoGeometria && <div className={`mt-3 rounded-lg border p-3 text-sm ${resultadoGeometria==="correcto" ? "border-emerald-300 bg-emerald-50 text-emerald-900" : "border-amber-300 bg-amber-50 text-amber-900"}`}><p className="font-semibold">{resultadoGeometria==="correcto" ? "¡Correcto! Módulo completado." : "Aún no es correcto. Vuelve a intentarlo."}</p><p className="mt-1 leading-5">{resultadoGeometria==="correcto" ? actividad.explicacion : "Revisa la ilustración y el concepto explicado en la lectura. Puedes seleccionar otra respuesta."}</p></div>}
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-2"><p className="text-xs text-muted-foreground">Actividad didáctica de reconocimiento · No modifica ni ejecuta geometría dentro de Rhino.</p><div className="flex gap-2"><button type="button" onClick={() => {setModuloGeometria(0);setRespuestaGeometria("");setResultadoGeometria(null);setModulosGeometriaCompletados([]);}} className="rounded-lg border border-border px-3 py-2 text-xs font-medium hover:bg-muted">Reiniciar</button><button type="button" disabled={moduloGeometria===3} onClick={() => {setModuloGeometria(v=>Math.min(3,v+1));setRespuestaGeometria("");setResultadoGeometria(null);}} className="rounded-lg border border-gold/40 px-3 py-2 text-xs font-semibold text-foreground disabled:opacity-40">Siguiente módulo</button></div></div>
+        {completados===4 && <div className="rounded-xl border border-emerald-300 bg-emerald-50 p-4 text-sm text-emerald-900"><p className="font-semibold">¡Laboratorio completado!</p><p className="mt-1">Has reconocido punto, curva, superficie y sólido. Continúa con las curvas básicas y su organización en capas.</p></div>}
+      </div>
+    </section>;
+  };
+
   if (!sesion || (!rolAlumno && !esDocente)) return <AppShell titulo="Aula de formación" subtitulo="Acceso restringido"><Panel titulo="Cuenta no habilitada"><p className="p-5 text-sm text-muted-foreground">El aula de alumnos está disponible para cuentas de gerente u operario. La docencia se administra exclusivamente desde FADILAB.</p></Panel></AppShell>;
 
   return <AppShell titulo="Aula de formación" subtitulo={esDocente ? "FADILAB · Administración académica" : "Tus cursos, materiales y actividades"}>
@@ -1512,6 +1563,7 @@ function AulaFormacionPage() {
                   if (lecturaAbierta?.numero === 1 && paginaLectura === 4 && idx >= 6) return null;
                   return <div key={idx}><p className="mb-4 max-w-4xl whitespace-pre-line text-[15px] leading-7 text-foreground/90">{bloque}</p></div>;
                 })}
+                {renderLaboratorioGeometria()}
                 {lecturaAbierta?.numero === 1 && paginaLectura === 4 && <section className="mt-5 max-w-4xl rounded-xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">Recurso interactivo</p>
                   <h4 className="mt-1 text-base font-semibold">Comandos de navegación</h4>
@@ -1886,6 +1938,7 @@ function AulaFormacionPage() {
                   if (lecturaAbierta?.numero === 1 && paginaLectura === 4 && idx >= 6) return null;
                   return <div key={idx}><p className="mb-4 max-w-4xl whitespace-pre-line text-[15px] leading-7 text-foreground/90">{bloque}</p></div>;
                 })}
+                {renderLaboratorioGeometria()}
                 {lecturaAbierta?.numero === 1 && paginaLectura === 4 && <section className="mt-5 max-w-4xl rounded-xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">Recurso interactivo</p>
                   <h4 className="mt-1 text-base font-semibold">Comandos de navegación</h4>
