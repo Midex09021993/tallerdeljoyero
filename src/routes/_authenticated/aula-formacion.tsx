@@ -34,18 +34,8 @@ const LECTURA_SESION_1 = [
     "Rhino trabaja principalmente con geometría NURBS, un sistema matemático para representar curvas y superficies con precisión. En esta primera sesión no dibujaremos ni construiremos geometría: aprenderemos a reconocer el entorno y a desplazarnos por el espacio de trabajo."
   ]},
   { titulo: "3. Reconocimiento de la interfaz", bloques: [
-    "La imagen de apoyo muestra MatrixGold 3.1, una interfaz especializada para joyería que funciona sobre el entorno de modelado de Rhino. No es la interfaz estándar de Rhino 7: algunos nombres y paneles, como Ribbon de MatrixGold, Quick Commands y Dynamic Panels, pertenecen a MatrixGold.",
-    "1. Ribbon de MatrixGold: franja superior con pestañas que agrupan herramientas y funciones por categorías.",
-    "2. Barras de herramientas: conjuntos de iconos de acceso directo a comandos. Su distribución puede variar según la configuración del espacio de trabajo.",
-    "3. Área gráfica: espacio central donde se visualiza el modelo y se trabaja con el contenido del archivo.",
-    "4. Cuatro ventanas de visualización: Top muestra la vista superior; Front, la frontal; Right, la lateral derecha; y Perspective, una vista tridimensional en perspectiva.",
-    "5. Quick Commands: panel de accesos rápidos a herramientas frecuentes de MatrixGold.",
-    "6. Panel de propiedades: muestra información y propiedades del objeto seleccionado. En la imagen se observan datos como tipo, capa, material y peso.",
-    "7. Panel de capas (Layers): organiza los elementos del proyecto por capas. En esta primera sesión solo reconoceremos su ubicación; todavía no crearemos ni modificaremos capas.",
-    "8. Paneles dinámicos: agrupan herramientas y funciones contextuales o especializadas, como los paneles que aparecen en la captura.",
-    "9. Línea de comandos: permite escribir comandos y leer las indicaciones, solicitudes y opciones que presenta Rhino.",
-    "10. Barra de estado: muestra información del entorno, como coordenadas, unidades y ayudas de modelado activas.",
-    "Importante: esta imagen se utiliza para reconocer visualmente componentes de una instalación de MatrixGold 3.1. En Rhino 7 sin MatrixGold, la disposición, los nombres y algunos paneles pueden ser diferentes. En esta sesión no ejecutaremos herramientas de modelado ni modificaremos el archivo."
+    "Explora la imagen de MatrixGold 3.1 y selecciona los diez números para conocer cada componente. Después completa el reto de comprobación. MatrixGold es una interfaz especializada para joyería que funciona sobre Rhino; no es la interfaz estándar de Rhino 7.",
+    "Importante: en esta sesión reconoceremos los componentes, sin ejecutar herramientas de modelado ni modificar el archivo. La disposición y algunos paneles pueden variar en Rhino 7 sin MatrixGold."
   ]},
   { titulo: "4. Vistas y orientación espacial", bloques: [
     "Top muestra el contenido desde arriba; Front, desde el frente; y Right, desde la derecha. Estas son vistas paralelas. Perspective permite apreciar la profundidad y observar el contenido desde una orientación tridimensional.",
@@ -116,6 +106,12 @@ function AulaFormacionPage() {
   const [estadoGuardadoLectura, setEstadoGuardadoLectura] = useState<{tipo:"success"|"error"|"info"; texto:string} | null>(null);
   const [seccionesLecturaActivas, setSeccionesLecturaActivas] = useState<Array<{titulo:string;bloques:string[]}>>(LECTURA_SESION_1.map(x => ({ titulo:x.titulo, bloques:[...x.bloques] })));
   const [imagenInterfazUrl, setImagenInterfazUrl] = useState("");
+  const [componentesExplorados, setComponentesExplorados] = useState<number[]>([]);
+  const [componenteActivo, setComponenteActivo] = useState(0);
+  const [preguntaInterfaz, setPreguntaInterfaz] = useState(0);
+  const [respuestaInterfaz, setRespuestaInterfaz] = useState<number | null>(null);
+  const [aciertosInterfaz, setAciertosInterfaz] = useState(0);
+  const [retoInterfazFinalizado, setRetoInterfazFinalizado] = useState(false);
   const [lecturaPublicada, setLecturaPublicada] = useState(false);
   const [archivo, setArchivo] = useState<File | null>(null);
   const [tituloMaterial, setTituloMaterial] = useState("");
