@@ -95,6 +95,9 @@ function AulaFormacionPage() {
   const [numeroSesionEditado, setNumeroSesionEditado] = useState("1");
   const [tituloSesionEditado, setTituloSesionEditado] = useState("");
   const [detalleSesionEditado, setDetalleSesionEditado] = useState("");
+  const [lecturaEditando, setLecturaEditando] = useState<SesionCurso | null>(null);
+  const [seccionesLecturaEditadas, setSeccionesLecturaEditadas] = useState<Array<{titulo:string;bloques:string[]}>>([]);
+  const [cargandoLecturaDocente, setCargandoLecturaDocente] = useState(false);
   const [archivo, setArchivo] = useState<File | null>(null);
   const [tituloMaterial, setTituloMaterial] = useState("");
   const [publicarMaterial, setPublicarMaterial] = useState(true);
@@ -557,6 +560,41 @@ function AulaFormacionPage() {
     }
   }
 
+  async function abrirEditorLectura(s: SesionCurso) {
+    setCargandoLecturaDocente(true);
+    setMensaje("");
+    try {
+      const { data, error } = await (supabase as any).from("formacion_contenidos_lectura").select("secciones").eq("sesion_id", s.id).maybeSingle();
+      if (error) throw error;
+      const guardadas = Array.isArray(data?.secciones) ? data.secciones : null;
+      setSeccionesLecturaEditadas(guardadas ?? (s.numero === 1 ? LECTURA_SESION_1.map(x => ({ titulo: x.titulo, bloques: [...x.bloques] })) : []));
+      setLecturaEditando(s);
+    } catch (err) {
+      setMensaje(err instanceof Error ? err.message : "No se pudo cargar la lectura. Verifica la tabla y sus permisos.");
+    } finally { setCargandoLecturaDocente(false); }
+  }
+
+  async function guardarContenidoLectura() {
+    if (!lecturaEditando || !participanteId || !sesionesQuery.data?.some(x => x.id === lecturaEditando.id)) return;
+    if (!seccionesLecturaEditadas.length || seccionesLecturaEditadas.some(x => !x.titulo.trim() || !x.bloques.length || x.bloques.some(b => !b.trim()))) {
+      setMensaje("Completa el título y al menos un bloque de texto en cada apartado.");
+      return;
+    }
+    setOcupado(true); setMensaje("");
+    try {
+      const { data: existente, error: consultaError } = await (supabase as any).from("formacion_contenidos_lectura").select("sesion_id").eq("sesion_id", lecturaEditando.id).maybeSingle();
+      if (consultaError) throw consultaError;
+      const payload = { sesion_id: lecturaEditando.id, secciones: seccionesLecturaEditadas, updated_by: sesion?.user?.id ?? sesion?.user?.user_metadata?.sub ?? null, updated_at: new Date().toISOString() };
+      const { error } = existente
+        ? await (supabase as any).from("formacion_contenidos_lectura").update(payload).eq("sesion_id", lecturaEditando.id)
+        : await (supabase as any).from("formacion_contenidos_lectura").insert(payload);
+      if (error) throw error;
+      setMensaje("Lectura guardada como borrador.");
+      await qc.invalidateQueries({ queryKey: ["aula-formacion-lectura", lecturaEditando.id] });
+    } catch (err) { setMensaje(err instanceof Error ? err.message : "No se pudo guardar la lectura."); }
+    finally { setOcupado(false); }
+  }
+
   async function publicarSesion(s: SesionCurso) {
     const { error } = await (supabase as any).from("formacion_sesiones").update({ publicada: !s.publicada }).eq("id", s.id).eq("participante_id", participanteId);
     if (error) setMensaje(error.message);
@@ -737,12 +775,28 @@ function AulaFormacionPage() {
                     <div className="min-w-0"><p className="text-sm font-medium">{s.numero}. {s.titulo}</p><p className="text-xs text-muted-foreground">{s.publicada ? "Visible para alumnos" : "Borrador"}</p>{s.descripcion && <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{s.descripcion}</p>}</div>
                     <div className="flex shrink-0 items-center gap-2">
                       <button type="button" disabled={ocupado} onClick={() => iniciarEdicionSesion(s)} aria-label={`Editar sesión ${s.numero}`} title="Editar sesión" className="rounded-md p-2 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-50"><Pencil className="size-4" /></button>
+                      <button type="button" disabled={ocupado || cargandoLecturaDocente} onClick={() => void abrirEditorLectura(s)} className="rounded-lg border border-gold/40 px-3 py-1.5 text-xs disabled:opacity-50">{cargandoLecturaDocente ? "Cargando…" : "Editar lectura"}</button>
                       <button type="button" disabled={ocupado} onClick={() => void publicarSesion(s)} className="rounded-lg border border-border px-3 py-1.5 text-xs disabled:opacity-50">{s.publicada ? "Ocultar" : "Publicar"}</button>
                     </div>
                   </div>
                 )}
               </div>)}</div>
             </Panel>
+            {lecturaEditando && <div className="fixed inset-0 z-[70] overflow-y-auto bg-black/60 p-3 sm:p-6" role="dialog" aria-modal="true" aria-label="Editor de lectura">
+              <div className="mx-auto my-4 max-w-4xl rounded-2xl border border-border bg-background shadow-2xl">
+                <div className="flex items-center justify-between border-b border-border p-4"><div><h3 className="font-semibold">Editar lectura · Sesión {lecturaEditando.numero}</h3><p className="text-xs text-muted-foreground">Los cambios se guardan como borrador hasta publicar.</p></div><button type="button" onClick={() => setLecturaEditando(null)} className="rounded-lg border border-border px-3 py-2 text-sm">Cerrar</button></div>
+                <div className="space-y-4 p-4 sm:p-6">
+                  {seccionesLecturaEditadas.map((sec, idx) => <section key={idx} className="space-y-2 rounded-xl border border-border p-3">
+                    <div className="flex items-center justify-between"><p className="text-sm font-semibold">Apartado {idx+1}</p><button type="button" onClick={() => setSeccionesLecturaEditadas(prev => prev.filter((_,i) => i!==idx))} className="text-xs text-destructive">Eliminar</button></div>
+                    <input value={sec.titulo} onChange={e => setSeccionesLecturaEditadas(prev => prev.map((x,i)=>i===idx?{...x,titulo:e.target.value}:x))} className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" placeholder="Título del apartado"/>
+                    {sec.bloques.map((bloque,j) => <div key={j} className="flex gap-2"><textarea value={bloque} onChange={e => setSeccionesLecturaEditadas(prev => prev.map((x,i)=>i===idx?{...x,bloques:x.bloques.map((b,k)=>k===j?e.target.value:b)}:x))} rows={3} className="min-w-0 flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm"/><button type="button" onClick={() => setSeccionesLecturaEditadas(prev=>prev.map((x,i)=>i===idx?{...x,bloques:x.bloques.filter((_,k)=>k!==j)}:x))} className="text-xs text-destructive">Quitar</button></div>)}
+                    <button type="button" onClick={() => setSeccionesLecturaEditadas(prev=>prev.map((x,i)=>i===idx?{...x,bloques:[...x.bloques,""]}:x))} className="text-xs font-medium text-gold-deep">+ Añadir bloque de texto</button>
+                  </section>)}
+                  <button type="button" onClick={() => setSeccionesLecturaEditadas(prev=>[...prev,{titulo:"Nuevo apartado",bloques:[""]}])} className="rounded-lg border border-border px-3 py-2 text-sm">+ Añadir apartado</button>
+                  <div className="flex justify-end gap-2"><button type="button" onClick={() => setLecturaEditando(null)} className="rounded-lg border border-border px-4 py-2 text-sm">Cancelar</button><button type="button" disabled={ocupado} onClick={() => void guardarContenidoLectura()} className="rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-black disabled:opacity-50">Guardar borrador</button></div>
+                </div>
+              </div>
+            </div>}
             <Panel titulo="Materiales de estudio">
               <form onSubmit={(e) => void subirMaterial(e)} className="space-y-3 p-5">
                 <label className="block text-xs font-medium">Título del material<input required value={tituloMaterial} onChange={e => setTituloMaterial(e.target.value)} className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm" placeholder="Guía de la sesión 1" /></label>
