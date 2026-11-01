@@ -114,6 +114,7 @@ function AulaFormacionPage() {
   const [materialEditandoId, setMaterialEditandoId] = useState("");
   const [tituloMaterialEditado, setTituloMaterialEditado] = useState("");
   const [sesionMaterialEditada, setSesionMaterialEditada] = useState("");
+  const [archivoMaterialReemplazo, setArchivoMaterialReemplazo] = useState<File | null>(null);
   const [mensaje, setMensaje] = useState("");
   const [tituloExamen, setTituloExamen] = useState("Evaluación de la sesión");
   const [instruccionesExamen, setInstruccionesExamen] = useState("");
@@ -700,11 +701,26 @@ function AulaFormacionPage() {
     e.preventDefault();
     if (!participanteId || !tituloMaterialEditado.trim()) return;
     setOcupado(true); setMensaje("");
+    if (archivoMaterialReemplazo && archivoMaterialReemplazo.size > 50 * 1024 * 1024) { setMensaje("El archivo supera el límite de 50 MB."); return; }
+    setOcupado(true); setMensaje("");
+    let nuevaRuta: string | null = null;
     try {
+      if (archivoMaterialReemplazo) {
+        const extension = archivoMaterialReemplazo.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "bin";
+        nuevaRuta = participanteId + "/" + cursoActivoId + "/" + crypto.randomUUID() + "." + extension;
+        const { error: uploadError } = await supabase.storage.from("formacion-academica").upload(nuevaRuta, archivoMaterialReemplazo, { contentType: archivoMaterialReemplazo.type || "application/octet-stream", upsert: false });
+        if (uploadError) throw uploadError;
+      }
       const { error } = await (supabase as any).from("formacion_materiales").update({
         titulo: tituloMaterialEditado.trim(), sesion_id: sesionMaterialEditada || null,
+        ...(archivoMaterialReemplazo && nuevaRuta ? { nombre_archivo: archivoMaterialReemplazo.name, ruta_storage: nuevaRuta, mime_type: archivoMaterialReemplazo.type || "application/octet-stream", tamano_bytes: archivoMaterialReemplazo.size } : {}),
       }).eq("id", material.id).eq("participante_id", participanteId).eq("curso_id", cursoActivoId);
-      if (error) throw error;
+      if (error) {
+        if (nuevaRuta) await supabase.storage.from("formacion-academica").remove([nuevaRuta]);
+        throw error;
+      }
+      if (nuevaRuta) await supabase.storage.from("formacion-academica").remove([material.ruta_storage]);
+      setArchivoMaterialReemplazo(null);
       setMaterialEditandoId("");
       await qc.invalidateQueries({ queryKey: ["aula-formacion-materiales-docente", participanteId, cursoActivoId] });
       await qc.invalidateQueries({ queryKey: ["aula-formacion-materiales-alumno"] });
@@ -974,6 +990,7 @@ function AulaFormacionPage() {
                   {[{id:"general",label:"Material general del curso",items:(materialesDocenteQuery.data ?? []).filter(m => !m.sesion_id)},...(sesionesQuery.data ?? []).map(s => ({id:s.id,label:"Sesión " + s.numero + " · " + s.titulo,items:(materialesDocenteQuery.data ?? []).filter(m => m.sesion_id === s.id)}))].filter(g => g.items.length > 0).map(grupo => <section key={grupo.id} className="space-y-2"><h4 className="text-xs font-semibold text-muted-foreground">{grupo.label}</h4>{grupo.items.map(m => <div key={m.id} className="rounded-xl border border-border p-3">
                     {materialEditandoId === m.id ? <form onSubmit={e => void guardarEdicionMaterial(e,m)} className="space-y-2">
                       <label className="block text-xs font-medium">Título<input required value={tituloMaterialEditado} onChange={e => setTituloMaterialEditado(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"/></label>
+                      <label className="block text-xs font-medium">Reemplazar archivo (opcional)<input type="file" onChange={e => setArchivoMaterialReemplazo(e.target.files?.[0] ?? null)} className="mt-1 block w-full text-xs"/></label>
                       <label className="block text-xs font-medium">Sesión<select value={sesionMaterialEditada} onChange={e => setSesionMaterialEditada(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"><option value="">Material general del curso</option>{(sesionesQuery.data ?? []).map(s => <option key={s.id} value={s.id}>Sesión {s.numero} · {s.titulo}</option>)}</select></label>
                       <div className="flex gap-2"><button disabled={ocupado} className="rounded-lg bg-gold px-3 py-2 text-xs font-semibold text-black">Guardar cambios</button><button type="button" onClick={() => setMaterialEditandoId("")} className="rounded-lg border border-border px-3 py-2 text-xs">Cancelar</button></div>
                     </form> : <>
