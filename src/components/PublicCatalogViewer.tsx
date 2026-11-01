@@ -213,7 +213,11 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
       let parseStartedAt = bootStartedAt;
       let preprocessStartedAt = bootStartedAt;
       try {
-        const viewer = createAurumWebGLViewer(THREE, host, { pixelRatio: Math.min(window.devicePixelRatio || 1, 1.25), controlsClass: OrbitControls, maxDistance: 100 });
+        // Keep desktop detail while reducing fragment workload on high-DPI phones.
+        // This is scoped to the public viewer; the shared Aurum renderer is unchanged.
+        const isCompactViewport = window.matchMedia("(max-width: 767px)").matches;
+        const viewerPixelRatio = Math.min(window.devicePixelRatio || 1, isCompactViewport ? 1 : 1.25);
+        const viewer = createAurumWebGLViewer(THREE, host, { pixelRatio: viewerPixelRatio, controlsClass: OrbitControls, maxDistance: 100 });
         ({ scene, camera, renderer, controls } = viewer);
         // Public viewer only: align highlight roll-off with the photographic reference.
         // Keep this override local; createAurumWebGLViewer is shared with Aurum Render.
