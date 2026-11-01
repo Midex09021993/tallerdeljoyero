@@ -17,7 +17,7 @@ type Curso = { id: string; participante_id: string; titulo: string; descripcion:
 type Inscripcion = { id: string; curso_id: string; email_alumno: string; nombre_alumno: string | null; estado: string; formacion_cursos: Curso | null };
 type Material = { id: string; curso_id: string; sesion_id: string | null; titulo: string; descripcion: string | null; nombre_archivo: string; ruta_storage: string; mime_type: string; tamano_bytes: number; created_at: string; publicado: boolean };
 type SesionCurso = { id: string; curso_id: string; numero: number; titulo: string; descripcion: string | null; duracion_horas: number; fecha_programada: string | null; publicada: boolean };
-type Examen = { id: string; curso_id: string; titulo: string; instrucciones: string | null; duracion_minutos: number | null; intentos_permitidos: number; puntaje_maximo: number; publicado: boolean; disponible_desde: string | null; disponible_hasta: string | null };
+type Examen = { id: string; curso_id: string; sesion_id?: string | null; titulo: string; instrucciones: string | null; duracion_minutos: number | null; intentos_permitidos: number; puntaje_maximo: number; publicado: boolean; disponible_desde: string | null; disponible_hasta: string | null };
 type Pregunta = { id: string; examen_id: string; tipo: "opcion_multiple" | "verdadero_falso" | "practica"; enunciado: string; opciones: Array<{label:string;value:string}>; puntaje: number; orden: number; obligatoria: boolean };
 type ExamenAlumno = { id: string; titulo: string; instrucciones: string | null; duracion_minutos: number | null; puntaje_maximo: number; preguntas: Array<{id:string;tipo:string;enunciado:string;opciones:Array<{label:string;value:string}>;puntaje:number;orden:number;obligatoria:boolean}> };
 type Intento = { id: string; examen_id: string; numero_intento: number; calificacion: number | null; estado: string; enviado_en: string; observaciones_docente: string | null };
@@ -320,7 +320,7 @@ function AulaFormacionPage() {
     queryKey: ["aula-formacion-examenes-docente", participanteId, cursoActivoId],
     enabled: Boolean(esDocente && participanteId && cursoActivoId),
     queryFn: async () => {
-      const { data, error } = await (supabase as any).from("formacion_examenes").select("id,curso_id,titulo,instrucciones,duracion_minutos,intentos_permitidos,puntaje_maximo,publicado,disponible_desde,disponible_hasta").eq("participante_id", participanteId).eq("curso_id", cursoActivoId).order("created_at", { ascending: false });
+      const { data, error } = await (supabase as any).from("formacion_examenes").select("id,curso_id,sesion_id,titulo,instrucciones,duracion_minutos,intentos_permitidos,puntaje_maximo,publicado,disponible_desde,disponible_hasta").eq("participante_id", participanteId).eq("curso_id", cursoActivoId).order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as Examen[];
     },
@@ -416,7 +416,7 @@ function AulaFormacionPage() {
     queryKey: ["aula-formacion-examenes-alumno", sesion?.user.id, idsCursosAlumno.join(",")],
     enabled: Boolean(!esDocente && idsCursosAlumno.length),
     queryFn: async () => {
-      const { data, error } = await (supabase as any).from("formacion_examenes").select("id,curso_id,titulo,instrucciones,duracion_minutos,intentos_permitidos,puntaje_maximo,publicado,disponible_desde,disponible_hasta").in("curso_id", idsCursosAlumno).eq("publicado", true).order("created_at", { ascending: false });
+      const { data, error } = await (supabase as any).from("formacion_examenes").select("id,curso_id,sesion_id,titulo,instrucciones,duracion_minutos,intentos_permitidos,puntaje_maximo,publicado,disponible_desde,disponible_hasta").in("curso_id", idsCursosAlumno).eq("publicado", true).order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as Examen[];
     },
@@ -554,6 +554,53 @@ function AulaFormacionPage() {
       setMensaje("Evaluación creada como borrador. Añade sus preguntas antes de publicarla.");
     } catch (err) { setMensaje(err instanceof Error ? err.message : "No se pudo crear la evaluación."); }
     finally { setOcupado(false); }
+  }
+
+  async function cargarExamenSesion1() {
+    if (!participanteId || !cursoActivoId) return;
+    const sesionUno = (sesionesQuery.data ?? []).find(s => s.numero === 1);
+    if (!sesionUno) { setMensaje("No se encontró la Sesión 1 del curso activo. Publica o crea primero esa sesión."); return; }
+    const existente = (examenesQuery.data ?? []).find(x => x.sesion_id === sesionUno.id);
+    if (existente) { setExamenSeleccionado(existente.id); setMensaje("Ya existe una evaluación vinculada a la Sesión 1. La he seleccionado para que puedas revisarla."); return; }
+    const preguntas = [
+      { enunciado:"¿Qué significa CAD en el diseño de joyería?", opciones:["Diseño asistido por computadora","Cálculo automático de diamantes","Control de acabado digital","Creación artística decorativa"], correcta:"Diseño asistido por computadora" },
+      { enunciado:"¿Para qué se utiliza principalmente Rhinoceros 7?", opciones:["Editar fotografías","Modelar objetos tridimensionales","Calcular el precio del oro","Controlar una impresora directamente"], correcta:"Modelar objetos tridimensionales" },
+      { enunciado:"¿Qué tipo de geometría utiliza Rhino para representar curvas y superficies?", opciones:["Píxeles","NURBS","Hojas de cálculo","Capas de imagen"], correcta:"NURBS" },
+      { enunciado:"¿Qué vista permite observar el modelo desde arriba?", opciones:["Front","Right","Top","Perspective"], correcta:"Top" },
+      { enunciado:"¿Qué vista permite observar el modelo desde el frente?", opciones:["Top","Front","Right","Perspective"], correcta:"Front" },
+      { enunciado:"¿Qué representa el eje Z en el sistema de referencia habitual?", opciones:["La anchura","La profundidad","La altura","El color"], correcta:"La altura" },
+      { enunciado:"¿Cómo puedes acercar o alejar la vista en Rhino?", opciones:["Con la rueda del ratón","Con doble clic en el título","Con clic izquierdo y arrastre","Cambiando el eje Z"], correcta:"Con la rueda del ratón" },
+      { enunciado:"¿Qué hace el comando ZE (Zoom Extents)?", opciones:["Oculta todos los objetos","Encuadra todos los objetos","Cambia a vista frontal","Recupera la vista anterior"], correcta:"Encuadra todos los objetos" },
+      { enunciado:"¿Qué comando permite recuperar la vista anterior?", opciones:["Pan","ZEA","UndoView","ZS"], correcta:"UndoView" },
+      { enunciado:"¿Cuál representa el flujo general desde el diseño digital hasta la fabricación aditiva?", opciones:["Impresión 3D → diseño CAD → preparación","Diseño CAD → preparación del archivo → impresión 3D → validación","Fundición → modelado → fotografía","Diseño CAD → acabado → eliminar el archivo"], correcta:"Diseño CAD → preparación del archivo → impresión 3D → validación" },
+    ];
+    setOcupado(true); setMensaje("");
+    try {
+      const { data: examen, error: examenError } = await (supabase as any).from("formacion_examenes").insert({
+        participante_id: participanteId, curso_id: cursoActivoId, sesion_id: sesionUno.id,
+        titulo:"Examen 01 · Sesión 1 · Introducción al diseño CAD y Rhino 7",
+        instrucciones:"Lee cada pregunta y selecciona una sola respuesta. Son 10 preguntas de opción múltiple, con un valor de 2 puntos cada una. Puntaje máximo: 20 puntos.",
+        duracion_minutos:20, intentos_permitidos:1, puntaje_maximo:20, publicado:false, creado_por:sesion?.user.id,
+      }).select("id").single();
+      if (examenError) throw examenError;
+      const filas = preguntas.map((p,idx)=>({
+        participante_id:participanteId, examen_id:examen.id, tipo:"opcion_multiple", enunciado:p.enunciado,
+        opciones:p.opciones.map(o=>({label:o,value:o})), respuesta_correcta:p.correcta, puntaje:2, orden:idx+1, obligatoria:true,
+      }));
+      const { error: preguntasError } = await (supabase as any).from("formacion_preguntas").insert(filas);
+      if (preguntasError) throw preguntasError;
+      const { error: publicarError } = await (supabase as any).from("formacion_examenes").update({publicado:true}).eq("id",examen.id).eq("participante_id",participanteId);
+      if (publicarError) throw publicarError;
+      setExamenSeleccionado(examen.id);
+      await Promise.all([
+        qc.invalidateQueries({queryKey:["aula-formacion-examenes-docente",participanteId,cursoActivoId]}),
+        qc.invalidateQueries({queryKey:["aula-formacion-preguntas-docente",examen.id]}),
+        qc.invalidateQueries({queryKey:["aula-formacion-examenes-alumno"]}),
+      ]);
+      setMensaje("Examen 01 creado y publicado para la Sesión 1 con 10 preguntas y 20 puntos.");
+    } catch (err) {
+      setMensaje(err instanceof Error ? err.message : "No se pudo cargar el examen. Si se creó como borrador, revisa sus preguntas antes de publicarlo.");
+    } finally { setOcupado(false); }
   }
 
   async function agregarPregunta(e: FormEvent) {
@@ -1354,6 +1401,11 @@ function AulaFormacionPage() {
             </Panel></div>}
           {seccionDocente === "evaluaciones" && cursoActivoId && <div id="doc-evaluaciones" className="scroll-mt-24"><Panel titulo="Evaluaciones y cuestionarios" colapsable defaultOpen={false}>
             <div className="space-y-3 p-5">
+              <div className="rounded-xl border border-gold/30 bg-gold/5 p-4">
+                <p className="text-sm font-semibold">Examen preparado · Sesión 1</p>
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">Carga las 10 preguntas de opción múltiple, 2 puntos cada una, asociadas a la primera sesión del curso seleccionado.</p>
+                <button type="button" disabled={ocupado || sesionesQuery.isLoading || examenesQuery.isLoading} onClick={()=>void cargarExamenSesion1()} className="mt-3 rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-black disabled:opacity-50">Cargar y publicar Examen 01</button>
+              </div>
               <form onSubmit={(e) => void crearExamen(e)} className="space-y-3 rounded-xl border border-border p-4">
                 <p className="text-sm font-semibold">Crear evaluación</p>
                 <label className="block text-xs font-medium">Título<input value={tituloExamen} onChange={e => setTituloExamen(e.target.value)} required className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" /></label>
