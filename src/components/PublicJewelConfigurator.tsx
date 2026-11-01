@@ -263,7 +263,7 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
               <button type="button" aria-pressed={activeCategory === "metal"} onClick={() => { setActiveCategory("metal"); setShowMaterialOptions(true); }} className={"min-w-[76px] rounded-full px-4 py-2 text-[11px] font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45] " + (activeCategory === "metal" ? "bg-white text-[#29251f] shadow-sm" : "text-[#77716a] hover:text-[#29251f]")}>Metal</button>
               <button type="button" aria-pressed={activeCategory === "gem"} onClick={() => { setActiveCategory("gem"); setShowMaterialOptions(true); }} className={"min-w-[76px] rounded-full px-4 py-2 text-[11px] font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45] " + (activeCategory === "gem" ? "bg-white text-[#29251f] shadow-sm" : "text-[#77716a] hover:text-[#29251f]")}>Gem</button>
             </div>
-            <p className={"overflow-hidden rounded-full bg-white/75 px-2.5 text-[10px] font-medium text-[#756b5e] shadow-sm backdrop-blur-sm transition-all duration-300 " + (showMaterialOptions ? "max-h-8 py-1 opacity-100" : "max-h-0 py-0 opacity-0")}>{activeCategory === "metal" ? metales.find((item) => item.id === metalId)?.label : gemasPublicas.find((item) => item.id === gemaId)?.label}</p>
+            
           </div>
           <div className="pointer-events-none absolute bottom-2 left-2 z-10 max-w-[calc(100%-1rem)] rounded-full border border-white/80 bg-white/85 px-2.5 py-1.5 text-[9px] text-[#766d61] shadow-sm backdrop-blur sm:bottom-3 sm:left-3 sm:px-3 sm:text-[10px]">Toca y arrastra para girar · Pellizca para acercar</div>
         </div>
