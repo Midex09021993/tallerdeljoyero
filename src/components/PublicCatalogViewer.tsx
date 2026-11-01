@@ -413,12 +413,40 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
           controls.update();
           loop?.converge?.(3);
         };
+        let zoomFrameId = 0;
+        const animateZoom = (direction: "in" | "out") => {
+          if (zoomFrameId) cancelAnimationFrame(zoomFrameId);
+          const offset = camera.position.clone().sub(controls.target);
+          const startDistance = offset.length();
+          const factor = direction === "in" ? 0.88 : 1.12;
+          const endDistance = THREE.MathUtils.clamp(startDistance * factor, controls.minDistance, controls.maxDistance);
+          const distanceDelta = endDistance - startDistance;
+          if (Math.abs(distanceDelta) < 0.0001) return;
+          const startedAt = performance.now();
+          const duration = 260;
+          loop?.setContinuousRendering?.(true);
+          const step = (now: number) => {
+            const progress = Math.min((now - startedAt) / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            const nextDistance = startDistance + distanceDelta * eased;
+            camera.position.copy(controls.target).addScaledVector(offset.clone().normalize(), nextDistance);
+            controls.update();
+            if (progress < 1) {
+              zoomFrameId = requestAnimationFrame(step);
+            } else {
+              zoomFrameId = 0;
+              loop?.setContinuousRendering?.(false);
+              loop?.converge?.(3);
+            }
+          };
+          zoomFrameId = requestAnimationFrame(step);
+        };
         cameraActionsRef.current = {
           reset: () => { camera.up.set(0, 1, 0); setCameraView(initialCameraPosition); },
           front: () => setCameraView(new THREE.Vector3(0, 0, distance)),
           side: () => setCameraView(new THREE.Vector3(distance, 0, 0)),
           top: () => setCameraView(new THREE.Vector3(0, distance, 0.001), new THREE.Vector3(0, 0, -1)),
-          zoom: (direction) => { if (direction === "in") controls.dollyIn(1.18); else controls.dollyOut(1.18); controls.update(); loop?.converge?.(3); },
+          zoom: (direction) => animateZoom(direction),
           rotate: (enabled) => { controls.autoRotate = enabled; if (enabled) loop?.setContinuousRendering?.(true); else { loop?.setContinuousRendering?.(false); loop?.converge?.(3); } controls.update(); },
         };
         setCameraReady(true);
@@ -451,6 +479,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
     void boot();
     return () => {
       cancelled = true;
+      if (zoomFrameId) cancelAnimationFrame(zoomFrameId);
       loop?.stop?.();
       resizeObserver?.disconnect();
       if (diamondBvhRuntimeRef.current) {
