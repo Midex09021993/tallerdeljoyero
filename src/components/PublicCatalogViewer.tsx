@@ -217,6 +217,9 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         // This is scoped to the public viewer; the shared Aurum renderer is unchanged.
         const isCompactViewport = window.matchMedia("(max-width: 767px)").matches;
         const viewerPixelRatio = Math.min(window.devicePixelRatio || 1, isCompactViewport ? 1 : 1.25);
+        // Render at a lower internal resolution only while the camera is moving.
+        // Restore the full viewer resolution as soon as OrbitControls settles.
+        const interactionPixelRatio = Math.max(0.75, viewerPixelRatio * 0.75);
         const viewer = createAurumWebGLViewer(THREE, host, { pixelRatio: viewerPixelRatio, controlsClass: OrbitControls, maxDistance: 100 });
         ({ scene, camera, renderer, controls } = viewer);
         // Public viewer only: align highlight roll-off with the photographic reference.
@@ -601,7 +604,19 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
           }
         }, {
           progressiveFrames: 3,
-          onEnd: () => reportFramePerf("interaction-end"),
+          onStart: () => {
+            if (renderer.getPixelRatio?.() !== interactionPixelRatio) {
+              renderer.setPixelRatio(interactionPixelRatio);
+              bvhCameraStateRef.current = null;
+            }
+          },
+          onEnd: () => {
+            if (renderer.getPixelRatio?.() !== viewerPixelRatio) {
+              renderer.setPixelRatio(viewerPixelRatio);
+              bvhCameraStateRef.current = null;
+            }
+            reportFramePerf("interaction-end");
+          },
         });
         renderRef.current = () => loop?.converge?.(3);
         loop.converge(3);
