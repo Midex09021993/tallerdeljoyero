@@ -215,7 +215,7 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
 
         </div>
         <div className="flex items-center justify-between gap-2 sm:justify-end">
-          <span className="inline-flex rounded-full border border-[#e9e2d7] px-2.5 py-1.5 text-[9px] font-semibold uppercase tracking-[.1em] text-[#81786c] sm:px-3 sm:text-[10px]">Solo visualización</span>
+          
           <button type="button" onClick={() => { setMetalId("oro-amarillo"); setGemaId("diamante_natural"); }} className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[#e4ddd1] bg-white px-3.5 py-2 text-xs font-semibold text-[#41382d] shadow-sm transition hover:border-[#b28b45] hover:bg-[#fbf8f1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45] focus-visible:ring-offset-2"><RotateCcw className="size-3.5" /> Restablecer</button>
         </div>
       </header>
