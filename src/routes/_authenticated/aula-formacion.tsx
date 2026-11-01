@@ -1447,9 +1447,15 @@ function AulaFormacionPage() {
   ];
   const renderLaboratorioGeometria = () => {
     if (lecturaAbierta?.numero !== 2 || paginaLectura !== 1) return null;
+    if (!laboratorioGeometriaAbierto) return <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5 sm:p-6">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="min-w-0"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-gold-deep">Laboratorio práctico · RHINO 7</p><h4 className="mt-2 text-lg font-semibold">Reconoce la geometría de una joya</h4><p className="mt-1 text-sm text-muted-foreground">Abre el laboratorio en una ventana independiente para trabajar con todo el espacio de pantalla.</p><p className="mt-2 text-xs text-muted-foreground">{modulosGeometriaCompletados.length}/4 módulos completados</p></div>
+        <button type="button" onClick={() => setLaboratorioGeometriaAbierto(true)} className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-gold px-5 py-3 text-sm font-semibold text-black shadow-sm transition hover:-translate-y-0.5 hover:brightness-105"><BookOpenCheck className="size-4"/> Abrir laboratorio <ArrowRight className="size-4"/></button>
+      </div>
+    </section>;
     const actividad = actividadesGeometria[moduloGeometria];
     const completados = modulosGeometriaCompletados.length;
-    return <section className={laboratorioGeometriaAbierto ? "fixed inset-0 z-[100] h-[100dvh] w-full max-w-none overflow-y-auto rounded-none border-0 bg-background" : "mt-8 max-w-4xl overflow-hidden rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background"}>
+    return <section className="fixed inset-0 z-[100] h-[100dvh] w-full max-w-none overflow-y-auto rounded-none border-0 bg-background" role="dialog" aria-modal="true" aria-label="Laboratorio interactivo de geometría">
       <div className="sticky top-0 z-10 border-b border-gold/20 bg-background/95 p-5 backdrop-blur sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-2"><span className="text-[10px] font-bold uppercase tracking-[0.16em] text-gold-deep">Laboratorio interactivo · RHINO 7</span><div className="flex items-center gap-2"><span className="rounded-full border border-gold/30 bg-background px-3 py-1 text-[11px] font-semibold">{completados}/4 módulos completados</span>{laboratorioGeometriaAbierto && <button type="button" onClick={() => setLaboratorioGeometriaAbierto(false)} className="rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-muted">Cerrar ✕</button>}</div></div>
         <h4 className="mt-2 text-xl font-semibold">Reconoce la geometría de una joya</h4>
