@@ -6,9 +6,9 @@ import { GEMAS, MATERIALES } from "@/lib/aurum/catalog";
 
 type Props = { slug?: string; producto?: string; sharedModelUrl?: string; sharedModelName?: string; localFile?: File };
 const metales = [
-  { id: "oro-amarillo", label: "Oro amarillo", color: 0xd5a63d, materialId: "oro18a_pulido" },
-  { id: "oro-blanco", label: "Oro blanco", color: 0xd7d9dc, materialId: "oro18b_rodinado" },
-  { id: "oro-rosa", label: "Oro rosa", color: 0xc98576, materialId: "oro18r_pulido" },
+  { id: "oro-amarillo", label: "Oro amarillo", color: 0xe5b377, materialId: "oro18a_ijewel_premium" },
+  { id: "oro-blanco", label: "Oro blanco", color: 0xc2c2c3, materialId: "oro18b_ijewel_premium" },
+  { id: "oro-rosa", label: "Oro rosa", color: 0xf2af83, materialId: "oro18r_ijewel_premium" },
   { id: "plata", label: "Plata", color: 0xe0e2e4, materialId: "plata925_pulida" },
 ] as const;
 // Keep the public viewer's original five gemstone choices; do not expose
