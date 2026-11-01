@@ -986,8 +986,8 @@ function AulaFormacionPage() {
                   </div>
                   <div className="rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-4 sm:p-5">
                     <div className="flex items-center gap-2"><BookOpen className="size-5 text-gold-deep"/><p className="text-xs font-semibold uppercase tracking-wider text-gold-deep">Guía de aprendizaje</p></div>
-                    <h4 className="mt-1 text-lg font-semibold">Lo que aprendiste en este recorrido</h4>
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">Has identificado los diez componentes principales de esta interfaz de MatrixGold 3.1. Puedes volver a seleccionar cualquier marcador para repasar dónde está y cómo se utiliza.</p>
+                    <h4 className="mt-1 text-lg font-semibold">{componentesExplorados.length===10 ? "Lo que aprendiste en este recorrido" : "Guía para conocer los componentes"}</h4>
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">{componentesExplorados.length===10 ? "Has recorrido los diez componentes principales de esta interfaz de MatrixGold 3.1. Puedes volver a seleccionar cualquier marcador para repasar dónde está y cómo se utiliza." : "Utiliza esta guía como referencia mientras exploras los marcadores. Cada componente incluye su ubicación, función y un ejemplo relacionado con el trabajo en joyería."}</p>
                     <div className="mt-4 grid gap-2 sm:grid-cols-2">
                       {COMPONENTES_INTERFAZ.map((item, indice) => <button key={indice} type="button" onClick={() => { setComponenteActivo(indice); setComponentesExplorados(prev => prev.includes(indice) ? prev : [...prev, indice]); }} className="flex items-start gap-2 rounded-xl border border-border bg-background/90 p-3 text-left transition hover:border-gold/60">
                         <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-gold/15 text-xs font-bold text-gold-deep">{indice+1}</span>
@@ -1277,8 +1277,8 @@ function AulaFormacionPage() {
                   </div>
                   <div className="rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-4 sm:p-5">
                     <div className="flex items-center gap-2"><BookOpen className="size-5 text-gold-deep"/><p className="text-xs font-semibold uppercase tracking-wider text-gold-deep">Guía de aprendizaje</p></div>
-                    <h4 className="mt-1 text-lg font-semibold">Lo que aprendiste en este recorrido</h4>
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">Has identificado los diez componentes principales de esta interfaz de MatrixGold 3.1. Puedes volver a seleccionar cualquier marcador para repasar dónde está y cómo se utiliza.</p>
+                    <h4 className="mt-1 text-lg font-semibold">{componentesExplorados.length===10 ? "Lo que aprendiste en este recorrido" : "Guía para conocer los componentes"}</h4>
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">{componentesExplorados.length===10 ? "Has recorrido los diez componentes principales de esta interfaz de MatrixGold 3.1. Puedes volver a seleccionar cualquier marcador para repasar dónde está y cómo se utiliza." : "Utiliza esta guía como referencia mientras exploras los marcadores. Cada componente incluye su ubicación, función y un ejemplo relacionado con el trabajo en joyería."}</p>
                     <div className="mt-4 grid gap-2 sm:grid-cols-2">
                       {COMPONENTES_INTERFAZ.map((item, indice) => <button key={indice} type="button" onClick={() => { setComponenteActivo(indice); setComponentesExplorados(prev => prev.includes(indice) ? prev : [...prev, indice]); }} className="flex items-start gap-2 rounded-xl border border-border bg-background/90 p-3 text-left transition hover:border-gold/60">
                         <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-gold/15 text-xs font-bold text-gold-deep">{indice+1}</span>
