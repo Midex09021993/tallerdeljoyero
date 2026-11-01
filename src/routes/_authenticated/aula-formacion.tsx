@@ -619,19 +619,26 @@ function AulaFormacionPage() {
 
   async function abrirLecturaParaAlumno(s: SesionCurso, vistaPrevia = false) {
     setOcupado(true);
+    setMensaje("");
     try {
-      const { data, error } = await (supabase as any).from("formacion_contenidos_lectura").select("secciones,publicado").eq("sesion_id",s.id).eq("publicado",true).maybeSingle();
+      let consulta = (supabase as any).from("formacion_contenidos_lectura").select("secciones,publicado").eq("sesion_id",s.id);
+      if (!vistaPrevia) consulta = consulta.eq("publicado",true);
+      const { data, error } = await consulta.maybeSingle();
       if (error) throw error;
-      if (!data || !Array.isArray(data.secciones) || data.secciones.length === 0) {
-        setMensaje("La lectura de esta sesión todavía no está publicada por FADILAB.");
+      const secciones = data && Array.isArray(data.secciones) && data.secciones.length > 0
+        ? data.secciones
+        : vistaPrevia && s.numero === 1 ? LECTURA_SESION_1 : null;
+      if (!secciones) {
+        setMensaje(vistaPrevia ? "Todavía no hay contenido de lectura guardado para esta sesión." : "La lectura de esta sesión todavía no está publicada por FADILAB.");
         return;
       }
-      setSeccionesLecturaActivas(data.secciones);
+      setSeccionesLecturaActivas(secciones);
       setLecturaModoVistaPrevia(vistaPrevia);
       setLecturaAbierta(s);
       setPaginaLectura(0);
-    } catch (err) { setMensaje(err instanceof Error ? err.message : "No se pudo cargar la lectura publicada."); }
-    finally { setOcupado(false); }
+    } catch (err) {
+      setMensaje(err instanceof Error ? err.message : "No se pudo cargar la lectura. Revisa los permisos de lectura del contenido.");
+    } finally { setOcupado(false); }
   }
 
   async function publicarSesion(s: SesionCurso) {
