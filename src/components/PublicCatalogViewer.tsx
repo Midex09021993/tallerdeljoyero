@@ -579,11 +579,6 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         setGemOpticsLoading(false);
         return;
       }
-      if (cancelled || modelRef.current !== model || gemIdRef.current !== gemId) {
-        runtime.dispose();
-        setGemOpticsLoading(false);
-        return;
-      }
       runtime.refresh(model);
       if (!runtime.diagnostics().enabled) {
         console.warn("[PUBLIC VIEWER] BVH AURUM sin mallas compatibles para " + selectedFamily + "; se mantiene el material AURUM.");
