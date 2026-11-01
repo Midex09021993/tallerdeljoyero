@@ -62,6 +62,7 @@ function AulaFormacionPage() {
   const [respuestasAlumno, setRespuestasAlumno] = useState<Record<string, string>>({});
   const [enviandoExamen, setEnviandoExamen] = useState(false);
   const [ocupado, setOcupado] = useState(false);
+  const [vistaPreviaAlumno, setVistaPreviaAlumno] = useState(false);
 
   const rolAlumno = Boolean(sesion?.roles.some((r) => r === "gerente" || r === "operario"));
   const fadilabCandidate = sesion?.participantes.find((p) => /fadilab/i.test(p.nombre)) ?? null;
@@ -147,6 +148,18 @@ function AulaFormacionPage() {
       return (data ?? []) as Array<{id:string;examen_id:string;alumno_user_id:string;numero_intento:number;respuestas:unknown[];puntaje_obtenido:number;puntaje_maximo:number;calificacion:number|null;estado:string;observaciones_docente:string|null;enviado_en:string}>;
     },
   });
+  const materialesDocenteQuery = useQuery({
+    queryKey: ["aula-formacion-materiales-docente", participanteId, cursoActivoId],
+    enabled: Boolean(esDocente && participanteId && cursoActivoId),
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).from("formacion_materiales")
+        .select("id,curso_id,titulo,descripcion,nombre_archivo,ruta_storage,mime_type,tamano_bytes,created_at,publicado")
+        .eq("participante_id", participanteId).eq("curso_id", cursoActivoId).eq("publicado", true)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as Material[];
+    },
+  });
   const [notasPracticas, setNotasPracticas] = useState<Record<string,string>>({});
   const [observacionesPracticas, setObservacionesPracticas] = useState<Record<string,string>>({});
   const sesionesQuery = useQuery({
@@ -177,6 +190,17 @@ function AulaFormacionPage() {
   });
   const inscripcionesAlumno = alumnoQuery.data ?? [];
   const idsCursosAlumno = useMemo(() => [...new Set(inscripcionesAlumno.map((i) => i.curso_id))], [inscripcionesAlumno]);
+  const sesionesAlumnoQuery = useQuery({
+    queryKey: ["aula-formacion-sesiones-alumno", sesion?.user.id, idsCursosAlumno.join(",")],
+    enabled: Boolean(!esDocente && idsCursosAlumno.length),
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).from("formacion_sesiones")
+        .select("id,curso_id,numero,titulo,descripcion,duracion_horas,fecha_programada,publicada")
+        .in("curso_id", idsCursosAlumno).eq("publicada", true).order("numero");
+      if (error) throw error;
+      return (data ?? []) as SesionCurso[];
+    },
+  });
   const examenesAlumnoQuery = useQuery({
     queryKey: ["aula-formacion-examenes-alumno", sesion?.user.id, idsCursosAlumno.join(",")],
     enabled: Boolean(!esDocente && idsCursosAlumno.length),
@@ -495,6 +519,45 @@ function AulaFormacionPage() {
             <div className="grid size-12 place-items-center rounded-xl bg-gold/15 text-gold-deep"><ShieldCheck className="size-6" /></div>
             <div><p className="text-sm font-semibold">Panel docente · FADILAB</p><p className="mt-1 text-xs text-muted-foreground">Crea cursos, matricula alumnos y publica sesiones y archivos académicos.</p></div>
           </section>
+          {cursoActivoId && <div className="flex justify-end">
+            <button type="button" onClick={() => setVistaPreviaAlumno(true)} className="inline-flex items-center gap-2 rounded-lg border border-gold/40 bg-gold/10 px-4 py-2.5 text-sm font-semibold text-gold-deep hover:bg-gold/20">
+              <BookOpen className="size-4" /> Vista previa del alumno
+            </button>
+          </div>}
+          {vistaPreviaAlumno && cursoActivoId && (() => {
+            const curso = cursos.find(item => item.id === cursoActivoId);
+            const sesionesPublicadas = (sesionesQuery.data ?? []).filter(item => item.publicada);
+            const materialesPublicados = materialesDocenteQuery.data ?? [];
+            const examenesPublicados = (examenesQuery.data ?? []).filter(item => item.publicado);
+            return <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 p-3 sm:p-6" role="dialog" aria-modal="true" aria-label="Vista previa del alumno">
+              <div className="mx-auto my-4 max-w-4xl overflow-hidden rounded-2xl border border-border bg-background shadow-2xl">
+                <div className="flex items-center justify-between gap-3 border-b border-border p-4">
+                  <div><p className="text-sm font-semibold">Vista previa del alumno</p><p className="text-xs text-muted-foreground">Solo lectura · Contenido que está publicado</p></div>
+                  <button type="button" onClick={() => setVistaPreviaAlumno(false)} className="rounded-lg border border-border px-3 py-2 text-sm">Cerrar</button>
+                </div>
+                <div className="space-y-5 p-5 sm:p-7">
+                  <section className="rounded-2xl border border-gold/25 bg-gradient-to-br from-gold/10 via-card to-card p-5">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-gold-deep">Aula de formación · FADILAB</p>
+                    <h2 className="mt-2 text-xl font-semibold">{curso?.titulo ?? "Curso"}</h2>
+                    <p className="mt-2 text-sm text-muted-foreground">{curso?.descripcion || "Materiales y actividades de tu formación."}</p>
+                    <p className="mt-3 text-xs text-muted-foreground">{curso?.duracion_horas ?? 0} horas · Vista del participante</p>
+                  </section>
+                  <section className="space-y-3">
+                    <h3 className="text-base font-semibold">Sesiones</h3>
+                    {sesionesQuery.isLoading ? <p className="text-sm text-muted-foreground">Cargando sesiones…</p> : sesionesPublicadas.length === 0 ? <p className="rounded-xl border border-dashed border-border p-4 text-sm text-muted-foreground">Todavía no hay sesiones publicadas. Los borradores no son visibles para los alumnos.</p> : sesionesPublicadas.map(item => <article key={item.id} className="rounded-xl border border-border p-4"><p className="text-xs text-muted-foreground">Sesión {item.numero}{item.duracion_horas ? " · "+item.duracion_horas+" horas" : ""}</p><h4 className="mt-1 text-sm font-semibold">{item.titulo}</h4>{item.descripcion && <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">{item.descripcion}</p>}</article>)}
+                  </section>
+                  <section className="space-y-3">
+                    <h3 className="text-base font-semibold">Materiales publicados</h3>
+                    {materialesDocenteQuery.isLoading ? <p className="text-sm text-muted-foreground">Cargando materiales…</p> : materialesPublicados.length === 0 ? <p className="rounded-xl border border-dashed border-border p-4 text-sm text-muted-foreground">Todavía no hay materiales publicados.</p> : materialesPublicados.map(item => <div key={item.id} className="flex items-center justify-between gap-3 rounded-xl border border-border p-3"><div className="flex min-w-0 items-center gap-2"><FileText className="size-4 shrink-0 text-gold-deep"/><div className="min-w-0"><p className="truncate text-sm font-medium">{item.titulo}</p><p className="text-xs text-muted-foreground">{item.nombre_archivo}</p></div></div><button type="button" onClick={() => void descargarMaterial(item)} className="shrink-0 rounded-lg border border-border px-3 py-2 text-xs"><Download className="mr-1 inline size-3.5"/>Descargar</button></div>)}
+                  </section>
+                  <section className="space-y-3">
+                    <h3 className="text-base font-semibold">Evaluaciones</h3>
+                    {examenesPublicados.length === 0 ? <p className="rounded-xl border border-dashed border-border p-4 text-sm text-muted-foreground">Todavía no hay evaluaciones publicadas.</p> : examenesPublicados.map(item => <div key={item.id} className="rounded-xl border border-border p-3"><p className="text-sm font-medium">{item.titulo}</p><p className="mt-1 text-xs text-muted-foreground">{item.duracion_minutos ?? "Sin límite"} min · {item.intentos_permitidos} intento(s)</p>{item.instrucciones && <p className="mt-2 text-sm text-muted-foreground">{item.instrucciones}</p>}</div>)}
+                  </section>
+                </div>
+              </div>
+            </div>;
+          })()}
           <div className="grid gap-5 lg:grid-cols-2">
             <Panel titulo="Crear curso">
               <form onSubmit={(e) => void crearCurso(e)} className="space-y-3 p-5">
@@ -672,6 +735,8 @@ function AulaFormacionPage() {
           </div></Panel> : null}
           {alumnoQuery.isLoading ? <Panel titulo="Cargando tus cursos"><p className="p-5 text-sm text-muted-foreground">Vinculando tu inscripción y recuperando tus cursos…</p></Panel> : alumnoQuery.error ? <Panel titulo="No se pudo cargar el aula"><p className="p-5 text-sm text-red-700">{alumnoQuery.error.message}</p></Panel> : inscripcionesAlumno.length === 0 ? <Panel titulo="Aún no tienes cursos asignados"><p className="p-5 text-sm text-muted-foreground">Cuando FADILAB te inscriba con el correo de tu cuenta, el curso aparecerá aquí automáticamente.</p></Panel> : inscripcionesAlumno.map(i => <Panel key={i.id} titulo={i.formacion_cursos?.titulo ?? "Curso de formación"}>
             <div className="p-5"><p className="text-sm text-muted-foreground">{i.formacion_cursos?.descripcion || "Materiales y actividades de tu formación."}</p><div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground"><span>{i.formacion_cursos?.duracion_horas ?? 0} horas</span><span>Inscripción: {i.estado}</span></div>
+              <h3 className="mb-2 mt-5 text-sm font-semibold">Sesiones</h3>
+              {(sesionesAlumnoQuery.data ?? []).filter(item => item.curso_id === i.curso_id).length === 0 ? <p className="text-xs text-muted-foreground">Todavía no hay sesiones publicadas.</p> : (sesionesAlumnoQuery.data ?? []).filter(item => item.curso_id === i.curso_id).map(item => <article key={item.id} className="border-t border-border py-3"><p className="text-xs text-muted-foreground">Sesión {item.numero}</p><p className="text-sm font-medium">{item.titulo}</p>{item.descripcion && <p className="mt-1 whitespace-pre-wrap text-xs text-muted-foreground">{item.descripcion}</p>}</article>)}
               <h3 className="mb-2 mt-5 text-sm font-semibold">Evaluaciones</h3>
               {(examenesAlumnoQuery.data ?? []).filter(x => x.curso_id === i.curso_id).map(x => {
                 const intentos = (intentosAlumnoQuery.data ?? []).filter(t => t.examen_id === x.id);
