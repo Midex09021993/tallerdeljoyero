@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listarDirectorioAlumnosFormacion } from "@/lib/aula-formacion.functions";
-import { BookOpen, Users, Plus, Upload, FileText, Download, CalendarDays, ShieldCheck, Send, Pencil, Trash2 } from "lucide-react";
+import { BookOpen, Users, Plus, Upload, FileText, Download, CalendarDays, ShieldCheck, Send, Pencil, Trash2, CheckCircle2, ChevronLeft, ChevronRight, BookOpenCheck } from "lucide-react";
 import { AppShell, Panel } from "@/components/AppShell";
 import { useSesion } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,6 +21,57 @@ type Examen = { id: string; curso_id: string; titulo: string; instrucciones: str
 type Pregunta = { id: string; examen_id: string; tipo: "opcion_multiple" | "verdadero_falso" | "practica"; enunciado: string; opciones: Array<{label:string;value:string}>; puntaje: number; orden: number; obligatoria: boolean };
 type ExamenAlumno = { id: string; titulo: string; instrucciones: string | null; duracion_minutos: number | null; puntaje_maximo: number; preguntas: Array<{id:string;tipo:string;enunciado:string;opciones:Array<{label:string;value:string}>;puntaje:number;orden:number;obligatoria:boolean}> };
 type Intento = { id: string; examen_id: string; numero_intento: number; calificacion: number | null; estado: string; enviado_en: string; observaciones_docente: string | null };
+
+
+const LECTURA_SESION_1 = [
+  { titulo: "1. El diseño CAD aplicado a la joyería", bloques: [
+    "CAD significa diseño asistido por computadora. En joyería permite construir, revisar y modificar digitalmente la geometría de una pieza antes de producirla.",
+    "El modelo digital facilita estudiar proporciones, dimensiones, ubicación de componentes y posibles interferencias. También permite conservar un archivo editable para continuar el trabajo.",
+    "El CAD complementa el conocimiento artesanal; no reemplaza el criterio del joyero sobre diseño, materiales, fabricación y acabado."
+  ]},
+  { titulo: "2. Introducción a Rhinoceros 7", bloques: [
+    "Rhinoceros (Rhino) es un programa de modelado tridimensional utilizado en diseño industrial, arquitectura, producto y joyería.",
+    "Trabaja con geometría NURBS, que permite representar curvas y superficies mediante definiciones matemáticas. En esta sesión no construiremos superficies ni sólidos: primero aprenderemos a reconocer el espacio de trabajo y a navegarlo."
+  ]},
+  { titulo: "3. Reconocimiento de la interfaz", bloques: [
+    "Área gráfica y ventanas: es la zona donde se visualiza y construye el modelo. De forma predeterminada aparecen Top (superior), Front (frontal), Right (derecha) y Perspective (perspectiva).",
+    "Línea de comandos: permite escribir comandos y consultar indicaciones del programa. Observa sus mensajes porque Rhino comunica allí las opciones y solicitudes de cada operación.",
+    "Barras y paneles: contienen herramientas y paneles de propiedades, capas y otras funciones. Su disposición puede variar según la configuración del espacio de trabajo.",
+    "Títulos de las ventanas: identifican cada vista. Haz doble clic en el título para maximizarla y repite la acción para restaurarla."
+  ]},
+  { titulo: "4. Vistas y orientación espacial", bloques: [
+    "Top observa desde arriba; Front desde el frente; Right desde la derecha. Son vistas paralelas. Perspective representa profundidad y permite inspeccionar el modelo desde una orientación tridimensional.",
+    "Los ejes X, Y y Z representan direcciones del espacio. En el sistema de referencia habitual, Z corresponde a la altura. La orientación visible de los ejes depende de la vista activa."
+  ]},
+  { titulo: "5. Navegación básica en Rhino 7 para Windows", bloques: [
+    "Zoom: gira la rueda del ratón para acercar o alejar la vista.",
+    "Desplazar una vista paralela: mantén pulsado el botón derecho y arrastra.",
+    "Girar Perspective: mantén pulsado el botón derecho y arrastra.",
+    "Desplazar Perspective: mantén pulsadas las teclas Shift y el botón derecho, y arrastra.",
+    "Maximizar/restaurar: haz doble clic en el título de la ventana.",
+    "Zoom Extents: escribe este comando en la línea de comandos para encuadrar los objetos visibles."
+  ]},
+  { titulo: "6. Configuración inicial del entorno", bloques: [
+    "Antes de modelar, verifica que el archivo utilice las unidades indicadas por el docente. En joyería es habitual trabajar con unidades pequeñas, pero la unidad concreta debe responder a las instrucciones del ejercicio y a los requisitos del proyecto.",
+    "No cambies las unidades de un archivo sin comprender cómo afecta a sus dimensiones. Para esta sesión, todo el grupo debe utilizar una plantilla y unidades comunes. Comprueba también que las cuatro ventanas estén visibles y que la línea de comandos pueda leerse."
+  ]},
+  { titulo: "7. Del diseño digital a la manufactura aditiva", bloques: [
+    "El flujo general puede resumirse así: diseño CAD → preparación del archivo → impresión 3D → validación del modelo.",
+    "En joyería pueden existir rutas posteriores distintas, como utilizar un patrón para fundición a la cera perdida o elaborar un patrón maestro para fabricar moldes. Aquí solo reconocemos la conexión entre el modelo digital y la producción.",
+    "La elección de una resina calcinable depende del material y del proceso recomendado. No todas las resinas de impresión son intercambiables."
+  ]},
+  { titulo: "8. Actividad práctica: mi primer recorrido por el espacio 3D", bloques: [
+    "Realiza esta secuencia individualmente. No es necesario dibujar todavía:",
+    "1) Abre Rhino 7 y localiza la línea de comandos, las barras y los paneles.  2) Identifica Top, Front, Right y Perspective.  3) Activa cada ventana y observa cómo cambia la vista.",
+    "4) Localiza X, Y y Z.  5) En una vista paralela, acerca y aleja con la rueda.  6) En una vista paralela, mantén el botón derecho y arrastra para desplazar.",
+    "7) En Perspective, mantén el botón derecho y arrastra para girar.  8) Usa Shift + botón derecho y arrastra para desplazar.  9) Maximiza Perspective con doble clic en su título y luego restáurala.",
+    "10) Escribe Zoom Extents en la línea de comandos.  11) Guarda el archivo como Sesion_01_Primer_Recorrido.3dm en la carpeta indicada por el docente."
+  ]},
+  { titulo: "9. Comprobación de aprendizaje", bloques: [
+    "Al terminar, debes poder identificar las cuatro ventanas principales, reconocer los ejes X/Y/Z, realizar zoom, desplazamiento y rotación, maximizar y restaurar una ventana, ejecutar Zoom Extents y guardar un archivo .3dm.",
+    "Repasa estas preguntas: ¿qué significa CAD y cómo ayuda al joyero? ¿Qué diferencia hay entre una vista paralela y Perspective? ¿Para qué sirve la línea de comandos? ¿Qué hace Zoom Extents?"
+  ]}
+] as const;
 
 function AulaFormacionPage() {
   const { data: sesion, isLoading: cargandoSesion } = useSesion();
@@ -62,7 +113,7 @@ function AulaFormacionPage() {
   const [respuestasAlumno, setRespuestasAlumno] = useState<Record<string, string>>({});
   const [enviandoExamen, setEnviandoExamen] = useState(false);
   const [ocupado, setOcupado] = useState(false);
-  const [vistaPreviaAlumno, setVistaPreviaAlumno] = useState(false);
+  const [vistaPreviaAlumno, setVistaPreviaAlumno] = useState(false);\n  const [lecturaAbierta, setLecturaAbierta] = useState<SesionCurso | null>(null);\n  const [paginaLectura, setPaginaLectura] = useState(0);
 
   const rolAlumno = Boolean(sesion?.roles.some((r) => r === "gerente" || r === "operario"));
   const fadilabCandidate = sesion?.participantes.find((p) => /fadilab/i.test(p.nombre)) ?? null;
@@ -201,6 +252,19 @@ function AulaFormacionPage() {
       return (data ?? []) as SesionCurso[];
     },
   });
+  const progresoLecturasQuery = useQuery({
+    queryKey: ["aula-formacion-progreso-lecturas", sesion?.user.id, idsCursosAlumno.join(",")],
+    enabled: Boolean(!esDocente && sesion?.user.id && idsCursosAlumno.length),
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).from("formacion_progreso_lecturas")
+        .select("sesion_id,completada_en")
+        .eq("alumno_user_id", sesion!.user.id);
+      if (error) throw error;
+      return (data ?? []) as Array<{ sesion_id: string; completada_en: string }>;
+    },
+  });
+  const sesionesCompletadas = new Set((progresoLecturasQuery.data ?? []).map(item => item.sesion_id));
+
   const examenesAlumnoQuery = useQuery({
     queryKey: ["aula-formacion-examenes-alumno", sesion?.user.id, idsCursosAlumno.join(",")],
     enabled: Boolean(!esDocente && idsCursosAlumno.length),
@@ -294,6 +358,26 @@ function AulaFormacionPage() {
       setMensaje("Evaluación práctica calificada y nota final del examen actualizada.");
     } catch (err) { setMensaje(err instanceof Error ? err.message : "No se pudo calificar el ejercicio práctico."); }
     finally { setOcupado(false); }
+  }
+
+  async function marcarLecturaCompletada(sesionLectura: SesionCurso) {
+    if (!sesion?.user.id) return;
+    setOcupado(true);
+    try {
+      const { error } = await (supabase as any).from("formacion_progreso_lecturas").insert({
+        alumno_user_id: sesion.user.id,
+        sesion_id: sesionLectura.id,
+      });
+      if (error && error.code !== "23505") throw error;
+      await qc.invalidateQueries({ queryKey: ["aula-formacion-progreso-lecturas", sesion.user.id] });
+      setLecturaAbierta(null);
+      setPaginaLectura(0);
+      setMensaje("Lectura completada. Tu avance quedó marcado.");
+    } catch (err) {
+      setMensaje(err instanceof Error ? err.message : "No se pudo guardar el avance. Verifica que la actualización del Aula esté aplicada.");
+    } finally {
+      setOcupado(false);
+    }
   }
 
   async function abrirExamenAlumno(id: string) {
@@ -725,6 +809,24 @@ function AulaFormacionPage() {
       ) : (
         <>
           <section className="rounded-2xl border border-gold/20 bg-card p-5"><p className="text-sm font-semibold">Bienvenido al aula</p><p className="mt-1 text-xs text-muted-foreground">Aquí aparecen únicamente los cursos en los que FADILAB te ha inscrito. Los archivos permanecen privados.</p></section>
+          {lecturaAbierta && <div className="fixed inset-0 z-[60] overflow-y-auto bg-black/60 p-3 sm:p-6" role="dialog" aria-modal="true" aria-label="Lectura de la sesión">
+            <div className="mx-auto my-4 flex min-h-[80vh] max-w-3xl flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl">
+              <header className="border-b border-border p-4 sm:p-6">
+                <div className="flex items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-wide text-gold-deep">Aula de formación · Lectura guiada</p><h2 className="mt-1 text-lg font-semibold">{lecturaAbierta.numero}. {lecturaAbierta.titulo}</h2><p className="mt-1 text-xs text-muted-foreground">Avanza por los apartados y marca la lectura al finalizar.</p></div><button type="button" onClick={() => setLecturaAbierta(null)} className="rounded-lg border border-border px-3 py-2 text-xs">Cerrar</button></div>
+                <div className="mt-4 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-gold transition-all" style={{width: (((paginaLectura+1)/LECTURA_SESION_1.length)*100)+"%"}}/></div>
+                <p className="mt-2 text-xs text-muted-foreground">Apartado {paginaLectura+1} de {LECTURA_SESION_1.length}</p>
+              </header>
+              <main className="flex-1 space-y-4 p-5 sm:p-8">
+                <h3 className="text-xl font-semibold">{LECTURA_SESION_1[paginaLectura].titulo}</h3>
+                {LECTURA_SESION_1[paginaLectura].bloques.map((bloque,idx) => <p key={idx} className="whitespace-pre-line text-sm leading-7 text-foreground/90">{bloque}</p>)}
+                {paginaLectura === LECTURA_SESION_1.length-1 && <div className="rounded-xl border border-gold/30 bg-gold/5 p-4"><p className="text-sm font-semibold">Has llegado al final de la lectura</p><p className="mt-1 text-sm text-muted-foreground">Cuando hayas realizado la práctica y revisado los contenidos, marca esta sesión como completada.</p></div>}
+              </main>
+              <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-border p-4 sm:p-5">
+                <button type="button" disabled={paginaLectura===0} onClick={() => setPaginaLectura(p => Math.max(0,p-1))} className="inline-flex items-center gap-1 rounded-lg border border-border px-4 py-2.5 text-sm disabled:opacity-40"><ChevronLeft className="size-4"/> Anterior</button>
+                {paginaLectura < LECTURA_SESION_1.length-1 ? <button type="button" onClick={() => setPaginaLectura(p => Math.min(LECTURA_SESION_1.length-1,p+1))} className="inline-flex items-center gap-1 rounded-lg bg-gold px-4 py-2.5 text-sm font-semibold text-black">Siguiente <ChevronRight className="size-4"/></button> : sesionesCompletadas.has(lecturaAbierta.id) ? <span className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-700"><CheckCircle2 className="size-5"/> Sesión completada</span> : <button type="button" disabled={ocupado} onClick={() => void marcarLecturaCompletada(lecturaAbierta)} className="inline-flex items-center gap-2 rounded-lg bg-gold px-4 py-2.5 text-sm font-semibold text-black disabled:opacity-50"><CheckCircle2 className="size-4"/> Marcar como completada</button>}
+              </footer>
+            </div>
+          </div>}
           {examenActivoAlumno ? <Panel titulo={examenActivoAlumno.titulo}><div className="space-y-4 p-5">
             {examenActivoAlumno.instrucciones && <p className="text-sm text-muted-foreground">{examenActivoAlumno.instrucciones}</p>}
             {examenActivoAlumno.preguntas.map((p, idx) => <div key={p.id} className="space-y-2 rounded-xl border border-border p-4">
@@ -736,7 +838,7 @@ function AulaFormacionPage() {
           {alumnoQuery.isLoading ? <Panel titulo="Cargando tus cursos"><p className="p-5 text-sm text-muted-foreground">Vinculando tu inscripción y recuperando tus cursos…</p></Panel> : alumnoQuery.error ? <Panel titulo="No se pudo cargar el aula"><p className="p-5 text-sm text-red-700">{alumnoQuery.error.message}</p></Panel> : inscripcionesAlumno.length === 0 ? <Panel titulo="Aún no tienes cursos asignados"><p className="p-5 text-sm text-muted-foreground">Cuando FADILAB te inscriba con el correo de tu cuenta, el curso aparecerá aquí automáticamente.</p></Panel> : inscripcionesAlumno.map(i => <Panel key={i.id} titulo={i.formacion_cursos?.titulo ?? "Curso de formación"}>
             <div className="p-5"><p className="text-sm text-muted-foreground">{i.formacion_cursos?.descripcion || "Materiales y actividades de tu formación."}</p><div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground"><span>{i.formacion_cursos?.duracion_horas ?? 0} horas</span><span>Inscripción: {i.estado}</span></div>
               <h3 className="mb-2 mt-5 text-sm font-semibold">Sesiones</h3>
-              {(sesionesAlumnoQuery.data ?? []).filter(item => item.curso_id === i.curso_id).length === 0 ? <p className="text-xs text-muted-foreground">Todavía no hay sesiones publicadas.</p> : (sesionesAlumnoQuery.data ?? []).filter(item => item.curso_id === i.curso_id).map(item => <article key={item.id} className="border-t border-border py-3"><p className="text-xs text-muted-foreground">Sesión {item.numero}</p><p className="text-sm font-medium">{item.titulo}</p>{item.descripcion && <p className="mt-1 whitespace-pre-wrap text-xs text-muted-foreground">{item.descripcion}</p>}</article>)}
+              {(sesionesAlumnoQuery.data ?? []).filter(item => item.curso_id === i.curso_id).length === 0 ? <p className="text-xs text-muted-foreground">Todavía no hay sesiones publicadas.</p> : (sesionesAlumnoQuery.data ?? []).filter(item => item.curso_id === i.curso_id).map(item => <article key={item.id} className="flex flex-wrap items-center justify-between gap-3 border-t border-border py-3"><div className="min-w-0"><p className="text-xs text-muted-foreground">Sesión {item.numero}</p><p className="text-sm font-medium">{item.titulo}</p>{item.descripcion && <p className="mt-1 whitespace-pre-wrap text-xs text-muted-foreground">{item.descripcion}</p>}</div><div className="flex shrink-0 items-center gap-2">{sesionesCompletadas.has(item.id) && <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700"><CheckCircle2 className="size-4"/> Completada</span>}<button type="button" onClick={() => { setLecturaAbierta(item); setPaginaLectura(0); }} className="inline-flex items-center gap-1 rounded-lg border border-gold/40 bg-gold/10 px-3 py-2 text-xs font-semibold text-gold-deep"><BookOpenCheck className="size-4"/> Abrir lectura</button></div></article>)}
               <h3 className="mb-2 mt-5 text-sm font-semibold">Evaluaciones</h3>
               {(examenesAlumnoQuery.data ?? []).filter(x => x.curso_id === i.curso_id).map(x => {
                 const intentos = (intentosAlumnoQuery.data ?? []).filter(t => t.examen_id === x.id);
