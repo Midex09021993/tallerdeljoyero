@@ -442,7 +442,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
           zoomFrameId = requestAnimationFrame(step);
         };
         cameraActionsRef.current = {
-          reset: () => { camera.up.set(0, 1, 0); setCameraView(initialCameraPosition); },
+          reset: () => setCameraView(new THREE.Vector3(0, 0, distance)),
           front: () => setCameraView(new THREE.Vector3(0, 0, distance)),
           side: () => setCameraView(new THREE.Vector3(distance, 0, 0)),
           top: () => setCameraView(new THREE.Vector3(0, distance, 0.001), new THREE.Vector3(0, 0, -1)),
