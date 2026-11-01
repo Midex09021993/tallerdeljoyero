@@ -12,7 +12,7 @@ import { MATERIALES, GEMAS } from "@/lib/aurum/catalog";
 import { getAurumHdriUrl, getAurumGemHdriUrl } from "@/lib/aurum-photographic-scene-engine";
 import { createAurumDiamondBvhRuntime } from "@/lib/aurum/aurum-diamond-bvh-runtime";
 
-type Props = { modelUrl: string; modelName: string; materialId: string; gemId: string; onReady?: () => void; onError?: (message: string) => void; hideControls?: boolean };
+type Props = { modelUrl: string; modelName: string; materialId: string; gemId: string; onReady?: () => void; onError?: (message: string) => void; hideControls?: boolean; onResetViewReady?: (reset: (() => void) | null) => void };
 const classifyMesh = (mesh: any): "metal" | "gema" | "otro" => {
   const data = mesh?.userData ?? {};
   const attrs = data?.attributes ?? {};
@@ -131,7 +131,7 @@ const inferGemMeshes = (model: THREE.Object3D): number => {
   return 1;
 };
 
-export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, onReady, onError, hideControls = false }: Props) {
+export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, onReady, onError, hideControls = false, onResetViewReady }: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
   const modelRef = useRef<THREE.Object3D | null>(null);
   const cameraRef = useRef<THREE.Camera | null>(null);
@@ -485,6 +485,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
           zoom: (direction) => animateZoom(direction),
           rotate: (enabled) => { controls.autoRotate = enabled; if (enabled) loop?.setContinuousRendering?.(true); else { loop?.setContinuousRendering?.(false); loop?.converge?.(3); } controls.update(); },
         };
+        onResetViewReady?.(() => cameraActionsRef.current?.reset());
         setCameraReady(true);
         scene.add(model);
         modelRef.current = model;
@@ -624,6 +625,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
       }
       cameraRef.current = null;
       cameraActionsRef.current = null;
+      onResetViewReady?.(null);
       setCameraReady(false);
       if (studioShadow) {
         scene?.remove(studioShadow);
@@ -776,8 +778,6 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
     <div ref={hostRef} className="absolute inset-0" />
     {!hideControls && cameraReady && !status && !error && <button type="button" onClick={() => cameraActionsRef.current?.reset()} title="Restablecer vista frontal" aria-label="Restablecer vista frontal" className="absolute right-3 top-3 z-20 inline-flex items-center gap-2 rounded-full border border-[#e8e1d6] bg-white/95 px-3.5 py-2 text-xs font-medium text-[#51483d] shadow-[0_2px_8px_-3px_rgba(45,35,20,.28)] backdrop-blur sm:hidden"><RotateCcw className="size-3.5" />Restablecer</button>}
     {!hideControls && cameraReady && !status && !error && <div className="hidden sm:flex absolute right-4 top-1/2 z-20 -translate-y-1/2 flex-col gap-2 rounded-full border border-white/65 bg-white/65 p-2 shadow-[0_10px_28px_-16px_rgba(45,35,20,.32),inset_0_1px_0_rgba(255,255,255,.85)] backdrop-blur-xl" aria-label="Controles de cámara">
-      <button type="button" onClick={() => cameraActionsRef.current?.reset()} title="Restablecer cámara" aria-label="Restablecer cámara" className="grid size-8 place-items-center rounded-xl text-[#655b4c] transition hover:bg-[#f5efe3] hover:text-[#8b692f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45]"><RotateCcw className="size-4" /></button>
-      <div className="h-px bg-[#eee8dd]" />
       <button type="button" onClick={() => { const next = !autoRotate; setAutoRotate(next); cameraActionsRef.current?.rotate(next); }} title={autoRotate ? "Pausar rotación" : "Rotación automática"} aria-label={autoRotate ? "Pausar rotación" : "Iniciar rotación automática"} aria-pressed={autoRotate} className={"grid size-8 place-items-center rounded-xl transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45] " + (autoRotate ? "bg-[#f5efe3] text-[#8b692f]" : "text-[#655b4c] hover:bg-[#f5efe3] hover:text-[#8b692f]")}>{autoRotate ? <Pause className="size-4" /> : <Play className="size-4" />}</button>
       <div className="h-px bg-[#eee8dd]" />
       <button type="button" onClick={() => cameraActionsRef.current?.front()} title="Vista frontal" aria-label="Vista frontal" className="grid size-8 place-items-center rounded-xl text-[#655b4c] transition hover:bg-[#f5efe3] hover:text-[#8b692f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45]"><Camera className="size-4" /></button>
