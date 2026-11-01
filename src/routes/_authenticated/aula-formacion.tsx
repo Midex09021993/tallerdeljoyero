@@ -116,31 +116,31 @@ const LECTURA_SESION_2 = [
     "Pulsa Enter cuando el comando solicite finalizar o confirmar. Pulsa Esc para cancelar el comando activo. Lee siempre las indicaciones de la línea de comandos antes de realizar el siguiente clic.",
     "Para seleccionar un objeto, haz clic sobre su geometría. Para quitar la selección, pulsa Esc o haz clic en un espacio vacío cuando no haya un comando activo. La selección permite identificar qué objeto vas a organizar."
   ]},
-  { titulo: "6. ¿Qué son las capas (Layers)?", bloques: [
-    "Las capas son una herramienta de organización del archivo. Permiten agrupar objetos relacionados y controlar su presentación sin tener que tratarlos como una sola geometría.",
-    "En un proyecto de joyería pueden utilizarse, por ejemplo, capas separadas para contornos de referencia, curvas auxiliares y componentes. Esta organización facilita localizar elementos y mantener ordenado el documento.",
-    "Cada capa puede tener un nombre, un color y estados de visibilidad o bloqueo. La capa actual es aquella en la que se crearán los objetos nuevos, mientras permanezca activa."
+  { titulo: "6. El panel Layers de MatrixGold", bloques: [
+    "En MatrixGold trabajaremos con el panel Layers (Capas) integrado en su entorno de Rhino. En la captura de referencia del curso aparecen los grupos Metal, Gem, Object, User, Render, Extra A, Extra B y Extra C. Estos nombres permiten reconocer distintas familias de organización del archivo; no debemos cambiar de grupo ni mover componentes sin comprender primero cómo está estructurada la joya.",
+    "Cada grupo muestra filas de capas identificadas por colores. El color ayuda a reconocer visualmente la capa, pero no significa necesariamente que todos los objetos de esa capa estén fabricados con ese material. En el ejemplo del curso, la barra inferior muestra Metal 01 como capa activa.",
+    "La capa activa es el destino de los objetos nuevos que se creen mientras permanezca seleccionada. Antes de dibujar, comprueba el nombre de la capa activa en el panel y en la barra inferior."
   ]},
-  { titulo: "7. Crear capas y organizar los objetos", bloques: [
-    "Abre el panel Layers (Capas) y localiza los controles para crear una capa nueva. Asigna nombres sencillos y descriptivos que indiquen qué tipo de elementos contendrá.",
-    "Para esta práctica crea dos capas: Contornos y Referencias. Asigna a cada una un color distinto para reconocer visualmente los grupos de objetos.",
-    "Activa la capa en la que deseas trabajar antes de dibujar. Los objetos nuevos se crearán en la capa actual. Si necesitas reorganizar un objeto existente, selecciónalo y utiliza la opción de cambio de capa del panel o del menú contextual.",
-    "El control de visibilidad permite ocultar o mostrar temporalmente los objetos de una capa. El bloqueo evita seleccionar o modificar accidentalmente los elementos que contiene. No elimines capas ni objetos durante esta práctica."
+  { titulo: "7. Asignar y controlar objetos desde Layers", bloques: [
+    "Asignar un objeto: primero selecciona el objeto en la ventana de modelado. Después, en el panel Layers, haz clic en el pequeño triángulo de la fila cuyo color identifica la capa de destino. Esta acción asigna el objeto seleccionado a esa capa. No confundas este triángulo con un control para desplegar subcapas.",
+    "Visibilidad (icono del ojo): al desactivar el ojo se ocultan en pantalla los objetos asignados a esa capa. Al volver a activarlo, los objetos se muestran otra vez. La prueba con el anillo del curso demostró que se puede ocultar una parte del cuerpo metálico o la piedra central sin ocultar necesariamente el resto de la joya.",
+    "Bloqueo (icono del candado): al bloquear una capa, sus objetos permanecen visibles, pero no se pueden seleccionar directamente en la ventana de modelado. Por ello no se pueden mover ni modificar mediante selección. La prueba también confirmó que el ojo sigue funcionando: una capa bloqueada puede ocultarse y volver a mostrarse.",
+    "Diferencia importante: ocultar controla si vemos los objetos; bloquear impide seleccionarlos para modificarlos; asignar determina a qué capa pertenecen. Son acciones independientes.",
+    "Trabaja con cuidado en las capas Metal y Gem de un diseño existente. Para practicar cambios de asignación, utiliza una copia del archivo y conserva intacto el original."
   ]},
-  { titulo: "8. Actividad práctica: geometría básica y capas", bloques: [
-    "Objetivo: crear un conjunto sencillo de curvas planas y organizarlo en dos capas. Esta actividad es un ejercicio de familiarización con las herramientas, no el diseño de una joya terminada.",
-    "1) Abre un documento nuevo siguiendo las indicaciones del docente y trabaja en la vista Top.",
-    "2) En el panel Layers, crea las capas Contornos y Referencias. Asigna a cada una un color diferente y activa Contornos.",
-    "3) Utiliza Rectangle para dibujar un rectángulo sencillo. Después utiliza Polyline para crear un contorno compuesto por varios segmentos.",
-    "4) Activa Referencias y crea un círculo con Circle y un segmento con Line. Mantén las formas separadas y evita superponerlas deliberadamente.",
-    "5) Selecciona uno de los objetos y comprueba en el panel Layers a qué capa pertenece. Si es necesario, cámbialo a la capa correspondiente.",
-    "6) Oculta y vuelve a mostrar Referencias para observar cómo cambia la visualización. Después bloquea y desbloquea esa capa para reconocer la diferencia entre ambos estados.",
-    "7) Guarda el archivo con el nombre indicado por el docente. Antes de finalizar, comprueba que los objetos estén organizados en las capas correctas."
+  { titulo: "8. Actividad práctica: organizar una joya en MatrixGold", bloques: [
+    "Objetivo: reconocer la estructura de capas de una joya real y comprobar las funciones de asignación, visibilidad y bloqueo en MatrixGold. Utilizaremos el anillo de práctica proporcionado por el docente.",
+    "1) Abre el archivo de práctica y guarda inmediatamente una copia con el nombre indicado por el docente. No realices pruebas sobre el archivo original.",
+    "2) Localiza el panel Layers e identifica los grupos Metal, Gem, Object, User, Render y los grupos Extra que aparezcan en tu instalación. Observa los colores de las filas y localiza la capa activa en la barra inferior.",
+    "3) Prueba la visibilidad: desactiva el ojo de una capa que contenga parte del cuerpo metálico. Observa qué elementos desaparecen. Vuelve a activar el ojo. Repite con una capa que contenga la piedra central y observa cómo el resto del engaste puede permanecer visible.",
+    "4) Prueba el bloqueo: activa el candado de una capa. Comprueba que sus objetos siguen visibles, pero que no puedes seleccionarlos directamente en la ventana de modelado. Intenta seleccionar uno de esos objetos y observa la respuesta. Desbloquea la capa al terminar.",
+    "5) Prueba la asignación únicamente con un objeto auxiliar o de práctica: selecciónalo en pantalla y haz clic en el triángulo de la fila de color de la capa de destino. Comprueba en el panel que el objeto queda asignado a esa capa. Evita reasignar piedras o componentes estructurales del anillo de ejemplo.",
+    "6) Antes de finalizar, deja visibles las capas necesarias, desbloquea las que bloqueaste y comprueba que el modelo se muestra como al inicio. Guarda la copia solo si el docente lo solicita."
   ]},
   { titulo: "9. Repaso guiado y preparación para la siguiente sesión", bloques: [
-    "Ya reconoces la diferencia entre punto, curva, superficie y sólido, y puedes crear cuatro tipos de curvas básicas: línea, polilínea, círculo y rectángulo.",
-    "También aprendiste que las capas permiten organizar los objetos, asignarles nombres y colores, controlar su visibilidad y bloquear elementos para evitar cambios accidentales.",
-    "Antes de terminar, verifica que puedes activar una capa, crear un objeto dentro de ella, seleccionar un objeto y reconocer a qué capa pertenece.",
+    "En MatrixGold, el panel Layers organiza los componentes del proyecto mediante grupos y capas identificadas por colores. La capa activa determina dónde se crearán los objetos nuevos.",
+    "Ya puedes distinguir las tres operaciones principales: el triángulo asigna el objeto seleccionado a una capa; el ojo muestra u oculta los objetos de esa capa; y el candado impide seleccionarlos directamente para moverlos o modificarlos. Una capa bloqueada puede seguir ocultándose o mostrándose con el ojo.",
+    "Antes de terminar, verifica que puedes localizar la capa activa, identificar los grupos principales, ocultar y recuperar una parte de la joya, bloquear y desbloquear una capa y asignar un objeto auxiliar a otra capa.",
     "En la siguiente sesión avanzaremos hacia el modelado preciso: trabajaremos con medidas, referencias y herramientas para controlar la construcción geométrica con mayor exactitud."
   ]}
 ] as const;
