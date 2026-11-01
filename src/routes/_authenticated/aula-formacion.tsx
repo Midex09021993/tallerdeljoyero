@@ -90,14 +90,16 @@ const COMPONENTES_INTERFAZ = [
   ["Línea y ventana de comandos", "Permiten escribir comandos y consultar las indicaciones, opciones, mensajes e historial de Rhino.", "En la zona inferior del área gráfica: el campo Command está abajo y, justo encima, aparecen las indicaciones y el historial de comandos.", "La línea de comandos sirve para introducir instrucciones; la ventana o área de historial permite seguir las respuestas, opciones y mensajes que Rhino muestra durante el trabajo."],
   ["Barra de estado", "Muestra coordenadas, unidades y ayudas de modelado activas.", "Franja inferior de la interfaz, debajo de la línea de comandos.", "Informa sobre coordenadas del cursor, unidades del documento y ayudas como Grid Snap, Ortho y Osnap."],
   ["Modos de visualización", "Accesos visuales para cambiar la apariencia con la que se muestra el modelo en el área gráfica.", "En la columna vertical de miniaturas situada junto al panel de capas (Layers), a su derecha.", "Permiten alternar entre distintas representaciones visuales del modelo para observar su forma y apariencia durante el trabajo."],
-  ["Comandos recientes", "Panel que reúne accesos a los comandos utilizados recientemente.", "En la parte superior de la columna lateral derecha, en el panel titulado Recent Commands.", "Permite volver a localizar y ejecutar comandos usados hace poco sin tener que buscarlos nuevamente."]
+  ["Comandos recientes", "Panel que reúne accesos a los comandos utilizados recientemente.", "En la parte superior de la columna lateral derecha, en el panel titulado Recent Commands.", "Permite volver a localizar y ejecutar comandos usados hace poco sin tener que buscarlos nuevamente."],
+  ["Fichas de las vistas", "Pestañas con los nombres de las vistas, como Perspective, Top, Front y Right. La ficha resaltada indica cuál está activa.", "En la franja inferior del área gráfica, donde aparecen las fichas Perspective, Top, Front y Right.", "Facilitan cambiar entre vistas, especialmente cuando se utilizan vistas maximizadas o flotantes."]
 ] as const;
 
 const COORDENADAS_INTERFAZ = [
   { x: "50%", y: "5%" }, { x: "35%", y: "13%" }, { x: "51%", y: "52%" },
   { x: "18%", y: "18%" }, { x: "6%", y: "19%" }, { x: "6%", y: "39%" },
   { x: "6%", y: "67%" }, { x: "94%", y: "47%" }, { x: "40%", y: "93%" },
-  { x: "48%", y: "96%" }, { x: "11%", y: "67%" }, { x: "87%", y: "18%" }
+  { x: "48%", y: "96%" }, { x: "11%", y: "67%" }, { x: "87%", y: "18%" },
+  { x: "14%", y: "83%" }
 ] as const;
 
 function AulaFormacionPage() {
