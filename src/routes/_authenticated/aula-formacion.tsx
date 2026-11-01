@@ -737,7 +737,7 @@ function AulaFormacionPage() {
     enabled: Boolean(!esDocente && idsCursosAlumno.length),
     queryFn: async () => {
       const { data, error } = await (supabase as any).from("formacion_sesiones")
-        .select("id,curso_id,numero,titulo,descripcion,duracion_horas,fecha_programada,publicada")
+        .select("id,curso_id,numero,titulo,descripcion,duracion_horas,fecha_programada,publicada,bloqueada")
         .in("curso_id", idsCursosAlumno).eq("publicada", true).order("numero");
       if (error) throw error;
       return (data ?? []) as SesionCurso[];
