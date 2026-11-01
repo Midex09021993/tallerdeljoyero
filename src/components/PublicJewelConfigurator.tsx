@@ -199,7 +199,7 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
     .trim() || "Joya compartida";
 
   return (
-    <section className="mx-auto w-full min-w-0 overflow-hidden rounded-xl border border-[#e8e1d5] bg-white shadow-[0_16px_44px_-30px_rgba(49,39,24,.28)] sm:mt-4 sm:rounded-2xl md:mt-0 lg:mx-auto lg:flex lg:h-[min(76vh,680px)] lg:min-h-[540px] lg:max-h-[680px] lg:flex-col lg:rounded-2xl lg:max-w-[1440px] 2xl:h-[min(84vh,900px)] 2xl:min-h-[680px] 2xl:max-h-[900px] 2xl:max-w-[1720px] 2xl:w-[calc(100vw-64px)]">
+    <section className="mx-auto w-full min-w-0 overflow-hidden rounded-xl border border-[#e8e1d5] bg-white shadow-[0_16px_44px_-30px_rgba(49,39,24,.28)] sm:mt-4 sm:rounded-2xl md:mt-0 lg:mx-auto lg:flex lg:h-[calc(100svh-32px)] lg:min-h-0 lg:max-h-none lg:flex-col lg:rounded-2xl lg:max-w-[1440px] 2xl:h-[calc(100svh-32px)] 2xl:min-h-0 2xl:max-h-none 2xl:max-w-[1720px] 2xl:w-[calc(100vw-64px)]">
       <header className="flex shrink-0 flex-col items-stretch justify-between gap-2 border-b border-[#eee9e0] bg-[linear-gradient(110deg,#fffefa_0%,#ffffff_58%,#fbf7ef_100%)] px-3.5 py-2.5 sm:flex-row sm:items-center sm:gap-4 sm:px-5 sm:py-3 [@media(max-height:800px)]:py-1.5">
         <div className="min-w-0">
           <div className="flex items-center gap-2.5">
