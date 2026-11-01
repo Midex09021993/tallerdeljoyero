@@ -163,6 +163,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
     let controls: any = null;
     let model: THREE.Object3D | null = null;
     let loop: any = null;
+    let zoomFrameId = 0;
     let resizeObserver: ResizeObserver | null = null;
     cameraActionsRef.current = null;
     setCameraReady(false);
@@ -413,7 +414,6 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
           controls.update();
           loop?.converge?.(3);
         };
-        let zoomFrameId = 0;
         const animateZoom = (direction: "in" | "out") => {
           if (zoomFrameId) cancelAnimationFrame(zoomFrameId);
           const offset = camera.position.clone().sub(controls.target);
