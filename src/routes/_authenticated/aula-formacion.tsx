@@ -1514,8 +1514,31 @@ function AulaFormacionPage() {
       <header className="sticky top-0 z-20 border-b border-border bg-background/95 px-4 py-3 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-gold-deep">FADILAB · Sesión 2</p><h3 className="text-base font-semibold sm:text-lg">Laboratorio de capas · MatrixGold</h3></div><button type="button" onClick={() => setLaboratorioCapasAbierto(false)} className="rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-muted">Cerrar ✕</button></div>
       </header>
-      <div className="mx-auto grid max-w-6xl gap-4 p-4 lg:grid-cols-[1.05fr_0.95fr] lg:p-6">
-        <div className="space-y-3">
+      <div className="mx-auto grid max-w-[1400px] gap-3 p-3 xl:grid-cols-[230px_minmax(420px,1fr)_330px] lg:p-5">
+        <aside className="rounded-xl border border-[#45464b] bg-[#292a2f] p-2 text-white">
+          <div className="mb-2 flex items-center justify-between"><span className="text-xs font-semibold">Layers</span><span className="text-[10px] text-white/50">MatrixGold</span></div>
+          <div className="mb-2 grid grid-cols-2 gap-1"><button type="button" onClick={()=>{setCapaMetalVisible(false);setCapaGemVisible(false);setObjetoSeleccionadoCapas(null);}} className="rounded border border-white/15 bg-white/5 py-1 text-[10px]">Hide</button><button type="button" onClick={()=>{setCapaMetalVisible(true);setCapaGemVisible(true);}} className="rounded border border-white/15 bg-white/5 py-1 text-[10px]">Show</button></div>
+          <div className="grid grid-cols-2 gap-x-2 gap-y-2">
+            {[
+              {group:"Metal",name:"Metal 01",color:"#23865c",visible:capaMetalVisible,locked:capaMetalBloqueada,setVisible:setCapaMetalVisible,setLocked:setCapaMetalBloqueada},
+              {group:"Gem",name:"Gem 01",color:"#244f9c",visible:capaGemVisible,locked:capaGemBloqueada,setVisible:setCapaGemVisible,setLocked:setCapaGemBloqueada},
+              {group:"Object",name:"Object 01",color:"#a83b83"},{group:"User",name:"User 01",color:"#f04438"},
+              {group:"Render",name:"Render 01",color:"#a5a5a5"},{group:"Extra A",name:"Extra A 01",color:"#ef8585"},
+              {group:"Extra B",name:"Extra B 01",color:"#368d83"},{group:"Extra C",name:"Extra C 01",color:"#22b9b4"}
+            ].map(layer=><div key={layer.group} className="min-w-0">
+              <div className="mb-1 border-b border-white/15 pb-1 text-[10px] font-semibold text-white/75">{layer.group}</div>
+              <div className="flex items-center gap-1 rounded px-1 py-1 hover:bg-white/10">
+                <button type="button" title="Asignar objeto seleccionado a esta capa" disabled={!layer.setVisible} onClick={()=>{if(objetoSeleccionadoCapas && layer.name){setAsignacionCapas(prev=>({...prev,[objetoSeleccionadoCapas]:layer.name}));setObjetoSeleccionadoCapas(null);}}} className="text-[11px] text-white/80 disabled:opacity-40">▶</button>
+                <span className="size-3 shrink-0 rounded-sm border border-white/20" style={{backgroundColor:layer.color}}/>
+                <span className="min-w-0 flex-1 truncate text-[10px]">{layer.name}</span>
+                {layer.setLocked&&<button type="button" title="Bloquear capa" onClick={()=>{layer.setLocked(!layer.locked);setObjetoSeleccionadoCapas(null);}} className="text-[11px] text-white/75">{layer.locked?"🔒":"♙"}</button>}
+                {layer.setVisible&&<button type="button" title="Ocultar o mostrar capa" onClick={()=>{layer.setVisible(!layer.visible);setObjetoSeleccionadoCapas(null);}} className="text-[11px] text-white/75">{layer.visible?"◉":"○"}</button>}
+              </div>
+            </div>)}
+          </div>
+          <p className="mt-3 border-t border-white/15 pt-2 text-[10px] leading-4 text-white/55">Selecciona primero un objeto en el visor. Después pulsa ▶ junto al color de la capa de destino.</p>
+        </aside>
+        <main className="min-w-0 space-y-3">
           <div className="rounded-2xl border border-border bg-[#17191d] p-4 text-white">
             <div className="mb-3 flex items-center justify-between gap-2"><span className="text-xs font-semibold text-white/80">Vista esquemática de la joya</span><span className="rounded-full bg-white/10 px-2 py-1 text-[10px]">Modelo didáctico</span></div>
             <svg viewBox="0 0 520 390" className="h-auto max-h-[48vh] w-full" role="img" aria-label="Anillo esquemático con cuerpo metálico y piedra central controlados por capas">
@@ -1527,6 +1550,9 @@ function AulaFormacionPage() {
             </svg>
             <div className="mt-2 flex flex-wrap gap-3 text-[11px] text-white/80"><span className="flex items-center gap-1.5"><i className="size-2.5 rounded-full bg-[#d8b45d]"/> Metal 01 · cuerpo</span><span className="flex items-center gap-1.5"><i className="size-2.5 rounded-full bg-[#438bd5]"/> Gem 01 · piedra</span></div>
           </div>
+
+        </main>
+        <aside className="min-w-0 space-y-3">
           <div className="rounded-xl border border-border p-4">
             <h4 className="text-sm font-semibold">Selecciona un objeto para asignarlo</h4><p className="mt-1 text-xs leading-5 text-muted-foreground">En MatrixGold real, primero seleccionas el objeto en pantalla y después pulsas el triángulo de la capa de destino.</p>
             <div className="mt-3 grid grid-cols-2 gap-2">
@@ -1536,15 +1562,10 @@ function AulaFormacionPage() {
             <div className="mt-3 flex flex-wrap items-center gap-2"><label className="text-xs font-medium" htmlFor="destino-capa-practica">Capa destino</label><select id="destino-capa-practica" value={capaDestinoCapas} onChange={e=>setCapaDestinoCapas(e.target.value as "Metal 01"|"Gem 01")} className="rounded-lg border border-border bg-background px-3 py-2 text-xs"><option>Metal 01</option><option>Gem 01</option></select><button type="button" disabled={!objetoSeleccionadoCapas} onClick={()=>{if(objetoSeleccionadoCapas){setAsignacionCapas(prev=>({...prev,[objetoSeleccionadoCapas]:capaDestinoCapas}));setObjetoSeleccionadoCapas(null);}}} className="rounded-lg bg-gold px-3 py-2 text-xs font-semibold text-black disabled:opacity-40">Asignar (triángulo)</button></div>
             <p className="mt-2 text-xs text-muted-foreground">Asignación actual: cuerpo → {asignacionCapas.aro}; piedra → {asignacionCapas.piedra}.</p>
           </div>
-        </div>
-        <div className="space-y-3">
-          <div className="rounded-xl border border-border p-4"><h4 className="font-semibold">Panel Layers simulado</h4><p className="mt-1 text-xs text-muted-foreground">Prueba los controles por separado y observa el resultado en la joya.</p>
-            {[{name:"Metal 01",visible:capaMetalVisible,locked:capaMetalBloqueada,setVisible:setCapaMetalVisible,setLocked:setCapaMetalBloqueada,items:"Cuerpo del anillo"},{name:"Gem 01",visible:capaGemVisible,locked:capaGemBloqueada,setVisible:setCapaGemVisible,setLocked:setCapaGemBloqueada,items:"Piedra central"}].map(layer=><div key={layer.name} className="mt-3 rounded-lg border border-border p-3"><div className="flex items-center justify-between gap-2"><div className="flex items-center gap-2"><span className={`size-3 rounded-sm ${layer.name==="Metal 01"?"bg-[#d8b45d]":"bg-[#438bd5]"}`}/><span className="text-sm font-semibold">{layer.name}</span></div><span className="text-[10px] text-muted-foreground">{layer.items}</span></div><div className="mt-3 flex flex-wrap gap-2"><button type="button" onClick={()=>{layer.setVisible(!layer.visible);setObjetoSeleccionadoCapas(null);}} className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-medium"><Eye className="size-3.5"/>{layer.visible?"Ocultar ojo":"Mostrar ojo"}</button><button type="button" onClick={()=>{layer.setLocked(!layer.locked);setObjetoSeleccionadoCapas(null);}} className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium ${layer.locked?"border-gold bg-gold/10":"border-border"}`}><Lock className="size-3.5"/>{layer.locked?"Desbloquear":"Bloquear"}</button></div><p className="mt-2 text-[11px] text-muted-foreground">{!layer.visible?"Capa oculta: sus objetos no se muestran.":layer.locked?"Capa bloqueada: los objetos se ven, pero no se pueden seleccionar directamente.":"Capa visible y desbloqueada: sus objetos se pueden seleccionar."}</p></div>)}
-          </div>
           <div className="rounded-xl border border-gold/30 bg-gold/5 p-4"><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gold-deep">Reto de comprobación</p><h4 className="mt-1 text-sm font-semibold">Quieres proteger la piedra central para evitar seleccionarla, pero mantenerla visible. ¿Qué control debes activar?</h4><div className="mt-3 space-y-2">{[{v:"ojo",t:"Cerrar el ojo de Gem 01"},{v:"candado",t:"Activar el candado de Gem 01"},{v:"triangulo",t:"Asignar la piedra a Metal 01"}].map(o=><button key={o.v} type="button" onClick={()=>{setRespuestaRetoCapas(o.v);setResultadoRetoCapas(null);}} className={`w-full rounded-lg border px-3 py-2 text-left text-xs ${respuestaRetoCapas===o.v?"border-gold bg-gold/10":"border-border hover:border-gold/50"}`}>{o.t}</button>)}</div><button type="button" disabled={!respuestaRetoCapas} onClick={()=>{const ok=respuestaRetoCapas==="candado";setResultadoRetoCapas(ok?"correcto":"incorrecto");if(ok)setRetoCapasCompletado(true);}} className="mt-3 w-full rounded-lg bg-gold px-4 py-2.5 text-xs font-semibold text-black disabled:opacity-40">Comprobar respuesta</button>{resultadoRetoCapas&&<div className={`mt-3 rounded-lg border p-3 text-xs ${resultadoRetoCapas==="correcto"?"border-emerald-300 bg-emerald-50 text-emerald-900":"border-amber-300 bg-amber-50 text-amber-900"}`}><p className="font-semibold">{resultadoRetoCapas==="correcto"?"¡Correcto!":"Inténtalo otra vez."}</p><p className="mt-1">{resultadoRetoCapas==="correcto"?"El candado mantiene la piedra visible y evita seleccionarla directamente. El ojo controla la visibilidad de forma independiente.":"Recuerda: el ojo oculta; el candado impide seleccionar directamente."}</p></div>}</div>
           {retoCapasCompletado&&<div className="rounded-xl border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-900"><p className="font-semibold">¡Reto completado!</p><p className="mt-1 text-xs">Has distinguido correctamente visibilidad, bloqueo y asignación.</p></div>}
           <div className="flex flex-wrap justify-between gap-2"><button type="button" onClick={reiniciar} className="rounded-lg border border-border px-3 py-2 text-xs font-medium hover:bg-muted">Reiniciar práctica</button><span className="self-center text-[10px] text-muted-foreground">Práctica interactiva · no modifica MatrixGold</span></div>
-        </div>
+        </aside>
       </div>
     </section>;
   };
