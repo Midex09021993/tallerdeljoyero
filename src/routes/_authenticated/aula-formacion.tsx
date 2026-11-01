@@ -948,22 +948,12 @@ function AulaFormacionPage() {
                       </figure>}
                       <section className="space-y-6">
                   <div className="rounded-2xl border border-border bg-background p-4 sm:p-5">
-                    <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-                      <div><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Exploración interactiva</p><h4 className="mt-1 text-lg font-semibold">Explora los 10 componentes</h4></div>
+                    <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                      <div><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Componente seleccionado</p><h4 className="mt-1 text-lg font-semibold">Punto {componenteActivo+1} · {COMPONENTES_INTERFAZ[componenteActivo][0]}</h4></div>
                       <span className="rounded-full bg-gold/15 px-3 py-1 text-xs font-semibold">{componentesExplorados.length} / 10 explorados</span>
                     </div>
-                    <div className="mb-4 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-gold transition-all" style={{ width: (componentesExplorados.length * 10) + "%" }} /></div>
-                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-                      {COMPONENTES_INTERFAZ.map((item, indice) => <button key={indice} type="button" onClick={() => { setComponenteActivo(indice); setComponentesExplorados(prev => prev.includes(indice) ? prev : [...prev, indice]); }} aria-pressed={componenteActivo===indice} className={`rounded-xl border p-3 text-left transition ${componenteActivo===indice ? "border-gold bg-gold/10" : "border-border bg-card hover:border-gold/50"}`}>
-                        <span className="flex items-center justify-between text-sm font-semibold"><span>{String(indice+1).padStart(2,"0")}</span>{componentesExplorados.includes(indice) && <CheckCircle2 className="size-4 text-emerald-600"/>}</span>
-                        <span className="mt-1 block text-[11px] leading-4 text-muted-foreground">{item[0]}</span>
-                      </button>)}
-                    </div>
-                    {componenteActivo >= 0 && <div className="mt-4 rounded-xl border border-gold/30 bg-gold/5 p-4" aria-live="polite">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Componente {componenteActivo+1}</p>
-                      <h5 className="mt-1 font-semibold">{COMPONENTES_INTERFAZ[componenteActivo][0]}</h5>
-                      <p className="mt-2 text-sm leading-6 text-foreground/85">{COMPONENTES_INTERFAZ[componenteActivo][1]}</p>
-                    </div>}
+                    <div className="mb-4 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-gold transition-all" style={{width:(componentesExplorados.length*10)+"%"}}/></div>
+                    <p className="text-sm leading-6 text-foreground/85">{COMPONENTES_INTERFAZ[componenteActivo][1]}</p>
                     {componentesExplorados.length===10 && <p className="mt-3 text-sm font-medium text-emerald-700">¡Excelente! Ya exploraste los diez componentes. Ahora puedes realizar el reto.</p>}
                   </div>
                   <div className="rounded-2xl border border-border bg-background p-4 sm:p-5">
@@ -1258,22 +1248,12 @@ function AulaFormacionPage() {
                       </figure>}
                       <section className="space-y-6">
                   <div className="rounded-2xl border border-border bg-background p-4 sm:p-5">
-                    <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-                      <div><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Exploración interactiva</p><h4 className="mt-1 text-lg font-semibold">Explora los 10 componentes</h4></div>
+                    <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                      <div><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Componente seleccionado</p><h4 className="mt-1 text-lg font-semibold">Punto {componenteActivo+1} · {COMPONENTES_INTERFAZ[componenteActivo][0]}</h4></div>
                       <span className="rounded-full bg-gold/15 px-3 py-1 text-xs font-semibold">{componentesExplorados.length} / 10 explorados</span>
                     </div>
-                    <div className="mb-4 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-gold transition-all" style={{ width: (componentesExplorados.length * 10) + "%" }} /></div>
-                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-                      {COMPONENTES_INTERFAZ.map((item, indice) => <button key={indice} type="button" onClick={() => { setComponenteActivo(indice); setComponentesExplorados(prev => prev.includes(indice) ? prev : [...prev, indice]); }} aria-pressed={componenteActivo===indice} className={`rounded-xl border p-3 text-left transition ${componenteActivo===indice ? "border-gold bg-gold/10" : "border-border bg-card hover:border-gold/50"}`}>
-                        <span className="flex items-center justify-between text-sm font-semibold"><span>{String(indice+1).padStart(2,"0")}</span>{componentesExplorados.includes(indice) && <CheckCircle2 className="size-4 text-emerald-600"/>}</span>
-                        <span className="mt-1 block text-[11px] leading-4 text-muted-foreground">{item[0]}</span>
-                      </button>)}
-                    </div>
-                    {componenteActivo >= 0 && <div className="mt-4 rounded-xl border border-gold/30 bg-gold/5 p-4" aria-live="polite">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Componente {componenteActivo+1}</p>
-                      <h5 className="mt-1 font-semibold">{COMPONENTES_INTERFAZ[componenteActivo][0]}</h5>
-                      <p className="mt-2 text-sm leading-6 text-foreground/85">{COMPONENTES_INTERFAZ[componenteActivo][1]}</p>
-                    </div>}
+                    <div className="mb-4 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-gold transition-all" style={{width:(componentesExplorados.length*10)+"%"}}/></div>
+                    <p className="text-sm leading-6 text-foreground/85">{COMPONENTES_INTERFAZ[componenteActivo][1]}</p>
                     {componentesExplorados.length===10 && <p className="mt-3 text-sm font-medium text-emerald-700">¡Excelente! Ya exploraste los diez componentes. Ahora puedes realizar el reto.</p>}
                   </div>
                   <div className="rounded-2xl border border-border bg-background p-4 sm:p-5">
