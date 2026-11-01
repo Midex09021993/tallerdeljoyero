@@ -367,26 +367,29 @@ function AulaFormacionPage() {
       return () => { vigente = false; };
     }
 
-    const esImagenInterfaz = (material: Material) =>
-      /\.(jpg|jpeg|png|webp)$/i.test(material.nombre_archivo.trim()) ||
-      /^image\//i.test(material.mime_type || "");
-    const nombreArchivo = (material: Material) =>
-      /^(interface|interfaz)\.(jpg|jpeg|png|webp)$/i.test(material.nombre_archivo.trim());
-    const tituloInterfaz = (material: Material) =>
-      material.titulo.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() === "reconocimiento de la interfaz";
+    const normalizarNombreArchivo = (nombre: string) =>
+      nombre.trim().normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLowerCase();
+    const esImagen = (material: Material) =>
+      /\\.(jpg|jpeg|png|webp)$/i.test(material.nombre_archivo.trim()) ||
+      /^image\\//i.test(material.mime_type || "");
+    const esImagenLimpia = (material: Material) =>
+      normalizarNombreArchivo(material.nombre_archivo) === "interface matrixgold.png";
+    const esImagenExplicada = (material: Material) =>
+      normalizarNombreArchivo(material.nombre_archivo) === "interface.jpg";
 
-    // Primero se busca el archivo asociado directamente a la sesión 1.
-    // Si el registro quedó vinculado a "Material general" o con una sesión distinta,
-    // se permite recuperarlo por el título exacto dentro del curso activo.
+    // La experiencia interactiva utiliza exclusivamente la captura limpia.
+    // INTERFACE.jpg contiene anotaciones y se conserva como material de consulta.
     const imagen = materiales.find(material =>
-      material.sesion_id === lecturaAbierta.id && esImagenInterfaz(material) &&
-      (nombreArchivo(material) || tituloInterfaz(material))
+      material.sesion_id === lecturaAbierta.id && esImagenLimpia(material) && esImagen(material)
     ) ?? materiales.find(material =>
-      esImagenInterfaz(material) && tituloInterfaz(material)
+      esImagenLimpia(material) && esImagen(material)
     );
 
     if (!imagen) {
-      setImagenInterfazError("No se encontró una imagen publicada titulada «Reconocimiento de la interfaz» en la biblioteca de este curso. Verifica que el material esté publicado.");
+      const existeExplicada = materiales.some(material => esImagenExplicada(material));
+      setImagenInterfazError(existeExplicada
+        ? "Se encontró INTERFACE.jpg, pero la actividad necesita la captura limpia «INTERFACE MATRIXGOLD.PNG». Comprueba que esté publicada en la Biblioteca de este curso."
+        : "No se encontró «INTERFACE MATRIXGOLD.PNG» entre los materiales de la Biblioteca de este curso. Comprueba su nombre y que esté publicado.");
       return () => { vigente = false; };
     }
 
