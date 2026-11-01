@@ -1081,7 +1081,17 @@ function AulaFormacionPage() {
                     {imagenesEjesUrl && <button type="button" onClick={() => setTipoImagenApoyoAbierta(tipoImagenApoyoAbierta === "ejes" ? null : "ejes")} aria-expanded={tipoImagenApoyoAbierta === "ejes"} className="inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95">Ver EJES <ChevronRight className="size-4"/></button>}
                   </div>
                   {!imagenesVistasUrl && !imagenesEjesUrl && <p className="mt-3 text-xs text-muted-foreground">{errorImagenesApoyo || "Buscando VISTAS y EJES en la Biblioteca del curso…"}</p>}
-
+                  {(tipoImagenApoyoAbierta === "vistas" || tipoImagenApoyoAbierta === "ejes") && <div className="fixed inset-0 z-[95] flex items-center justify-center overflow-hidden bg-black/75 p-2 sm:p-4" role="dialog" aria-modal="true" aria-label="Imagen de referencia de Rhinoceros">
+                    <div className="flex max-h-[96dvh] w-full max-w-[1200px] flex-col overflow-hidden rounded-xl border border-border bg-background shadow-2xl">
+                      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-border bg-gradient-to-r from-[#fbf8f0] to-background px-4 py-3 sm:px-5">
+                        <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">FADILAB · Material de estudio</p><h3 className="text-base font-semibold">{tipoImagenApoyoAbierta === "vistas" ? "Vistas de trabajo" : "Ejes de coordenadas"}</h3></div>
+                        <button type="button" onClick={() => setTipoImagenApoyoAbierta(null)} className="shrink-0 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:border-gold">Cerrar ×</button>
+                      </header>
+                      <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto bg-background p-3 sm:p-5">
+                        <img src={tipoImagenApoyoAbierta === "vistas" ? imagenesVistasUrl : imagenesEjesUrl} alt={tipoImagenApoyoAbierta === "vistas" ? "Vistas de trabajo de Rhinoceros" : "Ejes de coordenadas de Rhinoceros"} className="block h-auto max-h-[78dvh] w-auto max-w-full rounded-lg object-contain" />
+                      </div>
+                    </div>
+                  </div>}
                 </section>}
                 {paginaLectura === 2 && !interfazInteractivaAbierta && <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5 sm:p-6">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">Actividad guiada · FADILAB</p>
@@ -1384,7 +1394,17 @@ function AulaFormacionPage() {
                     {imagenesEjesUrl && <button type="button" onClick={() => setTipoImagenApoyoAbierta(tipoImagenApoyoAbierta === "ejes" ? null : "ejes")} aria-expanded={tipoImagenApoyoAbierta === "ejes"} className="inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95">Ver EJES <ChevronRight className="size-4"/></button>}
                   </div>
                   {!imagenesVistasUrl && !imagenesEjesUrl && <p className="mt-3 text-xs text-muted-foreground">{errorImagenesApoyo || "Buscando VISTAS y EJES en la Biblioteca del curso…"}</p>}
-
+                  {(tipoImagenApoyoAbierta === "vistas" || tipoImagenApoyoAbierta === "ejes") && <div className="fixed inset-0 z-[95] flex items-center justify-center overflow-hidden bg-black/75 p-2 sm:p-4" role="dialog" aria-modal="true" aria-label="Imagen de referencia de Rhinoceros">
+                    <div className="flex max-h-[96dvh] w-full max-w-[1200px] flex-col overflow-hidden rounded-xl border border-border bg-background shadow-2xl">
+                      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-border bg-gradient-to-r from-[#fbf8f0] to-background px-4 py-3 sm:px-5">
+                        <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">FADILAB · Material de estudio</p><h3 className="text-base font-semibold">{tipoImagenApoyoAbierta === "vistas" ? "Vistas de trabajo" : "Ejes de coordenadas"}</h3></div>
+                        <button type="button" onClick={() => setTipoImagenApoyoAbierta(null)} className="shrink-0 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:border-gold">Cerrar ×</button>
+                      </header>
+                      <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto bg-background p-3 sm:p-5">
+                        <img src={tipoImagenApoyoAbierta === "vistas" ? imagenesVistasUrl : imagenesEjesUrl} alt={tipoImagenApoyoAbierta === "vistas" ? "Vistas de trabajo de Rhinoceros" : "Ejes de coordenadas de Rhinoceros"} className="block h-auto max-h-[78dvh] w-auto max-w-full rounded-lg object-contain" />
+                      </div>
+                    </div>
+                  </div>}
                 </section>}
                 {paginaLectura === 2 && !interfazInteractivaAbierta && <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5 sm:p-6">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">Actividad guiada · FADILAB</p>
