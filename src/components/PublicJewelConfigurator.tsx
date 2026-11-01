@@ -237,7 +237,7 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
               {!loadError && <p className="mt-1 text-xs text-[#8a8175]">Estamos preparando la experiencia interactiva.</p>}
             </div>
           </div>}
-          <div className="absolute bottom-4 left-1/2 z-30 flex w-[min(92%,420px)] -translate-x-1/2 flex-col items-center gap-2.5 sm:bottom-5 sm:gap-3" aria-label="Selector de materiales de la joya">
+          <div className="absolute left-1/2 top-1/2 bottom-auto z-30 flex w-[min(92%,420px)] -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-2.5 sm:top-auto sm:bottom-5 sm:translate-y-0 sm:gap-3" aria-label="Selector de materiales de la joya">
             <div className={"overflow-hidden transition-all duration-300 ease-out " + (showMaterialOptions ? "max-h-20 translate-y-0 opacity-100" : "pointer-events-none max-h-0 -translate-y-2 opacity-0")} aria-hidden={!showMaterialOptions}>
             <div className="relative flex max-w-full items-center justify-center gap-2 overflow-hidden rounded-full border border-white/65 px-3 py-2 shadow-[0_10px_30px_rgba(45,38,29,.10),inset_0_1px_0_rgba(255,255,255,.85),inset_0_-1px_0_rgba(255,255,255,.22)] sm:gap-3 sm:px-4" style={{ background: "linear-gradient(145deg, rgba(255,255,255,.38), rgba(255,255,255,.18) 55%, rgba(245,241,234,.28))", backdropFilter: "blur(22px) saturate(175%)", WebkitBackdropFilter: "blur(22px) saturate(175%)" }}>
               {(activeCategory === "metal" ? metales : gemasPublicas).map((item) => {
