@@ -2036,16 +2036,28 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           const modifier=new SimplifyModifier(),prepared:any[]=[];let reducedTriangles=0;
           try{
             for(const entry of meshes){
-              const {object,geometry,faceCount}=entry;let working=geometry.clone();
+              const {object,geometry,faceCount}=entry;
+              let working=geometry.clone();
               if(!working.index)working=mergeVertices(working);
               if(!working.getAttribute("normal"))working.computeVertexNormals();
               const targetFaces=Math.min(faceCount,Math.max(1,Math.floor(TARGET*faceCount/sourceTriangles)));
               const targetVertices=Math.max(4,Math.min(working.getAttribute("position").count,Math.floor(targetFaces*1.8)));
               const removeCount=Math.max(0,working.getAttribute("position").count-targetVertices);
-              let simplified=working;if(removeCount>0)simplified=modifier.modify(working,removeCount);
-              if(simplified!==working)working.dispose();
+              let simplified:any=working;
+              try{
+                if(removeCount>0)simplified=modifier.modify(working,removeCount);
+                if(simplified!==working)working.dispose();
+                if(!simplified.index)simplified=mergeVertices(simplified);
+                const simplifiedFaces=Math.floor((simplified.index?.count??simplified.getAttribute("position").count)/3);
+                if(simplifiedFaces<1)throw new Error("La simplificación no conservó caras.");
+              }catch{
+                if(simplified&&simplified!==working)simplified.dispose?.();
+                working.dispose?.();
+                simplified=geometry.clone();
+                if(!simplified.index)simplified=mergeVertices(simplified);
+              }
               const after=Math.floor((simplified.index?.count??simplified.getAttribute("position").count)/3);
-              if(after<1){simplified.dispose();throw new Error("La simplificación produjo una malla vacía: "+(object.name||"sin nombre")+".");}
+              if(after<1){simplified.dispose();throw new Error("La malla original tampoco contiene caras válidas: "+(object.name||"sin nombre")+".");}
               prepared.push({object,geometry:simplified,faceCount:after});reducedTriangles+=after;
             }
             if(reducedTriangles>MAX_FACES)throw new Error("La simplificación produjo "+reducedTriangles.toLocaleString("es-ES")+" caras. Prueba el nivel ligero.");
