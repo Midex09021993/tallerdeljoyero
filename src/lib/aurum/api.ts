@@ -83,6 +83,10 @@ export function createAurumApi(options:any){
     exportPathTraced: options.exportPathTraced,
     exportVideo: options.exportVideo,
     exportSceneSettings: options.exportSceneSettings,
+    // Forward soil controls so the UI reaches the ground controller.
+    sueloVisible: options.sueloVisible,
+    sueloMaterial: options.sueloMaterial,
+    intensidadSombra: options.intensidadSombra,
     // Forward the live viewer DOF control; omitting it makes the UI toggle a no-op.
     setDepthOfField: options.setDepthOfField,
   };
