@@ -589,15 +589,13 @@ function AulaFormacionPage() {
       }));
       const { error: preguntasError } = await (supabase as any).from("formacion_preguntas").insert(filas);
       if (preguntasError) throw preguntasError;
-      const { error: publicarError } = await (supabase as any).from("formacion_examenes").update({publicado:true}).eq("id",examen.id).eq("participante_id",participanteId);
-      if (publicarError) throw publicarError;
       setExamenSeleccionado(examen.id);
       await Promise.all([
         qc.invalidateQueries({queryKey:["aula-formacion-examenes-docente",participanteId,cursoActivoId]}),
         qc.invalidateQueries({queryKey:["aula-formacion-preguntas-docente",examen.id]}),
         qc.invalidateQueries({queryKey:["aula-formacion-examenes-alumno"]}),
       ]);
-      setMensaje("Examen 01 creado y publicado para la Sesión 1 con 10 preguntas y 20 puntos.");
+      setMensaje("Examen 01 creado como borrador. Revísalo en Evaluaciones del curso y pulsa Publicar cuando quieras activarlo para los alumnos.");
     } catch (err) {
       setMensaje(err instanceof Error ? err.message : "No se pudo cargar el examen. Si se creó como borrador, revisa sus preguntas antes de publicarlo.");
     } finally { setOcupado(false); }
@@ -1404,7 +1402,7 @@ function AulaFormacionPage() {
               <div className="rounded-xl border border-gold/30 bg-gold/5 p-4">
                 <p className="text-sm font-semibold">Examen preparado · Sesión 1</p>
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">Carga las 10 preguntas de opción múltiple, 2 puntos cada una, asociadas a la primera sesión del curso seleccionado.</p>
-                <button type="button" disabled={ocupado || sesionesQuery.isLoading || examenesQuery.isLoading} onClick={()=>void cargarExamenSesion1()} className="mt-3 rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-black disabled:opacity-50">Cargar y publicar Examen 01</button>
+                <button type="button" disabled={ocupado || sesionesQuery.isLoading || examenesQuery.isLoading} onClick={()=>void cargarExamenSesion1()} className="mt-3 rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-black disabled:opacity-50">Crear Examen 01 como borrador</button>
               </div>
               <form onSubmit={(e) => void crearExamen(e)} className="space-y-3 rounded-xl border border-border p-4">
                 <p className="text-sm font-semibold">Crear evaluación</p>
