@@ -139,6 +139,8 @@ function AulaFormacionPage() {
   const [imagenRhinoError, setImagenRhinoError] = useState("");
   const [imagenesVistasUrl, setImagenesVistasUrl] = useState("");
   const [imagenesEjesUrl, setImagenesEjesUrl] = useState("");
+  const [imagenProceso3DUrl, setImagenProceso3DUrl] = useState("");
+  const [imagenProceso3DError, setImagenProceso3DError] = useState("");
   const [errorImagenesApoyo, setErrorImagenesApoyo] = useState("");
   const [tipoImagenApoyoAbierta, setTipoImagenApoyoAbierta] = useState<"rhinoceros" | "vistas" | "ejes" | null>(null);
   const [interfazInteractivaAbierta, setInterfazInteractivaAbierta] = useState(false);
@@ -493,6 +495,8 @@ function AulaFormacionPage() {
     setImagenesVistasUrl("");
     setImagenesEjesUrl("");
     setErrorImagenesApoyo("");
+    setImagenProceso3DUrl("");
+    setImagenProceso3DError("");
     if (!lecturaAbierta || lecturaAbierta.numero !== 1 || !materiales) {
       return () => { vigente = false; };
     }
@@ -520,6 +524,7 @@ function AulaFormacionPage() {
     void cargarImagen("rhinoceros", setImagenRhinoUrl, setImagenRhinoError);
     void cargarImagen("vistas", setImagenesVistasUrl, error => setErrorImagenesApoyo(prev => prev ? prev + " " + error : error));
     void cargarImagen("ejes", setImagenesEjesUrl, error => setErrorImagenesApoyo(prev => prev ? prev + " " + error : error));
+    void cargarImagen("proceso de joyeria con impresion 3d", setImagenProceso3DUrl, setImagenProceso3DError);
     return () => { vigente = false; };
   }, [lecturaAbierta?.id, lecturaAbierta?.numero, esDocente, materialesDocenteQuery.data, materialesAlumnoQuery.data]);
 
@@ -1089,6 +1094,23 @@ function AulaFormacionPage() {
                       </header>
                       <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto bg-background p-3 sm:p-5">
                         <img src={tipoImagenApoyoAbierta === "vistas" ? imagenesVistasUrl : imagenesEjesUrl} alt={tipoImagenApoyoAbierta === "vistas" ? "Vistas de trabajo de Rhinoceros" : "Ejes de coordenadas de Rhinoceros"} className="block h-auto max-h-[78dvh] w-auto max-w-full rounded-lg object-contain" />
+                      </div>
+                    </div>
+                  </div>}
+                </section>}
+                {paginaLectura === 6 && <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5 sm:p-6">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">Material visual de apoyo</p>
+                  <h4 className="mt-1 text-lg font-semibold">Proceso de joyería con impresión 3D</h4>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">Observa la secuencia general que conecta el diseño digital con la fabricación de una pieza de joyería mediante impresión 3D.</p>
+                  {imagenProceso3DUrl ? <button type="button" onClick={() => setTipoImagenApoyoAbierta(tipoImagenApoyoAbierta === "proceso3d" ? null : "proceso3d")} aria-expanded={tipoImagenApoyoAbierta === "proceso3d"} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95">Ver PROCESO DE JOYERÍA CON IMPRESIÓN 3D <ChevronRight className="size-4"/></button> : <p className="mt-3 text-xs text-muted-foreground">{imagenProceso3DError || "Buscando la imagen del proceso en la Biblioteca del curso…"}</p>}
+                  {tipoImagenApoyoAbierta === "proceso3d" && <div className="fixed inset-0 z-[95] flex items-center justify-center overflow-hidden bg-black/75 p-2 sm:p-4" role="dialog" aria-modal="true" aria-label="Proceso de joyería con impresión 3D">
+                    <div className="flex max-h-[96dvh] w-full max-w-[1200px] flex-col overflow-hidden rounded-xl border border-border bg-background shadow-2xl">
+                      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-border bg-gradient-to-r from-[#fbf8f0] to-background px-4 py-3 sm:px-5">
+                        <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">FADILAB · Material de estudio</p><h3 className="text-base font-semibold">Proceso de joyería con impresión 3D</h3></div>
+                        <button type="button" onClick={() => setTipoImagenApoyoAbierta(null)} className="shrink-0 rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:border-gold">Cerrar ×</button>
+                      </header>
+                      <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto bg-background p-3 sm:p-5">
+                        <img src={imagenProceso3DUrl} alt="Proceso de joyería con impresión 3D" className="block h-auto max-h-[78dvh] w-auto max-w-full rounded-lg object-contain" />
                       </div>
                     </div>
                   </div>}
