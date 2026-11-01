@@ -142,7 +142,7 @@ function AulaFormacionPage() {
   const [imagenProceso3DUrl, setImagenProceso3DUrl] = useState("");
   const [imagenProceso3DError, setImagenProceso3DError] = useState("");
   const [errorImagenesApoyo, setErrorImagenesApoyo] = useState("");
-  const [tipoImagenApoyoAbierta, setTipoImagenApoyoAbierta] = useState<"rhinoceros" | "vistas" | "ejes" | null>(null);
+  const [tipoImagenApoyoAbierta, setTipoImagenApoyoAbierta] = useState<"rhinoceros" | "vistas" | "ejes" | "proceso3d" | null>(null);
   const [interfazInteractivaAbierta, setInterfazInteractivaAbierta] = useState(false);
   const [componentesExplorados, setComponentesExplorados] = useState<number[]>([]);
   const [componenteActivo, setComponenteActivo] = useState<number | null>(null);
