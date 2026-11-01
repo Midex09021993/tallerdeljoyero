@@ -98,6 +98,7 @@ function AulaFormacionPage() {
   const [lecturaEditando, setLecturaEditando] = useState<SesionCurso | null>(null);
   const [seccionesLecturaEditadas, setSeccionesLecturaEditadas] = useState<Array<{titulo:string;bloques:string[]}>>([]);
   const [cargandoLecturaDocente, setCargandoLecturaDocente] = useState(false);
+  const [estadoGuardadoLectura, setEstadoGuardadoLectura] = useState<{tipo:"success"|"error"|"info"; texto:string} | null>(null);
   const [archivo, setArchivo] = useState<File | null>(null);
   const [tituloMaterial, setTituloMaterial] = useState("");
   const [publicarMaterial, setPublicarMaterial] = useState(true);
@@ -568,6 +569,7 @@ function AulaFormacionPage() {
       if (error) throw error;
       const guardadas = Array.isArray(data?.secciones) ? data.secciones : null;
       setSeccionesLecturaEditadas(guardadas ?? (s.numero === 1 ? LECTURA_SESION_1.map(x => ({ titulo: x.titulo, bloques: [...x.bloques] })) : []));
+      setEstadoGuardadoLectura(guardadas ? { tipo: "info", texto: "Contenido cargado desde Supabase. Los cambios aún no están guardados." } : { tipo: "info", texto: "Contenido inicial cargado. Guarda el borrador para conservarlo en Supabase." });
       setLecturaEditando(s);
     } catch (err) {
       setMensaje(err instanceof Error ? err.message : "No se pudo cargar la lectura. Verifica la tabla y sus permisos.");
@@ -577,22 +579,24 @@ function AulaFormacionPage() {
   async function guardarContenidoLectura() {
     if (!lecturaEditando || !participanteId || !sesionesQuery.data?.some(x => x.id === lecturaEditando.id)) return;
     if (!seccionesLecturaEditadas.length || seccionesLecturaEditadas.some(x => !x.titulo.trim() || !x.bloques.length || x.bloques.some(b => !b.trim()))) {
-      setMensaje("Completa el título y al menos un bloque de texto en cada apartado.");
+      setEstadoGuardadoLectura({ tipo: "error", texto: "No se guardó: completa el título y al menos un bloque de texto en cada apartado." });
       return;
     }
-    setOcupado(true); setMensaje("");
+    setOcupado(true); setMensaje(""); setEstadoGuardadoLectura({ tipo: "info", texto: "Guardando cambios en Supabase…" });
     try {
       const { data: existente, error: consultaError } = await (supabase as any).from("formacion_contenidos_lectura").select("sesion_id").eq("sesion_id", lecturaEditando.id).maybeSingle();
       if (consultaError) throw consultaError;
       const payload = { sesion_id: lecturaEditando.id, secciones: seccionesLecturaEditadas, updated_by: sesion?.user?.id ?? sesion?.user?.user_metadata?.sub ?? null, updated_at: new Date().toISOString() };
-      const { error } = existente
-        ? await (supabase as any).from("formacion_contenidos_lectura").update(payload).eq("sesion_id", lecturaEditando.id)
-        : await (supabase as any).from("formacion_contenidos_lectura").insert(payload);
-      if (error) throw error;
-      setMensaje("Lectura guardada como borrador.");
+      const resultado = existente
+        ? await (supabase as any).from("formacion_contenidos_lectura").update(payload).eq("sesion_id", lecturaEditando.id).select("sesion_id").maybeSingle()
+        : await (supabase as any).from("formacion_contenidos_lectura").insert(payload).select("sesion_id").single();
+      if (resultado.error) throw resultado.error;
+      if (!resultado.data?.sesion_id) throw new Error("Supabase no confirmó el guardado. Revisa los permisos de la tabla.");
       await qc.invalidateQueries({ queryKey: ["aula-formacion-lectura", lecturaEditando.id] });
-    } catch (err) { setMensaje(err instanceof Error ? err.message : "No se pudo guardar la lectura."); }
-    finally { setOcupado(false); }
+      setEstadoGuardadoLectura({ tipo: "success", texto: "¡Guardado correctamente! El borrador de esta lectura ya está almacenado en Supabase. Todavía no está publicado para los alumnos." });
+    } catch (err) {
+      setEstadoGuardadoLectura({ tipo: "error", texto: err instanceof Error ? "No se pudo guardar: " + err.message : "No se pudo guardar la lectura. Inténtalo nuevamente." });
+    } finally { setOcupado(false); }
   }
 
   async function publicarSesion(s: SesionCurso) {
@@ -793,6 +797,7 @@ function AulaFormacionPage() {
                     <button type="button" onClick={() => setSeccionesLecturaEditadas(prev=>prev.map((x,i)=>i===idx?{...x,bloques:[...x.bloques,""]}:x))} className="text-xs font-medium text-gold-deep">+ Añadir bloque de texto</button>
                   </section>)}
                   <button type="button" onClick={() => setSeccionesLecturaEditadas(prev=>[...prev,{titulo:"Nuevo apartado",bloques:[""]}])} className="rounded-lg border border-border px-3 py-2 text-sm">+ Añadir apartado</button>
+                  {estadoGuardadoLectura && <p role="status" aria-live="polite" className={`rounded-xl border p-3 text-sm ${estadoGuardadoLectura.tipo === "success" ? "border-emerald-300 bg-emerald-50 text-emerald-800" : estadoGuardadoLectura.tipo === "error" ? "border-red-300 bg-red-50 text-red-800" : "border-border bg-muted text-muted-foreground"}`}>{estadoGuardadoLectura.tipo === "success" ? "✓ " : estadoGuardadoLectura.tipo === "error" ? "⚠ " : "ℹ "}{estadoGuardadoLectura.texto}</p>}
                   <div className="flex justify-end gap-2"><button type="button" onClick={() => setLecturaEditando(null)} className="rounded-lg border border-border px-4 py-2 text-sm">Cancelar</button><button type="button" disabled={ocupado} onClick={() => void guardarContenidoLectura()} className="rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-black disabled:opacity-50">Guardar borrador</button></div>
                 </div>
               </div>
