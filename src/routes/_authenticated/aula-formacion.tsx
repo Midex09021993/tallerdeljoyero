@@ -980,37 +980,27 @@ function AulaFormacionPage() {
                     </div>
                     <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-gold transition-all" style={{width:(componentesExplorados.length*10)+"%"}}/></div>
                     <p className="mt-3 text-sm leading-6 text-muted-foreground">Selecciona un componente para consultar dónde se encuentra, para qué sirve y cómo se relaciona con el trabajo en joyería. También puedes seleccionarlo directamente en la imagen.</p>
-                    <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                      {COMPONENTES_INTERFAZ.map((item, indice) => <button key={indice} type="button" onClick={() => { setComponenteActivo(indice); setComponentesExplorados(prev => prev.includes(indice) ? prev : [...prev, indice]); }} aria-pressed={componenteActivo===indice} className={`flex min-w-0 flex-col items-start gap-2 rounded-xl border p-3 text-left transition ${componenteActivo===indice ? "border-gold bg-gold/5 ring-1 ring-gold/30" : "border-border bg-background/90 hover:border-gold/60"}`}>
-                        <span className="flex items-start gap-2">
-                          <span className={`flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${componentesExplorados.includes(indice) ? "bg-emerald-600 text-white" : "bg-gold/15 text-gold-deep"}`}>{indice+1}</span>
+                    <div className="mt-4 space-y-2">
+                      {COMPONENTES_INTERFAZ.map((item, indice) => <div key={indice} className={`grid min-w-0 gap-3 rounded-xl border p-3 transition sm:grid-cols-[minmax(150px,0.85fr)_minmax(0,2fr)] sm:items-center ${componenteActivo===indice ? "border-gold bg-gold/5 ring-1 ring-gold/25" : "border-border bg-background/90"}`}>
+                        <button type="button" onClick={() => { setComponenteActivo(indice); setComponentesExplorados(prev => prev.includes(indice) ? prev : [...prev, indice]); }} aria-pressed={componenteActivo===indice} className="flex min-w-0 items-center gap-2 text-left">
+                          <span className={`flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold ${componentesExplorados.includes(indice) ? "bg-emerald-600 text-white" : "bg-gold/15 text-gold-deep"}`}>{indice+1}</span>
                           <span className="min-w-0">
                             <span className="block text-sm font-semibold">{item[0]}</span>
                             <span className="mt-0.5 block text-xs leading-5 text-muted-foreground">{item[1]}</span>
                           </span>
-                        </span>
-
-                      </button>)}
+                        </button>
+                        <div className="grid min-w-0 gap-2 sm:grid-cols-2">
+                          <div className="rounded-lg bg-muted/60 p-3">
+                            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Dónde lo encuentras</p>
+                            <p className="mt-1 text-sm leading-5">{item[2]}</p>
+                          </div>
+                          <div className="rounded-lg bg-muted/60 p-3">
+                            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Para qué sirve</p>
+                            <p className="mt-1 text-sm leading-5">{item[3]}</p>
+                          </div>
+                        </div>
+                      </div>)}
                     </div>
-                    <section aria-live="polite" className="mt-4 rounded-xl border border-gold/30 bg-background p-4 sm:p-5">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <div>
-                          <p className="text-[10px] font-semibold uppercase tracking-wider text-gold-deep">Información del componente</p>
-                          <h5 className="mt-1 text-base font-semibold">{COMPONENTES_INTERFAZ[componenteActivo][0]}</h5>
-                        </div>
-                        <span className="rounded-full bg-gold/15 px-3 py-1 text-xs font-semibold">Punto {componenteActivo+1} de 10</span>
-                      </div>
-                      <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                        <div className="rounded-lg bg-muted/60 p-3">
-                          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Dónde lo encuentras</p>
-                          <p className="mt-1 text-sm leading-5">{COMPONENTES_INTERFAZ[componenteActivo][2]}</p>
-                        </div>
-                        <div className="rounded-lg bg-muted/60 p-3">
-                          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Para qué sirve</p>
-                          <p className="mt-1 text-sm leading-5">{COMPONENTES_INTERFAZ[componenteActivo][3]}</p>
-                        </div>
-                      </div>
-                    </section>
                     {componentesExplorados.length===10 && <p className="mt-4 rounded-xl bg-emerald-500/10 p-3 text-sm font-medium text-emerald-800">Recorrido completado. Ya conoces los diez componentes. Puedes repasar cualquiera de ellos cuando quieras.</p>}
                     <p className="mt-4 rounded-xl bg-background/80 p-3 text-sm leading-6"><strong>Recuerda:</strong> esta actividad es para aprender explorando. No tiene examen ni calificación. Puedes repetir el recorrido las veces que necesites.</p>
                   </div>
