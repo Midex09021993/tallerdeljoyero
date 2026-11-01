@@ -1536,16 +1536,6 @@ function AulaFormacionPage() {
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">Carga las 10 preguntas de opción múltiple, 2 puntos cada una, asociadas a la primera sesión del curso seleccionado.</p>
                 <div className="mt-3 flex flex-wrap gap-2"><button type="button" onClick={()=>setExamenMuestraAbierto(true)} className="rounded-lg border border-gold/40 px-4 py-2 text-sm font-semibold text-gold-deep">Vista previa de las 10 preguntas</button><button type="button" disabled={ocupado || sesionesQuery.isLoading || examenesQuery.isLoading} onClick={()=>void cargarExamenSesion1()} className="rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-black disabled:opacity-50">Crear Examen 01 como borrador</button></div>
               </div>
-              <form onSubmit={(e) => void crearExamen(e)} className="space-y-3 rounded-xl border border-border p-4">
-                <p className="text-sm font-semibold">Crear evaluación</p>
-                <label className="block text-xs font-medium">Título<input value={tituloExamen} onChange={e => setTituloExamen(e.target.value)} required className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" /></label>
-                <label className="block text-xs font-medium">Instrucciones<textarea value={instruccionesExamen} onChange={e => setInstruccionesExamen(e.target.value)} rows={2} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" /></label>
-                <div className="grid grid-cols-2 gap-2">
-                  <label className="text-xs font-medium">Duración (minutos)<input type="number" min="1" value={duracionExamen} onChange={e => setDuracionExamen(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" /></label>
-                  <label className="text-xs font-medium">Intentos permitidos<input type="number" min="1" max="10" value={intentosExamen} onChange={e => setIntentosExamen(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" /></label>
-                </div>
-                <button disabled={ocupado} className="rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-black">Crear evaluación</button>
-              </form>
               <div className="space-y-2"><p className="text-sm font-semibold">Evaluaciones del curso</p>
                 {(examenesQuery.data ?? []).map(x => <div key={x.id} className="space-y-3 rounded-lg border border-border p-3">
                   <div className="flex flex-wrap items-center justify-between gap-2">
