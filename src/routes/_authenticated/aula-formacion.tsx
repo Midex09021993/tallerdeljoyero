@@ -490,14 +490,14 @@ function AulaFormacionPage() {
       return () => { vigente = false; };
     }
     const normalizarNombre = (nombre: string) =>
-      nombre.trim().normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLowerCase();
+      nombre.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
     const imagen = materiales.find(material =>
       material.sesion_id === lecturaAbierta.id &&
-      normalizarNombre(material.nombre_archivo).replace(/\\.[^.]+$/, "") === "rhinoceros" &&
-      (/\\.(jpg|jpeg|png|webp)$/i.test(material.nombre_archivo) || /^image\\//i.test(material.mime_type || ""))
+      normalizarNombre(material.nombre_archivo).replace(/\.[^.]+$/, "") === "rhinoceros" &&
+      (/\.(jpg|jpeg|png|webp)$/i.test(material.nombre_archivo) || /^image\//i.test(material.mime_type || ""))
     ) ?? materiales.find(material =>
-      normalizarNombre(material.nombre_archivo).replace(/\\.[^.]+$/, "") === "rhinoceros" &&
-      (/\\.(jpg|jpeg|png|webp)$/i.test(material.nombre_archivo) || /^image\\//i.test(material.mime_type || ""))
+      normalizarNombre(material.nombre_archivo).replace(/\.[^.]+$/, "") === "rhinoceros" &&
+      (/\.(jpg|jpeg|png|webp)$/i.test(material.nombre_archivo) || /^image\//i.test(material.mime_type || ""))
     );
     if (!imagen) {
       setImagenRhinoError("No se encontró la imagen «RHINOCEROS» publicada en la Biblioteca de esta sesión.");
