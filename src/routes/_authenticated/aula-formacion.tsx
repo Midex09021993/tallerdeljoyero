@@ -14,7 +14,7 @@ export const Route = createFileRoute("/_authenticated/aula-formacion")({
 });
 
 type Curso = { id: string; participante_id: string; titulo: string; descripcion: string | null; duracion_horas: number; estado: string };
-type Inscripcion = { id: string; curso_id: string; email_alumno: string; nombre_alumno: string | null; estado: string; formacion_cursos: Curso | null };
+type Inscripcion = { id: string; curso_id: string; email_alumno: string; nombre_alumno: string | null; alumno_user_id?: string | null; estado: string; formacion_cursos: Curso | null };
 type Material = { id: string; curso_id: string; sesion_id: string | null; titulo: string; descripcion: string | null; nombre_archivo: string; ruta_storage: string; mime_type: string; tamano_bytes: number; created_at: string; publicado: boolean };
 type SesionCurso = { id: string; curso_id: string; numero: number; titulo: string; descripcion: string | null; duracion_horas: number; fecha_programada: string | null; publicada: boolean };
 type Examen = { id: string; curso_id: string; sesion_id?: string | null; titulo: string; instrucciones: string | null; duracion_minutos: number | null; intentos_permitidos: number; puntaje_maximo: number; publicado: boolean; disponible_desde: string | null; disponible_hasta: string | null };
@@ -255,6 +255,8 @@ function AulaFormacionPage() {
   const [instruccionesExamenEditadas, setInstruccionesExamenEditadas] = useState("");
   const [duracionExamenEditada, setDuracionExamenEditada] = useState("20");
   const [intentosExamenEditados, setIntentosExamenEditados] = useState("1");
+  const [disponibleDesdeEditado, setDisponibleDesdeEditado] = useState("");
+  const [disponibleHastaEditado, setDisponibleHastaEditado] = useState("");
   const [examenEliminarPendiente, setExamenEliminarPendiente] = useState<Examen | null>(null);
   const [tipoPregunta, setTipoPregunta] = useState<"opcion_multiple" | "verdadero_falso" | "practica">("opcion_multiple");
   const [enunciadoPregunta, setEnunciadoPregunta] = useState("");
@@ -394,7 +396,7 @@ function AulaFormacionPage() {
     enabled: Boolean(esDocente && participanteId && cursoActivoId),
     queryFn: async () => {
       const { data, error } = await (supabase as any).from("formacion_inscripciones")
-        .select("id,curso_id,email_alumno,nombre_alumno,estado")
+        .select("id,curso_id,email_alumno,nombre_alumno,alumno_user_id,estado")
         .eq("participante_id", participanteId).eq("curso_id", cursoActivoId)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -716,11 +718,17 @@ function AulaFormacionPage() {
     setInstruccionesExamenEditadas(examen.instrucciones ?? "");
     setDuracionExamenEditada(String(examen.duracion_minutos ?? 20));
     setIntentosExamenEditados(String(examen.intentos_permitidos ?? 1));
+    const aLocal = (valor: string | null) => valor ? new Date(new Date(valor).getTime() - new Date(valor).getTimezoneOffset() * 60000).toISOString().slice(0,16) : "";
+    setDisponibleDesdeEditado(aLocal(examen.disponible_desde));
+    setDisponibleHastaEditado(aLocal(examen.disponible_hasta));
   }
 
   async function guardarEdicionExamen(examen: Examen) {
     if (!tituloExamenEditado.trim()) { setMensaje("El título de la evaluación es obligatorio."); return; }
     if (examen.publicado) { setMensaje("Retira la publicación antes de modificar una evaluación."); return; }
+    const desde = disponibleDesdeEditado ? new Date(disponibleDesdeEditado) : null;
+    const hasta = disponibleHastaEditado ? new Date(disponibleHastaEditado) : null;
+    if (desde && hasta && hasta <= desde) { setMensaje("La fecha y hora de cierre debe ser posterior a la apertura."); return; }
     setOcupado(true); setMensaje("");
     try {
       const { error } = await (supabase as any).from("formacion_examenes").update({
@@ -728,6 +736,8 @@ function AulaFormacionPage() {
         instrucciones: instruccionesExamenEditadas.trim() || null,
         duracion_minutos: Math.max(1, Number(duracionExamenEditada) || 20),
         intentos_permitidos: Math.min(10, Math.max(1, Number(intentosExamenEditados) || 1)),
+        disponible_desde: desde ? desde.toISOString() : null,
+        disponible_hasta: hasta ? hasta.toISOString() : null,
       }).eq("id", examen.id).eq("participante_id", participanteId).eq("curso_id", cursoActivoId);
       if (error) throw error;
       await qc.invalidateQueries({ queryKey: ["aula-formacion-examenes-docente", participanteId, cursoActivoId] });
@@ -1571,6 +1581,7 @@ function AulaFormacionPage() {
                     <label className="text-xs font-medium">Título<input value={tituloExamenEditado} onChange={e=>setTituloExamenEditado(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"/></label>
                     <label className="text-xs font-medium">Instrucciones<textarea value={instruccionesExamenEditadas} onChange={e=>setInstruccionesExamenEditadas(e.target.value)} rows={2} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"/></label>
                     <div className="grid grid-cols-2 gap-2"><label className="text-xs font-medium">Duración (min)<input type="number" min="1" value={duracionExamenEditada} onChange={e=>setDuracionExamenEditada(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"/></label><label className="text-xs font-medium">Intentos permitidos<input type="number" min="1" max="10" value={intentosExamenEditados} onChange={e=>setIntentosExamenEditados(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"/></label></div>
+                    <div className="rounded-lg border border-gold/30 bg-gold/5 p-3"><p className="text-xs font-semibold">Programación del examen</p><p className="mt-1 text-[11px] text-muted-foreground">Hora local de Perú. Déjalos vacíos para no limitar el calendario.</p><div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2"><label className="text-xs font-medium">Habilitar desde<input type="datetime-local" value={disponibleDesdeEditado} onChange={e=>setDisponibleDesdeEditado(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"/></label><label className="text-xs font-medium">Cerrar el<input type="datetime-local" value={disponibleHastaEditado} onChange={e=>setDisponibleHastaEditado(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"/></label></div></div>
                     <div className="flex flex-wrap gap-2"><button type="button" disabled={ocupado || x.publicado} onClick={()=>void guardarEdicionExamen(x)} className="rounded-lg bg-gold px-3 py-2 text-xs font-semibold text-black disabled:opacity-40">Guardar cambios</button><button type="button" onClick={()=>setExamenEditandoId("")} className="rounded-lg border border-border px-3 py-2 text-xs">Cancelar</button></div>
                   </div> : <div className="flex flex-wrap gap-2">
                     <button type="button" onClick={()=>iniciarEdicionExamen(x)} disabled={x.publicado} className="rounded-lg border border-border px-3 py-1.5 text-xs disabled:opacity-40">Modificar</button>
