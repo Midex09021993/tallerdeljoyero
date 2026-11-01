@@ -49,7 +49,14 @@ const LECTURA_SESION_1 = [
     "Girar la vista Perspective: mantén pulsado el botón derecho del ratón y arrastra dentro de la ventana Perspective.",
     "Desplazar la vista Perspective: mantén pulsadas las teclas Shift y el botón derecho del ratón mientras arrastras.",
     "Maximizar y restaurar una ventana: haz doble clic sobre el título de la vista.",
-    "Recuperar el encuadre (Zoom Extents): utiliza Vista > Zoom > Extensión de zoom. Si el docente ha configurado F12 en el equipo, también podrás utilizar esa tecla como acceso directo."
+    "Recuperar el encuadre (Zoom Extents): utiliza Vista > Zoom > Extensión de zoom. Si el docente ha configurado F12 en el equipo, también podrás utilizar esa tecla como acceso directo.",
+    "Comandos de navegación disponibles en la línea de comandos:",
+    "Zoom — Control de acercamiento.",
+    "ZE (Zoom Extents) — encuadra todos los objetos.",
+    "ZEA (Zoom All Extents) — encuadra los objetos en todas las vistas.",
+    "ZS (Zoom Selected) — encuadra los objetos seleccionados.",
+    "Pan — desplaza la vista.",
+    "UndoView — recupera la vista anterior."
   ]},
   { titulo: "6. Configuración inicial del entorno", bloques: [
     "Antes de comenzar, verifica que estén disponibles las cuatro vistas principales: Top, Front, Right y Perspective. Comprueba también que la línea de comandos esté visible y que puedas leer sus indicaciones.",
