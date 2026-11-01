@@ -37,6 +37,7 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
   const viewerModelUrl = localFile ? localModelUrl : modelUrl;
   const [loadedModelReady, setLoadedModelReady] = useState(false);
   const visorRef = useRef<HTMLDivElement>(null);
+  const resetCameraRef = useRef<(() => void) | null>(null);
   const [pantallaCompleta, setPantallaCompleta] = useState(false);
 
   useEffect(() => {
@@ -214,7 +215,7 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
         </div>
         <div className="flex items-center justify-between gap-2 sm:justify-end">
           
-          <button type="button" onClick={() => { setMetalId("oro-amarillo"); setGemaId("diamante_natural"); }} className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[#e4ddd1] bg-white px-3.5 py-2 text-xs font-semibold text-[#41382d] shadow-sm transition hover:border-[#b28b45] hover:bg-[#fbf8f1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45] focus-visible:ring-offset-2"><RotateCcw className="size-3.5" /> Restablecer</button>
+          <button type="button" onClick={() => { setMetalId("oro-amarillo"); setGemaId("diamante_natural"); resetCameraRef.current?.(); }} className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[#e4ddd1] bg-white px-3.5 py-2 text-xs font-semibold text-[#41382d] shadow-sm transition hover:border-[#b28b45] hover:bg-[#fbf8f1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45] focus-visible:ring-offset-2"><RotateCcw className="size-3.5" /> Restablecer</button>
         </div>
       </header>
       <div className="isolate grid min-w-0 grid-cols-1 lg:min-h-0 lg:flex-1 lg:grid-rows-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)] 2xl:grid-cols-[minmax(0,1fr)]">
@@ -227,7 +228,7 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
               {pantallaCompleta ? <Minimize className="size-3.5 sm:size-4" /> : <Maximize className="size-3.5 sm:size-4" />}
             </button>
           </div>
-          {viewerModelUrl && <div className="absolute inset-0 cursor-grab active:cursor-grabbing"><PublicCatalogViewer modelUrl={viewerModelUrl} modelName={modelName || localFile?.name || "modelo.glb"} materialId={aurumMaterial.id} gemId={aurumGem.id} hideControls={pantallaCompleta} onReady={() => { setLoadedModelReady(true); setStatus(""); setAplicacionEstado("Visor 3D listo."); }} onError={(message) => { setLoadError(message); setStatus(""); }} /></div>}
+          {viewerModelUrl && <div className="absolute inset-0 cursor-grab active:cursor-grabbing"><PublicCatalogViewer modelUrl={viewerModelUrl} modelName={modelName || localFile?.name || "modelo.glb"} materialId={aurumMaterial.id} gemId={aurumGem.id} hideControls={pantallaCompleta} onResetViewReady={(reset) => { resetCameraRef.current = reset; }} onReady={() => { setLoadedModelReady(true); setStatus(""); setAplicacionEstado("Visor 3D listo."); }} onError={(message) => { setLoadError(message); setStatus(""); }} /></div>}
           {(!viewerModelUrl || loadError || status || !loadedModelReady) && <div className={"absolute inset-0 z-50 grid place-items-center p-6 text-center transition-opacity " + (isReady ? "pointer-events-none opacity-0" : "bg-white/90 backdrop-blur-[2px]")}>
             <div className="max-w-sm">
               {loadError ? <div className="mx-auto mb-3 grid size-10 place-items-center rounded-full border border-[#edd6c7] bg-[#fff6f0] text-[#a85b2d]"><span className="text-lg">!</span></div> : <div className="mx-auto mb-3 size-7 animate-spin rounded-full border-2 border-[#e9dfca] border-t-[#a7833d]" />}
