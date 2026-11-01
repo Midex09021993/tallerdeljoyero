@@ -884,11 +884,13 @@ function AulaFormacionPage() {
               </nav>
               <main className="flex-1 space-y-6 bg-card/40 px-6 py-8 sm:px-12 sm:py-10">
                 <h3 className="font-display text-2xl leading-tight sm:text-3xl">{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</h3>
-                {(seccionesLecturaActivas[paginaLectura]?.bloques ?? []).map((bloque,idx) => <p key={idx} className="mb-5 whitespace-pre-line text-[15px] leading-8 text-foreground/90">{bloque}</p>)}
-                {paginaLectura === 2 && imagenInterfazUrl && <figure className="my-8 overflow-hidden rounded-2xl border border-border bg-background p-3 sm:p-4">
-                  <img src={imagenInterfazUrl} alt="Interfaz principal de MatrixGold 3.1 con diez componentes identificados" className="h-auto w-full rounded-xl object-contain" loading="lazy" />
-                  <figcaption className="mt-3 text-center text-xs leading-5 text-muted-foreground">Material de apoyo FADILAB · MatrixGold 3.1 · Reconocimiento de los componentes de la interfaz</figcaption>
-                </figure>}
+                {(seccionesLecturaActivas[paginaLectura]?.bloques ?? []).map((bloque,idx) => <div key={idx}>
+                  <p className="mb-5 whitespace-pre-line text-[15px] leading-8 text-foreground/90">{bloque}</p>
+                  {paginaLectura === 2 && idx === 0 && imagenInterfazUrl && <figure className="my-8 overflow-hidden rounded-2xl border border-border bg-background p-3 sm:p-4">
+                    <img src={imagenInterfazUrl} alt="Interfaz principal de MatrixGold 3.1 con diez componentes identificados" className="h-auto w-full rounded-xl object-contain" loading="lazy" />
+                    <figcaption className="mt-3 text-center text-xs leading-5 text-muted-foreground">Material de apoyo FADILAB · MatrixGold 3.1 · Reconocimiento de los componentes de la interfaz</figcaption>
+                  </figure>}
+                </div>)}
                 {paginaLectura === seccionesLecturaActivas.length-1 && <div className="rounded-xl border border-gold/30 bg-gold/5 p-4"><p className="text-sm font-semibold">Has llegado al final de la lectura</p><p className="mt-1 text-sm text-muted-foreground">En el aula real, el alumno podrá finalizar y marcar la sesión como completada.</p></div>}
               </main>
               <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-border bg-background p-4 sm:p-5">
@@ -1120,11 +1122,13 @@ function AulaFormacionPage() {
               </nav>
               <main className="flex-1 space-y-6 bg-card/40 px-6 py-8 sm:px-12 sm:py-10">
                 <h3 className="font-display text-2xl leading-tight sm:text-3xl">{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</h3>
-                {(seccionesLecturaActivas[paginaLectura]?.bloques ?? []).map((bloque,idx) => <p key={idx} className="mb-5 whitespace-pre-line text-[15px] leading-8 text-foreground/90">{bloque}</p>)}
-                {paginaLectura === 2 && imagenInterfazUrl && <figure className="my-8 overflow-hidden rounded-2xl border border-border bg-background p-3 sm:p-4">
-                  <img src={imagenInterfazUrl} alt="Interfaz principal de MatrixGold 3.1 con diez componentes identificados" className="h-auto w-full rounded-xl object-contain" loading="lazy" />
-                  <figcaption className="mt-3 text-center text-xs leading-5 text-muted-foreground">Material de apoyo FADILAB · MatrixGold 3.1 · Reconocimiento de los componentes de la interfaz</figcaption>
-                </figure>}
+                {(seccionesLecturaActivas[paginaLectura]?.bloques ?? []).map((bloque,idx) => <div key={idx}>
+                  <p className="mb-5 whitespace-pre-line text-[15px] leading-8 text-foreground/90">{bloque}</p>
+                  {paginaLectura === 2 && idx === 0 && imagenInterfazUrl && <figure className="my-8 overflow-hidden rounded-2xl border border-border bg-background p-3 sm:p-4">
+                    <img src={imagenInterfazUrl} alt="Interfaz principal de MatrixGold 3.1 con diez componentes identificados" className="h-auto w-full rounded-xl object-contain" loading="lazy" />
+                    <figcaption className="mt-3 text-center text-xs leading-5 text-muted-foreground">Material de apoyo FADILAB · MatrixGold 3.1 · Reconocimiento de los componentes de la interfaz</figcaption>
+                  </figure>}
+                </div>)}
                 {paginaLectura === seccionesLecturaActivas.length-1 && <div className="rounded-xl border border-gold/30 bg-gold/5 p-4"><p className="text-sm font-semibold">Has llegado al final de la lectura</p><p className="mt-1 text-sm text-muted-foreground">{lecturaModoVistaPrevia ? "En la experiencia del alumno, aquí podrá finalizar y marcar la sesión como completada." : "La lectura está registrada como leída. Puedes marcar la sesión como completada."}</p></div>}
               </main>
               <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-border p-4 sm:p-5">
