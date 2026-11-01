@@ -479,19 +479,31 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         // BVH camera uniforms only need refreshing when the camera pose/target changes.
         // This skips redundant BVH work on settled/progressive frames without throttling
         // updates during an actual drag, zoom or auto-rotation.
-        let lastBvhCameraState: number[] | null = null;
+        let lastBvhCameraState: {
+          px: number; py: number; pz: number;
+          qx: number; qy: number; qz: number; qw: number;
+          tx: number; ty: number; tz: number;
+        } | null = null;
         loop = startAurumViewerLoop({ node: host, camera, renderer, controls }, () => {
-          const cameraState = [
-            camera.position.x, camera.position.y, camera.position.z,
-            camera.quaternion.x, camera.quaternion.y, camera.quaternion.z, camera.quaternion.w,
-            controls.target.x, controls.target.y, controls.target.z,
-          ];
-          const cameraChanged = lastBvhCameraState === null || cameraState.some(
-            (value, index) => Math.abs(value - (lastBvhCameraState?.[index] ?? value)) > 1e-7,
-          );
+          const previous = lastBvhCameraState;
+          const cameraChanged = previous === null
+            || Math.abs(camera.position.x - previous.px) > 1e-7
+            || Math.abs(camera.position.y - previous.py) > 1e-7
+            || Math.abs(camera.position.z - previous.pz) > 1e-7
+            || Math.abs(camera.quaternion.x - previous.qx) > 1e-7
+            || Math.abs(camera.quaternion.y - previous.qy) > 1e-7
+            || Math.abs(camera.quaternion.z - previous.qz) > 1e-7
+            || Math.abs(camera.quaternion.w - previous.qw) > 1e-7
+            || Math.abs(controls.target.x - previous.tx) > 1e-7
+            || Math.abs(controls.target.y - previous.ty) > 1e-7
+            || Math.abs(controls.target.z - previous.tz) > 1e-7;
           if (cameraChanged) {
             diamondBvhRuntimeRef.current?.update();
-            lastBvhCameraState = cameraState;
+            lastBvhCameraState = {
+              px: camera.position.x, py: camera.position.y, pz: camera.position.z,
+              qx: camera.quaternion.x, qy: camera.quaternion.y, qz: camera.quaternion.z, qw: camera.quaternion.w,
+              tx: controls.target.x, ty: controls.target.y, tz: controls.target.z,
+            };
           }
           renderer.render(scene, camera);
         }, { progressiveFrames: 3 });
