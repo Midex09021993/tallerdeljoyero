@@ -8,7 +8,7 @@
   "files": {
     ".github/workflows/quality.yml": "859ec017c449181488a8fd91e854e01ae746bf1fb6bdbebeefe07906e6cfa548",
     "scripts/check-aurum-lock.mjs": "d8b0b1e553fbfdd7faf6522482d0460b5c9803464b9fa03d34ed3bbacd18b5c4",
-    "src/components/AurumRender.tsx": "4c54230f9bfbc33d02be56e293d9ccf2d7889c1c87d20172b38c43737deb3fcc",
+    "src/components/AurumRender.tsx": "423f1449937401e7298fe49be5fe979118758caa592429f8a4000303db8ade9f",
     "src/components/AurumRenderConfig.tsx": "aee6ad6ae61c5ea3ad7a6fa03453154b871c3910845656f4ef6bed3b4660ad66",
     "src/lib/aurum-material-engine.ts": "1ebbacc784f61fbc9d77027cbd612269073e5de8be5a40a9276916653d34c742",
     "src/lib/aurum/api.ts": "5677a8021529d239e7b9e7f23274367d2aebbc7c91a17454f12b57dc39967e2d",
