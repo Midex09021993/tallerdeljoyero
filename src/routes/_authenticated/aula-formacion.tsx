@@ -135,6 +135,8 @@ function AulaFormacionPage() {
   const [seccionesLecturaActivas, setSeccionesLecturaActivas] = useState<Array<{titulo:string;bloques:string[]}>>(LECTURA_SESION_1.map(x => ({ titulo:x.titulo, bloques:[...x.bloques] })));
   const [imagenInterfazUrl, setImagenInterfazUrl] = useState("");
   const [imagenInterfazError, setImagenInterfazError] = useState("");
+  const [imagenRhinoUrl, setImagenRhinoUrl] = useState("");
+  const [imagenRhinoError, setImagenRhinoError] = useState("");
   const [interfazInteractivaAbierta, setInterfazInteractivaAbierta] = useState(false);
   const [componentesExplorados, setComponentesExplorados] = useState<number[]>([]);
   const [componenteActivo, setComponenteActivo] = useState<number | null>(null);
@@ -476,6 +478,43 @@ function AulaFormacionPage() {
         if (vigente) setImagenInterfazError(error instanceof Error ? error.message : "No se pudo recuperar la imagen del almacenamiento.");
       });
 
+    return () => { vigente = false; };
+  }, [lecturaAbierta?.id, lecturaAbierta?.numero, esDocente, materialesDocenteQuery.data, materialesAlumnoQuery.data]);
+
+  useEffect(() => {
+    const materiales = esDocente ? materialesDocenteQuery.data : materialesAlumnoQuery.data;
+    let vigente = true;
+    setImagenRhinoUrl("");
+    setImagenRhinoError("");
+    if (!lecturaAbierta || lecturaAbierta.numero !== 1 || !materiales) {
+      return () => { vigente = false; };
+    }
+    const normalizarNombre = (nombre: string) =>
+      nombre.trim().normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLowerCase();
+    const imagen = materiales.find(material =>
+      material.sesion_id === lecturaAbierta.id &&
+      normalizarNombre(material.nombre_archivo).replace(/\\.[^.]+$/, "") === "rhinoceros" &&
+      (/\\.(jpg|jpeg|png|webp)$/i.test(material.nombre_archivo) || /^image\\//i.test(material.mime_type || ""))
+    ) ?? materiales.find(material =>
+      normalizarNombre(material.nombre_archivo).replace(/\\.[^.]+$/, "") === "rhinoceros" &&
+      (/\\.(jpg|jpeg|png|webp)$/i.test(material.nombre_archivo) || /^image\\//i.test(material.mime_type || ""))
+    );
+    if (!imagen) {
+      setImagenRhinoError("No se encontró la imagen «RHINOCEROS» publicada en la Biblioteca de esta sesión.");
+      return () => { vigente = false; };
+    }
+    supabase.storage.from("formacion-academica").createSignedUrl(imagen.ruta_storage, 3600)
+      .then(({ data, error }) => {
+        if (!vigente) return;
+        if (error || !data?.signedUrl) {
+          setImagenRhinoError("No se pudo abrir la imagen RHINOCEROS: " + (error?.message || "enlace no disponible"));
+          return;
+        }
+        setImagenRhinoUrl(data.signedUrl);
+      })
+      .catch((error: unknown) => {
+        if (vigente) setImagenRhinoError(error instanceof Error ? error.message : "No se pudo recuperar la imagen RHINOCEROS.");
+      });
     return () => { vigente = false; };
   }, [lecturaAbierta?.id, lecturaAbierta?.numero, esDocente, materialesDocenteQuery.data, materialesAlumnoQuery.data]);
 
@@ -1011,6 +1050,12 @@ function AulaFormacionPage() {
                   <p className="mb-4 max-w-4xl whitespace-pre-line text-[15px] leading-7 text-foreground/90">{bloque}</p>
 
                 </div>)}
+                {paginaLectura === 1 && <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5 sm:p-6">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">Material visual de apoyo</p>
+                  <h4 className="mt-1 text-lg font-semibold">Rhinoceros 7</h4>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">Consulta la imagen de referencia que se ha añadido a la Biblioteca de esta sesión.</p>
+                  {imagenRhinoUrl ? <a href={imagenRhinoUrl} target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gold px-5 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95">Ver imagen RHINOCEROS <ChevronRight className="size-4"/></a> : <p className="mt-3 text-xs text-muted-foreground">{imagenRhinoError || "Buscando RHINOCEROS en la Biblioteca del curso…"}</p>}
+                </section>}
                 {paginaLectura === 2 && !interfazInteractivaAbierta && <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5 sm:p-6">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">Actividad guiada · FADILAB</p>
                   <h4 className="mt-1 text-lg font-semibold">Conoce cada parte de la interfaz</h4>
@@ -1286,6 +1331,12 @@ function AulaFormacionPage() {
                   <p className="mb-4 max-w-4xl whitespace-pre-line text-[15px] leading-7 text-foreground/90">{bloque}</p>
 
                 </div>)}
+                {paginaLectura === 1 && <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5 sm:p-6">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">Material visual de apoyo</p>
+                  <h4 className="mt-1 text-lg font-semibold">Rhinoceros 7</h4>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">Consulta la imagen de referencia que se ha añadido a la Biblioteca de esta sesión.</p>
+                  {imagenRhinoUrl ? <a href={imagenRhinoUrl} target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gold px-5 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95">Ver imagen RHINOCEROS <ChevronRight className="size-4"/></a> : <p className="mt-3 text-xs text-muted-foreground">{imagenRhinoError || "Buscando RHINOCEROS en la Biblioteca del curso…"}</p>}
+                </section>}
                 {paginaLectura === 2 && !interfazInteractivaAbierta && <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5 sm:p-6">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">Actividad guiada · FADILAB</p>
                   <h4 className="mt-1 text-lg font-semibold">Conoce cada parte de la interfaz</h4>
