@@ -713,6 +713,12 @@ function AulaFormacionPage() {
       setLecturaModoVistaPrevia(vistaPrevia);
       setLecturaAbierta(s);
       setPaginaLectura(0);
+      setComponentesExplorados([]);
+      setComponenteActivo(0);
+      setPreguntaInterfaz(0);
+      setRespuestaInterfaz(null);
+      setAciertosInterfaz(0);
+      setRetoInterfazFinalizado(false);
     } catch (err) {
       setMensaje(err instanceof Error ? err.message : "No se pudo cargar la lectura. Revisa los permisos de lectura del contenido.");
     } finally { setOcupado(false); }
