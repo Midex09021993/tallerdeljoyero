@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listarDirectorioAlumnosFormacion } from "@/lib/aula-formacion.functions";
-import { BookOpen, Users, Plus, Upload, FileText, Download, CalendarDays, ShieldCheck, Send, Pencil, Trash2, CheckCircle2, ChevronLeft, ChevronRight, BookOpenCheck } from "lucide-react";
+import { BookOpen, Users, Plus, Upload, FileText, Download, CalendarDays, ShieldCheck, Send, Pencil, Trash2, CheckCircle2, ChevronLeft, ChevronRight, BookOpenCheck, FolderOpen, ClipboardCheck } from "lucide-react";
 import { AppShell, Panel } from "@/components/AppShell";
 import { useSesion } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -885,6 +885,7 @@ function AulaFormacionPage() {
               </div>
             </Panel>
           </div>}
+          {!cursoActivoId && seccionDocente !== "cursos" && <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center"><BookOpen className="mx-auto size-8 text-muted-foreground"/><p className="mt-3 text-sm font-semibold">Primero selecciona un curso</p><p className="mt-1 text-xs text-muted-foreground">En el espacio «Cursos» puedes crear un curso o elegir uno existente para administrar sus alumnos, sesiones, materiales y evaluaciones.</p><button type="button" onClick={() => setSeccionDocente("cursos")} className="mt-4 rounded-lg bg-gold px-4 py-2 text-xs font-semibold text-black">Ir a cursos</button></div>}
           {seccionDocente === "alumnos" && cursoActivoId && <div id="doc-alumnos-sesiones" className="grid scroll-mt-24 gap-5 lg:grid-cols-2">
             <Panel titulo="Inscribir alumnos" colapsable defaultOpen={false}>
               <div className="space-y-4 p-5">
