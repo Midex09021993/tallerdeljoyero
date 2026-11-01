@@ -755,10 +755,19 @@ function AulaFormacionPage() {
     <div className="mx-auto max-w-6xl space-y-5">
       {esDocente ? (
         <>
-          <section className="flex flex-col gap-3 rounded-2xl border border-gold/25 bg-gradient-to-br from-gold/10 via-card to-card p-5 sm:flex-row sm:items-center">
-            <div className="grid size-12 place-items-center rounded-xl bg-gold/15 text-gold-deep"><ShieldCheck className="size-6" /></div>
-            <div><p className="text-sm font-semibold">Panel docente · FADILAB</p><p className="mt-1 text-xs text-muted-foreground">Crea cursos, matricula alumnos y publica sesiones y archivos académicos.</p></div>
+          <section className="rounded-2xl border border-gold/25 bg-gradient-to-br from-gold/10 via-card to-card p-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <div className="grid size-12 shrink-0 place-items-center rounded-xl bg-gold/15 text-gold-deep"><ShieldCheck className="size-6" /></div>
+              <div className="min-w-0 flex-1"><p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-gold-deep">FADILAB · Administración académica</p><h2 className="mt-1 text-xl font-semibold">Centro de gestión docente</h2><p className="mt-1 text-sm text-muted-foreground">Organiza cursos, acompaña alumnos y administra contenidos desde un solo lugar.</p></div>
+              {cursoActivoId && <button type="button" onClick={() => setVistaPreviaAlumno(true)} className="inline-flex items-center justify-center gap-2 rounded-lg border border-gold/40 bg-gold/10 px-4 py-2.5 text-sm font-semibold text-gold-deep hover:bg-gold/20"><BookOpen className="size-4" /> Vista previa del alumno</button>}
+            </div>
+            <div className="mt-5 grid grid-cols-2 gap-2 lg:grid-cols-4">
+              {[{label:"Cursos",value:cursos.length,icon:<BookOpen className="size-4"/>},{label:"Alumnos inscritos",value:(inscripcionesQuery.data ?? []).length,icon:<Users className="size-4"/>},{label:"Sesiones",value:(sesionesQuery.data ?? []).length,icon:<CalendarDays className="size-4"/>},{label:"Materiales",value:(materialesDocenteQuery.data ?? []).length,icon:<FileText className="size-4"/>}].map(item => <div key={item.label} className="rounded-xl border border-border/80 bg-card/80 p-3"><div className="flex items-center justify-between text-muted-foreground"><span className="text-xs">{item.label}</span>{item.icon}</div><p className="mt-2 text-2xl font-semibold tabular-nums">{item.value}</p></div>)}
+            </div>
           </section>
+          <nav aria-label="Secciones del panel docente" className="flex flex-wrap gap-2 rounded-xl border border-border bg-card p-2">
+            {[{id:"doc-cursos",label:"Cursos"},{id:"doc-alumnos-sesiones",label:"Alumnos y sesiones"},{id:"doc-materiales",label:"Materiales"},{id:"doc-evaluaciones",label:"Evaluaciones"},{id:"doc-entregas",label:"Entregas"}].map(item => <a key={item.id} href={"#" + item.id} className="rounded-lg px-3 py-2 text-xs font-semibold text-muted-foreground transition hover:bg-gold/10 hover:text-foreground">{item.label}</a>)}
+          </nav>
           {cursoActivoId && <div className="flex justify-end">
             <button type="button" onClick={() => setVistaPreviaAlumno(true)} className="inline-flex items-center gap-2 rounded-lg border border-gold/40 bg-gold/10 px-4 py-2.5 text-sm font-semibold text-gold-deep hover:bg-gold/20">
               <BookOpen className="size-4" /> Vista previa del alumno
@@ -767,7 +776,7 @@ function AulaFormacionPage() {
           {vistaPreviaAlumno && cursoActivoId && (() => {
             const curso = cursos.find(item => item.id === cursoActivoId);
             const sesionesPublicadas = (sesionesQuery.data ?? []).filter(item => item.publicada);
-            const materialesPublicados = materialesDocenteQuery.data ?? [];
+            const materialesPublicados = (materialesDocenteQuery.data ?? []).filter(m => m.publicado);
             const examenesPublicados = (examenesQuery.data ?? []).filter(item => item.publicado);
             return <div className="fixed inset-0 left-0 z-50 overflow-y-auto bg-background lg:left-64 xl:left-72" role="dialog" aria-modal="true" aria-label="Vista previa del aula del alumno">
               <div className="min-h-full">
@@ -831,7 +840,7 @@ function AulaFormacionPage() {
               </footer>
             </div>
           </div>}
-          <div className="grid gap-5 lg:grid-cols-2">
+          <div id="doc-cursos" className="grid scroll-mt-24 gap-5 lg:grid-cols-2">
             <Panel titulo="Crear curso" colapsable defaultOpen={true}>
               <form onSubmit={(e) => void crearCurso(e)} className="space-y-3 p-5">
                 <label className="block text-xs font-medium">Nombre del curso<input value={titulo} onChange={e => setTitulo(e.target.value)} required maxLength={140} className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm" /></label>
@@ -861,7 +870,7 @@ function AulaFormacionPage() {
               </div>
             </Panel>
           </div>
-          {cursoActivoId && <div className="grid gap-5 lg:grid-cols-2">
+          {cursoActivoId && <div id="doc-alumnos-sesiones" className="grid scroll-mt-24 gap-5 lg:grid-cols-2">
             <Panel titulo="Inscribir alumnos" colapsable defaultOpen={false}>
               <div className="space-y-4 p-5">
                 <div className="space-y-1">
@@ -945,7 +954,7 @@ function AulaFormacionPage() {
                 </div>
               </div>
             </div>}
-            <Panel titulo="Materiales de estudio" colapsable defaultOpen={false}>
+            <div id="doc-materiales" className="scroll-mt-24"><Panel titulo="Materiales de estudio" colapsable defaultOpen={false}>
               <form onSubmit={(e) => void subirMaterial(e)} className="space-y-3 p-5">
                 <label className="block text-xs font-medium">Título del material<input required value={tituloMaterial} onChange={e => setTituloMaterial(e.target.value)} className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm" placeholder="Ej. Guía de navegación en Rhino" /></label>
                 <label className="block text-xs font-medium">¿A qué parte del curso pertenece?
@@ -974,9 +983,9 @@ function AulaFormacionPage() {
                   </div>)}</section>)}
                 </>}
               </div>
-            </Panel>
+            </Panel></div>
           </div>}
-          {cursoActivoId && <Panel titulo="Evaluaciones y cuestionarios" colapsable defaultOpen={false}>
+          {cursoActivoId && <div id="doc-evaluaciones" className="scroll-mt-24"><Panel titulo="Evaluaciones y cuestionarios" colapsable defaultOpen={false}>
             <div className="space-y-3 p-5">
               <form onSubmit={(e) => void crearExamen(e)} className="space-y-3 rounded-xl border border-border p-4">
                 <p className="text-sm font-semibold">Crear evaluación</p>
@@ -1009,8 +1018,8 @@ function AulaFormacionPage() {
               </form>}
               {(preguntasQuery.data ?? []).map((p, idx) => <div key={p.id} className="rounded-lg border border-border p-3"><p className="text-xs text-muted-foreground">Pregunta {idx + 1} · {p.tipo.replaceAll("_"," ")} · {p.puntaje} pts</p><p className="mt-1 text-sm">{p.enunciado}</p></div>)}
             </div>
-          </Panel>}
-          {cursoActivoId && <Panel titulo="Entregas y revisión docente">
+          </Panel></div>}
+          {cursoActivoId && <div id="doc-entregas" className="scroll-mt-24"><Panel titulo="Entregas y revisión docente">
             <div className="space-y-3 p-5">
               {(intentosDocenteQuery.data ?? []).length === 0 ? <p className="text-sm text-muted-foreground">Todavía no hay evaluaciones entregadas.</p> : (intentosDocenteQuery.data ?? []).map(intento => {
                 const examen = (intento as any).formacion_examenes;
@@ -1030,7 +1039,7 @@ function AulaFormacionPage() {
                 </div>;
               })}
             </div>
-          </Panel>}
+          </Panel></div>}
           {cursosQuery.error && <p className="rounded-xl border border-red-300 p-3 text-sm text-red-700">{cursosQuery.error.message}</p>}
         </>
       ) : (
