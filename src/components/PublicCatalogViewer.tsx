@@ -498,6 +498,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         const framePerf = perfEnabled ? {
           frames: 0,
           startedAt: 0,
+          bvhUpdates: 0,
           bvhTotalMs: 0,
           bvhMaxMs: 0,
           renderTotalMs: 0,
@@ -516,7 +517,8 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
             averageFps: Number((framePerf.frames * 1000 / elapsedMs).toFixed(1)),
             averageFrameIntervalMs: Number((framePerf.frameIntervalTotalMs / Math.max(1, framePerf.frames - 1)).toFixed(2)),
             maxFrameIntervalMs: Number(framePerf.frameIntervalMaxMs.toFixed(2)),
-            bvhUpdateAverageMs: Number((framePerf.bvhTotalMs / framePerf.frames).toFixed(3)),
+            bvhUpdateCount: framePerf.bvhUpdates,
+            bvhUpdateAverageMs: Number((framePerf.bvhTotalMs / Math.max(1, framePerf.bvhUpdates)).toFixed(3)),
             bvhUpdateMaxMs: Number(framePerf.bvhMaxMs.toFixed(3)),
             renderAverageMs: Number((framePerf.renderTotalMs / framePerf.frames).toFixed(3)),
             renderMaxMs: Number(framePerf.renderMaxMs.toFixed(3)),
@@ -527,6 +529,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
           });
           framePerf.frames = 0;
           framePerf.startedAt = 0;
+          framePerf.bvhUpdates = 0;
           framePerf.bvhTotalMs = 0;
           framePerf.bvhMaxMs = 0;
           framePerf.renderTotalMs = 0;
@@ -555,7 +558,10 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
           if (cameraChanged) {
             const bvhStartedAt = framePerf ? performance.now() : 0;
             diamondBvhRuntimeRef.current?.update();
-            if (framePerf) bvhDurationMs = performance.now() - bvhStartedAt;
+            if (framePerf) {
+              bvhDurationMs = performance.now() - bvhStartedAt;
+              framePerf.bvhUpdates += 1;
+            }
             state[0] = camera.position.x;
             state[1] = camera.position.y;
             state[2] = camera.position.z;
