@@ -220,7 +220,7 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
         </div>
       </header>
       <div className="isolate grid min-w-0 grid-cols-1 lg:min-h-0 lg:flex-1 lg:grid-rows-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)] 2xl:grid-cols-[minmax(0,1fr)]">
-        <div ref={visorRef} className={"relative z-0 h-[clamp(340px,56svh,500px)] min-h-[340px] min-w-0 overflow-hidden bg-white sm:h-[clamp(400px,62vh,600px)] sm:min-h-[400px] lg:h-full lg:min-h-0 2xl:min-h-[680px] " + (pantallaCompleta ? "h-screen min-h-0 w-screen sm:h-screen sm:min-h-0 2xl:h-screen 2xl:min-h-0" : "")}>
+        <div ref={visorRef} className={"relative z-0 h-[clamp(400px,calc(100svh-230px),640px)] min-h-[400px] min-w-0 overflow-hidden bg-white sm:h-[clamp(400px,62vh,600px)] sm:min-h-[400px] lg:h-full lg:min-h-0 2xl:min-h-[680px] " + (pantallaCompleta ? "h-screen min-h-0 w-screen sm:h-screen sm:min-h-0 2xl:h-screen 2xl:min-h-0" : "")}>
           <div className="absolute right-2 top-2 z-20 flex items-center gap-1 rounded-full border border-[#e8e3db] bg-white/90 p-1 shadow-sm backdrop-blur sm:right-3 sm:top-3 sm:gap-1.5 sm:p-1.5" aria-label="Controles informativos del visor">
             <span title="Iluminación HDR" className="rounded-full border border-[#e8e3db] px-2 py-1 text-[9px] font-medium text-[#81786c] sm:text-[10px]">HDRI</span>
             <span title="Materiales PBR" className="rounded-full border border-[#e8e3db] px-2 py-1 text-[9px] font-medium text-[#81786c] sm:text-[10px]">PBR</span>
