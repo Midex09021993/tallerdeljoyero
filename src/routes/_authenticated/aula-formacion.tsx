@@ -99,6 +99,8 @@ function AulaFormacionPage() {
   const [seccionesLecturaEditadas, setSeccionesLecturaEditadas] = useState<Array<{titulo:string;bloques:string[]}>>([]);
   const [cargandoLecturaDocente, setCargandoLecturaDocente] = useState(false);
   const [estadoGuardadoLectura, setEstadoGuardadoLectura] = useState<{tipo:"success"|"error"|"info"; texto:string} | null>(null);
+  const [seccionesLecturaActivas, setSeccionesLecturaActivas] = useState<Array<{titulo:string;bloques:string[]}>>(LECTURA_SESION_1.map(x => ({ titulo:x.titulo, bloques:[...x.bloques] })));
+  const [lecturaPublicada, setLecturaPublicada] = useState(false);
   const [archivo, setArchivo] = useState<File | null>(null);
   const [tituloMaterial, setTituloMaterial] = useState("");
   const [publicarMaterial, setPublicarMaterial] = useState(true);
@@ -570,13 +572,14 @@ function AulaFormacionPage() {
       const guardadas = Array.isArray(data?.secciones) ? data.secciones : null;
       setSeccionesLecturaEditadas(guardadas ?? (s.numero === 1 ? LECTURA_SESION_1.map(x => ({ titulo: x.titulo, bloques: [...x.bloques] })) : []));
       setEstadoGuardadoLectura(guardadas ? { tipo: "info", texto: "Contenido cargado desde Supabase. Los cambios aún no están guardados." } : { tipo: "info", texto: "Contenido inicial cargado. Guarda el borrador para conservarlo en Supabase." });
+      setLecturaPublicada(Boolean(data?.publicado));
       setLecturaEditando(s);
     } catch (err) {
       setMensaje(err instanceof Error ? err.message : "No se pudo cargar la lectura. Verifica la tabla y sus permisos.");
     } finally { setCargandoLecturaDocente(false); }
   }
 
-  async function guardarContenidoLectura() {
+  async function guardarContenidoLectura(publicar = false) {
     if (!lecturaEditando || !participanteId || !sesionesQuery.data?.some(x => x.id === lecturaEditando.id)) return;
     if (!seccionesLecturaEditadas.length || seccionesLecturaEditadas.some(x => !x.titulo.trim() || !x.bloques.length || x.bloques.some(b => !b.trim()))) {
       setEstadoGuardadoLectura({ tipo: "error", texto: "No se guardó: completa el título y al menos un bloque de texto en cada apartado." });
@@ -586,17 +589,49 @@ function AulaFormacionPage() {
     try {
       const { data: existente, error: consultaError } = await (supabase as any).from("formacion_contenidos_lectura").select("sesion_id").eq("sesion_id", lecturaEditando.id).maybeSingle();
       if (consultaError) throw consultaError;
-      const payload = { sesion_id: lecturaEditando.id, secciones: seccionesLecturaEditadas, updated_by: sesion?.user?.id ?? sesion?.user?.user_metadata?.sub ?? null, updated_at: new Date().toISOString() };
+      const payload = { sesion_id: lecturaEditando.id, secciones: seccionesLecturaEditadas, publicado: publicar ? true : lecturaPublicada, updated_by: sesion?.user?.id ?? null, updated_at: new Date().toISOString() };
       const resultado = existente
         ? await (supabase as any).from("formacion_contenidos_lectura").update(payload).eq("sesion_id", lecturaEditando.id).select("sesion_id").maybeSingle()
         : await (supabase as any).from("formacion_contenidos_lectura").insert(payload).select("sesion_id").single();
       if (resultado.error) throw resultado.error;
       if (!resultado.data?.sesion_id) throw new Error("Supabase no confirmó el guardado. Revisa los permisos de la tabla.");
       await qc.invalidateQueries({ queryKey: ["aula-formacion-lectura", lecturaEditando.id] });
-      setEstadoGuardadoLectura({ tipo: "success", texto: "¡Guardado correctamente! El borrador de esta lectura ya está almacenado en Supabase. Todavía no está publicado para los alumnos." });
+      setLecturaPublicada(Boolean(payload.publicado));
+      setEstadoGuardadoLectura({ tipo: "success", texto: publicar ? "¡Lectura publicada! Ya está disponible para los alumnos." : payload.publicado ? "¡Cambios guardados! La lectura continúa publicada." : "¡Guardado correctamente! El borrador está almacenado en Supabase y aún no está publicado." });
     } catch (err) {
       setEstadoGuardadoLectura({ tipo: "error", texto: err instanceof Error ? "No se pudo guardar: " + err.message : "No se pudo guardar la lectura. Inténtalo nuevamente." });
     } finally { setOcupado(false); }
+  }
+
+  async function retirarPublicacionLectura() {
+    if (!lecturaEditando) return;
+    setOcupado(true);
+    setEstadoGuardadoLectura({ tipo:"info", texto:"Retirando la lectura del Aula…" });
+    try {
+      const { data, error } = await (supabase as any).from("formacion_contenidos_lectura").update({ publicado:false, updated_at:new Date().toISOString() }).eq("sesion_id",lecturaEditando.id).select("sesion_id").maybeSingle();
+      if (error) throw error;
+      if (!data?.sesion_id) throw new Error("Supabase no confirmó el cambio de publicación.");
+      setLecturaPublicada(false);
+      setEstadoGuardadoLectura({ tipo:"success", texto:"Lectura retirada. El contenido se conserva como borrador." });
+    } catch (err) { setEstadoGuardadoLectura({ tipo:"error", texto:err instanceof Error ? err.message : "No se pudo retirar la lectura." }); }
+    finally { setOcupado(false); }
+  }
+
+  async function abrirLecturaParaAlumno(s: SesionCurso, vistaPrevia = false) {
+    setOcupado(true);
+    try {
+      const { data, error } = await (supabase as any).from("formacion_contenidos_lectura").select("secciones,publicado").eq("sesion_id",s.id).eq("publicado",true).maybeSingle();
+      if (error) throw error;
+      if (!data || !Array.isArray(data.secciones) || data.secciones.length === 0) {
+        setMensaje("La lectura de esta sesión todavía no está publicada por FADILAB.");
+        return;
+      }
+      setSeccionesLecturaActivas(data.secciones);
+      setLecturaModoVistaPrevia(vistaPrevia);
+      setLecturaAbierta(s);
+      setPaginaLectura(0);
+    } catch (err) { setMensaje(err instanceof Error ? err.message : "No se pudo cargar la lectura publicada."); }
+    finally { setOcupado(false); }
   }
 
   async function publicarSesion(s: SesionCurso) {
@@ -671,7 +706,7 @@ function AulaFormacionPage() {
                       <p className="text-sm text-muted-foreground">{curso?.descripcion || "Materiales y actividades de tu formación."}</p>
                       <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground"><span>{curso?.duracion_horas ?? 0} horas</span><span>Inscripción: activo</span></div>
                       <h3 className="mb-2 mt-5 text-sm font-semibold">Sesiones</h3>
-                      {sesionesQuery.isLoading ? <p className="text-xs text-muted-foreground">Cargando sesiones…</p> : sesionesPublicadas.length === 0 ? <p className="text-xs text-muted-foreground">Todavía no hay sesiones publicadas.</p> : sesionesPublicadas.map(item => <article key={item.id} className="flex flex-wrap items-center justify-between gap-3 border-t border-border py-3"><div className="min-w-0"><p className="text-xs text-muted-foreground">Sesión {item.numero}</p><p className="text-sm font-medium">{item.titulo}</p>{item.descripcion && <p className="mt-1 whitespace-pre-wrap text-xs text-muted-foreground">{item.descripcion}</p>}</div><div className="flex shrink-0 items-center gap-2">{lecturasSimuladas.has(item.id) && <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700"><CheckCircle2 className="size-4"/> Completada</span>}{item.numero === 1 ? <button type="button" onClick={() => { setLecturaModoVistaPrevia(true); setLecturaAbierta(item); setPaginaLectura(0); }} className="inline-flex items-center gap-1 rounded-lg border border-gold/40 bg-gold/10 px-3 py-2 text-xs font-semibold text-gold-deep"><BookOpenCheck className="size-4"/> Abrir lectura</button> : <span className="text-xs text-muted-foreground">Lectura en preparación</span>}</div></article>)}
+                      {sesionesQuery.isLoading ? <p className="text-xs text-muted-foreground">Cargando sesiones…</p> : sesionesPublicadas.length === 0 ? <p className="text-xs text-muted-foreground">Todavía no hay sesiones publicadas.</p> : sesionesPublicadas.map(item => <article key={item.id} className="flex flex-wrap items-center justify-between gap-3 border-t border-border py-3"><div className="min-w-0"><p className="text-xs text-muted-foreground">Sesión {item.numero}</p><p className="text-sm font-medium">{item.titulo}</p>{item.descripcion && <p className="mt-1 whitespace-pre-wrap text-xs text-muted-foreground">{item.descripcion}</p>}</div><div className="flex shrink-0 items-center gap-2">{lecturasSimuladas.has(item.id) && <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700"><CheckCircle2 className="size-4"/> Completada</span>}{item.numero === 1 ? <button type="button" onClick={() => void abrirLecturaParaAlumno(item, true)} className="inline-flex items-center gap-1 rounded-lg border border-gold/40 bg-gold/10 px-3 py-2 text-xs font-semibold text-gold-deep"><BookOpenCheck className="size-4"/> Abrir lectura</button> : <span className="text-xs text-muted-foreground">Lectura en preparación</span>}</div></article>)}
                       <h3 className="mb-2 mt-5 text-sm font-semibold">Evaluaciones</h3>
                       {examenesPublicados.length === 0 ? <p className="text-xs text-muted-foreground">Todavía no hay evaluaciones publicadas.</p> : examenesPublicados.map(item => <div key={item.id} className="flex flex-wrap items-center justify-between gap-3 border-t border-border py-3"><div><p className="text-sm font-medium">{item.titulo}</p><p className="text-xs text-muted-foreground">{item.duracion_minutos ?? "Sin límite"} min · {item.intentos_permitidos} intento(s) · Simulación</p></div><button type="button" onClick={() => setMensaje("La simulación de evaluación estará disponible sin registrar intentos reales.")} className="rounded-lg border border-border px-3 py-2 text-xs">Rendir evaluación</button></div>)}
                       <h3 className="mb-2 mt-5 text-sm font-semibold">Materiales publicados</h3>
@@ -686,17 +721,17 @@ function AulaFormacionPage() {
             <div className="mx-auto my-4 flex min-h-[80vh] max-w-3xl flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl">
               <header className="border-b border-border p-4 sm:p-6">
                 <div className="flex items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-wide text-gold-deep">Aula de formación · Lectura guiada</p><h2 className="mt-1 text-lg font-semibold">{lecturaAbierta.numero}. {lecturaAbierta.titulo}</h2><p className="mt-1 text-xs text-muted-foreground">Modo de prueba docente · El avance no se guarda en la cuenta de ningún alumno.</p></div><button type="button" onClick={() => { setLecturaAbierta(null); setLecturaModoVistaPrevia(false); }} className="rounded-lg border border-border px-3 py-2 text-xs">Cerrar</button></div>
-                <div className="mt-4 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-gold transition-all" style={{width: (((paginaLectura+1)/LECTURA_SESION_1.length)*100)+"%"}}/></div>
-                <p className="mt-2 text-xs text-muted-foreground">Apartado {paginaLectura+1} de {LECTURA_SESION_1.length}</p>
+                <div className="mt-4 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-gold transition-all" style={{width: (((paginaLectura+1)/seccionesLecturaActivas.length)*100)+"%"}}/></div>
+                <p className="mt-2 text-xs text-muted-foreground">Apartado {paginaLectura+1} de {seccionesLecturaActivas.length}</p>
               </header>
               <main className="flex-1 space-y-4 p-5 sm:p-8">
-                <h3 className="text-xl font-semibold">{LECTURA_SESION_1[paginaLectura].titulo}</h3>
-                {LECTURA_SESION_1[paginaLectura].bloques.map((bloque,idx) => <p key={idx} className="whitespace-pre-line text-sm leading-7 text-foreground/90">{bloque}</p>)}
-                {paginaLectura === LECTURA_SESION_1.length-1 && <div className="rounded-xl border border-gold/30 bg-gold/5 p-4"><p className="text-sm font-semibold">Has llegado al final de la lectura</p><p className="mt-1 text-sm text-muted-foreground">En la experiencia del alumno, aquí podrá finalizar y marcar la sesión como completada.</p></div>}
+                <h3 className="text-xl font-semibold">{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</h3>
+                {(seccionesLecturaActivas[paginaLectura]?.bloques ?? []).map((bloque,idx) => <p key={idx} className="whitespace-pre-line text-sm leading-7 text-foreground/90">{bloque}</p>)}
+                {paginaLectura === seccionesLecturaActivas.length-1 && <div className="rounded-xl border border-gold/30 bg-gold/5 p-4"><p className="text-sm font-semibold">Has llegado al final de la lectura</p><p className="mt-1 text-sm text-muted-foreground">En la experiencia del alumno, aquí podrá finalizar y marcar la sesión como completada.</p></div>}
               </main>
               <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-border p-4 sm:p-5">
                 <button type="button" disabled={paginaLectura===0} onClick={() => setPaginaLectura(p => Math.max(0,p-1))} className="inline-flex items-center gap-1 rounded-lg border border-border px-4 py-2.5 text-sm disabled:opacity-40"><ChevronLeft className="size-4"/> Anterior</button>
-                {paginaLectura < LECTURA_SESION_1.length-1 ? <button type="button" onClick={() => setPaginaLectura(p => Math.min(LECTURA_SESION_1.length-1,p+1))} className="inline-flex items-center gap-1 rounded-lg bg-gold px-4 py-2.5 text-sm font-semibold text-black">Siguiente <ChevronRight className="size-4"/></button> : <button type="button" onClick={() => { setLecturasSimuladas(prev => new Set(prev).add(lecturaAbierta.id)); setLecturaAbierta(null); setLecturaModoVistaPrevia(false); }} className="inline-flex items-center gap-2 rounded-lg bg-gold px-4 py-2.5 text-sm font-semibold text-black"><CheckCircle2 className="size-4"/> Simular lectura completada</button>}
+                {paginaLectura < seccionesLecturaActivas.length-1 ? <button type="button" onClick={() => setPaginaLectura(p => Math.min(Math.max(0,seccionesLecturaActivas.length-1),p+1))} className="inline-flex items-center gap-1 rounded-lg bg-gold px-4 py-2.5 text-sm font-semibold text-black">Siguiente <ChevronRight className="size-4"/></button> : <button type="button" onClick={() => { setLecturasSimuladas(prev => new Set(prev).add(lecturaAbierta.id)); setLecturaAbierta(null); setLecturaModoVistaPrevia(false); }} className="inline-flex items-center gap-2 rounded-lg bg-gold px-4 py-2.5 text-sm font-semibold text-black"><CheckCircle2 className="size-4"/> Simular lectura completada</button>}
               </footer>
             </div>
           </div>}
@@ -810,7 +845,7 @@ function AulaFormacionPage() {
                   </section>)}
                   <button type="button" onClick={() => setSeccionesLecturaEditadas(prev=>[...prev,{titulo:"Nuevo apartado",bloques:[""]}])} className="rounded-lg border border-border px-3 py-2 text-sm">+ Añadir apartado</button>
                   {estadoGuardadoLectura && <p role="status" aria-live="polite" className={`rounded-xl border p-3 text-sm ${estadoGuardadoLectura.tipo === "success" ? "border-emerald-300 bg-emerald-50 text-emerald-800" : estadoGuardadoLectura.tipo === "error" ? "border-red-300 bg-red-50 text-red-800" : "border-border bg-muted text-muted-foreground"}`}>{estadoGuardadoLectura.tipo === "success" ? "✓ " : estadoGuardadoLectura.tipo === "error" ? "⚠ " : "ℹ "}{estadoGuardadoLectura.texto}</p>}
-                  <div className="flex justify-end gap-2"><button type="button" onClick={() => setLecturaEditando(null)} className="rounded-lg border border-border px-4 py-2 text-sm">Cancelar</button><button type="button" disabled={ocupado} onClick={() => void guardarContenidoLectura()} className="rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-black disabled:opacity-50">Guardar borrador</button></div>
+                  <div className="flex flex-wrap items-center justify-between gap-2"><span className="text-xs text-muted-foreground">{lecturaPublicada ? "Estado: publicada" : "Estado: borrador"}</span><div className="flex flex-wrap justify-end gap-2"><button type="button" onClick={() => setLecturaEditando(null)} className="rounded-lg border border-border px-4 py-2 text-sm">Cerrar</button><button type="button" disabled={ocupado} onClick={() => void guardarContenidoLectura(false)} className="rounded-lg border border-border px-4 py-2 text-sm disabled:opacity-50">Guardar borrador</button>{lecturaPublicada && <button type="button" disabled={ocupado} onClick={() => void retirarPublicacionLectura()} className="rounded-lg border border-red-300 px-4 py-2 text-sm text-red-700 disabled:opacity-50">Retirar</button>}<button type="button" disabled={ocupado} onClick={() => void guardarContenidoLectura(true)} className="rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-black disabled:opacity-50">{lecturaPublicada ? "Guardar y mantener publicada" : "Guardar y publicar"}</button></div></div>
                 </div>
               </div>
             </div>}
@@ -898,7 +933,7 @@ function AulaFormacionPage() {
               </main>
               <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-border p-4 sm:p-5">
                 <button type="button" disabled={paginaLectura===0} onClick={() => setPaginaLectura(p => Math.max(0,p-1))} className="inline-flex items-center gap-1 rounded-lg border border-border px-4 py-2.5 text-sm disabled:opacity-40"><ChevronLeft className="size-4"/> Anterior</button>
-                {paginaLectura < LECTURA_SESION_1.length-1 ? <button type="button" onClick={() => setPaginaLectura(p => Math.min(LECTURA_SESION_1.length-1,p+1))} className="inline-flex items-center gap-1 rounded-lg bg-gold px-4 py-2.5 text-sm font-semibold text-black">Siguiente <ChevronRight className="size-4"/></button> : lecturaModoVistaPrevia ? <button type="button" onClick={() => { setLecturasSimuladas(prev => new Set(prev).add(lecturaAbierta.id)); setLecturaAbierta(null); setLecturaModoVistaPrevia(false); }} className="inline-flex items-center gap-2 rounded-lg bg-gold px-4 py-2.5 text-sm font-semibold text-black"><CheckCircle2 className="size-4"/> Simular lectura completada</button> : sesionesCompletadas.has(lecturaAbierta.id) ? <span className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-700"><CheckCircle2 className="size-5"/> Sesión completada</span> : <button type="button" disabled={ocupado} onClick={() => void marcarLecturaCompletada(lecturaAbierta)} className="inline-flex items-center gap-2 rounded-lg bg-gold px-4 py-2.5 text-sm font-semibold text-black disabled:opacity-50"><CheckCircle2 className="size-4"/> Marcar como completada</button>}
+                {paginaLectura < seccionesLecturaActivas.length-1 ? <button type="button" onClick={() => setPaginaLectura(p => Math.min(LECTURA_SESION_1.length-1,p+1))} className="inline-flex items-center gap-1 rounded-lg bg-gold px-4 py-2.5 text-sm font-semibold text-black">Siguiente <ChevronRight className="size-4"/></button> : lecturaModoVistaPrevia ? <button type="button" onClick={() => { setLecturasSimuladas(prev => new Set(prev).add(lecturaAbierta.id)); setLecturaAbierta(null); setLecturaModoVistaPrevia(false); }} className="inline-flex items-center gap-2 rounded-lg bg-gold px-4 py-2.5 text-sm font-semibold text-black"><CheckCircle2 className="size-4"/> Simular lectura completada</button> : sesionesCompletadas.has(lecturaAbierta.id) ? <span className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-700"><CheckCircle2 className="size-5"/> Sesión completada</span> : <button type="button" disabled={ocupado} onClick={() => void marcarLecturaCompletada(lecturaAbierta)} className="inline-flex items-center gap-2 rounded-lg bg-gold px-4 py-2.5 text-sm font-semibold text-black disabled:opacity-50"><CheckCircle2 className="size-4"/> Marcar como completada</button>}
               </footer>
             </div>
           </div>}
@@ -913,7 +948,7 @@ function AulaFormacionPage() {
           {alumnoQuery.isLoading ? <Panel titulo="Cargando tus cursos"><p className="p-5 text-sm text-muted-foreground">Vinculando tu inscripción y recuperando tus cursos…</p></Panel> : alumnoQuery.error ? <Panel titulo="No se pudo cargar el aula"><p className="p-5 text-sm text-red-700">{alumnoQuery.error.message}</p></Panel> : inscripcionesAlumno.length === 0 ? <Panel titulo="Aún no tienes cursos asignados"><p className="p-5 text-sm text-muted-foreground">Cuando FADILAB te inscriba con el correo de tu cuenta, el curso aparecerá aquí automáticamente.</p></Panel> : inscripcionesAlumno.map(i => <Panel key={i.id} titulo={i.formacion_cursos?.titulo ?? "Curso de formación"}>
             <div className="p-5"><p className="text-sm text-muted-foreground">{i.formacion_cursos?.descripcion || "Materiales y actividades de tu formación."}</p><div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground"><span>{i.formacion_cursos?.duracion_horas ?? 0} horas</span><span>Inscripción: {i.estado}</span></div>
               <h3 className="mb-2 mt-5 text-sm font-semibold">Sesiones</h3>
-              {(sesionesAlumnoQuery.data ?? []).filter(item => item.curso_id === i.curso_id).length === 0 ? <p className="text-xs text-muted-foreground">Todavía no hay sesiones publicadas.</p> : (sesionesAlumnoQuery.data ?? []).filter(item => item.curso_id === i.curso_id).map(item => <article key={item.id} className="flex flex-wrap items-center justify-between gap-3 border-t border-border py-3"><div className="min-w-0"><p className="text-xs text-muted-foreground">Sesión {item.numero}</p><p className="text-sm font-medium">{item.titulo}</p>{item.descripcion && <p className="mt-1 whitespace-pre-wrap text-xs text-muted-foreground">{item.descripcion}</p>}</div><div className="flex shrink-0 items-center gap-2">{sesionesCompletadas.has(item.id) && <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700"><CheckCircle2 className="size-4"/> Completada</span>}{item.numero === 1 ? <button type="button" onClick={() => { setLecturaAbierta(item); setPaginaLectura(0); }} className="inline-flex items-center gap-1 rounded-lg border border-gold/40 bg-gold/10 px-3 py-2 text-xs font-semibold text-gold-deep"><BookOpenCheck className="size-4"/> Abrir lectura</button> : <span className="text-xs text-muted-foreground">Lectura en preparación</span>}</div></article>)}
+              {(sesionesAlumnoQuery.data ?? []).filter(item => item.curso_id === i.curso_id).length === 0 ? <p className="text-xs text-muted-foreground">Todavía no hay sesiones publicadas.</p> : (sesionesAlumnoQuery.data ?? []).filter(item => item.curso_id === i.curso_id).map(item => <article key={item.id} className="flex flex-wrap items-center justify-between gap-3 border-t border-border py-3"><div className="min-w-0"><p className="text-xs text-muted-foreground">Sesión {item.numero}</p><p className="text-sm font-medium">{item.titulo}</p>{item.descripcion && <p className="mt-1 whitespace-pre-wrap text-xs text-muted-foreground">{item.descripcion}</p>}</div><div className="flex shrink-0 items-center gap-2">{sesionesCompletadas.has(item.id) && <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700"><CheckCircle2 className="size-4"/> Completada</span>}{item.numero === 1 ? <button type="button" onClick={() => void abrirLecturaParaAlumno(item, false)} className="inline-flex items-center gap-1 rounded-lg border border-gold/40 bg-gold/10 px-3 py-2 text-xs font-semibold text-gold-deep"><BookOpenCheck className="size-4"/> Abrir lectura</button> : <span className="text-xs text-muted-foreground">Lectura en preparación</span>}</div></article>)}
               <h3 className="mb-2 mt-5 text-sm font-semibold">Evaluaciones</h3>
               {(examenesAlumnoQuery.data ?? []).filter(x => x.curso_id === i.curso_id).map(x => {
                 const intentos = (intentosAlumnoQuery.data ?? []).filter(t => t.examen_id === x.id);
