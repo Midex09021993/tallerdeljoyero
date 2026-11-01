@@ -37,8 +37,11 @@ export function createAurumGround(THREE: any, scene: any): AurumGroundController
   let groundVisibilityOverride: boolean | null = null;
   let hdriGroundEnabled = false;
   const syncGroundVisibility = () => {
-    mesh.visible = groundVisibilityOverride ?? presetGroundVisible;
-    bakedShadow.visible = mesh.visible && bakedShadowUserVisible && presetShadowVisible;
+    const visible = groundVisibilityOverride ?? presetGroundVisible;
+    mesh.visible = visible;
+    bakedShadow.visible = visible && bakedShadowUserVisible && presetShadowVisible;
+    // The HDRI studio floor is a separate mesh; keep it under the same user toggle.
+    if (hdriGround) hdriGround.visible = visible;
   };
   const shadowSize=128;
   const shadowData=new Uint8Array(shadowSize*shadowSize*4);
@@ -78,6 +81,7 @@ export function createAurumGround(THREE: any, scene: any): AurumGroundController
     hdriGround.rotation.x = Math.PI;
     hdriGround.renderOrder = -10;
     scene.add(hdriGround);
+    syncGroundVisibility();
   };
 
   return {
