@@ -529,6 +529,8 @@ function AulaFormacionPage() {
   const [posicionObjetosCapas, setPosicionObjetosCapas] = useState({ aro: { x: 0, y: 0 }, piedra: { x: 0, y: 0 } });
   const arrastreCapasRef = useRef<{ objeto: "aro" | "piedra"; pointerId: number; inicioX: number; inicioY: number; origenX: number; origenY: number } | null>(null);
   const [capaDestinoCapas, setCapaDestinoCapas] = useState<"Metal 01" | "Gem 01">("Metal 01");
+  const [capaPrincipalCapas, setCapaPrincipalCapas] = useState("");
+  const [mensajeCapaPrincipal, setMensajeCapaPrincipal] = useState("");
   const [asignacionCapas, setAsignacionCapas] = useState<{ aro: string; piedra: string }>({ aro: "", piedra: "" });
   const [retoCapasCompletado, setRetoCapasCompletado] = useState(false);
   const [respuestaRetoCapas, setRespuestaRetoCapas] = useState("");
@@ -1529,6 +1531,7 @@ function AulaFormacionPage() {
       setObjetoSeleccionadoCapas(null); setCapaDestinoCapas("Metal 01");
       setPosicionObjetosCapas({ aro: { x: 0, y: 0 }, piedra: { x: 0, y: 0 } }); arrastreCapasRef.current = null;
       setAsignacionCapas({ aro: "", piedra: "" });
+      setCapaPrincipalCapas(""); setMensajeCapaPrincipal("");
       setRetoCapasCompletado(false); setRespuestaRetoCapas(""); setResultadoRetoCapas(null);
     };
     if (!laboratorioCapasAbierto) return <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5 sm:p-6">
@@ -1557,13 +1560,14 @@ function AulaFormacionPage() {
               <div className="mb-1 border-b border-white/15 pb-1 text-[10px] font-semibold text-white/75">{layer.group}</div>
               <div className="flex items-center gap-1 rounded px-1 py-1 hover:bg-white/10">
                 <button type="button" title={!layer.setVisible ? "Control disponible en capas Metal y Gem" : !objetoSeleccionadoCapas ? "Primero selecciona una pieza directamente en la joya" : `Asignar ${objetoSeleccionadoCapas === "aro" ? "cuerpo del anillo" : "piedra central"} a ${layer.name}`} aria-label={!layer.setVisible ? "Asignación no disponible" : !objetoSeleccionadoCapas ? "Selecciona primero una pieza en la joya" : `Asignar objeto seleccionado a ${layer.name}`} disabled={!layer.setVisible || !objetoSeleccionadoCapas} onClick={()=>{if(objetoSeleccionadoCapas && layer.name){setAsignacionCapas(prev=>({...prev,[objetoSeleccionadoCapas]:layer.name}));setObjetoSeleccionadoCapas(null);}}} className="rounded p-1 text-[11px] text-white/80 hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-30">▶</button>
-                <span className="size-3 shrink-0 rounded-none border border-white/20" style={{backgroundColor:layer.color}}/>
+                <button type="button" title={`Establecer ${layer.name} como capa principal`} aria-label={`Establecer ${layer.name} como capa principal`} aria-pressed={capaPrincipalCapas===layer.name} onClick={()=>{setCapaPrincipalCapas(layer.name);setMensajeCapaPrincipal(`«${layer.name}» ahora es la capa principal. Los objetos nuevos que crees se asignarán a esta capa de forma predeterminada. Los objetos existentes no cambian de capa, y su visibilidad y bloqueo permanecen igual.`);}} className="flex size-5 shrink-0 items-center justify-center rounded hover:bg-white/15 focus-visible:outline focus-visible:outline-2 focus-visible:outline-gold"><span className="size-3 rounded-none border border-white/20" style={{backgroundColor:layer.color}}/></button>
                 <span className="min-w-0 flex-1 truncate text-[10px]">{layer.name}</span>
                 {layer.setLocked&&<button type="button" disabled={layer.name==="Metal 01" ? asignacionCapas.aro!=="Metal 01" : asignacionCapas.piedra!=="Gem 01"} title={layer.name==="Metal 01" ? (asignacionCapas.aro!=="Metal 01"?"Primero asigna el cuerpo del anillo a Metal 01":"Bloquear capa") : (asignacionCapas.piedra!=="Gem 01"?"Primero asigna la piedra a Gem 01":"Bloquear capa")} onClick={()=>{layer.setLocked(!layer.locked);if(!layer.locked && arrastreCapasRef.current?.objeto===(layer.name==="Metal 01"?"aro":"piedra"))arrastreCapasRef.current=null;}} className="text-[11px] text-white/75 disabled:cursor-not-allowed disabled:opacity-30">{layer.locked?"🔒":"♙"}</button>}
                 {layer.setVisible&&<button type="button" disabled={layer.name==="Metal 01" ? asignacionCapas.aro!=="Metal 01" : asignacionCapas.piedra!=="Gem 01"} title={layer.name==="Metal 01" ? (asignacionCapas.aro!=="Metal 01"?"Primero asigna el cuerpo del anillo a Metal 01":"Ocultar o mostrar capa") : (asignacionCapas.piedra!=="Gem 01"?"Primero asigna la piedra a Gem 01":"Ocultar o mostrar capa")} onClick={()=>{if(layer.visible)setObjetoSeleccionadoCapas(null);layer.setVisible(!layer.visible);}} className="text-[11px] text-white/75 disabled:cursor-not-allowed disabled:opacity-30">{layer.visible?"◉":"○"}</button>}
               </div>
             </div>)}
           </div>
+          {mensajeCapaPrincipal && <p className="mt-2 rounded-lg border border-emerald-300/30 bg-emerald-400/10 px-2.5 py-2 text-[10px] leading-4 text-emerald-100" role="status" aria-live="polite">{mensajeCapaPrincipal}</p>}
           <p className="mt-3 border-t border-white/15 pt-2 text-[10px] leading-4 text-white/55">Primero asigna el cuerpo del anillo a Metal 01 y la piedra a Gem 01. Hasta entonces, sus controles de visibilidad y bloqueo permanecerán desactivados.</p>
         </aside>
         <main className="min-w-0 space-y-3">
