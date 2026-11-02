@@ -185,8 +185,8 @@ const LECTURA_SESION_3 = [
     "Observa el indicador de Osnap antes de confirmar cada punto. Si se activa una referencia equivocada, pausa y desactiva temporalmente las opciones que no necesitas."
   ]},
   { titulo: "8. SmartTrack y ayudas de alineación", bloques: [
-    "SmartTrack utiliza puntos adquiridos mediante Osnap para mostrar líneas de seguimiento temporales. Al mover el cursor, estas guías ayudan a mantener alineaciones horizontales, verticales o relaciones entre referencias, sin crear geometría auxiliar permanente."
-    "Utiliza SmartTrack junto con Osnap: primero adquiere uno o más puntos exactos con Osnap y después desplaza el cursor para observar las guías temporales. Osnap define la referencia geométrica; SmartTrack facilita la alineación respecto a ella. Ninguna de las dos herramientas sustituye la revisión de las coordenadas ni del plano de trabajo."
+    "SmartTrack utiliza puntos adquiridos mediante Osnap para mostrar líneas de seguimiento temporales. Al mover el cursor, estas guías ayudan a mantener alineaciones horizontales, verticales o relaciones entre referencias, sin crear geometría auxiliar permanente.",
+    "Utiliza SmartTrack junto con Osnap: primero adquiere uno o más puntos exactos con Osnap y después desplaza el cursor para observar las guías temporales. Osnap define la referencia geométrica; SmartTrack facilita la alineación respecto a ella. Ninguna de las dos herramientas sustituye la revisión de las coordenadas ni del plano de trabajo.",
     "Para practicar, activa SmartTrack en la barra de estado, habilita solo los Osnap necesarios, captura un punto de referencia y mueve el cursor hasta que aparezca la guía de alineación deseada. Confirma el punto únicamente cuando la guía y la posición correspondan a la intención del diseño."
   ]},
   { titulo: "9. Práctica aplicada: placa base para una joya", bloques: [
