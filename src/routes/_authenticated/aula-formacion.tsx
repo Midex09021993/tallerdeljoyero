@@ -1589,13 +1589,6 @@ function AulaFormacionPage() {
 
         </main>
         <aside className="min-w-0 space-y-3">
-          <details className="overflow-hidden rounded-xl border border-border bg-card">
-            <summary className="cursor-pointer px-3 py-2.5 text-xs font-semibold">Ver captura original de MatrixGold</summary>
-            <div className="border-t border-border bg-[#171719] p-2">
-              {imagenLayersUrl ? <img src={imagenLayersUrl} alt="Captura original de MatrixGold subida a la Biblioteca de la Sesión 2" className="h-auto max-h-64 w-full rounded object-contain" loading="lazy" /> : <p className="p-2 text-xs text-white/75">{imagenLayersError || "Cargando la imagen desde la Biblioteca de la Sesión 2…"}</p>}
-            </div>
-          </details>
-
           <div className="rounded-xl border border-border bg-card/70 p-3">
             <p className="text-xs font-semibold">Selección directa en la joya</p>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">Haz clic en una pieza para seleccionarla. Vuelve a pulsarla y arrástrala para moverla. Si su capa está bloqueada, permanecerá seleccionada y visible, pero no podrás desplazarla.</p>
