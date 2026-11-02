@@ -173,30 +173,30 @@ const LECTURA_SESION_3 = [
     "Para indicar distancia y ángulo desde el último punto, utiliza el prefijo @: @10<45. Esta es una coordenada polar relativa. El símbolo @ cambia el punto de referencia: ya no se mide desde el origen, sino desde el último punto indicado.",
     "Como referencia angular: 0° apunta a la derecha, 90° hacia arriba, 180° hacia la izquierda y 270° hacia abajo. Antes de confirmar, comprueba que la distancia y la dirección correspondan al lado que deseas construir."
   ]},
-  { titulo: "4. Restricciones de distancia y ángulo", bloques: [
+  { titulo: "6. Restricciones de distancia y ángulo", bloques: [
     "Las restricciones permiten controlar la entrada de puntos mientras dibujas. Puedes indicar una distancia concreta o fijar una dirección angular para evitar que la geometría dependa de la posición aproximada del cursor.",
     "Utiliza una restricción de distancia cuando necesites que un segmento tenga una longitud definida. Utiliza una restricción angular cuando necesites mantener una dirección determinada. La disponibilidad y el comportamiento de estas ayudas dependen del comando activo y de las opciones de entrada de Rhino.",
     "Durante la práctica, combina coordenadas con restricciones: introduce los valores necesarios y confirma el punto solo cuando la dirección y la longitud correspondan al diseño. No confundas una guía visual con una dimensión verificada."
   ]},
-  { titulo: "5. Referencias a objetos (Osnap)", bloques: [
+  { titulo: "7. Referencias a objetos (Osnap)", bloques: [
     "Osnap (Object Snap) permite ajustar el cursor a puntos geométricos exactos de objetos existentes. Evita seleccionar posiciones aproximadas cuando necesitas conectar, centrar o alinear geometría.",
     "Referencias principales: End (extremo), Mid (punto medio), Cen (centro), Int (intersección), Near (cercano), Perp (perpendicular), Tan (tangente), Quad (cuadrante) y Point (punto). Activa solo las referencias necesarias para evitar capturas no deseadas.",
     "Ejemplos: utiliza End para comenzar exactamente en el extremo de una curva; Mid para localizar su punto medio; Cen para capturar el centro de un círculo; Int para ubicar el cruce de dos curvas; y Perp para establecer una relación perpendicular.",
     "Observa el indicador de Osnap antes de confirmar cada punto. Si se activa una referencia equivocada, pausa y desactiva temporalmente las opciones que no necesitas."
   ]},
-  { titulo: "6. SmartTrack y ayudas de alineación", bloques: [
-    "SmartTrack muestra líneas guía temporales y relaciones de alineación a partir de puntos de referencia existentes. Ayuda a localizar posiciones alineadas o relacionadas sin crear geometría auxiliar permanente.",
-    "Utiliza SmartTrack junto con Osnap: Osnap captura puntos exactos; SmartTrack ayuda a proyectar y relacionar posiciones mediante guías temporales. No sustituyen la revisión de las coordenadas ni del plano de trabajo.",
-    "Para trabajar con claridad, captura primero un punto de referencia válido y observa las guías temporales que aparecen al mover el cursor. Confirma únicamente cuando la alineación corresponda a la intención del diseño."
+  { titulo: "8. SmartTrack y ayudas de alineación", bloques: [
+    "SmartTrack utiliza puntos adquiridos mediante Osnap para mostrar líneas de seguimiento temporales. Al mover el cursor, estas guías ayudan a mantener alineaciones horizontales, verticales o relaciones entre referencias, sin crear geometría auxiliar permanente."
+    "Utiliza SmartTrack junto con Osnap: primero adquiere uno o más puntos exactos con Osnap y después desplaza el cursor para observar las guías temporales. Osnap define la referencia geométrica; SmartTrack facilita la alineación respecto a ella. Ninguna de las dos herramientas sustituye la revisión de las coordenadas ni del plano de trabajo."
+    "Para practicar, activa SmartTrack en la barra de estado, habilita solo los Osnap necesarios, captura un punto de referencia y mueve el cursor hasta que aparezca la guía de alineación deseada. Confirma el punto únicamente cuando la guía y la posición correspondan a la intención del diseño."
   ]},
-  { titulo: "7. Práctica aplicada: placa base para una joya", bloques: [
+  { titulo: "9. Práctica aplicada: placa base para una joya", bloques: [
     "Prepara un documento en milímetros, activa la vista Superior y utiliza el plano de construcción predeterminado. Inicia una polilínea en el origen con la coordenada absoluta 0,0,0.",
     "Construye un rectángulo de 20 × 10 mm mediante coordenadas relativas cartesianas: desde el primer punto introduce @20,0,0; después @0,10,0; luego @-20,0,0 y cierra la polilínea. Comprueba que las dimensiones sean 20 mm por 10 mm.\n\nRepite el mismo rectángulo usando coordenadas polares relativas. Inicia otra polilínea en 0,0,0 y, en cada vértice, introduce @20<0 (lado derecho), @10<90 (lado superior), @20<180 (lado izquierdo) y @10<270 (lado inferior). Cierra la polilínea y verifica que también mida 20 × 10 mm. Observa que aquí @ indica que la distancia y el ángulo se calculan desde el último punto, no desde el origen.",
     "Traza las dos diagonales del rectángulo. Utiliza Osnap Int para localizar su intersección y dibuja allí un círculo de radio 3 mm. Comprueba el centro con la referencia de intersección y el tamaño con la herramienta de medición correspondiente.",
     "Utiliza End y Mid para capturar puntos exactos de las curvas. Activa SmartTrack y prueba una alineación temporal respecto a puntos existentes, sin dejar líneas auxiliares innecesarias en el archivo.",
     "Guarda el ejercicio como Sesion_03_Modelado_Preciso.3dm. Verifica que el rectángulo mida 20 × 10 mm, que el círculo tenga radio 3 mm y que toda la geometría esté en el plano de construcción esperado."
   ]},
-  { titulo: "8. Verificación y criterios de logro", bloques: [
+  { titulo: "10. Verificación y criterios de logro", bloques: [
     "Al finalizar debes poder diferenciar coordenadas absolutas, relativas cartesianas y polares relativas; introducir una posición polar desde el origen y un desplazamiento polar desde el último punto; construir el rectángulo de 20 × 10 mm con @distancia<ángulo; aplicar restricciones de distancia y ángulo; utilizar al menos tres referencias Osnap adecuadas; y explicar cómo SmartTrack facilita una alineación temporal.",
     "La práctica se considera correcta cuando las dimensiones del rectángulo y del círculo coinciden con los valores solicitados, las curvas están correctamente ubicadas y el archivo queda guardado con el nombre indicado.",
     "Antes de continuar, revisa que no hayas creado geometría accidental fuera del plano de construcción. La siguiente sesión abordará la edición de curvas y las transformaciones."
