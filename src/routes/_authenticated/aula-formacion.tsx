@@ -1992,6 +1992,63 @@ function AulaFormacionPage() {
     </section></div>;
   };
 
+
+  const [laboratorioPlacaAbierto, setLaboratorioPlacaAbierto] = useState(false);
+  const [etapaPlaca, setEtapaPlaca] = useState(0);
+  const [respuestaPlaca, setRespuestaPlaca] = useState("");
+  const [etapasPlacaCompletadas, setEtapasPlacaCompletadas] = useState<number[]>([]);
+  const [metodoPlaca, setMetodoPlaca] = useState<"cartesiano" | "polar">("cartesiano");
+
+  const renderLaboratorioPlaca = () => {
+    if (lecturaAbierta?.numero !== 3 || paginaLectura !== 8) return null;
+    const etapas = [
+      { titulo: "Preparar el documento", texto: "Configura el archivo en milímetros, trabaja en la vista Superior y conserva el plano de construcción XY predeterminado.", pregunta: "¿Qué configuración corresponde a esta práctica?", opciones: ["Milímetros · Superior · plano XY", "Centímetros · Perspectiva · plano YZ", "Pulgadas · Frontal · plano XZ"], correcta: "Milímetros · Superior · plano XY", ayuda: "La práctica está definida en milímetros y se construye sobre el plano XY." },
+      { titulo: "Construir con coordenadas cartesianas", texto: "Desde 0,0,0 introduce los desplazamientos relativos: @20,0,0; @0,10,0; @-20,0,0 y cierra la polilínea.", pregunta: "¿Qué dimensiones debe tener el rectángulo?", opciones: ["20 × 10 mm", "10 × 10 mm", "20 × 20 mm"], correcta: "20 × 10 mm", ayuda: "Los desplazamientos suman 20 mm en X y 10 mm en Y." },
+      { titulo: "Repetir con coordenadas polares", texto: "Inicia otra polilínea en el origen. Introduce @20<0, @10<90, @20<180 y @10<270. El prefijo @ toma como referencia el último punto.", pregunta: "¿Qué indica @10<90?", opciones: ["10 mm a 90° desde el último punto", "10 mm desde el origen sobre el eje X", "Un ángulo de 10° y una distancia de 90 mm"], correcta: "10 mm a 90° desde el último punto", ayuda: "En coordenadas polares relativas, @ indica que la distancia y el ángulo parten del último punto." },
+      { titulo: "Localizar el centro con Osnap", texto: "Traza las dos diagonales de un rectángulo y utiliza Int para capturar exactamente su intersección.", pregunta: "¿Qué referencia captura el cruce de las diagonales?", opciones: ["Int", "End", "Mid"], correcta: "Int", ayuda: "Int corresponde a Intersección: captura el punto donde se cruzan las curvas." },
+      { titulo: "Crear el círculo central", texto: "Con el punto de intersección como centro, dibuja un círculo de radio 3 mm. Comprueba el valor con una herramienta de medición.", pregunta: "¿Qué radio debe tener el círculo?", opciones: ["3 mm", "6 mm", "10 mm"], correcta: "3 mm", ayuda: "La consigna solicita radio 3 mm; el diámetro resultante es 6 mm." },
+      { titulo: "Capturar y alinear referencias", texto: "Practica End para capturar extremos y Mid para capturar puntos medios. Después activa SmartTrack, adquiere una referencia con Osnap y desplaza el cursor para observar la guía temporal.", pregunta: "¿Qué combinación permite alinear sin crear una línea auxiliar permanente?", opciones: ["Osnap para adquirir el punto y SmartTrack para mostrar la guía", "SmartTrack para crear una curva definitiva", "End para medir el radio del círculo"], correcta: "Osnap para adquirir el punto y SmartTrack para mostrar la guía", ayuda: "Osnap captura la referencia exacta; SmartTrack muestra guías temporales de alineación." },
+      { titulo: "Verificación final", texto: "Comprueba ambos rectángulos de 20 × 10 mm, el círculo de radio 3 mm y que toda la geometría esté en el plano esperado. Guarda el archivo como Sesion_03_Modelado_Preciso.3dm.", pregunta: "¿Cuál es el nombre solicitado para guardar el ejercicio?", opciones: ["Sesion_03_Modelado_Preciso.3dm", "Placa_Final.3dm", "Modelo_Rhino.3dm"], correcta: "Sesion_03_Modelado_Preciso.3dm", ayuda: "El nombre permite identificar el archivo como la práctica de modelado preciso de la Sesión 03." }
+    ];
+    const etapa = etapas[etapaPlaca]!;
+    const validar = () => {
+      if (respuestaPlaca === etapa.correcta) setEtapasPlacaCompletadas(prev => prev.includes(etapaPlaca) ? prev : [...prev, etapaPlaca]);
+    };
+    const reiniciar = () => { setEtapaPlaca(0); setRespuestaPlaca(""); setEtapasPlacaCompletadas([]); setMetodoPlaca("cartesiano"); };
+    if (!laboratorioPlacaAbierto) return <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5 sm:p-6">
+      <div className="flex flex-wrap items-center justify-between gap-4"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-gold-deep">Práctica integradora · RHINO 7</p><h4 className="mt-2 text-lg font-semibold">Construcción de placa base para una joya</h4><p className="mt-1 text-sm text-muted-foreground">Integra coordenadas, Osnap, restricciones y SmartTrack en una secuencia guiada de siete etapas.</p><p className="mt-2 text-xs text-muted-foreground">{etapasPlacaCompletadas.length}/7 etapas verificadas</p></div><button type="button" onClick={() => setLaboratorioPlacaAbierto(true)} className="inline-flex items-center gap-2 rounded-xl bg-gold px-5 py-3 text-sm font-semibold text-black"><BookOpenCheck className="size-4"/> Abrir práctica <ArrowRight className="size-4"/></button></div>
+    </section>;
+    return <section className="fixed inset-0 z-[105] h-[100dvh] overflow-y-auto bg-background" role="dialog" aria-modal="true" aria-label="Laboratorio integrador de placa base">
+      <header className="sticky top-0 z-10 border-b border-border bg-background/95 px-4 py-3 backdrop-blur"><div className="flex items-center justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-widest text-gold-deep">Laboratorio integrador · Sesión 03</p><h3 className="text-base font-semibold">Placa base para una joya</h3></div><button type="button" onClick={() => setLaboratorioPlacaAbierto(false)} className="rounded-lg border border-border px-3 py-2 text-xs font-semibold">Cerrar ✕</button></div><div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted"><div className="h-full bg-gold transition-all" style={{width: (etapasPlacaCompletadas.length/7*100)+"%"}}/></div><p className="mt-1 text-right text-[10px] text-muted-foreground">{etapasPlacaCompletadas.length} de 7 etapas verificadas</p></header>
+      <div className="mx-auto grid max-w-6xl gap-4 p-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <div className="rounded-2xl border border-border bg-[#17191d] p-3 text-white">
+          <div className="flex items-center justify-between"><span className="text-xs font-semibold text-[#e7bd62]">Vista superior · esquema didáctico</span><span className="text-[10px] text-white/60">Unidades: mm</span></div>
+          <svg viewBox="0 0 520 360" className="mt-3 w-full" role="img" aria-label="Esquema de placa rectangular de 20 por 10 milímetros, diagonales y círculo central">
+            <defs><pattern id="placa-grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" fill="none" stroke="#39414b" strokeWidth="1"/></pattern></defs>
+            <rect width="520" height="360" fill="url(#placa-grid)"/>
+            <g transform="translate(130 90) scale(12)">
+              <rect x="0" y="0" width="20" height="10" fill="#e7bd62" fillOpacity=".12" stroke="#e7bd62" strokeWidth=".18"/>
+              {etapaPlaca>=3&&<><path d="M0 0L20 10M20 0L0 10" stroke="#7db8e8" strokeWidth=".13" strokeDasharray=".35 .25"/><circle cx="10" cy="5" r="3" fill="#6fd1a1" fillOpacity=".2" stroke="#6fd1a1" strokeWidth=".18"/><circle cx="10" cy="5" r=".18" fill="#6fd1a1"/></>}
+              {etapaPlaca>=5&&<><circle cx="0" cy="0" r=".22" fill="#e7bd62"/><circle cx="20" cy="0" r=".22" fill="#e7bd62"/><circle cx="10" cy="0" r=".22" fill="#e7bd62"/></>}
+            </g>
+            <g fill="#f4f4f5" fontSize="12"><text x="250" y="75" textAnchor="middle">20 mm</text><text x="105" y="155" textAnchor="middle">10 mm</text><text x="250" y="245" textAnchor="middle">{etapaPlaca>=3?"Centro · R 3 mm":"Rectángulo 20 × 10 mm"}</text></g>
+            {etapaPlaca>=5&&<path d="M130 90H370" stroke="#67d6a0" strokeWidth="2" strokeDasharray="7 6"/>}
+          </svg>
+          <p className="mt-2 text-xs leading-5 text-white/70">La ilustración representa el resultado esperado de cada fase. No es una conexión con Rhino ni genera un archivo .3dm.</p>
+        </div>
+        <div className="rounded-2xl border border-border p-4">
+          <div className="flex flex-wrap gap-1.5">{etapas.map((item,i)=><button key={item.titulo} type="button" onClick={()=>{if(i<=Math.max(-1,...etapasPlacaCompletadas)+1){setEtapaPlaca(i);setRespuestaPlaca("");}}} className={"rounded-full border px-2.5 py-1 text-[10px] font-semibold "+(etapaPlaca===i?"border-gold bg-gold/15 text-gold-deep":etapasPlacaCompletadas.includes(i)?"border-emerald-300 bg-emerald-50 text-emerald-800":"border-border text-muted-foreground")}>{i+1}{etapasPlacaCompletadas.includes(i)?" ✓":""}</button>)}</div>
+          <p className="mt-4 text-[10px] font-bold uppercase tracking-widest text-gold-deep">Etapa {etapaPlaca+1} de 7</p><h4 className="mt-1 text-lg font-semibold">{etapa.titulo}</h4><p className="mt-3 text-sm leading-6 text-muted-foreground">{etapa.texto}</p>
+          {etapaPlaca===1&&<div className="mt-3 flex gap-2"><button type="button" onClick={()=>setMetodoPlaca("cartesiano")} className={"rounded-lg border px-3 py-2 text-xs "+(metodoPlaca==="cartesiano"?"border-gold bg-gold/10":"border-border")}>Cartesiano</button><button type="button" onClick={()=>setMetodoPlaca("polar")} className={"rounded-lg border px-3 py-2 text-xs "+(metodoPlaca==="polar"?"border-gold bg-gold/10":"border-border")}>Polar</button></div>}
+          {etapaPlaca===1&&<div className="mt-2 rounded-lg bg-muted p-3 font-mono text-xs leading-6">{(metodoPlaca==="cartesiano"?["@20,0,0","@0,10,0","@-20,0,0","Cerrar polilínea"]:["@20<0","@10<90","@20<180","@10<270"]).map(v=><div key={v}>{v}</div>)}</div>}
+          <div className="mt-5 rounded-xl border border-border p-3"><p className="text-sm font-semibold">{etapa.pregunta}</p><div className="mt-3 space-y-2">{etapa.opciones.map(op=><button key={op} type="button" onClick={()=>setRespuestaPlaca(op)} className={"w-full rounded-lg border px-3 py-2.5 text-left text-sm "+(respuestaPlaca===op?"border-gold bg-gold/10":"border-border hover:border-gold/50")}>{op}</button>)}</div><button type="button" disabled={!respuestaPlaca} onClick={validar} className="mt-3 w-full rounded-lg bg-gold px-4 py-2.5 text-sm font-semibold text-black disabled:opacity-40">Comprobar etapa</button>{respuestaPlaca&&<p className={"mt-2 text-xs "+(respuestaPlaca===etapa.correcta?"text-emerald-700":"text-amber-700")}>{respuestaPlaca===etapa.correcta?"¡Correcto! "+etapa.ayuda:"No es correcto todavía. Revisa la explicación y vuelve a intentarlo."}</p>}</div>
+          <div className="mt-4 flex flex-wrap justify-between gap-2"><button type="button" disabled={etapaPlaca===0} onClick={()=>{setEtapaPlaca(v=>v-1);setRespuestaPlaca("");}} className="rounded-lg border border-border px-4 py-2 text-xs disabled:opacity-40">Anterior</button><button type="button" disabled={!etapasPlacaCompletadas.includes(etapaPlaca)||etapaPlaca===6} onClick={()=>{setEtapaPlaca(v=>v+1);setRespuestaPlaca("");}} className="rounded-lg bg-gold px-4 py-2 text-xs font-semibold text-black disabled:opacity-40">Siguiente etapa <ArrowRight className="ml-1 inline size-3.5"/></button></div>
+          {etapasPlacaCompletadas.length===7&&<div className="mt-4 rounded-xl border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-900"><b>¡Práctica completada!</b><p className="mt-1">Has verificado las siete etapas. Ejecuta la construcción en Rhino y guarda el archivo solicitado.</p><button type="button" onClick={reiniciar} className="mt-2 rounded-lg border border-emerald-700/30 px-3 py-2 text-xs font-semibold">Repetir práctica</button></div>}
+        </div>
+      </div>
+    </section>;
+  };
+
   const renderLaboratorioGeometria = () => {
     if (lecturaAbierta?.numero !== 2 || paginaLectura !== 1) return null;
     if (!laboratorioGeometriaAbierto) return <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5 sm:p-6">
@@ -2199,6 +2256,7 @@ function AulaFormacionPage() {
                 {renderLaboratorioRestricciones()}
                 {renderLaboratorioOsnap()}
                 {renderLaboratorioSmartTrack()}
+                {renderLaboratorioPlaca()}
 
                 {renderLaboratorioGeometria()}
                 {renderLaboratorioCapas()}
@@ -2600,6 +2658,7 @@ function AulaFormacionPage() {
                 {renderLaboratorioRestricciones()}
                 {renderLaboratorioOsnap()}
                 {renderLaboratorioSmartTrack()}
+                {renderLaboratorioPlaca()}
                 {renderLaboratorioGeometria()}
                 {renderSelectorVistasPlano()}
                 {lecturaAbierta?.numero === 1 && paginaLectura === 4 && <section className="mt-5 max-w-4xl rounded-xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5">
