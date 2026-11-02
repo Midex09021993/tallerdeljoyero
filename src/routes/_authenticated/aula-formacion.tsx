@@ -995,7 +995,7 @@ function AulaFormacionPage() {
       { id: "superior", nombre: "Superior", ingles: "Top", descripcion: "Vista paralela desde arriba, asociada al plano XY. Es especialmente útil para dibujar y revisar geometría plana, contornos y distribución sobre el plano de trabajo." },
       { id: "frontal", nombre: "Frontal", ingles: "Front", descripcion: "Vista paralela desde delante, asociada al plano XZ. Permite comprobar alturas, anchuras y alineaciones frontales sin la deformación visual de la perspectiva." },
     ];
-    const vistaActiva = vistas.find(v => v.id === vistaPlanoActiva) ?? vistas[0];
+    const vistaActiva = vistas.find(v => v.id === vistaPlanoActiva) ?? vistas[0]!;
     const urlActiva = imagenesVistasPlano[vistaPlanoActiva];
     return <>
       <section className="mt-7 max-w-5xl rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5">
