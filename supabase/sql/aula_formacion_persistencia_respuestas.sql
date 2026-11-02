@@ -117,9 +117,8 @@ begin
     raise exception 'No existe un intento activo que puedas recuperar.';
   end if;
 
-  if v_intento.vence_en is not null and now() >= v_intento.vence_en then
-    raise exception 'El tiempo de esta evaluación ha terminado.';
-  end if;
+  -- Se permite recuperar la instantánea incluso vencida para que el cliente
+  -- pueda enviarla automáticamente al reanudar; guardar seguirá bloqueado.
 
   return jsonb_build_object(
     'intento_id', v_intento.id,
