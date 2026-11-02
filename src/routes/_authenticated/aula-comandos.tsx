@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Search, BookOpen, Command, Shapes, Move3D, Layers3, Ruler, ArrowLeft, ChevronDown, Lightbulb, Gem } from "lucide-react";
+import { Search, BookOpen, Command, ArrowLeft, ChevronDown, Lightbulb } from "lucide-react";
 import { AppShell, Panel } from "@/components/AppShell";
 import { useSesion } from "@/lib/auth";
 
