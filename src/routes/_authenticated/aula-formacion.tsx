@@ -159,11 +159,19 @@ const LECTURA_SESION_3 = [
     "El plano de construcción determina la orientación de las coordenadas y el lugar donde se crean los puntos. Si el plano o la vista no son los esperados, una coordenada correcta puede producir geometría en una posición u orientación distinta de la prevista.",
     "Comprueba que el plano de construcción predeterminado esté activo y que la vista Superior esté preparada. No cambies a planos de construcción personalizados en esta sesión."
   ]},
-  { titulo: "3. Coordenadas absolutas, relativas y polares", bloques: [
+  { titulo: "3. Coordenadas absolutas", bloques: [
     "Las coordenadas absolutas indican una posición respecto al origen del sistema de coordenadas del plano de trabajo. En el sistema cartesiano se expresan mediante X, Y y Z. Por ejemplo, 20,10,0 indica X=20, Y=10 y Z=0 en las unidades del archivo.",
+    "En Rhino, introduce los valores X,Y,Z en la línea de comandos. La posición se calcula siempre desde el origen del plano de construcción, no desde el último punto indicado."
+  ]},
+  { titulo: "4. Coordenadas relativas", bloques: [
     "Las coordenadas relativas definen una nueva posición tomando como referencia el último punto indicado. En Rhino se utiliza el prefijo @. Por ejemplo, @10,0,0 indica avanzar 10 unidades en X desde el punto anterior, manteniendo Y y Z.",
-    "Las coordenadas polares definen una posición mediante una distancia y un ángulo respecto al eje X positivo del plano de construcción. Por ejemplo, 10<45 sitúa el punto a 10 unidades del origen con una dirección de 45° en sentido antihorario. Para medir desde el último punto, utiliza coordenadas polares relativas con @: @10<45. Los ángulos comienzan en 0° hacia la derecha y aumentan en sentido antihorario: 90° arriba, 180° a la izquierda y 270° abajo.",
-    "La diferencia esencial es el punto y la forma de referencia: las absolutas parten del origen, las relativas del último punto y las polares expresan longitud y dirección. Verifica siempre el plano de construcción y las unidades antes de introducir valores."
+    "Este método resulta útil para construir segmentos consecutivos con desplazamientos controlados, sin tener que calcular la posición absoluta de cada vértice."
+  ]},
+  { titulo: "5. Coordenadas polares", bloques: [
+    "Las coordenadas polares permiten definir un punto mediante una distancia y un ángulo, en lugar de indicar por separado sus valores X e Y. Rhino interpreta el ángulo en relación con el eje X positivo del plano de construcción.",
+    "Para introducir una coordenada polar absoluta, escribe distancia<ángulo. Por ejemplo, 10<45 sitúa el punto a 10 unidades del origen, en una dirección de 45° en sentido antihorario.",
+    "Para indicar distancia y ángulo desde el último punto, utiliza el prefijo @: @10<45. Esta es una coordenada polar relativa. El símbolo @ cambia el punto de referencia: ya no se mide desde el origen, sino desde el último punto indicado.",
+    "Como referencia angular: 0° apunta a la derecha, 90° hacia arriba, 180° hacia la izquierda y 270° hacia abajo. Antes de confirmar, comprueba que la distancia y la dirección correspondan al lado que deseas construir."
   ]},
   { titulo: "4. Restricciones de distancia y ángulo", bloques: [
     "Las restricciones permiten controlar la entrada de puntos mientras dibujas. Puedes indicar una distancia concreta o fijar una dirección angular para evitar que la geometría dependa de la posición aproximada del cursor.",
