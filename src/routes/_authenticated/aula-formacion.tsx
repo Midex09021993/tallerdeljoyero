@@ -385,32 +385,6 @@ const LECTURA_SESION_10 = [
   ]}
 ] as const;
 
-const PREGUNTAS_EXAMEN_SESION_1 = [
-  { enunciado:"¿Qué significa CAD en el diseño de joyería?", opciones:["Diseño asistido por computadora","Cálculo automático de diamantes","Control de acabado digital","Creación artística decorativa"], correcta:"Diseño asistido por computadora" },
-  { enunciado:"¿Para qué se utiliza principalmente Rhinoceros 7?", opciones:["Editar fotografías","Modelar objetos tridimensionales","Calcular el precio del oro","Controlar una impresora directamente"], correcta:"Modelar objetos tridimensionales" },
-  { enunciado:"¿Qué tipo de geometría utiliza Rhino para representar curvas y superficies?", opciones:["Píxeles","NURBS","Hojas de cálculo","Capas de imagen"], correcta:"NURBS" },
-  { enunciado:"¿Qué vista permite observar el modelo desde arriba?", opciones:["Front","Right","Top","Perspective"], correcta:"Top" },
-  { enunciado:"¿Qué vista permite observar el modelo desde el frente?", opciones:["Top","Front","Right","Perspective"], correcta:"Front" },
-  { enunciado:"¿Qué representa el eje Z en el sistema de referencia habitual?", opciones:["La anchura","La profundidad","La altura","El color"], correcta:"La altura" },
-  { enunciado:"¿Cómo puedes acercar o alejar la vista en Rhino?", opciones:["Con la rueda del ratón","Con doble clic en el título","Con clic izquierdo y arrastre","Cambiando el eje Z"], correcta:"Con la rueda del ratón" },
-  { enunciado:"¿Qué hace el comando ZE (Zoom Extents)?", opciones:["Oculta todos los objetos","Encuadra todos los objetos","Cambia a vista frontal","Recupera la vista anterior"], correcta:"Encuadra todos los objetos" },
-  { enunciado:"¿Qué comando permite recuperar la vista anterior?", opciones:["Pan","ZEA","UndoView","ZS"], correcta:"UndoView" },
-  { enunciado:"¿Cuál representa el flujo general desde el diseño digital hasta la fabricación aditiva?", opciones:["Impresión 3D → diseño CAD → preparación","Diseño CAD → preparación del archivo → impresión 3D → validación","Fundición → modelado → fotografía","Diseño CAD → acabado → eliminar el archivo"], correcta:"Diseño CAD → preparación del archivo → impresión 3D → validación" },
-] as const;
-
-const PREGUNTAS_EXAMEN_SESION_2 = [
-  { enunciado:"¿Qué representa un punto en Rhino?", opciones:["Una posición en el espacio","Un volumen cerrado","Una textura","Una capa"], correcta:"Una posición en el espacio" },
-  { enunciado:"¿Cuál de estos objetos es una curva cerrada?", opciones:["Una línea","Un círculo","Un punto","Una superficie"], correcta:"Un círculo" },
-  { enunciado:"¿Qué diferencia principal existe entre una curva y una superficie?", opciones:["La curva define un recorrido o contorno; la superficie representa un área","La curva siempre tiene volumen","La superficie solo puede ser circular","No existe diferencia"], correcta:"La curva define un recorrido o contorno; la superficie representa un área" },
-  { enunciado:"¿Qué comando crea una secuencia de segmentos rectos conectados?", opciones:["Circle","Polyline","Zoom","Pan"], correcta:"Polyline" },
-  { enunciado:"¿Cómo se define un rectángulo con el comando Rectangle en el procedimiento básico?", opciones:["Indicando dos esquinas opuestas","Indicando centro y radio","Seleccionando tres superficies","Indicando un único punto"], correcta:"Indicando dos esquinas opuestas" },
-  { enunciado:"¿Para qué sirve el plano de construcción (CPlane)?", opciones:["Define la orientación y posición del plano sobre el que se dibuja","Cambia el material del objeto","Oculta las capas","Convierte curvas en sólidos automáticamente"], correcta:"Define la orientación y posición del plano sobre el que se dibuja" },
-  { enunciado:"¿Qué representa la cuadrícula del área de trabajo?", opciones:["Una guía visual del plano de trabajo","Un conjunto de objetos del modelo","El material de la joya","Una capa de impresión"], correcta:"Una guía visual del plano de trabajo" },
-  { enunciado:"¿Qué determina la capa activa en Rhino/MatrixGold?", opciones:["El destino de los objetos nuevos que se creen","El color de fondo de Perspective","La escala de impresión","La vista que se oculta"], correcta:"El destino de los objetos nuevos que se creen" },
-  { enunciado:"¿Qué sucede al desactivar el icono del ojo de una capa?", opciones:["Se ocultan los objetos asignados a esa capa","Se eliminan los objetos","Se bloquea el documento","Se cambia su geometría"], correcta:"Se ocultan los objetos asignados a esa capa" },
-  { enunciado:"¿Qué efecto tiene bloquear una capa?", opciones:["Sus objetos siguen visibles, pero no se pueden seleccionar directamente","Sus objetos se borran","La capa cambia de nombre","Todos los objetos pasan a otra capa"], correcta:"Sus objetos siguen visibles, pero no se pueden seleccionar directamente" },
-] as const;
-
 const COMPONENTES_INTERFAZ = [
   ["Ribbon de MatrixGold", "Franja superior con pestañas que agrupan herramientas y funciones por categorías.", "En la primera franja de pestañas de MatrixGold: donde aparecen Curve, Surface, Solid, Tools, Gems y otras categorías.", "Organiza las herramientas especializadas de joyería en grupos para encontrarlas por tipo de tarea."],
   ["Barras de herramientas", "Conjuntos de iconos para acceder directamente a comandos.", "Debajo de las pestañas principales y en las filas de iconos.", "Permiten ejecutar herramientas frecuentes con un clic, sin escribir el nombre del comando."],
@@ -505,7 +479,6 @@ function AulaFormacionPage() {
   const [duracionExamen, setDuracionExamen] = useState("30");
   const [intentosExamen, setIntentosExamen] = useState("1");
   const [examenSeleccionado, setExamenSeleccionado] = useState("");
-  const [examenMuestraAbierto, setExamenMuestraAbierto] = useState(false);
   const [examenEditandoId, setExamenEditandoId] = useState("");
   const [preguntasAbiertasExamenId, setPreguntasAbiertasExamenId] = useState("");
   const [examenVistaPreviaId, setExamenVistaPreviaId] = useState("");
@@ -1072,74 +1045,6 @@ function AulaFormacionPage() {
       setMensaje("Evaluación creada como borrador. Añade sus preguntas antes de publicarla.");
     } catch (err) { setMensaje(err instanceof Error ? err.message : "No se pudo crear la evaluación."); }
     finally { setOcupado(false); }
-  }
-
-  async function cargarExamenSesion1() {
-    if (!participanteId || !cursoActivoId) return;
-    const sesionUno = (sesionesQuery.data ?? []).find(s => s.numero === 1);
-    if (!sesionUno) { setMensaje("No se encontró la Sesión 1 del curso activo. Publica o crea primero esa sesión."); return; }
-    const existente = (examenesQuery.data ?? []).find(x => x.sesion_id === sesionUno.id);
-    if (existente) { setExamenSeleccionado(existente.id); setMensaje("Ya existe una evaluación vinculada a la Sesión 1. La he seleccionado para que puedas revisarla."); return; }
-    const preguntas = PREGUNTAS_EXAMEN_SESION_1;
-    setOcupado(true); setMensaje("");
-    try {
-      const { data: examen, error: examenError } = await (supabase as any).from("formacion_examenes").insert({
-        participante_id: participanteId, curso_id: cursoActivoId, sesion_id: sesionUno.id,
-        titulo:"Examen 01 · Sesión 1 · Introducción al diseño CAD y Rhino 7",
-        instrucciones:"Lee cada pregunta y selecciona una sola respuesta. Son 10 preguntas de opción múltiple, con un valor de 2 puntos cada una. Puntaje máximo: 20 puntos.",
-        duracion_minutos:20, intentos_permitidos:1, puntaje_maximo:20, publicado:false, creado_por:sesion?.user.id,
-      }).select("id").single();
-      if (examenError) throw examenError;
-      const filas = preguntas.map((p,idx)=>({
-        participante_id:participanteId, examen_id:examen.id, tipo:"opcion_multiple", enunciado:p.enunciado,
-        opciones:p.opciones.map(o=>({label:o,value:o})), respuesta_correcta:p.correcta, puntaje:2, orden:idx+1, obligatoria:true,
-      }));
-      const { error: preguntasError } = await (supabase as any).from("formacion_preguntas").insert(filas);
-      if (preguntasError) throw preguntasError;
-      setExamenSeleccionado(examen.id);
-      await Promise.all([
-        qc.invalidateQueries({queryKey:["aula-formacion-examenes-docente",participanteId,cursoActivoId]}),
-        qc.invalidateQueries({queryKey:["aula-formacion-preguntas-docente",examen.id]}),
-        qc.invalidateQueries({queryKey:["aula-formacion-examenes-alumno"]}),
-      ]);
-      setMensaje("Examen 01 creado como borrador. Revísalo en Evaluaciones del curso y pulsa Publicar cuando quieras activarlo para los alumnos.");
-    } catch (err) {
-      setMensaje(err instanceof Error ? err.message : "No se pudo cargar el examen. Si se creó como borrador, revisa sus preguntas antes de publicarlo.");
-    } finally { setOcupado(false); }
-  }
-
-
-  async function cargarExamenSesion2() {
-    if (!participanteId || !cursoActivoId) return;
-    const sesionDos = (sesionesQuery.data ?? []).find(s => s.numero === 2);
-    if (!sesionDos) { setMensaje("No se encontró la Sesión 2 del curso activo. Crea primero esa sesión."); return; }
-    const existente = (examenesQuery.data ?? []).find(x => x.sesion_id === sesionDos.id);
-    if (existente) { setExamenSeleccionado(existente.id); setMensaje("Ya existe una evaluación vinculada a la Sesión 2. La he seleccionado para que puedas revisarla."); return; }
-    setOcupado(true); setMensaje("");
-    try {
-      const { data: examen, error: examenError } = await (supabase as any).from("formacion_examenes").insert({
-        participante_id: participanteId, curso_id: cursoActivoId, sesion_id: sesionDos.id,
-        titulo:"Examen 02 · Sesión 2 · Geometría básica y organización mediante Layers",
-        instrucciones:"Lee cada pregunta y selecciona una sola respuesta. Son 10 preguntas de opción múltiple, con un valor de 2 puntos cada una. Puntaje máximo: 20 puntos.",
-        duracion_minutos:20, intentos_permitidos:1, puntaje_maximo:20, publicado:false, creado_por:sesion?.user.id,
-      }).select("id").single();
-      if (examenError) throw examenError;
-      const filas = PREGUNTAS_EXAMEN_SESION_2.map((p,idx)=>({
-        participante_id:participanteId, examen_id:examen.id, tipo:"opcion_multiple", enunciado:p.enunciado,
-        opciones:p.opciones.map(o=>({label:o,value:o})), respuesta_correcta:p.correcta, puntaje:2, orden:idx+1, obligatoria:true,
-      }));
-      const { error: preguntasError } = await (supabase as any).from("formacion_preguntas").insert(filas);
-      if (preguntasError) throw preguntasError;
-      setExamenSeleccionado(examen.id);
-      await Promise.all([
-        qc.invalidateQueries({queryKey:["aula-formacion-examenes-docente",participanteId,cursoActivoId]}),
-        qc.invalidateQueries({queryKey:["aula-formacion-preguntas-docente",examen.id]}),
-        qc.invalidateQueries({queryKey:["aula-formacion-examenes-alumno"]}),
-      ]);
-      setMensaje("Examen 02 creado como borrador y vinculado a la Sesión 2. Revísalo en Evaluaciones del curso y publícalo cuando esté listo.");
-    } catch (err) {
-      setMensaje(err instanceof Error ? err.message : "No se pudo cargar el Examen 02. Si se creó como borrador, revisa sus preguntas antes de publicarlo.");
-    } finally { setOcupado(false); }
   }
 
   async function agregarPregunta(e: FormEvent) {
@@ -2170,17 +2075,6 @@ function AulaFormacionPage() {
             </Panel></div>}
           {seccionDocente === "evaluaciones" && cursoActivoId && <div id="doc-evaluaciones" className="scroll-mt-24"><Panel titulo="Evaluaciones y cuestionarios" colapsable defaultOpen={false}>
             <div className="space-y-3 p-5">
-              <div className="rounded-xl border border-gold/30 bg-gold/5 p-4">
-                <p className="text-sm font-semibold">Examen preparado · Sesión 1</p>
-                <p className="mt-1 text-xs leading-5 text-muted-foreground">Carga las 10 preguntas de opción múltiple, 2 puntos cada una, asociadas a la primera sesión del curso seleccionado.</p>
-                <div className="mt-3 flex flex-wrap gap-2"><button type="button" onClick={()=>setExamenMuestraAbierto(true)} className="rounded-lg border border-gold/40 px-4 py-2 text-sm font-semibold text-gold-deep">Vista previa de las 10 preguntas</button><button type="button" disabled={ocupado || sesionesQuery.isLoading || examenesQuery.isLoading} onClick={()=>void cargarExamenSesion1()} className="rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-black disabled:opacity-50">Crear Examen 01 como borrador</button></div>
-              </div>
-
-              <div className="rounded-xl border border-gold/30 bg-gold/5 p-4">
-                <p className="text-sm font-semibold">Examen preparado · Sesión 2</p>
-                <p className="mt-1 text-xs leading-5 text-muted-foreground">Carga 10 preguntas de opción múltiple sobre geometría básica, plano de trabajo y organización mediante Layers. 2 puntos cada una, 20 puntos en total.</p>
-                <div className="mt-3 flex flex-wrap gap-2"><button type="button" disabled={ocupado || sesionesQuery.isLoading || examenesQuery.isLoading} onClick={()=>void cargarExamenSesion2()} className="rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-black disabled:opacity-50">Crear Examen 02 como borrador</button></div>
-              </div>
               <div className="space-y-2"><p className="text-sm font-semibold">Evaluaciones del curso</p>
                 {(examenesQuery.data ?? []).map(x => <div key={x.id} className="space-y-3 rounded-lg border border-border p-3">
                   <div className="flex flex-wrap items-center justify-between gap-2">
@@ -2442,13 +2336,6 @@ function AulaFormacionPage() {
           <div className="min-h-0 flex-1 overflow-y-auto p-5">
             {examenActivoId!==examenVistaPreviaId||preguntasQuery.isLoading ? <p className="py-8 text-center text-sm text-muted-foreground">Cargando preguntas…</p> : (preguntasQuery.data??[]).length===0 ? <p className="py-8 text-center text-sm text-muted-foreground">Este examen todavía no tiene preguntas.</p> : (()=>{const preguntas=preguntasQuery.data??[];const pregunta=preguntas[preguntaVistaPrevia];const contestada=Boolean(pregunta&&String(respuestasVistaPrevia[pregunta?.id]??"").trim());const preguntasObjetivas=preguntas.filter(p=>p.tipo!=="practica");const puntosMaximos=preguntas.reduce((s,p)=>s+Number(p.puntaje||0),0);const puntosObtenidos=preguntasObjetivas.reduce((s,p)=>s+(String(p.respuesta_correcta??"")===String(respuestasVistaPrevia[p.id]??"")?Number(p.puntaje||0):0),0);const aciertos=preguntasObjetivas.filter(p=>String(p.respuesta_correcta??"")===String(respuestasVistaPrevia[p.id]??"")).length;const tienePracticas=preguntas.some(p=>p.tipo==="practica");const nota=puntosMaximos>0?(puntosObtenidos/puntosMaximos)*20:0;return simulacionFinalizada ? <div className="space-y-5"><div className="rounded-xl border border-gold/30 bg-gold/5 p-6 text-center"><p className="text-xs font-semibold uppercase tracking-[0.16em] text-gold-deep">{tienePracticas?"Resultado objetivo provisional":"Resultado de la evaluación"}</p><p className="mt-3 text-5xl font-bold tabular-nums text-foreground">{nota.toFixed(2)}<span className="text-xl font-medium text-muted-foreground">/20</span></p><p className="mt-2 text-sm text-muted-foreground">{aciertos} de {preguntasObjetivas.length} preguntas objetivas correctas</p>{tienePracticas&&<p className="mt-3 text-xs leading-5 text-muted-foreground">La nota definitiva queda pendiente de la revisión docente de las preguntas prácticas.</p>}</div><div className="space-y-3"><h3 className="text-sm font-semibold">Revisión de tus respuestas</h3>{preguntas.map((p,idx)=>{const elegida=String(respuestasVistaPrevia[p.id]??"");const correcta=String(p.respuesta_correcta??"");const esPractica=p.tipo==="practica";const acerto=!esPractica&&elegida===correcta;const opcionElegida=p.opciones.find(o=>o.value===elegida);const opcionCorrecta=p.opciones.find(o=>o.value===correcta);return <article key={p.id} className={`rounded-xl border p-4 ${esPractica?"border-border":acerto?"border-emerald-300 bg-emerald-50/50 dark:bg-emerald-950/10":"border-red-300 bg-red-50/50 dark:bg-red-950/10"}`}><div className="flex flex-wrap items-center justify-between gap-2"><p className="text-xs font-semibold text-muted-foreground">Pregunta {idx+1} · {p.puntaje} puntos</p><span className={`text-xs font-semibold ${esPractica?"text-muted-foreground":acerto?"text-emerald-700 dark:text-emerald-400":"text-red-700 dark:text-red-400"}`}>{esPractica?"Pendiente de revisión":acerto?"Correcta":"Incorrecta"}</span></div><p className="mt-2 text-sm font-semibold">{p.enunciado}</p><p className="mt-3 text-sm"><span className="font-medium">Tu respuesta: </span>{esPractica?(elegida||"Sin responder"):(opcionElegida?.label??"Sin responder")}</p>{!esPractica&&<p className="mt-1 text-sm"><span className="font-medium">Respuesta correcta: </span><span className="font-semibold text-emerald-700 dark:text-emerald-400">{(opcionCorrecta?.label ?? correcta) || "No definida"}</span></p>}{esPractica&&<p className="mt-1 text-xs text-muted-foreground">Esta respuesta requiere valoración del profesor.</p>}</article>})}</div><p className="text-center text-xs text-muted-foreground">Esta simulación es solo de prueba: la nota no se guarda ni consume intentos.</p><div className="flex justify-center"><button type="button" onClick={()=>{setExamenVistaPreviaId("");setRespuestasVistaPrevia({});setPreguntaVistaPrevia(0);setSimulacionFinalizada(false);}} className="rounded-lg bg-gold px-5 py-2.5 text-sm font-semibold text-black">Cerrar resultado</button></div></div> : <div className="space-y-4"><div className="rounded-lg border border-gold/30 bg-gold/5 p-3 text-xs leading-5"><strong>Indicaciones del profesor:</strong> Dispones de {(examenesQuery.data??[]).find(x=>x.id===examenVistaPreviaId)?.duracion_minutos ?? "tiempo no limitado"} {(examenesQuery.data??[]).find(x=>x.id===examenVistaPreviaId)?.duracion_minutos ? "minutos" : ""} para completar la evaluación. Responde cada pregunta antes de avanzar. <strong>Al pasar a la siguiente pregunta no podrás regresar ni modificar tu respuesta anterior.</strong></div><div className="flex items-center justify-between"><p className="text-xs font-semibold text-gold-deep">Pregunta {preguntaVistaPrevia+1} de {preguntas.length}</p><p className="text-xs text-muted-foreground">{pregunta?.puntaje} puntos</p></div><div className="h-1.5 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-gold" style={{width:`${((preguntaVistaPrevia+1)/preguntas.length)*100}%`}}/></div><article className="min-h-[220px] rounded-xl border border-border p-5"><h3 className="text-base font-semibold">{pregunta?.enunciado}</h3>{pregunta?.tipo==="practica"?<textarea value={respuestasVistaPrevia[pregunta?.id]??""} onChange={e=>setRespuestasVistaPrevia(v=>({...v,[pregunta?.id]:e.target.value}))} rows={5} className="mt-4 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" placeholder="Escribe tu respuesta…"/>:<div className="mt-4 space-y-3">{pregunta?.opciones.map(o=><label key={o.value} className="flex cursor-pointer items-center gap-3 rounded-lg border border-border p-3 text-sm hover:bg-muted/40"><input type="radio" name={"preview-"+pregunta?.id} value={o.value} checked={respuestasVistaPrevia[pregunta?.id]===o.value} onChange={e=>setRespuestasVistaPrevia(v=>({...v,[pregunta?.id]:e.target.value}))}/>{o.label}</label>)}</div>}</article><div className="flex items-center justify-between gap-2">{preguntaVistaPrevia<preguntas.length-1?<button type="button" disabled={!contestada} onClick={()=>setPreguntaVistaPrevia(v=>Math.min(preguntas.length-1,v+1))} className="rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-black disabled:opacity-40">Siguiente</button>:<button type="button" disabled={!contestada} onClick={()=>setSimulacionFinalizada(true)} className="rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-black disabled:opacity-40">Ver mi nota</button>}</div>{!contestada&&<p className="text-xs text-muted-foreground">Responde esta pregunta para continuar.</p>}</div>})()}
           </div>
-        </section>
-      </div>}
-      {examenMuestraAbierto && <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-3 sm:p-6" role="dialog" aria-modal="true" aria-label="Vista previa del Examen 01">
-        <section className="flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl">
-          <header className="flex items-start justify-between gap-3 border-b border-border p-5"><div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">FADILAB · Sesión 1</p><h2 className="mt-1 text-lg font-semibold">Examen 01 · Introducción al diseño CAD y Rhino 7</h2><p className="mt-1 text-xs text-muted-foreground">10 preguntas · 2 puntos cada una · 20 puntos · 20 minutos · 1 intento</p></div><button type="button" onClick={()=>setExamenMuestraAbierto(false)} className="shrink-0 rounded-lg border border-border px-3 py-2 text-xs">Cerrar</button></header>
-          <div className="overflow-y-auto p-5"><p className="mb-4 text-sm text-muted-foreground">Lee cada pregunta y selecciona mentalmente una respuesta. Esta es una vista de revisión: no guarda respuestas, no inicia intentos y no registra calificaciones.</p><div className="space-y-4">{PREGUNTAS_EXAMEN_SESION_1.map((p,i)=><article key={i} className="rounded-xl border border-border p-4"><p className="text-xs text-muted-foreground">Pregunta {i+1} · 2 puntos</p><h3 className="mt-1 text-sm font-semibold">{p.enunciado}</h3><div className="mt-3 grid gap-2 sm:grid-cols-2">{p.opciones.map((op,j)=><div key={j} className="rounded-lg bg-muted/40 px-3 py-2 text-sm"><span className="mr-2 font-semibold text-gold-deep">{String.fromCharCode(65+j)}.</span>{op}</div>)}</div></article>)}</div></div>
-          <footer className="flex justify-end border-t border-border p-4"><button type="button" onClick={()=>setExamenMuestraAbierto(false)} className="rounded-lg bg-gold px-4 py-2.5 text-sm font-semibold text-black">Cerrar vista previa</button></footer>
         </section>
       </div>}
       {permisoDocente.isLoading && sesion?.esAdmin && fadilabCandidate ? <p className="text-xs text-muted-foreground">Comprobando autorización docente de FADILAB…</p> : null}
