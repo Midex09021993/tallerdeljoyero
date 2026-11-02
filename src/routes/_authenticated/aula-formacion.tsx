@@ -994,22 +994,22 @@ function AulaFormacionPage() {
           <Eye className="size-4"/> Abrir explorador de vistas
         </button>
       </section>
-      {exploradorVistasAbierto && <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/70 p-2 sm:p-4" role="dialog" aria-modal="true" aria-label="Explorador interactivo de vistas de Rhino">
-        <div className="flex max-h-[96dvh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl">
-          <header className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-4 py-3 sm:px-6">
-            <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-gold-deep">Explorador de vistas · Rhino</p><h4 className="mt-1 text-base font-semibold">Orientaciones del espacio de trabajo</h4></div>
-            <button type="button" onClick={() => setExploradorVistasAbierto(false)} className="rounded-lg border border-border px-3 py-2 text-sm font-medium hover:bg-muted">Cerrar <span aria-hidden="true">×</span></button>
+      {exploradorVistasAbierto && <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/75 p-2 sm:p-3" role="dialog" aria-modal="true" aria-label="Explorador interactivo de vistas de Rhino">
+        <div className="flex h-[92dvh] max-h-[920px] w-[96vw] max-w-[1440px] flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl">
+          <header className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-4 py-2.5 sm:px-6">
+            <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-gold-deep">Explorador de vistas · Rhino</p><h4 className="mt-0.5 text-base font-semibold">Orientaciones del espacio de trabajo</h4></div>
+            <button type="button" onClick={() => setExploradorVistasAbierto(false)} className="rounded-lg border border-border px-3 py-1.5 text-sm font-medium hover:bg-muted">Cerrar <span aria-hidden="true">×</span></button>
           </header>
-          <div className="flex flex-wrap gap-2 border-b border-border p-3 sm:p-4">
-            {vistas.map(vista => <button key={vista.id} type="button" onClick={() => setVistaPlanoActiva(vista.id)} aria-pressed={vistaPlanoActiva===vista.id} className={`rounded-xl border px-4 py-2.5 text-left transition ${vistaPlanoActiva===vista.id ? "border-gold bg-gold/15 text-foreground shadow-sm" : "border-border bg-background text-muted-foreground hover:border-gold/50 hover:text-foreground"}`}>
-              <span className="block text-sm font-semibold">{vista.nombre} <span className="font-normal text-muted-foreground">({vista.ingles})</span></span>
+          <div className="flex shrink-0 flex-wrap gap-2 border-b border-border px-3 py-2 sm:px-5">
+            {vistas.map(vista => <button key={vista.id} type="button" onClick={() => setVistaPlanoActiva(vista.id)} aria-pressed={vistaPlanoActiva===vista.id} className={`rounded-xl border px-3 py-2 text-left transition sm:px-4 sm:py-2.5 ${vistaPlanoActiva===vista.id ? "border-gold bg-gold/15 text-foreground shadow-sm" : "border-border bg-background text-muted-foreground hover:border-gold/50 hover:text-foreground"}`}>
+              <span className="block text-xs font-semibold sm:text-sm">{vista.nombre} <span className="font-normal text-muted-foreground">({vista.ingles})</span></span>
             </button>)}
           </div>
-          <div className="min-h-0 flex-1 overflow-y-auto p-3 sm:p-5">
-            <div className="flex min-h-[220px] items-center justify-center overflow-hidden rounded-xl bg-[#111316] p-2 sm:min-h-[min(52vh,520px)]">
-              {urlActiva ? <img src={urlActiva} alt={"Vista " + vistaActiva.nombre + " (" + vistaActiva.ingles + ") de Rhino"} className="max-h-[52vh] w-full object-contain" loading="lazy"/> : erroresVistasPlano[vistaPlanoActiva] ? <p className="max-w-lg px-4 text-center text-sm text-amber-200">{erroresVistasPlano[vistaPlanoActiva]}</p> : <p className="text-sm text-white/70">Cargando imagen de la vista…</p>}
+          <div className="flex min-h-0 flex-1 flex-col gap-2 p-2 sm:gap-3 sm:p-4">
+            <div className="flex min-h-0 flex-1 items-center justify-center overflow-hidden rounded-xl bg-[#111316] p-1.5 sm:p-2">
+              {urlActiva ? <img src={urlActiva} alt={"Vista " + vistaActiva.nombre + " (" + vistaActiva.ingles + ") de Rhino"} className="block h-auto max-h-full w-auto max-w-full object-contain" loading="lazy"/> : erroresVistasPlano[vistaPlanoActiva] ? <p className="max-w-lg px-4 text-center text-sm text-amber-200">{erroresVistasPlano[vistaPlanoActiva]}</p> : <p className="text-sm text-white/70">Cargando imagen de la vista…</p>}
             </div>
-            <div className="mx-auto mt-4 max-w-3xl text-center"><h5 className="text-lg font-semibold">{vistaActiva.nombre} <span className="font-normal text-muted-foreground">({vistaActiva.ingles})</span></h5><p className="mt-2 text-sm leading-6 text-muted-foreground">{vistaActiva.descripcion}</p></div>
+            <div className="shrink-0 px-2 pb-1 text-center"><h5 className="text-base font-semibold sm:text-lg">{vistaActiva.nombre} <span className="font-normal text-muted-foreground">({vistaActiva.ingles})</span></h5><p className="mx-auto mt-1 max-w-4xl text-xs leading-5 text-muted-foreground sm:text-sm">{vistaActiva.descripcion}</p></div>
           </div>
         </div>
       </div>}
