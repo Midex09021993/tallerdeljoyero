@@ -553,6 +553,7 @@ function AulaFormacionPage() {
   const [respuestaOsnap, setRespuestaOsnap] = useState<string | null>(null);
   const [aciertosOsnap, setAciertosOsnap] = useState(0);
   const [laboratorioSmartTrackAbierto, setLaboratorioSmartTrackAbierto] = useState(false);
+  const [faseSmartTrack, setFaseSmartTrack] = useState<"aprendizaje"|"practica">("aprendizaje");
   const [retoSmartTrack, setRetoSmartTrack] = useState(0);
   const [respuestaSmartTrack, setRespuestaSmartTrack] = useState<string | null>(null);
   const [aciertosSmartTrack, setAciertosSmartTrack] = useState(0);
@@ -1838,13 +1839,51 @@ function AulaFormacionPage() {
         setRespuestaSmartTrack(null);
       }
     };
-    const reiniciar = () => { setRetoSmartTrack(0); setRespuestaSmartTrack(null); setAciertosSmartTrack(0); };
+    const reiniciar = () => { setRetoSmartTrack(0); setRespuestaSmartTrack(null); setAciertosSmartTrack(0); setFaseSmartTrack("aprendizaje"); };
     if (!laboratorioSmartTrackAbierto) return <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5">
       <div className="flex flex-wrap items-center justify-between gap-4"><div><p className="text-[10px] font-bold uppercase tracking-widest text-gold-deep">Recurso interactivo · Sesión 03</p><h4 className="mt-1 text-base font-semibold">Simulador SmartTrack</h4><p className="mt-1 text-sm text-muted-foreground">Practica alineaciones temporales usando puntos de referencia.</p></div><button type="button" onClick={() => { reiniciar(); setLaboratorioSmartTrackAbierto(true); }} className="inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-black"><ArrowRight className="size-4"/> Abrir simulador</button></div>
     </section>;
     return <div className="fixed inset-0 z-[101] overflow-hidden bg-background/95 p-2 backdrop-blur-sm sm:p-3"><section className="mx-auto flex h-[calc(100dvh-1rem)] max-w-[min(96vw,1500px)] flex-col overflow-hidden rounded-2xl border border-gold/30 bg-background shadow-2xl sm:h-[calc(100dvh-1.5rem)]">
       <header className="flex shrink-0 items-center justify-between border-b border-border bg-gradient-to-r from-[#fbf8f0] to-background px-4 py-3"><div><p className="text-[10px] font-bold uppercase tracking-widest text-gold-deep">Simulador SmartTrack · Sesión 03</p><h4 className="font-semibold">Alinea con guías temporales</h4></div><div className="flex items-center gap-2"><span className="hidden text-xs text-muted-foreground sm:inline">Aciertos: {aciertosSmartTrack}/{retos.length}</span><button type="button" onClick={reiniciar} className="rounded-lg border border-border px-3 py-2 text-xs"><RotateCcw className="mr-1 inline size-3.5"/> Reiniciar</button><button type="button" onClick={() => setLaboratorioSmartTrackAbierto(false)} className="rounded-lg border border-border px-3 py-2 text-xs">Volver a la lectura</button></div></header>
-      <div className="grid min-h-0 flex-1 gap-3 overflow-hidden p-2 sm:p-3 lg:grid-cols-[minmax(0,1.4fr)_minmax(350px,.8fr)]">
+      {faseSmartTrack === "aprendizaje" ? <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">
+        <div className="mx-auto max-w-5xl">
+          <div className="mb-5 rounded-2xl border border-gold/30 bg-gold/10 p-5">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-gold-deep">Primero aprende · Después practica</p>
+            <h3 className="mt-1 text-xl font-semibold">¿Qué es SmartTrack?</h3>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-foreground/80">SmartTrack muestra guías de alineación temporales en el área de dibujo de Rhino. Estas guías aparecen al mover el cursor tomando como referencia puntos que has adquirido; ayudan a colocar nuevos puntos alineados sin tener que dibujar líneas auxiliares que luego debas borrar.</p>
+            <p className="mt-2 text-sm font-medium">SmartTrack no sustituye a Osnap: Osnap captura una referencia geométrica exacta y SmartTrack utiliza esas referencias para facilitar alineaciones temporales.</p>
+          </div>
+          <h3 className="mb-3 text-base font-semibold">Aprende a reconocer las tres relaciones</h3>
+          <div className="grid gap-3 md:grid-cols-3">
+            <article className="rounded-xl border border-border bg-card p-4">
+              <div className="mb-3 flex h-28 items-center justify-center rounded-lg bg-[#17191d]"><svg viewBox="0 0 220 100" className="h-full w-full"><circle cx="45" cy="50" r="6" fill="#e7bd62"/><path d="M45 50 H195" stroke="#67d6a0" strokeWidth="3" strokeDasharray="7 5"/><circle cx="155" cy="50" r="6" fill="#67d6a0"/></svg></div>
+              <h4 className="font-semibold">Horizontal</h4><p className="mt-2 text-sm leading-5 text-foreground/80">El nuevo punto conserva la misma altura del punto de referencia. La coordenada Y permanece constante y cambia X.</p><p className="mt-2 text-xs text-muted-foreground">En joyería: alinear dos extremos a la misma altura para mantener recto un borde.</p>
+            </article>
+            <article className="rounded-xl border border-border bg-card p-4">
+              <div className="mb-3 flex h-28 items-center justify-center rounded-lg bg-[#17191d]"><svg viewBox="0 0 220 100" className="h-full w-full"><circle cx="110" cy="82" r="6" fill="#e7bd62"/><path d="M110 82 V12" stroke="#67d6a0" strokeWidth="3" strokeDasharray="7 5"/><circle cx="110" cy="30" r="6" fill="#67d6a0"/></svg></div>
+              <h4 className="font-semibold">Vertical</h4><p className="mt-2 text-sm leading-5 text-foreground/80">El nuevo punto conserva la misma posición X del punto de referencia. La coordenada X permanece constante y cambia Y.</p><p className="mt-2 text-xs text-muted-foreground">En joyería: mantener alineados verticalmente el centro y la base de un elemento.</p>
+            </article>
+            <article className="rounded-xl border border-border bg-card p-4">
+              <div className="mb-3 flex h-28 items-center justify-center rounded-lg bg-[#17191d]"><svg viewBox="0 0 220 100" className="h-full w-full"><circle cx="48" cy="75" r="6" fill="#e7bd62"/><circle cx="172" cy="20" r="6" fill="#e7bd62"/><path d="M48 75 H172 V20" stroke="#67d6a0" strokeWidth="3" strokeDasharray="7 5"/><circle cx="172" cy="75" r="6" fill="#f4d27f"/></svg></div>
+              <h4 className="font-semibold">Intersección de guías</h4><p className="mt-2 text-sm leading-5 text-foreground/80">El cruce de una guía horizontal y otra vertical indica una posición relacionada con dos referencias adquiridas.</p><p className="mt-2 text-xs text-muted-foreground">En joyería: localizar una posición a partir de dos alineaciones para ubicar un detalle.</p>
+            </article>
+          </div>
+          <div className="mt-5 rounded-xl border border-border p-4">
+            <h4 className="font-semibold">Cómo trabajar con SmartTrack en Rhino</h4>
+            <ol className="mt-2 list-inside list-decimal space-y-1.5 text-sm text-foreground/80">
+              <li>Activa SmartTrack en la barra de estado de Rhino.</li>
+              <li>Activa en Osnap las referencias que realmente necesitas.</li>
+              <li>Acerca el cursor a un punto exacto para adquirirlo como referencia.</li>
+              <li>Mueve el cursor y observa las guías temporales horizontales o verticales.</li>
+              <li>Cuando la alineación sea correcta, confirma el punto. No necesitas crear líneas auxiliares.</li>
+            </ol>
+          </div>
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-muted-foreground">Ya conoces cómo se generan las guías. Ahora identifica cada relación en tres situaciones.</p>
+            <button type="button" onClick={()=>{setRetoSmartTrack(0);setRespuestaSmartTrack(null);setAciertosSmartTrack(0);setFaseSmartTrack("practica");}} className="rounded-xl bg-gold px-5 py-3 text-sm font-semibold text-black">Comenzar práctica <ArrowRight className="ml-1 inline size-4"/></button>
+          </div>
+        </div>
+      </div> : <div className="grid min-h-0 flex-1 gap-3 overflow-hidden p-2 sm:p-3 lg:grid-cols-[minmax(0,1.4fr)_minmax(350px,.8fr)]">
         <div className="flex min-h-[260px] min-w-0 flex-col overflow-hidden rounded-xl bg-[#17191d]"><div className="flex shrink-0 justify-between border-b border-white/10 px-3 py-2 text-[10px] text-white/70"><span>PLANO XY · GUÍAS TEMPORALES</span><span>RETO {retoSmartTrack + 1} / {retos.length}</span></div>
           <svg viewBox="0 0 600 420" className="min-h-0 w-full flex-1" role="img" aria-label={"Ejemplo visual de " + reto.nombre}>
             <defs><pattern id="smarttrack-grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M 24 0 L 0 0 0 24" fill="none" stroke="#343a43" strokeWidth="1"/></pattern></defs><rect width="600" height="420" fill="url(#smarttrack-grid)"/>
@@ -1856,7 +1895,7 @@ function AulaFormacionPage() {
         <div className="flex min-h-0 flex-col gap-3 overflow-y-auto pr-1"><div className="rounded-xl border border-border p-4"><span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Identifica la relación de alineación</span><p className="mt-3 text-base font-semibold leading-snug">{reto.pregunta}</p><div className="mt-4 grid grid-cols-1 gap-2">{["Horizontal","Vertical","Intersección"].map(op => <button key={op} type="button" disabled={respuestaSmartTrack !== null} onClick={() => responder(op)} className={"rounded-xl border px-3 py-3 text-sm font-semibold transition " + (respuestaSmartTrack === op ? (op === reto.correcta ? "border-emerald-500 bg-emerald-500/10 text-emerald-700" : "border-red-400 bg-red-400/10 text-red-700") : respuestaSmartTrack !== null && op === reto.correcta ? "border-emerald-500 bg-emerald-500/10 text-emerald-700" : "border-border hover:border-gold/60 hover:bg-gold/5")}>{op}</button>)}</div>
           {respuestaSmartTrack !== null && <div className="mt-4 rounded-xl bg-muted p-3 text-sm"><p className="font-semibold">{respuestaSmartTrack === reto.correcta ? "¡Correcto!" : "Revisa la guía resaltada"}</p><p className="mt-1 text-muted-foreground">{reto.explicacion}</p><button type="button" onClick={siguiente} className="mt-3 w-full rounded-lg bg-gold px-4 py-2.5 font-semibold text-black">{retoSmartTrack === retos.length - 1 ? "Finalizar simulador" : "Siguiente reto"} <ArrowRight className="ml-1 inline size-4"/></button></div>}
         </div><div className="rounded-xl border border-border p-3"><div className="flex items-center justify-between"><b className="text-xs">Progreso</b><span className="text-xs text-muted-foreground">{aciertosSmartTrack} aciertos</span></div><div className="mt-2 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-gold transition-all" style={{width: ((retoSmartTrack + 1) / retos.length * 100) + "%"}}/></div><p className="mt-2 text-[11px] text-muted-foreground">Completa las tres situaciones para reconocer las alineaciones temporales.</p></div></div>
-      </div>
+      </div>}
     </section></div>;
   };
 
