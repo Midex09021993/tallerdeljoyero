@@ -1892,10 +1892,15 @@ function AulaFormacionPage() {
       if (opcion === reto.correcta) setAciertosSmartTrack(v => v + 1);
     };
     const siguiente = () => {
+      if (respuestaSmartTrack !== reto.correcta) {
+        setRespuestaSmartTrack(null);
+        return;
+      }
       if (retoSmartTrack === retos.length - 1) {
         setLaboratorioSmartTrackAbierto(false);
         setRetoSmartTrack(0);
         setRespuestaSmartTrack(null);
+        setFaseSmartTrack("aprendizaje");
       } else {
         setRetoSmartTrack(v => v + 1);
         setRespuestaSmartTrack(null);
@@ -1955,7 +1960,7 @@ function AulaFormacionPage() {
           </svg><p className="shrink-0 border-t border-white/10 px-3 py-2 text-[10px] text-white/70">Amarillo: puntos de referencia · Verde: guías temporales · No se crean curvas auxiliares</p>
         </div>
         <div className="flex min-h-0 flex-col gap-3 overflow-y-auto pr-1"><div className="rounded-xl border border-border p-4"><span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Identifica la relación de alineación</span><p className="mt-3 text-base font-semibold leading-snug">{reto.pregunta}</p><div className="mt-4 grid grid-cols-1 gap-2">{["Horizontal","Vertical","Intersección"].map(op => <button key={op} type="button" disabled={respuestaSmartTrack !== null} onClick={() => responder(op)} className={"rounded-xl border px-3 py-3 text-sm font-semibold transition " + (respuestaSmartTrack === op ? (op === reto.correcta ? "border-emerald-500 bg-emerald-500/10 text-emerald-700" : "border-red-400 bg-red-400/10 text-red-700") : respuestaSmartTrack !== null && op === reto.correcta ? "border-emerald-500 bg-emerald-500/10 text-emerald-700" : "border-border hover:border-gold/60 hover:bg-gold/5")}>{op}</button>)}</div>
-          {respuestaSmartTrack !== null && <div className="mt-4 rounded-xl bg-muted p-3 text-sm"><p className="font-semibold">{respuestaSmartTrack === reto.correcta ? "¡Correcto!" : "Revisa la guía resaltada"}</p><p className="mt-1 text-muted-foreground">{reto.explicacion}</p><button type="button" onClick={siguiente} className="mt-3 w-full rounded-lg bg-gold px-4 py-2.5 font-semibold text-black">{retoSmartTrack === retos.length - 1 ? "Finalizar simulador" : "Siguiente reto"} <ArrowRight className="ml-1 inline size-4"/></button></div>}
+          {respuestaSmartTrack !== null && <div className="mt-4 rounded-xl bg-muted p-3 text-sm"><p className="font-semibold">{respuestaSmartTrack === reto.correcta ? "¡Correcto!" : "Todavía no. Inténtalo otra vez."}</p><p className="mt-1 text-muted-foreground">{respuestaSmartTrack === reto.correcta ? reto.explicacion : "Observa los puntos de referencia y piensa qué coordenada se mantiene constante o dónde se cruzan las guías. No pierdes el progreso."}</p><button type="button" onClick={siguiente} className="mt-3 w-full rounded-lg bg-gold px-4 py-2.5 font-semibold text-black">{respuestaSmartTrack !== reto.correcta ? "Volver a intentar" : retoSmartTrack === retos.length - 1 ? "Finalizar simulador" : "Siguiente reto"} <ArrowRight className="ml-1 inline size-4"/></button></div>}
         </div><div className="rounded-xl border border-border p-3"><div className="flex items-center justify-between"><b className="text-xs">Progreso</b><span className="text-xs text-muted-foreground">{aciertosSmartTrack} aciertos</span></div><div className="mt-2 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-gold transition-all" style={{width: ((retoSmartTrack + 1) / retos.length * 100) + "%"}}/></div><p className="mt-2 text-[11px] text-muted-foreground">Completa las tres situaciones para reconocer las alineaciones temporales.</p></div></div>
       </div>}
     </section></div>;
