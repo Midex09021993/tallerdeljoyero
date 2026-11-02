@@ -1661,7 +1661,7 @@ function AulaFormacionPage() {
     { titulo: "Sólidos", pregunta: "¿Qué característica identifica a un sólido cerrado?", introduccion: "En Rhinoceros, un sólido es una superficie o polisuperficie cerrada que encierra un volumen. Sus límites forman un cuerpo completamente cerrado, no una superficie abierta.", claves: ["Un sólido cerrado encierra un volumen tridimensional.","Puede estar formado por una superficie cerrada o por varias superficies unidas en una polisuperficie.","El manual incluye operaciones para crear, separar, modificar y unir partes de un sólido."], aplicacion: "En joyería, puedes utilizar sólidos para representar cuerpos como una barra, un componente macizo o determinadas partes de una montura. Es importante comprobar que la geometría esté cerrada cuando el proceso de fabricación lo requiera.", ejemplo: "Una pieza modelada como sólido cerrado representa un volumen completo. No es lo mismo que tener únicamente las superficies exteriores sin cerrar.", opciones: [{ valor: "trazo", texto: "Está formado solo por líneas" }, { valor: "volumen", texto: "Delimita un volumen cerrado" }, { valor: "plano", texto: "Es una curva plana" }], correcta: "volumen", explicacion: "Correcto. Un sólido cerrado delimita un volumen tridimensional y representa un cuerpo, no solo líneas o superficies abiertas." },
   ];
   const renderLaboratorioCoordenadas = () => {
-    if (lecturaAbierta?.numero !== 3 || paginaLectura !== 6) return null;
+    if (lecturaAbierta?.numero !== 3 || paginaLectura !== 4) return null;
     if (!laboratorioCoordenadasAbierto) return <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div><p className="text-[10px] font-bold uppercase tracking-widest text-gold-deep">Recurso interactivo · Sesión 03</p><h4 className="mt-1 text-base font-semibold">Laboratorio de coordenadas</h4><p className="mt-1 text-sm text-muted-foreground">Practica coordenadas absolutas, relativas y polares en un espacio de trabajo independiente.</p></div>
@@ -1726,7 +1726,7 @@ function AulaFormacionPage() {
   };
 
   const renderLaboratorioOsnap = () => {
-    if (lecturaAbierta?.numero !== 3 || paginaLectura !== 4) return null;
+    if (lecturaAbierta?.numero !== 3 || paginaLectura !== 6) return null;
     const retos = [
       {snap:"End",nombre:"Extremo",pregunta:"Necesitas comenzar una línea exactamente donde termina esta curva.",explicacion:"End captura el punto final exacto de una curva o arista.",opciones:["Near","End","Mid","Cen"],figura:"end"},
       {snap:"Mid",nombre:"Punto medio",pregunta:"Quieres colocar un punto justo a la mitad de este segmento.",explicacion:"Mid localiza el punto medio exacto entre los extremos.",opciones:["End","Int","Mid","Quad"],figura:"mid"},
