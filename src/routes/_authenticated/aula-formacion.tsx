@@ -553,6 +553,13 @@ function AulaFormacionPage() {
   const [respuestaOsnap, setRespuestaOsnap] = useState<string | null>(null);
   const [aciertosOsnap, setAciertosOsnap] = useState(0);
   const [laboratorioSmartTrackAbierto, setLaboratorioSmartTrackAbierto] = useState(false);
+  const [laboratorioRestriccionesAbierto, setLaboratorioRestriccionesAbierto] = useState(false);
+  const [faseRestricciones, setFaseRestricciones] = useState<"aprendizaje"|"practica">("aprendizaje");
+  const [distanciaRestricciones, setDistanciaRestricciones] = useState("20");
+  const [anguloRestricciones, setAnguloRestricciones] = useState("0");
+  const [retoRestricciones, setRetoRestricciones] = useState(0);
+  const [validadoRestricciones, setValidadoRestricciones] = useState(false);
+  const [aciertosRestricciones, setAciertosRestricciones] = useState(0);
   const [faseSmartTrack, setFaseSmartTrack] = useState<"aprendizaje"|"practica">("aprendizaje");
   const [retoSmartTrack, setRetoSmartTrack] = useState(0);
   const [respuestaSmartTrack, setRespuestaSmartTrack] = useState<string | null>(null);
@@ -1727,6 +1734,60 @@ function AulaFormacionPage() {
     </section></div>;
   };
 
+  const renderLaboratorioRestricciones = () => {
+    if (lecturaAbierta?.numero !== 3 || paginaLectura !== 5) return null;
+    const retos = [
+      { nombre: "Longitud exacta", distancia: 20, angulo: 0, texto: "Construye un segmento horizontal de 20 mm.", explicacion: "La distancia fija la longitud del segmento. Con 20 mm y 0°, el punto final queda 20 mm a la derecha del origen." },
+      { nombre: "Dirección controlada", distancia: 15, angulo: 45, texto: "Construye un segmento de 15 mm con una dirección de 45°.", explicacion: "El ángulo define la dirección respecto al eje X positivo. A 45°, el segmento sube hacia la derecha." },
+      { nombre: "Combina distancia y ángulo", distancia: 20, angulo: 135, texto: "Construye un segmento de 20 mm con una dirección de 135°.", explicacion: "La longitud permanece en 20 mm y la dirección de 135° apunta hacia arriba y a la izquierda." }
+    ] as const;
+    const reto = retos[retoRestricciones] ?? retos[0];
+    const distancia = Math.max(0, Math.min(40, Number(distanciaRestricciones) || 0));
+    const angulo = Number(anguloRestricciones) || 0;
+    const rad = angulo * Math.PI / 180;
+    const x2 = 250 + Math.cos(rad) * distancia * 9;
+    const y2 = 285 - Math.sin(rad) * distancia * 9;
+    const validar = () => {
+      if (validadoRestricciones) return;
+      const correcto = Math.abs(distancia - reto.distancia) < 0.01 && Math.abs((((angulo - reto.angulo) % 360) + 540) % 360 - 180) < 0.5;
+      setValidadoRestricciones(true);
+      if (correcto) setAciertosRestricciones(v => v + 1);
+    };
+    const siguiente = () => {
+      if (retoRestricciones === retos.length - 1) {
+        setLaboratorioRestriccionesAbierto(false);
+        setRetoRestricciones(0);
+        setValidadoRestricciones(false);
+        setFaseRestricciones("aprendizaje");
+      } else {
+        setRetoRestricciones(v => v + 1);
+        setDistanciaRestricciones(String(retos[retoRestricciones + 1].distancia));
+        setAnguloRestricciones(String(retos[retoRestricciones + 1].angulo));
+        setValidadoRestricciones(false);
+      }
+    };
+    const reiniciar = () => {
+      setRetoRestricciones(0); setDistanciaRestricciones("20"); setAnguloRestricciones("0");
+      setValidadoRestricciones(false); setAciertosRestricciones(0); setFaseRestricciones("aprendizaje");
+    };
+    if (!laboratorioRestriccionesAbierto) return <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5">
+      <div className="flex flex-wrap items-center justify-between gap-4"><div><p className="text-[10px] font-bold uppercase tracking-widest text-gold-deep">Recurso interactivo · Sesión 03</p><h4 className="mt-1 text-base font-semibold">Laboratorio de distancia y ángulo</h4><p className="mt-1 text-sm text-muted-foreground">Aprende a controlar la longitud y dirección de cada segmento.</p></div><button type="button" onClick={() => { reiniciar(); setLaboratorioRestriccionesAbierto(true); }} className="inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-black"><ArrowRight className="size-4"/> Abrir laboratorio</button></div>
+    </section>;
+    return <div className="fixed inset-0 z-[102] overflow-hidden bg-background/95 p-2 backdrop-blur-sm sm:p-3"><section className="mx-auto flex h-[calc(100dvh-1rem)] max-w-[min(96vw,1500px)] flex-col overflow-hidden rounded-2xl border border-gold/30 bg-background shadow-2xl sm:h-[calc(100dvh-1.5rem)]">
+      <header className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-border bg-gradient-to-r from-[#fbf8f0] to-background px-4 py-3"><div><p className="text-[10px] font-bold uppercase tracking-widest text-gold-deep">Laboratorio de restricciones · Sesión 03</p><h4 className="font-semibold">Controla distancia y ángulo</h4></div><div className="flex items-center gap-2"><span className="hidden text-xs text-muted-foreground sm:inline">Aciertos: {aciertosRestricciones}/3</span><button type="button" onClick={reiniciar} className="rounded-lg border border-border px-3 py-2 text-xs"><RotateCcw className="mr-1 inline size-3.5"/> Reiniciar</button><button type="button" onClick={() => setLaboratorioRestriccionesAbierto(false)} className="rounded-lg border border-border px-3 py-2 text-xs">Volver a la lectura</button></div></header>
+      {faseRestricciones === "aprendizaje" ? <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6"><div className="mx-auto max-w-5xl">
+        <div className="rounded-2xl border border-gold/30 bg-gold/10 p-5"><p className="text-[10px] font-bold uppercase tracking-widest text-gold-deep">Primero aprende · Después practica</p><h3 className="mt-1 text-xl font-semibold">¿Qué controlan la distancia y el ángulo?</h3><p className="mt-2 text-sm leading-6 text-foreground/85">La distancia determina cuánto mide un segmento. El ángulo determina hacia qué dirección se dibuja respecto al eje X positivo del plano de construcción. Al combinar ambos valores puedes definir con precisión el punto final.</p><p className="mt-2 text-sm font-medium">No son lo mismo que las coordenadas cartesianas: aquí describes el desplazamiento mediante una longitud y una dirección.</p></div>
+        <div className="mt-4 grid gap-3 md:grid-cols-2"><article className="rounded-xl border border-border p-4"><div className="flex h-28 items-center justify-center rounded-lg bg-[#17191d]"><svg viewBox="0 0 260 110" className="h-full w-full"><path d="M35 65 H220" stroke="#e7bd62" strokeWidth="4"/><path d="M35 53 V77 M220 53 V77" stroke="#fff" strokeWidth="1.5"/><path d="M35 42 H220" stroke="#67d6a0" strokeWidth="1.5" strokeDasharray="4 4"/><text x="112" y="32" fill="#67d6a0" fontSize="13">20 mm</text></svg></div><h4 className="mt-3 font-semibold">Distancia = longitud</h4><p className="mt-1 text-sm text-muted-foreground">Un segmento de 20 mm conserva esa medida aunque cambies su orientación.</p></article>
+        <article className="rounded-xl border border-border p-4"><div className="flex h-28 items-center justify-center rounded-lg bg-[#17191d]"><svg viewBox="0 0 260 110" className="h-full w-full"><path d="M35 82 H225" stroke="#69717d" strokeWidth="1.5"/><path d="M35 82 L170 18" stroke="#67d6a0" strokeWidth="4"/><path d="M75 82 A40 40 0 0 0 71 63" fill="none" stroke="#e7bd62" strokeWidth="2"/><text x="83" y="70" fill="#e7bd62" fontSize="13">45°</text></svg></div><h4 className="mt-3 font-semibold">Ángulo = dirección</h4><p className="mt-1 text-sm text-muted-foreground">El ángulo establece la inclinación del segmento respecto al eje X positivo.</p></article></div>
+        <div className="mt-4 rounded-xl border border-border p-4"><h4 className="font-semibold">Referencia de ángulos en el plano XY</h4><div className="mt-3 grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">{[["0°","Derecha"],["90°","Arriba"],["180°","Izquierda"],["270°","Abajo"]].map(([a,b])=><div key={a} className="rounded-lg bg-muted p-3 text-center"><b>{a}</b><p className="text-xs text-muted-foreground">{b}</p></div>)}</div><p className="mt-3 text-xs leading-5 text-muted-foreground">En Rhino, las restricciones se aplican durante la introducción de puntos según el comando activo. La simulación permite comprender el efecto geométrico de los valores; no ejecuta comandos reales de Rhino.</p></div>
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-3"><p className="text-sm text-muted-foreground">Ahora modifica los valores y observa cómo cambia el segmento.</p><button type="button" onClick={()=>{setRetoRestricciones(0);setDistanciaRestricciones("20");setAnguloRestricciones("0");setAciertosRestricciones(0);setValidadoRestricciones(false);setFaseRestricciones("practica");}} className="rounded-xl bg-gold px-5 py-3 text-sm font-semibold text-black">Comenzar práctica <ArrowRight className="ml-1 inline size-4"/></button></div>
+      </div></div> : <div className="grid min-h-0 flex-1 gap-3 overflow-hidden p-2 sm:p-3 lg:grid-cols-[minmax(0,1.4fr)_minmax(330px,.8fr)]">
+        <div className="flex min-h-[260px] min-w-0 flex-col overflow-hidden rounded-xl bg-[#17191d]"><div className="flex justify-between border-b border-white/10 px-3 py-2 text-[10px] text-white/70"><span>PLANO XY · CONSTRUCCIÓN DE SEGMENTOS</span><span>RETO {retoRestricciones+1}/3</span></div><svg viewBox="0 0 600 420" className="min-h-0 w-full flex-1" role="img" aria-label="Segmento con distancia y ángulo ajustables"><defs><pattern id="restricciones-grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="#343a43" strokeWidth="1"/></pattern></defs><rect width="600" height="420" fill="url(#restricciones-grid)"/><path d="M25 285H575 M250 25V395" stroke="#9ca3af" strokeWidth="1.5"/><circle cx="250" cy="285" r="6" fill="#e7bd62"/><path d="M250 285L{x2} {y2}" stroke="#67d6a0" strokeWidth="4"/><circle cx={x2} cy={y2} r="7" fill="#67d6a0"/><text x="265" y="307" fill="white" fontSize="13">Inicio</text><text x={Math.min(520,Math.max(260,x2+10))} y={Math.max(30,y2-12)} fill="#67d6a0" fontSize="13">Final</text><path d="M305 285 A55 55 0 0 0 {305+Math.cos(rad)*55} {285-Math.sin(rad)*55}" fill="none" stroke="#e7bd62" strokeWidth="2"/><text x="315" y="270" fill="#e7bd62" fontSize="13">{angulo}°</text></svg><p className="border-t border-white/10 px-3 py-2 text-[10px] text-white/70">Amarillo: inicio · Verde: segmento y punto final · La cuadrícula representa el plano XY</p></div>
+        <div className="flex min-h-0 flex-col gap-3 overflow-y-auto pr-1"><div className="rounded-xl border border-border p-4"><span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Ejercicio {retoRestricciones+1} de 3</span><h3 className="mt-2 font-semibold">{reto.texto}</h3><div className="mt-3 grid grid-cols-2 gap-3"><label className="text-xs text-muted-foreground">Distancia (mm)<input type="number" min="0" max="40" step="1" value={distanciaRestricciones} disabled={validadoRestricciones} onChange={e=>setDistanciaRestricciones(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-3 text-base text-foreground"/></label><label className="text-xs text-muted-foreground">Ángulo (°)<input type="number" min="-360" max="360" step="1" value={anguloRestricciones} disabled={validadoRestricciones} onChange={e=>setAnguloRestricciones(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-3 text-base text-foreground"/></label></div><div className="mt-3 flex flex-wrap gap-2"><button type="button" disabled={validadoRestricciones} onClick={()=>setDistanciaRestricciones(String(reto.distancia))} className="rounded-lg border border-border px-3 py-2 text-xs">Fijar distancia</button><button type="button" disabled={validadoRestricciones} onClick={()=>setAnguloRestricciones(String(reto.angulo))} className="rounded-lg border border-border px-3 py-2 text-xs">Fijar ángulo</button></div><button type="button" disabled={validadoRestricciones} onClick={validar} className="mt-3 w-full rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-black disabled:opacity-50">Comprobar ejercicio</button>{validadoRestricciones&&<div className="mt-3 rounded-xl bg-muted p-3 text-sm"><b>{Math.abs(distancia-reto.distancia)<0.01 && Math.abs((((angulo-reto.angulo)%360)+540)%360-180)<0.5?"¡Correcto!":"Todavía no coincide"}</b><p className="mt-1 text-muted-foreground">{reto.explicacion}</p><button type="button" onClick={siguiente} className="mt-3 w-full rounded-lg bg-gold px-4 py-2.5 font-semibold text-black">{retoRestricciones===2?"Finalizar laboratorio":"Siguiente ejercicio"} <ArrowRight className="ml-1 inline size-4"/></button></div>}</div><div className="rounded-xl border border-border p-3"><div className="flex justify-between text-xs"><b>Progreso</b><span>{aciertosRestricciones}/3 aciertos</span></div><div className="mt-2 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full bg-gold" style={{width:((retoRestricciones+(validadoRestricciones?1:0))/3*100)+"%"}}/></div></div></div>
+      </div>}
+    </section></div>;
+  };
+
   const renderLaboratorioOsnap = () => {
     if (lecturaAbierta?.numero !== 3 || paginaLectura !== 6) return null;
     const retos = [
@@ -2102,6 +2163,7 @@ function AulaFormacionPage() {
                   return <div key={idx}><p className="mb-4 max-w-4xl whitespace-pre-line text-[15px] leading-7 text-foreground/90">{bloque}</p></div>;
                 })}
                 {renderLaboratorioCoordenadas()}
+                {renderLaboratorioRestricciones()}
                 {renderLaboratorioOsnap()}
                 {renderLaboratorioSmartTrack()}
 
