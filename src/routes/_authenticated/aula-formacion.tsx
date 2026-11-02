@@ -530,6 +530,8 @@ function AulaFormacionPage() {
   const [preguntaActualAlumno, setPreguntaActualAlumno] = useState(0);
   const [respuestasAlumno, setRespuestasAlumno] = useState<Record<string, string>>({});
   const [enviandoExamen, setEnviandoExamen] = useState(false);
+  const guardadoExamenPendienteRef = useRef<Promise<void> | null>(null);
+  const [guardandoSalidaExamen, setGuardandoSalidaExamen] = useState(false);
   const [segundosRestantesExamen, setSegundosRestantesExamen] = useState<number | null>(null);
   const [ocupado, setOcupado] = useState(false);
   const [vistaPreviaAlumno, setVistaPreviaAlumno] = useState(false);
@@ -593,14 +595,20 @@ function AulaFormacionPage() {
           : (respuestasAlumno[p.id] ?? "")
       }));
     const timeout = window.setTimeout(() => {
-      void (async () => {
+      const guardado = (async () => {
         const { error } = await (supabase as any).rpc("guardar_respuestas_intento_formacion", {
           _intento_id: examenActivoAlumno.intento_id,
           _respuestas: respuestas,
           _pregunta_actual: preguntaActualAlumno
         });
-        if (error) setMensaje("No se pudo guardar tu respuesta automáticamente. Mantén esta pantalla abierta e inténtalo de nuevo.");
+        if (error) throw error;
       })();
+      guardadoExamenPendienteRef.current = guardado;
+      void guardado
+        .catch(() => setMensaje("No se pudo guardar tu respuesta automáticamente. Mantén esta pantalla abierta e inténtalo de nuevo."))
+        .finally(() => {
+          if (guardadoExamenPendienteRef.current === guardado) guardadoExamenPendienteRef.current = null;
+        });
     }, 500);
     return () => window.clearTimeout(timeout);
   }, [respuestasAlumno, preguntaActualAlumno, examenActivoAlumno?.intento_id, enviandoExamen]);
@@ -1254,6 +1262,9 @@ function AulaFormacionPage() {
     const respuestas = examenActivoAlumno.preguntas.map(p => ({ pregunta_id: p.id, respuesta: p.tipo === "verdadero_falso" ? respuestasAlumno[p.id] === "true" : (respuestasAlumno[p.id] ?? "") }));
     setEnviandoExamen(true); setMensaje("");
     try {
+      // Esperamos cualquier guardado automático en curso antes del guardado final.
+      const guardadoPendiente = guardadoExamenPendienteRef.current;
+      if (guardadoPendiente) await guardadoPendiente;
       // Si el tiempo venció, guardar_respuestas rechaza la operación por diseño.
       // enviar_intento_formacion acepta el cierre vencido y conserva la última instantánea recibida.
       if (!tiempoAgotado) {
@@ -2484,20 +2495,30 @@ function AulaFormacionPage() {
               </div>
               {!respondida && <p className="text-xs text-muted-foreground">Debes responder esta pregunta para continuar.</p>}
             </> : <p className="text-sm text-muted-foreground">Este examen no contiene preguntas.</p>; })()}
-            <button type="button" onClick={async()=>{
-              if (!examenActivoAlumno?.intento_id) return;
-              const respuestas = examenActivoAlumno.preguntas
-                .filter(p => Object.prototype.hasOwnProperty.call(respuestasAlumno, p.id))
-                .map(p => ({ pregunta_id: p.id, respuesta: p.tipo === "verdadero_falso" ? respuestasAlumno[p.id] === "true" : (respuestasAlumno[p.id] ?? "") }));
-              const { error } = await (supabase as any).rpc("guardar_respuestas_intento_formacion", {
-                _intento_id: examenActivoAlumno.intento_id,
-                _respuestas: respuestas,
-                _pregunta_actual: preguntaActualAlumno
-              });
-              if (error) { setMensaje(error.message); return; }
-              setExamenActivoAlumno(null);
-              setMensaje("Intento guardado. Puedes volver a abrir la evaluación para continuar con el tiempo restante.");
-            }} className="text-xs text-muted-foreground underline">Salir del examen</button>
+            <button type="button" disabled={guardandoSalidaExamen || enviandoExamen} onClick={async()=>{
+              if (!examenActivoAlumno?.intento_id || guardandoSalidaExamen || enviandoExamen) return;
+              if (!window.confirm("¿Salir de la evaluación? Guardaremos tus respuestas y podrás continuar después con el tiempo que aún te quede.")) return;
+              setGuardandoSalidaExamen(true);
+              try {
+                const guardadoPendiente = guardadoExamenPendienteRef.current;
+                if (guardadoPendiente) await guardadoPendiente;
+                const respuestas = examenActivoAlumno.preguntas
+                  .filter(p => Object.prototype.hasOwnProperty.call(respuestasAlumno, p.id))
+                  .map(p => ({ pregunta_id: p.id, respuesta: p.tipo === "verdadero_falso" ? respuestasAlumno[p.id] === "true" : (respuestasAlumno[p.id] ?? "") }));
+                const { error } = await (supabase as any).rpc("guardar_respuestas_intento_formacion", {
+                  _intento_id: examenActivoAlumno.intento_id,
+                  _respuestas: respuestas,
+                  _pregunta_actual: preguntaActualAlumno
+                });
+                if (error) throw error;
+                setExamenActivoAlumno(null);
+                setMensaje("Intento guardado. Puedes volver a abrir la evaluación para continuar con el tiempo restante.");
+              } catch (err) {
+                setMensaje(err instanceof Error ? err.message : "No se pudo guardar el intento. La evaluación permanece abierta.");
+              } finally {
+                setGuardandoSalidaExamen(false);
+              }
+            }} className="text-xs text-muted-foreground underline disabled:opacity-50">{guardandoSalidaExamen ? "Guardando avance…" : "Salir del examen"}</button>
           </div></Panel> : null}
           {alumnoQuery.isLoading ? <Panel titulo="Cargando tus cursos"><p className="p-5 text-sm text-muted-foreground">Vinculando tu inscripción y recuperando tus cursos…</p></Panel> : alumnoQuery.error ? <Panel titulo="No se pudo cargar el aula"><p className="p-5 text-sm text-red-700">{alumnoQuery.error.message}</p></Panel> : inscripcionesAlumno.length === 0 ? <Panel titulo="Aún no tienes cursos asignados"><p className="p-5 text-sm text-muted-foreground">Cuando FADILAB te inscriba con el correo de tu cuenta, el curso aparecerá aquí automáticamente.</p></Panel> : inscripcionesAlumno.map(i => <Panel key={i.id} titulo={i.formacion_cursos?.titulo ?? "Curso de formación"}>
             <div className="p-5"><p className="text-sm text-muted-foreground">{i.formacion_cursos?.descripcion || "Materiales y actividades de tu formación."}</p><div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground"><span>{i.formacion_cursos?.duracion_horas ?? 0} horas</span><span>Inscripción: {i.estado}</span></div>
