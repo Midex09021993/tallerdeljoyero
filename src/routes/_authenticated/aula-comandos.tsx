@@ -54,18 +54,37 @@ const COMANDOS: Comando[] = [
   { nombre: "Export", categoria: "Archivos", resumen: "Exporta los objetos seleccionados o el modelo a otro formato.", uso: "Para intercambiar geometría con otros programas o procesos.", pasos: ["Selecciona los objetos que exportarás, si corresponde.", "Ejecuta Export.", "Elige ubicación, nombre y formato.", "Configura las opciones del formato y confirma."], ejemplo: "Exporta un modelo de prueba en un formato compatible con el destino requerido.", cuidado: "Comprueba qué formatos y opciones están disponibles en la versión instalada; revisa el archivo exportado.", joyeria: "Preparar archivos para intercambio, visualización o fabricación." },
 ];
 
+const CAPITULOS = [
+  { numero: 1, titulo: "Líneas y polilíneas", objetivo: "Construir trazos rectos y perfiles compuestos por segmentos.", comandos: ["Line", "Polyline"] },
+  { numero: 2, titulo: "Círculos y arcos", objetivo: "Crear geometría circular y controlar tramos curvos.", comandos: ["Circle", "Arc"] },
+  { numero: 3, titulo: "Rectángulos, elipses y polígonos", objetivo: "Generar perfiles geométricos básicos y regulares.", comandos: ["Rectangle", "Ellipse", "Polygon"] },
+  { numero: 4, titulo: "Curvas tridimensionales", objetivo: "Comprender la construcción de una hélice en el espacio.", comandos: ["Helix"] },
+  { numero: 5, titulo: "Mover y copiar", objetivo: "Reubicar geometría y crear duplicados conservando el original.", comandos: ["Move", "Copy"] },
+  { numero: 6, titulo: "Rotar y reflejar", objetivo: "Orientar objetos y construir simetrías controladas.", comandos: ["Rotate", "Mirror"] },
+  { numero: 7, titulo: "Escalar y distribuir", objetivo: "Cambiar dimensiones y repetir elementos mediante patrones.", comandos: ["Scale", "Array"] },
+  { numero: 8, titulo: "Empalmes y chaflanes", objetivo: "Resolver encuentros entre curvas mediante transiciones redondeadas o rectas.", comandos: ["Fillet", "Chamfer"] },
+  { numero: 9, titulo: "Desfasar curvas", objetivo: "Crear contornos paralelos y revisar sus posibles autointersecciones.", comandos: ["Offset"] },
+  { numero: 10, titulo: "Recortar y dividir", objetivo: "Eliminar sobrantes o separar curvas en partes independientes.", comandos: ["Trim", "Split"] },
+  { numero: 11, titulo: "Unir y organizar", objetivo: "Conectar segmentos y organizar objetos sin confundir unión con agrupación.", comandos: ["Join", "Group"] },
+  { numero: 12, titulo: "Extruir curvas", objetivo: "Dar profundidad a perfiles y distinguir superficies de sólidos.", comandos: ["ExtrudeCrv"] },
+  { numero: 13, titulo: "Revolución", objetivo: "Generar formas a partir del giro de un perfil alrededor de un eje.", comandos: ["Revolve"] },
+  { numero: 14, titulo: "Barridos", objetivo: "Construir superficies siguiendo uno o dos recorridos.", comandos: ["Sweep1", "Sweep2"] },
+  { numero: 15, titulo: "Superficies por secciones", objetivo: "Conectar curvas de sección para crear una forma continua.", comandos: ["Loft"] },
+  { numero: 16, titulo: "Booleanas, acabado y documentación", objetivo: "Combinar o restar volúmenes, suavizar aristas y documentar o exportar el diseño.", comandos: ["BooleanUnion", "BooleanDifference", "FilletEdge", "Dim", "Export"] },
+];
+
 const CATEGORIAS = ["Todas", ...Array.from(new Set(COMANDOS.map((item) => item.categoria)))];
 
 function BibliotecaComandosPage() {
   const { data: sesion, isLoading } = useSesion();
   const [busqueda, setBusqueda] = useState("");
-  const [categoria, setCategoria] = useState("Todas");
+  const [categoria, setCategoria] = useState("Todas");\n  const [capitulo, setCapitulo] = useState<number | null>(null);
   const [abierto, setAbierto] = useState("Line");
   const filtrados = useMemo(() => {
     const normalizar = (texto: string) => texto.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLocaleLowerCase("es");
     const q = normalizar(busqueda.trim());
-    return COMANDOS.filter((item) => (categoria === "Todas" || item.categoria === categoria) && (!q || normalizar([item.nombre,item.categoria,item.resumen,item.uso,item.pasos.join(" "),item.ejemplo,item.cuidado,item.joyeria].join(" ")).includes(q)));
-  }, [busqueda, categoria]);
+    return COMANDOS.filter((item) => (categoria === "Todas" || item.categoria === categoria) && (capitulo === null || CAPITULOS.find((cap) => cap.numero === capitulo)?.comandos.includes(item.nombre)) && (!q || normalizar([item.nombre,item.categoria,item.resumen,item.uso,item.pasos.join(" "),item.ejemplo,item.cuidado,item.joyeria].join(" ")).includes(q)));
+  }, [busqueda, categoria, capitulo]);
 
   if (isLoading) return <AppShell titulo="Biblioteca de comandos" subtitulo="Recursos didácticos de Rhinoceros"><div className="p-8 text-sm text-muted-foreground">Cargando aula…</div></AppShell>;
   if (!sesion?.user) return <AppShell titulo="Biblioteca de comandos" subtitulo="Recursos didácticos de Rhinoceros"><div className="mx-auto max-w-3xl p-8"><Panel titulo="Acceso requerido"><p className="text-sm">Inicia sesión para acceder a la biblioteca didáctica.</p></Panel></div></AppShell>;
@@ -83,9 +102,17 @@ function BibliotecaComandosPage() {
         </div>
       </section>
 
+      <section className="space-y-3 rounded-2xl border border-border bg-card p-4">
+        <div className="flex flex-wrap items-end justify-between gap-2">
+          <div><p className="text-xs font-semibold uppercase tracking-wider text-[#98743c]">Ruta de aprendizaje</p><h2 className="mt-1 text-lg font-semibold text-foreground">16 capítulos de consulta</h2><p className="mt-1 text-sm text-muted-foreground">Selecciona un capítulo para consultar únicamente los comandos que lo componen.</p></div>
+          <button type="button" onClick={() => { setCapitulo(null); setCategoria("Todas"); }} className="rounded-lg border border-border px-3 py-2 text-xs font-medium text-muted-foreground transition hover:border-[#c4a46a] hover:text-foreground">Ver biblioteca completa</button>
+        </div>
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">{CAPITULOS.map((cap) => <button key={cap.numero} type="button" onClick={() => { setCapitulo(cap.numero); setCategoria("Todas"); setAbierto(cap.comandos[0] ?? ""); }} aria-pressed={capitulo===cap.numero} className={`rounded-xl border p-3 text-left transition ${capitulo===cap.numero ? "border-[#b99657] bg-[#fbf6eb] ring-1 ring-[#c4a46a]/20" : "border-border bg-background hover:border-[#c4a46a]"}`}><span className="text-[10px] font-semibold uppercase tracking-wider text-[#98743c]">Capítulo {String(cap.numero).padStart(2,"0")}</span><span className="mt-1 block text-sm font-semibold text-foreground">{cap.titulo}</span><span className="mt-1 block text-xs leading-5 text-muted-foreground">{cap.objetivo}</span><span className="mt-2 block text-[10px] text-muted-foreground">{cap.comandos.length} {cap.comandos.length===1 ? "comando" : "comandos"}</span></button>)}</div>
+      </section>
+
       <section className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
         <label className="relative block"><Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"/><input value={busqueda} onChange={(e)=>setBusqueda(e.target.value)} placeholder="Buscar comando, función o aplicación en joyería…" className="h-11 w-full rounded-xl border border-border bg-background pl-10 pr-4 text-sm outline-none transition focus:border-[#c4a46a] focus:ring-2 focus:ring-[#c4a46a]/15"/></label>
-        <span className="text-xs text-muted-foreground">{filtrados.length} resultados</span>
+        <span className="text-xs text-muted-foreground">{filtrados.length} resultados{capitulo !== null ? ` · Capítulo ${String(capitulo).padStart(2,"0")}` : ""}</span>
       </section>
       <div className="flex flex-wrap gap-2">{CATEGORIAS.map((item)=><button key={item} type="button" onClick={()=>setCategoria(item)} aria-pressed={categoria===item} className={`rounded-full border px-3 py-2 text-xs font-medium transition ${categoria===item ? "border-[#b99657] bg-[#b99657] text-white shadow-sm" : "border-border bg-background text-muted-foreground hover:border-[#c4a46a] hover:text-foreground"}`}>{item}</button>)}</div>
 
