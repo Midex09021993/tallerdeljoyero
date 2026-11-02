@@ -62,8 +62,9 @@ function BibliotecaComandosPage() {
   const [categoria, setCategoria] = useState("Todas");
   const [abierto, setAbierto] = useState("Line");
   const filtrados = useMemo(() => {
-    const q = busqueda.trim().toLocaleLowerCase("es");
-    return COMANDOS.filter((item) => (categoria === "Todas" || item.categoria === categoria) && (!q || [item.nombre,item.categoria,item.resumen,item.uso,item.pasos.join(" "),item.ejemplo,item.cuidado,item.joyeria].join(" ").toLocaleLowerCase("es").includes(q)));
+    const normalizar = (texto: string) => texto.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLocaleLowerCase("es");
+    const q = normalizar(busqueda.trim());
+    return COMANDOS.filter((item) => (categoria === "Todas" || item.categoria === categoria) && (!q || normalizar([item.nombre,item.categoria,item.resumen,item.uso,item.pasos.join(" "),item.ejemplo,item.cuidado,item.joyeria].join(" ")).includes(q)));
   }, [busqueda, categoria]);
 
   if (isLoading) return <AppShell titulo="Biblioteca de comandos" subtitulo="Recursos didácticos de Rhinoceros"><div className="p-8 text-sm text-muted-foreground">Cargando aula…</div></AppShell>;
