@@ -33,7 +33,7 @@ export const PLANES_COMERCIALES: readonly PlanComercial[] = [
     nombre: "Taller",
     precioEtiqueta: "S/ 29 al mes",
     estadoComercial: "pago",
-    enfoque: "Acceso a las mismas funciones de la plataforma, con límites de uso según el plan.",
+    enfoque: "Acceso a las herramientas de gestión, diseño y trabajo de la plataforma con capacidades de uso del plan Taller.",
     capacidadesRelacionadas: ["Clientes", "Cotizaciones", "Pedidos", "Contratos", "Ventas", "Catálogo"],
     limitesActivos: false,
   },
@@ -42,7 +42,7 @@ export const PLANES_COMERCIALES: readonly PlanComercial[] = [
     nombre: "Profesional",
     precioEtiqueta: "S/ 79 al mes",
     estadoComercial: "pago",
-    enfoque: "Acceso a las mismas funciones de la plataforma, con límites de uso más amplios.",
+    enfoque: "Incluye las mismas herramientas que Taller, con mayores capacidades de uso y límites más amplios.",
     capacidadesRelacionadas: [
       "Clientes", "Cotizaciones", "Pedidos", "Contratos", "Ventas", "Catálogo",
       "Diseño 3D", "Impresión 3D", "Casting", "Corte Láser", "Taller", "Inventario", "Compras",
