@@ -548,6 +548,7 @@ function AulaFormacionPage() {
   const [estadoCoord3, setEstadoCoord3] = useState("");
   const [laboratorioCoordenadasAbierto, setLaboratorioCoordenadasAbierto] = useState(false);
   const [laboratorioOsnapAbierto, setLaboratorioOsnapAbierto] = useState(false);
+  const [faseOsnap, setFaseOsnap] = useState<"aprendizaje"|"practica">("aprendizaje");
   const [retoOsnap, setRetoOsnap] = useState(0);
   const [respuestaOsnap, setRespuestaOsnap] = useState<string | null>(null);
   const [aciertosOsnap, setAciertosOsnap] = useState(0);
@@ -1741,13 +1742,54 @@ function AulaFormacionPage() {
     const reto=retos[retoOsnap] ?? retos[0];
     const responder=(opcion:string)=>{if(respuestaOsnap!==null)return;setRespuestaOsnap(opcion);if(opcion===reto.snap)setAciertosOsnap(v=>v+1);};
     const siguiente=()=>{setRetoOsnap(v=>(v+1)%retos.length);setRespuestaOsnap(null);};
-    const reiniciar=()=>{setRetoOsnap(0);setRespuestaOsnap(null);setAciertosOsnap(0);};
+    const reiniciar=()=>{setRetoOsnap(0);setRespuestaOsnap(null);setAciertosOsnap(0);setFaseOsnap("aprendizaje");};
     if(!laboratorioOsnapAbierto)return <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5">
       <div className="flex flex-wrap items-center justify-between gap-4"><div><p className="text-[10px] font-bold uppercase tracking-widest text-gold-deep">Recurso interactivo · Sesión 03</p><h4 className="mt-1 text-base font-semibold">Entrenador Osnap</h4><p className="mt-1 text-sm text-muted-foreground">Practica cómo elegir referencias geométricas exactas en Rhino.</p></div><button type="button" onClick={()=>setLaboratorioOsnapAbierto(true)} className="inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-black"><ArrowRight className="size-4"/> Abrir laboratorio</button></div>
     </section>;
     return <div className="fixed inset-0 z-[100] overflow-hidden bg-background/95 p-2 backdrop-blur-sm sm:p-3"><section className="mx-auto flex h-[calc(100dvh-1rem)] max-w-[min(96vw,1500px)] flex-col overflow-hidden rounded-2xl border border-gold/30 bg-background shadow-2xl sm:h-[calc(100dvh-1.5rem)]">
       <header className="flex shrink-0 items-center justify-between border-b border-border bg-gradient-to-r from-[#fbf8f0] to-background px-4 py-3"><div><p className="text-[10px] font-bold uppercase tracking-widest text-gold-deep">Entrenador Osnap · Sesión 03</p><h4 className="font-semibold">Encuentra la referencia exacta</h4></div><div className="flex items-center gap-2"><span className="hidden text-xs text-muted-foreground sm:inline">Aciertos: {aciertosOsnap}/{retos.length}</span><button type="button" onClick={reiniciar} className="rounded-lg border border-border px-3 py-2 text-xs"><RotateCcw className="mr-1 inline size-3.5"/> Reiniciar</button><button type="button" onClick={()=>setLaboratorioOsnapAbierto(false)} className="rounded-lg border border-border px-3 py-2 text-xs">Volver a la lectura</button></div></header>
-      <div className="grid min-h-0 flex-1 gap-3 overflow-hidden p-2 sm:p-3 lg:grid-cols-[minmax(0,1.4fr)_minmax(350px,.8fr)]">
+      {faseOsnap === "aprendizaje" ? <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">
+        <div className="mx-auto max-w-5xl">
+          <div className="mb-5 rounded-2xl border border-gold/30 bg-gold/10 p-5">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-gold-deep">Primero aprende · Después practica</p>
+            <h3 className="mt-1 text-xl font-semibold">¿Qué es Osnap y para qué sirve?</h3>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-foreground/80">Osnap (Object Snap) permite capturar ubicaciones geométricas exactas de objetos existentes. En lugar de colocar el cursor “a ojo”, Rhino lo ajusta a referencias precisas para construir y conectar geometría correctamente.</p>
+            <p className="mt-2 text-sm font-medium">Activa únicamente las referencias que necesitas. Demasiadas capturas activas pueden producir puntos no deseados.</p>
+          </div>
+          <h3 className="mb-3 text-base font-semibold">Conoce las 9 referencias principales</h3>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              ["End","Extremo","Captura el inicio o final exacto de una curva o segmento.","Úsalo para continuar una línea desde el final de otra."],
+              ["Mid","Punto medio","Localiza el punto situado exactamente a mitad de una curva o segmento.","Úsalo para centrar elementos o dividir distancias en dos."],
+              ["Cen","Centro","Captura el centro geométrico de un círculo, arco o elipse.","Úsalo para crear círculos concéntricos o ubicar el centro de una piedra."],
+              ["Int","Intersección","Captura el punto exacto donde se cruzan dos curvas o aristas.","Úsalo para localizar cruces y construir desde ellos."],
+              ["Perp","Perpendicular","Localiza una posición que genera una relación de 90° respecto a una curva.","Úsalo para levantar líneas perpendiculares a un borde."],
+              ["Tan","Tangente","Captura una posición donde una curva toca a un círculo o arco sin cortarlo.","Úsalo para enlazar perfiles curvos suavemente."],
+              ["Quad","Cuadrante","Captura uno de los cuatro puntos cardinales de un círculo o arco.","Úsalo para ubicar la parte superior, inferior y los laterales de un círculo."],
+              ["Near","Cercano","Captura el punto más cercano disponible sobre una curva.","Úsalo cuando necesitas apoyar una geometría en cualquier lugar de una curva."],
+              ["Point","Punto","Captura un objeto de punto que ya existe en el documento.","Úsalo para reutilizar puntos de construcción colocados previamente."]
+            ].map(([codigo,nombre,definicion,uso])=><article key={codigo} className="rounded-xl border border-border bg-card p-4">
+              <div className="flex items-center gap-2"><span className="rounded-lg bg-gold/15 px-2.5 py-1 font-mono text-sm font-bold text-gold-deep">{codigo}</span><h4 className="font-semibold">{nombre}</h4></div>
+              <p className="mt-3 text-sm leading-5 text-foreground/85">{definicion}</p>
+              <p className="mt-2 text-xs leading-5 text-muted-foreground"><span className="font-semibold text-foreground">En joyería:</span> {uso}</p>
+            </article>)}
+          </div>
+          <div className="mt-5 rounded-xl border border-border p-4">
+            <h4 className="font-semibold">Cómo utilizar Osnap en Rhino</h4>
+            <ol className="mt-2 list-inside list-decimal space-y-1.5 text-sm text-foreground/80">
+              <li>Activa Osnap en la barra de estado de Rhino.</li>
+              <li>Marca la referencia que necesitas: End, Mid, Cen, etc.</li>
+              <li>Inicia un comando como Línea o Círculo.</li>
+              <li>Acerca el cursor al objeto y espera a que aparezca el indicador de captura.</li>
+              <li>Comprueba el nombre de la referencia antes de hacer clic.</li>
+            </ol>
+          </div>
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-muted-foreground">Ahora que conoces las referencias, identifica cuál corresponde a cada situación.</p>
+            <button type="button" onClick={()=>{setRetoOsnap(0);setRespuestaOsnap(null);setAciertosOsnap(0);setFaseOsnap("practica");}} className="rounded-xl bg-gold px-5 py-3 text-sm font-semibold text-black">Comenzar práctica <ArrowRight className="ml-1 inline size-4"/></button>
+          </div>
+        </div>
+      </div> : <div className="grid min-h-0 flex-1 gap-3 overflow-hidden p-2 sm:p-3 lg:grid-cols-[minmax(0,1.4fr)_minmax(350px,.8fr)]">
         <div className="flex min-h-[260px] min-w-0 flex-col overflow-hidden rounded-xl bg-[#17191d]"><div className="flex shrink-0 justify-between border-b border-white/10 px-3 py-2 text-[10px] text-white/70"><span>ÁREA DE DIBUJO · REFERENCIAS GEOMÉTRICAS</span><span>RETO {retoOsnap+1} / {retos.length}</span></div>
           <svg viewBox="0 0 600 420" className="min-h-0 w-full flex-1" role="img" aria-label={"Ejercicio visual de referencia " + reto.nombre}>
             <defs><pattern id="osnap-grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M 24 0 L 0 0 0 24" fill="none" stroke="#343a43" strokeWidth="1"/></pattern></defs>
@@ -1769,7 +1811,7 @@ function AulaFormacionPage() {
           </div>
           <div className="rounded-xl border border-border p-3"><div className="flex items-center justify-between"><b className="text-xs">Progreso</b><span className="text-xs text-muted-foreground">{aciertosOsnap} aciertos</span></div><div className="mt-2 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-gold transition-all" style={{width:((retoOsnap+1)/retos.length*100)+"%"}}/></div><p className="mt-2 text-[11px] text-muted-foreground">Resuelve los nueve retos para practicar las referencias principales de Rhino.</p></div>
         </div>
-      </div>
+      </div>}
     </section></div>;
   };
 
