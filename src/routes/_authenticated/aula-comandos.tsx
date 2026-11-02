@@ -131,6 +131,21 @@ function BibliotecaComandosPage() {
         </div>}
       </article>})}</section>}
       <section className="rounded-2xl border border-border bg-muted/20 p-4 text-xs leading-5 text-muted-foreground"><p className="font-semibold text-foreground">Nota didáctica</p><p className="mt-1">Estas son fichas iniciales de consulta. Los pasos describen el flujo general y algunas opciones pueden variar según la versión, el método elegido y la configuración del documento. Antes de aplicar un comando a una pieza real, practica con geometría de prueba y revisa las indicaciones de la línea de comandos de Rhino.</p></section>
+
+      <section aria-label="Contador general de comandos" className="overflow-hidden rounded-2xl border border-[#d8c39b]/70 bg-gradient-to-br from-[#fbf8f0] via-white to-[#f7f3eb] p-5 shadow-sm sm:p-6">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <span className="flex size-11 items-center justify-center rounded-xl border border-[#c4a46a]/30 bg-[#c4a46a]/10 text-[#87652f]"><Command className="size-5"/></span>
+            <div><p className="text-xs font-semibold uppercase tracking-[.14em] text-[#98743c]">Inventario de la biblioteca</p><h2 className="mt-1 text-lg font-semibold text-[#25231f]">Comandos registrados · Rhino 7</h2></div>
+          </div>
+          <div className="text-left sm:text-right"><p className="text-3xl font-semibold tabular-nums tracking-tight text-[#87652f]">{COMANDOS.length}</p><p className="text-xs text-[#776b58]">comandos en total</p></div>
+        </div>
+        <div className="mt-4 grid grid-cols-2 gap-3 border-t border-[#e5dccb] pt-4 sm:grid-cols-3">
+          <div><p className="text-xl font-semibold tabular-nums text-[#25231f]">{CAPITULOS.length}</p><p className="text-xs text-[#776b58]">Capítulos</p></div>
+          <div><p className="text-xl font-semibold tabular-nums text-[#25231f]">{CATEGORIAS.length - 1}</p><p className="text-xs text-[#776b58]">Categorías</p></div>
+          <div className="col-span-2 sm:col-span-1"><p className="text-sm font-semibold text-[#25231f]">Conteo automático</p><p className="text-xs text-[#776b58]">Se actualiza al añadir o retirar fichas.</p></div>
+        </div>
+      </section>
     </main>
   </AppShell>;
 }
