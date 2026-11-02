@@ -2571,8 +2571,9 @@ function AulaFormacionPage() {
                   return <div key={idx}><p className="mb-4 max-w-4xl whitespace-pre-line text-[15px] leading-7 text-foreground/90">{bloque}</p></div>;
                 })}
                 {renderLaboratorioCoordenadas()}
+                {renderLaboratorioRestricciones()}
                 {renderLaboratorioOsnap()}
-
+                {renderLaboratorioSmartTrack()}
                 {renderLaboratorioGeometria()}
                 {renderSelectorVistasPlano()}
                 {lecturaAbierta?.numero === 1 && paginaLectura === 4 && <section className="mt-5 max-w-4xl rounded-xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5">
