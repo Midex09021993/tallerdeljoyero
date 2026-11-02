@@ -872,8 +872,8 @@ function AulaFormacionPage() {
     setImagenLayersUrl("");
     setImagenLayersError("");
     if (!lecturaAbierta || lecturaAbierta.numero !== 2 || !materiales) return () => { vigente = false; };
-    const normalizarNombre = (nombre: string) => nombre.trim().normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLowerCase();
-    const esImagen = (material: Material) => /\\.(jpg|jpeg|png|webp)$/i.test(material.nombre_archivo.trim()) || /^image\\//i.test(material.mime_type || "");
+    const normalizarNombre = (nombre: string) => nombre.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    const esImagen = (material: Material) => /\.(jpg|jpeg|png|webp)$/i.test(material.nombre_archivo.trim()) || /^image\//i.test(material.mime_type || "");
     const imagen = materiales.find(material => material.sesion_id === lecturaAbierta.id && normalizarNombre(material.nombre_archivo).includes("matrixgold") && esImagen(material));
     if (!imagen) {
       setImagenLayersError("No se encontró una imagen MatrixGold publicada en los materiales de esta Sesión 2.");
@@ -944,9 +944,9 @@ function AulaFormacionPage() {
       { id: "frontal", archivo: "frontal" },
     ];
     const normalizarBase = (nombre: string) =>
-      nombre.trim().normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLowerCase().split(".").slice(0, -1).join(".");
+      nombre.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().split(".").slice(0, -1).join(".");
     const esImagen = (material: Material) =>
-      /\\.(jpg|jpeg|png|webp)$/i.test(material.nombre_archivo.trim()) || /^image\\//i.test(material.mime_type || "");
+      /\.(jpg|jpeg|png|webp)$/i.test(material.nombre_archivo.trim()) || /^image\//i.test(material.mime_type || "");
 
     void Promise.all(nombresVistas.map(async vista => {
       const imagen = materiales.find(material =>
