@@ -151,34 +151,47 @@ const LECTURA_SESION_2 = [
 const LECTURA_SESION_3 = [
   { titulo: "1. Objetivo: modelado preciso en Rhino", bloques: [
     "En esta sesión aprenderás a introducir posiciones con precisión y a utilizar ayudas de referencia para construir geometría controlada. La meta es dejar de depender únicamente de la colocación visual con el ratón.",
-    "Trabajaremos con coordenadas absolutas y relativas, referencias a objetos (Osnap) y SmartTrack. Estas herramientas permiten definir puntos y relaciones geométricas con mayor exactitud.",
-    "Distribución orientativa de las 2 horas: coordenadas (30 min), Osnap (35 min), SmartTrack (25 min), práctica integrada (20 min) y repaso (10 min)."
+    "Trabajaremos con coordenadas absolutas, relativas y polares; restricciones de distancia y ángulo; referencias a objetos (Osnap) y SmartTrack. Estas herramientas permiten definir puntos y relaciones geométricas con mayor exactitud.",
+    "Distribución de las 2 horas: preparación del documento (10 min), coordenadas (25 min), restricciones (15 min), Osnap (25 min), SmartTrack (10 min), práctica aplicada (25 min) y verificación (10 min)."
   ]},
-  { titulo: "2. Coordenadas absolutas", bloques: [
-    "Las coordenadas absolutas indican una posición respecto al origen del sistema de coordenadas del plano de trabajo. En el sistema cartesiano se expresan mediante X, Y y Z.",
-    "En Rhino puedes introducir un punto escribiendo sus valores en la línea de comandos, separados por comas. Por ejemplo, 20,10,0 indica X=20, Y=10 y Z=0 en las unidades del archivo.",
-    "Antes de introducir coordenadas, comprueba el plano de construcción y las unidades del documento. Un mismo valor numérico representa una distancia distinta si el archivo está configurado en milímetros o centímetros."
+  { titulo: "2. Preparar el documento y el plano de construcción", bloques: [
+    "Antes de dibujar, comprueba las unidades del archivo. Para esta práctica utiliza milímetros. Revisa también la vista activa y el plano de construcción (PlanoC): trabajaremos principalmente en la vista Superior, sobre el plano XY.",
+    "El plano de construcción determina la orientación de las coordenadas y el lugar donde se crean los puntos. Si el plano o la vista no son los esperados, una coordenada correcta puede producir geometría en una posición u orientación distinta de la prevista.",
+    "Comprueba que el plano de construcción predeterminado esté activo y que la vista Superior esté preparada. No cambies a planos de construcción personalizados en esta sesión."
   ]},
-  { titulo: "3. Coordenadas relativas", bloques: [
-    "Las coordenadas relativas definen una nueva posición tomando como referencia el último punto indicado, en lugar de medir desde el origen global.",
-    "En Rhino se utiliza el prefijo @ para indicar desplazamientos relativos. Por ejemplo, @10,0,0 indica avanzar 10 unidades en X desde el punto anterior, manteniendo Y y Z.",
-    "La diferencia esencial es el punto de referencia: las coordenadas absolutas parten del origen; las relativas parten del último punto. Practica ambas formas con una polilínea sencilla."
+  { titulo: "3. Coordenadas absolutas, relativas y polares", bloques: [
+    "Las coordenadas absolutas indican una posición respecto al origen del sistema de coordenadas del plano de trabajo. En el sistema cartesiano se expresan mediante X, Y y Z. Por ejemplo, 20,10,0 indica X=20, Y=10 y Z=0 en las unidades del archivo.",
+    "Las coordenadas relativas definen una nueva posición tomando como referencia el último punto indicado. En Rhino se utiliza el prefijo @. Por ejemplo, @10,0,0 indica avanzar 10 unidades en X desde el punto anterior, manteniendo Y y Z.",
+    "Las coordenadas polares permiten definir un desplazamiento mediante una distancia y un ángulo en el plano. En Rhino se utiliza la notación distancia<ángulo; por ejemplo, 10<45 representa un desplazamiento de 10 unidades con dirección de 45 grados en el plano de trabajo.",
+    "La diferencia esencial es el punto y la forma de referencia: las absolutas parten del origen, las relativas del último punto y las polares expresan longitud y dirección. Verifica siempre el plano de construcción y las unidades antes de introducir valores."
   ]},
-  { titulo: "4. Referencias a objetos (Osnap)", bloques: [
-    "Osnap (Object Snap) permite ajustar el cursor a puntos geométricos exactos de objetos existentes. Evita seleccionar posiciones aproximadas cuando necesitas conectar o alinear geometría.",
-    "Entre las referencias habituales están End (extremo), Mid (punto medio), Cen (centro), Int (intersección), Near (cercano), Perp (perpendicular) y Quad (cuadrante). Activa solo las referencias necesarias para evitar capturas no deseadas.",
-    "Al dibujar una línea, por ejemplo, puedes activar End para comenzar exactamente en el extremo de otra curva. Para ubicar el centro de un círculo utiliza Cen. Observa el indicador de la referencia antes de confirmar el punto."
+  { titulo: "4. Restricciones de distancia y ángulo", bloques: [
+    "Las restricciones permiten controlar la entrada de puntos mientras dibujas. Puedes indicar una distancia concreta o fijar una dirección angular para evitar que la geometría dependa de la posición aproximada del cursor.",
+    "Utiliza una restricción de distancia cuando necesites que un segmento tenga una longitud definida. Utiliza una restricción angular cuando necesites mantener una dirección determinada. La disponibilidad y el comportamiento de estas ayudas dependen del comando activo y de las opciones de entrada de Rhino.",
+    "Durante la práctica, combina coordenadas con restricciones: introduce los valores necesarios y confirma el punto solo cuando la dirección y la longitud correspondan al diseño. No confundas una guía visual con una dimensión verificada."
   ]},
-  { titulo: "5. SmartTrack y ayudas de modelado", bloques: [
-    "SmartTrack muestra líneas guía temporales y relaciones de alineación a partir de puntos de referencia existentes. Ayuda a localizar posiciones alineadas o relacionadas sin tener que crear geometría auxiliar permanente.",
+  { titulo: "5. Referencias a objetos (Osnap)", bloques: [
+    "Osnap (Object Snap) permite ajustar el cursor a puntos geométricos exactos de objetos existentes. Evita seleccionar posiciones aproximadas cuando necesitas conectar, centrar o alinear geometría.",
+    "Referencias principales: End (extremo), Mid (punto medio), Cen (centro), Int (intersección), Near (cercano), Perp (perpendicular), Tan (tangente), Quad (cuadrante) y Point (punto). Activa solo las referencias necesarias para evitar capturas no deseadas.",
+    "Ejemplos: utiliza End para comenzar exactamente en el extremo de una curva; Mid para localizar su punto medio; Cen para capturar el centro de un círculo; Int para ubicar el cruce de dos curvas; y Perp para establecer una relación perpendicular.",
+    "Observa el indicador de Osnap antes de confirmar cada punto. Si se activa una referencia equivocada, pausa y desactiva temporalmente las opciones que no necesitas."
+  ]},
+  { titulo: "6. SmartTrack y ayudas de alineación", bloques: [
+    "SmartTrack muestra líneas guía temporales y relaciones de alineación a partir de puntos de referencia existentes. Ayuda a localizar posiciones alineadas o relacionadas sin crear geometría auxiliar permanente.",
     "Utiliza SmartTrack junto con Osnap: Osnap captura puntos exactos; SmartTrack ayuda a proyectar y relacionar posiciones mediante guías temporales. No sustituyen la revisión de las coordenadas ni del plano de trabajo.",
-    "Si las guías aparecen en exceso, reduce las referencias activas y verifica qué punto está utilizando Rhino como origen de la alineación."
+    "Para trabajar con claridad, captura primero un punto de referencia válido y observa las guías temporales que aparecen al mover el cursor. Confirma únicamente cuando la alineación corresponda a la intención del diseño."
   ]},
-  { titulo: "6. Práctica guiada y comprobación", bloques: [
-    "Crea una polilínea introduciendo primero un punto mediante coordenadas absolutas y continúa con dos desplazamientos relativos. Comprueba las posiciones en las vistas Top y Perspective.",
-    "Dibuja un círculo y utiliza Osnap Cen para iniciar una línea desde su centro. Después activa End para terminarla exactamente en el extremo de otra curva.",
-    "Activa SmartTrack y realiza una alineación temporal respecto a puntos existentes. Guarda el archivo y comprueba que las curvas estén ubicadas en el plano de trabajo esperado.",
-    "Al finalizar debes poder explicar cuándo usar coordenadas absolutas o relativas, reconocer las referencias Osnap principales y distinguir la función de SmartTrack. La siguiente sesión abordará la edición de curvas y las transformaciones."
+  { titulo: "7. Práctica aplicada: placa base para una joya", bloques: [
+    "Prepara un documento en milímetros, activa la vista Superior y utiliza el plano de construcción predeterminado. Inicia una polilínea en el origen con la coordenada absoluta 0,0,0.",
+    "Construye un rectángulo de 20 × 10 mm mediante desplazamientos relativos: desde el primer punto introduce @20,0,0; después @0,10,0; luego @-20,0,0 y cierra la polilínea. Comprueba que las dimensiones sean 20 mm por 10 mm.",
+    "Traza las dos diagonales del rectángulo. Utiliza Osnap Int para localizar su intersección y dibuja allí un círculo de radio 3 mm. Comprueba el centro con la referencia de intersección y el tamaño con la herramienta de medición correspondiente.",
+    "Utiliza End y Mid para capturar puntos exactos de las curvas. Activa SmartTrack y prueba una alineación temporal respecto a puntos existentes, sin dejar líneas auxiliares innecesarias en el archivo.",
+    "Guarda el ejercicio como Sesion_03_Modelado_Preciso.3dm. Verifica que el rectángulo mida 20 × 10 mm, que el círculo tenga radio 3 mm y que toda la geometría esté en el plano de construcción esperado."
+  ]},
+  { titulo: "8. Verificación y criterios de logro", bloques: [
+    "Al finalizar debes poder diferenciar coordenadas absolutas, relativas y polares; aplicar restricciones de distancia y ángulo; utilizar al menos tres referencias Osnap adecuadas; y explicar cómo SmartTrack facilita una alineación temporal.",
+    "La práctica se considera correcta cuando las dimensiones del rectángulo y del círculo coinciden con los valores solicitados, las curvas están correctamente ubicadas y el archivo queda guardado con el nombre indicado.",
+    "Antes de continuar, revisa que no hayas creado geometría accidental fuera del plano de construcción. La siguiente sesión abordará la edición de curvas y las transformaciones."
   ]}
 ] as const;
 
