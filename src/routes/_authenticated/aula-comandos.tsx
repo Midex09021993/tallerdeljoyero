@@ -66,10 +66,10 @@ function BibliotecaComandosPage() {
     return COMANDOS.filter((item) => (categoria === "Todas" || item.categoria === categoria) && (!q || [item.nombre,item.categoria,item.resumen,item.uso,item.joyeria].join(" ").toLocaleLowerCase("es").includes(q)));
   }, [busqueda, categoria]);
 
-  if (isLoading) return <AppShell><div className="p-8 text-sm text-muted-foreground">Cargando aula…</div></AppShell>;
-  if (!sesion?.user) return <AppShell><div className="mx-auto max-w-3xl p-8"><Panel><p className="text-sm">Inicia sesión para acceder a la biblioteca didáctica.</p></Panel></div></AppShell>;
+  if (isLoading) return <AppShell titulo="Biblioteca de comandos" subtitulo="Recursos didácticos de Rhinoceros"><div className="p-8 text-sm text-muted-foreground">Cargando aula…</div></AppShell>;
+  if (!sesion?.user) return <AppShell titulo="Biblioteca de comandos" subtitulo="Recursos didácticos de Rhinoceros"><div className="mx-auto max-w-3xl p-8"><Panel titulo="Acceso requerido"><p className="text-sm">Inicia sesión para acceder a la biblioteca didáctica.</p></Panel></div></AppShell>;
 
-  return <AppShell>
+  return <AppShell titulo="Biblioteca de comandos" subtitulo="Aprende y consulta herramientas de Rhino aplicadas a joyería.">
     <main className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
       <a href="/aula-formacion" className="inline-flex items-center gap-2 text-sm text-muted-foreground transition hover:text-foreground"><ArrowLeft className="size-4"/> Volver al aula</a>
       <section className="relative overflow-hidden rounded-3xl border border-[#d8c39b]/70 bg-gradient-to-br from-[#fbf8f0] via-white to-[#f7f3eb] p-6 shadow-sm sm:p-8">
@@ -88,7 +88,7 @@ function BibliotecaComandosPage() {
       </section>
       <div className="flex flex-wrap gap-2">{CATEGORIAS.map((item)=><button key={item} type="button" onClick={()=>setCategoria(item)} aria-pressed={categoria===item} className={`rounded-full border px-3 py-2 text-xs font-medium transition ${categoria===item ? "border-[#b99657] bg-[#b99657] text-white shadow-sm" : "border-border bg-background text-muted-foreground hover:border-[#c4a46a] hover:text-foreground"}`}>{item}</button>)}</div>
 
-      {filtrados.length === 0 ? <Panel><div className="py-8 text-center"><Search className="mx-auto size-7 text-muted-foreground"/><p className="mt-3 text-sm font-medium">No encontramos ese comando</p><p className="mt-1 text-xs text-muted-foreground">Prueba con otro nombre o cambia la categoría.</p></div></Panel> : <section className="grid gap-3 lg:grid-cols-2">{filtrados.map((item)=>{const seleccionado=abierto===item.nombre;return <article key={item.nombre} className={`overflow-hidden rounded-2xl border bg-card shadow-sm transition ${seleccionado ? "border-[#c4a46a]/70 ring-1 ring-[#c4a46a]/15" : "border-border"}`}>
+      {filtrados.length === 0 ? <Panel titulo="Sin resultados"><div className="py-8 text-center"><Search className="mx-auto size-7 text-muted-foreground"/><p className="mt-3 text-sm font-medium">No encontramos ese comando</p><p className="mt-1 text-xs text-muted-foreground">Prueba con otro nombre o cambia la categoría.</p></div></Panel> : <section className="grid gap-3 lg:grid-cols-2">{filtrados.map((item)=>{const seleccionado=abierto===item.nombre;return <article key={item.nombre} className={`overflow-hidden rounded-2xl border bg-card shadow-sm transition ${seleccionado ? "border-[#c4a46a]/70 ring-1 ring-[#c4a46a]/15" : "border-border"}`}>
         <button type="button" onClick={()=>setAbierto(seleccionado ? "" : item.nombre)} aria-expanded={seleccionado} className="flex w-full items-start gap-3 p-4 text-left">
           <span className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-[#e5dccb] bg-[#faf6ed] text-[#98743c]"><Command className="size-5"/></span>
           <span className="min-w-0 flex-1"><span className="flex flex-wrap items-center gap-2"><span className="font-semibold text-foreground">{item.nombre}</span><span className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">{item.categoria}</span></span><span className="mt-1 block text-sm leading-5 text-muted-foreground">{item.resumen}</span></span>
