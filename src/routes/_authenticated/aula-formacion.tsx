@@ -1254,12 +1254,16 @@ function AulaFormacionPage() {
     const respuestas = examenActivoAlumno.preguntas.map(p => ({ pregunta_id: p.id, respuesta: p.tipo === "verdadero_falso" ? respuestasAlumno[p.id] === "true" : (respuestasAlumno[p.id] ?? "") }));
     setEnviandoExamen(true); setMensaje("");
     try {
-      const { error: guardarError } = await (supabase as any).rpc("guardar_respuestas_intento_formacion", {
-        _intento_id: examenActivoAlumno.intento_id,
-        _respuestas: respuestas,
-        _pregunta_actual: preguntaActualAlumno
-      });
-      if (guardarError) throw guardarError;
+      // Si el tiempo venció, guardar_respuestas rechaza la operación por diseño.
+      // enviar_intento_formacion acepta el cierre vencido y conserva la última instantánea recibida.
+      if (!tiempoAgotado) {
+        const { error: guardarError } = await (supabase as any).rpc("guardar_respuestas_intento_formacion", {
+          _intento_id: examenActivoAlumno.intento_id,
+          _respuestas: respuestas,
+          _pregunta_actual: preguntaActualAlumno
+        });
+        if (guardarError) throw guardarError;
+      }
       const { error } = await (supabase as any).rpc("enviar_intento_formacion", { _examen_id: examenActivoAlumno.id, _respuestas: respuestas });
       if (error) throw error;
       setExamenActivoAlumno(null);
