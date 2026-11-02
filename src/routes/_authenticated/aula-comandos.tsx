@@ -78,10 +78,11 @@ const CATEGORIAS = ["Todas", ...Array.from(new Set(COMANDOS.map((item) => item.c
 function BibliotecaComandosPage() {
   const { data: sesion, isLoading } = useSesion();
   const [busqueda, setBusqueda] = useState("");
-  const [categoria, setCategoria] = useState("Todas");\n  const [capitulo, setCapitulo] = useState<number | null>(null);
+  const [categoria, setCategoria] = useState("Todas");
+  const [capitulo, setCapitulo] = useState<number | null>(null);
   const [abierto, setAbierto] = useState("Line");
   const filtrados = useMemo(() => {
-    const normalizar = (texto: string) => texto.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLocaleLowerCase("es");
+    const normalizar = (texto: string) => texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es");
     const q = normalizar(busqueda.trim());
     return COMANDOS.filter((item) => (categoria === "Todas" || item.categoria === categoria) && (capitulo === null || CAPITULOS.find((cap) => cap.numero === capitulo)?.comandos.includes(item.nombre)) && (!q || normalizar([item.nombre,item.categoria,item.resumen,item.uso,item.pasos.join(" "),item.ejemplo,item.cuidado,item.joyeria].join(" ")).includes(q)));
   }, [busqueda, categoria, capitulo]);
