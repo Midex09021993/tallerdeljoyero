@@ -459,6 +459,9 @@ function AulaFormacionPage() {
   const [imagenesEjesUrl, setImagenesEjesUrl] = useState("");
   const [imagenProceso3DUrl, setImagenProceso3DUrl] = useState("");
   const [imagenProceso3DError, setImagenProceso3DError] = useState("");
+  const [imagenesVistasPlano, setImagenesVistasPlano] = useState<Record<string,string>>({});
+  const [erroresVistasPlano, setErroresVistasPlano] = useState<Record<string,string>>({});
+  const [vistaPlanoActiva, setVistaPlanoActiva] = useState("perspectiva");
   const [comandosNavegacionAbiertos, setComandosNavegacionAbiertos] = useState(false);
   const [comandoNavegacionActivo, setComandoNavegacionActivo] = useState("Zoom");
   const [errorImagenesApoyo, setErrorImagenesApoyo] = useState("");
@@ -926,6 +929,75 @@ function AulaFormacionPage() {
     void cargarImagen("proceso de joyeria con impresion 3d", setImagenProceso3DUrl, setImagenProceso3DError);
     return () => { vigente = false; };
   }, [lecturaAbierta?.id, lecturaAbierta?.numero, esDocente, materialesDocenteQuery.data, materialesAlumnoQuery.data]);
+
+  useEffect(() => {
+    const materiales = esDocente ? materialesDocenteQuery.data : materialesAlumnoQuery.data;
+    let vigente = true;
+    setImagenesVistasPlano({});
+    setErroresVistasPlano({});
+    if (!lecturaAbierta || lecturaAbierta.numero !== 2 || !materiales) return () => { vigente = false; };
+
+    const nombresVistas = [
+      { id: "perspectiva", archivo: "perspectiva" },
+      { id: "derecha", archivo: "derecha" },
+      { id: "superior", archivo: "superior" },
+      { id: "frontal", archivo: "frontal" },
+    ];
+    const normalizarBase = (nombre: string) =>
+      nombre.trim().normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLowerCase().split(".").slice(0, -1).join(".");
+    const esImagen = (material: Material) =>
+      /\\.(jpg|jpeg|png|webp)$/i.test(material.nombre_archivo.trim()) || /^image\\//i.test(material.mime_type || "");
+
+    void Promise.all(nombresVistas.map(async vista => {
+      const imagen = materiales.find(material =>
+        material.sesion_id === lecturaAbierta.id &&
+        normalizarBase(material.nombre_archivo) === vista.archivo &&
+        esImagen(material)
+      );
+      if (!imagen) {
+        if (vigente) setErroresVistasPlano(prev => ({ ...prev, [vista.id]: "No se encontró " + vista.archivo.toUpperCase() + " en la Biblioteca de esta sesión." }));
+        return;
+      }
+      const { data, error } = await supabase.storage.from("formacion-academica").createSignedUrl(imagen.ruta_storage, 3600);
+      if (!vigente) return;
+      if (error || !data?.signedUrl) {
+        setErroresVistasPlano(prev => ({ ...prev, [vista.id]: "No se pudo abrir " + imagen.nombre_archivo + ": " + (error?.message || "enlace no disponible") }));
+        return;
+      }
+      setImagenesVistasPlano(prev => ({ ...prev, [vista.id]: data.signedUrl }));
+    }));
+
+    return () => { vigente = false; };
+  }, [lecturaAbierta?.id, lecturaAbierta?.numero, esDocente, materialesDocenteQuery.data, materialesAlumnoQuery.data]);
+
+  const renderSelectorVistasPlano = () => {
+    if (lecturaAbierta?.numero !== 2 || paginaLectura !== 3) return null;
+    const vistas = [
+      { id: "perspectiva", nombre: "Perspectiva", ingles: "Perspective" },
+      { id: "derecha", nombre: "Derecha", ingles: "Right" },
+      { id: "superior", nombre: "Superior", ingles: "Top" },
+      { id: "frontal", nombre: "Frontal", ingles: "Front" },
+    ];
+    const urlActiva = imagenesVistasPlano[vistaPlanoActiva];
+    return <section className="mt-7 max-w-5xl overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+      <div className="border-b border-border bg-muted/20 px-4 py-4 sm:px-5">
+        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-gold-deep">Explorador de vistas · Rhino</p>
+        <h4 className="mt-1 text-base font-semibold">Selecciona una vista de trabajo</h4>
+        <p className="mt-1 text-xs text-muted-foreground">Cambia entre las cuatro orientaciones para comparar cómo se observa el modelo en cada ventana.</p>
+      </div>
+      <div className="flex flex-wrap gap-2 border-b border-border p-3 sm:p-4">
+        {vistas.map(vista => <button key={vista.id} type="button" onClick={() => setVistaPlanoActiva(vista.id)} aria-pressed={vistaPlanoActiva===vista.id} className={`rounded-xl border px-4 py-2.5 text-left transition ${vistaPlanoActiva===vista.id ? "border-gold bg-gold/15 text-foreground shadow-sm" : "border-border bg-background text-muted-foreground hover:border-gold/50 hover:text-foreground"}`}>
+          <span className="block text-sm font-semibold">{vista.nombre} <span className="font-normal text-muted-foreground">({vista.ingles})</span></span>
+        </button>)}
+      </div>
+      <div className="bg-[#17191d] p-3 sm:p-5">
+        <div className="flex min-h-[260px] items-center justify-center overflow-hidden rounded-xl bg-[#111316] p-2 sm:min-h-[360px]">
+          {urlActiva ? <img src={urlActiva} alt={"Vista " + vistas.find(v => v.id===vistaPlanoActiva)?.nombre + " (" + vistas.find(v => v.id===vistaPlanoActiva)?.ingles + ") de Rhino"} className="max-h-[62vh] w-full object-contain" loading="lazy"/> : erroresVistasPlano[vistaPlanoActiva] ? <p className="max-w-lg px-4 text-center text-sm text-amber-200">{erroresVistasPlano[vistaPlanoActiva]}</p> : <p className="text-sm text-white/70">Cargando imagen de la vista…</p>}
+        </div>
+        <p className="mt-3 text-center text-sm font-semibold text-white">{vistas.find(v => v.id===vistaPlanoActiva)?.nombre} <span className="font-normal text-white/65">({vistas.find(v => v.id===vistaPlanoActiva)?.ingles})</span></p>
+      </div>
+    </section>;
+  };
 
   async function crearExamen(e: FormEvent) {
     e.preventDefault();
@@ -1693,6 +1765,7 @@ function AulaFormacionPage() {
                 })}
                 {renderLaboratorioGeometria()}
                 {renderLaboratorioCapas()}
+                {renderSelectorVistasPlano()}
                 {lecturaAbierta?.numero === 1 && paginaLectura === 4 && <section className="mt-5 max-w-4xl rounded-xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">Recurso interactivo</p>
                   <h4 className="mt-1 text-base font-semibold">Comandos de navegación</h4>
@@ -2069,6 +2142,7 @@ function AulaFormacionPage() {
                   return <div key={idx}><p className="mb-4 max-w-4xl whitespace-pre-line text-[15px] leading-7 text-foreground/90">{bloque}</p></div>;
                 })}
                 {renderLaboratorioGeometria()}
+                {renderSelectorVistasPlano()}
                 {lecturaAbierta?.numero === 1 && paginaLectura === 4 && <section className="mt-5 max-w-4xl rounded-xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">Recurso interactivo</p>
                   <h4 className="mt-1 text-base font-semibold">Comandos de navegación</h4>
