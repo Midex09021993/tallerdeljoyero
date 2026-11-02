@@ -1973,7 +1973,7 @@ function AulaFormacionPage() {
                       <div className="flex flex-wrap items-start justify-between gap-2"><div className="min-w-0"><p className="text-sm font-semibold">{m.titulo}</p><p className="mt-1 break-all text-xs text-muted-foreground">{m.nombre_archivo} · {(m.tamano_bytes/1024/1024).toFixed(1)} MB</p></div><span className={`rounded-full px-2 py-1 text-[10px] font-semibold ${m.publicado ? "bg-emerald-50 text-emerald-700" : "bg-muted text-muted-foreground"}`}>{m.publicado ? "Publicado" : "Borrador"}</span></div>
                       <div className="mt-3 flex flex-wrap gap-2"><button type="button" onClick={() => void descargarMaterial(m)} className="rounded-lg border border-border px-2.5 py-1.5 text-xs">Descargar</button><button type="button" onClick={() => {setMaterialEditandoId(m.id);setTituloMaterialEditado(m.titulo);setSesionMaterialEditada(m.sesion_id ?? "");}} className="rounded-lg border border-border px-2.5 py-1.5 text-xs">Editar</button><button type="button" disabled={ocupado} onClick={() => void cambiarPublicacionMaterial(m)} className="rounded-lg border border-border px-2.5 py-1.5 text-xs">{m.publicado ? "Retirar publicación" : "Publicar"}</button><button type="button" disabled={ocupado} onClick={() => void eliminarMaterial(m)} className="rounded-lg border border-destructive/30 px-2.5 py-1.5 text-xs text-destructive">Eliminar</button></div>
                     </>}
-                  </div>)}</section>)}
+                  </div>)}</div></details>)}
                 </>}
               </div>
             </Panel></div>}
