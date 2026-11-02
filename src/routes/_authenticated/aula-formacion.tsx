@@ -1588,7 +1588,7 @@ function AulaFormacionPage() {
               {!capaMetalVisible && !capaGemVisible && <text x="260" y="205" textAnchor="middle" fill="#f4f4f5" fontSize="15">No hay objetos visibles</text>}
               <text x="260" y="382" textAnchor="middle" fill="#cbd5e1" fontSize="11">Representación conceptual · no es un archivo 3D editable</text>
             </svg>
-            <div className="mt-2 flex flex-wrap gap-3 text-[11px] text-white/80"><span className="flex items-center gap-1.5"><i className="size-2.5 rounded-full bg-[#d8b45d]"/> Metal 01 · cuerpo</span><span className="flex items-center gap-1.5"><i className="size-2.5 rounded-full bg-[#438bd5]"/> Gem 01 · piedra</span></div>
+            <div className="mt-2 flex flex-wrap gap-3 text-[11px] text-white/80"><span className="flex items-center gap-1.5"><i className="size-2.5 rounded-none bg-[#23865c]"/> Metal 01 · cuerpo</span><span className="flex items-center gap-1.5"><i className="size-2.5 rounded-none bg-[#438bd5]"/> Gem 01 · piedra</span></div>
           </div>
 
         </main>
