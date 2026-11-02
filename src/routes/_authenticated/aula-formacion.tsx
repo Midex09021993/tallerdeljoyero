@@ -528,6 +528,10 @@ function AulaFormacionPage() {
   const [cerradoCoord3, setCerradoCoord3] = useState(false);
   const [estadoCoord3, setEstadoCoord3] = useState("");
   const [laboratorioCoordenadasAbierto, setLaboratorioCoordenadasAbierto] = useState(false);
+  const [laboratorioOsnapAbierto, setLaboratorioOsnapAbierto] = useState(false);
+  const [retoOsnap, setRetoOsnap] = useState(0);
+  const [respuestaOsnap, setRespuestaOsnap] = useState<string | null>(null);
+  const [aciertosOsnap, setAciertosOsnap] = useState(0);
   const [moduloGeometria, setModuloGeometria] = useState(0);
   const [respuestaGeometria, setRespuestaGeometria] = useState("");
   const [resultadoGeometria, setResultadoGeometria] = useState<"correcto" | "incorrecto" | null>(null);
@@ -1659,6 +1663,54 @@ function AulaFormacionPage() {
     </section></div>;
   };
 
+  const renderLaboratorioOsnap = () => {
+    if (lecturaAbierta?.numero !== 3 || paginaLectura !== 4) return null;
+    const retos = [
+      {snap:"End",nombre:"Extremo",pregunta:"Necesitas comenzar una línea exactamente donde termina esta curva.",explicacion:"End captura el punto final exacto de una curva o arista.",opciones:["Near","End","Mid","Cen"],figura:"end"},
+      {snap:"Mid",nombre:"Punto medio",pregunta:"Quieres colocar un punto justo a la mitad de este segmento.",explicacion:"Mid localiza el punto medio exacto entre los extremos.",opciones:["End","Int","Mid","Quad"],figura:"mid"},
+      {snap:"Cen",nombre:"Centro",pregunta:"Necesitas iniciar un círculo concéntrico usando el centro del círculo existente.",explicacion:"Cen captura el centro geométrico de un círculo o arco.",opciones:["Cen","Tan","Near","Point"],figura:"cen"},
+      {snap:"Int",nombre:"Intersección",pregunta:"Debes capturar el punto exacto donde se cruzan estas dos curvas.",explicacion:"Int captura el cruce exacto entre dos curvas.",opciones:["Perp","End","Int","Mid"],figura:"int"},
+      {snap:"Perp",nombre:"Perpendicular",pregunta:"Quieres que una línea desde este punto llegue formando 90° con la curva.",explicacion:"Perp encuentra una posición que establece una relación perpendicular con la curva.",opciones:["Tan","Perp","Quad","Near"],figura:"perp"},
+      {snap:"Tan",nombre:"Tangente",pregunta:"Necesitas iniciar una curva que toque al círculo sin cortarlo, siguiendo su dirección tangente.",explicacion:"Tan captura una posición tangente a un círculo o arco.",opciones:["Cen","Int","Tan","End"],figura:"tan"},
+      {snap:"Quad",nombre:"Cuadrante",pregunta:"Necesitas capturar el punto más alto del círculo, alineado con el eje vertical.",explicacion:"Quad captura uno de los cuatro puntos cardinales de un círculo o arco.",opciones:["Mid","Quad","Point","Perp"],figura:"quad"},
+      {snap:"Near",nombre:"Cercano",pregunta:"Quieres situar el cursor sobre cualquier punto de esta curva, sin exigir un punto geométrico definido.",explicacion:"Near captura el punto más cercano disponible sobre la curva.",opciones:["Near","Int","Cen","End"],figura:"near"},
+      {snap:"Point",nombre:"Punto",pregunta:"Debes seleccionar exactamente el objeto de punto que ya existe en el dibujo.",explicacion:"Point captura un objeto de punto situado en el espacio de trabajo.",opciones:["End","Point","Tan","Mid"],figura:"point"}
+    ] as const;
+    const reto=retos[retoOsnap] ?? retos[0];
+    const responder=(opcion:string)=>{if(respuestaOsnap!==null)return;setRespuestaOsnap(opcion);if(opcion===reto.snap)setAciertosOsnap(v=>v+1);};
+    const siguiente=()=>{setRetoOsnap(v=>(v+1)%retos.length);setRespuestaOsnap(null);};
+    const reiniciar=()=>{setRetoOsnap(0);setRespuestaOsnap(null);setAciertosOsnap(0);};
+    if(!laboratorioOsnapAbierto)return <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5">
+      <div className="flex flex-wrap items-center justify-between gap-4"><div><p className="text-[10px] font-bold uppercase tracking-widest text-gold-deep">Recurso interactivo · Sesión 03</p><h4 className="mt-1 text-base font-semibold">Entrenador Osnap</h4><p className="mt-1 text-sm text-muted-foreground">Practica cómo elegir referencias geométricas exactas en Rhino.</p></div><button type="button" onClick={()=>setLaboratorioOsnapAbierto(true)} className="inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-black"><ArrowRight className="size-4"/> Abrir laboratorio</button></div>
+    </section>;
+    return <div className="fixed inset-0 z-[100] overflow-hidden bg-background/95 p-2 backdrop-blur-sm sm:p-3"><section className="mx-auto flex h-[calc(100dvh-1rem)] max-w-[min(96vw,1500px)] flex-col overflow-hidden rounded-2xl border border-gold/30 bg-background shadow-2xl sm:h-[calc(100dvh-1.5rem)]">
+      <header className="flex shrink-0 items-center justify-between border-b border-border bg-gradient-to-r from-[#fbf8f0] to-background px-4 py-3"><div><p className="text-[10px] font-bold uppercase tracking-widest text-gold-deep">Entrenador Osnap · Sesión 03</p><h4 className="font-semibold">Encuentra la referencia exacta</h4></div><div className="flex items-center gap-2"><span className="hidden text-xs text-muted-foreground sm:inline">Aciertos: {aciertosOsnap}/{retos.length}</span><button type="button" onClick={reiniciar} className="rounded-lg border border-border px-3 py-2 text-xs"><RotateCcw className="mr-1 inline size-3.5"/> Reiniciar</button><button type="button" onClick={()=>setLaboratorioOsnapAbierto(false)} className="rounded-lg border border-border px-3 py-2 text-xs">Volver a la lectura</button></div></header>
+      <div className="grid min-h-0 flex-1 gap-3 overflow-hidden p-2 sm:p-3 lg:grid-cols-[minmax(0,1.4fr)_minmax(350px,.8fr)]">
+        <div className="flex min-h-[260px] min-w-0 flex-col overflow-hidden rounded-xl bg-[#17191d]"><div className="flex shrink-0 justify-between border-b border-white/10 px-3 py-2 text-[10px] text-white/70"><span>ÁREA DE DIBUJO · REFERENCIAS GEOMÉTRICAS</span><span>RETO {retoOsnap+1} / {retos.length}</span></div>
+          <svg viewBox="0 0 600 420" className="min-h-0 w-full flex-1" role="img" aria-label={"Ejercicio visual de referencia " + reto.nombre}>
+            <defs><pattern id="osnap-grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M 24 0 L 0 0 0 24" fill="none" stroke="#343a43" strokeWidth="1"/></pattern></defs>
+            <rect width="600" height="420" fill="url(#osnap-grid)"/>
+            {reto.figura==="end"&&<><path d="M130 300 L300 120 L470 300" fill="none" stroke="#d5d9df" strokeWidth="4" strokeLinecap="round"/><circle cx="470" cy="300" r="8" fill="#e7bd62"/><text x="483" y="293" fill="white" fontSize="14">Extremo</text></>}
+            {reto.figura==="mid"&&<><path d="M130 210 L470 210" stroke="#d5d9df" strokeWidth="4"/><circle cx="130" cy="210" r="6" fill="#e7bd62"/><circle cx="470" cy="210" r="6" fill="#e7bd62"/><circle cx="300" cy="210" r="9" fill="#67d6a0"/><path d="M300 160 V260" stroke="#67d6a0" strokeDasharray="5 5"/><text x="314" y="190" fill="white" fontSize="14">Mitad</text></>}
+            {reto.figura==="cen"&&<><circle cx="300" cy="210" r="130" fill="none" stroke="#d5d9df" strokeWidth="4"/><circle cx="300" cy="210" r="8" fill="#67d6a0"/><path d="M300 210 L390 120" stroke="#e7bd62" strokeDasharray="6 5"/><text x="314" y="235" fill="white" fontSize="14">Centro</text></>}
+            {reto.figura==="int"&&<><path d="M120 330 L480 90 M120 90 L480 330" stroke="#d5d9df" strokeWidth="4" fill="none"/><circle cx="300" cy="210" r="9" fill="#67d6a0"/><path d="M300 210 V370" stroke="#67d6a0" strokeDasharray="5 5"/><text x="314" y="198" fill="white" fontSize="14">Cruce</text></>}
+            {reto.figura==="perp"&&<><path d="M90 270 Q300 70 510 270" stroke="#d5d9df" strokeWidth="4" fill="none"/><path d="M300 170 V350" stroke="#e7bd62" strokeWidth="3" strokeDasharray="7 5"/><path d="M300 170 L330 170 L330 200" stroke="#67d6a0" strokeWidth="3" fill="none"/><circle cx="300" cy="170" r="8" fill="#67d6a0"/></>}
+            {reto.figura==="tan"&&<><circle cx="300" cy="210" r="115" fill="none" stroke="#d5d9df" strokeWidth="4"/><path d="M415 70 V350" stroke="#e7bd62" strokeWidth="3" strokeDasharray="7 5"/><circle cx="415" cy="210" r="8" fill="#67d6a0"/><path d="M300 210 L415 210" stroke="#67d6a0" strokeDasharray="5 5"/></>}
+            {reto.figura==="quad"&&<><circle cx="300" cy="210" r="125" fill="none" stroke="#d5d9df" strokeWidth="4"/><path d="M300 60 V360 M150 210 H450" stroke="#59616d" strokeDasharray="6 5"/><circle cx="300" cy="85" r="9" fill="#67d6a0"/><text x="314" y="78" fill="white" fontSize="14">90°</text></>}
+            {reto.figura==="near"&&<><path d="M100 290 C170 50 420 70 500 290" stroke="#d5d9df" strokeWidth="5" fill="none"/><circle cx="355" cy="145" r="8" fill="#67d6a0"/><path d="M355 145 L390 110" stroke="#e7bd62" strokeDasharray="5 5"/></>}
+            {reto.figura==="point"&&<><circle cx="180" cy="270" r="7" fill="#d5d9df"/><circle cx="300" cy="150" r="10" fill="#67d6a0"/><circle cx="430" cy="280" r="7" fill="#d5d9df"/><text x="315" y="145" fill="white" fontSize="14">Punto</text></>}
+          </svg><p className="shrink-0 border-t border-white/10 px-3 py-2 text-[10px] text-white/70">Verde: referencia que debes identificar · Gris: geometría</p>
+        </div>
+        <div className="flex min-h-0 flex-col gap-3 overflow-y-auto pr-1">
+          <div className="rounded-xl border border-border p-4"><div className="flex items-center justify-between"><span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">¿Qué Osnap necesitas?</span><span className="text-xs font-mono">{retoOsnap+1}/{retos.length}</span></div><p className="mt-3 text-base font-semibold leading-snug">{reto.pregunta}</p><div className="mt-4 grid grid-cols-2 gap-2">{reto.opciones.map(op=><button key={op} type="button" disabled={respuestaOsnap!==null} onClick={()=>responder(op)} className={"rounded-xl border px-3 py-3 text-sm font-semibold transition "+(respuestaOsnap===op?(op===reto.snap?"border-emerald-500 bg-emerald-500/10 text-emerald-700":"border-red-400 bg-red-400/10 text-red-700"):respuestaOsnap!==null&&op===reto.snap?"border-emerald-500 bg-emerald-500/10 text-emerald-700":"border-border hover:border-gold/60 hover:bg-gold/5")}>{op}</button>)}</div>
+          {respuestaOsnap!==null&&<div className="mt-4 rounded-xl bg-muted p-3 text-sm"><p className="font-semibold">{respuestaOsnap===reto.snap?"¡Correcto!":"No es esa referencia"}</p><p className="mt-1 text-muted-foreground">{reto.explicacion}</p><button type="button" onClick={siguiente} className="mt-3 w-full rounded-lg bg-gold px-4 py-2.5 font-semibold text-black">{retoOsnap===retos.length-1?"Volver al primer reto":"Siguiente reto"} <ArrowRight className="ml-1 inline size-4"/></button></div>}
+          </div>
+          <div className="rounded-xl border border-border p-3"><div className="flex items-center justify-between"><b className="text-xs">Progreso</b><span className="text-xs text-muted-foreground">{aciertosOsnap} aciertos</span></div><div className="mt-2 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-gold transition-all" style={{width:((retoOsnap+1)/retos.length*100)+"%"}}/></div><p className="mt-2 text-[11px] text-muted-foreground">Resuelve los nueve retos para practicar las referencias principales de Rhino.</p></div>
+        </div>
+      </div>
+    </section></div>;
+  };
+
   const renderLaboratorioGeometria = () => {
     if (lecturaAbierta?.numero !== 2 || paginaLectura !== 1) return null;
     if (!laboratorioGeometriaAbierto) return <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5 sm:p-6">
@@ -1862,6 +1914,7 @@ function AulaFormacionPage() {
                   return <div key={idx}><p className="mb-4 max-w-4xl whitespace-pre-line text-[15px] leading-7 text-foreground/90">{bloque}</p></div>;
                 })}
                 {renderLaboratorioCoordenadas()}
+                {renderLaboratorioOsnap()}
 
                 {renderLaboratorioGeometria()}
                 {renderLaboratorioCapas()}
@@ -2247,6 +2300,7 @@ function AulaFormacionPage() {
                   return <div key={idx}><p className="mb-4 max-w-4xl whitespace-pre-line text-[15px] leading-7 text-foreground/90">{bloque}</p></div>;
                 })}
                 {renderLaboratorioCoordenadas()}
+                {renderLaboratorioOsnap()}
 
                 {renderLaboratorioGeometria()}
                 {renderSelectorVistasPlano()}
