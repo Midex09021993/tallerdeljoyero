@@ -398,6 +398,19 @@ const PREGUNTAS_EXAMEN_SESION_1 = [
   { enunciado:"¿Cuál representa el flujo general desde el diseño digital hasta la fabricación aditiva?", opciones:["Impresión 3D → diseño CAD → preparación","Diseño CAD → preparación del archivo → impresión 3D → validación","Fundición → modelado → fotografía","Diseño CAD → acabado → eliminar el archivo"], correcta:"Diseño CAD → preparación del archivo → impresión 3D → validación" },
 ] as const;
 
+const PREGUNTAS_EXAMEN_SESION_2 = [
+  { enunciado:"¿Qué representa un punto en Rhino?", opciones:["Una posición en el espacio","Un volumen cerrado","Una textura","Una capa"], correcta:"Una posición en el espacio" },
+  { enunciado:"¿Cuál de estos objetos es una curva cerrada?", opciones:["Una línea","Un círculo","Un punto","Una superficie"], correcta:"Un círculo" },
+  { enunciado:"¿Qué diferencia principal existe entre una curva y una superficie?", opciones:["La curva define un recorrido o contorno; la superficie representa un área","La curva siempre tiene volumen","La superficie solo puede ser circular","No existe diferencia"], correcta:"La curva define un recorrido o contorno; la superficie representa un área" },
+  { enunciado:"¿Qué comando crea una secuencia de segmentos rectos conectados?", opciones:["Circle","Polyline","Zoom","Pan"], correcta:"Polyline" },
+  { enunciado:"¿Cómo se define un rectángulo con el comando Rectangle en el procedimiento básico?", opciones:["Indicando dos esquinas opuestas","Indicando centro y radio","Seleccionando tres superficies","Indicando un único punto"], correcta:"Indicando dos esquinas opuestas" },
+  { enunciado:"¿Para qué sirve el plano de construcción (CPlane)?", opciones:["Define la orientación y posición del plano sobre el que se dibuja","Cambia el material del objeto","Oculta las capas","Convierte curvas en sólidos automáticamente"], correcta:"Define la orientación y posición del plano sobre el que se dibuja" },
+  { enunciado:"¿Qué representa la cuadrícula del área de trabajo?", opciones:["Una guía visual del plano de trabajo","Un conjunto de objetos del modelo","El material de la joya","Una capa de impresión"], correcta:"Una guía visual del plano de trabajo" },
+  { enunciado:"¿Qué determina la capa activa en Rhino/MatrixGold?", opciones:["El destino de los objetos nuevos que se creen","El color de fondo de Perspective","La escala de impresión","La vista que se oculta"], correcta:"El destino de los objetos nuevos que se creen" },
+  { enunciado:"¿Qué sucede al desactivar el icono del ojo de una capa?", opciones:["Se ocultan los objetos asignados a esa capa","Se eliminan los objetos","Se bloquea el documento","Se cambia su geometría"], correcta:"Se ocultan los objetos asignados a esa capa" },
+  { enunciado:"¿Qué efecto tiene bloquear una capa?", opciones:["Sus objetos siguen visibles, pero no se pueden seleccionar directamente","Sus objetos se borran","La capa cambia de nombre","Todos los objetos pasan a otra capa"], correcta:"Sus objetos siguen visibles, pero no se pueden seleccionar directamente" },
+] as const;
+
 const COMPONENTES_INTERFAZ = [
   ["Ribbon de MatrixGold", "Franja superior con pestañas que agrupan herramientas y funciones por categorías.", "En la primera franja de pestañas de MatrixGold: donde aparecen Curve, Surface, Solid, Tools, Gems y otras categorías.", "Organiza las herramientas especializadas de joyería en grupos para encontrarlas por tipo de tarea."],
   ["Barras de herramientas", "Conjuntos de iconos para acceder directamente a comandos.", "Debajo de las pestañas principales y en las filas de iconos.", "Permiten ejecutar herramientas frecuentes con un clic, sin escribir el nombre del comando."],
@@ -1092,6 +1105,40 @@ function AulaFormacionPage() {
       setMensaje("Examen 01 creado como borrador. Revísalo en Evaluaciones del curso y pulsa Publicar cuando quieras activarlo para los alumnos.");
     } catch (err) {
       setMensaje(err instanceof Error ? err.message : "No se pudo cargar el examen. Si se creó como borrador, revisa sus preguntas antes de publicarlo.");
+    } finally { setOcupado(false); }
+  }
+
+
+  async function cargarExamenSesion2() {
+    if (!participanteId || !cursoActivoId) return;
+    const sesionDos = (sesionesQuery.data ?? []).find(s => s.numero === 2);
+    if (!sesionDos) { setMensaje("No se encontró la Sesión 2 del curso activo. Crea primero esa sesión."); return; }
+    const existente = (examenesQuery.data ?? []).find(x => x.sesion_id === sesionDos.id);
+    if (existente) { setExamenSeleccionado(existente.id); setMensaje("Ya existe una evaluación vinculada a la Sesión 2. La he seleccionado para que puedas revisarla."); return; }
+    setOcupado(true); setMensaje("");
+    try {
+      const { data: examen, error: examenError } = await (supabase as any).from("formacion_examenes").insert({
+        participante_id: participanteId, curso_id: cursoActivoId, sesion_id: sesionDos.id,
+        titulo:"Examen 02 · Sesión 2 · Geometría básica y organización mediante Layers",
+        instrucciones:"Lee cada pregunta y selecciona una sola respuesta. Son 10 preguntas de opción múltiple, con un valor de 2 puntos cada una. Puntaje máximo: 20 puntos.",
+        duracion_minutos:20, intentos_permitidos:1, puntaje_maximo:20, publicado:false, creado_por:sesion?.user.id,
+      }).select("id").single();
+      if (examenError) throw examenError;
+      const filas = PREGUNTAS_EXAMEN_SESION_2.map((p,idx)=>({
+        participante_id:participanteId, examen_id:examen.id, tipo:"opcion_multiple", enunciado:p.enunciado,
+        opciones:p.opciones.map(o=>({label:o,value:o})), respuesta_correcta:p.correcta, puntaje:2, orden:idx+1, obligatoria:true,
+      }));
+      const { error: preguntasError } = await (supabase as any).from("formacion_preguntas").insert(filas);
+      if (preguntasError) throw preguntasError;
+      setExamenSeleccionado(examen.id);
+      await Promise.all([
+        qc.invalidateQueries({queryKey:["aula-formacion-examenes-docente",participanteId,cursoActivoId]}),
+        qc.invalidateQueries({queryKey:["aula-formacion-preguntas-docente",examen.id]}),
+        qc.invalidateQueries({queryKey:["aula-formacion-examenes-alumno"]}),
+      ]);
+      setMensaje("Examen 02 creado como borrador y vinculado a la Sesión 2. Revísalo en Evaluaciones del curso y publícalo cuando esté listo.");
+    } catch (err) {
+      setMensaje(err instanceof Error ? err.message : "No se pudo cargar el Examen 02. Si se creó como borrador, revisa sus preguntas antes de publicarlo.");
     } finally { setOcupado(false); }
   }
 
@@ -2127,6 +2174,12 @@ function AulaFormacionPage() {
                 <p className="text-sm font-semibold">Examen preparado · Sesión 1</p>
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">Carga las 10 preguntas de opción múltiple, 2 puntos cada una, asociadas a la primera sesión del curso seleccionado.</p>
                 <div className="mt-3 flex flex-wrap gap-2"><button type="button" onClick={()=>setExamenMuestraAbierto(true)} className="rounded-lg border border-gold/40 px-4 py-2 text-sm font-semibold text-gold-deep">Vista previa de las 10 preguntas</button><button type="button" disabled={ocupado || sesionesQuery.isLoading || examenesQuery.isLoading} onClick={()=>void cargarExamenSesion1()} className="rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-black disabled:opacity-50">Crear Examen 01 como borrador</button></div>
+              </div>
+
+              <div className="rounded-xl border border-gold/30 bg-gold/5 p-4">
+                <p className="text-sm font-semibold">Examen preparado · Sesión 2</p>
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">Carga 10 preguntas de opción múltiple sobre geometría básica, plano de trabajo y organización mediante Layers. 2 puntos cada una, 20 puntos en total.</p>
+                <div className="mt-3 flex flex-wrap gap-2"><button type="button" disabled={ocupado || sesionesQuery.isLoading || examenesQuery.isLoading} onClick={()=>void cargarExamenSesion2()} className="rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-black disabled:opacity-50">Crear Examen 02 como borrador</button></div>
               </div>
               <div className="space-y-2"><p className="text-sm font-semibold">Evaluaciones del curso</p>
                 {(examenesQuery.data ?? []).map(x => <div key={x.id} className="space-y-3 rounded-lg border border-border p-3">
