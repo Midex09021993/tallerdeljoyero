@@ -104,14 +104,14 @@ function PlanesPublicos() {
     },
     {
       nombre: "Taller", precioMensual: 29, gratis: false,
-      descripcion: "Ordena la gestión diaria de tu negocio.",
-      funciones: ["Clientes y cotizaciones", "Pedidos, ventas y contratos", "Catálogo digital", "Mi Nube para tus archivos"],
+      descripcion: "Todas las herramientas esenciales para gestionar tu taller.",
+      funciones: ["Clientes y cotizaciones", "Pedidos, ventas y contratos", "Catálogo digital", "Mi Nube y archivos", "Herramientas de diseño y gestión con capacidad limitada"],
       destacado: false, accion: "Acceder a la plataforma", href: "/auth" as const,
     },
     {
       nombre: "Profesional", precioMensual: 79, gratis: false,
-      descripcion: "Conecta la gestión con el trabajo productivo.",
-      funciones: ["Gestión comercial integrada", "Inventario y compras", "Aurum Render y diseño 3D", "Capacidades de fabricación", "Catálogo y archivos ampliados"],
+      descripcion: "Todo lo incluido en Taller, con mayores capacidades de uso.",
+      funciones: ["Incluye todas las herramientas del plan Taller", "Mayor capacidad para clientes y operaciones", "Más capacidad para catálogo y archivos", "Mayor capacidad de uso de las herramientas de diseño y gestión"],
       destacado: true, accion: "Acceder a la plataforma", href: "/auth" as const,
     },
     {
