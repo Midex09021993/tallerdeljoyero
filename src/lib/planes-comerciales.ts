@@ -43,10 +43,7 @@ export const PLANES_COMERCIALES: readonly PlanComercial[] = [
     precioEtiqueta: "S/ 79 al mes",
     estadoComercial: "pago",
     enfoque: "Incluye las mismas herramientas que Taller, con mayores capacidades de uso y límites más amplios.",
-    capacidadesRelacionadas: [
-      "Clientes", "Cotizaciones", "Pedidos", "Contratos", "Ventas", "Catálogo",
-      "Diseño 3D", "Impresión 3D", "Casting", "Corte Láser", "Taller", "Inventario", "Compras",
-    ],
+    capacidadesRelacionadas: ["Clientes", "Cotizaciones", "Pedidos", "Contratos", "Ventas", "Catálogo"],
     limitesActivos: false,
   },
   {
