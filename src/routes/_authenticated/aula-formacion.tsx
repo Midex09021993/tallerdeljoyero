@@ -474,6 +474,7 @@ function AulaFormacionPage() {
   const interfazInfoRef = useRef<HTMLElement | null>(null);
   const [lecturaPublicada, setLecturaPublicada] = useState(false);
   const [archivo, setArchivo] = useState<File | null>(null);
+  const [archivoArrastrando, setArchivoArrastrando] = useState(false);
   const [tituloMaterial, setTituloMaterial] = useState("");
   const [publicarMaterial, setPublicarMaterial] = useState(true);
   const [sesionMaterialId, setSesionMaterialId] = useState("");
@@ -2019,7 +2020,7 @@ function AulaFormacionPage() {
               </div>
             </div>}
             </div>}
-          {seccionDocente === "materiales" && cursoActivoId && <div id="doc-materiales" className="scroll-mt-24"><Panel titulo="Biblioteca del curso" colapsable defaultOpen={false}>
+          {seccionDocente === "materiales" && cursoActivoId && <div id="doc-materiales" className="scroll-mt-24"><Panel titulo="Biblioteca del curso">
               <form onSubmit={(e) => void subirMaterial(e)} className="space-y-3 p-5">
                 <label className="block text-xs font-medium">Título del material<input required value={tituloMaterial} onChange={e => setTituloMaterial(e.target.value)} className="mt-1.5 w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm" placeholder="Ej. Guía de navegación en Rhino" /></label>
                 <label className="block text-xs font-medium">¿A qué parte del curso pertenece?
@@ -2028,7 +2029,17 @@ function AulaFormacionPage() {
                     {(sesionesQuery.data ?? []).map(s => <option key={s.id} value={s.id}>Sesión {s.numero} · {s.titulo}</option>)}
                   </select>
                 </label>
-                <label className="block text-xs font-medium">Archivo (PDF, documentos, imágenes, ZIP o STL)<input id="aula-material-file" type="file" required onChange={(e: ChangeEvent<HTMLInputElement>) => setArchivo(e.target.files?.[0] ?? null)} className="mt-1.5 block w-full text-xs" /></label>
+                <div className="space-y-2">
+                  <span className="block text-xs font-medium">Archivo (PDF, documentos, imágenes, ZIP o STL)</span>
+                  <label htmlFor="aula-material-file" onDragEnter={e=>{e.preventDefault();setArchivoArrastrando(true);}} onDragOver={e=>{e.preventDefault();setArchivoArrastrando(true);}} onDragLeave={e=>{e.preventDefault();if(!e.currentTarget.contains(e.relatedTarget as Node|null))setArchivoArrastrando(false);}} onDrop={e=>{e.preventDefault();setArchivoArrastrando(false);const recibido=e.dataTransfer.files?.[0];if(recibido)setArchivo(recibido);}} className={`flex min-h-32 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed px-4 py-5 text-center transition ${archivoArrastrando ? "border-gold bg-gold/10" : "border-border bg-muted/20 hover:border-gold/60 hover:bg-gold/5"}`}>
+                    <Upload className={`mb-2 size-6 ${archivoArrastrando ? "text-gold-deep" : "text-muted-foreground"}`}/>
+                    <span className="text-sm font-semibold text-foreground">{archivoArrastrando ? "Suelta el archivo aquí" : "Arrastra tu archivo aquí"}</span>
+                    <span className="mt-1 text-xs text-muted-foreground">o haz clic para buscarlo en tu equipo</span>
+                    <span className="mt-2 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium">Seleccionar archivo</span>
+                    <input id="aula-material-file" type="file" required onChange={(e: ChangeEvent<HTMLInputElement>)=>setArchivo(e.target.files?.[0]??null)} className="sr-only"/>
+                  </label>
+                  {archivo ? <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800"><span className="min-w-0 break-all font-medium">{archivo.name}</span><span className="shrink-0">{(archivo.size/1024/1024).toFixed(2)} MB</span><button type="button" onClick={()=>{setArchivo(null);const input=document.getElementById("aula-material-file") as HTMLInputElement|null;if(input)input.value="";}} className="rounded-md border border-emerald-300 px-2 py-1">Quitar</button></div> : <p className="text-[11px] text-muted-foreground">Máximo 50 MB por archivo.</p>}
+                </div>
                 <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={publicarMaterial} onChange={e => setPublicarMaterial(e.target.checked)} /> Publicar inmediatamente para los alumnos</label>
                 <button disabled={ocupado || !archivo} className="inline-flex items-center gap-2 rounded-lg bg-gold px-4 py-2.5 text-sm font-semibold text-black disabled:opacity-50"><Upload className="size-4" /> Subir material</button>
                 <p className="text-xs text-muted-foreground">Almacenamiento privado · máximo 50 MB por archivo. Puedes editar, retirar, reemplazar o eliminar cada material posteriormente.</p>
