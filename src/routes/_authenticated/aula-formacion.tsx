@@ -1550,7 +1550,7 @@ function AulaFormacionPage() {
       <header className="sticky top-0 z-20 border-b border-border bg-background/95 px-4 py-3 backdrop-blur">
         <div className="flex w-full items-center justify-between gap-3 px-4"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-gold-deep">FADILAB · Sesión 2</p><h3 className="text-base font-semibold sm:text-lg">Laboratorio de capas · MatrixGold</h3></div><div className="flex shrink-0 items-center gap-2"><button type="button" onClick={reiniciar} className="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-2 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground" title="Restablecer todos los elementos de la práctica"><RotateCcw size={13} /> Reiniciar</button><button type="button" onClick={() => { setLaboratorioCapasAbierto(false); setMostrarRetoCapasAlCerrar(true); }} className="rounded-lg border border-border px-3 py-2 text-xs font-semibold hover:bg-muted">Cerrar ✕</button></div></div>
       </header>
-      <div className="grid w-full gap-2 p-2 lg:p-3 xl:h-[calc(100dvh-64px)] xl:min-h-0 xl:grid-cols-[290px_minmax(0,1fr)_300px] xl:items-stretch">
+      <div className="grid w-full gap-2 p-2 lg:p-3 xl:h-[calc(100dvh-64px)] xl:min-h-0 xl:grid-cols-[290px_minmax(0,1fr)] xl:items-stretch">
         <aside className="rounded-xl border border-[#45464b] bg-[#292a2f] p-2 text-white xl:h-full">
           <div className="mb-2 flex items-center justify-between"><span className="text-xs font-semibold">Layers</span><span className="text-[10px] text-white/50">MatrixGold</span></div>
           <div className="mb-2 grid grid-cols-2 gap-1"><button type="button" onClick={()=>{setCapaMetalVisible(false);setCapaGemVisible(false);}} className="rounded border border-white/15 bg-white/5 py-1 text-[10px]">Hide</button><button type="button" onClick={()=>{setCapaMetalVisible(true);setCapaGemVisible(true);}} className="rounded border border-white/15 bg-white/5 py-1 text-[10px]">Show</button></div>
@@ -1600,15 +1600,7 @@ function AulaFormacionPage() {
           </div>
 
         </main>
-        <aside className="min-w-0 space-y-3 xl:h-full">
-          <div className="rounded-xl border border-border bg-card/70 p-3">
-            <p className="text-xs font-semibold">Selección directa en la joya</p>
-            <p className="mt-1 text-xs leading-5 text-muted-foreground">Haz clic en una pieza para seleccionarla. Vuelve a pulsarla y arrástrala para moverla. Si su capa está bloqueada, permanecerá seleccionada y visible, pero no podrás desplazarla.</p>
-            <p className="mt-2 rounded-lg bg-muted/60 px-3 py-2 text-xs" role="status" aria-live="polite">{objetoSeleccionadoCapas ? `Seleccionado: ${objetoSeleccionadoCapas==="aro"?"Cuerpo del anillo":"Piedra central"}. Capa indicada: ${objetoSeleccionadoCapas==="aro"?"Metal 01 (verde)":"Gem 01 (azul)"}.` : "Ninguna pieza seleccionada. Selecciona una directamente en la representación."}</p>
-            <p className="mt-2 text-[11px] text-muted-foreground">Asignación: cuerpo → {asignacionCapas.aro || "Sin asignar"} · piedra → {asignacionCapas.piedra || "Sin asignar"}.</p>
-          </div>
-          <p className="text-right text-[10px] text-muted-foreground">Práctica interactiva · no modifica MatrixGold</p>
-        </aside>
+
       </div>
     </section>;
   };
