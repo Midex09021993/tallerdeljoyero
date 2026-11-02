@@ -561,6 +561,7 @@ function AulaFormacionPage() {
   const [validadoRestricciones, setValidadoRestricciones] = useState(false);
   const [aciertosRestricciones, setAciertosRestricciones] = useState(0);
   const [faseSmartTrack, setFaseSmartTrack] = useState<"aprendizaje"|"practica">("aprendizaje");
+  const [pasoDemoSmartTrack, setPasoDemoSmartTrack] = useState(0);
   const [retoSmartTrack, setRetoSmartTrack] = useState(0);
   const [respuestaSmartTrack, setRespuestaSmartTrack] = useState<string | null>(null);
   const [aciertosSmartTrack, setAciertosSmartTrack] = useState(0);
@@ -1934,6 +1935,31 @@ function AulaFormacionPage() {
               <div className="mb-3 flex h-28 items-center justify-center rounded-lg bg-[#17191d]"><svg viewBox="0 0 220 100" className="h-full w-full"><circle cx="48" cy="75" r="6" fill="#e7bd62"/><circle cx="172" cy="20" r="6" fill="#e7bd62"/><path d="M48 75 H172 V20" stroke="#67d6a0" strokeWidth="3" strokeDasharray="7 5"/><circle cx="172" cy="75" r="6" fill="#f4d27f"/></svg></div>
               <h4 className="font-semibold">Intersección de guías</h4><p className="mt-2 text-sm leading-5 text-foreground/80">El cruce de una guía horizontal y otra vertical indica una posición relacionada con dos referencias adquiridas.</p><p className="mt-2 text-xs text-muted-foreground">En joyería: localizar una posición a partir de dos alineaciones para ubicar un detalle.</p>
             </article>
+          </div>
+          <div className="mt-5 rounded-xl border border-gold/30 bg-card p-4">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-gold-deep">Demostración guiada</p>
+            <h4 className="mt-1 font-semibold">Observa cómo se construye una alineación</h4>
+            <p className="mt-1 text-sm text-muted-foreground">Avanza paso a paso: primero adquiere una referencia, después mueve el cursor y finalmente utiliza la guía temporal.</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {["1. Adquirir punto","2. Mover cursor","3. Alinear y confirmar"].map((paso,idx)=><button key={paso} type="button" onClick={()=>setPasoDemoSmartTrack(idx)} aria-pressed={pasoDemoSmartTrack===idx} className={"rounded-lg border px-3 py-2 text-xs font-semibold "+(pasoDemoSmartTrack===idx?"border-gold bg-gold/15 text-gold-deep":"border-border text-muted-foreground hover:border-gold/50")}>{paso}</button>)}
+            </div>
+            <div className="mt-3 overflow-hidden rounded-xl bg-[#17191d]">
+              <svg viewBox="0 0 600 220" className="h-48 w-full" role="img" aria-label={["Punto de referencia adquirido","Cursor desplazado y guía horizontal temporal visible","Cursor alineado sobre la guía temporal"][pasoDemoSmartTrack]}>
+                <defs><pattern id="smarttrack-demo-grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="#343a43" strokeWidth="1"/></pattern></defs>
+                <rect width="600" height="220" fill="url(#smarttrack-demo-grid)"/>
+                <circle cx="130" cy="110" r="9" fill="#e7bd62"/>
+                <text x="130" y="140" textAnchor="middle" fill="#f3d58e" fontSize="13">Referencia</text>
+                {pasoDemoSmartTrack>=1&&<><path d="M130 110H490" stroke="#67d6a0" strokeWidth="3" strokeDasharray="9 7"/><text x="310" y="92" textAnchor="middle" fill="#67d6a0" fontSize="13">Guía horizontal temporal</text><path d="M390 110V185" stroke="#7c8796" strokeWidth="2" strokeDasharray="5 6"/></>}
+                {pasoDemoSmartTrack===0&&<text x="350" y="180" textAnchor="middle" fill="#c4c9d1" fontSize="14">Acerca el cursor a un punto Osnap</text>}
+                {pasoDemoSmartTrack===1&&<><circle cx="390" cy="155" r="8" fill="#f4d27f"/><text x="410" y="160" fill="#f4d27f" fontSize="13">Cursor</text></>}
+                {pasoDemoSmartTrack===2&&<><circle cx="390" cy="110" r="9" fill="#67d6a0"/><text x="410" y="115" fill="#67d6a0" fontSize="13">Punto alineado</text><path d="M390 110V185" stroke="#7c8796" strokeWidth="2" strokeDasharray="5 6"/></>}
+              </svg>
+            </div>
+            <p className="mt-2 text-sm text-foreground/80">{["El punto amarillo representa una referencia geométrica adquirida mediante Osnap. SmartTrack toma ese punto como origen de una posible alineación.","Al desplazar el cursor, aparece una guía horizontal temporal que conserva la altura de la referencia. La línea discontinua no es geometría permanente.","Cuando el cursor coincide con la guía, puedes confirmar esa posición. No necesitas dibujar ni borrar una línea auxiliar."][pasoDemoSmartTrack]}</p>
+            <div className="mt-3 flex justify-end gap-2">
+              <button type="button" disabled={pasoDemoSmartTrack===0} onClick={()=>setPasoDemoSmartTrack(v=>Math.max(0,v-1))} className="rounded-lg border border-border px-3 py-2 text-xs disabled:opacity-40">Anterior</button>
+              <button type="button" onClick={()=>setPasoDemoSmartTrack(v=>(v+1)%3)} className="rounded-lg bg-gold px-3 py-2 text-xs font-semibold text-black">{pasoDemoSmartTrack===2?"Repetir demostración":"Siguiente paso"}</button>
+            </div>
           </div>
           <div className="mt-5 rounded-xl border border-border p-4">
             <h4 className="font-semibold">Cómo trabajar con SmartTrack en Rhino</h4>
