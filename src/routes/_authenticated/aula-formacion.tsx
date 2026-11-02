@@ -1527,7 +1527,9 @@ function AulaFormacionPage() {
       const seccionesOriginales = data && Array.isArray(data.secciones) && data.secciones.length > 0
         ? data.secciones
         : vistaPrevia && s.numero === 1 ? LECTURA_SESION_1 : null;
-      const secciones = seccionesOriginales;
+      const secciones = seccionesOriginales && s.numero === 3 && seccionesOriginales.length < LECTURA_SESION_3.length
+        ? [...seccionesOriginales, ...LECTURA_SESION_3.slice(seccionesOriginales.length)]
+        : seccionesOriginales;
       if (!secciones) {
         setMensaje(vistaPrevia ? "Todavía no hay contenido de lectura guardado para esta sesión." : "La lectura de esta sesión todavía no está publicada por FADILAB.");
         return;
