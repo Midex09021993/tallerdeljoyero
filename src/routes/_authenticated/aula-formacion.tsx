@@ -1681,11 +1681,11 @@ function AulaFormacionPage() {
     if (!laboratorioCoordenadasAbierto) return <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div><p className="text-[10px] font-bold uppercase tracking-widest text-gold-deep">Recurso interactivo · Sesión 03</p><h4 className="mt-1 text-base font-semibold">Laboratorio de coordenadas</h4><p className="mt-1 text-sm text-muted-foreground">Practica coordenadas absolutas, relativas y polares en un espacio de trabajo independiente.</p></div>
-        <button type="button" onClick={() => setLaboratorioCoordenadasAbierto(true)} className="inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-black shadow-sm"><ArrowRight className="size-4"/> Abrir laboratorio</button>
+        <button type="button" onClick={() => { setModoCoord3(paginaLectura === 2 ? "absolutas" : paginaLectura === 3 ? "relativas" : "polares"); setLaboratorioCoordenadasAbierto(true); }} className="inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-black shadow-sm"><ArrowRight className="size-4"/> Abrir laboratorio</button>
       </div>
     </section>;
     const ox=250,oy=170,k=9,last=puntosCoord3[puntosCoord3.length-1]??{x:0,y:0};
-    const reset=()=>{setPuntosCoord3([{x:0,y:0}]);setCerradoCoord3(false);setEstadoCoord3("");setModoCoord3("relativas");setValorCoord3("20");setAnguloCoord3("0");};
+    const reset=()=>{setPuntosCoord3([{x:0,y:0}]);setCerradoCoord3(false);setEstadoCoord3("");setValorCoord3("20");setAnguloCoord3("0");};
     const add=()=>{const a=Number(valorCoord3.replace(",",".")),b=Number(anguloCoord3.replace(",","."));if(!Number.isFinite(a)||!Number.isFinite(b)){setEstadoCoord3("Valor no válido");return;}let p={x:a,y:b};if(modoCoord3==="relativas")p={x:last.x+a,y:last.y+b};if(modoCoord3==="polares"){const rad=b*Math.PI/180;p={x:last.x+a*Math.cos(rad),y:last.y+a*Math.sin(rad)};}setPuntosCoord3(v=>[...v,p]);setCerradoCoord3(false);setEstadoCoord3(`Punto: ${p.x.toFixed(2)}, ${p.y.toFixed(2)}`);};
     const pts=puntosCoord3.map(p=>`${ox+p.x*k},${oy-p.y*k}`).join(" ");
     return <div className="fixed inset-0 z-[100] overflow-hidden bg-background/95 p-2 backdrop-blur-sm sm:p-3"><section className="mx-auto flex h-[calc(100dvh-1rem)] max-w-[min(96vw,1600px)] flex-col overflow-hidden rounded-2xl border border-gold/30 bg-background shadow-2xl sm:h-[calc(100dvh-1.5rem)]">
