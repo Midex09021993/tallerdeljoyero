@@ -17,9 +17,9 @@ type Curso = { id: string; participante_id: string; titulo: string; descripcion:
 type Inscripcion = { id: string; curso_id: string; email_alumno: string; nombre_alumno: string | null; alumno_user_id?: string | null; estado: string; formacion_cursos: Curso | null };
 type Material = { id: string; curso_id: string; sesion_id: string | null; titulo: string; descripcion: string | null; nombre_archivo: string; ruta_storage: string; mime_type: string; tamano_bytes: number; created_at: string; publicado: boolean };
 type SesionCurso = { id: string; curso_id: string; numero: number; titulo: string; descripcion: string | null; duracion_horas: number; fecha_programada: string | null; publicada: boolean; bloqueada: boolean };
-type Examen = { id: string; curso_id: string; sesion_id?: string | null; titulo: string; instrucciones: string | null; duracion_minutos: number | null; intentos_permitidos: number; puntaje_maximo: number; publicado: boolean; disponible_desde: string | null; disponible_hasta: string | null };
+type Examen = { id: string; curso_id: string; sesion_id?: string | null; titulo: string; instrucciones: string | null; duracion_minutos: number | null; intentos_permitidos: number; puntaje_maximo: number; publicado: boolean; disponible_desde: string | null; disponible_hasta: string | null; aleatorizar_preguntas?: boolean; permitir_retroceso?: boolean };
 type Pregunta = { id: string; examen_id: string; tipo: "opcion_multiple" | "verdadero_falso" | "practica"; enunciado: string; opciones: Array<{label:string;value:string}>; respuesta_correcta?: unknown; puntaje: number; orden: number; obligatoria: boolean };
-type ExamenAlumno = { id: string; titulo: string; instrucciones: string | null; duracion_minutos: number | null; puntaje_maximo: number; intento_id?: string; vence_en?: string | null; preguntas: Array<{id:string;tipo:string;enunciado:string;opciones:Array<{label:string;value:string}>;puntaje:number;orden:number;obligatoria:boolean}> };
+type ExamenAlumno = { id: string; titulo: string; instrucciones: string | null; duracion_minutos: number | null; puntaje_maximo: number; permitir_retroceso?: boolean; intento_id?: string; vence_en?: string | null; preguntas: Array<{id:string;tipo:string;enunciado:string;opciones:Array<{label:string;value:string}>;puntaje:number;orden:number;obligatoria:boolean}> };
 type Intento = { id: string; examen_id: string; numero_intento: number; calificacion: number | null; estado: string; enviado_en: string; observaciones_docente: string | null };
 
 
@@ -499,6 +499,8 @@ function AulaFormacionPage() {
   const [instruccionesExamen, setInstruccionesExamen] = useState("");
   const [duracionExamen, setDuracionExamen] = useState("30");
   const [intentosExamen, setIntentosExamen] = useState("1");
+  const [aleatorizarPreguntas, setAleatorizarPreguntas] = useState(false);
+  const [permitirRetroceso, setPermitirRetroceso] = useState(false);
   const [sesionExamenId, setSesionExamenId] = useState("");
   const [examenSeleccionado, setExamenSeleccionado] = useState("");
   const [examenEditandoId, setExamenEditandoId] = useState("");
@@ -511,6 +513,8 @@ function AulaFormacionPage() {
   const [instruccionesExamenEditadas, setInstruccionesExamenEditadas] = useState("");
   const [duracionExamenEditada, setDuracionExamenEditada] = useState("20");
   const [intentosExamenEditados, setIntentosExamenEditados] = useState("1");
+  const [aleatorizarPreguntasEditado, setAleatorizarPreguntasEditado] = useState(false);
+  const [permitirRetrocesoEditado, setPermitirRetrocesoEditado] = useState(false);
   const [sesionExamenEditada, setSesionExamenEditada] = useState("");
   const [disponibleDesdeEditado, setDisponibleDesdeEditado] = useState("");
   const [disponibleHastaEditado, setDisponibleHastaEditado] = useState("");
@@ -745,7 +749,7 @@ function AulaFormacionPage() {
     queryKey: ["aula-formacion-examenes-docente", participanteId, cursoActivoId],
     enabled: Boolean(esDocente && participanteId && cursoActivoId),
     queryFn: async () => {
-      const { data, error } = await (supabase as any).from("formacion_examenes").select("id,curso_id,sesion_id,titulo,instrucciones,duracion_minutos,intentos_permitidos,puntaje_maximo,publicado,disponible_desde,disponible_hasta").eq("participante_id", participanteId).eq("curso_id", cursoActivoId).order("created_at", { ascending: false });
+      const { data, error } = await (supabase as any).from("formacion_examenes").select("id,curso_id,sesion_id,titulo,instrucciones,duracion_minutos,intentos_permitidos,puntaje_maximo,publicado,disponible_desde,disponible_hasta,aleatorizar_preguntas,permitir_retroceso").eq("participante_id", participanteId).eq("curso_id", cursoActivoId).order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as Examen[];
     },
@@ -1074,7 +1078,7 @@ function AulaFormacionPage() {
       const { data, error } = await (supabase as any).from("formacion_examenes").insert({
         participante_id: participanteId, curso_id: cursoActivoId, sesion_id: sesionExamenId || null, titulo: tituloExamen.trim(),
         instrucciones: instruccionesExamen.trim() || null, duracion_minutos: Number(duracionExamen) || null,
-        intentos_permitidos: Math.max(1, Number(intentosExamen) || 1), puntaje_maximo: 20,
+        intentos_permitidos: Math.max(1, Number(intentosExamen) || 1), aleatorizar_preguntas: aleatorizarPreguntas, permitir_retroceso: permitirRetroceso, puntaje_maximo: 20,
         publicado: false, creado_por: sesion?.user.id,
       }).select("id").single();
       if (error) throw error;
@@ -1112,6 +1116,8 @@ function AulaFormacionPage() {
     setInstruccionesExamenEditadas(examen.instrucciones ?? "");
     setDuracionExamenEditada(String(examen.duracion_minutos ?? 20));
     setIntentosExamenEditados(String(examen.intentos_permitidos ?? 1));
+    setAleatorizarPreguntasEditado(Boolean(examen.aleatorizar_preguntas));
+    setPermitirRetrocesoEditado(Boolean(examen.permitir_retroceso));
     setSesionExamenEditada(examen.sesion_id ?? "");
     const aLocal = (valor: string | null) => valor ? new Date(new Date(valor).getTime() - new Date(valor).getTimezoneOffset() * 60000).toISOString().slice(0,16) : "";
     setDisponibleDesdeEditado(aLocal(examen.disponible_desde));
@@ -1131,6 +1137,8 @@ function AulaFormacionPage() {
         instrucciones: instruccionesExamenEditadas.trim() || null,
         duracion_minutos: Math.max(1, Number(duracionExamenEditada) || 20),
         intentos_permitidos: Math.min(10, Math.max(1, Number(intentosExamenEditados) || 1)),
+        aleatorizar_preguntas: aleatorizarPreguntasEditado,
+        permitir_retroceso: permitirRetrocesoEditado,
         sesion_id: sesionExamenEditada || null,
         disponible_desde: desde ? desde.toISOString() : null,
         disponible_hasta: hasta ? hasta.toISOString() : null,
@@ -1216,10 +1224,10 @@ function AulaFormacionPage() {
 
   async function abrirExamenAlumno(id: string) {
     setMensaje("");
-    const { data, error } = await (supabase as any).rpc("obtener_examen_formacion_alumno", { _examen_id: id });
-    if (error) { setMensaje(error.message); return; }
     const { data: inicio, error: inicioError } = await (supabase as any).rpc("iniciar_intento_formacion", { _examen_id: id });
     if (inicioError) { setMensaje(inicioError.message); return; }
+    const { data, error } = await (supabase as any).rpc("obtener_examen_intento_formacion", { _intento_id: inicio.intento_id });
+    if (error) { setMensaje(error.message); return; }
     const { data: intentoGuardado, error: recuperarError } = await (supabase as any).rpc("recuperar_respuestas_intento_formacion", { _intento_id: inicio.intento_id });
     if (recuperarError) { setMensaje(recuperarError.message); return; }
     const respuestasRecuperadas = Object.fromEntries(
@@ -2240,6 +2248,8 @@ function AulaFormacionPage() {
                 <label className="block text-xs font-medium">Sesión del curso<select value={sesionExamenId} onChange={e=>setSesionExamenId(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"><option value="">Material general del curso</option>{(sesionesQuery.data ?? []).map(s=><option key={s.id} value={s.id}>Sesión {s.numero} · {s.titulo}</option>)}</select></label>
                 <label className="block text-xs font-medium">Instrucciones<textarea value={instruccionesExamen} onChange={e=>setInstruccionesExamen(e.target.value)} rows={2} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"/></label>
                 <div className="grid grid-cols-2 gap-2"><label className="text-xs font-medium">Duración (min)<input type="number" min="1" max="300" value={duracionExamen} onChange={e=>setDuracionExamen(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"/></label><label className="text-xs font-medium">Intentos permitidos<input type="number" min="1" max="10" value={intentosExamen} onChange={e=>setIntentosExamen(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"/></label></div>
+                <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={aleatorizarPreguntas} onChange={e=>setAleatorizarPreguntas(e.target.checked)}/> Aleatorizar el orden de preguntas en cada intento</label>
+                <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={permitirRetroceso} onChange={e=>setPermitirRetroceso(e.target.checked)}/> Permitir volver a preguntas anteriores</label>
                 <button type="submit" disabled={ocupado || !tituloExamen.trim()} className="rounded-lg bg-gold px-4 py-2 text-xs font-semibold text-black disabled:opacity-40">{ocupado ? "Creando…" : "Crear evaluación en borrador"}</button>
               </form>
               <div className="space-y-2"><p className="text-sm font-semibold">Evaluaciones del curso</p>
@@ -2259,6 +2269,8 @@ function AulaFormacionPage() {
                     <label className="text-xs font-medium">Instrucciones<textarea value={instruccionesExamenEditadas} onChange={e=>setInstruccionesExamenEditadas(e.target.value)} rows={2} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"/></label>
                     <label className="text-xs font-medium">Sesión del curso<select value={sesionExamenEditada} onChange={e=>setSesionExamenEditada(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"><option value="">Material general del curso</option>{(sesionesQuery.data ?? []).map(s=><option key={s.id} value={s.id}>Sesión {s.numero} · {s.titulo}</option>)}</select></label>
                     <div className="grid grid-cols-2 gap-2"><label className="text-xs font-medium">Duración (min)<input type="number" min="1" value={duracionExamenEditada} onChange={e=>setDuracionExamenEditada(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"/></label><label className="text-xs font-medium">Intentos permitidos<input type="number" min="1" max="10" value={intentosExamenEditados} onChange={e=>setIntentosExamenEditados(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"/></label></div>
+                    <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={aleatorizarPreguntasEditado} onChange={e=>setAleatorizarPreguntasEditado(e.target.checked)}/> Aleatorizar preguntas por intento</label>
+                    <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={permitirRetrocesoEditado} onChange={e=>setPermitirRetrocesoEditado(e.target.checked)}/> Permitir volver a preguntas anteriores</label>
                     <div className="rounded-lg border border-gold/30 bg-gold/5 p-3"><p className="text-xs font-semibold">Programación del examen</p><p className="mt-1 text-[11px] text-muted-foreground">Hora local de Perú. Déjalos vacíos para no limitar el calendario.</p><div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2"><label className="text-xs font-medium">Habilitar desde<input type="datetime-local" value={disponibleDesdeEditado} onChange={e=>setDisponibleDesdeEditado(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"/></label><label className="text-xs font-medium">Cerrar el<input type="datetime-local" value={disponibleHastaEditado} onChange={e=>setDisponibleHastaEditado(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"/></label></div></div>
                     <div className="flex flex-wrap gap-2"><button type="button" disabled={ocupado || x.publicado} onClick={()=>void guardarEdicionExamen(x)} className="rounded-lg bg-gold px-3 py-2 text-xs font-semibold text-black disabled:opacity-40">Guardar cambios</button><button type="button" onClick={()=>setExamenEditandoId("")} className="rounded-lg border border-border px-3 py-2 text-xs">Cancelar</button></div>
                   </div> : <div className="flex flex-wrap gap-2">
@@ -2462,7 +2474,7 @@ function AulaFormacionPage() {
                 {pregunta.tipo === "practica" ? <textarea value={respuestasAlumno[pregunta.id] ?? ""} onChange={e=>setRespuestasAlumno(v=>({...v,[pregunta.id]:e.target.value}))} rows={5} className="mt-4 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm" placeholder="Escribe tu respuesta…" /> : <div className="mt-4 space-y-3">{pregunta.opciones.map(o=><label key={o.value} className="flex cursor-pointer items-center gap-3 rounded-lg border border-border p-3 text-sm hover:bg-muted/40"><input type="radio" name={pregunta.id} value={o.value} checked={respuestasAlumno[pregunta.id]===o.value} onChange={e=>setRespuestasAlumno(v=>({...v,[pregunta.id]:e.target.value}))}/>{o.label}</label>)}</div>}
               </article>
               <div className="flex flex-wrap items-center justify-between gap-2">
-                {preguntaActualAlumno < total-1 ? <button type="button" disabled={!respondida} onClick={()=>setPreguntaActualAlumno(v=>Math.min(total-1,v+1))} className="rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-black disabled:cursor-not-allowed disabled:opacity-40">Siguiente</button> : <button type="button" disabled={(!respondida && segundosRestantesExamen !== 0) || enviandoExamen} onClick={()=>void enviarExamenAlumno()} className="rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-black disabled:opacity-40"><Send className="mr-1 inline size-4"/> Enviar evaluación</button>}
+                {preguntaActualAlumno > 0 && examenActivoAlumno.permitir_retroceso && <button type="button" onClick={()=>setPreguntaActualAlumno(v=>Math.max(0,v-1))} className="rounded-lg border border-border px-4 py-2 text-sm font-medium">Anterior</button>}{preguntaActualAlumno < total-1 ? <button type="button" disabled={!respondida} onClick={()=>setPreguntaActualAlumno(v=>Math.min(total-1,v+1))} className="rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-black disabled:cursor-not-allowed disabled:opacity-40">Siguiente</button> : <button type="button" disabled={(!respondida && segundosRestantesExamen !== 0) || enviandoExamen} onClick={()=>void enviarExamenAlumno()} className="rounded-lg bg-gold px-4 py-2 text-sm font-semibold text-black disabled:opacity-40"><Send className="mr-1 inline size-4"/> Enviar evaluación</button>}
               </div>
               {!respondida && <p className="text-xs text-muted-foreground">Debes responder esta pregunta para continuar.</p>}
             </> : <p className="text-sm text-muted-foreground">Este examen no contiene preguntas.</p>; })()}
