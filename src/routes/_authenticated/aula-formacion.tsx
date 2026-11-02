@@ -527,6 +527,7 @@ function AulaFormacionPage() {
   const [puntosCoord3, setPuntosCoord3] = useState<Array<{x:number;y:number}>>([{x:0,y:0}]);
   const [cerradoCoord3, setCerradoCoord3] = useState(false);
   const [estadoCoord3, setEstadoCoord3] = useState("");
+  const [laboratorioCoordenadasAbierto, setLaboratorioCoordenadasAbierto] = useState(false);
   const [moduloGeometria, setModuloGeometria] = useState(0);
   const [respuestaGeometria, setRespuestaGeometria] = useState("");
   const [resultadoGeometria, setResultadoGeometria] = useState<"correcto" | "incorrecto" | null>(null);
@@ -1595,12 +1596,18 @@ function AulaFormacionPage() {
   ];
   const renderLaboratorioCoordenadas = () => {
     if (lecturaAbierta?.numero !== 3 || paginaLectura !== 2) return null;
+    if (!laboratorioCoordenadasAbierto) return <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div><p className="text-[10px] font-bold uppercase tracking-widest text-gold-deep">Recurso interactivo · Sesión 03</p><h4 className="mt-1 text-base font-semibold">Laboratorio de coordenadas</h4><p className="mt-1 text-sm text-muted-foreground">Practica coordenadas absolutas, relativas y polares en un espacio de trabajo independiente.</p></div>
+        <button type="button" onClick={() => setLaboratorioCoordenadasAbierto(true)} className="inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-black shadow-sm"><ArrowRight className="size-4"/> Abrir laboratorio</button>
+      </div>
+    </section>;
     const ox=250,oy=170,k=9,last=puntosCoord3[puntosCoord3.length-1]??{x:0,y:0};
     const reset=()=>{setPuntosCoord3([{x:0,y:0}]);setCerradoCoord3(false);setEstadoCoord3("");setModoCoord3("relativas");setValorCoord3("20");setAnguloCoord3("0");};
     const add=()=>{const a=Number(valorCoord3.replace(",",".")),b=Number(anguloCoord3.replace(",","."));if(!Number.isFinite(a)||!Number.isFinite(b)){setEstadoCoord3("Valor no válido");return;}let p={x:a,y:b};if(modoCoord3==="relativas")p={x:last.x+a,y:last.y+b};if(modoCoord3==="polares"){const rad=b*Math.PI/180;p={x:last.x+a*Math.cos(rad),y:last.y+a*Math.sin(rad)};}setPuntosCoord3(v=>[...v,p]);setCerradoCoord3(false);setEstadoCoord3(`Punto: ${p.x.toFixed(2)}, ${p.y.toFixed(2)}`);};
     const pts=puntosCoord3.map(p=>`${ox+p.x*k},${oy-p.y*k}`).join(" ");
-    return <section className="mt-7 overflow-hidden rounded-2xl border border-gold/30 bg-background shadow-sm">
-      <header className="flex items-center justify-between border-b border-border bg-gradient-to-r from-[#fbf8f0] to-background px-4 py-3"><div><p className="text-[10px] font-bold uppercase tracking-widest text-gold-deep">Laboratorio interactivo · 03</p><h4 className="font-semibold">Construye con coordenadas</h4></div><button type="button" onClick={reset} className="rounded-lg border border-border px-3 py-2 text-xs"><RotateCcw className="mr-1 inline size-3.5"/> Reiniciar</button></header>
+    return <div className="fixed inset-0 z-[100] overflow-y-auto bg-background/95 p-3 backdrop-blur-sm sm:p-6"><section className="mx-auto my-2 max-w-6xl overflow-hidden rounded-2xl border border-gold/30 bg-background shadow-2xl sm:my-4">
+      <header className="flex items-center justify-between border-b border-border bg-gradient-to-r from-[#fbf8f0] to-background px-4 py-3"><div><p className="text-[10px] font-bold uppercase tracking-widest text-gold-deep">Laboratorio independiente · Sesión 03</p><h4 className="font-semibold">Construye con coordenadas</h4></div><div className="flex items-center gap-2"><button type="button" onClick={reset} className="rounded-lg border border-border px-3 py-2 text-xs"><RotateCcw className="mr-1 inline size-3.5"/> Reiniciar</button><button type="button" onClick={() => setLaboratorioCoordenadasAbierto(false)} className="rounded-lg border border-border px-3 py-2 text-xs">Volver a la lectura</button></div></header>
       <div className="grid gap-3 p-3 sm:p-4 lg:grid-cols-[1.3fr_.7fr]">
         <div className="overflow-hidden rounded-xl bg-[#17191d]"><div className="flex justify-between border-b border-white/10 px-3 py-2 text-[10px] text-white/70"><span>PLANO XY · SUPERIOR</span><span>{puntosCoord3.length-1} segmentos</span></div>
           <svg viewBox="0 0 500 340" className="w-full" role="img" aria-label="Plano cartesiano interactivo">
@@ -1631,7 +1638,7 @@ function AulaFormacionPage() {
           </div>
         </div>
       </div>
-    </section>;
+    </section></div>;
   };
 
   const renderLaboratorioGeometria = () => {
