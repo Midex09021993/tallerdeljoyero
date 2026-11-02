@@ -1625,8 +1625,8 @@ function AulaFormacionPage() {
             <label className="text-[10px] text-muted-foreground">{modoCoord3==="polares"?"Ángulo °":modoCoord3==="relativas"?"ΔY":"Y"}<input value={anguloCoord3} onChange={e=>setAnguloCoord3(e.target.value)} inputMode="decimal" className="mt-1 w-full rounded-lg border border-border bg-background px-2 py-2.5 text-sm text-foreground"/></label>
           </div><button type="button" onClick={add} className="mt-3 w-full rounded-lg bg-gold px-3 py-2.5 text-sm font-bold text-black">Añadir punto</button><button type="button" onClick={()=>{if(puntosCoord3.length<3){setEstadoCoord3("Añade al menos tres puntos");return;}setCerradoCoord3(true);setEstadoCoord3("Contorno cerrado");}} className="mt-2 w-full rounded-lg border border-border px-3 py-2 text-xs font-semibold">Cerrar contorno</button></div>
           <div className="rounded-xl border border-border p-3 text-xs"><div className="flex justify-between"><b>Último punto</b><span className="font-mono">{last.x.toFixed(2)}, {last.y.toFixed(2)}</span></div><p className="mt-2 min-h-5 text-muted-foreground" aria-live="polite">{estadoCoord3||"Añade puntos y observa el trazado."}</p></div>
-          <div className="rounded-xl border border-gold/30 bg-gold/5 p-3 text-xs">
-            <p className="font-semibold text-foreground">Ejemplo práctico · Dibuja un rectángulo de 20 × 10 mm</p>
+          <div key={modoCoord3} className="rounded-xl border border-gold/30 bg-gold/5 p-3 text-xs">
+            <p className="font-semibold text-foreground">{modoCoord3==="absolutas"?"Ejemplo · Rectángulo por coordenadas absolutas":modoCoord3==="relativas"?"Ejemplo · Rectángulo por desplazamientos relativos":"Ejemplo · Rectángulo por coordenadas polares"}</p>
             {modoCoord3==="absolutas" ? <>
               <p className="mt-1 text-muted-foreground">En <b>Absolutas</b>, cada par indica la posición exacta del siguiente vértice respecto al origen (0, 0):</p>
               <ol className="mt-3 space-y-2">
@@ -1652,7 +1652,7 @@ function AulaFormacionPage() {
                 <li className="flex items-center justify-between gap-3"><span>4. Lado vertical</span><code className="rounded bg-background px-2 py-1 font-semibold">10 mm · 270°</code></li>
               </ol>
             </>}
-            <p className="mt-3 text-muted-foreground">Introduce los cuatro pares en los campos de arriba, pulsa <b>Añadir punto</b> después de cada uno y finalmente <b>Cerrar contorno</b>.</p>
+            <p className="mt-3 text-muted-foreground">{modoCoord3==="absolutas"?"Introduce la posición X/Y de cada vértice, uno por uno.":modoCoord3==="relativas"?"Introduce cada desplazamiento ΔX/ΔY desde el último punto.":"Introduce la distancia y el ángulo de cada lado."} Pulsa <b>Añadir punto</b> después de cada par y finalmente <b>Cerrar contorno</b>.</p>
           </div>
         </div>
       </div>
