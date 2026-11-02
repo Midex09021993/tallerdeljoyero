@@ -1412,13 +1412,13 @@ function AulaFormacionPage() {
       // Lo que el docente guardó en Supabase prevalece sobre la plantilla inicial del código.
       // La plantilla solo se utiliza cuando todavía no existe contenido persistido.
       const seccionesIniciales = s.numero === 1 ? LECTURA_SESION_1 : s.numero === 2 ? LECTURA_SESION_2 : s.numero === 3 ? LECTURA_SESION_3 : s.numero === 4 ? LECTURA_SESION_4 : s.numero === 5 ? LECTURA_SESION_5 : s.numero === 6 ? LECTURA_SESION_6 : s.numero === 7 ? LECTURA_SESION_7 : s.numero === 8 ? LECTURA_SESION_8 : s.numero === 9 ? LECTURA_SESION_9 : s.numero === 10 ? LECTURA_SESION_10 : null;
-      const seccionesEditor = guardadas
+      const seccionesEditor = guardadas?.length
         ? guardadas
         : seccionesIniciales
           ? seccionesIniciales.map(x => ({ titulo: x.titulo, bloques: [...x.bloques] }))
           : [];
       setSeccionesLecturaEditadas(seccionesEditor);
-      setEstadoGuardadoLectura(guardadas
+      setEstadoGuardadoLectura(guardadas?.length
         ? { tipo: "info", texto: "Contenido cargado desde Supabase. Los cambios aún no están guardados." }
         : { tipo: "info", texto: "Contenido inicial cargado. Guarda el borrador para conservarlo en Supabase." });
       setLecturaPublicada(Boolean(data?.publicado));
