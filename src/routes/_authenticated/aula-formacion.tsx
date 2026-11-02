@@ -1009,7 +1009,7 @@ function AulaFormacionPage() {
             <div className="flex min-h-0 flex-1 items-center justify-center overflow-hidden rounded-xl bg-[#111316] p-1.5 sm:p-2">
               {urlActiva ? <img src={urlActiva} alt={"Vista " + vistaActiva.nombre + " (" + vistaActiva.ingles + ") de Rhino"} className="block h-auto max-h-full w-auto max-w-full object-contain" loading="lazy"/> : erroresVistasPlano[vistaPlanoActiva] ? <p className="max-w-lg px-4 text-center text-sm text-amber-200">{erroresVistasPlano[vistaPlanoActiva]}</p> : <p className="text-sm text-white/70">Cargando imagen de la vista…</p>}
             </div>
-            <div className="shrink-0 px-2 pb-1 text-center"><h5 className="text-base font-semibold sm:text-lg">{vistaActiva.nombre} <span className="font-normal text-muted-foreground">({vistaActiva.ingles})</span></h5><p className="mx-auto mt-1 max-w-4xl text-xs leading-5 text-muted-foreground sm:text-sm">{vistaActiva.descripcion}</p></div>
+            <div className="shrink-0 px-2 pb-1 text-center"><h5 className="text-base font-semibold text-[#252a31] sm:text-lg">{vistaActiva.nombre} <span className="font-normal text-[#4b5563]">({vistaActiva.ingles})</span></h5><p className="mx-auto mt-1 max-w-4xl text-xs leading-5 text-[#414852] sm:text-sm">{vistaActiva.descripcion}</p></div>
           </div>
         </div>
       </div>}
