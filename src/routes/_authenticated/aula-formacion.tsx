@@ -551,6 +551,10 @@ function AulaFormacionPage() {
   const [retoOsnap, setRetoOsnap] = useState(0);
   const [respuestaOsnap, setRespuestaOsnap] = useState<string | null>(null);
   const [aciertosOsnap, setAciertosOsnap] = useState(0);
+  const [laboratorioSmartTrackAbierto, setLaboratorioSmartTrackAbierto] = useState(false);
+  const [retoSmartTrack, setRetoSmartTrack] = useState(0);
+  const [respuestaSmartTrack, setRespuestaSmartTrack] = useState<string | null>(null);
+  const [aciertosSmartTrack, setAciertosSmartTrack] = useState(0);
   const [moduloGeometria, setModuloGeometria] = useState(0);
   const [respuestaGeometria, setRespuestaGeometria] = useState("");
   const [resultadoGeometria, setResultadoGeometria] = useState<"correcto" | "incorrecto" | null>(null);
@@ -1767,6 +1771,51 @@ function AulaFormacionPage() {
     </section></div>;
   };
 
+  const renderLaboratorioSmartTrack = () => {
+    if (lecturaAbierta?.numero !== 3 || paginaLectura !== 5) return null;
+    const retos = [
+      { nombre: "Alineación horizontal", pregunta: "Ya capturaste un punto de referencia. Necesitas colocar el siguiente punto a la misma altura, manteniendo la coordenada Y.", correcta: "Horizontal", explicacion: "La guía horizontal conserva la misma altura (Y) del punto de referencia y ayuda a mantener una alineación paralela al eje X.", tipo: "horizontal" },
+      { nombre: "Alineación vertical", pregunta: "Necesitas ubicar el siguiente punto directamente encima del punto de referencia, manteniendo su coordenada X.", correcta: "Vertical", explicacion: "La guía vertical conserva la misma posición X del punto de referencia y ayuda a mantener una alineación paralela al eje Y.", tipo: "vertical" },
+      { nombre: "Cruce de guías", pregunta: "Dos puntos de referencia generan una guía horizontal y otra vertical. ¿Qué representa el cruce de ambas?", correcta: "Intersección", explicacion: "El cruce de las guías temporales permite localizar una posición relacionada con ambos puntos de referencia, sin dibujar líneas auxiliares permanentes.", tipo: "cruce" }
+    ] as const;
+    const reto = retos[retoSmartTrack] ?? retos[0];
+    const responder = (opcion: string) => {
+      if (respuestaSmartTrack !== null) return;
+      setRespuestaSmartTrack(opcion);
+      if (opcion === reto.correcta) setAciertosSmartTrack(v => v + 1);
+    };
+    const siguiente = () => {
+      if (retoSmartTrack === retos.length - 1) {
+        setLaboratorioSmartTrackAbierto(false);
+        setRetoSmartTrack(0);
+        setRespuestaSmartTrack(null);
+      } else {
+        setRetoSmartTrack(v => v + 1);
+        setRespuestaSmartTrack(null);
+      }
+    };
+    const reiniciar = () => { setRetoSmartTrack(0); setRespuestaSmartTrack(null); setAciertosSmartTrack(0); };
+    if (!laboratorioSmartTrackAbierto) return <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5">
+      <div className="flex flex-wrap items-center justify-between gap-4"><div><p className="text-[10px] font-bold uppercase tracking-widest text-gold-deep">Recurso interactivo · Sesión 03</p><h4 className="mt-1 text-base font-semibold">Simulador SmartTrack</h4><p className="mt-1 text-sm text-muted-foreground">Practica alineaciones temporales usando puntos de referencia.</p></div><button type="button" onClick={() => { reiniciar(); setLaboratorioSmartTrackAbierto(true); }} className="inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-black"><ArrowRight className="size-4"/> Abrir simulador</button></div>
+    </section>;
+    return <div className="fixed inset-0 z-[101] overflow-hidden bg-background/95 p-2 backdrop-blur-sm sm:p-3"><section className="mx-auto flex h-[calc(100dvh-1rem)] max-w-[min(96vw,1500px)] flex-col overflow-hidden rounded-2xl border border-gold/30 bg-background shadow-2xl sm:h-[calc(100dvh-1.5rem)]">
+      <header className="flex shrink-0 items-center justify-between border-b border-border bg-gradient-to-r from-[#fbf8f0] to-background px-4 py-3"><div><p className="text-[10px] font-bold uppercase tracking-widest text-gold-deep">Simulador SmartTrack · Sesión 03</p><h4 className="font-semibold">Alinea con guías temporales</h4></div><div className="flex items-center gap-2"><span className="hidden text-xs text-muted-foreground sm:inline">Aciertos: {aciertosSmartTrack}/{retos.length}</span><button type="button" onClick={reiniciar} className="rounded-lg border border-border px-3 py-2 text-xs"><RotateCcw className="mr-1 inline size-3.5"/> Reiniciar</button><button type="button" onClick={() => setLaboratorioSmartTrackAbierto(false)} className="rounded-lg border border-border px-3 py-2 text-xs">Volver a la lectura</button></div></header>
+      <div className="grid min-h-0 flex-1 gap-3 overflow-hidden p-2 sm:p-3 lg:grid-cols-[minmax(0,1.4fr)_minmax(350px,.8fr)]">
+        <div className="flex min-h-[260px] min-w-0 flex-col overflow-hidden rounded-xl bg-[#17191d]"><div className="flex shrink-0 justify-between border-b border-white/10 px-3 py-2 text-[10px] text-white/70"><span>PLANO XY · GUÍAS TEMPORALES</span><span>RETO {retoSmartTrack + 1} / {retos.length}</span></div>
+          <svg viewBox="0 0 600 420" className="min-h-0 w-full flex-1" role="img" aria-label={"Ejemplo visual de " + reto.nombre}>
+            <defs><pattern id="smarttrack-grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M 24 0 L 0 0 0 24" fill="none" stroke="#343a43" strokeWidth="1"/></pattern></defs><rect width="600" height="420" fill="url(#smarttrack-grid)"/>
+            {reto.tipo === "horizontal" && <><circle cx="190" cy="205" r="9" fill="#e7bd62"/><path d="M190 205 H520" stroke="#67d6a0" strokeWidth="3" strokeDasharray="9 7"/><path d="M190 205 V350" stroke="#7c8796" strokeWidth="2" strokeDasharray="5 7"/><circle cx="420" cy="205" r="9" fill="#67d6a0"/><text x="175" y="185" fill="white" fontSize="14">Referencia</text><text x="430" y="190" fill="#67d6a0" fontSize="14">Cursor alineado</text></>}
+            {reto.tipo === "vertical" && <><circle cx="300" cy="310" r="9" fill="#e7bd62"/><path d="M300 310 V55" stroke="#67d6a0" strokeWidth="3" strokeDasharray="9 7"/><path d="M300 310 H500" stroke="#7c8796" strokeWidth="2" strokeDasharray="5 7"/><circle cx="300" cy="115" r="9" fill="#67d6a0"/><text x="315" y="330" fill="white" fontSize="14">Referencia</text><text x="315" y="110" fill="#67d6a0" fontSize="14">Cursor alineado</text></>}
+            {reto.tipo === "cruce" && <><circle cx="180" cy="300" r="9" fill="#e7bd62"/><circle cx="420" cy="120" r="9" fill="#e7bd62"/><path d="M180 300 H420 M420 120 V300" stroke="#67d6a0" strokeWidth="3" strokeDasharray="9 7"/><circle cx="420" cy="300" r="10" fill="#f4d27f"/><path d="M420 300 L500 350" stroke="#f4d27f" strokeDasharray="5 5"/><text x="145" y="330" fill="white" fontSize="14">Referencia 1</text><text x="430" y="115" fill="white" fontSize="14">Referencia 2</text><text x="435" y="290" fill="#f4d27f" fontSize="14">Cruce</text></>}
+          </svg><p className="shrink-0 border-t border-white/10 px-3 py-2 text-[10px] text-white/70">Amarillo: puntos de referencia · Verde: guías temporales · No se crean curvas auxiliares</p>
+        </div>
+        <div className="flex min-h-0 flex-col gap-3 overflow-y-auto pr-1"><div className="rounded-xl border border-border p-4"><span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Identifica la relación de alineación</span><p className="mt-3 text-base font-semibold leading-snug">{reto.pregunta}</p><div className="mt-4 grid grid-cols-1 gap-2">{["Horizontal","Vertical","Intersección"].map(op => <button key={op} type="button" disabled={respuestaSmartTrack !== null} onClick={() => responder(op)} className={"rounded-xl border px-3 py-3 text-sm font-semibold transition " + (respuestaSmartTrack === op ? (op === reto.correcta ? "border-emerald-500 bg-emerald-500/10 text-emerald-700" : "border-red-400 bg-red-400/10 text-red-700") : respuestaSmartTrack !== null && op === reto.correcta ? "border-emerald-500 bg-emerald-500/10 text-emerald-700" : "border-border hover:border-gold/60 hover:bg-gold/5")}>{op}</button>)}</div>
+          {respuestaSmartTrack !== null && <div className="mt-4 rounded-xl bg-muted p-3 text-sm"><p className="font-semibold">{respuestaSmartTrack === reto.correcta ? "¡Correcto!" : "Revisa la guía resaltada"}</p><p className="mt-1 text-muted-foreground">{reto.explicacion}</p><button type="button" onClick={siguiente} className="mt-3 w-full rounded-lg bg-gold px-4 py-2.5 font-semibold text-black">{retoSmartTrack === retos.length - 1 ? "Finalizar simulador" : "Siguiente reto"} <ArrowRight className="ml-1 inline size-4"/></button></div>}
+        </div><div className="rounded-xl border border-border p-3"><div className="flex items-center justify-between"><b className="text-xs">Progreso</b><span className="text-xs text-muted-foreground">{aciertosSmartTrack} aciertos</span></div><div className="mt-2 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-gold transition-all" style={{width: ((retoSmartTrack + 1) / retos.length * 100) + "%"}}/></div><p className="mt-2 text-[11px] text-muted-foreground">Completa las tres situaciones para reconocer las alineaciones temporales.</p></div></div>
+      </div>
+    </section></div>;
+  };
+
   const renderLaboratorioGeometria = () => {
     if (lecturaAbierta?.numero !== 2 || paginaLectura !== 1) return null;
     if (!laboratorioGeometriaAbierto) return <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5 sm:p-6">
@@ -1971,6 +2020,7 @@ function AulaFormacionPage() {
                 })}
                 {renderLaboratorioCoordenadas()}
                 {renderLaboratorioOsnap()}
+                {renderLaboratorioSmartTrack()}
 
                 {renderLaboratorioGeometria()}
                 {renderLaboratorioCapas()}
