@@ -99,7 +99,7 @@ function BibliotecaComandosPage() {
           <span className="inline-flex items-center gap-2 rounded-full border border-[#c4a46a]/30 bg-[#c4a46a]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[.15em] text-[#87652f]"><BookOpen className="size-3.5"/> FADILAB · Recurso permanente</span>
           <h1 className="mt-4 text-2xl font-semibold tracking-tight text-[#25231f] sm:text-3xl">Biblioteca de comandos Rhino</h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-[#69645a]">Aprende qué hace cada herramienta, cuándo utilizarla y cómo aplicarla al diseño de joyería. Consulta una ficha antes de pasar a la práctica.</p>
-          <div className="mt-5 flex flex-wrap gap-2 text-xs text-[#776b58]"><span className="rounded-full border border-[#e5dccb] bg-white/80 px-3 py-1.5">{COMANDOS.length} fichas iniciales</span><span className="rounded-full border border-[#e5dccb] bg-white/80 px-3 py-1.5">{CATEGORIAS.length - 1} categorías</span><span className="rounded-full border border-[#e5dccb] bg-white/80 px-3 py-1.5">Rhino 7 · MatrixGold 3.1</span></div>
+          <div className="mt-5 flex flex-wrap gap-2 text-xs text-[#776b58]"><span className="rounded-full border border-[#e5dccb] bg-white/80 px-3 py-1.5">{COMANDOS.length} fichas didácticas desarrolladas</span><span className="rounded-full border border-[#e5dccb] bg-white/80 px-3 py-1.5">{CATEGORIAS.length - 1} categorías</span><span className="rounded-full border border-[#e5dccb] bg-white/80 px-3 py-1.5">Referencia: Rhino 7</span></div>
         </div>
       </section>
 
@@ -132,18 +132,22 @@ function BibliotecaComandosPage() {
       </article>})}</section>}
       <section className="rounded-2xl border border-border bg-muted/20 p-4 text-xs leading-5 text-muted-foreground"><p className="font-semibold text-foreground">Nota didáctica</p><p className="mt-1">Estas son fichas iniciales de consulta. Los pasos describen el flujo general y algunas opciones pueden variar según la versión, el método elegido y la configuración del documento. Antes de aplicar un comando a una pieza real, practica con geometría de prueba y revisa las indicaciones de la línea de comandos de Rhino.</p></section>
 
-      <section aria-label="Contador general de comandos" className="overflow-hidden rounded-2xl border border-[#d8c39b]/70 bg-gradient-to-br from-[#fbf8f0] via-white to-[#f7f3eb] p-5 shadow-sm sm:p-6">
+      <section aria-label="Estado del inventario de comandos" className="overflow-hidden rounded-2xl border border-[#d8c39b]/70 bg-gradient-to-br from-[#fbf8f0] via-white to-[#f7f3eb] p-5 shadow-sm sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <span className="flex size-11 items-center justify-center rounded-xl border border-[#c4a46a]/30 bg-[#c4a46a]/10 text-[#87652f]"><Command className="size-5"/></span>
-            <div><p className="text-xs font-semibold uppercase tracking-[.14em] text-[#98743c]">Inventario de la biblioteca</p><h2 className="mt-1 text-lg font-semibold text-[#25231f]">Comandos registrados · Rhino 7</h2></div>
+            <div><p className="text-xs font-semibold uppercase tracking-[.14em] text-[#98743c]">Estado de la biblioteca</p><h2 className="mt-1 text-lg font-semibold text-[#25231f]">Fichas didácticas desarrolladas</h2></div>
           </div>
-          <div className="text-left sm:text-right"><p className="text-3xl font-semibold tabular-nums tracking-tight text-[#87652f]">{COMANDOS.length}</p><p className="text-xs text-[#776b58]">comandos en total</p></div>
+          <div className="text-left sm:text-right"><p className="text-3xl font-semibold tabular-nums tracking-tight text-[#87652f]">{COMANDOS.length}</p><p className="text-xs text-[#776b58]">fichas disponibles</p></div>
         </div>
         <div className="mt-4 grid grid-cols-2 gap-3 border-t border-[#e5dccb] pt-4 sm:grid-cols-3">
-          <div><p className="text-xl font-semibold tabular-nums text-[#25231f]">{CAPITULOS.length}</p><p className="text-xs text-[#776b58]">Capítulos</p></div>
+          <div><p className="text-xl font-semibold tabular-nums text-[#25231f]">{CAPITULOS.length}</p><p className="text-xs text-[#776b58]">Capítulos temáticos</p></div>
           <div><p className="text-xl font-semibold tabular-nums text-[#25231f]">{CATEGORIAS.length - 1}</p><p className="text-xs text-[#776b58]">Categorías</p></div>
-          <div className="col-span-2 sm:col-span-1"><p className="text-sm font-semibold text-[#25231f]">Conteo automático</p><p className="text-xs text-[#776b58]">Se actualiza al añadir o retirar fichas.</p></div>
+          <div className="col-span-2 sm:col-span-1"><p className="text-sm font-semibold text-[#25231f]">Inventario total Rhino 7</p><p className="text-xs text-[#776b58]">Pendiente de cotejo con la lista de comandos de una instalación concreta.</p></div>
+        </div>
+        <div className="mt-4 rounded-xl border border-[#e5dccb] bg-white/80 p-3">
+          <p className="text-sm leading-5 text-[#5f5a51]">Las {COMANDOS.length} fichas son contenido didáctico elaborado para esta biblioteca; no representan el total de comandos que incluye Rhino 7. El inventario completo puede variar según la versión, los componentes y los complementos instalados.</p>
+          <a href="https://docs.mcneel.com/rhino/7mac/help/es-es/commandlist/command_list.htm" target="_blank" rel="noreferrer" className="mt-2 inline-flex text-xs font-semibold text-[#87652f] underline underline-offset-4 hover:text-[#5f4724]">Consultar referencia oficial de comandos Rhino 7 ↗</a>
         </div>
       </section>
     </main>
