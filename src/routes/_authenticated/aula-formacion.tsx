@@ -162,7 +162,7 @@ const LECTURA_SESION_3 = [
   { titulo: "3. Coordenadas absolutas, relativas y polares", bloques: [
     "Las coordenadas absolutas indican una posición respecto al origen del sistema de coordenadas del plano de trabajo. En el sistema cartesiano se expresan mediante X, Y y Z. Por ejemplo, 20,10,0 indica X=20, Y=10 y Z=0 en las unidades del archivo.",
     "Las coordenadas relativas definen una nueva posición tomando como referencia el último punto indicado. En Rhino se utiliza el prefijo @. Por ejemplo, @10,0,0 indica avanzar 10 unidades en X desde el punto anterior, manteniendo Y y Z.",
-    "Las coordenadas polares permiten definir un desplazamiento mediante una distancia y un ángulo en el plano. En Rhino se utiliza la notación distancia<ángulo; por ejemplo, 10<45 representa un desplazamiento de 10 unidades con dirección de 45 grados en el plano de trabajo.",
+    "Las coordenadas polares definen una posición mediante una distancia y un ángulo respecto al eje X positivo del plano de construcción. Por ejemplo, 10<45 sitúa el punto a 10 unidades del origen con una dirección de 45° en sentido antihorario. Para medir desde el último punto, utiliza coordenadas polares relativas con @: @10<45. Los ángulos comienzan en 0° hacia la derecha y aumentan en sentido antihorario: 90° arriba, 180° a la izquierda y 270° abajo.",
     "La diferencia esencial es el punto y la forma de referencia: las absolutas parten del origen, las relativas del último punto y las polares expresan longitud y dirección. Verifica siempre el plano de construcción y las unidades antes de introducir valores."
   ]},
   { titulo: "4. Restricciones de distancia y ángulo", bloques: [
@@ -183,13 +183,13 @@ const LECTURA_SESION_3 = [
   ]},
   { titulo: "7. Práctica aplicada: placa base para una joya", bloques: [
     "Prepara un documento en milímetros, activa la vista Superior y utiliza el plano de construcción predeterminado. Inicia una polilínea en el origen con la coordenada absoluta 0,0,0.",
-    "Construye un rectángulo de 20 × 10 mm mediante desplazamientos relativos: desde el primer punto introduce @20,0,0; después @0,10,0; luego @-20,0,0 y cierra la polilínea. Comprueba que las dimensiones sean 20 mm por 10 mm.",
+    "Construye un rectángulo de 20 × 10 mm mediante coordenadas relativas cartesianas: desde el primer punto introduce @20,0,0; después @0,10,0; luego @-20,0,0 y cierra la polilínea. Comprueba que las dimensiones sean 20 mm por 10 mm.\n\nRepite el mismo rectángulo usando coordenadas polares relativas. Inicia otra polilínea en 0,0,0 y, en cada vértice, introduce @20<0 (lado derecho), @10<90 (lado superior), @20<180 (lado izquierdo) y @10<270 (lado inferior). Cierra la polilínea y verifica que también mida 20 × 10 mm. Observa que aquí @ indica que la distancia y el ángulo se calculan desde el último punto, no desde el origen.",
     "Traza las dos diagonales del rectángulo. Utiliza Osnap Int para localizar su intersección y dibuja allí un círculo de radio 3 mm. Comprueba el centro con la referencia de intersección y el tamaño con la herramienta de medición correspondiente.",
     "Utiliza End y Mid para capturar puntos exactos de las curvas. Activa SmartTrack y prueba una alineación temporal respecto a puntos existentes, sin dejar líneas auxiliares innecesarias en el archivo.",
     "Guarda el ejercicio como Sesion_03_Modelado_Preciso.3dm. Verifica que el rectángulo mida 20 × 10 mm, que el círculo tenga radio 3 mm y que toda la geometría esté en el plano de construcción esperado."
   ]},
   { titulo: "8. Verificación y criterios de logro", bloques: [
-    "Al finalizar debes poder diferenciar coordenadas absolutas, relativas y polares; aplicar restricciones de distancia y ángulo; utilizar al menos tres referencias Osnap adecuadas; y explicar cómo SmartTrack facilita una alineación temporal.",
+    "Al finalizar debes poder diferenciar coordenadas absolutas, relativas cartesianas y polares relativas; introducir una posición polar desde el origen y un desplazamiento polar desde el último punto; construir el rectángulo de 20 × 10 mm con @distancia<ángulo; aplicar restricciones de distancia y ángulo; utilizar al menos tres referencias Osnap adecuadas; y explicar cómo SmartTrack facilita una alineación temporal.",
     "La práctica se considera correcta cuando las dimensiones del rectángulo y del círculo coinciden con los valores solicitados, las curvas están correctamente ubicadas y el archivo queda guardado con el nombre indicado.",
     "Antes de continuar, revisa que no hayas creado geometría accidental fuera del plano de construcción. La siguiente sesión abordará la edición de curvas y las transformaciones."
   ]}
