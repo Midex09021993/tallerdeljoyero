@@ -80,7 +80,7 @@ function BibliotecaComandosPage() {
   const [busqueda, setBusqueda] = useState("");
   const [categoria, setCategoria] = useState("Todas");
   const [capitulo, setCapitulo] = useState<number | null>(null);
-  const [abierto, setAbierto] = useState("Line");
+  const [abierto, setAbierto] = useState("");
   const filtrados = useMemo(() => {
     const normalizar = (texto: string) => texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es");
     const q = normalizar(busqueda.trim());
@@ -108,7 +108,7 @@ function BibliotecaComandosPage() {
           <div><p className="text-xs font-semibold uppercase tracking-wider text-[#98743c]">Ruta de aprendizaje</p><h2 className="mt-1 text-lg font-semibold text-foreground">16 capítulos de consulta</h2><p className="mt-1 text-sm text-muted-foreground">Selecciona un capítulo para consultar únicamente los comandos que lo componen.</p></div>
           <button type="button" onClick={() => { setCapitulo(null); setCategoria("Todas"); }} className="rounded-lg border border-border px-3 py-2 text-xs font-medium text-muted-foreground transition hover:border-[#c4a46a] hover:text-foreground">Ver biblioteca completa</button>
         </div>
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">{CAPITULOS.map((cap) => <button key={cap.numero} type="button" onClick={() => { setCapitulo(cap.numero); setCategoria("Todas"); setAbierto(cap.comandos[0] ?? ""); }} aria-pressed={capitulo===cap.numero} className={`rounded-xl border p-3 text-left transition ${capitulo===cap.numero ? "border-[#b99657] bg-[#fbf6eb] ring-1 ring-[#c4a46a]/20" : "border-border bg-background hover:border-[#c4a46a]"}`}><span className="text-[10px] font-semibold uppercase tracking-wider text-[#98743c]">Capítulo {String(cap.numero).padStart(2,"0")}</span><span className="mt-1 block text-sm font-semibold text-foreground">{cap.titulo}</span><span className="mt-1 block text-xs leading-5 text-muted-foreground">{cap.objetivo}</span><span className="mt-2 block text-[10px] text-muted-foreground">{cap.comandos.length} {cap.comandos.length===1 ? "comando" : "comandos"}</span></button>)}</div>
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">{CAPITULOS.map((cap) => <button key={cap.numero} type="button" onClick={() => { setCapitulo(cap.numero); setCategoria("Todas"); setAbierto(""); }} aria-pressed={capitulo===cap.numero} className={`rounded-xl border p-3 text-left transition ${capitulo===cap.numero ? "border-[#b99657] bg-[#fbf6eb] ring-1 ring-[#c4a46a]/20" : "border-border bg-background hover:border-[#c4a46a]"}`}><span className="text-[10px] font-semibold uppercase tracking-wider text-[#98743c]">Capítulo {String(cap.numero).padStart(2,"0")}</span><span className="mt-1 block text-sm font-semibold text-foreground">{cap.titulo}</span><span className="mt-1 block text-xs leading-5 text-muted-foreground">{cap.objetivo}</span><span className="mt-2 block text-[10px] text-muted-foreground">{cap.comandos.length} {cap.comandos.length===1 ? "comando" : "comandos"}</span></button>)}</div>
       </section>
 
       <section className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
