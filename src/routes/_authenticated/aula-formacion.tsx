@@ -1627,14 +1627,32 @@ function AulaFormacionPage() {
           <div className="rounded-xl border border-border p-3 text-xs"><div className="flex justify-between"><b>Último punto</b><span className="font-mono">{last.x.toFixed(2)}, {last.y.toFixed(2)}</span></div><p className="mt-2 min-h-5 text-muted-foreground" aria-live="polite">{estadoCoord3||"Añade puntos y observa el trazado."}</p></div>
           <div className="rounded-xl border border-gold/30 bg-gold/5 p-3 text-xs">
             <p className="font-semibold text-foreground">Ejemplo práctico · Dibuja un rectángulo de 20 × 10 mm</p>
-            <p className="mt-1 text-muted-foreground">Selecciona <b>Relativas</b>. Empieza desde el origen (0, 0) y añade estos desplazamientos, uno por uno:</p>
-            <ol className="mt-3 space-y-2">
-              <li className="flex items-center justify-between gap-3"><span>1. Lado horizontal</span><code className="rounded bg-background px-2 py-1 font-semibold">ΔX 20 · ΔY 0</code></li>
-              <li className="flex items-center justify-between gap-3"><span>2. Lado vertical</span><code className="rounded bg-background px-2 py-1 font-semibold">ΔX 0 · ΔY 10</code></li>
-              <li className="flex items-center justify-between gap-3"><span>3. Lado horizontal</span><code className="rounded bg-background px-2 py-1 font-semibold">ΔX -20 · ΔY 0</code></li>
-              <li className="flex items-center justify-between gap-3"><span>4. Lado vertical</span><code className="rounded bg-background px-2 py-1 font-semibold">ΔX 0 · ΔY -10</code></li>
-            </ol>
-            <p className="mt-3 text-muted-foreground">Por último, pulsa <b>Cerrar contorno</b>. Comprueba que la figura tenga cuatro lados y vuelva al punto inicial.</p>
+            {modoCoord3==="absolutas" ? <>
+              <p className="mt-1 text-muted-foreground">En <b>Absolutas</b>, cada par indica la posición exacta del siguiente vértice respecto al origen (0, 0):</p>
+              <ol className="mt-3 space-y-2">
+                <li className="flex items-center justify-between gap-3"><span>1. Esquina inferior derecha</span><code className="rounded bg-background px-2 py-1 font-semibold">X 20 · Y 0</code></li>
+                <li className="flex items-center justify-between gap-3"><span>2. Esquina superior derecha</span><code className="rounded bg-background px-2 py-1 font-semibold">X 20 · Y 10</code></li>
+                <li className="flex items-center justify-between gap-3"><span>3. Esquina superior izquierda</span><code className="rounded bg-background px-2 py-1 font-semibold">X 0 · Y 10</code></li>
+                <li className="flex items-center justify-between gap-3"><span>4. Regresa al origen</span><code className="rounded bg-background px-2 py-1 font-semibold">X 0 · Y 0</code></li>
+              </ol>
+            </> : modoCoord3==="relativas" ? <>
+              <p className="mt-1 text-muted-foreground">En <b>Relativas</b>, cada valor desplaza el punto desde el último vértice. Comienza en (0, 0):</p>
+              <ol className="mt-3 space-y-2">
+                <li className="flex items-center justify-between gap-3"><span>1. Lado horizontal</span><code className="rounded bg-background px-2 py-1 font-semibold">ΔX 20 · ΔY 0</code></li>
+                <li className="flex items-center justify-between gap-3"><span>2. Lado vertical</span><code className="rounded bg-background px-2 py-1 font-semibold">ΔX 0 · ΔY 10</code></li>
+                <li className="flex items-center justify-between gap-3"><span>3. Lado horizontal</span><code className="rounded bg-background px-2 py-1 font-semibold">ΔX -20 · ΔY 0</code></li>
+                <li className="flex items-center justify-between gap-3"><span>4. Lado vertical</span><code className="rounded bg-background px-2 py-1 font-semibold">ΔX 0 · ΔY -10</code></li>
+              </ol>
+            </> : <>
+              <p className="mt-1 text-muted-foreground">En <b>Polares</b>, introduce la longitud de cada lado y su ángulo respecto al eje X positivo:</p>
+              <ol className="mt-3 space-y-2">
+                <li className="flex items-center justify-between gap-3"><span>1. Lado horizontal</span><code className="rounded bg-background px-2 py-1 font-semibold">20 mm · 0°</code></li>
+                <li className="flex items-center justify-between gap-3"><span>2. Lado vertical</span><code className="rounded bg-background px-2 py-1 font-semibold">10 mm · 90°</code></li>
+                <li className="flex items-center justify-between gap-3"><span>3. Lado horizontal</span><code className="rounded bg-background px-2 py-1 font-semibold">20 mm · 180°</code></li>
+                <li className="flex items-center justify-between gap-3"><span>4. Lado vertical</span><code className="rounded bg-background px-2 py-1 font-semibold">10 mm · 270°</code></li>
+              </ol>
+            </>}
+            <p className="mt-3 text-muted-foreground">Introduce los cuatro pares en los campos de arriba, pulsa <b>Añadir punto</b> después de cada uno y finalmente <b>Cerrar contorno</b>.</p>
           </div>
         </div>
       </div>
