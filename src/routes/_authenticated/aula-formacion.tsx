@@ -499,6 +499,7 @@ function AulaFormacionPage() {
   const [instruccionesExamen, setInstruccionesExamen] = useState("");
   const [duracionExamen, setDuracionExamen] = useState("30");
   const [intentosExamen, setIntentosExamen] = useState("1");
+  const [sesionExamenId, setSesionExamenId] = useState("");
   const [examenSeleccionado, setExamenSeleccionado] = useState("");
   const [examenEditandoId, setExamenEditandoId] = useState("");
   const [preguntasAbiertasExamenId, setPreguntasAbiertasExamenId] = useState("");
@@ -510,6 +511,7 @@ function AulaFormacionPage() {
   const [instruccionesExamenEditadas, setInstruccionesExamenEditadas] = useState("");
   const [duracionExamenEditada, setDuracionExamenEditada] = useState("20");
   const [intentosExamenEditados, setIntentosExamenEditados] = useState("1");
+  const [sesionExamenEditada, setSesionExamenEditada] = useState("");
   const [disponibleDesdeEditado, setDisponibleDesdeEditado] = useState("");
   const [disponibleHastaEditado, setDisponibleHastaEditado] = useState("");
   const [examenEliminarPendiente, setExamenEliminarPendiente] = useState<Examen | null>(null);
@@ -682,18 +684,22 @@ function AulaFormacionPage() {
   }, [componenteActivo]);
 
   const rolAlumno = Boolean(sesion?.roles.some((r) => r === "gerente" || r === "operario"));
-  const fadilabCandidate = sesion?.participantes.find((p) => /fadilab/i.test(p.nombre)) ?? null;
+  // La autorización la decide la función SQL; el nombre del taller no se utiliza como credencial.
   const permisoDocente = useQuery({
-    queryKey: ["aula-formacion-docente-fadilab", sesion?.user.id, fadilabCandidate?.id],
-    enabled: Boolean(sesion?.esAdmin && fadilabCandidate?.id),
+    queryKey: ["aula-formacion-docente-autorizado", sesion?.user.id, (sesion?.participantes ?? []).map(p => p.id).sort().join(",")],
+    enabled: Boolean(sesion?.esAdmin && sesion?.participantes.length),
     queryFn: async () => {
-      const { data, error } = await (supabase as any).rpc("formacion_es_docente", { _participante_id: fadilabCandidate!.id });
-      if (error) throw error;
-      return data === true;
+      for (const participante of sesion!.participantes) {
+        const { data, error } = await (supabase as any).rpc("formacion_es_docente", { _participante_id: participante.id });
+        if (error) throw error;
+        if (data === true) return participante;
+      }
+      return null;
     },
   });
-  const esDocente = Boolean(sesion?.esAdmin && fadilabCandidate?.id && permisoDocente.data === true);
-  const participanteId = esDocente ? fadilabCandidate!.id : null;
+  const participanteDocente = permisoDocente.data ?? null;
+  const esDocente = Boolean(sesion?.esAdmin && participanteDocente?.id);
+  const participanteId = esDocente ? participanteDocente!.id : null;
 
   const cursosQuery = useQuery({
     queryKey: ["aula-formacion-cursos-docente", participanteId],
@@ -1066,7 +1072,7 @@ function AulaFormacionPage() {
     setOcupado(true); setMensaje("");
     try {
       const { data, error } = await (supabase as any).from("formacion_examenes").insert({
-        participante_id: participanteId, curso_id: cursoActivoId, titulo: tituloExamen.trim(),
+        participante_id: participanteId, curso_id: cursoActivoId, sesion_id: sesionExamenId || null, titulo: tituloExamen.trim(),
         instrucciones: instruccionesExamen.trim() || null, duracion_minutos: Number(duracionExamen) || null,
         intentos_permitidos: Math.max(1, Number(intentosExamen) || 1), puntaje_maximo: 20,
         publicado: false, creado_por: sesion?.user.id,
@@ -1106,6 +1112,7 @@ function AulaFormacionPage() {
     setInstruccionesExamenEditadas(examen.instrucciones ?? "");
     setDuracionExamenEditada(String(examen.duracion_minutos ?? 20));
     setIntentosExamenEditados(String(examen.intentos_permitidos ?? 1));
+    setSesionExamenEditada(examen.sesion_id ?? "");
     const aLocal = (valor: string | null) => valor ? new Date(new Date(valor).getTime() - new Date(valor).getTimezoneOffset() * 60000).toISOString().slice(0,16) : "";
     setDisponibleDesdeEditado(aLocal(examen.disponible_desde));
     setDisponibleHastaEditado(aLocal(examen.disponible_hasta));
@@ -1124,6 +1131,7 @@ function AulaFormacionPage() {
         instrucciones: instruccionesExamenEditadas.trim() || null,
         duracion_minutos: Math.max(1, Number(duracionExamenEditada) || 20),
         intentos_permitidos: Math.min(10, Math.max(1, Number(intentosExamenEditados) || 1)),
+        sesion_id: sesionExamenEditada || null,
         disponible_desde: desde ? desde.toISOString() : null,
         disponible_hasta: hasta ? hasta.toISOString() : null,
       }).eq("id", examen.id).eq("participante_id", participanteId).eq("curso_id", cursoActivoId);
@@ -2226,6 +2234,14 @@ function AulaFormacionPage() {
             </Panel></div>}
           {seccionDocente === "evaluaciones" && cursoActivoId && <div id="doc-evaluaciones" className="scroll-mt-24"><Panel titulo="Evaluaciones y cuestionarios" colapsable defaultOpen={false}>
             <div className="space-y-3 p-5">
+              <form onSubmit={crearExamen} className="space-y-3 rounded-xl border border-border bg-muted/20 p-4">
+                <div><p className="text-sm font-semibold">Crear evaluación</p><p className="mt-1 text-xs text-muted-foreground">Se guardará como borrador. Podrás añadir preguntas y publicarla cuando esté lista.</p></div>
+                <label className="block text-xs font-medium">Título<input value={tituloExamen} onChange={e=>setTituloExamen(e.target.value)} required maxLength={160} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"/></label>
+                <label className="block text-xs font-medium">Sesión del curso<select value={sesionExamenId} onChange={e=>setSesionExamenId(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"><option value="">Material general del curso</option>{(sesionesQuery.data ?? []).map(s=><option key={s.id} value={s.id}>Sesión {s.numero} · {s.titulo}</option>)}</select></label>
+                <label className="block text-xs font-medium">Instrucciones<textarea value={instruccionesExamen} onChange={e=>setInstruccionesExamen(e.target.value)} rows={2} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"/></label>
+                <div className="grid grid-cols-2 gap-2"><label className="text-xs font-medium">Duración (min)<input type="number" min="1" max="300" value={duracionExamen} onChange={e=>setDuracionExamen(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"/></label><label className="text-xs font-medium">Intentos permitidos<input type="number" min="1" max="10" value={intentosExamen} onChange={e=>setIntentosExamen(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"/></label></div>
+                <button type="submit" disabled={ocupado || !tituloExamen.trim()} className="rounded-lg bg-gold px-4 py-2 text-xs font-semibold text-black disabled:opacity-40">{ocupado ? "Creando…" : "Crear evaluación en borrador"}</button>
+              </form>
               <div className="space-y-2"><p className="text-sm font-semibold">Evaluaciones del curso</p>
                 {(examenesQuery.data ?? []).map(x => <div key={x.id} className="space-y-3 rounded-lg border border-border p-3">
                   <div className="flex flex-wrap items-center justify-between gap-2">
@@ -2241,6 +2257,7 @@ function AulaFormacionPage() {
                   {examenEditandoId === x.id ? <div className="grid gap-2 rounded-lg bg-muted/30 p-3">
                     <label className="text-xs font-medium">Título<input value={tituloExamenEditado} onChange={e=>setTituloExamenEditado(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"/></label>
                     <label className="text-xs font-medium">Instrucciones<textarea value={instruccionesExamenEditadas} onChange={e=>setInstruccionesExamenEditadas(e.target.value)} rows={2} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"/></label>
+                    <label className="text-xs font-medium">Sesión del curso<select value={sesionExamenEditada} onChange={e=>setSesionExamenEditada(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"><option value="">Material general del curso</option>{(sesionesQuery.data ?? []).map(s=><option key={s.id} value={s.id}>Sesión {s.numero} · {s.titulo}</option>)}</select></label>
                     <div className="grid grid-cols-2 gap-2"><label className="text-xs font-medium">Duración (min)<input type="number" min="1" value={duracionExamenEditada} onChange={e=>setDuracionExamenEditada(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"/></label><label className="text-xs font-medium">Intentos permitidos<input type="number" min="1" max="10" value={intentosExamenEditados} onChange={e=>setIntentosExamenEditados(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"/></label></div>
                     <div className="rounded-lg border border-gold/30 bg-gold/5 p-3"><p className="text-xs font-semibold">Programación del examen</p><p className="mt-1 text-[11px] text-muted-foreground">Hora local de Perú. Déjalos vacíos para no limitar el calendario.</p><div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2"><label className="text-xs font-medium">Habilitar desde<input type="datetime-local" value={disponibleDesdeEditado} onChange={e=>setDisponibleDesdeEditado(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"/></label><label className="text-xs font-medium">Cerrar el<input type="datetime-local" value={disponibleHastaEditado} onChange={e=>setDisponibleHastaEditado(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"/></label></div></div>
                     <div className="flex flex-wrap gap-2"><button type="button" disabled={ocupado || x.publicado} onClick={()=>void guardarEdicionExamen(x)} className="rounded-lg bg-gold px-3 py-2 text-xs font-semibold text-black disabled:opacity-40">Guardar cambios</button><button type="button" onClick={()=>setExamenEditandoId("")} className="rounded-lg border border-border px-3 py-2 text-xs">Cancelar</button></div>
