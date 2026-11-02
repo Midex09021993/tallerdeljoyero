@@ -204,36 +204,52 @@ const LECTURA_SESION_3 = [
 ] as const;
 
 const LECTURA_SESION_4 = [
-  { titulo: "1. Objetivo: edición y transformación de curvas", bloques: [
-    "En esta sesión aprenderás a modificar curvas existentes y a transformar objetos sin tener que dibujarlos nuevamente. Practicaremos empalmes, chaflanes, desfases, mover, copiar, rotar y escalar.",
-    "El objetivo es controlar la forma y la ubicación de perfiles que pueden servir como base para piezas de joyería. Trabaja sobre copias cuando quieras conservar la geometría original.",
-    "Distribución orientativa de las 2 horas: edición de contornos (35 min), transformaciones (35 min), práctica aplicada (40 min) y repaso (10 min)."
+  { titulo: "1. Objetivo: editar curvas sin perder el control del diseño", bloques: [
+    "En esta sesión aprenderás a modificar contornos existentes y transformar geometría de forma controlada. En joyería, estas operaciones permiten ajustar perfiles, preparar separaciones y organizar variantes de un diseño sin reconstruirlo desde cero.",
+    "Al finalizar podrás distinguir Fillet de Chamfer, generar un Offset con una distancia definida, utilizar Move y Copy sin confundir sus resultados, y aplicar Rotate y Scale conservando una referencia clara.",
+    "Regla de trabajo: conserva una copia del perfil original antes de editar. Comprueba siempre las medidas, el lado de operación y la continuidad visual del resultado. Una operación geométricamente válida no garantiza por sí sola que el perfil sea adecuado para fabricación.",
+    "Distribución orientativa de 2 horas: lectura y demostración (20 min), edición de contornos (30 min), transformaciones (25 min), práctica integradora (35 min) y verificación (10 min)."
   ]},
-  { titulo: "2. Empalmes de curvas (Fillet)", bloques: [
-    "El comando Fillet crea una transición redondeada entre dos curvas, utilizando un radio definido. Se emplea para suavizar una esquina o unir dos segmentos mediante un arco.",
-    "Selecciona las curvas que deseas conectar e introduce el radio solicitado. Revisa las opciones de recorte y la solución propuesta antes de confirmar, porque el resultado depende de la posición de selección y de la geometría.",
-    "En perfiles destinados a joyería, el radio debe responder al diseño y a las necesidades de fabricación. No asumas que cualquier radio es adecuado para todos los espesores o detalles."
+  { titulo: "2. Fillet: crear empalmes redondeados", bloques: [
+    "Fillet crea un arco de transición entre dos curvas o segmentos. El radio determina el tamaño del redondeo: un radio pequeño produce una transición más cerrada y uno mayor necesita más espacio.",
+    "Procedimiento: inicia Fillet; revisa el valor de Radio en la línea de comandos; introduce la medida solicitada; selecciona la primera curva cerca de la esquina que deseas resolver y después la segunda. Observa la solución antes de continuar.",
+    "La zona donde haces clic importa: Rhino utiliza la ubicación de selección para decidir qué partes de las curvas conservar. Si el resultado no corresponde al diseño, cancela y repite seleccionando cerca de la región correcta.",
+    "Comprueba que el arco enlaza ambas curvas y que el radio coincide con el solicitado. Si las curvas son demasiado cortas o están mal posicionadas, el empalme puede no generarse como esperas. No fuerces un radio que invada detalles funcionales de la joya."
   ]},
-  { titulo: "3. Chaflanes y desfasados (Chamfer y Offset)", bloques: [
-    "Chamfer genera una transición recta entre dos curvas o segmentos. A diferencia de Fillet, que crea un redondeo, Chamfer construye un bisel o chaflán.",
-    "Offset crea una curva paralela a una distancia determinada respecto de una curva original. Puede utilizarse para generar contornos interiores o exteriores y conservar una separación definida.",
-    "Comprueba el lado hacia el que se genera el desfase y revisa si las curvas resultantes se cruzan o se separan. En contornos cerrados, verifica que el resultado permanezca limpio y utilizable."
+  { titulo: "3. Chamfer y Offset: biselar y generar contornos paralelos", bloques: [
+    "Chamfer crea una transición recta entre dos curvas. Es diferente de Fillet: Fillet utiliza un arco y Chamfer utiliza un segmento recto. Según las opciones disponibles, el chaflán puede definirse mediante distancias desde la esquina.",
+    "Procedimiento: inicia Chamfer, define las distancias solicitadas, selecciona las dos curvas cerca de la esquina y revisa el segmento resultante. Comprueba que el bisel quedó en el lado previsto y que no se recortó una zona que debías conservar.",
+    "Offset genera una curva paralela a la original a una distancia indicada. Selecciona la curva, introduce la distancia y señala el lado donde quieres crear el nuevo contorno. En curvas cerradas, observa si el resultado es interior o exterior.",
+    "Un Offset no siempre produce un contorno utilizable: en zonas estrechas, radios pequeños o geometrías complejas pueden aparecer cruces, autointersecciones o segmentos no deseados. Revisa el resultado antes de continuar con otras operaciones.",
+    "Comparación clave: Fillet = transición curva; Chamfer = transición recta; Offset = curva paralela separada por una distancia."
   ]},
-  { titulo: "4. Transformación: mover y copiar", bloques: [
-    "Move desplaza objetos desde un punto base hasta un punto de destino. Puedes indicar ambos puntos con el ratón, coordenadas o ayudas de precisión vistas en la sesión anterior.",
-    "Copy crea una o varias copias del objeto seleccionado. Mantén claro si estás moviendo el original o generando duplicados para no confundir las piezas del archivo.",
-    "Practica desplazando una curva una distancia definida y creando una copia separada. Comprueba su posición en las vistas Top y Front."
+  { titulo: "4. Move y Copy: desplazar y duplicar con precisión", bloques: [
+    "Move desplaza el objeto seleccionado desde un punto base hasta un punto de destino. La diferencia entre ambos puntos define el desplazamiento. Puedes utilizar referencias Osnap o introducir coordenadas para controlar la ubicación.",
+    "Procedimiento: selecciona el objeto; ejecuta Move; indica el punto base; indica el punto de destino. Para desplazarlo exactamente 5 mm en X, puedes utilizar las ayudas de coordenadas aprendidas en la sesión anterior.",
+    "Copy utiliza una secuencia similar, pero conserva el objeto original y crea una o varias copias. Después de indicar el punto base, señala los destinos de las copias y finaliza el comando cuando hayas terminado.",
+    "Antes de continuar, identifica cuál es el original y cuáles son las copias. Comprueba sus posiciones en Top y Front y evita duplicar accidentalmente geometría que ya existe."
   ]},
-  { titulo: "5. Transformación: rotar y escalar", bloques: [
-    "Rotate gira objetos alrededor de un centro y un ángulo definidos. Selecciona cuidadosamente el centro de rotación y revisa el sentido del giro.",
-    "Scale modifica el tamaño de los objetos respecto a un punto base. El escalado uniforme conserva las proporciones; los modos no uniformes pueden cambiar las proporciones según los ejes.",
-    "En diseño de joyería, no escales una pieza sin considerar las dimensiones funcionales. Para esta práctica utiliza geometría de prueba y compara las medidas antes y después."
+  { titulo: "5. Rotate y Scale: cambiar orientación y tamaño", bloques: [
+    "Rotate gira la geometría alrededor de un centro definido. Después de seleccionar los objetos, indica el centro de rotación y el ángulo. La ubicación del centro es decisiva: el mismo ángulo produce resultados distintos si cambia el punto de giro.",
+    "En el plano XY, un giro positivo de 90° sigue la convención angular habitual de Rhino. Comprueba el resultado desde Top y utiliza un punto de referencia reconocible para verificar la orientación.",
+    "Scale modifica el tamaño respecto a un punto base. En el escalado uniforme, el mismo factor se aplica a las dimensiones y se conservan las proporciones. Por ejemplo, un factor 2 duplica las dimensiones y un factor 0.5 las reduce a la mitad.",
+    "No confundas escala con una medida final garantizada: el resultado depende del punto base y del factor introducido. En joyería, verifica dimensiones funcionales después de escalar y no alteres una pieza final sin autorización."
   ]},
-  { titulo: "6. Práctica: preparar un perfil", bloques: [
-    "Dibuja un contorno sencillo con segmentos y curvas. Crea una copia de seguridad del perfil antes de aplicar operaciones de edición.",
-    "Aplica Fillet a una esquina con un radio definido y Chamfer a otra para comparar una transición redondeada con una recta. Genera un Offset y revisa la separación.",
-    "Utiliza Move y Copy para organizar dos versiones del perfil. Después aplica Rotate y Scale a una copia, manteniendo intacto el original.",
-    "Guarda el archivo con nombres claros y verifica que las curvas no se hayan desplazado accidentalmente. En la siguiente sesión trabajaremos curvas avanzadas, puntos de control y optimización de perfiles."
+  { titulo: "6. Práctica integradora: preparar y transformar un perfil", bloques: [
+    "Objetivo: obtener dos variantes controladas de un perfil plano. Trabaja en un archivo nuevo o en una copia del documento de práctica. Configura milímetros y utiliza Top para construir y revisar el contorno.",
+    "1) Dibuja un perfil de prueba formado por dos segmentos que se encuentren en una esquina. Conserva una copia intacta y nómbrala ORIGINAL.",
+    "2) En una copia, aplica Fillet con radio de 2 mm en una esquina. Revisa la transición y comprueba que el arco enlaza los dos segmentos.",
+    "3) En otra esquina, aplica Chamfer con distancias de 2 mm y compara el segmento recto con el empalme redondeado.",
+    "4) Genera un Offset de 1 mm hacia el interior o exterior, según indique el docente. Comprueba la separación y revisa que el contorno no se cruce.",
+    "5) Utiliza Move para desplazar una variante 5 mm en X. Después utiliza Copy para crear otra variante separada 10 mm de su punto de referencia.",
+    "6) En la copia, aplica Rotate de 90° alrededor de un centro identificado. En otra copia de prueba, aplica Scale uniforme con factor 0.5.",
+    "7) Compara ORIGINAL y las variantes. Verifica qué operación modificó la forma, cuál cambió la posición y cuál cambió el tamaño. Guarda el archivo como Sesion_04_Edicion_Curvas.3dm."
+  ]},
+  { titulo: "7. Verificación y criterios de dominio", bloques: [
+    "Antes de finalizar, comprueba que puedes explicar con tus propias palabras la diferencia entre Fillet, Chamfer y Offset; identificar el punto base y el destino de Move; y distinguir una copia de un desplazamiento.",
+    "Verifica que puedes indicar el centro y el ángulo de Rotate, y explicar qué ocurre al aplicar un factor de escala uniforme de 2 o de 0.5.",
+    "La práctica se considera completada cuando conservas el perfil ORIGINAL, puedes identificar cada variante, las operaciones se aplicaron en el lado correcto y has revisado las medidas después de transformar la geometría.",
+    "Recuerda: esta sesión trabaja con curvas planas y transformaciones. En la siguiente sesión profundizaremos en curvas avanzadas, puntos de control y optimización de perfiles."
   ]}
 ] as const;
 
