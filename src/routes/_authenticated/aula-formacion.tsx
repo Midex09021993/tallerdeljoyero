@@ -531,6 +531,7 @@ function AulaFormacionPage() {
   const [respuestasAlumno, setRespuestasAlumno] = useState<Record<string, string>>({});
   const [enviandoExamen, setEnviandoExamen] = useState(false);
   const guardadoExamenPendienteRef = useRef<Promise<void> | null>(null);
+  const autosaveExamenTimeoutRef = useRef<number | null>(null);
   const [guardandoSalidaExamen, setGuardandoSalidaExamen] = useState(false);
   const [segundosRestantesExamen, setSegundosRestantesExamen] = useState<number | null>(null);
   const [ocupado, setOcupado] = useState(false);
@@ -585,7 +586,7 @@ function AulaFormacionPage() {
   }, [paginaLectura]);
 
   useEffect(() => {
-    if (!examenActivoAlumno?.intento_id || enviandoExamen) return;
+    if (!examenActivoAlumno?.intento_id || enviandoExamen || guardandoSalidaExamen) return;
     const respuestas = examenActivoAlumno.preguntas
       .filter(p => Object.prototype.hasOwnProperty.call(respuestasAlumno, p.id))
       .map(p => ({
@@ -594,15 +595,17 @@ function AulaFormacionPage() {
           ? respuestasAlumno[p.id] === "true"
           : (respuestasAlumno[p.id] ?? "")
       }));
-    const timeout = window.setTimeout(() => {
-      const guardado = (async () => {
+    autosaveExamenTimeoutRef.current = window.setTimeout(() => {
+      autosaveExamenTimeoutRef.current = null;
+      const anterior = guardadoExamenPendienteRef.current ?? Promise.resolve();
+      const guardado = anterior.catch(() => undefined).then(async () => {
         const { error } = await (supabase as any).rpc("guardar_respuestas_intento_formacion", {
           _intento_id: examenActivoAlumno.intento_id,
           _respuestas: respuestas,
           _pregunta_actual: preguntaActualAlumno
         });
         if (error) throw error;
-      })();
+      });
       guardadoExamenPendienteRef.current = guardado;
       void guardado
         .catch(() => setMensaje("No se pudo guardar tu respuesta automáticamente. Mantén esta pantalla abierta e inténtalo de nuevo."))
@@ -610,8 +613,13 @@ function AulaFormacionPage() {
           if (guardadoExamenPendienteRef.current === guardado) guardadoExamenPendienteRef.current = null;
         });
     }, 500);
-    return () => window.clearTimeout(timeout);
-  }, [respuestasAlumno, preguntaActualAlumno, examenActivoAlumno?.intento_id, enviandoExamen]);
+    return () => {
+      if (autosaveExamenTimeoutRef.current !== null) {
+        window.clearTimeout(autosaveExamenTimeoutRef.current);
+        autosaveExamenTimeoutRef.current = null;
+      }
+    };
+  }, [respuestasAlumno, preguntaActualAlumno, examenActivoAlumno?.intento_id, enviandoExamen, guardandoSalidaExamen]);
 
   useEffect(() => {
     if (!examenActivoAlumno?.vence_en) { setSegundosRestantesExamen(null); return; }
@@ -1262,7 +1270,11 @@ function AulaFormacionPage() {
     const respuestas = examenActivoAlumno.preguntas.map(p => ({ pregunta_id: p.id, respuesta: p.tipo === "verdadero_falso" ? respuestasAlumno[p.id] === "true" : (respuestasAlumno[p.id] ?? "") }));
     setEnviandoExamen(true); setMensaje("");
     try {
-      // Esperamos cualquier guardado automático en curso antes del guardado final.
+      // Cancelamos el debounce pendiente y serializamos el cierre tras cualquier autoguardado activo.
+      if (autosaveExamenTimeoutRef.current !== null) {
+        window.clearTimeout(autosaveExamenTimeoutRef.current);
+        autosaveExamenTimeoutRef.current = null;
+      }
       const guardadoPendiente = guardadoExamenPendienteRef.current;
       if (guardadoPendiente) await guardadoPendiente;
       // Si el tiempo venció, guardar_respuestas rechaza la operación por diseño.
@@ -2500,6 +2512,10 @@ function AulaFormacionPage() {
               if (!window.confirm("¿Salir de la evaluación? Guardaremos tus respuestas y podrás continuar después con el tiempo que aún te quede.")) return;
               setGuardandoSalidaExamen(true);
               try {
+                if (autosaveExamenTimeoutRef.current !== null) {
+                  window.clearTimeout(autosaveExamenTimeoutRef.current);
+                  autosaveExamenTimeoutRef.current = null;
+                }
                 const guardadoPendiente = guardadoExamenPendienteRef.current;
                 if (guardadoPendiente) await guardadoPendiente;
                 const respuestas = examenActivoAlumno.preguntas
