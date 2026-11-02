@@ -521,6 +521,12 @@ function AulaFormacionPage() {
   const [lecturaModoVistaPrevia, setLecturaModoVistaPrevia] = useState(false);
   const [lecturasSimuladas, setLecturasSimuladas] = useState<Set<string>>(new Set());
   const [paginaLectura, setPaginaLectura] = useState(0);
+  const [modoCoord3, setModoCoord3] = useState<"absolutas"|"relativas"|"polares">("relativas");
+  const [valorCoord3, setValorCoord3] = useState("20");
+  const [anguloCoord3, setAnguloCoord3] = useState("0");
+  const [puntosCoord3, setPuntosCoord3] = useState<Array<{x:number;y:number}>>([{x:0,y:0}]);
+  const [cerradoCoord3, setCerradoCoord3] = useState(false);
+  const [estadoCoord3, setEstadoCoord3] = useState("");
   const [moduloGeometria, setModuloGeometria] = useState(0);
   const [respuestaGeometria, setRespuestaGeometria] = useState("");
   const [resultadoGeometria, setResultadoGeometria] = useState<"correcto" | "incorrecto" | null>(null);
@@ -1587,6 +1593,36 @@ function AulaFormacionPage() {
     { titulo: "Superficies", pregunta: "¿Qué diferencia a una superficie de una curva?", introduccion: "En Rhino, una superficie es similar a un trozo de tela elástica: puede adoptar distintas formas y está limitada por curvas llamadas bordes. Tiene área y su forma puede modificarse mediante puntos de control.", claves: ["Una superficie tiene área y puede ser plana o adoptar formas curvas.","Sus límites se denominan bordes y están definidos por curvas.","Su forma puede modificarse moviendo sus puntos de control."], aplicacion: "En joyería, una superficie puede representar una zona exterior curva, como la parte superior de un colgante o una forma ornamental que después se integrará en el diseño de la pieza.", ejemplo: "La parte superior abombada de un colgante puede construirse como una superficie. Luego podrás evaluar cómo integrarla con el resto de la geometría.", opciones: [{ valor: "area", texto: "La superficie representa una zona con área" }, { valor: "color", texto: "La superficie siempre tiene otro color" }, { valor: "cierre", texto: "La superficie es siempre una línea cerrada" }], correcta: "area", explicacion: "Así es. Una superficie ocupa una zona con área. Una curva representa una línea o recorrido, no una región superficial." },
     { titulo: "Sólidos", pregunta: "¿Qué característica identifica a un sólido cerrado?", introduccion: "En Rhinoceros, un sólido es una superficie o polisuperficie cerrada que encierra un volumen. Sus límites forman un cuerpo completamente cerrado, no una superficie abierta.", claves: ["Un sólido cerrado encierra un volumen tridimensional.","Puede estar formado por una superficie cerrada o por varias superficies unidas en una polisuperficie.","El manual incluye operaciones para crear, separar, modificar y unir partes de un sólido."], aplicacion: "En joyería, puedes utilizar sólidos para representar cuerpos como una barra, un componente macizo o determinadas partes de una montura. Es importante comprobar que la geometría esté cerrada cuando el proceso de fabricación lo requiera.", ejemplo: "Una pieza modelada como sólido cerrado representa un volumen completo. No es lo mismo que tener únicamente las superficies exteriores sin cerrar.", opciones: [{ valor: "trazo", texto: "Está formado solo por líneas" }, { valor: "volumen", texto: "Delimita un volumen cerrado" }, { valor: "plano", texto: "Es una curva plana" }], correcta: "volumen", explicacion: "Correcto. Un sólido cerrado delimita un volumen tridimensional y representa un cuerpo, no solo líneas o superficies abiertas." },
   ];
+  const renderLaboratorioCoordenadas = () => {
+    if (lecturaAbierta?.numero !== 3 || paginaLectura !== 2) return null;
+    const ox=250,oy=170,k=9,last=puntosCoord3[puntosCoord3.length-1]??{x:0,y:0};
+    const reset=()=>{setPuntosCoord3([{x:0,y:0}]);setCerradoCoord3(false);setEstadoCoord3("");setModoCoord3("relativas");setValorCoord3("20");setAnguloCoord3("0");};
+    const add=()=>{const a=Number(valorCoord3.replace(",",".")),b=Number(anguloCoord3.replace(",","."));if(!Number.isFinite(a)||!Number.isFinite(b)){setEstadoCoord3("Valor no válido");return;}let p={x:a,y:b};if(modoCoord3==="relativas")p={x:last.x+a,y:last.y+b};if(modoCoord3==="polares"){const rad=b*Math.PI/180;p={x:last.x+a*Math.cos(rad),y:last.y+a*Math.sin(rad)};}setPuntosCoord3(v=>[...v,p]);setCerradoCoord3(false);setEstadoCoord3(`Punto: ${p.x.toFixed(2)}, ${p.y.toFixed(2)}`);};
+    const pts=puntosCoord3.map(p=>`${ox+p.x*k},${oy-p.y*k}`).join(" ");
+    return <section className="mt-7 overflow-hidden rounded-2xl border border-gold/30 bg-background shadow-sm">
+      <header className="flex items-center justify-between border-b border-border bg-gradient-to-r from-[#fbf8f0] to-background px-4 py-3"><div><p className="text-[10px] font-bold uppercase tracking-widest text-gold-deep">Laboratorio interactivo · 03</p><h4 className="font-semibold">Construye con coordenadas</h4></div><button type="button" onClick={reset} className="rounded-lg border border-border px-3 py-2 text-xs"><RotateCcw className="mr-1 inline size-3.5"/> Reiniciar</button></header>
+      <div className="grid gap-3 p-3 sm:p-4 lg:grid-cols-[1.3fr_.7fr]">
+        <div className="overflow-hidden rounded-xl bg-[#17191d]"><div className="flex justify-between border-b border-white/10 px-3 py-2 text-[10px] text-white/70"><span>PLANO XY · SUPERIOR</span><span>{puntosCoord3.length-1} segmentos</span></div>
+          <svg viewBox="0 0 500 340" className="w-full" role="img" aria-label="Plano cartesiano interactivo">
+            {Array.from({length:21},(_,i)=><g key={i}><line x1={20+i*23} y1="8" x2={20+i*23} y2="332" stroke="#3b414a"/><line x1="8" y1={10+i*16} x2="492" y2={10+i*16} stroke="#3b414a"/></g>)}
+            <line x1="8" y1={oy} x2="492" y2={oy} stroke="#aaa"/><line x1={ox} y1="8" x2={ox} y2="332" stroke="#aaa"/><text x="480" y={oy-7} fill="white" fontSize="10">X</text><text x={ox+8} y="18" fill="white" fontSize="10">Y</text>
+            {puntosCoord3.length>1&&<polyline points={pts} fill={cerradoCoord3?"rgba(231,189,98,.14)":"none"} stroke="#e7bd62" strokeWidth="3" strokeLinejoin="round"/>}
+            {cerradoCoord3&&<line x1={ox+last.x*k} y1={oy-last.y*k} x2={ox+puntosCoord3[0]!.x*k} y2={oy-puntosCoord3[0]!.y*k} stroke="#e7bd62" strokeWidth="3"/>}
+            {puntosCoord3.map((p,i)=><g key={i}><circle cx={ox+p.x*k} cy={oy-p.y*k} r="4.5" fill={i===0?"#67d6a0":"#e7bd62"}/><text x={ox+p.x*k+7} y={oy-p.y*k-8} fill="white" fontSize="10">{i===0?"O":`P${i}`}</text></g>)}
+          </svg><p className="border-t border-white/10 px-3 py-2 text-[10px] text-white/70">Verde: origen · Dorado: puntos</p>
+        </div>
+        <div className="flex flex-col gap-3">
+          <div className="grid grid-cols-3 gap-1 rounded-xl bg-muted p-1">{(["absolutas","relativas","polares"] as const).map(m=><button key={m} type="button" onClick={()=>{setModoCoord3(m);setEstadoCoord3("");}} className={`rounded-lg px-1 py-2 text-[11px] font-semibold capitalize ${modoCoord3===m?"bg-background shadow-sm":"text-muted-foreground"}`}>{m}</button>)}</div>
+          <div className="rounded-xl border border-border p-3"><p className="mb-2 text-xs font-semibold">{modoCoord3==="polares"?"Distancia / ángulo":modoCoord3==="relativas"?"Desplazamiento ΔX / ΔY":"Posición X / Y"}</p><div className="grid grid-cols-2 gap-2">
+            <label className="text-[10px] text-muted-foreground">{modoCoord3==="polares"?"Distancia":modoCoord3==="relativas"?"ΔX":"X"}<input value={valorCoord3} onChange={e=>setValorCoord3(e.target.value)} inputMode="decimal" className="mt-1 w-full rounded-lg border border-border bg-background px-2 py-2.5 text-sm text-foreground"/></label>
+            <label className="text-[10px] text-muted-foreground">{modoCoord3==="polares"?"Ángulo °":modoCoord3==="relativas"?"ΔY":"Y"}<input value={anguloCoord3} onChange={e=>setAnguloCoord3(e.target.value)} inputMode="decimal" className="mt-1 w-full rounded-lg border border-border bg-background px-2 py-2.5 text-sm text-foreground"/></label>
+          </div><button type="button" onClick={add} className="mt-3 w-full rounded-lg bg-gold px-3 py-2.5 text-sm font-bold text-black">Añadir punto</button><button type="button" onClick={()=>{if(puntosCoord3.length<3){setEstadoCoord3("Añade al menos tres puntos");return;}setCerradoCoord3(true);setEstadoCoord3("Contorno cerrado");}} className="mt-2 w-full rounded-lg border border-border px-3 py-2 text-xs font-semibold">Cerrar contorno</button></div>
+          <div className="rounded-xl border border-border p-3 text-xs"><div className="flex justify-between"><b>Último punto</b><span className="font-mono">{last.x.toFixed(2)}, {last.y.toFixed(2)}</span></div><p className="mt-2 min-h-5 text-muted-foreground" aria-live="polite">{estadoCoord3||"Añade puntos y observa el trazado."}</p></div>
+        </div>
+      </div>
+    </section>;
+  };
+
   const renderLaboratorioGeometria = () => {
     if (lecturaAbierta?.numero !== 2 || paginaLectura !== 1) return null;
     if (!laboratorioGeometriaAbierto) return <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5 sm:p-6">
@@ -1789,6 +1825,8 @@ function AulaFormacionPage() {
                   if (lecturaAbierta?.numero === 1 && paginaLectura === 4 && idx >= 6) return null;
                   return <div key={idx}><p className="mb-4 max-w-4xl whitespace-pre-line text-[15px] leading-7 text-foreground/90">{bloque}</p></div>;
                 })}
+                {renderLaboratorioCoordenadas()}
+
                 {renderLaboratorioGeometria()}
                 {renderLaboratorioCapas()}
                 {renderSelectorVistasPlano()}
@@ -2172,6 +2210,8 @@ function AulaFormacionPage() {
                   if (lecturaAbierta?.numero === 1 && paginaLectura === 4 && idx >= 6) return null;
                   return <div key={idx}><p className="mb-4 max-w-4xl whitespace-pre-line text-[15px] leading-7 text-foreground/90">{bloque}</p></div>;
                 })}
+                {renderLaboratorioCoordenadas()}
+
                 {renderLaboratorioGeometria()}
                 {renderSelectorVistasPlano()}
                 {lecturaAbierta?.numero === 1 && paginaLectura === 4 && <section className="mt-5 max-w-4xl rounded-xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5">
