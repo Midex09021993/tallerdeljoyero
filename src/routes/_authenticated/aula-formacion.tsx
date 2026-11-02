@@ -509,6 +509,12 @@ function AulaFormacionPage() {
   const [preguntaVistaPrevia, setPreguntaVistaPrevia] = useState(0);
   const [respuestasVistaPrevia, setRespuestasVistaPrevia] = useState<Record<string,string>>({});
   const [simulacionFinalizada, setSimulacionFinalizada] = useState(false);
+  const [laboratorioPlacaAbierto, setLaboratorioPlacaAbierto] = useState(false);
+  const [etapaPlaca, setEtapaPlaca] = useState(0);
+  const [respuestaPlaca, setRespuestaPlaca] = useState("");
+  const [etapasPlacaCompletadas, setEtapasPlacaCompletadas] = useState<number[]>([]);
+  const [metodoPlaca, setMetodoPlaca] = useState<"cartesiano" | "polar">("cartesiano");
+
   const [tituloExamenEditado, setTituloExamenEditado] = useState("");
   const [instruccionesExamenEditadas, setInstruccionesExamenEditadas] = useState("");
   const [duracionExamenEditada, setDuracionExamenEditada] = useState("20");
@@ -1992,12 +1998,6 @@ function AulaFormacionPage() {
     </section></div>;
   };
 
-
-  const [laboratorioPlacaAbierto, setLaboratorioPlacaAbierto] = useState(false);
-  const [etapaPlaca, setEtapaPlaca] = useState(0);
-  const [respuestaPlaca, setRespuestaPlaca] = useState("");
-  const [etapasPlacaCompletadas, setEtapasPlacaCompletadas] = useState<number[]>([]);
-  const [metodoPlaca, setMetodoPlaca] = useState<"cartesiano" | "polar">("cartesiano");
 
   const renderLaboratorioPlaca = () => {
     if (lecturaAbierta?.numero !== 3 || paginaLectura !== 8) return null;
