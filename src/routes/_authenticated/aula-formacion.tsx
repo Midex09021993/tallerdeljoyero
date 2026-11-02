@@ -1527,9 +1527,9 @@ function AulaFormacionPage() {
       const seccionesOriginales = data && Array.isArray(data.secciones) && data.secciones.length > 0
         ? data.secciones
         : vistaPrevia && s.numero === 1 ? LECTURA_SESION_1 : null;
-      const secciones = seccionesOriginales && s.numero === 3 && seccionesOriginales.length < LECTURA_SESION_3.length
-        ? [...seccionesOriginales, ...LECTURA_SESION_3.slice(seccionesOriginales.length)]
-        : seccionesOriginales;
+      // Sesión 3 utiliza la estructura curricular canónica para evitar que una lectura
+      // antigua guardada en Supabase oculte apartados nuevos o desordene los laboratorios.
+      const secciones = s.numero === 3 ? LECTURA_SESION_3 : seccionesOriginales;
       if (!secciones) {
         setMensaje(vistaPrevia ? "Todavía no hay contenido de lectura guardado para esta sesión." : "La lectura de esta sesión todavía no está publicada por FADILAB.");
         return;
@@ -1661,7 +1661,7 @@ function AulaFormacionPage() {
     { titulo: "Sólidos", pregunta: "¿Qué característica identifica a un sólido cerrado?", introduccion: "En Rhinoceros, un sólido es una superficie o polisuperficie cerrada que encierra un volumen. Sus límites forman un cuerpo completamente cerrado, no una superficie abierta.", claves: ["Un sólido cerrado encierra un volumen tridimensional.","Puede estar formado por una superficie cerrada o por varias superficies unidas en una polisuperficie.","El manual incluye operaciones para crear, separar, modificar y unir partes de un sólido."], aplicacion: "En joyería, puedes utilizar sólidos para representar cuerpos como una barra, un componente macizo o determinadas partes de una montura. Es importante comprobar que la geometría esté cerrada cuando el proceso de fabricación lo requiera.", ejemplo: "Una pieza modelada como sólido cerrado representa un volumen completo. No es lo mismo que tener únicamente las superficies exteriores sin cerrar.", opciones: [{ valor: "trazo", texto: "Está formado solo por líneas" }, { valor: "volumen", texto: "Delimita un volumen cerrado" }, { valor: "plano", texto: "Es una curva plana" }], correcta: "volumen", explicacion: "Correcto. Un sólido cerrado delimita un volumen tridimensional y representa un cuerpo, no solo líneas o superficies abiertas." },
   ];
   const renderLaboratorioCoordenadas = () => {
-    if (lecturaAbierta?.numero !== 3 || paginaLectura !== 2) return null;
+    if (lecturaAbierta?.numero !== 3 || paginaLectura !== 6) return null;
     if (!laboratorioCoordenadasAbierto) return <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div><p className="text-[10px] font-bold uppercase tracking-widest text-gold-deep">Recurso interactivo · Sesión 03</p><h4 className="mt-1 text-base font-semibold">Laboratorio de coordenadas</h4><p className="mt-1 text-sm text-muted-foreground">Practica coordenadas absolutas, relativas y polares en un espacio de trabajo independiente.</p></div>
@@ -1774,7 +1774,7 @@ function AulaFormacionPage() {
   };
 
   const renderLaboratorioSmartTrack = () => {
-    if (lecturaAbierta?.numero !== 3 || paginaLectura !== 5) return null;
+    if (lecturaAbierta?.numero !== 3 || paginaLectura !== 7) return null;
     const retos = [
       { nombre: "Alineación horizontal", pregunta: "Ya capturaste un punto de referencia. Necesitas colocar el siguiente punto a la misma altura, manteniendo la coordenada Y.", correcta: "Horizontal", explicacion: "La guía horizontal conserva la misma altura (Y) del punto de referencia y ayuda a mantener una alineación paralela al eje X.", tipo: "horizontal" },
       { nombre: "Alineación vertical", pregunta: "Necesitas ubicar el siguiente punto directamente encima del punto de referencia, manteniendo su coordenada X.", correcta: "Vertical", explicacion: "La guía vertical conserva la misma posición X del punto de referencia y ayuda a mantener una alineación paralela al eje Y.", tipo: "vertical" },
