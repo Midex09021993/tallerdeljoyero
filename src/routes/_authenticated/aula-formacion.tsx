@@ -525,6 +525,8 @@ function AulaFormacionPage() {
   const [respuestaCorrecta, setRespuestaCorrecta] = useState("Opción A");
   const [puntajePregunta, setPuntajePregunta] = useState("1");
   const [examenActivoAlumno, setExamenActivoAlumno] = useState<ExamenAlumno | null>(null);
+  const [examenPendienteInicio, setExamenPendienteInicio] = useState<{ examen: Examen; reanudar: boolean } | null>(null);
+  const [confirmandoInicioExamen, setConfirmandoInicioExamen] = useState(false);
   const [preguntaActualAlumno, setPreguntaActualAlumno] = useState(0);
   const [respuestasAlumno, setRespuestasAlumno] = useState<Record<string, string>>({});
   const [enviandoExamen, setEnviandoExamen] = useState(false);
@@ -2508,7 +2510,7 @@ function AulaFormacionPage() {
                 const disponible = x.publicado && (!x.disponible_desde || new Date(x.disponible_desde) <= new Date()) && (!x.disponible_hasta || new Date(x.disponible_hasta) > new Date());
                 const puedeIniciarONreanudar = disponible && (intentosCompletados.length < x.intentos_permitidos || Boolean(intentoEnCurso));
                 const estado = intentoEnCurso ? "Evaluación en curso" : intentos[0]?.calificacion == null ? (intentos[0]?.estado ?? "Sin intentos") : "Nota " + intentos[0].calificacion + "/20";
-                return <div key={x.id} className="flex flex-wrap items-center justify-between gap-3 border-t border-border py-3"><div className="min-w-0"><p className="text-sm font-medium">{x.titulo}</p><p className="mt-1 text-xs text-muted-foreground">{intentos.length}/{x.intentos_permitidos} intentos · {estado}</p>{x.publicado && (x.disponible_desde || x.disponible_hasta) && <div className="mt-2 space-y-1 text-xs text-muted-foreground">{x.disponible_desde && <p><span className="font-medium text-foreground">Disponible desde:</span> {new Date(x.disponible_desde).toLocaleString("es-PE", { dateStyle: "long", timeStyle: "short", timeZone: "America/Lima" })}</p>}{x.disponible_hasta && <p><span className="font-medium text-foreground">Cierre:</span> {new Date(x.disponible_hasta).toLocaleString("es-PE", { dateStyle: "long", timeStyle: "short", timeZone: "America/Lima" })}</p>}<p className={x.disponible_desde && new Date(x.disponible_desde).getTime() > Date.now() ? "font-semibold text-amber-700" : x.disponible_hasta && new Date(x.disponible_hasta).getTime() <= Date.now() ? "font-semibold text-muted-foreground" : "font-semibold text-emerald-700"}>{x.disponible_desde && new Date(x.disponible_desde).getTime() > Date.now() ? "Programado por el profesor" : x.disponible_hasta && new Date(x.disponible_hasta).getTime() <= Date.now() ? "Plazo finalizado" : "Disponible ahora"}</p></div>}<span className={x.publicado ? "mt-1 inline-block rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-700" : "mt-1 inline-block rounded-full bg-muted px-2 py-1 text-[10px] font-semibold text-muted-foreground"}>{x.publicado ? (disponible ? "Activo · disponible" : x.disponible_desde && new Date(x.disponible_desde).getTime() > Date.now() ? "Programado por el profesor" : x.disponible_hasta && new Date(x.disponible_hasta).getTime() <= Date.now() ? "Plazo finalizado" : "Publicado · fuera de horario") : "Desactivado · esperando al profesor"}</span></div><button type="button" disabled={!puedeIniciarONreanudar || Boolean(examenActivoAlumno)} onClick={() => void abrirExamenAlumno(x.id)} className="rounded-lg border border-border px-3 py-2 text-xs disabled:cursor-not-allowed disabled:opacity-40">{!disponible ? "Aún no disponible" : intentoEnCurso ? "Continuar evaluación en curso" : "Rendir evaluación"}</button></div>;
+                return <div key={x.id} className="flex flex-wrap items-center justify-between gap-3 border-t border-border py-3"><div className="min-w-0"><p className="text-sm font-medium">{x.titulo}</p><p className="mt-1 text-xs text-muted-foreground">{intentos.length}/{x.intentos_permitidos} intentos · {estado}</p>{x.publicado && (x.disponible_desde || x.disponible_hasta) && <div className="mt-2 space-y-1 text-xs text-muted-foreground">{x.disponible_desde && <p><span className="font-medium text-foreground">Disponible desde:</span> {new Date(x.disponible_desde).toLocaleString("es-PE", { dateStyle: "long", timeStyle: "short", timeZone: "America/Lima" })}</p>}{x.disponible_hasta && <p><span className="font-medium text-foreground">Cierre:</span> {new Date(x.disponible_hasta).toLocaleString("es-PE", { dateStyle: "long", timeStyle: "short", timeZone: "America/Lima" })}</p>}<p className={x.disponible_desde && new Date(x.disponible_desde).getTime() > Date.now() ? "font-semibold text-amber-700" : x.disponible_hasta && new Date(x.disponible_hasta).getTime() <= Date.now() ? "font-semibold text-muted-foreground" : "font-semibold text-emerald-700"}>{x.disponible_desde && new Date(x.disponible_desde).getTime() > Date.now() ? "Programado por el profesor" : x.disponible_hasta && new Date(x.disponible_hasta).getTime() <= Date.now() ? "Plazo finalizado" : "Disponible ahora"}</p></div>}<span className={x.publicado ? "mt-1 inline-block rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-700" : "mt-1 inline-block rounded-full bg-muted px-2 py-1 text-[10px] font-semibold text-muted-foreground"}>{x.publicado ? (disponible ? "Activo · disponible" : x.disponible_desde && new Date(x.disponible_desde).getTime() > Date.now() ? "Programado por el profesor" : x.disponible_hasta && new Date(x.disponible_hasta).getTime() <= Date.now() ? "Plazo finalizado" : "Publicado · fuera de horario") : "Desactivado · esperando al profesor"}</span></div><button type="button" disabled={!puedeIniciarONreanudar || Boolean(examenActivoAlumno)} onClick={() => setExamenPendienteInicio({ examen: x, reanudar: intentoEnCurso })} className="rounded-lg border border-border px-3 py-2 text-xs disabled:cursor-not-allowed disabled:opacity-40">{!disponible ? "Aún no disponible" : intentoEnCurso ? "Continuar evaluación en curso" : "Rendir evaluación"}</button></div>;
               })}
               <h3 className="mb-2 mt-5 text-sm font-semibold">Material general del curso</h3>
               {(materialesAlumnoQuery.data ?? []).filter(m => m.curso_id === i.curso_id && !m.sesion_id).length === 0 ? <p className="text-xs text-muted-foreground">No hay materiales generales publicados.</p> : (materialesAlumnoQuery.data ?? []).filter(m => m.curso_id === i.curso_id && !m.sesion_id).map(m => <div key={m.id} className="flex items-center justify-between gap-3 border-t border-border py-3"><div className="flex min-w-0 items-center gap-2"><FileText className="size-4 shrink-0 text-gold-deep"/><span className="min-w-0"><span className="block truncate text-sm font-medium">{m.titulo}</span><span className="text-xs text-muted-foreground">{m.nombre_archivo} · {(m.tamano_bytes/1024/1024).toFixed(1)} MB</span></span></div><button type="button" onClick={() => void descargarMaterial(m)} className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-border px-3 py-2 text-xs"><Download className="size-3.5"/> Descargar</button></div>)}
@@ -2516,6 +2518,38 @@ function AulaFormacionPage() {
           </Panel>)}
         </>
       )}
+      {examenPendienteInicio && <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true" aria-labelledby="confirmar-examen-titulo">
+        <section className="w-full max-w-lg overflow-hidden rounded-2xl border border-border bg-background shadow-2xl">
+          <header className="border-b border-border p-5">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">Aula de formación · Evaluación</p>
+            <h2 id="confirmar-examen-titulo" className="mt-1 text-lg font-semibold">{examenPendienteInicio.reanudar ? "Continuar evaluación" : "Antes de comenzar"}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">{examenPendienteInicio.examen.titulo}</p>
+          </header>
+          <div className="space-y-4 p-5">
+            <div className="rounded-xl border border-gold/30 bg-gold/5 p-4">
+              <p className="text-sm font-semibold">Tiempo asignado por el profesor</p>
+              <p className="mt-1 text-sm text-muted-foreground">{examenPendienteInicio.examen.duracion_minutos ? `${examenPendienteInicio.examen.duracion_minutos} minutos` : "Sin límite de tiempo configurado"}.</p>
+            </div>
+            <div className="rounded-xl border border-border p-4">
+              <p className="text-sm font-semibold">Navegación entre preguntas</p>
+              <p className="mt-1 text-sm leading-6 text-muted-foreground">{examenPendienteInicio.examen.permitir_retroceso ? "El profesor permite regresar a preguntas anteriores y modificar tus respuestas mientras la evaluación siga activa." : "Al avanzar a la siguiente pregunta no podrás regresar a la anterior ni modificar tu respuesta. Revisa bien antes de continuar."}</p>
+            </div>
+            <p className="text-xs leading-5 text-muted-foreground">{examenPendienteInicio.reanudar ? "Continuar recuperará tu intento y el tiempo restante; no iniciará un intento nuevo." : "Al confirmar comenzará el tiempo y se registrará tu intento. Asegúrate de estar listo antes de continuar."}</p>
+          </div>
+          <footer className="flex flex-wrap justify-end gap-2 border-t border-border p-4">
+            <button type="button" disabled={confirmandoInicioExamen} onClick={() => setExamenPendienteInicio(null)} className="rounded-lg border border-border px-4 py-2.5 text-sm">Ahora no</button>
+            <button type="button" disabled={confirmandoInicioExamen} onClick={async () => {
+              setConfirmandoInicioExamen(true);
+              try {
+                await abrirExamenAlumno(examenPendienteInicio.examen.id);
+                setExamenPendienteInicio(null);
+              } finally {
+                setConfirmandoInicioExamen(false);
+              }
+            }} className="rounded-lg bg-gold px-4 py-2.5 text-sm font-semibold text-black disabled:opacity-50">{confirmandoInicioExamen ? "Preparando evaluación…" : examenPendienteInicio.reanudar ? "Continuar evaluación" : "Comenzar evaluación"}</button>
+          </footer>
+        </section>
+      </div>}
       {vistaPreviaAlumno && examenVistaPreviaId && <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 p-3 sm:p-6" role="dialog" aria-modal="true" aria-label="Simulación de evaluación para alumno">
         <section className="flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl">
           <header className="flex items-start justify-between gap-3 border-b border-border p-5"><div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">FADILAB · Simulación del alumno</p><h2 className="mt-1 text-lg font-semibold">{(examenesQuery.data ?? []).find(x=>x.id===examenVistaPreviaId)?.titulo ?? "Evaluación"}</h2><p className="mt-1 text-xs text-muted-foreground">Modo de prueba · Las respuestas no se guardan ni consumen intentos.</p></div><button type="button" onClick={()=>{setExamenVistaPreviaId("");setRespuestasVistaPrevia({});setPreguntaVistaPrevia(0);setSimulacionFinalizada(false);}} className="rounded-lg border border-border px-3 py-2 text-xs">Cerrar</button></header>
