@@ -294,7 +294,8 @@ begin
 end;
 $function$;
 
-revoke all on function public.obtener_examen_intento_formacion(uuid) from public, anon;\ngrant execute on function public.obtener_examen_intento_formacion(uuid) to authenticated;
+revoke all on function public.obtener_examen_intento_formacion(uuid) from public, anon;
+grant execute on function public.obtener_examen_intento_formacion(uuid) to authenticated;
 
 commit;
 
