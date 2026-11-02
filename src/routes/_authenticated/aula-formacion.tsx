@@ -1618,6 +1618,17 @@ function AulaFormacionPage() {
             <label className="text-[10px] text-muted-foreground">{modoCoord3==="polares"?"Ángulo °":modoCoord3==="relativas"?"ΔY":"Y"}<input value={anguloCoord3} onChange={e=>setAnguloCoord3(e.target.value)} inputMode="decimal" className="mt-1 w-full rounded-lg border border-border bg-background px-2 py-2.5 text-sm text-foreground"/></label>
           </div><button type="button" onClick={add} className="mt-3 w-full rounded-lg bg-gold px-3 py-2.5 text-sm font-bold text-black">Añadir punto</button><button type="button" onClick={()=>{if(puntosCoord3.length<3){setEstadoCoord3("Añade al menos tres puntos");return;}setCerradoCoord3(true);setEstadoCoord3("Contorno cerrado");}} className="mt-2 w-full rounded-lg border border-border px-3 py-2 text-xs font-semibold">Cerrar contorno</button></div>
           <div className="rounded-xl border border-border p-3 text-xs"><div className="flex justify-between"><b>Último punto</b><span className="font-mono">{last.x.toFixed(2)}, {last.y.toFixed(2)}</span></div><p className="mt-2 min-h-5 text-muted-foreground" aria-live="polite">{estadoCoord3||"Añade puntos y observa el trazado."}</p></div>
+          <div className="rounded-xl border border-gold/30 bg-gold/5 p-3 text-xs">
+            <p className="font-semibold text-foreground">Ejemplo práctico · Dibuja un rectángulo de 20 × 10 mm</p>
+            <p className="mt-1 text-muted-foreground">Selecciona <b>Relativas</b>. Empieza desde el origen (0, 0) y añade estos desplazamientos, uno por uno:</p>
+            <ol className="mt-3 space-y-2">
+              <li className="flex items-center justify-between gap-3"><span>1. Lado horizontal</span><code className="rounded bg-background px-2 py-1 font-semibold">ΔX 20 · ΔY 0</code></li>
+              <li className="flex items-center justify-between gap-3"><span>2. Lado vertical</span><code className="rounded bg-background px-2 py-1 font-semibold">ΔX 0 · ΔY 10</code></li>
+              <li className="flex items-center justify-between gap-3"><span>3. Lado horizontal</span><code className="rounded bg-background px-2 py-1 font-semibold">ΔX -20 · ΔY 0</code></li>
+              <li className="flex items-center justify-between gap-3"><span>4. Lado vertical</span><code className="rounded bg-background px-2 py-1 font-semibold">ΔX 0 · ΔY -10</code></li>
+            </ol>
+            <p className="mt-3 text-muted-foreground">Por último, pulsa <b>Cerrar contorno</b>. Comprueba que la figura tenga cuatro lados y vuelva al punto inicial.</p>
+          </div>
         </div>
       </div>
     </section>;
