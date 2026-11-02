@@ -106,9 +106,12 @@ const LECTURA_SESION_2 = [
     "Estas herramientas permiten construir formas elementales que luego pueden servir como referencias para diseños más elaborados. Por ahora practica las formas sin buscar medidas o tolerancias de fabricación."
   ]},
   { titulo: "4. El plano de trabajo y la cuadrícula", bloques: [
-    "La cuadrícula ayuda a visualizar el plano de trabajo y la orientación de los objetos. En las vistas Top, Front y Right observas distintas orientaciones; la vista Top es especialmente útil para practicar geometría plana sobre el plano de trabajo habitual.",
-    "El plano de construcción determina dónde se dibuja la geometría. Para los ejercicios de esta sesión utilizaremos la vista Top y mantendremos el trabajo en un mismo plano, siguiendo las indicaciones del docente.",
-    "No cambies las unidades ni la configuración general del documento. La introducción al ingreso de medidas exactas y al modelado preciso corresponde a una etapa posterior."
+    "En Rhino, el plano de trabajo es la superficie de referencia sobre la que se ubican los puntos y se dibujan las curvas. La cuadrícula representa visualmente ese plano mediante líneas horizontales y verticales que ayudan a reconocer la orientación, las distancias relativas y la posición de la geometría. La cuadrícula es una guía visual: no forma parte del modelo ni se convierte en un objeto.",
+    "El plano de construcción (Construction Plane o CPlane) define la orientación y la posición del plano sobre el que trabaja una vista. Cuando dibujas en una vista, los puntos se interpretan respecto a ese plano. Por eso es importante saber qué vista está activa y qué plano de construcción utiliza antes de iniciar un comando.",
+    "Las vistas paralelas muestran el modelo desde direcciones perpendiculares entre sí y mantienen las proporciones sin convergencia de perspectiva: Top (Superior) observa desde arriba y representa el plano XY; Front (Frontal) observa desde delante y muestra los ejes X y Z; Right (Derecha) observa desde el costado y muestra los ejes Y y Z. Son útiles para dibujar, alinear y comprobar posiciones con claridad.",
+    "La vista Perspective (Perspectiva) muestra el modelo de forma tridimensional, como lo percibimos visualmente: permite apreciar profundidad, volumen y la relación espacial entre las partes. Es ideal para inspeccionar la forma general, pero para dibujar con precisión suele convenir una vista paralela adecuada al plano de trabajo.",
+    "Los ejes X, Y y Z representan las tres direcciones del espacio: X corresponde al ancho, Y a la profundidad y Z a la altura. La cuadrícula y los ejes te ayudan a orientarte, pero recuerda que cambiar de vista no cambia por sí solo la geometría: cambia el punto desde el que la observas.",
+    "En esta sesión aprenderás a reconocer las cuatro vistas y a entender para qué sirve cada una. No cambies las unidades ni la configuración general del documento; el ingreso de medidas exactas y el modelado preciso se estudiarán en una etapa posterior."
   ]},
   { titulo: "5. Crear y reconocer objetos en el área de trabajo", bloques: [
     "Para iniciar un comando puedes escribir su nombre en la línea de comandos o utilizar el icono correspondiente. Rhino mostrará indicaciones sobre el siguiente paso que debes realizar.",
@@ -462,6 +465,7 @@ function AulaFormacionPage() {
   const [imagenesVistasPlano, setImagenesVistasPlano] = useState<Record<string,string>>({});
   const [erroresVistasPlano, setErroresVistasPlano] = useState<Record<string,string>>({});
   const [vistaPlanoActiva, setVistaPlanoActiva] = useState("perspectiva");
+  const [exploradorVistasAbierto, setExploradorVistasAbierto] = useState(false);
   const [comandosNavegacionAbiertos, setComandosNavegacionAbiertos] = useState(false);
   const [comandoNavegacionActivo, setComandoNavegacionActivo] = useState("Zoom");
   const [errorImagenesApoyo, setErrorImagenesApoyo] = useState("");
@@ -974,30 +978,42 @@ function AulaFormacionPage() {
   const renderSelectorVistasPlano = () => {
     if (lecturaAbierta?.numero !== 2 || paginaLectura !== 3) return null;
     const vistas = [
-      { id: "perspectiva", nombre: "Perspectiva", ingles: "Perspective" },
-      { id: "derecha", nombre: "Derecha", ingles: "Right" },
-      { id: "superior", nombre: "Superior", ingles: "Top" },
-      { id: "frontal", nombre: "Frontal", ingles: "Front" },
+      { id: "perspectiva", nombre: "Perspectiva", ingles: "Perspective", descripcion: "Vista tridimensional que permite apreciar profundidad, volumen y la relación espacial entre las partes. Es útil para inspeccionar el diseño desde distintos ángulos." },
+      { id: "derecha", nombre: "Derecha", ingles: "Right", descripcion: "Vista paralela desde el costado. Muestra principalmente la relación entre los ejes Y (profundidad) y Z (altura), útil para revisar perfiles y alturas." },
+      { id: "superior", nombre: "Superior", ingles: "Top", descripcion: "Vista paralela desde arriba, asociada al plano XY. Es especialmente útil para dibujar y revisar geometría plana, contornos y distribución sobre el plano de trabajo." },
+      { id: "frontal", nombre: "Frontal", ingles: "Front", descripcion: "Vista paralela desde delante, asociada al plano XZ. Permite comprobar alturas, anchuras y alineaciones frontales sin la deformación visual de la perspectiva." },
     ];
+    const vistaActiva = vistas.find(v => v.id === vistaPlanoActiva) ?? vistas[0];
     const urlActiva = imagenesVistasPlano[vistaPlanoActiva];
-    return <section className="mt-7 max-w-5xl overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-      <div className="border-b border-border bg-muted/20 px-4 py-4 sm:px-5">
-        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-gold-deep">Explorador de vistas · Rhino</p>
-        <h4 className="mt-1 text-base font-semibold">Selecciona una vista de trabajo</h4>
-        <p className="mt-1 text-xs text-muted-foreground">Cambia entre las cuatro orientaciones para comparar cómo se observa el modelo en cada ventana.</p>
-      </div>
-      <div className="flex flex-wrap gap-2 border-b border-border p-3 sm:p-4">
-        {vistas.map(vista => <button key={vista.id} type="button" onClick={() => setVistaPlanoActiva(vista.id)} aria-pressed={vistaPlanoActiva===vista.id} className={`rounded-xl border px-4 py-2.5 text-left transition ${vistaPlanoActiva===vista.id ? "border-gold bg-gold/15 text-foreground shadow-sm" : "border-border bg-background text-muted-foreground hover:border-gold/50 hover:text-foreground"}`}>
-          <span className="block text-sm font-semibold">{vista.nombre} <span className="font-normal text-muted-foreground">({vista.ingles})</span></span>
-        </button>)}
-      </div>
-      <div className="bg-[#17191d] p-3 sm:p-5">
-        <div className="flex min-h-[260px] items-center justify-center overflow-hidden rounded-xl bg-[#111316] p-2 sm:min-h-[360px]">
-          {urlActiva ? <img src={urlActiva} alt={"Vista " + vistas.find(v => v.id===vistaPlanoActiva)?.nombre + " (" + vistas.find(v => v.id===vistaPlanoActiva)?.ingles + ") de Rhino"} className="max-h-[62vh] w-full object-contain" loading="lazy"/> : erroresVistasPlano[vistaPlanoActiva] ? <p className="max-w-lg px-4 text-center text-sm text-amber-200">{erroresVistasPlano[vistaPlanoActiva]}</p> : <p className="text-sm text-white/70">Cargando imagen de la vista…</p>}
+    return <>
+      <section className="mt-7 max-w-5xl rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5">
+        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-gold-deep">Recurso interactivo · Rhino</p>
+        <h4 className="mt-1 text-base font-semibold">Explora las cuatro vistas de trabajo</h4>
+        <p className="mt-1 max-w-3xl text-sm text-muted-foreground">Cada vista muestra el mismo modelo desde una orientación distinta. Abre el explorador para comparar las imágenes y comprender cuándo conviene utilizar cada una.</p>
+        <button type="button" onClick={() => setExploradorVistasAbierto(true)} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-2.5 text-sm font-semibold text-black shadow-sm transition hover:brightness-95">
+          <Eye className="size-4"/> Abrir explorador de vistas
+        </button>
+      </section>
+      {exploradorVistasAbierto && <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/70 p-2 sm:p-4" role="dialog" aria-modal="true" aria-label="Explorador interactivo de vistas de Rhino">
+        <div className="flex max-h-[96dvh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl">
+          <header className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-4 py-3 sm:px-6">
+            <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-gold-deep">Explorador de vistas · Rhino</p><h4 className="mt-1 text-base font-semibold">Orientaciones del espacio de trabajo</h4></div>
+            <button type="button" onClick={() => setExploradorVistasAbierto(false)} className="rounded-lg border border-border px-3 py-2 text-sm font-medium hover:bg-muted">Cerrar <span aria-hidden="true">×</span></button>
+          </header>
+          <div className="flex flex-wrap gap-2 border-b border-border p-3 sm:p-4">
+            {vistas.map(vista => <button key={vista.id} type="button" onClick={() => setVistaPlanoActiva(vista.id)} aria-pressed={vistaPlanoActiva===vista.id} className={`rounded-xl border px-4 py-2.5 text-left transition ${vistaPlanoActiva===vista.id ? "border-gold bg-gold/15 text-foreground shadow-sm" : "border-border bg-background text-muted-foreground hover:border-gold/50 hover:text-foreground"}`}>
+              <span className="block text-sm font-semibold">{vista.nombre} <span className="font-normal text-muted-foreground">({vista.ingles})</span></span>
+            </button>)}
+          </div>
+          <div className="min-h-0 flex-1 overflow-y-auto p-3 sm:p-5">
+            <div className="flex min-h-[220px] items-center justify-center overflow-hidden rounded-xl bg-[#111316] p-2 sm:min-h-[min(52vh,520px)]">
+              {urlActiva ? <img src={urlActiva} alt={"Vista " + vistaActiva.nombre + " (" + vistaActiva.ingles + ") de Rhino"} className="max-h-[52vh] w-full object-contain" loading="lazy"/> : erroresVistasPlano[vistaPlanoActiva] ? <p className="max-w-lg px-4 text-center text-sm text-amber-200">{erroresVistasPlano[vistaPlanoActiva]}</p> : <p className="text-sm text-white/70">Cargando imagen de la vista…</p>}
+            </div>
+            <div className="mx-auto mt-4 max-w-3xl text-center"><h5 className="text-lg font-semibold">{vistaActiva.nombre} <span className="font-normal text-muted-foreground">({vistaActiva.ingles})</span></h5><p className="mt-2 text-sm leading-6 text-muted-foreground">{vistaActiva.descripcion}</p></div>
+          </div>
         </div>
-        <p className="mt-3 text-center text-sm font-semibold text-white">{vistas.find(v => v.id===vistaPlanoActiva)?.nombre} <span className="font-normal text-white/65">({vistas.find(v => v.id===vistaPlanoActiva)?.ingles})</span></p>
-      </div>
-    </section>;
+      </div>}
+    </>;
   };
 
   async function crearExamen(e: FormEvent) {
