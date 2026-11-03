@@ -167,7 +167,6 @@ export default function RhinoObjectExplorer({ visible, materials }: Props) {
     () => materials.find(item => item.nombre_archivo.trim().toLocaleLowerCase() === "ring.3dm")?.ruta_storage ?? "",
     [materials],
   );
-  const ringStoragePath = useMemo(() => materials.find(item => item.nombre_archivo.trim().toLocaleLowerCase() === "ring.3dm")?.ruta_storage ?? "", [materials]);
   const counts = useMemo(() => {
     const c: Record<string, number> = { all: entries.length };
     CATEGORIES.forEach(item => { if (item.id !== "all") c[item.id] = entries.filter(e => e.category === item.id).length; });
