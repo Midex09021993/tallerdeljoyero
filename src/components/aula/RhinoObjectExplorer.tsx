@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AmbientLight, Box3, Color, DirectionalLight, GridHelper, Mesh, Object3D, PerspectiveCamera, Scene, SRGBColorSpace, Vector3, WebGLRenderer } from "three";
+import { AmbientLight, Box3, Color, DirectionalLight, GridHelper, HemisphereLight, Mesh, Object3D, PerspectiveCamera, Scene, Sphere, SRGBColorSpace, Vector3, WebGLRenderer } from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { Rhino3dmLoader } from "three/addons/loaders/3DMLoader.js";
 import { Box, Focus, Layers3, LoaderCircle, RotateCcw, Scan, X } from "lucide-react";
@@ -19,10 +19,15 @@ const CATEGORIES = [
 
 const normalize = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase();
 
-function getCategory(layer: string, type: string) {
+function getCategory(layer: string, type: string, geometryData?: Record<string, unknown>) {
   const name = normalize(layer);
   if (name.includes("PUNTOS DE CONTROL") || type === "Point" || type === "PointSet") return "points";
   if (name.includes("MALLAS") || name.includes("MAYAS") || type === "Mesh") return "meshes";
+  if (type === "Brep") {
+    if (geometryData?.isSolid === true) return "solids";
+    if (geometryData?.isSurface === true) return "surfaces";
+    return "polysurfaces";
+  }
   if (name.includes("POLISUPERFICIE")) return "polysurfaces";
   if (name.includes("SUPERFICIE")) return "surfaces";
   if (name.includes("SOLIDO")) return "solids";
@@ -87,11 +92,13 @@ export default function RhinoObjectExplorer({ visible, materials }: Props) {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
     renderer.outputColorSpace = SRGBColorSpace;
     host.replaceChildren(renderer.domElement);
-    scene.add(new AmbientLight(0xffffff, 1.35));
-    const key = new DirectionalLight(0xffffff, 2);
+    scene.add(new AmbientLight(0xffffff, 1.1));
+    const hemisphere = new HemisphereLight(0xeaf2ff, 0x647386, 1.65);
+    scene.add(hemisphere);
+    const key = new DirectionalLight(0xffffff, 2.7);
     key.position.set(90, -80, 140);
     scene.add(key);
-    const fill = new DirectionalLight(0xc5d7ef, 0.7);
+    const fill = new DirectionalLight(0xc5d7ef, 1.25);
     fill.position.set(-90, 40, 60);
     scene.add(fill);
     const grid = new GridHelper(300, 30, 0x536477, 0x293747);
@@ -133,21 +140,46 @@ export default function RhinoObjectExplorer({ visible, materials }: Props) {
         const found: Entry[] = [];
         model.traverse((object) => {
           const type = String(object.userData.objectType ?? "");
-          if (!type) return;
-          const attributes = object.userData.attributes as { layerIndex?: number; name?: string } | undefined;
+          // File3dm is the document container, not a model object for students to inspect.
+          if (!type || type === "File3dm") return;
+          const attributes = object.userData.attributes as {
+            layerIndex?: number;
+            name?: string;
+            geometry?: Record<string, unknown>;
+          } | undefined;
           const layer = layers[attributes?.layerIndex ?? -1]?.name ?? "Sin capa";
-          found.push({ object, type, layer, name: object.name || attributes?.name || type + " " + (found.length + 1), category: getCategory(layer, type) });
+          const category = getCategory(layer, type, attributes?.geometry);
+          if (object instanceof Mesh) {
+            const materials = Array.isArray(object.material) ? object.material : [object.material];
+            materials.forEach((material) => {
+              if ("color" in material && material.color instanceof Color) {
+                material.color.lerp(new Color("#A9B8C8"), 0.38);
+              }
+            });
+          }
+          found.push({
+            object,
+            type,
+            layer,
+            name: object.name || attributes?.name || type + " " + (found.length + 1),
+            category,
+          });
         });
         setEntries(found);
         setSelectedId(found[0]?.object.uuid ?? "");
         const bounds = new Box3().setFromObject(model);
         const center = bounds.getCenter(new Vector3());
-        const size = bounds.getSize(new Vector3());
-        const span = Math.max(size.x, size.y, size.z, 10);
+        const sphere = bounds.getBoundingSphere(new Sphere());
+        const radius = Math.max(sphere.radius, 5);
         controls.target.copy(center);
-        camera.position.copy(center).add(new Vector3(span * 1.45, -span * 1.8, span * 1.25));
-        camera.near = Math.max(span / 10000, 0.001);
-        camera.far = span * 100;
+        const viewDirection = new Vector3(1, -1.25, 0.9).normalize();
+        const verticalFov = camera.fov * Math.PI / 180;
+        const horizontalFov = 2 * Math.atan(Math.tan(verticalFov / 2) * Math.max(camera.aspect, 0.1));
+        const limitingFov = Math.min(verticalFov, horizontalFov);
+        const distance = (radius / Math.sin(limitingFov / 2)) * 1.12;
+        camera.position.copy(center).addScaledVector(viewDirection, distance);
+        camera.near = Math.max(radius / 1000, 0.001);
+        camera.far = radius * 100;
         camera.updateProjectionMatrix();
         controls.update();
       })
@@ -194,9 +226,16 @@ export default function RhinoObjectExplorer({ visible, materials }: Props) {
     if (!modelRef.current || !cameraRef.current || !controlsRef.current) return;
     const bounds = new Box3().setFromObject(modelRef.current);
     const center = bounds.getCenter(new Vector3());
-    const span = Math.max(...bounds.getSize(new Vector3()).toArray(), 10);
+    const radius = Math.max(bounds.getBoundingSphere(new Sphere()).radius, 5);
+    const camera = cameraRef.current;
+    const verticalFov = camera.fov * Math.PI / 180;
+    const horizontalFov = 2 * Math.atan(Math.tan(verticalFov / 2) * Math.max(camera.aspect, 0.1));
+    const distance = (radius / Math.sin(Math.min(verticalFov, horizontalFov) / 2)) * 1.12;
     controlsRef.current.target.copy(center);
-    cameraRef.current.position.copy(center).add(new Vector3(span * 1.45, -span * 1.8, span * 1.25));
+    camera.position.copy(center).addScaledVector(new Vector3(1, -1.25, 0.9).normalize(), distance);
+    camera.near = Math.max(radius / 1000, 0.001);
+    camera.far = radius * 100;
+    camera.updateProjectionMatrix();
     controlsRef.current.update();
   };
 
