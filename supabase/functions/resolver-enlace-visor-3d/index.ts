@@ -32,31 +32,17 @@ Deno.serve(async (req: Request) => {
 
     const { data: enlace, error: enlaceError } = await admin
       .from("visor_3d_enlaces")
-      .select("token, propietario_id, modelo_url, modelo_ruta, nombre, expira_en")
+      .select("token, propietario_id, modelo_ruta, nombre, expira_en")
       .eq("token", token)
       .gt("expira_en", new Date().toISOString())
       .maybeSingle();
 
-    if (enlaceError) {
-      // Compatibility for environments where the model_ruta migration has not yet
-      // been applied. This fallback preserves the old behavior but cannot renew URLs.
-      if (/modelo_ruta|column .* does not exist/i.test(enlaceError.message)) {
-        const { data, error } = await admin.rpc("resolver_enlace_visor_3d", { _token: token });
-        if (error) throw error;
-        const row = Array.isArray(data) ? data[0] : null;
-        if (!row || new Date(row.expira_en).getTime() <= Date.now()) {
-          return json({ error: "Enlace no válido o caducado." }, 404);
-        }
-        return json({ ok: true, url: row.modelo_url, nombre: row.nombre, expira_en: row.expira_en });
-      }
-      throw enlaceError;
-    }
+    if (enlaceError) throw enlaceError;
 
     if (!enlace || new Date(enlace.expira_en).getTime() <= Date.now()) {
       return json({ error: "Enlace no válido o caducado." }, 404);
     }
 
-    let modelUrl = enlace.modelo_url as string;
     const modelPath = typeof enlace.modelo_ruta === "string" ? enlace.modelo_ruta : "";
 
     if (modelPath) {
