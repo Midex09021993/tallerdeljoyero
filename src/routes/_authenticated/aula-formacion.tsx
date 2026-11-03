@@ -2812,17 +2812,29 @@ function AulaFormacionPage() {
           <section className="rounded-2xl border border-gold/20 bg-card p-5"><p className="text-sm font-semibold">Bienvenido al aula</p><p className="mt-1 text-xs text-muted-foreground">Aquí aparecen únicamente los cursos en los que FADILAB te ha inscrito. Los archivos permanecen privados.</p></section>
           {lecturaAbierta && <div className={`fixed inset-0 z-[60] flex items-center justify-center overflow-hidden ${modoAulaExpandida ? "bg-background p-0" : `bg-black/60 p-2 sm:p-3 ${lecturaModoVistaPrevia ? "left-0 lg:left-64 xl:left-72" : ""}`}`} role="dialog" aria-modal="true" aria-label="Lectura de la sesión">
             <div className={"mx-auto flex h-[calc(100dvh-1rem)] max-h-[900px] min-h-0 w-full flex-col " + (modoAulaExpandida ? "max-w-none" : lecturaAbierta.numero === 5 ? "max-w-[1700px]" : "max-w-5xl") + ` overflow-hidden border border-border bg-background shadow-2xl ${modoAulaExpandida ? "h-full max-h-none rounded-none border-0" : "rounded-2xl"}`}>
-              <header className="shrink-0 border-b border-border bg-gradient-to-r from-[#fbf8f0] to-background px-4 py-3 sm:px-6 sm:py-4">
-                <div className="flex flex-wrap items-start justify-between gap-3"><div className="min-w-0"><p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-gold-deep">FADILAB · Aula de formación · Lectura guiada</p><h2 className="mt-1 text-lg font-semibold">{lecturaAbierta.numero}. {lecturaAbierta.titulo}</h2><p className="mt-1 text-xs text-muted-foreground">{lecturaModoVistaPrevia ? "Modo de prueba docente · el avance no se guarda en la cuenta de ningún alumno." : "Al abrir esta lectura se registra como leída. Avanza por los apartados y márcala como completada al finalizar."}</p></div><div className="flex shrink-0 items-center gap-2"><button type="button" onClick={() => { setLecturaAbierta(null); setLecturaModoVistaPrevia(false); setModoAulaExpandida(false); }} className="rounded-lg border border-border px-3 py-2 text-xs">Cerrar</button></div></div>
-                <div className="mt-4 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-gold transition-all" style={{width: (((paginaLectura+1)/seccionesLecturaActivas.length)*100)+"%"}}/></div>
-                <p className="mt-2 text-xs text-muted-foreground">Apartado {paginaLectura+1} de {seccionesLecturaActivas.length}</p>
-              </header>
-              <nav aria-label="Índice de la lectura" className="shrink-0 border-b border-border bg-background px-4 py-3 sm:px-6 sm:py-3">
-                <div className="mb-2 flex items-center justify-between gap-3"><p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Índice de contenidos</p><p className="text-[11px] text-muted-foreground">Selecciona un apartado para navegar</p></div>
-                <div className="flex gap-2 overflow-x-auto pb-1">
-                  {seccionesLecturaActivas.map((seccion, indice) => <button key={indice} type="button" onClick={() => setPaginaLectura(indice)} aria-current={paginaLectura===indice ? "step" : undefined} className={`flex min-w-10 shrink-0 items-center justify-center rounded-lg border px-3 py-2 text-xs font-semibold transition ${paginaLectura===indice ? "border-gold bg-gold text-black shadow-sm" : "border-border bg-card text-muted-foreground hover:border-gold/50 hover:text-foreground"}`} title={seccion.titulo}>{String(indice+1).padStart(2,"0")}</button>)}
+              <header className={`shrink-0 border-b border-border bg-gradient-to-r from-[#fbf8f0] to-background ${modoAulaExpandida ? "px-4 py-2 sm:px-6 sm:py-2" : "px-4 py-3 sm:px-6 sm:py-4"}`}>
+                <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-deep">FADILAB · Aula de formación · Lectura guiada</p>
+                    <h2 className={`font-semibold leading-tight ${modoAulaExpandida ? "mt-0.5 text-base sm:text-lg" : "mt-1 text-lg"}`}>{lecturaAbierta.numero}. {lecturaAbierta.titulo}</h2>
+                    {!modoAulaExpandida && <p className="mt-1 text-xs text-muted-foreground">{lecturaModoVistaPrevia ? "Modo de prueba docente · el avance no se guarda en la cuenta de ningún alumno." : "Al abrir esta lectura se registra como leída. Avanza por los apartados y márcala como completada al finalizar."}</p>}
+                  </div>
+                  <button type="button" onClick={() => { setLecturaAbierta(null); setLecturaModoVistaPrevia(false); setModoAulaExpandida(false); }} className="shrink-0 rounded-lg border border-border px-3 py-1.5 text-xs font-medium transition hover:border-gold">Cerrar</button>
                 </div>
-                <p className="mt-2 truncate text-xs font-medium text-foreground">{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</p>
+                <div className={`flex items-center gap-3 ${modoAulaExpandida ? "mt-2" : "mt-4"}`}>
+                  <div className={`min-w-0 flex-1 overflow-hidden rounded-full bg-muted ${modoAulaExpandida ? "h-1" : "h-2"}`}><div className="h-full rounded-full bg-gold transition-all" style={{width: (((paginaLectura+1)/seccionesLecturaActivas.length)*100)+"%"}}/></div>
+                  <p className="shrink-0 text-[11px] text-muted-foreground">Apartado {paginaLectura+1} de {seccionesLecturaActivas.length}</p>
+                </div>
+              </header>
+              <nav aria-label="Índice de la lectura" className={`shrink-0 border-b border-border bg-background px-4 sm:px-6 ${modoAulaExpandida ? "py-2" : "py-3"}`}>
+                <div className={`flex flex-wrap items-center justify-between gap-x-3 gap-y-1 ${modoAulaExpandida ? "mb-1.5" : "mb-2"}`}>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Índice de contenidos</p>
+                  <p className="text-[10px] text-muted-foreground">{modoAulaExpandida ? "Selecciona un apartado" : "Selecciona un apartado para navegar"}</p>
+                </div>
+                <div className="flex gap-1.5 overflow-x-auto pb-0.5">
+                  {seccionesLecturaActivas.map((seccion, indice) => <button key={indice} type="button" onClick={() => setPaginaLectura(indice)} aria-current={paginaLectura===indice ? "step" : undefined} className={`flex shrink-0 items-center justify-center rounded-lg border font-semibold transition ${modoAulaExpandida ? "min-w-8 px-2 py-1.5 text-[11px]" : "min-w-10 px-3 py-2 text-xs"} ${paginaLectura===indice ? "border-gold bg-gold text-black shadow-sm" : "border-border bg-card text-muted-foreground hover:border-gold/50 hover:text-foreground"}`} title={seccion.titulo}>{String(indice+1).padStart(2,"0")}</button>)}
+                </div>
+                <p className={`truncate text-xs font-medium text-foreground ${modoAulaExpandida ? "mt-1" : "mt-2"}`}>{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</p>
               </nav>
               <main className="min-h-0 flex-1 overflow-y-auto bg-card/40 px-5 py-5 sm:px-8 sm:py-6 lg:px-10">
                 <h3 className="mb-5 max-w-4xl font-display text-2xl leading-tight sm:text-3xl">{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</h3>
