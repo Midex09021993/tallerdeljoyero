@@ -76,6 +76,7 @@ export default function LaboratorioCurvasNurbs({ initialModule = 0, onClose }: P
   const [done, setDone] = useState<number[]>([]);
   const [evidence, setEvidence] = useState<boolean[]>(Array(6).fill(false));
   const [validationMessage, setValidationMessage] = useState("");
+  const [rationalAdjusted, setRationalAdjusted] = useState(false);
   const [cleanupMode, setCleanupMode] = useState<"clean" | "open" | "cross">("open");
   const currentDegree = Math.min(degree, points.length - 1);
   const nurbsPoints = useMemo(() => nurbs(points, currentDegree, weights), [points, currentDegree, weights]);
@@ -93,7 +94,7 @@ export default function LaboratorioCurvasNurbs({ initialModule = 0, onClose }: P
     setPoints(prev => prev.map((pt, i) => i === active ? { x, y } : pt));
     setEvidence(prev => prev.map((v, i) => i === 1 ? true : v));
   };
-  const reset = () => { setPoints(ORIGINAL); setDegree(3); setRebuildCount(5); setCurveMode("nurbs"); setWeights(Array(7).fill(1)); setAnswer(""); setChecked(false); setShowOriginal(true); setEvidence(Array(6).fill(false)); setValidationMessage(""); };
+  const reset = () => { setPoints(ORIGINAL); setDegree(3); setRebuildCount(5); setCurveMode("nurbs"); setWeights(Array(7).fill(1)); setAnswer(""); setChecked(false); setShowOriginal(true); setEvidence(Array(6).fill(false)); setValidationMessage(""); setRationalAdjusted(false); };
   const markDone = () => setDone(prev => prev.includes(module) ? prev : [...prev, module]);
   const next = () => { markDone(); setModule(v => Math.min(5, v + 1)); setAnswer(""); setChecked(false); };
   const curveLength = renderedPoints.slice(1).reduce((sum, p, i) => sum + distance(p, renderedPoints[i]!), 0);
@@ -123,7 +124,7 @@ export default function LaboratorioCurvasNurbs({ initialModule = 0, onClose }: P
     setEvidence(prev => prev.map((v, i) => i === 2 ? true : v));
     setValidationMessage("Reconstrucción aplicada: se generó una nueva distribución de puntos sobre la curva evaluada.");
   };
-  const canComplete = (index: number) => evidence[index] && (index !== 5 || answer !== "");
+  const canComplete = (index: number) => index === 5 ? evidence[5] && answer !== "" && rationalAdjusted : evidence[index];
   const completeModule = () => {
     if (!canComplete(module)) {
       setChecked(true);
@@ -132,7 +133,7 @@ export default function LaboratorioCurvasNurbs({ initialModule = 0, onClose }: P
         : module === 2 ? "Ajusta los parámetros y ejecuta Rebuild."
         : module === 3 ? "Activa o desactiva el peine de curvatura para analizarlo."
         : module === 4 ? "Selecciona el escenario de perfil ordenado y revisa el diagnóstico."
-        : "Selecciona una decisión de diseño y ajusta el peso racional.");
+        : "Selecciona una decisión de diseño y modifica el peso racional del tercer punto.");
       return;
     }
     setDone(prev => prev.includes(module) ? prev : [...prev, module]);
@@ -170,7 +171,7 @@ export default function LaboratorioCurvasNurbs({ initialModule = 0, onClose }: P
             {module === 2 && <div className="mt-4 rounded-xl border border-white/10 bg-black/20 p-3"><p className="text-xs font-semibold">Comparación de reconstrucción</p><p className="mt-1 text-xs leading-5 text-slate-400">Prueba grados 1, 2 y 3. Observa cómo cambia la flexibilidad. En Rhino, Rebuild crea una nueva estructura de control; aquí se visualiza el efecto del grado sobre la misma geometría de referencia.</p></div>}
             {module === 3 && <div className="mt-4 space-y-3"><div className="rounded-xl border border-violet-400/20 bg-violet-400/5 p-3"><p className="text-xs font-semibold text-violet-200">Peine de curvatura · visualización didáctica</p><p className="mt-1 text-xs leading-5 text-slate-400">Las espinas indican variaciones locales de curvatura. Picos abruptos señalan transiciones que conviene inspeccionar.</p></div><label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={showComb} onChange={e => { setShowComb(e.target.checked); setEvidence(prev => prev.map((v, i) => i === 3 ? true : v)); }} className="accent-amber-300"/> Mostrar peine de curvatura</label><div className="grid grid-cols-3 gap-2 text-center">{["G0 · Posición","G1 · Tangencia","G2 · Curvatura"].map(x => <div key={x} className="rounded-lg border border-white/10 p-2 text-[10px] text-slate-300">{x}</div>)}</div></div>}
             {module === 4 && <div className="mt-4 space-y-2"><p className="text-xs font-semibold">Condición del perfil</p>{[{v:"open",t:"Extremos abiertos"},{v:"cross",t:"Autointersección visual"},{v:"clean",t:"Perfil ordenado"}].map(x => <button key={x.v} onClick={() => { setCleanupMode(x.v as typeof cleanupMode); if (x.v === "clean") setEvidence(prev => prev.map((v, i) => i === 4 ? true : v)); }} className={`w-full rounded-lg border p-2.5 text-left text-xs ${cleanupMode === x.v ? "border-amber-300 bg-amber-300/10 text-amber-100" : "border-white/10 text-slate-300"}`}>{x.t}</button>)}<p className="text-[10px] leading-4 text-slate-400">{cleanupMode === "cross" ? "ALERTA: perfil con cruce visible. No debe usarse para generar un contorno cerrado." : cleanupMode === "open" ? "ATENCIÓN: extremos abiertos. Comprueba si el diseño requiere un contorno cerrado." : "PERFIL ORDENADO: escenario de referencia seleccionado. Aún debes validar tolerancias y continuidad en Rhino."}</p></div>}
-            {module === 5 && <div className="mt-4 space-y-2"><label className="flex items-center justify-between text-xs">Peso del punto activo <strong>{(weights[2] ?? 1).toFixed(1)}</strong></label><input type="range" min=".5" max="2.5" step=".1" value={weights[2] ?? 1} onChange={e => { setWeights(prev => prev.map((w, i) => i === 2 ? Number(e.target.value) : w)); setEvidence(prev => prev.map((v, i) => i === 5 ? true : v)); }} className="w-full accent-amber-300"/><p className="text-[10px] leading-5 text-slate-400">Los pesos modifican la influencia racional de los puntos de control sin moverlos.</p></div>}
+            {module === 5 && <div className="mt-4 space-y-2"><label className="flex items-center justify-between text-xs">Peso del punto activo <strong>{(weights[2] ?? 1).toFixed(1)}</strong></label><input type="range" min=".5" max="2.5" step=".1" value={weights[2] ?? 1} onChange={e => { setWeights(prev => prev.map((w, i) => i === 2 ? Number(e.target.value) : w)); setRationalAdjusted(true); setEvidence(prev => prev.map((v, i) => i === 5 ? true : v)); }} className="w-full accent-amber-300"/><p className="text-[10px] leading-5 text-slate-400">Los pesos modifican la influencia racional de los puntos de control sin moverlos.</p></div>}
             <div className="mt-4 grid grid-cols-2 gap-2 border-t border-white/10 pt-4"><div className="rounded-lg bg-black/20 p-3"><p className="text-[10px] text-slate-500">Longitud aprox.</p><p className="mt-1 text-sm font-semibold tabular-nums">{curveLength.toFixed(1)} u</p></div><div className="rounded-lg bg-black/20 p-3"><p className="text-[10px] text-slate-500">Diferencia visual</p><p className="mt-1 text-sm font-semibold tabular-nums">{maxDeviation.toFixed(1)} u</p></div></div>
           </section>
           <section className="rounded-2xl border border-white/10 bg-[#121922] p-4"><div className="flex items-center gap-2"><CircleHelp className="size-4 text-amber-300"/><h4 className="text-sm font-semibold">Objetivo del módulo</h4></div><p className="mt-2 text-xs leading-5 text-slate-300">{MODULES[module]!.goal}</p><div className="mt-3 rounded-lg border border-white/10 bg-black/20 p-3"><p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Aplicación en joyería</p><p className="mt-1 text-xs leading-5 text-slate-300">Un perfil controlado mejora la calidad visual de un aro, bisel o contorno ornamental y reduce problemas al generar superficies posteriores.</p></div></section>
