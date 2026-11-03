@@ -91,11 +91,10 @@ begin
      'En Fillet, ¿qué parámetro determina el tamaño del redondeo?',
      '[{"label":"El radio","value":"El radio"},{"label":"El ángulo de rotación","value":"El ángulo de rotación"},{"label":"El factor de escala","value":"El factor de escala"},{"label":"La distancia de desplazamiento","value":"La distancia de desplazamiento"}]'::jsonb,
      '"El radio"'::jsonb),
-
     (3, 'opcion_multiple',
      '¿Qué hace Extend al editar curvas?',
-     '[{"label":"Prolonga una curva hasta alcanzar un límite o una condición de extensión válida","value":"Porque la ubicación de selección ayuda a determinar qué partes de las curvas se conservan"},{"label":"Porque define automáticamente las unidades del documento","value":"Porque define automáticamente las unidades del documento"},{"label":"Porque cambia el radio a cero","value":"Porque cambia el radio a cero"},{"label":"Porque convierte el empalme en una superficie","value":"Porque convierte el empalme en una superficie"}]'::jsonb,
-     '"Porque la ubicación de selección ayuda a determinar qué partes de las curvas se conservan"'::jsonb),
+     '[{"label":"Prolonga una curva hasta alcanzar un límite o una condición de extensión válida","value":"Prolonga una curva hasta alcanzar un límite o una condición de extensión válida"},{"label":"Divide la curva y elimina una parte","value":"Divide la curva y elimina una parte"},{"label":"Crea una curva paralela","value":"Crea una curva paralela"},{"label":"Une dos curvas automáticamente","value":"Une dos curvas automáticamente"}]'::jsonb,
+     '"Prolonga una curva hasta alcanzar un límite o una condición de extensión válida"'::jsonb),
 
     (4, 'opcion_multiple',
      '¿Cuál es la diferencia geométrica principal entre Fillet y Chamfer?',
@@ -116,11 +115,10 @@ begin
      'Al ejecutar Offset, ¿qué debes indicar además de la distancia?',
      '[{"label":"El lado donde se creará la nueva curva","value":"El lado donde se creará la nueva curva"},{"label":"El centro de rotación","value":"El centro de rotación"},{"label":"El número de copias","value":"El número de copias"},{"label":"El ángulo de empalme","value":"El ángulo de empalme"}]'::jsonb,
      '"El lado donde se creará la nueva curva"'::jsonb),
-
     (8, 'opcion_multiple',
      '¿Qué hace Trim cuando editas curvas con objetos de corte?',
-     '[{"label":"Elimina los segmentos sobrantes que seleccionas después de definir los objetos cortantes","value":"Cruces o autointersecciones en el contorno"},{"label":"El objeto siempre se convierte en una malla","value":"El objeto siempre se convierte en una malla"},{"label":"Se elimina automáticamente el documento","value":"Se elimina automáticamente el documento"},{"label":"Se bloquea el plano XY","value":"Se bloquea el plano XY"}]'::jsonb,
-     '"Cruces o autointersecciones en el contorno"'::jsonb),
+     '[{"label":"Elimina los segmentos sobrantes que seleccionas después de definir los objetos cortantes","value":"Elimina los segmentos sobrantes que seleccionas después de definir los objetos cortantes"},{"label":"Conserva todos los segmentos separados","value":"Conserva todos los segmentos separados"},{"label":"Prolonga una curva hasta un límite","value":"Prolonga una curva hasta un límite"},{"label":"Une extremos de curvas","value":"Une extremos de curvas"}]'::jsonb,
+     '"Elimina los segmentos sobrantes que seleccionas después de definir los objetos cortantes"'::jsonb),
 
     (9, 'opcion_multiple',
      '¿Qué información define el desplazamiento realizado con Move?',
@@ -151,16 +149,14 @@ begin
      '¿Qué ocurre al aplicar Scale uniforme con un factor de 0.5?',
      '[{"label":"Las dimensiones se reducen a la mitad","value":"Las dimensiones se reducen a la mitad"},{"label":"Las dimensiones se duplican","value":"Las dimensiones se duplican"},{"label":"El objeto gira 0.5 grados","value":"El objeto gira 0.5 grados"},{"label":"El objeto se desplaza 0.5 mm","value":"El objeto se desplaza 0.5 mm"}]'::jsonb,
      '"Las dimensiones se reducen a la mitad"'::jsonb),
-
     (15, 'opcion_multiple',
      '¿Qué debes comprobar después de utilizar Join?',
-     '[{"label":"Si las curvas se unieron y si el resultado es una curva abierta o cerrada","value":"Las dimensiones y que la geometría resultante sea adecuada para el diseño"},{"label":"Únicamente el color de visualización","value":"Únicamente el color de visualización"},{"label":"Solo el nombre del comando utilizado","value":"Solo el nombre del comando utilizado"},{"label":"Que el objeto quede fuera del plano de construcción","value":"Que el objeto quede fuera del plano de construcción"}]'::jsonb,
-     '"Las dimensiones y que la geometría resultante sea adecuada para el diseño"'::jsonb),
-
+     '[{"label":"Si las curvas se unieron y si el resultado es una curva abierta o cerrada","value":"Si las curvas se unieron y si el resultado es una curva abierta o cerrada"},{"label":"Únicamente el color de visualización","value":"Únicamente el color de visualización"},{"label":"Solo el nombre del comando utilizado","value":"Solo el nombre del comando utilizado"},{"label":"Que el objeto quede fuera del plano de construcción","value":"Que el objeto quede fuera del plano de construcción"}]'::jsonb,
+     '"Si las curvas se unieron y si el resultado es una curva abierta o cerrada"'::jsonb),
     (16, 'opcion_multiple',
      '¿Cuál es la diferencia principal entre Split y Trim?',
-     '[{"label":"Split divide y conserva los segmentos; Trim permite retirar los segmentos sobrantes seleccionados","value":"Para comparar las variantes y poder recuperar la geometría inicial"},{"label":"Para que Rhino cambie automáticamente las unidades","value":"Para que Rhino cambie automáticamente las unidades"},{"label":"Para convertir las curvas en superficies","value":"Para convertir las curvas en superficies"},{"label":"Para evitar indicar puntos base","value":"Para evitar indicar puntos base"}]'::jsonb,
-     '"Para comparar las variantes y poder recuperar la geometría inicial"'::jsonb)
+     '[{"label":"Split divide y conserva los segmentos; Trim permite retirar los segmentos sobrantes seleccionados","value":"Split divide y conserva los segmentos; Trim permite retirar los segmentos sobrantes seleccionados"},{"label":"Split desplaza la curva y Trim la escala","value":"Split desplaza la curva y Trim la escala"},{"label":"Ambos comandos siempre eliminan toda la curva","value":"Ambos comandos siempre eliminan toda la curva"},{"label":"Split une extremos y Trim crea curvas paralelas","value":"Split une extremos y Trim crea curvas paralelas"}]'::jsonb,
+     '"Split divide y conserva los segmentos; Trim permite retirar los segmentos sobrantes seleccionados"'::jsonb)
   ) as q(orden, tipo, enunciado, opciones, respuesta_correcta)
   order by q.orden;
 
