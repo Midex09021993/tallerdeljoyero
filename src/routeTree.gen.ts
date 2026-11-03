@@ -26,6 +26,7 @@ import { Route as RecuperarContrasenaRouteImport } from './routes/recuperar-cont
 import { Route as TiendaRouteImport } from './routes/tienda'
 import { Route as SlugIndexRouteImport } from './routes/$slug.index'
 import { Route as SlugProductoRouteImport } from './routes/$slug.$producto'
+import { Route as AuthenticatedAulaComandosRouteImport } from './routes/_authenticated/aula-comandos'
 import { Route as AuthenticatedAulaFormacionRouteImport } from './routes/_authenticated/aula-formacion'
 import { Route as AuthenticatedAurumRenderRouteImport } from './routes/_authenticated/aurum-render'
 import { Route as AuthenticatedAurumRenderPluginRouteImport } from './routes/_authenticated/aurum-render-plugin'
@@ -164,6 +165,12 @@ const SlugProductoRoute = SlugProductoRouteImport.update({
   path: '/$producto',
   getParentRoute: () => SlugRoute,
 } as any)
+const AuthenticatedAulaComandosRoute =
+  AuthenticatedAulaComandosRouteImport.update({
+    id: '/aula-comandos',
+    path: '/aula-comandos',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAulaFormacionRoute =
   AuthenticatedAulaFormacionRouteImport.update({
     id: '/aula-formacion',
@@ -467,6 +474,7 @@ export interface FileRoutesByFullPath {
   '/recuperar-contrasena': typeof RecuperarContrasenaRoute
   '/tienda': typeof TiendaRoute
   '/$slug/$producto': typeof SlugProductoRoute
+  '/aula-comandos': typeof AuthenticatedAulaComandosRoute
   '/aula-formacion': typeof AuthenticatedAulaFormacionRoute
   '/aurum-render': typeof AuthenticatedAurumRenderRoute
   '/aurum-render-plugin': typeof AuthenticatedAurumRenderPluginRoute
@@ -537,6 +545,7 @@ export interface FileRoutesByTo {
   '/recuperar-contrasena': typeof RecuperarContrasenaRoute
   '/tienda': typeof TiendaRoute
   '/$slug/$producto': typeof SlugProductoRoute
+  '/aula-comandos': typeof AuthenticatedAulaComandosRoute
   '/aula-formacion': typeof AuthenticatedAulaFormacionRoute
   '/aurum-render': typeof AuthenticatedAurumRenderRoute
   '/aurum-render-plugin': typeof AuthenticatedAurumRenderPluginRoute
@@ -608,6 +617,7 @@ export interface FileRoutesById {
   '/recuperar-contrasena': typeof RecuperarContrasenaRoute
   '/tienda': typeof TiendaRoute
   '/$slug/$producto': typeof SlugProductoRoute
+  '/_authenticated/aula-comandos': typeof AuthenticatedAulaComandosRoute
   '/_authenticated/aula-formacion': typeof AuthenticatedAulaFormacionRoute
   '/_authenticated/aurum-render': typeof AuthenticatedAurumRenderRoute
   '/_authenticated/aurum-render-plugin': typeof AuthenticatedAurumRenderPluginRoute
@@ -681,6 +691,7 @@ export interface FileRouteTypes {
     | '/recuperar-contrasena'
     | '/tienda'
     | '/$slug/$producto'
+    | '/aula-comandos'
     | '/aula-formacion'
     | '/aurum-render'
     | '/aurum-render-plugin'
@@ -751,6 +762,7 @@ export interface FileRouteTypes {
     | '/recuperar-contrasena'
     | '/tienda'
     | '/$slug/$producto'
+    | '/aula-comandos'
     | '/aula-formacion'
     | '/aurum-render'
     | '/aurum-render-plugin'
@@ -821,6 +833,7 @@ export interface FileRouteTypes {
     | '/recuperar-contrasena'
     | '/tienda'
     | '/$slug/$producto'
+    | '/_authenticated/aula-comandos'
     | '/_authenticated/aula-formacion'
     | '/_authenticated/aurum-render'
     | '/_authenticated/aurum-render-plugin'
@@ -1024,6 +1037,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/$slug/$producto'
       preLoaderRoute: typeof SlugProductoRouteImport
       parentRoute: typeof SlugRoute
+    }
+    '/_authenticated/aula-comandos': {
+      id: '/_authenticated/aula-comandos'
+      path: '/aula-comandos'
+      fullPath: '/aula-comandos'
+      preLoaderRoute: typeof AuthenticatedAulaComandosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/aula-formacion': {
       id: '/_authenticated/aula-formacion'
@@ -1442,6 +1462,7 @@ const AuthenticatedVentasRouteWithChildren =
   AuthenticatedVentasRoute._addFileChildren(AuthenticatedVentasRouteChildren)
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAulaComandosRoute: typeof AuthenticatedAulaComandosRoute
   AuthenticatedAulaFormacionRoute: typeof AuthenticatedAulaFormacionRoute
   AuthenticatedAurumRenderRoute: typeof AuthenticatedAurumRenderRoute
   AuthenticatedAurumRenderPluginRoute: typeof AuthenticatedAurumRenderPluginRoute
@@ -1479,6 +1500,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAulaComandosRoute: AuthenticatedAulaComandosRoute,
   AuthenticatedAulaFormacionRoute: AuthenticatedAulaFormacionRoute,
   AuthenticatedAurumRenderRoute: AuthenticatedAurumRenderRoute,
   AuthenticatedAurumRenderPluginRoute: AuthenticatedAurumRenderPluginRoute,
