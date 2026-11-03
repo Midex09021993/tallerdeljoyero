@@ -586,6 +586,12 @@ function AulaFormacionPage() {
   const [lecturaAbierta, setLecturaAbierta] = useState<SesionCurso | null>(null);
   const [lecturaModoVistaPrevia, setLecturaModoVistaPrevia] = useState(false);
   const [modoAulaExpandida, setModoAulaExpandida] = useState(false);
+  // Al cerrar cualquier lectura (botón Cerrar o finalización), devolver el Aula
+  // a su distribución anterior. La apertura de una sesión activa el modo expandido.
+  useEffect(() => {
+    if (!lecturaAbierta) setModoAulaExpandida(false);
+  }, [lecturaAbierta]);
+
   const [lecturasSimuladas, setLecturasSimuladas] = useState<Set<string>>(new Set());
   const [paginaLectura, setPaginaLectura] = useState(0);
   const [modoCoord3, setModoCoord3] = useState<"absolutas"|"relativas"|"polares">("relativas");
@@ -1618,6 +1624,7 @@ function AulaFormacionPage() {
       }
       setSeccionesLecturaActivas(secciones);
       setLecturaModoVistaPrevia(vistaPrevia);
+      setModoAulaExpandida(true);
       setLecturaAbierta(s);
       setPaginaLectura(0);
       setComponentesExplorados([]);
