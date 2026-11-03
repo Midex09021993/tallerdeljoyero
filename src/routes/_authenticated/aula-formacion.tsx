@@ -2422,10 +2422,10 @@ function AulaFormacionPage() {
       completar("Comando " + (cmd === "undoview" ? "UndoView" : cmd.toUpperCase()) + " reconocido. Has aplicado la función correspondiente.");
     };
     const viewports = [
-      { id: "Top", label: "SUPERIOR", sub: "TOP · XY" },
-      { id: "Perspective", label: "PERSPECTIVE", sub: "3D · ORBIT" },
-      { id: "Front", label: "FRONTAL", sub: "FRONT · XZ" },
-      { id: "Right", label: "DERECHA", sub: "RIGHT · YZ" },
+      { id: "Top", label: "TOP (SUPERIOR)", sub: "XY · PLANTA" },
+      { id: "Perspective", label: "PERSPECTIVE (PERSPECTIVA)", sub: "3D · ORBIT" },
+      { id: "Front", label: "FRONT (FRONTAL)", sub: "XZ · ELEVACIÓN" },
+      { id: "Right", label: "RIGHT (DERECHA)", sub: "YZ · LATERAL" },
     ];
     const viewport = (v: typeof viewports[number]) => {
       const activa = retoNavVistaActiva === v.id;
@@ -2435,7 +2435,7 @@ function AulaFormacionPage() {
       const zoom = activa ? retoNavZoom : 1;
       const pan = activa ? retoNavPan : { x: 0, y: 0 };
       const orbit = activa ? retoNavOrbit : 0;
-      return <div key={v.id} className={"min-w-0 overflow-hidden rounded-lg border " + (activa ? "border-[#C4A15A] ring-1 ring-[#C4A15A]/40" : "border-white/10")}>
+      return <div key={v.id} className={"min-w-0 overflow-hidden rounded-lg border " + (max ? "flex h-full min-h-0 flex-col " : "") + (activa ? "border-[#C4A15A] ring-1 ring-[#C4A15A]/40" : "border-white/10")}>
         <button type="button" onClick={() => setRetoNavVistaActiva(v.id)} onDoubleClick={() => {
           setRetoNavVistaMaximizada(current => current === v.id ? null : v.id);
           if (retoNavPaso === 4) {
@@ -2444,10 +2444,10 @@ function AulaFormacionPage() {
             if (next >= 2) completar("Vista maximizada y distribución restaurada correctamente.");
             else setRetoNavMensaje("Vista maximizada. Haz doble clic otra vez en el título para restaurar las cuatro vistas.");
           }
-        }} className={"flex w-full items-center justify-between px-3 py-2 text-[10px] font-semibold tracking-[0.14em] " + (activa ? "bg-[#353941] text-[#E9C879]" : "bg-[#292D34] text-slate-300")}>
+        }} className={"flex w-full shrink-0 items-center justify-between px-3 py-2 text-[10px] font-semibold tracking-[0.14em] " + (activa ? "bg-[#353941] text-[#E9C879]" : "bg-[#292D34] text-slate-300")}>
           <span>{v.label}</span><span className="font-normal tracking-normal text-slate-500">{v.sub}</span>
         </button>
-        <svg viewBox="0 0 320 190" className="block h-[190px] w-full touch-none bg-[#171B21]" onContextMenu={e => e.preventDefault()}
+        <svg viewBox="0 0 320 190" className={"block w-full touch-none bg-[#171B21] " + (max ? "min-h-0 flex-1" : "h-[190px]")} onContextMenu={e => e.preventDefault()}
           onWheel={e => {
             e.preventDefault(); setRetoNavVistaActiva(v.id);
             if (retoNavPaso === 0 && v.id === "Perspective") {
@@ -2513,7 +2513,7 @@ function AulaFormacionPage() {
         <div className="grid min-h-0 flex-1 grid-cols-1 overflow-hidden xl:grid-cols-[minmax(0,1fr)_340px]">
           <main className="min-h-0 overflow-y-auto p-3 sm:p-4">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2"><div><p className="text-[10px] font-semibold uppercase tracking-[.16em] text-slate-400">Área de trabajo · Viewports</p><p className="mt-1 text-xs text-slate-500">Botón derecho + arrastre · Rueda para Zoom · Doble clic en título para maximizar</p></div><div className="flex gap-2"><span className="rounded-md border border-white/10 px-2 py-1 text-[10px] text-slate-400">Zoom {retoNavZoom.toFixed(2)}×</span><span className="rounded-md border border-white/10 px-2 py-1 text-[10px] text-slate-400">Órbita {Math.round(retoNavOrbit)}°</span></div></div>
-            <div className="grid gap-2 md:grid-cols-2">{viewports.filter(v => !retoNavVistaMaximizada || v.id === retoNavVistaMaximizada).map(viewport)}</div>
+            <div className={"grid gap-2 " + (retoNavVistaMaximizada ? "h-[min(64vh,440px)] min-h-[320px] grid-cols-1" : "md:grid-cols-2")}>{viewports.filter(v => !retoNavVistaMaximizada || v.id === retoNavVistaMaximizada).map(viewport)}</div>
             <div className="mt-3 flex flex-wrap items-center gap-2 rounded-lg border border-white/10 bg-[#171B21] p-2.5"><span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Línea de comandos</span><code className="rounded bg-black/20 px-2 py-1 text-[10px] text-amber-200">_</code><input value={retoNavComando} onChange={e => setRetoNavComando(e.target.value)} onKeyDown={e => { if (e.key === "Enter") ejecutarComando(); }} placeholder="Escribe ZE, ZEA, ZS, UndoView, Pan o Zoom…" className="min-w-0 flex-1 bg-transparent px-1 py-2 text-sm text-white outline-none placeholder:text-slate-600"/><button type="button" onClick={ejecutarComando} className="rounded-md bg-[#C4A15A] px-3 py-2 text-xs font-bold text-[#17130B]">Ejecutar ↵</button></div>
             <p className="mt-2 text-[11px] text-slate-500">Simulación didáctica: los gestos se reproducen en este entorno; no se controla una instalación real de Rhino.</p>
           </main>
