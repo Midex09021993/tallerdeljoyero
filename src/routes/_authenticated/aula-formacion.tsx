@@ -2430,10 +2430,10 @@ function AulaFormacionPage() {
               <main className={`min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-8 sm:py-6 lg:px-10 ${modoAulaExpandida ? "bg-white px-6 py-7 text-[#3A3A3C] sm:px-10 sm:py-9 lg:px-14 xl:px-16 2xl:px-20" : "bg-white"}`}>
                 <div className={lecturaAbierta?.numero === 5 ? "grid items-start gap-6 2xl:grid-cols-[minmax(0,.9fr)_minmax(0,1.1fr)]" : ""}>
                   <section className={`min-w-0 ${modoAulaExpandida ? "mx-auto w-full max-w-[1180px]" : ""}`}>
-                    <h3 className={`mb-6 font-display text-2xl leading-tight sm:text-3xl ${modoAulaExpandida ? "max-w-[1080px] text-[#1D1D1F] sm:text-[2.15rem] sm:leading-[1.2]" : "max-w-4xl"}`} >{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</h3>
+                    <h3 className={`mb-6 font-display text-2xl leading-tight text-[#1D1D1F] sm:text-3xl ${modoAulaExpandida ? "max-w-[900px] sm:text-[2.15rem] sm:leading-[1.2]" : "max-w-[900px]"}`} >{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</h3>
                     {(seccionesLecturaActivas[paginaLectura]?.bloques ?? []).map((bloque,idx) => {
                       if (lecturaAbierta?.numero === 1 && paginaLectura === 4 && idx >= 6) return null;
-                      return <div key={idx}><p className={`mb-5 whitespace-pre-line text-[15px] leading-7 ${modoAulaExpandida ? "max-w-[1180px] text-[17px] leading-[1.85] tracking-[0.005em] text-[#3A3A3C]" : "max-w-4xl text-foreground/90"}`}>{bloque}</p></div>;
+                      return <div key={idx}><p className={`mb-5 whitespace-pre-line text-[15px] leading-7 ${modoAulaExpandida ? "max-w-[900px] text-[17px] leading-[1.85] tracking-[0.005em] text-[#3A3A3C]" : "max-w-[900px] text-[#3A3A3C]"}`}>{bloque}</p></div>;
                     })}
                     {renderLaboratorioCoordenadas()}
                     {renderLaboratorioSesion4()}
@@ -3030,7 +3030,7 @@ function AulaFormacionPage() {
                   <h3 className="mb-5 max-w-[1080px] font-display text-2xl leading-tight sm:text-3xl">{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</h3>
                   {(seccionesLecturaActivas[paginaLectura]?.bloques ?? []).map((bloque,idx) => {
                     if (lecturaAbierta?.numero === 1 && paginaLectura === 4 && idx >= 6) return null;
-                    return <div key={idx}><p className={`mb-5 whitespace-pre-line ${modoAulaExpandida ? "max-w-[1180px] text-[17px] leading-[1.85] tracking-[0.005em] text-[#3A3A3C]" : "max-w-4xl text-[15px] leading-7 text-foreground/90"}`}>{bloque}</p></div>;
+                    return <div key={idx}><p className={`mb-5 whitespace-pre-line ${modoAulaExpandida ? "max-w-[900px] text-[17px] leading-[1.85] tracking-[0.005em] text-[#3A3A3C]" : "max-w-4xl text-[15px] leading-7 text-foreground/90"}`}>{bloque}</p></div>;
                   })}
                 {renderLaboratorioCoordenadas()}
                 {renderLaboratorioRestricciones()}
