@@ -56,7 +56,7 @@ begin
     v_sesion.curso_id,
     v_sesion.id,
     'Evaluación · Sesión 04: Edición y transformación de curvas',
-    'Evaluación individual sobre Fillet, Chamfer, Offset, Move, Copy, Rotate y Scale. Tienes 25 minutos y un intento. Lee cada pregunta con atención. Una vez que avances, no podrás volver a la pregunta anterior. Las preguntas se presentan en orden aleatorio. La evaluación se envía al agotarse el tiempo.',
+    'Evaluación individual sobre Fillet, Chamfer, Offset, Trim, Split, Extend, Join, Move, Copy, Rotate y Scale. Tienes 25 minutos y un intento. Lee cada pregunta con atención. Una vez que avances, no podrás volver a la pregunta anterior. Las preguntas se presentan en orden aleatorio. La evaluación se envía al agotarse el tiempo.',
     25,
     1,
     20,
@@ -93,8 +93,8 @@ begin
      '"El radio"'::jsonb),
 
     (3, 'opcion_multiple',
-     'Al seleccionar las curvas para aplicar Fillet, ¿por qué importa la zona donde haces clic?',
-     '[{"label":"Porque la ubicación de selección ayuda a determinar qué partes de las curvas se conservan","value":"Porque la ubicación de selección ayuda a determinar qué partes de las curvas se conservan"},{"label":"Porque define automáticamente las unidades del documento","value":"Porque define automáticamente las unidades del documento"},{"label":"Porque cambia el radio a cero","value":"Porque cambia el radio a cero"},{"label":"Porque convierte el empalme en una superficie","value":"Porque convierte el empalme en una superficie"}]'::jsonb,
+     '¿Qué hace Extend al editar curvas?',
+     '[{"label":"Prolonga una curva hasta alcanzar un límite o una condición de extensión válida","value":"Porque la ubicación de selección ayuda a determinar qué partes de las curvas se conservan"},{"label":"Porque define automáticamente las unidades del documento","value":"Porque define automáticamente las unidades del documento"},{"label":"Porque cambia el radio a cero","value":"Porque cambia el radio a cero"},{"label":"Porque convierte el empalme en una superficie","value":"Porque convierte el empalme en una superficie"}]'::jsonb,
      '"Porque la ubicación de selección ayuda a determinar qué partes de las curvas se conservan"'::jsonb),
 
     (4, 'opcion_multiple',
@@ -118,8 +118,8 @@ begin
      '"El lado donde se creará la nueva curva"'::jsonb),
 
     (8, 'opcion_multiple',
-     '¿Qué problema puede aparecer al aplicar Offset en zonas estrechas o con radios pequeños?',
-     '[{"label":"Cruces o autointersecciones en el contorno","value":"Cruces o autointersecciones en el contorno"},{"label":"El objeto siempre se convierte en una malla","value":"El objeto siempre se convierte en una malla"},{"label":"Se elimina automáticamente el documento","value":"Se elimina automáticamente el documento"},{"label":"Se bloquea el plano XY","value":"Se bloquea el plano XY"}]'::jsonb,
+     '¿Qué hace Trim cuando editas curvas con objetos de corte?',
+     '[{"label":"Elimina los segmentos sobrantes que seleccionas después de definir los objetos cortantes","value":"Cruces o autointersecciones en el contorno"},{"label":"El objeto siempre se convierte en una malla","value":"El objeto siempre se convierte en una malla"},{"label":"Se elimina automáticamente el documento","value":"Se elimina automáticamente el documento"},{"label":"Se bloquea el plano XY","value":"Se bloquea el plano XY"}]'::jsonb,
      '"Cruces o autointersecciones en el contorno"'::jsonb),
 
     (9, 'opcion_multiple',
@@ -153,13 +153,13 @@ begin
      '"Las dimensiones se reducen a la mitad"'::jsonb),
 
     (15, 'opcion_multiple',
-     '¿Qué debes comprobar después de aplicar una transformación a un perfil destinado a joyería?',
-     '[{"label":"Las dimensiones y que la geometría resultante sea adecuada para el diseño","value":"Las dimensiones y que la geometría resultante sea adecuada para el diseño"},{"label":"Únicamente el color de visualización","value":"Únicamente el color de visualización"},{"label":"Solo el nombre del comando utilizado","value":"Solo el nombre del comando utilizado"},{"label":"Que el objeto quede fuera del plano de construcción","value":"Que el objeto quede fuera del plano de construcción"}]'::jsonb,
+     '¿Qué debes comprobar después de utilizar Join?',
+     '[{"label":"Si las curvas se unieron y si el resultado es una curva abierta o cerrada","value":"Las dimensiones y que la geometría resultante sea adecuada para el diseño"},{"label":"Únicamente el color de visualización","value":"Únicamente el color de visualización"},{"label":"Solo el nombre del comando utilizado","value":"Solo el nombre del comando utilizado"},{"label":"Que el objeto quede fuera del plano de construcción","value":"Que el objeto quede fuera del plano de construcción"}]'::jsonb,
      '"Las dimensiones y que la geometría resultante sea adecuada para el diseño"'::jsonb),
 
     (16, 'opcion_multiple',
-     '¿Por qué se debe conservar una copia del perfil ORIGINAL antes de realizar las operaciones de la práctica?',
-     '[{"label":"Para comparar las variantes y poder recuperar la geometría inicial","value":"Para comparar las variantes y poder recuperar la geometría inicial"},{"label":"Para que Rhino cambie automáticamente las unidades","value":"Para que Rhino cambie automáticamente las unidades"},{"label":"Para convertir las curvas en superficies","value":"Para convertir las curvas en superficies"},{"label":"Para evitar indicar puntos base","value":"Para evitar indicar puntos base"}]'::jsonb,
+     '¿Cuál es la diferencia principal entre Split y Trim?',
+     '[{"label":"Split divide y conserva los segmentos; Trim permite retirar los segmentos sobrantes seleccionados","value":"Para comparar las variantes y poder recuperar la geometría inicial"},{"label":"Para que Rhino cambie automáticamente las unidades","value":"Para que Rhino cambie automáticamente las unidades"},{"label":"Para convertir las curvas en superficies","value":"Para convertir las curvas en superficies"},{"label":"Para evitar indicar puntos base","value":"Para evitar indicar puntos base"}]'::jsonb,
      '"Para comparar las variantes y poder recuperar la geometría inicial"'::jsonb)
   ) as q(orden, tipo, enunciado, opciones, respuesta_correcta)
   order by q.orden;
