@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AmbientLight, AxesHelper, Box3, BoxGeometry, BufferGeometry, EdgesGeometry,
-  Color, DirectionalLight, ExtrudeGeometry, GridHelper, Group, HemisphereLight, IcosahedronGeometry,
+  Color, DirectionalLight, Float32BufferAttribute, ExtrudeGeometry, GridHelper, Group, HemisphereLight, IcosahedronGeometry,
   Line, LineBasicMaterial, LineSegments, Mesh, MeshBasicMaterial, MeshStandardMaterial, Object3D, PerspectiveCamera,
   PlaneGeometry, Points, PointsMaterial, Raycaster, Scene, Shape, Sphere, SphereGeometry, TorusGeometry,
   SRGBColorSpace, Vector2, Vector3, WebGLRenderer,
@@ -120,7 +120,7 @@ function createTeachingObjects(root: Object3D): Entry[] {
     const r = 0.45 + (i % 9) * 0.13;
     cloudPositions.push(-14 + Math.cos(a) * r, Math.sin(a) * r, 0.35 + (i % 7) * 0.12);
   }
-  cloudGeometry.setAttribute("position", new Float32Array(cloudPositions));
+  cloudGeometry.setAttribute("position", new Float32BufferAttribute(cloudPositions, 3));
   const cloud = new Points(cloudGeometry, new PointsMaterial({ color: "#E6C77D", size: 0.13, sizeAttenuation: true }));
   place(cloud, 0, 0, 0);
   add(cloud, "Nube de puntos", "PointCloud", "pointclouds",
