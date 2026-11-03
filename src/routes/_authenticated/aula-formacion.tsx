@@ -7,6 +7,7 @@ import { BookOpen, Users, Plus, Upload, FileText, Download, CalendarDays, Shield
 import { AppShell, Panel } from "@/components/AppShell";
 import LaboratorioCurvasNurbs from "@/components/aula/LaboratorioCurvasNurbs";
 import LaboratorioCurveEditor from "@/components/aula/LaboratorioCurveEditor";
+import LaboratorioCurvasBasicas from "@/components/aula/LaboratorioCurvasBasicas";
 import { useSesion } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -664,6 +665,7 @@ function AulaFormacionPage() {
   const [faseLaboratorioGeometria, setFaseLaboratorioGeometria] = useState(0);
   const [modulosGeometriaCompletados, setModulosGeometriaCompletados] = useState<number[]>([]);
   const [laboratorioGeometriaAbierto, setLaboratorioGeometriaAbierto] = useState(false);
+  const [laboratorioCurvasBasicasAbierto, setLaboratorioCurvasBasicasAbierto] = useState(false);
   const [laboratorioCapasAbierto, setLaboratorioCapasAbierto] = useState(false);
   const [capaMetalVisible, setCapaMetalVisible] = useState(true);
   const [capaGemVisible, setCapaGemVisible] = useState(true);
@@ -2614,6 +2616,8 @@ function AulaFormacionPage() {
                 {renderLaboratorioGeometria()}
                 {renderLaboratorioCapas()}
                 {renderSelectorVistasPlano()}
+                {lecturaAbierta?.numero === 2 && paginaLectura === 2 && <section className="mt-7 overflow-hidden rounded-2xl border border-[#d9c9a8] bg-gradient-to-br from-[#fffefa] via-white to-[#f7f2e8] shadow-sm"><div className="flex flex-wrap items-center justify-between gap-4 p-5 sm:p-6"><div className="min-w-0"><p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#98743c]">FADILAB · Sesión 02 · Práctica interactiva</p><h4 className="mt-1 text-xl font-semibold tracking-tight text-[#252a31]">CURVE LAB <span className="font-normal text-[#7b8490]">/ Curvas básicas</span></h4><p className="mt-1 max-w-2xl text-sm leading-6 text-[#626d79]">Construye líneas, polilíneas, círculos y rectángulos sobre un plano XY interactivo. Practica el flujo de puntos de cada herramienta y comprueba tus resultados.</p><div className="mt-3 flex flex-wrap gap-2 text-[10px] font-medium text-[#6c6251]">{["4 herramientas Rhino","Plano XY interactivo","Validación por ejercicio","Progreso de práctica"].map(item=><span key={item} className="rounded-full border border-[#e7ddca] bg-white/80 px-3 py-1.5">{item}</span>)}</div></div><button type="button" onClick={() => setLaboratorioCurvasBasicasAbierto(true)} className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-gradient-to-b from-[#e6c77d] to-[#bf9952] px-5 py-3 text-sm font-bold text-[#241b0c] shadow-sm transition hover:-translate-y-0.5 hover:brightness-105"><Pencil className="size-4"/> Iniciar Curve Lab <ArrowRight className="size-4"/></button></div><div className="h-1.5 bg-[#eee8dc]"><div className="h-full w-0 bg-[#bf9952]"/></div></section>}
+                {lecturaAbierta?.numero === 2 && paginaLectura === 2 && laboratorioCurvasBasicasAbierto && <LaboratorioCurvasBasicas onClose={() => setLaboratorioCurvasBasicasAbierto(false)}/>}
                 <div className="mt-5 grid min-w-0 grid-cols-1 items-stretch gap-4 lg:grid-cols-2">
                 {lecturaAbierta?.numero === 1 && paginaLectura === 4 && <section className={`h-full rounded-xl border border-[#D2D2D7] bg-[#F5F5F7] text-[#1D1D1F] p-5 ${modoAulaExpandida ? "max-w-[1400px]" : "max-w-4xl"}`}>
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9A7B43]">Recurso interactivo</p>
