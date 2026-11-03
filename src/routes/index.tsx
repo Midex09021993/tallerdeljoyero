@@ -1,9 +1,9 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { ClientOnly, createFileRoute, Link } from "@tanstack/react-router";
+import { lazy, Suspense, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabasePublic } from "@/integrations/supabase/client";
 import { RegistroTaller } from "@/components/RegistroTaller";
-import { MiniAurumRender } from "@/components/MiniAurumRender";
+const MiniAurumRender = lazy(() => import("@/components/MiniAurumRender").then((m) => ({ default: m.MiniAurumRender })));
 import { PrecioOroDiario } from "@/components/PrecioOroDiario";
 import { ArrowRight, BookOpen, Boxes, Calculator, Check, ChevronDown, Cloud, Gem, Layers3, MonitorSmartphone, PackageCheck, Sparkles, Sprout, ChartNoAxesCombined } from "lucide-react";
 import heroColgante from "@/assets/diseno-colgante.jpg";
@@ -432,7 +432,7 @@ function InicioPublico() {
                 </div>
                 <span className="grid size-10 place-items-center rounded-xl border border-[#f8c928]/30 bg-[#f8c928]/10 text-[#f8d85b]"><Gem className="size-5" /></span>
               </div>
-              <MiniAurumRender className="min-h-[270px] sm:min-h-[340px]" />
+              <ClientOnly fallback={null}><Suspense fallback={null}><MiniAurumRender className="min-h-[270px] sm:min-h-[340px]" /></Suspense></ClientOnly>
               <div className="grid grid-cols-3 gap-2 border-t border-white/10 pt-4 text-center">
                 <div className="rounded-lg bg-white/[.04] px-2 py-3"><p className="text-[9px] uppercase tracking-wider text-slate-400">Materiales</p><p className="mt-1 text-xs font-semibold text-white">Metales y gemas</p></div>
                 <div className="rounded-lg bg-white/[.04] px-2 py-3"><p className="text-[9px] uppercase tracking-wider text-slate-400">Iluminación</p><p className="mt-1 text-xs font-semibold text-white">Entornos HDR</p></div>
