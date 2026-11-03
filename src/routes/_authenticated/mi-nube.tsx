@@ -1976,8 +1976,30 @@ function MiNubePage() {
                       {proyecto.tieneStl && <span className="rounded-md bg-muted/70 px-2 py-1 text-[10px] font-medium text-muted-foreground">STL</span>}
                       {proyecto.tienePdf && <span className="rounded-md bg-muted/70 px-2 py-1 text-[10px] font-medium text-muted-foreground">PDF</span>}
                     </div>
-                    <button type="button" onClick={() => void anadirImagenAlCatalogo(proyecto.archivos.find((item) => item.categoria === "fotos") ?? null, proyecto, proyecto.archivos.find((item) => item.nombre.toLowerCase().endsWith(".pdf") && item.origen === "supabase") ?? null)} disabled={anadiendoCatalogo !== null} className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-[#c5a15d]/60 bg-[#c5a15d]/[0.10] px-3 py-2 text-xs font-semibold leading-tight text-foreground transition-colors hover:bg-[#c5a15d]/[0.17] disabled:opacity-50">
-                      {anadiendoCatalogo === proyecto.nombre ? "Preparando ficha…" : "Crear ficha para catálogo"}
+                    <button type="button" onClick={async () => {
+                      const original3dm = proyecto.archivos.find((item) => item.origen === "supabase" && item.nombre.toLowerCase().endsWith(".3dm"));
+                      if (!original3dm) { toast.error("Este proyecto no contiene un 3DM original disponible para Aurum Render."); return; }
+                      try {
+                        const { data, error: urlError } = await supabase.storage.from(BUCKET).createSignedUrl(original3dm.ruta, 600);
+                        if (urlError || !data?.signedUrl) throw urlError ?? new Error("No se pudo preparar el 3DM para Aurum Render.");
+                        const rutaCarpeta = original3dm.ruta.slice(0, original3dm.ruta.lastIndexOf("/"));
+                        const { data: glbData } = await supabase.storage.from(BUCKET).createSignedUrl(`${rutaCarpeta}/01-modelo.glb`, 600);
+                        const { data: configuracionData } = await supabase.storage.from(BUCKET).createSignedUrl(`${rutaCarpeta}/02-configuracion-aurum.json`, 600);
+                        sessionStorage.setItem("aurum-render-archivo-pendiente", JSON.stringify({
+                          url: data.signedUrl,
+                          glbUrl: glbData?.signedUrl ?? null,
+                          configuracionUrl: configuracionData?.signedUrl ?? null,
+                          nombre: nombreVisible(original3dm.nombre),
+                          rutaArchivoOriginal: original3dm.ruta,
+                          rutaCarpeta,
+                          archivoTamano: original3dm.bytes,
+                        }));
+                        window.location.assign("/aurum-render?desde-mi-nube=1");
+                      } catch (cause) {
+                        toast.error(cause instanceof Error ? cause.message : "No se pudo abrir el proyecto en Aurum Render.");
+                      }
+                    }} className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-[#c5a15d]/60 bg-[#c5a15d]/[0.10] px-3 py-2 text-xs font-semibold leading-tight text-foreground transition-colors hover:bg-[#c5a15d]/[0.17]">
+                      Abrir en Aurum Render
                     </button>
                     {compartiendo === proyecto.nombre && <p role="status" className="rounded-lg bg-gold/10 px-3 py-2 text-xs text-muted-foreground">{progresoCompartir || "Preparando transferencia…"}</p>}
                     {errorCompartir?.proyecto === proyecto.nombre && <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">{errorCompartir.mensaje}<button type="button" onClick={() => setErrorCompartir(null)} className="ml-2 underline">Cerrar</button></div>}
