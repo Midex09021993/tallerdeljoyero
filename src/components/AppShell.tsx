@@ -143,7 +143,7 @@ export function useCapacidadesMenu(sesion: ReturnType<typeof useSesion>["data"])
         ? (sedeFiltro !== TODAS_LAS_SEDES ? sedeFiltro : sesion?.perfil.sede_id ?? null)
         : sesion?.sede?.id ?? null;
 
-      // Consulta solo las capacidades de la sede activa; el dueño en vista global conserva todas.
+      // Consulta solo las capacidades de la sede que corresponde al contexto del menú.
       const consulta = supabase
         .from("sede_especialidades")
         .select("sede_id, especialidades!inner(nombre)");
