@@ -1894,7 +1894,6 @@ function AulaFormacionPage() {
       {!laboratorioSesion5Abierto && <button type="button" onClick={() => setLaboratorioSesion5Abierto(true)} className="flex w-full items-center justify-center gap-2 rounded-xl border border-gold/40 bg-gold/10 px-4 py-3 text-sm font-semibold text-gold-deep hover:bg-gold/15"><Layers className="size-4" /> Mostrar NURBS Studio</button>}
       <div className={laboratorioSesion5Abierto ? "block" : "hidden"}>
         <LaboratorioCurvasNurbs
-          embedded
           activeModule={activeModule}
           onModuleChange={(nextModule) => setPaginaLectura(pageByModule[nextModule] ?? paginaLectura)}
           onClose={() => setLaboratorioSesion5Abierto(false)}
