@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AmbientLight, Box3, Color, DirectionalLight, GridHelper, HemisphereLight, Mesh, Object3D, PerspectiveCamera, Scene, Sphere, SRGBColorSpace, Vector3, WebGLRenderer } from "three";
+import { AmbientLight, AxesHelper, Box3, Color, DirectionalLight, GridHelper, HemisphereLight, Mesh, Object3D, PerspectiveCamera, Scene, Sphere, SRGBColorSpace, Vector3, WebGLRenderer } from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { Rhino3dmLoader } from "three/addons/loaders/3DMLoader.js";
 import { Box, Focus, Layers3, LoaderCircle, RotateCcw, Scan, X } from "lucide-react";
@@ -104,6 +104,9 @@ export default function RhinoObjectExplorer({ visible, materials }: Props) {
     const grid = new GridHelper(300, 30, 0x536477, 0x293747);
     grid.rotation.x = Math.PI / 2;
     scene.add(grid);
+    // Rhino world axes remain fixed in model space and meet at the world origin.
+    const worldAxes = new AxesHelper(24);
+    scene.add(worldAxes);
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.07;
@@ -171,6 +174,7 @@ export default function RhinoObjectExplorer({ visible, materials }: Props) {
         const center = bounds.getCenter(new Vector3());
         const sphere = bounds.getBoundingSphere(new Sphere());
         const radius = Math.max(sphere.radius, 5);
+        worldAxes.scale.setScalar(Math.max(radius / 18, 0.35));
         controls.target.copy(center);
         const viewDirection = new Vector3(1, -1.25, 0.9).normalize();
         const verticalFov = camera.fov * Math.PI / 180;
@@ -268,6 +272,37 @@ export default function RhinoObjectExplorer({ visible, materials }: Props) {
       <nav className="flex shrink-0 gap-2 overflow-x-auto border-b border-white/10 bg-[#1B242E] px-4 py-2.5 sm:px-6">{CATEGORIES.map((item) => <button key={item.id} type="button" onClick={() => setCategory(item.id)} aria-pressed={category === item.id} className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold ${category === item.id ? "border-[#C6A15B] bg-[#C6A15B]/15 text-[#E5C47C]" : "border-white/10 bg-[#26313D] text-[#B9C5D1]"}`}>{item.label} <span className="ml-1 opacity-70">{counts[item.id] ?? 0}</span></button>)}</nav>
       <div className="grid min-h-0 flex-1 gap-3 overflow-hidden p-3 sm:p-4 lg:grid-cols-[minmax(0,1fr)_320px]">
         <section className="relative min-h-[260px] overflow-hidden rounded-xl border border-white/10 bg-[#141B24]"><div ref={viewportRef} className="absolute inset-0"/>
+          <div className="pointer-events-none absolute bottom-4 left-4 z-10 flex items-center gap-2 rounded-xl border border-white/10 bg-[#202A35]/85 px-3 py-2 shadow-lg">
+            <svg viewBox="0 0 76 64" className="h-12 w-14" aria-label="Ejes globales X Y Z">
+              <circle cx="25" cy="39" r="3" fill="#E8EDF2"/>
+              <path d="M25 39 L57 39" stroke="#EF4444" strokeWidth="2.5" strokeLinecap="round"/>
+              <path d="M57 39 l-7 -4 v8 z" fill="#EF4444"/>
+              <path d="M25 39 L7 19" stroke="#22C55E" strokeWidth="2.5" strokeLinecap="round"/>
+              <path d="M7 19 l1 8 6 -5 z" fill="#22C55E"/>
+              <path d="M25 39 L25 5" stroke="#3B82F6" strokeWidth="2.5" strokeLinecap="round"/>
+              <path d="M25 5 l-4 7 h8 z" fill="#3B82F6"/>
+              <g fontSize="10" fontWeight="700" fontFamily="Arial, sans-serif">
+                <text x="62" y="43" fill="#F87171">X</text>
+                <text x="1" y="15" fill="#4ADE80">Y</text>
+                <text x="30" y="10" fill="#60A5FA">Z</text>
+              </g>
+            </svg>
+            <span className="text-[10px] leading-4 text-[#C4CED8]">Ejes globales<br/><b className="font-semibold text-[#E8EDF2]">X · Y · Z</b></span>
+          </div>
+          <button type="button" onClick={resetView} disabled={!entries.length} title="Restablecer orientación isométrica" aria-label="Anillo de orientación: restablecer vista" className="absolute right-4 top-4 z-10 flex size-[76px] items-center justify-center rounded-full border border-[#D8B979]/55 bg-[#202A35]/90 shadow-xl backdrop-blur transition hover:border-[#E6C77D] hover:bg-[#293542] disabled:opacity-40">
+            <svg viewBox="0 0 76 76" className="size-[66px]" aria-hidden="true">
+              <circle cx="38" cy="38" r="31" fill="none" stroke="#718096" strokeWidth="1.5" strokeDasharray="3 3"/>
+              <circle cx="38" cy="38" r="23" fill="#263342" stroke="#D8B979" strokeWidth="1.2"/>
+              <path d="M38 12 L38 25 M38 51 L38 64 M12 38 L25 38 M51 38 L64 38" stroke="#AAB7C5" strokeWidth="1.5" strokeLinecap="round"/>
+              <path d="M38 17 L32 27 L44 27 Z" fill="#3B82F6"/>
+              <path d="M59 38 L49 32 L49 44 Z" fill="#EF4444"/>
+              <path d="M38 59 L32 49 L44 49 Z" fill="#22C55E"/>
+              <circle cx="38" cy="38" r="5" fill="#D8B979" stroke="#F4E4BE" strokeWidth="1"/>
+              <g fill="#E8EDF2" fontSize="8" fontWeight="700" textAnchor="middle" fontFamily="Arial, sans-serif">
+                <text x="38" y="9">Z</text><text x="69" y="41">X</text><text x="38" y="73">Y</text>
+              </g>
+            </svg>
+          </button>
           {!url && <div className="absolute inset-0 flex items-center justify-center p-6 text-center"><div className="max-w-md"><Box className="mx-auto size-10 text-[#C6A15B]"/><h3 className="mt-3 font-semibold">Modelo 3DM pendiente</h3><p className="mt-2 text-sm leading-6 text-[#AAB7C5]">{fileNotice || "Publica el archivo de tipos de objetos en la Biblioteca del curso."}</p></div></div>}
           {loading && <div className="absolute inset-0 flex items-center justify-center bg-[#141B24]/75"><div className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#202A35] px-4 py-3 text-sm"><LoaderCircle className="size-4 animate-spin text-[#D8B979]"/> Leyendo geometría…</div></div>}
           {error && <div className="absolute inset-x-4 bottom-4 rounded-lg border border-red-400/30 bg-red-950/80 p-3 text-xs text-red-100">{error}</div>}
