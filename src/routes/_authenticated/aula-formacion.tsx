@@ -2368,7 +2368,7 @@ function AulaFormacionPage() {
 
   if (!sesion || (!rolAlumno && !esDocente)) return <AppShell titulo="Aula de formación" subtitulo="Acceso restringido"><Panel titulo="Cuenta no habilitada"><p className="p-5 text-sm text-slate-400">El aula de alumnos está disponible para cuentas de gerente u operario. La docencia se administra exclusivamente desde FADILAB.</p></Panel></AppShell>;
 
-  return <AppShell titulo="Aula de formación" subtitulo={mostrarVistaDocente ? "FADILAB · Administración académica" : vistaPreviaAlumno ? "Vista previa idéntica al área del alumno · Modo de simulación, sin guardar actividad académica" : "Tus cursos, materiales y actividades"} modoAulaExpandida={modoAulaExpandida}>
+  return <AppShell titulo="Aula de formación" subtitulo={mostrarVistaDocente ? "FADILAB · Administración académica" : vistaPreviaAlumno ? "Vista previa idéntica al área del alumno · Modo de simulación, sin guardar actividad académica" : "Tus cursos, materiales y actividades"} ocultarEncabezado modoAulaExpandida={modoAulaExpandida}>
     <div className="mx-auto max-w-6xl space-y-6">
       {!mostrarVistaDocente && !vistaPreviaAlumno && esDocente && inscripcionesAlumno.length > 0 && <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#d5e1eb] bg-[#f3f7fa] px-4 py-3"><div><p className="text-sm font-semibold text-[#294760]">También tienes acceso de gestión docente</p><p className="mt-0.5 text-xs text-[#718096]">Estás viendo tu aula como alumno matriculado.</p></div><button type="button" onClick={() => setModoPanelDocente(true)} className="rounded-lg bg-[#294760] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#203b52]">Ir a gestión docente</button></div>}
       {mostrarVistaDocente ? (
