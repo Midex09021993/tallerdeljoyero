@@ -2409,7 +2409,8 @@ function AulaFormacionPage() {
     ] as const;
     const total = tareas.length;
     const terminado = retoNavPaso >= total;
-    const tarea = tareas[Math.min(retoNavPaso, total - 1)];
+    const tarea = tareas[Math.min(retoNavPaso, total - 1)] ?? tareas[0];
+    if (!tarea) return null;
     const completar = (mensaje: string) => {
       setRetoNavMensaje(mensaje);
       setRetoNavPaso(v => Math.min(total, v + 1));
