@@ -163,6 +163,10 @@ export default function RhinoObjectExplorer({ visible, materials }: Props) {
   const selectionRef = useRef<Object3D[]>([]);
   const visibleEntries = useMemo(() => entries.filter(e => category === "all" || e.category === category), [entries, category]);
   const selected = entries.find(e => e.object.uuid === selectedId) ?? null;
+  const ringStoragePath = useMemo(
+    () => materials.find(item => item.nombre_archivo.trim().toLocaleLowerCase() === "ring.3dm")?.ruta_storage ?? "",
+    [materials],
+  );
   const ringStoragePath = useMemo(() => materials.find(item => item.nombre_archivo.trim().toLocaleLowerCase() === "ring.3dm")?.ruta_storage ?? "", [materials]);
   const counts = useMemo(() => {
     const c: Record<string, number> = { all: entries.length };
@@ -298,11 +302,14 @@ export default function RhinoObjectExplorer({ visible, materials }: Props) {
     if (!open || !orientationSceneRef.current) return;
     let cancelled = false;
     let loadedObject: Object3D | null = null;
-    const ringMaterial = materials.find(item => item.nombre_archivo.trim().toLocaleLowerCase() === "ring.3dm");
-    if (!ringMaterial) return;
+    if (!ringStoragePath) {
+      setOrientationStatus("Ring.3dm no encontrado");
+      return;
+    }
+    setOrientationStatus("Cargando anillo…");
     const loadRing = async () => {
       try {
-        const { data, error } = await supabase.storage.from("formacion-academica").createSignedUrl(ringMaterial.ruta_storage, 3600);
+        const { data, error } = await supabase.storage.from("formacion-academica").createSignedUrl(ringStoragePath, 3600);
         if (error || !data?.signedUrl) throw new Error(error?.message || "No se pudo obtener el archivo Ring.3dm.");
         const response = await fetch(data.signedUrl);
         if (!response.ok) throw new Error("No se pudo descargar Ring.3dm desde la biblioteca de la sesión.");
@@ -327,8 +334,12 @@ export default function RhinoObjectExplorer({ visible, materials }: Props) {
         orientationRoot.add(loadedObject);
         orientationSceneRef.current.add(orientationRoot);
         orientationObjectRef.current = orientationRoot;
+        setOrientationStatus("Sincronizado con perspectiva");
       } catch (error) {
-        if (!cancelled) console.error("No se pudo integrar Ring.3dm:", error);
+        if (!cancelled) {
+          setOrientationStatus("No se pudo cargar el anillo");
+          console.error("No se pudo integrar Ring.3dm:", error);
+        }
       }
     };
     void loadRing();
@@ -337,9 +348,15 @@ export default function RhinoObjectExplorer({ visible, materials }: Props) {
       if (loadedObject && orientationObjectRef.current?.children.includes(loadedObject)) {
         orientationSceneRef.current?.remove(orientationObjectRef.current);
         orientationObjectRef.current = null;
+        loadedObject.traverse(object => {
+          const item = object as Mesh;
+          item.geometry?.dispose?.();
+          if (Array.isArray(item.material)) item.material.forEach(m => m.dispose());
+          else item.material?.dispose?.();
+        });
       }
     };
-  }, [open, materials]);
+  }, [open, ringStoragePath]);
 
   useEffect(() => {
     entries.forEach(e => { e.object.visible = category === "all" || e.category === category; });
