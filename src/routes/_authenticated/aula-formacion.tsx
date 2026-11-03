@@ -1857,14 +1857,14 @@ function AulaFormacionPage() {
   };
 
   const renderLaboratorioSesion5 = () => {
-    if (lecturaAbierta?.numero !== 5 || paginaLectura < 2 || paginaLectura > 7) return null;
+    if (lecturaAbierta?.numero !== 5 || ![2,3,4,5,6,8].includes(paginaLectura)) return null;
     const modulos = [
       {nombre:"Curve vs InterpCrv", pagina:2},
       {nombre:"Puntos de control", pagina:3},
       {nombre:"Reconstrucción · Rebuild", pagina:4},
       {nombre:"Continuidad · CurvatureGraph", pagina:5},
       {nombre:"Limpieza del perfil", pagina:6},
-      {nombre:"Reto integrador", pagina:7}
+      {nombre:"Reto integrador", pagina:8}
     ];
     const modulo = modulos[moduloLab5] ?? modulos[0];
     const abrir = () => { setModuloLab5(Math.max(0,modulos.findIndex(m=>m.pagina===paginaLectura))); setLaboratorioSesion5Abierto(true); };
