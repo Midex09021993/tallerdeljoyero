@@ -7,6 +7,8 @@ import {
   SRGBColorSpace, Vector2, Vector3, WebGLRenderer,
 } from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { Rhino3dmLoader } from "three/addons/loaders/3DMLoader.js";
+import { supabase } from "@/integrations/supabase/client";
 import { Focus, Layers3, RotateCcw, Scan, X } from "lucide-react";
 
 type Props = { visible: boolean; materials: { nombre_archivo: string; ruta_storage: string; mime_type?: string | null }[] };
@@ -140,13 +142,19 @@ function createTeachingObjects(root: Object3D): Entry[] {
 }
 
 
-export default function RhinoObjectExplorer({ visible }: Props) {
+export default function RhinoObjectExplorer({ visible, materials }: Props) {
   const [open, setOpen] = useState(false);
   const [entries, setEntries] = useState<Entry[]>([]);
   const [category, setCategory] = useState("all");
   const [selectedId, setSelectedId] = useState("");
   const [wireframe, setWireframe] = useState(false);
   const viewportRef = useRef<HTMLDivElement>(null);
+  const orientationRef = useRef<HTMLDivElement>(null);
+  const orientationSceneRef = useRef<Scene | null>(null);
+  const orientationCameraRef = useRef<PerspectiveCamera | null>(null);
+  const orientationRendererRef = useRef<WebGLRenderer | null>(null);
+  const orientationObjectRef = useRef<Object3D | null>(null);
+  const orientationLoaderRef = useRef<Rhino3dmLoader | null>(null);
   const modelRef = useRef<Object3D | null>(null);
   const cameraRef = useRef<PerspectiveCamera | null>(null);
   const controlsRef = useRef<OrbitControls | null>(null);
@@ -170,6 +178,32 @@ export default function RhinoObjectExplorer({ visible }: Props) {
     const camera = new PerspectiveCamera(42, 1, 0.01, 1000);
     camera.up.set(0, 0, 1);
     const renderer = new WebGLRenderer({ antialias: true });
+    const orientationHost = orientationRef.current;
+    const orientationScene = new Scene();
+    orientationScene.background = new Color("#202A35");
+    const orientationCamera = new PerspectiveCamera(34, 1, 0.01, 100);
+    orientationCamera.up.set(0, 0, 1);
+    orientationCamera.position.set(0, -8, 4.8);
+    orientationCamera.lookAt(0, 0, 0);
+    const orientationRenderer = new WebGLRenderer({ antialias: true, alpha: true });
+    orientationRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+    orientationRenderer.outputColorSpace = SRGBColorSpace;
+    orientationRenderer.setClearColor(0x202A35, 0);
+    if (orientationHost) {
+      orientationHost.replaceChildren(orientationRenderer.domElement);
+      orientationRenderer.setSize(Math.max(orientationHost.clientWidth, 1), Math.max(orientationHost.clientHeight, 1), false);
+    }
+    orientationScene.add(new AmbientLight(0xffffff, 1.5));
+    const orientationKey = new DirectionalLight(0xffffff, 2.2);
+    orientationKey.position.set(-3, -4, 6);
+    orientationScene.add(orientationKey);
+    const orientationFill = new DirectionalLight(0xc5d7ef, 1.2);
+    orientationFill.position.set(4, 3, 2);
+    orientationScene.add(orientationFill);
+    orientationSceneRef.current = orientationScene;
+    orientationCameraRef.current = orientationCamera;
+    orientationRendererRef.current = orientationRenderer;
+    orientationObjectRef.current = null;
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
     renderer.outputColorSpace = SRGBColorSpace;
     host.replaceChildren(renderer.domElement);
@@ -220,7 +254,12 @@ export default function RhinoObjectExplorer({ visible }: Props) {
     const animate = () => {
       if (disposed) return;
       frame = window.requestAnimationFrame(animate);
-      controls.update(); selectionRef.current?.update(); renderer.render(scene, camera);
+      controls.update();
+      renderer.render(scene, camera);
+      if (orientationObjectRef.current) {
+        orientationObjectRef.current.quaternion.copy(camera.quaternion).invert();
+        orientationRenderer.render(orientationScene, orientationCamera);
+      }
     };
     animate();
     return () => {
@@ -234,10 +273,71 @@ export default function RhinoObjectExplorer({ visible }: Props) {
         else item.material?.dispose?.();
       });
       renderer.dispose(); renderer.domElement.remove();
+      orientationLoaderRef.current?.dispose();
+      orientationLoaderRef.current = null;
+      orientationScene.traverse(object => {
+        const item = object as Mesh;
+        item.geometry?.dispose?.();
+        if (Array.isArray(item.material)) item.material.forEach(m => m.dispose());
+        else item.material?.dispose?.();
+      });
+      orientationRenderer.dispose();
+      orientationRenderer.domElement.remove();
+      orientationSceneRef.current = null;
+      orientationCameraRef.current = null;
+      orientationRendererRef.current = null;
+      orientationObjectRef.current = null;
       modelRef.current = null; cameraRef.current = null; controlsRef.current = null;
       sceneRef.current = null; selectionRef.current = [];
     };
   }, [open]);
+
+  useEffect(() => {
+    if (!open || !orientationSceneRef.current) return;
+    let cancelled = false;
+    let loadedObject: Object3D | null = null;
+    const ringMaterial = materials.find(item => item.nombre_archivo.trim().toLocaleLowerCase() === "ring.3dm");
+    if (!ringMaterial) return;
+    const loadRing = async () => {
+      try {
+        const { data, error } = await supabase.storage.from("formacion-academica").createSignedUrl(ringMaterial.ruta_storage, 3600);
+        if (error || !data?.signedUrl) throw new Error(error?.message || "No se pudo obtener el archivo Ring.3dm.");
+        const response = await fetch(data.signedUrl);
+        if (!response.ok) throw new Error("No se pudo descargar Ring.3dm desde la biblioteca de la sesión.");
+        const buffer = await response.arrayBuffer();
+        if (cancelled) return;
+        const loader = new Rhino3dmLoader();
+        loader.setLibraryPath("https://cdn.jsdelivr.net/npm/rhino3dm@8.32.1/");
+        loader.setWorkerLimit(1);
+        orientationLoaderRef.current = loader;
+        loadedObject = await new Promise<Object3D>((resolve, reject) => loader.parse(buffer, resolve, reject));
+        if (cancelled || !orientationSceneRef.current) return;
+        loadedObject.updateMatrixWorld(true);
+        const bounds = new Box3().setFromObject(loadedObject);
+        const center = bounds.getCenter(new Vector3());
+        const size = bounds.getSize(new Vector3());
+        const fitScale = 3.25 / Math.max(size.x, size.y, size.z, 0.001);
+        loadedObject.scale.setScalar(fitScale);
+        loadedObject.position.set(-center.x * fitScale, -center.y * fitScale, -center.z * fitScale);
+        loadedObject.updateMatrixWorld(true);
+        const orientationRoot = new Group();
+        orientationRoot.name = "Ring.3dm · orientación sincronizada";
+        orientationRoot.add(loadedObject);
+        orientationSceneRef.current.add(orientationRoot);
+        orientationObjectRef.current = orientationRoot;
+      } catch (error) {
+        if (!cancelled) console.error("No se pudo integrar Ring.3dm:", error);
+      }
+    };
+    void loadRing();
+    return () => {
+      cancelled = true;
+      if (loadedObject && orientationObjectRef.current?.children.includes(loadedObject)) {
+        orientationSceneRef.current?.remove(orientationObjectRef.current);
+        orientationObjectRef.current = null;
+      }
+    };
+  }, [open, materials]);
 
   useEffect(() => {
     entries.forEach(e => { e.object.visible = category === "all" || e.category === category; });
@@ -336,7 +436,7 @@ export default function RhinoObjectExplorer({ visible }: Props) {
             <svg viewBox="0 0 76 64" className="h-12 w-14" aria-label="Ejes globales X Y Z"><circle cx="25" cy="39" r="3" fill="#E8EDF2"/><path d="M25 39 L57 39" stroke="#EF4444" strokeWidth="2.5"/><path d="M25 39 L7 19" stroke="#22C55E" strokeWidth="2.5"/><path d="M25 39 L25 5" stroke="#3B82F6" strokeWidth="2.5"/><g fontSize="10" fontWeight="700"><text x="62" y="43" fill="#F87171">X</text><text x="1" y="15" fill="#4ADE80">Y</text><text x="30" y="10" fill="#60A5FA">Z</text></g></svg>
             <span className="text-[10px] leading-4 text-[#C4CED8]">Ejes del mundo<br/><b className="font-semibold text-[#E8EDF2]">X · Y · Z</b></span>
           </div>
-          <div className="pointer-events-none absolute right-4 top-4 z-10 max-w-[190px] rounded-lg border border-[#D8B979]/35 bg-[#202A35]/90 px-3 py-2 text-right shadow-lg"><p className="text-[9px] font-bold tracking-[.12em] text-[#D8B979]">ORIENTACIÓN 3D</p><p className="mt-0.5 text-[9px] leading-4 text-[#AAB7C5]">Anillo original pendiente de integrar desde la biblioteca</p></div>
+          <div className="pointer-events-none absolute right-3 top-3 z-10 flex h-[112px] w-[112px] flex-col items-center justify-center overflow-hidden rounded-full border border-[#D8B979]/50 bg-[#202A35]/85 shadow-xl"><div ref={orientationRef} className="h-[86px] w-[86px]" /><span className="absolute bottom-1 text-[8px] font-bold tracking-[.12em] text-[#D8B979]">ORIENTACIÓN</span></div>
           <div className="pointer-events-none absolute bottom-3 right-3 rounded-lg border border-white/10 bg-[#202A35]/80 px-3 py-2 text-[10px] text-[#AAB7C5]">Arrastra para orbitar · Rueda para zoom · Clic para seleccionar</div>
         </section>
         <aside className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-white/10 bg-[#202A35]">
