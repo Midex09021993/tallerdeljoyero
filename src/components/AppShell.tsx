@@ -282,6 +282,7 @@ export function AppShell({
   acciones,
   atrasMovil = { to: "/inicio" },
   ocultarNavegacion = false,
+  modoAulaExpandida = false,
   encabezadoMovilCompacto = false,
   ocultarAccionesCelular = false,
   children,
@@ -293,6 +294,7 @@ export function AppShell({
   encabezadoMovilCompacto?: boolean;
   ocultarAccionesCelular?: boolean;
   ocultarNavegacion?: boolean;
+  modoAulaExpandida?: boolean;
   children: ReactNode;
 }) {
   const { data: sesion } = useSesion();
@@ -373,10 +375,10 @@ export function AppShell({
 
 
   return (
-    <div className="flex min-h-screen bg-background text-foreground">
+    <div className={`flex min-h-screen bg-background text-foreground transition-[height] duration-300 ${modoAulaExpandida ? "h-[100dvh] min-h-0 overflow-hidden" : ""}`}>
       {sesion?.esAdmin ? <AlertaAutorizacionProduccion /> : null}
       {!ocultarNavegacion ? (
-        <aside className="sticky top-0 hidden h-screen max-h-screen w-64 shrink-0 flex-col overflow-hidden border-r border-ink-foreground/10 bg-ink text-ink-foreground lg:flex xl:w-72">
+        <aside aria-hidden={modoAulaExpandida} className={`sticky top-0 hidden h-screen max-h-screen shrink-0 flex-col overflow-hidden border-r border-ink-foreground/10 bg-ink text-ink-foreground transition-[width,opacity,transform] duration-300 ease-in-out lg:flex ${modoAulaExpandida ? "pointer-events-none w-0 -translate-x-4 border-r-0 opacity-0 xl:w-0" : "w-64 xl:w-72"}`}>
           <div className="border-b border-ink-foreground/10 px-6 py-7 xl:px-7">
             <p className="font-display text-2xl italic text-gold">Aurum Lab</p>
             <p className="mt-1 truncate text-[10px] uppercase tracking-[0.2em] text-ink-foreground/40">
@@ -479,12 +481,12 @@ export function AppShell({
       ) : null}
 
       <main
-        className={`min-w-0 flex-1 overflow-y-auto px-3 py-4 pb-8 sm:px-5 lg:p-8 xl:p-10 ${
+        className={`min-w-0 flex-1 overflow-y-auto px-3 py-4 pb-8 sm:px-5 lg:p-8 xl:p-10 ${modoAulaExpandida ? "min-h-0 overflow-hidden p-0" : ""} ${
           encabezadoMovilCompacto ? "max-lg:px-3 max-lg:pt-0 max-lg:pb-5" : ""
         }`}
       >
         <header
-          className={`mb-4 flex flex-wrap items-end justify-between gap-3 lg:mb-8 lg:gap-4 ${
+          className={`${modoAulaExpandida ? "hidden" : ""} mb-4 flex flex-wrap items-end justify-between gap-3 lg:mb-8 lg:gap-4 ${
             encabezadoMovilCompacto
               ? "max-lg:sticky max-lg:top-0 max-lg:z-30 max-lg:-mx-3 max-lg:mb-2 max-lg:justify-end max-lg:bg-background/95 max-lg:px-3 max-lg:py-2 max-lg:backdrop-blur"
               : ""
@@ -516,7 +518,7 @@ export function AppShell({
           ) : null}
         </header>
 
-        {!ocultarNavegacion && Boolean(sesion?.roles?.length) ? (
+        {!ocultarNavegacion && !modoAulaExpandida && Boolean(sesion?.roles?.length) ? (
           <nav className={`sticky top-0 z-20 mb-4 border-y border-border bg-background/95 py-3 backdrop-blur lg:hidden ${encabezadoMovilCompacto ? "max-lg:-mx-3 max-lg:px-3" : "-mx-4 px-4"}`}>
             <div className="flex items-center justify-between gap-3">
               <div className="flex min-w-0 items-center gap-3">
