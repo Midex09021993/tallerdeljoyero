@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  AmbientLight, AxesHelper, Box3, BoxGeometry, BoxHelper, BufferGeometry,
-  Color, DirectionalLight, ExtrudeGeometry, GridHelper, HemisphereLight, IcosahedronGeometry,
-  Line, LineBasicMaterial, Mesh, MeshStandardMaterial, Object3D, PerspectiveCamera,
-  PlaneGeometry, Raycaster, Scene, Shape, Sphere, SphereGeometry,
+  AmbientLight, AxesHelper, Box3, BoxGeometry, BufferGeometry, EdgesGeometry,
+  Color, DirectionalLight, ExtrudeGeometry, GridHelper, Group, HemisphereLight, IcosahedronGeometry,
+  Line, LineBasicMaterial, LineSegments, Mesh, MeshBasicMaterial, MeshStandardMaterial, Object3D, PerspectiveCamera,
+  PlaneGeometry, Points, PointsMaterial, Raycaster, Scene, Shape, Sphere, SphereGeometry, TorusGeometry,
   SRGBColorSpace, Vector2, Vector3, WebGLRenderer,
 } from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
@@ -14,8 +14,9 @@ type Entry = { object: Object3D; name: string; type: string; category: string; d
 const CATEGORIES = [
   { id: "all", label: "Todos" }, { id: "points", label: "Puntos" },
   { id: "curves", label: "Curvas" }, { id: "surfaces", label: "Superficies" },
-  { id: "polysurfaces", label: "Polisuperficies" }, { id: "solids", label: "Sólidos" },
-  { id: "meshes", label: "Mallas" }, { id: "extrusions", label: "Extrusiones" },
+  { id: "polysurfaces", label: "Polisuperficies" }, { id: "extrusions", label: "Extrusiones" },
+  { id: "meshes", label: "Mallas" }, { id: "subd", label: "SubD" },
+  { id: "pointclouds", label: "Nubes de puntos" }, { id: "others", label: "Otros" },
 ];
 const material = (color: string, roughness = 0.48) =>
   new MeshStandardMaterial({ color, roughness, metalness: 0.1, side: 2 });
@@ -29,75 +30,118 @@ function createTeachingObjects(root: Object3D): Entry[] {
     root.add(object);
     result.push({ object, name, type, category, description, jewelryUse });
   };
+  const gold = "#E6C77D";
+  const pale = "#B7D0E8";
+  const place = (object: Object3D, x: number, y: number, z = 0) => object.position.set(x, y, z);
 
-  const point = new Mesh(new SphereGeometry(0.16, 18, 12), material("#E6C77D", 0.3));
-  point.position.set(-8, -2.5, 0.16);
-  add(point, "Punto de control", "Point", "points",
-    "Una posición exacta en el espacio 3D, definida por coordenadas X, Y y Z.",
-    "Ubicar vértices, referencias y puntos de construcción.");
+  // Cada unidad de la escena equivale a 1 mm. El área útil es de 40 × 40 mm.
+  const point = new Mesh(new SphereGeometry(0.28, 18, 12), material(gold, 0.3));
+  place(point, -14, -12, 0.28);
+  add(point, "Punto", "Point", "points",
+    "Ubicación geométrica definida por coordenadas X, Y y Z. No debe confundirse con un punto de control, que sirve para editar la forma de una curva o superficie.",
+    "Marcar centros, referencias, posiciones de engastes y puntos de construcción.");
 
   const profile = lineFrom([
-    new Vector3(-6.5, -2.5, 0.12), new Vector3(-5.8, -1.5, 0.12),
-    new Vector3(-4.8, -1.15, 0.12), new Vector3(-3.8, -1.7, 0.12),
-    new Vector3(-3.2, -2.5, 0.12),
+    new Vector3(-9, -13, 0.08), new Vector3(-8, -11.8, 0.08),
+    new Vector3(-6.8, -11.3, 0.08), new Vector3(-5.5, -12, 0.08),
+    new Vector3(-4.8, -13, 0.08),
   ]);
-  add(profile, "Curva de perfil", "Curve", "curves",
-    "Entidad lineal sin grosor ni volumen. Puede ser abierta o cerrada.",
-    "Dibujar contornos, perfiles de anillos y trayectorias.");
+  add(profile, "Curva de perfil", "Curve · abierta", "curves",
+    "Curva abierta que define un recorrido sin grosor físico. En Rhino las curvas también pueden ser líneas, arcos, círculos, policurvas o curvas libres.",
+    "Dibujar perfiles de anillos, contornos, recorridos y secciones para extruir.");
 
   const circlePts = Array.from({ length: 97 }, (_, i) => {
     const a = i / 96 * Math.PI * 2;
-    return new Vector3(-1.6 + Math.cos(a), -2.1 + Math.sin(a), 0.12);
+    return new Vector3(-1.5 + Math.cos(a) * 1.8, -12 + Math.sin(a) * 1.8, 0.08);
   });
-  add(lineFrom(circlePts, "#F3D99A"), "Círculo", "Circle / Curve", "curves",
-    "Curva cerrada cuyos puntos mantienen la misma distancia respecto a un centro.",
-    "Crear aros, alianzas y perfiles circulares.");
+  add(lineFrom(circlePts, "#F3D99A"), "Círculo", "Curve · cerrada", "curves",
+    "Curva plana cerrada cuyos puntos están a la misma distancia del centro. En Rhino, el círculo pertenece a la familia de curvas; no es una familia independiente.",
+    "Construir aros, alianzas, perfiles circulares y trayectorias concéntricas.");
 
-  const surface = new Mesh(new PlaneGeometry(2.7, 2), material("#8FB8D8", 0.58));
-  surface.position.set(-4.6, 2, 0.12);
-  add(surface, "Superficie plana", "Surface", "surfaces",
-    "Cara geométrica que define largo y ancho, pero no encierra un volumen por sí sola.",
-    "Representar caras, paños y superficies de transición.");
+  const surface = new Mesh(new PlaneGeometry(5.2, 4.2), material("#8FB8D8", 0.58));
+  place(surface, 6, -12, 0.08);
+  add(surface, "Superficie plana", "Surface · NURBS", "surfaces",
+    "Superficie que define largo y ancho, pero no encierra volumen por sí sola. Rhino representa sus superficies mediante geometría NURBS; también existen superficies recortadas y de forma libre.",
+    "Crear caras, paños, asientos y superficies de transición en una joya.");
 
-  const polysurface = new Object3D();
+  const openBrep = new Group();
   const faceMat = material("#A8BDD1", 0.52);
-  const base = new Mesh(new PlaneGeometry(2.2, 1.8), faceMat);
+  const base = new Mesh(new PlaneGeometry(4.8, 3.8), faceMat);
   base.position.set(0, 0, 0.12);
-  const back = new Mesh(new PlaneGeometry(2.2, 1.5), faceMat);
-  back.position.set(0, 0.9, 0.87);
+  const back = new Mesh(new PlaneGeometry(4.8, 2.8), faceMat);
+  back.position.set(0, 1.9, 1.5);
   back.rotation.x = Math.PI / 2;
-  const side = new Mesh(new PlaneGeometry(1.8, 1.5), faceMat);
-  side.position.set(-1.1, 0, 0.87);
+  const side = new Mesh(new PlaneGeometry(3.8, 2.8), faceMat);
+  side.position.set(-2.4, 0, 1.5);
   side.rotation.y = -Math.PI / 2;
-  polysurface.add(base, back, side);
-  polysurface.position.set(-0.3, 2, 0);
-  add(polysurface, "Polisuperficie abierta", "Brep · varias caras", "polysurfaces",
-    "Dos o más superficies unidas por sus bordes. Este ejemplo está abierto y no encierra volumen.",
-    "Construir formas complejas uniendo distintas caras de una joya.");
+  openBrep.add(base, back, side);
+  place(openBrep, 14, -11.5, 0);
+  add(openBrep, "Polisuperficie abierta", "Brep · abierta", "polysurfaces",
+    "Conjunto de dos o más superficies unidas por bordes. Esta representación didáctica deja una abertura y no encierra un volumen.",
+    "Construir cuerpos complejos a partir de varias caras unidas.");
 
-  const solid = new Mesh(new BoxGeometry(2, 2, 1.8), material("#B7D0E8", 0.38));
-  solid.position.set(3.2, 2, 0.95);
-  add(solid, "Sólido cerrado", "Closed Brep", "solids",
-    "Geometría cerrada que delimita un volumen y tiene interior y exterior.",
-    "Modelar cuerpos de anillos, engastes, placas y componentes fabricables.");
+  const closedBrep = new Mesh(new BoxGeometry(4.5, 4.5, 3.6), material(pale, 0.38));
+  place(closedBrep, -10, 6, 1.8);
+  add(closedBrep, "Polisuperficie cerrada", "Closed Brep · sólido", "polysurfaces",
+    "Polisuperficie cuyas caras forman un límite cerrado y encierran un volumen. En Rhino suele denominarse sólido; no es una familia separada de las polisuperficies.",
+    "Modelar cuerpos de anillos, placas, engastes y componentes cerrados.");
 
-  const mesh = new Mesh(new IcosahedronGeometry(1.2, 1), new MeshStandardMaterial({
+  const mesh = new Mesh(new IcosahedronGeometry(2.15, 1), new MeshStandardMaterial({
     color: "#9EBBD6", roughness: 0.55, flatShading: true, metalness: 0.08,
   }));
-  mesh.position.set(6.5, 2, 1.25);
+  place(mesh, -2.5, 6, 2.1);
   add(mesh, "Malla poligonal", "Mesh", "meshes",
-    "Superficie representada mediante vértices, aristas y caras poligonales.",
-    "Visualización, escultura digital, impresión y formatos de intercambio.");
+    "Objeto formado por vértices, aristas y caras poligonales. Su densidad y distribución de polígonos influyen en la suavidad y el detalle.",
+    "Escultura digital, visualización, impresión 3D e intercambio de modelos.");
 
   const shape = new Shape();
-  shape.moveTo(-1, -0.65); shape.lineTo(0.75, -0.65); shape.lineTo(1, 0);
-  shape.lineTo(0.55, 0.75); shape.lineTo(-0.85, 0.75); shape.closePath();
-  const extrusion = new Mesh(new ExtrudeGeometry(shape, { depth: 1.55, bevelEnabled: false }), material("#D1DCE8", 0.4));
-  extrusion.position.set(9.6, 2, 0.1);
-  add(extrusion, "Extrusión lineal", "Extrusion", "extrusions",
-    "Perfil 2D extendido en una dirección para generar un cuerpo con longitud.",
-    "Crear perfiles, barras, biseles y elementos repetitivos.");
+  shape.moveTo(-2.2, -1.4); shape.lineTo(1.8, -1.4); shape.lineTo(2.2, 0);
+  shape.lineTo(1.4, 1.4); shape.lineTo(-1.8, 1.4); shape.closePath();
+  const extrusion = new Mesh(new ExtrudeGeometry(shape, { depth: 2.8, bevelEnabled: false }), material("#D1DCE8", 0.4));
+  place(extrusion, 6.5, 6, 0.08);
+  add(extrusion, "Extrusión lineal", "Extrusion · ligera", "extrusions",
+    "Objeto generado al extender un perfil en una dirección. Rhino puede conservarlo como extrusión ligera o convertirlo en superficies/polisuperficie; puede ser abierto o cerrado.",
+    "Crear barras, perfiles repetitivos, biseles y cuerpos de sección constante.");
+
+  const subd = new Mesh(new IcosahedronGeometry(2.25, 2), new MeshStandardMaterial({
+    color: "#B7A6D8", roughness: 0.34, metalness: 0.06,
+  }));
+  place(subd, 14, 6, 2.25);
+  add(subd, "SubD", "Subdivision Surface", "subd",
+    "Geometría de subdivisión Catmull–Clark de Rhino 7, diseñada para modelar formas orgánicas con control fluido de la superficie. No es una NURBS ni una malla poligonal convencional.",
+    "Diseñar volúmenes orgánicos, monturas escultóricas y formas suaves.");
+
+  const cloudGeometry = new BufferGeometry();
+  const cloudPositions: number[] = [];
+  for (let i = 0; i < 90; i++) {
+    const a = i * 2.399963;
+    const r = 0.45 + (i % 9) * 0.13;
+    cloudPositions.push(-14 + Math.cos(a) * r, Math.sin(a) * r, 0.35 + (i % 7) * 0.12);
+  }
+  cloudGeometry.setAttribute("position", new (awaitlessFloat32Array())(cloudPositions));
+  const cloud = new Points(cloudGeometry, new PointsMaterial({ color: "#E6C77D", size: 0.13, sizeAttenuation: true }));
+  place(cloud, 0, 0, 0);
+  add(cloud, "Nube de puntos", "PointCloud", "pointclouds",
+    "Conjunto de numerosos puntos agrupados como un solo objeto para representar datos de escaneo o captura espacial. No equivale a colocar puntos individuales uno por uno.",
+    "Consultar escaneos de piezas, comparar medidas y reconstruir referencias de modelos reales.");
+
+  const other = new Group();
+  const blockBody = new Mesh(new BoxGeometry(3.4, 2.4, 0.18), material("#B8C5D3", 0.65));
+  blockBody.position.z = 0.12;
+  const blockMark = lineFrom([
+    new Vector3(-1.1, -0.55, 0.24), new Vector3(0, 0.65, 0.24), new Vector3(1.1, -0.55, 0.24),
+  ], gold);
+  other.add(blockBody, blockMark);
+  place(other, 0, 12, 0);
+  add(other, "Otros objetos", "Bloques · cotas · textos…", "others",
+    "Grupo de objetos que no son geometría principal: bloques, anotaciones, cotas, textos, luces, sombreados y otros elementos del documento.",
+    "Organizar componentes reutilizables, rotular planos y documentar medidas del diseño.");
   return result;
+}
+
+// Helper local para mantener la construcción del atributo tipada sin dependencias adicionales.
+function awaitlessFloat32Array() {
+  return Float32Array;
 }
 
 export default function RhinoObjectExplorer({ visible }: Props) {
@@ -111,7 +155,7 @@ export default function RhinoObjectExplorer({ visible }: Props) {
   const cameraRef = useRef<PerspectiveCamera | null>(null);
   const controlsRef = useRef<OrbitControls | null>(null);
   const sceneRef = useRef<Scene | null>(null);
-  const selectionRef = useRef<BoxHelper | null>(null);
+  const selectionRef = useRef<Object3D[]>([]);
   const visibleEntries = useMemo(() => entries.filter(e => category === "all" || e.category === category), [entries, category]);
   const selected = entries.find(e => e.object.uuid === selectedId) ?? null;
   const counts = useMemo(() => {
@@ -137,13 +181,14 @@ export default function RhinoObjectExplorer({ visible }: Props) {
     scene.add(new HemisphereLight(0xeaf2ff, 0x536477, 1.45));
     const key = new DirectionalLight(0xffffff, 2.3); key.position.set(-8, -12, 18); scene.add(key);
     const fill = new DirectionalLight(0xc5d7ef, 1.15); fill.position.set(10, 8, 12); scene.add(fill);
-    const grid = new GridHelper(28, 28, 0x536477, 0x293747); grid.rotation.x = Math.PI / 2; scene.add(grid);
-    scene.add(new AxesHelper(4.5));
+    const grid = new GridHelper(40, 40, 0x64778B, 0x293747); grid.rotation.x = Math.PI / 2; scene.add(grid);
+    const workArea = new Line(new BufferGeometry().setFromPoints([new Vector3(-20,-20,0.025),new Vector3(20,-20,0.025),new Vector3(20,20,0.025),new Vector3(-20,20,0.025),new Vector3(-20,-20,0.025)]), new LineBasicMaterial({color:0xC6A15B})); scene.add(workArea);
+    scene.add(new AxesHelper(3));
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true; controls.dampingFactor = 0.075; controls.screenSpacePanning = true;
-    controls.target.set(1, 0, 0.5);
-    camera.position.set(15, -22, 17); camera.lookAt(controls.target);
+    controls.target.set(0, 0, 0);
+    camera.position.set(42, -56, 43); camera.lookAt(controls.target);
     cameraRef.current = camera; controlsRef.current = controls; sceneRef.current = scene;
 
     const resize = () => {
@@ -157,9 +202,9 @@ export default function RhinoObjectExplorer({ visible }: Props) {
     modelRef.current = model; setEntries(created); setSelectedId(created[0]?.object.uuid ?? "");
     const bounds = new Box3().setFromObject(model);
     const center = bounds.getCenter(new Vector3());
-    const radius = Math.max(bounds.getBoundingSphere(new Sphere()).radius, 6);
+    const radius = Math.max(bounds.getBoundingSphere(new Sphere()).radius, 21);
     controls.target.copy(center);
-    camera.position.copy(center).add(new Vector3(1, -1.35, 0.95).normalize().multiplyScalar(radius * 2.35));
+    camera.position.copy(center).add(new Vector3(1, -1.35, 1.0).normalize().multiplyScalar(radius * 2.25));
     camera.near = Math.max(radius / 1000, 0.01); camera.far = radius * 20;
     camera.updateProjectionMatrix(); controls.update();
 
@@ -194,7 +239,7 @@ export default function RhinoObjectExplorer({ visible }: Props) {
       });
       renderer.dispose(); renderer.domElement.remove();
       modelRef.current = null; cameraRef.current = null; controlsRef.current = null;
-      sceneRef.current = null; selectionRef.current = null;
+      sceneRef.current = null; selectionRef.current = [];
     };
   }, [open]);
 
@@ -205,22 +250,46 @@ export default function RhinoObjectExplorer({ visible }: Props) {
   useEffect(() => {
     const scene = sceneRef.current;
     if (!scene) return;
-    if (selectionRef.current) {
-      scene.remove(selectionRef.current);
-      selectionRef.current.geometry.dispose(); selectionRef.current.material.dispose();
-      selectionRef.current = null;
-    }
+    selectionRef.current.forEach(item => {
+      item.parent?.remove(item);
+      const mesh = item as LineSegments;
+      mesh.geometry?.dispose?.();
+      (mesh.material as MeshBasicMaterial | undefined)?.dispose?.();
+    });
+    selectionRef.current = [];
     if (selected) {
-      const helper = new BoxHelper(selected.object, new Color("#E6C77D"));
-      scene.add(helper); selectionRef.current = helper;
+      selected.object.updateWorldMatrix(true, true);
+      selected.object.traverse(child => {
+        const mesh = child as Mesh;
+        if (!mesh.isMesh || !mesh.geometry) return;
+        const outline = new LineSegments(
+          new EdgesGeometry(mesh.geometry, 22),
+          new LineBasicMaterial({ color: "#F0CC78", transparent: true, opacity: 0.98, depthTest: false }),
+        );
+        outline.position.set(0, 0, 0);
+        outline.renderOrder = 20;
+        mesh.add(outline);
+        selectionRef.current.push(outline);
+      });
+      const bounds = new Box3().setFromObject(selected.object);
+      const center = bounds.getCenter(new Vector3());
+      const marker = new Mesh(
+        new TorusGeometry(0.42, 0.025, 6, 40),
+        new MeshBasicMaterial({ color: "#F0CC78", transparent: true, opacity: 0.9, depthTest: false }),
+      );
+      marker.position.set(center.x, center.y, Math.max(0.05, bounds.min.z + 0.06));
+      marker.renderOrder = 21;
+      scene.add(marker);
+      selectionRef.current.push(marker);
     }
   }, [selectedId, selected]);
+
 
   const focus = (entry: Entry | null) => {
     if (!entry || !cameraRef.current || !controlsRef.current) return;
     const bounds = new Box3().setFromObject(entry.object);
     const center = bounds.getCenter(new Vector3());
-    const radius = Math.max(bounds.getBoundingSphere(new Sphere()).radius, 1.2);
+    const radius = Math.max(bounds.getBoundingSphere(new Sphere()).radius, 1.8);
     const camera = cameraRef.current;
     const vfov = camera.fov * Math.PI / 180;
     const hfov = 2 * Math.atan(Math.tan(vfov / 2) * camera.aspect);
@@ -232,7 +301,7 @@ export default function RhinoObjectExplorer({ visible }: Props) {
     if (!modelRef.current || !cameraRef.current || !controlsRef.current) return;
     const bounds = new Box3().setFromObject(modelRef.current);
     const center = bounds.getCenter(new Vector3());
-    const radius = Math.max(bounds.getBoundingSphere(new Sphere()).radius, 6);
+    const radius = Math.max(bounds.getBoundingSphere(new Sphere()).radius, 21);
     const camera = cameraRef.current, vfov = camera.fov * Math.PI / 180;
     const hfov = 2 * Math.atan(Math.tan(vfov / 2) * Math.max(camera.aspect, 0.1));
     controlsRef.current.target.copy(center);
@@ -254,24 +323,24 @@ export default function RhinoObjectExplorer({ visible }: Props) {
   return <>
     <section className="mt-5 overflow-hidden rounded-2xl border border-[#C6A15B]/35 bg-gradient-to-br from-[#222B36] via-[#1D2630] to-[#171C24] p-4 text-white shadow-lg sm:p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="min-w-0"><p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#D8B979]">FADILAB · SESIÓN 02 · LABORATORIO 3D</p><h3 className="mt-1 text-lg font-semibold">GEOMETRÍAS DE RHINO <span className="font-normal text-[#AAB7C5]">/ Aprende explorando</span></h3><p className="mt-1 text-sm text-[#C2CCD7]">Escena didáctica preparada para reconocer ocho familias de geometría.</p></div>
+        <div className="min-w-0"><p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#D8B979]">FADILAB · SESIÓN 02 · LABORATORIO 3D</p><h3 className="mt-1 text-lg font-semibold">GEOMETRÍAS DE RHINO <span className="font-normal text-[#AAB7C5]">/ Aprende explorando</span></h3><p className="mt-1 text-sm text-[#C2CCD7]">Explora las familias de objetos de Rhino en un área de trabajo de 40 × 40 mm.</p></div>
         <button type="button" onClick={() => setOpen(true)} className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-gradient-to-b from-[#E6C77D] to-[#BF9952] px-4 py-2.5 text-sm font-bold text-[#241B0C] shadow-sm transition hover:-translate-y-0.5 hover:brightness-105"><Scan className="size-4"/> Abrir laboratorio</button>
       </div>
-      <div className="mt-3 flex flex-wrap gap-2 text-[10px] text-[#D0D8E0]">{["8 familias geométricas","Selección directa en 3D","Ejes X · Y · Z","Modo alámbrico"].map(item => <span key={item} className="rounded-full border border-white/15 px-3 py-1.5">{item}</span>)}</div>
+      <div className="mt-3 flex flex-wrap gap-2 text-[10px] text-[#D0D8E0]">{["Área 40 × 40 mm","Cuadrícula de 1 mm","Selección directa en 3D","Ejes X · Y · Z"].map(item => <span key={item} className="rounded-full border border-white/15 px-3 py-1.5">{item}</span>)}</div>
     </section>
     {open && <div className="fixed inset-0 z-[130] flex h-[100dvh] flex-col overflow-hidden bg-[#141A22] text-[#E8EDF2]" role="dialog" aria-modal="true" aria-label="Laboratorio de geometrías Rhino">
       <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-white/10 bg-[#202A35] px-4 py-3 sm:px-6">
-        <div className="min-w-0"><p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#D8B979]">FADILAB · SESIÓN 02 · RHINO 7</p><h2 className="text-lg font-semibold">Geometry Lab <span className="font-normal text-[#AAB7C5]">/ Tipos de geometría</span></h2><p className="text-xs text-[#AAB7C5]">{entries.length} objetos didácticos · Escena independiente del archivo 3DM</p></div>
+        <div className="min-w-0"><p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#D8B979]">FADILAB · SESIÓN 02 · RHINO 7</p><h2 className="text-lg font-semibold">Geometry Lab <span className="font-normal text-[#AAB7C5]">/ Tipos de geometría</span></h2><p className="text-xs text-[#AAB7C5]">{entries.length} ejemplos didácticos · Área de trabajo 40 × 40 mm · Escena independiente del archivo 3DM</p></div>
         <div className="flex items-center gap-2"><button type="button" onClick={resetView} disabled={!entries.length} className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 px-3 py-2 text-xs font-semibold text-[#D0D8E0] disabled:opacity-40"><RotateCcw className="size-3.5"/> Encuadre</button><button type="button" onClick={toggleWireframe} disabled={!entries.length} className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 px-3 py-2 text-xs font-semibold text-[#D0D8E0] disabled:opacity-40"><Layers3 className="size-3.5"/> {wireframe ? "Sombreado" : "Alámbrico"}</button><button type="button" onClick={() => setOpen(false)} className="rounded-lg border border-white/15 p-2 text-[#D0D8E0]" aria-label="Cerrar"><X className="size-4"/></button></div>
       </header>
       <nav className="flex shrink-0 gap-2 overflow-x-auto border-b border-white/10 bg-[#1B242E] px-4 py-2.5 sm:px-6">{CATEGORIES.map(item => <button key={item.id} type="button" onClick={() => setCategory(item.id)} aria-pressed={category === item.id} className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold ${category === item.id ? "border-[#C6A15B] bg-[#C6A15B]/15 text-[#E5C47C]" : "border-white/10 bg-[#26313D] text-[#B9C5D1]"}`}>{item.label} <span className="ml-1 opacity-70">{counts[item.id] ?? 0}</span></button>)}</nav>
       <div className="grid min-h-0 flex-1 gap-3 overflow-hidden p-3 sm:p-4 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <section className="relative min-h-[260px] overflow-hidden rounded-xl border border-white/10 bg-[#141B24]"><div ref={viewportRef} className="absolute inset-0"/>
+        <section className="relative min-h-[260px] overflow-hidden rounded-xl border border-white/10 bg-[#141B24]"><div ref={viewportRef} className="absolute inset-0"/><div className="pointer-events-none absolute left-4 top-4 z-10 rounded-lg border border-white/15 bg-[#202A35]/90 px-3 py-2 shadow-lg"><p className="text-[10px] font-bold tracking-[.16em] text-[#E6C77D]">PERSPECTIVA</p><p className="mt-0.5 text-[9px] text-[#AAB7C5]">Área de trabajo · 40 × 40 mm</p></div>
           <div className="pointer-events-none absolute bottom-4 left-4 z-10 flex items-center gap-2 rounded-xl border border-white/10 bg-[#202A35]/85 px-3 py-2 shadow-lg">
             <svg viewBox="0 0 76 64" className="h-12 w-14" aria-label="Ejes globales X Y Z"><circle cx="25" cy="39" r="3" fill="#E8EDF2"/><path d="M25 39 L57 39" stroke="#EF4444" strokeWidth="2.5"/><path d="M25 39 L7 19" stroke="#22C55E" strokeWidth="2.5"/><path d="M25 39 L25 5" stroke="#3B82F6" strokeWidth="2.5"/><g fontSize="10" fontWeight="700"><text x="62" y="43" fill="#F87171">X</text><text x="1" y="15" fill="#4ADE80">Y</text><text x="30" y="10" fill="#60A5FA">Z</text></g></svg>
             <span className="text-[10px] leading-4 text-[#C4CED8]">Ejes del mundo<br/><b className="font-semibold text-[#E8EDF2]">X · Y · Z</b></span>
           </div>
-          <button type="button" onClick={resetView} title="Restablecer vista isométrica" aria-label="Restablecer orientación" className="absolute right-4 top-4 z-10 flex size-[68px] items-center justify-center rounded-full border border-[#D8B979]/55 bg-[#202A35]/90 shadow-xl backdrop-blur transition hover:border-[#E6C77D] hover:bg-[#293542]"><svg viewBox="0 0 76 76" className="size-[60px]" aria-hidden="true"><circle cx="38" cy="38" r="31" fill="none" stroke="#718096" strokeWidth="1.5" strokeDasharray="3 3"/><circle cx="38" cy="38" r="23" fill="#263342" stroke="#D8B979" strokeWidth="1.2"/><path d="M38 12 L38 25 M38 51 L38 64 M12 38 L25 38 M51 38 L64 38" stroke="#AAB7C5" strokeWidth="1.5"/><path d="M38 17 L32 27 L44 27 Z" fill="#3B82F6"/><path d="M59 38 L49 32 L49 44 Z" fill="#EF4444"/><path d="M38 59 L32 49 L44 49 Z" fill="#22C55E"/><circle cx="38" cy="38" r="5" fill="#D8B979"/><g fill="#E8EDF2" fontSize="8" fontWeight="700" textAnchor="middle"><text x="38" y="9">Z</text><text x="69" y="41">X</text><text x="38" y="73">Y</text></g></svg></button>
+          <div className="pointer-events-none absolute right-4 top-4 z-10 max-w-[190px] rounded-lg border border-[#D8B979]/35 bg-[#202A35]/90 px-3 py-2 text-right shadow-lg"><p className="text-[9px] font-bold tracking-[.12em] text-[#D8B979]">ORIENTACIÓN 3D</p><p className="mt-0.5 text-[9px] leading-4 text-[#AAB7C5]">Anillo original pendiente de integrar desde la biblioteca</p></div>
           <div className="pointer-events-none absolute bottom-3 right-3 rounded-lg border border-white/10 bg-[#202A35]/80 px-3 py-2 text-[10px] text-[#AAB7C5]">Arrastra para orbitar · Rueda para zoom · Clic para seleccionar</div>
         </section>
         <aside className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-white/10 bg-[#202A35]">
@@ -280,7 +349,7 @@ export default function RhinoObjectExplorer({ visible }: Props) {
           <div className="shrink-0 border-t border-white/10 bg-[#19222C] p-3"><p className="text-[10px] font-bold uppercase tracking-[.16em] text-[#D8B979]">Ficha didáctica</p>{selected ? <><p className="mt-1 truncate text-sm font-semibold">{selected.name}</p><p className="mt-1 text-[10px] font-semibold text-[#D8B979]">{selected.type}</p><p className="mt-2 text-xs leading-5 text-[#C3CDD8]">{selected.description}</p><p className="mt-2 text-[10px] font-bold uppercase tracking-wide text-[#9EADBC]">Aplicación en joyería</p><p className="mt-1 text-xs leading-5 text-[#C3CDD8]">{selected.jewelryUse}</p><button type="button" onClick={() => focus(selected)} className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#C6A15B] px-3 py-2 text-xs font-bold text-[#171C24]"><Focus className="size-3.5"/> Enfocar objeto</button></> : <p className="mt-1 text-xs text-[#9EADBC]">Selecciona una geometría en la escena o en la lista.</p>}</div>
         </aside>
       </div>
-      <footer className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-t border-white/10 bg-[#202A35] px-4 py-2 text-[10px] text-[#9EADBC]"><span>Escena didáctica propia · No modifica archivos del alumno</span><span>{visibleEntries.length} visibles / {entries.length} totales</span></footer>
+      <footer className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-t border-white/10 bg-[#202A35] px-4 py-2 text-[10px] text-[#9EADBC]"><span>Escala didáctica en milímetros · 40 × 40 mm · No modifica archivos del alumno</span><span>{visibleEntries.length} visibles / {entries.length} totales</span></footer>
     </div>}
   </>;
 }
