@@ -3263,18 +3263,21 @@ function AulaFormacionPage() {
                  <p className="text-sm text-[#718096]">Consulta los materiales organizados por sesión. Los materiales de sesiones bloqueadas tampoco se pueden descargar.</p>
                  {sesionesVistaAula.filter(s => s.curso_id === i.curso_id && materialesVistaAula.some(m => m.curso_id === i.curso_id && m.sesion_id === s.id)).sort((a, b) => Number(a.numero) - Number(b.numero)).map(s => {
                    const recursosSesion = materialesVistaAula.filter(m => m.curso_id === i.curso_id && m.sesion_id === s.id);
-                   return <section key={s.id} className={`overflow-hidden rounded-xl border ${s.bloqueada ? "border-[#dce2e8] bg-[#f1f3f5]" : "border-[#dce5ee] bg-white"}`}>
-                     <header className="flex flex-wrap items-center justify-between gap-2 border-b border-[#e7edf2] px-4 py-3">
+                   return <details key={s.id} className={`group overflow-hidden rounded-xl border ${s.bloqueada ? "border-[#dce2e8] bg-[#f1f3f5]" : "border-[#dce5ee] bg-white"}`}>
+                     <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-2 px-4 py-3 [&::-webkit-details-marker]:hidden">
                        <div className="min-w-0"><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#98743c]">Sesión {s.numero} · {s.duracion_horas} horas</p><h4 className="mt-0.5 text-sm font-semibold text-[#1d2b3a]">{s.titulo}</h4></div>
-                       {s.bloqueada ? <span className="inline-flex items-center gap-1 rounded-full border border-[#d6dce2] bg-[#e5e9ed] px-2.5 py-1 text-[10px] font-semibold text-[#66717d]"><span className="text-amber-600" aria-hidden="true">🔒</span> Bloqueada</span> : <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold text-emerald-700"><CheckCircle2 className="size-3"/> Disponible</span>}
-                     </header>
-                     <div className="divide-y divide-[#e7edf2] px-3">
+                       <div className="flex shrink-0 items-center gap-2.5">
+                         {s.bloqueada ? <span className="inline-flex items-center gap-1 rounded-full border border-[#d6dce2] bg-[#e5e9ed] px-2.5 py-1 text-[10px] font-semibold text-[#66717d]"><span className="text-amber-600" aria-hidden="true">🔒</span> Bloqueada</span> : <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold text-emerald-700"><CheckCircle2 className="size-3"/> Disponible</span>}
+                         <span aria-hidden="true" className="text-lg leading-none text-[#718096] transition-transform group-open:rotate-180">⌄</span>
+                       </div>
+                     </summary>
+                     <div className="border-t border-[#e7edf2] divide-y divide-[#e7edf2] px-3">
                        {recursosSesion.map(m => <div key={m.id} className={`flex flex-wrap items-center justify-between gap-3 py-3 ${s.bloqueada ? "opacity-60" : ""}`}>
                          <div className="flex min-w-0 items-center gap-2"><FileText className={`size-4 shrink-0 ${s.bloqueada ? "text-[#8b949e]" : "text-amber-500"}`}/><span className="min-w-0"><span className="block truncate text-sm font-medium text-[#1d2b3a]">{m.titulo}</span><span className="text-xs text-[#718096]">{m.nombre_archivo} · {(m.tamano_bytes/1024/1024).toFixed(1)} MB</span></span></div>
                          {s.bloqueada ? <span className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-[#d6dce2] bg-[#e5e9ed] px-3 py-2 text-xs font-semibold text-[#66717d]"><span className="text-amber-600" aria-hidden="true">🔒</span> Bloqueado</span> : <button type="button" onClick={() => void descargarMaterial(m)} className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-[#cbd9e5] bg-white px-3 py-2 text-xs font-semibold text-[#294760] hover:bg-[#f3f7fa]"><Download className="size-3.5"/> Descargar</button>}
                        </div>)}
                      </div>
-                   </section>;
+                   </details>;
                  })}
                  {materialesVistaAula.filter(m => m.curso_id === i.curso_id && !m.sesion_id).length > 0 && <section className="overflow-hidden rounded-xl border border-[#dce5ee] bg-white">
                    <header className="border-b border-[#e7edf2] px-4 py-3"><h4 className="text-sm font-semibold text-[#1d2b3a]">Material general del curso</h4><p className="mt-0.5 text-xs text-[#718096]">Recursos que no pertenecen a una sesión específica.</p></header>
