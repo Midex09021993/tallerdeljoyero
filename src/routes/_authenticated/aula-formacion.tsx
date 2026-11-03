@@ -2595,31 +2595,61 @@ function AulaFormacionPage() {
           </div>}
           {seccionDocente === "cursos" && <div id="doc-cursos" className="grid scroll-mt-24 gap-5">
             <Panel titulo="Nuevo curso" colapsable defaultOpen={false}>
-              <form onSubmit={(e) => void crearCurso(e)} className="space-y-3 p-5">
-                <label className="block text-xs font-medium">Nombre del curso<input value={titulo} onChange={e => setTitulo(e.target.value)} required maxLength={140} className="mt-1.5 w-full rounded-lg border border-white/10 bg-background px-3 py-2.5 text-sm" /></label>
-                <label className="block text-xs font-medium">Descripción<textarea value={descripcion} onChange={e => setDescripcion(e.target.value)} rows={2} className="mt-1.5 w-full rounded-lg border border-white/10 bg-background px-3 py-2.5 text-sm" /></label>
-                <label className="block text-xs font-medium">Duración total (horas)<input type="number" min="0" step="0.5" value={duracion} onChange={e => setDuracion(e.target.value)} className="mt-1.5 w-full rounded-lg border border-white/10 bg-background px-3 py-2.5 text-sm" /></label>
-                <button disabled={ocupado} className="inline-flex items-center gap-2 rounded-lg bg-gold px-4 py-2.5 text-sm font-semibold text-black disabled:opacity-50"><Plus className="size-4" /> Crear curso</button>
+              <div className="border-b border-[#edf0f3] bg-[#fbfcfd] px-5 py-4">
+                <div className="flex items-start gap-3">
+                  <span className="grid size-10 shrink-0 place-items-center rounded-xl border border-[#e8dcc7] bg-[#fbf6ec] text-[#9a7133]"><Plus className="size-5" /></span>
+                  <div><h3 className="text-sm font-semibold text-[#253446]">Diseña tu próximo programa</h3><p className="mt-1 max-w-2xl text-xs leading-5 text-[#718096]">Define la información principal. Después podrás organizar sesiones, inscribir alumnos y añadir materiales.</p></div>
+                </div>
+              </div>
+              <form onSubmit={(e) => void crearCurso(e)} className="space-y-4 p-5">
+                <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_180px]">
+                  <label className="block text-xs font-semibold text-[#425466]">Nombre del curso
+                    <input value={titulo} onChange={e => setTitulo(e.target.value)} required maxLength={140} placeholder="Ej. Diseño CAD 3D para Joyería · Nivel 1" className="mt-2 w-full rounded-xl border border-[#dce4ec] bg-white px-3.5 py-3 text-sm text-[#253446] outline-none transition placeholder:text-[#9aa7b5] focus:border-[#8ba6bd] focus:ring-2 focus:ring-[#8ba6bd]/15" />
+                  </label>
+                  <label className="block text-xs font-semibold text-[#425466]">Duración total
+                    <span className="relative mt-2 block"><input type="number" min="0" step="0.5" value={duracion} onChange={e => setDuracion(e.target.value)} className="w-full rounded-xl border border-[#dce4ec] bg-white px-3.5 py-3 pr-14 text-sm text-[#253446] outline-none transition focus:border-[#8ba6bd] focus:ring-2 focus:ring-[#8ba6bd]/15" /><span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-medium text-[#8190a0]">horas</span></span>
+                  </label>
+                </div>
+                <label className="block text-xs font-semibold text-[#425466]">Descripción del programa <span className="font-normal text-[#8a97a5]">· opcional</span>
+                  <textarea value={descripcion} onChange={e => setDescripcion(e.target.value)} rows={3} placeholder="Resume qué aprenderán los participantes y cuál es el objetivo del curso." className="mt-2 w-full resize-y rounded-xl border border-[#dce4ec] bg-white px-3.5 py-3 text-sm leading-6 text-[#253446] outline-none transition placeholder:text-[#9aa7b5] focus:border-[#8ba6bd] focus:ring-2 focus:ring-[#8ba6bd]/15" />
+                </label>
+                <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#edf0f3] pt-4">
+                  <p className="text-xs leading-5 text-[#8190a0]">Podrás completar y editar los detalles académicos más adelante.</p>
+                  <button disabled={ocupado} className="inline-flex items-center gap-2 rounded-xl bg-[#294760] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#203b52] disabled:cursor-not-allowed disabled:opacity-50"><Plus className="size-4" /> Crear curso</button>
+                </div>
               </form>
             </Panel>
             <Panel titulo="Mis cursos · FADILAB" colapsable defaultOpen={true}>
-              <div className="space-y-2 p-5">
-                {cursosQuery.isLoading ? <p className="text-sm text-slate-400">Cargando cursos…</p> : cursos.length === 0 ? <p className="rounded-xl border border-dashed border-white/10 p-5 text-sm text-slate-400">Todavía no hay cursos. Crea el primero desde el formulario.</p> : cursos.map(c => <div key={c.id} className={`rounded-xl border p-3 ${cursoActivoId === c.id ? "border-gold bg-gold/10" : "border-white/10"}`}>
-                  <div className="flex items-center gap-3">
-                    <button type="button" onClick={() => setCursoSeleccionado(c.id)} className="flex min-w-0 flex-1 items-center justify-between gap-3 text-left">
-                      <span className="min-w-0"><span className="block truncate text-sm font-semibold">{c.titulo}</span><span className="text-xs text-slate-400">{c.duracion_horas} horas · {c.estado}</span></span>
-                      <BookOpen className="size-4 shrink-0 text-amber-300" />
-                    </button>
-                    <button type="button" onClick={() => { setCursoEditandoId(c.id); setTituloCursoEditado(c.titulo); }} aria-label={`Editar nombre de ${c.titulo}`} title="Editar nombre del curso" className="shrink-0 rounded-lg border border-white/10 p-2 text-slate-400 hover:bg-white/5">
-                      <Pencil className="size-4" />
-                    </button>
+              <div className="space-y-3 p-5">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-xs leading-5 text-[#718096]">Programas académicos de tu institución.</p>
+                  {!cursosQuery.isLoading && <span className="rounded-full border border-[#dce4ec] bg-[#f7f9fb] px-2.5 py-1 text-[11px] font-semibold text-[#526b81]">{cursos.length} {cursos.length === 1 ? "curso" : "cursos"}</span>}
+                </div>
+                {cursosQuery.isLoading ? <div className="rounded-xl border border-[#e4e9ef] bg-[#fbfcfd] p-5 text-sm text-[#718096]">Cargando cursos…</div> : cursos.length === 0 ? <div className="rounded-2xl border border-dashed border-[#cbd7e1] bg-[#fbfcfd] px-5 py-8 text-center"><span className="mx-auto grid size-11 place-items-center rounded-xl bg-[#eef3f7] text-[#55718d]"><BookOpen className="size-5" /></span><p className="mt-3 text-sm font-semibold text-[#253446]">Todavía no tienes cursos</p><p className="mx-auto mt-1 max-w-sm text-xs leading-5 text-[#718096]">Crea tu primer programa académico para comenzar a organizar sesiones, alumnos y materiales.</p></div> : cursos.map((c, index) => <article key={c.id} className={`overflow-hidden rounded-2xl border bg-white transition ${cursoActivoId === c.id ? "border-[#a9bfd2] shadow-[0_0_0_2px_rgba(73,103,130,0.08)]" : "border-[#e4e9ef] hover:border-[#c7d3de] hover:shadow-sm"}`}>
+                  <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:gap-5 sm:p-5">
+                    <span className={`grid size-12 shrink-0 place-items-center rounded-xl ${cursoActivoId === c.id ? "bg-[#edf3f8] text-[#496782]" : "bg-[#f3f6f8] text-[#71869a]"}`}><BookOpen className="size-5" /></span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#8a97a5]">Programa {String(index + 1).padStart(2, "0")}</span>
+                        {cursoActivoId === c.id && <span className="inline-flex items-center gap-1 rounded-full border border-[#d9e5ef] bg-[#f3f7fa] px-2 py-0.5 text-[10px] font-semibold text-[#496782]"><CheckCircle2 className="size-3" /> En administración</span>}
+                      </div>
+                      <h3 className="mt-1 break-words text-sm font-semibold leading-6 text-[#253446]">{c.titulo}</h3>
+                      <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-[#718096]">
+                        <span className="inline-flex items-center gap-1.5 rounded-lg bg-[#f5f7f9] px-2.5 py-1.5"><BookOpen className="size-3.5" /> {c.duracion_horas} horas académicas</span>
+                        <span className="rounded-lg bg-[#f5f7f9] px-2.5 py-1.5 capitalize">{c.estado}</span>
+                      </div>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2 sm:flex-col sm:items-stretch">
+                      <button type="button" onClick={() => setCursoSeleccionado(c.id)} className={`inline-flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold transition sm:min-w-[132px] ${cursoActivoId === c.id ? "border border-[#d9e5ef] bg-[#f3f7fa] text-[#496782]" : "bg-[#294760] text-white hover:bg-[#203b52]"}`}>{cursoActivoId === c.id ? "Curso seleccionado" : "Administrar curso"} <span aria-hidden="true">→</span></button>
+                      <button type="button" onClick={() => { setCursoEditandoId(c.id); setTituloCursoEditado(c.titulo); }} aria-label={`Editar nombre de ${c.titulo}`} title="Editar nombre del curso" className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#dce4ec] px-3 py-2.5 text-xs font-medium text-[#60758a] transition hover:bg-[#f7f9fb]"><Pencil className="size-3.5" /><span className="sm:hidden">Editar</span></button>
+                    </div>
                   </div>
-                  {cursoEditandoId === c.id && <form onSubmit={(e) => void guardarNombreCurso(e)} className="mt-3 flex flex-wrap gap-2 border-t border-white/10 pt-3">
-                    <input autoFocus value={tituloCursoEditado} onChange={e => setTituloCursoEditado(e.target.value)} required maxLength={140} aria-label="Nuevo nombre del curso" className="min-w-0 flex-1 rounded-lg border border-white/10 bg-background px-3 py-2 text-sm" />
-                    <button type="submit" disabled={ocupado || !tituloCursoEditado.trim()} className="rounded-lg bg-gold px-3 py-2 text-xs font-semibold text-black disabled:opacity-50">Guardar</button>
-                    <button type="button" onClick={() => { setCursoEditandoId(""); setTituloCursoEditado(""); }} disabled={ocupado} className="rounded-lg border border-white/10 px-3 py-2 text-xs">Cancelar</button>
+                  {cursoEditandoId === c.id && <form onSubmit={(e) => void guardarNombreCurso(e)} className="flex flex-col gap-2 border-t border-[#edf0f3] bg-[#fbfcfd] p-4 sm:flex-row">
+                    <input autoFocus value={tituloCursoEditado} onChange={e => setTituloCursoEditado(e.target.value)} required maxLength={140} aria-label="Nuevo nombre del curso" className="min-w-0 flex-1 rounded-xl border border-[#dce4ec] bg-white px-3 py-2.5 text-sm text-[#253446] outline-none focus:border-[#8ba6bd] focus:ring-2 focus:ring-[#8ba6bd]/15" />
+                    <button type="submit" disabled={ocupado || !tituloCursoEditado.trim()} className="rounded-xl bg-[#294760] px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-50">Guardar cambios</button>
+                    <button type="button" onClick={() => { setCursoEditandoId(""); setTituloCursoEditado(""); }} disabled={ocupado} className="rounded-xl border border-[#dce4ec] bg-white px-4 py-2.5 text-xs font-medium text-[#60758a] disabled:opacity-50">Cancelar</button>
                   </form>}
-                </div>)}
+                </article>)}
               </div>
             </Panel>
           </div>}
