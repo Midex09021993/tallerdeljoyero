@@ -3050,7 +3050,6 @@ function AulaFormacionPage() {
         </>
       ) : (
         <>
-          <section className="rounded-2xl border border-gold/20 bg-[#121922] p-5"><p className="text-sm font-semibold">Bienvenido al aula</p><p className="mt-1 text-xs text-slate-400">Aquí aparecen únicamente los cursos en los que FADILAB te ha inscrito. Los archivos permanecen privados.</p></section>
           {lecturaAbierta && <div className={`fixed inset-0 z-[60] flex items-center justify-center overflow-hidden ${modoAulaExpandida ? "bg-background p-0" : `bg-black/60 p-2 sm:p-3 ${lecturaModoVistaPrevia ? "left-0 lg:left-64 xl:left-72" : ""}`}`} role="dialog" aria-modal="true" aria-label="Lectura de la sesión">
             <div className={"mx-auto flex h-[calc(100dvh-1rem)] max-h-[900px] min-h-0 w-full flex-col " + (modoAulaExpandida ? "max-w-none" : lecturaAbierta.numero === 5 ? "max-w-[1700px]" : "max-w-5xl") + ` overflow-hidden border border-white/10 bg-background shadow-2xl ${modoAulaExpandida ? "h-full max-h-none rounded-none border-0" : "rounded-2xl"}`}>
               <header className={`shrink-0 border-b border-[#e8dfce] bg-[#fbfaf7]/95 ${modoAulaExpandida ? "px-4 py-2 sm:px-6 sm:py-2" : "px-4 py-3 sm:px-6 sm:py-4"}`}>
