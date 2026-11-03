@@ -1704,6 +1704,7 @@ export type Database = {
       }
       formacion_examenes: {
         Row: {
+          aleatorizar_preguntas: boolean
           creado_por: string | null
           created_at: string
           curso_id: string
@@ -1714,6 +1715,7 @@ export type Database = {
           instrucciones: string | null
           intentos_permitidos: number
           participante_id: string
+          permitir_retroceso: boolean
           publicado: boolean
           puntaje_maximo: number
           sesion_id: string | null
@@ -1721,6 +1723,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          aleatorizar_preguntas?: boolean
           creado_por?: string | null
           created_at?: string
           curso_id: string
@@ -1731,6 +1734,7 @@ export type Database = {
           instrucciones?: string | null
           intentos_permitidos?: number
           participante_id: string
+          permitir_retroceso?: boolean
           publicado?: boolean
           puntaje_maximo?: number
           sesion_id?: string | null
@@ -1738,6 +1742,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          aleatorizar_preguntas?: boolean
           creado_por?: string | null
           created_at?: string
           curso_id?: string
@@ -1748,6 +1753,7 @@ export type Database = {
           instrucciones?: string | null
           intentos_permitidos?: number
           participante_id?: string
+          permitir_retroceso?: boolean
           publicado?: boolean
           puntaje_maximo?: number
           sesion_id?: string | null
@@ -1832,7 +1838,9 @@ export type Database = {
           iniciado_en: string
           numero_intento: number
           observaciones_docente: string | null
+          orden_preguntas: string[] | null
           participante_id: string
+          pregunta_actual: number
           puntaje_maximo: number
           puntaje_obtenido: number
           respuestas: Json
@@ -1851,7 +1859,9 @@ export type Database = {
           iniciado_en?: string
           numero_intento: number
           observaciones_docente?: string | null
+          orden_preguntas?: string[] | null
           participante_id: string
+          pregunta_actual?: number
           puntaje_maximo: number
           puntaje_obtenido?: number
           respuestas?: Json
@@ -1870,7 +1880,9 @@ export type Database = {
           iniciado_en?: string
           numero_intento?: number
           observaciones_docente?: string | null
+          orden_preguntas?: string[] | null
           participante_id?: string
+          pregunta_actual?: number
           puntaje_maximo?: number
           puntaje_obtenido?: number
           respuestas?: Json
@@ -4823,6 +4835,14 @@ export type Database = {
         Args: { _cotizacion_id: string; _detalles: Json }
         Returns: undefined
       }
+      guardar_respuestas_intento_formacion: {
+        Args: {
+          _intento_id: string
+          _pregunta_actual?: number
+          _respuestas: Json
+        }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -5006,6 +5026,10 @@ export type Database = {
         Args: { _examen_id: string }
         Returns: Json
       }
+      obtener_examen_intento_formacion: {
+        Args: { _intento_id: string }
+        Returns: Json
+      }
       obtener_ficha_servicio_externo: {
         Args: { _trabajo_id: string }
         Returns: Json
@@ -5126,6 +5150,10 @@ export type Database = {
       recibir_compra: { Args: { _compra_id: string }; Returns: Json }
       reconciliar_servicios_externos_pendientes: {
         Args: { _orden_produccion_id: string }
+        Returns: Json
+      }
+      recuperar_respuestas_intento_formacion: {
+        Args: { _intento_id: string }
         Returns: Json
       }
       registrar_entrega_material_produccion: {
