@@ -803,7 +803,7 @@ function AulaFormacionPage() {
   // La autorización la decide la función SQL; el nombre del taller no se utiliza como credencial.
   const permisoDocente = useQuery({
     queryKey: ["aula-formacion-docente-autorizado", sesion?.user.id, (sesion?.participantes ?? []).map(p => p.id).sort().join(",")],
-    enabled: Boolean(sesion?.esAdmin && sesion?.participantes.length),
+    enabled: Boolean(sesion?.esDueno && sesion?.participantes.length),
     queryFn: async () => {
       for (const participante of sesion!.participantes) {
         const { data, error } = await (supabase as any).rpc("formacion_es_docente", { _participante_id: participante.id });
@@ -814,7 +814,7 @@ function AulaFormacionPage() {
     },
   });
   const participanteDocente = permisoDocente.data ?? null;
-  const esDocente = Boolean(sesion?.esAdmin && participanteDocente?.id);
+  const esDocente = Boolean(sesion?.esDueno && participanteDocente?.id);
   const participanteId = esDocente ? participanteDocente!.id : null;
 
   const cursosQuery = useQuery({
