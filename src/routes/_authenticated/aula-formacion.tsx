@@ -1714,14 +1714,14 @@ function AulaFormacionPage() {
     { titulo: "Sólidos", pregunta: "¿Qué característica identifica a un sólido cerrado?", introduccion: "En Rhinoceros, un sólido es una superficie o polisuperficie cerrada que encierra un volumen. Sus límites forman un cuerpo completamente cerrado, no una superficie abierta.", claves: ["Un sólido cerrado encierra un volumen tridimensional.","Puede estar formado por una superficie cerrada o por varias superficies unidas en una polisuperficie.","El manual incluye operaciones para crear, separar, modificar y unir partes de un sólido."], aplicacion: "En joyería, puedes utilizar sólidos para representar cuerpos como una barra, un componente macizo o determinadas partes de una montura. Es importante comprobar que la geometría esté cerrada cuando el proceso de fabricación lo requiera.", ejemplo: "Una pieza modelada como sólido cerrado representa un volumen completo. No es lo mismo que tener únicamente las superficies exteriores sin cerrar.", opciones: [{ valor: "trazo", texto: "Está formado solo por líneas" }, { valor: "volumen", texto: "Delimita un volumen cerrado" }, { valor: "plano", texto: "Es una curva plana" }], correcta: "volumen", explicacion: "Correcto. Un sólido cerrado delimita un volumen tridimensional y representa un cuerpo, no solo líneas o superficies abiertas." },
   ];
   const renderLaboratorioSesion4 = () => {
-    if (lecturaAbierta?.numero !== 4 || ![1, 2, 3, 4, 5, 6].includes(paginaLectura)) return null;
+    if (lecturaAbierta?.numero !== 4 || ![2, 3, 4, 5, 6, 7].includes(paginaLectura)) return null;
     const modulos = [
-      { id: "fillet" as const, nombre: "Fillet / Chamfer", pagina: 1 },
-      { id: "offset" as const, nombre: "Offset", pagina: 2 },
-      { id: "trim" as const, nombre: "Trim / Split / Extend / Join", pagina: 3 },
-      { id: "move" as const, nombre: "Move / Copy", pagina: 4 },
-      { id: "rotate" as const, nombre: "Rotate / Scale", pagina: 5 },
-      { id: "integrador" as const, nombre: "Integrador", pagina: 6 },
+      { id: "fillet" as const, nombre: "Fillet / Chamfer", pagina: 2 },
+      { id: "offset" as const, nombre: "Offset", pagina: 3 },
+      { id: "trim" as const, nombre: "Trim / Split / Extend / Join", pagina: 4 },
+      { id: "move" as const, nombre: "Move / Copy", pagina: 5 },
+      { id: "rotate" as const, nombre: "Rotate / Scale", pagina: 6 },
+      { id: "integrador" as const, nombre: "Integrador", pagina: 7 },
     ];
     const modulo = modulos.find(m => m.id === moduloLab4)!;
     const abrir = () => { setModuloLab4(modulos.find(m => m.pagina === paginaLectura)?.id ?? "fillet"); setLaboratorioSesion4Abierto(true); };
