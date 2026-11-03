@@ -3220,7 +3220,6 @@ function AulaFormacionPage() {
                 </div>
               </div>
             </header>
-            {true && (
             <div className="grid gap-3 border-b border-[#e8edf2] p-5 sm:grid-cols-2 sm:p-6 lg:grid-cols-4">
               <button type="button" onClick={() => setPanelCursoActivo({ inscripcionId: i.id, panel: "sesiones" })} className="group rounded-2xl border border-[#c4a46a] bg-[#fffaf0] p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
                 <span className="flex items-center gap-2 text-xs font-medium text-[#647386]"><BookOpen className="size-4 text-[#a77b35]"/> Sesiones publicadas <ArrowRight className="ml-auto size-4"/></span>
@@ -3243,7 +3242,6 @@ function AulaFormacionPage() {
                 <span className="mt-1 block text-xs text-[#718096]">Biblioteca didáctica y ejemplos</span>
               </a>
             </div>
-            )}
             {panelCursoActivo?.inscripcionId === i.id && <section id={`panel-curso-${i.id}`} className="border-t border-[#e8edf2] bg-[#fbfcfd] p-5 sm:p-7">
               <div className="space-y-6">
                 {panelCursoActivo?.panel === "sesiones" && <><div id={`sesiones-curso-${i.id}`} className="scroll-mt-24"><h3 className="text-lg font-semibold text-[#1d2b3a]">Sesiones de aprendizaje</h3><p className="mt-1 text-sm text-[#718096]">Avanza paso a paso por los contenidos preparados por FADILAB.</p></div>
