@@ -2,12 +2,13 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { fmtFecha, isoDesdeDMA } from "@/lib/utils";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 const Calendar = lazy(() => import("@/components/ui/calendar").then((module) => ({ default: module.Calendar })));
 
 // Evita cargar date-fns en el árbol SSR. Este campo solo maneja fechas civiles
 // (yyyy-mm-dd), por lo que la API nativa permite conservar el mismo formato.
 function fechaDesdeISO(iso: string): Date | undefined {
-  const match = iso.match(/^(\\d{4})-(\\d{2})-(\\d{2})$/);
+  const match = iso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (!match) return undefined;
   const year = Number(match[1]);
   const month = Number(match[2]);
@@ -23,8 +24,6 @@ function isoDesdeFecha(date: Date): string {
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 }
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-
 /**
  * Campo de fecha con formato dd/mm/yyyy.
  * - Permite escribir la fecha manualmente.
