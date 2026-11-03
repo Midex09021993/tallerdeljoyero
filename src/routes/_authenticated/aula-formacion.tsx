@@ -2376,7 +2376,7 @@ function AulaFormacionPage() {
                 <p className="mt-2 truncate text-xs font-medium text-foreground">{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</p>
               </nav>
               <main className="min-h-0 flex-1 overflow-y-auto bg-card/40 px-5 py-5 sm:px-8 sm:py-6 lg:px-10">
-                <div className={lecturaAbierta?.numero === 5 ? "grid items-start gap-6 xl:grid-cols-[minmax(280px,.78fr)_minmax(0,1.22fr)]" : ""}>
+                <div className={lecturaAbierta?.numero === 5 ? "grid items-start gap-6 2xl:grid-cols-[minmax(0,.9fr)_minmax(0,1.1fr)]" : ""}>
                   <section className="min-w-0">
                     <h3 className="mb-5 max-w-4xl font-display text-2xl leading-tight sm:text-3xl">{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</h3>
                     {(seccionesLecturaActivas[paginaLectura]?.bloques ?? []).map((bloque,idx) => {
@@ -2387,7 +2387,7 @@ function AulaFormacionPage() {
                     {renderLaboratorioSesion4()}
                     {renderLaboratorioRestricciones()}
                   </section>
-                  {lecturaAbierta?.numero === 5 && <section className="min-w-0 xl:sticky xl:top-2">{renderLaboratorioSesion5()}</section>}
+                  {lecturaAbierta?.numero === 5 && <section className="min-w-0">{renderLaboratorioSesion5()}</section>}
                 </div>
                 {renderLaboratorioOsnap()}
                 {renderLaboratorioSmartTrack()}
