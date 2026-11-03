@@ -2639,9 +2639,9 @@ function AulaFormacionPage() {
                         <span className="rounded-lg bg-[#f5f7f9] px-2.5 py-1.5 capitalize">{c.estado}</span>
                       </div>
                     </div>
-                    <div className="flex shrink-0 items-center gap-2 sm:flex-col sm:items-stretch">
+                    <div className="flex shrink-0 items-center gap-2">
                       <button type="button" onClick={() => setCursoSeleccionado(c.id)} className={`inline-flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold transition sm:min-w-[132px] ${cursoActivoId === c.id ? "border border-[#d9e5ef] bg-[#f3f7fa] text-[#496782]" : "bg-[#294760] text-white hover:bg-[#203b52]"}`}>{cursoActivoId === c.id ? "Curso seleccionado" : "Administrar curso"} <span aria-hidden="true">→</span></button>
-                      <button type="button" onClick={() => { setCursoEditandoId(c.id); setTituloCursoEditado(c.titulo); }} aria-label={`Editar nombre de ${c.titulo}`} title="Editar nombre del curso" className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#dce4ec] px-3 py-2.5 text-xs font-medium text-[#60758a] transition hover:bg-[#f7f9fb]"><Pencil className="size-3.5" /><span className="sm:hidden">Editar</span></button>
+                      <button type="button" onClick={() => { setCursoEditandoId(c.id); setTituloCursoEditado(c.titulo); }} aria-label={`Editar nombre de ${c.titulo}`} title="Editar nombre del curso" className="inline-flex size-10 shrink-0 items-center justify-center rounded-xl border border-[#dce4ec] text-[#60758a] transition hover:border-[#c7d3de] hover:bg-[#f7f9fb]"><Pencil className="size-3.5" /><span className="sm:hidden">Editar</span></button>
                     </div>
                   </div>
                   {cursoEditandoId === c.id && <form onSubmit={(e) => void guardarNombreCurso(e)} className="flex flex-col gap-2 border-t border-[#edf0f3] bg-[#fbfcfd] p-4 sm:flex-row">
