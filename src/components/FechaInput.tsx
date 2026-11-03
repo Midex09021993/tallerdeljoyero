@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { format, parseISO } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { fmtFecha, isoDesdeDMA } from "@/lib/utils";
-import { Calendar } from "@/components/ui/calendar";
+const Calendar = lazy(() => import("@/components/ui/calendar").then((module) => ({ default: module.Calendar })));
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 /**
@@ -82,18 +82,20 @@ export function FechaInput({
           </button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
-          <Calendar
-            mode="single"
-            selected={fechaDate}
-            onSelect={(d) => {
-              if (d) {
-                aplicarFecha(format(d, "yyyy-MM-dd"));
-              }
-              setAbierto(false);
-            }}
-            initialFocus
-            className={cn("p-3 pointer-events-auto")}
-          />
+          <Suspense fallback={<div className="h-[280px] w-[280px]" aria-label="Cargando calendario" />}>
+            <Calendar
+              mode="single"
+              selected={fechaDate}
+              onSelect={(d) => {
+                if (d) {
+                  aplicarFecha(format(d, "yyyy-MM-dd"));
+                }
+                setAbierto(false);
+              }}
+              initialFocus
+              className={cn("p-3 pointer-events-auto")}
+            />
+          </Suspense>
         </PopoverContent>
       </Popover>
       {name ? <input type="hidden" name={name} value={iso} /> : null}
