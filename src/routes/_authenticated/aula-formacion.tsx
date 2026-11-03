@@ -3039,6 +3039,13 @@ function AulaFormacionPage() {
                     if (lecturaAbierta?.numero === 1 && paginaLectura === 4 && idx >= 6) return null;
                     return <div key={idx}><p className={`mb-5 whitespace-pre-line ${modoAulaExpandida ? "w-full max-w-[1100px] text-[17px] leading-[1.8] tracking-[0.005em] text-[#3A3A3C]" : "max-w-4xl text-[15px] leading-7 text-foreground/90"}`}>{bloque}</p></div>;
                   })}
+                {lecturaAbierta?.numero === 1 && paginaLectura === 0 && <div className="mt-7 flex w-full max-w-[1100px] flex-col items-start gap-3 rounded-2xl border border-[#E5DCCB] bg-[#FBF8F1] p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+                  <div className="max-w-2xl">
+                    <p className="text-sm font-semibold text-[#1D1D1F]">Lleva tu diseño CAD a una presentación 3D</p>
+                    <p className="mt-1 text-sm leading-6 text-[#6E6E73]">Explora materiales, metales e iluminación para visualizar tu pieza en Aurum Render.</p>
+                  </div>
+                  <a href="/aurum-render" className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-[#C4A15A] px-5 py-3 text-sm font-semibold text-[#1D1D1F] shadow-sm transition hover:bg-[#B99552] focus:outline-none focus:ring-2 focus:ring-[#B99552]/30">Ir a Aurum Render <span aria-hidden="true">↗</span></a>
+                </div>}
                 {renderLaboratorioCoordenadas()}
                 {renderLaboratorioRestricciones()}
                 {renderLaboratorioOsnap()}
