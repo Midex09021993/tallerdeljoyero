@@ -611,6 +611,13 @@ function AulaFormacionPage() {
   const [pasoIntegradorLab4, setPasoIntegradorLab4] = useState(0);
   const [laboratorioCoordenadasAbierto, setLaboratorioCoordenadasAbierto] = useState(true);
   const [referenciaPolarCoord3, setReferenciaPolarCoord3] = useState<"origen"|"ultimo">("ultimo");
+  useEffect(() => {
+    if (lecturaAbierta?.numero !== 3) return;
+    if (paginaLectura === 2) setModoCoord3("absolutas");
+    else if (paginaLectura === 3) setModoCoord3("relativas");
+    else if (paginaLectura === 4) setModoCoord3("polares");
+    setEstadoCoord3("");
+  }, [lecturaAbierta?.numero, paginaLectura]);
   const [laboratorioOsnapAbierto, setLaboratorioOsnapAbierto] = useState(false);
   const [faseOsnap, setFaseOsnap] = useState<"aprendizaje"|"practica">("aprendizaje");
   const [retoOsnap, setRetoOsnap] = useState(0);
