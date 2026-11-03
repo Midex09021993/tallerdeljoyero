@@ -2439,12 +2439,10 @@ function AulaFormacionPage() {
         <button type="button" onClick={() => setRetoNavVistaActiva(v.id)} onDoubleClick={() => {
           setRetoNavVistaMaximizada(current => current === v.id ? null : v.id);
           if (retoNavPaso === 4) {
-            setRetoNavMaxClicks(count => {
-              const next = count + 1;
-              if (next >= 2) completar("Vista maximizada y distribución restaurada correctamente.");
-              else setRetoNavMensaje("Vista maximizada. Haz doble clic otra vez en el título para restaurar las cuatro vistas.");
-              return next;
-            });
+            const next = retoNavMaxClicks + 1;
+            setRetoNavMaxClicks(next);
+            if (next >= 2) completar("Vista maximizada y distribución restaurada correctamente.");
+            else setRetoNavMensaje("Vista maximizada. Haz doble clic otra vez en el título para restaurar las cuatro vistas.");
           }
         }} className={"flex w-full items-center justify-between px-3 py-2 text-[10px] font-semibold tracking-[0.14em] " + (activa ? "bg-[#353941] text-[#E9C879]" : "bg-[#292D34] text-slate-300")}>
           <span>{v.label}</span><span className="font-normal tracking-normal text-slate-500">{v.sub}</span>
