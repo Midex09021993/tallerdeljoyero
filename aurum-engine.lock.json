@@ -6,7 +6,7 @@
     "src/lib/aurum"
   ],
   "files": {
-    ".github/workflows/quality.yml": "859ec017c449181488a8fd91e854e01ae746bf1fb6bdbebeefe07906e6cfa548",
+    ".github/workflows/quality.yml": "f461b2473a072d8ed187c0c88d7114c46742578ba2014dc7848d1591c7cfa8a8",
     "scripts/check-aurum-lock.mjs": "d8b0b1e553fbfdd7faf6522482d0460b5c9803464b9fa03d34ed3bbacd18b5c4",
     "src/components/AurumRender.tsx": "1466801328a22cc9cfcb96f85b718171e295ece6b8e1a277f46e0c2a254cabc3",
     "src/components/AurumRenderConfig.tsx": "c54846f1ebf7fb2c143be54bf686b18ada16615e546f1d8ff6d98847df76575b",
