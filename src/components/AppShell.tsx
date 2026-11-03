@@ -131,15 +131,17 @@ export function useCapacidadesMenu(sesion: ReturnType<typeof useSesion>["data"])
   const { esDueno, sedeFiltro } = useSedeFiltroDueno();
 
   return useQuery({
-    queryKey: ["menu-capacidades", esDueno, sedeFiltro, sesion?.sede?.id],
+    queryKey: ["menu-capacidades", esDueno, sedeFiltro, sesion?.sede?.id, sesion?.perfil.sede_id],
     staleTime: 60_000,
     enabled: Boolean(sesion?.esAdmin),
     queryFn: async () => {
-      const sedeObjetivo = esDueno && sedeFiltro !== TODAS_LAS_SEDES
-        ? sedeFiltro
-        : !esDueno
-          ? sesion?.sede?.id ?? null
-          : null;
+      // El menú debe seguir la misma sede que configura Gestión.
+      // En "Todas las sedes", el dueño conserva como contexto base su sede de perfil;
+      // no mezclamos capacidades de otras sedes, porque una opción desactivada aquí
+      // podría reaparecer por estar activa en otra sede.
+      const sedeObjetivo = esDueno
+        ? (sedeFiltro !== TODAS_LAS_SEDES ? sedeFiltro : sesion?.perfil.sede_id ?? null)
+        : sesion?.sede?.id ?? null;
 
       // Consulta solo las capacidades de la sede activa; el dueño en vista global conserva todas.
       const consulta = supabase
