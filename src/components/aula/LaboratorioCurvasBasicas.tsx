@@ -1,5 +1,5 @@
-import { useMemo, useState, type PointerEvent } from "react";
-import { ArrowRight, CheckCircle2, Circle, CornerDownLeft, Eraser, Grid3X3, Minus, MousePointer2, Pencil, RotateCcw, Square, Undo2, X } from "lucide-react";
+import { useState, type PointerEvent } from "react";
+import { CheckCircle2, Circle, CornerDownLeft, Eraser, Grid3X3, Minus, MousePointer2, Pencil, RotateCcw, Square, Undo2, X } from "lucide-react";
 
 type Point = { x: number; y: number };
 type Tool = "line" | "polyline" | "circle" | "rectangle";
@@ -21,6 +21,7 @@ const fmt = (n: number) => n.toFixed(0);
 export default function LaboratorioCurvasBasicas({ onClose }: Props) {
   const [tool, setTool] = useState<Tool>("line");
   const [draft, setDraft] = useState<Point[]>([]);
+  const [polylineFinished, setPolylineFinished] = useState(false);
   const [completed, setCompleted] = useState<Partial<Record<Tool, Shape>>>({});
   const [message, setMessage] = useState("Selecciona una herramienta y comienza a marcar puntos en el plano.");
   const [showGrid, setShowGrid] = useState(true);
@@ -68,7 +69,7 @@ export default function LaboratorioCurvasBasicas({ onClose }: Props) {
       setMessage("La polilínea necesita al menos cuatro vértices para completar tres tramos.");
       return;
     }
-    setMessage("Polilínea terminada. Revisa la continuidad de sus segmentos.");
+    setPolylineFinished(true);\n    setMessage("Polilínea terminada. Revisa la continuidad de sus segmentos y registra el ejercicio.");
   };
 
   const register = () => {
@@ -76,9 +77,9 @@ export default function LaboratorioCurvasBasicas({ onClose }: Props) {
       setMessage("Este ejercicio ya está registrado. Puedes reiniciarlo para practicar de nuevo.");
       return;
     }
-    const enough = tool === "line" || tool === "circle" || tool === "rectangle" ? draft.length === 2 : draft.length >= 4;
+    const enough = tool === "line" || tool === "circle" || tool === "rectangle" ? draft.length === 2 : draft.length >= 4 && polylineFinished;
     if (!enough) {
-      setMessage(tool === "polyline" ? "Añade al menos cuatro vértices y termina la polilínea." : "Completa los dos puntos requeridos antes de registrar.");
+      setMessage(tool === "polyline" ? "Añade al menos cuatro vértices y pulsa «Terminar polilínea» antes de validar." : "Completa los dos puntos requeridos antes de registrar.");
       return;
     }
     if (tool === "polyline" && draft.length < 4) return;
@@ -120,7 +121,7 @@ export default function LaboratorioCurvasBasicas({ onClose }: Props) {
     if (tool === "line" && draft.length === 2) return drawShape({ tool, points: draft });
     if (tool === "circle" && draft.length === 2) return drawShape({ tool, points: draft });
     if (tool === "rectangle" && draft.length === 2) return drawShape({ tool, points: draft });
-    if (tool === "polyline" && draft.length >= 2) return <polyline points={draft.map(p => `${p.x},${p.y}`).join(" ")} fill="none" stroke={TOOLS[1].color} strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="8 4"/>;
+    if (tool === "polyline" && draft.length >= 2) return <polyline points={draft.map(p => `${p.x},${p.y}`).join(" ")} fill="none" stroke={TOOLS[1].color} strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" strokeDasharray={polylineFinished ? undefined : "8 4"}/>;
     return null;
   };
 
