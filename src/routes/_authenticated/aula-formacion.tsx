@@ -609,7 +609,7 @@ function AulaFormacionPage() {
   const [operacionesVistasLab4, setOperacionesVistasLab4] = useState<string[]>([]);
   const [estadoIntegradorLab4, setEstadoIntegradorLab4] = useState("");
   const [pasoIntegradorLab4, setPasoIntegradorLab4] = useState(0);
-  const [laboratorioCoordenadasAbierto, setLaboratorioCoordenadasAbierto] = useState(true);
+  const [laboratorioCoordenadasAbierto, setLaboratorioCoordenadasAbierto] = useState(false);
   const [referenciaPolarCoord3, setReferenciaPolarCoord3] = useState<"origen"|"ultimo">("ultimo");
   useEffect(() => {
     if (lecturaAbierta?.numero !== 3) return;
@@ -1830,15 +1830,21 @@ function AulaFormacionPage() {
       setPuntosCoord3(v=>[...v,p]);setCerradoCoord3(false);setEstadoCoord3(`Punto: ${p.x.toFixed(2)}, ${p.y.toFixed(2)}`);
     };
     const pts=puntosCoord3.map(p=>`${ox+p.x*k},${oy-p.y*k}`).join(" ");
-    return <section className="mt-7 overflow-hidden rounded-2xl border border-gold/30 bg-background shadow-sm">
+    return !laboratorioCoordenadasAbierto ? <div className="mt-6 max-w-4xl rounded-xl border border-gold/30 bg-gradient-to-r from-gold/10 to-background p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div><p className="text-[10px] font-bold uppercase tracking-widest text-gold-deep">Laboratorio interactivo compartido · Sesión 03</p><h4 className="mt-1 text-sm font-semibold">Construcción por coordenadas</h4><p className="mt-1 text-xs text-muted-foreground">Abre el espacio de trabajo independiente para practicar sin reducir el área de lectura.</p></div>
+        <button type="button" onClick={()=>setLaboratorioCoordenadasAbierto(true)} className="shrink-0 rounded-lg bg-gold px-4 py-2.5 text-sm font-bold text-black">Abrir laboratorio <ExternalLink className="ml-1 inline size-3.5"/></button>
+      </div>
+    </div> : <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 p-2 sm:p-4">
+      <section className="flex max-h-[calc(100vh-1rem)] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-gold/40 bg-background shadow-2xl sm:max-h-[calc(100vh-2rem)]">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-gradient-to-r from-[#fbf8f0] to-background px-4 py-3 sm:px-5">
         <div><p className="text-[10px] font-bold uppercase tracking-widest text-gold-deep">FADILAB · Sesión 03 · Laboratorio continuo</p><h4 className="text-base font-semibold">Construcción por coordenadas</h4><p className="mt-0.5 text-xs text-muted-foreground">Un mismo plano para comparar los tres métodos sin salir de la lectura.</p></div>
         <div className="flex items-center gap-2">
           <button type="button" onClick={reset} className="rounded-lg border border-border px-3 py-2 text-xs"><RotateCcw className="mr-1 inline size-3.5"/> Reiniciar práctica</button>
-          <button type="button" onClick={()=>setLaboratorioCoordenadasAbierto(v=>!v)} className="rounded-lg border border-border px-3 py-2 text-xs">{laboratorioCoordenadasAbierto?"Ocultar laboratorio":"Mostrar laboratorio"}</button>
+          <button type="button" onClick={()=>setLaboratorioCoordenadasAbierto(false)} className="rounded-lg border border-border px-3 py-2 text-xs">Cerrar laboratorio <span aria-hidden="true">×</span></button>
         </div>
       </header>
-      {laboratorioCoordenadasAbierto && <div className="p-3 sm:p-4">
+      <div className="min-h-0 overflow-y-auto p-3 sm:p-4">
         <div className="mb-4 rounded-xl border border-gold/30 bg-gold/5 p-3 sm:p-4">
           <div className="flex flex-wrap items-center justify-between gap-2"><p className="text-xs font-bold uppercase tracking-wide text-gold-deep">Explicación del índice {paginaLectura+1}</p><span className="rounded-full bg-background px-2.5 py-1 text-[10px] font-semibold text-muted-foreground">{metodoActual==="absolutas"?"Método 1 de 3":metodoActual==="relativas"?"Método 2 de 3":"Método 3 de 3"}</span></div>
           <h5 className="mt-1 text-sm font-semibold">{explicacion.titulo}</h5>
@@ -1875,8 +1881,8 @@ function AulaFormacionPage() {
             <div className="rounded-xl border border-border p-3 text-xs"><p className="font-semibold">Ejercicio guiado · Rectángulo 20 × 10</p><p className="mt-1 text-muted-foreground">{modoCoord3==="absolutas"?"Introduce los vértices (20,0), (20,10), (0,10) y (0,0), siempre medidos desde el origen.":modoCoord3==="relativas"?"Desde (0,0), introduce @20,0; @0,10; @-20,0; @0,-10. Cada desplazamiento parte del punto anterior.":referenciaPolarCoord3==="origen"?"Para practicar coordenadas polares absolutas, usa distancias y ángulos medidos desde el origen. Cambia a «Desde último punto» para construir lados consecutivos.":"Desde el último punto, introduce 20 a 0°, 10 a 90°, 20 a 180° y 10 a 270°. Así se completa el rectángulo."}</p></div>
           </div>
         </div>
-      </div>}
-    </section>;
+      </div>
+    </section></div>;
   };
   const renderLaboratorioSesion5 = () => {
     if (lecturaAbierta?.numero !== 5) return null;
