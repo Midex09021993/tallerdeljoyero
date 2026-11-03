@@ -580,7 +580,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       const originalYaEnCarpeta = (archivosEnCarpeta ?? []).some((entrada) =>
         entrada.name === nombreOriginal
       );
+      // Si se abrió desde Mi Nube, storagePath identifica el 3DM original.
+      // Nunca volver a subirlo durante una actualización.
       const origenYaGuardado = Boolean(
+        archivoOriginalInfo.storagePath &&
+        (archivoOriginalInfo.storagePath === rutaOriginalEnCarpeta ||
+          archivoOriginalInfo.storagePath.startsWith(`${rutaCarpeta}/`))
+      ) || Boolean(
         destinoProyectoGuardado?.rutaCarpeta === rutaCarpeta &&
         destinoProyectoGuardado?.archivoNombre === archivoOriginalInfo.name &&
         destinoProyectoGuardado?.rutaArchivoOriginal?.startsWith(`${rutaCarpeta}/`)
@@ -621,7 +627,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
 
       const destino: AurumProjectDestination = {
         rutaCarpeta,
-        rutaArchivoOriginal: destinoProyectoGuardado?.rutaArchivoOriginal ?? rutaOriginalEnCarpeta,
+        rutaArchivoOriginal: archivoOriginalInfo.storagePath ?? destinoProyectoGuardado?.rutaArchivoOriginal ?? rutaOriginalEnCarpeta,
         nombre: carpeta,
         nombreProyecto: nombreVisibleProyecto,
         archivoNombre: archivoOriginalInfo.name,
@@ -3498,7 +3504,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         if (typeof parsed.rutaCarpeta === "string" &&
             (!parsed.archivoNombre || parsed.archivoNombre === archivoOriginalInfo.name)) {
           setDestinoProyectoGuardado(parsed.rutaCarpeta && typeof parsed.nombre === "string"
-            ? { rutaCarpeta: parsed.rutaCarpeta, nombre: parsed.nombre, nombreProyecto: parsed.nombreProyecto,
+            ? { rutaCarpeta: parsed.rutaCarpeta, rutaArchivoOriginal: parsed.rutaArchivoOriginal,
+                nombre: parsed.nombre, nombreProyecto: parsed.nombreProyecto,
                 archivoNombre: parsed.archivoNombre, archivoTamano: parsed.archivoTamano, archivoModificado: parsed.archivoModificado }
             : null);
           return;
@@ -3518,6 +3525,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         nombre: saved.nombre,
         nombreProyecto: saved.nombreProyecto,
         archivoNombre: saved.archivoNombre,
+        rutaArchivoOriginal: saved.rutaArchivoOriginal,
         archivoTamano: saved.archivoTamano,
         archivoModificado: saved.archivoModificado,
       };
