@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { listarDirectorioAlumnosFormacion } from "@/lib/aula-formacion.functions";
 import { BookOpen, Users, Plus, Upload, FileText, Download, CalendarDays, ShieldCheck, Send, Pencil, Trash2, CheckCircle2, ChevronLeft, ChevronRight, ChevronDown, ArrowRight, BookOpenCheck, FolderOpen, ClipboardCheck, Layers, Eye, Lock, Unlock, RotateCcw, Command } from "lucide-react";
 import { AppShell, Panel } from "@/components/AppShell";
+import LaboratorioCurvasNurbs from "@/components/aula/LaboratorioCurvasNurbs";
 import { useSesion } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -594,13 +595,6 @@ function AulaFormacionPage() {
   const [estadoCoord3, setEstadoCoord3] = useState("");
   const [laboratorioSesion4Abierto, setLaboratorioSesion4Abierto] = useState(false);
   const [laboratorioSesion5Abierto, setLaboratorioSesion5Abierto] = useState(false);
-  const [moduloLab5, setModuloLab5] = useState(0);
-  const [puntosLab5, setPuntosLab5] = useState(5);
-  const [gradoLab5, setGradoLab5] = useState(3);
-  const [desviacionLab5, setDesviacionLab5] = useState(2);
-  const [curvaturaLab5, setCurvaturaLab5] = useState(true);
-  const [perfilCerradoLab5, setPerfilCerradoLab5] = useState(false);
-  const [pasosIntegradorLab5, setPasosIntegradorLab5] = useState([false,false,false,false,false]);
 
   const [moduloLab4, setModuloLab4] = useState<"fillet"|"offset"|"trim"|"move"|"rotate"|"integrador">("fillet");
   const [radioLab4, setRadioLab4] = useState(2);
@@ -1858,50 +1852,12 @@ function AulaFormacionPage() {
 
   const renderLaboratorioSesion5 = () => {
     if (lecturaAbierta?.numero !== 5 || ![2,3,4,5,6,8].includes(paginaLectura)) return null;
-    const modulos = [
-      {nombre:"Curve vs InterpCrv", pagina:2},
-      {nombre:"Puntos de control", pagina:3},
-      {nombre:"Reconstrucción · Rebuild", pagina:4},
-      {nombre:"Continuidad · CurvatureGraph", pagina:5},
-      {nombre:"Limpieza del perfil", pagina:6},
-      {nombre:"Reto integrador", pagina:8}
-    ];
-    const modulo = modulos[moduloLab5] ?? modulos[0];
-    const abrir = () => { setModuloLab5(Math.max(0,modulos.findIndex(m=>m.pagina===paginaLectura))); setLaboratorioSesion5Abierto(true); };
-    if (!laboratorioSesion5Abierto) return <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5">
-      <div className="flex flex-wrap items-center justify-between gap-4"><div><p className="text-[10px] font-bold uppercase tracking-widest text-gold-deep">Recurso interactivo · Sesión 05</p><h4 className="mt-1 text-base font-semibold">Laboratorio de curvas NURBS</h4><p className="mt-1 text-sm text-muted-foreground">Explora la construcción, edición, reconstrucción y revisión de perfiles para joyería.</p></div>
-      <button type="button" onClick={abrir} className="inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-black"><ArrowRight className="size-4"/> Abrir laboratorio</button></div>
-    </section>;
-    const curva = moduloLab5===0 ? "M80 210 C150 30 280 30 360 210" : moduloLab5===2 ? `M80 210 C${150+desviacionLab5*8} ${80+puntosLab5*7} 280 ${330-desviacionLab5*8} 360 210` : "M80 210 C150 70 280 70 360 210";
-    return <div className="fixed inset-0 z-[100] overflow-hidden bg-background/95 p-2 backdrop-blur-sm sm:p-3" role="dialog" aria-modal="true" aria-label="Laboratorio de curvas NURBS, sesión 05">
-      <section className="mx-auto flex h-[calc(100dvh-1rem)] max-w-[min(96vw,1450px)] flex-col overflow-hidden rounded-2xl border border-gold/30 bg-background shadow-2xl sm:h-[calc(100dvh-1.5rem)]">
-        <header className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-4 py-3"><div><p className="text-[10px] font-bold uppercase tracking-widest text-gold-deep">FADILAB · Sesión 05</p><h3 className="font-semibold">Laboratorio de curvas NURBS</h3></div><button type="button" onClick={()=>setLaboratorioSesion5Abierto(false)} className="rounded-lg border border-border px-3 py-2 text-xs">Volver a la lectura</button></header>
-        <nav className="flex shrink-0 gap-2 overflow-x-auto border-b border-border px-3 py-2">{modulos.map((m,i)=><button key={m.pagina} type="button" onClick={()=>setModuloLab5(i)} className={`shrink-0 rounded-lg px-3 py-2 text-xs font-semibold ${moduloLab5===i?"bg-gold text-black":"border border-border text-muted-foreground"}`}>{i+1}. {m.nombre}</button>)}</nav>
-        <div className="grid min-h-0 flex-1 gap-3 overflow-y-auto p-3 lg:grid-cols-[minmax(0,1.35fr)_minmax(300px,.8fr)]">
-          <div className="flex min-h-[300px] flex-col overflow-hidden rounded-xl bg-[#17191d]">
-            <div className="flex justify-between border-b border-white/10 px-3 py-2 text-[10px] text-white/70"><span>VISTA ESQUEMÁTICA · PERFIL NURBS</span><span>Representación didáctica</span></div>
-            <svg viewBox="0 0 440 300" className="min-h-0 w-full flex-1" role="img" aria-label="Comparación esquemática de una curva NURBS y sus controles">
-              {Array.from({length:11},(_,i)=><g key={i}><line x1={20+i*40} y1="10" x2={20+i*40} y2="290" stroke="#343a43"/><line x1="10" y1={20+i*26} x2="430" y2={20+i*26} stroke="#343a43"/></g>)}
-              <path d={curva} fill="none" stroke="#e7bd62" strokeWidth="4" strokeLinecap="round"/>
-              {(moduloLab5===1||moduloLab5===2||moduloLab5===5)&&<g><polyline points={Array.from({length:puntosLab5},(_,i)=>`${80+i*(280/(puntosLab5-1))},${210-(i%2===0?90:35)}`).join(" ")} fill="none" stroke="#67d6a0" strokeWidth="2" strokeDasharray="5 5"/>{Array.from({length:puntosLab5},(_,i)=><circle key={i} cx={80+i*(280/(puntosLab5-1))} cy={210-(i%2===0?90:35)} r="5" fill="#67d6a0"/>)}</g>}
-              {moduloLab5===0&&<path d="M80 210 C150 30 280 30 360 210" fill="none" stroke="#67d6a0" strokeWidth="2" strokeDasharray="7 5"/>}
-              {moduloLab5===3&&curvaturaLab5&&<path d="M80 250 C140 240 150 70 220 85 S310 240 360 250" fill="none" stroke="#67d6a0" strokeWidth="2.5"/>}
-              {moduloLab5===4&&<g><text x="90" y="265" fill="#fff" fontSize="12">{perfilCerradoLab5?"Contorno cerrado · revisar unión":"Perfil abierto · extremos identificados"}</text><circle cx="80" cy="210" r="6" fill="#67d6a0"/><circle cx="360" cy="210" r="6" fill="#67d6a0"/></g>}
-              {moduloLab5===5&&<g><rect x="55" y="35" width="330" height="220" rx="12" fill="none" stroke="#fff" strokeDasharray="5 6"/><text x="95" y="280" fill="#fff" fontSize="12">Perfil final · versión de trabajo</text></g>}
-            </svg>
-            <p className="border-t border-white/10 px-3 py-2 text-[10px] text-white/65">Dorado: curva · Verde: controles o análisis · Esquema conceptual, no geometría CAD a escala.</p>
-          </div>
-          <aside className="flex min-h-0 flex-col gap-3 overflow-y-auto pr-1">
-            {moduloLab5===0&&<div className="space-y-3"><h4 className="font-semibold">1. Curve frente a InterpCrv</h4><p className="text-sm text-muted-foreground">Compara la curva controlada por puntos de control con una curva interpolada que pasa por los puntos marcados.</p><div className="rounded-lg border border-border p-3 text-sm leading-6"><b>Curve:</b> la curva responde a una estructura de control y no tiene que pasar por cada punto. <br/><b>InterpCrv:</b> el recorrido pasa por las posiciones indicadas.</div><p className="text-xs text-muted-foreground">En Rhino dibuja ambas sobre la misma referencia y compara la silueta, la edición y la cantidad de puntos que necesitas.</p></div>}
-            {moduloLab5===1&&<div className="space-y-3"><h4 className="font-semibold">2. Edición de puntos de control</h4><p className="text-sm text-muted-foreground">Ajusta la cantidad de controles del esquema y observa cómo se organiza la estructura de edición.</p><label className="block text-sm">Puntos de control: <b>{puntosLab5}</b><input type="range" min="4" max="9" value={puntosLab5} onChange={e=>setPuntosLab5(Number(e.target.value))} className="mt-2 w-full accent-amber-500"/></label><div className="rounded-lg border border-border p-3 text-xs leading-5">En Rhino: duplica una curva, activa PointsOn (F10), mueve un punto con desplazamientos pequeños y oculta los controles con PointsOff (F11). El esquema muestra controles ilustrativos, no la estructura matemática exacta.</div></div>}
-            {moduloLab5===2&&<div className="space-y-3"><h4 className="font-semibold">3. Reconstrucción · Rebuild</h4><p className="text-sm text-muted-foreground">Prueba cómo cambia la estructura de control. El resultado debe compararse siempre con la curva original.</p><label className="block text-sm">Cantidad de puntos: <b>{puntosLab5}</b><input type="range" min="4" max="9" value={puntosLab5} onChange={e=>setPuntosLab5(Number(e.target.value))} className="mt-2 w-full accent-amber-500"/></label><label className="block text-sm">Grado: <b>{gradoLab5}</b><input type="range" min="1" max="5" value={gradoLab5} onChange={e=>setGradoLab5(Number(e.target.value))} className="mt-2 w-full accent-amber-500"/></label><label className="block text-sm">Variación ilustrada: <b>{desviacionLab5}</b><input type="range" min="0" max="5" value={desviacionLab5} onChange={e=>setDesviacionLab5(Number(e.target.value))} className="mt-2 w-full accent-amber-500"/></label><p className="rounded-lg border border-border p-3 text-xs leading-5">En Rhino: ejecuta Rebuild sobre una copia. Cambia grado y puntos, acepta y compara con el original. No evalúes solo la apariencia: revisa desviación, extremos y facilidad de edición.</p></div>}
-            {moduloLab5===3&&<div className="space-y-3"><h4 className="font-semibold">4. Continuidad y CurvatureGraph</h4><p className="text-sm text-muted-foreground">Activa o desactiva el gráfico conceptual para observar la relación entre la curva y sus variaciones de curvatura.</p><button type="button" onClick={()=>setCurvaturaLab5(v=>!v)} className={`rounded-lg px-3 py-2 text-xs font-semibold ${curvaturaLab5?"bg-gold text-black":"border border-border"}`}>{curvaturaLab5?"Ocultar":"Mostrar"} gráfico de curvatura</button><div className="rounded-lg border border-border p-3 text-xs leading-5">G0: las curvas se encuentran. G1: comparten dirección tangente. G2: también mantienen una transición de curvatura compatible. En Rhino utiliza CurvatureGraph para inspeccionar variaciones; interpreta el gráfico junto con la silueta.</div></div>}
-            {moduloLab5===4&&<div className="space-y-3"><h4 className="font-semibold">5. Limpieza del perfil</h4><p className="text-sm text-muted-foreground">Define si el perfil debe permanecer abierto o formar un contorno cerrado.</p><button type="button" onClick={()=>setPerfilCerradoLab5(v=>!v)} className={`rounded-lg px-3 py-2 text-xs font-semibold ${perfilCerradoLab5?"bg-gold text-black":"border border-border"}`}>{perfilCerradoLab5?"Revisar como perfil abierto":"Revisar como contorno cerrado"}</button><ul className="list-disc space-y-1 pl-5 text-xs leading-5"><li>Busca segmentos duplicados o accidentales.</li><li>Comprueba extremos y posibles autointersecciones.</li><li>Verifica que la continuidad responda al diseño.</li><li>Conserva una copia original antes de limpiar.</li></ul></div>}
-            {moduloLab5===5&&<div className="space-y-3"><h4 className="font-semibold">6. Reto integrador</h4><p className="text-sm text-muted-foreground">Marca cada fase cuando la hayas realizado en Rhino. El progreso se actualiza al completar la secuencia.</p>{["Crear el perfil orgánico con Curve o InterpCrv","Editar la silueta con puntos de control","Reconstruir una copia con Rebuild y comparar","Inspeccionar la continuidad con CurvatureGraph","Limpiar y guardar las versiones del perfil"].map((p,i)=><label key={i} className="flex items-start gap-2 rounded-lg border border-border p-3 text-xs"><input type="checkbox" checked={pasosIntegradorLab5[i]} onChange={e=>setPasosIntegradorLab5(prev=>prev.map((v,j)=>j===i?e.target.checked:v))} className="mt-0.5 accent-amber-500"/><span>{p}</span></label>)}<div className="h-2 overflow-hidden rounded-full bg-muted"><div className="h-full bg-gold" style={{width:(pasosIntegradorLab5.filter(Boolean).length/5*100)+"%"}}/></div><p className="text-xs text-muted-foreground">{pasosIntegradorLab5.filter(Boolean).length} de 5 etapas completadas.</p><button type="button" onClick={()=>{setPasosIntegradorLab5([false,false,false,false,false]);setPuntosLab5(5);setGradoLab5(3);setDesviacionLab5(2);setCurvaturaLab5(true);setPerfilCerradoLab5(false);}} className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs"><RotateCcw className="size-3"/> Restablecer reto</button></div>}
-          </aside>
-        </div>
-      </section>
-    </div>;
+    const initialModule = Math.max(0, [2,3,4,5,6,8].indexOf(paginaLectura));
+    return <LaboratorioCurvasNurbs
+      key={paginaLectura}
+      initialModule={initialModule}
+      onClose={() => setLaboratorioSesion5Abierto(false)}
+    />;
   };
 
   const renderLaboratorioRestricciones = () => {
