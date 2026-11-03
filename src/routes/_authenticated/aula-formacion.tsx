@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent, type ChangeEvent 
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { listarDirectorioAlumnosFormacion } from "@/lib/aula-formacion.functions";
+import { listarDirectorioAlumnosFormacion, listarInscripcionesAlumnoFormacion } from "@/lib/aula-formacion.functions";
 import { BookOpen, Users, Plus, Upload, FileText, Download, CalendarDays, ShieldCheck, Send, Pencil, Trash2, CheckCircle2, ChevronLeft, ChevronRight, ChevronDown, ArrowRight, BookOpenCheck, FolderOpen, ClipboardCheck, Layers, Eye, Lock, Unlock, RotateCcw, Command } from "lucide-react";
 import { AppShell, Panel } from "@/components/AppShell";
 import LaboratorioCurvasNurbs from "@/components/aula/LaboratorioCurvasNurbs";
@@ -490,6 +490,7 @@ function AulaFormacionPage() {
   const [busquedaAlumno, setBusquedaAlumno] = useState("");
   const [alumnosSeleccionados, setAlumnosSeleccionados] = useState<string[]>([]);
   const listarDirectorio = useServerFn(listarDirectorioAlumnosFormacion);
+  const listarInscripcionesAlumno = useServerFn(listarInscripcionesAlumnoFormacion);
   const [numeroSesion, setNumeroSesion] = useState("1");
   const [tituloSesion, setTituloSesion] = useState("");
   const [detalleSesion, setDetalleSesion] = useState("");
@@ -919,12 +920,7 @@ function AulaFormacionPage() {
     queryFn: async () => {
       const { error: vincularError } = await (supabase as any).rpc("vincular_inscripciones_formacion");
       if (vincularError) throw vincularError;
-      const { data, error } = await (supabase as any).from("formacion_inscripciones")
-        .select("id,curso_id,email_alumno,nombre_alumno,estado,formacion_cursos:formacion_cursos!formacion_inscripciones_curso_fk(id,participante_id,titulo,descripcion,duracion_horas,estado)")
-        .eq("alumno_user_id", sesion!.user.id).in("estado", ["activo", "finalizado"])
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return (data ?? []) as Inscripcion[];
+      return await listarInscripcionesAlumno({ data: {} }) as Inscripcion[];
     },
   });
   const inscripcionesAlumno = alumnoQuery.data ?? [];
