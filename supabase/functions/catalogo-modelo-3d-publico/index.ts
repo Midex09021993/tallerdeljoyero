@@ -79,14 +79,14 @@ Deno.serve(async (req: Request) => {
         typeof candidate.ruta === "string"
       ) ?? null;
     }
-    // Sin GLB guardado, se permite usar el 3DM original como alternativa.
-    if (!file) file = original3dm ?? null;
-    if (!file) return json({ error: "Esta publicación no tiene un GLB ni un 3DM compatible para el visor 3D." }, 404);
+    // Nunca entregar el archivo maestro 3DM al visor público.
+    // La vista pública solo recibe el GLB derivado preparado para visualización.
+    if (!file) return json({ error: "Esta publicación todavía no tiene una copia GLB preparada para el visor público." }, 404);
     const ruta = String(file.ruta);
     if (!ruta || ruta.startsWith("/") || ruta.split("/").some((part) => part === "..") || ruta.includes("\\") || ruta.length > 1024) {
       return json({ error: "La ruta del modelo no es válida." }, 400);
     }
-    const { data: signed, error: signedError } = await admin.storage.from("mi-nube").createSignedUrl(ruta, 5 * 60);
+    const { data: signed, error: signedError } = await admin.storage.from("mi-nube").createSignedUrl(ruta, 60);
     if (signedError || !signed?.signedUrl) throw signedError ?? new Error("No se pudo preparar el modelo 3D.");
     return json({ ok: true, url: signed.signedUrl, nombre: clean(file.nombre, 180) });
   } catch (error) {
