@@ -55,16 +55,17 @@ Deno.serve(async (req: Request) => {
     const admin = createClient(url, serviceKey, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
-    const { data: storedObject, error: objectError } = await admin
-      .schema("storage")
-      .from("objects")
-      .select("name")
-      .eq("bucket_id", "mi-nube")
-      .eq("name", modelPath)
-      .maybeSingle();
+    const separator = modelPath.lastIndexOf("/");
+    const folderPath = separator >= 0 ? modelPath.slice(0, separator) : "";
+    const fileName = modelPath.slice(separator + 1);
+    const { data: storedObjects, error: objectError } = await admin.storage
+      .from("mi-nube")
+      .list(folderPath, { limit: 1000, search: fileName });
 
     if (objectError) throw objectError;
-    if (!storedObject) return json({ error: "No se encontró el GLB en tu Mi Nube." }, 404);
+    if (!(storedObjects ?? []).some((item) => item.name === fileName)) {
+      return json({ error: "No se encontró el GLB en tu Mi Nube." }, 404);
+    }
 
     const tokenBytes = crypto.getRandomValues(new Uint8Array(12));
     const token = Array.from(tokenBytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
