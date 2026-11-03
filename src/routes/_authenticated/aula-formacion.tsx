@@ -2392,9 +2392,9 @@ function AulaFormacionPage() {
                     <div className="relative max-w-3xl">
                       <div className="inline-flex items-center gap-2 rounded-full border border-gold/25 bg-[#edf3f8] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#a77b35]"><BookOpen className="size-3.5"/> Aula de formación · FADILAB</div>
                       <h1 className="mt-5 font-display text-2xl leading-tight text-foreground sm:text-3xl">{curso?.titulo ?? "Curso de formación"}</h1>
-                      <p className="mt-3 max-w-2xl text-sm leading-7 text-[#718096]">{curso?.descripcion || "Aquí encontrarás tus sesiones, lecturas y recursos de aprendizaje."}</p>
+                      <p className="mt-3 max-w-2xl text-sm leading-7 text-[#718096]">{curso?.descripcion || "Materiales y actividades de tu formación."}</p>
                       <div className="mt-6 flex flex-wrap items-center gap-3">
-                        <span className="inline-flex items-center gap-2 rounded-xl border border-[#e0e7ef] bg-background/80 px-3 py-2 text-xs font-medium"><CalendarDays className="size-4 text-[#a77b35]"/>{curso?.duracion_horas ?? 0} horas académicas</span>
+                        <span className="inline-flex items-center gap-2 rounded-xl border border-[#e0e7ef] bg-background/80 px-3 py-2 text-xs font-medium"><CalendarDays className="size-4 text-[#a77b35]"/>{curso?.duracion_horas ?? "—"} horas académicas</span>
                         <span className="inline-flex items-center gap-2 rounded-xl border border-[#e0e7ef] bg-background/80 px-3 py-2 text-xs font-medium"><ShieldCheck className="size-4 text-[#a77b35]"/> Inscripción activa</span>
                         <span className="inline-flex items-center gap-2 rounded-xl border border-[#e0e7ef] bg-background/80 px-3 py-2 text-xs font-medium"><Users className="size-4 text-[#a77b35]"/> Formación FADILAB</span>
                       </div>
