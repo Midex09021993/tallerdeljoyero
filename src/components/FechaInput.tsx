@@ -33,6 +33,11 @@ export function FechaInput({
   const [texto, setTexto] = useState(() => fmtFecha(value ?? defaultValue ?? "") ?? "");
   const [iso, setIso] = useState(value ?? defaultValue ?? "");
   const [abierto, setAbierto] = useState(false);
+  const [calendarDisponible, setCalendarDisponible] = useState(false);
+
+  useEffect(() => {
+    setCalendarDisponible(true);
+  }, []);
 
   useEffect(() => {
     if (controlado) {
@@ -82,7 +87,7 @@ export function FechaInput({
           </button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
-          <Suspense fallback={<div className="h-[280px] w-[280px]" aria-label="Cargando calendario" />}>
+          {calendarDisponible ? <Suspense fallback={<div className="h-[280px] w-[280px]" aria-label="Cargando calendario" />}>
             <Calendar
               mode="single"
               selected={fechaDate}
@@ -95,7 +100,7 @@ export function FechaInput({
               initialFocus
               className={cn("p-3 pointer-events-auto")}
             />
-          </Suspense>
+          </Suspense> : <div className="h-[280px] w-[280px]" aria-label="Cargando calendario" />}
         </PopoverContent>
       </Popover>
       {name ? <input type="hidden" name={name} value={iso} /> : null}
