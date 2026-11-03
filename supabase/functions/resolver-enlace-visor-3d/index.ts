@@ -44,26 +44,23 @@ Deno.serve(async (req: Request) => {
     }
 
     const modelPath = typeof enlace.modelo_ruta === "string" ? enlace.modelo_ruta : "";
+    const safePath = Boolean(modelPath) &&
+      !modelPath.startsWith("/") &&
+      !modelPath.includes("\\") &&
+      modelPath.split("/").every((part) => part && part !== "." && part !== "..") &&
+      modelPath.length <= 1024 &&
+      modelPath.split("/")[1] === enlace.propietario_id &&
+      /\.glb$/i.test(modelPath);
 
-    if (modelPath) {
-      const safePath = !modelPath.startsWith("/") &&
-        !modelPath.includes("\\") &&
-        modelPath.split("/").every((part) => part && part !== "." && part !== "..") &&
-        modelPath.length <= 1024 &&
-        modelPath.split("/")[1] === enlace.propietario_id;
-
-      if (!safePath) return json({ error: "La ruta del modelo no es válida." }, 400);
-
-      const { data: signed, error: signedError } = await admin.storage
-        .from("mi-nube")
-        .createSignedUrl(modelPath, 5 * 60);
-      if (signedError || !signed?.signedUrl) throw signedError ?? new Error("No se pudo preparar el modelo 3D.");
-      modelUrl = signed.signedUrl;
+    if (!safePath) {
+      return json({ error: "El modelo público no está disponible. Genera un enlace nuevo desde Mi Nube." }, 404);
     }
 
-    if (!modelUrl || !modelUrl.startsWith("https://")) {
-      return json({ error: "El modelo no está disponible." }, 404);
-    }
+    const { data: signed, error: signedError } = await admin.storage
+      .from("mi-nube")
+      .createSignedUrl(modelPath, 60);
+    if (signedError || !signed?.signedUrl) throw signedError ?? new Error("No se pudo preparar el modelo 3D.");
+    const modelUrl = signed.signedUrl;
 
     return json({
       ok: true,
