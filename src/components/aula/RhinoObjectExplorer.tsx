@@ -119,7 +119,11 @@ export default function RhinoObjectExplorer({ visible, materials }: Props) {
     setError("");
     fetch(url)
       .then((response) => { if (!response.ok) throw new Error("No se pudo descargar el archivo 3DM."); return response.arrayBuffer(); })
-      .then((buffer) => loader.parseAsync(buffer))
+      .then((buffer) => new Promise<Object3D>((resolve, reject) => {
+        // Use the callback parser to avoid Loader.parseAsync internals when the
+        // app's bundled Three.js Loader and addon implementations are out of sync.
+        loader.parse(buffer, resolve, reject);
+      }))
       .then((model) => {
         if (disposed) return;
         model.rotation.x = -Math.PI / 2;
