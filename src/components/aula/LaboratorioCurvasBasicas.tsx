@@ -31,11 +31,6 @@ export default function LaboratorioCurvasBasicas({ onClose }: Props) {
   const doneCount = Object.keys(completed).length;
   const currentShape = completed[tool];
 
-  const preview = useMemo(() => {
-    if (tool === "line" && draft.length >= 2) return null;
-    return draft;
-  }, [draft, tool]);
-
   const toPoint = (event: PointerEvent<SVGSVGElement>): Point => {
     const svg = event.currentTarget;
     const matrix = svg.getScreenCTM();
