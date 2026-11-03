@@ -347,7 +347,15 @@ export async function parseAurumInput(file: File, ext: string, fallbackMaterial:
   }
   if (ext === "obj") { const { OBJLoader } = await import("three/examples/jsm/loaders/OBJLoader.js"); return new OBJLoader().parse(new TextDecoder().decode(buffer)); }
   if (ext === "fbx") { const { FBXLoader } = await import("three/examples/jsm/loaders/FBXLoader.js"); return new FBXLoader().parse(buffer, ""); }
-  if (ext === "glb") {\n    const [{ GLTFLoader }, dracoLoader] = await Promise.all([\n      import("three/examples/jsm/loaders/GLTFLoader.js"),\n      getAurumDracoLoader(),\n    ]);\n    const loader = new GLTFLoader();\n    loader.setDRACOLoader(dracoLoader);\n    return (await loader.parseAsync(buffer, "")).scene;\n  }
+  if (ext === "glb") {
+    const [{ GLTFLoader }, dracoLoader] = await Promise.all([
+      import("three/examples/jsm/loaders/GLTFLoader.js"),
+      getAurumDracoLoader(),
+    ]);
+    const loader = new GLTFLoader();
+    loader.setDRACOLoader(dracoLoader);
+    return (await loader.parseAsync(buffer, "")).scene;
+  }
   if (ext === "3dm") {
     const { Rhino3dmLoader } = await import("three/examples/jsm/loaders/3DMLoader.js");
     auditStep("rhino-loader-module-ready");
