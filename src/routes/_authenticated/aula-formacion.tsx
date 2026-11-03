@@ -3273,7 +3273,7 @@ function AulaFormacionPage() {
               <h3 id={`materiales-curso-${i.id}`} className="scroll-mt-24 text-lg font-semibold text-[#1d2b3a]">Material general del curso</h3>
               {(materialesAlumnoQuery.data ?? []).filter(m => m.curso_id === i.curso_id && !m.sesion_id).length === 0 ? <p className="text-xs text-[#718096]">No hay materiales generales publicados.</p> : (materialesAlumnoQuery.data ?? []).filter(m => m.curso_id === i.curso_id && !m.sesion_id).map(m => <div key={m.id} className="flex items-center justify-between gap-3 border-t border-[#e7edf2] py-3"><div className="flex min-w-0 items-center gap-2"><FileText className="size-4 shrink-0 text-amber-300"/><span className="min-w-0"><span className="block truncate text-sm font-medium">{m.titulo}</span><span className="text-xs text-[#718096]">{m.nombre_archivo} · {(m.tamano_bytes/1024/1024).toFixed(1)} MB</span></span></div><button type="button" onClick={() => void descargarMaterial(m)} className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-[#cbd9e5] bg-white px-3 py-2 text-xs font-semibold text-[#294760] hover:bg-[#f3f7fa]"><Download className="size-3.5"/> Descargar</button></div>)}
             </div>
-          </div></article>)}
+          </article>)}
         </>
       )}
       {examenPendienteInicio && <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true" aria-labelledby="confirmar-examen-titulo">
