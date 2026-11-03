@@ -1,9 +1,28 @@
 import { lazy, Suspense, useEffect, useState } from "react";
-import { format, parseISO } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { fmtFecha, isoDesdeDMA } from "@/lib/utils";
 const Calendar = lazy(() => import("@/components/ui/calendar").then((module) => ({ default: module.Calendar })));
+
+// Evita cargar date-fns en el árbol SSR. Este campo solo maneja fechas civiles
+// (yyyy-mm-dd), por lo que la API nativa permite conservar el mismo formato.
+function fechaDesdeISO(iso: string): Date | undefined {
+  const match = iso.match(/^(\\d{4})-(\\d{2})-(\\d{2})$/);
+  if (!match) return undefined;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const date = new Date(year, month - 1, day);
+  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return undefined;
+  return date;
+}
+
+function isoDesdeFecha(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 /**
@@ -63,7 +82,7 @@ export function FechaInput({
     onChangeIso?.(nuevoIso);
   };
 
-  const fechaDate = iso ? parseISO(iso) : undefined;
+  const fechaDate = iso ? fechaDesdeISO(iso) : undefined;
 
   return (
     <div className={cn("relative flex items-center", className)}>
@@ -93,7 +112,7 @@ export function FechaInput({
               selected={fechaDate}
               onSelect={(d) => {
                 if (d) {
-                  aplicarFecha(format(d, "yyyy-MM-dd"));
+                  aplicarFecha(isoDesdeFecha(d));
                 }
                 setAbierto(false);
               }}
