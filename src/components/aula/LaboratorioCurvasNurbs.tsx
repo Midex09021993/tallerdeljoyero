@@ -1,87 +1,153 @@
 import { useMemo, useState, type PointerEvent } from "react";
-import { ArrowLeft, ArrowRight, CheckCircle2, CircleHelp, RotateCcw, Target, WandSparkles } from "lucide-react";
+import { Activity, ArrowLeft, ArrowRight, CheckCircle2, CircleHelp, Eye, EyeOff, Gauge, Layers3, Move, RotateCcw, Ruler, ScanLine, Sparkles, Target, WandSparkles } from "lucide-react";
 
 type Point = { x: number; y: number };
 type Props = { initialModule?: number; onClose: () => void };
 
-const INITIAL: Point[] = [
-  { x: 95, y: 260 }, { x: 175, y: 85 }, { x: 300, y: 95 }, { x: 405, y: 260 },
+const ORIGINAL: Point[] = [
+  { x: 58, y: 250 }, { x: 112, y: 94 }, { x: 190, y: 72 },
+  { x: 272, y: 190 }, { x: 350, y: 240 }, { x: 432, y: 104 }, { x: 480, y: 248 },
+];
+const MODULES = [
+  { title: "Curve vs InterpCrv", short: "Construcción", icon: Activity, goal: "Distingue una curva gobernada por controles de otra que interpola posiciones definidas." },
+  { title: "Puntos de control", short: "Edición", icon: Move, goal: "Modifica la silueta moviendo controles y observa cómo se distribuye su influencia." },
+  { title: "Rebuild Studio", short: "Grado y puntos", icon: ScanLine, goal: "Reconstruye la curva cambiando grado y número de controles sin perder de vista la desviación." },
+  { title: "Continuidad", short: "G0 · G1 · G2", icon: Activity, goal: "Interpreta posición, tangencia y curvatura en una transición de perfil." },
+  { title: "Curve Cleanup", short: "Diagnóstico", icon: Layers3, goal: "Identifica perfiles abiertos, cruces y puntos innecesarios antes de construir superficies." },
+  { title: "Reto de joyería", short: "Integración", icon: Sparkles, goal: "Aplica las decisiones anteriores al diseño de un perfil orgánico para un colgante." },
 ];
 
-function catmullRom(points: Point[]) {
-  if (points.length < 2) return "";
-  let d = `M ${points[0]!.x} ${points[0]!.y}`;
-  for (let i = 0; i < points.length - 1; i++) {
-    const p0 = points[Math.max(0, i - 1)]!;
-    const p1 = points[i]!;
-    const p2 = points[i + 1]!;
-    const p3 = points[Math.min(points.length - 1, i + 2)]!;
-    const c1 = { x: p1.x + (p2.x - p0.x) / 6, y: p1.y + (p2.y - p0.y) / 6 };
-    const c2 = { x: p2.x - (p3.x - p1.x) / 6, y: p2.y - (p3.y - p1.y) / 6 };
-    d += ` C ${c1.x} ${c1.y}, ${c2.x} ${c2.y}, ${p2.x} ${p2.y}`;
-  }
-  return d;
+function knots(count: number, degree: number) {
+  const n = count - 1, m = n + degree + 1;
+  return Array.from({ length: m + 1 }, (_, i) => i <= degree ? 0 : i >= m - degree ? 1 : (i - degree) / (m - 2 * degree));
 }
+function basis(i: number, p: number, u: number, k: number[]): number {
+  if (p === 0) return (k[i]! <= u && u < k[i + 1]!) || (u === 1 && k[i + 1] === 1 && k[i] < 1) ? 1 : 0;
+  const leftDen = k[i + p]! - k[i]!;
+  const rightDen = k[i + p + 1]! - k[i + 1]!;
+  const left = leftDen ? ((u - k[i]!) / leftDen) * basis(i, p - 1, u, k) : 0;
+  const right = rightDen ? ((k[i + p + 1]! - u) / rightDen) * basis(i + 1, p - 1, u, k) : 0;
+  return left + right;
+}
+function nurbs(points: Point[], degree: number, weights: number[] = []) {
+  if (points.length < 2) return points;
+  const p = Math.max(1, Math.min(degree, points.length - 1));
+  const k = knots(points.length, p);
+  return Array.from({ length: 181 }, (_, step) => {
+    const u = step / 180;
+    let x = 0, y = 0, den = 0;
+    points.forEach((pt, i) => {
+      const w = weights[i] ?? 1, b = basis(i, p, u, k) * w;
+      x += pt.x * b; y += pt.y * b; den += b;
+    });
+    return { x: den ? x / den : points[0]!.x, y: den ? y / den : points[0]!.y };
+  });
+}
+function interp(points: Point[]) {
+  if (points.length < 2) return points;
+  const out: Point[] = [];
+  for (let i = 0; i < points.length - 1; i++) {
+    const a = points[Math.max(0, i - 1)]!, b = points[i]!, c = points[i + 1]!, d = points[Math.min(points.length - 1, i + 2)]!;
+    for (let j = 0; j < 30; j++) {
+      const t = j / 30, t2 = t * t, t3 = t2 * t;
+      out.push({ x: .5 * ((2*b.x)+(-a.x+c.x)*t+(2*a.x-5*b.x+4*c.x-d.x)*t2+(-a.x+3*b.x-3*c.x+d.x)*t3), y: .5 * ((2*b.y)+(-a.y+c.y)*t+(2*a.y-5*b.y+4*c.y-d.y)*t2+(-a.y+3*b.y-3*c.y+d.y)*t3) });
+    }
+  }
+  out.push(points[points.length - 1]!);
+  return out;
+}
+function pathOf(points: Point[]) { return points.map((p, i) => `${i ? "L" : "M"} ${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join(" "); }
+function distance(a: Point, b: Point) { return Math.hypot(a.x - b.x, a.y - b.y); }
 
 export default function LaboratorioCurvasNurbs({ initialModule = 0, onClose }: Props) {
   const [started, setStarted] = useState(false);
-  const [mode, setMode] = useState<"control" | "interpolada">("control");
-  const [points, setPoints] = useState<Point[]>(INITIAL);
+  const [module, setModule] = useState(Math.max(0, Math.min(5, initialModule)));
+  const [points, setPoints] = useState<Point[]>(ORIGINAL);
   const [active, setActive] = useState<number | null>(null);
+  const [degree, setDegree] = useState(3);
+  const [controlCount, setControlCount] = useState(7);
+  const [curveMode, setCurveMode] = useState<"nurbs" | "interp">("nurbs");
   const [showPolygon, setShowPolygon] = useState(true);
-  const [answer, setAnswer] = useState<string | null>(null);
-  const [checked, setChecked] = useState(false);
-  const [completed, setCompleted] = useState(false);
+  const [showComb, setShowComb] = useState(true);
   const [showOriginal, setShowOriginal] = useState(true);
-  const [task, setTask] = useState(Math.max(0, Math.min(2, initialModule)));
-  const path = useMemo(() => mode === "control"
-    ? `M ${points[0]!.x} ${points[0]!.y} C ${points[1]!.x} ${points[1]!.y}, ${points[2]!.x} ${points[2]!.y}, ${points[3]!.x} ${points[3]!.y}`
-    : catmullRom(points), [mode, points]);
+  const [weights, setWeights] = useState<number[]>(Array(7).fill(1));
+  const [answer, setAnswer] = useState("");
+  const [checked, setChecked] = useState(false);
+  const [done, setDone] = useState<number[]>([]);
+  const [cleanupMode, setCleanupMode] = useState<"clean" | "open" | "cross">("open");
+  const currentDegree = Math.min(degree, points.length - 1);
+  const nurbsPoints = useMemo(() => nurbs(points, currentDegree, weights), [points, currentDegree, weights]);
+  const renderedPoints = useMemo(() => curveMode === "nurbs" ? nurbsPoints : interp(points), [curveMode, nurbsPoints, points]);
+  const originalPath = useMemo(() => pathOf(nurbs(ORIGINAL, 3)), []);
+  const curvePath = useMemo(() => pathOf(renderedPoints), [renderedPoints]);
   const movePoint = (event: PointerEvent<SVGSVGElement>) => {
     if (active === null) return;
     const rect = event.currentTarget.getBoundingClientRect();
-    const x = Math.max(45, Math.min(455, ((event.clientX - rect.left) / rect.width) * 520));
-    const y = Math.max(35, Math.min(325, ((event.clientY - rect.top) / rect.height) * 360));
-    setPoints(prev => prev.map((p, i) => i === active ? { x, y } : p));
+    const x = Math.max(25, Math.min(495, ((event.clientX - rect.left) / rect.width) * 520));
+    const y = Math.max(25, Math.min(315, ((event.clientY - rect.top) / rect.height) * 340));
+    setPoints(prev => prev.map((pt, i) => i === active ? { x, y } : pt));
   };
-  const reset = () => { setPoints(INITIAL); setMode("control"); setAnswer(null); setChecked(false); setCompleted(false); setShowOriginal(true); setTask(0); };
-  const tasks = [
-    { title: "Modifica la silueta sin perder el control", detail: "Arrastra el segundo o tercer punto de control y observa cómo cambia la curva. Los puntos de control orientan la forma, pero la curva no tiene que pasar por ellos.", target: "point" },
-    { title: "Compara los dos métodos de construcción", detail: "Cambia entre Curva por puntos de control e Interpolación. Observa qué sucede con los puntos marcados.", target: "compare" },
-    { title: "Decide qué método conviene", detail: "Responde según el comportamiento geométrico que acabas de observar.", target: "quiz" },
-  ];
-  const advance = () => { setTask(v => Math.min(2, v + 1)); setAnswer(null); setChecked(false); };
-  if (!started) return <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5 sm:p-6">
-    <div className="flex flex-wrap items-center justify-between gap-4"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-gold-deep">AURUM LAB · Sesión 05 · Prototipo 01</p><h4 className="mt-1 text-lg font-semibold">Estudio de curvas · Curve vs InterpCrv</h4><p className="mt-1 max-w-2xl text-sm text-muted-foreground">Construye, manipula y compara perfiles mediante una mesa de trabajo vectorial interactiva.</p><p className="mt-2 text-xs text-muted-foreground">3 desafíos · manipulación directa · comprobación técnica</p></div><button type="button" onClick={() => setStarted(true)} className="inline-flex items-center gap-2 rounded-xl bg-gold px-5 py-3 text-sm font-semibold text-black shadow-sm hover:brightness-105"><WandSparkles className="size-4"/> Iniciar estudio <ArrowRight className="size-4"/></button></div>
+  const reset = () => { setPoints(ORIGINAL); setDegree(3); setControlCount(7); setCurveMode("nurbs"); setWeights(Array(7).fill(1)); setAnswer(""); setChecked(false); setShowOriginal(true); };
+  const markDone = () => setDone(prev => prev.includes(module) ? prev : [...prev, module]);
+  const next = () => { markDone(); setModule(v => Math.min(5, v + 1)); setAnswer(""); setChecked(false); };
+  const curveLength = renderedPoints.slice(1).reduce((sum, p, i) => sum + distance(p, renderedPoints[i]!), 0);
+  const maxDeviation = Math.max(...renderedPoints.map((p, i) => distance(p, nurbsPoints[Math.min(nurbsPoints.length - 1, Math.round(i * (nurbsPoints.length - 1) / Math.max(1, renderedPoints.length - 1)))]!)));
+  const controlPoints = points.slice(0, controlCount);
+  const comb = renderedPoints.filter((_, i) => i % 8 === 0 && i > 0 && i < renderedPoints.length - 1);
+  if (!started) return <section className="mt-7 overflow-hidden rounded-2xl border border-[#b79558]/40 bg-gradient-to-br from-[#211b11] via-[#151b22] to-[#10151b] p-5 text-white sm:p-7">
+    <div className="flex flex-wrap items-center justify-between gap-5"><div className="max-w-2xl"><p className="text-[10px] font-bold uppercase tracking-[.22em] text-amber-300">AURUM LAB · Sesión 05 · Laboratorio profesional</p><h3 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">NURBS STUDIO</h3><p className="mt-2 text-sm leading-6 text-slate-300">Una mesa de trabajo interactiva para construir, editar, reconstruir y diagnosticar perfiles de joyería. Seis módulos, geometría manipulable y retos guiados.</p><div className="mt-4 flex flex-wrap gap-2 text-[11px] text-slate-300"><span className="rounded-full border border-white/15 px-3 py-1.5">6 módulos prácticos</span><span className="rounded-full border border-white/15 px-3 py-1.5">Curvas NURBS racionales</span><span className="rounded-full border border-white/15 px-3 py-1.5">Rhino 7 aplicado</span></div></div><button type="button" onClick={() => setStarted(true)} className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-b from-[#f3d28b] to-[#bd9143] px-5 py-3 text-sm font-bold text-[#21180a] shadow-lg shadow-black/30 hover:brightness-105"><WandSparkles className="size-4"/> Abrir NURBS Studio <ArrowRight className="size-4"/></button></div>
   </section>;
-  return <div className="fixed inset-0 z-[120] overflow-y-auto bg-[#0d1117] text-slate-100">
-    <header className="sticky top-0 z-20 border-b border-white/10 bg-[#111820]/95 px-4 py-3 backdrop-blur">
-      <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[.2em] text-amber-400">AURUM LAB / GEOMETRY STUDIO</p><h2 className="text-base font-semibold sm:text-lg">Estudio de curvas NURBS</h2><p className="text-xs text-slate-400">Sesión 05 · Desafío {task + 1} de 3</p></div><div className="flex items-center gap-2"><button onClick={reset} className="rounded-lg border border-white/15 px-3 py-2 text-xs hover:bg-white/5"><RotateCcw className="mr-1 inline size-3.5"/> Reiniciar</button><button onClick={onClose} className="rounded-lg border border-white/15 px-3 py-2 text-xs hover:bg-white/5">Volver a lectura</button></div></div>
-      <div className="mx-auto mt-3 h-1 max-w-[1600px] overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-amber-400 transition-all" style={{width:`${(task + (completed ? 1 : 0)) / 3 * 100}%`}}/></div>
+  return <div className="fixed inset-0 z-[120] overflow-y-auto bg-[#090d12] text-slate-100">
+    <header className="sticky top-0 z-30 border-b border-white/10 bg-[#0e141b]/95 px-3 py-3 backdrop-blur-xl sm:px-5">
+      <div className="mx-auto flex max-w-[1700px] flex-wrap items-center justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[.2em] text-amber-300">AURUM LAB / NURBS STUDIO</p><h2 className="text-lg font-semibold sm:text-xl">Curvas NURBS avanzadas</h2><p className="text-xs text-slate-400">Sesión 05 · {MODULES[module]!.title}</p></div><div className="flex items-center gap-2"><span className="hidden rounded-lg border border-white/10 px-3 py-2 text-xs text-slate-300 sm:inline-flex">{done.length}/6 módulos completados</span><button onClick={reset} className="rounded-lg border border-white/15 px-3 py-2 text-xs hover:bg-white/5"><RotateCcw className="mr-1 inline size-3.5"/> Reiniciar</button><button onClick={onClose} className="rounded-lg border border-white/15 px-3 py-2 text-xs hover:bg-white/5">Cerrar laboratorio</button></div></div>
+      <div className="mx-auto mt-3 h-1 max-w-[1700px] overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-gradient-to-r from-amber-300 to-yellow-600 transition-all" style={{ width: `${done.length / 6 * 100}%` }}/></div>
     </header>
-    <main className="mx-auto grid max-w-[1600px] gap-4 p-3 lg:grid-cols-[minmax(0,1.55fr)_minmax(340px,.75fr)] lg:p-5">
-      <section className="overflow-hidden rounded-2xl border border-white/10 bg-[#151c24] shadow-2xl">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 px-4 py-3"><div><p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Viewport · plano XY</p><p className="text-sm font-medium">Perfil orgánico de referencia</p></div><div className="flex gap-2"><button onClick={() => setMode("control")} className={`rounded-lg px-3 py-2 text-xs font-semibold ${mode==="control"?"bg-amber-400 text-black":"border border-white/15 text-slate-300"}`}>Curve</button><button onClick={() => setMode("interpolada")} className={`rounded-lg px-3 py-2 text-xs font-semibold ${mode==="interpolada"?"bg-amber-400 text-black":"border border-white/15 text-slate-300"}`}>InterpCrv</button></div></div>
-        <div className="p-2 sm:p-4"><svg viewBox="0 0 520 360" className="h-[min(58vh,620px)] w-full touch-none rounded-xl bg-[#10151b]" onPointerMove={movePoint} onPointerUp={() => setActive(null)} onPointerCancel={() => setActive(null)} role="img" aria-label="Mesa de trabajo interactiva de curvas">
-          {Array.from({length:14},(_,i)=><g key={i}><line x1={20+i*38} y1="12" x2={20+i*38} y2="348" stroke="#29333e" strokeWidth=".8"/><line x1="12" y1={15+i*25} x2="508" y2={15+i*25} stroke="#29333e" strokeWidth=".8"/></g>)}
-          <line x1="260" y1="12" x2="260" y2="348" stroke="#52606d"/><line x1="12" y1="180" x2="508" y2="180" stroke="#52606d"/>
-          {showOriginal && <path d={`M ${INITIAL[0]!.x} ${INITIAL[0]!.y} C ${INITIAL[1]!.x} ${INITIAL[1]!.y}, ${INITIAL[2]!.x} ${INITIAL[2]!.y}, ${INITIAL[3]!.x} ${INITIAL[3]!.y}`} fill="none" stroke="#7b8794" strokeWidth="2" strokeDasharray="7 7" opacity=".65"/>}
-          {showPolygon && <polyline points={points.map(p=>`${p.x},${p.y}`).join(" ")} fill="none" stroke="#3dd6a0" strokeWidth="1.6" strokeDasharray="5 5"/>}
-          <path d={path} fill="none" stroke="#efbd59" strokeWidth="4" strokeLinecap="round"/>
-          {points.map((p,i)=><g key={i} onPointerDown={e=>{e.currentTarget.ownerSVGElement?.setPointerCapture(e.pointerId);setActive(i);}} className="cursor-grab active:cursor-grabbing"><circle cx={p.x} cy={p.y} r="12" fill="#3dd6a0" opacity=".14"/><circle cx={p.x} cy={p.y} r="5.5" fill="#3dd6a0" stroke="#08130f" strokeWidth="2"/><text x={p.x+9} y={p.y-10} fill="#d9e4ec" fontSize="10">P{i+1}</text></g>)}
-        </svg></div>
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 px-4 py-3 text-[11px] text-slate-400"><div className="flex flex-wrap gap-4"><span><i className="mr-1 inline-block size-2 rounded-full bg-amber-400"/> Curva</span><span><i className="mr-1 inline-block size-2 rounded-full bg-emerald-400"/> Puntos / polígono de control</span><span><i className="mr-1 inline-block size-2 rounded-full bg-slate-500"/> Referencia original</span></div><button onClick={()=>setShowPolygon(v=>!v)} className="rounded-md border border-white/15 px-3 py-1.5 hover:bg-white/5">{showPolygon?"Ocultar":"Mostrar"} polígono</button></div>
-      </section>
-      <aside className="flex flex-col gap-4">
-        <section className="rounded-2xl border border-white/10 bg-[#151c24] p-4"><div className="flex items-center justify-between"><p className="text-[10px] font-bold uppercase tracking-widest text-amber-400">Desafío {task+1}</p><Target className="size-4 text-amber-400"/></div><h3 className="mt-2 text-lg font-semibold">{tasks[task]!.title}</h3><p className="mt-2 text-sm leading-6 text-slate-300">{tasks[task]!.detail}</p>
-          {task===0 && <div className="mt-4 rounded-xl border border-white/10 bg-black/20 p-3"><p className="text-xs font-semibold text-slate-200">Instrucción de trabajo</p><p className="mt-1 text-xs leading-5 text-slate-400">Arrastra P2 o P3 dentro del viewport. Activa y desactiva el polígono para comprender la relación entre los controles y la curva.</p><button onClick={()=>setCompleted(true)} className="mt-3 w-full rounded-lg bg-amber-400 px-3 py-2.5 text-sm font-semibold text-black">He comprendido la edición</button></div>}
-          {task===1 && <div className="mt-4 space-y-3"><div className="rounded-xl border border-white/10 bg-black/20 p-3 text-xs leading-5 text-slate-300">{mode==="control"?"En Curve, los puntos son controles: la curva responde a su posición y generalmente no pasa por ellos.":"En InterpCrv, la curva pasa por las ubicaciones indicadas. La forma resultante depende de la interpolación y parametrización."}</div><button onClick={()=>setShowOriginal(v=>!v)} className="w-full rounded-lg border border-white/15 px-3 py-2 text-xs hover:bg-white/5">{showOriginal?"Ocultar":"Mostrar"} curva original de referencia</button><button onClick={()=>setCompleted(true)} className="w-full rounded-lg bg-amber-400 px-3 py-2.5 text-sm font-semibold text-black">He comparado ambos métodos</button></div>}
-          {task===2 && <div className="mt-4 space-y-3"><p className="text-xs font-semibold text-slate-200">¿Qué afirmación es correcta?</p>{[{v:"a",t:"Curve pasa por todos los puntos marcados; InterpCrv los usa solo como controles."},{v:"b",t:"Curve usa puntos de control; InterpCrv genera una curva que pasa por los puntos indicados."},{v:"c",t:"Ambos comandos generan siempre la misma curva."}].map(o=><button key={o.v} onClick={()=>{setAnswer(o.v);setChecked(false);}} className={`block w-full rounded-xl border p-3 text-left text-xs leading-5 ${answer===o.v?"border-amber-400 bg-amber-400/10":"border-white/10 hover:border-white/30"}`}>{o.t}</button>)}<button disabled={!answer} onClick={()=>setChecked(true)} className="w-full rounded-lg bg-amber-400 px-3 py-2.5 text-sm font-semibold text-black disabled:opacity-40">Comprobar respuesta</button>{checked && <div className={`rounded-lg p-3 text-xs leading-5 ${answer==="b"?"bg-emerald-400/10 text-emerald-200":"bg-rose-400/10 text-rose-200"}`}>{answer==="b"?"Correcto. Has distinguido los puntos de control de los puntos de interpolación.":"Todavía no. Revisa qué relación tiene la curva con los puntos que seleccionas y vuelve a intentarlo."}</div>}</div>}
+    <main className="mx-auto max-w-[1700px] space-y-4 p-3 sm:p-5">
+      <nav className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">{MODULES.map((item, i) => { const Icon = item.icon; return <button key={item.title} onClick={() => { setModule(i); setAnswer(""); setChecked(false); }} className={`flex min-h-[76px] items-center gap-3 rounded-xl border p-3 text-left transition ${module === i ? "border-amber-300/80 bg-gradient-to-br from-[#4a3718] to-[#20242a] shadow-lg shadow-amber-950/20" : "border-white/10 bg-[#131a22] hover:border-white/25"}`}><span className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${module === i ? "bg-amber-300 text-[#201607]" : "bg-white/5 text-slate-300"}`}>{done.includes(i) ? <CheckCircle2 className="size-5"/> : <Icon className="size-5"/>}</span><span><span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">0{i + 1} · {item.short}</span><span className="mt-1 block text-xs font-semibold leading-4 text-white">{item.title}</span></span></button>; })}</nav>
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.65fr)_minmax(320px,.8fr)]">
+        <section className="overflow-hidden rounded-2xl border border-white/10 bg-[#121922] shadow-2xl">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 px-4 py-3"><div><p className="text-[10px] font-bold uppercase tracking-[.18em] text-slate-400">Viewport · plano XY · unidades visuales</p><h3 className="text-sm font-semibold">{MODULES[module]!.title}</h3></div><div className="flex flex-wrap gap-2"><button onClick={() => setCurveMode("nurbs")} className={`rounded-lg px-3 py-2 text-xs font-semibold ${curveMode === "nurbs" ? "bg-amber-300 text-black" : "border border-white/15 text-slate-300"}`}>Curve · NURBS</button><button onClick={() => setCurveMode("interp")} className={`rounded-lg px-3 py-2 text-xs font-semibold ${curveMode === "interp" ? "bg-amber-300 text-black" : "border border-white/15 text-slate-300"}`}>InterpCrv · guía</button></div></div>
+          <div className="p-2 sm:p-4"><svg viewBox="0 0 520 340" className="h-[min(54vh,560px)] w-full touch-none rounded-xl bg-[#0c1219]" onPointerMove={movePoint} onPointerUp={() => setActive(null)} onPointerCancel={() => setActive(null)} role="img" aria-label="Editor interactivo de curvas NURBS">
+            {Array.from({ length: 14 }, (_, i) => <g key={i}><line x1={20 + i * 38} y1="8" x2={20 + i * 38} y2="332" stroke="#263341" strokeWidth=".8"/><line x1="10" y1={12 + i * 24} x2="510" y2={12 + i * 24} stroke="#263341" strokeWidth=".8"/></g>)}
+            <line x1="260" y1="8" x2="260" y2="332" stroke="#536273" strokeWidth="1"/><line x1="10" y1="170" x2="510" y2="170" stroke="#536273" strokeWidth="1"/>
+            {showOriginal && <path d={originalPath} fill="none" stroke="#778493" strokeWidth="2" strokeDasharray="6 7" opacity=".6"/>}
+            {showPolygon && <polyline points={controlPoints.map(p => `${p.x},${p.y}`).join(" ")} fill="none" stroke="#55c6d8" strokeWidth="1.5" strokeDasharray="5 5"/>}
+            <path d={curvePath} fill="none" stroke="#f2bd58" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
+            {showComb && (module === 3 || module === 2) && comb.map((p, i) => { const before = renderedPoints[Math.max(0, i * 8 - 1)]!, after = renderedPoints[Math.min(renderedPoints.length - 1, i * 8 + 1)]!; const dx = after.x - before.x, dy = after.y - before.y, len = Math.max(1, Math.hypot(dx, dy)); const amp = Math.min(38, Math.abs(dx * dy) / 140); return <line key={i} x1={p.x} y1={p.y} x2={p.x - dy / len * amp} y2={p.y + dx / len * amp} stroke="#8c7bff" strokeWidth="1.4" opacity=".9"/>; })}
+            {points.map((p, i) => <g key={i} onPointerDown={e => { e.currentTarget.ownerSVGElement?.setPointerCapture(e.pointerId); setActive(i); }} className="cursor-grab active:cursor-grabbing"><circle cx={p.x} cy={p.y} r="12" fill="#f2bd58" opacity=".13"/><circle cx={p.x} cy={p.y} r="5.5" fill="#f2bd58" stroke="#201607" strokeWidth="2"/><text x={p.x + 9} y={p.y - 9} fill="#e5edf4" fontSize="10">P{i + 1}</text></g>)}
+          </svg></div>
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 px-4 py-3 text-[11px] text-slate-400"><div className="flex flex-wrap gap-4"><span><i className="mr-1 inline-block size-2 rounded-full bg-amber-300"/> Curva activa</span><span><i className="mr-1 inline-block size-2 rounded-full bg-cyan-300"/> Polígono de control</span><span><i className="mr-1 inline-block size-2 rounded-full bg-slate-500"/> Original</span></div><div className="flex gap-2"><button onClick={() => setShowPolygon(v => !v)} className="rounded-md border border-white/15 px-2.5 py-1.5">{showPolygon ? <EyeOff className="mr-1 inline size-3"/> : <Eye className="mr-1 inline size-3"/>} Polígono</button><button onClick={() => setShowOriginal(v => !v)} className="rounded-md border border-white/15 px-2.5 py-1.5">Original</button></div></div>
         </section>
-        <section className="rounded-2xl border border-white/10 bg-[#151c24] p-4"><div className="flex items-center gap-2"><CircleHelp className="size-4 text-amber-400"/><h4 className="text-sm font-semibold">Aplicación en joyería</h4></div><p className="mt-2 text-xs leading-5 text-slate-300">Para diseñar un contorno orgánico de colgante, InterpCrv resulta útil cuando necesitas que la curva atraviese puntos de una silueta definida. Curve resulta útil cuando quieres gobernar la forma con una estructura de control editable. La elección depende del diseño y de la edición posterior.</p><div className="mt-3 rounded-lg border border-white/10 bg-black/20 p-3"><p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Comandos Rhino 7</p><p className="mt-1 font-mono text-xs text-amber-300">Curve · InterpCrv · PointsOn · PointsOff</p></div></section>
-        <div className="flex gap-2"><button disabled={task===0} onClick={()=>{setTask(v=>v-1);setCompleted(false);setAnswer(null);setChecked(false);}} className="flex-1 rounded-lg border border-white/15 px-3 py-2.5 text-xs disabled:opacity-30"><ArrowLeft className="mr-1 inline size-3.5"/> Anterior</button>{task<2?<button disabled={!completed && task!==2} onClick={advance} className="flex-1 rounded-lg bg-amber-400 px-3 py-2.5 text-xs font-semibold text-black disabled:opacity-35">Siguiente desafío <ArrowRight className="ml-1 inline size-3.5"/></button>:<button disabled={!checked||answer!=="b"} onClick={()=>setCompleted(true)} className="flex-1 rounded-lg bg-amber-400 px-3 py-2.5 text-xs font-semibold text-black disabled:opacity-35">Finalizar prototipo <CheckCircle2 className="ml-1 inline size-3.5"/></button>}</div>
-        {task===2&&checked&&answer==="b"&&<div className="rounded-xl border border-emerald-400/30 bg-emerald-400/10 p-3 text-sm text-emerald-200"><CheckCircle2 className="mr-2 inline size-4"/> Desafío superado. Has completado el prototipo de creación de curvas.</div>}
-      </aside>
+        <aside className="space-y-4">
+          <section className="rounded-2xl border border-white/10 bg-[#121922] p-4"><div className="flex items-center justify-between"><p className="text-[10px] font-bold uppercase tracking-[.18em] text-amber-300">Panel de parámetros</p><Gauge className="size-4 text-amber-300"/></div>
+            {(module === 2 || module === 0 || module === 1) && <><label className="mt-4 flex items-center justify-between text-xs font-medium">Grado NURBS <strong className="text-amber-300">{currentDegree}</strong></label><input type="range" min="1" max={Math.max(1, points.length - 1)} value={currentDegree} onChange={e => setDegree(Number(e.target.value))} className="mt-2 w-full accent-amber-300"/><div className="flex justify-between text-[10px] text-slate-500"><span>1 · Poligonal</span><span>{points.length - 1} · Máximo</span></div>
+              <label className="mt-4 flex items-center justify-between text-xs font-medium">Puntos de control <strong className="text-amber-300">{controlCount}</strong></label><input type="range" min="4" max="7" value={controlCount} onChange={e => setControlCount(Number(e.target.value))} className="mt-2 w-full accent-amber-300"/><p className="mt-1 text-[10px] text-slate-500">El recuento controla los vértices visibles del polígono de referencia.</p></>}
+            {module === 2 && <div className="mt-4 rounded-xl border border-white/10 bg-black/20 p-3"><p className="text-xs font-semibold">Comparación de reconstrucción</p><p className="mt-1 text-xs leading-5 text-slate-400">Prueba grados 1, 2 y 3. Observa cómo cambia la flexibilidad. En Rhino, Rebuild crea una nueva estructura de control; aquí se visualiza el efecto del grado sobre la misma geometría de referencia.</p></div>}
+            {module === 3 && <div className="mt-4 space-y-3"><div className="rounded-xl border border-violet-400/20 bg-violet-400/5 p-3"><p className="text-xs font-semibold text-violet-200">Peine de curvatura · visualización didáctica</p><p className="mt-1 text-xs leading-5 text-slate-400">Las espinas indican variaciones locales de curvatura. Picos abruptos señalan transiciones que conviene inspeccionar.</p></div><label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={showComb} onChange={e => setShowComb(e.target.checked)} className="accent-amber-300"/> Mostrar peine de curvatura</label><div className="grid grid-cols-3 gap-2 text-center">{["G0 · Posición","G1 · Tangencia","G2 · Curvatura"].map(x => <div key={x} className="rounded-lg border border-white/10 p-2 text-[10px] text-slate-300">{x}</div>)}</div></div>}
+            {module === 4 && <div className="mt-4 space-y-2"><p className="text-xs font-semibold">Condición del perfil</p>{[{v:"open",t:"Extremos abiertos"},{v:"cross",t:"Autointersección visual"},{v:"clean",t:"Perfil ordenado"}].map(x => <button key={x.v} onClick={() => setCleanupMode(x.v as typeof cleanupMode)} className={`w-full rounded-lg border p-2.5 text-left text-xs ${cleanupMode === x.v ? "border-amber-300 bg-amber-300/10 text-amber-100" : "border-white/10 text-slate-300"}`}>{x.t}</button>)}<p className="text-[10px] leading-4 text-slate-500">Selector de escenario didáctico; revisa la lista de diagnóstico y decide qué validar en Rhino antes de continuar.</p></div>}
+            {module === 5 && <div className="mt-4 space-y-2"><label className="flex items-center justify-between text-xs">Peso del punto activo <strong>{(weights[2] ?? 1).toFixed(1)}</strong></label><input type="range" min=".5" max="2.5" step=".1" value={weights[2] ?? 1} onChange={e => setWeights(prev => prev.map((w, i) => i === 2 ? Number(e.target.value) : w))} className="w-full accent-amber-300"/><p className="text-[10px] leading-5 text-slate-400">Los pesos modifican la influencia racional de los puntos de control sin moverlos.</p></div>}
+            <div className="mt-4 grid grid-cols-2 gap-2 border-t border-white/10 pt-4"><div className="rounded-lg bg-black/20 p-3"><p className="text-[10px] text-slate-500">Longitud aprox.</p><p className="mt-1 text-sm font-semibold tabular-nums">{curveLength.toFixed(1)} u</p></div><div className="rounded-lg bg-black/20 p-3"><p className="text-[10px] text-slate-500">Diferencia visual</p><p className="mt-1 text-sm font-semibold tabular-nums">{maxDeviation.toFixed(1)} u</p></div></div>
+          </section>
+          <section className="rounded-2xl border border-white/10 bg-[#121922] p-4"><div className="flex items-center gap-2"><CircleHelp className="size-4 text-amber-300"/><h4 className="text-sm font-semibold">Objetivo del módulo</h4></div><p className="mt-2 text-xs leading-5 text-slate-300">{MODULES[module]!.goal}</p><div className="mt-3 rounded-lg border border-white/10 bg-black/20 p-3"><p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Aplicación en joyería</p><p className="mt-1 text-xs leading-5 text-slate-300">Un perfil controlado mejora la calidad visual de un aro, bisel o contorno ornamental y reduce problemas al generar superficies posteriores.</p></div></section>
+        </aside>
+      </div>
+      <section className="grid gap-4 lg:grid-cols-[1.2fr_.8fr]">
+        <div className="rounded-2xl border border-white/10 bg-[#121922] p-4"><div className="flex items-center gap-2"><Ruler className="size-4 text-amber-300"/><h4 className="text-sm font-semibold">{module === 3 ? "Lectura de continuidad y curvatura" : module === 4 ? "Lista de diagnóstico geométrico" : "Guía técnica · Rhino 7"}</h4></div>
+          {module === 3 ? <div className="mt-3 grid gap-2 sm:grid-cols-3">{[{t:"G0 · Posición",d:"Los extremos coinciden. No implica suavidad."},{t:"G1 · Tangencia",d:"Además de coincidir, comparten dirección tangente."},{t:"G2 · Curvatura",d:"La transición mantiene continuidad de curvatura."}].map(x => <article key={x.t} className="rounded-xl border border-white/10 bg-black/20 p-3"><p className="text-xs font-semibold text-amber-200">{x.t}</p><p className="mt-1 text-xs leading-5 text-slate-400">{x.d}</p></article>)}</div> : module === 4 ? <div className="mt-3 space-y-2">{["Verificar si el contorno debe estar abierto o cerrado","Buscar segmentos duplicados y tramos excesivamente cortos","Comprobar autointersecciones antes de crear superficies","Confirmar tolerancias y continuidad requeridas por la operación"].map((x, i) => <p key={x} className="flex gap-2 text-xs text-slate-300"><CheckCircle2 className="size-4 shrink-0 text-amber-300"/>{x}</p>)}</div> : <div className="mt-3 flex flex-wrap gap-2 font-mono text-xs text-amber-200">{(module === 0 ? ["Curve","InterpCrv"] : module === 1 ? ["PointsOn · F10","PointsOff · F11","Move"] : module === 2 ? ["Rebuild","Degree","Point count"] : ["Curve","Rebuild","CurvatureGraph"]).map(x => <span key={x} className="rounded-lg border border-amber-300/20 bg-amber-300/5 px-3 py-2">{x}</span>)}</div>}
+        </div>
+        <div className="rounded-2xl border border-white/10 bg-[#121922] p-4"><div className="flex items-center gap-2"><Target className="size-4 text-amber-300"/><h4 className="text-sm font-semibold">Práctica guiada</h4></div>
+          {module === 0 && <><p className="mt-2 text-xs leading-5 text-slate-300">Alterna Curve e InterpCrv. En el primer caso, los puntos gobiernan la forma; en el segundo, la curva interpolada atraviesa las posiciones marcadas. Esta vista usa una interpolación Catmull–Rom como aproximación visual, no replica el algoritmo interno de Rhino.</p><button onClick={() => setCurveMode(v => v === "nurbs" ? "interp" : "nurbs")} className="mt-3 w-full rounded-lg bg-amber-300 px-3 py-2.5 text-xs font-bold text-black">Alternar tipo de curva</button></>}
+          {module === 1 && <p className="mt-2 text-xs leading-5 text-slate-300">Arrastra los nodos dorados directamente en el viewport. Observa el polígono cian y cómo el cambio de un control afecta a la curva completa.</p>}
+          {module === 2 && <p className="mt-2 text-xs leading-5 text-slate-300">Cambia el grado y compara el resultado. En un flujo real de Rhino, duplica la curva y aplica Rebuild para poder evaluar desviaciones antes de sustituir el original.</p>}
+          {module === 3 && <p className="mt-2 text-xs leading-5 text-slate-300">Activa el peine de curvatura. Busca picos y cambios bruscos. Recuerda: el gráfico ayuda a diagnosticar, pero no sustituye la inspección de la unión ni la continuidad real entre curvas.</p>}
+          {module === 4 && <p className="mt-2 text-xs leading-5 text-slate-300">Escoge un escenario y ejecuta la lista de comprobación. En Rhino valida con SelOpenCrv, SelDup, ShowEnds y las herramientas de análisis pertinentes.</p>}
+          {module === 5 && <p className="mt-2 text-xs leading-5 text-slate-300">Ajusta el peso racional del tercer control y observa cómo atrae la curva. Define una silueta equilibrada, conserva una copia original y explica por qué tu perfil es adecuado para un colgante.</p>}
+          {module === 5 && <div className="mt-3"><p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Decisión de diseño</p>{["Perfil suave y orgánico","Perfil simétrico y técnico","Perfil ornamental asimétrico"].map(x => <button key={x} onClick={() => setAnswer(x)} className={`mt-2 w-full rounded-lg border p-2 text-left text-xs ${answer === x ? "border-amber-300 bg-amber-300/10" : "border-white/10"}`}>{x}</button>)}</div>}
+          <button onClick={() => { markDone(); setChecked(true); }} className="mt-3 w-full rounded-lg border border-amber-300/40 px-3 py-2.5 text-xs font-semibold text-amber-200 hover:bg-amber-300/10">{module === 5 ? "Registrar reto completado" : "Marcar práctica completada"}</button>
+          {checked && done.includes(module) && <p className="mt-2 text-xs text-emerald-300"><CheckCircle2 className="mr-1 inline size-4"/> Módulo registrado en esta práctica.</p>}
+        </div>
+      </section>
+      <footer className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-[#121922] p-4"><button disabled={module === 0} onClick={() => { setModule(v => v - 1); setChecked(false); }} className="rounded-lg border border-white/15 px-4 py-2.5 text-xs disabled:opacity-30"><ArrowLeft className="mr-1 inline size-3.5"/> Módulo anterior</button><p className="text-xs text-slate-400">Módulo {module + 1} de 6 · {done.length} completados</p><button onClick={() => module < 5 ? next() : (markDone(), onClose())} className="rounded-lg bg-gradient-to-b from-[#f3d28b] to-[#bd9143] px-4 py-2.5 text-xs font-bold text-[#21180a]">{module === 5 ? "Finalizar laboratorio" : "Siguiente módulo"} <ArrowRight className="ml-1 inline size-3.5"/></button></footer>
     </main>
   </div>;
 }
