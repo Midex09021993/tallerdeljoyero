@@ -1503,15 +1503,16 @@ function MiNubePage() {
         catch { toast.info("Enlace existente recuperado. Puedes copiarlo desde la carpeta."); }
         return;
       }
-      const { data, error: urlError } = await supabase.storage.from(BUCKET).createSignedUrl(archivo.ruta, 3 * 24 * 60 * 60);
-      if (urlError || !data?.signedUrl) throw urlError ?? new Error("No se pudo crear el enlace del visor.");
-      const tokenBytes = crypto.getRandomValues(new Uint8Array(12));
-      const token = Array.from(tokenBytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
-      const { error: saveError } = await supabase.rpc("crear_enlace_visor_3d", { _token: token, _modelo_url: data.signedUrl, _nombre: nombreVisible(archivo.nombre), _modelo_ruta: archivo.ruta });
-      if (saveError) throw saveError;
+      const { data, error: createError } = await supabase.functions.invoke("crear-enlace-visor-3d", {
+        body: { modelo_ruta: archivo.ruta, nombre: nombreVisible(archivo.nombre) },
+      });
+      if (createError || data?.ok !== true || typeof data?.token !== "string" || !/^[a-f0-9]{24}$/.test(data.token)) {
+        throw new Error(data?.error || createError?.message || "No se pudo crear el enlace seguro del visor.");
+      }
+      const token = data.token;
       const url = new URL("/v/" + token, window.location.origin).toString();
       setEnlacesVisorArchivo((actuales) => [...actuales.filter((enlace) => enlace.ruta !== archivo.ruta), { ruta: archivo.ruta, url }]);
-      try { await navigator.clipboard.writeText(url); toast.success("Enlace del visor copiado. Vence en 3 días."); }
+      try { await navigator.clipboard.writeText(url); toast.success("Enlace protegido del visor copiado. Vence en 3 días."); }
       catch { toast.info("Enlace preparado. Puedes copiarlo desde la carpeta."); }
     } catch (cause) {
       // Los errores PostgREST suelen ser objetos planos, no instancias de Error.
