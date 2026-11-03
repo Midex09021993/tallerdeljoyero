@@ -3384,6 +3384,22 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         }
         if (!cargado) throw new Error("No se pudo abrir el GLB guardado ni el 3DM original.");
         if (cargado) {
+          // La carpeta es la identidad del proyecto. Vincularla DESPUÉS de cargar
+          // el modelo evita que los efectos de inicialización del archivo reemplacen
+          // el destino por un estado local sin vínculo.
+          if (typeof datos.rutaCarpeta === "string" && datos.rutaCarpeta.trim()) {
+            const destinoVinculado: AurumProjectDestination = {
+              rutaCarpeta: datos.rutaCarpeta,
+              rutaArchivoOriginal: datos.rutaArchivoOriginal,
+              nombre: datos.rutaCarpeta.split("/").filter(Boolean).pop() ?? datos.nombre,
+              nombreProyecto: datos.nombre.replace(/\.3dm$/i, ""),
+              archivoNombre: datos.nombre,
+              archivoTamano: datos.archivoTamano,
+            };
+            setDestinoProyectoGuardado(destinoVinculado);
+            sessionStorage.setItem("aurum-render-poster-destino", JSON.stringify(destinoVinculado));
+            localStorage.setItem("aurum-render-proyecto-destino", JSON.stringify(destinoVinculado));
+          }
           if (archivoParaAbrir !== originalFile) {
             // El visor usa GLB; el 3DM queda remoto y solo se recupera al guardar.
             setArchivoOriginal(null);
