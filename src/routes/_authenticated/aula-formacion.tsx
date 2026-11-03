@@ -2699,42 +2699,72 @@ function AulaFormacionPage() {
                 </div>)}</div>}
               </div>
             </Panel>
-            <Panel titulo={`Programa de sesiones · ${(sesionesQuery.data ?? []).length}`}>
-              <form onSubmit={(e) => void crearSesion(e)} className="space-y-4 border-b border-[#edf0f3] bg-[#fbfcfd] p-5">
-                <div className="flex items-center gap-3"><span className="grid size-9 place-items-center rounded-lg border border-[#e8dcc7] bg-[#fbf6ec] text-[#9a7133]"><CalendarDays className="size-4" /></span><div><p className="text-sm font-semibold text-[#253446]">Añadir una sesión</p><p className="text-xs text-[#8190a0]">Organiza el contenido del programa por etapas.</p></div></div>
-                <div className="grid grid-cols-[88px_minmax(0,1fr)] gap-3">
-                  <label className="text-xs font-semibold text-[#425466]">N.º<input type="number" min="1" value={numeroSesion} onChange={e => setNumeroSesion(e.target.value)} className="mt-2 w-full rounded-xl border border-[#dce4ec] bg-white px-3 py-2.5 text-sm font-normal text-[#253446] outline-none focus:border-[#8ba6bd] focus:ring-2 focus:ring-[#8ba6bd]/15" /></label>
-                  <label className="text-xs font-semibold text-[#425466]">Título<input required value={tituloSesion} onChange={e => setTituloSesion(e.target.value)} className="mt-2 w-full rounded-xl border border-[#dce4ec] bg-white px-3 py-2.5 text-sm font-normal text-[#253446] outline-none focus:border-[#8ba6bd] focus:ring-2 focus:ring-[#8ba6bd]/15" placeholder="Ej. Interfaz y navegación" /></label>
+            <Panel titulo="Programa académico">
+              <div className="space-y-4 p-5">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-[#253446]">Estructura del curso</p>
+                    <p className="mt-1 text-xs text-[#718096]">Organiza el recorrido formativo en orden secuencial.</p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded-full border border-[#dce4ec] bg-[#f7f9fb] px-3 py-1.5 text-[11px] font-semibold text-[#526b81]">{(sesionesQuery.data ?? []).length} sesiones</span>
+                    <span className="rounded-full border border-[#ccebdd] bg-[#effaf4] px-3 py-1.5 text-[11px] font-semibold text-[#28744e]">{(sesionesQuery.data ?? []).filter(s => s.publicada).length} publicadas</span>
+                    <span className="rounded-full border border-[#e4e9ef] bg-[#f7f9fb] px-3 py-1.5 text-[11px] font-semibold text-[#718096]">{(sesionesQuery.data ?? []).filter(s => !s.publicada).length} borradores</span>
+                  </div>
                 </div>
-                <label className="block text-xs font-semibold text-[#425466]">Descripción <span className="font-normal text-[#8a97a5]">· opcional</span><textarea value={detalleSesion} onChange={e => setDetalleSesion(e.target.value)} rows={2} className="mt-2 w-full rounded-xl border border-[#dce4ec] bg-white px-3 py-2.5 text-sm font-normal leading-6 text-[#253446] outline-none focus:border-[#8ba6bd] focus:ring-2 focus:ring-[#8ba6bd]/15" /></label>
-                <button disabled={ocupado} className="inline-flex items-center gap-2 rounded-xl bg-[#294760] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#203b52] disabled:opacity-50"><CalendarDays className="size-4" /> Añadir sesión</button>
-              </form>
-              <div className="space-y-3 p-5">
-                {sesionesQuery.isLoading ? <p className="py-4 text-xs text-[#718096]">Cargando sesiones…</p> : (sesionesQuery.data ?? []).length === 0 ? <div className="rounded-xl border border-dashed border-[#cbd7e1] bg-[#fbfcfd] px-4 py-8 text-center"><CalendarDays className="mx-auto size-7 text-[#9aa7b5]"/><p className="mt-2 text-sm font-semibold text-[#425466]">Todavía no hay sesiones</p><p className="mt-1 text-xs text-[#8190a0]">Crea la primera sesión con el formulario superior.</p></div> : (sesionesQuery.data ?? []).map(s => <article key={s.id} className="overflow-hidden rounded-xl border border-[#e4e9ef] bg-white">
-                  {sesionEditandoId === s.id ? (
-                    <form onSubmit={(e) => void guardarEdicionSesion(e, s)} className="space-y-3 bg-[#fbfcfd] p-4">
-                      <div className="grid grid-cols-[88px_minmax(0,1fr)] gap-3">
-                        <label className="text-xs font-semibold text-[#425466]">N.º<input type="number" min="1" required value={numeroSesionEditado} onChange={e => setNumeroSesionEditado(e.target.value)} className="mt-2 w-full rounded-xl border border-[#dce4ec] bg-white px-3 py-2.5 text-sm font-normal text-[#253446]" /></label>
-                        <label className="text-xs font-semibold text-[#425466]">Título<input required value={tituloSesionEditado} onChange={e => setTituloSesionEditado(e.target.value)} className="mt-2 w-full rounded-xl border border-[#dce4ec] bg-white px-3 py-2.5 text-sm font-normal text-[#253446]" /></label>
-                      </div>
-                      <label className="block text-xs font-semibold text-[#425466]">Descripción<textarea value={detalleSesionEditado} onChange={e => setDetalleSesionEditado(e.target.value)} rows={3} className="mt-2 w-full rounded-xl border border-[#dce4ec] bg-white px-3 py-2.5 text-sm font-normal text-[#253446]" /></label>
-                      <div className="flex flex-wrap gap-2"><button type="submit" disabled={ocupado} className="rounded-lg bg-[#294760] px-3 py-2 text-xs font-semibold text-white disabled:opacity-50">Guardar cambios</button><button type="button" disabled={ocupado} onClick={cancelarEdicionSesion} className="rounded-lg border border-[#dce4ec] bg-white px-3 py-2 text-xs font-medium text-[#60758a]">Cancelar</button></div>
-                    </form>
-                  ) : (
-                    <div className="space-y-3 p-4">
-                      <div className="flex items-start gap-3">
-                        <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-[#edf3f8] text-sm font-bold tabular-nums text-[#496782]">{String(s.numero).padStart(2,"0")}</span>
-                        <div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><h3 className="text-sm font-semibold leading-5 text-[#253446]">{s.titulo}</h3><span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${s.publicada ? "bg-emerald-50 text-emerald-700" : "bg-[#f3f6f8] text-[#718096]"}`}>{s.publicada ? "Publicada" : "Borrador"}</span></div>{s.descripcion && <p className="mt-1.5 text-xs leading-5 text-[#718096]">{s.descripcion}</p>}<p className="mt-1 text-[11px] text-[#8a97a5]">{s.publicada ? "Visible para los alumnos" : "Solo visible para el docente"}</p></div>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-2 border-t border-[#edf0f3] pt-3">
-                        <button type="button" disabled={ocupado} onClick={() => iniciarEdicionSesion(s)} aria-label={`Editar sesión ${s.numero}`} title="Editar sesión" className="inline-flex items-center gap-1.5 rounded-lg border border-[#dce4ec] px-3 py-2 text-xs font-medium text-[#60758a] transition hover:bg-[#f7f9fb] disabled:opacity-50"><Pencil className="size-3.5" /> Editar</button>
-                        <button type="button" disabled={ocupado || cargandoLecturaDocente} onClick={() => void abrirEditorLectura(s)} className="inline-flex items-center gap-1.5 rounded-lg border border-[#dce4ec] px-3 py-2 text-xs font-medium text-[#60758a] transition hover:bg-[#f7f9fb] disabled:opacity-50">{cargandoLecturaDocente ? "Cargando…" : "Editar lectura"}</button>
-                        <button type="button" disabled={ocupado} onClick={() => void cambiarBloqueoSesion(s)} title={s.bloqueada ? "Desbloquear sesión para alumnos" : "Bloquear apertura para alumnos"} aria-label={s.bloqueada ? `Desbloquear sesión ${s.numero}` : `Bloquear sesión ${s.numero}`} className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium disabled:opacity-50 ${s.bloqueada ? "border-amber-300 bg-amber-50 text-amber-800" : "border-emerald-200 bg-emerald-50 text-emerald-800"}`}><span aria-hidden="true">{s.bloqueada ? "🔒" : "🔓"}</span>{s.bloqueada ? "Bloqueada" : "Abierta"}</button>
-                        <button type="button" disabled={ocupado} onClick={() => void publicarSesion(s)} className="inline-flex items-center gap-1.5 rounded-lg bg-[#294760] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#203b52] disabled:opacity-50">{s.publicada ? "Ocultar a alumnos" : "Publicar sesión"}</button>
-                      </div>
+
+                <details className="group overflow-hidden rounded-xl border border-[#e5d8c2] bg-white">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-3 bg-[#fbf8f2] px-4 py-3.5 transition hover:bg-[#f8f2e8] [&::-webkit-details-marker]:hidden">
+                    <span className="flex min-w-0 items-center gap-3">
+                      <span className="grid size-9 shrink-0 place-items-center rounded-lg border border-[#e8dcc7] bg-white text-[#9a7133]"><CalendarDays className="size-4" /></span>
+                      <span className="min-w-0"><span className="block text-sm font-semibold text-[#253446]">Añadir una sesión</span><span className="mt-0.5 block text-xs text-[#718096]">Incorpora una nueva etapa al programa académico.</span></span>
+                    </span>
+                    <span className="flex shrink-0 items-center gap-2 text-xs font-semibold text-[#8b6a36]"><Plus className="size-4" /><span className="hidden sm:inline">Nueva sesión</span><span className="text-[#9aabb9] transition group-open:rotate-180">⌄</span></span>
+                  </summary>
+                  <form onSubmit={(e) => void crearSesion(e)} className="space-y-4 border-t border-[#edf0f3] p-4 sm:p-5">
+                    <div className="grid grid-cols-[88px_minmax(0,1fr)] gap-3">
+                      <label className="text-xs font-semibold text-[#425466]">N.º<input type="number" min="1" value={numeroSesion} onChange={e => setNumeroSesion(e.target.value)} className="mt-2 w-full rounded-xl border border-[#dce4ec] bg-white px-3 py-2.5 text-sm font-normal text-[#253446] outline-none focus:border-[#8ba6bd] focus:ring-2 focus:ring-[#8ba6bd]/15" /></label>
+                      <label className="text-xs font-semibold text-[#425466]">Título<input required value={tituloSesion} onChange={e => setTituloSesion(e.target.value)} className="mt-2 w-full rounded-xl border border-[#dce4ec] bg-white px-3 py-2.5 text-sm font-normal text-[#253446] outline-none focus:border-[#8ba6bd] focus:ring-2 focus:ring-[#8ba6bd]/15" placeholder="Ej. Interfaz y navegación" /></label>
                     </div>
-                  )}
-                </article>)}
+                    <label className="block text-xs font-semibold text-[#425466]">Descripción <span className="font-normal text-[#8a97a5]">· opcional</span><textarea value={detalleSesion} onChange={e => setDetalleSesion(e.target.value)} rows={2} className="mt-2 w-full rounded-xl border border-[#dce4ec] bg-white px-3 py-2.5 text-sm font-normal leading-6 text-[#253446] outline-none focus:border-[#8ba6bd] focus:ring-2 focus:ring-[#8ba6bd]/15" /></label>
+                    <div className="flex justify-end border-t border-[#edf0f3] pt-3"><button disabled={ocupado} className="inline-flex items-center gap-2 rounded-xl bg-[#294760] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#203b52] disabled:opacity-50"><CalendarDays className="size-4" /> Añadir sesión</button></div>
+                  </form>
+                </details>
+
+                <div className="space-y-2.5">
+                  {sesionesQuery.isLoading ? <p className="rounded-xl border border-[#e4e9ef] bg-[#fbfcfd] px-4 py-6 text-center text-xs text-[#718096]">Cargando sesiones…</p> : (sesionesQuery.data ?? []).length === 0 ? <div className="rounded-xl border border-dashed border-[#cbd7e1] bg-[#fbfcfd] px-4 py-8 text-center"><CalendarDays className="mx-auto size-7 text-[#9aa7b5]"/><p className="mt-2 text-sm font-semibold text-[#425466]">Todavía no hay sesiones</p><p className="mt-1 text-xs text-[#8190a0]">Añade la primera etapa para comenzar a construir el programa.</p></div> : (sesionesQuery.data ?? []).map(s => <details key={s.id} open={sesionEditandoId === s.id} className="group overflow-hidden rounded-xl border border-[#e1e8ef] bg-white transition open:border-[#b9cad9] open:shadow-[0_2px_12px_rgba(41,71,96,0.06)]">
+                    <summary className="flex cursor-pointer list-none items-center gap-3 px-3.5 py-3.5 transition hover:bg-[#f8fafc] [&::-webkit-details-marker]:hidden sm:px-4">
+                      <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#edf3f8] text-sm font-bold tabular-nums text-[#496782]">{String(s.numero).padStart(2,"0")}</span>
+                      <span className="min-w-0 flex-1">
+                        <span className="flex flex-wrap items-center gap-2"><span className="text-sm font-semibold leading-5 text-[#253446]">{s.titulo}</span><span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${s.publicada ? "bg-emerald-50 text-emerald-700" : "bg-[#f3f6f8] text-[#718096]"}`}>{s.publicada ? "Publicada" : "Borrador"}</span></span>
+                        <span className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-[#8190a0]"><span>{s.publicada ? "Visible para alumnos" : "Pendiente de publicación"}</span><span>·</span><span>{s.bloqueada ? "Acceso bloqueado" : "Acceso abierto"}</span>{s.descripcion && <><span>·</span><span className="max-w-[240px] truncate">{s.descripcion}</span></>}</span>
+                      </span>
+                      <span className="flex shrink-0 items-center gap-2 text-xs font-medium text-[#60758a]"><span className="hidden sm:inline">Gestionar</span><span className="text-[#9aabb9] transition group-open:rotate-180">⌄</span></span>
+                    </summary>
+                    <div className="border-t border-[#edf0f3] bg-[#fbfcfd] p-4 sm:p-5">
+                      {sesionEditandoId === s.id ? (
+                        <form onSubmit={(e) => void guardarEdicionSesion(e, s)} className="space-y-3">
+                          <div className="grid grid-cols-[88px_minmax(0,1fr)] gap-3">
+                            <label className="text-xs font-semibold text-[#425466]">N.º<input type="number" min="1" required value={numeroSesionEditado} onChange={e => setNumeroSesionEditado(e.target.value)} className="mt-2 w-full rounded-xl border border-[#dce4ec] bg-white px-3 py-2.5 text-sm font-normal text-[#253446]" /></label>
+                            <label className="text-xs font-semibold text-[#425466]">Título<input required value={tituloSesionEditado} onChange={e => setTituloSesionEditado(e.target.value)} className="mt-2 w-full rounded-xl border border-[#dce4ec] bg-white px-3 py-2.5 text-sm font-normal text-[#253446]" /></label>
+                          </div>
+                          <label className="block text-xs font-semibold text-[#425466]">Descripción<textarea value={detalleSesionEditado} onChange={e => setDetalleSesionEditado(e.target.value)} rows={3} className="mt-2 w-full rounded-xl border border-[#dce4ec] bg-white px-3 py-2.5 text-sm font-normal text-[#253446]" /></label>
+                          <div className="flex flex-wrap gap-2"><button type="submit" disabled={ocupado} className="rounded-lg bg-[#294760] px-3 py-2 text-xs font-semibold text-white disabled:opacity-50">Guardar cambios</button><button type="button" disabled={ocupado} onClick={cancelarEdicionSesion} className="rounded-lg border border-[#dce4ec] bg-white px-3 py-2 text-xs font-medium text-[#60758a]">Cancelar</button></div>
+                        </form>
+                      ) : (
+                        <>
+                          {s.descripcion && <p className="text-xs leading-6 text-[#60758a]">{s.descripcion}</p>}
+                          <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-[#e8edf2] pt-3">
+                            <button type="button" disabled={ocupado} onClick={() => iniciarEdicionSesion(s)} aria-label={`Editar sesión ${s.numero}`} title="Editar sesión" className="inline-flex items-center gap-1.5 rounded-lg border border-[#dce4ec] bg-white px-3 py-2 text-xs font-medium text-[#60758a] transition hover:bg-[#f7f9fb] disabled:opacity-50"><Pencil className="size-3.5" /> Editar</button>
+                            <button type="button" disabled={ocupado || cargandoLecturaDocente} onClick={() => void abrirEditorLectura(s)} className="inline-flex items-center gap-1.5 rounded-lg border border-[#dce4ec] bg-white px-3 py-2 text-xs font-medium text-[#60758a] transition hover:bg-[#f7f9fb] disabled:opacity-50">{cargandoLecturaDocente ? "Cargando…" : "Editar lectura"}</button>
+                            <button type="button" disabled={ocupado} onClick={() => void cambiarBloqueoSesion(s)} title={s.bloqueada ? "Desbloquear sesión para alumnos" : "Bloquear apertura para alumnos"} aria-label={s.bloqueada ? `Desbloquear sesión ${s.numero}` : `Bloquear sesión ${s.numero}`} className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium disabled:opacity-50 ${s.bloqueada ? "border-amber-300 bg-amber-50 text-amber-800" : "border-emerald-200 bg-emerald-50 text-emerald-800"}`}><span aria-hidden="true">{s.bloqueada ? "🔒" : "🔓"}</span>{s.bloqueada ? "Bloqueada" : "Abierta"}</button>
+                            <button type="button" disabled={ocupado} onClick={() => void publicarSesion(s)} className="inline-flex items-center gap-1.5 rounded-lg bg-[#294760] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#203b52] disabled:opacity-50">{s.publicada ? "Ocultar a alumnos" : "Publicar sesión"}</button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </details>)}
+                </div>
               </div>
             </Panel>
             {lecturaEditando && <div className="fixed inset-0 z-[70] overflow-y-auto bg-black/60 p-3 sm:p-6" role="dialog" aria-modal="true" aria-label="Editor de lectura">
