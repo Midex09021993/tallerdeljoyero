@@ -261,36 +261,53 @@ const LECTURA_SESION_4 = [
 ] as const;
 
 const LECTURA_SESION_5 = [
-  { titulo: "1. Objetivo: curvas avanzadas aplicadas a joyería", bloques: [
-    "Esta sesión profundiza en la construcción y edición de curvas para desarrollar perfiles más expresivos y adecuados al diseño de joyas. Aprenderás a crear curvas libres y a modificar su forma mediante puntos de control.",
-    "El propósito es obtener perfiles continuos y controlables que puedan utilizarse como guías o contornos en etapas posteriores de modelado. La calidad de una curva influye en las operaciones que se construyan a partir de ella.",
-    "Distribución orientativa de las 2 horas: curvas libres (30 min), puntos de control (35 min), optimización de perfiles (35 min), práctica y repaso (20 min)."
+  { titulo: "1. Objetivo: curvas NURBS aplicadas a joyería", bloques: [
+    "En esta sesión aprenderás a construir, controlar y evaluar curvas NURBS para desarrollar perfiles precisos y expresivos. En Rhino, una curva NURBS se define matemáticamente mediante puntos de control, grado, nodos y pesos; estos elementos determinan cómo se comporta y qué tan fácil resulta editarla.",
+    "En joyería, las curvas sirven para crear siluetas de colgantes, perfiles de anillos, líneas ornamentales y trayectorias que después pueden utilizarse para generar superficies o sólidos. Una curva visualmente atractiva también debe ser técnicamente controlable.",
+    "Al finalizar podrás crear curvas libres, editar sus puntos, reconstruirlas con Rebuild, interpretar su continuidad mediante CurvatureGraph y revisar su limpieza antes de reutilizarlas.",
+    "Distribución de las 2 horas: creación (20 min), puntos de control (20 min), reconstrucción (20 min), continuidad (20 min), optimización (20 min) y reto integrador (20 min)."
   ]},
-  { titulo: "2. Curvas libres", bloques: [
-    "Las curvas libres permiten definir recorridos que no están limitados a segmentos rectos, círculos o arcos simples. En Rhino puedes utilizar Curve para dibujar una curva pasando por puntos que marcan su recorrido.",
-    "Coloca los puntos con intención: demasiados puntos pueden dificultar el control de la forma. Empieza con pocos puntos bien distribuidos y revisa la continuidad visual del perfil.",
-    "En joyería, las curvas libres pueden servir para definir siluetas orgánicas, contornos decorativos y líneas guía. Mantén el perfil limpio y evita ondulaciones involuntarias."
+  { titulo: "2. Creación de curvas libres: Curve e InterpCrv", bloques: [
+    "El comando Curve crea una curva NURBS a partir de puntos de control que orientan su forma. No es necesario que la curva pase exactamente por cada punto de control: estos gobiernan la forma desde una estructura de control.",
+    "InterpCrv crea una curva interpolada que pasa por los puntos que marcas. Es útil cuando necesitas que el recorrido atraviese posiciones concretas, por ejemplo, puntos de una silueta dibujada como referencia.",
+    "La diferencia es importante: con Curve controlas la forma mediante una red de puntos de control; con InterpCrv defines puntos por los que debe pasar la curva. Elige según la intención del diseño y evita colocar puntos de más.",
+    "Práctica Rhino: dibuja dos perfiles similares, uno con Curve y otro con InterpCrv. Compara dónde pasa cada curva, cuántos puntos requiere y qué tan fácil resulta ajustar su silueta."
   ]},
-  { titulo: "3. Puntos de control: mostrar y editar", bloques: [
-    "Los puntos de control permiten modificar la forma de determinadas curvas NURBS sin tener que redibujarlas desde cero. En Rhino puedes activar su visualización con PointsOn (F10) y ocultarlos con PointsOff (F11).",
-    "Al mover un punto de control cambia la forma de la curva en su zona de influencia. El efecto depende de la distribución y el peso de los puntos; no todos los puntos afectan la curva de la misma manera.",
-    "Realiza cambios pequeños y observa el resultado en varias vistas. Si la curva pierde la forma deseada, utiliza Undo o vuelve a una copia del perfil original."
+  { titulo: "3. Puntos de control: edición consciente de la forma", bloques: [
+    "Los puntos de control permiten modificar una curva NURBS sin redibujarla. En Rhino, PointsOn (F10) muestra los puntos editables y PointsOff (F11) los oculta. Selecciona un punto y desplázalo para observar cómo cambia la curva.",
+    "La influencia de cada punto depende de la estructura matemática de la curva. Un movimiento pequeño puede afectar una zona amplia; por eso conviene trabajar con desplazamientos graduales y revisar el resultado desde más de una vista.",
+    "No confundas puntos de control con puntos de interpolación. Los primeros gobiernan la forma y, en general, la curva no tiene que pasar por ellos; los segundos son posiciones por las que una curva interpolada sí debe pasar.",
+    "Conserva una copia del perfil original antes de editar. En una pieza de joyería, una deformación pequeña puede alterar la simetría, el espacio para una piedra o el espesor que se construirá posteriormente."
   ]},
-  { titulo: "4. Ajustar la forma y mantener un perfil limpio", bloques: [
-    "Distribuye los puntos de control de forma equilibrada y evita añadir puntos innecesarios. Una curva con una estructura sencilla suele ser más fácil de editar y de reutilizar.",
-    "Comprueba que el perfil no presente picos, ondulaciones o cambios bruscos que no formen parte del diseño. Revisa tanto la silueta general como las transiciones entre tramos.",
-    "Cuando el perfil deba conectarse con otras curvas, verifica los extremos y la continuidad visual. No confundas que dos curvas se toquen con que formen una transición suave."
+  { titulo: "4. Reconstrucción de curvas: Rebuild, grado y cantidad de puntos", bloques: [
+    "Rebuild permite reconstruir una curva con un grado y una cantidad de puntos de control definidos. Es una herramienta para reorganizar su estructura y facilitar la edición, no un botón que garantice automáticamente una curva mejor.",
+    "El grado describe el orden matemático de la curva y afecta su flexibilidad. La cantidad de puntos determina cuántos controles estarán disponibles para modificarla. Aumentar puntos no significa necesariamente ganar calidad: demasiados controles pueden producir ajustes difíciles y ondulaciones.",
+    "Al reconstruir, compara siempre la curva resultante con la original. Revisa la desviación de la silueta, los extremos y las zonas críticas del diseño. Si la reconstrucción altera una dimensión o una transición importante, deshazla o ajusta los parámetros.",
+    "Práctica Rhino: duplica una curva, ejecuta Rebuild sobre la copia y prueba distintas cantidades de puntos manteniendo constante el grado. Compara facilidad de edición y diferencia respecto al perfil original."
   ]},
-  { titulo: "5. Optimización de perfiles para fabricación", bloques: [
-    "Un perfil pensado para fabricación debe ser claro, editable y coherente con la pieza que se desea construir. Evita segmentos duplicados, puntos excesivos y pequeños tramos accidentales.",
-    "Comprueba si la curva está abierta o cerrada según la función que tendrá. Si debe formar un contorno cerrado, verifica que sus extremos coincidan y que no existan interrupciones.",
-    "La optimización en esta etapa es una revisión geométrica del perfil; todavía no sustituye la validación de espesores, volúmenes ni tolerancias de fabricación, que se abordarán en etapas posteriores."
+  { titulo: "5. Continuidad y suavidad: lectura de la curvatura", bloques: [
+    "La continuidad describe cómo se conectan dos tramos. G0 indica que se encuentran; G1 que comparten dirección tangente; G2 que además mantienen una transición de curvatura compatible. Una unión visualmente cerrada no garantiza por sí sola una transición suave.",
+    "CurvatureGraph muestra gráficamente cómo varía la curvatura a lo largo de una curva. Cambios bruscos, picos o interrupciones en el gráfico pueden revelar zonas que conviene revisar. Interpreta el gráfico junto con la silueta y la función de la pieza.",
+    "En joyería, una transición irregular puede hacerse visible en reflejos, en el perfil de una montura o al generar una superficie. La suavidad debe responder al diseño: no todas las piezas necesitan continuidad G2, pero sí debes reconocer cuándo una transición resulta inadecuada.",
+    "Práctica Rhino: activa CurvatureGraph en una curva y modifica uno o dos puntos de control. Observa cómo cambia el gráfico y relaciona sus variaciones con la forma que ves en pantalla."
   ]},
-  { titulo: "6. Práctica: perfil orgánico para una joya", bloques: [
-    "Dibuja una curva libre que represente el contorno lateral de un elemento decorativo para una joya. Utiliza pocos puntos y busca una silueta equilibrada.",
-    "Activa PointsOn (F10), modifica dos o tres puntos de control y compara la forma antes y después. Evita deformaciones bruscas y conserva una copia del perfil inicial.",
-    "Revisa el perfil en Top y Perspective, comprueba sus extremos y decide si debe permanecer abierto o cerrarse según el ejercicio. Guarda el archivo con una versión inicial y otra optimizada.",
-    "Al terminar debes poder crear una curva libre, editar sus puntos de control y explicar qué hace que un perfil sea más sencillo de reutilizar. La siguiente sesión iniciará el modelado de sólidos."
+  { titulo: "6. Limpieza y optimización de perfiles", bloques: [
+    "Un perfil limpio tiene una estructura comprensible, sin tramos duplicados, puntos innecesarios ni pequeñas ondulaciones accidentales. La optimización consiste en conservar la intención del diseño con una geometría que pueda editarse y reutilizarse.",
+    "Comprueba si la curva debe ser abierta o cerrada. Si debe cerrar un contorno, revisa que sus extremos coincidan y que la unión no genere un quiebre. Si debe permanecer abierta, identifica claramente sus extremos y evita cierres accidentales.",
+    "Revisa duplicados, segmentos cortos, autointersecciones y cambios de dirección no deseados. No unas curvas solo porque sus extremos parecen tocarse: verifica la tolerancia y la continuidad que necesita la operación posterior.",
+    "La limpieza del perfil no sustituye la validación de espesores, sólidos ni tolerancias de fabricación. Es una revisión previa para que las operaciones posteriores partan de curvas ordenadas."
+  ]},
+  { titulo: "7. Aplicación en joyería: diseñar un perfil orgánico", bloques: [
+    "Diseña el contorno lateral de un elemento decorativo para un colgante. Comienza con una silueta sencilla y define qué zonas deben ser suaves, dónde se requiere una transición más marcada y qué proporción debe conservarse.",
+    "Crea una versión con Curve y otra con InterpCrv si necesitas comparar el control de la forma. Conserva el perfil que mejor responda al diseño y guarda una copia antes de reconstruir o editar.",
+    "Utiliza PointsOn para ajustar la silueta, Rebuild para probar una estructura de control más sencilla y CurvatureGraph para detectar variaciones bruscas. Revisa el resultado en Top y Perspective.",
+    "Nombra y organiza las versiones: PERFIL_ORIGINAL, PERFIL_AJUSTADO y PERFIL_FINAL. Así podrás comparar decisiones sin perder la geometría inicial."
+  ]},
+  { titulo: "8. Reto integrador: perfil orgánico controlado", bloques: [
+    "Construye un perfil orgánico destinado a un colgante. Debe tener una silueta intencional, una estructura de control manejable y una condición abierta o cerrada coherente con su función.",
+    "Completa la secuencia: crea la curva; modifica puntos de control; reconstruye una copia con Rebuild; inspecciona su continuidad con CurvatureGraph; y limpia el perfil final.",
+    "Compara la versión inicial y la final. Explica qué cambió, por qué elegiste esa cantidad de puntos y qué observaste en el gráfico de curvatura. No ocultes desviaciones importantes respecto al diseño original.",
+    "Criterios de dominio: curva creada correctamente, edición controlada, reconstrucción comparada con el original, continuidad revisada y archivo organizado con versiones identificables. Guarda como Sesion_05_Curvas_NURBS.3dm."
   ]}
 ] as const;
 
@@ -576,6 +593,15 @@ function AulaFormacionPage() {
   const [cerradoCoord3, setCerradoCoord3] = useState(false);
   const [estadoCoord3, setEstadoCoord3] = useState("");
   const [laboratorioSesion4Abierto, setLaboratorioSesion4Abierto] = useState(false);
+  const [laboratorioSesion5Abierto, setLaboratorioSesion5Abierto] = useState(false);
+  const [moduloLab5, setModuloLab5] = useState(0);
+  const [puntosLab5, setPuntosLab5] = useState(5);
+  const [gradoLab5, setGradoLab5] = useState(3);
+  const [desviacionLab5, setDesviacionLab5] = useState(2);
+  const [curvaturaLab5, setCurvaturaLab5] = useState(true);
+  const [perfilCerradoLab5, setPerfilCerradoLab5] = useState(false);
+  const [pasosIntegradorLab5, setPasosIntegradorLab5] = useState([false,false,false,false,false]);
+
   const [moduloLab4, setModuloLab4] = useState<"fillet"|"offset"|"trim"|"move"|"rotate"|"integrador">("fillet");
   const [radioLab4, setRadioLab4] = useState(2);
   const [distanciaLab4, setDistanciaLab4] = useState(1);
@@ -1830,6 +1856,54 @@ function AulaFormacionPage() {
     </section></div>;
   };
 
+  const renderLaboratorioSesion5 = () => {
+    if (lecturaAbierta?.numero !== 5 || paginaLectura < 2 || paginaLectura > 7) return null;
+    const modulos = [
+      {nombre:"Curve vs InterpCrv", pagina:2},
+      {nombre:"Puntos de control", pagina:3},
+      {nombre:"Reconstrucción · Rebuild", pagina:4},
+      {nombre:"Continuidad · CurvatureGraph", pagina:5},
+      {nombre:"Limpieza del perfil", pagina:6},
+      {nombre:"Reto integrador", pagina:7}
+    ];
+    const modulo = modulos[moduloLab5] ?? modulos[0];
+    const abrir = () => { setModuloLab5(Math.max(0,modulos.findIndex(m=>m.pagina===paginaLectura))); setLaboratorioSesion5Abierto(true); };
+    if (!laboratorioSesion5Abierto) return <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5">
+      <div className="flex flex-wrap items-center justify-between gap-4"><div><p className="text-[10px] font-bold uppercase tracking-widest text-gold-deep">Recurso interactivo · Sesión 05</p><h4 className="mt-1 text-base font-semibold">Laboratorio de curvas NURBS</h4><p className="mt-1 text-sm text-muted-foreground">Explora la construcción, edición, reconstrucción y revisión de perfiles para joyería.</p></div>
+      <button type="button" onClick={abrir} className="inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-black"><ArrowRight className="size-4"/> Abrir laboratorio</button></div>
+    </section>;
+    const curva = moduloLab5===0 ? "M80 210 C150 30 280 30 360 210" : moduloLab5===2 ? `M80 210 C${150+desviacionLab5*8} ${80+puntosLab5*7} 280 ${330-desviacionLab5*8} 360 210` : "M80 210 C150 70 280 70 360 210";
+    return <div className="fixed inset-0 z-[100] overflow-hidden bg-background/95 p-2 backdrop-blur-sm sm:p-3" role="dialog" aria-modal="true" aria-label="Laboratorio de curvas NURBS, sesión 05">
+      <section className="mx-auto flex h-[calc(100dvh-1rem)] max-w-[min(96vw,1450px)] flex-col overflow-hidden rounded-2xl border border-gold/30 bg-background shadow-2xl sm:h-[calc(100dvh-1.5rem)]">
+        <header className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-4 py-3"><div><p className="text-[10px] font-bold uppercase tracking-widest text-gold-deep">FADILAB · Sesión 05</p><h3 className="font-semibold">Laboratorio de curvas NURBS</h3></div><button type="button" onClick={()=>setLaboratorioSesion5Abierto(false)} className="rounded-lg border border-border px-3 py-2 text-xs">Volver a la lectura</button></header>
+        <nav className="flex shrink-0 gap-2 overflow-x-auto border-b border-border px-3 py-2">{modulos.map((m,i)=><button key={m.pagina} type="button" onClick={()=>setModuloLab5(i)} className={`shrink-0 rounded-lg px-3 py-2 text-xs font-semibold ${moduloLab5===i?"bg-gold text-black":"border border-border text-muted-foreground"}`}>{i+1}. {m.nombre}</button>)}</nav>
+        <div className="grid min-h-0 flex-1 gap-3 overflow-y-auto p-3 lg:grid-cols-[minmax(0,1.35fr)_minmax(300px,.8fr)]">
+          <div className="flex min-h-[300px] flex-col overflow-hidden rounded-xl bg-[#17191d]">
+            <div className="flex justify-between border-b border-white/10 px-3 py-2 text-[10px] text-white/70"><span>VISTA ESQUEMÁTICA · PERFIL NURBS</span><span>Representación didáctica</span></div>
+            <svg viewBox="0 0 440 300" className="min-h-0 w-full flex-1" role="img" aria-label="Comparación esquemática de una curva NURBS y sus controles">
+              {Array.from({length:11},(_,i)=><g key={i}><line x1={20+i*40} y1="10" x2={20+i*40} y2="290" stroke="#343a43"/><line x1="10" y1={20+i*26} x2="430" y2={20+i*26} stroke="#343a43"/></g>)}
+              <path d={curva} fill="none" stroke="#e7bd62" strokeWidth="4" strokeLinecap="round"/>
+              {(moduloLab5===1||moduloLab5===2||moduloLab5===5)&&<g><polyline points={Array.from({length:puntosLab5},(_,i)=>`${80+i*(280/(puntosLab5-1))},${210-(i%2===0?90:35)}`).join(" ")} fill="none" stroke="#67d6a0" strokeWidth="2" strokeDasharray="5 5"/>{Array.from({length:puntosLab5},(_,i)=><circle key={i} cx={80+i*(280/(puntosLab5-1))} cy={210-(i%2===0?90:35)} r="5" fill="#67d6a0"/>)}</g>}
+              {moduloLab5===0&&<path d="M80 210 C150 30 280 30 360 210" fill="none" stroke="#67d6a0" strokeWidth="2" strokeDasharray="7 5"/>}
+              {moduloLab5===3&&curvaturaLab5&&<path d="M80 250 C140 240 150 70 220 85 S310 240 360 250" fill="none" stroke="#67d6a0" strokeWidth="2.5"/>}
+              {moduloLab5===4&&<g><text x="90" y="265" fill="#fff" fontSize="12">{perfilCerradoLab5?"Contorno cerrado · revisar unión":"Perfil abierto · extremos identificados"}</text><circle cx="80" cy="210" r="6" fill="#67d6a0"/><circle cx="360" cy="210" r="6" fill="#67d6a0"/></g>}
+              {moduloLab5===5&&<g><rect x="55" y="35" width="330" height="220" rx="12" fill="none" stroke="#fff" strokeDasharray="5 6"/><text x="95" y="280" fill="#fff" fontSize="12">Perfil final · versión de trabajo</text></g>}
+            </svg>
+            <p className="border-t border-white/10 px-3 py-2 text-[10px] text-white/65">Dorado: curva · Verde: controles o análisis · Esquema conceptual, no geometría CAD a escala.</p>
+          </div>
+          <aside className="flex min-h-0 flex-col gap-3 overflow-y-auto pr-1">
+            {moduloLab5===0&&<div className="space-y-3"><h4 className="font-semibold">1. Curve frente a InterpCrv</h4><p className="text-sm text-muted-foreground">Compara la curva controlada por puntos de control con una curva interpolada que pasa por los puntos marcados.</p><div className="rounded-lg border border-border p-3 text-sm leading-6"><b>Curve:</b> la curva responde a una estructura de control y no tiene que pasar por cada punto. <br/><b>InterpCrv:</b> el recorrido pasa por las posiciones indicadas.</div><p className="text-xs text-muted-foreground">En Rhino dibuja ambas sobre la misma referencia y compara la silueta, la edición y la cantidad de puntos que necesitas.</p></div>}
+            {moduloLab5===1&&<div className="space-y-3"><h4 className="font-semibold">2. Edición de puntos de control</h4><p className="text-sm text-muted-foreground">Ajusta la cantidad de controles del esquema y observa cómo se organiza la estructura de edición.</p><label className="block text-sm">Puntos de control: <b>{puntosLab5}</b><input type="range" min="4" max="9" value={puntosLab5} onChange={e=>setPuntosLab5(Number(e.target.value))} className="mt-2 w-full accent-amber-500"/></label><div className="rounded-lg border border-border p-3 text-xs leading-5">En Rhino: duplica una curva, activa PointsOn (F10), mueve un punto con desplazamientos pequeños y oculta los controles con PointsOff (F11). El esquema muestra controles ilustrativos, no la estructura matemática exacta.</div></div>}
+            {moduloLab5===2&&<div className="space-y-3"><h4 className="font-semibold">3. Reconstrucción · Rebuild</h4><p className="text-sm text-muted-foreground">Prueba cómo cambia la estructura de control. El resultado debe compararse siempre con la curva original.</p><label className="block text-sm">Cantidad de puntos: <b>{puntosLab5}</b><input type="range" min="4" max="9" value={puntosLab5} onChange={e=>setPuntosLab5(Number(e.target.value))} className="mt-2 w-full accent-amber-500"/></label><label className="block text-sm">Grado: <b>{gradoLab5}</b><input type="range" min="1" max="5" value={gradoLab5} onChange={e=>setGradoLab5(Number(e.target.value))} className="mt-2 w-full accent-amber-500"/></label><label className="block text-sm">Variación ilustrada: <b>{desviacionLab5}</b><input type="range" min="0" max="5" value={desviacionLab5} onChange={e=>setDesviacionLab5(Number(e.target.value))} className="mt-2 w-full accent-amber-500"/></label><p className="rounded-lg border border-border p-3 text-xs leading-5">En Rhino: ejecuta Rebuild sobre una copia. Cambia grado y puntos, acepta y compara con el original. No evalúes solo la apariencia: revisa desviación, extremos y facilidad de edición.</p></div>}
+            {moduloLab5===3&&<div className="space-y-3"><h4 className="font-semibold">4. Continuidad y CurvatureGraph</h4><p className="text-sm text-muted-foreground">Activa o desactiva el gráfico conceptual para observar la relación entre la curva y sus variaciones de curvatura.</p><button type="button" onClick={()=>setCurvaturaLab5(v=>!v)} className={`rounded-lg px-3 py-2 text-xs font-semibold ${curvaturaLab5?"bg-gold text-black":"border border-border"}`}>{curvaturaLab5?"Ocultar":"Mostrar"} gráfico de curvatura</button><div className="rounded-lg border border-border p-3 text-xs leading-5">G0: las curvas se encuentran. G1: comparten dirección tangente. G2: también mantienen una transición de curvatura compatible. En Rhino utiliza CurvatureGraph para inspeccionar variaciones; interpreta el gráfico junto con la silueta.</div></div>}
+            {moduloLab5===4&&<div className="space-y-3"><h4 className="font-semibold">5. Limpieza del perfil</h4><p className="text-sm text-muted-foreground">Define si el perfil debe permanecer abierto o formar un contorno cerrado.</p><button type="button" onClick={()=>setPerfilCerradoLab5(v=>!v)} className={`rounded-lg px-3 py-2 text-xs font-semibold ${perfilCerradoLab5?"bg-gold text-black":"border border-border"}`}>{perfilCerradoLab5?"Revisar como perfil abierto":"Revisar como contorno cerrado"}</button><ul className="list-disc space-y-1 pl-5 text-xs leading-5"><li>Busca segmentos duplicados o accidentales.</li><li>Comprueba extremos y posibles autointersecciones.</li><li>Verifica que la continuidad responda al diseño.</li><li>Conserva una copia original antes de limpiar.</li></ul></div>}
+            {moduloLab5===5&&<div className="space-y-3"><h4 className="font-semibold">6. Reto integrador</h4><p className="text-sm text-muted-foreground">Marca cada fase cuando la hayas realizado en Rhino. El progreso se actualiza al completar la secuencia.</p>{["Crear el perfil orgánico con Curve o InterpCrv","Editar la silueta con puntos de control","Reconstruir una copia con Rebuild y comparar","Inspeccionar la continuidad con CurvatureGraph","Limpiar y guardar las versiones del perfil"].map((p,i)=><label key={i} className="flex items-start gap-2 rounded-lg border border-border p-3 text-xs"><input type="checkbox" checked={pasosIntegradorLab5[i]} onChange={e=>setPasosIntegradorLab5(prev=>prev.map((v,j)=>j===i?e.target.checked:v))} className="mt-0.5 accent-amber-500"/><span>{p}</span></label>)}<div className="h-2 overflow-hidden rounded-full bg-muted"><div className="h-full bg-gold" style={{width:(pasosIntegradorLab5.filter(Boolean).length/5*100)+"%"}}/></div><p className="text-xs text-muted-foreground">{pasosIntegradorLab5.filter(Boolean).length} de 5 etapas completadas.</p><button type="button" onClick={()=>{setPasosIntegradorLab5([false,false,false,false,false]);setPuntosLab5(5);setGradoLab5(3);setDesviacionLab5(2);setCurvaturaLab5(true);setPerfilCerradoLab5(false);}} className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs"><RotateCcw className="size-3"/> Restablecer reto</button></div>}
+          </aside>
+        </div>
+      </section>
+    </div>;
+  };
+
   const renderLaboratorioRestricciones = () => {
     if (lecturaAbierta?.numero !== 3 || paginaLectura !== 5) return null;
     const retos = [
@@ -2344,6 +2418,7 @@ function AulaFormacionPage() {
                 })}
                 {renderLaboratorioCoordenadas()}
                 {renderLaboratorioSesion4()}
+                {renderLaboratorioSesion5()}
                 {renderLaboratorioRestricciones()}
                 {renderLaboratorioOsnap()}
                 {renderLaboratorioSmartTrack()}
