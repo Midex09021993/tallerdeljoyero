@@ -1833,7 +1833,7 @@ function AulaFormacionPage() {
     return !laboratorioCoordenadasAbierto ? <div className="mt-6 max-w-4xl rounded-xl border border-gold/30 bg-gradient-to-r from-gold/10 to-background p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div><p className="text-[10px] font-bold uppercase tracking-widest text-gold-deep">Laboratorio interactivo compartido · Sesión 03</p><h4 className="mt-1 text-sm font-semibold">Construcción por coordenadas</h4><p className="mt-1 text-xs text-muted-foreground">Abre el espacio de trabajo independiente para practicar sin reducir el área de lectura.</p></div>
-        <button type="button" onClick={()=>setLaboratorioCoordenadasAbierto(true)} className="shrink-0 rounded-lg bg-gold px-4 py-2.5 text-sm font-bold text-black">Abrir laboratorio <ExternalLink className="ml-1 inline size-3.5"/></button>
+        <button type="button" onClick={()=>setLaboratorioCoordenadasAbierto(true)} className="shrink-0 rounded-lg bg-gold px-4 py-2.5 text-sm font-bold text-black">Abrir laboratorio <span aria-hidden="true">↗</span></button>
       </div>
     </div> : <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 p-2 sm:p-4">
       <section className="flex max-h-[calc(100vh-1rem)] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-gold/40 bg-background shadow-2xl sm:max-h-[calc(100vh-2rem)]">
