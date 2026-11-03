@@ -108,6 +108,7 @@ const GemSwatch = ({ g, selected, onClick }: { g:GemaConfig; selected:boolean; o
   </button>;
 };
 
+type AurumOriginalSource = { name: string; size: number; lastModified: number; storagePath?: string; contentType?: string };
 type AurumProjectDestination = { rutaCarpeta: string; rutaArchivoOriginal?: string | undefined; nombre: string; archivoNombre?: string | undefined; archivoTamano?: number | undefined; archivoModificado?: number | undefined; nombreProyecto?: string | undefined };
 const EXPORT_LEGADO_VISIBLE: boolean = true;
 
@@ -215,6 +216,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   onCatalogApiReadyRef.current = onCatalogApiReady;
   const [archivo, setArchivo] = useState<string|null>(null), [cargando, setCargando] = useState(false), [estadoCarga, setEstadoCarga] = useState(""), [error, setError] = useState<string|null>(null), [formatoInterno, setFormatoInterno] = useState<string|null>(null);
   const [archivoOriginal, setArchivoOriginal] = useState<File | null>(null);
+  const [archivoOriginalInfo, setArchivoOriginalInfo] = useState<AurumOriginalSource | null>(null);
   const [arrastrandoArchivo, setArrastrandoArchivo] = useState(false);
 
   const [materialId, setMaterialId] = useState<MaterialId>("plata950_pulida"), [gemaId, setGemaId] = useState<GemaId>("diamante_natural"), [escenarioId, setEscenarioId] = useState<EscenarioId>("ijewelReference"), [iluminacionId, setIluminacionId] = useState<IluminacionId>("studioSoft"), [vista, setVista] = useState<VistaId>("frontal");
@@ -338,14 +340,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       toast.error("Inicia sesión con un taller activo para guardar el proyecto en Mi Nube.");
       return;
     }
-    if (!archivo || !archivoOriginal || !apiRef.current?.exportGLB || !apiRef.current?.exportPNG) {
+    if (!archivo || !archivoOriginalInfo || !apiRef.current?.exportGLB || !apiRef.current?.exportPNG) {
       toast.error("Carga una joya antes de guardar el proyecto completo.");
       return;
     }
     setGuardandoProyectoNube(false);
-    setNombreProyectoGuardar((destinoProyectoGuardado?.nombreProyecto && destinoProyectoGuardado.archivoNombre === archivoOriginal.name)
+    setNombreProyectoGuardar((destinoProyectoGuardado?.nombreProyecto && destinoProyectoGuardado.archivoNombre === archivoOriginalInfo.name)
       ? destinoProyectoGuardado.nombreProyecto
-      : (nombreProyecto && nombreProyecto !== "Diseño de joyería" ? nombreProyecto : archivoOriginal.name.replace(/\\.[^.]+$/, "")));
+      : (nombreProyecto && nombreProyecto !== "Diseño de joyería" ? nombreProyecto : archivoOriginalInfo.name.replace(/\\.[^.]+$/, "")));
     try {
       const raiz = `${participanteId}/${userId}`;
       const { data, error: listError } = await supabase.storage.from("mi-nube").list(raiz, {
@@ -365,7 +367,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         if (rawSession) {
           const parsed = JSON.parse(rawSession) as Partial<AurumProjectDestination>;
           if (typeof parsed.rutaCarpeta === "string" && parsed.rutaCarpeta.startsWith(raiz + "/") &&
-              (!parsed.archivoNombre || parsed.archivoNombre === archivoOriginal.name)) {
+              (!parsed.archivoNombre || parsed.archivoNombre === archivoOriginalInfo.name)) {
             carpetaRecordada = parsed.rutaCarpeta.slice((raiz + "/").length).split("/")[0] ?? "";
           }
         }
@@ -375,9 +377,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             const parsed = JSON.parse(rawSaved) as Partial<AurumProjectDestination>;
             if (typeof parsed.rutaCarpeta === "string" &&
                 parsed.rutaCarpeta.startsWith(raiz + "/") &&
-                parsed.archivoNombre === archivoOriginal.name &&
-                parsed.archivoTamano === archivoOriginal.size &&
-                parsed.archivoModificado === archivoOriginal.lastModified) {
+                parsed.archivoNombre === archivoOriginalInfo.name &&
+                parsed.archivoTamano === archivoOriginalInfo.size &&
+                parsed.archivoModificado === archivoOriginalInfo.lastModified) {
               carpetaRecordada = parsed.rutaCarpeta.slice((raiz + "/").length).split("/")[0] ?? "";
             }
           }
@@ -402,7 +404,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const guardarProyectoEnMiNube = async () => {
     const userId = sesion?.user?.id;
     const participanteId = sesion?.participante?.id;
-    if (!userId || !participanteId || !archivoOriginal || !apiRef.current?.exportGLB || !apiRef.current?.exportPNG) {
+    if (!userId || !participanteId || !archivoOriginalInfo || !apiRef.current?.exportGLB || !apiRef.current?.exportPNG) {
       toast.error("La sesión o el modelo ya no están disponibles. Vuelve a cargar la joya e inténtalo de nuevo.");
       return;
     }
@@ -415,7 +417,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
       .replace(/[^a-z0-9_-]+/gi, "-").replace(/^-+|-+$/g, "").slice(0, 80);
     const carpetaVinculada = destinoProyectoGuardado?.rutaCarpeta
-      && destinoProyectoGuardado.archivoNombre === archivoOriginal.name
+      && destinoProyectoGuardado.archivoNombre === archivoOriginalInfo.name
       ? destinoProyectoGuardado.rutaCarpeta.split("/").filter(Boolean).pop()
       : null;
     // Si el archivo se abrió desde Mi Nube, actualizar siempre su carpeta vinculada.
@@ -566,7 +568,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
 
       // El archivo fuente debe quedar en la carpeta del proyecto. Si ya existe allí,
       // o el proyecto conserva una ruta de origen guardada, no volver a subirlo ni sobrescribirlo.
-      const nombreOriginal = archivoOriginal.name.replace(/[\\/]/g, "_");
+      const nombreOriginal = archivoOriginalInfo.name.replace(/[\\/]/g, "_");
       const rutaOriginalEnCarpeta = `${rutaCarpeta}/${nombreOriginal}`;
       const { data: archivosEnCarpeta, error: listarCarpetaError } = await supabase.storage
         .from("mi-nube")
@@ -580,15 +582,20 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       );
       const origenYaGuardado = Boolean(
         destinoProyectoGuardado?.rutaCarpeta === rutaCarpeta &&
-        destinoProyectoGuardado?.archivoNombre === archivoOriginal.name &&
+        destinoProyectoGuardado?.archivoNombre === archivoOriginalInfo.name &&
         destinoProyectoGuardado?.rutaArchivoOriginal?.startsWith(`${rutaCarpeta}/`)
       );
       if (!originalYaEnCarpeta && !origenYaGuardado) {
-        uploads.unshift({
-          ruta: rutaOriginalEnCarpeta,
-          blob: archivoOriginal,
-          contentType: archivoOriginal.type || "application/octet-stream",
-        });
+        let fuenteOriginal: File | null = archivoOriginal;
+        if (!fuenteOriginal && archivoOriginalInfo.storagePath) {
+          const { data: signed, error: signedError } = await supabase.storage.from("mi-nube").createSignedUrl(archivoOriginalInfo.storagePath, 300);
+          if (signedError || !signed?.signedUrl) throw new Error("No se pudo preparar la descarga del 3DM original.");
+          const originalResponse = await fetch(signed.signedUrl);
+          if (!originalResponse.ok) throw new Error("No se pudo recuperar el 3DM original desde Mi Nube.");
+          fuenteOriginal = new File([await originalResponse.blob()], archivoOriginalInfo.name, { type: archivoOriginalInfo.contentType || "application/octet-stream", lastModified: archivoOriginalInfo.lastModified });
+        }
+        if (!fuenteOriginal) throw new Error("No está disponible el archivo fuente 3DM para guardarlo.");
+        uploads.unshift({ ruta: rutaOriginalEnCarpeta, blob: fuenteOriginal, contentType: fuenteOriginal.type || "application/octet-stream" });
       }
 
       if (posterPreview) {
@@ -617,9 +624,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         rutaArchivoOriginal: destinoProyectoGuardado?.rutaArchivoOriginal ?? rutaOriginalEnCarpeta,
         nombre: carpeta,
         nombreProyecto: nombreVisibleProyecto,
-        archivoNombre: archivoOriginal.name,
-        archivoTamano: archivoOriginal.size,
-        archivoModificado: archivoOriginal.lastModified,
+        archivoNombre: archivoOriginalInfo.name,
+        archivoTamano: archivoOriginalInfo.size,
+        archivoModificado: archivoOriginalInfo.lastModified,
       };
       localStorage.setItem("aurum-render-proyecto-destino", JSON.stringify(destino));
       sessionStorage.setItem("aurum-render-poster-destino", JSON.stringify(destino));
@@ -3178,6 +3185,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       invalidateRenderRef.current?.();
       setArchivo(file.name);
       setArchivoOriginal(file);
+      setArchivoOriginalInfo({ name: file.name, size: file.size, lastModified: file.lastModified, contentType: file.type || "application/octet-stream" });
       setFormatoInterno("GLB");
       // El visor permanece en modo LIVE después de cargar el modelo.
       invalidateRenderRef.current?.();
@@ -3187,6 +3195,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       setError(e instanceof Error?e.message:"No se pudo convertir el modelo");
       setArchivo(null);
       setArchivoOriginal(null);
+      setArchivoOriginalInfo(null);
       setFormatoInterno(null);
       return false;
     } finally {
@@ -3311,7 +3320,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       }
       try {
         const datos = JSON.parse(pending) as { url?: string; glbUrl?: string | null; configuracionUrl?: string | null; nombre?: string; rutaArchivoOriginal?: string; rutaCarpeta?: string; archivoTamano?: number };
-        if (typeof datos.url !== "string" || typeof datos.nombre !== "string") throw new Error("La referencia del archivo no es válida.");
+        if (typeof datos.nombre !== "string" || (!datos.url && !datos.glbUrl)) throw new Error("La referencia del archivo no es válida.");
         setPosterPreview(null);
         if (typeof datos.rutaCarpeta === "string" && datos.rutaCarpeta.trim()) {
           const destino = { rutaCarpeta: datos.rutaCarpeta, rutaArchivoOriginal: datos.rutaArchivoOriginal, nombre: datos.nombre, archivoNombre: datos.nombre, archivoTamano: datos.archivoTamano };
@@ -3332,25 +3341,30 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             setPosterPreview(posterUrlData.signedUrl);
           }
         }
-        const responseOriginal = await fetch(datos.url);
-        if (!responseOriginal.ok) throw new Error("No se pudo descargar el 3DM privado desde Mi Nube.");
-        const originalBlob = await responseOriginal.blob();
-        if (cancelado) return;
-        const originalFile = new File([originalBlob], datos.nombre, { type: originalBlob.type || "application/octet-stream" });
-        let archivoParaAbrir = originalFile;
+        let archivoParaAbrir: File | null = null;
         if (typeof datos.glbUrl === "string" && datos.glbUrl) {
           try {
             const responseGlb = await fetch(datos.glbUrl);
             if (responseGlb.ok) {
               const glbBlob = await responseGlb.blob();
-              if (glbBlob.size > 1024 && !cancelado) {
-                archivoParaAbrir = new File([glbBlob], datos.nombre.replace(/\.3dm$/i, ".glb"), { type: "model/gltf-binary" });
-              }
+              if (glbBlob.size > 1024 && !cancelado) archivoParaAbrir = new File([glbBlob], datos.nombre.replace(/\.3dm$/i, ".glb"), { type: "model/gltf-binary" });
             }
           } catch (glbError) {
-            console.warn("[AURUM] No se pudo cargar el GLB guardado; se abrirá el 3DM original.", glbError);
+            console.warn("[AURUM] No se pudo cargar el GLB guardado; se intentará el 3DM fuente.", glbError);
           }
         }
+        let originalFile: File | null = null;
+        const recuperarOriginal = async () => {
+          if (originalFile) return originalFile;
+          if (!datos.url) throw new Error("El GLB no está disponible y falta la referencia del 3DM original.");
+          const response = await fetch(datos.url);
+          if (!response.ok) throw new Error("No se pudo recuperar el 3DM privado desde Mi Nube.");
+          const blob = await response.blob();
+          originalFile = new File([blob], datos.nombre!, { type: blob.type || "application/octet-stream" });
+          return originalFile;
+        };
+        if (!archivoParaAbrir) archivoParaAbrir = await recuperarOriginal();
+        if (cancelado) return;
         sessionStorage.removeItem(key);
         const url = new URL(window.location.href);
         url.searchParams.delete("desde-mi-nube");
@@ -3359,13 +3373,15 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         if (!cargado && archivoParaAbrir !== originalFile) {
           // Si el GLB no se puede interpretar, volver al 3DM fuente en vez de dejar el visor vacío.
           console.warn("[AURUM] Falló la carga del GLB guardado; se intentará el 3DM original.");
-          cargado = await cargarArchivo(originalFile);
+          const fuente = await recuperarOriginal();
+          cargado = await cargarArchivo(fuente);
         }
         if (!cargado) throw new Error("No se pudo abrir el GLB guardado ni el 3DM original.");
         if (cargado) {
           if (archivoParaAbrir !== originalFile) {
-            // El visor usa el GLB, pero las próximas actualizaciones deben conservar el 3DM original.
-            setArchivoOriginal(originalFile);
+            // El visor usa GLB; el 3DM queda remoto y solo se recupera al guardar.
+            setArchivoOriginal(null);
+            setArchivoOriginalInfo({ name: datos.nombre, size: datos.archivoTamano ?? 0, lastModified: 0, storagePath: datos.rutaArchivoOriginal, contentType: "application/octet-stream" });
             setArchivo(datos.nombre);
             setFormatoInterno("GLB");
           }
@@ -3474,13 +3490,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   }, [cargarArchivo]);
 
   useEffect(() => {
-    if (!archivoOriginal) return;
+    if (!archivoOriginalInfo) return;
     try {
       const rawSession = sessionStorage.getItem("aurum-render-poster-destino");
       if (rawSession) {
         const parsed = JSON.parse(rawSession) as Partial<AurumProjectDestination>;
         if (typeof parsed.rutaCarpeta === "string" &&
-            (!parsed.archivoNombre || parsed.archivoNombre === archivoOriginal.name)) {
+            (!parsed.archivoNombre || parsed.archivoNombre === archivoOriginalInfo.name)) {
           setDestinoProyectoGuardado(parsed.rutaCarpeta && typeof parsed.nombre === "string"
             ? { rutaCarpeta: parsed.rutaCarpeta, nombre: parsed.nombre, nombreProyecto: parsed.nombreProyecto,
                 archivoNombre: parsed.archivoNombre, archivoTamano: parsed.archivoTamano, archivoModificado: parsed.archivoModificado }
@@ -3492,9 +3508,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       const rawSaved = localStorage.getItem("aurum-render-proyecto-destino");
       if (!rawSaved) return;
       const saved = JSON.parse(rawSaved) as Partial<AurumProjectDestination>;
-      if (saved.archivoNombre !== archivoOriginal.name ||
-          saved.archivoTamano !== archivoOriginal.size ||
-          saved.archivoModificado !== archivoOriginal.lastModified ||
+      if (saved.archivoNombre !== archivoOriginalInfo.name ||
+          saved.archivoTamano !== archivoOriginalInfo.size ||
+          saved.archivoModificado !== archivoOriginalInfo.lastModified ||
           typeof saved.rutaCarpeta !== "string" ||
           typeof saved.nombre !== "string") return;
       const destino: AurumProjectDestination = {
@@ -3510,9 +3526,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
     } catch {
       // Un destino persistido inválido no debe impedir cargar ni renderizar una joya.
     }
-  }, [archivoOriginal]);
+  }, [archivoOriginalInfo]);
 
-  const limpiar=()=>{apiRef.current?.limpiar();invalidateRenderRef.current?.();setArchivo(null);setArchivoOriginal(null);setFormatoInterno(null);if(fileRef.current)fileRef.current.value=""};
+  const limpiar=()=>{apiRef.current?.limpiar();invalidateRenderRef.current?.();setArchivo(null);setArchivoOriginal(null);setArchivoOriginalInfo(null);setFormatoInterno(null);if(fileRef.current)fileRef.current.value=""};
   const cambiarCalidad=(id:AurumRenderQualityId)=>{
     apiRef.current?.calidad(id);
     setQualityOpen(false);
@@ -3579,7 +3595,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           <input value={nombreProyectoGuardar} onChange={event => setNombreProyectoGuardar(event.target.value)} maxLength={100} placeholder="Ej. Anillo de compromiso" className="mt-1.5 w-full rounded-lg border border-black/10 bg-white px-3 py-2.5 text-sm text-[#292824] outline-none focus:border-[#b99642]" />
         </label>
         <div className="mb-2 block text-xs font-medium text-[#55534d]">Carpeta del proyecto
-          {destinoProyectoGuardado?.rutaCarpeta && destinoProyectoGuardado.archivoNombre === archivoOriginal?.name ? (
+          {destinoProyectoGuardado?.rutaCarpeta && destinoProyectoGuardado.archivoNombre === archivoOriginalInfo?.name ? (
             <div className="mt-1.5 flex items-center gap-2 rounded-lg border border-[#c5a15d]/45 bg-[#c5a15d]/[.08] px-3 py-2.5 text-sm text-[#292824]">
               <FolderOpen className="size-4 shrink-0 text-[#92743b]"/>
               <span className="min-w-0 flex-1 truncate">Carpeta vinculada: {destinoProyectoGuardado.rutaCarpeta.split("/").filter(Boolean).pop()}</span>
@@ -3592,11 +3608,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             </select>
           )}
         </div>
-        {destinoProyectoGuardado?.rutaCarpeta && destinoProyectoGuardado.archivoNombre === archivoOriginal?.name && <p className="mb-3 flex items-start gap-2 rounded-lg border border-[#c5a15d]/35 bg-[#c5a15d]/[.08] p-2.5 text-[11px] leading-relaxed text-[#6d5523]"><FolderOpen className="mt-0.5 size-4 shrink-0"/> Esta joya se actualizará en su carpeta vinculada. No se crearán copias ni se cambiará el destino por accidente.</p>}
+        {destinoProyectoGuardado?.rutaCarpeta && destinoProyectoGuardado.archivoNombre === archivoOriginalInfo?.name && <p className="mb-3 flex items-start gap-2 rounded-lg border border-[#c5a15d]/35 bg-[#c5a15d]/[.08] p-2.5 text-[11px] leading-relaxed text-[#6d5523]"><FolderOpen className="mt-0.5 size-4 shrink-0"/> Esta joya se actualizará en su carpeta vinculada. No se crearán copias ni se cambiará el destino por accidente.</p>}
         <div className="mb-3 rounded-lg border border-black/[.06] bg-white/65 p-3">
           <div className="mb-2 text-[10px] font-semibold uppercase tracking-[.12em] text-[#92743b]">Archivos incluidos</div>
           <div className="space-y-2 text-xs">
-            <div className="flex items-center gap-2"><span className="grid size-6 place-items-center rounded-md bg-[#f0eee7]"><FileJson className="size-3.5"/></span><span className="min-w-0 flex-1 truncate">{archivoOriginal?.name ?? "Archivo original"}</span><span className="text-[#77756f]">Original</span></div>
+            <div className="flex items-center gap-2"><span className="grid size-6 place-items-center rounded-md bg-[#f0eee7]"><FileJson className="size-3.5"/></span><span className="min-w-0 flex-1 truncate">{archivoOriginalInfo?.name ?? "Archivo original"}</span><span className="text-[#77756f]">Original</span></div>
             <div className="flex items-center gap-2"><span className="grid size-6 place-items-center rounded-md bg-[#f0eee7]"><Gem className="size-3.5"/></span><span className="flex-1">Modelo GLB actualizado</span><span className="text-[#77756f]">3D</span></div>
             <div className="flex items-center gap-2"><span className="grid size-6 place-items-center rounded-md bg-[#f0eee7]"><ImageIcon className="size-3.5"/></span><span className="flex-1">Portada del proyecto</span><span className="text-[#77756f]">Solo con su botón</span></div>
           </div>
