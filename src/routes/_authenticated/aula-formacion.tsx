@@ -2435,6 +2435,13 @@ function AulaFormacionPage() {
                       if (lecturaAbierta?.numero === 1 && paginaLectura === 4 && idx >= 6) return null;
                       return <div key={idx}><p className={`mb-5 whitespace-pre-line text-[15px] leading-7 ${modoAulaExpandida ? "max-w-[900px] text-[17px] leading-[1.85] tracking-[0.005em] text-[#3A3A3C]" : "max-w-[900px] text-[#3A3A3C]"}`}>{bloque}</p></div>;
                     })}
+                    {lecturaAbierta?.numero === 1 && paginaLectura === 0 && <div className={`mt-2 rounded-2xl border border-[#D2D2D7] bg-[#F5F5F7] p-4 sm:p-5 ${modoAulaExpandida ? "max-w-[900px]" : "max-w-[900px]"}`}>
+                      <p className="text-sm leading-7 text-[#3A3A3C]">En joyería, la precisión dimensional es fundamental: el modelo debe considerar espesores, tolerancias, espacios de montaje y la ubicación de piedras y engastes. Estas decisiones influyen en la resistencia, la funcionalidad y la viabilidad de fabricación de la pieza.</p>
+                      <div className="mt-4 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <p className="max-w-[560px] text-sm leading-6 text-[#6E6E73]">Una vez definido el modelo CAD, puedes explorar cómo se vería mediante materiales, metales e iluminación en un entorno de presentación 3D.</p>
+                        <a href="/aurum-render" className="inline-flex shrink-0 items-center justify-center rounded-lg bg-[#007AFF] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#0066D6] focus:outline-none focus:ring-2 focus:ring-[#007AFF]/30">Ir a Aurum Render <span aria-hidden="true" className="ml-2">↗</span></a>
+                      </div>
+                    </div>}
                     {renderLaboratorioCoordenadas()}
                     {renderLaboratorioSesion4()}
                     {renderLaboratorioRestricciones()}
