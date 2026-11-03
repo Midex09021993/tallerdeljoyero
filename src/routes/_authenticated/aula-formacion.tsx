@@ -3283,7 +3283,7 @@ function AulaFormacionPage() {
                    </div>
                  </section>}
                  {materialesVistaAula.filter(m => m.curso_id === i.curso_id).length === 0 && <p className="rounded-xl border border-dashed border-[#dce5ee] p-5 text-sm text-[#718096]">Todavía no hay materiales publicados.</p>}
-               </section></>}}
+               </section></>}
               </div>
             </section>}
           </article>)}
