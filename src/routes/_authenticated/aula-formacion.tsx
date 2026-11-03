@@ -2405,35 +2405,35 @@ function AulaFormacionPage() {
             </nav>
           </section>
 
-          {lecturaAbierta && lecturaModoVistaPrevia && <div className={`fixed inset-0 z-[60] flex items-center justify-center overflow-hidden ${modoAulaExpandida ? "bg-background p-0" : "left-0 bg-black/60 p-2 sm:p-3 lg:left-64 xl:left-72"}`} role="dialog" aria-modal="true" aria-label="Lectura de la sesión · vista previa">
-            <div className={"mx-auto flex h-[calc(100dvh-1rem)] max-h-[900px] min-h-0 w-full flex-col " + (modoAulaExpandida ? "max-w-none" : lecturaAbierta.numero === 5 ? "max-w-[1700px]" : "max-w-5xl") + ` overflow-hidden border border-white/10 bg-background shadow-2xl ${modoAulaExpandida ? "h-full max-h-none rounded-none border-0" : "rounded-2xl"}`}>
-              <header className={`shrink-0 border-b border-[#e2e8f0] bg-white ${modoAulaExpandida ? "px-4 py-2 sm:px-6 sm:py-2" : "px-4 py-3 sm:px-6 sm:py-4"}`}>
-                <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1"><div className="min-w-0 flex-1"><p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[#98743c]">FADILAB · Lectura guiada</p><h2 className={`font-semibold leading-tight ${modoAulaExpandida ? "mt-0.5 text-base sm:text-lg" : "mt-1 text-lg"}`}>{lecturaAbierta.numero}. {lecturaAbierta.titulo}</h2>{!modoAulaExpandida && <p className="mt-1 text-xs text-[#64748b]">Vista previa del alumno · Modo de simulación, sin guardar actividad académica.</p>}</div><button type="button" onClick={() => { setLecturaAbierta(null); setLecturaModoVistaPrevia(false); setModoAulaExpandida(false); }} className="shrink-0 rounded-lg border border-[#d8e1ea] bg-white px-3 py-1.5 text-xs font-medium text-[#40556b] transition hover:border-[#b99552]">Cerrar</button></div>
-                <div className={`flex items-center gap-3 ${modoAulaExpandida ? "mt-1.5" : "mt-4"}`}><div className={`min-w-0 flex-1 overflow-hidden rounded-full bg-[#e8edf2] ${modoAulaExpandida ? "h-1" : "h-2"}`}><div className="h-full rounded-full bg-gold transition-all" style={{width: (seccionesLecturaActivas.length ? ((paginaLectura+1)/seccionesLecturaActivas.length)*100 : 0)+"%"}}/></div><p className="shrink-0 text-[10px] text-[#64748b]">Apartado {paginaLectura+1} de {seccionesLecturaActivas.length}</p></div>
+          {lecturaAbierta && lecturaModoVistaPrevia && <div className={`fixed inset-0 z-[60] flex items-center justify-center overflow-hidden ${modoAulaExpandida ? "bg-background p-0" : "left-0 bg-black/25 p-2 sm:p-3 lg:left-64 xl:left-72"}`} role="dialog" aria-modal="true" aria-label="Lectura de la sesión · vista previa">
+            <div className={"mx-auto flex h-[calc(100dvh-1rem)] max-h-[900px] min-h-0 w-full flex-col " + (modoAulaExpandida ? "max-w-none" : lecturaAbierta.numero === 5 ? "max-w-[1700px]" : "max-w-5xl") + ` overflow-hidden border border-[#D2D2D7] bg-white shadow-[0_16px_48px_rgba(0,0,0,0.12)] ${modoAulaExpandida ? "h-full max-h-none rounded-none border-0" : "rounded-2xl"}`}>
+              <header className={`shrink-0 border-b border-[#D2D2D7] bg-white ${modoAulaExpandida ? "px-4 py-2 sm:px-6 sm:py-2" : "px-4 py-3 sm:px-6 sm:py-4"}`}>
+                <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1"><div className="min-w-0 flex-1"><p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[#98743c]">FADILAB · Lectura guiada</p><h2 className={`font-semibold leading-tight ${modoAulaExpandida ? "mt-0.5 text-base sm:text-lg" : "mt-1 text-lg"}`}>{lecturaAbierta.numero}. {lecturaAbierta.titulo}</h2>{!modoAulaExpandida && <p className="mt-1 text-xs text-[#6E6E73]">Vista previa del alumno · Modo de simulación, sin guardar actividad académica.</p>}</div><button type="button" onClick={() => { setLecturaAbierta(null); setLecturaModoVistaPrevia(false); setModoAulaExpandida(false); }} className="shrink-0 rounded-lg border border-[#d8e1ea] bg-white px-3 py-1.5 text-xs font-medium text-[#1D1D1F] transition hover:border-[#b99552]">Cerrar</button></div>
+                <div className={`flex items-center gap-3 ${modoAulaExpandida ? "mt-1.5" : "mt-4"}`}><div className={`min-w-0 flex-1 overflow-hidden rounded-full bg-[#E5E5EA] ${modoAulaExpandida ? "h-1" : "h-2"}`}><div className="h-full rounded-full bg-[#007AFF] transition-all" style={{width: (seccionesLecturaActivas.length ? ((paginaLectura+1)/seccionesLecturaActivas.length)*100 : 0)+"%"}}/></div><p className="shrink-0 text-[10px] text-[#6E6E73]">Apartado {paginaLectura+1} de {seccionesLecturaActivas.length}</p></div>
               </header>
-              <nav aria-label="Índice de la lectura" className={`shrink-0 border-b px-4 sm:px-6 ${modoAulaExpandida ? "border-[#e2e8f0] bg-[#f8fafc] py-2" : "border-[#e2e8f0] bg-[#f8fafc] py-3 sm:py-3"}`}>
+              <nav aria-label="Índice de la lectura" className={`shrink-0 border-b px-4 sm:px-6 ${modoAulaExpandida ? "border-[#D2D2D7] bg-[#F5F5F7] py-2" : "border-[#D2D2D7] bg-[#F5F5F7] py-3 sm:py-3"}`}>
                 {modoAulaExpandida ? (
                   <div className="flex min-w-0 items-center gap-3">
-                    <p className="shrink-0 text-[9px] font-semibold uppercase tracking-[0.13em] text-[#64748b]">Índice</p>
+                    <p className="shrink-0 text-[9px] font-semibold uppercase tracking-[0.13em] text-[#6E6E73]">Índice</p>
                     <div className="flex min-w-0 flex-1 gap-1.5 overflow-x-auto py-0.5">
-                      {seccionesLecturaActivas.map((seccion, indice) => <button key={indice} type="button" onClick={() => setPaginaLectura(indice)} aria-current={paginaLectura===indice ? "step" : undefined} aria-label={`Apartado ${indice+1}: ${seccion.titulo}`} className={`flex h-10 min-w-10 shrink-0 items-center justify-center rounded-lg border px-3 text-xs font-semibold transition ${paginaLectura===indice ? "border-[#b99552] bg-[#b99552] text-white shadow-sm" : "border-[#d8e1ea] bg-white text-[#40556b] hover:border-[#b99552] hover:bg-[#fbf8f1] hover:text-[#24364a]"}`} title={seccion.titulo}>{String(indice+1).padStart(2,"0")}</button>)}
+                      {seccionesLecturaActivas.map((seccion, indice) => <button key={indice} type="button" onClick={() => setPaginaLectura(indice)} aria-current={paginaLectura===indice ? "step" : undefined} aria-label={`Apartado ${indice+1}: ${seccion.titulo}`} className={`flex h-10 min-w-10 shrink-0 items-center justify-center rounded-lg border px-3 text-xs font-semibold transition ${paginaLectura===indice ? "border-[#007AFF] bg-[#007AFF] text-white shadow-sm" : "border-[#d8e1ea] bg-white text-[#1D1D1F] hover:border-[#b99552] hover:bg-[#fbf8f1] hover:text-[#1D1D1F]"}`} title={seccion.titulo}>{String(indice+1).padStart(2,"0")}</button>)}
                     </div>
                   </div>
                 ) : (
                   <>
-                    <div className="mb-2 flex items-center justify-between gap-3"><p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#64748b]">Índice de contenidos</p><p className="text-[11px] text-[#64748b]">Selecciona un apartado para navegar</p></div>
-                    <div className="flex gap-2 overflow-x-auto pb-1">{seccionesLecturaActivas.map((seccion, indice) => <button key={indice} type="button" onClick={() => setPaginaLectura(indice)} aria-current={paginaLectura===indice ? "step" : undefined} className={`flex min-w-10 shrink-0 items-center justify-center rounded-lg border px-3 py-2 text-xs font-semibold transition ${paginaLectura===indice ? "border-[#b99552] bg-[#b99552] text-white shadow-sm" : "border-white/10 bg-[#121922] text-[#64748b] hover:border-gold/50 hover:text-foreground"}`} title={seccion.titulo}>{String(indice+1).padStart(2,"0")}</button>)}</div>
-                    <p className="mt-2 truncate text-xs font-medium text-[#40556b]">{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</p>
+                    <div className="mb-2 flex items-center justify-between gap-3"><p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#6E6E73]">Índice de contenidos</p><p className="text-[11px] text-[#6E6E73]">Selecciona un apartado para navegar</p></div>
+                    <div className="flex gap-2 overflow-x-auto pb-1">{seccionesLecturaActivas.map((seccion, indice) => <button key={indice} type="button" onClick={() => setPaginaLectura(indice)} aria-current={paginaLectura===indice ? "step" : undefined} className={`flex min-w-10 shrink-0 items-center justify-center rounded-lg border px-3 py-2 text-xs font-semibold transition ${paginaLectura===indice ? "border-[#007AFF] bg-[#007AFF] text-white shadow-sm" : "border-white/10 bg-[#121922] text-[#6E6E73] hover:border-gold/50 hover:text-foreground"}`} title={seccion.titulo}>{String(indice+1).padStart(2,"0")}</button>)}</div>
+                    <p className="mt-2 truncate text-xs font-medium text-[#1D1D1F]">{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</p>
                   </>
                 )}
               </nav>
-              <main className={`min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-8 sm:py-6 lg:px-10 ${modoAulaExpandida ? "bg-[#f8fafc] px-6 py-7 text-[#334155] sm:px-10 sm:py-9 lg:px-14 xl:px-16 2xl:px-20" : "bg-[#f8fafc]"}`}>
+              <main className={`min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-8 sm:py-6 lg:px-10 ${modoAulaExpandida ? "bg-white px-6 py-7 text-[#3A3A3C] sm:px-10 sm:py-9 lg:px-14 xl:px-16 2xl:px-20" : "bg-white"}`}>
                 <div className={lecturaAbierta?.numero === 5 ? "grid items-start gap-6 2xl:grid-cols-[minmax(0,.9fr)_minmax(0,1.1fr)]" : ""}>
                   <section className={`min-w-0 ${modoAulaExpandida ? "mx-auto w-full max-w-[1180px]" : ""}`}>
-                    <h3 className={`mb-6 font-display text-2xl leading-tight sm:text-3xl ${modoAulaExpandida ? "max-w-[1080px] text-[#1d2b3a] sm:text-[2.15rem] sm:leading-[1.2]" : "max-w-4xl"}`} >{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</h3>
+                    <h3 className={`mb-6 font-display text-2xl leading-tight sm:text-3xl ${modoAulaExpandida ? "max-w-[1080px] text-[#1D1D1F] sm:text-[2.15rem] sm:leading-[1.2]" : "max-w-4xl"}`} >{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</h3>
                     {(seccionesLecturaActivas[paginaLectura]?.bloques ?? []).map((bloque,idx) => {
                       if (lecturaAbierta?.numero === 1 && paginaLectura === 4 && idx >= 6) return null;
-                      return <div key={idx}><p className={`mb-5 whitespace-pre-line text-[15px] leading-7 ${modoAulaExpandida ? "max-w-[1180px] text-[17px] leading-[1.85] tracking-[0.005em] text-[#475569]" : "max-w-4xl text-foreground/90"}`}>{bloque}</p></div>;
+                      return <div key={idx}><p className={`mb-5 whitespace-pre-line text-[15px] leading-7 ${modoAulaExpandida ? "max-w-[1180px] text-[17px] leading-[1.85] tracking-[0.005em] text-[#3A3A3C]" : "max-w-4xl text-foreground/90"}`}>{bloque}</p></div>;
                     })}
                     {renderLaboratorioCoordenadas()}
                     {renderLaboratorioSesion4()}
@@ -2449,14 +2449,14 @@ function AulaFormacionPage() {
                 {renderLaboratorioCapas()}
                 {renderSelectorVistasPlano()}
                 {lecturaAbierta?.numero === 1 && paginaLectura === 4 && <section className={`mt-5 rounded-xl border border-[#b79558]/40 bg-gradient-to-br from-[#211b11] via-[#151b22] to-[#10151b] text-slate-100 p-5 ${modoAulaExpandida ? "max-w-[1400px]" : "max-w-4xl"}`}>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-300">Recurso interactivo</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9A7B43]">Recurso interactivo</p>
                   <h4 className="mt-1 text-base font-semibold">Comandos de navegación</h4>
-                  <p className="mt-2 text-sm text-[#64748b]">Abre la ficha para explorar los comandos y consultar la función de cada uno.</p>
+                  <p className="mt-2 text-sm text-[#6E6E73]">Abre la ficha para explorar los comandos y consultar la función de cada uno.</p>
                   <button type="button" onClick={() => { setComandoNavegacionActivo("Zoom"); setComandosNavegacionAbiertos(true); }} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95">Ver comandos de navegación <ChevronRight className="size-4"/></button>
                   {comandosNavegacionAbiertos && <div className="fixed inset-0 z-[96] flex items-center justify-center bg-black/75 p-2 sm:p-4" role="dialog" aria-modal="true" aria-label="Comandos de navegación de Rhino 7">
-                    <div className="flex max-h-[94dvh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-white/10 bg-background shadow-2xl">
+                    <div className="flex max-h-[94dvh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-[#D2D2D7] bg-white shadow-[0_16px_48px_rgba(0,0,0,0.12)]">
                       <header className="flex shrink-0 items-center justify-between gap-3 border-b border-white/10 bg-[#0e141b]/95 px-5 py-4">
-                        <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-300">FADILAB · Guía interactiva</p><h3 className="text-lg font-semibold">Comandos de navegación · Rhino 7</h3><p className="mt-1 text-xs text-[#64748b]">Selecciona un comando para consultar su función.</p></div>
+                        <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9A7B43]">FADILAB · Guía interactiva</p><h3 className="text-lg font-semibold">Comandos de navegación · Rhino 7</h3><p className="mt-1 text-xs text-[#6E6E73]">Selecciona un comando para consultar su función.</p></div>
                         <button type="button" onClick={() => setComandosNavegacionAbiertos(false)} className="shrink-0 rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold hover:border-gold">Cerrar ×</button>
                       </header>
                       <div className="min-h-0 overflow-y-auto p-4 sm:p-5">
@@ -2469,11 +2469,11 @@ function AulaFormacionPage() {
                               {comando:"ZS",funcion:"Zoom Selected: encuadrar objetos seleccionados"},
                               {comando:"Pan",funcion:"Desplazamiento de la vista"},
                               {comando:"UndoView",funcion:"Recuperar la vista anterior"}
-                            ].map(item=><tr key={item.comando}><td className="border-b border-white/10 p-0"><button type="button" onClick={()=>setComandoNavegacionActivo(item.comando)} aria-pressed={comandoNavegacionActivo===item.comando} className={`w-full px-4 py-3 text-left font-semibold transition hover:bg-gold/10 ${comandoNavegacionActivo===item.comando?"bg-gold/15 text-amber-300":"bg-background"}`}>{item.comando}</button></td><td className="border-b border-white/10 px-4 py-3">{item.funcion}</td></tr>)}
+                            ].map(item=><tr key={item.comando}><td className="border-b border-white/10 p-0"><button type="button" onClick={()=>setComandoNavegacionActivo(item.comando)} aria-pressed={comandoNavegacionActivo===item.comando} className={`w-full px-4 py-3 text-left font-semibold transition hover:bg-gold/10 ${comandoNavegacionActivo===item.comando?"bg-gold/15 text-[#9A7B43]":"bg-background"}`}>{item.comando}</button></td><td className="border-b border-white/10 px-4 py-3">{item.funcion}</td></tr>)}
                           </tbody></table>
                         </div>
                         <div className="mt-4 rounded-xl border border-[#b79558]/40 bg-gold/10 p-4" aria-live="polite">
-                          <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-amber-300">Comando seleccionado</p>
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#9A7B43]">Comando seleccionado</p>
                           <p className="mt-1 text-lg font-semibold">{comandoNavegacionActivo}</p>
                           <p className="mt-1 text-sm text-slate-300">{({Zoom:"Control de acercamiento",ZE:"Zoom Extents: encuadrar todos los objetos",ZEA:"Zoom All Extents: encuadrar todas las vistas",ZS:"Zoom Selected: encuadrar objetos seleccionados",Pan:"Desplazamiento de la vista",UndoView:"Recuperar la vista anterior"} as Record<string,string>)[comandoNavegacionActivo]}</p>
                         </div>
@@ -2482,14 +2482,14 @@ function AulaFormacionPage() {
                   </div>}
                 </section>}
                 {lecturaAbierta?.numero === 1 && paginaLectura === 1 && <section className="mt-7 rounded-2xl border border-[#b79558]/40 bg-gradient-to-br from-white via-[#fffefa] to-[#f7f3eb] text-[#24221e] p-5 sm:p-6">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-300">Material visual de apoyo</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9A7B43]">Material visual de apoyo</p>
                   <h4 className="mt-1 text-lg font-semibold">Rhinoceros 7</h4>
-                  <p className="mt-2 text-sm leading-6 text-[#64748b]">Consulta la imagen de referencia general del programa.</p>
-                  {imagenRhinoUrl ? <button type="button" onClick={() => setTipoImagenApoyoAbierta(tipoImagenApoyoAbierta === "rhinoceros" ? null : "rhinoceros")} aria-expanded={tipoImagenApoyoAbierta === "rhinoceros"} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95">Ver RHINOCEROS <ChevronRight className="size-4"/></button> : <p className="mt-3 text-xs text-[#64748b]">{imagenRhinoError || "Buscando RHINOCEROS en la Biblioteca del curso…"}</p>}
+                  <p className="mt-2 text-sm leading-6 text-[#6E6E73]">Consulta la imagen de referencia general del programa.</p>
+                  {imagenRhinoUrl ? <button type="button" onClick={() => setTipoImagenApoyoAbierta(tipoImagenApoyoAbierta === "rhinoceros" ? null : "rhinoceros")} aria-expanded={tipoImagenApoyoAbierta === "rhinoceros"} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95">Ver RHINOCEROS <ChevronRight className="size-4"/></button> : <p className="mt-3 text-xs text-[#6E6E73]">{imagenRhinoError || "Buscando RHINOCEROS en la Biblioteca del curso…"}</p>}
                   {tipoImagenApoyoAbierta && <div className="fixed inset-0 z-[95] flex items-center justify-center overflow-hidden bg-black/75 p-2 sm:p-4" role="dialog" aria-modal="true" aria-label="Imagen de referencia de Rhinoceros">
-                    <div className="flex max-h-[96dvh] w-full max-w-[1200px] flex-col overflow-hidden rounded-xl border border-white/10 bg-background shadow-2xl">
-                      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-[#e2e8f0] bg-white px-4 py-3 sm:px-5">
-                        <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-300">FADILAB · Material de estudio</p><h3 className="text-base font-semibold">{tipoImagenApoyoAbierta === "rhinoceros" ? "Rhinoceros 7" : tipoImagenApoyoAbierta === "vistas" ? "Vistas de trabajo" : "Ejes de coordenadas"}</h3></div>
+                    <div className="flex max-h-[96dvh] w-full max-w-[1200px] flex-col overflow-hidden rounded-xl border border-[#D2D2D7] bg-white shadow-[0_16px_48px_rgba(0,0,0,0.12)]">
+                      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-[#D2D2D7] bg-white px-4 py-3 sm:px-5">
+                        <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9A7B43]">FADILAB · Material de estudio</p><h3 className="text-base font-semibold">{tipoImagenApoyoAbierta === "rhinoceros" ? "Rhinoceros 7" : tipoImagenApoyoAbierta === "vistas" ? "Vistas de trabajo" : "Ejes de coordenadas"}</h3></div>
                         <button type="button" onClick={() => setTipoImagenApoyoAbierta(null)} className="shrink-0 rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold hover:border-gold">Cerrar ×</button>
                       </header>
                       <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto bg-background p-3 sm:p-5">
@@ -2499,18 +2499,18 @@ function AulaFormacionPage() {
                   </div>}
                 </section>}
                 {lecturaAbierta?.numero === 1 && paginaLectura === 3 && <section className="mt-7 rounded-2xl border border-[#b79558]/40 bg-gradient-to-br from-white via-[#fffefa] to-[#f7f3eb] text-[#24221e] p-5 sm:p-6">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-300">Material visual de apoyo</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9A7B43]">Material visual de apoyo</p>
                   <h4 className="mt-1 text-lg font-semibold">Vistas y ejes de Rhinoceros 7</h4>
-                  <p className="mt-2 text-sm leading-6 text-[#64748b]">Identifica las vistas de trabajo y la orientación espacial mediante los ejes de coordenadas.</p>
+                  <p className="mt-2 text-sm leading-6 text-[#6E6E73]">Identifica las vistas de trabajo y la orientación espacial mediante los ejes de coordenadas.</p>
                   <div className="mt-4 flex flex-wrap gap-2">
                     {imagenesVistasUrl && <button type="button" onClick={() => setTipoImagenApoyoAbierta(tipoImagenApoyoAbierta === "vistas" ? null : "vistas")} aria-expanded={tipoImagenApoyoAbierta === "vistas"} className="inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95">Ver VISTAS <ChevronRight className="size-4"/></button>}
                     {imagenesEjesUrl && <button type="button" onClick={() => setTipoImagenApoyoAbierta(tipoImagenApoyoAbierta === "ejes" ? null : "ejes")} aria-expanded={tipoImagenApoyoAbierta === "ejes"} className="inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95">Ver EJES <ChevronRight className="size-4"/></button>}
                   </div>
-                  {!imagenesVistasUrl && !imagenesEjesUrl && <p className="mt-3 text-xs text-[#64748b]">{errorImagenesApoyo || "Buscando VISTAS y EJES en la Biblioteca del curso…"}</p>}
+                  {!imagenesVistasUrl && !imagenesEjesUrl && <p className="mt-3 text-xs text-[#6E6E73]">{errorImagenesApoyo || "Buscando VISTAS y EJES en la Biblioteca del curso…"}</p>}
                   {(tipoImagenApoyoAbierta === "vistas" || tipoImagenApoyoAbierta === "ejes") && <div className="fixed inset-0 z-[95] flex items-center justify-center overflow-hidden bg-black/75 p-2 sm:p-4" role="dialog" aria-modal="true" aria-label="Imagen de referencia de Rhinoceros">
-                    <div className="flex max-h-[96dvh] w-full max-w-[1200px] flex-col overflow-hidden rounded-xl border border-white/10 bg-background shadow-2xl">
+                    <div className="flex max-h-[96dvh] w-full max-w-[1200px] flex-col overflow-hidden rounded-xl border border-[#D2D2D7] bg-white shadow-[0_16px_48px_rgba(0,0,0,0.12)]">
                       <header className="flex shrink-0 items-center justify-between gap-3 border-b border-white/10 bg-[#0e141b]/95 px-4 py-3 sm:px-5">
-                        <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-300">FADILAB · Material de estudio</p><h3 className="text-base font-semibold">{tipoImagenApoyoAbierta === "vistas" ? "Vistas de trabajo" : "Ejes de coordenadas"}</h3></div>
+                        <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9A7B43]">FADILAB · Material de estudio</p><h3 className="text-base font-semibold">{tipoImagenApoyoAbierta === "vistas" ? "Vistas de trabajo" : "Ejes de coordenadas"}</h3></div>
                         <button type="button" onClick={() => setTipoImagenApoyoAbierta(null)} className="shrink-0 rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold hover:border-gold">Cerrar ×</button>
                       </header>
                       <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto bg-background p-3 sm:p-5">
@@ -2520,14 +2520,14 @@ function AulaFormacionPage() {
                   </div>}
                 </section>}
                 {lecturaAbierta?.numero === 1 && paginaLectura === 6 && <section className="mt-7 rounded-2xl border border-[#b79558]/40 bg-gradient-to-br from-white via-[#fffefa] to-[#f7f3eb] text-[#24221e] p-5 sm:p-6">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-300">Material visual de apoyo</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9A7B43]">Material visual de apoyo</p>
                   <h4 className="mt-1 text-lg font-semibold">Proceso de joyería con impresión 3D</h4>
-                  <p className="mt-2 text-sm leading-6 text-[#64748b]">Observa la secuencia general que conecta el diseño digital con la fabricación de una pieza de joyería mediante impresión 3D.</p>
-                  {imagenProceso3DUrl ? <button type="button" onClick={() => setTipoImagenApoyoAbierta(tipoImagenApoyoAbierta === "proceso3d" ? null : "proceso3d")} aria-expanded={tipoImagenApoyoAbierta === "proceso3d"} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95">Ver PROCESO DE JOYERÍA CON IMPRESIÓN 3D <ChevronRight className="size-4"/></button> : <p className="mt-3 text-xs text-[#64748b]">{imagenProceso3DError || "Buscando la imagen del proceso en la Biblioteca del curso…"}</p>}
+                  <p className="mt-2 text-sm leading-6 text-[#6E6E73]">Observa la secuencia general que conecta el diseño digital con la fabricación de una pieza de joyería mediante impresión 3D.</p>
+                  {imagenProceso3DUrl ? <button type="button" onClick={() => setTipoImagenApoyoAbierta(tipoImagenApoyoAbierta === "proceso3d" ? null : "proceso3d")} aria-expanded={tipoImagenApoyoAbierta === "proceso3d"} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95">Ver PROCESO DE JOYERÍA CON IMPRESIÓN 3D <ChevronRight className="size-4"/></button> : <p className="mt-3 text-xs text-[#6E6E73]">{imagenProceso3DError || "Buscando la imagen del proceso en la Biblioteca del curso…"}</p>}
                   {tipoImagenApoyoAbierta === "proceso3d" && <div className="fixed inset-0 z-[95] flex items-center justify-center overflow-hidden bg-black/75 p-2 sm:p-4" role="dialog" aria-modal="true" aria-label="Proceso de joyería con impresión 3D">
-                    <div className="flex max-h-[96dvh] w-full max-w-[1200px] flex-col overflow-hidden rounded-xl border border-white/10 bg-background shadow-2xl">
+                    <div className="flex max-h-[96dvh] w-full max-w-[1200px] flex-col overflow-hidden rounded-xl border border-[#D2D2D7] bg-white shadow-[0_16px_48px_rgba(0,0,0,0.12)]">
                       <header className="flex shrink-0 items-center justify-between gap-3 border-b border-white/10 bg-[#0e141b]/95 px-4 py-3 sm:px-5">
-                        <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-300">FADILAB · Material de estudio</p><h3 className="text-base font-semibold">Proceso de joyería con impresión 3D</h3></div>
+                        <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9A7B43]">FADILAB · Material de estudio</p><h3 className="text-base font-semibold">Proceso de joyería con impresión 3D</h3></div>
                         <button type="button" onClick={() => setTipoImagenApoyoAbierta(null)} className="shrink-0 rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold hover:border-gold">Cerrar ×</button>
                       </header>
                       <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto bg-background p-3 sm:p-5">
@@ -2537,16 +2537,16 @@ function AulaFormacionPage() {
                   </div>}
                 </section>}
                 {lecturaAbierta?.numero === 1 && paginaLectura === 2 && !interfazInteractivaAbierta && <section className="mt-7 rounded-2xl border border-[#b79558]/40 bg-gradient-to-br from-white via-[#fffefa] to-[#f7f3eb] text-[#24221e] p-5 sm:p-6">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-300">Actividad guiada · FADILAB</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9A7B43]">Actividad guiada · FADILAB</p>
                   <h4 className="mt-1 text-lg font-semibold">Conoce cada parte de la interfaz</h4>
-                  <p className="mt-2 max-w-3xl text-sm leading-6 text-[#64748b]">Abre el recorrido interactivo para identificar los componentes directamente sobre la captura de MatrixGold 3.1. Explora los 14 marcadores numerados para conocer dónde se encuentra cada componente y para qué sirve.</p>
+                  <p className="mt-2 max-w-3xl text-sm leading-6 text-[#6E6E73]">Abre el recorrido interactivo para identificar los componentes directamente sobre la captura de MatrixGold 3.1. Explora los 14 marcadores numerados para conocer dónde se encuentra cada componente y para qué sirve.</p>
                   <button type="button" disabled={!imagenInterfazUrl} onClick={() => setInterfazInteractivaAbierta(true)} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gold px-5 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50">Explorar interfaz interactiva <ChevronRight className="size-4"/></button>
-                  {!imagenInterfazUrl && <p className="mt-2 text-xs text-[#64748b]">{imagenInterfazError || "Buscando la imagen en la Biblioteca del curso…"}</p>}
+                  {!imagenInterfazUrl && <p className="mt-2 text-xs text-[#6E6E73]">{imagenInterfazError || "Buscando la imagen en la Biblioteca del curso…"}</p>}
                 </section>}
                 {lecturaAbierta?.numero === 1 && paginaLectura === 2 && interfazInteractivaAbierta && <div className="fixed inset-0 z-[90] flex items-center justify-center overflow-hidden bg-black/75 p-1 sm:p-2" role="dialog" aria-modal="true" aria-label="Exploración interactiva de MatrixGold 3.1">
-                  <div className="flex h-[calc(100dvh-0.5rem)] w-[99vw] max-w-[1700px] min-h-0 flex-col overflow-hidden rounded-xl border border-white/10 bg-background shadow-2xl">
+                  <div className="flex h-[calc(100dvh-0.5rem)] w-[99vw] max-w-[1700px] min-h-0 flex-col overflow-hidden rounded-xl border border-[#D2D2D7] bg-white shadow-[0_16px_48px_rgba(0,0,0,0.12)]">
                     <header className="flex shrink-0 items-center justify-between gap-3 border-b border-white/10 bg-[#0e141b]/95 px-3 py-2 sm:px-5">
-                      <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-300">FADILAB · Recorrido de aprendizaje</p><h3 className="text-base font-semibold sm:text-lg">Explora la interfaz de MatrixGold 3.1</h3></div>
+                      <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9A7B43]">FADILAB · Recorrido de aprendizaje</p><h3 className="text-base font-semibold sm:text-lg">Explora la interfaz de MatrixGold 3.1</h3></div>
                       <button type="button" onClick={() => setInterfazInteractivaAbierta(false)} className="shrink-0 rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold hover:border-gold">Cerrar ×</button>
                     </header>
                     <div className="flex min-h-0 flex-1 flex-col overflow-hidden p-1.5 sm:p-2">
@@ -2576,7 +2576,7 @@ function AulaFormacionPage() {
                     </div>
                   </div>
                 </div>}
-                {paginaLectura === seccionesLecturaActivas.length-1 && <div className="rounded-xl border border-[#dce4ec] bg-white p-4"><p className="text-sm font-semibold">Has llegado al final de la lectura</p><p className="mt-1 text-sm text-[#64748b]">En el aula real, el alumno podrá finalizar y marcar la sesión como completada.</p></div>}
+                {paginaLectura === seccionesLecturaActivas.length-1 && <div className="rounded-xl border border-[#dce4ec] bg-white p-4"><p className="text-sm font-semibold">Has llegado al final de la lectura</p><p className="mt-1 text-sm text-[#6E6E73]">En el aula real, el alumno podrá finalizar y marcar la sesión como completada.</p></div>}
               </main>
               {paginaLectura === seccionesLecturaActivas.length-1 && <footer className="shrink-0 flex justify-end border-t border-[#e2e8f0] bg-white px-4 py-3 sm:px-6 sm:py-4">
                 <button type="button" onClick={() => { setLecturasSimuladas(prev => new Set(prev).add(lecturaAbierta.id)); setLecturaAbierta(null); setLecturaModoVistaPrevia(false); }} className="inline-flex items-center gap-2 rounded-lg bg-[#b99552] px-4 py-2.5 text-sm font-semibold text-white"><CheckCircle2 className="size-4"/> Simular lectura completada</button>
@@ -2647,7 +2647,7 @@ function AulaFormacionPage() {
           {seccionDocente === "alumnos" && cursoActivoId && <div id="doc-alumnos-sesiones" className="grid scroll-mt-24 gap-5 lg:grid-cols-2">
             <Panel titulo="Alumnos del curso" colapsable defaultOpen={true}>
               <div className="space-y-4 p-5">
-                <div className="flex items-start gap-3 rounded-xl border border-[#e4eaf0] bg-[#f8fafc] p-4">
+                <div className="flex items-start gap-3 rounded-xl border border-[#e4eaf0] bg-white p-4">
                   <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#edf3f8] text-[#496782]"><Users className="size-5" /></span>
                   <div><p className="text-sm font-semibold text-[#253446]">Incorpora participantes</p><p className="mt-1 text-xs leading-5 text-[#718096]">Selecciona personas de las cuentas existentes de Taller del Joyero. No se crean usuarios nuevos.</p></div>
                 </div>
@@ -2723,7 +2723,7 @@ function AulaFormacionPage() {
 
                 <div className="space-y-2.5">
                   {sesionesQuery.isLoading ? <p className="rounded-xl border border-[#e4e9ef] bg-[#fbfcfd] px-4 py-6 text-center text-xs text-[#718096]">Cargando sesiones…</p> : (sesionesQuery.data ?? []).length === 0 ? <div className="rounded-xl border border-dashed border-[#cbd7e1] bg-[#fbfcfd] px-4 py-8 text-center"><CalendarDays className="mx-auto size-7 text-[#9aa7b5]"/><p className="mt-2 text-sm font-semibold text-[#425466]">Todavía no hay sesiones</p><p className="mt-1 text-xs text-[#8190a0]">Añade la primera etapa para comenzar a construir el programa.</p></div> : (sesionesQuery.data ?? []).map(s => <details key={s.id} open={sesionEditandoId === s.id} className="group overflow-hidden rounded-xl border border-[#e1e8ef] bg-white transition open:border-[#b9cad9] open:shadow-[0_2px_12px_rgba(41,71,96,0.06)]">
-                    <summary className="flex cursor-pointer list-none items-center gap-3 px-3.5 py-3.5 transition hover:bg-[#f8fafc] [&::-webkit-details-marker]:hidden sm:px-4">
+                    <summary className="flex cursor-pointer list-none items-center gap-3 px-3.5 py-3.5 transition hover:bg-white [&::-webkit-details-marker]:hidden sm:px-4">
                       <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#edf3f8] text-sm font-bold tabular-nums text-[#496782]">{String(s.numero).padStart(2,"0")}</span>
                       <span className="min-w-0 flex-1">
                         <span className="flex flex-wrap items-center gap-2"><span className="text-sm font-semibold leading-5 text-[#253446]">{s.titulo}</span><span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${s.publicada ? "bg-emerald-50 text-emerald-700" : "bg-[#f3f6f8] text-[#718096]"}`}>{s.publicada ? "Publicada" : "Borrador"}</span></span>
@@ -2759,14 +2759,14 @@ function AulaFormacionPage() {
             </Panel>
             {lecturaEditando && <div className="fixed inset-0 z-[70] flex items-center justify-center overflow-y-auto bg-[#142638]/65 p-2 backdrop-blur-sm sm:p-5" role="dialog" aria-modal="true" aria-label="Editor de lectura">
               <div className="my-auto flex max-h-[min(94vh,960px)] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-[#dce4ec] bg-white shadow-2xl">
-                <header className="flex shrink-0 items-center justify-between gap-4 border-b border-[#e7edf2] bg-[#f8fafc] px-4 py-3.5 sm:px-6">
+                <header className="flex shrink-0 items-center justify-between gap-4 border-b border-[#e7edf2] bg-white px-4 py-3.5 sm:px-6">
                   <div className="flex min-w-0 items-center gap-3">
                     <span className="grid size-10 shrink-0 place-items-center rounded-xl border border-[#e5d8c2] bg-[#fbf6ec] text-sm font-bold text-[#946b2e]">{String(lecturaEditando.numero).padStart(2,"0")}</span>
                     <div className="min-w-0"><h3 className="truncate text-sm font-semibold text-[#253446] sm:text-base">Editor de lectura · Sesión {lecturaEditando.numero}</h3><p className="mt-0.5 text-xs text-[#718096]">Los cambios se guardan como borrador hasta publicar.</p></div>
                   </div>
                   <button type="button" onClick={() => setLecturaEditando(null)} className="shrink-0 rounded-lg border border-[#dce4ec] bg-white px-3 py-2 text-xs font-semibold text-[#526477] transition hover:bg-[#f1f5f8]">Cerrar <span aria-hidden="true">×</span></button>
                 </header>
-                <div className="min-h-0 flex-1 space-y-4 overflow-y-auto bg-[#f8fafc] p-3 sm:p-5">
+                <div className="min-h-0 flex-1 space-y-4 overflow-y-auto bg-white p-3 sm:p-5">
                   <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#dce4ec] bg-white px-4 py-3">
                     <div><p className="text-xs font-semibold text-[#334b61]">Estructura de la lectura</p><p className="mt-0.5 text-[11px] text-[#8190a0]">Organiza el contenido en apartados y bloques de texto.</p></div>
                     <div className="flex gap-2"><span className="rounded-full bg-[#edf3f8] px-2.5 py-1 text-[10px] font-semibold text-[#496782]">{seccionesLecturaEditadas.length} apartados</span><span className="rounded-full bg-[#f7f2e9] px-2.5 py-1 text-[10px] font-semibold text-[#946b2e]">{seccionesLecturaEditadas.reduce((total,sec)=>total+sec.bloques.length,0)} bloques</span></div>
@@ -2852,13 +2852,13 @@ function AulaFormacionPage() {
                   <div className="flex flex-wrap items-end justify-between gap-2"><div><h3 className="text-sm font-semibold text-[#253446]">Recursos organizados</h3><p className="mt-1 text-xs text-[#718096]">Consulta y administra los materiales generales y los de cada sesión.</p></div><span className="text-[11px] font-medium text-[#8190a0]">Los cambios se reflejan en el aula del alumno</span></div>
                   {materialesDocenteQuery.isLoading ? <div className="rounded-xl border border-[#e4e9ef] bg-[#fbfcfd] px-4 py-8 text-center text-xs text-[#718096]">Cargando biblioteca…</div> : (materialesDocenteQuery.data ?? []).length === 0 ? <div className="rounded-xl border border-dashed border-[#cbd7e1] bg-[#fbfcfd] px-4 py-9 text-center"><span className="mx-auto grid size-11 place-items-center rounded-xl bg-[#edf3f8] text-[#496782]"><FileText className="size-5"/></span><p className="mt-3 text-sm font-semibold text-[#425466]">La biblioteca está lista para recibir recursos</p><p className="mt-1 text-xs text-[#8190a0]">Incorpora el primer material para comenzar a organizar el contenido del curso.</p></div> : <>
                     {[...((materialesDocenteQuery.data ?? []).some(m => !m.sesion_id) ? [{id:"general",label:"Material general del curso",items:(materialesDocenteQuery.data ?? []).filter(m => !m.sesion_id)}] : []),...(sesionesQuery.data ?? []).map(s => ({id:s.id,label:"Sesión " + s.numero + " · " + s.titulo,items:(materialesDocenteQuery.data ?? []).filter(m => m.sesion_id === s.id)}))].map(grupo => <details key={grupo.id} className="group/library overflow-hidden rounded-xl border border-[#e1e8ef] bg-white">
-                      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 bg-[#f8fafc] px-4 py-3.5 transition hover:bg-[#f1f5f8] [&::-webkit-details-marker]:hidden">
+                      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 bg-white px-4 py-3.5 transition hover:bg-[#f1f5f8] [&::-webkit-details-marker]:hidden">
                         <span className="flex min-w-0 items-center gap-3"><span className="grid size-9 shrink-0 place-items-center rounded-lg bg-[#edf3f8] text-[#496782]">{grupo.id === "general" ? <FolderOpen className="size-4"/> : <FileText className="size-4"/>}</span><span className="min-w-0"><span className="block truncate text-xs font-semibold text-[#253446]">{grupo.label}</span><span className="mt-0.5 block text-[11px] text-[#8190a0]">{grupo.items.length} recurso{grupo.items.length===1?"":"s"}</span></span></span>
                         <ChevronDown className="size-4 shrink-0 text-[#8190a0] transition-transform group-open/library:rotate-180"/>
                       </summary>
                       <div className="space-y-2 border-t border-[#edf0f3] p-3 sm:p-4">
                         {grupo.items.length===0 ? <p className="rounded-lg border border-dashed border-[#d5dfe7] bg-[#fbfcfd] px-3 py-4 text-center text-xs text-[#8190a0]">Todavía no hay archivos asignados a esta sesión.</p> : grupo.items.map(m => <div key={m.id} className="rounded-xl border border-[#e4e9ef] bg-white p-3 sm:p-4">
-                          {materialEditandoId === m.id ? <form onSubmit={e => void guardarEdicionMaterial(e,m)} className="space-y-3 rounded-lg bg-[#f8fafc] p-3">
+                          {materialEditandoId === m.id ? <form onSubmit={e => void guardarEdicionMaterial(e,m)} className="space-y-3 rounded-lg bg-white p-3">
                             <label className="block text-xs font-semibold text-[#425466]">Título<input required value={tituloMaterialEditado} onChange={e => setTituloMaterialEditado(e.target.value)} className="mt-2 w-full rounded-xl border border-[#dce4ec] bg-white px-3 py-2.5 text-sm font-normal text-[#253446]"/></label>
                             <label className="block text-xs font-semibold text-[#425466]">Reemplazar archivo <span className="font-normal text-[#8190a0]">· opcional</span><input type="file" onChange={e => setArchivoMaterialReemplazo(e.target.files?.[0] ?? null)} className="mt-2 block w-full rounded-lg border border-[#dce4ec] bg-white p-2 text-xs text-[#526477]"/></label>
                             <label className="block text-xs font-semibold text-[#425466]">Ubicación en el programa<select value={sesionMaterialEditada} onChange={e => setSesionMaterialEditada(e.target.value)} className="mt-2 w-full rounded-xl border border-[#dce4ec] bg-white px-3 py-2.5 text-sm font-normal text-[#253446]"><option value="">Material general del curso</option>{(sesionesQuery.data ?? []).map(s => <option key={s.id} value={s.id}>Sesión {s.numero} · {s.titulo}</option>)}</select></label>
@@ -2896,7 +2896,7 @@ function AulaFormacionPage() {
                       <label className="block text-xs font-semibold text-[#425466]">Intentos permitidos<input type="number" min="1" max="10" value={intentosExamen} onChange={e=>setIntentosExamen(e.target.value)} className="mt-2 w-full rounded-xl border border-[#dce4ec] bg-white px-3 py-2.5 text-sm font-normal text-[#253446]"/></label>
                     </div>
                     <label className="block text-xs font-semibold text-[#425466]">Instrucciones <span className="font-normal text-[#8190a0]">· opcional</span><textarea value={instruccionesExamen} onChange={e=>setInstruccionesExamen(e.target.value)} rows={2} placeholder="Indicaciones que verá el alumno antes de comenzar…" className="mt-2 w-full rounded-xl border border-[#dce4ec] bg-white px-3 py-2.5 text-sm font-normal text-[#253446] outline-none focus:border-[#8ba6bd]"/></label>
-                    <div className="grid gap-2 rounded-xl border border-[#e4e9ef] bg-[#f8fafc] p-3 sm:grid-cols-2">
+                    <div className="grid gap-2 rounded-xl border border-[#e4e9ef] bg-white p-3 sm:grid-cols-2">
                       <label className="flex items-start gap-2.5 text-xs leading-5 text-[#526477]"><input type="checkbox" checked={aleatorizarPreguntas} onChange={e=>setAleatorizarPreguntas(e.target.checked)} className="mt-0.5 size-4 accent-[#294760]"/> Aleatorizar el orden de preguntas en cada intento</label>
                       <label className="flex items-start gap-2.5 text-xs leading-5 text-[#526477]"><input type="checkbox" checked={permitirRetroceso} onChange={e=>setPermitirRetroceso(e.target.checked)} className="mt-0.5 size-4 accent-[#294760]"/> Permitir volver a preguntas anteriores</label>
                     </div>
@@ -2907,7 +2907,7 @@ function AulaFormacionPage() {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between gap-2"><div><h3 className="text-sm font-semibold text-[#253446]">Evaluaciones del curso</h3><p className="mt-0.5 text-xs text-[#8190a0]">Abre una ficha para revisar sus preguntas y configuración.</p></div></div>
                   {(examenesQuery.data ?? []).map((x,idx) => <details key={x.id} className="group/examen overflow-hidden rounded-xl border border-[#e1e8ef] bg-white">
-                    <summary className="flex cursor-pointer list-none items-center gap-3 px-3.5 py-3.5 transition hover:bg-[#f8fafc] [&::-webkit-details-marker]:hidden sm:px-4">
+                    <summary className="flex cursor-pointer list-none items-center gap-3 px-3.5 py-3.5 transition hover:bg-white [&::-webkit-details-marker]:hidden sm:px-4">
                       <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#edf3f8] text-xs font-bold tabular-nums text-[#496782]">{String(idx+1).padStart(2,"0")}</span>
                       <span className="min-w-0 flex-1"><span className="flex flex-wrap items-center gap-2"><span className="text-sm font-semibold leading-5 text-[#253446]">{x.titulo}</span><span className={x.publicado ? "rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold text-emerald-700" : "rounded-full bg-[#f3f6f8] px-2.5 py-1 text-[10px] font-semibold text-[#718096]"}>{x.publicado ? "Publicada" : "Borrador"}</span></span><span className="mt-1 block text-[11px] text-[#8190a0]">{x.duracion_minutos ?? "Sin límite"} min · {x.intentos_permitidos} intento(s)</span></span>
                       <span className="hidden shrink-0 text-xs font-medium text-[#60758a] sm:inline">Gestionar</span><span className="text-[#9aabb9] transition group-open/examen:rotate-180">⌄</span>
@@ -2949,7 +2949,7 @@ function AulaFormacionPage() {
                   const entregaron = inscritos.filter((i: any) => i.alumno_user_id && usuariosConEntrega.has(i.alumno_user_id)).length;
                   const pendientes = Math.max(0, inscritos.length - entregaron);
                   return <details key={examenSeguimiento.id} className="group/seguimiento overflow-hidden rounded-xl border border-[#e1e8ef] bg-white">
-                    <summary className="flex cursor-pointer list-none items-center gap-3 px-3.5 py-3.5 transition hover:bg-[#f8fafc] [&::-webkit-details-marker]:hidden sm:px-4">
+                    <summary className="flex cursor-pointer list-none items-center gap-3 px-3.5 py-3.5 transition hover:bg-white [&::-webkit-details-marker]:hidden sm:px-4">
                       <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-[#edf3f8] text-[#496782]"><span className="text-sm font-bold">✓</span></span>
                       <span className="min-w-0 flex-1"><span className="block text-sm font-semibold text-[#253446]">{examenSeguimiento.titulo}</span><span className="mt-0.5 block text-[11px] text-[#8190a0]">{inscritos.length} inscritos · {entregaron} entregaron · {pendientes} pendientes</span></span>
                       <span className="text-[#9aabb9] transition group-open/seguimiento:rotate-180">⌄</span>
@@ -2976,7 +2976,7 @@ function AulaFormacionPage() {
                     const alumnoEntrega = (inscripcionesQuery.data ?? []).find((i: any) => i.alumno_user_id === intento.alumno_user_id);
                     const nombreAlumno = alumnoEntrega?.nombre_alumno || alumnoEntrega?.email_alumno || ("Alumno " + intento.alumno_user_id.slice(0,8));
                     return <details key={intento.id} className="group/entrega overflow-hidden rounded-xl border border-[#e1e8ef] bg-white">
-                      <summary className="flex cursor-pointer items-center gap-3 px-3.5 py-3.5 transition hover:bg-[#f8fafc] [&::-webkit-details-marker]:hidden sm:px-4">
+                      <summary className="flex cursor-pointer items-center gap-3 px-3.5 py-3.5 transition hover:bg-white [&::-webkit-details-marker]:hidden sm:px-4">
                         <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-[#edf3f8] text-[#496782]"><span className="text-xs font-bold">R</span></span>
                         <span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold text-[#253446]">{nombreAlumno}</span><span className="mt-0.5 block text-[11px] text-[#8190a0]">{examen?.titulo ?? "Evaluación"} · Intento {intento.numero_intento} · {new Date(intento.enviado_en).toLocaleString("es-PE")}</span></span>
                         <span className={intento.estado === "pendiente_revision" ? "shrink-0 rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-semibold text-amber-700" : "shrink-0 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold text-emerald-700"}>{intento.estado === "pendiente_revision" ? "Por revisar" : intento.estado}</span><span className="text-[#9aabb9] transition group-open/entrega:rotate-180">⌄</span>
@@ -2999,38 +2999,38 @@ function AulaFormacionPage() {
         </>
       ) : (
         <>
-          {lecturaAbierta && <div className={`fixed inset-0 z-[60] flex items-center justify-center overflow-hidden ${modoAulaExpandida ? "bg-background p-0" : `bg-black/60 p-2 sm:p-3 ${lecturaModoVistaPrevia ? "left-0 lg:left-64 xl:left-72" : ""}`}`} role="dialog" aria-modal="true" aria-label="Lectura de la sesión">
-            <div className={"mx-auto flex h-[calc(100dvh-1rem)] max-h-[900px] min-h-0 w-full flex-col " + (modoAulaExpandida ? "max-w-none" : lecturaAbierta.numero === 5 ? "max-w-[1700px]" : "max-w-5xl") + ` overflow-hidden border border-white/10 bg-background shadow-2xl ${modoAulaExpandida ? "h-full max-h-none rounded-none border-0" : "rounded-2xl"}`}>
-              <header className={`shrink-0 border-b border-[#e2e8f0] bg-white ${modoAulaExpandida ? "px-4 py-2 sm:px-6 sm:py-2" : "px-4 py-3 sm:px-6 sm:py-4"}`}>
+          {lecturaAbierta && <div className={`fixed inset-0 z-[60] flex items-center justify-center overflow-hidden ${modoAulaExpandida ? "bg-background p-0" : `bg-black/25 p-2 sm:p-3 ${lecturaModoVistaPrevia ? "left-0 lg:left-64 xl:left-72" : ""}`}`} role="dialog" aria-modal="true" aria-label="Lectura de la sesión">
+            <div className={"mx-auto flex h-[calc(100dvh-1rem)] max-h-[900px] min-h-0 w-full flex-col " + (modoAulaExpandida ? "max-w-none" : lecturaAbierta.numero === 5 ? "max-w-[1700px]" : "max-w-5xl") + ` overflow-hidden border border-[#D2D2D7] bg-white shadow-[0_16px_48px_rgba(0,0,0,0.12)] ${modoAulaExpandida ? "h-full max-h-none rounded-none border-0" : "rounded-2xl"}`}>
+              <header className={`shrink-0 border-b border-[#D2D2D7] bg-white ${modoAulaExpandida ? "px-4 py-2 sm:px-6 sm:py-2" : "px-4 py-3 sm:px-6 sm:py-4"}`}>
                 <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
                   <div className="min-w-0 flex-1">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#98722e]">FADILAB · Aula de formación · Lectura guiada</p>
                     <h2 className={`font-semibold leading-tight ${modoAulaExpandida ? "mt-0.5 text-base sm:text-lg" : "mt-1 text-lg"}`}>{lecturaAbierta.numero}. {lecturaAbierta.titulo}</h2>
-                    {!modoAulaExpandida && <p className="mt-1 text-xs text-[#64748b]">{lecturaModoVistaPrevia ? "Modo de prueba docente · el avance no se guarda en la cuenta de ningún alumno." : "Al abrir esta lectura se registra como leída. Avanza por los apartados y márcala como completada al finalizar."}</p>}
+                    {!modoAulaExpandida && <p className="mt-1 text-xs text-[#6E6E73]">{lecturaModoVistaPrevia ? "Modo de prueba docente · el avance no se guarda en la cuenta de ningún alumno." : "Al abrir esta lectura se registra como leída. Avanza por los apartados y márcala como completada al finalizar."}</p>}
                   </div>
-                  <button type="button" onClick={() => { setLecturaAbierta(null); setLecturaModoVistaPrevia(false); setModoAulaExpandida(false); }} className="shrink-0 rounded-lg border border-[#d8e1ea] bg-white px-3 py-1.5 text-xs font-medium text-[#40556b] transition hover:border-[#b99552]">Cerrar</button>
+                  <button type="button" onClick={() => { setLecturaAbierta(null); setLecturaModoVistaPrevia(false); setModoAulaExpandida(false); }} className="shrink-0 rounded-lg border border-[#d8e1ea] bg-white px-3 py-1.5 text-xs font-medium text-[#1D1D1F] transition hover:border-[#b99552]">Cerrar</button>
                 </div>
                 <div className={`flex items-center gap-3 ${modoAulaExpandida ? "mt-2" : "mt-4"}`}>
-                  <div className={`min-w-0 flex-1 overflow-hidden rounded-full bg-[#e8edf2] ${modoAulaExpandida ? "h-1" : "h-2"}`}><div className="h-full rounded-full bg-gold transition-all" style={{width: (((paginaLectura+1)/seccionesLecturaActivas.length)*100)+"%"}}/></div>
-                  <p className="shrink-0 text-[11px] text-[#64748b]">Apartado {paginaLectura+1} de {seccionesLecturaActivas.length}</p>
+                  <div className={`min-w-0 flex-1 overflow-hidden rounded-full bg-[#E5E5EA] ${modoAulaExpandida ? "h-1" : "h-2"}`}><div className="h-full rounded-full bg-[#007AFF] transition-all" style={{width: (((paginaLectura+1)/seccionesLecturaActivas.length)*100)+"%"}}/></div>
+                  <p className="shrink-0 text-[11px] text-[#6E6E73]">Apartado {paginaLectura+1} de {seccionesLecturaActivas.length}</p>
                 </div>
               </header>
-              <nav aria-label="Índice de la lectura" className={`shrink-0 border-b border-[#e2e8f0] bg-[#f8fafc] px-4 sm:px-6 ${modoAulaExpandida ? "py-2" : "py-3"}`}>
+              <nav aria-label="Índice de la lectura" className={`shrink-0 border-b border-[#D2D2D7] bg-[#F5F5F7] px-4 sm:px-6 ${modoAulaExpandida ? "py-2" : "py-3"}`}>
                 <div className={`flex flex-wrap items-center justify-between gap-x-3 gap-y-1 ${modoAulaExpandida ? "mb-1" : "mb-2"}`}>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#64748b]">Índice de contenidos</p>
-                  {!modoAulaExpandida && <p className="text-[10px] text-[#64748b]">Selecciona un apartado para navegar</p>}
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#6E6E73]">Índice de contenidos</p>
+                  {!modoAulaExpandida && <p className="text-[10px] text-[#6E6E73]">Selecciona un apartado para navegar</p>}
                 </div>
                 <div className="flex gap-2 overflow-x-auto pb-0.5">
-                  {seccionesLecturaActivas.map((seccion, indice) => <button key={indice} type="button" onClick={() => setPaginaLectura(indice)} aria-current={paginaLectura===indice ? "step" : undefined} className={`flex h-10 shrink-0 items-center justify-center rounded-lg border px-3 text-xs font-semibold transition ${paginaLectura===indice ? "border-[#b99552] bg-[#b99552] text-white shadow-sm" : "border-[#d8e1ea] bg-white text-[#40556b] hover:border-[#b99552] hover:bg-[#fbf8f1] hover:text-[#24364a]"}`} title={seccion.titulo}>{String(indice+1).padStart(2,"0")}</button>)}
+                  {seccionesLecturaActivas.map((seccion, indice) => <button key={indice} type="button" onClick={() => setPaginaLectura(indice)} aria-current={paginaLectura===indice ? "step" : undefined} className={`flex h-10 shrink-0 items-center justify-center rounded-lg border px-3 text-xs font-semibold transition ${paginaLectura===indice ? "border-[#007AFF] bg-[#007AFF] text-white shadow-sm" : "border-[#d8e1ea] bg-white text-[#1D1D1F] hover:border-[#b99552] hover:bg-[#fbf8f1] hover:text-[#1D1D1F]"}`} title={seccion.titulo}>{String(indice+1).padStart(2,"0")}</button>)}
                 </div>
-                {!modoAulaExpandida && <p className="mt-2 truncate text-xs font-medium text-[#40556b]">{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</p>}
+                {!modoAulaExpandida && <p className="mt-2 truncate text-xs font-medium text-[#1D1D1F]">{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</p>}
               </nav>
-              <main className={`min-h-0 flex-1 overflow-y-auto px-6 py-6 sm:px-10 lg:px-14 ${modoAulaExpandida ? "bg-[#f8fafc] text-[#334155]" : "bg-[#f8fafc] px-5 py-5 sm:px-8 sm:py-6 lg:px-10"}`}>
+              <main className={`min-h-0 flex-1 overflow-y-auto px-6 py-6 sm:px-10 lg:px-14 ${modoAulaExpandida ? "bg-white text-[#334155]" : "bg-white px-5 py-5 sm:px-8 sm:py-6 lg:px-10"}`}>
                 <section className={`mx-auto w-full ${modoAulaExpandida ? "max-w-[1180px]" : "max-w-4xl"}`}>
                   <h3 className="mb-5 max-w-[1080px] font-display text-2xl leading-tight sm:text-3xl">{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</h3>
                   {(seccionesLecturaActivas[paginaLectura]?.bloques ?? []).map((bloque,idx) => {
                     if (lecturaAbierta?.numero === 1 && paginaLectura === 4 && idx >= 6) return null;
-                    return <div key={idx}><p className={`mb-5 whitespace-pre-line ${modoAulaExpandida ? "max-w-[1180px] text-[17px] leading-[1.85] tracking-[0.005em] text-[#475569]" : "max-w-4xl text-[15px] leading-7 text-foreground/90"}`}>{bloque}</p></div>;
+                    return <div key={idx}><p className={`mb-5 whitespace-pre-line ${modoAulaExpandida ? "max-w-[1180px] text-[17px] leading-[1.85] tracking-[0.005em] text-[#3A3A3C]" : "max-w-4xl text-[15px] leading-7 text-foreground/90"}`}>{bloque}</p></div>;
                   })}
                 {renderLaboratorioCoordenadas()}
                 {renderLaboratorioRestricciones()}
@@ -3039,15 +3039,15 @@ function AulaFormacionPage() {
                 {renderLaboratorioPlaca()}
                 {renderLaboratorioGeometria()}
                 {renderSelectorVistasPlano()}
-                {lecturaAbierta?.numero === 1 && paginaLectura === 4 && <section className="mt-5 max-w-4xl rounded-xl border border-[#e0e6ed] bg-white text-[#24364a] p-5 shadow-sm">
+                {lecturaAbierta?.numero === 1 && paginaLectura === 4 && <section className="mt-5 max-w-4xl rounded-xl border border-[#e0e6ed] bg-white text-[#1D1D1F] p-5 shadow-sm">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#98722e]">Recurso interactivo</p>
                   <h4 className="mt-1 text-base font-semibold">Comandos de navegación</h4>
-                  <p className="mt-2 text-sm text-[#64748b]">Abre la ficha para explorar los comandos y consultar la función de cada uno.</p>
+                  <p className="mt-2 text-sm text-[#6E6E73]">Abre la ficha para explorar los comandos y consultar la función de cada uno.</p>
                   <button type="button" onClick={() => { setComandoNavegacionActivo("Zoom"); setComandosNavegacionAbiertos(true); }} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#b99552] px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#a9823f]">Ver comandos de navegación <ChevronRight className="size-4"/></button>
                   {comandosNavegacionAbiertos && <div className="fixed inset-0 z-[96] flex items-center justify-center bg-black/75 p-2 sm:p-4" role="dialog" aria-modal="true" aria-label="Comandos de navegación de Rhino 7">
-                    <div className="flex max-h-[94dvh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-white/10 bg-background shadow-2xl">
+                    <div className="flex max-h-[94dvh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-[#D2D2D7] bg-white shadow-[0_16px_48px_rgba(0,0,0,0.12)]">
                       <header className="flex shrink-0 items-center justify-between gap-3 border-b border-white/10 bg-[#0e141b]/95 px-5 py-4">
-                        <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-300">FADILAB · Guía interactiva</p><h3 className="text-lg font-semibold">Comandos de navegación · Rhino 7</h3><p className="mt-1 text-xs text-slate-400">Selecciona un comando para consultar su función.</p></div>
+                        <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9A7B43]">FADILAB · Guía interactiva</p><h3 className="text-lg font-semibold">Comandos de navegación · Rhino 7</h3><p className="mt-1 text-xs text-slate-400">Selecciona un comando para consultar su función.</p></div>
                         <button type="button" onClick={() => setComandosNavegacionAbiertos(false)} className="shrink-0 rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold hover:border-gold">Cerrar ×</button>
                       </header>
                       <div className="min-h-0 overflow-y-auto p-4 sm:p-5">
@@ -3060,11 +3060,11 @@ function AulaFormacionPage() {
                               {comando:"ZS",funcion:"Zoom Selected: encuadrar objetos seleccionados"},
                               {comando:"Pan",funcion:"Desplazamiento de la vista"},
                               {comando:"UndoView",funcion:"Recuperar la vista anterior"}
-                            ].map(item=><tr key={item.comando}><td className="border-b border-white/10 p-0"><button type="button" onClick={()=>setComandoNavegacionActivo(item.comando)} aria-pressed={comandoNavegacionActivo===item.comando} className={`w-full px-4 py-3 text-left font-semibold transition hover:bg-gold/10 ${comandoNavegacionActivo===item.comando?"bg-gold/15 text-amber-300":"bg-background"}`}>{item.comando}</button></td><td className="border-b border-white/10 px-4 py-3">{item.funcion}</td></tr>)}
+                            ].map(item=><tr key={item.comando}><td className="border-b border-white/10 p-0"><button type="button" onClick={()=>setComandoNavegacionActivo(item.comando)} aria-pressed={comandoNavegacionActivo===item.comando} className={`w-full px-4 py-3 text-left font-semibold transition hover:bg-gold/10 ${comandoNavegacionActivo===item.comando?"bg-gold/15 text-[#9A7B43]":"bg-background"}`}>{item.comando}</button></td><td className="border-b border-white/10 px-4 py-3">{item.funcion}</td></tr>)}
                           </tbody></table>
                         </div>
                         <div className="mt-4 rounded-xl border border-[#b79558]/40 bg-gold/10 p-4" aria-live="polite">
-                          <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-amber-300">Comando seleccionado</p>
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#9A7B43]">Comando seleccionado</p>
                           <p className="mt-1 text-lg font-semibold">{comandoNavegacionActivo}</p>
                           <p className="mt-1 text-sm text-slate-300">{({Zoom:"Control de acercamiento",ZE:"Zoom Extents: encuadrar todos los objetos",ZEA:"Zoom All Extents: encuadrar todas las vistas",ZS:"Zoom Selected: encuadrar objetos seleccionados",Pan:"Desplazamiento de la vista",UndoView:"Recuperar la vista anterior"} as Record<string,string>)[comandoNavegacionActivo]}</p>
                         </div>
@@ -3072,15 +3072,15 @@ function AulaFormacionPage() {
                     </div>
                   </div>}
                 </section>}
-                {lecturaAbierta?.numero === 1 && paginaLectura === 1 && <section className="mt-7 rounded-2xl border border-[#e0e6ed] bg-white text-[#24364a] p-5 sm:p-6 shadow-sm">
+                {lecturaAbierta?.numero === 1 && paginaLectura === 1 && <section className="mt-7 rounded-2xl border border-[#e0e6ed] bg-white text-[#1D1D1F] p-5 sm:p-6 shadow-sm">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#98722e]">Material visual de apoyo</p>
                   <h4 className="mt-1 text-lg font-semibold">Rhinoceros 7</h4>
-                  <p className="mt-2 text-sm leading-6 text-[#64748b]">Consulta la imagen de referencia general del programa.</p>
+                  <p className="mt-2 text-sm leading-6 text-[#6E6E73]">Consulta la imagen de referencia general del programa.</p>
                   {imagenRhinoUrl ? <button type="button" onClick={() => setTipoImagenApoyoAbierta(tipoImagenApoyoAbierta === "rhinoceros" ? null : "rhinoceros")} aria-expanded={tipoImagenApoyoAbierta === "rhinoceros"} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#b99552] px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#a9823f]">Ver RHINOCEROS <ChevronRight className="size-4"/></button> : <p className="mt-3 text-xs text-slate-400">{imagenRhinoError || "Buscando RHINOCEROS en la Biblioteca del curso…"}</p>}
                   {tipoImagenApoyoAbierta && <div className="fixed inset-0 z-[95] flex items-center justify-center overflow-hidden bg-black/75 p-2 sm:p-4" role="dialog" aria-modal="true" aria-label="Imagen de referencia de Rhinoceros">
-                    <div className="flex max-h-[96dvh] w-full max-w-[1200px] flex-col overflow-hidden rounded-xl border border-white/10 bg-background shadow-2xl">
+                    <div className="flex max-h-[96dvh] w-full max-w-[1200px] flex-col overflow-hidden rounded-xl border border-[#D2D2D7] bg-white shadow-[0_16px_48px_rgba(0,0,0,0.12)]">
                       <header className="flex shrink-0 items-center justify-between gap-3 border-b border-white/10 bg-[#0e141b]/95 px-4 py-3 sm:px-5">
-                        <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-300">FADILAB · Material de estudio</p><h3 className="text-base font-semibold">{tipoImagenApoyoAbierta === "rhinoceros" ? "Rhinoceros 7" : tipoImagenApoyoAbierta === "vistas" ? "Vistas de trabajo" : "Ejes de coordenadas"}</h3></div>
+                        <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9A7B43]">FADILAB · Material de estudio</p><h3 className="text-base font-semibold">{tipoImagenApoyoAbierta === "rhinoceros" ? "Rhinoceros 7" : tipoImagenApoyoAbierta === "vistas" ? "Vistas de trabajo" : "Ejes de coordenadas"}</h3></div>
                         <button type="button" onClick={() => setTipoImagenApoyoAbierta(null)} className="shrink-0 rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold hover:border-gold">Cerrar ×</button>
                       </header>
                       <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto bg-background p-3 sm:p-5">
@@ -3089,19 +3089,19 @@ function AulaFormacionPage() {
                     </div>
                   </div>}
                 </section>}
-                {lecturaAbierta?.numero === 1 && paginaLectura === 3 && <section className="mt-7 rounded-2xl border border-[#e0e6ed] bg-white text-[#24364a] p-5 sm:p-6 shadow-sm">
+                {lecturaAbierta?.numero === 1 && paginaLectura === 3 && <section className="mt-7 rounded-2xl border border-[#e0e6ed] bg-white text-[#1D1D1F] p-5 sm:p-6 shadow-sm">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#98722e]">Material visual de apoyo</p>
                   <h4 className="mt-1 text-lg font-semibold">Vistas y ejes de Rhinoceros 7</h4>
-                  <p className="mt-2 text-sm leading-6 text-[#64748b]">Identifica las vistas de trabajo y la orientación espacial mediante los ejes de coordenadas.</p>
+                  <p className="mt-2 text-sm leading-6 text-[#6E6E73]">Identifica las vistas de trabajo y la orientación espacial mediante los ejes de coordenadas.</p>
                   <div className="mt-4 flex flex-wrap gap-2">
                     {imagenesVistasUrl && <button type="button" onClick={() => setTipoImagenApoyoAbierta(tipoImagenApoyoAbierta === "vistas" ? null : "vistas")} aria-expanded={tipoImagenApoyoAbierta === "vistas"} className="inline-flex items-center gap-2 rounded-xl bg-[#b99552] px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#a9823f]">Ver VISTAS <ChevronRight className="size-4"/></button>}
                     {imagenesEjesUrl && <button type="button" onClick={() => setTipoImagenApoyoAbierta(tipoImagenApoyoAbierta === "ejes" ? null : "ejes")} aria-expanded={tipoImagenApoyoAbierta === "ejes"} className="inline-flex items-center gap-2 rounded-xl bg-[#b99552] px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#a9823f]">Ver EJES <ChevronRight className="size-4"/></button>}
                   </div>
                   {!imagenesVistasUrl && !imagenesEjesUrl && <p className="mt-3 text-xs text-slate-400">{errorImagenesApoyo || "Buscando VISTAS y EJES en la Biblioteca del curso…"}</p>}
                   {(tipoImagenApoyoAbierta === "vistas" || tipoImagenApoyoAbierta === "ejes") && <div className="fixed inset-0 z-[95] flex items-center justify-center overflow-hidden bg-black/75 p-2 sm:p-4" role="dialog" aria-modal="true" aria-label="Imagen de referencia de Rhinoceros">
-                    <div className="flex max-h-[96dvh] w-full max-w-[1200px] flex-col overflow-hidden rounded-xl border border-white/10 bg-background shadow-2xl">
+                    <div className="flex max-h-[96dvh] w-full max-w-[1200px] flex-col overflow-hidden rounded-xl border border-[#D2D2D7] bg-white shadow-[0_16px_48px_rgba(0,0,0,0.12)]">
                       <header className="flex shrink-0 items-center justify-between gap-3 border-b border-white/10 bg-[#0e141b]/95 px-4 py-3 sm:px-5">
-                        <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-300">FADILAB · Material de estudio</p><h3 className="text-base font-semibold">{tipoImagenApoyoAbierta === "vistas" ? "Vistas de trabajo" : "Ejes de coordenadas"}</h3></div>
+                        <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9A7B43]">FADILAB · Material de estudio</p><h3 className="text-base font-semibold">{tipoImagenApoyoAbierta === "vistas" ? "Vistas de trabajo" : "Ejes de coordenadas"}</h3></div>
                         <button type="button" onClick={() => setTipoImagenApoyoAbierta(null)} className="shrink-0 rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold hover:border-gold">Cerrar ×</button>
                       </header>
                       <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto bg-background p-3 sm:p-5">
@@ -3110,17 +3110,17 @@ function AulaFormacionPage() {
                     </div>
                   </div>}
                 </section>}
-                {lecturaAbierta?.numero === 1 && paginaLectura === 2 && !interfazInteractivaAbierta && <section className="mt-7 rounded-2xl border border-[#e0e6ed] bg-white text-[#24364a] p-5 sm:p-6 shadow-sm">
+                {lecturaAbierta?.numero === 1 && paginaLectura === 2 && !interfazInteractivaAbierta && <section className="mt-7 rounded-2xl border border-[#e0e6ed] bg-white text-[#1D1D1F] p-5 sm:p-6 shadow-sm">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#98722e]">Actividad guiada · FADILAB</p>
                   <h4 className="mt-1 text-lg font-semibold">Conoce cada parte de la interfaz</h4>
-                  <p className="mt-2 max-w-3xl text-sm leading-6 text-[#64748b]">Abre el recorrido interactivo para identificar los componentes directamente sobre la captura de MatrixGold 3.1. Explora los 14 marcadores numerados para conocer dónde se encuentra cada componente y para qué sirve.</p>
+                  <p className="mt-2 max-w-3xl text-sm leading-6 text-[#6E6E73]">Abre el recorrido interactivo para identificar los componentes directamente sobre la captura de MatrixGold 3.1. Explora los 14 marcadores numerados para conocer dónde se encuentra cada componente y para qué sirve.</p>
                   <button type="button" disabled={!imagenInterfazUrl} onClick={() => setInterfazInteractivaAbierta(true)} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gold px-5 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50">Explorar interfaz interactiva <ChevronRight className="size-4"/></button>
                   {!imagenInterfazUrl && <p className="mt-2 text-xs text-slate-400">{imagenInterfazError || "Buscando la imagen en la Biblioteca del curso…"}</p>}
                 </section>}
                 {lecturaAbierta?.numero === 1 && paginaLectura === 2 && interfazInteractivaAbierta && <div className="fixed inset-0 z-[90] flex items-center justify-center overflow-hidden bg-black/75 p-1 sm:p-2" role="dialog" aria-modal="true" aria-label="Exploración interactiva de MatrixGold 3.1">
-                  <div className="flex h-[calc(100dvh-0.5rem)] w-[99vw] max-w-[1700px] min-h-0 flex-col overflow-hidden rounded-xl border border-white/10 bg-background shadow-2xl">
+                  <div className="flex h-[calc(100dvh-0.5rem)] w-[99vw] max-w-[1700px] min-h-0 flex-col overflow-hidden rounded-xl border border-[#D2D2D7] bg-white shadow-[0_16px_48px_rgba(0,0,0,0.12)]">
                     <header className="flex shrink-0 items-center justify-between gap-3 border-b border-white/10 bg-[#0e141b]/95 px-3 py-2 sm:px-5">
-                      <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-300">FADILAB · Recorrido de aprendizaje</p><h3 className="text-base font-semibold sm:text-lg">Explora la interfaz de MatrixGold 3.1</h3></div>
+                      <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9A7B43]">FADILAB · Recorrido de aprendizaje</p><h3 className="text-base font-semibold sm:text-lg">Explora la interfaz de MatrixGold 3.1</h3></div>
                       <button type="button" onClick={() => setInterfazInteractivaAbierta(false)} className="shrink-0 rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold hover:border-gold">Cerrar ×</button>
                     </header>
                     <div className="flex min-h-0 flex-1 flex-col overflow-hidden p-1.5 sm:p-2">
@@ -3150,7 +3150,7 @@ function AulaFormacionPage() {
                     </div>
                   </div>
                 </div>}
-                {paginaLectura === seccionesLecturaActivas.length-1 && <div className="rounded-xl border border-[#dce4ec] bg-white p-4"><p className="text-sm font-semibold">Has llegado al final de la lectura</p><p className="mt-1 text-sm text-[#64748b]">{lecturaModoVistaPrevia ? "En la experiencia del alumno, aquí podrá finalizar y marcar la sesión como completada." : "La lectura está registrada como leída. Puedes marcar la sesión como completada."}</p></div>}
+                {paginaLectura === seccionesLecturaActivas.length-1 && <div className="rounded-xl border border-[#dce4ec] bg-white p-4"><p className="text-sm font-semibold">Has llegado al final de la lectura</p><p className="mt-1 text-sm text-[#6E6E73]">{lecturaModoVistaPrevia ? "En la experiencia del alumno, aquí podrá finalizar y marcar la sesión como completada." : "La lectura está registrada como leída. Puedes marcar la sesión como completada."}</p></div>}
                 </section>
               </main>
               {paginaLectura === seccionesLecturaActivas.length-1 && <footer className="shrink-0 flex justify-end border-t border-[#e2e8f0] bg-white px-4 py-3 sm:px-6 sm:py-4">
