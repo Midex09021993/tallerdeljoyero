@@ -24,20 +24,18 @@ function VisorCortoPage() {
 
   useEffect(() => {
     let activo = true;
-    void supabase.rpc("resolver_enlace_visor_3d", { _token: token })
-      .then(({ data, error: rpcError }) => {
+    void supabase.functions.invoke("resolver-enlace-visor-3d", { body: { token } })
+      .then(({ data, error: functionError }) => {
         if (!activo) return;
 
-        // The SQL function returns SETOF rows, represented by Supabase as an array.
-        const registro = Array.isArray(data) ? data[0] : null;
-        const url = registro?.modelo_url;
-        const nombre = registro?.nombre;
-        const expiraEn = registro?.expira_en;
+        const url = data?.url;
+        const nombre = data?.nombre;
+        const expiraEn = data?.expira_en;
         const fechaExpiracion = typeof expiraEn === "string" ? new Date(expiraEn).getTime() : NaN;
 
         if (
-          rpcError ||
-          !registro ||
+          functionError ||
+          data?.ok !== true ||
           typeof url !== "string" ||
           !url.startsWith("https://") ||
           typeof nombre !== "string" ||
