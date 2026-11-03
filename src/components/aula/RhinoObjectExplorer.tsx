@@ -250,7 +250,9 @@ export default function RhinoObjectExplorer({ visible, materials }: Props) {
       raycaster.setFromCamera(pointer, camera);
       const hits = raycaster.intersectObjects(created.map(e => e.object), true);
       if (!hits.length) return;
-      let target: Object3D | null = hits[0].object;
+      const firstHit = hits[0];
+      if (!firstHit) return;
+      let target: Object3D | null = firstHit.object;
       while (target && !created.some(e => e.object === target)) target = target.parent;
       const match = created.find(e => e.object === target);
       if (match) setSelectedId(match.object.uuid);
