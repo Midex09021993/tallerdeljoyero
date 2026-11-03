@@ -2416,13 +2416,13 @@ function AulaFormacionPage() {
                 <div className="flex gap-2 overflow-x-auto pb-1">{seccionesLecturaActivas.map((seccion, indice) => <button key={indice} type="button" onClick={() => setPaginaLectura(indice)} aria-current={paginaLectura===indice ? "step" : undefined} className={`flex min-w-10 shrink-0 items-center justify-center rounded-lg border px-3 py-2 text-xs font-semibold transition ${paginaLectura===indice ? "border-gold bg-gold text-black shadow-sm" : "border-border bg-card text-muted-foreground hover:border-gold/50 hover:text-foreground"}`} title={seccion.titulo}>{String(indice+1).padStart(2,"0")}</button>)}</div>
                 <p className="mt-2 truncate text-xs font-medium text-foreground">{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</p>
               </nav>
-              <main className={`min-h-0 flex-1 overflow-y-auto bg-card/40 px-5 py-5 sm:px-8 sm:py-6 lg:px-10 ${modoAulaExpandida ? "px-6 sm:px-10 lg:px-14 xl:px-16 2xl:px-20" : ""}`}>
+              <main className={`min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-8 sm:py-6 lg:px-10 ${modoAulaExpandida ? "bg-[#F7F6F2] px-6 py-7 text-[#343B45] sm:px-10 sm:py-9 lg:px-14 xl:px-16 2xl:px-20" : "bg-card/40"}`}>
                 <div className={lecturaAbierta?.numero === 5 ? "grid items-start gap-6 2xl:grid-cols-[minmax(0,.9fr)_minmax(0,1.1fr)]" : ""}>
-                  <section className="min-w-0">
-                    <h3 className={`mb-5 font-display text-2xl leading-tight sm:text-3xl ${modoAulaExpandida ? "max-w-[1400px]" : "max-w-4xl"}`} >{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</h3>
+                  <section className={`min-w-0 ${modoAulaExpandida ? "mx-auto w-full max-w-[1180px]" : ""}`}>
+                    <h3 className={`mb-6 font-display text-2xl leading-tight sm:text-3xl ${modoAulaExpandida ? "max-w-[1080px] text-[#202630] sm:text-[2.15rem] sm:leading-[1.2]" : "max-w-4xl"}`} >{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</h3>
                     {(seccionesLecturaActivas[paginaLectura]?.bloques ?? []).map((bloque,idx) => {
                       if (lecturaAbierta?.numero === 1 && paginaLectura === 4 && idx >= 6) return null;
-                      return <div key={idx}><p className={`mb-4 whitespace-pre-line text-[15px] leading-7 text-foreground/90 ${modoAulaExpandida ? "max-w-[1400px] text-base leading-8" : "max-w-4xl"}`}>{bloque}</p></div>;
+                      return <div key={idx}><p className={`mb-5 whitespace-pre-line text-[15px] leading-7 ${modoAulaExpandida ? "max-w-[980px] text-[17px] leading-[1.85] tracking-[0.005em] text-[#343B45]" : "max-w-4xl text-foreground/90"}`}>{bloque}</p></div>;
                     })}
                     {renderLaboratorioCoordenadas()}
                     {renderLaboratorioSesion4()}
