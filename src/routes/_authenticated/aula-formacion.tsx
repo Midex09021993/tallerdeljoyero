@@ -2334,23 +2334,38 @@ function AulaFormacionPage() {
   if (!sesion || (!rolAlumno && !esDocente)) return <AppShell titulo="Aula de formación" subtitulo="Acceso restringido"><Panel titulo="Cuenta no habilitada"><p className="p-5 text-sm text-slate-400">El aula de alumnos está disponible para cuentas de gerente u operario. La docencia se administra exclusivamente desde FADILAB.</p></Panel></AppShell>;
 
   return <AppShell titulo="Aula de formación" subtitulo={esDocente ? "FADILAB · Administración académica" : "Tus cursos, materiales y actividades"} modoAulaExpandida={modoAulaExpandida}>
-    <div className="mx-auto max-w-6xl space-y-5">
+    <div className="mx-auto max-w-6xl space-y-6">
       {esDocente ? (
         <>
-          <section className="rounded-2xl border border-gold/25 bg-gradient-to-br from-gold/10 via-card to-card p-5">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <div className="grid size-12 shrink-0 place-items-center rounded-xl bg-gold/15 text-amber-300"><ShieldCheck className="size-6" /></div>
-              <div className="min-w-0 flex-1"><p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-amber-300">FADILAB · Administración académica</p><h2 className="mt-1 text-xl font-semibold">Centro de gestión docente</h2><p className="mt-1 text-sm text-slate-400">Organiza cursos, acompaña alumnos y administra contenidos desde un solo lugar.</p></div>
-              {cursoActivoId && <button type="button" onClick={() => setVistaPreviaAlumno(true)} className="inline-flex items-center justify-center gap-2 rounded-lg border border-[#b79558]/50 bg-gold/10 px-4 py-2.5 text-sm font-semibold text-amber-300 hover:bg-gold/20"><BookOpen className="size-4" /> Vista previa del alumno</button>}
+          <section className="overflow-hidden rounded-2xl border border-[#e4e9ef] bg-white shadow-[0_8px_28px_rgba(27,43,59,0.045)]">
+            <div className="flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-7">
+              <div className="flex min-w-0 items-start gap-4">
+                <div className="grid size-12 shrink-0 place-items-center rounded-xl border border-[#e7d8b8] bg-[#faf6ed] text-[#a77c32]"><ShieldCheck className="size-6" /></div>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.19em] text-[#8a6a35]">FADILAB <span className="mx-1 text-[#c8b58f]">/</span> ADMINISTRACIÓN ACADÉMICA</p>
+                  <h2 className="mt-1.5 text-xl font-semibold tracking-tight text-[#1d2b3a] sm:text-2xl">Panel docente</h2>
+                  <p className="mt-1.5 max-w-2xl text-sm leading-6 text-[#647386]">Organiza tus cursos, acompaña el progreso de tus alumnos y administra el contenido académico.</p>
+                </div>
+              </div>
+              {cursoActivoId && <button type="button" onClick={() => setVistaPreviaAlumno(true)} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-[#d9c69f] bg-[#fbf8f1] px-4 py-2.5 text-sm font-semibold text-[#765a2d] transition hover:border-[#b9975b] hover:bg-[#f7f0e2]"><Eye className="size-4" /> Vista previa del alumno</button>}
             </div>
-            <div className="mt-5 grid grid-cols-2 gap-2 lg:grid-cols-4">
-              {[{label:"Cursos",value:cursos.length,icon:<BookOpen className="size-4"/>},{label:"Alumnos inscritos",value:(inscripcionesQuery.data ?? []).length,icon:<Users className="size-4"/>},{label:"Sesiones",value:(sesionesQuery.data ?? []).length,icon:<CalendarDays className="size-4"/>},{label:"Materiales",value:(materialesDocenteQuery.data ?? []).length,icon:<FileText className="size-4"/>}].map(item => <div key={item.label} className="rounded-xl border border-white/10/80 bg-[#121922]/80 p-3"><div className="flex items-center justify-between text-slate-400"><span className="text-xs">{item.label}</span>{item.icon}</div><p className="mt-2 text-2xl font-semibold tabular-nums">{item.value}</p></div>)}
+            <div className="grid grid-cols-2 border-t border-[#edf0f3] bg-[#fbfcfd] lg:grid-cols-4">
+              {[{label:"Cursos",value:cursos.length,icon:<BookOpen className="size-4"/>},{label:"Alumnos inscritos",value:(inscripcionesQuery.data ?? []).length,icon:<Users className="size-4"/>},{label:"Sesiones",value:(sesionesQuery.data ?? []).length,icon:<CalendarDays className="size-4"/>},{label:"Materiales",value:(materialesDocenteQuery.data ?? []).length,icon:<FileText className="size-4"/>}].map((item,index) => <div key={item.label} className={`flex items-center justify-between gap-3 px-4 py-4 sm:px-6 ${index % 2 === 0 ? "border-r border-[#edf0f3]" : ""} ${index < 2 ? "border-b border-[#edf0f3] lg:border-b-0" : ""} ${index === 1 ? "lg:border-r" : ""} ${index === 2 ? "lg:border-r" : ""}`}>
+                <div><p className="text-xs font-medium text-[#718096]">{item.label}</p><p className="mt-1 text-2xl font-semibold tracking-tight text-[#1e2937] tabular-nums">{item.value}</p></div>
+                <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-[#eef3f7] text-[#55718d]">{item.icon}</span>
+              </div>)}
             </div>
           </section>
-          <section className="rounded-2xl border border-white/10 bg-[#121922] p-3 sm:p-4">
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-2"><div><p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">Espacios de trabajo</p><p className="mt-1 text-sm font-semibold">{cursoActivoId ? cursos.find(c => c.id === cursoActivoId)?.titulo : "Selecciona o crea un curso"}</p></div>{cursoActivoId && <span className="rounded-full bg-gold/10 px-3 py-1 text-[11px] font-semibold text-amber-300">Curso seleccionado</span>}</div>
-            <nav aria-label="Secciones del panel docente" className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              {[{id:"cursos",label:"Cursos",detail:"Crear y seleccionar",icon:<BookOpen className="size-5"/>},{id:"alumnos",label:"Alumnos y sesiones",detail:"Matrículas y programa",icon:<Users className="size-5"/>},{id:"materiales",label:"Biblioteca",detail:"Archivos y recursos",icon:<FolderOpen className="size-5"/>},{id:"evaluaciones",label:"Evaluaciones",detail:"Exámenes y entregas",icon:<ClipboardCheck className="size-5"/>}].map(item => <button key={item.id} type="button" onClick={() => setSeccionDocente(item.id)} aria-pressed={seccionDocente===item.id} className={`flex min-h-24 flex-col items-start gap-2 rounded-xl border p-3 text-left transition ${seccionDocente===item.id ? "border-gold bg-gold/10 text-amber-300 shadow-sm" : "border-white/10 bg-background hover:border-[#b79558]/50 hover:bg-white/5/40"}`}><span className="flex w-full items-center justify-between">{item.icon}{seccionDocente===item.id && <CheckCircle2 className="size-4"/>}</span><span><span className="block text-xs font-semibold">{item.label}</span><span className="mt-0.5 block text-[10px] text-slate-400">{item.detail}</span></span></button>)}
+          <section className="rounded-2xl border border-[#e4e9ef] bg-[#f8fafc] p-4 shadow-[0_4px_18px_rgba(27,43,59,0.035)] sm:p-5">
+            <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+              <div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#718096]">ÁREAS DE TRABAJO</p><h3 className="mt-1 text-base font-semibold text-[#1d2b3a]">{cursoActivoId ? cursos.find(c => c.id === cursoActivoId)?.titulo : "Comienza por crear o seleccionar un curso"}</h3></div>
+              {cursoActivoId && <span className="inline-flex items-center gap-1.5 rounded-full border border-[#d9e5ef] bg-white px-3 py-1.5 text-[11px] font-semibold text-[#496782]"><CheckCircle2 className="size-3.5"/> Curso activo</span>}
+            </div>
+            <nav aria-label="Secciones del panel docente" className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
+              {[{id:"cursos",label:"Cursos",detail:"Crear y organizar programas",icon:<BookOpen className="size-5"/>},{id:"alumnos",label:"Alumnos y sesiones",detail:"Matrículas y programa académico",icon:<Users className="size-5"/>},{id:"materiales",label:"Biblioteca",detail:"Archivos y recursos de estudio",icon:<FolderOpen className="size-5"/>},{id:"evaluaciones",label:"Evaluaciones",detail:"Exámenes y entregas",icon:<ClipboardCheck className="size-5"/>}].map(item => <button key={item.id} type="button" onClick={() => setSeccionDocente(item.id)} aria-pressed={seccionDocente===item.id} className={`group flex min-h-[112px] flex-col items-start justify-between gap-4 rounded-xl border p-4 text-left transition duration-150 ${seccionDocente===item.id ? "border-[#a9bfd2] bg-[#edf3f8] shadow-[inset_3px_0_0_#496782]" : "border-[#e4e9ef] bg-white hover:border-[#bdcbd8] hover:bg-[#fbfcfd] hover:shadow-sm"}`}>
+                <span className="flex w-full items-center justify-between"><span className={`grid size-9 place-items-center rounded-lg ${seccionDocente===item.id ? "bg-white text-[#496782]" : "bg-[#f1f4f7] text-[#718096]"}`}>{item.icon}</span>{seccionDocente===item.id && <CheckCircle2 className="size-4 text-[#496782]"/>}</span>
+                <span><span className={`block text-sm font-semibold ${seccionDocente===item.id ? "text-[#27445f]" : "text-[#253446]"}`}>{item.label}</span><span className="mt-1 block text-xs leading-5 text-[#718096]">{item.detail}</span></span>
+              </button>)}
             </nav>
           </section>
 
