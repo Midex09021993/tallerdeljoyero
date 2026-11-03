@@ -56,15 +56,14 @@ Deno.serve(async (req: Request) => {
       return json({ error: "El modelo público no está disponible. Genera un enlace nuevo desde Mi Nube." }, 404);
     }
 
-    const { data: signed, error: signedError } = await admin.storage
-      .from("mi-nube")
-      .createSignedUrl(modelPath, 60);
-    if (signedError || !signed?.signedUrl) throw signedError ?? new Error("No se pudo preparar el modelo 3D.");
-    const modelUrl = signed.signedUrl;
+    // The browser receives only this tokenized Edge Function URL, never a
+    // Supabase Storage signed URL or the private object path.
+    const modelUrl = new URL("/functions/v1/entregar-modelo-visor-3d", url);
+    modelUrl.searchParams.set("token", token);
 
     return json({
       ok: true,
-      url: modelUrl,
+      url: modelUrl.toString(),
       nombre: enlace.nombre,
       expira_en: enlace.expira_en,
     });
