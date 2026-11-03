@@ -1011,7 +1011,7 @@ function AulaFormacionPage() {
 
 
   useEffect(() => {
-    const materiales = mostrarVistaDocente ? materialesDocenteQuery.data : materialesAlumnoQuery.data;
+    const materiales = mostrarVistaDocente || vistaPreviaAlumno ? materialesDocenteQuery.data : materialesAlumnoQuery.data;
     let vigente = true;
     setImagenInterfazUrl("");
     setImagenInterfazError("");
@@ -1062,10 +1062,10 @@ function AulaFormacionPage() {
       });
 
     return () => { vigente = false; };
-  }, [lecturaAbierta?.id, lecturaAbierta?.numero, mostrarVistaDocente, materialesDocenteQuery.data, materialesAlumnoQuery.data]);
+  }, [lecturaAbierta?.id, lecturaAbierta?.numero, mostrarVistaDocente, vistaPreviaAlumno, materialesDocenteQuery.data, materialesAlumnoQuery.data]);
 
   useEffect(() => {
-    const materiales = mostrarVistaDocente ? materialesDocenteQuery.data : materialesAlumnoQuery.data;
+    const materiales = mostrarVistaDocente || vistaPreviaAlumno ? materialesDocenteQuery.data : materialesAlumnoQuery.data;
     let vigente = true;
     setImagenLayersUrl("");
     setImagenLayersError("");
@@ -1085,10 +1085,10 @@ function AulaFormacionPage() {
       })
       .catch((error: unknown) => { if (vigente) setImagenLayersError(error instanceof Error ? error.message : "No se pudo recuperar la imagen de MatrixGold."); });
     return () => { vigente = false; };
-  }, [lecturaAbierta?.id, lecturaAbierta?.numero, mostrarVistaDocente, materialesDocenteQuery.data, materialesAlumnoQuery.data]);
+  }, [lecturaAbierta?.id, lecturaAbierta?.numero, mostrarVistaDocente, vistaPreviaAlumno, materialesDocenteQuery.data, materialesAlumnoQuery.data]);
 
   useEffect(() => {
-    const materiales = mostrarVistaDocente ? materialesDocenteQuery.data : materialesAlumnoQuery.data;
+    const materiales = mostrarVistaDocente || vistaPreviaAlumno ? materialesDocenteQuery.data : materialesAlumnoQuery.data;
     let vigente = true;
     setImagenRhinoUrl("");
     setImagenRhinoError("");
@@ -1126,10 +1126,10 @@ function AulaFormacionPage() {
     void cargarImagen("ejes", setImagenesEjesUrl, error => setErrorImagenesApoyo(prev => prev ? prev + " " + error : error));
     void cargarImagen("proceso de joyeria con impresion 3d", setImagenProceso3DUrl, setImagenProceso3DError);
     return () => { vigente = false; };
-  }, [lecturaAbierta?.id, lecturaAbierta?.numero, mostrarVistaDocente, materialesDocenteQuery.data, materialesAlumnoQuery.data]);
+  }, [lecturaAbierta?.id, lecturaAbierta?.numero, mostrarVistaDocente, vistaPreviaAlumno, materialesDocenteQuery.data, materialesAlumnoQuery.data]);
 
   useEffect(() => {
-    const materiales = mostrarVistaDocente ? materialesDocenteQuery.data : materialesAlumnoQuery.data;
+    const materiales = mostrarVistaDocente || vistaPreviaAlumno ? materialesDocenteQuery.data : materialesAlumnoQuery.data;
     let vigente = true;
     setImagenesVistasPlano({});
     setErroresVistasPlano({});
@@ -1166,7 +1166,7 @@ function AulaFormacionPage() {
     }));
 
     return () => { vigente = false; };
-  }, [lecturaAbierta?.id, lecturaAbierta?.numero, mostrarVistaDocente, materialesDocenteQuery.data, materialesAlumnoQuery.data]);
+  }, [lecturaAbierta?.id, lecturaAbierta?.numero, mostrarVistaDocente, vistaPreviaAlumno, materialesDocenteQuery.data, materialesAlumnoQuery.data]);
 
   const renderSelectorVistasPlano = () => {
     if (lecturaAbierta?.numero !== 2 || paginaLectura !== 3) return null;
