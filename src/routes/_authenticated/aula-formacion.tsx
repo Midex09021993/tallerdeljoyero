@@ -2427,15 +2427,15 @@ function AulaFormacionPage() {
                   </>
                 )}
               </nav>
-              <main className={`min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-8 sm:py-6 lg:px-10 ${modoAulaExpandida ? "bg-white px-6 py-7 text-[#3A3A3C] sm:px-10 sm:py-9 lg:px-14 xl:px-16 2xl:px-20" : "bg-white"}`}>
+              <main className={`min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-8 sm:py-6 lg:px-10 ${modoAulaExpandida ? "bg-white px-6 py-7 text-[#3A3A3C] sm:px-10 sm:py-8 lg:px-12 xl:px-16 2xl:px-20 pb-16 sm:pb-20" : "bg-white"}`}>
                 <div className={lecturaAbierta?.numero === 5 ? "grid items-start gap-6 2xl:grid-cols-[minmax(0,.9fr)_minmax(0,1.1fr)]" : ""}>
-                  <section className={`min-w-0 ${modoAulaExpandida ? "mx-auto w-full max-w-[1180px]" : ""}`}>
-                    <h3 className={`mb-6 font-display text-2xl leading-tight text-[#1D1D1F] sm:text-3xl ${modoAulaExpandida ? "max-w-[900px] sm:text-[2.15rem] sm:leading-[1.2]" : "max-w-[900px]"}`} >{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</h3>
+                  <section className={`min-w-0 ${modoAulaExpandida ? "mx-auto w-full max-w-[1320px]" : ""}`}>
+                    <h3 className={`mb-6 font-display text-2xl leading-tight text-[#1D1D1F] sm:text-3xl ${modoAulaExpandida ? "max-w-[1100px] sm:text-[2.15rem] sm:leading-[1.2]" : "max-w-[900px]"}`} >{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</h3>
                     {(seccionesLecturaActivas[paginaLectura]?.bloques ?? []).map((bloque,idx) => {
                       if (lecturaAbierta?.numero === 1 && paginaLectura === 4 && idx >= 6) return null;
-                      return <div key={idx}><p className={`mb-5 whitespace-pre-line text-[15px] leading-7 ${modoAulaExpandida ? "max-w-[900px] text-[17px] leading-[1.85] tracking-[0.005em] text-[#3A3A3C]" : "max-w-[900px] text-[#3A3A3C]"}`}>{bloque}</p></div>;
+                      return <div key={idx}><p className={`mb-5 whitespace-pre-line text-[15px] leading-7 ${modoAulaExpandida ? "w-full max-w-[1100px] text-[17px] leading-[1.8] tracking-[0.005em] text-[#3A3A3C]" : "max-w-[900px] text-[#3A3A3C]"}`}>{bloque}</p></div>;
                     })}
-                    {lecturaAbierta?.numero === 1 && paginaLectura === 0 && <div className={`mt-2 rounded-2xl border border-[#D2D2D7] bg-[#F5F5F7] p-4 sm:p-5 ${modoAulaExpandida ? "max-w-[900px]" : "max-w-[900px]"}`}>
+                    {lecturaAbierta?.numero === 1 && paginaLectura === 0 && <div className={`mt-2 rounded-2xl border border-[#D2D2D7] bg-[#F5F5F7] p-4 sm:p-5 ${modoAulaExpandida ? "w-full max-w-[1100px]" : "w-full max-w-[1100px]"}`}>
                       <p className="text-sm leading-7 text-[#3A3A3C]">En joyería, la precisión dimensional es fundamental: el modelo debe considerar espesores, tolerancias, espacios de montaje y la ubicación de piedras y engastes. Estas decisiones influyen en la resistencia, la funcionalidad y la viabilidad de fabricación de la pieza.</p>
                       <div className="mt-4 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <p className="max-w-[560px] text-sm leading-6 text-[#6E6E73]">Una vez definido el modelo CAD, puedes explorar cómo se vería mediante materiales, metales e iluminación en un entorno de presentación 3D.</p>
@@ -3037,7 +3037,7 @@ function AulaFormacionPage() {
                   <h3 className="mb-5 max-w-[1080px] font-display text-2xl leading-tight sm:text-3xl">{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</h3>
                   {(seccionesLecturaActivas[paginaLectura]?.bloques ?? []).map((bloque,idx) => {
                     if (lecturaAbierta?.numero === 1 && paginaLectura === 4 && idx >= 6) return null;
-                    return <div key={idx}><p className={`mb-5 whitespace-pre-line ${modoAulaExpandida ? "max-w-[900px] text-[17px] leading-[1.85] tracking-[0.005em] text-[#3A3A3C]" : "max-w-4xl text-[15px] leading-7 text-foreground/90"}`}>{bloque}</p></div>;
+                    return <div key={idx}><p className={`mb-5 whitespace-pre-line ${modoAulaExpandida ? "w-full max-w-[1100px] text-[17px] leading-[1.8] tracking-[0.005em] text-[#3A3A3C]" : "max-w-4xl text-[15px] leading-7 text-foreground/90"}`}>{bloque}</p></div>;
                   })}
                 {renderLaboratorioCoordenadas()}
                 {renderLaboratorioRestricciones()}
