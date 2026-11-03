@@ -1782,12 +1782,12 @@ function AulaFormacionPage() {
   };
 
   const renderRhinoCommand = (command: string, detail: string) => (
-    <div className="mx-3 mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl border border-[#b79558]/35 bg-[#1c211f] px-3 py-2.5 sm:mx-4">
+    <div className="mx-3 mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl border border-[#e6dcc9] bg-[#faf7f0] px-3 py-2.5 sm:mx-4">
       <div className="min-w-[112px]">
-        <p className="text-[9px] font-bold uppercase tracking-[.18em] text-amber-300">COMANDO RHINO</p>
-        <code className="mt-1 block font-mono text-sm font-semibold tracking-wide text-white">_{command}</code>
+        <p className="text-[9px] font-bold uppercase tracking-[.18em] text-[#98743c]">COMANDO RHINO</p>
+        <code className="mt-1 block font-mono text-sm font-semibold tracking-wide text-[#24221e]">_{command}</code>
       </div>
-      <p className="min-w-0 flex-1 text-xs leading-5 text-slate-400">{detail}</p>
+      <p className="min-w-0 flex-1 text-xs leading-5 text-[#68645c]">{detail}</p>
     </div>
   );
 
@@ -1828,14 +1828,14 @@ function AulaFormacionPage() {
       setPuntosCoord3(v=>[...v,p]);setCerradoCoord3(false);setEstadoCoord3(`Punto: ${p.x.toFixed(2)}, ${p.y.toFixed(2)}`);
     };
     const pts=puntosCoord3.map(p=>`${ox+p.x*k},${oy-p.y*k}`).join(" ");
-    return !laboratorioCoordenadasAbierto ? <div className="mt-6 max-w-4xl rounded-xl border border-[#b79558]/40 bg-gradient-to-r from-gold/10 to-background p-4">
+    return !laboratorioCoordenadasAbierto ? <div className="mt-6 max-w-4xl rounded-xl border border-[#b79558]/40 bg-gradient-to-br from-white to-[#faf7f0] p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div><p className="text-[10px] font-bold uppercase tracking-widest text-amber-300">Laboratorio interactivo compartido · Sesión 03</p><h4 className="mt-1 text-sm font-semibold">Construcción por coordenadas</h4><p className="mt-1 text-xs text-slate-400">Abre el espacio de trabajo independiente para practicar sin reducir el área de lectura.</p></div>
         <button type="button" onClick={()=>setLaboratorioCoordenadasAbierto(true)} className="shrink-0 rounded-lg bg-gold px-4 py-2.5 text-sm font-bold text-black">Abrir laboratorio <span aria-hidden="true">↗</span></button>
       </div>
     </div> : <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 p-2 sm:p-4">
       <section className="flex max-h-[calc(100vh-1rem)] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-[#b79558]/50 bg-background shadow-2xl sm:max-h-[calc(100vh-2rem)]">
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 bg-[#0e141b]/95 px-4 py-3 sm:px-5">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[#e8dfce] bg-[#fbfaf7]/95 px-4 py-3 sm:px-5">
         <div><p className="text-[10px] font-bold uppercase tracking-widest text-amber-300">FADILAB · Sesión 03 · Laboratorio continuo</p><h4 className="text-base font-semibold">Construcción por coordenadas</h4><p className="mt-0.5 text-xs text-slate-400">Un mismo plano para comparar los tres métodos sin salir de la lectura.</p></div>
         <div className="flex items-center gap-2">
           <button type="button" onClick={reset} className="rounded-lg border border-white/10 px-3 py-2 text-xs"><RotateCcw className="mr-1 inline size-3.5"/> Reiniciar práctica</button>
@@ -1847,9 +1847,9 @@ function AulaFormacionPage() {
         <div className="mb-4 rounded-xl border border-[#b79558]/40 bg-gold/5 p-3 sm:p-4">
           <div className="flex flex-wrap items-center justify-between gap-2"><p className="text-xs font-bold uppercase tracking-wide text-amber-300">Explicación del índice {paginaLectura+1}</p><span className="rounded-full bg-background px-2.5 py-1 text-[10px] font-semibold text-slate-400">{metodoActual==="absolutas"?"Método 1 de 3":metodoActual==="relativas"?"Método 2 de 3":"Método 3 de 3"}</span></div>
           <h5 className="mt-1 text-sm font-semibold">{explicacion.titulo}</h5>
-          <p className="mt-1 text-sm leading-6 text-slate-300">{explicacion.texto}</p>
-          <div className="mt-3 grid gap-2 sm:grid-cols-[auto_1fr] sm:items-center"><span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Sintaxis Rhino</span><code className="rounded-lg bg-background px-3 py-2 text-sm font-bold text-foreground">{explicacion.ejemplo}</code></div>
-          <p className="mt-2 text-xs leading-5 text-slate-400">{explicacion.detalle}</p>
+          <p className="mt-1 text-sm leading-6 text-[#4f4a42]">{explicacion.texto}</p>
+          <div className="mt-3 grid gap-2 sm:grid-cols-[auto_1fr] sm:items-center"><span className="text-[10px] font-semibold uppercase tracking-wide text-[#776b58]">Sintaxis Rhino</span><code className="rounded-lg bg-background px-3 py-2 text-sm font-bold text-foreground">{explicacion.ejemplo}</code></div>
+          <p className="mt-2 text-xs leading-5 text-[#68645c]">{explicacion.detalle}</p>
         </div>
         <div className="grid min-w-0 gap-3 lg:grid-cols-[minmax(0,1.35fr)_minmax(290px,.8fr)]">
           <div className="flex min-h-[300px] min-w-0 flex-col overflow-hidden rounded-xl bg-[#17191d]">
@@ -2179,11 +2179,11 @@ function AulaFormacionPage() {
       if (respuestaPlaca === etapa.correcta) setEtapasPlacaCompletadas(prev => prev.includes(etapaPlaca) ? prev : [...prev, etapaPlaca]);
     };
     const reiniciar = () => { setEtapaPlaca(0); setRespuestaPlaca(""); setEtapasPlacaCompletadas([]); setMetodoPlaca("cartesiano"); };
-    if (!laboratorioPlacaAbierto) return <section className="mt-7 rounded-2xl border border-[#b79558]/40 bg-gradient-to-br from-[#211b11] via-[#151b22] to-[#10151b] text-slate-100 p-5 sm:p-6">
+    if (!laboratorioPlacaAbierto) return <section className="mt-7 rounded-2xl border border-[#b79558]/40 bg-gradient-to-br from-white via-[#fffefa] to-[#f7f3eb] text-[#24221e] p-5 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-4"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-300">Práctica integradora · RHINO 7</p><h4 className="mt-2 text-lg font-semibold">Construcción de placa base para una joya</h4><p className="mt-1 text-sm text-slate-400">Integra coordenadas, Osnap, restricciones y SmartTrack en una secuencia guiada de ocho etapas.</p><p className="mt-2 text-xs text-slate-400">{etapasPlacaCompletadas.length}/8 etapas verificadas</p></div><button type="button" onClick={() => setLaboratorioPlacaAbierto(true)} className="inline-flex items-center gap-2 rounded-xl bg-gold px-5 py-3 text-sm font-semibold text-black"><BookOpenCheck className="size-4"/> Abrir práctica <ArrowRight className="size-4"/></button></div>
     </section>;
     return <section className="fixed inset-0 z-[105] h-[100dvh] overflow-y-auto bg-background" role="dialog" aria-modal="true" aria-label="Laboratorio integrador de placa base">
-      <header className="sticky top-0 z-10 border-b border-white/10 bg-[#0e141b]/95 px-4 py-3 backdrop-blur"><div className="flex items-center justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-widest text-amber-300">Laboratorio integrador · Sesión 03</p><h3 className="text-base font-semibold">Placa base para una joya</h3></div><button type="button" onClick={() => setLaboratorioPlacaAbierto(false)} className="rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold">Cerrar ✕</button></div><div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/5"><div className="h-full bg-gold transition-all" style={{width: (etapasPlacaCompletadas.length/8*100)+"%"}}/></div><p className="mt-1 text-right text-[10px] text-slate-400">{etapasPlacaCompletadas.length} de 8 etapas verificadas</p></header>
+      <header className="sticky top-0 z-10 border-b border-[#e8dfce] bg-[#fbfaf7]/95 px-4 py-3 backdrop-blur"><div className="flex items-center justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-widest text-amber-300">Laboratorio integrador · Sesión 03</p><h3 className="text-base font-semibold">Placa base para una joya</h3></div><button type="button" onClick={() => setLaboratorioPlacaAbierto(false)} className="rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold">Cerrar ✕</button></div><div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/5"><div className="h-full bg-gold transition-all" style={{width: (etapasPlacaCompletadas.length/8*100)+"%"}}/></div><p className="mt-1 text-right text-[10px] text-slate-400">{etapasPlacaCompletadas.length} de 8 etapas verificadas</p></header>
       {renderRhinoCommand("Polyline", "Construye el perfil de la placa integrando coordenadas y referencias.")}
       <div className="mx-auto grid max-w-6xl gap-4 p-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <div className="rounded-2xl border border-white/10 bg-[#17191d] p-3 text-white">
@@ -2206,7 +2206,7 @@ function AulaFormacionPage() {
           <p className="mt-4 text-[10px] font-bold uppercase tracking-widest text-amber-300">Etapa {etapaPlaca+1} de 8</p><h4 className="mt-1 text-lg font-semibold">{etapa.titulo}</h4><p className="mt-3 text-sm leading-6 text-slate-400">{etapa.texto}</p>
           {etapaPlaca===2&&<div className="mt-3 flex gap-2"><button type="button" onClick={()=>setMetodoPlaca("cartesiano")} className={"rounded-lg border px-3 py-2 text-xs "+(metodoPlaca==="cartesiano"?"border-gold bg-gold/10":"border-white/10")}>Cartesiano</button><button type="button" onClick={()=>setMetodoPlaca("polar")} className={"rounded-lg border px-3 py-2 text-xs "+(metodoPlaca==="polar"?"border-gold bg-gold/10":"border-white/10")}>Polar</button></div>}
           {etapaPlaca===2&&<div className="mt-2 rounded-lg bg-white/5 p-3 font-mono text-xs leading-6">{(metodoPlaca==="cartesiano"?["@20,0,0","@0,10,0","@-20,0,0","Cerrar polilínea"]:["@20<0","@10<90","@20<180","@10<270"]).map(v=><div key={v}>{v}</div>)}</div>}
-          <div className="mt-5 rounded-xl border border-white/10 p-3"><p className="text-sm font-semibold">{etapa.pregunta}</p><div className="mt-3 space-y-2">{etapa.opciones.map(op=><button key={op} type="button" onClick={()=>setRespuestaPlaca(op)} className={"w-full rounded-lg border px-3 py-2.5 text-left text-sm "+(respuestaPlaca===op?"border-gold bg-gold/10":"border-white/10 hover:border-gold/50")}>{op}</button>)}</div><button type="button" disabled={!respuestaPlaca} onClick={validar} className="mt-3 w-full rounded-lg bg-gold px-4 py-2.5 text-sm font-semibold text-black disabled:opacity-40">Comprobar etapa</button>{respuestaPlaca&&<p className={"mt-2 text-xs "+(respuestaPlaca===etapa.correcta?"text-emerald-700":"text-amber-700")}>{respuestaPlaca===etapa.correcta?"¡Correcto! "+etapa.ayuda:"No es correcto todavía. Revisa la explicación y vuelve a intentarlo."}</p>}</div>
+          <div className="mt-5 rounded-xl border border-white/10 p-3"><p className="text-sm font-semibold">{etapa.pregunta}</p><div className="mt-3 space-y-2">{etapa.opciones.map(op=><button key={op} type="button" onClick={()=>setRespuestaPlaca(op)} className={"w-full rounded-lg border px-3 py-2.5 text-left text-sm "+(respuestaPlaca===op?"border-gold bg-gold/10":"border-[#e8dfce] hover:border-[#c4a46a]")}>{op}</button>)}</div><button type="button" disabled={!respuestaPlaca} onClick={validar} className="mt-3 w-full rounded-lg bg-gold px-4 py-2.5 text-sm font-semibold text-black disabled:opacity-40">Comprobar etapa</button>{respuestaPlaca&&<p className={"mt-2 text-xs "+(respuestaPlaca===etapa.correcta?"text-emerald-700":"text-amber-700")}>{respuestaPlaca===etapa.correcta?"¡Correcto! "+etapa.ayuda:"No es correcto todavía. Revisa la explicación y vuelve a intentarlo."}</p>}</div>
           <div className="mt-4 flex flex-wrap justify-between gap-2"><button type="button" disabled={etapaPlaca===0} onClick={()=>{setEtapaPlaca(v=>v-1);setRespuestaPlaca("");}} className="rounded-lg border border-white/10 px-4 py-2 text-xs disabled:opacity-40">Anterior</button><button type="button" disabled={!etapasPlacaCompletadas.includes(etapaPlaca)||etapaPlaca===7} onClick={()=>{setEtapaPlaca(v=>v+1);setRespuestaPlaca("");}} className="rounded-lg bg-gold px-4 py-2 text-xs font-semibold text-black disabled:opacity-40">Siguiente etapa <ArrowRight className="ml-1 inline size-3.5"/></button></div>
           {etapasPlacaCompletadas.length===8&&<div className="mt-4 rounded-xl border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-900"><b>¡Práctica completada!</b><p className="mt-1">Has verificado las ocho etapas. Ejecuta la construcción en Rhino y guarda el archivo solicitado.</p><button type="button" onClick={reiniciar} className="mt-2 rounded-lg border border-emerald-700/30 px-3 py-2 text-xs font-semibold">Repetir práctica</button></div>}
         </div>
@@ -2216,7 +2216,7 @@ function AulaFormacionPage() {
 
   const renderLaboratorioGeometria = () => {
     if (lecturaAbierta?.numero !== 2 || paginaLectura !== 1) return null;
-    if (!laboratorioGeometriaAbierto) return <section className="mt-7 rounded-2xl border border-[#b79558]/40 bg-gradient-to-br from-[#211b11] via-[#151b22] to-[#10151b] text-slate-100 p-5 sm:p-6">
+    if (!laboratorioGeometriaAbierto) return <section className="mt-7 rounded-2xl border border-[#b79558]/40 bg-gradient-to-br from-white via-[#fffefa] to-[#f7f3eb] text-[#24221e] p-5 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-4"><div className="min-w-0"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-300">Laboratorio guiado · RHINO 7</p><h4 className="mt-2 text-lg font-semibold">Aprende a reconocer la geometría de una joya</h4><p className="mt-1 text-sm text-slate-400">Primero aprende, observa ejemplos y aplica cada concepto. Al final podrás comprobar lo que has aprendido.</p><p className="mt-2 text-xs text-slate-400">{modulosGeometriaCompletados.length}/4 módulos completados</p></div><button type="button" onClick={() => setLaboratorioGeometriaAbierto(true)} className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-gold px-5 py-3 text-sm font-semibold text-black shadow-sm transition hover:-translate-y-0.5 hover:brightness-105"><BookOpenCheck className="size-4"/> Abrir laboratorio <ArrowRight className="size-4"/></button></div>
     </section>;
     const actividad = actividadesGeometria[moduloGeometria] ?? actividadesGeometria[0]!;
@@ -2240,7 +2240,7 @@ function AulaFormacionPage() {
             {faseLaboratorioGeometria===0 && <div className="mt-2 space-y-3"><h5 className="text-lg font-semibold">Primero, comprende el concepto</h5><p className="text-sm leading-6 text-slate-400">{actividad.introduccion}</p><div className="rounded-xl border border-white/10 bg-white/5/30 p-3"><p className="text-xs font-semibold uppercase tracking-wide text-amber-300">Ideas clave</p><ul className="mt-2 space-y-2">{actividad.claves.map(clave=><li key={clave} className="flex gap-2 text-sm leading-5"><span className="text-amber-300">•</span>{clave}</li>)}</ul></div></div>}
             {faseLaboratorioGeometria===1 && <div className="mt-2 space-y-3"><h5 className="text-lg font-semibold">Observa la representación</h5><p className="text-sm leading-6 text-slate-400">Mira la ilustración y relaciona sus formas con la explicación. No necesitas responder todavía: dedica un momento a identificar sus elementos.</p><div className="rounded-xl border border-white/10 bg-white/5/30 p-3 text-sm leading-6">{actividad.claves.map(clave=><p key={clave}>• {clave}</p>)}</div></div>}
             {faseLaboratorioGeometria===2 && <div className="mt-2 space-y-3"><h5 className="text-lg font-semibold">Llévalo al diseño de joyería</h5><p className="text-sm leading-6 text-slate-400">{actividad.aplicacion}</p><div className="rounded-xl border border-[#b79558]/40 bg-gold/5 p-3"><p className="text-xs font-semibold uppercase tracking-wide text-amber-300">Ejemplo aplicado</p><p className="mt-1 text-sm leading-6">{actividad.ejemplo}</p></div></div>}
-            {faseLaboratorioGeometria===3 && <div className="mt-2 space-y-3"><h5 className="text-lg font-semibold">{actividad.pregunta}</h5><p className="text-sm text-slate-400">Ahora que ya conoces el concepto, selecciona la respuesta que mejor lo representa.</p><div className="space-y-2">{actividad.opciones.map(opcion=><button key={opcion.valor} type="button" onClick={()=>{setRespuestaGeometria(opcion.valor);setResultadoGeometria(null);}} className={`w-full rounded-lg border px-3 py-2.5 text-left text-sm transition ${respuestaGeometria===opcion.valor ? "border-gold bg-gold/10" : "border-white/10 hover:border-gold/50"}`}>{opcion.texto}</button>)}</div><button type="button" disabled={!respuestaGeometria} onClick={()=>{const correcto=respuestaGeometria===actividad.correcta;setResultadoGeometria(correcto?"correcto":"incorrecto");if(correcto)setModulosGeometriaCompletados(prev=>prev.includes(moduloGeometria)?prev:[...prev,moduloGeometria]);}} className="w-full rounded-lg bg-gold px-4 py-2.5 text-sm font-semibold text-black disabled:cursor-not-allowed disabled:opacity-40">Comprobar lo aprendido</button>{resultadoGeometria&&<div className={`rounded-lg border p-3 text-sm ${resultadoGeometria==="correcto"?"border-emerald-300 bg-emerald-50 text-emerald-900":"border-amber-300 bg-amber-50 text-amber-900"}`}><p className="font-semibold">{resultadoGeometria==="correcto"?"¡Muy bien! Has comprendido este concepto.":"Vamos a repasarlo una vez más."}</p><p className="mt-1 leading-5">{resultadoGeometria==="correcto"?actividad.explicacion:"Vuelve a las fases Aprende y Observa para revisar la explicación. Después puedes intentarlo de nuevo."}</p></div>}</div>}
+            {faseLaboratorioGeometria===3 && <div className="mt-2 space-y-3"><h5 className="text-lg font-semibold">{actividad.pregunta}</h5><p className="text-sm text-slate-400">Ahora que ya conoces el concepto, selecciona la respuesta que mejor lo representa.</p><div className="space-y-2">{actividad.opciones.map(opcion=><button key={opcion.valor} type="button" onClick={()=>{setRespuestaGeometria(opcion.valor);setResultadoGeometria(null);}} className={`w-full rounded-lg border px-3 py-2.5 text-left text-sm transition ${respuestaGeometria===opcion.valor ? "border-gold bg-gold/10" : "border-[#e8dfce] hover:border-[#c4a46a]"}`}>{opcion.texto}</button>)}</div><button type="button" disabled={!respuestaGeometria} onClick={()=>{const correcto=respuestaGeometria===actividad.correcta;setResultadoGeometria(correcto?"correcto":"incorrecto");if(correcto)setModulosGeometriaCompletados(prev=>prev.includes(moduloGeometria)?prev:[...prev,moduloGeometria]);}} className="w-full rounded-lg bg-gold px-4 py-2.5 text-sm font-semibold text-black disabled:cursor-not-allowed disabled:opacity-40">Comprobar lo aprendido</button>{resultadoGeometria&&<div className={`rounded-lg border p-3 text-sm ${resultadoGeometria==="correcto"?"border-emerald-300 bg-emerald-50 text-emerald-900":"border-amber-300 bg-amber-50 text-amber-900"}`}><p className="font-semibold">{resultadoGeometria==="correcto"?"¡Muy bien! Has comprendido este concepto.":"Vamos a repasarlo una vez más."}</p><p className="mt-1 leading-5">{resultadoGeometria==="correcto"?actividad.explicacion:"Vuelve a las fases Aprende y Observa para revisar la explicación. Después puedes intentarlo de nuevo."}</p></div>}</div>}
             <div className="mt-4 flex flex-wrap justify-between gap-2"><button type="button" disabled={faseLaboratorioGeometria===0} onClick={()=>{setFaseLaboratorioGeometria(v=>Math.max(0,v-1));setRespuestaGeometria("");setResultadoGeometria(null);}} className="rounded-lg border border-white/10 px-4 py-2 text-xs font-semibold disabled:opacity-40">Anterior</button>{faseLaboratorioGeometria<3 ? <button type="button" onClick={avanzarFase} className="rounded-lg bg-gold px-4 py-2 text-xs font-semibold text-black">Continuar <ArrowRight className="ml-1 inline size-3.5"/></button> : <button type="button" disabled={resultadoGeometria!=="correcto"||moduloGeometria===3} onClick={()=>{setModuloGeometria(v=>Math.min(3,v+1));setFaseLaboratorioGeometria(0);setRespuestaGeometria("");setResultadoGeometria(null);}} className="rounded-lg bg-gold px-4 py-2 text-xs font-semibold text-black disabled:opacity-40">Siguiente módulo <ArrowRight className="ml-1 inline size-3.5"/></button>}</div>
           </div>
         </div>
@@ -2264,16 +2264,16 @@ function AulaFormacionPage() {
       setSolidosColocados([]); setFigurasDisponibles(["cubo","esfera","cilindro","cono","toroide"]); setSolidoSeleccionadoId(null); arrastreSolidoRef.current = null; setMensajeSolidos(""); siguienteSolidoId.current = 1;
       setRetoCapasCompletado(false); setRespuestaRetoCapas(""); setResultadoRetoCapas(null); setMostrarRetoCapasAlCerrar(false);
     };
-    if (!laboratorioCapasAbierto) return <><section className="mt-7 rounded-2xl border border-[#b79558]/40 bg-gradient-to-br from-[#211b11] via-[#151b22] to-[#10151b] text-slate-100 p-5 sm:p-6">
-      <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-300">Laboratorio interactivo · MatrixGold</p>
+    if (!laboratorioCapasAbierto) return <><section className="mt-7 rounded-2xl border border-[#b79558]/40 bg-gradient-to-br from-white via-[#fffefa] to-[#f7f3eb] text-[#24221e] p-5 sm:p-6">
+      <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#98743c]">Laboratorio interactivo · MatrixGold</p>
       <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0"><h4 className="text-lg font-semibold">Practica con las capas de una joya</h4><p className="mt-1 text-sm text-slate-400">Experimenta con la visibilidad, el bloqueo y la asignación de objetos en un modelo didáctico.</p></div>
+        <div className="min-w-0"><h4 className="text-lg font-semibold">Practica con las capas de una joya</h4><p className="mt-1 text-sm text-[#68645c]">Experimenta con la visibilidad, el bloqueo y la asignación de objetos en un modelo didáctico.</p></div>
         <button type="button" onClick={() => setLaboratorioCapasAbierto(true)} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-gold px-5 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-105"><Layers className="size-4"/> Iniciar práctica <ArrowRight className="size-4"/></button>
       </div>
-    </section>{mostrarRetoCapasAlCerrar && <section className="mt-4 rounded-2xl border border-[#b79558]/40 bg-[#121922] p-4 sm:p-5"><div className="rounded-xl border border-[#b79558]/40 bg-gold/5 p-4"><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-amber-300">Reto de comprobación</p><h4 className="mt-1 text-sm font-semibold">Quieres proteger la piedra central para evitar seleccionarla, pero mantenerla visible. ¿Qué control debes activar?</h4><div className="mt-3 space-y-2">{[{v:"ojo",t:"Cerrar el ojo de Gem 01"},{v:"candado",t:"Activar el candado de Gem 01"},{v:"triangulo",t:"Asignar la piedra a Metal 01"}].map(o=><button key={o.v} type="button" onClick={()=>{setRespuestaRetoCapas(o.v);setResultadoRetoCapas(null);}} className={`w-full rounded-lg border px-3 py-2 text-left text-xs ${respuestaRetoCapas===o.v?"border-gold bg-gold/10":"border-white/10 hover:border-gold/50"}`}>{o.t}</button>)}</div><button type="button" disabled={!respuestaRetoCapas} onClick={()=>{const ok=respuestaRetoCapas==="candado";setResultadoRetoCapas(ok?"correcto":"incorrecto");if(ok)setRetoCapasCompletado(true);}} className="mt-3 w-full rounded-lg bg-gold px-4 py-2.5 text-xs font-semibold text-black disabled:opacity-40">Comprobar respuesta</button>{resultadoRetoCapas&&<div className={`mt-3 rounded-lg border p-3 text-xs ${resultadoRetoCapas==="correcto"?"border-emerald-300 bg-emerald-50 text-emerald-900":"border-amber-300 bg-amber-50 text-amber-900"}`}><p className="font-semibold">{resultadoRetoCapas==="correcto"?"¡Correcto!":"Inténtalo otra vez."}</p><p className="mt-1">{resultadoRetoCapas==="correcto"?"El candado mantiene la piedra visible y evita seleccionarla directamente. El ojo controla la visibilidad de forma independiente.":"Recuerda: el ojo oculta; el candado impide seleccionar directamente."}</p></div>}</div>{retoCapasCompletado&&<div className="rounded-xl border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-900"><p className="font-semibold">¡Reto completado!</p><p className="mt-1 text-xs">Has distinguido correctamente visibilidad, bloqueo y asignación.</p></div>}</section>}</>;
+    </section>{mostrarRetoCapasAlCerrar && <section className="mt-4 rounded-2xl border border-[#e6dcc9] bg-[#faf7f0] p-4 sm:p-5"><div className="rounded-xl border border-[#e6dcc9] bg-white p-4"><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#98743c]">Reto de comprobación</p><h4 className="mt-1 text-sm font-semibold">Quieres proteger la piedra central para evitar seleccionarla, pero mantenerla visible. ¿Qué control debes activar?</h4><div className="mt-3 space-y-2">{[{v:"ojo",t:"Cerrar el ojo de Gem 01"},{v:"candado",t:"Activar el candado de Gem 01"},{v:"triangulo",t:"Asignar la piedra a Metal 01"}].map(o=><button key={o.v} type="button" onClick={()=>{setRespuestaRetoCapas(o.v);setResultadoRetoCapas(null);}} className={`w-full rounded-lg border px-3 py-2 text-left text-xs ${respuestaRetoCapas===o.v?"border-gold bg-gold/10":"border-[#e8dfce] hover:border-[#c4a46a]"}`}>{o.t}</button>)}</div><button type="button" disabled={!respuestaRetoCapas} onClick={()=>{const ok=respuestaRetoCapas==="candado";setResultadoRetoCapas(ok?"correcto":"incorrecto");if(ok)setRetoCapasCompletado(true);}} className="mt-3 w-full rounded-lg bg-gold px-4 py-2.5 text-xs font-semibold text-black disabled:opacity-40">Comprobar respuesta</button>{resultadoRetoCapas&&<div className={`mt-3 rounded-lg border p-3 text-xs ${resultadoRetoCapas==="correcto"?"border-emerald-300 bg-emerald-50 text-emerald-900":"border-amber-300 bg-amber-50 text-amber-900"}`}><p className="font-semibold">{resultadoRetoCapas==="correcto"?"¡Correcto!":"Inténtalo otra vez."}</p><p className="mt-1">{resultadoRetoCapas==="correcto"?"El candado mantiene la piedra visible y evita seleccionarla directamente. El ojo controla la visibilidad de forma independiente.":"Recuerda: el ojo oculta; el candado impide seleccionar directamente."}</p></div>}</div>{retoCapasCompletado&&<div className="rounded-xl border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-900"><p className="font-semibold">¡Reto completado!</p><p className="mt-1 text-xs">Has distinguido correctamente visibilidad, bloqueo y asignación.</p></div>}</section>}</>;
     return <section className="fixed inset-0 z-[105] h-[100dvh] overflow-y-auto bg-background xl:overflow-hidden" role="dialog" aria-modal="true" aria-label="Laboratorio interactivo de capas MatrixGold">
-      <header className="sticky top-0 z-20 border-b border-white/10 bg-[#0e141b]/95 px-4 py-3 backdrop-blur">
-        <div className="flex w-full items-center justify-between gap-3 px-4"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-300">FADILAB · Sesión 2</p><h3 className="text-base font-semibold sm:text-lg">Laboratorio de capas · MatrixGold</h3></div><div className="flex shrink-0 items-center gap-2"><button type="button" onClick={reiniciar} className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-2.5 py-2 text-xs font-medium text-slate-400 hover:bg-white/5 hover:text-foreground" title="Restablecer todos los elementos de la práctica"><RotateCcw size={13} /> Reiniciar</button><button type="button" onClick={() => { setLaboratorioCapasAbierto(false); setMostrarRetoCapasAlCerrar(true); }} className="rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold hover:bg-white/5">Cerrar ✕</button></div></div>
+      <header className="sticky top-0 z-20 border-b border-[#e8dfce] bg-[#fbfaf7]/95 px-4 py-3 backdrop-blur">
+        <div className="flex w-full items-center justify-between gap-3 px-4"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#98743c]">FADILAB · Sesión 2</p><h3 className="text-base font-semibold sm:text-lg">Laboratorio de capas · MatrixGold</h3></div><div className="flex shrink-0 items-center gap-2"><button type="button" onClick={reiniciar} className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-2.5 py-2 text-xs font-medium text-[#776b58] hover:bg-[#faf6ed] hover:text-[#24221e]" title="Restablecer todos los elementos de la práctica"><RotateCcw size={13} /> Reiniciar</button><button type="button" onClick={() => { setLaboratorioCapasAbierto(false); setMostrarRetoCapasAlCerrar(true); }} className="rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold hover:bg-white/5">Cerrar ✕</button></div></div>
       </header>
       {renderRhinoCommand("Layer", "Organiza los objetos mediante capas, visibilidad y bloqueo.")}
       <div className="grid w-full gap-2 p-2 lg:p-3 xl:h-[calc(100dvh-64px)] xl:min-h-0 xl:grid-cols-[320px_minmax(0,1fr)] xl:items-stretch">
@@ -2361,7 +2361,7 @@ function AulaFormacionPage() {
             const examenesVistaPrevia = examenesQuery.data ?? [];
             return <div className="fixed inset-0 left-0 z-50 overflow-y-auto bg-background lg:left-64 xl:left-72" role="dialog" aria-modal="true" aria-label="Vista previa del aula del alumno">
               <div className="min-h-full">
-                <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-white/10 bg-[#0e141b]/95 px-4 py-3 backdrop-blur sm:px-6">
+                <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-[#e8dfce] bg-[#fbfaf7]/95 px-4 py-3 backdrop-blur sm:px-6">
                   <div><h2 className="text-sm font-semibold">Aula de formación</h2><p className="text-xs text-slate-400">Vista previa idéntica al área del alumno · Modo de simulación, sin guardar actividad académica</p></div>
                   <button type="button" onClick={() => setVistaPreviaAlumno(false)} className="rounded-lg border border-white/10 px-3 py-2 text-sm">Salir de vista previa</button>
                 </header>
@@ -2476,14 +2476,14 @@ function AulaFormacionPage() {
                     </div>
                   </div>}
                 </section>}
-                {lecturaAbierta?.numero === 1 && paginaLectura === 1 && <section className="mt-7 rounded-2xl border border-[#b79558]/40 bg-gradient-to-br from-[#211b11] via-[#151b22] to-[#10151b] text-slate-100 p-5 sm:p-6">
+                {lecturaAbierta?.numero === 1 && paginaLectura === 1 && <section className="mt-7 rounded-2xl border border-[#b79558]/40 bg-gradient-to-br from-white via-[#fffefa] to-[#f7f3eb] text-[#24221e] p-5 sm:p-6">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-300">Material visual de apoyo</p>
                   <h4 className="mt-1 text-lg font-semibold">Rhinoceros 7</h4>
                   <p className="mt-2 text-sm leading-6 text-slate-400">Consulta la imagen de referencia general del programa.</p>
                   {imagenRhinoUrl ? <button type="button" onClick={() => setTipoImagenApoyoAbierta(tipoImagenApoyoAbierta === "rhinoceros" ? null : "rhinoceros")} aria-expanded={tipoImagenApoyoAbierta === "rhinoceros"} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95">Ver RHINOCEROS <ChevronRight className="size-4"/></button> : <p className="mt-3 text-xs text-slate-400">{imagenRhinoError || "Buscando RHINOCEROS en la Biblioteca del curso…"}</p>}
                   {tipoImagenApoyoAbierta && <div className="fixed inset-0 z-[95] flex items-center justify-center overflow-hidden bg-black/75 p-2 sm:p-4" role="dialog" aria-modal="true" aria-label="Imagen de referencia de Rhinoceros">
                     <div className="flex max-h-[96dvh] w-full max-w-[1200px] flex-col overflow-hidden rounded-xl border border-white/10 bg-background shadow-2xl">
-                      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-white/10 bg-[#0e141b]/95 px-4 py-3 sm:px-5">
+                      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-[#e8dfce] bg-[#fbfaf7]/95 px-4 py-3 sm:px-5">
                         <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-300">FADILAB · Material de estudio</p><h3 className="text-base font-semibold">{tipoImagenApoyoAbierta === "rhinoceros" ? "Rhinoceros 7" : tipoImagenApoyoAbierta === "vistas" ? "Vistas de trabajo" : "Ejes de coordenadas"}</h3></div>
                         <button type="button" onClick={() => setTipoImagenApoyoAbierta(null)} className="shrink-0 rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold hover:border-gold">Cerrar ×</button>
                       </header>
@@ -2493,7 +2493,7 @@ function AulaFormacionPage() {
                     </div>
                   </div>}
                 </section>}
-                {lecturaAbierta?.numero === 1 && paginaLectura === 3 && <section className="mt-7 rounded-2xl border border-[#b79558]/40 bg-gradient-to-br from-[#211b11] via-[#151b22] to-[#10151b] text-slate-100 p-5 sm:p-6">
+                {lecturaAbierta?.numero === 1 && paginaLectura === 3 && <section className="mt-7 rounded-2xl border border-[#b79558]/40 bg-gradient-to-br from-white via-[#fffefa] to-[#f7f3eb] text-[#24221e] p-5 sm:p-6">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-300">Material visual de apoyo</p>
                   <h4 className="mt-1 text-lg font-semibold">Vistas y ejes de Rhinoceros 7</h4>
                   <p className="mt-2 text-sm leading-6 text-slate-400">Identifica las vistas de trabajo y la orientación espacial mediante los ejes de coordenadas.</p>
@@ -2514,7 +2514,7 @@ function AulaFormacionPage() {
                     </div>
                   </div>}
                 </section>}
-                {lecturaAbierta?.numero === 1 && paginaLectura === 6 && <section className="mt-7 rounded-2xl border border-[#b79558]/40 bg-gradient-to-br from-[#211b11] via-[#151b22] to-[#10151b] text-slate-100 p-5 sm:p-6">
+                {lecturaAbierta?.numero === 1 && paginaLectura === 6 && <section className="mt-7 rounded-2xl border border-[#b79558]/40 bg-gradient-to-br from-white via-[#fffefa] to-[#f7f3eb] text-[#24221e] p-5 sm:p-6">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-300">Material visual de apoyo</p>
                   <h4 className="mt-1 text-lg font-semibold">Proceso de joyería con impresión 3D</h4>
                   <p className="mt-2 text-sm leading-6 text-slate-400">Observa la secuencia general que conecta el diseño digital con la fabricación de una pieza de joyería mediante impresión 3D.</p>
@@ -2531,7 +2531,7 @@ function AulaFormacionPage() {
                     </div>
                   </div>}
                 </section>}
-                {lecturaAbierta?.numero === 1 && paginaLectura === 2 && !interfazInteractivaAbierta && <section className="mt-7 rounded-2xl border border-[#b79558]/40 bg-gradient-to-br from-[#211b11] via-[#151b22] to-[#10151b] text-slate-100 p-5 sm:p-6">
+                {lecturaAbierta?.numero === 1 && paginaLectura === 2 && !interfazInteractivaAbierta && <section className="mt-7 rounded-2xl border border-[#b79558]/40 bg-gradient-to-br from-white via-[#fffefa] to-[#f7f3eb] text-[#24221e] p-5 sm:p-6">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-300">Actividad guiada · FADILAB</p>
                   <h4 className="mt-1 text-lg font-semibold">Conoce cada parte de la interfaz</h4>
                   <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">Abre el recorrido interactivo para identificar los componentes directamente sobre la captura de MatrixGold 3.1. Explora los 14 marcadores numerados para conocer dónde se encuentra cada componente y para qué sirve.</p>
@@ -2571,7 +2571,7 @@ function AulaFormacionPage() {
                     </div>
                   </div>
                 </div>}
-                {paginaLectura === seccionesLecturaActivas.length-1 && <div className="rounded-xl border border-[#b79558]/40 bg-gold/5 p-4"><p className="text-sm font-semibold">Has llegado al final de la lectura</p><p className="mt-1 text-sm text-slate-400">En el aula real, el alumno podrá finalizar y marcar la sesión como completada.</p></div>}
+                {paginaLectura === seccionesLecturaActivas.length-1 && <div className="rounded-xl border border-[#e6dcc9] bg-white p-4"><p className="text-sm font-semibold">Has llegado al final de la lectura</p><p className="mt-1 text-sm text-slate-400">En el aula real, el alumno podrá finalizar y marcar la sesión como completada.</p></div>}
               </main>
               {paginaLectura === seccionesLecturaActivas.length-1 && <footer className="shrink-0 flex justify-end border-t border-white/10 bg-background px-4 py-3 sm:px-6 sm:py-4">
                 <button type="button" onClick={() => { setLecturasSimuladas(prev => new Set(prev).add(lecturaAbierta.id)); setLecturaAbierta(null); setLecturaModoVistaPrevia(false); }} className="inline-flex items-center gap-2 rounded-lg bg-gold px-4 py-2.5 text-sm font-semibold text-black"><CheckCircle2 className="size-4"/> Simular lectura completada</button>
@@ -2669,7 +2669,7 @@ function AulaFormacionPage() {
                   <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0"><p className="text-sm font-medium">{s.numero}. {s.titulo}</p><p className="text-xs text-slate-400">{s.publicada ? "Publicada · visible para alumnos" : "Borrador · solo visible para el docente"}</p>{s.descripcion && <p className="mt-1 line-clamp-2 text-xs text-slate-400">{s.descripcion}</p>}</div>
                     <div className="flex shrink-0 items-center gap-2">
-                      <button type="button" disabled={ocupado} onClick={() => iniciarEdicionSesion(s)} aria-label={`Editar sesión ${s.numero}`} title="Editar sesión" className="rounded-md p-2 text-slate-400 hover:bg-white/5 hover:text-foreground disabled:opacity-50"><Pencil className="size-4" /></button>
+                      <button type="button" disabled={ocupado} onClick={() => iniciarEdicionSesion(s)} aria-label={`Editar sesión ${s.numero}`} title="Editar sesión" className="rounded-md p-2 text-[#776b58] hover:bg-[#faf6ed] hover:text-[#24221e] disabled:opacity-50"><Pencil className="size-4" /></button>
                       <button type="button" disabled={ocupado || cargandoLecturaDocente} onClick={() => void abrirEditorLectura(s)} className="rounded-lg border border-[#b79558]/50 px-3 py-1.5 text-xs disabled:opacity-50">{cargandoLecturaDocente ? "Cargando…" : "Editar lectura"}</button>
                       <button type="button" disabled={ocupado} onClick={() => void cambiarBloqueoSesion(s)} title={s.bloqueada ? "Desbloquear sesión para alumnos" : "Bloquear apertura para alumnos"} aria-label={s.bloqueada ? `Desbloquear sesión ${s.numero}` : `Bloquear sesión ${s.numero}`} className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs disabled:opacity-50 ${s.bloqueada ? "border-amber-300 bg-amber-50 text-amber-800" : "border-emerald-300 bg-emerald-50 text-emerald-800"}`}><span aria-hidden="true">{s.bloqueada ? "🔒" : "🔓"}</span>{s.bloqueada ? "Bloqueada" : "Abierta"}</button>
                       <button type="button" disabled={ocupado} onClick={() => void publicarSesion(s)} className="rounded-lg border border-white/10 px-3 py-1.5 text-xs disabled:opacity-50">{s.publicada ? "Ocultar" : "Publicar"}</button>
@@ -2888,7 +2888,7 @@ function AulaFormacionPage() {
                     </div>
                   </div>}
                 </section>}
-                {lecturaAbierta?.numero === 1 && paginaLectura === 1 && <section className="mt-7 rounded-2xl border border-[#b79558]/40 bg-gradient-to-br from-[#211b11] via-[#151b22] to-[#10151b] text-slate-100 p-5 sm:p-6">
+                {lecturaAbierta?.numero === 1 && paginaLectura === 1 && <section className="mt-7 rounded-2xl border border-[#b79558]/40 bg-gradient-to-br from-white via-[#fffefa] to-[#f7f3eb] text-[#24221e] p-5 sm:p-6">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-300">Material visual de apoyo</p>
                   <h4 className="mt-1 text-lg font-semibold">Rhinoceros 7</h4>
                   <p className="mt-2 text-sm leading-6 text-slate-400">Consulta la imagen de referencia general del programa.</p>
@@ -2905,7 +2905,7 @@ function AulaFormacionPage() {
                     </div>
                   </div>}
                 </section>}
-                {lecturaAbierta?.numero === 1 && paginaLectura === 3 && <section className="mt-7 rounded-2xl border border-[#b79558]/40 bg-gradient-to-br from-[#211b11] via-[#151b22] to-[#10151b] text-slate-100 p-5 sm:p-6">
+                {lecturaAbierta?.numero === 1 && paginaLectura === 3 && <section className="mt-7 rounded-2xl border border-[#b79558]/40 bg-gradient-to-br from-white via-[#fffefa] to-[#f7f3eb] text-[#24221e] p-5 sm:p-6">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-300">Material visual de apoyo</p>
                   <h4 className="mt-1 text-lg font-semibold">Vistas y ejes de Rhinoceros 7</h4>
                   <p className="mt-2 text-sm leading-6 text-slate-400">Identifica las vistas de trabajo y la orientación espacial mediante los ejes de coordenadas.</p>
@@ -2926,7 +2926,7 @@ function AulaFormacionPage() {
                     </div>
                   </div>}
                 </section>}
-                {lecturaAbierta?.numero === 1 && paginaLectura === 2 && !interfazInteractivaAbierta && <section className="mt-7 rounded-2xl border border-[#b79558]/40 bg-gradient-to-br from-[#211b11] via-[#151b22] to-[#10151b] text-slate-100 p-5 sm:p-6">
+                {lecturaAbierta?.numero === 1 && paginaLectura === 2 && !interfazInteractivaAbierta && <section className="mt-7 rounded-2xl border border-[#b79558]/40 bg-gradient-to-br from-white via-[#fffefa] to-[#f7f3eb] text-[#24221e] p-5 sm:p-6">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-300">Actividad guiada · FADILAB</p>
                   <h4 className="mt-1 text-lg font-semibold">Conoce cada parte de la interfaz</h4>
                   <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">Abre el recorrido interactivo para identificar los componentes directamente sobre la captura de MatrixGold 3.1. Explora los 14 marcadores numerados para conocer dónde se encuentra cada componente y para qué sirve.</p>
@@ -2966,7 +2966,7 @@ function AulaFormacionPage() {
                     </div>
                   </div>
                 </div>}
-                {paginaLectura === seccionesLecturaActivas.length-1 && <div className="rounded-xl border border-[#b79558]/40 bg-gold/5 p-4"><p className="text-sm font-semibold">Has llegado al final de la lectura</p><p className="mt-1 text-sm text-slate-400">{lecturaModoVistaPrevia ? "En la experiencia del alumno, aquí podrá finalizar y marcar la sesión como completada." : "La lectura está registrada como leída. Puedes marcar la sesión como completada."}</p></div>}
+                {paginaLectura === seccionesLecturaActivas.length-1 && <div className="rounded-xl border border-[#e6dcc9] bg-white p-4"><p className="text-sm font-semibold">Has llegado al final de la lectura</p><p className="mt-1 text-sm text-slate-400">{lecturaModoVistaPrevia ? "En la experiencia del alumno, aquí podrá finalizar y marcar la sesión como completada." : "La lectura está registrada como leída. Puedes marcar la sesión como completada."}</p></div>}
                 </section>
               </main>
               {paginaLectura === seccionesLecturaActivas.length-1 && <footer className="shrink-0 flex justify-end border-t border-white/10 bg-background px-4 py-3 sm:px-6 sm:py-4">
@@ -3049,7 +3049,7 @@ function AulaFormacionPage() {
             <p className="mt-1 text-sm text-slate-400">{examenPendienteInicio.examen.titulo}</p>
           </header>
           <div className="space-y-4 p-5">
-            <div className="rounded-xl border border-[#b79558]/40 bg-gold/5 p-4">
+            <div className="rounded-xl border border-[#e6dcc9] bg-white p-4">
               <p className="text-sm font-semibold">Tiempo asignado por el profesor</p>
               <p className="mt-1 text-sm text-slate-400">{examenPendienteInicio.examen.duracion_minutos ? `${examenPendienteInicio.examen.duracion_minutos} minutos` : "Sin límite de tiempo configurado"}.</p>
             </div>
