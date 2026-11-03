@@ -3501,8 +3501,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       const rawSession = sessionStorage.getItem("aurum-render-poster-destino");
       if (rawSession) {
         const parsed = JSON.parse(rawSession) as Partial<AurumProjectDestination>;
-        if (typeof parsed.rutaCarpeta === "string" &&
-            (!parsed.archivoNombre || parsed.archivoNombre === archivoOriginalInfo.name)) {
+        const nombreOriginalCoincide = !parsed.archivoNombre ||
+          parsed.archivoNombre === archivoOriginalInfo.name ||
+          (parsed.archivoNombre.toLowerCase().endsWith(".3dm") &&
+            parsed.archivoNombre.replace(/\.3dm$/i, ".glb") === archivoOriginalInfo.name);
+        if (typeof parsed.rutaCarpeta === "string" && nombreOriginalCoincide) {
           setDestinoProyectoGuardado(parsed.rutaCarpeta && typeof parsed.nombre === "string"
             ? { rutaCarpeta: parsed.rutaCarpeta, rutaArchivoOriginal: parsed.rutaArchivoOriginal,
                 nombre: parsed.nombre, nombreProyecto: parsed.nombreProyecto,
@@ -3515,9 +3518,16 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       const rawSaved = localStorage.getItem("aurum-render-proyecto-destino");
       if (!rawSaved) return;
       const saved = JSON.parse(rawSaved) as Partial<AurumProjectDestination>;
-      if (saved.archivoNombre !== archivoOriginalInfo.name ||
-          saved.archivoTamano !== archivoOriginalInfo.size ||
-          saved.archivoModificado !== archivoOriginalInfo.lastModified ||
+      const nombreOriginalCoincide = saved.archivoNombre === archivoOriginalInfo.name ||
+        (typeof saved.archivoNombre === "string" &&
+          saved.archivoNombre.toLowerCase().endsWith(".3dm") &&
+          saved.archivoNombre.replace(/\.3dm$/i, ".glb") === archivoOriginalInfo.name);
+      // Al abrir desde Mi Nube se carga el GLB, pero el destino sigue vinculado
+      // al 3DM original. En ese caso el tamaño/lastModified del GLB no coinciden.
+      const esCargaDesdeMiNube = new URLSearchParams(window.location.search).get("desde-mi-nube") === "1";
+      if (!nombreOriginalCoincide ||
+          (!esCargaDesdeMiNube && (saved.archivoTamano !== archivoOriginalInfo.size ||
+          saved.archivoModificado !== archivoOriginalInfo.lastModified)) ||
           typeof saved.rutaCarpeta !== "string" ||
           typeof saved.nombre !== "string") return;
       const destino: AurumProjectDestination = {
