@@ -39,7 +39,7 @@
     "src/lib/aurum/material-application.ts": "02c6ba0ef55d606f6fd92d0b6057e3da1e1daa40f8596917b7a5f7e87914e030",
     "src/lib/aurum/mesh-preflight.ts": "a3e9f4ba831106b965055a3aca635962d23637fb51fe82d4d881ca271e1de685",
     "src/lib/aurum/metal-union-experiment.ts": "fc1754e12ca066592b7e5daecd757e5c786bd8271e8b0ffd13b7efd44522269f",
-    "src/lib/aurum/model-loader.ts": "16158ce6985bba4eb75aaba43da9256792ddb65e9d269df2f2f23e9907d1134c",
+    "src/lib/aurum/model-loader.ts": "f6c1c20c1e102c731ec8bf1c1f83f234c38b8537d2a14084e3955ec70bb66aef",
     "src/lib/aurum/model-materials.ts": "384aad39d87bae203dc9c7b5621334deac8ea527eb88755d70b5d2ea4b99f1ad",
     "src/lib/aurum/model-normalizer.ts": "fd60e0f16d875f19486b1ca81760aa7bf65509306d5bb5df154d92519026011c",
     "src/lib/aurum/model-parts.ts": "b5adb1dfc23f168ae551c6629df634a1b14ef9d49f7206f4b2b55bc034a94aef",
