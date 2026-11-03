@@ -77,13 +77,13 @@ function createTeachingObjects(root: Object3D): Entry[] {
   openBrep.add(base, back, side);
   place(openBrep, 14, -11.5, 0);
   add(openBrep, "Polisuperficie abierta", "Brep · abierta", "polysurfaces",
-    "Conjunto de dos o más superficies unidas por bordes. Esta representación didáctica deja una abertura y no encierra un volumen.",
+    "Conceptualmente representa varias superficies unidas que dejan una abertura y no encierran volumen. La escena es una ilustración visual; no es un Brep nativo editable de Rhino.",
     "Construir cuerpos complejos a partir de varias caras unidas.");
 
   const closedBrep = new Mesh(new BoxGeometry(4.5, 4.5, 3.6), material(pale, 0.38));
   place(closedBrep, -10, 6, 1.8);
   add(closedBrep, "Polisuperficie cerrada", "Closed Brep · sólido", "polysurfaces",
-    "Polisuperficie cuyas caras forman un límite cerrado y encierran un volumen. En Rhino suele denominarse sólido; no es una familia separada de las polisuperficies.",
+    "Polisuperficie cuyas caras forman un límite cerrado y encierran un volumen. En Rhino suele denominarse sólido; no es una familia separada. La caja mostrada es una analogía visual, no un Brep nativo.",
     "Modelar cuerpos de anillos, placas, engastes y componentes cerrados.");
 
   const mesh = new Mesh(new IcosahedronGeometry(2.15, 1), new MeshStandardMaterial({
@@ -108,7 +108,7 @@ function createTeachingObjects(root: Object3D): Entry[] {
   }));
   place(subd, 14, 6, 2.25);
   add(subd, "SubD", "Subdivision Surface", "subd",
-    "Geometría de subdivisión Catmull–Clark de Rhino 7, diseñada para modelar formas orgánicas con control fluido de la superficie. No es una NURBS ni una malla poligonal convencional.",
+    "Geometría de subdivisión Catmull–Clark de Rhino 7, diseñada para modelar formas orgánicas con control fluido. La forma suave mostrada es una ilustración; no es un objeto SubD nativo ni editable de Rhino.",
     "Diseñar volúmenes orgánicos, monturas escultóricas y formas suaves.");
 
   const cloudGeometry = new BufferGeometry();
@@ -345,7 +345,7 @@ export default function RhinoObjectExplorer({ visible }: Props) {
           <div className="shrink-0 border-t border-white/10 bg-[#19222C] p-3"><p className="text-[10px] font-bold uppercase tracking-[.16em] text-[#D8B979]">Ficha didáctica</p>{selected ? <><p className="mt-1 truncate text-sm font-semibold">{selected.name}</p><p className="mt-1 text-[10px] font-semibold text-[#D8B979]">{selected.type}</p><p className="mt-2 text-xs leading-5 text-[#C3CDD8]">{selected.description}</p><p className="mt-2 text-[10px] font-bold uppercase tracking-wide text-[#9EADBC]">Aplicación en joyería</p><p className="mt-1 text-xs leading-5 text-[#C3CDD8]">{selected.jewelryUse}</p><button type="button" onClick={() => focus(selected)} className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#C6A15B] px-3 py-2 text-xs font-bold text-[#171C24]"><Focus className="size-3.5"/> Enfocar objeto</button></> : <p className="mt-1 text-xs text-[#9EADBC]">Selecciona una geometría en la escena o en la lista.</p>}</div>
         </aside>
       </div>
-      <footer className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-t border-white/10 bg-[#202A35] px-4 py-2 text-[10px] text-[#9EADBC]"><span>Escala didáctica en milímetros · 40 × 40 mm · No modifica archivos del alumno</span><span>{visibleEntries.length} visibles / {entries.length} totales</span></footer>
+      <footer className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-t border-white/10 bg-[#202A35] px-4 py-2 text-[10px] text-[#9EADBC]"><span>Modelos visuales ilustrativos · No son objetos nativos editables de Rhino · 40 × 40 mm</span><span>{visibleEntries.length} visibles / {entries.length} totales</span></footer>
     </div>}
   </>;
 }
