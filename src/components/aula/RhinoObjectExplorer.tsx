@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  AmbientLight, AxesHelper, Box3, BoxGeometry, BoxHelper, BufferGeometry, CircleGeometry,
+  AmbientLight, AxesHelper, Box3, BoxGeometry, BoxHelper, BufferGeometry,
   Color, DirectionalLight, ExtrudeGeometry, GridHelper, HemisphereLight, IcosahedronGeometry,
   Line, LineBasicMaterial, Mesh, MeshStandardMaterial, Object3D, PerspectiveCamera,
-  PlaneGeometry, Points, PointsMaterial, Raycaster, Scene, Shape, Sphere, SphereGeometry,
+  PlaneGeometry, Raycaster, Scene, Shape, Sphere, SphereGeometry,
   SRGBColorSpace, Vector2, Vector3, WebGLRenderer,
 } from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import { Box, Focus, Layers3, RotateCcw, Scan, X } from "lucide-react";
+import { Focus, Layers3, RotateCcw, Scan, X } from "lucide-react";
 
 type Props = { visible: boolean; materials: { nombre_archivo: string; ruta_storage: string; mime_type?: string | null }[] };
 type Entry = { object: Object3D; name: string; type: string; category: string; description: string; jewelryUse: string };
