@@ -134,13 +134,13 @@ const LECTURA_SESION_2 = [
     "Trabaja con cuidado en las capas Metal y Gem de un diseño existente. Para practicar cambios de asignación, utiliza una copia del archivo y conserva intacto el original."
   ]},
   { titulo: "8. Actividad práctica: organizar una joya en MatrixGold", bloques: [
-    "Objetivo: reconocer la estructura de capas de una joya real y comprobar las funciones de asignación, visibilidad y bloqueo en MatrixGold. Utilizaremos el anillo de práctica proporcionado por el docente.",
-    "1) Abre el archivo de práctica y guarda inmediatamente una copia con el nombre indicado por el docente. No realices pruebas sobre el archivo original.",
-    "2) Localiza el panel Layers e identifica los grupos Metal, Gem, Object, User, Render y los grupos Extra que aparezcan en tu instalación. Observa los colores de las filas y localiza la capa activa en la barra inferior.",
-    "3) Prueba la visibilidad: desactiva el ojo de una capa que contenga parte del cuerpo metálico. Observa qué elementos desaparecen. Vuelve a activar el ojo. Repite con una capa que contenga la piedra central y observa cómo el resto del engaste puede permanecer visible.",
-    "4) Prueba el bloqueo: activa el candado de una capa. Comprueba que sus objetos siguen visibles, pero que no puedes seleccionarlos directamente en la ventana de modelado. Intenta seleccionar uno de esos objetos y observa la respuesta. Desbloquea la capa al terminar.",
-    "5) Prueba la asignación únicamente con un objeto auxiliar o de práctica: selecciónalo en pantalla y haz clic en el triángulo de la fila de color de la capa de destino. Comprueba en el panel que el objeto queda asignado a esa capa. Evita reasignar piedras o componentes estructurales del anillo de ejemplo.",
-    "6) Antes de finalizar, deja visibles las capas necesarias, desbloquea las que bloqueaste y comprueba que el modelo se muestra como al inicio. Guarda la copia solo si el docente lo solicita."
+    "Objetivo: organizar los componentes de una joya por capas y demostrar que puedes asignar objetos, controlar su visibilidad y bloquearlos sin perder de vista el modelo. Primero completarás el laboratorio interactivo de FADILAB; después podrás repetir el procedimiento en MatrixGold con una copia del archivo de práctica.",
+    "1) Inicia el Laboratorio de capas · MatrixGold que aparece debajo de esta actividad. En la vista esquemática, selecciona el cuerpo del anillo y asígnalo a Metal 01 mediante el botón de asignación (▶). Después selecciona la piedra central y asígnala a Gem 01. Comprueba que cada pieza adopta el color de identificación de su capa.",
+    "2) Comprueba la visibilidad de forma independiente: oculta Metal 01 y observa qué parte desaparece; vuelve a mostrarla. Repite el procedimiento con Gem 01. La otra parte de la joya debe permanecer visible en cada prueba.",
+    "3) Comprueba el bloqueo: activa el candado de Metal 01 e intenta seleccionar o arrastrar el cuerpo del anillo. Debe permanecer visible y no permitir la selección. Desbloquéala y repite la prueba con Gem 01.",
+    "4) Selecciona Metal 01 como capa principal y añade una figura auxiliar desde el panel Sólidos. Comprueba que aparece identificada en esa capa. Cambia la capa principal a Gem 01 y añade otra figura. Prueba a seleccionar y mover los objetos auxiliares; después elimínalos para dejar limpia la escena.",
+    "5) Verifica el resultado final: el cuerpo debe pertenecer a Metal 01 y la piedra a Gem 01; ambas capas deben quedar visibles y desbloqueadas. Cierra el laboratorio y responde el reto de comprobación.",
+    "6) Si dispones de MatrixGold, abre el archivo de práctica, guarda una copia y reproduce allí la organización por capas. No modifiques el archivo original ni reasignes componentes estructurales sin indicación del docente."
   ]},
   { titulo: "9. Repaso guiado y preparación para la siguiente sesión", bloques: [
     "En MatrixGold, el panel Layers organiza los componentes del proyecto mediante grupos y capas identificadas por colores. La capa activa determina dónde se crearán los objetos nuevos.",
@@ -2298,7 +2298,7 @@ function AulaFormacionPage() {
 
 
   const renderLaboratorioCapas = () => {
-    if (lecturaAbierta?.numero !== 2 || paginaLectura !== 6) return null;
+    if (lecturaAbierta?.numero !== 2 || paginaLectura !== 7) return null;
     const ambasPiezasAsignadas = asignacionCapas.aro === "Metal 01" && asignacionCapas.piedra === "Gem 01";
     const reiniciar = () => {
       setCapaMetalVisible(true); setCapaGemVisible(true);
