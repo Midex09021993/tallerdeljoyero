@@ -609,7 +609,8 @@ function AulaFormacionPage() {
   const [operacionesVistasLab4, setOperacionesVistasLab4] = useState<string[]>([]);
   const [estadoIntegradorLab4, setEstadoIntegradorLab4] = useState("");
   const [pasoIntegradorLab4, setPasoIntegradorLab4] = useState(0);
-  const [laboratorioCoordenadasAbierto, setLaboratorioCoordenadasAbierto] = useState(false);
+  const [laboratorioCoordenadasAbierto, setLaboratorioCoordenadasAbierto] = useState(true);
+  const [referenciaPolarCoord3, setReferenciaPolarCoord3] = useState<"origen"|"ultimo">("ultimo");
   const [laboratorioOsnapAbierto, setLaboratorioOsnapAbierto] = useState(false);
   const [faseOsnap, setFaseOsnap] = useState<"aprendizaje"|"practica">("aprendizaje");
   const [retoOsnap, setRetoOsnap] = useState(0);
@@ -1787,69 +1788,89 @@ function AulaFormacionPage() {
 
   const renderLaboratorioCoordenadas = () => {
     if (lecturaAbierta?.numero !== 3 || ![2, 3, 4].includes(paginaLectura)) return null;
-    if (!laboratorioCoordenadasAbierto) return <section className="mt-7 rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-background to-background p-5">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div><p className="text-[10px] font-bold uppercase tracking-widest text-gold-deep">Recurso interactivo · Sesión 03</p><h4 className="mt-1 text-base font-semibold">Laboratorio de coordenadas</h4><p className="mt-1 text-sm text-muted-foreground">Practica coordenadas absolutas, relativas y polares en un espacio de trabajo independiente.</p></div>
-        <button type="button" onClick={() => { setModoCoord3(paginaLectura === 2 ? "absolutas" : paginaLectura === 3 ? "relativas" : "polares"); setLaboratorioCoordenadasAbierto(true); }} className="inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-black shadow-sm"><ArrowRight className="size-4"/> Abrir laboratorio</button>
-      </div>
-    </section>;
     const ox=250,oy=170,k=9,last=puntosCoord3[puntosCoord3.length-1]??{x:0,y:0};
-    const reset=()=>{setPuntosCoord3([{x:0,y:0}]);setCerradoCoord3(false);setEstadoCoord3("");setValorCoord3("20");setAnguloCoord3("0");};
-    const add=()=>{const a=Number(valorCoord3.replace(",",".")),b=Number(anguloCoord3.replace(",","."));if(!Number.isFinite(a)||!Number.isFinite(b)){setEstadoCoord3("Valor no válido");return;}let p={x:a,y:b};if(modoCoord3==="relativas")p={x:last.x+a,y:last.y+b};if(modoCoord3==="polares"){const rad=b*Math.PI/180;p={x:last.x+a*Math.cos(rad),y:last.y+a*Math.sin(rad)};}setPuntosCoord3(v=>[...v,p]);setCerradoCoord3(false);setEstadoCoord3(`Punto: ${p.x.toFixed(2)}, ${p.y.toFixed(2)}`);};
+    const metodoActual: "absolutas"|"relativas"|"polares" = paginaLectura===2 ? "absolutas" : paginaLectura===3 ? "relativas" : "polares";
+    const explicacion = {
+      absolutas: {
+        titulo: "Coordenadas absolutas · referencia fija en el origen",
+        texto: "Cada punto se define por su posición X/Y respecto al origen (0,0) del plano de construcción. El punto anterior no modifica el resultado.",
+        ejemplo: "20,10,0",
+        detalle: "En Rhino escribe X,Y,Z. Por ejemplo, 20,10,0 sitúa el punto en X=20, Y=10 y Z=0."
+      },
+      relativas: {
+        titulo: "Coordenadas relativas · referencia en el último punto",
+        texto: "Cada nuevo punto se calcula como un desplazamiento ΔX/ΔY desde el último punto confirmado. El prefijo @ indica que la referencia es el punto anterior.",
+        ejemplo: "@10,0,0",
+        detalle: "En Rhino escribe @ΔX,ΔY,ΔZ. Por ejemplo, @10,0,0 avanza 10 unidades en X desde el último punto."
+      },
+      polares: {
+        titulo: "Coordenadas polares · distancia y dirección",
+        texto: "Define el siguiente punto con una distancia y un ángulo respecto al eje X positivo. Puedes medir desde el origen o desde el último punto.",
+        ejemplo: "10<45  ·  @10<45",
+        detalle: "10<45 define una posición desde el origen; @10<45 aplica esa distancia y ángulo desde el último punto. 0° va a la derecha y 90° hacia arriba."
+      }
+    }[metodoActual];
+    const reset=()=>{setPuntosCoord3([{x:0,y:0}]);setCerradoCoord3(false);setEstadoCoord3("");setValorCoord3("20");setAnguloCoord3("0");setReferenciaPolarCoord3("ultimo");};
+    const add=()=>{
+      const a=Number(valorCoord3.replace(",",".")),b=Number(anguloCoord3.replace(",","."));
+      if(!Number.isFinite(a)||!Number.isFinite(b)){setEstadoCoord3("Introduce valores numéricos válidos.");return;}
+      let p={x:a,y:b};
+      if(modoCoord3==="relativas")p={x:last.x+a,y:last.y+b};
+      if(modoCoord3==="polares"){
+        const rad=b*Math.PI/180,base=referenciaPolarCoord3==="origen"?{x:0,y:0}:last;
+        p={x:base.x+a*Math.cos(rad),y:base.y+a*Math.sin(rad)};
+      }
+      setPuntosCoord3(v=>[...v,p]);setCerradoCoord3(false);setEstadoCoord3(`Punto: ${p.x.toFixed(2)}, ${p.y.toFixed(2)}`);
+    };
     const pts=puntosCoord3.map(p=>`${ox+p.x*k},${oy-p.y*k}`).join(" ");
-    return <div className="fixed inset-0 z-[100] overflow-hidden bg-background/95 p-2 backdrop-blur-sm sm:p-3"><section className="mx-auto flex h-[calc(100dvh-1rem)] max-w-[min(96vw,1600px)] flex-col overflow-hidden rounded-2xl border border-gold/30 bg-background shadow-2xl sm:h-[calc(100dvh-1.5rem)]">
-      <header className="flex items-center justify-between border-b border-border bg-gradient-to-r from-[#fbf8f0] to-background px-4 py-3"><div><p className="text-[10px] font-bold uppercase tracking-widest text-gold-deep">Laboratorio independiente · Sesión 03</p><h4 className="font-semibold">Construye con coordenadas</h4></div><div className="flex items-center gap-2"><button type="button" onClick={reset} className="rounded-lg border border-border px-3 py-2 text-xs"><RotateCcw className="mr-1 inline size-3.5"/> Reiniciar</button><button type="button" onClick={() => setLaboratorioCoordenadasAbierto(false)} className="rounded-lg border border-border px-3 py-2 text-xs">Volver a la lectura</button></div></header>
-      <div className="grid min-h-0 flex-1 gap-3 overflow-hidden p-2 sm:p-3 lg:grid-cols-[minmax(0,1.45fr)_minmax(360px,.75fr)]">
-        <div className="flex min-h-[260px] min-w-0 flex-col overflow-hidden rounded-xl bg-[#17191d]"><div className="flex shrink-0 justify-between border-b border-white/10 px-3 py-2 text-[10px] text-white/70"><span>PLANO XY · SUPERIOR</span><span>{puntosCoord3.length-1} segmentos</span></div>
-          <svg viewBox="0 0 500 340" className="min-h-0 w-full flex-1" role="img" aria-label="Plano cartesiano interactivo">
-            {Array.from({length:21},(_,i)=><g key={i}><line x1={20+i*23} y1="8" x2={20+i*23} y2="332" stroke="#3b414a"/><line x1="8" y1={10+i*16} x2="492" y2={10+i*16} stroke="#3b414a"/></g>)}
-            <line x1="8" y1={oy} x2="492" y2={oy} stroke="#aaa"/><line x1={ox} y1="8" x2={ox} y2="332" stroke="#aaa"/><text x="480" y={oy-7} fill="white" fontSize="10">X</text><text x={ox+8} y="18" fill="white" fontSize="10">Y</text>
-            {puntosCoord3.length>1&&<polyline points={pts} fill={cerradoCoord3?"rgba(231,189,98,.14)":"none"} stroke="#e7bd62" strokeWidth="3" strokeLinejoin="round"/>}
-            {cerradoCoord3&&<line x1={ox+last.x*k} y1={oy-last.y*k} x2={ox+puntosCoord3[0]!.x*k} y2={oy-puntosCoord3[0]!.y*k} stroke="#e7bd62" strokeWidth="3"/>}
-            {puntosCoord3.map((p,i)=><g key={i}><circle cx={ox+p.x*k} cy={oy-p.y*k} r="4.5" fill={i===0?"#67d6a0":"#e7bd62"}/><text x={ox+p.x*k+7} y={oy-p.y*k-8} fill="white" fontSize="10">{i===0?"O":`P${i}`}</text></g>)}
-          </svg><p className="shrink-0 border-t border-white/10 px-3 py-2 text-[10px] text-white/70">Verde: origen · Dorado: puntos</p>
+    return <section className="mt-7 overflow-hidden rounded-2xl border border-gold/30 bg-background shadow-sm">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-gradient-to-r from-[#fbf8f0] to-background px-4 py-3 sm:px-5">
+        <div><p className="text-[10px] font-bold uppercase tracking-widest text-gold-deep">FADILAB · Sesión 03 · Laboratorio continuo</p><h4 className="text-base font-semibold">Construcción por coordenadas</h4><p className="mt-0.5 text-xs text-muted-foreground">Un mismo plano para comparar los tres métodos sin salir de la lectura.</p></div>
+        <div className="flex items-center gap-2">
+          <button type="button" onClick={reset} className="rounded-lg border border-border px-3 py-2 text-xs"><RotateCcw className="mr-1 inline size-3.5"/> Reiniciar práctica</button>
+          <button type="button" onClick={()=>setLaboratorioCoordenadasAbierto(v=>!v)} className="rounded-lg border border-border px-3 py-2 text-xs">{laboratorioCoordenadasAbierto?"Ocultar laboratorio":"Mostrar laboratorio"}</button>
         </div>
-        <div className="flex min-h-0 flex-col gap-2 overflow-y-auto pr-1 lg:overscroll-contain">
-          <div className="grid grid-cols-3 gap-1 rounded-xl bg-muted p-1">{(["absolutas","relativas","polares"] as const).map(m=><button key={m} type="button" onClick={()=>{setModoCoord3(m);setEstadoCoord3("");}} className={`rounded-lg px-1 py-2 text-[11px] font-semibold capitalize ${modoCoord3===m?"bg-background shadow-sm":"text-muted-foreground"}`}>{m}</button>)}</div>
-          <div className="rounded-xl border border-border p-3"><p className="mb-2 text-xs font-semibold">{modoCoord3==="polares"?"Distancia / ángulo":modoCoord3==="relativas"?"Desplazamiento ΔX / ΔY":"Posición X / Y"}</p><div className="grid grid-cols-2 gap-2">
-            <label className="text-[10px] text-muted-foreground">{modoCoord3==="polares"?"Distancia":modoCoord3==="relativas"?"ΔX":"X"}<input value={valorCoord3} onChange={e=>setValorCoord3(e.target.value)} inputMode="decimal" className="mt-1 w-full rounded-lg border border-border bg-background px-2 py-2.5 text-sm text-foreground"/></label>
-            <label className="text-[10px] text-muted-foreground">{modoCoord3==="polares"?"Ángulo °":modoCoord3==="relativas"?"ΔY":"Y"}<input value={anguloCoord3} onChange={e=>setAnguloCoord3(e.target.value)} inputMode="decimal" className="mt-1 w-full rounded-lg border border-border bg-background px-2 py-2.5 text-sm text-foreground"/></label>
-          </div><button type="button" onClick={add} className="mt-3 w-full rounded-lg bg-gold px-3 py-2.5 text-sm font-bold text-black">Añadir punto</button><button type="button" onClick={()=>{if(puntosCoord3.length<3){setEstadoCoord3("Añade al menos tres puntos");return;}setCerradoCoord3(true);setEstadoCoord3("Contorno cerrado");}} className="mt-2 w-full rounded-lg border border-border px-3 py-2 text-xs font-semibold">Cerrar contorno</button></div>
-          <div className="rounded-xl border border-border p-3 text-xs"><div className="flex justify-between"><b>Último punto</b><span className="font-mono">{last.x.toFixed(2)}, {last.y.toFixed(2)}</span></div><p className="mt-2 min-h-5 text-muted-foreground" aria-live="polite">{estadoCoord3||"Añade puntos y observa el trazado."}</p></div>
-          <div key={modoCoord3} className="rounded-xl border border-gold/30 bg-gold/5 p-3 text-xs">
-            <p className="font-semibold text-foreground">{modoCoord3==="absolutas"?"Ejemplo · Rectángulo por coordenadas absolutas":modoCoord3==="relativas"?"Ejemplo · Rectángulo por desplazamientos relativos":"Ejemplo · Rectángulo por coordenadas polares"}</p>
-            {modoCoord3==="absolutas" ? <>
-              <p className="mt-1 text-muted-foreground">En <b>Absolutas</b>, cada par indica la posición exacta del siguiente vértice respecto al origen (0, 0):</p>
-              <ol className="mt-3 space-y-2">
-                <li className="flex items-center justify-between gap-3"><span>1. Esquina inferior derecha</span><code className="rounded bg-background px-2 py-1 font-semibold">X 20 · Y 0</code></li>
-                <li className="flex items-center justify-between gap-3"><span>2. Esquina superior derecha</span><code className="rounded bg-background px-2 py-1 font-semibold">X 20 · Y 10</code></li>
-                <li className="flex items-center justify-between gap-3"><span>3. Esquina superior izquierda</span><code className="rounded bg-background px-2 py-1 font-semibold">X 0 · Y 10</code></li>
-                <li className="flex items-center justify-between gap-3"><span>4. Regresa al origen</span><code className="rounded bg-background px-2 py-1 font-semibold">X 0 · Y 0</code></li>
-              </ol>
-            </> : modoCoord3==="relativas" ? <>
-              <p className="mt-1 text-muted-foreground">En <b>Relativas</b>, cada valor desplaza el punto desde el último vértice. Comienza en (0, 0):</p>
-              <ol className="mt-3 space-y-2">
-                <li className="flex items-center justify-between gap-3"><span>1. Lado horizontal</span><code className="rounded bg-background px-2 py-1 font-semibold">ΔX 20 · ΔY 0</code></li>
-                <li className="flex items-center justify-between gap-3"><span>2. Lado vertical</span><code className="rounded bg-background px-2 py-1 font-semibold">ΔX 0 · ΔY 10</code></li>
-                <li className="flex items-center justify-between gap-3"><span>3. Lado horizontal</span><code className="rounded bg-background px-2 py-1 font-semibold">ΔX -20 · ΔY 0</code></li>
-                <li className="flex items-center justify-between gap-3"><span>4. Lado vertical</span><code className="rounded bg-background px-2 py-1 font-semibold">ΔX 0 · ΔY -10</code></li>
-              </ol>
-            </> : <>
-              <p className="mt-1 text-muted-foreground">En <b>Polares</b>, introduce la longitud de cada lado y su ángulo respecto al eje X positivo:</p>
-              <ol className="mt-3 space-y-2">
-                <li className="flex items-center justify-between gap-3"><span>1. Lado horizontal</span><code className="rounded bg-background px-2 py-1 font-semibold">20 mm · 0°</code></li>
-                <li className="flex items-center justify-between gap-3"><span>2. Lado vertical</span><code className="rounded bg-background px-2 py-1 font-semibold">10 mm · 90°</code></li>
-                <li className="flex items-center justify-between gap-3"><span>3. Lado horizontal</span><code className="rounded bg-background px-2 py-1 font-semibold">20 mm · 180°</code></li>
-                <li className="flex items-center justify-between gap-3"><span>4. Lado vertical</span><code className="rounded bg-background px-2 py-1 font-semibold">10 mm · 270°</code></li>
-              </ol>
-            </>}
-            <p className="mt-3 text-muted-foreground">{modoCoord3==="absolutas"?"Introduce la posición X/Y de cada vértice, uno por uno.":modoCoord3==="relativas"?"Introduce cada desplazamiento ΔX/ΔY desde el último punto.":"Introduce la distancia y el ángulo de cada lado."} Pulsa <b>Añadir punto</b> después de cada par y finalmente <b>Cerrar contorno</b>.</p>
+      </header>
+      {laboratorioCoordenadasAbierto && <div className="p-3 sm:p-4">
+        <div className="mb-4 rounded-xl border border-gold/30 bg-gold/5 p-3 sm:p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2"><p className="text-xs font-bold uppercase tracking-wide text-gold-deep">Explicación del índice {paginaLectura+1}</p><span className="rounded-full bg-background px-2.5 py-1 text-[10px] font-semibold text-muted-foreground">{metodoActual==="absolutas"?"Método 1 de 3":metodoActual==="relativas"?"Método 2 de 3":"Método 3 de 3"}</span></div>
+          <h5 className="mt-1 text-sm font-semibold">{explicacion.titulo}</h5>
+          <p className="mt-1 text-sm leading-6 text-foreground/85">{explicacion.texto}</p>
+          <div className="mt-3 grid gap-2 sm:grid-cols-[auto_1fr] sm:items-center"><span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Sintaxis Rhino</span><code className="rounded-lg bg-background px-3 py-2 text-sm font-bold text-foreground">{explicacion.ejemplo}</code></div>
+          <p className="mt-2 text-xs leading-5 text-muted-foreground">{explicacion.detalle}</p>
+        </div>
+        <div className="grid min-w-0 gap-3 lg:grid-cols-[minmax(0,1.35fr)_minmax(290px,.8fr)]">
+          <div className="flex min-h-[300px] min-w-0 flex-col overflow-hidden rounded-xl bg-[#17191d]">
+            <div className="flex shrink-0 justify-between border-b border-white/10 px-3 py-2 text-[10px] text-white/70"><span>PLANO XY · VISTA SUPERIOR</span><span>{puntosCoord3.length-1} segmentos</span></div>
+            <svg viewBox="0 0 500 340" className="h-[340px] w-full" role="img" aria-label="Plano cartesiano interactivo de coordenadas">
+              {Array.from({length:21},(_,i)=><g key={i}><line x1={20+i*23} y1="8" x2={20+i*23} y2="332" stroke="#3b414a"/><line x1="8" y1={10+i*16} x2="492" y2={10+i*16} stroke="#3b414a"/></g>)}
+              <line x1="8" y1={oy} x2="492" y2={oy} stroke="#aaa"/><line x1={ox} y1="8" x2={ox} y2="332" stroke="#aaa"/><text x="480" y={oy-7} fill="white" fontSize="10">X</text><text x={ox+8} y="18" fill="white" fontSize="10">Y</text>
+              {puntosCoord3.length>1&&<polyline points={pts} fill={cerradoCoord3?"rgba(231,189,98,.14)":"none"} stroke="#e7bd62" strokeWidth="3" strokeLinejoin="round"/>}
+              {cerradoCoord3&&<line x1={ox+last.x*k} y1={oy-last.y*k} x2={ox+puntosCoord3[0]!.x*k} y2={oy-puntosCoord3[0]!.y*k} stroke="#e7bd62" strokeWidth="3"/>}
+              {puntosCoord3.map((p,i)=><g key={i}><circle cx={ox+p.x*k} cy={oy-p.y*k} r="4.5" fill={i===0?"#67d6a0":"#e7bd62"}/><text x={ox+p.x*k+7} y={oy-p.y*k-8} fill="white" fontSize="10">{i===0?"O":`P${i}`}</text></g>)}
+            </svg>
+            <p className="shrink-0 border-t border-white/10 px-3 py-2 text-[10px] text-white/70">Verde: origen · Dorado: puntos construidos · La geometría se conserva al cambiar de índice.</p>
+          </div>
+          <div className="flex min-w-0 flex-col gap-2">
+            <div className="rounded-xl border border-border p-3">
+              <p className="mb-2 text-xs font-semibold">Método de entrada</p>
+              <div className="grid grid-cols-3 gap-1 rounded-xl bg-muted p-1">{(["absolutas","relativas","polares"] as const).map(m=><button key={m} type="button" onClick={()=>{setModoCoord3(m);setEstadoCoord3("");}} className={`rounded-lg px-1 py-2 text-[11px] font-semibold capitalize ${modoCoord3===m?"bg-background shadow-sm":"text-muted-foreground"}`}>{m}</button>)}</div>
+              {modoCoord3==="polares" && <div className="mt-3"><p className="mb-1.5 text-[10px] font-semibold text-muted-foreground">Punto de referencia</p><div className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1"><button type="button" onClick={()=>setReferenciaPolarCoord3("origen")} className={`rounded-md px-2 py-2 text-[11px] font-semibold ${referenciaPolarCoord3==="origen"?"bg-background shadow-sm":"text-muted-foreground"}`}>Desde origen</button><button type="button" onClick={()=>setReferenciaPolarCoord3("ultimo")} className={`rounded-md px-2 py-2 text-[11px] font-semibold ${referenciaPolarCoord3==="ultimo"?"bg-background shadow-sm":"text-muted-foreground"}`}>Desde último punto</button></div></div>}
+              <p className="mt-3 mb-2 text-xs font-semibold">{modoCoord3==="polares"?"Distancia / ángulo":modoCoord3==="relativas"?"Desplazamiento ΔX / ΔY":"Posición X / Y"}</p>
+              <div className="grid grid-cols-2 gap-2">
+                <label className="text-[10px] text-muted-foreground">{modoCoord3==="polares"?"Distancia":modoCoord3==="relativas"?"ΔX":"X"}<input value={valorCoord3} onChange={e=>setValorCoord3(e.target.value)} inputMode="decimal" className="mt-1 w-full rounded-lg border border-border bg-background px-2 py-2.5 text-sm text-foreground"/></label>
+                <label className="text-[10px] text-muted-foreground">{modoCoord3==="polares"?"Ángulo °":modoCoord3==="relativas"?"ΔY":"Y"}<input value={anguloCoord3} onChange={e=>setAnguloCoord3(e.target.value)} inputMode="decimal" className="mt-1 w-full rounded-lg border border-border bg-background px-2 py-2.5 text-sm text-foreground"/></label>
+              </div>
+              <button type="button" onClick={add} className="mt-3 w-full rounded-lg bg-gold px-3 py-2.5 text-sm font-bold text-black">Añadir punto</button>
+              <button type="button" onClick={()=>{if(puntosCoord3.length<3){setEstadoCoord3("Añade al menos tres puntos");return;}setCerradoCoord3(true);setEstadoCoord3("Contorno cerrado");}} className="mt-2 w-full rounded-lg border border-border px-3 py-2 text-xs font-semibold">Cerrar contorno</button>
+            </div>
+            <div className="rounded-xl border border-border p-3 text-xs"><div className="flex flex-wrap justify-between gap-2"><b>Último punto</b><span className="font-mono">{last.x.toFixed(2)}, {last.y.toFixed(2)}</span></div><p className="mt-2 min-h-5 text-muted-foreground" aria-live="polite">{estadoCoord3||"Añade puntos y observa el trazado."}</p></div>
+            <div className="rounded-xl border border-border p-3 text-xs"><p className="font-semibold">Ejercicio guiado · Rectángulo 20 × 10</p><p className="mt-1 text-muted-foreground">{modoCoord3==="absolutas"?"Introduce los vértices (20,0), (20,10), (0,10) y (0,0), siempre medidos desde el origen.":modoCoord3==="relativas"?"Desde (0,0), introduce @20,0; @0,10; @-20,0; @0,-10. Cada desplazamiento parte del punto anterior.":referenciaPolarCoord3==="origen"?"Para practicar coordenadas polares absolutas, usa distancias y ángulos medidos desde el origen. Cambia a «Desde último punto» para construir lados consecutivos.":"Desde el último punto, introduce 20 a 0°, 10 a 90°, 20 a 180° y 10 a 270°. Así se completa el rectángulo."}</p></div>
           </div>
         </div>
-      </div>
-    </section></div>;
+      </div>}
+    </section>;
   };
-
   const renderLaboratorioSesion5 = () => {
     if (lecturaAbierta?.numero !== 5) return null;
     // El editor permanece montado aunque se oculte: cerrar no destruye el trabajo.
