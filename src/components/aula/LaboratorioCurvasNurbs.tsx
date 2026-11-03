@@ -33,11 +33,11 @@ export default function LaboratorioCurvasNurbs({ initialModule = 0, onClose }: P
   const [checked, setChecked] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [showOriginal, setShowOriginal] = useState(true);
-  const [task, setTask] = useState(0);
+  const [task, setTask] = useState(Math.max(0, Math.min(2, initialModule)));
   const path = useMemo(() => mode === "control"
     ? `M ${points[0]!.x} ${points[0]!.y} C ${points[1]!.x} ${points[1]!.y}, ${points[2]!.x} ${points[2]!.y}, ${points[3]!.x} ${points[3]!.y}`
     : catmullRom(points), [mode, points]);
-  const movePoint = (event: React.PointerEvent<SVGSVGElement>) => {
+  const movePoint = (event: PointerEvent<SVGSVGElement>) => {
     if (active === null) return;
     const rect = event.currentTarget.getBoundingClientRect();
     const x = Math.max(45, Math.min(455, ((event.clientX - rect.left) / rect.width) * 520));
