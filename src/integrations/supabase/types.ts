@@ -4563,7 +4563,7 @@ export type Database = {
           creado_en: string
           expira_en: string
           modelo_ruta: string | null
-          modelo_url: string
+          modelo_url: string | null
           nombre: string
           propietario_id: string
           token: string
@@ -4572,7 +4572,7 @@ export type Database = {
           creado_en?: string
           expira_en: string
           modelo_ruta?: string | null
-          modelo_url: string
+          modelo_url?: string | null
           nombre?: string
           propietario_id: string
           token: string
@@ -4581,7 +4581,7 @@ export type Database = {
           creado_en?: string
           expira_en?: string
           modelo_ruta?: string | null
-          modelo_url?: string
+          modelo_url?: string | null
           nombre?: string
           propietario_id?: string
           token?: string

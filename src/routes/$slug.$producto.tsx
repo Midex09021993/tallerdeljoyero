@@ -1,11 +1,11 @@
 /* eslint-disable-next-line @typescript-eslint/ban-ts-comment -- excepción temporal: corregir tipos heredados requiere una tarea separada */
 // @ts-nocheck
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { ClientOnly, createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Box, ExternalLink, MessageCircle, Play, Share2, Sparkles, ShoppingBag, X, Ruler, Truck, CheckCircle2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { supabasePublic as supabase } from "@/integrations/supabase/client";
-import { PublicJewelConfigurator } from "@/components/PublicJewelConfigurator";
+const PublicJewelConfigurator = lazy(() => import("@/components/PublicJewelConfigurator").then((m) => ({ default: m.PublicJewelConfigurator })));
 
 export const Route = createFileRoute("/$slug/$producto")({
   head: ({ params }) => ({
@@ -214,7 +214,7 @@ export function CatalogoProductoPublicoPage() {
                   {(imagenSeleccionada || item.imagen_principal_url) ? <img draggable={false} onContextMenu={(event) => event.preventDefault()} onDragStart={(event) => event.preventDefault()} src={imagenSeleccionada || item.imagen_principal_url || ""} alt={item.nombre} className="size-full scale-[1.08] object-contain p-0 transition duration-300 sm:scale-[1.1] lg:scale-[1.12]" onError={(event) => { event.currentTarget.style.display = "none"; }} /> : <div className="grid size-full place-items-center"><Box className="size-14 text-[#8a6b36]" /></div>}
                 </div>
               </div>
-            </> : modelo3dPublico ? <div className="overflow-hidden rounded-[28px] border border-[#1f1b1815] bg-white shadow-[0_24px_60px_-45px_rgba(31,27,24,.35)]"><PublicJewelConfigurator slug={slug} producto={productoSlug} sharedModelUrl={modelo3dPublico.url} sharedModelName={modelo3dPublico.nombre} /></div> : null}
+            </> : modelo3dPublico ? <div className="overflow-hidden rounded-[28px] border border-[#1f1b1815] bg-white shadow-[0_24px_60px_-45px_rgba(31,27,24,.35)]"><ClientOnly fallback={null}><Suspense fallback={null}><PublicJewelConfigurator slug={slug} producto={productoSlug} sharedModelUrl={modelo3dPublico.url} sharedModelName={modelo3dPublico.nombre} /></Suspense></ClientOnly></div> : null}
           </div>
         </div>
 

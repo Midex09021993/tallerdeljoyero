@@ -109,10 +109,10 @@ export default function LaboratorioCurvasBasicas({ onClose }: Props) {
 
   const drawShape = (shape: Shape, opacity = 1) => {
     const pts = shape.points;
-    if (shape.tool === "line" && pts.length === 2) return <line x1={pts[0]!.x} y1={pts[0]!.y} x2={pts[1]!.x} y2={pts[1]!.y} stroke={TOOLS[0].color} strokeWidth="4" strokeLinecap="round" opacity={opacity}/>;
-    if (shape.tool === "polyline" && pts.length >= 2) return <polyline points={pts.map(p => `${p.x},${p.y}`).join(" ")} fill="none" stroke={TOOLS[1].color} strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" opacity={opacity}/>;
-    if (shape.tool === "circle" && pts.length === 2) return <circle cx={pts[0]!.x} cy={pts[0]!.y} r={distance(pts[0]!, pts[1]!)} fill="rgba(139,212,167,.08)" stroke={TOOLS[2].color} strokeWidth="4" opacity={opacity}/>;
-    if (shape.tool === "rectangle" && pts.length === 2) return <rect x={Math.min(pts[0]!.x, pts[1]!.x)} y={Math.min(pts[0]!.y, pts[1]!.y)} width={Math.abs(pts[1]!.x-pts[0]!.x)} height={Math.abs(pts[1]!.y-pts[0]!.y)} fill="rgba(183,160,237,.08)" stroke={TOOLS[3].color} strokeWidth="4" opacity={opacity}/>;
+    if (shape.tool === "line" && pts.length === 2) return <line x1={pts[0]!.x} y1={pts[0]!.y} x2={pts[1]!.x} y2={pts[1]!.y} stroke={TOOLS[0]!.color} strokeWidth="4" strokeLinecap="round" opacity={opacity}/>;
+    if (shape.tool === "polyline" && pts.length >= 2) return <polyline points={pts.map(p => `${p.x},${p.y}`).join(" ")} fill="none" stroke={TOOLS[1]!.color} strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" opacity={opacity}/>;
+    if (shape.tool === "circle" && pts.length === 2) return <circle cx={pts[0]!.x} cy={pts[0]!.y} r={distance(pts[0]!, pts[1]!)} fill="rgba(139,212,167,.08)" stroke={TOOLS[2]!.color} strokeWidth="4" opacity={opacity}/>;
+    if (shape.tool === "rectangle" && pts.length === 2) return <rect x={Math.min(pts[0]!.x, pts[1]!.x)} y={Math.min(pts[0]!.y, pts[1]!.y)} width={Math.abs(pts[1]!.x-pts[0]!.x)} height={Math.abs(pts[1]!.y-pts[0]!.y)} fill="rgba(183,160,237,.08)" stroke={TOOLS[3]!.color} strokeWidth="4" opacity={opacity}/>;
     return null;
   };
 
@@ -121,7 +121,7 @@ export default function LaboratorioCurvasBasicas({ onClose }: Props) {
     if (tool === "line" && draft.length === 2) return drawShape({ tool, points: draft });
     if (tool === "circle" && draft.length === 2) return drawShape({ tool, points: draft });
     if (tool === "rectangle" && draft.length === 2) return drawShape({ tool, points: draft });
-    if (tool === "polyline" && draft.length >= 2) return <polyline points={draft.map(p => `${p.x},${p.y}`).join(" ")} fill="none" stroke={TOOLS[1].color} strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" strokeDasharray={polylineFinished ? undefined : "8 4"}/>;
+    if (tool === "polyline" && draft.length >= 2) return <polyline points={draft.map(p => `${p.x},${p.y}`).join(" ")} fill="none" stroke={TOOLS[1]!.color} strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" strokeDasharray={polylineFinished ? undefined : "8 4"}/>;
     return null;
   };
 

@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { lazy, Suspense, useEffect, useState } from "react";
+import { ClientOnly, createFileRoute } from "@tanstack/react-router";
 import { AlertCircle } from "lucide-react";
-import { PublicJewelConfigurator } from "@/components/PublicJewelConfigurator";
+const PublicJewelConfigurator = lazy(() => import("@/components/PublicJewelConfigurator").then((m) => ({ default: m.PublicJewelConfigurator })));
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/v/$token")({
@@ -73,7 +73,7 @@ function VisorCortoPage() {
   return (
     <main className="min-h-screen bg-[#f7f6f2] text-[#292824] md:h-[100svh] md:min-h-0 md:overflow-hidden md:p-3 lg:p-4">
       <div className="mx-auto w-full max-w-none md:h-full md:min-h-0">
-        <PublicJewelConfigurator sharedModelUrl={enlace.url} sharedModelName={enlace.nombre} />
+        <ClientOnly fallback={null}><Suspense fallback={null}><PublicJewelConfigurator sharedModelUrl={enlace.url} sharedModelName={enlace.nombre} /></Suspense></ClientOnly>
       </div>
     </main>
   );

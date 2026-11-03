@@ -1,7 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { ClientOnly, createFileRoute } from "@tanstack/react-router";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { AlertCircle, Upload, FileBox } from "lucide-react";
-import { PublicJewelConfigurator } from "@/components/PublicJewelConfigurator";
+const PublicJewelConfigurator = lazy(() => import("@/components/PublicJewelConfigurator").then((m) => ({ default: m.PublicJewelConfigurator })));
 
 export const Route = createFileRoute("/aurum-render-public")({
   head: () => ({
@@ -94,9 +94,9 @@ function VisorJoyaCompartidaPage() {
           </div>
         ) : modelUrl || localFile ? (
           <div className="mx-auto w-full max-w-none">
-            <PublicJewelConfigurator
+            <ClientOnly fallback={null}><Suspense fallback={null}><PublicJewelConfigurator
               {...(localFile ? { localFile } : { sharedModelUrl: modelUrl!, sharedModelName: modelName })}
-            />
+            /></Suspense></ClientOnly>
             {localFile && (
               <div className="mx-auto mt-3 flex max-w-3xl items-center justify-between gap-3 rounded-xl border border-[#e7e2d8] bg-white px-4 py-3 text-sm">
                 <span className="min-w-0 truncate text-[#625b54]">Archivo temporal: <strong>{localFile.name}</strong></span>
