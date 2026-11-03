@@ -262,7 +262,7 @@ export default function RhinoObjectExplorer({ visible, materials }: Props) {
       controls.update();
       renderer.render(scene, camera);
       if (orientationObjectRef.current) {
-        orientationObjectRef.current.quaternion.copy(camera.quaternion).invert();
+        orientationObjectRef.current.quaternion.copy(orientationCamera.quaternion).multiply(camera.quaternion.clone().invert());
         orientationRenderer.render(orientationScene, orientationCamera);
       }
     };
