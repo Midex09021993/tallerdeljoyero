@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type PointerEvent } from "react";
 import { ArrowLeft, ArrowRight, CheckCircle2, CircleHelp, RotateCcw, Target, WandSparkles } from "lucide-react";
 
 type Point = { x: number; y: number };
