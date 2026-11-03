@@ -67,3 +67,12 @@ jobs:
 
       - name: Type-check Nextcloud video files
         run: deno check supabase/functions/nextcloud-video-files/index.ts
+      
+      - name: Type-check public viewer link creator
+        run: deno check supabase/functions/crear-enlace-visor-3d/index.ts
+
+      - name: Type-check public viewer model delivery
+        run: deno check supabase/functions/entregar-modelo-visor-3d/index.ts
+
+      - name: Type-check public viewer link resolver
+        run: deno check supabase/functions/resolver-enlace-visor-3d/index.ts
