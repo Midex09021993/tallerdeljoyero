@@ -571,7 +571,7 @@ function AulaFormacionPage() {
   const [laboratorioSesion4Abierto, setLaboratorioSesion4Abierto] = useState(false);
   const [moduloLab4, setModuloLab4] = useState<"fillet"|"offset"|"move"|"rotate"|"integrador">("fillet");
   const [radioLab4, setRadioLab4] = useState(2);
-  const [distanciaLab4, setDistanciaLab4] = useState(2);
+  const [distanciaLab4, setDistanciaLab4] = useState(1);
   const [desplazamientoLab4, setDesplazamientoLab4] = useState(5);
   const [anguloLab4, setAnguloLab4] = useState(90);
   const [escalaLab4, setEscalaLab4] = useState(0.5);
