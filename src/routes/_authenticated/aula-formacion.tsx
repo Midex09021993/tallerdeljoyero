@@ -520,6 +520,10 @@ function AulaFormacionPage() {
   const [exploradorVistasAbierto, setExploradorVistasAbierto] = useState(false);
   const [comandosNavegacionAbiertos, setComandosNavegacionAbiertos] = useState(false);
   const [comandoNavegacionActivo, setComandoNavegacionActivo] = useState("Zoom");
+  const [retoNavegacionAbierto, setRetoNavegacionAbierto] = useState(false);
+  const [retoNavegacionIndice, setRetoNavegacionIndice] = useState(0);
+  const [retoNavegacionRespuesta, setRetoNavegacionRespuesta] = useState<number | null>(null);
+  const [retoNavegacionAciertos, setRetoNavegacionAciertos] = useState(0);
   const [errorImagenesApoyo, setErrorImagenesApoyo] = useState("");
   const [tipoImagenApoyoAbierta, setTipoImagenApoyoAbierta] = useState<"rhinoceros" | "vistas" | "ejes" | "proceso3d" | null>(null);
   const [interfazInteractivaAbierta, setInterfazInteractivaAbierta] = useState(false);
@@ -2366,6 +2370,49 @@ function AulaFormacionPage() {
     </section>;
   };
 
+  const renderRetoNavegacion = () => {
+    if (lecturaAbierta?.numero !== 1 || paginaLectura !== 4) return null;
+    const retos = [
+      { pregunta: "Necesitas acercarte a una zona pequeña de la joya sin modificar su geometría. ¿Qué haces?", opciones: ["Girar la rueda del ratón hacia delante", "Mantener Shift y arrastrar con botón derecho", "Ejecutar UndoView"], correcta: 0, explicacion: "Zoom se controla con la rueda del ratón sobre la ventana activa: hacia delante acerca y hacia atrás aleja." },
+      { pregunta: "Estás en una vista paralela y quieres desplazar el encuadre lateralmente. ¿Qué acción corresponde?", opciones: ["Doble clic en el título de la vista", "Mantener pulsado el botón derecho y arrastrar", "Girar la rueda del ratón"], correcta: 1, explicacion: "En una vista paralela, mantén pulsado el botón derecho del ratón y arrastra para hacer Pan." },
+      { pregunta: "En Perspective quieres observar la joya desde otro ángulo. ¿Cómo giras la vista?", opciones: ["Botón derecho pulsado y arrastrar dentro de Perspective", "Shift + botón derecho y arrastrar", "Ejecutar ZS"], correcta: 0, explicacion: "Para girar la vista Perspective, mantén pulsado el botón derecho y arrastra dentro de esa ventana." },
+      { pregunta: "Quieres desplazar la vista Perspective sin girarla. ¿Qué combinación utilizas?", opciones: ["Rueda del ratón", "Shift + botón derecho pulsado mientras arrastras", "Doble clic en el título"], correcta: 1, explicacion: "Shift + botón derecho y arrastrar desplaza la vista Perspective. Sin Shift, el arrastre con botón derecho la gira." },
+      { pregunta: "Necesitas trabajar temporalmente con una sola vista y luego recuperar las cuatro ventanas. ¿Qué haces?", opciones: ["Doble clic en el título de la vista para maximizar y repetir para restaurar", "Ejecutar ZEA", "Ejecutar UndoView"], correcta: 0, explicacion: "El doble clic sobre el título maximiza la ventana activa; repetirlo restaura la disposición anterior." },
+      { pregunta: "La pieza quedó fuera del encuadre y quieres volver a verla completa. ¿Qué opción de la interfaz utilizas?", opciones: ["Vista > Zoom > Extensión de zoom", "Editar > Deshacer", "Archivo > Propiedades"], correcta: 0, explicacion: "Zoom Extents recupera el encuadre de todos los objetos. F12 solo sirve como acceso directo si el docente la configuró en ese equipo." },
+      { pregunta: "Desde la línea de comandos, ¿qué comando encuadra todos los objetos en la vista activa?", opciones: ["ZS", "ZE", "UndoView"], correcta: 1, explicacion: "ZE corresponde a Zoom Extents y encuadra todos los objetos." },
+      { pregunta: "Quieres encuadrar los objetos en todas las vistas al mismo tiempo. ¿Qué comando escribes?", opciones: ["ZEA", "Pan", "Zoom"], correcta: 0, explicacion: "ZEA (Zoom All Extents) encuadra los objetos en todas las vistas." },
+      { pregunta: "Solo quieres encuadrar los objetos que tienes seleccionados. ¿Qué comando corresponde?", opciones: ["ZE", "ZS", "UndoView"], correcta: 1, explicacion: "ZS (Zoom Selected) encuadra los objetos seleccionados." },
+      { pregunta: "Acabas de cambiar el encuadre y quieres recuperar la vista anterior. ¿Qué comando utilizas?", opciones: ["Pan", "ZEA", "UndoView"], correcta: 2, explicacion: "UndoView recupera la vista anterior. Pan desplaza la vista y ZEA encuadra los objetos en todas las vistas." }
+    ] as const;
+    const reto = retos[retoNavegacionIndice];
+    const finalizar = retoNavegacionIndice >= retos.length;
+    const reiniciar = () => { setRetoNavegacionIndice(0); setRetoNavegacionRespuesta(null); setRetoNavegacionAciertos(0); };
+    return <section className="min-w-0 rounded-xl border border-[#E5DCCB] bg-gradient-to-br from-white via-[#fffefa] to-[#f7f3eb] p-5 text-[#24221e] shadow-sm">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9A7B43]">Práctica gamificada · Rhino 7</p>
+      <h4 className="mt-1 text-base font-semibold">Reto de navegación 3D</h4>
+      <p className="mt-2 text-sm leading-6 text-[#6E6E73]">Resuelve situaciones reales usando los mismos movimientos y comandos de la guía de navegación.</p>
+      <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-[#6E6E73]"><span className="rounded-full bg-white px-3 py-1.5">10 desafíos</span><span className="rounded-full bg-white px-3 py-1.5">10 puntos por acierto</span><span className="rounded-full bg-white px-3 py-1.5">Sin límite de tiempo</span></div>
+      <button type="button" onClick={() => { reiniciar(); setRetoNavegacionAbierto(true); }} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#C4A15A] px-4 py-3 text-sm font-semibold text-[#1D1D1F] shadow-sm transition hover:bg-[#B99552]">Iniciar reto <ChevronRight className="size-4"/></button>
+      {retoNavegacionAbierto && <div className="fixed inset-0 z-[97] flex items-center justify-center bg-black/75 p-2 sm:p-4" role="dialog" aria-modal="true" aria-label="Reto de navegación 3D de Rhino 7">
+        <div className="flex max-h-[94dvh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-[#D2D2D7] bg-white text-[#1D1D1F] shadow-2xl">
+          <header className="flex shrink-0 items-center justify-between gap-3 border-b border-[#E5E5EA] px-5 py-4">
+            <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9A7B43]">FADILAB · Desafío práctico</p><h3 className="text-lg font-semibold">Reto de navegación 3D</h3></div>
+            <button type="button" onClick={() => setRetoNavegacionAbierto(false)} className="rounded-lg border border-[#D2D2D7] px-3 py-2 text-xs font-semibold hover:bg-[#F5F5F7]">Cerrar ×</button>
+          </header>
+          <div className="min-h-0 overflow-y-auto p-5 sm:p-6">
+            {!finalizar ? <>
+              <div className="flex items-center justify-between gap-3 text-xs text-[#6E6E73]"><span>Desafío {retoNavegacionIndice + 1} de {retos.length}</span><span>{retoNavegacionAciertos * 10} puntos</span></div>
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#EEEAE2]"><div className="h-full rounded-full bg-[#C4A15A] transition-all" style={{ width: ((retoNavegacionIndice + 1) / retos.length * 100) + "%" }}/></div>
+              <div className="mt-6 rounded-xl bg-[#F7F5F0] p-4 sm:p-5"><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#9A7B43]">Situación</p><p className="mt-2 text-base font-semibold leading-7">{reto.pregunta}</p></div>
+              <div className="mt-4 grid gap-2">{reto.opciones.map((opcion, indice) => <button key={opcion} type="button" disabled={retoNavegacionRespuesta !== null} onClick={() => { setRetoNavegacionRespuesta(indice); if (indice === reto.correcta) setRetoNavegacionAciertos(v => v + 1); }} className={"rounded-xl border px-4 py-3 text-left text-sm font-medium transition " + (retoNavegacionRespuesta === indice ? (indice === reto.correcta ? "border-emerald-500 bg-emerald-50 text-emerald-800" : "border-red-300 bg-red-50 text-red-800") : retoNavegacionRespuesta !== null && indice === reto.correcta ? "border-emerald-500 bg-emerald-50 text-emerald-800" : "border-[#D2D2D7] bg-white hover:border-[#C4A15A] hover:bg-[#FBF8F1]")}>{opcion}</button>)}</div>
+              {retoNavegacionRespuesta !== null && <div className="mt-4 rounded-xl border border-[#E5DCCB] bg-[#FBF8F1] p-4" aria-live="polite"><p className="text-sm font-semibold">{retoNavegacionRespuesta === reto.correcta ? "¡Correcto! +10 puntos" : "Esta vez no. Repasa la indicación."}</p><p className="mt-1 text-sm leading-6 text-[#5E5A52]">{reto.explicacion}</p><button type="button" onClick={() => { setRetoNavegacionIndice(v => v + 1); setRetoNavegacionRespuesta(null); }} className="mt-3 inline-flex items-center gap-2 rounded-lg bg-[#C4A15A] px-4 py-2.5 text-sm font-semibold text-[#1D1D1F] hover:bg-[#B99552]">{retoNavegacionIndice === retos.length - 1 ? "Ver resultado" : "Siguiente desafío"} <ChevronRight className="size-4"/></button></div>}
+            </> : <div className="py-8 text-center"><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9A7B43]">Reto completado</p><h4 className="mt-3 text-3xl font-semibold">{retoNavegacionAciertos * 10} / 100 puntos</h4><p className="mt-2 text-sm text-[#6E6E73]">{retoNavegacionAciertos >= 8 ? "¡Excelente dominio de la navegación!" : retoNavegacionAciertos >= 5 ? "Buen avance. Repasa los comandos que te resultaron difíciles." : "Te recomendamos volver a consultar la guía y repetir el reto."}</p><div className="mt-6 flex flex-wrap justify-center gap-2"><button type="button" onClick={reiniciar} className="rounded-lg bg-[#C4A15A] px-4 py-2.5 text-sm font-semibold text-[#1D1D1F]">Repetir reto</button><button type="button" onClick={() => setRetoNavegacionAbierto(false)} className="rounded-lg border border-[#D2D2D7] px-4 py-2.5 text-sm font-semibold">Cerrar</button></div></div>}
+          </div>
+        </div>
+      </div>}
+    </section>;
+  };
+
   if (!sesion || (!rolAlumno && !esDocente)) return <AppShell titulo="Aula de formación" subtitulo="Acceso restringido"><Panel titulo="Cuenta no habilitada"><p className="p-5 text-sm text-slate-400">El aula de alumnos está disponible para cuentas de gerente u operario. La docencia se administra exclusivamente desde FADILAB.</p></Panel></AppShell>;
 
   return <AppShell titulo="Aula de formación" subtitulo={mostrarVistaDocente ? "FADILAB · Administración académica" : vistaPreviaAlumno ? "Vista previa idéntica al área del alumno · Modo de simulación, sin guardar actividad académica" : "Tus cursos, materiales y actividades"} ocultarEncabezado modoAulaExpandida={modoAulaExpandida}>
@@ -2455,7 +2502,8 @@ function AulaFormacionPage() {
                 {renderLaboratorioGeometria()}
                 {renderLaboratorioCapas()}
                 {renderSelectorVistasPlano()}
-                {lecturaAbierta?.numero === 1 && paginaLectura === 4 && <section className={`mt-5 rounded-xl border border-[#D2D2D7] bg-[#F5F5F7] text-[#1D1D1F] p-5 ${modoAulaExpandida ? "max-w-[1400px]" : "max-w-4xl"}`}>
+                <div className="mt-5 grid min-w-0 grid-cols-1 items-stretch gap-4 lg:grid-cols-2">
+                {lecturaAbierta?.numero === 1 && paginaLectura === 4 && <section className={`h-full rounded-xl border border-[#D2D2D7] bg-[#F5F5F7] text-[#1D1D1F] p-5 ${modoAulaExpandida ? "max-w-[1400px]" : "max-w-4xl"}`}>
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9A7B43]">Recurso interactivo</p>
                   <h4 className="mt-1 text-base font-semibold">Comandos de navegación</h4>
                   <p className="mt-2 text-sm text-[#6E6E73]">Abre la ficha para explorar los comandos y consultar la función de cada uno.</p>
@@ -2488,6 +2536,8 @@ function AulaFormacionPage() {
                     </div>
                   </div>}
                 </section>}
+                {renderRetoNavegacion()}
+              </div>
                 {lecturaAbierta?.numero === 1 && paginaLectura === 1 && <section className="mt-7 rounded-2xl border border-[#D2D2D7] bg-gradient-to-br from-white via-[#fffefa] to-[#f7f3eb] text-[#24221e] p-5 sm:p-6">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9A7B43]">Material visual de apoyo</p>
                   <h4 className="mt-1 text-lg font-semibold">Rhinoceros 7</h4>
@@ -3070,7 +3120,8 @@ function AulaFormacionPage() {
                 {renderLaboratorioPlaca()}
                 {renderLaboratorioGeometria()}
                 {renderSelectorVistasPlano()}
-                {lecturaAbierta?.numero === 1 && paginaLectura === 4 && <section className="mt-5 max-w-4xl rounded-xl border border-[#e0e6ed] bg-white text-[#1D1D1F] p-5 shadow-sm">
+                <div className="mt-5 grid min-w-0 grid-cols-1 items-stretch gap-4 lg:grid-cols-2">
+                {lecturaAbierta?.numero === 1 && paginaLectura === 4 && <section className="h-full rounded-xl border border-[#e0e6ed] bg-white text-[#1D1D1F] p-5 shadow-sm">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#98722e]">Recurso interactivo</p>
                   <h4 className="mt-1 text-base font-semibold">Comandos de navegación</h4>
                   <p className="mt-2 text-sm text-[#6E6E73]">Abre la ficha para explorar los comandos y consultar la función de cada uno.</p>
@@ -3103,6 +3154,8 @@ function AulaFormacionPage() {
                     </div>
                   </div>}
                 </section>}
+                {renderRetoNavegacion()}
+              </div>
                 {lecturaAbierta?.numero === 1 && paginaLectura === 1 && <section className="mt-7 rounded-2xl border border-[#e0e6ed] bg-white text-[#1D1D1F] p-5 sm:p-6 shadow-sm">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#98722e]">Material visual de apoyo</p>
                   <h4 className="mt-1 text-lg font-semibold">Rhinoceros 7</h4>
