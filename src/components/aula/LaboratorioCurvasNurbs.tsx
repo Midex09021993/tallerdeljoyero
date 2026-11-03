@@ -1,8 +1,8 @@
-import { useMemo, useState, type PointerEvent } from "react";
+import { useEffect, useMemo, useState, type PointerEvent } from "react";
 import { Activity, ArrowLeft, ArrowRight, CheckCircle2, CircleHelp, Eye, EyeOff, Gauge, Layers3, Move, RotateCcw, Ruler, ScanLine, Sparkles, Target, WandSparkles } from "lucide-react";
 
 type Point = { x: number; y: number };
-type Props = { initialModule?: number; onClose: () => void };
+type Props = { initialModule?: number; activeModule?: number; embedded?: boolean; onModuleChange?: (module: number) => void; onClose: () => void };
 
 const ORIGINAL: Point[] = [
   { x: 58, y: 250 }, { x: 112, y: 94 }, { x: 190, y: 72 },
@@ -59,9 +59,17 @@ function interp(points: Point[]) {
 function pathOf(points: Point[]) { return points.map((p, i) => `${i ? "L" : "M"} ${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join(" "); }
 function distance(a: Point, b: Point) { return Math.hypot(a.x - b.x, a.y - b.y); }
 
-export default function LaboratorioCurvasNurbs({ initialModule = 0, onClose }: Props) {
+export default function LaboratorioCurvasNurbs({ initialModule = 0, activeModule, embedded = false, onModuleChange, onClose }: Props) {
   const [started, setStarted] = useState(false);
-  const [module, setModule] = useState(Math.max(0, Math.min(5, initialModule)));
+  const [module, setModule] = useState(Math.max(0, Math.min(5, activeModule ?? initialModule)));
+  useEffect(() => {
+    if (activeModule !== undefined) setModule(Math.max(0, Math.min(5, activeModule)));
+  }, [activeModule]);
+  const goToModule = (nextModule: number) => {
+    const normalized = Math.max(0, Math.min(5, nextModule));
+    setModule(normalized);
+    onModuleChange?.(normalized);
+  };
   const [points, setPoints] = useState<Point[]>(ORIGINAL);
   const [active, setActive] = useState<number | null>(null);
   const [degree, setDegree] = useState(3);
@@ -96,7 +104,7 @@ export default function LaboratorioCurvasNurbs({ initialModule = 0, onClose }: P
   };
   const reset = () => { setPoints(ORIGINAL); setDegree(3); setRebuildCount(5); setCurveMode("nurbs"); setWeights(Array(7).fill(1)); setAnswer(""); setChecked(false); setShowOriginal(true); setEvidence(Array(6).fill(false)); setValidationMessage(""); setRationalAdjusted(false); };
   const markDone = () => setDone(prev => prev.includes(module) ? prev : [...prev, module]);
-  const next = () => { markDone(); setModule(v => Math.min(5, v + 1)); setAnswer(""); setChecked(false); };
+  const next = () => { markDone(); goToModule(module + 1); setAnswer(""); setChecked(false); };
   const curveLength = renderedPoints.slice(1).reduce((sum, p, i) => sum + distance(p, renderedPoints[i]!), 0);
   const maxDeviation = Math.max(...renderedPoints.map((p, i) => distance(p, nurbsPoints[Math.min(nurbsPoints.length - 1, Math.round(i * (nurbsPoints.length - 1) / Math.max(1, renderedPoints.length - 1)))]!)));
   const controlPoints = points;
@@ -142,16 +150,16 @@ export default function LaboratorioCurvasNurbs({ initialModule = 0, onClose }: P
     setChecked(true);
     setValidationMessage("Práctica completada en esta sesión.");
   };
-  if (!started) return <section className="mt-7 overflow-hidden rounded-2xl border border-[#b79558]/40 bg-gradient-to-br from-[#211b11] via-[#151b22] to-[#10151b] p-5 text-white sm:p-7">
+  if (!started && !embedded) return <section className="mt-7 overflow-hidden rounded-2xl border border-[#b79558]/40 bg-gradient-to-br from-[#211b11] via-[#151b22] to-[#10151b] p-5 text-white sm:p-7">
     <div className="flex flex-wrap items-center justify-between gap-5"><div className="max-w-2xl"><p className="text-[10px] font-bold uppercase tracking-[.22em] text-amber-300">AURUM LAB · Sesión 05 · Laboratorio profesional</p><h3 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">NURBS STUDIO</h3><p className="mt-2 text-sm leading-6 text-slate-300">Una mesa de trabajo interactiva para construir, editar, reconstruir y diagnosticar perfiles de joyería. Seis módulos, geometría manipulable y retos guiados.</p><div className="mt-4 flex flex-wrap gap-2 text-[11px] text-slate-300"><span className="rounded-full border border-white/15 px-3 py-1.5">6 módulos prácticos</span><span className="rounded-full border border-white/15 px-3 py-1.5">Curvas NURBS racionales</span><span className="rounded-full border border-white/15 px-3 py-1.5">Rhino 7 aplicado</span></div></div><button type="button" onClick={() => setStarted(true)} className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-b from-[#f3d28b] to-[#bd9143] px-5 py-3 text-sm font-bold text-[#21180a] shadow-lg shadow-black/30 hover:brightness-105"><WandSparkles className="size-4"/> Abrir NURBS Studio <ArrowRight className="size-4"/></button></div>
   </section>;
-  return <div className="fixed inset-0 z-[120] overflow-y-auto bg-[#090d12] text-slate-100">
-    <header className="sticky top-0 z-30 border-b border-white/10 bg-[#0e141b]/95 px-3 py-3 backdrop-blur-xl sm:px-5">
-      <div className="mx-auto flex max-w-[1700px] flex-wrap items-center justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[.2em] text-amber-300">AURUM LAB / NURBS STUDIO</p><h2 className="text-lg font-semibold sm:text-xl">Curvas NURBS avanzadas</h2><p className="text-xs text-slate-400">Sesión 05 · {MODULES[module]!.title}</p></div><div className="flex items-center gap-2"><span className="hidden rounded-lg border border-white/10 px-3 py-2 text-xs text-slate-300 sm:inline-flex">{done.length}/6 módulos completados</span><button onClick={reset} className="rounded-lg border border-white/15 px-3 py-2 text-xs hover:bg-white/5"><RotateCcw className="mr-1 inline size-3.5"/> Reiniciar</button><button onClick={onClose} className="rounded-lg border border-white/15 px-3 py-2 text-xs hover:bg-white/5">Cerrar laboratorio</button></div></div>
+  return <div className={embedded ? "relative w-full overflow-hidden rounded-2xl border border-white/10 bg-[#090d12] text-slate-100" : "fixed inset-0 z-[120] overflow-y-auto bg-[#090d12] text-slate-100"}>
+    <header className={`${embedded ? "relative" : "sticky top-0 z-30"} border-b border-white/10 bg-[#0e141b]/95 px-3 py-3 backdrop-blur-xl sm:px-5`}>
+      <div className="mx-auto flex max-w-[1700px] flex-wrap items-center justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[.2em] text-amber-300">AURUM LAB / NURBS STUDIO</p><h2 className="text-lg font-semibold sm:text-xl">Curvas NURBS avanzadas</h2><p className="text-xs text-slate-400">Sesión 05 · {MODULES[module]!.title}</p></div><div className="flex items-center gap-2"><span className="hidden rounded-lg border border-white/10 px-3 py-2 text-xs text-slate-300 sm:inline-flex">{done.length}/6 módulos completados</span><button onClick={reset} className="rounded-lg border border-white/15 px-3 py-2 text-xs hover:bg-white/5"><RotateCcw className="mr-1 inline size-3.5"/> Reiniciar</button>{!embedded && <button onClick={onClose} className="rounded-lg border border-white/15 px-3 py-2 text-xs hover:bg-white/5">Cerrar laboratorio</button>}</div></div>
       <div className="mx-auto mt-3 h-1 max-w-[1700px] overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-gradient-to-r from-amber-300 to-yellow-600 transition-all" style={{ width: `${done.length / 6 * 100}%` }}/></div>
     </header>
     <main className="mx-auto max-w-[1700px] space-y-4 p-3 sm:p-5">
-      <nav className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">{MODULES.map((item, i) => { const Icon = item.icon; return <button key={item.title} onClick={() => { setModule(i); setAnswer(""); setChecked(false); setValidationMessage(""); }} className={`flex min-h-[76px] items-center gap-3 rounded-xl border p-3 text-left transition ${module === i ? "border-amber-300/80 bg-gradient-to-br from-[#4a3718] to-[#20242a] shadow-lg shadow-amber-950/20" : "border-white/10 bg-[#131a22] hover:border-white/25"}`}><span className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${module === i ? "bg-amber-300 text-[#201607]" : "bg-white/5 text-slate-300"}`}>{done.includes(i) ? <CheckCircle2 className="size-5"/> : <Icon className="size-5"/>}</span><span><span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">0{i + 1} · {item.short}</span><span className="mt-1 block text-xs font-semibold leading-4 text-white">{item.title}</span></span></button>; })}</nav>
+      <nav className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">{MODULES.map((item, i) => { const Icon = item.icon; return <button key={item.title} onClick={() => { goToModule(i); setAnswer(""); setChecked(false); setValidationMessage(""); }} className={`flex min-h-[76px] items-center gap-3 rounded-xl border p-3 text-left transition ${module === i ? "border-amber-300/80 bg-gradient-to-br from-[#4a3718] to-[#20242a] shadow-lg shadow-amber-950/20" : "border-white/10 bg-[#131a22] hover:border-white/25"}`}><span className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${module === i ? "bg-amber-300 text-[#201607]" : "bg-white/5 text-slate-300"}`}>{done.includes(i) ? <CheckCircle2 className="size-5"/> : <Icon className="size-5"/>}</span><span><span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">0{i + 1} · {item.short}</span><span className="mt-1 block text-xs font-semibold leading-4 text-white">{item.title}</span></span></button>; })}</nav>
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.65fr)_minmax(320px,.8fr)]">
         <section className="overflow-hidden rounded-2xl border border-white/10 bg-[#121922] shadow-2xl">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 px-4 py-3"><div><p className="text-[10px] font-bold uppercase tracking-[.18em] text-slate-400">Viewport · plano XY · unidades visuales</p><h3 className="text-sm font-semibold">{MODULES[module]!.title}</h3></div><div className="flex flex-wrap gap-2"><button onClick={() => { setCurveMode("nurbs"); if (module === 0) setEvidence(prev => prev.map((v, i) => i === 0 ? true : v)); }} className={`rounded-lg px-3 py-2 text-xs font-semibold ${curveMode === "nurbs" ? "bg-amber-300 text-black" : "border border-white/15 text-slate-300"}`}>Curve · NURBS</button><button onClick={() => { setCurveMode("interp"); if (module === 0) setEvidence(prev => prev.map((v, i) => i === 0 ? true : v)); }} className={`rounded-lg px-3 py-2 text-xs font-semibold ${curveMode === "interp" ? "bg-amber-300 text-black" : "border border-white/15 text-slate-300"}`}>InterpCrv · guía</button></div></div>
@@ -200,7 +208,7 @@ export default function LaboratorioCurvasNurbs({ initialModule = 0, onClose }: P
           {checked && <p className={`mt-2 text-xs ${done.includes(module) ? "text-emerald-300" : "text-amber-200"}`}><CheckCircle2 className="mr-1 inline size-4"/>{validationMessage}</p>}
         </div>
       </section>
-      <footer className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-[#121922] p-4"><button disabled={module === 0} onClick={() => { setModule(v => v - 1); setChecked(false); }} className="rounded-lg border border-white/15 px-4 py-2.5 text-xs disabled:opacity-30"><ArrowLeft className="mr-1 inline size-3.5"/> Módulo anterior</button><p className="text-xs text-slate-400">Módulo {module + 1} de 6 · {done.length} completados</p><button disabled={!done.includes(module)} onClick={() => module < 5 ? next() : onClose()} className="rounded-lg bg-gradient-to-b from-[#f3d28b] to-[#bd9143] px-4 py-2.5 text-xs font-bold text-[#21180a] disabled:cursor-not-allowed disabled:opacity-40">{module === 5 ? "Finalizar laboratorio" : "Siguiente módulo"} <ArrowRight className="ml-1 inline size-3.5"/></button></footer>
+      <footer className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-[#121922] p-4"><button disabled={module === 0} onClick={() => { goToModule(module - 1); setChecked(false); }} className="rounded-lg border border-white/15 px-4 py-2.5 text-xs disabled:opacity-30"><ArrowLeft className="mr-1 inline size-3.5"/> Módulo anterior</button><p className="text-xs text-slate-400">Módulo {module + 1} de 6 · {done.length} completados</p><button disabled={!done.includes(module)} onClick={() => module < 5 ? next() : onClose()} className="rounded-lg bg-gradient-to-b from-[#f3d28b] to-[#bd9143] px-4 py-2.5 text-xs font-bold text-[#21180a] disabled:cursor-not-allowed disabled:opacity-40">{module === 5 ? "Finalizar laboratorio" : "Siguiente módulo"} <ArrowRight className="ml-1 inline size-3.5"/></button></footer>
     </main>
   </div>;
 }
