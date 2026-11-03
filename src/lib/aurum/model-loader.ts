@@ -7,6 +7,27 @@ import { applyAurumMetalUnionExperiment } from "./metal-union-experiment";
 import { applyAurumVoxelRemeshExperiment } from "./voxel-remesh-experiment";
 import { toCreasedNormals } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
+// Reuse one Draco decoder across GLB loads. The pinned Google decoder URL avoids
+// relying on bundler-relative paths for Three.js decoder assets.
+let aurumDracoLoaderPromise: Promise<any> | null = null;
+async function getAurumDracoLoader() {
+  if (!aurumDracoLoaderPromise) {
+    aurumDracoLoaderPromise = import("three/examples/jsm/loaders/DRACOLoader.js")
+      .then(({ DRACOLoader }) => {
+        const loader = new DRACOLoader();
+        loader.setDecoderPath("https://www.gstatic.com/draco/versioned/decoders/1.5.7/");
+        loader.setWorkerLimit(2);
+        return loader;
+      })
+      .catch((error) => {
+        aurumDracoLoaderPromise = null;
+        throw error;
+      });
+  }
+  return aurumDracoLoaderPromise;
+}
+
+
 type AurumNormalMode = "authored" | "diagnostic" | "recompute-metal" | "crease-metal";
 
 function getAurumNormalExperimentMode(): AurumNormalMode {
@@ -326,7 +347,7 @@ export async function parseAurumInput(file: File, ext: string, fallbackMaterial:
   }
   if (ext === "obj") { const { OBJLoader } = await import("three/examples/jsm/loaders/OBJLoader.js"); return new OBJLoader().parse(new TextDecoder().decode(buffer)); }
   if (ext === "fbx") { const { FBXLoader } = await import("three/examples/jsm/loaders/FBXLoader.js"); return new FBXLoader().parse(buffer, ""); }
-  if (ext === "glb") { const { GLTFLoader } = await import("three/examples/jsm/loaders/GLTFLoader.js"); return (await new GLTFLoader().parseAsync(buffer, "")).scene; }
+  if (ext === "glb") {\n    const [{ GLTFLoader }, dracoLoader] = await Promise.all([\n      import("three/examples/jsm/loaders/GLTFLoader.js"),\n      getAurumDracoLoader(),\n    ]);\n    const loader = new GLTFLoader();\n    loader.setDRACOLoader(dracoLoader);\n    return (await loader.parseAsync(buffer, "")).scene;\n  }
   if (ext === "3dm") {
     const { Rhino3dmLoader } = await import("three/examples/jsm/loaders/3DMLoader.js");
     auditStep("rhino-loader-module-ready");
