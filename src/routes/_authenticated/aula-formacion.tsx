@@ -8,6 +8,7 @@ import { AppShell, Panel } from "@/components/AppShell";
 import LaboratorioCurvasNurbs from "@/components/aula/LaboratorioCurvasNurbs";
 import LaboratorioCurveEditor from "@/components/aula/LaboratorioCurveEditor";
 import LaboratorioCurvasBasicas from "@/components/aula/LaboratorioCurvasBasicas";
+import RhinoObjectExplorer from "@/components/aula/RhinoObjectExplorer";
 import { useSesion } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -2627,6 +2628,7 @@ function AulaFormacionPage() {
                 {renderLaboratorioPlaca()}
 
                 {renderLaboratorioGeometria()}
+                <RhinoObjectExplorer visible={lecturaAbierta?.numero === 2 && paginaLectura === 1} materials={materialesVistaAula} />
                 {renderLaboratorioCapas()}
                 {renderSelectorVistasPlano()}
                 {seccionesLecturaActivas[paginaLectura]?.titulo?.toLowerCase().includes("curvas básicas") && <section className="mt-7 overflow-hidden rounded-2xl border border-[#d9c9a8] bg-gradient-to-br from-[#fffefa] via-white to-[#f7f2e8] shadow-sm"><div className="flex flex-wrap items-center justify-between gap-4 p-5 sm:p-6"><div className="min-w-0"><p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#98743c]">FADILAB · Sesión 02 · Práctica interactiva</p><h4 className="mt-1 text-xl font-semibold tracking-tight text-[#252a31]">CURVE LAB <span className="font-normal text-[#7b8490]">/ Curvas básicas</span></h4><p className="mt-1 max-w-2xl text-sm leading-6 text-[#626d79]">Construye líneas, polilíneas, círculos y rectángulos sobre un plano XY interactivo. Practica el flujo de puntos de cada herramienta y comprueba tus resultados.</p><div className="mt-3 flex flex-wrap gap-2 text-[10px] font-medium text-[#6c6251]">{["4 herramientas Rhino","Plano XY interactivo","Validación por ejercicio","Progreso de práctica"].map(item=><span key={item} className="rounded-full border border-[#e7ddca] bg-white/80 px-3 py-1.5">{item}</span>)}</div></div><button type="button" onClick={() => setLaboratorioCurvasBasicasAbierto(true)} className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-gradient-to-b from-[#e6c77d] to-[#bf9952] px-5 py-3 text-sm font-bold text-[#241b0c] shadow-sm transition hover:-translate-y-0.5 hover:brightness-105"><Pencil className="size-4"/> Iniciar Curve Lab <ArrowRight className="size-4"/></button></div></section>}
@@ -3260,6 +3262,7 @@ function AulaFormacionPage() {
                 {renderLaboratorioSmartTrack()}
                 {renderLaboratorioPlaca()}
                 {renderLaboratorioGeometria()}
+                <RhinoObjectExplorer visible={lecturaAbierta?.numero === 2 && paginaLectura === 1} materials={materialesVistaAula} />
                 {renderLaboratorioCapas()}
                 {renderSelectorVistasPlano()}
                 <div className="mt-5 grid min-w-0 grid-cols-1 items-stretch gap-4 lg:grid-cols-2">
