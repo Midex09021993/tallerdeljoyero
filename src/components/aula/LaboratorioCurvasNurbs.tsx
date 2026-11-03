@@ -22,7 +22,7 @@ function knots(count: number, degree: number) {
   return Array.from({ length: m + 1 }, (_, i) => i <= degree ? 0 : i >= m - degree ? 1 : (i - degree) / (m - 2 * degree));
 }
 function basis(i: number, p: number, u: number, k: number[]): number {
-  if (p === 0) return (k[i]! <= u && u < k[i + 1]!) || (u === 1 && k[i + 1] === 1 && k[i] < 1) ? 1 : 0;
+  if (p === 0) return (k[i]! <= u && u < k[i + 1]!) || (u === 1 && k[i + 1] === 1 && k[i]! < 1) ? 1 : 0;
   const leftDen = k[i + p]! - k[i]!;
   const rightDen = k[i + p + 1]! - k[i + 1]!;
   const left = leftDen ? ((u - k[i]!) / leftDen) * basis(i, p - 1, u, k) : 0;
