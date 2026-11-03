@@ -584,6 +584,7 @@ function AulaFormacionPage() {
   const [segundosRestantesExamen, setSegundosRestantesExamen] = useState<number | null>(null);
   const [ocupado, setOcupado] = useState(false);
   const [vistaPreviaAlumno, setVistaPreviaAlumno] = useState(false);
+  const [modoPanelDocente, setModoPanelDocente] = useState(false);
   const [lecturaAbierta, setLecturaAbierta] = useState<SesionCurso | null>(null);
   const [lecturaModoVistaPrevia, setLecturaModoVistaPrevia] = useState(false);
   const [modoAulaExpandida, setModoAulaExpandida] = useState(false);
@@ -914,7 +915,7 @@ function AulaFormacionPage() {
 
   const alumnoQuery = useQuery({
     queryKey: ["aula-formacion-alumno", sesion?.user.id],
-    enabled: Boolean(sesion?.user.id && !esDocente && rolAlumno),
+    enabled: Boolean(sesion?.user.id && rolAlumno),
     queryFn: async () => {
       const { error: vincularError } = await (supabase as any).rpc("vincular_inscripciones_formacion");
       if (vincularError) throw vincularError;
@@ -927,10 +928,13 @@ function AulaFormacionPage() {
     },
   });
   const inscripcionesAlumno = alumnoQuery.data ?? [];
+  // Si una cuenta tiene ambos permisos, el aula del alumno matriculado es la vista inicial.
+  // La gestión docente sigue disponible mediante un cambio explícito de modo.
+  const mostrarVistaDocente = esDocente && (inscripcionesAlumno.length === 0 || modoPanelDocente);
   const idsCursosAlumno = useMemo(() => [...new Set(inscripcionesAlumno.map((i) => i.curso_id))], [inscripcionesAlumno]);
   const sesionesAlumnoQuery = useQuery({
     queryKey: ["aula-formacion-sesiones-alumno", sesion?.user.id, idsCursosAlumno.join(",")],
-    enabled: Boolean(!esDocente && idsCursosAlumno.length),
+    enabled: Boolean(!mostrarVistaDocente && idsCursosAlumno.length),
     queryFn: async () => {
       const { data, error } = await (supabase as any).from("formacion_sesiones")
         .select("id,curso_id,numero,titulo,descripcion,duracion_horas,fecha_programada,publicada,bloqueada")
@@ -941,7 +945,7 @@ function AulaFormacionPage() {
   });
   const progresoLecturasQuery = useQuery({
     queryKey: ["aula-formacion-progreso-lecturas", sesion?.user.id, idsCursosAlumno.join(",")],
-    enabled: Boolean(!esDocente && sesion?.user.id && idsCursosAlumno.length),
+    enabled: Boolean(!mostrarVistaDocente && sesion?.user.id && idsCursosAlumno.length),
     queryFn: async () => {
       const { data, error } = await (supabase as any).from("formacion_progreso_lecturas")
         .select("sesion_id,completada_en")
@@ -954,7 +958,7 @@ function AulaFormacionPage() {
 
   const examenesAlumnoQuery = useQuery({
     queryKey: ["aula-formacion-examenes-alumno", sesion?.user.id, idsCursosAlumno.join(",")],
-    enabled: Boolean(!esDocente && idsCursosAlumno.length),
+    enabled: Boolean(!mostrarVistaDocente && idsCursosAlumno.length),
     queryFn: async () => {
       const { data, error } = await (supabase as any).from("formacion_examenes").select("id,curso_id,sesion_id,titulo,instrucciones,duracion_minutos,intentos_permitidos,puntaje_maximo,publicado,disponible_desde,disponible_hasta").in("curso_id", idsCursosAlumno).eq("publicado", true).order("created_at", { ascending: false });
       if (error) throw error;
@@ -963,7 +967,7 @@ function AulaFormacionPage() {
   });
   const intentosAlumnoQuery = useQuery({
     queryKey: ["aula-formacion-intentos-alumno", sesion?.user.id],
-    enabled: Boolean(!esDocente && sesion?.user.id),
+    enabled: Boolean(!mostrarVistaDocente && sesion?.user.id),
     queryFn: async () => {
       const { data, error } = await (supabase as any).from("formacion_intentos").select("id,examen_id,numero_intento,calificacion,estado,enviado_en,observaciones_docente").eq("alumno_user_id", sesion!.user.id).order("enviado_en", { ascending: false });
       if (error) throw error;
@@ -972,7 +976,7 @@ function AulaFormacionPage() {
   });
   const materialesAlumnoQuery = useQuery({
     queryKey: ["aula-formacion-materiales-alumno", sesion?.user.id, idsCursosAlumno.join(",")],
-    enabled: Boolean(!esDocente && idsCursosAlumno.length),
+    enabled: Boolean(!mostrarVistaDocente && idsCursosAlumno.length),
     queryFn: async () => {
       const { data, error } = await (supabase as any).from("formacion_materiales")
         .select("id,curso_id,sesion_id,titulo,descripcion,nombre_archivo,ruta_storage,mime_type,tamano_bytes,created_at,publicado")
@@ -983,7 +987,7 @@ function AulaFormacionPage() {
   });
 
   useEffect(() => {
-    const materiales = esDocente ? materialesDocenteQuery.data : materialesAlumnoQuery.data;
+    const materiales = mostrarVistaDocente ? materialesDocenteQuery.data : materialesAlumnoQuery.data;
     let vigente = true;
     setImagenInterfazUrl("");
     setImagenInterfazError("");
@@ -1034,10 +1038,10 @@ function AulaFormacionPage() {
       });
 
     return () => { vigente = false; };
-  }, [lecturaAbierta?.id, lecturaAbierta?.numero, esDocente, materialesDocenteQuery.data, materialesAlumnoQuery.data]);
+  }, [lecturaAbierta?.id, lecturaAbierta?.numero, mostrarVistaDocente, materialesDocenteQuery.data, materialesAlumnoQuery.data]);
 
   useEffect(() => {
-    const materiales = esDocente ? materialesDocenteQuery.data : materialesAlumnoQuery.data;
+    const materiales = mostrarVistaDocente ? materialesDocenteQuery.data : materialesAlumnoQuery.data;
     let vigente = true;
     setImagenLayersUrl("");
     setImagenLayersError("");
@@ -1057,10 +1061,10 @@ function AulaFormacionPage() {
       })
       .catch((error: unknown) => { if (vigente) setImagenLayersError(error instanceof Error ? error.message : "No se pudo recuperar la imagen de MatrixGold."); });
     return () => { vigente = false; };
-  }, [lecturaAbierta?.id, lecturaAbierta?.numero, esDocente, materialesDocenteQuery.data, materialesAlumnoQuery.data]);
+  }, [lecturaAbierta?.id, lecturaAbierta?.numero, mostrarVistaDocente, materialesDocenteQuery.data, materialesAlumnoQuery.data]);
 
   useEffect(() => {
-    const materiales = esDocente ? materialesDocenteQuery.data : materialesAlumnoQuery.data;
+    const materiales = mostrarVistaDocente ? materialesDocenteQuery.data : materialesAlumnoQuery.data;
     let vigente = true;
     setImagenRhinoUrl("");
     setImagenRhinoError("");
@@ -1098,10 +1102,10 @@ function AulaFormacionPage() {
     void cargarImagen("ejes", setImagenesEjesUrl, error => setErrorImagenesApoyo(prev => prev ? prev + " " + error : error));
     void cargarImagen("proceso de joyeria con impresion 3d", setImagenProceso3DUrl, setImagenProceso3DError);
     return () => { vigente = false; };
-  }, [lecturaAbierta?.id, lecturaAbierta?.numero, esDocente, materialesDocenteQuery.data, materialesAlumnoQuery.data]);
+  }, [lecturaAbierta?.id, lecturaAbierta?.numero, mostrarVistaDocente, materialesDocenteQuery.data, materialesAlumnoQuery.data]);
 
   useEffect(() => {
-    const materiales = esDocente ? materialesDocenteQuery.data : materialesAlumnoQuery.data;
+    const materiales = mostrarVistaDocente ? materialesDocenteQuery.data : materialesAlumnoQuery.data;
     let vigente = true;
     setImagenesVistasPlano({});
     setErroresVistasPlano({});
@@ -1138,7 +1142,7 @@ function AulaFormacionPage() {
     }));
 
     return () => { vigente = false; };
-  }, [lecturaAbierta?.id, lecturaAbierta?.numero, esDocente, materialesDocenteQuery.data, materialesAlumnoQuery.data]);
+  }, [lecturaAbierta?.id, lecturaAbierta?.numero, mostrarVistaDocente, materialesDocenteQuery.data, materialesAlumnoQuery.data]);
 
   const renderSelectorVistasPlano = () => {
     if (lecturaAbierta?.numero !== 2 || paginaLectura !== 3) return null;
@@ -2333,9 +2337,9 @@ function AulaFormacionPage() {
 
   if (!sesion || (!rolAlumno && !esDocente)) return <AppShell titulo="Aula de formación" subtitulo="Acceso restringido"><Panel titulo="Cuenta no habilitada"><p className="p-5 text-sm text-slate-400">El aula de alumnos está disponible para cuentas de gerente u operario. La docencia se administra exclusivamente desde FADILAB.</p></Panel></AppShell>;
 
-  return <AppShell titulo="Aula de formación" subtitulo={esDocente ? "FADILAB · Administración académica" : "Tus cursos, materiales y actividades"} modoAulaExpandida={modoAulaExpandida}>
+  return <AppShell titulo="Aula de formación" subtitulo={mostrarVistaDocente ? "FADILAB · Administración académica" : "Tus cursos, materiales y actividades"} modoAulaExpandida={modoAulaExpandida}>
     <div className="mx-auto max-w-6xl space-y-6">
-      {esDocente ? (
+      {mostrarVistaDocente ? (
         <>
           <section className="overflow-hidden rounded-2xl border border-[#e4e9ef] bg-white shadow-[0_8px_28px_rgba(27,43,59,0.045)]">
             <div className="flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-7">
