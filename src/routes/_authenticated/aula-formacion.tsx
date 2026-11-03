@@ -2411,10 +2411,21 @@ function AulaFormacionPage() {
                 <div className="mt-4 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-gold transition-all" style={{width: (seccionesLecturaActivas.length ? ((paginaLectura+1)/seccionesLecturaActivas.length)*100 : 0)+"%"}}/></div>
                 <p className="mt-2 text-xs text-muted-foreground">Apartado {paginaLectura+1} de {seccionesLecturaActivas.length}</p>
               </header>
-              <nav aria-label="Índice de la lectura" className="shrink-0 border-b border-border bg-background px-4 py-3 sm:px-6 sm:py-3">
-                <div className="mb-2 flex items-center justify-between gap-3"><p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Índice de contenidos</p><p className="text-[11px] text-muted-foreground">Selecciona un apartado para navegar</p></div>
-                <div className="flex gap-2 overflow-x-auto pb-1">{seccionesLecturaActivas.map((seccion, indice) => <button key={indice} type="button" onClick={() => setPaginaLectura(indice)} aria-current={paginaLectura===indice ? "step" : undefined} className={`flex min-w-10 shrink-0 items-center justify-center rounded-lg border px-3 py-2 text-xs font-semibold transition ${paginaLectura===indice ? "border-gold bg-gold text-black shadow-sm" : "border-border bg-card text-muted-foreground hover:border-gold/50 hover:text-foreground"}`} title={seccion.titulo}>{String(indice+1).padStart(2,"0")}</button>)}</div>
-                <p className="mt-2 truncate text-xs font-medium text-foreground">{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</p>
+              <nav aria-label="Índice de la lectura" className={`shrink-0 border-b px-4 sm:px-6 ${modoAulaExpandida ? "border-[#E4E0D7] bg-[#F7F6F2] py-2" : "border-border bg-background py-3 sm:py-3"}`}>
+                {modoAulaExpandida ? (
+                  <div className="flex min-w-0 items-center gap-3">
+                    <p className="shrink-0 text-[9px] font-semibold uppercase tracking-[0.13em] text-[#77766F]">Índice</p>
+                    <div className="flex min-w-0 flex-1 gap-1.5 overflow-x-auto py-0.5">
+                      {seccionesLecturaActivas.map((seccion, indice) => <button key={indice} type="button" onClick={() => setPaginaLectura(indice)} aria-current={paginaLectura===indice ? "step" : undefined} aria-label={`Apartado ${indice+1}: ${seccion.titulo}`} className={`flex h-7 min-w-8 shrink-0 items-center justify-center rounded-lg border px-2 text-[10px] font-semibold transition ${paginaLectura===indice ? "border-[#B99552] bg-[#B99552] text-[#171717] shadow-sm" : "border-[#E2DED5] bg-white/80 text-[#626B76] hover:border-[#B99552] hover:text-[#343B45]"}`} title={seccion.titulo}>{String(indice+1).padStart(2,"0")}</button>)}
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="mb-2 flex items-center justify-between gap-3"><p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Índice de contenidos</p><p className="text-[11px] text-muted-foreground">Selecciona un apartado para navegar</p></div>
+                    <div className="flex gap-2 overflow-x-auto pb-1">{seccionesLecturaActivas.map((seccion, indice) => <button key={indice} type="button" onClick={() => setPaginaLectura(indice)} aria-current={paginaLectura===indice ? "step" : undefined} className={`flex min-w-10 shrink-0 items-center justify-center rounded-lg border px-3 py-2 text-xs font-semibold transition ${paginaLectura===indice ? "border-gold bg-gold text-black shadow-sm" : "border-border bg-card text-muted-foreground hover:border-gold/50 hover:text-foreground"}`} title={seccion.titulo}>{String(indice+1).padStart(2,"0")}</button>)}</div>
+                    <p className="mt-2 truncate text-xs font-medium text-foreground">{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</p>
+                  </>
+                )}
               </nav>
               <main className={`min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-8 sm:py-6 lg:px-10 ${modoAulaExpandida ? "bg-[#F7F6F2] px-6 py-7 text-[#343B45] sm:px-10 sm:py-9 lg:px-14 xl:px-16 2xl:px-20" : "bg-card/40"}`}>
                 <div className={lecturaAbierta?.numero === 5 ? "grid items-start gap-6 2xl:grid-cols-[minmax(0,.9fr)_minmax(0,1.1fr)]" : ""}>
