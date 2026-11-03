@@ -102,3 +102,59 @@ export const listarDirectorioAlumnosFormacion = createServerFn({ method: "POST" 
       alumnos: alumnos.filter(Boolean),
     };
   });
+
+type InscripcionesAlumnoInput = Record<string, never>;
+
+/**
+ * Recupera las matrículas propias con los datos canónicos del curso.
+ * La identidad procede del JWT validado por requireSupabaseAuth; nunca del cliente.
+ * La lectura de cursos con service role se limita a los IDs obtenidos de esas matrículas.
+ */
+export const listarInscripcionesAlumnoFormacion = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: InscripcionesAlumnoInput) => input)
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+
+    const { data: inscripciones, error: inscripcionesError } = await supabase
+      .from("formacion_inscripciones")
+      .select("id,curso_id,participante_id,email_alumno,nombre_alumno,estado,created_at")
+      .eq("alumno_user_id", userId)
+      .in("estado", ["activo", "finalizado"])
+      .order("created_at", { ascending: false });
+
+    if (inscripcionesError) {
+      throw new Error("No se pudieron recuperar tus matrículas: " + inscripcionesError.message);
+    }
+
+    if (!inscripciones?.length) return [];
+
+    const cursoIds = [...new Set(inscripciones.map((inscripcion) => inscripcion.curso_id))];
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: cursos, error: cursosError } = await supabaseAdmin
+      .from("formacion_cursos")
+      .select("id,participante_id,titulo,descripcion,duracion_horas,estado")
+      .in("id", cursoIds);
+
+    if (cursosError) {
+      throw new Error("No se pudieron recuperar los datos académicos de tus cursos: " + cursosError.message);
+    }
+
+    const cursoPorId = new Map((cursos ?? []).map((curso) => [curso.id, curso]));
+
+    return inscripciones.map((inscripcion) => {
+      const curso = cursoPorId.get(inscripcion.curso_id);
+      // La matrícula debe corresponder también al mismo espacio docente.
+      const cursoValidado = curso?.participante_id === inscripcion.participante_id ? curso : null;
+
+      return {
+        id: inscripcion.id,
+        curso_id: inscripcion.curso_id,
+        email_alumno: inscripcion.email_alumno,
+        nombre_alumno: inscripcion.nombre_alumno,
+        estado: inscripcion.estado,
+        formacion_cursos: cursoValidado,
+      };
+    });
+  });
+
