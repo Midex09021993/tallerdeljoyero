@@ -285,6 +285,7 @@ export function AppShell({
   atrasMovil = { to: "/inicio" },
   ocultarNavegacion = false,
   modoAulaExpandida = false,
+  ocultarEncabezado = false,
   encabezadoMovilCompacto = false,
   ocultarAccionesCelular = false,
   children,
@@ -297,6 +298,7 @@ export function AppShell({
   ocultarAccionesCelular?: boolean;
   ocultarNavegacion?: boolean;
   modoAulaExpandida?: boolean;
+  ocultarEncabezado?: boolean;
   children: ReactNode;
 }) {
   const { data: sesion } = useSesion();
@@ -487,7 +489,7 @@ export function AppShell({
           encabezadoMovilCompacto ? "max-lg:px-3 max-lg:pt-0 max-lg:pb-5" : ""
         }`}
       >
-        <header
+        {!ocultarEncabezado && <header
           className={`${modoAulaExpandida ? "hidden" : ""} mb-4 flex flex-wrap items-end justify-between gap-3 lg:mb-8 lg:gap-4 ${
             encabezadoMovilCompacto
               ? "max-lg:sticky max-lg:top-0 max-lg:z-30 max-lg:-mx-3 max-lg:mb-2 max-lg:justify-end max-lg:bg-background/95 max-lg:px-3 max-lg:py-2 max-lg:backdrop-blur"
@@ -518,7 +520,7 @@ export function AppShell({
               {acciones}
             </div>
           ) : null}
-        </header>
+        </header>}
 
         {!ocultarNavegacion && !modoAulaExpandida && Boolean(sesion?.roles?.length) ? (
           <nav className={`sticky top-0 z-20 mb-4 border-y border-border bg-background/95 py-3 backdrop-blur lg:hidden ${encabezadoMovilCompacto ? "max-lg:-mx-3 max-lg:px-3" : "-mx-4 px-4"}`}>
