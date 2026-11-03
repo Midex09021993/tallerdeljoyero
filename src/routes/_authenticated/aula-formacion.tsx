@@ -2214,7 +2214,7 @@ function AulaFormacionPage() {
       if (respuestaPlaca === etapa.correcta) setEtapasPlacaCompletadas(prev => prev.includes(etapaPlaca) ? prev : [...prev, etapaPlaca]);
     };
     const reiniciar = () => { setEtapaPlaca(0); setRespuestaPlaca(""); setEtapasPlacaCompletadas([]); setMetodoPlaca("cartesiano"); };
-    if (!laboratorioPlacaAbierto) return <section className="mt-7 rounded-2xl border border-[#e0e6ed] bg-white text-[#24364a] p-5 sm:p-6 shadow-sm">
+    if (!laboratorioPlacaAbierto) return <section className="mt-7 rounded-2xl border border-[#b79558]/40 bg-gradient-to-br from-white via-[#fffefa] to-[#f7f3eb] text-[#24221e] p-5 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-4"><div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-300">Práctica integradora · RHINO 7</p><h4 className="mt-2 text-lg font-semibold">Construcción de placa base para una joya</h4><p className="mt-1 text-sm text-slate-400">Integra coordenadas, Osnap, restricciones y SmartTrack en una secuencia guiada de ocho etapas.</p><p className="mt-2 text-xs text-slate-400">{etapasPlacaCompletadas.length}/8 etapas verificadas</p></div><button type="button" onClick={() => setLaboratorioPlacaAbierto(true)} className="inline-flex items-center gap-2 rounded-xl bg-gold px-5 py-3 text-sm font-semibold text-black"><BookOpenCheck className="size-4"/> Abrir práctica <ArrowRight className="size-4"/></button></div>
     </section>;
     return <section className="fixed inset-0 z-[105] h-[100dvh] overflow-y-auto bg-background" role="dialog" aria-modal="true" aria-label="Laboratorio integrador de placa base">
@@ -2251,7 +2251,7 @@ function AulaFormacionPage() {
 
   const renderLaboratorioGeometria = () => {
     if (lecturaAbierta?.numero !== 2 || paginaLectura !== 1) return null;
-    if (!laboratorioGeometriaAbierto) return <section className="mt-7 rounded-2xl border border-[#e0e6ed] bg-white text-[#24364a] p-5 sm:p-6 shadow-sm">
+    if (!laboratorioGeometriaAbierto) return <section className="mt-7 rounded-2xl border border-[#b79558]/40 bg-gradient-to-br from-white via-[#fffefa] to-[#f7f3eb] text-[#24221e] p-5 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-4"><div className="min-w-0"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-300">Laboratorio guiado · RHINO 7</p><h4 className="mt-2 text-lg font-semibold">Aprende a reconocer la geometría de una joya</h4><p className="mt-1 text-sm text-slate-400">Primero aprende, observa ejemplos y aplica cada concepto. Al final podrás comprobar lo que has aprendido.</p><p className="mt-2 text-xs text-slate-400">{modulosGeometriaCompletados.length}/4 módulos completados</p></div><button type="button" onClick={() => setLaboratorioGeometriaAbierto(true)} className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-gold px-5 py-3 text-sm font-semibold text-black shadow-sm transition hover:-translate-y-0.5 hover:brightness-105"><BookOpenCheck className="size-4"/> Abrir laboratorio <ArrowRight className="size-4"/></button></div>
     </section>;
     const actividad = actividadesGeometria[moduloGeometria] ?? actividadesGeometria[0]!;
@@ -2299,7 +2299,7 @@ function AulaFormacionPage() {
       setSolidosColocados([]); setFigurasDisponibles(["cubo","esfera","cilindro","cono","toroide"]); setSolidoSeleccionadoId(null); arrastreSolidoRef.current = null; setMensajeSolidos(""); siguienteSolidoId.current = 1;
       setRetoCapasCompletado(false); setRespuestaRetoCapas(""); setResultadoRetoCapas(null); setMostrarRetoCapasAlCerrar(false);
     };
-    if (!laboratorioCapasAbierto) return <><section className="mt-7 rounded-2xl border border-[#e0e6ed] bg-white text-[#24364a] p-5 sm:p-6 shadow-sm">
+    if (!laboratorioCapasAbierto) return <><section className="mt-7 rounded-2xl border border-[#b79558]/40 bg-gradient-to-br from-white via-[#fffefa] to-[#f7f3eb] text-[#24221e] p-5 sm:p-6">
       <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#98743c]">Laboratorio interactivo · MatrixGold</p>
       <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0"><h4 className="text-lg font-semibold">Practica con las capas de una joya</h4><p className="mt-1 text-sm text-[#68645c]">Experimenta con la visibilidad, el bloqueo y la asignación de objetos en un modelo didáctico.</p></div>
@@ -2481,10 +2481,10 @@ function AulaFormacionPage() {
                     </div>
                   </div>}
                 </section>}
-                {lecturaAbierta?.numero === 1 && paginaLectura === 1 && <section className="mt-7 rounded-2xl border border-[#e0e6ed] bg-white text-[#24364a] p-5 sm:p-6 shadow-sm">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#98722e]">Material visual de apoyo</p>
+                {lecturaAbierta?.numero === 1 && paginaLectura === 1 && <section className="mt-7 rounded-2xl border border-[#b79558]/40 bg-gradient-to-br from-white via-[#fffefa] to-[#f7f3eb] text-[#24221e] p-5 sm:p-6">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-300">Material visual de apoyo</p>
                   <h4 className="mt-1 text-lg font-semibold">Rhinoceros 7</h4>
-                  <p className="mt-2 text-sm leading-6 text-[#64748b]">Consulta la imagen de referencia general del programa.</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-400">Consulta la imagen de referencia general del programa.</p>
                   {imagenRhinoUrl ? <button type="button" onClick={() => setTipoImagenApoyoAbierta(tipoImagenApoyoAbierta === "rhinoceros" ? null : "rhinoceros")} aria-expanded={tipoImagenApoyoAbierta === "rhinoceros"} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95">Ver RHINOCEROS <ChevronRight className="size-4"/></button> : <p className="mt-3 text-xs text-slate-400">{imagenRhinoError || "Buscando RHINOCEROS en la Biblioteca del curso…"}</p>}
                   {tipoImagenApoyoAbierta && <div className="fixed inset-0 z-[95] flex items-center justify-center overflow-hidden bg-black/75 p-2 sm:p-4" role="dialog" aria-modal="true" aria-label="Imagen de referencia de Rhinoceros">
                     <div className="flex max-h-[96dvh] w-full max-w-[1200px] flex-col overflow-hidden rounded-xl border border-white/10 bg-background shadow-2xl">
@@ -2498,10 +2498,10 @@ function AulaFormacionPage() {
                     </div>
                   </div>}
                 </section>}
-                {lecturaAbierta?.numero === 1 && paginaLectura === 3 && <section className="mt-7 rounded-2xl border border-[#e0e6ed] bg-white text-[#24364a] p-5 sm:p-6 shadow-sm">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#98722e]">Material visual de apoyo</p>
+                {lecturaAbierta?.numero === 1 && paginaLectura === 3 && <section className="mt-7 rounded-2xl border border-[#b79558]/40 bg-gradient-to-br from-white via-[#fffefa] to-[#f7f3eb] text-[#24221e] p-5 sm:p-6">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-300">Material visual de apoyo</p>
                   <h4 className="mt-1 text-lg font-semibold">Vistas y ejes de Rhinoceros 7</h4>
-                  <p className="mt-2 text-sm leading-6 text-[#64748b]">Identifica las vistas de trabajo y la orientación espacial mediante los ejes de coordenadas.</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-400">Identifica las vistas de trabajo y la orientación espacial mediante los ejes de coordenadas.</p>
                   <div className="mt-4 flex flex-wrap gap-2">
                     {imagenesVistasUrl && <button type="button" onClick={() => setTipoImagenApoyoAbierta(tipoImagenApoyoAbierta === "vistas" ? null : "vistas")} aria-expanded={tipoImagenApoyoAbierta === "vistas"} className="inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95">Ver VISTAS <ChevronRight className="size-4"/></button>}
                     {imagenesEjesUrl && <button type="button" onClick={() => setTipoImagenApoyoAbierta(tipoImagenApoyoAbierta === "ejes" ? null : "ejes")} aria-expanded={tipoImagenApoyoAbierta === "ejes"} className="inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95">Ver EJES <ChevronRight className="size-4"/></button>}
@@ -2519,8 +2519,8 @@ function AulaFormacionPage() {
                     </div>
                   </div>}
                 </section>}
-                {lecturaAbierta?.numero === 1 && paginaLectura === 6 && <section className="mt-7 rounded-2xl border border-[#e0e6ed] bg-white text-[#24364a] p-5 sm:p-6 shadow-sm">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#98722e]">Material visual de apoyo</p>
+                {lecturaAbierta?.numero === 1 && paginaLectura === 6 && <section className="mt-7 rounded-2xl border border-[#b79558]/40 bg-gradient-to-br from-white via-[#fffefa] to-[#f7f3eb] text-[#24221e] p-5 sm:p-6">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-300">Material visual de apoyo</p>
                   <h4 className="mt-1 text-lg font-semibold">Proceso de joyería con impresión 3D</h4>
                   <p className="mt-2 text-sm leading-6 text-slate-400">Observa la secuencia general que conecta el diseño digital con la fabricación de una pieza de joyería mediante impresión 3D.</p>
                   {imagenProceso3DUrl ? <button type="button" onClick={() => setTipoImagenApoyoAbierta(tipoImagenApoyoAbierta === "proceso3d" ? null : "proceso3d")} aria-expanded={tipoImagenApoyoAbierta === "proceso3d"} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95">Ver PROCESO DE JOYERÍA CON IMPRESIÓN 3D <ChevronRight className="size-4"/></button> : <p className="mt-3 text-xs text-slate-400">{imagenProceso3DError || "Buscando la imagen del proceso en la Biblioteca del curso…"}</p>}
@@ -2536,10 +2536,10 @@ function AulaFormacionPage() {
                     </div>
                   </div>}
                 </section>}
-                {lecturaAbierta?.numero === 1 && paginaLectura === 2 && !interfazInteractivaAbierta && <section className="mt-7 rounded-2xl border border-[#e0e6ed] bg-white text-[#24364a] p-5 sm:p-6 shadow-sm">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#98722e]">Actividad guiada · FADILAB</p>
+                {lecturaAbierta?.numero === 1 && paginaLectura === 2 && !interfazInteractivaAbierta && <section className="mt-7 rounded-2xl border border-[#b79558]/40 bg-gradient-to-br from-white via-[#fffefa] to-[#f7f3eb] text-[#24221e] p-5 sm:p-6">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-amber-300">Actividad guiada · FADILAB</p>
                   <h4 className="mt-1 text-lg font-semibold">Conoce cada parte de la interfaz</h4>
-                  <p className="mt-2 max-w-3xl text-sm leading-6 text-[#64748b]">Abre el recorrido interactivo para identificar los componentes directamente sobre la captura de MatrixGold 3.1. Explora los 14 marcadores numerados para conocer dónde se encuentra cada componente y para qué sirve.</p>
+                  <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">Abre el recorrido interactivo para identificar los componentes directamente sobre la captura de MatrixGold 3.1. Explora los 14 marcadores numerados para conocer dónde se encuentra cada componente y para qué sirve.</p>
                   <button type="button" disabled={!imagenInterfazUrl} onClick={() => setInterfazInteractivaAbierta(true)} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gold px-5 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50">Explorar interfaz interactiva <ChevronRight className="size-4"/></button>
                   {!imagenInterfazUrl && <p className="mt-2 text-xs text-slate-400">{imagenInterfazError || "Buscando la imagen en la Biblioteca del curso…"}</p>}
                 </section>}
