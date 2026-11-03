@@ -148,6 +148,7 @@ export default function RhinoObjectExplorer({ visible, materials }: Props) {
   const [category, setCategory] = useState("all");
   const [selectedId, setSelectedId] = useState("");
   const [wireframe, setWireframe] = useState(false);
+  const [orientationStatus, setOrientationStatus] = useState("Esperando archivo");
   const viewportRef = useRef<HTMLDivElement>(null);
   const orientationRef = useRef<HTMLDivElement>(null);
   const orientationSceneRef = useRef<Scene | null>(null);
@@ -162,6 +163,7 @@ export default function RhinoObjectExplorer({ visible, materials }: Props) {
   const selectionRef = useRef<Object3D[]>([]);
   const visibleEntries = useMemo(() => entries.filter(e => category === "all" || e.category === category), [entries, category]);
   const selected = entries.find(e => e.object.uuid === selectedId) ?? null;
+  const ringStoragePath = useMemo(() => materials.find(item => item.nombre_archivo.trim().toLocaleLowerCase() === "ring.3dm")?.ruta_storage ?? "", [materials]);
   const counts = useMemo(() => {
     const c: Record<string, number> = { all: entries.length };
     CATEGORIES.forEach(item => { if (item.id !== "all") c[item.id] = entries.filter(e => e.category === item.id).length; });
@@ -436,7 +438,7 @@ export default function RhinoObjectExplorer({ visible, materials }: Props) {
             <svg viewBox="0 0 76 64" className="h-12 w-14" aria-label="Ejes globales X Y Z"><circle cx="25" cy="39" r="3" fill="#E8EDF2"/><path d="M25 39 L57 39" stroke="#EF4444" strokeWidth="2.5"/><path d="M25 39 L7 19" stroke="#22C55E" strokeWidth="2.5"/><path d="M25 39 L25 5" stroke="#3B82F6" strokeWidth="2.5"/><g fontSize="10" fontWeight="700"><text x="62" y="43" fill="#F87171">X</text><text x="1" y="15" fill="#4ADE80">Y</text><text x="30" y="10" fill="#60A5FA">Z</text></g></svg>
             <span className="text-[10px] leading-4 text-[#C4CED8]">Ejes del mundo<br/><b className="font-semibold text-[#E8EDF2]">X · Y · Z</b></span>
           </div>
-          <div className="pointer-events-none absolute right-3 top-3 z-10 flex h-[112px] w-[112px] flex-col items-center justify-center overflow-hidden rounded-full border border-[#D8B979]/50 bg-[#202A35]/85 shadow-xl"><div ref={orientationRef} className="h-[86px] w-[86px]" /><span className="absolute bottom-1 text-[8px] font-bold tracking-[.12em] text-[#D8B979]">ORIENTACIÓN</span></div>
+          <div className="pointer-events-none absolute right-3 top-3 z-10 flex h-[112px] w-[112px] flex-col items-center justify-center overflow-hidden rounded-full border border-[#D8B979]/50 bg-[#202A35]/85 shadow-xl"><div ref={orientationRef} className="h-[86px] w-[86px]" /><span className="absolute bottom-1 text-[8px] font-bold tracking-[.12em] text-[#D8B979]">ORIENTACIÓN</span><span className="absolute -bottom-4 right-0 max-w-[150px] text-right text-[8px] text-[#AAB7C5]">{orientationStatus}</span></div>
           <div className="pointer-events-none absolute bottom-3 right-3 rounded-lg border border-white/10 bg-[#202A35]/80 px-3 py-2 text-[10px] text-[#AAB7C5]">Arrastra para orbitar · Rueda para zoom · Clic para seleccionar</div>
         </section>
         <aside className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-white/10 bg-[#202A35]">
