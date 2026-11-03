@@ -2680,7 +2680,7 @@ function AulaFormacionPage() {
                       <input type="checkbox" checked={alumnosSeleccionados.includes(alumno.userId)} onChange={e => setAlumnosSeleccionados(actual => e.target.checked ? [...actual, alumno.userId] : actual.filter(id => id !== alumno.userId))} className="mt-1 size-4 accent-[#496782]" />
                       <span className="min-w-0 flex-1">
                         <span className="block text-sm font-semibold text-[#253446]">{alumno.nombre}</span>
-                        <span className="mt-0.5 block text-xs text-[#718096]">Usuario: {alumno.usuario}</span>
+                        {alumno.usuario && alumno.usuario.trim().toLowerCase() !== alumno.email?.trim().toLowerCase() && <span className="mt-0.5 block text-xs text-[#718096]">Usuario: {alumno.usuario}</span>}
                         <span className="block break-all text-xs text-[#718096]">{alumno.email}</span>
                         <span className="mt-2 inline-flex rounded-md bg-[#f4f6f8] px-2 py-1 text-[11px] font-medium text-[#60758a]">{alumno.taller} · {alumno.roles.join(", ")}</span>
                       </span>
