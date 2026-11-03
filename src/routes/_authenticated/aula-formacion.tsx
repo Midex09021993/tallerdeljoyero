@@ -3039,6 +3039,23 @@ function AulaFormacionPage() {
                     if (lecturaAbierta?.numero === 1 && paginaLectura === 4 && idx >= 6) return null;
                     return <div key={idx}><p className={`mb-5 whitespace-pre-line ${modoAulaExpandida ? "w-full max-w-[1100px] text-[17px] leading-[1.8] tracking-[0.005em] text-[#3A3A3C]" : "max-w-4xl text-[15px] leading-7 text-foreground/90"}`}>{bloque}</p></div>;
                   })}
+                {lecturaAbierta?.numero === 1 && paginaLectura === 6 && <section className="mt-7 w-full max-w-[1100px] rounded-2xl border border-[#E5DCCB] bg-gradient-to-br from-white via-[#fffefa] to-[#f7f3eb] p-5 text-[#24221e] sm:p-6">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9A7B43]">Material visual de apoyo · FADILAB</p>
+                  <h4 className="mt-1 text-lg font-semibold">Proceso de joyería con impresión 3D</h4>
+                  <p className="mt-2 text-sm leading-6 text-[#6E6E73]">Consulta la secuencia visual que conecta el diseño digital con la preparación del modelo, la impresión 3D y la fabricación de la joya.</p>
+                  {imagenProceso3DUrl ? <button type="button" onClick={() => setTipoImagenApoyoAbierta(tipoImagenApoyoAbierta === "proceso3d" ? null : "proceso3d")} aria-expanded={tipoImagenApoyoAbierta === "proceso3d"} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#C4A15A] px-5 py-3 text-sm font-semibold text-[#1D1D1F] shadow-sm transition hover:bg-[#B99552] focus:outline-none focus:ring-2 focus:ring-[#B99552]/30">Ver proceso de joyería con impresión 3D <ChevronRight className="size-4"/></button> : <p className="mt-3 text-xs text-[#6E6E73]">{imagenProceso3DError || "Buscando la imagen en la Biblioteca del curso…"}</p>}
+                  {tipoImagenApoyoAbierta === "proceso3d" && <div className="fixed inset-0 z-[95] flex items-center justify-center overflow-hidden bg-black/75 p-2 sm:p-4" role="dialog" aria-modal="true" aria-label="Proceso de joyería con impresión 3D">
+                    <div className="flex max-h-[96dvh] w-full max-w-[1200px] flex-col overflow-hidden rounded-xl border border-[#D2D2D7] bg-white shadow-[0_16px_48px_rgba(0,0,0,0.12)]">
+                      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-[#D2D2D7] bg-white px-4 py-3 sm:px-5">
+                        <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9A7B43]">FADILAB · Material de estudio</p><h3 className="text-base font-semibold">Proceso de joyería con impresión 3D</h3></div>
+                        <button type="button" onClick={() => setTipoImagenApoyoAbierta(null)} className="shrink-0 rounded-lg border border-[#D2D2D7] px-3 py-2 text-xs font-semibold text-[#3A3A3C] hover:bg-[#F5F5F7]">Cerrar ×</button>
+                      </header>
+                      <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto bg-[#F5F5F7] p-3 sm:p-5">
+                        <img src={imagenProceso3DUrl} alt="Proceso de joyería con impresión 3D" className="block h-auto max-h-[78dvh] w-auto max-w-full rounded-lg object-contain" />
+                      </div>
+                    </div>
+                  </div>}
+                </section>}
                 {lecturaAbierta?.numero === 1 && paginaLectura === 0 && <div className="mt-7 flex w-full max-w-[1100px] flex-col items-start gap-3 rounded-2xl border border-[#E5DCCB] bg-[#FBF8F1] p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
                   <div className="max-w-2xl">
                     <p className="text-sm font-semibold text-[#1D1D1F]">Lleva tu diseño CAD a una presentación 3D</p>
