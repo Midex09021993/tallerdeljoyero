@@ -1851,11 +1851,16 @@ function AulaFormacionPage() {
   };
 
   const renderLaboratorioSesion5 = () => {
-    if (lecturaAbierta?.numero !== 5 || ![2,3,4,5,6,8].includes(paginaLectura)) return null;
-    const initialModule = Math.max(0, [2,3,4,5,6,8].indexOf(paginaLectura));
+    if (lecturaAbierta?.numero !== 5) return null;
+    // Un solo laboratorio persistente para toda la lectura. Cada índice selecciona
+    // el módulo relacionado sin desmontar el editor ni perder el trabajo del alumno.
+    const moduleByPage = [0, 0, 0, 1, 2, 3, 4, 4, 5];
+    const pageByModule = [2, 3, 4, 5, 6, 8];
+    const activeModule = moduleByPage[paginaLectura] ?? 0;
     return <LaboratorioCurvasNurbs
-      key={paginaLectura}
-      initialModule={initialModule}
+      embedded
+      activeModule={activeModule}
+      onModuleChange={(nextModule) => setPaginaLectura(pageByModule[nextModule] ?? paginaLectura)}
       onClose={() => setLaboratorioSesion5Abierto(false)}
     />;
   };
@@ -2355,7 +2360,7 @@ function AulaFormacionPage() {
             </div>;
           })()}
           {lecturaAbierta && lecturaModoVistaPrevia && <div className="fixed inset-0 left-0 z-[60] flex items-center justify-center overflow-hidden bg-black/60 p-2 sm:p-3 lg:left-64 xl:left-72" role="dialog" aria-modal="true" aria-label="Lectura de la sesión · vista previa">
-            <div className="mx-auto flex h-[calc(100dvh-1rem)] max-h-[900px] min-h-0 w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl">
+            <div className="mx-auto flex h-[calc(100dvh-1rem)] max-h-[900px] min-h-0 w-full flex-col ${lecturaAbierta.numero === 5 ? "max-w-[1700px]" : "max-w-5xl"} overflow-hidden rounded-2xl border border-border bg-background shadow-2xl">
               <header className="shrink-0 border-b border-border bg-gradient-to-r from-[#fbf8f0] to-background px-4 py-3 sm:px-6 sm:py-4">
                 <div className="flex items-start justify-between gap-3"><div><p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-gold-deep">FADILAB · Aula de formación · Lectura guiada</p><h2 className="mt-1 text-lg font-semibold">{lecturaAbierta.numero}. {lecturaAbierta.titulo}</h2><p className="mt-1 text-xs text-muted-foreground">Vista previa del alumno · Modo de simulación, sin guardar actividad académica.</p></div><button type="button" onClick={() => { setLecturaAbierta(null); setLecturaModoVistaPrevia(false); }} className="rounded-lg border border-border px-3 py-2 text-xs">Cerrar</button></div>
                 <div className="mt-4 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-gold transition-all" style={{width: (seccionesLecturaActivas.length ? ((paginaLectura+1)/seccionesLecturaActivas.length)*100 : 0)+"%"}}/></div>
@@ -2367,15 +2372,19 @@ function AulaFormacionPage() {
                 <p className="mt-2 truncate text-xs font-medium text-foreground">{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</p>
               </nav>
               <main className="min-h-0 flex-1 overflow-y-auto bg-card/40 px-5 py-5 sm:px-8 sm:py-6 lg:px-10">
-                <h3 className="mb-5 max-w-4xl font-display text-2xl leading-tight sm:text-3xl">{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</h3>
-                {(seccionesLecturaActivas[paginaLectura]?.bloques ?? []).map((bloque,idx) => {
-                  if (lecturaAbierta?.numero === 1 && paginaLectura === 4 && idx >= 6) return null;
-                  return <div key={idx}><p className="mb-4 max-w-4xl whitespace-pre-line text-[15px] leading-7 text-foreground/90">{bloque}</p></div>;
-                })}
-                {renderLaboratorioCoordenadas()}
-                {renderLaboratorioSesion4()}
-                {renderLaboratorioSesion5()}
-                {renderLaboratorioRestricciones()}
+                <div className={lecturaAbierta?.numero === 5 ? "grid items-start gap-6 xl:grid-cols-[minmax(280px,.78fr)_minmax(0,1.22fr)]" : ""}>
+                  <section className="min-w-0">
+                    <h3 className="mb-5 max-w-4xl font-display text-2xl leading-tight sm:text-3xl">{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</h3>
+                    {(seccionesLecturaActivas[paginaLectura]?.bloques ?? []).map((bloque,idx) => {
+                      if (lecturaAbierta?.numero === 1 && paginaLectura === 4 && idx >= 6) return null;
+                      return <div key={idx}><p className="mb-4 max-w-4xl whitespace-pre-line text-[15px] leading-7 text-foreground/90">{bloque}</p></div>;
+                    })}
+                    {renderLaboratorioCoordenadas()}
+                    {renderLaboratorioSesion4()}
+                    {renderLaboratorioRestricciones()}
+                  </section>
+                  {lecturaAbierta?.numero === 5 && <section className="min-w-0 xl:sticky xl:top-2">{renderLaboratorioSesion5()}</section>}
+                </div>
                 {renderLaboratorioOsnap()}
                 {renderLaboratorioSmartTrack()}
                 {renderLaboratorioPlaca()}
@@ -2757,7 +2766,7 @@ function AulaFormacionPage() {
         <>
           <section className="rounded-2xl border border-gold/20 bg-card p-5"><p className="text-sm font-semibold">Bienvenido al aula</p><p className="mt-1 text-xs text-muted-foreground">Aquí aparecen únicamente los cursos en los que FADILAB te ha inscrito. Los archivos permanecen privados.</p></section>
           {lecturaAbierta && <div className={`fixed inset-0 z-[60] flex items-center justify-center overflow-hidden bg-black/60 p-2 sm:p-3 ${lecturaModoVistaPrevia ? "left-0 lg:left-64 xl:left-72" : ""}`} role="dialog" aria-modal="true" aria-label="Lectura de la sesión">
-            <div className="mx-auto flex h-[calc(100dvh-1rem)] max-h-[900px] min-h-0 w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl">
+            <div className="mx-auto flex h-[calc(100dvh-1rem)] max-h-[900px] min-h-0 w-full flex-col ${lecturaAbierta.numero === 5 ? "max-w-[1700px]" : "max-w-5xl"} overflow-hidden rounded-2xl border border-border bg-background shadow-2xl">
               <header className="shrink-0 border-b border-border bg-gradient-to-r from-[#fbf8f0] to-background px-4 py-3 sm:px-6 sm:py-4">
                 <div className="flex items-start justify-between gap-3"><div><p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-gold-deep">FADILAB · Aula de formación · Lectura guiada</p><h2 className="mt-1 text-lg font-semibold">{lecturaAbierta.numero}. {lecturaAbierta.titulo}</h2><p className="mt-1 text-xs text-muted-foreground">{lecturaModoVistaPrevia ? "Modo de prueba docente · el avance no se guarda en la cuenta de ningún alumno." : "Al abrir esta lectura se registra como leída. Avanza por los apartados y márcala como completada al finalizar."}</p></div><button type="button" onClick={() => { setLecturaAbierta(null); setLecturaModoVistaPrevia(false); }} className="rounded-lg border border-border px-3 py-2 text-xs">Cerrar</button></div>
                 <div className="mt-4 h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-gold transition-all" style={{width: (((paginaLectura+1)/seccionesLecturaActivas.length)*100)+"%"}}/></div>
