@@ -2339,6 +2339,7 @@ function AulaFormacionPage() {
 
   return <AppShell titulo="Aula de formación" subtitulo={mostrarVistaDocente ? "FADILAB · Administración académica" : "Tus cursos, materiales y actividades"} modoAulaExpandida={modoAulaExpandida}>
     <div className="mx-auto max-w-6xl space-y-6">
+      {!mostrarVistaDocente && esDocente && inscripcionesAlumno.length > 0 && <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#d5e1eb] bg-[#f3f7fa] px-4 py-3"><div><p className="text-sm font-semibold text-[#294760]">También tienes acceso de gestión docente</p><p className="mt-0.5 text-xs text-[#718096]">Estás viendo tu aula como alumno matriculado.</p></div><button type="button" onClick={() => setModoPanelDocente(true)} className="rounded-lg bg-[#294760] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#203b52]">Ir a gestión docente</button></div>}
       {mostrarVistaDocente ? (
         <>
           <section className="overflow-hidden rounded-2xl border border-[#e4e9ef] bg-white shadow-[0_8px_28px_rgba(27,43,59,0.045)]">
@@ -2351,7 +2352,7 @@ function AulaFormacionPage() {
                   <p className="mt-1.5 max-w-2xl text-sm leading-6 text-[#647386]">Organiza tus cursos, acompaña el progreso de tus alumnos y administra el contenido académico.</p>
                 </div>
               </div>
-              {cursoActivoId && <button type="button" onClick={() => setVistaPreviaAlumno(true)} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-[#d9c69f] bg-[#fbf8f1] px-4 py-2.5 text-sm font-semibold text-[#765a2d] transition hover:border-[#b9975b] hover:bg-[#f7f0e2]"><Eye className="size-4" /> Vista previa del alumno</button>}
+              {cursoActivoId && <div className="flex flex-wrap gap-2">{inscripcionesAlumno.length > 0 && <button type="button" onClick={() => { setModoPanelDocente(false); setVistaPreviaAlumno(false); }} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-[#cbd9e5] bg-white px-4 py-2.5 text-sm font-semibold text-[#294760] transition hover:bg-[#f1f6fa]"><BookOpen className="size-4" /> Mi aula de alumno</button>}<button type="button" onClick={() => setVistaPreviaAlumno(true)} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-[#d9c69f] bg-[#fbf8f1] px-4 py-2.5 text-sm font-semibold text-[#765a2d] transition hover:border-[#b9975b] hover:bg-[#f7f0e2]"><Eye className="size-4" /> Vista previa del alumno</button></div>}
             </div>
             <div className="grid grid-cols-2 border-t border-[#edf0f3] bg-[#fbfcfd] lg:grid-cols-4">
               {[{label:"Cursos",value:cursos.length,icon:<BookOpen className="size-4"/>},{label:"Alumnos inscritos",value:(inscripcionesQuery.data ?? []).length,icon:<Users className="size-4"/>},{label:"Sesiones",value:(sesionesQuery.data ?? []).length,icon:<CalendarDays className="size-4"/>},{label:"Materiales",value:(materialesDocenteQuery.data ?? []).length,icon:<FileText className="size-4"/>}].map((item,index) => <div key={item.label} className={`flex items-center justify-between gap-3 px-4 py-4 sm:px-6 ${index % 2 === 0 ? "border-r border-[#edf0f3]" : ""} ${index < 2 ? "border-b border-[#edf0f3] lg:border-b-0" : ""} ${index === 1 ? "lg:border-r" : ""} ${index === 2 ? "lg:border-r" : ""}`}>
