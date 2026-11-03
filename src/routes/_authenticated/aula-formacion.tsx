@@ -3261,7 +3261,7 @@ function AulaFormacionPage() {
               })}</>}
                 {panelCursoActivo?.panel === "biblioteca" && <><section id={`biblioteca-curso-${i.id}`} className="scroll-mt-24 space-y-5">
                  <p className="text-sm text-[#718096]">Consulta los materiales organizados por sesión. Los materiales de sesiones bloqueadas tampoco se pueden descargar.</p>
-                 {sesionesVistaAula.filter(s => s.curso_id === i.curso_id && materialesVistaAula.some(m => m.curso_id === i.curso_id && m.sesion_id === s.id)).map(s => {
+                 {sesionesVistaAula.filter(s => s.curso_id === i.curso_id && materialesVistaAula.some(m => m.curso_id === i.curso_id && m.sesion_id === s.id)).sort((a, b) => Number(a.numero) - Number(b.numero)).map(s => {
                    const recursosSesion = materialesVistaAula.filter(m => m.curso_id === i.curso_id && m.sesion_id === s.id);
                    return <section key={s.id} className={`overflow-hidden rounded-xl border ${s.bloqueada ? "border-[#dce2e8] bg-[#f1f3f5]" : "border-[#dce5ee] bg-white"}`}>
                      <header className="flex flex-wrap items-center justify-between gap-2 border-b border-[#e7edf2] px-4 py-3">
