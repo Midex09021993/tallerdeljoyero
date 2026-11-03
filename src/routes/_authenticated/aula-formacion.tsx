@@ -3232,6 +3232,7 @@ function AulaFormacionPage() {
                 {renderLaboratorioSmartTrack()}
                 {renderLaboratorioPlaca()}
                 {renderLaboratorioGeometria()}
+                {renderLaboratorioCapas()}
                 {renderSelectorVistasPlano()}
                 <div className="mt-5 grid min-w-0 grid-cols-1 items-stretch gap-4 lg:grid-cols-2">
                 {lecturaAbierta?.numero === 1 && paginaLectura === 4 && <section className="h-full rounded-xl border border-[#e0e6ed] bg-white text-[#1D1D1F] p-5 shadow-sm">
