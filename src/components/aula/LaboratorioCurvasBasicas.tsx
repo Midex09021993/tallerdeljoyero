@@ -48,7 +48,7 @@ export default function LaboratorioCurvasBasicas({ onClose }: Props) {
   };
 
   const addPoint = (event: PointerEvent<SVGSVGElement>) => {
-    if (completed[tool]) return;
+    if (completed[tool] || (tool === "polyline" && polylineFinished)) return;
     const point = toPoint(event);
     if (tool === "line" || tool === "circle" || tool === "rectangle") {
       const next = [...draft, point].slice(-2);
@@ -69,7 +69,8 @@ export default function LaboratorioCurvasBasicas({ onClose }: Props) {
       setMessage("La polilínea necesita al menos cuatro vértices para completar tres tramos.");
       return;
     }
-    setPolylineFinished(true);\n    setMessage("Polilínea terminada. Revisa la continuidad de sus segmentos y registra el ejercicio.");
+    setPolylineFinished(true);
+    setMessage("Polilínea terminada. Revisa la continuidad de sus segmentos y registra el ejercicio.");
   };
 
   const register = () => {
@@ -91,11 +92,13 @@ export default function LaboratorioCurvasBasicas({ onClose }: Props) {
 
   const resetCurrent = () => {
     setDraft([]);
+    setPolylineFinished(false);
     setCompleted(prev => { const next = { ...prev }; delete next[tool]; return next; });
     setMessage("Área de trabajo limpia. Puedes repetir el ejercicio.");
   };
   const resetAll = () => {
     setDraft([]);
+    setPolylineFinished(false);
     setCompleted({});
     setScore(0);
     setMessage("Laboratorio reiniciado. Vuelve a construir las cuatro geometrías.");
@@ -104,6 +107,7 @@ export default function LaboratorioCurvasBasicas({ onClose }: Props) {
   const selectTool = (next: Tool) => {
     setTool(next);
     setDraft([]);
+    setPolylineFinished(false);
     setMessage(`Herramienta ${TOOLS.find(item => item.id === next)!.name} seleccionada. ${TOOLS.find(item => item.id === next)!.instruction}`);
   };
 
