@@ -3222,6 +3222,18 @@ function AulaFormacionPage() {
                     </div>
                   </div>}
                 </section>}
+                {lecturaAbierta?.numero === 2 && seccionesLecturaActivas[paginaLectura]?.titulo?.toLowerCase().includes("curvas básicas") && <section className="mx-auto mt-7 w-full max-w-4xl overflow-hidden rounded-2xl border border-[#E5DCCB] bg-gradient-to-br from-white via-[#fffefa] to-[#f7f3eb] p-5 shadow-sm sm:p-6">
+                  <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#98743c]">FADILAB · Sesión 02 · Práctica interactiva</p>
+                      <h4 className="mt-1 text-xl font-semibold tracking-tight text-[#252a31]">CURVE LAB <span className="font-normal text-[#7b8490]">/ Curvas básicas</span></h4>
+                      <p className="mt-1 max-w-2xl text-sm leading-6 text-[#626d79]">Construye líneas, polilíneas, círculos y rectángulos sobre un plano XY interactivo. Practica cada herramienta y comprueba tus resultados.</p>
+                      <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-medium text-[#6c6251]">{["4 herramientas Rhino","Plano XY interactivo","Validación por ejercicio"].map(item=><span key={item} className="rounded-full border border-[#e7ddca] bg-white/80 px-3 py-1.5">{item}</span>)}</div>
+                    </div>
+                    <button type="button" onClick={() => setLaboratorioCurvasBasicasAbierto(true)} className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-gradient-to-b from-[#e6c77d] to-[#bf9952] px-5 py-3 text-sm font-bold text-[#241b0c] shadow-sm transition hover:-translate-y-0.5 hover:brightness-105"><Pencil className="size-4"/> Iniciar Curve Lab <ArrowRight className="size-4"/></button>
+                  </div>
+                </section>}
+                {lecturaAbierta?.numero === 2 && seccionesLecturaActivas[paginaLectura]?.titulo?.toLowerCase().includes("curvas básicas") && laboratorioCurvasBasicasAbierto && <LaboratorioCurvasBasicas onClose={() => setLaboratorioCurvasBasicasAbierto(false)}/>}
                 {lecturaAbierta?.numero === 1 && paginaLectura === 0 && <div className="mt-7 flex w-full max-w-[1100px] flex-col items-start gap-3 rounded-2xl border border-[#E5DCCB] bg-[#FBF8F1] p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
                   <div className="max-w-2xl">
                     <p className="text-sm font-semibold text-[#1D1D1F]">Lleva tu diseño CAD a una presentación 3D</p>
