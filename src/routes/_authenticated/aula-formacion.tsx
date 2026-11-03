@@ -2416,13 +2416,13 @@ function AulaFormacionPage() {
                   <div className="flex min-w-0 items-center gap-3">
                     <p className="shrink-0 text-[9px] font-semibold uppercase tracking-[0.13em] text-[#6E6E73]">Índice</p>
                     <div className="flex min-w-0 flex-1 gap-1.5 overflow-x-auto py-0.5">
-                      {seccionesLecturaActivas.map((seccion, indice) => <button key={indice} type="button" onClick={() => setPaginaLectura(indice)} aria-current={paginaLectura===indice ? "step" : undefined} aria-label={`Apartado ${indice+1}: ${seccion.titulo}`} className={`flex h-10 min-w-10 shrink-0 items-center justify-center rounded-lg border px-3 text-xs font-semibold transition ${paginaLectura===indice ? "border-[#007AFF] bg-[#007AFF] text-white shadow-sm" : "border-[#d8e1ea] bg-white text-[#1D1D1F] hover:border-[#b99552] hover:bg-[#fbf8f1] hover:text-[#1D1D1F]"}`} title={seccion.titulo}>{String(indice+1).padStart(2,"0")}</button>)}
+                      {seccionesLecturaActivas.map((seccion, indice) => <button key={indice} type="button" onClick={() => setPaginaLectura(indice)} aria-current={paginaLectura===indice ? "step" : undefined} aria-label={`Apartado ${indice+1}: ${seccion.titulo}`} className={`flex h-10 min-w-10 shrink-0 items-center justify-center rounded-lg border px-3 text-xs font-semibold transition ${paginaLectura===indice ? "border-[#007AFF] bg-[#007AFF] text-white shadow-sm" : "border-[#D2D2D7] bg-white text-[#1D1D1F] hover:border-[#007AFF] hover:bg-[#F5F5F7]"}`} title={seccion.titulo}>{String(indice+1).padStart(2,"0")}</button>)}
                     </div>
                   </div>
                 ) : (
                   <>
                     <div className="mb-2 flex items-center justify-between gap-3"><p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#6E6E73]">Índice de contenidos</p><p className="text-[11px] text-[#6E6E73]">Selecciona un apartado para navegar</p></div>
-                    <div className="flex gap-2 overflow-x-auto pb-1">{seccionesLecturaActivas.map((seccion, indice) => <button key={indice} type="button" onClick={() => setPaginaLectura(indice)} aria-current={paginaLectura===indice ? "step" : undefined} className={`flex min-w-10 shrink-0 items-center justify-center rounded-lg border px-3 py-2 text-xs font-semibold transition ${paginaLectura===indice ? "border-[#007AFF] bg-[#007AFF] text-white shadow-sm" : "border-white/10 bg-[#121922] text-[#6E6E73] hover:border-gold/50 hover:text-foreground"}`} title={seccion.titulo}>{String(indice+1).padStart(2,"0")}</button>)}</div>
+                    <div className="flex gap-2 overflow-x-auto pb-1">{seccionesLecturaActivas.map((seccion, indice) => <button key={indice} type="button" onClick={() => setPaginaLectura(indice)} aria-current={paginaLectura===indice ? "step" : undefined} className={`flex min-w-10 shrink-0 items-center justify-center rounded-lg border px-3 py-2 text-xs font-semibold transition ${paginaLectura===indice ? "border-[#007AFF] bg-[#007AFF] text-white shadow-sm" : "border-[#D2D2D7] bg-white text-[#1D1D1F] hover:border-[#007AFF] hover:bg-[#F5F5F7]"}`} title={seccion.titulo}>{String(indice+1).padStart(2,"0")}</button>)}</div>
                     <p className="mt-2 truncate text-xs font-medium text-[#1D1D1F]">{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</p>
                   </>
                 )}
@@ -2448,20 +2448,20 @@ function AulaFormacionPage() {
                 {renderLaboratorioGeometria()}
                 {renderLaboratorioCapas()}
                 {renderSelectorVistasPlano()}
-                {lecturaAbierta?.numero === 1 && paginaLectura === 4 && <section className={`mt-5 rounded-xl border border-[#b79558]/40 bg-gradient-to-br from-[#211b11] via-[#151b22] to-[#10151b] text-slate-100 p-5 ${modoAulaExpandida ? "max-w-[1400px]" : "max-w-4xl"}`}>
+                {lecturaAbierta?.numero === 1 && paginaLectura === 4 && <section className={`mt-5 rounded-xl border border-[#D2D2D7] bg-[#F5F5F7] text-[#1D1D1F] p-5 ${modoAulaExpandida ? "max-w-[1400px]" : "max-w-4xl"}`}>
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9A7B43]">Recurso interactivo</p>
                   <h4 className="mt-1 text-base font-semibold">Comandos de navegación</h4>
                   <p className="mt-2 text-sm text-[#6E6E73]">Abre la ficha para explorar los comandos y consultar la función de cada uno.</p>
-                  <button type="button" onClick={() => { setComandoNavegacionActivo("Zoom"); setComandosNavegacionAbiertos(true); }} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95">Ver comandos de navegación <ChevronRight className="size-4"/></button>
+                  <button type="button" onClick={() => { setComandoNavegacionActivo("Zoom"); setComandosNavegacionAbiertos(true); }} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#007AFF] px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:brightness-95">Ver comandos de navegación <ChevronRight className="size-4"/></button>
                   {comandosNavegacionAbiertos && <div className="fixed inset-0 z-[96] flex items-center justify-center bg-black/75 p-2 sm:p-4" role="dialog" aria-modal="true" aria-label="Comandos de navegación de Rhino 7">
                     <div className="flex max-h-[94dvh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-[#D2D2D7] bg-white shadow-[0_16px_48px_rgba(0,0,0,0.12)]">
-                      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-white/10 bg-[#0e141b]/95 px-5 py-4">
+                      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-[#D2D2D7] bg-white px-5 py-4">
                         <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9A7B43]">FADILAB · Guía interactiva</p><h3 className="text-lg font-semibold">Comandos de navegación · Rhino 7</h3><p className="mt-1 text-xs text-[#6E6E73]">Selecciona un comando para consultar su función.</p></div>
                         <button type="button" onClick={() => setComandosNavegacionAbiertos(false)} className="shrink-0 rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold hover:border-gold">Cerrar ×</button>
                       </header>
                       <div className="min-h-0 overflow-y-auto p-4 sm:p-5">
                         <div className="overflow-hidden rounded-xl border border-white/10">
-                          <table className="w-full border-collapse text-left text-sm"><thead><tr className="bg-white/5/40"><th className="border-b border-white/10 px-4 py-3">Comando</th><th className="border-b border-white/10 px-4 py-3">Función</th></tr></thead><tbody>
+                          <table className="w-full border-collapse text-left text-sm"><thead><tr className="bg-[#F5F5F7]"><th className="border-b border-[#D2D2D7] px-4 py-3">Comando</th><th className="border-b border-[#D2D2D7] px-4 py-3">Función</th></tr></thead><tbody>
                             {[
                               {comando:"Zoom",funcion:"Control de acercamiento"},
                               {comando:"ZE",funcion:"Zoom Extents: encuadrar todos los objetos"},
@@ -2469,23 +2469,23 @@ function AulaFormacionPage() {
                               {comando:"ZS",funcion:"Zoom Selected: encuadrar objetos seleccionados"},
                               {comando:"Pan",funcion:"Desplazamiento de la vista"},
                               {comando:"UndoView",funcion:"Recuperar la vista anterior"}
-                            ].map(item=><tr key={item.comando}><td className="border-b border-white/10 p-0"><button type="button" onClick={()=>setComandoNavegacionActivo(item.comando)} aria-pressed={comandoNavegacionActivo===item.comando} className={`w-full px-4 py-3 text-left font-semibold transition hover:bg-gold/10 ${comandoNavegacionActivo===item.comando?"bg-gold/15 text-[#9A7B43]":"bg-background"}`}>{item.comando}</button></td><td className="border-b border-white/10 px-4 py-3">{item.funcion}</td></tr>)}
+                            ].map(item=><tr key={item.comando}><td className="border-b border-[#D2D2D7] p-0"><button type="button" onClick={()=>setComandoNavegacionActivo(item.comando)} aria-pressed={comandoNavegacionActivo===item.comando} className={`w-full px-4 py-3 text-left font-semibold transition hover:bg-[#F5F5F7] ${comandoNavegacionActivo===item.comando?"bg-gold/15 text-[#9A7B43]":"bg-white"}`}>{item.comando}</button></td><td className="border-b border-[#D2D2D7] px-4 py-3">{item.funcion}</td></tr>)}
                           </tbody></table>
                         </div>
-                        <div className="mt-4 rounded-xl border border-[#b79558]/40 bg-gold/10 p-4" aria-live="polite">
+                        <div className="mt-4 rounded-xl border border-[#D2D2D7] bg-[#F5F5F7] p-4" aria-live="polite">
                           <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#9A7B43]">Comando seleccionado</p>
                           <p className="mt-1 text-lg font-semibold">{comandoNavegacionActivo}</p>
-                          <p className="mt-1 text-sm text-slate-300">{({Zoom:"Control de acercamiento",ZE:"Zoom Extents: encuadrar todos los objetos",ZEA:"Zoom All Extents: encuadrar todas las vistas",ZS:"Zoom Selected: encuadrar objetos seleccionados",Pan:"Desplazamiento de la vista",UndoView:"Recuperar la vista anterior"} as Record<string,string>)[comandoNavegacionActivo]}</p>
+                          <p className="mt-1 text-sm text-[#3A3A3C]">{({Zoom:"Control de acercamiento",ZE:"Zoom Extents: encuadrar todos los objetos",ZEA:"Zoom All Extents: encuadrar todas las vistas",ZS:"Zoom Selected: encuadrar objetos seleccionados",Pan:"Desplazamiento de la vista",UndoView:"Recuperar la vista anterior"} as Record<string,string>)[comandoNavegacionActivo]}</p>
                         </div>
                       </div>
                     </div>
                   </div>}
                 </section>}
-                {lecturaAbierta?.numero === 1 && paginaLectura === 1 && <section className="mt-7 rounded-2xl border border-[#b79558]/40 bg-gradient-to-br from-white via-[#fffefa] to-[#f7f3eb] text-[#24221e] p-5 sm:p-6">
+                {lecturaAbierta?.numero === 1 && paginaLectura === 1 && <section className="mt-7 rounded-2xl border border-[#D2D2D7] bg-gradient-to-br from-white via-[#fffefa] to-[#f7f3eb] text-[#24221e] p-5 sm:p-6">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9A7B43]">Material visual de apoyo</p>
                   <h4 className="mt-1 text-lg font-semibold">Rhinoceros 7</h4>
                   <p className="mt-2 text-sm leading-6 text-[#6E6E73]">Consulta la imagen de referencia general del programa.</p>
-                  {imagenRhinoUrl ? <button type="button" onClick={() => setTipoImagenApoyoAbierta(tipoImagenApoyoAbierta === "rhinoceros" ? null : "rhinoceros")} aria-expanded={tipoImagenApoyoAbierta === "rhinoceros"} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95">Ver RHINOCEROS <ChevronRight className="size-4"/></button> : <p className="mt-3 text-xs text-[#6E6E73]">{imagenRhinoError || "Buscando RHINOCEROS en la Biblioteca del curso…"}</p>}
+                  {imagenRhinoUrl ? <button type="button" onClick={() => setTipoImagenApoyoAbierta(tipoImagenApoyoAbierta === "rhinoceros" ? null : "rhinoceros")} aria-expanded={tipoImagenApoyoAbierta === "rhinoceros"} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#007AFF] px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:brightness-95">Ver RHINOCEROS <ChevronRight className="size-4"/></button> : <p className="mt-3 text-xs text-[#6E6E73]">{imagenRhinoError || "Buscando RHINOCEROS en la Biblioteca del curso…"}</p>}
                   {tipoImagenApoyoAbierta && <div className="fixed inset-0 z-[95] flex items-center justify-center overflow-hidden bg-black/75 p-2 sm:p-4" role="dialog" aria-modal="true" aria-label="Imagen de referencia de Rhinoceros">
                     <div className="flex max-h-[96dvh] w-full max-w-[1200px] flex-col overflow-hidden rounded-xl border border-[#D2D2D7] bg-white shadow-[0_16px_48px_rgba(0,0,0,0.12)]">
                       <header className="flex shrink-0 items-center justify-between gap-3 border-b border-[#D2D2D7] bg-white px-4 py-3 sm:px-5">
@@ -2498,18 +2498,18 @@ function AulaFormacionPage() {
                     </div>
                   </div>}
                 </section>}
-                {lecturaAbierta?.numero === 1 && paginaLectura === 3 && <section className="mt-7 rounded-2xl border border-[#b79558]/40 bg-gradient-to-br from-white via-[#fffefa] to-[#f7f3eb] text-[#24221e] p-5 sm:p-6">
+                {lecturaAbierta?.numero === 1 && paginaLectura === 3 && <section className="mt-7 rounded-2xl border border-[#D2D2D7] bg-gradient-to-br from-white via-[#fffefa] to-[#f7f3eb] text-[#24221e] p-5 sm:p-6">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9A7B43]">Material visual de apoyo</p>
                   <h4 className="mt-1 text-lg font-semibold">Vistas y ejes de Rhinoceros 7</h4>
                   <p className="mt-2 text-sm leading-6 text-[#6E6E73]">Identifica las vistas de trabajo y la orientación espacial mediante los ejes de coordenadas.</p>
                   <div className="mt-4 flex flex-wrap gap-2">
-                    {imagenesVistasUrl && <button type="button" onClick={() => setTipoImagenApoyoAbierta(tipoImagenApoyoAbierta === "vistas" ? null : "vistas")} aria-expanded={tipoImagenApoyoAbierta === "vistas"} className="inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95">Ver VISTAS <ChevronRight className="size-4"/></button>}
-                    {imagenesEjesUrl && <button type="button" onClick={() => setTipoImagenApoyoAbierta(tipoImagenApoyoAbierta === "ejes" ? null : "ejes")} aria-expanded={tipoImagenApoyoAbierta === "ejes"} className="inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95">Ver EJES <ChevronRight className="size-4"/></button>}
+                    {imagenesVistasUrl && <button type="button" onClick={() => setTipoImagenApoyoAbierta(tipoImagenApoyoAbierta === "vistas" ? null : "vistas")} aria-expanded={tipoImagenApoyoAbierta === "vistas"} className="inline-flex items-center gap-2 rounded-xl bg-[#007AFF] px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:brightness-95">Ver VISTAS <ChevronRight className="size-4"/></button>}
+                    {imagenesEjesUrl && <button type="button" onClick={() => setTipoImagenApoyoAbierta(tipoImagenApoyoAbierta === "ejes" ? null : "ejes")} aria-expanded={tipoImagenApoyoAbierta === "ejes"} className="inline-flex items-center gap-2 rounded-xl bg-[#007AFF] px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:brightness-95">Ver EJES <ChevronRight className="size-4"/></button>}
                   </div>
                   {!imagenesVistasUrl && !imagenesEjesUrl && <p className="mt-3 text-xs text-[#6E6E73]">{errorImagenesApoyo || "Buscando VISTAS y EJES en la Biblioteca del curso…"}</p>}
                   {(tipoImagenApoyoAbierta === "vistas" || tipoImagenApoyoAbierta === "ejes") && <div className="fixed inset-0 z-[95] flex items-center justify-center overflow-hidden bg-black/75 p-2 sm:p-4" role="dialog" aria-modal="true" aria-label="Imagen de referencia de Rhinoceros">
                     <div className="flex max-h-[96dvh] w-full max-w-[1200px] flex-col overflow-hidden rounded-xl border border-[#D2D2D7] bg-white shadow-[0_16px_48px_rgba(0,0,0,0.12)]">
-                      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-white/10 bg-[#0e141b]/95 px-4 py-3 sm:px-5">
+                      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-[#D2D2D7] bg-white px-4 py-3 sm:px-5">
                         <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9A7B43]">FADILAB · Material de estudio</p><h3 className="text-base font-semibold">{tipoImagenApoyoAbierta === "vistas" ? "Vistas de trabajo" : "Ejes de coordenadas"}</h3></div>
                         <button type="button" onClick={() => setTipoImagenApoyoAbierta(null)} className="shrink-0 rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold hover:border-gold">Cerrar ×</button>
                       </header>
@@ -2519,14 +2519,14 @@ function AulaFormacionPage() {
                     </div>
                   </div>}
                 </section>}
-                {lecturaAbierta?.numero === 1 && paginaLectura === 6 && <section className="mt-7 rounded-2xl border border-[#b79558]/40 bg-gradient-to-br from-white via-[#fffefa] to-[#f7f3eb] text-[#24221e] p-5 sm:p-6">
+                {lecturaAbierta?.numero === 1 && paginaLectura === 6 && <section className="mt-7 rounded-2xl border border-[#D2D2D7] bg-gradient-to-br from-white via-[#fffefa] to-[#f7f3eb] text-[#24221e] p-5 sm:p-6">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9A7B43]">Material visual de apoyo</p>
                   <h4 className="mt-1 text-lg font-semibold">Proceso de joyería con impresión 3D</h4>
                   <p className="mt-2 text-sm leading-6 text-[#6E6E73]">Observa la secuencia general que conecta el diseño digital con la fabricación de una pieza de joyería mediante impresión 3D.</p>
-                  {imagenProceso3DUrl ? <button type="button" onClick={() => setTipoImagenApoyoAbierta(tipoImagenApoyoAbierta === "proceso3d" ? null : "proceso3d")} aria-expanded={tipoImagenApoyoAbierta === "proceso3d"} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95">Ver PROCESO DE JOYERÍA CON IMPRESIÓN 3D <ChevronRight className="size-4"/></button> : <p className="mt-3 text-xs text-[#6E6E73]">{imagenProceso3DError || "Buscando la imagen del proceso en la Biblioteca del curso…"}</p>}
+                  {imagenProceso3DUrl ? <button type="button" onClick={() => setTipoImagenApoyoAbierta(tipoImagenApoyoAbierta === "proceso3d" ? null : "proceso3d")} aria-expanded={tipoImagenApoyoAbierta === "proceso3d"} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#007AFF] px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:brightness-95">Ver PROCESO DE JOYERÍA CON IMPRESIÓN 3D <ChevronRight className="size-4"/></button> : <p className="mt-3 text-xs text-[#6E6E73]">{imagenProceso3DError || "Buscando la imagen del proceso en la Biblioteca del curso…"}</p>}
                   {tipoImagenApoyoAbierta === "proceso3d" && <div className="fixed inset-0 z-[95] flex items-center justify-center overflow-hidden bg-black/75 p-2 sm:p-4" role="dialog" aria-modal="true" aria-label="Proceso de joyería con impresión 3D">
                     <div className="flex max-h-[96dvh] w-full max-w-[1200px] flex-col overflow-hidden rounded-xl border border-[#D2D2D7] bg-white shadow-[0_16px_48px_rgba(0,0,0,0.12)]">
-                      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-white/10 bg-[#0e141b]/95 px-4 py-3 sm:px-5">
+                      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-[#D2D2D7] bg-white px-4 py-3 sm:px-5">
                         <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9A7B43]">FADILAB · Material de estudio</p><h3 className="text-base font-semibold">Proceso de joyería con impresión 3D</h3></div>
                         <button type="button" onClick={() => setTipoImagenApoyoAbierta(null)} className="shrink-0 rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold hover:border-gold">Cerrar ×</button>
                       </header>
@@ -2536,7 +2536,7 @@ function AulaFormacionPage() {
                     </div>
                   </div>}
                 </section>}
-                {lecturaAbierta?.numero === 1 && paginaLectura === 2 && !interfazInteractivaAbierta && <section className="mt-7 rounded-2xl border border-[#b79558]/40 bg-gradient-to-br from-white via-[#fffefa] to-[#f7f3eb] text-[#24221e] p-5 sm:p-6">
+                {lecturaAbierta?.numero === 1 && paginaLectura === 2 && !interfazInteractivaAbierta && <section className="mt-7 rounded-2xl border border-[#D2D2D7] bg-gradient-to-br from-white via-[#fffefa] to-[#f7f3eb] text-[#24221e] p-5 sm:p-6">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9A7B43]">Actividad guiada · FADILAB</p>
                   <h4 className="mt-1 text-lg font-semibold">Conoce cada parte de la interfaz</h4>
                   <p className="mt-2 max-w-3xl text-sm leading-6 text-[#6E6E73]">Abre el recorrido interactivo para identificar los componentes directamente sobre la captura de MatrixGold 3.1. Explora los 14 marcadores numerados para conocer dónde se encuentra cada componente y para qué sirve.</p>
@@ -2545,7 +2545,7 @@ function AulaFormacionPage() {
                 </section>}
                 {lecturaAbierta?.numero === 1 && paginaLectura === 2 && interfazInteractivaAbierta && <div className="fixed inset-0 z-[90] flex items-center justify-center overflow-hidden bg-black/75 p-1 sm:p-2" role="dialog" aria-modal="true" aria-label="Exploración interactiva de MatrixGold 3.1">
                   <div className="flex h-[calc(100dvh-0.5rem)] w-[99vw] max-w-[1700px] min-h-0 flex-col overflow-hidden rounded-xl border border-[#D2D2D7] bg-white shadow-[0_16px_48px_rgba(0,0,0,0.12)]">
-                    <header className="flex shrink-0 items-center justify-between gap-3 border-b border-white/10 bg-[#0e141b]/95 px-3 py-2 sm:px-5">
+                    <header className="flex shrink-0 items-center justify-between gap-3 border-b border-[#D2D2D7] bg-white px-3 py-2 sm:px-5">
                       <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9A7B43]">FADILAB · Recorrido de aprendizaje</p><h3 className="text-base font-semibold sm:text-lg">Explora la interfaz de MatrixGold 3.1</h3></div>
                       <button type="button" onClick={() => setInterfazInteractivaAbierta(false)} className="shrink-0 rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold hover:border-gold">Cerrar ×</button>
                     </header>
@@ -3021,7 +3021,7 @@ function AulaFormacionPage() {
                   {!modoAulaExpandida && <p className="text-[10px] text-[#6E6E73]">Selecciona un apartado para navegar</p>}
                 </div>
                 <div className="flex gap-2 overflow-x-auto pb-0.5">
-                  {seccionesLecturaActivas.map((seccion, indice) => <button key={indice} type="button" onClick={() => setPaginaLectura(indice)} aria-current={paginaLectura===indice ? "step" : undefined} className={`flex h-10 shrink-0 items-center justify-center rounded-lg border px-3 text-xs font-semibold transition ${paginaLectura===indice ? "border-[#007AFF] bg-[#007AFF] text-white shadow-sm" : "border-[#d8e1ea] bg-white text-[#1D1D1F] hover:border-[#b99552] hover:bg-[#fbf8f1] hover:text-[#1D1D1F]"}`} title={seccion.titulo}>{String(indice+1).padStart(2,"0")}</button>)}
+                  {seccionesLecturaActivas.map((seccion, indice) => <button key={indice} type="button" onClick={() => setPaginaLectura(indice)} aria-current={paginaLectura===indice ? "step" : undefined} className={`flex h-10 shrink-0 items-center justify-center rounded-lg border px-3 text-xs font-semibold transition ${paginaLectura===indice ? "border-[#007AFF] bg-[#007AFF] text-white shadow-sm" : "border-[#D2D2D7] bg-white text-[#1D1D1F] hover:border-[#007AFF] hover:bg-[#F5F5F7]"}`} title={seccion.titulo}>{String(indice+1).padStart(2,"0")}</button>)}
                 </div>
                 {!modoAulaExpandida && <p className="mt-2 truncate text-xs font-medium text-[#1D1D1F]">{seccionesLecturaActivas[paginaLectura]?.titulo ?? "Lectura"}</p>}
               </nav>
@@ -3046,13 +3046,13 @@ function AulaFormacionPage() {
                   <button type="button" onClick={() => { setComandoNavegacionActivo("Zoom"); setComandosNavegacionAbiertos(true); }} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#b99552] px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#a9823f]">Ver comandos de navegación <ChevronRight className="size-4"/></button>
                   {comandosNavegacionAbiertos && <div className="fixed inset-0 z-[96] flex items-center justify-center bg-black/75 p-2 sm:p-4" role="dialog" aria-modal="true" aria-label="Comandos de navegación de Rhino 7">
                     <div className="flex max-h-[94dvh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-[#D2D2D7] bg-white shadow-[0_16px_48px_rgba(0,0,0,0.12)]">
-                      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-white/10 bg-[#0e141b]/95 px-5 py-4">
-                        <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9A7B43]">FADILAB · Guía interactiva</p><h3 className="text-lg font-semibold">Comandos de navegación · Rhino 7</h3><p className="mt-1 text-xs text-slate-400">Selecciona un comando para consultar su función.</p></div>
+                      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-[#D2D2D7] bg-white px-5 py-4">
+                        <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9A7B43]">FADILAB · Guía interactiva</p><h3 className="text-lg font-semibold">Comandos de navegación · Rhino 7</h3><p className="mt-1 text-xs text-[#6E6E73]">Selecciona un comando para consultar su función.</p></div>
                         <button type="button" onClick={() => setComandosNavegacionAbiertos(false)} className="shrink-0 rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold hover:border-gold">Cerrar ×</button>
                       </header>
                       <div className="min-h-0 overflow-y-auto p-4 sm:p-5">
                         <div className="overflow-hidden rounded-xl border border-white/10">
-                          <table className="w-full border-collapse text-left text-sm"><thead><tr className="bg-white/5/40"><th className="border-b border-white/10 px-4 py-3">Comando</th><th className="border-b border-white/10 px-4 py-3">Función</th></tr></thead><tbody>
+                          <table className="w-full border-collapse text-left text-sm"><thead><tr className="bg-[#F5F5F7]"><th className="border-b border-[#D2D2D7] px-4 py-3">Comando</th><th className="border-b border-[#D2D2D7] px-4 py-3">Función</th></tr></thead><tbody>
                             {[
                               {comando:"Zoom",funcion:"Control de acercamiento"},
                               {comando:"ZE",funcion:"Zoom Extents: encuadrar todos los objetos"},
@@ -3060,13 +3060,13 @@ function AulaFormacionPage() {
                               {comando:"ZS",funcion:"Zoom Selected: encuadrar objetos seleccionados"},
                               {comando:"Pan",funcion:"Desplazamiento de la vista"},
                               {comando:"UndoView",funcion:"Recuperar la vista anterior"}
-                            ].map(item=><tr key={item.comando}><td className="border-b border-white/10 p-0"><button type="button" onClick={()=>setComandoNavegacionActivo(item.comando)} aria-pressed={comandoNavegacionActivo===item.comando} className={`w-full px-4 py-3 text-left font-semibold transition hover:bg-gold/10 ${comandoNavegacionActivo===item.comando?"bg-gold/15 text-[#9A7B43]":"bg-background"}`}>{item.comando}</button></td><td className="border-b border-white/10 px-4 py-3">{item.funcion}</td></tr>)}
+                            ].map(item=><tr key={item.comando}><td className="border-b border-[#D2D2D7] p-0"><button type="button" onClick={()=>setComandoNavegacionActivo(item.comando)} aria-pressed={comandoNavegacionActivo===item.comando} className={`w-full px-4 py-3 text-left font-semibold transition hover:bg-[#F5F5F7] ${comandoNavegacionActivo===item.comando?"bg-gold/15 text-[#9A7B43]":"bg-white"}`}>{item.comando}</button></td><td className="border-b border-[#D2D2D7] px-4 py-3">{item.funcion}</td></tr>)}
                           </tbody></table>
                         </div>
-                        <div className="mt-4 rounded-xl border border-[#b79558]/40 bg-gold/10 p-4" aria-live="polite">
+                        <div className="mt-4 rounded-xl border border-[#D2D2D7] bg-[#F5F5F7] p-4" aria-live="polite">
                           <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[#9A7B43]">Comando seleccionado</p>
                           <p className="mt-1 text-lg font-semibold">{comandoNavegacionActivo}</p>
-                          <p className="mt-1 text-sm text-slate-300">{({Zoom:"Control de acercamiento",ZE:"Zoom Extents: encuadrar todos los objetos",ZEA:"Zoom All Extents: encuadrar todas las vistas",ZS:"Zoom Selected: encuadrar objetos seleccionados",Pan:"Desplazamiento de la vista",UndoView:"Recuperar la vista anterior"} as Record<string,string>)[comandoNavegacionActivo]}</p>
+                          <p className="mt-1 text-sm text-[#3A3A3C]">{({Zoom:"Control de acercamiento",ZE:"Zoom Extents: encuadrar todos los objetos",ZEA:"Zoom All Extents: encuadrar todas las vistas",ZS:"Zoom Selected: encuadrar objetos seleccionados",Pan:"Desplazamiento de la vista",UndoView:"Recuperar la vista anterior"} as Record<string,string>)[comandoNavegacionActivo]}</p>
                         </div>
                       </div>
                     </div>
@@ -3076,10 +3076,10 @@ function AulaFormacionPage() {
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#98722e]">Material visual de apoyo</p>
                   <h4 className="mt-1 text-lg font-semibold">Rhinoceros 7</h4>
                   <p className="mt-2 text-sm leading-6 text-[#6E6E73]">Consulta la imagen de referencia general del programa.</p>
-                  {imagenRhinoUrl ? <button type="button" onClick={() => setTipoImagenApoyoAbierta(tipoImagenApoyoAbierta === "rhinoceros" ? null : "rhinoceros")} aria-expanded={tipoImagenApoyoAbierta === "rhinoceros"} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#b99552] px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#a9823f]">Ver RHINOCEROS <ChevronRight className="size-4"/></button> : <p className="mt-3 text-xs text-slate-400">{imagenRhinoError || "Buscando RHINOCEROS en la Biblioteca del curso…"}</p>}
+                  {imagenRhinoUrl ? <button type="button" onClick={() => setTipoImagenApoyoAbierta(tipoImagenApoyoAbierta === "rhinoceros" ? null : "rhinoceros")} aria-expanded={tipoImagenApoyoAbierta === "rhinoceros"} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#b99552] px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#a9823f]">Ver RHINOCEROS <ChevronRight className="size-4"/></button> : <p className="mt-3 text-xs text-[#6E6E73]">{imagenRhinoError || "Buscando RHINOCEROS en la Biblioteca del curso…"}</p>}
                   {tipoImagenApoyoAbierta && <div className="fixed inset-0 z-[95] flex items-center justify-center overflow-hidden bg-black/75 p-2 sm:p-4" role="dialog" aria-modal="true" aria-label="Imagen de referencia de Rhinoceros">
                     <div className="flex max-h-[96dvh] w-full max-w-[1200px] flex-col overflow-hidden rounded-xl border border-[#D2D2D7] bg-white shadow-[0_16px_48px_rgba(0,0,0,0.12)]">
-                      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-white/10 bg-[#0e141b]/95 px-4 py-3 sm:px-5">
+                      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-[#D2D2D7] bg-white px-4 py-3 sm:px-5">
                         <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9A7B43]">FADILAB · Material de estudio</p><h3 className="text-base font-semibold">{tipoImagenApoyoAbierta === "rhinoceros" ? "Rhinoceros 7" : tipoImagenApoyoAbierta === "vistas" ? "Vistas de trabajo" : "Ejes de coordenadas"}</h3></div>
                         <button type="button" onClick={() => setTipoImagenApoyoAbierta(null)} className="shrink-0 rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold hover:border-gold">Cerrar ×</button>
                       </header>
@@ -3097,10 +3097,10 @@ function AulaFormacionPage() {
                     {imagenesVistasUrl && <button type="button" onClick={() => setTipoImagenApoyoAbierta(tipoImagenApoyoAbierta === "vistas" ? null : "vistas")} aria-expanded={tipoImagenApoyoAbierta === "vistas"} className="inline-flex items-center gap-2 rounded-xl bg-[#b99552] px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#a9823f]">Ver VISTAS <ChevronRight className="size-4"/></button>}
                     {imagenesEjesUrl && <button type="button" onClick={() => setTipoImagenApoyoAbierta(tipoImagenApoyoAbierta === "ejes" ? null : "ejes")} aria-expanded={tipoImagenApoyoAbierta === "ejes"} className="inline-flex items-center gap-2 rounded-xl bg-[#b99552] px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#a9823f]">Ver EJES <ChevronRight className="size-4"/></button>}
                   </div>
-                  {!imagenesVistasUrl && !imagenesEjesUrl && <p className="mt-3 text-xs text-slate-400">{errorImagenesApoyo || "Buscando VISTAS y EJES en la Biblioteca del curso…"}</p>}
+                  {!imagenesVistasUrl && !imagenesEjesUrl && <p className="mt-3 text-xs text-[#6E6E73]">{errorImagenesApoyo || "Buscando VISTAS y EJES en la Biblioteca del curso…"}</p>}
                   {(tipoImagenApoyoAbierta === "vistas" || tipoImagenApoyoAbierta === "ejes") && <div className="fixed inset-0 z-[95] flex items-center justify-center overflow-hidden bg-black/75 p-2 sm:p-4" role="dialog" aria-modal="true" aria-label="Imagen de referencia de Rhinoceros">
                     <div className="flex max-h-[96dvh] w-full max-w-[1200px] flex-col overflow-hidden rounded-xl border border-[#D2D2D7] bg-white shadow-[0_16px_48px_rgba(0,0,0,0.12)]">
-                      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-white/10 bg-[#0e141b]/95 px-4 py-3 sm:px-5">
+                      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-[#D2D2D7] bg-white px-4 py-3 sm:px-5">
                         <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9A7B43]">FADILAB · Material de estudio</p><h3 className="text-base font-semibold">{tipoImagenApoyoAbierta === "vistas" ? "Vistas de trabajo" : "Ejes de coordenadas"}</h3></div>
                         <button type="button" onClick={() => setTipoImagenApoyoAbierta(null)} className="shrink-0 rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold hover:border-gold">Cerrar ×</button>
                       </header>
@@ -3115,11 +3115,11 @@ function AulaFormacionPage() {
                   <h4 className="mt-1 text-lg font-semibold">Conoce cada parte de la interfaz</h4>
                   <p className="mt-2 max-w-3xl text-sm leading-6 text-[#6E6E73]">Abre el recorrido interactivo para identificar los componentes directamente sobre la captura de MatrixGold 3.1. Explora los 14 marcadores numerados para conocer dónde se encuentra cada componente y para qué sirve.</p>
                   <button type="button" disabled={!imagenInterfazUrl} onClick={() => setInterfazInteractivaAbierta(true)} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-gold px-5 py-3 text-sm font-semibold text-black shadow-sm transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50">Explorar interfaz interactiva <ChevronRight className="size-4"/></button>
-                  {!imagenInterfazUrl && <p className="mt-2 text-xs text-slate-400">{imagenInterfazError || "Buscando la imagen en la Biblioteca del curso…"}</p>}
+                  {!imagenInterfazUrl && <p className="mt-2 text-xs text-[#6E6E73]">{imagenInterfazError || "Buscando la imagen en la Biblioteca del curso…"}</p>}
                 </section>}
                 {lecturaAbierta?.numero === 1 && paginaLectura === 2 && interfazInteractivaAbierta && <div className="fixed inset-0 z-[90] flex items-center justify-center overflow-hidden bg-black/75 p-1 sm:p-2" role="dialog" aria-modal="true" aria-label="Exploración interactiva de MatrixGold 3.1">
                   <div className="flex h-[calc(100dvh-0.5rem)] w-[99vw] max-w-[1700px] min-h-0 flex-col overflow-hidden rounded-xl border border-[#D2D2D7] bg-white shadow-[0_16px_48px_rgba(0,0,0,0.12)]">
-                    <header className="flex shrink-0 items-center justify-between gap-3 border-b border-white/10 bg-[#0e141b]/95 px-3 py-2 sm:px-5">
+                    <header className="flex shrink-0 items-center justify-between gap-3 border-b border-[#D2D2D7] bg-white px-3 py-2 sm:px-5">
                       <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9A7B43]">FADILAB · Recorrido de aprendizaje</p><h3 className="text-base font-semibold sm:text-lg">Explora la interfaz de MatrixGold 3.1</h3></div>
                       <button type="button" onClick={() => setInterfazInteractivaAbierta(false)} className="shrink-0 rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold hover:border-gold">Cerrar ×</button>
                     </header>
