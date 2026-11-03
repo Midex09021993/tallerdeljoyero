@@ -3220,6 +3220,7 @@ function AulaFormacionPage() {
                 </div>
               </div>
             </header>
+            {panelCursoActivo?.inscripcionId !== i.id && (
             <div className="grid gap-3 border-b border-[#e8edf2] p-5 sm:grid-cols-2 sm:p-6 lg:grid-cols-4">
               <button type="button" onClick={() => setPanelCursoActivo({ inscripcionId: i.id, panel: "sesiones" })} className="group rounded-2xl border border-[#c4a46a] bg-[#fffaf0] p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
                 <span className="flex items-center gap-2 text-xs font-medium text-[#647386]"><BookOpen className="size-4 text-[#a77b35]"/> Sesiones publicadas <ArrowRight className="ml-auto size-4"/></span>
@@ -3242,6 +3243,7 @@ function AulaFormacionPage() {
                 <span className="mt-1 block text-xs text-[#718096]">Biblioteca didáctica y ejemplos</span>
               </a>
             </div>
+            )}
             {panelCursoActivo?.inscripcionId === i.id && <section id={`panel-curso-${i.id}`} className="border-t border-[#e8edf2] bg-[#fbfcfd] p-5 sm:p-7">
               <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#dce5ee] bg-white px-4 py-3">
                 <div><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#98743c]">Área de aprendizaje</p><h2 className="mt-1 text-lg font-semibold text-[#1d2b3a]">{panelCursoActivo?.panel === "sesiones" ? "Sesiones publicadas" : panelCursoActivo?.panel === "biblioteca" ? "Biblioteca del curso" : "Refuerza lo aprendido"}</h2></div>
