@@ -125,7 +125,10 @@ async function consumeOneTimeToken(jti, ttlSeconds) {
     };
     socket.setTimeout(3_000);
     socket.once("timeout", () => finish(new Error("replay_store_timeout")));
-    socket.once("error", (error) => {\n      const code = ["ENOTFOUND", "EAI_AGAIN", "ECONNREFUSED", "ETIMEDOUT", "EHOSTUNREACH", "ENETUNREACH", "ECONNRESET", "EACCES"].includes(error?.code) ? error.code : "replay_store_unavailable";\n      finish(new Error(code));\n    });
+    socket.once("error", (error) => {
+      const code = ["ENOTFOUND", "EAI_AGAIN", "ECONNREFUSED", "ETIMEDOUT", "EHOSTUNREACH", "ENETUNREACH", "ECONNRESET", "EACCES"].includes(error?.code) ? error.code : "replay_store_unavailable";
+      finish(new Error(code));
+    });
     socket.on("data", (chunk) => {
       buffer = Buffer.concat([buffer, chunk]);
       try {
