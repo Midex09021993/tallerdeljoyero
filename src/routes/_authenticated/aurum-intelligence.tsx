@@ -256,8 +256,8 @@ function PanelAnalisisBinario() {
         data: { fileName: file.name, contentBase64, mode },
       });
       setStatus("Análisis recibido por REA. Ghidra está trabajando en segundo plano; puedes mantener esta ventana abierta.");
-      for (let attempt = 0; attempt < 110; attempt += 1) {
-        await new Promise((resolve) => window.setTimeout(resolve, 4000));
+      for (let attempt = 0; attempt < 75; attempt += 1) {
+        await new Promise((resolve) => window.setTimeout(resolve, 7000));
         const state = await consultarAnalisisBinarioEnRunner({ data: { jobId: job.jobId } }) as {
           status: string;
           result?: unknown;
@@ -278,7 +278,7 @@ function PanelAnalisisBinario() {
         }
         setStatus(state.status === "queued"
           ? "Análisis en cola…"
-          : "Ghidra está analizando el ejecutable… (" + Math.round(((attempt + 1) * 4) / 60) + " min)");
+          : "Ghidra está analizando el ejecutable… (" + Math.round(((attempt + 1) * 7) / 60) + " min)");
       }
       throw new Error("El análisis sigue en segundo plano, pero la interfaz alcanzó su límite de espera. Puedes volver a consultar el mismo archivo cuando el trabajo termine.");
     } catch (error) {
