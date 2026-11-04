@@ -276,7 +276,8 @@ const server = createServer(async (request, response) => {
       const message = error instanceof Error ? error.message : "rea_analysis_failed";
       const safeCode = message.startsWith("rea_analysis_failed:") ? "rea_analysis_failed" :
         /^[a-z0-9_]+$/.test(message) ? message : "rea_analysis_failed";
-      return sendJson(response, safeCode === "analysis_timeout" ? 504 : 422, {
+      const statusCode = safeCode === "analysis_timeout" ? 504 : safeCode === "analysis_busy" ? 429 : 422;
+      return sendJson(response, statusCode, {
         error: safeCode,
         executed: false,
         stored: false,
