@@ -7,7 +7,7 @@ Independent, intentionally inert service scaffold for the future REA analysis bo
 - REA is not installed.
 - No user-supplied code, shell command, package, archive, or binary is executed.
 - `GET /health` reports service health and `executionEnabled: false`.
-- `POST /v1/analyze` always returns HTTP 503 with `execution_disabled`.
+- `POST /v1/analyze` requires a valid short-lived JWT, bounded request body, and Redis-backed single-use token. On success it returns HTTP 200 with `validated_and_discarded`; the payload is discarded and REA remains disabled. Redis/auth failures fail closed (401/409/503).
 - No Supabase, GitHub, application, or production secrets are configured.
 - The service has no application-level outbound network client.
 - Run as the unprivileged `node` user.
@@ -23,4 +23,4 @@ curl -i http://localhost:8080/health
 curl -i -X POST http://localhost:8080/v1/analyze
 ```
 
-Expected: health returns 200 and `executionEnabled: false`; analyze returns 503 and `execution_disabled`.
+Expected: health returns 200 and `executionEnabled: false`; an unauthenticated analyze request returns 401. An authenticated request without an available replay store fails closed with 503. With replay protection available, it returns `validated_and_discarded` and never executes the payload.
