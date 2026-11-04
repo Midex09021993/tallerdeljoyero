@@ -201,6 +201,7 @@ function MiNubePage() {
   const [enlaceCompartido, setEnlaceCompartido] = useState<{ proyecto: string; url: string } | null>(null);
   const [enlacesVisorArchivo, setEnlacesVisorArchivo] = useState<Array<{ ruta: string; url: string }>>([]);
   const [generandoEnlaceVisor, setGenerandoEnlaceVisor] = useState<string | null>(null);
+  const [revocandoEnlaceVisor, setRevocandoEnlaceVisor] = useState<string | null>(null);
   const [seccionActiva, setSeccionActiva] = useState<Categoria | "todos">("todos");
   const [carpeta, setCarpeta] = useState("");
   const [carpetas, setCarpetas] = useState<string[]>([]);
@@ -1539,6 +1540,28 @@ function MiNubePage() {
     finally { setGenerandoEnlaceVisor(null); }
   };
 
+  const revocarEnlaceVisorArchivo = async (archivo: ArchivoNube) => {
+    const enlace = enlacesVisorArchivo.find((item) => item.ruta === archivo.ruta);
+    if (!enlace) return;
+    if (!window.confirm("¿Revocar este enlace público? Dejará de funcionar inmediatamente y tendrás que crear uno nuevo para volver a compartirlo.")) return;
+    let token = "";
+    try { token = new URL(enlace.url).pathname.split("/").filter(Boolean).pop() ?? ""; }
+    catch { toast.error("No se pudo identificar el enlace que deseas revocar."); return; }
+    if (!/^[a-f0-9]{24}$/.test(token)) { toast.error("El identificador del enlace no es válido."); return; }
+
+    setRevocandoEnlaceVisor(archivo.ruta);
+    try {
+      const { data, error } = await supabase.functions.invoke("revocar-enlace-visor-3d", { body: { token } });
+      if (error || data?.ok !== true) throw new Error(data?.error || error?.message || "No se pudo revocar el enlace.");
+      setEnlacesVisorArchivo((actuales) => actuales.filter((item) => item.ruta !== archivo.ruta));
+      toast.success("Enlace revocado. El acceso al GLB queda invalidado.");
+    } catch (cause) {
+      toast.error(cause instanceof Error ? cause.message : "No se pudo revocar el enlace del visor.");
+    } finally {
+      setRevocandoEnlaceVisor(null);
+    }
+  };
+
   const abrirArchivo = async (archivo: ArchivoNube) => {
     if (archivo.origen === "nas") {
       try {
@@ -2083,6 +2106,7 @@ function MiNubePage() {
                                   <div className="flex flex-wrap gap-2">
                                     <button type="button" onClick={async () => { try { await navigator.clipboard.writeText(enlacesVisorArchivo.find((enlace) => enlace.ruta === archivo.ruta)?.url ?? ""); toast.success("Enlace copiado."); } catch { toast.error("No se pudo copiar automáticamente. Selecciona el enlace y cópialo."); } }} className="inline-flex items-center gap-1.5 rounded-lg border border-[#e1dbd0] bg-white px-3 py-2 text-[11px] font-semibold text-[#39372f] transition hover:border-[#c5a15d] hover:bg-[#faf6ed]"><Copy className="size-3.5" /> Copiar enlace</button>
                                     <button type="button" onClick={() => { const enlace = enlacesVisorArchivo.find((item) => item.ruta === archivo.ruta); if (enlace) window.open(enlace.url, "_blank", "noopener,noreferrer"); }} className="rounded-lg border border-[#c5a15d] bg-[#c5a15d] px-3 py-2 text-[11px] font-semibold text-white transition hover:bg-[#ad8b4c]">Abrir visor</button>
+                                    <button type="button" disabled={revocandoEnlaceVisor === archivo.ruta} onClick={() => void revocarEnlaceVisorArchivo(archivo)} className="rounded-lg border border-red-200 bg-white px-3 py-2 text-[11px] font-semibold text-red-700 transition hover:bg-red-50 disabled:opacity-50">{revocandoEnlaceVisor === archivo.ruta ? "Revocando…" : "Revocar enlace"}</button>
                                   </div>
                                 </div>
                               )}
