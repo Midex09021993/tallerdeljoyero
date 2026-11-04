@@ -1,5 +1,6 @@
 import { createServer } from "node:http";
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { connect } from "node:net";
 
 const PORT = Number.parseInt(process.env.PORT ?? "8080", 10);
 // 10 MiB of source text plus JSON envelope/UTF-8 serialization overhead.
@@ -45,7 +46,7 @@ function verifyRunnerToken(request) {
     const actual = decodeBase64Url(parts[2]);
     if (actual.length !== expected.length || !timingSafeEqual(actual, expected)) return false;
     const now = Math.floor(Date.now() / 1000);
-    return claims.iss === JWT_ISSUER &&
+    const valid = claims.iss === JWT_ISSUER &&
       claims.aud === JWT_AUDIENCE &&
       claims.sub === JWT_SUBJECT &&
       Number.isInteger(claims.iat) &&
@@ -56,9 +57,67 @@ function verifyRunnerToken(request) {
       claims.exp - claims.iat <= MAX_TOKEN_SECONDS &&
       typeof claims.jti === "string" &&
       /^[a-f0-9]{32}$/.test(claims.jti);
+    return valid ? claims : false;
   } catch {
     return false;
   }
+}
+
+function redisCommand(parts) {
+  return "*" + parts.length + "\r\n" + parts.map((part) => {
+    const value = String(part);
+    return "$" + Buffer.byteLength(value) + "\r\n" + value + "\r\n";
+  }).join("");
+}
+
+function redisReplyLine(buffer) {
+  const end = buffer.indexOf("\r\n");
+  if (end < 0) return null;
+  const line = buffer.subarray(0, end).toString("utf8");
+  if (line.startsWith("+")) return { value: line.slice(1), bytes: end + 2 };
+  if (line.startsWith("-")) throw new Error("redis_command_failed");
+  if (line === "$-1") return { value: null, bytes: end + 2 };
+  throw new Error("redis_protocol_error");
+}
+
+async function consumeOneTimeToken(jti, ttlSeconds) {
+  const host = process.env.AURUM_REPLAY_STORE_HOST || "aurum-rea-replay.railway.internal";
+  const password = process.env.AURUM_REPLAY_STORE_PASSWORD;
+  if (!password || Buffer.byteLength(password) < 32) throw new Error("replay_store_not_configured");
+  const port = Number.parseInt(process.env.AURUM_REPLAY_STORE_PORT || "6379", 10);
+  return new Promise((resolve, reject) => {
+    const socket = connect({ host, port });
+    let stage = "auth";
+    let buffer = Buffer.alloc(0);
+    let settled = false;
+    const finish = (error, value) => {
+      if (settled) return;
+      settled = true;
+      socket.destroy();
+      error ? reject(error) : resolve(value);
+    };
+    socket.setTimeout(3_000);
+    socket.once("timeout", () => finish(new Error("replay_store_timeout")));
+    socket.once("error", () => finish(new Error("replay_store_unavailable")));
+    socket.on("data", (chunk) => {
+      buffer = Buffer.concat([buffer, chunk]);
+      try {
+        const reply = redisReplyLine(buffer);
+        if (!reply) return;
+        buffer = buffer.subarray(reply.bytes);
+        if (stage === "auth") {
+          if (reply.value !== "OK") return finish(new Error("replay_store_auth_failed"));
+          stage = "set";
+          socket.write(redisCommand(["SET", "aurum:runner:jti:" + jti, "1", "NX", "EX", Math.max(1, ttlSeconds)]));
+          return;
+        }
+        finish(null, reply.value === "OK");
+      } catch (error) {
+        finish(error);
+      }
+    });
+    socket.once("connect", () => socket.write(redisCommand(["AUTH", password])));
+  });
 }
 
 async function consumeBoundedBody(request) {
@@ -87,7 +146,8 @@ const server = createServer(async (request, response) => {
   }
 
   if (request.method === "POST" && pathname === "/v1/analyze") {
-    if (!verifyRunnerToken(request)) {
+    const tokenClaims = verifyRunnerToken(request);
+    if (!tokenClaims) {
       request.resume();
       return sendJson(response, 401, { error: "unauthorized" });
     }
@@ -116,11 +176,16 @@ const server = createServer(async (request, response) => {
       return response.destroy();
     }
 
-    // Fail closed until an atomic, persistent one-time-token store is configured.
-    // A process-local cache is intentionally not accepted as replay protection.
+    try {
+      const accepted = await consumeOneTimeToken(tokenClaims.jti, tokenClaims.exp - Math.floor(Date.now() / 1000));
+      if (!accepted) return sendJson(response, 409, { error: "token_replayed" });
+    } catch {
+      return sendJson(response, 503, { error: "replay_protection_unavailable" });
+    }
+
     return sendJson(response, 503, {
-      error: "replay_protection_unavailable",
-      message: "Persistent one-time-token protection is not configured; analysis remains disabled.",
+      error: "execution_disabled",
+      message: "Authentication and replay protection passed; REA execution remains disabled pending sandbox validation.",
     });
   }
 
