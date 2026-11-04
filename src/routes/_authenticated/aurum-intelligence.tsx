@@ -2,7 +2,7 @@ import { useState, type ChangeEvent } from "react";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
-import { analizarBinarioEnRunner, validarProyectoEnRunner, verificarAccesoAurumIntelligence } from "@/lib/aurum-intelligence.functions";
+import { iniciarAnalisisBinarioEnRunner, consultarAnalisisBinarioEnRunner, validarProyectoEnRunner, verificarAccesoAurumIntelligence } from "@/lib/aurum-intelligence.functions";
 import { AlertCircle, CheckCircle2, FileCode2, FileSearch, FlaskConical, FolderOpen, HardDrive, LockKeyhole, ShieldCheck, UploadCloud, X } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/aurum-intelligence")({
@@ -252,11 +252,35 @@ function PanelAnalisisBinario() {
         binary += String.fromCharCode(...bytes.subarray(offset, offset + chunkSize));
       }
       const contentBase64 = btoa(binary);
-      const result = await analizarBinarioEnRunner({
+      const job = await iniciarAnalisisBinarioEnRunner({
         data: { fileName: file.name, contentBase64, mode },
       });
-      setReport(JSON.stringify(result, null, 2));
-      setStatus("Análisis estático completado. El archivo temporal fue eliminado y no se ejecutó ni almacenó.");
+      setStatus("Análisis recibido por REA. Ghidra está trabajando en segundo plano; puedes mantener esta ventana abierta.");
+      for (let attempt = 0; attempt < 110; attempt += 1) {
+        await new Promise((resolve) => window.setTimeout(resolve, 4000));
+        const state = await consultarAnalisisBinarioEnRunner({ data: { jobId: job.jobId } }) as {
+          status: string;
+          result?: unknown;
+          error?: string | null;
+        };
+        if (state.status === "complete" && state.result) {
+          setReport(JSON.stringify(state.result, null, 2));
+          setStatus("Análisis estático completado. El archivo temporal fue eliminado; no se ejecutó ni almacenó.");
+          return;
+        }
+        if (state.status === "failed") {
+          const reason = state.error === "analysis_timeout"
+            ? "Ghidra superó el tiempo máximo de análisis."
+            : state.error === "analysis_busy"
+              ? "El motor ya estaba ocupado con otro análisis."
+              : "REA no pudo completar una de las etapas de análisis (" + (state.error || "error desconocido") + ").";
+          throw new Error(reason);
+        }
+        setStatus(state.status === "queued"
+          ? "Análisis en cola…"
+          : "Ghidra está analizando el ejecutable… (" + Math.round(((attempt + 1) * 4) / 60) + " min)");
+      }
+      throw new Error("El análisis sigue en segundo plano, pero la interfaz alcanzó su límite de espera. Puedes volver a consultar el mismo archivo cuando el trabajo termine.");
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "No se pudo completar el análisis.");
     } finally {
