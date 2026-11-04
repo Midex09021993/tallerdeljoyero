@@ -1,14 +1,17 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
-import { puedeAccederAurumIntelligence } from "@/lib/aurum-intelligence-access";
+import { verificarAccesoAurumIntelligence } from "@/lib/aurum-intelligence.functions";
 import { FileSearch, FlaskConical, LockKeyhole, ShieldCheck } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/aurum-intelligence")({
   beforeLoad: async () => {
-    const { data, error } = await supabase.auth.getUser();
-    if (error || !data.user) throw redirect({ to: "/auth" });
-    if (!puedeAccederAurumIntelligence(data.user.id)) {
+    const { data } = await supabase.auth.getSession();
+    if (!data.session?.user) throw redirect({ to: "/auth" });
+
+    try {
+      await verificarAccesoAurumIntelligence();
+    } catch {
       throw redirect({ to: "/inicio" });
     }
   },
