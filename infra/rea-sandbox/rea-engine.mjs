@@ -3,6 +3,7 @@ import { mkdtemp, writeFile, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
+import { inspectPortableExecutable } from "./pe-inspector.mjs";
 
 const MAX_OUTPUT_BYTES = 12 * 1024 * 1024;
 const ANALYSIS_TIMEOUT_MS = 8 * 60 * 1000;
@@ -105,11 +106,12 @@ function runRea(args) {
  */
 export async function analyzeWithRea(fileName, binary, mode) {
   if (analysisInProgress) throw new Error("analysis_busy");
-  if (!Buffer.isBuffer(binary) || binary.length < 256 || binary.length > 4 * 1024 * 1024) {
+  if (!Buffer.isBuffer(binary) || binary.length < 256 || binary.length > 32 * 1024 * 1024) {
     throw new Error("binary_size_invalid");
   }
   if (!["managed", "native"].includes(mode)) throw new Error("analysis_mode_invalid");
 
+  const staticProfile = inspectPortableExecutable(binary);
   analysisInProgress = true;
   let directory;
   try {
@@ -120,7 +122,7 @@ export async function analyzeWithRea(fileName, binary, mode) {
     if (mode === "managed") {
       const artifact = await runRea(["inspect-managed-artifact", targetPath, "--json"]);
       const members = await runRea(["inspect-managed-members", targetPath, "--json"]);
-      return { engine: "REA", provider: "managed-static", executed: false, artifact, members };
+      return { engine: "REA", provider: "managed-static", executed: false, staticProfile, artifact, members };
     }
     const report = await runRea(["analyze", targetPath, "--provider", "ghidra", "--json"]);
     const investigation = {
@@ -185,6 +187,7 @@ export async function analyzeWithRea(fileName, binary, mode) {
       engine: "REA + Ghidra",
       provider: "ghidra",
       executed: false,
+      staticProfile,
       report,
       investigation,
     };
