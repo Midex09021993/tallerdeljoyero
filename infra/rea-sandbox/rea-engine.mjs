@@ -18,6 +18,12 @@ function classifyReaStderr(stderr) {
   if (/invalid.*(pe|executable)|not a valid.*(pe|executable)/.test(value)) return "invalid_pe_input";
   return stderr.trim() ? "unclassified_stderr" : "empty_stderr";
 }
+
+function safeSpawnErrorCode(error) {
+  const allowed = new Set(["ENOENT", "EACCES", "EPERM", "EMFILE", "ENFILE", "ENOMEM", "E2BIG"]);
+  return allowed.has(error?.code) ? error.code : "UNKNOWN";
+}
+
 function runRea(args) {
   return new Promise((resolve, reject) => {
     const child = spawn("rea", args, {
@@ -38,13 +44,16 @@ function runRea(args) {
     let stderr = "";
     let outputBytes = 0;
     let settled = false;
+    let timer;
     const finish = (error, result) => {
       if (settled) return;
       settled = true;
-      clearTimeout(timer);
+      if (timer) clearTimeout(timer);
       error ? reject(error) : resolve(result);
     };
-    const timer = setTimeout(() => {
+
+    timer = setTimeout(() => {
+      console.error("[rea-analysis] command_timeout", JSON.stringify({ timeoutMs: ANALYSIS_TIMEOUT_MS }));
       child.kill("SIGKILL");
       finish(new Error("analysis_timeout"));
     }, ANALYSIS_TIMEOUT_MS);
@@ -52,6 +61,7 @@ function runRea(args) {
     child.stdout.on("data", (chunk) => {
       outputBytes += chunk.length;
       if (outputBytes > MAX_OUTPUT_BYTES) {
+        console.error("[rea-analysis] output_limit", JSON.stringify({ maxOutputBytes: MAX_OUTPUT_BYTES }));
         child.kill("SIGKILL");
         finish(new Error("analysis_output_limit"));
         return;
@@ -61,16 +71,22 @@ function runRea(args) {
     child.stderr.on("data", (chunk) => {
       if (stderr.length < 64 * 1024) stderr += chunk.toString("utf8").slice(0, 64 * 1024 - stderr.length);
     });
-    child.once("error", () => finish(new Error("rea_start_failed")));
-    child.once("close", (code) => {
+    child.once("error", (error) => {
+      console.error("[rea-analysis] spawn_failed", JSON.stringify({
+        errorCode: safeSpawnErrorCode(error),
+      }));
+      finish(new Error("rea_start_failed"));
+    });
+    child.once("close", (code, signal) => {
+      if (settled) return;
       if (code !== 0) {
-        const diagnostic = classifyReaStderr(stderr);
         console.error("[rea-analysis] command_failed", JSON.stringify({
           exitCode: Number.isInteger(code) ? code : null,
+          signal: ["SIGTERM", "SIGKILL", "SIGABRT", "SIGSEGV"].includes(signal) ? signal : null,
           stderrBytes: Buffer.byteLength(stderr),
-          diagnostic,
+          diagnostic: classifyReaStderr(stderr),
         }));
-        finish(new Error("rea_analysis_failed:" + String(code) + ":" + stderr.slice(-4000)));
+        finish(new Error("rea_analysis_failed"));
         return;
       }
       try {
