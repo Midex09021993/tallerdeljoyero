@@ -2,6 +2,7 @@ import { createServer } from "node:http";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { connect } from "node:net";
 import { inspectPortableExecutable } from "./pe-inspector.mjs";
+import { analyzeWithRea } from "./rea-engine.mjs";
 
 const PORT = Number.parseInt(process.env.PORT ?? "8080", 10);
 // 10 MiB of source text plus JSON envelope/UTF-8 serialization overhead.
@@ -153,7 +154,7 @@ const server = createServer(async (request, response) => {
     return sendJson(response, 200, {
       service: "aurum-rea-sandbox",
       status: "healthy",
-      executionEnabled: EXECUTION_ENABLED,
+      staticAnalysisEnabled: STATIC_ANALYSIS_ENABLED,\n      targetExecutionEnabled: TARGET_EXECUTION_ENABLED,
     });
   }
 
@@ -217,6 +218,70 @@ const server = createServer(async (request, response) => {
     }
   }
 
+  if (request.method === "POST" && pathname === "/v1/analyze-pe") {
+    const tokenClaims = verifyRunnerToken(request);
+    if (!tokenClaims) {
+      request.resume();
+      return sendJson(response, 401, { error: "unauthorized" });
+    }
+    if (!String(request.headers["content-type"] || "").toLowerCase().startsWith("application/json")) {
+      request.resume();
+      return sendJson(response, 415, { error: "content_type_not_supported" });
+    }
+
+    const body = await readBoundedBody(request, 6 * 1024 * 1024);
+    if (!body) return sendJson(response, 413, { error: "request_too_large" });
+
+    let payload;
+    try {
+      payload = JSON.parse(body.toString("utf8"));
+    } catch {
+      return sendJson(response, 400, { error: "invalid_json" });
+    }
+    if (!payload || typeof payload !== "object" || Array.isArray(payload) ||
+        Object.keys(payload).some((key) => !["fileName", "contentBase64", "mode"].includes(key)) ||
+        typeof payload.fileName !== "string" ||
+        !/^[A-Za-z0-9][A-Za-z0-9._-]{0,119}\.(exe|dll)$/i.test(payload.fileName) ||
+        typeof payload.contentBase64 !== "string" ||
+        payload.contentBase64.length < 4 ||
+        payload.contentBase64.length > 6 * 1024 * 1024 ||
+        !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(payload.contentBase64) ||
+        !["managed", "native"].includes(payload.mode)) {
+      return sendJson(response, 400, { error: "invalid_pe_analysis_request" });
+    }
+
+    const binary = Buffer.from(payload.contentBase64, "base64");
+    if (binary.length > 4 * 1024 * 1024 || binary.toString("base64") !== payload.contentBase64) {
+      return sendJson(response, 413, { error: "binary_size_or_encoding_invalid" });
+    }
+
+    try {
+      const accepted = await consumeOneTimeToken(tokenClaims.jti, tokenClaims.exp - Math.floor(Date.now() / 1000));
+      if (!accepted) return sendJson(response, 409, { error: "token_replayed" });
+    } catch {
+      return sendJson(response, 503, { error: "replay_protection_unavailable" });
+    }
+
+    try {
+      const result = await analyzeWithRea(payload.fileName, binary, payload.mode);
+      return sendJson(response, 200, {
+        status: "static_analysis_complete",
+        fileName: payload.fileName,
+        stored: false,
+        ...result,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "rea_analysis_failed";
+      const safeCode = message.startsWith("rea_analysis_failed:") ? "rea_analysis_failed" :
+        /^[a-z0-9_]+$/.test(message) ? message : "rea_analysis_failed";
+      return sendJson(response, safeCode === "analysis_timeout" ? 504 : 422, {
+        error: safeCode,
+        executed: false,
+        stored: false,
+      });
+    }
+  }
+
   if (request.method === "POST" && pathname === "/v1/analyze") {
     const tokenClaims = verifyRunnerToken(request);
     if (!tokenClaims) {
@@ -274,7 +339,7 @@ server.maxHeadersCount = 32;
 server.maxRequestsPerSocket = 10;
 
 server.listen(PORT, "0.0.0.0", () => {
-  process.stdout.write(`AURUM REA SANDBOX listening on ${PORT}; execution disabled\\n`);
+  process.stdout.write(`AURUM REA SANDBOX listening on ${PORT}; static REA analysis enabled, target execution disabled\\n`);
 });
 
 function shutdown() {
