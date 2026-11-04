@@ -1,4 +1,4 @@
-FROM node:22.16.0-alpine3.22
+FROM node:22.23.4-alpine3.22
 
 ENV NODE_ENV=production
 ENV PORT=8080
