@@ -79,6 +79,17 @@ function verifyRunnerToken(request) {
   }
 }
 
+function safeReplayDiagnostic(error) {
+  const message = error instanceof Error ? error.message : "";
+  const allowed = new Set([
+    "replay_store_not_configured", "replay_store_timeout", "replay_store_auth_failed",
+    "redis_command_failed", "redis_protocol_error", "replay_store_unavailable",
+    "ENOTFOUND", "EAI_AGAIN", "ECONNREFUSED", "ETIMEDOUT", "EHOSTUNREACH",
+    "ENETUNREACH", "ECONNRESET", "EACCES",
+  ]);
+  return allowed.has(message) ? message : "replay_store_unknown_error";
+}
+
 function redisCommand(parts) {
   return "*" + parts.length + "\r\n" + parts.map((part) => {
     const value = String(part);
@@ -114,7 +125,7 @@ async function consumeOneTimeToken(jti, ttlSeconds) {
     };
     socket.setTimeout(3_000);
     socket.once("timeout", () => finish(new Error("replay_store_timeout")));
-    socket.once("error", () => finish(new Error("replay_store_unavailable")));
+    socket.once("error", (error) => {\n      const code = ["ENOTFOUND", "EAI_AGAIN", "ECONNREFUSED", "ETIMEDOUT", "EHOSTUNREACH", "ENETUNREACH", "ECONNRESET", "EACCES"].includes(error?.code) ? error.code : "replay_store_unavailable";\n      finish(new Error(code));\n    });
     socket.on("data", (chunk) => {
       buffer = Buffer.concat([buffer, chunk]);
       try {
