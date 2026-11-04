@@ -41,6 +41,9 @@ verify_jwt = true
 [functions.entregar-modelo-visor-3d]
 verify_jwt = false
 
+[functions.revocar-enlace-visor-3d]
+verify_jwt = true
+
 [functions.catalogo-extraer-ficha-pdf]
 verify_jwt = true
 
