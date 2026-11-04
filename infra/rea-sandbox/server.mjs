@@ -1,5 +1,5 @@
 import { createServer } from "node:http";
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { connect } from "node:net";
 import { inspectPortableExecutable } from "./pe-inspector.mjs";
 import { analyzeWithRea } from "./rea-engine.mjs";
