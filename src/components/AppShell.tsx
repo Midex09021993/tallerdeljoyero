@@ -21,6 +21,7 @@ import {
   GraduationCap,
   ShoppingBag,
   Cloud,
+  BrainCircuit,
   Menu,
   X,
 } from "lucide-react";
@@ -29,6 +30,7 @@ import { areaCoincide, rolEtiqueta, useCerrarSesion, useSesion, type Rol } from 
 import { supabase } from "@/integrations/supabase/client";
 import { TODAS_LAS_SEDES, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 import { AlertaAutorizacionProduccion } from "@/components/AlertaAutorizacionProduccion";
+import { puedeAccederAurumIntelligence } from "@/lib/aurum-intelligence-access";
 
 type Seccion = {
   to:
@@ -51,6 +53,7 @@ type Seccion = {
     | "/perfil"
     | "/mensajes"
     | "/aurum-render"
+    | "/aurum-intelligence"
     | "/herramientas"
     | "/mi-nube"
     | "/migracion"
@@ -78,6 +81,7 @@ const secciones: Seccion[] = [
   { to: "/clientes", label: "Clientes", icono: Users, grupo: "comercial" },
   { to: "/diseno-3d", label: "Diseño 3D", area: "Diseño 3D", icono: LayoutGrid, grupo: "produccion" },
   { to: "/aurum-render", label: "AURUM RENDER", icono: Gem, grupo: "aurum" },
+  { to: "/aurum-intelligence", label: "AURUM INTELLIGENCE", roles: ["dueno"], icono: BrainCircuit, grupo: "aurum" },
   { to: "/impresion-3d", label: "Impresión 3D", area: "Impresión 3D", icono: Boxes, grupo: "produccion" },
   { to: "/casting", label: "Casting", area: "Casting", icono: Landmark, grupo: "produccion" },
   { to: "/corte-laser", label: "Corte Láser", area: "Corte Láser", icono: Scissors, grupo: "produccion" },
@@ -271,6 +275,7 @@ const ORDEN_MENU: Record<string, number> = {
   "/gestion": 50,
   "/migracion": 55,
   "/mi-nube": 48,
+  "/aurum-intelligence": 998,
   "/aurum-render": 999,
 };
 
@@ -314,7 +319,11 @@ export function AppShell({
     modalidadesCargadas ? modalidadesMenu : undefined,
   );
   const visiblesOrdenadas = ordenarMenu(
-    visibles.filter((s) => s.to !== "/tienda-admin" || /fadilab/i.test(sesion?.participante?.nombre ?? "")),
+    visibles.filter((s) => {
+      if (s.to === "/aurum-intelligence" && !puedeAccederAurumIntelligence(sesion?.user.id)) return false;
+      if (s.to === "/tienda-admin" && !/fadilab/i.test(sesion?.participante?.nombre ?? "")) return false;
+      return true;
+    }),
   );
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const nombrePersonal = [sesion?.perfil.nombre, sesion?.perfil.apellidos]
