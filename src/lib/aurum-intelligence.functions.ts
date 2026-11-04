@@ -157,7 +157,8 @@ export const validarProyectoEnRunner = createServerFn({ method: "POST" })
   });
 
 
-const MAX_PE_BYTES = 4 * 1024 * 1024;
+const MAX_PE_BYTES = 32 * 1024 * 1024;
+const MAX_PE_BASE64_CHARS = Math.ceil(MAX_PE_BYTES / 3) * 4;
 
 function getRunnerConfig() {
   const runnerUrl = process.env["AURUM_RUNNER_URL"];
@@ -181,7 +182,7 @@ function validateBinaryRequest(data: unknown) {
       !/^[A-Za-z0-9][A-Za-z0-9._-]{0,119}\.(exe|dll)$/i.test(item.fileName) ||
       typeof item.contentBase64 !== "string" ||
       item.contentBase64.length < 4 ||
-      item.contentBase64.length > Math.ceil(MAX_PE_BYTES / 3) * 4 ||
+      item.contentBase64.length > MAX_PE_BASE64_CHARS ||
       !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(item.contentBase64) ||
       !["managed", "native"].includes(String(item.mode))) {
     throw new Error("Archivo o modo de análisis no válido.");
