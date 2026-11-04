@@ -161,7 +161,7 @@ export const analizarBinarioEnRunner = createServerFn({ method: "POST" })
     }
     const item = data as Record<string, unknown>;
     if (typeof item.fileName !== "string" ||
-        !/^[A-Za-z0-9][A-Za-z0-9._-]{0,119}\\.(exe|dll)$/i.test(item.fileName) ||
+        !/^[A-Za-z0-9][A-Za-z0-9._-]{0,119}\.(exe|dll)$/i.test(item.fileName) ||
         typeof item.contentBase64 !== "string" ||
         item.contentBase64.length < 4 ||
         item.contentBase64.length > Math.ceil(MAX_PE_BYTES / 3) * 4 ||
