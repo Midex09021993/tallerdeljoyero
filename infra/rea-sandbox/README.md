@@ -8,7 +8,7 @@ Private static-analysis service for AURUM INTELLIGENCE. The runner uses REA for 
 - Managed analysis reads PE/CLI metadata and CIL using REA's managed workflows; it does not require a native decompiler.
 - Native analysis uses REA's Ghidra provider (Ghidra 12.1.4 + full JDK 21).
 - The image installs the Ghidra release archive only after validating its published SHA-256 checksum, then runs `rea doctor --provider ghidra --json` during the image build.
-- `POST /v1/analyze-pe` accepts one Base64-encoded `.exe` or `.dll` (maximum 4 MiB), a `mode` of `managed` or `native`, a short-lived owner JWT, and a Redis-backed single-use token.
+- `POST /v1/analyze-pe` accepts one Base64-encoded `.exe` or `.dll` (maximum 32 MiB), a `mode` of `managed` or `native`, a short-lived owner JWT, and a Redis-backed single-use token.
 - The file is written to a unique mode-0600 temporary directory, passed to REA with fixed argument arrays (no shell), and deleted after analysis. No binary or report is persisted by this service.
 - Analysis has an eight-minute process timeout and a 12 MiB stdout cap. REA stderr is bounded and never returned to the caller.
 - `GET /health` reports static analysis availability separately from target execution; target execution remains disabled.
