@@ -233,13 +233,13 @@ const server = createServer(async (request, response) => {
         !/^[A-Za-z0-9][A-Za-z0-9._-]{0,119}\.(exe|dll)$/i.test(payload.fileName) ||
         typeof payload.contentBase64 !== "string" ||
         payload.contentBase64.length < 4 ||
-        payload.contentBase64.length > MAX_PE_BASE64_CHARS ||
+        payload.contentBase64.length > 6 * 1024 * 1024 ||
         !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(payload.contentBase64)) {
       return sendJson(response, 400, { error: "invalid_pe_request" });
     }
 
     const binary = Buffer.from(payload.contentBase64, "base64");
-    if (binary.length > MAX_PE_BINARY_BYTES || binary.toString("base64") !== payload.contentBase64) {
+    if (binary.length > 4 * 1024 * 1024 || binary.toString("base64") !== payload.contentBase64) {
       return sendJson(response, 413, { error: "binary_size_or_encoding_invalid" });
     }
 
@@ -293,14 +293,14 @@ const server = createServer(async (request, response) => {
         !/^[A-Za-z0-9][A-Za-z0-9._-]{0,119}\.(exe|dll)$/i.test(payload.fileName) ||
         typeof payload.contentBase64 !== "string" ||
         payload.contentBase64.length < 4 ||
-        payload.contentBase64.length > 6 * 1024 * 1024 ||
+        payload.contentBase64.length > MAX_PE_BASE64_CHARS ||
         !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(payload.contentBase64) ||
         !["managed", "native"].includes(payload.mode)) {
       return sendJson(response, 400, { error: "invalid_pe_analysis_request" });
     }
 
     const binary = Buffer.from(payload.contentBase64, "base64");
-    if (binary.length > 4 * 1024 * 1024 || binary.toString("base64") !== payload.contentBase64) {
+    if (binary.length > MAX_PE_BINARY_BYTES || binary.toString("base64") !== payload.contentBase64) {
       return sendJson(response, 413, { error: "binary_size_or_encoding_invalid" });
     }
 
