@@ -53,8 +53,8 @@ test("analysis endpoint never executes and always rejects with 503", async () =>
 test("analysis endpoint rejects declared payloads above the 12 MiB transport limit", async () => {
   const response = await fetch(`${baseUrl}/v1/analyze`, {
     method: "POST",
-    headers: { "content-type": "application/json", "content-length": String(12 * 1024 * 1024 + 1) },
-    body: "x",
+    headers: { "content-type": "application/json" },
+    body: "x".repeat(12 * 1024 * 1024 + 1),
   });
   assert.equal(response.status, 413);
   assert.equal((await response.json()).error, "request_too_large");
