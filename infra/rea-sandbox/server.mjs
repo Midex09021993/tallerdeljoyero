@@ -1,6 +1,7 @@
 import { createServer } from "node:http";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { connect } from "node:net";
+import { inspectPortableExecutable } from "./pe-inspector.mjs";
 
 const PORT = Number.parseInt(process.env.PORT ?? "8080", 10);
 // 10 MiB of source text plus JSON envelope/UTF-8 serialization overhead.
@@ -120,6 +121,17 @@ async function consumeOneTimeToken(jti, ttlSeconds) {
   });
 }
 
+async function readBoundedBody(request, limit) {
+  const chunks = [];
+  let received = 0;
+  for await (const chunk of request) {
+    received += Buffer.byteLength(chunk);
+    if (received > limit) return null;
+    chunks.push(Buffer.from(chunk));
+  }
+  return Buffer.concat(chunks, received);
+}
+
 async function consumeBoundedBody(request) {
   let received = 0;
   for await (const chunk of request) {
@@ -143,6 +155,66 @@ const server = createServer(async (request, response) => {
       status: "healthy",
       executionEnabled: EXECUTION_ENABLED,
     });
+  }
+
+  if (request.method === "POST" && pathname === "/v1/inspect-pe") {
+    const tokenClaims = verifyRunnerToken(request);
+    if (!tokenClaims) {
+      request.resume();
+      return sendJson(response, 401, { error: "unauthorized" });
+    }
+    if (!String(request.headers["content-type"] || "").toLowerCase().startsWith("application/json")) {
+      request.resume();
+      return sendJson(response, 415, { error: "content_type_not_supported" });
+    }
+
+    const body = await readBoundedBody(request, 6 * 1024 * 1024);
+    if (!body) return sendJson(response, 413, { error: "request_too_large" });
+
+    let payload;
+    try {
+      payload = JSON.parse(body.toString("utf8"));
+    } catch {
+      return sendJson(response, 400, { error: "invalid_json" });
+    }
+    if (!payload || typeof payload !== "object" || Array.isArray(payload) ||
+        Object.keys(payload).some((key) => key !== "fileName" && key !== "contentBase64") ||
+        typeof payload.fileName !== "string" ||
+        !/^[A-Za-z0-9][A-Za-z0-9._-]{0,119}\\.(exe|dll)$/i.test(payload.fileName) ||
+        typeof payload.contentBase64 !== "string" ||
+        payload.contentBase64.length < 4 ||
+        payload.contentBase64.length > 6 * 1024 * 1024 ||
+        !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(payload.contentBase64)) {
+      return sendJson(response, 400, { error: "invalid_pe_request" });
+    }
+
+    const binary = Buffer.from(payload.contentBase64, "base64");
+    if (binary.length > 4 * 1024 * 1024 || binary.toString("base64") !== payload.contentBase64) {
+      return sendJson(response, 413, { error: "binary_size_or_encoding_invalid" });
+    }
+
+    try {
+      const accepted = await consumeOneTimeToken(tokenClaims.jti, tokenClaims.exp - Math.floor(Date.now() / 1000));
+      if (!accepted) return sendJson(response, 409, { error: "token_replayed" });
+    } catch {
+      return sendJson(response, 503, { error: "replay_protection_unavailable" });
+    }
+
+    try {
+      const report = inspectPortableExecutable(binary);
+      return sendJson(response, 200, {
+        status: "static_analysis_complete",
+        executed: false,
+        stored: false,
+        fileName: payload.fileName,
+        report,
+      });
+    } catch (error) {
+      const code = error instanceof Error && /^[a-z0-9_]+$/.test(error.message)
+        ? error.message
+        : "pe_inspection_failed";
+      return sendJson(response, 422, { error: code, executed: false, stored: false });
+    }
   }
 
   if (request.method === "POST" && pathname === "/v1/analyze") {
