@@ -1,4 +1,5 @@
 import { createServer } from "node:http";
+import { createHmac, timingSafeEqual } from "node:crypto";
 
 const PORT = Number.parseInt(process.env.PORT ?? "8080", 10);
 // 10 MiB of source text plus JSON envelope/UTF-8 serialization overhead.
@@ -7,6 +8,10 @@ const MAX_REQUEST_BYTES = 12 * 1024 * 1024;
 // This service is deliberately inert. Do not add REA, shell, package managers,
 // dynamic code loading, outbound requests, or user-controlled execution here.
 const EXECUTION_ENABLED = false;
+const JWT_ISSUER = "tallerdeljoyero";
+const JWT_AUDIENCE = "aurum-intelligence-runner";
+const JWT_SUBJECT = "5d80fd40-b059-42e9-ad57-28ac5cf9899e";
+const MAX_TOKEN_SECONDS = 300;
 
 function sendJson(response, status, payload) {
   response.writeHead(status, {
@@ -17,6 +22,43 @@ function sendJson(response, status, payload) {
     "connection": "close",
   });
   response.end(JSON.stringify(payload));
+}
+
+function decodeBase64Url(value) {
+  if (!/^[A-Za-z0-9_-]+$/.test(value)) throw new Error("invalid_base64url");
+  return Buffer.from(value.replace(/-/g, "+").replace(/_/g, "/"), "base64");
+}
+
+function verifyRunnerToken(request) {
+  const authorization = request.headers.authorization;
+  if (typeof authorization !== "string" || !authorization.startsWith("Bearer ")) return false;
+  const token = authorization.slice(7);
+  const parts = token.split(".");
+  if (parts.length !== 3 || parts.some((part) => !part)) return false;
+  const secret = process.env.AURUM_RUNNER_JWT_SECRET;
+  if (!secret || Buffer.byteLength(secret) < 32) return false;
+  try {
+    const header = JSON.parse(decodeBase64Url(parts[0]).toString("utf8"));
+    const claims = JSON.parse(decodeBase64Url(parts[1]).toString("utf8"));
+    if (!header || header.alg !== "HS256" || header.typ !== "JWT") return false;
+    const expected = createHmac("sha256", secret).update(parts[0] + "." + parts[1]).digest();
+    const actual = decodeBase64Url(parts[2]);
+    if (actual.length !== expected.length || !timingSafeEqual(actual, expected)) return false;
+    const now = Math.floor(Date.now() / 1000);
+    return claims.iss === JWT_ISSUER &&
+      claims.aud === JWT_AUDIENCE &&
+      claims.sub === JWT_SUBJECT &&
+      Number.isInteger(claims.iat) &&
+      Number.isInteger(claims.exp) &&
+      claims.iat <= now + 30 &&
+      claims.exp > now &&
+      claims.exp > claims.iat &&
+      claims.exp - claims.iat <= MAX_TOKEN_SECONDS &&
+      typeof claims.jti === "string" &&
+      /^[a-f0-9]{32}$/.test(claims.jti);
+  } catch {
+    return false;
+  }
 }
 
 async function consumeBoundedBody(request) {
@@ -45,6 +87,16 @@ const server = createServer(async (request, response) => {
   }
 
   if (request.method === "POST" && pathname === "/v1/analyze") {
+    if (!verifyRunnerToken(request)) {
+      request.resume();
+      return sendJson(response, 401, { error: "unauthorized" });
+    }
+
+    // Fail closed until an atomic, persistent one-time-token store is configured.
+    // A process-local cache is intentionally not accepted as replay protection.
+    request.resume();
+    return sendJson(response, 503, { error: "replay_protection_unavailable" });
+
     const contentLengthHeader = request.headers["content-length"];
     if (contentLengthHeader !== undefined) {
       if (!/^(0|[1-9][0-9]*)$/.test(contentLengthHeader)) {
