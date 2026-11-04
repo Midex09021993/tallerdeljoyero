@@ -74,6 +74,7 @@ export function inspectPortableExecutable(buffer) {
   if (magic !== 0x20b && magic !== 0x10b) fail("optional_header_invalid");
 
   const is64Bit = magic === 0x20b;
+  if (optionalHeaderSize < (is64Bit ? 112 : 96)) fail("optional_header_truncated");
   const directoryCountOffset = optionalHeader + (is64Bit ? 108 : 92);
   const directoryOffset = optionalHeader + (is64Bit ? 112 : 96);
   const directoryCount = u32(buffer, directoryCountOffset);
