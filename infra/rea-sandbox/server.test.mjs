@@ -50,6 +50,26 @@ test("analysis endpoint never executes and always rejects with 503", async () =>
   assert.equal((await response.json()).error, "execution_disabled");
 });
 
+test("analysis endpoint rejects declared payloads above the 12 MiB transport limit", async () => {
+  const response = await fetch(`${baseUrl}/v1/analyze`, {
+    method: "POST",
+    headers: { "content-type": "application/json", "content-length": String(12 * 1024 * 1024 + 1) },
+    body: "x",
+  });
+  assert.equal(response.status, 413);
+  assert.equal((await response.json()).error, "request_too_large");
+});
+
+test("chunked analysis requests are consumed but never executed", async () => {
+  const response = await fetch(`${baseUrl}/v1/analyze`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ files: [{ path: "probe.js", content: "console.log('not run')" }] }),
+  });
+  assert.equal(response.status, 503);
+  assert.equal((await response.json()).error, "execution_disabled");
+});
+
 test("unknown routes are not exposed", async () => {
   const response = await fetch(`${baseUrl}/admin`);
   assert.equal(response.status, 404);
