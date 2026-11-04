@@ -93,7 +93,10 @@ export async function analyzeWithRea(fileName, binary, mode) {
     const report = await runRea(["analyze", targetPath, "--provider", "ghidra", "--json"]);
     return { engine: "REA + Ghidra", provider: "ghidra", executed: false, report };
   } finally {
-    if (directory) await rm(directory, { recursive: true, force: true });
-    analysisInProgress = false;
+    try {
+      if (directory) await rm(directory, { recursive: true, force: true });
+    } finally {
+      analysisInProgress = false;
+    }
   }
 }
