@@ -43,7 +43,7 @@ function PanelValidacionProyecto() {
       event.target.value = "";
       return;
     }
-    const allowed = /\\.(js|jsx|ts|tsx|mjs|cjs|json)$/i;
+    const allowed = /\.(js|jsx|ts|tsx|mjs|cjs|json)$/i;
     if (selected.some((file) => !allowed.test(file.name))) {
       setStatus("Solo se permiten archivos JS, JSX, TS, TSX, MJS, CJS y JSON.");
       event.target.value = "";
