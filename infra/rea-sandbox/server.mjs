@@ -10,7 +10,8 @@ const MAX_REQUEST_BYTES = 12 * 1024 * 1024;
 
 // This service is deliberately inert. Do not add REA, shell, package managers,
 // dynamic code loading, outbound requests, or user-controlled execution here.
-const EXECUTION_ENABLED = false;
+const STATIC_ANALYSIS_ENABLED = true;
+const TARGET_EXECUTION_ENABLED = false;
 const JWT_ISSUER = "tallerdeljoyero";
 const JWT_AUDIENCE = "aurum-intelligence-runner";
 const JWT_SUBJECT = "5d80fd40-b059-42e9-ad57-28ac5cf9899e";
@@ -154,7 +155,8 @@ const server = createServer(async (request, response) => {
     return sendJson(response, 200, {
       service: "aurum-rea-sandbox",
       status: "healthy",
-      staticAnalysisEnabled: STATIC_ANALYSIS_ENABLED,\n      targetExecutionEnabled: TARGET_EXECUTION_ENABLED,
+      staticAnalysisEnabled: STATIC_ANALYSIS_ENABLED,
+      targetExecutionEnabled: TARGET_EXECUTION_ENABLED,
     });
   }
 
