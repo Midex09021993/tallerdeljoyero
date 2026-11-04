@@ -180,7 +180,7 @@ const server = createServer(async (request, response) => {
     if (!payload || typeof payload !== "object" || Array.isArray(payload) ||
         Object.keys(payload).some((key) => key !== "fileName" && key !== "contentBase64") ||
         typeof payload.fileName !== "string" ||
-        !/^[A-Za-z0-9][A-Za-z0-9._-]{0,119}\\.(exe|dll)$/i.test(payload.fileName) ||
+        !/^[A-Za-z0-9][A-Za-z0-9._-]{0,119}\.(exe|dll)$/i.test(payload.fileName) ||
         typeof payload.contentBase64 !== "string" ||
         payload.contentBase64.length < 4 ||
         payload.contentBase64.length > 6 * 1024 * 1024 ||
