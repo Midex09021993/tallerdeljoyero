@@ -10,6 +10,12 @@ const MAX_FILE_BYTES = 1024 * 1024;
 const MAX_TOTAL_BYTES = 10 * 1024 * 1024;
 const ALLOWED_EXTENSIONS = new Set([".js", ".jsx", ".ts", ".tsx", ".mjs", ".cjs", ".json"]);
 
+function rejectRunnerRedirect(response: Response): void {
+  if (response.type === "opaqueredirect" || (response.status >= 300 && response.status < 400)) {
+    throw new Error("El runner intentó redirigir la solicitud; se bloqueó por seguridad.");
+  }
+}
+
 type SourceFile = { path: string; content: string };
 
 function encodeBase64Url(value: string): string {
@@ -127,7 +133,7 @@ export const validarProyectoEnRunner = createServerFn({ method: "POST" })
     const token = await createRunnerJwt(signingSecret);
     const response = await fetch(endpoint, {
       method: "POST",
-      redirect: "error",
+      redirect: "manual",
       headers: {
         authorization: `Bearer ${token}`,
         "content-type": "application/json",
@@ -136,6 +142,7 @@ export const validarProyectoEnRunner = createServerFn({ method: "POST" })
       body: JSON.stringify({ files: data.files }),
       signal: AbortSignal.timeout(20_000),
     });
+    rejectRunnerRedirect(response);
     if (!response.ok) {
       if (response.status === 503) throw new Error("La protección anti-repetición del runner no está disponible.");
       if (response.status === 401) throw new Error("El runner rechazó la autenticación.");
@@ -193,7 +200,7 @@ export const analizarBinarioEnRunner = createServerFn({ method: "POST" })
     const token = await createRunnerJwt(signingSecret);
     const response = await fetch(endpoint, {
       method: "POST",
-      redirect: "error",
+      redirect: "manual",
       headers: {
         authorization: `Bearer ${token}`,
         "content-type": "application/json",
@@ -202,6 +209,7 @@ export const analizarBinarioEnRunner = createServerFn({ method: "POST" })
       body: JSON.stringify(data),
       signal: AbortSignal.timeout(9 * 60 * 1000),
     });
+    rejectRunnerRedirect(response);
     if (!response.ok) {
       if (response.status === 503) throw new Error("La protección anti-repetición del runner no está disponible.");
       if (response.status === 401) throw new Error("El runner rechazó la autenticación.");
