@@ -133,7 +133,7 @@ export async function analyzeWithRea(fileName, binary, mode) {
     // sequential to stay within the runner's 1 GiB memory ceiling.
     try {
       investigation.procedures.result = await runRea([
-        "search", targetPath, "--pattern=.*", "--kind", "procedures",
+        "search", targetPath, "--pattern=.*", "--mode", "regex", "--kind", "procedures",
         "--provider", "ghidra", "--json",
       ]);
       investigation.procedures.status = "complete";
@@ -143,7 +143,7 @@ export async function analyzeWithRea(fileName, binary, mode) {
 
     try {
       investigation.strings.result = await runRea([
-        "search", targetPath, "--pattern=.*", "--kind", "strings",
+        "search", targetPath, "--pattern=.*", "--mode", "regex", "--kind", "strings",
         "--provider", "ghidra", "--json",
       ]);
       investigation.strings.status = "complete";
@@ -153,7 +153,8 @@ export async function analyzeWithRea(fileName, binary, mode) {
 
     const procedureResult = investigation.procedures.result;
     const normalized = procedureResult?.normalized_result ?? {};
-    const procedureRows = Array.isArray(normalized.procedures) ? normalized.procedures :
+    const procedureRows = Array.isArray(normalized) ? normalized :
+      Array.isArray(normalized.procedures) ? normalized.procedures :
       Array.isArray(normalized.rows) ? normalized.rows :
       Array.isArray(normalized.items) ? normalized.items : [];
     const selectors = procedureRows
