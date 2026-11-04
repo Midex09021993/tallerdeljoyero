@@ -7,9 +7,9 @@ import { randomUUID } from "node:crypto";
 const MAX_OUTPUT_BYTES = 12 * 1024 * 1024;
 const ANALYSIS_TIMEOUT_MS = 8 * 60 * 1000;
 
-function runRea(args, targetPath) {
+function runRea(args) {
   return new Promise((resolve, reject) => {
-    const child = spawn("rea", [...args, targetPath, "--json"], {
+    const child = spawn("rea", args, {
       shell: false,
       cwd: "/tmp",
       env: {
@@ -82,11 +82,11 @@ export async function analyzeWithRea(fileName, binary, mode) {
   try {
     await writeFile(targetPath, binary, { flag: "wx", mode: 0o600 });
     if (mode === "managed") {
-      const artifact = await runRea(["inspect-managed-artifact"], targetPath);
-      const members = await runRea(["inspect-managed-members"], targetPath);
+      const artifact = await runRea(["inspect-managed-artifact", targetPath, "--json"]);
+      const members = await runRea(["inspect-managed-members", targetPath, "--json"]);
       return { engine: "REA", provider: "managed-static", executed: false, artifact, members };
     }
-    const report = await runRea(["analyze", "--provider", "ghidra"], targetPath);
+    const report = await runRea(["analyze", targetPath, "--provider", "ghidra", "--json"]);
     return { engine: "REA + Ghidra", provider: "ghidra", executed: false, report };
   } finally {
     await rm(directory, { recursive: true, force: true });
