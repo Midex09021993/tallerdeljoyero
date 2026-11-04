@@ -16,6 +16,23 @@ const JWT_ISSUER = "tallerdeljoyero";
 const JWT_AUDIENCE = "aurum-intelligence-runner";
 const JWT_SUBJECT = "5d80fd40-b059-42e9-ad57-28ac5cf9899e";
 const MAX_TOKEN_SECONDS = 300;
+const ANALYSIS_JOB_TTL_MS = 15 * 60 * 1000;
+const MAX_ANALYSIS_JOBS = 4;
+const analysisJobs = new Map();
+
+function pruneAnalysisJobs() {
+  const now = Date.now();
+  for (const [id, job] of analysisJobs) {
+    if (job.expiresAt <= now) analysisJobs.delete(id);
+  }
+  while (analysisJobs.size >= MAX_ANALYSIS_JOBS) {
+    const oldest = analysisJobs.keys().next().value;
+    if (!oldest) break;
+    const job = analysisJobs.get(oldest);
+    if (job && (job.status === "queued" || job.status === "running")) break;
+    analysisJobs.delete(oldest);
+  }
+}
 
 function sendJson(response, status, payload) {
   response.writeHead(status, {
@@ -291,25 +308,71 @@ const server = createServer(async (request, response) => {
       return sendJson(response, 503, { error: "replay_protection_unavailable" });
     }
 
-    try {
-      const result = await analyzeWithRea(payload.fileName, binary, payload.mode);
-      return sendJson(response, 200, {
-        status: "static_analysis_complete",
-        fileName: payload.fileName,
-        stored: false,
-        ...result,
-      });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "rea_analysis_failed";
-      const safeCode = message.startsWith("rea_analysis_failed:") ? "rea_analysis_failed" :
-        /^[a-z0-9_]+$/.test(message) ? message : "rea_analysis_failed";
-      const statusCode = safeCode === "analysis_timeout" ? 504 : safeCode === "analysis_busy" ? 429 : 422;
-      return sendJson(response, statusCode, {
-        error: safeCode,
-        executed: false,
-        stored: false,
-      });
+    pruneAnalysisJobs();
+    if (analysisJobs.size >= MAX_ANALYSIS_JOBS) {
+      return sendJson(response, 429, { error: "analysis_queue_full", executed: false, stored: false });
     }
+    const jobId = randomUUID();
+    const job = {
+      id: jobId,
+      fileName: payload.fileName,
+      status: "queued",
+      createdAt: new Date().toISOString(),
+      expiresAt: Date.now() + ANALYSIS_JOB_TTL_MS,
+      result: null,
+      error: null,
+    };
+    analysisJobs.set(jobId, job);
+    setImmediate(async () => {
+      job.status = "running";
+      try {
+        const result = await analyzeWithRea(payload.fileName, binary, payload.mode);
+        job.result = {
+          status: "static_analysis_complete",
+          fileName: payload.fileName,
+          stored: false,
+          ...result,
+        };
+        job.status = "complete";
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "rea_analysis_failed";
+        const safeCode = /^[a-z0-9_]+$/.test(message) ? message : "rea_analysis_failed";
+        job.error = safeCode;
+        job.status = "failed";
+      } finally {
+        job.expiresAt = Date.now() + ANALYSIS_JOB_TTL_MS;
+      }
+    });
+    return sendJson(response, 202, {
+      status: "queued",
+      jobId,
+      fileName: payload.fileName,
+      expiresInSeconds: ANALYSIS_JOB_TTL_MS / 1000,
+      executed: false,
+      stored: false,
+    });
+  }
+
+
+  const jobMatch = request.method === "GET" ? pathname.match(/^\/v1\/analyze-pe\/([a-f0-9-]{36})$/i) : null;
+  if (jobMatch) {
+    const tokenClaims = verifyRunnerToken(request);
+    if (!tokenClaims) return sendJson(response, 401, { error: "unauthorized" });
+    try {
+      const accepted = await consumeOneTimeToken(tokenClaims.jti, tokenClaims.exp - Math.floor(Date.now() / 1000));
+      if (!accepted) return sendJson(response, 409, { error: "token_replayed" });
+    } catch {
+      return sendJson(response, 503, { error: "replay_protection_unavailable" });
+    }
+    pruneAnalysisJobs();
+    const job = analysisJobs.get(jobMatch[1]);
+    if (!job) return sendJson(response, 404, { error: "analysis_job_not_found" });
+    return sendJson(response, 200, {
+      status: job.status,
+      fileName: job.fileName,
+      result: job.status === "complete" ? job.result : null,
+      error: job.error,
+    });
   }
 
   if (request.method === "POST" && pathname === "/v1/analyze") {
