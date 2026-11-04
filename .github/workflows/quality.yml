@@ -75,3 +75,6 @@ jobs:
 
       - name: Type-check public viewer link resolver
         run: deno check supabase/functions/resolver-enlace-visor-3d/index.ts
+
+      - name: Type-check public viewer link revocation
+        run: deno check supabase/functions/revocar-enlace-visor-3d/index.ts
