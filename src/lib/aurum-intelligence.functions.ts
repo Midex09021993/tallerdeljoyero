@@ -16,7 +16,7 @@ function encodeBase64Url(value: string): string {
   const bytes = new TextEncoder().encode(value);
   let binary = "";
   for (const byte of bytes) binary += String.fromCharCode(byte);
-  return btoa(binary).replace(/=/g, "").replace(/\\+/g, "-").replace(/\\//g, "_");
+  return btoa(binary).replace(/=/g, "").replaceAll("+", "-").replaceAll("/", "_");
 }
 
 function validateSourceManifest(value: unknown): SourceFile[] {
@@ -81,7 +81,7 @@ async function createRunnerJwt(secret: string): Promise<string> {
   const signatureBytes = new Uint8Array(signature);
   let binary = "";
   for (const byte of signatureBytes) binary += String.fromCharCode(byte);
-  const encodedSignature = btoa(binary).replace(/=/g, "").replace(/\\+/g, "-").replace(/\\//g, "_");
+  const encodedSignature = btoa(binary).replace(/=/g, "").replaceAll("+", "-").replaceAll("/", "_");
   return `${header}.${payload}.${encodedSignature}`;
 }
 
