@@ -3,7 +3,7 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { iniciarAnalisisBinarioEnRunner, consultarAnalisisBinarioEnRunner, validarProyectoEnRunner, verificarAccesoAurumIntelligence } from "@/lib/aurum-intelligence.functions";
-import { AlertCircle, CheckCircle2, FileCode2, FileSearch, FlaskConical, FolderOpen, HardDrive, LockKeyhole, ShieldCheck, UploadCloud, X } from "lucide-react";
+import { AlertCircle, Check, CheckCircle2, Copy, FileCode2, FileSearch, FlaskConical, FolderOpen, HardDrive, LockKeyhole, ShieldCheck, UploadCloud, X } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/aurum-intelligence")({
   beforeLoad: async () => {
@@ -237,6 +237,7 @@ function PanelAnalisisBinario() {
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("");
   const [report, setReport] = useState("");
+  const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "error">("idle");
   const maxBytes = 4 * 1024 * 1024;
 
   async function analyze() {
@@ -244,6 +245,7 @@ function PanelAnalisisBinario() {
     setBusy(true);
     setStatus("Preparando análisis estático… El ejecutable no se iniciará.");
     setReport("");
+    setCopyStatus("idle");
     try {
       const bytes = new Uint8Array(await file.arrayBuffer());
       let binary = "";
@@ -314,6 +316,7 @@ function PanelAnalisisBinario() {
           onChange={(event) => {
             const selected = event.target.files?.[0] ?? null;
             setReport("");
+            setCopyStatus("idle");
             if (selected && selected.size > maxBytes) {
               setFile(null);
               setStatus("El archivo supera el límite de 4 MiB.");
@@ -351,8 +354,38 @@ function PanelAnalisisBinario() {
         {status ? <p role="status" aria-live="polite" className="mt-4 rounded-xl border border-border bg-muted/40 p-3 text-sm text-muted-foreground">{status}</p> : null}
         {report ? (
           <div className="mt-4">
-            <h4 className="mb-2 text-sm font-semibold">Informe técnico</h4>
-            <pre className="max-h-[28rem] overflow-auto rounded-xl border border-border bg-muted/50 p-3 text-xs leading-5 whitespace-pre-wrap break-words">{report}</pre>
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h4 className="text-sm font-semibold">Informe técnico</h4>
+                <p className="mt-0.5 text-xs text-muted-foreground">Informe completo · {formatFileSize(new Blob([report]).size)}</p>
+              </div>
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(report);
+                    setCopyStatus("copied");
+                  } catch {
+                    setCopyStatus("error");
+                  }
+                }}
+                className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-xs font-semibold transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+                aria-label="Copiar informe técnico completo"
+              >
+                {copyStatus === "copied" ? <Check className="size-3.5 text-emerald-600" /> : <Copy className="size-3.5" />}
+                {copyStatus === "copied" ? "Copiado" : "Copiar informe"}
+              </button>
+            </div>
+            {copyStatus === "error" ? (
+              <p role="alert" className="mb-2 rounded-lg border border-destructive/25 bg-destructive/5 px-3 py-2 text-xs text-destructive">
+                El navegador no permitió copiar automáticamente. Haz clic dentro del informe y usa Ctrl+A, luego Ctrl+C.
+              </p>
+            ) : null}
+            <pre
+              tabIndex={0}
+              aria-label="Contenido completo del informe técnico; también puedes seleccionarlo manualmente"
+              className="max-h-[28rem] select-text overflow-auto rounded-xl border border-border bg-muted/50 p-3 text-xs leading-5 whitespace-pre-wrap break-words focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+            >{report}</pre>
           </div>
         ) : null}
         <p className="mt-4 border-t border-border pt-3 text-[11px] leading-5 text-muted-foreground">
