@@ -74,8 +74,7 @@ test("analysis endpoint rejects declared payloads above the 12 MiB transport lim
 test("chunked analysis requests are consumed but never executed", async () => {
   const response = await fetch(`${baseUrl}/v1/analyze`, {
     method: "POST",
-    headers: { "content-type": "application/json" },
-    headers: { authorization: "Bearer " + makeToken() },
+    headers: { "content-type": "application/json", authorization: "Bearer " + makeToken() },
     body: JSON.stringify({ files: [{ path: "probe.js", content: "console.log('not run')" }] }),
   });
   assert.equal(response.status, 503);
