@@ -7,6 +7,9 @@ import { analyzeWithRea } from "./rea-engine.mjs";
 const PORT = Number.parseInt(process.env.PORT ?? "8080", 10);
 // 10 MiB of source text plus JSON envelope/UTF-8 serialization overhead.
 const MAX_REQUEST_BYTES = 12 * 1024 * 1024;
+const MAX_PE_BINARY_BYTES = 32 * 1024 * 1024;
+const MAX_PE_BASE64_CHARS = Math.ceil(MAX_PE_BINARY_BYTES / 3) * 4;
+const MAX_PE_REQUEST_BYTES = MAX_PE_BASE64_CHARS + 4096;
 
 // This service is deliberately inert. Do not add REA, shell, package managers,
 // dynamic code loading, outbound requests, or user-controlled execution here.
@@ -230,13 +233,13 @@ const server = createServer(async (request, response) => {
         !/^[A-Za-z0-9][A-Za-z0-9._-]{0,119}\.(exe|dll)$/i.test(payload.fileName) ||
         typeof payload.contentBase64 !== "string" ||
         payload.contentBase64.length < 4 ||
-        payload.contentBase64.length > 6 * 1024 * 1024 ||
+        payload.contentBase64.length > MAX_PE_BASE64_CHARS ||
         !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(payload.contentBase64)) {
       return sendJson(response, 400, { error: "invalid_pe_request" });
     }
 
     const binary = Buffer.from(payload.contentBase64, "base64");
-    if (binary.length > 4 * 1024 * 1024 || binary.toString("base64") !== payload.contentBase64) {
+    if (binary.length > MAX_PE_BINARY_BYTES || binary.toString("base64") !== payload.contentBase64) {
       return sendJson(response, 413, { error: "binary_size_or_encoding_invalid" });
     }
 
@@ -275,7 +278,7 @@ const server = createServer(async (request, response) => {
       return sendJson(response, 415, { error: "content_type_not_supported" });
     }
 
-    const body = await readBoundedBody(request, 6 * 1024 * 1024);
+    const body = await readBoundedBody(request, MAX_PE_REQUEST_BYTES);
     if (!body) return sendJson(response, 413, { error: "request_too_large" });
 
     let payload;
@@ -426,7 +429,7 @@ const server = createServer(async (request, response) => {
 });
 
 server.headersTimeout = 5_000;
-server.requestTimeout = 15_000;
+server.requestTimeout = 60_000;
 server.keepAliveTimeout = 1_000;
 server.maxHeadersCount = 32;
 server.maxRequestsPerSocket = 10;
