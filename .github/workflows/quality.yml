@@ -78,3 +78,20 @@ jobs:
 
       - name: Type-check public viewer link revocation
         run: deno check supabase/functions/revocar-enlace-visor-3d/index.ts
+
+  rea-sandbox:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Test disabled REA sandbox contract
+        run: node --test infra/rea-sandbox/server.test.mjs
+
+      - name: Build isolated sandbox image
+        run: docker build -t aurum-rea-sandbox:ci infra/rea-sandbox
