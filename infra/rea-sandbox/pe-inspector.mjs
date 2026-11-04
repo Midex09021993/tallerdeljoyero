@@ -1,17 +1,157 @@
-const MAX_BINARY_BYTES=4*1024*1024,MAX_SECTIONS=96,MAX_IMPORTS=128,MAX_STRINGS=160;
-function fail(m){throw new Error(m)}
-function u16(b,o){if(o<0||o+2>b.length)fail("pe_truncated");return b.readUInt16LE(o)}
-function u32(b,o){if(o<0||o+4>b.length)fail("pe_truncated");return b.readUInt32LE(o)}
-function ascii(b,s,e,max=512){let v="";for(let i=s;i<Math.min(e,s+max)&&b[i]!==0;i++){if(b[i]<32||b[i]>126)return "";v+=String.fromCharCode(b[i])}return v}
-export function inspectPortableExecutable(b){
-if(!Buffer.isBuffer(b)||b.length<256||b.length>MAX_BINARY_BYTES)fail("binary_size_invalid");if(b.toString("ascii",0,2)!=="MZ")fail("not_pe");
-const pe=u32(b,0x3c);if(pe<0x40||pe+24>b.length||b.toString("ascii",pe,pe+4)!=="PE\\0\\0")fail("invalid_pe_header");
-const c=pe+4,m=u16(b,c),nsec=u16(b,c+2),stamp=u32(b,c+4),os=u16(b,c+16),o=c+20;if(nsec<1||nsec>MAX_SECTIONS||o+os>b.length)fail("pe_truncated");
-const magic=u16(b,o);if(magic!==0x20b&&magic!==0x10b)fail("optional_header_invalid");const is64=magic===0x20b,dc=o+(is64?108:92),dd=o+(is64?112:96),nd=u32(b,dc),so=o+os,sections=[];
-for(let i=0;i<nsec;i++){const x=so+i*40;if(x+40>b.length)fail("section_table_truncated");const name=ascii(b,x,x+8,8)||"unnamed",virtualSize=u32(b,x+8),virtualAddress=u32(b,x+12),rawSize=u32(b,x+16),rawOffset=u32(b,x+20);if(rawSize&&(rawOffset>b.length||rawSize>b.length-rawOffset))fail("section_out_of_bounds");sections.push({name,virtualSize,virtualAddress,rawSize,rawOffset})}
-const map=(r)=>{for(const s of sections){if(r>=s.virtualAddress&&r<s.virtualAddress+Math.max(s.virtualSize,s.rawSize)){const d=r-s.virtualAddress;return d<s.rawSize?s.rawOffset+d:null}}return r<b.length?r:null};
-const dir=(i)=>nd>i&&dd+(i+1)*8<=o+os?{rva:u32(b,dd+i*8),size:u32(b,dd+i*8+4)}:{rva:0,size:0};
-const imp=dir(1),imports=[];if(imp.rva){let x=map(imp.rva);if(x!==null)for(let i=0;i<MAX_IMPORTS&&x+20<=b.length;i++,x+=20){const nr=u32(b,x+12);if(!nr&&!u32(b,x)&&!u32(b,x+16))break;const no=map(nr);if(no!==null){const v=ascii(b,no,b.length,260);if(v)imports.push(v)}}}
-const cd=dir(14);let clr=null;if(cd.rva){const x=map(cd.rva);if(x!==null&&x+24<=b.length)clr={headerSize:u32(b,x),metadataRva:u32(b,x+8),metadataSize:u32(b,x+12),flags:u32(b,x+16)}}
-const indicators=[],seen=new Set(),re=/[A-Za-z_][A-Za-z0-9_.+$:-]{3,100}/g;for(const z of b.toString("latin1").matchAll(re)){const v=z[0];if(seen.has(v))continue;seen.add(v);if(/Matrix|Rhino|Gem|Jali|Pave|Prong|Mesh|Weight|Command|Plugin|WPF|System|Microsoft|Newtonsoft|Grasshopper/i.test(v))indicators.push(v);if(indicators.length>=MAX_STRINGS)break}
-const names={332:"x86",34404:"x64",43620:"ARM64",448:"ARM"};return {format:"PE",machine:names[m]||"unknown",machineCode:"0x"+m.toString(16),optionalHeader:is64?"PE32+":"PE32",architecture:is64?"64-bit":"32-bit",compileTimestamp:stamp?new Date(stamp*1000).toISOString():null,sections,imports,clr:clr?{present:true,...clr}:{present:false},runtimeHint:clr?"Common Language Runtime (.NET-compatible assembly)":"Native PE or managed metadata not detected",indicators}}
+const MAX_BINARY_BYTES = 4 * 1024 * 1024;
+const MAX_SECTIONS = 96;
+const MAX_IMPORT_LIBRARIES = 128;
+
+function fail(message) {
+  throw new Error(message);
+}
+
+function u16(buffer, offset) {
+  if (offset < 0 || offset + 2 > buffer.length) fail("pe_truncated");
+  return buffer.readUInt16LE(offset);
+}
+
+function u32(buffer, offset) {
+  if (offset < 0 || offset + 4 > buffer.length) fail("pe_truncated");
+  return buffer.readUInt32LE(offset);
+}
+
+function readAscii(buffer, start, end, maxLength = 512) {
+  let value = "";
+  for (let i = start; i < Math.min(end, start + maxLength) && buffer[i] !== 0; i += 1) {
+    if (buffer[i] < 32 || buffer[i] > 126) return "";
+    value += String.fromCharCode(buffer[i]);
+  }
+  return value;
+}
+
+/**
+ * Reads PE metadata only. It never loads, maps, or executes the supplied file.
+ * The caller must enforce upload authentication and transport limits.
+ */
+export function inspectPortableExecutable(buffer) {
+  if (!Buffer.isBuffer(buffer) || buffer.length < 256 || buffer.length > MAX_BINARY_BYTES) {
+    fail("binary_size_invalid");
+  }
+  if (buffer.toString("ascii", 0, 2) !== "MZ") fail("not_pe");
+
+  const peOffset = u32(buffer, 0x3c);
+  if (peOffset < 0x40 || peOffset + 24 > buffer.length ||
+      buffer.toString("binary", peOffset, peOffset + 4) !== "PE\0\0") {
+    fail("invalid_pe_header");
+  }
+
+  const coff = peOffset + 4;
+  const machine = u16(buffer, coff);
+  const sectionCount = u16(buffer, coff + 2);
+  const timestamp = u32(buffer, coff + 4);
+  const optionalHeaderSize = u16(buffer, coff + 16);
+  const optionalHeader = coff + 20;
+
+  if (sectionCount < 1 || sectionCount > MAX_SECTIONS ||
+      optionalHeader + optionalHeaderSize > buffer.length) {
+    fail("pe_truncated");
+  }
+
+  const magic = u16(buffer, optionalHeader);
+  if (magic !== 0x20b && magic !== 0x10b) fail("optional_header_invalid");
+
+  const is64Bit = magic === 0x20b;
+  const directoryCountOffset = optionalHeader + (is64Bit ? 108 : 92);
+  const directoryOffset = optionalHeader + (is64Bit ? 112 : 96);
+  const directoryCount = u32(buffer, directoryCountOffset);
+  const sectionTable = optionalHeader + optionalHeaderSize;
+  const sections = [];
+
+  for (let index = 0; index < sectionCount; index += 1) {
+    const offset = sectionTable + index * 40;
+    if (offset + 40 > buffer.length) fail("section_table_truncated");
+
+    const name = readAscii(buffer, offset, offset + 8, 8) || "unnamed";
+    const virtualSize = u32(buffer, offset + 8);
+    const virtualAddress = u32(buffer, offset + 12);
+    const rawSize = u32(buffer, offset + 16);
+    const rawOffset = u32(buffer, offset + 20);
+
+    if (rawSize > 0 && (rawOffset > buffer.length || rawSize > buffer.length - rawOffset)) {
+      fail("section_out_of_bounds");
+    }
+    sections.push({ name, virtualSize, virtualAddress, rawSize, rawOffset });
+  }
+
+  const rvaToOffset = (rva) => {
+    for (const section of sections) {
+      const span = Math.max(section.virtualSize, section.rawSize);
+      if (rva >= section.virtualAddress && rva < section.virtualAddress + span) {
+        const delta = rva - section.virtualAddress;
+        return delta < section.rawSize ? section.rawOffset + delta : null;
+      }
+    }
+    return rva < buffer.length ? rva : null;
+  };
+
+  const dataDirectory = (index) => {
+    if (directoryCount <= index || directoryOffset + (index + 1) * 8 > optionalHeader + optionalHeaderSize) {
+      return { rva: 0, size: 0 };
+    }
+    return {
+      rva: u32(buffer, directoryOffset + index * 8),
+      size: u32(buffer, directoryOffset + index * 8 + 4),
+    };
+  };
+
+  const importDirectory = dataDirectory(1);
+  const importLibraries = [];
+  if (importDirectory.rva) {
+    let offset = rvaToOffset(importDirectory.rva);
+    if (offset !== null) {
+      for (let index = 0; index < MAX_IMPORT_LIBRARIES && offset + 20 <= buffer.length; index += 1, offset += 20) {
+        const nameRva = u32(buffer, offset + 12);
+        if (!nameRva && !u32(buffer, offset) && !u32(buffer, offset + 16)) break;
+        const nameOffset = rvaToOffset(nameRva);
+        if (nameOffset !== null) {
+          const name = readAscii(buffer, nameOffset, buffer.length, 260);
+          if (name && !importLibraries.includes(name)) importLibraries.push(name);
+        }
+      }
+    }
+  }
+
+  const clrDirectory = dataDirectory(14);
+  let clr = { present: false };
+  if (clrDirectory.rva) {
+    const offset = rvaToOffset(clrDirectory.rva);
+    if (offset !== null && offset + 24 <= buffer.length) {
+      clr = {
+        present: true,
+        headerSize: u32(buffer, offset),
+        metadataRva: u32(buffer, offset + 8),
+        metadataSize: u32(buffer, offset + 12),
+        flags: u32(buffer, offset + 16),
+      };
+    }
+  }
+
+  const machineNames = {
+    0x014c: "x86",
+    0x8664: "x64",
+    0xaa64: "ARM64",
+    0x01c0: "ARM",
+  };
+
+  return {
+    format: "PE",
+    fileSizeBytes: buffer.length,
+    machine: machineNames[machine] || "unknown",
+    machineCode: "0x" + machine.toString(16).padStart(4, "0"),
+    optionalHeader: is64Bit ? "PE32+" : "PE32",
+    architecture: is64Bit ? "64-bit" : "32-bit",
+    compileTimestamp: timestamp ? new Date(timestamp * 1000).toISOString() : null,
+    sections,
+    importLibraries,
+    clr,
+    runtimeHint: clr.present
+      ? "Common Language Runtime (.NET-compatible assembly)"
+      : "Native PE or managed metadata not detected",
+  };
+}
