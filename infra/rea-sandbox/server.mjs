@@ -183,9 +183,11 @@ const server = createServer(async (request, response) => {
       return sendJson(response, 503, { error: "replay_protection_unavailable" });
     }
 
-    return sendJson(response, 503, {
-      error: "execution_disabled",
-      message: "Authentication and replay protection passed; REA execution remains disabled pending sandbox validation.",
+    return sendJson(response, 200, {
+      status: "validated_and_discarded",
+      executionEnabled: false,
+      filePayloadExecuted: false,
+      message: "Authentication, request-size limits, and replay protection passed. The payload was discarded; REA execution remains disabled.",
     });
   }
 
