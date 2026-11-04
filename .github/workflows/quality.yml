@@ -14,10 +14,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: 22
+          bun-version: 1.4.4
 
       - name: Verify AURUM Render integrity lock
         run: node scripts/check-aurum-lock.mjs
@@ -34,18 +34,18 @@ jobs:
           node-version: 22
 
       - name: Install dependencies
-        run: npm install --no-package-lock
+        run: bun ci
 
       # TanStack Router generates src/routeTree.gen.ts during the Vite build.
       # Build first so TypeScript checks the generated route tree, including new file routes.
       - name: Build
-        run: npm run build
+        run: bun run build
 
       - name: TypeScript
-        run: npm run typecheck
+        run: bun run typecheck
 
       - name: Lint
-        run: npm run lint
+        run: bun run lint
 
   edge-functions:
     runs-on: ubuntu-latest
