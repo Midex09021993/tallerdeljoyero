@@ -47,7 +47,8 @@ test("health endpoint explicitly reports execution disabled", async () => {
   assert.deepEqual(await response.json(), {
     service: "aurum-rea-sandbox",
     status: "healthy",
-    executionEnabled: false,
+    staticAnalysisEnabled: true,
+    targetExecutionEnabled: false,
   });
 });
 
