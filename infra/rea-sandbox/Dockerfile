@@ -1,6 +1,7 @@
 FROM node:22-trixie-slim
 
 ENV NODE_ENV=production
+ENV DEBIAN_FRONTEND=noninteractive
 ENV PORT=8080
 ENV JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 ENV GHIDRA_INSTALL_DIR=/opt/ghidra_12.1.4_PUBLIC
