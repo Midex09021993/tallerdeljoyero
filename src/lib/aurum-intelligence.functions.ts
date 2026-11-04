@@ -35,7 +35,7 @@ function validateSourceManifest(value: unknown): SourceFile[] {
       throw new Error("Cada archivo debe contener únicamente path y content de texto.");
     }
     const path = item.path;
-    if (!path || path.length > 240 || path.startsWith("/") || path.includes("\\\\") ||
+    if (!path || path.length > 240 || path.startsWith("/") || path.includes("\\") ||
         path.split("/").some((part) => !part || part === "." || part === ".." || part.startsWith("."))) {
       throw new Error("Ruta de archivo no permitida.");
     }
