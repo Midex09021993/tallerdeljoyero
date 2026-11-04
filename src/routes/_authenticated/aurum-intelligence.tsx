@@ -109,7 +109,7 @@ function PanelValidacionProyecto() {
       const result = await validarProyectoEnRunner({ data: { files } });
       const info = result as { fileCount?: number; totalBytes?: number; analysis?: string };
       setStatusType("success");
-      setStatus("Manifiesto validado y descartado: " + (info.fileCount ?? files.length) + " archivos · " + formatFileSize(info.totalBytes ?? totalBytes) + ". No se ejecutó código. REA continúa desactivado.");
+      setStatus("Manifiesto validado y descartado: " + (info.fileCount ?? files.length) + " archivos · " + formatFileSize(info.totalBytes ?? totalBytes) + ". No se ejecutó código; esta etapa solo valida y descarta el manifiesto.");
     } catch (error) {
       setStatusType("error");
       setStatus(error instanceof Error ? error.message : "No se pudo validar el proyecto. El servicio puede no estar conectado todavía.");
