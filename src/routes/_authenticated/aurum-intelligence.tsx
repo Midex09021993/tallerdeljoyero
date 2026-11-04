@@ -2,7 +2,7 @@ import { useState, type ChangeEvent } from "react";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
-import { validarProyectoEnRunner, verificarAccesoAurumIntelligence } from "@/lib/aurum-intelligence.functions";
+import { analizarBinarioEnRunner, validarProyectoEnRunner, verificarAccesoAurumIntelligence } from "@/lib/aurum-intelligence.functions";
 import { AlertCircle, CheckCircle2, FileCode2, FileSearch, FlaskConical, FolderOpen, HardDrive, LockKeyhole, ShieldCheck, UploadCloud, X } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/aurum-intelligence")({
@@ -230,6 +230,115 @@ function PanelValidacionProyecto() {
     </article>
   );
 }
+
+function PanelAnalisisBinario() {
+  const [file, setFile] = useState<File | null>(null);
+  const [mode, setMode] = useState<"managed" | "native">("native");
+  const [busy, setBusy] = useState(false);
+  const [status, setStatus] = useState("");
+  const [report, setReport] = useState("");
+  const maxBytes = 4 * 1024 * 1024;
+
+  async function analyze() {
+    if (!file || busy) return;
+    setBusy(true);
+    setStatus("Preparando análisis estático… El ejecutable no se iniciará.");
+    setReport("");
+    try {
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      let binary = "";
+      const chunkSize = 0x8000;
+      for (let offset = 0; offset < bytes.length; offset += chunkSize) {
+        binary += String.fromCharCode(...bytes.subarray(offset, offset + chunkSize));
+      }
+      const contentBase64 = btoa(binary);
+      const result = await analizarBinarioEnRunner({
+        data: { fileName: file.name, contentBase64, mode },
+      });
+      setReport(JSON.stringify(result, null, 2));
+      setStatus("Análisis estático completado. El archivo temporal fue eliminado y no se ejecutó ni almacenó.");
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "No se pudo completar el análisis.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <article className="relative overflow-hidden rounded-3xl border border-amber-500/20 bg-card p-5 shadow-sm sm:p-6">
+      <div className="pointer-events-none absolute -right-16 -top-16 size-48 rounded-full bg-amber-500/10 blur-3xl" />
+      <div className="relative">
+        <div className="flex items-start justify-between gap-3">
+          <div className="grid size-12 place-items-center rounded-2xl border border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-300">
+            <FileCode2 className="size-5" />
+          </div>
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/5 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
+            <ShieldCheck className="size-3.5" /> REA · Estático
+          </span>
+        </div>
+        <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Etapa 02 · Análisis de binarios</p>
+        <h3 className="mt-1 text-lg font-semibold tracking-tight">Inspeccionar EXE / DLL</h3>
+        <p className="mt-2 text-sm leading-6 text-muted-foreground">
+          Análisis estático con REA. Para ensamblados .NET selecciona «Gestionado»; para ejecutables nativos PE selecciona «Nativo · Ghidra». El archivo se procesa temporalmente y nunca se inicia.
+        </p>
+        <label className="mt-5 block text-sm font-semibold" htmlFor="aurum-pe-file">Archivo ejecutable</label>
+        <input
+          id="aurum-pe-file"
+          type="file"
+          accept=".exe,.dll"
+          disabled={busy}
+          onChange={(event) => {
+            const selected = event.target.files?.[0] ?? null;
+            setReport("");
+            if (selected && selected.size > maxBytes) {
+              setFile(null);
+              setStatus("El archivo supera el límite de 4 MiB.");
+              event.target.value = "";
+              return;
+            }
+            setFile(selected);
+            setStatus(selected ? selected.name + " · " + formatFileSize(selected.size) : "");
+          }}
+          className="mt-2 block w-full rounded-xl border border-border bg-background p-3 text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-muted file:px-3 file:py-2 file:text-xs file:font-semibold"
+        />
+        <label className="mt-4 block text-sm font-semibold" htmlFor="aurum-pe-mode">Tipo de análisis</label>
+        <select
+          id="aurum-pe-mode"
+          value={mode}
+          disabled={busy}
+          onChange={(event) => setMode(event.target.value as "managed" | "native")}
+          className="mt-2 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm"
+        >
+          <option value="native">Nativo · Ghidra</option>
+          <option value="managed">Gestionado · .NET</option>
+        </select>
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={analyze}
+            disabled={!file || busy}
+            className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-semibold text-black transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {busy ? <span className="size-4 animate-spin rounded-full border-2 border-black/30 border-t-black" /> : <FileSearch className="size-4" />}
+            {busy ? "Analizando…" : "Iniciar análisis estático"}
+          </button>
+          <span className="text-xs text-muted-foreground">Máximo 4 MiB · EXE / DLL</span>
+        </div>
+        {status ? <p role="status" aria-live="polite" className="mt-4 rounded-xl border border-border bg-muted/40 p-3 text-sm text-muted-foreground">{status}</p> : null}
+        {report ? (
+          <div className="mt-4">
+            <h4 className="mb-2 text-sm font-semibold">Informe técnico</h4>
+            <pre className="max-h-[28rem] overflow-auto rounded-xl border border-border bg-muted/50 p-3 text-xs leading-5 whitespace-pre-wrap break-words">{report}</pre>
+          </div>
+        ) : null}
+        <p className="mt-4 border-t border-border pt-3 text-[11px] leading-5 text-muted-foreground">
+          No hay ejecución dinámica, persistencia ni modificación del original. Los resultados son hallazgos estáticos y no garantizan recuperar el código fuente original.
+        </p>
+      </div>
+    </article>
+  );
+}
+
 function AurumIntelligencePage() {
   return (
     <AppShell
@@ -273,6 +382,7 @@ function AurumIntelligencePage() {
 
         <div className="grid gap-4 md:grid-cols-2">
           <PanelValidacionProyecto />
+          <PanelAnalisisBinario />
 
           <article className="rounded-2xl border border-border bg-card p-5 sm:p-6">
             <div className="mb-4 grid size-11 place-items-center rounded-xl bg-primary/10 text-primary">
@@ -280,10 +390,10 @@ function AurumIntelligencePage() {
             </div>
             <h3 className="text-lg font-semibold">Motor REA</h3>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              El servicio aislado ya está desplegado y protegido con autenticación de corta duración y bloqueo anti-repetición. En esta etapa solo valida y descarta manifiestos; REA aún no está instalado ni ejecuta código. Aurum Render y los secretos del ERP permanecen fuera de este entorno.
+              REA 6.8.0 y Ghidra 12.1.4 están incorporados al runner para inspección estática. El servicio no inicia los archivos analizados, aplica autenticación de corta duración y protección anti-repetición. Aurum Render y los secretos del ERP permanecen fuera de este entorno.
             </p>
             <span className="mt-5 inline-flex rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs text-amber-700 dark:text-amber-300">
-              Runner aislado · Ejecución desactivada
+              REA + Ghidra · Análisis estático
             </span>
           </article>
         </div>
