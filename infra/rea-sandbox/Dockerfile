@@ -41,6 +41,8 @@ COPY --chown=1000:1000 server.mjs ./server.mjs
 COPY --chown=1000:1000 pe-inspector.mjs ./pe-inspector.mjs
 COPY --chown=1000:1000 rea-engine.mjs ./rea-engine.mjs
 
+RUN node --check server.mjs && node --check pe-inspector.mjs && node --check rea-engine.mjs
+
 USER 1000:1000
 EXPOSE 8080
 
