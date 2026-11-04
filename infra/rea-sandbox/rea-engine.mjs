@@ -8,6 +8,16 @@ const MAX_OUTPUT_BYTES = 12 * 1024 * 1024;
 const ANALYSIS_TIMEOUT_MS = 8 * 60 * 1000;
 let analysisInProgress = false;
 
+function classifyReaStderr(stderr) {
+  const value = String(stderr).toLowerCase();
+  if (/ghidra.{0,40}(not found|missing|unavailable)|provider.{0,40}(not found|unavailable)/.test(value)) return "provider_unavailable";
+  if (/java.{0,40}(not found|unable|error)|could not create the java virtual machine/.test(value)) return "java_runtime_error";
+  if (/permission denied|eacces/.test(value)) return "filesystem_permission_error";
+  if (/enoent|command not found|not found.*rea/.test(value)) return "rea_command_or_dependency_missing";
+  if (/out of memory|heap space|memory limit/.test(value)) return "memory_limit";
+  if (/invalid.*(pe|executable)|not a valid.*(pe|executable)/.test(value)) return "invalid_pe_input";
+  return stderr.trim() ? "unclassified_stderr" : "empty_stderr";
+}
 function runRea(args) {
   return new Promise((resolve, reject) => {
     const child = spawn("rea", args, {
@@ -54,6 +64,12 @@ function runRea(args) {
     child.once("error", () => finish(new Error("rea_start_failed")));
     child.once("close", (code) => {
       if (code !== 0) {
+        const diagnostic = classifyReaStderr(stderr);
+        console.error("[rea-analysis] command_failed", JSON.stringify({
+          exitCode: Number.isInteger(code) ? code : null,
+          stderrBytes: Buffer.byteLength(stderr),
+          diagnostic,
+        }));
         finish(new Error("rea_analysis_failed:" + String(code) + ":" + stderr.slice(-4000)));
         return;
       }
