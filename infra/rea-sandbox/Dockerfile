@@ -5,6 +5,7 @@ ENV PORT=8080
 WORKDIR /app
 
 COPY --chown=node:node server.mjs ./server.mjs
+COPY --chown=node:node pe-inspector.mjs ./pe-inspector.mjs
 
 USER node
 EXPOSE 8080
