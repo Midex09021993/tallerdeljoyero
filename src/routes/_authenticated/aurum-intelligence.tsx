@@ -238,7 +238,7 @@ function PanelAnalisisBinario() {
   const [status, setStatus] = useState("");
   const [report, setReport] = useState("");
   const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "error">("idle");
-  const maxBytes = 4 * 1024 * 1024;
+  const maxBytes = 32 * 1024 * 1024;
 
   async function analyze() {
     if (!file || busy) return;
@@ -319,7 +319,7 @@ function PanelAnalisisBinario() {
             setCopyStatus("idle");
             if (selected && selected.size > maxBytes) {
               setFile(null);
-              setStatus("El archivo supera el límite de 4 MiB.");
+              setStatus("El archivo supera el límite de 32 MiB.");
               event.target.value = "";
               return;
             }
@@ -349,7 +349,7 @@ function PanelAnalisisBinario() {
             {busy ? <span className="size-4 animate-spin rounded-full border-2 border-black/30 border-t-black" /> : <FileSearch className="size-4" />}
             {busy ? "Analizando…" : "Iniciar análisis estático"}
           </button>
-          <span className="text-xs text-muted-foreground">Máximo 4 MiB · EXE / DLL</span>
+          <span className="text-xs text-muted-foreground">Máximo 32 MiB · EXE / DLL</span>
         </div>
         {status ? <p role="status" aria-live="polite" className="mt-4 rounded-xl border border-border bg-muted/40 p-3 text-sm text-muted-foreground">{status}</p> : null}
         {report ? (
