@@ -92,11 +92,6 @@ const server = createServer(async (request, response) => {
       return sendJson(response, 401, { error: "unauthorized" });
     }
 
-    // Fail closed until an atomic, persistent one-time-token store is configured.
-    // A process-local cache is intentionally not accepted as replay protection.
-    request.resume();
-    return sendJson(response, 503, { error: "replay_protection_unavailable" });
-
     const contentLengthHeader = request.headers["content-length"];
     if (contentLengthHeader !== undefined) {
       if (!/^(0|[1-9][0-9]*)$/.test(contentLengthHeader)) {
@@ -121,9 +116,11 @@ const server = createServer(async (request, response) => {
       return response.destroy();
     }
 
+    // Fail closed until an atomic, persistent one-time-token store is configured.
+    // A process-local cache is intentionally not accepted as replay protection.
     return sendJson(response, 503, {
-      error: "execution_disabled",
-      message: "REA execution is disabled while the sandbox security review is pending.",
+      error: "replay_protection_unavailable",
+      message: "Persistent one-time-token protection is not configured; analysis remains disabled.",
     });
   }
 
