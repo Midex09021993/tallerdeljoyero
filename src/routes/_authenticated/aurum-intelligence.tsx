@@ -109,7 +109,7 @@ function PanelValidacionProyecto() {
       const result = await validarProyectoEnRunner({ data: { files } });
       const info = result as { fileCount?: number; totalBytes?: number; analysis?: string };
       setStatusType("success");
-      setStatus("Validación completada: " + (info.fileCount ?? files.length) + " archivos · " + formatFileSize(info.totalBytes ?? totalBytes) + ". REA continúa desactivado.");
+      setStatus("Manifiesto validado y descartado: " + (info.fileCount ?? files.length) + " archivos · " + formatFileSize(info.totalBytes ?? totalBytes) + ". No se ejecutó código. REA continúa desactivado.");
     } catch (error) {
       setStatusType("error");
       setStatus(error instanceof Error ? error.message : "No se pudo validar el proyecto. El servicio puede no estar conectado todavía.");
@@ -280,12 +280,10 @@ function AurumIntelligencePage() {
             </div>
             <h3 className="text-lg font-semibold">Motor REA</h3>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              La integración con REA todavía no está conectada. Primero aislaremos
-              su ejecución en un servicio independiente, sin acceso al motor de
-              renderizado ni a secretos del ERP.
+              El servicio aislado ya está desplegado y protegido con autenticación de corta duración y bloqueo anti-repetición. En esta etapa solo valida y descarta manifiestos; REA aún no está instalado ni ejecuta código. Aurum Render y los secretos del ERP permanecen fuera de este entorno.
             </p>
             <span className="mt-5 inline-flex rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs text-amber-700 dark:text-amber-300">
-              Sin ejecutar código externo
+              Runner aislado · Ejecución desactivada
             </span>
           </article>
         </div>
