@@ -57,15 +57,14 @@ test("analysis endpoint rejects requests without a signed token", async () => {
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ files: [{ path: "probe.js", content: "process.exit(99)" }] }),
   });
-  assert.equal(response.status, 503);
+  assert.equal(response.status, 401);
   assert.equal((await response.json()).error, "unauthorized");
 });
 
 test("analysis endpoint rejects declared payloads above the 12 MiB transport limit", async () => {
   const response = await fetch(`${baseUrl}/v1/analyze`, {
     method: "POST",
-    headers: { "content-type": "application/json" },
-    headers: { authorization: "Bearer " + makeToken() },
+    headers: { "content-type": "application/json", authorization: "Bearer " + makeToken() },
     body: "x".repeat(12 * 1024 * 1024 + 1),
   });
   assert.equal(response.status, 413);
