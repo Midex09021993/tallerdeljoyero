@@ -123,7 +123,69 @@ export async function analyzeWithRea(fileName, binary, mode) {
       return { engine: "REA", provider: "managed-static", executed: false, artifact, members };
     }
     const report = await runRea(["analyze", targetPath, "--provider", "ghidra", "--json"]);
-    return { engine: "REA + Ghidra", provider: "ghidra", executed: false, report };
+    const investigation = {
+      procedures: { status: "pending", result: null },
+      strings: { status: "pending", result: null },
+      decompilation: { status: "pending", items: [] },
+    };
+
+    // Each REA CLI call owns an ephemeral Ghidra session. Keep calls strictly
+    // sequential to stay within the runner's 1 GiB memory ceiling.
+    try {
+      investigation.procedures.result = await runRea([
+        "search", targetPath, "--pattern=.*", "--kind", "procedures",
+        "--provider", "ghidra", "--json",
+      ]);
+      investigation.procedures.status = "complete";
+    } catch {
+      investigation.procedures.status = "unavailable";
+    }
+
+    try {
+      investigation.strings.result = await runRea([
+        "search", targetPath, "--pattern=.*", "--kind", "strings",
+        "--provider", "ghidra", "--json",
+      ]);
+      investigation.strings.status = "complete";
+    } catch {
+      investigation.strings.status = "unavailable";
+    }
+
+    const procedureResult = investigation.procedures.result;
+    const normalized = procedureResult?.normalized_result ?? {};
+    const procedureRows = Array.isArray(normalized.procedures) ? normalized.procedures :
+      Array.isArray(normalized.items) ? normalized.items : [];
+    const selectors = procedureRows
+      .map((item) => item?.address ?? item?.procedure?.address ?? item?.name ?? item?.value)
+      .filter((value) => typeof value === "string" && value.length > 0)
+      .slice(0, 3);
+
+    if (selectors.length) {
+      for (const selector of selectors) {
+        try {
+          const result = await runRea([
+            "decompile", targetPath, "--procedure=" + selector,
+            "--provider", "ghidra", "--json",
+          ]);
+          investigation.decompilation.items.push({ selector, status: "complete", result });
+        } catch {
+          investigation.decompilation.items.push({ selector, status: "unavailable" });
+        }
+      }
+      investigation.decompilation.status = investigation.decompilation.items.every((item) => item.status === "complete")
+        ? "complete"
+        : "partial";
+    } else {
+      investigation.decompilation.status = "not_attempted";
+    }
+
+    return {
+      engine: "REA + Ghidra",
+      provider: "ghidra",
+      executed: false,
+      report,
+      investigation,
+    };
   } finally {
     try {
       if (directory) await rm(directory, { recursive: true, force: true });
