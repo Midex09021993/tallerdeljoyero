@@ -154,6 +154,7 @@ export async function analyzeWithRea(fileName, binary, mode) {
     const procedureResult = investigation.procedures.result;
     const normalized = procedureResult?.normalized_result ?? {};
     const procedureRows = Array.isArray(normalized.procedures) ? normalized.procedures :
+      Array.isArray(normalized.rows) ? normalized.rows :
       Array.isArray(normalized.items) ? normalized.items : [];
     const selectors = procedureRows
       .map((item) => item?.address ?? item?.procedure?.address ?? item?.name ?? item?.value)
