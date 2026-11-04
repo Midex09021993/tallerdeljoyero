@@ -120,13 +120,14 @@ export const validarProyectoEnRunner = createServerFn({ method: "POST" })
     }
 
     const endpoint = new URL("/v1/analyze", runnerUrl);
-    if (endpoint.protocol !== "https:" || endpoint.username || endpoint.password) {
+    if (endpoint.protocol !== "https:" || endpoint.username || endpoint.password || endpoint.search || endpoint.hash || (new URL(runnerUrl).pathname !== "/" && new URL(runnerUrl).pathname !== "")) {
       throw new Error("La dirección del runner debe ser HTTPS.");
     }
 
     const token = await createRunnerJwt(signingSecret);
     const response = await fetch(endpoint, {
       method: "POST",
+      redirect: "error",
       headers: {
         authorization: `Bearer ${token}`,
         "content-type": "application/json",
