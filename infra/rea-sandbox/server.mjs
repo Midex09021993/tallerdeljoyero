@@ -33,36 +33,49 @@ function decodeBase64Url(value) {
   return Buffer.from(value.replace(/-/g, "+").replace(/_/g, "/"), "base64");
 }
 
+function authFailure(reason) {
+  // Diagnostic only: never log tokens, claims, signatures, or secret values.
+  console.warn("[runner-auth] rejected:", reason);
+  return false;
+}
+
 function verifyRunnerToken(request) {
   const authorization = request.headers.authorization;
-  if (typeof authorization !== "string" || !authorization.startsWith("Bearer ")) return false;
+  if (typeof authorization !== "string" || !authorization.startsWith("Bearer ")) {
+    return authFailure("missing_bearer");
+  }
   const token = authorization.slice(7);
   const parts = token.split(".");
-  if (parts.length !== 3 || parts.some((part) => !part)) return false;
+  if (parts.length !== 3 || parts.some((part) => !part)) return authFailure("malformed_token");
   const secret = process.env.AURUM_RUNNER_JWT_SECRET;
-  if (!secret || Buffer.byteLength(secret) < 32) return false;
+  if (!secret) return authFailure("secret_missing");
+  const secretBytes = Buffer.byteLength(secret);
+  if (secretBytes < 32) return authFailure("secret_too_short");
   try {
     const header = JSON.parse(decodeBase64Url(parts[0]).toString("utf8"));
     const claims = JSON.parse(decodeBase64Url(parts[1]).toString("utf8"));
-    if (!header || header.alg !== "HS256" || header.typ !== "JWT") return false;
+    if (!header || header.alg !== "HS256" || header.typ !== "JWT") return authFailure("invalid_header");
     const expected = createHmac("sha256", secret).update(parts[0] + "." + parts[1]).digest();
     const actual = decodeBase64Url(parts[2]);
-    if (actual.length !== expected.length || !timingSafeEqual(actual, expected)) return false;
+    if (actual.length !== expected.length || !timingSafeEqual(actual, expected)) {
+      return authFailure("signature_mismatch");
+    }
     const now = Math.floor(Date.now() / 1000);
-    const valid = claims.iss === JWT_ISSUER &&
-      claims.aud === JWT_AUDIENCE &&
-      claims.sub === JWT_SUBJECT &&
-      Number.isInteger(claims.iat) &&
-      Number.isInteger(claims.exp) &&
-      claims.iat <= now + 30 &&
-      claims.exp > now &&
-      claims.exp > claims.iat &&
-      claims.exp - claims.iat <= MAX_TOKEN_SECONDS &&
-      typeof claims.jti === "string" &&
-      /^[a-f0-9]{32}$/.test(claims.jti);
-    return valid ? claims : false;
+    if (claims.iss !== JWT_ISSUER) return authFailure("issuer_mismatch");
+    if (claims.aud !== JWT_AUDIENCE) return authFailure("audience_mismatch");
+    if (claims.sub !== JWT_SUBJECT) return authFailure("subject_mismatch");
+    if (!Number.isInteger(claims.iat) || !Number.isInteger(claims.exp)) return authFailure("invalid_timestamps");
+    if (claims.iat > now + 30) return authFailure("issued_in_future");
+    if (claims.exp <= now) return authFailure("token_expired");
+    if (claims.exp <= claims.iat || claims.exp - claims.iat > MAX_TOKEN_SECONDS) {
+      return authFailure("invalid_token_lifetime");
+    }
+    if (typeof claims.jti !== "string" || !/^[a-f0-9]{32}$/.test(claims.jti)) {
+      return authFailure("invalid_token_id");
+    }
+    return claims;
   } catch {
-    return false;
+    return authFailure("invalid_token_encoding_or_json");
   }
 }
 
