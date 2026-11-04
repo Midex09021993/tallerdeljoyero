@@ -159,8 +159,6 @@ export const validarProyectoEnRunner = createServerFn({ method: "POST" })
 
 const MAX_PE_BYTES = 4 * 1024 * 1024;
 
-const MAX_PE_BYTES = 4 * 1024 * 1024;
-
 function getRunnerConfig() {
   const runnerUrl = process.env["AURUM_RUNNER_URL"];
   const signingSecret = process.env["AURUM_RUNNER_JWT_SECRET"];
