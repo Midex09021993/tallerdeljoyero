@@ -1,4 +1,4 @@
-FROM node:22-bookworm-slim
+FROM node:22-trixie-slim
 
 ENV NODE_ENV=production
 ENV PORT=8080
@@ -29,6 +29,7 @@ RUN npm install --global rea-agents@latest \
 
 COPY --chown=node:node server.mjs ./server.mjs
 COPY --chown=node:node pe-inspector.mjs ./pe-inspector.mjs
+COPY --chown=node:node rea-engine.mjs ./rea-engine.mjs
 
 USER node
 EXPOSE 8080
