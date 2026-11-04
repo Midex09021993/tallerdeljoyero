@@ -6,6 +6,7 @@ import { randomUUID } from "node:crypto";
 
 const MAX_OUTPUT_BYTES = 12 * 1024 * 1024;
 const ANALYSIS_TIMEOUT_MS = 8 * 60 * 1000;
+let analysisInProgress = false;
 
 function runRea(args) {
   return new Promise((resolve, reject) => {
@@ -71,15 +72,18 @@ function runRea(args) {
  * deleted after the result is collected.
  */
 export async function analyzeWithRea(fileName, binary, mode) {
+  if (analysisInProgress) throw new Error("analysis_busy");
   if (!Buffer.isBuffer(binary) || binary.length < 256 || binary.length > 4 * 1024 * 1024) {
     throw new Error("binary_size_invalid");
   }
   if (!["managed", "native"].includes(mode)) throw new Error("analysis_mode_invalid");
 
-  const directory = await mkdtemp(join(tmpdir(), "aurum-rea-"));
-  const safeName = randomUUID() + (fileName.toLowerCase().endsWith(".dll") ? ".dll" : ".exe");
-  const targetPath = join(directory, safeName);
+  analysisInProgress = true;
+  let directory;
   try {
+    directory = await mkdtemp(join(tmpdir(), "aurum-rea-"));
+    const safeName = randomUUID() + (fileName.toLowerCase().endsWith(".dll") ? ".dll" : ".exe");
+    const targetPath = join(directory, safeName);
     await writeFile(targetPath, binary, { flag: "wx", mode: 0o600 });
     if (mode === "managed") {
       const artifact = await runRea(["inspect-managed-artifact", targetPath, "--json"]);
@@ -89,6 +93,7 @@ export async function analyzeWithRea(fileName, binary, mode) {
     const report = await runRea(["analyze", targetPath, "--provider", "ghidra", "--json"]);
     return { engine: "REA + Ghidra", provider: "ghidra", executed: false, report };
   } finally {
-    await rm(directory, { recursive: true, force: true });
+    if (directory) await rm(directory, { recursive: true, force: true });
+    analysisInProgress = false;
   }
 }
