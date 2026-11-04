@@ -4,6 +4,8 @@ ENV NODE_ENV=production
 ENV PORT=8080
 ENV JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 ENV GHIDRA_INSTALL_DIR=/opt/ghidra_12.1.4_PUBLIC
+# Keep the JVM bounded inside Railway 1 GiB runner memory.
+ENV JAVA_TOOL_OPTIONS="-Xms128m -Xmx512m -XX:MaxMetaspaceSize=192m -XX:+UseSerialGC"
 ENV PATH="${JAVA_HOME}/bin:/usr/local/bin:${PATH}"
 WORKDIR /app
 
