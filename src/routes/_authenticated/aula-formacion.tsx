@@ -1835,12 +1835,12 @@ function AulaFormacionPage() {
   };
 
   const renderRhinoCommand = (command: string, detail: string) => (
-    <div className="mx-3 mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl border border-[#e6dcc9] bg-[#faf7f0] px-3 py-2.5 sm:mx-4">
+    <div className="mx-3 mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl border border-white/10 bg-[#222B36] px-3 py-2.5 sm:mx-4">
       <div className="min-w-[112px]">
-        <p className="text-[9px] font-bold uppercase tracking-[.18em] text-[#98743c]">COMANDO RHINO</p>
-        <code className="mt-1 block font-mono text-sm font-semibold tracking-wide text-[#24221e]">_{command}</code>
+        <p className="text-[9px] font-bold uppercase tracking-[.18em] text-[#D8B979]">COMANDO RHINO</p>
+        <code className="mt-1 block font-mono text-sm font-semibold tracking-wide text-[#E8EDF2]">_{command}</code>
       </div>
-      <p className="min-w-0 flex-1 text-xs leading-5 text-[#68645c]">{detail}</p>
+      <p className="min-w-0 flex-1 text-xs leading-5 text-[#AAB7C5]">{detail}</p>
     </div>
   );
 
@@ -1881,28 +1881,28 @@ function AulaFormacionPage() {
       setPuntosCoord3(v=>[...v,p]);setCerradoCoord3(false);setEstadoCoord3(`Punto: ${p.x.toFixed(2)}, ${p.y.toFixed(2)}`);
     };
     const pts=puntosCoord3.map(p=>`${ox+p.x*k},${oy-p.y*k}`).join(" ");
-    return !laboratorioCoordenadasAbierto ? <div className="mt-6 max-w-4xl rounded-xl border border-[#b79558]/40 bg-gradient-to-br from-white to-[#faf7f0] p-4">
+    return !laboratorioCoordenadasAbierto ? <div className="mt-6 max-w-4xl rounded-xl border border-[#C6A15B]/40 bg-[#1B222C] text-[#E8EDF2] p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div><p className="text-[10px] font-bold uppercase tracking-widest text-amber-300">Laboratorio interactivo compartido · Sesión 03</p><h4 className="mt-1 text-sm font-semibold">Construcción por coordenadas</h4><p className="mt-1 text-xs text-slate-400">Abre el espacio de trabajo independiente para practicar sin reducir el área de lectura.</p></div>
-        <button type="button" onClick={()=>setLaboratorioCoordenadasAbierto(true)} className="shrink-0 rounded-lg bg-gold px-4 py-2.5 text-sm font-bold text-black">Abrir laboratorio <span aria-hidden="true">↗</span></button>
+        <button type="button" onClick={()=>setLaboratorioCoordenadasAbierto(true)} className="shrink-0 rounded-lg bg-[#C6A15B] px-4 py-2.5 text-sm font-bold text-[#171C24]">Abrir laboratorio <span aria-hidden="true">↗</span></button>
       </div>
     </div> : <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 p-2 sm:p-4">
-      <section className="flex max-h-[calc(100vh-1rem)] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-[#b79558]/50 bg-background shadow-2xl sm:max-h-[calc(100vh-2rem)]">
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[#e8dfce] bg-[#fbfaf7]/95 px-4 py-3 sm:px-5">
-        <div><p className="text-[10px] font-bold uppercase tracking-widest text-[#98743c]">FADILAB · Sesión 03 · Laboratorio continuo</p><h4 className="text-base font-semibold">Construcción por coordenadas</h4><p className="mt-0.5 text-xs text-[#776b58]">Un mismo plano para comparar los tres métodos sin salir de la lectura.</p></div>
+      <section className="flex max-h-[calc(100vh-1rem)] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-[#C6A15B]/40 bg-[#1B222C] text-[#E8EDF2] shadow-2xl sm:max-h-[calc(100vh-2rem)]">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 bg-[#222B36] px-4 py-3 sm:px-5">
+        <div><p className="text-[10px] font-bold uppercase tracking-widest text-[#D8B979]">FADILAB · Sesión 03 · Laboratorio continuo</p><h4 className="text-base font-semibold">Construcción por coordenadas</h4><p className="mt-0.5 text-xs text-[#AAB7C5]">Un mismo plano para comparar los tres métodos sin salir de la lectura.</p></div>
         <div className="flex items-center gap-2">
-          <button type="button" onClick={reset} className="rounded-lg border border-[#e5d9c3] bg-white px-3 py-2 text-xs text-[#6f6250]"><RotateCcw className="mr-1 inline size-3.5"/> Reiniciar práctica</button>
-          <button type="button" onClick={()=>setLaboratorioCoordenadasAbierto(false)} className="rounded-lg border border-[#e5d9c3] bg-white px-3 py-2 text-xs text-[#6f6250]">Cerrar laboratorio <span aria-hidden="true">×</span></button>
+          <button type="button" onClick={reset} className="rounded-lg border border-white/15 bg-[#283442] px-3 py-2 text-xs text-[#D5DDE6]"><RotateCcw className="mr-1 inline size-3.5"/> Reiniciar práctica</button>
+          <button type="button" onClick={()=>setLaboratorioCoordenadasAbierto(false)} className="rounded-lg border border-white/15 bg-[#283442] px-3 py-2 text-xs text-[#D5DDE6]">Cerrar laboratorio <span aria-hidden="true">×</span></button>
         </div>
       </header>
       {renderRhinoCommand("Polyline", "Construye el contorno con coordenadas absolutas, relativas o polares.")}
       <div className="min-h-0 overflow-y-auto p-3 sm:p-4">
         <div className="mb-4 rounded-xl border border-[#b79558]/40 bg-gold/5 p-3 sm:p-4">
-          <div className="flex flex-wrap items-center justify-between gap-2"><p className="text-xs font-bold uppercase tracking-wide text-[#98743c]">Explicación del índice {paginaLectura+1}</p><span className="rounded-full bg-background px-2.5 py-1 text-[10px] font-semibold text-[#776b58]">{metodoActual==="absolutas"?"Método 1 de 3":metodoActual==="relativas"?"Método 2 de 3":"Método 3 de 3"}</span></div>
+          <div className="flex flex-wrap items-center justify-between gap-2"><p className="text-xs font-bold uppercase tracking-wide text-[#D8B979]">Explicación del índice {paginaLectura+1}</p><span className="rounded-full bg-background px-2.5 py-1 text-[10px] font-semibold text-[#AAB7C5]">{metodoActual==="absolutas"?"Método 1 de 3":metodoActual==="relativas"?"Método 2 de 3":"Método 3 de 3"}</span></div>
           <h5 className="mt-1 text-sm font-semibold">{explicacion.titulo}</h5>
-          <p className="mt-1 text-sm leading-6 text-[#4f4a42]">{explicacion.texto}</p>
-          <div className="mt-3 grid gap-2 sm:grid-cols-[auto_1fr] sm:items-center"><span className="text-[10px] font-semibold uppercase tracking-wide text-[#776b58]">Sintaxis Rhino</span><code className="rounded-lg bg-background px-3 py-2 text-sm font-bold text-foreground">{explicacion.ejemplo}</code></div>
-          <p className="mt-2 text-xs leading-5 text-[#68645c]">{explicacion.detalle}</p>
+          <p className="mt-1 text-sm leading-6 text-[#D5DDE6]">{explicacion.texto}</p>
+          <div className="mt-3 grid gap-2 sm:grid-cols-[auto_1fr] sm:items-center"><span className="text-[10px] font-semibold uppercase tracking-wide text-[#AAB7C5]">Sintaxis Rhino</span><code className="rounded-lg bg-[#171C24] px-3 py-2 text-sm font-bold text-[#E8EDF2]">{explicacion.ejemplo}</code></div>
+          <p className="mt-2 text-xs leading-5 text-[#AAB7C5]">{explicacion.detalle}</p>
         </div>
         <div className="grid min-w-0 gap-3 lg:grid-cols-[minmax(0,1.35fr)_minmax(290px,.8fr)]">
           <div className="flex min-h-[300px] min-w-0 flex-col overflow-hidden rounded-xl bg-[#17191d]">
@@ -1919,14 +1919,14 @@ function AulaFormacionPage() {
           <div className="flex min-w-0 flex-col gap-2">
             <div className="rounded-xl border border-white/10 p-3">
               <p className="mb-2 text-xs font-semibold">Método de entrada</p>
-              <div className="grid grid-cols-3 gap-1 rounded-xl bg-white/5 p-1">{(["absolutas","relativas","polares"] as const).map(m=><button key={m} type="button" onClick={()=>{setModoCoord3(m);setEstadoCoord3("");}} className={`rounded-lg px-1 py-2 text-[11px] font-semibold capitalize ${modoCoord3===m?"bg-background shadow-sm":"text-slate-400"}`}>{m}</button>)}</div>
-              {modoCoord3==="polares" && <div className="mt-3"><p className="mb-1.5 text-[10px] font-semibold text-slate-400">Punto de referencia</p><div className="grid grid-cols-2 gap-1 rounded-lg bg-white/5 p-1"><button type="button" onClick={()=>setReferenciaPolarCoord3("origen")} className={`rounded-md px-2 py-2 text-[11px] font-semibold ${referenciaPolarCoord3==="origen"?"bg-background shadow-sm":"text-slate-400"}`}>Desde origen</button><button type="button" onClick={()=>setReferenciaPolarCoord3("ultimo")} className={`rounded-md px-2 py-2 text-[11px] font-semibold ${referenciaPolarCoord3==="ultimo"?"bg-background shadow-sm":"text-slate-400"}`}>Desde último punto</button></div></div>}
+              <div className="grid grid-cols-3 gap-1 rounded-xl bg-white/5 p-1">{(["absolutas","relativas","polares"] as const).map(m=><button key={m} type="button" onClick={()=>{setModoCoord3(m);setEstadoCoord3("");}} className={`rounded-lg px-1 py-2 text-[11px] font-semibold capitalize ${modoCoord3===m?"bg-[#394653] text-[#F4D18A] shadow-sm":"text-slate-400"}`}>{m}</button>)}</div>
+              {modoCoord3==="polares" && <div className="mt-3"><p className="mb-1.5 text-[10px] font-semibold text-slate-400">Punto de referencia</p><div className="grid grid-cols-2 gap-1 rounded-lg bg-white/5 p-1"><button type="button" onClick={()=>setReferenciaPolarCoord3("origen")} className={`rounded-md px-2 py-2 text-[11px] font-semibold ${referenciaPolarCoord3==="origen"?"bg-[#394653] text-[#F4D18A] shadow-sm":"text-slate-400"}`}>Desde origen</button><button type="button" onClick={()=>setReferenciaPolarCoord3("ultimo")} className={`rounded-md px-2 py-2 text-[11px] font-semibold ${referenciaPolarCoord3==="ultimo"?"bg-[#394653] text-[#F4D18A] shadow-sm":"text-slate-400"}`}>Desde último punto</button></div></div>}
               <p className="mt-3 mb-2 text-xs font-semibold">{modoCoord3==="polares"?"Distancia / ángulo":modoCoord3==="relativas"?"Desplazamiento ΔX / ΔY":"Posición X / Y"}</p>
               <div className="grid grid-cols-2 gap-2">
-                <label className="text-[10px] text-slate-400">{modoCoord3==="polares"?"Distancia":modoCoord3==="relativas"?"ΔX":"X"}<input value={valorCoord3} onChange={e=>setValorCoord3(e.target.value)} inputMode="decimal" className="mt-1 w-full rounded-lg border border-white/10 bg-background px-2 py-2.5 text-sm text-foreground"/></label>
-                <label className="text-[10px] text-slate-400">{modoCoord3==="polares"?"Ángulo °":modoCoord3==="relativas"?"ΔY":"Y"}<input value={anguloCoord3} onChange={e=>setAnguloCoord3(e.target.value)} inputMode="decimal" className="mt-1 w-full rounded-lg border border-white/10 bg-background px-2 py-2.5 text-sm text-foreground"/></label>
+                <label className="text-[10px] text-slate-400">{modoCoord3==="polares"?"Distancia":modoCoord3==="relativas"?"ΔX":"X"}<input value={valorCoord3} onChange={e=>setValorCoord3(e.target.value)} inputMode="decimal" className="mt-1 w-full rounded-lg border border-white/10 bg-[#171C24] px-2 py-2.5 text-sm text-[#E8EDF2]"/></label>
+                <label className="text-[10px] text-slate-400">{modoCoord3==="polares"?"Ángulo °":modoCoord3==="relativas"?"ΔY":"Y"}<input value={anguloCoord3} onChange={e=>setAnguloCoord3(e.target.value)} inputMode="decimal" className="mt-1 w-full rounded-lg border border-white/10 bg-[#171C24] px-2 py-2.5 text-sm text-[#E8EDF2]"/></label>
               </div>
-              <button type="button" onClick={add} className="mt-3 w-full rounded-lg bg-gold px-3 py-2.5 text-sm font-bold text-black">Añadir punto</button>
+              <button type="button" onClick={add} className="mt-3 w-full rounded-lg bg-[#C6A15B] px-3 py-2.5 text-sm font-bold text-[#171C24]">Añadir punto</button>
               <button type="button" onClick={()=>{if(puntosCoord3.length<3){setEstadoCoord3("Añade al menos tres puntos");return;}setCerradoCoord3(true);setEstadoCoord3("Contorno cerrado");}} className="mt-2 w-full rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold">Cerrar contorno</button>
             </div>
             <div className="rounded-xl border border-white/10 p-3 text-xs"><div className="flex flex-wrap justify-between gap-2"><b>Último punto</b><span className="font-mono">{last.x.toFixed(2)}, {last.y.toFixed(2)}</span></div><p className="mt-2 min-h-5 text-slate-400" aria-live="polite">{estadoCoord3||"Añade puntos y observa el trazado."}</p></div>
