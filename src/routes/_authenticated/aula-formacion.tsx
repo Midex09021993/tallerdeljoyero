@@ -2633,7 +2633,7 @@ function AulaFormacionPage() {
                 {renderLaboratorioPlaca()}
 
                 {renderLaboratorioGeometria()}
-                <RhinoObjectExplorer visible={lecturaAbierta?.numero === 2 && paginaLectura === 4} materials={materialesVistaAula} />
+                
                 {lecturaAbierta?.numero === 2 && paginaLectura === 4 && <section className="mt-5 overflow-hidden rounded-2xl border border-[#C6A15B]/35 bg-gradient-to-br from-[#222B36] via-[#1D2630] to-[#171C24] p-4 text-white shadow-lg sm:p-5">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div><p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#D8B979]">Mini Lab · Rhino 7</p><h4 className="mt-1 text-lg font-semibold">Comandos y selección</h4></div>
