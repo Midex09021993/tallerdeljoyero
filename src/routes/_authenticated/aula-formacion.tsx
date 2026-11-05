@@ -1836,7 +1836,7 @@ function AulaFormacionPage() {
             <h4 className="mt-1 text-xl font-semibold">CURVE EDITOR STUDIO</h4>
             <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-300">11 comandos de edición y transformación, más un reto integrador para perfiles de joyería.</p>
             <div className="mt-3 flex flex-wrap gap-2 text-[10px] text-slate-300">
-              {["12 comandos","Viewport técnico","Inspector de parámetros","Práctica guiada"].map(x=><span key={x} className="rounded-full border border-white/15 px-3 py-1.5">{x}</span>)}
+              {["11 comandos","Viewport técnico","Inspector de parámetros","Práctica guiada"].map(x=><span key={x} className="rounded-full border border-white/15 px-3 py-1.5">{x}</span>)}
             </div>
           </div>
           <button type="button" onClick={() => setLaboratorioSesion4Abierto(true)} className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-b from-amber-200 to-amber-500 px-5 py-3 text-sm font-bold text-[#21180a] shadow-lg hover:brightness-105">
