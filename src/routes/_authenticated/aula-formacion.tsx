@@ -1829,7 +1829,7 @@ function AulaFormacionPage() {
         </div>
       </section>
     );
-    return <LaboratorioCurveEditor key={initialModule} initialModule={initialModule} onClose={() => setLaboratorioSesion4Abierto(false)} />;
+    return <LaboratorioCurveEditor initialModule={initialModule} onClose={() => setLaboratorioSesion4Abierto(false)} />;
   };
 
   const renderRhinoCommand = (command: string, detail: string) => (
