@@ -177,7 +177,7 @@ export default function RhinoObjectExplorer({ visible, materials }: Props) {
   const controlsRef = useRef<OrbitControls | null>(null);
   const sceneRef = useRef<Scene | null>(null);
   const selectionRef = useRef<Object3D[]>([]);
-  const visibleEntries = useMemo(() => entries.filter(e => category === "all" || e.category === category), [entries, category]);
+  const visibleEntries = entries;
   const selected = entries.find(e => e.object.uuid === selectedId) ?? null;
   const selectedGuide = selected ? TEACHING_GUIDES[selected.name] : null;
   const ringStoragePath = useMemo(
@@ -377,10 +377,6 @@ export default function RhinoObjectExplorer({ visible, materials }: Props) {
   }, [open, ringStoragePath]);
 
   useEffect(() => {
-    entries.forEach(e => { e.object.visible = category === "all" || e.category === category; });
-  }, [entries, category]);
-
-  useEffect(() => {
     const scene = sceneRef.current;
     if (!scene) return;
     selectionRef.current.forEach(item => {
@@ -466,7 +462,7 @@ export default function RhinoObjectExplorer({ visible, materials }: Props) {
         <div className="min-w-0"><p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#D8B979]">FADILAB · SESIÓN 02 · RHINO 7</p><h2 className="text-lg font-semibold">Geometry Lab <span className="font-normal text-[#AAB7C5]">/ Tipos de geometría</span></h2><p className="text-xs text-[#AAB7C5]">{entries.length} ejemplos didácticos · Área de trabajo 40 × 40 mm · Escena independiente del archivo 3DM</p></div>
         <div className="flex items-center gap-2"><button type="button" onClick={resetView} disabled={!entries.length} className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 px-3 py-2 text-xs font-semibold text-[#D0D8E0] disabled:opacity-40"><RotateCcw className="size-3.5"/> Encuadre</button><button type="button" onClick={toggleWireframe} disabled={!entries.length} className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 px-3 py-2 text-xs font-semibold text-[#D0D8E0] disabled:opacity-40"><Layers3 className="size-3.5"/> {wireframe ? "Sombreado" : "Alámbrico"}</button><button type="button" onClick={() => setOpen(false)} className="rounded-lg border border-white/15 p-2 text-[#D0D8E0]" aria-label="Cerrar"><X className="size-4"/></button></div>
       </header>
-      <nav className="flex shrink-0 gap-2 overflow-x-auto border-b border-white/10 bg-[#1B242E] px-4 py-2.5 sm:px-6">{CATEGORIES.map(item => <button key={item.id} type="button" onClick={() => setCategory(item.id)} aria-pressed={category === item.id} className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold ${category === item.id ? "border-[#C6A15B] bg-[#C6A15B]/15 text-[#E5C47C]" : "border-white/10 bg-[#26313D] text-[#B9C5D1]"}`}>{item.label} <span className="ml-1 opacity-70">{counts[item.id] ?? 0}</span></button>)}</nav>
+      <nav className="flex shrink-0 gap-2 overflow-x-auto border-b border-white/10 bg-[#1B242E] px-4 py-2.5 sm:px-6">{CATEGORIES.map(item => <button key={item.id} type="button" onClick={() => { setCategory(item.id); const target = item.id === "all" ? null : entries.find(entry => entry.category === item.id); if (target) { setSelectedId(target.object.uuid); setChallengeAnswer(null); setChallengeChecked(false); } }} aria-pressed={category === item.id} className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold ${category === item.id ? "border-[#C6A15B] bg-[#C6A15B]/15 text-[#E5C47C]" : "border-white/10 bg-[#26313D] text-[#B9C5D1]"}`}>{item.label} <span className="ml-1 opacity-70">{counts[item.id] ?? 0}</span></button>)}</nav>
       <div className="grid min-h-0 flex-1 gap-3 overflow-hidden p-3 sm:p-4 lg:grid-cols-[minmax(0,1fr)_320px]">
         <section className="relative min-h-[260px] overflow-hidden rounded-xl border border-white/10 bg-[#141B24]"><div ref={viewportRef} className="absolute inset-0"/><div className="pointer-events-none absolute left-4 top-4 z-10 rounded-lg border border-white/15 bg-[#202A35]/90 px-3 py-2 shadow-lg"><p className="text-[10px] font-bold tracking-[.16em] text-[#E6C77D]">PERSPECTIVA</p><p className="mt-0.5 text-[9px] text-[#AAB7C5]">Área de trabajo · 40 × 40 mm</p></div>
           <div className="pointer-events-none absolute bottom-4 left-4 z-10 flex items-center gap-2 rounded-xl border border-white/10 bg-[#202A35]/85 px-3 py-2 shadow-lg">
