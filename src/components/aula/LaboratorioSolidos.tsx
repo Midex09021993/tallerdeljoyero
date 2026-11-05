@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Box, CircleDot, RotateCcw, Ruler, ShieldCheck, X, ArrowUpRight, CheckCircle2, AlertTriangle, Layers3 } from "lucide-react";
+import { Box, CircleDot, RotateCcw, ShieldCheck, X, ArrowUpRight, CheckCircle2, AlertTriangle, Layers3 } from "lucide-react";
 
 type Lab = "builder" | "ring" | "inspector";
 const shell = "rounded-xl border border-white/10 bg-[#202A35]";
