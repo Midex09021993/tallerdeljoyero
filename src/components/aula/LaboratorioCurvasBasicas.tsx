@@ -149,7 +149,6 @@ export default function LaboratorioCurvasBasicas({ onClose }: Props) {
             {showGrid&&<g stroke="#354454" strokeWidth="1">{GRID.map(v=><line key={`v${v}`} x1={v} y1="0" x2={v} y2="520"/>)}{Array.from({length:14},(_,i)=><line key={`h${i}`} x1="0" y1={i*40} x2="800" y2={i*40}/>)}</g>}
             <path d="M0 260 H800 M400 0 V520" stroke="#8294A8" strokeWidth="1.2" strokeDasharray="7 6" opacity=".7"/>
             <text x="785" y="250" fill="#AAB7C5" textAnchor="end" fontSize="12">X+</text><text x="412" y="18" fill="#AAB7C5" fontSize="12">Y+</text><text x="14" y="505" fill="#8294A8" fontSize="11">PLANO XY · VISTA SUPERIOR (TOP)</text>
-            {Object.values(completed).filter((s): s is Shape => !!s).map((shape,i)=><g key={`done-${i}`}>{drawShape(shape,.48)}</g>)}
             {drawDraft()}
             {draft.map((p,i)=><g key={i}><circle cx={p.x} cy={p.y} r="7" fill={current.color} stroke="#171C24" strokeWidth="2"/>{showCoordinates&&<text x={p.x+10} y={p.y-10} fill="#E8EDF2" fontSize="12">{fmt(p.x)}, {fmt(520-p.y)}</text>}</g>)}
             {currentShape&&<g>{drawShape(currentShape,1)}</g>}
