@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ArrowRight, CheckCircle2, RotateCcw, Target } from "lucide-react";
 
 type ToolId = "fillet"|"chamfer"|"offset"|"trim"|"split"|"extend"|"join"|"move"|"copy"|"rotate"|"scale"|"integrador";
@@ -18,8 +18,9 @@ const tools: {id:ToolId;name:string;goal:string;command:string;steps:string[];ti
 {id:"integrador",name:"Reto integrador",goal:"Resolver un perfil de joyería combinando las operaciones.",command:"Flujo de trabajo",steps:["Aplica Fillet y compara con Chamfer.","Genera un Offset y revisa el espesor.","Limpia con Trim y divide con Split.","Extiende y une segmentos.","Crea una variante con Copy, Move, Rotate y Scale."],tip:"Conserva el original y verifica medidas y tolerancias."}
 ];
 export default function LaboratorioCurveEditor({initialModule="fillet",onClose}:Props){
- const [active,setActive]=useState<ToolId>(initialModule);
- useEffect(()=>{setActive(initialModule);},[initialModule]);
+ const [activeState,setActiveState]=useState<{initial:ToolId;active:ToolId}>({initial:initialModule,active:initialModule});
+ const active=activeState.initial===initialModule?activeState.active:initialModule;
+ const setActive=(next:ToolId)=>setActiveState({initial:initialModule,active:next});
  const [radius,setRadius]=useState(2),[distance,setDistance]=useState(1),[angle,setAngle]=useState(90),[factor,setFactor]=useState(.8);
  const [done,setDone]=useState<ToolId[]>([]);
  const current=tools.find(t=>t.id===active)!;
