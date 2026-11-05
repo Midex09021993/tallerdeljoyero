@@ -2739,6 +2739,9 @@ function AulaFormacionPage() {
                     {renderLaboratorioPreparacion()}
                     {renderLaboratorioSesion4()}
                     {renderLaboratorioRestricciones()}
+                    {lecturaAbierta?.numero === 6 && paginaLectura === 1 && <LaboratorioSolidos onlyLab="builder" />}
+                    {lecturaAbierta?.numero === 6 && paginaLectura === 3 && <LaboratorioSolidos onlyLab="ring" />}
+                    {lecturaAbierta?.numero === 6 && paginaLectura === 4 && <LaboratorioSolidos onlyLab="inspector" />}
                   </section>
                   {lecturaAbierta?.numero === 5 && <section className="min-w-0">{renderLaboratorioSesion5()}</section>}
                 </div>
@@ -3400,7 +3403,6 @@ function AulaFormacionPage() {
                     {renderLaboratorioPreparacion()}
                 {renderLaboratorioSesion4()}
                 {lecturaAbierta?.numero === 5 && <section className="mx-auto mt-7 w-full max-w-[1100px]">{renderLaboratorioSesion5()}</section>}
-                {lecturaAbierta?.numero === 6 && <LaboratorioSolidos />}
                 {renderLaboratorioRestricciones()}
                 {renderLaboratorioOsnap()}
                 {renderLaboratorioSmartTrack()}
