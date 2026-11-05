@@ -2631,6 +2631,7 @@ function AulaFormacionPage() {
                 {renderLaboratorioPlaca()}
 
                 {renderLaboratorioGeometria()}
+                <RhinoObjectExplorer visible={lecturaAbierta?.numero === 2 && paginaLectura === 4} materials={materialesVistaAula} />
                 
                 {lecturaAbierta?.numero === 2 && paginaLectura === 4 && <>
                   <section className="mt-5 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
@@ -3286,6 +3287,7 @@ function AulaFormacionPage() {
                 {renderLaboratorioSmartTrack()}
                 {renderLaboratorioPlaca()}
                 {renderLaboratorioGeometria()}
+                <RhinoObjectExplorer visible={lecturaAbierta?.numero === 2 && paginaLectura === 4} materials={materialesVistaAula} />
                 
                 {lecturaAbierta?.numero === 2 && paginaLectura === 4 && <>
                   <section className="mt-5 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
