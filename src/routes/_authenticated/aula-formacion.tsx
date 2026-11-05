@@ -3258,6 +3258,7 @@ function AulaFormacionPage() {
                   <a href="/aurum-render" className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-[#C4A15A] px-5 py-3 text-sm font-semibold text-[#1D1D1F] shadow-sm transition hover:bg-[#B99552] focus:outline-none focus:ring-2 focus:ring-[#B99552]/30">Ir a Aurum Render <span aria-hidden="true">↗</span></a>
                 </div>}
                 {renderLaboratorioCoordenadas()}
+                {renderLaboratorioSesion4()}
                 {renderLaboratorioRestricciones()}
                 {renderLaboratorioOsnap()}
                 {renderLaboratorioSmartTrack()}
