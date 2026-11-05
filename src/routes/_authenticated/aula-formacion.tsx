@@ -669,6 +669,10 @@ function AulaFormacionPage() {
   const [modulosGeometriaCompletados, setModulosGeometriaCompletados] = useState<number[]>([]);
   const [laboratorioGeometriaAbierto, setLaboratorioGeometriaAbierto] = useState(false);
   const [laboratorioCurvasBasicasAbierto, setLaboratorioCurvasBasicasAbierto] = useState(false);
+  const [comandoMiniLab, setComandoMiniLab] = useState<"line" | "circle" | "rectangle">("line");
+  const [objetoMiniLab, setObjetoMiniLab] = useState<string | null>(null);
+  const [respuestaMiniLab, setRespuestaMiniLab] = useState<string | null>(null);
+
   const [laboratorioCapasAbierto, setLaboratorioCapasAbierto] = useState(false);
   const [capaMetalVisible, setCapaMetalVisible] = useState(true);
   const [capaGemVisible, setCapaGemVisible] = useState(true);
@@ -2630,6 +2634,34 @@ function AulaFormacionPage() {
 
                 {renderLaboratorioGeometria()}
                 <RhinoObjectExplorer visible={lecturaAbierta?.numero === 2 && paginaLectura === 4} materials={materialesVistaAula} />
+                {lecturaAbierta?.numero === 2 && paginaLectura === 4 && <section className="mt-5 overflow-hidden rounded-2xl border border-[#C6A15B]/35 bg-gradient-to-br from-[#222B36] via-[#1D2630] to-[#171C24] p-4 text-white shadow-lg sm:p-5">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div><p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#D8B979]">Mini Lab · Rhino 7</p><h4 className="mt-1 text-lg font-semibold">Comandos y selección</h4></div>
+                    <span className="rounded-full border border-white/15 px-3 py-1 text-[10px] text-[#D0D8E0]">3 prácticas rápidas</span>
+                  </div>
+                  <div className="mt-3 grid grid-cols-3 gap-2">
+                    {([{id:"line",name:"LINE",help:"2 puntos",icon:"—"},{id:"circle",name:"CIRCLE",help:"Centro + radio",icon:"○"},{id:"rectangle",name:"RECTANGLE",help:"2 esquinas",icon:"□"}] as const).map(item=><button key={item.id} type="button" onClick={()=>setComandoMiniLab(item.id)} className={`rounded-xl border p-3 text-left transition ${comandoMiniLab===item.id?"border-[#D8B979] bg-[#C6A15B]/15":"border-white/10 bg-[#27323E] hover:border-white/25"}`}><span className="text-xl text-[#D8B979]">{item.icon}</span><span className="mt-1 block text-xs font-bold">{item.name}</span><span className="mt-0.5 block text-[10px] text-[#B8C4D0]">{item.help}</span></button>)}
+                  </div>
+                  <div className="mt-3 flex flex-col gap-3 rounded-xl border border-white/10 bg-[#151D27] p-3 sm:flex-row sm:items-center">
+                    <div className="flex h-20 shrink-0 items-center justify-center rounded-lg bg-[#202B37] px-6 sm:w-36">
+                      {comandoMiniLab==="line"?<div className="h-1 w-24 rotate-[-12deg] rounded-full bg-[#D8B979]"/>:comandoMiniLab==="circle"?<div className="size-14 rounded-full border-2 border-[#D8B979]"/>:<div className="h-12 w-20 border-2 border-[#D8B979]"/>}
+                    </div>
+                    <div className="min-w-0"><p className="text-xs font-semibold text-[#E9D4A8]">{comandoMiniLab==="line"?"LINE · Línea":comandoMiniLab==="circle"?"CIRCLE · Círculo":"RECTANGLE · Rectángulo"}</p><p className="mt-1 text-sm text-[#E3E8EE]">{comandoMiniLab==="line"?"Marca el punto inicial y luego el punto final.":comandoMiniLab==="circle"?"Marca el centro y después define el radio.":"Marca dos esquinas opuestas."}</p><p className="mt-1 text-[10px] text-[#AAB7C5]">Observa la figura y repite la secuencia en Rhino.</p></div>
+                  </div>
+                  <div className="mt-3 rounded-xl border border-white/10 bg-[#202B37] p-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2"><p className="text-xs font-semibold">Practica seleccionar</p><button type="button" onClick={()=>setObjetoMiniLab(null)} className="rounded-lg border border-white/15 px-3 py-1.5 text-[10px] font-semibold text-[#E9D4A8] hover:bg-white/5">Esc · Quitar selección</button></div>
+                    <div className="mt-2 grid grid-cols-3 gap-2">
+                      {([{id:"Aro",shape:"◯"},{id:"Piedra",shape:"◆"},{id:"Perfil",shape:"▱"}]).map(item=><button key={item.id} type="button" onClick={()=>setObjetoMiniLab(item.id)} className={`rounded-lg border p-2 text-center transition ${objetoMiniLab===item.id?"border-[#D8B979] bg-[#C6A15B]/15 text-[#F2D99E]":"border-white/10 bg-[#17212C] text-[#C5D0DB] hover:border-white/25"}`}><span className="block text-xl">{item.shape}</span><span className="text-[10px]">{item.id}</span></button>)}
+                    </div>
+                    <p className="mt-2 text-[11px] text-[#B8C4D0]" aria-live="polite">{objetoMiniLab? `Seleccionado: ${objetoMiniLab}. En Rhino, pulsa Esc para quitar la selección.`:"Selecciona una pieza para identificarla."}</p>
+                  </div>
+                  <div className="mt-3 rounded-xl border border-white/10 bg-[#151D27] p-3">
+                    <p className="text-xs font-semibold">Comprueba: ¿qué tecla cancela el comando activo?</p>
+                    <div className="mt-2 flex gap-2"><button type="button" onClick={()=>setRespuestaMiniLab("Enter")} className={`rounded-lg border px-4 py-2 text-xs font-semibold ${respuestaMiniLab==="Enter"?"border-white/30 bg-white/10":"border-white/15 hover:bg-white/5"}`}>Enter</button><button type="button" onClick={()=>setRespuestaMiniLab("Esc")} className={`rounded-lg border px-4 py-2 text-xs font-semibold ${respuestaMiniLab==="Esc"?"border-[#65B995] bg-[#65B995]/10 text-[#8AD4B4]":"border-white/15 hover:bg-white/5"}`}>Esc</button></div>
+                    {respuestaMiniLab&&<p className={`mt-2 text-xs ${respuestaMiniLab==="Esc"?"text-[#8AD4B4]":"text-[#F0C27B]"}`} aria-live="polite">{respuestaMiniLab==="Esc"?"¡Correcto! Esc cancela el comando activo. Enter confirma o finaliza cuando Rhino lo solicita.":"Casi. Enter confirma; Esc cancela el comando activo."}</p>}
+                  </div>
+                </section>}
+
                 {renderLaboratorioCapas()}
                 {renderSelectorVistasPlano()}
                 {lecturaAbierta?.numero === 2 && paginaLectura === 2 && <section className="mt-7 overflow-hidden rounded-2xl border border-[#d9c9a8] bg-gradient-to-br from-[#fffefa] via-white to-[#f7f2e8] shadow-sm"><div className="flex flex-wrap items-center justify-between gap-4 p-5 sm:p-6"><div className="min-w-0"><p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#98743c]">FADILAB · Sesión 02 · Práctica interactiva</p><h4 className="mt-1 text-xl font-semibold tracking-tight text-[#252a31]">CURVE LAB <span className="font-normal text-[#7b8490]">/ Curvas básicas</span></h4><p className="mt-1 max-w-2xl text-sm leading-6 text-[#626d79]">Construye líneas, polilíneas, círculos y rectángulos sobre un plano XY interactivo. Practica el flujo de puntos de cada herramienta y comprueba tus resultados.</p><div className="mt-3 flex flex-wrap gap-2 text-[10px] font-medium text-[#6c6251]">{["4 herramientas Rhino","Plano XY interactivo","Validación por ejercicio","Progreso de práctica"].map(item=><span key={item} className="rounded-full border border-[#e7ddca] bg-white/80 px-3 py-1.5">{item}</span>)}</div></div><button type="button" onClick={() => setLaboratorioCurvasBasicasAbierto(true)} className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-gradient-to-b from-[#e6c77d] to-[#bf9952] px-5 py-3 text-sm font-bold text-[#241b0c] shadow-sm transition hover:-translate-y-0.5 hover:brightness-105"><Pencil className="size-4"/> Iniciar Curve Lab <ArrowRight className="size-4"/></button></div></section>}
