@@ -82,7 +82,16 @@ export default function LaboratorioCurvasBasicas({ onClose }: Props) {
     const snapshot = { tool, points: [...draft] } as Shape;
     setCompleted(prev => ({ ...prev, [tool]: snapshot }));
     setScore(prev => prev + 25);
-    setMessage(`¡Correcto! ${current.name} registrada. Has demostrado cómo construir esta geometría.`);
+    const currentIndex = TOOLS.findIndex(item => item.id === tool);
+    const nextTool = TOOLS[currentIndex + 1];
+    setDraft([]);
+    setPolylineFinished(false);
+    if (nextTool) {
+      setTool(nextTool.id);
+      setMessage(`¡Correcto! ${current.name} validada (+25 pts). Avanzamos automáticamente al siguiente ejercicio: ${nextTool.name}. ${nextTool.instruction}`);
+    } else {
+      setMessage(`¡Excelente! ${current.name} validada (+25 pts). Has completado los cuatro ejercicios del Curve Lab.`);
+    }
   };
 
   const resetCurrent = () => {
