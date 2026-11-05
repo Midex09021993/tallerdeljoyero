@@ -28,6 +28,7 @@ import { Route as SlugIndexRouteImport } from './routes/$slug.index'
 import { Route as SlugProductoRouteImport } from './routes/$slug.$producto'
 import { Route as AuthenticatedAulaComandosRouteImport } from './routes/_authenticated/aula-comandos'
 import { Route as AuthenticatedAulaFormacionRouteImport } from './routes/_authenticated/aula-formacion'
+import { Route as AuthenticatedAurumIntelligenceRouteImport } from './routes/_authenticated/aurum-intelligence'
 import { Route as AuthenticatedAurumRenderRouteImport } from './routes/_authenticated/aurum-render'
 import { Route as AuthenticatedAurumRenderPluginRouteImport } from './routes/_authenticated/aurum-render-plugin'
 import { Route as AuthenticatedCastingRouteImport } from './routes/_authenticated/casting'
@@ -175,6 +176,12 @@ const AuthenticatedAulaFormacionRoute =
   AuthenticatedAulaFormacionRouteImport.update({
     id: '/aula-formacion',
     path: '/aula-formacion',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAurumIntelligenceRoute =
+  AuthenticatedAurumIntelligenceRouteImport.update({
+    id: '/aurum-intelligence',
+    path: '/aurum-intelligence',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedAurumRenderRoute =
@@ -476,6 +483,7 @@ export interface FileRoutesByFullPath {
   '/$slug/$producto': typeof SlugProductoRoute
   '/aula-comandos': typeof AuthenticatedAulaComandosRoute
   '/aula-formacion': typeof AuthenticatedAulaFormacionRoute
+  '/aurum-intelligence': typeof AuthenticatedAurumIntelligenceRoute
   '/aurum-render': typeof AuthenticatedAurumRenderRoute
   '/aurum-render-plugin': typeof AuthenticatedAurumRenderPluginRoute
   '/casting': typeof AuthenticatedCastingRoute
@@ -547,6 +555,7 @@ export interface FileRoutesByTo {
   '/$slug/$producto': typeof SlugProductoRoute
   '/aula-comandos': typeof AuthenticatedAulaComandosRoute
   '/aula-formacion': typeof AuthenticatedAulaFormacionRoute
+  '/aurum-intelligence': typeof AuthenticatedAurumIntelligenceRoute
   '/aurum-render': typeof AuthenticatedAurumRenderRoute
   '/aurum-render-plugin': typeof AuthenticatedAurumRenderPluginRoute
   '/casting': typeof AuthenticatedCastingRoute
@@ -619,6 +628,7 @@ export interface FileRoutesById {
   '/$slug/$producto': typeof SlugProductoRoute
   '/_authenticated/aula-comandos': typeof AuthenticatedAulaComandosRoute
   '/_authenticated/aula-formacion': typeof AuthenticatedAulaFormacionRoute
+  '/_authenticated/aurum-intelligence': typeof AuthenticatedAurumIntelligenceRoute
   '/_authenticated/aurum-render': typeof AuthenticatedAurumRenderRoute
   '/_authenticated/aurum-render-plugin': typeof AuthenticatedAurumRenderPluginRoute
   '/_authenticated/casting': typeof AuthenticatedCastingRoute
@@ -693,6 +703,7 @@ export interface FileRouteTypes {
     | '/$slug/$producto'
     | '/aula-comandos'
     | '/aula-formacion'
+    | '/aurum-intelligence'
     | '/aurum-render'
     | '/aurum-render-plugin'
     | '/casting'
@@ -764,6 +775,7 @@ export interface FileRouteTypes {
     | '/$slug/$producto'
     | '/aula-comandos'
     | '/aula-formacion'
+    | '/aurum-intelligence'
     | '/aurum-render'
     | '/aurum-render-plugin'
     | '/casting'
@@ -835,6 +847,7 @@ export interface FileRouteTypes {
     | '/$slug/$producto'
     | '/_authenticated/aula-comandos'
     | '/_authenticated/aula-formacion'
+    | '/_authenticated/aurum-intelligence'
     | '/_authenticated/aurum-render'
     | '/_authenticated/aurum-render-plugin'
     | '/_authenticated/casting'
@@ -1050,6 +1063,13 @@ declare module '@tanstack/react-router' {
       path: '/aula-formacion'
       fullPath: '/aula-formacion'
       preLoaderRoute: typeof AuthenticatedAulaFormacionRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/aurum-intelligence': {
+      id: '/_authenticated/aurum-intelligence'
+      path: '/aurum-intelligence'
+      fullPath: '/aurum-intelligence'
+      preLoaderRoute: typeof AuthenticatedAurumIntelligenceRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/aurum-render': {
@@ -1464,6 +1484,7 @@ const AuthenticatedVentasRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAulaComandosRoute: typeof AuthenticatedAulaComandosRoute
   AuthenticatedAulaFormacionRoute: typeof AuthenticatedAulaFormacionRoute
+  AuthenticatedAurumIntelligenceRoute: typeof AuthenticatedAurumIntelligenceRoute
   AuthenticatedAurumRenderRoute: typeof AuthenticatedAurumRenderRoute
   AuthenticatedAurumRenderPluginRoute: typeof AuthenticatedAurumRenderPluginRoute
   AuthenticatedCastingRoute: typeof AuthenticatedCastingRoute
@@ -1502,6 +1523,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAulaComandosRoute: AuthenticatedAulaComandosRoute,
   AuthenticatedAulaFormacionRoute: AuthenticatedAulaFormacionRoute,
+  AuthenticatedAurumIntelligenceRoute: AuthenticatedAurumIntelligenceRoute,
   AuthenticatedAurumRenderRoute: AuthenticatedAurumRenderRoute,
   AuthenticatedAurumRenderPluginRoute: AuthenticatedAurumRenderPluginRoute,
   AuthenticatedCastingRoute: AuthenticatedCastingRoute,
