@@ -668,6 +668,7 @@ function AulaFormacionPage() {
   const [faseLaboratorioGeometria, setFaseLaboratorioGeometria] = useState(0);
   const [modulosGeometriaCompletados, setModulosGeometriaCompletados] = useState<number[]>([]);
   const [laboratorioGeometriaAbierto, setLaboratorioGeometriaAbierto] = useState(false);
+  const [guiaComandosAbierta, setGuiaComandosAbierta] = useState(false);
   const [laboratorioCurvasBasicasAbierto, setLaboratorioCurvasBasicasAbierto] = useState(false);
 
   const [laboratorioCapasAbierto, setLaboratorioCapasAbierto] = useState(false);
@@ -2631,28 +2632,26 @@ function AulaFormacionPage() {
 
                 {renderLaboratorioGeometria()}
                 
-                {lecturaAbierta?.numero === 2 && paginaLectura === 4 && <section className="mt-5 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-                  <div className="flex items-center justify-between gap-3">
-                    <div><p className="text-[10px] font-bold uppercase tracking-[.16em] text-[#A47B32]">Guía visual · Rhino 7</p><h4 className="mt-1 text-base font-semibold text-slate-900">Del comando al objeto</h4></div>
-                    <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-medium text-slate-600">Flujo de trabajo</span>
-                  </div>
-                  <div className="mt-4 grid gap-2 sm:grid-cols-5">
-                    {[
-                      {n:"01",t:"Crear",d:"Escribe LINE, CIRCLE o RECTANGLE.",k:"Comando"},
-                      {n:"02",t:"Indicar",d:"Marca los puntos que Rhino solicita.",k:"Puntos"},
-                      {n:"03",t:"Confirmar",d:"Pulsa Enter para terminar o aceptar.",k:"Enter"},
-                      {n:"04",t:"Seleccionar",d:"Haz clic sobre el objeto creado.",k:"Clic"},
-                      {n:"05",t:"Cancelar",d:"Pulsa Esc para salir o quitar selección.",k:"Esc"},
-                    ].map((step)=><div key={step.n} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-                      <span className="text-[10px] font-bold tracking-wider text-[#A47B32]">{step.n} · {step.k}</span>
-                      <p className="mt-1 text-sm font-semibold text-slate-900">{step.t}</p>
-                      <p className="mt-1 text-xs leading-relaxed text-slate-600">{step.d}</p>
-                    </div>)}
-                  </div>
-                  <div className="mt-3 rounded-lg bg-[#F7F3E9] px-3 py-2.5 text-xs leading-relaxed text-slate-700">
-                    <span className="font-semibold text-[#8A672B]">En joyería:</span> crea un círculo para ubicar una piedra, selecciona el perfil del aro y confirma cada comando leyendo la línea de instrucciones de Rhino.
-                  </div>
-                </section>}
+                {lecturaAbierta?.numero === 2 && paginaLectura === 4 && <>
+                  <section className="mt-5 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+                    <div><p className="text-[10px] font-bold uppercase tracking-[.16em] text-[#A47B32]">Mini guía · Rhino 7</p><h4 className="mt-1 text-base font-semibold text-slate-900">Del comando al objeto</h4><p className="mt-1 text-sm text-slate-600">Aprende el flujo básico para crear y seleccionar geometría.</p></div>
+                    <button type="button" onClick={()=>setGuiaComandosAbierta(true)} className="inline-flex items-center gap-2 rounded-lg bg-[#C6A15B] px-4 py-2.5 text-sm font-semibold text-slate-950 shadow-sm transition hover:brightness-105"><BookOpenCheck className="size-4"/> Abrir guía</button>
+                  </section>
+                  {guiaComandosAbierta && <div className="fixed inset-0 z-[120] flex h-[100dvh] w-full flex-col overflow-y-auto bg-[#171C24] text-[#E8EDF2]" role="dialog" aria-modal="true" aria-label="Guía de comandos y selección en Rhino">
+                    <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-white/10 bg-[#1D2630] px-4 py-3 sm:px-7"><div><p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#D8B979]">FADILAB · Sesión 02 · Rhino 7</p><h3 className="text-lg font-semibold">Del comando al objeto</h3><p className="text-xs text-[#AAB7C5]">Guía visual · Crear, confirmar y seleccionar</p></div><button type="button" onClick={()=>setGuiaComandosAbierta(false)} className="rounded-lg border border-white/15 px-3 py-2 text-sm font-semibold hover:border-[#C6A15B]">Cerrar ✕</button></header>
+                    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col justify-center gap-5 p-4 sm:p-8">
+                      <div className="grid gap-3 sm:grid-cols-5">{[
+                        {n:"01",t:"Crear",d:"Escribe LINE, CIRCLE o RECTANGLE.",k:"⌨",e:"Comando"},
+                        {n:"02",t:"Indicar",d:"Marca los puntos que Rhino solicita.",k:"●",e:"Puntos"},
+                        {n:"03",t:"Confirmar",d:"Pulsa Enter cuando Rhino lo indique.",k:"↵",e:"Enter"},
+                        {n:"04",t:"Seleccionar",d:"Haz clic sobre la geometría creada.",k:"◉",e:"Clic"},
+                        {n:"05",t:"Cancelar",d:"Pulsa Esc para cancelar o quitar selección.",k:"Esc",e:"Esc"},
+                      ].map(step=><article key={step.n} className="rounded-xl border border-white/10 bg-[#222B36] p-4"><span className="text-[10px] font-bold tracking-widest text-[#D8B979]">{step.n} · {step.e}</span><div className="my-4 flex h-20 items-center justify-center rounded-lg bg-[#171C24] text-3xl font-semibold text-[#D8B979]">{step.k}</div><h4 className="font-semibold">{step.t}</h4><p className="mt-1 text-sm leading-5 text-[#AAB7C5]">{step.d}</p></article>)}</div>
+                      <section className="rounded-xl border border-[#C6A15B]/30 bg-[#C6A15B]/10 p-4"><p className="text-[10px] font-bold uppercase tracking-widest text-[#D8B979]">Aplicación en joyería</p><p className="mt-2 text-sm leading-6 text-[#E8EDF2]">Crea un círculo para definir una referencia de piedra, dibuja el perfil del aro con una curva y selecciona cada objeto para organizarlo. Lee siempre la indicación de la línea de comandos antes del siguiente clic.</p></section>
+                      <p className="text-center text-xs text-[#AAB7C5]">Recuerda: Enter confirma cuando Rhino lo solicita · Esc cancela el comando activo.</p>
+                    </main>
+                  </div>}
+                </>}
                 {renderLaboratorioCapas()}
                 {renderSelectorVistasPlano()}
                 {lecturaAbierta?.numero === 2 && paginaLectura === 2 && <section className="mt-7 overflow-hidden rounded-2xl border border-[#d9c9a8] bg-gradient-to-br from-[#fffefa] via-white to-[#f7f2e8] shadow-sm"><div className="flex flex-wrap items-center justify-between gap-4 p-5 sm:p-6"><div className="min-w-0"><p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#98743c]">FADILAB · Sesión 02 · Práctica interactiva</p><h4 className="mt-1 text-xl font-semibold tracking-tight text-[#252a31]">CURVE LAB <span className="font-normal text-[#7b8490]">/ Curvas básicas</span></h4><p className="mt-1 max-w-2xl text-sm leading-6 text-[#626d79]">Construye líneas, polilíneas, círculos y rectángulos sobre un plano XY interactivo. Practica el flujo de puntos de cada herramienta y comprueba tus resultados.</p><div className="mt-3 flex flex-wrap gap-2 text-[10px] font-medium text-[#6c6251]">{["4 herramientas Rhino","Plano XY interactivo","Validación por ejercicio","Progreso de práctica"].map(item=><span key={item} className="rounded-full border border-[#e7ddca] bg-white/80 px-3 py-1.5">{item}</span>)}</div></div><button type="button" onClick={() => setLaboratorioCurvasBasicasAbierto(true)} className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-gradient-to-b from-[#e6c77d] to-[#bf9952] px-5 py-3 text-sm font-bold text-[#241b0c] shadow-sm transition hover:-translate-y-0.5 hover:brightness-105"><Pencil className="size-4"/> Iniciar Curve Lab <ArrowRight className="size-4"/></button></div></section>}
@@ -3288,28 +3287,26 @@ function AulaFormacionPage() {
                 {renderLaboratorioPlaca()}
                 {renderLaboratorioGeometria()}
                 
-                {lecturaAbierta?.numero === 2 && paginaLectura === 4 && <section className="mt-5 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-                  <div className="flex items-center justify-between gap-3">
-                    <div><p className="text-[10px] font-bold uppercase tracking-[.16em] text-[#A47B32]">Guía visual · Rhino 7</p><h4 className="mt-1 text-base font-semibold text-slate-900">Del comando al objeto</h4></div>
-                    <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-medium text-slate-600">Flujo de trabajo</span>
-                  </div>
-                  <div className="mt-4 grid gap-2 sm:grid-cols-5">
-                    {[
-                      {n:"01",t:"Crear",d:"Escribe LINE, CIRCLE o RECTANGLE.",k:"Comando"},
-                      {n:"02",t:"Indicar",d:"Marca los puntos que Rhino solicita.",k:"Puntos"},
-                      {n:"03",t:"Confirmar",d:"Pulsa Enter para terminar o aceptar.",k:"Enter"},
-                      {n:"04",t:"Seleccionar",d:"Haz clic sobre el objeto creado.",k:"Clic"},
-                      {n:"05",t:"Cancelar",d:"Pulsa Esc para salir o quitar selección.",k:"Esc"},
-                    ].map((step)=><div key={step.n} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-                      <span className="text-[10px] font-bold tracking-wider text-[#A47B32]">{step.n} · {step.k}</span>
-                      <p className="mt-1 text-sm font-semibold text-slate-900">{step.t}</p>
-                      <p className="mt-1 text-xs leading-relaxed text-slate-600">{step.d}</p>
-                    </div>)}
-                  </div>
-                  <div className="mt-3 rounded-lg bg-[#F7F3E9] px-3 py-2.5 text-xs leading-relaxed text-slate-700">
-                    <span className="font-semibold text-[#8A672B]">En joyería:</span> crea un círculo para ubicar una piedra, selecciona el perfil del aro y confirma cada comando leyendo la línea de instrucciones de Rhino.
-                  </div>
-                </section>}
+                {lecturaAbierta?.numero === 2 && paginaLectura === 4 && <>
+                  <section className="mt-5 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+                    <div><p className="text-[10px] font-bold uppercase tracking-[.16em] text-[#A47B32]">Mini guía · Rhino 7</p><h4 className="mt-1 text-base font-semibold text-slate-900">Del comando al objeto</h4><p className="mt-1 text-sm text-slate-600">Aprende el flujo básico para crear y seleccionar geometría.</p></div>
+                    <button type="button" onClick={()=>setGuiaComandosAbierta(true)} className="inline-flex items-center gap-2 rounded-lg bg-[#C6A15B] px-4 py-2.5 text-sm font-semibold text-slate-950 shadow-sm transition hover:brightness-105"><BookOpenCheck className="size-4"/> Abrir guía</button>
+                  </section>
+                  {guiaComandosAbierta && <div className="fixed inset-0 z-[120] flex h-[100dvh] w-full flex-col overflow-y-auto bg-[#171C24] text-[#E8EDF2]" role="dialog" aria-modal="true" aria-label="Guía de comandos y selección en Rhino">
+                    <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-white/10 bg-[#1D2630] px-4 py-3 sm:px-7"><div><p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#D8B979]">FADILAB · Sesión 02 · Rhino 7</p><h3 className="text-lg font-semibold">Del comando al objeto</h3><p className="text-xs text-[#AAB7C5]">Guía visual · Crear, confirmar y seleccionar</p></div><button type="button" onClick={()=>setGuiaComandosAbierta(false)} className="rounded-lg border border-white/15 px-3 py-2 text-sm font-semibold hover:border-[#C6A15B]">Cerrar ✕</button></header>
+                    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col justify-center gap-5 p-4 sm:p-8">
+                      <div className="grid gap-3 sm:grid-cols-5">{[
+                        {n:"01",t:"Crear",d:"Escribe LINE, CIRCLE o RECTANGLE.",k:"⌨",e:"Comando"},
+                        {n:"02",t:"Indicar",d:"Marca los puntos que Rhino solicita.",k:"●",e:"Puntos"},
+                        {n:"03",t:"Confirmar",d:"Pulsa Enter cuando Rhino lo indique.",k:"↵",e:"Enter"},
+                        {n:"04",t:"Seleccionar",d:"Haz clic sobre la geometría creada.",k:"◉",e:"Clic"},
+                        {n:"05",t:"Cancelar",d:"Pulsa Esc para cancelar o quitar selección.",k:"Esc",e:"Esc"},
+                      ].map(step=><article key={step.n} className="rounded-xl border border-white/10 bg-[#222B36] p-4"><span className="text-[10px] font-bold tracking-widest text-[#D8B979]">{step.n} · {step.e}</span><div className="my-4 flex h-20 items-center justify-center rounded-lg bg-[#171C24] text-3xl font-semibold text-[#D8B979]">{step.k}</div><h4 className="font-semibold">{step.t}</h4><p className="mt-1 text-sm leading-5 text-[#AAB7C5]">{step.d}</p></article>)}</div>
+                      <section className="rounded-xl border border-[#C6A15B]/30 bg-[#C6A15B]/10 p-4"><p className="text-[10px] font-bold uppercase tracking-widest text-[#D8B979]">Aplicación en joyería</p><p className="mt-2 text-sm leading-6 text-[#E8EDF2]">Crea un círculo para definir una referencia de piedra, dibuja el perfil del aro con una curva y selecciona cada objeto para organizarlo. Lee siempre la indicación de la línea de comandos antes del siguiente clic.</p></section>
+                      <p className="text-center text-xs text-[#AAB7C5]">Recuerda: Enter confirma cuando Rhino lo solicita · Esc cancela el comando activo.</p>
+                    </main>
+                  </div>}
+                </>}
                 {renderLaboratorioCapas()}
                 {renderSelectorVistasPlano()}
                 <div className="mt-5 grid min-w-0 grid-cols-1 items-stretch gap-4 lg:grid-cols-2">
