@@ -2035,8 +2035,8 @@ function AulaFormacionPage() {
   const renderLaboratorioSesion5 = () => {
     if (lecturaAbierta?.numero !== 5) return null;
     // El editor permanece montado aunque se oculte: cerrar no destruye el trabajo.
-    const moduleByPage = [0, 0, 0, 1, 2, 3, 4, 4, 5];
-    const pageByModule = [2, 3, 4, 5, 6, 8];
+    const moduleByPage = [0, 0, 1, 2, 3, 4, 4, 5];
+    const pageByModule = [1, 2, 3, 4, 5, 7];
     const activeModule = moduleByPage[paginaLectura] ?? 0;
     return <div className="space-y-3">
       {!laboratorioSesion5Abierto && <button type="button" onClick={() => setLaboratorioSesion5Abierto(true)} className="flex w-full items-center justify-center gap-2 rounded-xl border border-gold/40 bg-gold/10 px-4 py-3 text-sm font-semibold text-gold-deep hover:bg-gold/15"><Layers className="size-4" /> Mostrar NURBS Studio</button>}
@@ -3380,6 +3380,7 @@ function AulaFormacionPage() {
                 {renderLaboratorioCoordenadas()}
                     {renderLaboratorioPreparacion()}
                 {renderLaboratorioSesion4()}
+                {lecturaAbierta?.numero === 5 && <section className="mx-auto mt-7 w-full max-w-[1100px]">{renderLaboratorioSesion5()}</section>}
                 {renderLaboratorioRestricciones()}
                 {renderLaboratorioOsnap()}
                 {renderLaboratorioSmartTrack()}
