@@ -1809,16 +1809,25 @@ function AulaFormacionPage() {
     { titulo: "Sólidos", pregunta: "¿Qué característica identifica a un sólido cerrado?", introduccion: "Un sólido es una geometría cerrada que encierra volumen.", claves: ["Encierra un volumen 3D.","Puede ser una superficie cerrada o una polisuperficie.","Puede crearse, separarse, modificarse y unirse."], aplicacion: "En joyería: representa cuerpos macizos y componentes de una montura.", ejemplo: "Ejemplo: una montura maciza debe cerrar su volumen.", opciones: [{ valor: "trazo", texto: "Está formado solo por líneas" }, { valor: "volumen", texto: "Delimita un volumen cerrado" }, { valor: "plano", texto: "Es una curva plana" }], correcta: "volumen", explicacion: "Correcto. Un sólido cerrado delimita un volumen tridimensional y representa un cuerpo, no solo líneas o superficies abiertas." },
   ];
   const renderLaboratorioSesion4 = () => {
-    if (lecturaAbierta?.numero !== 4 || ![1, 2, 3, 4, 5, 6].includes(paginaLectura)) return null;
-    const moduloPorApartado = {
-      1: "fillet",
-      2: "chamfer",
-      3: "trim",
-      4: "move",
-      5: "rotate",
-      6: "integrador",
-    } as const;
-    const initialModule = moduloPorApartado[paginaLectura as keyof typeof moduloPorApartado] ?? "fillet";
+    if (lecturaAbierta?.numero !== 4) return null;
+
+    // La lectura activa puede venir de Supabase y no coincidir con el orden
+    // de la plantilla local. Resolver el laboratorio por el título real.
+    const tituloApartado = String(seccionesLecturaActivas[paginaLectura]?.titulo ?? "")
+      .normalize("NFD")
+      .replace(/[\\u0300-\\u036f]/g, "")
+      .toLowerCase();
+    const moduloPorTitulo: Array<{ claves: string[]; modulo: "fillet"|"chamfer"|"trim"|"move"|"rotate"|"integrador" }> = [
+      { claves: ["integrador", "practica integradora", "reto integrador"], modulo: "integrador" },
+      { claves: ["trim", "split", "extend", "join", "limpiar y organizar curvas"], modulo: "trim" },
+      { claves: ["move", "copy", "mover", "copiar", "desplazar y duplicar"], modulo: "move" },
+      { claves: ["rotate", "scale", "rotar", "girar", "escalar", "orientacion y tamano"], modulo: "rotate" },
+      { claves: ["fillet", "empalme", "redonde"], modulo: "fillet" },
+      { claves: ["chamfer", "offset", "bisel", "contornos paralelos"], modulo: "chamfer" },
+    ];
+    const coincidencia = moduloPorTitulo.find(({ claves }) => claves.some(clave => tituloApartado.includes(clave)));
+    if (!coincidencia) return null;
+    const initialModule = coincidencia.modulo;
     if (!laboratorioSesion4Abierto) return (
       <section className="mt-7 overflow-hidden rounded-2xl border border-gold/30 bg-gradient-to-br from-[#171b21] via-[#111820] to-[#0c1219] p-5 text-white shadow-xl">
         <div className="flex flex-wrap items-center justify-between gap-4">
