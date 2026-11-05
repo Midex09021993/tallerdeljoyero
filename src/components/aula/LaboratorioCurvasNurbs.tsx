@@ -77,7 +77,6 @@ export default function LaboratorioCurvasNurbs({ initialModule = 0, activeModule
   const [rebuildCount, setRebuildCount] = useState(5);
   const [curveMode, setCurveMode] = useState<"nurbs" | "interp">("nurbs");
   const [showPolygon, setShowPolygon] = useState(true);
-  const [showComb, setShowComb] = useState(true);
   const [showOriginal, setShowOriginal] = useState(true);
   const [weights, setWeights] = useState<number[]>(Array(7).fill(1));
   const [answer, setAnswer] = useState("");
@@ -110,15 +109,6 @@ export default function LaboratorioCurvasNurbs({ initialModule = 0, activeModule
   const curveLength = renderedPoints.slice(1).reduce((sum, p, i) => sum + distance(p, renderedPoints[i]!), 0);
   const maxDeviation = Math.max(...renderedPoints.map((p, i) => distance(p, nurbsPoints[Math.min(nurbsPoints.length - 1, Math.round(i * (nurbsPoints.length - 1) / Math.max(1, renderedPoints.length - 1)))]!)));
   const controlPoints = points;
-  const comb = renderedPoints.map((p, i) => {
-    if (i < 2 || i > renderedPoints.length - 3 || i % 5 !== 0) return null;
-    const a = renderedPoints[i - 1]!, b = p, c = renderedPoints[i + 1]!;
-    const ab = distance(a, b), bc = distance(b, c), ac = distance(a, c);
-    const cross = Math.abs((b.x - a.x) * (c.y - b.y) - (b.y - a.y) * (c.x - b.x));
-    const curvature = ab * bc * ac > 1e-6 ? (2 * cross) / (ab * bc * ac) : 0;
-    const dx = c.x - a.x, dy = c.y - a.y, len = Math.max(1, Math.hypot(dx, dy));
-    return { point: p, nx: -dy / len, ny: dx / len, amp: Math.min(34, curvature * 950) };
-  }).filter((v): v is { point: Point; nx: number; ny: number; amp: number } => v !== null);
   const cleanupPoints: Point[] = cleanupMode === "cross"
     ? [{ x: 72, y: 80 }, { x: 448, y: 280 }, { x: 72, y: 280 }, { x: 448, y: 80 }]
     : cleanupMode === "open"
@@ -187,7 +177,7 @@ export default function LaboratorioCurvasNurbs({ initialModule = 0, activeModule
               {points.map((p, i) => <g key={i} onPointerDown={e => { e.currentTarget.ownerSVGElement?.setPointerCapture(e.pointerId); setActive(i); }} className="cursor-grab active:cursor-grabbing"><circle cx={p.x} cy={p.y} r="12" fill="#f2bd58" opacity=".13"/><circle cx={p.x} cy={p.y} r="5.5" fill="#f2bd58" stroke="#201607" strokeWidth="2"/><text x={p.x + 9} y={p.y - 9} fill="#e5edf4" fontSize="10">P{i + 1}</text></g>)}
             </>}
           </svg></div>
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 px-4 py-3 text-[11px] text-slate-400"><div className="flex flex-wrap gap-4"><span><i className="mr-1 inline-block size-2 rounded-full bg-amber-300"/> Curva activa</span><span><i className="mr-1 inline-block size-2 rounded-full bg-cyan-300"/> Polígono de control</span><span><i className="mr-1 inline-block size-2 rounded-full bg-slate-500"/> Original</span></div><div className="flex gap-2"><button onClick={() => setShowPolygon(v => !v)} className="rounded-md border border-white/15 px-2.5 py-1.5">{showPolygon ? <EyeOff className="mr-1 inline size-3"/> : <Eye className="mr-1 inline size-3"/>} Polígono</button><button onClick={() => setShowOriginal(v => !v)} className="rounded-md border border-white/15 px-2.5 py-1.5">Original</button></div></div>
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 px-4 py-3 text-[11px] text-slate-400">{module === 3 ? <div className="flex flex-wrap gap-4"><span><i className="mr-1 inline-block size-2 rounded-full bg-amber-300"/> Curva A</span><span><i className="mr-1 inline-block size-2 rounded-full bg-cyan-300"/> Curva B</span><span><i className="mr-1 inline-block size-2 rounded-full bg-violet-300"/> Dirección tangente</span></div> : <><div className="flex flex-wrap gap-4"><span><i className="mr-1 inline-block size-2 rounded-full bg-amber-300"/> Curva activa</span><span><i className="mr-1 inline-block size-2 rounded-full bg-cyan-300"/> Polígono de control</span><span><i className="mr-1 inline-block size-2 rounded-full bg-slate-500"/> Original</span></div><div className="flex gap-2"><button onClick={() => setShowPolygon(v => !v)} className="rounded-md border border-white/15 px-2.5 py-1.5">{showPolygon ? <EyeOff className="mr-1 inline size-3"/> : <Eye className="mr-1 inline size-3"/>} Polígono</button><button onClick={() => setShowOriginal(v => !v)} className="rounded-md border border-white/15 px-2.5 py-1.5">Original</button></div></>}</div>
         </section>
         <aside className="space-y-4">
           <section className="rounded-2xl border border-white/10 bg-[#121922] p-4"><div className="flex items-center justify-between"><p className="text-[10px] font-bold uppercase tracking-[.18em] text-amber-300">Panel de parámetros</p><Gauge className="size-4 text-amber-300"/></div>
