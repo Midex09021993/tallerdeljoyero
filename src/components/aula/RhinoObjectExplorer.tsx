@@ -272,7 +272,7 @@ export default function RhinoObjectExplorer({ visible, materials }: Props) {
       let target: Object3D | null = firstHit.object;
       while (target && !created.some(e => e.object === target)) target = target.parent;
       const match = created.find(e => e.object === target);
-      if (match) setSelectedId(match.object.uuid);
+      if (match) { setSelectedId(match.object.uuid); setChallengeAnswer(null); setChallengeChecked(false); }
     };
     renderer.domElement.addEventListener("click", handlePick);
     const animate = () => {
