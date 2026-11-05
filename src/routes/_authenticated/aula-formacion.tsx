@@ -1934,7 +1934,7 @@ function AulaFormacionPage() {
   const renderLaboratorioCoordenadas = () => {
     if (lecturaAbierta?.numero !== 3 || ![2, 3, 4].includes(paginaLectura)) return null;
     const ox=250,oy=170,k=9,last=puntosCoord3[puntosCoord3.length-1]??{x:0,y:0};
-    const metodoActual: "absolutas"|"relativas"|"polares" = paginaLectura===2 ? "absolutas" : paginaLectura===3 ? "relativas" : "polares";
+    const metodoActual: "absolutas"|"relativas"|"polares" = modoCoord3;
     const explicacion = {
       absolutas: {
         titulo: "Coordenadas absolutas · referencia fija en el origen",
