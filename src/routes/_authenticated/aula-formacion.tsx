@@ -1825,7 +1825,7 @@ function AulaFormacionPage() {
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[.22em] text-amber-300">AURUM LAB · Sesión 04</p>
             <h4 className="mt-1 text-xl font-semibold">CURVE EDITOR STUDIO</h4>
-            <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-300">Doce herramientas independientes para editar, transformar y verificar perfiles de joyería.</p>
+            <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-300">11 comandos de edición y transformación, más un reto integrador para perfiles de joyería.</p>
             <div className="mt-3 flex flex-wrap gap-2 text-[10px] text-slate-300">
               {["12 comandos","Viewport técnico","Inspector de parámetros","Práctica guiada"].map(x=><span key={x} className="rounded-full border border-white/15 px-3 py-1.5">{x}</span>)}
             </div>
