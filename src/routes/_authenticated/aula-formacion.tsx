@@ -1815,7 +1815,7 @@ function AulaFormacionPage() {
     // de la plantilla local. Resolver el laboratorio por el título real.
     const tituloApartado = String(seccionesLecturaActivas[paginaLectura]?.titulo ?? "")
       .normalize("NFD")
-      .replace(/[\\u0300-\\u036f]/g, "")
+      .replace(/[\u0300-\u036f]/g, "")
       .toLowerCase();
     const moduloPorTitulo: Array<{ claves: string[]; modulo: "fillet"|"chamfer"|"trim"|"move"|"rotate"|"integrador" }> = [
       { claves: ["integrador", "practica integradora", "reto integrador"], modulo: "integrador" },
