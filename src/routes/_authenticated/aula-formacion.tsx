@@ -618,6 +618,11 @@ function AulaFormacionPage() {
   const [cerradoCoord3, setCerradoCoord3] = useState(false);
   const [estadoCoord3, setEstadoCoord3] = useState("");
   const [laboratorioSesion4Abierto, setLaboratorioSesion4Abierto] = useState(false);
+  const [laboratorioPreparacionAbierto, setLaboratorioPreparacionAbierto] = useState(false);
+  const [unidadesPreparacion, setUnidadesPreparacion] = useState("Centímetros");
+  const [vistaPreparacion, setVistaPreparacion] = useState("Perspectiva");
+  const [planoPreparacion, setPlanoPreparacion] = useState("YZ");
+  const [validacionPreparacion, setValidacionPreparacion] = useState(false);
   const [laboratorioSesion5Abierto, setLaboratorioSesion5Abierto] = useState(true);
 
   const [moduloLab4, setModuloLab4] = useState<"fillet"|"offset"|"trim"|"move"|"rotate"|"integrador">("fillet");
@@ -1834,6 +1839,59 @@ function AulaFormacionPage() {
     return <LaboratorioCurveEditor initialModule={initialModule} onClose={() => setLaboratorioSesion4Abierto(false)} />;
   };
 
+  const renderLaboratorioPreparacion = () => {
+    if (lecturaAbierta?.numero !== 3 || paginaLectura !== 1) return null;
+    const correcto = unidadesPreparacion === "Milímetros" && vistaPreparacion === "Superior" && planoPreparacion === "XY";
+    const opciones = (titulo: string, valor: string, setValor: (v: string) => void, items: string[]) => (
+      <div className="rounded-xl border border-white/10 bg-[#171b21] p-4">
+        <p className="mb-3 text-sm font-semibold text-white">{titulo}</p>
+        <div className="flex flex-wrap gap-2">{items.map(item => <button key={item} type="button" onClick={() => { setValor(item); setValidacionPreparacion(false); }} className={`rounded-lg border px-3 py-2 text-sm font-medium transition ${valor === item ? "border-amber-300/70 bg-amber-300/15 text-amber-200" : "border-white/15 bg-[#222B36] text-slate-200 hover:border-amber-200/50"}`}>{item}</button>)}</div>
+      </div>
+    );
+    if (!laboratorioPreparacionAbierto) return (
+      <section className="mt-7 overflow-hidden rounded-2xl border border-gold/30 bg-gradient-to-br from-[#171b21] via-[#111820] to-[#0c1219] p-5 text-white shadow-xl">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-[.22em] text-amber-300">AURUM LAB · Sesión 03 · Índice 02</p>
+            <h4 className="mt-1 text-xl font-semibold text-white">WORKSPACE SETUP</h4>
+            <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-300">Prepara el documento, reconoce la vista Superior y comprueba el plano de construcción XY antes de dibujar.</p>
+            <div className="mt-3 flex flex-wrap gap-2 text-[10px] text-slate-300">{["Unidades en mm","Vista Superior","Plano XY"].map(x=><span key={x} className="rounded-full border border-white/15 bg-white/5 px-3 py-1.5">{x}</span>)}</div>
+          </div>
+          <button type="button" onClick={() => { setUnidadesPreparacion("Centímetros"); setVistaPreparacion("Perspectiva"); setPlanoPreparacion("YZ"); setValidacionPreparacion(false); setLaboratorioPreparacionAbierto(true); }} className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-gradient-to-b from-amber-200 to-amber-500 px-5 py-3 text-sm font-bold text-[#21180a] shadow-lg hover:brightness-105"><ArrowRight className="size-4"/> Abrir laboratorio</button>
+        </div>
+      </section>
+    );
+    return (
+      <div className="fixed inset-0 z-[103] overflow-y-auto bg-[#080d13]/95 p-2 backdrop-blur-sm sm:p-4">
+        <section className="mx-auto flex min-h-[calc(100dvh-1rem)] max-w-6xl flex-col overflow-hidden rounded-2xl border border-amber-300/30 bg-gradient-to-br from-[#171b21] via-[#111820] to-[#0c1219] text-white shadow-2xl sm:min-h-[calc(100dvh-2rem)]">
+          <header className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 bg-[#0e141b]/90 px-5 py-4">
+            <div><p className="text-[10px] font-bold uppercase tracking-[.22em] text-amber-300">FADILAB · SESIÓN 03 · ÍNDICE 02</p><h3 className="mt-1 text-lg font-semibold text-white">Preparación del espacio de trabajo</h3><p className="mt-1 text-sm text-slate-300">Configura el entorno antes de introducir coordenadas.</p></div>
+            <button type="button" onClick={() => setLaboratorioPreparacionAbierto(false)} className="rounded-lg border border-white/20 bg-[#222B36] px-4 py-2 text-sm font-medium text-white hover:border-amber-200/50">Cerrar laboratorio ×</button>
+          </header>
+          <div className="grid flex-1 gap-4 p-4 lg:grid-cols-[1.05fr_.95fr] lg:p-6">
+            <div className="flex min-h-[280px] flex-col overflow-hidden rounded-xl border border-white/10 bg-[#10151b]">
+              <div className="flex items-center justify-between border-b border-white/10 px-4 py-3"><span className="text-xs font-semibold tracking-wide text-slate-200">PLANO DE CONSTRUCCIÓN · VISTA SUPERIOR</span><span className="rounded-full bg-amber-300/10 px-2.5 py-1 text-[10px] font-semibold text-amber-200">XY · TOP</span></div>
+              <svg viewBox="0 0 620 430" className="min-h-0 w-full flex-1" role="img" aria-label="Vista superior del plano XY con cuadrícula y ejes">
+                <defs><pattern id="prep-grid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" fill="none" stroke="#34404d" strokeWidth="1"/></pattern></defs>
+                <rect width="620" height="430" fill="url(#prep-grid)"/><path d="M30 215H590 M310 25V405" stroke="#d3d9e0" strokeWidth="1.5"/><path d="M575 207l15 8-15 8 M302 40l8-15 8 15" fill="none" stroke="#D8B979" strokeWidth="2"/><circle cx="310" cy="215" r="6" fill="#D8B979"/><text x="322" y="205" fill="#F4D18B" fontSize="14">0,0</text><text x="594" y="220" fill="#E8EDF2" fontSize="15">X</text><text x="320" y="27" fill="#E8EDF2" fontSize="15">Y</text><text x="28" y="32" fill="#AAB7C5" fontSize="12">PLANO XY · MILÍMETROS</text>
+              </svg>
+              <div className="border-t border-white/10 px-4 py-3 text-xs leading-5 text-slate-300">En la vista Superior observas el plano XY desde arriba. El eje X es horizontal y el eje Y vertical en esta representación.</div>
+            </div>
+            <div className="flex flex-col gap-3">
+              <div className="rounded-xl border border-amber-300/25 bg-amber-300/5 p-4"><p className="text-[10px] font-bold uppercase tracking-[.18em] text-amber-200">Configuración requerida</p><p className="mt-1 text-sm leading-6 text-slate-200">Para esta práctica, el documento debe estar en milímetros, la vista activa debe ser Superior y el plano de construcción predeterminado debe ser XY.</p></div>
+              {opciones("1 · Unidades del documento",unidadesPreparacion,setUnidadesPreparacion,["Milímetros","Centímetros","Pulgadas"])}
+              {opciones("2 · Vista activa",vistaPreparacion,setVistaPreparacion,["Superior","Perspectiva","Frontal"])}
+              {opciones("3 · Plano de construcción",planoPreparacion,setPlanoPreparacion,["XY","YZ","XZ"])}
+              <button type="button" onClick={() => setValidacionPreparacion(true)} className="mt-1 rounded-xl bg-gradient-to-b from-amber-200 to-amber-500 px-4 py-3 text-sm font-bold text-[#21180a] shadow-lg hover:brightness-105">Comprobar configuración</button>
+              {validacionPreparacion && <div className={`rounded-xl border p-4 ${correcto ? "border-emerald-400/30 bg-emerald-400/10" : "border-amber-300/30 bg-amber-300/10"}`}><p className={`text-sm font-semibold ${correcto ? "text-emerald-200" : "text-amber-100"}`}>{correcto ? "Configuración correcta" : "Todavía falta ajustar el espacio de trabajo"}</p><p className="mt-1 text-xs leading-5 text-slate-200">{correcto ? "El documento está preparado para continuar con coordenadas sobre el plano XY." : "Revisa las tres opciones. La práctica requiere milímetros, vista Superior y plano XY."}</p></div>}
+              <p className="text-xs leading-5 text-slate-400">Simulación didáctica: no modifica un archivo de Rhino ni ejecuta comandos reales.</p>
+            </div>
+          </div>
+        </section>
+      </div>
+    );
+  };
+
   const renderRhinoCommand = (command: string, detail: string) => (
     <div className="mx-3 mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl border border-white/10 bg-[#222B36] px-3 py-2.5 sm:mx-4">
       <div className="min-w-[112px]">
@@ -2621,6 +2679,7 @@ function AulaFormacionPage() {
                       </div>
                     </div>}
                     {renderLaboratorioCoordenadas()}
+                    {renderLaboratorioPreparacion()}
                     {renderLaboratorioSesion4()}
                     {renderLaboratorioRestricciones()}
                   </section>
@@ -3281,6 +3340,7 @@ function AulaFormacionPage() {
                   <a href="/aurum-render" className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-[#C4A15A] px-5 py-3 text-sm font-semibold text-[#1D1D1F] shadow-sm transition hover:bg-[#B99552] focus:outline-none focus:ring-2 focus:ring-[#B99552]/30">Ir a Aurum Render <span aria-hidden="true">↗</span></a>
                 </div>}
                 {renderLaboratorioCoordenadas()}
+                    {renderLaboratorioPreparacion()}
                 {renderLaboratorioSesion4()}
                 {renderLaboratorioRestricciones()}
                 {renderLaboratorioOsnap()}
