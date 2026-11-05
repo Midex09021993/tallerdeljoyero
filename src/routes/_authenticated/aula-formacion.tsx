@@ -1842,6 +1842,15 @@ function AulaFormacionPage() {
   const renderLaboratorioPreparacion = () => {
     if (lecturaAbierta?.numero !== 3 || paginaLectura !== 1) return null;
     const correcto = unidadesPreparacion === "Milímetros" && vistaPreparacion === "Superior" && planoPreparacion === "XY";
+    const planoActivo = planoPreparacion;
+    const orientacion = vistaPreparacion === "Superior"
+      ? { horizontal: planoActivo[0], vertical: planoActivo[1], descripcion: "Vista superior: observas el plano de frente, con sus dos ejes en pantalla." }
+      : vistaPreparacion === "Frontal"
+        ? { horizontal: "X", vertical: "Z", descripcion: "Vista frontal: la pantalla muestra los ejes X y Z. El plano activo sigue siendo " + planoActivo + "." }
+        : { horizontal: "X", vertical: "Y", descripcion: "Perspectiva: representación tridimensional de referencia. El plano activo sigue siendo " + planoActivo + "." };
+    const escalaEtiqueta = unidadesPreparacion === "Milímetros" ? "mm" : unidadesPreparacion === "Centímetros" ? "cm" : "in";
+    const factorEscala = unidadesPreparacion === "Milímetros" ? "1 división = 1 mm" : unidadesPreparacion === "Centímetros" ? "1 división = 1 cm" : "1 división = 1 in";
+    const estadoCampo = (bien: boolean) => bien ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-200" : "border-amber-300/30 bg-amber-300/10 text-amber-100";
     const opciones = (titulo: string, valor: string, setValor: (v: string) => void, items: string[]) => (
       <div className="rounded-xl border border-white/10 bg-[#171b21] p-4">
         <p className="mb-3 text-sm font-semibold text-white">{titulo}</p>
@@ -1870,20 +1879,40 @@ function AulaFormacionPage() {
           </header>
           <div className="grid flex-1 gap-4 p-4 lg:grid-cols-[1.05fr_.95fr] lg:p-6">
             <div className="flex min-h-[280px] flex-col overflow-hidden rounded-xl border border-white/10 bg-[#10151b]">
-              <div className="flex items-center justify-between border-b border-white/10 px-4 py-3"><span className="text-xs font-semibold tracking-wide text-slate-200">PLANO DE CONSTRUCCIÓN · VISTA SUPERIOR</span><span className="rounded-full bg-amber-300/10 px-2.5 py-1 text-[10px] font-semibold text-amber-200">XY · TOP</span></div>
-              <svg viewBox="0 0 620 430" className="min-h-0 w-full flex-1" role="img" aria-label="Vista superior del plano XY con cuadrícula y ejes">
-                <defs><pattern id="prep-grid" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" fill="none" stroke="#34404d" strokeWidth="1"/></pattern></defs>
-                <rect width="620" height="430" fill="url(#prep-grid)"/><path d="M30 215H590 M310 25V405" stroke="#d3d9e0" strokeWidth="1.5"/><path d="M575 207l15 8-15 8 M302 40l8-15 8 15" fill="none" stroke="#D8B979" strokeWidth="2"/><circle cx="310" cy="215" r="6" fill="#D8B979"/><text x="322" y="205" fill="#F4D18B" fontSize="14">0,0</text><text x="594" y="220" fill="#E8EDF2" fontSize="15">X</text><text x="320" y="27" fill="#E8EDF2" fontSize="15">Y</text><text x="28" y="32" fill="#AAB7C5" fontSize="12">PLANO XY · MILÍMETROS</text>
+              <div className="flex items-center justify-between border-b border-white/10 px-4 py-3"><span className="text-xs font-semibold tracking-wide text-slate-200">VISOR GEOMÉTRICO · {vistaPreparacion.toUpperCase()}</span><span className="rounded-full bg-amber-300/10 px-2.5 py-1 text-[10px] font-semibold text-amber-200">{planoActivo} · {vistaPreparacion === "Perspectiva" ? "3D" : vistaPreparacion === "Frontal" ? "FRONT" : "TOP"}</span></div>
+              <svg viewBox="0 0 620 430" className="min-h-0 w-full flex-1" role="img" aria-label={`Vista ${vistaPreparacion}, plano ${planoActivo}, unidades ${unidadesPreparacion}`}>
+                <defs><pattern id="prep-grid-dynamic" width={unidadesPreparacion === "Milímetros" ? 28 : unidadesPreparacion === "Centímetros" ? 36 : 44} height={unidadesPreparacion === "Milímetros" ? 28 : unidadesPreparacion === "Centímetros" ? 36 : 44} patternUnits="userSpaceOnUse"><path d="M28 0H0V28" fill="none" stroke="#34404d" strokeWidth="1"/></pattern></defs>
+                <rect width="620" height="430" fill="url(#prep-grid-dynamic)"/>
+                {vistaPreparacion === "Perspectiva" ? <>
+                  <path d="M80 315L310 180L545 315L310 405Z" fill="#D8B979" fillOpacity=".045" stroke="#D8B979" strokeOpacity=".65" strokeWidth="1.5"/>
+                  {Array.from({length:9},(_,i)=><path key={`pv-${i}`} d={`M${105+i*25} ${300-i*13}L${335+i*25} ${390-i*13}`} stroke="#34404d" strokeWidth="1"/>)}
+                  {Array.from({length:9},(_,i)=><path key={`ph-${i}`} d={`M${80+i*28} ${315+i*10}L${310+i*28} ${180+i*10}`} stroke="#34404d" strokeWidth="1"/>)}
+                  <path d="M310 300L540 300 M310 300L190 230 M310 300L310 80" stroke="#D8DDE5" strokeWidth="1.6"/>
+                  <path d="M530 292l10 8-10 8 M198 225l-8 5 8 5 M302 90l8-12 8 12" fill="none" stroke="#D8B979" strokeWidth="2"/>
+                  <circle cx="310" cy="300" r="5" fill="#D8B979"/><text x="548" y="305" fill="#E8EDF2" fontSize="15">X</text><text x="178" y="225" fill="#E8EDF2" fontSize="15">Y</text><text x="322" y="83" fill="#E8EDF2" fontSize="15">Z</text>
+                </> : <>
+                  <path d="M45 215H575 M310 35V395" stroke="#D3D9E0" strokeWidth="1.5"/>
+                  <path d="M560 207l15 8-15 8 M302 50l8-15 8 15" fill="none" stroke="#D8B979" strokeWidth="2"/>
+                  <circle cx="310" cy="215" r="6" fill="#D8B979"/>
+                  <text x="322" y="205" fill="#F4D18B" fontSize="14">0,0</text>
+                  <text x="584" y="220" fill="#E8EDF2" fontSize="15">{orientacion.horizontal}</text>
+                  <text x="320" y="35" fill="#E8EDF2" fontSize="15">{orientacion.vertical}</text>
+                </>}
+                <text x="28" y="32" fill="#AAB7C5" fontSize="12">PLANO {planoActivo} · {escalaEtiqueta.toUpperCase()} · {factorEscala}</text>
               </svg>
-              <div className="border-t border-white/10 px-4 py-3 text-xs leading-5 text-slate-300">En la vista Superior observas el plano XY desde arriba. El eje X es horizontal y el eje Y vertical en esta representación.</div>
+              <div className="border-t border-white/10 px-4 py-3 text-xs leading-5 text-slate-300">{orientacion.descripcion} La cuadrícula representa divisiones en {unidadesPreparacion.toLowerCase()}.</div>
             </div>
             <div className="flex flex-col gap-3">
               <div className="rounded-xl border border-amber-300/25 bg-amber-300/5 p-4"><p className="text-[10px] font-bold uppercase tracking-[.18em] text-amber-200">Configuración requerida</p><p className="mt-1 text-sm leading-6 text-slate-200">Para esta práctica, el documento debe estar en milímetros, la vista activa debe ser Superior y el plano de construcción predeterminado debe ser XY.</p></div>
               {opciones("1 · Unidades del documento",unidadesPreparacion,setUnidadesPreparacion,["Milímetros","Centímetros","Pulgadas"])}
               {opciones("2 · Vista activa",vistaPreparacion,setVistaPreparacion,["Superior","Perspectiva","Frontal"])}
               {opciones("3 · Plano de construcción",planoPreparacion,setPlanoPreparacion,["XY","YZ","XZ"])}
+              <div className="grid grid-cols-3 gap-2">
+                {[{label:"Unidades",ok:unidadesPreparacion==="Milímetros",value:unidadesPreparacion},{label:"Vista",ok:vistaPreparacion==="Superior",value:vistaPreparacion},{label:"Plano",ok:planoPreparacion==="XY",value:planoPreparacion}].map(item=><div key={item.label} className={`rounded-lg border px-2 py-2 ${estadoCampo(item.ok)}`}><div className="flex items-center gap-1 text-[10px] font-semibold"><span>{item.ok?"✓":"!"}</span>{item.label}</div><p className="mt-1 truncate text-xs font-bold">{item.value}</p></div>)}
+              </div>
               <button type="button" onClick={() => setValidacionPreparacion(true)} className="mt-1 rounded-xl bg-gradient-to-b from-amber-200 to-amber-500 px-4 py-3 text-sm font-bold text-[#21180a] shadow-lg hover:brightness-105">Comprobar configuración</button>
-              {validacionPreparacion && <div className={`rounded-xl border p-4 ${correcto ? "border-emerald-400/30 bg-emerald-400/10" : "border-amber-300/30 bg-amber-300/10"}`}><p className={`text-sm font-semibold ${correcto ? "text-emerald-200" : "text-amber-100"}`}>{correcto ? "Configuración correcta" : "Todavía falta ajustar el espacio de trabajo"}</p><p className="mt-1 text-xs leading-5 text-slate-200">{correcto ? "El documento está preparado para continuar con coordenadas sobre el plano XY." : "Revisa las tres opciones. La práctica requiere milímetros, vista Superior y plano XY."}</p></div>}
+              {validacionPreparacion && <div className={`rounded-xl border p-4 ${correcto ? "border-emerald-400/30 bg-emerald-400/10" : "border-amber-300/30 bg-amber-300/10"}`}><p className={`text-sm font-semibold ${correcto ? "text-emerald-200" : "text-amber-100"}`}>{correcto ? "Configuración correcta" : "Todavía falta ajustar el espacio de trabajo"}</p><p className="mt-1 text-xs leading-5 text-slate-200">{correcto ? "El documento está preparado para continuar con coordenadas sobre el plano XY." : "Corrige los indicadores pendientes. Se requiere milímetros, vista Superior y plano XY."}</p></div>}
+              <button type="button" onClick={()=>{setUnidadesPreparacion("Centímetros");setVistaPreparacion("Perspectiva");setPlanoPreparacion("YZ");setValidacionPreparacion(false);}} className="rounded-lg border border-white/15 bg-[#222B36] px-3 py-2 text-xs font-semibold text-slate-200 hover:border-amber-200/50">Reiniciar reto</button>
               <p className="text-xs leading-5 text-slate-400">Simulación didáctica: no modifica un archivo de Rhino ni ejecuta comandos reales.</p>
             </div>
           </div>
