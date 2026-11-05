@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Box, CircleDot, RotateCcw, ShieldCheck, X, ArrowUpRight, CheckCircle2, AlertTriangle, Layers3 } from "lucide-react";
 
 type Lab = "builder" | "ring" | "inspector";
+type LaboratorioSolidosProps = { onlyLab?: Lab };
 const shell = "rounded-xl border border-white/10 bg-[#202A35]";
 const btn = "rounded-lg border border-white/15 px-3 py-2 text-xs font-semibold text-[#DCE5ED] transition hover:border-[#C6A15B]/70 hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-[#C6A15B]/50";
 const activeBtn = "border-[#C6A15B] bg-[#C6A15B]/15 text-[#F3D99F]";
@@ -17,7 +18,7 @@ function LabCard({title,tag,description,icon:Icon,onClick}:{title:string;tag:str
  </button>;
 }
 
-export default function LaboratorioSolidos() {
+export default function LaboratorioSolidos({ onlyLab }: LaboratorioSolidosProps) {
  const [lab,setLab]=useState<Lab|null>(null);
  const [operation,setOperation]=useState<"extrusion"|"revolution">("extrusion");
  const [profile,setProfile]=useState<"closed"|"open"|"nonplanar">("closed");
@@ -36,10 +37,10 @@ export default function LaboratorioSolidos() {
     <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#C6A15B]">FADILAB · AURUM LAB · SESIÓN 06</p>
     <div className="mt-1 flex flex-wrap items-end justify-between gap-2"><div><h3 className="text-xl font-semibold tracking-tight text-[#F4F6F8]">LABORATORIOS DE MODELADO DE SÓLIDOS</h3><p className="mt-1 text-xs text-[#B7C3CF]">Experimenta, construye y diagnostica volúmenes antes de trabajar en Rhino.</p></div><span className="rounded-full border border-[#C6A15B]/30 px-3 py-1 text-[10px] font-semibold text-[#E3C47F]">3 experiencias prácticas</span></div>
    </header>
-   <div className="grid gap-3 p-4 sm:grid-cols-3 sm:p-5">
-    <LabCard title="Solid Builder Studio" tag="01 · Construcción" description="Compara extrusión y revolución; cambia el perfil, la altura, el eje conceptual y el ángulo para entender cómo nace un volumen." icon={Box} onClick={()=>setLab("builder")}/>
-    <LabCard title="Ring Volume Studio" tag="02 · Joyería" description="Explora cómo el diámetro interior, el ancho y la sección modifican la proporción del volumen básico de un anillo." icon={CircleDot} onClick={()=>setLab("ring")}/>
-    <LabCard title="Solid Inspector" tag="03 · Diagnóstico" description="Distingue un sólido cerrado de una geometría abierta o de componentes desconectados y aprende qué revisar en Rhino." icon={ShieldCheck} onClick={()=>setLab("inspector")}/>
+   <div className={`grid gap-3 p-4 sm:p-5 ${onlyLab ? "grid-cols-1" : "sm:grid-cols-3"}`}>
+    {(!onlyLab || onlyLab === "builder") && <LabCard title="Solid Builder Studio" tag="01 · Construcción" description="Compara extrusión y revolución; cambia el perfil, la altura, el eje conceptual y el ángulo para entender cómo nace un volumen." icon={Box} onClick={()=>setLab("builder")}/> }
+    {(!onlyLab || onlyLab === "ring") && <LabCard title="Ring Volume Studio" tag="02 · Joyería" description="Explora cómo el diámetro interior, el ancho y la sección modifican la proporción del volumen básico de un anillo." icon={CircleDot} onClick={()=>setLab("ring")}/> }
+    {(!onlyLab || onlyLab === "inspector") && <LabCard title="Solid Inspector" tag="03 · Diagnóstico" description="Distingue un sólido cerrado de una geometría abierta o de componentes desconectados y aprende qué revisar en Rhino." icon={ShieldCheck} onClick={()=>setLab("inspector")}/> }
    </div>
    <p className="border-t border-white/10 px-5 py-3 text-[11px] leading-5 text-[#9EADBA]">Estos laboratorios son simuladores didácticos. No ejecutan Rhino ni certifican archivos .3dm; la validación geométrica real se realiza en Rhino 7/MatrixGold.</p>
   </section>
