@@ -3264,7 +3264,7 @@ function AulaFormacionPage() {
                 {renderLaboratorioSmartTrack()}
                 {renderLaboratorioPlaca()}
                 {renderLaboratorioGeometria()}
-                <RhinoObjectExplorer visible={lecturaAbierta?.numero === 2 && paginaLectura === 1} materials={materialesVistaAula} />
+                <RhinoObjectExplorer visible={lecturaAbierta?.numero === 2 && paginaLectura === 4} materials={materialesVistaAula} />
                 {renderLaboratorioCapas()}
                 {renderSelectorVistasPlano()}
                 <div className="mt-5 grid min-w-0 grid-cols-1 items-stretch gap-4 lg:grid-cols-2">
