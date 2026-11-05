@@ -14,7 +14,7 @@ import { Focus, Layers3, RotateCcw, Scan, X } from "lucide-react";
 type Props = { visible: boolean; materials: { nombre_archivo: string; ruta_storage: string; mime_type?: string | null }[] };
 type Entry = { object: Object3D; name: string; type: string; category: string; description: string; jewelryUse: string };
 const CATEGORIES = [
-  { id: "all", label: "Todos" }, { id: "points", label: "Puntos" },
+  { id: "points", label: "Puntos" },
   { id: "curves", label: "Curvas" }, { id: "surfaces", label: "Superficies" },
   { id: "polysurfaces", label: "Polisuperficies" }, { id: "extrusions", label: "Extrusiones" },
   { id: "meshes", label: "Mallas" }, { id: "subd", label: "SubD" },
@@ -63,7 +63,7 @@ function createTeachingObjects(root: Object3D): Entry[] {
     new Vector3(-4.8, -13, 0.08),
   ]);
   add(profile, "Curva de perfil", "Curve · abierta", "curves",
-    "Curva abierta que define un recorrido sin grosor físico. En Rhino las curvas también pueden ser líneas, arcos, círculos, policurvas o curvas libres.",
+    "Curva abierta que define un recorrido sin grosor físico. En Rhino las curvas incluyen líneas, arcos, círculos, elipses, policurvas y curvas libres. El círculo es un subtipo de curva cerrada.",
     "Dibujar perfiles de anillos, contornos, recorridos y secciones para extruir.");
 
   const circlePts = Array.from({ length: 97 }, (_, i) => {
@@ -116,7 +116,7 @@ function createTeachingObjects(root: Object3D): Entry[] {
   const extrusion = new Mesh(new ExtrudeGeometry(shape, { depth: 2.8, bevelEnabled: false }), material("#D1DCE8", 0.4));
   place(extrusion, 6.5, 6, 0.08);
   add(extrusion, "Extrusión lineal", "Extrusion · ligera", "extrusions",
-    "Objeto generado al extender un perfil en una dirección. Rhino puede conservarlo como extrusión ligera o convertirlo en superficies/polisuperficie; puede ser abierto o cerrado.",
+    "Se genera al desplazar un perfil en una dirección y una distancia. Rhino puede conservarlo como objeto Extrusion ligero o convertirlo en superficies/polisuperficie. Según el perfil y las opciones, puede ser abierto o cerrar un volumen.",
     "Crear barras, perfiles repetitivos, biseles y cuerpos de sección constante.");
 
   const subd = new Mesh(new IcosahedronGeometry(2.25, 2), new MeshStandardMaterial({
@@ -124,7 +124,7 @@ function createTeachingObjects(root: Object3D): Entry[] {
   }));
   place(subd, 14, 6, 2.25);
   add(subd, "SubD", "Subdivision Surface", "subd",
-    "Geometría de subdivisión Catmull–Clark de Rhino 7, diseñada para modelar formas orgánicas con control fluido. La forma suave mostrada es una ilustración; no es un objeto SubD nativo ni editable de Rhino.",
+    "Geometría de subdivisión (SubD) basada en una jaula de control y suavizado Catmull–Clark. En Rhino 7 complementa el modelado NURBS y facilita formas orgánicas. Esta categoría amplía el contenido del manual Nivel 1.",
     "Diseñar volúmenes orgánicos, monturas escultóricas y formas suaves.");
 
   const cloudGeometry = new BufferGeometry();
@@ -138,7 +138,7 @@ function createTeachingObjects(root: Object3D): Entry[] {
   const cloud = new Points(cloudGeometry, new PointsMaterial({ color: "#E6C77D", size: 0.13, sizeAttenuation: true }));
   place(cloud, 0, 0, 0);
   add(cloud, "Nube de puntos", "PointCloud", "pointclouds",
-    "Conjunto de numerosos puntos agrupados como un solo objeto para representar datos de escaneo o captura espacial. No equivale a colocar puntos individuales uno por uno.",
+    "Conjunto de puntos capturados en el espacio, normalmente procedentes de escaneo 3D. Se estudia aquí como dato espacial complementario: no es una superficie ni un sólido y el manual Nivel 1 no la desarrolla como familia principal.",
     "Consultar escaneos de piezas, comparar medidas y reconstruir referencias de modelos reales.");
 
   const other = new Group();
@@ -150,7 +150,7 @@ function createTeachingObjects(root: Object3D): Entry[] {
   other.add(blockBody, blockMark);
   place(other, 0, 12, 0);
   add(other, "Otros objetos", "Bloques · cotas · textos…", "others",
-    "Grupo de objetos que no son geometría principal: bloques, anotaciones, cotas, textos, luces, sombreados y otros elementos del documento.",
+    "Grupo didáctico de objetos auxiliares del documento, como bloques, cotas, textos y luces. No constituye una única clase geométrica: son elementos con funciones distintas de modelado, organización o documentación.",
     "Organizar componentes reutilizables, rotular planos y documentar medidas del diseño.");
   return result;
 }
@@ -159,7 +159,7 @@ function createTeachingObjects(root: Object3D): Entry[] {
 export default function RhinoObjectExplorer({ visible, materials }: Props) {
   const [open, setOpen] = useState(false);
   const [entries, setEntries] = useState<Entry[]>([]);
-  const [category, setCategory] = useState("all");
+  const [category, setCategory] = useState("points");
   const [selectedId, setSelectedId] = useState("");
   const [wireframe, setWireframe] = useState(false);
   const [orientationStatus, setOrientationStatus] = useState("Esperando archivo");
@@ -185,7 +185,7 @@ export default function RhinoObjectExplorer({ visible, materials }: Props) {
     [materials],
   );
   const counts = useMemo(() => {
-    const c: Record<string, number> = { all: entries.length };
+    const c: Record<string, number> = {};
     CATEGORIES.forEach(item => { if (item.id !== "all") c[item.id] = entries.filter(e => e.category === item.id).length; });
     return c;
   }, [entries]);
@@ -462,7 +462,7 @@ export default function RhinoObjectExplorer({ visible, materials }: Props) {
         <div className="min-w-0"><p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#D8B979]">FADILAB · SESIÓN 02 · RHINO 7</p><h2 className="text-lg font-semibold">Geometry Lab <span className="font-normal text-[#AAB7C5]">/ Tipos de geometría</span></h2><p className="text-xs text-[#AAB7C5]">{entries.length} ejemplos didácticos · Área de trabajo 40 × 40 mm · Escena independiente del archivo 3DM</p></div>
         <div className="flex items-center gap-2"><button type="button" onClick={resetView} disabled={!entries.length} className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 px-3 py-2 text-xs font-semibold text-[#D0D8E0] disabled:opacity-40"><RotateCcw className="size-3.5"/> Encuadre</button><button type="button" onClick={toggleWireframe} disabled={!entries.length} className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 px-3 py-2 text-xs font-semibold text-[#D0D8E0] disabled:opacity-40"><Layers3 className="size-3.5"/> {wireframe ? "Sombreado" : "Alámbrico"}</button><button type="button" onClick={() => setOpen(false)} className="rounded-lg border border-white/15 p-2 text-[#D0D8E0]" aria-label="Cerrar"><X className="size-4"/></button></div>
       </header>
-      <nav className="flex shrink-0 gap-2 overflow-x-auto border-b border-white/10 bg-[#1B242E] px-4 py-2.5 sm:px-6">{CATEGORIES.map(item => <button key={item.id} type="button" onClick={() => { setCategory(item.id); const target = item.id === "all" ? null : entries.find(entry => entry.category === item.id); if (target) { setSelectedId(target.object.uuid); setChallengeAnswer(null); setChallengeChecked(false); } }} aria-pressed={category === item.id} className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold ${category === item.id ? "border-[#C6A15B] bg-[#C6A15B]/15 text-[#E5C47C]" : "border-white/10 bg-[#26313D] text-[#B9C5D1]"}`}>{item.label} <span className="ml-1 opacity-70">{counts[item.id] ?? 0}</span></button>)}</nav>
+      <nav className="flex shrink-0 gap-2 overflow-x-auto border-b border-white/10 bg-[#1B242E] px-4 py-2.5 sm:px-6">{CATEGORIES.map(item => <button key={item.id} type="button" onClick={() => { setCategory(item.id); const target = entries.find(entry => entry.category === item.id); if (target) { setSelectedId(target.object.uuid); setChallengeAnswer(null); setChallengeChecked(false); } }} aria-pressed={category === item.id} className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold ${category === item.id ? "border-[#C6A15B] bg-[#C6A15B]/15 text-[#E5C47C]" : "border-white/10 bg-[#26313D] text-[#B9C5D1]"}`}>{item.label} <span className="ml-1 opacity-70">{counts[item.id] ?? 0}</span></button>)}</nav>
       <div className="grid min-h-0 flex-1 gap-3 overflow-hidden p-3 sm:p-4 lg:grid-cols-[minmax(0,1fr)_320px]">
         <section className="relative min-h-[260px] overflow-hidden rounded-xl border border-white/10 bg-[#141B24]"><div ref={viewportRef} className="absolute inset-0"/><div className="pointer-events-none absolute left-4 top-4 z-10 rounded-lg border border-white/15 bg-[#202A35]/90 px-3 py-2 shadow-lg"><p className="text-[10px] font-bold tracking-[.16em] text-[#E6C77D]">PERSPECTIVA</p><p className="mt-0.5 text-[9px] text-[#AAB7C5]">Área de trabajo · 40 × 40 mm</p></div>
           <div className="pointer-events-none absolute bottom-4 left-4 z-10 flex items-center gap-2 rounded-xl border border-white/10 bg-[#202A35]/85 px-3 py-2 shadow-lg">
