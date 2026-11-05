@@ -21,7 +21,7 @@ public sealed class AurumCadPanel : Panel
         var layout = new DynamicLayout
         {
             Padding = new Padding(16),
-            DefaultSpacing = new Size(0, 9),
+            Spacing = new Size(0, 9),
             BackgroundColor = EtoColor.FromArgb(27, 30, 35)
         };
 
@@ -68,14 +68,15 @@ public sealed class AurumCadPanel : Panel
 
     private static NumericStepper CreateStepper(double min, double max, double value, double increment)
     {
-        return new NumericStepper
+        var stepper = new NumericStepper
         {
-            MinValue = (decimal)min,
-            MaxValue = (decimal)max,
-            Value = (decimal)value,
-            Increment = (decimal)increment,
-            DecimalPlaces = 2
+            DecimalPlaces = 2,
+            MinValue = min,
+            MaxValue = max,
+            Increment = increment,
+            Value = value
         };
+        return stepper;
     }
 
     private void CreateRing()
@@ -89,9 +90,9 @@ public sealed class AurumCadPanel : Panel
 
         var parameters = new RingParameters
         {
-            InnerDiameterMm = Convert.ToDouble(_innerDiameter.Value),
-            WidthMm = Convert.ToDouble(_width.Value),
-            RadialThicknessMm = Convert.ToDouble(_thickness.Value)
+            InnerDiameterMm = _innerDiameter.Value,
+            WidthMm = _width.Value,
+            RadialThicknessMm = _thickness.Value
         };
 
         if (!RingGeometryBuilder.TryBuild(parameters, doc.ModelUnitSystem, doc.ModelAbsoluteTolerance, out var ring, out var error) ||
