@@ -6,6 +6,7 @@ import { listarDirectorioAlumnosFormacion, listarInscripcionesAlumnoFormacion } 
 import { BookOpen, Users, Plus, Upload, FileText, Download, CalendarDays, ShieldCheck, Send, Pencil, Trash2, CheckCircle2, ChevronLeft, ChevronRight, ChevronDown, ArrowRight, BookOpenCheck, FolderOpen, ClipboardCheck, Layers, Eye, Lock, Unlock, RotateCcw, Command } from "lucide-react";
 import { AppShell, Panel } from "@/components/AppShell";
 import LaboratorioCurvasNurbs from "@/components/aula/LaboratorioCurvasNurbs";
+import LaboratorioSolidos from "@/components/aula/LaboratorioSolidos";
 import LaboratorioCurveEditor from "@/components/aula/LaboratorioCurveEditor";
 import LaboratorioCurvasBasicas from "@/components/aula/LaboratorioCurvasBasicas";
 import RhinoObjectExplorer from "@/components/aula/RhinoObjectExplorer";
@@ -317,28 +318,46 @@ const LECTURA_SESION_5 = [
 
 const LECTURA_SESION_6 = [
   { titulo: "1. Objetivo: modelado de sólidos para joyería", bloques: [
-    "En esta sesión aprenderás a construir volúmenes tridimensionales a partir de perfiles y operaciones de modelado. Los sólidos permiten representar piezas con volumen definido y constituyen una base importante para desarrollar anillos y componentes sencillos.",
-    "Antes de comenzar, revisa las unidades del documento, la escala y la organización de las curvas que utilizarás como perfiles. Mantén copias de las geometrías originales para poder corregir el proceso sin perder el trabajo inicial."
+    "En esta sesión aprenderás a convertir perfiles y superficies en volúmenes tridimensionales. Un sólido cerrado representa un volumen delimitado por una envolvente continua; es una base esencial para desarrollar cuerpos de anillos y componentes de joyería.",
+    "Al finalizar podrás diferenciar curvas, superficies y polisuperficies cerradas; reconocer las condiciones que necesita un perfil para extruirse como sólido; controlar una revolución mediante su eje y ángulo; y comprobar si el resultado está cerrado.",
+    "Antes de comenzar, configura el documento en milímetros, revisa la tolerancia absoluta indicada por el docente y conserva copias de los perfiles originales. Trabaja de forma progresiva: perfil → operación → inspección → archivo."
   ]},
-  { titulo: "2. Extrusiones", bloques: [
-    "La extrusión genera un volumen al desplazar una curva en una dirección y una distancia determinadas. El resultado depende del perfil utilizado, de su condición geométrica y de los parámetros de la operación.",
-    "Practica con perfiles cerrados y observa cómo cambia el sólido al modificar la altura o dirección. Comprueba que el contorno sea adecuado antes de extruir y revisa el resultado en distintas vistas."
+  { titulo: "2. Extrusiones: del perfil al volumen", bloques: [
+    "La extrusión desplaza una curva o superficie a lo largo de una dirección y una distancia. En una extrusión recta, la altura define cuánto se prolonga el perfil; la dirección determina hacia dónde se genera el volumen.",
+    "Para obtener una polisuperficie cerrada mediante ExtrudeCrv, el perfil debe ser una curva cerrada y plana y la opción Solid debe estar activada. Si la curva está abierta o no es plana, Rhino puede crear una extrusión abierta. La apariencia sombreada no demuestra que esté cerrada.",
+    "Flujo de práctica en Rhino 7: selecciona una curva cerrada y plana; ejecuta ExtrudeCrv; revisa Solid=Yes y DeleteInput=No para conservar el perfil; introduce una altura; confirma y revisa el resultado en Perspective y en las vistas ortogonales.",
+    "Compara una curva cerrada con una abierta. Observa qué extremos quedan sin tapar y por qué. Si la extrusión no se cierra, revisa primero si el perfil está cerrado y es plano; no intentes resolverlo aumentando la altura."
   ]},
-  { titulo: "3. Revoluciones", bloques: [
-    "La revolución crea una forma tridimensional al girar un perfil alrededor de un eje. Es especialmente útil para estudiar piezas con simetría radial, como cuerpos de anillos y elementos torneados.",
-    "Define con cuidado el eje de giro y el ángulo de revolución. Un eje mal ubicado puede producir una pieza descentrada o una forma distinta de la esperada."
+  { titulo: "3. Revoluciones: construir alrededor de un eje", bloques: [
+    "Revolve genera una superficie al girar un perfil alrededor de un eje. La forma final depende de la sección utilizada, de la ubicación y dirección del eje y del ángulo de revolución.",
+    "Para practicar, selecciona el perfil adecuado, indica el punto inicial y final del eje y define el ángulo. Una revolución completa utiliza 360°. Una revolución parcial deja una abertura angular y no debe confundirse automáticamente con un sólido cerrado.",
+    "En piezas de simetría radial, el eje debe corresponder al centro de giro previsto. Si está desplazado o inclinado de forma incorrecta, la pieza resultará descentrada o tendrá una forma distinta a la intención del diseño.",
+    "Después de ejecutar Revolve, inspecciona el tipo de objeto y sus bordes. Una revolución de superficie no equivale necesariamente a un sólido; evalúa si la geometría necesita tapas u operaciones adicionales."
   ]},
-  { titulo: "4. Construcción de anillos y piezas básicas", bloques: [
-    "Combina perfiles y operaciones de extrusión o revolución para construir un volumen sencillo de anillo. Concéntrate en la sección del aro, el diámetro interior y la proporción general de la pieza.",
-    "Utiliza medidas coherentes y revisa el modelo desde las vistas superior, frontal y lateral. En esta etapa se busca comprender la construcción del volumen, no todavía resolver todos los detalles de fabricación."
+  { titulo: "4. Construcción de un anillo básico", bloques: [
+    "Un anillo de revolución se estudia a partir de una sección transversal y un eje central. La sección determina el ancho y el espesor del aro; la distancia entre el eje y el perfil influye en el diámetro interior y en la proporción general.",
+    "Prepara una sección cerrada y adecuada, ubícala respecto al eje de revolución y comprueba que no lo atraviese de forma accidental. Conserva una copia de la sección antes de ejecutar la operación.",
+    "Construye el volumen con una revolución completa y revisa el resultado desde Top, Front, Right y Perspective. Comprueba el diámetro interior y la sección con las herramientas de medición de Rhino; no deduzcas medidas exactas solo por la vista sombreada.",
+    "El laboratorio Ring Volume Studio permite variar dimensiones y observar su efecto conceptual. Sus controles no calculan tallas comerciales, peso, tolerancias ni condiciones de fabricación: esos datos requieren un diseño y una validación específicos."
   ]},
-  { titulo: "5. Revisión del sólido", bloques: [
-    "Comprueba que el objeto obtenido sea realmente un sólido cerrado y que no presente superficies abiertas o partes desconectadas. La apariencia sombreada por sí sola no garantiza que la geometría esté correctamente cerrada.",
-    "Guarda una versión del archivo y realiza una revisión visual del volumen. Anota cualquier error antes de continuar con operaciones más complejas."
+  { titulo: "5. Revisión: ¿es realmente un sólido cerrado?", bloques: [
+    "En Rhino, una polisuperficie que encierra completamente un volumen se considera un sólido cerrado. Si quedan bordes desnudos (naked edges), la envolvente está abierta y no define un volumen cerrado.",
+    "Utiliza What o Propiedades para consultar el tipo de objeto. Ejecuta ShowEdges y activa Naked edges para localizar bordes abiertos. Revisa también si hay superficies o piezas separadas que solo parecen tocarse desde el ángulo de cámara.",
+    "Si una extrusión no se cierra, revisa que la curva de entrada esté cerrada y sea plana. Si una tapa no se puede crear, inspecciona el contorno y la planaridad antes de probar otra operación. Join solo une bordes compatibles dentro de la tolerancia; no repara automáticamente huecos grandes.",
+    "Distingue tres situaciones: sólido cerrado, superficie o polisuperficie abierta y componentes desconectados. Cada una requiere un diagnóstico distinto. Conserva una copia antes de reparar geometría."
   ]},
   { titulo: "6. Práctica guiada: volumen básico de joyería", bloques: [
-    "Crea un anillo sencillo a partir de un perfil controlado y una operación de revolución o de extrusión, según la geometría propuesta por el docente. Identifica qué operación resulta más adecuada para cada forma.",
-    "Al finalizar, entrega el archivo editable y señala qué perfil y qué operación utilizaste para construir el volumen."
+    "Parte de un perfil preparado en milímetros. Guarda una copia del archivo y organiza las curvas de construcción en una capa identificable. No elimines el perfil original.",
+    "Ejercicio A — Extrusión: selecciona un perfil cerrado y plano; extrúyelo 8 mm con Solid=Yes; conserva la curva de entrada y verifica el resultado con What y ShowEdges.",
+    "Ejercicio B — Revolución: prepara una sección sencilla para un cuerpo radial; define el eje con dos puntos; realiza una revolución de 360° y revisa el tipo de objeto y sus bordes.",
+    "Ejercicio C — Anillo: construye un aro básico mediante una sección y un eje central. Comprueba diámetro interior, ancho y espesor con herramientas de medición; registra las dimensiones verificadas.",
+    "Ejercicio D — Diagnóstico: inspecciona cada resultado. Identifica si está cerrado, si presenta bordes desnudos o si contiene componentes desconectados. Explica qué comprobación utilizaste para llegar a esa conclusión.",
+    "Guarda el archivo como Sesion_06_Modelado_Solidos.3dm. Incluye el perfil de construcción, el volumen final y una breve nota que indique qué operación utilizaste y cómo verificaste el cierre."
+  ]},
+  { titulo: "7. Verificación y criterios de logro", bloques: [
+    "Diferencia una curva, una superficie y una polisuperficie cerrada. Explica qué condiciones necesita un perfil para generar una extrusión sólida y por qué una extrusión abierta no debe considerarse un volumen cerrado.",
+    "Identifica el eje y el ángulo de una revolución; explica por qué una vuelta completa y una parcial pueden producir resultados distintos; y reconoce la relación entre sección, eje y diámetro interior de un anillo.",
+    "La práctica se considera completada cuando entregas el archivo editable, conservas los perfiles de origen, verificas las dimensiones solicitadas y documentas el resultado de What o ShowEdges. La simulación de FADILAB acompaña el aprendizaje, pero no sustituye la inspección del modelo real en Rhino."
   ]}
 ] as const;
 
@@ -3381,6 +3400,7 @@ function AulaFormacionPage() {
                     {renderLaboratorioPreparacion()}
                 {renderLaboratorioSesion4()}
                 {lecturaAbierta?.numero === 5 && <section className="mx-auto mt-7 w-full max-w-[1100px]">{renderLaboratorioSesion5()}</section>}
+                {lecturaAbierta?.numero === 6 && <LaboratorioSolidos />}
                 {renderLaboratorioRestricciones()}
                 {renderLaboratorioOsnap()}
                 {renderLaboratorioSmartTrack()}
