@@ -1,3 +1,4 @@
+using System;
 using System.Globalization;
 using Rhino;
 using Rhino.DocObjects;
@@ -23,7 +24,7 @@ public static class RingGeometryBuilder
             return false;
 
         var scale = RhinoMath.UnitScale(UnitSystem.Millimeters, modelUnits);
-        if (!double.IsFinite(scale) || scale <= 0)
+        if (double.IsNaN(scale) || double.IsInfinity(scale) || scale <= 0)
         {
             error = "No se pudo determinar la escala de unidades del documento Rhino.";
             return false;
