@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import ExtrusionViewport from "./ExtrusionViewport";
 import RevolveStudio from "./RevolveStudio";
+import RingVolumeStudio from "./RingVolumeStudio";
 import { Box, CircleDot, RotateCcw, ShieldCheck, X, ArrowUpRight, CheckCircle2, AlertTriangle, Layers3 } from "lucide-react";
 
 type Lab = "extrusion" | "revolution" | "ring" | "inspector";
@@ -40,10 +41,6 @@ export default function LaboratorioSolidos({ onlyLab }: LaboratorioSolidosProps)
  const closeInspector=()=>{setInspectorOpen(false);setChecked(false);};
  const [profile,setProfile]=useState<"closed"|"open"|"nonplanar">("closed");
  const [height,setHeight]=useState(0);
- const [ringInner,setRingInner]=useState(17);
- const [ringWidth,setRingWidth]=useState(5);
- const [ringSection,setRingSection]=useState(2);
- const [ringProfile,setRingProfile]=useState<"rectangular"|"comfort"|"half-round">("rectangular");
  const [scenario,setScenario]=useState<"closed"|"open"|"disconnected">("closed");
  const [checked,setChecked]=useState(false);
  const result=useMemo(()=>profile==="closed"?"Puede generar un volumen cerrado si el perfil también es plano y la opción Solid está activada.":profile==="open"?"El perfil está abierto: la extrusión no podrá cerrar ambos extremos como un sólido.":"El perfil no es plano: Rhino puede dejar extremos sin tapar aunque la curva parezca cerrada.",[profile]);
@@ -135,63 +132,7 @@ export default function LaboratorioSolidos({ onlyLab }: LaboratorioSolidosProps)
    </section>
   </div>}
   <RevolveStudio open={(!onlyLab || onlyLab === "revolution") && revolutionOpen} onClose={closeRevolution} />
-  {(!onlyLab || onlyLab === "ring") && ringOpen && <div className="fixed inset-0 z-[150] flex items-center justify-center bg-[#080C11]/95 p-2 backdrop-blur-sm sm:p-4" role="dialog" aria-modal="true" aria-label="Ring Volume Studio">
-   <section className="flex h-[min(96dvh,960px)] w-full max-w-[1440px] flex-col overflow-hidden rounded-2xl border border-[#465565] bg-[#111820] text-[#E8EDF2] shadow-[0_30px_100px_rgba(0,0,0,.65)]">
-    <header className="flex shrink-0 items-center justify-between gap-3 border-b border-white/10 bg-[#19232D] px-5 py-3 sm:px-7">
-     <div><p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#D2AD68]">FADILAB / AURUM LAB / SESIÓN 06</p><div className="mt-1 flex flex-wrap items-center gap-2"><h2 className="text-lg font-semibold text-white sm:text-xl">Ring Volume Studio</h2><span className="rounded-full border border-emerald-400/25 bg-emerald-400/10 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-wider text-emerald-300">Práctica guiada</span></div></div>
-     <button type="button" onClick={closeRing} className={btn+" flex shrink-0 items-center gap-2"}><X size={15}/> Salir</button>
-    </header>
-    <div className="grid min-h-0 flex-1 grid-cols-1 overflow-y-auto lg:grid-cols-[minmax(0,1fr)_360px] lg:overflow-hidden">
-     <main className="flex min-h-[520px] min-w-0 flex-col border-b border-white/10 lg:min-h-0 lg:border-b-0 lg:border-r">
-      <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-white/10 px-5 py-3 sm:px-7"><div><p className="text-xs font-semibold text-white">Área de construcción</p><p className="mt-0.5 text-[10px] text-slate-400">Proporciones del aro · unidades en milímetros</p></div><span className="rounded-full border border-[#D2AD68]/25 bg-[#D2AD68]/10 px-3 py-1.5 text-[10px] font-semibold text-[#E6C887]">Vista conceptual 3D</span></div>
-      <div className="grid min-h-0 flex-1 gap-3 bg-[#0D141B] p-4 sm:p-6 xl:grid-cols-[minmax(0,1.3fr)_minmax(220px,.7fr)]">
-       <div className="relative flex min-h-[300px] items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-[#111A23] p-3">
-        <div className="pointer-events-none absolute inset-0 opacity-[.18]" style={{backgroundImage:"linear-gradient(rgba(148,163,184,.18) 1px, transparent 1px),linear-gradient(90deg,rgba(148,163,184,.18) 1px, transparent 1px)",backgroundSize:"30px 30px"}}/>
-        <svg viewBox="0 0 520 360" className="relative z-10 h-auto max-h-[440px] w-full" role="img" aria-label="Vista superior conceptual de un anillo con cotas de diámetro interior">
-         <defs><linearGradient id="ringStudioGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#F5DFA8"/><stop offset=".48" stopColor="#C49A54"/><stop offset="1" stopColor="#76572F"/></linearGradient><linearGradient id="ringStudioShade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#E5C783"/><stop offset="1" stopColor="#75552D"/></linearGradient></defs>
-         <ellipse cx="250" cy="160" rx={Math.min(190,140+(ringInner-12)*2)} ry={Math.min(104,75+(ringInner-12)*1.3)} fill="none" stroke="#5A4529" strokeWidth={Math.max(12,ringSection*10+8)} opacity=".8"/>
-         <ellipse cx="250" cy="150" rx={Math.min(190,140+(ringInner-12)*2)} ry={Math.min(104,75+(ringInner-12)*1.3)} fill="none" stroke="url(#ringStudioGold)" strokeWidth={Math.max(12,ringSection*10+8)}/>
-         <ellipse cx="250" cy="150" rx={Math.min(190,140+(ringInner-12)*2)} ry={Math.min(104,75+(ringInner-12)*1.3)} fill="none" stroke="#F2D99E" strokeWidth="1.5" opacity=".9"/>
-         <ellipse cx="250" cy="150" rx={Math.max(48,Math.min(190,140+(ringInner-12)*2)-Math.max(12,ringSection*10+8))} ry={Math.max(26,Math.min(104,75+(ringInner-12)*1.3)-Math.max(12,ringSection*10+8)*.55)} fill="none" stroke="#F2D99E" strokeWidth="2" opacity=".8"/>
-         <path d="M86 150 V260 M414 150 V260 M86 248 H414 M80 242 L86 248 L80 254 M420 242 L414 248 L420 254" fill="none" stroke="#D2AD68" strokeWidth="1.6"/>
-         <text x="250" y="278" textAnchor="middle" fill="#E6C887" fontSize="13" fontWeight="600">Ø interior · {ringInner} mm</text>
-         <path d="M370 48 H430 V82" fill="none" stroke="#D2AD68" strokeWidth="1.5"/><text x="434" y="46" fill="#E6C887" fontSize="11">Sección</text><text x="434" y="61" fill="#B7C3CF" fontSize="11">{ringSection} mm</text>
-         <text x="250" y="332" textAnchor="middle" fill="#9EADBA" fontSize="11">Vista superior · forma y espesor conceptual</text>
-        </svg>
-        <span className="absolute bottom-3 left-3 rounded-lg border border-white/10 bg-[#101820]/90 px-3 py-2 text-[10px] text-slate-400">La vista responde a los cambios de dimensión</span>
-       </div>
-       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-        <section className="rounded-xl border border-white/10 bg-[#151E27] p-4"><div className="flex items-center justify-between gap-2"><h3 className="text-xs font-semibold text-white">Perfil de la sección</h3><span className="text-[9px] uppercase tracking-wider text-slate-500">Corte lateral</span></div>
-         <svg viewBox="0 0 300 170" className="mt-2 w-full" role="img" aria-label="Perfil transversal del aro"><defs><linearGradient id="ringSectionGold" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#F1D79B"/><stop offset="1" stopColor="#99713B"/></linearGradient></defs>
-          {ringProfile==="rectangular"?<rect x="74" y="48" width="152" height="58" rx="3" fill="url(#ringSectionGold)" stroke="#F1D79B" strokeWidth="2"/>:ringProfile==="comfort"?<path d="M74 106 Q74 48 112 48 H188 Q226 48 226 106 Q150 119 74 106Z" fill="url(#ringSectionGold)" stroke="#F1D79B" strokeWidth="2"/>:<path d="M74 106 Q74 48 150 48 Q226 48 226 106Z" fill="url(#ringSectionGold)" stroke="#F1D79B" strokeWidth="2"/>}
-          <path d="M74 126 V139 M226 126 V139 M74 134 H226 M68 128 L74 134 L68 140 M232 128 L226 134 L232 140" stroke="#D2AD68" fill="none" strokeWidth="1.4"/><text x="150" y="153" textAnchor="middle" fill="#E6C887" fontSize="10">{ringWidth} mm · ancho</text>
-          <path d="M244 48 H260 M244 106 H260 M253 48 V106" stroke="#D2AD68" fill="none" strokeWidth="1.4"/><text x="263" y="80" fill="#E6C887" fontSize="10">{ringSection}</text>
-         </svg>
-         <p className="text-[10px] leading-4 text-slate-400">{ringProfile==="rectangular"?"Perfil recto: caras planas y esquinas definidas.":ringProfile==="comfort"?"Perfil confort: interior y exterior suavemente curvados.":"Media caña: sección exterior redondeada."}</p>
-        </section>
-        <section className="rounded-xl border border-white/10 bg-[#151E27] p-4"><h3 className="text-xs font-semibold text-white">Resumen dimensional</h3><div className="mt-3 grid grid-cols-3 gap-2 text-center"><div className="rounded-lg bg-[#0F1720] p-2"><p className="text-[9px] text-slate-500">Interior</p><p className="mt-1 text-sm font-semibold text-white">{ringInner}</p><p className="text-[9px] text-slate-500">mm</p></div><div className="rounded-lg bg-[#0F1720] p-2"><p className="text-[9px] text-slate-500">Ancho</p><p className="mt-1 text-sm font-semibold text-white">{ringWidth}</p><p className="text-[9px] text-slate-500">mm</p></div><div className="rounded-lg bg-[#0F1720] p-2"><p className="text-[9px] text-slate-500">Espesor</p><p className="mt-1 text-sm font-semibold text-white">{ringSection}</p><p className="text-[9px] text-slate-500">mm</p></div></div></section>
-       </div>
-      </div>
-     </main>
-     <aside className="flex min-h-0 flex-col overflow-hidden bg-[#151E27]">
-      <div className="border-b border-white/10 px-5 py-5"><p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#D2AD68]">Aprende paso a paso</p><h3 className="mt-1 text-lg font-semibold text-white">Diseña la proporción de un aro</h3><p className="mt-1 text-[11px] leading-5 text-slate-400">Modifica tres medidas y observa cómo cambia la sección del anillo.</p></div>
-      <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-5">
-       <section><h4 className="text-xs font-semibold text-slate-200">1. Elige la forma del perfil</h4><div className="mt-3 grid grid-cols-3 gap-2">{[["rectangular","Recto"],["comfort","Confort"],["half-round","Media caña"]].map(([value,label])=><button key={value} type="button" aria-pressed={ringProfile===value} onClick={()=>setRingProfile(value as typeof ringProfile)} className={"rounded-lg border px-2 py-2.5 text-[10px] font-semibold transition "+(ringProfile===value?"border-[#D2AD68]/70 bg-[#D2AD68]/15 text-[#F0D69F]":"border-white/10 bg-[#101820] text-slate-300 hover:border-white/25")}>{label}</button>)}</div><p className="mt-2 text-[10px] leading-4 text-slate-500">La sección es el perfil que se gira alrededor del eje para formar el aro.</p></section>
-       <section className="space-y-4 border-t border-white/10 pt-5"><h4 className="text-xs font-semibold text-slate-200">2. Ajusta las dimensiones</h4>
-        <label className="block text-xs text-slate-300"><span className="flex justify-between gap-2"><span>Diámetro interior</span><strong className="text-[#E6C887]">{ringInner.toFixed(1)} mm</strong></span><input aria-label="Diámetro interior en milímetros" type="range" min="12" max="24" step=".5" value={ringInner} onChange={e=>setRingInner(Number(e.target.value))} className="mt-3 w-full accent-[#C6A15B]"/><span className="flex justify-between text-[9px] text-slate-500"><span>12 mm</span><span>24 mm</span></span></label>
-        <label className="block text-xs text-slate-300"><span className="flex justify-between gap-2"><span>Ancho del aro</span><strong className="text-[#E6C887]">{ringWidth.toFixed(1)} mm</strong></span><input aria-label="Ancho del aro en milímetros" type="range" min="2" max="10" step=".5" value={ringWidth} onChange={e=>setRingWidth(Number(e.target.value))} className="mt-3 w-full accent-[#C6A15B]"/><span className="flex justify-between text-[9px] text-slate-500"><span>2 mm</span><span>10 mm</span></span></label>
-        <label className="block text-xs text-slate-300"><span className="flex justify-between gap-2"><span>Espesor de sección</span><strong className="text-[#E6C887]">{ringSection.toFixed(1)} mm</strong></span><input aria-label="Espesor de sección en milímetros" type="range" min="1" max="5" step=".5" value={ringSection} onChange={e=>setRingSection(Number(e.target.value))} className="mt-3 w-full accent-[#C6A15B]"/><span className="flex justify-between text-[9px] text-slate-500"><span>1 mm</span><span>5 mm</span></span></label>
-       </section>
-       <section className="rounded-xl border border-emerald-400/20 bg-emerald-400/[.06] p-3"><div className="flex items-center gap-2"><CheckCircle2 size={15} className="text-emerald-300"/><h4 className="text-xs font-semibold text-emerald-200">Observa el cambio</h4></div><p className="mt-2 text-[11px] leading-5 text-slate-300">El diámetro define el espacio interior; el ancho determina cuánto ocupa el aro sobre el dedo y el espesor modifica la sección del material. Son proporciones de aprendizaje, no medidas de fabricación certificadas.</p></section>
-       <section className="border-t border-white/10 pt-5"><h4 className="text-xs font-semibold text-slate-200">3. Llévalo a Rhinoceros</h4><div className="mt-3 rounded-xl border border-[#D2AD68]/25 bg-[#D2AD68]/[.07] p-3"><p className="text-[9px] font-bold uppercase tracking-[.16em] text-[#D2AD68]">Comando principal de Rhino</p><p className="mt-1 text-xl font-bold text-[#F0D69F]">Revolve</p><p className="mt-1 text-[10px] leading-4 text-slate-300">Gira una curva de sección alrededor de un eje para generar el volumen del aro.</p></div><ol className="mt-3 space-y-2 text-[10px] leading-5 text-slate-300"><li><span className="mr-2 font-bold text-[#D2AD68]">01</span>Dibuja una sección cerrada en una vista lateral.</li><li><span className="mr-2 font-bold text-[#D2AD68]">02</span>Coloca la sección a la distancia del eje que corresponda al diámetro interior.</li><li><span className="mr-2 font-bold text-[#D2AD68]">03</span>Selecciona la sección, escribe <code className="rounded bg-black/30 px-1.5 py-0.5 text-[#F0D69F]">Revolve</code> y define el eje.</li><li><span className="mr-2 font-bold text-[#D2AD68]">04</span>Introduce <strong className="text-white">360°</strong> para completar la vuelta.</li></ol><p className="mt-3 text-[10px] leading-4 text-slate-500">Consejo: usa <code className="rounded bg-black/30 px-1">Fillet</code> para suavizar esquinas de la sección antes de revolucionarla, si el diseño lo requiere.</p></section>
-       <button type="button" onClick={()=>{setRingInner(17);setRingWidth(5);setRingSection(2);setRingProfile("rectangular");}} className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-white/15 px-3 py-2.5 text-xs font-semibold text-slate-300 transition hover:border-[#D2AD68]/50 hover:text-white"><RotateCcw size={14}/> Restablecer ejercicio</button>
-      </div>
-      <div className="mt-auto border-t border-white/10 px-5 py-3"><p className="text-[9px] leading-4 text-slate-500">Simulador conceptual · valida el perfil y el sólido final en Rhino 7 / MatrixGold.</p></div>
-     </aside>
-    </div>
-    <footer className="flex shrink-0 items-center justify-between gap-3 border-t border-white/10 bg-[#19232D] px-5 py-3 sm:px-7"><p className="text-[10px] text-slate-500"><Layers3 className="mr-1 inline" size={13}/> AURUM LAB · Modelado de anillos</p><button type="button" onClick={closeRing} className="rounded-lg bg-gradient-to-b from-[#E6CB8C] to-[#B88D48] px-4 py-2.5 text-xs font-bold text-[#21190D] shadow transition hover:brightness-105">Volver a la sesión 06</button></footer>
-   </section>
-  </div>}
+  <RingVolumeStudio open={(!onlyLab || onlyLab === "ring") && ringOpen} onClose={closeRing} />
   {(!onlyLab || onlyLab === "inspector") && inspectorOpen && <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/80 p-2 sm:p-5" role="dialog" aria-modal="true" aria-label="Solid Inspector">
    <section className="flex h-[min(94dvh,900px)] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-[#526171] bg-[#171F28] text-[#E8EDF2] shadow-2xl">
     <header className="flex shrink-0 items-center justify-between gap-3 border-b border-white/10 bg-[#202A35] px-4 py-3 sm:px-6">
