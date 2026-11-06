@@ -256,6 +256,10 @@ export default function ExtrusionViewport({ profile, height, onHeightChange }: {
       <select aria-label="Plantilla de perfil" value={preset} onChange={e=>applyPreset(e.target.value)} className="rounded-md border border-white/10 bg-[#17212b] px-2 py-1.5 text-[10px] text-slate-200"><option value="rectangle">Rectangular</option><option value="shield">Escudo</option><option value="arch">Arco</option></select>
       <span className="ml-auto text-[9px] text-slate-500">Arrastra nodos · fondo para orbitar · rueda para zoom</span>
     </div>
+    <div className="border-b border-white/10 bg-[#121b24] px-3 py-2 text-[10px] leading-4 text-slate-400">
+      <span className="mr-2 font-semibold uppercase tracking-wider text-[#e6c887]">Reto guiado</span>
+      {preset === "rectangle" ? "Placa técnica: conserva un contorno cerrado y comprueba cómo el volumen crece desde 0 mm." : preset === "shield" ? "Colgante: edita los vértices para afinar la silueta y observa cómo cambia el área y el volumen." : "Perfil ornamental: ajusta los nodos del arco y compara el resultado en vistas superior, frontal e isométrica."}
+    </div>
     <div className="relative min-h-0 flex-1">
       <div ref={hostRef} className="absolute inset-0"/>
       <div className="pointer-events-none absolute bottom-3 left-3 rounded-md border border-white/10 bg-[#101820]/85 px-2.5 py-1.5 text-[9px] text-slate-400">La geometría se actualiza al soltar cada nodo</div>
