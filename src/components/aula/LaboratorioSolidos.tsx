@@ -36,7 +36,6 @@ export default function LaboratorioSolidos({ onlyLab }: LaboratorioSolidosProps)
  const [scenario,setScenario]=useState<"closed"|"open"|"disconnected">("closed");
  const [checked,setChecked]=useState(false);
  const result=useMemo(()=>profile==="closed"?"Puede generar un volumen cerrado si el perfil también es plano y la opción Solid está activada.":profile==="open"?"El perfil está abierto: la extrusión no podrá cerrar ambos extremos como un sólido.":"El perfil no es plano: Rhino puede dejar extremos sin tapar aunque la curva parezca cerrada.",[profile]);
- const close=()=>{setLab(null);setChecked(false);};
  return <>
   <section className="mx-auto mt-7 w-full max-w-[1100px] overflow-hidden rounded-2xl border border-[#344352] bg-[#171F28] text-[#E8EDF2]">
    <header className="border-b border-white/10 bg-[#202A35] px-5 py-4 sm:px-6">
@@ -51,7 +50,7 @@ export default function LaboratorioSolidos({ onlyLab }: LaboratorioSolidosProps)
    </div>
    <p className="border-t border-white/10 px-5 py-3 text-[11px] leading-5 text-[#9EADBA]">Estos laboratorios son simuladores didácticos. No ejecutan Rhino ni certifican archivos .3dm; la validación geométrica real se realiza en Rhino 7/MatrixGold.</p>
   </section>
-  {extrusionOpen && <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/80 p-2 sm:p-5" role="dialog" aria-modal="true" aria-label="Extrusion Studio">
+  {(!onlyLab || onlyLab === "extrusion") && extrusionOpen && <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/80 p-2 sm:p-5" role="dialog" aria-modal="true" aria-label="Extrusion Studio">
    <section className="flex h-[min(94dvh,900px)] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-[#526171] bg-[#171F28] text-[#E8EDF2] shadow-2xl">
     <header className="flex shrink-0 items-center justify-between gap-3 border-b border-white/10 bg-[#202A35] px-4 py-3 sm:px-6">
      <div><p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#C6A15B]">AURUM LAB · SESIÓN 06</p><h2 className="mt-0.5 text-lg font-semibold text-white">Extrusion Studio</h2></div>
@@ -89,7 +88,7 @@ export default function LaboratorioSolidos({ onlyLab }: LaboratorioSolidosProps)
     <footer className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-t border-white/10 bg-[#202A35] px-4 py-3 sm:px-6"><p className="text-[10px] text-[#9EADBA]"><Layers3 className="mr-1 inline" size={13}/> Simulación conceptual · valida siempre el modelo en Rhino 7/MatrixGold</p><button type="button" onClick={closeExtrusion} className={btn}>Volver a la sesión 06</button></footer>
    </section>
   </div>}
-  {revolutionOpen && <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/80 p-2 sm:p-5" role="dialog" aria-modal="true" aria-label="Revolve Studio">
+  {(!onlyLab || onlyLab === "revolution") && revolutionOpen && <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/80 p-2 sm:p-5" role="dialog" aria-modal="true" aria-label="Revolve Studio">
    <section className="flex h-[min(94dvh,900px)] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-[#526171] bg-[#171F28] text-[#E8EDF2] shadow-2xl">
     <header className="flex shrink-0 items-center justify-between gap-3 border-b border-white/10 bg-[#202A35] px-4 py-3 sm:px-6">
      <div><p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#C6A15B]">AURUM LAB · SESIÓN 06</p><h2 className="mt-0.5 text-lg font-semibold text-white">Revolve Studio</h2></div>
@@ -127,7 +126,7 @@ export default function LaboratorioSolidos({ onlyLab }: LaboratorioSolidosProps)
     <footer className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-t border-white/10 bg-[#202A35] px-4 py-3 sm:px-6"><p className="text-[10px] text-[#9EADBA]"><Layers3 className="mr-1 inline" size={13}/> Simulación conceptual · valida siempre el modelo en Rhino 7/MatrixGold</p><button type="button" onClick={closeRevolution} className={btn}>Volver a la sesión 06</button></footer>
    </section>
   </div>}
-  {ringOpen && <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/80 p-2 sm:p-5" role="dialog" aria-modal="true" aria-label="Ring Volume Studio">
+  {(!onlyLab || onlyLab === "ring") && ringOpen && <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/80 p-2 sm:p-5" role="dialog" aria-modal="true" aria-label="Ring Volume Studio">
    <section className="flex h-[min(94dvh,900px)] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-[#526171] bg-[#171F28] text-[#E8EDF2] shadow-2xl">
     <header className="flex shrink-0 items-center justify-between gap-3 border-b border-white/10 bg-[#202A35] px-4 py-3 sm:px-6">
      <div><p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#C6A15B]">AURUM LAB · SESIÓN 06</p><h2 className="mt-0.5 text-lg font-semibold text-white">Ring Volume Studio</h2></div>
@@ -165,7 +164,7 @@ export default function LaboratorioSolidos({ onlyLab }: LaboratorioSolidosProps)
     <footer className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-t border-white/10 bg-[#202A35] px-4 py-3 sm:px-6"><p className="text-[10px] text-[#9EADBA]"><Layers3 className="mr-1 inline" size={13}/> Simulación conceptual · valida siempre el modelo en Rhino 7/MatrixGold</p><button type="button" onClick={closeRing} className={btn}>Volver a la sesión 06</button></footer>
    </section>
   </div>}
-  {inspectorOpen && <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/80 p-2 sm:p-5" role="dialog" aria-modal="true" aria-label="Solid Inspector">
+  {(!onlyLab || onlyLab === "inspector") && inspectorOpen && <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/80 p-2 sm:p-5" role="dialog" aria-modal="true" aria-label="Solid Inspector">
    <section className="flex h-[min(94dvh,900px)] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-[#526171] bg-[#171F28] text-[#E8EDF2] shadow-2xl">
     <header className="flex shrink-0 items-center justify-between gap-3 border-b border-white/10 bg-[#202A35] px-4 py-3 sm:px-6">
      <div><p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#C6A15B]">AURUM LAB · SESIÓN 06</p><h2 className="mt-0.5 text-lg font-semibold text-white">Solid Inspector</h2></div>
