@@ -2909,7 +2909,6 @@ function AulaFormacionPage() {
                     </div>
                   </div>
                 </div>}
-}
                                 {paginaLectura === seccionesLecturaActivas.length-1 && <div className="rounded-xl border border-[#dce4ec] bg-white p-4"><p className="text-sm font-semibold">Has llegado al final de la lectura</p><p className="mt-1 text-sm text-[#6E6E73]">En el aula real, el alumno podrá finalizar y marcar la sesión como completada.</p></div>}
               </main>
               {paginaLectura === seccionesLecturaActivas.length-1 && <footer className="shrink-0 flex justify-end border-t border-[#e2e8f0] bg-white px-4 py-3 sm:px-6 sm:py-4">
