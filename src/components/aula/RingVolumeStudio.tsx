@@ -49,6 +49,37 @@ function createSection(innerDiameter: number, width: number, thickness: number, 
   return pts;
 }
 
+function getSectionMetrics(points: THREE.Vector2[]) {
+  let twiceArea = 0, centroidNumerator = 0;
+  for (let i = 0; i < points.length - 1; i++) {
+    const a = points[i], b = points[i + 1];
+    const cross = a.x * b.y - b.x * a.y;
+    twiceArea += cross;
+    centroidNumerator += (a.x + b.x) * cross;
+  }
+  const area = Math.abs(twiceArea) / 2;
+  const centroidRadius = Math.abs(twiceArea) > 1e-8 ? centroidNumerator / (3 * twiceArea) : 0;
+  return { area, centroidRadius, volume: area > 0 && centroidRadius > 0 ? area * 2 * Math.PI * centroidRadius : 0 };
+}
+function SectionDrawing({ points, width, thickness }: { points: THREE.Vector2[]; width: number; thickness: number }) {
+  const minX = Math.min(...points.map(p => p.x)), maxX = Math.max(...points.map(p => p.x));
+  const minY = Math.min(...points.map(p => p.y)), maxY = Math.max(...points.map(p => p.y));
+  const scale = Math.min(150 / Math.max(0.1, maxX - minX), 88 / Math.max(0.1, maxY - minY));
+  const ox = 160 - ((minX + maxX) / 2) * scale, oy = 91 + ((minY + maxY) / 2) * scale;
+  const polygon = points.map(p => (ox + p.x * scale).toFixed(1) + "," + (oy - p.y * scale).toFixed(1)).join(" ");
+  const left = ox + minX * scale, right = ox + maxX * scale, top = oy - maxY * scale, bottom = oy - minY * scale;
+  return <svg viewBox="0 0 320 180" className="h-[170px] w-full" role="img" aria-label={"Sección de " + width + " mm de ancho y " + thickness + " mm de espesor"}>
+    <line x1="160" y1="14" x2="160" y2="157" stroke="#72CBB4" strokeDasharray="4 4" opacity=".7"/>
+    <text x="168" y="20" fill="#72CBB4" fontSize="8">Eje de revolución</text>
+    <polygon points={polygon} fill="#C49A54" fillOpacity=".82" stroke="#F0D69F" strokeWidth="1.8" strokeLinejoin="round"/>
+    <line x1={left} y1={Math.min(150,bottom+15)} x2={right} y2={Math.min(150,bottom+15)} stroke="#D2AD68"/>
+    <text x={(left+right)/2} y={Math.min(165,bottom+29)} textAnchor="middle" fill="#E6C887" fontSize="9">{width.toFixed(1)} mm · ancho</text>
+    <line x1={Math.min(292,right+17)} y1={top} x2={Math.min(292,right+17)} y2={bottom} stroke="#D2AD68"/>
+    <text x={Math.min(300,right+24)} y={(top+bottom)/2+3} fill="#E6C887" fontSize="9">{thickness.toFixed(1)} mm</text>
+    <text x="14" y="169" fill="#718096" fontSize="8">Corte radial esquemático · no a escala de fabricación</text>
+  </svg>;
+}
+
 function RingViewport({ innerDiameter, width, thickness, profile, cameraView, showSection }: {
   innerDiameter: number; width: number; thickness: number; profile: RingProfile; cameraView: CameraView; showSection: boolean;
 }) {
@@ -188,6 +219,10 @@ export default function RingVolumeStudio({ open, onClose }: { open: boolean; onC
   const [profile, setProfile] = useState<RingProfile>("rectangular");
   const [cameraView, setCameraView] = useState<CameraView>("iso");
   const [showSection, setShowSection] = useState(false);
+  const [challengeChecked, setChallengeChecked] = useState(false);
+  const sectionPoints = useMemo(() => createSection(innerDiameter, width, thickness, profile), [innerDiameter, width, thickness, profile]);
+  const sectionMetrics = useMemo(() => getSectionMetrics(sectionPoints), [sectionPoints]);
+  const challengePassed = profile === "comfort" && Math.abs(innerDiameter - 17) <= 0.5 && Math.abs(width - 5) <= 0.5 && Math.abs(thickness - 2) <= 0.5;
 
   const reset = () => {
     setInnerDiameter(17);
@@ -196,8 +231,10 @@ export default function RingVolumeStudio({ open, onClose }: { open: boolean; onC
     setProfile("rectangular");
     setCameraView("iso");
     setShowSection(false);
+    setChallengeChecked(false);
   };
   const outerDiameter = innerDiameter + thickness * 2;
+  const geometryStatus = sectionMetrics.area > 0 && sectionMetrics.centroidRadius > innerDiameter / 2 ? "Perfil cerrado y apto para la simulación" : "Revisa la sección antes de continuar";
 
   if (!open) return null;
 
@@ -227,6 +264,15 @@ export default function RingVolumeStudio({ open, onClose }: { open: boolean; onC
             <span className="mr-1 text-[9px] font-semibold uppercase tracking-wider text-slate-500">Cámara</span>
             {(["iso", "top", "front", "side"] as CameraView[]).map(v => <button key={v} type="button" onClick={() => setCameraView(v)} aria-pressed={cameraView === v} className={"rounded-md border px-3 py-1.5 text-[10px] font-semibold " + (cameraView === v ? "border-[#D2AD68]/60 bg-[#D2AD68]/10 text-[#E6C887]" : "border-white/10 text-slate-400 hover:border-white/25")}>{v === "iso" ? "Isométrica" : v === "top" ? "Superior" : v === "front" ? "Frontal" : "Lateral"}</button>)}
           </div>
+          <section className="shrink-0 border-t border-white/10 bg-[#111820] px-5 py-3 sm:px-7">
+            <div className="mb-1 flex flex-wrap items-center justify-between gap-2"><div><p className="text-[10px] font-semibold text-slate-200">Sección técnica del perfil</p><p className="text-[9px] text-slate-500">La sección que gira alrededor del eje para formar el aro</p></div><span className="rounded-md border border-[#D2AD68]/20 bg-[#D2AD68]/10 px-2 py-1 text-[9px] font-semibold text-[#E6C887]">{profileLabels[profile]}</span></div>
+            <SectionDrawing points={sectionPoints} width={width} thickness={thickness}/>
+            <div className="grid grid-cols-3 gap-2 border-t border-white/10 pt-2 text-center">
+              <div><p className="text-[9px] text-slate-500">Área sección</p><p className="text-[11px] font-semibold text-slate-200">{sectionMetrics.area.toFixed(1)} mm²</p></div>
+              <div><p className="text-[9px] text-slate-500">Radio medio</p><p className="text-[11px] font-semibold text-slate-200">{sectionMetrics.centroidRadius.toFixed(1)} mm</p></div>
+              <div><p className="text-[9px] text-slate-500">Volumen estimado</p><p className="text-[11px] font-semibold text-[#E6C887]">{(sectionMetrics.volume / 1000).toFixed(2)} cm³</p></div>
+            </div>
+          </section>
         </main>
         <aside className="flex min-h-0 flex-col overflow-y-auto bg-[#151E27]">
           <div className="border-b border-white/10 px-5 py-5"><p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#D2AD68]">Aprende paso a paso</p><h3 className="mt-1 text-lg font-semibold text-white">Construye tu aro en 3D</h3><p className="mt-1 text-[11px] leading-5 text-slate-400">Ajusta las medidas y observa cómo cambia el modelo en tiempo real.</p></div>
@@ -235,8 +281,30 @@ export default function RingVolumeStudio({ open, onClose }: { open: boolean; onC
             <section className="space-y-4 border-t border-white/10 pt-5"><h4 className="text-xs font-semibold text-slate-200">2. Ajusta las dimensiones</h4>
               {([{label:"Diámetro interior",value:innerDiameter,set:setInnerDiameter,min:12,max:24,step:0.5},{label:"Ancho del aro",value:width,set:setWidth,min:2,max:10,step:0.5},{label:"Espesor radial",value:thickness,set:setThickness,min:1,max:5,step:0.5}] as const).map(item => <label key={item.label} className="block text-xs text-slate-300"><span className="flex justify-between gap-2"><span>{item.label}</span><strong className="text-[#E6C887] tabular-nums">{item.value.toFixed(1)} mm</strong></span><input aria-label={item.label} type="range" min={item.min} max={item.max} step={item.step} value={item.value} onChange={e => item.set(Number(e.target.value))} className="mt-3 w-full accent-[#C6A15B]"/><div className="mt-1 flex items-center justify-between gap-3"><span className="text-[9px] text-slate-500">{item.min}–{item.max} mm</span><span className="flex items-center gap-1 rounded-md border border-white/10 bg-[#101820] px-2 py-1"><input aria-label={"Valor exacto de " + item.label} type="number" min={item.min} max={item.max} step={item.step} value={item.value} onChange={e => item.set(Math.min(item.max, Math.max(item.min, Number(e.target.value) || item.min)))} className="w-14 bg-transparent text-right text-[11px] font-semibold text-white outline-none"/><span className="text-[9px] text-slate-500">mm</span></span></div></label>)}
             </section>
+            <section className="rounded-xl border border-emerald-400/20 bg-emerald-400/[.06] p-3">
+              <div className="flex items-center gap-2"><CircleHelp size={15} className="text-emerald-300"/><h4 className="text-xs font-semibold text-slate-100">Diagnóstico geométrico</h4></div>
+              <p className="mt-2 text-[10px] font-semibold text-emerald-200">{geometryStatus}</p>
+              <p className="mt-1 text-[10px] leading-5 text-slate-300">Espesor/ancho: {(thickness / width * 100).toFixed(0)}%. Es una lectura de proporción visual; no certifica resistencia ni tolerancias de fabricación.</p>
+            </section>
+            <details className="rounded-xl border border-white/10 bg-[#101820] p-3">
+              <summary className="cursor-pointer text-xs font-semibold text-slate-200">Comparar los tres perfiles</summary>
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                {(["rectangular", "comfort", "half-round"] as RingProfile[]).map(value => <button key={value} type="button" onClick={() => { setProfile(value); setChallengeChecked(false); }} aria-pressed={profile === value} className={"rounded-lg border p-2 text-center " + (profile === value ? "border-[#D2AD68]/60 bg-[#D2AD68]/10" : "border-white/10 bg-[#151E27]")}>
+                  <svg viewBox="0 0 64 42" className="h-10 w-full"><path d={value === "rectangular" ? "M16 8 H48 V34 H16 Z" : value === "comfort" ? "M19 8 Q16 8 16 12 V30 Q16 34 20 34 H44 Q48 34 48 30 V12 Q48 8 44 8 Z" : "M16 34 Q16 8 32 8 Q48 8 48 34 Z"} fill="#C49A54" stroke="#F0D69F" strokeWidth="1.5"/></svg>
+                  <span className="mt-1 block text-[9px] font-semibold text-slate-300">{profileLabels[value]}</span>
+                </button>)}
+              </div>
+              <p className="mt-2 text-[9px] leading-4 text-slate-500">Selecciona un perfil para aplicarlo al modelo y a la sección técnica.</p>
+            </details>
+            <section className="rounded-xl border border-[#D2AD68]/25 bg-[#D2AD68]/[.06] p-3">
+              <div className="flex items-center justify-between gap-2"><h4 className="text-xs font-semibold text-slate-100">Reto práctico</h4><span className="rounded-full bg-[#D2AD68]/10 px-2 py-1 text-[9px] text-[#E6C887]">Nivel inicial</span></div>
+              <p className="mt-2 text-[10px] leading-5 text-slate-300">Construye un aro Confort con diámetro interior de 17 mm, ancho de 5 mm y espesor de 2 mm.</p>
+              <div className="mt-2 grid grid-cols-3 gap-1 text-center text-[9px]"><span className="rounded-md bg-[#101820] p-2 text-slate-300">Ø 17 mm</span><span className="rounded-md bg-[#101820] p-2 text-slate-300">5 mm ancho</span><span className="rounded-md bg-[#101820] p-2 text-slate-300">2 mm espesor</span></div>
+              <button type="button" onClick={() => setChallengeChecked(true)} className="mt-3 w-full rounded-lg border border-[#D2AD68]/40 bg-[#D2AD68]/10 px-3 py-2 text-[10px] font-semibold text-[#F0D69F] hover:bg-[#D2AD68]/20">Comprobar mi modelo</button>
+              {challengeChecked && <p role="status" className={"mt-2 rounded-lg p-2 text-[10px] leading-4 " + (challengePassed ? "bg-emerald-400/10 text-emerald-200" : "bg-amber-400/10 text-amber-200")}>{challengePassed ? "¡Reto conseguido! Tus dimensiones y perfil coinciden con el objetivo." : "Aún no coincide. Ajusta el perfil a Confort y aproxima las tres dimensiones al objetivo."}</p>}
+            </section>
             <section className="rounded-xl border border-[#D2AD68]/20 bg-[#D2AD68]/[.06] p-3"><div className="flex items-center gap-2"><CircleHelp size={15} className="text-[#E6C887]"/><h4 className="text-xs font-semibold text-slate-100">Lectura del modelo</h4></div><div className="mt-2 grid grid-cols-2 gap-2 text-[10px]"><div className="rounded-lg bg-[#101820] p-2"><span className="text-slate-500">Diámetro exterior</span><strong className="mt-1 block text-[#E6C887]">{outerDiameter.toFixed(1)} mm</strong></div><div className="rounded-lg bg-[#101820] p-2"><span className="text-slate-500">Radio interior</span><strong className="mt-1 block text-[#E6C887]">{(innerDiameter/2).toFixed(1)} mm</strong></div></div><p className="mt-2 text-[10px] leading-5 text-slate-300">El diámetro interior define el espacio para el dedo. El ancho recorre el aro y el espesor radial determina cuánto material tiene.</p></section>
-            <section className="border-t border-white/10 pt-5"><h4 className="text-xs font-semibold text-slate-200">3. Repite la operación en Rhinoceros</h4><div className="mt-3 rounded-xl border border-[#D2AD68]/25 bg-[#101820] p-3"><div className="flex items-center justify-between gap-2"><span className="text-[10px] text-slate-400">Comando principal</span><code className="rounded-md border border-[#D2AD68]/30 bg-[#D2AD68]/10 px-2.5 py-1 text-xs font-bold text-[#F0D69F]">_Revolve</code></div><ol className="mt-3 space-y-2 text-[10px] leading-5 text-slate-300"><li><span className="mr-2 font-bold text-[#D2AD68]">01</span>Dibuja una sección cerrada en una vista lateral.</li><li><span className="mr-2 font-bold text-[#D2AD68]">02</span>Ubícala a la distancia correcta del eje vertical.</li><li><span className="mr-2 font-bold text-[#D2AD68]">03</span>Ejecuta <code className="text-[#F0D69F]">_Revolve</code>, selecciona el perfil y define el eje.</li><li><span className="mr-2 font-bold text-[#D2AD68]">04</span>Indica 0° como inicio y 360° como final.</li></ol><p className="mt-3 border-t border-white/10 pt-2 text-[10px] leading-4 text-slate-500">Comprueba el resultado como polisuperficie cerrada antes de continuar el modelado.</p></div></section>
+            <section className="border-t border-white/10 pt-5"><h4 className="text-xs font-semibold text-slate-200">3. Repite la operación en Rhinoceros</h4><div className="mt-3 rounded-xl border border-[#D2AD68]/25 bg-[#101820] p-3"><div className="flex items-center justify-between gap-2"><span className="text-[10px] text-slate-400">Comando principal</span><code className="rounded-md border border-[#D2AD68]/30 bg-[#D2AD68]/10 px-2.5 py-1 text-xs font-bold text-[#F0D69F]">_Revolve</code></div><ol className="mt-3 space-y-2 text-[10px] leading-5 text-slate-300"><li><span className="mr-2 font-bold text-[#D2AD68]">01</span><code className="text-[#F0D69F]">_Rectangle</code>: dibuja la sección cerrada en una vista lateral.</li><li><span className="mr-2 font-bold text-[#D2AD68]">02</span>Coloca el perfil a la distancia del eje que define el radio interior.</li><li><span className="mr-2 font-bold text-[#D2AD68]">03</span><code className="text-[#F0D69F]">_Revolve</code>: selecciona el perfil y marca dos puntos del eje central.</li><li><span className="mr-2 font-bold text-[#D2AD68]">04</span>Define 360° para completar la revolución.</li><li><span className="mr-2 font-bold text-[#D2AD68]">05</span><code className="text-[#F0D69F]">_ShowEdges</code>: revisa si existen bordes desnudos.</li></ol><p className="mt-3 border-t border-white/10 pt-2 text-[10px] leading-4 text-slate-500">Comprueba el resultado como polisuperficie cerrada antes de continuar el modelado.</p></div></section>
             <details className="border-t border-white/10 pt-4"><summary className="cursor-pointer text-[11px] font-semibold text-slate-400 hover:text-[#E6C887]">Consejo técnico</summary><p className="mt-3 rounded-lg bg-[#101820] p-3 text-[10px] leading-5 text-slate-400">La sección debe ser una curva plana y cerrada. Evita que cruce el eje de revolución. El simulador es didáctico y no sustituye la comprobación de geometría en Rhinoceros / MatrixGold.</p></details>
             <button type="button" onClick={reset} className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-white/15 px-3 py-2.5 text-xs font-semibold text-slate-300 transition hover:border-[#D2AD68]/50 hover:text-white"><RotateCcw size={14}/> Restablecer ejercicio</button>
           </div>
