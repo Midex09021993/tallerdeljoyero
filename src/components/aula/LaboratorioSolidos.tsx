@@ -149,10 +149,10 @@ export default function LaboratorioSolidos({ onlyLab }: LaboratorioSolidosProps)
         <div className="pointer-events-none absolute inset-0 opacity-[.18]" style={{backgroundImage:"linear-gradient(rgba(148,163,184,.18) 1px, transparent 1px),linear-gradient(90deg,rgba(148,163,184,.18) 1px, transparent 1px)",backgroundSize:"30px 30px"}}/>
         <svg viewBox="0 0 520 360" className="relative z-10 h-auto max-h-[440px] w-full" role="img" aria-label="Vista superior conceptual de un anillo con cotas de diámetro interior">
          <defs><linearGradient id="ringStudioGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#F5DFA8"/><stop offset=".48" stopColor="#C49A54"/><stop offset="1" stopColor="#76572F"/></linearGradient><linearGradient id="ringStudioShade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#E5C783"/><stop offset="1" stopColor="#75552D"/></linearGradient></defs>
-         <ellipse cx="250" cy="160" rx="164" ry="91" fill="none" stroke="#5A4529" strokeWidth={Math.max(12,ringSection*10+8)} opacity=".8"/>
-         <ellipse cx="250" cy="150" rx="164" ry="91" fill="none" stroke="url(#ringStudioGold)" strokeWidth={Math.max(12,ringSection*10+8)}/>
-         <ellipse cx="250" cy="150" rx="164" ry="91" fill="none" stroke="#F2D99E" strokeWidth="1.5" opacity=".9"/>
-         <ellipse cx="250" cy="150" rx={Math.max(48,164-Math.max(12,ringSection*10+8))} ry={Math.max(26,91-Math.max(12,ringSection*10+8)*.55)} fill="none" stroke="#F2D99E" strokeWidth="2" opacity=".8"/>
+         <ellipse cx="250" cy="160" rx={Math.min(190,140+(ringInner-12)*2)} ry={Math.min(104,75+(ringInner-12)*1.3)} fill="none" stroke="#5A4529" strokeWidth={Math.max(12,ringSection*10+8)} opacity=".8"/>
+         <ellipse cx="250" cy="150" rx={Math.min(190,140+(ringInner-12)*2)} ry={Math.min(104,75+(ringInner-12)*1.3)} fill="none" stroke="url(#ringStudioGold)" strokeWidth={Math.max(12,ringSection*10+8)}/>
+         <ellipse cx="250" cy="150" rx={Math.min(190,140+(ringInner-12)*2)} ry={Math.min(104,75+(ringInner-12)*1.3)} fill="none" stroke="#F2D99E" strokeWidth="1.5" opacity=".9"/>
+         <ellipse cx="250" cy="150" rx={Math.max(48,Math.min(190,140+(ringInner-12)*2)-Math.max(12,ringSection*10+8))} ry={Math.max(26,Math.min(104,75+(ringInner-12)*1.3)-Math.max(12,ringSection*10+8)*.55)} fill="none" stroke="#F2D99E" strokeWidth="2" opacity=".8"/>
          <path d="M86 150 V260 M414 150 V260 M86 248 H414 M80 242 L86 248 L80 254 M420 242 L414 248 L420 254" fill="none" stroke="#D2AD68" strokeWidth="1.6"/>
          <text x="250" y="278" textAnchor="middle" fill="#E6C887" fontSize="13" fontWeight="600">Ø interior · {ringInner} mm</text>
          <path d="M370 48 H430 V82" fill="none" stroke="#D2AD68" strokeWidth="1.5"/><text x="434" y="46" fill="#E6C887" fontSize="11">Sección</text><text x="434" y="61" fill="#B7C3CF" fontSize="11">{ringSection} mm</text>
