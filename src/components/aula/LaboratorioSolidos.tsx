@@ -38,6 +38,10 @@ export default function LaboratorioSolidos({ onlyLab }: LaboratorioSolidosProps)
  const closeInspector=()=>{setInspectorOpen(false);setChecked(false);};
  const [profile,setProfile]=useState<"closed"|"open"|"nonplanar">("closed");
  const [height,setHeight]=useState(12);
+ const extrusionDepth=36+(height/30)*150;
+ const leftBaseY=190+extrusionDepth;
+ const frontBaseY=258+extrusionDepth;
+ const rightBaseY=194+extrusionDepth;
  const [angle,setAngle]=useState(360);
  const [ringInner,setRingInner]=useState(17);
  const [ringWidth,setRingWidth]=useState(5);
@@ -84,10 +88,10 @@ export default function LaboratorioSolidos({ onlyLab }: LaboratorioSolidosProps)
         <ellipse cx="365" cy="365" rx="205" ry="32" fill="#000" opacity=".45" filter="url(#exShadow)"/>
         {profile==="closed" ? <g strokeLinejoin="round">
          <path d="M180 190 L330 128 L520 194 L370 258 Z" fill="url(#exTop)" stroke="#F0D49A" strokeWidth="2.5"/>
-         <path d="M180 190 L370 258 L370 365 L180 298 Z" fill="url(#exFront)" stroke="#D2AD68" strokeWidth="2"/>
-         <path d="M370 258 L520 194 L520 301 L370 365 Z" fill="url(#exSide)" stroke="#D2AD68" strokeWidth="2"/>
-         <path d="M180 190 L330 128 L520 194 L520 301 L370 365 L180 298 Z" fill="none" stroke="#F2D9A3" strokeWidth="2.2"/>
-         <path d="M180 298 L370 365 L520 301" fill="none" stroke="#E8C987" strokeWidth="1.5" opacity=".65"/>
+         <path d={`M180 190 L370 258 L370 ${frontBaseY} L180 ${leftBaseY} Z`} fill="url(#exFront)" stroke="#D2AD68" strokeWidth="2"/>
+         <path d={`M370 258 L520 194 L520 ${rightBaseY} L370 ${frontBaseY} Z`} fill="url(#exSide)" stroke="#D2AD68" strokeWidth="2"/>
+         <path d={`M180 190 L330 128 L520 194 L520 ${rightBaseY} L370 ${frontBaseY} L180 ${leftBaseY} Z`} fill="none" stroke="#F2D9A3" strokeWidth="2.2"/>
+         <path d={`M180 ${leftBaseY} L370 ${frontBaseY} L520 ${rightBaseY}`} fill="none" stroke="#E8C987" strokeWidth="1.5" opacity=".65"/>
          <path d="M330 128 L330 235" stroke="#F6E3B7" strokeWidth="1.2" strokeDasharray="5 6" opacity=".65"/>
         </g> : <g fill="none" stroke="#D7B879" strokeWidth="3" strokeLinejoin="round">
          <path d="M180 298 L180 190 L330 128 L520 194"/>
@@ -97,10 +101,10 @@ export default function LaboratorioSolidos({ onlyLab }: LaboratorioSolidosProps)
          <text x="350" y="400" fill="#E5C987" stroke="none" fontSize="13" textAnchor="middle">{profile==="open"?"Perfil abierto · volumen no cerrado":"Perfil no plano · revisar tapas"}</text>
         </g>}
         <g stroke="#E3C17A" fill="none" strokeWidth="1.5">
-         <path d="M565 190 V301 M557 198 L565 190 L573 198 M557 293 L565 301 L573 293"/>
-         <path d="M180 325 L370 392 M180 318 V332 M370 385 V399" opacity=".75"/>
+         <path d={`M565 194 V${rightBaseY} M557 202 L565 194 L573 202 M557 ${rightBaseY-8} L565 ${rightBaseY} L573 ${rightBaseY-8}`}/>
+         <path d={`M180 ${leftBaseY+18} L370 ${frontBaseY+27} M180 ${leftBaseY+11} V${leftBaseY+25} M370 ${frontBaseY+20} V${frontBaseY+34}`} opacity=".75"/>
         </g>
-        <g fill="#E8CA87" fontSize="14" fontWeight="600"><text x="582" y="250"> {height} mm</text><text x="273" y="415" fontSize="11" opacity=".8">ALTURA DE EXTRUSIÓN</text></g>
+        <g fill="#E8CA87" fontSize="14" fontWeight="600"><text x="582" y={(194+rightBaseY)/2+5}> {height.toFixed(1)} mm</text><text x="273" y={frontBaseY+58} fontSize="11" opacity=".8">ALTURA DE EXTRUSIÓN</text></g>
         <g transform="translate(62 365)" strokeWidth="2" fill="none"><path d="M0 0 H42" stroke="#D97757"/><path d="M0 0 V-42" stroke="#72B69A"/><path d="M0 0 L-23 18" stroke="#76A7D8"/><g fill="#B8C6D3" stroke="none" fontSize="10"><text x="47" y="4">X</text><text x="-4" y="-49">Z</text><text x="-37" y="29">Y</text></g></g>
        </svg>
        <div className="absolute bottom-4 left-5 rounded-lg border border-white/10 bg-[#111820]/90 px-3 py-2 text-[10px] text-slate-400 backdrop-blur"><span className="mr-2 inline-block size-1.5 rounded-full bg-emerald-400"/>Vista conceptual actualizada con los parámetros</div>
@@ -111,9 +115,9 @@ export default function LaboratorioSolidos({ onlyLab }: LaboratorioSolidosProps)
        <div className="px-4 py-3 sm:px-6"><p className="text-[9px] uppercase tracking-wider text-slate-500">Altura</p><p className="mt-1 text-xs font-semibold text-[#E6C887]">{height} mm</p></div>
       </div>
      </main>
-     <aside className="flex min-h-0 flex-col bg-[#151E27] lg:overflow-y-auto">
+     <aside className="flex min-h-0 flex-col overflow-hidden bg-[#151E27]">
       <div className="border-b border-white/10 px-5 py-4"><p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#D2AD68]">Panel de propiedades</p><h3 className="mt-1 text-base font-semibold text-white">Parámetros de operación</h3><p className="mt-1 text-[11px] leading-5 text-slate-400">Modifica la geometría de entrada y observa su efecto en la vista.</p></div>
-      <div className="space-y-6 p-5">
+      <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-5">
        <section><div className="flex items-center justify-between"><h4 className="text-xs font-semibold text-slate-200">01 · Geometría del perfil</h4><span className="text-[9px] uppercase tracking-wider text-slate-500">Entrada</span></div><div className="mt-3 grid grid-cols-3 gap-1.5">{[["closed","Cerrado"],["open","Abierto"],["nonplanar","No plano"]].map(([v,l])=><button key={v} type="button" onClick={()=>setProfile(v as typeof profile)} aria-pressed={profile===v} className={"rounded-lg border px-2 py-2.5 text-[10px] font-semibold transition "+(profile===v?"border-[#D2AD68]/70 bg-[#D2AD68]/15 text-[#F0D69F] shadow-[inset_0_0_0_1px_rgba(210,173,104,.12)]":"border-white/10 bg-[#101820] text-slate-400 hover:border-white/25 hover:text-white")}>{l}</button>)}</div><p className="mt-2 text-[10px] leading-5 text-slate-500">{profile==="closed"?"Una curva cerrada y plana permite generar un volumen con tapas.":profile==="open"?"Una curva abierta genera una superficie extruida, no un sólido cerrado.":"Un perfil fuera del plano puede impedir el cierre correcto de las tapas."}</p></section>
        <section className="border-t border-white/10 pt-5"><div className="flex items-center justify-between"><h4 className="text-xs font-semibold text-slate-200">02 · Distancia de extrusión</h4><span className="rounded-md bg-[#D2AD68]/10 px-2 py-1 text-xs font-bold tabular-nums text-[#E6C887]">{height.toFixed(1)} mm</span></div><input aria-label="Altura de extrusión en milímetros" type="range" min="2" max="30" step="0.5" value={height} onChange={e=>setHeight(Number(e.target.value))} className="mt-4 w-full accent-[#C6A15B]"/><div className="mt-1 flex justify-between text-[9px] text-slate-500"><span>2 mm</span><span>30 mm</span></div><div className="mt-3 flex items-center gap-2 rounded-lg border border-white/10 bg-[#101820] px-3 py-2"><span className="text-[10px] text-slate-400">Valor exacto</span><input aria-label="Valor exacto de altura" type="number" min="2" max="30" step="0.5" value={height} onChange={e=>setHeight(Math.min(30,Math.max(2,Number(e.target.value)||2)))} className="ml-auto w-20 bg-transparent text-right text-xs font-semibold text-white outline-none"/><span className="text-[10px] text-slate-500">mm</span></div></section>
        <section className="border-t border-white/10 pt-5"><h4 className="text-xs font-semibold text-slate-200">03 · Diagnóstico geométrico</h4><div className={"mt-3 rounded-xl border p-3 "+(profile==="closed"?"border-emerald-400/20 bg-emerald-400/[.06]":"border-amber-400/20 bg-amber-400/[.06]")}><div className="flex items-center gap-2">{profile==="closed"?<CheckCircle2 size={15} className="text-emerald-300"/>:<AlertTriangle size={15} className="text-amber-300"/>}<span className={"text-[11px] font-semibold "+(profile==="closed"?"text-emerald-200":"text-amber-200")}>{profile==="closed"?"Condición favorable":"Requiere revisión"}</span></div><p className="mt-2 text-[10px] leading-5 text-slate-300">{result}</p></div></section>
