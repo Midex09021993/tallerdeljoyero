@@ -2743,7 +2743,6 @@ function AulaFormacionPage() {
                   </section>
                   {lecturaAbierta?.numero === 5 && <section className="min-w-0">{renderLaboratorioSesion5()}</section>}
                 </div>
-                {lecturaAbierta?.numero === 6 && <section className="mx-auto w-full max-w-[1100px]"><LaboratorioSolidos /></section>}
                 {renderLaboratorioOsnap()}
                 {renderLaboratorioSmartTrack()}
                 {renderLaboratorioPlaca()}
