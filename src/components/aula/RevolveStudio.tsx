@@ -43,7 +43,7 @@ function RevolveViewport({ profile, angle, axis, display, showProfile, showResul
     scene.background = new THREE.Color("#0d141b");
     const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 200);
     camera.up.set(0, 1, 0);
-    camera.position.set(78, 88, 76);
+    camera.position.set(72, 76, 88);
     camera.lookAt(0, 20, 0);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
@@ -124,8 +124,8 @@ function RevolveViewport({ profile, angle, axis, display, showProfile, showResul
     controls.dampingFactor = 0.07;
     const axisTarget = new THREE.Vector3(0, 20, 0).applyQuaternion(model.quaternion);
     controls.target.copy(axisTarget);
-    controls.minDistance = 65;
-    controls.maxDistance = 190;
+    controls.minDistance = 42;
+    controls.maxDistance = 160;
     controls.maxPolarAngle = Math.PI;
 
     const resize = () => {
@@ -215,7 +215,7 @@ export default function RevolveStudio({ open, onClose }: { open: boolean; onClos
       <div className="grid min-h-0 flex-1 grid-cols-1 overflow-y-auto lg:grid-cols-[minmax(0,1fr)_340px] lg:overflow-hidden">
         <main className="flex min-h-[440px] min-w-0 flex-col border-b border-white/10 lg:min-h-0 lg:border-b-0 lg:border-r">
           <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-white/10 bg-[#111820] px-5 py-3 sm:px-7">
-            <div><p className="text-xs font-semibold text-white">Área de construcción</p><p className="mt-0.5 text-[10px] text-slate-400">Observa cómo gira el perfil alrededor del eje</p></div>
+            <div><p className="text-xs font-semibold text-white">Área de construcción</p><p className="mt-0.5 text-[10px] text-slate-400">Curva de entrada y superficie generada · unidades de modelo</p></div>
             <span className="rounded-full border border-[#D2AD68]/25 bg-[#D2AD68]/10 px-3 py-1.5 text-[10px] font-semibold text-[#E6C887]">VISTA 3D · {angle}°</span>
           </div>
           <div className="relative flex min-h-[340px] flex-1 items-center justify-center overflow-hidden bg-[#0D141B] p-3 sm:p-5">
@@ -252,6 +252,9 @@ export default function RevolveStudio({ open, onClose }: { open: boolean; onClos
               <div className="flex items-center justify-between gap-2"><h4 className="text-xs font-semibold text-slate-200">2. Define el ángulo</h4><span className="rounded-md bg-[#D2AD68]/10 px-2.5 py-1 text-sm font-bold tabular-nums text-[#E6C887]">{angle}°</span></div>
               <input aria-label="Ángulo de revolución" type="range" min="0" max="360" step="1" value={angle} onChange={event => { setPlaying(false); setAngle(Number(event.target.value)); }} className="mt-4 w-full accent-[#C6A15B]"/>
               <div className="mt-1 flex justify-between text-[9px] text-slate-500"><span>0° · Sin giro</span><span>360° · Completo</span></div>
+              <div className="mt-3 grid grid-cols-4 gap-1.5">
+                {[90, 180, 270, 360].map(value => <button key={value} type="button" onClick={() => { setPlaying(false); setAngle(value); }} aria-pressed={angle === value} className={"rounded-md border px-1 py-1.5 text-[10px] font-semibold tabular-nums transition " + (angle === value ? "border-[#D2AD68]/60 bg-[#D2AD68]/15 text-[#E6C887]" : "border-white/10 bg-[#101820] text-slate-400 hover:border-white/25")}>{value}°</button>)}
+              </div>
               <button type="button" onClick={() => { if (angle >= 360) setAngle(0); setPlaying(value => !value); }} className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[#D2AD68]/35 bg-[#D2AD68]/10 px-3 py-2.5 text-xs font-semibold text-[#E6C887] transition hover:bg-[#D2AD68]/15">{playing ? <Pause size={14}/> : <Play size={14}/>} {playing ? "Pausar giro" : "Animar revolución"}</button>
             </section>
 
@@ -259,6 +262,22 @@ export default function RevolveStudio({ open, onClose }: { open: boolean; onClos
               <h4 className="text-xs font-semibold text-slate-200">3. Elige el eje</h4>
               <div className="mt-3 grid grid-cols-3 gap-2">
                 {(["x", "y", "z"] as AxisKey[]).map(value => <button key={value} type="button" onClick={() => setAxis(value)} aria-pressed={axis === value} className={"rounded-lg border px-3 py-2 text-xs font-semibold transition " + (axis === value ? "border-[#D2AD68]/70 bg-[#D2AD68]/15 text-[#F0D69F]" : "border-white/10 bg-[#101820] text-slate-400 hover:border-white/25")}>Eje {value.toUpperCase()}</button>)}
+              </div>
+            </section>
+
+            <section className="border-t border-white/10 pt-5">
+              <h4 className="text-xs font-semibold text-slate-200">4. Repite la operación en Rhinoceros</h4>
+              <div className="mt-3 rounded-xl border border-[#D2AD68]/25 bg-[#101820] p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[10px] text-slate-400">Comando de Rhino</span>
+                  <code className="rounded-md border border-[#D2AD68]/30 bg-[#D2AD68]/10 px-2.5 py-1 text-xs font-bold text-[#F0D69F]">_Revolve</code>
+                </div>
+                <ol className="mt-3 space-y-2 text-[10px] leading-4 text-slate-300">
+                  <li><span className="mr-2 font-bold text-[#D2AD68]">01</span>Selecciona la curva del perfil y pulsa Enter.</li>
+                  <li><span className="mr-2 font-bold text-[#D2AD68]">02</span>Marca el inicio y el final del eje de revolución.</li>
+                  <li><span className="mr-2 font-bold text-[#D2AD68]">03</span>Indica el ángulo inicial (0°) y el final (por ejemplo, 360°).</li>
+                </ol>
+                <p className="mt-3 border-t border-white/10 pt-2 text-[10px] leading-4 text-slate-400">Consejo: trabaja con una curva plana y limpia. El resultado real dependerá del perfil y del eje que dibujes.</p>
               </div>
             </section>
 
@@ -276,7 +295,7 @@ export default function RevolveStudio({ open, onClose }: { open: boolean; onClos
 
             <section className={"rounded-xl border p-3 " + (angle === 0 ? "border-amber-400/30 bg-amber-400/[.06]" : fullTurn ? "border-emerald-400/25 bg-emerald-400/[.06]" : "border-[#D2AD68]/25 bg-[#D2AD68]/[.06]")}>
               <div className="flex items-center gap-2 text-xs font-semibold text-slate-100"><CircleHelp size={15} className="text-[#E6C887]"/> ¿Qué está ocurriendo?</div>
-              <p className="mt-2 text-[11px] leading-5 text-slate-300">{angle === 0 ? "El perfil permanece en su posición inicial: todavía no se ha generado una superficie." : fullTurn ? "El perfil ha completado una vuelta. La superficie vuelve a su punto de partida; el resultado depende de que el perfil sea adecuado y esté bien cerrado." : "La superficie solo ha recorrido una parte del giro. Los extremos angulares permanecen abiertos."}</p>
+              <p className="mt-2 text-[11px] leading-5 text-slate-300">{angle === 0 ? "El perfil permanece en su posición inicial: todavía no se ha generado una superficie." : fullTurn ? "El perfil completó una vuelta de 360°. En Rhino, comprueba que la curva sea válida y que el eje esté bien definido." : "La superficie ha girado {angle}°. Aún no completa la vuelta; puedes elegir 90°, 180°, 270° o 360° para comparar."}</p>
             </section>
             <button type="button" onClick={reset} className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-white/15 px-3 py-2.5 text-xs font-semibold text-slate-300 transition hover:border-[#D2AD68]/50 hover:text-white"><RotateCcw size={14}/> Reiniciar ejercicio</button>
           </div>
