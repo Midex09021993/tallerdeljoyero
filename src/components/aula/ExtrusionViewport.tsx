@@ -61,7 +61,7 @@ export default function ExtrusionViewport({ profile, height, onHeightChange }: {
   const closed = profile !== "open";
   const area = useMemo(() => closed && profile === "closed" ? polygonArea(points) : null, [closed, profile, points]);
   const length = useMemo(() => perimeter(points, closed), [points, closed]);
-  const volume = area === null ? null : area * height / 10;
+  const volume = area === null ? null : area * height;
   const selfIntersecting = useMemo(() => closed && profile === "closed" && hasSelfIntersection(points), [closed, profile, points]);
   const validForSolid = profile === "closed" && !selfIntersecting && points.length >= 3;
 
@@ -106,7 +106,7 @@ export default function ExtrusionViewport({ profile, height, onHeightChange }: {
     controls.target.set(0, 0, direction === "symmetric" ? 0 : Math.max(0, height / 20));
     controls.minDistance = 4;
     controls.maxDistance = 20;
-    controls.maxPolarAngle = Math.PI * 0.495;
+    controls.maxPolarAngle = Math.PI;
 
     const sourceGroup = new THREE.Group();
     const resultGroup = new THREE.Group();
