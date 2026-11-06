@@ -295,7 +295,7 @@ export default function RevolveStudio({ open, onClose }: { open: boolean; onClos
 
             <section className={"rounded-xl border p-3 " + (angle === 0 ? "border-amber-400/30 bg-amber-400/[.06]" : fullTurn ? "border-emerald-400/25 bg-emerald-400/[.06]" : "border-[#D2AD68]/25 bg-[#D2AD68]/[.06]")}>
               <div className="flex items-center gap-2 text-xs font-semibold text-slate-100"><CircleHelp size={15} className="text-[#E6C887]"/> ¿Qué está ocurriendo?</div>
-              <p className="mt-2 text-[11px] leading-5 text-slate-300">{angle === 0 ? "El perfil permanece en su posición inicial: todavía no se ha generado una superficie." : fullTurn ? "El perfil completó una vuelta de 360°. En Rhino, comprueba que la curva sea válida y que el eje esté bien definido." : "La superficie ha girado {angle}°. Aún no completa la vuelta; puedes elegir 90°, 180°, 270° o 360° para comparar."}</p>
+              <p className="mt-2 text-[11px] leading-5 text-slate-300">{angle === 0 ? "El perfil permanece en su posición inicial: todavía no se ha generado una superficie." : fullTurn ? "El perfil completó una vuelta de 360°. En Rhino, comprueba que la curva sea válida y que el eje esté bien definido." : `La superficie ha girado ${angle}°. Aún no completa la vuelta; puedes elegir 90°, 180°, 270° o 360° para comparar.`}</p>
             </section>
             <button type="button" onClick={reset} className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-white/15 px-3 py-2.5 text-xs font-semibold text-slate-300 transition hover:border-[#D2AD68]/50 hover:text-white"><RotateCcw size={14}/> Reiniciar ejercicio</button>
           </div>
