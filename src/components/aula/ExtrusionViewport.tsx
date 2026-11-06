@@ -25,7 +25,9 @@ export default function ExtrusionViewport({ profile, height }: { profile: Profil
     const scene = new THREE.Scene();
     scene.background = new THREE.Color("#0d141b");
     const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
+    camera.up.set(0, 0, 1);
     camera.position.set(7.5, -8.5, 7);
+    camera.lookAt(0, 0, 0);
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -72,7 +74,7 @@ export default function ExtrusionViewport({ profile, height }: { profile: Profil
 
     const heightUnits = height / 10;
     const sourcePoints = points.map((p, i) => new THREE.Vector3(p.x, p.y, profile === "nonplanar" ? (i % 2 === 0 ? 0.45 : -0.35) : 0));
-    const isClosed = profile === "closed";
+    const isClosed = profile !== "open";
     const curvePoints = [...sourcePoints];
     if (isClosed && curvePoints.length > 2) curvePoints.push(curvePoints[0].clone());
     if (showSource && curvePoints.length > 1) {
@@ -88,7 +90,7 @@ export default function ExtrusionViewport({ profile, height }: { profile: Profil
     }
 
     if (showResult && sourcePoints.length >= 2) {
-      if (isClosed && sourcePoints.length >= 3) {
+      if (profile === "closed" && sourcePoints.length >= 3) {
         const shape = new THREE.Shape();
         shape.moveTo(sourcePoints[0].x, sourcePoints[0].y);
         sourcePoints.slice(1).forEach(p => shape.lineTo(p.x, p.y));
@@ -225,7 +227,7 @@ export default function ExtrusionViewport({ profile, height }: { profile: Profil
     <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 bg-[#151e27]/95 px-3 py-2">
       <div className="flex flex-wrap items-center gap-2 text-[10px] text-slate-300">
         <span className="font-semibold uppercase tracking-wider text-[#e6c887]">Curva de entrada</span>
-        <span className="text-slate-500">{points.length} puntos · {profile === "closed" ? "cerrada" : "abierta"}</span>
+        <span className="text-slate-500">{points.length} puntos · {profile === "open" ? "abierta" : profile === "nonplanar" ? "cerrada · no plana" : "cerrada"}</span>
       </div>
       <div className="flex flex-wrap gap-1.5">
         <button type="button" onClick={() => setShowSource(v => !v)} className={`rounded-md border px-2 py-1.5 text-[10px] ${showSource ? "border-[#d2ad68]/50 bg-[#d2ad68]/10 text-[#f0d69f]" : "border-white/10 text-slate-400"}`}>{showSource ? "Ocultar curva" : "Mostrar curva"}</button>
@@ -238,7 +240,7 @@ export default function ExtrusionViewport({ profile, height }: { profile: Profil
     <div className="relative min-h-0 flex-1">
       <div ref={hostRef} className="absolute inset-0"/>
       <div className="pointer-events-none absolute bottom-3 left-3 rounded-md border border-white/10 bg-[#101820]/85 px-2.5 py-1.5 text-[9px] text-slate-400">Arrastra los nodos para editar · arrastra el fondo para orbitar · rueda para zoom</div>
-      <div className="absolute right-3 top-3 rounded-md border border-white/10 bg-[#101820]/90 px-2.5 py-1.5 text-[9px] font-semibold text-[#e6c887]">{height.toFixed(1)} mm · {profile === "closed" ? "Sólido" : "Superficie abierta"}</div>
+      <div className="absolute right-3 top-3 rounded-md border border-white/10 bg-[#101820]/90 px-2.5 py-1.5 text-[9px] font-semibold text-[#e6c887]">{height.toFixed(1)} mm · {profile === "closed" ? "Sólido" : profile === "open" ? "Superficie abierta" : "Superficie sin tapa"}</div>
     </div>
     <div className="flex flex-wrap items-center gap-3 border-t border-white/10 bg-[#151e27]/95 px-3 py-2">
       <span className="text-[10px] font-semibold text-slate-300">Punto {selected + 1}</span>
