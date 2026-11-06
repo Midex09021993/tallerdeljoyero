@@ -42,9 +42,9 @@ function RevolveViewport({ profile, angle, axis, display, showProfile, showResul
     const scene = new THREE.Scene();
     scene.background = new THREE.Color("#0d141b");
     const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 200);
-    camera.up.set(0, 0, 1);
-    camera.position.set(78, -92, 76);
-    camera.lookAt(0, 0, 20);
+    camera.up.set(0, 1, 0);
+    camera.position.set(78, 88, 76);
+    camera.lookAt(0, 20, 0);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -63,7 +63,6 @@ function RevolveViewport({ profile, angle, axis, display, showProfile, showResul
     scene.add(fill);
 
     const grid = new THREE.GridHelper(120, 24, 0x526170, 0x26323e);
-    grid.rotation.x = Math.PI / 2;
     (grid.material as THREE.Material).transparent = true;
     (grid.material as THREE.Material).opacity = 0.28;
     scene.add(grid);
@@ -123,7 +122,8 @@ function RevolveViewport({ profile, angle, axis, display, showProfile, showResul
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.07;
-    controls.target.set(0, 0, 20);
+    const axisTarget = new THREE.Vector3(0, 20, 0).applyQuaternion(model.quaternion);
+    controls.target.copy(axisTarget);
     controls.minDistance = 65;
     controls.maxDistance = 190;
     controls.maxPolarAngle = Math.PI;
@@ -178,20 +178,14 @@ export default function RevolveStudio({ open, onClose }: { open: boolean; onClos
   useEffect(() => {
     if (!playing) return;
     const timer = window.setInterval(() => {
-      setAngle(current => {
-        if (current >= 360) {
-          setPlaying(false);
-          return 360;
-        }
-        return Math.min(360, current + 3);
-      });
+      setAngle(current => Math.min(360, current + 3));
     }, 28);
     return () => window.clearInterval(timer);
   }, [playing]);
 
   useEffect(() => {
-    if (!open) setPlaying(false);
-  }, [open]);
+    if (!open || angle >= 360) setPlaying(false);
+  }, [open, angle]);
 
   if (!open) return null;
 
