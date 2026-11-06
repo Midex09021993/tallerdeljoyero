@@ -100,11 +100,12 @@ export default function LaboratorioSolidos({ onlyLab }: LaboratorioSolidosProps)
           <linearGradient id="openFaceC" x1="0" y1="0" x2="1" y2="0"><stop stopColor="#E1C486" stopOpacity=".7"/><stop offset="1" stopColor="#8A6B40" stopOpacity=".5"/></linearGradient>
          </defs>
          <g stroke="#D9B978" strokeWidth="1.8">
-          <path d={`M175 170 L175 270 L365 340 L365 240 Z`} fill="url(#openFaceA)"/>
-          <path d={`M175 170 L365 240 L365 ${240+extrusionDepth} L175 ${170+extrusionDepth} Z`} fill="url(#openFaceB)"/>
+          <path d={`M175 170 L175 270 L175 ${270+extrusionDepth} L175 ${170+extrusionDepth} Z`} fill="url(#openFaceB)"/>
           <path d={`M175 270 L365 340 L365 ${340+extrusionDepth} L175 ${270+extrusionDepth} Z`} fill="url(#openFaceC)"/>
-          <path d={`M365 240 L365 340 L365 ${340+extrusionDepth} L365 ${240+extrusionDepth} Z`} fill="#8C7047" fillOpacity=".48"/>
-          <path d={`M175 ${170+extrusionDepth} L175 ${270+extrusionDepth} L365 ${340+extrusionDepth} L365 ${240+extrusionDepth}`} fill="none" stroke="#D9B978" strokeWidth="2.4" strokeDasharray="6 6" opacity=".55"/>
+          <path d={`M365 340 L365 240 L365 ${240+extrusionDepth} L365 ${340+extrusionDepth} Z`} fill="#8C7047" fillOpacity=".48"/>
+          <path d={`M175 170 L175 270 L365 340 L365 240`} fill="none" stroke="#F0D69F" strokeWidth="2.8"/>
+          <path d={`M175 ${170+extrusionDepth} L175 ${270+extrusionDepth} L365 ${340+extrusionDepth} L365 ${240+extrusionDepth}`} fill="none" stroke="#D9B978" strokeWidth="2.4" strokeDasharray="6 6" opacity=".7"/>
+          <path d={`M175 170 L175 ${170+extrusionDepth} M175 270 L175 ${270+extrusionDepth} M365 340 L365 ${340+extrusionDepth} M365 240 L365 ${240+extrusionDepth}`} fill="none" stroke="#EAD39F" strokeWidth="1.5" opacity=".85"/>
          </g>
          <g fill="none" stroke="#F0D69F" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
           <path d="M175 170 L175 270 L365 340 L365 240"/>
