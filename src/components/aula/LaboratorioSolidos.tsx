@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import ExtrusionViewport from "./ExtrusionViewport";
 import { Box, CircleDot, RotateCcw, ShieldCheck, X, ArrowUpRight, CheckCircle2, AlertTriangle, Layers3 } from "lucide-react";
 
 type Lab = "extrusion" | "revolution" | "ring" | "inspector";
@@ -38,10 +39,6 @@ export default function LaboratorioSolidos({ onlyLab }: LaboratorioSolidosProps)
  const closeInspector=()=>{setInspectorOpen(false);setChecked(false);};
  const [profile,setProfile]=useState<"closed"|"open"|"nonplanar">("closed");
  const [height,setHeight]=useState(12);
- const extrusionDepth=45+(height/30)*75;
- const leftBaseY=190+extrusionDepth;
- const frontBaseY=258+extrusionDepth;
- const rightBaseY=194+extrusionDepth;
  const [angle,setAngle]=useState(360);
  const [ringInner,setRingInner]=useState(17);
  const [ringWidth,setRingWidth]=useState(5);
@@ -78,64 +75,7 @@ export default function LaboratorioSolidos({ onlyLab }: LaboratorioSolidosProps)
       <div className="relative flex min-h-[360px] flex-1 items-center justify-center overflow-hidden bg-[#0D141B] p-3 sm:p-6">
        <div className="pointer-events-none absolute inset-0 opacity-[.17]" style={{backgroundImage:"linear-gradient(rgba(148,163,184,.22) 1px, transparent 1px),linear-gradient(90deg,rgba(148,163,184,.22) 1px, transparent 1px)",backgroundSize:"32px 32px"}}/>
        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-[#18232D]/40 to-transparent"/>
-       <svg viewBox="0 0 760 470" className="relative z-10 h-full max-h-[590px] w-full" role="img" aria-label="Vista isométrica conceptual de un perfil extruido">
-        <defs>
-         <linearGradient id="exTop" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#F1D99F"/><stop offset=".48" stopColor="#C7A15E"/><stop offset="1" stopColor="#8A6838"/></linearGradient>
-         <linearGradient id="exSide" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#A98248"/><stop offset="1" stopColor="#4F3C27"/></linearGradient>
-         <linearGradient id="exFront" x1="0" y1="0" x2="0" y2="1"><stop stopColor="#B58D50"/><stop offset="1" stopColor="#59452D"/></linearGradient>
-         <filter id="exShadow" x="-30%" y="-30%" width="160%" height="170%"><feGaussianBlur stdDeviation="13"/></filter>
-        </defs>
-        <ellipse cx="365" cy="365" rx="205" ry="32" fill="#000" opacity=".45" filter="url(#exShadow)"/>
-        {profile==="closed" ? <g strokeLinejoin="round">
-         <path d="M180 190 L330 128 L520 194 L370 258 Z" fill="url(#exTop)" stroke="#F0D49A" strokeWidth="2.5"/>
-         <path d={`M180 190 L370 258 L370 ${frontBaseY} L180 ${leftBaseY} Z`} fill="url(#exFront)" stroke="#D2AD68" strokeWidth="2"/>
-         <path d={`M370 258 L520 194 L520 ${rightBaseY} L370 ${frontBaseY} Z`} fill="url(#exSide)" stroke="#D2AD68" strokeWidth="2"/>
-         <path d={`M180 190 L330 128 L520 194 L520 ${rightBaseY} L370 ${frontBaseY} L180 ${leftBaseY} Z`} fill="none" stroke="#F2D9A3" strokeWidth="2.2"/>
-         <path d={`M180 ${leftBaseY} L370 ${frontBaseY} L520 ${rightBaseY}`} fill="none" stroke="#E8C987" strokeWidth="1.5" opacity=".65"/>
-         <path d="M330 128 L330 235" stroke="#F6E3B7" strokeWidth="1.2" strokeDasharray="5 6" opacity=".65"/>
-        </g> : profile==="open" ? <g strokeLinejoin="round">
-         <defs>
-          <linearGradient id="openFaceA" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#D6B675" stopOpacity=".72"/><stop offset="1" stopColor="#80633B" stopOpacity=".48"/></linearGradient>
-          <linearGradient id="openFaceB" x1="0" y1="0" x2="0" y2="1"><stop stopColor="#B18C51" stopOpacity=".7"/><stop offset="1" stopColor="#55452F" stopOpacity=".52"/></linearGradient>
-          <linearGradient id="openFaceC" x1="0" y1="0" x2="1" y2="0"><stop stopColor="#E1C486" stopOpacity=".7"/><stop offset="1" stopColor="#8A6B40" stopOpacity=".5"/></linearGradient>
-         </defs>
-         <g stroke="#D9B978" strokeWidth="1.8">
-          <path d={`M175 170 L175 270 L175 ${270+extrusionDepth} L175 ${170+extrusionDepth} Z`} fill="url(#openFaceB)"/>
-          <path d={`M175 270 L365 340 L365 ${340+extrusionDepth} L175 ${270+extrusionDepth} Z`} fill="url(#openFaceC)"/>
-          <path d={`M365 340 L365 240 L365 ${240+extrusionDepth} L365 ${340+extrusionDepth} Z`} fill="#8C7047" fillOpacity=".48"/>
-          <path d={`M175 170 L175 270 L365 340 L365 240`} fill="none" stroke="#F0D69F" strokeWidth="2.8"/>
-          <path d={`M175 ${170+extrusionDepth} L175 ${270+extrusionDepth} L365 ${340+extrusionDepth} L365 ${240+extrusionDepth}`} fill="none" stroke="#D9B978" strokeWidth="2.4" strokeDasharray="6 6" opacity=".7"/>
-          <path d={`M175 170 L175 ${170+extrusionDepth} M175 270 L175 ${270+extrusionDepth} M365 340 L365 ${340+extrusionDepth} M365 240 L365 ${240+extrusionDepth}`} fill="none" stroke="#EAD39F" strokeWidth="1.5" opacity=".85"/>
-         </g>
-         <g fill="none" stroke="#F0D69F" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M175 170 L175 270 L365 340 L365 240"/>
-          <path d={`M175 ${170+extrusionDepth} L175 ${270+extrusionDepth} L365 ${340+extrusionDepth} L365 ${240+extrusionDepth}`} strokeDasharray="7 6" opacity=".7"/>
-         </g>
-         <g fill="#F0D69F" stroke="#111820" strokeWidth="2"><circle cx="175" cy="170" r="5"/><circle cx="365" cy="240" r="5"/><circle cx="175" cy={170+extrusionDepth} r="4"/><circle cx="365" cy={240+extrusionDepth} r="4"/></g>
-         <g fill="#F2D69B" fontSize="10" fontWeight="700" letterSpacing=".7">
-          <text x="142" y="154">CURVA ORIGINAL</text>
-          <text x="374" y="238">EXTREMO</text>
-          <text x="270" y={Math.min(438,300+extrusionDepth/2)} textAnchor="middle">SUPERFICIE GENERADA</text>
-          <text x="185" y={Math.min(455,285+extrusionDepth)} fill="#B7C6D6" fontSize="9">CURVA DESPLAZADA</text>
-         </g>
-         <g stroke="#8FC6B2" strokeWidth="1.5" fill="none" opacity=".9"><path d="M410 180 V225 M403 217 L410 225 L417 217"/><path d="M410 270 V315 M403 307 L410 315 L417 307"/></g>
-         <text x="430" y="250" fill="#A9D8C7" fontSize="10">Dirección</text>
-         <text x="430" y="264" fill="#A9D8C7" fontSize="10">de barrido</text>
-         <text x="350" y="430" fill="#E5C987" stroke="none" fontSize="13" textAnchor="middle">Superficie abierta · sin tapas de cierre</text>
-        </g> : <g fill="none" stroke="#D7B879" strokeWidth="3" strokeLinejoin="round">
-         <path d={`M180 ${leftBaseY} L180 190 L330 128 L520 194`}/>
-         <path d={`M370 ${frontBaseY} L370 258 L520 194`}/>
-         <path d="M180 190 L370 258 L520 194"/>
-         <path d={`M180 ${leftBaseY} L370 ${frontBaseY} L520 ${rightBaseY}`} strokeDasharray="7 7" opacity=".45"/>
-         <text x="350" y="400" fill="#E5C987" stroke="none" fontSize="13" textAnchor="middle">Perfil no plano · revisar tapas</text>
-        </g>}
-        <g stroke="#E3C17A" fill="none" strokeWidth="1.5">
-         <path d={`M565 194 V${rightBaseY} M557 202 L565 194 L573 202 M557 ${rightBaseY-8} L565 ${rightBaseY} L573 ${rightBaseY-8}`}/>
-         <path d={`M180 ${leftBaseY+18} L370 ${frontBaseY+27} M180 ${leftBaseY+11} V${leftBaseY+25} M370 ${frontBaseY+20} V${frontBaseY+34}`} opacity=".75"/>
-        </g>
-        <g fill="#E8CA87" fontSize="14" fontWeight="600"><text x="582" y={(194+rightBaseY)/2+5}> {height.toFixed(1)} mm</text><text x="273" y={frontBaseY+58} fontSize="11" opacity=".8">ALTURA DE EXTRUSIÓN</text></g>
-        <g transform="translate(62 365)" strokeWidth="2" fill="none"><path d="M0 0 H42" stroke="#D97757"/><path d="M0 0 V-42" stroke="#72B69A"/><path d="M0 0 L-23 18" stroke="#76A7D8"/><g fill="#B8C6D3" stroke="none" fontSize="10"><text x="47" y="4">X</text><text x="-4" y="-49">Z</text><text x="-37" y="29">Y</text></g></g>
-       </svg>
+       <ExtrusionViewport profile={profile} height={height}/>
        <div className="absolute bottom-4 left-5 rounded-lg border border-white/10 bg-[#111820]/90 px-3 py-2 text-[10px] text-slate-400 backdrop-blur"><span className="mr-2 inline-block size-1.5 rounded-full bg-emerald-400"/>Vista conceptual actualizada con los parámetros</div>
       </div>
       <div className="grid shrink-0 grid-cols-3 divide-x divide-white/10 border-t border-white/10 bg-[#151E27]">
