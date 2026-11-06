@@ -15,7 +15,7 @@ async function getAurumDracoLoader() {
     aurumDracoLoaderPromise = import("three/examples/jsm/loaders/DRACOLoader.js")
       .then(({ DRACOLoader }) => {
         const loader = new DRACOLoader();
-        loader.setDecoderPath("https://www.gstatic.com/draco/versioned/decoders/1.5.7/");
+        loader.setDecoderPath("/draco/1.5.7/");
         loader.setWorkerLimit(2);
         return loader;
       })
