@@ -2739,13 +2739,11 @@ function AulaFormacionPage() {
                     {renderLaboratorioPreparacion()}
                     {renderLaboratorioSesion4()}
                     {renderLaboratorioRestricciones()}
-                    {lecturaAbierta?.numero === 6 && paginaLectura === 0 && <LaboratorioSolidos />}
-                    {lecturaAbierta?.numero === 6 && paginaLectura === 1 && <LaboratorioSolidos onlyLab="builder" />}
-                    {lecturaAbierta?.numero === 6 && paginaLectura === 3 && <LaboratorioSolidos onlyLab="ring" />}
-                    {lecturaAbierta?.numero === 6 && paginaLectura === 4 && <LaboratorioSolidos onlyLab="inspector" />}
+
                   </section>
                   {lecturaAbierta?.numero === 5 && <section className="min-w-0">{renderLaboratorioSesion5()}</section>}
                 </div>
+                {lecturaAbierta?.numero === 6 && <section className="mx-auto w-full max-w-[1100px]"><LaboratorioSolidos /></section>}
                 {renderLaboratorioOsnap()}
                 {renderLaboratorioSmartTrack()}
                 {renderLaboratorioPlaca()}
