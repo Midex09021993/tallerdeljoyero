@@ -2909,7 +2909,11 @@ function AulaFormacionPage() {
                     </div>
                   </div>
                 </div>}
-                {paginaLectura === seccionesLecturaActivas.length-1 && <div className="rounded-xl border border-[#dce4ec] bg-white p-4"><p className="text-sm font-semibold">Has llegado al final de la lectura</p><p className="mt-1 text-sm text-[#6E6E73]">En el aula real, el alumno podrá finalizar y marcar la sesión como completada.</p></div>}
+                {lecturaAbierta?.numero === 6 && paginaLectura === 1 && <div className="mx-auto w-full max-w-[1100px] pb-6"><LaboratorioSolidos onlyLab="extrusion" /></div>}
+                {lecturaAbierta?.numero === 6 && paginaLectura === 2 && <div className="mx-auto w-full max-w-[1100px] pb-6"><LaboratorioSolidos onlyLab="revolution" /></div>}
+                {lecturaAbierta?.numero === 6 && paginaLectura === 3 && <div className="mx-auto w-full max-w-[1100px] pb-6"><LaboratorioSolidos onlyLab="ring" /></div>}
+                {lecturaAbierta?.numero === 6 && paginaLectura === 4 && <div className="mx-auto w-full max-w-[1100px] pb-6"><LaboratorioSolidos onlyLab="inspector" /></div>
+                                {paginaLectura === seccionesLecturaActivas.length-1 && <div className="rounded-xl border border-[#dce4ec] bg-white p-4"><p className="text-sm font-semibold">Has llegado al final de la lectura</p><p className="mt-1 text-sm text-[#6E6E73]">En el aula real, el alumno podrá finalizar y marcar la sesión como completada.</p></div>}
               </main>
               {paginaLectura === seccionesLecturaActivas.length-1 && <footer className="shrink-0 flex justify-end border-t border-[#e2e8f0] bg-white px-4 py-3 sm:px-6 sm:py-4">
                 <button type="button" onClick={() => { setLecturasSimuladas(prev => new Set(prev).add(lecturaAbierta.id)); setLecturaAbierta(null); setLecturaModoVistaPrevia(false); }} className="inline-flex items-center gap-2 rounded-lg bg-[#b99552] px-4 py-2.5 text-sm font-semibold text-white"><CheckCircle2 className="size-4"/> Simular lectura completada</button>
@@ -3434,10 +3438,7 @@ function AulaFormacionPage() {
                 </>}
                 {renderLaboratorioCapas()}
                 {renderSelectorVistasPlano()}
-                {lecturaAbierta?.numero === 6 && paginaLectura === 1 && <div className="mx-auto w-full max-w-[1100px] pb-6"><LaboratorioSolidos onlyLab="extrusion" /></div>}
-                {lecturaAbierta?.numero === 6 && paginaLectura === 2 && <div className="mx-auto w-full max-w-[1100px] pb-6"><LaboratorioSolidos onlyLab="revolution" /></div>}
-                {lecturaAbierta?.numero === 6 && paginaLectura === 3 && <div className="mx-auto w-full max-w-[1100px] pb-6"><LaboratorioSolidos onlyLab="ring" /></div>}
-                {lecturaAbierta?.numero === 6 && paginaLectura === 4 && <div className="mx-auto w-full max-w-[1100px] pb-6"><LaboratorioSolidos onlyLab="inspector" /></div>
+
                 <div className="mt-5 grid min-w-0 grid-cols-1 items-stretch gap-4 lg:grid-cols-2">
                 {lecturaAbierta?.numero === 1 && paginaLectura === 4 && <section className="h-full rounded-xl border border-[#e0e6ed] bg-white text-[#1D1D1F] p-5 shadow-sm">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#98722e]">Recurso interactivo</p>
