@@ -8,7 +8,16 @@ const btn = "rounded-lg border border-white/15 px-3 py-2 text-xs font-semibold t
 const activeBtn = "border-[#C6A15B] bg-[#C6A15B]/15 text-[#F3D99F]";
 const number = (v:number) => Number.isFinite(v) ? v.toFixed(1) : "0.0";
 
-function LabCard({title,tag,description,icon:Icon,onClick}:{title:string;tag:string;description:string;icon:typeof Box;onClick:()=>void}) {
+function LabCard({title,tag,description,icon:Icon,onClick,featured=false}:{title:string;tag:string;description:string;icon:typeof Box;onClick:()=>void;featured?:boolean}) {
+ if (featured) return <button type="button" onClick={onClick} className="group flex min-h-[190px] w-full flex-col justify-between gap-5 rounded-2xl border border-[#C6A15B]/35 bg-gradient-to-br from-[#171b21] via-[#111820] to-[#0c1219] p-6 text-left text-white shadow-lg transition hover:border-[#D8B979]/70 focus:outline-none focus:ring-2 focus:ring-[#C6A15B]/50 sm:min-h-[218px] sm:flex-row sm:items-center sm:px-7">
+  <span className="min-w-0 flex-1">
+   <span className="block text-[10px] font-bold uppercase tracking-[.22em] text-amber-300">AURUM LAB · SESIÓN 06 · LABORATORIO PROFESIONAL</span>
+   <span className="mt-2 block text-2xl font-semibold tracking-tight text-white sm:text-3xl">{title}</span>
+   <span className="mt-2 block max-w-3xl text-sm leading-6 text-slate-300">{description}</span>
+   <span className="mt-4 flex flex-wrap gap-2 text-[10px] text-slate-200"><span className="rounded-full border border-white/15 px-3 py-1.5">Simulador interactivo</span><span className="rounded-full border border-white/15 px-3 py-1.5">Práctica guiada</span><span className="rounded-full border border-white/15 px-3 py-1.5">Rhino 7 aplicado</span></span>
+  </span>
+  <span className="inline-flex shrink-0 items-center justify-center gap-2 self-start rounded-xl bg-gradient-to-b from-amber-200 to-amber-500 px-5 py-3 text-sm font-semibold text-[#21180a] shadow-lg transition group-hover:brightness-105 sm:self-center">Abrir {title} <ArrowUpRight size={17}/></span>
+ </button>;
  return <button type="button" onClick={onClick} className="group flex h-full min-w-0 flex-col rounded-xl border border-[#344352] bg-[#202A35] p-4 text-left transition hover:-translate-y-0.5 hover:border-[#C6A15B]/70 hover:bg-[#263442] focus:outline-none focus:ring-2 focus:ring-[#C6A15B]/50">
   <span className="flex size-10 items-center justify-center rounded-lg border border-[#C6A15B]/30 bg-[#C6A15B]/10 text-[#D9B66E]"><Icon size={19}/></span>
   <span className="mt-3 text-[10px] font-bold uppercase tracking-[.17em] text-[#C6A15B]">{tag}</span>
@@ -37,18 +46,18 @@ export default function LaboratorioSolidos({ onlyLab }: LaboratorioSolidosProps)
  const [checked,setChecked]=useState(false);
  const result=useMemo(()=>profile==="closed"?"Puede generar un volumen cerrado si el perfil también es plano y la opción Solid está activada.":profile==="open"?"El perfil está abierto: la extrusión no podrá cerrar ambos extremos como un sólido.":"El perfil no es plano: Rhino puede dejar extremos sin tapar aunque la curva parezca cerrada.",[profile]);
  return <>
-  <section className="mx-auto mt-7 w-full max-w-[1100px] overflow-hidden rounded-2xl border border-[#344352] bg-[#171F28] text-[#E8EDF2]">
-   <header className="border-b border-white/10 bg-[#202A35] px-5 py-4 sm:px-6">
+  <section className={onlyLab ? "mx-auto mt-7 w-full max-w-[1100px]" : "mx-auto mt-7 w-full max-w-[1100px] overflow-hidden rounded-2xl border border-[#344352] bg-[#171F28] text-[#E8EDF2]"}>
+   {!onlyLab && <header className="border-b border-white/10 bg-[#202A35] px-5 py-4 sm:px-6">
     <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#C6A15B]">FADILAB · AURUM LAB · SESIÓN 06</p>
     <div className="mt-1 flex flex-wrap items-end justify-between gap-2"><div><h3 className="text-xl font-semibold tracking-tight text-[#F4F6F8]">LABORATORIOS DE MODELADO DE SÓLIDOS</h3><p className="mt-1 text-xs text-[#B7C3CF]">Experimenta, construye y diagnostica volúmenes antes de trabajar en Rhino.</p></div><span className="rounded-full border border-[#C6A15B]/30 px-3 py-1 text-[10px] font-semibold text-[#E3C47F]">4 laboratorios independientes</span></div>
-   </header>
-   <div className={`grid gap-3 p-4 sm:p-5 ${onlyLab ? "grid-cols-1" : "sm:grid-cols-2 lg:grid-cols-4"}`}>
-    {(!onlyLab || onlyLab === "extrusion") && <LabCard title="Extrusion Studio" tag="02 · Extrusión" description="Construye volúmenes desde perfiles; experimenta con perfiles cerrados, abiertos y planos y ajusta la altura." icon={Box} onClick={()=>setExtrusionOpen(true)}/> }
-    {(!onlyLab || onlyLab === "revolution") && <LabCard title="Revolve Studio" tag="03 · Revolución" description="Estudia cómo el perfil, el eje y el ángulo de giro determinan la forma resultante." icon={RotateCcw} onClick={()=>setRevolutionOpen(true)}/> }
-    {(!onlyLab || onlyLab === "ring") && <LabCard title="Ring Volume Studio" tag="04 · Joyería" description="Explora cómo el diámetro interior, el ancho y la sección modifican la proporción del volumen básico de un anillo." icon={CircleDot} onClick={()=>setRingOpen(true)}/> }
-    {(!onlyLab || onlyLab === "inspector") && <LabCard title="Solid Inspector" tag="05 · Diagnóstico" description="Distingue un sólido cerrado de una geometría abierta o de componentes desconectados y aprende qué revisar en Rhino." icon={ShieldCheck} onClick={()=>setInspectorOpen(true)}/> }
+   </header>}
+   <div className={onlyLab ? "w-full" : "grid gap-3 p-4 sm:grid-cols-2 sm:p-5 lg:grid-cols-4"}>
+    {(!onlyLab || onlyLab === "extrusion") && <LabCard featured={Boolean(onlyLab)} title="Extrusion Studio" tag="02 · Extrusión" description="Construye volúmenes desde perfiles; experimenta con perfiles cerrados, abiertos y planos y ajusta la altura." icon={Box} onClick={()=>setExtrusionOpen(true)}/> }
+    {(!onlyLab || onlyLab === "revolution") && <LabCard featured={Boolean(onlyLab)} title="Revolve Studio" tag="03 · Revolución" description="Estudia cómo el perfil, el eje y el ángulo de giro determinan la forma resultante." icon={RotateCcw} onClick={()=>setRevolutionOpen(true)}/> }
+    {(!onlyLab || onlyLab === "ring") && <LabCard featured={Boolean(onlyLab)} title="Ring Volume Studio" tag="04 · Joyería" description="Explora cómo el diámetro interior, el ancho y la sección modifican la proporción del volumen básico de un anillo." icon={CircleDot} onClick={()=>setRingOpen(true)}/> }
+    {(!onlyLab || onlyLab === "inspector") && <LabCard featured={Boolean(onlyLab)} title="Solid Inspector" tag="05 · Diagnóstico" description="Distingue un sólido cerrado de una geometría abierta o de componentes desconectados y aprende qué revisar en Rhino." icon={ShieldCheck} onClick={()=>setInspectorOpen(true)}/> }
    </div>
-   <p className="border-t border-white/10 px-5 py-3 text-[11px] leading-5 text-[#9EADBA]">Estos laboratorios son simuladores didácticos. No ejecutan Rhino ni certifican archivos .3dm; la validación geométrica real se realiza en Rhino 7/MatrixGold.</p>
+   {!onlyLab && <p className="border-t border-white/10 px-5 py-3 text-[11px] leading-5 text-[#9EADBA]">Estos laboratorios son simuladores didácticos. No ejecutan Rhino ni certifican archivos .3dm; la validación geométrica real se realiza en Rhino 7/MatrixGold.</p>}
   </section>
   {(!onlyLab || onlyLab === "extrusion") && extrusionOpen && <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/80 p-2 sm:p-5" role="dialog" aria-modal="true" aria-label="Extrusion Studio">
    <section className="flex h-[min(94dvh,900px)] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-[#526171] bg-[#171F28] text-[#E8EDF2] shadow-2xl">
