@@ -241,31 +241,22 @@ export default function ExtrusionViewport({ profile, height, onHeightChange }: {
   const applyPreset=(name:string)=>{setPreset(name);setPoints(presets[name].map(p=>({...p})));setSelected(0);};
 
   return <div className="relative z-10 flex h-full min-h-[420px] w-full flex-col overflow-hidden rounded-xl border border-white/10 bg-[#0d141b]/90">
-    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 bg-[#151e27]/95 px-3 py-2">
-      <div className="flex flex-wrap items-center gap-2 text-[10px] text-slate-300"><span className="font-semibold uppercase tracking-wider text-[#e6c887]">Curva de entrada</span><span className="text-slate-500">{points.length} puntos · {profile==="open"?"abierta":profile==="nonplanar"?"cerrada · no plana":"cerrada"}</span></div>
-      <div className="flex flex-wrap gap-1.5">
-        <button type="button" onClick={()=>setShowSource(v=>!v)} className="rounded-md border border-white/10 px-2 py-1.5 text-[10px] text-slate-300">{showSource?"Ocultar curva":"Mostrar curva"}</button>
-        <button type="button" onClick={()=>setShowResult(v=>!v)} className="rounded-md border border-white/10 px-2 py-1.5 text-[10px] text-slate-300">{showResult?"Ocultar resultado":"Mostrar resultado"}</button>
-        <button type="button" onClick={addPoint} disabled={points.length>=12} className="rounded-md border border-white/10 px-2 py-1.5 text-[10px] text-slate-300 disabled:opacity-40">+ Nodo</button>
-        <button type="button" onClick={removePoint} disabled={points.length<=(profile==="closed"?3:2)} className="rounded-md border border-white/10 px-2 py-1.5 text-[10px] text-slate-300 disabled:opacity-40">− Nodo</button>
-        <button type="button" onClick={()=>{setPoints(initialPoints);setSelected(0);setPreset("rectangle");}} className="rounded-md border border-white/10 px-2 py-1.5 text-[10px] text-slate-300">Restablecer</button>
-      </div>
+    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 bg-[#151e27]/95 px-4 py-3">
+      <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-300"><span className="font-semibold text-[#e6c887]">Perfil de entrada</span><span className="text-slate-500">{preset==="rectangle"?"Rectangular":preset==="shield"?"Escudo":"Arco"} · {profile==="open"?"abierto":"cerrado"}</span></div>
+      <button type="button" onClick={()=>{setPoints(initialPoints);setSelected(0);setPreset("rectangle");}} className="rounded-md border border-white/10 px-3 py-1.5 text-[10px] text-slate-300 hover:border-[#d2ad68]/50">Restablecer forma</button>
     </div>
-    <div className="flex flex-wrap items-center gap-2 border-b border-white/10 bg-[#101820] px-3 py-2">
-      <span className="text-[9px] font-semibold uppercase tracking-wider text-slate-500">Perfil</span>
-      <select aria-label="Plantilla de perfil" value={preset} onChange={e=>applyPreset(e.target.value)} className="rounded-md border border-white/10 bg-[#17212b] px-2 py-1.5 text-[10px] text-slate-200"><option value="rectangle">Rectangular</option><option value="shield">Escudo</option><option value="arch">Arco</option></select>
-      <span className="ml-auto text-[9px] text-slate-500">Arrastra nodos · fondo para orbitar · rueda para zoom</span>
-    </div>
-    <div className="border-b border-white/10 bg-[#121b24] px-3 py-2 text-[10px] leading-4 text-slate-400">
-      <span className="mr-2 font-semibold uppercase tracking-wider text-[#e6c887]">Reto guiado</span>
-      {preset === "rectangle" ? "Placa técnica: conserva un contorno cerrado y comprueba cómo el volumen crece desde 0 mm." : preset === "shield" ? "Colgante: edita los vértices para afinar la silueta y observa cómo cambia el área y el volumen." : "Perfil ornamental: ajusta los nodos del arco y compara el resultado en vistas superior, frontal e isométrica."}
+    <div className="flex flex-wrap items-center gap-3 border-b border-white/10 bg-[#101820] px-4 py-2.5">
+      <label className="flex items-center gap-2 text-[10px] text-slate-400"><span>Forma</span><select aria-label="Forma del perfil" value={preset} onChange={e=>applyPreset(e.target.value)} className="rounded-md border border-white/10 bg-[#17212b] px-3 py-2 text-[11px] text-slate-100"><option value="rectangle">Rectangular</option><option value="shield">Escudo</option><option value="arch">Arco</option></select></label>
+      <span className="ml-auto text-[10px] text-slate-500">Arrastra los puntos para cambiar la forma · gira la vista con el ratón</span>
     </div>
     <div className="relative min-h-0 flex-1">
       <div ref={hostRef} className="absolute inset-0"/>
       <div className="pointer-events-none absolute bottom-3 left-3 rounded-md border border-white/10 bg-[#101820]/85 px-2.5 py-1.5 text-[9px] text-slate-400">La geometría se actualiza al soltar cada nodo</div>
       <div className="absolute right-3 top-3 rounded-md border border-white/10 bg-[#101820]/90 px-2.5 py-1.5 text-[9px] font-semibold text-[#e6c887]">{height.toFixed(1)} mm · {height===0?"Perfil sin extruir":profile==="closed"?"Sólido":profile==="open"?"Superficie abierta":"Superficie lateral sin tapas"}</div>
     </div>
-    <div className="flex flex-wrap items-center gap-2 border-t border-white/10 bg-[#151e27]/95 px-3 py-2">
+    <details className="border-t border-white/10 bg-[#111a23]">
+      <summary className="cursor-pointer px-4 py-3 text-[10px] font-semibold text-slate-400 hover:text-[#e6c887]">Herramientas avanzadas · edición de puntos y visualización</summary>
+      <div className="flex flex-wrap items-center gap-2 border-t border-white/10 bg-[#151e27]/95 px-3 py-2">
       <span className="text-[10px] font-semibold text-slate-300">Punto {selected+1}</span>
       <label className="flex items-center gap-1.5 text-[10px] text-slate-400">X <input type="number" step="0.1" value={points[selected]?.x??0} onChange={e=>updatePoint("x",Number(e.target.value))} className="w-16 rounded border border-white/10 bg-[#0d141b] px-2 py-1 text-right text-slate-100"/></label>
       <label className="flex items-center gap-1.5 text-[10px] text-slate-400">Y <input type="number" step="0.1" value={points[selected]?.y??0} onChange={e=>updatePoint("y",Number(e.target.value))} className="w-16 rounded border border-white/10 bg-[#0d141b] px-2 py-1 text-right text-slate-100"/></label>
@@ -282,6 +273,7 @@ export default function ExtrusionViewport({ profile, height, onHeightChange }: {
       <label className="flex items-center gap-2 text-[10px] text-slate-400">Visualización <select value={display} onChange={e=>setDisplay(e.target.value as DisplayMode)} className="rounded-md border border-white/10 bg-[#17212b] px-2 py-1.5 text-[10px] text-slate-200"><option value="solid">Sólido</option><option value="wireframe">Alámbrico</option><option value="transparent">Transparente</option></select></label>
       <div className="ml-auto flex gap-1">{(["iso","top","front","side"] as CameraView[]).map(v=><button key={v} type="button" onClick={()=>setCameraView(v)} className={"rounded-md border px-2 py-1.5 text-[9px] "+(cameraView===v?"border-[#d2ad68]/60 bg-[#d2ad68]/10 text-[#f0d69f]":"border-white/10 text-slate-400")}>{v==="iso"?"Iso":v==="top"?"Superior":v==="front"?"Frontal":"Lateral"}</button>)}</div>
     </div>
-    <div className="px-3 py-2 text-[9px] leading-4 text-slate-500">{height===0?"Distancia 0 mm: se conserva únicamente la curva de entrada; no existe superficie ni volumen extruido.":profile==="open"?"Perfil abierto: se genera una superficie lateral sin tapas.":profile==="nonplanar"?"Perfil no plano: se generan caras laterales; no se calculan tapas planas.":selfIntersecting?"Corrige los cruces del contorno antes de considerar válido el sólido.": "El volumen es una estimación didáctica basada en el área del perfil y la distancia de extrusión."}</div>
+      <div className="px-3 py-2 text-[9px] leading-4 text-slate-500">{height===0?"Distancia 0 mm: se conserva únicamente la curva de entrada; no existe superficie ni volumen extruido.":profile==="open"?"Perfil abierto: se genera una superficie lateral sin tapas.":profile==="nonplanar"?"Perfil no plano: se generan caras laterales; no se calculan tapas planas.":selfIntersecting?"Corrige los cruces del contorno antes de considerar válido el sólido.": "El volumen es una estimación didáctica basada en el área del perfil y la distancia de extrusión."}</div>
+    </details>
   </div>;
 }
