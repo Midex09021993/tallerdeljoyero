@@ -72,7 +72,10 @@ export default function ExtrusionViewport({ profile, height, onHeightChange }: {
     scene.background = new THREE.Color("#0d141b");
     const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
     camera.up.set(0, 0, 1);
-    camera.position.set(7.5, -8.5, 7);
+    if (cameraView === "top") { camera.up.set(0, 1, 0); camera.position.set(0, 0, 12); }
+    else if (cameraView === "front") camera.position.set(0, -12, 0);
+    else if (cameraView === "side") camera.position.set(12, 0, 0);
+    else camera.position.set(7.5, -8.5, 7);
     camera.lookAt(0, 0, 0);
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -119,7 +122,7 @@ export default function ExtrusionViewport({ profile, height, onHeightChange }: {
       sourceGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(linePoints), new THREE.LineBasicMaterial({ color: 0xf2d69b })));
       const pointGeometry = new THREE.SphereGeometry(0.085, 18, 12);
       sourcePoints.forEach((p, index) => {
-        const handle = new THREE.Mesh(pointGeometry, new THREE.MeshStandardMaterial({ color: index === selected ? 0xffe2a6 : 0xf0d69f, emissive: 0x4b3517, roughness: 0.35, metalness: 0.15 }));
+        const handle = new THREE.Mesh(pointGeometry, new THREE.MeshStandardMaterial({ color: 0xf0d69f, emissive: 0x4b3517, roughness: 0.35, metalness: 0.15 }));
         handle.position.copy(p);
         handle.userData.pointIndex = index;
         sourceGroup.add(handle);
@@ -217,7 +220,7 @@ export default function ExtrusionViewport({ profile, height, onHeightChange }: {
       });
       renderer.dispose(); renderer.domElement.remove();
     };
-  },[profile,height,points,selected,showSource,showResult,direction,display]);
+  },[profile,height,points,showSource,showResult,direction,display,cameraView]);
 
   useEffect(()=>{
     const host=hostRef.current;
