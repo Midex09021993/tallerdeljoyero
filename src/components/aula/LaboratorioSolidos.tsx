@@ -38,7 +38,7 @@ export default function LaboratorioSolidos({ onlyLab }: LaboratorioSolidosProps)
  const closeInspector=()=>{setInspectorOpen(false);setChecked(false);};
  const [profile,setProfile]=useState<"closed"|"open"|"nonplanar">("closed");
  const [height,setHeight]=useState(12);
- const extrusionDepth=36+(height/30)*150;
+ const extrusionDepth=45+(height/30)*75;
  const leftBaseY=190+extrusionDepth;
  const frontBaseY=258+extrusionDepth;
  const rightBaseY=194+extrusionDepth;
@@ -94,10 +94,10 @@ export default function LaboratorioSolidos({ onlyLab }: LaboratorioSolidosProps)
          <path d={`M180 ${leftBaseY} L370 ${frontBaseY} L520 ${rightBaseY}`} fill="none" stroke="#E8C987" strokeWidth="1.5" opacity=".65"/>
          <path d="M330 128 L330 235" stroke="#F6E3B7" strokeWidth="1.2" strokeDasharray="5 6" opacity=".65"/>
         </g> : <g fill="none" stroke="#D7B879" strokeWidth="3" strokeLinejoin="round">
-         <path d="M180 298 L180 190 L330 128 L520 194"/>
-         <path d="M370 365 L370 258 L520 194"/>
+         <path d={`M180 ${leftBaseY} L180 190 L330 128 L520 194`}/>
+         <path d={`M370 ${frontBaseY} L370 258 L520 194`}/>
          <path d="M180 190 L370 258 L520 194"/>
-         <path d="M180 298 L370 365 L520 301" strokeDasharray="7 7" opacity=".45"/>
+         <path d={`M180 ${leftBaseY} L370 ${frontBaseY} L520 ${rightBaseY}`} strokeDasharray="7 7" opacity=".45"/>
          <text x="350" y="400" fill="#E5C987" stroke="none" fontSize="13" textAnchor="middle">{profile==="open"?"Perfil abierto · volumen no cerrado":"Perfil no plano · revisar tapas"}</text>
         </g>}
         <g stroke="#E3C17A" fill="none" strokeWidth="1.5">
