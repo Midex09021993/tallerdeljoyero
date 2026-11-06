@@ -2907,6 +2907,7 @@ function AulaFormacionPage() {
                   </div>
                 </div>}
                 {paginaLectura === seccionesLecturaActivas.length-1 && <div className="rounded-xl border border-[#dce4ec] bg-white p-4"><p className="text-sm font-semibold">Has llegado al final de la lectura</p><p className="mt-1 text-sm text-[#6E6E73]">En el aula real, el alumno podrá finalizar y marcar la sesión como completada.</p></div>}
+                {lecturaAbierta?.numero === 6 && paginaLectura === seccionesLecturaActivas.length-1 && <div className="mx-auto w-full max-w-[1100px] pb-6"><LaboratorioSolidos /></div>}
               </main>
               {paginaLectura === seccionesLecturaActivas.length-1 && <footer className="shrink-0 flex justify-end border-t border-[#e2e8f0] bg-white px-4 py-3 sm:px-6 sm:py-4">
                 <button type="button" onClick={() => { setLecturasSimuladas(prev => new Set(prev).add(lecturaAbierta.id)); setLecturaAbierta(null); setLecturaModoVistaPrevia(false); }} className="inline-flex items-center gap-2 rounded-lg bg-[#b99552] px-4 py-2.5 text-sm font-semibold text-white"><CheckCircle2 className="size-4"/> Simular lectura completada</button>
@@ -3547,6 +3548,7 @@ function AulaFormacionPage() {
                 </div>}
                 {paginaLectura === seccionesLecturaActivas.length-1 && <div className="rounded-xl border border-[#dce4ec] bg-white p-4"><p className="text-sm font-semibold">Has llegado al final de la lectura</p><p className="mt-1 text-sm text-[#6E6E73]">{lecturaModoVistaPrevia ? "En la experiencia del alumno, aquí podrá finalizar y marcar la sesión como completada." : "La lectura está registrada como leída. Puedes marcar la sesión como completada."}</p></div>}
                 </section>
+                {lecturaAbierta?.numero === 6 && paginaLectura === seccionesLecturaActivas.length-1 && <div className="mx-auto w-full max-w-[1100px] pb-6"><LaboratorioSolidos /></div>}
               </main>
               {paginaLectura === seccionesLecturaActivas.length-1 && <footer className="shrink-0 flex justify-end border-t border-[#e2e8f0] bg-white px-4 py-3 sm:px-6 sm:py-4">
                 {lecturaModoVistaPrevia ? <button type="button" onClick={() => { setLecturasSimuladas(prev => new Set(prev).add(lecturaAbierta.id)); setLecturaAbierta(null); setLecturaModoVistaPrevia(false); }} className="inline-flex items-center gap-2 rounded-lg bg-[#b99552] px-4 py-2.5 text-sm font-semibold text-white"><CheckCircle2 className="size-4"/> Simular lectura completada</button> : sesionesCompletadas.has(lecturaAbierta.id) ? <span className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-700"><CheckCircle2 className="size-5"/> Sesión completada</span> : <button type="button" disabled={ocupado} onClick={() => void marcarLecturaCompletada(lecturaAbierta)} className="inline-flex items-center gap-2 rounded-lg bg-[#b99552] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"><CheckCircle2 className="size-4"/> Marcar como completada</button>}
