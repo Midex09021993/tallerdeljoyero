@@ -40,12 +40,12 @@ function createSection(innerDiameter: number, width: number, thickness: number, 
     pts.push(new THREE.Vector2(innerRadius, -halfWidth + Math.min(0.45, width * 0.12)));
     return pts;
   }
-  const pts: THREE.Vector2[] = [new THREE.Vector2(innerRadius, -halfWidth), new THREE.Vector2(outerRadius - thickness * 0.12, -halfWidth)];
-  for (let i = 0; i <= 12; i++) {
-    const a = -Math.PI / 2 + (Math.PI * i) / 12;
-    pts.push(new THREE.Vector2(innerRadius + thickness * (0.5 + 0.5 * Math.cos(a)), halfWidth * Math.sin(a)));
+  const pts: THREE.Vector2[] = [];
+  for (let i = 0; i <= 24; i++) {
+    const angle = -Math.PI / 2 + (Math.PI * i) / 24;
+    pts.push(new THREE.Vector2(innerRadius + thickness * Math.cos(angle), halfWidth * Math.sin(angle)));
   }
-  pts.push(new THREE.Vector2(innerRadius, halfWidth), new THREE.Vector2(innerRadius, -halfWidth));
+  pts.push(new THREE.Vector2(innerRadius, -halfWidth));
   return pts;
 }
 
