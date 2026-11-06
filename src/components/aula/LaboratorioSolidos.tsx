@@ -93,12 +93,35 @@ export default function LaboratorioSolidos({ onlyLab }: LaboratorioSolidosProps)
          <path d={`M180 190 L330 128 L520 194 L520 ${rightBaseY} L370 ${frontBaseY} L180 ${leftBaseY} Z`} fill="none" stroke="#F2D9A3" strokeWidth="2.2"/>
          <path d={`M180 ${leftBaseY} L370 ${frontBaseY} L520 ${rightBaseY}`} fill="none" stroke="#E8C987" strokeWidth="1.5" opacity=".65"/>
          <path d="M330 128 L330 235" stroke="#F6E3B7" strokeWidth="1.2" strokeDasharray="5 6" opacity=".65"/>
+        </g> : profile==="open" ? <g strokeLinejoin="round">
+         <defs>
+          <linearGradient id="openFaceA" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#D6B675" stopOpacity=".72"/><stop offset="1" stopColor="#80633B" stopOpacity=".48"/></linearGradient>
+          <linearGradient id="openFaceB" x1="0" y1="0" x2="0" y2="1"><stop stopColor="#B18C51" stopOpacity=".7"/><stop offset="1" stopColor="#55452F" stopOpacity=".52"/></linearGradient>
+          <linearGradient id="openFaceC" x1="0" y1="0" x2="1" y2="0"><stop stopColor="#E1C486" stopOpacity=".7"/><stop offset="1" stopColor="#8A6B40" stopOpacity=".5"/></linearGradient>
+         </defs>
+         <g stroke="#D9B978" strokeWidth="1.8">
+          <path d={`M175 170 L175 270 L365 340 L365 240 Z`} fill="url(#openFaceA)"/>
+          <path d={`M175 170 L365 240 L365 ${240+extrusionDepth} L175 ${170+extrusionDepth} Z`} fill="url(#openFaceB)"/>
+          <path d={`M175 270 L365 340 L365 ${340+extrusionDepth} L175 ${270+extrusionDepth} Z`} fill="url(#openFaceC)"/>
+          <path d={`M365 240 L365 340 L365 ${340+extrusionDepth} L365 ${240+extrusionDepth} Z`} fill="#8C7047" fillOpacity=".48"/>
+          <path d={`M175 ${170+extrusionDepth} L175 ${270+extrusionDepth} L365 ${340+extrusionDepth} L365 ${240+extrusionDepth}`} fill="none" stroke="#D9B978" strokeWidth="2.4" strokeDasharray="6 6" opacity=".55"/>
+         </g>
+         <g fill="none" stroke="#F0D69F" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M175 170 L175 270 L365 340 L365 240"/>
+          <path d={`M175 ${170+extrusionDepth} L175 ${270+extrusionDepth} L365 ${340+extrusionDepth} L365 ${240+extrusionDepth}`} strokeDasharray="7 6" opacity=".7"/>
+         </g>
+         <g fill="#F0D69F" stroke="#111820" strokeWidth="2"><circle cx="175" cy="170" r="5"/><circle cx="365" cy="240" r="5"/><circle cx="175" cy={170+extrusionDepth} r="4"/><circle cx="365" cy={240+extrusionDepth} r="4"/></g>
+         <g fill="#E5C987" fontSize="11" fontWeight="600"><text x="142" y="154">INICIO</text><text x="374" y="238">FINAL</text><text x="270" y={Math.min(438,300+extrusionDepth/2)} textAnchor="middle">SUPERFICIE EXTRUIDA</text></g>
+         <g stroke="#8FC6B2" strokeWidth="1.5" fill="none" opacity=".9"><path d="M410 180 V225 M403 217 L410 225 L417 217"/><path d="M410 270 V315 M403 307 L410 315 L417 307"/></g>
+         <text x="430" y="250" fill="#A9D8C7" fontSize="10">Dirección</text>
+         <text x="430" y="264" fill="#A9D8C7" fontSize="10">de barrido</text>
+         <text x="350" y="430" fill="#E5C987" stroke="none" fontSize="13" textAnchor="middle">Superficie abierta · sin tapas de cierre</text>
         </g> : <g fill="none" stroke="#D7B879" strokeWidth="3" strokeLinejoin="round">
          <path d={`M180 ${leftBaseY} L180 190 L330 128 L520 194`}/>
          <path d={`M370 ${frontBaseY} L370 258 L520 194`}/>
          <path d="M180 190 L370 258 L520 194"/>
          <path d={`M180 ${leftBaseY} L370 ${frontBaseY} L520 ${rightBaseY}`} strokeDasharray="7 7" opacity=".45"/>
-         <text x="350" y="400" fill="#E5C987" stroke="none" fontSize="13" textAnchor="middle">{profile==="open"?"Perfil abierto · volumen no cerrado":"Perfil no plano · revisar tapas"}</text>
+         <text x="350" y="400" fill="#E5C987" stroke="none" fontSize="13" textAnchor="middle">Perfil no plano · revisar tapas</text>
         </g>}
         <g stroke="#E3C17A" fill="none" strokeWidth="1.5">
          <path d={`M565 194 V${rightBaseY} M557 202 L565 194 L573 202 M557 ${rightBaseY-8} L565 ${rightBaseY} L573 ${rightBaseY-8}`}/>
