@@ -70,7 +70,7 @@ export default function LaboratorioSolidos({ onlyLab }: LaboratorioSolidosProps)
      <main className="flex min-h-[470px] min-w-0 flex-col border-b border-white/10 lg:min-h-0 lg:border-b-0 lg:border-r">
       <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-white/10 px-5 py-3 sm:px-7">
        <div><p className="text-xs font-semibold text-white">Área de construcción</p><p className="mt-0.5 text-[10px] text-slate-400">Previsualización geométrica · unidades en milímetros</p></div>
-       <div className="flex items-center gap-2"><span className="rounded-md border border-white/10 bg-white/[.03] px-2.5 py-1.5 text-[9px] font-semibold tracking-wider text-slate-300">VISTA ISOMÉTRICA</span><span className="rounded-md border border-[#D2AD68]/25 bg-[#D2AD68]/10 px-2.5 py-1.5 text-[9px] font-semibold tracking-wider text-[#E6C887]">EXTRUSIÓN</span></div>
+       <span className="rounded-full border border-[#D2AD68]/25 bg-[#D2AD68]/10 px-3 py-1.5 text-[10px] font-semibold text-[#E6C887]">Vista 3D interactiva</span>
       </div>
       <div className="relative flex min-h-[360px] flex-1 items-center justify-center overflow-hidden bg-[#0D141B] p-3 sm:p-6">
        <div className="pointer-events-none absolute inset-0 opacity-[.17]" style={{backgroundImage:"linear-gradient(rgba(148,163,184,.22) 1px, transparent 1px),linear-gradient(90deg,rgba(148,163,184,.22) 1px, transparent 1px)",backgroundSize:"32px 32px"}}/>
@@ -85,15 +85,49 @@ export default function LaboratorioSolidos({ onlyLab }: LaboratorioSolidosProps)
       </div>
      </main>
      <aside className="flex min-h-0 flex-col overflow-hidden bg-[#151E27]">
-      <div className="border-b border-white/10 px-5 py-4"><p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#D2AD68]">Panel de propiedades</p><h3 className="mt-1 text-base font-semibold text-white">Parámetros de operación</h3><p className="mt-1 text-[11px] leading-5 text-slate-400">Modifica la geometría de entrada y observa su efecto en la vista.</p></div>
-      <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-5">
-       <section><div className="flex items-center justify-between"><h4 className="text-xs font-semibold text-slate-200">01 · Geometría del perfil</h4><span className="text-[9px] uppercase tracking-wider text-slate-500">Entrada</span></div><div className="mt-3 grid grid-cols-3 gap-1.5">{[["closed","Cerrado"],["open","Abierto"],["nonplanar","No plano"]].map(([v,l])=><button key={v} type="button" onClick={()=>setProfile(v as typeof profile)} aria-pressed={profile===v} className={"rounded-lg border px-2 py-2.5 text-[10px] font-semibold transition "+(profile===v?"border-[#D2AD68]/70 bg-[#D2AD68]/15 text-[#F0D69F] shadow-[inset_0_0_0_1px_rgba(210,173,104,.12)]":"border-white/10 bg-[#101820] text-slate-400 hover:border-white/25 hover:text-white")}>{l}</button>)}</div><p className="mt-2 text-[10px] leading-5 text-slate-500">{profile==="closed"?"Una curva cerrada y plana permite generar un volumen con tapas.":profile==="open"?"Una curva abierta genera una superficie extruida, no un sólido cerrado.":"Un perfil fuera del plano puede impedir el cierre correcto de las tapas."}</p></section>
-       <section className="border-t border-white/10 pt-5"><div className="flex items-center justify-between"><h4 className="text-xs font-semibold text-slate-200">02 · Distancia de extrusión</h4><span className="rounded-md bg-[#D2AD68]/10 px-2 py-1 text-xs font-bold tabular-nums text-[#E6C887]">{height.toFixed(1)} mm</span></div><input aria-label="Altura de extrusión en milímetros" type="range" min="0" max="30" step="0.1" value={height} onChange={e=>setHeight(Number(e.target.value))} className="mt-4 w-full accent-[#C6A15B]"/><div className="mt-1 flex justify-between text-[9px] text-slate-500"><span>0 mm</span><span>30 mm</span></div><div className="mt-3 flex items-center gap-2 rounded-lg border border-white/10 bg-[#101820] px-3 py-2"><span className="text-[10px] text-slate-400">Valor exacto</span><input aria-label="Valor exacto de altura" type="number" min="0" max="30" step="0.1" value={height} onChange={e=>setHeight(Math.min(30,Math.max(0,Number(e.target.value)||0)))} className="ml-auto w-20 bg-transparent text-right text-xs font-semibold text-white outline-none"/><span className="text-[10px] text-slate-500">mm</span></div></section>
-       <section className="border-t border-white/10 pt-5"><h4 className="text-xs font-semibold text-slate-200">03 · Diagnóstico geométrico</h4><div className={"mt-3 rounded-xl border p-3 "+(profile==="closed"?"border-emerald-400/20 bg-emerald-400/[.06]":"border-amber-400/20 bg-amber-400/[.06]")}><div className="flex items-center gap-2">{profile==="closed"?<CheckCircle2 size={15} className="text-emerald-300"/>:<AlertTriangle size={15} className="text-amber-300"/>}<span className={"text-[11px] font-semibold "+(profile==="closed"?"text-emerald-200":"text-amber-200")}>{profile==="closed"?(height===0?"Perfil válido · listo para extruir":"Condición favorable"):"Requiere revisión"}</span></div><p className="mt-2 text-[10px] leading-5 text-slate-300">{height===0?"El perfil está definido, pero todavía no hay distancia de extrusión. Aumenta la altura para generar la geometría.":result}</p></div></section>
-       <section className="border-t border-white/10 pt-5"><h4 className="text-xs font-semibold text-slate-200">Flujo de trabajo en Rhino</h4><ol className="mt-3 space-y-2 text-[10px] leading-5 text-slate-400"><li><span className="mr-2 text-[#D2AD68]">01</span>Selecciona una curva de perfil válida.</li><li><span className="mr-2 text-[#D2AD68]">02</span>Ejecuta <code className="rounded bg-white/5 px-1.5 py-0.5 text-slate-200">ExtrudeCrv</code>.</li><li><span className="mr-2 text-[#D2AD68]">03</span>Define la distancia y activa <code className="rounded bg-white/5 px-1.5 py-0.5 text-slate-200">Solid=Yes</code> cuando corresponda.</li></ol></section>
-       <button type="button" onClick={()=>{setProfile("closed");setHeight(0);}} className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-white/15 px-3 py-2.5 text-xs font-semibold text-slate-300 transition hover:border-[#D2AD68]/50 hover:text-white"><RotateCcw size={14}/> Restablecer parámetros</button>
+      <div className="border-b border-white/10 px-5 py-5">
+       <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#D2AD68]">Empecemos paso a paso</p>
+       <h3 className="mt-1 text-lg font-semibold text-white">Crea tu primera extrusión</h3>
+       <p className="mt-1 text-[11px] leading-5 text-slate-400">Elige una curva y aumenta su altura para convertirla en una forma 3D.</p>
       </div>
-      <div className="mt-auto border-t border-white/10 px-5 py-3"><p className="text-[9px] leading-4 text-slate-500">Simulador didáctico: representa relaciones geométricas. La validación del sólido debe realizarse en Rhino 7 / MatrixGold.</p></div>
+      <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-5">
+       <section>
+        <h4 className="text-xs font-semibold text-slate-200">1. Elige el tipo de curva</h4>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+         <button type="button" onClick={()=>setProfile("closed")} aria-pressed={profile==="closed"} className={"rounded-xl border p-3 text-left transition "+(profile==="closed"?"border-[#D2AD68]/70 bg-[#D2AD68]/15 text-[#F0D69F]":"border-white/10 bg-[#101820] text-slate-300 hover:border-white/25")}>
+          <span className="block text-xs font-semibold">Cerrada</span><span className="mt-1 block text-[10px] leading-4 opacity-70">Puede formar un sólido</span>
+         </button>
+         <button type="button" onClick={()=>setProfile("open")} aria-pressed={profile==="open"} className={"rounded-xl border p-3 text-left transition "+(profile==="open"?"border-[#D2AD68]/70 bg-[#D2AD68]/15 text-[#F0D69F]":"border-white/10 bg-[#101820] text-slate-300 hover:border-white/25")}>
+          <span className="block text-xs font-semibold">Abierta</span><span className="mt-1 block text-[10px] leading-4 opacity-70">Forma una superficie</span>
+         </button>
+        </div>
+        <p className="mt-2 text-[10px] leading-5 text-slate-500">{profile==="closed"?"Una curva cerrada vuelve al punto inicial. Es la mejor opción para comenzar.":"Una curva abierta tiene dos extremos y genera una superficie sin tapas."}</p>
+       </section>
+       <section className="border-t border-white/10 pt-5">
+        <div className="flex items-center justify-between gap-2"><h4 className="text-xs font-semibold text-slate-200">2. Define la altura</h4><span className="rounded-md bg-[#D2AD68]/10 px-2.5 py-1 text-sm font-bold tabular-nums text-[#E6C887]">{height.toFixed(1)} mm</span></div>
+        <input aria-label="Altura de extrusión en milímetros" type="range" min="0" max="30" step="0.1" value={height} onChange={e=>setHeight(Number(e.target.value))} className="mt-5 w-full accent-[#C6A15B]"/>
+        <div className="mt-1 flex justify-between text-[9px] text-slate-500"><span>0 mm</span><span>30 mm</span></div>
+        <div className="mt-3 flex items-center gap-2 rounded-lg border border-white/10 bg-[#101820] px-3 py-2.5">
+         <span className="text-[10px] text-slate-400">Altura exacta</span>
+         <input aria-label="Valor exacto de altura" type="number" min="0" max="30" step="0.1" value={height} onChange={e=>setHeight(Math.min(30,Math.max(0,Number(e.target.value)||0)))} className="ml-auto w-20 bg-transparent text-right text-sm font-semibold text-white outline-none"/>
+         <span className="text-[10px] text-slate-500">mm</span>
+        </div>
+       </section>
+       <section className="rounded-xl border border-[#D2AD68]/20 bg-[#D2AD68]/[.06] p-3">
+        <div className="flex items-center gap-2"><span className="flex size-6 items-center justify-center rounded-full bg-[#D2AD68]/15 text-[11px] font-bold text-[#E6C887]">3</span><h4 className="text-xs font-semibold text-slate-100">Observa el resultado</h4></div>
+        <p className="mt-2 text-[11px] leading-5 text-slate-300">{height===0?"Todavía no hay extrusión. Mueve el control de altura para comenzar.":profile==="closed"?"¡Bien! La curva cerrada genera un volumen con tapas en esta simulación.":"La curva abierta genera una superficie. Observa que sus extremos permanecen abiertos."}</p>
+       </section>
+       <details className="border-t border-white/10 pt-4">
+        <summary className="cursor-pointer text-[11px] font-semibold text-slate-400 hover:text-[#E6C887]">Opciones avanzadas</summary>
+        <div className="mt-3 space-y-3">
+         <button type="button" onClick={()=>setProfile("nonplanar")} className={"w-full rounded-lg border px-3 py-2 text-left text-[10px] "+(profile==="nonplanar"?"border-amber-400/50 bg-amber-400/10 text-amber-200":"border-white/10 text-slate-300")}>Probar un perfil no plano</button>
+         <p className="text-[10px] leading-5 text-slate-500">Un perfil no plano puede impedir que Rhino cierre las tapas. Para volver al ejercicio inicial, selecciona «Cerrada».</p>
+         <div className="rounded-lg bg-[#101820] p-3 text-[10px] leading-5 text-slate-400"><strong className="text-slate-200">En Rhino:</strong> selecciona la curva, ejecuta <code className="rounded bg-white/5 px-1">ExtrudeCrv</code> y define la distancia. Activa <code className="rounded bg-white/5 px-1">Solid=Yes</code> cuando corresponda.</div>
+        </div>
+       </details>
+       <button type="button" onClick={()=>{setProfile("closed");setHeight(0);}} className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-white/15 px-3 py-2.5 text-xs font-semibold text-slate-300 transition hover:border-[#D2AD68]/50 hover:text-white"><RotateCcw size={14}/> Reiniciar ejercicio</button>
+      </div>
+      <div className="mt-auto border-t border-white/10 px-5 py-3"><p className="text-[9px] leading-4 text-slate-500">Simulador didáctico. La validación geométrica real se realiza en Rhino 7 / MatrixGold.</p></div>
      </aside>
     </div>
     <footer className="flex shrink-0 items-center justify-between gap-3 border-t border-white/10 bg-[#19232D] px-5 py-3 sm:px-7"><p className="text-[10px] text-slate-500"><Layers3 className="mr-1 inline" size={13}/> AURUM LAB · Herramienta de aprendizaje geométrico</p><button type="button" onClick={closeExtrusion} className="rounded-lg bg-gradient-to-b from-[#E6CB8C] to-[#B88D48] px-4 py-2.5 text-xs font-bold text-[#21190D] shadow transition hover:brightness-105">Volver a la sesión 06</button></footer>
