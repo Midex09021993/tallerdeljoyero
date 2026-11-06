@@ -3553,6 +3553,10 @@ function AulaFormacionPage() {
                     </div>
                   </div>
                 </div>}
+                {lecturaAbierta?.numero === 6 && paginaLectura === 1 && <div className="mt-7"><LaboratorioSolidos onlyLab="extrusion" /></div>}
+                {lecturaAbierta?.numero === 6 && paginaLectura === 2 && <div className="mt-7"><LaboratorioSolidos onlyLab="revolution" /></div>}
+                {lecturaAbierta?.numero === 6 && paginaLectura === 3 && <div className="mt-7"><LaboratorioSolidos onlyLab="ring" /></div>}
+                {lecturaAbierta?.numero === 6 && paginaLectura === 4 && <div className="mt-7"><LaboratorioSolidos onlyLab="inspector" /></div>}
                 {paginaLectura === seccionesLecturaActivas.length-1 && <div className="rounded-xl border border-[#dce4ec] bg-white p-4"><p className="text-sm font-semibold">Has llegado al final de la lectura</p><p className="mt-1 text-sm text-[#6E6E73]">{lecturaModoVistaPrevia ? "En la experiencia del alumno, aquí podrá finalizar y marcar la sesión como completada." : "La lectura está registrada como leída. Puedes marcar la sesión como completada."}</p></div>}
                 </section>
               </main>
