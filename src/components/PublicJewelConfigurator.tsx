@@ -254,7 +254,7 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
                   className={"relative z-10 grid size-10 shrink-0 place-items-center rounded-full transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45] focus-visible:ring-offset-2 sm:size-11 " + (selected ? "ring-2 ring-[#8b9cf4] ring-offset-2 ring-offset-white" : "opacity-90 hover:scale-105 hover:opacity-100")}
                 >
                   <span className="size-8 rounded-full border border-black/10 shadow-[inset_0_1px_2px_rgba(255,255,255,.7),0_2px_5px_rgba(0,0,0,.18)] sm:size-9" style={swatch} />
-                </button>;
+                </button>
               })}
             </div>
             </div>
