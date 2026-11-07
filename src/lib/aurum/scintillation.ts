@@ -81,10 +81,40 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
                 : new THREE.Color(0xd7799b);
 
   const ijewel=material.userData?.aurumIJEWELParameters;
-  // iJewel source parameters are retained for calibration, but the custom
-  // multi-bounce shader is opt-in. Physical MeshPhysicalMaterial transmission
-  // remains the default path for every gemstone.
-  const ijewelEnabled=Boolean(material.userData?.aurumIJEWELActive) && family==="Diamante";
+  // Controlled diamond A/B laboratory. It is read once when the material
+  // shader is prepared; the normal production path has no extra per-frame work.
+  const diamondTestMode=family==="Diamante" && typeof window!=="undefined"
+    ? new URLSearchParams(window.location.search).get("aurumDiamondTest")
+    : null;
+  const diamondTestProfiles:Record<string,{label:string;ior:number;dispersion:number;rayBounces:number}>={
+    b:{label:"iJewel reference · physical IOR",ior:2.417,dispersion:0.01,rayBounces:5},
+    c:{label:"Higher dispersion · physical IOR",ior:2.417,dispersion:0.02,rayBounces:8},
+    d:{label:"iJewel source IOR experiment",ior:2.6,dispersion:0.01,rayBounces:5},
+  };
+  const diamondTestProfile=diamondTestMode ? diamondTestProfiles[diamondTestMode] : undefined;
+  // A explicitly restores the unmodified AURUM shader. B-D enable the
+  // iJewel-inspired environment-ray approximation with isolated parameters.
+  const ijewelEnabled=family==="Diamante" && diamondTestMode!=="a"
+    && (Boolean(material.userData?.aurumIJEWELActive) || Boolean(diamondTestProfile));
+  const effectiveIewel=diamondTestProfile ?? {
+    label:"Source material defaults",
+    ior:Number(ijewel?.refractiveIndex??2.417),
+    dispersion:Number(ijewel?.dispersion??baseDispersion),
+    rayBounces:Number(ijewel?.rayBounces??5),
+  };
+  const ijewelDispersionScale=Math.max(0,Math.min(4,effectiveIewel.dispersion/0.01));
+  if(diamondTestProfile){
+    console.info("[AURUM][DIAMOND_AB_TEST]",{
+      mode:diamondTestMode,
+      label:diamondTestProfile.label,
+      ior:diamondTestProfile.ior,
+      dispersion:diamondTestProfile.dispersion,
+      rayBounces:diamondTestProfile.rayBounces,
+      physicalMaterialIor:Number(material.ior??2.417),
+      physicalMaterialTransmission:Number(material.transmission??0),
+      note:"Diagnostic shader parameters only; no geometry, BVH, metal or saved material preset is modified.",
+    });
+  }
   // Reduce the experimental virtual-facet energy for standard diamond profiles
   // to stabilize small stones during orbit. Keep the blue-diamond profile unchanged.
   const diamondPresetId=String(
@@ -125,6 +155,10 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
     "aurum-dynamic-scintillation-v1",
     family,
     ijewelEnabled?"ijewel-diamond-active":"physical-gem-only",
+    diamondTestMode??"no-diamond-ab-test",
+    diamondTestProfile?.ior??"source-ior",
+    diamondTestProfile?.dispersion??"source-dispersion",
+    diamondTestProfile?.rayBounces??"source-bounces",
     oilDropEnabled?"oil-drop":"no-oil-drop",
     colorChangeEnabled?"color-change":"no-color-change",
     phenomenonEnabled?"phenomenon":"no-phenomenon",
@@ -134,7 +168,7 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
   material.onBeforeCompile=(shader:any)=>{
     shader.uniforms.aurumScintillationStrength={value:strength};
     shader.uniforms.aurumScintillationContrast={value:contrastStrength};
-    shader.uniforms.aurumRuntimeDispersion={value:baseDispersion*familyDispersionScale};
+    shader.uniforms.aurumRuntimeDispersion={value:(diamondTestProfile?.dispersion??baseDispersion)*familyDispersionScale};
     const gemLightState=material.userData?.aurumGemLightState??{};
     shader.uniforms.aurumGemLightPosition={value:new THREE.Vector3(...(gemLightState.position??[0,0,0]))};
     shader.uniforms.aurumGemLightIntensity={value:gemLightState.enabled?Math.max(0,Number(gemLightState.intensity??0)):0};
@@ -150,8 +184,9 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
       // while this custom iJewel-inspired environment-ray path consumes the
       // source DiamondMaterial refractiveIndex (2.6) from calibration metadata.
       // This does not change the physical PBR material or claim shader parity.
-      shader.uniforms.aurumIJEWELRefractiveIndex={value:Math.max(1.01,Math.min(2.65,Number(ijewel.refractiveIndex??2.417)))};
-      shader.uniforms.aurumIJEWELRayBounces={value:Math.max(1,Math.min(8,Math.floor(Number(ijewel.rayBounces??5))))};
+      shader.uniforms.aurumIJEWELRefractiveIndex={value:Math.max(1.01,Math.min(2.65,Number(effectiveIewel.ior??2.417)))};
+      shader.uniforms.aurumIJEWELRayBounces={value:Math.max(1,Math.min(8,Math.floor(Number(effectiveIewel.rayBounces??5))))};
+      shader.uniforms.aurumIJEWELDispersionScale={value:ijewelDispersionScale};
       shader.uniforms.aurumIJEWELReflectivity={value:Number(ijewel.reflectivity??.5)};
       shader.uniforms.aurumIJEWELGeometryFactor={value:Number(ijewel.geometryFactor??.5)};
       shader.uniforms.aurumIJEWELSQUASHFactor={value:Number(ijewel.squashFactor??.98)};
@@ -238,6 +273,7 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
       uniform float aurumPhenomenonMode;
       uniform float aurumIJEWELRefractiveIndex;
       uniform float aurumIJEWELRayBounces;
+      uniform float aurumIJEWELDispersionScale;
       uniform float aurumIJEWELReflectivity;
       uniform float aurumIJEWELGeometryFactor;
       uniform float aurumIJEWELSQUASHFactor;
@@ -341,9 +377,10 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // Slightly widen visible-band separation for live diamond fire.
         // Keep the change restrained: dispersion is an approximation in this
         // single-pass shader, not wavelength-resolved spectral path tracing.
-        float ijEtaR=1.0/max(ijIor-0.010,1.0001);
+        float ijDispersionScale=max(aurumIJEWELDispersionScale,0.0);
+        float ijEtaR=1.0/max(ijIor-0.010*ijDispersionScale,1.0001);
         float ijEtaG=1.0/ijIor;
-        float ijEtaB=1.0/min(ijIor+0.034,2.65);
+        float ijEtaB=1.0/min(ijIor+0.034*ijDispersionScale,2.65);
         // Preserve the last visually working direction while isolating the
         // blank-render regression from the recent view-vector change.
         vec3 ijDirR=refract(ijView,ijNormal,ijEtaR);
