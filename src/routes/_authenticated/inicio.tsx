@@ -369,9 +369,20 @@ function Inicio() {
                 <h2 className="mt-1 text-lg font-semibold">Tus primeros resultados en AURUM LAB</h2>
                 <p className="mt-1 max-w-2xl text-xs leading-5 text-muted-foreground">Completa acciones reales para poner en marcha tu operación comercial. El avance se calcula con los datos guardados en tu taller.</p>
               </div>
-              <Link to="/herramientas" className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-gold/30 px-3 py-2 text-xs font-semibold text-gold-deep transition hover:bg-gold/5">
-                Explorar herramientas <ChevronRight className="size-4" />
-              </Link>
+              <div className="flex flex-wrap items-center gap-2">
+                {esDueno ? (
+                  <SelectorSedeDueno
+                    esDueno={esDueno}
+                    sedes={sedes}
+                    value={sedeFiltro}
+                    onChange={setSedeFiltro}
+                    className="w-full sm:w-auto"
+                  />
+                ) : null}
+                <Link to="/herramientas" className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-gold/30 px-3 py-2 text-xs font-semibold text-gold-deep transition hover:bg-gold/5">
+                  Explorar herramientas <ChevronRight className="size-4" />
+                </Link>
+              </div>
             </div>
             {esDueno && !sedeContextoId ? (
               <p className="mt-4 rounded-xl border border-border bg-muted/30 p-3 text-xs text-muted-foreground">Selecciona una sede para revisar el avance de sus primeros pasos sin mezclar datos de distintos talleres.</p>
