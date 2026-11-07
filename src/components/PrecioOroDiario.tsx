@@ -187,12 +187,13 @@ export function PrecioOroDiario() {
   const purity = purityByKarat[karat] ?? 750;
   const quoteAge = quote ? Date.now() - new Date(quote.asOf).getTime() : 0;
   const isQuoteStale = quote ? !Number.isFinite(quoteAge) || quoteAge > QUOTE_STALE_MS : false;
+  const usablePrice24k = isQuoteStale ? undefined : price24k;
 
   const estimatedValue = useMemo(() => {
     const weight = Number(grams);
-    if (price24k === undefined || !Number.isFinite(weight) || weight <= 0) return null;
-    return weight * price24k * (purity / 1000);
-  }, [grams, purity, price24k]);
+    if (usablePrice24k === undefined || !Number.isFinite(weight) || weight <= 0) return null;
+    return weight * usablePrice24k * (purity / 1000);
+  }, [grams, purity, usablePrice24k]);
 
   return (
     <section ref={sectionRef} id="precio-del-oro" className="scroll-mt-24 overflow-hidden border-y border-[#eadca8] bg-[radial-gradient(ellipse_at_top_left,_rgba(250,224,139,0.24),_transparent_44%),linear-gradient(135deg,#fffdf8_0%,#ffffff_52%,#fff8e5_100%)]">
@@ -241,10 +242,10 @@ export function PrecioOroDiario() {
                   </div>
                   <span className="rounded-full border border-[#e9d79d] bg-white px-2.5 py-1 text-[10px] font-bold text-[#876500]">Referencia indicativa</span>
                 </div>
-                {price24k !== undefined ? (
-                  <p className="mt-3 break-words text-3xl font-extrabold tracking-[-.04em] text-[#17232d] sm:text-[2.6rem]">{formatMoney(price24k, country.currency, country.locale)}</p>
+                {usablePrice24k !== undefined ? (
+                  <p className="mt-3 break-words text-3xl font-extrabold tracking-[-.04em] text-[#17232d] sm:text-[2.6rem]">{formatMoney(usablePrice24k, country.currency, country.locale)}</p>
                 ) : (
-                  <p className="mt-3 text-2xl font-extrabold text-slate-400">{loading ? "Consultando…" : "Precio no disponible"}</p>
+                  <p className="mt-3 text-xl font-extrabold text-slate-500">{loading ? "Consultando…" : isQuoteStale ? "Cotización desactualizada" : "Precio no disponible"}</p>
                 )}
               </div>
             </div>
@@ -301,7 +302,7 @@ export function PrecioOroDiario() {
               <div className="mt-5 rounded-2xl border border-[#e9d79d] bg-gradient-to-br from-[#fff8df] to-[#fffdf6] p-4 sm:p-5">
                 <p className="text-xs font-medium text-[#765900]">Valor teórico estimado</p>
                 <p className="mt-1 break-words text-2xl font-extrabold tracking-tight text-[#17232d] sm:text-3xl">
-                  {estimatedValue === null ? "—" : formatMoney(estimatedValue, country.currency, country.locale)}
+                  {estimatedValue === null ? (isQuoteStale ? "Referencia no vigente" : "—") : formatMoney(estimatedValue, country.currency, country.locale)}
                 </p>
                 <p className="mt-1 text-[11px] leading-5 text-slate-600">Fórmula: peso × precio de 24K × ({purity}/1000). La ley se aplica en milésimas.</p>
               </div>
