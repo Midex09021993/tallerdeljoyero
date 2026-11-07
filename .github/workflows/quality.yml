@@ -64,6 +64,30 @@ jobs:
 
       - name: Type-check public viewer link revocation
         run: deno check supabase/functions/revocar-enlace-visor-3d/index.ts
+      - name: Type-check Public quotation PDF viewer
+        run: deno check supabase/functions/ver-cotizacion-pdf/index.ts
+      - name: Type-check AURUM transfer creation
+        run: deno check supabase/functions/aurum-transfer-create/index.ts
+      - name: Type-check AURUM transfer download
+        run: deno check supabase/functions/aurum-transfer-download/index.ts
+      - name: Type-check AURUM transfer import
+        run: deno check supabase/functions/aurum-transfer-import/index.ts
+      - name: Type-check AURUM welcome email
+        run: deno check supabase/functions/aurum-welcome-email/index.ts
+      - name: Type-check Nextcloud status
+        run: deno check supabase/functions/nextcloud-status/index.ts
+      - name: Type-check Public catalog 3D model delivery
+        run: deno check supabase/functions/catalogo-modelo-3d-publico/index.ts
+      - name: Type-check Catalog technical sheet PDF extraction
+        run: deno check supabase/functions/catalogo-extraer-ficha-pdf/index.ts
+      - name: Type-check Catalog description generation
+        run: deno check supabase/functions/catalogo-generar-descripcion/index.ts
+      - name: Type-check Marketplace file download
+        run: deno check supabase/functions/marketplace-descargar-archivo/index.ts
+      - name: Type-check Marketplace payment initialization
+        run: deno check supabase/functions/marketplace-iniciar-pago/index.ts
+      - name: Type-check Marketplace payment webhook
+        run: deno check supabase/functions/marketplace-pago-webhook/index.ts
 
   rea-sandbox:
     runs-on: ubuntu-latest
