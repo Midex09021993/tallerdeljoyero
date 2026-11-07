@@ -673,7 +673,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
   // This final assignment intentionally replaces the earlier material key,
   // so include all relevant feature flags here rather than losing them.
   material.customProgramCacheKey=()=>[
-    "aurum-scintillation-v12",
+    "aurum-scintillation-v13",
     family,
     familyDispersionScale,
     ijewelEnabled?"ijewel-diamond-active":"physical-gem-only",
