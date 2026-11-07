@@ -107,8 +107,9 @@ async function fetchXausQuote(currency: CurrencyCode): Promise<GoldQuote> {
     throw new Error("XAUS no entregó un precio por gramo válido.");
   }
   const asOf = data.price_as_of ?? data.data_state?.as_of ?? data.updated_at;
-  if (!asOf || !Number.isFinite(new Date(asOf).getTime())) {
-    throw new Error("XAUS no entregó una fecha válida para la cotización.");
+  const updatedAtMs = data.updated_at ? new Date(data.updated_at).getTime() : Number.NaN;
+  if (!asOf || !Number.isFinite(new Date(asOf).getTime()) || !Number.isFinite(updatedAtMs)) {
+    throw new Error("XAUS no entregó fechas válidas para verificar la cotización.");
   }
   if (data.data_state?.status === "unavailable") {
     throw new Error("XAUS no tiene una cotización disponible en este momento.");
@@ -118,7 +119,10 @@ async function fetchXausQuote(currency: CurrencyCode): Promise<GoldQuote> {
     price24kPerGram: price,
     asOf,
     cachedAt: Date.now(),
-    isStale: data.stale === true || data.data_state?.status === "stale",
+    isStale: data.stale === true ||
+      data.data_state?.status === "stale" ||
+      Date.now() - updatedAtMs > 5 * 60 * 1000 ||
+      Date.now() - updatedAtMs < -60 * 1000,
   };
 }
 
@@ -192,9 +196,11 @@ export function PrecioOroDiario() {
           setQuoteSource("browser-cache");
           setMessage(saved
             ? `No se pudo actualizar XAUS. Se conserva la cotización del ${formatQuoteDate(saved.asOf)}; verifica su vigencia antes de usarla.`
-            : error instanceof Error
-              ? error.message
-              : "No fue posible consultar el precio del oro. Inténtalo nuevamente más tarde.");
+            : error instanceof TypeError
+              ? "No se pudo establecer conexión con XAUS. Revisa la conexión e inténtalo nuevamente."
+              : error instanceof Error
+                ? error.message
+                : "No fue posible consultar el precio del oro. Inténtalo nuevamente más tarde.");
         }
       } finally {
         if (!cancelled) setLoading(false);
