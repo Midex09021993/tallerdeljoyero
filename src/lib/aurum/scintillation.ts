@@ -607,9 +607,9 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         gl_FragColor.rgb *= 1.04;
         // Restrained angelic diamond aura: a cool-white grazing-angle lift on the
         // gemstone surface, not a screen-space bloom or an emissive shell.
-        float aurumAngelRim=pow(1.0-clamp(abs(dot(aurumN,aurumV)),0.0,1.0),3.2);
+        float aurumAngelRim=pow(1.0-clamp(abs(dot(aurumN,aurumV)),0.0,1.0),2.9);
         float aurumAngelFacetGate=smoothstep(0.08,0.72,aurumFacetContrast);
-        gl_FragColor.rgb+=vec3(0.72,0.84,1.0)*aurumAngelRim*aurumAngelFacetGate*0.078;
+        gl_FragColor.rgb+=vec3(1.0,0.91,0.82)*aurumAngelRim*aurumAngelFacetGate*0.092;
         ` : ""}
 
         if(aurumPhenomenonStrength>0.0){
@@ -692,16 +692,16 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
                 float aurumGemSunNdotL=max(dot(aurumGemN,aurumGemSunDir),0.0);
                 vec3 aurumGemSunHalf=normalize(aurumGemSunDir+aurumGemViewDir);
                 float aurumGemSunHalfDot=max(dot(aurumGemN,aurumGemSunHalf),0.0);
-                float aurumGemSoftbox=pow(aurumGemSunHalfDot,1.65);
-                float aurumGemSoftboxCore=pow(aurumGemSunHalfDot,7.5);
+                float aurumGemSoftbox=pow(aurumGemSunHalfDot,1.25);
+                float aurumGemSoftboxCore=pow(aurumGemSunHalfDot,6.0);
                 float aurumGemSunEdge=pow(1.0-aurumGemNdotV,2.0)*aurumGemSunNdotL;
-                float aurumGemSunResponse=aurumGemSunNdotL*0.14
-                    +aurumGemSoftbox*0.50+aurumGemSoftboxCore*0.10
-                    +aurumGemSunEdge*0.08;
+                float aurumGemSunResponse=aurumGemSunNdotL*0.16
+                    +aurumGemSoftbox*0.60+aurumGemSoftboxCore*0.09
+                    +aurumGemSunEdge*0.10;
                 // Broad warm-neutral overhead reflection, fixed in world space.
                 // This reuses the existing diamond-only shader source: no extra
                 // Three.js light, shadow map, render pass or per-frame CPU work.
-                gl_FragColor.rgb+=vec3(1.0,0.83,0.69)*0.44*aurumGemSunResponse;
+                gl_FragColor.rgb+=vec3(1.0,0.88,0.78)*0.52*aurumGemSunResponse;
         ` : ``}
 
                 #include <tonemapping_fragment>
@@ -717,7 +717,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
   // This final assignment intentionally replaces the earlier material key,
   // so include all relevant feature flags here rather than losing them.
   material.customProgramCacheKey=()=>[
-    "aurum-scintillation-v15",
+    "aurum-scintillation-v16-angelic-softbox",
     family,
     familyDispersionScale,
     ijewelEnabled?"ijewel-diamond-active":"physical-gem-only",
