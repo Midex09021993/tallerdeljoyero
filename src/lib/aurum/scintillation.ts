@@ -644,15 +644,21 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
                 float aurumGemLightResponse=aurumGemNdotL*0.18+aurumGemFacetSpecular*0.42+aurumGemFacetEdge*0.12;
                 gl_FragColor.rgb+=vec3(1.0)*aurumGemLightEnergy*aurumGemLightResponse;
 
-                // Soft sun-like directional fill, evaluated only by gemstone materials.
-                // This is deliberately low-energy and facet-driven, not an emissive glow.
+                // Fixed world-space studio softbox: unlike the HDRI reflection field,
+                // this key remains stationary while the jewel is rotated. It creates
+                // the stable studio catchlight visible in premium jewelry viewers.
+                // Two facet lobes mimic a broad softbox plus its brighter center.
                 vec3 aurumGemSunDir=normalize(vec3(-0.38,0.78,0.50));
                 float aurumGemSunNdotL=max(dot(aurumGemN,aurumGemSunDir),0.0);
                 vec3 aurumGemSunHalf=normalize(aurumGemSunDir+aurumGemViewDir);
-                float aurumGemSunFacet=pow(max(dot(aurumGemN,aurumGemSunHalf),0.0),32.0);
+                float aurumGemSunHalfDot=max(dot(aurumGemN,aurumGemSunHalf),0.0);
+                float aurumGemSoftbox=pow(aurumGemSunHalfDot,12.0);
+                float aurumGemSoftboxCore=pow(aurumGemSunHalfDot,42.0);
                 float aurumGemSunEdge=pow(1.0-aurumGemNdotV,2.0)*aurumGemSunNdotL;
-                float aurumGemSunResponse=aurumGemSunNdotL*0.10+aurumGemSunFacet*0.16+aurumGemSunEdge*0.06;
-                gl_FragColor.rgb+=vec3(1.0,0.985,0.95)*0.10*aurumGemSunResponse;
+                float aurumGemSunResponse=aurumGemSunNdotL*0.14
+                    +aurumGemSoftbox*0.30+aurumGemSoftboxCore*0.18
+                    +aurumGemSunEdge*0.08;
+                gl_FragColor.rgb+=vec3(1.0,0.985,0.96)*0.22*aurumGemSunResponse;
 
                 #include <tonemapping_fragment>
                 #include <colorspace_fragment>
