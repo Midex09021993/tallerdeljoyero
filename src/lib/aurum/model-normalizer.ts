@@ -217,20 +217,20 @@ function auditRhinoSourceObjects(object:any) {
   console.info("[AURUM][RHINO SOURCE OBJECT AUDIT]",audit);
   return audit;
 }
-function removeGlbConstructionPrimitives(object:any) {
-  const removeQueue:any[]=[];
+function hideGlbConstructionPrimitives(object:any) {
+  const hiddenNodes:any[]=[];
   const counts={lines:0,points:0};
   object?.traverse?.((node:any)=>{
     if(node===object)return;
     if(node?.isLine||node?.isLineSegments||node?.isLineLoop||node?.isPoints){
-      removeQueue.push(node);
+      hiddenNodes.push(node);
       if(node.isPoints)counts.points++;else counts.lines++;
     }
   });
-  for(const node of removeQueue)node.parent?.remove(node);
+  for(const node of hiddenNodes)node.visible=false;
   if(counts.lines||counts.points){
-    object.userData={...(object.userData??{}),aurumConstructionGeometry:{...counts,removed:true,source:"GLB line/point primitives"}};
-    console.info("[AURUM][GLB] Geometría auxiliar de construcción oculta",object.userData.aurumConstructionGeometry);
+    object.userData={...(object.userData??{}),aurumConstructionGeometry:{...counts,hidden:true,removed:false,retainedInHierarchy:hiddenNodes.length,source:"GLB line/point primitives"}};
+    console.info("[AURUM][GLB] Geometría auxiliar oculta y conservada",object.userData.aurumConstructionGeometry);
   }
   object.updateMatrixWorld?.(true);
   return counts;
@@ -447,7 +447,7 @@ export async function normalizeAurumModel(
     // Audit original Rhino object types/IDs before hiding construction curves and points.
     auditRhinoSourceObjects(object);
     // Surface meshes and their authored materials/normals remain untouched.
-    removeGlbConstructionPrimitives(object);
+    hideGlbConstructionPrimitives(object);
     // Official iJewel-style GLBs carry the layer assignment in node extras.
     // Hydrate it directly so the same MatrixGold layer rules work for GLB input.
     hydrateRhinoLayerMetadata(object,clasificarCapa);
