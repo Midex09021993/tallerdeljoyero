@@ -94,6 +94,22 @@ function buildRhinoLayerVisibility(layers:any[]) {
   };
 }
 
+function findRhinoLayerManifest(object:any): any[] {
+  const rootData = object?.userData ?? {};
+  const rootCandidates = [rootData.aurumRhinoSourceLayers, rootData.layers, rootData.rhinoLayers];
+  for (const candidate of rootCandidates) {
+    if (Array.isArray(candidate) && candidate.length) return candidate;
+  }
+  // GLTFLoader attaches extras to the node that owns them, not always the scene root.
+  let discovered: any[] = [];
+  object?.traverse?.((node:any) => {
+    if (discovered.length) return;
+    const data = node?.userData ?? {};
+    const match = [data.aurumRhinoSourceLayers, data.layers, data.rhinoLayers].find((value:any) => Array.isArray(value) && value.length);
+    if (match) discovered = match;
+  });
+  return discovered;
+}
 function resolveRhinoLayerIndex(x:any): number {
   const candidates = [
     x?.userData?.aurumRhinoSource?.layerIndex,
@@ -176,10 +192,8 @@ function hydrateRhinoLayerMetadata(
   clasificarCapa:(capa:string,colorCapa?:string)=>"metal"|"gema"|"otro"
 ) {
   const rootData=object?.userData??{};
-  const sourceLayerManifest=Array.isArray(rootData.aurumRhinoSourceLayers)?rootData.aurumRhinoSourceLayers:[];
-  const layers=sourceLayerManifest.length?sourceLayerManifest:
-    Array.isArray(rootData.layers)?rootData.layers:
-    Array.isArray(rootData.rhinoLayers)?rootData.rhinoLayers:[];
+  const layers=findRhinoLayerManifest(object);
+  const sourceLayerManifest=layers;
   const byId=new Map<string,any>();
   const byName=new Map<string,any>();
   layers.forEach((layer:any,index:number)=>{
@@ -210,6 +224,8 @@ function hydrateRhinoLayerMetadata(
     const layerIndex=resolveRhinoLayerIndex(x);
     const source=data.aurumRhinoSource??{};
     const rhinoLayer=data.rhinoLayer??data.RhinoLayer??{};
+    const objectId=source.objectId??attrs.id??attrs.Id??data.objectId??data.ObjectId??data.id??data.Id??null;
+    const objectName=String(source.objectName??attrs.name??attrs.Name??data.objectName??data.ObjectName??x.name??"").trim();
     const layerId=source.layerId??rhinoLayer.id??rhinoLayer.Id??attrs.layerId??attrs.LayerId??data.layerId??data.LayerId??existing.rhinoLayerId;
     let layer=layerIndex>=0?layers[layerIndex]:undefined;
     if(!layer&&layerId!=null)layer=byId.get(String(layerId));
@@ -268,8 +284,12 @@ function hydrateRhinoLayerMetadata(
     audit.categoryCounts[category]=(audit.categoryCounts[category]??0)+1;
     x.userData={
       ...data,
+      ...(objectName && !String(x.name??"").trim() ? { name: objectName } : {}),
       aurumRhinoSource:{
         ...source,
+        objectId,
+        objectName: objectName || source.objectName || null,
+        objectType: data.aurumRhinoGeometryType ?? source.objectType ?? null,
         layerIndex:resolvedLayerIndex,
         layerId:resolvedLayerId,
         layerName:layerName||source.layerName||null,
@@ -302,7 +322,21 @@ function hydrateRhinoLayerMetadata(
       });
     }
   }
-  object.userData={...(object.userData??{}),aurumLayerMetadataAudit:{...audit,source:"GLB node extras + source layer table"}};
+    let hierarchyGroups = 0;
+  let namedNodes = 0;
+  object?.traverse?.((node:any) => {
+    if (node === object) return;
+    if (node?.children?.length) hierarchyGroups++;
+    if (String(node?.name ?? "").trim()) namedNodes++;
+  });
+  object.userData={...(object.userData??{}),aurumLayerMetadataAudit:{
+    ...audit,
+    source: sourceLayerManifest.length ? "GLB nested/root node extras + source layer table" : "GLB node extras (layer table not found)",
+    layerTableFound: sourceLayerManifest.length > 0,
+    sourceLayerCount: sourceLayerManifest.length,
+    hierarchyGroups,
+    namedNodes,
+  }};
   if(audit.unresolvedMeshes>0||audit.meshesWithLayerKey!==audit.meshes||audit.duplicateLayerKeys.length>0){
     console.warn("[AURUM][LAYER METADATA AUDIT]",object.userData.aurumLayerMetadataAudit);
   }else{
