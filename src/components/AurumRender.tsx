@@ -1775,6 +1775,47 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       };
       apiRef.current=createAurumApi({
         cargar,
+        getCadTree:()=>{
+          if(!modelo)return [];
+          const items:any[]=[];
+          modelo.traverse((node:any)=>{
+            if(node===modelo)return;
+            const data=node.userData??{};
+            const source=data.aurumRhinoSource??{};
+            const attrs=data.attributes??{};
+            const meta=data.aurumRhino??{};
+            const type=String(source.objectType??data.objectType?.name??data.objectType??attrs.geometry?.objectType?.name??attrs.geometry?.objectType??(node.isMesh?"Mesh":node.isLine||node.isLineSegments||node.isLineLoop?"Curve":node.isPoints?"Point":"Unknown"));
+            if(type.toLowerCase()==="file3dm")return;
+            const sourceId=source.objectId??attrs.id??attrs.Id??data.objectId??data.ObjectId??null;
+            const hasCadIdentity=sourceId!=null||source.objectType!=null||data.aurumRhinoSource!=null||meta.rhinoLayerId!=null||attrs.layerIndex!=null||attrs.LayerIndex!=null;
+            if(!hasCadIdentity)return;
+            const layer=String(source.layerName??meta.capa??attrs.layerName??attrs.LayerName??"Sin capa").trim()||"Sin capa";
+            items.push({uuid:node.uuid,name:String(source.objectName??attrs.name??attrs.Name??node.name??"Objeto sin nombre").trim()||"Objeto sin nombre",type,layer,visible:node.visible!==false,sourceId:sourceId!=null?String(sourceId):null});
+          });
+          return items;
+        },
+        setCadObjectVisible:(uuid:string,visible:boolean)=>{
+          if(!modelo||typeof uuid!=="string")return false;
+          let found=false;
+          modelo.traverse((node:any)=>{if(node.uuid===uuid){node.visible=Boolean(visible);found=true;}});
+          if(found){modelo.updateMatrixWorld?.(true);invalidateRenderRef.current?.();}
+          return found;
+        },
+        setCadLayerVisible:(layerName:string,visible:boolean)=>{
+          if(!modelo||typeof layerName!=="string")return 0;
+          let changed=0;
+          modelo.traverse((node:any)=>{
+            const source=node.userData?.aurumRhinoSource??{};
+            const meta=node.userData?.aurumRhino??{};
+            const attrs=node.userData?.attributes??{};
+            const layer=String(source.layerName??meta.capa??attrs.layerName??attrs.LayerName??"Sin capa").trim()||"Sin capa";
+            if(layer===layerName&&(source.objectId!=null||source.objectType!=null||node.isMesh||node.isLine||node.isLineSegments||node.isLineLoop||node.isPoints)){
+              node.visible=Boolean(visible);changed++;
+            }
+          });
+          if(changed){modelo.updateMatrixWorld?.(true);invalidateRenderRef.current?.();}
+          return changed;
+        },
         material:aplicarMaterial,
         gema:aplicarGema,
         materialCatalogo:(m:MaterialConfig):boolean=>{
