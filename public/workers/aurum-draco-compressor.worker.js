@@ -129,6 +129,7 @@ function stripCompressedFallbacks(json, bin, compressedAccessorIndices, dracoBuf
 async function compress(buffer) {
   const {json,bin}=parseGlb(buffer),Module=await getEncoder(),originalBytes=buffer.byteLength;
   json.bufferViews=json.bufferViews||[];
+  if((json.buffers||[]).length!==1 || json.bufferViews.some(view=>view.buffer!==undefined && view.buffer!==0)) return {buffer,compressed:0,originalBytes,outputBytes:originalBytes};
   const parts=[new Uint8Array(bin)];let length=bin.byteLength,compressed=0;
   const compressedAccessorIndices=new Set(),dracoBufferViews=new Set();
   const encoder=new Module.Encoder(),builder=new Module.MeshBuilder();
