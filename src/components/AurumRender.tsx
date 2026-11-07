@@ -128,7 +128,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const ambienteIdRef = useRef<string|null>(null);
   ambienteIdRef.current = ambienteId;
   const [ambienteMetalInfluence, setAmbienteMetalInfluence] = useState(45);
-  const [fondoId, setFondoId] = useState("escena");
+  const [fondoId, setFondoId] = useState("blanco");
   const [sombraContactoVisible, setSombraContactoVisible] = useState(true);
   const [sueloVisible, setSueloVisible] = useState(true);
   const [sueloColor, setSueloColor] = useState("#ffffff");
@@ -1143,6 +1143,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         groundController,
         nodo
       );
+      // Fondo inicial del visor: blanco puro. Los proyectos guardados pueden
+      // restaurar después su propio fondo desde la configuración del proyecto.
+      sceneController.setBackground("blanco");
       const photoInicial = getAurumPhotographicProfile("ijewelReference");
       // La escena visual no administra los HDRI ni la exposición: se inicializan
       // aquí una sola vez y permanecen bajo sus controles independientes.
