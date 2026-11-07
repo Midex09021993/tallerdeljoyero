@@ -1152,16 +1152,33 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       const photoInicial = getAurumPhotographicProfile("ijewelReference");
       // La escena visual no administra los HDRI ni la exposición: se inicializan
       // aquí una sola vez y permanecen bajo sus controles independientes.
-      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      // Production remains on the established ACES profile. Diagnostic overrides
+      // are opt-in through the URL and never affect normal sessions.
+      const toneAuditParams = typeof window !== "undefined"
+        ? new URLSearchParams(window.location.search)
+        : null;
+      const toneAuditEnabled = toneAuditParams?.get("aurumToneAudit") === "1";
+      const requestedToneMode = toneAuditParams?.get("aurumToneMode");
+      const toneModeOverride = requestedToneMode === "agx"
+        ? THREE.AgXToneMapping
+        : requestedToneMode === "none"
+          ? THREE.NoToneMapping
+          : THREE.ACESFilmicToneMapping;
+      renderer.toneMapping = toneModeOverride;
       renderer.toneMappingExposure = photoInicial.exposure;
-      // Opt-in diagnostics only: no render-path changes and no per-frame logging in production.
-      const toneAuditEnabled = typeof window !== "undefined"
-        && new URLSearchParams(window.location.search).get("aurumToneAudit") === "1";
+      const toneMappingLabel = (value: number) => value === THREE.ACESFilmicToneMapping
+        ? "ACESFilmic"
+        : value === THREE.AgXToneMapping
+          ? "AgX"
+          : value === THREE.NoToneMapping
+            ? "None"
+            : "Other";
       let lastToneAuditPath: "direct" | "composer" | null = null;
       if (toneAuditEnabled) {
         console.info("[AURUM][TONE_AUDIT][INITIAL]", {
+          requestedToneMode: requestedToneMode ?? "default",
           toneMapping: renderer.toneMapping,
-          toneMappingName: renderer.toneMapping === THREE.ACESFilmicToneMapping ? "ACESFilmic" : "other",
+          toneMappingName: toneMappingLabel(renderer.toneMapping),
           toneMappingExposure: renderer.toneMappingExposure,
           outputColorSpace: renderer.outputColorSpace,
           outputPassPresent: Boolean(outputPass),
@@ -2947,6 +2964,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             console.info("[AURUM][TONE_AUDIT][PATH]", {
               path: activeToneAuditPath,
               toneMapping: renderer.toneMapping,
+              toneMappingName: toneMappingLabel(renderer.toneMapping),
               toneMappingExposure: renderer.toneMappingExposure,
               outputColorSpace: renderer.outputColorSpace,
               outputPassEnabled: Boolean(outputPass?.enabled),
