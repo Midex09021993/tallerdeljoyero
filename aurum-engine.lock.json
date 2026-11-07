@@ -8,7 +8,7 @@
   "files": {
     ".github/workflows/quality.yml": "f461b2473a072d8ed187c0c88d7114c46742578ba2014dc7848d1591c7cfa8a8",
     "scripts/check-aurum-lock.mjs": "d8b0b1e553fbfdd7faf6522482d0460b5c9803464b9fa03d34ed3bbacd18b5c4",
-    "src/components/AurumRender.tsx": "c813361d69cd6738c5bde7197566ac22f282536da95cd00ce4922d3e458c218e",
+    "src/components/AurumRender.tsx": "b64098360ba93f4db79b198d2ad0a203c0b8a80e0b6b5ffb800315ab8702cd4a",
     "src/components/AurumRenderConfig.tsx": "c54846f1ebf7fb2c143be54bf686b18ada16615e546f1d8ff6d98847df76575b",
     "src/lib/aurum-material-engine.ts": "1ebbacc784f61fbc9d77027cbd612269073e5de8be5a40a9276916653d34c742",
     "src/lib/aurum/api.ts": "cdf41d03d12a94e0a624660f34965db573ed2a615bbfbf1df4adb81cec2f7d4c",
@@ -56,6 +56,7 @@
     "src/lib/aurum/video-exporter.ts": "d8ea0c5c0bff1b89771beca38f60da3e36357eba8b017fd8d5a856905d16366e",
     "src/lib/aurum/viewer.ts": "b58321bc4f31844935506fe7c2ff39d3471183e3ee336416894f5740e76e0e43",
     "src/lib/aurum/voxel-remesh-experiment.ts": "cb0229096ab24e5cf469fa62d13fed1b7418fd895cf1e4e7451b38a9a077a2bc",
-    "src/lib/aurum/semantic-object-recognition.ts": "1a874cac8a1edb294cc9af93cb9404ef730c3e648b53ade652963c5f3f6046f2"
+    "src/lib/aurum/semantic-object-recognition.ts": "1a874cac8a1edb294cc9af93cb9404ef730c3e648b53ade652963c5f3f6046f2",
+    "src/components/AurumRenderSidebar.tsx": "70fc3b88bed7d4c2a9579e3105bbbbd987e1ca7278b03a2552cfb4288c83f44a"
   }
 }
