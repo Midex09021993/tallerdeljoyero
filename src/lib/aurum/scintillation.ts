@@ -103,13 +103,14 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
     rayBounces:Number(ijewel?.rayBounces??5),
   };
   const ijewelDispersionScale=Math.max(0,Math.min(4,effectiveIewel.dispersion/0.01));
-  if(diamondTestProfile){
+  if(diamondTestMode && ["a","b","c","d"].includes(diamondTestMode)){
     console.info("[AURUM][DIAMOND_AB_TEST]",{
       mode:diamondTestMode,
-      label:diamondTestProfile.label,
-      ior:diamondTestProfile.ior,
-      dispersion:diamondTestProfile.dispersion,
-      rayBounces:diamondTestProfile.rayBounces,
+      label:diamondTestProfile?.label??"AURUM production baseline",
+      ior:diamondTestProfile?.ior??Number(material.ior??2.417),
+      dispersion:diamondTestProfile?.dispersion??baseDispersion,
+      rayBounces:diamondTestProfile?.rayBounces??"unchanged baseline",
+      customIJEWELPathEnabled:ijewelEnabled,
       physicalMaterialIor:Number(material.ior??2.417),
       physicalMaterialTransmission:Number(material.transmission??0),
       note:"Diagnostic shader parameters only; no geometry, BVH, metal or saved material preset is modified.",
