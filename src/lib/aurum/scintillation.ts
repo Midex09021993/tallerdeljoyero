@@ -680,18 +680,22 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
                 // definition without washing the neighboring facets to white.
                 // The source is fixed in world space (not camera space): orbiting the
                 // product changes the facet/view relationship, never the light position.
-                // A near-zenith, broad lobe models one large overhead studio diffuser.
+                // Large warm overhead softbox: lower exponents broaden the
+                // reflected source across more crown facets without moving it
+                // with the camera or adding another scene/area light.
                 vec3 aurumGemSunDir=vec3(0.0,1.0,0.0);
                 float aurumGemSunNdotL=max(dot(aurumGemN,aurumGemSunDir),0.0);
                 vec3 aurumGemSunHalf=normalize(aurumGemSunDir+aurumGemViewDir);
                 float aurumGemSunHalfDot=max(dot(aurumGemN,aurumGemSunHalf),0.0);
-                float aurumGemSoftbox=pow(aurumGemSunHalfDot,4.2);
-                float aurumGemSoftboxCore=pow(aurumGemSunHalfDot,18.0);
+                float aurumGemSoftbox=pow(aurumGemSunHalfDot,2.65);
+                float aurumGemSoftboxCore=pow(aurumGemSunHalfDot,12.0);
                 float aurumGemSunEdge=pow(1.0-aurumGemNdotV,2.0)*aurumGemSunNdotL;
                 float aurumGemSunResponse=aurumGemSunNdotL*0.12
-                    +aurumGemSoftbox*0.38+aurumGemSoftboxCore*0.14
+                    +aurumGemSoftbox*0.42+aurumGemSoftboxCore*0.12
                     +aurumGemSunEdge*0.07;
-                gl_FragColor.rgb+=vec3(1.0,0.99,0.97)*0.34*aurumGemSunResponse;
+                // Warm-neutral studio white (not saturated yellow), kept
+                // diamond-only and before the existing tone-mapping stage.
+                gl_FragColor.rgb+=vec3(1.0,0.88,0.76)*0.39*aurumGemSunResponse;
         ` : ``}
 
                 #include <tonemapping_fragment>
