@@ -74,20 +74,6 @@ function formatQuoteDate(value: string) {
   }).format(date);
 }
 
-function isValidQuote(value: unknown, currency: CurrencyCode): value is GoldQuote {
-  if (!value || typeof value !== "object") return false;
-  const quote = value as GoldQuote;
-  return (
-    quote.currency === currency &&
-    typeof quote.asOf === "string" &&
-    Number.isFinite(new Date(quote.asOf).getTime()) &&
-    Number.isFinite(quote.cachedAt) &&
-    typeof quote.price24kPerGram === "number" &&
-    Number.isFinite(quote.price24kPerGram) &&
-    quote.price24kPerGram > 0
-  );
-}
-
 function readCachedQuote(currency: CurrencyCode): GoldQuote | null {
   try {
     const [goldRaw, fxRaw] = [
