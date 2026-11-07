@@ -22,11 +22,6 @@ export async function compressAurumGlbWithDraco(source: ArrayBuffer): Promise<Au
       finish({ blob: new Blob([data.buffer as ArrayBuffer], { type: "model/gltf-binary" }), compressed: true, primitiveCount: Number(data.compressed), originalBytes: Number(data.originalBytes) || originalBlob.size, outputBytes: Number(data.outputBytes) || (data.buffer as ArrayBuffer).byteLength });
     };
     worker.onerror = (event) => { console.warn("[AURUM Draco] Error del worker; se conserva el GLB original.", event.message); finish(fallback()); };
-    try {
-      worker.postMessage({ id, buffer: source }, [source]);
-    } catch (error) {
-      console.warn("[AURUM Draco] No se pudo transferir el GLB al worker; se conserva el original.", error);
-      finish(fallback());
-    }
+    worker.postMessage({ id, buffer: source }, [source]);
   });
 }
