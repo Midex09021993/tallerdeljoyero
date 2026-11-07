@@ -671,21 +671,25 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
                 float aurumGemLightResponse=aurumGemNdotL*0.18+aurumGemFacetSpecular*0.42+aurumGemFacetEdge*0.12;
                 gl_FragColor.rgb+=vec3(1.0)*aurumGemLightEnergy*aurumGemLightResponse;
 
-                // Fixed world-space studio softbox: unlike the HDRI reflection field,
-                // this key remains stationary while the jewel is rotated. It creates
-                // the stable studio catchlight visible in premium jewelry viewers.
-                // Two facet lobes mimic a broad softbox plus its brighter center.
-                vec3 aurumGemSunDir=normalize(vec3(-0.38,0.78,0.50));
+        ${family === "Diamante" ? `
+                // Diamond-only overhead studio softbox. Keep it independent from
+                // the scene HDRI and physical RectAreaLights: this broad, fixed
+                // source gives the crown a stable white reflection while the
+                // environment rays continue to provide rotation-dependent fire.
+                // A wide lobe models the large diffuser; a restrained core adds
+                // definition without washing the neighboring facets to white.
+                vec3 aurumGemSunDir=normalize(vec3(-0.06,0.94,0.34));
                 float aurumGemSunNdotL=max(dot(aurumGemN,aurumGemSunDir),0.0);
                 vec3 aurumGemSunHalf=normalize(aurumGemSunDir+aurumGemViewDir);
                 float aurumGemSunHalfDot=max(dot(aurumGemN,aurumGemSunHalf),0.0);
-                float aurumGemSoftbox=pow(aurumGemSunHalfDot,12.0);
-                float aurumGemSoftboxCore=pow(aurumGemSunHalfDot,42.0);
+                float aurumGemSoftbox=pow(aurumGemSunHalfDot,8.0);
+                float aurumGemSoftboxCore=pow(aurumGemSunHalfDot,28.0);
                 float aurumGemSunEdge=pow(1.0-aurumGemNdotV,2.0)*aurumGemSunNdotL;
-                float aurumGemSunResponse=aurumGemSunNdotL*0.14
-                    +aurumGemSoftbox*0.30+aurumGemSoftboxCore*0.18
-                    +aurumGemSunEdge*0.08;
-                gl_FragColor.rgb+=vec3(1.0,0.985,0.96)*0.22*aurumGemSunResponse;
+                float aurumGemSunResponse=aurumGemSunNdotL*0.10
+                    +aurumGemSoftbox*0.34+aurumGemSoftboxCore*0.16
+                    +aurumGemSunEdge*0.06;
+                gl_FragColor.rgb+=vec3(1.0,0.99,0.97)*0.26*aurumGemSunResponse;
+        ` : ``}
 
                 #include <tonemapping_fragment>
                 #include <colorspace_fragment>
@@ -700,7 +704,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
   // This final assignment intentionally replaces the earlier material key,
   // so include all relevant feature flags here rather than losing them.
   material.customProgramCacheKey=()=>[
-    "aurum-scintillation-v13",
+    "aurum-scintillation-v14",
     family,
     familyDispersionScale,
     ijewelEnabled?"ijewel-diamond-active":"physical-gem-only",
