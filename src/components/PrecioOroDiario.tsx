@@ -83,7 +83,8 @@ async function fetchXausQuote(currency: CurrencyCode): Promise<GoldQuote> {
     return { response, data };
   };
 
-  const { response, data } = await request(currency);
+  const { response, data: initialData } = await request(currency);
+  let data = initialData;
   let price: number | undefined;
   if (response.ok && data.xau?.currency === currency && data.xau.unit === "gram") {
     price = data.xau.price;
