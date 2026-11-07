@@ -179,7 +179,7 @@ function auditRhinoSourceObjects(object:any) {
   const layers=findRhinoLayerManifest(object);
   const byLayer:Record<string,number>={};
   const byType:Record<string,number>={};
-  const records:Array<{id:string|null;name:string;type:string;layer:string|null;layerId:string|null}>=[];
+  const records:Array<{id:string|null;name:string;type:string;layer:string|null;layerId:string|null;geometry:Record<string,unknown>}>=[];
   let nodesWithSourceIdentity=0;
   let curveNodes=0;
   let linePrimitives=0;
