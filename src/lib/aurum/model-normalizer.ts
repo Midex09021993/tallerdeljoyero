@@ -97,6 +97,10 @@ function buildRhinoLayerVisibility(layers:any[]) {
 function resolveRhinoLayerIndex(x:any): number {
   const candidates = [
     x?.userData?.aurumRhinoSource?.layerIndex,
+    x?.userData?.rhinoLayer?.layerIndex,
+    x?.userData?.rhinoLayer?.index,
+    x?.userData?.RhinoLayer?.layerIndex,
+    x?.userData?.RhinoLayer?.index,
     x?.userData?.attributes?.layerIndex,
     x?.userData?.attributes?.LayerIndex,
     x?.userData?.layerIndex,
@@ -148,6 +152,25 @@ function matrixSlotFromLayer(name:string,category:"metal"|"gema"|"otro",_colorCa
  * Resolve each mesh from its own Rhino layer index/name and the root layer table.
  * Never pair source and exported meshes by traversal order: GLTF export may reorder nodes.
  */
+function removeGlbConstructionPrimitives(object:any) {
+  const removeQueue:any[]=[];
+  const counts={lines:0,points:0};
+  object?.traverse?.((node:any)=>{
+    if(node===object)return;
+    if(node?.isLine||node?.isLineSegments||node?.isLineLoop||node?.isPoints){
+      removeQueue.push(node);
+      if(node.isPoints)counts.points++;else counts.lines++;
+    }
+  });
+  for(const node of removeQueue)node.parent?.remove(node);
+  if(counts.lines||counts.points){
+    object.userData={...(object.userData??{}),aurumConstructionGeometry:{...counts,removed:true,source:"GLB line/point primitives"}};
+    console.info("[AURUM][GLB] Geometría auxiliar de construcción oculta",object.userData.aurumConstructionGeometry);
+  }
+  object.updateMatrixWorld?.(true);
+  return counts;
+}
+
 function hydrateRhinoLayerMetadata(
   object:any,
   clasificarCapa:(capa:string,colorCapa?:string)=>"metal"|"gema"|"otro"
@@ -186,17 +209,17 @@ function hydrateRhinoLayerMetadata(
     const existing=data.aurumRhino??{};
     const layerIndex=resolveRhinoLayerIndex(x);
     const source=data.aurumRhinoSource??{};
-    const layerId=source.layerId??attrs.layerId??attrs.LayerId??data.layerId??data.LayerId??existing.rhinoLayerId;
+    const rhinoLayer=data.rhinoLayer??data.RhinoLayer??{};
+    const layerId=source.layerId??rhinoLayer.id??rhinoLayer.Id??attrs.layerId??attrs.LayerId??data.layerId??data.LayerId??existing.rhinoLayerId;
     let layer=layerIndex>=0?layers[layerIndex]:undefined;
     if(!layer&&layerId!=null)layer=byId.get(String(layerId));
-    const rawName=layer?.name??layer?.Name??source.layerName??data.rhinoLayer?.name??data.rhinoLayer?.Name??
-      data.RhinoLayer?.name??data.RhinoLayer?.Name??attrs.layerName??attrs.LayerName??
-      data.layerName??data.LayerName??existing.capa??"";
+    const rawName=layer?.name??layer?.Name??source.layerName??rhinoLayer.name??rhinoLayer.Name??
+      attrs.layerName??attrs.LayerName??data.layerName??data.LayerName??existing.capa??"";
     const layerName=String(rawName??"").trim();
     if(!layer&&layerName)layer=byName.get(layerName.toLowerCase());
-    const color=colorToHex(layer?.color??layer?.Color??source.layerColor??data.rhinoLayer?.color??data.RhinoLayer?.color??
+    const color=colorToHex(layer?.color??layer?.Color??source.layerColor??rhinoLayer.color??rhinoLayer.Color??
       attrs.layerColor??attrs.LayerColor??existing.colorCapa);
-    const hasResolvedLayer=Boolean(layerName||color);
+    const hasResolvedLayer=Boolean(layerName||color||layerIndex>=0||layerId!=null);
     const category=hasResolvedLayer
       ? classifyRhinoLayer(layerName,color,clasificarCapa)
       : (existing.categoria??classifyRhinoLayer(String(existing.capa??""),existing.colorCapa,clasificarCapa));
@@ -245,6 +268,14 @@ function hydrateRhinoLayerMetadata(
     audit.categoryCounts[category]=(audit.categoryCounts[category]??0)+1;
     x.userData={
       ...data,
+      aurumRhinoSource:{
+        ...source,
+        layerIndex:resolvedLayerIndex,
+        layerId:resolvedLayerId,
+        layerName:layerName||source.layerName||null,
+        layerColor:color||source.layerColor||null,
+        materialIndex:attrs.materialIndex??attrs.MaterialIndex??source.materialIndex??null,
+      },
       aurumRhino:{
         ...existing,
         capa:layerName||existing.capa||(resolvedLayerIndex>=0?`Capa ${resolvedLayerIndex+1}`:undefined),
@@ -312,6 +343,9 @@ export async function normalizeAurumModel(
   // parseamos una segunda vez: conservar el Object3D original evita una
   // conversión redundante y mantiene intactas sus normales/materiales authored.
   if (extension === "glb") {
+    // Hide construction curves/points imported as native glTF line primitives.
+    // Surface meshes and their authored materials/normals remain untouched.
+    removeGlbConstructionPrimitives(object);
     // Official iJewel-style GLBs carry the layer assignment in node extras.
     // Hydrate it directly so the same MatrixGold layer rules work for GLB input.
     hydrateRhinoLayerMetadata(object,clasificarCapa);
