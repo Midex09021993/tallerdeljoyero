@@ -590,11 +590,11 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         gl_FragColor.rgb *= 1.0 + aurumFlash * 0.08;
 
         // Slightly broaden the facet-response transition to reduce abrupt contrast changes during orbit.
-        float aurumFacetContrast=smoothstep(0.62,0.94,aurumFacing);
+        float aurumFacetContrast=smoothstep(0.56,0.92,aurumFacing);
         // Stronger diamond-only facet separation addresses the washed-out crown
         // seen against the iJewel reference. This is contrast, not extra exposure:
         // preserve the colored-gem response and leave PBR refraction untouched.
-        float aurumFacetFloor=${family === "Diamante" ? "0.50" : "0.992"};
+        float aurumFacetFloor=${family === "Diamante" ? "0.44" : "0.992"};
         float aurumContrast=mix(aurumFacetFloor,1.0,aurumScintillationContrast*aurumFacetContrast);
         gl_FragColor.rgb*=aurumContrast;
         ${family === "Diamante" ? `
@@ -682,13 +682,13 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
                 float aurumGemSunNdotL=max(dot(aurumGemN,aurumGemSunDir),0.0);
                 vec3 aurumGemSunHalf=normalize(aurumGemSunDir+aurumGemViewDir);
                 float aurumGemSunHalfDot=max(dot(aurumGemN,aurumGemSunHalf),0.0);
-                float aurumGemSoftbox=pow(aurumGemSunHalfDot,8.0);
-                float aurumGemSoftboxCore=pow(aurumGemSunHalfDot,28.0);
+                float aurumGemSoftbox=pow(aurumGemSunHalfDot,5.5);
+                float aurumGemSoftboxCore=pow(aurumGemSunHalfDot,20.0);
                 float aurumGemSunEdge=pow(1.0-aurumGemNdotV,2.0)*aurumGemSunNdotL;
                 float aurumGemSunResponse=aurumGemSunNdotL*0.10
                     +aurumGemSoftbox*0.34+aurumGemSoftboxCore*0.16
                     +aurumGemSunEdge*0.06;
-                gl_FragColor.rgb+=vec3(1.0,0.99,0.97)*0.26*aurumGemSunResponse;
+                gl_FragColor.rgb+=vec3(1.0,0.99,0.97)*0.28*aurumGemSunResponse;
         ` : ``}
 
                 #include <tonemapping_fragment>
@@ -704,7 +704,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
   // This final assignment intentionally replaces the earlier material key,
   // so include all relevant feature flags here rather than losing them.
   material.customProgramCacheKey=()=>[
-    "aurum-scintillation-v14",
+    "aurum-scintillation-v15",
     family,
     familyDispersionScale,
     ijewelEnabled?"ijewel-diamond-active":"physical-gem-only",
