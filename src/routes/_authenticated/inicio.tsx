@@ -17,6 +17,8 @@ import {
   CircleAlert,
   ListChecks,
   Gift,
+  UserRound,
+  FileText,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -141,6 +143,35 @@ function Inicio() {
         produccionActiva,
         serviciosExternosActivos,
       };
+    },
+  });
+
+  const { data: primerosPasos, isLoading: cargandoPrimerosPasos, isError: errorPrimerosPasos } = useQuery({
+    queryKey: ["inicio-primeros-pasos", sesion?.user?.id, sedeContextoId, esDueno],
+    enabled: Boolean(sesion?.esAdmin && sesion?.participante?.id),
+    staleTime: 30_000,
+    queryFn: async () => {
+      let clientesQuery = supabase.from("clientes").select("id", { count: "exact", head: true });
+      let cotizacionesQuery = supabase.from("cotizaciones").select("id", { count: "exact", head: true });
+
+      if (esDueno) {
+        if (sedeContextoId) {
+          clientesQuery = clientesQuery.eq("sede_id", sedeContextoId);
+          cotizacionesQuery = cotizacionesQuery.eq("sede_id", sedeContextoId);
+        }
+      } else {
+        clientesQuery = clientesQuery.eq("participante_id", sesion!.participante!.id);
+        cotizacionesQuery = cotizacionesQuery.eq("participante_id", sesion!.participante!.id);
+      }
+
+      const [{ count: clientesCount, error: clientesError }, { count: cotizacionesCount, error: cotizacionesError }] = await Promise.all([
+        clientesQuery,
+        cotizacionesQuery,
+      ]);
+      if (clientesError) throw clientesError;
+      if (cotizacionesError) throw cotizacionesError;
+
+      return { clientes: clientesCount ?? 0, cotizaciones: cotizacionesCount ?? 0 };
     },
   });
 
@@ -330,6 +361,75 @@ function Inicio() {
             ) : null}
           </div>
         </section>
+        {sesion?.esAdmin ? (
+          <section className="rounded-3xl border border-gold/20 bg-card p-4 shadow-card sm:p-5">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold">Activación del taller</p>
+                <h2 className="mt-1 text-lg font-semibold">Tus primeros resultados en AURUM LAB</h2>
+                <p className="mt-1 max-w-2xl text-xs leading-5 text-muted-foreground">Completa acciones reales para poner en marcha tu operación comercial. El avance se calcula con los datos guardados en tu taller.</p>
+              </div>
+              <Link to="/herramientas" className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-gold/30 px-3 py-2 text-xs font-semibold text-gold-deep transition hover:bg-gold/5">
+                Explorar herramientas <ChevronRight className="size-4" />
+              </Link>
+            </div>
+            {esDueno && !sedeContextoId ? (
+              <p className="mt-4 rounded-xl border border-border bg-muted/30 p-3 text-xs text-muted-foreground">Selecciona una sede para revisar el avance de sus primeros pasos sin mezclar datos de distintos talleres.</p>
+            ) : errorPrimerosPasos ? (
+              <p className="mt-4 rounded-xl border border-warning/30 bg-warning/5 p-3 text-xs text-muted-foreground">No se pudo consultar el avance comercial. Puedes seguir usando el panel y volver a intentarlo más tarde.</p>
+            ) : cargandoPrimerosPasos || cargandoPreparacion || cargandoPedidos ? (
+              <p className="mt-4 p-3 text-xs text-muted-foreground">Consultando el avance del taller…</p>
+            ) : (
+              (() => {
+                const pasos = [
+                  { titulo: "Completar identidad comercial", detalle: "Configura el nombre y los datos maestros que aparecerán en tus documentos.", listo: Boolean(preparacion?.identidadConfigurada), destino: "/gestion?modulo=comercial", accion: "Configurar identidad", icono: Building2 },
+                  { titulo: "Registrar primer cliente", detalle: "Guarda el contacto de una persona o empresa para tu cartera.", listo: (primerosPasos?.clientes ?? 0) > 0, destino: "/clientes", accion: "Registrar cliente", icono: UserRound },
+                  { titulo: "Crear primera cotización", detalle: "Prepara una propuesta comercial vinculada a tu taller.", listo: (primerosPasos?.cotizaciones ?? 0) > 0, destino: "/cotizaciones", accion: "Crear cotización", icono: FileText },
+                  { titulo: "Registrar primer pedido", detalle: "Inicia el seguimiento de una pieza o trabajo del taller.", listo: pedidosSede.length > 0, destino: "/pedidos/nuevo", accion: "Crear pedido", icono: Wrench },
+                ];
+                const completados = pasos.filter((paso) => paso.listo).length;
+                const porcentaje = Math.round((completados / pasos.length) * 100);
+                return (
+                  <div className="mt-5 space-y-4">
+                    <div>
+                      <div className="mb-2 flex items-center justify-between gap-3">
+                        <span className="text-xs font-semibold text-muted-foreground">Progreso de activación</span>
+                        <span className="text-xs font-bold tabular-nums">{completados}/{pasos.length} · {porcentaje}%</span>
+                      </div>
+                      <div className="h-2 overflow-hidden rounded-full bg-muted" role="progressbar" aria-label="Progreso de activación del taller" aria-valuemin={0} aria-valuemax={pasos.length} aria-valuenow={completados}>
+                        <div className="h-full rounded-full bg-gold transition-all duration-500" style={{ width: porcentaje + "%" }} />
+                      </div>
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {pasos.map((paso, index) => {
+                        const Icono = paso.icono;
+                        return (
+                          <div key={paso.titulo} className="flex min-w-0 items-start gap-3 rounded-2xl border border-border p-3 sm:p-4">
+                            <span className={paso.listo ? "grid size-10 shrink-0 place-items-center rounded-xl bg-success/10 text-success" : "grid size-10 shrink-0 place-items-center rounded-xl bg-gold/10 text-gold-deep"}>
+                              {paso.listo ? <CheckCircle2 className="size-5" /> : <Icono className="size-5" />}
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <p className="text-xs font-semibold">{index + 1}. {paso.titulo}</p>
+                                <span className={paso.listo ? "text-[9px] font-bold uppercase tracking-wider text-success" : "text-[9px] font-bold uppercase tracking-wider text-muted-foreground"}>{paso.listo ? "Completado" : "Pendiente"}</span>
+                              </div>
+                              <p className="mt-1 text-[11px] leading-5 text-muted-foreground">{paso.detalle}</p>
+                              <Link to={paso.destino as never} className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-gold-deep hover:underline">
+                                {paso.listo ? "Revisar" : paso.accion} <ChevronRight className="size-3" />
+                              </Link>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {completados === pasos.length ? <p className="rounded-xl border border-success/25 bg-success/5 p-3 text-xs font-medium text-success">¡Excelente! Tu taller ya tiene configurados los elementos básicos para gestionar clientes, cotizaciones y pedidos.</p> : null}
+                  </div>
+                );
+              })()
+            )}
+          </section>
+        ) : null}
+
         {mostrarEstadoTaller ? (
         <section id="estado-preparacion-taller" className="rounded-3xl border border-gold/20 bg-card shadow-card">
           <div className="flex flex-col gap-3 border-b border-border p-4 lg:flex-row lg:items-center lg:justify-between lg:gap-4 lg:p-6">
