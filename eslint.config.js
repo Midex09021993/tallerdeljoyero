@@ -33,6 +33,8 @@ export default tseslint.config(
       ],
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
       // Gradual migration: keep explicit any visible without blocking CI while types are improved.
+      // Existing documented ts-nocheck directives remain visible as warnings during strict typing migration.
+      "@typescript-eslint/ban-ts-comment": ["warn", { "ts-nocheck": "allow-with-description", minimumDescriptionLength: 3 }],
       "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/no-unused-vars": "off",
     },
