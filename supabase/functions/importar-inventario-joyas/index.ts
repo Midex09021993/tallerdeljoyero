@@ -63,7 +63,7 @@ export default {
   fetch: withSupabase({ auth: "user" }, async (req, ctx) => {
     if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
     try {
-      const userId = ctx.userId;
+      const userId = ctx.userClaims?.id;
       if (!userId) return Response.json({ error: "Sesión no válida" }, { status: 401, headers: corsHeaders });
 
       const { data: esAdmin, error: adminError } = await ctx.supabase.rpc("es_admin", { _user_id: userId });
