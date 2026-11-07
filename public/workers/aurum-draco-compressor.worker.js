@@ -95,7 +95,10 @@ function stripCompressedFallbacks(json, bin, compressedAccessorIndices, dracoBuf
   const keep = [];
   (json.bufferViews || []).forEach((view, index) => {
     const refs = accessorRefs.get(index) || [];
-    const onlyCompressedAccessors = refs.length > 0 && refs.every(ref => removable.has(ref));
+    // A bufferView with no remaining accessor references is also removable.
+    // The previous refs.length > 0 guard accidentally retained every original
+    // geometry bufferView after its accessors had been detached for Draco.
+    const onlyCompressedAccessors = refs.every(ref => removable.has(ref));
     if (!onlyCompressedAccessors || imageViews.has(index) || dracoBufferViews.has(index)) keep.push(index);
   });
   const remap = new Map(), nextViews = [], chunks = [];
