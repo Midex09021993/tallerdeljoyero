@@ -13,7 +13,13 @@ export type AurumAnalyticsEvent =
   | "access_request_started"
   | "access_request_submitted"
   | "login_started"
-  | "login_completed";
+  | "login_completed"
+  | "login_failed"
+  | "registration_started"
+  | "registration_completed"
+  | "registration_failed"
+  | "contact_started"
+  | "contact_submitted";
 
 const SESSION_KEY = "aurum_analytics_session";
 const LOGIN_STARTED_KEY = "aurum_login_started";
