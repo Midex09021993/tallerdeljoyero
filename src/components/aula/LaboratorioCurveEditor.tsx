@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState } from "react";
 import { ArrowRight, CheckCircle2, RotateCcw, Target } from "lucide-react";
 

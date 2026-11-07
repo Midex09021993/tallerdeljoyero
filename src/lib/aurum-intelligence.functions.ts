@@ -35,7 +35,7 @@ function validateSourceManifest(value: unknown): SourceFile[] {
     if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
       throw new Error("Manifiesto de archivos no válido.");
     }
-    const item = entry as Record<string, unknown>;
+    const item = entry as { path?: unknown; content?: unknown };
     if (Object.keys(item).some((key) => key !== "path" && key !== "content") ||
         typeof item.path !== "string" || typeof item.content !== "string") {
       throw new Error("Cada archivo debe contener únicamente path y content de texto.");
@@ -150,7 +150,7 @@ export const validarProyectoEnRunner = createServerFn({ method: "POST" })
     }
     const result: unknown = await response.json();
     if (!result || typeof result !== "object" ||
-        (result as Record<string, unknown>).status !== "validated_and_discarded") {
+        (result as { status?: unknown }).status !== "validated_and_discarded") {
       throw new Error("El runner devolvió una respuesta no reconocida.");
     }
     return result;
@@ -177,7 +177,7 @@ function validateBinaryRequest(data: unknown) {
       Object.keys(data).some((key) => !["fileName", "contentBase64", "mode"].includes(key))) {
     throw new Error("Solicitud de análisis binario no válida.");
   }
-  const item = data as Record<string, unknown>;
+  const item = data as { fileName?: unknown; contentBase64?: unknown; mode?: unknown };
   if (typeof item.fileName !== "string" ||
       !/^[A-Za-z0-9][A-Za-z0-9._-]{0,119}\.(exe|dll)$/i.test(item.fileName) ||
       typeof item.contentBase64 !== "string" ||
@@ -215,7 +215,7 @@ export const iniciarAnalisisBinarioEnRunner = createServerFn({ method: "POST" })
       if (response.status === 429) throw new Error("El motor está ocupado. Espera a que termine el análisis actual.");
       throw new Error("No se pudo iniciar el análisis estático.");
     }
-    const result = await response.json() as Record<string, unknown>;
+    const result = await response.json() as { status?: unknown; jobId?: unknown; executed?: unknown };
     if (result.status !== "queued" || typeof result.jobId !== "string" ||
         !/^[a-f0-9-]{36}$/i.test(result.jobId) || result.executed !== false) {
       throw new Error("El runner devolvió una respuesta de trabajo no reconocida.");
@@ -228,8 +228,8 @@ export const consultarAnalisisBinarioEnRunner = createServerFn({ method: "POST" 
   .inputValidator((data: unknown) => {
     if (!data || typeof data !== "object" || Array.isArray(data) ||
         Object.keys(data).some((key) => key !== "jobId") ||
-        typeof (data as Record<string, unknown>).jobId !== "string" ||
-        !/^[a-f0-9-]{36}$/i.test((data as Record<string, unknown>).jobId as string)) {
+        typeof (data as { jobId?: unknown }).jobId !== "string" ||
+        !/^[a-f0-9-]{36}$/i.test((data as { jobId: string }).jobId)) {
       throw new Error("Identificador de análisis no válido.");
     }
     return { jobId: (data as { jobId: string }).jobId };
@@ -248,9 +248,11 @@ export const consultarAnalisisBinarioEnRunner = createServerFn({ method: "POST" 
     if (response.status === 404) throw new Error("El trabajo de análisis expiró o ya no está disponible.");
     if (response.status === 503) throw new Error("La protección anti-repetición del runner no está disponible.");
     if (!response.ok) throw new Error("No se pudo consultar el estado del análisis.");
-    const result = await response.json() as Record<string, unknown>;
-    if (!["queued", "running", "complete", "failed"].includes(String(result.status))) {
+    const result = await response.json() as { [key: string]: RunnerJson };
+    if (!["queued", "running", "complete", "failed"].includes(String(result["status"]))) {
       throw new Error("El runner devolvió un estado de análisis no reconocido.");
     }
     return result;
   });
+
+type RunnerJson = string | number | boolean | null | RunnerJson[] | { [key: string]: RunnerJson };
