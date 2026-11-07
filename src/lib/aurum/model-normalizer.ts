@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { getAurumModelParts } from "./model-parts";
 import { resolveAurumLayerKey } from "./layer-identity";
+import { classifyAurumSemanticObject } from "./semantic-object-recognition";
 
 function isRhinoObjectHidden(attributes:any): boolean {
   if (!attributes) return false;
@@ -211,6 +212,8 @@ function hydrateRhinoLayerMetadata(
     meshesWithoutSourceIdentity:0,
     duplicateLayerKeys:[] as Array<{layerKey:string;meshCount:number;sourceIds:string[];layerNames:string[]}>,
     categoryCounts:{metal:0,gema:0,otro:0} as Record<string,number>,
+    semanticCounts:{metal:0,gem:0,engraving:0,relief:0,auxiliary:0,unknown:0} as Record<string,number>,
+    lowConfidenceSemanticMeshes:0,
     layers:{} as Record<string,number>,
   };
   const layerSources=new Map<string,{meshCount:number;sourceIds:Set<string>;layerNames:Set<string>}>();
@@ -234,6 +237,9 @@ function hydrateRhinoLayerMetadata(
     if(!layer&&layerName)layer=byName.get(layerName.toLowerCase());
     const color=colorToHex(layer?.color??layer?.Color??source.layerColor??rhinoLayer.color??rhinoLayer.Color??
       attrs.layerColor??attrs.LayerColor??existing.colorCapa);
+    const semantic = classifyAurumSemanticObject(x,layer);
+    audit.semanticCounts[semantic.classification]=(audit.semanticCounts[semantic.classification]??0)+1;
+    if(semantic.confidence>0 && semantic.confidence<0.7) audit.lowConfidenceSemanticMeshes++;
     const hasResolvedLayer=Boolean(layerName||color||layerIndex>=0||layerId!=null);
     const category=hasResolvedLayer
       ? classifyRhinoLayer(layerName,color,clasificarCapa)
@@ -265,6 +271,7 @@ function hydrateRhinoLayerMetadata(
           layerIndex: resolvedLayerIndex,
           layerId: resolvedLayerId,
         },
+        aurumSemantic:semantic,
         aurumRhino:{
           ...existing,
           capa:layerName||existing.capa||(resolvedLayerIndex>=0?`Capa ${resolvedLayerIndex+1}`:undefined),
@@ -293,6 +300,7 @@ function hydrateRhinoLayerMetadata(
     if (objectName && !String(x.name??"").trim()) x.name=objectName;
     x.userData={
       ...data,
+      aurumSemantic:semantic,
       aurumRhinoSource:{
         ...source,
         objectId,
@@ -344,6 +352,8 @@ function hydrateRhinoLayerMetadata(
     sourceLayerCount: sourceLayerManifest.length,
     hierarchyGroups,
     namedNodes,
+    semanticCounts:audit.semanticCounts,
+    lowConfidenceSemanticMeshes:audit.lowConfidenceSemanticMeshes,
   }};
   if(audit.unresolvedMeshes>0||audit.meshesWithLayerKey!==audit.meshes||audit.duplicateLayerKeys.length>0){
     console.warn("[AURUM][LAYER METADATA AUDIT]",object.userData.aurumLayerMetadataAudit);
