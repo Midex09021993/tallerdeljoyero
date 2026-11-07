@@ -12,6 +12,7 @@ type RecordEntry = {
   family: string;
   gemId: string;
   activeGemFamily: string;
+  baseEnvironmentIntensity: number;
   setQuality: (quality: "interactive" | "high" | "final") => void;
   dispose: () => void;
 };
@@ -19,6 +20,7 @@ type RecordEntry = {
 export type AurumDiamondBvhRuntime = {
   refresh: (model: THREE.Object3D | null | undefined) => void;
   update: () => void;
+  updateEnvironment: (rotationRadians: number, intensityScale: number) => void;
   /** Temporarily raise diamond-only ray bounces for a still capture. */
   setDiamondQuality: (quality: "interactive" | "high" | "final") => void;
   dispose: () => void;
@@ -241,6 +243,7 @@ export async function createAurumDiamondBvhRuntime(options: {
           family,
           gemId: activeGemId,
           activeGemFamily,
+          baseEnvironmentIntensity: prepared.diagnostics.environmentIntensity,
           setQuality: (quality) => {
             if (!packageApi.setDiamondOptions) return;
             if (family === "diamante") {
@@ -303,6 +306,17 @@ export async function createAurumDiamondBvhRuntime(options: {
       if (disposed) return;
       for (const entry of entries.values()) {
         packageApi.updateDiamondCamera(entry.experimentalMaterial, options.camera);
+      }
+    },
+    updateEnvironment(rotationRadians, intensityScale) {
+      if (disposed) return;
+      const safeScale = Number.isFinite(intensityScale) ? Math.max(0.75, Math.min(1.35, intensityScale)) : 1;
+      const rotationDegrees = THREE_NS.MathUtils.radToDeg(Number.isFinite(rotationRadians) ? rotationRadians : 0);
+      for (const entry of entries.values()) {
+        packageApi.setDiamondEnvironmentRotation?.(entry.experimentalMaterial, { x: 0, y: rotationDegrees, z: 0 });
+        packageApi.setDiamondOptions?.(entry.experimentalMaterial, {
+          environmentIntensity: Math.max(0, Math.min(2.5, entry.baseEnvironmentIntensity * safeScale)),
+        });
       }
     },
     setDiamondQuality(quality) {
