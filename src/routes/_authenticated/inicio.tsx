@@ -521,9 +521,9 @@ function Inicio() {
             <div className="border-b border-border bg-card px-6 py-7 sm:px-8">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold/10 px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.18em] text-gold"><Sparkles className="size-3.5" /> Guía de Aurum Lab</div>
-                  <h2 className="font-display text-3xl">Bienvenido a Aurum Lab</h2>
-                  <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">{sesion?.participante?.nombre ? "Hemos preparado tu espacio para " + sesion.participante.nombre + ". " : "Hemos preparado tu espacio de trabajo. "}Antes de empezar, te mostramos lo esencial.</p>
+                  <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold/10 px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.18em] text-gold"><Sparkles className="size-3.5" /> Primeros pasos · AURUM LAB</div>
+                  <h2 className="font-display text-3xl">Tu taller empieza aquí</h2>
+                  <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">{sesion?.participante?.nombre ? "Preparamos el espacio de " + sesion.participante.nombre + ". " : "Tu espacio de trabajo ya está preparado. "}Completa estos pasos a tu ritmo para organizar el taller y empezar a trabajar con tus primeros pedidos.</p>
                 </div>
                 <span className="shrink-0 text-xs font-semibold text-muted-foreground">{pasoBienvenida + 1}/{pasosBienvenida.length}</span>
               </div>
@@ -554,7 +554,7 @@ function Inicio() {
                 </div>
               ); })()}
               <div className="mt-6 flex flex-col-reverse justify-between gap-3 sm:flex-row sm:items-center">
-                <button type="button" onClick={() => void cerrarBienvenida()} disabled={guardandoBienvenida} className="text-xs font-semibold text-muted-foreground transition hover:text-foreground disabled:opacity-50">Saltar guía</button>
+                <button type="button" onClick={() => void cerrarBienvenida()} disabled={guardandoBienvenida} className="text-xs font-semibold text-muted-foreground transition hover:text-foreground disabled:opacity-50">Explorar el panel ahora</button>
                 <div className="flex items-center justify-end gap-2">
                   {pasoBienvenida > 0 ? <button type="button" onClick={() => setPasoBienvenida((actual) => actual - 1)} className="rounded-xl border border-border bg-card px-4 py-2.5 text-xs font-semibold text-muted-foreground hover:text-foreground">Atrás</button> : null}
                   {pasoBienvenida < pasosBienvenida.length - 1 ? <button type="button" onClick={() => setPasoBienvenida((actual) => actual + 1)} className="rounded-xl border border-gold/30 bg-card px-4 py-2.5 text-xs font-semibold text-gold-deep hover:bg-gold/5">Siguiente</button> : (
