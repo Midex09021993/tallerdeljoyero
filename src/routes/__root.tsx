@@ -15,7 +15,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { useSesion, useSincronizarSesion } from "@/lib/auth";
 import { registrarServiceWorker } from "@/lib/pwa-push";
-import { consumirInicioLogin, marcarInicioLogin, registrarEvento } from "@/lib/analytics";
+import { registrarEvento } from "@/lib/analytics";
 
 const ContactoComercial = lazy(() => import("@/components/ContactoComercial").then((module) => ({ default: module.ContactoComercial })));
 
@@ -201,9 +201,6 @@ function AnalyticsSync() {
 
   useEffect(() => {
     registrarEvento("page_view", { page: pathname });
-    if (pathname !== "/auth" && consumirInicioLogin()) {
-      registrarEvento("login_completed", { destination: pathname });
-    }
   }, [pathname]);
 
   useEffect(() => {
@@ -220,11 +217,6 @@ function AnalyticsSync() {
       }
       if (/solicitar acceso/i.test(text)) {
         registrarEvento("access_request_started");
-        return;
-      }
-      if (/^(entrar|iniciar sesión)$/i.test(text)) {
-        marcarInicioLogin();
-        registrarEvento("login_started");
         return;
       }
       if (/conocer la plataforma/i.test(text)) {
