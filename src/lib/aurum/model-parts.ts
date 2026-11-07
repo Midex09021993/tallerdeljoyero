@@ -12,6 +12,8 @@ export type AurumModelPart = {
   layerIndex?: number;
   layerId?: string | number;
   layerKey?: string;
+  /** Stable Rhino source identity; id remains the Three.js UUID for selection compatibility. */
+  sourceId?: string;
 };
 
 function explicitLayerCategory(name:string): "metal" | "gema" | "otro" | undefined {
@@ -73,13 +75,16 @@ export function getAurumModelParts(
     const hasChildren = Array.isArray(x.children) && x.children.length > 0;
     if (!isMesh && !hasChildren) return;
 
-    const nombre = typeof x.name === "string" && x.name.trim()
-      ? x.name.trim()
-      : (isMesh ? "Malla" : "Componente");
-
     const attrs = x.userData?.attributes || {};
     const meta = x.userData?.aurumRhino;
     const sourceMeta = x.userData?.aurumRhinoSource ?? {};
+    const sourceId = sourceMeta.objectId ?? attrs.id ?? attrs.Id ?? x.userData?.objectId ?? x.userData?.ObjectId;
+    const sourceName = sourceMeta.objectName ?? attrs.name ?? attrs.Name ?? x.userData?.objectName ?? x.userData?.ObjectName;
+    const nombre = typeof x.name === "string" && x.name.trim()
+      ? x.name.trim()
+      : (typeof sourceName === "string" && sourceName.trim()
+        ? sourceName.trim()
+        : (sourceId ? `${isMesh ? "Objeto" : "Grupo"} ${String(sourceId).slice(0,8)}` : (isMesh ? "Malla" : "Componente")));
     // Follow the same source-of-truth order as the GLB hydrator: preserved
     // source identity first, then importer attributes, then cached metadata.
     const indexCandidates=[sourceMeta.layerIndex,attrs.layerIndex,attrs.LayerIndex,x.userData?.layerIndex,x.userData?.LayerIndex,meta?.layerIndex];
@@ -99,7 +104,7 @@ export function getAurumModelParts(
       : (layerIndex>=0 && layer ? matrixLayerSlot(layer,layerIndex,categoria,colorCapa) : undefined);
 
     const layerKey=resolveAurumLayerKey({layerId,layerIndex,layerName:capa,layerColor:colorCapa,category:categoria,existingKey:meta?.layerKey});
-    result.push({ id: x.uuid, nombre, tipo: isMesh ? "malla" : "grupo", nivel, ...(capa ? { capa } : {}), ...(colorCapa ? { colorCapa } : {}), categoria, layerIndex, ...(layerId != null ? { layerId } : {}), ...(layerKey ? { layerKey } : {}), ...(matrixSlot !== undefined ? { matrixSlot } : {}) });
+    result.push({ id: x.uuid, nombre, tipo: isMesh ? "malla" : "grupo", nivel, ...(sourceId != null ? { sourceId: String(sourceId) } : {}), ...(capa ? { capa } : {}), ...(colorCapa ? { colorCapa } : {}), categoria, layerIndex, ...(layerId != null ? { layerId } : {}), ...(layerKey ? { layerKey } : {}), ...(matrixSlot !== undefined ? { matrixSlot } : {}) });
   });
 
   return result;
