@@ -1,14 +1,14 @@
 {
   "description": "Candado de integridad de AURUM Render. No editar sin la frase DESCONGELAR AURUM RENDER.",
-  "baseline_commit": "e3522f21f98d671899c1ae67350f842dc5b60cff",
+  "baseline_commit": "unknown",
   "algorithm": "sha256",
   "protected_dirs": [
     "src/lib/aurum"
   ],
   "files": {
-    ".github/workflows/quality.yml": "f461b2473a072d8ed187c0c88d7114c46742578ba2014dc7848d1591c7cfa8a8",
+    ".github/workflows/quality.yml": "288bbf31cb9650d345a10f9821b3feed2420ffce764309eef097018a04cf1c19",
     "scripts/check-aurum-lock.mjs": "d8b0b1e553fbfdd7faf6522482d0460b5c9803464b9fa03d34ed3bbacd18b5c4",
-    "src/components/AurumRender.tsx": "ece8f1f8edf5e57fc7088d8275a135fbd4473366086e2607c679f854c6b53ac5",
+    "src/components/AurumRender.tsx": "b48615aa2a7b51d8c32018d3b6c0cc61518de9f28cb426625d14e4af0d10ca68",
     "src/components/AurumRenderConfig.tsx": "c54846f1ebf7fb2c143be54bf686b18ada16615e546f1d8ff6d98847df76575b",
     "src/lib/aurum-material-engine.ts": "1ebbacc784f61fbc9d77027cbd612269073e5de8be5a40a9276916653d34c742",
     "src/lib/aurum/api.ts": "cdf41d03d12a94e0a624660f34965db573ed2a615bbfbf1df4adb81cec2f7d4c",
@@ -22,6 +22,7 @@
     "src/lib/aurum/catalog.ts": "c2d1751e9f52cca98a5d6f87819a5e8cdd167f2d27afb876df0f7f767ff98068",
     "src/lib/aurum/configurator-state.ts": "674ccd59f288be0bdd99c8aaf02d62dcfd1dc089a641c46bcc39ca3de5e35175",
     "src/lib/aurum/configurator.ts": "591aff277b730b2d3827b5b6d99bf78963378adff3eb89f7a27fa08e14f8d389",
+    "src/lib/aurum/draco-export.ts": "9ea09c5ed584d709e482185b1d4ed7366aa144fee8273edfeb48faeab98705a6",
     "src/lib/aurum/environment.ts": "71410503c63d573db901d738c3a1baa385b1438f145e9ad91777150d4e71366b",
     "src/lib/aurum/gem-environment.ts": "3cd7dac1454eb0e795f40d282fe029f6266a81bb13ee9b359ba7d73cb0bdeb5a",
     "src/lib/aurum/gem-material-baseline.ts": "f7478efb2725614bd2104cfd020852cda661b6c03794a5e4b132d6f95d36cdaa",
@@ -41,8 +42,8 @@
     "src/lib/aurum/metal-union-experiment.ts": "c431b1cd858bbb5e4ba26cab4e2bb03f02dc023e551ba6399c8a232e7e929863",
     "src/lib/aurum/model-loader.ts": "30fdb2bd5e8bc4f2055da81ca9c8c3fa210a6a295849e7e1115d664973517cb4",
     "src/lib/aurum/model-materials.ts": "384aad39d87bae203dc9c7b5621334deac8ea527eb88755d70b5d2ea4b99f1ad",
-    "src/lib/aurum/model-normalizer.ts": "7e24405bdfafcc94a31b8813b2ab24deb00f3a4a72bd841af6cc52becb465a9a",
-    "src/lib/aurum/model-parts.ts": "3763e15afa15ef176e04cc7e28fcc992c77ca89b7c87316d8da3d99ac4d3fe46",
+    "src/lib/aurum/model-normalizer.ts": "b5c6dcc02a7ca017935fe080dd8b1f7a4348a26cd3bf8dd9adc3a41113fb0cc2",
+    "src/lib/aurum/model-parts.ts": "49951f89a133f9919b2e4b296f27fa041453794cd9d99ea8225ebe6f5427759a",
     "src/lib/aurum/model-prep.ts": "ee4f6608d1ec118e817d289b9ca88b65681af4aeba666e859320296caeba9e69",
     "src/lib/aurum/optical-response.ts": "c66fd2c5b2e12ac7eea898a794450f2ab595f7de5ed143e6330fec2b2d0a98d7",
     "src/lib/aurum/overlap-experiment.ts": "89942dc3c2d3604d7fef97440eeafc1471cce823270c2754aaf567e853207a42",
@@ -52,11 +53,10 @@
     "src/lib/aurum/runtime-budget.ts": "98d726dd1fe15b25590d50878f60d38e7c1e1fcf9b03f99a769cbf13482cdbb6",
     "src/lib/aurum/scene.ts": "6a5649cf506d05bca2957840c31dc0846d7f21be22e4a824535821c8e07ff608",
     "src/lib/aurum/scintillation.ts": "b7c4531e613a818acf3f8e267b01addbeab0017891cc68f611f0c7a1b8297714",
+    "src/lib/aurum/semantic-object-recognition.ts": "571d8d69ba40d95be45ee6dfb5f75e928144818c1c9ed525d85df80da6bbb13b",
     "src/lib/aurum/thickness-map.ts": "d99702072fbd14433a55246259af62541d9850549fe985ba12994b479f69abf7",
     "src/lib/aurum/video-exporter.ts": "d8ea0c5c0bff1b89771beca38f60da3e36357eba8b017fd8d5a856905d16366e",
     "src/lib/aurum/viewer.ts": "b58321bc4f31844935506fe7c2ff39d3471183e3ee336416894f5740e76e0e43",
-    "src/lib/aurum/voxel-remesh-experiment.ts": "cb0229096ab24e5cf469fa62d13fed1b7418fd895cf1e4e7451b38a9a077a2bc",
-    "src/lib/aurum/semantic-object-recognition.ts": "1a874cac8a1edb294cc9af93cb9404ef730c3e648b53ade652963c5f3f6046f2",
-    "src/components/AurumRenderSidebar.tsx": "70fc3b88bed7d4c2a9579e3105bbbbd987e1ca7278b03a2552cfb4288c83f44a"
+    "src/lib/aurum/voxel-remesh-experiment.ts": "cb0229096ab24e5cf469fa62d13fed1b7418fd895cf1e4e7451b38a9a077a2bc"
   }
 }
