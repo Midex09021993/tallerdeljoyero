@@ -23,27 +23,7 @@ async function sha256(value: string) {
 }
 
 type FileMeta = { name: string; size: number; type: string; path: string };
-type Client = ReturnType<typeof createClient>;
 
-// Limpieza oportunista: borra archivos de transferencias consumidas cuya ventana ya pasó y de las expiradas.
-async function sweep(supabase: Client) {
-  const cutoff = new Date(Date.now() - DOWNLOAD_WINDOW_SECONDS * 1000).toISOString();
-  const now = new Date().toISOString();
-  const { data } = await supabase
-    .from("aurum_transfers")
-    .select("id,files,status")
-    .or(`and(status.eq.consumed,consumed_at.lt.${cutoff}),and(status.eq.available,expires_at.lt.${now})`)
-    .neq("files", "[]")
-    .limit(20);
-  for (const row of (data ?? []) as Array<{ id: string; files: FileMeta[]; status: string }>) {
-    const paths = (row.files ?? []).map((f) => f.path).filter(Boolean);
-    if (paths.length) await supabase.storage.from(BUCKET).remove(paths);
-    await supabase
-      .from("aurum_transfers")
-      .update({ files: [], status: row.status === "available" ? "expired" : row.status })
-      .eq("id", row.id);
-  }
-}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -54,7 +34,27 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_SECRET_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 
-  try { await sweep(supabase); } catch (e) { console.error("[aurum-transfer-download] sweep", e); }
+  // Limpieza oportunista local al handler: evita incompatibilidades de tipos genéricos
+  // entre versiones de SupabaseClient sin cambiar el comportamiento de limpieza.
+  const sweep = async () => {
+    const cutoff = new Date(Date.now() - DOWNLOAD_WINDOW_SECONDS * 1000).toISOString();
+    const now = new Date().toISOString();
+    const { data } = await supabase
+      .from("aurum_transfers")
+      .select("id,files,status")
+      .or(`and(status.eq.consumed,consumed_at.lt.${cutoff}),and(status.eq.available,expires_at.lt.${now})`)
+      .neq("files", "[]")
+      .limit(20);
+    for (const row of (data ?? []) as Array<{ id: string; files: FileMeta[]; status: string }>) {
+      const paths = (row.files ?? []).map((f) => f.path).filter(Boolean);
+      if (paths.length) await supabase.storage.from(BUCKET).remove(paths);
+      await supabase
+        .from("aurum_transfers")
+        .update({ files: [], status: row.status === "available" ? "expired" : row.status })
+        .eq("id", row.id);
+    }
+  };
+  try { await sweep(); } catch (e) { console.error("[aurum-transfer-download] sweep", e); }
 
   const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
   const token = req.method === "GET"
