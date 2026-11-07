@@ -1154,6 +1154,25 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       // aquí una sola vez y permanecen bajo sus controles independientes.
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
       renderer.toneMappingExposure = photoInicial.exposure;
+      // Opt-in diagnostics only: no render-path changes and no per-frame logging in production.
+      const toneAuditEnabled = typeof window !== "undefined"
+        && new URLSearchParams(window.location.search).get("aurumToneAudit") === "1";
+      let lastToneAuditPath: "direct" | "composer" | null = null;
+      if (toneAuditEnabled) {
+        console.info("[AURUM][TONE_AUDIT][INITIAL]", {
+          toneMapping: renderer.toneMapping,
+          toneMappingName: renderer.toneMapping === THREE.ACESFilmicToneMapping ? "ACESFilmic" : "other",
+          toneMappingExposure: renderer.toneMappingExposure,
+          outputColorSpace: renderer.outputColorSpace,
+          outputPassPresent: Boolean(outputPass),
+          outputPassEnabled: Boolean(outputPass?.enabled),
+          composerPasses: ((composer as any)?.passes ?? []).map((pass: any) => ({
+            type: pass?.constructor?.name ?? "unknown",
+            enabled: pass?.enabled !== false,
+          })),
+          hint: "Compare this report with the [PATH] report after the viewer settles and with a capture using the same jewel, camera and lighting.",
+        });
+      }
       const ambientInicial = AURUM_AMBIENT_PRESETS.predeterminado;
       let initialMetalReady = false;
       let initialGemReady = false;
@@ -2922,6 +2941,18 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           }
           // Keep the interactive path lightweight; use the photographic
           // EffectComposer pipeline only when the settled configuration needs it.
+          const activeToneAuditPath = liveFastPathRef.current || !composer ? "direct" : "composer";
+          if (toneAuditEnabled && activeToneAuditPath !== lastToneAuditPath) {
+            lastToneAuditPath = activeToneAuditPath;
+            console.info("[AURUM][TONE_AUDIT][PATH]", {
+              path: activeToneAuditPath,
+              toneMapping: renderer.toneMapping,
+              toneMappingExposure: renderer.toneMappingExposure,
+              outputColorSpace: renderer.outputColorSpace,
+              outputPassEnabled: Boolean(outputPass?.enabled),
+              dofEnabled: Boolean(postRuntimeConfig.dof),
+            });
+          }
           if (liveFastPathRef.current || !composer) {
             renderer.render(escena,camara);
           } else {
