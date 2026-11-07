@@ -50,6 +50,9 @@ export function createAurumCatalogApi(api: Partial<AurumApi>): AurumCatalogApi {
 
 export function createAurumApi(options:any){
   return {
+    getCadTree: options.getCadTree,
+    setCadObjectVisible: options.setCadObjectVisible,
+    setCadLayerVisible: options.setCadLayerVisible,
     cargar: options.cargar,
     material: options.material,
     gema: options.gema,
