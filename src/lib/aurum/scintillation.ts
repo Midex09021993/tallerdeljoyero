@@ -609,7 +609,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // gemstone surface, not a screen-space bloom or an emissive shell.
         float aurumAngelRim=pow(1.0-clamp(abs(dot(aurumN,aurumV)),0.0,1.0),2.9);
         float aurumAngelFacetGate=smoothstep(0.08,0.72,aurumFacetContrast);
-        gl_FragColor.rgb+=vec3(1.0,0.91,0.82)*aurumAngelRim*aurumAngelFacetGate*0.092;
+        gl_FragColor.rgb+=vec3(1.0,0.91,0.82)*aurumAngelRim*aurumAngelFacetGate*0.105;
         ` : ""}
 
         if(aurumPhenomenonStrength>0.0){
@@ -701,7 +701,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
                 // Broad warm-neutral overhead reflection, fixed in world space.
                 // This reuses the existing diamond-only shader source: no extra
                 // Three.js light, shadow map, render pass or per-frame CPU work.
-                gl_FragColor.rgb+=vec3(1.0,0.88,0.78)*0.52*aurumGemSunResponse;
+                gl_FragColor.rgb+=vec3(1.0,0.88,0.78)*0.60*aurumGemSunResponse;
         ` : ``}
 
                 #include <tonemapping_fragment>
