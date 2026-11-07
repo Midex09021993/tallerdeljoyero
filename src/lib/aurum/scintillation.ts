@@ -103,18 +103,45 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
     rayBounces:Number(ijewel?.rayBounces??5),
   };
   const ijewelDispersionScale=Math.max(0,Math.min(4,effectiveIewel.dispersion/0.01));
-  if(diamondTestMode && ["a","b","c","d"].includes(diamondTestMode)){
-    console.info("[AURUM][DIAMOND_AB_TEST]",{
-      mode:diamondTestMode,
-      label:diamondTestProfile?.label??"AURUM production baseline",
-      ior:diamondTestProfile?.ior??Number(material.ior??2.417),
-      dispersion:diamondTestProfile?.dispersion??baseDispersion,
-      rayBounces:diamondTestProfile?.rayBounces??"unchanged baseline",
-      customIJEWELPathEnabled:ijewelEnabled,
-      physicalMaterialIor:Number(material.ior??2.417),
-      physicalMaterialTransmission:Number(material.transmission??0),
-      note:"Diagnostic shader parameters only; no geometry, BVH, metal or saved material preset is modified.",
-    });
+  const gemCompareEnabled=typeof window!=="undefined"
+    && new URLSearchParams(window.location.search).get("aurumGemCompare")==="1";
+  if((diamondTestMode && ["a","b","c","d"].includes(diamondTestMode)) || gemCompareEnabled){
+    const diagnosticKey=`aurumGemCompareLogged:${family}:${String(material.uuid??material.id??"material")}`;
+    const alreadyLogged=Boolean(material.userData?.[diagnosticKey]);
+    if(!alreadyLogged){
+      material.userData={...(material.userData??{}),[diagnosticKey]:true};
+      console.info("[AURUM][GEM_COMPARISON]",{
+        family,
+        presetId:material.userData?.aurumGemPresetId??material.userData?.aurumGemId??material.userData?.aurumDiamondPresetId??null,
+        shaderTestMode:diamondTestMode??"production",
+        shaderTestLabel:diamondTestProfile?.label??"AURUM production baseline",
+        physicalMaterial:{
+          ior:Number(material.ior??0),
+          transmission:Number(material.transmission??0),
+          dispersion:Number(material.dispersion??0),
+          roughness:Number(material.roughness??0),
+          iridescence:Number(material.iridescence??0),
+          envMapIntensity:Number(material.envMapIntensity??0),
+          hasGemEnvironment:Boolean(material.envMap),
+        },
+        opticalProfile:{
+          ior:Number(profile.ior??material.ior??0),
+          transmission:Number(profile.transmission??material.transmission??0),
+          dispersion:baseDispersion,
+          brilliance,
+          facetContrast,
+          fire:Number(profile.fire??0),
+        },
+        iJewelApproximation:{
+          enabled:ijewelEnabled,
+          refractiveIndex:diamondTestProfile?.ior??Number(ijewel?.refractiveIndex??2.417),
+          dispersion:diamondTestProfile?.dispersion??Number(ijewel?.dispersion??baseDispersion),
+          rayBounces:diamondTestProfile?.rayBounces??Number(ijewel?.rayBounces??5),
+        },
+        gemEnvironment:material.userData?.aurumGemEnvironmentIntensity??null,
+        note:"Lectura diagnóstica del material realmente aplicado; no modifica geometría, BVH, cámara ni presets guardados.",
+      });
+    }
   }
   // Reduce the experimental virtual-facet energy for standard diamond profiles
   // to stabilize small stones during orbit. Keep the blue-diamond profile unchanged.
