@@ -88,7 +88,7 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
     : null;
   const diamondTestProfiles:Record<string,{label:string;ior:number;dispersion:number;rayBounces:number}>={
     b:{label:"iJewel reference · physical IOR",ior:2.417,dispersion:0.01,rayBounces:5},
-    c:{label:"Higher dispersion · physical IOR",ior:2.417,dispersion:0.02,rayBounces:8},
+    c:{label:"Higher dispersion · physical IOR",ior:2.417,dispersion:0.02,rayBounces:5},
     d:{label:"iJewel source IOR experiment",ior:2.6,dispersion:0.01,rayBounces:5},
   };
   const diamondTestProfile=diamondTestMode ? diamondTestProfiles[diamondTestMode] : undefined;
