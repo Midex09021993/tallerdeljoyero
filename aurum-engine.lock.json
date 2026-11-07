@@ -41,7 +41,7 @@
     "src/lib/aurum/metal-union-experiment.ts": "c431b1cd858bbb5e4ba26cab4e2bb03f02dc023e551ba6399c8a232e7e929863",
     "src/lib/aurum/model-loader.ts": "30fdb2bd5e8bc4f2055da81ca9c8c3fa210a6a295849e7e1115d664973517cb4",
     "src/lib/aurum/model-materials.ts": "384aad39d87bae203dc9c7b5621334deac8ea527eb88755d70b5d2ea4b99f1ad",
-    "src/lib/aurum/model-normalizer.ts": "95ae49b99a0f10da642ac6ac9a3bec59dd3c07b27bea3370ee8d7eff11840705",
+    "src/lib/aurum/model-normalizer.ts": "92cdefa015f0356922710f9e7c75fd3f0ee9d105c5396b21245ae7be62b22462",
     "src/lib/aurum/model-parts.ts": "3763e15afa15ef176e04cc7e28fcc992c77ca89b7c87316d8da3d99ac4d3fe46",
     "src/lib/aurum/model-prep.ts": "ee4f6608d1ec118e817d289b9ca88b65681af4aeba666e859320296caeba9e69",
     "src/lib/aurum/optical-response.ts": "c66fd2c5b2e12ac7eea898a794450f2ab595f7de5ed143e6330fec2b2d0a98d7",
