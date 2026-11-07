@@ -276,16 +276,18 @@ export async function createAurumPostPipeline(
       ssaoPass.maxDistance=Math.max(.02,Number(config.ssaoFalloff??(ssaoPass.kernelRadius*2.5)));
     }
     if(bloomPass){
-      // Bloom creates colored fringes around high-contrast jewelry edges; keep it out of PNG AA-only capture.
+      // Bloom is only active for profiles that explicitly request it and is
+      // excluded from the lightweight PNG AA-only capture path.
       bloomPass.enabled=!options.capture && Boolean(config.bloom) && high;
-      // Keep bloom restrained on polished jewelry: broad bright halos wash out
-      // metal edges and can make gold/silver appear milky. Only applies when bloom
-      // is explicitly enabled by the active profile; the default remains disabled.
-      // Very restrained bloom for jewelry: prevent broad white fringes on metal.
-      // The default remains off; this only caps intensity when an active profile enables it.
-      bloomPass.strength=Math.min(0.008,Math.max(0,Number(config.bloomIntensity??.008)));
-      bloomPass.threshold=Math.max(2.2,Number(config.bloomThreshold??2.2));
-      bloomPass.radius=Math.min(0.12,Math.max(0,Number(config.bloomRadius??.12)));
+      // The beauty buffer is already tone-mapped by the live material pipeline.
+      // A threshold above 1.0 therefore starves UnrealBloomPass of highlights.
+      // Use a near-white threshold and a restrained radius/strength so only
+      // the brightest specular peaks produce a soft photographic halo.
+      // Keep this conservative: the pass is luminance-selective, not material-
+      // isolated, so it must not create broad glow around ordinary metal reflections.
+      bloomPass.strength=Math.min(0.04,Math.max(0,Number(config.bloomIntensity??0.035)));
+      bloomPass.threshold=Math.max(0.94,Math.min(0.995,Number(config.bloomThreshold??0.96)));
+      bloomPass.radius=Math.min(0.38,Math.max(0,Number(config.bloomRadius??0.32)));
     }
     if(gradingPass){
       gradingPass.enabled=!options.capture && Boolean(config.gradeEnabled);
