@@ -74,14 +74,13 @@ function buildGlb(json,bin) {
 async function compress(buffer) {
   const {json,bin}=parseGlb(buffer),Module=await getEncoder(),originalBytes=buffer.byteLength;
   json.bufferViews=json.bufferViews||[];
-  const parts=[new Uint8Array(bin)];let length=bin.byteLength,compressed=0,attempted=0,facesRejected=0,encodeFailed=0;
+  const parts=[new Uint8Array(bin)];let length=bin.byteLength,compressed=0;
   const encoder=new Module.Encoder(),builder=new Module.MeshBuilder();
   encoder.SetEncodingMethod(Module.MESH_EDGEBREAKER_ENCODING);encoder.SetSpeedOptions(5,5);
   encoder.SetAttributeQuantization(Module.POSITION,16);encoder.SetAttributeQuantization(Module.NORMAL,12);encoder.SetAttributeQuantization(Module.TEX_COORD,14);
   try {
     for(const mesh of (json.meshes||[])) for(const primitive of (mesh.primitives||[])) {
       if((primitive.mode??4)!==4 || !primitive.attributes || primitive.extensions?.KHR_draco_mesh_compression) continue;
-      attempted++;
       const positionIndex=primitive.attributes.POSITION;if(positionIndex===undefined) continue;
       const position=readAccessor(json,bin,positionIndex);if(position.components!==3 || position.count<3) continue;
       let indices;
@@ -94,7 +93,7 @@ async function compress(buffer) {
       }
       if(indices.length%3!==0 || indices.some(v=>v<0||v>=position.count)) continue;
       const dracoMesh=new Module.Mesh();
-      if(!builder.AddFacesToMesh(dracoMesh,indices.length/3,indices)){facesRejected++;dracoMesh.__destroy__();continue;}
+      if(!builder.AddFacesToMesh(dracoMesh,indices.length/3,indices)){dracoMesh.__destroy__();continue;}
       const attributeIds={};
       const addAttribute=(semantic,type,index,components) => {
         if(index===undefined)return;
@@ -111,7 +110,7 @@ async function compress(buffer) {
       if(attributeIds.POSITION===undefined){dracoMesh.__destroy__();continue;}
       const encoded=new Module.DracoInt8Array(),size=encoder.EncodeMeshToDracoBuffer(dracoMesh,encoded);
       dracoMesh.__destroy__();
-      if(size<=0){encodeFailed++;encoded.__destroy__();continue;}
+      if(size<=0){encoded.__destroy__();continue;}
       const payload=new Uint8Array(size);for(let i=0;i<size;i++)payload[i]=encoded.GetValue(i);encoded.__destroy__();
       const aligned=align4(length);if(aligned>length)parts.push(new Uint8Array(aligned-length));
       const bufferView=json.bufferViews.length;json.bufferViews.push({buffer:0,byteOffset:aligned,byteLength:payload.byteLength});
@@ -120,7 +119,7 @@ async function compress(buffer) {
       primitive.extensions.KHR_draco_mesh_compression={bufferView,attributes:attributeIds};compressed++;
     }
   } finally {encoder.__destroy__();builder.__destroy__();}
-  if(!compressed)return {buffer,compressed:0,originalBytes,outputBytes:originalBytes,diagnostics:{attempted,facesRejected,encodeFailed,meshCount:(json.meshes||[]).length}};
+  if(!compressed)return {buffer,compressed:0,originalBytes,outputBytes:originalBytes};
   const binary=new Uint8Array(length);let cursor=0;for(const part of parts){binary.set(part,cursor);cursor+=part.length;}
   json.extensionsUsed=Array.from(new Set([...(json.extensionsUsed||[]),"KHR_draco_mesh_compression"]));
   const output=buildGlb(json,binary.buffer);
