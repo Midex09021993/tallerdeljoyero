@@ -78,6 +78,13 @@ export function createAurumGemEnvironment(
         // reflections; do not change renderer exposure, gem IOR or metal response.
         const familyReflectionScale = family === "Diamante" ? 1.5 : 1;
         m.envMapIntensity = Math.max(.55, Math.min(2.35, authored * intensityScale * familyReflectionScale));
+        // Keep the custom internal-ray shader synchronized with the same
+        // gem-environment energy used by MeshPhysicalMaterial. The shader's
+        // textureCubeUV samples bypass Three.js envMapIntensity automatically.
+        const gemEnvironmentUniform = m.userData?.aurumGemEnvironmentUniforms;
+        if (gemEnvironmentUniform?.value) {
+          gemEnvironmentUniform.value.value = m.envMapIntensity;
+        }
         const nativeIJEWELRotation = Number(m.userData?.aurumIJEWELParameters?.environmentRotationOffset);
         const oriented = Number(m.userData?.aurumIJEWELParameters?.diamondOrientedEnvMap ?? 0) === 1;
         const worldEuler = new THREE.Euler();

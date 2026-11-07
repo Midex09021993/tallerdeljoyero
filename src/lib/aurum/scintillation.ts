@@ -197,6 +197,8 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
     shader.uniforms.aurumScintillationStrength={value:strength};
     shader.uniforms.aurumScintillationContrast={value:contrastStrength};
     shader.uniforms.aurumRuntimeDispersion={value:(diamondTestProfile?.dispersion??baseDispersion)*familyDispersionScale};
+    shader.uniforms.aurumGemEnvironmentIntensity={value:Math.max(.55,Math.min(2.35,Number(material.envMapIntensity??1)))};
+    material.userData={...(material.userData??{}),aurumGemEnvironmentUniforms:shader.uniforms.aurumGemEnvironmentIntensity};
     const gemLightState=material.userData?.aurumGemLightState??{};
     shader.uniforms.aurumGemLightPosition={value:new THREE.Vector3(...(gemLightState.position??[0,0,0]))};
     shader.uniforms.aurumGemLightIntensity={value:gemLightState.enabled?Math.max(0,Number(gemLightState.intensity??0)):0};
@@ -283,7 +285,7 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
     shader.fragmentShader=`
       uniform float aurumScintillationStrength;
       uniform float aurumScintillationContrast;
-      uniform float aurumRuntimeDispersion;
+      uniform float aurumRuntimeDispersion;\n      uniform float aurumGemEnvironmentIntensity;
       uniform vec3 aurumColorChangeFluorescent;
       uniform vec3 aurumColorChangeIncandescent;
       uniform float aurumColorChangeStrength;
@@ -509,7 +511,9 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // envMapIntensity uniform. Apply a restrained diamond-only energy lift
         // here as well, otherwise changing the gem HDR intensity brightens only
         // the outer PBR layer and leaves the internal facets comparatively dull.
-        ijAccum*=aurumIJEWELBoostFactors*1.06;
+        // Match the energy of the active gem HDRI, including environment
+        // changes, instead of using the former fixed 1.06 multiplier.
+        ijAccum*=aurumIJEWELBoostFactors*aurumGemEnvironmentIntensity;
         ijAccum=pow(max(ijAccum,vec3(0.0)),vec3(max(aurumIJEWELGammaFactor,.01)));
         float ijCosTheta=clamp(abs(dot(ijNormal,ijView)),0.0,1.0);
         float ijF0=pow((ijIor-1.0)/(ijIor+1.0),2.0);
@@ -687,15 +691,16 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
                 float aurumGemSunNdotL=max(dot(aurumGemN,aurumGemSunDir),0.0);
                 vec3 aurumGemSunHalf=normalize(aurumGemSunDir+aurumGemViewDir);
                 float aurumGemSunHalfDot=max(dot(aurumGemN,aurumGemSunHalf),0.0);
-                float aurumGemSoftbox=pow(aurumGemSunHalfDot,2.65);
-                float aurumGemSoftboxCore=pow(aurumGemSunHalfDot,12.0);
+                float aurumGemSoftbox=pow(aurumGemSunHalfDot,1.65);
+                float aurumGemSoftboxCore=pow(aurumGemSunHalfDot,7.5);
                 float aurumGemSunEdge=pow(1.0-aurumGemNdotV,2.0)*aurumGemSunNdotL;
-                float aurumGemSunResponse=aurumGemSunNdotL*0.12
-                    +aurumGemSoftbox*0.42+aurumGemSoftboxCore*0.12
-                    +aurumGemSunEdge*0.07;
-                // Warm-neutral studio white (not saturated yellow), kept
-                // diamond-only and before the existing tone-mapping stage.
-                gl_FragColor.rgb+=vec3(1.0,0.88,0.76)*0.39*aurumGemSunResponse;
+                float aurumGemSunResponse=aurumGemSunNdotL*0.14
+                    +aurumGemSoftbox*0.50+aurumGemSoftboxCore*0.10
+                    +aurumGemSunEdge*0.08;
+                // Broad warm-neutral overhead reflection, fixed in world space.
+                // This reuses the existing diamond-only shader source: no extra
+                // Three.js light, shadow map, render pass or per-frame CPU work.
+                gl_FragColor.rgb+=vec3(1.0,0.83,0.69)*0.44*aurumGemSunResponse;
         ` : ``}
 
                 #include <tonemapping_fragment>
