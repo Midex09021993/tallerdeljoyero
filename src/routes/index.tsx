@@ -319,7 +319,8 @@ function InicioPublico() {
             <a href="#contacto" className="shrink-0">Contacto</a>
           </nav>
           <div className="flex items-center gap-2">
-            <Link to="/auth" target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-[#17232d] px-4 text-xs font-semibold text-white shadow-sm transition hover:bg-[#293b49] sm:text-sm"><MonitorSmartphone className="size-4" /> Ingresar</Link>
+            <RegistroTaller className="hidden min-h-10 items-center justify-center rounded-xl bg-[#f8c928] px-4 text-xs font-bold text-[#17232d] shadow-sm transition hover:bg-[#ffdf65] sm:inline-flex" />
+            <Link to="/auth" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-xs font-semibold text-[#17232d] transition hover:border-[#d4aa19] sm:text-sm"><MonitorSmartphone className="size-4" /> Ingresar</Link>
           </div>
         </div>
       </header>
@@ -331,18 +332,17 @@ function InicioPublico() {
           <div className="relative z-10 max-w-[650px]">
             <span className="inline-flex items-center gap-2 rounded-full border border-[#e5c04a]/50 bg-[#fff9df] px-3.5 py-2 text-[10px] font-bold uppercase tracking-[.16em] text-[#785b00]"><Sparkles className="size-3.5" /> AURUM LAB · TECNOLOGÍA PARA JOYEROS</span>
             <h1 className="mt-6 text-[2.65rem] font-extrabold leading-[1.06] tracking-[-.045em] text-[#17232d] sm:text-5xl lg:text-[3.8rem]"><span className="block">La plataforma digital para talleres de joyería.</span><span className="mt-2 block text-[#9a7400]">Organiza, calcula y presenta tus diseños.</span></h1>
-            <p className="mt-6 max-w-xl text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">Un ecosistema digital para el oficio joyero: herramientas técnicas, gestión comercial integral y AURUM RENDER, nuestro estudio premium de visualización 3D.</p>
+            <p className="mt-6 max-w-xl text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">Tu taller merece trabajar con más orden y presentar cada diseño con profesionalismo. Reúne herramientas técnicas, gestión comercial y visualización 3D en un solo espacio digital.</p>
             <ul className="mt-7 space-y-4 text-sm font-medium text-[#25323b] sm:text-[15px]">
               <li className="flex items-start gap-3"><span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-lg bg-[#fff4c4] text-[#9b7600]"><Check className="size-4" /></span>Calculadoras y herramientas técnicas para trabajar con más claridad.</li>
               <li className="flex items-start gap-3"><span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-lg bg-[#fff4c4] text-[#9b7600]"><Check className="size-4" /></span>AURUM RENDER para explorar materiales y presentar tus diseños en 3D.</li>
               <li className="flex items-start gap-3"><span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-lg bg-[#fff4c4] text-[#9b7600]"><Check className="size-4" /></span>Clientes, cotizaciones, contratos, pedidos y catálogo; con Mi Nube para organizar tus archivos.</li>
             </ul>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link to="/herramientas-publicas" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#17232d] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-slate-900/10 transition hover:-translate-y-0.5 hover:bg-[#293b49]">Empezar con herramientas <ArrowRight className="size-4" /></Link>
-              <Link to="/auth" target="_blank" rel="noreferrer" className="inline-flex min-h-12 items-center justify-center rounded-xl border border-slate-300 bg-white/80 px-6 py-3 text-sm font-semibold text-[#17232d] transition hover:border-[#d4aa19] hover:bg-[#fffbee]">Iniciar sesión</Link>
-              <RegistroTaller className="inline-flex min-h-12 items-center justify-center rounded-xl border border-[#d4aa19] bg-[#fff4c4] px-6 py-3 text-sm font-bold text-[#5f4900] transition hover:bg-[#ffe99a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19]" />
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              <RegistroTaller className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-[#d4aa19] bg-[#f8c928] px-6 py-3 text-sm font-extrabold text-[#17232d] shadow-lg shadow-amber-900/10 transition hover:-translate-y-0.5 hover:bg-[#ffdf65] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19] focus-visible:ring-offset-2" />
+              <Link to="/herramientas-publicas" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white/90 px-6 py-3 text-sm font-semibold text-[#17232d] transition hover:border-[#d4aa19] hover:bg-[#fffbee]">Probar herramientas gratis <ArrowRight className="size-4" /></Link>
             </div>
-            <p className="mt-4 text-xs text-slate-500">Prueba las herramientas públicas sin crear una cuenta.</p>
+            <p className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500"><span className="inline-flex items-center gap-1.5"><Check className="size-3.5 text-emerald-600" /> Crea tu espacio de taller gratuito</span><span aria-hidden="true">·</span><span>Explora herramientas públicas sin registrarte</span></p>
           </div>
 
           <div className="relative mx-auto w-full max-w-[720px] pb-7 sm:pb-10">
