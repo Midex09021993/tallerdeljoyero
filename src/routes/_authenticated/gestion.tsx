@@ -135,7 +135,7 @@ function GestionPage() {
   useEffect(() => {
     const moduloInicial = new URLSearchParams(window.location.search).get("modulo");
     if (moduloInicial === "capacidades") setModulo("capacidades");
-    if (moduloInicial === "resumen" || moduloInicial === "finanzas") setModulo("comercial");
+    if (moduloInicial === "comercial" || moduloInicial === "resumen" || moduloInicial === "finanzas") setModulo("comercial");
   }, []);
 
   const esDueno = Boolean(sesion?.esDueno);
