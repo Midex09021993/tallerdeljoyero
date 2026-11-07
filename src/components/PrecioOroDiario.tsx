@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, CalendarClock, Coins, RefreshCw, ShieldCheck, Sparkles } from "lucide-react";
 
@@ -31,6 +31,7 @@ type GoldApiResponse = {
 
 const CACHE_KEY = "aurum-gold-quote-south-america-v2";
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+const QUOTE_STALE_MS = 36 * 60 * 60 * 1000;
 const CURRENCIES = COUNTRIES.map((country) => country.currency).join(",");
 const API_URL = `https://goldprice.corgano.com/api/v1/latest?currency=${CURRENCIES}`;
 
@@ -75,11 +76,33 @@ export function PrecioOroDiario() {
   const [karat, setKarat] = useState(18);
   const [countryCode, setCountryCode] = useState<string>("PE");
   const [refreshKey, setRefreshKey] = useState(0);
+  const [isVisible, setIsVisible] = useState(false);
+  const [quoteSource, setQuoteSource] = useState<"source" | "browser-cache">("source");
+  const sectionRef = useRef<HTMLElement | null>(null);
 
   const country = COUNTRIES.find((item) => item.code === countryCode) ?? COUNTRIES[0];
   const price24k = quote?.prices[country.currency];
 
   useEffect(() => {
+    const element = sectionRef.current;
+    if (!element || typeof IntersectionObserver === "undefined") {
+      setIsVisible(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setIsVisible(true);
+        observer.disconnect();
+      }
+    }, { rootMargin: "160px" });
+
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!isVisible) return;
     let cancelled = false;
 
     async function loadQuote() {
@@ -94,7 +117,8 @@ export function PrecioOroDiario() {
           if (isValidQuote(parsed)) {
             saved = parsed;
             setQuote(parsed);
-            if (Date.now() - parsed.cachedAt < CACHE_TTL_MS && refreshKey === 0 && typeof parsed.prices[country.currency] === "number") {
+            if (Date.now() - parsed.cachedAt < CACHE_TTL_MS && refreshKey === 0) {
+              setQuoteSource("browser-cache");
               setLoading(false);
               return;
             }
@@ -128,6 +152,7 @@ export function PrecioOroDiario() {
         const fresh: GoldQuote = { prices, asOf, cachedAt: Date.now() };
         if (cancelled) return;
         setQuote(fresh);
+        setQuoteSource("source");
         try {
           window.localStorage.setItem(CACHE_KEY, JSON.stringify(fresh));
         } catch {
@@ -138,12 +163,13 @@ export function PrecioOroDiario() {
         }
       } catch (error) {
         if (!cancelled) {
+          setQuoteSource("browser-cache");
           setMessage(
             saved
-              ? "No pudimos actualizar la fuente. Mostramos la última cotización guardada."
+              ? `No se pudo actualizar la fuente. Se conserva la cotización del ${formatQuoteDate(saved.asOf)}; comprueba su fecha antes de usarla.`
               : error instanceof Error
                 ? error.message
-                : "No fue posible consultar el precio del oro."
+                : "No fue posible consultar el precio del oro. Inténtalo nuevamente más tarde."
           );
         }
       } finally {
@@ -155,16 +181,21 @@ export function PrecioOroDiario() {
     return () => {
       cancelled = true;
     };
-  }, [refreshKey, country.currency]);
+  }, [isVisible, refreshKey]);
+
+  const purityByKarat: Record<number, number> = { 24: 999, 22: 916, 18: 750, 14: 585, 10: 417, 9: 375 };
+  const purity = purityByKarat[karat] ?? 750;
+  const quoteAge = quote ? Date.now() - new Date(quote.asOf).getTime() : 0;
+  const isQuoteStale = quote ? !Number.isFinite(quoteAge) || quoteAge > QUOTE_STALE_MS : false;
 
   const estimatedValue = useMemo(() => {
     const weight = Number(grams);
     if (price24k === undefined || !Number.isFinite(weight) || weight <= 0) return null;
-    return weight * price24k * (karat / 24);
-  }, [grams, karat, price24k]);
+    return weight * price24k * (purity / 1000);
+  }, [grams, purity, price24k]);
 
   return (
-    <section id="precio-del-oro" className="scroll-mt-24 overflow-hidden border-y border-[#eadca8] bg-[radial-gradient(ellipse_at_top_left,_rgba(250,224,139,0.24),_transparent_44%),linear-gradient(135deg,#fffdf8_0%,#ffffff_52%,#fff8e5_100%)]">
+    <section ref={sectionRef} id="precio-del-oro" className="scroll-mt-24 overflow-hidden border-y border-[#eadca8] bg-[radial-gradient(ellipse_at_top_left,_rgba(250,224,139,0.24),_transparent_44%),linear-gradient(135deg,#fffdf8_0%,#ffffff_52%,#fff8e5_100%)]">
       <div className="mx-auto max-w-[1320px] px-5 py-12 sm:px-8 sm:py-16 lg:px-12">
         <div className="grid items-center gap-10 lg:grid-cols-[.88fr_1.12fr] lg:gap-16">
           <div>
@@ -208,7 +239,7 @@ export function PrecioOroDiario() {
                     <p className="text-[10px] font-bold uppercase tracking-[.16em] text-[#8b6b0a]">Cotización de referencia</p>
                     <p className="mt-1 text-xs font-semibold text-slate-600">Oro puro · 24K · por gramo</p>
                   </div>
-                  <span className="rounded-full border border-[#e9d79d] bg-white px-2.5 py-1 text-[10px] font-bold text-[#876500]">Precio indicativo</span>
+                  <span className="rounded-full border border-[#e9d79d] bg-white px-2.5 py-1 text-[10px] font-bold text-[#876500]">Referencia indicativa</span>
                 </div>
                 {price24k !== undefined ? (
                   <p className="mt-3 break-words text-3xl font-extrabold tracking-[-.04em] text-[#17232d] sm:text-[2.6rem]">{formatMoney(price24k, country.currency, country.locale)}</p>
@@ -219,9 +250,10 @@ export function PrecioOroDiario() {
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 sm:px-7">
-              <div className="flex items-center gap-2 text-[11px] text-slate-500">
+              <div className="flex min-w-0 items-center gap-2 text-[11px] text-slate-500">
                 <CalendarClock className="size-3.5 shrink-0" />
-                {quote ? <>Dato de origen: {formatQuoteDate(quote.asOf)} · hora de Perú</> : "La fecha aparecerá cuando la fuente responda."}
+                <span>{quote ? <>Dato de origen: {formatQuoteDate(quote.asOf)} · hora de Perú</> : "La fecha aparecerá cuando la fuente responda."}</span>
+                {quote && <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-semibold ${isQuoteStale ? "bg-amber-100 text-amber-800" : quoteSource === "browser-cache" ? "bg-slate-100 text-slate-600" : "bg-emerald-50 text-emerald-700"}`}>{isQuoteStale ? "Dato desactualizado" : quoteSource === "browser-cache" ? "Guardada en este navegador" : "Fuente consultada"}</span>}
               </div>
               <button
                 type="button"
@@ -236,7 +268,7 @@ export function PrecioOroDiario() {
             {message && <p role="status" className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900">{message}</p>}
 
             <div className="p-5 pt-4 sm:p-7 sm:pt-4">
-              <div className="flex items-start justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[.16em] text-[#9a7400]">Calculadora de taller</p><h3 className="mt-1 text-base font-extrabold text-[#17232d]">Estima el valor de tu oro</h3></div><span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold text-slate-600">En tiempo real</span></div>
+              <div className="flex items-start justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[.16em] text-[#9a7400]">Calculadora de taller</p><h3 className="mt-1 text-base font-extrabold text-[#17232d]">Estima el valor de tu oro</h3></div><span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold text-slate-600">Cálculo instantáneo</span></div>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 <label className="block text-xs font-semibold text-slate-600">
                   Peso (gramos)
@@ -271,7 +303,7 @@ export function PrecioOroDiario() {
                 <p className="mt-1 break-words text-2xl font-extrabold tracking-tight text-[#17232d] sm:text-3xl">
                   {estimatedValue === null ? "—" : formatMoney(estimatedValue, country.currency, country.locale)}
                 </p>
-                <p className="mt-1 text-[11px] leading-5 text-slate-600">Fórmula: peso × precio de 24K × ({karat}/24).</p>
+                <p className="mt-1 text-[11px] leading-5 text-slate-600">Fórmula: peso × precio de 24K × ({purity}/1000). La ley se aplica en milésimas.</p>
               </div>
             </div>
 
