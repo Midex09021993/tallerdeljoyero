@@ -125,6 +125,13 @@ function stripCompressedFallbacks(json, bin, compressedAccessorIndices, dracoBuf
   for (const image of (json.images || [])) {
     if (image.bufferView !== undefined && remap.has(image.bufferView)) image.bufferView = remap.get(image.bufferView);
   }
+  // Draco primitive extensions also reference bufferViews. Remap them after compaction.
+  for (const mesh of (json.meshes || [])) for (const primitive of (mesh.primitives || [])) {
+    const draco = primitive.extensions?.KHR_draco_mesh_compression;
+    if (draco?.bufferView !== undefined && remap.has(draco.bufferView)) {
+      draco.bufferView = remap.get(draco.bufferView);
+    }
+  }
   json.bufferViews = nextViews;
   const packed = new Uint8Array(nextOffset);
   let cursor = 0;
