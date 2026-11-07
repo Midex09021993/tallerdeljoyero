@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { Building2, Eye, EyeOff, MapPin, Mail, Phone, UserRound, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { registrarTaller } from "@/lib/cuentas.functions";
+import { registrarEvento } from "@/lib/analytics";
 
 type Props = {
   className?: string;
@@ -36,9 +37,12 @@ export function RegistroTaller({ className = "" }: Props) {
     e.preventDefault();
     setError("");
     setCargando(true);
+    let tallerCreado = false;
 
     try {
       const resultado = await registrarTaller({ data: form });
+      tallerCreado = true;
+      registrarEvento("registration_completed", { source: "public_workshop_form" });
       setCorreoEnviado(resultado.correoEnviado === true);
       const { error: loginError } = await supabase.auth.signInWithPassword({
         email: resultado.email,
@@ -56,6 +60,7 @@ export function RegistroTaller({ className = "" }: Props) {
         }
       }, 450);
     } catch (e2) {
+      if (!tallerCreado) registrarEvento("registration_failed", { source: "public_workshop_form" });
       setError(e2 instanceof Error ? e2.message : "No se pudo crear el taller.");
     } finally {
       setCargando(false);
@@ -68,6 +73,7 @@ export function RegistroTaller({ className = "" }: Props) {
         type="button"
         onClick={() => {
           setAbierto(true);
+          registrarEvento("registration_started", { source: "public_workshop_form" });
           setCreado(false);
           setCorreoEnviado(false);
           setError("");
