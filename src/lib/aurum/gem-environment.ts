@@ -83,7 +83,7 @@ export function createAurumGemEnvironment(
         // textureCubeUV samples bypass Three.js envMapIntensity automatically.
         const gemEnvironmentUniform = m.userData?.aurumGemEnvironmentUniforms;
         if (gemEnvironmentUniform?.value) {
-          gemEnvironmentUniform.value.value = m.envMapIntensity;
+          gemEnvironmentUniform.value = m.envMapIntensity;
         }
         const nativeIJEWELRotation = Number(m.userData?.aurumIJEWELParameters?.environmentRotationOffset);
         const oriented = Number(m.userData?.aurumIJEWELParameters?.diamondOrientedEnvMap ?? 0) === 1;

@@ -285,7 +285,8 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
     shader.fragmentShader=`
       uniform float aurumScintillationStrength;
       uniform float aurumScintillationContrast;
-      uniform float aurumRuntimeDispersion;\n      uniform float aurumGemEnvironmentIntensity;
+      uniform float aurumRuntimeDispersion;
+      uniform float aurumGemEnvironmentIntensity;
       uniform vec3 aurumColorChangeFluorescent;
       uniform vec3 aurumColorChangeIncandescent;
       uniform float aurumColorChangeStrength;
