@@ -1542,17 +1542,27 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       };
 
       const aplicarEscenario = (id:EscenarioId) => {
-        // Las escenas solo controlan la presentación: fondo, suelo y sombra de contacto.
-        // Los HDR de metal/gemas, la iluminación de estudio y el postprocesado
-        // permanecen bajo sus controles independientes.
+        // La escena conserva los controles independientes de HDRI de metales,
+        // pero aplica su calibración fotográfica al entorno óptico de las gemas.
         liveFastPathRef.current = true;
         const scenePreset = sceneController.apply(id);
-        // Mantener ambos entornos sincronizados con la rotación del VJSON.
         if (Number.isFinite(scenePreset.environmentRotation)) {
           environmentController.setRotation(scenePreset.environmentRotation as number);
-          gemEnvironmentRotation=scenePreset.environmentRotation as number;
-          aplicarEntornoGema();
         }
+        if (Number.isFinite(scenePreset.gemEnvironmentRotation)) {
+          gemEnvironmentRotation=scenePreset.gemEnvironmentRotation as number;
+        }
+        if (Number.isFinite(scenePreset.gemEnvironmentIntensity)) {
+          // El valor del perfil es un multiplicador de intensidad del HDRI de gemas.
+          // Se aplica en caliente: no recarga texturas ni recompila el shader.
+          gemEnvironmentIntensityScale=Math.max(.75,Math.min(1.35,scenePreset.gemEnvironmentIntensity));
+        }
+        aplicarEntornoGema();
+        console.info("[AURUM][GEM SCENE CALIBRATION]",{
+          scene:id,
+          gemEnvironmentRotation,
+          gemEnvironmentIntensityScale,
+        });
         // La galería de escenas no modifica cámara, encuadre, distancia ni FOV.
         // Los datos cameraDirection del VJSON se conservan como referencia, no se aplican.
         // Aplicar solo los parámetros de sombra compatibles con la luz Spot de AURUM.
