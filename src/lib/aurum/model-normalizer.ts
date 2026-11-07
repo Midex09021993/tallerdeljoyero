@@ -192,7 +192,8 @@ function auditRhinoSourceObjects(object:any) {
     const geometryType=normalizeRhinoObjectType(data.objectType??data.aurumRhinoGeometryType??geometry.objectType??geometry.ObjectType);
     const rhinoLayer=data.rhinoLayer??data.RhinoLayer??{};
     const layerIndexValue=attrs.layerIndex??attrs.LayerIndex??data.layerIndex??data.LayerIndex;
-    const layerIndex=Number.isInteger(Number(layerIndexValue))?Number(layerIndexValue):-1;
+    const hasLayerIndex=layerIndexValue!==null&&layerIndexValue!==undefined&&layerIndexValue!=="";
+    const layerIndex=hasLayerIndex&&Number.isInteger(Number(layerIndexValue))?Number(layerIndexValue):-1;
     const layer=layers[layerIndex]??null;
     const layerName=String(rhinoLayer.fullPath??rhinoLayer.FullPath??rhinoLayer.name??rhinoLayer.Name??layer?.fullPath??layer?.FullPath??layer?.name??layer?.Name??"").trim()||null;
     const layerId=rhinoLayer.id??rhinoLayer.Id??layer?.id??layer?.Id??null;
@@ -209,7 +210,7 @@ function auditRhinoSourceObjects(object:any) {
     if(node.isPoints)pointPrimitives++;
     const source=data.aurumRhinoSource??{};
     node.userData={...data,aurumRhinoSource:{...source,objectId:objectId??source.objectId??null,objectName:objectName||source.objectName||null,objectType:geometryType!=="Unknown"?geometryType:(source.objectType??null),layerIndex:layerIndex>=0?layerIndex:(source.layerIndex??null),layerId:layerId??source.layerId??null,layerName:layerName??source.layerName??null}};
-    records.push({id:objectId!=null?String(objectId):null,name:objectName,type:geometryType,layer:layerName,layerId:layerId!=null?String(layerId):null});
+    records.push({id:objectId!=null?String(objectId):null,name:objectName,type:geometryType,layer:layerName,layerId:layerId!=null?String(layerId):null,geometry:{isSolid:geometry.isSolid??null,isManifold:geometry.isManifold??null,isSurface:geometry.isSurface??null,isClosed:geometry.isClosed??null,hasBrepForm:geometry.hasBrepForm??null,dimension:geometry.dimension??null,segmentCount:geometry.segmentCount??null,spanCount:geometry.spanCount??null,degree:geometry.degree??null,isValid:geometry.isValid??null}});
   });
   const audit={totalSourceObjects:records.length,nodesWithSourceIdentity,byGeometryType:byType,byLayer,curveNodes,linePrimitives,pointPrimitives,sourceLayerCount:layers.length,objects:records};
   object.userData={...(object.userData??{}),aurumSourceObjectAudit:audit};
