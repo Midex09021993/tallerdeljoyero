@@ -17,23 +17,22 @@ const COUNTRIES = [
 
 type CurrencyCode = (typeof COUNTRIES)[number]["currency"];
 type GoldQuote = {
-  prices: Partial<Record<CurrencyCode, number>>;
+  currency: CurrencyCode;
+  price24kPerGram: number;
   asOf: string;
   cachedAt: number;
 };
 
 type GoldApiResponse = {
-  data?: {
-    as_of?: string;
-    currencies?: Partial<Record<CurrencyCode, { per_gram?: number }>>;
-  };
+  currency?: string;
+  timestamp?: string;
+  price_gram_24k?: string;
 };
 
-const CACHE_KEY = "aurum-gold-quote-south-america-v2";
-const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
-const QUOTE_STALE_MS = 36 * 60 * 60 * 1000;
-const CURRENCIES = COUNTRIES.map((country) => country.currency).join(",");
-const API_URL = `https://goldprice.corgano.com/api/v1/latest?currency=${CURRENCIES}`;
+const CACHE_KEY = "aurum-gold-quote-goldprice-dev-v1";
+const CACHE_TTL_MS = 15 * 60 * 1000;
+const QUOTE_STALE_MS = 2 * 60 * 60 * 1000;
+const API_URL = "https://api.goldprice.dev/v1/carat";
 
 function formatMoney(value: number, currency: CurrencyCode, locale: string) {
   return new Intl.NumberFormat(locale, {
@@ -54,18 +53,29 @@ function formatQuoteDate(value: string) {
   }).format(date);
 }
 
-function isValidQuote(value: unknown): value is GoldQuote {
+function isValidQuote(value: unknown, currency: CurrencyCode): value is GoldQuote {
   if (!value || typeof value !== "object") return false;
   const quote = value as GoldQuote;
   return (
+    quote.currency === currency &&
     typeof quote.asOf === "string" &&
+    Number.isFinite(new Date(quote.asOf).getTime()) &&
     Number.isFinite(quote.cachedAt) &&
-    !!quote.prices &&
-    COUNTRIES.some((country) => {
-      const price = quote.prices[country.currency];
-      return typeof price === "number" && Number.isFinite(price) && price > 0;
-    })
+    typeof quote.price24kPerGram === "number" &&
+    Number.isFinite(quote.price24kPerGram) &&
+    quote.price24kPerGram > 0
   );
+}
+
+function readCachedQuote(currency: CurrencyCode): GoldQuote | null {
+  try {
+    const raw = window.localStorage.getItem(`${CACHE_KEY}:${currency}`);
+    if (!raw) return null;
+    const parsed: unknown = JSON.parse(raw);
+    return isValidQuote(parsed, currency) ? parsed : null;
+  } catch {
+    return null;
+  }
 }
 
 export function PrecioOroDiario() {
@@ -81,7 +91,7 @@ export function PrecioOroDiario() {
   const sectionRef = useRef<HTMLElement | null>(null);
 
   const country = COUNTRIES.find((item) => item.code === countryCode) ?? COUNTRIES[0];
-  const price24k = quote?.prices[country.currency];
+  const price24k = quote?.currency === country.currency ? quote.price24kPerGram : undefined;
 
   useEffect(() => {
     const element = sectionRef.current;
@@ -108,65 +118,62 @@ export function PrecioOroDiario() {
     async function loadQuote() {
       setLoading(true);
       setMessage("");
-      let saved: GoldQuote | null = null;
+      const saved = readCachedQuote(country.currency);
 
-      try {
-        const raw = window.localStorage.getItem(CACHE_KEY);
-        if (raw) {
-          const parsed: unknown = JSON.parse(raw);
-          if (isValidQuote(parsed)) {
-            saved = parsed;
-            setQuote(parsed);
-            if (Date.now() - parsed.cachedAt < CACHE_TTL_MS && refreshKey === 0) {
-              setQuoteSource("browser-cache");
-              setLoading(false);
-              return;
-            }
-          }
+      if (saved) {
+        setQuote(saved);
+        setQuoteSource("browser-cache");
+        if (Date.now() - saved.cachedAt < CACHE_TTL_MS && refreshKey === 0) {
+          setLoading(false);
+          return;
         }
-      } catch {
-        // If browser storage is unavailable, fetch a fresh quote.
+      } else {
+        setQuote((current) => current?.currency === country.currency ? current : null);
       }
 
       try {
-        const response = await fetch(API_URL, {
+        const response = await fetch(`${API_URL}?currency=${country.currency}`, {
           headers: { Accept: "application/json" },
         });
-        if (!response.ok) throw new Error("La fuente de precios no respondió correctamente.");
+        if (!response.ok) {
+          if (response.status === 429) throw new Error("La fuente alcanzó su límite temporal de consultas. Inténtalo más tarde.");
+          throw new Error("La fuente de cotizaciones no respondió correctamente.");
+        }
 
         const result = (await response.json()) as GoldApiResponse;
-        const asOf = result.data?.as_of;
-        const prices: Partial<Record<CurrencyCode, number>> = {};
+        const price = Number(result.price_gram_24k);
+        const asOf = result.timestamp;
 
-        for (const item of COUNTRIES) {
-          const value = result.data?.currencies?.[item.currency]?.per_gram;
-          if (typeof value === "number" && Number.isFinite(value) && value > 0) {
-            prices[item.currency] = value;
-          }
+        if (
+          result.currency !== country.currency ||
+          !asOf ||
+          !Number.isFinite(new Date(asOf).getTime()) ||
+          !Number.isFinite(price) ||
+          price <= 0
+        ) {
+          throw new Error(`La fuente no ofrece una cotización válida en ${country.currency}.`);
         }
 
-        if (!asOf || Object.keys(prices).length === 0) {
-          throw new Error("La fuente no entregó una cotización válida para los países seleccionados.");
-        }
-
-        const fresh: GoldQuote = { prices, asOf, cachedAt: Date.now() };
+        const fresh: GoldQuote = {
+          currency: country.currency,
+          price24kPerGram: price,
+          asOf,
+          cachedAt: Date.now(),
+        };
         if (cancelled) return;
         setQuote(fresh);
         setQuoteSource("source");
         try {
-          window.localStorage.setItem(CACHE_KEY, JSON.stringify(fresh));
+          window.localStorage.setItem(`${CACHE_KEY}:${country.currency}`, JSON.stringify(fresh));
         } catch {
-          // The quote remains usable when local storage is disabled.
-        }
-        if (!prices[country.currency]) {
-          setMessage(`La fuente no entregó el precio en ${country.currency}; selecciona otro país o vuelve a intentarlo.`);
+          // La cotización sigue disponible durante esta sesión.
         }
       } catch (error) {
         if (!cancelled) {
           setQuoteSource("browser-cache");
           setMessage(
             saved
-              ? `No se pudo actualizar la fuente. Se conserva la cotización del ${formatQuoteDate(saved.asOf)}; comprueba su fecha antes de usarla.`
+              ? `No se pudo actualizar. Se conserva la cotización del ${formatQuoteDate(saved.asOf)}; verifica su vigencia antes de usarla.`
               : error instanceof Error
                 ? error.message
                 : "No fue posible consultar el precio del oro. Inténtalo nuevamente más tarde."
@@ -176,17 +183,16 @@ export function PrecioOroDiario() {
         if (!cancelled) setLoading(false);
       }
     }
-
     void loadQuote();
     return () => {
       cancelled = true;
     };
-  }, [isVisible, refreshKey]);
+  }, [isVisible, refreshKey, country.currency]);
 
   const purityByKarat: Record<number, number> = { 24: 999, 22: 916, 18: 750, 14: 585, 10: 417, 9: 375 };
   const purity = purityByKarat[karat] ?? 750;
-  const quoteAge = quote ? Date.now() - new Date(quote.asOf).getTime() : 0;
-  const isQuoteStale = quote ? !Number.isFinite(quoteAge) || quoteAge > QUOTE_STALE_MS : false;
+  const quoteAge = quote && quote.currency === country.currency ? Date.now() - new Date(quote.asOf).getTime() : 0;
+  const isQuoteStale = quote?.currency === country.currency ? !Number.isFinite(quoteAge) || quoteAge > QUOTE_STALE_MS : false;
   const usablePrice24k = isQuoteStale ? undefined : price24k;
 
   const estimatedValue = useMemo(() => {
@@ -201,21 +207,21 @@ export function PrecioOroDiario() {
         <div className="grid items-center gap-10 lg:grid-cols-[.88fr_1.12fr] lg:gap-16">
           <div>
             <span className="inline-flex items-center gap-2 rounded-full border border-[#e9d79d] bg-white/90 px-3.5 py-2 text-[10px] font-bold uppercase tracking-[.17em] text-[#876500] shadow-sm">
-              <Coins className="size-3.5" /> Referencia diaria · Sudamérica
+              <Coins className="size-3.5" /> Referencia de mercado · Sudamérica
             </span>
             <h2 className="mt-5 max-w-2xl text-3xl font-extrabold leading-[1.12] tracking-[-.035em] text-[#17232d] sm:text-4xl lg:text-[2.8rem]">
               Precio del oro hoy
               <span className="block text-[#9a7400]">Calcula el valor teórico de tu metal.</span>
             </h2>
             <p className="mt-5 max-w-xl text-sm leading-7 text-slate-600 sm:text-base">
-              Consulta la referencia internacional del oro convertida a moneda local y estima el contenido metálico de una pieza según su peso y quilataje.
+              Consulta una referencia internacional del oro, convertida a moneda local, y estima el contenido metálico según peso y ley.
             </p>
             <p className="mt-5 max-w-xl text-xs leading-6 text-slate-500">
               Es una estimación del contenido metálico, no una oferta de compra ni una tasación comercial. No incluye piedras, mano de obra, mermas, impuestos ni márgenes del comprador. La conversión a moneda local es referencial.
             </p>
             <div className="mt-6 flex flex-wrap gap-x-5 gap-y-3 border-t border-[#eadca8]/70 pt-5 text-xs font-medium text-slate-600">
               <span className="inline-flex items-center gap-2"><ShieldCheck className="size-4 text-[#9a7400]" /> Sin registro</span>
-              <span className="inline-flex items-center gap-2"><CalendarClock className="size-4 text-[#9a7400]" /> Referencia diaria</span>
+              <span className="inline-flex items-center gap-2"><CalendarClock className="size-4 text-[#9a7400]" /> Actualización aproximada cada 15 min</span>
               <span className="inline-flex items-center gap-2"><Sparkles className="size-4 text-[#9a7400]" /> Para joyeros de la región</span>
             </div>
           </div>
@@ -254,7 +260,7 @@ export function PrecioOroDiario() {
               <div className="flex min-w-0 items-center gap-2 text-[11px] text-slate-500">
                 <CalendarClock className="size-3.5 shrink-0" />
                 <span>{quote ? <>Dato de origen: {formatQuoteDate(quote.asOf)} · hora de Perú</> : "La fecha aparecerá cuando la fuente responda."}</span>
-                {quote && <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-semibold ${isQuoteStale ? "bg-amber-100 text-amber-800" : quoteSource === "browser-cache" ? "bg-slate-100 text-slate-600" : "bg-emerald-50 text-emerald-700"}`}>{isQuoteStale ? "Dato desactualizado" : quoteSource === "browser-cache" ? "Guardada en este navegador" : "Fuente consultada"}</span>}
+                {quote && <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-semibold ${isQuoteStale ? "bg-amber-100 text-amber-800" : quoteSource === "browser-cache" ? "bg-slate-100 text-slate-600" : "bg-emerald-50 text-emerald-700"}`}>{isQuoteStale ? "Dato desactualizado" : quoteSource === "browser-cache" ? "Guardada en este navegador" : "Fuente consultada · demora aprox. 15 min"}</span>}
               </div>
               <button
                 type="button"
@@ -309,8 +315,8 @@ export function PrecioOroDiario() {
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-5 py-4 sm:px-7">
-              <a href="https://goldprice.corgano.com/" target="_blank" rel="noreferrer" className="text-[11px] font-medium text-slate-500 underline decoration-slate-300 underline-offset-4 hover:text-[#765900]">
-                Gold price data by Corgano
+              <a href="https://goldprice.dev/" target="_blank" rel="noreferrer" className="text-[11px] font-medium text-slate-500 underline decoration-slate-300 underline-offset-4 hover:text-[#765900]">
+                Datos de oro por goldprice.dev
               </a>
               <Link to="/herramientas-publicas" className="inline-flex items-center gap-2 text-xs font-bold text-[#765900] hover:text-[#17232d]">
                 Más herramientas <ArrowRight className="size-3.5" />
