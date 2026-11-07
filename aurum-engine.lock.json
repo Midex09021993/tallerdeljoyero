@@ -8,10 +8,10 @@
   "files": {
     ".github/workflows/quality.yml": "f461b2473a072d8ed187c0c88d7114c46742578ba2014dc7848d1591c7cfa8a8",
     "scripts/check-aurum-lock.mjs": "d8b0b1e553fbfdd7faf6522482d0460b5c9803464b9fa03d34ed3bbacd18b5c4",
-    "src/components/AurumRender.tsx": "51bdad37e200a76cc082618f6a1a81ef92a4c0ad215cc2fb2b8b2756e7ce7917",
+    "src/components/AurumRender.tsx": "c813361d69cd6738c5bde7197566ac22f282536da95cd00ce4922d3e458c218e",
     "src/components/AurumRenderConfig.tsx": "c54846f1ebf7fb2c143be54bf686b18ada16615e546f1d8ff6d98847df76575b",
     "src/lib/aurum-material-engine.ts": "1ebbacc784f61fbc9d77027cbd612269073e5de8be5a40a9276916653d34c742",
-    "src/lib/aurum/api.ts": "5563dbde27a7bc9a414f7d2c668349c060266895e9f3b04c6f6f9eb917ebfe40",
+    "src/lib/aurum/api.ts": "cdf41d03d12a94e0a624660f34965db573ed2a615bbfbf1df4adb81cec2f7d4c",
     "src/lib/aurum/aspect-ratios.ts": "dbbb8de198e9b21c5a3484dcaf793a0061e73d4c27499ba8f2021ae3ababbdd9",
     "src/lib/aurum/aurum-diamond-bvh-experimental.ts": "40ffdb0fd69fa26ffa2520d16d13a4ab3ce53a7b98d95bf4d45d635233d8552a",
     "src/lib/aurum/aurum-diamond-bvh-runtime.ts": "6c382ca90b0443d976b9e17b67255ee06b3c96976f7fe248696cb05056832604",
