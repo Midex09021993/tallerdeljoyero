@@ -21,39 +21,24 @@ type GoldQuote = {
   price24kPerGram: number;
   asOf: string;
   cachedAt: number;
+  isStale: boolean;
 };
 
-type GoldApiResponse = {
-  currency?: string;
-  timestamp?: string;
-  price_gram_24k?: string;
+type XausSpotResponse = {
+  xau?: { price?: number; currency?: string; unit?: string };
+  per_gram_usd?: number;
+  fx_rates?: Partial<Record<CurrencyCode, number>>;
+  data_state?: { status?: "fresh" | "stale" | "unavailable"; as_of?: string; age_seconds?: number };
+  stale?: boolean;
+  price_as_of?: string;
+  updated_at?: string;
 };
 
-type ExchangeRatesResponse = {
-  result?: string;
-  time_last_update_utc?: string;
-  rates?: Partial<Record<CurrencyCode, number>>;
-};
-
-type CachedGoldUsd = {
-  price24kPerGram: number;
-  asOf: string;
-  cachedAt: number;
-};
-
-type CachedExchangeRates = {
-  rates: Partial<Record<CurrencyCode, number>>;
-  asOf: string;
-  cachedAt: number;
-};
-
-const CACHE_KEY = "aurum-gold-quote-goldprice-dev-usd-v1";
-const FX_CACHE_KEY = "aurum-gold-quote-fx-v1";
-const CACHE_TTL_MS = 15 * 60 * 1000;
-const FX_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+type CachedGoldQuote = GoldQuote;
+const CACHE_KEY_PREFIX = "aurum-gold-quote-xaus-v2-";
+const CACHE_TTL_MS = 60 * 1000;
 const QUOTE_STALE_MS = 2 * 60 * 60 * 1000;
-const API_URL = "https://api.goldprice.dev/v1/carat?currency=USD";
-const FX_API_URL = "https://open.er-api.com/v6/latest/USD";
+const XAUS_API_URL = "https://xaus.com/api/v1/spot";
 
 function formatMoney(value: number, currency: CurrencyCode, locale: string) {
   return new Intl.NumberFormat(locale, {
@@ -74,57 +59,67 @@ function formatQuoteDate(value: string) {
   }).format(date);
 }
 
-function readCachedQuote(currency: CurrencyCode): GoldQuote | null {
+function readCachedQuote(currency: CurrencyCode): CachedGoldQuote | null {
   try {
-    const [goldRaw, fxRaw] = [
-      window.localStorage.getItem(CACHE_KEY),
-      window.localStorage.getItem(FX_CACHE_KEY),
-    ];
-    if (!goldRaw || !fxRaw) return null;
-    const gold = JSON.parse(goldRaw) as CachedGoldUsd;
-    const fx = JSON.parse(fxRaw) as CachedExchangeRates;
-    const rate = currency === "USD" ? 1 : fx.rates?.[currency];
-    if (
-      !Number.isFinite(gold.price24kPerGram) ||
-      gold.price24kPerGram <= 0 ||
-      !Number.isFinite(new Date(gold.asOf).getTime()) ||
-      !Number.isFinite(gold.cachedAt) ||
-      !Number.isFinite(fx.cachedAt) ||
-      !Number.isFinite(new Date(fx.asOf).getTime()) ||
-      typeof rate !== "number" ||
-      !Number.isFinite(rate) ||
-      rate <= 0
-    ) return null;
-    return {
-      currency,
-      price24kPerGram: gold.price24kPerGram * rate,
-      asOf: gold.asOf,
-      cachedAt: Math.min(gold.cachedAt, fx.cachedAt),
-    };
+    const raw = window.localStorage.getItem(CACHE_KEY_PREFIX + currency);
+    if (!raw) return null;
+    const value = JSON.parse(raw) as CachedGoldQuote;
+    if (value.currency !== currency || !Number.isFinite(value.price24kPerGram) ||
+      value.price24kPerGram <= 0 || !Number.isFinite(value.cachedAt) ||
+      !Number.isFinite(new Date(value.asOf).getTime())) return null;
+    return value;
   } catch {
     return null;
   }
 }
 
-function readCachedGoldUsd(): CachedGoldUsd | null {
-  try {
-    const raw = window.localStorage.getItem(CACHE_KEY);
-    if (!raw) return null;
-    const value = JSON.parse(raw) as CachedGoldUsd;
-    return Number.isFinite(value.price24kPerGram) && value.price24kPerGram > 0 &&
-      Number.isFinite(value.cachedAt) && Number.isFinite(new Date(value.asOf).getTime())
-      ? value : null;
-  } catch { return null; }
-}
+async function fetchXausQuote(currency: CurrencyCode): Promise<GoldQuote> {
+  const request = async (requestedCurrency: string) => {
+    const url = new URL(XAUS_API_URL);
+    url.searchParams.set("currency", requestedCurrency);
+    url.searchParams.set("unit", "gram");
+    const response = await fetch(url.toString(), { headers: { Accept: "application/json" } });
+    const data = await response.json() as XausSpotResponse;
+    return { response, data };
+  };
 
-function readCachedExchangeRates(): CachedExchangeRates | null {
-  try {
-    const raw = window.localStorage.getItem(FX_CACHE_KEY);
-    if (!raw) return null;
-    const value = JSON.parse(raw) as CachedExchangeRates;
-    return value.rates && Number.isFinite(value.cachedAt) &&
-      Number.isFinite(new Date(value.asOf).getTime()) ? value : null;
-  } catch { return null; }
+  let { response, data } = await request(currency);
+  let price: number | undefined;
+  if (response.ok && data.xau?.currency === currency && data.xau.unit === "gram") {
+    price = data.xau.price;
+  } else if (response.status === 400) {
+    // Use XAUS' own FX table if its direct currency selector does not support this code.
+    const fallback = await request("USD");
+    if (!fallback.response.ok || !Number.isFinite(fallback.data.per_gram_usd)) {
+      throw new Error("XAUS no pudo entregar una cotización válida para esta moneda.");
+    }
+    const rate = fallback.data.fx_rates?.[currency];
+    if (typeof rate !== "number" || !Number.isFinite(rate) || rate <= 0) {
+      throw new Error(`XAUS todavía no ofrece conversión para ${currency}.`);
+    }
+    price = fallback.data.per_gram_usd! * rate;
+    data = fallback.data;
+  } else if (!response.ok) {
+    throw new Error(`XAUS no respondió correctamente (HTTP ${response.status}).`);
+  }
+
+  if (typeof price !== "number" || !Number.isFinite(price) || price <= 0) {
+    throw new Error("XAUS no entregó un precio por gramo válido.");
+  }
+  const asOf = data.price_as_of ?? data.data_state?.as_of ?? data.updated_at;
+  if (!asOf || !Number.isFinite(new Date(asOf).getTime())) {
+    throw new Error("XAUS no entregó una fecha válida para la cotización.");
+  }
+  if (data.data_state?.status === "unavailable") {
+    throw new Error("XAUS no tiene una cotización disponible en este momento.");
+  }
+  return {
+    currency,
+    price24kPerGram: price,
+    asOf,
+    cachedAt: Date.now(),
+    isStale: data.stale === true || data.data_state?.status === "stale",
+  };
 }
 
 export function PrecioOroDiario() {
@@ -168,7 +163,6 @@ export function PrecioOroDiario() {
       setLoading(true);
       setMessage("");
       const saved = readCachedQuote(country.currency);
-
       if (saved) {
         setQuote(saved);
         setQuoteSource("browser-cache");
@@ -181,72 +175,39 @@ export function PrecioOroDiario() {
       }
 
       try {
-        let gold = readCachedGoldUsd();
-        if (!gold || Date.now() - gold.cachedAt >= CACHE_TTL_MS || refreshKey > 0) {
-          const goldResponse = await fetch(API_URL, { headers: { Accept: "application/json" } });
-          if (!goldResponse.ok) throw new Error("La fuente del oro no respondió correctamente.");
-          const goldData = (await goldResponse.json()) as GoldApiResponse;
-          const price = Number(goldData.price_gram_24k);
-          if (goldData.currency !== "USD" || !goldData.timestamp ||
-              !Number.isFinite(new Date(goldData.timestamp).getTime()) ||
-              !Number.isFinite(price) || price <= 0) {
-            throw new Error("La fuente no entregó una cotización válida del oro.");
-          }
-          gold = { price24kPerGram: price, asOf: goldData.timestamp, cachedAt: Date.now() };
-          try { window.localStorage.setItem(CACHE_KEY, JSON.stringify(gold)); } catch { /* Caché opcional */ }
-        }
-
-        let fx = readCachedExchangeRates();
-        if (!fx || Date.now() - fx.cachedAt >= FX_CACHE_TTL_MS || refreshKey > 0) {
-          const fxResponse = await fetch(FX_API_URL, { headers: { Accept: "application/json" } });
-          if (!fxResponse.ok) throw new Error("No fue posible actualizar los tipos de cambio.");
-          const fxData = (await fxResponse.json()) as ExchangeRatesResponse;
-          if (fxData.result !== "success" || !fxData.time_last_update_utc || !fxData.rates) {
-            throw new Error("La fuente de divisas no entregó datos válidos.");
-          }
-          fx = { rates: fxData.rates, asOf: fxData.time_last_update_utc, cachedAt: Date.now() };
-          try { window.localStorage.setItem(FX_CACHE_KEY, JSON.stringify(fx)); } catch { /* Caché opcional */ }
-        }
-
-        const exchangeRate = country.currency === "USD" ? 1 : fx.rates[country.currency];
-        if (typeof exchangeRate !== "number" || !Number.isFinite(exchangeRate) || exchangeRate <= 0) {
-          throw new Error(`No hay conversión disponible para ${country.currency}.`);
-        }
-
-        const fresh: GoldQuote = {
-          currency: country.currency,
-          price24kPerGram: gold.price24kPerGram * exchangeRate,
-          asOf: gold.asOf,
-          cachedAt: Math.min(gold.cachedAt, fx.cachedAt),
-        };
+        const fresh = await fetchXausQuote(country.currency);
         if (cancelled) return;
+        try {
+          window.localStorage.setItem(CACHE_KEY_PREFIX + country.currency, JSON.stringify(fresh));
+        } catch {
+          // La caché local es opcional.
+        }
         setQuote(fresh);
         setQuoteSource("source");
+        if (fresh.isStale) {
+          setMessage("XAUS está entregando su último precio real disponible; verifica su fecha antes de utilizarlo.");
+        }
       } catch (error) {
         if (!cancelled) {
           setQuoteSource("browser-cache");
-          setMessage(
-            saved
-              ? `No se pudo actualizar. Se conserva la cotización del ${formatQuoteDate(saved.asOf)}; verifica su vigencia antes de usarla.`
-              : error instanceof Error
-                ? error.message
-                : "No fue posible consultar el precio del oro. Inténtalo nuevamente más tarde."
-          );
+          setMessage(saved
+            ? `No se pudo actualizar XAUS. Se conserva la cotización del ${formatQuoteDate(saved.asOf)}; verifica su vigencia antes de usarla.`
+            : error instanceof Error
+              ? error.message
+              : "No fue posible consultar el precio del oro. Inténtalo nuevamente más tarde.");
         }
       } finally {
         if (!cancelled) setLoading(false);
       }
     }
     void loadQuote();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [isVisible, refreshKey, country.currency]);
 
   const purityByKarat: Record<number, number> = { 24: 999, 22: 916, 18: 750, 14: 585, 10: 417, 9: 375 };
   const purity = purityByKarat[karat] ?? 750;
   const quoteAge = quote && quote.currency === country.currency ? Date.now() - new Date(quote.asOf).getTime() : 0;
-  const isQuoteStale = quote?.currency === country.currency ? !Number.isFinite(quoteAge) || quoteAge > QUOTE_STALE_MS : false;
+  const isQuoteStale = quote?.currency === country.currency ? quote.isStale || !Number.isFinite(quoteAge) || quoteAge > QUOTE_STALE_MS : false;
   const usablePrice24k = isQuoteStale ? undefined : price24k;
 
   const estimatedValue = useMemo(() => {
@@ -275,7 +236,7 @@ export function PrecioOroDiario() {
             </p>
             <div className="mt-6 flex flex-wrap gap-x-5 gap-y-3 border-t border-[#eadca8]/70 pt-5 text-xs font-medium text-slate-600">
               <span className="inline-flex items-center gap-2"><ShieldCheck className="size-4 text-[#9a7400]" /> Sin registro</span>
-              <span className="inline-flex items-center gap-2"><CalendarClock className="size-4 text-[#9a7400]" /> Actualización aproximada cada 15 min</span>
+              <span className="inline-flex items-center gap-2"><CalendarClock className="size-4 text-[#9a7400]" /> Actualización aproximada cada 60 segundos</span>
               <span className="inline-flex items-center gap-2"><Sparkles className="size-4 text-[#9a7400]" /> Para joyeros de la región</span>
             </div>
           </div>
@@ -314,7 +275,7 @@ export function PrecioOroDiario() {
               <div className="flex min-w-0 items-center gap-2 text-[11px] text-slate-500">
                 <CalendarClock className="size-3.5 shrink-0" />
                 <span>{quote ? <>Dato de origen: {formatQuoteDate(quote.asOf)} · hora de Perú</> : "La fecha aparecerá cuando la fuente responda."}</span>
-                {quote && <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-semibold ${isQuoteStale ? "bg-amber-100 text-amber-800" : quoteSource === "browser-cache" ? "bg-slate-100 text-slate-600" : "bg-emerald-50 text-emerald-700"}`}>{isQuoteStale ? "Dato desactualizado" : quoteSource === "browser-cache" ? "Guardada en este navegador" : "Oro con demora aprox. 15 min"}</span>}
+                {quote && <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-semibold ${isQuoteStale ? "bg-amber-100 text-amber-800" : quoteSource === "browser-cache" ? "bg-slate-100 text-slate-600" : "bg-emerald-50 text-emerald-700"}`}>{isQuoteStale ? "Dato desactualizado" : quoteSource === "browser-cache" ? "Guardada en este navegador" : "Fuente XAUS · actualización 60 s"}</span>}
               </div>
               <button
                 type="button"
@@ -369,10 +330,7 @@ export function PrecioOroDiario() {
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-5 py-4 sm:px-7">
-              <a href="https://goldprice.dev/" target="_blank" rel="noreferrer" className="text-[11px] font-medium text-slate-500 underline decoration-slate-300 underline-offset-4 hover:text-[#765900]">
-                Datos de oro por goldprice.dev
-              </a>
-              <a href="https://www.exchangerate-api.com/" target="_blank" rel="noreferrer" className="text-[11px] font-medium text-slate-500 underline decoration-slate-300 underline-offset-4 hover:text-[#765900]">Rates By Exchange Rate API</a>
+              <a href="https://xaus.com/api/" target="_blank" rel="noreferrer" className="text-[11px] font-medium text-slate-500 underline decoration-slate-300 underline-offset-4 hover:text-[#765900]">Datos de oro y conversión por XAUS</a>
               <Link to="/herramientas-publicas" className="inline-flex items-center gap-2 text-xs font-bold text-[#765900] hover:text-[#17232d]">
                 Más herramientas <ArrowRight className="size-3.5" />
               </Link>
