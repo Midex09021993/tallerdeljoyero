@@ -254,9 +254,9 @@ function hydrateRhinoLayerMetadata(
     if(!hasAnyLayerEvidence||!layerKey){
       audit.unresolvedMeshes++;
       audit.categoryCounts["otro"]=(audit.categoryCounts["otro"]??0)+1;
+      if (objectName && !String(x.name??"").trim()) x.name=objectName;
       x.userData={
         ...data,
-        ...(objectName && !String(x.name??"").trim() ? { name: objectName } : {}),
         aurumRhinoSource:{
           ...source,
           objectId,
@@ -290,9 +290,9 @@ function hydrateRhinoLayerMetadata(
       layerSources.set(layerKey,source);
     }
     audit.categoryCounts[category]=(audit.categoryCounts[category]??0)+1;
+    if (objectName && !String(x.name??"").trim()) x.name=objectName;
     x.userData={
       ...data,
-      ...(objectName && !String(x.name??"").trim() ? { name: objectName } : {}),
       aurumRhinoSource:{
         ...source,
         objectId,
