@@ -169,6 +169,53 @@ function matrixSlotFromLayer(name:string,category:"metal"|"gema"|"otro",_colorCa
  * Resolve each mesh from its own Rhino layer index/name and the root layer table.
  * Never pair source and exported meshes by traversal order: GLTF export may reorder nodes.
  */
+function normalizeRhinoObjectType(value:any):string {
+  const raw=String(value?.name??value??"").trim();
+  return raw.replace(/^ObjectType_/i,"").replace(/([a-z])([A-Z])/g,"$1 $2").trim()||"Unknown";
+}
+
+/** Capture Rhino object metadata before construction curves are removed. */
+function auditRhinoSourceObjects(object:any) {
+  const layers=findRhinoLayerManifest(object);
+  const byLayer:Record<string,number>={};
+  const byType:Record<string,number>={};
+  const records:Array<{id:string|null;name:string;type:string;layer:string|null;layerId:string|null}>=[];
+  let nodesWithSourceIdentity=0;
+  let curveNodes=0;
+  let linePrimitives=0;
+  let pointPrimitives=0;
+  object?.traverse?.((node:any)=>{
+    if(node===object)return;
+    const data=node?.userData??{};
+    const attrs=data.attributes??{};
+    const geometry=attrs.geometry??attrs.Geometry??{};
+    const geometryType=normalizeRhinoObjectType(data.objectType??data.aurumRhinoGeometryType??geometry.objectType??geometry.ObjectType);
+    const rhinoLayer=data.rhinoLayer??data.RhinoLayer??{};
+    const layerIndexValue=attrs.layerIndex??attrs.LayerIndex??data.layerIndex??data.LayerIndex;
+    const layerIndex=Number.isInteger(Number(layerIndexValue))?Number(layerIndexValue):-1;
+    const layer=layers[layerIndex]??null;
+    const layerName=String(rhinoLayer.fullPath??rhinoLayer.FullPath??rhinoLayer.name??rhinoLayer.Name??layer?.fullPath??layer?.FullPath??layer?.name??layer?.Name??"").trim()||null;
+    const layerId=rhinoLayer.id??rhinoLayer.Id??layer?.id??layer?.Id??null;
+    const objectId=attrs.id??attrs.Id??data.objectId??data.ObjectId??data.id??data.Id??null;
+    const objectName=String(attrs.name??attrs.Name??data.objectName??data.ObjectName??node.name??"").trim();
+    const hasRhinoMetadata=Boolean(objectId!=null||layerName||layerId!=null||data.objectType||geometry.objectType);
+    if(!hasRhinoMetadata)return;
+    if(objectId!=null)nodesWithSourceIdentity++;
+    byType[geometryType]=(byType[geometryType]??0)+1;
+    const layerKey=layerName??(layerId!=null?"ID "+String(layerId):"Sin capa");
+    byLayer[layerKey]=(byLayer[layerKey]??0)+1;
+    if(geometryType.toLowerCase()==="curve")curveNodes++;
+    if(node.isLine||node.isLineSegments||node.isLineLoop)linePrimitives++;
+    if(node.isPoints)pointPrimitives++;
+    const source=data.aurumRhinoSource??{};
+    node.userData={...data,aurumRhinoSource:{...source,objectId:objectId??source.objectId??null,objectName:objectName||source.objectName||null,objectType:geometryType!=="Unknown"?geometryType:(source.objectType??null),layerIndex:layerIndex>=0?layerIndex:(source.layerIndex??null),layerId:layerId??source.layerId??null,layerName:layerName??source.layerName??null}};
+    records.push({id:objectId!=null?String(objectId):null,name:objectName,type:geometryType,layer:layerName,layerId:layerId!=null?String(layerId):null});
+  });
+  const audit={totalSourceObjects:records.length,nodesWithSourceIdentity,byGeometryType:byType,byLayer,curveNodes,linePrimitives,pointPrimitives,sourceLayerCount:layers.length,objects:records};
+  object.userData={...(object.userData??{}),aurumSourceObjectAudit:audit};
+  console.info("[AURUM][RHINO SOURCE OBJECT AUDIT]",audit);
+  return audit;
+}
 function removeGlbConstructionPrimitives(object:any) {
   const removeQueue:any[]=[];
   const counts={lines:0,points:0};
@@ -379,6 +426,7 @@ export async function normalizeAurumModel(
     if (!glb) throw new Error("No se generó el GLB interno del archivo 3DM.");
     const { GLTFLoader } = await import("three/examples/jsm/loaders/GLTFLoader.js");
     const interno = (await new GLTFLoader().parseAsync(glb,"")).scene;
+    auditRhinoSourceObjects(interno);
     // The exported GLB already carries the layer metadata used by
     // iJewel. Read it from the GLB itself instead of matching meshes by
     // traversal index. Mesh order is not a stable MatrixGold layer identity.
@@ -395,7 +443,8 @@ export async function normalizeAurumModel(
   // parseamos una segunda vez: conservar el Object3D original evita una
   // conversión redundante y mantiene intactas sus normales/materiales authored.
   if (extension === "glb") {
-    // Hide construction curves/points imported as native glTF line primitives.
+    // Audit original Rhino object types/IDs before hiding construction curves and points.
+    auditRhinoSourceObjects(object);
     // Surface meshes and their authored materials/normals remain untouched.
     removeGlbConstructionPrimitives(object);
     // Official iJewel-style GLBs carry the layer assignment in node extras.
