@@ -50,6 +50,7 @@ export type AurumDiamondBvhSetup = {
     triangleCount: number;
     ior: number;
     rayBounces: number;
+    environmentIntensity: number;
     geometryMutated: false;
     rendererRequired: "WebGL2";
   };
@@ -133,6 +134,7 @@ export function prepareAurumDiamondBvhExperiment(
       triangleCount,
       ior: Math.max(1, options.ior ?? 2.417),
       rayBounces,
+      environmentIntensity: Math.max(0, Math.min(2.5, options.environmentIntensity ?? 1.14)),
       geometryMutated: false,
       rendererRequired: "WebGL2",
     },
