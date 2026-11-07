@@ -678,17 +678,20 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
                 // environment rays continue to provide rotation-dependent fire.
                 // A wide lobe models the large diffuser; a restrained core adds
                 // definition without washing the neighboring facets to white.
-                vec3 aurumGemSunDir=normalize(vec3(-0.06,0.94,0.34));
+                // The source is fixed in world space (not camera space): orbiting the
+                // product changes the facet/view relationship, never the light position.
+                // A near-zenith, broad lobe models one large overhead studio diffuser.
+                vec3 aurumGemSunDir=vec3(0.0,1.0,0.0);
                 float aurumGemSunNdotL=max(dot(aurumGemN,aurumGemSunDir),0.0);
                 vec3 aurumGemSunHalf=normalize(aurumGemSunDir+aurumGemViewDir);
                 float aurumGemSunHalfDot=max(dot(aurumGemN,aurumGemSunHalf),0.0);
-                float aurumGemSoftbox=pow(aurumGemSunHalfDot,5.5);
-                float aurumGemSoftboxCore=pow(aurumGemSunHalfDot,20.0);
+                float aurumGemSoftbox=pow(aurumGemSunHalfDot,4.2);
+                float aurumGemSoftboxCore=pow(aurumGemSunHalfDot,18.0);
                 float aurumGemSunEdge=pow(1.0-aurumGemNdotV,2.0)*aurumGemSunNdotL;
-                float aurumGemSunResponse=aurumGemSunNdotL*0.10
-                    +aurumGemSoftbox*0.34+aurumGemSoftboxCore*0.16
-                    +aurumGemSunEdge*0.06;
-                gl_FragColor.rgb+=vec3(1.0,0.99,0.97)*0.28*aurumGemSunResponse;
+                float aurumGemSunResponse=aurumGemSunNdotL*0.12
+                    +aurumGemSoftbox*0.38+aurumGemSoftboxCore*0.14
+                    +aurumGemSunEdge*0.07;
+                gl_FragColor.rgb+=vec3(1.0,0.99,0.97)*0.34*aurumGemSunResponse;
         ` : ``}
 
                 #include <tonemapping_fragment>
