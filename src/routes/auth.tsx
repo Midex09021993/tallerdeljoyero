@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { esVistaMovilTablet, inicioSegunRol, useSesion } from "@/lib/auth";
 import { ArrowRight, Boxes, Calculator, Eye, EyeOff, Gem, Grid2X2, Headphones, HelpCircle, Home, LockKeyhole, Menu, X, Monitor, Network, PackageCheck, ShieldCheck, ShoppingBag, Sparkles, UserRound, UsersRound, type LucideIcon } from "lucide-react";
 import { registrarPrimerDueno, resolverEmailInicioSesion, sistemaSinDuenos } from "@/lib/cuentas.functions";
+import { registrarEvento } from "@/lib/analytics";
 
 const RegistroTaller = lazy(() => import("@/components/RegistroTaller").then((module) => ({ default: module.RegistroTaller })));
 const ComunidadAurumLab = lazy(() => import("@/components/ComunidadAurumLab").then((module) => ({ default: module.ComunidadAurumLab })));
@@ -120,6 +121,7 @@ function LoginPage() {
     e.preventDefault();
     setError("");
     setCargando(true);
+    registrarEvento("login_started", { mode: modoAlta ? "initial_owner" : "existing_user" });
     try {
       const email = modoAlta ? emailRegistro.trim().toLowerCase() : (await resolverEmailInicioSesion({ data: { usuario } })).email;
       if (modoAlta) {
@@ -167,12 +169,14 @@ function LoginPage() {
       if (errorSesion || !sesionActualizada) {
         throw new Error("La sesión se creó, pero no se pudo resolver el acceso al taller");
       }
+      registrarEvento("login_completed", { mode: modoAlta ? "initial_owner" : "existing_user" });
       if (window.sessionStorage.getItem("aurum_peso_draft")) {
         window.location.assign("/herramientas?recuperarPeso=1");
         return;
       }
       navigate({ to: inicioSegunRol(sesionActualizada, { movilTablet: esVistaMovilTablet() }), replace: true });
     } catch (e2) {
+      registrarEvento("login_failed", { mode: modoAlta ? "initial_owner" : "existing_user" });
       setError(e2 instanceof Error ? e2.message : "No se pudo iniciar sesión");
     } finally {
       setCargando(false);
