@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, CalendarClock, Coins, RefreshCw, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRight, CalendarClock, Coins, RefreshCw, ShieldCheck } from "lucide-react";
 
 const COUNTRIES = [
   { code: "PE", name: "Perú", currency: "PEN", locale: "es-PE", flag: "🇵🇪" },
