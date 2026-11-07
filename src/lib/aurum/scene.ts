@@ -18,7 +18,7 @@ export function createAurumSceneController(
     if (backgroundElement?.style) {
       backgroundElement.style.backgroundColor = color ?? ("#" + Number(currentPreset.background).toString(16).padStart(6, "0"));
       const isCssGradient = image
-        ? /^(?:linear|radial|conic)-gradient\\(/i.test(image.trim())
+        ? /^(?:linear|radial|conic)-gradient\(/i.test(image.trim())
         : false;
       backgroundElement.style.backgroundImage = image
         ? (isCssGradient ? image : `url("${image}")`)
