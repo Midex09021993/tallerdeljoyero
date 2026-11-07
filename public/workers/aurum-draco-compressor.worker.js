@@ -173,12 +173,14 @@ async function compress(buffer) {
       parts.push(payload);length=aligned+payload.byteLength;
       primitive.extensions=primitive.extensions||{};
       primitive.extensions.KHR_draco_mesh_compression={bufferView,attributes:attributeIds};
-      for(const index of Object.values(primitive.attributes)) compressedAccessorIndices.add(index);
+      for(const semantic of Object.keys(attributeIds)) compressedAccessorIndices.add(primitive.attributes[semantic]);
       if(primitive.indices!==undefined) compressedAccessorIndices.add(primitive.indices);
       compressed++;
     }
   } finally {encoder.__destroy__();builder.__destroy__();}
   if(!compressed)return {buffer,compressed:0,originalBytes,outputBytes:originalBytes};
+  const allPrimitivesCompressed=(json.meshes||[]).every(mesh=>(mesh.primitives||[]).every(primitive=>Boolean(primitive.extensions?.KHR_draco_mesh_compression)));
+  if(!allPrimitivesCompressed)return {buffer,compressed:0,originalBytes,outputBytes:originalBytes};
   const binary=new Uint8Array(length);let cursor=0;for(const part of parts){binary.set(part,cursor);cursor+=part.length;}
   json.extensionsUsed=Array.from(new Set([...(json.extensionsUsed||[]),"KHR_draco_mesh_compression"]));
   json.extensionsRequired=Array.from(new Set([...(json.extensionsRequired||[]),"KHR_draco_mesh_compression"]));
