@@ -29,10 +29,31 @@ type GoldApiResponse = {
   price_gram_24k?: string;
 };
 
-const CACHE_KEY = "aurum-gold-quote-goldprice-dev-v1";
+type ExchangeRatesResponse = {
+  result?: string;
+  time_last_update_utc?: string;
+  rates?: Partial<Record<CurrencyCode, number>>;
+};
+
+type CachedGoldUsd = {
+  price24kPerGram: number;
+  asOf: string;
+  cachedAt: number;
+};
+
+type CachedExchangeRates = {
+  rates: Partial<Record<CurrencyCode, number>>;
+  asOf: string;
+  cachedAt: number;
+};
+
+const CACHE_KEY = "aurum-gold-quote-goldprice-dev-usd-v1";
+const FX_CACHE_KEY = "aurum-gold-quote-fx-v1";
 const CACHE_TTL_MS = 15 * 60 * 1000;
+const FX_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const QUOTE_STALE_MS = 2 * 60 * 60 * 1000;
-const API_URL = "https://api.goldprice.dev/v1/carat";
+const API_URL = "https://api.goldprice.dev/v1/carat?currency=USD";
+const FX_API_URL = "https://open.er-api.com/v6/latest/USD";
 
 function formatMoney(value: number, currency: CurrencyCode, locale: string) {
   return new Intl.NumberFormat(locale, {
@@ -69,13 +90,55 @@ function isValidQuote(value: unknown, currency: CurrencyCode): value is GoldQuot
 
 function readCachedQuote(currency: CurrencyCode): GoldQuote | null {
   try {
-    const raw = window.localStorage.getItem(`${CACHE_KEY}:${currency}`);
-    if (!raw) return null;
-    const parsed: unknown = JSON.parse(raw);
-    return isValidQuote(parsed, currency) ? parsed : null;
+    const [goldRaw, fxRaw] = [
+      window.localStorage.getItem(CACHE_KEY),
+      window.localStorage.getItem(FX_CACHE_KEY),
+    ];
+    if (!goldRaw || !fxRaw) return null;
+    const gold = JSON.parse(goldRaw) as CachedGoldUsd;
+    const fx = JSON.parse(fxRaw) as CachedExchangeRates;
+    const rate = currency === "USD" ? 1 : fx.rates?.[currency];
+    if (
+      !Number.isFinite(gold.price24kPerGram) ||
+      gold.price24kPerGram <= 0 ||
+      !Number.isFinite(new Date(gold.asOf).getTime()) ||
+      !Number.isFinite(gold.cachedAt) ||
+      !Number.isFinite(fx.cachedAt) ||
+      !Number.isFinite(new Date(fx.asOf).getTime()) ||
+      typeof rate !== "number" ||
+      !Number.isFinite(rate) ||
+      rate <= 0
+    ) return null;
+    return {
+      currency,
+      price24kPerGram: gold.price24kPerGram * rate,
+      asOf: gold.asOf,
+      cachedAt: Math.min(gold.cachedAt, fx.cachedAt),
+    };
   } catch {
     return null;
   }
+}
+
+function readCachedGoldUsd(): CachedGoldUsd | null {
+  try {
+    const raw = window.localStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const value = JSON.parse(raw) as CachedGoldUsd;
+    return Number.isFinite(value.price24kPerGram) && value.price24kPerGram > 0 &&
+      Number.isFinite(value.cachedAt) && Number.isFinite(new Date(value.asOf).getTime())
+      ? value : null;
+  } catch { return null; }
+}
+
+function readCachedExchangeRates(): CachedExchangeRates | null {
+  try {
+    const raw = window.localStorage.getItem(FX_CACHE_KEY);
+    if (!raw) return null;
+    const value = JSON.parse(raw) as CachedExchangeRates;
+    return value.rates && Number.isFinite(value.cachedAt) &&
+      Number.isFinite(new Date(value.asOf).getTime()) ? value : null;
+  } catch { return null; }
 }
 
 export function PrecioOroDiario() {
@@ -132,42 +195,47 @@ export function PrecioOroDiario() {
       }
 
       try {
-        const response = await fetch(`${API_URL}?currency=${country.currency}`, {
-          headers: { Accept: "application/json" },
-        });
-        if (!response.ok) {
-          if (response.status === 429) throw new Error("La fuente alcanzó su límite temporal de consultas. Inténtalo más tarde.");
-          throw new Error("La fuente de cotizaciones no respondió correctamente.");
+        let gold = readCachedGoldUsd();
+        if (!gold || Date.now() - gold.cachedAt >= CACHE_TTL_MS || refreshKey > 0) {
+          const goldResponse = await fetch(API_URL, { headers: { Accept: "application/json" } });
+          if (!goldResponse.ok) throw new Error("La fuente del oro no respondió correctamente.");
+          const goldData = (await goldResponse.json()) as GoldApiResponse;
+          const price = Number(goldData.price_gram_24k);
+          if (goldData.currency !== "USD" || !goldData.timestamp ||
+              !Number.isFinite(new Date(goldData.timestamp).getTime()) ||
+              !Number.isFinite(price) || price <= 0) {
+            throw new Error("La fuente no entregó una cotización válida del oro.");
+          }
+          gold = { price24kPerGram: price, asOf: goldData.timestamp, cachedAt: Date.now() };
+          try { window.localStorage.setItem(CACHE_KEY, JSON.stringify(gold)); } catch { /* Caché opcional */ }
         }
 
-        const result = (await response.json()) as GoldApiResponse;
-        const price = Number(result.price_gram_24k);
-        const asOf = result.timestamp;
+        let fx = readCachedExchangeRates();
+        if (!fx || Date.now() - fx.cachedAt >= FX_CACHE_TTL_MS || refreshKey > 0) {
+          const fxResponse = await fetch(FX_API_URL, { headers: { Accept: "application/json" } });
+          if (!fxResponse.ok) throw new Error("No fue posible actualizar los tipos de cambio.");
+          const fxData = (await fxResponse.json()) as ExchangeRatesResponse;
+          if (fxData.result !== "success" || !fxData.time_last_update_utc || !fxData.rates) {
+            throw new Error("La fuente de divisas no entregó datos válidos.");
+          }
+          fx = { rates: fxData.rates, asOf: fxData.time_last_update_utc, cachedAt: Date.now() };
+          try { window.localStorage.setItem(FX_CACHE_KEY, JSON.stringify(fx)); } catch { /* Caché opcional */ }
+        }
 
-        if (
-          result.currency !== country.currency ||
-          !asOf ||
-          !Number.isFinite(new Date(asOf).getTime()) ||
-          !Number.isFinite(price) ||
-          price <= 0
-        ) {
-          throw new Error(`La fuente no ofrece una cotización válida en ${country.currency}.`);
+        const exchangeRate = country.currency === "USD" ? 1 : fx.rates[country.currency];
+        if (typeof exchangeRate !== "number" || !Number.isFinite(exchangeRate) || exchangeRate <= 0) {
+          throw new Error(`No hay conversión disponible para ${country.currency}.`);
         }
 
         const fresh: GoldQuote = {
           currency: country.currency,
-          price24kPerGram: price,
-          asOf,
-          cachedAt: Date.now(),
+          price24kPerGram: gold.price24kPerGram * exchangeRate,
+          asOf: gold.asOf,
+          cachedAt: Math.min(gold.cachedAt, fx.cachedAt),
         };
         if (cancelled) return;
         setQuote(fresh);
         setQuoteSource("source");
-        try {
-          window.localStorage.setItem(`${CACHE_KEY}:${country.currency}`, JSON.stringify(fresh));
-        } catch {
-          // La cotización sigue disponible durante esta sesión.
-        }
       } catch (error) {
         if (!cancelled) {
           setQuoteSource("browser-cache");
@@ -260,7 +328,7 @@ export function PrecioOroDiario() {
               <div className="flex min-w-0 items-center gap-2 text-[11px] text-slate-500">
                 <CalendarClock className="size-3.5 shrink-0" />
                 <span>{quote ? <>Dato de origen: {formatQuoteDate(quote.asOf)} · hora de Perú</> : "La fecha aparecerá cuando la fuente responda."}</span>
-                {quote && <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-semibold ${isQuoteStale ? "bg-amber-100 text-amber-800" : quoteSource === "browser-cache" ? "bg-slate-100 text-slate-600" : "bg-emerald-50 text-emerald-700"}`}>{isQuoteStale ? "Dato desactualizado" : quoteSource === "browser-cache" ? "Guardada en este navegador" : "Fuente consultada · demora aprox. 15 min"}</span>}
+                {quote && <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-semibold ${isQuoteStale ? "bg-amber-100 text-amber-800" : quoteSource === "browser-cache" ? "bg-slate-100 text-slate-600" : "bg-emerald-50 text-emerald-700"}`}>{isQuoteStale ? "Dato desactualizado" : quoteSource === "browser-cache" ? "Guardada en este navegador" : "Oro con demora aprox. 15 min"}</span>}
               </div>
               <button
                 type="button"
@@ -318,6 +386,7 @@ export function PrecioOroDiario() {
               <a href="https://goldprice.dev/" target="_blank" rel="noreferrer" className="text-[11px] font-medium text-slate-500 underline decoration-slate-300 underline-offset-4 hover:text-[#765900]">
                 Datos de oro por goldprice.dev
               </a>
+              <a href="https://www.exchangerate-api.com/" target="_blank" rel="noreferrer" className="text-[11px] font-medium text-slate-500 underline decoration-slate-300 underline-offset-4 hover:text-[#765900]">Rates By Exchange Rate API</a>
               <Link to="/herramientas-publicas" className="inline-flex items-center gap-2 text-xs font-bold text-[#765900] hover:text-[#17232d]">
                 Más herramientas <ArrowRight className="size-3.5" />
               </Link>
