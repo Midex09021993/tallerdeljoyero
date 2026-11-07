@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { ArrowRight, CheckCircle2, LoaderCircle, MessageCircle, X } from "lucide-react";
 import { enviarConsultaComercial } from "@/lib/contacto.functions";
+import { registrarEvento } from "@/lib/analytics";
 
 const INTERESES = [
   { value: "aurum_lab", label: "AURUM LAB", detail: "La plataforma para talleres de joyería" },
@@ -29,6 +30,7 @@ export function ContactoComercial({ className = "" }: { className?: string }) {
         data: { nombre, email, telefono, interes, mensaje, website },
       });
       if (!result.ok) throw new Error("No se pudo enviar la consulta.");
+      registrarEvento("contact_submitted", { interest: interes });
       setEnviado(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "No pudimos enviar tu consulta. Inténtalo de nuevo.");
@@ -45,7 +47,7 @@ export function ContactoComercial({ className = "" }: { className?: string }) {
 
   return (
     <>
-      <button type="button" onClick={() => { setAbierto(true); setEnviado(false); }} className={className}>
+      <button type="button" onClick={() => { setAbierto(true); registrarEvento("contact_started"); setEnviado(false); }} className={className}>
         <MessageCircle className="size-4" /> Hablemos
       </button>
       {abierto ? (
