@@ -16,6 +16,34 @@ function getFamily(mesh: THREE.Mesh): MeshFamily {
   return "otro";
 }
 
+
+const materialFingerprintCache = new WeakMap<THREE.Material, string>();
+
+function areEquivalentMaterials(a: THREE.Material, b: THREE.Material): boolean {
+  if (a === b) return true;
+  const fingerprint = (material: THREE.Material): string => {
+    const cached = materialFingerprintCache.get(material);
+    if (cached) return cached;
+    const serialized = material.toJSON() as Record<string, unknown>;
+    const normalized = { ...serialized };
+    delete normalized.uuid;
+    const value = JSON.stringify(normalized);
+    materialFingerprintCache.set(material, value);
+    return value;
+  };
+  try {
+    return fingerprint(a) === fingerprint(b);
+  } catch {
+    return false;
+  }
+}
+
+function isPrimaryMetalProcessingLayer(meta: Record<string, unknown>): boolean {
+  if (meta.categoria !== "metal") return false;
+  const name = String(meta.capa ?? "").trim().replace(/\s+/g, " ").toLocaleLowerCase();
+  return /^capa metal 0?[1-4]$/.test(name);
+}
+
 function compatibleAttributes(a: THREE.BufferGeometry, b: THREE.BufferGeometry): boolean {
   const aNames = Object.keys(a.attributes).sort();
   const bNames = Object.keys(b.attributes).sort();
@@ -84,8 +112,9 @@ export type AurumUnionExperimentResult = {
 
 /**
  * Rhino 3DM import CSG pass (invoked during internal GLB conversion).
- * Builds an accumulated union per compatible layer: after A+B succeeds,
- * the next operation is (A+B)+C. Original Rhino meshes remain hidden,
+ * Builds an accumulated union for the same source layer, or across the four
+ * explicit primary metal layers when serialized material properties match.
+ * After A+B succeeds, the next operation is (A+B)+C. Original Rhino meshes remain hidden,
  * not destroyed, so the operation can be rolled back.
  *
  * This is a visual mesh union, not a native Rhino/NURBS BREP Boolean.
@@ -120,10 +149,14 @@ export function applyAurumMetalUnionExperiment(root: THREE.Object3D, maxMerges =
     for (let j = i + 1; j < candidates.length && result.merged < maxMerges; j++) {
       const right = candidates[j]!;
       if (!right.parent || accumulator.parent !== right.parent || !right.visible
-        || accumulator.material !== right.material) continue;
+        || !areEquivalentMaterials(accumulator.material as THREE.Material, right.material as THREE.Material)) continue;
       const rightMeta = (right.userData?.aurumRhino ?? {}) as Record<string, unknown>;
       const rightLayerKey = typeof rightMeta.layerKey === "string" ? rightMeta.layerKey : "";
-      if (!rightLayerKey || rightLayerKey !== layerKey) continue;
+      if (!rightLayerKey) continue;
+      const sameSourceLayer = rightLayerKey === layerKey;
+      const samePrimaryMetalFamily = isPrimaryMetalProcessingLayer(seedMeta)
+        && isPrimaryMetalProcessingLayer(rightMeta);
+      if (!sameSourceLayer && !samePrimaryMetalFamily) continue;
       if (!accumulator.geometry || !right.geometry
         || !compatibleAttributes(accumulator.geometry, right.geometry)) {
         result.skipped++;
