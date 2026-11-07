@@ -74,13 +74,13 @@ function buildGlb(json,bin) {
 async function compress(buffer) {
   const {json,bin}=parseGlb(buffer),Module=await getEncoder(),originalBytes=buffer.byteLength;
   json.bufferViews=json.bufferViews||[];
-  const parts=[new Uint8Array(bin)];let length=bin.byteLength,compressed=0;
+  const parts=[new Uint8Array(bin)];let length=bin.byteLength,compressed=0,facesRejected=0,unsupported=0;
   const encoder=new Module.Encoder(),builder=new Module.MeshBuilder();
   encoder.SetEncodingMethod(Module.MESH_EDGEBREAKER_ENCODING);encoder.SetSpeedOptions(5,5);
   encoder.SetAttributeQuantization(Module.POSITION,16);encoder.SetAttributeQuantization(Module.NORMAL,12);encoder.SetAttributeQuantization(Module.TEX_COORD,14);
   try {
     for(const mesh of (json.meshes||[])) for(const primitive of (mesh.primitives||[])) {
-      if((primitive.mode??4)!==4 || !primitive.attributes || primitive.extensions?.KHR_draco_mesh_compression) continue;
+      if((primitive.mode??4)!==4 || !primitive.attributes || primitive.extensions?.KHR_draco_mesh_compression) { unsupported++; continue; }
       const positionIndex=primitive.attributes.POSITION;if(positionIndex===undefined) continue;
       const position=readAccessor(json,bin,positionIndex);if(position.components!==3 || position.count<3) continue;
       let indices;
@@ -121,7 +121,7 @@ async function compress(buffer) {
       primitive.extensions.KHR_draco_mesh_compression={bufferView,attributes:attributeIds};compressed++;
     }
   } finally {encoder.__destroy__();builder.__destroy__();}
-  if(!compressed)return {buffer,compressed:0,originalBytes,outputBytes:originalBytes};
+  if(!compressed)return {buffer,compressed:0,originalBytes,outputBytes:originalBytes,diagnostics:{facesRejected,unsupported,meshCount:(json.meshes||[]).length,primitiveCount:(json.meshes||[]).reduce((n,m)=>n+(m.primitives||[]).length,0)}};
   const binary=new Uint8Array(length);let cursor=0;for(const part of parts){binary.set(part,cursor);cursor+=part.length;}
   json.extensionsUsed=Array.from(new Set([...(json.extensionsUsed||[]),"KHR_draco_mesh_compression"]));
   const output=buildGlb(json,binary.buffer);
