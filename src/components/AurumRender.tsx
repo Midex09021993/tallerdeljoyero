@@ -870,7 +870,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               diamondBvhRuntime = null;
               diamondBvhRuntimeUrl = null;
             }
-            if (modelo && !diamondBvhRuntime) {
+            if (diamondBvhRuntime && diamondBvhRuntimeUrl === gemEnvironmentUrl) {
+              diamondBvhRuntime.updateEnvironment(gemEnvironmentRotation, gemEnvironmentIntensityScale);
+            } else if (modelo && !diamondBvhRuntime) {
               void asegurarDiamanteBvh();
             }
             onLoaded?.();
@@ -1549,19 +1551,20 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         if (Number.isFinite(scenePreset.environmentRotation)) {
           environmentController.setRotation(scenePreset.environmentRotation as number);
         }
-        if (Number.isFinite(scenePreset.gemEnvironmentRotation)) {
-          gemEnvironmentRotation=scenePreset.gemEnvironmentRotation as number;
-        }
-        if (Number.isFinite(scenePreset.gemEnvironmentIntensity)) {
-          // El valor del perfil es un multiplicador de intensidad del HDRI de gemas.
-          // Se aplica en caliente: no recarga texturas ni recompila el shader.
-          gemEnvironmentIntensityScale=Math.max(.75,Math.min(1.35,scenePreset.gemEnvironmentIntensity));
-        }
-        aplicarEntornoGema();
+        const nextGemRotation = Number.isFinite(scenePreset.gemEnvironmentRotation)
+          ? scenePreset.gemEnvironmentRotation as number
+          : gemEnvironmentRotation;
+        const nextGemIntensity = Number.isFinite(scenePreset.gemEnvironmentIntensity)
+          ? Math.max(.75, Math.min(1.35, scenePreset.gemEnvironmentIntensity))
+          : gemEnvironmentIntensityScale;
+        const nextGemEnvironmentKey = scenePreset.gemEnvironmentKey ?? "ijewelGem";
+        // Load the scene's actual gemstone HDRI, then synchronize standard and BVH materials.
+        cargarEntornoGema(nextGemEnvironmentKey, nextGemRotation, nextGemIntensity);
         console.info("[AURUM][GEM SCENE CALIBRATION]",{
           scene:id,
-          gemEnvironmentRotation,
-          gemEnvironmentIntensityScale,
+          gemEnvironmentKey:nextGemEnvironmentKey,
+          gemEnvironmentRotation:nextGemRotation,
+          gemEnvironmentIntensityScale:nextGemIntensity,
         });
         // La galería de escenas no modifica cámara, encuadre, distancia ni FOV.
         // Los datos cameraDirection del VJSON se conservan como referencia, no se aplican.
