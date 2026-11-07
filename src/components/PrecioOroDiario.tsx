@@ -83,21 +83,22 @@ async function fetchXausQuote(currency: CurrencyCode): Promise<GoldQuote> {
     return { response, data };
   };
 
-  let { response, data } = await request(currency);
+  const { response, data } = await request(currency);
   let price: number | undefined;
   if (response.ok && data.xau?.currency === currency && data.xau.unit === "gram") {
     price = data.xau.price;
   } else if (response.status === 400) {
     // Use XAUS' own FX table if its direct currency selector does not support this code.
     const fallback = await request("USD");
-    if (!fallback.response.ok || !Number.isFinite(fallback.data.per_gram_usd)) {
+    const usdPrice = fallback.data.per_gram_usd;
+    if (!fallback.response.ok || typeof usdPrice !== "number" || !Number.isFinite(usdPrice) || usdPrice <= 0) {
       throw new Error("XAUS no pudo entregar una cotización válida para esta moneda.");
     }
     const rate = fallback.data.fx_rates?.[currency];
     if (typeof rate !== "number" || !Number.isFinite(rate) || rate <= 0) {
       throw new Error(`XAUS todavía no ofrece conversión para ${currency}.`);
     }
-    price = fallback.data.per_gram_usd! * rate;
+    price = usdPrice * rate;
     data = fallback.data;
   } else if (!response.ok) {
     throw new Error(`XAUS no respondió correctamente (HTTP ${response.status}).`);
