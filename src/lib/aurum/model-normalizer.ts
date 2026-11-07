@@ -191,7 +191,6 @@ function hydrateRhinoLayerMetadata(
   object:any,
   clasificarCapa:(capa:string,colorCapa?:string)=>"metal"|"gema"|"otro"
 ) {
-  const rootData=object?.userData??{};
   const layers=findRhinoLayerManifest(object);
   const sourceLayerManifest=layers;
   const byId=new Map<string,any>();
@@ -257,6 +256,15 @@ function hydrateRhinoLayerMetadata(
       audit.categoryCounts["otro"]=(audit.categoryCounts["otro"]??0)+1;
       x.userData={
         ...data,
+        ...(objectName && !String(x.name??"").trim() ? { name: objectName } : {}),
+        aurumRhinoSource:{
+          ...source,
+          objectId,
+          objectName: objectName || source.objectName || null,
+          objectType: data.aurumRhinoGeometryType ?? source.objectType ?? null,
+          layerIndex: resolvedLayerIndex,
+          layerId: resolvedLayerId,
+        },
         aurumRhino:{
           ...existing,
           capa:layerName||existing.capa||(resolvedLayerIndex>=0?`Capa ${resolvedLayerIndex+1}`:undefined),
