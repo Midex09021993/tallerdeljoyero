@@ -35,6 +35,8 @@ export function createAurumSceneController(
       backgroundImageOverride =
         id === "estudioFotografico"
           ? "https://packs.ijewel3d.com/files/bg_1_d37cf7c1d8.jpg"
+          : id === "auroraBlue"
+            ? "radial-gradient(ellipse 42% 70% at 0% 28%, rgba(255,151,111,.98) 0%, rgba(255,181,157,.72) 42%, transparent 100%), radial-gradient(ellipse 58% 90% at 100% 100%, rgba(0,65,164,.98) 0%, rgba(30,104,202,.78) 48%, transparent 100%), linear-gradient(125deg, #f2b5a7 0%, #b7b1d3 38%, #7399d0 68%, #0751a8 100%)"
           : id === "degradadoGrisBlanco"
             ? "linear-gradient(135deg, #ffffff 0%, #eeeeec 48%, #bfc1c0 100%)"
             : null;
