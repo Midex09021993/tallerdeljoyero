@@ -4326,7 +4326,7 @@ function AurumPositionsPanel({api,hasModel,onClose}:{api:any;hasModel:boolean;on
   const [originalTransform]=useState<Transform|null>(()=>{const value=api?.getJewelTransform?.();return value?clone(value):null;});
   const [transform,setTransform]=useState<Transform>(()=>{const value=api?.getJewelTransform?.();return value?clone(value):{position:[0,0,0],rotation:[0,0,0,"XYZ"],scale:[1,1,1]};});
   const [uniformScale,setUniformScale]=useState(true);
-  useEffect(()=>{try{sessionStorage.setItem("aurum-positions-session",JSON.stringify(items));}catch{}},[items]);
+  useEffect(()=>{try{sessionStorage.setItem("aurum-positions-session",JSON.stringify(items));}catch { /* Ignore unavailable storage or quota errors for session-only positions. */ }},[items]);
   const capture=()=>{const value=api?.getJewelTransform?.();return value?clone(value):null;};
   const applyTransform=(next:Transform)=>{if(api?.setJewelTransform?.(next)){setTransform(clone(next));return true;}return false;};
   const sync=()=>{const value=capture();if(value)setTransform(value);};
