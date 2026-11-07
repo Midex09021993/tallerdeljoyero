@@ -74,6 +74,10 @@ jobs:
         run: deno check supabase/functions/aurum-transfer-import/index.ts
       - name: Type-check AURUM welcome email
         run: deno check supabase/functions/aurum-welcome-email/index.ts
+      - name: Type-check new order owner notification
+        run: deno check supabase/functions/notify-new-order-owner/index.ts
+      - name: Type-check jewelry inventory import
+        run: deno check supabase/functions/importar-inventario-joyas/index.ts
       - name: Type-check Nextcloud status
         run: deno check supabase/functions/nextcloud-status/index.ts
       - name: Type-check Public catalog 3D model delivery
