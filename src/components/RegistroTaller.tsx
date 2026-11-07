@@ -56,7 +56,7 @@ export function RegistroTaller({ className = "" }: Props) {
         if (importTransfer && /^[A-Za-z0-9_-]{30,100}$/.test(importTransfer)) {
           window.location.href = `/mi-nube?importTransfer=${encodeURIComponent(importTransfer)}`;
         } else {
-          window.location.href = "/";
+          window.location.href = "/inicio";
         }
       }, 450);
     } catch (e2) {
