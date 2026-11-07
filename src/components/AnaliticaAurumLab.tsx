@@ -25,6 +25,12 @@ const EVENT_LABELS: Record<string, string> = {
   access_request_submitted: "Solicitudes enviadas",
   login_started: "Login iniciado",
   login_completed: "Login completado",
+  login_failed: "Login fallido",
+  registration_started: "Registro iniciado",
+  registration_completed: "Registros nuevos",
+  registration_failed: "Registro fallido",
+  contact_started: "Contacto iniciado",
+  contact_submitted: "Consultas comerciales recibidas",
 };
 
 const EVENT_ICONS: Record<string, typeof Eye> = {
@@ -39,6 +45,12 @@ const EVENT_ICONS: Record<string, typeof Eye> = {
   access_request_submitted: Send,
   login_started: Users,
   login_completed: Users,
+  login_failed: Users,
+  registration_started: Users,
+  registration_completed: Users,
+  registration_failed: Users,
+  contact_started: MessageCircle,
+  contact_submitted: Send,
 };
 
 export function AnaliticaAurumLab() {
@@ -59,6 +71,8 @@ export function AnaliticaAurumLab() {
   const visitas = eventos["page_view"] ?? 0;
   const solicitudes = eventos["access_request_submitted"] ?? 0;
   const logins = eventos["login_completed"] ?? 0;
+  const registros = eventos["registration_completed"] ?? 0;
+  const contactos = eventos["contact_submitted"] ?? 0;
   const whatsapp = eventos["whatsapp_clicked"] ?? 0;
   const herramientas = eventos["tool_opened"] ?? 0;
   const conversionSolicitud = visitas ? ((solicitudes / visitas) * 100).toFixed(1) : "0.0";
@@ -100,6 +114,8 @@ export function AnaliticaAurumLab() {
             <Kpi icon={Users} label="Sesiones" value={data.sesiones} />
             <Kpi icon={Wrench} label="Herramientas usadas" value={herramientas} />
             <Kpi icon={MessageCircle} label="WhatsApp" value={whatsapp} />
+            <Kpi icon={Users} label="Registros nuevos" value={registros} />
+            <Kpi icon={Send} label="Consultas recibidas" value={contactos} />
           </div>
 
           <div className="grid gap-5 lg:grid-cols-2">
@@ -107,6 +123,7 @@ export function AnaliticaAurumLab() {
               <div className="grid gap-3 p-5 sm:grid-cols-2">
                 <Conversion label="Visita → solicitud" value={conversionSolicitud + "%"} detail={`${solicitudes} solicitudes enviadas`} />
                 <Conversion label="Visita → acceso" value={conversionLogin + "%"} detail={`${logins} accesos completados`} />
+                <Conversion label="Visita → registro" value={(visitas ? ((registros / visitas) * 100).toFixed(1) : "0.0") + "%"} detail={`${registros} cuentas nuevas creadas`} />
               </div>
             </Panel>
 
