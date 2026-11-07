@@ -93,9 +93,8 @@ async function compress(buffer) {
       }
       if(indices.length%3!==0 || indices.some(v=>v<0||v>=position.count)) continue;
       const dracoMesh=new Module.Mesh();
-      // AddFacesToMesh returns void in the official Draco JS encoder API.
-      // Do not treat its return value as a success flag (undefined is expected).
-      builder.AddFacesToMesh(dracoMesh,indices.length/3,indices);
+      // The bundled Emscripten binding returns a boolean; reject invalid face buffers.
+      if(!builder.AddFacesToMesh(dracoMesh,indices.length/3,indices)){facesRejected++;dracoMesh.__destroy__();continue;}
       const attributeIds={};
       const addAttribute=(semantic,type,index,components) => {
         if(index===undefined)return;
