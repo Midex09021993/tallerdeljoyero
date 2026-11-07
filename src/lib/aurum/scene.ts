@@ -17,8 +17,11 @@ export function createAurumSceneController(
   const applyBackground = (color:string | null, image:string | null = null) => {
     if (backgroundElement?.style) {
       backgroundElement.style.backgroundColor = color ?? ("#" + Number(currentPreset.background).toString(16).padStart(6, "0"));
+      const isCssGradient = image
+        ? /^(?:linear|radial|conic)-gradient\\(/i.test(image.trim())
+        : false;
       backgroundElement.style.backgroundImage = image
-        ? (image.startsWith("linear-gradient(") ? image : `url("${image}")`)
+        ? (isCssGradient ? image : `url("${image}")`)
         : "none";
       backgroundElement.style.backgroundSize = image ? "cover" : "";
       backgroundElement.style.backgroundPosition = image ? "center center" : "";
