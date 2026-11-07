@@ -71,10 +71,66 @@ function buildGlb(json,bin) {
   bytes.set(new Uint8Array(bin),header+8);json.buffers[0].byteLength=bin.byteLength;
   return out;
 }
+
+function stripCompressedFallbacks(json, bin, compressedAccessorIndices, dracoBufferViews) {
+  const uncompressedAccessorIndices = new Set();
+  for (const mesh of (json.meshes || [])) for (const primitive of (mesh.primitives || [])) {
+    if (primitive.extensions?.KHR_draco_mesh_compression) continue;
+    for (const index of Object.values(primitive.attributes || {})) uncompressedAccessorIndices.add(index);
+    if (primitive.indices !== undefined) uncompressedAccessorIndices.add(primitive.indices);
+    for (const target of (primitive.targets || [])) for (const index of Object.values(target || {})) uncompressedAccessorIndices.add(index);
+  }
+  const removable = new Set([...compressedAccessorIndices].filter(index => !uncompressedAccessorIndices.has(index)));
+  for (const index of removable) {
+    const accessor = json.accessors[index];
+    if (accessor) { delete accessor.bufferView; delete accessor.byteOffset; }
+  }
+  const accessorRefs = new Map();
+  (json.accessors || []).forEach((accessor, index) => {
+    if (accessor.bufferView === undefined) return;
+    const refs = accessorRefs.get(accessor.bufferView) || [];
+    refs.push(index); accessorRefs.set(accessor.bufferView, refs);
+  });
+  const imageViews = new Set((json.images || []).map(image => image.bufferView).filter(index => index !== undefined));
+  const keep = [];
+  (json.bufferViews || []).forEach((view, index) => {
+    const refs = accessorRefs.get(index) || [];
+    const onlyCompressedAccessors = refs.length > 0 && refs.every(ref => removable.has(ref));
+    if (!onlyCompressedAccessors || imageViews.has(index) || dracoBufferViews.has(index)) keep.push(index);
+  });
+  const remap = new Map(), nextViews = [], chunks = [];
+  let nextOffset = 0;
+  for (const oldIndex of keep) {
+    const view = json.bufferViews[oldIndex];
+    if (view.buffer !== undefined && view.buffer !== 0) {
+      remap.set(oldIndex, nextViews.length); nextViews.push(view); continue;
+    }
+    const oldOffset = view.byteOffset || 0;
+    const start = align4(nextOffset);
+    if (start > nextOffset) chunks.push(new Uint8Array(start - nextOffset));
+    const chunk = bin.slice(oldOffset, oldOffset + view.byteLength);
+    const updated = { ...view, byteOffset: start };
+    remap.set(oldIndex, nextViews.length); nextViews.push(updated);
+    chunks.push(new Uint8Array(chunk)); nextOffset = start + chunk.byteLength;
+  }
+  for (const accessor of (json.accessors || [])) {
+    if (accessor.bufferView !== undefined && remap.has(accessor.bufferView)) accessor.bufferView = remap.get(accessor.bufferView);
+  }
+  for (const image of (json.images || [])) {
+    if (image.bufferView !== undefined && remap.has(image.bufferView)) image.bufferView = remap.get(image.bufferView);
+  }
+  json.bufferViews = nextViews;
+  const packed = new Uint8Array(nextOffset);
+  let cursor = 0;
+  for (const chunk of chunks) { packed.set(chunk, cursor); cursor += chunk.byteLength; }
+  return packed.buffer;
+}
+
 async function compress(buffer) {
   const {json,bin}=parseGlb(buffer),Module=await getEncoder(),originalBytes=buffer.byteLength;
   json.bufferViews=json.bufferViews||[];
   const parts=[new Uint8Array(bin)];let length=bin.byteLength,compressed=0;
+  const compressedAccessorIndices=new Set(),dracoBufferViews=new Set();
   const encoder=new Module.Encoder(),builder=new Module.MeshBuilder();
   encoder.SetEncodingMethod(Module.MESH_EDGEBREAKER_ENCODING);encoder.SetSpeedOptions(5,5);
   encoder.SetAttributeQuantization(Module.POSITION,16);encoder.SetAttributeQuantization(Module.NORMAL,12);encoder.SetAttributeQuantization(Module.TEX_COORD,14);
@@ -113,16 +169,21 @@ async function compress(buffer) {
       if(size<=0){encoded.__destroy__();continue;}
       const payload=new Uint8Array(size);for(let i=0;i<size;i++)payload[i]=encoded.GetValue(i);encoded.__destroy__();
       const aligned=align4(length);if(aligned>length)parts.push(new Uint8Array(aligned-length));
-      const bufferView=json.bufferViews.length;json.bufferViews.push({buffer:0,byteOffset:aligned,byteLength:payload.byteLength});
+      const bufferView=json.bufferViews.length;json.bufferViews.push({buffer:0,byteOffset:aligned,byteLength:payload.byteLength});dracoBufferViews.add(bufferView);
       parts.push(payload);length=aligned+payload.byteLength;
       primitive.extensions=primitive.extensions||{};
-      primitive.extensions.KHR_draco_mesh_compression={bufferView,attributes:attributeIds};compressed++;
+      primitive.extensions.KHR_draco_mesh_compression={bufferView,attributes:attributeIds};
+      for(const index of Object.values(primitive.attributes)) compressedAccessorIndices.add(index);
+      if(primitive.indices!==undefined) compressedAccessorIndices.add(primitive.indices);
+      compressed++;
     }
   } finally {encoder.__destroy__();builder.__destroy__();}
   if(!compressed)return {buffer,compressed:0,originalBytes,outputBytes:originalBytes};
   const binary=new Uint8Array(length);let cursor=0;for(const part of parts){binary.set(part,cursor);cursor+=part.length;}
   json.extensionsUsed=Array.from(new Set([...(json.extensionsUsed||[]),"KHR_draco_mesh_compression"]));
-  const output=buildGlb(json,binary.buffer);
+  json.extensionsRequired=Array.from(new Set([...(json.extensionsRequired||[]),"KHR_draco_mesh_compression"]));
+  const compactBinary=stripCompressedFallbacks(json,binary.buffer,compressedAccessorIndices,dracoBufferViews);
+  const output=buildGlb(json,compactBinary);
   return {buffer:output,compressed,originalBytes,outputBytes:output.byteLength};
 }
 self.onmessage=async(event)=>{
