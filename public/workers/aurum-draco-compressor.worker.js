@@ -61,6 +61,9 @@ function parseGlb(buffer) {
   return {json,bin};
 }
 function buildGlb(json,bin) {
+  // Update the declared BIN length before serializing the JSON chunk.
+  // Serializing first left a stale original byteLength in the compressed GLB.
+  json.buffers[0].byteLength=bin.byteLength;
   const jsonBytes=new TextEncoder().encode(JSON.stringify(json));
   const jsonLength=align4(jsonBytes.length),binLength=align4(bin.byteLength),total=12+8+jsonLength+8+binLength;
   const out=new ArrayBuffer(total),dv=new DataView(out),bytes=new Uint8Array(out);
@@ -68,7 +71,7 @@ function buildGlb(json,bin) {
   dv.setUint32(12,jsonLength,true);dv.setUint32(16,0x4e4f534a,true);
   bytes.fill(0x20,20,20+jsonLength);bytes.set(jsonBytes,20);
   const header=20+jsonLength;dv.setUint32(header,binLength,true);dv.setUint32(header+4,0x004e4942,true);
-  bytes.set(new Uint8Array(bin),header+8);json.buffers[0].byteLength=bin.byteLength;
+  bytes.set(new Uint8Array(bin),header+8);
   return out;
 }
 
