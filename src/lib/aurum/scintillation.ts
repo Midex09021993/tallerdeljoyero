@@ -80,7 +80,7 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
                 ? new THREE.Color(0xe69a7c)
                 : new THREE.Color(0xd7799b);
 
-  const ijewel=material.userData?.aurumIJEWELParameters;
+  const ijewel=material.userData?.aurumIJEWELParameters ?? {};
   // Controlled diamond A/B laboratory. It is read once when the material
   // shader is prepared; the normal production path has no extra per-frame work.
   const diamondTestMode=family==="Diamante" && typeof window!=="undefined"
