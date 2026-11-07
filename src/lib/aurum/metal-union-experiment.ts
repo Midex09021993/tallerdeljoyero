@@ -29,6 +29,51 @@ function compatibleAttributes(a: THREE.BufferGeometry, b: THREE.BufferGeometry):
 
 type UnionSource = { uuid: string; name: string; layerKey: string };
 
+/**
+ * Reject malformed CSG output before it can replace any source mesh.
+ * Bounds are only a sanity envelope here; they do not claim that two inputs
+ * intersect or that the result is a watertight CAD solid.
+ */
+function validateUnionOutput(
+  geometry: THREE.BufferGeometry,
+  expectedBounds: THREE.Box3,
+): string | null {
+  const position = geometry.getAttribute("position");
+  if (!position || position.count < 3) return "CSG no produjo vértices suficientes.";
+
+  for (let i = 0; i < position.count; i++) {
+    if (!Number.isFinite(position.getX(i)) || !Number.isFinite(position.getY(i)) || !Number.isFinite(position.getZ(i))) {
+      return "CSG produjo coordenadas no finitas.";
+    }
+  }
+
+  const index = geometry.getIndex();
+  const elementCount = index ? index.count : position.count;
+  if (elementCount < 3 || elementCount % 3 !== 0) return "CSG produjo una cantidad inválida de índices o vértices.";
+  if (index) {
+    for (let i = 0; i < index.count; i++) {
+      const vertexIndex = index.getX(i);
+      if (!Number.isInteger(vertexIndex) || vertexIndex < 0 || vertexIndex >= position.count) {
+        return "CSG produjo un índice fuera del rango de vértices.";
+      }
+    }
+  }
+
+  geometry.computeBoundingBox();
+  const bounds = geometry.boundingBox;
+  if (!bounds || bounds.isEmpty()) return "CSG produjo límites vacíos.";
+  const size = expectedBounds.getSize(new THREE.Vector3());
+  const tolerance = Math.max(size.x, size.y, size.z, 1) * 1e-4;
+  for (const axis of ["x", "y", "z"] as const) {
+    if (bounds.min[axis] < expectedBounds.min[axis] - tolerance
+      || bounds.max[axis] > expectedBounds.max[axis] + tolerance) {
+      return "CSG produjo geometría fuera de los límites de las piezas originales.";
+    }
+  }
+
+  return null;
+}
+
 export type AurumUnionExperimentResult = {
   attempted: number;
   merged: number;
@@ -38,9 +83,12 @@ export type AurumUnionExperimentResult = {
 };
 
 /**
- * Opt-in GLB boolean union. Builds an accumulated union per connected group:
- * after A+B succeeds, the next operation is (A+B)+C, never A+C in parallel.
- * Original Rhino meshes are kept in the scene hidden for reversibility.
+ * Rhino 3DM import CSG pass (invoked during internal GLB conversion).
+ * Builds an accumulated union per compatible layer: after A+B succeeds,
+ * the next operation is (A+B)+C. Original Rhino meshes remain hidden,
+ * not destroyed, so the operation can be rolled back.
+ *
+ * This is a visual mesh union, not a native Rhino/NURBS BREP Boolean.
  */
 export function applyAurumMetalUnionExperiment(root: THREE.Object3D, maxMerges = 8): AurumUnionExperimentResult {
   const result: AurumUnionExperimentResult = {
@@ -99,6 +147,13 @@ export function applyAurumMetalUnionExperiment(root: THREE.Object3D, maxMerges =
         rightGeometry.clearGroups();
         leftGeometry.setDrawRange(0, Infinity);
         rightGeometry.setDrawRange(0, Infinity);
+        leftGeometry.computeBoundingBox();
+        rightGeometry.computeBoundingBox();
+        if (!leftGeometry.boundingBox || !rightGeometry.boundingBox
+          || leftGeometry.boundingBox.isEmpty() || rightGeometry.boundingBox.isEmpty()) {
+          throw new Error("Una pieza no tiene límites geométricos válidos.");
+        }
+        const expectedBounds = leftGeometry.boundingBox.clone().union(rightGeometry.boundingBox);
 
         const a = new Brush(leftGeometry, accumulator.material);
         const b = new Brush(rightGeometry, right.material);
@@ -108,15 +163,14 @@ export function applyAurumMetalUnionExperiment(root: THREE.Object3D, maxMerges =
         const geometry = evaluator.evaluate(a, b, ADDITION).geometry;
         geometry.setDrawRange(0, Infinity);
         geometry.clearGroups();
-        geometry.computeBoundingBox();
         geometry.computeBoundingSphere();
+        const outputError = validateUnionOutput(geometry, expectedBounds);
         const position = geometry.getAttribute("position");
         const normal = geometry.getAttribute("normal");
-        if (!position || position.count < 3 || !normal || normal.count !== position.count
-          || !geometry.boundingBox || geometry.boundingBox.isEmpty()
+        if (outputError || !normal || normal.count !== position.count
           || !Number.isFinite(geometry.boundingSphere?.radius ?? NaN)) {
           geometry.dispose();
-          throw new Error("CSG produjo una geometría incompleta o no válida.");
+          throw new Error(outputError || "CSG produjo normales o límites incompletos.");
         }
 
         const nextSources = [...sources, {
