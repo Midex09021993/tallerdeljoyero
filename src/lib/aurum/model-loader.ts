@@ -7,8 +7,8 @@ import { applyAurumMetalUnionExperiment } from "./metal-union-experiment";
 import { applyAurumVoxelRemeshExperiment } from "./voxel-remesh-experiment";
 import { toCreasedNormals } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
-// Reuse one Draco decoder across GLB loads. The pinned Google decoder URL avoids
-// relying on bundler-relative paths for Three.js decoder assets.
+// Reuse one Draco decoder across GLB loads. Decoder assets are served locally
+// from the versioned, Apache-2.0 Google Draco distribution in public/.
 let aurumDracoLoaderPromise: Promise<any> | null = null;
 async function getAurumDracoLoader() {
   if (!aurumDracoLoaderPromise) {

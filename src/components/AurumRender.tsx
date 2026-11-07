@@ -26,6 +26,7 @@ import { setAurumGemShaderQuality } from "../lib/aurum/scintillation";
 import { createAurumLightingController } from "../lib/aurum/lighting";
 import { frameAurumProduct, disposeAurumViewer, createAurumWebGLViewer, startAurumViewerLoop } from "../lib/aurum/viewer";
 import { parseAurumInput, convertAurumToGlb } from "../lib/aurum/model-loader";
+import { compressAurumGlbWithDraco } from "../lib/draco-export";
 import { getAurumRhinoGeometryType, isAurumRhinoCsgSurface } from "../lib/aurum/metal-union-experiment";
 import { getAurumModelParts } from "../lib/aurum/model-parts";
 import { applyAurumMaterialToModel, applyAurumGemToTarget, clearAurumGemFromTarget } from "../lib/aurum/material-application";
@@ -1987,7 +1988,18 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               else reject(new Error("El exportador no generó un GLB binario."));
             },(error:any)=>reject(error),{binary:true,onlyVisible:true,trs:false,animations:[]});
           });
-          const blob=new Blob([result],{type:"model/gltf-binary"});
+          const dracoResult = await compressAurumGlbWithDraco(result);
+          if (dracoResult.compressed) {
+            console.info("[AURUM Draco] GLB comprimido", {
+              primitivas: dracoResult.primitiveCount,
+              bytesOriginales: dracoResult.originalBytes,
+              bytesFinales: dracoResult.outputBytes,
+              reduccion: Math.round((1 - dracoResult.outputBytes / dracoResult.originalBytes) * 100),
+            });
+          } else {
+            console.warn("[AURUM Draco] Se exportó GLB sin compresión; el archivo original se conserva.");
+          }
+          const blob=dracoResult.blob;
           if(options.download===false) return blob;
           const url=URL.createObjectURL(blob);
           const link=document.createElement("a");

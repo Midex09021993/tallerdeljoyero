@@ -8,7 +8,7 @@
   "files": {
     ".github/workflows/quality.yml": "f461b2473a072d8ed187c0c88d7114c46742578ba2014dc7848d1591c7cfa8a8",
     "scripts/check-aurum-lock.mjs": "d8b0b1e553fbfdd7faf6522482d0460b5c9803464b9fa03d34ed3bbacd18b5c4",
-    "src/components/AurumRender.tsx": "b7a1220631862e6931614d1fdd7bb98642fe2a2f239e62a8cdf4fc0f1945c879",
+    "src/components/AurumRender.tsx": "70f305f070ce88b828b53e71e3ae7ddfb0d0cb8ddaff44c8bb162cf0b193ca3a",
     "src/components/AurumRenderConfig.tsx": "c54846f1ebf7fb2c143be54bf686b18ada16615e546f1d8ff6d98847df76575b",
     "src/lib/aurum-material-engine.ts": "1ebbacc784f61fbc9d77027cbd612269073e5de8be5a40a9276916653d34c742",
     "src/lib/aurum/api.ts": "5563dbde27a7bc9a414f7d2c668349c060266895e9f3b04c6f6f9eb917ebfe40",
@@ -39,7 +39,7 @@
     "src/lib/aurum/material-application.ts": "02c6ba0ef55d606f6fd92d0b6057e3da1e1daa40f8596917b7a5f7e87914e030",
     "src/lib/aurum/mesh-preflight.ts": "a3e9f4ba831106b965055a3aca635962d23637fb51fe82d4d881ca271e1de685",
     "src/lib/aurum/metal-union-experiment.ts": "fc1754e12ca066592b7e5daecd757e5c786bd8271e8b0ffd13b7efd44522269f",
-    "src/lib/aurum/model-loader.ts": "f6c1c20c1e102c731ec8bf1c1f83f234c38b8537d2a14084e3955ec70bb66aef",
+    "src/lib/aurum/model-loader.ts": "30fdb2bd5e8bc4f2055da81ca9c8c3fa210a6a295849e7e1115d664973517cb4",
     "src/lib/aurum/model-materials.ts": "384aad39d87bae203dc9c7b5621334deac8ea527eb88755d70b5d2ea4b99f1ad",
     "src/lib/aurum/model-normalizer.ts": "fd60e0f16d875f19486b1ca81760aa7bf65509306d5bb5df154d92519026011c",
     "src/lib/aurum/model-parts.ts": "b5adb1dfc23f168ae551c6629df634a1b14ef9d49f7206f4b2b55bc034a94aef",
