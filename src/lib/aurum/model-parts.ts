@@ -43,9 +43,10 @@ function matrixFamilyCategory(layer:any,index:number,colorCapa:string|undefined,
 function matrixLayerSlot(layer:any, index:number, category:"metal"|"gema"|"otro", colorCapa?:string):number|undefined {
   if (category==="otro" || index<0) return undefined;
   const name=String(layer?.name ?? "").trim().toLowerCase();
-  const explicit=name.match(/(?:metal|gema|gem|piedra|stone)[\s_-]*([1-4])\b/);
+  const explicit=name.match(/(?:metal|gema|gem|piedra|stone)[\s_-]*(0?[1-4])\b/);
   if (explicit) return Number(explicit[1]);
 
+  // Recognize zero-padded Rhino names such as Capa Metal 01 through 04.
   // Do not infer slot order from layer index or RGB without exact template rules.
   void colorCapa;
   return undefined;
