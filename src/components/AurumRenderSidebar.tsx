@@ -23,7 +23,7 @@ const toolbarItems = [
   { id: "materiales", label: "Materiales", icon: Tags },
   { id: "gemas", label: "Gemas", icon: Gem },
   { id: "images", label: "", icon: Image },
-  { id: "layers", label: "", icon: Layers2 },
+  { id: "cad-tree", label: "CAD", icon: Layers2 },
   { id: "timing", label: "", icon: Timer },
   { id: "export", label: "", icon: Upload },
   { id: "boolean", label: "B×", icon: Blend, beta: true },
@@ -37,7 +37,7 @@ const toolbarItems = [
  * Barra lateral visual de Aurum Render.
  * Escena agrupa los controles del suelo y las sombras de contacto.
  */
-export function AurumRenderSidebar({ activeToolId, onAmbientesClick, onGemHdrClick, onBackgroundClick, onSceneClick, onMaterialsClick, onGemsClick, onRhinoExportClick }: { activeToolId: string; onAmbientesClick: () => void; onGemHdrClick: () => void; onBackgroundClick: () => void; onSceneClick: () => void; onMaterialsClick: () => void; onGemsClick: () => void; onRhinoExportClick: () => void }) {
+export function AurumRenderSidebar({ activeToolId, onAmbientesClick, onGemHdrClick, onBackgroundClick, onSceneClick, onMaterialsClick, onGemsClick, onCadTreeClick, onRhinoExportClick }: { activeToolId: string; onAmbientesClick: () => void; onGemHdrClick: () => void; onBackgroundClick: () => void; onSceneClick: () => void; onMaterialsClick: () => void; onGemsClick: () => void; onCadTreeClick: () => void; onRhinoExportClick: () => void }) {
   return (
     <nav
       aria-label="Herramientas de Aurum Render"
@@ -52,7 +52,8 @@ export function AurumRenderSidebar({ activeToolId, onAmbientesClick, onGemHdrCli
         const isMaterials = item.id === "materiales";
         const isGems = item.id === "gemas";
         const isRhinoExport = item.id === "export";
-        const active = (isAmbientes && (activeToolId === "ambientes" || activeToolId === "hdrMetales")) || (isGemHdr && activeToolId === "hdrGemas") || (isBackground && activeToolId === "fondos") || (isScene && activeToolId === "escenas") || (isMaterials && activeToolId === "materiales") || (isGems && activeToolId === "gemas") || (isRhinoExport && activeToolId === "rhino-export");
+        const isCadTree = item.id === "cad-tree";
+        const active = (isAmbientes && (activeToolId === "ambientes" || activeToolId === "hdrMetales")) || (isGemHdr && activeToolId === "hdrGemas") || (isBackground && activeToolId === "fondos") || (isScene && activeToolId === "escenas") || (isMaterials && activeToolId === "materiales") || (isGems && activeToolId === "gemas") || (isRhinoExport && activeToolId === "rhino-export") || (isCadTree && activeToolId === "cad-tree");
         const contents = (
           <>
             {active && (
@@ -74,9 +75,9 @@ export function AurumRenderSidebar({ activeToolId, onAmbientesClick, onGemHdrCli
           </>
         );
         const className = "relative flex h-[54px] w-full flex-col items-center justify-center gap-0.5 " + (active ? "text-[#92743b]" : "text-[#45433e]");
-        if (isAmbientes || isGemHdr || isBackground || isScene || isMaterials || isGems || isRhinoExport) {
-          const title = isAmbientes ? "Ambientes" : isGemHdr ? "HDR Entorno de Gemas" : isBackground ? "Fondos de escena" : isScene ? "Escenas" : isMaterials ? "Materiales" : isGems ? "Gemas" : "Exportar para Rhinoceros";
-          const onClick = isAmbientes ? onAmbientesClick : isGemHdr ? onGemHdrClick : isBackground ? onBackgroundClick : isScene ? onSceneClick : isMaterials ? onMaterialsClick : isGems ? onGemsClick : onRhinoExportClick;
+        if (isAmbientes || isGemHdr || isBackground || isScene || isMaterials || isGems || isCadTree || isRhinoExport) {
+          const title = isAmbientes ? "Ambientes" : isGemHdr ? "HDR Entorno de Gemas" : isBackground ? "Fondos de escena" : isScene ? "Escenas" : isMaterials ? "Materiales" : isGems ? "Gemas" : isCadTree ? "Árbol CAD · Capas y objetos" : "Exportar para Rhinoceros";
+          const onClick = isAmbientes ? onAmbientesClick : isGemHdr ? onGemHdrClick : isBackground ? onBackgroundClick : isScene ? onSceneClick : isMaterials ? onMaterialsClick : isGems ? onGemsClick : isCadTree ? onCadTreeClick : onRhinoExportClick;
           return (
             <button key={item.id} type="button" title={title} aria-label={title} aria-pressed={active} onClick={onClick} className={className}>
               {contents}
