@@ -462,7 +462,7 @@ function InicioPublico() {
           </nav>
           <div className="flex items-center gap-2">
             <RegistroTaller className="hidden min-h-10 items-center justify-center rounded-xl bg-[#f8c928] px-4 text-xs font-bold text-[#17232d] shadow-sm transition hover:bg-[#ffdf65] sm:inline-flex" />
-            <Link to="/auth" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-xs font-semibold text-[#17232d] transition hover:border-[#d4aa19] sm:text-sm"><MonitorSmartphone className="size-4" /> Ingresar</Link>
+            <Link to="/auth" target="_blank" rel="noopener noreferrer" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-xs font-semibold text-[#17232d] transition hover:border-[#d4aa19] sm:text-sm"><MonitorSmartphone className="size-4" /> Ingresar</Link>
           </div>
         </div>
       </header>
