@@ -14,9 +14,6 @@ import {
   Rocket,
   CheckCircle2,
   CircleAlert,
-  Gift,
-  UserRound,
-  FileText,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -178,7 +175,6 @@ function Inicio() {
   );
   const navigate = useNavigate();
   const [mostrarBienvenida, setMostrarBienvenida] = useState(false);
-  const [mostrarEstadoTaller, setMostrarEstadoTaller] = useState(false);
   const [pasoBienvenida, setPasoBienvenida] = useState(0);
   const [guardandoBienvenida, setGuardandoBienvenida] = useState(false);
 
