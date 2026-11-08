@@ -601,7 +601,14 @@ function Inicio() {
                           <span className="text-xs font-medium">{area}</span>
                           <span className="text-xs font-semibold tabular-nums">{cantidad}</span>
                         </span>
-                        <span className="mt-1.5 block h-1.5 overflow-hidden rounded-full bg-muted">
+                        <span
+                          className="mt-1.5 block h-1.5 overflow-hidden rounded-full bg-muted"
+                          role="progressbar"
+                          aria-label={`Carga de ${area}`}
+                          aria-valuemin={0}
+                          aria-valuemax={maxCargaArea}
+                          aria-valuenow={cantidad}
+                        >
                           <span className="block h-full rounded-full bg-gold transition-all" style={{ width: `${(cantidad / maxCargaArea) * 100}%` }} />
                         </span>
                       </span>
