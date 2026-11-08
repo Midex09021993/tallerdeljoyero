@@ -11,8 +11,36 @@ export const Route = createFileRoute("/guias")({
       { property: "og:description", content: "Conocimiento técnico aplicado al trabajo diario de los talleres de joyería." },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://www.tallerdeljoyero.com/guias" },
+      { property: "og:site_name", content: "AURUM LAB · Taller del Joyero" },
+      { property: "og:locale", content: "es_PE" },
+      { name: "twitter:card", content: "summary" },
+      { name: "twitter:title", content: "Guías técnicas de joyería | AURUM LAB" },
+      { name: "twitter:description", content: "Conocimiento técnico aplicado al trabajo diario de los talleres de joyería." },
     ],
     links: [{ rel: "canonical", href: "https://www.tallerdeljoyero.com/guias" }],
+    scripts: [{
+      type: "application/ld+json",
+      children: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        name: "Guías técnicas de joyería | AURUM LAB",
+        description: "Conocimiento técnico aplicado al trabajo diario de los talleres de joyería.",
+        url: "https://www.tallerdeljoyero.com/guias",
+        inLanguage: "es-PE",
+        isPartOf: { "@type": "WebSite", name: "Taller del Joyero · AURUM LAB", url: "https://www.tallerdeljoyero.com/" },
+        mainEntity: {
+          "@type": "ItemList",
+          itemListOrder: "https://schema.org/ItemListOrderAscending",
+          numberOfItems: guias.length,
+          itemListElement: guias.map((guia, index) => ({
+            "@type": "ListItem",
+            position: index + 1,
+            name: guia.titulo,
+            url: `https://www.tallerdeljoyero.com/guias/${guia.slug}`,
+          })),
+        },
+      }),
+    }],
   }),
   component: GuiasPage,
 });
@@ -87,6 +115,12 @@ const guias = [
   },
 ];
 
+function categoriaId(categoria: string) {
+  return `categoria-${categoria.toLowerCase().normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}`;
+}
+
+const categorias = Array.from(new Set(guias.map((guia) => guia.categoria)));
+
 function GuiasPage() {
   return (
     <main className="min-h-screen bg-[#fffefa] text-[#17232d]">
@@ -124,7 +158,7 @@ function GuiasPage() {
           {guias.map((guia) => {
             const Icon = guia.icon;
             return (
-              <article key={guia.slug} className="flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_3px_14px_rgba(15,23,42,.035)] transition hover:border-[#dfbd4b] hover:shadow-[0_12px_30px_rgba(15,23,42,.07)] sm:p-6">
+              <article key={guia.slug} id={`${categoriaId(guia.categoria)}-${guia.slug}`} className="flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_3px_14px_rgba(15,23,42,.035)] transition hover:border-[#dfbd4b] hover:shadow-[0_12px_30px_rgba(15,23,42,.07)] sm:p-6">
                 <div className="flex items-start justify-between gap-3">
                   <span className="grid size-11 place-items-center rounded-xl bg-[#fff4c4] text-[#8f6b00]"><Icon className="size-5" /></span>
                   <span className="text-[10px] font-medium text-slate-400">{guia.lectura}</span>
