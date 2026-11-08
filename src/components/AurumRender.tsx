@@ -3991,8 +3991,15 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 <div className={"flex w-full max-w-sm flex-col items-center text-center "+(presentationCover?"opacity-0":"opacity-100")}>
                   <div className="relative mb-6 grid size-[76px] place-items-center rounded-full border border-[#b99642]/20 bg-white/75 shadow-[0_12px_36px_rgba(70,58,30,.10)] backdrop-blur-md">
                     <div className="absolute inset-[7px] animate-spin rounded-full border-[2.5px] border-[#e8e4da] border-t-[#b99642] [animation-duration:1.15s]" />
-                    <div className="grid size-10 place-items-center rounded-full border border-[#b99642]/25 bg-gradient-to-br from-white to-[#f5f0e4]">
-                      <span className="font-display text-lg font-semibold tracking-[-.08em] text-[#a18443]">A</span>
+                    <div className="grid size-10 place-items-center rounded-full border border-[#b99642]/25 bg-gradient-to-br from-white to-[#f5f0e4] shadow-[inset_0_1px_3px_rgba(161,132,67,.10)]">
+                      <img
+                        src="/brand/aurum-symbol.svg"
+                        alt=""
+                        aria-hidden="true"
+                        width="27"
+                        height="27"
+                        className="size-[27px] object-contain drop-shadow-[0_1px_1px_rgba(161,132,67,.16)]"
+                      />
                     </div>
                   </div>
                   <p className="text-[9px] font-semibold uppercase tracking-[.3em] text-[#a18443]">AURUM RENDER · ESTUDIO DIGITAL</p>
