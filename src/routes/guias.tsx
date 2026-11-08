@@ -181,7 +181,7 @@ function GuiasPage() {
                     <p className="mt-1 text-xs font-semibold text-slate-700">{guia.herramienta}</p>
                   )}
                 </div>
-                <a href={`/guias/${guia.slug}`} aria-label={`Leer guía completa: ${guia.titulo}`} className="mt-5 inline-flex min-h-10 items-center gap-2 text-sm font-semibold text-[#876500] hover:text-[#5f4900]">Leer guía completa <ArrowRight className="size-4" /></a>
+                <Link to="/guias/$slug" params={{ slug: guia.slug }} aria-label={`Leer guía completa: ${guia.titulo}`} className="mt-5 inline-flex min-h-10 items-center gap-2 text-sm font-semibold text-[#876500] hover:text-[#5f4900]">Leer guía completa <ArrowRight className="size-4" /></Link>
               </article>
             );
           })}
