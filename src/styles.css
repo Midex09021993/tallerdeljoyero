@@ -136,6 +136,48 @@
   --ring: oklch(0.712 0.083 84);
 }
 
+/*
+ * AURUM LAB — Midnight Champagne 1.0
+ * Alcance: ERP administrativo/comercial/operativo.
+ * Aula de Formación, sus laboratorios y AURUM Render quedan fuera de este tema.
+ */
+.aurum-erp-theme {
+  color-scheme: light;
+
+  --background: #F5F1E8;
+  --foreground: #293B4A;
+  --card: #FFFEFC;
+  --card-foreground: #293B4A;
+  --popover: #FFFEFC;
+  --popover-foreground: #293B4A;
+
+  --primary: #182838;
+  --primary-foreground: #F8F5EF;
+  --secondary: #EAE6DE;
+  --secondary-foreground: #293B4A;
+  --muted: #EEEAE2;
+  --muted-foreground: #687887;
+  --accent: #F0E8DA;
+  --accent-foreground: #293B4A;
+
+  --gold: #C5A36B;
+  --gold-bright: #D9BD8B;
+  --gold-deep: #92734B;
+  --ink: #182838;
+  --ink-foreground: #F5F1E8;
+  --surface: #FFFEFC;
+  --surface-muted: #F0EDE6;
+  --surface-sunken: #EAE6DE;
+
+  --border: rgb(41 59 74 / 11%);
+  --input: rgb(41 59 74 / 17%);
+  --ring: #C5A36B;
+
+  --shadow-card: 0 1px 2px rgb(24 40 56 / 4%), 0 8px 24px -16px rgb(24 40 56 / 20%);
+  --shadow-raised: 0 2px 5px rgb(24 40 56 / 5%), 0 14px 32px -18px rgb(24 40 56 / 24%);
+  --shadow-inset-soft: inset 0 1px 0 rgb(255 255 255 / 85%);
+}
+
 @layer base {
   * {
     border-color: var(--color-border);
