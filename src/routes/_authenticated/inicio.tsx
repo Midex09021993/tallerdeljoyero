@@ -347,7 +347,6 @@ function Inicio() {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {esDueno ? <SelectorSedeDueno esDueno={esDueno} sedes={sedes} value={sedeFiltro} onChange={setSedeFiltro} className="w-full sm:w-auto" /> : null}
-            <Link to="/pedidos/nuevo" className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-[#b9975b] px-4 text-xs font-semibold text-white transition hover:bg-[#a9874d]"><Wrench className="size-4" /> Nuevo pedido</Link>
           </div>
         </header>
 
