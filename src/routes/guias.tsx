@@ -116,7 +116,7 @@ const guias = [
 ];
 
 function categoriaId(categoria: string) {
-  return `categoria-${categoria.toLowerCase().normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}`;
+  return `categoria-${categoria.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}`;
 }
 
 const categorias = Array.from(new Set(guias.map((guia) => guia.categoria)));
@@ -154,6 +154,13 @@ function GuiasPage() {
           <h2 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">Aprende, calcula y aplica</h2>
           <p className="mt-3 text-sm leading-6 text-slate-600">Contenido práctico para apoyar decisiones del taller. Los cálculos son estimaciones: contrasta siempre los resultados con las especificaciones de los materiales y el proceso de fabricación.</p>
         </div>
+        <nav aria-label="Categorías de guías técnicas" className="mt-6 flex flex-wrap gap-2">
+          {categorias.map((categoria) => (
+            <a key={categoria} href={`#${categoriaId(categoria)}-${guias.find((guia) => guia.categoria === categoria)?.slug}`} className="inline-flex min-h-9 items-center rounded-full border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-700 transition hover:border-[#d4aa19] hover:text-[#876500]">
+              {categoria}
+            </a>
+          ))}
+        </nav>
         <div className="mt-7 grid gap-4 md:grid-cols-2">
           {guias.map((guia) => {
             const Icon = guia.icon;
