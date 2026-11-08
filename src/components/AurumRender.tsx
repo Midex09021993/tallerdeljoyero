@@ -221,6 +221,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [arrastrandoArchivo, setArrastrandoArchivo] = useState(false);
 
   const [materialId, setMaterialId] = useState<MaterialId>("plata950_pulida"), [gemaId, setGemaId] = useState<GemaId>("diamante_natural"), [escenarioId, setEscenarioId] = useState<EscenarioId>("ijewelReference"), [iluminacionId, setIluminacionId] = useState<IluminacionId>("studioSoft"), [vista, setVista] = useState<VistaId>("frontal");
+  const vistaRef = useRef<VistaId>("frontal");
+  vistaRef.current = vista;
   const [nombreProyecto, setNombreProyecto] = useState("Diseño de joyería");
   const [categoriaProyecto, setCategoriaProyecto] = useState("Anillo");
   const categoriaProyectoRef = useRef("Anillo");
@@ -797,6 +799,17 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       renderer.shadowMap.autoUpdate = false;
       renderer.shadowMap.needsUpdate = true;
       renderer.domElement.className = "block h-full w-full";
+      // La cámara parte en una vista ortogonal de catálogo; al iniciar una
+      // órbita con el botón izquierdo, la etiqueta pasa a Perspectiva sin
+      // reiniciar la cámara: OrbitControls conserva el gesto y su continuidad.
+      const handleOrbitPointerDown = (event: PointerEvent) => {
+        const startsOrbit = event.button === 0 || event.pointerType === "touch";
+        if (startsOrbit && vistaRef.current !== "perspectiva") {
+          vistaRef.current = "perspectiva";
+          setVista("perspectiva");
+        }
+      };
+      renderer.domElement.addEventListener("pointerdown", handleOrbitPointerDown, { passive: true });
       nodo.appendChild(renderer.domElement);
       // SSR is globally disabled in the primary Aurum Render viewer until
       // reflection audits and A/B verification are complete. URL/profile
@@ -3227,6 +3240,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         diamondBvhRuntime?.dispose();
         diamondBvhRuntime = null;
         diamondBvhRuntimeUrl = null;
+        renderer.domElement.removeEventListener("pointerdown", handleOrbitPointerDown);
         quitar();
         disposeAurumViewer({
           node:nodo,
@@ -3736,13 +3750,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <label className="flex h-10 items-center gap-2 rounded-xl border border-black/[.08] bg-white/85 px-3 text-sm text-[#292824] shadow-sm transition hover:border-black/15 focus-within:ring-2 focus-within:ring-[#92743b]/15">
-            <Gem className="size-4 text-[#55534d]"/>
-            <select value={vista} onChange={e=>setVista(e.target.value as VistaId)} className="appearance-none bg-transparent outline-none cursor-pointer">
+          <label className="flex h-10 items-center gap-2 rounded-xl border border-[#b99642]/25 bg-white/95 px-3 text-sm text-[#292824] shadow-sm transition hover:border-[#b99642]/60 hover:shadow-[0_3px_12px_rgba(185,150,66,.12)] focus-within:ring-2 focus-within:ring-[#92743b]/20">
+            <Gem className="size-4 text-[#92743b]"/>
+            <select aria-label="Seleccionar vista de cámara" value={vista} onChange={e=>{const next=e.target.value as VistaId;vistaRef.current=next;setVista(next);}} className="min-w-0 appearance-none bg-transparent font-medium outline-none cursor-pointer">
               <option className="bg-white" value={VISTAS[0]?.id}>{VISTAS[0]?.nombre || "Vista 3D"}</option>
               {VISTAS.slice(1).map(v=><option className="bg-white" key={v.id} value={v.id}>{v.nombre}</option>)}
             </select>
-            <ChevronDown className="pointer-events-none -ml-1 size-4 text-[#77756f]"/>
+            <ChevronDown aria-hidden="true" className="pointer-events-none size-4 shrink-0 text-[#a17d38]"/>
           </label>
           <button type="button" disabled={!archivo || cargando || guardandoProyectoNube} onClick={() => void abrirGuardarEnMiNube()} className="flex h-10 items-center gap-2 rounded-xl border border-black/[.10] bg-white/90 px-3 text-sm font-semibold text-[#292824] shadow-sm transition-colors hover:border-[#b99642]/50 hover:bg-[#d4af37]/10 disabled:cursor-not-allowed disabled:opacity-45"><Upload className="size-4 text-[#92743b]"/><span>{destinoProyectoGuardado?.rutaCarpeta ? "Actualizar en Mi Nube" : "Guardar en Mi Nube"}</span></button>
           {destinoProyectoGuardado?.rutaCarpeta && <button type="button" onClick={()=>window.location.assign("/mi-nube")} className="flex h-10 items-center gap-2 rounded-xl border border-[#b99642]/45 bg-[#d4af37]/15 px-3 text-sm font-semibold text-[#6d5523] shadow-sm transition-colors hover:bg-[#d4af37]/25" title="Ir a Mi Nube"><Cloud className="size-4"/><span>Ir a Mi Nube</span></button>}
