@@ -322,7 +322,7 @@ function TalleresDeLaComunidad() {
         </div>
 
         {!visible || isLoading ? (
-          <div role="status" aria-label="Cargando logotipos de talleres" className="mx-auto mt-12 flex max-w-6xl flex-wrap items-center justify-center gap-x-12 gap-y-8">
+          <div role="status" className="mx-auto mt-12 flex max-w-6xl flex-wrap items-center justify-center gap-x-12 gap-y-8">
             {[0, 1, 2, 3, 4, 5].map((item) => <div key={item} className="h-14 w-40 animate-pulse rounded bg-slate-100" />)}
           </div>
         ) : (
