@@ -1,10 +1,10 @@
 import { ClientOnly, createFileRoute, Link } from "@tanstack/react-router";
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabasePublic } from "@/integrations/supabase/client";
 import { RegistroTaller } from "@/components/RegistroTaller";
 const MiniAurumRender = lazy(() => import("@/components/MiniAurumRender").then((m) => ({ default: m.MiniAurumRender })));
-import { PrecioOroDiario } from "@/components/PrecioOroDiario";
+const PrecioOroDiario = lazy(() => import("@/components/PrecioOroDiario").then((m) => ({ default: m.PrecioOroDiario })));
 import { ArrowRight, BookOpen, Boxes, Calculator, Check, ChevronDown, Cloud, Gem, Layers3, MonitorSmartphone, PackageCheck, Sparkles, Sprout, ChartNoAxesCombined } from "lucide-react";
 import heroColgante from "@/assets/diseno-colgante.jpg";
 import heroFloral from "@/assets/diseno-floral.jpg";
@@ -169,6 +169,39 @@ function PlanesPublicos() {
 }
 
 
+function PrecioOroDiferido() {
+  const [visible, setVisible] = useState(false);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const element = containerRef.current;
+    if (!element || typeof IntersectionObserver === "undefined") {
+      setVisible(true);
+      return;
+    }
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setVisible(true);
+        observer.disconnect();
+      }
+    }, { rootMargin: "240px 0px" });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={containerRef} style={{ contentVisibility: "auto", containIntrinsicSize: "auto 420px" }}>
+      {visible ? (
+        <Suspense fallback={<div className="min-h-[360px]" aria-label="Cargando cotización del oro" />}>
+          <ClientOnly fallback={<div className="min-h-[360px]" />}>
+            <PrecioOroDiferido />
+          </ClientOnly>
+        </Suspense>
+      ) : <div className="min-h-[360px]" aria-hidden="true" />}
+    </div>
+  );
+}
+
 type LogoTallerComunidad = {
   tipo: "taller" | "curso";
   participante_id: string;
@@ -180,6 +213,25 @@ type LogoTallerComunidad = {
 };
 
 function TalleresDeLaComunidad() {
+  const [visible, setVisible] = useState(false);
+  const sectionRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    const element = sectionRef.current;
+    if (!element || typeof IntersectionObserver === "undefined") {
+      setVisible(true);
+      return;
+    }
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setVisible(true);
+        observer.disconnect();
+      }
+    }, { rootMargin: "240px 0px" });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
   const { data = [], isLoading, isError } = useQuery({
     queryKey: ["logos-talleres-comunidad-home"],
     queryFn: async () => {
@@ -189,6 +241,7 @@ function TalleresDeLaComunidad() {
     },
     staleTime: 5 * 60_000,
     retry: 1,
+    enabled: visible,
   });
 
   const talleres = Array.from(new Map(
@@ -204,7 +257,7 @@ function TalleresDeLaComunidad() {
       .map((item) => [item.id, item]),
   ).values());
 
-  if (isError || (!isLoading && talleres.length === 0)) return null;
+  if (visible && (isError || (!isLoading && talleres.length === 0))) return null;
 
   const renderTalleres = (duplicado = false) => (
     <div className="aurum-community-marquee-group" aria-hidden={duplicado || undefined}>
@@ -228,7 +281,7 @@ function TalleresDeLaComunidad() {
   );
 
   return (
-    <section aria-labelledby="talleres-comunidad-titulo" className="overflow-hidden border-y border-slate-100 bg-white">
+    <section ref={sectionRef} aria-labelledby="talleres-comunidad-titulo" className="overflow-hidden border-y border-slate-100 bg-white">
       <style>{`
         @keyframes aurum-community-marquee {
           from { transform: translateX(0); }
@@ -268,7 +321,7 @@ function TalleresDeLaComunidad() {
           </h2>
         </div>
 
-        {isLoading ? (
+        {!visible || isLoading ? (
           <div className="mx-auto mt-12 flex max-w-6xl flex-wrap items-center justify-center gap-x-12 gap-y-8" aria-label="Cargando logotipos de talleres">
             {[0, 1, 2, 3, 4, 5].map((item) => <div key={item} className="h-14 w-40 animate-pulse rounded bg-slate-100" />)}
           </div>
