@@ -131,7 +131,6 @@ function GuiasPage() {
             <span className="leading-tight"><span className="block text-[17px] font-extrabold tracking-tight">AURUM<span className="text-[#bd8d00]"> LAB</span></span><span className="block text-[9px] font-medium uppercase tracking-[.15em] text-slate-500">Guías técnicas</span></span>
           </Link>
           <nav className="flex items-center gap-4 text-sm font-medium text-slate-600 sm:gap-6" aria-label="Navegación de guías">
-            <Link to="/herramientas-publicas" className="transition hover:text-[#987400]">Herramientas</Link>
             <Link to="/auth" className="rounded-full bg-[#17232d] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#293b49]">Acceder</Link>
           </nav>
         </div>
@@ -141,10 +140,9 @@ function GuiasPage() {
         <div className="relative mx-auto max-w-7xl px-5 py-14 sm:px-8 sm:py-20">
           <p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#987400]">Conocimiento aplicado al oficio</p>
           <h1 className="mt-4 max-w-3xl text-3xl font-extrabold leading-tight tracking-tight sm:text-5xl">Guías técnicas para trabajar mejor la joyería.</h1>
-          <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base sm:leading-7">Resuelve dudas frecuentes del taller: cómo calcular aleaciones de oro de 18K, 14K y 9K, estimar el peso de una joya desde un modelo 3D y preparar un cilindro para fundición. Cada guía explica los conceptos paso a paso y enlaza con herramientas gratuitas para llevar el cálculo a la práctica.</p>
+          <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base sm:leading-7">Resuelve dudas frecuentes del taller: cómo calcular aleaciones de oro de 18K, 14K y 9K, estimar el peso de una joya desde un modelo 3D y preparar un cilindro para fundición. Cada guía explica los conceptos paso a paso para ayudarte a tomar mejores decisiones en el taller.</p>
           <div className="mt-7 flex flex-wrap gap-3">
             <a href="#guias" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#17232d] px-5 text-sm font-semibold text-white transition hover:bg-[#293b49]">Explorar guías <ArrowRight className="size-4" /></a>
-            <Link to="/herramientas-publicas" className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 text-sm font-semibold text-[#17232d] transition hover:border-[#d4aa19]"><Calculator className="size-4" /> Ver herramientas gratuitas</Link>
           </div>
         </div>
       </section>
@@ -187,19 +185,6 @@ function GuiasPage() {
               </article>
             );
           })}
-        </div>
-      </section>
-      <section className="border-y border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-7xl flex-col gap-5 px-5 py-10 sm:px-8 md:flex-row md:items-center md:justify-between">
-          <div className="max-w-2xl">
-            <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#987400]">De la teoría a la práctica</p>
-            <h2 className="mt-2 text-xl font-bold">Continúa con una herramienta de tu taller.</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600">Prueba las calculadoras públicas sin crear una cuenta y utiliza los resultados como referencia para tu trabajo.</p>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <Link to="/herramientas-publicas" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#17232d] px-5 text-sm font-semibold text-white transition hover:bg-[#293b49]">Ver herramientas <ArrowRight className="size-4" /></Link>
-            <Link to="/auth" className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[#d4aa19] bg-[#fff8d8] px-5 text-sm font-semibold text-[#604900] transition hover:bg-[#ffefad]">Crear cuenta</Link>
-          </div>
         </div>
       </section>
       <footer className="border-t border-slate-200 bg-white">
