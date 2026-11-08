@@ -145,7 +145,7 @@ function Inicio() {
 
   const { data: primerosPasos, isLoading: cargandoPrimerosPasos, isError: errorPrimerosPasos } = useQuery({
     queryKey: ["inicio-primeros-pasos", sesion?.user?.id, sedeContextoId, esDueno],
-    enabled: Boolean(sesion?.esAdmin && sesion?.participante?.id && (!esDueno || sedeContextoId)),
+    enabled: Boolean(sesion?.esAdmin && sesion?.participante?.id && (esDueno || sedeContextoId)),
     queryFn: async () => {
       let clientesQuery = supabase.from("clientes").select("id", { count: "exact", head: true });
       let cotizacionesQuery = supabase.from("cotizaciones").select("id", { count: "exact", head: true });
