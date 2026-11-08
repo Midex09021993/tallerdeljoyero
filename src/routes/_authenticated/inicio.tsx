@@ -2,7 +2,6 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   Boxes,
   ChevronRight,
-  Clock3,
   Gem,
   Hammer,
   LayoutGrid,
@@ -15,14 +14,13 @@ import {
   Rocket,
   CheckCircle2,
   CircleAlert,
-  ListChecks,
   Gift,
   UserRound,
   FileText,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { AppShell, Panel, StatCard, useCapacidadesMenu } from "@/components/AppShell";
+import { AppShell, Panel, useCapacidadesMenu } from "@/components/AppShell";
 import { ResumenPlanComercial } from "@/components/ResumenPlanComercial";
 import { TODAS_LAS_SEDES, SelectorSedeDueno, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
 import { supabase } from "@/integrations/supabase/client";
