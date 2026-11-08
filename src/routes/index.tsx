@@ -262,13 +262,13 @@ function TalleresDeLaComunidad() {
   const renderTalleres = (duplicado = false) => (
     <div className="aurum-community-marquee-group" aria-hidden={duplicado || undefined}>
       {talleres.map((taller) => (
-        <div key={taller.id} className="flex h-28 w-44 shrink-0 flex-col items-center justify-center gap-2 px-2 sm:w-52 lg:w-56" title={duplicado ? undefined : taller.nombre}>
+        <div key={taller.id} className="flex h-32 w-56 shrink-0 flex-col items-center justify-center gap-2 px-3 sm:w-64 lg:w-72" title={duplicado ? undefined : taller.nombre}>
           <img
             src={taller.logo}
             alt={duplicado ? "" : taller.nombre}
             loading="lazy"
             decoding="async"
-            className="max-h-16 max-w-[88%] rounded-sm bg-white object-contain opacity-90 transition-opacity duration-300 hover:opacity-100 sm:max-h-[4.5rem]"
+            className="max-h-20 max-w-full rounded-sm bg-white object-contain opacity-90 transition-opacity duration-300 hover:opacity-100"
             style={{ backgroundColor: "#ffffff" }}
           />
           {taller.pais && (
@@ -328,8 +328,6 @@ function TalleresDeLaComunidad() {
           </div>
         ) : (
           <div role="region" aria-labelledby="talleres-comunidad-titulo" className="aurum-community-marquee-viewport relative mx-auto mt-10 max-w-[1240px] overflow-hidden py-2">
-            <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-white to-transparent sm:w-16" />
-            <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-white to-transparent sm:w-16" />
             <div className="aurum-community-marquee-track">
               {renderTalleres()}
               {renderTalleres(true)}
