@@ -236,6 +236,7 @@ function Inicio() {
   const [mostrarBienvenida, setMostrarBienvenida] = useState(false);
   const [pasoBienvenida, setPasoBienvenida] = useState(0);
   const [guardandoBienvenida, setGuardandoBienvenida] = useState(false);
+  const [filtroAtencion, setFiltroAtencion] = useState<"todos" | "vencidos" | "recepcion">("todos");
 
   useEffect(() => {
     if (!sesion?.esAdmin || !sesion.user) return;
@@ -293,6 +294,15 @@ function Inicio() {
     return { activos, produccion, recepcion, vencidos, hoy, urgentes, atencion, sinFecha };
   }, [pedidosSede]);
 
+  const pedidosAtencion = useMemo(() => resumen.atencion.filter((pedido) => {
+    if (filtroAtencion === "vencidos") {
+      const dias = diasHastaEntrega(pedido);
+      return dias !== null && dias < 0;
+    }
+    if (filtroAtencion === "recepcion") return pedidoEnRecepcion(pedido.estado);
+    return true;
+  }), [filtroAtencion, resumen.atencion]);
+
   const cargaAreas = useMemo(() => {
     const todas = [
       ["Diseño 3D", LayoutGrid, "Diseño 3D"],
@@ -304,6 +314,12 @@ function Inicio() {
     ] as const;
     return todas.filter(([, , capacidad]) => capacidadesSet.has(capacidad));
   }, [capacidadesSet]);
+
+  const cantidadesPorArea = useMemo(
+    () => cargaAreas.map(([area]) => pedidosSede.filter((p) => p.area_actual === area && !esEstadoFinalPedido(p.estado)).length),
+    [cargaAreas, pedidosSede],
+  );
+  const maxCargaArea = Math.max(1, ...cantidadesPorArea);
 
   // Los operarios usan exclusivamente /operario como bandeja única.
 
@@ -506,24 +522,46 @@ function Inicio() {
 
         <section className="grid items-start gap-5 xl:grid-cols-[minmax(0,1.6fr)_minmax(280px,0.8fr)]">
           <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
-            <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3.5">
-              <div>
-                <h2 className="text-sm font-semibold">Atención prioritaria</h2>
-                <p className="mt-0.5 text-xs text-muted-foreground">Pedidos que necesitan una acción</p>
+            <div className="space-y-3 border-b border-border px-4 py-3.5">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-sm font-semibold">Atención prioritaria</h2>
+                  <p className="mt-0.5 text-xs text-muted-foreground">Seguimiento de pedidos que necesitan una acción</p>
+                </div>
+                <Link to="/pedidos" className="text-xs font-semibold text-gold-deep hover:underline">Ver pedidos <ChevronRight className="inline size-3" /></Link>
               </div>
-              <Link to="/pedidos" className="text-xs font-semibold text-gold-deep hover:underline">Ver pedidos <ChevronRight className="inline size-3" /></Link>
+              <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Filtrar atención prioritaria">
+                {([
+                  { id: "todos", label: "Todos", count: resumen.atencion.length },
+                  { id: "vencidos", label: "Vencidos", count: resumen.vencidos.filter((p) => resumen.atencion.some((a) => a.id === p.id)).length },
+                  { id: "recepcion", label: "Por recibir", count: resumen.recepcion.filter((p) => resumen.atencion.some((a) => a.id === p.id)).length },
+                ] as const).map((filtro) => (
+                  <button
+                    key={filtro.id}
+                    type="button"
+                    onClick={() => setFiltroAtencion(filtro.id)}
+                    aria-pressed={filtroAtencion === filtro.id}
+                    className={filtroAtencion === filtro.id
+                      ? "inline-flex items-center gap-2 rounded-lg border border-gold/30 bg-gold/10 px-3 py-1.5 text-[11px] font-semibold text-gold-deep"
+                      : "inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-1.5 text-[11px] font-medium text-muted-foreground transition hover:border-gold/25 hover:text-foreground"}
+                  >
+                    {filtro.label}
+                    <span className="tabular-nums opacity-75">{filtro.count}</span>
+                  </button>
+                ))}
+              </div>
             </div>
             {cargandoPedidos ? (
               <p className="p-5 text-sm text-muted-foreground">Cargando operaciones…</p>
-            ) : resumen.atencion.length === 0 ? (
+            ) : pedidosAtencion.length === 0 ? (
               <div className="px-5 py-10 text-center">
                 <CheckCircle2 className="mx-auto size-7 text-emerald-600" />
                 <p className="mt-2 text-sm font-semibold">Sin pendientes urgentes</p>
-                <p className="mt-1 text-xs text-muted-foreground">No hay pedidos vencidos ni recepciones por verificar.</p>
+                <p className="mt-1 text-xs text-muted-foreground">{filtroAtencion === "vencidos" ? "No hay pedidos vencidos en esta sede." : filtroAtencion === "recepcion" ? "No hay pedidos pendientes de recepción." : "No hay pedidos vencidos ni recepciones por verificar."}</p>
               </div>
             ) : (
               <div className="divide-y divide-border">
-                {resumen.atencion.slice(0, 7).map((pedido) => (
+                {pedidosAtencion.slice(0, 7).map((pedido) => (
                   <Link key={pedido.id} to="/pedidos/$id" params={{ id: pedido.id }} search={{ from: undefined }} className="flex items-center gap-3 px-4 py-3 transition hover:bg-muted/30">
                     <span className={esUrgente(pedido) ? "size-2 shrink-0 rounded-full bg-red-500" : "size-2 shrink-0 rounded-full bg-amber-500"} />
                     <span className="min-w-0 flex-1">
@@ -546,7 +584,7 @@ function Inicio() {
               </div>
               <div className="divide-y divide-border px-4">
                 {cargaAreas.map(([area, Icono]) => {
-                  const cantidad = pedidosSede.filter((p) => p.area_actual === area && !esEstadoFinalPedido(p.estado)).length;
+                  const cantidad = cantidadesPorArea[cargaAreas.findIndex(([nombre]) => nombre === area)] ?? 0;
                   const destinos: Record<string, string> = {
                     "Diseño 3D": "/diseno-3d",
                     "Impresión": "/impresion-3d",
@@ -557,10 +595,17 @@ function Inicio() {
                   };
                   return (
                     <Link key={area} to={destinos[area] as never} className="flex items-center gap-3 py-3 transition hover:text-gold-deep">
-                      <Icono className="size-4 text-muted-foreground" />
-                      <span className="min-w-0 flex-1 text-xs font-medium">{area}</span>
-                      <span className="text-xs font-semibold tabular-nums">{cantidad}</span>
-                      <ChevronRight className="size-3.5 text-muted-foreground" />
+                      <Icono className="size-4 shrink-0 text-muted-foreground" />
+                      <span className="min-w-0 flex-1">
+                        <span className="flex items-center justify-between gap-3">
+                          <span className="text-xs font-medium">{area}</span>
+                          <span className="text-xs font-semibold tabular-nums">{cantidad}</span>
+                        </span>
+                        <span className="mt-1.5 block h-1.5 overflow-hidden rounded-full bg-muted">
+                          <span className="block h-full rounded-full bg-gold transition-all" style={{ width: `${(cantidad / maxCargaArea) * 100}%` }} />
+                        </span>
+                      </span>
+                      <ChevronRight className="size-3.5 shrink-0 text-muted-foreground" />
                     </Link>
                   );
                 })}
