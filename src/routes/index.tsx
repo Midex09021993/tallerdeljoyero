@@ -5,7 +5,7 @@ import { supabasePublic } from "@/integrations/supabase/client";
 import { RegistroTaller } from "@/components/RegistroTaller";
 const MiniAurumRender = lazy(() => import("@/components/MiniAurumRender").then((m) => ({ default: m.MiniAurumRender })));
 const PrecioOroDiario = lazy(() => import("@/components/PrecioOroDiario").then((m) => ({ default: m.PrecioOroDiario })));
-import { ArrowRight, BookOpen, Boxes, Calculator, Check, ChevronDown, Cloud, Gem, Layers3, MonitorSmartphone, PackageCheck, Sparkles, Sprout, ChartNoAxesCombined } from "lucide-react";
+import { ArrowRight, BookOpen, Boxes, Calculator, Check, Cloud, Gem, Layers3, MonitorSmartphone, PackageCheck, Sparkles, Sprout, ChartNoAxesCombined } from "lucide-react";
 import heroColgante from "@/assets/diseno-colgante.jpg";
 import heroFloral from "@/assets/diseno-floral.jpg";
 import heroGemelos from "@/assets/diseno-gemelos.jpg";
@@ -442,8 +442,8 @@ function InicioPublico() {
           </Link>
           <nav className="hidden items-center gap-7 text-[13px] font-medium text-slate-700 lg:flex" aria-label="Navegación principal">
             <Link to="/" className="transition hover:text-[#a77a00]">Inicio</Link>
-            <a href="#soluciones" className="inline-flex items-center gap-1 transition hover:text-[#a77a00]">Soluciones <ChevronDown className="size-3.5" /></a>
-            <Link to="/herramientas-publicas" className="inline-flex items-center gap-1 transition hover:text-[#a77a00]">Herramientas <ChevronDown className="size-3.5" /></Link>
+            <a href="#soluciones" className="transition hover:text-[#a77a00]">Soluciones</a>
+            <Link to="/herramientas-publicas" className="transition hover:text-[#a77a00]">Herramientas</Link>
             <a href="#como-funciona" className="transition hover:text-[#a77a00]">Cómo funciona</a>
             <Link to="/guias" className="transition hover:text-[#a77a00]">Guías técnicas</Link>
             <Link to="/comunidad" className="transition hover:text-[#a77a00]">Comunidad</Link>
