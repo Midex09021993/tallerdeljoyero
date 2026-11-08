@@ -17,20 +17,22 @@ import {
 export const Route = createFileRoute("/herramientas-publicas")({
   head: () => ({
     meta: [
-      { title: "Herramientas para joyeros — Aurum Lab" },
+      { title: "Calculadoras para joyería: oro, gemas y peso 3D | AURUM LAB" },
       {
         name: "description",
         content:
-          "Calculadoras técnicas y herramientas gratuitas para joyeros: aleación de oro, peso de gemas, tallas de anillos, peso de modelos 3D y preparación de fundición.",
+          "Calcula aleaciones de oro, peso de gemas y modelos 3D, convierte tallas de anillos y prepara revestimiento para fundición con herramientas técnicas para joyeros.",
       },
       { name: "robots", content: "index, follow, max-image-preview:large" },
-      { property: "og:title", content: "Herramientas para joyeros | AURUM LAB" },
+      { property: "og:title", content: "Calculadoras para joyería: oro, gemas y peso 3D | AURUM LAB" },
       { property: "og:url", content: "https://www.tallerdeljoyero.com/herramientas-publicas" },
-      { name: "twitter:card", content: "summary" },
-      { name: "twitter:title", content: "Herramientas para joyeros | AURUM LAB" },
-      { name: "twitter:description", content: "Calcula aleaciones, estima pesos, convierte tallas y prepara trabajos de fundición con herramientas para joyeros." },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Calculadoras para joyería: oro, gemas y peso 3D | AURUM LAB" },
+      { name: "twitter:description", content: "Calcula aleaciones de oro, peso de gemas y modelos 3D, convierte tallas y prepara revestimiento para fundición." },
       { property: "og:description", content: "Calcula aleaciones, estima el peso de gemas y modelos 3D, convierte tallas y prepara tus trabajos de joyería." },
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "AURUM LAB" },
+      { property: "og:locale", content: "es_PE" },
     ],
     links: [{ rel: "canonical", href: "https://www.tallerdeljoyero.com/herramientas-publicas" }],
   }),
