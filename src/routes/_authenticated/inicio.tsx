@@ -169,6 +169,63 @@ function Inicio() {
     },
   });
 
+  const { data: resumenComercial, isLoading: cargandoResumenComercial, isError: errorResumenComercial } = useQuery({
+    queryKey: ["inicio-resumen-comercial", sesion?.participante?.id, sedeContextoId, esDueno],
+    enabled: Boolean(sesion?.esAdmin && sesion?.participante?.id && (!esDueno || sedeContextoId)),
+    staleTime: 60_000,
+    queryFn: async () => {
+      let clientesQuery = supabase.from("clientes").select("id", { count: "exact", head: true });
+      let cotizacionesQuery = supabase
+        .from("cotizaciones")
+        .select("id,estado,total,moneda,fecha_vencimiento,sede_id,participante_id");
+      let inventarioQuery = supabase
+        .from("inventario")
+        .select("id,material,stock,minimo,sede_id");
+
+      if (esDueno) {
+        if (sedeContextoId) {
+          clientesQuery = clientesQuery.eq("sede_id", sedeContextoId);
+          cotizacionesQuery = cotizacionesQuery.eq("sede_id", sedeContextoId);
+          inventarioQuery = inventarioQuery.eq("sede_id", sedeContextoId);
+        }
+      } else {
+        clientesQuery = clientesQuery.eq("participante_id", sesion!.participante!.id);
+        cotizacionesQuery = cotizacionesQuery.eq("participante_id", sesion!.participante!.id);
+        inventarioQuery = inventarioQuery.eq("sede_id", sedeContextoId!);
+      }
+
+      const [{ count: clientesCount, error: clientesError }, { data: cotizaciones, error: cotizacionesError }, { data: materiales, error: inventarioError }] = await Promise.all([
+        clientesQuery,
+        cotizacionesQuery.order("created_at", { ascending: false }).limit(500),
+        inventarioQuery.eq("activo", true).order("material").limit(500),
+      ]);
+      if (clientesError) throw clientesError;
+      if (cotizacionesError) throw cotizacionesError;
+      if (inventarioError) throw inventarioError;
+
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0);
+      const cotizacionesLista = cotizaciones ?? [];
+      const pendientes = cotizacionesLista.filter((q) => ["borrador", "enviada", "pendiente"].includes(String(q.estado ?? "").toLowerCase()));
+      const aprobadas = cotizacionesLista.filter((q) => String(q.estado ?? "").toLowerCase() === "aprobada");
+      const porVencer = cotizacionesLista.filter((q) => {
+        if (!q.fecha_vencimiento || !["borrador", "enviada", "pendiente"].includes(String(q.estado ?? "").toLowerCase())) return false;
+        const fecha = new Date(`${q.fecha_vencimiento}T00:00:00`);
+        const dias = Math.ceil((fecha.getTime() - hoy.getTime()) / 86_400_000);
+        return dias >= 0 && dias <= 7;
+      });
+      const stockBajo = (materiales ?? []).filter((m) => Number(m.stock) <= Number(m.minimo));
+      return {
+        clientes: clientesCount ?? 0,
+        cotizacionesPendientes: pendientes.length,
+        cotizacionesAprobadas: aprobadas.length,
+        cotizacionesPorVencer: porVencer.length,
+        materialesStockBajo: stockBajo.length,
+        materialesStockBajoLista: stockBajo.slice(0, 5).map((m) => ({ id: m.id, material: m.material, stock: Number(m.stock), minimo: Number(m.minimo) })),
+      };
+    },
+  });
+
   const pedidosSede = useMemo(
     () => (sedeContextoId ? pedidos.filter((pedido) => pedido.sede_id === sedeContextoId) : pedidos),
     [pedidos, sedeContextoId],
