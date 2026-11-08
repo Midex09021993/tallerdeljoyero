@@ -168,15 +168,35 @@ export const Route = createFileRoute("/herramientas-publicas/$herramienta")({
     const structuredData = pagina
       ? {
           "@context": "https://schema.org",
-          "@type": "FAQPage",
-          mainEntity: pagina.preguntas.map((item) => ({
-            "@type": "Question",
-            name: item.pregunta,
-            acceptedAnswer: {
-              "@type": "Answer",
-              text: item.respuesta,
+          "@graph": [
+            {
+              "@type": "SoftwareApplication",
+              name: pagina.titulo,
+              description: pagina.descripcion,
+              applicationCategory: "UtilitiesApplication",
+              operatingSystem: "Web",
+              isAccessibleForFree: true,
+              url: canonical,
+              inLanguage: "es-PE",
+              publisher: { "@type": "Organization", name: "AURUM LAB", url: "https://www.tallerdeljoyero.com/" },
             },
-          })),
+            {
+              "@type": "BreadcrumbList",
+              itemListElement: [
+                { "@type": "ListItem", position: 1, name: "Inicio", item: "https://www.tallerdeljoyero.com/" },
+                { "@type": "ListItem", position: 2, name: "Herramientas para joyeros", item: "https://www.tallerdeljoyero.com/herramientas-publicas" },
+                { "@type": "ListItem", position: 3, name: pagina.titulo, item: canonical },
+              ],
+            },
+            {
+              "@type": "FAQPage",
+              mainEntity: pagina.preguntas.map((item) => ({
+                "@type": "Question",
+                name: item.pregunta,
+                acceptedAnswer: { "@type": "Answer", text: item.respuesta },
+              })),
+            },
+          ],
         }
       : undefined;
 
