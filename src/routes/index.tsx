@@ -268,8 +268,8 @@ function TalleresDeLaComunidad() {
             alt={duplicado ? "" : taller.nombre}
             loading="lazy"
             decoding="async"
-            className="max-h-14 max-w-full bg-transparent object-contain opacity-90 transition-opacity duration-300 hover:opacity-100 sm:max-h-16"
-            style={{ backgroundColor: "transparent" }}
+            className="max-h-14 max-w-full rounded-sm bg-white object-contain opacity-90 transition-opacity duration-300 hover:opacity-100 sm:max-h-16"
+            style={{ backgroundColor: "#ffffff" }}
           />
           {taller.pais && (
             <span className="text-[9px] font-medium uppercase tracking-[.17em] text-slate-400">
