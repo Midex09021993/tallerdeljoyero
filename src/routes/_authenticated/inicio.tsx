@@ -434,6 +434,12 @@ function Inicio() {
           </section>
         ) : null}
 
+        {sesion?.esAdmin ? (
+          <section aria-label="Suscripción y consumo">
+            <ResumenPlanComercial />
+          </section>
+        ) : null}
+
         <section className="grid gap-5 xl:grid-cols-[minmax(0,1.55fr)_minmax(280px,0.85fr)]">
           <Panel titulo="Pedidos que requieren atención" accion={<Link to="/pedidos" className="text-xs font-semibold text-gold hover:underline">Ver todos <ChevronRight className="inline size-3" /></Link>}>
             <div className="divide-y divide-border">
