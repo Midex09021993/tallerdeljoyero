@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Calculator, Gem, Ruler } from "lucide-react";
+import { ArrowRight, Gem, Ruler } from "lucide-react";
 
 export const Route = createFileRoute("/guias")({
   head: () => ({
@@ -190,7 +190,7 @@ function GuiasPage() {
       <footer className="border-t border-slate-200 bg-white">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-6 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-8">
           <span>AURUM LAB · Guías técnicas para joyeros</span>
-          <div className="flex flex-wrap gap-4"><Link to="/" className="hover:text-[#987400]">Inicio</Link><Link to="/herramientas-publicas" className="hover:text-[#987400]">Herramientas</Link></div>
+          <Link to="/" className="hover:text-[#987400]">Inicio</Link>
         </div>
       </footer>
     </main>
