@@ -344,232 +344,118 @@ function Inicio() {
       subtitulo={sesion?.sede?.nombre ? `Sede ${sesion.sede.nombre} · ${rolEtiqueta[sesion.rolPrincipal]}` : "Visión general del taller"}
       encabezadoMovilCompacto
     >
-      <div className="space-y-6">
-        <section aria-label="Accesos del taller" className="rounded-2xl border border-gold/20 bg-card p-3 shadow-card sm:p-4">
-          <div className="flex flex-wrap items-center gap-2">
-            {sesion?.esAdmin ? (
-              <button
-                type="button"
-                onClick={() => setMostrarEstadoTaller((visible) => !visible)}
-                aria-expanded={mostrarEstadoTaller}
-                aria-controls="estado-preparacion-taller"
-                className="inline-flex min-h-11 items-center justify-center rounded-xl border border-gold/30 bg-gold px-4 py-2.5 text-center text-xs font-semibold text-gold-foreground shadow-card transition hover:shadow-raised"
-              >
-                Estado del taller
-              </button>
-            ) : null}
+      <div className="space-y-5">
+        <section className="overflow-hidden rounded-3xl border border-border bg-card shadow-card">
+          <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold">AURUM LAB · OPERACIONES</p>
+              <h2 className="mt-1 font-display text-2xl font-semibold tracking-tight sm:text-3xl">Resumen del taller</h2>
+              <p className="mt-1 text-sm text-muted-foreground">{sesion?.sede?.nombre ? `Sede ${sesion.sede.nombre} · ${rolEtiqueta[sesion.rolPrincipal]}` : "Controla pedidos, producción y entregas desde un solo lugar."}</p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {esDueno ? (
+                <SelectorSedeDueno esDueno={esDueno} sedes={sedes} value={sedeFiltro} onChange={setSedeFiltro} className="w-full sm:w-auto" />
+              ) : null}
+              <Link to="/pedidos/nuevo" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-gold px-4 py-2.5 text-xs font-bold text-gold-foreground shadow-card transition hover:shadow-raised">
+                <Wrench className="size-4" /> Nuevo pedido
+              </Link>
+              <Link to="/herramientas" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-2.5 text-xs font-semibold transition hover:border-gold/40 hover:bg-muted/40">
+                Herramientas <ChevronRight className="size-4" />
+              </Link>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 border-t border-border sm:grid-cols-3 lg:grid-cols-5">
+            {[
+              { label: "Pedidos activos", value: resumen.activos.length, note: "En seguimiento", tone: "text-foreground" },
+              { label: "En producción", value: resumen.produccion.length, note: "Trabajo en curso", tone: "text-foreground" },
+              { label: "En recepción", value: resumen.recepcion.length, note: "Por verificar", tone: "text-foreground" },
+              { label: "Entregas hoy", value: resumen.hoy.length, note: "Compromiso de hoy", tone: resumen.hoy.length ? "text-gold-deep" : "text-foreground" },
+              { label: "Vencidos", value: resumen.vencidos.length, note: "Requieren atención", tone: resumen.vencidos.length ? "text-danger" : "text-foreground" },
+            ].map((item) => (
+              <div key={item.label} className="border-b border-r border-border p-4 last:border-r-0 sm:p-5 lg:border-b-0">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{item.label}</p>
+                <p className={`mt-2 font-display text-3xl font-semibold tabular-nums ${item.tone}`}>{cargandoPedidos ? "—" : item.value}</p>
+                <p className="mt-1 text-[11px] text-muted-foreground">{item.note}</p>
+              </div>
+            ))}
           </div>
         </section>
+
         {sesion?.esAdmin ? (
-          <section className="rounded-3xl border border-gold/20 bg-card p-4 shadow-card sm:p-5">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold">Activación del taller</p>
-                <h2 className="mt-1 text-lg font-semibold">Tus primeros resultados en AURUM LAB</h2>
-                <p className="mt-1 max-w-2xl text-xs leading-5 text-muted-foreground">Completa acciones reales para poner en marcha tu operación comercial. El avance se calcula con los datos guardados en tu taller.</p>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                {esDueno ? (
-                  <SelectorSedeDueno
-                    esDueno={esDueno}
-                    sedes={sedes}
-                    value={sedeFiltro}
-                    onChange={setSedeFiltro}
-                    className="w-full sm:w-auto"
-                  />
-                ) : null}
-                <Link to="/herramientas" className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-gold/30 px-3 py-2 text-xs font-semibold text-gold-deep transition hover:bg-gold/5">
-                  Explorar herramientas <ChevronRight className="size-4" />
-                </Link>
-              </div>
-            </div>
+          <section className="rounded-2xl border border-gold/25 bg-card p-4 shadow-card sm:p-5">
             {esDueno && !sedeContextoId ? (
-              <p className="mt-4 rounded-xl border border-border bg-muted/30 p-3 text-xs text-muted-foreground">Selecciona una sede para revisar el avance de sus primeros pasos sin mezclar datos de distintos talleres.</p>
+              <p className="text-xs text-muted-foreground">Selecciona una sede para consultar su activación sin mezclar datos.</p>
             ) : errorPrimerosPasos ? (
-              <p className="mt-4 rounded-xl border border-warning/30 bg-warning/5 p-3 text-xs text-muted-foreground">No se pudo consultar el avance comercial. Puedes seguir usando el panel y volver a intentarlo más tarde.</p>
+              <p className="text-xs text-muted-foreground">No se pudo consultar el avance de activación. El resto del panel sigue disponible.</p>
             ) : cargandoPrimerosPasos || cargandoPreparacion || cargandoPedidos ? (
-              <p className="mt-4 p-3 text-xs text-muted-foreground">Consultando el avance del taller…</p>
+              <p className="text-xs text-muted-foreground">Consultando la activación del taller…</p>
             ) : (
               (() => {
                 const pasos = [
-                  { titulo: "Completar identidad comercial", detalle: "Configura el nombre y los datos maestros que aparecerán en tus documentos.", listo: Boolean(preparacion?.identidadConfigurada), destino: "/gestion?modulo=comercial", accion: "Configurar identidad", icono: Building2 },
-                  { titulo: "Registrar primer cliente", detalle: "Guarda el contacto de una persona o empresa para tu cartera.", listo: (primerosPasos?.clientes ?? 0) > 0, destino: "/clientes", accion: "Registrar cliente", icono: UserRound },
-                  { titulo: "Crear primera cotización", detalle: "Prepara una propuesta comercial vinculada a tu taller.", listo: (primerosPasos?.cotizaciones ?? 0) > 0, destino: "/cotizaciones", accion: "Crear cotización", icono: FileText },
-                  { titulo: "Registrar primer pedido", detalle: "Inicia el seguimiento de una pieza o trabajo del taller.", listo: pedidosSede.length > 0, destino: "/pedidos/nuevo", accion: "Crear pedido", icono: Wrench },
+                  { titulo: "Identidad comercial", detalle: "Configura los datos de tus documentos.", listo: Boolean(preparacion?.identidadConfigurada), destino: "/gestion?modulo=comercial", accion: "Configurar", icono: Building2 },
+                  { titulo: "Primer cliente", detalle: "Registra un contacto en tu cartera.", listo: (primerosPasos?.clientes ?? 0) > 0, destino: "/clientes", accion: "Registrar", icono: UserRound },
+                  { titulo: "Primera cotización", detalle: "Prepara una propuesta comercial.", listo: (primerosPasos?.cotizaciones ?? 0) > 0, destino: "/cotizaciones", accion: "Crear", icono: FileText },
+                  { titulo: "Primer pedido", detalle: "Inicia el seguimiento de un trabajo.", listo: pedidosSede.length > 0, destino: "/pedidos/nuevo", accion: "Crear", icono: Wrench },
                 ];
                 const completados = pasos.filter((paso) => paso.listo).length;
                 const porcentaje = Math.round((completados / pasos.length) * 100);
                 return (
-                  <div className="mt-5 space-y-4">
-                    <div>
-                      <div className="mb-2 flex items-center justify-between gap-3">
-                        <span className="text-xs font-semibold text-muted-foreground">Progreso de activación</span>
-                        <span className="text-xs font-bold tabular-nums">{completados}/{pasos.length} · {porcentaje}%</span>
-                      </div>
-                      <div className="h-2 overflow-hidden rounded-full bg-muted" role="progressbar" aria-label="Progreso de activación del taller" aria-valuemin={0} aria-valuemax={pasos.length} aria-valuenow={completados}>
-                        <div className="h-full rounded-full bg-gold transition-all duration-500" style={{ width: porcentaje + "%" }} />
-                      </div>
-                    </div>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      {pasos.map((paso, index) => {
+                  <details className="group">
+                    <summary className="flex cursor-pointer list-none flex-wrap items-center gap-4 [&::-webkit-details-marker]:hidden">
+                      <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-gold/10 text-gold-deep"><Rocket className="size-5" /></span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-sm font-semibold">Puesta en marcha del taller</span>
+                        <span className="mt-0.5 block text-xs text-muted-foreground">{completados} de {pasos.length} acciones completadas</span>
+                      </span>
+                      <span className="w-full min-w-28 flex-1 sm:max-w-48">
+                        <span className="block h-2 overflow-hidden rounded-full bg-muted"><span className="block h-full rounded-full bg-gold transition-all" style={{ width: porcentaje + "%" }} /></span>
+                      </span>
+                      <span className="text-xs font-bold tabular-nums">{porcentaje}%</span>
+                      <ChevronRight className="size-4 text-muted-foreground transition group-open:rotate-90" />
+                    </summary>
+                    <div className="mt-4 grid gap-2 border-t border-border pt-4 sm:grid-cols-2 xl:grid-cols-4">
+                      {pasos.map((paso) => {
                         const Icono = paso.icono;
                         return (
-                          <div key={paso.titulo} className="flex min-w-0 items-start gap-3 rounded-2xl border border-border p-3 sm:p-4">
-                            <span className={paso.listo ? "grid size-10 shrink-0 place-items-center rounded-xl bg-success/10 text-success" : "grid size-10 shrink-0 place-items-center rounded-xl bg-gold/10 text-gold-deep"}>
-                              {paso.listo ? <CheckCircle2 className="size-5" /> : <Icono className="size-5" />}
+                          <Link key={paso.titulo} to={paso.destino as never} className="flex min-w-0 items-center gap-3 rounded-xl border border-border p-3 transition hover:border-gold/40 hover:bg-muted/30">
+                            <span className={paso.listo ? "grid size-9 shrink-0 place-items-center rounded-lg bg-success/10 text-success" : "grid size-9 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground"}>
+                              {paso.listo ? <CheckCircle2 className="size-4" /> : <Icono className="size-4" />}
                             </span>
-                            <div className="min-w-0 flex-1">
-                              <div className="flex flex-wrap items-center gap-2">
-                                <p className="text-xs font-semibold">{index + 1}. {paso.titulo}</p>
-                                <span className={paso.listo ? "text-[9px] font-bold uppercase tracking-wider text-success" : "text-[9px] font-bold uppercase tracking-wider text-muted-foreground"}>{paso.listo ? "Completado" : "Pendiente"}</span>
-                              </div>
-                              <p className="mt-1 text-[11px] leading-5 text-muted-foreground">{paso.detalle}</p>
-                              <Link to={paso.destino as never} className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-gold-deep hover:underline">
-                                {paso.listo ? "Revisar" : paso.accion} <ChevronRight className="size-3" />
-                              </Link>
-                            </div>
-                          </div>
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate text-xs font-semibold">{paso.titulo}</span>
+                              <span className="mt-0.5 block text-[10px] text-muted-foreground">{paso.listo ? "Completado" : paso.accion}</span>
+                            </span>
+                          </Link>
                         );
                       })}
                     </div>
-                    {completados === pasos.length ? <p className="rounded-xl border border-success/25 bg-success/5 p-3 text-xs font-medium text-success">¡Excelente! Tu taller ya tiene configurados los elementos básicos para gestionar clientes, cotizaciones y pedidos.</p> : null}
-                  </div>
+                  </details>
                 );
               })()
             )}
           </section>
         ) : null}
 
-        {mostrarEstadoTaller ? (
-        <section id="estado-preparacion-taller" className="rounded-3xl border border-gold/20 bg-card shadow-card">
-          <div className="flex flex-col gap-3 border-b border-border p-4 lg:flex-row lg:items-center lg:justify-between lg:gap-4 lg:p-6">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="grid size-9 place-items-center rounded-xl border border-gold/25 bg-gold/10 text-gold-deep">
-                  <ListChecks className="size-4" />
-                </span>
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Estado de preparación</p>
-                  <h2 className="mt-0.5 text-lg font-semibold">Tu taller está listo para trabajar</h2>
-                </div>
-              </div>
-              <p className="mt-2 max-w-2xl text-xs leading-5 text-muted-foreground">
-                Aurum Lab revisa la configuración real de esta sede y te indica qué falta antes de llevar tu primer pedido a producción.
-              </p>
-            </div>
-            {esDueno ? (
-              <SelectorSedeDueno
-                esDueno={esDueno}
-                sedes={sedes}
-                value={sedeFiltro}
-                onChange={setSedeFiltro}
-                className="w-full sm:w-auto"
-              />
-            ) : null}
-          </div>
-
-          {esDueno && sedeFiltro === TODAS_LAS_SEDES ? (
-            <div className="flex flex-col items-start gap-4 p-5 lg:flex-row lg:items-center lg:justify-between lg:px-6">
-              <div>
-                <p className="text-sm font-semibold">Selecciona una sede para revisar su preparación</p>
-                <p className="mt-1 text-xs text-muted-foreground">La vista global sigue disponible en los indicadores inferiores. La preparación se evalúa por taller para no mezclar configuraciones.</p>
-              </div>
-              <Link to="/gestion" className="inline-flex items-center gap-2 rounded-xl bg-gold px-4 py-2.5 text-xs font-semibold text-gold-foreground hover:shadow-raised">
-                Administrar sedes <ChevronRight className="size-4" />
-              </Link>
-            </div>
-          ) : (
-            <InicioPreparacion
-              preparacion={preparacion ? preparacion : undefined}
-              cargando={cargandoPreparacion}
-              tienePedido={pedidosSede.length > 0}
-              destinoGestion="/gestion"
-              destinoPedidos="/pedidos/nuevo"
-            />
-          )}
-        </section>
-        ) : null}
-
-        {sesion?.esAdmin ? <ResumenPlanComercial /> : null}
-
-        <section className="rounded-2xl border border-gold/20 bg-card"><header className="flex items-center justify-between border-b p-4"><h2 className="font-semibold">🎂 Próximos cumpleaños</h2><Link to="/clientes" className="text-xs font-semibold text-gold">Ver clientes <ChevronRight className="inline size-3"/></Link></header>{cumpleanos.length?cumpleanos.map(c=><div key={c.id} className="flex items-center gap-3 border-b p-3"><Gift className="size-4 text-gold"/><span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold">{c.nombre}</span><span className="text-xs text-muted-foreground">{c.fecha.toLocaleDateString("es-PE",{day:"2-digit",month:"short"})}</span></span><span className="text-xs font-semibold text-gold">{c.dias===0?"Hoy":`En ${c.dias} días`}</span></div>):<p className="p-4 text-sm text-muted-foreground">No hay cumpleaños en los próximos 30 días.</p>}</section>
-        <section className="rounded-2xl border border-gold/20 bg-card p-4 shadow-card sm:p-5">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold">Enfoque del día</p>
-              <h2 className="mt-1 text-base font-semibold">¿Qué conviene resolver primero?</h2>
-            </div>
-            <span className="text-xs text-muted-foreground">{resumen.vencidos.length + resumen.hoy.length + resumen.recepcion.length} asunto(s) prioritario(s)</span>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <Link to="/pedidos" className="group rounded-xl border border-border p-3 transition hover:border-danger/40 hover:bg-muted/30">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-semibold">Entregas vencidas</span>
-                <span className={resumen.vencidos.length ? "rounded-full bg-danger/10 px-2 py-1 text-xs font-bold text-danger" : "rounded-full bg-muted px-2 py-1 text-xs font-semibold"}>{resumen.vencidos.length}</span>
-              </div>
-              <p className="mt-2 text-xs leading-5 text-muted-foreground">{resumen.vencidos.length ? "Revisa fechas y actualiza el compromiso con el cliente." : "No hay pedidos vencidos."}</p>
-              <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-gold">Revisar pedidos <ChevronRight className="size-3 transition group-hover:translate-x-0.5" /></span>
-            </Link>
-            <Link to="/pedidos" className="group rounded-xl border border-border p-3 transition hover:border-gold/40 hover:bg-muted/30">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-semibold">Entrega hoy</span>
-                <span className={resumen.hoy.length ? "rounded-full bg-gold/15 px-2 py-1 text-xs font-bold text-gold-deep" : "rounded-full bg-muted px-2 py-1 text-xs font-semibold"}>{resumen.hoy.length}</span>
-              </div>
-              <p className="mt-2 text-xs leading-5 text-muted-foreground">{resumen.hoy.length ? "Confirma el avance y prepara la entrega." : "No hay entregas programadas para hoy."}</p>
-              <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-gold">Ver agenda <ChevronRight className="size-3 transition group-hover:translate-x-0.5" /></span>
-            </Link>
-            <Link to="/pedidos" className="group rounded-xl border border-border p-3 transition hover:border-gold/40 hover:bg-muted/30">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-semibold">En recepción</span>
-                <span className="rounded-full bg-muted px-2 py-1 text-xs font-semibold">{resumen.recepcion.length}</span>
-              </div>
-              <p className="mt-2 text-xs leading-5 text-muted-foreground">{resumen.recepcion.length ? "Comprueba lo recibido y define el siguiente paso." : "No hay pedidos pendientes de recepción."}</p>
-              <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-gold">Gestionar recepción <ChevronRight className="size-3 transition group-hover:translate-x-0.5" /></span>
-            </Link>
-            <Link to="/pedidos" className="group rounded-xl border border-border p-3 transition hover:border-gold/40 hover:bg-muted/30">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-semibold">Sin fecha de entrega</span>
-                <span className="rounded-full bg-muted px-2 py-1 text-xs font-semibold">{resumen.sinFecha.length}</span>
-              </div>
-              <p className="mt-2 text-xs leading-5 text-muted-foreground">{resumen.sinFecha.length ? "Completa las fechas para detectar riesgos a tiempo." : "Todos los pedidos activos tienen fecha."}</p>
-              <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-gold">Completar planificación <ChevronRight className="size-3 transition group-hover:translate-x-0.5" /></span>
-            </Link>
-          </div>
-        </section>
-
-        <section className="grid grid-cols-2 gap-3 lg:grid-cols-5">
-          <StatCard etiqueta="Pedidos activos" valor={String(resumen.activos.length)} />
-          <StatCard etiqueta="En producción" valor={String(resumen.produccion.length)} />
-          <StatCard etiqueta="En recepción" valor={String(resumen.recepcion.length)} />
-          <StatCard etiqueta="Entrega hoy" valor={String(resumen.hoy.length)} tono={resumen.hoy.length ? "negativo" : "positivo"} />
-          <StatCard etiqueta="Vencidos" valor={String(resumen.vencidos.length)} tono={resumen.vencidos.length ? "negativo" : "positivo"} />
-        </section>
-
-        <section className="grid gap-6 xl:grid-cols-[1.6fr_1fr]">
-          <Panel
-            titulo="Requieren atención"
-            accion={<Link to="/pedidos" className="text-xs font-semibold text-gold hover:underline">Ver pedidos</Link>}
-          >
+        <section className="grid gap-5 xl:grid-cols-[minmax(0,1.55fr)_minmax(280px,0.85fr)]">
+          <Panel titulo="Pedidos que requieren atención" accion={<Link to="/pedidos" className="text-xs font-semibold text-gold hover:underline">Ver todos <ChevronRight className="inline size-3" /></Link>}>
             <div className="divide-y divide-border">
               {cargandoPedidos ? (
-                <div className="p-6 text-sm text-muted-foreground">Cargando pedidos...</div>
-               ) : resumen.atencion.length === 0 ? (
+                <div className="p-6 text-sm text-muted-foreground">Cargando pedidos…</div>
+              ) : resumen.atencion.length === 0 ? (
                 <div className="p-8 text-center">
-                  <Clock3 className="mx-auto size-8 text-muted-foreground" />
-                  <p className="mt-3 text-sm font-medium">No hay pedidos activos</p>
-                  <p className="mt-1 text-xs text-muted-foreground">Cuando ingresen pedidos aparecerán aquí.</p>
+                  <CheckCircle2 className="mx-auto size-8 text-success" />
+                  <p className="mt-3 text-sm font-semibold">Todo está bajo control</p>
+                  <p className="mt-1 text-xs text-muted-foreground">No hay pedidos urgentes ni pendientes de recepción.</p>
                 </div>
               ) : (
-                resumen.atencion.slice(0, 7).map((pedido) => (
-                  <Link key={pedido.id} to="/pedidos/$id" params={{ id: pedido.id }} search={{ from: undefined }} className="flex items-center justify-between gap-4 px-4 py-4 transition hover:bg-muted/40 lg:px-6">
+                resumen.atencion.slice(0, 6).map((pedido) => (
+                  <Link key={pedido.id} to="/pedidos/$id" params={{ id: pedido.id }} search={{ from: undefined }} className="flex items-center justify-between gap-4 px-4 py-3.5 transition hover:bg-muted/40">
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold">{pedido.referencia || pedido.pieza || pedido.trabajo || "Pedido sin referencia"}</p>
                       <p className="mt-1 truncate text-xs text-muted-foreground">{pedido.cliente || "Sin cliente"} · {pedido.estado}</p>
                     </div>
                     <div className="shrink-0 text-right">
-                      <p className={esUrgente(pedido) ? "text-xs font-bold text-danger" : "text-xs font-medium text-muted-foreground"}>
-                        {textoEntrega(pedido)}
-                      </p>
+                      <p className={esUrgente(pedido) ? "text-xs font-bold text-danger" : "text-xs font-medium text-muted-foreground"}>{textoEntrega(pedido)}</p>
                       <ChevronRight className="ml-auto mt-1 size-4 text-muted-foreground" />
                     </div>
                   </Link>
@@ -578,53 +464,103 @@ function Inicio() {
             </div>
           </Panel>
 
-          <Panel titulo="Actividad del taller">
+          <Panel titulo="Prioridades de hoy">
             <div className="space-y-2 p-3">
               {[
-                { label: "Diseño 3D", area: "Diseño 3D", icon: LayoutGrid },
-                { label: "Impresión", area: "Impresión 3D", icon: Boxes },
-                { label: "Casting", area: "Casting", icon: Gem },
-                { label: "Taller", area: "Taller", icon: Hammer },
-                { label: "Ventas", area: "Área ventas", icon: PackageCheck },
-              ].map(({ label, area, icon: Icono }) => (
-                <div key={label} className="flex items-center gap-3 rounded-xl border border-border px-3 py-3">
-                  <span className="grid size-9 place-items-center rounded-lg border border-gold/20 bg-gold/10 text-gold-deep"><Icono className="size-4" /></span>
-                  <span className="flex-1 text-sm font-semibold">{label}</span>
-                  <span className="font-display text-xl">{pedidos.filter((p) => p.area_actual === area).length}</span>
-                </div>
+                { label: "Entregas vencidas", value: resumen.vencidos.length, detail: "Revisar compromisos", tone: resumen.vencidos.length ? "text-danger bg-danger/10" : "text-success bg-success/10" },
+                { label: "Entregas hoy", value: resumen.hoy.length, detail: "Preparar despachos", tone: "text-gold-deep bg-gold/10" },
+                { label: "Pendientes de recepción", value: resumen.recepcion.length, detail: "Verificar ingresos", tone: "text-foreground bg-muted" },
+                { label: "Sin fecha de entrega", value: resumen.sinFecha.length, detail: "Completar planificación", tone: "text-foreground bg-muted" },
+              ].map((item) => (
+                <Link key={item.label} to="/pedidos" className="flex items-center gap-3 rounded-xl border border-border p-3 transition hover:border-gold/40 hover:bg-muted/30">
+                  <span className={`grid size-10 shrink-0 place-items-center rounded-lg text-sm font-bold tabular-nums ${item.tone}`}>{item.value}</span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-xs font-semibold">{item.label}</span>
+                    <span className="mt-0.5 block text-[10px] text-muted-foreground">{item.detail}</span>
+                  </span>
+                  <ChevronRight className="size-4 text-muted-foreground" />
+                </Link>
               ))}
             </div>
           </Panel>
         </section>
 
-        <Panel titulo="Carga operativa por área">
-          <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3">
-            {cargaAreas.map(([area, Icono]) => {
-              const cantidad = pedidosSede.filter((p) => p.area_actual === area && !esEstadoFinalPedido(p.estado)).length;
-              const destinos: Record<string, string> = {
-                "Diseño 3D": "/diseno-3d",
-                "Impresión 3D": "/impresion-3d",
-                Casting: "/casting",
-                Taller: "/taller",
-                "Corte Láser": "/corte-laser",
-                Ventas: "/ventas",
-              };
-              const destino = destinos[area];
-              return (
-                <Link key={area} to={destino as never} className="rounded-2xl border border-border bg-card p-4 shadow-card transition hover:-translate-y-0.5 hover:border-gold/40 hover:shadow-raised">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="grid size-9 place-items-center rounded-xl border border-gold/20 bg-gold/10 text-gold-deep"><Icono className="size-4" /></span>
-                    <span className="font-display text-2xl font-semibold">{cantidad}</span>
-                  </div>
-                  <p className="mt-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{area}</p>
-                  <p className="mt-1 text-[11px] text-muted-foreground">{cantidad === 0 ? "Sin carga activa" : cantidad === 1 ? "1 pedido en curso" : cantidad + " pedidos en curso"}</p>
-                </Link>
-              );
-            })}
-          </div>
-        </Panel>
-      </div>
+        <section className="grid gap-5 lg:grid-cols-2">
+          <Panel titulo="Carga operativa por área">
+            <div className="grid gap-2 p-3 sm:grid-cols-2">
+              {cargaAreas.map(([area, Icono]) => {
+                const cantidad = pedidosSede.filter((p) => p.area_actual === area && !esEstadoFinalPedido(p.estado)).length;
+                const destinos: Record<string, string> = {
+                  "Diseño 3D": "/diseno-3d",
+                  "Impresión 3D": "/impresion-3d",
+                  Casting: "/casting",
+                  Taller: "/taller",
+                  "Corte Láser": "/corte-laser",
+                  Ventas: "/ventas",
+                };
+                return (
+                  <Link key={area} to={destinos[area] as never} className="flex items-center gap-3 rounded-xl border border-border p-3 transition hover:border-gold/40 hover:bg-muted/30">
+                    <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-gold/10 text-gold-deep"><Icono className="size-4" /></span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-xs font-semibold">{area}</span>
+                      <span className="mt-0.5 block text-[10px] text-muted-foreground">{cantidad === 0 ? "Sin carga activa" : cantidad === 1 ? "1 pedido en curso" : cantidad + " pedidos en curso"}</span>
+                    </span>
+                    <span className="font-display text-xl font-semibold tabular-nums">{cantidad}</span>
+                  </Link>
+                );
+              })}
+              {cargaAreas.length === 0 ? <p className="col-span-full p-4 text-xs text-muted-foreground">No hay áreas internas configuradas para esta sede.</p> : null}
+            </div>
+          </Panel>
 
+          <div className="space-y-5">
+            {sesion?.esAdmin ? (
+              <section className="rounded-2xl border border-border bg-card shadow-card">
+                <div className="flex items-center justify-between gap-3 border-b border-border p-4">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground">Configuración</p>
+                    <h2 className="mt-1 text-sm font-semibold">Preparación de la sede</h2>
+                  </div>
+                  <button type="button" onClick={() => setMostrarEstadoTaller((visible) => !visible)} aria-expanded={mostrarEstadoTaller} aria-controls="estado-preparacion-taller" className="text-xs font-semibold text-gold-deep hover:underline">
+                    {mostrarEstadoTaller ? "Ocultar" : "Revisar"}
+                  </button>
+                </div>
+                {mostrarEstadoTaller ? (
+                  <div id="estado-preparacion-taller">
+                    {esDueno && sedeFiltro === TODAS_LAS_SEDES ? (
+                      <div className="p-4">
+                        <p className="text-xs text-muted-foreground">Selecciona una sede para revisar su preparación sin mezclar configuraciones.</p>
+                        <Link to="/gestion" className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-gold-deep">Administrar sedes <ChevronRight className="size-3" /></Link>
+                      </div>
+                    ) : (
+                      <InicioPreparacion preparacion={preparacion ? preparacion : undefined} cargando={cargandoPreparacion} tienePedido={pedidosSede.length > 0} destinoGestion="/gestion" destinoPedidos="/pedidos/nuevo" />
+                    )}
+                  </div>
+                ) : null}
+              </section>
+            ) : null}
+            <section className="rounded-2xl border border-border bg-card shadow-card">
+              <header className="flex items-center justify-between gap-3 border-b border-border p-4">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground">Relación con clientes</p>
+                  <h2 className="mt-1 text-sm font-semibold">Próximos cumpleaños</h2>
+                </div>
+                <Link to="/clientes" className="text-xs font-semibold text-gold hover:underline">Ver clientes <ChevronRight className="inline size-3" /></Link>
+              </header>
+              {cumpleanos.length ? cumpleanos.map((c) => (
+                <div key={c.id} className="flex items-center gap-3 border-b border-border p-3 last:border-0">
+                  <Gift className="size-4 shrink-0 text-gold" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-semibold">{c.nombre}</span>
+                    <span className="text-xs text-muted-foreground">{c.fecha.toLocaleDateString("es-PE", { day: "2-digit", month: "short" })}</span>
+                  </span>
+                  <span className="text-xs font-semibold text-gold">{c.dias === 0 ? "Hoy" : `En ${c.dias} días`}</span>
+                </div>
+              )) : <p className="p-4 text-xs text-muted-foreground">No hay cumpleaños en los próximos 30 días.</p>}
+            </section>
+          </div>
+        </section>
+      </div>
       {mostrarBienvenida && pasosBienvenida.length > 0 ? (
         <div className="fixed inset-0 z-[100] grid place-items-center bg-background/80 p-4 backdrop-blur-sm">
           <div className="w-full max-w-2xl overflow-hidden rounded-3xl border border-gold/20 bg-card shadow-raised">
