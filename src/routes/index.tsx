@@ -342,13 +342,44 @@ function TalleresDeLaComunidad() {
 
 function InicioPublico() {
   const [mostrarDemo3D, setMostrarDemo3D] = useState(false);
+  const demo3DSectionRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(min-width: 640px)");
-    const actualizarVisibilidad = () => setMostrarDemo3D(mediaQuery.matches);
-    actualizarVisibilidad();
-    mediaQuery.addEventListener("change", actualizarVisibilidad);
-    return () => mediaQuery.removeEventListener("change", actualizarVisibilidad);
+    let observer: IntersectionObserver | null = null;
+
+    const observarDemo3D = () => {
+      observer?.disconnect();
+      observer = null;
+
+      if (!mediaQuery.matches) {
+        setMostrarDemo3D(false);
+        return;
+      }
+
+      const section = demo3DSectionRef.current;
+      if (!section) return;
+
+      observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            setMostrarDemo3D(true);
+            observer?.disconnect();
+            observer = null;
+          }
+        },
+        { rootMargin: "150px 0px", threshold: 0 },
+      );
+      observer.observe(section);
+    };
+
+    observarDemo3D();
+    mediaQuery.addEventListener("change", observarDemo3D);
+
+    return () => {
+      observer?.disconnect();
+      mediaQuery.removeEventListener("change", observarDemo3D);
+    };
   }, []);
 
   return (
@@ -512,7 +543,7 @@ function InicioPublico() {
 
       <PrecioOroDiario />
 
-      <section id="aurum-render" style={{ contentVisibility: "auto", containIntrinsicSize: "auto 760px" }} className="overflow-hidden border-y border-[#263743] bg-[#111a22] text-white">
+      <section ref={demo3DSectionRef} id="aurum-render" style={{ contentVisibility: "auto", containIntrinsicSize: "auto 760px" }} className="overflow-hidden border-y border-[#263743] bg-[#111a22] text-white">
         <div className="mx-auto grid max-w-[1440px] items-center gap-9 px-5 py-14 sm:px-8 sm:py-16 lg:grid-cols-[1.05fr_.95fr] lg:gap-14 lg:px-12 lg:py-20">
           <div className="max-w-2xl">
             <p className="inline-flex items-center gap-2 rounded-full border border-[#d4aa19]/40 bg-[#d4aa19]/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.2em] text-[#f3d66e]"><Sparkles className="size-3.5" /> ESTUDIO 3D PROFESIONAL PARA JOYEROS</p>
@@ -543,16 +574,18 @@ function InicioPublico() {
                   </Suspense>
                 </ClientOnly>
               ) : (
-                <div className="overflow-hidden rounded-xl sm:hidden">
+                <div className="overflow-hidden rounded-xl">
                   <img
                     src={heroColgante}
-                    alt="Diseño de joyería presentado en AURUM LAB"
+                    alt="Vista previa de un diseño de joyería presentado en AURUM LAB"
                     loading="lazy"
                     decoding="async"
+                    width={800}
+                    height={600}
                     className="aspect-[4/3] w-full object-cover"
                   />
                   <p className="bg-white/5 px-3 py-2 text-center text-xs text-slate-300">
-                    Explora la visualización 3D desde una pantalla de escritorio.
+                    La demostración 3D se activa al acercarte a esta sección.
                   </p>
                 </div>
               )}
