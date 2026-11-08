@@ -395,29 +395,35 @@ function Inicio() {
     <AppShell
       titulo="Centro de control"
       subtitulo={sesion?.sede?.nombre ? `Sede ${sesion.sede.nombre} · ${rolEtiqueta[sesion.rolPrincipal]}` : "Visión general del taller"}
-      encabezadoMovilCompacto
+      ocultarEncabezado
     >
-      <div className="space-y-7">
-        <header className="flex flex-col gap-4 rounded-2xl border border-border bg-card px-5 py-5 shadow-card sm:flex-row sm:items-end sm:justify-between lg:px-6">
-          <div>
+      <div className="space-y-6">
+        <header className="flex flex-col gap-4 rounded-2xl border border-border bg-card px-5 py-5 shadow-card sm:flex-row sm:items-center sm:justify-between lg:px-6">
+          <div className="min-w-0">
             <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gold-deep">AURUM LAB / OPERACIONES</p>
-            <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight">Panel de operaciones</h1>
-            <p className="mt-1 text-sm text-muted-foreground">{sesion?.sede?.nombre ? `${sesion.sede.nombre} · ${rolEtiqueta[sesion.rolPrincipal]}` : "Estado general del taller"}</p>
+            <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight">Centro de control</h1>
+            <p className="mt-1 text-sm text-muted-foreground">{sesion?.sede?.nombre ? `${sesion.sede.nombre} · ${rolEtiqueta[sesion.rolPrincipal]}` : "Visión general del taller"}</p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            {esDueno ? <SelectorSedeDueno esDueno={esDueno} sedes={sedes} value={sedeFiltro} onChange={setSedeFiltro} className="w-full sm:w-auto" /> : null}
-          </div>
+          {esDueno ? (
+            <div className="flex w-full flex-col gap-1.5 sm:w-auto">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Sede de trabajo</span>
+              <SelectorSedeDueno esDueno={esDueno} sedes={sedes} value={sedeFiltro} onChange={setSedeFiltro} className="w-full sm:min-w-56" />
+            </div>
+          ) : null}
         </header>
 
         <section aria-label="Indicadores del taller" className="grid grid-cols-2 gap-3 xl:grid-cols-4">
           {[
-            { label: "Pedidos activos", value: resumen.activos.length, detail: "En seguimiento", tone: "text-foreground" },
-            { label: "En producción", value: resumen.produccion.length, detail: "Trabajo en curso", tone: "text-foreground" },
-            { label: "Entregas hoy", value: resumen.hoy.length, detail: "Compromisos de hoy", tone: "text-foreground" },
-            { label: "Vencidos", value: resumen.vencidos.length, detail: "Requieren atención", tone: resumen.vencidos.length ? "text-red-600" : "text-foreground" },
+            { label: "Pedidos activos", value: resumen.activos.length, detail: "En seguimiento", tone: "text-foreground", Icon: PackageCheck, accent: "bg-slate-100 text-slate-600" },
+            { label: "En producción", value: resumen.produccion.length, detail: "Trabajo en curso", tone: "text-foreground", Icon: Hammer, accent: "bg-blue-50 text-blue-700" },
+            { label: "Entregas hoy", value: resumen.hoy.length, detail: "Compromisos de hoy", tone: "text-foreground", Icon: CheckCircle2, accent: "bg-emerald-50 text-emerald-700" },
+            { label: "Vencidos", value: resumen.vencidos.length, detail: "Requieren atención", tone: resumen.vencidos.length ? "text-red-600" : "text-foreground", Icon: CircleAlert, accent: resumen.vencidos.length ? "bg-red-50 text-red-600" : "bg-slate-100 text-slate-500" },
           ].map((item) => (
-            <article key={item.label} className="rounded-2xl border border-border bg-card p-4 shadow-card">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{item.label}</p>
+            <article key={item.label} className="group rounded-2xl border border-border bg-card p-4 shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:border-gold/30 hover:shadow-raised">
+              <div className="flex items-start justify-between gap-3">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{item.label}</p>
+                <span className={`grid size-8 shrink-0 place-items-center rounded-xl ${item.accent}`}><item.Icon className="size-4" /></span>
+              </div>
               <p className={`mt-2 font-display text-3xl font-semibold tabular-nums ${item.tone}`}>{cargandoPedidos ? "—" : item.value}</p>
               <p className="mt-1 text-[11px] text-muted-foreground">{item.detail}</p>
             </article>
