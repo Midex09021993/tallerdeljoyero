@@ -397,8 +397,8 @@ function Inicio() {
       subtitulo={sesion?.sede?.nombre ? `Sede ${sesion.sede.nombre} · ${rolEtiqueta[sesion.rolPrincipal]}` : "Visión general del taller"}
       encabezadoMovilCompacto
     >
-      <div className="space-y-6">
-        <header className="flex flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-end sm:justify-between">
+      <div className="space-y-7">
+        <header className="flex flex-col gap-4 rounded-2xl border border-border bg-card px-5 py-5 shadow-card sm:flex-row sm:items-end sm:justify-between lg:px-6">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gold-deep">AURUM LAB / OPERACIONES</p>
             <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight">Panel de operaciones</h1>
@@ -416,7 +416,7 @@ function Inicio() {
             { label: "Entregas hoy", value: resumen.hoy.length, detail: "Compromisos de hoy", tone: "text-foreground" },
             { label: "Vencidos", value: resumen.vencidos.length, detail: "Requieren atención", tone: resumen.vencidos.length ? "text-red-600" : "text-foreground" },
           ].map((item) => (
-            <article key={item.label} className="rounded-xl border border-border bg-card p-4">
+            <article key={item.label} className="rounded-2xl border border-border bg-card p-4 shadow-card">
               <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{item.label}</p>
               <p className={`mt-2 font-display text-3xl font-semibold tabular-nums ${item.tone}`}>{cargandoPedidos ? "—" : item.value}</p>
               <p className="mt-1 text-[11px] text-muted-foreground">{item.detail}</p>
@@ -450,7 +450,7 @@ function Inicio() {
                   ].map((item) => {
                     const Icono = item.icon;
                     return (
-                      <Link key={item.label} to={item.href as never} className="group rounded-xl border border-border bg-card p-4 transition hover:border-gold/35 hover:shadow-card">
+                      <Link key={item.label} to={item.href as never} className="group rounded-2xl border border-border bg-card p-4 shadow-card transition-all duration-200 hover:-translate-y-0.5 hover:border-gold/35 hover:shadow-raised">
                         <div className="flex items-center justify-between gap-2">
                           <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{item.label}</p>
                           <Icono className="size-4 shrink-0 text-gold-deep/75" />
@@ -465,14 +465,14 @@ function Inicio() {
                 </div>
 
                 <div className="grid gap-3 xl:grid-cols-2">
-                  <Link to="/cotizaciones" className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3 transition hover:border-gold/35">
+                  <Link to="/cotizaciones" className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-4 shadow-card transition hover:border-gold/35 hover:shadow-raised">
                     <span className="min-w-0">
                       <span className="block text-xs font-semibold">Cotizaciones próximas a vencer</span>
                       <span className="mt-0.5 block text-[11px] text-muted-foreground">Pendientes con vencimiento en los próximos 7 días</span>
                     </span>
                     <span className="font-display text-2xl font-semibold tabular-nums">{cargandoResumenComercial ? "—" : resumenComercial?.cotizacionesPorVencer ?? 0}</span>
                   </Link>
-                  <div className="rounded-xl border border-border bg-card px-4 py-3">
+                  <div className="rounded-2xl border border-border bg-card px-4 py-4 shadow-card">
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-xs font-semibold">Materiales que requieren revisión</span>
                       <Link to="/inventario" className="text-[11px] font-semibold text-gold-deep hover:underline">Ver inventario</Link>
@@ -499,7 +499,7 @@ function Inicio() {
         ) : null}
 
         <section className="grid items-start gap-5 xl:grid-cols-[minmax(0,1.6fr)_minmax(280px,0.8fr)]">
-          <section className="overflow-hidden rounded-xl border border-border bg-card">
+          <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
             <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3.5">
               <div>
                 <h2 className="text-sm font-semibold">Atención prioritaria</h2>
@@ -533,7 +533,7 @@ function Inicio() {
           </section>
 
           <div className="space-y-5">
-            <section className="rounded-xl border border-border bg-card">
+            <section className="rounded-2xl border border-border bg-card shadow-card">
               <div className="border-b border-border px-4 py-3.5">
                 <h2 className="text-sm font-semibold">Estado de producción</h2>
                 <p className="mt-0.5 text-xs text-muted-foreground">Carga actual por área</p>
@@ -562,7 +562,7 @@ function Inicio() {
               </div>
             </section>
 
-            <section className="rounded-xl border border-border bg-card p-4">
+            <section className="rounded-2xl border border-border bg-card p-4 shadow-card">
               <h2 className="text-sm font-semibold">Resumen del día</h2>
               <div className="mt-3 space-y-2.5">
                 {[
