@@ -14,6 +14,8 @@ import {
   Rocket,
   CheckCircle2,
   CircleAlert,
+  FileText,
+  UserRound,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
