@@ -1,5 +1,5 @@
 import { ClientOnly, createFileRoute, Link } from "@tanstack/react-router";
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabasePublic } from "@/integrations/supabase/client";
 import { RegistroTaller } from "@/components/RegistroTaller";
@@ -288,6 +288,16 @@ function TalleresDeLaComunidad() {
 }
 
 function InicioPublico() {
+  const [mostrarDemo3D, setMostrarDemo3D] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(min-width: 640px)");
+    const actualizarVisibilidad = () => setMostrarDemo3D(mediaQuery.matches);
+    actualizarVisibilidad();
+    mediaQuery.addEventListener("change", actualizarVisibilidad);
+    return () => mediaQuery.removeEventListener("change", actualizarVisibilidad);
+  }, []);
+
   return (
     <main className="min-h-screen bg-white text-[#17232d]">
       <script type="application/ld+json">{JSON.stringify({
@@ -473,7 +483,26 @@ function InicioPublico() {
                 </div>
                 <span className="grid size-10 place-items-center rounded-xl border border-[#f8c928]/30 bg-[#f8c928]/10 text-[#f8d85b]"><Gem className="size-5" /></span>
               </div>
-              <ClientOnly fallback={null}><Suspense fallback={null}><MiniAurumRender className="min-h-[270px] sm:min-h-[340px]" /></Suspense></ClientOnly>
+              {mostrarDemo3D ? (
+                <ClientOnly fallback={null}>
+                  <Suspense fallback={<div className="min-h-[270px] sm:min-h-[340px]" aria-label="Cargando demostración 3D" />}>
+                    <MiniAurumRender className="min-h-[270px] sm:min-h-[340px]" />
+                  </Suspense>
+                </ClientOnly>
+              ) : (
+                <div className="overflow-hidden rounded-xl sm:hidden">
+                  <img
+                    src={heroColgante}
+                    alt="Diseño de joyería presentado en AURUM LAB"
+                    loading="lazy"
+                    decoding="async"
+                    className="aspect-[4/3] w-full object-cover"
+                  />
+                  <p className="bg-white/5 px-3 py-2 text-center text-xs text-slate-300">
+                    Explora la visualización 3D desde una pantalla de escritorio.
+                  </p>
+                </div>
+              )}
               <div className="grid grid-cols-3 gap-2 border-t border-white/10 pt-4 text-center">
                 <div className="rounded-lg bg-white/[.04] px-2 py-3"><p className="text-[9px] uppercase tracking-wider text-slate-400">Materiales</p><p className="mt-1 text-xs font-semibold text-white">Metales y gemas</p></div>
                 <div className="rounded-lg bg-white/[.04] px-2 py-3"><p className="text-[9px] uppercase tracking-wider text-slate-400">Iluminación</p><p className="mt-1 text-xs font-semibold text-white">Entornos HDR</p></div>
