@@ -391,16 +391,16 @@ export function AppShell({
     <div className={`flex min-h-screen bg-background text-foreground transition-[height] duration-300 ${modoAulaExpandida ? "h-[100dvh] min-h-0 overflow-hidden" : ""}`}>
       {sesion?.esAdmin ? <AlertaAutorizacionProduccion /> : null}
       {!ocultarNavegacion ? (
-        <aside aria-hidden={modoAulaExpandida} className={`sticky top-0 hidden h-screen max-h-screen shrink-0 flex-col overflow-hidden border-r border-ink-foreground/10 bg-ink text-ink-foreground transition-[width,opacity,transform] duration-300 ease-in-out lg:flex ${modoAulaExpandida ? "pointer-events-none w-0 -translate-x-4 border-r-0 opacity-0 xl:w-0" : "w-64 xl:w-72"}`}>
-          <div className="border-b border-ink-foreground/10 px-6 py-7 xl:px-7">
+        <aside aria-hidden={modoAulaExpandida} className={`sticky top-0 hidden h-screen max-h-screen shrink-0 flex-col overflow-hidden border-r border-border bg-white text-foreground shadow-[8px_0_28px_-24px_rgba(25,35,45,.28)] transition-[width,opacity,transform] duration-300 ease-in-out lg:flex ${modoAulaExpandida ? "pointer-events-none w-0 -translate-x-4 border-r-0 opacity-0 xl:w-0" : "w-64 xl:w-72"}`}>
+          <div className="border-b border-border px-6 py-7 xl:px-7">
             <p className="font-display text-2xl italic text-gold">Aurum Lab</p>
-            <p className="mt-1 truncate text-[10px] uppercase tracking-[0.2em] text-ink-foreground/40">
+            <p className="mt-1 truncate text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
               {sesion?.participante?.nombre ?? sesion?.sede?.nombre ?? ""}
             </p>
           </div>
 
           <div className="relative min-h-0 flex-1">
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-10 bg-gradient-to-t from-ink via-ink/85 to-transparent" aria-hidden="true" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-10 bg-gradient-to-t from-white via-white/90 to-transparent" aria-hidden="true" />
             <nav className="scrollbar-hidden h-full space-y-1 overflow-y-auto px-4 pb-8">
             {(["principal", "comercial", "produccion", "inventario", "aurum", "herramientas", "aprendizaje", "administracion"] as const).map((grupo) => {
               const items = visiblesOrdenadas.filter((s) => s.grupo === grupo);
@@ -417,15 +417,15 @@ export function AppShell({
               } as const;
               return (
                 <div key={grupo} className="pt-2 first:pt-0">
-                  <p className="px-4 pb-2 pt-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-foreground/50">{nombres[grupo]}</p>
+                  <p className="px-4 pb-2 pt-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{nombres[grupo]}</p>
                   <div className="space-y-1">
                     {items.map((s) => {
                       const Icon = s.icono;
                       const activo = pathname === s.to;
                       const clases = `flex min-h-11 items-center gap-3 rounded-xl border px-3.5 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/70 xl:px-4 ${
                         activo
-                          ? "border-gold/25 bg-gold/10 text-gold-bright shadow-[inset_3px_0_0_0_hsl(var(--gold))]"
-                          : "border-transparent text-ink-foreground/65 hover:border-ink-foreground/10 hover:bg-ink-foreground/5 hover:text-ink-foreground"
+                          ? "border-gold/25 bg-gold/10 text-gold-deep shadow-[inset_3px_0_0_0_hsl(var(--gold))]"
+                          : "border-transparent text-foreground/70 hover:border-border hover:bg-surface-muted hover:text-foreground"
                       }`;
                       if (s.to === "/mensajes") {
                         return (
@@ -437,7 +437,7 @@ export function AppShell({
                           >
                             {Icon ? <Icon className="size-4 shrink-0 opacity-70" /> : null}
                             <span>{s.label}</span>
-                            <span className="ml-auto rounded-md border border-ink-foreground/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-ink-foreground/35">Próximamente</span>
+                            <span className="ml-auto rounded-md border border-border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">Próximamente</span>
                           </div>
                         );
                       }
@@ -455,7 +455,7 @@ export function AppShell({
                           to={s.to}
                           activeOptions={{ exact: true }}
                           className={clases}
-                          activeProps={{ className: "border-gold/25 bg-gold/10 text-gold-bright shadow-[inset_3px_0_0_0_hsl(var(--gold))]" }}
+                          activeProps={{ className: "border-gold/25 bg-gold/10 text-gold-deep shadow-[inset_3px_0_0_0_hsl(var(--gold))]" }}
                         >
                           {Icon ? <Icon className="size-4 shrink-0 opacity-70" /> : null}
                           {s.label}
@@ -469,14 +469,14 @@ export function AppShell({
             </nav>
           </div>
 
-          <div className="shrink-0 border-t border-ink-foreground/5 p-6">
+          <div className="shrink-0 border-t border-border p-6">
             <div className="mb-4 flex items-center gap-3">
-              <div className="grid size-8 shrink-0 place-items-center rounded-full border border-gold/30 bg-gold/20 font-display italic text-gold">
+              <div className="grid size-8 shrink-0 place-items-center rounded-full border border-gold/25 bg-gold/10 font-display italic text-gold-deep">
                 {inicial}
               </div>
               <div className="min-w-0">
                 <p className="truncate text-xs font-medium">{nombreVisible}</p>
-                <p className="truncate text-[10px] text-ink-foreground/40">
+                <p className="truncate text-[10px] text-muted-foreground">
                   {sesion ? rolEtiqueta[sesion.rolPrincipal] : ""}
                   {tallerVisible && nombrePersonal ? ` · ${tallerVisible}` : ""}
                 </p>
@@ -485,7 +485,7 @@ export function AppShell({
             <button
               type="button"
               onClick={() => void cerrarSesion()}
-              className="w-full rounded-lg border border-ink-foreground/15 py-2 text-[10px] uppercase tracking-wider text-ink-foreground/60 transition-colors hover:text-ink-foreground"
+              className="w-full rounded-lg border border-border py-2 text-[10px] uppercase tracking-wider text-muted-foreground transition-colors hover:border-gold/30 hover:text-foreground"
             >
               Cerrar sesión
             </button>
