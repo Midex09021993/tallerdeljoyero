@@ -3989,22 +3989,22 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               {!presentationCover && <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_43%,rgba(255,255,255,.35)_0%,transparent_54%)]" />}
               <div className="absolute inset-0 flex items-center justify-center px-6">
                 <div className={"flex w-full max-w-sm flex-col items-center text-center "+(presentationCover?"opacity-0":"opacity-100")}>
-                  <div className="relative mb-6 grid size-[76px] place-items-center rounded-full border border-[#b99642]/20 bg-white/75 shadow-[0_12px_36px_rgba(70,58,30,.10)] backdrop-blur-md">
-                    <div className="absolute inset-[7px] animate-spin rounded-full border-[2.5px] border-[#e8e4da] border-t-[#b99642] [animation-duration:1.15s]" />
-                    <div className="grid size-10 place-items-center rounded-full border border-[#b99642]/25 bg-gradient-to-br from-white to-[#f5f0e4] shadow-[inset_0_1px_3px_rgba(161,132,67,.10)]">
+                  <div className="relative mb-8 grid size-[116px] place-items-center rounded-full border border-[#b99642]/25 bg-white/80 shadow-[0_18px_52px_rgba(70,58,30,.14)] backdrop-blur-md">
+                    <div className="absolute inset-[9px] animate-spin rounded-full border-[3px] border-[#e8e4da] border-t-[#b99642] [animation-duration:1.15s]" />
+                    <div className="grid size-[76px] place-items-center rounded-full border border-[#b99642]/30 bg-gradient-to-br from-white to-[#f5f0e4] shadow-[inset_0_1px_3px_rgba(161,132,67,.10)]">
                       <img
                         src="/brand/aurum-symbol.svg"
                         alt=""
                         aria-hidden="true"
-                        width="27"
-                        height="27"
-                        className="size-[27px] object-contain drop-shadow-[0_1px_1px_rgba(161,132,67,.16)]"
+                        width="54"
+                        height="54"
+                        className="size-[54px] object-contain drop-shadow-[0_2px_3px_rgba(161,132,67,.22)]"
                       />
                     </div>
                   </div>
-                  <p className="text-[9px] font-semibold uppercase tracking-[.3em] text-[#a18443]">AURUM RENDER · ESTUDIO DIGITAL</p>
-                  <h2 className="mt-3 text-lg font-semibold tracking-[-.025em] text-[#292824] sm:text-xl">{estadoCarga}</h2>
-                  <div className="mt-7 h-[3px] w-36 overflow-hidden rounded-full bg-[#e7e3da]">
+                  <p className="text-[10px] font-semibold uppercase tracking-[.34em] text-[#a18443]">AURUM RENDER · ESTUDIO DIGITAL</p>
+                  <h2 className="mt-3 text-xl font-semibold tracking-[-.025em] text-[#292824] sm:text-2xl">{estadoCarga}</h2>
+                  <div className="mt-8 h-[3px] w-40 overflow-hidden rounded-full bg-[#e7e3da]">
                     <div className="h-full w-2/5 animate-pulse rounded-full bg-gradient-to-r from-[#b99642] via-[#e4cb83] to-[#b99642]" />
                   </div>
                 </div>
