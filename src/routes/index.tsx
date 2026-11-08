@@ -631,58 +631,41 @@ function InicioPublico() {
         </div>
       </section>
 
-      <section id="como-funciona" style={{ contentVisibility: "auto", containIntrinsicSize: "auto 680px" }} className="scroll-mt-24 border-y border-slate-200 bg-gradient-to-b from-white to-[#f8fafc]">
+      <section id="como-funciona" style={{ contentVisibility: "auto", containIntrinsicSize: "auto 520px" }} className="scroll-mt-24 border-y border-slate-200 bg-gradient-to-b from-white to-[#f8fafc]">
         <div className="mx-auto max-w-[1440px] px-5 py-14 sm:px-8 sm:py-16 lg:px-12">
           <div className="mx-auto max-w-3xl text-center">
-            <p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#987400]">Tu taller, paso a paso</p>
-            <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-[#17232d] sm:text-3xl lg:text-4xl">Así funciona AURUM LAB</h2>
-            <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-slate-600 sm:text-base">Empieza con las herramientas públicas. No necesitas crear una cuenta.</p>
+            <p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#987400]">Empieza a tu ritmo</p>
+            <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-[#17232d] sm:text-3xl lg:text-4xl">Pon tu taller en marcha en tres pasos.</h2>
+            <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-slate-600 sm:text-base">Conoce AURUM LAB, configura tu espacio y comienza a trabajar con tus herramientas.</p>
           </div>
 
-          <div className="mt-9 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <article className="flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:border-[#dfbd4b] hover:shadow-lg sm:p-6">
-              <span className="grid size-11 place-items-center rounded-xl bg-[#fff3c1] text-[#8f6b00]"><Calculator className="size-5" /></span>
-              <p className="mt-5 text-[10px] font-bold uppercase tracking-[.18em] text-[#987400]">01 · Explora</p>
-              <h3 className="mt-2 text-lg font-bold">Calcula materiales</h3>
-              <p className="mt-2 flex-1 text-sm leading-6 text-slate-600">Calcula aleaciones, pesos y equivalencias de tallas.</p>
-              <Link to="/herramientas-publicas" className="mt-5 inline-flex min-h-10 items-center gap-2 text-sm font-bold text-[#765900] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19]">Explorar herramientas <ArrowRight className="size-4" /></Link>
+          <div className="relative mt-10 grid gap-5 md:grid-cols-3">
+            <article className="relative flex gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+              <span className="grid size-10 shrink-0 place-items-center rounded-full bg-[#fff3c1] text-sm font-extrabold text-[#8f6b00]">01</span>
+              <div className="min-w-0">
+                <h3 className="text-base font-bold text-[#17232d]">Explora la plataforma</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-600">Prueba las herramientas técnicas y conoce el visor 3D sin crear una cuenta.</p>
+                <Link to="/herramientas-publicas" className="mt-4 inline-flex min-h-9 items-center gap-2 text-xs font-bold text-[#765900] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19]">Explorar herramientas <ArrowRight className="size-3.5" /></Link>
+              </div>
             </article>
 
-            <article className="flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:border-[#dfbd4b] hover:shadow-lg sm:p-6">
-              <span className="grid size-11 place-items-center rounded-xl bg-[#eaf1ff] text-[#4d6ba5]"><Gem className="size-5" /></span>
-              <p className="mt-5 text-[10px] font-bold uppercase tracking-[.18em] text-[#987400]">02 · Visualiza</p>
-              <h3 className="mt-2 text-lg font-bold">Visualiza tus diseños</h3>
-              <p className="mt-2 flex-1 text-sm leading-6 text-slate-600">Muestra modelos compatibles en el visor público 3D.</p>
-              <Link to="/aurum-render-public" className="mt-5 inline-flex min-h-10 items-center gap-2 text-sm font-bold text-[#765900] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19]">Probar visor 3D <ArrowRight className="size-4" /></Link>
+            <article className="relative flex gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+              <span className="grid size-10 shrink-0 place-items-center rounded-full bg-[#eaf1ff] text-sm font-extrabold text-[#4d6ba5]">02</span>
+              <div className="min-w-0">
+                <h3 className="text-base font-bold text-[#17232d]">Crea tu espacio de trabajo</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-600">Registra tu taller y configura la información inicial de tu operación.</p>
+                <RegistroTaller className="mt-4 inline-flex min-h-9 items-center gap-2 text-xs font-bold text-[#765900] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19]" />
+              </div>
             </article>
 
-            <article className="flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:border-[#dfbd4b] hover:shadow-lg sm:p-6">
-              <span className="grid size-11 place-items-center rounded-xl bg-[#e9f8ef] text-[#27834d]"><Cloud className="size-5" /></span>
-              <p className="mt-5 text-[10px] font-bold uppercase tracking-[.18em] text-[#987400]">03 · Organiza</p>
-              <h3 className="mt-2 text-lg font-bold">Organiza tus pedidos</h3>
-              <p className="mt-2 flex-1 text-sm leading-6 text-slate-600">Registra clientes, cotizaciones y pedidos desde tu cuenta.</p>
-              <Link to="/auth" target="_blank" rel="noreferrer" className="mt-5 inline-flex min-h-10 items-center gap-2 text-sm font-bold text-[#765900] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19]">Conocer la plataforma <ArrowRight className="size-4" /></Link>
+            <article className="relative flex gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+              <span className="grid size-10 shrink-0 place-items-center rounded-full bg-[#e9f8ef] text-sm font-extrabold text-[#27834d]">03</span>
+              <div className="min-w-0">
+                <h3 className="text-base font-bold text-[#17232d]">Gestiona tu operación</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-600">Accede a tu espacio para organizar clientes, cotizaciones y pedidos.</p>
+                <Link to="/auth" target="_blank" rel="noreferrer" className="mt-4 inline-flex min-h-9 items-center gap-2 text-xs font-bold text-[#765900] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19]">Acceder a mi taller <ArrowRight className="size-3.5" /></Link>
+              </div>
             </article>
-
-            <article className="flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:border-[#dfbd4b] hover:shadow-lg sm:p-6">
-              <span className="grid size-11 place-items-center rounded-xl bg-[#fff3c1] text-[#8f6b00]"><Sprout className="size-5" /></span>
-              <p className="mt-5 text-[10px] font-bold uppercase tracking-[.18em] text-[#987400]">04 · Aprende</p>
-              <h3 className="mt-2 text-lg font-bold">Aprende nuevas técnicas</h3>
-              <p className="mt-2 flex-1 text-sm leading-6 text-slate-600">Consulta guías prácticas y comparte experiencias con la comunidad.</p>
-              <Link to="/comunidad" className="mt-5 inline-flex min-h-10 items-center gap-2 text-sm font-bold text-[#765900] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19]">Visitar comunidad <ArrowRight className="size-4" /></Link>
-            </article>
-          </div>
-
-          <div className="mt-7 flex flex-col gap-4 rounded-2xl border border-[#eadca8] bg-[#fffdf5] p-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-            <div>
-              <h3 className="text-sm font-bold text-[#17232d]">Empieza hoy</h3>
-              <p className="mt-1 text-xs leading-5 text-slate-600">Regístrate para organizar la información de tu taller.</p>
-            </div>
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <Link to="/herramientas-publicas" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-[#17232d] px-4 py-2 text-xs font-bold text-white transition hover:bg-[#293b49]">Empezar gratis <ArrowRight className="size-4" /></Link>
-              <Link to="/auth" target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-[#17232d] transition hover:border-[#d4aa19]">Iniciar sesión</Link>
-              <RegistroTaller className="inline-flex min-h-10 items-center justify-center rounded-xl border border-[#d4aa19] bg-[#fff4c4] px-4 py-2 text-xs font-bold text-[#5f4900] transition hover:bg-[#ffe99a]" />
-            </div>
           </div>
         </div>
       </section>
