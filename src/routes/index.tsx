@@ -262,13 +262,13 @@ function TalleresDeLaComunidad() {
   const renderTalleres = (duplicado = false) => (
     <div className="aurum-community-marquee-group" aria-hidden={duplicado || undefined}>
       {talleres.map((taller) => (
-        <div key={taller.id} className="flex h-24 w-36 shrink-0 flex-col items-center justify-center gap-2 px-3 sm:w-44 lg:w-48" title={duplicado ? undefined : taller.nombre}>
+        <div key={taller.id} className="flex h-28 w-44 shrink-0 flex-col items-center justify-center gap-2 px-2 sm:w-52 lg:w-56" title={duplicado ? undefined : taller.nombre}>
           <img
             src={taller.logo}
             alt={duplicado ? "" : taller.nombre}
             loading="lazy"
             decoding="async"
-            className="max-h-14 max-w-full rounded-sm bg-white object-contain opacity-90 transition-opacity duration-300 hover:opacity-100 sm:max-h-16"
+            className="max-h-16 max-w-full rounded-sm bg-white object-contain opacity-90 transition-opacity duration-300 hover:opacity-100 sm:max-h-[4.5rem]"
             style={{ backgroundColor: "#ffffff" }}
           />
           {taller.pais && (
