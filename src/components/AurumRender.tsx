@@ -3721,6 +3721,15 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
     <div className={(embedded ? "relative h-full min-h-0 w-full " : "fixed inset-0 z-40 ") + "flex flex-col overflow-hidden bg-[#eeede8] text-white"}>
       {!embedded && <header className="flex h-[64px] shrink-0 items-center justify-between gap-2 border-b border-black/10 bg-[#f7f6f2]/95 px-3 text-[#242424] shadow-sm backdrop-blur-xl sm:h-[68px] sm:px-4 xl:h-[74px] xl:px-5">
         <div className="flex min-w-0 items-center gap-3">
+          <img
+            src="/brand/aurum-symbol.svg"
+            alt=""
+            aria-hidden="true"
+            width="42"
+            height="42"
+            className="size-[42px] shrink-0 object-contain"
+            loading="eager"
+          />
           <div className="leading-none">
             <div className="font-display text-[23px] font-semibold tracking-[.16em] text-[#92743b]">AURUM <span className="tracking-normal text-[#292824]">RENDER</span></div>
             <div className="mt-1 text-[10px] tracking-[.06em] text-[#77756f]">Estudio profesional de joyería</div>
