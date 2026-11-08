@@ -17,17 +17,20 @@ import {
 } from "lucide-react";
 
 const toolbarItems = [
+  // Herramientas activas y conectadas
   { id: "ambientes", label: "Ambientes", icon: CircleDot },
   { id: "gem-hdr", label: "HDR", icon: Diamond },
   { id: "fondos", label: "Fondo", icon: Wallpaper },
   { id: "escenas", label: "Escena", icon: Sparkles },
   { id: "materiales", label: "Materiales", icon: Tags },
   { id: "gemas", label: "Gemas", icon: Gem },
-  { id: "images", label: "", icon: Image },
   { id: "cad-tree", label: "CAD", icon: Layers2 },
   { id: "positions", label: "Posiciones", icon: Crosshair },
-  { id: "timing", label: "", icon: Timer },
   { id: "export", label: "", icon: Upload },
+
+  // Herramientas pendientes de conexión: se mantienen al final
+  { id: "images", label: "", icon: Image },
+  { id: "timing", label: "", icon: Timer },
   { id: "boolean", label: "B×", icon: Blend, beta: true },
   { id: "code", label: "", icon: Code2 },
   { id: "tags", label: "", icon: Tags },
