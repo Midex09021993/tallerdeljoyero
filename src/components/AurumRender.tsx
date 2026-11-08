@@ -3989,18 +3989,25 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               {!presentationCover && <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_43%,rgba(255,255,255,.35)_0%,transparent_54%)]" />}
               <div className="absolute inset-0 flex items-center justify-center px-6">
                 <div className={"flex w-full max-w-sm flex-col items-center text-center "+(presentationCover?"opacity-0":"opacity-100")}>
-                  <div className="relative mb-8 grid size-[116px] place-items-center rounded-full border border-[#b99642]/25 bg-white/80 shadow-[0_18px_52px_rgba(70,58,30,.14)] backdrop-blur-md">
-                    <div className="absolute inset-[9px] animate-spin rounded-full border-[3px] border-[#e8e4da] border-t-[#b99642] [animation-duration:1.15s]" />
-                    <div className="grid size-[76px] place-items-center rounded-full border border-[#b99642]/30 bg-gradient-to-br from-white to-[#f5f0e4] shadow-[inset_0_1px_3px_rgba(161,132,67,.10)]">
+                  <div className="relative mb-8 grid size-[168px] place-items-center">
+                    <div className="absolute inset-0 rounded-full bg-[#d5b66d]/10 blur-2xl" />
+                    <div className="absolute inset-[5px] rounded-full border border-[#c8a45b]/20" />
+                    <div className="absolute inset-[10px] animate-spin rounded-full border-[2px] border-transparent border-t-[#b99642] border-r-[#e8d7a9]/80 [animation-duration:5.5s]" />
+                    <div className="absolute inset-[17px] animate-[spin_11s_linear_infinite_reverse] rounded-full border border-dashed border-[#b99642]/35" />
+                    <div className="absolute inset-[25px] animate-spin rounded-full border-[3px] border-transparent border-b-[#d6b66d] border-l-[#ead9ad]/70 [animation-duration:8s]" />
+                    <div className="absolute inset-[31px] rounded-full border border-[#b99642]/25 bg-white/75 shadow-[0_0_28px_rgba(185,150,66,.13),inset_0_0_16px_rgba(185,150,66,.08)] backdrop-blur-md" />
+                    <div className="relative grid size-[76px] place-items-center rounded-full border border-[#b99642]/35 bg-gradient-to-br from-white via-[#fffdf8] to-[#f1e7ce] shadow-[0_8px_24px_rgba(100,76,28,.16),inset_0_1px_5px_rgba(255,255,255,.95)]">
                       <img
                         src="/brand/aurum-symbol.svg"
                         alt=""
                         aria-hidden="true"
-                        width="54"
-                        height="54"
-                        className="size-[54px] object-contain drop-shadow-[0_2px_3px_rgba(161,132,67,.22)]"
+                        width="58"
+                        height="58"
+                        className="size-[58px] object-contain drop-shadow-[0_2px_4px_rgba(161,132,67,.25)]"
                       />
                     </div>
+                    <span className="absolute left-1/2 top-0 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-[#d4af62] shadow-[0_0_9px_2px_rgba(212,175,98,.55)]" />
+                    <span className="absolute bottom-[5px] right-[25px] h-1 w-1 rounded-full bg-[#d4af62]/80 shadow-[0_0_7px_2px_rgba(212,175,98,.4)]" />
                   </div>
                   <p className="text-[10px] font-semibold uppercase tracking-[.34em] text-[#a18443]">AURUM RENDER · ESTUDIO DIGITAL</p>
                   <h2 className="mt-3 text-xl font-semibold tracking-[-.025em] text-[#292824] sm:text-2xl">{estadoCarga}</h2>
