@@ -391,16 +391,16 @@ export function AppShell({
     <div className={`flex min-h-screen bg-background text-foreground transition-[height] duration-300 ${modoAulaExpandida ? "h-[100dvh] min-h-0 overflow-hidden" : ""}`}>
       {sesion?.esAdmin ? <AlertaAutorizacionProduccion /> : null}
       {!ocultarNavegacion ? (
-        <aside aria-hidden={modoAulaExpandida} className={`sticky top-0 hidden h-screen max-h-screen shrink-0 flex-col overflow-hidden border-r border-[#26384A] bg-[#172635] text-[#E8EDF3] shadow-[10px_0_30px_-22px_rgba(10,20,32,.55)] transition-[width,opacity,transform] duration-300 ease-in-out lg:flex ${modoAulaExpandida ? "pointer-events-none w-0 -translate-x-4 border-r-0 opacity-0 xl:w-0" : "w-64 xl:w-72"}`}>
-          <div className="border-b border-white/10 bg-gradient-to-br from-[#1D3042] to-[#172635] px-6 py-7 xl:px-7">
-            <p className="font-display text-2xl italic text-[#D9B879]">Aurum Lab</p>
-            <p className="mt-1 truncate text-[10px] uppercase tracking-[0.2em] text-[#9EADBA]">
+        <aside aria-hidden={modoAulaExpandida} className={`sticky top-0 hidden h-screen max-h-screen shrink-0 flex-col overflow-hidden border-r border-white/10 bg-[#171C24] text-[#E8EDF2] shadow-[10px_0_30px_-22px_rgba(0,0,0,.55)] transition-[width,opacity,transform] duration-300 ease-in-out lg:flex ${modoAulaExpandida ? "pointer-events-none w-0 -translate-x-4 border-r-0 opacity-0 xl:w-0" : "w-64 xl:w-72"}`}>
+          <div className="border-b border-white/10 bg-gradient-to-br from-[#222B36] to-[#171C24] px-6 py-7 xl:px-7">
+            <p className="font-display text-2xl italic text-[#D8B979]">Aurum Lab</p>
+            <p className="mt-1 truncate text-[10px] uppercase tracking-[0.2em] text-[#AAB7C5]">
               {sesion?.participante?.nombre ?? sesion?.sede?.nombre ?? ""}
             </p>
           </div>
 
           <div className="relative min-h-0 flex-1">
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-10 bg-gradient-to-t from-[#172635] via-[#172635]/90 to-transparent" aria-hidden="true" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-10 bg-gradient-to-t from-[#171C24] via-[#171C24]/90 to-transparent" aria-hidden="true" />
             <nav className="scrollbar-hidden h-full space-y-1 overflow-y-auto px-4 pb-8">
             {(["principal", "comercial", "produccion", "inventario", "aurum", "herramientas", "aprendizaje", "administracion"] as const).map((grupo) => {
               const items = visiblesOrdenadas.filter((s) => s.grupo === grupo);
@@ -417,15 +417,15 @@ export function AppShell({
               } as const;
               return (
                 <div key={grupo} className="pt-2 first:pt-0">
-                  <p className="px-4 pb-2 pt-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#91A2B2]">{nombres[grupo]}</p>
+                  <p className="px-4 pb-2 pt-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#AAB7C5]">{nombres[grupo]}</p>
                   <div className="space-y-1">
                     {items.map((s) => {
                       const Icon = s.icono;
                       const activo = pathname === s.to;
                       const clases = `flex min-h-11 items-center gap-3 rounded-xl border px-3.5 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/70 xl:px-4 ${
                         activo
-                          ? "border-[#D9B879]/30 bg-[#D9B879]/15 text-[#F0D7A5] shadow-[inset_3px_0_0_0_#D9B879]"
-                          : "border-transparent text-[#C2CDD7] hover:border-white/10 hover:bg-white/[0.07] hover:text-white"
+                          ? "border-[#D8B979]/35 bg-[#D8B979]/15 text-[#F0D69F] shadow-[inset_3px_0_0_0_#D8B979]"
+                          : "border-transparent text-[#D5DDE6] hover:border-white/10 hover:bg-white/[0.07] hover:text-white"
                       }`;
                       if (s.to === "/mensajes") {
                         return (
@@ -433,11 +433,11 @@ export function AppShell({
                             key={s.to}
                             aria-disabled="true"
                             title="Próximamente"
-                            className="flex min-h-11 cursor-not-allowed items-center gap-3 rounded-xl border border-transparent px-3.5 py-2.5 text-sm font-medium text-[#8292A1] opacity-60 xl:px-4"
+                            className="flex min-h-11 cursor-not-allowed items-center gap-3 rounded-xl border border-transparent px-3.5 py-2.5 text-sm font-medium text-[#AAB7C5] opacity-60 xl:px-4"
                           >
                             {Icon ? <Icon className="size-4 shrink-0 opacity-70" /> : null}
                             <span>{s.label}</span>
-                            <span className="ml-auto rounded-md border border-white/10 bg-white/[0.04] px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-[#9EADBA]">Próximamente</span>
+                            <span className="ml-auto rounded-md border border-white/10 bg-white/[0.04] px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-[#AAB7C5]">Próximamente</span>
                           </div>
                         );
                       }
@@ -455,7 +455,7 @@ export function AppShell({
                           to={s.to}
                           activeOptions={{ exact: true }}
                           className={clases}
-                          activeProps={{ className: "border-[#D9B879]/30 bg-[#D9B879]/15 text-[#F0D7A5] shadow-[inset_3px_0_0_0_#D9B879]" }}
+                          activeProps={{ className: "border-[#D8B979]/35 bg-[#D8B979]/15 text-[#F0D69F] shadow-[inset_3px_0_0_0_#D8B979]" }}
                         >
                           {Icon ? <Icon className="size-4 shrink-0 opacity-70" /> : null}
                           {s.label}
@@ -469,14 +469,14 @@ export function AppShell({
             </nav>
           </div>
 
-          <div className="shrink-0 border-t border-white/10 bg-[#142230] p-6">
+          <div className="shrink-0 border-t border-white/10 bg-[#151E27] p-6">
             <div className="mb-4 flex items-center gap-3">
-              <div className="grid size-8 shrink-0 place-items-center rounded-full border border-[#D9B879]/30 bg-[#D9B879]/10 font-display italic text-[#E5C58B]">
+              <div className="grid size-8 shrink-0 place-items-center rounded-full border border-[#D8B979]/30 bg-[#D8B979]/10 font-display italic text-[#E6C887]">
                 {inicial}
               </div>
               <div className="min-w-0">
-                <p className="truncate text-xs font-semibold text-[#F1F4F7]">{nombreVisible}</p>
-                <p className="truncate text-[10px] text-[#9EADBA]">
+                <p className="truncate text-xs font-semibold text-[#E8EDF2]">{nombreVisible}</p>
+                <p className="truncate text-[10px] text-[#AAB7C5]">
                   {sesion ? rolEtiqueta[sesion.rolPrincipal] : ""}
                   {tallerVisible && nombrePersonal ? ` · ${tallerVisible}` : ""}
                 </p>
@@ -485,7 +485,7 @@ export function AppShell({
             <button
               type="button"
               onClick={() => void cerrarSesion()}
-              className="w-full rounded-lg border border-white/15 bg-white/[0.03] py-2 text-[10px] uppercase tracking-wider text-[#B8C4CE] transition-colors hover:border-[#D9B879]/40 hover:bg-white/[0.07] hover:text-white"
+              className="w-full rounded-lg border border-white/15 bg-white/[0.03] py-2 text-[10px] uppercase tracking-wider text-[#D5DDE6] transition-colors hover:border-[#D8B979]/40 hover:bg-white/[0.07] hover:text-white"
             >
               Cerrar sesión
             </button>
