@@ -422,6 +422,80 @@ function Inicio() {
           ))}
         </section>
 
+        {sesion?.esAdmin ? (
+          <section aria-label="Resumen comercial e inventario" className="space-y-3">
+            <div className="flex flex-wrap items-end justify-between gap-2">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-gold-deep">Visión del negocio</p>
+                <h2 className="mt-1 text-base font-semibold">Comercial e inventario</h2>
+                <p className="mt-0.5 text-xs text-muted-foreground">Indicadores del taller seleccionado</p>
+              </div>
+              <span className="text-[10px] text-muted-foreground">Datos sujetos a los permisos de tu cuenta</span>
+            </div>
+
+            {errorResumenComercial ? (
+              <div role="status" className="rounded-xl border border-warning/30 bg-warning/5 px-4 py-3 text-xs text-muted-foreground">
+                No se pudo cargar el resumen comercial e inventario. Los indicadores operativos siguen disponibles.
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+                  {[
+                    { label: "Clientes registrados", value: resumenComercial?.clientes, detail: "Cartera del taller", href: "/clientes", icon: UserRound },
+                    { label: "Cotizaciones pendientes", value: resumenComercial?.cotizacionesPendientes, detail: "Borrador o enviadas", href: "/cotizaciones", icon: FileText },
+                    { label: "Cotizaciones aprobadas", value: resumenComercial?.cotizacionesAprobadas, detail: "Aprobaciones registradas", href: "/cotizaciones", icon: CheckCircle2 },
+                    { label: "Stock bajo o mínimo", value: resumenComercial?.materialesStockBajo, detail: "Materiales por revisar", href: "/inventario", icon: Boxes },
+                  ].map((item) => {
+                    const Icono = item.icon;
+                    return (
+                      <Link key={item.label} to={item.href as never} className="group rounded-xl border border-border bg-card p-4 transition hover:border-gold/35 hover:shadow-card">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{item.label}</p>
+                          <Icono className="size-4 shrink-0 text-gold-deep/75" />
+                        </div>
+                        <p className="mt-2 font-display text-3xl font-semibold tabular-nums">
+                          {cargandoResumenComercial ? "—" : (item.value ?? 0)}
+                        </p>
+                        <p className="mt-1 text-[11px] text-muted-foreground">{item.detail}</p>
+                      </Link>
+                    );
+                  })}
+                </div>
+
+                <div className="grid gap-3 xl:grid-cols-2">
+                  <Link to="/cotizaciones" className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3 transition hover:border-gold/35">
+                    <span className="min-w-0">
+                      <span className="block text-xs font-semibold">Cotizaciones próximas a vencer</span>
+                      <span className="mt-0.5 block text-[11px] text-muted-foreground">Pendientes con vencimiento en los próximos 7 días</span>
+                    </span>
+                    <span className="font-display text-2xl font-semibold tabular-nums">{cargandoResumenComercial ? "—" : resumenComercial?.cotizacionesPorVencer ?? 0}</span>
+                  </Link>
+                  <div className="rounded-xl border border-border bg-card px-4 py-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-semibold">Materiales que requieren revisión</span>
+                      <Link to="/inventario" className="text-[11px] font-semibold text-gold-deep hover:underline">Ver inventario</Link>
+                    </div>
+                    {cargandoResumenComercial ? (
+                      <p className="mt-2 text-[11px] text-muted-foreground">Consultando existencias…</p>
+                    ) : (resumenComercial?.materialesStockBajoLista.length ?? 0) === 0 ? (
+                      <p className="mt-2 text-[11px] text-muted-foreground">No hay materiales en mínimo o por debajo del mínimo.</p>
+                    ) : (
+                      <div className="mt-2 divide-y divide-border">
+                        {resumenComercial?.materialesStockBajoLista.map((material) => (
+                          <div key={material.id} className="flex items-center justify-between gap-3 py-1.5 text-[11px]">
+                            <span className="min-w-0 truncate font-medium">{material.material}</span>
+                            <span className="shrink-0 tabular-nums text-muted-foreground">{material.stock} / mín. {material.minimo}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+          </section>
+        ) : null}
+
         <section className="grid items-start gap-5 xl:grid-cols-[minmax(0,1.6fr)_minmax(280px,0.8fr)]">
           <section className="overflow-hidden rounded-xl border border-border bg-card">
             <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3.5">
