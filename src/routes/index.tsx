@@ -459,7 +459,7 @@ function InicioPublico() {
 
       <PrecioOroDiario />
 
-      <section id="aurum-render" className="overflow-hidden border-y border-[#263743] bg-[#111a22] text-white">
+      <section id="aurum-render" style={{ contentVisibility: "auto", containIntrinsicSize: "auto 760px" }} className="overflow-hidden border-y border-[#263743] bg-[#111a22] text-white">
         <div className="mx-auto grid max-w-[1440px] items-center gap-9 px-5 py-14 sm:px-8 sm:py-16 lg:grid-cols-[1.05fr_.95fr] lg:gap-14 lg:px-12 lg:py-20">
           <div className="max-w-2xl">
             <p className="inline-flex items-center gap-2 rounded-full border border-[#d4aa19]/40 bg-[#d4aa19]/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.2em] text-[#f3d66e]"><Sparkles className="size-3.5" /> ESTUDIO 3D PROFESIONAL PARA JOYEROS</p>
@@ -513,7 +513,7 @@ function InicioPublico() {
         </div>
       </section>
 
-      <section id="soluciones" className="border-y border-slate-200 bg-[#f7f9fc]">
+      <section id="soluciones" style={{ contentVisibility: "auto", containIntrinsicSize: "auto 680px" }} className="border-y border-slate-200 bg-[#f7f9fc]">
         <div className="mx-auto max-w-[1440px] px-5 py-14 sm:px-8 sm:py-16 lg:px-12">
           <div className="mx-auto max-w-3xl text-center">
             <p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#987400]">Tecnología pensada para el oficio joyero</p>
@@ -550,7 +550,7 @@ function InicioPublico() {
         </div>
       </section>
 
-      <section id="como-funciona" className="scroll-mt-24 border-y border-slate-200 bg-gradient-to-b from-white to-[#f8fafc]">
+      <section id="como-funciona" style={{ contentVisibility: "auto", containIntrinsicSize: "auto 680px" }} className="scroll-mt-24 border-y border-slate-200 bg-gradient-to-b from-white to-[#f8fafc]">
         <div className="mx-auto max-w-[1440px] px-5 py-14 sm:px-8 sm:py-16 lg:px-12">
           <div className="mx-auto max-w-3xl text-center">
             <p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#987400]">Tu taller, paso a paso</p>
@@ -606,7 +606,7 @@ function InicioPublico() {
         </div>
       </section>
 
-      <section id="guias-tecnicas" className="scroll-mt-24 border-y border-slate-200 bg-white">
+      <section id="guias-tecnicas" style={{ contentVisibility: "auto", containIntrinsicSize: "auto 560px" }} className="scroll-mt-24 border-y border-slate-200 bg-white">
         <div className="mx-auto max-w-[1440px] px-5 py-14 sm:px-8 sm:py-16 lg:px-12">
           <div className="grid items-start gap-8 lg:grid-cols-[.85fr_1.15fr] lg:gap-14">
             <div className="max-w-xl">
@@ -638,7 +638,7 @@ function InicioPublico() {
         </div>
       </section>
 
-      <section id="planes" className="border-y border-slate-200 bg-[#f8fafc]">
+      <section id="planes" style={{ contentVisibility: "auto", containIntrinsicSize: "auto 720px" }} className="border-y border-slate-200 bg-[#f8fafc]">
         <div className="mx-auto max-w-[1440px] px-5 py-14 sm:px-8 sm:py-16 lg:px-12">
           <div className="mx-auto max-w-2xl text-center">
             <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#987400]">Planes para cada etapa</p>
