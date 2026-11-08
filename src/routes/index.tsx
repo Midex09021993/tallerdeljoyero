@@ -442,8 +442,8 @@ function InicioPublico() {
           </Link>
           <nav className="hidden items-center gap-7 text-[13px] font-medium text-slate-700 lg:flex" aria-label="Navegación principal">
             <Link to="/" className="transition hover:text-[#a77a00]">Inicio</Link>
-            <Link to="/herramientas-publicas" className="inline-flex items-center gap-1 transition hover:text-[#a77a00]">Herramientas <ChevronDown className="size-3.5" /></Link>
             <a href="#soluciones" className="inline-flex items-center gap-1 transition hover:text-[#a77a00]">Soluciones <ChevronDown className="size-3.5" /></a>
+            <Link to="/herramientas-publicas" className="inline-flex items-center gap-1 transition hover:text-[#a77a00]">Herramientas <ChevronDown className="size-3.5" /></Link>
             <a href="#como-funciona" className="transition hover:text-[#a77a00]">Cómo funciona</a>
             <Link to="/guias" className="transition hover:text-[#a77a00]">Guías técnicas</Link>
             <Link to="/comunidad" className="transition hover:text-[#a77a00]">Comunidad</Link>
@@ -451,8 +451,8 @@ function InicioPublico() {
           </nav>
           <nav className="order-3 flex w-full items-center gap-5 overflow-x-auto border-t border-slate-100 py-3 text-xs font-medium text-slate-700 lg:hidden" aria-label="Navegación móvil">
             <Link to="/" className="shrink-0">Inicio</Link>
-            <Link to="/herramientas-publicas" className="shrink-0">Herramientas</Link>
             <a href="#soluciones" className="shrink-0">Soluciones</a>
+            <Link to="/herramientas-publicas" className="shrink-0">Herramientas</Link>
             <a href="#como-funciona" className="shrink-0">Cómo funciona</a>
             <Link to="/guias" className="shrink-0">Guías técnicas</Link>
             <Link to="/comunidad" className="shrink-0">Comunidad</Link>
