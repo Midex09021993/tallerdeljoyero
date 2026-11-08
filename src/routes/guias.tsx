@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Calculator, Gem, Layers3, Ruler } from "lucide-react";
+import { ArrowRight, Calculator, Gem, Ruler } from "lucide-react";
 
 export const Route = createFileRoute("/guias")({
   head: () => ({
@@ -61,7 +61,7 @@ const guias = [
     categoria: "Diseño y fabricación",
     titulo: "Cómo estimar el peso de una joya a partir de un modelo 3D",
     descripcion: "Descubre cómo calcular el peso aproximado de una joya en 3D con el volumen del modelo, las unidades y la densidad del oro, plata o platino.",
-    icon: Layers3,
+    icon: Gem,
     lectura: "5 min de lectura",
     herramienta: "Visualizador y calculadora de peso 3D",
     herramientaHref: "/herramientas-publicas/peso-joya-3d",
@@ -91,7 +91,7 @@ const guias = [
     categoria: "Diseño del taller",
     titulo: "Cómo organizar la distribución de un taller de joyería",
     descripcion: "Planifica las zonas de diseño, producción digital, fundición y acabado con criterios de circulación, instalación y seguridad.",
-    icon: Layers3,
+    icon: Gem,
     lectura: "7 min de lectura",
     herramienta: "Guía de distribución del taller",
   },
@@ -109,7 +109,7 @@ const guias = [
     categoria: "Fundición y materiales",
     titulo: "Fundición de joyería: guía del revestimiento y preparación del cilindro",
     descripcion: "Guía de fundición de joyería para preparar el cilindro, medir agua y revestimiento y consultar correctamente la ficha técnica de Whip Mix Omni-Cast.",
-    icon: Layers3,
+    icon: Gem,
     lectura: "7 min de lectura",
     herramienta: "Calculadora de yeso y agua",
   },
