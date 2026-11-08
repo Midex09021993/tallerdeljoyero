@@ -51,7 +51,7 @@ const soluciones = [
     icon: Gem,
     titulo: "Muestra la joya antes de fabricarla",
     texto: "Comparte modelos 3D para que tus clientes revisen el diseño antes de iniciar la fabricación.",
-    beneficio: "Alinea expectativas antes de producir",
+    beneficio: "Evita cambios antes de fabricar",
     enlace: "/aurum-render-public" as const,
     accion: "Explorar visor 3D",
   },
@@ -71,7 +71,7 @@ const soluciones = [
     icon: Cloud,
     titulo: "Tus diseños organizados y listos para compartir",
     texto: "Organiza tus diseños en Mi Nube. Crea un catálogo digital y comparte tus piezas cuando lo necesites.",
-    beneficio: "Archivos y presentación conectados",
+    beneficio: "Tus diseños, siempre a mano",
     enlace: "/auth" as const,
     accion: "Organizar mis archivos",
   },
@@ -609,8 +609,8 @@ function InicioPublico() {
         <div className="mx-auto max-w-[1440px] px-5 py-14 sm:px-8 sm:py-16 lg:px-12">
           <div className="mx-auto max-w-3xl text-center">
             <p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#987400]">Tecnología pensada para el oficio joyero</p>
-            <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-[#17232d] sm:text-3xl lg:text-4xl">Tecnología práctica para talleres de joyería.</h2>
-            <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">Calcula materiales. Presenta tus diseños. Organiza el trabajo de tu taller con herramientas digitales.</p>
+            <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-[#17232d] sm:text-3xl lg:text-4xl">Herramientas digitales para tu taller.</h2>
+            <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">Calcula materiales, presenta tus diseños y organiza tu taller.</p>
           </div>
           <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {soluciones.map(({ numero, etiqueta, icon: Icono, titulo, texto, beneficio, enlace, accion }) => (
@@ -633,8 +633,8 @@ function InicioPublico() {
             <div className="flex items-start gap-3">
               <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#ffefad] text-[#8f6b00]"><Layers3 className="size-5" /></span>
               <div>
-                <h3 className="text-sm font-bold text-[#17232d]">De la idea al trabajo organizado</h3>
-                <p className="mt-1 max-w-3xl text-xs leading-5 text-slate-600">AURUM LAB reúne herramientas para calcular materiales, visualizar diseños en 3D y gestionar tu taller. Las funciones varían según el plan.</p>
+                <h3 className="text-sm font-bold text-[#17232d]">Todo para tu taller</h3>
+                <p className="mt-1 max-w-3xl text-xs leading-5 text-slate-600">Calcula materiales, presenta tus diseños en 3D y gestiona tu taller desde un solo lugar.</p>
               </div>
             </div>
             <a href="#planes" className="inline-flex min-h-9 shrink-0 items-center gap-2 self-start text-xs font-bold text-[#765900] transition hover:text-[#17232d] sm:self-center">Conocer los planes<ArrowRight className="size-3.5" /></a>
@@ -647,7 +647,7 @@ function InicioPublico() {
           <div className="mx-auto max-w-3xl text-center">
             <p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#987400]">Tu taller, paso a paso</p>
             <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-[#17232d] sm:text-3xl lg:text-4xl">Así funciona AURUM LAB</h2>
-            <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-slate-600 sm:text-base">Elige una tarea y prueba nuestras herramientas. No necesitas registrarte para usar los recursos públicos.</p>
+            <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-slate-600 sm:text-base">Prueba las herramientas públicas sin registrarte.</p>
           </div>
 
           <div className="mt-9 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -655,7 +655,7 @@ function InicioPublico() {
               <span className="grid size-11 place-items-center rounded-xl bg-[#fff3c1] text-[#8f6b00]"><Calculator className="size-5" /></span>
               <p className="mt-5 text-[10px] font-bold uppercase tracking-[.18em] text-[#987400]">01 · Explora</p>
               <h3 className="mt-2 text-lg font-bold">Resuelve tareas del oficio</h3>
-              <p className="mt-2 flex-1 text-sm leading-6 text-slate-600">Calcula aleaciones y estima el peso de gemas y modelos 3D. También puedes convertir tallas.</p>
+              <p className="mt-2 flex-1 text-sm leading-6 text-slate-600">Calcula aleaciones, estima pesos y convierte tallas.</p>
               <Link to="/herramientas-publicas" className="mt-5 inline-flex min-h-10 items-center gap-2 text-sm font-bold text-[#765900] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19]">Explorar herramientas <ArrowRight className="size-4" /></Link>
             </article>
 
@@ -663,7 +663,7 @@ function InicioPublico() {
               <span className="grid size-11 place-items-center rounded-xl bg-[#eaf1ff] text-[#4d6ba5]"><Gem className="size-5" /></span>
               <p className="mt-5 text-[10px] font-bold uppercase tracking-[.18em] text-[#987400]">02 · Visualiza</p>
               <h3 className="mt-2 text-lg font-bold">Presenta tus diseños en 3D</h3>
-              <p className="mt-2 flex-1 text-sm leading-6 text-slate-600">Carga modelos compatibles mediante un enlace y visualízalos en 3D. El visor público funciona por separado de AURUM RENDER.</p>
+              <p className="mt-2 flex-1 text-sm leading-6 text-slate-600">Comparte modelos compatibles en el visor 3D, independiente de AURUM RENDER.</p>
               <Link to="/aurum-render-public" className="mt-5 inline-flex min-h-10 items-center gap-2 text-sm font-bold text-[#765900] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19]">Probar visor 3D <ArrowRight className="size-4" /></Link>
             </article>
 
@@ -671,7 +671,7 @@ function InicioPublico() {
               <span className="grid size-11 place-items-center rounded-xl bg-[#e9f8ef] text-[#27834d]"><Cloud className="size-5" /></span>
               <p className="mt-5 text-[10px] font-bold uppercase tracking-[.18em] text-[#987400]">03 · Organiza</p>
               <h3 className="mt-2 text-lg font-bold">Centraliza el trabajo del taller</h3>
-              <p className="mt-2 flex-1 text-sm leading-6 text-slate-600">Guarda archivos en Mi Nube y consulta tu catálogo. Inicia sesión para acceder a estas funciones según tu plan.</p>
+              <p className="mt-2 flex-1 text-sm leading-6 text-slate-600">Guarda tus archivos y consulta tu catálogo desde tu cuenta.</p>
               <Link to="/auth" target="_blank" rel="noreferrer" className="mt-5 inline-flex min-h-10 items-center gap-2 text-sm font-bold text-[#765900] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19]">Conocer la plataforma <ArrowRight className="size-4" /></Link>
             </article>
 
@@ -679,15 +679,15 @@ function InicioPublico() {
               <span className="grid size-11 place-items-center rounded-xl bg-[#fff3c1] text-[#8f6b00]"><Sprout className="size-5" /></span>
               <p className="mt-5 text-[10px] font-bold uppercase tracking-[.18em] text-[#987400]">04 · Aprende</p>
               <h3 className="mt-2 text-lg font-bold">Sigue desarrollando tu oficio</h3>
-              <p className="mt-2 flex-1 text-sm leading-6 text-slate-600">Consulta guías técnicas de joyería. Comparte ideas con otros profesionales del sector.</p>
+              <p className="mt-2 flex-1 text-sm leading-6 text-slate-600">Aprende con guías técnicas y conecta con otros profesionales.</p>
               <Link to="/comunidad" className="mt-5 inline-flex min-h-10 items-center gap-2 text-sm font-bold text-[#765900] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19]">Visitar comunidad <ArrowRight className="size-4" /></Link>
             </article>
           </div>
 
           <div className="mt-7 flex flex-col gap-4 rounded-2xl border border-[#eadca8] bg-[#fffdf5] p-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
             <div>
-              <h3 className="text-sm font-bold text-[#17232d]">¿Listo para dar el siguiente paso?</h3>
-              <p className="mt-1 text-xs leading-5 text-slate-600">Prueba las herramientas públicas. Crea una cuenta para guardar tus diseños y archivos.</p>
+              <h3 className="text-sm font-bold text-[#17232d]">Empieza hoy</h3>
+              <p className="mt-1 text-xs leading-5 text-slate-600">Crea tu cuenta para guardar diseños y archivos.</p>
             </div>
             <div className="flex flex-col gap-2 sm:flex-row">
               <Link to="/herramientas-publicas" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-[#17232d] px-4 py-2 text-xs font-bold text-white transition hover:bg-[#293b49]">Empezar gratis <ArrowRight className="size-4" /></Link>
@@ -704,7 +704,7 @@ function InicioPublico() {
             <div className="max-w-xl">
               <p className="inline-flex items-center gap-2 rounded-full border border-[#eadca8] bg-[#fff9df] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.2em] text-[#876500]"><BookOpen className="size-3.5" /> Biblioteca práctica del oficio</p>
               <h2 className="mt-4 text-2xl font-extrabold leading-tight tracking-tight text-[#17232d] sm:text-3xl lg:text-4xl">Guías de metalurgia, gemología y técnicas de joyería.</h2>
-              <p className="mt-4 text-sm leading-7 text-slate-600 sm:text-base">Encuentra fórmulas y ejemplos para aplicar técnicas de joyería en tu taller.</p>
+              <p className="mt-4 text-sm leading-7 text-slate-600 sm:text-base">Fórmulas y ejemplos prácticos para tu taller.</p>
               <Link to="/guias" className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-[#17232d] transition hover:border-[#d4aa19] hover:bg-[#fffbee] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19]">Explorar todas las guías <ArrowRight className="size-4" /></Link>
             </div>
             <article className="group overflow-hidden rounded-2xl border border-slate-200 bg-[#f8fafc] shadow-[0_8px_30px_rgba(23,35,45,.045)] transition hover:border-[#dfbd4b] hover:shadow-[0_16px_36px_rgba(23,35,45,.08)]">
@@ -735,7 +735,7 @@ function InicioPublico() {
           <div className="mx-auto max-w-2xl text-center">
             <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#987400]">Planes para cada etapa</p>
             <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-[#17232d] sm:text-3xl">Elige cómo quieres crecer.</h2>
-            <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base">Compara los planes y elige el que mejor se adapte a tu taller. Revisa las herramientas de gestión, cálculo y diseño 3D.</p>
+            <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base">Elige el plan que mejor se adapte a tu taller.</p>
           </div>
           <PlanesPublicos />
         </div>
@@ -751,7 +751,7 @@ function InicioPublico() {
                 <span className="grid size-8 place-items-center rounded-lg bg-[#f8c928] text-[#17232d]"><Gem className="size-4" /></span>
                 <span className="text-lg font-extrabold tracking-tight">AURUM<span className="text-[#f8c928]"> LAB</span></span>
               </Link>
-              <p className="mt-3 max-w-xs text-xs leading-5 text-slate-300">Herramientas digitales para joyeros. Organiza tu taller, calcula materiales y presenta diseños en 3D.</p>
+              <p className="mt-3 max-w-xs text-xs leading-5 text-slate-300">Tecnología para joyeros: calcula materiales, presenta diseños y organiza tu taller.</p>
               <a href="mailto:noreply@tallerdeljoyero.com" className="mt-4 inline-flex items-center gap-2 text-xs font-medium text-white transition hover:text-[#f8c928]">noreply@tallerdeljoyero.com <ArrowRight className="size-3.5" /></a>
             </div>
             <div>
