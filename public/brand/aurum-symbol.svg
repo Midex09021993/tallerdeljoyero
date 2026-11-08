@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">Símbolo oficial AURUM LAB</title>
+  <desc id="desc">Monograma geométrico A en acabado champagne dorado.</desc>
+  <defs>
+    <linearGradient id="champagne" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFF0A8"/>
+      <stop offset=".22" stop-color="#D9A52F"/>
+      <stop offset=".48" stop-color="#FFF3A2"/>
+      <stop offset=".72" stop-color="#B77912"/>
+      <stop offset="1" stop-color="#F4D36A"/>
+    </linearGradient>
+    <linearGradient id="facet" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFF6BD"/>
+      <stop offset=".48" stop-color="#C58A1E"/>
+      <stop offset="1" stop-color="#8D570A"/>
+    </linearGradient>
+    <linearGradient id="edge" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFE58A"/>
+      <stop offset="1" stop-color="#A96C0D"/>
+    </linearGradient>
+  </defs>
+  <path d="M512 90 1004 890H770L512 332 254 890H12L512 90Z" fill="url(#champagne)" stroke="url(#edge)" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M512 90 512 332 770 890 844 890 512 90Z" fill="url(#facet)" opacity=".88"/>
+  <path d="M512 332 254 890H164L512 332Z" fill="#FBE68C" opacity=".52"/>
+  <path d="M512 610 688 890H516L424 742 512 610Z" fill="url(#champagne)" stroke="#B87912" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M512 610 424 742 516 890 512 610Z" fill="url(#facet)" opacity=".48"/>
+</svg>
