@@ -24,7 +24,11 @@ export const Route = createFileRoute("/herramientas-publicas")({
           "Calculadoras técnicas y herramientas gratuitas para joyeros: aleación de oro, peso de gemas, tallas de anillos, peso de modelos 3D y preparación de fundición.",
       },
       { name: "robots", content: "index, follow, max-image-preview:large" },
-      { property: "og:title", content: "Herramientas gratuitas para joyeros | Aurum Lab" },
+      { property: "og:title", content: "Herramientas para joyeros | AURUM LAB" },
+      { property: "og:url", content: "https://www.tallerdeljoyero.com/herramientas-publicas" },
+      { name: "twitter:card", content: "summary" },
+      { name: "twitter:title", content: "Herramientas para joyeros | AURUM LAB" },
+      { name: "twitter:description", content: "Calcula aleaciones, estima pesos, convierte tallas y prepara trabajos de fundición con herramientas para joyeros." },
       { property: "og:description", content: "Calcula aleaciones, estima el peso de gemas y modelos 3D, convierte tallas y prepara tus trabajos de joyería." },
       { property: "og:type", content: "website" },
     ],
@@ -143,7 +147,7 @@ function HerramientasPublicasPage() {
             El arte de crear. La inteligencia de gestionar.
           </p>
           <h1 className="mt-3 max-w-3xl font-display text-3xl italic leading-tight sm:text-5xl">
-            Herramientas gratuitas para joyeros y talleres de joyería
+            Herramientas técnicas para joyeros y talleres de joyería
           </h1>
           <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-600 sm:text-base">
             Calcula aleaciones, pesos de gemas, medidas de anillos y materiales para fundición con herramientas especializadas.
@@ -195,7 +199,7 @@ function HerramientasPublicasPage() {
               >
                 <span className="grid size-11 place-items-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800"><Eye className="size-5" /></span>
                 <span className="mt-4 flex items-center gap-2 text-base font-semibold">Visor 3D de Joyas <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-[9px] font-semibold uppercase tracking-wider text-emerald-800">Público</span></span>
-                <span className="mt-2 flex-1 text-sm leading-6 text-slate-600">Abre un modelo Rhino .3dm y explora la joya en el navegador. No necesitas iniciar sesión ni subir el archivo a tu cuenta.</span>
+                <span className="mt-2 flex-1 text-sm leading-6 text-slate-600">Carga un archivo Rhino .3dm desde tu equipo y explora la joya en el navegador. El archivo se procesa localmente y no se guarda en tu cuenta.</span>
                 <span className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-emerald-800">Abrir visor público <ArrowRight className="size-3.5 transition group-hover:translate-x-1" /></span>
               </Link>
             </div>
@@ -208,9 +212,9 @@ function HerramientasPublicasPage() {
             className="group flex min-h-52 flex-col rounded-2xl border border-slate-200 bg-white p-5 transition duration-200 hover:-translate-y-0.5 hover:border-[#e5c04a] hover:bg-[#fffbee] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19]"
           >
             <span className="grid size-11 place-items-center rounded-xl border border-[#e5c04a]/60 bg-[#fff4c4] text-[#987400]"><Gem className="size-5" /></span>
-            <span className="mt-4 text-base font-semibold">¿Cómo puedo mostrar mi diseño a un cliente?</span>
-            <span className="mt-2 flex-1 text-sm leading-6 text-slate-600">Abre Aurum Render para visualizar y presentar tu joya en 3D.</span>
-            <span className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-[#987400]">Abrir visor 3D <ArrowRight className="size-3.5 transition group-hover:translate-x-1" /></span>
+            <span className="mt-4 text-base font-semibold">Presenta tu diseño con AURUM RENDER</span>
+            <span className="mt-2 flex-1 text-sm leading-6 text-slate-600">Accede a AURUM RENDER para visualizar tu modelo y preparar su presentación.</span>
+            <span className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-[#987400]">Acceder a AURUM RENDER <ArrowRight className="size-3.5 transition group-hover:translate-x-1" /></span>
           </Link>}
           {mostrarTransfer && <Link
             to="/transfer"
@@ -218,7 +222,7 @@ function HerramientasPublicasPage() {
           >
             <span className="grid size-11 place-items-center rounded-xl border border-[#e5c04a]/60 bg-[#fff4c4] text-[#987400]"><Sparkles className="size-5" /></span>
             <span className="mt-4 text-base font-semibold">¿Cómo comparto un archivo 3D pesado?</span>
-            <span className="mt-2 flex-1 text-sm leading-6 text-slate-600">Prepara un enlace privado para enviar modelos y archivos de fabricación.</span>
+            <span className="mt-2 flex-1 text-sm leading-6 text-slate-600">Comparte modelos y archivos de fabricación mediante las opciones disponibles en AURUM TRANSFERS.</span>
             <span className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-[#987400]">Compartir archivo <ArrowRight className="size-3.5 transition group-hover:translate-x-1" /></span>
           </Link>}
             </div>
@@ -228,14 +232,14 @@ function HerramientasPublicasPage() {
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               <Link to="/cotizaciones" className="group flex min-h-48 flex-col rounded-2xl border border-slate-200 bg-white p-5 transition duration-200 hover:-translate-y-0.5 hover:border-[#e5c04a] hover:bg-[#fffbee] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19]">
                 <span className="grid size-11 place-items-center rounded-xl border border-[#e5c04a]/60 bg-[#fff4c4] text-[#987400]"><Coins className="size-5" /></span>
-                <span className="mt-4 text-base font-semibold">¿Cuánto debo cobrar por una joya?</span>
-                <span className="mt-2 flex-1 text-sm leading-6 text-slate-600">Accede a Aurum Lab para consultar las herramientas de cotización disponibles para tu taller.</span>
+                <span className="mt-4 text-base font-semibold">Gestiona cotizaciones de joyería</span>
+                <span className="mt-2 flex-1 text-sm leading-6 text-slate-600">Consulta las herramientas de cotización y organiza la información comercial de tu taller.</span>
                 <span className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-[#987400]">Entrar a Aurum Lab <ArrowRight className="size-3.5 transition group-hover:translate-x-1" /></span>
               </Link>
               <Link to="/catalogo" className="group flex min-h-48 flex-col rounded-2xl border border-slate-200 bg-white p-5 transition duration-200 hover:-translate-y-0.5 hover:border-[#e5c04a] hover:bg-[#fffbee] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19]">
                 <span className="grid size-11 place-items-center rounded-xl border border-[#e5c04a]/60 bg-[#fff4c4] text-[#987400]"><Gem className="size-5" /></span>
-                <span className="mt-4 text-base font-semibold">¿Cómo consulto la ficha técnica de una pieza?</span>
-                <span className="mt-2 flex-1 text-sm leading-6 text-slate-600">Abre el catálogo de tu taller para consultar y preparar fichas técnicas de tus piezas.</span>
+                <span className="mt-4 text-base font-semibold">Consulta el catálogo de tu taller</span>
+                <span className="mt-2 flex-1 text-sm leading-6 text-slate-600">Organiza tus piezas y consulta la información técnica disponible en tu catálogo.</span>
                 <span className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-[#987400]">Abrir catálogo <ArrowRight className="size-3.5 transition group-hover:translate-x-1" /></span>
               </Link>
             </div>
