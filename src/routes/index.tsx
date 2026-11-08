@@ -5,7 +5,7 @@ import { supabasePublic } from "@/integrations/supabase/client";
 import { RegistroTaller } from "@/components/RegistroTaller";
 const MiniAurumRender = lazy(() => import("@/components/MiniAurumRender").then((m) => ({ default: m.MiniAurumRender })));
 const PrecioOroDiario = lazy(() => import("@/components/PrecioOroDiario").then((m) => ({ default: m.PrecioOroDiario })));
-import { ArrowRight, BookOpen, Boxes, Calculator, Check, ChevronDown, Cloud, Gem, MonitorSmartphone, PackageCheck, Sparkles, Sprout, ChartNoAxesCombined } from "lucide-react";
+import { ArrowRight, BookOpen, Boxes, Calculator, Check, ChevronDown, Cloud, Gem, Layers3, MonitorSmartphone, PackageCheck, Sparkles, Sprout, ChartNoAxesCombined } from "lucide-react";
 import heroColgante from "@/assets/diseno-colgante.jpg";
 import heroFloral from "@/assets/diseno-floral.jpg";
 import heroGemelos from "@/assets/diseno-gemelos.jpg";
