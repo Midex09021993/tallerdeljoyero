@@ -245,6 +245,25 @@ export function PrecioOroDiario() {
             <div className="mt-6 border-t border-[#eadca8]/70 pt-5 text-xs font-medium text-slate-600">
               <span className="inline-flex items-center gap-2"><ShieldCheck className="size-4 text-[#9a7400]" /> Gratis · Sin registro</span>
             </div>
+            <div className="mt-7 rounded-2xl border border-[#e8d79e]/80 bg-white/80 p-3 shadow-sm">
+              <p className="mb-3 text-[10px] font-bold uppercase tracking-[.14em] text-slate-500">Mercado internacional · Kitco</p>
+              <a
+                href="https://www.kitco.com/connecting.html"
+                target="_blank"
+                rel="noreferrer"
+                className="block"
+                aria-label="Ver cotizaciones internacionales de metales en Kitco"
+              >
+                <img
+                  src="https://www.kitconet.com/images/quotes_7a.gif"
+                  alt="Cotizaciones de oro, plata, platino y paladio de Kitco"
+                  loading="lazy"
+                  decoding="async"
+                  className="h-auto w-full"
+                />
+              </a>
+              <p className="mt-2 text-[10px] text-slate-400">Cotizaciones en USD · Actualización cada minuto</p>
+            </div>
           </div>
 
           <div className="overflow-hidden rounded-[1.6rem] border border-[#e8d79e] bg-white shadow-[0_24px_70px_rgba(77,60,12,.12)]">
