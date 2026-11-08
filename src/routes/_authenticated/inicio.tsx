@@ -342,228 +342,143 @@ function Inicio() {
       subtitulo={sesion?.sede?.nombre ? `Sede ${sesion.sede.nombre} · ${rolEtiqueta[sesion.rolPrincipal]}` : "Visión general del taller"}
       encabezadoMovilCompacto
     >
-      <div className="space-y-5">
-        <section className="overflow-hidden rounded-3xl border border-border bg-card shadow-card">
-          <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
-            <div className="min-w-0">
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold">AURUM LAB · OPERACIONES</p>
-              <h2 className="mt-1 font-display text-2xl font-semibold tracking-tight sm:text-3xl">Resumen del taller</h2>
-              <p className="mt-1 text-sm text-muted-foreground">{sesion?.sede?.nombre ? `Sede ${sesion.sede.nombre} · ${rolEtiqueta[sesion.rolPrincipal]}` : "Controla pedidos, producción y entregas desde un solo lugar."}</p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              {esDueno ? (
-                <SelectorSedeDueno esDueno={esDueno} sedes={sedes} value={sedeFiltro} onChange={setSedeFiltro} className="w-full sm:w-auto" />
-              ) : null}
-              <Link to="/pedidos/nuevo" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-gold px-4 py-2.5 text-xs font-bold text-gold-foreground shadow-card transition hover:shadow-raised">
-                <Wrench className="size-4" /> Nuevo pedido
-              </Link>
-              <Link to="/herramientas" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-2.5 text-xs font-semibold transition hover:border-gold/40 hover:bg-muted/40">
-                Herramientas <ChevronRight className="size-4" />
-              </Link>
-            </div>
+      <div className="space-y-6">
+        <header className="flex flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gold-deep">AURUM LAB / OPERACIONES</p>
+            <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight">Panel de operaciones</h1>
+            <p className="mt-1 text-sm text-muted-foreground">{sesion?.sede?.nombre ? `${sesion.sede.nombre} · ${rolEtiqueta[sesion.rolPrincipal]}` : "Estado general del taller"}</p>
           </div>
-          <div className="grid grid-cols-2 border-t border-border sm:grid-cols-3 lg:grid-cols-5">
-            {[
-              { label: "Pedidos activos", value: resumen.activos.length, note: "En seguimiento", tone: "text-foreground" },
-              { label: "En producción", value: resumen.produccion.length, note: "Trabajo en curso", tone: "text-foreground" },
-              { label: "En recepción", value: resumen.recepcion.length, note: "Por verificar", tone: "text-foreground" },
-              { label: "Entregas hoy", value: resumen.hoy.length, note: "Compromiso de hoy", tone: resumen.hoy.length ? "text-gold-deep" : "text-foreground" },
-              { label: "Vencidos", value: resumen.vencidos.length, note: "Requieren atención", tone: resumen.vencidos.length ? "text-danger" : "text-foreground" },
-            ].map((item) => (
-              <div key={item.label} className="border-b border-r border-border p-4 last:border-r-0 sm:p-5 lg:border-b-0">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{item.label}</p>
-                <p className={`mt-2 font-display text-3xl font-semibold tabular-nums ${item.tone}`}>{cargandoPedidos ? "—" : item.value}</p>
-                <p className="mt-1 text-[11px] text-muted-foreground">{item.note}</p>
-              </div>
-            ))}
+          <div className="flex flex-wrap items-center gap-2">
+            {esDueno ? <SelectorSedeDueno esDueno={esDueno} sedes={sedes} value={sedeFiltro} onChange={setSedeFiltro} className="w-full sm:w-auto" /> : null}
+            <Link to="/pedidos/nuevo" className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-[#b9975b] px-4 text-xs font-semibold text-white transition hover:bg-[#a9874d]"><Wrench className="size-4" /> Nuevo pedido</Link>
           </div>
+        </header>
+
+        <section aria-label="Indicadores del taller" className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+          {[
+            { label: "Pedidos activos", value: resumen.activos.length, detail: "En seguimiento", tone: "text-foreground" },
+            { label: "En producción", value: resumen.produccion.length, detail: "Trabajo en curso", tone: "text-foreground" },
+            { label: "Entregas hoy", value: resumen.hoy.length, detail: "Compromisos de hoy", tone: "text-foreground" },
+            { label: "Vencidos", value: resumen.vencidos.length, detail: "Requieren atención", tone: resumen.vencidos.length ? "text-red-600" : "text-foreground" },
+          ].map((item) => (
+            <article key={item.label} className="rounded-xl border border-border bg-card p-4">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{item.label}</p>
+              <p className={`mt-2 font-display text-3xl font-semibold tabular-nums ${item.tone}`}>{cargandoPedidos ? "—" : item.value}</p>
+              <p className="mt-1 text-[11px] text-muted-foreground">{item.detail}</p>
+            </article>
+          ))}
         </section>
 
-        {sesion?.esAdmin ? (
-          <section className="rounded-2xl border border-gold/25 bg-card p-4 shadow-card sm:p-5">
-            {esDueno && !sedeContextoId ? (
-              <p className="text-xs text-muted-foreground">Selecciona una sede para consultar su activación sin mezclar datos.</p>
-            ) : errorPrimerosPasos ? (
-              <p className="text-xs text-muted-foreground">No se pudo consultar el avance de activación. El resto del panel sigue disponible.</p>
-            ) : cargandoPrimerosPasos || cargandoPreparacion || cargandoPedidos ? (
-              <p className="text-xs text-muted-foreground">Consultando la activación del taller…</p>
+        <section className="grid items-start gap-5 xl:grid-cols-[minmax(0,1.6fr)_minmax(280px,0.8fr)]">
+          <section className="overflow-hidden rounded-xl border border-border bg-card">
+            <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3.5">
+              <div>
+                <h2 className="text-sm font-semibold">Atención prioritaria</h2>
+                <p className="mt-0.5 text-xs text-muted-foreground">Pedidos que necesitan una acción</p>
+              </div>
+              <Link to="/pedidos" className="text-xs font-semibold text-gold-deep hover:underline">Ver pedidos <ChevronRight className="inline size-3" /></Link>
+            </div>
+            {cargandoPedidos ? (
+              <p className="p-5 text-sm text-muted-foreground">Cargando operaciones…</p>
+            ) : resumen.atencion.length === 0 ? (
+              <div className="px-5 py-10 text-center">
+                <CheckCircle2 className="mx-auto size-7 text-emerald-600" />
+                <p className="mt-2 text-sm font-semibold">Sin pendientes urgentes</p>
+                <p className="mt-1 text-xs text-muted-foreground">No hay pedidos vencidos ni recepciones por verificar.</p>
+              </div>
             ) : (
-              (() => {
-                const pasos = [
-                  { titulo: "Identidad comercial", detalle: "Configura los datos de tus documentos.", listo: Boolean(preparacion?.identidadConfigurada), destino: "/gestion?modulo=comercial", accion: "Configurar", icono: Building2 },
-                  { titulo: "Primer cliente", detalle: "Registra un contacto en tu cartera.", listo: (primerosPasos?.clientes ?? 0) > 0, destino: "/clientes", accion: "Registrar", icono: UserRound },
-                  { titulo: "Primera cotización", detalle: "Prepara una propuesta comercial.", listo: (primerosPasos?.cotizaciones ?? 0) > 0, destino: "/cotizaciones", accion: "Crear", icono: FileText },
-                  { titulo: "Primer pedido", detalle: "Inicia el seguimiento de un trabajo.", listo: pedidosSede.length > 0, destino: "/pedidos/nuevo", accion: "Crear", icono: Wrench },
-                ];
-                const completados = pasos.filter((paso) => paso.listo).length;
-                const porcentaje = Math.round((completados / pasos.length) * 100);
-                return (
-                  <details className="group">
-                    <summary className="flex cursor-pointer list-none flex-wrap items-center gap-4 [&::-webkit-details-marker]:hidden">
-                      <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-gold/10 text-gold-deep"><Rocket className="size-5" /></span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-sm font-semibold">Puesta en marcha del taller</span>
-                        <span className="mt-0.5 block text-xs text-muted-foreground">{completados} de {pasos.length} acciones completadas</span>
-                      </span>
-                      <span className="w-full min-w-28 flex-1 sm:max-w-48">
-                        <span className="block h-2 overflow-hidden rounded-full bg-muted"><span className="block h-full rounded-full bg-gold transition-all" style={{ width: porcentaje + "%" }} /></span>
-                      </span>
-                      <span className="text-xs font-bold tabular-nums">{porcentaje}%</span>
-                      <ChevronRight className="size-4 text-muted-foreground transition group-open:rotate-90" />
-                    </summary>
-                    <div className="mt-4 grid gap-2 border-t border-border pt-4 sm:grid-cols-2 xl:grid-cols-4">
-                      {pasos.map((paso) => {
-                        const Icono = paso.icono;
-                        return (
-                          <Link key={paso.titulo} to={paso.destino as never} className="flex min-w-0 items-center gap-3 rounded-xl border border-border p-3 transition hover:border-gold/40 hover:bg-muted/30">
-                            <span className={paso.listo ? "grid size-9 shrink-0 place-items-center rounded-lg bg-success/10 text-success" : "grid size-9 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground"}>
-                              {paso.listo ? <CheckCircle2 className="size-4" /> : <Icono className="size-4" />}
-                            </span>
-                            <span className="min-w-0 flex-1">
-                              <span className="block truncate text-xs font-semibold">{paso.titulo}</span>
-                              <span className="mt-0.5 block text-[10px] text-muted-foreground">{paso.listo ? "Completado" : paso.accion}</span>
-                            </span>
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  </details>
-                );
-              })()
+              <div className="divide-y divide-border">
+                {resumen.atencion.slice(0, 7).map((pedido) => (
+                  <Link key={pedido.id} to="/pedidos/$id" params={{ id: pedido.id }} search={{ from: undefined }} className="flex items-center gap-3 px-4 py-3 transition hover:bg-muted/30">
+                    <span className={esUrgente(pedido) ? "size-2 shrink-0 rounded-full bg-red-500" : "size-2 shrink-0 rounded-full bg-amber-500"} />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-xs font-semibold">{pedido.referencia || pedido.pieza || pedido.trabajo || "Pedido sin referencia"}</span>
+                      <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">{pedido.cliente || "Sin cliente"} · {pedido.estado}</span>
+                    </span>
+                    <span className={esUrgente(pedido) ? "shrink-0 text-right text-[11px] font-semibold text-red-600" : "shrink-0 text-right text-[11px] font-medium text-muted-foreground"}>{textoEntrega(pedido)}</span>
+                    <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+                  </Link>
+                ))}
+              </div>
             )}
           </section>
-        ) : null}
-
-        {sesion?.esAdmin ? (
-          <section aria-label="Suscripción y consumo">
-            <ResumenPlanComercial />
-          </section>
-        ) : null}
-
-        <section className="grid gap-5 xl:grid-cols-[minmax(0,1.55fr)_minmax(280px,0.85fr)]">
-          <Panel titulo="Pedidos que requieren atención" accion={<Link to="/pedidos" className="text-xs font-semibold text-gold hover:underline">Ver todos <ChevronRight className="inline size-3" /></Link>}>
-            <div className="divide-y divide-border">
-              {cargandoPedidos ? (
-                <div className="p-6 text-sm text-muted-foreground">Cargando pedidos…</div>
-              ) : resumen.atencion.length === 0 ? (
-                <div className="p-8 text-center">
-                  <CheckCircle2 className="mx-auto size-8 text-success" />
-                  <p className="mt-3 text-sm font-semibold">Todo está bajo control</p>
-                  <p className="mt-1 text-xs text-muted-foreground">No hay pedidos urgentes ni pendientes de recepción.</p>
-                </div>
-              ) : (
-                resumen.atencion.slice(0, 6).map((pedido) => (
-                  <Link key={pedido.id} to="/pedidos/$id" params={{ id: pedido.id }} search={{ from: undefined }} className="flex items-center justify-between gap-4 px-4 py-3.5 transition hover:bg-muted/40">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold">{pedido.referencia || pedido.pieza || pedido.trabajo || "Pedido sin referencia"}</p>
-                      <p className="mt-1 truncate text-xs text-muted-foreground">{pedido.cliente || "Sin cliente"} · {pedido.estado}</p>
-                    </div>
-                    <div className="shrink-0 text-right">
-                      <p className={esUrgente(pedido) ? "text-xs font-bold text-danger" : "text-xs font-medium text-muted-foreground"}>{textoEntrega(pedido)}</p>
-                      <ChevronRight className="ml-auto mt-1 size-4 text-muted-foreground" />
-                    </div>
-                  </Link>
-                ))
-              )}
-            </div>
-          </Panel>
-
-          <Panel titulo="Prioridades de hoy">
-            <div className="space-y-2 p-3">
-              {[
-                { label: "Entregas vencidas", value: resumen.vencidos.length, detail: "Revisar compromisos", tone: resumen.vencidos.length ? "text-danger bg-danger/10" : "text-success bg-success/10" },
-                { label: "Entregas hoy", value: resumen.hoy.length, detail: "Preparar despachos", tone: "text-gold-deep bg-gold/10" },
-                { label: "Pendientes de recepción", value: resumen.recepcion.length, detail: "Verificar ingresos", tone: "text-foreground bg-muted" },
-                { label: "Sin fecha de entrega", value: resumen.sinFecha.length, detail: "Completar planificación", tone: "text-foreground bg-muted" },
-              ].map((item) => (
-                <Link key={item.label} to="/pedidos" className="flex items-center gap-3 rounded-xl border border-border p-3 transition hover:border-gold/40 hover:bg-muted/30">
-                  <span className={`grid size-10 shrink-0 place-items-center rounded-lg text-sm font-bold tabular-nums ${item.tone}`}>{item.value}</span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-xs font-semibold">{item.label}</span>
-                    <span className="mt-0.5 block text-[10px] text-muted-foreground">{item.detail}</span>
-                  </span>
-                  <ChevronRight className="size-4 text-muted-foreground" />
-                </Link>
-              ))}
-            </div>
-          </Panel>
-        </section>
-
-        <section className="grid gap-5 lg:grid-cols-2">
-          <Panel titulo="Carga operativa por área">
-            <div className="grid gap-2 p-3 sm:grid-cols-2">
-              {cargaAreas.map(([area, Icono]) => {
-                const cantidad = pedidosSede.filter((p) => p.area_actual === area && !esEstadoFinalPedido(p.estado)).length;
-                const destinos: Record<string, string> = {
-                  "Diseño 3D": "/diseno-3d",
-                  "Impresión 3D": "/impresion-3d",
-                  Casting: "/casting",
-                  Taller: "/taller",
-                  "Corte Láser": "/corte-laser",
-                  Ventas: "/ventas",
-                };
-                return (
-                  <Link key={area} to={destinos[area] as never} className="flex items-center gap-3 rounded-xl border border-border p-3 transition hover:border-gold/40 hover:bg-muted/30">
-                    <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-gold/10 text-gold-deep"><Icono className="size-4" /></span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-xs font-semibold">{area}</span>
-                      <span className="mt-0.5 block text-[10px] text-muted-foreground">{cantidad === 0 ? "Sin carga activa" : cantidad === 1 ? "1 pedido en curso" : cantidad + " pedidos en curso"}</span>
-                    </span>
-                    <span className="font-display text-xl font-semibold tabular-nums">{cantidad}</span>
-                  </Link>
-                );
-              })}
-              {cargaAreas.length === 0 ? <p className="col-span-full p-4 text-xs text-muted-foreground">No hay áreas internas configuradas para esta sede.</p> : null}
-            </div>
-          </Panel>
 
           <div className="space-y-5">
-            {sesion?.esAdmin ? (
-              <section className="rounded-2xl border border-border bg-card shadow-card">
-                <div className="flex items-center justify-between gap-3 border-b border-border p-4">
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground">Configuración</p>
-                    <h2 className="mt-1 text-sm font-semibold">Preparación de la sede</h2>
+            <section className="rounded-xl border border-border bg-card">
+              <div className="border-b border-border px-4 py-3.5">
+                <h2 className="text-sm font-semibold">Estado de producción</h2>
+                <p className="mt-0.5 text-xs text-muted-foreground">Carga actual por área</p>
+              </div>
+              <div className="divide-y divide-border px-4">
+                {cargaAreas.map(([area, Icono]) => {
+                  const cantidad = pedidosSede.filter((p) => p.area_actual === area && !esEstadoFinalPedido(p.estado)).length;
+                  const destinos: Record<string, string> = {
+                    "Diseño 3D": "/diseno-3d",
+                    "Impresión": "/impresion-3d",
+                    Casting: "/casting",
+                    Taller: "/taller",
+                    "Corte Láser": "/corte-laser",
+                    Ventas: "/ventas",
+                  };
+                  return (
+                    <Link key={area} to={destinos[area] as never} className="flex items-center gap-3 py-3 transition hover:text-gold-deep">
+                      <Icono className="size-4 text-muted-foreground" />
+                      <span className="min-w-0 flex-1 text-xs font-medium">{area}</span>
+                      <span className="text-xs font-semibold tabular-nums">{cantidad}</span>
+                      <ChevronRight className="size-3.5 text-muted-foreground" />
+                    </Link>
+                  );
+                })}
+                {cargaAreas.length === 0 ? <p className="py-4 text-xs text-muted-foreground">No hay áreas configuradas.</p> : null}
+              </div>
+            </section>
+
+            <section className="rounded-xl border border-border bg-card p-4">
+              <h2 className="text-sm font-semibold">Resumen del día</h2>
+              <div className="mt-3 space-y-2.5">
+                {[
+                  { label: "En recepción", value: resumen.recepcion.length },
+                  { label: "Entregas vencidas", value: resumen.vencidos.length },
+                  { label: "Sin fecha de entrega", value: resumen.sinFecha.length },
+                ].map((item) => (
+                  <div key={item.label} className="flex items-center justify-between gap-3 text-xs">
+                    <span className="text-muted-foreground">{item.label}</span>
+                    <span className="font-semibold tabular-nums">{item.value}</span>
                   </div>
-                  <button type="button" onClick={() => setMostrarEstadoTaller((visible) => !visible)} aria-expanded={mostrarEstadoTaller} aria-controls="estado-preparacion-taller" className="text-xs font-semibold text-gold-deep hover:underline">
-                    {mostrarEstadoTaller ? "Ocultar" : "Revisar"}
-                  </button>
-                </div>
-                {mostrarEstadoTaller ? (
-                  <div id="estado-preparacion-taller">
-                    {esDueno && sedeFiltro === TODAS_LAS_SEDES ? (
-                      <div className="p-4">
-                        <p className="text-xs text-muted-foreground">Selecciona una sede para revisar su preparación sin mezclar configuraciones.</p>
-                        <Link to="/gestion" className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-gold-deep">Administrar sedes <ChevronRight className="size-3" /></Link>
-                      </div>
-                    ) : (
-                      <InicioPreparacion preparacion={preparacion ? preparacion : undefined} cargando={cargandoPreparacion} tienePedido={pedidosSede.length > 0} destinoGestion="/gestion" destinoPedidos="/pedidos/nuevo" />
-                    )}
-                  </div>
-                ) : null}
-              </section>
-            ) : null}
-            <section className="rounded-2xl border border-border bg-card shadow-card">
-              <header className="flex items-center justify-between gap-3 border-b border-border p-4">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground">Relación con clientes</p>
-                  <h2 className="mt-1 text-sm font-semibold">Próximos cumpleaños</h2>
-                </div>
-                <Link to="/clientes" className="text-xs font-semibold text-gold hover:underline">Ver clientes <ChevronRight className="inline size-3" /></Link>
-              </header>
-              {cumpleanos.length ? cumpleanos.map((c) => (
-                <div key={c.id} className="flex items-center gap-3 border-b border-border p-3 last:border-0">
-                  <Gift className="size-4 shrink-0 text-gold" />
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-semibold">{c.nombre}</span>
-                    <span className="text-xs text-muted-foreground">{c.fecha.toLocaleDateString("es-PE", { day: "2-digit", month: "short" })}</span>
-                  </span>
-                  <span className="text-xs font-semibold text-gold">{c.dias === 0 ? "Hoy" : `En ${c.dias} días`}</span>
-                </div>
-              )) : <p className="p-4 text-xs text-muted-foreground">No hay cumpleaños en los próximos 30 días.</p>}
+                ))}
+              </div>
             </section>
           </div>
         </section>
+
+        {sesion?.esAdmin ? (
+          <section className="space-y-2">
+            <details className="group rounded-xl border border-border bg-card">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3.5 [&::-webkit-details-marker]:hidden">
+                <span className="flex items-center gap-2 text-xs font-semibold"><Rocket className="size-4 text-gold-deep" /> Configuración y puesta en marcha</span>
+                <ChevronRight className="size-4 text-muted-foreground transition group-open:rotate-90" />
+              </summary>
+              <div className="border-t border-border p-4">
+                {esDueno && !sedeContextoId ? (
+                  <p className="text-xs text-muted-foreground">Selecciona una sede para consultar su configuración.</p>
+                ) : (
+                  <InicioPreparacion preparacion={preparacion ? preparacion : undefined} cargando={cargandoPreparacion} tienePedido={pedidosSede.length > 0} destinoGestion="/gestion" destinoPedidos="/pedidos/nuevo" />
+                )}
+                {!errorPrimerosPasos && !cargandoPrimerosPasos && primerosPasos ? (
+                  <p className="mt-3 text-xs text-muted-foreground">Clientes registrados: {primerosPasos.clientes} · Cotizaciones: {primerosPasos.cotizaciones}</p>
+                ) : null}
+              </div>
+            </details>
+            <details className="group rounded-xl border border-border bg-card">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3.5 [&::-webkit-details-marker]:hidden">
+                <span className="flex items-center gap-2 text-xs font-semibold"><Gem className="size-4 text-gold-deep" /> Suscripción y consumo</span>
+                <ChevronRight className="size-4 text-muted-foreground transition group-open:rotate-90" />
+              </summary>
+              <div className="border-t border-border p-4"><ResumenPlanComercial /></div>
+            </details>
+          </section>
+        ) : null}
       </div>
       {mostrarBienvenida && pasosBienvenida.length > 0 ? (
         <div className="fixed inset-0 z-[100] grid place-items-center bg-background/80 p-4 backdrop-blur-sm">
