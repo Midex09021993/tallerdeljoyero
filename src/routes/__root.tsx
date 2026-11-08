@@ -115,21 +115,49 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
-  // Recupera una sola vez por pestaña los chunks obsoletos tras un despliegue.
-  // No altera loaders, materiales ni el pipeline de AURUM Render.
+  // Recupera chunks obsoletos tras un despliegue sin crear bucles de recarga.
+  // La marca expira tras una carga estable y también tiene caducidad defensiva.
   useEffect(() => {
-    const recoveryKey = "taller:stale-chunk-reload-attempted";
+    const recoveryKey = "taller:stale-chunk-recovery:v2";
+    const legacyKey = "taller:stale-chunk-reload-attempted";
+    const recoveryWindowMs = 60_000;
     let reloadInProgress = false;
+    let clearRecoveryTimer: number | undefined;
+
+    try {
+      window.sessionStorage.removeItem(legacyKey);
+      const stored = window.sessionStorage.getItem(recoveryKey);
+      if (stored) {
+        const parsed = JSON.parse(stored) as { at?: number };
+        if (typeof parsed.at !== "number" || Date.now() - parsed.at > recoveryWindowMs) {
+          window.sessionStorage.removeItem(recoveryKey);
+        } else {
+          // Esta instancia ya superó el arranque tras la recarga. Si la ruta
+          // sigue fallando, se conserva el bloqueo temporal para evitar loops.
+          clearRecoveryTimer = window.setTimeout(() => {
+            window.sessionStorage.removeItem(recoveryKey);
+          }, 15_000);
+        }
+      }
+    } catch {
+      // Sin sessionStorage no se fuerza una recarga automática: evita loops
+      // imposibles de limitar entre documentos.
+    }
 
     const reloadForStaleChunk = () => {
       if (reloadInProgress) return false;
 
       try {
-        if (window.sessionStorage.getItem(recoveryKey) === "1") return false;
-        window.sessionStorage.setItem(recoveryKey, "1");
+        const stored = window.sessionStorage.getItem(recoveryKey);
+        if (stored) {
+          const parsed = JSON.parse(stored) as { at?: number };
+          if (typeof parsed.at === "number" && Date.now() - parsed.at <= recoveryWindowMs) {
+            return false;
+          }
+        }
+        window.sessionStorage.setItem(recoveryKey, JSON.stringify({ at: Date.now() }));
       } catch {
-        // Si el almacenamiento está bloqueado, el guard en memoria evita
-        // que dos eventos simultáneos provoquen recargas duplicadas.
+        return false;
       }
 
       reloadInProgress = true;
@@ -145,7 +173,7 @@ function RootComponent() {
       const reason = event.reason;
       const message = reason instanceof Error ? reason.message : String(reason ?? "");
       const isChunkLoadFailure =
-        /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|Loading chunk .+ failed|ChunkLoadError|Unable to preload CSS/i.test(message);
+        /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|Loading chunk .+ failed|ChunkLoadError|Unable to preload CSS|Failed to load module script|CSS_CHUNK_LOAD_FAILED/i.test(message);
 
       if (isChunkLoadFailure && reloadForStaleChunk()) {
         event.preventDefault();
@@ -156,6 +184,7 @@ function RootComponent() {
     window.addEventListener("unhandledrejection", handleUnhandledRejection);
 
     return () => {
+      if (clearRecoveryTimer !== undefined) window.clearTimeout(clearRecoveryTimer);
       window.removeEventListener("vite:preloadError", handleVitePreloadError);
       window.removeEventListener("unhandledrejection", handleUnhandledRejection);
     };
