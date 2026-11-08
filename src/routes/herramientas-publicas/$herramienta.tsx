@@ -160,20 +160,45 @@ type HerramientaSlug = keyof typeof paginas;
 export const Route = createFileRoute("/herramientas-publicas/$herramienta")({
   head: ({ params }) => {
     const pagina = paginas[params.herramienta as HerramientaSlug];
+    const canonical = pagina
+      ? "https://www.tallerdeljoyero.com/herramientas-publicas/" + encodeURIComponent(params.herramienta)
+      : undefined;
+    const title = pagina?.metaTitulo ?? "Herramientas para joyeros | AURUM LAB";
+    const description = pagina?.descripcion ?? "Herramientas técnicas para el trabajo diario de joyería.";
+    const structuredData = pagina
+      ? {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: pagina.preguntas.map((item) => ({
+            "@type": "Question",
+            name: item.pregunta,
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: item.respuesta,
+            },
+          })),
+        }
+      : undefined;
+
     return {
       meta: [
-        { title: pagina?.metaTitulo ?? "Herramientas para joyeros | Taller del Joyero" },
-        { name: "description", content: pagina?.descripcion ?? "Herramientas técnicas para el trabajo diario de joyería." },
+        { title },
+        { name: "description", content: description },
         { name: "robots", content: pagina ? "index, follow, max-image-preview:large" : "noindex, follow" },
-        { property: "og:title", content: pagina?.metaTitulo ?? "Herramientas para joyeros | Taller del Joyero" },
-        { property: "og:description", content: pagina?.descripcion ?? "Herramientas técnicas para joyería." },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
         { property: "og:type", content: "website" },
+        { property: "og:site_name", content: "AURUM LAB" },
+        { property: "og:locale", content: "es_PE" },
         { name: "twitter:card", content: "summary" },
-        { name: "twitter:title", content: pagina?.metaTitulo ?? "Herramientas para joyeros | Taller del Joyero" },
-        { name: "twitter:description", content: pagina?.descripcion ?? "Herramientas técnicas para joyería." },
-        ...(pagina ? [{ property: "og:url", content: "https://www.tallerdeljoyero.com/herramientas-publicas/" + encodeURIComponent(params.herramienta) }] : []),
+        { name: "twitter:title", content: title },
+        { name: "twitter:description", content: description },
+        ...(canonical ? [{ property: "og:url", content: canonical }] : []),
       ],
-      links: pagina ? [{ rel: "canonical", href: "https://www.tallerdeljoyero.com/herramientas-publicas/" + encodeURIComponent(params.herramienta) }] : [],
+      links: canonical ? [{ rel: "canonical", href: canonical }] : [],
+      scripts: structuredData
+        ? [{ type: "application/ld+json", children: JSON.stringify(structuredData) }]
+        : [],
     };
   },
   component: HerramientaPublicaPage,
