@@ -176,6 +176,7 @@ export const Route = createFileRoute("/herramientas-publicas/$herramienta")({
               applicationCategory: "UtilitiesApplication",
               operatingSystem: "Web",
               isAccessibleForFree: true,
+              offers: { "@type": "Offer", price: "0", priceCurrency: "PEN" },
               url: canonical,
               inLanguage: "es-PE",
               publisher: { "@type": "Organization", name: "AURUM LAB", url: "https://www.tallerdeljoyero.com/" },
