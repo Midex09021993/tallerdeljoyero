@@ -727,9 +727,20 @@ function InicioPublico() {
         <div className="mx-auto max-w-[1440px] px-5 py-9 sm:px-8 sm:py-10 lg:px-12">
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr] lg:gap-12">
             <div>
-              <Link to="/" className="inline-flex items-center gap-2 text-white" aria-label="AURUM LAB, inicio">
-                <span className="grid size-8 place-items-center rounded-lg bg-[#f8c928] text-[#17232d]"><Gem className="size-4" /></span>
-                <span className="text-lg font-extrabold tracking-tight">AURUM<span className="text-[#f8c928]"> LAB</span></span>
+              <Link to="/" className="inline-flex items-center gap-2.5 text-white" aria-label="AURUM LAB, inicio">
+                <img
+                  src="/brand/aurum-symbol.svg"
+                  alt=""
+                  aria-hidden="true"
+                  width="40"
+                  height="40"
+                  className="size-10 shrink-0 object-contain"
+                  loading="lazy"
+                />
+                <span className="leading-tight">
+                  <span className="block text-[17px] font-extrabold tracking-tight text-white">AURUM<span className="text-[#C5A36B]"> LAB</span></span>
+                  <span className="block text-[9px] font-medium uppercase tracking-[.15em] text-slate-400">Tecnología para joyeros</span>
+                </span>
               </Link>
               <p className="mt-3 max-w-xs text-xs leading-5 text-slate-300">Software para joyeros: cálculo de materiales, visualización 3D y gestión del taller.</p>
               <a href="mailto:noreply@tallerdeljoyero.com" className="mt-4 inline-flex items-center gap-2 text-xs font-medium text-white transition hover:text-[#f8c928]">noreply@tallerdeljoyero.com <ArrowRight className="size-3.5" /></a>
