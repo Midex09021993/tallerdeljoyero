@@ -434,10 +434,18 @@ function InicioPublico() {
       <header className="sticky top-0 z-30 border-b border-slate-200/90 bg-white/95 shadow-[0_2px_8px_rgba(15,23,42,.05)] backdrop-blur">
         <div className="mx-auto flex min-h-[68px] max-w-[1440px] flex-wrap items-center justify-between gap-4 px-5 sm:px-8 lg:px-12">
           <Link to="/" className="flex shrink-0 items-center gap-2.5" aria-label="AURUM LAB, inicio">
-            <span className="grid size-9 place-items-center rounded-lg bg-[#f8c928] text-[#17232d]"><Gem className="size-5" strokeWidth={2.5} /></span>
+            <img
+              src="/brand/aurum-symbol.svg"
+              alt=""
+              aria-hidden="true"
+              width="40"
+              height="40"
+              className="size-10 shrink-0 object-contain"
+              fetchPriority="high"
+            />
             <span className="leading-tight">
-              <span className="block text-[17px] font-extrabold tracking-tight">AURUM<span className="text-[#bd8d00]"> LAB</span></span>
-              <span className="block text-[9px] font-medium uppercase tracking-[.15em] text-slate-500">Tecnología para joyeros</span>
+              <span className="block text-[17px] font-extrabold tracking-tight text-[#182838]">AURUM<span className="text-[#C5A36B]"> LAB</span></span>
+              <span className="block text-[9px] font-medium uppercase tracking-[.15em] text-[#687887]">Tecnología para joyeros</span>
             </span>
           </Link>
           <nav className="hidden items-center gap-7 text-[13px] font-medium text-slate-700 lg:flex" aria-label="Navegación principal">
