@@ -322,11 +322,11 @@ function TalleresDeLaComunidad() {
         </div>
 
         {!visible || isLoading ? (
-          <div className="mx-auto mt-12 flex max-w-6xl flex-wrap items-center justify-center gap-x-12 gap-y-8" aria-label="Cargando logotipos de talleres">
+          <div role="status" aria-label="Cargando logotipos de talleres" className="mx-auto mt-12 flex max-w-6xl flex-wrap items-center justify-center gap-x-12 gap-y-8">
             {[0, 1, 2, 3, 4, 5].map((item) => <div key={item} className="h-14 w-40 animate-pulse rounded bg-slate-100" />)}
           </div>
         ) : (
-          <div className="aurum-community-marquee-viewport relative mx-auto mt-10 max-w-[1240px] overflow-hidden py-2" aria-label="Logotipos de talleres participantes, carrusel de derecha a izquierda. Pasa el cursor para pausar.">
+          <div role="region" aria-labelledby="talleres-comunidad-titulo" className="aurum-community-marquee-viewport relative mx-auto mt-10 max-w-[1240px] overflow-hidden py-2">
             <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-white to-transparent sm:w-16" />
             <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-white to-transparent sm:w-16" />
             <div className="aurum-community-marquee-track">
