@@ -433,7 +433,7 @@ function InicioPublico() {
       })}</script>
       <a href="#contenido-principal" className="sr-only z-50 rounded-md bg-white px-4 py-2 font-semibold text-[#17232d] focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:ring-2 focus:ring-[#d4aa19]">Saltar al contenido principal</a>
       <header className="sticky top-0 z-30 border-b border-slate-200/90 bg-white/95 shadow-[0_2px_8px_rgba(15,23,42,.05)] backdrop-blur">
-        <div className="mx-auto flex min-h-[68px] max-w-[1440px] flex-wrap items-center justify-between gap-4 px-5 sm:px-8 lg:px-12">
+        <div className="mx-auto flex min-h-[68px] max-w-[1440px] flex-nowrap items-center justify-between gap-2 px-4 sm:gap-4 sm:px-8 lg:px-12">
           <Link to="/" className="flex shrink-0 items-center gap-2.5" aria-label="AURUM LAB, inicio">
             <img
               src="/brand/aurum-symbol.svg"
@@ -458,7 +458,7 @@ function InicioPublico() {
             <Link to="/comunidad" className="transition hover:text-[#a77a00]">Comunidad</Link>
             <a href="#contacto" className="transition hover:text-[#a77a00]">Contacto</a>
           </nav>
-          <div className="flex items-center gap-2">
+          <div className="ml-auto flex shrink-0 items-center gap-2">
             <RegistroTaller className="hidden min-h-10 items-center justify-center rounded-xl bg-[#f8c928] px-4 text-xs font-bold text-[#17232d] shadow-sm transition hover:bg-[#ffdf65] sm:inline-flex" />
             <Link to="/auth" target="_blank" rel="noopener noreferrer" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 sm:px-4 text-xs font-semibold text-[#17232d] transition hover:border-[#d4aa19] sm:text-sm"><MonitorSmartphone className="size-4" /> Ingresar</Link>
             <button
