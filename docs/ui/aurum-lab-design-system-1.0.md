@@ -12,7 +12,7 @@ Una identidad de lujo contemporáneo que combina precisión tecnológica, calide
 | Champagne | `#C5A36B` | Acentos, selección, iconos y detalles |
 | Champagne light | `#D9BD8B` | Estados hover y detalles suaves |
 | Champagne deep | `#92734B` | Texto dorado sobre superficies claras |
-| Ivory | `#F5F1E8` | Fondo general del ERP |
+| Ivory | `#F6F4EF` | Fondo general del ERP |
 | Warm white | `#FFFEFC` | Tarjetas, formularios y superficies elevadas |
 | Stone | `#EAE6DE` | Superficies secundarias |
 | Steel | `#687887` | Texto secundario |
@@ -21,7 +21,7 @@ Una identidad de lujo contemporáneo que combina precisión tecnológica, calide
 Los estados semánticos de éxito, información, advertencia y error conservan colores diferenciados. No se reemplazan por dorado: el usuario debe distinguir el significado del estado sin depender del color de marca.
 
 ## Reglas de aplicación
-- Fondo de trabajo: marfil cálido.
+- Fondo de trabajo: blanco cálido ligeramente neutro (`#F6F4EF`).
 - Tarjetas y formularios: blanco cálido.
 - Texto: azul pizarra oscuro.
 - Navegación: azul medianoche con texto marfil.
