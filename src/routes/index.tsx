@@ -5,7 +5,7 @@ import { supabasePublic } from "@/integrations/supabase/client";
 import { RegistroTaller } from "@/components/RegistroTaller";
 const MiniAurumRender = lazy(() => import("@/components/MiniAurumRender").then((m) => ({ default: m.MiniAurumRender })));
 const PrecioOroDiario = lazy(() => import("@/components/PrecioOroDiario").then((m) => ({ default: m.PrecioOroDiario })));
-import { ArrowRight, BookOpen, Boxes, Calculator, Check, Cloud, Gem, Layers3, MonitorSmartphone, PackageCheck, Sparkles, Sprout, ChartNoAxesCombined } from "lucide-react";
+import { ArrowRight, BookOpen, Boxes, Calculator, Check, Cloud, Gem, Layers3, Menu, MonitorSmartphone, PackageCheck, Sparkles, Sprout, ChartNoAxesCombined, X } from "lucide-react";
 import heroColgante from "@/assets/diseno-colgante.jpg";
 import heroFloral from "@/assets/diseno-floral.jpg";
 import heroGemelos from "@/assets/diseno-gemelos.jpg";
@@ -341,6 +341,7 @@ function TalleresDeLaComunidad() {
 
 function InicioPublico() {
   const [mostrarDemo3D, setMostrarDemo3D] = useState(false);
+  const [menuMovilAbierto, setMenuMovilAbierto] = useState(false);
   const demo3DSectionRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
@@ -457,20 +458,34 @@ function InicioPublico() {
             <Link to="/comunidad" className="transition hover:text-[#a77a00]">Comunidad</Link>
             <a href="#contacto" className="transition hover:text-[#a77a00]">Contacto</a>
           </nav>
-          <nav className="order-3 flex w-full items-center gap-5 overflow-x-auto border-t border-slate-100 py-3 text-xs font-medium text-slate-700 lg:hidden" aria-label="Navegación móvil">
-            <Link to="/" className="shrink-0">Inicio</Link>
-            <a href="#soluciones" className="shrink-0">Soluciones</a>
-            <Link to="/herramientas-publicas" className="shrink-0">Herramientas</Link>
-            <a href="#como-funciona" className="shrink-0">Cómo funciona</a>
-            <Link to="/guias" className="shrink-0">Guías técnicas</Link>
-            <Link to="/comunidad" className="shrink-0">Comunidad</Link>
-            <a href="#contacto" className="shrink-0">Contacto</a>
-          </nav>
           <div className="flex items-center gap-2">
             <RegistroTaller className="hidden min-h-10 items-center justify-center rounded-xl bg-[#f8c928] px-4 text-xs font-bold text-[#17232d] shadow-sm transition hover:bg-[#ffdf65] sm:inline-flex" />
-            <Link to="/auth" target="_blank" rel="noopener noreferrer" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 text-xs font-semibold text-[#17232d] transition hover:border-[#d4aa19] sm:text-sm"><MonitorSmartphone className="size-4" /> Ingresar</Link>
+            <Link to="/auth" target="_blank" rel="noopener noreferrer" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 sm:px-4 text-xs font-semibold text-[#17232d] transition hover:border-[#d4aa19] sm:text-sm"><MonitorSmartphone className="size-4" /> Ingresar</Link>
+            <button
+              type="button"
+              onClick={() => setMenuMovilAbierto((abierto) => !abierto)}
+              className="inline-flex size-10 items-center justify-center rounded-xl border border-slate-300 bg-white text-[#17232d] shadow-sm transition hover:border-[#d4aa19] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19] lg:hidden"
+              aria-label={menuMovilAbierto ? "Cerrar menú" : "Abrir menú"}
+              aria-expanded={menuMovilAbierto}
+              aria-controls="menu-principal-movil"
+            >
+              {menuMovilAbierto ? <X className="size-5" aria-hidden="true" /> : <Menu className="size-5" aria-hidden="true" />}
+            </button>
           </div>
         </div>
+        {menuMovilAbierto && (
+          <nav id="menu-principal-movil" className="border-t border-slate-200 bg-white px-5 py-3 shadow-lg lg:hidden" aria-label="Navegación móvil">
+            <div className="mx-auto grid max-w-[1440px] gap-1">
+              <Link to="/" onClick={() => setMenuMovilAbierto(false)} className="rounded-lg px-3 py-3 text-sm font-medium text-slate-700 transition hover:bg-amber-50 hover:text-[#8f6b00]">Inicio</Link>
+              <a href="#soluciones" onClick={() => setMenuMovilAbierto(false)} className="rounded-lg px-3 py-3 text-sm font-medium text-slate-700 transition hover:bg-amber-50 hover:text-[#8f6b00]">Soluciones</a>
+              <Link to="/herramientas-publicas" onClick={() => setMenuMovilAbierto(false)} className="rounded-lg px-3 py-3 text-sm font-medium text-slate-700 transition hover:bg-amber-50 hover:text-[#8f6b00]">Herramientas</Link>
+              <a href="#como-funciona" onClick={() => setMenuMovilAbierto(false)} className="rounded-lg px-3 py-3 text-sm font-medium text-slate-700 transition hover:bg-amber-50 hover:text-[#8f6b00]">Cómo funciona</a>
+              <Link to="/guias" onClick={() => setMenuMovilAbierto(false)} className="rounded-lg px-3 py-3 text-sm font-medium text-slate-700 transition hover:bg-amber-50 hover:text-[#8f6b00]">Guías técnicas</Link>
+              <Link to="/comunidad" onClick={() => setMenuMovilAbierto(false)} className="rounded-lg px-3 py-3 text-sm font-medium text-slate-700 transition hover:bg-amber-50 hover:text-[#8f6b00]">Comunidad</Link>
+              <a href="#contacto" onClick={() => setMenuMovilAbierto(false)} className="rounded-lg px-3 py-3 text-sm font-medium text-slate-700 transition hover:bg-amber-50 hover:text-[#8f6b00]">Contacto</a>
+            </div>
+          </nav>
+        )}
       </header>
 
       <section id="contenido-principal" className="relative isolate scroll-mt-24 overflow-hidden">
