@@ -494,7 +494,7 @@ export function AppShell({
       ) : null}
 
       <main
-        className={`min-w-0 flex-1 overflow-y-auto px-3 py-4 pb-8 sm:px-5 lg:p-8 xl:p-10 ${pathname === "/inicio" ? "bg-[#F6F4EF]" : ""} ${modoAulaExpandida ? "min-h-0 !overflow-hidden !p-0" : ""} ${
+        className={`min-w-0 flex-1 overflow-y-auto px-3 py-4 pb-8 sm:px-5 lg:p-8 xl:p-10 ${modoAulaExpandida ? "min-h-0 !overflow-hidden !p-0" : ""} ${
           encabezadoMovilCompacto ? "max-lg:px-3 max-lg:pt-0 max-lg:pb-5" : ""
         }`}
       >
