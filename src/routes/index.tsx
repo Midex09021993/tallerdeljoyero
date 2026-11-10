@@ -89,6 +89,19 @@ function formatoSoles(valor: number) {
 
 function PlanesPublicos() {
   const [periodicidad, setPeriodicidad] = useState<"mensual" | "trimestral" | "anual">("mensual");
+  const { data: cuotasPlanes, isLoading: cargandoCuotas, isError: errorCuotas } = useQuery({
+    queryKey: ["planes-comerciales-publicos"],
+    queryFn: async () => {
+      const { data, error } = await supabasePublic
+        .from("aurum_plan_quotas")
+        .select("plan_id,operaciones_comerciales_mes,almacenamiento_mib,productos_catalogo_max,carpetas_mi_nube_max");
+      if (error) throw error;
+      return data ?? [];
+    },
+    staleTime: 15_000,
+    refetchOnWindowFocus: true,
+    retry: 1,
+  });
   const [planCapacidadesAbierto, setPlanCapacidadesAbierto] = useState<string | null>(null);
   const periodos = {
     mensual: { etiqueta: "Mensual", meses: 1, descuento: 0 },
@@ -98,25 +111,25 @@ function PlanesPublicos() {
   const periodo = periodos[periodicidad];
   const planes = [
     {
-      nombre: "Emprendedor", precioMensual: 0, gratis: true,
+      id: "emprendedor", nombre: "Emprendedor", precioMensual: 0, gratis: true,
       descripcion: "Usa herramientas básicas para tu taller.",
       funciones: ["Calculadoras y herramientas técnicas", "Visor 3D público", "Explora antes de crecer"],
       destacado: false, accion: "Explorar herramientas", href: "/herramientas-publicas" as const,
     },
     {
-      nombre: "Taller", precioMensual: 29, gratis: false,
+      id: "taller", nombre: "Taller", precioMensual: 29, gratis: false,
       descripcion: "Organiza las tareas diarias de tu taller.",
       funciones: ["Clientes y cotizaciones", "Pedidos, ventas y contratos", "Catálogo digital", "Mi Nube y archivos", "Herramientas de diseño y gestión con capacidad limitada"],
       destacado: false, accion: "Acceder a la plataforma", href: "/auth" as const,
     },
     {
-      nombre: "Profesional", precioMensual: 79, gratis: false,
+      id: "profesional", nombre: "Profesional", precioMensual: 79, gratis: false,
       descripcion: "Incluye el plan Taller y ofrece más capacidad.",
       funciones: ["Incluye todo lo que ofrece el plan Taller", "Más espacio para clientes y operaciones", "Más espacio para archivos y catálogo", "Más uso de las herramientas de diseño y gestión"],
       destacado: true, accion: "Acceder a la plataforma", href: "/auth" as const,
     },
     {
-      nombre: "Empresarial", precioMensual: null, gratis: false,
+      id: "empresarial", nombre: "Empresarial", precioMensual: null, gratis: false,
       descripcion: "Para talleres y equipos en expansión.",
       funciones: ["Configuración para equipos", "Organización de varias sedes", "Capacidades por taller", "Acompañamiento para definir necesidades"],
       destacado: false, accion: "Consultar solución", href: "/auth" as const,
@@ -161,18 +174,20 @@ function PlanesPublicos() {
                 {plan.accion} <ArrowRight className="size-3.5" />
               </Link>
               {planCapacidadesAbierto === plan.nombre && (() => {
-                const capacidades = {
-                  Emprendedor: { productos: 10, operaciones: 10, almacenamiento: 1, carpetas: 10 },
-                  Taller: { productos: 50, operaciones: 50, almacenamiento: 5, carpetas: 50 },
-                  Profesional: { productos: 1000, operaciones: 1500, almacenamiento: 100, carpetas: 200 },
-                  Empresarial: { productos: -1, operaciones: -1, almacenamiento: -1, carpetas: -1 },
-                }[plan.nombre as "Emprendedor" | "Taller" | "Profesional" | "Empresarial"];
-                if (!capacidades) return null;
+                const cuota = cuotasPlanes?.find((item) => item.plan_id === plan.id);
+                const formatoLimite = (value: number | null | undefined) =>
+                  value == null ? (cargandoCuotas ? "Cargando…" : errorCuotas ? "No disponible" : "—")
+                    : value < 0 ? "Sin límite" : value.toLocaleString("es-PE");
+                const formatoAlmacenamiento = (mib: number | null | undefined) =>
+                  mib == null ? (cargandoCuotas ? "Cargando…" : errorCuotas ? "No disponible" : "—")
+                    : mib < 0 ? "Sin límite"
+                    : mib >= 1024 ? Number((mib / 1024).toFixed(2)).toLocaleString("es-PE") + " GB"
+                    : mib + " MB";
                 const campos = [
-                  { label: "Productos catálogo", value: capacidades.productos },
-                  { label: "Operaciones/mes", value: capacidades.operaciones },
-                  { label: "Almacenamiento (GB)", value: capacidades.almacenamiento },
-                  { label: "Carpetas Mi Nube", value: capacidades.carpetas },
+                  { label: "Productos catálogo", value: formatoLimite(cuota?.productos_catalogo_max) },
+                  { label: "Operaciones/mes", value: formatoLimite(cuota?.operaciones_comerciales_mes) },
+                  { label: "Almacenamiento", value: formatoAlmacenamiento(cuota?.almacenamiento_mib) },
+                  { label: "Carpetas Mi Nube", value: formatoLimite(cuota?.carpetas_mi_nube_max) },
                 ];
                 return <div className="absolute inset-0 z-20 flex flex-col overflow-y-auto rounded-2xl border border-[#d4aa19] bg-white p-5 shadow-xl sm:p-6" role="dialog" aria-modal="false" aria-labelledby={"capacidades-plan-title-" + plan.nombre}>
                   <div className="flex items-start justify-between gap-3">
@@ -180,7 +195,7 @@ function PlanesPublicos() {
                     <button type="button" onClick={event => { event.stopPropagation(); setPlanCapacidadesAbierto(null); }} aria-label="Cerrar capacidades" className="shrink-0 rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"><X className="size-5" /></button>
                   </div>
                   <div className="mt-5 grid flex-1 content-start grid-cols-2 gap-3">
-                    {campos.map(campo => <div key={campo.label} className="rounded-xl border border-slate-200 bg-white p-3"><p className="text-[10px] leading-4 text-slate-500">{campo.label}</p><p className="mt-1 text-2xl font-semibold tabular-nums text-[#17232d]">{campo.value < 0 ? "Sin límite" : campo.value}</p></div>)}
+                    {campos.map(campo => <div key={campo.label} className="rounded-xl border border-slate-200 bg-white p-3"><p className="text-[10px] leading-4 text-slate-500">{campo.label}</p><p className="mt-1 text-2xl font-semibold tabular-nums text-[#17232d]">{campo.value}</p></div>)}
                   </div>
                   <div className="mt-4 flex justify-end"><button type="button" onClick={event => { event.stopPropagation(); setPlanCapacidadesAbierto(null); }} className="rounded-xl bg-[#17232d] px-5 py-2.5 text-xs font-bold text-white transition hover:bg-[#293b49]">Volver al plan</button></div>
                 </div>;
