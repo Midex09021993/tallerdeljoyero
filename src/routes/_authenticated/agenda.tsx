@@ -37,7 +37,7 @@ function fechaLocal(date: Date) {
 function AgendaPage() {
   const { data: sesion } = useSesion();
   const qc = useQueryClient();
-  const esAdministrador = Boolean(sesion?.esDueno);
+  const esAdministrador = Boolean(sesion?.esDueno && (sesion.participante?.nombre.trim().toLocaleLowerCase("es") === "fadilab" || sesion.participantes.some((p) => p.nombre.trim().toLocaleLowerCase("es") === "fadilab")));
   const [horarioSeleccionado, setHorarioSeleccionado] = useState("");
   const [tema, setTema] = useState(temas[0]);
   const [descripcion, setDescripcion] = useState("");
@@ -106,7 +106,7 @@ function AgendaPage() {
   const misReservas = useMemo(() => (reservas.data ?? []).filter((r) => esAdministrador || r.solicitante_id === sesion?.user.id), [reservas.data, esAdministrador, sesion?.user.id]);
   const reservasFiltradas = misReservas.filter((r) => filtro === "todas" || r.estado === filtro);
   const horariosFuturos = (horarios.data ?? []).filter((h) => new Date(h.inicio_at) > new Date());
-  const slotsDia = horariosFuturos.filter((h) => h.inicio_at.slice(0, 10) === fecha);
+  const slotsDia = horariosFuturos.filter((h) => new Date(h.inicio_at).toLocaleDateString("en-CA") === fecha);
 
   return (
     <AppShell titulo="Agenda" subtitulo="Reserva y administra asesorías de AURUM LAB" atrasMovil={{ to: "/inicio" }}>
@@ -134,7 +134,8 @@ function AgendaPage() {
               <div className="flex items-center gap-2"><CalendarDays className="size-5 text-gold-deep" /><h2 className="text-lg font-semibold">Reservar asesoría</h2></div>
               <p className="mt-1 text-sm text-muted-foreground">Elige uno de los horarios publicados por administración.</p>
               <label className="mt-4 block text-xs font-semibold text-muted-foreground">Tema de la asesoría<select value={tema} onChange={(e) => setTema(e.target.value)} className="mt-1.5 w-full rounded-xl border bg-background px-3 py-2.5 text-sm text-foreground">{temas.map((t) => <option key={t}>{t}</option>)}</select></label>
-              <label className="mt-3 block text-xs font-semibold text-muted-foreground">Fecha disponible<select value={horarioSeleccionado} onChange={(e) => setHorarioSeleccionado(e.target.value)} className="mt-1.5 w-full rounded-xl border bg-background px-3 py-2.5 text-sm text-foreground"><option value="">Selecciona fecha y hora</option>{horariosFuturos.map((h) => <option key={h.id} value={h.id}>{fechaHora(h.inicio_at)} – {new Date(h.fin_at).toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" })}</option>)}</select></label>
+              <label className="mt-3 block text-xs font-semibold text-muted-foreground">Fecha disponible<input type="date" min={new Date().toLocaleDateString("en-CA")} value={fecha} onChange={(e) => { setFecha(e.target.value); setHorarioSeleccionado(""); }} className="mt-1.5 w-full rounded-xl border bg-background px-3 py-2.5 text-sm text-foreground" /></label>
+              <label className="mt-3 block text-xs font-semibold text-muted-foreground">Hora disponible<select value={horarioSeleccionado} onChange={(e) => setHorarioSeleccionado(e.target.value)} className="mt-1.5 w-full rounded-xl border bg-background px-3 py-2.5 text-sm text-foreground"><option value="">Selecciona una hora</option>{slotsDia.map((h) => <option key={h.id} value={h.id}>{new Date(h.inicio_at).toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" })} – {new Date(h.fin_at).toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" })}</option>)}</select></label>
               <label className="mt-3 block text-xs font-semibold text-muted-foreground">Cuéntanos qué necesitas (opcional)<textarea value={descripcion} onChange={(e) => setDescripcion(e.target.value)} maxLength={1000} rows={3} placeholder="Describe brevemente tu consulta…" className="mt-1.5 w-full resize-y rounded-xl border bg-background px-3 py-2.5 text-sm text-foreground" /></label>
               <button type="button" disabled={!horarioSeleccionado || reservar.isPending} onClick={() => reservar.mutate()} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-ink-foreground disabled:opacity-40"><CalendarCheck className="size-4" /> Solicitar asesoría</button>
               {horarios.isLoading ? <p className="mt-3 text-xs text-muted-foreground">Cargando disponibilidad…</p> : null}
