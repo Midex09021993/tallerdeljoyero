@@ -510,7 +510,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
             <div className="sm:col-span-2"><p className="text-[10px] font-bold uppercase tracking-[.18em] text-gold">Identidad</p><p className="mt-1 text-xs text-muted-foreground">Datos que identifican la pieza en el catálogo.</p></div>
             <label className="grid gap-1.5 text-xs font-semibold">Código
               <input value={form.codigo} readOnly className={`${input} bg-surface-muted font-mono font-semibold text-muted-foreground`} placeholder="Se genera automáticamente" />
-              <span className="text-[10px] font-normal text-muted-foreground">{producto ? "Código permanente." : "Se asignará automáticamente al crearla."}</span>
+              {producto ? <span className="text-[10px] font-normal text-muted-foreground">Código permanente.</span> : null}
             </label>
             <label className="grid gap-1.5 text-xs font-semibold">Nombre<input required value={form.nombre} onChange={(e) => setForm(v => ({ ...v, nombre: e.target.value, slug: slugify(e.target.value) }))} className={input} placeholder="Anillo Aura" /></label>
             <div className="grid min-w-0 gap-3 sm:grid-cols-2 sm:col-span-2">
