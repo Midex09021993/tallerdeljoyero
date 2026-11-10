@@ -116,6 +116,7 @@ function slugify(value: string) {
 }
 
 export function CatalogoModeloDialog({ open, producto, participanteId, categorias, onClose, onSaved, initialImageUrl, initialName, initialProject, initialPdf }: Props) {
+  const [monedaConfigurada, setMonedaConfigurada] = useState("PEN");
   const [form, setForm] = useState({
     codigo: "", nombre: "", slug: "", categoria: CATEGORIAS_PREDETERMINADAS[0] as string, descripcion: "",
     imagen_principal_url: "", galeria: "", video_url: "", aurum_render_url: "",
@@ -209,7 +210,25 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
         }
       })();
     }
-  }, [open, producto, categorias, initialProject, initialPdf, initialImageUrl, initialName]);
+    void (async () => {
+      const { data, error } = await supabase
+        .from("identidades_comerciales")
+        .select("moneda_codigo")
+        .eq("participante_id", participanteId)
+        .eq("activa", true)
+        .limit(1)
+        .maybeSingle();
+      if (error) {
+        console.warn("[Catálogo] No se pudo leer la moneda configurada para el taller.", error.message);
+        return;
+      }
+      const moneda = (data?.moneda_codigo || "PEN").trim().toUpperCase();
+      if (/^[A-Z]{3}$/.test(moneda)) {
+        setMonedaConfigurada(moneda);
+        setForm(actual => ({ ...actual, moneda: producto?.moneda || moneda }));
+      }
+    })();
+  }, [open, producto, categorias, initialProject, initialPdf, initialImageUrl, initialName, participanteId]);
 
   useEffect(() => {
     if (!open || !participanteId || !form.categoria) {
@@ -567,7 +586,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
           <section className="grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2"><p className="text-[10px] font-bold uppercase tracking-[.18em] text-gold">Comercial</p></div>
             <label className="grid gap-1.5 text-xs font-semibold">Precio desde<input type="number" min="0" step="0.01" value={form.precio_desde} onChange={(e) => setForm(v => ({ ...v, precio_desde: e.target.value }))} className={input} placeholder="Dejar vacío = Consultar" /></label>
-            <label className="grid gap-1.5 text-xs font-semibold">Moneda<input maxLength={3} value={form.moneda} onChange={(e) => setForm(v => ({ ...v, moneda: e.target.value.toUpperCase() }))} className={input} /></label>
+            <label className="grid gap-1.5 text-xs font-semibold">Moneda<input value={form.moneda || monedaConfigurada} readOnly className={`${input} bg-surface-muted text-muted-foreground`} /><span className="text-[10px] font-normal text-muted-foreground">Según el país y la moneda configurados en la identidad del taller.</span></label>
             <div className="grid gap-3 rounded-2xl border border-gold/25 bg-gold/5 p-4 sm:col-span-2">
               <div>
                 <p className="text-sm font-semibold">Calculadora de precio para joyeros</p>
