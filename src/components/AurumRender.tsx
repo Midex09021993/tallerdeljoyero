@@ -4032,31 +4032,18 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               {!presentationCover && <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_43%,rgba(255,255,255,.35)_0%,transparent_54%)]" />}
               <div className="absolute inset-0 flex items-center justify-center px-6">
                 <div className={"flex w-full max-w-sm flex-col items-center text-center "+(presentationCover?"opacity-0":"opacity-100")}>
-                  <div className="relative mb-9 grid size-[220px] place-items-center">
-                    <div className="absolute inset-[12px] rounded-full bg-[radial-gradient(circle,rgba(255,226,157,.52)_0%,rgba(220,184,104,.22)_38%,rgba(220,184,104,0)_72%)] blur-xl animate-pulse [animation-duration:3.2s]" />
-                    <div className="absolute inset-0 rounded-full bg-[conic-gradient(from_20deg,transparent_0deg,rgba(224,190,112,.0)_35deg,rgba(224,190,112,.5)_75deg,transparent_112deg,transparent_205deg,rgba(224,190,112,.38)_250deg,transparent_290deg)] blur-md animate-spin [animation-duration:9s]" />
-                    <div className="absolute inset-[3px] rounded-full border border-[#c8a45b]/35 shadow-[0_0_22px_rgba(210,174,91,.18),inset_0_0_18px_rgba(210,174,91,.08)]" />
-                    <div className="absolute inset-[9px] animate-spin rounded-full border-[3px] border-transparent border-t-[#a87925] border-r-[#f1d994] shadow-[0_0_12px_rgba(208,170,83,.42)] [animation-duration:4.8s]" />
-                    <div className="absolute inset-[19px] animate-[spin_13s_linear_infinite_reverse] rounded-full border border-dashed border-[#b99642]/55" />
-                    <div className="absolute inset-[29px] animate-spin rounded-full border-[4px] border-transparent border-b-[#d6ad55] border-l-[#f5dfaa] shadow-[0_0_14px_rgba(218,183,105,.38)] [animation-duration:7s]" />
-                    <div className="absolute inset-[38px] rounded-full border border-[#b99642]/40 bg-white/80 shadow-[0_0_34px_rgba(220,184,104,.28),inset_0_0_22px_rgba(226,199,139,.2)] backdrop-blur-md" />
-                    <div className="relative grid size-[88px] place-items-center rounded-full border border-[#c9a65e]/55 bg-[radial-gradient(circle_at_35%_25%,#ffffff_0%,#fffdf7_48%,#ead9b3_100%)] shadow-[0_12px_34px_rgba(123,91,31,.22),0_0_28px_rgba(229,194,112,.36),inset_0_2px_8px_rgba(255,255,255,.98)]">
-                      <img
-                        src="/brand/aurum-symbol.svg"
-                        alt=""
-                        aria-hidden="true"
-                        width="68"
-                        height="68"
-                        className="size-[68px] object-contain drop-shadow-[0_3px_7px_rgba(161,112,27,.38)]"
-                      />
+                  <div className="relative mb-7 grid size-[92px] place-items-center">
+                    <div className="absolute inset-0 rounded-full bg-[#d8bd7c]/20 blur-2xl" />
+                    <div className="absolute inset-0 rounded-full border border-[#c8a45b]/25" />
+                    <div className="absolute inset-[-5px] animate-spin rounded-full border border-transparent border-t-[#b99642] [animation-duration:2.8s]" />
+                    <div className="relative grid size-[76px] place-items-center rounded-full border border-[#c9a65e]/35 bg-white shadow-[0_8px_24px_rgba(123,91,31,.10)]">
+                      <img src="/brand/aurum-symbol.svg" alt="" aria-hidden="true" width="54" height="54" className="size-[54px] object-contain" />
                     </div>
-                    <span className="absolute left-1/2 top-[2px] h-2 w-2 -translate-x-1/2 rounded-full bg-[#e6c36e] shadow-[0_0_12px_4px_rgba(226,190,99,.78)]" />
-                    <span className="absolute bottom-[18px] right-[19px] h-1.5 w-1.5 rounded-full bg-[#e6c36e] shadow-[0_0_11px_4px_rgba(226,190,99,.72)]" />
-                    <span className="absolute bottom-[40px] left-[8px] h-1 w-1 rounded-full bg-[#d3aa55] shadow-[0_0_9px_3px_rgba(211,170,85,.65)]" />
                   </div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[.34em] text-[#a18443]">AURUM RENDER · ESTUDIO DIGITAL</p>
-                  <h2 className="mt-3 text-xl font-semibold tracking-[-.025em] text-[#292824] sm:text-2xl">{estadoCarga}</h2>
-                  <div className="mt-8 h-[3px] w-40 overflow-hidden rounded-full bg-[#e7e3da]">
+                  <p className="text-[10px] font-semibold uppercase tracking-[.24em] text-[#a18443]">AURUM RENDER</p>
+
+                  <h2 className="mt-3 text-lg font-medium tracking-[-.02em] text-[#292824] sm:text-xl">{estadoCarga}</h2>
+                  <div className="mt-7 h-[2px] w-32 overflow-hidden rounded-full bg-[#e7e3da]">
                     <div className="h-full w-2/5 animate-pulse rounded-full bg-gradient-to-r from-[#b99642] via-[#e4cb83] to-[#b99642]" />
                   </div>
                 </div>
