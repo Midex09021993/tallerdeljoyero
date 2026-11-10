@@ -501,7 +501,8 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
                 </select>
                 <span className="text-[10px] font-normal text-muted-foreground">Categoría principal de la joya.</span>
               </label>
-              <label className="grid min-w-0 gap-1.5 text-xs font-semibold">Subcategoría <span className="font-normal text-muted-foreground">(opcional)</span>
+              <label className="grid min-w-0 gap-1.5 text-xs font-semibold">
+                <span>Subcategoría <span className="font-normal text-muted-foreground">(opcional)</span></span>
                 <select value={subcategoria} onChange={(e) => setSubcategoria(e.target.value)} disabled={cargandoSubcategorias || subcategorias.length === 0} className={input}>
                   <option value="">{cargandoSubcategorias ? "Cargando subcategorías…" : subcategorias.length ? "Sin subcategoría" : "No hay subcategorías disponibles"}</option>
                   {subcategorias.map((item) => <option key={item.id} value={item.nombre}>{item.nombre}</option>)}
