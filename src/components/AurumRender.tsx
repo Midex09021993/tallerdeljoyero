@@ -2612,38 +2612,64 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               },
             });
             if (!transparent) {
-              // Compose the selected CSS backdrop before drawing the WebGL canvas.
-              const backdrop = window.getComputedStyle(nodo);
-              const bgColor = backdrop.backgroundColor || "#ffffff";
-              const bgImage = backdrop.backgroundImage || "none";
-              context.fillStyle = bgColor === "transparent" || bgColor === "rgba(0, 0, 0, 0)" ? "#ffffff" : bgColor;
+              // Export from the scene controller's source-of-truth descriptor.
+              // Do not read computed CSS: its serialization is browser-dependent
+              // and the renderer effect can outlive the React state that selected it.
+              const selectedBackground = sceneController.getBackground();
+              const backgroundColor = selectedBackground.color ?? "#ffffff";
+              context.fillStyle = backgroundColor === "transparent" ? "#ffffff" : backgroundColor;
               context.fillRect(0, 0, width, height);
-              if (fondoId === "auroraBlue" || (bgImage !== "none" && bgImage.includes("gradient"))) {
-                if (fondoId === "auroraBlue") {
-                  const base = context.createLinearGradient(0, 0, width, height);
-                  base.addColorStop(0, "#f2b5a7"); base.addColorStop(.42, "#b7b1d3"); base.addColorStop(.68, "#7399d0"); base.addColorStop(1, "#0751a8");
-                  context.fillStyle = base; context.fillRect(0, 0, width, height);
-                  const glowA = context.createRadialGradient(0, height * .28, 0, 0, height * .28, width * .62);
-                  glowA.addColorStop(0, "rgba(255,151,111,.98)"); glowA.addColorStop(.42, "rgba(255,181,157,.72)"); glowA.addColorStop(1, "rgba(255,181,157,0)");
-                  context.fillStyle = glowA; context.fillRect(0, 0, width, height);
-                  const glowB = context.createRadialGradient(width, height, 0, width, height, width * .72);
-                  glowB.addColorStop(0, "rgba(0,65,164,.98)"); glowB.addColorStop(.48, "rgba(30,104,202,.78)"); glowB.addColorStop(1, "rgba(30,104,202,0)");
-                  context.fillStyle = glowB; context.fillRect(0, 0, width, height);
-                } else {
-                  const gradient = context.createLinearGradient(0, 0, width, height);
-                  gradient.addColorStop(0, "#ffffff"); gradient.addColorStop(.48, "#eeeeec"); gradient.addColorStop(1, "#bfc1c0");
-                  context.fillStyle = gradient; context.fillRect(0, 0, width, height);
-                }
-              } else if (bgImage.startsWith("url(")) {
-                const imageUrl = bgImage.slice(5, -2);
+
+              if (selectedBackground.id === "auroraBlue") {
+                // Match the three CSS layers used by the live Aurora Blue backdrop.
+                const base = context.createLinearGradient(0, 0, width, height);
+                base.addColorStop(0, "#f2b5a7");
+                base.addColorStop(0.38, "#b7b1d3");
+                base.addColorStop(0.68, "#7399d0");
+                base.addColorStop(1, "#0751a8");
+                context.fillStyle = base;
+                context.fillRect(0, 0, width, height);
+
+                const glowA = context.createRadialGradient(0, height * 0.28, 0, 0, height * 0.28, Math.max(width * 0.42, height * 0.70));
+                glowA.addColorStop(0, "rgba(255,151,111,.98)");
+                glowA.addColorStop(0.42, "rgba(255,181,157,.72)");
+                glowA.addColorStop(1, "rgba(255,181,157,0)");
+                context.fillStyle = glowA;
+                context.fillRect(0, 0, width, height);
+
+                const glowB = context.createRadialGradient(width, height, 0, width, height, Math.max(width * 0.58, height * 0.90));
+                glowB.addColorStop(0, "rgba(0,65,164,.98)");
+                glowB.addColorStop(0.48, "rgba(30,104,202,.78)");
+                glowB.addColorStop(1, "rgba(30,104,202,0)");
+                context.fillStyle = glowB;
+                context.fillRect(0, 0, width, height);
+              } else if (selectedBackground.id === "degradadoGrisBlanco") {
+                const gradient = context.createLinearGradient(0, 0, width, height);
+                gradient.addColorStop(0, "#ffffff");
+                gradient.addColorStop(0.48, "#eeeeec");
+                gradient.addColorStop(1, "#bfc1c0");
+                context.fillStyle = gradient;
+                context.fillRect(0, 0, width, height);
+              } else if (selectedBackground.id === "estudioFotografico" && selectedBackground.image) {
                 const backgroundImage = new Image();
                 backgroundImage.crossOrigin = "anonymous";
-                backgroundImage.src = imageUrl;
-                await new Promise<void>((resolve, reject) => {
-                  if (backgroundImage.complete && backgroundImage.naturalWidth > 0) { resolve(); return; }
-                  backgroundImage.onload = () => resolve();
-                  backgroundImage.onerror = () => reject(new Error("No se pudo cargar el fondo fotográfico para la exportación. Comprueba la conexión o el permiso CORS de la imagen."));
-                });
+                backgroundImage.decoding = "async";
+                backgroundImage.src = selectedBackground.image;
+                try {
+                  if (typeof backgroundImage.decode === "function") {
+                    await backgroundImage.decode();
+                  } else {
+                    await new Promise<void>((resolve, reject) => {
+                      backgroundImage.onload = () => resolve();
+                      backgroundImage.onerror = () => reject(new Error("No se pudo cargar la fotografía de Estudio fotográfico."));
+                    });
+                  }
+                } catch {
+                  throw new Error("No se pudo incorporar la fotografía de Estudio fotográfico. El servidor externo debe permitir CORS para exportar imágenes; el visor puede mostrarla aunque el navegador bloquee su uso en Canvas.");
+                }
+                if (!backgroundImage.naturalWidth || !backgroundImage.naturalHeight) {
+                  throw new Error("La fotografía de Estudio fotográfico no devolvió una imagen válida.");
+                }
                 const scale = Math.max(width / backgroundImage.naturalWidth, height / backgroundImage.naturalHeight);
                 const drawWidth = backgroundImage.naturalWidth * scale;
                 const drawHeight = backgroundImage.naturalHeight * scale;
