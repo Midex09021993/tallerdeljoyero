@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { CalculadoraAleacionOro } from "@/components/CalculadoraAleacionOro";
 import { ConversorTallasAnillo } from "@/components/ConversorTallasAnillo";
 import { AppShell } from "@/components/AppShell";
-import { ArrowLeft, ChevronLeft, ChevronRight, Calculator, Gem, Ruler, ScanLine, Scale, Send, CircleDot, Download, Sparkles } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Calculator, Gem, Ruler, Scale, Send, CircleDot, Sparkles } from "lucide-react";
 import { VisorPesoJoyeria } from "@/components/VisorPesoJoyeria";
 import { CalculadoraYeso } from "@/components/CalculadoraYesoAgua";
 import { CalculadoraPesoGemas } from "@/components/CalculadoraPesoGemas";
@@ -135,12 +135,6 @@ function HerramientasPage() {
             >
               <Send className="size-4 text-gold" /> Aurum Transfer
             </Link>
-            <Link
-              to="/aurum-render-plugin"
-              className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border border-border px-3.5 text-sm font-medium text-muted-foreground transition hover:border-gold/50 hover:text-foreground"
-            >
-              <Download className="size-4 text-gold" /> Complemento Rhino
-            </Link>
             {opciones.map(({ id, titulo, Icono }) => (
               <button
                 key={id}
@@ -158,12 +152,6 @@ function HerramientasPage() {
                 {titulo}
               </button>
             ))}
-            <Link
-              to="/vectorizador-laser"
-              className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border border-border px-3.5 text-sm font-medium text-muted-foreground transition hover:border-gold/50 hover:text-foreground"
-            >
-              <ScanLine className="size-4 text-gold" /> Vectorizador láser
-            </Link>
           </div>
           <button type="button" onClick={() => desplazarBarra(1)} aria-label="Desplazar herramientas a la derecha" className="absolute right-2 top-1/2 z-10 grid size-8 -translate-y-1/2 place-items-center rounded-full border border-border bg-card/95 text-foreground shadow-md backdrop-blur transition hover:border-gold/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"><ChevronRight className="size-4" /></button>
         </section>
