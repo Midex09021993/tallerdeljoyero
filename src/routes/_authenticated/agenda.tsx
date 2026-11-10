@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { CalendarDays, Clock3, Video, Plus, CheckCircle2, XCircle, CalendarCheck, UserRound, Building2, RefreshCw } from "lucide-react";
+import { CalendarDays, Clock3, Video, Plus, CheckCircle2, XCircle, CalendarCheck, UserRound, Building2, RefreshCw, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +13,7 @@ export const Route = createFileRoute("/_authenticated/agenda")({
 });
 
 type Horario = { id: string; inicio_at: string; fin_at: string; zona_horaria: string; };
+type Evento = { id: string; titulo: string; tipo: "reunion" | "capacitacion" | "evento" | "bloqueo" | "vacaciones" | "otro"; descripcion: string | null; inicio_at: string; fin_at: string; todo_el_dia: boolean; };
 type Reserva = {
   id: string; horario_id: string; tema: string; descripcion: string | null; estado: "pendiente" | "confirmada" | "cancelada" | "realizada";
   enlace_reunion: string | null; nota_administrador: string | null; created_at: string; inicio_at: string; fin_at: string;
@@ -20,6 +21,7 @@ type Reserva = {
 };
 const db = supabase as any;
 const temas = ["Configuración inicial de la plataforma", "Gestión de clientes, cotizaciones y pedidos", "Catálogo digital y visor 3D", "AURUM RENDER y herramientas de diseño", "Mi Nube y archivos", "Capacitación general", "Otra consulta"];
+const tipoEventoLabel: Record<Evento["tipo"], string> = { reunion: "Reunión", capacitacion: "Capacitación", evento: "Evento", bloqueo: "Bloqueo", vacaciones: "Vacaciones", otro: "Otro" };
 const estadoLabel: Record<Reserva["estado"], string> = { pendiente: "Pendiente", confirmada: "Confirmada", cancelada: "Cancelada", realizada: "Realizada" };
 const estadoClass: Record<Reserva["estado"], string> = {
   pendiente: "border-amber-300 bg-amber-50 text-amber-800",
@@ -45,6 +47,15 @@ function AgendaPage() {
   const [horaInicio, setHoraInicio] = useState("10:00");
   const [horaFin, setHoraFin] = useState("10:30");
   const [filtro, setFiltro] = useState<"todas" | "pendiente" | "confirmada" | "realizada">("todas");
+  const [mesVisible, setMesVisible] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
+  const [fechaSeleccionada, setFechaSeleccionada] = useState(() => new Date().toLocaleDateString("en-CA"));
+  const [eventoTitulo, setEventoTitulo] = useState("");
+  const [eventoTipo, setEventoTipo] = useState<Evento["tipo"]>("reunion");
+  const [eventoDescripcion, setEventoDescripcion] = useState("");
+  const [eventoInicio, setEventoInicio] = useState("09:00");
+  const [eventoFin, setEventoFin] = useState("10:00");
+  const [mostrarFormularioEvento, setMostrarFormularioEvento] = useState(false);
+  const [mostrarPublicacionHorarios, setMostrarPublicacionHorarios] = useState(false);
 
   const horarios = useQuery<Horario[]>({
     queryKey: ["agenda-horarios"],
@@ -53,6 +64,17 @@ function AgendaPage() {
       const { data, error } = await db.rpc("agenda_listar_horarios");
       if (error) throw error;
       return (data ?? []) as Horario[];
+    },
+  });
+  const inicioMes = new Date(mesVisible.getFullYear(), mesVisible.getMonth(), 1);
+  const finMes = new Date(mesVisible.getFullYear(), mesVisible.getMonth() + 1, 1);
+  const eventos = useQuery<Evento[]>({
+    queryKey: ["agenda-eventos", mesVisible.getFullYear(), mesVisible.getMonth()],
+    enabled: Boolean(sesion?.user.id && esAdministrador),
+    queryFn: async () => {
+      const { data, error } = await db.rpc("agenda_listar_eventos", { _desde: inicioMes.toISOString(), _hasta: finMes.toISOString() });
+      if (error) throw error;
+      return (data ?? []) as Evento[];
     },
   });
   const reservas = useQuery<Reserva[]>({
@@ -68,6 +90,7 @@ function AgendaPage() {
     await Promise.all([
       qc.invalidateQueries({ queryKey: ["agenda-horarios"] }),
       qc.invalidateQueries({ queryKey: ["agenda-reservas"] }),
+      qc.invalidateQueries({ queryKey: ["agenda-eventos"] }),
     ]);
   };
   const reservar = useMutation({
@@ -88,6 +111,23 @@ function AgendaPage() {
     },
     onSuccess: async () => { toast.success("Horario publicado"); await invalidar(); },
     onError: (error: Error) => toast.error("No se pudo crear el horario", { description: error.message }),
+  });
+  const crearEvento = useMutation({
+    mutationFn: async () => {
+      const inicio = new Date(`${fechaSeleccionada}T${eventoInicio}:00`);
+      const fin = new Date(`${fechaSeleccionada}T${eventoFin}:00`);
+      if (eventoTitulo.trim().length < 3) throw new Error("Escribe un título de al menos 3 caracteres.");
+      if (!Number.isFinite(inicio.getTime()) || !Number.isFinite(fin.getTime()) || fin <= inicio || inicio <= new Date()) throw new Error("Selecciona un horario futuro y una hora final posterior.");
+      const { error } = await db.rpc("agenda_crear_evento", { _titulo: eventoTitulo.trim(), _tipo: eventoTipo, _descripcion: eventoDescripcion.trim() || null, _inicio_at: inicio.toISOString(), _fin_at: fin.toISOString(), _todo_el_dia: false });
+      if (error) throw error;
+    },
+    onSuccess: async () => { toast.success("Evento agregado al calendario", { description: "Ese bloque ya no estará disponible para asesorías." }); setEventoTitulo(""); setEventoDescripcion(""); setMostrarFormularioEvento(false); await invalidar(); },
+    onError: (error: Error) => toast.error("No se pudo agregar el evento", { description: error.message }),
+  });
+  const eliminarEvento = useMutation({
+    mutationFn: async (id: string) => { const { error } = await db.rpc("agenda_eliminar_evento", { _evento_id: id }); if (error) throw error; },
+    onSuccess: async () => { toast.success("Evento eliminado"); await invalidar(); },
+    onError: (error: Error) => toast.error("No se pudo eliminar el evento", { description: error.message }),
   });
   const actualizarReserva = useMutation({
     mutationFn: async ({ id, estado }: { id: string; estado: Reserva["estado"] }) => {
