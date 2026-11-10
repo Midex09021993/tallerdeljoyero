@@ -197,20 +197,20 @@ export function CatalogoProductoPublicoPage() {
 
   return (
     <main className="min-h-screen bg-[#f7f4ef] text-[#1f1b18]">
-      <header className="border-b border-[#1f1b1815] bg-[#f7f4ef]/95 px-5 py-5 backdrop-blur sm:px-8">
+      <header className="border-b border-[#1f1b1815] bg-[#f7f4ef]/95 px-5 py-3 backdrop-blur sm:px-8 sm:py-4">
         <div className="mx-auto flex max-w-[1720px] items-center justify-between gap-4 lg:px-2 2xl:px-4">
           <Link to="/$slug" params={{ slug }} className="inline-flex items-center gap-2 text-xs font-semibold"><ArrowLeft className="size-4" /> Volver al catálogo</Link>
           <button type="button" onClick={() => void navigator.share?.({ title: item.nombre || "", url: window.location.href })} className="inline-flex items-center gap-2 rounded-full border border-[#1f1b1820] px-3 py-2 text-xs font-semibold"><Share2 className="size-3.5" /> Compartir</button>
         </div>
       </header>
 
-      <section className="mx-auto grid w-full max-w-[1720px] gap-4 px-4 py-4 sm:px-6 lg:grid-cols-[minmax(0,1.12fr)_minmax(0,.88fr)] lg:gap-6 lg:px-8 lg:py-5 2xl:gap-10 2xl:px-12 2xl:py-8">
+      <section className="mx-auto grid w-full max-w-[1720px] gap-4 px-4 py-3 sm:px-6 lg:grid-cols-[minmax(0,1.12fr)_minmax(0,.88fr)] lg:gap-6 lg:px-8 lg:py-4 2xl:gap-10 2xl:px-12 2xl:py-8 [@media(min-width:1024px)_and_(max-height:850px)]:gap-4 [@media(min-width:1024px)_and_(max-height:850px)]:py-2">
         <div className="min-w-0">
           <div role="tabpanel" aria-label={vistaVisual === "fotos" ? "Fotografías del producto" : "Configurador 3D"} className="min-w-0">
             {vistaVisual === "fotos" ? <>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
                 {imagenesGaleria.length ? <div className="order-2 flex max-w-full gap-2 overflow-x-auto pb-1 sm:order-1 sm:w-[84px] sm:shrink-0 sm:flex-col sm:overflow-x-visible sm:overflow-y-auto sm:max-h-[68vh] sm:pr-1">{imagenesGaleria.slice(0, 8).map((url, index) => <button type="button" key={url + index} onClick={() => setImagenSeleccionada(url)} aria-label={index === 0 ? "Ver fotografía principal" : `Ver fotografía ${index + 1}`} aria-pressed={(imagenSeleccionada || item.imagen_principal_url) === url} className={"w-[72px] shrink-0 overflow-hidden rounded-xl border bg-white transition sm:w-full " + ((imagenSeleccionada || item.imagen_principal_url) === url ? "border-[#8a6b36] ring-2 ring-[#8a6b36]/20" : "border-transparent hover:border-[#d6c6a1]")}><img draggable={false} onContextMenu={(event) => event.preventDefault()} onDragStart={(event) => event.preventDefault()} src={url} alt={item.nombre + (index === 0 ? " fotografía principal" : " " + (index + 1))} className="aspect-square w-full object-contain" onError={(event) => { event.currentTarget.style.display = "none"; }} /></button>)}</div> : null}
-                <div className="group relative order-1 aspect-square w-full min-w-0 flex-1 overflow-hidden rounded-[24px] bg-white shadow-[0_20px_55px_-42px_rgba(31,27,24,.45)] ring-1 ring-[#1f1b1815] sm:order-2 sm:w-auto">
+                <div className="group relative order-1 aspect-square w-full min-w-0 flex-1 overflow-hidden rounded-[24px] bg-white shadow-[0_20px_55px_-42px_rgba(31,27,24,.45)] ring-1 ring-[#1f1b1815] sm:order-2 sm:w-auto [@media(min-width:1024px)_and_(max-height:850px)]:h-[min(68vh,620px)] [@media(min-width:1024px)_and_(max-height:850px)]:aspect-auto">
                   {(imagenSeleccionada || item.imagen_principal_url) ? <img draggable={false} onContextMenu={(event) => event.preventDefault()} onDragStart={(event) => event.preventDefault()} src={imagenSeleccionada || item.imagen_principal_url || ""} alt={item.nombre} className="size-full scale-[1.08] object-contain p-0 transition duration-300 sm:scale-[1.1] lg:scale-[1.12]" onError={(event) => { event.currentTarget.style.display = "none"; }} /> : <div className="grid size-full place-items-center"><Box className="size-14 text-[#8a6b36]" /></div>}
                 </div>
               </div>
@@ -218,11 +218,11 @@ export function CatalogoProductoPublicoPage() {
           </div>
         </div>
 
-        <div className="self-start">
+        <div className="self-start [@media(min-width:1024px)_and_(max-height:850px)]:-mt-1">
           <p className="text-[9px] font-bold uppercase tracking-[.2em] text-[#8a6b36]">{item.codigo} · {item.categoria}</p>
-          <h1 className="mt-2 font-display text-5xl tracking-tight">{item.nombre}</h1>
-          <p className="mt-5 text-sm leading-7 text-[#625b54]">{item.descripcion_producto || "Consulta al taller para conocer los detalles de esta pieza."}</p>
-          <div className="mt-4 flex items-end gap-3"><p className="text-2xl font-semibold tracking-tight">{precio}</p><span className="mb-1 text-[9px] font-bold uppercase tracking-[.18em] text-[#8a6b36]">Pieza de colección</span></div>
+          <h1 className="mt-1 font-display text-4xl tracking-tight">{item.nombre}</h1>
+          <p className="mt-3 text-sm leading-6 text-[#625b54] [@media(min-width:1024px)_and_(max-height:850px)]:mt-2 [@media(min-width:1024px)_and_(max-height:850px)]:leading-5">{item.descripcion_producto || "Consulta al taller para conocer los detalles de esta pieza."}</p>
+          <div className="mt-3 flex items-end gap-3 [@media(min-width:1024px)_and_(max-height:850px)]:mt-2"><p className="text-2xl font-semibold tracking-tight">{precio}</p><span className="mb-1 text-[9px] font-bold uppercase tracking-[.18em] text-[#8a6b36]">Pieza de colección</span></div>
 
           {item.mostrar_ficha_tecnica ? (
             <div className="mt-5 grid grid-cols-2 gap-2.5 rounded-2xl border border-[#1f1b1820] bg-white/70 p-3.5 text-xs">
@@ -242,12 +242,12 @@ export function CatalogoProductoPublicoPage() {
             </div>
           ) : null}
 
-          <div className="mt-8 rounded-[24px] border border-[#1f1b1818] bg-white/75 p-3 shadow-[0_20px_60px_-45px_rgba(31,27,24,.45)] backdrop-blur">
-            <button type="button" disabled={esNoDisponible} onClick={() => { setCompraAbierta(true); setAnadidoAlCarrito(false); setErrorCarrito(""); setTipoEnvio(esPorEncargo ? "fabricacion" : "rapido"); }} className="group flex w-full items-center justify-between rounded-[18px] border border-[#d8c49b] bg-[#f7f3ea] px-5 py-4 text-left text-[#3b3328] transition duration-300 hover:-translate-y-0.5 hover:bg-[#efe6d5] hover:shadow-[0_18px_40px_-20px_rgba(138,107,54,.18)] disabled:cursor-not-allowed disabled:opacity-50">
+          <div className="mt-6 rounded-[24px] border border-[#1f1b1818] bg-white/75 p-3 shadow-[0_20px_60px_-45px_rgba(31,27,24,.45)] backdrop-blur [@media(min-width:1024px)_and_(max-height:850px)]:mt-4 [@media(min-width:1024px)_and_(max-height:850px)]:p-2.5">
+            <button type="button" disabled={esNoDisponible} onClick={() => { setCompraAbierta(true); setAnadidoAlCarrito(false); setErrorCarrito(""); setTipoEnvio(esPorEncargo ? "fabricacion" : "rapido"); }} className="group flex w-full items-center justify-between rounded-[18px] border border-[#d8c49b] bg-[#f7f3ea] px-5 py-3 text-left text-[#3b3328] transition duration-300 hover:-translate-y-0.5 hover:bg-[#efe6d5] hover:shadow-[0_18px_40px_-20px_rgba(138,107,54,.18)] disabled:cursor-not-allowed disabled:opacity-50 [@media(min-width:1024px)_and_(max-height:850px)]:py-2.5">
               <span><span className="block text-[9px] font-bold uppercase tracking-[.2em] text-[#8a6b36]">Tu selección</span><span className="mt-1 block text-sm font-semibold">{esNoDisponible ? "No disponible" : "Añadir al carrito"}</span></span>
               <ShoppingBag className="size-4 text-[#d7b56d]" />
             </button>
-            <button type="button" onClick={() => { setSolicitudAbierta(true); setErrorSolicitud(""); }} className="mt-2 flex w-full items-center justify-between rounded-[18px] border border-[#1f1b1820] px-5 py-3.5 text-left transition hover:border-[#8a6b36]">
+            <button type="button" onClick={() => { setSolicitudAbierta(true); setErrorSolicitud(""); }} className="mt-2 flex w-full items-center justify-between rounded-[18px] border border-[#1f1b1820] px-5 py-3 text-left transition hover:border-[#8a6b36] [@media(min-width:1024px)_and_(max-height:850px)]:py-2.5">
               <span className="text-sm font-semibold">Solicitar cotización</span><MessageCircle className="size-4 text-[#8a6b36]" />
             </button>
             <div className="mt-2 flex flex-wrap gap-2 px-1 pb-1 pt-1">
