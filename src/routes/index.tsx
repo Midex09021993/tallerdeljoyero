@@ -99,6 +99,7 @@ function PlanesPublicos() {
       return data ?? [];
     },
     staleTime: 15_000,
+    refetchInterval: 30_000,
     refetchOnWindowFocus: true,
     retry: 1,
   });
