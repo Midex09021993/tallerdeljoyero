@@ -5,7 +5,7 @@ import {
   ClipboardList,
   Gauge,
   Landmark,
-  MessageCircle,
+  CalendarDays,
   LayoutDashboard,
   LayoutGrid,
   PackageCheck,
@@ -52,6 +52,7 @@ type Seccion = {
     | "/operario"
     | "/perfil"
     | "/mensajes"
+    | "/agenda"
     | "/aurum-render"
     | "/aurum-intelligence"
     | "/herramientas"
@@ -73,7 +74,7 @@ type AtrasMovil = false | { to?: string; onClick?: () => void };
 
 const secciones: Seccion[] = [
   { to: "/inicio", label: "Inicio", roles: ["dueno", "gerente"], icono: LayoutDashboard, grupo: "principal" },
-  { to: "/mensajes", label: "Mensajes", icono: MessageCircle, grupo: "principal" },
+  { to: "/agenda", label: "Agenda", roles: ["dueno", "gerente"], icono: CalendarDays, grupo: "principal" },
   { to: "/operario", label: "Mi trabajo", roles: ["operario"], icono: LayoutDashboard, grupo: "principal" },
   { to: "/pedidos", label: "Pedidos", area: "Pedidos", icono: ClipboardList, grupo: "comercial" },
   { to: "/cotizaciones", label: "Cotizaciones", icono: ClipboardList, grupo: "comercial" },
@@ -219,7 +220,7 @@ function seccionesVisibles(
     | undefined,
 ): Seccion[] {
   if (!roles) return [];
-  if (roles.includes("monitor")) return secciones.filter((s) => s.to === "/monitor" || s.to === "/mensajes");
+  if (roles.includes("monitor")) return secciones.filter((s) => s.to === "/monitor");
   // El monitor no es un área: solo es visible para usuarios con rol "monitor".
   if (esAdmin) {
     if (!capacidades) return secciones.filter((s) => !["/monitor", "/operario", "/perfil"].includes(s.to));
@@ -251,7 +252,7 @@ function seccionesVisibles(
   const inicio = secciones.filter(
     (s) =>
       s.to === "/operario" ||
-      s.to === "/mensajes" ||
+      s.to === "/agenda" ||
       (s.to === "/aula-formacion" && (roles.includes("gerente") || roles.includes("operario") || roles.includes("dueno"))) ||
       (s.to === "/servicios-externos" && Boolean(modalidades?.serviciosExternosActivos)),
   );
@@ -427,20 +428,6 @@ export function AppShell({
                           ? "border-[#C5A36B]/45 bg-[#C5A36B]/15 text-[#F5E5C4] shadow-[inset_3px_0_0_0_#C5A36B]"
                           : "border-transparent text-[#E0E5E9] hover:border-white/10 hover:bg-white/[0.07] hover:text-white"
                       }`;
-                      if (s.to === "/mensajes") {
-                        return (
-                          <div
-                            key={s.to}
-                            aria-disabled="true"
-                            title="Próximamente"
-                            className="flex min-h-11 cursor-not-allowed items-center gap-3 rounded-xl border border-transparent px-3.5 py-2.5 text-sm font-medium text-[#B8C2CC] opacity-60 xl:px-4"
-                          >
-                            {Icon ? <Icon className="size-4 shrink-0 opacity-70" /> : null}
-                            <span>{s.label}</span>
-                            <span className="ml-auto rounded-md border border-white/10 bg-white/[0.04] px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-[#B8C2CC]">Próximamente</span>
-                          </div>
-                        );
-                      }
                       if (s.to === "/herramientas") {
                         return (
                           <a key={s.to} href={s.to} className={clases} aria-current={activo ? "page" : undefined}>
@@ -581,20 +568,6 @@ export function AppShell({
                       <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
                         {items.map((s) => {
                           const Icon = s.icono;
-                          if (s.to === "/mensajes") {
-                            return (
-                              <div
-                                key={s.to}
-                                aria-disabled="true"
-                                title="Próximamente"
-                                className="flex min-h-11 cursor-not-allowed items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-foreground/35 opacity-60"
-                              >
-                                {Icon ? <Icon className="size-4 shrink-0" aria-hidden="true" /> : null}
-                                <span className="min-w-0">{s.label}</span>
-                                <span className="ml-auto rounded-md border border-current/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide">Próximamente</span>
-                              </div>
-                            );
-                          }
                           return (
                             <Link
                               key={s.to}
