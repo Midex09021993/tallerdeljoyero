@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-type PaisTelefono = { iso: string; nombre: string; prefijo: string; bandera: string };
+export type PaisTelefono = { iso: string; nombre: string; prefijo: string; bandera: string };
 
 export const PAISES_TELEFONO: PaisTelefono[] = [
   { iso: "PE", nombre: "Perú", prefijo: "51", bandera: "🇵🇪" },
