@@ -103,8 +103,9 @@ function AgendaPage() {
   });
   const crearHorario = useMutation({
     mutationFn: async () => {
-      const inicio = new Date(`${fecha}T${horaInicio}:00`);
-      const fin = new Date(`${fecha}T${horaFin}:00`);
+      const fechaBloque = esAdministrador ? fechaSeleccionada : fecha;
+      const inicio = new Date(`${fechaBloque}T${horaInicio}:00`);
+      const fin = new Date(`${fechaBloque}T${horaFin}:00`);
       if (!Number.isFinite(inicio.getTime()) || !Number.isFinite(fin.getTime()) || fin <= inicio || inicio <= new Date()) throw new Error("Selecciona una fecha futura y una hora final posterior a la inicial.");
       const { error } = await db.rpc("agenda_crear_horario", { _inicio_at: inicio.toISOString(), _fin_at: fin.toISOString(), _zona_horaria: Intl.DateTimeFormat().resolvedOptions().timeZone || "America/Lima" });
       if (error) throw error;
