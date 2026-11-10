@@ -328,9 +328,11 @@ function CatalogoPage() {
               <button type="button" onClick={() => setConfigAbierta(true)} className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3.5 py-2.5 text-xs font-semibold hover:border-gold/40">
                 <Settings className="size-4" /> Configurar catálogo público
               </button>
-              <button type="button" onClick={() => setCategoriasAbierta(true)} className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3.5 py-2.5 text-xs font-semibold hover:border-gold/40">
-                <Tags className="size-4" /> Categorías
-              </button>
+              {sesion?.esDueno ? (
+                <button type="button" onClick={() => setCategoriasAbierta(true)} className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3.5 py-2.5 text-xs font-semibold hover:border-gold/40">
+                  <Tags className="size-4" /> Categorías
+                </button>
+              ) : null}
               <button type="button" onClick={() => setColeccionesAbierta(true)} className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3.5 py-2.5 text-xs font-semibold hover:border-gold/40">
                 <Sparkles className="size-4" /> Colecciones
               </button>
@@ -428,7 +430,7 @@ function CatalogoPage() {
 
       <CatalogoModeloDialog open={editorAbierto} producto={modeloEditando} participanteId={sesion?.participante?.id ?? ""} categorias={categoriasDisponibles} initialImageUrl={imagenDesdeMiNube?.imagen_principal_url ?? null} initialName={imagenDesdeMiNube?.nombre ?? null} initialProject={proyectoDesdeMiNube ?? null} initialPdf={pdfDesdeMiNube ?? null} onClose={() => { sessionStorage.removeItem("mi-nube-catalogo-pendiente"); setEditorAbierto(false); setImagenDesdeMiNube(null); setProyectoDesdeMiNube(null); setPdfDesdeMiNube(null); }} onSaved={() => { sessionStorage.removeItem("mi-nube-catalogo-pendiente"); setImagenDesdeMiNube(null); setProyectoDesdeMiNube(null); setPdfDesdeMiNube(null); if (sesion?.participante?.id) void queryClient.invalidateQueries({ queryKey: ["catalogo-productos", sesion.participante.id] }); }} />
       <CatalogoConfiguracionDialog open={configAbierta} participanteId={sesion?.participante?.id ?? ""} initial={catalogoConfig} onClose={() => setConfigAbierta(false)} onSaved={() => { if (sesion?.participante?.id) void queryClient.invalidateQueries({ queryKey: ["catalogo-config-publico", sesion.participante.id] }); }} />
-      <CatalogoCategoriasDialog open={categoriasAbierta} participanteId={sesion?.participante?.id ?? ""} onClose={() => setCategoriasAbierta(false)} onChanged={() => { if (sesion?.participante?.id) void queryClient.invalidateQueries({ queryKey: ["catalogo-categorias", sesion.participante.id] }); }} />
+      <CatalogoCategoriasDialog open={categoriasAbierta && Boolean(sesion?.esDueno)} participanteId={sesion?.participante?.id ?? ""} onClose={() => setCategoriasAbierta(false)} onChanged={() => { if (sesion?.participante?.id) void queryClient.invalidateQueries({ queryKey: ["catalogo-categorias", sesion.participante.id] }); }} />
       <CatalogoColeccionesDialog open={coleccionesAbierta} participanteId={sesion?.participante?.id ?? ""} productos={productoRows.map((p) => ({ id: p.id, nombre: p.nombre, codigo: p.codigo }))} onClose={() => setColeccionesAbierta(false)} onChanged={() => { if (sesion?.participante?.id) { void queryClient.invalidateQueries({ queryKey: ["catalogo-producto-colecciones", sesion.participante.id] }); void queryClient.invalidateQueries({ queryKey: ["catalogo-productos", sesion.participante.id] }); } }} />
 
       <Panel titulo="Arquitectura del catálogo" className="mt-6">
