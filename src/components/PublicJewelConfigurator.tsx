@@ -4,7 +4,7 @@ import { supabasePublic } from "@/integrations/supabase/client";
 import { PublicCatalogViewer } from "@/components/PublicCatalogViewer";
 import { GEMAS, MATERIALES } from "@/lib/aurum/catalog";
 
-type Props = { slug?: string; producto?: string; sharedModelUrl?: string; sharedModelName?: string; localFile?: File };
+type Props = { slug?: string; producto?: string; sharedModelUrl?: string; sharedModelName?: string; localFile?: File; embedded?: boolean };
 const metales = [
   { id: "oro-amarillo", label: "Oro amarillo", color: 0xe5b377, materialId: "oro18a_ijewel_premium" },
   { id: "oro-blanco", label: "Oro blanco", color: 0xc2c2c3, materialId: "oro18b_ijewel_premium" },
@@ -23,7 +23,7 @@ const gemasPublicas = [
 
 const colorHex = (color: number) => "#" + color.toString(16).padStart(6, "0");
 
-export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, sharedModelName, localFile }: Props) {
+export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, sharedModelName, localFile, embedded = false }: Props) {
   const [metalId, setMetalId] = useState<string>("oro-amarillo");
   const [gemaId, setGemaId] = useState<string>("diamante_natural");
   const [activeCategory, setActiveCategory] = useState<"metal" | "gem">("metal");
@@ -200,8 +200,8 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
     .trim() || "Joya compartida";
 
   return (
-    <section className="mx-auto w-full min-w-0 overflow-hidden rounded-xl border border-[#e8e1d5] bg-white shadow-[0_16px_44px_-30px_rgba(49,39,24,.28)] sm:mt-4 sm:rounded-2xl md:mt-0 lg:mx-auto lg:flex lg:h-[calc(100svh-32px)] lg:min-h-0 lg:max-h-none lg:flex-col lg:rounded-2xl lg:max-w-[1440px] 2xl:h-[calc(100svh-32px)] 2xl:min-h-0 2xl:max-h-none 2xl:max-w-[1720px] 2xl:w-[calc(100vw-64px)]">
-      <header className="flex shrink-0 flex-col items-stretch justify-between gap-2 border-b border-[#eee9e0] bg-[linear-gradient(110deg,#fffefa_0%,#ffffff_58%,#fbf7ef_100%)] px-3.5 py-2.5 sm:flex-row sm:items-center sm:gap-4 sm:px-5 sm:py-3 [@media(max-height:800px)]:py-1.5">
+    <section className={embedded ? "relative h-full w-full min-w-0 overflow-hidden rounded-[24px] bg-white" : "mx-auto w-full min-w-0 overflow-hidden rounded-xl border border-[#e8e1d5] bg-white shadow-[0_16px_44px_-30px_rgba(49,39,24,.28)] sm:mt-4 sm:rounded-2xl md:mt-0 lg:mx-auto lg:flex lg:h-[calc(100svh-32px)] lg:min-h-0 lg:max-h-none lg:flex-col lg:rounded-2xl lg:max-w-[1440px] 2xl:h-[calc(100svh-32px)] 2xl:min-h-0 2xl:max-h-none 2xl:max-w-[1720px] 2xl:w-[calc(100vw-64px)]"}>
+      <header className={embedded ? "hidden" : "flex shrink-0 flex-col items-stretch justify-between gap-2 border-b border-[#eee9e0] bg-[linear-gradient(110deg,#fffefa_0%,#ffffff_58%,#fbf7ef_100%)] px-3.5 py-2.5 sm:flex-row sm:items-center sm:gap-4 sm:px-5 sm:py-3 [@media(max-height:800px)]:py-1.5"}>
         <div className="min-w-0">
           <div className="flex items-center gap-2.5">
             <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-xl border border-[#eadfc9] bg-[#f8f1e3] text-[#92702f]">
@@ -218,8 +218,8 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
           <button type="button" onClick={() => { setMetalId("oro-amarillo"); setGemaId("diamante_natural"); resetCameraRef.current?.(); }} className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[#e4ddd1] bg-white px-3.5 py-2 text-xs font-semibold text-[#41382d] shadow-sm transition hover:border-[#b28b45] hover:bg-[#fbf8f1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45] focus-visible:ring-offset-2"><RotateCcw className="size-3.5" /> Restablecer</button>
         </div>
       </header>
-      <div className="isolate grid min-w-0 grid-cols-1 lg:min-h-0 lg:flex-1 lg:grid-rows-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)] 2xl:grid-cols-[minmax(0,1fr)]">
-        <div ref={visorRef} className={"relative z-0 h-[clamp(520px,calc(100dvh-170px),900px)] min-h-[520px] min-w-0 overflow-hidden bg-white sm:h-[clamp(400px,62vh,600px)] sm:min-h-[400px] lg:h-full lg:min-h-0 " + (pantallaCompleta ? "h-screen min-h-0 w-screen sm:h-screen sm:min-h-0 2xl:h-screen 2xl:min-h-0" : "")}>
+      <div className={embedded ? "absolute inset-0 isolate grid min-w-0 grid-cols-1" : "isolate grid min-w-0 grid-cols-1 lg:min-h-0 lg:flex-1 lg:grid-rows-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)] 2xl:grid-cols-[minmax(0,1fr)]"}>
+        <div ref={visorRef} className={"relative z-0 min-w-0 overflow-hidden bg-white " + (embedded ? "h-full min-h-0 w-full" : "h-[clamp(520px,calc(100dvh-170px),900px)] min-h-[520px] sm:h-[clamp(400px,62vh,600px)] sm:min-h-[400px] lg:h-full lg:min-h-0 ") + (pantallaCompleta ? "h-screen min-h-0 w-screen sm:h-screen sm:min-h-0 2xl:h-screen 2xl:min-h-0" : "")}>
           <div className="absolute right-2 top-2 z-20 flex items-center gap-1 rounded-full border border-[#e8e3db] bg-white/90 p-1 shadow-sm backdrop-blur sm:right-3 sm:top-3 sm:gap-1.5 sm:p-1.5" aria-label="Controles informativos del visor">
             <span title="Iluminación HDR" className="rounded-full border border-[#e8e3db] px-2 py-1 text-[9px] font-medium text-[#81786c] sm:text-[10px]">HDRI</span>
             <span title="Materiales PBR" className="rounded-full border border-[#e8e3db] px-2 py-1 text-[9px] font-medium text-[#81786c] sm:text-[10px]">PBR</span>
@@ -268,7 +268,7 @@ export function PublicJewelConfigurator({ slug, producto, sharedModelUrl, shared
         </div>
 
       </div>
-      <footer className="hidden border-t border-[#eee9e0] bg-[#fdfcf9] px-4 py-2 text-[10px] leading-4 text-[#8a8175] md:flex md:items-center md:justify-between">
+      <footer className={embedded ? "hidden" : "hidden border-t border-[#eee9e0] bg-[#fdfcf9] px-4 py-2 text-[10px] leading-4 text-[#8a8175] md:flex md:items-center md:justify-between"}>
         <span>Taller del Joyero · Visualizador independiente</span>
         <span>Los cambios son una vista previa y no modifican el archivo original.</span>
       </footer>
