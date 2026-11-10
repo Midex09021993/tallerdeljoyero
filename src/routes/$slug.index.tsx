@@ -322,15 +322,76 @@ function CatalogoPublicoPage() {
   useEffect(() => {
     const track = carruselEnlacesRef.current;
     if (!config?.enlaces_carrusel || config.enlaces_carrusel.length <= 1 || !track) return;
-    const timer = window.setInterval(() => {
+
+    let pausaSolicitada = false;
+    let direccion: 1 | -1 = 1;
+    let frame = 0;
+    let inicioAnimacion = 0;
+    let inicioScroll = track.scrollLeft;
+    let destinoScroll = track.scrollLeft;
+    let timer = 0;
+
+    const reducirMovimiento = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const animar = (timestamp: number) => {
+      if (!inicioAnimacion) inicioAnimacion = timestamp;
+      const progreso = Math.min((timestamp - inicioAnimacion) / 1100, 1);
+      const suavizado = progreso < 0.5
+        ? 4 * progreso * progreso * progreso
+        : 1 - Math.pow(-2 * progreso + 2, 3) / 2;
+      track.scrollLeft = inicioScroll + (destinoScroll - inicioScroll) * suavizado;
+      if (progreso < 1) frame = window.requestAnimationFrame(animar);
+      else frame = 0;
+    };
+
+    const avanzar = () => {
+      if (pausaSolicitada || document.hidden || track.matches(":hover") || track.contains(document.activeElement)) return;
       const firstCard = track.querySelector<HTMLElement>("[data-carousel-card]");
       const step = firstCard ? firstCard.getBoundingClientRect().width + 16 : track.clientWidth / 4;
-      const atEnd = track.scrollLeft + track.clientWidth >= track.scrollWidth - 8;
-      if (atEnd) track.scrollTo({ left: 0, behavior: "smooth" });
-      else track.scrollBy({ left: step, behavior: "smooth" });
-      setIndiceCarrusel(actual => (actual + 1) % config.enlaces_carrusel!.length);
-    }, 4000);
-    return () => window.clearInterval(timer);
+      const maxScroll = Math.max(0, track.scrollWidth - track.clientWidth);
+      let siguiente = track.scrollLeft + step * direccion;
+      if (siguiente >= maxScroll - 8) {
+        direccion = -1;
+        siguiente = Math.max(0, track.scrollLeft - step);
+      } else if (siguiente <= 8) {
+        direccion = 1;
+        siguiente = Math.min(maxScroll, track.scrollLeft + step);
+      }
+      inicioScroll = track.scrollLeft;
+      destinoScroll = siguiente;
+      inicioAnimacion = 0;
+      if (reducirMovimiento) {
+        track.scrollLeft = destinoScroll;
+      } else {
+        if (frame) window.cancelAnimationFrame(frame);
+        frame = window.requestAnimationFrame(animar);
+      }
+      const cards = Array.from(track.querySelectorAll<HTMLElement>("[data-carousel-card]"));
+      const closest = cards.reduce((best, card, index) => {
+        const distance = Math.abs(card.offsetLeft - destinoScroll);
+        return distance < best.distance ? { index, distance } : best;
+      }, { index: 0, distance: Number.POSITIVE_INFINITY });
+      setIndiceCarrusel(closest.index);
+    };
+
+    const pausar = () => { pausaSolicitada = true; if (frame) window.cancelAnimationFrame(frame); frame = 0; };
+    const reanudar = () => { pausaSolicitada = false; };
+    track.addEventListener("pointerenter", pausar);
+    track.addEventListener("pointerleave", reanudar);
+    track.addEventListener("focusin", pausar);
+    track.addEventListener("focusout", reanudar);
+    track.addEventListener("touchstart", pausar, { passive: true });
+    track.addEventListener("touchend", reanudar, { passive: true });
+    timer = window.setInterval(avanzar, 6500);
+    return () => {
+      window.clearInterval(timer);
+      if (frame) window.cancelAnimationFrame(frame);
+      track.removeEventListener("pointerenter", pausar);
+      track.removeEventListener("pointerleave", reanudar);
+      track.removeEventListener("focusin", pausar);
+      track.removeEventListener("focusout", reanudar);
+      track.removeEventListener("touchstart", pausar);
+      track.removeEventListener("touchend", reanudar);
+    };
   }, [config?.enlaces_carrusel]);
 
   useEffect(() => {
