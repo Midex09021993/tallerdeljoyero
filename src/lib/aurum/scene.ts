@@ -1,8 +1,15 @@
 import { getAurumScenePreset, type AurumScenePreset } from "../aurum-scene-engine";
 
+export interface AurumSceneBackground {
+  id: string;
+  color: string | null;
+  image: string | null;
+}
+
 export interface AurumSceneController {
   apply: (id: string, opts?: { transparent?: boolean }) => AurumScenePreset;
   setBackground: (id: string) => void;
+  getBackground: () => AurumSceneBackground;
 }
 
 export function createAurumSceneController(
@@ -14,6 +21,7 @@ export function createAurumSceneController(
   let currentPreset = getAurumScenePreset("ijewelReference");
   let backgroundOverride: string | null = null;
   let backgroundImageOverride: string | null = null;
+  let activeBackgroundId = "blanco";
   const applyBackground = (color:string | null, image:string | null = null) => {
     if (backgroundElement?.style) {
       backgroundElement.style.backgroundColor = color ?? ("#" + Number(currentPreset.background).toString(16).padStart(6, "0"));
@@ -32,6 +40,7 @@ export function createAurumSceneController(
 
   return {
     setBackground(id:string) {
+      activeBackgroundId = id;
       const backgrounds:Record<string,string> = {
         blanco:"#ffffff", marfil:"#f4f1e9", grisClaro:"#e7e7e4", grisMedio:"#a6a6a3", grisOscuro:"#303236", negro:"#090b0e", transparente:"transparent",
       };
@@ -45,6 +54,13 @@ export function createAurumSceneController(
             : null;
       backgroundOverride = id === "escena" ? null : (backgrounds[id] ?? (backgroundImageOverride ? "#f4f4f2" : null));
       applyBackground(backgroundOverride, backgroundImageOverride);
+    },
+    getBackground() {
+      return {
+        id: activeBackgroundId,
+        color: backgroundOverride,
+        image: backgroundImageOverride,
+      };
     },
     apply(id, opts) {
       const preset = getAurumScenePreset(id);
