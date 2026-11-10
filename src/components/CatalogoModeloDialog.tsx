@@ -115,6 +115,34 @@ function slugify(value: string) {
   return value.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
 }
 
+async function prepararImagenCatalogo(file: File): Promise<File> {
+  if (!file.type.startsWith("image/")) throw new Error("Selecciona una imagen válida.");
+  if (file.size > 20 * 1024 * 1024) throw new Error("La imagen supera los 20 MB. Reduce su tamaño e inténtalo de nuevo.");
+  const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+  try {
+    const canvas = document.createElement("canvas");
+    canvas.width = 1200;
+    canvas.height = 1200;
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("No se pudo preparar el lienzo de la imagen.");
+    // Fondo neutro y ajuste contain: conserva toda la joya sin cortar ni deformar.
+    context.fillStyle = "#ffffff";
+    context.fillRect(0, 0, 1200, 1200);
+    const margen = 72;
+    const escala = Math.min((1200 - margen * 2) / bitmap.width, (1200 - margen * 2) / bitmap.height);
+    const ancho = Math.round(bitmap.width * escala);
+    const alto = Math.round(bitmap.height * escala);
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = "high";
+    context.drawImage(bitmap, Math.round((1200 - ancho) / 2), Math.round((1200 - alto) / 2), ancho, alto);
+    const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob((value) => value ? resolve(value) : reject(new Error("No se pudo optimizar la fotografía.")), "image/webp", 0.9));
+    const nombreBase = file.name.replace(/\.[^.]+$/, "").replace(/[^a-zA-Z0-9_-]+/g, "-").slice(0, 80) || "joya";
+    return new File([blob], nombreBase + "-1200.webp", { type: "image/webp", lastModified: Date.now() });
+  } finally {
+    bitmap.close();
+  }
+}
+
 export function CatalogoModeloDialog({ open, producto, participanteId, categorias, onClose, onSaved, initialImageUrl, initialName, initialProject, initialPdf }: Props) {
   const [monedaConfigurada, setMonedaConfigurada] = useState("PEN");
   const [form, setForm] = useState({
@@ -363,12 +391,13 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
     }
     const carpeta = carpetaSubida || crypto.randomUUID();
     setCarpetaSubida(carpeta);
-    const ruta = `${participanteId}/${carpeta}/${tipo}-${Date.now()}-${nombreSeguro(file.name)}`;
     setSubiendo(true);
     setProgresoSubida(0);
     setError(null);
     try {
-      await subirConProgreso({ bucket: "catalogo-joyas", ruta, file, onProgreso: setProgresoSubida });
+      const imagenCuadrada = await prepararImagenCatalogo(file);
+      const ruta = `${participanteId}/${carpeta}/${tipo}-${Date.now()}-${nombreSeguro(imagenCuadrada.name)}`;
+      await subirConProgreso({ bucket: "catalogo-joyas", ruta, file: imagenCuadrada, onProgreso: setProgresoSubida });
       const { data } = supabase.storage.from("catalogo-joyas").getPublicUrl(ruta);
       if (!data.publicUrl) throw new Error("No se pudo obtener la URL pública de la imagen.");
       setForm((actual) => ({
@@ -534,13 +563,13 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
           <section className="grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
               <p className="text-[10px] font-bold uppercase tracking-[.18em] text-gold">Multimedia</p>
-              <p className="mt-1 text-xs text-muted-foreground">Sube las imágenes directamente. Los enlaces de almacenamiento se gestionan automáticamente y no necesitas copiarlos.</p>
+              <p className="mt-1 text-xs text-muted-foreground">Las fotografías se normalizan automáticamente a 1200 × 1200 px en WebP. Se conserva toda la joya dentro del cuadro, sin estirar ni cortar la pieza.</p>
             </div>
             <div className="grid gap-2 sm:col-span-2">
               <span className="text-xs font-semibold">Imagen principal</span>
               {form.imagen_principal_url ? (
                 <div className="flex items-center gap-3 rounded-xl border border-border bg-surface-muted/30 p-3">
-                  <img src={form.imagen_principal_url} alt="Vista previa de la imagen principal" className="size-20 rounded-lg border border-border object-cover" />
+                  <img src={form.imagen_principal_url} alt="Vista previa de la imagen principal" className="size-20 rounded-lg border border-border bg-white object-contain" />
                   <div className="min-w-0 flex-1"><p className="text-xs font-medium">Imagen principal cargada</p><p className="mt-1 text-[11px] text-muted-foreground">Puedes reemplazarla seleccionando otra imagen.</p></div>
                 </div>
               ) : <div className="rounded-xl border border-dashed border-border p-4 text-center text-xs text-muted-foreground">Todavía no has seleccionado una imagen principal.</div>}
@@ -555,7 +584,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
                 <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
                   {form.galeria.split(/\\n/).map((url) => url.trim()).filter(Boolean).map((url, index) => (
                     <div key={url + index} className="group relative aspect-square overflow-hidden rounded-lg border border-border bg-white">
-                      <img src={url} alt={`Imagen de galería ${index + 1}`} className="size-full object-cover" />
+                      <img src={url} alt={`Imagen de galería ${index + 1}`} className="size-full bg-white object-contain" />
                       <button type="button" title={`Quitar imagen ${index + 1} de la galería`} aria-label={`Quitar imagen ${index + 1} de la galería`} disabled={subiendo || guardando} onClick={() => setForm(actual => ({ ...actual, galeria: actual.galeria.split(/\\n/).map(value => value.trim()).filter(Boolean).filter((_, i) => i !== index).join("\\n") }))} className="absolute right-1 top-1 grid size-7 place-items-center rounded-full bg-black/75 text-white shadow transition hover:bg-red-600 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100"><X className="size-4" /></button>
                     </div>
                   ))}
