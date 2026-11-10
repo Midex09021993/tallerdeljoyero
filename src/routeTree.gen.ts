@@ -26,6 +26,7 @@ import { Route as RecuperarContrasenaRouteImport } from './routes/recuperar-cont
 import { Route as TiendaRouteImport } from './routes/tienda'
 import { Route as SlugIndexRouteImport } from './routes/$slug.index'
 import { Route as SlugProductoRouteImport } from './routes/$slug.$producto'
+import { Route as AuthenticatedAgendaRouteImport } from './routes/_authenticated/agenda'
 import { Route as AuthenticatedAulaComandosRouteImport } from './routes/_authenticated/aula-comandos'
 import { Route as AuthenticatedAulaFormacionRouteImport } from './routes/_authenticated/aula-formacion'
 import { Route as AuthenticatedAurumIntelligenceRouteImport } from './routes/_authenticated/aurum-intelligence'
@@ -46,7 +47,6 @@ import { Route as AuthenticatedInicioRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedInventarioRouteImport } from './routes/_authenticated/inventario'
 import { Route as AuthenticatedMarketplaceMisComprasRouteImport } from './routes/_authenticated/marketplace-mis-compras'
 import { Route as AuthenticatedMarketplacePublicarRouteImport } from './routes/_authenticated/marketplace-publicar'
-import { Route as AuthenticatedAgendaRouteImport } from './routes/_authenticated/agenda'
 import { Route as AuthenticatedMensajesRouteImport } from './routes/_authenticated/mensajes'
 import { Route as AuthenticatedMiNubeRouteImport } from './routes/_authenticated/mi-nube'
 import { Route as AuthenticatedMigracionRouteImport } from './routes/_authenticated/migracion'
@@ -167,6 +167,11 @@ const SlugProductoRoute = SlugProductoRouteImport.update({
   path: '/$producto',
   getParentRoute: () => SlugRoute,
 } as any)
+const AuthenticatedAgendaRoute = AuthenticatedAgendaRouteImport.update({
+  id: '/agenda',
+  path: '/agenda',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAulaComandosRoute =
   AuthenticatedAulaComandosRouteImport.update({
     id: '/aula-comandos',
@@ -278,11 +283,6 @@ const AuthenticatedMarketplacePublicarRoute =
     path: '/marketplace-publicar',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedAgendaRoute = AuthenticatedAgendaRouteImport.update({
-  id: '/agenda',
-  path: '/agenda',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedMensajesRoute = AuthenticatedMensajesRouteImport.update({
   id: '/mensajes',
   path: '/mensajes',
@@ -487,6 +487,7 @@ export interface FileRoutesByFullPath {
   '/recuperar-contrasena': typeof RecuperarContrasenaRoute
   '/tienda': typeof TiendaRoute
   '/$slug/$producto': typeof SlugProductoRoute
+  '/agenda': typeof AuthenticatedAgendaRoute
   '/aula-comandos': typeof AuthenticatedAulaComandosRoute
   '/aula-formacion': typeof AuthenticatedAulaFormacionRoute
   '/aurum-intelligence': typeof AuthenticatedAurumIntelligenceRoute
@@ -507,7 +508,6 @@ export interface FileRoutesByFullPath {
   '/inventario': typeof AuthenticatedInventarioRoute
   '/marketplace-mis-compras': typeof AuthenticatedMarketplaceMisComprasRoute
   '/marketplace-publicar': typeof AuthenticatedMarketplacePublicarRoute
-  '/agenda': typeof AuthenticatedAgendaRoute
   '/mensajes': typeof AuthenticatedMensajesRoute
   '/mi-nube': typeof AuthenticatedMiNubeRoute
   '/migracion': typeof AuthenticatedMigracionRoute
@@ -560,6 +560,7 @@ export interface FileRoutesByTo {
   '/recuperar-contrasena': typeof RecuperarContrasenaRoute
   '/tienda': typeof TiendaRoute
   '/$slug/$producto': typeof SlugProductoRoute
+  '/agenda': typeof AuthenticatedAgendaRoute
   '/aula-comandos': typeof AuthenticatedAulaComandosRoute
   '/aula-formacion': typeof AuthenticatedAulaFormacionRoute
   '/aurum-intelligence': typeof AuthenticatedAurumIntelligenceRoute
@@ -579,7 +580,6 @@ export interface FileRoutesByTo {
   '/inventario': typeof AuthenticatedInventarioRoute
   '/marketplace-mis-compras': typeof AuthenticatedMarketplaceMisComprasRoute
   '/marketplace-publicar': typeof AuthenticatedMarketplacePublicarRoute
-  '/agenda': typeof AuthenticatedAgendaRoute
   '/mensajes': typeof AuthenticatedMensajesRoute
   '/mi-nube': typeof AuthenticatedMiNubeRoute
   '/migracion': typeof AuthenticatedMigracionRoute
@@ -634,6 +634,7 @@ export interface FileRoutesById {
   '/recuperar-contrasena': typeof RecuperarContrasenaRoute
   '/tienda': typeof TiendaRoute
   '/$slug/$producto': typeof SlugProductoRoute
+  '/_authenticated/agenda': typeof AuthenticatedAgendaRoute
   '/_authenticated/aula-comandos': typeof AuthenticatedAulaComandosRoute
   '/_authenticated/aula-formacion': typeof AuthenticatedAulaFormacionRoute
   '/_authenticated/aurum-intelligence': typeof AuthenticatedAurumIntelligenceRoute
@@ -654,7 +655,6 @@ export interface FileRoutesById {
   '/_authenticated/inventario': typeof AuthenticatedInventarioRoute
   '/_authenticated/marketplace-mis-compras': typeof AuthenticatedMarketplaceMisComprasRoute
   '/_authenticated/marketplace-publicar': typeof AuthenticatedMarketplacePublicarRoute
-  '/_authenticated/agenda': typeof AuthenticatedAgendaRoute
   '/_authenticated/mensajes': typeof AuthenticatedMensajesRoute
   '/_authenticated/mi-nube': typeof AuthenticatedMiNubeRoute
   '/_authenticated/migracion': typeof AuthenticatedMigracionRoute
@@ -710,6 +710,7 @@ export interface FileRouteTypes {
     | '/recuperar-contrasena'
     | '/tienda'
     | '/$slug/$producto'
+    | '/agenda'
     | '/aula-comandos'
     | '/aula-formacion'
     | '/aurum-intelligence'
@@ -782,6 +783,7 @@ export interface FileRouteTypes {
     | '/recuperar-contrasena'
     | '/tienda'
     | '/$slug/$producto'
+    | '/agenda'
     | '/aula-comandos'
     | '/aula-formacion'
     | '/aurum-intelligence'
@@ -854,6 +856,7 @@ export interface FileRouteTypes {
     | '/recuperar-contrasena'
     | '/tienda'
     | '/$slug/$producto'
+    | '/_authenticated/agenda'
     | '/_authenticated/aula-comandos'
     | '/_authenticated/aula-formacion'
     | '/_authenticated/aurum-intelligence'
@@ -1059,6 +1062,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/$slug/$producto'
       preLoaderRoute: typeof SlugProductoRouteImport
       parentRoute: typeof SlugRoute
+    }
+    '/_authenticated/agenda': {
+      id: '/_authenticated/agenda'
+      path: '/agenda'
+      fullPath: '/agenda'
+      preLoaderRoute: typeof AuthenticatedAgendaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/aula-comandos': {
       id: '/_authenticated/aula-comandos'
@@ -1491,6 +1501,7 @@ const AuthenticatedVentasRouteWithChildren =
   AuthenticatedVentasRoute._addFileChildren(AuthenticatedVentasRouteChildren)
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAgendaRoute: typeof AuthenticatedAgendaRoute
   AuthenticatedAulaComandosRoute: typeof AuthenticatedAulaComandosRoute
   AuthenticatedAulaFormacionRoute: typeof AuthenticatedAulaFormacionRoute
   AuthenticatedAurumIntelligenceRoute: typeof AuthenticatedAurumIntelligenceRoute
@@ -1511,7 +1522,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedInventarioRoute: typeof AuthenticatedInventarioRoute
   AuthenticatedMarketplaceMisComprasRoute: typeof AuthenticatedMarketplaceMisComprasRoute
   AuthenticatedMarketplacePublicarRoute: typeof AuthenticatedMarketplacePublicarRoute
-  AuthenticatedAgendaRoute: typeof AuthenticatedAgendaRoute
   AuthenticatedMensajesRoute: typeof AuthenticatedMensajesRoute
   AuthenticatedMiNubeRoute: typeof AuthenticatedMiNubeRoute
   AuthenticatedMigracionRoute: typeof AuthenticatedMigracionRoute
@@ -1531,6 +1541,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAgendaRoute: AuthenticatedAgendaRoute,
   AuthenticatedAulaComandosRoute: AuthenticatedAulaComandosRoute,
   AuthenticatedAulaFormacionRoute: AuthenticatedAulaFormacionRoute,
   AuthenticatedAurumIntelligenceRoute: AuthenticatedAurumIntelligenceRoute,
@@ -1552,7 +1563,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMarketplaceMisComprasRoute:
     AuthenticatedMarketplaceMisComprasRoute,
   AuthenticatedMarketplacePublicarRoute: AuthenticatedMarketplacePublicarRoute,
-  AuthenticatedAgendaRoute: AuthenticatedAgendaRoute,
   AuthenticatedMensajesRoute: AuthenticatedMensajesRoute,
   AuthenticatedMiNubeRoute: AuthenticatedMiNubeRoute,
   AuthenticatedMigracionRoute: AuthenticatedMigracionRoute,
