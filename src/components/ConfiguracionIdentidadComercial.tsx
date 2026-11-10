@@ -460,6 +460,9 @@ export function ConfiguracionIdentidadComercial() {
           accion={<button type="button" onClick={() => void guardar()} disabled={guardando} className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground disabled:opacity-50"><Save className="size-4" />{guardando ? "Guardando…" : "Guardar cambios"}</button>}
         >
           <div className="space-y-6 p-5">
+            <div className="grid gap-4 lg:grid-cols-2">
+              <label className="text-xs font-semibold text-muted-foreground">País<select className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm font-normal" value={form.pais_codigo} onChange={e=>aplicarPais(e.target.value)}>{Object.entries(NOMBRES_PAIS).sort((a,b)=>a[1].localeCompare(b[1],"es")).map(([codigo,nombre])=><option key={codigo} value={codigo}>{nombre}</option>)}<option value="OTHER">Otro / país no listado</option></select></label>
+            </div>
             {identidades.length > 1 ? <label className="block text-xs font-semibold text-muted-foreground">Identidad activa<select className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm font-normal" value={identidadId} onChange={e=>setIdentidadId(e.target.value)}>{identidades.map(x=><option key={x.id} value={x.id}>{x.nombre_comercial} · {participantes.find(p=>p.id===x.participante_id)?.nombre ?? "sin taller asignado"}</option>)}</select></label> : null}
             <div className="grid gap-4 lg:grid-cols-2">
               <label className="text-xs font-semibold text-muted-foreground">Nombre comercial<input className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm font-normal" value={form.nombre_comercial} onChange={e=>campo("nombre_comercial",e.target.value)} /></label>
@@ -471,7 +474,6 @@ export function ConfiguracionIdentidadComercial() {
             </div>
             <div className="grid gap-4 lg:grid-cols-2">
               <label className="text-xs font-semibold text-muted-foreground">{form.identificador_fiscal_label || "RUC / NIT"}<input className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-normal" value={form.ruc ?? ""} onChange={e=>campo("ruc",e.target.value)} /></label>
-              <label className="text-xs font-semibold text-muted-foreground">País<select className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 text-sm font-normal" value={form.pais_codigo} onChange={e=>aplicarPais(e.target.value)}>{Object.entries(NOMBRES_PAIS).sort((a,b)=>a[1].localeCompare(b[1],"es")).map(([codigo,nombre])=><option key={codigo} value={codigo}>{nombre}</option>)}<option value="OTHER">Otro / país no listado</option></select></label>
             </div>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <label className="text-xs font-semibold text-muted-foreground">Moneda<select className="mt-1 h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-normal" value={form.moneda_codigo} onChange={e=>{const moneda=MONEDAS.find(m=>m.codigo===e.target.value);campo("moneda_codigo",e.target.value);if(moneda)campo("moneda_simbolo",moneda.simbolo);}}>{MONEDAS.map(m=><option key={m.codigo} value={m.codigo}>{m.codigo} · {m.nombre} ({m.simbolo})</option>)}</select></label>
