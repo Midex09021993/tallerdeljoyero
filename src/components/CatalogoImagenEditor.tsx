@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { Check, RotateCcw, RotateCw, X } from "lucide-react";
 
 type Props = {
@@ -83,7 +83,7 @@ export function CatalogoImagenEditor({ file, onCancel, onConfirm }: Props) {
     }
   }, [dimensiones, zoom, rotacion, offset, guia]);
 
-  function mover(event: React.PointerEvent<HTMLCanvasElement>) {
+  function mover(event: ReactPointerEvent<HTMLCanvasElement>) {
     const drag = dragRef.current;
     if (!drag) return;
     setOffset({
