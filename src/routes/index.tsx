@@ -3,6 +3,7 @@ import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabasePublic } from "@/integrations/supabase/client";
 import { RegistroTaller } from "@/components/RegistroTaller";
+import { PAISES_TELEFONO } from "@/components/TelefonoInternacional";
 const MiniAurumRender = lazy(() => import("@/components/MiniAurumRender").then((m) => ({ default: m.MiniAurumRender })));
 const PrecioOroDiario = lazy(() => import("@/components/PrecioOroDiario").then((m) => ({ default: m.PrecioOroDiario })));
 import { ArrowRight, BookOpen, Boxes, Calculator, Check, Cloud, Gem, Layers3, Menu, MonitorSmartphone, PackageCheck, Sparkles, Sprout, ChartNoAxesCombined, X } from "lucide-react";
@@ -76,17 +77,46 @@ const soluciones = [
 ];
 
 
-function formatoSoles(valor: number) {
-  return new Intl.NumberFormat("es-PE", {
+function formatoPrecio(valor: number, moneda: "PEN" | "USD") {
+  return new Intl.NumberFormat(moneda === "PEN" ? "es-PE" : "en-US", {
     style: "currency",
-    currency: "PEN",
+    currency: moneda,
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(valor);
 }
 
+function detectarPaisDelNavegador(): string {
+  if (typeof navigator === "undefined") return "PE";
+  const idiomas = [...(navigator.languages ?? []), navigator.language];
+  for (const idioma of idiomas) {
+    try {
+      const region = new Intl.Locale(idioma).region;
+      if (region && PAISES_TELEFONO.some((pais) => pais.iso === region)) return region;
+    } catch {
+      // Ignorar configuraciones regionales no válidas y probar el siguiente idioma.
+    }
+  }
+  return "PE";
+}
+
 function PlanesPublicos() {
   const [periodicidad, setPeriodicidad] = useState<"mensual" | "trimestral" | "anual">("mensual");
+  const [paisIso, setPaisIso] = useState("PE");
+  const moneda: "PEN" | "USD" = paisIso === "PE" ? "PEN" : "USD";
+
+  useEffect(() => {
+    const paisGuardado = window.localStorage.getItem("aurum-pais-precios");
+    const paisValido = paisGuardado && PAISES_TELEFONO.some((pais) => pais.iso === paisGuardado);
+    setPaisIso(paisValido ? paisGuardado : detectarPaisDelNavegador());
+  }, []);
+
+  const cambiarPaisPrecios = (pais: string) => {
+    const paisValido = PAISES_TELEFONO.some((item) => item.iso === pais);
+    if (!paisValido) return;
+    setPaisIso(pais);
+    window.localStorage.setItem("aurum-pais-precios", pais);
+  };
   const { data: cuotasPlanes, isLoading: cargandoCuotas, isError: errorCuotas } = useQuery({
     queryKey: ["planes-comerciales-publicos"],
     queryFn: async () => {
@@ -108,6 +138,7 @@ function PlanesPublicos() {
     anual: { etiqueta: "Anual", meses: 12, descuento: 0.25 },
   } as const;
   const periodo = periodos[periodicidad];
+  const precios = moneda === "USD" ? { taller: 9, profesional: 24 } : { taller: 29, profesional: 79 };
   const planes = [
     {
       id: "emprendedor", nombre: "Emprendedor", precioMensual: 0, gratis: true,
@@ -116,13 +147,13 @@ function PlanesPublicos() {
       destacado: false, accion: "Explorar herramientas", href: "/herramientas-publicas" as const,
     },
     {
-      id: "taller", nombre: "Taller", precioMensual: 29, gratis: false,
+      id: "taller", nombre: "Taller", precioMensual: precios.taller, gratis: false,
       descripcion: "Organiza las tareas diarias de tu taller.",
       funciones: ["Clientes y cotizaciones", "Pedidos, ventas y contratos", "Catálogo digital", "Mi Nube y archivos", "Herramientas de diseño y gestión con capacidad limitada"],
       destacado: false, accion: "Acceder a la plataforma", href: "/auth" as const,
     },
     {
-      id: "profesional", nombre: "Profesional", precioMensual: 79, gratis: false,
+      id: "profesional", nombre: "Profesional", precioMensual: precios.profesional, gratis: false,
       descripcion: "Incluye el plan Taller y ofrece más capacidad.",
       funciones: ["Incluye todo lo que ofrece el plan Taller", "Más espacio para clientes y operaciones", "Más espacio para archivos y catálogo", "Más uso de las herramientas de diseño y gestión"],
       destacado: true, accion: "Acceder a la plataforma", href: "/auth" as const,
@@ -136,7 +167,14 @@ function PlanesPublicos() {
   ];
   return (
     <>
-      <p className="mt-3 text-center text-xs text-slate-500">Elige tu forma de pago. Puedes ahorrar al elegir varios meses.</p>
+      <div className="mx-auto mt-4 flex flex-wrap items-center justify-center gap-2">
+        <label htmlFor="pais-precios-publicos" className="text-xs font-semibold text-slate-600">País:</label>
+        <select id="pais-precios-publicos" value={paisIso} onChange={(event) => cambiarPaisPrecios(event.target.value)} className="max-w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 outline-none transition focus:border-[#d4aa19] focus:ring-2 focus:ring-[#d4aa19]/20">
+          {PAISES_TELEFONO.map((pais) => <option key={pais.iso} value={pais.iso}>{pais.bandera} {pais.nombre}</option>)}
+        </select>
+        <span className="rounded-full bg-slate-100 px-3 py-2 text-xs font-bold text-slate-600">{moneda === "PEN" ? "Precios en soles (PEN)" : "Precios en dólares estadounidenses (USD)"}</span>
+      </div>
+      <p className="mt-2 text-center text-xs text-slate-500">Elige tu forma de pago. Puedes ahorrar al elegir varios meses.</p>
       <div className="mx-auto mt-4 flex w-fit flex-wrap justify-center gap-2 rounded-2xl border border-slate-200 bg-white p-1.5" role="group" aria-label="Modalidad de pago">
         {(["mensual", "trimestral", "anual"] as const).map((opcion) => (
           <button key={opcion} type="button" onClick={() => setPeriodicidad(opcion)} aria-pressed={periodicidad === opcion}
@@ -160,9 +198,9 @@ function PlanesPublicos() {
                 {tienePrecio && plan.gratis && <p className="mt-2 text-2xl font-extrabold tracking-tight text-[#17232d]">Gratis</p>}
                 {tienePrecio && !plan.gratis && (
                   <>
-                    <p className="mt-1 text-2xl font-extrabold tracking-tight text-[#17232d]">{formatoSoles(totalPeriodo)}<span className="ml-1 text-xs font-medium text-slate-500">{periodicidad === "mensual" ? "al mes" : "por " + periodo.meses + " meses"}</span></p>
-                    {periodo.descuento > 0 && <p className="mt-1 text-xs text-slate-500"><span className="line-through">{formatoSoles(precioMensual * periodo.meses)}</span> <span className="font-semibold text-emerald-700">Ahorra {formatoSoles(precioMensual * periodo.meses - totalPeriodo)} ({Math.round(periodo.descuento * 100)} %)</span></p>}
-                    {periodicidad !== "mensual" && <p className="mt-1 text-[10px] text-slate-500">Equivale a {formatoSoles(totalPeriodo / periodo.meses)} al mes</p>}
+                    <p className="mt-1 text-2xl font-extrabold tracking-tight text-[#17232d]">{formatoPrecio(totalPeriodo, moneda)}<span className="ml-1 text-xs font-medium text-slate-500">{periodicidad === "mensual" ? "al mes" : "por " + periodo.meses + " meses"}</span></p>
+                    {periodo.descuento > 0 && <p className="mt-1 text-xs text-slate-500"><span className="line-through">{formatoPrecio(precioMensual * periodo.meses, moneda)}</span> <span className="font-semibold text-emerald-700">Ahorra {formatoPrecio(precioMensual * periodo.meses - totalPeriodo, moneda)} ({Math.round(periodo.descuento * 100)} %)</span></p>}
+                    {periodicidad !== "mensual" && <p className="mt-1 text-[10px] text-slate-500">Equivale a {formatoPrecio(totalPeriodo / periodo.meses, moneda)} al mes</p>}
                   </>
                 )}
               </div>
