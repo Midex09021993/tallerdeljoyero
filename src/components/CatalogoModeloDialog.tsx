@@ -158,7 +158,6 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
   const [selectorCarpetaAbierto, setSelectorCarpetaAbierto] = useState(false);
   const [cargandoCarpetasModelo, setCargandoCarpetasModelo] = useState(false);
   const [errorCarpetasModelo, setErrorCarpetasModelo] = useState("");
-  const [carpetaModeloSeleccionada, setCarpetaModeloSeleccionada] = useState("");
 
   const [productoCreadoId, setProductoCreadoId] = useState<string | null>(null);
   const [subiendo, setSubiendo] = useState(false);
@@ -475,7 +474,6 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
     const elegida = carpetasModelo.find((item) => item.carpeta === carpeta);
     if (!elegida) return;
     setProyectoNube({ carpeta: elegida.carpeta, archivos: elegida.archivos });
-    setCarpetaModeloSeleccionada(elegida.carpeta);
     setSelectorCarpetaAbierto(false);
     setError(null);
   }
