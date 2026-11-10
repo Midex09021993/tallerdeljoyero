@@ -661,6 +661,12 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
                 <p className="text-[10px] font-bold uppercase tracking-[.18em] text-gold">Proyecto vinculado a Mi Nube</p>
                 <p className="mt-1 text-sm font-semibold">{proyectoNube.carpeta}</p>
                 <p className="mt-1 text-xs text-muted-foreground">{proyectoNube.archivos.length} archivo(s) asociados. Los originales permanecen privados en Mi Nube; el catálogo solo guarda sus referencias.</p>
+                {proyectoNube.archivos.some((archivo) => archivo.origen === "supabase" && /\.3dm$/i.test(archivo.nombre)) ? (
+                  <div className="mt-3 flex items-start gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3">
+                    <Box className="mt-0.5 size-4 shrink-0 text-emerald-600" />
+                    <div><p className="text-xs font-semibold text-foreground">Modelo 3D vinculado automáticamente</p><p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">Al abrir la ficha pública, el visor buscará el archivo interno 01-modelo.glb en la misma carpeta del 3DM. El GLB no necesita mostrarse ni duplicarse en la lista de archivos.</p></div>
+                  </div>
+                ) : null}
               </div>
               <ul className="grid gap-1 sm:grid-cols-2">
                 {proyectoNube.archivos.map((archivo, index) => (
