@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { BookOpen, ExternalLink, Grid2X2, Image as ImageIcon, LayoutList, MoreHorizontal, Pencil, Plus, Search, Share2, Sparkles, Settings, Tags, X } from "lucide-react";
+import { BookOpen, Crop, ExternalLink, Grid2X2, Image as ImageIcon, LayoutList, MoreHorizontal, Pencil, Plus, Search, Share2, Sparkles, Settings, Tags, X } from "lucide-react";
 import { AppShell, Panel } from "@/components/AppShell";
 import { CatalogoCategoriasDialog } from "@/components/CatalogoCategoriasDialog";
 import { CatalogoColeccionesDialog } from "@/components/CatalogoColeccionesDialog";
 import { CatalogoModeloDialog, type CatalogoProductoEditor, type ProyectoNubeInicial } from "@/components/CatalogoModeloDialog";
+import { CatalogoImagenEditor } from "@/components/CatalogoImagenEditor";
 import { useSesion } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -133,6 +134,8 @@ function CatalogoPage() {
   const [guardandoAccion, setGuardandoAccion] = useState<string | null>(null);
   const [productoPendienteEliminar, setProductoPendienteEliminar] = useState<Producto | null>(null);
   const [menuProductoAbierto, setMenuProductoAbierto] = useState<string | null>(null);
+  const [imagenAEncuadrar, setImagenAEncuadrar] = useState<{ file: File; productoId: string } | null>(null);
+  const [encuadreGuardando, setEncuadreGuardando] = useState(false);
   const puedeGestionar = Boolean(sesion?.esAdmin);
 
   useEffect(() => {
@@ -161,6 +164,34 @@ function CatalogoPage() {
     const row = productoRows.find((item) => item.id === producto.id);
     if (!row) return;
     setModeloEditando(row); setEditorAbierto(true);
+  };
+  const abrirEncuadreExistente = async (producto: Producto) => {
+    if (!producto.imagen || !puedeGestionar || encuadreGuardando) return;
+    try {
+      const response = await fetch(producto.imagen);
+      if (!response.ok) throw new Error("No se pudo descargar la fotografía actual.");
+      const blob = await response.blob();
+      if (!blob.type.startsWith("image/")) throw new Error("La fotografía no tiene un formato compatible.");
+      const file = new File([blob], producto.codigo + "-actual." + (blob.type.split("/")[1] || "jpg"), { type: blob.type });
+      setImagenAEncuadrar({ file, productoId: producto.id });
+    } catch (error) { window.alert(error instanceof Error ? error.message : "No se pudo abrir el editor de encuadre."); }
+  };
+
+  const guardarEncuadreExistente = async (file: File) => {
+    if (!imagenAEncuadrar || !sesion?.participante?.id || encuadreGuardando) return;
+    setEncuadreGuardando(true);
+    try {
+      const destino = sesion.participante.id + "/catalogo/encuadre-" + crypto.randomUUID() + ".webp";
+      const { error: uploadError } = await supabase.storage.from("catalogo-joyas").upload(destino, file, { upsert: false, contentType: "image/webp" });
+      if (uploadError) throw uploadError;
+      const { data } = supabase.storage.from("catalogo-joyas").getPublicUrl(destino);
+      if (!data?.publicUrl) throw new Error("No se pudo obtener la nueva URL de la fotografía.");
+      const { error: updateError } = await supabase.from("catalogo_productos").update({ imagen_principal_url: data.publicUrl }).eq("id", imagenAEncuadrar.productoId).eq("participante_id", sesion.participante.id);
+      if (updateError) throw updateError;
+      setImagenAEncuadrar(null);
+      await queryClient.invalidateQueries({ queryKey: ["catalogo-productos", sesion.participante.id] });
+    } catch (error) { window.alert(error instanceof Error ? error.message : "No se pudo guardar el nuevo encuadre."); }
+    finally { setEncuadreGuardando(false); }
   };
   const cambiarFlag = async (id: string, campo: "publicado" | "destacado", valor: boolean) => {
     if (!puedeGestionar || guardandoAccion) return;
@@ -378,7 +409,7 @@ function CatalogoPage() {
         </div>
 
         {productos.length ? (
-          <div className={vista === "grid" ? "grid items-stretch gap-px bg-border sm:grid-cols-2 xl:grid-cols-3" : "divide-y divide-border"}>
+          <div className={vista === "grid" ? "grid items-stretch gap-px bg-border sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "divide-y divide-border"}>
           {productos.map((p) => (
             <article key={p.id} className={vista === "grid" ? "group flex h-full min-w-0 flex-col bg-card" : "flex min-w-0 gap-4 bg-card p-4"}>
               <div className={vista === "grid" ? "relative aspect-square shrink-0 overflow-hidden bg-surface-muted" : "relative size-28 shrink-0 overflow-hidden rounded-xl bg-surface-muted"}>
@@ -394,7 +425,7 @@ function CatalogoPage() {
                   <div className="grid size-full place-items-center"><ImageIcon className="size-10 text-muted-foreground" /></div>
                 )}
                 <span className="absolute left-3 top-3 rounded-full border border-border/60 bg-background/90 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider">{p.estado}</span>
-                {vista === "grid" ? <div className="absolute right-3 top-3 flex gap-1.5"><button type="button" onClick={() => abrirEdicion(p)} aria-label="Editar ficha" title="Editar ficha" className="grid size-9 place-items-center rounded-full border border-border/60 bg-background/85 shadow-sm backdrop-blur hover:bg-background"><Pencil className="size-4" /></button><button type="button" onClick={() => setMenuProductoAbierto(menuProductoAbierto === p.id ? null : p.id)} aria-label="Más acciones" aria-expanded={menuProductoAbierto === p.id} title="Más acciones" className="grid size-9 place-items-center rounded-full border border-border/60 bg-background/85 shadow-sm backdrop-blur hover:bg-background"><MoreHorizontal className="size-4" /></button></div> : null}
+                {vista === "grid" ? <div className="absolute right-3 top-3 flex gap-1.5">{p.imagen ? <button type="button" onClick={() => void abrirEncuadreExistente(p)} aria-label="Editar encuadre de imagen" title="Editar encuadre" disabled={encuadreGuardando} className="grid size-9 place-items-center rounded-full border border-border/60 bg-background/85 shadow-sm backdrop-blur hover:bg-background disabled:opacity-50"><Crop className="size-4" /></button> : null}<button type="button" onClick={() => abrirEdicion(p)} aria-label="Editar ficha" title="Editar ficha" className="grid size-9 place-items-center rounded-full border border-border/60 bg-background/85 shadow-sm backdrop-blur hover:bg-background"><Pencil className="size-4" /></button><button type="button" onClick={() => setMenuProductoAbierto(menuProductoAbierto === p.id ? null : p.id)} aria-label="Más acciones" aria-expanded={menuProductoAbierto === p.id} title="Más acciones" className="grid size-9 place-items-center rounded-full border border-border/60 bg-background/85 shadow-sm backdrop-blur hover:bg-background"><MoreHorizontal className="size-4" /></button></div> : null}
               </div>
               <div className={vista === "grid" ? "flex min-w-0 flex-1 flex-col p-5" : "flex min-w-0 flex-1 flex-col justify-center gap-3 sm:flex-row sm:items-center sm:justify-between"}>
                 <div className={vista === "grid" ? "min-w-0" : "min-w-0 flex-1"}>
@@ -428,6 +459,7 @@ function CatalogoPage() {
         )}
       </section>
 
+      {imagenAEncuadrar ? <CatalogoImagenEditor file={imagenAEncuadrar.file} onCancel={() => { if (!encuadreGuardando) setImagenAEncuadrar(null); }} onConfirm={(file) => void guardarEncuadreExistente(file)} /> : null}
       <CatalogoModeloDialog open={editorAbierto} producto={modeloEditando} participanteId={sesion?.participante?.id ?? ""} categorias={categoriasDisponibles} initialImageUrl={imagenDesdeMiNube?.imagen_principal_url ?? null} initialName={imagenDesdeMiNube?.nombre ?? null} initialProject={proyectoDesdeMiNube ?? null} initialPdf={pdfDesdeMiNube ?? null} onClose={() => { sessionStorage.removeItem("mi-nube-catalogo-pendiente"); setEditorAbierto(false); setImagenDesdeMiNube(null); setProyectoDesdeMiNube(null); setPdfDesdeMiNube(null); }} onSaved={() => { sessionStorage.removeItem("mi-nube-catalogo-pendiente"); setImagenDesdeMiNube(null); setProyectoDesdeMiNube(null); setPdfDesdeMiNube(null); if (sesion?.participante?.id) void queryClient.invalidateQueries({ queryKey: ["catalogo-productos", sesion.participante.id] }); }} />
       <CatalogoConfiguracionDialog open={configAbierta} participanteId={sesion?.participante?.id ?? ""} initial={catalogoConfig} onClose={() => setConfigAbierta(false)} onSaved={() => { if (sesion?.participante?.id) void queryClient.invalidateQueries({ queryKey: ["catalogo-config-publico", sesion.participante.id] }); }} />
       <CatalogoCategoriasDialog open={categoriasAbierta && Boolean(sesion?.esDueno)} participanteId={sesion?.participante?.id ?? ""} onClose={() => setCategoriasAbierta(false)} onChanged={() => { if (sesion?.participante?.id) void queryClient.invalidateQueries({ queryKey: ["catalogo-categorias", sesion.participante.id] }); }} />
