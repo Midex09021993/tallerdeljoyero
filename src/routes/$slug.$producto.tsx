@@ -1,7 +1,7 @@
 /* eslint-disable-next-line @typescript-eslint/ban-ts-comment -- excepción temporal: corregir tipos heredados requiere una tarea separada */
 // @ts-nocheck
 import { ClientOnly, createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Box, ExternalLink, MessageCircle, Play, Share2, Sparkles, ShoppingBag, X, Ruler, Truck, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Box, ExternalLink, FileText, MessageCircle, Play, Share2, Sparkles, ShoppingBag, X, Ruler, Truck, CheckCircle2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { supabasePublic as supabase } from "@/integrations/supabase/client";
@@ -243,15 +243,19 @@ export function CatalogoProductoPublicoPage() {
           ) : null}
 
           <div className="mt-6 rounded-[24px] border border-[#1f1b1818] bg-white/75 p-3 shadow-[0_20px_60px_-45px_rgba(31,27,24,.45)] backdrop-blur [@media(min-width:1024px)_and_(max-height:850px)]:mt-4 [@media(min-width:1024px)_and_(max-height:850px)]:p-2.5">
-            <button type="button" disabled={esNoDisponible} onClick={() => { setCompraAbierta(true); setAnadidoAlCarrito(false); setErrorCarrito(""); setTipoEnvio(esPorEncargo ? "fabricacion" : "rapido"); }} className="group flex w-full items-center justify-between rounded-[18px] border border-[#d8c49b] bg-[#f7f3ea] px-5 py-3 text-left text-[#3b3328] transition duration-300 hover:-translate-y-0.5 hover:bg-[#efe6d5] hover:shadow-[0_18px_40px_-20px_rgba(138,107,54,.18)] disabled:cursor-not-allowed disabled:opacity-50 [@media(min-width:1024px)_and_(max-height:850px)]:py-2.5">
-              <span><span className="block text-[9px] font-bold uppercase tracking-[.2em] text-[#8a6b36]">Tu selección</span><span className="mt-1 block text-sm font-semibold">{esNoDisponible ? "No disponible" : "Añadir al carrito"}</span></span>
-              <ShoppingBag className="size-4 text-[#d7b56d]" />
+            <button type="button" disabled={esNoDisponible} onClick={() => { setCompraAbierta(true); setAnadidoAlCarrito(false); setErrorCarrito(""); setTipoEnvio(esPorEncargo ? "fabricacion" : "rapido"); }} className="group flex w-full items-center justify-between gap-4 rounded-[18px] border border-[#d8b35e] bg-gradient-to-r from-[#fbf5e8] to-[#f4e6c8] px-5 py-3.5 text-left text-[#3b3328] shadow-[0_8px_24px_-18px_rgba(138,107,54,.5)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_32px_-18px_rgba(138,107,54,.35)] disabled:cursor-not-allowed disabled:opacity-50 [@media(min-width:1024px)_and_(max-height:850px)]:py-2.5">
+              <span className="flex items-center gap-3"><ShoppingBag className="size-5 shrink-0 text-[#a77a24]" /><span><span className="block text-[9px] font-bold uppercase tracking-[.2em] text-[#8a6b36]">Tu selección</span><span className="mt-1 block text-sm font-semibold">{esNoDisponible ? "No disponible" : "Añadir al carrito"}</span><span className="mt-0.5 block text-[11px] font-normal text-[#746b62]">Incluir esta joya en tu pedido</span></span></span>
+              <ExternalLink className="size-4 shrink-0 text-[#a77a24]" />
             </button>
-            <button type="button" onClick={() => { setSolicitudAbierta(true); setErrorSolicitud(""); }} className="mt-2 flex w-full items-center justify-between rounded-[18px] border border-[#1f1b1820] px-5 py-3 text-left transition hover:border-[#8a6b36] [@media(min-width:1024px)_and_(max-height:850px)]:py-2.5">
-              <span className="text-sm font-semibold">Solicitar cotización</span><MessageCircle className="size-4 text-[#8a6b36]" />
+            <button type="button" onClick={() => { setSolicitudAbierta(true); setErrorSolicitud(""); }} className="mt-2 flex w-full items-center justify-between gap-4 rounded-[18px] border border-[#1f1b1820] bg-white px-5 py-3.5 text-left transition duration-300 hover:border-[#b89a62] hover:bg-[#fffdfa] [@media(min-width:1024px)_and_(max-height:850px)]:py-2.5">
+              <span className="flex items-center gap-3"><FileText className="size-5 shrink-0 text-[#a47a35]" /><span><span className="block text-sm font-semibold">Cotización personalizada</span><span className="mt-0.5 block text-[11px] font-normal text-[#746b62]">Solicita una propuesta a medida para esta joya</span></span></span>
+              <ExternalLink className="size-4 shrink-0 text-[#8a6b36]" />
             </button>
-            <div className="mt-2 flex flex-wrap gap-2 px-1 pb-1 pt-1">
-              {whatsappHref ? <a href={whatsappHref + "?text=" + encodeURIComponent("Hola, quisiera información sobre " + item.nombre + " (" + item.codigo + ").")} target="_blank" rel="noreferrer" className="rounded-full border border-[#1f1b1820] px-3 py-2 text-[10px] font-semibold">WhatsApp</a> : null}
+            {whatsappHref ? <a href={whatsappHref + "?text=" + encodeURIComponent("Hola, estoy interesado/a en la joya " + item.nombre + " (" + item.codigo + "). Quisiera recibir más información sobre esta pieza.")} target="_blank" rel="noreferrer" className="mt-2 flex w-full items-center justify-between gap-4 rounded-[18px] border border-[#b9dfc4] bg-[#f0f8f1] px-5 py-3.5 text-left text-[#174b2a] transition duration-300 hover:border-[#80bd91] hover:bg-[#e8f5eb] [@media(min-width:1024px)_and_(max-height:850px)]:py-2.5">
+              <span className="flex items-center gap-3"><MessageCircle className="size-5 shrink-0 text-[#159447]" /><span><span className="block text-sm font-semibold">Consultar por WhatsApp</span><span className="mt-0.5 block text-[11px] font-normal text-[#356447]">Habla con nuestro equipo sobre esta joya</span></span></span>
+              <ExternalLink className="size-4 shrink-0 text-[#159447]" />
+            </a> : null}
+            <div className="mt-3 flex flex-wrap gap-2 px-1 pb-1 pt-1">
               {item.aurum_render_url ? <a href={item.aurum_render_url} target="_blank" rel="noreferrer" className="rounded-full border border-[#1f1b1820] px-3 py-2 text-[10px] font-semibold">AURUM Render</a> : null}
               {item.video_url ? <a href={item.video_url} target="_blank" rel="noreferrer" className="rounded-full border border-[#1f1b1820] px-3 py-2 text-[10px] font-semibold">Ver video</a> : null}
               {item.mostrar_ficha_tecnica && item.ficha_tecnica_url ? <a href={item.ficha_tecnica_url} target="_blank" rel="noreferrer" className="rounded-full border border-[#1f1b1820] px-3 py-2 text-[10px] font-semibold">Ficha técnica</a> : null}
@@ -260,7 +264,7 @@ export function CatalogoProductoPublicoPage() {
           {solicitudAbierta ? (
             <div className="fixed inset-0 z-50 grid place-items-center bg-[#1f1b18]/55 p-5 backdrop-blur-sm">
               <div className="w-full max-w-lg rounded-[28px] bg-[#f7f4ef] p-6 shadow-2xl">
-                <div className="flex items-start justify-between gap-4"><div><p className="text-[9px] font-bold uppercase tracking-[.2em] text-[#8a6b36]">Solicitud privada</p><h2 className="mt-1 font-display text-3xl">Hablemos de tu pieza</h2><p className="mt-2 text-xs text-[#746b62]">{item.codigo} · {item.nombre}</p></div><button type="button" onClick={() => setSolicitudAbierta(false)} className="rounded-full border border-[#1f1b1820] px-3 py-2 text-xs">Cerrar</button></div>
+                <div className="flex items-start justify-between gap-4"><div><p className="text-[9px] font-bold uppercase tracking-[.2em] text-[#8a6b36]">Cotización personalizada</p><h2 className="mt-1 font-display text-3xl">Cuéntanos cómo quieres tu joya</h2><p className="mt-2 text-xs text-[#746b62]">{item.codigo} · {item.nombre}</p></div><button type="button" onClick={() => setSolicitudAbierta(false)} className="rounded-full border border-[#1f1b1820] px-3 py-2 text-xs">Cerrar</button></div>
                 {enviada ? <div className="mt-6 rounded-2xl border border-[#8a6b36]/20 bg-white p-5"><p className="font-semibold">Solicitud enviada</p><p className="mt-2 text-sm leading-6 text-[#625b54]">El taller recibió tus datos y la pieza consultada.</p></div> : (
                   <form onSubmit={async (event) => {
                     event.preventDefault(); setEnviando(true); setErrorSolicitud("");
@@ -273,7 +277,7 @@ export function CatalogoProductoPublicoPage() {
                   }} className="mt-6 grid gap-3">
                     <input required value={formSolicitud.nombre} onChange={(e) => setFormSolicitud({ ...formSolicitud, nombre: e.target.value })} placeholder="Nombre" className="h-11 rounded-xl border border-[#1f1b1820] bg-white px-3 text-sm outline-none focus:border-[#8a6b36]" />
                     <div className="grid gap-3 sm:grid-cols-2"><input value={formSolicitud.telefono} onChange={(e) => setFormSolicitud({ ...formSolicitud, telefono: e.target.value })} placeholder="WhatsApp / teléfono" className="h-11 rounded-xl border border-[#1f1b1820] bg-white px-3 text-sm" /><input type="email" value={formSolicitud.email} onChange={(e) => setFormSolicitud({ ...formSolicitud, email: e.target.value })} placeholder="Correo electrónico" className="h-11 rounded-xl border border-[#1f1b1820] bg-white px-3 text-sm" /></div>
-                    <div className="grid gap-3 sm:grid-cols-[100px_1fr]"><input type="number" min="1" value={formSolicitud.cantidad} onChange={(e) => setFormSolicitud({ ...formSolicitud, cantidad: Number(e.target.value) || 1 })} className="h-11 rounded-xl border border-[#1f1b1820] bg-white px-3 text-sm" /><textarea value={formSolicitud.mensaje} onChange={(e) => setFormSolicitud({ ...formSolicitud, mensaje: e.target.value })} placeholder="Talla, acabado o personalización" rows={3} className="rounded-xl border border-[#1f1b1820] bg-white px-3 py-2 text-sm" /></div>
+                    <div className="grid gap-3 sm:grid-cols-[100px_1fr]"><input type="number" min="1" value={formSolicitud.cantidad} onChange={(e) => setFormSolicitud({ ...formSolicitud, cantidad: Number(e.target.value) || 1 })} className="h-11 rounded-xl border border-[#1f1b1820] bg-white px-3 text-sm" /><textarea value={formSolicitud.mensaje} onChange={(e) => setFormSolicitud({ ...formSolicitud, mensaje: e.target.value })} placeholder="Cuéntanos qué necesitas: talla, acabado, piedra, grabado o alguna personalización..." rows={3} className="rounded-xl border border-[#1f1b1820] bg-white px-3 py-2 text-sm" /></div>
                     {errorSolicitud ? <p className="text-xs text-red-600">{errorSolicitud}</p> : null}
                     <button disabled={enviando} className="mt-2 rounded-xl bg-[#1f1b18] px-4 py-3 text-xs font-semibold text-white disabled:opacity-50">{enviando ? "Enviando…" : "Enviar solicitud"}</button>
                   </form>
