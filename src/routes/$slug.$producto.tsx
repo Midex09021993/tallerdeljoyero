@@ -224,7 +224,7 @@ export function CatalogoProductoPublicoPage() {
                   {(imagenSeleccionada || item.imagen_principal_url) ? <img draggable={false} onContextMenu={(event) => event.preventDefault()} onDragStart={(event) => event.preventDefault()} src={imagenSeleccionada || item.imagen_principal_url || ""} alt={item.nombre} className="size-full scale-[1.08] object-contain p-0 transition duration-300 sm:scale-[1.1] lg:scale-[1.35]" onError={(event) => { event.currentTarget.style.display = "none"; }} /> : <div className="grid size-full place-items-center"><Box className="size-14 text-[#8a6b36]" /></div>}
                 </div>
               </div>
-            </> : modelo3dPublico ? <div className="overflow-hidden rounded-[28px] border border-[#1f1b1815] bg-white shadow-[0_24px_60px_-45px_rgba(31,27,24,.35)]"><ClientOnly fallback={null}><Suspense fallback={null}><PublicJewelConfigurator slug={slug} producto={productoSlug} sharedModelUrl={modelo3dPublico.url} sharedModelName={modelo3dPublico.nombre} /></Suspense></ClientOnly></div> : null}
+            </> : modelo3dPublico ? <div className="relative aspect-square w-full min-w-0 overflow-hidden rounded-[24px] bg-white shadow-[0_20px_55px_-42px_rgba(31,27,24,.45)] ring-1 ring-[#1f1b1815] [@media(min-width:1024px)]:max-w-[82vh]"><ClientOnly fallback={<div className="grid size-full place-items-center text-sm text-[#746b62]">Preparando visor 3D…</div>}><Suspense fallback={<div className="grid size-full place-items-center text-sm text-[#746b62]">Preparando visor 3D…</div>}><PublicJewelConfigurator slug={slug} producto={productoSlug} sharedModelUrl={modelo3dPublico.url} sharedModelName={modelo3dPublico.nombre} embedded /></Suspense></ClientOnly></div> : null}
           </div>
         </div>
 
