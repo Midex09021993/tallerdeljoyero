@@ -1508,7 +1508,12 @@ function MiNubePage() {
         body: { modelo_ruta: archivo.ruta, nombre: nombreVisible(archivo.nombre) },
       });
       if (createError || data?.ok !== true || typeof data?.token !== "string" || !/^[a-f0-9]{24}$/.test(data.token)) {
-        throw new Error(data?.error || createError?.message || "No se pudo crear el enlace seguro del visor.");
+        const mensajeServidor = typeof data?.error === "string" ? data.error : "";
+        const detalleServidor = typeof data?.detail === "string" ? data.detail : "";
+        const codigoServidor = typeof data?.code === "string" ? data.code : "";
+        const mensajeTransporte = createError?.message || "";
+        const mensaje = [mensajeServidor || mensajeTransporte || "La función no devolvió un enlace válido.", detalleServidor, codigoServidor].filter(Boolean).join(" · ");
+        throw new Error(mensaje);
       }
       const token = data.token;
       const url = new URL("/v/" + token, window.location.origin).toString();
@@ -1527,8 +1532,10 @@ function MiNubePage() {
         : typeof detalle?.message === "string"
           ? detalle.message
           : "Error desconocido al preparar el enlace."; 
-      if (codigo === "PGRST202" || /could not find the function|function .* does not exist/i.test(mensaje)) {
-        toast.error("Falta actualizar en Supabase la función del enlace del visor 3D. Hay que aplicar la migración correspondiente.");
+      if (/failed to send a request|failed to fetch|edge function.*(not found|unavailable)|fetch failed/i.test(mensaje)) {
+        toast.error("La función crear-enlace-visor-3d no respondió. Lovable debe desplegar la función actualizada y verificar su configuración.");
+      } else if (codigo === "PGRST202" || /could not find the function|function .* does not exist/i.test(mensaje)) {
+        toast.error("Falta aplicar en Lovable la migración SQL de los enlaces del visor 3D.");
       } else {
         const contexto = [codigo, typeof detalle?.details === "string" ? detalle.details : "", typeof detalle?.hint === "string" ? detalle.hint : ""]
           .filter(Boolean)
