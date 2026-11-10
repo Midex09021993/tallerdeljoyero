@@ -776,15 +776,7 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
                   aria-valuenow={progresoCarruselPorcentaje}
                 ><div className="h-full rounded-full bg-[#b9975b] transition-[width] duration-150 ease-out" style={{ width: `${progresoCarruselPorcentaje}%` }} /></div> : null}
               </div> : null}
-              <p className="text-xs text-muted-foreground">Hasta 10 elementos en total. Imágenes: máximo 15 MB; videos: máximo 50 MB. Los videos se reproducen sin sonido; si un elemento no tiene enlace, no será clicable.</p>
-              <div className="grid gap-2 rounded-xl bg-background p-3">
-                <p className="text-xs font-semibold">O pega una URL directa de imagen o video</p>
-                <div className="flex flex-col gap-2 sm:flex-row">
-                  <input type="url" value={urlNuevaImagenCarrusel} onChange={e => setUrlNuevaImagenCarrusel(e.target.value)} placeholder="https://sitio.com/foto.jpg o video.mp4" className="h-10 min-w-0 flex-1 rounded-lg border border-border bg-card px-3 text-sm font-normal" />
-                  <button type="button" onClick={agregarImagenPorUrl} disabled={enlacesCarrusel.length >= 10} className="rounded-lg border border-border px-3 py-2 text-xs font-semibold">Añadir por enlace</button>
-                </div>
-                <p className="text-[10px] text-muted-foreground">Usa una URL directa al archivo de imagen o video. Los enlaces a publicaciones de redes sociales no siempre sirven como archivo multimedia directo.</p>
-              </div>
+              {enlacesCarrusel.length > 0 ? <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">Vista previa de {enlacesCarrusel.length} elemento{enlacesCarrusel.length === 1 ? "" : "s"}. Recuerda pulsar «Guardar configuración» para publicarlo en el catálogo.</p> : null}
               {enlacesCarrusel.map((slide, index) => <div key={slide.imagen_url} className="grid gap-3 rounded-xl border border-border p-3 sm:grid-cols-[112px_1fr]">
                 <div className="relative">{(slide.tipo_media === "video" || /\.(mp4|webm|ogg|mov)(\?|#|$)/i.test(slide.imagen_url)) ? <video src={slide.imagen_url} muted playsInline controls className="aspect-[4/3] w-full rounded-lg bg-black object-contain" /> : <img src={slide.url_imagen_externa.trim() || slide.imagen_url} alt={slide.texto || "Imagen del carrusel"} className="aspect-[4/3] w-full rounded-lg object-cover" onError={event => { event.currentTarget.style.opacity = "0.35"; }} /> }<button type="button" onClick={() => setEnlacesCarrusel(actual => actual.filter((_, i) => i !== index))} className="absolute right-1 top-1 rounded-full bg-background/90 p-1.5" aria-label={"Quitar elemento " + (index + 1)}><X className="size-3.5" /></button></div>
                 <div className="grid gap-2">
@@ -794,6 +786,16 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
                   <label className="flex items-center gap-2 text-xs font-normal"><input type="checkbox" checked={slide.nueva_pestana} onChange={e => setEnlacesCarrusel(actual => actual.map((item, i) => i === index ? { ...item, nueva_pestana: e.target.checked } : item))} /> Abrir enlace en una pestaña nueva</label>
                 </div>
               </div>)}
+
+              <p className="text-xs text-muted-foreground">Hasta 10 elementos en total. Imágenes: máximo 15 MB; videos: máximo 50 MB. Los videos se reproducen sin sonido; si un elemento no tiene enlace, no será clicable.</p>
+              <div className="grid gap-2 rounded-xl bg-background p-3">
+                <p className="text-xs font-semibold">O pega una URL directa de imagen o video</p>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <input type="url" value={urlNuevaImagenCarrusel} onChange={e => setUrlNuevaImagenCarrusel(e.target.value)} placeholder="https://sitio.com/foto.jpg o video.mp4" className="h-10 min-w-0 flex-1 rounded-lg border border-border bg-card px-3 text-sm font-normal" />
+                  <button type="button" onClick={agregarImagenPorUrl} disabled={enlacesCarrusel.length >= 10} className="rounded-lg border border-border px-3 py-2 text-xs font-semibold">Añadir por enlace</button>
+                </div>
+                <p className="text-[10px] text-muted-foreground">Usa una URL directa al archivo de imagen o video. Los enlaces a publicaciones de redes sociales no siempre sirven como archivo multimedia directo.</p>
+              </div>
               {!enlacesCarrusel.length ? <p className="text-xs text-muted-foreground">Todavía no hay imágenes. Añade fotografías para crear el carrusel.</p> : null}
             </div>
           </details>
