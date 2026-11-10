@@ -2612,7 +2612,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               },
             });
             if (!transparent) {
-              context.fillStyle="#ffffff";
+              // The WebGL canvas is transparent so the viewer can show the CSS backdrop.
+              // Recreate its solid color in the export instead of forcing white.
+              const backdropColor = typeof window !== "undefined"
+                ? window.getComputedStyle(nodo).backgroundColor
+                : "rgb(255, 255, 255)";
+              context.fillStyle = backdropColor && backdropColor !== "rgba(0, 0, 0, 0)"
+                ? backdropColor
+                : "#ffffff";
               context.fillRect(0,0,width,height);
             } else {
               context.clearRect(0,0,width,height);
@@ -4203,7 +4210,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             {snapshotFormat === "png" && <label className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-black/10 bg-white p-3 text-xs text-[#292824]"><span><span className="block font-semibold">Fondo transparente</span><span className="mt-1 block text-[10px] text-[#77756f]">PNG con canal alfa, sin cambiar el visor ni el póster.</span></span><input type="checkbox" checked={snapshotTransparent} onChange={e=>setSnapshotTransparent(e.target.checked)} className="size-4 accent-[#b99642]"/></label>}
             <label className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-black/10 bg-white p-3 text-xs text-[#292824]"><span><span className="block font-semibold">Profundidad de campo</span><span className="mt-1 block text-[10px] text-[#77756f]">Activa el desenfoque en la vista y en la captura; apagado por defecto.</span></span><input type="checkbox" checked={snapshotDof} onChange={e=>setSnapshotDof(e.target.checked)} className="size-4 accent-[#b99642]"/></label>
             {snapshotDof && <label className="mt-2 block text-[10px] text-[#66645e]">Intensidad del desenfoque<select value={snapshotDofStrength} onChange={e=>setSnapshotDofStrength(e.target.value as "soft"|"medium"|"strong")} className="mt-1 w-full rounded-lg border border-black/15 bg-white px-2 py-2 text-xs text-[#292824]"><option value="soft">Suave · recomendado para joyería</option><option value="medium">Medio</option><option value="strong">Intenso · creativo</option></select></label>}
-            <div className="mt-2 text-[10px] leading-relaxed text-[#858178]">{snapshotTransparent && snapshotFormat === "png" ? "Se intentará exportar con canal alfa real; si el renderizador no lo admite, se mostrará un error." : "La captura vuelve a renderizar la joya a la resolución elegida y usa fondo blanco."} {snapshotDof ? "Se usará el compositor fotográfico solo para esta captura." : "Se conserva la ruta habitual de captura."}</div>
+            <div className="mt-2 text-[10px] leading-relaxed text-[#858178]">{snapshotTransparent && snapshotFormat === "png" ? "Se intentará exportar con canal alfa real; si el renderizador no lo admite, se mostrará un error." : "La captura conserva el color de fondo seleccionado en el visor; también puedes exportar con transparencia."} {snapshotDof ? "Se usará el compositor fotográfico solo para esta captura." : "Se conserva la ruta habitual de captura."}</div>
             <button type="button" disabled={!archivo||exportBusy} onClick={()=>{setExportBusy(true);setError(null);window.setTimeout(()=>{try{apiRef.current?.exportPNG({width:Number(snapshotWidth),height:Number(snapshotHeight),format:snapshotFormat,transparent:snapshotFormat==="png"&&snapshotTransparent,depthOfField:snapshotDof,dofStrength:snapshotDofStrength});setSnapshotOpen(false);}catch(e){setError(e instanceof Error?e.message:"No se pudo generar la imagen.");}finally{setExportBusy(false);}},50);}} className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-[#7168f4] px-3 py-2.5 text-xs font-semibold text-[#292824] disabled:cursor-not-allowed disabled:opacity-40"><Download className="size-4"/>{exportBusy?"Procesando imagen…":`Descargar ${snapshotFormat.toUpperCase()} · ${snapshotWidth||"3840"} × ${snapshotHeight||"2160"}`}</button>
             {exportBusy&&<div className="mt-3 rounded-lg border border-[#7168f4]/20 bg-white p-3" role="status" aria-live="polite"><div className="mb-2 flex items-center justify-between gap-2 text-[11px]"><span className="font-medium text-[#292824]">Renderizando imagen de alta resolución</span><RotateCw className="size-4 animate-spin" /><span className="text-[#7168f4]">En proceso</span></div><div className="h-2 overflow-hidden rounded-full bg-[#e8e6f8]"><div className="h-full w-1/3 rounded-full bg-[#7168f4]"/></div><p className="mt-2 text-[10px] leading-relaxed text-[#77756f]">La captura está procesando las facetas del diamante. La interfaz puede quedar temporalmente ocupada.</p></div>}
           </div>}
