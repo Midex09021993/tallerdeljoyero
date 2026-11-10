@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 type PaisTelefono = { iso: string; nombre: string; prefijo: string; bandera: string };
 
-const PAISES: PaisTelefono[] = [
+export const PAISES_TELEFONO: PaisTelefono[] = [
   { iso: "PE", nombre: "Perú", prefijo: "51", bandera: "🇵🇪" },
   { iso: "US", nombre: "Estados Unidos", prefijo: "1", bandera: "🇺🇸" },
   { iso: "CA", nombre: "Canadá", prefijo: "1", bandera: "🇨🇦" },
@@ -41,20 +41,20 @@ function digitos(valor: string) {
 
 function interpretarNumero(valor: string, paisPredeterminado = "PE") {
   const limpio = valor.trim();
-  if (!limpio) return { pais: PAISES.some((pais) => pais.iso === paisPredeterminado) ? paisPredeterminado : "PE", nacional: "" };
+  if (!limpio) return { pais: PAISES_TELEFONO.some((pais) => pais.iso === paisPredeterminado) ? paisPredeterminado : "PE", nacional: "" };
   const numeros = digitos(limpio);
-  if (!numeros) return { pais: PAISES.some((pais) => pais.iso === paisPredeterminado) ? paisPredeterminado : "PE", nacional: "" };
+  if (!numeros) return { pais: PAISES_TELEFONO.some((pais) => pais.iso === paisPredeterminado) ? paisPredeterminado : "PE", nacional: "" };
   const paisCoincidente = limpio.startsWith("+")
-    ? [...PAISES].sort((a, b) => b.prefijo.length - a.prefijo.length).find((pais) => numeros.startsWith(pais.prefijo))
+    ? [...PAISES_TELEFONO].sort((a, b) => b.prefijo.length - a.prefijo.length).find((pais) => numeros.startsWith(pais.prefijo))
     : numeros.startsWith("00")
-      ? [...PAISES].sort((a, b) => b.prefijo.length - a.prefijo.length).find((pais) => numeros.slice(2).startsWith(pais.prefijo))
+      ? [...PAISES_TELEFONO].sort((a, b) => b.prefijo.length - a.prefijo.length).find((pais) => numeros.slice(2).startsWith(pais.prefijo))
       : undefined;
   if (paisCoincidente) {
     const internacional = limpio.startsWith("+") ? numeros : numeros.slice(2);
     return { pais: paisCoincidente.iso, nacional: internacional.slice(paisCoincidente.prefijo.length) };
   }
   // Los números antiguos sin prefijo se interpretan con el país configurado para el taller.
-  return { pais: PAISES.some((pais) => pais.iso === paisPredeterminado) ? paisPredeterminado : "PE", nacional: numeros };
+  return { pais: PAISES_TELEFONO.some((pais) => pais.iso === paisPredeterminado) ? paisPredeterminado : "PE", nacional: numeros };
 }
 
 type Props = {
@@ -69,7 +69,7 @@ export function TelefonoInternacional({ value, onChange, defaultCountry = "PE", 
   const [nacional, setNacional] = useState(() => interpretarNumero(value, defaultCountry).nacional);
   const [tocado, setTocado] = useState(false);
   const ultimoValorEmitido = useRef<string | null>(null);
-  const pais = PAISES.find((item) => item.iso === paisIso) ?? PAISES[0]!;
+  const pais = PAISES_TELEFONO.find((item) => item.iso === paisIso) ?? PAISES_TELEFONO[0]!;
 
   useEffect(() => {
     // No volver a inferir un valor que este mismo control acaba de emitir: los prefijos
@@ -101,13 +101,13 @@ export function TelefonoInternacional({ value, onChange, defaultCountry = "PE", 
         id={id ? `${id}-pais` : undefined}
         value={paisIso}
         onChange={(event) => {
-          const siguiente = PAISES.find((item) => item.iso === event.target.value) ?? PAISES[0]!;
+          const siguiente = PAISES_TELEFONO.find((item) => item.iso === event.target.value) ?? PAISES_TELEFONO[0]!;
           setPaisIso(siguiente.iso);
           emitir(siguiente, nacional);
         }}
         className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-gold/50 focus:ring-1 focus:ring-gold/20"
       >
-        {PAISES.map((item) => <option key={item.iso} value={item.iso}>{item.bandera} {item.nombre} (+{item.prefijo})</option>)}
+        {PAISES_TELEFONO.map((item) => <option key={item.iso} value={item.iso}>{item.bandera} {item.nombre} (+{item.prefijo})</option>)}
       </select>
       <label htmlFor={id} className="text-xs font-medium text-foreground">Número de teléfono</label>
       <div className="flex min-w-0 items-center rounded-xl border border-border bg-background focus-within:border-gold/50 focus-within:ring-1 focus-within:ring-gold/20">
