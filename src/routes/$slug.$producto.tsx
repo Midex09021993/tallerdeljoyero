@@ -204,7 +204,7 @@ export function CatalogoProductoPublicoPage() {
         </div>
       </header>
 
-      <section className="mx-auto grid w-full max-w-[1720px] gap-4 px-4 py-3 sm:px-6 lg:grid-cols-[minmax(0,1.12fr)_minmax(0,.88fr)] lg:gap-6 lg:px-8 lg:py-4 2xl:gap-10 2xl:px-12 2xl:py-8 [@media(min-width:1024px)_and_(max-height:850px)]:gap-4 [@media(min-width:1024px)_and_(max-height:850px)]:py-2">
+      <section className="mx-auto grid w-full max-w-[1720px] gap-4 px-4 py-3 sm:px-6 lg:grid-cols-[minmax(0,1.22fr)_minmax(0,.78fr)] lg:gap-6 lg:px-8 lg:py-4 2xl:gap-10 2xl:px-12 2xl:py-8 [@media(min-width:1024px)_and_(max-height:850px)]:gap-4 [@media(min-width:1024px)_and_(max-height:850px)]:py-2">
         <div className="min-w-0">
           <div role="tabpanel" aria-label={vistaVisual === "fotos" ? "Fotografías del producto" : "Configurador 3D"} className="min-w-0">
             {vistaVisual === "fotos" ? <>
