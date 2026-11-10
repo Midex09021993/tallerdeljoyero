@@ -46,6 +46,7 @@ import { Route as AuthenticatedInicioRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedInventarioRouteImport } from './routes/_authenticated/inventario'
 import { Route as AuthenticatedMarketplaceMisComprasRouteImport } from './routes/_authenticated/marketplace-mis-compras'
 import { Route as AuthenticatedMarketplacePublicarRouteImport } from './routes/_authenticated/marketplace-publicar'
+import { Route as AuthenticatedAgendaRouteImport } from './routes/_authenticated/agenda'
 import { Route as AuthenticatedMensajesRouteImport } from './routes/_authenticated/mensajes'
 import { Route as AuthenticatedMiNubeRouteImport } from './routes/_authenticated/mi-nube'
 import { Route as AuthenticatedMigracionRouteImport } from './routes/_authenticated/migracion'
@@ -277,6 +278,11 @@ const AuthenticatedMarketplacePublicarRoute =
     path: '/marketplace-publicar',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAgendaRoute = AuthenticatedAgendaRouteImport.update({
+  id: '/agenda',
+  path: '/agenda',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedMensajesRoute = AuthenticatedMensajesRouteImport.update({
   id: '/mensajes',
   path: '/mensajes',
@@ -501,6 +507,7 @@ export interface FileRoutesByFullPath {
   '/inventario': typeof AuthenticatedInventarioRoute
   '/marketplace-mis-compras': typeof AuthenticatedMarketplaceMisComprasRoute
   '/marketplace-publicar': typeof AuthenticatedMarketplacePublicarRoute
+  '/agenda': typeof AuthenticatedAgendaRoute
   '/mensajes': typeof AuthenticatedMensajesRoute
   '/mi-nube': typeof AuthenticatedMiNubeRoute
   '/migracion': typeof AuthenticatedMigracionRoute
@@ -646,6 +653,7 @@ export interface FileRoutesById {
   '/_authenticated/inventario': typeof AuthenticatedInventarioRoute
   '/_authenticated/marketplace-mis-compras': typeof AuthenticatedMarketplaceMisComprasRoute
   '/_authenticated/marketplace-publicar': typeof AuthenticatedMarketplacePublicarRoute
+  '/_authenticated/agenda': typeof AuthenticatedAgendaRoute
   '/_authenticated/mensajes': typeof AuthenticatedMensajesRoute
   '/_authenticated/mi-nube': typeof AuthenticatedMiNubeRoute
   '/_authenticated/migracion': typeof AuthenticatedMigracionRoute
@@ -1502,6 +1510,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedInventarioRoute: typeof AuthenticatedInventarioRoute
   AuthenticatedMarketplaceMisComprasRoute: typeof AuthenticatedMarketplaceMisComprasRoute
   AuthenticatedMarketplacePublicarRoute: typeof AuthenticatedMarketplacePublicarRoute
+  AuthenticatedAgendaRoute: typeof AuthenticatedAgendaRoute
   AuthenticatedMensajesRoute: typeof AuthenticatedMensajesRoute
   AuthenticatedMiNubeRoute: typeof AuthenticatedMiNubeRoute
   AuthenticatedMigracionRoute: typeof AuthenticatedMigracionRoute
@@ -1542,6 +1551,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMarketplaceMisComprasRoute:
     AuthenticatedMarketplaceMisComprasRoute,
   AuthenticatedMarketplacePublicarRoute: AuthenticatedMarketplacePublicarRoute,
+  AuthenticatedAgendaRoute: AuthenticatedAgendaRoute,
   AuthenticatedMensajesRoute: AuthenticatedMensajesRoute,
   AuthenticatedMiNubeRoute: AuthenticatedMiNubeRoute,
   AuthenticatedMigracionRoute: AuthenticatedMigracionRoute,
