@@ -608,6 +608,7 @@ function AulaFormacionPage() {
   const [puntajePregunta, setPuntajePregunta] = useState("1");
   const [examenActivoAlumno, setExamenActivoAlumno] = useState<ExamenAlumno | null>(null);
   const [examenPendienteInicio, setExamenPendienteInicio] = useState<{ examen: Examen; reanudar: boolean } | null>(null);
+  const [errorInicioExamen, setErrorInicioExamen] = useState("");
   const [confirmandoInicioExamen, setConfirmandoInicioExamen] = useState(false);
   const [preguntaActualAlumno, setPreguntaActualAlumno] = useState(0);
   const [respuestasAlumno, setRespuestasAlumno] = useState<Record<string, string>>({});
@@ -1410,26 +1411,26 @@ function AulaFormacionPage() {
     }
   }
 
-  async function abrirExamenAlumno(id: string) {
-    setMensaje("");
-    const { data: inicio, error: inicioError } = await (supabase as any).rpc("iniciar_intento_formacion", { _examen_id: id });
-    if (inicioError) { setMensaje(inicioError.message); return; }
-    const { data, error } = await (supabase as any).rpc("obtener_examen_intento_formacion", { _intento_id: inicio.intento_id });
-    if (error) { setMensaje(error.message); return; }
-    const { data: intentoGuardado, error: recuperarError } = await (supabase as any).rpc("recuperar_respuestas_intento_formacion", { _intento_id: inicio.intento_id });
-    if (recuperarError) { setMensaje(recuperarError.message); return; }
-    const respuestasRecuperadas = Object.fromEntries(
-      ((intentoGuardado?.respuestas ?? []) as Array<{ pregunta_id: string; respuesta: unknown }>).map(r => [
-        r.pregunta_id,
-        typeof r.respuesta === "boolean" ? String(r.respuesta) : String(r.respuesta ?? "")
-      ])
-    );
-    setRespuestasAlumno(respuestasRecuperadas);
-    setPreguntaActualAlumno(Math.min(
-      Math.max(0, Number(intentoGuardado?.pregunta_actual ?? 0)),
-      Math.max(0, (data as ExamenAlumno).preguntas.length - 1)
-    ));
-    setExamenActivoAlumno({ ...(data as ExamenAlumno), intento_id: inicio.intento_id, vence_en: inicio.vence_en ?? null });
+  async function abrirExamenAlumno(id: string): Promise<boolean> {
+    setMensaje(""); setErrorInicioExamen("");
+    try {
+      const { data: inicio, error: inicioError } = await (supabase as any).rpc("iniciar_intento_formacion", { _examen_id: id });
+      if (inicioError) throw inicioError;
+      if (!inicio?.intento_id) throw new Error("El servidor no devolvió un identificador de intento.");
+      const { data, error } = await (supabase as any).rpc("obtener_examen_intento_formacion", { _intento_id: inicio.intento_id });
+      if (error) throw error;
+      if (!data || !Array.isArray(data.preguntas) || data.preguntas.length === 0) throw new Error("La evaluación no tiene preguntas disponibles. Informa al docente para que revise su configuración.");
+      const { data: intentoGuardado, error: recuperarError } = await (supabase as any).rpc("recuperar_respuestas_intento_formacion", { _intento_id: inicio.intento_id });
+      if (recuperarError) throw recuperarError;
+      const respuestasRecuperadas = Object.fromEntries(((intentoGuardado?.respuestas ?? []) as Array<{ pregunta_id: string; respuesta: unknown }>).map(r => [r.pregunta_id, typeof r.respuesta === "boolean" ? String(r.respuesta) : String(r.respuesta ?? "")]));
+      setRespuestasAlumno(respuestasRecuperadas);
+      setPreguntaActualAlumno(Math.min(Math.max(0, Number(intentoGuardado?.pregunta_actual ?? 0)), Math.max(0, (data as ExamenAlumno).preguntas.length - 1)));
+      setExamenActivoAlumno({ ...(data as ExamenAlumno), intento_id: inicio.intento_id, vence_en: inicio.vence_en ?? null });
+      return true;
+    } catch (err) {
+      const detalle = err instanceof Error ? err.message : String((err as any)?.message ?? "Error desconocido");
+      setErrorInicioExamen(detalle); return false;
+    }
   }
 
   async function enviarExamenAlumno() {
@@ -3660,7 +3661,7 @@ function AulaFormacionPage() {
                 const disponible = x.publicado && (!x.disponible_desde || new Date(x.disponible_desde) <= new Date()) && (!x.disponible_hasta || new Date(x.disponible_hasta) > new Date());
                 const puedeIniciarONreanudar = disponible && (intentosCompletados.length < x.intentos_permitidos || Boolean(intentoEnCurso));
                 const estado = intentoEnCurso ? "Evaluación en curso" : intentos[0]?.calificacion == null ? (intentos[0]?.estado ?? "Sin intentos") : "Nota " + intentos[0].calificacion + "/20";
-                return <div key={x.id} className="flex flex-wrap items-center justify-between gap-3 border-t border-[#e7edf2] py-3"><div className="min-w-0"><p className="text-sm font-medium">{x.titulo}</p><p className="mt-1 text-xs text-[#718096]">{intentos.length}/{x.intentos_permitidos} intentos · {estado}</p>{x.publicado && (x.disponible_desde || x.disponible_hasta) && <div className="mt-2 space-y-1 text-xs text-[#718096]">{x.disponible_desde && <p><span className="font-medium text-foreground">Disponible desde:</span> {new Date(x.disponible_desde).toLocaleString("es-PE", { dateStyle: "long", timeStyle: "short", timeZone: "America/Lima" })}</p>}{x.disponible_hasta && <p><span className="font-medium text-foreground">Cierre:</span> {new Date(x.disponible_hasta).toLocaleString("es-PE", { dateStyle: "long", timeStyle: "short", timeZone: "America/Lima" })}</p>}<p className={x.disponible_desde && new Date(x.disponible_desde).getTime() > Date.now() ? "font-semibold text-amber-700" : x.disponible_hasta && new Date(x.disponible_hasta).getTime() <= Date.now() ? "font-semibold text-[#718096]" : "font-semibold text-emerald-700"}>{x.disponible_desde && new Date(x.disponible_desde).getTime() > Date.now() ? "Programado por el profesor" : x.disponible_hasta && new Date(x.disponible_hasta).getTime() <= Date.now() ? "Plazo finalizado" : "Disponible ahora"}</p></div>}<span className={x.publicado ? "mt-1 inline-block rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-700" : "mt-1 inline-block rounded-full bg-white/5 px-2 py-1 text-[10px] font-semibold text-[#718096]"}>{x.publicado ? (disponible ? "Activo · disponible" : x.disponible_desde && new Date(x.disponible_desde).getTime() > Date.now() ? "Programado por el profesor" : x.disponible_hasta && new Date(x.disponible_hasta).getTime() <= Date.now() ? "Plazo finalizado" : "Publicado · fuera de horario") : "Desactivado · esperando al profesor"}</span></div><button type="button" disabled={!puedeIniciarONreanudar || Boolean(examenActivoAlumno)} onClick={() => { if (vistaPreviaAlumno) { setExamenSeleccionado(x.id); setExamenVistaPreviaId(x.id); setPreguntaVistaPrevia(0); setRespuestasVistaPrevia({}); setSimulacionFinalizada(false); } else { setExamenPendienteInicio({ examen: x, reanudar: Boolean(intentoEnCurso) }); } }} className="rounded-lg border border-[#cbd9e5] bg-white px-3 py-2 text-xs font-semibold text-[#294760] transition hover:bg-[#f3f7fa] disabled:cursor-not-allowed disabled:opacity-40">{!disponible ? "Aún no disponible" : intentoEnCurso ? "Continuar evaluación en curso" : "Rendir evaluación"}</button></div>;
+                return <div key={x.id} className="flex flex-wrap items-center justify-between gap-3 border-t border-[#e7edf2] py-3"><div className="min-w-0"><p className="text-sm font-medium">{x.titulo}</p><p className="mt-1 text-xs text-[#718096]">{intentos.length}/{x.intentos_permitidos} intentos · {estado}</p>{x.publicado && (x.disponible_desde || x.disponible_hasta) && <div className="mt-2 space-y-1 text-xs text-[#718096]">{x.disponible_desde && <p><span className="font-medium text-foreground">Disponible desde:</span> {new Date(x.disponible_desde).toLocaleString("es-PE", { dateStyle: "long", timeStyle: "short", timeZone: "America/Lima" })}</p>}{x.disponible_hasta && <p><span className="font-medium text-foreground">Cierre:</span> {new Date(x.disponible_hasta).toLocaleString("es-PE", { dateStyle: "long", timeStyle: "short", timeZone: "America/Lima" })}</p>}<p className={x.disponible_desde && new Date(x.disponible_desde).getTime() > Date.now() ? "font-semibold text-amber-700" : x.disponible_hasta && new Date(x.disponible_hasta).getTime() <= Date.now() ? "font-semibold text-[#718096]" : "font-semibold text-emerald-700"}>{x.disponible_desde && new Date(x.disponible_desde).getTime() > Date.now() ? "Programado por el profesor" : x.disponible_hasta && new Date(x.disponible_hasta).getTime() <= Date.now() ? "Plazo finalizado" : "Disponible ahora"}</p></div>}<span className={x.publicado ? "mt-1 inline-block rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-700" : "mt-1 inline-block rounded-full bg-white/5 px-2 py-1 text-[10px] font-semibold text-[#718096]"}>{x.publicado ? (disponible ? "Activo · disponible" : x.disponible_desde && new Date(x.disponible_desde).getTime() > Date.now() ? "Programado por el profesor" : x.disponible_hasta && new Date(x.disponible_hasta).getTime() <= Date.now() ? "Plazo finalizado" : "Publicado · fuera de horario") : "Desactivado · esperando al profesor"}</span></div><button type="button" disabled={!puedeIniciarONreanudar || Boolean(examenActivoAlumno)} onClick={() => { if (vistaPreviaAlumno) { setExamenSeleccionado(x.id); setExamenVistaPreviaId(x.id); setPreguntaVistaPrevia(0); setRespuestasVistaPrevia({}); setSimulacionFinalizada(false); } else { setErrorInicioExamen(""); setExamenPendienteInicio({ examen: x, reanudar: Boolean(intentoEnCurso) }); } }} className="rounded-lg border border-[#cbd9e5] bg-white px-3 py-2 text-xs font-semibold text-[#294760] transition hover:bg-[#f3f7fa] disabled:cursor-not-allowed disabled:opacity-40">{!disponible ? "Aún no disponible" : intentoEnCurso ? "Continuar evaluación en curso" : "Rendir evaluación"}</button></div>;
               })}</>}
                 {panelCursoActivo?.panel === "biblioteca" && <><section id={`biblioteca-curso-${i.id}`} className="scroll-mt-24 space-y-5">
                  <p className="text-sm text-[#718096]">Consulta los materiales organizados por sesión. Los materiales de sesiones bloqueadas tampoco se pueden descargar.</p>
@@ -3703,6 +3704,7 @@ function AulaFormacionPage() {
             <p className="mt-1 text-sm text-slate-400">{examenPendienteInicio.examen.titulo}</p>
           </header>
           <div className="space-y-4 p-5">
+            {errorInicioExamen ? <div role="alert" className="rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800"><p className="font-semibold">No se pudo abrir la evaluación</p><p className="mt-1 break-words">{errorInicioExamen}</p><p className="mt-2 text-xs">Puedes volver a intentarlo o avisar al docente con este mensaje.</p></div> : null}
             <div className="rounded-xl border border-[#e6dcc9] bg-white p-4">
               <p className="text-sm font-semibold">Tiempo asignado por el profesor</p>
               <p className="mt-1 text-sm text-slate-400">{examenPendienteInicio.examen.duracion_minutos ? `${examenPendienteInicio.examen.duracion_minutos} minutos` : "Sin límite de tiempo configurado"}.</p>
@@ -3718,8 +3720,8 @@ function AulaFormacionPage() {
             <button type="button" disabled={confirmandoInicioExamen} onClick={async () => {
               setConfirmandoInicioExamen(true);
               try {
-                await abrirExamenAlumno(examenPendienteInicio.examen.id);
-                setExamenPendienteInicio(null);
+                const iniciado = await abrirExamenAlumno(examenPendienteInicio.examen.id);
+                if (iniciado) { setErrorInicioExamen(""); setExamenPendienteInicio(null); }
               } finally {
                 setConfirmandoInicioExamen(false);
               }
