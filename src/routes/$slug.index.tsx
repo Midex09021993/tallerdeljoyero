@@ -351,6 +351,36 @@ function CatalogoPublicoPage() {
     ? `https://wa.me/${config.whatsapp.replace(/\D/g, "")}`
     : null;
 
+  const compartirCatalogo = async () => {
+    const url = window.location.href;
+    const titulo = config?.nombre_publico
+      ? `Catálogo de ${config.nombre_publico}`
+      : "Catálogo de joyería";
+    const texto = `Descubre el showroom digital de ${config?.nombre_publico ?? "esta joyería"}.`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: titulo, text: texto, url });
+      } catch (shareError) {
+        if (shareError instanceof Error && shareError.name === "AbortError") return;
+        try {
+          await navigator.clipboard.writeText(url);
+          window.alert("Enlace del catálogo copiado.");
+        } catch {
+          window.prompt("Copia el enlace del catálogo:", url);
+        }
+      }
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(url);
+      window.alert("Enlace del catálogo copiado.");
+    } catch {
+      window.prompt("Copia el enlace del catálogo:", url);
+    }
+  };
+
   if (isLoading) {
     return <EstadoCatalogo titulo="Cargando catálogo…" texto="Estamos preparando la publicación de esta joyería." />;
   }
@@ -380,7 +410,10 @@ function CatalogoPublicoPage() {
             <button type="button" onClick={() => setMenuMovilAbierto((open) => !open)} aria-label={menuMovilAbierto ? "Cerrar menú" : "Abrir menú"} aria-expanded={menuMovilAbierto} className="absolute right-0 top-1 grid size-10 place-items-center rounded-full text-[#5c201f] hover:bg-[#8a6b36]/10 sm:hidden">{menuMovilAbierto ? <X className="size-6" /> : <Menu className="size-6" />}</button>
           </div>
           <div className="flex w-full shrink-0 items-center justify-between gap-2 sm:w-auto sm:justify-center">
-            {whatsappHref ? <a href={whatsappHref} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-full bg-[#25D366] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#1DA851]"><MessageCircle className="size-3.5" /> Escríbenos por WhatsApp</a> : null}
+            <div className="flex items-center gap-2">
+              <button type="button" onClick={compartirCatalogo} className="inline-flex items-center gap-1.5 rounded-full border border-[#1f1b1820] px-3.5 py-2 text-xs font-semibold transition-colors hover:border-[#8a6b36]/40 hover:bg-[#8a6b36]/5" aria-label="Compartir catálogo"><Share2 className="size-3.5" /> Compartir</button>
+              {whatsappHref ? <a href={whatsappHref} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-full bg-[#25D366] px-3.5 py-2 text-xs font-semibold text-white hover:bg-[#1DA851]"><MessageCircle className="size-3.5" /> Escríbenos por WhatsApp</a> : null}
+            </div>
             <button type="button" onClick={() => setCarritoAbierto(true)} className="relative inline-flex items-center gap-2 rounded-full border border-[#1f1b1820] px-3.5 py-2 text-xs font-semibold" aria-label={"Carrito de compras, " + cantidadCarrito + " artículos"}><ShoppingBag className="size-4" /> Carrito {cantidadCarrito > 0 ? <span className="rounded-full bg-[#8a6b36] px-1.5 py-0.5 text-[10px] text-white">{cantidadCarrito}</span> : null}</button>
           </div>
           {menuMovilAbierto ? <nav className="w-full border-t border-[#1f1b1815] pt-3 sm:hidden" aria-label="Menú principal">
