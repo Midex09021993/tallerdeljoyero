@@ -224,7 +224,7 @@ function PrecioOroDiferido() {
       return;
     }
     const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) {
+      if (entry?.isIntersecting) {
         setVisible(true);
         observer.disconnect();
       }
@@ -267,7 +267,7 @@ function TalleresDeLaComunidad() {
       return;
     }
     const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) {
+      if (entry?.isIntersecting) {
         setVisible(true);
         observer.disconnect();
       }
@@ -406,7 +406,7 @@ function InicioPublico() {
 
       observer = new IntersectionObserver(
         ([entry]) => {
-          if (entry.isIntersecting) {
+          if (entry?.isIntersecting) {
             setMostrarDemo3D(true);
             observer?.disconnect();
             observer = null;
