@@ -80,11 +80,19 @@ Deno.serve(async (req: Request) => {
       expira_en: expiraEn,
     });
 
-    if (insertError) throw insertError;
+    if (insertError) {
+      console.error("crear-enlace-visor-3d insert", insertError);
+      return json({
+        error: "No se pudo guardar el enlace del visor.",
+        detail: insertError.message,
+        code: insertError.code ?? null,
+      }, 500);
+    }
 
     return json({ ok: true, token, expira_en: expiraEn, nombre: name || "joya-compartida" });
   } catch (error) {
     console.error("crear-enlace-visor-3d", error);
-    return json({ error: "No se pudo crear el enlace del visor 3D." }, 500);
+    const detail = error instanceof Error ? error.message : "Error interno desconocido.";
+    return json({ error: "No se pudo crear el enlace del visor 3D.", detail }, 500);
   }
 });
