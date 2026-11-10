@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Box, FileText, Sparkles, X } from "lucide-react";
+import { Box, FileText, FolderOpen, Sparkles, X } from "lucide-react";
 import { CatalogoImagenEditor } from "@/components/CatalogoImagenEditor";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
@@ -154,6 +154,12 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
   const [archivoPdfNombre, setArchivoPdfNombre] = useState("");
   const [avisosExtraccion, setAvisosExtraccion] = useState<string[]>([]);
   const [proyectoNube, setProyectoNube] = useState<ProyectoNubeInicial | null>(null);
+  const [carpetasModelo, setCarpetasModelo] = useState<Array<{ nombre: string; carpeta: string; archivos: ProyectoNubeInicial["archivos"]; glbBytes: number }>>([]);
+  const [selectorCarpetaAbierto, setSelectorCarpetaAbierto] = useState(false);
+  const [cargandoCarpetasModelo, setCargandoCarpetasModelo] = useState(false);
+  const [errorCarpetasModelo, setErrorCarpetasModelo] = useState("");
+  const [carpetaModeloSeleccionada, setCarpetaModeloSeleccionada] = useState("");
+
   const [productoCreadoId, setProductoCreadoId] = useState<string | null>(null);
   const [subiendo, setSubiendo] = useState(false);
   const [archivoEditor, setArchivoEditor] = useState<File | null>(null);
@@ -429,6 +435,51 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
     }
     setColaEditor([]);
   }
+
+  async function abrirSelectorCarpetaModelo() {
+    setSelectorCarpetaAbierto(true);
+    setErrorCarpetasModelo("");
+    if (carpetasModelo.length || cargandoCarpetasModelo) return;
+    setCargandoCarpetasModelo(true);
+    try {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError || !authData.user) throw new Error("Inicia sesión para consultar tus carpetas de Mi Nube.");
+      const raiz = `${participanteId}/${authData.user.id}`;
+      const { data: carpetas, error: carpetasError } = await supabase.storage.from("mi-nube").list(raiz, { limit: 1000, sortBy: { column: "name", order: "asc" } });
+      if (carpetasError) throw carpetasError;
+      const nombres = (carpetas ?? []).filter((entry) => !entry.id && !entry.metadata && entry.name).map((entry) => entry.name);
+      const candidatas = await Promise.all(nombres.map(async (nombre) => {
+        const carpeta = `${raiz}/${nombre}`;
+        const { data: entradas, error } = await supabase.storage.from("mi-nube").list(carpeta, { limit: 1000, sortBy: { column: "name", order: "asc" } });
+        if (error) return null;
+        const archivos = (entradas ?? []).filter((entry) => entry.name && (entry.id || entry.metadata)).map((entry) => {
+          const bytes = Number(entry.metadata?.size ?? 0);
+          const ext = entry.name.split(".").pop()?.toLowerCase() ?? "";
+          const categoria = ["3dm", "glb", "stl", "obj", "step", "stp", "3mf"].includes(ext) ? "modelos-3d" : ["jpg", "jpeg", "png", "webp"].includes(ext) ? "fotos" : "otros";
+          return { nombre: entry.name, ruta: `${carpeta}/${entry.name}`, categoria, bytes, origen: "supabase" as const, actualizado: entry.updated_at ?? entry.created_at ?? null };
+        });
+        const glb = archivos.find((archivo) => archivo.nombre.toLowerCase() === "01-modelo.glb") ?? archivos.find((archivo) => archivo.nombre.toLowerCase().endsWith(".glb"));
+        const original3dm = archivos.some((archivo) => archivo.nombre.toLowerCase().endsWith(".3dm"));
+        if (!glb || !original3dm) return null;
+        return { nombre, carpeta, archivos, glbBytes: glb.bytes };
+      }));
+      setCarpetasModelo(candidatas.filter((item): item is NonNullable<typeof item> => item !== null));
+    } catch (cause) {
+      setErrorCarpetasModelo(cause instanceof Error ? cause.message : "No se pudieron consultar las carpetas de Mi Nube.");
+    } finally {
+      setCargandoCarpetasModelo(false);
+    }
+  }
+
+  function vincularCarpetaModelo(carpeta: string) {
+    const elegida = carpetasModelo.find((item) => item.carpeta === carpeta);
+    if (!elegida) return;
+    setProyectoNube({ carpeta: elegida.carpeta, archivos: elegida.archivos });
+    setCarpetaModeloSeleccionada(elegida.carpeta);
+    setSelectorCarpetaAbierto(false);
+    setError(null);
+  }
+
   async function guardar(event: FormEvent) {
     event.preventDefault();
     const nombre = form.nombre.trim();
@@ -653,6 +704,26 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
               </div>
             </div>
             <label className="flex items-center gap-3 rounded-xl border border-border p-3 text-xs sm:col-span-2"><input type="checkbox" checked={form.mostrar_precio} onChange={e => setForm(v => ({ ...v, mostrar_precio: e.target.checked }))} /> Mostrar precio en el catálogo público</label>
+          </section>
+
+          <section className="grid gap-3 rounded-2xl border border-gold/30 bg-gold/5 p-4">
+            <div className="flex items-start gap-3">
+              <div className="rounded-xl bg-gold/10 p-2.5 text-gold"><Box className="size-5" /></div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-bold uppercase tracking-[.18em] text-gold">Modelo 3D · Mi Nube</p>
+                <p className="mt-1 text-sm font-semibold">Vincula la carpeta del proyecto</p>
+                <p className="mt-1 text-xs text-muted-foreground">Buscaremos automáticamente el GLB interno de esa carpeta. Solo se mostrarán carpetas que tengan un archivo 3DM y un GLB preparado.</p>
+              </div>
+            </div>
+            <button type="button" onClick={() => void abrirSelectorCarpetaModelo()} disabled={cargandoCarpetasModelo || !participanteId} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-gold/40 bg-background px-4 py-2.5 text-xs font-semibold hover:bg-gold/5 disabled:opacity-60">
+              <FolderOpen className="size-4" /> {cargandoCarpetasModelo ? "Buscando carpetas…" : proyectoNube ? "Cambiar carpeta vinculada" : "Vincular carpeta de Mi Nube"}
+            </button>
+            {proyectoNube ? <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 text-xs"><p className="font-semibold text-emerald-700">Carpeta vinculada</p><p className="mt-1 break-all text-muted-foreground">{proyectoNube.carpeta}</p><p className="mt-1 text-muted-foreground">GLB detectado: {proyectoNube.archivos.find((archivo) => archivo.nombre.toLowerCase() === "01-modelo.glb")?.nombre ?? proyectoNube.archivos.find((archivo) => archivo.nombre.toLowerCase().endsWith(".glb"))?.nombre}</p></div> : null}
+            {errorCarpetasModelo ? <p role="alert" className="text-xs text-destructive">{errorCarpetasModelo}</p> : null}
+            {selectorCarpetaAbierto ? <div className="grid gap-2 rounded-xl border border-border bg-background p-3">
+              <div className="flex items-center justify-between gap-2"><p className="text-xs font-semibold">Carpetas con modelo 3D preparado</p><button type="button" onClick={() => setSelectorCarpetaAbierto(false)} className="rounded-lg p-1 text-muted-foreground hover:bg-muted" aria-label="Cerrar selector"><X className="size-4" /></button></div>
+              {cargandoCarpetasModelo ? <p className="py-3 text-xs text-muted-foreground">Revisando tus proyectos de Mi Nube…</p> : carpetasModelo.length ? <div className="grid max-h-56 gap-2 overflow-y-auto">{carpetasModelo.map((item) => <button key={item.carpeta} type="button" onClick={() => vincularCarpetaModelo(item.carpeta)} className="flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2.5 text-left hover:border-gold/50 hover:bg-gold/5"><span className="min-w-0"><span className="block truncate text-xs font-semibold">{item.nombre}</span><span className="mt-0.5 block text-[10px] text-muted-foreground">GLB · {(item.glbBytes / (1024 * 1024)).toFixed(2)} MB</span></span><span className="shrink-0 text-[10px] font-semibold text-emerald-700">Seleccionar</span></button>)}</div> : <p className="py-3 text-xs text-muted-foreground">No encontramos carpetas con un 3DM y su GLB preparado. Comprueba que el proyecto esté guardado en Mi Nube.</p>}
+            </div> : null}
           </section>
 
           {proyectoNube ? (
