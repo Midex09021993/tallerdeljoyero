@@ -1,7 +1,7 @@
 /* eslint-disable-next-line @typescript-eslint/ban-ts-comment -- excepción temporal: corregir tipos heredados requiere una tarea separada */
 // @ts-nocheck
 import { ClientOnly, createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Box, ExternalLink, FileText, MessageCircle, Play, Share2, Sparkles, ShoppingBag, X, Ruler, Truck, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Box, ExternalLink, FileText, Image, MessageCircle, Play, Share2, Sparkles, ShoppingBag, X, Ruler, Truck, CheckCircle2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { supabasePublic as supabase } from "@/integrations/supabase/client";
@@ -206,6 +206,16 @@ export function CatalogoProductoPublicoPage() {
 
       <section className="mx-auto grid w-full max-w-[1720px] gap-4 px-4 py-3 sm:px-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(360px,.85fr)] lg:gap-6 lg:px-8 lg:py-4 2xl:gap-10 2xl:px-12 2xl:py-8 [@media(min-width:1024px)_and_(max-height:850px)]:gap-4 [@media(min-width:1024px)_and_(max-height:850px)]:py-2">
         <div className="min-w-0">
+          {modelo3dPublico ? (
+            <div className="mb-3 flex w-fit items-center gap-1 rounded-full border border-[#1f1b1818] bg-white p-1 shadow-sm" role="group" aria-label="Modo de visualización">
+              <button type="button" onClick={() => setVistaVisual("fotos")} aria-pressed={vistaVisual === "fotos"} className={"inline-flex min-h-9 items-center gap-2 rounded-full px-4 text-xs font-semibold transition " + (vistaVisual === "fotos" ? "bg-[#f4ecdc] text-[#76551f] shadow-sm" : "text-[#746b62] hover:bg-[#f7f4ef]")}>
+                <Image className="size-4" /> Fotografías
+              </button>
+              <button type="button" onClick={() => setVistaVisual("3d")} aria-pressed={vistaVisual === "3d"} className={"inline-flex min-h-9 items-center gap-2 rounded-full px-4 text-xs font-semibold transition " + (vistaVisual === "3d" ? "bg-[#f4ecdc] text-[#76551f] shadow-sm" : "text-[#746b62] hover:bg-[#f7f4ef]")}>
+                <Box className="size-4" /> Ver en 3D
+              </button>
+            </div>
+          ) : null}
           <div role="tabpanel" aria-label={vistaVisual === "fotos" ? "Fotografías del producto" : "Configurador 3D"} className="min-w-0">
             {vistaVisual === "fotos" ? <>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
