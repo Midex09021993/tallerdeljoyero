@@ -2537,6 +2537,34 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           // capture between progress-frame yields. The browser can still paint React UI.
           const loop:any=viewerLoopRef.current;
           loop?.pause?.();
+
+          // Keep the interactive viewport visually frozen while the shared WebGL
+          // renderer temporarily changes its drawing buffer for the high-resolution
+          // capture. The overlay is a bitmap of the last live frame; it does not
+          // participate in rendering, camera controls, materials or the export.
+          const viewportOverlay = document.createElement("canvas");
+          const viewportRect = liveCanvas.getBoundingClientRect();
+          const viewportParent = nodo;
+          const previousParentPosition = viewportParent.style.position;
+          const needsRelativeParent = window.getComputedStyle(viewportParent).position === "static";
+          if (needsRelativeParent) viewportParent.style.position = "relative";
+          viewportOverlay.width = Math.max(1, Math.round(viewportRect.width * (window.devicePixelRatio || 1)));
+          viewportOverlay.height = Math.max(1, Math.round(viewportRect.height * (window.devicePixelRatio || 1)));
+          viewportOverlay.style.position = "absolute";
+          viewportOverlay.style.inset = "0";
+          viewportOverlay.style.width = "100%";
+          viewportOverlay.style.height = "100%";
+          viewportOverlay.style.pointerEvents = "none";
+          viewportOverlay.style.zIndex = "2";
+          viewportOverlay.setAttribute("aria-hidden", "true");
+          const viewportOverlayContext = viewportOverlay.getContext("2d");
+          if (viewportOverlayContext) {
+            viewportOverlayContext.drawImage(liveCanvas, 0, 0, viewportOverlay.width, viewportOverlay.height);
+            viewportParent.appendChild(viewportOverlay);
+          } else if (needsRelativeParent) {
+            viewportParent.style.position = previousParentPosition;
+          }
+
           const capturePassStates: Array<{pass:any;enabled:boolean}> = [];
           const originalCameraPosition = camara.position.clone();
           const originalCameraQuaternion = camara.quaternion.clone();
@@ -2695,6 +2723,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             context.drawImage(renderer.domElement,0,0,width,height);
             dataUrl=output.toDataURL(mime,0.94);
           } finally {
+            viewportOverlay.remove();
+            if (needsRelativeParent) viewportParent.style.position = previousParentPosition;
             escena.background=originalBackground;
             Object.assign(postRuntimeConfig, originalDofConfig);
             renderer.setClearColor(originalClearColor,originalClearAlpha);
