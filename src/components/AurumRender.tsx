@@ -2612,15 +2612,29 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               },
             });
             if (!transparent) {
-              // The WebGL canvas is transparent so the viewer can show the CSS backdrop.
-              // Recreate its solid color in the export instead of forcing white.
-              const backdropColor = typeof window !== "undefined"
-                ? window.getComputedStyle(nodo).backgroundColor
-                : "rgb(255, 255, 255)";
-              context.fillStyle = backdropColor && backdropColor !== "rgba(0, 0, 0, 0)"
-                ? backdropColor
-                : "#ffffff";
+              // Read the exact backdrop assigned by the scene controller (inline style),
+              // not the WebGL canvas: the viewer deliberately keeps WebGL alpha transparent.
+              const backdropStyle = nodo.style;
+              const computedBackdrop = typeof window !== "undefined" ? window.getComputedStyle(nodo) : null;
+              const backdropColor = backdropStyle.backgroundColor || computedBackdrop?.backgroundColor || "#ffffff";
+              const backdropImage = backdropStyle.backgroundImage || computedBackdrop?.backgroundImage || "none";
+              context.fillStyle = backdropColor === "transparent" || backdropColor === "rgba(0, 0, 0, 0)" ? "#ffffff" : backdropColor;
               context.fillRect(0,0,width,height);
+              // Recreate the supported CSS gradient backgrounds on the export canvas.
+              if (backdropImage && backdropImage !== "none" && backdropImage.includes("gradient")) {
+                const stops = Array.from(backdropImage.matchAll(/(#[0-9a-fA-F]{3,8}|rgba?\\([^)]*\\)|hsla?\\([^)]*\\))\\s*(\\d+(?:\\.\\d+)?%?)?/g));
+                const colors = stops.map(match => ({ color: match[1], at: match[3] ? Number.parseFloat(match[3]) / (match[3].includes("%") ? 100 : 100) : NaN })).filter(stop => stop.color);
+                if (colors.length >= 2) {
+                  const angleMatch = backdropImage.match(/linear-gradient\\(\\s*(-?\\d+(?:\\.\\d+)?)deg/);
+                  const angle = (Number(angleMatch?.[1] ?? 135) - 90) * Math.PI / 180;
+                  const dx = Math.cos(angle) * width / 2;
+                  const dy = Math.sin(angle) * height / 2;
+                  const gradient = context.createLinearGradient(width / 2 - dx, height / 2 - dy, width / 2 + dx, height / 2 + dy);
+                  colors.forEach((stop, index) => gradient.addColorStop(Number.isFinite(stop.at) ? Math.max(0, Math.min(1, stop.at)) : index / (colors.length - 1), stop.color));
+                  context.fillStyle = gradient;
+                  context.fillRect(0,0,width,height);
+                }
+              }
             } else {
               context.clearRect(0,0,width,height);
             }
