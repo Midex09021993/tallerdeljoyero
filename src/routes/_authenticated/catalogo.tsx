@@ -756,7 +756,7 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
         slug: slugNormalizado,
         descripcion: descripcion.trim() || null,
         frase_portada: frasePortada.trim() || null,
-        texto_superior_portada: textoSuperiorPortada.trim() || null,
+        texto_superior_portada: "SHOWROOM " + nombre.trim(),
         whatsapp: whatsapp.trim() || null,
         telefono_contacto: telefonoContacto.trim() || null,
         email_contacto: emailContacto.trim() || null,
@@ -862,8 +862,8 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
           </details>
           <label className="grid gap-1.5 text-xs font-semibold sm:col-span-2">Descripción pública<textarea rows={3} value={descripcion} onChange={e => setDescripcion(e.target.value)} className="rounded-xl border border-input bg-card px-3.5 py-3 text-sm font-normal text-foreground outline-none transition focus:border-gold focus:ring-4 focus:ring-gold/15" /></label>
           <label className="grid gap-1.5 text-xs font-semibold sm:col-span-2">Texto superior de portada
-            <input maxLength={100} value={textoSuperiorPortada} onChange={e => setTextoSuperiorPortada(e.target.value)} placeholder="SHOWROOM · SIBERIANA JOYERÍA" className="h-11 rounded-xl border border-input bg-card px-3.5 text-sm font-normal text-foreground shadow-sm outline-none transition focus:border-gold focus:ring-4 focus:ring-gold/15" />
-            <span className="text-[11px] font-normal text-muted-foreground">Texto pequeño sobre el título principal. Déjalo vacío para ocultarlo y evitar repetir el nombre de la joyería.</span>
+            <input value={"SHOWROOM " + (nombre.trim() || "AURUM JOYERÍA")} readOnly disabled aria-readonly="true" className="h-11 cursor-not-allowed rounded-xl border border-input bg-muted/70 px-3.5 text-sm font-semibold uppercase tracking-wide text-muted-foreground opacity-100" />
+            <span className="text-[11px] font-normal text-muted-foreground">Identificador fijo del showroom. Se genera automáticamente con el nombre público de la joyería y no se puede editar.</span>
           </label>
           <label className="grid gap-1.5 text-xs font-semibold sm:col-span-2">Frase principal de portada
             <input maxLength={120} value={frasePortada} onChange={e => setFrasePortada(e.target.value)} placeholder="Joyas hechas para quedarse." className="h-11 rounded-xl border border-input bg-card px-3.5 text-sm font-normal text-foreground shadow-sm outline-none transition focus:border-gold focus:ring-4 focus:ring-gold/15" />
