@@ -163,5 +163,82 @@ $$;
 revoke all on function public.agenda_listar_horarios() from public, anon;
 grant execute on function public.agenda_listar_horarios() to authenticated;
 
+
+-- Segunda barrera: la reserva RPC también valida el bloqueo, aunque se invoque
+-- directamente sin pasar por el selector de disponibilidad de la interfaz.
+create or replace function public.agenda_reservar(
+  _horario_id uuid,
+  _tema text,
+  _descripcion text default null
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $
+declare
+  v_uid uuid := auth.uid();
+  v_participante_id uuid;
+  v_horario public.agenda_horarios%rowtype;
+  v_reserva_id uuid;
+begin
+  if v_uid is null then
+    raise exception using errcode = '28000', message = 'Debes iniciar sesión.';
+  end if;
+  if not exists (select 1 from public.user_roles ur where ur.user_id = v_uid and ur.role::text in ('gerente','dueno')) then
+    raise exception using errcode = '42501', message = 'Sólo los dueños y gerentes pueden solicitar asesorías.';
+  end if;
+  if _tema is null or char_length(btrim(_tema)) not between 3 and 160
+     or (_descripcion is not null and char_length(_descripcion) > 1000) then
+    raise exception using errcode = '22023', message = 'Revisa el tema y la descripción de la asesoría.';
+  end if;
+
+  select pc.participante_id into v_participante_id
+  from public.participante_cuentas pc
+  join public.ecosistema_participantes ep on ep.id = pc.participante_id
+  where pc.user_id = v_uid and pc.estado = 'activo' and ep.estado = 'activo'
+  order by pc.created_at limit 1;
+  if v_participante_id is null then
+    select p.participante_id into v_participante_id
+    from public.profiles p
+    join public.ecosistema_participantes ep on ep.id = p.participante_id and ep.estado = 'activo'
+    where p.id = v_uid;
+  end if;
+  if v_participante_id is null then
+    raise exception using errcode = '42501', message = 'Tu cuenta no está vinculada a un taller activo.';
+  end if;
+
+  select * into v_horario
+  from public.agenda_horarios
+  where id = _horario_id and activo = true
+  for update;
+  if not found or v_horario.inicio_at <= now() then
+    raise exception using errcode = 'P0002', message = 'El horario ya no está disponible.';
+  end if;
+
+  if exists (
+    select 1 from public.agenda_eventos e
+    where e.activo
+      and tstzrange(e.inicio_at,e.fin_at,'[)') && tstzrange(v_horario.inicio_at,v_horario.fin_at,'[)')
+  ) then
+    raise exception using errcode = '23505', message = 'Ese horario está bloqueado por un compromiso de FADILAB.';
+  end if;
+  if exists (
+    select 1 from public.agenda_reservas r
+    where r.horario_id = _horario_id and r.estado in ('pendiente','confirmada')
+  ) then
+    raise exception using errcode = '23505', message = 'Ese horario acaba de ser reservado. Elige otro.';
+  end if;
+
+  insert into public.agenda_reservas(horario_id,solicitante_id,participante_id,tema,descripcion)
+  values (_horario_id,v_uid,v_participante_id,btrim(_tema),nullif(btrim(_descripcion),''))
+  returning id into v_reserva_id;
+  return v_reserva_id;
+end;
+$;
+revoke all on function public.agenda_reservar(uuid,text,text) from public, anon;
+grant execute on function public.agenda_reservar(uuid,text,text) to authenticated;
+
 notify pgrst, 'reload schema';
+
 commit;
