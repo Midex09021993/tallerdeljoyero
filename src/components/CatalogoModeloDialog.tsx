@@ -116,32 +116,23 @@ function slugify(value: string) {
   return value.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
 }
 
-async function prepararImagenCatalogo(file: File): Promise<File> {
+async function prepararImagenCuadrada(file: File): Promise<File> {
   if (!file.type.startsWith("image/")) throw new Error("Selecciona una imagen válida.");
   if (file.size > 20 * 1024 * 1024) throw new Error("La imagen supera los 20 MB. Reduce su tamaño e inténtalo de nuevo.");
   const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
   try {
-    const canvas = document.createElement("canvas");
-    canvas.width = 1200;
-    canvas.height = 1200;
+    if (bitmap.width !== bitmap.height) throw new Error("La fotografía no es cuadrada y necesita encuadre.");
+    if (bitmap.width === 1200 && file.type === "image/webp") return file;
+    const canvas = document.createElement("canvas"); canvas.width = 1200; canvas.height = 1200;
     const context = canvas.getContext("2d");
     if (!context) throw new Error("No se pudo preparar el lienzo de la imagen.");
-    // Fondo neutro y ajuste contain: conserva toda la joya sin cortar ni deformar.
-    context.fillStyle = "#ffffff";
-    context.fillRect(0, 0, 1200, 1200);
-    const margen = 72;
-    const escala = Math.min((1200 - margen * 2) / bitmap.width, (1200 - margen * 2) / bitmap.height);
-    const ancho = Math.round(bitmap.width * escala);
-    const alto = Math.round(bitmap.height * escala);
-    context.imageSmoothingEnabled = true;
-    context.imageSmoothingQuality = "high";
-    context.drawImage(bitmap, Math.round((1200 - ancho) / 2), Math.round((1200 - alto) / 2), ancho, alto);
+    context.fillStyle = "#ffffff"; context.fillRect(0, 0, 1200, 1200);
+    context.imageSmoothingEnabled = true; context.imageSmoothingQuality = "high";
+    context.drawImage(bitmap, 0, 0, 1200, 1200);
     const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob((value) => value ? resolve(value) : reject(new Error("No se pudo optimizar la fotografía.")), "image/webp", 0.9));
     const nombreBase = file.name.replace(/\.[^.]+$/, "").replace(/[^a-zA-Z0-9_-]+/g, "-").slice(0, 80) || "joya";
     return new File([blob], nombreBase + "-1200.webp", { type: "image/webp", lastModified: Date.now() });
-  } finally {
-    bitmap.close();
-  }
+  } finally { bitmap.close(); }
 }
 
 export function CatalogoModeloDialog({ open, producto, participanteId, categorias, onClose, onSaved, initialImageUrl, initialName, initialProject, initialPdf }: Props) {
@@ -399,7 +390,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
     setProgresoSubida(0);
     setError(null);
     try {
-      const imagenCuadrada = yaPreparada ? file : await prepararImagenCatalogo(file);
+      const imagenCuadrada = yaPreparada ? file : await prepararImagenCuadrada(file);
       const ruta = `${participanteId}/${carpeta}/${tipo}-${Date.now()}-${nombreSeguro(imagenCuadrada.name)}`;
       await subirConProgreso({ bucket: "catalogo-joyas", ruta, file: imagenCuadrada, onProgreso: setProgresoSubida });
       const { data } = supabase.storage.from("catalogo-joyas").getPublicUrl(ruta);
@@ -417,6 +408,26 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
     }
   }
 
+  async function seleccionarImagenes(files: File[], tipo: "principal" | "galeria") {
+    for (let index = 0; index < files.length; index += 1) {
+      const file = files[index];
+      try {
+        if (!file.type.startsWith("image/")) throw new Error("Selecciona una imagen válida.");
+        if (file.size > 20 * 1024 * 1024) throw new Error("La imagen supera los 20 MB. Reduce su tamaño e inténtalo de nuevo.");
+        const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+        const width = bitmap.width; const height = bitmap.height; bitmap.close();
+        if (width === height) {
+          const optimizada = width === 1200 && file.type === "image/webp" ? file : await prepararImagenCuadrada(file);
+          await subirImagen(optimizada, tipo, true);
+        } else {
+          setTipoEditor(tipo); setColaEditor(files.slice(index + 1)); setArchivoEditor(file); return;
+        }
+      } catch (cause) {
+        setError(cause instanceof Error ? cause.message : "No se pudo preparar la fotografía."); return;
+      }
+    }
+    setColaEditor([]);
+  }
   async function guardar(event: FormEvent) {
     event.preventDefault();
     const nombre = form.nombre.trim();
@@ -579,7 +590,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
               ) : <div className="rounded-xl border border-dashed border-border p-4 text-center text-xs text-muted-foreground">Todavía no has seleccionado una imagen principal.</div>}
               <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-gold/40 bg-gold/5 px-4 py-3 text-xs font-semibold transition hover:bg-gold/10">
                 {subiendo ? "Subiendo imagen…" : form.imagen_principal_url ? "Cambiar imagen principal" : "Seleccionar imagen principal"}
-                <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" disabled={subiendo} onChange={(e) => { const file = e.currentTarget.files?.[0]; e.currentTarget.value = ""; if (file) { setTipoEditor("principal"); setColaEditor([]); setArchivoEditor(file); } }} className="sr-only" />
+                <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" disabled={subiendo} onChange={(e) => { const file = e.currentTarget.files?.[0]; e.currentTarget.value = ""; if (file) void seleccionarImagenes([file], "principal"); }} className="sr-only" />
               </label>
             </div>
             <div className="grid gap-2 sm:col-span-2">
@@ -596,7 +607,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
               ) : <div className="rounded-xl border border-dashed border-border p-4 text-center text-xs text-muted-foreground">Aún no hay imágenes en la galería.</div>}
               <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-border px-4 py-3 text-xs font-semibold transition hover:bg-surface-muted">
                 Añadir imágenes a la galería
-                <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" multiple disabled={subiendo} onChange={(e) => { const files = Array.from(e.currentTarget.files ?? []); e.currentTarget.value = ""; if (files.length) { setTipoEditor("galeria"); setColaEditor(files.slice(1)); setArchivoEditor(files[0]); } }} className="sr-only" />
+                <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" multiple disabled={subiendo} onChange={(e) => { const files = Array.from(e.currentTarget.files ?? []); e.currentTarget.value = ""; if (files.length) void seleccionarImagenes(files, "galeria"); }} className="sr-only" />
               </label>
               {subiendo ? <span className="text-[11px] text-muted-foreground">Subiendo imágenes… {progresoSubida}%</span> : null}
             </div>
@@ -691,11 +702,11 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
           file={archivoEditor}
           onCancel={() => { setArchivoEditor(null); setColaEditor([]); }}
           onConfirm={(imagenPreparada) => {
-            const siguiente = colaEditor[0];
+            const pendientes = colaEditor;
             setArchivoEditor(null);
-            setColaEditor((actual) => actual.slice(1));
+            setColaEditor([]);
             void subirImagen(imagenPreparada, tipoEditor, true).then(() => {
-              if (siguiente) setArchivoEditor(siguiente);
+              if (pendientes.length) void seleccionarImagenes(pendientes, tipoEditor);
             });
           }}
         />
