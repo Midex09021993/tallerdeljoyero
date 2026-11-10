@@ -411,6 +411,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
   async function seleccionarImagenes(files: File[], tipo: "principal" | "galeria") {
     for (let index = 0; index < files.length; index += 1) {
       const file = files[index];
+      if (!file) continue;
       try {
         if (!file.type.startsWith("image/")) throw new Error("Selecciona una imagen válida.");
         if (file.size > 20 * 1024 * 1024) throw new Error("La imagen supera los 20 MB. Reduce su tamaño e inténtalo de nuevo.");
