@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { FileText, Sparkles, X } from "lucide-react";
+import { Box, FileText, Sparkles, X } from "lucide-react";
 import { CatalogoImagenEditor } from "@/components/CatalogoImagenEditor";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
