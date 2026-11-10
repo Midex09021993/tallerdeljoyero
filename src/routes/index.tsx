@@ -90,12 +90,8 @@ function detectarPaisDelNavegador(): string {
   if (typeof navigator === "undefined") return "PE";
   const idiomas = [...(navigator.languages ?? []), navigator.language];
   for (const idioma of idiomas) {
-    try {
-      const region = new Intl.Locale(idioma).region;
-      if (region && PAISES_TELEFONO.some((pais) => pais.iso === region)) return region;
-    } catch {
-      // Ignorar configuraciones regionales no válidas y probar el siguiente idioma.
-    }
+    const region = idioma.match(/[-_]([A-Za-z]{2})(?:$|[-_])/i)?.[1]?.toUpperCase();
+    if (region && PAISES_TELEFONO.some((pais) => pais.iso === region)) return region;
   }
   return "PE";
 }
