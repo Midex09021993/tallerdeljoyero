@@ -14,6 +14,96 @@ export type Database = {
   }
   public: {
     Tables: {
+      agenda_horarios: {
+        Row: {
+          activo: boolean
+          creado_por: string
+          created_at: string
+          fin_at: string
+          id: string
+          inicio_at: string
+          zona_horaria: string
+        }
+        Insert: {
+          activo?: boolean
+          creado_por: string
+          created_at?: string
+          fin_at: string
+          id?: string
+          inicio_at: string
+          zona_horaria?: string
+        }
+        Update: {
+          activo?: boolean
+          creado_por?: string
+          created_at?: string
+          fin_at?: string
+          id?: string
+          inicio_at?: string
+          zona_horaria?: string
+        }
+        Relationships: []
+      }
+      agenda_reservas: {
+        Row: {
+          created_at: string
+          descripcion: string | null
+          enlace_reunion: string | null
+          estado: string
+          gestionado_por: string | null
+          horario_id: string
+          id: string
+          nota_administrador: string | null
+          participante_id: string | null
+          solicitante_id: string
+          tema: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          descripcion?: string | null
+          enlace_reunion?: string | null
+          estado?: string
+          gestionado_por?: string | null
+          horario_id: string
+          id?: string
+          nota_administrador?: string | null
+          participante_id?: string | null
+          solicitante_id: string
+          tema: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          descripcion?: string | null
+          enlace_reunion?: string | null
+          estado?: string
+          gestionado_por?: string | null
+          horario_id?: string
+          id?: string
+          nota_administrador?: string | null
+          participante_id?: string | null
+          solicitante_id?: string
+          tema?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agenda_reservas_horario_id_fkey"
+            columns: ["horario_id"]
+            isOneToOne: false
+            referencedRelation: "agenda_horarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agenda_reservas_participante_id_fkey"
+            columns: ["participante_id"]
+            isOneToOne: false
+            referencedRelation: "ecosistema_participantes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       archivos_digitales_marketplace: {
         Row: {
           archivos_adjuntos: Json
@@ -4644,6 +4734,55 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      agenda_actualizar_reserva: {
+        Args: {
+          _enlace_reunion?: string
+          _estado: string
+          _nota_administrador?: string
+          _reserva_id: string
+        }
+        Returns: undefined
+      }
+      agenda_cancelar_reserva: {
+        Args: { _reserva_id: string }
+        Returns: undefined
+      }
+      agenda_crear_horario: {
+        Args: { _fin_at: string; _inicio_at: string; _zona_horaria?: string }
+        Returns: string
+      }
+      agenda_es_administrador: { Args: never; Returns: boolean }
+      agenda_listar_horarios: {
+        Args: never
+        Returns: {
+          fin_at: string
+          id: string
+          inicio_at: string
+          zona_horaria: string
+        }[]
+      }
+      agenda_listar_reservas: {
+        Args: never
+        Returns: {
+          created_at: string
+          descripcion: string
+          enlace_reunion: string
+          estado: string
+          fin_at: string
+          horario_id: string
+          id: string
+          inicio_at: string
+          nota_administrador: string
+          solicitante_id: string
+          solicitante_nombre: string
+          taller_nombre: string
+          tema: string
+        }[]
+      }
+      agenda_reservar: {
+        Args: { _descripcion?: string; _horario_id: string; _tema: string }
+        Returns: string
+      }
       asignar_participante_externo_trabajo: {
         Args: { _participante_id: string; _trabajo_id: string }
         Returns: Json
