@@ -208,7 +208,6 @@ function AgendaPage() {
             </div>
           </section>
         ) : (
-        ) : (
           <section className="grid gap-5 lg:grid-cols-[1.05fr_.95fr]">
             <div className="rounded-2xl border bg-card p-5 shadow-card">
               <div className="flex items-center gap-2"><CalendarDays className="size-5 text-gold-deep" /><h2 className="text-lg font-semibold">Reservar asesoría</h2></div>
