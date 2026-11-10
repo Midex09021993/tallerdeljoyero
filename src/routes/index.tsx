@@ -89,6 +89,7 @@ function formatoSoles(valor: number) {
 
 function PlanesPublicos() {
   const [periodicidad, setPeriodicidad] = useState<"mensual" | "trimestral" | "anual">("mensual");
+  const [planCapacidadesAbierto, setPlanCapacidadesAbierto] = useState<string | null>(null);
   const periodos = {
     mensual: { etiqueta: "Mensual", meses: 1, descuento: 0 },
     trimestral: { etiqueta: "Trimestral", meses: 3, descuento: 0.10 },
@@ -138,7 +139,7 @@ function PlanesPublicos() {
           const precioMensual = plan.precioMensual ?? 0;
           const totalPeriodo = precioMensual * periodo.meses * (1 - periodo.descuento);
           return (
-            <article key={plan.nombre} className={"relative flex h-full flex-col rounded-2xl border bg-white p-5 shadow-[0_4px_18px_rgba(15,23,42,.035)] sm:p-6 " + (plan.destacado ? "border-[#d4aa19] ring-1 ring-[#d4aa19]" : "border-slate-200")}>
+            <article key={plan.nombre} role="button" tabIndex={0} aria-haspopup="dialog" aria-label={"Ver capacidades del plan " + plan.nombre} onClick={() => setPlanCapacidadesAbierto(plan.nombre)} onKeyDown={event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setPlanCapacidadesAbierto(plan.nombre); } }} className={"relative flex h-full cursor-pointer flex-col rounded-2xl border bg-white p-5 shadow-[0_4px_18px_rgba(15,23,42,.035)] transition hover:-translate-y-0.5 hover:shadow-[0_10px_28px_rgba(15,23,42,.09)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19] sm:p-6 " + (plan.destacado ? "border-[#d4aa19] ring-1 ring-[#d4aa19]" : "border-slate-200")}>
               {plan.destacado && <span className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-[#f8c928] px-3 py-1 text-[10px] font-bold text-[#17232d]">Más capacidades</span>}
               <h3 className="mt-1 text-lg font-bold text-[#17232d]">{plan.nombre}</h3>
               <p className="mt-2 min-h-10 text-xs leading-5 text-slate-500">{plan.descripcion}</p>
@@ -156,13 +157,41 @@ function PlanesPublicos() {
               <ul className="mt-4 flex-1 space-y-3 border-t border-slate-100 pt-4">
                 {plan.funciones.map((funcion) => <li key={funcion} className="flex items-start gap-2 text-xs leading-5 text-slate-600"><Check className="mt-0.5 size-4 shrink-0 text-emerald-600" />{funcion}</li>)}
               </ul>
-              <Link to={plan.href} className={"mt-6 inline-flex min-h-10 items-center justify-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19] " + (plan.destacado ? "bg-[#17232d] text-white hover:bg-[#293b49]" : "border border-slate-300 text-[#17232d] hover:border-[#d4aa19] hover:bg-[#fffbee]")}>
+              <Link to={plan.href} onClick={event => event.stopPropagation()} className={"mt-6 inline-flex min-h-10 items-center justify-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19] " + (plan.destacado ? "bg-[#17232d] text-white hover:bg-[#293b49]" : "border border-slate-300 text-[#17232d] hover:border-[#d4aa19] hover:bg-[#fffbee]")}>
                 {plan.accion} <ArrowRight className="size-3.5" />
               </Link>
             </article>
           );
         })}
       </div>
+      {planCapacidadesAbierto ? (() => {
+        const capacidades = {
+          Emprendedor: { productos: 10, operaciones: 10, almacenamiento: 1, carpetas: 10 },
+          Taller: { productos: 50, operaciones: 50, almacenamiento: 5, carpetas: 50 },
+          Profesional: { productos: 1000, operaciones: 1500, almacenamiento: 100, carpetas: 200 },
+          Empresarial: { productos: -1, operaciones: -1, almacenamiento: -1, carpetas: -1 },
+        }[planCapacidadesAbierto as "Emprendedor" | "Taller" | "Profesional" | "Empresarial"];
+        if (!capacidades) return null;
+        const campos = [
+          { label: "Productos catálogo", value: capacidades.productos },
+          { label: "Operaciones/mes", value: capacidades.operaciones },
+          { label: "Almacenamiento (GB)", value: capacidades.almacenamiento },
+          { label: "Carpetas Mi Nube", value: capacidades.carpetas },
+        ];
+        return <div className="fixed inset-0 z-[100] grid place-items-center bg-[#17232d]/45 p-4 backdrop-blur-sm" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) setPlanCapacidadesAbierto(null); }}>
+          <section role="dialog" aria-modal="true" aria-labelledby="capacidades-plan-title" className="w-full max-w-3xl rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl sm:p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div><p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#b58b37]">Capacidades incluidas</p><h3 id="capacidades-plan-title" className="mt-1 text-xl font-bold text-[#17232d]">Plan {planCapacidadesAbierto}</h3><p className="mt-1 text-xs text-slate-500">Límites y recursos asignados a este plan.</p></div>
+              <button type="button" onClick={() => setPlanCapacidadesAbierto(null)} aria-label="Cerrar capacidades" className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"><X className="size-5" /></button>
+            </div>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              {campos.map(campo => <div key={campo.label} className="rounded-xl border border-slate-200 bg-white p-4"><p className="text-[11px] font-medium text-slate-500">{campo.label}</p><p className="mt-1 text-2xl font-semibold tabular-nums text-[#17232d]">{campo.value < 0 ? "Sin límite" : campo.value}</p></div>)}
+            </div>
+            <p className="mt-4 text-[11px] text-slate-500">Selecciona el botón del plan para continuar con el acceso o la contratación.</p>
+            <div className="mt-5 flex justify-end"><button type="button" onClick={() => setPlanCapacidadesAbierto(null)} className="rounded-xl bg-[#17232d] px-5 py-2.5 text-xs font-bold text-white transition hover:bg-[#293b49]">Cerrar</button></div>
+          </section>
+        </div>;
+      })() : null}
       <p className="mx-auto mt-5 max-w-3xl text-center text-[11px] leading-5 text-slate-500">Los importes y descuentos se muestran según el periodo de pago seleccionado. Revisa las condiciones antes de confirmar tu suscripción.</p>
     </>
   );
