@@ -580,6 +580,22 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
     event.target.value = "";
     if (!files.length) return;
     if (enlacesCarrusel.length + files.length > 10) { setError("El carrusel admite como máximo 10 elementos entre imágenes y videos."); return; }
+    const archivoExcedido = files.find(file => {
+      const esVideo = file.type.startsWith("video/");
+      const esImagen = file.type.startsWith("image/");
+      const limiteBytes = (esVideo ? 50 : 15) * 1024 * 1024;
+      return (!esVideo && !esImagen) || file.size > limiteBytes;
+    });
+    if (archivoExcedido) {
+      const esVideo = archivoExcedido.type.startsWith("video/");
+      if (!esVideo && !archivoExcedido.type.startsWith("image/")) {
+        setError(`“${archivoExcedido.name}” no es un formato compatible. Selecciona una imagen o un video admitido.`);
+      } else {
+        const limite = esVideo ? 50 : 15;
+        setError(`“${archivoExcedido.name}” pesa ${formatBytesUpload(archivoExcedido.size)} y supera el máximo de ${limite} MB para ${esVideo ? "videos" : "imágenes"}. No se inició ninguna subida.`);
+      }
+      return;
+    }
     const totalBytes = files.reduce((total, file) => total + file.size, 0);
     let bytesCompletados = 0;
     setSubiendoCarrusel(true);
@@ -761,6 +777,7 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
                 {subiendoCarrusel ? <span className="size-4 animate-spin rounded-full border-2 border-[#c5a66c]/30 border-t-[#9a773d]" aria-hidden="true" /> : <ImageIcon className="size-4" />} {subiendoCarrusel ? "Subiendo archivos…" : "Añadir imágenes o videos"}
                 <input type="file" accept="image/*,video/mp4,video/webm,video/ogg,video/quicktime" multiple disabled={subiendoCarrusel || enlacesCarrusel.length >= 10} onChange={subirImagenesCarrusel} className="sr-only" />
               </label>
+              <p className="text-[11px] text-muted-foreground">Límites por archivo: imágenes hasta 15 MB · videos hasta 50 MB. Si eliges un archivo que supere el límite, verás una advertencia antes de iniciar la subida.</p>
               {progresoCarrusel ? <div role="status" aria-live="polite" className={`space-y-2 rounded-xl border px-3 py-3 text-xs ${subiendoCarrusel ? "border-[#e8d8b8] bg-[#fff9ed] text-[#72572d]" : "border-emerald-200 bg-emerald-50 text-emerald-800"}`}>
                 <div className="flex items-start gap-3">
                   {subiendoCarrusel ? <span className="mt-0.5 size-2 shrink-0 animate-pulse rounded-full bg-[#b9975b]" /> : <span className="grid size-5 shrink-0 place-items-center rounded-full bg-emerald-100 font-bold">✓</span>}
