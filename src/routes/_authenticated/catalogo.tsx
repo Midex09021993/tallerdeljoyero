@@ -804,7 +804,7 @@ function CatalogoConfiguracionDialog({ open, participanteId, initial, onClose, o
                 </div>
               </div>)}
 
-              <p className="text-xs text-muted-foreground">Hasta 10 elementos en total. Imágenes: máximo 15 MB; videos: máximo 50 MB. Los videos se reproducen sin sonido; si un elemento no tiene enlace, no será clicable.</p>
+              <p className="text-xs text-muted-foreground">Hasta 10 elementos en total. Imágenes: máximo 15 MB; videos: máximo 80 MB. Los videos se reproducen sin sonido; si un elemento no tiene enlace, no será clicable.</p>
               <div className="grid gap-2 rounded-xl bg-background p-3">
                 <p className="text-xs font-semibold">O pega una URL directa de imagen o video</p>
                 <div className="flex flex-col gap-2 sm:flex-row">
