@@ -208,16 +208,6 @@ function AgendaPage() {
             </div>
           </section>
         ) : (
-        <section className="rounded-2xl border bg-card p-5 shadow-card">
-            <div className="flex items-start gap-3"><span className="rounded-xl bg-gold/15 p-2 text-gold-deep"><CalendarDays className="size-5" /></span><div><h2 className="text-lg font-semibold">Gestión de agenda</h2><p className="text-sm text-muted-foreground">Publica horarios disponibles para que los gerentes puedan reservar.</p></div></div>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <label className="text-xs font-semibold text-muted-foreground">Fecha<input type="date" min={new Date().toISOString().slice(0,10)} value={fecha} onChange={(e) => setFecha(e.target.value)} className="mt-1.5 w-full rounded-xl border bg-background px-3 py-2.5 text-sm text-foreground" /></label>
-              <label className="text-xs font-semibold text-muted-foreground">Hora de inicio<input type="time" value={horaInicio} onChange={(e) => setHoraInicio(e.target.value)} className="mt-1.5 w-full rounded-xl border bg-background px-3 py-2.5 text-sm text-foreground" /></label>
-              <label className="text-xs font-semibold text-muted-foreground">Hora de fin<input type="time" value={horaFin} onChange={(e) => setHoraFin(e.target.value)} className="mt-1.5 w-full rounded-xl border bg-background px-3 py-2.5 text-sm text-foreground" /></label>
-              <div className="flex items-end"><button type="button" disabled={crearHorario.isPending} onClick={() => crearHorario.mutate()} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-ink px-4 py-2.5 text-sm font-semibold text-ink-foreground disabled:opacity-50"><Plus className="size-4" /> Publicar horario</button></div>
-            </div>
-            <p className="mt-2 text-xs text-muted-foreground">Los horarios se guardan con la zona horaria de tu dispositivo. Puedes publicar varios bloques, uno por sesión.</p>
-          </section>
         ) : (
           <section className="grid gap-5 lg:grid-cols-[1.05fr_.95fr]">
             <div className="rounded-2xl border bg-card p-5 shadow-card">
