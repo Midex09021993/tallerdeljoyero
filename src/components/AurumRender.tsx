@@ -2630,19 +2630,29 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 context.fillStyle = base;
                 context.fillRect(0, 0, width, height);
 
-                const glowA = context.createRadialGradient(0, height * 0.28, 0, 0, height * 0.28, Math.max(width * 0.42, height * 0.70));
+                // CSS uses elliptical radial gradients; scale the Canvas coordinate
+                // system so the exported glow keeps the same horizontal/vertical radii.
+                context.save();
+                context.translate(0, height * 0.28);
+                context.scale(width * 0.42, height * 0.70);
+                const glowA = context.createRadialGradient(0, 0, 0, 0, 0, 1);
                 glowA.addColorStop(0, "rgba(255,151,111,.98)");
                 glowA.addColorStop(0.42, "rgba(255,181,157,.72)");
                 glowA.addColorStop(1, "rgba(255,181,157,0)");
                 context.fillStyle = glowA;
-                context.fillRect(0, 0, width, height);
+                context.fillRect(0, -0.28 / 0.70, 1 / 0.42, (1 - 0.28) / 0.70);
+                context.restore();
 
-                const glowB = context.createRadialGradient(width, height, 0, width, height, Math.max(width * 0.58, height * 0.90));
+                context.save();
+                context.translate(width, height);
+                context.scale(width * 0.58, height * 0.90);
+                const glowB = context.createRadialGradient(0, 0, 0, 0, 0, 1);
                 glowB.addColorStop(0, "rgba(0,65,164,.98)");
                 glowB.addColorStop(0.48, "rgba(30,104,202,.78)");
                 glowB.addColorStop(1, "rgba(30,104,202,0)");
                 context.fillStyle = glowB;
-                context.fillRect(0, 0, width, height);
+                context.fillRect(-1 / 0.58, -1 / 0.90, 1 / 0.58, 1 / 0.90);
+                context.restore();
               } else if (selectedBackground.id === "degradadoGrisBlanco") {
                 const gradient = context.createLinearGradient(0, 0, width, height);
                 gradient.addColorStop(0, "#ffffff");
