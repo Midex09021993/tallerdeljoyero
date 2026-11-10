@@ -2618,8 +2618,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               const bgImage = backdrop.backgroundImage || "none";
               context.fillStyle = bgColor === "transparent" || bgColor === "rgba(0, 0, 0, 0)" ? "#ffffff" : bgColor;
               context.fillRect(0, 0, width, height);
-              if (bgImage !== "none" && bgImage.includes("gradient")) {
-                if (bgImage.includes("#f2b5a7") || bgImage.includes("255,151,111")) {
+              if (fondoId === "auroraBlue" || (bgImage !== "none" && bgImage.includes("gradient"))) {
+                if (fondoId === "auroraBlue") {
                   const base = context.createLinearGradient(0, 0, width, height);
                   base.addColorStop(0, "#f2b5a7"); base.addColorStop(.42, "#b7b1d3"); base.addColorStop(.68, "#7399d0"); base.addColorStop(1, "#0751a8");
                   context.fillStyle = base; context.fillRect(0, 0, width, height);
