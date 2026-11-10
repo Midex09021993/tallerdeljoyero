@@ -381,7 +381,7 @@ function CatalogoPage() {
           <div className={vista === "grid" ? "grid items-stretch gap-px bg-border sm:grid-cols-2 xl:grid-cols-3" : "divide-y divide-border"}>
           {productos.map((p) => (
             <article key={p.id} className={vista === "grid" ? "group flex h-full min-w-0 flex-col bg-card" : "flex min-w-0 gap-4 bg-card p-4"}>
-              <div className={vista === "grid" ? "relative aspect-[4/3] shrink-0 overflow-hidden bg-surface-muted" : "relative size-28 shrink-0 overflow-hidden rounded-xl bg-surface-muted"}>
+              <div className={vista === "grid" ? "relative aspect-square shrink-0 overflow-hidden bg-surface-muted" : "relative size-28 shrink-0 overflow-hidden rounded-xl bg-surface-muted"}>
                 {p.imagen ? (
                   <img
                     src={p.imagen}
