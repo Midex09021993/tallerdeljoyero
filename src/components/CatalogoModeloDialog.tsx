@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { FileText, Sparkles, X } from "lucide-react";
+import { CatalogoImagenEditor } from "@/components/CatalogoImagenEditor";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { nombreSeguro, subirConProgreso } from "@/lib/subir-archivo";
@@ -164,6 +165,9 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
   const [proyectoNube, setProyectoNube] = useState<ProyectoNubeInicial | null>(null);
   const [productoCreadoId, setProductoCreadoId] = useState<string | null>(null);
   const [subiendo, setSubiendo] = useState(false);
+  const [archivoEditor, setArchivoEditor] = useState<File | null>(null);
+  const [tipoEditor, setTipoEditor] = useState<"principal" | "galeria">("principal");
+  const [colaEditor, setColaEditor] = useState<File[]>([]);
   const [progresoSubida, setProgresoSubida] = useState(0);
   const [carpetaSubida, setCarpetaSubida] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -384,7 +388,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
     }
   }
 
-  async function subirImagen(file: File, tipo: "principal" | "galeria") {
+  async function subirImagen(file: File, tipo: "principal" | "galeria", yaPreparada = false) {
     if (!participanteId || !file.type.startsWith("image/")) {
       setError("Selecciona una imagen válida.");
       return;
@@ -395,7 +399,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
     setProgresoSubida(0);
     setError(null);
     try {
-      const imagenCuadrada = await prepararImagenCatalogo(file);
+      const imagenCuadrada = yaPreparada ? file : await prepararImagenCatalogo(file);
       const ruta = `${participanteId}/${carpeta}/${tipo}-${Date.now()}-${nombreSeguro(imagenCuadrada.name)}`;
       await subirConProgreso({ bucket: "catalogo-joyas", ruta, file: imagenCuadrada, onProgreso: setProgresoSubida });
       const { data } = supabase.storage.from("catalogo-joyas").getPublicUrl(ruta);
@@ -575,7 +579,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
               ) : <div className="rounded-xl border border-dashed border-border p-4 text-center text-xs text-muted-foreground">Todavía no has seleccionado una imagen principal.</div>}
               <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-gold/40 bg-gold/5 px-4 py-3 text-xs font-semibold transition hover:bg-gold/10">
                 {subiendo ? "Subiendo imagen…" : form.imagen_principal_url ? "Cambiar imagen principal" : "Seleccionar imagen principal"}
-                <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" disabled={subiendo} onChange={(e) => { const file = e.currentTarget.files?.[0]; e.currentTarget.value = ""; if (file) void subirImagen(file, "principal"); }} className="sr-only" />
+                <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" disabled={subiendo} onChange={(e) => { const file = e.currentTarget.files?.[0]; e.currentTarget.value = ""; if (file) { setTipoEditor("principal"); setColaEditor([]); setArchivoEditor(file); } }} className="sr-only" />
               </label>
             </div>
             <div className="grid gap-2 sm:col-span-2">
@@ -592,7 +596,7 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
               ) : <div className="rounded-xl border border-dashed border-border p-4 text-center text-xs text-muted-foreground">Aún no hay imágenes en la galería.</div>}
               <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-border px-4 py-3 text-xs font-semibold transition hover:bg-surface-muted">
                 Añadir imágenes a la galería
-                <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" multiple disabled={subiendo} onChange={(e) => { const files = Array.from(e.currentTarget.files ?? []); e.currentTarget.value = ""; void Promise.all(files.map((file) => subirImagen(file, "galeria"))); }} className="sr-only" />
+                <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" multiple disabled={subiendo} onChange={(e) => { const files = Array.from(e.currentTarget.files ?? []); e.currentTarget.value = ""; if (files.length) { setTipoEditor("galeria"); setColaEditor(files.slice(1)); setArchivoEditor(files[0]); } }} className="sr-only" />
               </label>
               {subiendo ? <span className="text-[11px] text-muted-foreground">Subiendo imágenes… {progresoSubida}%</span> : null}
             </div>
@@ -682,6 +686,20 @@ export function CatalogoModeloDialog({ open, producto, participanteId, categoria
           <div className="flex justify-end gap-2"><button type="button" onClick={onClose} disabled={guardando || subiendo || analizandoPdf} className="rounded-xl border border-border px-4 py-2.5 text-xs font-semibold disabled:opacity-50">Cancelar</button><button type="submit" disabled={guardando || subiendo || analizandoPdf} className="rounded-xl bg-gold px-4 py-2.5 text-xs font-semibold text-gold-foreground disabled:opacity-50">{analizandoPdf ? "Analizando PDF…" : subiendo ? "Subiendo imágenes…" : guardando ? "Guardando…" : producto ? "Guardar cambios" : "Crear ficha"}</button></div>
         </form>
       </div>
+      {archivoEditor ? (
+        <CatalogoImagenEditor
+          file={archivoEditor}
+          onCancel={() => { setArchivoEditor(null); setColaEditor([]); }}
+          onConfirm={(imagenPreparada) => {
+            const siguiente = colaEditor[0];
+            setArchivoEditor(null);
+            setColaEditor((actual) => actual.slice(1));
+            void subirImagen(imagenPreparada, tipoEditor, true).then(() => {
+              if (siguiente) setArchivoEditor(siguiente);
+            });
+          }}
+        />
+      ) : null}
     </div>
   );
 }
