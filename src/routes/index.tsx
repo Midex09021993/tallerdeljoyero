@@ -77,95 +77,19 @@ const soluciones = [
 ];
 
 
-const MONEDA_POR_PAIS: Record<string, string> = {
-  PE: "PEN", US: "USD", CA: "CAD", MX: "MXN", ES: "EUR", CO: "COP",
-  CL: "CLP", AR: "ARS", BR: "BRL", EC: "USD", BO: "BOB", UY: "UYU",
-  PY: "PYG", VE: "VES", CR: "CRC", PA: "USD", DO: "DOP", GB: "GBP",
-  FR: "EUR", DE: "EUR", IT: "EUR", PT: "EUR", NL: "EUR", CH: "CHF",
-  AU: "AUD", NZ: "NZD", JP: "JPY", CN: "CNY", IN: "INR", AE: "AED",
-};
-
-// Valores de respaldo para mantener visibles los precios si el servicio de cambio no responde.
-// La tasa online se consulta por moneda y se conserva durante 12 horas.
-const TASAS_USD_RESPALDO: Record<string, number> = {
-  PEN: 3.42, CAD: 1.39, MXN: 18.5, EUR: 0.92, COP: 4200, CLP: 960,
-  ARS: 1450, BRL: 5.7, BOB: 6.96, UYU: 42, PYG: 7800, VES: 220,
-  CRC: 505, DOP: 61, GBP: 0.78, CHF: 0.88, AUD: 1.52, NZD: 1.67,
-  JPY: 153, CNY: 7.2, INR: 87, AED: 3.6725, USD: 1,
-};
-
-const LOCALE_POR_PAIS: Record<string, string> = {
-  PE: "es-PE", US: "en-US", CA: "en-CA", MX: "es-MX", ES: "es-ES",
-  CO: "es-CO", CL: "es-CL", AR: "es-AR", BR: "pt-BR", EC: "es-EC",
-  BO: "es-BO", UY: "es-UY", PY: "es-PY", VE: "es-VE", CR: "es-CR",
-  PA: "es-PA", DO: "es-DO", GB: "en-GB", FR: "fr-FR", DE: "de-DE",
-  IT: "it-IT", PT: "pt-PT", NL: "nl-NL", CH: "de-CH", AU: "en-AU",
-  NZ: "en-NZ", JP: "ja-JP", CN: "zh-CN", IN: "en-IN", AE: "ar-AE",
-};
-
-function formatoPrecio(valor: number, moneda: string, paisIso: string) {
-  return new Intl.NumberFormat(LOCALE_POR_PAIS[paisIso] ?? "en-US", {
+function formatoPrecio(valor: number) {
+  return new Intl.NumberFormat("en-US", {
     style: "currency",
-    currency: moneda,
-    maximumFractionDigits: ["JPY", "CLP", "PYG", "COP", "ARS", "VES"].includes(moneda) ? 0 : 2,
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(valor);
-}
-
-function detectarPaisDelNavegador(): string {
-  if (typeof navigator === "undefined") return "PE";
-  const idiomas = [...(navigator.languages ?? []), navigator.language];
-  for (const idioma of idiomas) {
-    const region = idioma.match(/[-_]([A-Za-z]{2})(?:$|[-_])/i)?.[1]?.toUpperCase();
-    if (region && PAISES_TELEFONO.some((pais) => pais.iso === region)) return region;
-  }
-  return "PE";
 }
 
 function PlanesPublicos() {
   const [periodicidad, setPeriodicidad] = useState<"mensual" | "trimestral" | "anual">("mensual");
-  const [paisIso, setPaisIso] = useState("PE");
-  const moneda = MONEDA_POR_PAIS[paisIso] ?? "USD";
-  const [tasasCambio, setTasasCambio] = useState<Record<string, number>>(TASAS_USD_RESPALDO);
-  const [fuenteTasa, setFuenteTasa] = useState<"online" | "respaldo">("respaldo");
+  const moneda = "USD";
 
-  useEffect(() => {
-    if (moneda === "USD") return;
-    let cancelado = false;
-    const cacheKey = "aurum-tasas-usd-v1";
-    const cacheRaw = window.localStorage.getItem(cacheKey);
-    let cache: { timestamp: number; rates: Record<string, number> } | null = null;
-    try { cache = cacheRaw ? JSON.parse(cacheRaw) : null; } catch { cache = null; }
-    if (cache && Date.now() - cache.timestamp < 12 * 60 * 60 * 1000 && Number.isFinite(cache.rates[moneda])) {
-      setTasasCambio((actuales) => ({ ...actuales, ...cache!.rates }));
-      setFuenteTasa("online");
-      return;
-    }
-    const controller = new AbortController();
-    fetch("https://open.er-api.com/v6/latest/USD", { signal: controller.signal })
-      .then((response) => { if (!response.ok) throw new Error("No se pudo consultar el tipo de cambio."); return response.json(); })
-      .then((data: { result?: string; rates?: Record<string, number> }) => {
-        if (data.result !== "success" || !data.rates || !Number.isFinite(data.rates[moneda])) throw new Error("Tipo de cambio no disponible.");
-        if (cancelado) return;
-        setTasasCambio((actuales) => ({ ...actuales, ...data.rates }));
-        setFuenteTasa("online");
-        window.localStorage.setItem(cacheKey, JSON.stringify({ timestamp: Date.now(), rates: data.rates }));
-      })
-      .catch(() => { if (!cancelado) setFuenteTasa("respaldo"); });
-    return () => { cancelado = true; controller.abort(); };
-  }, [moneda]);
-
-  useEffect(() => {
-    const paisGuardado = window.localStorage.getItem("aurum-pais-precios");
-    const paisValido = paisGuardado && PAISES_TELEFONO.some((pais) => pais.iso === paisGuardado);
-    setPaisIso(paisValido ? paisGuardado : detectarPaisDelNavegador());
-  }, []);
-
-  const cambiarPaisPrecios = (pais: string) => {
-    const paisValido = PAISES_TELEFONO.some((item) => item.iso === pais);
-    if (!paisValido) return;
-    setPaisIso(pais);
-    window.localStorage.setItem("aurum-pais-precios", pais);
-  };
   const { data: cuotasPlanes, isLoading: cargandoCuotas, isError: errorCuotas } = useQuery({
     queryKey: ["planes-comerciales-publicos"],
     queryFn: async () => {
@@ -187,10 +111,7 @@ function PlanesPublicos() {
     anual: { etiqueta: "Anual", meses: 12, descuento: 0.25 },
   } as const;
   const periodo = periodos[periodicidad];
-  const tasa = moneda === "PEN" ? 1 : (tasasCambio[moneda] ?? TASAS_USD_RESPALDO[moneda] ?? 1);
-  const precios = moneda === "PEN"
-    ? { taller: 29, profesional: 79 }
-    : { taller: 9 * tasa, profesional: 24 * tasa };
+  const precios = { taller: 9, profesional: 24 };
   const planes = [
     {
       id: "emprendedor", nombre: "Emprendedor", precioMensual: 0, gratis: true,
@@ -219,15 +140,8 @@ function PlanesPublicos() {
   ];
   return (
     <>
-      <div className="mx-auto mt-4 flex flex-wrap items-center justify-center gap-2">
-        <label htmlFor="pais-precios-publicos" className="text-xs font-semibold text-slate-600">País:</label>
-        <select id="pais-precios-publicos" value={paisIso} onChange={(event) => cambiarPaisPrecios(event.target.value)} className="max-w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 outline-none transition focus:border-[#d4aa19] focus:ring-2 focus:ring-[#d4aa19]/20">
-          {PAISES_TELEFONO.map((pais) => <option key={pais.iso} value={pais.iso}>{pais.bandera} {pais.nombre}</option>)}
-        </select>
-        <span className="rounded-full bg-slate-100 px-3 py-2 text-xs font-bold text-slate-600">{`Precios en ${moneda} · ${PAISES_TELEFONO.find((pais) => pais.iso === paisIso)?.nombre ?? "país seleccionado"}`}</span>
-      </div>
+      <p className="mt-4 text-center text-xs font-semibold text-slate-600">Todos los planes se muestran en dólares estadounidenses (USD).</p>
       <p className="mt-2 text-center text-xs text-slate-500">Elige tu forma de pago. Puedes ahorrar al elegir varios meses.</p>
-      {moneda !== "PEN" && <p className="text-center text-[10px] text-slate-400">{fuenteTasa === "online" ? "Importes convertidos con tipo de cambio de referencia actualizado cada 12 horas." : "Tipo de cambio de referencia; puede variar al momento del pago."}</p>}
       <div className="mx-auto mt-4 flex w-fit flex-wrap justify-center gap-2 rounded-2xl border border-slate-200 bg-white p-1.5" role="group" aria-label="Modalidad de pago">
         {(["mensual", "trimestral", "anual"] as const).map((opcion) => (
           <button key={opcion} type="button" onClick={() => setPeriodicidad(opcion)} aria-pressed={periodicidad === opcion}
@@ -251,9 +165,9 @@ function PlanesPublicos() {
                 {tienePrecio && plan.gratis && <p className="mt-2 text-2xl font-extrabold tracking-tight text-[#17232d]">Gratis</p>}
                 {tienePrecio && !plan.gratis && (
                   <>
-                    <p className="mt-1 text-2xl font-extrabold tracking-tight text-[#17232d]">{formatoPrecio(totalPeriodo, moneda, paisIso)}<span className="ml-1 text-xs font-medium text-slate-500">{periodicidad === "mensual" ? "al mes" : "por " + periodo.meses + " meses"}</span></p>
-                    {periodo.descuento > 0 && <p className="mt-1 text-xs text-slate-500"><span className="line-through">{formatoPrecio(precioMensual * periodo.meses, moneda, paisIso)}</span> <span className="font-semibold text-emerald-700">Ahorra {formatoPrecio(precioMensual * periodo.meses - totalPeriodo, moneda, paisIso)} ({Math.round(periodo.descuento * 100)} %)</span></p>}
-                    {periodicidad !== "mensual" && <p className="mt-1 text-[10px] text-slate-500">Equivale a {formatoPrecio(totalPeriodo / periodo.meses, moneda, paisIso)} al mes</p>}
+                    <p className="mt-1 text-2xl font-extrabold tracking-tight text-[#17232d]">{formatoPrecio(totalPeriodo)}<span className="ml-1 text-xs font-medium text-slate-500">{periodicidad === "mensual" ? "al mes" : "por " + periodo.meses + " meses"}</span></p>
+                    {periodo.descuento > 0 && <p className="mt-1 text-xs text-slate-500"><span className="line-through">{formatoPrecio(precioMensual * periodo.meses)}</span> <span className="font-semibold text-emerald-700">Ahorra {formatoPrecio(precioMensual * periodo.meses - totalPeriodo)} ({Math.round(periodo.descuento * 100)} %)</span></p>}
+                    {periodicidad !== "mensual" && <p className="mt-1 text-[10px] text-slate-500">Equivale a {formatoPrecio(totalPeriodo / periodo.meses)} al mes</p>}
                   </>
                 )}
               </div>
