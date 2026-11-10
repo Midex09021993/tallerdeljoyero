@@ -579,6 +579,7 @@ export interface FileRoutesByTo {
   '/inventario': typeof AuthenticatedInventarioRoute
   '/marketplace-mis-compras': typeof AuthenticatedMarketplaceMisComprasRoute
   '/marketplace-publicar': typeof AuthenticatedMarketplacePublicarRoute
+  '/agenda': typeof AuthenticatedAgendaRoute
   '/mensajes': typeof AuthenticatedMensajesRoute
   '/mi-nube': typeof AuthenticatedMiNubeRoute
   '/migracion': typeof AuthenticatedMigracionRoute
