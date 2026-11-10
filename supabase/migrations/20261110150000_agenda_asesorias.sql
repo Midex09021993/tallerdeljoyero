@@ -98,6 +98,11 @@ as $$
   select h.id, h.inicio_at, h.fin_at, h.zona_horaria
   from public.agenda_horarios h
   where auth.uid() is not null
+    and exists (
+      select 1 from public.user_roles ur
+      where ur.user_id = auth.uid()
+        and ur.role::text in ('gerente','dueno')
+    )
     and h.activo = true
     and h.inicio_at > now()
     and not exists (
