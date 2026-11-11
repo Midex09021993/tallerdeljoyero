@@ -178,7 +178,7 @@ function HerramientasPage() {
           <div ref={barraHerramientasRef} className="scrollbar-hidden flex gap-2 overflow-x-auto scroll-smooth px-9 [overscroll-behavior-x:contain] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <button
               type="button"
-              onClick={() => { setHerramientaActiva(null); setMostrarIntroAurumRender(true); }}
+              onClick={() => { setHerramientaActiva(null); setMostrarIntroAurumRender(true); setMostrarIntroAurumTransfer(false); setMostrarGuiaAurumConect(false); }}
               aria-pressed={mostrarIntroAurumRender}
               className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border px-3.5 text-sm font-medium transition hover:border-gold/50 hover:text-foreground ${mostrarIntroAurumRender ? "border-gold/40 bg-gold/10 text-gold" : "border-border text-muted-foreground"}`}
             >
@@ -197,7 +197,7 @@ function HerramientasPage() {
                 key={id}
                 ref={herramientaActiva === id ? herramientaActivaRef : undefined}
                 type="button"
-                onClick={() => setHerramientaActiva(id)}
+                onClick={() => { setHerramientaActiva(id); setMostrarIntroAurumRender(false); setMostrarIntroAurumTransfer(false); setMostrarGuiaAurumConect(false); }}
                 aria-pressed={herramientaActiva === id}
                 className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border px-3.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold ${
                   herramientaActiva === id
