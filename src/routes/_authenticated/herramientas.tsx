@@ -238,7 +238,7 @@ function HerramientasPage() {
                         <div>
                           <h4 className="font-semibold">Antes de comenzar</h4>
                           <ul className="mt-3 space-y-2 text-sm leading-6 text-muted-foreground">
-                            <li>• Windows con Rhino 7 instalado.</li>
+                            <li>• Windows con Rhino 7 y Microsoft Edge WebView2 Runtime instalado.</li>
                             <li>• Rhino 7 de 64 bits instalado en Windows.</li>
                             <li>• MatrixGold 3.1 instalado dentro de Rhino 7 para el flujo CAD previsto.</li>
                             <li>• Conexión a Internet para acceder a AURUM LAB.</li>
@@ -247,7 +247,7 @@ function HerramientasPage() {
                         <div>
                           <h4 className="font-semibold">Instalación en Windows</h4>
                           <ol className="mt-3 space-y-2 text-sm leading-6 text-muted-foreground">
-                            <li><strong className="text-foreground">1.</strong> Descarga <code className="rounded bg-muted px-1.5 py-0.5 text-xs">AurumConect-Rhino7-1.0.0.rhp</code> desde el botón de esta tarjeta y guárdalo en una carpeta permanente.</li>
+                            <li><strong className="text-foreground">1.</strong> Descarga <code className="rounded bg-muted px-1.5 py-0.5 text-xs">AurumConect-Rhino7-1.0.0.zip</code>, desbloquéalo desde Propiedades si Windows lo solicita y extrae todo en una carpeta permanente.</li>
                             <li><strong className="text-foreground">2.</strong> Abre Rhino 7 y escribe <code className="rounded bg-muted px-1.5 py-0.5 text-xs">_PlugInManager</code> en la línea de comandos.</li>
                             <li><strong className="text-foreground">3.</strong> En el administrador, pulsa «Install», busca `AurumConect-Rhino7-1.0.0.rhp` dentro de la carpeta extraída y confirma.</li>
                             <li><strong className="text-foreground">4.</strong> Si Windows bloquea el archivo, abre Propiedades del .RHP, marca «Desbloquear» y aplica. Conserva las DLL junto al .RHP.</li>
