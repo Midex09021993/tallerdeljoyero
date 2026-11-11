@@ -5,7 +5,6 @@ import { supabasePublic } from "@/integrations/supabase/client";
 import { RegistroTaller } from "@/components/RegistroTaller";
 import { SolicitarDemo } from "@/components/SolicitarDemo";
 const MiniAurumRender = lazy(() => import("@/components/MiniAurumRender").then((m) => ({ default: m.MiniAurumRender })));
-const PrecioOroDiario = lazy(() => import("@/components/PrecioOroDiario").then((m) => ({ default: m.PrecioOroDiario })));
 import { ArrowRight, BookOpen, Boxes, Calculator, Check, Cloud, Gem, Layers3, Menu, MonitorSmartphone, PackageCheck, Sparkles, Sprout, ChartNoAxesCombined, X } from "lucide-react";
 import heroColgante from "@/assets/diseno-colgante.jpg";
 
@@ -214,38 +213,6 @@ function PlanesPublicos() {
 }
 
 
-function PrecioOroDiferido() {
-  const [visible, setVisible] = useState(false);
-  const containerRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    const element = containerRef.current;
-    if (!element || typeof IntersectionObserver === "undefined") {
-      setVisible(true);
-      return;
-    }
-    const observer = new IntersectionObserver(([entry]) => {
-      if (entry?.isIntersecting) {
-        setVisible(true);
-        observer.disconnect();
-      }
-    }, { rootMargin: "240px 0px" });
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, []);
-
-  return (
-    <div ref={containerRef} style={{ contentVisibility: "auto", containIntrinsicSize: "auto 420px" }}>
-      {visible ? (
-        <Suspense fallback={<div className="min-h-[360px]" aria-label="Cargando cotización del oro" />}>
-          <ClientOnly fallback={<div className="min-h-[360px]" />}>
-            <PrecioOroDiario />
-          </ClientOnly>
-        </Suspense>
-      ) : <div className="min-h-[360px]" aria-hidden="true" />}
-    </div>
-  );
-}
 
 type LogoTallerComunidad = {
   tipo: "taller" | "curso";
@@ -667,7 +634,6 @@ function InicioPublico() {
         </div>
       </section>
 
-      <PrecioOroDiario />
 
       <section ref={demo3DSectionRef} id="aurum-render" style={{ contentVisibility: "auto", containIntrinsicSize: "auto 760px" }} className="overflow-hidden border-y border-[#263743] bg-[#111a22] text-white">
         <div className="mx-auto grid max-w-[1440px] items-center gap-9 px-5 py-14 sm:px-8 sm:py-16 lg:grid-cols-[1.05fr_.95fr] lg:gap-14 lg:px-12 lg:py-20">
@@ -862,7 +828,6 @@ function InicioPublico() {
               <ul className="mt-3 space-y-3 text-xs">
                 <li><Link to="/herramientas-publicas" className="transition hover:text-[#f8c928]">Herramientas para joyeros</Link></li>
                 <li><Link to="/aurum-render-public" className="transition hover:text-[#f8c928]">Visor 3D</Link></li>
-                <li><Link to="/precio-del-oro-hoy" className="transition hover:text-[#f8c928]">Precio del oro hoy</Link></li>
                 <li><Link to="/auth" target="_blank" rel="noreferrer" className="transition hover:text-[#f8c928]">Ingresar a AURUM LAB</Link></li>
               </ul>
             </div>
