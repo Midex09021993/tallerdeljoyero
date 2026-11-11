@@ -232,9 +232,9 @@ function HerramientasPage() {
                         <div>
                           <h4 className="font-semibold">Instalación en Windows</h4>
                           <ol className="mt-3 space-y-2 text-sm leading-6 text-muted-foreground">
-                            <li><strong className="text-foreground">1.</strong> Descarga <code className="rounded bg-muted px-1.5 py-0.5 text-xs">AurumConect-Rhino7-1.0.9.rhp</code>. Guárdalo en una ubicación permanente, por ejemplo <code className="rounded bg-muted px-1.5 py-0.5 text-xs">Documentos\AURUM LAB\AURUM CONECT</code>. Crea la carpeta si no existe y no muevas el archivo después de instalarlo.</li>
-                            <li><strong className="text-foreground">2.</strong> Abre Rhino 7 y escribe <code className="rounded bg-muted px-1.5 py-0.5 text-xs">_PlugInManager</code> en la línea de comandos.</li>
-                            <li><strong className="text-foreground">3.</strong> En el administrador, elige instalar un complemento, busca la carpeta donde guardaste el archivo y selecciona <code className="rounded bg-muted px-1.5 py-0.5 text-xs">AurumConect-Rhino7-1.0.9.rhp</code>. Confirma la instalación y habilítalo si Rhino lo solicita.</li>
+                            <li><strong className="text-foreground">1.</strong> Descarga <code className="rounded bg-muted px-1.5 py-0.5 text-xs">AurumConect-Rhino7-1.0.9.rhp</code>.</li>
+                            <li><strong className="text-foreground">2.</strong> Copia el archivo en la carpeta de complementos de Rhino 7: <code className="rounded bg-muted px-1.5 py-0.5 text-xs">C:\Program Files\Rhino 7\Plug-ins\</code>. Si Windows solicita autorización, acepta el permiso de administrador.</li>
+                            <li><strong className="text-foreground">3.</strong> Abre Rhino 7 y escribe <code className="rounded bg-muted px-1.5 py-0.5 text-xs">_PlugInManager</code> en la línea de comandos.</li>
                             <li><strong className="text-foreground">4.</strong> En la línea de comandos de Rhino escribe <code className="rounded bg-muted px-1.5 py-0.5 text-xs">AurumConect</code>. Debe abrirse el panel AURUM CONECT.</li>
                             <li><strong className="text-foreground">5.</strong> Pulsa «ABRIR AURUM RENDER» e inicia sesión. Después vuelve a Rhino, selecciona o prepara el diseño y pulsa «ENVIAR DISEÑO».</li>
                           </ol>
@@ -242,7 +242,7 @@ function HerramientasPage() {
                       </div>
                       <div className="mt-6 rounded-xl border border-border bg-muted/30 p-4">
                         <h4 className="font-semibold">¿Dónde queda guardado el complemento?</h4>
-                        <p className="mt-2 text-sm leading-6 text-muted-foreground">El archivo .RHP permanece en la carpeta permanente que elegiste. Rhino registra esa ubicación al instalarlo desde PlugInManager; no necesitas copiarlo manualmente a Program Files ni a las carpetas internas de Rhino. Si lo mueves o borras, Rhino podría dejar de encontrarlo.</p>
+                        <p className="mt-2 text-sm leading-6 text-muted-foreground">Para esta instalación beta, guardamos el complemento en la carpeta habitual de Rhino 7: <code className="rounded bg-muted px-1.5 py-0.5 text-xs">C:\Program Files\Rhino 7\Plug-ins\</code>. Copia allí el archivo .RHP antes de registrarlo desde _PlugInManager. Windows puede pedir permisos de administrador. Si Rhino 7 está instalado en otra unidad o carpeta personalizada, utiliza la carpeta Plug-ins de esa instalación. No muevas ni elimines el .RHP después de registrarlo.</p>
                         <h4 className="mt-4 font-semibold">Conexión y primera prueba</h4>
                         <p className="mt-2 text-sm leading-6 text-muted-foreground">Abre el panel AURUM CONECT y pulsa «ABRIR AURUM RENDER». Inicia sesión en la ventana integrada. Después selecciona o prepara el diseño en Rhino/MatrixGold y pulsa «ENVIAR DISEÑO»; la misma ventana de AURUM RENDER debe recibirlo. La transferencia envía una copia temporal del documento Rhino completo, no mantiene sincronización en vivo.</p>
                       </div>
