@@ -386,8 +386,37 @@ function TalleresDeLaComunidad() {
 
 function InicioPublico() {
   const [mostrarDemo3D, setMostrarDemo3D] = useState(false);
+  const mainRef = useRef<HTMLElement | null>(null);
   const [menuMovilAbierto, setMenuMovilAbierto] = useState(false);
   const demo3DSectionRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    const root = mainRef.current;
+    if (!root) return;
+
+    const targets = Array.from(root.querySelectorAll<HTMLElement>("[data-aurum-reveal]"));
+    root.classList.add("aurum-motion-ready");
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || typeof IntersectionObserver === "undefined") {
+      targets.forEach((target) => target.classList.add("aurum-is-visible"));
+      return () => root.classList.remove("aurum-motion-ready");
+    }
+
+    const revealObserver = new IntersectionObserver((entries, observer) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("aurum-is-visible");
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: "0px 0px -48px 0px" });
+
+    targets.forEach((target) => revealObserver.observe(target));
+    return () => {
+      revealObserver.disconnect();
+      root.classList.remove("aurum-motion-ready");
+    };
+  }, []);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(min-width: 640px)");
@@ -428,7 +457,32 @@ function InicioPublico() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-white text-[#17232d]">
+    <main ref={mainRef} className="min-h-screen bg-white text-[#17232d]">
+      <style>{`
+        @keyframes aurum-hero-enter {
+          from { opacity: 0; transform: translateY(22px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .aurum-hero-enter { animation: aurum-hero-enter .8s cubic-bezier(.2,.75,.25,1) both; }
+        .aurum-hero-enter-delay-1 { animation-delay: .12s; }
+        .aurum-hero-enter-delay-2 { animation-delay: .24s; }
+        .aurum-hero-enter-delay-3 { animation-delay: .36s; }
+        .aurum-motion-ready [data-aurum-reveal] {
+          opacity: 0;
+          transform: translate3d(0, 24px, 0);
+          transition: opacity .7s cubic-bezier(.2,.75,.25,1), transform .7s cubic-bezier(.2,.75,.25,1);
+          will-change: opacity, transform;
+        }
+        .aurum-motion-ready [data-aurum-reveal].aurum-is-visible {
+          opacity: 1;
+          transform: translate3d(0, 0, 0);
+          will-change: auto;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .aurum-hero-enter { animation: none !important; }
+          .aurum-motion-ready [data-aurum-reveal] { opacity: 1 !important; transform: none !important; transition: none !important; }
+        }
+      `}</style>
       <script type="application/ld+json">{JSON.stringify({
         "@context": "https://schema.org",
         "@graph": [
@@ -536,7 +590,7 @@ function InicioPublico() {
         <div className="pointer-events-none absolute -left-32 top-12 -z-10 size-[28rem] rounded-full bg-[#ffe99b]/70 blur-[90px]" />
         <div className="pointer-events-none absolute right-[28%] top-20 -z-10 size-64 rounded-full bg-[#e9f1ff]/80 blur-[80px]" />
         <div className="mx-auto grid max-w-[1440px] items-center gap-12 px-5 pb-16 pt-12 sm:px-8 sm:pb-20 sm:pt-16 lg:grid-cols-[.92fr_1.08fr] lg:gap-8 lg:px-12 lg:pb-24 lg:pt-20">
-          <div className="relative z-10 max-w-[650px]">
+          <div data-aurum-reveal className="aurum-hero-enter relative z-10 max-w-[650px]">
             <span className="inline-flex items-center gap-2 rounded-full border border-[#e5c04a]/50 bg-[#fff9df] px-3.5 py-2 text-[10px] font-bold uppercase tracking-[.16em] text-[#785b00]"><Sparkles className="size-3.5" /> AURUM LAB · TECNOLOGÍA PARA JOYEROS</span>
             <h1 className="mt-6 text-[2.65rem] font-extrabold leading-[1.06] tracking-[-.045em] text-[#17232d] sm:text-5xl lg:text-[3.8rem]">Software para joyeros y talleres de joyería.</h1>
             <p className="mt-6 max-w-xl text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">Con <strong>AURUM LAB</strong>, calcula materiales, crea <strong>diseños 3D</strong> y gestiona tu taller.</p>
@@ -552,7 +606,7 @@ function InicioPublico() {
             <p className="mt-4 text-xs text-slate-500">Agenda un recorrido personalizado para conocer AURUM LAB.</p>
           </div>
 
-          <div className="relative mx-auto w-full max-w-[720px] pb-7 sm:pb-10">
+          <div data-aurum-reveal className="aurum-hero-enter aurum-hero-enter-delay-2 relative mx-auto w-full max-w-[720px] pb-7 sm:pb-10">
             <div className="absolute inset-x-8 bottom-0 top-12 rounded-[3rem] bg-gradient-to-br from-[#ffe99a]/70 via-[#f8faff] to-[#e4ecf7] blur-2xl" />
             <div className="relative rounded-[1.6rem] border border-slate-200 bg-white p-2.5 shadow-[0_25px_80px_rgba(28,40,52,.15)] sm:p-3">
               <div className="flex h-10 items-center gap-2 border-b border-slate-100 px-3">
@@ -680,7 +734,7 @@ function InicioPublico() {
           </div>
           <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {soluciones.map(({ numero, etiqueta, icon: Icono, titulo, texto, beneficio, enlace, accion }) => (
-              <article key={titulo} className="group relative flex min-h-[290px] flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-5 shadow-[0_5px_20px_rgba(23,35,45,.035)] transition duration-200 hover:-translate-y-1 hover:border-[#dfbd4b] hover:shadow-[0_18px_40px_rgba(23,35,45,.09)] sm:p-6">
+              <article data-aurum-reveal key={titulo} className="group relative flex min-h-[290px] flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-5 shadow-[0_5px_20px_rgba(23,35,45,.035)] transition duration-200 hover:-translate-y-1 hover:border-[#dfbd4b] hover:shadow-[0_18px_40px_rgba(23,35,45,.09)] sm:p-6">
                 <div className="flex items-start justify-between gap-3">
                   <span className="grid size-12 place-items-center rounded-xl bg-[#fff3c1] text-[#8f6b00] transition-colors group-hover:bg-[#ffdf65]"><Icono className="size-5" strokeWidth={1.8} /></span>
                   <span className="text-[11px] font-semibold tracking-[.16em] text-slate-300">{numero}</span>
@@ -707,7 +761,7 @@ function InicioPublico() {
           </div>
 
           <div className="relative mt-10 grid gap-5 md:grid-cols-3">
-            <article className="relative flex gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <article data-aurum-reveal className="relative flex gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
               <span className="grid size-10 shrink-0 place-items-center rounded-full bg-[#fff3c1] text-sm font-extrabold text-[#8f6b00]">01</span>
               <div className="min-w-0">
                 <h3 className="text-base font-bold text-[#17232d]">Explora la plataforma</h3>
@@ -716,7 +770,7 @@ function InicioPublico() {
               </div>
             </article>
 
-            <article className="relative flex gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <article data-aurum-reveal className="relative flex gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
               <span className="grid size-10 shrink-0 place-items-center rounded-full bg-[#eaf1ff] text-sm font-extrabold text-[#4d6ba5]">02</span>
               <div className="min-w-0">
                 <h3 className="text-base font-bold text-[#17232d]">Crea tu espacio de trabajo</h3>
@@ -725,7 +779,7 @@ function InicioPublico() {
               </div>
             </article>
 
-            <article className="relative flex gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <article data-aurum-reveal className="relative flex gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
               <span className="grid size-10 shrink-0 place-items-center rounded-full bg-[#e9f8ef] text-sm font-extrabold text-[#27834d]">03</span>
               <div className="min-w-0">
                 <h3 className="text-base font-bold text-[#17232d]">Gestiona tu operación</h3>
@@ -746,7 +800,7 @@ function InicioPublico() {
               <p className="mt-4 text-sm leading-7 text-slate-600 sm:text-base">Consulta guías prácticas de joyería.</p>
               <Link to="/guias" className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-[#17232d] transition hover:border-[#d4aa19] hover:bg-[#fffbee] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19]">Explorar todas las guías <ArrowRight className="size-4" /></Link>
             </div>
-            <article className="group overflow-hidden rounded-2xl border border-slate-200 bg-[#f8fafc] shadow-[0_8px_30px_rgba(23,35,45,.045)] transition hover:border-[#dfbd4b] hover:shadow-[0_16px_36px_rgba(23,35,45,.08)]">
+            <article data-aurum-reveal className="group overflow-hidden rounded-2xl border border-slate-200 bg-[#f8fafc] shadow-[0_8px_30px_rgba(23,35,45,.045)] transition hover:border-[#dfbd4b] hover:shadow-[0_16px_36px_rgba(23,35,45,.08)]">
               <div className="flex items-start gap-4 p-5 sm:p-7">
                 <span className="grid size-12 shrink-0 place-items-center rounded-xl border border-[#eadca7] bg-[#fff4c4] text-[#8f6b00]"><Calculator className="size-5" /></span>
                 <div className="min-w-0 flex-1">
