@@ -79,6 +79,14 @@ function LoginPage() {
   const [seccionPlataforma, setSeccionPlataforma] = useState<"ecosistema"|"participantes"|"flujo"|"comunidad"|"planes">("ecosistema");
   const modoAlta = Boolean(estado?.vacio && (estado as { disponible?: boolean } | undefined)?.disponible !== false);
 
+  // Conserva el handoff de AURUM CONECT mientras se resuelve o renueva la sesión.
+  // El fragmento no viaja al servidor; sessionStorage lo mantiene en este WebView.
+  useEffect(() => {
+    if (window.location.hash.startsWith("#aurum-conect=")) {
+      window.sessionStorage.setItem("aurum-conect-pending", window.location.hash);
+    }
+  }, []);
+
   useEffect(() => {
     if (window.location.hash === "#conoce-plataforma") {
       setSeccionPlataforma("ecosistema");
@@ -117,7 +125,8 @@ function LoginPage() {
     // AURUM CONECT solo puede solicitar este destino interno explícito.
     // No aceptamos URLs arbitrarias para evitar redirecciones abiertas.
     if (new URLSearchParams(window.location.search).get("returnTo") === "aurum-render") {
-      window.location.assign("/aurum-render" + (window.location.hash.startsWith("#aurum-conect=") ? window.location.hash : ""));
+      const transferHash = window.location.hash.startsWith("#aurum-conect=") ? window.location.hash : window.sessionStorage.getItem("aurum-conect-pending") || "";
+      window.location.assign("/aurum-render" + transferHash);
       return;
     }
     navigate({ to: inicioSegunRol(sesion, { movilTablet: esVistaMovilTablet() }) });
@@ -186,7 +195,7 @@ function LoginPage() {
         // The fragment is intentionally not sent to the web server.
         const transferHash = window.location.hash.startsWith("#aurum-conect=")
           ? window.location.hash
-          : "";
+          : window.sessionStorage.getItem("aurum-conect-pending") || "";
         window.location.assign("/aurum-render" + transferHash);
         return;
       }
