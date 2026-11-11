@@ -233,11 +233,11 @@ export function PrecioOroDiario() {
               <Coins className="size-3.5" /> Oro · Sudamérica
             </span>
             <h2 className="mt-5 max-w-2xl text-3xl font-extrabold leading-[1.12] tracking-[-.035em] text-[#17232d] sm:text-4xl lg:text-[2.8rem]">
-              Precio del oro hoy
-              <span className="block text-[#9a7400]">Calcula el valor de tu oro.</span>
+              Cotización del oro por gramo
+              <span className="block text-[#9a7400]">Calcula el valor teórico de tu oro.</span>
             </h2>
             <p className="mt-5 max-w-xl text-sm leading-7 text-slate-600 sm:text-base">
-              Cotización por gramo en tu moneda local.
+              Consulta una referencia del oro puro en tu moneda local y estima su valor según el peso y la ley seleccionada.
             </p>
             <p className="mt-4 max-w-xl text-xs leading-5 text-slate-500">
               Valor referencial; no incluye piedras, mano de obra ni otros costos.
@@ -245,24 +245,10 @@ export function PrecioOroDiario() {
             <div className="mt-6 border-t border-[#eadca8]/70 pt-5 text-xs font-medium text-slate-600">
               <span className="inline-flex items-center gap-2"><ShieldCheck className="size-4 text-[#9a7400]" /> Gratis · Sin registro</span>
             </div>
-            <div className="mt-7 rounded-2xl border border-[#e8d79e]/80 bg-white/80 p-3 shadow-sm">
-              <p className="mb-3 text-[10px] font-bold uppercase tracking-[.14em] text-slate-500">Mercado internacional · Kitco</p>
-              <a
-                href="https://www.kitco.com/connecting.html"
-                target="_blank"
-                rel="noreferrer"
-                className="block"
-                aria-label="Ver cotizaciones internacionales de metales en Kitco"
-              >
-                <img
-                  src="https://www.kitconet.com/images/quotes_7a.gif"
-                  alt="Cotizaciones de oro, plata, platino y paladio de Kitco"
-                  loading="lazy"
-                  decoding="async"
-                  className="h-auto w-full"
-                />
-              </a>
-              <p className="mt-2 text-[10px] text-slate-400">Cotizaciones en USD · Actualización cada minuto</p>
+            <div className="mt-7 rounded-2xl border border-[#e8d79e]/80 bg-white/80 p-4 shadow-sm">
+              <p className="text-[10px] font-bold uppercase tracking-[.14em] text-slate-500">Sobre esta cotización</p>
+              <p className="mt-2 text-sm leading-6 text-slate-600">La referencia se consulta a través de XAUS y se expresa por gramo de oro fino. El valor puede variar con el mercado internacional y el tipo de cambio.</p>
+              <p className="mt-2 text-[10px] leading-5 text-slate-500">El precio teórico del metal no equivale necesariamente al precio de compra o venta de una joya.</p>
             </div>
           </div>
 
