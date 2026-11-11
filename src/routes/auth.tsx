@@ -182,7 +182,12 @@ function LoginPage() {
       }
       // Flujo de acceso solicitado por el complemento nativo AURUM CONECT.
       if (new URLSearchParams(window.location.search).get("returnTo") === "aurum-render") {
-        window.location.assign("/aurum-render");
+        // Preserve the one-time AURUM CONECT transfer fragment through login.
+        // The fragment is intentionally not sent to the web server.
+        const transferHash = window.location.hash.startsWith("#aurum-conect=")
+          ? window.location.hash
+          : "";
+        window.location.assign("/aurum-render" + transferHash);
         return;
       }
       navigate({ to: inicioSegunRol(sesionActualizada, { movilTablet: esVistaMovilTablet() }), replace: true });
