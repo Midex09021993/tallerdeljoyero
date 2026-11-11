@@ -41,7 +41,7 @@ namespace AurumConect
 
             var connectButton = new Button
             {
-                Text = "CONECTAR CON AURUM LAB",
+                Text = "CONECTAR A AURUM LAB",
                 Height = 38,
                 BackgroundColor = Color.FromArgb(48, 55, 64),
                 TextColor = Color.FromArgb(235, 225, 202)
@@ -51,7 +51,7 @@ namespace AurumConect
 
             var updateButton = new Button
             {
-                Text = "ACTUALIZAR DISEÑO",
+                Text = "ENVIAR DISEÑO",
                 Height = 42,
                 BackgroundColor = Color.FromArgb(184, 143, 63),
                 TextColor = Color.FromArgb(25, 25, 25)
@@ -80,7 +80,11 @@ namespace AurumConect
                 Wrap = WrapMode.Word
             });
 
-            Content = new Scrollable { Content = layout };
+            Content = new Scrollable
+            {
+                Content = layout,
+                ExpandContentWidth = true
+            };
         }
 
         internal static void OpenAurumLogin()
