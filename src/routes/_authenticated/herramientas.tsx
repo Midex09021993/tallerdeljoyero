@@ -35,6 +35,7 @@ function HerramientasPage() {
   const [herramientaActiva, setHerramientaActiva] = useState<HerramientaInterna>(null);
   const [mostrarIntroAurumRender, setMostrarIntroAurumRender] = useState(false);
   const [mostrarIntroAurumTransfer, setMostrarIntroAurumTransfer] = useState(false);
+  const [mostrarIntroAurumConect, setMostrarIntroAurumConect] = useState(false);
   const [mostrarGuiaAurumConect, setMostrarGuiaAurumConect] = useState(false);
   const [archivoInicial, setArchivoInicial] = useState<File | null>(null);
   const [archivoOrigen, setArchivoOrigen] = useState<{ ruta: string; proyecto: string } | null>(null);
@@ -104,84 +105,12 @@ function HerramientasPage() {
       atrasMovil={{ to: "/inicio" }}
     >
       <div className="mx-auto w-full max-w-[1440px] space-y-5">
-        <section aria-labelledby="aurum-conect-title" className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
-          <div className="grid gap-5 p-5 sm:p-6 lg:grid-cols-[1fr_auto] lg:items-center">
-            <div className="flex items-start gap-4">
-              <span className="grid size-12 shrink-0 place-items-center rounded-xl border border-gold/30 bg-gold/10 text-gold"><MonitorDown className="size-6" /></span>
-              <div className="min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold">Integración CAD · Rhino 7</p>
-                <h2 id="aurum-conect-title" className="mt-1 text-lg font-semibold">AURUM CONECT</h2>
-                <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">Conecta MatrixGold 3.1 con AURUM RENDER. Descarga el complemento para preparar y transferir el diseño seleccionado desde Rhino 7.</p>
-                <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-semibold text-muted-foreground">
-                  <span className="rounded-full border border-border px-2.5 py-1">MatrixGold 3.1</span>
-                  <span className="rounded-full border border-border px-2.5 py-1">Rhino 7</span>
-                  <span className="rounded-full border border-border px-2.5 py-1">Windows</span>
-                  <span className="rounded-full border border-gold/30 bg-gold/10 px-2.5 py-1 text-gold">Beta</span>
-                </div>
-              </div>
-            </div>
-            <div className="flex flex-col gap-2 sm:flex-row lg:flex-col">
-              <div className="flex flex-col gap-1">
-                <button type="button" disabled aria-disabled="true" className="inline-flex min-h-11 cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-muted px-5 py-3 text-sm font-semibold text-muted-foreground opacity-80">
-                  <Download className="size-4" /> Instalador profesional en preparación
-                </button>
-                <p className="max-w-xs text-[11px] leading-4 text-muted-foreground">La descarga se habilitará cuando la compilación y el empaquetado hayan terminado correctamente.</p>
-              </div>
-              <button type="button" aria-expanded={mostrarGuiaAurumConect} aria-controls="aurum-conect-guia" onClick={() => setMostrarGuiaAurumConect((visible) => !visible)} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-border px-4 py-2 text-xs font-semibold text-muted-foreground transition hover:border-gold/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold">
-                {mostrarGuiaAurumConect ? "Ocultar guía" : "Ver guía de instalación"} <ChevronRight className={`size-3.5 transition-transform ${mostrarGuiaAurumConect ? "rotate-90" : ""}`} />
-              </button>
-            </div>
-          </div>
-          <div className="flex items-start gap-2 border-t border-border bg-muted/30 px-5 py-3 text-xs leading-5 text-muted-foreground sm:px-6">
-            <Info className="mt-0.5 size-4 shrink-0 text-gold" />
-            <p>Requiere Windows de 64 bits y Rhino 7. No requiere SDK ni compilación en el equipo del usuario. Versión beta: la carga del complemento y el flujo de transferencia deben validarse en cada entorno Rhino/MatrixGold antes de uso productivo.</p>
-          </div>
-        </section>
-        {mostrarGuiaAurumConect ? (
-          <section id="aurum-conect-guia" aria-labelledby="aurum-conect-guia-title" className="rounded-2xl border border-border bg-card p-5 shadow-card sm:p-7">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold">Guía integrada · Rhino 7</p>
-                <h3 id="aurum-conect-guia-title" className="mt-1 text-xl font-semibold">Instala AURUM CONECT paso a paso</h3>
-                <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">El instalador incluye el complemento ya compilado. No necesitas instalar SDK, descargar dependencias ni compilar código.</p>
-              </div>
-              <span className="rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-[10px] font-semibold text-gold">Versión beta</span>
-            </div>
-            <div className="mt-6 grid gap-6 lg:grid-cols-2">
-              <div>
-                <h4 className="font-semibold">Antes de comenzar</h4>
-                <ul className="mt-3 space-y-2 text-sm leading-6 text-muted-foreground">
-                  <li>• Windows con Rhino 7 instalado.</li>
-                  <li>• Rhino 7 de 64 bits instalado en Windows.</li>
-                  <li>• MatrixGold 3.1 instalado dentro de Rhino 7 para el flujo CAD previsto.</li>
-                  <li>• Conexión a Internet para acceder a AURUM LAB.</li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-semibold">Instalación en Windows</h4>
-                <ol className="mt-3 space-y-2 text-sm leading-6 text-muted-foreground">
-                  <li><strong className="text-foreground">1.</strong> Pulsa «Descargar instalador para Windows (.EXE)» y ejecuta el archivo descargado.</li>
-                  <li><strong className="text-foreground">2.</strong> Haz clic derecho sobre el archivo y selecciona «Ejecutar» o «Abrir».</li>
-                  <li><strong className="text-foreground">3.</strong> El asistente detectará Rhino 7, instalará el complemento compilado y registrará AURUM CONECT.</li>
-                  <li><strong className="text-foreground">4.</strong> El instalador copiará y registrará automáticamente <code className="rounded bg-muted px-1.5 py-0.5 text-xs">AurumConect.rhp</code>.</li>
-                  <li><strong className="text-foreground">5.</strong> Cierra y vuelve a abrir Rhino 7 para cargar el complemento registrado.</li>
-                  <li><strong className="text-foreground">6.</strong> Ejecuta el comando <code className="rounded bg-muted px-1.5 py-0.5 text-xs">AurumConect</code> para abrir el panel.</li>
-                </ol>
-              </div>
-            </div>
-            <div className="mt-6 rounded-xl border border-border bg-muted/30 p-4">
-              <h4 className="font-semibold">Conexión con AURUM RENDER</h4>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">Abre el panel AURUM CONECT, pulsa «CONECTAR CON AURUM LAB» e inicia sesión en la web oficial. Después selecciona la geometría en Rhino/MatrixGold y pulsa «ACTUALIZAR DISEÑO». La transferencia directa está en fase beta y debe validarse con el botón de recepción de AURUM RENDER y los permisos de red local de Chrome.</p>
-            </div>
-            <p className="mt-4 text-xs leading-5 text-muted-foreground">Seguridad: el complemento no solicita ni almacena tu contraseña. La copia .3dm es temporal y el canal local usa 127.0.0.1, un token de un solo uso y una caducidad de 3 minutos. Si el instalador detecta dependencias ausentes o falla la compilación, se detiene sin instalar un complemento incompleto.</p>
-          </section>
-        ) : null}
         <section aria-label="Seleccionar herramienta" className="relative rounded-2xl border border-border bg-card p-2 shadow-card">
           <button type="button" onClick={() => desplazarBarra(-1)} aria-label="Desplazar herramientas a la izquierda" className="absolute left-2 top-1/2 z-10 grid size-8 -translate-y-1/2 place-items-center rounded-full border border-border bg-card/95 text-foreground shadow-md backdrop-blur transition hover:border-gold/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"><ChevronLeft className="size-4" /></button>
           <div ref={barraHerramientasRef} className="scrollbar-hidden flex gap-2 overflow-x-auto scroll-smooth px-9 [overscroll-behavior-x:contain] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <button
               type="button"
-              onClick={() => { setHerramientaActiva(null); setMostrarIntroAurumRender(true); setMostrarIntroAurumTransfer(false); setMostrarGuiaAurumConect(false); }}
+              onClick={() => { setHerramientaActiva(null); setMostrarIntroAurumRender(true); setMostrarIntroAurumTransfer(false); setMostrarIntroAurumConect(false); setMostrarGuiaAurumConect(false); }}
               aria-pressed={mostrarIntroAurumRender}
               className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border px-3.5 text-sm font-medium transition hover:border-gold/50 hover:text-foreground ${mostrarIntroAurumRender ? "border-gold/40 bg-gold/10 text-gold" : "border-border text-muted-foreground"}`}
             >
@@ -189,18 +118,26 @@ function HerramientasPage() {
             </button>
             <button
               type="button"
-              onClick={() => { setHerramientaActiva(null); setMostrarIntroAurumRender(false); setMostrarIntroAurumTransfer(true); setMostrarGuiaAurumConect(false); }}
+              onClick={() => { setHerramientaActiva(null); setMostrarIntroAurumRender(false); setMostrarIntroAurumTransfer(true); setMostrarIntroAurumConect(false); setMostrarGuiaAurumConect(false); }}
               aria-pressed={mostrarIntroAurumTransfer}
               className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border px-3.5 text-sm font-medium transition hover:border-gold/50 hover:text-foreground ${mostrarIntroAurumTransfer ? "border-gold/40 bg-gold/10 text-gold" : "border-border text-muted-foreground"}`}
             >
               <Send className="size-4 text-gold" /> Aurum Transfer
+            </button>
+            <button
+              type="button"
+              onClick={() => { setHerramientaActiva(null); setMostrarIntroAurumRender(false); setMostrarIntroAurumTransfer(false); setMostrarIntroAurumConect(true); setMostrarGuiaAurumConect(false); }}
+              aria-pressed={mostrarIntroAurumConect}
+              className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border px-3.5 text-sm font-medium transition hover:border-gold/50 hover:text-foreground ${mostrarIntroAurumConect ? "border-gold/40 bg-gold/10 text-gold" : "border-border text-muted-foreground"}`}
+            >
+              <MonitorDown className="size-4 text-gold" /> Aurum Conect
             </button>
             {opciones.map(({ id, titulo, Icono }) => (
               <button
                 key={id}
                 ref={herramientaActiva === id ? herramientaActivaRef : undefined}
                 type="button"
-                onClick={() => { setHerramientaActiva(id); setMostrarIntroAurumRender(false); setMostrarIntroAurumTransfer(false); setMostrarGuiaAurumConect(false); }}
+                onClick={() => { setHerramientaActiva(id); setMostrarIntroAurumRender(false); setMostrarIntroAurumTransfer(false); setMostrarIntroAurumConect(false); setMostrarGuiaAurumConect(false); }}
                 aria-pressed={herramientaActiva === id}
                 className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border px-3.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold ${
                   herramientaActiva === id
@@ -216,7 +153,82 @@ function HerramientasPage() {
           <button type="button" onClick={() => desplazarBarra(1)} aria-label="Desplazar herramientas a la derecha" className="absolute right-2 top-1/2 z-10 grid size-8 -translate-y-1/2 place-items-center rounded-full border border-border bg-card/95 text-foreground shadow-md backdrop-blur transition hover:border-gold/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"><ChevronRight className="size-4" /></button>
         </section>
 
-        {mostrarIntroAurumRender ? (
+        {mostrarIntroAurumConect ? (
+          <>
+                  <section aria-labelledby="aurum-conect-title" className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+                    <div className="grid gap-5 p-5 sm:p-6 lg:grid-cols-[1fr_auto] lg:items-center">
+                      <div className="flex items-start gap-4">
+                        <span className="grid size-12 shrink-0 place-items-center rounded-xl border border-gold/30 bg-gold/10 text-gold"><MonitorDown className="size-6" /></span>
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold">Integración CAD · Rhino 7</p>
+                          <h2 id="aurum-conect-title" className="mt-1 text-lg font-semibold">AURUM CONECT</h2>
+                          <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">Conecta MatrixGold 3.1 con AURUM RENDER. Descarga el complemento para preparar y transferir el diseño seleccionado desde Rhino 7.</p>
+                          <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-semibold text-muted-foreground">
+                            <span className="rounded-full border border-border px-2.5 py-1">MatrixGold 3.1</span>
+                            <span className="rounded-full border border-border px-2.5 py-1">Rhino 7</span>
+                            <span className="rounded-full border border-border px-2.5 py-1">Windows</span>
+                            <span className="rounded-full border border-gold/30 bg-gold/10 px-2.5 py-1 text-gold">Beta</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-2 sm:flex-row lg:flex-col">
+                        <div className="flex flex-col gap-1">
+                          <button type="button" disabled aria-disabled="true" className="inline-flex min-h-11 cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-muted px-5 py-3 text-sm font-semibold text-muted-foreground opacity-80">
+                            <Download className="size-4" /> Instalador profesional en preparación
+                          </button>
+                          <p className="max-w-xs text-[11px] leading-4 text-muted-foreground">La descarga se habilitará cuando la compilación y el empaquetado hayan terminado correctamente.</p>
+                        </div>
+                        <button type="button" aria-expanded={mostrarGuiaAurumConect} aria-controls="aurum-conect-guia" onClick={() => setMostrarGuiaAurumConect((visible) => !visible)} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-border px-4 py-2 text-xs font-semibold text-muted-foreground transition hover:border-gold/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold">
+                          {mostrarGuiaAurumConect ? "Ocultar guía" : "Ver guía de instalación"} <ChevronRight className={`size-3.5 transition-transform ${mostrarGuiaAurumConect ? "rotate-90" : ""}`} />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2 border-t border-border bg-muted/30 px-5 py-3 text-xs leading-5 text-muted-foreground sm:px-6">
+                      <Info className="mt-0.5 size-4 shrink-0 text-gold" />
+                      <p>Requiere Windows de 64 bits y Rhino 7. No requiere SDK ni compilación en el equipo del usuario. Versión beta: la carga del complemento y el flujo de transferencia deben validarse en cada entorno Rhino/MatrixGold antes de uso productivo.</p>
+                    </div>
+                  </section>
+                  {mostrarGuiaAurumConect ? (
+                    <section id="aurum-conect-guia" aria-labelledby="aurum-conect-guia-title" className="rounded-2xl border border-border bg-card p-5 shadow-card sm:p-7">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold">Guía integrada · Rhino 7</p>
+                          <h3 id="aurum-conect-guia-title" className="mt-1 text-xl font-semibold">Instala AURUM CONECT paso a paso</h3>
+                          <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">El instalador incluye el complemento ya compilado. No necesitas instalar SDK, descargar dependencias ni compilar código.</p>
+                        </div>
+                        <span className="rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-[10px] font-semibold text-gold">Versión beta</span>
+                      </div>
+                      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+                        <div>
+                          <h4 className="font-semibold">Antes de comenzar</h4>
+                          <ul className="mt-3 space-y-2 text-sm leading-6 text-muted-foreground">
+                            <li>• Windows con Rhino 7 instalado.</li>
+                            <li>• Rhino 7 de 64 bits instalado en Windows.</li>
+                            <li>• MatrixGold 3.1 instalado dentro de Rhino 7 para el flujo CAD previsto.</li>
+                            <li>• Conexión a Internet para acceder a AURUM LAB.</li>
+                          </ul>
+                        </div>
+                        <div>
+                          <h4 className="font-semibold">Instalación en Windows</h4>
+                          <ol className="mt-3 space-y-2 text-sm leading-6 text-muted-foreground">
+                            <li><strong className="text-foreground">1.</strong> Pulsa «Descargar instalador para Windows (.EXE)» y ejecuta el archivo descargado.</li>
+                            <li><strong className="text-foreground">2.</strong> Haz clic derecho sobre el archivo y selecciona «Ejecutar» o «Abrir».</li>
+                            <li><strong className="text-foreground">3.</strong> El asistente detectará Rhino 7, instalará el complemento compilado y registrará AURUM CONECT.</li>
+                            <li><strong className="text-foreground">4.</strong> El instalador copiará y registrará automáticamente <code className="rounded bg-muted px-1.5 py-0.5 text-xs">AurumConect.rhp</code>.</li>
+                            <li><strong className="text-foreground">5.</strong> Cierra y vuelve a abrir Rhino 7 para cargar el complemento registrado.</li>
+                            <li><strong className="text-foreground">6.</strong> Ejecuta el comando <code className="rounded bg-muted px-1.5 py-0.5 text-xs">AurumConect</code> para abrir el panel.</li>
+                          </ol>
+                        </div>
+                      </div>
+                      <div className="mt-6 rounded-xl border border-border bg-muted/30 p-4">
+                        <h4 className="font-semibold">Conexión con AURUM RENDER</h4>
+                        <p className="mt-2 text-sm leading-6 text-muted-foreground">Abre el panel AURUM CONECT, pulsa «CONECTAR CON AURUM LAB» e inicia sesión en la web oficial. Después selecciona la geometría en Rhino/MatrixGold y pulsa «ACTUALIZAR DISEÑO». La transferencia directa está en fase beta y debe validarse con el botón de recepción de AURUM RENDER y los permisos de red local de Chrome.</p>
+                      </div>
+                      <p className="mt-4 text-xs leading-5 text-muted-foreground">Seguridad: el complemento no solicita ni almacena tu contraseña. La copia .3dm es temporal y el canal local usa 127.0.0.1, un token de un solo uso y una caducidad de 3 minutos. Si el instalador detecta dependencias ausentes o falla la compilación, se detiene sin instalar un complemento incompleto.</p>
+                    </section>
+                  ) : null}
+          </>
+        ) : mostrarIntroAurumRender ? (
           <section className="mx-auto w-full max-w-[1200px] overflow-hidden rounded-2xl border border-border bg-card shadow-card">
             <div className="relative overflow-hidden border-b border-border bg-gradient-to-br from-gold/10 via-card to-card px-6 py-10 sm:px-10 sm:py-14">
               <div className="max-w-3xl">
