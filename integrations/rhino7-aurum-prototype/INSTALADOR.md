@@ -6,7 +6,7 @@ Descarga un solo archivo:
 
 `AURUM-CONECT-Setup-Rhino7-1.0.0.exe`
 
-El asistente detecta Rhino 7 de 64 bits, instala el complemento `.RHP` ya compilado en el perfil del usuario y registra el complemento en Rhino 7. No pide SDK, no compila en el ordenador del cliente y no requiere que el usuario abra PlugInManager para registrar el archivo.
+El asistente detecta Rhino 7 de 64 bits, instala el complemento `.RHP` ya compilado en el perfil del usuario y registra el complemento en la vista de 64 bits del registro del usuario (`HKCU64`). No pide SDK, no compila en el ordenador del cliente y no requiere que el usuario abra PlugInManager para registrar el archivo.
 
 Al finalizar:
 1. Cierra Rhino 7 si estaba abierto y vuelve a iniciarlo.
