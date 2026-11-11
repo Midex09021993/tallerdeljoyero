@@ -199,8 +199,8 @@ function HerramientasPage() {
                         <div className="flex flex-col gap-1">
                           {pluginAurumConectDisponible ? (
                             <a
-                              href="/downloads/AurumConect-Rhino7-1.0.0.rhp"
-                              download
+                              href="/downloads/INICIAR-AURUM-CONECT.cmd"
+                              download="INICIAR-AURUM-CONECT.cmd"
                               className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
                             >
                               <Download className="size-4" /> Descargar preparador para Windows (.CMD)
