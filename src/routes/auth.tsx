@@ -117,7 +117,7 @@ function LoginPage() {
     // AURUM CONECT solo puede solicitar este destino interno explícito.
     // No aceptamos URLs arbitrarias para evitar redirecciones abiertas.
     if (new URLSearchParams(window.location.search).get("returnTo") === "aurum-render") {
-      window.location.assign("/aurum-render");
+      window.location.assign("/aurum-render" + (window.location.hash.startsWith("#aurum-conect=") ? window.location.hash : ""));
       return;
     }
     navigate({ to: inicioSegunRol(sesion, { movilTablet: esVistaMovilTablet() }) });
