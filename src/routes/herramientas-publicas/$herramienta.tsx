@@ -92,7 +92,7 @@ const paginas = {
     ],
     preguntas: [
       { pregunta: "¿Cómo calcular la cantidad de revestimiento para un cilindro de joyería?", respuesta: "Mide el diámetro interior y la altura útil del cilindro, selecciona el tipo de tarro y consulta la estimación que entrega la herramienta." },
-      { pregunta: "¿Qué proporción de agua y polvo se utiliza en el revestimiento de fundición?", respuesta: "No. La proporción depende del producto. Consulta la ficha técnica del revestimiento que vas a utilizar y no extrapoles las instrucciones de una marca a otra." },
+      { pregunta: "¿La proporción de agua y polvo es igual para todos los revestimientos de fundición?", respuesta: "No. La proporción depende del producto. Consulta la ficha técnica del revestimiento que vas a utilizar y no extrapoles las instrucciones de una marca a otra." },
       { pregunta: "¿La calculadora sirve para cualquier marca de revestimiento de fundición?", respuesta: "No debe asumirse eso. La herramienta utiliza las proporciones configuradas en ella; verifica siempre que sean adecuadas para el revestimiento concreto y sus instrucciones vigentes." }
     ]
   },
