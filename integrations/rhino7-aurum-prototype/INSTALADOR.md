@@ -1,34 +1,42 @@
-# AURUM CONECT — Complemento directo para Rhino 7
+# AURUM CONECT — Beta para Rhino 7
 
-## Descarga
+## Descarga oficial
 
-Paquete recomendado:
+La distribución beta vigente es un único archivo:
 
-`AurumConect-Rhino7-1.0.0.zip`
+`AurumConect-Rhino7-1.0.9.rhp`
 
-Incluye el complemento `.RHP`, las bibliotecas administradas de WebView2 y `WebView2Loader.dll`. No separes estos archivos.
+Descárgalo desde la publicación oficial:
+https://github.com/Midex09021993/aurum-conect-build/releases/download/v1.0.9/AurumConect-Rhino7-1.0.9.rhp
 
-El complemento se compila para Rhino 7 mediante RhinoCommon 7.27 y .NET Framework 4.8. No distribuye bibliotecas propietarias de Rhino o MatrixGold.
+No utilices los binarios 1.0.0 ni los paquetes ZIP históricos de este prototipo. Este directorio contiene fuentes de una integración anterior y no es la fuente de publicación de la beta vigente.
 
-## Instalación
+## Instalación manual beta
 
-1. Descarga `AurumConect-Rhino7-1.0.0.zip`. Si Windows muestra la casilla **Desbloquear** en Propiedades del ZIP, márcala antes de extraer.
-2. Extrae todo su contenido en una carpeta permanente, por ejemplo `Documentos\\AurumLab\\Plugins\\AurumConect`.
-3. Conserva el `.RHP`, `Microsoft.Web.WebView2.Core.dll`, `Microsoft.Web.WebView2.WinForms.dll` y `WebView2Loader.dll` juntos en esa carpeta.
-4. Abre Rhino 7 y ejecuta `_PlugInManager`.
-5. Pulsa **Install / Instalar**, selecciona `AurumConect-Rhino7-1.0.0.rhp` desde la carpeta extraída y confirma.
-6. Reinicia Rhino y ejecuta `AurumConect` para abrir el panel.
+1. Descarga el archivo `.RHP` desde el enlace oficial anterior.
+2. Copia el archivo en la carpeta de complementos de Rhino 7: `C:\\Program Files\\Rhino 7\\Plug-ins\\`. Si Windows solicita autorización, acepta el permiso de administrador.
+3. Abre Rhino 7 y ejecuta `_PlugInManager`.
+4. Selecciona la opción para instalar un complemento y registra `AurumConect-Rhino7-1.0.9.rhp` desde esa carpeta.
+5. Habilita el complemento si Rhino lo solicita y ejecuta `AurumConect`.
+
+Si Rhino 7 está instalado en otra unidad o carpeta personalizada, utiliza la carpeta `Plug-ins` de esa instalación.
 
 ## Requisitos
 
 - Windows de 64 bits.
-- Rhino 7 actualizado (compilación dirigida a RhinoCommon 7.27).
-- MatrixGold 3.1 instalado dentro de Rhino 7 para el flujo CAD.
-- Microsoft Edge WebView2 Runtime (Evergreen) instalado en Windows.
-- Conexión a Internet para acceder a AURUM LAB.
+- Rhino 7 de 64 bits.
+- Microsoft Edge WebView2 Evergreen Runtime x64.
+- .NET Framework 4.8.
+- MatrixGold 3.1 dentro de Rhino 7 si se utilizará ese flujo CAD.
+- Conexión a Internet e inicio de sesión en AURUM LAB.
 
-## Estado y validación
+## Estado beta y límites
 
-La descarga se publica únicamente después de compilar el complemento y validar que el archivo resultante es un ensamblado Windows válido. La carga real del .RHP, WebView2, el visor integrado y el ciclo completo de transferencia deben probarse en Rhino 7 + MatrixGold 3.1 antes de declarar la integración lista para producción.
+- La beta se distribuye como un único `.RHP`; todavía no es un instalador completo `.EXE`.
+- No requiere que el usuario instale SDK ni compile el código.
+- La transferencia actual envía una copia completa temporal del documento Rhino; no es sincronización en vivo.
+- El complemento no solicita ni almacena la contraseña del usuario.
+- El canal local utiliza `127.0.0.1`, un token de un solo uso y una caducidad de tres minutos.
+- La integración debe validarse en cada entorno Rhino 7 / MatrixGold antes de su uso productivo.
 
-AURUM CONECT continúa en beta. El visor Chromium se abre en una ventana modeless vinculada a la ventana principal de Rhino; no utiliza el WebView heredado de Eto/Internet Explorer de Rhino 7. El canal local de transferencia utiliza un token efímero y requiere verificar los permisos de red local del navegador. Esta compilación no modifica el documento original de Rhino: prepara una copia de la geometría seleccionada para el flujo de transferencia.
+El instalador profesional completo queda reservado para la versión final. La publicación oficial de la beta se mantiene en el repositorio `Midex09021993/aurum-conect-build`.
