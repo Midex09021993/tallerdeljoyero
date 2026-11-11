@@ -121,9 +121,12 @@ function HerramientasPage() {
               </div>
             </div>
             <div className="flex flex-col gap-2 sm:flex-row lg:flex-col">
-              <a href="https://www.tallerdeljoyero.com/downloads/AURUM-CONECT-Setup-Rhino7-1.0.0.exe" download="AURUM-CONECT-Setup-Rhino7-1.0.0.exe" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold">
-                <Download className="size-4" /> Descargar instalador para Windows (.EXE)
-              </a>
+              <div className="flex flex-col gap-1">
+                <button type="button" disabled aria-disabled="true" className="inline-flex min-h-11 cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-muted px-5 py-3 text-sm font-semibold text-muted-foreground opacity-80">
+                  <Download className="size-4" /> Instalador profesional en preparación
+                </button>
+                <p className="max-w-xs text-[11px] leading-4 text-muted-foreground">La descarga se habilitará cuando la compilación y el empaquetado hayan terminado correctamente.</p>
+              </div>
               <button type="button" aria-expanded={mostrarGuiaAurumConect} aria-controls="aurum-conect-guia" onClick={() => setMostrarGuiaAurumConect((visible) => !visible)} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-border px-4 py-2 text-xs font-semibold text-muted-foreground transition hover:border-gold/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold">
                 {mostrarGuiaAurumConect ? "Ocultar guía" : "Ver guía de instalación"} <ChevronRight className={`size-3.5 transition-transform ${mostrarGuiaAurumConect ? "rotate-90" : ""}`} />
               </button>
