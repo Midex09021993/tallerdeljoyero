@@ -29,6 +29,8 @@ jobs:
 
       - name: TypeScript
         run: bun run typecheck
+      - name: AURUM viewer regression tests
+        run: bun test scripts/aurum-viewer-buffer.test.ts
 
       - name: Lint
         run: bun run lint
