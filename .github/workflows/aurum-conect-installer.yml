@@ -55,12 +55,15 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-      - name: Publish beta installer release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: aurum-conect-rhino7-${{ github.run_number }}
-          name: AURUM CONECT para Rhino 7 · Beta ${{ github.run_number }}
-          prerelease: true
-          make_latest: true
-          files: integrations/rhino7-aurum-prototype/installer/Output/AURUM-CONECT-Setup-Rhino7-1.0.0.exe
-          fail_on_unmatched_files: true
+      - name: Publish installer to the website static downloads
+        shell: pwsh
+        run: |
+          $source = "integrations/rhino7-aurum-prototype/installer/Output/AURUM-CONECT-Setup-Rhino7-1.0.0.exe"
+          $destination = "public/downloads/AURUM-CONECT-Setup-Rhino7-1.0.0.exe"
+          New-Item -ItemType Directory -Path "public/downloads" -Force | Out-Null
+          Copy-Item -LiteralPath $source -Destination $destination -Force
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add $destination
+          git commit -m "build(aurum-conect): publish Rhino 7 installer" || Write-Host "Installer binary unchanged."
+          if ($LASTEXITCODE -eq 0) { git push origin HEAD:main }
