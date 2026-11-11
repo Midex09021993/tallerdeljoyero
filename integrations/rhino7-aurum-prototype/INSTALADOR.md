@@ -1,15 +1,20 @@
-# Instalador AURUM Render Bridge — Rhino 7
+# Instalación de AURUM CONECT — Rhino 7 / MatrixGold 3.1
 
-## Instalación
-1. Descarga Instalar-AURUM-Render-Bridge.bat.
-2. Haz doble clic. Windows abrirá PowerShell para descargar el instalador oficial y el script.
-3. El instalador coloca AurumRenderBridge.py en %APPDATA%\\AurumLab\\Rhino7\\AURUM-Render-Bridge, crea una guía y un acceso directo en el Escritorio.
+## Primera instalación
+
+1. Compila el proyecto `AurumConect.csproj` siguiendo el README.
+2. En Rhino 7 ejecuta `_PlugInManager`.
+3. Selecciona **Install** y elige `AurumConect.rhp`.
+4. Ejecuta `AurumConect` en la línea de comandos de Rhino.
+5. Acopla el panel AURUM CONECT en el lateral que prefieras.
 
 ## Uso
-En Rhino 7 / MatrixGold, ejecuta _RunPythonScript y elige el archivo instalado. Selecciona los objetos que deseas preparar.
 
-## Alcance real
-El instalador instala el prototipo local. El script copia los objetos seleccionados a un archivo temporal .3dm y abre AURUM Render. No sube ni carga automáticamente el modelo en el editor web. Esa integración requiere una siguiente fase de desarrollo y pruebas en una instalación real de Rhino 7 / MatrixGold 3.1.
+1. Abre tu diseño en MatrixGold 3.1.
+2. Selecciona la geometría que quieras enviar.
+3. Pulsa **ACTUALIZAR DISEÑO**.
+4. Esta primera entrega crea una copia .3dm temporal y abre AURUM Render. La ruta aparece en la línea de comandos de Rhino; todavía debes seleccionar ese archivo en el visor.
 
-## Requisitos
-Windows, conexión a Internet, Rhino 7 y permisos de ejecución de PowerShell para este instalador. Revisa el código fuente antes de ejecutarlo si tu política de seguridad lo requiere.
+## Importante
+
+Esta versión instala el panel nativo y su botón. La transferencia automática directa al visor web está pendiente de la siguiente fase y no debe confundirse con una integración terminada.
