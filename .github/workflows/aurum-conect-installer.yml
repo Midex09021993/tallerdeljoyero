@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   build-rhp:
-    name: Compile and publish Rhino 7 plugin
+    name: Compile, package and publish Rhino 7 plugin
     runs-on: windows-latest
     steps:
       - name: Checkout main
@@ -38,7 +38,8 @@ jobs:
             "integrations/rhino7-aurum-prototype/AurumConectPlugin.cs",
             "integrations/rhino7-aurum-prototype/AurumConectPanel.cs",
             "integrations/rhino7-aurum-prototype/AurumConectCommands.cs",
-            "integrations/rhino7-aurum-prototype/AurumConectLocalServer.cs"
+            "integrations/rhino7-aurum-prototype/AurumConectLocalServer.cs",
+            "integrations/rhino7-aurum-prototype/AurumConectRenderWindow.cs"
           )
           foreach ($path in $required) {
             if (!(Test-Path $path)) { throw "Required plugin source is missing: $path" }
@@ -53,7 +54,8 @@ jobs:
       - name: Verify compiled Rhino plugin
         shell: pwsh
         run: |
-          $plugin = "integrations/rhino7-aurum-prototype/bin/Release/net48/AurumConect.rhp"
+          $output = "integrations/rhino7-aurum-prototype/bin/Release/net48"
+          $plugin = Join-Path $output "AurumConect.rhp"
           if (!(Test-Path $plugin)) { throw "AurumConect.rhp was not produced by the .NET build." }
           $file = Get-Item $plugin
           if ($file.Length -lt 4096) { throw "AurumConect.rhp is unexpectedly small ($($file.Length) bytes)." }
@@ -67,35 +69,74 @@ jobs:
           [void][System.Reflection.AssemblyName]::GetAssemblyName((Resolve-Path $plugin))
           Write-Host "Validated .RHP: $($file.Length) bytes"
 
-      - name: Upload verified Rhino plugin artifact
+      - name: Assemble complete installation package
+        shell: pwsh
+        run: |
+          $output = "integrations/rhino7-aurum-prototype/bin/Release/net48"
+          $bundle = "integrations/rhino7-aurum-prototype/package"
+          if (Test-Path $bundle) { Remove-Item $bundle -Recurse -Force }
+          New-Item -ItemType Directory -Path $bundle -Force | Out-Null
+
+          Copy-Item "$output/AurumConect.rhp" "$bundle/AurumConect-Rhino7-1.0.0.rhp" -Force
+
+          $managed = @(Get-ChildItem $output -File -Filter "Microsoft.Web.WebView2*.dll")
+          foreach ($name in @("Microsoft.Web.WebView2.Core.dll", "Microsoft.Web.WebView2.WinForms.dll")) {
+            if (!($managed.Name -contains $name)) { throw "Required WebView2 assembly missing from build output: $name" }
+          }
+          foreach ($assembly in $managed) {
+            Copy-Item $assembly.FullName $bundle -Force
+          }
+
+          $loader = Get-ChildItem $output -Recurse -File -Filter "WebView2Loader.dll" |
+            Where-Object { $_.FullName -match "[\\/]win-x64[\\/]native[\\/]" -or $_.FullName -match "[\\/]x64[\\/]" } |
+            Select-Object -First 1
+          if (!$loader) { throw "WebView2Loader.dll for Windows x64 was not found. Refusing to publish an incomplete installer." }
+          Copy-Item $loader.FullName "$bundle/WebView2Loader.dll" -Force
+
+          $requiredFiles = @(
+            "AurumConect-Rhino7-1.0.0.rhp",
+            "Microsoft.Web.WebView2.Core.dll",
+            "Microsoft.Web.WebView2.WinForms.dll",
+            "WebView2Loader.dll"
+          )
+          foreach ($name in $requiredFiles) {
+            if (!(Test-Path (Join-Path $bundle $name))) { throw "Installer package is missing $name" }
+          }
+
+          New-Item -ItemType Directory -Path "public/downloads" -Force | Out-Null
+          Copy-Item "$output/AurumConect.rhp" "public/downloads/AurumConect-Rhino7-1.0.0.rhp" -Force
+          if (Test-Path "public/downloads/AurumConect-Rhino7-1.0.0.zip") {
+            Remove-Item "public/downloads/AurumConect-Rhino7-1.0.0.zip" -Force
+          }
+          Compress-Archive -Path "$bundle/*" -DestinationPath "public/downloads/AurumConect-Rhino7-1.0.0.zip" -CompressionLevel Optimal
+          Write-Host "Complete installer package created with $($requiredFiles.Count) required files."
+
+      - name: Upload verified installer artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: AurumConect-Rhino7-1.0.0
-          path: integrations/rhino7-aurum-prototype/bin/Release/net48/AurumConect.rhp
+          name: AurumConect-Rhino7-1.0.0-Installer
+          path: |
+            public/downloads/AurumConect-Rhino7-1.0.0.zip
+            public/downloads/AurumConect-Rhino7-1.0.0.rhp
           if-no-files-found: error
           retention-days: 30
 
-      - name: Publish verified RHP to website downloads
+      - name: Publish verified installer files to website on main
         shell: pwsh
         run: |
-          $source = "integrations/rhino7-aurum-prototype/bin/Release/net48/AurumConect.rhp"
-          $destination = "public/downloads/AurumConect-Rhino7-1.0.0.rhp"
-          New-Item -ItemType Directory -Path "public/downloads" -Force | Out-Null
-          Copy-Item -LiteralPath $source -Destination $destination -Force
-
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git fetch origin main
           git checkout -B main origin/main
-          git add $destination
+          git add public/downloads/AurumConect-Rhino7-1.0.0.zip public/downloads/AurumConect-Rhino7-1.0.0.rhp
 
           git diff --cached --quiet
           if ($LASTEXITCODE -eq 0) {
-            Write-Host "The published plugin is already up to date."
+            Write-Host "The published installer files are already up to date."
             exit 0
           }
 
-          git commit -m "build(aurum-conect): publish verified Rhino 7 RHP"
-          if ($LASTEXITCODE -ne 0) { throw "Could not create the plugin publication commit." }
+          git commit -m "build(aurum-conect): publish complete Rhino 7 installer"
+          if ($LASTEXITCODE -ne 0) { throw "Could not create the installer publication commit." }
           git push origin HEAD:main
-          if ($LASTEXITCODE -ne 0) { throw "Could not publish the verified RHP to main." }
+          if ($LASTEXITCODE -ne 0) { throw "Could not publish the verified installer files to main." }
