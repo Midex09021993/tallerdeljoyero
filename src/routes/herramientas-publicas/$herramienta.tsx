@@ -10,22 +10,22 @@ import { CalculadoraYeso } from "@/components/CalculadoraYesoAgua";
 
 const paginas = {
   "aleacion-oro": {
-    titulo: "Calculadora de aleación de oro",
-    metaTitulo: "Calculadora de aleación de oro en gramos | Taller del Joyero",
-    descripcion: "Calcula cuánta liga debes añadir para ajustar la ley del oro y preparar aleaciones de joyería.",
-    contenido: "Introduce el peso y los quilates de partida, selecciona la ley final y consulta una estimación del metal de liga necesario. Puedes elegir el color de la aleación para aplicar la receta configurada.",
+    titulo: "Calculadora de aleación de oro: calcula la liga en gramos",
+    metaTitulo: "Calculadora de aleación de oro y liga en gramos | AURUM LAB",
+    descripcion: "Calcula la cantidad estimada de liga para ajustar la ley del oro y preparar aleaciones de 18K, 14K y otras purezas en joyería.",
+    contenido: "Introduce el peso del oro inicial y su quilataje, define la ley final y estima cuántos gramos de metal de liga necesitas. Selecciona el color de oro y consulta el cálculo según la receta configurada.",
     id: "oro",
     guiaSlug: "calcular-aleaciones-oro-18k-14k-9k",
     secciones: [
       {
-        titulo: "Cómo calcular una aleación de oro por quilates",
+        titulo: "Cómo calcular una aleación de oro y la cantidad de liga por quilates",
         parrafos: [
           "El quilataje expresa la proporción de oro fino dentro de una aleación de 24 partes. Por ejemplo, una aleación de 18 quilates representa 18 partes de oro fino de cada 24; el resto corresponde a otros metales.",
           "Para estimar la liga que debes añadir, la calculadora toma la masa inicial, la ley de partida y la ley objetivo. El resultado es teórico y depende de que los datos introducidos y la receta seleccionada correspondan al material real."
         ]
       },
       {
-        titulo: "Oro de 18K, 14K y otras leyes",
+        titulo: "Cálculo de oro de 18K, 14K y otras leyes de pureza",
         parrafos: [
           "La herramienta permite seleccionar leyes habituales o introducir una ley personalizada. Úsala para planificar el ajuste desde una ley inicial superior hacia una ley final inferior; comprueba que la ley de partida sea mayor que la ley deseada.",
           "El color amarillo, blanco, rosa o naranja se calcula con la receta de metales de liga configurada en la herramienta. La composición de una aleación comercial puede variar según el fabricante y la aplicación."
@@ -33,9 +33,9 @@ const paginas = {
       }
     ],
     preguntas: [
-      { pregunta: "¿Cuánto metal de liga necesito para preparar oro de 18 quilates?", respuesta: "Depende del peso y de la ley del oro de partida. Introduce ambos valores y selecciona 18K como ley final para obtener una estimación según la receta configurada." },
-      { pregunta: "¿Puedo calcular una aleación de oro de 14K o 9K?", respuesta: "Puedes seleccionar una ley disponible o introducir una ley personalizada. Verifica que la ley inicial sea superior a la ley final para que el cálculo sea aplicable." },
-      { pregunta: "¿La calculadora determina la receta exacta del oro amarillo, blanco o rosa?", respuesta: "La herramienta distribuye la cantidad estimada de liga según la receta configurada para cada color. No sustituye la ficha técnica de una aleación comercial ni un análisis de laboratorio." }
+      { pregunta: "¿Cuántos gramos de liga necesito para preparar oro de 18 quilates?", respuesta: "Depende del peso y de la ley del oro de partida. Introduce ambos valores y selecciona 18K como ley final para obtener una estimación según la receta configurada." },
+      { pregunta: "¿Cómo calcular una aleación de oro de 14K o 9K?", respuesta: "Puedes seleccionar una ley disponible o introducir una ley personalizada. Verifica que la ley inicial sea superior a la ley final para que el cálculo sea aplicable." },
+      { pregunta: "¿La calculadora ofrece recetas para oro amarillo, blanco y rosa?", respuesta: "La herramienta distribuye la cantidad estimada de liga según la receta configurada para cada color. No sustituye la ficha técnica de una aleación comercial ni un análisis de laboratorio." }
     ]
   },
   "peso-joya-3d": {
@@ -289,7 +289,7 @@ function HerramientaPublicaPage() {
             {pagina.secciones[1].parrafos.map((parrafo) => <p key={parrafo} className="mt-3 text-sm leading-7 text-slate-600 sm:text-base">{parrafo}</p>)}
           </div>
           <div className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
-            <h2 className="text-xl font-bold tracking-tight text-[#17232d]">{pagina.id === "yeso" ? "Preguntas frecuentes sobre yeso, agua y revestimiento de fundición" : "Preguntas frecuentes"}</h2>
+            <h2 className="text-xl font-bold tracking-tight text-[#17232d]">{pagina.id === "yeso" ? "Preguntas frecuentes sobre yeso, agua y revestimiento de fundición" : pagina.id === "oro" ? "Preguntas frecuentes sobre aleaciones de oro y metales de liga" : pagina.id === "gemas" ? "Preguntas frecuentes sobre el peso de las gemas" : "Preguntas frecuentes"}</h2>
             <div className="mt-4 divide-y divide-slate-100">
               {pagina.preguntas.map((item) => (
                 <div key={item.pregunta} className="py-4 first:pt-0 last:pb-0">
