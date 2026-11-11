@@ -1,4 +1,4 @@
-name: AURUM CONECT · Instalador Rhino 7
+name: AURUM CONECT · Complemento Rhino 7
 
 on:
   push:
@@ -12,12 +12,12 @@ permissions:
   contents: write
 
 concurrency:
-  group: aurum-conect-installer-main
+  group: aurum-conect-rhp-main
   cancel-in-progress: false
 
 jobs:
-  build-installer:
-    name: Compile plugin and package Windows installer
+  build-rhp:
+    name: Compile and publish Rhino 7 plugin
     runs-on: windows-latest
     steps:
       - name: Checkout main
@@ -30,7 +30,7 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
-      - name: Validate installer sources
+      - name: Validate plugin sources
         shell: pwsh
         run: |
           $required = @(
@@ -38,11 +38,10 @@ jobs:
             "integrations/rhino7-aurum-prototype/AurumConectPlugin.cs",
             "integrations/rhino7-aurum-prototype/AurumConectPanel.cs",
             "integrations/rhino7-aurum-prototype/AurumConectCommands.cs",
-            "integrations/rhino7-aurum-prototype/AurumConectLocalServer.cs",
-            "integrations/rhino7-aurum-prototype/installer/AurumConect.iss"
+            "integrations/rhino7-aurum-prototype/AurumConectLocalServer.cs"
           )
           foreach ($path in $required) {
-            if (!(Test-Path $path)) { throw "Required installer source is missing: $path" }
+            if (!(Test-Path $path)) { throw "Required plugin source is missing: $path" }
           }
 
       - name: Restore pinned Rhino 7 dependencies
@@ -68,48 +67,19 @@ jobs:
           [void][System.Reflection.AssemblyName]::GetAssemblyName((Resolve-Path $plugin))
           Write-Host "Validated .RHP: $($file.Length) bytes"
 
-      - name: Install Inno Setup 6
-        shell: pwsh
-        run: |
-          choco install innosetup --yes --no-progress
-          if ($LASTEXITCODE -ne 0) { throw "Inno Setup installation failed." }
-
-      - name: Build single-file Windows installer
-        shell: pwsh
-        run: |
-          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
-          if (!(Test-Path $iscc)) { throw "Inno Setup compiler not found: $iscc" }
-          & $iscc "integrations/rhino7-aurum-prototype/installer/AurumConect.iss"
-          if ($LASTEXITCODE -ne 0) { throw "Inno Setup compilation failed." }
-
-          $installer = "integrations/rhino7-aurum-prototype/installer/Output/AURUM-CONECT-Setup-Rhino7-1.0.0.exe"
-          if (!(Test-Path $installer)) { throw "The expected installer EXE was not generated: $installer" }
-          $file = Get-Item $installer
-          if ($file.Length -lt 100KB) { throw "The installer EXE is unexpectedly small ($($file.Length) bytes)." }
-          $stream = [System.IO.File]::OpenRead($installer)
-          try {
-            $reader = [System.IO.BinaryReader]::new($stream)
-            if ($reader.ReadUInt16() -ne 0x5A4D) { throw "The installer does not have a valid Windows executable signature." }
-          } finally {
-            $stream.Dispose()
-          }
-          Write-Host "Installer generated and verified: $($file.Length) bytes"
-
-      - name: Upload verified installer artifact
+      - name: Upload verified Rhino plugin artifact
         uses: actions/upload-artifact@v4
         with:
-          name: AURUM-CONECT-Setup-Rhino7
-          path: integrations/rhino7-aurum-prototype/installer/Output/AURUM-CONECT-Setup-Rhino7-1.0.0.exe
+          name: AurumConect-Rhino7-1.0.0
+          path: integrations/rhino7-aurum-prototype/bin/Release/net48/AurumConect.rhp
           if-no-files-found: error
           retention-days: 30
 
-      - name: Publish verified installer to website downloads
+      - name: Publish verified RHP to website downloads
         shell: pwsh
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          $source = "integrations/rhino7-aurum-prototype/installer/Output/AURUM-CONECT-Setup-Rhino7-1.0.0.exe"
-          $destination = "public/downloads/AURUM-CONECT-Setup-Rhino7-1.0.0.exe"
+          $source = "integrations/rhino7-aurum-prototype/bin/Release/net48/AurumConect.rhp"
+          $destination = "public/downloads/AurumConect-Rhino7-1.0.0.rhp"
           New-Item -ItemType Directory -Path "public/downloads" -Force | Out-Null
           Copy-Item -LiteralPath $source -Destination $destination -Force
 
@@ -121,11 +91,11 @@ jobs:
 
           git diff --cached --quiet
           if ($LASTEXITCODE -eq 0) {
-            Write-Host "The published installer is already up to date."
+            Write-Host "The published plugin is already up to date."
             exit 0
           }
 
-          git commit -m "build(aurum-conect): publish verified Rhino 7 installer"
-          if ($LASTEXITCODE -ne 0) { throw "Could not create the installer publication commit." }
+          git commit -m "build(aurum-conect): publish verified Rhino 7 RHP"
+          if ($LASTEXITCODE -ne 0) { throw "Could not create the plugin publication commit." }
           git push origin HEAD:main
-          if ($LASTEXITCODE -ne 0) { throw "Could not publish the verified installer to main." }
+          if ($LASTEXITCODE -ne 0) { throw "Could not publish the verified RHP to main." }
