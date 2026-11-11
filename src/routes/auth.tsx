@@ -114,6 +114,12 @@ function LoginPage() {
       window.location.assign("/herramientas?recuperarPeso=1");
       return;
     }
+    // AURUM CONECT solo puede solicitar este destino interno explícito.
+    // No aceptamos URLs arbitrarias para evitar redirecciones abiertas.
+    if (new URLSearchParams(window.location.search).get("returnTo") === "aurum-render") {
+      window.location.assign("/aurum-render");
+      return;
+    }
     navigate({ to: inicioSegunRol(sesion, { movilTablet: esVistaMovilTablet() }) });
   }, [sesion, navigate]);
 
@@ -172,6 +178,11 @@ function LoginPage() {
       registrarEvento("login_completed", { mode: modoAlta ? "initial_owner" : "existing_user" });
       if (window.sessionStorage.getItem("aurum_peso_draft")) {
         window.location.assign("/herramientas?recuperarPeso=1");
+        return;
+      }
+      // Flujo de acceso solicitado por el complemento nativo AURUM CONECT.
+      if (new URLSearchParams(window.location.search).get("returnTo") === "aurum-render") {
+        window.location.assign("/aurum-render");
         return;
       }
       navigate({ to: inicioSegunRol(sesionActualizada, { movilTablet: esVistaMovilTablet() }), replace: true });
