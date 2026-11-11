@@ -1,62 +1,58 @@
 # AURUM CONECT — Rhino 7 / MatrixGold 3.1
 
-Complemento nativo para Rhino 7. Esta integración se mantiene separada del prototipo de Rhino 8.
+Complemento nativo de AURUM LAB para Rhino 7 de 64 bits. El instalador de Windows se compila en GitHub Actions; el usuario final no instala SDK ni compila código.
 
-## Estado verificado del código
+## Instalador único
 
-La base del complemento contiene:
-- Proyecto C# para .NET Framework 4.8, con referencias a RhinoCommon y Eto de Rhino 7.
+El flujo profesional está definido en:
+
+- `installer/AurumConect.iss`: genera un único instalador EXE con Inno Setup.
+- `.github/workflows/aurum-conect-installer.yml`: restaura y compila el complemento para .NET Framework 4.8, valida que exista el .RHP, empaqueta el EXE y publica una versión beta en GitHub Releases.
+- `AurumConect.csproj`: usa versiones fijadas de RhinoCommon 7 y Eto.Forms para que el build no dependa de DLL copiadas manualmente desde el ordenador del usuario.
+
+La instalación coloca el complemento en el perfil del usuario y registra su GUID en el registro de Rhino 7 (HKCU64), siguiendo el mecanismo documentado por McNeel. No necesita privilegios de administrador. Al terminar, el usuario debe cerrar y volver a abrir Rhino 7; después ejecuta el comando `AurumConect`.
+
+## Requisitos
+
+- Windows de 64 bits.
+- Rhino 7 actualizado (SDK de compilación fijado a RhinoCommon 7.27).
+- MatrixGold 3.1 dentro de Rhino 7 para el flujo CAD previsto.
+- Conexión a Internet para iniciar sesión en AURUM LAB y usar el canal de transferencia.
+
+No se requiere .NET SDK, Developer Pack ni compilación en el equipo del usuario. Rhino 7 proporciona en ejecución las bibliotecas de RhinoCommon y Eto que necesita el complemento.
+
+## Qué instala
+
+- `AurumConect.rhp` compilado en Release.
+- Registro del complemento para Rhino 7 en el perfil del usuario.
+- Entrada de desinstalación de Windows.
+
+La instalación no distribuye RhinoCommon ni componentes propietarios de McNeel/MatrixGold.
+
+## Funciones del complemento y estado de validación
+
+El código incluye:
 - Panel acoplable **AURUM CONECT**.
-- Comando `AurumConect` para abrir el panel.
-- Botón **CONECTAR CON AURUM LAB**, que abre el inicio de sesión oficial en el navegador.
-- Botón **ACTUALIZAR DISEÑO**, que prepara la copia temporal y solicita el acceso al visor.
-- Comando `AurumConectActualizar`, que copia la geometría seleccionada a un archivo .3dm temporal y abre AURUM Render.
-- El documento original de Rhino no se modifica.
+- Comando `AurumConect`.
+- Inicio de sesión en el navegador oficial de AURUM LAB; el complemento no captura ni almacena contraseñas.
+- Comando `AurumConectActualizar`, que copia los objetos seleccionados a un .3dm temporal sin modificar el documento original.
+- Servidor local efímero en 127.0.0.1, con token aleatorio, origen web fijo, vencimiento de tres minutos, límite de 100 MB y recepción de un solo uso.
 
-La transferencia directa ya cuenta con una primera implementación técnica: el complemento crea un servidor efímero ligado exclusivamente a 127.0.0.1, con token aleatorio de 256 bits, origen web permitido fijo, caducidad de 3 minutos, límite de 100 MB y recepción de un solo uso. El navegador solicita el archivo desde un botón explícito en Aurum Render; no se envía a Supabase ni a Mi Nube.
+**Límite actual:** la instalación automática y el registro se empaquetan en el EXE, pero el flujo completo de recepción en Chrome/AURUM RENDER, permisos de red local y conservación de materiales/escena necesita pruebas reales de extremo a extremo en Rhino 7 + MatrixGold 3.1. No se debe anunciar como integración certificada hasta completar esas pruebas.
 
-El navegador debe conceder el permiso de acceso a red local de Chrome cuando lo solicite. La prueba final de extremo a extremo, compilación Rhino 7 y validación de preservación completa de escena siguen pendientes.
+## Compilación y empaquetado de desarrollo
 
-La compilación contra RhinoCommon/Eto y la prueba dentro de Rhino 7 deben ejecutarse en un equipo Windows que tenga Rhino 7 instalado. No se declara el complemento compilado ni probado hasta completar esas comprobaciones.
+En GitHub Actions se ejecuta automáticamente al cambiar los archivos de esta integración en `main`. El workflow:
 
-## Instalación asistida
+1. Restaura los paquetes fijados.
+2. Compila el proyecto `.rhp` para `net48`.
+3. Comprueba que el binario exista y tenga tamaño razonable.
+4. Genera `AURUM-CONECT-Setup-Rhino7-1.0.0.exe`.
+5. Publica el EXE como artefacto y como versión beta de GitHub Releases.
 
-Ejecuta `Instalar-AURUM-Render-Bridge.bat`. El instalador:
-1. Detecta la carpeta System de Rhino 7 y comprueba RhinoCommon.dll y Eto.dll.
-2. Comprueba que exista el comando `dotnet`.
-3. Descarga los cuatro archivos fuente del complemento desde la rama `main`.
-4. Compila el proyecto en Release.
-5. Solo si la compilación termina correctamente, copia `AurumConect.rhp` a `%LOCALAPPDATA%\AurumLab\AurumConect\Rhino7`.
+El instalador publicado es beta y no está firmado digitalmente. Windows SmartScreen puede mostrar una advertencia de editor desconocido hasta que AURUM LAB disponga de un certificado de firma de código.
 
-Requisitos: Windows, Rhino 7 instalado y .NET SDK con soporte para compilar .NET Framework 4.8. Si faltan dependencias o la compilación falla, el instalador se detiene y no copia un complemento incompleto.
+## Referencias técnicas
 
-## Instalación en Rhino
-
-1. Abre Rhino 7.
-2. Ejecuta `_PlugInManager`.
-3. Pulsa **Install** y selecciona `AurumConect.rhp` en la carpeta indicada por el instalador.
-4. Ejecuta `AurumConect` para abrir el panel.
-5. Pulsa **CONECTAR CON AURUM LAB** e inicia sesión en el navegador oficial (si aún no tienes una sesión activa).
-6. Regresa a Rhino, selecciona las piezas del diseño y pulsa **ACTUALIZAR DISEÑO**.
-
-## Compilación manual
-
-Desde esta carpeta:
-
-```powershell
-dotnet build .\AurumConect.csproj -c Release
-```
-
-Si Rhino 7 está en otra ruta:
-
-```powershell
-dotnet build .\AurumConect.csproj -c Release -p:Rhino7SystemDir="D:\Rhinoceros 7\System"
-```
-
-El resultado esperado es `bin/Release/net48/AurumConect.rhp`.
-
-## Siguiente fase: transferencia directa
-
-La siguiente fase debe validar en equipos reales el canal local, los permisos de Chrome y la sustitución del modelo. La carga utiliza la función existente de Aurum Render; se omite el perfil inicial Plata 950 Pulida para no pisar el acabado que el usuario tenga aplicado.
-
-Ese canal requiere validación de origen, token efímero, límite de tamaño, consumo único y pruebas reales en Chrome/Windows. No se deben introducir secretos permanentes ni exponer archivos 3DM públicamente.
+- [McNeel: Registering Plugins (Windows)](https://developer.rhino3d.com/en/guides/rhinocommon/registering-plugins-windows/)
+- [McNeel: RhinoCommon](https://www.nuget.org/packages/RhinoCommon/7.27.23032.13001)
