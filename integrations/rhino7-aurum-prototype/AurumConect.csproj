@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <TargetExt>.rhp</TargetExt>
+    <AssemblyName>AurumConect</AssemblyName>
+    <RootNamespace>AurumConect</RootNamespace>
+    <Version>1.0.0</Version>
+    <Company>Taller del Joyero</Company>
+    <Product>AURUM CONECT</Product>
+    <Description>Panel de conexión entre Rhino 7 / MatrixGold 3.1 y AURUM Render.</Description>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+  </PropertyGroup>
+  <PropertyGroup>
+    <Rhino7SystemDir Condition="'$(Rhino7SystemDir)' == ''">C:\Program Files\Rhino 7\System</Rhino7SystemDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="RhinoCommon">
+      <HintPath>$(Rhino7SystemDir)\RhinoCommon.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Eto">
+      <HintPath>$(Rhino7SystemDir)\Eto.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+</Project>
