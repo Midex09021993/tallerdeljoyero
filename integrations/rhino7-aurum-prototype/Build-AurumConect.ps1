@@ -9,7 +9,7 @@ $Expected = "AurumConect-Rhino7-1.0.0.rhp"
 function Fail($Message) {
   Write-Host ""
   Write-Host "ERROR: $Message" -ForegroundColor Red
-  Read-Host "Presiona Enter para cerrar"
+  Read-Host -Prompt 'Presiona Enter para cerrar'
   exit 1
 }
 
@@ -65,8 +65,8 @@ if ($LASTEXITCODE -ne 0) { Fail "No se pudo crear el commit de publicación." }
 if ($LASTEXITCODE -ne 0) { Fail "El complemento se compiló, pero no se pudo subir a origin/main. Revisa la autenticación de Git y ejecuta git push origin main." }
 
 Write-Host ""
-Write-Host "PUBLICACIÓN ENVIADA A MAIN" -ForegroundColor Green
+Write-Host 'PUBLICACION ENVIADA A MAIN' -ForegroundColor Green
 Write-Host "Archivo: public/downloads/$Expected"
-Write-Host "La web podrá servirlo cuando termine de desplegar el commit."
+Write-Host 'La web podra servirlo cuando termine de desplegar el commit.'
 Write-Host "URL: https://www.tallerdeljoyero.com/downloads/$Expected"
-Read-Host "Presiona Enter para cerrar"
+Read-Host -Prompt 'Presiona Enter para cerrar'
