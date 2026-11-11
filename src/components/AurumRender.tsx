@@ -1,5 +1,6 @@
 // @ts-nocheck -- AURUM Render engine: strict-mode typing pending; runtime behaviour unchanged.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import * as THREE from "three";
 import { supabase } from "@/integrations/supabase/client";
 import { useSesion } from "@/lib/auth";
 import { PLANES_COMERCIALES, type PlanComercialId } from "@/lib/planes-comerciales";
@@ -267,7 +268,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [panel, setPanel] = useState<"materiales" | "escenas" | "iluminacion">("materiales");
   const [uxSection, setUxSection] = useState<"materiales"|"gemas"|"ambientes"|"escenas"|"hdrMetales"|"hdrGemas"|"fondos"|"rhino-export"|"cad-tree"|"positions">("materiales");
   const [cadTreeItems,setCadTreeItems] = useState<Array<{uuid:string;name:string;type:string;layer:string;visible:boolean;sourceId:string|null}>>([]);
-  const refreshCadTree = () => setCadTreeItems(apiRef.current?.getCadTree?.() ?? []);
+  const [cadModelDiagnostics,setCadModelDiagnostics] = useState<any|null>(null);
+  const refreshCadTree = () => {
+    setCadTreeItems(apiRef.current?.getCadTree?.() ?? []);
+    setCadModelDiagnostics(apiRef.current?.getModelDiagnostics?.() ?? null);
+  };
 
   const exportSettingsRef = useRef({nombreProyecto,categoriaProyecto,archivo,materialId,gemaId,escenarioId,iluminacionId,vista,renderQualityId});
   exportSettingsRef.current={nombreProyecto,categoriaProyecto,archivo,materialId,gemaId,escenarioId,iluminacionId,vista,renderQualityId};
@@ -1859,6 +1864,18 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         cargar,
         getJewelTransform:()=>modelo?({position:modelo.position.toArray(),rotation:modelo.rotation.toArray(),scale:modelo.scale.toArray()}):null,
         setJewelTransform:(value:any)=>{if(!modelo||!value)return false;try{if(Array.isArray(value.position)&&value.position.length===3)modelo.position.fromArray(value.position);if(Array.isArray(value.rotation)&&value.rotation.length>=3)modelo.rotation.set(value.rotation[0],value.rotation[1],value.rotation[2],value.rotation[3]||"XYZ");if(Array.isArray(value.scale)&&value.scale.length===3)modelo.scale.fromArray(value.scale);modelo.updateMatrixWorld?.(true);invalidateRenderRef.current?.();return true;}catch{return false;}},
+        getModelDiagnostics:()=>{
+          if(!modelo)return null;
+          let meshes=0,visibleMeshes=0,hiddenMeshes=0,curves=0,points=0;
+          modelo.traverse((node:any)=>{
+            if(node.isMesh){meshes++;if(node.visible!==false)visibleMeshes++;else hiddenMeshes++;}
+            else if(node.isLine||node.isLineSegments||node.isLineLoop)curves++;
+            else if(node.isPoints)points++;
+          });
+          const bounds=new THREE.Box3().setFromObject(modelo);
+          const size=bounds.isEmpty()?new THREE.Vector3():bounds.getSize(new THREE.Vector3());
+          return {meshes,visibleMeshes,hiddenMeshes,curves,points,triangles:countAurumTriangles(modelo),bounds:{x:size.x,y:size.y,z:size.z},modelVisible:modelo.visible!==false};
+        },
         getCadTree:()=>{
           if(!modelo)return [];
           const items:any[]=[];
@@ -4042,6 +4059,16 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           </div>}
           {uxSection==="cad-tree"&&<div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain [scrollbar-width:thin] bg-[#f9f8f5] px-3 py-3">
             <div className="mb-3 flex items-start justify-between gap-2"><div><div className="text-[10px] font-semibold uppercase tracking-[.16em] text-[#92743b]">AURUM CAD</div><h2 className="mt-1 text-base font-semibold">Estructura del modelo</h2><p className="mt-1 text-[10px] text-[#77756f]">{archivo?.name??"Sin modelo cargado"}</p></div><button type="button" onClick={refreshCadTree} disabled={!archivo} className="rounded-lg border border-black/10 bg-white px-2 py-1.5 text-[10px] font-semibold text-[#6d5523] disabled:opacity-40">Actualizar</button></div>
+            {cadModelDiagnostics&&<section className="mb-3 rounded-xl border border-[#b99b5d]/30 bg-white p-3">
+              <div className="mb-2 flex items-center justify-between"><span className="text-[10px] font-semibold uppercase tracking-[.12em] text-[#92743b]">Diagnóstico geométrico</span><span className={"rounded-full px-2 py-0.5 text-[9px] font-semibold "+(cadModelDiagnostics.meshes>0||cadModelDiagnostics.curves>0||cadModelDiagnostics.points>0?"bg-emerald-50 text-emerald-700":"bg-amber-50 text-amber-700")}>{cadModelDiagnostics.meshes>0||cadModelDiagnostics.curves>0||cadModelDiagnostics.points>0?"Geometría detectada":"Sin geometría"}</span></div>
+              <div className="grid grid-cols-2 gap-2 text-[10px]">
+                <div><strong className="text-sm tabular-nums">{cadModelDiagnostics.meshes}</strong><div className="text-[#77756f]">Mallas</div></div>
+                <div><strong className="text-sm tabular-nums">{cadModelDiagnostics.triangles.toLocaleString("es-PE")}</strong><div className="text-[#77756f]">Triángulos</div></div>
+                <div><strong className="text-sm tabular-nums">{cadModelDiagnostics.visibleMeshes}/{cadModelDiagnostics.meshes}</strong><div className="text-[#77756f]">Mallas visibles</div></div>
+                <div><strong className="text-sm tabular-nums">{cadModelDiagnostics.curves+cadModelDiagnostics.points}</strong><div className="text-[#77756f]">Curvas y puntos</div></div>
+              </div>
+              <div className="mt-2 border-t border-black/[.06] pt-2 text-[9px] text-[#77756f]">Dimensiones: {cadModelDiagnostics.bounds.x.toFixed(2)} × {cadModelDiagnostics.bounds.y.toFixed(2)} × {cadModelDiagnostics.bounds.z.toFixed(2)} unidades</div>
+            </section>}
             <div className="mb-3 grid grid-cols-3 gap-1.5">
               <div className="rounded-lg border border-black/[.07] bg-white p-2"><div className="text-lg font-semibold tabular-nums">{cadTreeItems.length}</div><div className="text-[9px] text-[#77756f]">Objetos</div></div>
               <div className="rounded-lg border border-black/[.07] bg-white p-2"><div className="text-lg font-semibold tabular-nums">{cadTreeItems.filter(x=>x.visible).length}</div><div className="text-[9px] text-[#77756f]">Visibles</div></div>
