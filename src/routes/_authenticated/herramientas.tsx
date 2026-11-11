@@ -180,7 +180,7 @@ function HerramientasPage() {
                       <div className="flex flex-col gap-2 sm:flex-row lg:flex-col lg:min-w-[250px]">
                         {paqueteAurumConectDisponible ? (
                           <a
-                            href="https://github.com/Midex09021993/aurum-conect-build/releases/download/v1.0.8/AurumConect-Rhino7-1.0.8.rhp"
+                            href="https://github.com/Midex09021993/aurum-conect-build/releases/download/v1.0.9/AurumConect-Rhino7-1.0.9.rhp"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
@@ -199,7 +199,7 @@ function HerramientasPage() {
                           {mostrarGuiaAurumConect ? "Ocultar guía" : "Ver guía de instalación"} <ChevronRight className={`size-3.5 transition-transform ${mostrarGuiaAurumConect ? "rotate-90" : ""}`} />
                         </button>
                         {!paqueteAurumConectDisponible ? (
-                          <p className="max-w-xs text-[11px] leading-4 text-muted-foreground">Descarga directa de AURUM CONECT 1.0.8 para Rhino 7 x64.</p>
+                          <p className="max-w-xs text-[11px] leading-4 text-muted-foreground">Descarga directa de AURUM CONECT 1.0.9 para Rhino 7 x64.</p>
                         ) : null}
                       </div>
                     </div>
@@ -232,9 +232,9 @@ function HerramientasPage() {
                         <div>
                           <h4 className="font-semibold">Instalación en Windows</h4>
                           <ol className="mt-3 space-y-2 text-sm leading-6 text-muted-foreground">
-                            <li><strong className="text-foreground">1.</strong> Descarga <code className="rounded bg-muted px-1.5 py-0.5 text-xs">AurumConect-Rhino7-1.0.8.rhp</code>. Guárdalo en una ubicación permanente, por ejemplo <code className="rounded bg-muted px-1.5 py-0.5 text-xs">Documentos\AURUM LAB\AURUM CONECT</code>. Crea la carpeta si no existe y no muevas el archivo después de instalarlo.</li>
+                            <li><strong className="text-foreground">1.</strong> Descarga <code className="rounded bg-muted px-1.5 py-0.5 text-xs">AurumConect-Rhino7-1.0.9.rhp</code>. Guárdalo en una ubicación permanente, por ejemplo <code className="rounded bg-muted px-1.5 py-0.5 text-xs">Documentos\AURUM LAB\AURUM CONECT</code>. Crea la carpeta si no existe y no muevas el archivo después de instalarlo.</li>
                             <li><strong className="text-foreground">2.</strong> Abre Rhino 7 y escribe <code className="rounded bg-muted px-1.5 py-0.5 text-xs">_PlugInManager</code> en la línea de comandos.</li>
-                            <li><strong className="text-foreground">3.</strong> En el administrador, elige instalar un complemento, busca la carpeta donde guardaste el archivo y selecciona <code className="rounded bg-muted px-1.5 py-0.5 text-xs">AurumConect-Rhino7-1.0.8.rhp</code>. Confirma la instalación y habilítalo si Rhino lo solicita.</li>
+                            <li><strong className="text-foreground">3.</strong> En el administrador, elige instalar un complemento, busca la carpeta donde guardaste el archivo y selecciona <code className="rounded bg-muted px-1.5 py-0.5 text-xs">AurumConect-Rhino7-1.0.9.rhp</code>. Confirma la instalación y habilítalo si Rhino lo solicita.</li>
                             <li><strong className="text-foreground">4.</strong> En la línea de comandos de Rhino escribe <code className="rounded bg-muted px-1.5 py-0.5 text-xs">AurumConect</code>. Debe abrirse el panel AURUM CONECT.</li>
                             <li><strong className="text-foreground">5.</strong> Pulsa «ABRIR AURUM RENDER» e inicia sesión. Después vuelve a Rhino, selecciona o prepara el diseño y pulsa «ENVIAR DISEÑO».</li>
                           </ol>
