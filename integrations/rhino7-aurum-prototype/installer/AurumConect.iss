@@ -20,7 +20,7 @@ SolidCompression=yes
 WizardStyle=modern
 UninstallDisplayName={#MyAppName} para Rhino 7
 UninstallDisplayIcon={app}\AurumConect.rhp
-CloseApplications= yes
+CloseApplications=yes
 RestartApplications=no
 
 [Languages]
