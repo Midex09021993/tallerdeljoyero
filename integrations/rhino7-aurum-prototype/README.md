@@ -13,7 +13,9 @@ La base del complemento contiene:
 - Comando `AurumConectActualizar`, que copia la geometría seleccionada a un archivo .3dm temporal y abre AURUM Render.
 - El documento original de Rhino no se modifica.
 
-**Limitación funcional actual:** el inicio de sesión ya reutiliza la autenticación oficial de AURUM LAB y devuelve al usuario directamente a Aurum Render. El complemento no almacena contraseñas. Todavía no existe transferencia directa del .3dm al visor; el archivo temporal debe cargarse manualmente. No se debe presentar esta versión como sincronización automática.
+La transferencia directa ya cuenta con una primera implementación técnica: el complemento crea un servidor efímero ligado exclusivamente a 127.0.0.1, con token aleatorio de 256 bits, origen web permitido fijo, caducidad de 3 minutos, límite de 100 MB y recepción de un solo uso. El navegador solicita el archivo desde un botón explícito en Aurum Render; no se envía a Supabase ni a Mi Nube.
+
+El navegador debe conceder el permiso de acceso a red local de Chrome cuando lo solicite. La prueba final de extremo a extremo, compilación Rhino 7 y validación de preservación completa de escena siguen pendientes.
 
 La compilación contra RhinoCommon/Eto y la prueba dentro de Rhino 7 deben ejecutarse en un equipo Windows que tenga Rhino 7 instalado. No se declara el complemento compilado ni probado hasta completar esas comprobaciones.
 
@@ -55,6 +57,6 @@ El resultado esperado es `bin/Release/net48/AurumConect.rhp`.
 
 ## Siguiente fase: transferencia directa
 
-La siguiente fase debe conectar el plugin con la sesión autenticada del editor mediante un canal local de un solo uso. El navegador recibirá el .3dm y lo entregará a la función de carga existente de AURUM Render, reemplazando el modelo anterior en lugar de duplicarlo.
+La siguiente fase debe validar en equipos reales el canal local, los permisos de Chrome y la sustitución del modelo. La carga utiliza la función existente de Aurum Render; se omite el perfil inicial Plata 950 Pulida para no pisar el acabado que el usuario tenga aplicado.
 
 Ese canal requiere validación de origen, token efímero, límite de tamaño, consumo único y pruebas reales en Chrome/Windows. No se deben introducir secretos permanentes ni exponer archivos 3DM públicamente.
