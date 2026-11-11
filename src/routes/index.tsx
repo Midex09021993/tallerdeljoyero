@@ -5,7 +5,7 @@ import { supabasePublic } from "@/integrations/supabase/client";
 import { RegistroTaller } from "@/components/RegistroTaller";
 import { SolicitarDemo } from "@/components/SolicitarDemo";
 const MiniAurumRender = lazy(() => import("@/components/MiniAurumRender").then((m) => ({ default: m.MiniAurumRender })));
-import { ArrowRight, Info, BookOpen, Boxes, Calculator, Check, Cloud, Download, Gem, Layers3, Menu, MonitorDown, MonitorSmartphone, PackageCheck, Sparkles, Sprout, ChartNoAxesCombined, X } from "lucide-react";
+import { ArrowRight, BookOpen, Boxes, Calculator, Check, Cloud, Gem, Layers3, Menu, MonitorSmartphone, PackageCheck, Sparkles, Sprout, ChartNoAxesCombined, X } from "lucide-react";
 import heroColgante from "@/assets/diseno-colgante.jpg";
 
 export const Route = createFileRoute("/")({
@@ -887,47 +887,6 @@ function InicioPublico() {
 
       <TalleresDeLaComunidad />
 
-      <section id="aurum-conect" className="border-y border-slate-200 bg-white">
-        <div className="mx-auto grid max-w-[1440px] items-center gap-8 px-5 py-14 sm:px-8 sm:py-16 lg:grid-cols-[1.1fr_.9fr] lg:px-12">
-          <div>
-            <p className="inline-flex items-center gap-2 rounded-full border border-[#eadca8] bg-[#fff9df] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.2em] text-[#876500]">
-              <MonitorDown className="size-3.5" /> Integración CAD
-            </p>
-            <h2 className="mt-4 text-2xl font-extrabold tracking-tight text-[#17232d] sm:text-3xl lg:text-4xl">Conecta MatrixGold con AURUM RENDER.</h2>
-            <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-600 sm:text-base">
-              AURUM CONECT es el complemento para Rhino 7 y MatrixGold 3.1 que permite enviar tu diseño seleccionado hacia AURUM RENDER mediante un canal local en tu equipo.
-            </p>
-            <div className="mt-5 flex flex-wrap gap-2 text-xs font-semibold text-slate-600">
-              <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-2">Rhino 7</span>
-              <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-2">MatrixGold 3.1</span>
-              <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-2">Windows</span>
-            </div>
-          </div>
-          <div className="rounded-2xl border border-slate-200 bg-[#f8fafc] p-5 shadow-[0_8px_30px_rgba(23,35,45,.045)] sm:p-7">
-            <div className="flex items-center gap-3">
-              <span className="grid size-12 shrink-0 place-items-center rounded-xl border border-[#eadca7] bg-[#fff4c4] text-[#8f6b00]"><Download className="size-5" /></span>
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#987400]">Complemento para escritorio</p>
-                <h3 className="text-lg font-bold text-[#17232d]">AURUM CONECT</h3>
-              </div>
-            </div>
-            <p className="mt-4 text-xs leading-6 text-slate-600">
-              Descarga el instalador. El asistente detecta Rhino 7, descarga los componentes y compila el complemento en tu equipo.
-            </p>
-            <a href="https://raw.githubusercontent.com/Midex09021993/tallerdeljoyero/main/integrations/rhino7-aurum-prototype/Instalar-AURUM-Render-Bridge.bat" download="Instalar-AURUM-CONECT.bat" className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#17232d] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#293b49] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19]">
-              <Download className="size-4" /> Descargar AURUM CONECT (.BAT)
-            </a>
-            <div className="mt-4 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-[11px] leading-5 text-amber-900">
-              <Info className="mt-0.5 size-4 shrink-0" />
-              <p><strong>Versión beta.</strong> Requiere Rhino 7 y .NET SDK con .NET Framework 4.8 Developer Pack. La instalación y transferencia deben validarse en cada equipo antes de usarla en producción.</p>
-            </div>
-            <a href="https://github.com/Midex09021993/tallerdeljoyero/blob/main/integrations/rhino7-aurum-prototype/INSTALADOR.md" target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-[#765900] transition hover:text-[#17232d]">
-              Ver requisitos e instrucciones <ArrowRight className="size-3.5" />
-            </a>
-          </div>
-        </div>
-      </section>
-
       <footer id="contacto" className="border-t border-[#263743] bg-[#17232d] text-slate-300">
         <div className="mx-auto max-w-[1440px] px-5 py-9 sm:px-8 sm:py-10 lg:px-12">
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr] lg:gap-12">
@@ -954,7 +913,6 @@ function InicioPublico() {
               <ul className="mt-3 space-y-3 text-xs">
                 <li><Link to="/herramientas-publicas" className="transition hover:text-[#f8c928]">Herramientas para joyeros</Link></li>
                 <li><Link to="/aurum-render-public" className="transition hover:text-[#f8c928]">Visor 3D</Link></li>
-                <li><a href="#aurum-conect" className="transition hover:text-[#f8c928]">AURUM CONECT · Rhino 7</a></li>
                 <li><Link to="/auth" target="_blank" rel="noreferrer" className="transition hover:text-[#f8c928]">Ingresar a AURUM LAB</Link></li>
               </ul>
             </div>
