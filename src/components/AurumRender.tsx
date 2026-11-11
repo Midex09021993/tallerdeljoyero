@@ -117,6 +117,8 @@ type AurumRenderProps = { embedded?: boolean; onCatalogApiReady?: (api: AurumCat
 
 export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRenderProps = {}) {
   const { data: sesion } = useSesion();
+  const [aurumConectStatus, setAurumConectStatus] = useState("");
+  const [aurumConectBusy, setAurumConectBusy] = useState(false);
   const visorRef = useRef<HTMLDivElement>(null), fileRef = useRef<HTMLInputElement>(null);
   const orbitControlsRef = useRef<any>(null);
   const [autoRotate360, setAutoRotate360] = useState(false);
@@ -3416,7 +3418,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
     invalidateRenderRef.current?.();
   },[vista]);
 
-  const cargarArchivo=useCallback(async(file:File)=>{
+  const cargarArchivo=useCallback(async(file:File, options: { preserveScene?: boolean } = {})=>{
     try {
       const rawDestino = sessionStorage.getItem("aurum-render-poster-destino");
       if (rawDestino) {
@@ -3446,7 +3448,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       });
       // El GLB guardado ya contiene los materiales del visor: no aplicar el perfil inicial
       // al reabrirlo, porque sobrescribiría el acabado que el usuario había guardado.
-      if (!file.name.toLowerCase().endsWith(".glb")) {
+      if (!file.name.toLowerCase().endsWith(".glb") && !options.preserveScene) {
         const plataInicial = MATERIALES.find((material) => material.id === "plata950_pulida");
         if (plataInicial) {
           const aplicado = apiRef.current?.materialCatalogo?.(plataInicial);
@@ -3480,6 +3482,61 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       }
     }
   },[]);
+  const recibirDesdeRhino = useCallback(async () => {
+    const match = window.location.hash.match(/^#aurum-conect=(\\d{1,5})\\.([a-f0-9]{64})$/i);
+    if (!match) {
+      setAurumConectStatus("No hay una transferencia de Rhino pendiente. Vuelve a pulsar ACTUALIZAR DISEÑO.");
+      return;
+    }
+    const port = Number(match[1]);
+    const token = match[2];
+    if (!Number.isInteger(port) || port < 1 || port > 65535) {
+      setAurumConectStatus("El enlace local no es válido. Genera una nueva transferencia desde Rhino.");
+      return;
+    }
+
+    setAurumConectBusy(true);
+    setAurumConectStatus("Solicitando permiso de acceso local y recibiendo el diseño…");
+    try {
+      const endpoint = `http://127.0.0.1:${port}/transfer?token=${token}`;
+      const response = await fetch(endpoint, {
+        method: "GET",
+        mode: "cors",
+        credentials: "omit",
+        cache: "no-store",
+        referrerPolicy: "no-referrer",
+        targetAddressSpace: "loopback",
+      } as RequestInit & { targetAddressSpace: "loopback" });
+      if (!response.ok) {
+        const message = await response.text().catch(() => "");
+        throw new Error(message || `El canal local respondió ${response.status}.`);
+      }
+      const blob = await response.blob();
+      if (!blob.size || blob.size > 100 * 1024 * 1024) {
+        throw new Error("El archivo recibido está vacío o supera el límite de 100 MB.");
+      }
+      const file = new File([blob], "AURUM-CONECT.3dm", {
+        type: "application/octet-stream",
+        lastModified: Date.now(),
+      });
+      const loaded = await cargarArchivo(file, { preserveScene: true });
+      if (!loaded) throw new Error("Aurum Render no pudo procesar el archivo 3DM.");
+      const cleanUrl = new URL(window.location.href);
+      cleanUrl.hash = "";
+      window.history.replaceState({}, "", cleanUrl.pathname + cleanUrl.search);
+      setAurumConectStatus("Diseño recibido correctamente desde Rhino.");
+      toast.success("Diseño actualizado desde AURUM CONECT.");
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : "No se pudo recibir el diseño.";
+      setAurumConectStatus(detail.includes("Failed to fetch")
+        ? "No se pudo acceder al canal local. Permite el acceso a la red local en Chrome y vuelve a intentarlo desde Rhino."
+        : detail);
+      toast.error("No se pudo recibir el diseño de Rhino.");
+    } finally {
+      setAurumConectBusy(false);
+    }
+  }, [cargarArchivo]);
+
   useEffect(() => {
     const visor = visorRef.current;
     if (!visor || embedded) return;
@@ -3863,6 +3920,22 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   );
   return (<>
     <div className={(embedded ? "relative h-full min-h-0 w-full " : "fixed inset-0 z-40 ") + "flex flex-col overflow-hidden bg-[#eeede8] text-white"}>
+      {!embedded && /^#aurum-conect=/.test(window.location.hash) && (
+        <div className="absolute left-1/2 top-20 z-[120] w-[min(92vw,520px)] -translate-x-1/2 rounded-2xl border border-[#c6a45a]/50 bg-[#171a1f] p-4 text-white shadow-2xl">
+          <div className="flex items-center gap-3">
+            <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#c6a45a]/15 text-[#d9bd78]"><Gem className="size-5"/></div>
+            <div className="min-w-0 flex-1">
+              <div className="font-semibold tracking-wide">AURUM CONECT</div>
+              <div className="text-xs text-white/65">Diseño preparado desde Rhino 7 / MatrixGold</div>
+            </div>
+            <button type="button" disabled={aurumConectBusy} onClick={() => void recibirDesdeRhino()} className="rounded-xl bg-[#c6a45a] px-4 py-2 text-sm font-semibold text-[#171717] disabled:opacity-50">
+              {aurumConectBusy ? "RECIBIENDO…" : "RECIBIR DISEÑO"}
+            </button>
+          </div>
+          {aurumConectStatus && <p role="status" className="mt-3 text-xs leading-5 text-white/75">{aurumConectStatus}</p>}
+          <p className="mt-2 text-[11px] leading-4 text-white/45">La conexión solicita permiso local de Chrome. El archivo se transfiere directamente desde tu equipo; no pasa por almacenamiento en la nube.</p>
+        </div>
+      )}
       {!embedded && <header className="flex h-[64px] shrink-0 items-center justify-between gap-2 border-b border-black/10 bg-[#f7f6f2]/95 px-3 text-[#242424] shadow-sm backdrop-blur-xl sm:h-[68px] sm:px-4 xl:h-[74px] xl:px-5">
         <div className="flex min-w-0 items-center gap-3">
           <img
