@@ -4334,7 +4334,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             </div>}
             {!embedded && <div className="absolute bottom-6 right-6 z-20 flex gap-1 rounded-xl border border-white/35 bg-white/75 p-1 text-black/55 shadow-sm backdrop-blur-2xl">
               <span className="rounded-lg border border-black/10 px-2 py-1 text-[9px]">HDRI</span><span className="rounded-lg border border-black/10 px-2 py-1 text-[9px]">PBR</span><span className="rounded-lg border border-black/10 px-2 py-1 text-[9px]">4K</span>
-              <button type="button" title={isViewerFullscreen?"Restaurar visor":"Maximizar visor"} aria-label={isViewerFullscreen?"Restaurar visor":"Maximizar visor"} aria-pressed={isViewerFullscreen} onClick={()=>apiRef.current?.fullscreen()} className="grid size-7 place-items-center rounded-lg bg-[#17191c] text-white"><Maximize2 className="size-3.5"/></button>
+              <button type="button" title={isViewerFullscreen?"Restaurar visor":"Maximizar visor"} aria-label={isViewerFullscreen?"Restaurar visor":"Maximizar visor"} aria-pressed={isViewerFullscreen} onClick={()=>apiRef.current?.fullscreen()} className="grid size-7 place-items-center rounded-lg bg-[#17191c] text-white transition-colors hover:bg-[#b99642] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b99642] focus-visible:ring-offset-2">{isViewerFullscreen?<Minimize2 className="size-3.5"/>:<Maximize2 className="size-3.5"/>}</button>
             </div>}
 
             {!embedded && <div className={"absolute right-5 top-1/2 z-30 -translate-y-1/2 transition-opacity duration-200 "+(isViewerFullscreen?"opacity-0 hover:opacity-100 focus-within:opacity-100":"opacity-100")}>
