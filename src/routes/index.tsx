@@ -530,7 +530,7 @@ function InicioPublico() {
         .aurum-motion-ready [data-aurum-reveal].aurum-is-visible { transition-delay: var(--aurum-reveal-delay, 0ms); }
         @media (prefers-reduced-motion: reduce) {
           .aurum-hero-enter, .aurum-ambient-orb, .aurum-ambient-glow, .aurum-dashboard-float, .aurum-hero-badge, .aurum-preview-glint::after { animation: none !important; }
-          .aurum-motion-ready [data-aurum-reveal] { opacity: 1 !important; transform: none !important; transition: none !important; }
+          .aurum-motion-ready [data-aurum-reveal] { opacity: 1 !important; translate: 0 0 !important; scale: 1 !important; transform: none !important; transition: none !important; }
           .aurum-motion-card, .aurum-motion-card:hover { transform: none !important; transition: none !important; }
           .aurum-motion-card::after { display: none !important; }
         }
