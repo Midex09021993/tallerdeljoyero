@@ -38,7 +38,6 @@ function HerramientasPage() {
   const [mostrarIntroAurumConect, setMostrarIntroAurumConect] = useState(false);
   const [mostrarGuiaAurumConect, setMostrarGuiaAurumConect] = useState(false);
   const [paqueteAurumConectDisponible, setPaqueteAurumConectDisponible] = useState(false);
-  const [pluginAurumConectDisponible, setPluginAurumConectDisponible] = useState(false);
   const [archivoInicial, setArchivoInicial] = useState<File | null>(null);
   const [archivoOrigen, setArchivoOrigen] = useState<{ ruta: string; proyecto: string } | null>(null);
   const [errorArchivoInicial, setErrorArchivoInicial] = useState<string | null>(null);
@@ -65,13 +64,8 @@ function HerramientasPage() {
       }
     };
 
-    Promise.all([
-      comprobarArchivo("/downloads/AurumConect-Rhino7-1.0.0.zip"),
-      comprobarArchivo("/downloads/AurumConect-Rhino7-1.0.0.rhp"),
-    ]).then(([paqueteDisponible, pluginDisponible]) => {
-      if (controller.signal.aborted) return;
-      setPaqueteAurumConectDisponible(paqueteDisponible);
-      setPluginAurumConectDisponible(pluginDisponible);
+    comprobarArchivo("/downloads/AurumConect-Rhino7-1.0.0.zip").then((disponible) => {
+      if (!controller.signal.aborted) setPaqueteAurumConectDisponible(disponible);
     });
 
     return () => controller.abort();
@@ -215,26 +209,20 @@ function HerramientasPage() {
                             <Download className="size-4" /> Instalador completo en preparación
                           </button>
                         )}
-                        {pluginAurumConectDisponible ? (
-                          <a
-                            href="/downloads/AurumConect-Rhino7-1.0.0.rhp"
-                            download="AurumConect-Rhino7-1.0.0.rhp"
-                            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-border px-4 py-2 text-xs font-semibold text-muted-foreground transition hover:border-gold/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
-                          >
-                            <Download className="size-3.5" /> Descargar solo .RHP
-                          </a>
+                        {paqueteAurumConectDisponible ? (
+                          <p className="text-center text-[11px] leading-4 text-muted-foreground">El paquete incluye el complemento y sus dependencias. No instales el .RHP por separado.</p>
                         ) : null}
                         <button type="button" aria-expanded={mostrarGuiaAurumConect} aria-controls="aurum-conect-guia" onClick={() => setMostrarGuiaAurumConect((visible) => !visible)} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-border px-4 py-2 text-xs font-semibold text-muted-foreground transition hover:border-gold/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold">
                           {mostrarGuiaAurumConect ? "Ocultar guía" : "Ver guía de instalación"} <ChevronRight className={`size-3.5 transition-transform ${mostrarGuiaAurumConect ? "rotate-90" : ""}`} />
                         </button>
                         {!paqueteAurumConectDisponible && !pluginAurumConectDisponible ? (
-                          <p className="max-w-xs text-[11px] leading-4 text-muted-foreground">Los archivos de instalación aparecerán aquí cuando termine la compilación y validación automática.</p>
+                          <p className="max-w-xs text-[11px] leading-4 text-muted-foreground">El instalador completo aparecerá aquí cuando la compilación y la validación automática hayan terminado correctamente.</p>
                         ) : null}
                       </div>
                     </div>
                     <div className="flex items-start gap-2 border-t border-border bg-muted/30 px-5 py-3 text-xs leading-5 text-muted-foreground sm:px-6">
                       <Info className="mt-0.5 size-4 shrink-0 text-gold" />
-                      <p>Requiere Windows de 64 bits, Rhino 7 y Microsoft Edge WebView2 Runtime. El complemento se distribuye ya compilado; no necesitas Git ni .NET SDK. Versión beta: la carga del complemento y el flujo de transferencia deben validarse en cada entorno Rhino/MatrixGold antes de uso productivo.</p>
+                      <p>Requiere Windows de 64 bits, Rhino 7 y Microsoft Edge WebView2 Runtime. El instalador completo estará disponible cuando finalice la compilación y validación del paquete. No instales archivos individuales mientras tanto. Versión beta: la carga del complemento y el flujo de transferencia deben validarse en cada entorno Rhino/MatrixGold antes de uso productivo.</p>
                     </div>
                   </section>
                   {mostrarGuiaAurumConect ? (
