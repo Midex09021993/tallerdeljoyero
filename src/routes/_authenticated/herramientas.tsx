@@ -37,6 +37,7 @@ function HerramientasPage() {
   const [mostrarIntroAurumTransfer, setMostrarIntroAurumTransfer] = useState(false);
   const [mostrarIntroAurumConect, setMostrarIntroAurumConect] = useState(false);
   const [mostrarGuiaAurumConect, setMostrarGuiaAurumConect] = useState(false);
+  const [paqueteAurumConectDisponible, setPaqueteAurumConectDisponible] = useState(false);
   const [pluginAurumConectDisponible, setPluginAurumConectDisponible] = useState(false);
   const [archivoInicial, setArchivoInicial] = useState<File | null>(null);
   const [archivoOrigen, setArchivoOrigen] = useState<{ ruta: string; proyecto: string } | null>(null);
@@ -50,23 +51,28 @@ function HerramientasPage() {
 
   useEffect(() => {
     const controller = new AbortController();
-    const pluginUrl = "/downloads/AurumConect-Rhino7-1.0.0.zip";
-
-    fetch(pluginUrl, {
-      method: "HEAD",
-      cache: "no-store",
-      signal: controller.signal,
-    })
-      .then((response) => {
+    const comprobarArchivo = async (ruta: string) => {
+      try {
+        const response = await fetch(ruta, {
+          method: "HEAD",
+          cache: "no-store",
+          signal: controller.signal,
+        });
         const contentType = response.headers.get("content-type")?.toLowerCase() ?? "";
-        setPluginAurumConectDisponible(
-          response.ok &&
-          !contentType.includes("text/html")
-        );
-      })
-      .catch(() => {
-        if (!controller.signal.aborted) setPluginAurumConectDisponible(false);
-      });
+        return response.ok && !contentType.includes("text/html");
+      } catch {
+        return false;
+      }
+    };
+
+    Promise.all([
+      comprobarArchivo("/downloads/AurumConect-Rhino7-1.0.0.zip"),
+      comprobarArchivo("/downloads/AurumConect-Rhino7-1.0.0.rhp"),
+    ]).then(([paqueteDisponible, pluginDisponible]) => {
+      if (controller.signal.aborted) return;
+      setPaqueteAurumConectDisponible(paqueteDisponible);
+      setPluginAurumConectDisponible(pluginDisponible);
+    });
 
     return () => controller.abort();
   }, []);
@@ -195,28 +201,35 @@ function HerramientasPage() {
                           </div>
                         </div>
                       </div>
-                      <div className="flex flex-col gap-2 sm:flex-row lg:flex-col">
-                        <div className="flex flex-col gap-1">
-                          {pluginAurumConectDisponible ? (
-                            <a
-                              href="/downloads/AurumConect-Rhino7-1.0.0.zip"
-                              download="AurumConect-Rhino7-1.0.0.zip"
-                              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
-                            >
-                              <Download className="size-4" /> Descargar AURUM CONECT (.ZIP)
-                            </a>
-                          ) : (
-                            <>
-                              <button type="button" disabled aria-disabled="true" className="inline-flex min-h-11 cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-muted px-5 py-3 text-sm font-semibold text-muted-foreground opacity-80">
-                                <Download className="size-4" /> Complemento no disponible
-                              </button>
-                              <p className="max-w-xs text-[11px] leading-4 text-muted-foreground">No se encontró el complemento compilado. Inténtalo nuevamente más tarde.</p>
-                            </>
-                          )}
-                        </div>
+                      <div className="flex flex-col gap-2 sm:flex-row lg:flex-col lg:min-w-[250px]">
+                        {paqueteAurumConectDisponible ? (
+                          <a
+                            href="/downloads/AurumConect-Rhino7-1.0.0.zip"
+                            download="AurumConect-Rhino7-1.0.0.zip"
+                            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+                          >
+                            <Download className="size-4" /> Descargar instalador completo (.ZIP)
+                          </a>
+                        ) : (
+                          <button type="button" disabled aria-disabled="true" className="inline-flex min-h-11 cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-muted px-5 py-3 text-sm font-semibold text-muted-foreground opacity-80">
+                            <Download className="size-4" /> Instalador completo en preparación
+                          </button>
+                        )}
+                        {pluginAurumConectDisponible ? (
+                          <a
+                            href="/downloads/AurumConect-Rhino7-1.0.0.rhp"
+                            download="AurumConect-Rhino7-1.0.0.rhp"
+                            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-border px-4 py-2 text-xs font-semibold text-muted-foreground transition hover:border-gold/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+                          >
+                            <Download className="size-3.5" /> Descargar solo .RHP
+                          </a>
+                        ) : null}
                         <button type="button" aria-expanded={mostrarGuiaAurumConect} aria-controls="aurum-conect-guia" onClick={() => setMostrarGuiaAurumConect((visible) => !visible)} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-border px-4 py-2 text-xs font-semibold text-muted-foreground transition hover:border-gold/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold">
                           {mostrarGuiaAurumConect ? "Ocultar guía" : "Ver guía de instalación"} <ChevronRight className={`size-3.5 transition-transform ${mostrarGuiaAurumConect ? "rotate-90" : ""}`} />
                         </button>
+                        {!paqueteAurumConectDisponible && !pluginAurumConectDisponible ? (
+                          <p className="max-w-xs text-[11px] leading-4 text-muted-foreground">Los archivos de instalación aparecerán aquí cuando termine la compilación y validación automática.</p>
+                        ) : null}
                       </div>
                     </div>
                     <div className="flex items-start gap-2 border-t border-border bg-muted/30 px-5 py-3 text-xs leading-5 text-muted-foreground sm:px-6">
