@@ -215,7 +215,7 @@ function HerramientasPage() {
                         <button type="button" aria-expanded={mostrarGuiaAurumConect} aria-controls="aurum-conect-guia" onClick={() => setMostrarGuiaAurumConect((visible) => !visible)} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-border px-4 py-2 text-xs font-semibold text-muted-foreground transition hover:border-gold/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold">
                           {mostrarGuiaAurumConect ? "Ocultar guía" : "Ver guía de instalación"} <ChevronRight className={`size-3.5 transition-transform ${mostrarGuiaAurumConect ? "rotate-90" : ""}`} />
                         </button>
-                        {!paqueteAurumConectDisponible && !pluginAurumConectDisponible ? (
+                        {!paqueteAurumConectDisponible ? (
                           <p className="max-w-xs text-[11px] leading-4 text-muted-foreground">El instalador completo aparecerá aquí cuando la compilación y la validación automática hayan terminado correctamente.</p>
                         ) : null}
                       </div>
