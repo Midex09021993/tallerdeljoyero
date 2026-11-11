@@ -1,0 +1,5 @@
+# Archivos generados por NuGet y la compilación local de Rhino 7
+bin/
+obj/
+*.user
+*.suo
