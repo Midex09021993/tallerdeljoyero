@@ -26,16 +26,30 @@ $status = (& git -C $RepoRoot status --porcelain)
 if ($status) { Fail "Hay cambios locales sin guardar. Haz commit o guarda tus cambios antes de publicar." }
 
 $dotnet = Get-Command dotnet -ErrorAction SilentlyContinue
-if (-not $dotnet) {
+$sdkList = @()
+if ($dotnet) {
+  $sdkList = @(& dotnet --list-sdks 2>$null)
+}
+if (-not $dotnet -or $sdkList.Count -eq 0) {
   $winget = Get-Command winget -ErrorAction SilentlyContinue
   if (-not $winget) { Fail "Falta .NET SDK 8 y no se encontró winget. Instala .NET SDK 8 y vuelve a ejecutar." }
-  Write-Host "Instalando .NET SDK 8..." -ForegroundColor Yellow
+  Write-Host "No se encontró .NET SDK. Instalando .NET SDK 8..." -ForegroundColor Yellow
   & winget install --id Microsoft.DotNet.SDK.8 --exact --accept-package-agreements --accept-source-agreements
   if ($LASTEXITCODE -ne 0) { Fail "No se pudo instalar .NET SDK 8." }
-  $env:PATH = [Environment]::GetEnvironmentVariable("PATH","Machine") + ";" + [Environment]::GetEnvironmentVariable("PATH","User")
+  $machinePath = [Environment]::GetEnvironmentVariable("PATH","Machine")
+  $userPath = [Environment]::GetEnvironmentVariable("PATH","User")
+  $env:PATH = "$machinePath;$userPath"
   $dotnet = Get-Command dotnet -ErrorAction SilentlyContinue
-  if (-not $dotnet) { Fail "Cierra esta ventana, abre una nueva y vuelve a ejecutar el lanzador para que Windows actualice PATH." }
+  if (-not $dotnet) {
+    $dotnetExe = Join-Path $env:ProgramFiles "dotnet\dotnet.exe"
+    if (Test-Path $dotnetExe) { $env:PATH = "$(Split-Path $dotnetExe);$env:PATH" }
+    $dotnet = Get-Command dotnet -ErrorAction SilentlyContinue
+  }
+  if (-not $dotnet) { Fail "Se instaló .NET SDK, pero Windows no encuentra dotnet. Reinicia Windows y vuelve a ejecutar." }
+  $sdkList = @(& dotnet --list-sdks 2>$null)
+  if ($sdkList.Count -eq 0) { Fail "No se detectó ningún SDK de .NET. Reinicia Windows y vuelve a ejecutar." }
 }
+Write-Host "SDK detectado: $($sdkList -join ', ')" -ForegroundColor Green
 
 Write-Host "Restaurando dependencias NuGet..."
 & dotnet restore $Project
