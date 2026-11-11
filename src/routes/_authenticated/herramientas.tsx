@@ -37,6 +37,7 @@ function HerramientasPage() {
   const [mostrarIntroAurumTransfer, setMostrarIntroAurumTransfer] = useState(false);
   const [mostrarIntroAurumConect, setMostrarIntroAurumConect] = useState(false);
   const [mostrarGuiaAurumConect, setMostrarGuiaAurumConect] = useState(false);
+  const [instaladorAurumConectDisponible, setInstaladorAurumConectDisponible] = useState(false);
   const [archivoInicial, setArchivoInicial] = useState<File | null>(null);
   const [archivoOrigen, setArchivoOrigen] = useState<{ ruta: string; proyecto: string } | null>(null);
   const [errorArchivoInicial, setErrorArchivoInicial] = useState<string | null>(null);
@@ -46,6 +47,31 @@ function HerramientasPage() {
   useEffect(() => {
     herramientaActivaRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
   }, [herramientaActiva]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const instaladorUrl = "/downloads/AURUM-CONECT-Setup-Rhino7-1.0.0.exe";
+
+    fetch(instaladorUrl, {
+      method: "HEAD",
+      cache: "no-store",
+      signal: controller.signal,
+    })
+      .then((response) => {
+        const contentType = response.headers.get("content-type")?.toLowerCase() ?? "";
+        const contentLength = Number(response.headers.get("content-length") ?? 0);
+        setInstaladorAurumConectDisponible(
+          response.ok &&
+          !contentType.includes("text/html") &&
+          contentLength >= 100 * 1024
+        );
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setInstaladorAurumConectDisponible(false);
+      });
+
+    return () => controller.abort();
+  }, []);
 
   const desplazarBarra = (direccion: -1 | 1) => {
     barraHerramientasRef.current?.scrollBy({ left: direccion * 260, behavior: "smooth" });
@@ -173,10 +199,22 @@ function HerramientasPage() {
                       </div>
                       <div className="flex flex-col gap-2 sm:flex-row lg:flex-col">
                         <div className="flex flex-col gap-1">
-                          <button type="button" disabled aria-disabled="true" className="inline-flex min-h-11 cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-muted px-5 py-3 text-sm font-semibold text-muted-foreground opacity-80">
-                            <Download className="size-4" /> Instalador profesional en preparación
-                          </button>
-                          <p className="max-w-xs text-[11px] leading-4 text-muted-foreground">La descarga se habilitará cuando la compilación y el empaquetado hayan terminado correctamente.</p>
+                          {instaladorAurumConectDisponible ? (
+                            <a
+                              href="/downloads/AURUM-CONECT-Setup-Rhino7-1.0.0.exe"
+                              download
+                              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+                            >
+                              <Download className="size-4" /> Descargar instalador (.EXE)
+                            </a>
+                          ) : (
+                            <>
+                              <button type="button" disabled aria-disabled="true" className="inline-flex min-h-11 cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-muted px-5 py-3 text-sm font-semibold text-muted-foreground opacity-80">
+                                <Download className="size-4" /> Instalador profesional en preparación
+                              </button>
+                              <p className="max-w-xs text-[11px] leading-4 text-muted-foreground">La descarga aparecerá automáticamente cuando el instalador compilado y verificado esté publicado.</p>
+                            </>
+                          )}
                         </div>
                         <button type="button" aria-expanded={mostrarGuiaAurumConect} aria-controls="aurum-conect-guia" onClick={() => setMostrarGuiaAurumConect((visible) => !visible)} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-border px-4 py-2 text-xs font-semibold text-muted-foreground transition hover:border-gold/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold">
                           {mostrarGuiaAurumConect ? "Ocultar guía" : "Ver guía de instalación"} <ChevronRight className={`size-3.5 transition-transform ${mostrarGuiaAurumConect ? "rotate-90" : ""}`} />
