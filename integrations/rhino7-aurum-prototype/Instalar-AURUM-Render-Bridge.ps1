@@ -43,6 +43,11 @@ try {
         throw "No se encontró .NET SDK (comando dotnet). Instala el SDK de .NET y vuelve a ejecutar este instalador."
     }
 
+    $net48ReferencePack = Join-Path ${env:ProgramFiles(x86)} "Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8\mscorlib.dll"
+    if (-not (Test-Path $net48ReferencePack)) {
+        throw "Falta el targeting pack de .NET Framework 4.8. Instala .NET Framework 4.8 Developer Pack y vuelve a compilar."
+    }
+
     New-Item -ItemType Directory -Path $sourceDir -Force | Out-Null
     New-Item -ItemType Directory -Path $installDir -Force | Out-Null
 
