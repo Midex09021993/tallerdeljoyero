@@ -68,7 +68,12 @@ jobs:
             $stream.Dispose()
           }
           [void][System.Reflection.AssemblyName]::GetAssemblyName((Resolve-Path $plugin))
-          Write-Host "Validated .RHP: $($file.Length) bytes"
+          $stream.Position = 0x3C
+          $peOffset = $reader.ReadInt32()
+          $stream.Position = $peOffset + 4
+          $machine = $reader.ReadUInt16()
+          if ($machine -ne 0x8664) { throw "AurumConect.rhp is not an x64 Windows assembly (machine: 0x$('{0:X4}' -f $machine))." }
+          Write-Host "Validated x64 .RHP: $($file.Length) bytes"
 
       - name: Assemble complete installation package
         shell: pwsh
@@ -105,7 +110,6 @@ jobs:
           }
 
           New-Item -ItemType Directory -Path "public/downloads" -Force | Out-Null
-          Copy-Item "$output/AurumConect.rhp" "public/downloads/AurumConect-Rhino7-1.0.0.rhp" -Force
           if (Test-Path "public/downloads/AurumConect-Rhino7-1.0.0.zip") {
             Remove-Item "public/downloads/AurumConect-Rhino7-1.0.0.zip" -Force
           }
@@ -118,7 +122,6 @@ jobs:
           name: AurumConect-Rhino7-1.0.0-Installer
           path: |
             public/downloads/AurumConect-Rhino7-1.0.0.zip
-            public/downloads/AurumConect-Rhino7-1.0.0.rhp
           if-no-files-found: error
           retention-days: 30
 
@@ -129,7 +132,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git fetch origin main
           git checkout -B main origin/main
-          git add public/downloads/AurumConect-Rhino7-1.0.0.zip public/downloads/AurumConect-Rhino7-1.0.0.rhp
+          git add public/downloads/AurumConect-Rhino7-1.0.0.zip
 
           git diff --cached --quiet
           if ($LASTEXITCODE -eq 0) {
