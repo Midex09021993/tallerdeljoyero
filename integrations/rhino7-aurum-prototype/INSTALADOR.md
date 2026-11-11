@@ -1,32 +1,31 @@
-# Instalación de AURUM CONECT — Rhino 7 / MatrixGold 3.1
+# AURUM CONECT — Instalador único para Rhino 7
 
-## Instalador recomendado
+## Experiencia del usuario
 
-Ejecuta `Instalar-AURUM-Render-Bridge.bat`. El instalador detecta Rhino 7, descarga el código C# desde `main`, compila el complemento y copia el archivo `.rhp` únicamente si la compilación finaliza correctamente.
+Descarga un solo archivo:
 
-Requisitos: Rhino 7 instalado, RhinoCommon.dll y Eto.dll disponibles en su carpeta System, y .NET SDK con soporte para .NET Framework 4.8.
+`AURUM-CONECT-Setup-Rhino7-1.0.0.exe`
 
-## Instalar el complemento
+El asistente detecta Rhino 7 de 64 bits, instala el complemento `.RHP` ya compilado en el perfil del usuario y registra el complemento en Rhino 7. No pide SDK, no compila en el ordenador del cliente y no requiere que el usuario abra PlugInManager para registrar el archivo.
 
-1. Abre Rhino 7.
-2. Ejecuta `_PlugInManager`.
-3. Pulsa **Install** y selecciona `AurumConect.rhp` en `%LOCALAPPDATA%\AurumLab\AurumConect\Rhino7`.
-4. Ejecuta el comando `AurumConect`.
-5. Acopla el panel donde prefieras.
+Al finalizar:
+1. Cierra Rhino 7 si estaba abierto y vuelve a iniciarlo.
+2. Ejecuta el comando `AurumConect` para abrir el panel.
+3. Pulsa **CONECTAR CON AURUM LAB** e inicia sesión en el navegador.
+4. Selecciona la geometría en MatrixGold y pulsa **ACTUALIZAR DISEÑO**.
+5. Completa la recepción desde AURUM RENDER.
 
-## Uso actual
+## Requisitos
 
-1. Abre el diseño en MatrixGold 3.1.
-2. En el panel, pulsa **CONECTAR CON AURUM LAB**.
-3. El navegador abre el inicio de sesión oficial. Ingresa con las mismas credenciales de tu plataforma; el complemento nunca recibe ni guarda tu contraseña.
-4. Tras autenticarte, AURUM LAB te dirige directamente a Aurum Render.
-5. Regresa a Rhino, selecciona la geometría que quieras enviar y pulsa **ACTUALIZAR DISEÑO**.
-6. El complemento prepara una copia temporal .3dm y vuelve a abrir el acceso a Aurum Render. La carga del archivo todavía es manual.
+- Windows de 64 bits.
+- Rhino 7 actualizado (compilación dirigida a RhinoCommon 7.27).
+- MatrixGold 3.1 instalado en Rhino 7 para el flujo CAD.
+- Acceso a Internet para AURUM LAB.
 
-## Estado y limitaciones
+No requiere SDK ni Developer Pack en el equipo del usuario. El instalador no distribuye DLL propietarias de Rhino o MatrixGold.
 
-El instalador no genera un .rhp ficticio: se detiene si no encuentra las DLL de Rhino 7 o si `dotnet build` falla. La compilación debe verificarse también dentro de Rhino 7 en el equipo de destino.
+## Validación pendiente
 
-La transferencia directa tiene una implementación inicial mediante un canal local efímero (127.0.0.1), token de un solo uso y expiración de 3 minutos. En Aurum Render debes pulsar **RECIBIR DISEÑO** y autorizar el acceso local en Chrome si el navegador lo solicita. El archivo viaja directamente desde Rhino al navegador, sin almacenarse en la nube.
+El pipeline genera el instalador y registra el complemento, pero la carga efectiva del .RHP y el ciclo completo de transferencia necesitan una prueba física en Rhino 7 + MatrixGold 3.1 + Chrome. El instalador es beta y no está firmado digitalmente; SmartScreen puede advertir que el editor no está verificado.
 
-Esta fase requiere pruebas reales en Windows/Rhino 7/Chrome. La conservación de todos los ajustes de cámara, iluminación y materiales durante el reemplazo debe validarse antes de darla por garantizada.
+La recepción directa utiliza un canal local efímero. La compatibilidad de permisos de red local de Chrome y la conservación de todos los materiales/ajustes del render deben verificarse antes de declarar la integración lista para producción.
