@@ -1,54 +1,107 @@
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"
-$scriptUrl = "https://raw.githubusercontent.com/Midex09021993/tallerdeljoyero/main/integrations/rhino7-aurum-prototype/AurumRenderBridge.py"
-$installDir = Join-Path $env:APPDATA "AurumLab\Rhino7\AURUM-Render-Bridge"
-$scriptPath = Join-Path $installDir "AurumRenderBridge.py"
-$guidePath = Join-Path $installDir "LEEME.txt"
-try {
-    Write-Host "AURUM LAB - Instalador de AURUM Render Bridge" -ForegroundColor Yellow
-    New-Item -ItemType Directory -Path $installDir -Force | Out-Null
-    $tempPath = Join-Path $installDir "AurumRenderBridge.download"
-    Invoke-WebRequest -Uri $scriptUrl -OutFile $tempPath -UseBasicParsing
-    $downloaded = Get-Content -LiteralPath $tempPath -Raw
-    if (-not $downloaded.StartsWith("# -*- coding: utf-8 -*-")) {
-        Remove-Item -LiteralPath $tempPath -Force -ErrorAction SilentlyContinue
-        throw "El archivo descargado no parece ser el script oficial."
+
+$repoRoot = "https://raw.githubusercontent.com/Midex09021993/tallerdeljoyero/main/integrations/rhino7-aurum-prototype"
+$sourceDir = Join-Path $env:TEMP "AurumConect-Rhino7-Source"
+$installDir = Join-Path $env:LOCALAPPDATA "AurumLab\AurumConect\Rhino7"
+$files = @(
+    "AurumConect.csproj",
+    "AurumConectPlugin.cs",
+    "AurumConectPanel.cs",
+    "AurumConectCommands.cs"
+)
+
+function Find-Rhino7System {
+    $candidates = @(
+        (Join-Path $env:ProgramFiles "Rhino 7\System"),
+        (Join-Path ${env:ProgramFiles(x86)} "Rhino 7\System"),
+        "C:\Program Files\Rhino 7\System",
+        "C:\Program Files\Rhinoceros 7\System"
+    ) | Select-Object -Unique
+
+    foreach ($candidate in $candidates) {
+        if ((Test-Path (Join-Path $candidate "RhinoCommon.dll")) -and
+            (Test-Path (Join-Path $candidate "Eto.dll"))) {
+            return $candidate
+        }
     }
-    Move-Item -LiteralPath $tempPath -Destination $scriptPath -Force
+    return $null
+}
+
+try {
+    Write-Host ""
+    Write-Host "AURUM LAB | AURUM CONECT - Rhino 7" -ForegroundColor Yellow
+    Write-Host "Preparando el complemento nativo C#..." -ForegroundColor Gray
+
+    $rhinoSystem = Find-Rhino7System
+    if (-not $rhinoSystem) {
+        throw "No se encontraron RhinoCommon.dll y Eto.dll. Instala Rhino 7 o verifica su carpeta System."
+    }
+
+    $dotnet = Get-Command "dotnet" -ErrorAction SilentlyContinue
+    if (-not $dotnet) {
+        throw "No se encontró .NET SDK (comando dotnet). Instala el SDK de .NET y vuelve a ejecutar este instalador."
+    }
+
+    New-Item -ItemType Directory -Path $sourceDir -Force | Out-Null
+    New-Item -ItemType Directory -Path $installDir -Force | Out-Null
+
+    foreach ($file in $files) {
+        $url = "$repoRoot/$file"
+        $destination = Join-Path $sourceDir $file
+        Invoke-WebRequest -Uri $url -OutFile $destination -UseBasicParsing
+        if (-not (Test-Path $destination) -or (Get-Item $destination).Length -lt 40) {
+            throw "Descarga incompleta o inválida: $file"
+        }
+    }
+
+    $project = Join-Path $sourceDir "AurumConect.csproj"
+    $buildOutput = & dotnet build $project -c Release "-p:Rhino7SystemDir=$rhinoSystem" --nologo 2>&1
+    $buildOutput | ForEach-Object { Write-Host $_ }
+    if ($LASTEXITCODE -ne 0) {
+        throw "La compilación falló. Revisa los errores anteriores; no se instaló ningún complemento."
+    }
+
+    $builtPlugin = Join-Path $sourceDir "bin\Release\net48\AurumConect.rhp"
+    if (-not (Test-Path $builtPlugin)) {
+        throw "La compilación terminó sin generar AurumConect.rhp."
+    }
+
+    $installedPlugin = Join-Path $installDir "AurumConect.rhp"
+    Copy-Item -LiteralPath $builtPlugin -Destination $installedPlugin -Force
+
     $guide = @"
-AURUM Render Bridge - Rhino 7
+AURUM CONECT | Rhino 7 / MatrixGold 3.1
 
-INSTALADO EN:
-$scriptPath
+Complemento compilado desde el código fuente de AURUM LAB.
+Archivo: $installedPlugin
 
-COMO EJECUTAR:
-1. Abre Rhino 7 / MatrixGold.
-2. En Rhino, ejecuta _RunPythonScript.
-3. Selecciona AurumRenderBridge.py en esta carpeta.
-4. Selecciona los objetos que deseas preparar.
+INSTALACIÓN EN RHINO:
+1. Abre Rhino 7.
+2. Ejecuta _PlugInManager.
+3. Pulsa Install y selecciona AurumConect.rhp.
+4. Ejecuta AurumConect para abrir el panel.
 
-LIMITACIONES:
-El prototipo crea una copia temporal .3dm y abre AURUM Render.
-No transfiere ni carga el modelo automáticamente en el editor web.
+USO:
+Selecciona la geometría en MatrixGold y pulsa ACTUALIZAR DISEÑO.
+
+ESTADO FUNCIONAL:
+Esta compilación prepara una copia temporal .3dm y abre AURUM Render.
+La transferencia automática directa al visor web todavía no está habilitada.
 "@
-    Set-Content -LiteralPath $guidePath -Value $guide -Encoding UTF8
-    $desktop = [Environment]::GetFolderPath("Desktop")
-    $shortcutPath = Join-Path $desktop "AURUM Render Bridge - Rhino 7.lnk"
-    $shell = New-Object -ComObject WScript.Shell
-    $shortcut = $shell.CreateShortcut($shortcutPath)
-    $shortcut.TargetPath = $installDir
-    $shortcut.WorkingDirectory = $installDir
-    $shortcut.Description = "Carpeta instalada de AURUM Render Bridge para Rhino 7"
-    $shortcut.Save()
-    Write-Host "Instalacion completada." -ForegroundColor Green
-    Write-Host "Script: $scriptPath"
-    Write-Host "Guia: $guidePath"
-    Write-Host "La transferencia automatica al editor web aun no esta implementada." -ForegroundColor Yellow
+    Set-Content -LiteralPath (Join-Path $installDir "LEEME.txt") -Value $guide -Encoding UTF8
+
+    Write-Host ""
+    Write-Host "Compilación correcta. Complemento preparado:" -ForegroundColor Green
+    Write-Host $installedPlugin -ForegroundColor Cyan
+    Write-Host "Abriendo carpeta para que instales el .rhp desde Rhino..." -ForegroundColor Gray
     Start-Process explorer.exe -ArgumentList $installDir
     Read-Host "Presiona Enter para cerrar"
 }
 catch {
-    Write-Host "No se pudo completar la instalacion: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host ""
+    Write-Host "AURUM CONECT no se instaló." -ForegroundColor Red
+    Write-Host $_.Exception.Message -ForegroundColor Red
     Read-Host "Presiona Enter para cerrar"
     exit 1
 }
