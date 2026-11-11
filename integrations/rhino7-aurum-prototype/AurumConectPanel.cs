@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using Eto.Drawing;
 using Eto.Forms;
 using Rhino;
@@ -38,6 +39,16 @@ namespace AurumConect
                 Wrap = WrapMode.Word
             });
 
+            var connectButton = new Button
+            {
+                Text = "CONECTAR CON AURUM LAB",
+                Height = 38,
+                BackgroundColor = Color.FromArgb(48, 55, 64),
+                TextColor = Color.FromArgb(235, 225, 202)
+            };
+            connectButton.Click += (_, __) => OpenAurumLogin();
+            layout.AddRow(connectButton);
+
             var updateButton = new Button
             {
                 Text = "ACTUALIZAR DISEÑO",
@@ -58,12 +69,34 @@ namespace AurumConect
             layout.AddRow(_status);
             layout.AddRow(new Label
             {
-                Text = "La transferencia automática al visor web se habilitará en la siguiente fase. Esta versión prepara el .3dm temporal y abre AURUM Render.",
+                Text = "El acceso se realiza en la página oficial de AURUM LAB. Tus credenciales nunca se guardan en Rhino ni en este complemento.",
+                TextColor = Color.FromArgb(145, 150, 158),
+                Wrap = WrapMode.Word
+            });
+            layout.AddRow(new Label
+            {
+                Text = "La actualización prepara una copia .3dm temporal. La transferencia directa al visor aún está en desarrollo.",
                 TextColor = Color.FromArgb(145, 150, 158),
                 Wrap = WrapMode.Word
             });
 
             Content = new Scrollable { Content = layout };
+        }
+
+        internal static void OpenAurumLogin()
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = "https://www.tallerdeljoyero.com/auth?returnTo=aurum-render",
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception exception)
+            {
+                RhinoApp.WriteLine("AURUM CONECT: no se pudo abrir el inicio de sesión: {0}", exception.Message);
+            }
         }
 
         internal void SetStatus(string message)
