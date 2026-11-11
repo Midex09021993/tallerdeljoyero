@@ -87,7 +87,11 @@ namespace AurumConect
             }
             catch (ObjectDisposedException) { }
             catch (SocketException) { }
-            finally { Dispose(); }
+            finally
+            {
+                Dispose();
+                try { if (File.Exists(_filePath)) File.Delete(_filePath); } catch { }
+            }
         }
 
         private void HandleRequest(NetworkStream stream)
@@ -205,7 +209,6 @@ namespace AurumConect
         {
             if (!_stop.IsCancellationRequested) _stop.Cancel();
             try { _listener.Stop(); } catch { }
-            _stop.Dispose();
         }
     }
 }
