@@ -27,4 +27,6 @@ Requisitos: Rhino 7 instalado, RhinoCommon.dll y Eto.dll disponibles en su carpe
 
 El instalador no genera un .rhp ficticio: se detiene si no encuentra las DLL de Rhino 7 o si `dotnet build` falla. La compilación debe verificarse también dentro de Rhino 7 en el equipo de destino.
 
-La autenticación integrada y el retorno directo a Aurum Render están implementados. La transferencia automática directa del .3dm al visor web sigue pendiente. No se debe confundir esta versión con una integración de un solo clic ya terminada.
+La transferencia directa tiene una implementación inicial mediante un canal local efímero (127.0.0.1), token de un solo uso y expiración de 3 minutos. En Aurum Render debes pulsar **RECIBIR DISEÑO** y autorizar el acceso local en Chrome si el navegador lo solicita. El archivo viaja directamente desde Rhino al navegador, sin almacenarse en la nube.
+
+Esta fase requiere pruebas reales en Windows/Rhino 7/Chrome. La conservación de todos los ajustes de cámara, iluminación y materiales durante el reemplazo debe validarse antes de darla por garantizada.
