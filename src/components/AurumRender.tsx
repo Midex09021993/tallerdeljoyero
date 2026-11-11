@@ -3484,7 +3484,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
     }
   },[]);
   const recibirDesdeRhino = useCallback(async () => {
-    const match = window.location.hash.match(/^#aurum-conect=(\\d{1,5})\\.([a-f0-9]{64})$/i);
+    const match = window.location.hash.match(/^#aurum-conect=(\d{1,5})\.([a-f0-9]{64})$/i);
     if (!match) {
       setAurumConectStatus("No hay una transferencia de Rhino pendiente. Vuelve a pulsar ACTUALIZAR DISEÑO.");
       return;
@@ -3956,9 +3956,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             </span>
           </div>
           {aurumConectStatus && <p role="status" className="mt-3 text-xs leading-5 text-white/75">{aurumConectStatus}</p>}
-          {!aurumConectBusy && aurumConectStatus && !aurumConectStatus.includes("correctamente") && (
-            <button type="button" onClick={() => { aurumConectAttemptRef.current = null; void recibirDesdeRhino(); }} className="mt-3 rounded-lg bg-[#c6a45a] px-3 py-2 text-xs font-semibold text-[#171717]">REINTENTAR TRANSFERENCIA</button>
-          )}
+
           <p className="mt-2 text-[11px] leading-4 text-white/45">La geometría se transfiere directamente desde Rhino a este visor, sin pasar por almacenamiento en la nube.</p>
         </div>
       )}
