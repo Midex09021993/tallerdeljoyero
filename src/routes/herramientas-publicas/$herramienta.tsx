@@ -126,22 +126,22 @@ const paginas = {
     ]
   },
   "peso-gemas": {
-    titulo: "Calculadora de peso de gemas",
-    metaTitulo: "Calculadora de peso de gemas: gramos y quilates | Taller del Joyero",
-    descripcion: "Convierte gramos a quilates y estima el peso de gemas por medidas, forma y gravedad específica.",
+    titulo: "Calculadora de peso de gemas en quilates y gramos",
+    metaTitulo: "Calculadora de peso de gemas en quilates y gramos | AURUM LAB",
+    descripcion: "Calcula el peso de gemas en quilates (ct). Convierte gramos a quilates y estima el peso de diamantes y otras piedras por sus medidas y talla.",
     contenido: "Convierte el peso de una piedra de gramos a quilates o estima su peso a partir de las dimensiones, la forma de talla y el material seleccionado.",
     id: "gemas",
     guiaSlug: "calcular-peso-gemas-por-medidas",
     secciones: [
       {
-        titulo: "Conversión de gramos a quilates de gemas",
+        titulo: "Cómo convertir gramos a quilates (ct) de una gema",
         parrafos: [
           "El quilate métrico (ct) es una unidad de masa utilizada para gemas. Un quilate equivale a 0,20 gramos, es decir, 200 miligramos; un quilate se divide en 100 puntos.",
           "Si conoces el peso en gramos, utiliza el modo de conversión para obtener el equivalente en quilates, puntos y miligramos."
         ]
       },
       {
-        titulo: "Cómo estimar el peso de una piedra por sus medidas",
+        titulo: "Cómo calcular el peso de diamantes y gemas por medidas",
         parrafos: [
           "La estimación por dimensiones considera el largo, el ancho, la profundidad, la forma de talla y la gravedad específica asociada al material seleccionado. Las proporciones reales de la piedra pueden hacer que el peso se aparte de la estimación.",
           "En gemas facetadas, el perfil de la corona, el pabellón y la cintura influye en el volumen. Por eso, el resultado debe utilizarse como referencia y no como sustituto de una balanza gemológica."
@@ -149,8 +149,8 @@ const paginas = {
       }
     ],
     preguntas: [
-      { pregunta: "¿Cuántos quilates tiene una gema de un gramo?", respuesta: "Un gramo equivale a 5 quilates métricos, porque cada quilate equivale a 0,20 gramos." },
-      { pregunta: "¿Se puede estimar el peso de un diamante por sus medidas?", respuesta: "Sí, se puede obtener una estimación si se conocen las dimensiones y la forma de talla. El peso real depende también de las proporciones y del perfil de la piedra." },
+      { pregunta: "¿Cuántos quilates son 1 gramo de una gema?", respuesta: "Un gramo equivale a 5 quilates métricos, porque cada quilate equivale a 0,20 gramos." },
+      { pregunta: "¿Cómo estimar el peso de un diamante por sus medidas?", respuesta: "Sí, se puede obtener una estimación si se conocen las dimensiones y la forma de talla. El peso real depende también de las proporciones y del perfil de la piedra." },
       { pregunta: "¿La estimación sirve para cualquier tipo de gema?", respuesta: "La herramienta ofrece materiales y formas configurados. La precisión depende de que el material, la gravedad específica y los parámetros de talla representen la piedra real; confirma el peso con una balanza cuando sea necesario." }
     ]
   },
