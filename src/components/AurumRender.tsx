@@ -121,6 +121,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const { data: sesion } = useSesion();
   const [aurumConectStatus, setAurumConectStatus] = useState("");
   const [aurumConectBusy, setAurumConectBusy] = useState(false);
+  const [aurumConectCanRetry, setAurumConectCanRetry] = useState(false);
   const aurumConectAttemptRef = useRef<string | null>(null);
   const visorRef = useRef<HTMLDivElement>(null), fileRef = useRef<HTMLInputElement>(null);
   const orbitControlsRef = useRef<any>(null);
@@ -3534,6 +3535,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const recibirDesdeRhino = useCallback(async () => {
     const match = window.location.hash.match(/^#aurum-conect=(\d{1,5})\.([a-f0-9]{64})$/i);
     if (!match) {
+      aurumConectAttemptRef.current = null;
+      setAurumConectCanRetry(false);
       setAurumConectStatus("No hay una transferencia de Rhino pendiente. Vuelve a pulsar ACTUALIZAR DISEÑO.");
       return;
     }
@@ -3548,7 +3551,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
     }
 
     setAurumConectBusy(true);
-    setAurumConectStatus("Solicitando permiso de acceso local y recibiendo el diseño…");
+    setAurumConectCanRetry(false);
+    setAurumConectStatus("Conectando con Rhino y solicitando acceso al documento…");
     try {
       const endpoint = `http://127.0.0.1:${port}/transfer?token=${token}`;
       const response = await fetch(endpoint, {
@@ -3561,8 +3565,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       } as RequestInit & { targetAddressSpace: "loopback" });
       if (!response.ok) {
         const message = await response.text().catch(() => "");
+        if (response.status === 410) throw new Error("La transferencia expiró o ya fue completada. Vuelve a pulsar ACTUALIZAR DISEÑO en Rhino.");
+        if (response.status === 401) throw new Error("El enlace de transferencia ya no es válido. Vuelve a pulsar ACTUALIZAR DISEÑO en Rhino.");
         throw new Error(message || `El canal local respondió ${response.status}.`);
       }
+      setAurumConectStatus("Descargando el documento 3DM desde Rhino…");
       const blob = await response.blob();
       if (!blob.size || blob.size > 100 * 1024 * 1024) {
         throw new Error("El archivo recibido está vacío o supera el límite de 100 MB.");
@@ -3571,19 +3578,23 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         type: "application/octet-stream",
         lastModified: Date.now(),
       });
+      setAurumConectStatus("Documento recibido. Preparando la geometría para AURUM RENDER…");
       const loaded = await cargarArchivo(file, { preserveScene: true });
       if (!loaded) throw new Error("Aurum Render no pudo procesar el archivo 3DM.");
       const cleanUrl = new URL(window.location.href);
       cleanUrl.hash = "";
       window.sessionStorage.removeItem("aurum-conect-pending");
       window.history.replaceState({}, "", cleanUrl.pathname + cleanUrl.search);
+      setAurumConectCanRetry(false);
       setAurumConectStatus("Diseño recibido correctamente desde Rhino.");
       toast.success("Diseño actualizado desde AURUM CONECT.");
     } catch (error) {
       const detail = error instanceof Error ? error.message : "No se pudo recibir el diseño.";
-      setAurumConectStatus(detail.includes("Failed to fetch")
-        ? "No se pudo acceder al canal local. Permite el acceso a la red local en Chrome y vuelve a intentarlo desde Rhino."
-        : detail);
+      const networkFailure = /failed to fetch|networkerror|fetch failed/i.test(detail);
+      setAurumConectCanRetry(networkFailure);
+      setAurumConectStatus(networkFailure
+        ? "No se pudo acceder al canal local. Comprueba el permiso de red local del navegador y vuelve a intentar la recepción."
+        : detail); 
       aurumConectAttemptRef.current = null;
       toast.error("No se pudo recibir el diseño de Rhino.");
     } finally {
@@ -4003,7 +4014,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               {aurumConectBusy ? "RECIBIENDO AUTOMÁTICAMENTE…" : aurumConectStatus.includes("correctamente") ? "DISEÑO RECIBIDO" : "RECEPCIÓN AUTOMÁTICA"}
             </span>
           </div>
-          {aurumConectStatus && <p role="status" className="mt-3 text-xs leading-5 text-white/75">{aurumConectStatus}</p>}
+          {aurumConectStatus && <p role="status" aria-live="polite" className="mt-3 text-xs leading-5 text-white/75">{aurumConectStatus}</p>}
+          {aurumConectCanRetry && !aurumConectBusy && <button type="button" onClick={() => void recibirDesdeRhino()} className="mt-3 inline-flex items-center justify-center rounded-lg border border-[#d9bd78]/40 bg-[#c6a45a]/15 px-3 py-2 text-[11px] font-semibold tracking-wide text-[#e3c77f] transition hover:bg-[#c6a45a]/25 focus:outline-none focus:ring-2 focus:ring-[#d9bd78]/60">REINTENTAR RECEPCIÓN</button>}
 
           <p className="mt-2 text-[11px] leading-4 text-white/45">La geometría se transfiere directamente desde Rhino a este visor, sin pasar por almacenamiento en la nube.</p>
         </div>
