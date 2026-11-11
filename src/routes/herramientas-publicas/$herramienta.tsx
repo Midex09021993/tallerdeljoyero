@@ -97,32 +97,32 @@ const paginas = {
     ]
   },
   "tallas-anillos": {
-    titulo: "Conversor de tallas de anillos",
-    metaTitulo: "Conversor de tallas de anillos: España, Europa y USA | Taller del Joyero",
-    descripcion: "Convierte tallas de anillos entre sistemas de España, Europa e internacional y consulta equivalencias a partir del diámetro interior.",
-    contenido: "Introduce una talla conocida o el diámetro interior del anillo para consultar la equivalencia disponible. También puedes calibrar la pantalla y medir visualmente un anillo.",
+    titulo: "Conversor de tallas de anillos: España, Europa y USA",
+    metaTitulo: "Conversor de tallas de anillos: España, Europa y USA | AURUM LAB",
+    descripcion: "Convierte tallas de anillos de España, Europa y USA. Consulta equivalencias entre sistemas o encuentra tu talla a partir del diámetro interior en milímetros.",
+    contenido: "Selecciona el sistema de tallaje, introduce una talla conocida o mide el diámetro interior de tu anillo en milímetros. Consulta la equivalencia disponible y utiliza la medición visual en pantalla después de calibrarla.",
     id: "tallas",
     guiaSlug: "convertir-tallas-anillos-espana-europa-usa",
     secciones: [
       {
-        titulo: "Cómo saber la talla de un anillo por su diámetro",
+        titulo: "Cómo saber la talla de un anillo midiendo su diámetro interior",
         parrafos: [
-          "Una forma de consultar la talla es medir el diámetro interior de un anillo que ajuste correctamente. Utiliza milímetros y mide de un borde interior al opuesto, sin incluir el grosor del aro.",
-          "El conversor compara el valor introducido con la tabla de equivalencias disponible y muestra las referencias de España, Europa ISO y Estados Unidos cuando existe correspondencia."
+          "Una forma práctica de estimar tu talla es medir el diámetro interior de un anillo que te quede bien. Mide en milímetros, de un borde interior al opuesto, pasando por el centro y sin incluir el grosor del aro.",
+          "Introduce el diámetro en milímetros y el conversor lo compara con su tabla de equivalencias. Cuando existe correspondencia, puedes consultar las referencias de España, Europa (ISO) y Estados Unidos (USA)."
         ]
       },
       {
-        titulo: "Equivalencias de tallas y medición en pantalla",
+        titulo: "Tabla de equivalencias de tallas de anillos: España, Europa y USA",
         parrafos: [
-          "Los sistemas de tallaje no utilizan todos la misma numeración. Al convertir una talla, confirma qué sistema utiliza la tabla o el proveedor con el que estás trabajando; una cifra aislada no identifica por sí sola el sistema.",
-          "La medición en pantalla requiere calibrar la escala con una referencia física. El tamaño del monitor, el zoom del navegador y la calibración pueden afectar el resultado, por lo que debes verificar la medida con un anillero o instrumento físico antes de fabricar."
+          "España, Europa y Estados Unidos utilizan referencias de tallaje diferentes. Antes de elegir una equivalencia, identifica el sistema de origen y confirma que el sistema de destino coincide con el utilizado por tu joyería o proveedor.",
+          "Para medir un anillo en pantalla, calibra primero la escala con una referencia física. El tamaño del monitor y el zoom del navegador pueden alterar la medición; confirma siempre el resultado con un anillero o instrumento físico antes de fabricar."
         ]
       }
     ],
     preguntas: [
-      { pregunta: "¿Cómo convierto una talla de anillo de España a USA?", respuesta: "Selecciona el sistema de origen, introduce la talla y consulta la equivalencia que devuelve la tabla del conversor. Confirma la referencia con el sistema utilizado por tu proveedor." },
-      { pregunta: "¿Cómo puedo saber la talla de un anillo midiendo su diámetro?", respuesta: "Mide el diámetro interior en milímetros y selecciona esa opción en el conversor. La herramienta busca la equivalencia más cercana disponible en su tabla." },
-      { pregunta: "¿La medición del anillo en pantalla es exacta?", respuesta: "Es orientativa y depende de calibrar correctamente la pantalla. Para fabricación, venta o ajuste definitivo, confirma la medida con un anillero físico." }
+      { pregunta: "¿Cómo convertir una talla de anillo de España a USA?", respuesta: "Selecciona España como sistema de origen, introduce la talla y consulta la equivalencia USA que ofrece la tabla. Confirma la referencia con el sistema utilizado por tu proveedor antes de fabricar o vender." },
+      { pregunta: "¿Cómo saber mi talla de anillo midiendo el diámetro interior?", respuesta: "Mide en milímetros el espacio interior del anillo, de lado a lado y pasando por el centro. Introduce el valor en el conversor para consultar la equivalencia más cercana disponible." },
+      { pregunta: "¿Puedo medir mi talla de anillo en la pantalla?", respuesta: "La medición en pantalla es orientativa y depende de una calibración correcta. Para fabricación, venta o ajuste definitivo, confirma siempre la medida con un anillero físico." }
     ]
   },
   "peso-gemas": {
@@ -289,7 +289,7 @@ function HerramientaPublicaPage() {
             {pagina.secciones[1].parrafos.map((parrafo) => <p key={parrafo} className="mt-3 text-sm leading-7 text-slate-600 sm:text-base">{parrafo}</p>)}
           </div>
           <div className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
-            <h2 className="text-xl font-bold tracking-tight text-[#17232d]">{pagina.id === "yeso" ? "Preguntas frecuentes sobre yeso, agua y revestimiento de fundición" : pagina.id === "oro" ? "Preguntas frecuentes sobre aleaciones de oro y metales de liga" : pagina.id === "gemas" ? "Preguntas frecuentes sobre el peso de las gemas" : "Preguntas frecuentes"}</h2>
+            <h2 className="text-xl font-bold tracking-tight text-[#17232d]">{pagina.id === "yeso" ? "Preguntas frecuentes sobre yeso, agua y revestimiento de fundición" : pagina.id === "oro" ? "Preguntas frecuentes sobre aleaciones de oro y metales de liga" : pagina.id === "gemas" ? "Preguntas frecuentes sobre el peso de las gemas" : pagina.id === "tallas" ? "Preguntas frecuentes sobre tallas y equivalencias de anillos" : "Preguntas frecuentes"}</h2>
             <div className="mt-4 divide-y divide-slate-100">
               {pagina.preguntas.map((item) => (
                 <div key={item.pregunta} className="py-4 first:pt-0 last:pb-0">
