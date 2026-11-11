@@ -68,22 +68,22 @@ const paginas = {
     ]
   },
   "yeso-agua": {
-    titulo: "Calculadora de yeso y agua para joyería",
-    metaTitulo: "Calculadora de yeso y agua para fundición de joyería | Taller del Joyero",
-    descripcion: "Calcula cantidades estimadas de agua y revestimiento para preparar cilindros de fundición de joyería.",
-    contenido: "Introduce el diámetro, la altura y el tipo de cilindro para estimar las cantidades de agua y revestimiento según las proporciones disponibles en la herramienta.",
+    titulo: "Calculadora de yeso y agua para fundición de joyería",
+    metaTitulo: "Calculadora de yeso y agua para fundición de joyería | AURUM LAB",
+    descripcion: "Calcula la cantidad estimada de revestimiento y agua para cilindros de fundición de joyería según sus medidas y la proporción configurada para el material.",
+    contenido: "Introduce el diámetro interior, la altura útil y el tipo de cilindro para calcular una referencia de polvo de revestimiento y agua antes del proceso de fundición a la cera perdida.",
     id: "yeso",
     guiaSlug: "fundicion-joyeria-revestimiento-omni-cast",
     secciones: [
       {
-        titulo: "Cómo calcular agua y revestimiento para un cilindro de fundición",
+        titulo: "Cómo calcular yeso y agua para un cilindro de fundición de joyería",
         parrafos: [
           "La cantidad de mezcla depende del volumen útil del cilindro. Para obtener una estimación más representativa, mide el diámetro interior y la altura que realmente ocupará el revestimiento.",
           "Selecciona el tipo de tarro correspondiente y revisa las cantidades calculadas antes de preparar la mezcla. Las dimensiones nominales pueden diferir de las medidas interiores del recipiente."
         ]
       },
       {
-        titulo: "La proporción de agua y polvo depende del revestimiento",
+        titulo: "Proporción de agua y polvo de revestimiento para fundición en joyería",
         parrafos: [
           "No todos los revestimientos para fundición utilizan la misma relación de agua y polvo. Sigue siempre la ficha técnica vigente del fabricante para el producto exacto que estás utilizando.",
           "Las cantidades de esta calculadora se basan en las proporciones configuradas en la herramienta. No deben interpretarse como una dosificación universal ni sustituir las instrucciones específicas del fabricante."
@@ -91,9 +91,9 @@ const paginas = {
       }
     ],
     preguntas: [
-      { pregunta: "¿Cómo calculo la cantidad de yeso para un cilindro de joyería?", respuesta: "Mide el diámetro interior y la altura útil del cilindro, selecciona el tipo de tarro y consulta la estimación que entrega la herramienta." },
-      { pregunta: "¿Puedo utilizar la misma proporción de agua y polvo para cualquier revestimiento?", respuesta: "No. La proporción depende del producto. Consulta la ficha técnica del revestimiento que vas a utilizar y no extrapoles las instrucciones de una marca a otra." },
-      { pregunta: "¿La calculadora está calibrada para todos los revestimientos de fundición?", respuesta: "No debe asumirse eso. La herramienta utiliza las proporciones configuradas en ella; verifica siempre que sean adecuadas para el revestimiento concreto y sus instrucciones vigentes." }
+      { pregunta: "¿Cómo calcular la cantidad de revestimiento para un cilindro de joyería?", respuesta: "Mide el diámetro interior y la altura útil del cilindro, selecciona el tipo de tarro y consulta la estimación que entrega la herramienta." },
+      { pregunta: "¿Qué proporción de agua y polvo se utiliza en el revestimiento de fundición?", respuesta: "No. La proporción depende del producto. Consulta la ficha técnica del revestimiento que vas a utilizar y no extrapoles las instrucciones de una marca a otra." },
+      { pregunta: "¿La calculadora sirve para cualquier marca de revestimiento de fundición?", respuesta: "No debe asumirse eso. La herramienta utiliza las proporciones configuradas en ella; verifica siempre que sean adecuadas para el revestimiento concreto y sus instrucciones vigentes." }
     ]
   },
   "tallas-anillos": {
@@ -289,7 +289,7 @@ function HerramientaPublicaPage() {
             {pagina.secciones[1].parrafos.map((parrafo) => <p key={parrafo} className="mt-3 text-sm leading-7 text-slate-600 sm:text-base">{parrafo}</p>)}
           </div>
           <div className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
-            <h2 className="text-xl font-bold tracking-tight text-[#17232d]">Preguntas frecuentes</h2>
+            <h2 className="text-xl font-bold tracking-tight text-[#17232d]">{pagina.id === "yeso" ? "Preguntas frecuentes sobre yeso, agua y revestimiento de fundición" : "Preguntas frecuentes"}</h2>
             <div className="mt-4 divide-y divide-slate-100">
               {pagina.preguntas.map((item) => (
                 <div key={item.pregunta} className="py-4 first:pt-0 last:pb-0">
