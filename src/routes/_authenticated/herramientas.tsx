@@ -246,7 +246,7 @@ function HerramientasPage() {
                         <h4 className="mt-4 font-semibold">Conexión y primera prueba</h4>
                         <p className="mt-2 text-sm leading-6 text-muted-foreground">Abre el panel AURUM CONECT y pulsa «ABRIR AURUM RENDER». Inicia sesión en la ventana integrada. Después selecciona o prepara el diseño en Rhino/MatrixGold y pulsa «ENVIAR DISEÑO»; la misma ventana de AURUM RENDER debe recibirlo. La transferencia envía una copia temporal del documento Rhino completo, no mantiene sincronización en vivo.</p>
                       </div>
-                      <p className="mt-4 text-xs leading-5 text-muted-foreground">Seguridad y solución de problemas: el complemento no solicita ni almacena tu contraseña. La copia .3dm es temporal y el canal local usa 127.0.0.1, un token de un solo uso y una caducidad de 3 minutos. Si no abre la ventana integrada, instala o repara Microsoft Edge WebView2 Evergreen Runtime x64 y reinicia Rhino. Si el comando AurumConect no existe, vuelve a PlugInManager y verifica que el complemento esté instalado y habilitado. Versión 1.0.8 beta.</p>
+                      <p className="mt-4 text-xs leading-5 text-muted-foreground">Seguridad y solución de problemas: el complemento no solicita ni almacena tu contraseña. La copia .3dm es temporal y el canal local usa 127.0.0.1, un token de un solo uso y una caducidad de 3 minutos. Si no abre la ventana integrada, instala o repara Microsoft Edge WebView2 Evergreen Runtime x64 y reinicia Rhino. Si el comando AurumConect no existe, vuelve a PlugInManager y verifica que el complemento esté instalado y habilitado. Versión 1.0.9 beta.</p>
                     </section>
                   ) : null}
           </>
