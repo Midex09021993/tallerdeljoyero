@@ -859,6 +859,19 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         renderQuality
       );
 
+      // The post pipeline loads Three.js passes asynchronously. If the route
+      // unmounts while those imports are pending, release the renderer created
+      // above instead of continuing to allocate scene/GPU resources off-screen.
+      if (!vivo) {
+        renderer.domElement.removeEventListener("pointerdown", handleOrbitPointerDown);
+        renderer.domElement.removeEventListener("pointermove", handleOrbitPointerMove);
+        renderer.domElement.removeEventListener("pointerup", handleOrbitPointerEnd);
+        renderer.domElement.removeEventListener("pointercancel", handleOrbitPointerEnd);
+        disposeAurumViewer({ node: nodo, renderer, controls: controles, composer });
+        if (orbitControlsRef.current === controles) orbitControlsRef.current = null;
+        return;
+      }
+
       const environmentController = createAurumEnvironment(renderer, escena, THREE, RoomEnvironment, RGBELoader, EXRLoader);
       let entorno = environmentController.current;
       // El EnvironmentController es la única autoridad para HDRI,
