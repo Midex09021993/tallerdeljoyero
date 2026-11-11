@@ -119,6 +119,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const { data: sesion } = useSesion();
   const [aurumConectStatus, setAurumConectStatus] = useState("");
   const [aurumConectBusy, setAurumConectBusy] = useState(false);
+  const aurumConectAttemptRef = useRef<string | null>(null);
   const visorRef = useRef<HTMLDivElement>(null), fileRef = useRef<HTMLInputElement>(null);
   const orbitControlsRef = useRef<any>(null);
   const [autoRotate360, setAutoRotate360] = useState(false);
@@ -3488,6 +3489,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       setAurumConectStatus("No hay una transferencia de Rhino pendiente. Vuelve a pulsar ACTUALIZAR DISEÑO.");
       return;
     }
+    const handoffKey = match[0];
+    if (aurumConectAttemptRef.current === handoffKey) return;
+    aurumConectAttemptRef.current = handoffKey;
     const port = Number(match[1]);
     const token = match[2];
     if (!Number.isInteger(port) || port < 1 || port > 65535) {
@@ -3531,11 +3535,19 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       setAurumConectStatus(detail.includes("Failed to fetch")
         ? "No se pudo acceder al canal local. Permite el acceso a la red local en Chrome y vuelve a intentarlo desde Rhino."
         : detail);
+      aurumConectAttemptRef.current = null;
       toast.error("No se pudo recibir el diseño de Rhino.");
     } finally {
       setAurumConectBusy(false);
     }
   }, [cargarArchivo]);
+
+  // Una transferencia enviada desde Rhino se recibe automáticamente al aterrizar
+  // en AURUM RENDER. El ref evita dobles descargas por re-render o React StrictMode.
+  useEffect(() => {
+    if (embedded || !/^#aurum-conect=/.test(window.location.hash)) return;
+    void recibirDesdeRhino();
+  }, [embedded, recibirDesdeRhino]);
 
   useEffect(() => {
     const visor = visorRef.current;
@@ -3928,12 +3940,15 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               <div className="font-semibold tracking-wide">AURUM CONECT</div>
               <div className="text-xs text-white/65">Diseño preparado desde Rhino 7 / MatrixGold</div>
             </div>
-            <button type="button" disabled={aurumConectBusy} onClick={() => void recibirDesdeRhino()} className="rounded-xl bg-[#c6a45a] px-4 py-2 text-sm font-semibold text-[#171717] disabled:opacity-50">
-              {aurumConectBusy ? "RECIBIENDO…" : "RECIBIR DISEÑO"}
-            </button>
+            <span className="rounded-xl bg-[#c6a45a]/15 px-3 py-2 text-xs font-semibold text-[#e3c77f]">
+              {aurumConectBusy ? "RECIBIENDO AUTOMÁTICAMENTE…" : aurumConectStatus.includes("correctamente") ? "DISEÑO RECIBIDO" : "RECEPCIÓN AUTOMÁTICA"}
+            </span>
           </div>
           {aurumConectStatus && <p role="status" className="mt-3 text-xs leading-5 text-white/75">{aurumConectStatus}</p>}
-          <p className="mt-2 text-[11px] leading-4 text-white/45">La conexión solicita permiso local de Chrome. El archivo se transfiere directamente desde tu equipo; no pasa por almacenamiento en la nube.</p>
+          {!aurumConectBusy && aurumConectStatus && !aurumConectStatus.includes("correctamente") && (
+            <button type="button" onClick={() => { aurumConectAttemptRef.current = null; void recibirDesdeRhino(); }} className="mt-3 rounded-lg bg-[#c6a45a] px-3 py-2 text-xs font-semibold text-[#171717]">REINTENTAR TRANSFERENCIA</button>
+          )}
+          <p className="mt-2 text-[11px] leading-4 text-white/45">La geometría se transfiere directamente desde Rhino a este visor, sin pasar por almacenamiento en la nube.</p>
         </div>
       )}
       {!embedded && <header className="flex h-[64px] shrink-0 items-center justify-between gap-2 border-b border-black/10 bg-[#f7f6f2]/95 px-3 text-[#242424] shadow-sm backdrop-blur-xl sm:h-[68px] sm:px-4 xl:h-[74px] xl:px-5">
