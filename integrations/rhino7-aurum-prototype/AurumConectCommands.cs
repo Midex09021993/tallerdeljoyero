@@ -6,6 +6,7 @@ using Rhino.DocObjects;
 using Rhino.FileIO;
 using Rhino.Input;
 using Rhino.Input.Custom;
+using Rhino.Geometry;
 
 namespace AurumConect
 {
@@ -47,10 +48,25 @@ namespace AurumConect
                 var geometryCopy = source.Geometry.Duplicate();
                 if (geometryCopy == null) continue;
 
-                // Rhino 7 File3dmObjectTable expone Add(GeometryBase) para
-                // esta ruta; no dispone del overload de dos argumentos.
-                exportDoc.Objects.Add(geometryCopy);
-                exported++;
+                var attributesCopy = source.Attributes.Duplicate();
+                bool added = false;
+
+                // File3dmObjectTable requiere métodos tipados para incorporar
+                // geometría y conservar sus atributos de objeto.
+                if (geometryCopy is Extrusion extrusion)
+                    added = exportDoc.Objects.AddExtrusion(extrusion, attributesCopy) != Guid.Empty;
+                else if (geometryCopy is Brep brep)
+                    added = exportDoc.Objects.AddBrep(brep, attributesCopy) != Guid.Empty;
+                else if (geometryCopy is Mesh mesh)
+                    added = exportDoc.Objects.AddMesh(mesh, attributesCopy) != Guid.Empty;
+                else if (geometryCopy is Curve curve)
+                    added = exportDoc.Objects.AddCurve(curve, attributesCopy) != Guid.Empty;
+                else if (geometryCopy is Surface surface)
+                    added = exportDoc.Objects.AddSurface(surface, attributesCopy) != Guid.Empty;
+                else if (geometryCopy is Point point)
+                    added = exportDoc.Objects.AddPoint(point.Location, attributesCopy) != Guid.Empty;
+
+                if (added) exported++;
             }
 
             if (exported == 0)
