@@ -34,6 +34,7 @@ const tarjetaBase =
 function HerramientasPage() {
   const [herramientaActiva, setHerramientaActiva] = useState<HerramientaInterna>(null);
   const [mostrarIntroAurumRender, setMostrarIntroAurumRender] = useState(false);
+  const [mostrarGuiaAurumConect, setMostrarGuiaAurumConect] = useState(false);
   const [archivoInicial, setArchivoInicial] = useState<File | null>(null);
   const [archivoOrigen, setArchivoOrigen] = useState<{ ruta: string; proyecto: string } | null>(null);
   const [errorArchivoInicial, setErrorArchivoInicial] = useState<string | null>(null);
@@ -119,12 +120,12 @@ function HerramientasPage() {
               </div>
             </div>
             <div className="flex flex-col gap-2 sm:flex-row lg:flex-col">
-              <a href="https://raw.githubusercontent.com/Midex09021993/tallerdeljoyero/main/integrations/rhino7-aurum-prototype/Instalar-AURUM-Render-Bridge.bat" download="Instalar-AURUM-CONECT.bat" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold">
-                <Download className="size-4" /> Descargar instalador
+              <a href="https://github.com/Midex09021993/tallerdeljoyero/raw/refs/heads/main/integrations/rhino7-aurum-prototype/Instalar-AURUM-Render-Bridge.bat" download="Instalar-AURUM-CONECT.bat" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold">
+                <Download className="size-4" /> Descargar instalador (.BAT)
               </a>
-              <a href="https://github.com/Midex09021993/tallerdeljoyero/blob/main/integrations/rhino7-aurum-prototype/INSTALADOR.md" target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-border px-4 py-2 text-xs font-semibold text-muted-foreground transition hover:border-gold/50 hover:text-foreground">
-                Ver guía de instalación <ArrowLeft className="size-3.5 rotate-180" />
-              </a>
+              <button type="button" aria-expanded={mostrarGuiaAurumConect} aria-controls="aurum-conect-guia" onClick={() => setMostrarGuiaAurumConect((visible) => !visible)} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-border px-4 py-2 text-xs font-semibold text-muted-foreground transition hover:border-gold/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold">
+                {mostrarGuiaAurumConect ? "Ocultar guía" : "Ver guía de instalación"} <ChevronRight className={`size-3.5 transition-transform ${mostrarGuiaAurumConect ? "rotate-90" : ""}`} />
+              </button>
             </div>
           </div>
           <div className="flex items-start gap-2 border-t border-border bg-muted/30 px-5 py-3 text-xs leading-5 text-muted-foreground sm:px-6">
@@ -132,6 +133,45 @@ function HerramientasPage() {
             <p>Requiere Rhino 7 y .NET SDK con soporte para .NET Framework 4.8. Esta versión beta debe probarse en el equipo antes de utilizarse en producción; la transferencia y la conservación de todos los ajustes aún requieren validación.</p>
           </div>
         </section>
+        {mostrarGuiaAurumConect ? (
+          <section id="aurum-conect-guia" aria-labelledby="aurum-conect-guia-title" className="rounded-2xl border border-border bg-card p-5 shadow-card sm:p-7">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold">Guía integrada · Rhino 7</p>
+                <h3 id="aurum-conect-guia-title" className="mt-1 text-xl font-semibold">Instala AURUM CONECT paso a paso</h3>
+                <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">El instalador compila el complemento en tu propio equipo usando las bibliotecas de Rhino 7. No descarga un archivo .RHP precompilado.</p>
+              </div>
+              <span className="rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-[10px] font-semibold text-gold">Versión beta</span>
+            </div>
+            <div className="mt-6 grid gap-6 lg:grid-cols-2">
+              <div>
+                <h4 className="font-semibold">Antes de comenzar</h4>
+                <ul className="mt-3 space-y-2 text-sm leading-6 text-muted-foreground">
+                  <li>• Windows con Rhino 7 instalado.</li>
+                  <li>• RhinoCommon.dll y Eto.dll dentro de la carpeta System de Rhino 7.</li>
+                  <li>• .NET SDK y .NET Framework 4.8 Developer Pack.</li>
+                  <li>• Conexión a Internet durante la descarga de los archivos fuente.</li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-semibold">Instalación en Windows</h4>
+                <ol className="mt-3 space-y-2 text-sm leading-6 text-muted-foreground">
+                  <li><strong className="text-foreground">1.</strong> Pulsa «Descargar instalador (.BAT)» y guarda el archivo.</li>
+                  <li><strong className="text-foreground">2.</strong> Haz clic derecho sobre el archivo y selecciona «Ejecutar» o «Abrir».</li>
+                  <li><strong className="text-foreground">3.</strong> El asistente detectará Rhino 7, descargará los fuentes y compilará el complemento.</li>
+                  <li><strong className="text-foreground">4.</strong> Si la compilación termina correctamente, se abrirá la carpeta con <code className="rounded bg-muted px-1.5 py-0.5 text-xs">AurumConect.rhp</code>.</li>
+                  <li><strong className="text-foreground">5.</strong> En Rhino ejecuta <code className="rounded bg-muted px-1.5 py-0.5 text-xs">_PlugInManager</code>, pulsa Install y selecciona el archivo generado.</li>
+                  <li><strong className="text-foreground">6.</strong> Ejecuta <code className="rounded bg-muted px-1.5 py-0.5 text-xs">AurumConect</code> para abrir el panel.</li>
+                </ol>
+              </div>
+            </div>
+            <div className="mt-6 rounded-xl border border-border bg-muted/30 p-4">
+              <h4 className="font-semibold">Conexión con AURUM RENDER</h4>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">Abre el panel AURUM CONECT, pulsa «CONECTAR CON AURUM LAB» e inicia sesión en la web oficial. Después selecciona la geometría en Rhino/MatrixGold y pulsa «ACTUALIZAR DISEÑO». La transferencia directa está en fase beta y debe validarse con el botón de recepción de AURUM RENDER y los permisos de red local de Chrome.</p>
+            </div>
+            <p className="mt-4 text-xs leading-5 text-muted-foreground">Seguridad: el complemento no solicita ni almacena tu contraseña. La copia .3dm es temporal y el canal local usa 127.0.0.1, un token de un solo uso y una caducidad de 3 minutos. Si el instalador detecta dependencias ausentes o falla la compilación, se detiene sin instalar un complemento incompleto.</p>
+          </section>
+        ) : null}
         <section aria-label="Seleccionar herramienta" className="relative rounded-2xl border border-border bg-card p-2 shadow-card">
           <button type="button" onClick={() => desplazarBarra(-1)} aria-label="Desplazar herramientas a la izquierda" className="absolute left-2 top-1/2 z-10 grid size-8 -translate-y-1/2 place-items-center rounded-full border border-border bg-card/95 text-foreground shadow-md backdrop-blur transition hover:border-gold/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"><ChevronLeft className="size-4" /></button>
           <div ref={barraHerramientasRef} className="scrollbar-hidden flex gap-2 overflow-x-auto scroll-smooth px-9 [overscroll-behavior-x:contain] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
