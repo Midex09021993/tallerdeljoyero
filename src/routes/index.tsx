@@ -479,21 +479,24 @@ function InicioPublico() {
         .aurum-hero-enter-delay-3 { animation-delay: .36s; }
         .aurum-motion-ready [data-aurum-reveal] {
           opacity: 0;
-          transform: translate3d(0, 30px, 0);
+          translate: 0 30px;
           transition:
             opacity .75s cubic-bezier(.2,.75,.25,1),
-            transform .75s cubic-bezier(.2,.75,.25,1);
+            translate .75s cubic-bezier(.2,.75,.25,1),
+            scale .75s cubic-bezier(.2,.75,.25,1);
           transition-delay: var(--aurum-reveal-delay, 0ms);
         }
         .aurum-motion-ready [data-aurum-reveal="scale"] {
-          transform: translate3d(0, 18px, 0) scale(.965);
+          translate: 0 18px;
+          scale: .965;
         }
         .aurum-motion-ready [data-aurum-reveal="left"] {
-          transform: translate3d(-34px, 0, 0);
+          translate: -34px 0;
         }
         .aurum-motion-ready [data-aurum-reveal].aurum-is-visible {
           opacity: 1;
-          transform: translate3d(0, 0, 0) scale(1);
+          translate: 0 0;
+          scale: 1;
         }
         .aurum-ambient-orb { animation: aurum-orb-drift 13s ease-in-out infinite; }
         .aurum-ambient-glow { animation: aurum-glow-breathe 8s ease-in-out infinite; }
@@ -639,7 +642,7 @@ function InicioPublico() {
         <div className="aurum-ambient-orb pointer-events-none absolute -left-32 top-12 -z-10 size-[28rem] rounded-full bg-[#ffe99b]/70 blur-[90px]" />
         <div className="aurum-ambient-glow pointer-events-none absolute right-[28%] top-20 -z-10 size-64 rounded-full bg-[#e9f1ff]/80 blur-[80px]" />
         <div className="mx-auto grid max-w-[1440px] items-center gap-12 px-5 pb-16 pt-12 sm:px-8 sm:pb-20 sm:pt-16 lg:grid-cols-[.92fr_1.08fr] lg:gap-8 lg:px-12 lg:pb-24 lg:pt-20">
-          <div data-aurum-reveal className="aurum-hero-enter relative z-10 max-w-[650px]">
+          <div className="aurum-hero-enter relative z-10 max-w-[650px]">
             <span className="aurum-hero-badge inline-flex items-center gap-2 rounded-full border border-[#e5c04a]/50 bg-[#fff9df] px-3.5 py-2 text-[10px] font-bold uppercase tracking-[.16em] text-[#785b00]"><Sparkles className="size-3.5" /> AURUM LAB · TECNOLOGÍA PARA JOYEROS</span>
             <h1 className="mt-6 text-[2.65rem] font-extrabold leading-[1.06] tracking-[-.045em] text-[#17232d] sm:text-5xl lg:text-[3.8rem]">Software para joyeros y talleres de joyería.</h1>
             <p className="mt-6 max-w-xl text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">Con <strong>AURUM LAB</strong>, calcula materiales, crea <strong>diseños 3D</strong> y gestiona tu taller.</p>
@@ -655,7 +658,7 @@ function InicioPublico() {
             <p className="mt-4 text-xs text-slate-500">Agenda un recorrido personalizado para conocer AURUM LAB.</p>
           </div>
 
-          <div data-aurum-reveal="scale" className="aurum-hero-enter aurum-hero-enter-delay-2 relative mx-auto w-full max-w-[720px] pb-7 sm:pb-10">
+          <div className="aurum-hero-enter aurum-hero-enter-delay-2 relative mx-auto w-full max-w-[720px] pb-7 sm:pb-10">
             <div className="absolute inset-x-8 bottom-0 top-12 rounded-[3rem] bg-gradient-to-br from-[#ffe99a]/70 via-[#f8faff] to-[#e4ecf7] blur-2xl" />
             <div className="aurum-dashboard-float aurum-preview-glint relative rounded-[1.6rem] border border-slate-200 bg-white p-2.5 shadow-[0_25px_80px_rgba(28,40,52,.15)] sm:p-3">
               <div className="flex h-10 items-center gap-2 border-b border-slate-100 px-3">
