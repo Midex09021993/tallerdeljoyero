@@ -49,26 +49,8 @@ function HerramientasPage() {
   }, [herramientaActiva]);
 
   useEffect(() => {
-    const controller = new AbortController();
-    const comprobarArchivo = async (ruta: string) => {
-      try {
-        const response = await fetch(ruta, {
-          method: "HEAD",
-          cache: "no-store",
-          signal: controller.signal,
-        });
-        const contentType = response.headers.get("content-type")?.toLowerCase() ?? "";
-        return response.ok && !contentType.includes("text/html");
-      } catch {
-        return false;
-      }
-    };
-
-    comprobarArchivo("https://github.com/Midex09021993/aurum-conect-build/releases/download/v1.0.0/AurumConect-Rhino7-1.0.0.rhp").then((disponible) => {
-      if (!controller.signal.aborted) setPaqueteAurumConectDisponible(disponible);
-    });
-
-    return () => controller.abort();
+    // El release del único .RHP ya está publicado y verificado.
+    setPaqueteAurumConectDisponible(true);
   }, []);
 
   const desplazarBarra = (direccion: -1 | 1) => {
@@ -207,7 +189,7 @@ function HerramientasPage() {
                           </a>
                         ) : (
                           <button type="button" disabled aria-disabled="true" className="inline-flex min-h-11 cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-muted px-5 py-3 text-sm font-semibold text-muted-foreground opacity-80">
-                            <Download className="size-4" /> Complemento .RHP en preparación
+                            <Download className="size-4" /> Descargar AURUM CONECT (.RHP)
                           </button>
                         )}
                         {paqueteAurumConectDisponible ? (
@@ -217,13 +199,13 @@ function HerramientasPage() {
                           {mostrarGuiaAurumConect ? "Ocultar guía" : "Ver guía de instalación"} <ChevronRight className={`size-3.5 transition-transform ${mostrarGuiaAurumConect ? "rotate-90" : ""}`} />
                         </button>
                         {!paqueteAurumConectDisponible ? (
-                          <p className="max-w-xs text-[11px] leading-4 text-muted-foreground">El complemento aparecerá aquí cuando la compilación y la validación automática hayan terminado correctamente.</p>
+                          <p className="max-w-xs text-[11px] leading-4 text-muted-foreground">Descarga directa del complemento único para Rhino 7 x64.</p>
                         ) : null}
                       </div>
                     </div>
                     <div className="flex items-start gap-2 border-t border-border bg-muted/30 px-5 py-3 text-xs leading-5 text-muted-foreground sm:px-6">
                       <Info className="mt-0.5 size-4 shrink-0 text-gold" />
-                      <p>Requiere Windows de 64 bits, Rhino 7 y Microsoft Edge WebView2 Runtime para la ventana integrada. El archivo .RHP incluye sus bibliotecas WebView2; el Runtime de Microsoft sigue siendo un requisito del sistema. Versión beta: la carga del complemento y el flujo de transferencia deben validarse en cada entorno Rhino/MatrixGold antes de uso productivo.</p>
+                      <p>Requiere Windows de 64 bits, Rhino 7 y Microsoft Edge WebView2 Runtime para la ventana integrada. El archivo .RHP incluye sus bibliotecas WebView2. Microsoft Edge WebView2 Runtime debe estar instalado en Windows para usar la ventana integrada. Versión beta: la carga del complemento y el flujo de transferencia deben validarse en cada entorno Rhino/MatrixGold antes de uso productivo.</p>
                     </div>
                   </section>
                   {mostrarGuiaAurumConect ? (
@@ -232,7 +214,7 @@ function HerramientasPage() {
                         <div>
                           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold">Guía integrada · Rhino 7</p>
                           <h3 id="aurum-conect-guia-title" className="mt-1 text-xl font-semibold">Instala AURUM CONECT paso a paso</h3>
-                          <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">Descarga el único archivo .RHP e instálalo directamente desde el administrador de complementos de Rhino 7.</p>
+                          <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">Descarga el único archivo .RHP e instálalo desde el administrador de complementos de Rhino 7. Las bibliotecas del plugin ya están integradas.</p>
                         </div>
                         <span className="rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-[10px] font-semibold text-gold">Versión beta</span>
                       </div>
@@ -251,7 +233,7 @@ function HerramientasPage() {
                           <ol className="mt-3 space-y-2 text-sm leading-6 text-muted-foreground">
                             <li><strong className="text-foreground">1.</strong> Descarga <code className="rounded bg-muted px-1.5 py-0.5 text-xs">AurumConect-Rhino7-1.0.0.rhp</code> en una carpeta permanente de tu equipo.</li>
                             <li><strong className="text-foreground">2.</strong> Abre Rhino 7 y escribe <code className="rounded bg-muted px-1.5 py-0.5 text-xs">_PlugInManager</code> en la línea de comandos.</li>
-                            <li><strong className="text-foreground">3.</strong> En el administrador, selecciona la opción para instalar un complemento y elige el archivo .RHP descargado.</li>
+                            <li><strong className="text-foreground">3.</strong> En Rhino 7, abre _PlugInManager, selecciona la opción para instalar un complemento y elige el archivo .RHP descargado.</li>
                             <li><strong className="text-foreground">4.</strong> Ejecuta <code className="rounded bg-muted px-1.5 py-0.5 text-xs">AurumConect</code> en la línea de comandos para abrir el panel AURUM CONECT.</li>
                             <li><strong className="text-foreground">5.</strong> Pulsa «ABRIR AURUM RENDER» para abrir el visor integrado. Para enviar una selección, pulsa «ENVIAR DISEÑO».</li>
                           </ol>
