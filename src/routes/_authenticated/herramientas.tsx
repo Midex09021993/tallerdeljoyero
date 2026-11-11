@@ -50,7 +50,7 @@ function HerramientasPage() {
 
   useEffect(() => {
     const controller = new AbortController();
-    const pluginUrl = "/downloads/INICIAR-AURUM-CONECT.cmd";
+    const pluginUrl = "/downloads/AurumConect-Rhino7-1.0.0.rhp";
 
     fetch(pluginUrl, {
       method: "HEAD",
@@ -186,7 +186,7 @@ function HerramientasPage() {
                         <div className="min-w-0">
                           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold">Integración CAD · Rhino 7</p>
                           <h2 id="aurum-conect-title" className="mt-1 text-lg font-semibold">AURUM CONECT</h2>
-                          <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">Conecta MatrixGold 3.1 con AURUM RENDER. Descarga el complemento para preparar y transferir el diseño seleccionado desde Rhino 7.</p>
+                          <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">Conecta MatrixGold 3.1 con AURUM RENDER. Instala el complemento para transferir diseños seleccionados desde Rhino 7 a AURUM RENDER.</p>
                           <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-semibold text-muted-foreground">
                             <span className="rounded-full border border-border px-2.5 py-1">MatrixGold 3.1</span>
                             <span className="rounded-full border border-border px-2.5 py-1">Rhino 7</span>
@@ -199,18 +199,18 @@ function HerramientasPage() {
                         <div className="flex flex-col gap-1">
                           {pluginAurumConectDisponible ? (
                             <a
-                              href="/downloads/INICIAR-AURUM-CONECT.cmd"
-                              download="INICIAR-AURUM-CONECT.cmd"
+                              href="/downloads/AurumConect-Rhino7-1.0.0.rhp"
+                              download="AurumConect-Rhino7-1.0.0.rhp"
                               className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
                             >
-                              <Download className="size-4" /> Descargar preparador para Windows (.CMD)
+                              <Download className="size-4" /> Descargar AURUM CONECT (.RHP)
                             </a>
                           ) : (
                             <>
                               <button type="button" disabled aria-disabled="true" className="inline-flex min-h-11 cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-muted px-5 py-3 text-sm font-semibold text-muted-foreground opacity-80">
-                                <Download className="size-4" /> Preparador no disponible
+                                <Download className="size-4" /> Complemento no disponible
                               </button>
-                              <p className="max-w-xs text-[11px] leading-4 text-muted-foreground">No se encontró el archivo preparador. Inténtalo nuevamente más tarde.</p>
+                              <p className="max-w-xs text-[11px] leading-4 text-muted-foreground">No se encontró el complemento compilado. Inténtalo nuevamente más tarde.</p>
                             </>
                           )}
                         </div>
@@ -221,7 +221,7 @@ function HerramientasPage() {
                     </div>
                     <div className="flex items-start gap-2 border-t border-border bg-muted/30 px-5 py-3 text-xs leading-5 text-muted-foreground sm:px-6">
                       <Info className="mt-0.5 size-4 shrink-0 text-gold" />
-                      <p>Requiere Windows de 64 bits. El preparador instala/usa Git y .NET SDK para compilar en tu equipo. Versión beta: la carga del complemento y el flujo de transferencia deben validarse en cada entorno Rhino/MatrixGold antes de uso productivo.</p>
+                      <p>Requiere Windows de 64 bits y Rhino 7. El complemento se distribuye ya compilado; no necesitas Git ni .NET SDK. Versión beta: la carga del complemento y el flujo de transferencia deben validarse en cada entorno Rhino/MatrixGold antes de uso productivo.</p>
                     </div>
                   </section>
                   {mostrarGuiaAurumConect ? (
@@ -230,7 +230,7 @@ function HerramientasPage() {
                         <div>
                           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold">Guía integrada · Rhino 7</p>
                           <h3 id="aurum-conect-guia-title" className="mt-1 text-xl font-semibold">Instala AURUM CONECT paso a paso</h3>
-                          <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">Descarga y ejecuta el preparador. Este descargará el código y compilará el complemento en tu equipo Windows.</p>
+                          <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">Descarga el archivo .RHP e instálalo desde el administrador de complementos de Rhino 7.</p>
                         </div>
                         <span className="rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-[10px] font-semibold text-gold">Versión beta</span>
                       </div>
@@ -260,7 +260,7 @@ function HerramientasPage() {
                         <h4 className="font-semibold">Conexión con AURUM RENDER</h4>
                         <p className="mt-2 text-sm leading-6 text-muted-foreground">Abre el panel AURUM CONECT, pulsa «CONECTAR CON AURUM LAB» e inicia sesión en la web oficial. Después selecciona la geometría en Rhino/MatrixGold y pulsa «ACTUALIZAR DISEÑO». La transferencia directa está en fase beta y debe validarse con el botón de recepción de AURUM RENDER y los permisos de red local de Chrome.</p>
                       </div>
-                      <p className="mt-4 text-xs leading-5 text-muted-foreground">Seguridad: el complemento no solicita ni almacena tu contraseña. La copia .3dm es temporal y el canal local usa 127.0.0.1, un token de un solo uso y una caducidad de 3 minutos. Si falta algún requisito o falla la compilación, el proceso se detiene y muestra el error; no instala un complemento incompleto.</p>
+                      <p className="mt-4 text-xs leading-5 text-muted-foreground">Seguridad: el complemento no solicita ni almacena tu contraseña. La copia .3dm es temporal y el canal local usa 127.0.0.1, un token de un solo uso y una caducidad de 3 minutos. La versión beta debe validarse en cada entorno Rhino/MatrixGold antes de su uso productivo.</p>
                     </section>
                   ) : null}
           </>
