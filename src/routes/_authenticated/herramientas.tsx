@@ -235,8 +235,9 @@ function HerramientasPage() {
                             <li><strong className="text-foreground">1.</strong> Descarga <code className="rounded bg-muted px-1.5 py-0.5 text-xs">AurumConect-Rhino7-1.0.9.rhp</code>.</li>
                             <li><strong className="text-foreground">2.</strong> Copia el archivo en la carpeta de complementos de Rhino 7: <code className="rounded bg-muted px-1.5 py-0.5 text-xs">C:\Program Files\Rhino 7\Plug-ins\</code>. Si Windows solicita autorización, acepta el permiso de administrador.</li>
                             <li><strong className="text-foreground">3.</strong> Abre Rhino 7 y escribe <code className="rounded bg-muted px-1.5 py-0.5 text-xs">_PlugInManager</code> en la línea de comandos.</li>
-                            <li><strong className="text-foreground">4.</strong> En la línea de comandos de Rhino escribe <code className="rounded bg-muted px-1.5 py-0.5 text-xs">AurumConect</code>. Debe abrirse el panel AURUM CONECT.</li>
-                            <li><strong className="text-foreground">5.</strong> Pulsa «ABRIR AURUM RENDER» e inicia sesión. Después vuelve a Rhino, selecciona o prepara el diseño y pulsa «ENVIAR DISEÑO».</li>
+                            <li><strong className="text-foreground">4.</strong> En _PlugInManager, selecciona la opción para instalar un complemento y registra el archivo <code className="rounded bg-muted px-1.5 py-0.5 text-xs">AurumConect-Rhino7-1.0.9.rhp</code> desde esa carpeta. Habilítalo si Rhino lo solicita.</li>
+                            <li><strong className="text-foreground">5.</strong> En la línea de comandos de Rhino escribe <code className="rounded bg-muted px-1.5 py-0.5 text-xs">AurumConect</code>. Debe abrirse el panel AURUM CONECT.</li>
+                            <li><strong className="text-foreground">6.</strong> Pulsa «ABRIR AURUM RENDER» e inicia sesión. Después vuelve a Rhino, selecciona o prepara el diseño y pulsa «ENVIAR DISEÑO».</li>
                           </ol>
                         </div>
                       </div>
