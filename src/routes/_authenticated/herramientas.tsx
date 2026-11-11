@@ -168,7 +168,7 @@ function HerramientasPage() {
                         <div className="min-w-0">
                           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold">Integración CAD · Rhino 7</p>
                           <h2 id="aurum-conect-title" className="mt-1 text-lg font-semibold">AURUM CONECT</h2>
-                          <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">Conecta MatrixGold 3.1 con AURUM RENDER. Instala el archivo .RHP para transferir diseños seleccionados desde Rhino 7 a AURUM RENDER.</p>
+                          <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">Conecta MatrixGold 3.1 con AURUM RENDER. Instala el archivo .RHP para cargar automáticamente el documento Rhino completo en AURUM RENDER.</p>
                           <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-semibold text-muted-foreground">
                             <span className="rounded-full border border-border px-2.5 py-1">MatrixGold 3.1</span>
                             <span className="rounded-full border border-border px-2.5 py-1">Rhino 7</span>
