@@ -67,10 +67,13 @@ if (-not (Test-Path $Built)) { Fail "La compilación terminó, pero no apareció
 $bytes = [System.IO.File]::ReadAllBytes($Built)
 if ($bytes.Length -lt 4096) { Fail "El archivo generado es demasiado pequeño; se rechaza por seguridad." }
 if ($bytes[0] -ne 0x4D -or $bytes[1] -ne 0x5A) { Fail "El archivo no tiene una cabecera PE válida (MZ)." }
+$peOffset = [BitConverter]::ToInt32($bytes, 0x3C)
+if ($peOffset -lt 0x40 -or $peOffset + 6 -gt $bytes.Length) { Fail "El desplazamiento de la cabecera PE no es válido." }
+if ($bytes[$peOffset] -ne 0x50 -or $bytes[$peOffset + 1] -ne 0x45 -or $bytes[$peOffset + 2] -ne 0 -or $bytes[$peOffset + 3] -ne 0) { Fail "La firma PE del complemento no es válida." }
+$machine = [BitConverter]::ToUInt16($bytes, $peOffset + 4)
+if ($machine -ne 0x8664) { Fail ("El complemento no es x64. Arquitectura PE detectada: 0x{0:X4}" -f $machine) }
 
 New-Item -ItemType Directory -Force -Path $DownloadDir | Out-Null
-$Published = Join-Path $DownloadDir $Expected
-Copy-Item -Force $Built $Published
 
 # El visor Chromium necesita las bibliotecas administradas de WebView2 y su loader nativo.
 # Se distribuyen juntas con el .RHP para que Rhino pueda resolverlas desde la misma carpeta.
@@ -101,14 +104,25 @@ if (Test-Path $BundlePath) { Remove-Item -Force $BundlePath }
 Compress-Archive -Path (Join-Path $BundleDir "*") -DestinationPath $BundlePath -CompressionLevel Optimal
 
 $bundleFiles = Get-ChildItem $BundleDir -File
-if (-not ($bundleFiles.Name -contains "AurumConect-Rhino7-1.0.0.rhp") -or
-    -not ($bundleFiles.Name -contains "WebView2Loader.dll")) {
-  Fail "El paquete de instalación no contiene todos los archivos requeridos."
+$requiredBundleFiles = @("AurumConect-Rhino7-1.0.0.rhp", "Microsoft.Web.WebView2.Core.dll", "Microsoft.Web.WebView2.WinForms.dll", "WebView2Loader.dll")
+foreach ($requiredFile in $requiredBundleFiles) {
+  if (-not ($bundleFiles.Name -contains $requiredFile)) {
+    Fail "El paquete de instalación no contiene el archivo requerido: $requiredFile"
+  }
 }
+$zipCheck = Join-Path $env:TEMP ("AurumConect-ZipCheck-" + [Guid]::NewGuid().ToString("N"))
+Expand-Archive -LiteralPath $BundlePath -DestinationPath $zipCheck -Force
+foreach ($requiredFile in $requiredBundleFiles) {
+  if (-not (Test-Path (Join-Path $zipCheck $requiredFile))) {
+    Remove-Item $zipCheck -Recurse -Force
+    Fail "El ZIP final no contiene el archivo requerido: $requiredFile"
+  }
+}
+Remove-Item $zipCheck -Recurse -Force
 
-Write-Host "Validación correcta: .RHP $([Math]::Round($bytes.Length / 1KB, 1)) KB; paquete WebView2 $([Math]::Round((Get-Item $BundlePath).Length / 1KB, 1)) KB" -ForegroundColor Green
+Write-Host "Validación correcta: .RHP x64 $([Math]::Round($bytes.Length / 1KB, 1)) KB; ZIP completo $([Math]::Round((Get-Item $BundlePath).Length / 1KB, 1)) KB" -ForegroundColor Green
 
-& git -C $RepoRoot add -- $Published $BundlePath
+& git -C $RepoRoot add -- $BundlePath
 if ($LASTEXITCODE -ne 0) { Fail "No se pudo preparar el archivo para Git." }
 & git -C $RepoRoot commit -m "Publish AURUM CONECT Rhino 7 plugin"
 if ($LASTEXITCODE -ne 0) { Fail "No se pudo crear el commit de publicación." }
@@ -117,7 +131,6 @@ if ($LASTEXITCODE -ne 0) { Fail "El complemento se compiló, pero no se pudo sub
 
 Write-Host ""
 Write-Host 'PUBLICACION ENVIADA A MAIN' -ForegroundColor Green
-Write-Host "Complemento: public/downloads/$Expected"
 Write-Host "Paquete recomendado: public/downloads/$BundleName"
 Write-Host 'La web podra servirlo cuando termine de desplegar el commit.'
 Write-Host "URL: https://www.tallerdeljoyero.com/downloads/$BundleName"
