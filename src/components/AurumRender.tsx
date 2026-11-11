@@ -31,6 +31,7 @@ import { compressAurumGlbWithDraco } from "../lib/draco-export";
 import { getAurumRhinoGeometryType, isAurumRhinoCsgSurface } from "../lib/aurum/metal-union-experiment";
 import { getAurumModelParts } from "../lib/aurum/model-parts";
 import { applyAurumMaterialToModel, applyAurumGemToTarget, clearAurumGemFromTarget } from "../lib/aurum/material-application";
+import { inspectAurumMesh } from "../lib/aurum/mesh-preflight";
 import { normalizeAurumModel } from "../lib/aurum/model-normalizer";
 import { applyAurumInitialModelMaterials } from "../lib/aurum/model-materials";
 import { disposeAurumThicknessCacheForTarget } from "../lib/aurum/thickness-map";
@@ -1867,14 +1868,29 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         getModelDiagnostics:()=>{
           if(!modelo)return null;
           let meshes=0,visibleMeshes=0,hiddenMeshes=0,curves=0,points=0;
+          const geometryAudit={analyzedMeshes:0,missingPreflight:0,boundaryEdges:0,nonManifoldEdges:0,degenerateTriangles:0,invalidNormals:0,renderReadyMeshes:0};
           modelo.traverse((node:any)=>{
-            if(node.isMesh){meshes++;if(node.visible!==false)visibleMeshes++;else hiddenMeshes++;}
+            if(node.isMesh){
+              meshes++;
+              if(node.visible!==false)visibleMeshes++;else hiddenMeshes++;
+              const preflight=node.userData?.aurumMeshPreflight;
+              if(preflight){
+                geometryAudit.analyzedMeshes++;
+                geometryAudit.boundaryEdges+=Number(preflight.boundaryEdges??0);
+                geometryAudit.nonManifoldEdges+=Number(preflight.nonManifoldEdges??0);
+                geometryAudit.degenerateTriangles+=Number(preflight.degenerateTriangles??0);
+                if(preflight.normalsValid!==true)geometryAudit.invalidNormals++;
+                if(preflight.renderReady===true)geometryAudit.renderReadyMeshes++;
+              }else geometryAudit.missingPreflight++;
+            }
             else if(node.isLine||node.isLineSegments||node.isLineLoop)curves++;
             else if(node.isPoints)points++;
           });
           const bounds=new THREE.Box3().setFromObject(modelo);
           const size=bounds.isEmpty()?new THREE.Vector3():bounds.getSize(new THREE.Vector3());
-          return {meshes,visibleMeshes,hiddenMeshes,curves,points,triangles:countAurumTriangles(modelo),bounds:{x:size.x,y:size.y,z:size.z},modelVisible:modelo.visible!==false};
+          const sourceAudit=modelo.userData?.aurumSourceObjectAudit??null;
+          const layerAudit=modelo.userData?.aurumLayerMetadataAudit??null;
+          return {meshes,visibleMeshes,hiddenMeshes,curves,points,triangles:countAurumTriangles(modelo),bounds:{x:size.x,y:size.y,z:size.z},modelVisible:modelo.visible!==false,geometryAudit,sourceAudit:sourceAudit?{totalSourceObjects:sourceAudit.totalSourceObjects,sourceLayerCount:sourceAudit.sourceLayerCount,byGeometryType:sourceAudit.byGeometryType}:null,layerAudit:layerAudit?{meshes:layerAudit.meshes,meshesWithLayerKey:layerAudit.meshesWithLayerKey,unresolvedMeshes:layerAudit.unresolvedMeshes,duplicateLayerKeys:layerAudit.duplicateLayerKeys?.length??0}:null};
         },
         getCadTree:()=>{
           if(!modelo)return [];
@@ -2935,6 +2951,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 vertices: obj.geometry?.attributes?.position?.count ?? null,
                 triangles: obj.geometry?.index ? Math.floor(obj.geometry.index.count / 3) : obj.geometry?.attributes?.position ? Math.floor(obj.geometry.attributes.position.count / 3) : null,
                 indexed: Boolean(obj.geometry?.index), normals: Boolean(obj.geometry?.attributes?.normal),
+                preflight: obj.geometry ? inspectAurumMesh(obj.geometry) : null,
               },
               materials: (Array.isArray(obj.material) ? obj.material : [obj.material]).filter(Boolean).map((material:any) => ({
                 name: material.name || null, type: material.type || material.constructor?.name || null,
@@ -4320,6 +4337,17 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 <div className="mb-1 font-semibold text-[#d4af37]">Geometría y material actual</div>
                 <div>Vértices: {String(diagnosticoSeleccion.selected.geometry.vertices??"—")} · Triángulos aprox.: {String(diagnosticoSeleccion.selected.geometry.triangles??"—")}</div>
                 <div>Índice de geometría: {String(diagnosticoSeleccion.selected.geometry.indexed)} · Normales: {String(diagnosticoSeleccion.selected.geometry.normals)}</div>
+                {diagnosticoSeleccion.selected.geometry.preflight&&<div className="mt-2 rounded-md border border-white/10 bg-white/[.035] p-2">
+                  <div className="mb-1 font-semibold text-[#d4af37]">Preflight topológico · solo lectura</div>
+                  <div className="grid grid-cols-2 gap-1">
+                    <span>Aristas abiertas: <strong>{diagnosticoSeleccion.selected.geometry.preflight.boundaryEdges}</strong></span>
+                    <span>No manifold: <strong>{diagnosticoSeleccion.selected.geometry.preflight.nonManifoldEdges}</strong></span>
+                    <span>Caras degeneradas: <strong>{diagnosticoSeleccion.selected.geometry.preflight.degenerateTriangles}</strong></span>
+                    <span>Normales válidas: <strong>{diagnosticoSeleccion.selected.geometry.preflight.normalsValid?"Sí":"No"}</strong></span>
+                  </div>
+                  <div className="mt-1 font-semibold">{diagnosticoSeleccion.selected.geometry.preflight.renderReady?"Geometría apta para renderizado":"Revisar geometría antes de procesos topológicos"}</div>
+                  <p className="mt-1 text-[9px] text-white/45">Las aristas abiertas no impiden el renderizado; indican que la malla no es cerrada. Este análisis no repara ni modifica el modelo.</p>
+                </div>}
                 {diagnosticoSeleccion.selected.materials.map((material:any,index:number)=><div key={index} className="mt-1 break-words text-white/75">Material {index+1}: {material.type} · {material.name||"sin nombre"} · {material.color||"sin color"}{material.transmission!==null?" · transmisión "+material.transmission:""}{material.ior!==null?" · IOR "+material.ior:""}</div>)}
               </div>
               <details className="mt-2 rounded-lg border border-white/10 p-2" open>
