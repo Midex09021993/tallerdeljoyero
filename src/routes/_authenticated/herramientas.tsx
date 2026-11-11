@@ -34,6 +34,7 @@ const tarjetaBase =
 function HerramientasPage() {
   const [herramientaActiva, setHerramientaActiva] = useState<HerramientaInterna>(null);
   const [mostrarIntroAurumRender, setMostrarIntroAurumRender] = useState(false);
+  const [mostrarIntroAurumTransfer, setMostrarIntroAurumTransfer] = useState(false);
   const [mostrarGuiaAurumConect, setMostrarGuiaAurumConect] = useState(false);
   const [archivoInicial, setArchivoInicial] = useState<File | null>(null);
   const [archivoOrigen, setArchivoOrigen] = useState<{ ruta: string; proyecto: string } | null>(null);
@@ -183,12 +184,14 @@ function HerramientasPage() {
             >
               <Gem className="size-4 text-gold" /> Aurum Render
             </button>
-            <Link
-              to="/transfer"
-              className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border border-border px-3.5 text-sm font-medium text-muted-foreground transition hover:border-gold/50 hover:text-foreground"
+            <button
+              type="button"
+              onClick={() => { setHerramientaActiva(null); setMostrarIntroAurumRender(false); setMostrarIntroAurumTransfer(true); setMostrarGuiaAurumConect(false); }}
+              aria-pressed={mostrarIntroAurumTransfer}
+              className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border px-3.5 text-sm font-medium transition hover:border-gold/50 hover:text-foreground ${mostrarIntroAurumTransfer ? "border-gold/40 bg-gold/10 text-gold" : "border-border text-muted-foreground"}`}
             >
               <Send className="size-4 text-gold" /> Aurum Transfer
-            </Link>
+            </button>
             {opciones.map(({ id, titulo, Icono }) => (
               <button
                 key={id}
@@ -247,6 +250,44 @@ function HerramientasPage() {
               </div>
               <Link to="/aurum-render" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold">
                 <Gem className="size-4" /> Ir a Aurum Render <ChevronRight className="size-4" />
+              </Link>
+            </div>
+          </section>
+        ) : mostrarIntroAurumTransfer ? (
+          <section className="mx-auto w-full max-w-[1200px] overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+            <div className="relative overflow-hidden border-b border-border bg-gradient-to-br from-gold/10 via-card to-card px-6 py-10 sm:px-10 sm:py-14">
+              <div className="max-w-3xl">
+                <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-gold">Aurum Lab · Transferencia segura de archivos</p>
+                <h2 className="mt-3 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">AURUM TRANSFER</h2>
+                <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">Envía modelos 3D y archivos de fabricación mediante enlaces privados de un solo uso. Prepara tus archivos, genera un enlace y compártelo con quien necesite recibirlos.</p>
+              </div>
+              <div className="pointer-events-none absolute -right-12 -top-12 hidden size-64 rounded-full border border-gold/20 sm:block" />
+              <div className="pointer-events-none absolute -right-3 -top-3 hidden size-44 rounded-full border border-gold/20 sm:block" />
+            </div>
+            <div className="grid gap-6 p-6 sm:grid-cols-3 sm:p-8">
+              <article>
+                <div className="mb-3 grid size-10 place-items-center rounded-xl border border-gold/25 bg-gold/10 text-gold"><ShieldCheck className="size-5" /></div>
+                <h3 className="font-semibold">Enlaces privados de un solo uso</h3>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">Comparte archivos mediante un enlace privado cuyo acceso se consume al completar la descarga.</p>
+              </article>
+              <article>
+                <div className="mb-3 grid size-10 place-items-center rounded-xl border border-gold/25 bg-gold/10 text-gold"><FileUp className="size-5" /></div>
+                <h3 className="font-semibold">Hasta 10 archivos por envío</h3>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">Agrupa modelos y documentos en una transferencia de hasta 2 GB en total.</p>
+              </article>
+              <article>
+                <div className="mb-3 grid size-10 place-items-center rounded-xl border border-gold/25 bg-gold/10 text-gold"><Link2 className="size-5" /></div>
+                <h3 className="font-semibold">Comparte con tu equipo o cliente</h3>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">Genera un enlace para entregar diseños y archivos de fabricación sin adjuntar archivos pesados al correo.</p>
+              </article>
+            </div>
+            <div className="flex flex-col items-start justify-between gap-4 border-t border-border bg-muted/20 px-6 py-5 sm:flex-row sm:items-center sm:px-8">
+              <div>
+                <h3 className="font-semibold">¿Listo para enviar tus archivos?</h3>
+                <p className="mt-1 text-sm text-muted-foreground">Abre AURUM Transfer para preparar tu primera transferencia.</p>
+              </div>
+              <Link to="/transfer" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold">
+                <Send className="size-4" /> Ir a Aurum Transfer <ChevronRight className="size-4" />
               </Link>
             </div>
           </section>
