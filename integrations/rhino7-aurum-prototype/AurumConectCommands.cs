@@ -100,7 +100,7 @@ namespace AurumConect
                 if (_activeTransfer != null) _activeTransfer.Dispose();
                 _activeTransfer = AurumConectLocalServer.Start(outputPath);
                 _activeTransfer.Run();
-                AurumConectPanel.OpenUrl(_activeTransfer.CreateHandoffUrl());
+                AurumConectRenderWindow.Open(_activeTransfer.CreateHandoffUrl());
             }
             catch (Exception exception)
             {
