@@ -59,11 +59,9 @@ function HerramientasPage() {
     })
       .then((response) => {
         const contentType = response.headers.get("content-type")?.toLowerCase() ?? "";
-        const contentLength = Number(response.headers.get("content-length") ?? 0);
         setPluginAurumConectDisponible(
           response.ok &&
-          !contentType.includes("text/html") &&
-          contentLength >= 100
+          !contentType.includes("text/html")
         );
       })
       .catch(() => {
