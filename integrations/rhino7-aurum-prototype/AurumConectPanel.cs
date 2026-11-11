@@ -49,6 +49,17 @@ namespace AurumConect
             connectButton.Click += (_, __) => OpenAurumLogin();
             layout.AddRow(connectButton);
 
+            var renderButton = new Button
+            {
+                Text = "ABRIR AURUM RENDER",
+                Height = 38,
+                BackgroundColor = Color.FromArgb(48, 55, 64),
+                TextColor = Color.FromArgb(215, 181, 111)
+            };
+            renderButton.Click += (_, __) =>
+                AurumConectRenderWindow.Open("https://www.tallerdeljoyero.com/auth?returnTo=aurum-render");
+            layout.AddRow(renderButton);
+
             var updateButton = new Button
             {
                 Text = "ENVIAR DISEÑO",
@@ -75,7 +86,7 @@ namespace AurumConect
             });
             layout.AddRow(new Label
             {
-                Text = "La actualización prepara una copia .3dm temporal. La transferencia directa al visor aún está en desarrollo.",
+                Text = "AURUM RENDER se abre en una ventana Chromium vinculada a Rhino. Puedes mantenerla junto al área CAD o maximizarla.",
                 TextColor = Color.FromArgb(145, 150, 158),
                 Wrap = WrapMode.Word
             });
