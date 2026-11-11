@@ -64,15 +64,15 @@ jobs:
           try {
             $reader = [System.IO.BinaryReader]::new($stream)
             if ($reader.ReadUInt16() -ne 0x5A4D) { throw "AurumConect.rhp does not have a valid Windows PE signature." }
+            $stream.Position = 0x3C
+            $peOffset = $reader.ReadInt32()
+            $stream.Position = $peOffset + 4
+            $machine = $reader.ReadUInt16()
+            if ($machine -ne 0x8664) { throw "AurumConect.rhp is not an x64 Windows assembly (machine: 0x$('{0:X4}' -f $machine))." }
           } finally {
             $stream.Dispose()
           }
           [void][System.Reflection.AssemblyName]::GetAssemblyName((Resolve-Path $plugin))
-          $stream.Position = 0x3C
-          $peOffset = $reader.ReadInt32()
-          $stream.Position = $peOffset + 4
-          $machine = $reader.ReadUInt16()
-          if ($machine -ne 0x8664) { throw "AurumConect.rhp is not an x64 Windows assembly (machine: 0x$('{0:X4}' -f $machine))." }
           Write-Host "Validated x64 .RHP: $($file.Length) bytes"
 
       - name: Assemble complete installation package
