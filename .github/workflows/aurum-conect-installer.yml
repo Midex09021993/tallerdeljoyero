@@ -11,33 +11,70 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: aurum-conect-installer-main
+  cancel-in-progress: false
+
 jobs:
   build-installer:
+    name: Compile plugin and package Windows installer
     runs-on: windows-latest
     steps:
       - name: Checkout main
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
+          cache: true
+          cache-dependency-path: integrations/rhino7-aurum-prototype/AurumConect.csproj
 
-      - name: Restore Rhino 7 plugin dependencies
-        run: dotnet restore integrations/rhino7-aurum-prototype/AurumConect.csproj
+      - name: Validate installer sources
+        shell: pwsh
+        run: |
+          $required = @(
+            "integrations/rhino7-aurum-prototype/AurumConect.csproj",
+            "integrations/rhino7-aurum-prototype/AurumConectPlugin.cs",
+            "integrations/rhino7-aurum-prototype/AurumConectPanel.cs",
+            "integrations/rhino7-aurum-prototype/AurumConectCommands.cs",
+            "integrations/rhino7-aurum-prototype/AurumConectLocalServer.cs",
+            "integrations/rhino7-aurum-prototype/installer/AurumConect.iss"
+          )
+          foreach ($path in $required) {
+            if (!(Test-Path $path)) { throw "Required installer source is missing: $path" }
+          }
 
-      - name: Compile Rhino 7 plugin
-        run: dotnet build integrations/rhino7-aurum-prototype/AurumConect.csproj --configuration Release --no-restore
+      - name: Restore pinned Rhino 7 dependencies
+        run: dotnet restore integrations/rhino7-aurum-prototype/AurumConect.csproj --source https://api.nuget.org/v3/index.json --verbosity minimal
 
-      - name: Verify plugin output
+      - name: Compile Rhino 7 plugin (.NET Framework 4.8)
+        run: dotnet build integrations/rhino7-aurum-prototype/AurumConect.csproj --configuration Release --no-restore --verbosity minimal
+
+      - name: Verify compiled Rhino plugin
         shell: pwsh
         run: |
           $plugin = "integrations/rhino7-aurum-prototype/bin/Release/net48/AurumConect.rhp"
-          if (!(Test-Path $plugin)) { throw "AurumConect.rhp was not produced." }
-          if ((Get-Item $plugin).Length -lt 4096) { throw "Plugin output is unexpectedly small." }
+          if (!(Test-Path $plugin)) { throw "AurumConect.rhp was not produced by the .NET build." }
+          $file = Get-Item $plugin
+          if ($file.Length -lt 4096) { throw "AurumConect.rhp is unexpectedly small ($($file.Length) bytes)." }
+          $stream = [System.IO.File]::OpenRead($plugin)
+          try {
+            $reader = [System.IO.BinaryReader]::new($stream)
+            if ($reader.ReadUInt16() -ne 0x5A4D) { throw "AurumConect.rhp does not have a valid Windows PE signature." }
+          } finally {
+            $stream.Dispose()
+          }
+          [void][System.Reflection.AssemblyName]::GetAssemblyName((Resolve-Path $plugin))
+          Write-Host "Validated .RHP: $($file.Length) bytes"
 
-      - name: Install Inno Setup
-        run: choco install innosetup --yes --no-progress
+      - name: Install Inno Setup 6
+        shell: pwsh
+        run: |
+          choco install innosetup --yes --no-progress
+          if ($LASTEXITCODE -ne 0) { throw "Inno Setup installation failed." }
 
       - name: Build single-file Windows installer
         shell: pwsh
@@ -47,7 +84,20 @@ jobs:
           & $iscc "integrations/rhino7-aurum-prototype/installer/AurumConect.iss"
           if ($LASTEXITCODE -ne 0) { throw "Inno Setup compilation failed." }
 
-      - name: Upload installer artifact
+          $installer = "integrations/rhino7-aurum-prototype/installer/Output/AURUM-CONECT-Setup-Rhino7-1.0.0.exe"
+          if (!(Test-Path $installer)) { throw "The expected installer EXE was not generated: $installer" }
+          $file = Get-Item $installer
+          if ($file.Length -lt 100KB) { throw "The installer EXE is unexpectedly small ($($file.Length) bytes)." }
+          $stream = [System.IO.File]::OpenRead($installer)
+          try {
+            $reader = [System.IO.BinaryReader]::new($stream)
+            if ($reader.ReadUInt16() -ne 0x5A4D) { throw "The installer does not have a valid Windows executable signature." }
+          } finally {
+            $stream.Dispose()
+          }
+          Write-Host "Installer generated and verified: $($file.Length) bytes"
+
+      - name: Upload verified installer artifact
         uses: actions/upload-artifact@v4
         with:
           name: AURUM-CONECT-Setup-Rhino7
@@ -55,15 +105,29 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-      - name: Publish installer to the website static downloads
+      - name: Publish verified installer to website downloads
         shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           $source = "integrations/rhino7-aurum-prototype/installer/Output/AURUM-CONECT-Setup-Rhino7-1.0.0.exe"
           $destination = "public/downloads/AURUM-CONECT-Setup-Rhino7-1.0.0.exe"
           New-Item -ItemType Directory -Path "public/downloads" -Force | Out-Null
           Copy-Item -LiteralPath $source -Destination $destination -Force
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git checkout -B main origin/main
           git add $destination
-          git commit -m "build(aurum-conect): publish Rhino 7 installer" || Write-Host "Installer binary unchanged."
-          if ($LASTEXITCODE -eq 0) { git push origin HEAD:main }
+
+          git diff --cached --quiet
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "The published installer is already up to date."
+            exit 0
+          }
+
+          git commit -m "build(aurum-conect): publish verified Rhino 7 installer"
+          if ($LASTEXITCODE -ne 0) { throw "Could not create the installer publication commit." }
+          git push origin HEAD:main
+          if ($LASTEXITCODE -ne 0) { throw "Could not publish the verified installer to main." }
