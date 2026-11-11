@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Diagnostics;
 using Rhino;
 using Rhino.DocObjects;
 using Rhino.FileIO;
@@ -10,6 +11,8 @@ namespace AurumConect
 {
     public sealed class AurumConectActualizarCommand : Rhino.Commands.Command
     {
+        private static AurumConectLocalServer _activeTransfer;
+
         public override string EnglishName { get { return "AurumConectActualizar"; } }
 
         protected override Rhino.Commands.Result RunCommand(
@@ -75,13 +78,22 @@ namespace AurumConect
                 return Rhino.Commands.Result.Failure;
             }
 
-            AurumConectPanel.OpenAurumLogin();
+            try
+            {
+                if (_activeTransfer != null) _activeTransfer.Dispose();
+                _activeTransfer = AurumConectLocalServer.Start(outputPath);
+                _activeTransfer.Run();
+                AurumConectPanel.OpenUrl(_activeTransfer.CreateHandoffUrl());
+            }
+            catch (Exception exception)
+            {
+                RhinoApp.WriteLine("AURUM CONECT: no se pudo iniciar el canal local seguro: {0}", exception.Message);
+                return Rhino.Commands.Result.Failure;
+            }
 
             RhinoApp.WriteLine(
-                "AURUM CONECT: copia temporal preparada ({0} objetos): {1}",
-                exported, outputPath);
-            RhinoApp.WriteLine(
-                "Inicia sesión en AURUM LAB para abrir Aurum Render. La transferencia directa del .3dm aún está pendiente.");
+                "AURUM CONECT: transferencia local preparada ({0} objetos). Completa la recepción desde Aurum Render.",
+                exported);
             return Rhino.Commands.Result.Success;
         }
     }
