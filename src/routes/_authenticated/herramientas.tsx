@@ -247,12 +247,12 @@ function HerramientasPage() {
                         <div>
                           <h4 className="font-semibold">Instalación en Windows</h4>
                           <ol className="mt-3 space-y-2 text-sm leading-6 text-muted-foreground">
-                            <li><strong className="text-foreground">1.</strong> Descarga AurumConect-Rhino7-1.0.0.rhp en una carpeta permanente de tu equipo.</li>
-                            <li><strong className="text-foreground">2.</strong> En Rhino 7, ejecuta el comando _PlugInManager y pulsa «Install» (Instalar).</li>
-                            <li><strong className="text-foreground">3.</strong> Selecciona el archivo AurumConect-Rhino7-1.0.0.rhp y confirma la instalación.</li>
-                            <li><strong className="text-foreground">4.</strong> Reinicia Rhino 7. El complemento quedará disponible en el administrador de complementos como <code className="rounded bg-muted px-1.5 py-0.5 text-xs">AurumConect.rhp</code>.</li>
-                            <li><strong className="text-foreground">5.</strong> Cierra y vuelve a abrir Rhino 7 para cargar el complemento registrado.</li>
-                            <li><strong className="text-foreground">6.</strong> Ejecuta el comando <code className="rounded bg-muted px-1.5 py-0.5 text-xs">AurumConect</code> para abrir el panel.</li>
+                            <li><strong className="text-foreground">1.</strong> Descarga <code className="rounded bg-muted px-1.5 py-0.5 text-xs">AurumConect-Rhino7-1.0.0.rhp</code> desde el botón de esta tarjeta y guárdalo en una carpeta permanente.</li>
+                            <li><strong className="text-foreground">2.</strong> Abre Rhino 7 y escribe <code className="rounded bg-muted px-1.5 py-0.5 text-xs">_PlugInManager</code> en la línea de comandos.</li>
+                            <li><strong className="text-foreground">3.</strong> En el administrador, pulsa «Install», busca el archivo .RHP descargado y confirma.</li>
+                            <li><strong className="text-foreground">4.</strong> Si Rhino solicita confirmación de seguridad, verifica que el archivo procede de tallerdeljoyero.com y autoriza su carga.</li>
+                            <li><strong className="text-foreground">5.</strong> Ejecuta <code className="rounded bg-muted px-1.5 py-0.5 text-xs">AurumConect</code> en la línea de comandos para abrir el panel AURUM CONECT.</li>
+                            <li><strong className="text-foreground">6.</strong> Pulsa «CONECTAR CON AURUM LAB» para iniciar sesión. Para probar la preparación del diseño, selecciona geometría y pulsa «ACTUALIZAR DISEÑO».</li>
                           </ol>
                         </div>
                       </div>
