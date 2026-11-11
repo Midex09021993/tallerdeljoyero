@@ -120,7 +120,7 @@ function HerramientasPage() {
               </div>
             </div>
             <div className="flex flex-col gap-2 sm:flex-row lg:flex-col">
-              <a href="https://github.com/Midex09021993/tallerdeljoyero/raw/refs/heads/main/integrations/rhino7-aurum-prototype/Instalar-AURUM-Render-Bridge.bat" download="Instalar-AURUM-CONECT.bat" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold">
+              <a href="https://github.com/Midex09021993/tallerdeljoyero/raw/refs/heads/main/integrations/rhino7-aurum-prototype/Instalar-AURUM-Render-Bridge.bat?download=1" download="Instalar-AURUM-CONECT.bat" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold">
                 <Download className="size-4" /> Descargar instalador (.BAT)
               </a>
               <button type="button" aria-expanded={mostrarGuiaAurumConect} aria-controls="aurum-conect-guia" onClick={() => setMostrarGuiaAurumConect((visible) => !visible)} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-border px-4 py-2 text-xs font-semibold text-muted-foreground transition hover:border-gold/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold">
