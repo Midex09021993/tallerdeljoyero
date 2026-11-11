@@ -17,8 +17,11 @@ concurrency:
 
 jobs:
   build-rhp:
-    name: Compile, package and publish Rhino 7 plugin
-    runs-on: windows-2022
+    name: Cross-compile, package and publish Rhino 7 plugin
+    # .NET Framework 4.8 SDK-style projects can be cross-compiled on Linux
+    # using the official reference-assemblies NuGet package. This avoids
+    # dependence on the unavailable GitHub Windows runner pool.
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - name: Checkout main
@@ -32,115 +35,104 @@ jobs:
           dotnet-version: 8.0.x
 
       - name: Validate plugin sources
-        shell: pwsh
+        shell: bash
         run: |
-          $required = @(
-            "integrations/rhino7-aurum-prototype/AurumConect.csproj",
-            "integrations/rhino7-aurum-prototype/AurumConectPlugin.cs",
-            "integrations/rhino7-aurum-prototype/AurumConectPanel.cs",
-            "integrations/rhino7-aurum-prototype/AurumConectCommands.cs",
-            "integrations/rhino7-aurum-prototype/AurumConectLocalServer.cs",
+          set -euo pipefail
+          required=(
+            "integrations/rhino7-aurum-prototype/AurumConect.csproj"
+            "integrations/rhino7-aurum-prototype/AurumConectPlugin.cs"
+            "integrations/rhino7-aurum-prototype/AurumConectPanel.cs"
+            "integrations/rhino7-aurum-prototype/AurumConectCommands.cs"
+            "integrations/rhino7-aurum-prototype/AurumConectLocalServer.cs"
             "integrations/rhino7-aurum-prototype/AurumConectRenderWindow.cs"
           )
-          foreach ($path in $required) {
-            if (!(Test-Path $path)) { throw "Required plugin source is missing: $path" }
-          }
+          for path in "${required[@]}"; do
+            test -f "$path" || { echo "::error::Required plugin source missing: $path"; exit 1; }
+          done
 
-      - name: Restore pinned Rhino 7 dependencies
+      - name: Restore .NET Framework 4.8 reference assemblies and dependencies
         run: dotnet restore integrations/rhino7-aurum-prototype/AurumConect.csproj --source https://api.nuget.org/v3/index.json --verbosity minimal
 
-      - name: Compile Rhino 7 plugin (.NET Framework 4.8)
+      - name: Cross-compile Rhino 7 plugin (.NET Framework 4.8, x64)
         run: dotnet build integrations/rhino7-aurum-prototype/AurumConect.csproj --configuration Release --no-restore --verbosity minimal
 
-      - name: Verify compiled Rhino plugin
-        shell: pwsh
+      - name: Verify compiled Windows x64 plugin
+        shell: bash
         run: |
-          $output = "integrations/rhino7-aurum-prototype/bin/Release/net48"
-          $plugin = Join-Path $output "AurumConect.rhp"
-          if (!(Test-Path $plugin)) { throw "AurumConect.rhp was not produced by the .NET build." }
-          $file = Get-Item $plugin
-          if ($file.Length -lt 4096) { throw "AurumConect.rhp is unexpectedly small ($($file.Length) bytes)." }
-          $stream = [System.IO.File]::OpenRead($plugin)
-          try {
-            $reader = [System.IO.BinaryReader]::new($stream)
-            if ($reader.ReadUInt16() -ne 0x5A4D) { throw "AurumConect.rhp does not have a valid Windows PE signature." }
-            $stream.Position = 0x3C
-            $peOffset = $reader.ReadInt32()
-            $stream.Position = $peOffset + 4
-            $machine = $reader.ReadUInt16()
-            if ($machine -ne 0x8664) { throw "AurumConect.rhp is not an x64 Windows assembly (machine: 0x$('{0:X4}' -f $machine))." }
-          } finally {
-            $stream.Dispose()
-          }
-          [void][System.Reflection.AssemblyName]::GetAssemblyName((Resolve-Path $plugin))
-          Write-Host "Validated x64 .RHP: $($file.Length) bytes"
+          set -euo pipefail
+          python3 - <<'PY'
+          import pathlib, struct, sys
+          plugin = pathlib.Path("integrations/rhino7-aurum-prototype/bin/Release/net48/AurumConect.rhp")
+          if not plugin.is_file():
+              sys.exit("AurumConect.rhp was not produced by the .NET build.")
+          data = plugin.read_bytes()
+          if len(data) < 4096 or data[:2] != b"MZ":
+              sys.exit("AurumConect.rhp is too small or does not have a Windows PE signature.")
+          pe_offset = struct.unpack_from("<I", data, 0x3C)[0]
+          if data[pe_offset:pe_offset+4] != b"PE\\0\\0":
+              sys.exit("AurumConect.rhp has an invalid PE header.")
+          machine = struct.unpack_from("<H", data, pe_offset+4)[0]
+          if machine != 0x8664:
+              sys.exit(f"Expected Windows x64 PE (0x8664), got 0x{machine:04X}.")
+          print(f"Validated Windows x64 .RHP: {len(data)} bytes")
+          PY
 
-      - name: Assemble complete installation package
-        shell: pwsh
+      - name: Assemble complete installation ZIP
+        shell: bash
         run: |
-          $output = "integrations/rhino7-aurum-prototype/bin/Release/net48"
-          $bundle = "integrations/rhino7-aurum-prototype/package"
-          if (Test-Path $bundle) { Remove-Item $bundle -Recurse -Force }
-          New-Item -ItemType Directory -Path $bundle -Force | Out-Null
+          set -euo pipefail
+          output="integrations/rhino7-aurum-prototype/bin/Release/net48"
+          bundle="integrations/rhino7-aurum-prototype/package"
+          rm -rf "$bundle"
+          mkdir -p "$bundle" public/downloads
 
-          Copy-Item "$output/AurumConect.rhp" "$bundle/AurumConect-Rhino7-1.0.0.rhp" -Force
+          cp "$output/AurumConect.rhp" "$bundle/AurumConect-Rhino7-1.0.0.rhp"
+          for name in Microsoft.Web.WebView2.Core.dll Microsoft.Web.WebView2.WinForms.dll; do
+            source_file="$(find "$output" -maxdepth 2 -type f -name "$name" -print -quit)"
+            if [[ -z "$source_file" ]]; then
+              echo "::error::Required WebView2 assembly missing from build output: $name"
+              exit 1
+            fi
+            cp "$source_file" "$bundle/$name"
+          done
 
-          $managed = @(Get-ChildItem $output -File -Filter "Microsoft.Web.WebView2*.dll")
-          foreach ($name in @("Microsoft.Web.WebView2.Core.dll", "Microsoft.Web.WebView2.WinForms.dll")) {
-            if (!($managed.Name -contains $name)) { throw "Required WebView2 assembly missing from build output: $name" }
-          }
-          foreach ($assembly in $managed) {
-            Copy-Item $assembly.FullName $bundle -Force
-          }
+          loader="$(find "$output" "$HOME/.nuget/packages/microsoft.web.webview2" -type f -name WebView2Loader.dll 2>/dev/null | grep -E '/(win-x64/native|x64)/' | head -n 1 || true)"
+          if [[ -z "$loader" ]]; then
+            echo "::error::WebView2Loader.dll for Windows x64 was not found; refusing to publish an incomplete installer."
+            exit 1
+          fi
+          cp "$loader" "$bundle/WebView2Loader.dll"
 
-          $loader = Get-ChildItem $output -Recurse -File -Filter "WebView2Loader.dll" |
-            Where-Object { $_.FullName -match "[\\/]win-x64[\\/]native[\\/]" -or $_.FullName -match "[\\/]x64[\\/]" } |
-            Select-Object -First 1
-          if (!$loader) { throw "WebView2Loader.dll for Windows x64 was not found. Refusing to publish an incomplete installer." }
-          Copy-Item $loader.FullName "$bundle/WebView2Loader.dll" -Force
+          test -s "$bundle/AurumConect-Rhino7-1.0.0.rhp"
+          test -s "$bundle/Microsoft.Web.WebView2.Core.dll"
+          test -s "$bundle/Microsoft.Web.WebView2.WinForms.dll"
+          test -s "$bundle/WebView2Loader.dll"
 
-          $requiredFiles = @(
-            "AurumConect-Rhino7-1.0.0.rhp",
-            "Microsoft.Web.WebView2.Core.dll",
-            "Microsoft.Web.WebView2.WinForms.dll",
-            "WebView2Loader.dll"
-          )
-          foreach ($name in $requiredFiles) {
-            if (!(Test-Path (Join-Path $bundle $name))) { throw "Installer package is missing $name" }
-          }
+          (cd "$bundle" && zip -9 -q "$GITHUB_WORKSPACE/public/downloads/AurumConect-Rhino7-1.0.0.zip" ./*)
+          unzip -t public/downloads/AurumConect-Rhino7-1.0.0.zip
+          echo "Complete ZIP created:"
+          ls -lh public/downloads/AurumConect-Rhino7-1.0.0.zip
 
-          New-Item -ItemType Directory -Path "public/downloads" -Force | Out-Null
-          if (Test-Path "public/downloads/AurumConect-Rhino7-1.0.0.zip") {
-            Remove-Item "public/downloads/AurumConect-Rhino7-1.0.0.zip" -Force
-          }
-          Compress-Archive -Path "$bundle/*" -DestinationPath "public/downloads/AurumConect-Rhino7-1.0.0.zip" -CompressionLevel Optimal
-          Write-Host "Complete installer package created with $($requiredFiles.Count) required files."
-
-      - name: Upload verified installer artifacts
+      - name: Upload complete installer artifact
         uses: actions/upload-artifact@v4
         with:
           name: AurumConect-Rhino7-1.0.0-Installer
-          path: |
-            public/downloads/AurumConect-Rhino7-1.0.0.zip
+          path: public/downloads/AurumConect-Rhino7-1.0.0.zip
           if-no-files-found: error
           retention-days: 30
 
-      - name: Publish verified installer files to website on main
-        shell: pwsh
+      - name: Publish verified ZIP to website on main
+        shell: bash
         run: |
+          set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git fetch origin main
           git checkout -B main origin/main
           git add public/downloads/AurumConect-Rhino7-1.0.0.zip
-
-          git diff --cached --quiet
-          if ($LASTEXITCODE -eq 0) {
-            Write-Host "The published installer files are already up to date."
+          if git diff --cached --quiet; then
+            echo "The published installer is already up to date."
             exit 0
-          }
-
+          fi
           git commit -m "build(aurum-conect): publish complete Rhino 7 installer"
-          if ($LASTEXITCODE -ne 0) { throw "Could not create the installer publication commit." }
           git push origin HEAD:main
-          if ($LASTEXITCODE -ne 0) { throw "Could not publish the verified installer files to main." }
