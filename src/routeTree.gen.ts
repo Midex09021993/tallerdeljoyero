@@ -24,7 +24,6 @@ import { Route as GuiasRouteImport } from './routes/guias'
 import { Route as HerramientasPublicasRouteImport } from './routes/herramientas-publicas'
 import { Route as RecuperarContrasenaRouteImport } from './routes/recuperar-contrasena'
 import { Route as TiendaRouteImport } from './routes/tienda'
-import { Route as PrecioDelOroHoyRouteImport } from './routes/precio-del-oro-hoy'
 import { Route as SlugIndexRouteImport } from './routes/$slug.index'
 import { Route as SlugProductoRouteImport } from './routes/$slug.$producto'
 import { Route as AuthenticatedAgendaRouteImport } from './routes/_authenticated/agenda'
@@ -151,11 +150,6 @@ const HerramientasPublicasRoute = HerramientasPublicasRouteImport.update({
 const RecuperarContrasenaRoute = RecuperarContrasenaRouteImport.update({
   id: '/recuperar-contrasena',
   path: '/recuperar-contrasena',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrecioDelOroHoyRoute = PrecioDelOroHoyRouteImport.update({
-  id: '/precio-del-oro-hoy',
-  path: '/precio-del-oro-hoy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TiendaRoute = TiendaRouteImport.update({
@@ -937,7 +931,6 @@ export interface RootRouteChildren {
   HerramientasPublicasRoute: typeof HerramientasPublicasRouteWithChildren
   RecuperarContrasenaRoute: typeof RecuperarContrasenaRoute
   TiendaRoute: typeof TiendaRoute
-  PrecioDelOroHoyRoute: typeof PrecioDelOroHoyRoute
   CCodigoRoute: typeof CCodigoRouteWithChildren
   FormacionSlugRoute: typeof FormacionSlugRoute
   JoyaTokenRoute: typeof JoyaTokenRoute
@@ -1040,13 +1033,6 @@ declare module '@tanstack/react-router' {
       path: '/herramientas-publicas'
       fullPath: '/herramientas-publicas'
       preLoaderRoute: typeof HerramientasPublicasRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/precio-del-oro-hoy': {
-      id: '/precio-del-oro-hoy'
-      path: '/precio-del-oro-hoy'
-      fullPath: '/precio-del-oro-hoy'
-      preLoaderRoute: typeof PrecioDelOroHoyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/recuperar-contrasena': {
@@ -1660,7 +1646,6 @@ const rootRouteChildren: RootRouteChildren = {
   HerramientasPublicasRoute: HerramientasPublicasRouteWithChildren,
   RecuperarContrasenaRoute: RecuperarContrasenaRoute,
   TiendaRoute: TiendaRoute,
-  PrecioDelOroHoyRoute: PrecioDelOroHoyRoute,
   CCodigoRoute: CCodigoRouteWithChildren,
   FormacionSlugRoute: FormacionSlugRoute,
   JoyaTokenRoute: JoyaTokenRoute,
