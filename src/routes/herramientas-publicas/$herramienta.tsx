@@ -39,32 +39,32 @@ const paginas = {
     ]
   },
   "peso-joya-3d": {
-    titulo: "Visualizador y calculadora de peso 3D",
-    metaTitulo: "Calculadora de peso de joyas 3D | Taller del Joyero",
-    descripcion: "Carga un modelo 3D compatible para estimar el peso de una joya según el metal y su densidad.",
-    contenido: "Carga un archivo 3D compatible, selecciona el metal y revisa el peso teórico estimado a partir del volumen del modelo y la densidad configurada.",
+    titulo: "Calculadora de peso de joyas 3D: estima el metal desde tu modelo",
+    metaTitulo: "Calculadora de peso de joyas 3D: STL, OBJ y GLB | AURUM LAB",
+    descripcion: "Calcula el peso estimado de una joya desde un modelo 3D STL, OBJ, GLB o FBX. Selecciona oro o plata y estima el metal según el volumen y la densidad.",
+    contenido: "Carga tu modelo 3D, elige la aleación de oro o plata y añade el peso real del árbol de colada para estimar el metal necesario. También puedes estimar el peso del metal a partir del peso de una impresión en resina compatible.",
     id: "peso",
     guiaSlug: "calcular-peso-joya-modelo-3d",
     secciones: [
       {
-        titulo: "Cómo calcular el peso de una joya desde un archivo 3D",
+        titulo: "Cómo calcular el peso de una joya 3D usando un archivo STL, OBJ o GLB",
         parrafos: [
-          "La estimación de peso relaciona el volumen de la geometría con la densidad del material seleccionado. Por eso, la escala del archivo y las unidades del modelo deben ser correctas antes de interpretar el resultado.",
-          "Un mismo diseño puede tener pesos distintos en oro, plata o platino porque cada metal y aleación tiene una densidad diferente. Selecciona el material que realmente planeas utilizar."
+          "La calculadora procesa el volumen de la geometría 3D y lo relaciona con la densidad del metal seleccionado. Para obtener una estimación útil, el modelo debe conservar la escala correcta y utilizar unidades conocidas antes de cargarlo.",
+          "Un mismo diseño puede tener pesos distintos según la aleación seleccionada. El oro de 18K, el oro de 14K y las aleaciones de plata no tienen la misma densidad; elige el material que corresponda al proyecto para obtener una referencia más adecuada."
         ]
       },
       {
-        titulo: "Qué revisar antes de usar el resultado",
+        titulo: "Peso del árbol de colada y estimación desde una impresión 3D",
         parrafos: [
-          "Comprueba que el modelo represente la pieza que deseas fabricar y que no tenga errores de escala o geometría. El peso calculado es una referencia teórica: puede variar respecto a la pieza terminada por el proceso de fabricación, los ajustes de aleación, las gemas, soldaduras y otros componentes.",
-          "Si el diseño incluye piedras, considera su peso por separado. No interpretes el resultado del metal como el peso total de una joya montada."
+          "Si conoces el peso adicional del tronco, las ramas y el botón o reservorio, introdúcelo en el campo del árbol de colada para incorporarlo a la estimación. Como método alternativo, puedes introducir el peso de la impresión en resina limpia, seca y sin soportes, y seleccionar el tipo de resina disponible en la herramienta.",
+          "El cálculo basado en el modelo representa una estimación del metal según su volumen y densidad; no equivale necesariamente al peso final de la pieza fundida. Si el diseño incluye gemas, soldaduras u otros componentes, considera sus pesos por separado. Verifica también que el archivo no tenga errores de escala o geometría."
         ]
       }
     ],
     preguntas: [
-      { pregunta: "¿Puedo calcular el peso de una joya desde un archivo STL?", respuesta: "La herramienta admite archivos 3D compatibles. Si tu archivo STL se puede cargar correctamente, podrás estimar el peso según el volumen y el metal seleccionado." },
-      { pregunta: "¿Por qué cambia el peso cuando selecciono otro metal?", respuesta: "Porque el cálculo utiliza la densidad configurada para cada material. Para un mismo volumen, un metal más denso produce un peso teórico mayor." },
-      { pregunta: "¿El peso calculado será igual al de la joya fundida?", respuesta: "No necesariamente. Es una estimación basada en el modelo y la densidad seleccionada; el proceso de fabricación, la aleación real y los componentes añadidos pueden modificar el peso final." }
+      { pregunta: "¿Qué formatos 3D puedo usar para calcular el peso de una joya?", respuesta: "La herramienta permite cargar archivos STL, OBJ, GLB y FBX. El resultado depende de que el modelo se procese correctamente y conserve la escala y las unidades adecuadas." },
+      { pregunta: "¿Cómo influye el tipo de oro o plata en el peso calculado?", respuesta: "El cálculo utiliza la densidad configurada para la aleación seleccionada. Para un mismo volumen, las distintas aleaciones pueden producir pesos estimados diferentes." },
+      { pregunta: "¿Puedo incluir el árbol de colada o calcular el metal desde el peso de una impresión en resina?", respuesta: "Sí. Puedes añadir el peso real del árbol de colada y, como método alternativo, introducir el peso de una impresión limpia, seca y sin soportes junto con el tipo de resina seleccionado. Ambas opciones ofrecen estimaciones; comprueba los datos y las condiciones de uso antes de fabricar." }
     ]
   },
   "yeso-agua": {
@@ -289,7 +289,7 @@ function HerramientaPublicaPage() {
             {pagina.secciones[1].parrafos.map((parrafo) => <p key={parrafo} className="mt-3 text-sm leading-7 text-slate-600 sm:text-base">{parrafo}</p>)}
           </div>
           <div className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
-            <h2 className="text-xl font-bold tracking-tight text-[#17232d]">{pagina.id === "yeso" ? "Preguntas frecuentes sobre yeso, agua y revestimiento de fundición" : pagina.id === "oro" ? "Preguntas frecuentes sobre aleaciones de oro y metales de liga" : pagina.id === "gemas" ? "Preguntas frecuentes sobre el peso de las gemas" : pagina.id === "tallas" ? "Preguntas frecuentes sobre tallas y equivalencias de anillos" : "Preguntas frecuentes"}</h2>
+            <h2 className="text-xl font-bold tracking-tight text-[#17232d]">{pagina.id === "yeso" ? "Preguntas frecuentes sobre yeso, agua y revestimiento de fundición" : pagina.id === "oro" ? "Preguntas frecuentes sobre aleaciones de oro y metales de liga" : pagina.id === "gemas" ? "Preguntas frecuentes sobre el peso de las gemas" : pagina.id === "tallas" ? "Preguntas frecuentes sobre tallas y equivalencias de anillos" : pagina.id === "peso" ? "Preguntas frecuentes sobre el peso de joyas en 3D" : "Preguntas frecuentes"}</h2>
             <div className="mt-4 divide-y divide-slate-100">
               {pagina.preguntas.map((item) => (
                 <div key={item.pregunta} className="py-4 first:pt-0 last:pb-0">
