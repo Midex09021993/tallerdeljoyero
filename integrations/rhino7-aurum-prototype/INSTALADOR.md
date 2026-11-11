@@ -17,12 +17,14 @@ Requisitos: Rhino 7 instalado, RhinoCommon.dll y Eto.dll disponibles en su carpe
 ## Uso actual
 
 1. Abre el diseño en MatrixGold 3.1.
-2. Selecciona la geometría que quieras enviar.
-3. Pulsa **ACTUALIZAR DISEÑO**.
-4. El complemento prepara una copia temporal .3dm y abre AURUM Render. En esta versión todavía debes seleccionar manualmente el archivo desde el visor.
+2. En el panel, pulsa **CONECTAR CON AURUM LAB**.
+3. El navegador abre el inicio de sesión oficial. Ingresa con las mismas credenciales de tu plataforma; el complemento nunca recibe ni guarda tu contraseña.
+4. Tras autenticarte, AURUM LAB te dirige directamente a Aurum Render.
+5. Regresa a Rhino, selecciona la geometría que quieras enviar y pulsa **ACTUALIZAR DISEÑO**.
+6. El complemento prepara una copia temporal .3dm y vuelve a abrir el acceso a Aurum Render. La carga del archivo todavía es manual.
 
 ## Estado y limitaciones
 
 El instalador no genera un .rhp ficticio: se detiene si no encuentra las DLL de Rhino 7 o si `dotnet build` falla. La compilación debe verificarse también dentro de Rhino 7 en el equipo de destino.
 
-La transferencia automática directa al visor web sigue pendiente. No se debe confundir esta versión con una integración de un solo clic ya terminada.
+La autenticación integrada y el retorno directo a Aurum Render están implementados. La transferencia automática directa del .3dm al visor web sigue pendiente. No se debe confundir esta versión con una integración de un solo clic ya terminada.
