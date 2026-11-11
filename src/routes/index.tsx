@@ -862,6 +862,7 @@ function InicioPublico() {
               <ul className="mt-3 space-y-3 text-xs">
                 <li><Link to="/herramientas-publicas" className="transition hover:text-[#f8c928]">Herramientas para joyeros</Link></li>
                 <li><Link to="/aurum-render-public" className="transition hover:text-[#f8c928]">Visor 3D</Link></li>
+                <li><Link to="/precio-del-oro-hoy" className="transition hover:text-[#f8c928]">Precio del oro hoy</Link></li>
                 <li><Link to="/auth" target="_blank" rel="noreferrer" className="transition hover:text-[#f8c928]">Ingresar a AURUM LAB</Link></li>
               </ul>
             </div>
