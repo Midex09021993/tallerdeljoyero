@@ -452,6 +452,19 @@ function InicioPublico() {
           0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
           50% { transform: translate3d(18px, -15px, 0) scale(1.06); }
         }
+        @keyframes aurum-dashboard-float {
+          0%, 100% { transform: translate3d(0, 0, 0) rotateX(0deg); }
+          50% { transform: translate3d(0, -10px, 0) rotateX(.35deg); }
+        }
+        @keyframes aurum-badge-pulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(248,201,40,0); }
+          50% { box-shadow: 0 0 0 7px rgba(248,201,40,.12); }
+        }
+        @keyframes aurum-preview-glint {
+          0%, 72%, 100% { transform: translateX(-140%) skewX(-18deg); opacity: 0; }
+          12%, 42% { opacity: .75; }
+          58% { transform: translateX(240%) skewX(-18deg); opacity: 0; }
+        }
         @keyframes aurum-glow-breathe {
           0%, 100% { opacity: .55; }
           50% { opacity: .9; }
@@ -484,6 +497,19 @@ function InicioPublico() {
         }
         .aurum-ambient-orb { animation: aurum-orb-drift 13s ease-in-out infinite; }
         .aurum-ambient-glow { animation: aurum-glow-breathe 8s ease-in-out infinite; }
+        .aurum-dashboard-float { animation: aurum-dashboard-float 6s ease-in-out infinite; transform-origin: center center; }
+        .aurum-hero-badge { animation: aurum-badge-pulse 3.8s ease-in-out infinite; }
+        .aurum-preview-glint { position: relative; isolation: isolate; overflow: hidden; }
+        .aurum-preview-glint::after {
+          content: "";
+          position: absolute;
+          z-index: 5;
+          inset: 0 auto 0 0;
+          width: 34%;
+          pointer-events: none;
+          background: linear-gradient(100deg, transparent, rgba(255,255,255,.24), transparent);
+          animation: aurum-preview-glint 8s ease-in-out infinite;
+        }
         .aurum-motion-card { transform: translateZ(0); transition: transform .45s cubic-bezier(.2,.75,.25,1), box-shadow .45s ease, border-color .35s ease; }
         .aurum-motion-card::after {
           content: "";
@@ -500,7 +526,7 @@ function InicioPublico() {
         .aurum-motion-card:hover [data-aurum-icon] { transform: translateY(-3px) rotate(-5deg) scale(1.06); }
         .aurum-motion-ready [data-aurum-reveal].aurum-is-visible { transition-delay: var(--aurum-reveal-delay, 0ms); }
         @media (prefers-reduced-motion: reduce) {
-          .aurum-hero-enter, .aurum-ambient-orb, .aurum-ambient-glow { animation: none !important; }
+          .aurum-hero-enter, .aurum-ambient-orb, .aurum-ambient-glow, .aurum-dashboard-float, .aurum-hero-badge, .aurum-preview-glint::after { animation: none !important; }
           .aurum-motion-ready [data-aurum-reveal] { opacity: 1 !important; transform: none !important; transition: none !important; }
           .aurum-motion-card, .aurum-motion-card:hover { transform: none !important; transition: none !important; }
           .aurum-motion-card::after { display: none !important; }
@@ -614,7 +640,7 @@ function InicioPublico() {
         <div className="aurum-ambient-glow pointer-events-none absolute right-[28%] top-20 -z-10 size-64 rounded-full bg-[#e9f1ff]/80 blur-[80px]" />
         <div className="mx-auto grid max-w-[1440px] items-center gap-12 px-5 pb-16 pt-12 sm:px-8 sm:pb-20 sm:pt-16 lg:grid-cols-[.92fr_1.08fr] lg:gap-8 lg:px-12 lg:pb-24 lg:pt-20">
           <div data-aurum-reveal className="aurum-hero-enter relative z-10 max-w-[650px]">
-            <span className="inline-flex items-center gap-2 rounded-full border border-[#e5c04a]/50 bg-[#fff9df] px-3.5 py-2 text-[10px] font-bold uppercase tracking-[.16em] text-[#785b00]"><Sparkles className="size-3.5" /> AURUM LAB · TECNOLOGÍA PARA JOYEROS</span>
+            <span className="aurum-hero-badge inline-flex items-center gap-2 rounded-full border border-[#e5c04a]/50 bg-[#fff9df] px-3.5 py-2 text-[10px] font-bold uppercase tracking-[.16em] text-[#785b00]"><Sparkles className="size-3.5" /> AURUM LAB · TECNOLOGÍA PARA JOYEROS</span>
             <h1 className="mt-6 text-[2.65rem] font-extrabold leading-[1.06] tracking-[-.045em] text-[#17232d] sm:text-5xl lg:text-[3.8rem]">Software para joyeros y talleres de joyería.</h1>
             <p className="mt-6 max-w-xl text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">Con <strong>AURUM LAB</strong>, calcula materiales, crea <strong>diseños 3D</strong> y gestiona tu taller.</p>
             <ul className="mt-7 space-y-4 text-sm font-medium text-[#25323b] sm:text-[15px]">
@@ -631,7 +657,7 @@ function InicioPublico() {
 
           <div data-aurum-reveal="scale" className="aurum-hero-enter aurum-hero-enter-delay-2 relative mx-auto w-full max-w-[720px] pb-7 sm:pb-10">
             <div className="absolute inset-x-8 bottom-0 top-12 rounded-[3rem] bg-gradient-to-br from-[#ffe99a]/70 via-[#f8faff] to-[#e4ecf7] blur-2xl" />
-            <div className="relative rounded-[1.6rem] border border-slate-200 bg-white p-2.5 shadow-[0_25px_80px_rgba(28,40,52,.15)] sm:p-3">
+            <div className="aurum-dashboard-float aurum-preview-glint relative rounded-[1.6rem] border border-slate-200 bg-white p-2.5 shadow-[0_25px_80px_rgba(28,40,52,.15)] sm:p-3">
               <div className="flex h-10 items-center gap-2 border-b border-slate-100 px-3">
                 <span className="size-2.5 rounded-full bg-[#ff6b63]" /><span className="size-2.5 rounded-full bg-[#ffce45]" /><span className="size-2.5 rounded-full bg-[#4ac58b]" />
                 <div className="mx-auto mr-12 rounded-full bg-slate-100 px-14 py-1 text-[9px] text-slate-400">TU ESPACIO DIGITAL</div>
