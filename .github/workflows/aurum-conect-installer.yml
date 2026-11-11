@@ -1,0 +1,56 @@
+name: AURUM CONECT · Instalador Rhino 7
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "integrations/rhino7-aurum-prototype/**"
+      - ".github/workflows/aurum-conect-installer.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-installer:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore Rhino 7 plugin dependencies
+        run: dotnet restore integrations/rhino7-aurum-prototype/AurumConect.csproj
+
+      - name: Compile Rhino 7 plugin
+        run: dotnet build integrations/rhino7-aurum-prototype/AurumConect.csproj --configuration Release --no-restore
+
+      - name: Verify plugin output
+        shell: pwsh
+        run: |
+          $plugin = "integrations/rhino7-aurum-prototype/bin/Release/net48/AurumConect.rhp"
+          if (!(Test-Path $plugin)) { throw "AurumConect.rhp was not produced." }
+          if ((Get-Item $plugin).Length -lt 4096) { throw "Plugin output is unexpectedly small." }
+
+      - name: Install Inno Setup
+        run: choco install innosetup --yes --no-progress
+
+      - name: Build single-file Windows installer
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (!(Test-Path $iscc)) { throw "Inno Setup compiler not found: $iscc" }
+          & $iscc "integrations/rhino7-aurum-prototype/installer/AurumConect.iss"
+          if ($LASTEXITCODE -ne 0) { throw "Inno Setup compilation failed." }
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AURUM-CONECT-Setup-Rhino7
+          path: integrations/rhino7-aurum-prototype/installer/Output/AURUM-CONECT-Setup-Rhino7-1.0.0.exe
+          if-no-files-found: error
+          retention-days: 30
