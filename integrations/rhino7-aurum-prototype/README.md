@@ -1,36 +1,53 @@
-# AURUM Render Bridge — prototipo Rhino 7
+# AURUM CONECT — Rhino 7 / MatrixGold 3.1
 
-## Estado
+Complemento nativo para abrir un panel acoplable en Rhino 7 y preparar una copia temporal del diseño para AURUM Render.
 
-Prueba de concepto local para validar el primer tramo del flujo desde Rhino 7: seleccionar geometría, exportar una copia .3dm y abrir AURUM Render en el navegador.
+## Estado de esta entrega
 
-**Todavía no es una integración completa.** No carga el modelo automáticamente en el editor web ni sube archivos a la nube.
+**Base nativa del complemento implementada; transferencia directa todavía pendiente.**
 
-## Requisitos
+Incluye:
+- Plugin Rhino 7 (.rhp) en C# / .NET Framework 4.8.
+- Panel acoplable **AURUM CONECT**.
+- Comando `AurumConect` para abrir el panel.
+- Botón único **ACTUALIZAR DISEÑO**.
+- Comando `AurumConectActualizar`: solicita la geometría seleccionada, crea una copia .3dm temporal y abre AURUM Render.
+- El documento original de Rhino no se modifica.
+- Cada actualización crea un archivo temporal nuevo; no sobrescribe transferencias anteriores.
 
-- Rhino 7 para Windows.
-- Script Editor de Rhino con IronPython.
-- Acceso a https://www.tallerdeljoyero.com/ y sesión iniciada en AURUM LAB.
+La carga automática del archivo en el visor web aún no está conectada. El comando informa claramente de esta limitación y muestra la ruta del .3dm preparado. No se presenta esta fase como sincronización completa.
 
-## Prueba manual
+## Compilar
 
-1. Abre una joya en Rhino 7.
-2. Abre el editor de scripts de Rhino y carga AurumRenderBridge.py.
-3. Ejecuta el script y selecciona los objetos que quieras preparar.
-4. Comprueba que se crea una copia en la carpeta temporal AURUM-Render-Bridge y que el documento original no cambia.
-5. Comprueba que se abre una pestaña del navegador con AURUM Render.
+Requisitos:
+- Windows.
+- Rhino 7 instalado.
+- Visual Studio 2022 o .NET Framework 4.8 Developer Pack.
+- RhinoCommon.dll y Eto.dll de la carpeta de instalación de Rhino 7.
 
-La ruta temporal se muestra al terminar. El script exporta únicamente los objetos seleccionados a un archivo nuevo; no guarda cambios sobre el archivo original.
+Desde esta carpeta:
 
-## Limitaciones conocidas
+```powershell
+dotnet build .\AurumConect.csproj -c Release
+```
 
-- MatrixGold 3.1 no ha sido validado en esta prueba; el script se ejecuta desde Rhino 7.
-- La transferencia web segura aún debe implementarse.
-- El modelo no se importa automáticamente al renderizador en esta fase.
-- No se deben incorporar claves de Supabase ni credenciales privadas al script del plugin.
+Si Rhino 7 está instalado en otra ruta:
 
-## Siguiente fase
+```powershell
+dotnet build .\AurumConect.csproj -c Release -p:Rhino7SystemDir="D:\\Rhinoceros 7\\System"
+```
 
-Implementar un flujo autenticado de carga temporal: el navegador o el servicio verifica la sesión del usuario, valida tamaño y tipo de archivo, recibe el modelo en almacenamiento temporal y genera un identificador de un solo uso y con vencimiento. La ruta autenticada de AURUM Render deberá consumir ese identificador y cargar el modelo mediante la lógica de carga existente, sin alterar shaders ni el motor de renderizado.
+El archivo resultante se genera en `bin/Release/net48/AurumConect.rhp`.
 
-Antes de habilitarlo en producción, probar el script en una instalación real de Rhino 7 y ejecutar typecheck, lint y build para los cambios web de la fase siguiente.
+## Instalar y abrir
+
+1. En Rhino 7 ejecuta `_PlugInManager` e instala `AurumConect.rhp`.
+2. Ejecuta el comando `AurumConect` para abrir el panel.
+3. Acopla el panel donde prefieras.
+4. Selecciona las piezas del diseño y pulsa **ACTUALIZAR DISEÑO**.
+
+## Transferencia directa — siguiente fase
+
+El siguiente paso es conectar el plugin con el editor autenticado mediante un canal local seguro de un solo uso. El navegador deberá recibir el .3dm y pasarlo a la función de carga existente en AURUM Render, sustituyendo el modelo anterior sin duplicarlo. Esta fase requiere cambios web y pruebas en Chrome/Windows; no se simula ni se considera completada aquí.
+
+No se incluyen claves de Supabase, tokens permanentes ni credenciales en el plugin.
