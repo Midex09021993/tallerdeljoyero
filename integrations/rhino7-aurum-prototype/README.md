@@ -50,7 +50,7 @@ En GitHub Actions se ejecuta automáticamente al cambiar los archivos de esta in
 4. Genera `AURUM-CONECT-Setup-Rhino7-1.0.0.exe`.
 5. Publica el EXE como artefacto y como versión beta de GitHub Releases.
 
-El instalador publicado es beta y no está firmado digitalmente. Windows SmartScreen puede mostrar una advertencia de editor desconocido hasta que AURUM LAB disponga de un certificado de firma de código.
+El instalador se considera beta hasta completar las pruebas físicas en Rhino 7 + MatrixGold 3.1. No está firmado digitalmente; Windows SmartScreen puede mostrar una advertencia de editor desconocido hasta que AURUM LAB disponga de un certificado de firma de código. La web habilita la descarga únicamente cuando detecta el EXE publicado con tamaño y tipo de contenido válidos.
 
 ## Referencias técnicas
 
