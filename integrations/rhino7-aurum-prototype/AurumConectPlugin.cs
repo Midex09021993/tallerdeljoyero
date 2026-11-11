@@ -4,9 +4,6 @@ using Rhino;
 using Rhino.PlugIns;
 using Rhino.UI;
 
-// Rhino 7 obtiene la identidad del complemento desde el GUID del ensamblado.
-[assembly: Guid("C8F4D8A1-5A2B-4D8E-9C31-7B7E2A4D9016")]
-
 namespace AurumConect
 {
     [Guid("C8F4D8A1-5A2B-4D8E-9C31-7B7E2A4D9016")]
