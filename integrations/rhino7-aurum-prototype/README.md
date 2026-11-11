@@ -1,29 +1,41 @@
 # AURUM CONECT — Rhino 7 / MatrixGold 3.1
 
-Complemento nativo para abrir un panel acoplable en Rhino 7 y preparar una copia temporal del diseño para AURUM Render.
+Complemento nativo para Rhino 7. Esta integración se mantiene separada del prototipo de Rhino 8.
 
-## Estado de esta entrega
+## Estado verificado del código
 
-**Base nativa del complemento implementada; transferencia directa todavía pendiente.**
-
-Incluye:
-- Plugin Rhino 7 (.rhp) en C# / .NET Framework 4.8.
+La base del complemento contiene:
+- Proyecto C# para .NET Framework 4.8, con referencias a RhinoCommon y Eto de Rhino 7.
 - Panel acoplable **AURUM CONECT**.
 - Comando `AurumConect` para abrir el panel.
 - Botón único **ACTUALIZAR DISEÑO**.
-- Comando `AurumConectActualizar`: solicita la geometría seleccionada, crea una copia .3dm temporal y abre AURUM Render.
+- Comando `AurumConectActualizar`, que copia la geometría seleccionada a un archivo .3dm temporal y abre AURUM Render.
 - El documento original de Rhino no se modifica.
-- Cada actualización crea un archivo temporal nuevo; no sobrescribe transferencias anteriores.
 
-La carga automática del archivo en el visor web aún no está conectada. El comando informa claramente de esta limitación y muestra la ruta del .3dm preparado. No se presenta esta fase como sincronización completa.
+**Limitación funcional actual:** todavía no hay transferencia directa al visor web. Después de actualizar, el usuario debe cargar manualmente el .3dm en AURUM Render. No se debe presentar esta versión como sincronización automática.
 
-## Compilar
+La compilación contra RhinoCommon/Eto y la prueba dentro de Rhino 7 deben ejecutarse en un equipo Windows que tenga Rhino 7 instalado. No se declara el complemento compilado ni probado hasta completar esas comprobaciones.
 
-Requisitos:
-- Windows.
-- Rhino 7 instalado.
-- Visual Studio 2022 o .NET Framework 4.8 Developer Pack.
-- RhinoCommon.dll y Eto.dll de la carpeta de instalación de Rhino 7.
+## Instalación asistida
+
+Ejecuta `Instalar-AURUM-Render-Bridge.bat`. El instalador:
+1. Detecta la carpeta System de Rhino 7 y comprueba RhinoCommon.dll y Eto.dll.
+2. Comprueba que exista el comando `dotnet`.
+3. Descarga los cuatro archivos fuente del complemento desde la rama `main`.
+4. Compila el proyecto en Release.
+5. Solo si la compilación termina correctamente, copia `AurumConect.rhp` a `%LOCALAPPDATA%\AurumLab\AurumConect\Rhino7`.
+
+Requisitos: Windows, Rhino 7 instalado y .NET SDK con soporte para compilar .NET Framework 4.8. Si faltan dependencias o la compilación falla, el instalador se detiene y no copia un complemento incompleto.
+
+## Instalación en Rhino
+
+1. Abre Rhino 7.
+2. Ejecuta `_PlugInManager`.
+3. Pulsa **Install** y selecciona `AurumConect.rhp` en la carpeta indicada por el instalador.
+4. Ejecuta `AurumConect` para abrir el panel.
+5. Selecciona las piezas del diseño y pulsa **ACTUALIZAR DISEÑO**.
+
+## Compilación manual
 
 Desde esta carpeta:
 
@@ -31,23 +43,16 @@ Desde esta carpeta:
 dotnet build .\AurumConect.csproj -c Release
 ```
 
-Si Rhino 7 está instalado en otra ruta:
+Si Rhino 7 está en otra ruta:
 
 ```powershell
-dotnet build .\AurumConect.csproj -c Release -p:Rhino7SystemDir="D:\\Rhinoceros 7\\System"
+dotnet build .\AurumConect.csproj -c Release -p:Rhino7SystemDir="D:\Rhinoceros 7\System"
 ```
 
-El archivo resultante se genera en `bin/Release/net48/AurumConect.rhp`.
+El resultado esperado es `bin/Release/net48/AurumConect.rhp`.
 
-## Instalar y abrir
+## Siguiente fase: transferencia directa
 
-1. En Rhino 7 ejecuta `_PlugInManager` e instala `AurumConect.rhp`.
-2. Ejecuta el comando `AurumConect` para abrir el panel.
-3. Acopla el panel donde prefieras.
-4. Selecciona las piezas del diseño y pulsa **ACTUALIZAR DISEÑO**.
+La siguiente fase debe conectar el plugin con la sesión autenticada del editor mediante un canal local de un solo uso. El navegador recibirá el .3dm y lo entregará a la función de carga existente de AURUM Render, reemplazando el modelo anterior en lugar de duplicarlo.
 
-## Transferencia directa — siguiente fase
-
-El siguiente paso es conectar el plugin con el editor autenticado mediante un canal local seguro de un solo uso. El navegador deberá recibir el .3dm y pasarlo a la función de carga existente en AURUM Render, sustituyendo el modelo anterior sin duplicarlo. Esta fase requiere cambios web y pruebas en Chrome/Windows; no se simula ni se considera completada aquí.
-
-No se incluyen claves de Supabase, tokens permanentes ni credenciales en el plugin.
+Ese canal requiere validación de origen, token efímero, límite de tamaño, consumo único y pruebas reales en Chrome/Windows. No se deben introducir secretos permanentes ni exponer archivos 3DM públicamente.
