@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build-installer:
@@ -54,3 +54,13 @@ jobs:
           path: integrations/rhino7-aurum-prototype/installer/Output/AURUM-CONECT-Setup-Rhino7-1.0.0.exe
           if-no-files-found: error
           retention-days: 30
+
+      - name: Publish beta installer release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: aurum-conect-rhino7-${{ github.run_number }}
+          name: AURUM CONECT para Rhino 7 · Beta ${{ github.run_number }}
+          prerelease: true
+          make_latest: true
+          files: integrations/rhino7-aurum-prototype/installer/Output/AURUM-CONECT-Setup-Rhino7-1.0.0.exe
+          fail_on_unmatched_files: true
