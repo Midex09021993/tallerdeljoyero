@@ -33,6 +33,7 @@ const tarjetaBase =
 
 function HerramientasPage() {
   const [herramientaActiva, setHerramientaActiva] = useState<HerramientaInterna>(null);
+  const [mostrarIntroAurumRender, setMostrarIntroAurumRender] = useState(false);
   const [archivoInicial, setArchivoInicial] = useState<File | null>(null);
   const [archivoOrigen, setArchivoOrigen] = useState<{ ruta: string; proyecto: string } | null>(null);
   const [errorArchivoInicial, setErrorArchivoInicial] = useState<string | null>(null);
@@ -134,12 +135,14 @@ function HerramientasPage() {
         <section aria-label="Seleccionar herramienta" className="relative rounded-2xl border border-border bg-card p-2 shadow-card">
           <button type="button" onClick={() => desplazarBarra(-1)} aria-label="Desplazar herramientas a la izquierda" className="absolute left-2 top-1/2 z-10 grid size-8 -translate-y-1/2 place-items-center rounded-full border border-border bg-card/95 text-foreground shadow-md backdrop-blur transition hover:border-gold/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"><ChevronLeft className="size-4" /></button>
           <div ref={barraHerramientasRef} className="scrollbar-hidden flex gap-2 overflow-x-auto scroll-smooth px-9 [overscroll-behavior-x:contain] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <Link
-              to="/aurum-render"
-              className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border border-border px-3.5 text-sm font-medium text-muted-foreground transition hover:border-gold/50 hover:text-foreground"
+            <button
+              type="button"
+              onClick={() => { setHerramientaActiva(null); setMostrarIntroAurumRender(true); }}
+              aria-pressed={mostrarIntroAurumRender}
+              className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border px-3.5 text-sm font-medium transition hover:border-gold/50 hover:text-foreground ${mostrarIntroAurumRender ? "border-gold/40 bg-gold/10 text-gold" : "border-border text-muted-foreground"}`}
             >
               <Gem className="size-4 text-gold" /> Aurum Render
-            </Link>
+            </button>
             <Link
               to="/transfer"
               className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border border-border px-3.5 text-sm font-medium text-muted-foreground transition hover:border-gold/50 hover:text-foreground"
@@ -167,7 +170,47 @@ function HerramientasPage() {
           <button type="button" onClick={() => desplazarBarra(1)} aria-label="Desplazar herramientas a la derecha" className="absolute right-2 top-1/2 z-10 grid size-8 -translate-y-1/2 place-items-center rounded-full border border-border bg-card/95 text-foreground shadow-md backdrop-blur transition hover:border-gold/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"><ChevronRight className="size-4" /></button>
         </section>
 
-        {herramientaActiva ? (
+        {mostrarIntroAurumRender ? (
+          <section className="mx-auto w-full max-w-[1200px] overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+            <div className="relative overflow-hidden border-b border-border bg-gradient-to-br from-gold/10 via-card to-card px-6 py-10 sm:px-10 sm:py-14">
+              <div className="max-w-3xl">
+                <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-gold">Aurum Lab · Visualización 3D para joyería</p>
+                <h2 className="mt-3 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">AURUM RENDER</h2>
+                <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
+                  Lleva tus diseños de joyería a una experiencia de visualización 3D. Inspecciona tus piezas, explora sus materiales y presenta cada detalle desde distintos ángulos.
+                </p>
+              </div>
+              <div className="pointer-events-none absolute -right-12 -top-12 hidden size-64 rounded-full border border-gold/20 sm:block" />
+              <div className="pointer-events-none absolute -right-3 -top-3 hidden size-44 rounded-full border border-gold/20 sm:block" />
+            </div>
+            <div className="grid gap-6 p-6 sm:grid-cols-3 sm:p-8">
+              <article>
+                <div className="mb-3 grid size-10 place-items-center rounded-xl border border-gold/25 bg-gold/10 text-gold"><Gem className="size-5" /></div>
+                <h3 className="font-semibold">Materiales de joyería</h3>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">Visualiza metales y gemas con materiales especializados para apreciar sus reflejos, tonos y apariencia.</p>
+              </article>
+              <article>
+                <div className="mb-3 grid size-10 place-items-center rounded-xl border border-gold/25 bg-gold/10 text-gold"><Sparkles className="size-5" /></div>
+                <h3 className="font-semibold">Iluminación y acabado</h3>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">Explora la respuesta visual de la pieza mediante entornos e iluminación pensados para la presentación de joyas.</p>
+              </article>
+              <article>
+                <div className="mb-3 grid size-10 place-items-center rounded-xl border border-gold/25 bg-gold/10 text-gold"><MonitorDown className="size-5" /></div>
+                <h3 className="font-semibold">Inspección del diseño</h3>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">Rota y observa el modelo para revisar su volumen, proporciones y detalles desde diferentes perspectivas.</p>
+              </article>
+            </div>
+            <div className="flex flex-col items-start justify-between gap-4 border-t border-border bg-muted/20 px-6 py-5 sm:flex-row sm:items-center sm:px-8">
+              <div>
+                <h3 className="font-semibold">¿Listo para visualizar tu diseño?</h3>
+                <p className="mt-1 text-sm text-muted-foreground">Abre Aurum Render cuando hayas terminado de conocer sus funciones.</p>
+              </div>
+              <Link to="/aurum-render" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold">
+                <Gem className="size-4" /> Ir a Aurum Render <ChevronRight className="size-4" />
+              </Link>
+            </div>
+          </section>
+        ) : herramientaActiva ? (
           <section className="mx-auto min-h-[680px] w-full max-w-[1200px] overflow-hidden rounded-2xl border border-border bg-card p-3 shadow-card sm:p-5 lg:p-6">
             <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
               <div>
