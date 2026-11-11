@@ -19,7 +19,9 @@ export type AurumAnalyticsEvent =
   | "registration_completed"
   | "registration_failed"
   | "contact_started"
-  | "contact_submitted";
+  | "contact_submitted"
+  | "demo_request_started"
+  | "demo_request_submitted";
 
 const SESSION_KEY = "aurum_analytics_session";
 const LOGIN_STARTED_KEY = "aurum_login_started";
