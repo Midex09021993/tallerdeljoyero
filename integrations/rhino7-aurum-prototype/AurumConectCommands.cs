@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.IO;
 using Rhino;
 using Rhino.DocObjects;
@@ -76,24 +75,13 @@ namespace AurumConect
                 return Rhino.Commands.Result.Failure;
             }
 
-            try
-            {
-                Process.Start(new ProcessStartInfo
-                {
-                    FileName = "https://www.tallerdeljoyero.com/aurum-render",
-                    UseShellExecute = true
-                });
-            }
-            catch (Exception exception)
-            {
-                RhinoApp.WriteLine("AURUM CONECT: archivo preparado, pero no se pudo abrir el navegador: {0}", exception.Message);
-            }
+            AurumConectPanel.OpenAurumLogin();
 
             RhinoApp.WriteLine(
                 "AURUM CONECT: copia temporal preparada ({0} objetos): {1}",
                 exported, outputPath);
             RhinoApp.WriteLine(
-                "La carga en el visor todavía requiere seleccionar el archivo. La conexión directa se implementará en la siguiente fase.");
+                "Inicia sesión en AURUM LAB para abrir Aurum Render. La transferencia directa del .3dm aún está pendiente.");
             return Rhino.Commands.Result.Success;
         }
     }
