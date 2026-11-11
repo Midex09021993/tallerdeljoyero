@@ -86,9 +86,13 @@ foreach ($assembly in $webViewAssemblies) {
   Copy-Item -Force $assembly.FullName $BundleDir
 }
 
-$nativeLoader = Get-ChildItem (Join-Path $PSScriptRoot "bin\Release\net48") -Recurse -File -Filter "WebView2Loader.dll" | Select-Object -First 1
+$nativeLoaders = @(Get-ChildItem (Join-Path $PSScriptRoot "bin\Release\net48") -Recurse -File -Filter "WebView2Loader.dll")
+$nativeLoader = $nativeLoaders | Where-Object { $_.FullName -match "[\\/]win-x64[\\/]native[\\/]" } | Select-Object -First 1
 if (-not $nativeLoader) {
-  Fail "No se encontró WebView2Loader.dll. No se publicará un paquete incompleto."
+  $nativeLoader = $nativeLoaders | Where-Object { $_.FullName -match "[\\/]x64[\\/]" } | Select-Object -First 1
+}
+if (-not $nativeLoader) {
+  Fail "No se encontró WebView2Loader.dll para Windows x64. No se publicará un paquete incompleto."
 }
 Copy-Item -Force $nativeLoader.FullName (Join-Path $BundleDir "WebView2Loader.dll")
 
