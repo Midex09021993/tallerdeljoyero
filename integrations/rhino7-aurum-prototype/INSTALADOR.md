@@ -12,9 +12,9 @@ El complemento se compila para Rhino 7 mediante RhinoCommon 7.27 y .NET Framewor
 
 ## Instalación
 
-1. Descarga `AurumConect-Rhino7-1.0.0.zip` y extrae todo su contenido en una carpeta permanente, por ejemplo `Documentos\\AurumLab\\Plugins\\AurumConect`.
-2. Conserva el `.RHP`, `Microsoft.Web.WebView2.Core.dll`, `Microsoft.Web.WebView2.WinForms.dll` y `WebView2Loader.dll` juntos en esa carpeta.
-3. Si Windows bloquea el `.RHP`, abre Propiedades y marca **Desbloquear**.
+1. Descarga `AurumConect-Rhino7-1.0.0.zip`. Si Windows muestra la casilla **Desbloquear** en Propiedades del ZIP, márcala antes de extraer.
+2. Extrae todo su contenido en una carpeta permanente, por ejemplo `Documentos\\AurumLab\\Plugins\\AurumConect`.
+3. Conserva el `.RHP`, `Microsoft.Web.WebView2.Core.dll`, `Microsoft.Web.WebView2.WinForms.dll` y `WebView2Loader.dll` juntos en esa carpeta.
 4. Abre Rhino 7 y ejecuta `_PlugInManager`.
 5. Pulsa **Install / Instalar**, selecciona `AurumConect-Rhino7-1.0.0.rhp` desde la carpeta extraída y confirma.
 6. Reinicia Rhino y ejecuta `AurumConect` para abrir el panel.
