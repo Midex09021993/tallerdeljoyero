@@ -5,6 +5,8 @@ $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
 $Project = Join-Path $PSScriptRoot "AurumConect.csproj"
 $DownloadDir = Join-Path $RepoRoot "public\downloads"
 $Expected = "AurumConect-Rhino7-1.0.0.rhp"
+$BundleName = "AurumConect-Rhino7-1.0.0.zip"
+$BundleDir = Join-Path $PSScriptRoot "bundle"
 
 function Fail($Message) {
   Write-Host ""
@@ -69,9 +71,40 @@ if ($bytes[0] -ne 0x4D -or $bytes[1] -ne 0x5A) { Fail "El archivo no tiene una c
 New-Item -ItemType Directory -Force -Path $DownloadDir | Out-Null
 $Published = Join-Path $DownloadDir $Expected
 Copy-Item -Force $Built $Published
-Write-Host "Validación correcta: $([Math]::Round($bytes.Length / 1KB, 1)) KB" -ForegroundColor Green
 
-& git -C $RepoRoot add -- $Published
+# El visor Chromium necesita las bibliotecas administradas de WebView2 y su loader nativo.
+# Se distribuyen juntas con el .RHP para que Rhino pueda resolverlas desde la misma carpeta.
+if (Test-Path $BundleDir) { Remove-Item -Recurse -Force $BundleDir }
+New-Item -ItemType Directory -Force -Path $BundleDir | Out-Null
+Copy-Item -Force $Built (Join-Path $BundleDir $Expected)
+
+$webViewAssemblies = Get-ChildItem (Join-Path $PSScriptRoot "bin\Release\net48") -File -Filter "Microsoft.Web.WebView2*.dll"
+if (-not $webViewAssemblies -or $webViewAssemblies.Count -lt 2) {
+  Fail "No se encontraron las bibliotecas administradas WebView2 en la salida de compilación."
+}
+foreach ($assembly in $webViewAssemblies) {
+  Copy-Item -Force $assembly.FullName $BundleDir
+}
+
+$nativeLoader = Get-ChildItem (Join-Path $PSScriptRoot "bin\Release\net48") -Recurse -File -Filter "WebView2Loader.dll" | Select-Object -First 1
+if (-not $nativeLoader) {
+  Fail "No se encontró WebView2Loader.dll. No se publicará un paquete incompleto."
+}
+Copy-Item -Force $nativeLoader.FullName (Join-Path $BundleDir "WebView2Loader.dll")
+
+$BundlePath = Join-Path $DownloadDir $BundleName
+if (Test-Path $BundlePath) { Remove-Item -Force $BundlePath }
+Compress-Archive -Path (Join-Path $BundleDir "*") -DestinationPath $BundlePath -CompressionLevel Optimal
+
+$bundleFiles = Get-ChildItem $BundleDir -File
+if (-not ($bundleFiles.Name -contains "AurumConect-Rhino7-1.0.0.rhp") -or
+    -not ($bundleFiles.Name -contains "WebView2Loader.dll")) {
+  Fail "El paquete de instalación no contiene todos los archivos requeridos."
+}
+
+Write-Host "Validación correcta: .RHP $([Math]::Round($bytes.Length / 1KB, 1)) KB; paquete WebView2 $([Math]::Round((Get-Item $BundlePath).Length / 1KB, 1)) KB" -ForegroundColor Green
+
+& git -C $RepoRoot add -- $Published $BundlePath
 if ($LASTEXITCODE -ne 0) { Fail "No se pudo preparar el archivo para Git." }
 & git -C $RepoRoot commit -m "Publish AURUM CONECT Rhino 7 plugin"
 if ($LASTEXITCODE -ne 0) { Fail "No se pudo crear el commit de publicación." }
@@ -80,7 +113,8 @@ if ($LASTEXITCODE -ne 0) { Fail "El complemento se compiló, pero no se pudo sub
 
 Write-Host ""
 Write-Host 'PUBLICACION ENVIADA A MAIN' -ForegroundColor Green
-Write-Host "Archivo: public/downloads/$Expected"
+Write-Host "Complemento: public/downloads/$Expected"
+Write-Host "Paquete recomendado: public/downloads/$BundleName"
 Write-Host 'La web podra servirlo cuando termine de desplegar el commit.'
-Write-Host "URL: https://www.tallerdeljoyero.com/downloads/$Expected"
+Write-Host "URL: https://www.tallerdeljoyero.com/downloads/$BundleName"
 Read-Host -Prompt 'Presiona Enter para cerrar'
