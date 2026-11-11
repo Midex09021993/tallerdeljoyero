@@ -8,7 +8,8 @@ $files = @(
     "AurumConect.csproj",
     "AurumConectPlugin.cs",
     "AurumConectPanel.cs",
-    "AurumConectCommands.cs"
+    "AurumConectCommands.cs",
+    "AurumConectLocalServer.cs"
 )
 
 function Find-Rhino7System {
@@ -91,8 +92,9 @@ USO:
 Selecciona la geometría en MatrixGold y pulsa ACTUALIZAR DISEÑO.
 
 ESTADO FUNCIONAL:
-Esta compilación prepara una copia temporal .3dm y abre AURUM Render.
-La transferencia automática directa al visor web todavía no está habilitada.
+Esta compilación prepara una copia temporal .3dm y un canal local efímero.
+La recepción se completa desde el botón de AURUM RENDER tras iniciar sesión.
+El canal solo escucha en 127.0.0.1, expira en 3 minutos y admite un único uso.
 "@
     Set-Content -LiteralPath (Join-Path $installDir "LEEME.txt") -Value $guide -Encoding UTF8
 
