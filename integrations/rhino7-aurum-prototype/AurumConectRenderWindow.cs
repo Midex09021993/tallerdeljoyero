@@ -60,7 +60,11 @@ namespace AurumConect
                 }
 
                 _instance = new AurumConectRenderWindow(url);
-                _instance.Show();
+                IntPtr rhinoHandle = RhinoApp.MainWindowHandle();
+                if (rhinoHandle != IntPtr.Zero)
+                    _instance.Show(new RhinoWindowOwner(rhinoHandle));
+                else
+                    _instance.Show();
             }
             catch (Exception exception)
             {
@@ -102,6 +106,12 @@ namespace AurumConect
                     MessageBoxIcon.Warning);
                 AurumConectPanel.OpenUrl(_initialUrl);
             }
+        }
+
+        private sealed class RhinoWindowOwner : IWin32Window
+        {
+            internal RhinoWindowOwner(IntPtr handle) { Handle = handle; }
+            public IntPtr Handle { get; private set; }
         }
 
         private void Navigate(string url)
