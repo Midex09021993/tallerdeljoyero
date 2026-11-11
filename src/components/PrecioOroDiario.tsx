@@ -245,11 +245,6 @@ export function PrecioOroDiario() {
             <div className="mt-6 border-t border-[#eadca8]/70 pt-5 text-xs font-medium text-slate-600">
               <span className="inline-flex items-center gap-2"><ShieldCheck className="size-4 text-[#9a7400]" /> Gratis · Sin registro</span>
             </div>
-            <div className="mt-7 rounded-2xl border border-[#e8d79e]/80 bg-white/80 p-4 shadow-sm">
-              <p className="text-[10px] font-bold uppercase tracking-[.14em] text-slate-500">Sobre esta cotización</p>
-              <p className="mt-2 text-sm leading-6 text-slate-600">La referencia se consulta a través de XAUS y se expresa por gramo de oro fino. El valor puede variar con el mercado internacional y el tipo de cambio.</p>
-              <p className="mt-2 text-[10px] leading-5 text-slate-500">El precio teórico del metal no equivale necesariamente al precio de compra o venta de una joya.</p>
-            </div>
           </div>
 
           <div className="overflow-hidden rounded-[1.6rem] border border-[#e8d79e] bg-white shadow-[0_24px_70px_rgba(77,60,12,.12)]">
