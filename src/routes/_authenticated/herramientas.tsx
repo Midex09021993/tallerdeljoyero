@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { CalculadoraAleacionOro } from "@/components/CalculadoraAleacionOro";
 import { ConversorTallasAnillo } from "@/components/ConversorTallasAnillo";
 import { AppShell } from "@/components/AppShell";
-import { ArrowLeft, ChevronLeft, ChevronRight, Calculator, Gem, Ruler, Scale, Send, CircleDot, Sparkles } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Calculator, Gem, Ruler, Scale, Send, CircleDot, Sparkles, Download, MonitorDown, Info } from "lucide-react";
 import { VisorPesoJoyeria } from "@/components/VisorPesoJoyeria";
 import { CalculadoraYeso } from "@/components/CalculadoraYesoAgua";
 import { CalculadoraPesoGemas } from "@/components/CalculadoraPesoGemas";
@@ -120,6 +120,36 @@ function HerramientasPage() {
       atrasMovil={{ to: "/inicio" }}
     >
       <div className="mx-auto w-full max-w-[1440px] space-y-5">
+        <section aria-labelledby="aurum-conect-title" className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+          <div className="grid gap-5 p-5 sm:p-6 lg:grid-cols-[1fr_auto] lg:items-center">
+            <div className="flex items-start gap-4">
+              <span className="grid size-12 shrink-0 place-items-center rounded-xl border border-gold/30 bg-gold/10 text-gold"><MonitorDown className="size-6" /></span>
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold">Integración CAD · Rhino 7</p>
+                <h2 id="aurum-conect-title" className="mt-1 text-lg font-semibold">AURUM CONECT</h2>
+                <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">Conecta MatrixGold 3.1 con AURUM RENDER. Descarga el complemento para preparar y transferir el diseño seleccionado desde Rhino 7.</p>
+                <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-semibold text-muted-foreground">
+                  <span className="rounded-full border border-border px-2.5 py-1">MatrixGold 3.1</span>
+                  <span className="rounded-full border border-border px-2.5 py-1">Rhino 7</span>
+                  <span className="rounded-full border border-border px-2.5 py-1">Windows</span>
+                  <span className="rounded-full border border-gold/30 bg-gold/10 px-2.5 py-1 text-gold">Beta</span>
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-col gap-2 sm:flex-row lg:flex-col">
+              <a href="https://raw.githubusercontent.com/Midex09021993/tallerdeljoyero/main/integrations/rhino7-aurum-prototype/Instalar-AURUM-Render-Bridge.bat" download="Instalar-AURUM-CONECT.bat" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold">
+                <Download className="size-4" /> Descargar instalador
+              </a>
+              <a href="https://github.com/Midex09021993/tallerdeljoyero/blob/main/integrations/rhino7-aurum-prototype/INSTALADOR.md" target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-border px-4 py-2 text-xs font-semibold text-muted-foreground transition hover:border-gold/50 hover:text-foreground">
+                Ver guía de instalación <ArrowLeft className="size-3.5 rotate-180" />
+              </a>
+            </div>
+          </div>
+          <div className="flex items-start gap-2 border-t border-border bg-muted/30 px-5 py-3 text-xs leading-5 text-muted-foreground sm:px-6">
+            <Info className="mt-0.5 size-4 shrink-0 text-gold" />
+            <p>Requiere Rhino 7 y .NET SDK con soporte para .NET Framework 4.8. Esta versión beta debe probarse en el equipo antes de utilizarse en producción; la transferencia y la conservación de todos los ajustes aún requieren validación.</p>
+          </div>
+        </section>
         <section aria-label="Seleccionar herramienta" className="relative rounded-2xl border border-border bg-card p-2 shadow-card">
           <button type="button" onClick={() => desplazarBarra(-1)} aria-label="Desplazar herramientas a la izquierda" className="absolute left-2 top-1/2 z-10 grid size-8 -translate-y-1/2 place-items-center rounded-full border border-border bg-card/95 text-foreground shadow-md backdrop-blur transition hover:border-gold/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"><ChevronLeft className="size-4" /></button>
           <div ref={barraHerramientasRef} className="scrollbar-hidden flex gap-2 overflow-x-auto scroll-smooth px-9 [overscroll-behavior-x:contain] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
