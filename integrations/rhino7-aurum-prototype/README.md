@@ -8,11 +8,12 @@ La base del complemento contiene:
 - Proyecto C# para .NET Framework 4.8, con referencias a RhinoCommon y Eto de Rhino 7.
 - Panel acoplable **AURUM CONECT**.
 - Comando `AurumConect` para abrir el panel.
-- Botón único **ACTUALIZAR DISEÑO**.
+- Botón **CONECTAR CON AURUM LAB**, que abre el inicio de sesión oficial en el navegador.
+- Botón **ACTUALIZAR DISEÑO**, que prepara la copia temporal y solicita el acceso al visor.
 - Comando `AurumConectActualizar`, que copia la geometría seleccionada a un archivo .3dm temporal y abre AURUM Render.
 - El documento original de Rhino no se modifica.
 
-**Limitación funcional actual:** todavía no hay transferencia directa al visor web. Después de actualizar, el usuario debe cargar manualmente el .3dm en AURUM Render. No se debe presentar esta versión como sincronización automática.
+**Limitación funcional actual:** el inicio de sesión ya reutiliza la autenticación oficial de AURUM LAB y devuelve al usuario directamente a Aurum Render. El complemento no almacena contraseñas. Todavía no existe transferencia directa del .3dm al visor; el archivo temporal debe cargarse manualmente. No se debe presentar esta versión como sincronización automática.
 
 La compilación contra RhinoCommon/Eto y la prueba dentro de Rhino 7 deben ejecutarse en un equipo Windows que tenga Rhino 7 instalado. No se declara el complemento compilado ni probado hasta completar esas comprobaciones.
 
@@ -33,7 +34,8 @@ Requisitos: Windows, Rhino 7 instalado y .NET SDK con soporte para compilar .NET
 2. Ejecuta `_PlugInManager`.
 3. Pulsa **Install** y selecciona `AurumConect.rhp` en la carpeta indicada por el instalador.
 4. Ejecuta `AurumConect` para abrir el panel.
-5. Selecciona las piezas del diseño y pulsa **ACTUALIZAR DISEÑO**.
+5. Pulsa **CONECTAR CON AURUM LAB** e inicia sesión en el navegador oficial (si aún no tienes una sesión activa).
+6. Regresa a Rhino, selecciona las piezas del diseño y pulsa **ACTUALIZAR DISEÑO**.
 
 ## Compilación manual
 
