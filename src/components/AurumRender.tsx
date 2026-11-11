@@ -2106,7 +2106,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           modelo?.traverse((x:any)=>{if(x.uuid===id) encontrado=x;});
           if(encontrado) { seleccionarMalla(encontrado); invalidateRenderRef.current?.(); }
         },
-        fullscreen:()=>nodo.requestFullscreen?.(),
+        fullscreen:()=>{if(document.fullscreenElement===nodo){void document.exitFullscreen();}else{void nodo.requestFullscreen?.();}},
         vista:(id:VistaId)=>{ camaraVista(id); invalidateRenderRef.current?.(); },
         calidad:aplicarCalidadRender,
         exportGLB:async(options:{download?:boolean}={})=>{
@@ -4334,7 +4334,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             </div>}
             {!embedded && <div className="absolute bottom-6 right-6 z-20 flex gap-1 rounded-xl border border-white/35 bg-white/75 p-1 text-black/55 shadow-sm backdrop-blur-2xl">
               <span className="rounded-lg border border-black/10 px-2 py-1 text-[9px]">HDRI</span><span className="rounded-lg border border-black/10 px-2 py-1 text-[9px]">PBR</span><span className="rounded-lg border border-black/10 px-2 py-1 text-[9px]">4K</span>
-              <button type="button" onClick={()=>apiRef.current?.fullscreen()} className="grid size-7 place-items-center rounded-lg bg-[#17191c] text-white"><Expand className="size-3.5"/></button>
+              <button type="button" title={isViewerFullscreen?"Restaurar visor":"Maximizar visor"} aria-label={isViewerFullscreen?"Restaurar visor":"Maximizar visor"} aria-pressed={isViewerFullscreen} onClick={()=>apiRef.current?.fullscreen()} className="grid size-7 place-items-center rounded-lg bg-[#17191c] text-white"><Maximize2 className="size-3.5"/></button>
             </div>}
 
             {!embedded && <div className={"absolute right-5 top-1/2 z-30 -translate-y-1/2 transition-opacity duration-200 "+(isViewerFullscreen?"opacity-0 hover:opacity-100 focus-within:opacity-100":"opacity-100")}>
@@ -4344,7 +4344,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 <button type="button" title="Reiniciar cámara" onClick={()=>apiRef.current?.reset()} className="grid size-9 place-items-center rounded-xl text-black/70 hover:bg-white/70"><RotateCcw className="size-[17px]"/></button>
                 <button type="button" title="Profundidad de campo en el visor" aria-label="Ajustes de profundidad de campo en el visor" aria-expanded={liveDofOpen} onClick={()=>{setLiveDofOpen(v=>!v);setLibraryMenuOpen(false);setQualityOpen(false);}} className={"grid size-9 place-items-center rounded-xl text-[10px] font-semibold transition-colors "+(liveDof?"bg-[#d4af37]/20 text-[#92743b]":liveDofOpen?"bg-white/80 text-[#92743b]":"text-black/70 hover:bg-white/70")}>DOF</button>
                 <button type="button" title={autoRotate360 ? "Detener rotación 360°" : "Activar rotación 360°"} aria-label={autoRotate360 ? "Detener rotación 360 grados" : "Activar rotación 360 grados"} aria-pressed={autoRotate360} onClick={()=>{const next=!autoRotate360;setAutoRotate360(next);if(orbitControlsRef.current){orbitControlsRef.current.autoRotate=next;orbitControlsRef.current.autoRotateSpeed=0.8;orbitControlsRef.current.update?.();}invalidateRenderRef.current?.();}} className={"grid size-9 place-items-center rounded-xl transition-colors "+(autoRotate360 ? "bg-[#d4af37]/20 text-[#92743b]" : "text-black/70 hover:bg-white/70")}><span className="text-[10px] font-semibold">360°</span></button>
-                <button type="button" title="Pantalla completa" onClick={()=>apiRef.current?.fullscreen()} className="grid size-9 place-items-center rounded-xl text-black/70 hover:bg-white/70"><Expand className="size-[17px]"/></button>
+                <button type="button" title={isViewerFullscreen?"Restaurar visor":"Maximizar visor"} aria-label={isViewerFullscreen?"Restaurar visor":"Maximizar visor"} aria-pressed={isViewerFullscreen} onClick={()=>apiRef.current?.fullscreen()} className="grid size-9 place-items-center rounded-xl text-black/70 hover:bg-white/70">{isViewerFullscreen?<Minimize2 className="size-[17px]"/>:<Maximize2 className="size-[17px]"/>}</button>
               </div>
             </div>}
             {!embedded && liveDofOpen&&<div className="absolute right-[70px] top-[calc(50%+52px)] z-40 w-[min(270px,calc(100%-5rem))] rounded-2xl border border-black/10 bg-[#fbfaf7]/95 p-3 text-[#292824] shadow-xl backdrop-blur-2xl">
