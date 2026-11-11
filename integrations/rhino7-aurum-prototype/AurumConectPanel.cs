@@ -85,17 +85,18 @@ namespace AurumConect
 
         internal static void OpenAurumLogin()
         {
+            OpenUrl("https://www.tallerdeljoyero.com/auth?returnTo=aurum-render");
+        }
+
+        internal static void OpenUrl(string url)
+        {
             try
             {
-                Process.Start(new ProcessStartInfo
-                {
-                    FileName = "https://www.tallerdeljoyero.com/auth?returnTo=aurum-render",
-                    UseShellExecute = true
-                });
+                Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true });
             }
             catch (Exception exception)
             {
-                RhinoApp.WriteLine("AURUM CONECT: no se pudo abrir el inicio de sesión: {0}", exception.Message);
+                RhinoApp.WriteLine("AURUM CONECT: no se pudo abrir el navegador: {0}", exception.Message);
             }
         }
 
