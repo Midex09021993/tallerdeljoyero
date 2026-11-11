@@ -19,25 +19,6 @@ export const Route = createFileRoute("/_authenticated/herramientas")({
   component: HerramientasPage,
 });
 
-function ProximamenteCard({ titulo, descripcion }: { titulo: string; descripcion: string }) {
-  return (
-    <article className="rounded-2xl border border-border bg-card p-5 shadow-card">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
-            Próximamente
-          </span>
-          <h3 className="mt-2 text-lg font-semibold">{titulo}</h3>
-          <p className="mt-1 text-sm text-muted-foreground">{descripcion}</p>
-        </div>
-        <span className="shrink-0 rounded-full border border-border bg-surface-muted px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          En desarrollo
-        </span>
-      </div>
-    </article>
-  );
-}
-
 type HerramientaInterna =
   | "yeso"
   | "aleacion"
@@ -222,14 +203,6 @@ function HerramientasPage() {
           </section>
         )}
 
-        <section className="border-t border-border pt-5" aria-labelledby="herramientas-proximamente">
-          <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Próximamente</p>
-          <h2 id="herramientas-proximamente" className="mt-1 text-lg font-semibold">Nuevas herramientas</h2>
-          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <ProximamenteCard titulo="Calculadora de volumen" descripcion="Cálculo de volumen para piezas y componentes de joyería." />
-            <ProximamenteCard titulo="Conversor de medidas" descripcion="Conversión rápida entre unidades utilizadas en joyería." />
-          </div>
-        </section>
       </div>
     </AppShell>
   );
