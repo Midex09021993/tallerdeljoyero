@@ -198,7 +198,7 @@ function HerramientasPage() {
                       <div className="flex flex-col gap-2 sm:flex-row lg:flex-col lg:min-w-[250px]">
                         {paqueteAurumConectDisponible ? (
                           <a
-                            href="https://github.com/Midex09021993/aurum-conect-build/releases/download/v1.0.0/AURUM-CONECT-Setup-Rhino7-1.0.0.exe"
+                            href="https://github.com/Midex09021993/aurum-conect-build/releases/download/v1.0.0/AurumConect-Rhino7-1.0.0.rhp"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
@@ -252,9 +252,8 @@ function HerramientasPage() {
                             <li><strong className="text-foreground">1.</strong> Descarga <code className="rounded bg-muted px-1.5 py-0.5 text-xs">AurumConect-Rhino7-1.0.0.rhp</code> en una carpeta permanente de tu equipo.</li>
                             <li><strong className="text-foreground">2.</strong> Abre Rhino 7 y escribe <code className="rounded bg-muted px-1.5 py-0.5 text-xs">_PlugInManager</code> en la línea de comandos.</li>
                             <li><strong className="text-foreground">3.</strong> En el administrador, selecciona la opción para instalar un complemento y elige el archivo .RHP descargado.</li>
-                            <li><strong className="text-foreground">4.</strong> Cuando Rhino termine de cargar el complemento, ejecuta el comando <code className="rounded bg-muted px-1.5 py-0.5 text-xs">AurumConect</code>.</li>
-                            <li><strong className="text-foreground">5.</strong> Ejecuta <code className="rounded bg-muted px-1.5 py-0.5 text-xs">AurumConect</code> en la línea de comandos para abrir el panel AURUM CONECT.</li>
-                            <li><strong className="text-foreground">6.</strong> Pulsa «ABRIR AURUM RENDER» para abrir el visor Chromium vinculado a Rhino. Para enviar una selección, pulsa «ENVIAR DISEÑO».</li>
+                            <li><strong className="text-foreground">4.</strong> Ejecuta <code className="rounded bg-muted px-1.5 py-0.5 text-xs">AurumConect</code> en la línea de comandos para abrir el panel AURUM CONECT.</li>
+                            <li><strong className="text-foreground">5.</strong> Pulsa «ABRIR AURUM RENDER» para abrir el visor integrado. Para enviar una selección, pulsa «ENVIAR DISEÑO».</li>
                           </ol>
                         </div>
                       </div>
