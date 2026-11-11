@@ -45,10 +45,11 @@ namespace AurumConect
                     continue;
 
                 var geometryCopy = source.Geometry.Duplicate();
-                var attributesCopy = source.Attributes.Duplicate();
                 if (geometryCopy == null) continue;
 
-                exportDoc.Objects.Add(geometryCopy, attributesCopy);
+                // Rhino 7 File3dmObjectTable expone Add(GeometryBase) para
+                // esta ruta; no dispone del overload de dos argumentos.
+                exportDoc.Objects.Add(geometryCopy);
                 exported++;
             }
 
