@@ -364,9 +364,27 @@ function InicioPublico() {
     const targets = Array.from(root.querySelectorAll<HTMLElement>("[data-aurum-reveal]"));
     root.classList.add("aurum-motion-ready");
 
+    // Stagger only nearby siblings so the reveal feels intentional without delaying distant sections.
+    const siblingGroups = new Map<HTMLElement, HTMLElement[]>();
+    targets.forEach((target) => {
+      const parent = target.parentElement;
+      if (!parent) return;
+      const group = siblingGroups.get(parent) ?? [];
+      group.push(target);
+      siblingGroups.set(parent, group);
+    });
+    siblingGroups.forEach((group) => {
+      group.forEach((target, index) => {
+        target.style.setProperty("--aurum-reveal-delay", `${Math.min(index, 4) * 85}ms`);
+      });
+    });
+
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || typeof IntersectionObserver === "undefined") {
       targets.forEach((target) => target.classList.add("aurum-is-visible"));
-      return () => root.classList.remove("aurum-motion-ready");
+      return () => {
+        root.classList.remove("aurum-motion-ready");
+        targets.forEach((target) => target.style.removeProperty("--aurum-reveal-delay"));
+      };
     }
 
     const revealObserver = new IntersectionObserver((entries, observer) => {
@@ -427,27 +445,65 @@ function InicioPublico() {
     <main ref={mainRef} className="min-h-screen bg-white text-[#17232d]">
       <style>{`
         @keyframes aurum-hero-enter {
-          from { opacity: 0; transform: translateY(22px); }
-          to { opacity: 1; transform: translateY(0); }
+          from { opacity: 0; transform: translate3d(0, 26px, 0) scale(.985); filter: blur(5px); }
+          to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); filter: blur(0); }
         }
-        .aurum-hero-enter { animation: aurum-hero-enter .8s cubic-bezier(.2,.75,.25,1) both; }
+        @keyframes aurum-orb-drift {
+          0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+          50% { transform: translate3d(18px, -15px, 0) scale(1.06); }
+        }
+        @keyframes aurum-glow-breathe {
+          0%, 100% { opacity: .55; }
+          50% { opacity: .9; }
+        }
+        @keyframes aurum-card-sheen {
+          from { transform: translateX(-130%) skewX(-18deg); }
+          to { transform: translateX(230%) skewX(-18deg); }
+        }
+        .aurum-hero-enter { animation: aurum-hero-enter .9s cubic-bezier(.2,.75,.25,1) both; }
         .aurum-hero-enter-delay-1 { animation-delay: .12s; }
         .aurum-hero-enter-delay-2 { animation-delay: .24s; }
         .aurum-hero-enter-delay-3 { animation-delay: .36s; }
         .aurum-motion-ready [data-aurum-reveal] {
           opacity: 0;
-          transform: translate3d(0, 24px, 0);
-          transition: opacity .7s cubic-bezier(.2,.75,.25,1), transform .7s cubic-bezier(.2,.75,.25,1);
-          will-change: opacity, transform;
+          transform: translate3d(0, 30px, 0);
+          transition:
+            opacity .75s cubic-bezier(.2,.75,.25,1),
+            transform .75s cubic-bezier(.2,.75,.25,1);
+          transition-delay: var(--aurum-reveal-delay, 0ms);
+        }
+        .aurum-motion-ready [data-aurum-reveal="scale"] {
+          transform: translate3d(0, 18px, 0) scale(.965);
+        }
+        .aurum-motion-ready [data-aurum-reveal="left"] {
+          transform: translate3d(-34px, 0, 0);
         }
         .aurum-motion-ready [data-aurum-reveal].aurum-is-visible {
           opacity: 1;
-          transform: translate3d(0, 0, 0);
-          will-change: auto;
+          transform: translate3d(0, 0, 0) scale(1);
         }
+        .aurum-ambient-orb { animation: aurum-orb-drift 13s ease-in-out infinite; }
+        .aurum-ambient-glow { animation: aurum-glow-breathe 8s ease-in-out infinite; }
+        .aurum-motion-card { transform: translateZ(0); transition: transform .45s cubic-bezier(.2,.75,.25,1), box-shadow .45s ease, border-color .35s ease; }
+        .aurum-motion-card::after {
+          content: "";
+          position: absolute;
+          inset: 0 auto 0 0;
+          width: 42%;
+          pointer-events: none;
+          background: linear-gradient(100deg, transparent, rgba(255,255,255,.48), transparent);
+          opacity: 0;
+        }
+        .aurum-motion-card:hover::after { opacity: 1; animation: aurum-card-sheen .85s ease both; }
+        .aurum-motion-card:hover { transform: translateY(-7px); }
+        .aurum-motion-card [data-aurum-icon] { transition: transform .45s cubic-bezier(.2,.75,.25,1), background-color .3s ease; }
+        .aurum-motion-card:hover [data-aurum-icon] { transform: translateY(-3px) rotate(-5deg) scale(1.06); }
+        .aurum-motion-ready [data-aurum-reveal].aurum-is-visible { transition-delay: var(--aurum-reveal-delay, 0ms); }
         @media (prefers-reduced-motion: reduce) {
-          .aurum-hero-enter { animation: none !important; }
+          .aurum-hero-enter, .aurum-ambient-orb, .aurum-ambient-glow { animation: none !important; }
           .aurum-motion-ready [data-aurum-reveal] { opacity: 1 !important; transform: none !important; transition: none !important; }
+          .aurum-motion-card, .aurum-motion-card:hover { transform: none !important; transition: none !important; }
+          .aurum-motion-card::after { display: none !important; }
         }
       `}</style>
       <script type="application/ld+json">{JSON.stringify({
@@ -554,8 +610,8 @@ function InicioPublico() {
       </header>
 
       <section id="contenido-principal" className="relative isolate scroll-mt-24 overflow-hidden">
-        <div className="pointer-events-none absolute -left-32 top-12 -z-10 size-[28rem] rounded-full bg-[#ffe99b]/70 blur-[90px]" />
-        <div className="pointer-events-none absolute right-[28%] top-20 -z-10 size-64 rounded-full bg-[#e9f1ff]/80 blur-[80px]" />
+        <div className="aurum-ambient-orb pointer-events-none absolute -left-32 top-12 -z-10 size-[28rem] rounded-full bg-[#ffe99b]/70 blur-[90px]" />
+        <div className="aurum-ambient-glow pointer-events-none absolute right-[28%] top-20 -z-10 size-64 rounded-full bg-[#e9f1ff]/80 blur-[80px]" />
         <div className="mx-auto grid max-w-[1440px] items-center gap-12 px-5 pb-16 pt-12 sm:px-8 sm:pb-20 sm:pt-16 lg:grid-cols-[.92fr_1.08fr] lg:gap-8 lg:px-12 lg:pb-24 lg:pt-20">
           <div data-aurum-reveal className="aurum-hero-enter relative z-10 max-w-[650px]">
             <span className="inline-flex items-center gap-2 rounded-full border border-[#e5c04a]/50 bg-[#fff9df] px-3.5 py-2 text-[10px] font-bold uppercase tracking-[.16em] text-[#785b00]"><Sparkles className="size-3.5" /> AURUM LAB · TECNOLOGÍA PARA JOYEROS</span>
@@ -573,7 +629,7 @@ function InicioPublico() {
             <p className="mt-4 text-xs text-slate-500">Agenda un recorrido personalizado para conocer AURUM LAB.</p>
           </div>
 
-          <div data-aurum-reveal className="aurum-hero-enter aurum-hero-enter-delay-2 relative mx-auto w-full max-w-[720px] pb-7 sm:pb-10">
+          <div data-aurum-reveal="scale" className="aurum-hero-enter aurum-hero-enter-delay-2 relative mx-auto w-full max-w-[720px] pb-7 sm:pb-10">
             <div className="absolute inset-x-8 bottom-0 top-12 rounded-[3rem] bg-gradient-to-br from-[#ffe99a]/70 via-[#f8faff] to-[#e4ecf7] blur-2xl" />
             <div className="relative rounded-[1.6rem] border border-slate-200 bg-white p-2.5 shadow-[0_25px_80px_rgba(28,40,52,.15)] sm:p-3">
               <div className="flex h-10 items-center gap-2 border-b border-slate-100 px-3">
@@ -700,9 +756,9 @@ function InicioPublico() {
           </div>
           <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {soluciones.map(({ numero, etiqueta, icon: Icono, titulo, texto, beneficio, enlace, accion }) => (
-              <article data-aurum-reveal key={titulo} className="group relative flex min-h-[290px] flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-5 shadow-[0_5px_20px_rgba(23,35,45,.035)] transition duration-200 hover:-translate-y-1 hover:border-[#dfbd4b] hover:shadow-[0_18px_40px_rgba(23,35,45,.09)] sm:p-6">
+              <article data-aurum-reveal key={titulo} className="aurum-motion-card group relative flex min-h-[290px] flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-5 shadow-[0_5px_20px_rgba(23,35,45,.035)] hover:border-[#dfbd4b] hover:shadow-[0_18px_40px_rgba(23,35,45,.09)] sm:p-6">
                 <div className="flex items-start justify-between gap-3">
-                  <span className="grid size-12 place-items-center rounded-xl bg-[#fff3c1] text-[#8f6b00] transition-colors group-hover:bg-[#ffdf65]"><Icono className="size-5" strokeWidth={1.8} /></span>
+                  <span data-aurum-icon className="grid size-12 place-items-center rounded-xl bg-[#fff3c1] text-[#8f6b00] transition-colors group-hover:bg-[#ffdf65]"><Icono className="size-5" strokeWidth={1.8} /></span>
                   <span className="text-[11px] font-semibold tracking-[.16em] text-slate-300">{numero}</span>
                 </div>
                 <p className="mt-5 text-[9px] font-bold tracking-[.18em] text-[#9a7600]">{etiqueta}</p>
