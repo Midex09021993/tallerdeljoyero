@@ -3527,6 +3527,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       if (!loaded) throw new Error("Aurum Render no pudo procesar el archivo 3DM.");
       const cleanUrl = new URL(window.location.href);
       cleanUrl.hash = "";
+      window.sessionStorage.removeItem("aurum-conect-pending");
       window.history.replaceState({}, "", cleanUrl.pathname + cleanUrl.search);
       setAurumConectStatus("Diseño recibido correctamente desde Rhino.");
       toast.success("Diseño actualizado desde AURUM CONECT.");
@@ -3545,7 +3546,17 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   // Una transferencia enviada desde Rhino se recibe automáticamente al aterrizar
   // en AURUM RENDER. El ref evita dobles descargas por re-render o React StrictMode.
   useEffect(() => {
-    if (embedded || !/^#aurum-conect=/.test(window.location.hash)) return;
+    if (embedded) return;
+    let transferHash = window.location.hash;
+    if (!transferHash.startsWith("#aurum-conect=")) {
+      transferHash = window.sessionStorage.getItem("aurum-conect-pending") || "";
+      if (transferHash.startsWith("#aurum-conect=")) {
+        const restoredUrl = new URL(window.location.href);
+        restoredUrl.hash = transferHash;
+        window.history.replaceState({}, "", restoredUrl.pathname + restoredUrl.search + restoredUrl.hash);
+      }
+    }
+    if (!transferHash.startsWith("#aurum-conect=")) return;
     void recibirDesdeRhino();
   }, [embedded, recibirDesdeRhino]);
 
