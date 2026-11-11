@@ -12,10 +12,7 @@
     <Nullable>disable</Nullable>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
   </PropertyGroup>
-  <PropertyGroup>
-    <Rhino7SystemDir Condition="'$(Rhino7SystemDir)' == ''">C:\Program Files\Rhino 7\System</Rhino7SystemDir>
-  </PropertyGroup>
-  <ItemGroup>
+<ItemGroup>
     <Reference Include="RhinoCommon">
       <HintPath>$(Rhino7SystemDir)\RhinoCommon.dll</HintPath>
       <Private>false</Private>
