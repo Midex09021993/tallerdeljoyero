@@ -50,7 +50,7 @@ function HerramientasPage() {
 
   useEffect(() => {
     const controller = new AbortController();
-    const pluginUrl = "/downloads/AurumConect-Rhino7-1.0.0.rhp";
+    const pluginUrl = "/downloads/AurumConect-Rhino7-1.0.0.zip";
 
     fetch(pluginUrl, {
       method: "HEAD",
@@ -199,11 +199,11 @@ function HerramientasPage() {
                         <div className="flex flex-col gap-1">
                           {pluginAurumConectDisponible ? (
                             <a
-                              href="/downloads/AurumConect-Rhino7-1.0.0.rhp"
-                              download="AurumConect-Rhino7-1.0.0.rhp"
+                              href="/downloads/AurumConect-Rhino7-1.0.0.zip"
+                              download="AurumConect-Rhino7-1.0.0.zip"
                               className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
                             >
-                              <Download className="size-4" /> Descargar AURUM CONECT (.RHP)
+                              <Download className="size-4" /> Descargar AURUM CONECT (.ZIP)
                             </a>
                           ) : (
                             <>
@@ -221,7 +221,7 @@ function HerramientasPage() {
                     </div>
                     <div className="flex items-start gap-2 border-t border-border bg-muted/30 px-5 py-3 text-xs leading-5 text-muted-foreground sm:px-6">
                       <Info className="mt-0.5 size-4 shrink-0 text-gold" />
-                      <p>Requiere Windows de 64 bits y Rhino 7. El complemento se distribuye ya compilado; no necesitas Git ni .NET SDK. Versión beta: la carga del complemento y el flujo de transferencia deben validarse en cada entorno Rhino/MatrixGold antes de uso productivo.</p>
+                      <p>Requiere Windows de 64 bits, Rhino 7 y Microsoft Edge WebView2 Runtime. El complemento se distribuye ya compilado; no necesitas Git ni .NET SDK. Versión beta: la carga del complemento y el flujo de transferencia deben validarse en cada entorno Rhino/MatrixGold antes de uso productivo.</p>
                     </div>
                   </section>
                   {mostrarGuiaAurumConect ? (
@@ -230,7 +230,7 @@ function HerramientasPage() {
                         <div>
                           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold">Guía integrada · Rhino 7</p>
                           <h3 id="aurum-conect-guia-title" className="mt-1 text-xl font-semibold">Instala AURUM CONECT paso a paso</h3>
-                          <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">Descarga el archivo .RHP e instálalo desde el administrador de complementos de Rhino 7.</p>
+                          <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">Descarga el paquete ZIP, extrae todos sus archivos juntos e instala el .RHP desde esa carpeta.</p>
                         </div>
                         <span className="rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-[10px] font-semibold text-gold">Versión beta</span>
                       </div>
@@ -249,16 +249,16 @@ function HerramientasPage() {
                           <ol className="mt-3 space-y-2 text-sm leading-6 text-muted-foreground">
                             <li><strong className="text-foreground">1.</strong> Descarga <code className="rounded bg-muted px-1.5 py-0.5 text-xs">AurumConect-Rhino7-1.0.0.rhp</code> desde el botón de esta tarjeta y guárdalo en una carpeta permanente.</li>
                             <li><strong className="text-foreground">2.</strong> Abre Rhino 7 y escribe <code className="rounded bg-muted px-1.5 py-0.5 text-xs">_PlugInManager</code> en la línea de comandos.</li>
-                            <li><strong className="text-foreground">3.</strong> En el administrador, pulsa «Install», busca el archivo .RHP descargado y confirma.</li>
-                            <li><strong className="text-foreground">4.</strong> Si Rhino solicita confirmación de seguridad, verifica que el archivo procede de tallerdeljoyero.com y autoriza su carga.</li>
+                            <li><strong className="text-foreground">3.</strong> En el administrador, pulsa «Install», busca `AurumConect-Rhino7-1.0.0.rhp` dentro de la carpeta extraída y confirma.</li>
+                            <li><strong className="text-foreground">4.</strong> Si Windows bloquea el archivo, abre Propiedades del .RHP, marca «Desbloquear» y aplica. Conserva las DLL junto al .RHP.</li>
                             <li><strong className="text-foreground">5.</strong> Ejecuta <code className="rounded bg-muted px-1.5 py-0.5 text-xs">AurumConect</code> en la línea de comandos para abrir el panel AURUM CONECT.</li>
-                            <li><strong className="text-foreground">6.</strong> Pulsa «CONECTAR CON AURUM LAB» para iniciar sesión. Para probar la preparación del diseño, selecciona geometría y pulsa «ACTUALIZAR DISEÑO».</li>
+                            <li><strong className="text-foreground">6.</strong> Pulsa «ABRIR AURUM RENDER» para abrir el visor Chromium vinculado a Rhino. Para enviar una selección, pulsa «ENVIAR DISEÑO».</li>
                           </ol>
                         </div>
                       </div>
                       <div className="mt-6 rounded-xl border border-border bg-muted/30 p-4">
                         <h4 className="font-semibold">Conexión con AURUM RENDER</h4>
-                        <p className="mt-2 text-sm leading-6 text-muted-foreground">Abre el panel AURUM CONECT, pulsa «CONECTAR CON AURUM LAB» e inicia sesión en la web oficial. Después selecciona la geometría en Rhino/MatrixGold y pulsa «ACTUALIZAR DISEÑO». La transferencia directa está en fase beta y debe validarse con el botón de recepción de AURUM RENDER y los permisos de red local de Chrome.</p>
+                        <p className="mt-2 text-sm leading-6 text-muted-foreground">Abre el panel AURUM CONECT y pulsa «ABRIR AURUM RENDER». Inicia sesión en la ventana Chromium. Después selecciona geometría en Rhino/MatrixGold y pulsa «ENVIAR DISEÑO»; la misma ventana recibe el modelo. La transferencia directa está en fase beta y debe validarse con el botón de recepción de AURUM RENDER y los permisos de red local de Chrome.</p>
                       </div>
                       <p className="mt-4 text-xs leading-5 text-muted-foreground">Seguridad: el complemento no solicita ni almacena tu contraseña. La copia .3dm es temporal y el canal local usa 127.0.0.1, un token de un solo uso y una caducidad de 3 minutos. La versión beta debe validarse en cada entorno Rhino/MatrixGold antes de su uso productivo.</p>
                     </section>
