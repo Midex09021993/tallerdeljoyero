@@ -418,7 +418,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         vec3 ijDirG=refract(ijView,ijNormal,ijEtaG);
         vec3 ijDirB=refract(ijView,ijNormal,ijEtaB);
         vec3 ijAccum=vec3(0.0);
-        float ijWeight=0.64;
+        float ijWeight=0.67;
         float ijDepth=1.0;
         // First internal path: sample wavelength-separated rays in the HDRI.
         vec3 ijWorldR=inverseTransformDirection(normalize(ijDirR),viewMatrix);
@@ -526,11 +526,11 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // surface. HDR samples can be dark on some directions; replacing the
         // surface outright made the diamond nearly opaque/black. Keep enough
         // PBR energy for readable crown facets and a restrained transmission path.
-        vec3 ijInternal=mix(ijAccum,ijAccum*1.16,ijFresnel);
+        vec3 ijInternal=mix(ijAccum,ijAccum*1.18,ijFresnel);
         // Diamond-only microcontrast: separate adjacent bright/dark facets
         // without increasing the scene exposure. Keep the pivot near mid-grey
         // and clamp negative energy so this cannot create invalid HDR values.
-        ijInternal=max((ijInternal-vec3(0.46))*1.06+vec3(0.46),vec3(0.0));
+        ijInternal=max((ijInternal-vec3(0.46))*1.035+vec3(0.46),vec3(0.0));
 
         // Internal fire from the wavelength-separated environment rays above.
         // Use the actual R/G/B ray samples and their energy spread as a mask;
@@ -558,7 +558,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // estimate carry more of the final diamond color while retaining a
         // controlled share of the physical PBR/Fresnel surface for highlights.
         // This is still an environment-sampling approximation, not geometric tracing.
-        float ijInternalWeight=clamp(ijReflect*0.80,0.54,0.64);
+        float ijInternalWeight=clamp(ijReflect*0.82,0.57,0.67);
         gl_FragColor.rgb=mix(gl_FragColor.rgb,ijInternal,ijInternalWeight);
         // Keep geometry shading restrained: a strong normal-based multiplier
         // was making broad crown facets look uniformly grey.
@@ -599,7 +599,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // Stronger diamond-only facet separation addresses the washed-out crown
         // seen against the iJewel reference. This is contrast, not extra exposure:
         // preserve the colored-gem response and leave PBR refraction untouched.
-        float aurumFacetFloor=${family === "Diamante" ? "0.78" : "0.992"};
+        float aurumFacetFloor=${family === "Diamante" ? "0.81" : "0.992"};
         float aurumContrast=mix(aurumFacetFloor,1.0,aurumScintillationContrast*aurumFacetContrast);
         gl_FragColor.rgb*=aurumContrast;
         ${family === "Diamante" ? `
