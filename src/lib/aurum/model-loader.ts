@@ -687,7 +687,7 @@ export async function convertAurumToGlb(
   // Rhino Mesh, SubD and unknown geometry types remain excluded by the CSG
   // eligibility guard; their original source meshes stay intact.
   try {
-    const unionResult = applyAurumMetalUnionExperiment(object, 8);
+    const unionResult = applyAurumMetalUnionExperiment(object, 16);
     console.info("[AURUM][METAL UNION]", unionResult);
   } catch (error) {
     console.warn("[AURUM][METAL UNION] Failed safely; keeping source meshes", error);
