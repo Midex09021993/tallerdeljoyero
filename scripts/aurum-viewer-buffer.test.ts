@@ -489,3 +489,21 @@ test("the settled viewport preserves the LIVE diamond appearance", () => {
   expect(idleBlock).toContain("const settledComposerRequested = idleSoftEdgeAaAvailable;");
   expect(initialAaBlock).toContain("const initialTaaRequested = false;");
 });
+
+
+test("standard image export reproduces the LIVE gem-mask and FXAA composer", () => {
+  const componentSource = readFileSync("src/components/AurumRender.tsx", "utf8");
+  const exportStart = componentSource.indexOf("exportPNG:async");
+  const exportEnd = componentSource.indexOf("exportGLB:", exportStart);
+  const exportBlock = componentSource.slice(exportStart, exportEnd);
+
+  expect(exportStart).toBeGreaterThan(-1);
+  expect(exportBlock).toContain("liveFastPathRef.current=false");
+  expect(exportBlock).toContain("new Set([renderPass, gemMaskPass, fxaaPass, outputPass])");
+  expect(exportBlock).toContain("composer.setPixelRatio?.(1)");
+  expect(exportBlock).toContain("composer.setSize?.(renderWidth, renderHeight)");
+  expect(exportBlock).toContain("resolution?.set?.(1 / renderWidth, 1 / renderHeight)");
+  expect(exportBlock).toContain("composer.render()");
+  expect(exportBlock).toContain("composer.setSize?.(originalCssWidth, originalCssHeight)");
+  expect(exportBlock).toContain("for(const state of capturePassStates)");
+});
