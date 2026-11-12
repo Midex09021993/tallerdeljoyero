@@ -115,6 +115,17 @@ export function createAurumLightingController(
       if (light?.color?.setRGB) light.color.setRGB(r,g,b,THREE.SRGBColorSpace);
     });
   };
+  const applyReflectorPower = () => {
+    const rig = getAurumReflectionRigProfile(activeRigId);
+    const preset = getAurumLightingPreset(activeRigId);
+    const power = Math.max(0, Math.min(6, Number(config.reflectorPower ?? 2)));
+    (["softbox","strip","front","kicker","edgeLeft","edgeRight"] as const).forEach((name) => {
+      const light = lights[name];
+      const profile = rig[name];
+      if (!light || !profile) return;
+      light.intensity = profile.intensity * preset[name] * power;
+    });
+  };
   const apply = (light: any, cfg: any) => {
     if (!light || !cfg) return;
     light.visible = cfg.enabled;
@@ -183,6 +194,7 @@ export function createAurumLightingController(
       apply(lights.rim, config.rim);
       apply(lights.gem, config.gem);
       applyTemperature();
+      applyReflectorPower();
       // Gem illumination is applied only by the gemstone shader, never as a
       // scene light that could change the gold/silver reflections.
       if (lights.gem) lights.gem.visible = false;
@@ -275,7 +287,7 @@ export function createAurumLightingController(
         const light = entry.light;
         const profile = entry.profile;
         if (!light || !profile) return;
-        light.intensity = profile.intensity * entry.multiplier;
+        light.intensity = profile.intensity * entry.multiplier * Math.max(0, Math.min(6, Number(config.reflectorPower ?? 2)));
         light.width = profile.width;
         light.height = profile.height;
       });
@@ -303,7 +315,7 @@ export function createAurumLightingController(
         lights.front.visible = id === "ijewelEnvironmentReference" ? false : Boolean(config.front?.enabled);
         const rig = getAurumReflectionRigProfile(activeRigId);
         const frontPreset = getAurumLightingPreset(activeRigId);
-        lights.front.intensity = rig.front.intensity * frontPreset.front * Math.max(0, Number(config.front?.intensity) || 0);
+        lights.front.intensity = rig.front.intensity * frontPreset.front * Math.max(0, Number(config.reflectorPower ?? 2)) * Math.max(0, Number(config.front?.intensity) || 0);
       }
       syncGemShaderLight();
       if (diagnosticEnvironmentOnly && manuallyTouched.size > 0) {
@@ -316,7 +328,7 @@ export function createAurumLightingController(
         const rig = getAurumReflectionRigProfile(activeRigId);
         const preset = getAurumLightingPreset(activeRigId);
         lights.front.visible = Boolean(config.front?.enabled);
-        lights.front.intensity = rig.front.intensity * preset.front * (Number(config.front?.intensity) || 0);
+        lights.front.intensity = rig.front.intensity * preset.front * Math.max(0, Number(config.reflectorPower ?? 2)) * (Number(config.front?.intensity) || 0);
       }
     },
     update(patch) {
@@ -327,6 +339,7 @@ export function createAurumLightingController(
       Object.keys(patch ?? {}).forEach((name) => manuallyTouched.add(name));
       Object.assign(config, patch);
       if (patch?.temperatureK !== undefined) applyTemperature();
+      if (patch?.reflectorPower !== undefined) applyReflectorPower();
 
       (["key", "fill", "rim", "gem"] as const).forEach((name) => {
         const cfg = patch?.[name];
@@ -356,7 +369,7 @@ export function createAurumLightingController(
         const rig = getAurumReflectionRigProfile(activeRigId);
         const preset = getAurumLightingPreset(activeRigId);
         lights.front.visible = Boolean(config.front?.enabled);
-        lights.front.intensity = rig.front.intensity * preset.front * Math.max(0, Number(config.front?.intensity) || 0);
+        lights.front.intensity = rig.front.intensity * preset.front * Math.max(0, Number(config.reflectorPower ?? 2)) * Math.max(0, Number(config.front?.intensity) || 0);
       }
 
       // Auxiliary reflection sources remain the photographic baseline and
