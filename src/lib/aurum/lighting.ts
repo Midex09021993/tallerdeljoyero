@@ -100,6 +100,21 @@ export function createAurumLightingController(
     light.shadow.needsUpdate=true;
     return true;
   };
+  const temperatureToRgb = (kelvin:number) => {
+    const temperature = Math.max(3200, Math.min(7500, Number(kelvin) || 5500)) / 100;
+    const red = temperature <= 66 ? 255 : 329.698727446 * Math.pow(temperature - 60, -0.1332047592);
+    const green = temperature <= 66
+      ? 99.4708025861 * Math.log(temperature) - 161.1195681661
+      : 288.1221695283 * Math.pow(temperature - 60, -0.0755148492);
+    const blue = temperature >= 66 ? 255 : temperature <= 19 ? 0 : 138.5177312231 * Math.log(temperature - 10) - 305.0447927307;
+    return [red, green, blue].map((value) => Math.max(0, Math.min(255, value)) / 255);
+  };
+  const applyTemperature = () => {
+    const [r,g,b] = temperatureToRgb(Number(config.temperatureK ?? 5500));
+    Object.values(lights).forEach((light:any) => {
+      if (light?.color?.setRGB) light.color.setRGB(r,g,b,THREE.SRGBColorSpace);
+    });
+  };
   const apply = (light: any, cfg: any) => {
     if (!light || !cfg) return;
     light.visible = cfg.enabled;
@@ -167,6 +182,7 @@ export function createAurumLightingController(
       apply(lights.fill, config.fill);
       apply(lights.rim, config.rim);
       apply(lights.gem, config.gem);
+      applyTemperature();
       // Gem illumination is applied only by the gemstone shader, never as a
       // scene light that could change the gold/silver reflections.
       if (lights.gem) lights.gem.visible = false;
@@ -310,6 +326,7 @@ export function createAurumLightingController(
       // on/off state for each light and leave unrelated sources untouched.
       Object.keys(patch ?? {}).forEach((name) => manuallyTouched.add(name));
       Object.assign(config, patch);
+      if (patch?.temperatureK !== undefined) applyTemperature();
 
       (["key", "fill", "rim", "gem"] as const).forEach((name) => {
         const cfg = patch?.[name];
