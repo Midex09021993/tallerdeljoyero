@@ -1904,6 +1904,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         parteActiva=null;
         limpiarResaltado();
         escena.add(modelo);
+        // Converge the initial settled image so progressive TAA receives its
+        // full sample budget without waiting for the user to orbit the model.
+        viewerLoopRef.current?.converge?.(postRuntimeConfig.progressiveFrameCount ?? 32);
         loadAuditStep("model-added-to-scene");
         // No reaplicar el metal globalmente al cargar: el paso anterior ya asignó\n        // materiales por categoría y una aplicación con parteActiva=null sobrescribiría\n        // las gemas recién configuradas. El metal se aplica después solo sobre la capa seleccionada.\n        if (ext!=="3dm" && parteActiva) aplicarMaterial(materialActivo);
         // Presentación inicial: usar la geometría real para encuadrar y
@@ -3486,8 +3489,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           },
         }
       );
+      viewerLoopRef.current = viewerLoop;
       frameRef.current = viewerLoop.frame;
       invalidateRenderRef.current = viewerLoop.invalidate;
+      // The model may have finished loading before the demand-driven loop was
+      // created. Start its bounded beauty convergence now, not on first orbit.
+      if (modelo && !liveFastPathRef.current) {
+        viewerLoop.converge?.(postRuntimeConfig.progressiveFrameCount ?? 32);
+      }
       const obs = viewerLoop.observer;
 
       // Cleanup completo del Viewer: evita listeners, RAF y contextos WebGL acumulados
