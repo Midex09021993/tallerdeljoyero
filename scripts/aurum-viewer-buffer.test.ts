@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test";
+import { readFileSync } from "node:fs";
 import { createAurumWebGLViewer, resizeAurumViewer, startAurumViewerLoop } from "../src/lib/aurum/viewer";
 
 test("the demand-driven viewer preserves its final WebGL frame", () => {
@@ -421,4 +422,22 @@ test("the XL softbox is opt-in when its configuration is missing or disabled", a
   expect(isAurumLargeSoftboxEnabled({})).toBe(false);
   expect(isAurumLargeSoftboxEnabled({ largeSoftboxEnabled: false })).toBe(false);
   expect(isAurumLargeSoftboxEnabled({ largeSoftboxEnabled: true })).toBe(true);
+});
+
+
+test("lighting changes explicitly reset idle TAA accumulation before rendering", () => {
+  const postSource = readFileSync("src/lib/aurum/post.ts", "utf8");
+  const componentSource = readFileSync("src/components/AurumRender.tsx", "utf8");
+
+  expect(postSource).toContain("const resetTemporalAccumulation=()=>");
+  expect(postSource).toContain("taaPass.accumulateIndex=-1;");
+  expect(componentSource).toContain("resetTemporalAccumulationRef.current?.();");
+  expect(componentSource).toContain("resetTemporalAccumulationRef.current = resetTemporalAccumulation;");
+});
+
+test("studio reflector labels distinguish the XL diffuser from the main reflector", () => {
+  const componentSource = readFileSync("src/components/AurumRender.tsx", "utf8");
+
+  expect(componentSource).toContain("DIFUSOR AÉREO XL");
+  expect(componentSource).toContain('label:"Reflector Cenital de Estudio"');
 });
