@@ -3230,9 +3230,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // Pause temporal accumulation immediately when the ring/camera starts
             // moving. The previous history is discarded and cannot wash out facets.
             setTemporalMotion?.(true);
-            // Use native Three.js FXAA during LIVE interaction, after OutputPass.
-            // Applying it in display space avoids filtering HDR gem radiance before
-            // tone/color output; diamond shaders, BVH, dispersion and ACES stay untouched.
+            // Use the restrained AURUM Soft Edge AA pass during LIVE interaction.
+            // It only blends a small amount at strong luminance boundaries;
+            // diamond shaders, BVH, dispersion and ACES calibration stay untouched.
             syncAurumSsrDiagnosticConfig();
             const liveFxaaEnabled = true;
             liveFastPathRef.current = true;
@@ -3259,7 +3259,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             (renderer as any).transmissionResolutionScale = runtimeBudget.interactionTransmissionScale;
             aplicarPerfilLive(true);
             syncAurumSsrDiagnosticConfig();
-            // Route non-extreme LIVE interaction through the minimal OutputPass -> FXAA chain.
+            // Route non-extreme LIVE interaction through the minimal soft-AA chain.
             // Keep the direct path as the safety fallback for extreme CAD assemblies.
             if (liveFxaaEnabled) {
               interactionPasses.forEach((pass) => {
