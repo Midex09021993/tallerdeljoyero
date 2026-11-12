@@ -94,8 +94,11 @@ export function resolveAurumRubyBvhProfile(
   return {
     ior: THREE.MathUtils.clamp(readFinite(physical.ior, readFinite(optical.ior, 1.762)), 1, 2.8),
     dispersion: THREE.MathUtils.clamp(readFinite(physical.dispersion, readFinite(optical.dispersion, 0.001)), 0, 0.02),
-    absorption: 1.25,
-    environmentIntensity: THREE.MathUtils.clamp(readFinite(physical.envMapIntensity, 1.0), 0.6, 1.4),
+    // A modestly lower absorption and a slightly wider HDR range recover
+    // readable red facet energy without enabling BVH transmission (kept at 0
+    // to avoid introducing unvalidated refraction/intersection artifacts).
+    absorption: 1.05,
+    environmentIntensity: THREE.MathUtils.clamp(readFinite(physical.envMapIntensity, 1.0), 0.8, 1.55),
     color: nativeColor ?? (Number.isFinite(profileColor) && profileColor >= 0 ? profileColor : 0x9b001b),
     reflectivity: THREE.MathUtils.clamp(readFinite(physical.reflectivity, 0.38), 0.08, 0.5),
     transmission: 0,
