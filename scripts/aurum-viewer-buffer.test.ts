@@ -455,3 +455,17 @@ test("Mi Nube persists the complete studio lighting configuration", () => {
   expect(componentSource).toContain("patch.reflectors = reflectorsPatch");
   expect(componentSource).toContain("Missing XL/reflector values deliberately retain the safe default (XL off).");
 });
+
+
+test("the first settled model frame keeps the anti-aliasing composer active", () => {
+  const componentSource = readFileSync("src/components/AurumRender.tsx", "utf8");
+  const initialFramingStart = componentSource.indexOf('requestAnimationFrame(() => {', componentSource.indexOf('loadAuditStep("load-pipeline-complete"'));
+  const initialFramingEnd = componentSource.indexOf('});', initialFramingStart);
+  const initialFramingBlock = componentSource.slice(initialFramingStart, initialFramingEnd);
+
+  expect(initialFramingStart).toBeGreaterThan(-1);
+  expect(initialFramingBlock).toContain("aplicarPerfilLive(true)");
+  expect(initialFramingBlock).toContain("invalidateRenderRef.current?.()");
+  expect(initialFramingBlock).not.toContain("liveFastPathRef.current = true");
+  expect(initialFramingBlock).not.toContain("aplicarPerfilLive()");
+});
