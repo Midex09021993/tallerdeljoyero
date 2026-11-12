@@ -1934,7 +1934,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             gemMaskEnabled: Boolean(gemMaskPass?.enabled),
             gemSoftEdgeEnabled: Boolean(fxaaPass?.enabled),
             outputEnabled: Boolean(outputPass?.enabled),
-            progressiveFrames: postRuntimeConfig.progressiveFrameCount ?? 32,
+            progressiveFrames: postRuntimeConfig.progressiveFrameCount ?? 1,
             composerAvailable: Boolean(composer),
           });
         } else {
@@ -1960,7 +1960,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         gemMaskPass?.refreshCache?.();
         // Converge the initial settled image so progressive TAA receives its
         // full sample budget without waiting for the user to orbit the model.
-        viewerLoopRef.current?.converge?.(postRuntimeConfig.progressiveFrameCount ?? 32);
+        viewerLoopRef.current?.converge?.(postRuntimeConfig.progressiveFrameCount ?? 1);
         loadAuditStep("model-added-to-scene");
         // No reaplicar el metal globalmente al cargar: el paso anterior ya asignó\n        // materiales por categoría y una aplicación con parteActiva=null sobrescribiría\n        // las gemas recién configuradas. El metal se aplica después solo sobre la capa seleccionada.\n        if (ext!=="3dm" && parteActiva) aplicarMaterial(materialActivo);
         // Presentación inicial: usar la geometría real para encuadrar y
@@ -3316,7 +3316,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           perfTick();
         },
         {
-          progressiveFrames: Math.max(1, Math.min(32, Math.floor(Number(postRuntimeConfig.progressiveFrameCount ?? 32)))),
+          progressiveFrames: Math.max(1, Math.min(32, Math.floor(Number(postRuntimeConfig.progressiveFrameCount ?? 1)))),
           onStart: () => {
             // Pause temporal accumulation immediately when the ring/camera starts
             // moving. The previous history is discarded and cannot wash out facets.
@@ -3441,7 +3441,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               idleTaaPass.accumulate = settledTaaRequested;
               idleTaaPass.accumulateIndex = -1;
               idleTaaPass.sampleLevel = Math.max(0, Math.min(5, Math.ceil(Math.log2(
-                Math.max(1, Math.min(32, Number(postRuntimeConfig.progressiveFrameCount ?? 32)))
+                Math.max(1, Math.min(32, Number(postRuntimeConfig.progressiveFrameCount ?? 1)))
               ))));
             }
             // Re-assert the live DOF state after the live profile reapplies post quality.
@@ -3519,7 +3519,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               gemMaskEnabled: Boolean(gemMaskPass?.enabled),
               gemSoftEdgeEnabled: Boolean(fxaaPass?.enabled),
               outputEnabled: Boolean(outputPass?.enabled),
-              progressiveFrames: postRuntimeConfig.progressiveFrameCount ?? 32,
+              progressiveFrames: postRuntimeConfig.progressiveFrameCount ?? 1,
               composerAvailable: Boolean(composer),
             });
             console.info("[AURUM][DIAMOND LIVE DIAGNOSTICS]", {
@@ -3565,7 +3565,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       // The model may have finished loading before the demand-driven loop was
       // created. Start its bounded beauty convergence now, not on first orbit.
       if (modelo && !liveFastPathRef.current) {
-        viewerLoop.converge?.(postRuntimeConfig.progressiveFrameCount ?? 32);
+        viewerLoop.converge?.(postRuntimeConfig.progressiveFrameCount ?? 1);
       }
       const obs = viewerLoop.observer;
 
