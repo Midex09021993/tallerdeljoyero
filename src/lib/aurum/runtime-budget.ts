@@ -2,7 +2,7 @@
  * AURUM RUNTIME BUDGET
  *
  * Keeps interactive rendering independent from the requested beauty quality.
- * Live raster resolution receives a small +0.05 DPR bump per geometry tier;
+ * Live raster resolution receives a +0.10 DPR bump per geometry tier;
  * existing caps remain the hard safety ceiling for dense CAD assemblies.
  * Jewelry CAD can be much denser than a web-ready asset; the budget caps the
  * GPU-heavy transmission/DPR path without changing geometry or material identity.
@@ -35,13 +35,13 @@ export function getAurumRuntimeBudget(triangleCount:number):AurumRuntimeBudget {
   const triangles=Math.max(0,Math.floor(Number(triangleCount)||0));
 
   if(triangles<=200_000){
-    return {triangleCount:triangles,tier:"web",pixelRatioCap:1.5,transmissionScaleCap:.50,interactionTransmissionScale:.22,interactionPixelRatio:1.40};
+    return {triangleCount:triangles,tier:"web",pixelRatioCap:1.5,transmissionScaleCap:.50,interactionTransmissionScale:.22,interactionPixelRatio:1.45};
   }
   if(triangles<=500_000){
-    return {triangleCount:triangles,tier:"dense",pixelRatioCap:1.25,transmissionScaleCap:.32,interactionTransmissionScale:.17,interactionPixelRatio:1.15};
+    return {triangleCount:triangles,tier:"dense",pixelRatioCap:1.25,transmissionScaleCap:.32,interactionTransmissionScale:.17,interactionPixelRatio:1.20};
   }
   if(triangles<=900_000){
-    return {triangleCount:triangles,tier:"very-dense",pixelRatioCap:1.10,transmissionScaleCap:.25,interactionTransmissionScale:.13,interactionPixelRatio:1.05};
+    return {triangleCount:triangles,tier:"very-dense",pixelRatioCap:1.10,transmissionScaleCap:.25,interactionTransmissionScale:.13,interactionPixelRatio:1.10};
   }
-  return {triangleCount:triangles,tier:"extreme",pixelRatioCap:1.0,transmissionScaleCap:.20,interactionTransmissionScale:.12,interactionPixelRatio:.95};
+  return {triangleCount:triangles,tier:"extreme",pixelRatioCap:1.0,transmissionScaleCap:.20,interactionTransmissionScale:.12,interactionPixelRatio:1.0};
 }
