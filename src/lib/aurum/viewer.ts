@@ -120,8 +120,9 @@ export function resizeAurumViewer(viewer: {
     // Update the existing renderer and post pipeline in place. Never recreate
     // the WebGL context, scene, camera, materials or optical configuration.
     viewer.renderer.setSize(w, h, false);
+    // SSAOPass belongs to EffectComposer; composer.setSize() resizes every pass.
+    // Calling ssaoPass.setSize() again reallocates its targets redundantly.
     viewer.composer?.setSize?.(w, h);
-    viewer.ssaoPass?.setSize?.(w, h);
   }
   // A host resize can happen while demand rendering is idle. Return true for
   // either a buffer or projection change so the caller always schedules the
