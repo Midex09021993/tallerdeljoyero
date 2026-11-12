@@ -96,6 +96,30 @@ export async function createAurumDiamondBvhRuntime(options: {
     const found = new Set<THREE.Mesh>();
     for (const key of Object.keys(familyCounts)) delete familyCounts[key];
     skippedTargetMeshes.length = 0;
+
+    // Compare diamond sizes within this model so halo/melee stones can use a
+    // calmer internal-ray budget while the largest center stone keeps its
+    // calibrated optical detail. The ratio is scale-independent of CAD units.
+    model.updateMatrixWorld(true);
+    const diamondRadiusByMesh = new Map<THREE.Mesh, number>();
+    let largestDiamondRadius = 0;
+    model.traverse((object) => {
+      const candidate = object as THREE.Mesh;
+      if (!candidate.isMesh || !candidate.geometry) return;
+      const candidateMaterials = Array.isArray(candidate.material) ? candidate.material : [candidate.material];
+      if (candidateMaterials.length !== 1) return;
+      const candidateFamily = getGemFamily(candidateMaterials[0])
+        || String(candidate.userData?.aurumActiveGemFamily ?? "").toLocaleLowerCase();
+      if (candidateFamily !== "diamante") return;
+      if (!candidate.geometry.boundingSphere) candidate.geometry.computeBoundingSphere();
+      const localRadius = candidate.geometry.boundingSphere?.radius ?? 0;
+      const worldScale = candidate.getWorldScale(new THREE_NS.Vector3());
+      const radius = localRadius * Math.max(Math.abs(worldScale.x), Math.abs(worldScale.y), Math.abs(worldScale.z));
+      if (!Number.isFinite(radius) || radius <= 0) return;
+      diamondRadiusByMesh.set(candidate, radius);
+      largestDiamondRadius = Math.max(largestDiamondRadius, radius);
+    });
+
     model.traverse((object) => {
       const mesh = object as THREE.Mesh;
       if (!mesh.isMesh || !mesh.geometry || mesh.userData?.["aurumInternalInclusion"]) return;
@@ -166,6 +190,14 @@ export async function createAurumDiamondBvhRuntime(options: {
       // Emerald optics remain exclusive to emeralds; Diamante VS no longer borrows them.
       const isBlueDiamond = activeGemId === "diamante_azul";
       const isPinkDiamond = activeGemId === "diamante_rosa";
+      const diamondRadius = diamondRadiusByMesh.get(mesh) ?? 0;
+      const diamondSizeRatio = largestDiamondRadius > 0 ? diamondRadius / largestDiamondRadius : 1;
+      // Secondary stones at <=42% of the largest diamond receive fewer internal
+      // reflections and a gentler dispersion profile; center stones are unchanged.
+      const isSmallSecondaryDiamond = family === "diamante"
+        && diamondRadius > 0
+        && largestDiamondRadius > 0
+        && diamondSizeRatio <= 0.42;
       const useEmeraldBvhOptics = isEmerald;
       const isRuby = family === "rubí" || family === "rubi";
       const isSapphire = family === "zafiro" || family === "sapphire";
@@ -211,7 +243,7 @@ export async function createAurumDiamondBvhRuntime(options: {
           camera: options.camera,
           // Keep small secondary diamonds on interactive quality initially;
           // higher bounce counts are reserved for explicit high/final capture.
-          quality: family === "diamante" ? "high" : (options.quality ?? "interactive"),
+          quality: family === "diamante" && !isSmallSecondaryDiamond ? "high" : (options.quality ?? "interactive"),
           // Restore the original diamond BVH fire/brightness settings; the emerald experiment remains isolated.
           rgbBoost: family === "diamante" ? (isBlueDiamond ? [2, 2, 2] : isPinkDiamond ? [1.3, 1, 1] : [1, 1, 1]) : undefined,
           // Calibración visual de los tres blancos según la referencia iJewel: VS con más contraste, inclusiones más claras; el azul queda intacto.
@@ -220,7 +252,7 @@ export async function createAurumDiamondBvhRuntime(options: {
           // The green color is authored by the profile; chromatic splitting is not
           // required for emerald and may amplify unstable ray/intersection artifacts.
           dispersion: family === "diamante"
-            ? (activeGemId === "diamante_natural" ? 0.01 : isBlueDiamond ? 0.004 : isPinkDiamond ? 0.012 : 0.006)
+            ? (isSmallSecondaryDiamond ? 0.002 : activeGemId === "diamante_natural" ? 0.01 : isBlueDiamond ? 0.004 : isPinkDiamond ? 0.012 : 0.006)
             : useEmeraldBvhOptics ? 0 : (emeraldProfile?.dispersion ?? rubyProfile?.dispersion ?? sapphireProfile?.dispersion ?? (isRuby ? 0.001 : isSapphire ? 0.001 : isAmethyst || isAquamarine || isCitrine || isBlueTopaz || isImperialTopaz || isParaibaTourmaline || isTanzanite || isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 0.0002 : isZircon ? 0.001 : isMoissanite ? 0.009 : 0.01)),
           ior: emeraldProfile?.ior ?? rubyProfile?.ior ?? sapphireProfile?.ior ?? (family === "diamante" ? 2.417 : isEmerald ? 1.58 : isRuby ? 1.762 : isSapphire ? 1.762 : isAmethyst ? 1.55 : isAquamarine ? 1.577 : isCitrine || isQuartz ? 1.544 : isBlueTopaz || isImperialTopaz ? 1.63 : isParaibaTourmaline || isOtherTourmaline ? 1.62 : isTanzanite ? 1.695 : isMoissanite ? 2.65 : isSpinel ? 1.718 : isGarnet ? 1.78 : isPeridot ? 1.65 : isMorganite ? 1.58 : isZircon ? 1.92 : isChrysoberyl ? 1.75 : 1.55),
           // Match the catalog's iJewel inclusion reference (absorption 1.6)
@@ -250,7 +282,7 @@ export async function createAurumDiamondBvhRuntime(options: {
               // Match the exact iJewel ray-bounce count for each calibrated diamond.
               // Blue uses 6; the three white references use 5 at all quality levels.
               packageApi.setDiamondOptions(prepared.material, {
-                rayBounces: isBlueDiamond ? 6 : 5,
+                rayBounces: isSmallSecondaryDiamond ? 2 : isBlueDiamond ? 6 : 5,
               });
               return;
             }
