@@ -852,7 +852,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       // Preserve the original scene background while the live Bokeh preview is active.
       let dofSavedSceneBackground: THREE.Scene["background"] | undefined;
       let dofHasSavedSceneBackground = false;
-      const { composer, ssaoPass, ssrPass, ssrSavePass, ssrCompositePass, setSSRSelects, applyQuality: applyPostQuality, updateTemporal, setTemporalMotion, dofPass, renderPass, taaPass: idleTaaPass, fxaaPass, outputPass } = await createAurumPostPipeline(
+      const { composer, ssaoPass, ssrPass, ssrSavePass, ssrCompositePass, bloomPass, setSSRSelects, applyQuality: applyPostQuality, updateTemporal, setTemporalMotion, dofPass, renderPass, taaPass: idleTaaPass, fxaaPass, outputPass } = await createAurumPostPipeline(
         renderer,
         escena,
         camara,
@@ -3282,6 +3282,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             const idleOutputPass = idlePasses.find((pass) => pass?.constructor?.name === "OutputPass");
             const idleTaaAvailable = Boolean(idleRenderPass && idleTaaPass && idleOutputPass && idlePasses.includes(idleTaaPass));
             const extremeGeometry = runtimeBudget.tier === "extreme";
+            // Bloom is captured from the active quality profile, then restored only
+            // in the settled preview; it never runs while the camera is moving.
+            const settledBloomRequested = Boolean(bloomPass?.enabled && !extremeGeometry);
             idlePasses.forEach((pass) => {
               // Keep the settled photographic chain explicit. Bokeh must run after
               // the beauty/TAA image and before OutputPass; it must not be enabled
@@ -3294,6 +3297,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 || (pass === ssrPass && isAurumSsrDiagnosticEnabled())
                 || (pass === ssrCompositePass && isAurumSsrDiagnosticEnabled())
                 || (pass === dofPass && postRuntimeConfig.dof === true)
+                || (pass === bloomPass && settledBloomRequested)
                 || pass === idleOutputPass;
             });
             // Controlled LIVE TAA trial: accumulate only after the camera stops.
@@ -3324,6 +3328,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // minifiers may rename BokehPass.constructor.name.
             const settledDofPass = dofPass && idlePasses.includes(dofPass) ? dofPass : null;
             if (settledDofPass) settledDofPass.enabled = postRuntimeConfig.dof === true;
+            if (bloomPass) bloomPass.enabled = settledBloomRequested;
             // Restore the full-resolution SSR chain after orbit; it was reduced
             // to 0.35 resolution only for interactive camera movement.
             syncAurumSsrDiagnosticConfig();
@@ -3371,10 +3376,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               });
             }
             // Use EffectComposer in settled BEAUTY mode whenever an enabled
-            // post-processing feature actually requires it. TAA, SSR and DOF
+            // post-processing feature actually requires it. TAA, SSR, Bloom and DOF
             // must not be configured and then silently bypassed by direct rendering.
             const settledComposerRequested = (settledTaaRequested && idleTaaAvailable)
               || settledSsrEnabled
+              || settledBloomRequested
               || (postRuntimeConfig.dof === true && Boolean(settledDofPass));
             liveFastPathRef.current = extremeGeometry || !settledComposerRequested;
             renderer.shadowMap.enabled = false;
