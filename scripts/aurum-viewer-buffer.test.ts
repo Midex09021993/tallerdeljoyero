@@ -396,7 +396,7 @@ test("viewer resize delegates post-processing target sizing to the composer exac
       domElement: canvas,
       getPixelRatio: () => 2,
       getSize(target: { set: (width: number, height: number) => unknown }) {
-        target.set(800, 600);
+        target.set(640, 480);
         return target;
       },
       setSize() { rendererResizeCount++; },
@@ -407,8 +407,8 @@ test("viewer resize delegates post-processing target sizing to the composer exac
 
   const changed = resizeAurumViewer(viewer as any);
 
-  expect(changed).toBe(false);
-  expect(rendererResizeCount).toBe(0);
-  expect(composerResizeCount).toBe(0);
+  expect(changed).toBe(true);
+  expect(rendererResizeCount).toBe(1);
+  expect(composerResizeCount).toBe(1);
   expect(directSsaoResizeCount).toBe(0);
 });
