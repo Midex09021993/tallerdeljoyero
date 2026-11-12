@@ -1896,6 +1896,26 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             idleTaaPass.accumulateIndex = -1;
           }
           liveFastPathRef.current = false;
+          console.info("[AURUM][RENDER PIPELINE]", {
+            phase: "first-model-frame",
+            path: "composer",
+            taaConfigured: postRuntimeConfig.taa === true,
+            taaEnabled: Boolean(idleTaaPass?.enabled),
+            taaAccumulating: Boolean(idleTaaPass?.accumulate),
+            gemMaskEnabled: Boolean(gemMaskPass?.enabled),
+            gemSoftEdgeEnabled: Boolean(fxaaPass?.enabled),
+            outputEnabled: Boolean(outputPass?.enabled),
+            progressiveFrames: postRuntimeConfig.progressiveFrameCount ?? 32,
+            composerAvailable: Boolean(composer),
+          });
+        } else {
+          console.warn("[AURUM][RENDER PIPELINE] Selective gem AA unavailable on first model frame; keeping direct renderer.", {
+            composerAvailable: Boolean(composer),
+            renderPassAvailable: Boolean(renderPass),
+            gemMaskPassAvailable: Boolean(gemMaskPass),
+            softEdgePassAvailable: Boolean(fxaaPass),
+            outputPassAvailable: Boolean(outputPass),
+          });
         }
 
         encuadrar();
