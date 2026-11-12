@@ -3280,7 +3280,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             const requestedDpr = Math.max(1, Math.min(2, renderQuality.pixelRatio));
             // First A/B test without TAA: increase only the settled raster resolution.
             // Keep Low unchanged and respect the geometry-based GPU budget.
-            const idleTargetDpr = measuredQualityId === "low" ? requestedDpr : Math.max(requestedDpr, 1.5);
+            const idleTargetDpr = measuredQualityId === "low" ? requestedDpr : Math.max(requestedDpr, 1.65);
             const idleDpr = Math.min(idleTargetDpr, runtimeBudget.pixelRatioCap);
             renderer.setPixelRatio(idleDpr);
             composer?.setPixelRatio?.(idleDpr);
