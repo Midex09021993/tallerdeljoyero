@@ -1348,12 +1348,15 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                   aurumLiveTransmissionStored:Number(m.transmission??0),
                 };
               }
-              const disableGemTransmission=Boolean(m.userData?.aurumGemFamily) && Number(m.transmission??0)!==0;
-              // Official metal profile: metals keep their validated clearcoat in LIVE.
-              // Only gemstones use the lightweight live clearcoat/transmission path.
               const isGem=Boolean(m.userData?.aurumGemFamily);
+              const isDiamond=String(m.userData?.aurumGemFamily??"")==="Diamante";
+              // Keep the focal and melee diamonds on their authored optical profile
+              // during orbit. Their spectral shader is already specialized for LIVE;
+              // stripping clearcoat/transmission makes them look milky and flat.
+              const disableGemTransmission=isGem && !isDiamond && Number(m.transmission??0)!==0;
+              // Other gem families retain the lightweight interaction profile.
               if (
-                isGem && (
+                isGem && !isDiamond && (
                 Number(m.clearcoat??0)!==0 ||
                 Number(m.clearcoatRoughness??0)!==0 ||
                 disableGemTransmission)
