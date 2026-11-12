@@ -221,8 +221,26 @@ export async function createAurumPostPipeline(
         scene.traverse((object:any)=>{
           if(object?.isMesh && String(object.userData?.aurumRhino?.categoria??"").toLowerCase()==="gema") gemMeshes.push(object);
         });
-        if(gemMeshes.length===0){fxaaPass.material.uniforms.gemMask.value=gemMaskTarget.texture;return;}
         const previousTarget=activeRenderer.getRenderTarget();
+        if(gemMeshes.length===0){
+          // Clear stale pixels when a model has no gemstone meshes; never let a
+          // previous model's mask cause AA to appear on unrelated metal geometry.
+          const previousAutoClear=activeRenderer.autoClear;
+          const previousClearColor=activeRenderer.getClearColor(new THREE.Color()).clone();
+          const previousClearAlpha=activeRenderer.getClearAlpha();
+          try{
+            activeRenderer.setRenderTarget(gemMaskTarget);
+            activeRenderer.setClearColor(0x000000,0);
+            activeRenderer.autoClear=false;
+            activeRenderer.clear(true,true,true);
+          }finally{
+            activeRenderer.autoClear=previousAutoClear;
+            activeRenderer.setClearColor(previousClearColor,previousClearAlpha);
+            activeRenderer.setRenderTarget(previousTarget);
+          }
+          fxaaPass.material.uniforms.gemMask.value=gemMaskTarget.texture;
+          return;
+        }
         const previousOverride=scene.overrideMaterial;
         const previousBackground=scene.background;
         const previousAutoClear=activeRenderer.autoClear;
@@ -276,14 +294,25 @@ export async function createAurumPostPipeline(
           vec4 center=texture2D(tDiffuse,vUv);
           if(texture2D(gemMask,vUv).r<0.5){gl_FragColor=center;return;}
           vec2 px=max(resolution,vec2(0.000001));
-          vec3 n0=texture2D(tDiffuse,vUv+vec2(-px.x,-px.y)).rgb;
-          vec3 n1=texture2D(tDiffuse,vUv+vec2( px.x,-px.y)).rgb;
-          vec3 n2=texture2D(tDiffuse,vUv+vec2(-px.x, px.y)).rgb;
-          vec3 n3=texture2D(tDiffuse,vUv+vec2( px.x, px.y)).rgb;
+          vec2 uv0=vUv+vec2(-px.x,-px.y);
+          vec2 uv1=vUv+vec2( px.x,-px.y);
+          vec2 uv2=vUv+vec2(-px.x, px.y);
+          vec2 uv3=vUv+vec2( px.x, px.y);
+          // Only gemstone samples may contribute to the filtered gemstone pixel.
+          // Metal/background samples are excluded from the neighborhood entirely.
+          float m0=step(0.5,texture2D(gemMask,uv0).r);
+          float m1=step(0.5,texture2D(gemMask,uv1).r);
+          float m2=step(0.5,texture2D(gemMask,uv2).r);
+          float m3=step(0.5,texture2D(gemMask,uv3).r);
+          vec3 n0=mix(center.rgb,texture2D(tDiffuse,uv0).rgb,m0);
+          vec3 n1=mix(center.rgb,texture2D(tDiffuse,uv1).rgb,m1);
+          vec3 n2=mix(center.rgb,texture2D(tDiffuse,uv2).rgb,m2);
+          vec3 n3=mix(center.rgb,texture2D(tDiffuse,uv3).rgb,m3);
           float lo=min(luma(center.rgb),min(min(luma(n0),luma(n1)),min(luma(n2),luma(n3))));
           float hi=max(luma(center.rgb),max(max(luma(n0),luma(n1)),max(luma(n2),luma(n3))));
           float edge=smoothstep(edgeThreshold,edgeThreshold*2.0,hi-lo);
-          vec3 diagonal=(n0+n1+n2+n3)*0.25;
+          float sampleWeight=max(0.0001,m0+m1+m2+m3);
+          vec3 diagonal=(n0*m0+n1*m1+n2*m2+n3*m3)/sampleWeight;
           float blendAmount=edge*strength;
           gl_FragColor=vec4(mix(center.rgb,diagonal,blendAmount),center.a);
         }`,
