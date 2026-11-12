@@ -184,6 +184,20 @@ export function createAurumLightingController(
           lights.kicker = createSource(rig.kicker);
           lights.edgeLeft = createSource(rig.edgeLeft);
           lights.edgeRight = createSource(rig.edgeRight);
+
+          // Dedicated oversized overhead softbox: a genuinely larger
+          // RectAreaLight surface, not an intensity-only imitation.
+          lights.largeSoftbox = new THREE.RectAreaLight(
+            0xffffff,
+            2.2 * Math.max(0, Number(config.largeSoftboxPower ?? 1)),
+            24,
+            18
+          );
+          lights.largeSoftbox.name = "aurum-large-overhead-softbox";
+          lights.largeSoftbox.position.set(0, 8, 7);
+          lights.largeSoftbox.lookAt(0, 0, 0);
+          lights.largeSoftbox.visible = config.largeSoftboxEnabled ?? true;
+          scene.add(lights.largeSoftbox);
         }
       }
       apply(lights.key, config.key); configureShadow(lights.key);
@@ -196,6 +210,10 @@ export function createAurumLightingController(
       apply(lights.gem, config.gem);
       applyTemperature();
       applyReflectorPower();
+      if (lights.largeSoftbox) {
+        lights.largeSoftbox.visible = config.largeSoftboxEnabled ?? true;
+        lights.largeSoftbox.intensity = 2.2 * Math.max(0, Math.min(4, Number(config.largeSoftboxPower ?? 1)));
+      }
       // Gem illumination is applied only by the gemstone shader, never as a
       // scene light that could change the gold/silver reflections.
       if (lights.gem) lights.gem.visible = false;
@@ -341,6 +359,12 @@ export function createAurumLightingController(
       Object.assign(config, patch);
       if (patch?.temperatureK !== undefined) applyTemperature();
       if (patch?.reflectorPower !== undefined) applyReflectorPower();
+      if (patch?.largeSoftboxEnabled !== undefined && lights.largeSoftbox) {
+        lights.largeSoftbox.visible = Boolean(config.largeSoftboxEnabled);
+      }
+      if (patch?.largeSoftboxPower !== undefined && lights.largeSoftbox) {
+        lights.largeSoftbox.intensity = 2.2 * Math.max(0, Math.min(4, Number(config.largeSoftboxPower ?? 1)));
+      }
 
       (["key", "fill", "rim", "gem"] as const).forEach((name) => {
         const cfg = patch?.[name];
@@ -411,6 +435,14 @@ export function createAurumLightingController(
       };
       Object.entries(lights).forEach(([name, light]: any) => {
         if (!light) return;
+        if (name === "largeSoftbox") {
+          const n = [0.08, 1.0, 0.88];
+          light.position.set(n[0] * rigScale, targetY + n[1] * rigScale, n[2] * rigScale);
+          light.width = 24 * sourceScale;
+          light.height = 18 * sourceScale;
+          light.lookAt?.(0, targetY, 0);
+          return;
+        }
         if (name === "softbox" || name === "strip" || name === "front" || name === "kicker" || name === "edgeLeft" || name === "edgeRight") {
           const rig = getAurumReflectionRigProfile(activeRigId);
           const source = rig[name as "softbox"|"strip"|"front"|"kicker"|"edgeLeft"|"edgeRight"].position;
