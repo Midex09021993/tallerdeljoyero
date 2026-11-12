@@ -1,5 +1,12 @@
 name: Aurum Lab CI
 
+permissions:
+  contents: read
+
+concurrency:
+  group: aurum-lab-ci-${{ github.ref }}
+  cancel-in-progress: false
+
 on:
   workflow_dispatch:
   push:
@@ -10,6 +17,7 @@ on:
 jobs:
   quality:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -39,6 +47,7 @@ jobs:
 
   edge-functions:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -56,7 +65,7 @@ jobs:
 
       - name: Type-check Nextcloud video files
         run: deno check supabase/functions/nextcloud-video-files/index.ts
-      
+
       - name: Type-check public viewer link creator
         run: deno check supabase/functions/crear-enlace-visor-3d/index.ts
 
