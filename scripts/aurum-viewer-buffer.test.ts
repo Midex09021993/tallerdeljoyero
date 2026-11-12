@@ -75,6 +75,15 @@ test("the viewer pauses on WebGL context loss and resumes after restoration", ()
   try {
     const loop = startAurumViewerLoop(viewer as any, () => { renderCount++; });
     flushFrame();
+    const rendersBeforeWake = renderCount;
+
+    // Native WebView2 focus restoration must wake demand rendering without
+    // requiring a user click on the canvas.
+    mockWindow.dispatchEvent(new Event("focus"));
+    expect(scheduled.size).toBeGreaterThan(0);
+    flushFrame();
+    expect(renderCount).toBeGreaterThan(rendersBeforeWake);
+
     const rendersBeforeLoss = renderCount;
 
     const lost = new Event("webglcontextlost", { cancelable: true });
