@@ -852,7 +852,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       // Preserve the original scene background while the live Bokeh preview is active.
       let dofSavedSceneBackground: THREE.Scene["background"] | undefined;
       let dofHasSavedSceneBackground = false;
-      const { composer, ssaoPass, ssrPass, ssrSavePass, ssrCompositePass, setSSRSelects, applyQuality: applyPostQuality, updateTemporal, setTemporalMotion, dofPass, renderPass, fxaaPass, outputPass } = await createAurumPostPipeline(
+      const { composer, ssaoPass, ssrPass, ssrSavePass, ssrCompositePass, setSSRSelects, applyQuality: applyPostQuality, updateTemporal, setTemporalMotion, dofPass, renderPass, taaPass: idleTaaPass, fxaaPass, outputPass } = await createAurumPostPipeline(
         renderer,
         escena,
         camara,
@@ -3279,9 +3279,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // Keep all other post effects disabled so this test isolates TAA.
             const idlePasses = ((composer as any)?.passes ?? []) as any[];
             const idleRenderPass = idlePasses.find((pass) => pass?.constructor?.name === "RenderPass");
-            const idleTaaPass = idlePasses.find((pass) => pass?.constructor?.name === "TAARenderPass");
             const idleOutputPass = idlePasses.find((pass) => pass?.constructor?.name === "OutputPass");
-            const idleTaaAvailable = Boolean(idleRenderPass && idleTaaPass && idleOutputPass);
+            const idleTaaAvailable = Boolean(idleRenderPass && idleTaaPass && idleOutputPass && idlePasses.includes(idleTaaPass));
             const extremeGeometry = runtimeBudget.tier === "extreme";
             idlePasses.forEach((pass) => {
               // Keep the settled photographic chain explicit. Bokeh must run after
@@ -3297,11 +3296,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 || (pass === dofPass && postRuntimeConfig.dof === true)
                 || pass === idleOutputPass;
             });
-            // TAA is allowed only after motion ends and only when explicitly
-            // requested by the active profile. Never reuse pre-orbit samples.
+            // Controlled LIVE TAA trial: accumulate only after the camera stops.
+            // It is deliberately disabled during orbit and on low/extreme budgets.
             const settledTaaRequested = Boolean(
-              postRuntimeConfig.temporalAA === true
-              && postRuntimeConfig.taa === true
+              idleTaaAvailable
               && measuredQualityId !== "low"
               && !(measuredQualityId === "" && Number(renderQuality.pixelRatio ?? 1.5) <= 1.01)
               && !extremeGeometry
@@ -3318,6 +3316,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               idleTaaPass.enabled = settledTaaRequested;
               idleTaaPass.accumulate = settledTaaRequested;
               idleTaaPass.accumulateIndex = -1;
+              idleTaaPass.sampleLevel = measuredQualityId === "ultra" ? 4 : 3;
             }
             // Re-assert the live DOF state after the live profile reapplies post quality.
             // Without TAA, the composer can still render RenderPass -> BokehPass -> OutputPass.
