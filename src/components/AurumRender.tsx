@@ -2958,7 +2958,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             renderer.setSize(originalCssWidth,originalCssHeight,false);
             if (composer) {
               composer.setPixelRatio?.(originalComposerPixelRatio);
-              composer.setSize?.(originalBufferWidth, originalBufferHeight);
+              composer.setSize?.(originalCssWidth, originalCssHeight);
               if (originalFxaaResolution) {
                 fxaaPass?.material?.uniforms?.resolution?.value?.copy?.(originalFxaaResolution);
               }
