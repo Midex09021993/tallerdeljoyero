@@ -1332,7 +1332,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         if (Array.isArray(x.material)) x.material.forEach((m:any)=>m.dispose?.());
         else x.material?.dispose?.();
       });
-      const quitar = () => {        if (modelo) { modelo.userData={...(modelo.userData??{}),aurumDisposed:true}; escena.remove(modelo); disposeAurumLiveGeometry(modelo); disposeAurumThicknessCacheForTarget(modelo); dispose(modelo); modelo=null; }
+      const quitar = () => {        if (modelo) { modelo.userData={...(modelo.userData??{}),aurumDisposed:true}; escena.remove(modelo); disposeAurumLiveGeometry(modelo); disposeAurumThicknessCacheForTarget(modelo); dispose(modelo); modelo=null; gemMaskPass?.refreshCache?.(); }
         if (suelo) { escena.remove(suelo); suelo.geometry.dispose(); suelo.material.dispose(); suelo=null; }
       };
       const configurarMaterial = (mat:any, m:MaterialConfig) => {
@@ -1949,6 +1949,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         parteActiva=null;
         limpiarResaltado();
         escena.add(modelo);
+        gemMaskPass?.refreshCache?.();
         // Converge the initial settled image so progressive TAA receives its
         // full sample budget without waiting for the user to orbit the model.
         viewerLoopRef.current?.converge?.(postRuntimeConfig.progressiveFrameCount ?? 32);
@@ -2961,6 +2962,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       const limpiarResaltado = () => {
         if (!resaltado) return;
         escena.remove(resaltado);
+        gemMaskPass?.refreshCache?.();
         resaltado.geometry?.dispose?.();
         resaltado.material?.dispose?.();
         resaltado = null;
@@ -3154,6 +3156,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             resaltado.quaternion.copy(obj.getWorldQuaternion(new THREE.Quaternion()));
             resaltado.scale.copy(obj.getWorldScale(new THREE.Vector3()));
             escena.add(resaltado);
+            gemMaskPass?.refreshCache?.();
           }
         }
       };
