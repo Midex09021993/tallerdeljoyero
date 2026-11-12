@@ -643,6 +643,14 @@ export async function createAurumPostPipeline(
     }
   };
 
+  const resetTemporalAccumulation=()=>{
+    if(!taaPass)return;
+    // A scene-lighting change invalidates the accumulated beauty frame even
+    // when the camera is stationary. Keep the existing TAA quality/settings.
+    taaPass.accumulateIndex=-1;
+    taaPass.accumulate=Boolean(taaPass.enabled && !temporalMotionActive);
+  };
+
   const setTemporalMotion=(moving:boolean)=>{
     const next=Boolean(moving);
     const changed=next!==temporalMotionActive;
@@ -670,5 +678,5 @@ export async function createAurumPostPipeline(
     if(!ssrPass)return;
     ssrPass.selects=Array.isArray(objects)?objects:[];
   };
-  return {composer,renderPass,ssaoPass,ssrPass,ssrSavePass,ssrCompositePass,bloomPass,setSSRSelects,applyQuality,updateTemporal,setTemporalMotion,dofPass,taaPass,fxaaPass,gemMaskPass,outputPass};
+  return {composer,renderPass,ssaoPass,ssrPass,ssrSavePass,ssrCompositePass,bloomPass,setSSRSelects,applyQuality,updateTemporal,resetTemporalAccumulation,setTemporalMotion,dofPass,taaPass,fxaaPass,gemMaskPass,outputPass};
 }
