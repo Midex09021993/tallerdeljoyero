@@ -180,7 +180,7 @@ function HerramientasPage() {
                       <div className="flex flex-col gap-2 sm:flex-row lg:flex-col lg:min-w-[250px]">
                         {paqueteAurumConectDisponible ? (
                           <a
-                            href="https://github.com/Midex09021993/aurum-conect-build/releases/download/v1.0.9/AurumConect-Rhino7-1.0.9.rhp"
+                            href="https://github.com/Midex09021993/aurum-conect-build/releases/download/v1.0.9/AurumConect-Rhino7-1.0.10.rhp"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
@@ -199,7 +199,7 @@ function HerramientasPage() {
                           {mostrarGuiaAurumConect ? "Ocultar guía" : "Ver guía de instalación"} <ChevronRight className={`size-3.5 transition-transform ${mostrarGuiaAurumConect ? "rotate-90" : ""}`} />
                         </button>
                         {!paqueteAurumConectDisponible ? (
-                          <p className="max-w-xs text-[11px] leading-4 text-muted-foreground">Descarga directa de AURUM CONECT 1.0.9 para Rhino 7 x64.</p>
+                          <p className="max-w-xs text-[11px] leading-4 text-muted-foreground">Descarga directa de AURUM CONECT 1.0.10 para Rhino 7 x64.</p>
                         ) : null}
                       </div>
                     </div>
@@ -232,10 +232,10 @@ function HerramientasPage() {
                         <div>
                           <h4 className="font-semibold">Instalación en Windows</h4>
                           <ol className="mt-3 space-y-2 text-sm leading-6 text-muted-foreground">
-                            <li><strong className="text-foreground">1.</strong> Descarga <code className="rounded bg-muted px-1.5 py-0.5 text-xs">AurumConect-Rhino7-1.0.9.rhp</code>.</li>
+                            <li><strong className="text-foreground">1.</strong> Descarga <code className="rounded bg-muted px-1.5 py-0.5 text-xs">AurumConect-Rhino7-1.0.10.rhp</code>.</li>
                             <li><strong className="text-foreground">2.</strong> Copia el archivo en la carpeta de complementos de Rhino 7: <code className="rounded bg-muted px-1.5 py-0.5 text-xs">C:\Program Files\Rhino 7\Plug-ins\</code>. Si Windows solicita autorización, acepta el permiso de administrador.</li>
                             <li><strong className="text-foreground">3.</strong> Abre Rhino 7 y escribe <code className="rounded bg-muted px-1.5 py-0.5 text-xs">_PlugInManager</code> en la línea de comandos.</li>
-                            <li><strong className="text-foreground">4.</strong> En _PlugInManager, selecciona la opción para instalar un complemento y registra el archivo <code className="rounded bg-muted px-1.5 py-0.5 text-xs">AurumConect-Rhino7-1.0.9.rhp</code> desde esa carpeta. Habilítalo si Rhino lo solicita.</li>
+                            <li><strong className="text-foreground">4.</strong> En _PlugInManager, selecciona la opción para instalar un complemento y registra el archivo <code className="rounded bg-muted px-1.5 py-0.5 text-xs">AurumConect-Rhino7-1.0.10.rhp</code> desde esa carpeta. Habilítalo si Rhino lo solicita.</li>
                             <li><strong className="text-foreground">5.</strong> En la línea de comandos de Rhino escribe <code className="rounded bg-muted px-1.5 py-0.5 text-xs">AurumConect</code>. Debe abrirse el panel AURUM CONECT.</li>
                             <li><strong className="text-foreground">6.</strong> Pulsa «ABRIR AURUM RENDER» e inicia sesión. Después vuelve a Rhino, selecciona o prepara el diseño y pulsa «ENVIAR DISEÑO».</li>
                           </ol>
@@ -247,7 +247,7 @@ function HerramientasPage() {
                         <h4 className="mt-4 font-semibold">Conexión y primera prueba</h4>
                         <p className="mt-2 text-sm leading-6 text-muted-foreground">Abre el panel AURUM CONECT y pulsa «ABRIR AURUM RENDER». Inicia sesión en la ventana integrada. Después selecciona o prepara el diseño en Rhino/MatrixGold y pulsa «ENVIAR DISEÑO»; la misma ventana de AURUM RENDER debe recibirlo. La transferencia envía una copia temporal del documento Rhino completo, no mantiene sincronización en vivo.</p>
                       </div>
-                      <p className="mt-4 text-xs leading-5 text-muted-foreground">Seguridad y solución de problemas: el complemento no solicita ni almacena tu contraseña. La copia .3dm es temporal y el canal local usa 127.0.0.1, un token de un solo uso y una caducidad de 3 minutos. Si no abre la ventana integrada, instala o repara Microsoft Edge WebView2 Evergreen Runtime x64 y reinicia Rhino. Si el comando AurumConect no existe, vuelve a PlugInManager y verifica que el complemento esté instalado y habilitado. Versión 1.0.9 beta.</p>
+                      <p className="mt-4 text-xs leading-5 text-muted-foreground">Seguridad y solución de problemas: el complemento no solicita ni almacena tu contraseña. La copia .3dm es temporal y el canal local usa 127.0.0.1, un token de un solo uso y una caducidad de 3 minutos. Si no abre la ventana integrada, instala o repara Microsoft Edge WebView2 Evergreen Runtime x64 y reinicia Rhino. Si el comando AurumConect no existe, vuelve a PlugInManager y verifica que el complemento esté instalado y habilitado. Versión 1.0.10 beta.</p>
                     </section>
                   ) : null}
           </>
