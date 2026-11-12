@@ -3374,7 +3374,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // Use EffectComposer in settled BEAUTY mode whenever an enabled
             // post-processing feature actually requires it. TAA, SSR and DOF
             // must not be configured and then silently bypassed by direct rendering.
-            const settledComposerRequested = settledTaaRequested
+            const settledComposerRequested = (settledTaaRequested && idleTaaAvailable)
               || settledSsrEnabled
               || (postRuntimeConfig.dof === true && Boolean(settledDofPass));
             liveFastPathRef.current = extremeGeometry || !settledComposerRequested;
