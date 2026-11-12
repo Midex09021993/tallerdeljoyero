@@ -2758,6 +2758,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           }
 
           const capturePassStates: Array<{pass:any;enabled:boolean}> = [];
+          const originalComposerPixelRatio = Number((composer as any)?.getPixelRatio?.() ?? originalPixelRatio);
+          const originalFxaaResolution = fxaaPass?.material?.uniforms?.resolution?.value?.clone?.() ?? null;
+          const originalRenderPassClearColor = renderPass?.clearColor?.clone?.() ?? renderPass?.clearColor ?? null;
+          const originalRenderPassClearAlpha = renderPass?.clearAlpha;
           const originalCameraPosition = camara.position.clone();
           const originalCameraQuaternion = camara.quaternion.clone();
           const originalControlsTarget = controles?.target?.clone?.() ?? null;
@@ -2767,9 +2771,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // supersampling; the final file still uses exactly width x height.
             // Camera, materials, lights and both independent HDR environments stay unchanged.
             renderer.setPixelRatio(1);
-            // Fidelity-first capture: use the same direct WebGL path as the live viewer.
-            // Do not change transmission scale or accumulate a different post-processing/TAA pipeline.
-            liveFastPathRef.current=true;
+            // Fidelity-first capture: reproduce the actual LIVE viewport chain.
+            // The interactive reference uses LIVE gemstone materials plus the selective
+            // gem-mask/FXAA composer; bypassing it here made exports differ from the screen.
+            liveFastPathRef.current=false;
             // Give Mi Nube poster captures extra breathing room without changing the live view.
             if (isPoster && posterCameraTarget) {
               camara.position.copy(posterCameraTarget).addScaledVector(
@@ -2779,6 +2784,28 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               camara.updateMatrixWorld?.();
             }
             renderer.setSize(renderWidth,renderHeight,false);
+            if (composer && !options.depthOfField) {
+              // Snapshot only the four LIVE viewport passes. TAA and photographic
+              // effects are intentionally excluded so the export matches motion.
+              const liveCapturePasses = new Set([renderPass, gemMaskPass, fxaaPass, outputPass]);
+              const allComposerPasses = ((composer as any)?.passes ?? []) as any[];
+              for (const pass of allComposerPasses) {
+                capturePassStates.push({ pass, enabled: Boolean(pass?.enabled) });
+                pass.enabled = liveCapturePasses.has(pass);
+              }
+              composer.setPixelRatio?.(1);
+              composer.setSize?.(renderWidth, renderHeight);
+              if (renderPass) {
+                renderPass.clearColor = transparent ? null : renderPass.clearColor;
+                renderPass.clearAlpha = transparent ? 0 : renderPass.clearAlpha;
+              }
+              const resolution = fxaaPass?.material?.uniforms?.resolution?.value;
+              resolution?.set?.(1 / renderWidth, 1 / renderHeight);
+            } else if (composer) {
+              for (const pass of ((composer as any)?.passes ?? []) as any[]) {
+                capturePassStates.push({ pass, enabled: Boolean(pass?.enabled) });
+              }
+            }
             if(typeof camara.aspect==="number") {
               camara.aspect=renderWidth/renderHeight;
               camara.updateProjectionMatrix?.();
@@ -2795,7 +2822,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             if(Math.round(drawingBufferSize.x)!==renderWidth || Math.round(drawingBufferSize.y)!==renderHeight){
               throw new Error("El búfer de dibujo WebGL no coincide con la resolución interna solicitada.");
             }
-            // The established direct-render path remains the default. The compositor is opt-in for photographic DOF captures only.
+            // The normal export uses the same LIVE composer path as the moving viewport.
+            // DOF remains an explicit photographic override selected by the user.
             if (options.depthOfField) {
               const strength = options.dofStrength === "strong" ? { aperture: 0.0011, maxBlur: 0.012 } : options.dofStrength === "medium" ? { aperture: 0.0008, maxBlur: 0.008 } : { aperture: 0.0005, maxBlur: 0.004 };
               Object.assign(postRuntimeConfig, { dof: true, dofAperture: strength.aperture, dofMaxBlur: strength.maxBlur });
@@ -2806,7 +2834,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               escena.background=null;
               renderer.setClearColor(0x000000,0);
             }
-            if (options.depthOfField && composer) composer.render();
+            if (composer && (options.depthOfField || !liveFastPathRef.current)) composer.render();
             else renderer.render(escena,camara);
             const captureComposerBuffer = options.depthOfField && composer ? { width: renderer.domElement.width, height: renderer.domElement.height } : null;
             const captureTaaPass = null as null | { enabled?: boolean; accumulate?: boolean; sampleLevel?: number; accumulateIndex?: number };
@@ -2928,6 +2956,17 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             (renderer as any).transmissionResolutionScale=originalTransmissionResolutionScale;
             liveFastPathRef.current=originalFastPath;
             renderer.setSize(originalCssWidth,originalCssHeight,false);
+            if (composer) {
+              composer.setPixelRatio?.(originalComposerPixelRatio);
+              composer.setSize?.(originalBufferWidth, originalBufferHeight);
+              if (originalFxaaResolution) {
+                fxaaPass?.material?.uniforms?.resolution?.value?.copy?.(originalFxaaResolution);
+              }
+              if (renderPass) {
+                renderPass.clearColor = originalRenderPassClearColor;
+                renderPass.clearAlpha = originalRenderPassClearAlpha;
+              }
+            }
             if(composer && applyPostQuality){
               applyPostQuality({...renderQuality,pixelRatio:originalPixelRatio,qualityId:measuredQualityId});
             }
