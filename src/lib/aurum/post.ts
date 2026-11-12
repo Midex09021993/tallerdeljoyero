@@ -30,6 +30,7 @@ export async function createAurumPostPipeline(
   let dofPass:any=null;
   let outputPass:any=null;
   let fxaaPass:any=null;
+  let gemMaskPass:any=null;
   let gradingPass:any=null;
 
   try {
@@ -191,21 +192,89 @@ export async function createAurumPostPipeline(
     composer.addPass(vignettePass);
 
     const { ShaderPass: FXAAShaderPass }=await import("three/examples/jsm/postprocessing/ShaderPass.js");
-    // AURUM Soft Edge AA: a deliberately restrained spatial edge smoother.
-    // Unlike standard FXAA, it blends only a small amount at strong luminance
-    // boundaries, preserving the high-frequency contrast inside diamond facets.
+    const THREE=await import("three");
+    // Render a material-ID mask using existing Rhino metadata. The depth prepass
+    // includes every object, while the color pass writes white only for gems.
+    // This keeps foreground metal occlusion correct without touching materials.
+    const gemMaskTarget=new THREE.WebGLRenderTarget(
+      Math.max(1,renderer.domElement.width),
+      Math.max(1,renderer.domElement.height),
+      {format:THREE.RGBAFormat,type:THREE.UnsignedByteType,depthBuffer:true,stencilBuffer:false}
+    );
+    gemMaskTarget.texture.minFilter=THREE.LinearFilter;
+    gemMaskTarget.texture.magFilter=THREE.LinearFilter;
+    gemMaskTarget.texture.generateMipmaps=false;
+    const depthOnlyMaterial=new THREE.MeshBasicMaterial({
+      color:0x000000,side:THREE.DoubleSide,depthTest:true,depthWrite:true,colorWrite:false
+    });
+    const gemMaskMaterial=new THREE.MeshBasicMaterial({
+      color:0xffffff,side:THREE.DoubleSide,depthTest:true,depthWrite:false,
+      depthFunc:THREE.EqualDepth,toneMapped:false
+    });
+    const gemMeshes:any[]=[];
+    scene.traverse((object:any)=>{
+      if(object?.isMesh && String(object.userData?.aurumRhino?.categoria??"").toLowerCase()==="gema") gemMeshes.push(object);
+    });
+    gemMaskPass={
+      enabled:true,needsSwap:false,clear:false,renderToScreen:false,
+      setSize(width:number,height:number){
+        gemMaskTarget.setSize(Math.max(1,width),Math.max(1,height));
+      },
+      render(activeRenderer:any){
+        if(gemMeshes.length===0){fxaaPass.material.uniforms.gemMask.value=gemMaskTarget.texture;return;}
+        const previousTarget=activeRenderer.getRenderTarget();
+        const previousOverride=scene.overrideMaterial;
+        const previousBackground=scene.background;
+        const previousAutoClear=activeRenderer.autoClear;
+        const previousClearColor=activeRenderer.getClearColor(new THREE.Color()).clone();
+        const previousClearAlpha=activeRenderer.getClearAlpha();
+        const meshVisibility:any[]=[];
+        try{
+          activeRenderer.setRenderTarget(gemMaskTarget);
+          activeRenderer.setClearColor(0x000000,0);
+          activeRenderer.autoClear=false;
+          activeRenderer.clear(true,true,true);
+          scene.background=null;
+          scene.overrideMaterial=depthOnlyMaterial;
+          activeRenderer.render(scene,camera);
+          for(const mesh of gemMeshes) meshVisibility.push([mesh,mesh.visible]);
+          scene.traverse((object:any)=>{
+            if(object?.isMesh && String(object.userData?.aurumRhino?.categoria??"").toLowerCase()!=="gema") object.visible=false;
+          });
+          scene.overrideMaterial=gemMaskMaterial;
+          activeRenderer.render(scene,camera);
+        }finally{
+          for(const [mesh,visible] of meshVisibility) mesh.visible=visible;
+          scene.overrideMaterial=previousOverride;
+          scene.background=previousBackground;
+          activeRenderer.autoClear=previousAutoClear;
+          activeRenderer.setClearColor(previousClearColor,previousClearAlpha);
+          activeRenderer.setRenderTarget(previousTarget);
+        }
+        fxaaPass.material.uniforms.gemMask.value=gemMaskTarget.texture;
+      },
+      dispose(){
+        gemMaskTarget.dispose();
+        depthOnlyMaterial.dispose();
+        gemMaskMaterial.dispose();
+      }
+    };
+    // AURUM Soft Edge AA is composited only inside pixels belonging to visible
+    // gemstone meshes. Metals and all other geometry retain their original pixels.
     fxaaPass=new FXAAShaderPass({
       uniforms:{
         tDiffuse:{value:null},
-        resolution:{value:new (await import("three")).Vector2(1,1)},
+        gemMask:{value:gemMaskTarget.texture},
+        resolution:{value:new THREE.Vector2(1,1)},
         strength:{value:0.16},
         edgeThreshold:{value:0.20},
       },
       vertexShader:`varying vec2 vUv; void main(){vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
-      fragmentShader:`uniform sampler2D tDiffuse; uniform vec2 resolution; uniform float strength; uniform float edgeThreshold; varying vec2 vUv;
+      fragmentShader:`uniform sampler2D tDiffuse; uniform sampler2D gemMask; uniform vec2 resolution; uniform float strength; uniform float edgeThreshold; varying vec2 vUv;
         float luma(vec3 c){return dot(c,vec3(0.2126,0.7152,0.0722));}
         void main(){
           vec4 center=texture2D(tDiffuse,vUv);
+          if(texture2D(gemMask,vUv).r<0.5){gl_FragColor=center;return;}
           vec2 px=max(resolution,vec2(0.000001));
           vec3 n0=texture2D(tDiffuse,vUv+vec2(-px.x,-px.y)).rgb;
           vec3 n1=texture2D(tDiffuse,vUv+vec2( px.x,-px.y)).rgb;
@@ -220,6 +289,7 @@ export async function createAurumPostPipeline(
         }`,
     });
     fxaaPass.enabled=false;
+    composer.addPass(gemMaskPass);
     composer.addPass(fxaaPass);
 
     const { OutputPass }=await import("three/examples/jsm/postprocessing/OutputPass.js");
@@ -521,5 +591,5 @@ export async function createAurumPostPipeline(
     if(!ssrPass)return;
     ssrPass.selects=Array.isArray(objects)?objects:[];
   };
-  return {composer,renderPass,ssaoPass,ssrPass,ssrSavePass,ssrCompositePass,bloomPass,setSSRSelects,applyQuality,updateTemporal,setTemporalMotion,dofPass,taaPass,fxaaPass,outputPass};
+  return {composer,renderPass,ssaoPass,ssrPass,ssrSavePass,ssrCompositePass,bloomPass,setSSRSelects,applyQuality,updateTemporal,setTemporalMotion,dofPass,taaPass,fxaaPass,gemMaskPass,outputPass};
 }
