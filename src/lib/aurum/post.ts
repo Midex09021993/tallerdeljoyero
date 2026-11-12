@@ -209,14 +209,18 @@ export async function createAurumPostPipeline(
     const cachedSceneMeshes:any[]=[];
     const cachedGemMeshes:any[]=[];
     const cachedMeshVisibility:boolean[]=[];
+    const cachedSceneMeshIsGem:boolean[]=[];
     const cachedClearColor=new THREE.Color();
     const refreshGemMaskCache=()=>{
       cachedSceneMeshes.length=0;
       cachedGemMeshes.length=0;
+      cachedSceneMeshIsGem.length=0;
       scene.traverse((object:any)=>{
         if(!object?.isMesh) return;
+        const isGem=getAurumRenderCategory(object)==="gema";
         cachedSceneMeshes.push(object);
-        if(getAurumRenderCategory(object)==="gema") cachedGemMeshes.push(object);
+        cachedSceneMeshIsGem.push(isGem);
+        if(isGem) cachedGemMeshes.push(object);
       });
       cachedMeshVisibility.length=cachedSceneMeshes.length;
     };
@@ -234,7 +238,8 @@ export async function createAurumPostPipeline(
           // Clear stale pixels when a model has no gemstone meshes; never let a
           // previous model's mask cause AA to appear on unrelated metal geometry.
           const previousAutoClear=activeRenderer.autoClear;
-          const previousClearColor=activeRenderer.getClearColor(new THREE.Color()).clone();
+          activeRenderer.getClearColor(cachedClearColor);
+          const previousClearColor=cachedClearColor;
           const previousClearAlpha=activeRenderer.getClearAlpha();
           try{
             activeRenderer.setRenderTarget(gemMaskTarget);
@@ -268,7 +273,7 @@ export async function createAurumPostPipeline(
           activeRenderer.render(scene,camera);
           for(let i=0;i<cachedSceneMeshes.length;i++){
             const mesh=cachedSceneMeshes[i];
-            if(getAurumRenderCategory(mesh)!=="gema") mesh.visible=false;
+            if(!cachedSceneMeshIsGem[i]) mesh.visible=false;
           }
           scene.overrideMaterial=gemMaskMaterial;
           activeRenderer.render(scene,camera);
