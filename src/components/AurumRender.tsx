@@ -1452,7 +1452,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         (renderer as any).transmissionResolutionScale=liveTransmissionScaleRef.current;
       };
 
-      const aplicarGema = (g:GemaConfig, objetivo?:any, aplicarTodas=false) => {
+      const aplicarGema = (g:GemaConfig, objetivo?:any, aplicarTodas=false, renderImmediately=true) => {
         const target=objetivo||parteActiva;
         const applied=applyAurumGemToTarget(target,g,aplicarEntornoGema,()=>invalidateRenderRef.current?.(),aplicarTodas);
         if(!applied){
@@ -1543,7 +1543,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         } else {
           aplicarPerfilLive();
         }
-        invalidateRenderRef.current?.();
+        // A catalog batch may touch several meshes; render once after the batch.
+        // For an individual selection, present the new material immediately so
+        // the user never has to orbit the jewel to see the change.
+        if(renderImmediately){
+          viewerLoopRef.current?.renderNow?.();
+        }else{
+          invalidateRenderRef.current?.();
+        }
       };
       const aplicarMaterial = (m:MaterialConfig, aplicarTodos=false) => {
         if (!modelo) {
@@ -2140,10 +2147,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             const key=layer||String(meta.layerKey??x.uuid);
             visited.add(key);
             // Apply to every matching mesh, not just the first mesh in a layer.
-            aplicarGema(g,x);
+            aplicarGema(g,x,false,false);
           });
           console.info("[AURUM][CATALOG GEM] Selección aplicada", {gemId:g.id, gemMeshes, layers:visited.size});
-          invalidateRenderRef.current?.();
+          viewerLoopRef.current?.renderNow?.();
           return gemMeshes > 0;
         },
         escenario:aplicarEscenario,
