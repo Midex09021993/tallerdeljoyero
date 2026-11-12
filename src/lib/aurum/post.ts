@@ -33,7 +33,27 @@ export async function createAurumPostPipeline(
   let gradingPass:any=null;
 
   try {
-    composer=new EffectComposer(renderer);
+    // Multisample the live compositing buffers on WebGL2 before FXAA.
+    // MSAA improves geometric silhouette coverage; FXAA remains as a light
+    // cleanup pass for shader/refraction edges. Keep a conservative 4x cap.
+    const supportsLiveMsaa = Boolean(renderer.capabilities?.isWebGL2);
+    const maxLiveSamples = Math.max(0, Number(renderer.capabilities?.maxSamples ?? 4));
+    const requestedLiveSamples = Math.max(0, Math.min(4, Number(config?.liveMsaaSamples ?? 4)));
+    const liveMsaaSamples = supportsLiveMsaa
+      ? Math.min(requestedLiveSamples, maxLiveSamples)
+      : 0;
+    if (liveMsaaSamples > 0) {
+      const { WebGLRenderTarget, HalfFloatType } = await import("three");
+      const liveTarget = new WebGLRenderTarget(
+        Math.max(1, renderer.domElement.width),
+        Math.max(1, renderer.domElement.height),
+        { type: HalfFloatType, depthBuffer: true, stencilBuffer: false }
+      );
+      liveTarget.samples = liveMsaaSamples;
+      composer = new EffectComposer(renderer, liveTarget);
+    } else {
+      composer = new EffectComposer(renderer);
+    }
     composer.setPixelRatio?.(Math.max(1,Math.min(2,Number(quality?.pixelRatio??1.5))));
     renderPass=new RenderPass(scene,camera);
     composer.addPass(renderPass);
