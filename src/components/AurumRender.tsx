@@ -3283,8 +3283,12 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           },
           onEnd: () => {
             // Restore the same gem-only AA composer chain for the settled preview.
-            // Use the exact same raster resolution selected for LIVE interaction.
-            const idleDpr = sharedRenderDpr;
+            // Recompute the same quality/budget target used by LIVE interaction.
+            const requestedDpr = Math.max(1, Math.min(2, renderQuality.pixelRatio));
+            const idleDpr = Math.min(
+              measuredQualityId === "low" ? requestedDpr : Math.max(requestedDpr, 1.65),
+              runtimeBudget.pixelRatioCap,
+            );
             renderer.setPixelRatio(idleDpr);
             composer?.setPixelRatio?.(idleDpr);
             // Controlled TAA trial: only anti-alias the settled preview.
