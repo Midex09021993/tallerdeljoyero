@@ -3238,10 +3238,15 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             liveFastPathRef.current = true;
             // Camera movement always selects LIVE materials, even when FXAA uses
             // EffectComposer instead of the direct WebGL path.
-            const interactionDpr = Math.min(
-              runtimeBudget.interactionPixelRatio,
+            // Keep raster resolution identical in LIVE and settled modes.
+            // A lower interaction DPR softens metal edges even though the gem mask
+            // correctly excludes metals from the AA shader.
+            const requestedDpr = Math.max(1, Math.min(2, renderQuality.pixelRatio));
+            const sharedRenderDpr = Math.min(
+              measuredQualityId === "low" ? requestedDpr : Math.max(requestedDpr, 1.65),
               runtimeBudget.pixelRatioCap,
             );
+            const interactionDpr = sharedRenderDpr;
             viewerLoopRef.current = viewerLoop;
             renderer.setPixelRatio(interactionDpr);
             composer?.setPixelRatio?.(interactionDpr);
@@ -3256,8 +3261,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               if (fxaaPass) fxaaPass.enabled = true;
               if (outputPass) outputPass.enabled = true;
             }
-            liveTransmissionScaleRef.current = runtimeBudget.interactionTransmissionScale;
-            (renderer as any).transmissionResolutionScale = runtimeBudget.interactionTransmissionScale;
+            // Preserve the same transmission/refraction render scale as the
+            // settled image; do not trade metal/reflection detail for orbit speed.
+            const sharedTransmissionScale = Math.min(renderQuality.transmissionScale, runtimeBudget.transmissionScaleCap);
+            liveTransmissionScaleRef.current = sharedTransmissionScale;
+            (renderer as any).transmissionResolutionScale = sharedTransmissionScale;
             aplicarPerfilLive(true);
             syncAurumSsrDiagnosticConfig();
             // Route LIVE interaction through the minimal gem-only soft-AA chain.
@@ -3275,11 +3283,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           },
           onEnd: () => {
             // Restore the same gem-only AA composer chain for the settled preview.
-            const requestedDpr = Math.max(1, Math.min(2, renderQuality.pixelRatio));
-            // First A/B test without TAA: increase only the settled raster resolution.
-            // Keep Low unchanged and respect the geometry-based GPU budget.
-            const idleTargetDpr = measuredQualityId === "low" ? requestedDpr : Math.max(requestedDpr, 1.65);
-            const idleDpr = Math.min(idleTargetDpr, runtimeBudget.pixelRatioCap);
+            // Use the exact same raster resolution selected for LIVE interaction.
+            const idleDpr = sharedRenderDpr;
             renderer.setPixelRatio(idleDpr);
             composer?.setPixelRatio?.(idleDpr);
             // Controlled TAA trial: only anti-alias the settled preview.
