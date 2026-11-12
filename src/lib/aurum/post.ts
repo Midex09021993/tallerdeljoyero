@@ -34,12 +34,12 @@ export async function createAurumPostPipeline(
   let gradingPass:any=null;
 
   try {
-    // Multisample the live compositing buffers on WebGL2 before FXAA.
-    // MSAA improves geometric silhouette coverage; FXAA remains as a light
-    // cleanup pass for shader/refraction edges. Keep a conservative 4x cap.
+    // Improve geometric silhouette coverage for polished metal without
+    // applying the gemstone-only Soft Edge AA shader to metal pixels.
+    // Request up to 8x MSAA; the GPU's real maxSamples is always authoritative.
     const supportsLiveMsaa = Boolean(renderer.capabilities?.isWebGL2);
-    const maxLiveSamples = Math.max(0, Number(renderer.capabilities?.maxSamples ?? 4));
-    const requestedLiveSamples = Math.max(0, Math.min(4, Number(config?.liveMsaaSamples ?? 4)));
+    const maxLiveSamples = Math.max(0, Number(renderer.capabilities?.maxSamples ?? 0));
+    const requestedLiveSamples = Math.max(0, Math.min(8, Number(config?.liveMsaaSamples ?? 8)));
     const liveMsaaSamples = supportsLiveMsaa
       ? Math.min(requestedLiveSamples, maxLiveSamples)
       : 0;
