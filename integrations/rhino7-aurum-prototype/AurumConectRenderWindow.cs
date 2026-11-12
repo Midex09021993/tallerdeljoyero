@@ -17,6 +17,7 @@ namespace AurumConect
         private static AurumConectRenderWindow _instance;
         private readonly WebView2 _browser;
         private readonly string _initialUrl;
+        private readonly System.Windows.Forms.Timer _viewportSyncTimer;
 
         private AurumConectRenderWindow(string url)
         {
@@ -30,11 +31,43 @@ namespace AurumConect
 
             _browser = new WebView2 { Dock = DockStyle.Fill };
             Controls.Add(_browser);
+
+            // WebView2 is hosted inside a native WinForms window owned by Rhino.
+            // Explicitly synchronize its client bounds after maximize/restore:
+            // some Rhino/Windows DPI transitions resize the Form before the
+            // embedded Chromium viewport commits its final composition bounds.
+            _viewportSyncTimer = new System.Windows.Forms.Timer { Interval = 120 };
+            _viewportSyncTimer.Tick += (_, __) =>
+            {
+                _viewportSyncTimer.Stop();
+                if (IsDisposed || _browser.IsDisposed) return;
+                _browser.Bounds = ClientRectangle;
+                _browser.Invalidate();
+                if (_browser.CoreWebView2 != null)
+                {
+                    try
+                    {
+                        _browser.CoreWebView2.ExecuteScriptAsync(
+                            "window.dispatchEvent(new Event('resize')); window.dispatchEvent(new Event('aurum-host-resize'));"
+                        );
+                    }
+                    catch { /* The WebView may still be navigating or closing. */ }
+                }
+            };
+            Resize += (_, __) => ScheduleViewportSync();
+            ResizeEnd += (_, __) => ScheduleViewportSync();
+            Activated += (_, __) => ScheduleViewportSync();
             FormClosed += (_, __) =>
             {
+                _viewportSyncTimer.Stop();
+                _viewportSyncTimer.Dispose();
                 if (ReferenceEquals(_instance, this)) _instance = null;
             };
-            Shown += InitializeBrowser;
+            Shown += (_, __) =>
+            {
+                ScheduleViewportSync();
+                InitializeBrowser(this, EventArgs.Empty);
+            };
         }
 
         internal static void Open(string url)
@@ -71,6 +104,13 @@ namespace AurumConect
                 RhinoApp.WriteLine("AURUM CONECT: no se pudo abrir la ventana integrada: {0}", exception.Message);
                 AurumConectPanel.OpenUrl(url);
             }
+        }
+
+        private void ScheduleViewportSync()
+        {
+            if (IsDisposed || _viewportSyncTimer == null) return;
+            _viewportSyncTimer.Stop();
+            _viewportSyncTimer.Start();
         }
 
         private async void InitializeBrowser(object sender, EventArgs e)
