@@ -81,8 +81,22 @@ export function resizeAurumViewer(viewer: {
   const h = Math.floor(rect.height);
   if (!Number.isFinite(w) || !Number.isFinite(h) || w < 2 || h < 2) return false;
 
-  const currentSize = viewer.renderer?.getSize?.({ set: (x:number,y:number) => ({ x, y }) });
-  const sizeChanged = !currentSize || Math.round(currentSize.x) !== w || Math.round(currentSize.y) !== h;
+  // Three.js writes into the supplied Vector2-like target. The previous
+  // target returned a new object without mutating itself, so x/y stayed
+  // undefined and every resize was incorrectly treated as a size change.
+  const sizeTarget = {
+    x: 0,
+    y: 0,
+    set(x: number, y: number) {
+      this.x = x;
+      this.y = y;
+      return this;
+    },
+  };
+  const currentSize = viewer.renderer?.getSize?.(sizeTarget);
+  const sizeChanged = !currentSize ||
+    Math.round(currentSize.x) !== w ||
+    Math.round(currentSize.y) !== h;
   const nextAspect = w / h;
   const aspectChanged = Math.abs(Number(viewer.camera.aspect) - nextAspect) > 0.0001;
 
@@ -95,6 +109,9 @@ export function resizeAurumViewer(viewer: {
     viewer.composer?.setSize?.(w, h);
     viewer.ssaoPass?.setSize?.(w, h);
   }
+  // A host resize can happen while demand rendering is idle. Return true for
+  // either a buffer or projection change so the caller always schedules the
+  // first frame against the final viewport dimensions.
   return sizeChanged || aspectChanged;
 }
 
