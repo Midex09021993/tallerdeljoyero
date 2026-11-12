@@ -259,7 +259,7 @@ export async function createAurumDiamondBvhRuntime(options: {
           // The green color is authored by the profile; chromatic splitting is not
           // required for emerald and may amplify unstable ray/intersection artifacts.
           dispersion: family === "diamante"
-            ? (isSmallSecondaryDiamond ? 0.002 : activeGemId === "diamante_natural" ? 0.01 : isBlueDiamond ? 0.004 : isPinkDiamond ? 0.012 : 0.006)
+            ? (isSmallSecondaryDiamond ? 0.005 : activeGemId === "diamante_natural" ? 0.01 : isBlueDiamond ? 0.004 : isPinkDiamond ? 0.012 : 0.006)
             : useEmeraldBvhOptics ? 0 : (emeraldProfile?.dispersion ?? rubyProfile?.dispersion ?? sapphireProfile?.dispersion ?? (isRuby ? 0.001 : isSapphire ? 0.001 : isAmethyst || isAquamarine || isCitrine || isBlueTopaz || isImperialTopaz || isParaibaTourmaline || isTanzanite || isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 0.0002 : isZircon ? 0.001 : isMoissanite ? 0.009 : 0.01)),
           ior: emeraldProfile?.ior ?? rubyProfile?.ior ?? sapphireProfile?.ior ?? (family === "diamante" ? 2.417 : isEmerald ? 1.58 : isRuby ? 1.762 : isSapphire ? 1.762 : isAmethyst ? 1.55 : isAquamarine ? 1.577 : isCitrine || isQuartz ? 1.544 : isBlueTopaz || isImperialTopaz ? 1.63 : isParaibaTourmaline || isOtherTourmaline ? 1.62 : isTanzanite ? 1.695 : isMoissanite ? 2.65 : isSpinel ? 1.718 : isGarnet ? 1.78 : isPeridot ? 1.65 : isMorganite ? 1.58 : isZircon ? 1.92 : isChrysoberyl ? 1.75 : 1.55),
           // Match the catalog's iJewel inclusion reference (absorption 1.6)
@@ -286,10 +286,10 @@ export async function createAurumDiamondBvhRuntime(options: {
           setQuality: (quality) => {
             if (!packageApi.setDiamondOptions) return;
             if (family === "diamante") {
-              // Match the exact iJewel ray-bounce count for each calibrated diamond.
-              // Blue uses 6; the three white references use 5 at all quality levels.
+              // Match the audited secondary-diamond minimum while preserving calibrated center/blue values.
+              // Secondary melee uses 4; blue uses 6 and center white references use 5.
               packageApi.setDiamondOptions(prepared.material, {
-                rayBounces: isSmallSecondaryDiamond ? 2 : isBlueDiamond ? 6 : 5,
+                rayBounces: isSmallSecondaryDiamond ? 4 : isBlueDiamond ? 6 : 5,
               });
               return;
             }
