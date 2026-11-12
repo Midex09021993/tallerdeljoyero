@@ -71,7 +71,7 @@ export function resizeAurumViewer(viewer: {
   renderer: any;
   composer?: any;
   ssaoPass?: any;
-}) {
+}, forceSurfaceSync = false) {
   // Measure the committed layout, not clientWidth/clientHeight fallbacks.
   // During WinForms/WebView2 maximize/restore the host can briefly report a
   // zero-sized viewport. Resizing WebGL to an invented 900x600 at that moment
@@ -105,7 +105,10 @@ export function resizeAurumViewer(viewer: {
     Math.abs(canvas!.width - Math.floor(w * pixelRatio)) > 1 ||
     Math.abs(canvas!.height - Math.floor(h * pixelRatio)) > 1
   );
-  const sizeChanged = logicalSizeChanged || bufferSizeChanged;
+  // A native host can blank/rebind the WebView2 composition surface while
+  // keeping the canvas attributes unchanged. On an explicit host wake, force
+  // Three.js to reassert the drawing buffer and post-processing targets.
+  const sizeChanged = forceSurfaceSync || logicalSizeChanged || bufferSizeChanged;
   const nextAspect = w / h;
   const aspectChanged = Math.abs(Number(viewer.camera.aspect) - nextAspect) > 0.0001;
 
@@ -324,22 +327,29 @@ export function startAurumViewerLoop(
       });
       return;
     }
-    if (paused) {
-      try {
-        viewer.renderer?.setRenderTarget?.(null);
-        viewer.renderer?.resetState?.();
-        resizeAurumViewer(viewer);
-        clearFrameRetry(true);
-        paused = false;
-        dirty = true;
-        console.warn("[AURUM][VIEWER][HOST_WAKE_RECOVERY] The existing WebGL context is available; resumed the viewer without rebuilding the scene.", {
-          canvas: canvas ? { width: canvas.width, height: canvas.height, clientWidth: canvas.clientWidth, clientHeight: canvas.clientHeight } : null,
-          visibility: document.visibilityState,
-        });
-      } catch (error) {
-        console.error("[AURUM][VIEWER][HOST_WAKE_RECOVERY_ERROR] Could not resume the existing WebGL renderer.", error);
-        return;
-      }
+
+    // WebView2 may lose/rebind its composition surface without reporting a
+    // WebGL context-loss event. In that case paused remains false, so the old
+    // recovery path only queued a frame while Three.js could retain stale GL
+    // state and a stale default framebuffer. Reassert the existing context,
+    // drawing buffer and post targets on every native host wake.
+    try {
+      viewer.renderer?.setRenderTarget?.(null);
+      viewer.renderer?.resetState?.();
+      resizeAurumViewer(viewer, true);
+      viewer.renderer?.resetState?.();
+      clearFrameRetry(true);
+      const wasPaused = paused;
+      paused = false;
+      dirty = true;
+      console.info("[AURUM][VIEWER][HOST_WAKE_SURFACE_SYNC] Re-synchronized the existing WebGL surface and post-processing targets.", {
+        recoveredPausedLoop: wasPaused,
+        canvas: canvas ? { width: canvas.width, height: canvas.height, clientWidth: canvas.clientWidth, clientHeight: canvas.clientHeight } : null,
+        visibility: document.visibilityState,
+      });
+    } catch (error) {
+      console.error("[AURUM][VIEWER][HOST_WAKE_RECOVERY_ERROR] Could not re-synchronize the existing WebGL renderer.", error);
+      return;
     }
     requestRender();
   };
