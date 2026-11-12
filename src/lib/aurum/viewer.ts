@@ -310,15 +310,54 @@ export function startAurumViewerLoop(
       hostResizeSettleFrame = requestAnimationFrame(runResizePass);
     });
   };
-  const onDocumentVisibilityChange = () => {
-    if (document.visibilityState === "visible") scheduleHostResize();
-  };
-  const onPageShow = () => scheduleHostResize();
-  // WebView2 can restore its native composition surface without a reliable
-  // ResizeObserver notification. A focus/pointer wake must request a frame
-  // immediately; the bounded resize pass then reconciles the final viewport.
-  const onHostWake = () => {
+  // A host can restore the native/WebGL surface without delivering the
+  // matching webglcontextrestored event to this canvas. In that case the
+  // context is usable again but the demand loop remains paused forever.
+  // Recover only when the existing context confirms it is no longer lost;
+  // never recreate the renderer, scene, materials, or post-processing chain.
+  const wakeFromHost = () => {
+    if (stopped) return;
+    const context = viewer.renderer?.getContext?.();
+    if (context?.isContextLost?.()) {
+      console.warn("[AURUM][VIEWER][HOST_WAKE_CONTEXT_STILL_LOST] Waiting for WebGL restoration before resuming.", {
+        visibility: document.visibilityState,
+      });
+      return;
+    }
+    if (paused) {
+      try {
+        viewer.renderer?.setRenderTarget?.(null);
+        viewer.renderer?.resetState?.();
+        resizeAurumViewer(viewer);
+        clearFrameRetry(true);
+        paused = false;
+        dirty = true;
+        console.warn("[AURUM][VIEWER][HOST_WAKE_RECOVERY] The existing WebGL context is available; resumed the viewer without rebuilding the scene.", {
+          canvas: canvas ? { width: canvas.width, height: canvas.height, clientWidth: canvas.clientWidth, clientHeight: canvas.clientHeight } : null,
+          visibility: document.visibilityState,
+        });
+      } catch (error) {
+        console.error("[AURUM][VIEWER][HOST_WAKE_RECOVERY_ERROR] Could not resume the existing WebGL renderer.", error);
+        return;
+      }
+    }
     requestRender();
+  };
+  const onDocumentVisibilityChange = () => {
+    if (document.visibilityState === "visible") {
+      wakeFromHost();
+      scheduleHostResize();
+    }
+  };
+  const onPageShow = () => {
+    wakeFromHost();
+    scheduleHostResize();
+  };
+  // WebView2 and browser tab/window restoration can miss a canvas restoration
+  // notification. Focus, visibility, and pointer wake all use the same
+  // guarded recovery path before requesting a fresh frame.
+  const onHostWake = () => {
+    wakeFromHost();
     scheduleHostResize();
   };
   window.addEventListener("resize", scheduleHostResize, { passive: true });
@@ -352,13 +391,11 @@ export function startAurumViewerLoop(
     if (stopped) return;
     try {
       clearFrameRetry(true);
-      resizeAurumViewer(viewer);
-      paused = false;
-      dirty = true;
+      paused = true;
+      wakeFromHost();
       console.info("[AURUM][VIEWER][WEBGL_CONTEXT_RESTORED] Viewer render loop resumed without rebuilding the scene.", {
         canvas: canvas ? { width: canvas.width, height: canvas.height, clientWidth: canvas.clientWidth, clientHeight: canvas.clientHeight } : null,
       });
-      requestRender();
     } catch (error) {
       console.error("[AURUM][VIEWER][WEBGL_CONTEXT_RECOVERY_ERROR] Could not resume after context restoration.", error);
     }
