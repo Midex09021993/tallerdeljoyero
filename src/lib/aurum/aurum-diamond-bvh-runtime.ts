@@ -245,7 +245,14 @@ export async function createAurumDiamondBvhRuntime(options: {
           // higher bounce counts are reserved for explicit high/final capture.
           quality: family === "diamante" && !isSmallSecondaryDiamond ? "high" : (options.quality ?? "interactive"),
           // Restore the original diamond BVH fire/brightness settings; the emerald experiment remains isolated.
-          rgbBoost: family === "diamante" ? (isBlueDiamond ? [2, 2, 2] : isPinkDiamond ? [1.3, 1, 1] : [1, 1, 1]) : undefined,
+          // Small white melee stones need a gentle neutral energy lift so their
+          // compact facets read bright instead of graphite-grey; keep colored
+          // diamonds and the center stone on their existing calibrated values.
+          rgbBoost: family === "diamante"
+            ? (isSmallSecondaryDiamond && !isBlueDiamond && !isPinkDiamond
+              ? [1.14, 1.14, 1.14]
+              : isBlueDiamond ? [2, 2, 2] : isPinkDiamond ? [1.3, 1, 1] : [1, 1, 1])
+            : undefined,
           // Calibración visual de los tres blancos según la referencia iJewel: VS con más contraste, inclusiones más claras; el azul queda intacto.
           environmentIntensity: family === "diamante" ? (isBlueDiamond ? 1.5 : isPinkDiamond ? 1.33 : activeGemId === "diamante_vs" ? 1.7 : activeGemId === "diamante_inclusiones" ? 2.05 : 1.85) : useEmeraldBvhOptics ? 1 : emeraldProfile?.environmentIntensity ?? rubyProfile?.environmentIntensity ?? sapphireProfile?.environmentIntensity ?? (isEmerald ? 1.5 : isRuby ? 1.0 : isSapphire ? 1.2 : isAmethyst ? 1.35 : isAquamarine ? 1.25 : isCitrine ? 1.2 : isBlueTopaz ? 1.25 : isImperialTopaz ? 1.22 : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 1.55 : 1.3) : isTanzanite ? 1.25 : isMoissanite ? 1.35 : isZircon ? 1.2 : isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 1.18 : 1.14),
           // Emerald test: disable dispersion entirely while isolating BVH speckles.
