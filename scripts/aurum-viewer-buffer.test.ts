@@ -469,3 +469,23 @@ test("the first settled model frame keeps the anti-aliasing composer active", ()
   expect(initialFramingBlock).not.toContain("liveFastPathRef.current = true");
   expect(initialFramingBlock).not.toContain("aplicarPerfilLive()");
 });
+
+
+test("the settled viewport preserves the LIVE diamond appearance", () => {
+  const componentSource = readFileSync("src/components/AurumRender.tsx", "utf8");
+  const idleStart = componentSource.indexOf("onEnd: () => {");
+  const idleEnd = componentSource.indexOf("onStart:", idleStart);
+  const idleBlock = componentSource.slice(idleStart, idleEnd > idleStart ? idleEnd : idleStart + 16000);
+  const initialAaStart = componentSource.indexOf("const initialTaaRequested = false;");
+  const initialAaEnd = componentSource.indexOf("if (idleTaaPass)", initialAaStart);
+  const initialAaBlock = componentSource.slice(initialAaStart, initialAaEnd);
+
+  expect(idleStart).toBeGreaterThan(-1);
+  expect(idleBlock).toContain("const settledTaaRequested = false;");
+  expect(idleBlock).toContain("pass === idleRenderPass");
+  expect(idleBlock).toContain("pass === idleOutputPass");
+  expect(idleBlock).toContain("pass === gemMaskPass");
+  expect(idleBlock).toContain("pass === fxaaPass");
+  expect(idleBlock).toContain("const settledComposerRequested = idleSoftEdgeAaAvailable;");
+  expect(initialAaBlock).toContain("const initialTaaRequested = false;");
+});
