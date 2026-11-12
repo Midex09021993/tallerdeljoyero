@@ -3230,16 +3230,12 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // Pause temporal accumulation immediately when the ring/camera starts
             // moving. The previous history is discarded and cannot wash out facets.
             setTemporalMotion?.(true);
-            // Interaction path: use a single lightweight FXAA pass to soften
-            // facet silhouettes during orbit. Keep SSR/SSAO/Bloom/TAA and all
-            // photographic effects disabled while moving to protect frame time.
-            // Extremely dense CAD assemblies retain the direct-render fallback.
+            // FXAA is disabled during LIVE interaction. Use the direct renderer
+            // path to preserve the established optical appearance while orbiting.
+            // Other post-processing and material settings remain unchanged.
             syncAurumSsrDiagnosticConfig();
-            const liveFxaaEnabled = Boolean(
-              composer && renderPass && fxaaPass && outputPass
-              && runtimeBudget.tier !== "extreme"
-            );
-            liveFastPathRef.current = !liveFxaaEnabled;
+            const liveFxaaEnabled = false;
+            liveFastPathRef.current = true;
             // Camera movement always selects LIVE materials, even when FXAA uses
             // EffectComposer instead of the direct WebGL path.
             const interactionDpr = Math.min(
@@ -3260,9 +3256,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             (renderer as any).transmissionResolutionScale = runtimeBudget.interactionTransmissionScale;
             aplicarPerfilLive(true);
             syncAurumSsrDiagnosticConfig();
-            // Reassert only RenderPass -> FXAA -> OutputPass after the live
-            // material profile applies its quality gates. No temporal history
-            // is accumulated, so orbiting cannot leave ghost trails.
+            // FXAA remains disabled for the LIVE direct-render path.
             if (liveFxaaEnabled) {
               interactionPasses.forEach((pass) => {
                 pass.enabled = pass === renderPass || pass === fxaaPass || pass === outputPass;
