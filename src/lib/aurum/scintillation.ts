@@ -2,6 +2,19 @@ import * as THREE from "three";
 import type { AurumOpticalProfile } from "../aurum-material-engine";
 
 /**
+ * Conservative live-view tuning for brilliant diamonds.
+ * These values shape only the diamond shader; they do not alter metal materials,
+ * physical IOR, dispersion calibration, BVH geometry, or post-processing cost.
+ */
+export const AURUM_DIAMOND_LIVE_TUNING = Object.freeze({
+  internalContrast: 1.05,
+  highlightShoulder: 0.42,
+  faceBrightness: 1.06,
+  rimEnergy: 0.075,
+  fireMax: 0.085,
+});
+
+/**
  * Dynamic scintillation + runtime gemstone optics for AURUM.
  *
  * The gemstone continues to use Three.js MeshPhysicalMaterial for the actual
@@ -531,7 +544,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // Diamond-only microcontrast: separate adjacent bright/dark facets
         // without increasing the scene exposure. Keep the pivot near mid-grey
         // and clamp negative energy so this cannot create invalid HDR values.
-        ijInternal=max((ijInternal-vec3(0.46))*1.035+vec3(0.46),vec3(0.0));
+        ijInternal=max((ijInternal-vec3(0.46))*${AURUM_DIAMOND_LIVE_TUNING.internalContrast.toFixed(3)}+vec3(0.46),vec3(0.0));
 
         // Internal fire from the wavelength-separated environment rays above.
         // Use the actual R/G/B ray samples and their energy spread as a mask;
@@ -548,7 +561,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // Grazing facets retain the full response; face-on facets receive 55%.
         float ijFaceOnFire=mix(0.55,1.0,1.0-smoothstep(0.78,0.98,ijCosTheta));
         float ijFireFacet=smoothstep(0.10,0.42,ijFresnel)*ijFaceOnFire;
-        float ijFireMask=clamp(ijFireEnergy*ijFireFacet*0.16,0.0,0.085);
+        float ijFireMask=clamp(ijFireEnergy*ijFireFacet*0.16,0.0,${AURUM_DIAMOND_LIVE_TUNING.fireMax.toFixed(3)});
         vec3 ijFireColor=vec3(
           max(ijAccum.r-ijAccum.g*0.72,0.0),
           max(ijAccum.g-max(ijAccum.r,ijAccum.b)*0.78,0.0),
@@ -567,7 +580,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // Diamond-only HDR highlight shoulder: reduce clipped white reflections
         // while preserving the RGB ratios that carry the subtle spectral fire.
         float ijHighlightPeak=max(max(gl_FragColor.r,gl_FragColor.g),gl_FragColor.b);
-        float ijHighlightCompression=1.0/(1.0+max(ijHighlightPeak-1.02,0.0)*0.28);
+        float ijHighlightCompression=1.0/(1.0+max(ijHighlightPeak-1.02,0.0)*${AURUM_DIAMOND_LIVE_TUNING.highlightShoulder.toFixed(2)});
         gl_FragColor.rgb*=ijHighlightCompression;
         // Selective real-time glint response for very bright diamond facets.
         // This is a lightweight shader highlight, not a screen-space bloom pass.
@@ -605,12 +618,12 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         gl_FragColor.rgb*=aurumContrast;
         ${isDiamond ? `
         // Slightly lift diamond face brightness without raising scene exposure.
-        gl_FragColor.rgb *= 1.10;
+        gl_FragColor.rgb *= ${AURUM_DIAMOND_LIVE_TUNING.faceBrightness.toFixed(2)};
         // Restrained angelic diamond aura: a cool-white grazing-angle lift on the
         // gemstone surface, not a screen-space bloom or an emissive shell.
         float aurumAngelRim=pow(1.0-clamp(abs(dot(aurumN,aurumV)),0.0,1.0),2.9);
         float aurumAngelFacetGate=smoothstep(0.08,0.72,aurumFacetContrast);
-        gl_FragColor.rgb+=vec3(1.0,0.91,0.82)*aurumAngelRim*aurumAngelFacetGate*0.105;
+        gl_FragColor.rgb+=vec3(1.0,0.91,0.82)*aurumAngelRim*aurumAngelFacetGate*${AURUM_DIAMOND_LIVE_TUNING.rimEnergy.toFixed(3)};
         ` : ""}
 
         if(aurumPhenomenonStrength>0.0){
