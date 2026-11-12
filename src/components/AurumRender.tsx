@@ -1349,14 +1349,12 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 };
               }
               const isGem=Boolean(m.userData?.aurumGemFamily);
-              const isDiamond=String(m.userData?.aurumGemFamily??"")==="Diamante";
-              // Keep the focal and melee diamonds on their authored optical profile
-              // during orbit. Their spectral shader is already specialized for LIVE;
-              // stripping clearcoat/transmission makes them look milky and flat.
-              const disableGemTransmission=isGem && !isDiamond && Number(m.transmission??0)!==0;
-              // Other gem families retain the lightweight interaction profile.
+              const disableGemTransmission=isGem && Number(m.transmission??0)!==0;
+              // Keep the established lightweight LIVE gemstone profile for every
+              // family, including diamonds. The authored optical properties are
+              // restored exactly when interaction ends.
               if (
-                isGem && !isDiamond && (
+                isGem && (
                 Number(m.clearcoat??0)!==0 ||
                 Number(m.clearcoatRoughness??0)!==0 ||
                 disableGemTransmission)
@@ -1403,8 +1401,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         });
       };
 
-      const aplicarPerfilLive = () => {
-        const live=liveFastPathRef.current;
+      const aplicarPerfilLive = (forceLive?:boolean) => {
+        // Material quality is independent from the renderer path (direct vs composer).
+        // FXAA availability must never decide whether LIVE or BEAUTY materials are used.
+        const live=forceLive ?? liveFastPathRef.current;
         if (!modelo) {
           renderer.shadowMap.enabled=!live && renderQuality.shadows;
           return;
@@ -3240,6 +3240,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               && runtimeBudget.tier !== "extreme"
             );
             liveFastPathRef.current = !liveFxaaEnabled;
+            // Camera movement always selects LIVE materials, even when FXAA uses
+            // EffectComposer instead of the direct WebGL path.
             const interactionDpr = Math.min(
               runtimeBudget.interactionPixelRatio,
               runtimeBudget.pixelRatioCap,
@@ -3256,7 +3258,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             }
             liveTransmissionScaleRef.current = runtimeBudget.interactionTransmissionScale;
             (renderer as any).transmissionResolutionScale = runtimeBudget.interactionTransmissionScale;
-            aplicarPerfilLive();
+            aplicarPerfilLive(true);
             syncAurumSsrDiagnosticConfig();
             // Reassert only RenderPass -> FXAA -> OutputPass after the live
             // material profile applies its quality gates. No temporal history
@@ -3314,7 +3316,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // gemstone profile, independently of whether TAA or DOF is enabled.
             // Only extreme geometry keeps the direct LIVE fallback for safety.
             liveFastPathRef.current = extremeGeometry;
-            aplicarPerfilLive();
+            // Restore BEAUTY materials after motion; extreme geometry retains
+            // the established LIVE fallback for GPU safety.
+            aplicarPerfilLive(extremeGeometry);
             setTemporalMotion?.(false);
             if (idleTaaPass) {
               idleTaaPass.enabled = settledTaaRequested;
