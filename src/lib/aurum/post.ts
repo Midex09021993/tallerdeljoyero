@@ -34,15 +34,13 @@ export async function createAurumPostPipeline(
   let gradingPass:any=null;
 
   try {
-    // Improve geometric silhouette coverage for polished metal without
-    // applying the gemstone-only Soft Edge AA shader to metal pixels.
-    // Request up to 8x MSAA; the GPU's real maxSamples is always authoritative.
+    // Preserve the renderer's native geometric edge quality while using
+    // post-processing: the composer must render into a multisampled target.
+    // Use a stable 4x MSAA target (bounded by the actual WebGL2 device limit).
+    // Soft Edge AA remains a separate, gem-mask-only pass later in the chain.
     const supportsLiveMsaa = Boolean(renderer.capabilities?.isWebGL2);
     const maxLiveSamples = Math.max(0, Number(renderer.capabilities?.maxSamples ?? 0));
-    const requestedLiveSamples = Math.max(0, Math.min(8, Number(config?.liveMsaaSamples ?? 8)));
-    const liveMsaaSamples = supportsLiveMsaa
-      ? Math.min(requestedLiveSamples, maxLiveSamples)
-      : 0;
+    const liveMsaaSamples = supportsLiveMsaa ? Math.min(4, maxLiveSamples) : 0;
     if (liveMsaaSamples > 0) {
       const { WebGLRenderTarget, HalfFloatType } = await import("three");
       const liveTarget = new WebGLRenderTarget(
@@ -52,7 +50,13 @@ export async function createAurumPostPipeline(
       );
       liveTarget.samples = liveMsaaSamples;
       composer = new EffectComposer(renderer, liveTarget);
+      // EffectComposer owns two ping-pong buffers. Keep both multisampled so
+      // later passes never silently fall back to a single-sample target.
+      if (composer.renderTarget1) composer.renderTarget1.samples = liveMsaaSamples;
+      if (composer.renderTarget2) composer.renderTarget2.samples = liveMsaaSamples;
     } else {
+      // WebGL1 cannot multisample offscreen composer targets. Keep the native
+      // renderer's antialiasing path rather than pretending post AA covers metal.
       composer = new EffectComposer(renderer);
     }
     composer.setPixelRatio?.(Math.max(1,Math.min(2,Number(quality?.pixelRatio??1.5))));
