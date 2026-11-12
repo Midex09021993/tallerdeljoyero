@@ -3260,8 +3260,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             (renderer as any).transmissionResolutionScale = runtimeBudget.interactionTransmissionScale;
             aplicarPerfilLive(true);
             syncAurumSsrDiagnosticConfig();
-            // Route non-extreme LIVE interaction through the minimal soft-AA chain.
-            // Keep the direct path as the safety fallback for extreme CAD assemblies.
+            // Route LIVE interaction through the minimal gem-only soft-AA chain.
+            // This pass chain is retained for dense assemblies as well.
             if (liveFxaaEnabled) {
               interactionPasses.forEach((pass) => {
                 pass.enabled = pass === renderPass || pass === gemMaskPass || pass === fxaaPass || pass === outputPass;
@@ -3274,8 +3274,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             invalidateRenderRef.current?.();
           },
           onEnd: () => {
-            // Diagnostic-only pass: preserve the current diamond appearance and
-            // rendering path while measuring the settled preview before changing it.
+            // Restore the same gem-only AA composer chain for the settled preview.
             const requestedDpr = Math.max(1, Math.min(2, renderQuality.pixelRatio));
             // First A/B test without TAA: increase only the settled raster resolution.
             // Keep Low unchanged and respect the geometry-based GPU budget.
