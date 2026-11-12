@@ -3307,9 +3307,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               && !(measuredQualityId === "" && Number(renderQuality.pixelRatio ?? 1.5) <= 1.01)
               && !extremeGeometry
             );
-            // Use the composer at rest only for an explicitly requested TAA
-            // profile or an enabled DOF preview; otherwise retain direct rendering.
-            liveFastPathRef.current = (postRuntimeConfig.dof !== true && !settledTaaRequested) || extremeGeometry;
+            // Settled preview must always restore the full BEAUTY material and
+            // gemstone profile, independently of whether TAA or DOF is enabled.
+            // Only extreme geometry keeps the direct LIVE fallback for safety.
+            liveFastPathRef.current = extremeGeometry;
             aplicarPerfilLive();
             setTemporalMotion?.(false);
             if (idleTaaPass) {
