@@ -470,15 +470,24 @@ export async function createAurumPostPipeline(
 
   const setTemporalMotion=(moving:boolean)=>{
     const next=Boolean(moving);
-    if(next===temporalMotionActive)return;
+    const changed=next!==temporalMotionActive;
     temporalMotionActive=next;
     if(!taaPass)return;
-    // Never blend samples from different object/camera poses. Pause TAA while
-    // orbiting, invalidate its history, then restart from sample zero at rest.
-    taaPass.accumulate=false;
-    taaPass.accumulateIndex=-1;
-    taaPass.enabled=!temporalMotionActive && taaRequested;
-    if(taaPass.enabled)taaPass.accumulate=true;
+    // Hard-disable temporal accumulation on every interaction start, even if
+    // a previous state transition left the motion flag unchanged.
+    if(next){
+      taaPass.enabled=false;
+      taaPass.accumulate=false;
+      taaPass.accumulateIndex=-1;
+      return;
+    }
+    // At rest, start a fresh history only when the settled profile requested TAA.
+    if(changed){
+      taaPass.accumulate=false;
+      taaPass.accumulateIndex=-1;
+      taaPass.enabled=taaRequested;
+      if(taaPass.enabled)taaPass.accumulate=true;
+    }
   };
 
   applyQuality(quality);
