@@ -852,7 +852,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       // Preserve the original scene background while the live Bokeh preview is active.
       let dofSavedSceneBackground: THREE.Scene["background"] | undefined;
       let dofHasSavedSceneBackground = false;
-      const { composer, ssaoPass, ssrPass, ssrSavePass, ssrCompositePass, setSSRSelects, applyQuality: applyPostQuality, updateTemporal, dofPass, renderPass, fxaaPass, outputPass } = await createAurumPostPipeline(
+      const { composer, ssaoPass, ssrPass, ssrSavePass, ssrCompositePass, setSSRSelects, applyQuality: applyPostQuality, updateTemporal, setTemporalMotion, dofPass, renderPass, fxaaPass, outputPass } = await createAurumPostPipeline(
         renderer,
         escena,
         camara,
@@ -3224,6 +3224,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         {
           progressiveFrames: 1,
           onStart: () => {
+            // Pause temporal accumulation immediately when the ring/camera starts
+            // moving. The previous history is discarded and cannot wash out facets.
+            setTemporalMotion?.(true);
             // Interaction path: use a single lightweight FXAA pass to soften
             // facet silhouettes during orbit. Keep SSR/SSAO/Bloom/TAA and all
             // photographic effects disabled while moving to protect frame time.
@@ -3295,23 +3298,23 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 || (pass === dofPass && postRuntimeConfig.dof === true)
                 || pass === idleOutputPass;
             });
-            // Keep TAA out of the interactive preview. Its temporal accumulation
-            // switches the settled viewer to EffectComposer and can leave the
-            // canvas blank on some GPU/browser combinations after orbit settles.
-            // TAA remains available to dedicated capture workflows.
-            if (idleTaaPass) {
-              idleTaaPass.enabled = false;
-              idleTaaPass.accumulate = false;
-              idleTaaPass.accumulateIndex = -1;
-            }
-            // The live viewer stays on the known-good direct renderer by default.
-            // EffectComposer is reserved for an explicitly enabled live DOF preview.
-            liveFastPathRef.current = postRuntimeConfig.dof !== true || extremeGeometry;
+            // TAA is allowed only after motion ends and only when explicitly
+            // requested by the active profile. Never reuse pre-orbit samples.
+            const settledTaaRequested = Boolean(
+              postRuntimeConfig.temporalAA === true
+              && postRuntimeConfig.taa === true
+              && measuredQualityId !== "low"
+              && !(measuredQualityId === "" && Number(renderQuality.pixelRatio ?? 1.5) <= 1.01)
+              && !extremeGeometry
+            );
+            // Use the composer at rest only for an explicitly requested TAA
+            // profile or an enabled DOF preview; otherwise retain direct rendering.
+            liveFastPathRef.current = (postRuntimeConfig.dof !== true && !settledTaaRequested) || extremeGeometry;
             aplicarPerfilLive();
-            // aplicarPerfilLive reapplies quality gates; reassert the live TAA bypass.
+            setTemporalMotion?.(false);
             if (idleTaaPass) {
-              idleTaaPass.enabled = false;
-              idleTaaPass.accumulate = false;
+              idleTaaPass.enabled = settledTaaRequested;
+              idleTaaPass.accumulate = settledTaaRequested;
               idleTaaPass.accumulateIndex = -1;
             }
             // Re-assert the live DOF state after the live profile reapplies post quality.
