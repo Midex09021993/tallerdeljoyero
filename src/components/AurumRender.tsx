@@ -3320,13 +3320,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // accumulation changes facet contrast, so the gem-only spatial AA is
             // the sole anti-aliasing stage in both states.
             const settledTaaRequested = false;
-            // Settled preview must always restore the full BEAUTY material and
-            // gemstone profile, independently of whether TAA or DOF is enabled.
-            // Only extreme geometry keeps the direct LIVE fallback for safety.
+            // Keep the exact LIVE gemstone material/shader profile after motion
+            // so the settled preview does not change diamond contrast or fire.
+            // The gem-only Soft Edge AA composer remains active independently.
             liveFastPathRef.current = extremeGeometry;
-            // Restore BEAUTY materials after motion; extreme geometry retains
-            // the established LIVE fallback for GPU safety.
-            aplicarPerfilLive(extremeGeometry);
+            aplicarPerfilLive(true);
             setTemporalMotion?.(false);
             if (idleTaaPass) {
               idleTaaPass.enabled = settledTaaRequested;
