@@ -1932,16 +1932,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           fxaaPass.enabled = true;
           outputPass.enabled = true;
 
-          const initialTaaRequested = Boolean(
-            postRuntimeConfig.taa === true
-            && postRuntimeConfig.temporalAA !== false
-            && measuredQualityId !== "low"
-            && runtimeBudget.tier !== "extreme"
-            && idleTaaPass
-          );
+          // The motion preview is the visual reference for the entire viewport.
+          // Keep temporal accumulation out of the settled preview: it can alter
+          // diamond facet contrast/fire compared with the spatial LIVE image.
+          // TAA remains available to the dedicated high-quality capture pipeline.
+          const initialTaaRequested = false;
           if (idleTaaPass) {
-            idleTaaPass.enabled = initialTaaRequested;
-            idleTaaPass.accumulate = initialTaaRequested;
+            idleTaaPass.enabled = false;
+            idleTaaPass.accumulate = false;
             idleTaaPass.accumulateIndex = -1;
           }
           liveFastPathRef.current = false;
@@ -3427,13 +3425,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               // if its module failed to load or the user disabled live DOF.
               // Use the actual pass instance returned by the pipeline. Constructor names
               // can be minified in production bundles, so name-based detection is unreliable.
+              // Match the motion reference exactly: same spatial gem AA chain,
+              // same LIVE materials, and no idle-only temporal/photographic passes.
+              // This prevents diamonds changing contrast, fire or visibility after
+              // the camera stops. High-quality captures keep their separate TAA path.
               pass.enabled = pass === idleRenderPass
-                || pass === idleTaaPass
-                || (pass === ssrSavePass && isAurumSsrDiagnosticEnabled())
-                || (pass === ssrPass && isAurumSsrDiagnosticEnabled())
-                || (pass === ssrCompositePass && isAurumSsrDiagnosticEnabled())
-                || (pass === dofPass && postRuntimeConfig.dof === true)
-                || (pass === bloomPass && settledBloomRequested)
                 || pass === idleOutputPass
                 || pass === gemMaskPass
                 || pass === fxaaPass;
@@ -3443,13 +3439,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // Keep the settled gemstone appearance identical to LIVE: temporal
             // accumulation changes facet contrast, so the gem-only spatial AA is
             // the sole anti-aliasing stage in both states.
-            const settledTaaRequested = Boolean(
-              postRuntimeConfig.taa === true
-              && postRuntimeConfig.temporalAA !== false
-              && measuredQualityId !== "low"
-              && runtimeBudget.tier !== "extreme"
-              && idleTaaAvailable
-            );
+            // The viewport follows the LIVE reference in both states.
+            // Temporal AA is reserved for final captures, not the settled preview.
+            const settledTaaRequested = false;
             // Keep the exact LIVE gemstone material/shader profile after motion
             // so the settled preview does not change diamond contrast or fire.
             // The gem-only Soft Edge AA composer remains active independently.
@@ -3520,11 +3512,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // Use EffectComposer in settled BEAUTY mode whenever an enabled
             // post-processing feature actually requires it. TAA, SSR, Bloom and DOF
             // must not be configured and then silently bypassed by direct rendering.
-            const settledComposerRequested = idleSoftEdgeAaAvailable
-              || (settledTaaRequested && idleTaaAvailable)
-              || settledSsrEnabled
-              || settledBloomRequested
-              || (postRuntimeConfig.dof === true && Boolean(settledDofPass));
+            const settledComposerRequested = idleSoftEdgeAaAvailable;
             // Keep the selective gem AA composer active even on extreme
             // assemblies; only fall back to direct rendering if its passes are unavailable.
             liveFastPathRef.current = !settledComposerRequested;
