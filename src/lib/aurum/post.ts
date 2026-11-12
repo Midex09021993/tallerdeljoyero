@@ -34,32 +34,41 @@ export async function createAurumPostPipeline(
   let gradingPass:any=null;
 
   try {
-    // Preserve the renderer's native geometric edge quality while using
-    // post-processing: the composer must render into a multisampled target.
-    // Use a stable 4x MSAA target (bounded by the actual WebGL2 device limit).
-    // Soft Edge AA remains a separate, gem-mask-only pass later in the chain.
+    // The preview now uses a multisampled off-screen pipeline because the
+    // gem-only edge pass must not sacrifice the renderer's geometric AA on metal.
+    // Request the highest practical MSAA level up to 8x, always bounded by the
+    // actual WebGL2 device capability. Both ping-pong targets are configured.
     const supportsLiveMsaa = Boolean(renderer.capabilities?.isWebGL2);
     const maxLiveSamples = Math.max(0, Number(renderer.capabilities?.maxSamples ?? 0));
-    const liveMsaaSamples = supportsLiveMsaa ? Math.min(4, maxLiveSamples) : 0;
+    const requestedLiveSamples = Math.max(0, Math.min(8, Number(config?.liveMsaaSamples ?? 8)));
+    const liveMsaaSamples = supportsLiveMsaa ? Math.min(requestedLiveSamples, maxLiveSamples) : 0;
     if (liveMsaaSamples > 0) {
       const { WebGLRenderTarget, HalfFloatType } = await import("three");
       const liveTarget = new WebGLRenderTarget(
-        Math.max(1, renderer.domElement.width),
-        Math.max(1, renderer.domElement.height),
-        { type: HalfFloatType, depthBuffer: true, stencilBuffer: false }
+        Math.max(1,renderer.domElement.width),
+        Math.max(1,renderer.domElement.height),
+        { type:HalfFloatType,depthBuffer:true,stencilBuffer:false }
       );
-      liveTarget.samples = liveMsaaSamples;
-      composer = new EffectComposer(renderer, liveTarget);
-      // EffectComposer owns two ping-pong buffers. Keep both multisampled so
-      // later passes never silently fall back to a single-sample target.
-      if (composer.renderTarget1) composer.renderTarget1.samples = liveMsaaSamples;
-      if (composer.renderTarget2) composer.renderTarget2.samples = liveMsaaSamples;
+      liveTarget.samples=liveMsaaSamples;
+      composer=new EffectComposer(renderer,liveTarget);
     } else {
-      // WebGL1 cannot multisample offscreen composer targets. Keep the native
-      // renderer's antialiasing path rather than pretending post AA covers metal.
-      composer = new EffectComposer(renderer);
+      composer=new EffectComposer(renderer);
     }
     composer.setPixelRatio?.(Math.max(1,Math.min(2,Number(quality?.pixelRatio??1.5))));
+    // EffectComposer clones its input target for ping-pong rendering. Set the
+    // sample count after composer sizing so both buffers retain multisampling.
+    if(liveMsaaSamples>0){
+      if(composer.renderTarget1) composer.renderTarget1.samples=liveMsaaSamples;
+      if(composer.renderTarget2) composer.renderTarget2.samples=liveMsaaSamples;
+    }
+    console.info("[AURUM][MSAA] Composer geometric antialiasing configured",{
+      webgl2:supportsLiveMsaa,
+      requestedSamples:requestedLiveSamples,
+      deviceMaxSamples:maxLiveSamples,
+      activeSamples:liveMsaaSamples,
+      target1Samples:composer.renderTarget1?.samples??0,
+      target2Samples:composer.renderTarget2?.samples??0,
+    });
     renderPass=new RenderPass(scene,camera);
     composer.addPass(renderPass);
 
