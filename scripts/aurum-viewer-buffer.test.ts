@@ -355,10 +355,16 @@ test("the viewer reasserts the WebGL drawing surface on host wake without a cont
     const initialRenders = renderCount;
     expect(resizeCount).toBe(0);
 
-    // Some WebView2 restore paths blank the composition surface without
-    // dispatching webglcontextlost/webglcontextrestored. Focus must still
-    // force a drawing-buffer and renderer-state synchronization.
-    mockWindow.dispatchEvent(new Event("focus"));
+    // Normal orbit input must not force a WebGL/composer resize.
+    mockWindow.dispatchEvent(new Event("pointerdown"));
+    expect(setRenderTargetCount).toBe(0);
+    expect(resetStateCount).toBe(0);
+    expect(resizeCount).toBe(0);
+
+    // If the host left the foreground and then misses its focus event, the
+    // first pointer press remains a guarded fallback for surface recovery.
+    mockWindow.dispatchEvent(new Event("blur"));
+    mockWindow.dispatchEvent(new Event("pointerdown"));
     expect(setRenderTargetCount).toBeGreaterThan(0);
     expect(resetStateCount).toBeGreaterThan(0);
     expect(resizeCount).toBeGreaterThan(0);
