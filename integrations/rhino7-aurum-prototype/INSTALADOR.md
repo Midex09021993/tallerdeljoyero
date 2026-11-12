@@ -4,10 +4,10 @@
 
 La distribución beta vigente es un único archivo:
 
-`AurumConect-Rhino7-1.0.9.rhp`
+`AurumConect-Rhino7-1.0.10.rhp`
 
 Descárgalo desde la publicación oficial:
-https://github.com/Midex09021993/aurum-conect-build/releases/download/v1.0.9/AurumConect-Rhino7-1.0.9.rhp
+https://github.com/Midex09021993/aurum-conect-build/releases/download/v1.0.9/AurumConect-Rhino7-1.0.10.rhp
 
 No utilices los binarios 1.0.0 ni los paquetes ZIP históricos de este prototipo. Este directorio contiene fuentes de una integración anterior y no es la fuente de publicación de la beta vigente.
 
@@ -16,7 +16,7 @@ No utilices los binarios 1.0.0 ni los paquetes ZIP históricos de este prototipo
 1. Descarga el archivo `.RHP` desde el enlace oficial anterior.
 2. Copia el archivo en la carpeta de complementos de Rhino 7: `C:\\Program Files\\Rhino 7\\Plug-ins\\`. Si Windows solicita autorización, acepta el permiso de administrador.
 3. Abre Rhino 7 y ejecuta `_PlugInManager`.
-4. Selecciona la opción para instalar un complemento y registra `AurumConect-Rhino7-1.0.9.rhp` desde esa carpeta.
+4. Selecciona la opción para instalar un complemento y registra `AurumConect-Rhino7-1.0.10.rhp` desde esa carpeta.
 5. Habilita el complemento si Rhino lo solicita y ejecuta `AurumConect`.
 
 Si Rhino 7 está instalado en otra unidad o carpeta personalizada, utiliza la carpeta `Plug-ins` de esa instalación.
