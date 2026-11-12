@@ -1,4 +1,18 @@
 /**
+ * Configure the gem classification target as categorical data.
+ * Nearest sampling preserves a strict gem/non-gem boundary; color filtering
+ * remains in the beauty buffer and is applied only after the binary mask gate.
+ */
+export function configureAurumGemMaskTexture(texture:any, three:any) {
+  texture.minFilter=three.NearestFilter;
+  texture.magFilter=three.NearestFilter;
+  texture.generateMipmaps=false;
+  texture.colorSpace=three.NoColorSpace;
+  texture.needsUpdate=true;
+  return texture;
+}
+
+/**
  * AURUM POST PROCESSING PIPELINE v2
  *
  * Post effects are scene-aware and quality-aware. The goal is not to add
@@ -184,9 +198,9 @@ export async function createAurumPostPipeline(
       Math.max(1,renderer.domElement.height),
       {format:THREE.RGBAFormat,type:THREE.UnsignedByteType,depthBuffer:true,stencilBuffer:false}
     );
-    gemMaskTarget.texture.minFilter=THREE.LinearFilter;
-    gemMaskTarget.texture.magFilter=THREE.LinearFilter;
-    gemMaskTarget.texture.generateMipmaps=false;
+    // This is a categorical ID mask, not an image: never interpolate metal
+    // and gemstone coverage at their shared boundary.
+    configureAurumGemMaskTexture(gemMaskTarget.texture,THREE);
     const depthOnlyMaterial=new THREE.MeshBasicMaterial({
       color:0x000000,side:THREE.DoubleSide,depthTest:true,depthWrite:true,colorWrite:false
     });
