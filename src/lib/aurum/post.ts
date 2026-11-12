@@ -216,7 +216,7 @@ export async function createAurumPostPipeline(
       if(object?.isMesh && String(object.userData?.aurumRhino?.categoria??"").toLowerCase()==="gema") gemMeshes.push(object);
     });
     gemMaskPass={
-      enabled:true,needsSwap:false,clear:false,renderToScreen:false,
+      enabled:false,needsSwap:false,clear:false,renderToScreen:false,
       setSize(width:number,height:number){
         gemMaskTarget.setSize(Math.max(1,width),Math.max(1,height));
       },
