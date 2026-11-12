@@ -3594,7 +3594,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       setAurumConectCanRetry(networkFailure);
       setAurumConectStatus(networkFailure
         ? "No se pudo acceder al canal local. Comprueba el permiso de red local del navegador y vuelve a intentar la recepción."
-        : detail); 
+        : detail);
       aurumConectAttemptRef.current = null;
       toast.error("No se pudo recibir el diseño de Rhino.");
     } finally {
