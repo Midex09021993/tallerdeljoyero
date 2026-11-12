@@ -190,18 +190,41 @@ export async function createAurumPostPipeline(
     });
     composer.addPass(vignettePass);
 
-    const { FXAAShader }=await import("three/examples/jsm/shaders/FXAAShader.js");
     const { ShaderPass: FXAAShaderPass }=await import("three/examples/jsm/postprocessing/ShaderPass.js");
-    // Use Three.js' real FXAA shader. Keep it AFTER OutputPass so edge detection
-    // operates on the final display-referred image, not HDR gem radiance.
-    fxaaPass=new FXAAShaderPass(FXAAShader);
+    // AURUM Soft Edge AA: a deliberately restrained spatial edge smoother.
+    // Unlike standard FXAA, it blends only a small amount at strong luminance
+    // boundaries, preserving the high-frequency contrast inside diamond facets.
+    fxaaPass=new FXAAShaderPass({
+      uniforms:{
+        tDiffuse:{value:null},
+        resolution:{value:new (await import("three")).Vector2(1,1)},
+        strength:{value:0.16},
+        edgeThreshold:{value:0.20},
+      },
+      vertexShader:`varying vec2 vUv; void main(){vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
+      fragmentShader:`uniform sampler2D tDiffuse; uniform vec2 resolution; uniform float strength; uniform float edgeThreshold; varying vec2 vUv;
+        float luma(vec3 c){return dot(c,vec3(0.2126,0.7152,0.0722));}
+        void main(){
+          vec4 center=texture2D(tDiffuse,vUv);
+          vec2 px=max(resolution,vec2(0.000001));
+          vec3 n0=texture2D(tDiffuse,vUv+vec2(-px.x,-px.y)).rgb;
+          vec3 n1=texture2D(tDiffuse,vUv+vec2( px.x,-px.y)).rgb;
+          vec3 n2=texture2D(tDiffuse,vUv+vec2(-px.x, px.y)).rgb;
+          vec3 n3=texture2D(tDiffuse,vUv+vec2( px.x, px.y)).rgb;
+          float lo=min(luma(center.rgb),min(min(luma(n0),luma(n1)),min(luma(n2),luma(n3))));
+          float hi=max(luma(center.rgb),max(max(luma(n0),luma(n1)),max(luma(n2),luma(n3))));
+          float edge=smoothstep(edgeThreshold,edgeThreshold*2.0,hi-lo);
+          vec3 diagonal=(n0+n1+n2+n3)*0.25;
+          float blendAmount=edge*strength;
+          gl_FragColor=vec4(mix(center.rgb,diagonal,blendAmount),center.a);
+        }`,
+    });
     fxaaPass.enabled=false;
+    composer.addPass(fxaaPass);
 
     const { OutputPass }=await import("three/examples/jsm/postprocessing/OutputPass.js");
     outputPass=new OutputPass();
     composer.addPass(outputPass);
-    // FXAA must be the final pass in the chain.
-    composer.addPass(fxaaPass);
   } catch (error) {
     // Keep the live viewer resilient, but never hide why the photographic
     // pipeline failed: PNG capture diagnostics need the original exception.
