@@ -360,12 +360,13 @@ export async function createAurumPostPipeline(
     const high=diagnosticHigh || qualityId==="high" || qualityId==="ultra" || q.pixelRatio>=1.4;
     const ultra=qualityId==="ultra" || q.pixelRatio>=1.55;
 
-    // TAA is opt-in for the interactive viewer: its temporal accumulation can
-    // wash out or soften the live jewelry preview when camera motion resets
-    // the sample history. Captures keep TAA enabled; preview requires both
-    // temporalAA and taa to be explicitly true.
+    // The photographic profile's canonical switch is "taa". Older preview
+    // code also required "temporalAA", a field that the active iJewel profile
+    // does not define; that silently disabled TAA after every model load.
+    // Motion is handled separately by setTemporalMotion(), never by hiding
+    // the configured settled TAA request.
     const isLowQuality=qualityId==="low" || (qualityId==="" && Number(q?.pixelRatio??1.5) <= 1.01);
-    taaRequested=Boolean(options.capture) || (config.temporalAA===true && config.taa===true && !isLowQuality);
+    taaRequested=Boolean(options.capture) || (config.taa===true && config.temporalAA!==false && !isLowQuality);
     const taaEnabled=taaRequested && !temporalMotionActive;
     const progressiveFrames=Math.max(1,Math.min(32,Math.floor(Number(config.progressiveFrameCount??32))));
     const taaSampleLevel=Math.max(0,Math.min(5,Math.ceil(Math.log2(progressiveFrames))));
