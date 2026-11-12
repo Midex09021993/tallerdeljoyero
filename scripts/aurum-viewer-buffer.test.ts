@@ -108,3 +108,96 @@ test("the viewer pauses on WebGL context loss and resumes after restoration", ()
     globalThis.document = originalDocument;
   }
 });
+
+
+test("the demand-driven loop retries a transient frame exception with bounded recovery", () => {
+  const originalResizeObserver = globalThis.ResizeObserver;
+  const originalRequestAnimationFrame = globalThis.requestAnimationFrame;
+  const originalCancelAnimationFrame = globalThis.cancelAnimationFrame;
+  const originalWindow = globalThis.window;
+  const originalDocument = globalThis.document;
+  const scheduledFrames = new Map<number, FrameRequestCallback>();
+  const scheduledTimers = new Map<number, () => void>();
+  let nextFrameId = 1;
+  let nextTimerId = 1;
+  let renderCount = 0;
+
+  class MockResizeObserver {
+    constructor(private callback: ResizeObserverCallback) {}
+    observe() {}
+    disconnect() {}
+  }
+
+  const mockWindow = Object.assign(new EventTarget(), {
+    setTimeout(callback: () => void) {
+      const id = nextTimerId++;
+      scheduledTimers.set(id, callback);
+      return id;
+    },
+    clearTimeout(id: number) {
+      scheduledTimers.delete(id);
+    },
+  });
+  const mockDocument = Object.assign(new EventTarget(), { visibilityState: "visible" }) as Document;
+  globalThis.window = mockWindow as unknown as Window & typeof globalThis;
+  globalThis.document = mockDocument;
+  globalThis.ResizeObserver = MockResizeObserver as unknown as typeof ResizeObserver;
+  globalThis.requestAnimationFrame = ((callback: FrameRequestCallback) => {
+    const id = nextFrameId++;
+    scheduledFrames.set(id, callback);
+    return id;
+  }) as typeof requestAnimationFrame;
+  globalThis.cancelAnimationFrame = ((id: number) => {
+    scheduledFrames.delete(id);
+  }) as typeof cancelAnimationFrame;
+
+  const flushFrame = () => {
+    const entry = scheduledFrames.entries().next().value as [number, FrameRequestCallback] | undefined;
+    if (!entry) return;
+    scheduledFrames.delete(entry[0]);
+    entry[1](0);
+  };
+  const flushTimer = () => {
+    const entry = scheduledTimers.entries().next().value as [number, () => void] | undefined;
+    if (!entry) return;
+    scheduledTimers.delete(entry[0]);
+    entry[1]();
+  };
+
+  try {
+    const loop = startAurumViewerLoop({
+      node: {
+        getBoundingClientRect: () => ({ width: 640, height: 480 }),
+      },
+      camera: { aspect: 1, updateProjectionMatrix() {} },
+      renderer: { domElement: new EventTarget(), setSize() {} },
+      controls: null,
+    } as any, () => {
+      renderCount++;
+      if (renderCount === 1) throw new Error("simulated transient GPU frame failure");
+    });
+
+    flushFrame();
+    expect(renderCount).toBe(1);
+    expect(scheduledTimers.size).toBe(1);
+    expect(scheduledFrames.size).toBe(0);
+
+    // The bounded backoff queues one retry; a transient error must not leave
+    // the viewer blank until the next mouse click.
+    flushTimer();
+    expect(scheduledFrames.size).toBe(1);
+    flushFrame();
+    expect(renderCount).toBe(2);
+    expect(scheduledTimers.size).toBe(0);
+
+    loop.stop();
+    expect(scheduledFrames.size).toBe(0);
+    expect(scheduledTimers.size).toBe(0);
+  } finally {
+    globalThis.ResizeObserver = originalResizeObserver;
+    globalThis.requestAnimationFrame = originalRequestAnimationFrame;
+    globalThis.cancelAnimationFrame = originalCancelAnimationFrame;
+    globalThis.window = originalWindow;
+    globalThis.document = originalDocument;
+  }
+});
