@@ -457,11 +457,6 @@ export async function createAurumPostPipeline(
       ssaoPass.kernelSize=ultra?24:high?20:12;
       // Keep the live SSAO radius synchronized with the active photographic profile.
       ssaoPass.kernelRadius=Math.max(.01,Number(config.radius??.20));
-      const ssaoScale=ultra?.72:high?.82:.70;
-      ssaoPass.setSize?.(
-        Math.max(1,Math.floor((renderer.domElement.width||renderer.domElement.clientWidth||1)*ssaoScale)),
-        Math.max(1,Math.floor((renderer.domElement.height||renderer.domElement.clientHeight||1)*ssaoScale))
-      );
       ssaoPass.aoClamp=Math.max(0,Math.min(1,(config.ssaoIntensity??.12)*(ultra?.92:.82)));
       ssaoPass.maxDistance=Math.max(.02,Number(config.ssaoFalloff??(ssaoPass.kernelRadius*2.5)));
     }
@@ -525,25 +520,10 @@ export async function createAurumPostPipeline(
     }else{
       composer.setSize?.(renderer.domElement.clientWidth||renderer.domElement.width,renderer.domElement.clientHeight||renderer.domElement.height);
     }
-    if(ssrSavePass){
-      ssrSavePass.setSize?.(
-        renderer.domElement.width||renderer.domElement.clientWidth||1,
-        renderer.domElement.height||renderer.domElement.clientHeight||1
-      );
-    }
     if(ssrPass){
-      ssrPass.setSize?.(
-        renderer.domElement.width||renderer.domElement.clientWidth||1,
-        renderer.domElement.height||renderer.domElement.clientHeight||1
-      );
+      // EffectComposer.setSize() already resizes every pass using its active DPR.
+      // Only update SSR quality here; a second setSize() reallocates its targets.
       ssrPass.resolutionScale=ultra?.85:high?.65:.45;
-    }
-    if(ssaoPass){
-      const ssaoScale=ultra?.72:high?.82:.70;
-      ssaoPass.setSize?.(
-        Math.max(1,Math.floor((renderer.domElement.width||renderer.domElement.clientWidth||1)*ssaoScale)),
-        Math.max(1,Math.floor((renderer.domElement.height||renderer.domElement.clientHeight||1)*ssaoScale))
-      );
     }
     if(diagnosticMode === "environment") {
       const state = {
