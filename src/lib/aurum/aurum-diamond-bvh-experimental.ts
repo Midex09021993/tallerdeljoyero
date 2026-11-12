@@ -116,6 +116,21 @@ export function prepareAurumDiamondBvhExperiment(
     throw new Error("[AURUM diamond BVH] El paquete no devolvió un material Three.js.");
   }
 
+  // Preserve diamond HDR radiance for a single tone-mapping pass.
+  // Fail closed to the original material fallback if the package output changes.
+  if (!(material instanceof THREE.ShaderMaterial)) {
+    throw new Error("[AURUM diamond BVH] El paquete no devolvió un ShaderMaterial compatible.");
+  }
+  const acesOutput = "gl_FragColor = vec4(aces(hdrColor), 1.0);";
+  if (!material.fragmentShader.includes(acesOutput)) {
+    throw new Error("[AURUM diamond BVH] No se encontró la salida ACES esperada; se conserva el material original.");
+  }
+  material.fragmentShader = material.fragmentShader.replace(
+    acesOutput,
+    "gl_FragColor = vec4(hdrColor, 1.0);",
+  );
+  material.needsUpdate = true;
+
   const rotation = THREE.MathUtils.radToDeg(options.environmentRotationRadians ?? 0);
   api.setDiamondEnvironmentRotation?.(material, { x: 0, y: rotation, z: 0 });
 
