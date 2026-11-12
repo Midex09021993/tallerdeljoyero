@@ -14,13 +14,14 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
   if(!material) return material;
 
   const family=String(material.userData?.aurumGemFamily??"");
+  const isDiamond=family.trim().toLowerCase()==="diamante";
   const brilliance=Math.max(0,Math.min(1.2,Number(profile.brilliance??.75)));
   const facetContrast=Math.max(0,Math.min(1.2,Number(profile.facetContrast??.9)));
   const baseDispersion=Math.max(0,Number(profile.dispersion??material.dispersion??0));
 
   // Diamonds and moissanite naturally show stronger spectral separation;
   // colored stones stay deliberately restrained so body color remains dominant.
-  const familyDispersionScale=family==="Diamante"
+  const familyDispersionScale=isDiamond
     ? 0.88
     : family==="Moissanita"
       ? 1.00
@@ -32,12 +33,12 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
             ? .76
             : .80;
 
-  const strength=family==="Diamante"
+  const strength=isDiamond
     ? .16*brilliance
     : family==="Moissanita"
       ? .20*brilliance
       : .045*brilliance;
-  const contrastStrength=(family==="Diamante" ? .88 : .075)*facetContrast;
+  const contrastStrength=(isDiamond ? .88 : .075)*facetContrast;
   const colorChange:any=(profile as any).colorChange;
   const oilDrop:any=(profile as any).oilDrop;
   const oilDropEnabled=Boolean(oilDrop?.enabled);
@@ -83,7 +84,7 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
   const ijewel=material.userData?.aurumIJEWELParameters ?? {};
   // Controlled diamond A/B laboratory. It is read once when the material
   // shader is prepared; the normal production path has no extra per-frame work.
-  const diamondTestMode=family==="Diamante" && typeof window!=="undefined"
+  const diamondTestMode=isDiamond && typeof window!=="undefined"
     ? new URLSearchParams(window.location.search).get("aurumDiamondTest")
     : null;
   const diamondTestProfiles:Record<string,{label:string;ior:number;dispersion:number;rayBounces:number}>={
@@ -94,7 +95,7 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
   const diamondTestProfile=diamondTestMode ? diamondTestProfiles[diamondTestMode] : undefined;
   // A explicitly restores the unmodified AURUM shader. B-D enable the
   // iJewel-inspired environment-ray approximation with isolated parameters.
-  const ijewelEnabled=family==="Diamante" && diamondTestMode!=="a"
+  const ijewelEnabled=isDiamond && diamondTestMode!=="a"
     && (Boolean(material.userData?.aurumIJEWELActive) || Boolean(diamondTestProfile));
   const effectiveIewel=diamondTestProfile ?? {
     label:"Source material defaults",
@@ -599,10 +600,10 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // Stronger diamond-only facet separation addresses the washed-out crown
         // seen against the iJewel reference. This is contrast, not extra exposure:
         // preserve the colored-gem response and leave PBR refraction untouched.
-        float aurumFacetFloor=${family === "Diamante" ? "0.81" : "0.992"};
+        float aurumFacetFloor=${isDiamond ? "0.81" : "0.992"};
         float aurumContrast=mix(aurumFacetFloor,1.0,aurumScintillationContrast*aurumFacetContrast);
         gl_FragColor.rgb*=aurumContrast;
-        ${family === "Diamante" ? `
+        ${isDiamond ? `
         // Slightly lift diamond face brightness without raising scene exposure.
         gl_FragColor.rgb *= 1.10;
         // Restrained angelic diamond aura: a cool-white grazing-angle lift on the
@@ -676,7 +677,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
                 float aurumGemLightResponse=aurumGemNdotL*0.18+aurumGemFacetSpecular*0.42+aurumGemFacetEdge*0.12;
                 gl_FragColor.rgb+=vec3(1.0)*aurumGemLightEnergy*aurumGemLightResponse;
 
-        ${family === "Diamante" ? `
+        ${isDiamond ? `
                 // Diamond-only overhead studio softbox. Keep it independent from
                 // the scene HDRI and physical RectAreaLights: this broad, fixed
                 // source gives the crown a stable white reflection while the
@@ -757,7 +758,7 @@ export const setAurumGemShaderQuality=(target:any,quality:AurumGemShaderQuality)
     // which can flatten catalog hue and absorption differences under HDR.
     // Authored MeshPhysicalMaterial properties remain intact; CAPTURE restores
     // the full custom shader from aurumBeautyOnBeforeCompile.
-    if(quality==="live" && ud.aurumGemFamily==="Diamante"){
+    if(quality==="live" && String(ud.aurumGemFamily??"").trim().toLowerCase()==="diamante"){
       return;
     }
     if(quality==="live"){
