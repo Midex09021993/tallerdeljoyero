@@ -3316,12 +3316,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             });
             // Controlled LIVE TAA trial: accumulate only after the camera stops.
             // It is deliberately disabled during orbit and on low/extreme budgets.
-            const settledTaaRequested = Boolean(
-              idleTaaAvailable
-              && measuredQualityId !== "low"
-              && !(measuredQualityId === "" && Number(renderQuality.pixelRatio ?? 1.5) <= 1.01)
-              && !extremeGeometry
-            );
+            // Keep the settled gemstone appearance identical to LIVE: temporal
+            // accumulation changes facet contrast, so the gem-only spatial AA is
+            // the sole anti-aliasing stage in both states.
+            const settledTaaRequested = false;
             // Settled preview must always restore the full BEAUTY material and
             // gemstone profile, independently of whether TAA or DOF is enabled.
             // Only extreme geometry keeps the direct LIVE fallback for safety.
@@ -3392,7 +3390,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // Use EffectComposer in settled BEAUTY mode whenever an enabled
             // post-processing feature actually requires it. TAA, SSR, Bloom and DOF
             // must not be configured and then silently bypassed by direct rendering.
-            const settledComposerRequested = (settledTaaRequested && idleTaaAvailable)
+            const settledComposerRequested = idleSoftEdgeAaAvailable
+              || (settledTaaRequested && idleTaaAvailable)
               || settledSsrEnabled
               || settledBloomRequested
               || (postRuntimeConfig.dof === true && Boolean(settledDofPass));
