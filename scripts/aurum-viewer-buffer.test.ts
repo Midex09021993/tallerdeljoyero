@@ -441,3 +441,17 @@ test("studio reflector labels distinguish the XL diffuser from the main reflecto
   expect(componentSource).toContain("DIFUSOR AÉREO XL");
   expect(componentSource).toContain('label:"Reflector Cenital de Estudio"');
 });
+
+
+test("Mi Nube persists the complete studio lighting configuration", () => {
+  const componentSource = readFileSync("src/components/AurumRender.tsx", "utf8");
+
+  expect(componentSource).toContain("largeSoftboxEnabled: lightingStudio.largeSoftboxEnabled === true");
+  expect(componentSource).toContain("largeSoftboxPower: lightingStudio.largeSoftboxPower");
+  expect(componentSource).toContain("reflectorPower: lightingStudio.reflectorPower");
+  expect(componentSource).toContain("reflectorScale: lightingStudio.reflectorScale");
+  expect(componentSource).toContain("reflectors: {");
+  expect(componentSource).toContain("patch.largeSoftboxEnabled = guardadas.largeSoftboxEnabled");
+  expect(componentSource).toContain("patch.reflectors = reflectorsPatch");
+  expect(componentSource).toContain("Missing XL/reflector values deliberately retain the safe default (XL off).");
+});
