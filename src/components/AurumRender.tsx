@@ -1994,10 +1994,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         requestAnimationFrame(() => {
           if (modelo) {
             camaraVista("frontal");
-            // Keep the interactive preview lightweight after initial framing.
-            // Full photographic post-processing is reserved for image capture.
-            liveFastPathRef.current = true;
-            aplicarPerfilLive();
+            // Keep the LIVE gemstone material profile for responsiveness, but
+            // do not switch the renderer to the direct path: that bypasses the
+            // settled composer and silently removes FXAA/TAA until the first orbit.
+            aplicarPerfilLive(true);
             renderer.shadowMap.enabled = false;
             renderer.shadowMap.needsUpdate = false;
             invalidateRenderRef.current?.();
