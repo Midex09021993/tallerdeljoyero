@@ -2,6 +2,9 @@ import { RectAreaLightUniformsLib } from "three/examples/jsm/lights/RectAreaLigh
 import { getAurumLightingPreset, type AurumLightingRenderPresetId } from "../aurum-lighting-engine";
 import { getAurumReflectionRigProfile } from "../aurum-reflection-engine";
 
+/** The XL softbox is opt-in: missing configuration must never illuminate the scene. */
+export const isAurumLargeSoftboxEnabled = (config: any): boolean => config?.largeSoftboxEnabled === true;
+
 export interface AurumLightingController {
   readonly lights: Record<string, any>;
   create: () => void;
@@ -196,7 +199,7 @@ export function createAurumLightingController(
           lights.largeSoftbox.name = "aurum-large-overhead-softbox";
           lights.largeSoftbox.position.set(0, 8, 7);
           lights.largeSoftbox.lookAt(0, 0, 0);
-          lights.largeSoftbox.visible = config.largeSoftboxEnabled ?? true;
+          lights.largeSoftbox.visible = isAurumLargeSoftboxEnabled(config);
           scene.add(lights.largeSoftbox);
         }
       }
@@ -211,7 +214,7 @@ export function createAurumLightingController(
       applyTemperature();
       applyReflectorPower();
       if (lights.largeSoftbox) {
-        lights.largeSoftbox.visible = config.largeSoftboxEnabled ?? true;
+        lights.largeSoftbox.visible = isAurumLargeSoftboxEnabled(config);
         lights.largeSoftbox.intensity = 2.2 * Math.max(0, Math.min(4, Number(config.largeSoftboxPower ?? 1)));
       }
       // Gem illumination is applied only by the gemstone shader, never as a
