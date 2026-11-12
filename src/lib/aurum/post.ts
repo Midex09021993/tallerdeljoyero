@@ -221,8 +221,9 @@ export async function createAurumPostPipeline(
     // Reuse these arrays on every frame instead of traversing the whole scene
     // and allocating visibility snapshots inside the hot render path.
     const cachedGemMeshes:any[]=[];
-    const cachedOccluderMeshes:any[]=[];
-    const cachedOccluderVisibility:boolean[]=[];
+    const previousGemLayerMasks=new Map<any,number>();
+    const gemMaskLayer=31;
+    const gemMaskLayerBit=1<<gemMaskLayer;
     const cachedClearColor=new THREE.Color();
     let lastGemMaskCameraState:number[]|null=null;
     const readGemMaskCameraState=():number[]=>{
@@ -240,17 +241,22 @@ export async function createAurumPostPipeline(
       // A scene/model refresh invalidates the cached mask even if the camera
       // happens to remain at the same transform.
       lastGemMaskCameraState=null;
+      // Restore any previous classification before rebuilding. This keeps the
+      // dedicated mask layer isolated from the beauty camera and other systems.
+      for(const [mesh,originalMask] of previousGemLayerMasks){
+        if(mesh?.layers) mesh.layers.mask=originalMask;
+      }
+      previousGemLayerMasks.clear();
       cachedGemMeshes.length=0;
-      cachedOccluderMeshes.length=0;
       scene.traverse((object:any)=>{
         if(!object?.isMesh) return;
-        if(getAurumRenderCategory(object)==="gema") cachedGemMeshes.push(object);
-        else cachedOccluderMeshes.push(object);
+        if(getAurumRenderCategory(object)!=="gema") return;
+        cachedGemMeshes.push(object);
+        if(object.layers){
+          previousGemLayerMasks.set(object,object.layers.mask);
+          object.layers.enable(gemMaskLayer);
+        }
       });
-      // Only non-gem meshes need a visibility snapshot: the gem meshes remain
-      // visible for the mask color pass. Keep the arrays aligned with the
-      // occluder cache and rebuild them only when the scene structure changes.
-      cachedOccluderVisibility.length=cachedOccluderMeshes.length;
     };
     refreshGemMaskCache();
     gemMaskPass={
@@ -296,28 +302,28 @@ export async function createAurumPostPipeline(
         const previousOverride=scene.overrideMaterial;
         const previousBackground=scene.background;
         const previousAutoClear=activeRenderer.autoClear;
+        const previousCameraLayerMask=camera.layers?.mask;
         activeRenderer.getClearColor(cachedClearColor);
         const previousClearColor=cachedClearColor;
         const previousClearAlpha=activeRenderer.getClearAlpha();
-        for(let i=0;i<cachedOccluderMeshes.length;i++){
-          cachedOccluderVisibility[i]=cachedOccluderMeshes[i].visible;
-        }
         try{
           activeRenderer.setRenderTarget(gemMaskTarget);
           activeRenderer.setClearColor(0x000000,0);
           activeRenderer.autoClear=false;
           activeRenderer.clear(true,true,true);
           scene.background=null;
+          // Pass 1: preserve the camera's original layer mask so every visible
+          // surface (including foreground metal) writes depth for occlusion.
           scene.overrideMaterial=depthOnlyMaterial;
           activeRenderer.render(scene,camera);
-          for(let i=0;i<cachedOccluderMeshes.length;i++){
-            cachedOccluderMeshes[i].visible=false;
-          }
+          // Pass 2: render only gems through a dedicated layer. This replaces
+          // per-frame visibility snapshots and N mesh.visible writes/restores.
           scene.overrideMaterial=gemMaskMaterial;
+          if(camera.layers) camera.layers.mask=gemMaskLayerBit;
           activeRenderer.render(scene,camera);
         }finally{
-          for(let i=0;i<cachedOccluderMeshes.length;i++){
-            cachedOccluderMeshes[i].visible=cachedOccluderVisibility[i];
+          if(camera.layers && previousCameraLayerMask!==undefined){
+            camera.layers.mask=previousCameraLayerMask;
           }
           scene.overrideMaterial=previousOverride;
           scene.background=previousBackground;
@@ -328,6 +334,10 @@ export async function createAurumPostPipeline(
         fxaaPass.material.uniforms.gemMask.value=gemMaskTarget.texture;
       },
       dispose(){
+        for(const [mesh,originalMask] of previousGemLayerMasks){
+          if(mesh?.layers) mesh.layers.mask=originalMask;
+        }
+        previousGemLayerMasks.clear();
         gemMaskTarget.dispose();
         depthOnlyMaterial.dispose();
         gemMaskMaterial.dispose();
