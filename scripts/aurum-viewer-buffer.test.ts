@@ -26,7 +26,7 @@ test("the viewer pauses on WebGL context loss and resumes after restoration", ()
   const originalResizeObserver = globalThis.ResizeObserver;
   const originalRequestAnimationFrame = globalThis.requestAnimationFrame;
   const originalCancelAnimationFrame = globalThis.cancelAnimationFrame;
-  let scheduled = new Map<number, FrameRequestCallback>();
+  const scheduled = new Map<number, FrameRequestCallback>();
   let nextFrameId = 1;
   let renderCount = 0;
   let resizeCount = 0;
