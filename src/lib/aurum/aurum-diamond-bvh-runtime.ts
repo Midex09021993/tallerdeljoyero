@@ -78,6 +78,22 @@ export async function createAurumDiamondBvhRuntime(options: {
   const entries = new Map<THREE.Mesh, RecordEntry>();
   let disposed = false;
 
+  // Camera uniforms are shared by all BVH gems. Avoid rewriting them when
+  // multiple invalidations/API calls occur without an actual camera change.
+  // Reset after refresh so newly-created BVH materials always receive a camera update.
+  let lastCameraState: number[] | null = null;
+  const readCameraState = (): number[] => {
+    const camera = options.camera as any;
+    const position = camera.position;
+    const quaternion = camera.quaternion;
+    return [
+      position?.x ?? 0, position?.y ?? 0, position?.z ?? 0,
+      quaternion?.x ?? 0, quaternion?.y ?? 0, quaternion?.z ?? 0, quaternion?.w ?? 1,
+      camera.zoom ?? 1, camera.fov ?? 0, camera.aspect ?? 0,
+      camera.near ?? 0, camera.far ?? 0,
+    ];
+  };
+
   const familyCounts: Record<string, number> = {};
   const skippedTargetMeshes: Array<{ mesh: string; materialFamilies: string[]; activeGemFamily: string; reason: string }> = [];
 
@@ -93,6 +109,7 @@ export async function createAurumDiamondBvhRuntime(options: {
 
   const refresh = (model: THREE.Object3D | null | undefined) => {
     if (!model || disposed) return;
+    lastCameraState = null;
     const found = new Set<THREE.Mesh>();
     for (const key of Object.keys(familyCounts)) delete familyCounts[key];
     skippedTargetMeshes.length = 0;
@@ -342,7 +359,18 @@ export async function createAurumDiamondBvhRuntime(options: {
   return {
     refresh,
     update() {
-      if (disposed) return;
+      if (disposed || entries.size === 0) return;
+      const nextCameraState = readCameraState();
+      if (
+        lastCameraState
+        && nextCameraState.length === lastCameraState.length
+        && nextCameraState.every((value, index) => value === lastCameraState![index])
+      ) {
+        return;
+      }
+      // Commit the signature before updating materials: if one package update
+      // throws, the caller's existing error boundary still handles that frame.
+      lastCameraState = nextCameraState;
       for (const entry of entries.values()) {
         packageApi.updateDiamondCamera(entry.experimentalMaterial, options.camera);
       }
