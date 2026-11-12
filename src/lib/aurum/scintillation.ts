@@ -21,7 +21,7 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
   // Diamonds and moissanite naturally show stronger spectral separation;
   // colored stones stay deliberately restrained so body color remains dominant.
   const familyDispersionScale=family==="Diamante"
-    ? 1.00
+    ? 0.88
     : family==="Moissanita"
       ? 1.00
       : family==="Esmeralda"
@@ -530,7 +530,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // Diamond-only microcontrast: separate adjacent bright/dark facets
         // without increasing the scene exposure. Keep the pivot near mid-grey
         // and clamp negative energy so this cannot create invalid HDR values.
-        ijInternal=max((ijInternal-vec3(0.46))*1.12+vec3(0.46),vec3(0.0));
+        ijInternal=max((ijInternal-vec3(0.46))*1.06+vec3(0.46),vec3(0.0));
 
         // Internal fire from the wavelength-separated environment rays above.
         // Use the actual R/G/B ray samples and their energy spread as a mask;
@@ -547,7 +547,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // Grazing facets retain the full response; face-on facets receive 55%.
         float ijFaceOnFire=mix(0.55,1.0,1.0-smoothstep(0.78,0.98,ijCosTheta));
         float ijFireFacet=smoothstep(0.10,0.42,ijFresnel)*ijFaceOnFire;
-        float ijFireMask=clamp(ijFireEnergy*ijFireFacet*0.20,0.0,0.10);
+        float ijFireMask=clamp(ijFireEnergy*ijFireFacet*0.16,0.0,0.085);
         vec3 ijFireColor=vec3(
           max(ijAccum.r-ijAccum.g*0.72,0.0),
           max(ijAccum.g-max(ijAccum.r,ijAccum.b)*0.78,0.0),
@@ -558,7 +558,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // estimate carry more of the final diamond color while retaining a
         // controlled share of the physical PBR/Fresnel surface for highlights.
         // This is still an environment-sampling approximation, not geometric tracing.
-        float ijInternalWeight=clamp(ijReflect*0.82,0.60,0.70);
+        float ijInternalWeight=clamp(ijReflect*0.76,0.50,0.60);
         gl_FragColor.rgb=mix(gl_FragColor.rgb,ijInternal,ijInternalWeight);
         // Keep geometry shading restrained: a strong normal-based multiplier
         // was making broad crown facets look uniformly grey.
@@ -599,7 +599,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // Stronger diamond-only facet separation addresses the washed-out crown
         // seen against the iJewel reference. This is contrast, not extra exposure:
         // preserve the colored-gem response and leave PBR refraction untouched.
-        float aurumFacetFloor=${family === "Diamante" ? "0.70" : "0.992"};
+        float aurumFacetFloor=${family === "Diamante" ? "0.78" : "0.992"};
         float aurumContrast=mix(aurumFacetFloor,1.0,aurumScintillationContrast*aurumFacetContrast);
         gl_FragColor.rgb*=aurumContrast;
         ${family === "Diamante" ? `
