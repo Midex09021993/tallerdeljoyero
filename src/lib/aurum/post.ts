@@ -202,7 +202,6 @@ export async function createAurumPostPipeline(
     composer.addPass(outputPass);
     // FXAA must be the final pass in the chain.
     composer.addPass(fxaaPass);
-    composer.addPass(outputPass);
   } catch (error) {
     // Keep the live viewer resilient, but never hide why the photographic
     // pipeline failed: PNG capture diagnostics need the original exception.
