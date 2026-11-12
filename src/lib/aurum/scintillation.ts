@@ -418,7 +418,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         vec3 ijDirG=refract(ijView,ijNormal,ijEtaG);
         vec3 ijDirB=refract(ijView,ijNormal,ijEtaB);
         vec3 ijAccum=vec3(0.0);
-        float ijWeight=0.58;
+        float ijWeight=0.64;
         float ijDepth=1.0;
         // First internal path: sample wavelength-separated rays in the HDRI.
         vec3 ijWorldR=inverseTransformDirection(normalize(ijDirR),viewMatrix);
@@ -448,7 +448,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         ijEnvG=textureCubeUV(envMap,envMapRotation*ijWorldG,0.0).rgb;
         ijEnvB=textureCubeUV(envMap,envMapRotation*ijWorldB,0.0).rgb;
         ijDepth=exp(-max(aurumIJEWELAbsorptionFactor,0.001)*.12);
-        ijAccum+=vec3(ijEnvR.r,ijEnvG.g,ijEnvB.b)*(.42*ijDepth);
+        ijAccum+=vec3(ijEnvR.r,ijEnvG.g,ijEnvB.b)*(.46*ijDepth);
 
         // Optional third environment sample: approximate a second pavilion
         // interaction without claiming geometric multi-bounce ray tracing.
@@ -464,7 +464,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
           ijEnvR=textureCubeUV(envMap,envMapRotation*ijWorldR,0.0).rgb;
           ijEnvG=textureCubeUV(envMap,envMapRotation*ijWorldG,0.0).rgb;
           ijEnvB=textureCubeUV(envMap,envMapRotation*ijWorldB,0.0).rgb;
-          float ijThirdBounceWeight=0.12*ijDepth;
+          float ijThirdBounceWeight=0.14*ijDepth;
           ijAccum+=vec3(ijEnvR.r,ijEnvG.g,ijEnvB.b)*ijThirdBounceWeight;
         }
         // Bounces 4 and 5: low-energy, geometry-guided environment samples.
@@ -478,7 +478,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
           vec3 ijBounceDir4=normalize(ijDirG+ijBounceTangent4*0.045);
           vec3 ijBounceWorld4=inverseTransformDirection(ijBounceDir4,viewMatrix);
           vec3 ijBounceEnv4=textureCubeUV(envMap,envMapRotation*ijBounceWorld4,0.0).rgb;
-          ijAccum+=ijBounceEnv4*(0.045*ijDepth);
+          ijAccum+=ijBounceEnv4*(0.050*ijDepth);
         }
         if(aurumIJEWELRayBounces>=5.0){
           vec3 ijBounceAxis5=abs(ijNormal.y)<0.9?vec3(0.0,1.0,0.0):vec3(1.0,0.0,0.0);
@@ -487,7 +487,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
           vec3 ijBounceDir5=normalize(ijDirG-ijBounceBitangent5*0.065);
           vec3 ijBounceWorld5=inverseTransformDirection(ijBounceDir5,viewMatrix);
           vec3 ijBounceEnv5=textureCubeUV(envMap,envMapRotation*ijBounceWorld5,0.0).rgb;
-          ijAccum+=ijBounceEnv5*(0.0225*ijDepth);
+          ijAccum+=ijBounceEnv5*(0.025*ijDepth);
         }
         // Experimental virtual internal-facet reflections.
         // These are additional directional PMREM samples, not added triangles:
@@ -526,7 +526,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // surface. HDR samples can be dark on some directions; replacing the
         // surface outright made the diamond nearly opaque/black. Keep enough
         // PBR energy for readable crown facets and a restrained transmission path.
-        vec3 ijInternal=mix(ijAccum,ijAccum*1.12,ijFresnel);
+        vec3 ijInternal=mix(ijAccum,ijAccum*1.16,ijFresnel);
         // Diamond-only microcontrast: separate adjacent bright/dark facets
         // without increasing the scene exposure. Keep the pivot near mid-grey
         // and clamp negative energy so this cannot create invalid HDR values.
@@ -558,7 +558,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // estimate carry more of the final diamond color while retaining a
         // controlled share of the physical PBR/Fresnel surface for highlights.
         // This is still an environment-sampling approximation, not geometric tracing.
-        float ijInternalWeight=clamp(ijReflect*0.76,0.50,0.60);
+        float ijInternalWeight=clamp(ijReflect*0.80,0.54,0.64);
         gl_FragColor.rgb=mix(gl_FragColor.rgb,ijInternal,ijInternalWeight);
         // Keep geometry shading restrained: a strong normal-based multiplier
         // was making broad crown facets look uniformly grey.
