@@ -221,7 +221,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [ptSamples, setPtSamples] = useState("256");
   const [ptProgress, setPtProgress] = useState<string|null>(null);
   const ptAbortRef = useRef<AbortController|null>(null);
-  const [lightingStudio, setLightingStudio] = useState<any>(() => ({...AURUM_LIGHTING_DEFAULT, temperatureK:5500, reflectorPower:2.5, reflectorScale:1.6, largeSoftboxEnabled:true, largeSoftboxPower:1.4, reflectors:{softbox:true,strip:true,kicker:true,edgeLeft:true,edgeRight:true}}));
+  const [lightingStudio, setLightingStudio] = useState<any>(() => ({...AURUM_LIGHTING_DEFAULT, temperatureK:5500, reflectorPower:2.5, reflectorScale:1.6, largeSoftboxEnabled:false, largeSoftboxPower:1.4, reflectors:{softbox:true,strip:true,kicker:true,edgeLeft:true,edgeRight:true}}));
   const lucesRef = useRef<((patch:any)=>void)|null>(null);
   const [, refrescarLuces] = useState(0);
   const actualizarLucesAurum = useCallback((patch:any) => {
@@ -236,7 +236,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       reflectors: patch.reflectors ? {...(prev.reflectors ?? {}), ...patch.reflectors} : prev.reflectors,
     }));
     lucesRef.current?.(patch);
-    invalidateRenderRef.current?.();
+    // Lighting controls are direct scene mutations. Render the updated scene
+    // immediately so the user never has to orbit to reveal the new light state.
+    // renderNow consumes any already queued demand frame, avoiding a duplicate.
+    if (viewerLoopRef.current?.renderNow) viewerLoopRef.current.renderNow();
+    else invalidateRenderRef.current?.();
     refrescarLuces(n=>n+1);
   }, []);
   const apiRef = useRef<any>(null);
@@ -4203,7 +4207,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       <div style={{marginTop:10,paddingTop:10,borderTop:"1px solid rgba(243,214,110,.28)",background:"rgba(243,214,110,.055)",borderRadius:9,padding:9}}>
         <label style={{display:"flex",alignItems:"center",justifyContent:"space-between",fontSize:12,fontWeight:700,color:"#f3d66e"}}>
           SOFTBOX AÉREO XL
-          <input aria-label="Activar softbox aéreo XL" type="checkbox" checked={lightingStudio.largeSoftboxEnabled ?? true} onChange={e=>actualizarLucesAurum({largeSoftboxEnabled:e.target.checked})}/>
+          <input aria-label="Activar softbox aéreo XL" type="checkbox" checked={lightingStudio.largeSoftboxEnabled === true} onChange={e=>actualizarLucesAurum({largeSoftboxEnabled:e.target.checked})}/>
         </label>
         <div style={{fontSize:10,color:"rgba(255,255,255,.68)",margin:"4px 0 7px"}}>Fuente rectangular de gran superficie para reflejos amplios y difusos sobre toda la joya.</div>
         <label style={{display:"block",fontSize:11}}>Potencia XL <strong style={{float:"right",color:"#f3d66e"}}>{(lightingStudio.largeSoftboxPower ?? 1.4).toFixed(1)}×</strong>
