@@ -200,7 +200,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [ptSamples, setPtSamples] = useState("256");
   const [ptProgress, setPtProgress] = useState<string|null>(null);
   const ptAbortRef = useRef<AbortController|null>(null);
-  const [lightingStudio, setLightingStudio] = useState<any>(() => ({...AURUM_LIGHTING_DEFAULT, reflectorScale: 1.35, reflectors: {softbox:true, strip:true, kicker:true, edgeLeft:true, edgeRight:true}}));
+  const [lightingStudio, setLightingStudio] = useState<any>(() => ({...AURUM_LIGHTING_DEFAULT, temperatureK:5500, reflectorScale:1.6, reflectors:{softbox:true,strip:true,kicker:true,edgeLeft:true,edgeRight:true}}));
   const lucesRef = useRef<((patch:any)=>void)|null>(null);
   const [, refrescarLuces] = useState(0);
   const actualizarLucesAurum = useCallback((patch:any) => {
@@ -4021,10 +4021,26 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
 
   const hexColor = (c:number) => "#" + c.toString(16).padStart(6, "0");
   const lightingPanel=(
-    <div style={{position:"absolute",right:84,top:72,zIndex:40,width:290,maxHeight:"calc(100% - 88px)",overflowY:"auto",padding:14,borderRadius:14,background:"rgba(12,14,18,.94)",color:"#fff",boxShadow:"0 12px 35px rgba(0,0,0,.35)",border:"1px solid rgba(255,255,255,.10)",fontFamily:"Inter,system-ui"}}>
+    <div style={{position:"absolute",right:84,top:72,zIndex:40,width:340,maxHeight:"calc(100% - 88px)",overflowY:"auto",padding:14,borderRadius:14,background:"rgba(12,14,18,.94)",color:"#fff",boxShadow:"0 12px 35px rgba(0,0,0,.35)",border:"1px solid rgba(255,255,255,.10)",fontFamily:"Inter,system-ui"}}>
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
         <div style={{fontWeight:700,fontSize:14}}>ESTUDIO DE ILUMINACIÓN AURUM</div>
         <button type="button" aria-label="Cerrar panel de iluminación" onClick={()=>setLightingOpen(false)} style={{background:"none",border:"none",color:"rgba(255,255,255,.5)",cursor:"pointer"}}><X className="size-4"/></button>
+      </div>
+      <div style={{padding:"10px 0",marginBottom:8,borderTop:"1px solid rgba(255,255,255,.12)",borderBottom:"1px solid rgba(255,255,255,.12)"}}>
+        <div style={{fontSize:11,fontWeight:700,color:"#f3d66e",letterSpacing:".08em",textTransform:"uppercase",marginBottom:7}}>Calibración de estudio</div>
+        <label style={{display:"block",fontSize:11}}>Temperatura de color <strong style={{float:"right",color:"#f3d66e"}}>{Math.round(lightingStudio.temperatureK ?? 5500)} K</strong>
+          <input aria-label="Temperatura de color del estudio" style={{width:"100%"}} type="range" min="3200" max="7500" step="100" value={lightingStudio.temperatureK ?? 5500} onChange={e=>actualizarLucesAurum({temperatureK:+e.target.value})}/>
+        </label>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(3,minmax(0,1fr))",gap:5,marginTop:7}}>
+          {([{label:"Cálida",value:4000},{label:"Neutra",value:5500},{label:"Fría",value:6500}] as const).map(item=><button key={item.value} type="button" onClick={()=>actualizarLucesAurum({temperatureK:item.value})} style={{border:"1px solid rgba(255,255,255,.16)",borderRadius:7,padding:"6px 4px",fontSize:10,color:Math.round(lightingStudio.temperatureK??5500)===item.value?"#171a1f":"#fff",background:Math.round(lightingStudio.temperatureK??5500)===item.value?"#f3d66e":"rgba(255,255,255,.06)"}}>{item.label}</button>)}
+        </div>
+        <div style={{fontSize:10,fontWeight:700,color:"#f3d66e",letterSpacing:".08em",textTransform:"uppercase",margin:"12px 0 6px"}}>Recetas fotográficas</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:5}}>
+          <button type="button" onClick={()=>actualizarLucesAurum({temperatureK:5500,reflectorScale:2.1,key:{...lightingStudio.key,enabled:true,intensity:1.25},fill:{...lightingStudio.fill,enabled:true,intensity:.48},rim:{...lightingStudio.rim,enabled:true,intensity:.7},gem:{...lightingStudio.gem,enabled:true,intensity:1.2},front:{...lightingStudio.front,enabled:true,intensity:.8}})} style={{border:"1px solid rgba(255,255,255,.16)",borderRadius:7,padding:7,fontSize:10,textAlign:"left",background:"rgba(255,255,255,.06)"}}>Diamond Brilliance<small style={{display:"block",opacity:.6}}>Gemas y destellos</small></button>
+          <button type="button" onClick={()=>actualizarLucesAurum({temperatureK:4300,reflectorScale:2.2,key:{...lightingStudio.key,enabled:true,intensity:1.1},fill:{...lightingStudio.fill,enabled:true,intensity:.7},rim:{...lightingStudio.rim,enabled:true,intensity:.55},gem:{...lightingStudio.gem,enabled:false},front:{...lightingStudio.front,enabled:true,intensity:.65}})} style={{border:"1px solid rgba(255,255,255,.16)",borderRadius:7,padding:7,fontSize:10,textAlign:"left",background:"rgba(255,255,255,.06)"}}>Gold Luxury<small style={{display:"block",opacity:.6}}>Reflejos cálidos</small></button>
+          <button type="button" onClick={()=>actualizarLucesAurum({temperatureK:5500,reflectorScale:2.4,key:{...lightingStudio.key,enabled:true,intensity:.9},fill:{...lightingStudio.fill,enabled:true,intensity:.85},rim:{...lightingStudio.rim,enabled:true,intensity:.45},gem:{...lightingStudio.gem,enabled:true,intensity:.8},front:{...lightingStudio.front,enabled:true,intensity:.9}})} style={{border:"1px solid rgba(255,255,255,.16)",borderRadius:7,padding:7,fontSize:10,textAlign:"left",background:"rgba(255,255,255,.06)"}}>Commercial Catalog<small style={{display:"block",opacity:.6}}>Luz equilibrada</small></button>
+          <button type="button" onClick={()=>actualizarLucesAurum({temperatureK:5500,reflectorScale:1.6,key:{...AURUM_LIGHTING_DEFAULT.key},fill:{...AURUM_LIGHTING_DEFAULT.fill},rim:{...AURUM_LIGHTING_DEFAULT.rim},gem:{...AURUM_LIGHTING_DEFAULT.gem},front:{...AURUM_LIGHTING_DEFAULT.front}})} style={{border:"1px solid rgba(255,255,255,.16)",borderRadius:7,padding:7,fontSize:10,textAlign:"left",background:"rgba(255,255,255,.06)"}}>Restablecer<small style={{display:"block",opacity:.6}}>Configuración base</small></button>
+        </div>
       </div>
       <label style={{display:"flex",justifyContent:"space-between",fontSize:12}}>Luz principal <input type="checkbox" checked={lightingStudio.key.enabled} onChange={e=>actualizarLucesAurum({key:{...lightingStudio.key,enabled:e.target.checked}})}/></label>
       <label style={{display:"block",fontSize:11}}>Intensidad de luz principal<input aria-label="Intensidad de luz principal" style={{width:"100%"}} type="range" min="0" max="4" step=".05" value={lightingStudio.key.intensity} onChange={e=>actualizarLucesAurum({key:{...lightingStudio.key,intensity:+e.target.value}})}/></label>
@@ -4042,7 +4058,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           {([{id:"softbox",label:"Softbox principal"},{id:"strip",label:"Strip lateral"},{id:"kicker",label:"Reflector trasero"},{id:"edgeLeft",label:"Borde izquierdo"},{id:"edgeRight",label:"Borde derecho"}] as const).map(item=><label key={item.id} style={{display:"flex",alignItems:"center",gap:5}}><input type="checkbox" checked={lightingStudio.reflectors?.[item.id] ?? true} onChange={e=>actualizarLucesAurum({reflectors:{...(lightingStudio.reflectors ?? {}),[item.id]:e.target.checked}})}/>{item.label}</label>)}
         </div>
       </div>
-      <div style={{marginTop:10,paddingTop:10,borderTop:"1px solid rgba(255,255,255,.12)"}}><label style={{display:"block",fontSize:12,fontWeight:600}}>Tamaño de reflectores <span style={{float:"right",color:"#f3d66e"}}>{Math.round((lightingStudio.reflectorScale ?? 1.35)*100)}%</span><input aria-label="Tamaño de reflectores" style={{width:"100%"}} type="range" min=".75" max="2" step=".05" value={lightingStudio.reflectorScale ?? 1.35} onChange={e=>actualizarLucesAurum({reflectorScale:+e.target.value})}/></label><p style={{fontSize:10,color:"rgba(255,255,255,.62)",marginTop:3}}>Ajusta el ancho y alto de las fuentes de estudio sin aumentar su intensidad.</p></div>
+      <div style={{marginTop:10,paddingTop:10,borderTop:"1px solid rgba(255,255,255,.12)"}}><label style={{display:"block",fontSize:12,fontWeight:600}}>Tamaño de reflectores <span style={{float:"right",color:"#f3d66e"}}>{Math.round((lightingStudio.reflectorScale ?? 1.6)*100)}%</span><input aria-label="Tamaño de reflectores" style={{width:"100%"}} type="range" min=".75" max="3.5" step=".05" value={lightingStudio.reflectorScale ?? 1.6} onChange={e=>actualizarLucesAurum({reflectorScale:+e.target.value})}/></label><p style={{fontSize:10,color:"rgba(255,255,255,.62)",marginTop:3}}>Ajusta el tamaño aparente de los softboxes y strips; fuentes mayores producen reflejos más amplios y suaves.</p></div>
     </div>
   );
   return (<>
