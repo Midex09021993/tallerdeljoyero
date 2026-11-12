@@ -214,11 +214,61 @@ export function startAurumViewerLoop(
   let interactionEnding = false;
   let idleFramesRemaining = 0;
   let continuousRendering = false;
+  // A transient GPU/compositor exception must not permanently wedge the
+  // demand-driven loop. Retry a small, bounded number of times with backoff;
+  // a later host wake or explicit user invalidation can always start fresh.
+  let frameRetryTimer: number | null = null;
+  let frameRetryAttempts = 0;
+  const maxFrameRetryAttempts = 3;
   const progressiveFrames = Math.max(0, Math.min(32, Math.floor(interaction?.progressiveFrames ?? 32)));
 
-  const requestRender = () => {
+  const clearFrameRetry = (resetAttempts = false) => {
+    if (frameRetryTimer !== null) {
+      window.clearTimeout(frameRetryTimer);
+      frameRetryTimer = null;
+    }
+    if (resetAttempts) frameRetryAttempts = 0;
+  };
+
+  const requestRender = (resetRecovery = true) => {
+    if (resetRecovery) clearFrameRetry(true);
     dirty = true;
     if (!frame && !ticking && !stopped && !paused) frame = requestAnimationFrame(tick);
+  };
+
+  const scheduleFrameRetry = (error: unknown) => {
+    if (stopped || paused || frameRetryTimer !== null) return;
+    if (frameRetryAttempts >= maxFrameRetryAttempts) {
+      dirty = false;
+      console.error("[AURUM][VIEWER][FRAME_RECOVERY_EXHAUSTED] Automatic retries stopped after repeated frame failures. A host wake or user action can retry safely.", {
+        attempts: frameRetryAttempts,
+        canvas: canvas ? { width: canvas.width, height: canvas.height, clientWidth: canvas.clientWidth, clientHeight: canvas.clientHeight } : null,
+        contextLost: Boolean(canvas && viewer.renderer?.getContext?.()?.isContextLost?.()),
+      });
+      return;
+    }
+    const delays = [120, 360, 900];
+    const delay = delays[Math.min(frameRetryAttempts, delays.length - 1)];
+    frameRetryAttempts += 1;
+    dirty = true;
+    console.warn("[AURUM][VIEWER][FRAME_RECOVERY_SCHEDULED] Retrying a failed frame with bounded backoff.", {
+      attempt: frameRetryAttempts,
+      maxAttempts: maxFrameRetryAttempts,
+      retryInMs: delay,
+      error,
+    });
+    frameRetryTimer = window.setTimeout(() => {
+      frameRetryTimer = null;
+      if (stopped || paused) return;
+      const contextLost = Boolean(canvas && viewer.renderer?.getContext?.()?.isContextLost?.());
+      if (contextLost) {
+        paused = true;
+        dirty = true;
+        console.warn("[AURUM][VIEWER][FRAME_RECOVERY_WAITING_FOR_CONTEXT] WebGL context is still lost; waiting for webglcontextrestored.");
+        return;
+      }
+      requestRender(false);
+    }, delay);
   };
 
   const resize = () => {
@@ -284,18 +334,25 @@ export function startAurumViewerLoop(
   const onWebGLContextLost = (event: Event) => {
     event.preventDefault();
     paused = true;
+    clearFrameRetry(true);
     if (frame) cancelAnimationFrame(frame);
     frame = 0;
     dirty = true;
-    console.warn("[AURUM][VIEWER][WEBGL_CONTEXT_LOST] Rendering paused while the browser restores the GPU context.");
+    console.error("[AURUM][VIEWER][WEBGL_CONTEXT_LOST] Rendering paused while the browser restores the GPU context.", {
+      canvas: canvas ? { width: canvas.width, height: canvas.height, clientWidth: canvas.clientWidth, clientHeight: canvas.clientHeight } : null,
+      visibility: document.visibilityState,
+    });
   };
   const onWebGLContextRestored = () => {
     if (stopped) return;
     try {
+      clearFrameRetry(true);
       resizeAurumViewer(viewer);
       paused = false;
       dirty = true;
-      console.info("[AURUM][VIEWER][WEBGL_CONTEXT_RESTORED] Viewer render loop resumed.");
+      console.info("[AURUM][VIEWER][WEBGL_CONTEXT_RESTORED] Viewer render loop resumed without rebuilding the scene.", {
+        canvas: canvas ? { width: canvas.width, height: canvas.height, clientWidth: canvas.clientWidth, clientHeight: canvas.clientHeight } : null,
+      });
       requestRender();
     } catch (error) {
       console.error("[AURUM][VIEWER][WEBGL_CONTEXT_RECOVERY_ERROR] Could not resume after context restoration.", error);
@@ -355,21 +412,21 @@ export function startAurumViewerLoop(
       if (shouldRender) {
         dirty = false;
         render();
+        frameRetryAttempts = 0;
         if (!interactionActive && !interactionEnding && idleFramesRemaining > 0) idleFramesRemaining--;
       }
     } catch (error) {
-      // Prevent one failed frame from permanently wedging the demand-driven RAF.
-      // Stop automatic retries to avoid a hot error loop; a later invalidate()
-      // or user interaction can request another frame.
-      dirty = false;
+      // Recover transient GPU/compositor failures without entering an endless
+      // RAF loop. Keep the scene intact and retry only a bounded number of times.
       interactionActive = false;
       interactionEnding = false;
       idleFramesRemaining = 0;
       continuousRendering = false;
-      console.error("[AURUM][VIEWER][FRAME_ERROR] Render loop suspended after an exception.", error);
+      console.error("[AURUM][VIEWER][FRAME_ERROR] Render loop hit an exception; scheduling bounded recovery.", error);
+      scheduleFrameRetry(error);
     } finally {
       ticking = false;
-      if (!stopped && !paused && !frame && (dirty || changedByControls || interactionActive || interactionEnding || idleFramesRemaining > 0 || continuousRendering)) {
+      if (!stopped && !paused && frameRetryTimer === null && !frame && (dirty || changedByControls || interactionActive || interactionEnding || idleFramesRemaining > 0 || continuousRendering)) {
         frame = requestAnimationFrame(tick);
       }
     }
@@ -398,12 +455,14 @@ export function startAurumViewerLoop(
       dirty = false;
       try {
         render();
+        frameRetryAttempts = 0;
       } catch (error) {
         dirty = true;
-        console.error("[AURUM][VIEWER][IMMEDIATE_RENDER_ERROR] Immediate scene update failed; scheduling a safe retry.", error);
+        console.error("[AURUM][VIEWER][IMMEDIATE_RENDER_ERROR] Immediate scene update failed; scheduling bounded recovery.", error);
+        scheduleFrameRetry(error);
       }
-      if (dirty || interactionActive || interactionEnding || idleFramesRemaining > 0 || continuousRendering) {
-        requestRender();
+      if (frameRetryTimer === null && (dirty || interactionActive || interactionEnding || idleFramesRemaining > 0 || continuousRendering)) {
+        requestRender(false);
       }
     },
     // Keep rendering every frame for time-based exports such as turntable video.
@@ -420,16 +479,19 @@ export function startAurumViewerLoop(
     },
     pause: () => {
       paused = true;
+      clearFrameRetry(true);
       if (frame) cancelAnimationFrame(frame);
       frame = 0;
     },
     resume: () => {
       if (stopped) return;
+      clearFrameRetry(true);
       paused = false;
       requestRender();
     },
     stop: () => {
       stopped = true;
+      clearFrameRetry(true);
       if (frame) cancelAnimationFrame(frame);
       frame = 0;
       viewer.controls?.removeEventListener?.("start", onControlStart);
