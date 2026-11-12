@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { createAurumWebGLViewer, startAurumViewerLoop } from "../src/lib/aurum/viewer";
+import { createAurumWebGLViewer, resizeAurumViewer, startAurumViewerLoop } from "../src/lib/aurum/viewer";
 
 test("the demand-driven viewer preserves its final WebGL frame", () => {
   let rendererOptions: Record<string, unknown> = {};
@@ -382,3 +382,33 @@ test("the viewer reasserts the WebGL drawing surface on host wake without a cont
   }
 });
 
+
+
+test("viewer resize delegates post-processing target sizing to the composer exactly once", () => {
+  let rendererResizeCount = 0;
+  let composerResizeCount = 0;
+  let directSsaoResizeCount = 0;
+  const canvas = { width: 1600, height: 1200 };
+  const viewer = {
+    node: { getBoundingClientRect: () => ({ width: 800, height: 600 }) },
+    camera: { aspect: 4 / 3, updateProjectionMatrix() {} },
+    renderer: {
+      domElement: canvas,
+      getPixelRatio: () => 2,
+      getSize(target: { set: (width: number, height: number) => unknown }) {
+        target.set(800, 600);
+        return target;
+      },
+      setSize() { rendererResizeCount++; },
+    },
+    composer: { setSize() { composerResizeCount++; } },
+    ssaoPass: { setSize() { directSsaoResizeCount++; } },
+  };
+
+  const changed = resizeAurumViewer(viewer as any);
+
+  expect(changed).toBe(false);
+  expect(rendererResizeCount).toBe(0);
+  expect(composerResizeCount).toBe(0);
+  expect(directSsaoResizeCount).toBe(0);
+});
