@@ -11,6 +11,8 @@ export type AurumLightConfig={
   ambient:number;
   /** Shared photographic white-balance control for the studio sources. */
   temperatureK?:number;
+  /** Multiplier applied only to the six rectangular studio reflectors. */
+  reflectorPower?:number;
 };
 export const AURUM_LIGHTING_DEFAULT:AurumLightConfig={
  // Start with the manual studio sources disabled. The scene HDR remains active;
