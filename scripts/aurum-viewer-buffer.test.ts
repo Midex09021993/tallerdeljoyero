@@ -412,3 +412,13 @@ test("viewer resize delegates post-processing target sizing to the composer exac
   expect(composerResizeCount).toBe(1);
   expect(directSsaoResizeCount).toBe(0);
 });
+
+
+test("the XL softbox is opt-in when its configuration is missing or disabled", async () => {
+  const { isAurumLargeSoftboxEnabled } = await import("../src/lib/aurum/lighting");
+
+  expect(isAurumLargeSoftboxEnabled(undefined)).toBe(false);
+  expect(isAurumLargeSoftboxEnabled({})).toBe(false);
+  expect(isAurumLargeSoftboxEnabled({ largeSoftboxEnabled: false })).toBe(false);
+  expect(isAurumLargeSoftboxEnabled({ largeSoftboxEnabled: true })).toBe(true);
+});
