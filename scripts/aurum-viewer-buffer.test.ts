@@ -285,3 +285,94 @@ test("the viewer recovers on host wake when WebGL is available but restoration e
     globalThis.document = originalDocument;
   }
 });
+
+test("the viewer reasserts the WebGL drawing surface on host wake without a context-loss event", () => {
+  const originalResizeObserver = globalThis.ResizeObserver;
+  const originalRequestAnimationFrame = globalThis.requestAnimationFrame;
+  const originalCancelAnimationFrame = globalThis.cancelAnimationFrame;
+  const originalWindow = globalThis.window;
+  const originalDocument = globalThis.document;
+  const scheduled = new Map<number, FrameRequestCallback>();
+  let nextFrameId = 1;
+  let renderCount = 0;
+  let resizeCount = 0;
+  let resetStateCount = 0;
+  let setRenderTargetCount = 0;
+
+  class MockResizeObserver {
+    constructor(private callback: ResizeObserverCallback) {}
+    observe() {}
+    disconnect() {}
+  }
+
+  const mockWindow = new EventTarget() as EventTarget & { visualViewport?: EventTarget };
+  const mockDocument = Object.assign(new EventTarget(), { visibilityState: "visible" }) as Document;
+  globalThis.window = mockWindow as unknown as Window & typeof globalThis;
+  globalThis.document = mockDocument;
+  globalThis.ResizeObserver = MockResizeObserver as unknown as typeof ResizeObserver;
+  globalThis.requestAnimationFrame = ((callback: FrameRequestCallback) => {
+    const id = nextFrameId++;
+    scheduled.set(id, callback);
+    return id;
+  }) as typeof requestAnimationFrame;
+  globalThis.cancelAnimationFrame = ((id: number) => {
+    scheduled.delete(id);
+  }) as typeof cancelAnimationFrame;
+
+  const flushFrame = () => {
+    const entry = scheduled.entries().next().value as [number, FrameRequestCallback] | undefined;
+    if (!entry) return;
+    scheduled.delete(entry[0]);
+    entry[1](0);
+  };
+  const canvas = Object.assign(new EventTarget(), {
+    width: 800,
+    height: 600,
+    clientWidth: 800,
+    clientHeight: 600,
+  });
+
+  try {
+    const loop = startAurumViewerLoop({
+      node: { getBoundingClientRect: () => ({ width: 800, height: 600 }) },
+      camera: { aspect: 800 / 600, updateProjectionMatrix() {} },
+      renderer: {
+        domElement: canvas,
+        getSize(target: { set: (width: number, height: number) => unknown }) {
+          target.set(800, 600);
+          return target;
+        },
+        getPixelRatio: () => 1,
+        getContext: () => ({ isContextLost: () => false }),
+        setSize() { resizeCount++; },
+        setRenderTarget() { setRenderTargetCount++; },
+        resetState() { resetStateCount++; },
+      },
+      controls: null,
+    } as any, () => { renderCount++; });
+
+    flushFrame();
+    const initialRenders = renderCount;
+    expect(resizeCount).toBe(0);
+
+    // Some WebView2 restore paths blank the composition surface without
+    // dispatching webglcontextlost/webglcontextrestored. Focus must still
+    // force a drawing-buffer and renderer-state synchronization.
+    mockWindow.dispatchEvent(new Event("focus"));
+    expect(setRenderTargetCount).toBeGreaterThan(0);
+    expect(resetStateCount).toBeGreaterThan(0);
+    expect(resizeCount).toBeGreaterThan(0);
+    flushFrame();
+    expect(renderCount).toBeGreaterThan(initialRenders);
+
+    loop.stop();
+    expect(scheduled.size).toBe(0);
+  } finally {
+    globalThis.ResizeObserver = originalResizeObserver;
+    globalThis.requestAnimationFrame = originalRequestAnimationFrame;
+    globalThis.cancelAnimationFrame = originalCancelAnimationFrame;
+    globalThis.window = originalWindow;
+    globalThis.document = originalDocument;
+  }
+});
+
