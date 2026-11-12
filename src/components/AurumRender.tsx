@@ -172,12 +172,33 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const videoAbortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
+    let resizeFrame = 0;
+    let settleFrame = 0;
     const syncFullscreenState = () => {
-      setIsViewerFullscreen(Boolean(visorRef.current && document.fullscreenElement === visorRef.current));
+      const isFullscreen = Boolean(visorRef.current && document.fullscreenElement === visorRef.current);
+      setIsViewerFullscreen(isFullscreen);
+
+      // Fullscreen transitions can complete before the browser has committed
+      // the final layout size. Resize the existing renderer after layout settles
+      // instead of recreating the WebGL context or the loaded scene.
+      if (resizeFrame) cancelAnimationFrame(resizeFrame);
+      if (settleFrame) cancelAnimationFrame(settleFrame);
+      resizeFrame = requestAnimationFrame(() => {
+        settleFrame = requestAnimationFrame(() => {
+          viewerLoopRef.current?.resize?.();
+          viewerLoopRef.current?.invalidate?.();
+          resizeFrame = 0;
+          settleFrame = 0;
+        });
+      });
     };
     document.addEventListener("fullscreenchange", syncFullscreenState);
     syncFullscreenState();
-    return () => document.removeEventListener("fullscreenchange", syncFullscreenState);
+    return () => {
+      document.removeEventListener("fullscreenchange", syncFullscreenState);
+      if (resizeFrame) cancelAnimationFrame(resizeFrame);
+      if (settleFrame) cancelAnimationFrame(settleFrame);
+    };
   }, []);
   const videoExportLockRef = useRef(false);
   const [snapshotOpen, setSnapshotOpen] = useState(false);
@@ -4480,7 +4501,17 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         </aside>
 
         <main className={"relative min-w-0 flex-1 overflow-hidden bg-[#090b0e] " + (embedded ? "rounded-none" : "rounded-2xl")}>
-          <div ref={visorRef} className="absolute inset-0">
+          <div
+            ref={visorRef}
+            className="absolute inset-0"
+            style={isViewerFullscreen ? {
+              position: "fixed",
+              inset: 0,
+              width: "100vw",
+              height: "100dvh",
+              zIndex: 9999,
+            } : undefined}
+          >
             {arrastrandoArchivo && !embedded && <div className="pointer-events-none absolute inset-3 z-[60] grid place-items-center rounded-2xl border border-dashed border-[#d4af37]/80 bg-[#090b0e]/88 text-center shadow-[inset_0_0_90px_rgba(212,175,55,.12),0_18px_55px_rgba(0,0,0,.22)] backdrop-blur-md" aria-live="polite">
               <div className="px-6 py-8">
                 <span className="mx-auto grid size-[72px] place-items-center rounded-full border border-[#d4af37]/45 bg-gradient-to-br from-[#d4af37]/15 to-transparent text-[#e3bd55] shadow-[0_0_35px_rgba(212,175,55,.12)]"><Upload className="size-7"/></span>
