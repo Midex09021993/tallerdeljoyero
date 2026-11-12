@@ -1421,9 +1421,12 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           renderer.shadowMap.enabled=renderQuality.shadows;
           renderer.shadowMap.needsUpdate=true;
         }
-        liveTransmissionScaleRef.current=live
-          ? runtimeBudget.interactionTransmissionScale
-          : Math.min(renderQuality.transmissionScale, runtimeBudget.transmissionScaleCap);
+        // Keep transmission/refraction sampling identical in LIVE and settled
+        // rendering; the interaction-only scale was visibly softening polished metal.
+        liveTransmissionScaleRef.current = Math.min(
+          renderQuality.transmissionScale,
+          runtimeBudget.transmissionScaleCap,
+        );
         (renderer as any).transmissionResolutionScale=liveTransmissionScaleRef.current;
       };
 
