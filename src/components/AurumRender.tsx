@@ -3285,8 +3285,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // Controlled TAA trial: only anti-alias the settled preview.
             // Keep all other post effects disabled so this test isolates TAA.
             const idlePasses = ((composer as any)?.passes ?? []) as any[];
-            const idleRenderPass = idlePasses.find((pass) => pass?.constructor?.name === "RenderPass");
-            const idleOutputPass = idlePasses.find((pass) => pass?.constructor?.name === "OutputPass");
+            // Use the concrete pass instances returned by the pipeline.
+            // Constructor-name lookup breaks in minified production bundles and
+            // can silently route the settled preview around the gem AA composer.
+            const idleRenderPass = renderPass;
+            const idleOutputPass = outputPass;
             const idleSoftEdgeAaAvailable = Boolean(idleRenderPass && gemMaskPass && fxaaPass && idleOutputPass);
             if (idleSoftEdgeAaAvailable) {
               const width = Math.max(1, renderer.domElement.width || renderer.domElement.clientWidth || 1);
@@ -3376,10 +3379,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 bokehPassIndex: settledDofPass ? idlePasses.indexOf(settledDofPass) : -1,
                 passNames: idlePasses.map((pass) => ({ name: pass?.constructor?.name ?? "unknown", enabled: Boolean(pass?.enabled) })),
                 taaAvailable: idleTaaAvailable,
-                renderPath: (idleTaaAvailable && settledTaaRequested)
-                  || settledSsrEnabled
-                  || (postRuntimeConfig.dof === true && Boolean(dofPass) && idlePasses.includes(dofPass))
-                  ? "composer" : "direct",
+                renderPath: settledComposerRequested ? "composer" : "direct",
+                gemOnlyAaAvailable: idleSoftEdgeAaAvailable,
+                gemMaskPassEnabled: Boolean(gemMaskPass?.enabled),
+                gemAaPassEnabled: Boolean(fxaaPass?.enabled),
                 focusDistance: controles?.target ? camara.position.distanceTo(controles.target) : null,
                 aperture: settledDofPass?.uniforms?.aperture?.value ?? null,
                 maxblur: settledDofPass?.uniforms?.maxblur?.value ?? null,
