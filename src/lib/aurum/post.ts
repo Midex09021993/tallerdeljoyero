@@ -203,16 +203,32 @@ export async function createAurumPostPipeline(
       }
       return "otro";
     };
+    // Scene classification is stable between model/selection-geometry changes.
+    // Reuse these arrays on every frame instead of traversing the whole scene
+    // and allocating visibility snapshots inside the hot render path.
+    const cachedSceneMeshes:any[]=[];
+    const cachedGemMeshes:any[]=[];
+    const cachedMeshVisibility:boolean[]=[];
+    const cachedClearColor=new THREE.Color();
+    const refreshGemMaskCache=()=>{
+      cachedSceneMeshes.length=0;
+      cachedGemMeshes.length=0;
+      scene.traverse((object:any)=>{
+        if(!object?.isMesh) return;
+        cachedSceneMeshes.push(object);
+        if(getAurumRenderCategory(object)==="gema") cachedGemMeshes.push(object);
+      });
+      cachedMeshVisibility.length=cachedSceneMeshes.length;
+    };
+    refreshGemMaskCache();
     gemMaskPass={
       enabled:false,needsSwap:false,clear:false,renderToScreen:false,
+      refreshCache:refreshGemMaskCache,
       setSize(width:number,height:number){
         gemMaskTarget.setSize(Math.max(1,width),Math.max(1,height));
       },
       render(activeRenderer:any){
-        const gemMeshes:any[]=[];
-        scene.traverse((object:any)=>{
-          if(object?.isMesh && getAurumRenderCategory(object)==="gema") gemMeshes.push(object);
-        });
+        const gemMeshes=cachedGemMeshes;
         const previousTarget=activeRenderer.getRenderTarget();
         if(gemMeshes.length===0){
           // Clear stale pixels when a model has no gemstone meshes; never let a
@@ -236,10 +252,12 @@ export async function createAurumPostPipeline(
         const previousOverride=scene.overrideMaterial;
         const previousBackground=scene.background;
         const previousAutoClear=activeRenderer.autoClear;
-        const previousClearColor=activeRenderer.getClearColor(new THREE.Color()).clone();
+        activeRenderer.getClearColor(cachedClearColor);
+        const previousClearColor=cachedClearColor;
         const previousClearAlpha=activeRenderer.getClearAlpha();
-        const meshVisibility:any[]=[];
-        scene.traverse((object:any)=>{if(object?.isMesh) meshVisibility.push([object,object.visible]);});
+        for(let i=0;i<cachedSceneMeshes.length;i++){
+          cachedMeshVisibility[i]=cachedSceneMeshes[i].visible;
+        }
         try{
           activeRenderer.setRenderTarget(gemMaskTarget);
           activeRenderer.setClearColor(0x000000,0);
@@ -248,13 +266,16 @@ export async function createAurumPostPipeline(
           scene.background=null;
           scene.overrideMaterial=depthOnlyMaterial;
           activeRenderer.render(scene,camera);
-          scene.traverse((object:any)=>{
-            if(object?.isMesh && getAurumRenderCategory(object)!=="gema") object.visible=false;
-          });
+          for(let i=0;i<cachedSceneMeshes.length;i++){
+            const mesh=cachedSceneMeshes[i];
+            if(getAurumRenderCategory(mesh)!=="gema") mesh.visible=false;
+          }
           scene.overrideMaterial=gemMaskMaterial;
           activeRenderer.render(scene,camera);
         }finally{
-          for(const [mesh,visible] of meshVisibility) mesh.visible=visible;
+          for(let i=0;i<cachedSceneMeshes.length;i++){
+            cachedSceneMeshes[i].visible=cachedMeshVisibility[i];
+          }
           scene.overrideMaterial=previousOverride;
           scene.background=previousBackground;
           activeRenderer.autoClear=previousAutoClear;
