@@ -388,7 +388,7 @@ export function createAurumLightingController(
       // appear to have studio lights too far away.
       const rigScale = Math.max(safeRadius * 2.25, 0.01);
       const distance = Math.max(safeRadius * 6, 0.05);
-      const reflectorScale = Math.max(0.75, Math.min(2.0, Number(config?.reflectorScale ?? 1.35) || 1.35));
+      const reflectorScale = Math.max(0.75, Math.min(3.5, Number(config?.reflectorScale ?? 1.35) || 1.35));
       const sourceScale = Math.max((rigScale / 10) * reflectorScale, 0.01);
       const normalizedPosition = (position: any) => {
         if (!Array.isArray(position) || position.length < 3) return [0, 0, 0] as [number, number, number];
