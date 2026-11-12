@@ -13,6 +13,9 @@ export type AurumLightConfig={
   temperatureK?:number;
   /** Multiplier applied only to the six rectangular studio reflectors. */
   reflectorPower?:number;
+  /** Dedicated oversized overhead RectAreaLight controls. */
+  largeSoftboxEnabled?:boolean;
+  largeSoftboxPower?:number;
 };
 export const AURUM_LIGHTING_DEFAULT:AurumLightConfig={
  // Start with the manual studio sources disabled. The scene HDR remains active;
