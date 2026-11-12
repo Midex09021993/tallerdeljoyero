@@ -600,6 +600,18 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           rim: { enabled: lightingStudio.rim.enabled, intensity: lightingStudio.rim.intensity },
           gem: { enabled: lightingStudio.gem.enabled, intensity: lightingStudio.gem.intensity },
           front: { enabled: lightingStudio.front.enabled, intensity: lightingStudio.front.intensity },
+          temperatureK: lightingStudio.temperatureK,
+          reflectorPower: lightingStudio.reflectorPower,
+          reflectorScale: lightingStudio.reflectorScale,
+          largeSoftboxEnabled: lightingStudio.largeSoftboxEnabled === true,
+          largeSoftboxPower: lightingStudio.largeSoftboxPower,
+          reflectors: {
+            softbox: lightingStudio.reflectors?.softbox !== false,
+            strip: lightingStudio.reflectors?.strip !== false,
+            kicker: lightingStudio.reflectors?.kicker !== false,
+            edgeLeft: lightingStudio.reflectors?.edgeLeft !== false,
+            edgeRight: lightingStudio.reflectors?.edgeRight !== false,
+          },
         },
         guardadoEn: new Date().toISOString(),
       };
@@ -4078,8 +4090,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                   }
                   if (config.lucesEstudio && typeof config.lucesEstudio === "object") {
                     const guardadas = config.lucesEstudio as Record<string, unknown>;
-                    const patch: Record<string, { enabled?: boolean; intensity?: number }> = {};
-                    const limites: Record<string, number> = { key: 4, fill: 3, rim: 3, gem: 2, front: 2 };
+                    const patch: Record<string, unknown> = {};
+                    const limites: Record<string, number> = { key: 12, fill: 8, rim: 8, gem: 8, front: 8 };
                     (["key", "fill", "rim", "gem", "front"] as const).forEach((nombre) => {
                       const valor = guardadas[nombre];
                       if (!valor || typeof valor !== "object") return;
@@ -4087,10 +4099,35 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                       const cambio: { enabled?: boolean; intensity?: number } = {};
                       if (typeof luz.enabled === "boolean") cambio.enabled = luz.enabled;
                       if (typeof luz.intensity === "number" && Number.isFinite(luz.intensity)) {
-                        cambio.intensity = Math.max(0, Math.min(limites[nombre] ?? 4, luz.intensity));
+                        cambio.intensity = Math.max(0, Math.min(limites[nombre] ?? 8, luz.intensity));
                       }
                       if (Object.keys(cambio).length) patch[nombre] = cambio;
                     });
+                    // Version 1 manifests created before the full studio snapshot remain valid.
+                    // Missing XL/reflector values deliberately retain the safe default (XL off).
+                    if (typeof guardadas.temperatureK === "number" && Number.isFinite(guardadas.temperatureK)) {
+                      patch.temperatureK = Math.max(2000, Math.min(12000, guardadas.temperatureK));
+                    }
+                    if (typeof guardadas.reflectorPower === "number" && Number.isFinite(guardadas.reflectorPower)) {
+                      patch.reflectorPower = Math.max(0, Math.min(12, guardadas.reflectorPower));
+                    }
+                    if (typeof guardadas.reflectorScale === "number" && Number.isFinite(guardadas.reflectorScale)) {
+                      patch.reflectorScale = Math.max(0.1, Math.min(5, guardadas.reflectorScale));
+                    }
+                    if (typeof guardadas.largeSoftboxEnabled === "boolean") {
+                      patch.largeSoftboxEnabled = guardadas.largeSoftboxEnabled;
+                    }
+                    if (typeof guardadas.largeSoftboxPower === "number" && Number.isFinite(guardadas.largeSoftboxPower)) {
+                      patch.largeSoftboxPower = Math.max(0, Math.min(4, guardadas.largeSoftboxPower));
+                    }
+                    if (guardadas.reflectors && typeof guardadas.reflectors === "object") {
+                      const reflectores = guardadas.reflectors as Record<string, unknown>;
+                      const reflectorsPatch: Record<string, boolean> = {};
+                      (["softbox", "strip", "kicker", "edgeLeft", "edgeRight"] as const).forEach((nombre) => {
+                        if (typeof reflectores[nombre] === "boolean") reflectorsPatch[nombre] = reflectores[nombre] as boolean;
+                      });
+                      if (Object.keys(reflectorsPatch).length) patch.reflectors = reflectorsPatch;
+                    }
                     if (Object.keys(patch).length) actualizarLucesAurum(patch);
                   }
                   if (!ambienteGuardado) {
