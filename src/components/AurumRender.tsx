@@ -1864,7 +1864,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           ssaoFalloff: 1.3,
           bias: 0.001,
         });
+        // Re-apply the settled photographic profile only after its values have
+        // been copied into postRuntimeConfig. The previous order configured
+        // TAA from stale defaults before the model's iJewel profile was applied.
         applyPostQuality?.(renderQuality);
+        setTemporalMotion?.(false);
 
         // The first completed model frame must use the same selective gem-AA
         // composer as the settled preview. Previously the viewer stayed on the
@@ -1880,8 +1884,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           outputPass.enabled = true;
 
           const initialTaaRequested = Boolean(
-            postRuntimeConfig.temporalAA === true
-            && postRuntimeConfig.taa === true
+            postRuntimeConfig.taa === true
+            && postRuntimeConfig.temporalAA !== false
             && measuredQualityId !== "low"
             && runtimeBudget.tier !== "extreme"
             && idleTaaPass
@@ -3368,8 +3372,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // accumulation changes facet contrast, so the gem-only spatial AA is
             // the sole anti-aliasing stage in both states.
             const settledTaaRequested = Boolean(
-              postRuntimeConfig.temporalAA === true
-              && postRuntimeConfig.taa === true
+              postRuntimeConfig.taa === true
+              && postRuntimeConfig.temporalAA !== false
               && measuredQualityId !== "low"
               && runtimeBudget.tier !== "extreme"
               && idleTaaAvailable
@@ -3384,7 +3388,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               idleTaaPass.enabled = settledTaaRequested;
               idleTaaPass.accumulate = settledTaaRequested;
               idleTaaPass.accumulateIndex = -1;
-              idleTaaPass.sampleLevel = measuredQualityId === "ultra" ? 4 : 3;
+              idleTaaPass.sampleLevel = Math.max(0, Math.min(5, Math.ceil(Math.log2(
+                Math.max(1, Math.min(32, Number(postRuntimeConfig.progressiveFrameCount ?? 32)))
+              ))));
             }
             // Re-assert the live DOF state after the live profile reapplies post quality.
             // Without TAA, the composer can still render RenderPass -> BokehPass -> OutputPass.
@@ -3452,6 +3458,18 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             liveFastPathRef.current = !settledComposerRequested;
             renderer.shadowMap.enabled = false;
             renderer.shadowMap.needsUpdate = false;
+            console.info("[AURUM][RENDER PIPELINE]", {
+              phase: "settled",
+              path: liveFastPathRef.current ? "direct" : "composer",
+              taaRequested: settledTaaRequested,
+              taaEnabled: Boolean(idleTaaPass?.enabled),
+              taaAccumulating: Boolean(idleTaaPass?.accumulate),
+              gemMaskEnabled: Boolean(gemMaskPass?.enabled),
+              gemSoftEdgeEnabled: Boolean(fxaaPass?.enabled),
+              outputEnabled: Boolean(outputPass?.enabled),
+              progressiveFrames: postRuntimeConfig.progressiveFrameCount ?? 32,
+              composerAvailable: Boolean(composer),
+            });
             console.info("[AURUM][DIAMOND LIVE DIAGNOSTICS]", {
               renderQuality: measuredQualityId,
               runtimeBudget: {
