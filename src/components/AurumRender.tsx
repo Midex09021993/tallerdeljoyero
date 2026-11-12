@@ -218,6 +218,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const frameRef = useRef<number | null>(null);
   const invalidateRenderRef = useRef<(() => void) | null>(null);
   const viewerLoopRef = useRef<any>(null);
+  const resetTemporalAccumulationRef = useRef<(() => void) | null>(null);
   const [ptSamples, setPtSamples] = useState("256");
   const [ptProgress, setPtProgress] = useState<string|null>(null);
   const ptAbortRef = useRef<AbortController|null>(null);
@@ -236,6 +237,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       reflectors: patch.reflectors ? {...(prev.reflectors ?? {}), ...patch.reflectors} : prev.reflectors,
     }));
     lucesRef.current?.(patch);
+    resetTemporalAccumulationRef.current?.();
     // Lighting controls are direct scene mutations. Render the updated scene
     // immediately so the user never has to orbit to reveal the new light state.
     // renderNow consumes any already queued demand frame, avoiding a duplicate.
@@ -877,13 +879,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       // Preserve the original scene background while the live Bokeh preview is active.
       let dofSavedSceneBackground: THREE.Scene["background"] | undefined;
       let dofHasSavedSceneBackground = false;
-      const { composer, ssaoPass, ssrPass, ssrSavePass, ssrCompositePass, bloomPass, setSSRSelects, applyQuality: applyPostQuality, updateTemporal, setTemporalMotion, dofPass, renderPass, taaPass: idleTaaPass, fxaaPass, gemMaskPass, outputPass } = await createAurumPostPipeline(
+      const { composer, ssaoPass, ssrPass, ssrSavePass, ssrCompositePass, bloomPass, setSSRSelects, applyQuality: applyPostQuality, updateTemporal, resetTemporalAccumulation, setTemporalMotion, dofPass, renderPass, taaPass: idleTaaPass, fxaaPass, gemMaskPass, outputPass } = await createAurumPostPipeline(
         renderer,
         escena,
         camara,
         postRuntimeConfig,
         renderQuality
       );
+      resetTemporalAccumulationRef.current = resetTemporalAccumulation;
 
       // The post pipeline loads Three.js passes asynchronously. If the route
       // unmounts while those imports are pending, release the renderer created
@@ -4206,18 +4209,18 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       <label style={{display:"block",fontSize:11}}>Intensidad frontal<input aria-label="Intensidad de luz frontal" style={{width:"100%"}} type="range" min="0" max="8" step=".05" value={lightingStudio.front.intensity} onChange={e=>actualizarLucesAurum({front:{...lightingStudio.front,intensity:+e.target.value}})}/></label>
       <div style={{marginTop:10,paddingTop:10,borderTop:"1px solid rgba(243,214,110,.28)",background:"rgba(243,214,110,.055)",borderRadius:9,padding:9}}>
         <label style={{display:"flex",alignItems:"center",justifyContent:"space-between",fontSize:12,fontWeight:700,color:"#f3d66e"}}>
-          SOFTBOX AÉREO XL
-          <input aria-label="Activar softbox aéreo XL" type="checkbox" checked={lightingStudio.largeSoftboxEnabled === true} onChange={e=>actualizarLucesAurum({largeSoftboxEnabled:e.target.checked})}/>
+          DIFUSOR AÉREO XL
+          <input aria-label="Activar difusor aéreo XL" type="checkbox" checked={lightingStudio.largeSoftboxEnabled === true} onChange={e=>actualizarLucesAurum({largeSoftboxEnabled:e.target.checked})}/>
         </label>
         <div style={{fontSize:10,color:"rgba(255,255,255,.68)",margin:"4px 0 7px"}}>Fuente rectangular de gran superficie para reflejos amplios y difusos sobre toda la joya.</div>
         <label style={{display:"block",fontSize:11}}>Potencia XL <strong style={{float:"right",color:"#f3d66e"}}>{(lightingStudio.largeSoftboxPower ?? 1.4).toFixed(1)}×</strong>
-          <input aria-label="Potencia del softbox aéreo XL" style={{width:"100%"}} type="range" min="0" max="4" step=".1" value={lightingStudio.largeSoftboxPower ?? 1.4} onChange={e=>actualizarLucesAurum({largeSoftboxPower:+e.target.value})}/>
+          <input aria-label="Potencia del difusor aéreo XL" style={{width:"100%"}} type="range" min="0" max="4" step=".1" value={lightingStudio.largeSoftboxPower ?? 1.4} onChange={e=>actualizarLucesAurum({largeSoftboxPower:+e.target.value})}/>
         </label>
       </div>
       <div style={{marginTop:10,paddingTop:10,borderTop:"1px solid rgba(255,255,255,.12)"}}>
         <div style={{fontSize:12,fontWeight:700,marginBottom:7}}>Reflectores de estudio</div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"6px 10px",fontSize:11}}>
-          {([{id:"softbox",label:"Softbox principal"},{id:"strip",label:"Strip lateral"},{id:"kicker",label:"Reflector trasero"},{id:"edgeLeft",label:"Borde izquierdo"},{id:"edgeRight",label:"Borde derecho"}] as const).map(item=><label key={item.id} style={{display:"flex",alignItems:"center",gap:5}}><input type="checkbox" checked={lightingStudio.reflectors?.[item.id] ?? true} onChange={e=>actualizarLucesAurum({reflectors:{...(lightingStudio.reflectors ?? {}),[item.id]:e.target.checked}})}/>{item.label}</label>)}
+          {([{id:"softbox",label:"Reflector Cenital de Estudio"},{id:"strip",label:"Strip lateral"},{id:"kicker",label:"Reflector trasero"},{id:"edgeLeft",label:"Borde izquierdo"},{id:"edgeRight",label:"Borde derecho"}] as const).map(item=><label key={item.id} style={{display:"flex",alignItems:"center",gap:5}}><input type="checkbox" checked={lightingStudio.reflectors?.[item.id] ?? true} onChange={e=>actualizarLucesAurum({reflectors:{...(lightingStudio.reflectors ?? {}),[item.id]:e.target.checked}})}/>{item.label}</label>)}
         </div>
       </div>
       <div style={{marginTop:10,paddingTop:10,borderTop:"1px solid rgba(255,255,255,.12)"}}>
