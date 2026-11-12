@@ -6,9 +6,9 @@ Este directorio conserva fuentes de una integración anterior de AURUM CONECT. N
 
 La beta se distribuye actualmente como un único archivo `.RHP`:
 
-- Archivo: `AurumConect-Rhino7-1.0.9.rhp`
-- Publicación oficial: https://github.com/Midex09021993/aurum-conect-build/releases/tag/v1.0.9
-- Descarga directa: https://github.com/Midex09021993/aurum-conect-build/releases/download/v1.0.9/AurumConect-Rhino7-1.0.9.rhp
+- Archivo: `AurumConect-Rhino7-1.0.10.rhp`
+- Publicación oficial: https://github.com/Midex09021993/aurum-conect-build/releases/tag/v1.0.10
+- Descarga directa: https://github.com/Midex09021993/aurum-conect-build/releases/download/v1.0.9/AurumConect-Rhino7-1.0.10.rhp
 
 No utilizar el paquete ZIP ni los binarios 1.0.0 históricos de este prototipo. El flujo de empaquetado antiguo se desactivó para evitar que publique archivos obsoletos o contradiga las instrucciones de instalación beta.
 
