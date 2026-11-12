@@ -3230,11 +3230,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // Pause temporal accumulation immediately when the ring/camera starts
             // moving. The previous history is discarded and cannot wash out facets.
             setTemporalMotion?.(true);
-            // Keep FXAA disabled during LIVE interaction: the full-screen
-            // filter washes out diamond facet contrast while the camera moves.
-            // Preserve native WebGL antialiasing (MSAA/antialias context) instead.
+            // Use the restrained AURUM Soft Edge AA pass during LIVE interaction.
+            // It only blends a small amount at strong luminance boundaries;
+            // diamond shaders, BVH, dispersion and ACES calibration stay untouched.
             syncAurumSsrDiagnosticConfig();
-            const liveFxaaEnabled = false;
+            const liveFxaaEnabled = true;
             liveFastPathRef.current = true;
             // Camera movement always selects LIVE materials, even when FXAA uses
             // EffectComposer instead of the direct WebGL path.
@@ -3259,7 +3259,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             (renderer as any).transmissionResolutionScale = runtimeBudget.interactionTransmissionScale;
             aplicarPerfilLive(true);
             syncAurumSsrDiagnosticConfig();
-            // Route non-extreme LIVE interaction through the minimal FXAA chain.
+            // Route non-extreme LIVE interaction through the minimal soft-AA chain.
             // Keep the direct path as the safety fallback for extreme CAD assemblies.
             if (liveFxaaEnabled) {
               interactionPasses.forEach((pass) => {
