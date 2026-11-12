@@ -180,7 +180,7 @@ function HerramientasPage() {
                       <div className="flex flex-col gap-2 sm:flex-row lg:flex-col lg:min-w-[250px]">
                         {paqueteAurumConectDisponible ? (
                           <a
-                            href="https://github.com/Midex09021993/aurum-conect-build/releases/download/v1.0.9/AurumConect-Rhino7-1.0.10.rhp"
+                            href="https://github.com/Midex09021993/aurum-conect-build/releases/download/v1.0.10/AurumConect-Rhino7-1.0.10.rhp"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
