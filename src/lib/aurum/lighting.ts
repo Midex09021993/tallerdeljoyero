@@ -123,7 +123,8 @@ export function createAurumLightingController(
       const light = lights[name];
       const profile = rig[name];
       if (!light || !profile) return;
-      light.intensity = profile.intensity * preset[name] * power;
+      const manualFrontScale = name === "front" ? Math.max(0, Number(config.front?.intensity ?? 1)) : 1;
+      light.intensity = profile.intensity * preset[name] * power * manualFrontScale;
     });
   };
   const apply = (light: any, cfg: any) => {
