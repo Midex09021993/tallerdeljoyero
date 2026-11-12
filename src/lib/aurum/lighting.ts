@@ -436,8 +436,8 @@ export function createAurumLightingController(
       Object.entries(lights).forEach(([name, light]: any) => {
         if (!light) return;
         if (name === "largeSoftbox") {
-          const n = [0.08, 1.0, 0.88];
-          light.position.set(n[0] * rigScale, targetY + n[1] * rigScale, n[2] * rigScale);
+          const [nx, ny, nz] = [0.08, 1.0, 0.88] as const;
+          light.position.set(nx * rigScale, targetY + ny * rigScale, nz * rigScale);
           light.width = 24 * sourceScale;
           light.height = 18 * sourceScale;
           light.lookAt?.(0, targetY, 0);
