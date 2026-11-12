@@ -211,6 +211,15 @@ export async function createAurumPostPipeline(
       color:0xffffff,side:THREE.DoubleSide,depthTest:true,depthWrite:false,
       depthFunc:THREE.EqualDepth,toneMapped:false
     });
+    const getAurumRenderCategory=(object:any):string=>{
+      let current=object;
+      while(current){
+        const category=String(current.userData?.aurumRhino?.categoria??"").trim().toLowerCase();
+        if(category) return category;
+        current=current.parent;
+      }
+      return "otro";
+    };
     gemMaskPass={
       enabled:false,needsSwap:false,clear:false,renderToScreen:false,
       setSize(width:number,height:number){
@@ -219,7 +228,7 @@ export async function createAurumPostPipeline(
       render(activeRenderer:any){
         const gemMeshes:any[]=[];
         scene.traverse((object:any)=>{
-          if(object?.isMesh && String(object.userData?.aurumRhino?.categoria??"").toLowerCase()==="gema") gemMeshes.push(object);
+          if(object?.isMesh && getAurumRenderCategory(object)==="gema") gemMeshes.push(object);
         });
         const previousTarget=activeRenderer.getRenderTarget();
         if(gemMeshes.length===0){
@@ -257,7 +266,7 @@ export async function createAurumPostPipeline(
           scene.overrideMaterial=depthOnlyMaterial;
           activeRenderer.render(scene,camera);
           scene.traverse((object:any)=>{
-            if(object?.isMesh && String(object.userData?.aurumRhino?.categoria??"").toLowerCase()!=="gema") object.visible=false;
+            if(object?.isMesh && getAurumRenderCategory(object)!=="gema") object.visible=false;
           });
           scene.overrideMaterial=gemMaskMaterial;
           activeRenderer.render(scene,camera);
