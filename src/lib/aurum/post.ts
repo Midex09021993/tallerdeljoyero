@@ -229,6 +229,7 @@ export async function createAurumPostPipeline(
         const previousClearColor=activeRenderer.getClearColor(new THREE.Color()).clone();
         const previousClearAlpha=activeRenderer.getClearAlpha();
         const meshVisibility:any[]=[];
+        scene.traverse((object:any)=>{if(object?.isMesh) meshVisibility.push([object,object.visible]);});
         try{
           activeRenderer.setRenderTarget(gemMaskTarget);
           activeRenderer.setClearColor(0x000000,0);
@@ -237,7 +238,6 @@ export async function createAurumPostPipeline(
           scene.background=null;
           scene.overrideMaterial=depthOnlyMaterial;
           activeRenderer.render(scene,camera);
-          for(const mesh of gemMeshes) meshVisibility.push([mesh,mesh.visible]);
           scene.traverse((object:any)=>{
             if(object?.isMesh && String(object.userData?.aurumRhino?.categoria??"").toLowerCase()!=="gema") object.visible=false;
           });
