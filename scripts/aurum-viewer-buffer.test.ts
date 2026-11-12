@@ -201,3 +201,87 @@ test("the demand-driven loop retries a transient frame exception with bounded re
     globalThis.document = originalDocument;
   }
 });
+
+
+test("the viewer recovers on host wake when WebGL is available but restoration event was missed", () => {
+  const originalResizeObserver = globalThis.ResizeObserver;
+  const originalRequestAnimationFrame = globalThis.requestAnimationFrame;
+  const originalCancelAnimationFrame = globalThis.cancelAnimationFrame;
+  const originalWindow = globalThis.window;
+  const originalDocument = globalThis.document;
+  const scheduled = new Map<number, FrameRequestCallback>();
+  let nextFrameId = 1;
+  let renderCount = 0;
+  let resetStateCount = 0;
+  let setRenderTargetCount = 0;
+  let contextLost = false;
+
+  class MockResizeObserver {
+    constructor(private callback: ResizeObserverCallback) {}
+    observe() {}
+    disconnect() {}
+  }
+
+  const mockWindow = new EventTarget() as EventTarget & { visualViewport?: EventTarget };
+  const mockDocument = Object.assign(new EventTarget(), { visibilityState: "visible" }) as Document;
+  globalThis.window = mockWindow as unknown as Window & typeof globalThis;
+  globalThis.document = mockDocument;
+  globalThis.ResizeObserver = MockResizeObserver as unknown as typeof ResizeObserver;
+  globalThis.requestAnimationFrame = ((callback: FrameRequestCallback) => {
+    const id = nextFrameId++;
+    scheduled.set(id, callback);
+    return id;
+  }) as typeof requestAnimationFrame;
+  globalThis.cancelAnimationFrame = ((id: number) => {
+    scheduled.delete(id);
+  }) as typeof cancelAnimationFrame;
+
+  const canvas = new EventTarget();
+  const context = { isContextLost: () => contextLost };
+  const flushFrame = () => {
+    const entry = scheduled.entries().next().value as [number, FrameRequestCallback] | undefined;
+    if (!entry) return;
+    scheduled.delete(entry[0]);
+    entry[1](0);
+  };
+
+  try {
+    const loop = startAurumViewerLoop({
+      node: { getBoundingClientRect: () => ({ width: 800, height: 600 }) },
+      camera: { aspect: 1, updateProjectionMatrix() {} },
+      renderer: {
+        domElement: canvas,
+        getContext: () => context,
+        setSize() {},
+        setRenderTarget() { setRenderTargetCount++; },
+        resetState() { resetStateCount++; },
+      },
+      controls: null,
+    } as any, () => { renderCount++; });
+
+    flushFrame();
+    const beforeContextLoss = renderCount;
+    contextLost = true;
+    canvas.dispatchEvent(new Event("webglcontextlost", { cancelable: true }));
+    expect(scheduled.size).toBe(0);
+
+    // Simulate a browser/host that makes the existing context usable again
+    // but does not deliver webglcontextrestored to the canvas.
+    contextLost = false;
+    mockWindow.dispatchEvent(new Event("focus"));
+    expect(scheduled.size).toBeGreaterThan(0);
+    expect(resetStateCount).toBe(1);
+    expect(setRenderTargetCount).toBe(1);
+    flushFrame();
+    expect(renderCount).toBeGreaterThan(beforeContextLoss);
+
+    loop.stop();
+    expect(scheduled.size).toBe(0);
+  } finally {
+    globalThis.ResizeObserver = originalResizeObserver;
+    globalThis.requestAnimationFrame = originalRequestAnimationFrame;
+    globalThis.cancelAnimationFrame = originalCancelAnimationFrame;
+    globalThis.window = originalWindow;
+    globalThis.document = originalDocument;
+  }
+});
