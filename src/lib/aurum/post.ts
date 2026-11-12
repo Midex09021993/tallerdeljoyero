@@ -418,7 +418,11 @@ export async function createAurumPostPipeline(
     const isLowQuality=qualityId==="low" || (qualityId==="" && Number(q?.pixelRatio??1.5) <= 1.01);
     taaRequested=Boolean(options.capture) || (config.taa===true && config.temporalAA!==false && !isLowQuality);
     const taaEnabled=taaRequested && !temporalMotionActive;
-    const progressiveFrames=Math.max(1,Math.min(32,Math.floor(Number(config.progressiveFrameCount??1))));
+    // Keep the interactive/settled preview responsive with one convergence frame.
+    // Still captures retain the full 32-frame temporal budget for final image quality.
+    const progressiveFrames=options.capture
+      ? 32
+      : Math.max(1,Math.min(32,Math.floor(Number(config.progressiveFrameCount??1))));
     const taaSampleLevel=Math.max(0,Math.min(5,Math.ceil(Math.log2(progressiveFrames))));
     const ssrEnabled=!options.capture && (diagnosticForceSSR || (!diagnosticDisableSSR && Boolean(config.ssr))) && high && Boolean(ssrPass) && Boolean(ssrSavePass) && Boolean(ssrCompositePass);
     if(renderPass) renderPass.enabled=true;
