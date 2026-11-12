@@ -1216,6 +1216,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       const aplicarIluminacion = (id:IluminacionId) => {
         lightingController.applyPreset(id);
         renderer.shadowMap.needsUpdate = true;
+        resetTemporalAccumulationRef.current?.();
         invalidateRenderRef.current?.();
         // Iluminación solo modifica luces. Scene conserva Environment y exposición.
       };
