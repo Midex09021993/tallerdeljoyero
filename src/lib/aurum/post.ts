@@ -243,11 +243,12 @@ export async function createAurumPostPipeline(
     const high=diagnosticHigh || qualityId==="high" || qualityId==="ultra" || q.pixelRatio>=1.4;
     const ultra=qualityId==="ultra" || q.pixelRatio>=1.55;
 
-    // iJewel VJSON explicitly enables progressive jitter + TAA. In Three r185,
-    // sampleLevel=5 gives the 32-jitter sequence. SSR is composed over the
-    // saved TAA beauty so neither stage is silently discarded.
+    // TAA is opt-in for the interactive viewer: its temporal accumulation can
+    // wash out or soften the live jewelry preview when camera motion resets
+    // the sample history. Captures keep TAA enabled; preview requires both
+    // temporalAA and taa to be explicitly true.
     const isLowQuality=qualityId==="low" || (qualityId==="" && Number(q?.pixelRatio??1.5) <= 1.01);
-    const taaEnabled=Boolean(options.capture) || (config.temporalAA!==false && config.taa!==false && !isLowQuality);
+    const taaEnabled=Boolean(options.capture) || (config.temporalAA===true && config.taa===true && !isLowQuality);
     const progressiveFrames=Math.max(1,Math.min(32,Math.floor(Number(config.progressiveFrameCount??32))));
     const taaSampleLevel=Math.max(0,Math.min(5,Math.ceil(Math.log2(progressiveFrames))));
     const ssrEnabled=!options.capture && (diagnosticForceSSR || (!diagnosticDisableSSR && Boolean(config.ssr))) && high && Boolean(ssrPass) && Boolean(ssrSavePass) && Boolean(ssrCompositePass);
