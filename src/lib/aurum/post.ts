@@ -210,7 +210,22 @@ export async function createAurumPostPipeline(
     const cachedOccluderMeshes:any[]=[];
     const cachedOccluderVisibility:boolean[]=[];
     const cachedClearColor=new THREE.Color();
+    let lastGemMaskCameraState:number[]|null=null;
+    const readGemMaskCameraState=():number[]=>{
+      const position=camera.position;
+      const quaternion=camera.quaternion;
+      const projection=camera.projectionMatrix?.elements??[];
+      const world=camera.matrixWorld?.elements??[];
+      return [
+        position?.x??0,position?.y??0,position?.z??0,
+        quaternion?.x??0,quaternion?.y??0,quaternion?.z??0,quaternion?.w??1,
+        ...projection,...world,
+      ];
+    };
     const refreshGemMaskCache=()=>{
+      // A scene/model refresh invalidates the cached mask even if the camera
+      // happens to remain at the same transform.
+      lastGemMaskCameraState=null;
       cachedGemMeshes.length=0;
       cachedOccluderMeshes.length=0;
       scene.traverse((object:any)=>{
@@ -232,6 +247,17 @@ export async function createAurumPostPipeline(
       },
       render(activeRenderer:any){
         const gemMeshes=cachedGemMeshes;
+        const cameraState=readGemMaskCameraState();
+        if(
+          lastGemMaskCameraState
+          && cameraState.length===lastGemMaskCameraState.length
+          && cameraState.every((value,index)=>value===lastGemMaskCameraState![index])
+        ){
+          // Progressive settled frames reuse the exact same camera-space mask.
+          // Camera motion or refreshGemMaskCache() invalidates it automatically.
+          return;
+        }
+        lastGemMaskCameraState=cameraState;
         const previousTarget=activeRenderer.getRenderTarget();
         if(gemMeshes.length===0){
           // Clear stale pixels when a model has no gemstone meshes; never let a
