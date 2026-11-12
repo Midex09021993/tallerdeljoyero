@@ -3266,7 +3266,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               interactionPasses.forEach((pass) => {
                 pass.enabled = pass === renderPass || pass === gemMaskPass || pass === fxaaPass || pass === outputPass;
               });
-              liveFastPathRef.current = runtimeBudget.tier === "extreme";
+              // The gem-only AA chain is intentionally lightweight and must
+              // not be bypassed by the extreme-geometry direct-render fallback.
+              liveFastPathRef.current = !(renderPass && gemMaskPass && fxaaPass && outputPass);
             }
             renderer.shadowMap.enabled = false;
             invalidateRenderRef.current?.();
@@ -3393,7 +3395,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               || settledSsrEnabled
               || settledBloomRequested
               || (postRuntimeConfig.dof === true && Boolean(settledDofPass));
-            liveFastPathRef.current = extremeGeometry || !settledComposerRequested;
+            // Keep the selective gem AA composer active even on extreme
+            // assemblies; only fall back to direct rendering if its passes are unavailable.
+            liveFastPathRef.current = !settledComposerRequested;
             renderer.shadowMap.enabled = false;
             renderer.shadowMap.needsUpdate = false;
             console.info("[AURUM][DIAMOND LIVE DIAGNOSTICS]", {
