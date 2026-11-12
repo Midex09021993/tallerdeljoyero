@@ -211,16 +211,16 @@ export async function createAurumPostPipeline(
       color:0xffffff,side:THREE.DoubleSide,depthTest:true,depthWrite:false,
       depthFunc:THREE.EqualDepth,toneMapped:false
     });
-    const gemMeshes:any[]=[];
-    scene.traverse((object:any)=>{
-      if(object?.isMesh && String(object.userData?.aurumRhino?.categoria??"").toLowerCase()==="gema") gemMeshes.push(object);
-    });
     gemMaskPass={
       enabled:false,needsSwap:false,clear:false,renderToScreen:false,
       setSize(width:number,height:number){
         gemMaskTarget.setSize(Math.max(1,width),Math.max(1,height));
       },
       render(activeRenderer:any){
+        const gemMeshes:any[]=[];
+        scene.traverse((object:any)=>{
+          if(object?.isMesh && String(object.userData?.aurumRhino?.categoria??"").toLowerCase()==="gema") gemMeshes.push(object);
+        });
         if(gemMeshes.length===0){fxaaPass.material.uniforms.gemMask.value=gemMaskTarget.texture;return;}
         const previousTarget=activeRenderer.getRenderTarget();
         const previousOverride=scene.overrideMaterial;
