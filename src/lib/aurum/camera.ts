@@ -54,7 +54,9 @@ export function applyAurumIJEWELPresentationCamera(
   // VJSON camera distance is |position| around the origin. Because the
   // reference model is normalized to the documented autoScaleRadius=2,
   // preserve the measured distance instead of re-fitting the camera.
-  const distance = AURUM_IJEWEL_REFERENCE.camera.distance;
+  // Slightly tighter default product framing: about 6% closer while preserving
+  // the calibrated iJewel viewing direction and keeping the complete jewel visible.
+  const distance = AURUM_IJEWEL_REFERENCE.camera.distance * 0.94;
   camera.fov = AURUM_IJEWEL_REFERENCE.camera.fov;
   camera.up.set(...AURUM_IJEWEL_REFERENCE.camera.up);
   // Center the actual normalized product volume. The iJewel reference frame
@@ -97,7 +99,9 @@ export function applyAurumCameraView(
   const fitDistance = radius / Math.sin(limitingHalfFov);
   // 18% de margen fotográfico, ajustado por categoría para conservar aire
   // adicional en collares, aretes y piezas alargadas.
-  const distance = Math.max(fitDistance * 1.18 * profile.distance, 0.1);
+  // Reduce the original photographic breathing room slightly so the jewel
+  // occupies a little more of the viewport without changing its proportions.
+  const distance = Math.max(fitDistance * 1.10 * profile.distance, 0.1);
   const verticalBias = radius * profile.vertical;
 
   controls.target.copy(target);
