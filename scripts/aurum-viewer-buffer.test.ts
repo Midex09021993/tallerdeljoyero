@@ -507,3 +507,21 @@ test("standard image export reproduces the LIVE gem-mask and FXAA composer", () 
   expect(exportBlock).toContain("composer.setSize?.(originalCssWidth, originalCssHeight)");
   expect(exportBlock).toContain("for(const state of capturePassStates)");
 });
+
+
+test("gem mask uses a dedicated camera layer instead of per-frame mesh visibility mutation", () => {
+  const postSource = readFileSync("src/lib/aurum/post.ts", "utf8");
+  const maskStart = postSource.indexOf("const cachedGemMeshes:any[]=[];");
+  const maskEnd = postSource.indexOf("// AURUM Soft Edge AA is composited", maskStart);
+  const maskBlock = postSource.slice(maskStart, maskEnd);
+
+  expect(maskStart).toBeGreaterThan(-1);
+  expect(maskBlock).toContain("const gemMaskLayer=31;");
+  expect(maskBlock).toContain("object.layers.enable(gemMaskLayer)");
+  expect(maskBlock).toContain("camera.layers.mask=gemMaskLayerBit");
+  expect(maskBlock).toContain("previousGemLayerMasks");
+  expect(maskBlock).toContain("camera.layers.mask=previousCameraLayerMask");
+  expect(maskBlock).not.toContain("cachedOccluderMeshes");
+  expect(maskBlock).not.toContain(".visible=false");
+  expect(maskBlock).not.toContain("cachedOccluderVisibility");
+});
