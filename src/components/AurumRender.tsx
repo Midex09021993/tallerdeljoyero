@@ -3230,11 +3230,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // Pause temporal accumulation immediately when the ring/camera starts
             // moving. The previous history is discarded and cannot wash out facets.
             setTemporalMotion?.(true);
-            // Use a minimal LIVE composer chain (RenderPass -> FXAA -> OutputPass)
-            // during orbit. MSAA remains enabled on the composer render target;
-            // FXAA only cleans residual edge aliasing and does not touch gem shaders.
+            // Keep FXAA disabled during LIVE interaction: the full-screen
+            // filter washes out diamond facet contrast while the camera moves.
+            // Preserve native WebGL antialiasing (MSAA/antialias context) instead.
             syncAurumSsrDiagnosticConfig();
-            const liveFxaaEnabled = true;
+            const liveFxaaEnabled = false;
             liveFastPathRef.current = true;
             // Camera movement always selects LIVE materials, even when FXAA uses
             // EffectComposer instead of the direct WebGL path.
