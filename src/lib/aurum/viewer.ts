@@ -206,12 +206,18 @@ export function startAurumViewerLoop(
   // for the embedded canvas. Re-sync the existing renderer on host viewport
   // and visibility transitions; never recreate the WebGL context or scene.
   let hostResizeFrame = 0;
+  let hostResizeSettleFrame = 0;
   const scheduleHostResize = () => {
-    if (stopped || hostResizeFrame) return;
+    if (stopped || hostResizeFrame || hostResizeSettleFrame) return;
+    // Wait two layout frames: WebView2 may report the Form resize before its
+    // visual viewport and the absolutely positioned viewer have final bounds.
     hostResizeFrame = requestAnimationFrame(() => {
       hostResizeFrame = 0;
-      if (stopped || paused) return;
-      resize();
+      hostResizeSettleFrame = requestAnimationFrame(() => {
+        hostResizeSettleFrame = 0;
+        if (stopped || paused) return;
+        resize();
+      });
     });
   };
   const onDocumentVisibilityChange = () => {
@@ -219,6 +225,7 @@ export function startAurumViewerLoop(
   };
   const onPageShow = () => scheduleHostResize();
   window.addEventListener("resize", scheduleHostResize, { passive: true });
+  window.addEventListener("aurum-host-resize", scheduleHostResize);
   window.visualViewport?.addEventListener("resize", scheduleHostResize, { passive: true });
   window.addEventListener("pageshow", onPageShow);
   document.addEventListener("visibilitychange", onDocumentVisibilityChange);
@@ -379,11 +386,14 @@ export function startAurumViewerLoop(
       viewer.controls?.removeEventListener?.("change", onControlChange);
       viewer.controls?.removeEventListener?.("end", onControlEnd);
       window.removeEventListener("resize", scheduleHostResize);
+      window.removeEventListener("aurum-host-resize", scheduleHostResize);
       window.visualViewport?.removeEventListener("resize", scheduleHostResize);
       window.removeEventListener("pageshow", onPageShow);
       document.removeEventListener("visibilitychange", onDocumentVisibilityChange);
       if (hostResizeFrame) cancelAnimationFrame(hostResizeFrame);
+      if (hostResizeSettleFrame) cancelAnimationFrame(hostResizeSettleFrame);
       hostResizeFrame = 0;
+      hostResizeSettleFrame = 0;
       canvas?.removeEventListener("webglcontextlost", onWebGLContextLost);
       canvas?.removeEventListener("webglcontextrestored", onWebGLContextRestored);
       observer.disconnect();
