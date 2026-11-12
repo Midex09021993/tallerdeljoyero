@@ -308,8 +308,30 @@ export function startAurumViewerLoop(
     observer,
     get frame() { return frame; },
     invalidate: requestRender,
-    // Render synchronously after an export updates the camera, before capturing that frame.
-    renderNow: () => { if (!stopped && !paused) render(); },
+    // Present material/scene mutations immediately without waiting for camera input.
+    // Consume a queued demand frame to avoid rendering the same state twice.
+    // If a frame is already executing, leave the next frame dirty instead.
+    renderNow: () => {
+      if (stopped || paused) return;
+      if (ticking) {
+        dirty = true;
+        return;
+      }
+      if (frame) {
+        cancelAnimationFrame(frame);
+        frame = 0;
+      }
+      dirty = false;
+      try {
+        render();
+      } catch (error) {
+        dirty = true;
+        console.error("[AURUM][VIEWER][IMMEDIATE_RENDER_ERROR] Immediate scene update failed; scheduling a safe retry.", error);
+      }
+      if (dirty || interactionActive || interactionEnding || idleFramesRemaining > 0 || continuousRendering) {
+        requestRender();
+      }
+    },
     // Keep rendering every frame for time-based exports such as turntable video.
     // Always disable this in a finally block so the editor returns to demand rendering.
     setContinuousRendering: (active: boolean) => {
