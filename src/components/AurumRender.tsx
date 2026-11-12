@@ -3361,17 +3361,23 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 bokehPassIndex: settledDofPass ? idlePasses.indexOf(settledDofPass) : -1,
                 passNames: idlePasses.map((pass) => ({ name: pass?.constructor?.name ?? "unknown", enabled: Boolean(pass?.enabled) })),
                 taaAvailable: idleTaaAvailable,
-                renderPath: (idleTaaAvailable || (postRuntimeConfig.dof === true && Boolean(dofPass) && idlePasses.includes(dofPass))) ? "composer" : "direct",
+                renderPath: (idleTaaAvailable && settledTaaRequested)
+                  || settledSsrEnabled
+                  || (postRuntimeConfig.dof === true && Boolean(dofPass) && idlePasses.includes(dofPass))
+                  ? "composer" : "direct",
                 focusDistance: controles?.target ? camara.position.distanceTo(controles.target) : null,
                 aperture: settledDofPass?.uniforms?.aperture?.value ?? null,
                 maxblur: settledDofPass?.uniforms?.maxblur?.value ?? null,
                 focus: settledDofPass?.uniforms?.focus?.value ?? null,
               });
             }
-            // Use EffectComposer only for an explicitly requested, available live DOF pass.
-            // TAA availability alone must never switch the idle viewer away from direct rendering.
-            liveFastPathRef.current = extremeGeometry
-              || !(postRuntimeConfig.dof === true && Boolean(settledDofPass));
+            // Use EffectComposer in settled BEAUTY mode whenever an enabled
+            // post-processing feature actually requires it. TAA, SSR and DOF
+            // must not be configured and then silently bypassed by direct rendering.
+            const settledComposerRequested = settledTaaRequested
+              || settledSsrEnabled
+              || (postRuntimeConfig.dof === true && Boolean(settledDofPass));
+            liveFastPathRef.current = extremeGeometry || !settledComposerRequested;
             renderer.shadowMap.enabled = false;
             renderer.shadowMap.needsUpdate = false;
             console.info("[AURUM][DIAMOND LIVE DIAGNOSTICS]", {
