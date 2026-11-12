@@ -66,19 +66,36 @@ export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, pre
 
 
 export function resizeAurumViewer(viewer: {
-  node: { clientWidth: number; clientHeight: number };
+  node: HTMLElement;
   camera: PerspectiveCamera;
   renderer: any;
   composer?: any;
   ssaoPass?: any;
 }) {
-  const w = viewer.node.clientWidth || 900;
-  const h = viewer.node.clientHeight || 600;
-  viewer.camera.aspect = w / h;
-  viewer.camera.updateProjectionMatrix();
-  viewer.renderer.setSize(w, h, false);
-  viewer.composer?.setSize?.(w, h);
-  viewer.ssaoPass?.setSize?.(w, h);
+  // Measure the committed layout, not clientWidth/clientHeight fallbacks.
+  // During WinForms/WebView2 maximize/restore the host can briefly report a
+  // zero-sized viewport. Resizing WebGL to an invented 900x600 at that moment
+  // leaves the drawing buffer out of sync with the final embedded viewport.
+  const rect = viewer.node.getBoundingClientRect();
+  const w = Math.floor(rect.width);
+  const h = Math.floor(rect.height);
+  if (!Number.isFinite(w) || !Number.isFinite(h) || w < 2 || h < 2) return false;
+
+  const currentSize = viewer.renderer?.getSize?.({ set: (x:number,y:number) => ({ x, y }) });
+  const sizeChanged = !currentSize || Math.round(currentSize.x) !== w || Math.round(currentSize.y) !== h;
+  const nextAspect = w / h;
+  const aspectChanged = Math.abs(Number(viewer.camera.aspect) - nextAspect) > 0.0001;
+
+  if (aspectChanged) {
+    viewer.camera.aspect = nextAspect;
+    viewer.camera.updateProjectionMatrix();
+  }
+  if (sizeChanged) {
+    viewer.renderer.setSize(w, h, false);
+    viewer.composer?.setSize?.(w, h);
+    viewer.ssaoPass?.setSize?.(w, h);
+  }
+  return sizeChanged || aspectChanged;
 }
 
 export function disposeAurumViewer(viewer: {
