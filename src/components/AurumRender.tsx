@@ -1721,6 +1721,37 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           );
           loadAuditStep("normalize-converted-model-complete");
         }
+        // Reject empty or fully hidden conversions before replacing the current jewel.
+        // Rhino may transfer a valid 3DM container that contains only construction
+        // curves/points or objects hidden by their layer visibility.
+        let visibleMeshCount = 0;
+        let visibleTriangleCount = 0;
+        interno?.traverse?.((node:any) => {
+          if (!node?.isMesh || !node.geometry) return;
+          let isVisible = true;
+          for (let parent = node; parent; parent = parent.parent) {
+            if (parent.visible === false) {
+              isVisible = false;
+              break;
+            }
+          }
+          if (!isVisible) return;
+          const position = node.geometry.getAttribute?.("position");
+          const index = node.geometry.getIndex?.();
+          const vertexCount = Number(index?.count ?? position?.count ?? 0);
+          const triangles = Math.floor(vertexCount / 3);
+          if (!position || triangles < 1) return;
+          visibleMeshCount += 1;
+          visibleTriangleCount += triangles;
+        });
+        if (visibleMeshCount === 0 || visibleTriangleCount === 0) {
+          throw new Error("El 3DM se recibió, pero no contiene geometría de malla visible y renderizable. Revisa que las piezas estén visibles en Rhino y vuelve a enviar el diseño.");
+        }
+        loadAuditStep("renderable-geometry-validated", {
+          visibleMeshCount,
+          visibleTriangleCount,
+        });
+
         // Runtime budget is derived from actual renderable geometry, not source file size.
         // This keeps CAD-heavy jewelry responsive without changing authored geometry.
         informar("Configurando calidad de visualización...");
@@ -3492,7 +3523,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
     }
     let cargaCorrecta = false;
     try {
-      await apiRef.current?.cargar(file,(paso:string)=>{
+      const cargar = apiRef.current?.cargar;
+      if (typeof cargar !== "function") {
+        throw new Error("El visor AURUM RENDER todavía está inicializándose. Espera unos segundos y vuelve a intentar la recepción.");
+      }
+      await cargar(file,(paso:string)=>{
         const etapa = String(paso ?? "").toLowerCase();
         setEstadoCarga(etapa.includes("leyendo") ? (file.name.toLowerCase().endsWith(".3dm") ? "Cargando archivo 3DM…" : "Cargando archivo…") : "Procesando modelo…");
       });
@@ -3552,8 +3587,18 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
 
     setAurumConectBusy(true);
     setAurumConectCanRetry(false);
-    setAurumConectStatus("Conectando con Rhino y solicitando acceso al documento…");
+    setAurumConectStatus("Preparando el visor para recibir el documento…");
     try {
+      // Do not consume the one-time Rhino transfer token until the viewer API
+      // is ready to load the received file.
+      const apiReadyDeadline = Date.now() + 10000;
+      while (typeof apiRef.current?.cargar !== "function" && Date.now() < apiReadyDeadline) {
+        await new Promise((resolve) => window.setTimeout(resolve, 100));
+      }
+      if (typeof apiRef.current?.cargar !== "function") {
+        throw new Error("AURUM RENDER no terminó de inicializarse. Vuelve a intentar la recepción desde Rhino.");
+      }
+      setAurumConectStatus("Conectando con Rhino y solicitando acceso al documento…");
       const endpoint = `http://127.0.0.1:${port}/transfer?token=${token}`;
       const response = await fetch(endpoint, {
         method: "GET",
