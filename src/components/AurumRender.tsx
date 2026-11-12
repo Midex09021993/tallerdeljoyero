@@ -3224,18 +3224,16 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         {
           progressiveFrames: 1,
           onStart: () => {
-            // Interaction path: direct renderer, no FXAA post-process.
-            // Keep the adaptive raster/transmission budgets; isolate resolution
-            // changes from post-processing so dense CAD interaction stays light.
-            // Keep a lightweight SSR chain alive during camera orbit so metal
-            // reflections are recalculated from the active camera every frame.
-            // Dense CAD assemblies retain the direct-render fallback.
+            // Interaction path: use a single lightweight FXAA pass to soften
+            // facet silhouettes during orbit. Keep SSR/SSAO/Bloom/TAA and all
+            // photographic effects disabled while moving to protect frame time.
+            // Extremely dense CAD assemblies retain the direct-render fallback.
             syncAurumSsrDiagnosticConfig();
-            const ssrInteractionEnabled = Boolean(
-              isAurumSsrDiagnosticEnabled() && ssrPass && ssrSavePass && ssrCompositePass
+            const liveFxaaEnabled = Boolean(
+              composer && renderPass && fxaaPass && outputPass
               && runtimeBudget.tier !== "extreme"
             );
-            liveFastPathRef.current = !ssrInteractionEnabled;
+            liveFastPathRef.current = !liveFxaaEnabled;
             const interactionDpr = Math.min(
               runtimeBudget.interactionPixelRatio,
               runtimeBudget.pixelRatioCap,
@@ -3245,31 +3243,22 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             composer?.setPixelRatio?.(interactionDpr);
             const interactionPasses = ((composer as any)?.passes ?? []) as any[];
             interactionPasses.forEach((pass) => { pass.enabled = false; });
-            if (ssrInteractionEnabled) {
+            if (liveFxaaEnabled) {
               if (renderPass) renderPass.enabled = true;
-              if (ssrSavePass) ssrSavePass.enabled = true;
-              if (ssrPass) {
-                ssrPass.enabled = true;
-                ssrPass.resolutionScale = 0.35;
-              }
-              if (ssrCompositePass) {
-                ssrCompositePass.enabled = true;
-                ssrCompositePass.uniforms.intensity.value = Math.max(0, Number(postRuntimeConfig.ssrIntensity ?? 0.55));
-              }
+              if (fxaaPass) fxaaPass.enabled = true;
               if (outputPass) outputPass.enabled = true;
             }
-            if (fxaaPass) fxaaPass.enabled = false;
             liveTransmissionScaleRef.current = runtimeBudget.interactionTransmissionScale;
             (renderer as any).transmissionResolutionScale = runtimeBudget.interactionTransmissionScale;
             aplicarPerfilLive();
             syncAurumSsrDiagnosticConfig();
-            // Reassert the minimal interaction chain after the live profile applies quality gates.
-            if (ssrInteractionEnabled) {
+            // Reassert only RenderPass -> FXAA -> OutputPass after the live
+            // material profile applies its quality gates. No temporal history
+            // is accumulated, so orbiting cannot leave ghost trails.
+            if (liveFxaaEnabled) {
               interactionPasses.forEach((pass) => {
-                pass.enabled = pass === renderPass || pass === ssrSavePass || pass === ssrPass
-                  || pass === ssrCompositePass || pass === outputPass;
+                pass.enabled = pass === renderPass || pass === fxaaPass || pass === outputPass;
               });
-              if (ssrPass) ssrPass.resolutionScale = 0.35;
             }
             renderer.shadowMap.enabled = false;
             invalidateRenderRef.current?.();
