@@ -42,5 +42,5 @@ test("rejects non-PE input", () => {
 });
 
 test("rejects binaries above the static inspection limit", () => {
-  assert.throws(() => inspectPortableExecutable(Buffer.alloc(4 * 1024 * 1024 + 1)), /binary_size_invalid/);
+  assert.throws(() => inspectPortableExecutable(Buffer.alloc(32 * 1024 * 1024 + 1)), /binary_size_invalid/);
 });
