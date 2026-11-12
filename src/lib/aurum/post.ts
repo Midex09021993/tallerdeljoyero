@@ -248,7 +248,8 @@ export async function createAurumPostPipeline(
     // the sample history. Captures keep TAA enabled; preview requires both
     // temporalAA and taa to be explicitly true.
     const isLowQuality=qualityId==="low" || (qualityId==="" && Number(q?.pixelRatio??1.5) <= 1.01);
-    const taaEnabled=Boolean(options.capture) || (config.temporalAA===true && config.taa===true && !isLowQuality);
+    taaRequested=Boolean(options.capture) || (config.temporalAA===true && config.taa===true && !isLowQuality);
+    const taaEnabled=taaRequested && !temporalMotionActive;
     const progressiveFrames=Math.max(1,Math.min(32,Math.floor(Number(config.progressiveFrameCount??32))));
     const taaSampleLevel=Math.max(0,Math.min(5,Math.ceil(Math.log2(progressiveFrames))));
     const ssrEnabled=!options.capture && (diagnosticForceSSR || (!diagnosticDisableSSR && Boolean(config.ssr))) && high && Boolean(ssrPass) && Boolean(ssrSavePass) && Boolean(ssrCompositePass);
@@ -425,6 +426,8 @@ export async function createAurumPostPipeline(
     }
   };
 
+  let taaRequested=false;
+  let temporalMotionActive=false;
   let lastPX=NaN,lastPY=NaN,lastPZ=NaN,lastQX=NaN,lastQY=NaN,lastQZ=NaN,lastQW=NaN;
   let lastLoggedFocus=NaN;
   const updateTemporal=(focusDistance?:number)=>{
@@ -465,10 +468,23 @@ export async function createAurumPostPipeline(
     }
   };
 
+  const setTemporalMotion=(moving:boolean)=>{
+    const next=Boolean(moving);
+    if(next===temporalMotionActive)return;
+    temporalMotionActive=next;
+    if(!taaPass)return;
+    // Never blend samples from different object/camera poses. Pause TAA while
+    // orbiting, invalidate its history, then restart from sample zero at rest.
+    taaPass.accumulate=false;
+    taaPass.accumulateIndex=-1;
+    taaPass.enabled=!temporalMotionActive && taaRequested;
+    if(taaPass.enabled)taaPass.accumulate=true;
+  };
+
   applyQuality(quality);
   const setSSRSelects=(objects:any[])=>{
     if(!ssrPass)return;
     ssrPass.selects=Array.isArray(objects)?objects:[];
   };
-  return {composer,renderPass,ssaoPass,ssrPass,ssrSavePass,ssrCompositePass,setSSRSelects,applyQuality,updateTemporal,dofPass,taaPass,fxaaPass,outputPass};
+  return {composer,renderPass,ssaoPass,ssrPass,ssrSavePass,ssrCompositePass,setSSRSelects,applyQuality,updateTemporal,setTemporalMotion,dofPass,taaPass,fxaaPass,outputPass};
 }
