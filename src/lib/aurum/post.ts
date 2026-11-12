@@ -418,7 +418,7 @@ export async function createAurumPostPipeline(
     const isLowQuality=qualityId==="low" || (qualityId==="" && Number(q?.pixelRatio??1.5) <= 1.01);
     taaRequested=Boolean(options.capture) || (config.taa===true && config.temporalAA!==false && !isLowQuality);
     const taaEnabled=taaRequested && !temporalMotionActive;
-    const progressiveFrames=Math.max(1,Math.min(32,Math.floor(Number(config.progressiveFrameCount??32))));
+    const progressiveFrames=Math.max(1,Math.min(32,Math.floor(Number(config.progressiveFrameCount??1))));
     const taaSampleLevel=Math.max(0,Math.min(5,Math.ceil(Math.log2(progressiveFrames))));
     const ssrEnabled=!options.capture && (diagnosticForceSSR || (!diagnosticDisableSSR && Boolean(config.ssr))) && high && Boolean(ssrPass) && Boolean(ssrSavePass) && Boolean(ssrCompositePass);
     if(renderPass) renderPass.enabled=true;
