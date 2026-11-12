@@ -368,12 +368,12 @@ export async function createAurumDiamondBvhRuntime(options: {
       ) {
         return;
       }
-      // Commit the signature before updating materials: if one package update
-      // throws, the caller's existing error boundary still handles that frame.
-      lastCameraState = nextCameraState;
       for (const entry of entries.values()) {
         packageApi.updateDiamondCamera(entry.experimentalMaterial, options.camera);
       }
+      // Commit only after every material accepted the camera update. If one
+      // update throws, the next render frame retries instead of staying stale.
+      lastCameraState = nextCameraState;
     },
     updateEnvironment(rotationRadians, intensityScale) {
       if (disposed) return;
