@@ -108,6 +108,20 @@ export type AurumUnionExperimentResult = {
   skipped: number;
   errors: string[];
   preservedSourceMeshes: number;
+  audit: {
+    visibleMetalMeshes: number;
+    eligibleBrepSurfaceExtrusion: number;
+    excludedGeometryType: Record<string, number>;
+    excludedArrayMaterial: number;
+    excludedMissingLayerKey: number;
+    pairChecks: number;
+    rejectedDifferentParent: number;
+    rejectedMaterialMismatch: number;
+    rejectedLayerMismatch: number;
+    rejectedAttributesMismatch: number;
+    rejectedNoBoundsIntersection: number;
+    csgFailures: number;
+  };
 };
 
 /**
@@ -122,6 +136,20 @@ export type AurumUnionExperimentResult = {
 export function applyAurumMetalUnionExperiment(root: THREE.Object3D, maxMerges = 8): AurumUnionExperimentResult {
   const result: AurumUnionExperimentResult = {
     attempted: 0, merged: 0, skipped: 0, errors: [], preservedSourceMeshes: 0,
+    audit: {
+      visibleMetalMeshes: 0,
+      eligibleBrepSurfaceExtrusion: 0,
+      excludedGeometryType: {},
+      excludedArrayMaterial: 0,
+      excludedMissingLayerKey: 0,
+      pairChecks: 0,
+      rejectedDifferentParent: 0,
+      rejectedMaterialMismatch: 0,
+      rejectedLayerMismatch: 0,
+      rejectedAttributesMismatch: 0,
+      rejectedNoBoundsIntersection: 0,
+      csgFailures: 0,
+    },
   };
   const evaluator = new Evaluator();
   const candidates: THREE.Mesh[] = [];
@@ -129,9 +157,21 @@ export function applyAurumMetalUnionExperiment(root: THREE.Object3D, maxMerges =
   root.updateMatrixWorld(true);
   root.traverse((object) => {
     const mesh = object as THREE.Mesh;
-    if (mesh.isMesh && mesh.visible && mesh.geometry && getFamily(mesh) === "metal"
-      && isAurumRhinoCsgSurface(mesh)
-      && !Array.isArray(mesh.material) && mesh.material) candidates.push(mesh);
+    if (!mesh.isMesh || !mesh.visible || !mesh.geometry || getFamily(mesh) !== "metal") return;
+    result.audit.visibleMetalMeshes++;
+    const geometryType = getAurumRhinoGeometryType(mesh) || "(unknown)";
+    if (!isAurumRhinoCsgSurface(mesh)) {
+      result.audit.excludedGeometryType[geometryType] = (result.audit.excludedGeometryType[geometryType] ?? 0) + 1;
+      return;
+    }
+    if (Array.isArray(mesh.material) || !mesh.material) {
+      result.audit.excludedArrayMaterial++;
+      return;
+    }
+    result.audit.eligibleBrepSurfaceExtrusion++;
+    const meta = (mesh.userData?.aurumRhino ?? {}) as Record<string, unknown>;
+    if (typeof meta.layerKey !== "string" || !meta.layerKey) result.audit.excludedMissingLayerKey++;
+    candidates.push(mesh);
   });
 
   for (let i = 0; i < candidates.length && result.merged < maxMerges; i++) {
@@ -148,25 +188,39 @@ export function applyAurumMetalUnionExperiment(root: THREE.Object3D, maxMerges =
 
     for (let j = i + 1; j < candidates.length && result.merged < maxMerges; j++) {
       const right = candidates[j]!;
-      if (!right.parent || accumulator.parent !== right.parent || !right.visible
-        || !areEquivalentMaterials(accumulator.material as THREE.Material, right.material as THREE.Material)) continue;
+      result.audit.pairChecks++;
+      if (!right.parent || accumulator.parent !== right.parent || !right.visible) {
+        result.audit.rejectedDifferentParent++;
+        continue;
+      }
+      if (!areEquivalentMaterials(accumulator.material as THREE.Material, right.material as THREE.Material)) {
+        result.audit.rejectedMaterialMismatch++;
+        continue;
+      }
       const rightMeta = (right.userData?.aurumRhino ?? {}) as Record<string, unknown>;
       const rightLayerKey = typeof rightMeta.layerKey === "string" ? rightMeta.layerKey : "";
       if (!rightLayerKey) continue;
       const sameSourceLayer = rightLayerKey === layerKey;
       const samePrimaryMetalFamily = isPrimaryMetalProcessingLayer(seedMeta)
         && isPrimaryMetalProcessingLayer(rightMeta);
-      if (!sameSourceLayer && !samePrimaryMetalFamily) continue;
+      if (!sameSourceLayer && !samePrimaryMetalFamily) {
+        result.audit.rejectedLayerMismatch++;
+        continue;
+      }
       if (!accumulator.geometry || !right.geometry
         || !compatibleAttributes(accumulator.geometry, right.geometry)) {
         result.skipped++;
+        result.audit.rejectedAttributesMismatch++;
         continue;
       }
 
       root.updateMatrixWorld(true);
       const accumulatorBox = new THREE.Box3().setFromObject(accumulator);
       const rightBox = new THREE.Box3().setFromObject(right);
-      if (!accumulatorBox.intersectsBox(rightBox)) continue;
+      if (!accumulatorBox.intersectsBox(rightBox)) {
+        result.audit.rejectedNoBoundsIntersection++;
+        continue;
+      }
       result.attempted++;
 
       try {
@@ -249,6 +303,7 @@ export function applyAurumMetalUnionExperiment(root: THREE.Object3D, maxMerges =
         sources = nextSources;
         result.merged++;
       } catch (error) {
+        result.audit.csgFailures++;
         result.errors.push(`${accumulator.name || accumulator.uuid} + ${right.name || right.uuid}: ${error instanceof Error ? error.message : String(error)}`);
       }
     }
