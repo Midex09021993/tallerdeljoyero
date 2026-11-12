@@ -520,6 +520,15 @@ export async function createAurumPostPipeline(
     }else{
       composer.setSize?.(renderer.domElement.clientWidth||renderer.domElement.width,renderer.domElement.clientHeight||renderer.domElement.height);
     }
+    if(ssaoPass && !options.capture){
+      // Composer sizes every pass at the full output resolution. Reapply the
+      // intentional SSAO quality scale once so AO does not silently move to full DPR.
+      const ssaoScale=ultra?.72:high?.82:.70;
+      ssaoPass.setSize?.(
+        Math.max(1,Math.floor((renderer.domElement.width||renderer.domElement.clientWidth||1)*ssaoScale)),
+        Math.max(1,Math.floor((renderer.domElement.height||renderer.domElement.clientHeight||1)*ssaoScale))
+      );
+    }
     if(ssrPass){
       // EffectComposer.setSize() already resizes every pass using its active DPR.
       // Only update SSR quality here; a second setSize() reallocates its targets.
