@@ -336,7 +336,12 @@ export function startAurumViewerLoop(
     paused = true;
     clearFrameRetry(true);
     if (frame) cancelAnimationFrame(frame);
+    if (hostResizeFrame) cancelAnimationFrame(hostResizeFrame);
+    if (hostResizeSettleFrame) cancelAnimationFrame(hostResizeSettleFrame);
     frame = 0;
+    hostResizeFrame = 0;
+    hostResizeSettleFrame = 0;
+    hostResizePassesRemaining = 0;
     dirty = true;
     console.error("[AURUM][VIEWER][WEBGL_CONTEXT_LOST] Rendering paused while the browser restores the GPU context.", {
       canvas: canvas ? { width: canvas.width, height: canvas.height, clientWidth: canvas.clientWidth, clientHeight: canvas.clientHeight } : null,
