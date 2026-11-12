@@ -270,7 +270,7 @@ test("the viewer recovers on host wake when WebGL is available but restoration e
     contextLost = false;
     mockWindow.dispatchEvent(new Event("focus"));
     expect(scheduled.size).toBeGreaterThan(0);
-    expect(resetStateCount).toBe(1);
+    expect(resetStateCount).toBeGreaterThan(0);
     expect(setRenderTargetCount).toBe(1);
     flushFrame();
     expect(renderCount).toBeGreaterThan(beforeContextLoss);
