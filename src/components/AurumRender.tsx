@@ -3230,11 +3230,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // Pause temporal accumulation immediately when the ring/camera starts
             // moving. The previous history is discarded and cannot wash out facets.
             setTemporalMotion?.(true);
-            // FXAA is disabled during LIVE interaction. Use the direct renderer
-            // path to preserve the established optical appearance while orbiting.
-            // Other post-processing and material settings remain unchanged.
+            // Use a minimal LIVE composer chain (RenderPass -> FXAA -> OutputPass)
+            // during orbit. MSAA remains enabled on the composer render target;
+            // FXAA only cleans residual edge aliasing and does not touch gem shaders.
             syncAurumSsrDiagnosticConfig();
-            const liveFxaaEnabled = false;
+            const liveFxaaEnabled = true;
             liveFastPathRef.current = true;
             // Camera movement always selects LIVE materials, even when FXAA uses
             // EffectComposer instead of the direct WebGL path.
@@ -3248,6 +3248,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             const interactionPasses = ((composer as any)?.passes ?? []) as any[];
             interactionPasses.forEach((pass) => { pass.enabled = false; });
             if (liveFxaaEnabled) {
+              const width = Math.max(1, renderer.domElement.width || renderer.domElement.clientWidth || 1);
+              const height = Math.max(1, renderer.domElement.height || renderer.domElement.clientHeight || 1);
+              fxaaPass?.material?.uniforms?.resolution?.value?.set?.(1 / width, 1 / height);
               if (renderPass) renderPass.enabled = true;
               if (fxaaPass) fxaaPass.enabled = true;
               if (outputPass) outputPass.enabled = true;
@@ -3256,11 +3259,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             (renderer as any).transmissionResolutionScale = runtimeBudget.interactionTransmissionScale;
             aplicarPerfilLive(true);
             syncAurumSsrDiagnosticConfig();
-            // FXAA remains disabled for the LIVE direct-render path.
+            // Route non-extreme LIVE interaction through the minimal FXAA chain.
+            // Keep the direct path as the safety fallback for extreme CAD assemblies.
             if (liveFxaaEnabled) {
               interactionPasses.forEach((pass) => {
                 pass.enabled = pass === renderPass || pass === fxaaPass || pass === outputPass;
               });
+              liveFastPathRef.current = runtimeBudget.tier === "extreme";
             }
             renderer.shadowMap.enabled = false;
             invalidateRenderRef.current?.();
