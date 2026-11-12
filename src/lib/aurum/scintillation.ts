@@ -530,7 +530,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // Diamond-only microcontrast: separate adjacent bright/dark facets
         // without increasing the scene exposure. Keep the pivot near mid-grey
         // and clamp negative energy so this cannot create invalid HDR values.
-        ijInternal=max((ijInternal-vec3(0.46))*1.20+vec3(0.46),vec3(0.0));
+        ijInternal=max((ijInternal-vec3(0.46))*1.12+vec3(0.46),vec3(0.0));
 
         // Internal fire from the wavelength-separated environment rays above.
         // Use the actual R/G/B ray samples and their energy spread as a mask;
@@ -566,7 +566,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // Diamond-only HDR highlight shoulder: reduce clipped white reflections
         // while preserving the RGB ratios that carry the subtle spectral fire.
         float ijHighlightPeak=max(max(gl_FragColor.r,gl_FragColor.g),gl_FragColor.b);
-        float ijHighlightCompression=1.0/(1.0+max(ijHighlightPeak-0.82,0.0)*0.42);
+        float ijHighlightCompression=1.0/(1.0+max(ijHighlightPeak-1.02,0.0)*0.28);
         gl_FragColor.rgb*=ijHighlightCompression;
         // Selective real-time glint response for very bright diamond facets.
         // This is a lightweight shader highlight, not a screen-space bloom pass.
@@ -599,12 +599,12 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // Stronger diamond-only facet separation addresses the washed-out crown
         // seen against the iJewel reference. This is contrast, not extra exposure:
         // preserve the colored-gem response and leave PBR refraction untouched.
-        float aurumFacetFloor=${family === "Diamante" ? "0.56" : "0.992"};
+        float aurumFacetFloor=${family === "Diamante" ? "0.70" : "0.992"};
         float aurumContrast=mix(aurumFacetFloor,1.0,aurumScintillationContrast*aurumFacetContrast);
         gl_FragColor.rgb*=aurumContrast;
         ${family === "Diamante" ? `
         // Slightly lift diamond face brightness without raising scene exposure.
-        gl_FragColor.rgb *= 1.07;
+        gl_FragColor.rgb *= 1.10;
         // Restrained angelic diamond aura: a cool-white grazing-angle lift on the
         // gemstone surface, not a screen-space bloom or an emissive shell.
         float aurumAngelRim=pow(1.0-clamp(abs(dot(aurumN,aurumV)),0.0,1.0),2.9);
