@@ -1865,6 +1865,35 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           bias: 0.001,
         });
         applyPostQuality?.(renderQuality);
+
+        // The first completed model frame must use the same selective gem-AA
+        // composer as the settled preview. Previously the viewer stayed on the
+        // direct LIVE renderer until the first orbit event enabled these passes.
+        const initialGemAaAvailable = Boolean(composer && renderPass && gemMaskPass && fxaaPass && outputPass);
+        if (initialGemAaAvailable) {
+          const initialWidth = Math.max(1, renderer.domElement.width || renderer.domElement.clientWidth || 1);
+          const initialHeight = Math.max(1, renderer.domElement.height || renderer.domElement.clientHeight || 1);
+          fxaaPass.material?.uniforms?.resolution?.value?.set?.(1 / initialWidth, 1 / initialHeight);
+          renderPass.enabled = true;
+          gemMaskPass.enabled = true;
+          fxaaPass.enabled = true;
+          outputPass.enabled = true;
+
+          const initialTaaRequested = Boolean(
+            postRuntimeConfig.temporalAA === true
+            && postRuntimeConfig.taa === true
+            && measuredQualityId !== "low"
+            && runtimeBudget.tier !== "extreme"
+            && idleTaaPass
+          );
+          if (idleTaaPass) {
+            idleTaaPass.enabled = initialTaaRequested;
+            idleTaaPass.accumulate = initialTaaRequested;
+            idleTaaPass.accumulateIndex = -1;
+          }
+          liveFastPathRef.current = false;
+        }
+
         encuadrar();
         setVista("frontal");
         // Si el GemEnvironment ya terminó de cargar, aplicarlo ahora al modelo.
@@ -3228,7 +3257,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           perfTick();
         },
         {
-          progressiveFrames: 1,
+          progressiveFrames: Math.max(1, Math.min(32, Math.floor(Number(postRuntimeConfig.progressiveFrameCount ?? 32)))),
           onStart: () => {
             // Pause temporal accumulation immediately when the ring/camera starts
             // moving. The previous history is discarded and cannot wash out facets.
@@ -3335,7 +3364,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // Keep the settled gemstone appearance identical to LIVE: temporal
             // accumulation changes facet contrast, so the gem-only spatial AA is
             // the sole anti-aliasing stage in both states.
-            const settledTaaRequested = false;
+            const settledTaaRequested = Boolean(
+              postRuntimeConfig.temporalAA === true
+              && postRuntimeConfig.taa === true
+              && measuredQualityId !== "low"
+              && runtimeBudget.tier !== "extreme"
+              && idleTaaAvailable
+            );
             // Keep the exact LIVE gemstone material/shader profile after motion
             // so the settled preview does not change diamond contrast or fire.
             // The gem-only Soft Edge AA composer remains active independently.
