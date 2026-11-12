@@ -200,7 +200,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [ptSamples, setPtSamples] = useState("256");
   const [ptProgress, setPtProgress] = useState<string|null>(null);
   const ptAbortRef = useRef<AbortController|null>(null);
-  const [lightingStudio, setLightingStudio] = useState<any>(() => ({...AURUM_LIGHTING_DEFAULT, temperatureK:5500, reflectorScale:1.6, reflectors:{softbox:true,strip:true,kicker:true,edgeLeft:true,edgeRight:true}}));
+  const [lightingStudio, setLightingStudio] = useState<any>(() => ({...AURUM_LIGHTING_DEFAULT, temperatureK:5500, reflectorPower:2.5, reflectorScale:1.6, reflectors:{softbox:true,strip:true,kicker:true,edgeLeft:true,edgeRight:true}}));
   const lucesRef = useRef<((patch:any)=>void)|null>(null);
   const [, refrescarLuces] = useState(0);
   const actualizarLucesAurum = useCallback((patch:any) => {
@@ -4043,22 +4043,28 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         </div>
       </div>
       <label style={{display:"flex",justifyContent:"space-between",fontSize:12}}>Luz principal <input type="checkbox" checked={lightingStudio.key.enabled} onChange={e=>actualizarLucesAurum({key:{...lightingStudio.key,enabled:e.target.checked}})}/></label>
-      <label style={{display:"block",fontSize:11}}>Intensidad de luz principal<input aria-label="Intensidad de luz principal" style={{width:"100%"}} type="range" min="0" max="4" step=".05" value={lightingStudio.key.intensity} onChange={e=>actualizarLucesAurum({key:{...lightingStudio.key,intensity:+e.target.value}})}/></label>
+      <label style={{display:"block",fontSize:11}}>Intensidad de luz principal<input aria-label="Intensidad de luz principal" style={{width:"100%"}} type="range" min="0" max="12" step=".05" value={lightingStudio.key.intensity} onChange={e=>actualizarLucesAurum({key:{...lightingStudio.key,intensity:+e.target.value}})}/></label>
       <label style={{display:"flex",justifyContent:"space-between",fontSize:12}}>Luz de relleno <input type="checkbox" checked={lightingStudio.fill.enabled} onChange={e=>actualizarLucesAurum({fill:{...lightingStudio.fill,enabled:e.target.checked}})}/></label>
-      <label style={{display:"block",fontSize:11}}>Intensidad de relleno<input aria-label="Intensidad de relleno" style={{width:"100%"}} type="range" min="0" max="3" step=".05" value={lightingStudio.fill.intensity} onChange={e=>actualizarLucesAurum({fill:{...lightingStudio.fill,intensity:+e.target.value}})}/></label>
+      <label style={{display:"block",fontSize:11}}>Intensidad de relleno<input aria-label="Intensidad de relleno" style={{width:"100%"}} type="range" min="0" max="8" step=".05" value={lightingStudio.fill.intensity} onChange={e=>actualizarLucesAurum({fill:{...lightingStudio.fill,intensity:+e.target.value}})}/></label>
       <label style={{display:"flex",justifyContent:"space-between",fontSize:12}}>Luz de contorno <input type="checkbox" checked={lightingStudio.rim.enabled} onChange={e=>actualizarLucesAurum({rim:{...lightingStudio.rim,enabled:e.target.checked}})}/></label>
-      <label style={{display:"block",fontSize:11}}>Intensidad de contorno<input aria-label="Intensidad de luz de contorno" style={{width:"100%"}} type="range" min="0" max="3" step=".05" value={lightingStudio.rim.intensity} onChange={e=>actualizarLucesAurum({rim:{...lightingStudio.rim,intensity:+e.target.value}})}/></label>
+      <label style={{display:"block",fontSize:11}}>Intensidad de contorno<input aria-label="Intensidad de luz de contorno" style={{width:"100%"}} type="range" min="0" max="10" step=".05" value={lightingStudio.rim.intensity} onChange={e=>actualizarLucesAurum({rim:{...lightingStudio.rim,intensity:+e.target.value}})}/></label>
       <label style={{display:"flex",justifyContent:"space-between",fontSize:12}}>Luz de gemas <input type="checkbox" checked={lightingStudio.gem.enabled} onChange={e=>actualizarLucesAurum({gem:{...lightingStudio.gem,enabled:e.target.checked}})}/></label>
-      <label style={{display:"block",fontSize:11}}>Intensidad para gemas<input aria-label="Intensidad para gemas" style={{width:"100%"}} type="range" min="0" max="2" step=".05" value={lightingStudio.gem.intensity} onChange={e=>actualizarLucesAurum({gem:{...lightingStudio.gem,intensity:+e.target.value}})}/></label>
+      <label style={{display:"block",fontSize:11}}>Intensidad para gemas<input aria-label="Intensidad para gemas" style={{width:"100%"}} type="range" min="0" max="6" step=".05" value={lightingStudio.gem.intensity} onChange={e=>actualizarLucesAurum({gem:{...lightingStudio.gem,intensity:+e.target.value}})}/></label>
       <label style={{display:"flex",justifyContent:"space-between",fontSize:12}}>Luz frontal rectangular <input type="checkbox" checked={lightingStudio.front.enabled} onChange={e=>actualizarLucesAurum({front:{...lightingStudio.front,enabled:e.target.checked}})}/></label>
-      <label style={{display:"block",fontSize:11}}>Intensidad frontal<input aria-label="Intensidad de luz frontal" style={{width:"100%"}} type="range" min="0" max="2" step=".05" value={lightingStudio.front.intensity} onChange={e=>actualizarLucesAurum({front:{...lightingStudio.front,intensity:+e.target.value}})}/></label>
+      <label style={{display:"block",fontSize:11}}>Intensidad frontal<input aria-label="Intensidad de luz frontal" style={{width:"100%"}} type="range" min="0" max="8" step=".05" value={lightingStudio.front.intensity} onChange={e=>actualizarLucesAurum({front:{...lightingStudio.front,intensity:+e.target.value}})}/></label>
       <div style={{marginTop:10,paddingTop:10,borderTop:"1px solid rgba(255,255,255,.12)"}}>
         <div style={{fontSize:12,fontWeight:700,marginBottom:7}}>Reflectores de estudio</div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"6px 10px",fontSize:11}}>
           {([{id:"softbox",label:"Softbox principal"},{id:"strip",label:"Strip lateral"},{id:"kicker",label:"Reflector trasero"},{id:"edgeLeft",label:"Borde izquierdo"},{id:"edgeRight",label:"Borde derecho"}] as const).map(item=><label key={item.id} style={{display:"flex",alignItems:"center",gap:5}}><input type="checkbox" checked={lightingStudio.reflectors?.[item.id] ?? true} onChange={e=>actualizarLucesAurum({reflectors:{...(lightingStudio.reflectors ?? {}),[item.id]:e.target.checked}})}/>{item.label}</label>)}
         </div>
       </div>
-      <div style={{marginTop:10,paddingTop:10,borderTop:"1px solid rgba(255,255,255,.12)"}}><label style={{display:"block",fontSize:12,fontWeight:600}}>Tamaño de reflectores <span style={{float:"right",color:"#f3d66e"}}>{Math.round((lightingStudio.reflectorScale ?? 1.6)*100)}%</span><input aria-label="Tamaño de reflectores" style={{width:"100%"}} type="range" min=".75" max="3.5" step=".05" value={lightingStudio.reflectorScale ?? 1.6} onChange={e=>actualizarLucesAurum({reflectorScale:+e.target.value})}/></label><p style={{fontSize:10,color:"rgba(255,255,255,.62)",marginTop:3}}>Ajusta el tamaño aparente de los softboxes y strips; fuentes mayores producen reflejos más amplios y suaves.</p></div>
+      <div style={{marginTop:10,paddingTop:10,borderTop:"1px solid rgba(255,255,255,.12)"}}>
+         <label style={{display:"block",fontSize:12,fontWeight:700}}>Potencia global de reflectores <span style={{float:"right",color:"#f3d66e"}}>{(lightingStudio.reflectorPower ?? 2.5).toFixed(1)}×</span>
+           <input aria-label="Potencia global de reflectores" style={{width:"100%"}} type="range" min="0" max="6" step=".1" value={lightingStudio.reflectorPower ?? 2.5} onChange={e=>actualizarLucesAurum({reflectorPower:+e.target.value})}/>
+         </label>
+         <p style={{fontSize:10,color:"rgba(255,255,255,.62)",marginTop:3}}>Multiplica la energía de los seis reflectores rectangulares sin alterar el HDRI ni la exposición global.</p>
+       </div>
+       <div style={{marginTop:10,paddingTop:10,borderTop:"1px solid rgba(255,255,255,.12)"}}><label style={{display:"block",fontSize:12,fontWeight:600}}>Tamaño de reflectores <span style={{float:"right",color:"#f3d66e"}}>{Math.round((lightingStudio.reflectorScale ?? 1.6)*100)}%</span><input aria-label="Tamaño de reflectores" style={{width:"100%"}} type="range" min=".75" max="3.5" step=".05" value={lightingStudio.reflectorScale ?? 1.6} onChange={e=>actualizarLucesAurum({reflectorScale:+e.target.value})}/></label><p style={{fontSize:10,color:"rgba(255,255,255,.62)",marginTop:3}}>Ajusta el tamaño aparente de los softboxes y strips; fuentes mayores producen reflejos más amplios y suaves.</p></div>
     </div>
   );
   return (<>
