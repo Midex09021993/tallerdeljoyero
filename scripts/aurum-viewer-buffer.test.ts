@@ -26,6 +26,8 @@ test("the viewer pauses on WebGL context loss and resumes after restoration", ()
   const originalResizeObserver = globalThis.ResizeObserver;
   const originalRequestAnimationFrame = globalThis.requestAnimationFrame;
   const originalCancelAnimationFrame = globalThis.cancelAnimationFrame;
+  const originalWindow = globalThis.window;
+  const originalDocument = globalThis.document;
   const scheduled = new Map<number, FrameRequestCallback>();
   let nextFrameId = 1;
   let renderCount = 0;
@@ -37,6 +39,10 @@ test("the viewer pauses on WebGL context loss and resumes after restoration", ()
     disconnect() {}
   }
 
+  const mockWindow = new EventTarget() as EventTarget & { visualViewport?: EventTarget };
+  const mockDocument = Object.assign(new EventTarget(), { visibilityState: "visible" }) as Document;
+  globalThis.window = mockWindow as unknown as Window & typeof globalThis;
+  globalThis.document = mockDocument;
   globalThis.ResizeObserver = MockResizeObserver as unknown as typeof ResizeObserver;
   globalThis.requestAnimationFrame = ((callback: FrameRequestCallback) => {
     const id = nextFrameId++;
@@ -49,7 +55,11 @@ test("the viewer pauses on WebGL context loss and resumes after restoration", ()
 
   const canvas = new EventTarget() as EventTarget & { parentElement?: HTMLElement };
   const viewer = {
-    node: { clientWidth: 800, clientHeight: 600 },
+    node: {
+      clientWidth: 800,
+      clientHeight: 600,
+      getBoundingClientRect: () => ({ width: 800, height: 600 }),
+    },
     camera: { aspect: 1, updateProjectionMatrix() {} },
     renderer: { domElement: canvas, setSize() { resizeCount++; } },
     controls: null,
@@ -85,5 +95,7 @@ test("the viewer pauses on WebGL context loss and resumes after restoration", ()
     globalThis.ResizeObserver = originalResizeObserver;
     globalThis.requestAnimationFrame = originalRequestAnimationFrame;
     globalThis.cancelAnimationFrame = originalCancelAnimationFrame;
+    globalThis.window = originalWindow;
+    globalThis.document = originalDocument;
   }
 });
