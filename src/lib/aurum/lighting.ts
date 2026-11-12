@@ -316,7 +316,7 @@ export function createAurumLightingController(
         // The supplied iJewel VJSON has no active rectangular studio-reflector rig.
         // Keep AURUM's six RectAreaLights available for other presets and A/B tests,
         // but disable them in this reference profile so the HDR environment is primary.
-        (["softbox", "strip", "front", "kicker", "edgeLeft", "edgeRight"] as const)
+        (["softbox", "strip", "front", "kicker", "edgeLeft", "edgeRight", "largeSoftbox"] as const)
           .forEach((name) => {
             if (lights[name]) lights[name].visible = false;
           });
