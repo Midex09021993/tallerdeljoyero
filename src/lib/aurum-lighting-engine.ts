@@ -9,6 +9,8 @@ export type AurumLightConfig={
   gem:{enabled:boolean;intensity:number;position:[number,number,number]};
   front:{enabled:boolean;intensity:number};
   ambient:number;
+  /** Shared photographic white-balance control for the studio sources. */
+  temperatureK?:number;
 };
 export const AURUM_LIGHTING_DEFAULT:AurumLightConfig={
  // Start with the manual studio sources disabled. The scene HDR remains active;
