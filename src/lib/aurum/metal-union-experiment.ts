@@ -115,7 +115,10 @@ export type AurumUnionExperimentResult = {
     excludedArrayMaterial: number;
     excludedMissingLayerKey: number;
     pairChecks: number;
+    rejectedMissingParent: number;
     rejectedDifferentParent: number;
+    rejectedInvisibleCandidate: number;
+    rejectedMissingLayerKey: number;
     rejectedMaterialMismatch: number;
     rejectedLayerMismatch: number;
     rejectedAttributesMismatch: number;
@@ -143,7 +146,10 @@ export function applyAurumMetalUnionExperiment(root: THREE.Object3D, maxMerges =
       excludedArrayMaterial: 0,
       excludedMissingLayerKey: 0,
       pairChecks: 0,
+      rejectedMissingParent: 0,
       rejectedDifferentParent: 0,
+      rejectedInvisibleCandidate: 0,
+      rejectedMissingLayerKey: 0,
       rejectedMaterialMismatch: 0,
       rejectedLayerMismatch: 0,
       rejectedAttributesMismatch: 0,
@@ -189,8 +195,16 @@ export function applyAurumMetalUnionExperiment(root: THREE.Object3D, maxMerges =
     for (let j = i + 1; j < candidates.length && result.merged < maxMerges; j++) {
       const right = candidates[j]!;
       result.audit.pairChecks++;
-      if (!right.parent || accumulator.parent !== right.parent || !right.visible) {
+      if (!right.parent || !accumulator.parent) {
+        result.audit.rejectedMissingParent++;
+        continue;
+      }
+      if (accumulator.parent !== right.parent) {
         result.audit.rejectedDifferentParent++;
+        continue;
+      }
+      if (!right.visible) {
+        result.audit.rejectedInvisibleCandidate++;
         continue;
       }
       if (!areEquivalentMaterials(accumulator.material as THREE.Material, right.material as THREE.Material)) {
@@ -199,7 +213,10 @@ export function applyAurumMetalUnionExperiment(root: THREE.Object3D, maxMerges =
       }
       const rightMeta = (right.userData?.aurumRhino ?? {}) as Record<string, unknown>;
       const rightLayerKey = typeof rightMeta.layerKey === "string" ? rightMeta.layerKey : "";
-      if (!rightLayerKey) continue;
+      if (!rightLayerKey) {
+        result.audit.rejectedMissingLayerKey++;
+        continue;
+      }
       const sameSourceLayer = rightLayerKey === layerKey;
       const samePrimaryMetalFamily = isPrimaryMetalProcessingLayer(seedMeta)
         && isPrimaryMetalProcessingLayer(rightMeta);
