@@ -94,9 +94,18 @@ export function resizeAurumViewer(viewer: {
     },
   };
   const currentSize = viewer.renderer?.getSize?.(sizeTarget);
-  const sizeChanged = !currentSize ||
+  const logicalSizeChanged = !currentSize ||
     Math.round(currentSize.x) !== w ||
     Math.round(currentSize.y) !== h;
+  const pixelRatio = Math.max(1, Number(viewer.renderer?.getPixelRatio?.() ?? 1));
+  const canvas = viewer.renderer?.domElement as HTMLCanvasElement | undefined;
+  // A fullscreen transition can leave Three.js' logical size correct while
+  // the actual drawing buffer still has the previous dimensions. Check both.
+  const bufferSizeChanged = Boolean(canvas) && (
+    Math.abs(canvas!.width - Math.floor(w * pixelRatio)) > 1 ||
+    Math.abs(canvas!.height - Math.floor(h * pixelRatio)) > 1
+  );
+  const sizeChanged = logicalSizeChanged || bufferSizeChanged;
   const nextAspect = w / h;
   const aspectChanged = Math.abs(Number(viewer.camera.aspect) - nextAspect) > 0.0001;
 
@@ -104,7 +113,9 @@ export function resizeAurumViewer(viewer: {
     viewer.camera.aspect = nextAspect;
     viewer.camera.updateProjectionMatrix();
   }
-  if (sizeChanged) {
+  if (sizeChanged || aspectChanged) {
+    // Update the existing renderer and post pipeline in place. Never recreate
+    // the WebGL context, scene, camera, materials or optical configuration.
     viewer.renderer.setSize(w, h, false);
     viewer.composer?.setSize?.(w, h);
     viewer.ssaoPass?.setSize?.(w, h);
@@ -224,17 +235,29 @@ export function startAurumViewerLoop(
   // and visibility transitions; never recreate the WebGL context or scene.
   let hostResizeFrame = 0;
   let hostResizeSettleFrame = 0;
+  let hostResizePassesRemaining = 0;
   const scheduleHostResize = () => {
-    if (stopped || hostResizeFrame || hostResizeSettleFrame) return;
-    // Wait two layout frames: WebView2 may report the Form resize before its
-    // visual viewport and the absolutely positioned viewer have final bounds.
+    if (stopped) return;
+    // Internal fullscreen can settle over several layout/compositor frames.
+    // Keep a short bounded retry window instead of trusting one ResizeObserver
+    // notification; every pass resizes the existing WebGL resources in place.
+    hostResizePassesRemaining = Math.max(hostResizePassesRemaining, 4);
+    if (hostResizeFrame || hostResizeSettleFrame) return;
+    const runResizePass = () => {
+      hostResizeSettleFrame = 0;
+      if (stopped) {
+        hostResizePassesRemaining = 0;
+        return;
+      }
+      if (!paused) resize();
+      hostResizePassesRemaining -= 1;
+      if (hostResizePassesRemaining > 0) {
+        hostResizeSettleFrame = requestAnimationFrame(runResizePass);
+      }
+    };
     hostResizeFrame = requestAnimationFrame(() => {
       hostResizeFrame = 0;
-      hostResizeSettleFrame = requestAnimationFrame(() => {
-        hostResizeSettleFrame = 0;
-        if (stopped || paused) return;
-        resize();
-      });
+      hostResizeSettleFrame = requestAnimationFrame(runResizePass);
     });
   };
   const onDocumentVisibilityChange = () => {
@@ -243,6 +266,7 @@ export function startAurumViewerLoop(
   const onPageShow = () => scheduleHostResize();
   window.addEventListener("resize", scheduleHostResize, { passive: true });
   window.addEventListener("aurum-host-resize", scheduleHostResize);
+  document.addEventListener("fullscreenchange", scheduleHostResize);
   window.visualViewport?.addEventListener("resize", scheduleHostResize, { passive: true });
   window.addEventListener("pageshow", onPageShow);
   document.addEventListener("visibilitychange", onDocumentVisibilityChange);
@@ -404,6 +428,7 @@ export function startAurumViewerLoop(
       viewer.controls?.removeEventListener?.("end", onControlEnd);
       window.removeEventListener("resize", scheduleHostResize);
       window.removeEventListener("aurum-host-resize", scheduleHostResize);
+      document.removeEventListener("fullscreenchange", scheduleHostResize);
       window.visualViewport?.removeEventListener("resize", scheduleHostResize);
       window.removeEventListener("pageshow", onPageShow);
       document.removeEventListener("visibilitychange", onDocumentVisibilityChange);
@@ -411,6 +436,7 @@ export function startAurumViewerLoop(
       if (hostResizeSettleFrame) cancelAnimationFrame(hostResizeSettleFrame);
       hostResizeFrame = 0;
       hostResizeSettleFrame = 0;
+      hostResizePassesRemaining = 0;
       canvas?.removeEventListener("webglcontextlost", onWebGLContextLost);
       canvas?.removeEventListener("webglcontextrestored", onWebGLContextRestored);
       observer.disconnect();
