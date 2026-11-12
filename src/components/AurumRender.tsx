@@ -852,7 +852,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       // Preserve the original scene background while the live Bokeh preview is active.
       let dofSavedSceneBackground: THREE.Scene["background"] | undefined;
       let dofHasSavedSceneBackground = false;
-      const { composer, ssaoPass, ssrPass, ssrSavePass, ssrCompositePass, bloomPass, setSSRSelects, applyQuality: applyPostQuality, updateTemporal, setTemporalMotion, dofPass, renderPass, taaPass: idleTaaPass, fxaaPass, outputPass } = await createAurumPostPipeline(
+      const { composer, ssaoPass, ssrPass, ssrSavePass, ssrCompositePass, bloomPass, setSSRSelects, applyQuality: applyPostQuality, updateTemporal, setTemporalMotion, dofPass, renderPass, taaPass: idleTaaPass, fxaaPass, gemMaskPass, outputPass } = await createAurumPostPipeline(
         renderer,
         escena,
         camara,
@@ -3234,7 +3234,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // It only blends a small amount at strong luminance boundaries;
             // diamond shaders, BVH, dispersion and ACES calibration stay untouched.
             syncAurumSsrDiagnosticConfig();
-            const liveFxaaEnabled = false; // Desactivado globalmente hasta aislar el AA exclusivamente en gemas.
+            const liveFxaaEnabled = true; // Soft Edge AA con máscara exclusiva de gemas.
             liveFastPathRef.current = true;
             // Camera movement always selects LIVE materials, even when FXAA uses
             // EffectComposer instead of the direct WebGL path.
@@ -3252,6 +3252,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               const height = Math.max(1, renderer.domElement.height || renderer.domElement.clientHeight || 1);
               fxaaPass?.material?.uniforms?.resolution?.value?.set?.(1 / width, 1 / height);
               if (renderPass) renderPass.enabled = true;
+              if (gemMaskPass) gemMaskPass.enabled = true;
               if (fxaaPass) fxaaPass.enabled = true;
               if (outputPass) outputPass.enabled = true;
             }
@@ -3263,7 +3264,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // Keep the direct path as the safety fallback for extreme CAD assemblies.
             if (liveFxaaEnabled) {
               interactionPasses.forEach((pass) => {
-                pass.enabled = pass === renderPass || pass === fxaaPass || pass === outputPass;
+                pass.enabled = pass === renderPass || pass === gemMaskPass || pass === fxaaPass || pass === outputPass;
               });
               liveFastPathRef.current = runtimeBudget.tier === "extreme";
             }
@@ -3285,7 +3286,12 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             const idlePasses = ((composer as any)?.passes ?? []) as any[];
             const idleRenderPass = idlePasses.find((pass) => pass?.constructor?.name === "RenderPass");
             const idleOutputPass = idlePasses.find((pass) => pass?.constructor?.name === "OutputPass");
-            const idleSoftEdgeAaAvailable = false; // No aplicar filtro de pantalla completa sobre los metales.
+            const idleSoftEdgeAaAvailable = Boolean(idleRenderPass && gemMaskPass && fxaaPass && idleOutputPass);
+            if (idleSoftEdgeAaAvailable) {
+              const width = Math.max(1, renderer.domElement.width || renderer.domElement.clientWidth || 1);
+              const height = Math.max(1, renderer.domElement.height || renderer.domElement.clientHeight || 1);
+              fxaaPass.material?.uniforms?.resolution?.value?.set?.(1 / width, 1 / height);
+            }
             const idleTaaAvailable = Boolean(idleRenderPass && idleTaaPass && idleOutputPass && idlePasses.includes(idleTaaPass));
             const extremeGeometry = runtimeBudget.tier === "extreme";
             // Bloom is captured from the active quality profile, then restored only
@@ -3304,7 +3310,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 || (pass === ssrCompositePass && isAurumSsrDiagnosticEnabled())
                 || (pass === dofPass && postRuntimeConfig.dof === true)
                 || (pass === bloomPass && settledBloomRequested)
-                || pass === idleOutputPass;
+                || pass === idleOutputPass
+                || pass === gemMaskPass
+                || pass === fxaaPass;
             });
             // Controlled LIVE TAA trial: accumulate only after the camera stops.
             // It is deliberately disabled during orbit and on low/extreme budgets.
