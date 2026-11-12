@@ -264,11 +264,20 @@ export function startAurumViewerLoop(
     if (document.visibilityState === "visible") scheduleHostResize();
   };
   const onPageShow = () => scheduleHostResize();
+  // WebView2 can restore its native composition surface without a reliable
+  // ResizeObserver notification. A focus/pointer wake must request a frame
+  // immediately; the bounded resize pass then reconciles the final viewport.
+  const onHostWake = () => {
+    requestRender();
+    scheduleHostResize();
+  };
   window.addEventListener("resize", scheduleHostResize, { passive: true });
   window.addEventListener("aurum-host-resize", scheduleHostResize);
   document.addEventListener("fullscreenchange", scheduleHostResize);
   window.visualViewport?.addEventListener("resize", scheduleHostResize, { passive: true });
   window.addEventListener("pageshow", onPageShow);
+  window.addEventListener("focus", onHostWake);
+  window.addEventListener("pointerdown", onHostWake, true);
   document.addEventListener("visibilitychange", onDocumentVisibilityChange);
 
   const canvas = viewer.renderer?.domElement as HTMLCanvasElement | undefined;
@@ -431,6 +440,8 @@ export function startAurumViewerLoop(
       document.removeEventListener("fullscreenchange", scheduleHostResize);
       window.visualViewport?.removeEventListener("resize", scheduleHostResize);
       window.removeEventListener("pageshow", onPageShow);
+      window.removeEventListener("focus", onHostWake);
+      window.removeEventListener("pointerdown", onHostWake, true);
       document.removeEventListener("visibilitychange", onDocumentVisibilityChange);
       if (hostResizeFrame) cancelAnimationFrame(hostResizeFrame);
       if (hostResizeSettleFrame) cancelAnimationFrame(hostResizeSettleFrame);
