@@ -184,6 +184,28 @@ export function startAurumViewerLoop(
   const observer = new ResizeObserver(resize);
   observer.observe(viewer.node);
 
+  // Native desktop hosts (including Rhino's WebView2) can resize or restore
+  // their top-level window without producing a reliable observer notification
+  // for the embedded canvas. Re-sync the existing renderer on host viewport
+  // and visibility transitions; never recreate the WebGL context or scene.
+  let hostResizeFrame = 0;
+  const scheduleHostResize = () => {
+    if (stopped || hostResizeFrame) return;
+    hostResizeFrame = requestAnimationFrame(() => {
+      hostResizeFrame = 0;
+      if (stopped || paused) return;
+      resize();
+    });
+  };
+  const onDocumentVisibilityChange = () => {
+    if (document.visibilityState === "visible") scheduleHostResize();
+  };
+  const onPageShow = () => scheduleHostResize();
+  window.addEventListener("resize", scheduleHostResize, { passive: true });
+  window.visualViewport?.addEventListener("resize", scheduleHostResize, { passive: true });
+  window.addEventListener("pageshow", onPageShow);
+  document.addEventListener("visibilitychange", onDocumentVisibilityChange);
+
   const canvas = viewer.renderer?.domElement as HTMLCanvasElement | undefined;
   const onWebGLContextLost = (event: Event) => {
     event.preventDefault();
@@ -317,6 +339,12 @@ export function startAurumViewerLoop(
       viewer.controls?.removeEventListener?.("start", onControlStart);
       viewer.controls?.removeEventListener?.("change", onControlChange);
       viewer.controls?.removeEventListener?.("end", onControlEnd);
+      window.removeEventListener("resize", scheduleHostResize);
+      window.visualViewport?.removeEventListener("resize", scheduleHostResize);
+      window.removeEventListener("pageshow", onPageShow);
+      document.removeEventListener("visibilitychange", onDocumentVisibilityChange);
+      if (hostResizeFrame) cancelAnimationFrame(hostResizeFrame);
+      hostResizeFrame = 0;
       canvas?.removeEventListener("webglcontextlost", onWebGLContextLost);
       canvas?.removeEventListener("webglcontextrestored", onWebGLContextRestored);
       observer.disconnect();
