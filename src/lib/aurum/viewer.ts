@@ -289,6 +289,10 @@ export function startAurumViewerLoop(
   let hostResizeFrame = 0;
   let hostResizeSettleFrame = 0;
   let hostResizePassesRemaining = 0;
+  // A pointer press is common during orbit and must not trigger an expensive
+  // forced WebGL/post-target resize. Arm the fallback only after the host
+  // actually leaves the foreground or the WebGL context is lost.
+  let hostSurfaceSyncPending = false;
   const scheduleHostResize = () => {
     if (stopped) return;
     // Internal fullscreen can settle over several layout/compositor frames.
@@ -340,6 +344,7 @@ export function startAurumViewerLoop(
       viewer.renderer?.resetState?.();
       clearFrameRetry(true);
       const wasPaused = paused;
+      hostSurfaceSyncPending = false;
       paused = false;
       dirty = true;
       console.info("[AURUM][VIEWER][HOST_WAKE_SURFACE_SYNC] Re-synchronized the existing WebGL surface and post-processing targets.", {
@@ -354,19 +359,29 @@ export function startAurumViewerLoop(
     requestRender();
   };
   const onDocumentVisibilityChange = () => {
-    if (document.visibilityState === "visible") {
-      wakeFromHost();
-      scheduleHostResize();
+    if (document.visibilityState === "hidden") {
+      hostSurfaceSyncPending = true;
+      return;
     }
+    wakeFromHost();
+    scheduleHostResize();
   };
   const onPageShow = () => {
     wakeFromHost();
     scheduleHostResize();
   };
-  // WebView2 and browser tab/window restoration can miss a canvas restoration
-  // notification. Focus, visibility, and pointer wake all use the same
-  // guarded recovery path before requesting a fresh frame.
+  // Focus/restore is a real host transition and warrants a full surface sync.
   const onHostWake = () => {
+    wakeFromHost();
+    scheduleHostResize();
+  };
+  const onHostBlur = () => {
+    hostSurfaceSyncPending = true;
+  };
+  // Pointer input is only a fallback when a preceding blur/visibility loss
+  // armed recovery. Normal orbit clicks must never reallocate composer targets.
+  const onPointerWake = () => {
+    if (!hostSurfaceSyncPending && !paused) return;
     wakeFromHost();
     scheduleHostResize();
   };
@@ -376,13 +391,15 @@ export function startAurumViewerLoop(
   window.visualViewport?.addEventListener("resize", scheduleHostResize, { passive: true });
   window.addEventListener("pageshow", onPageShow);
   window.addEventListener("focus", onHostWake);
-  window.addEventListener("pointerdown", onHostWake, true);
+  window.addEventListener("blur", onHostBlur);
+  window.addEventListener("pointerdown", onPointerWake, true);
   document.addEventListener("visibilitychange", onDocumentVisibilityChange);
 
   const canvas = viewer.renderer?.domElement as HTMLCanvasElement | undefined;
   const onWebGLContextLost = (event: Event) => {
     event.preventDefault();
     paused = true;
+    hostSurfaceSyncPending = true;
     clearFrameRetry(true);
     if (frame) cancelAnimationFrame(frame);
     if (hostResizeFrame) cancelAnimationFrame(hostResizeFrame);
@@ -555,7 +572,8 @@ export function startAurumViewerLoop(
       window.visualViewport?.removeEventListener("resize", scheduleHostResize);
       window.removeEventListener("pageshow", onPageShow);
       window.removeEventListener("focus", onHostWake);
-      window.removeEventListener("pointerdown", onHostWake, true);
+      window.removeEventListener("blur", onHostBlur);
+      window.removeEventListener("pointerdown", onPointerWake, true);
       document.removeEventListener("visibilitychange", onDocumentVisibilityChange);
       if (hostResizeFrame) cancelAnimationFrame(hostResizeFrame);
       if (hostResizeSettleFrame) cancelAnimationFrame(hostResizeSettleFrame);
