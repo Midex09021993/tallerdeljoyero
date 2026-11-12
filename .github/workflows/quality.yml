@@ -3,10 +3,6 @@ name: Aurum Lab CI
 permissions:
   contents: read
 
-concurrency:
-  group: aurum-lab-ci-${{ github.ref }}
-  cancel-in-progress: false
-
 on:
   workflow_dispatch:
   push:
