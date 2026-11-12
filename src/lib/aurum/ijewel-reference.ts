@@ -25,7 +25,7 @@ export const AURUM_IJEWEL_REFERENCE = {
   },
   progressive: {
     enabled: true,
-    maxFrameCount: 32,
+    maxFrameCount: 1,
     jitter: true,
   },
   toneMapping: {
