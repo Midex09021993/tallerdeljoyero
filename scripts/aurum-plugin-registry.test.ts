@@ -191,3 +191,37 @@ test("AURUM plugin service contracts reject duplicate service providers", async 
 
   await expect(registry.start()).rejects.toThrow('declared by both "aurum.scene" and "aurum.viewer"');
 });
+
+
+test("AURUM plugin registry snapshots mutable contract arrays at registration", async () => {
+  const services = new Map<string, unknown>([["aurum.ready", {}]]);
+  const dependencies = ["aurum.base"];
+  const requiredServices = ["aurum.ready"];
+  const providedServices = ["aurum.plugin.api"];
+  services.set("aurum.plugin.api", {});
+  const registry = new AurumPluginRegistry({ ...createContext(), services });
+
+  registry.register({
+    id: "aurum.base",
+    version: "1.0.0",
+    initialize: () => undefined,
+  });
+  registry.register({
+    id: "aurum.feature",
+    version: "1.0.0",
+    dependencies,
+    requiresServices: requiredServices,
+    providesServices: providedServices,
+    initialize: () => undefined,
+  });
+
+  // Mutating caller-owned arrays after registration must not rewrite the
+  // validated dependency graph or the declared service contract.
+  dependencies.push("aurum.missing");
+  requiredServices.push("aurum.missing.service");
+  providedServices.push("aurum.duplicate.api");
+
+  await registry.start();
+  expect(registry.getState()).toBe("running");
+  await registry.dispose();
+});
