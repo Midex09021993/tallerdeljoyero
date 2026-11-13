@@ -26,7 +26,7 @@ export interface AurumSurfaceReport {
 export interface AurumSurfaceInspectOptions {
   /** World-space tolerance in model units. Must be selected for the source model scale. */
   readonly tolerance?: number;
-  /** Safety ceiling for diagnostic edge records; this engine is opt-in, not part of import. */
+  /** Safety ceiling for boundary-edge records retained by this diagnostic, including the import inspection stage. */
   readonly maxEdges?: number;
   /** Dot-product threshold for a tangent-plane alignment hint. */
   readonly normalAlignmentThreshold?: number;
