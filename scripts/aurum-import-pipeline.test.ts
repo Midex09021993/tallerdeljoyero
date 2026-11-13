@@ -80,7 +80,7 @@ test("import pipeline manager returns a complete, ordered stage history", async 
   expect(calls).toEqual(["import"]);
   expect(result.geometry.meshCount).toBe(1);
   expect(result.geometry.visibleMeshCount).toBe(1);
-  expect(result.geometry.bounds).toBeNull();
+  expect(result.geometry.bounds).not.toBeNull();
   expect(result.pipeline).toEqual([
     "import-started",
     "source-decoded",
