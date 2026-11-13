@@ -142,7 +142,9 @@ export function createAurumImportPipelineManager(
         solid: solidReport, intersection: intersectionReport, pipeline: Object.freeze(stages),
       });
       } catch (error) {
-        if (request.signal?.aborted) disposeImportedGeometry(imported);
+        // The manager did not hand a result to the caller; it therefore releases
+        // the imported geometry on every failure, not only explicit cancellation.
+        disposeImportedGeometry(imported);
         try {
           request.onStage?.("import-failed", {
             reason: error instanceof Error ? error.message : String(error),
