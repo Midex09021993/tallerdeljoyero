@@ -31,6 +31,11 @@ export interface AurumGemEnvironmentController {
     texture:any,
     options?:{rotation?:number; intensityScale?:number}
   )=>void;
+  applyToTargets: (
+    targets:readonly any[],
+    texture:any,
+    options?:{rotation?:number; intensityScale?:number}
+  )=>void;
   dispose: (texture?:any)=>void;
 }
 
@@ -43,23 +48,21 @@ export function createAurumGemEnvironment(
   const cache = new Map<string, any>();
   const MAX_CACHE = 2;
 
-  const applyToModel = (
-    model:any,
+  const applyToTargets = (
+    targets:readonly any[],
     texture:any,
     options:{rotation?:number; intensityScale?:number} = {}
   ) => {
-    if (!model || !texture) return;
+    if (!texture || !targets?.length) return;
     const rotation = Number.isFinite(options.rotation) ? Number(options.rotation) : 0;
     const intensityScale = Number.isFinite(options.intensityScale)
       ? Math.max(.75, Math.min(1.35, Number(options.intensityScale)))
       : 1;
 
-    model.traverse((x:any) => {
-      if (!x.isMesh || !x.material) return;
+    for (const x of targets) {
+      if (!x?.isMesh || !x.material) continue;
       const apply = (m:any) => {
         if (!m?.userData?.aurumOpticalProfile) return m;
-        // Once an environment map is installed, swapping another PMREM texture
-        // of the same type updates the uniform without recompiling the material.
         const requiresShaderUpdate = !m.envMap;
         m.envMap = texture;
         const family = String(m.userData?.aurumGemFamily ?? m.userData?.aurumOpticalProfile?.familia ?? "default");
@@ -69,35 +72,18 @@ export function createAurumGemEnvironment(
           : (Number.isFinite(m.userData?.aurumGemEnvIntensity)
             ? m.userData.aurumGemEnvIntensity
             : profile.intensity);
-
-        // iJewel exposes the gem environment independently from the scene
-        // environment. A very small family-specific rotation offset is applied
-        // to the gem light field only; it does not alter geometry or IOR.
-        // Live-view calibration: avoid washing out the diamond's facet contrast
-        // under bright studio HDRIs. Keep the adjustment isolated to diamond
-        // reflections; do not change renderer exposure, gem IOR or metal response.
         const familyReflectionScale = family === "Diamante" ? 1.5 : 1;
         m.envMapIntensity = Math.max(.55, Math.min(2.35, authored * intensityScale * familyReflectionScale));
-        // Keep the custom internal-ray shader synchronized with the same
-        // gem-environment energy used by MeshPhysicalMaterial. The shader's
-        // textureCubeUV samples bypass Three.js envMapIntensity automatically.
         const gemEnvironmentUniform = m.userData?.aurumGemEnvironmentUniforms;
-        if (gemEnvironmentUniform?.value) {
-          gemEnvironmentUniform.value = m.envMapIntensity;
-        }
+        if (gemEnvironmentUniform?.value) gemEnvironmentUniform.value = m.envMapIntensity;
         const nativeIJEWELRotation = Number(m.userData?.aurumIJEWELParameters?.environmentRotationOffset);
         const oriented = Number(m.userData?.aurumIJEWELParameters?.diamondOrientedEnvMap ?? 0) === 1;
         const worldEuler = new THREE.Euler();
         if (oriented && m.getWorldQuaternion) worldEuler.setFromQuaternion(m.getWorldQuaternion(new THREE.Quaternion()), "YXZ");
         const orientedCompensation = oriented ? -worldEuler.y : 0;
         const effectiveRotation = rotation + (Number.isFinite(nativeIJEWELRotation) ? nativeIJEWELRotation : profile.rotationOffset) + orientedCompensation;
-
-        if (m.envMapRotation?.set) {
-          m.envMapRotation.set(0, effectiveRotation, 0);
-        } else if (m.envMapRotation) {
-          m.envMapRotation.y = effectiveRotation;
-        }
-
+        if (m.envMapRotation?.set) m.envMapRotation.set(0, effectiveRotation, 0);
+        else if (m.envMapRotation) m.envMapRotation.y = effectiveRotation;
         m.userData = {
           ...(m.userData ?? {}),
           aurumGemEnvironmentRotation: effectiveRotation,
@@ -111,7 +97,18 @@ export function createAurumGemEnvironment(
         return m;
       };
       x.material = Array.isArray(x.material) ? x.material.map(apply) : apply(x.material);
-    });
+    }
+  };
+
+  const applyToModel = (
+    model:any,
+    texture:any,
+    options:{rotation?:number; intensityScale?:number} = {}
+  ) => {
+    if (!model || !texture) return;
+    const targets:any[] = [];
+    model.traverse((x:any) => { if (x?.isMesh) targets.push(x); });
+    applyToTargets(targets, texture, options);
   };
 
   return {
@@ -159,6 +156,7 @@ export function createAurumGemEnvironment(
       });
     },
     applyToModel,
+    applyToTargets,
     dispose(texture?:any) {
       if (texture) {
         for (const [url, cached] of cache) {
