@@ -239,3 +239,26 @@ En `production-plugin-host.ts` se corrigió el patrón de validación de IDs con
 
 Los runs asociados a los commits `121ea81` y `ee8a5d1` finalizaron en fallo, pero GitHub devolvió los jobs sin pasos ni logs (`steps: null`, `logs_url: null`). Por tanto no se puede atribuir el fallo a TypeScript, tests, build o ESLint ni declarar la suite aprobada. La ejecución verificable de calidad sigue siendo un bloqueo previo al cierre.
 
+
+
+## Actualización del mapa de módulos — 2026-11-13
+
+El mapa de arquitectura de la sección interna de Herramientas se actualizó para reflejar las piezas que ya existen en el repositorio y separar su estado real de integración:
+
+- **AURUM CORE:** Plugin Registry, Service Container, Event Bus, Resource Scope y GPU Resource Manager. El manager GPU está registrado como servicio, pero la adopción sobre recursos productivos sigue siendo explícita y controlada.
+- **Adaptadores registrados:** Viewer, Scene, Lighting, Metal y Gem. Son fachadas hacia controladores productivos; su registro no significa que sean motores autónomos.
+- **Óptica:** Diamond Pipeline/BVH conserva su runtime especializado. No se modifica ni se declara como plugin autónomo por aparecer en el mapa.
+- **Importación:** AURUM IMPORT, Import Pipeline Manager, Smart Scan, Geometry, Solid, Intersection y Broadphase. El manager ya contempla cancelación en puntos seguros y presupuestos de recursos; los presupuestos geométricos son diagnósticos/advisory y el límite de bytes solo se aplica cuando se configura explícitamente.
+- **GLB Quality Gate:** existe como módulo de validación y tiene pruebas de round-trip. El punto de invocación exacto dentro de cada ruta productiva debe confirmarse durante la auditoría.
+- **Surface:** diagnóstico experimental de solo lectura; no suelda ni repara.
+- **Metal Union / Visual Weld:** experimentales y no habilitados por defecto.
+- **Post / Edge Quality:** MSAA está integrado en los targets del compositor; TAA permanece en el pipeline de postprocesado; SSAA no está implementado.
+- **Final Render / exportación:** el usuario reporta que el flujo ya funciona correctamente. Se refleja como funcional en revisión preliminar, no como validación técnica certificada. La auditoría debe comprobar fidelidad de salida, restauración del visor y limpieza de recursos sin reabrir cambios funcionales innecesarios.
+- **Video Export / Image Export:** flujos separados que se conectan al visor productivo; no son plugins independientes del Registry.
+- **AURUM GEM TRANSITION:** suspendido. No reactivar.
+
+### Criterio de cierre de esta fase
+
+La prioridad es completar y verificar integraciones, contratos y dependencias reales. No iniciar optimizaciones, cambios ópticos ni rediseños funcionales antes de que Lovable entregue una auditoría de solo lectura con evidencia por archivo/línea, clasificación de severidad y plan de corrección. La existencia de una tarjeta en el mapa no constituye prueba de integración: cada módulo debe rastrearse hasta su punto de invocación productivo y su propietario de ciclo de vida.
+
+La actualización visual del mapa no certifica por sí misma que todos los módulos estén integrados. Las conexiones pendientes quedan explícitamente marcadas para la auditoría.
