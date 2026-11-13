@@ -2045,9 +2045,26 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         limpiarResaltado();
         escena.add(modelo);
         gemMaskPass?.refreshCache?.();
-        // Converge the initial settled image so progressive TAA receives its
-        // full sample budget without waiting for the user to orbit the model.
-        viewerLoopRef.current?.converge?.(postRuntimeConfig.progressiveFrameCount ?? 1);
+        // Start the initial progressive TAA only after the model, camera and
+        // gem-mask cache are stable. The demand loop renders a bounded sample
+        // budget and then sleeps; interaction start hard-disables accumulation.
+        const initialTaaEligible = Boolean(
+          idleTaaPass
+          && postRuntimeConfig.taa === true
+          && measuredQualityId !== "low"
+        );
+        if (initialTaaEligible) {
+          const initialProgressivePasses = new Set([renderPass, gemMaskPass, fxaaPass, idleTaaPass, outputPass]);
+          ((composer as any)?.passes ?? []).forEach((pass: any) => {
+            pass.enabled = initialProgressivePasses.has(pass);
+          });
+          setTemporalMotion?.(true);
+          setTemporalMotion?.(false);
+        }
+        // Converge only a bounded number of frames. No permanent RAF loop.
+        viewerLoopRef.current?.converge?.(initialTaaEligible
+          ? Math.max(1, Math.min(32, Number(postRuntimeConfig.progressiveFrameCount ?? 8)))
+          : 1);
         loadAuditStep("model-added-to-scene");
         // No reaplicar el metal globalmente al cargar: el paso anterior ya asignó\n        // materiales por categoría y una aplicación con parteActiva=null sobrescribiría\n        // las gemas recién configuradas. El metal se aplica después solo sobre la capa seleccionada.\n        if (ext!=="3dm" && parteActiva) aplicarMaterial(materialActivo);
         // Presentación inicial: usar la geometría real para encuadrar y
