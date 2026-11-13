@@ -1,0 +1,100 @@
+import { expect, test } from "bun:test";
+import { AurumPluginRegistry, type AurumPluginContext } from "../src/lib/aurum/core/plugin-registry";
+
+function createContext() {
+  return {
+    appId: "aurum-render" as const,
+    version: "0.1.0",
+    services: new Map<string, unknown>(),
+  };
+}
+
+test("AURUM plugin registry initializes dependencies before dependents and disposes in reverse order", async () => {
+  const calls: string[] = [];
+  const registry = new AurumPluginRegistry(createContext());
+
+  registry.register({
+    id: "aurum.gem",
+    version: "1.0.0",
+    initialize: (_context: AurumPluginContext) => {
+      calls.push("gem:init");
+      return {
+        activate: () => { calls.push("gem:activate"); },
+        deactivate: () => { calls.push("gem:deactivate"); },
+        dispose: () => { calls.push("gem:dispose"); },
+      };
+    },
+  });
+  registry.register({
+    id: "aurum.diamond",
+    version: "1.0.0",
+    dependencies: ["aurum.gem"],
+    initialize: () => {
+      calls.push("diamond:init");
+      return {
+        activate: () => { calls.push("diamond:activate"); },
+        deactivate: () => { calls.push("diamond:deactivate"); },
+        dispose: () => { calls.push("diamond:dispose"); },
+      };
+    },
+  });
+
+  await registry.start();
+  expect(registry.getState()).toBe("running");
+  await registry.dispose();
+  expect(registry.getState()).toBe("disposed");
+  expect(calls).toEqual([
+    "gem:init", "gem:activate",
+    "diamond:init", "diamond:activate",
+    "diamond:deactivate", "diamond:dispose",
+    "gem:deactivate", "gem:dispose",
+  ]);
+});
+
+test("AURUM plugin registry rejects duplicate ids and missing dependencies before initialization", async () => {
+  const registry = new AurumPluginRegistry(createContext());
+  registry.register({ id: "aurum.gem", version: "1.0.0", initialize: () => undefined });
+  expect(() => registry.register({ id: "aurum.gem", version: "2.0.0", initialize: () => undefined })).toThrow("already registered");
+
+  const incomplete = new AurumPluginRegistry(createContext());
+  incomplete.register({
+    id: "aurum.diamond",
+    version: "1.0.0",
+    dependencies: ["aurum.gem"],
+    initialize: () => { throw new Error("must not initialize"); },
+  });
+  await expect(incomplete.start()).rejects.toThrow('Required AURUM plugin "aurum.gem" is not registered');
+  expect(incomplete.getState()).toBe("idle");
+});
+
+test("AURUM plugin registry detects circular dependencies before initializing", async () => {
+  const registry = new AurumPluginRegistry(createContext());
+  registry.register({ id: "aurum.gem", version: "1.0.0", dependencies: ["aurum.diamond"], initialize: () => undefined });
+  registry.register({ id: "aurum.diamond", version: "1.0.0", dependencies: ["aurum.gem"], initialize: () => undefined });
+  await expect(registry.start()).rejects.toThrow("Circular AURUM plugin dependency");
+  expect(registry.getState()).toBe("idle");
+});
+
+test("AURUM plugin registry rolls back already initialized plugins when a later plugin fails", async () => {
+  const calls: string[] = [];
+  const registry = new AurumPluginRegistry(createContext());
+  registry.register({
+    id: "aurum.gem",
+    version: "1.0.0",
+    initialize: () => ({
+      activate: () => { calls.push("gem:activate"); },
+      deactivate: () => { calls.push("gem:deactivate"); },
+      dispose: () => { calls.push("gem:dispose"); },
+    }),
+  });
+  registry.register({
+    id: "aurum.diamond",
+    version: "1.0.0",
+    dependencies: ["aurum.gem"],
+    initialize: () => { throw new Error("diamond init failed"); },
+  });
+
+  await expect(registry.start()).rejects.toThrow("diamond init failed");
+  expect(registry.getState()).toBe("idle");
+  expect(calls).toEqual(["gem:activate", "gem:deactivate", "gem:dispose"]);
+});
