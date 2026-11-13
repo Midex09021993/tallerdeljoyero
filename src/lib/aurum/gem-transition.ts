@@ -38,7 +38,10 @@ export function captureAurumGemTransitionState(target: any): GemMaterialSnapshot
   const visit = (mesh: any) => {
     if (!mesh?.isMesh || mesh.userData?.aurumInternalInclusion) return;
     materialList(mesh).forEach((material, materialIndex) => {
-      if (!material?.isMeshPhysicalMaterial) return;
+      // The source may still be a MeshStandardMaterial from Rhino/GLB.
+      // Capture its compatible base appearance so the first gem assignment
+      // can also blend smoothly into the new MeshPhysicalMaterial.
+      if (!material) return;
       snapshots.push({
         meshUuid: String(mesh.uuid),
         materialIndex,
