@@ -60,29 +60,40 @@ export default function AurumStudioShell() {
 
   async function importModel(file?: File) {
     if (!file || !viewerRef.current) return;
-    if (!/\.(glb|gltf)$/i.test(file.name)) {
-      setError("Por ahora el prototipo admite archivos .GLB y .GLTF.");
+    const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
+    if (!["glb", "gltf", "3dm"].includes(extension)) {
+      setError("Formato no compatible. Selecciona un archivo .3DM, .GLB o .GLTF.");
       return;
     }
     setBusy(true);
     setError("");
-    setStatus("Cargando modelo…");
+    setStatus(extension === "3dm" ? "Preparando archivo Rhino…" : "Cargando modelo…");
+    let url: string | null = null;
     try {
-      const url = URL.createObjectURL(file);
+      let modelBlob: Blob = file;
+      if (extension === "3dm") {
+        // Load the shared AURUM CAD pipeline only when a Rhino file is selected.
+        // The conversion produces an in-memory GLB; STUDIO keeps its own renderer.
+        const { prepareAurumStudio3dm } = await import("@/lib/aurum-studio/import-3dm");
+        modelBlob = await prepareAurumStudio3dm(file, (message) => setStatus(message));
+      }
+      if (!viewerRef.current) throw new Error("El visor se cerró antes de terminar la importación.");
+      url = URL.createObjectURL(modelBlob);
+      await viewerRef.current.load(url, { autoCenter: true, autoScale: true });
       if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
       objectUrlRef.current = url;
-      await viewerRef.current.load(url, { autoCenter: true, autoScale: true });
+      url = null;
       setFileName(file.name);
-      setStatus("Modelo cargado correctamente");
+      setStatus(extension === "3dm" ? "3DM procesado · GLB temporal cargado" : "Modelo cargado correctamente");
     } catch (cause) {
       console.error("[AURUM STUDIO] Error importando modelo", cause);
-      setError("No se pudo importar el modelo. Verifica que el GLB/GLTF sea válido y vuelve a intentarlo.");
+      setError(cause instanceof Error ? cause.message : "No se pudo importar el modelo. Verifica el archivo e inténtalo nuevamente.");
       setStatus("Error al importar");
     } finally {
+      if (url) URL.revokeObjectURL(url);
       setBusy(false);
     }
   }
-
   function capture() {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -140,7 +151,7 @@ export default function AurumStudioShell() {
                 <div className="max-w-sm text-center text-[#454b55]">
                   <div className="mx-auto mb-4 grid size-16 place-items-center rounded-2xl border border-black/10 bg-white/65 shadow-sm"><Box className="size-8 text-[#a18449]"/></div>
                   <h2 className="text-lg font-semibold">Tu espacio de diseño 3D</h2>
-                  <p className="mt-2 text-sm text-[#68707b]">Importa un modelo GLB o GLTF para comenzar a explorar AURUM STUDIO.</p>
+                  <p className="mt-2 text-sm text-[#68707b]">Importa un modelo Rhino 3DM, GLB o GLTF para comenzar a explorar AURUM STUDIO.</p>
                   <button type="button" onClick={() => fileInputRef.current?.click()} disabled={!engineReady} className="pointer-events-auto mt-5 inline-flex h-11 items-center gap-2 rounded-xl bg-[#b99652] px-5 text-sm font-semibold text-[#17130b] shadow-sm transition hover:bg-[#c9aa6c] disabled:opacity-50"><FolderOpen className="size-4"/> Importar modelo</button>
                 </div>
               </div>
@@ -163,7 +174,7 @@ export default function AurumStudioShell() {
               <p className="mb-2 text-xs font-semibold text-white/80">Proyecto</p>
               <div className="rounded-lg border border-white/10 bg-white/[.03] p-3">
                 <p className="truncate text-xs text-white/75">{fileName || "Sin modelo cargado"}</p>
-                <p className="mt-1 text-[10px] text-white/35">GLB / GLTF · Local</p>
+                <p className="mt-1 text-[10px] text-white/35">3DM / GLB / GLTF · Local</p>
               </div>
             </div>
             <div>
@@ -180,7 +191,7 @@ export default function AurumStudioShell() {
       </div>
 
       {error && <div role="alert" className="flex shrink-0 items-center gap-3 border-t border-red-400/20 bg-red-950/70 px-4 py-3 text-xs text-red-100"><X className="size-4 shrink-0"/><span className="flex-1">{error}</span><button onClick={() => setError("")} aria-label="Cerrar aviso"><X className="size-4"/></button></div>}
-      <input ref={fileInputRef} type="file" accept=".glb,.gltf,model/gltf-binary,model/gltf+json" className="hidden" onChange={(event) => { const file = event.target.files?.[0]; if (file) void importModel(file); event.currentTarget.value = ""; }}/>
+      <input ref={fileInputRef} type="file" accept=".3dm,.glb,.gltf,model/gltf-binary,model/gltf+json" className="hidden" onChange={(event) => { const file = event.target.files?.[0]; if (file) void importModel(file); event.currentTarget.value = ""; }}/>
     </div>
   );
 }
