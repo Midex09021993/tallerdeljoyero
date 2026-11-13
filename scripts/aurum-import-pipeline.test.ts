@@ -106,3 +106,83 @@ test("import pipeline includes geometry, surface, solid and BVH intersection dia
     if ((node as THREE.Mesh).isMesh) (node as THREE.Mesh).geometry.dispose();
   });
 });
+
+
+test("import pipeline rejects an already-aborted request before invoking the importer", async () => {
+  const controller = new AbortController();
+  controller.abort();
+  let importerCalls = 0;
+  const importer = {
+    id: "aurum.import",
+    version: "1.0.0",
+    load: async () => {
+      importerCalls++;
+      throw new Error("Importer must not run");
+    },
+  } as AurumImportPlugin;
+  await expect(createAurumImportPipelineManager(importer, createAurumGeometryEngine()).load({
+    file: new File(["model"], "cancelled.3dm"),
+    format: "3dm",
+    fallbackMaterial: new THREE.MeshBasicMaterial(),
+    colorRhinoHex: () => undefined,
+    classifyLayer: () => "otro",
+    signal: controller.signal,
+  })).rejects.toMatchObject({ name: "AbortError" });
+  expect(importerCalls).toBe(0);
+});
+
+test("import pipeline releases decoded geometry when cancellation arrives after decoding", async () => {
+  const controller = new AbortController();
+  const geometry = new THREE.BoxGeometry();
+  let geometryDisposed = false;
+  geometry.addEventListener("dispose", () => { geometryDisposed = true; });
+  const model = new THREE.Group();
+  model.add(new THREE.Mesh(geometry, new THREE.MeshBasicMaterial()));
+  const importer = {
+    id: "aurum.import",
+    version: "1.0.0",
+    load: async () => ({ sourceObject: model, model, format: "3dm" as const, pipeline: ["source-decoded"] }),
+  } as AurumImportPlugin;
+  const stages: string[] = [];
+  await expect(createAurumImportPipelineManager(importer, createAurumGeometryEngine()).load({
+    file: new File(["model"], "cancelled.3dm"),
+    format: "3dm",
+    fallbackMaterial: new THREE.MeshBasicMaterial(),
+    colorRhinoHex: () => undefined,
+    classifyLayer: () => "otro",
+    signal: controller.signal,
+    onStage: (stage) => {
+      stages.push(stage);
+      if (stage === "import-started") controller.abort();
+    },
+  })).rejects.toMatchObject({ name: "AbortError" });
+  expect(geometryDisposed).toBe(true);
+  expect(stages).toContain("import-failed");
+});
+
+test("import pipeline observes cancellation between Smart Scan and deep diagnostics", async () => {
+  const controller = new AbortController();
+  const geometry = new THREE.BoxGeometry();
+  let geometryDisposed = false;
+  geometry.addEventListener("dispose", () => { geometryDisposed = true; });
+  const model = new THREE.Group();
+  model.add(new THREE.Mesh(geometry, new THREE.MeshBasicMaterial()));
+  const importer = {
+    id: "aurum.import",
+    version: "1.0.0",
+    load: async () => ({ sourceObject: model, model, format: "3dm" as const, pipeline: ["source-decoded"] }),
+  } as AurumImportPlugin;
+  await expect(createAurumImportPipelineManager(importer, createAurumGeometryEngine()).load({
+    file: new File(["model"], "cancelled.3dm"),
+    format: "3dm",
+    fallbackMaterial: new THREE.MeshBasicMaterial(),
+    colorRhinoHex: () => undefined,
+    classifyLayer: () => "otro",
+    diagnostics: true,
+    signal: controller.signal,
+    onStage: (stage) => {
+      if (stage === "smart-scan-complete") controller.abort();
+    },
+  })).rejects.toMatchObject({ name: "AbortError" });
+  expect(geometryDisposed).toBe(true);
+});
