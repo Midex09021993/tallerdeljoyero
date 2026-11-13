@@ -12,6 +12,10 @@ export function logAurumEdgeQualityDiagnostics(
     activeSamples: msaa.activeSamples,
     multisampledTargets: msaa.targetCount,
     fallback: !msaa.supported,
+    activeTechniques: {
+      surfaceEdgeAa: "settled-high-quality-only",
+      gemstoneEdgeAa: "settled-high-quality-only",
+    },
     futureTechniques: {
       ssaa: "not-enabled",
       taa: "existing-post-pipeline-controlled",
