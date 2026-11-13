@@ -1,3 +1,5 @@
+import { configureAurumEdgeQuality } from "./edge-quality";
+
 /**
  * Configure the gem classification target as categorical data.
  * Nearest sampling preserves a strict gem/non-gem boundary; color filtering
@@ -49,37 +51,9 @@ export async function createAurumPostPipeline(
   let composerMsaaSamples=0;
 
   try {
-    // The native canvas antialias flag does not antialias EffectComposer's
-    // intermediate render targets. Enable MSAA on both ping-pong targets so
-    // the scene silhouette (including polished metal) is multisampled before
-    // the post-processing chain. Keep a WebGL2/capability guard and fall back
-    // cleanly on devices that cannot provide at least 2 samples.
     composer=new EffectComposer(renderer);
-    const glCapabilities=renderer?.capabilities;
-    const maxSamples=Number(glCapabilities?.maxSamples??0);
-    if(glCapabilities?.isWebGL2===true && Number.isFinite(maxSamples) && maxSamples>=2){
-      const requestedSamples=Math.min(4,Math.floor(maxSamples));
-      try{
-        const targets=[composer.renderTarget1,composer.renderTarget2].filter(Boolean);
-        if(targets.length===2){
-          targets.forEach((target:any)=>{target.samples=requestedSamples;});
-          composerMsaaSamples=requestedSamples;
-        }
-      }catch(error){
-        composerMsaaSamples=0;
-        for(const target of [composer.renderTarget1,composer.renderTarget2]){
-          if(target) target.samples=0;
-        }
-        console.warn("[AURUM][POST][MSAA] Multisampling unavailable; using the native renderer fallback.",error);
-      }
-    }
-    console.info("[AURUM][POST][MSAA]",{
-      webgl2:glCapabilities?.isWebGL2===true,
-      maxSamples:Number.isFinite(maxSamples)?maxSamples:0,
-      requestedSamples:4,
-      activeSamples:composerMsaaSamples,
-      targets:composerMsaaSamples>0?2:0,
-    });
+    const edgeQuality=configureAurumEdgeQuality(renderer,composer);
+    composerMsaaSamples=edgeQuality.msaa.activeSamples;
     composer.setPixelRatio?.(Math.max(1,Math.min(2,Number(quality?.pixelRatio??1.5))));
     renderPass=new RenderPass(scene,camera);
     composer.addPass(renderPass);
