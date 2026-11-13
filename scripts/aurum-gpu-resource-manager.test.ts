@@ -1,0 +1,85 @@
+import { expect, test } from "bun:test";
+import { createAurumGpuResourceManager } from "../src/lib/aurum/core/gpu-resource-manager";
+
+function disposable() {
+  let disposeCount = 0;
+  return {
+    dispose() { disposeCount += 1; },
+    get disposeCount() { return disposeCount; },
+  };
+}
+
+test("shared GPU resource is disposed only after its final owner releases it", () => {
+  const manager = createAurumGpuResourceManager();
+  const texture = disposable();
+
+  manager.track("gem-engine", texture, "texture");
+  manager.track("final-render", texture, "texture");
+  manager.track("gem-engine", texture, "texture");
+
+  expect(manager.stats()).toEqual({
+    resourceCount: 1,
+    ownerCount: 2,
+    referenceCount: 2,
+    disposed: false,
+  });
+  expect(manager.releaseOwner("gem-engine")).toBe(1);
+  expect(texture.disposeCount).toBe(0);
+  expect(manager.release("final-render", texture)).toBe(true);
+  expect(texture.disposeCount).toBe(1);
+  expect(manager.stats().resourceCount).toBe(0);
+  expect(manager.release("final-render", texture)).toBe(false);
+});
+
+test("owner cleanup releases only its resources and preserves shared resources", () => {
+  const manager = createAurumGpuResourceManager();
+  const geometry = disposable();
+  const material = disposable();
+  const sharedTexture = disposable();
+
+  manager.track("viewer", geometry, "geometry");
+  manager.track("viewer", sharedTexture, "texture");
+  manager.track("gem", material, "material");
+  manager.track("gem", sharedTexture, "texture");
+
+  expect(manager.releaseOwner("viewer")).toBe(2);
+  expect(geometry.disposeCount).toBe(1);
+  expect(sharedTexture.disposeCount).toBe(0);
+  expect(material.disposeCount).toBe(0);
+  expect(manager.resourcesByKind()).toEqual({
+    geometry: 0,
+    material: 1,
+    texture: 1,
+    "render-target": 0,
+    buffer: 0,
+    other: 0,
+  });
+
+  manager.releaseOwner("gem");
+  expect(material.disposeCount).toBe(1);
+  expect(sharedTexture.disposeCount).toBe(1);
+});
+
+test("manager disposal is idempotent and rejects new ownership", () => {
+  const manager = createAurumGpuResourceManager();
+  const renderTarget = disposable();
+  manager.track("capture", renderTarget, "render-target");
+
+  manager.dispose();
+  manager.dispose();
+
+  expect(renderTarget.disposeCount).toBe(1);
+  expect(manager.stats()).toEqual({
+    resourceCount: 0,
+    ownerCount: 0,
+    referenceCount: 0,
+    disposed: true,
+  });
+  expect(() => manager.track("late", disposable())).toThrow("disposed");
+});
+
+test("invalid ownership and non-disposable resources are rejected", () => {
+  const manager = createAurumGpuResourceManager();
+  expect(() => manager.track(" ", disposable())).toThrow("owner id");
+  expect(() => manager.track("viewer", {} as { dispose: () => void })).toThrow("dispose()");
+});
