@@ -38,7 +38,7 @@ test("intersection classification uses stable body indices when display names re
   const solid = createAurumSolidEngine().inspect(root);
   const report = createAurumIntersectionEngine().inspect(root, solid);
   expect(report.pairs[0]?.kind).toBe("surface-penetrates-solid");
-  expect(report.pairs[0]?.samplesInsideB).toBeGreaterThan(0);
+  expect(report.pairs[0]?.samplesInsideA).toBeGreaterThan(0);
 });
 
 test("BVH prunes disjoint bodies and enforces triangle-test budget", () => {

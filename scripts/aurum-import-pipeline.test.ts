@@ -93,13 +93,13 @@ test("import pipeline includes geometry, surface, solid and BVH intersection dia
     onStage: (stage) => stages.push(stage),
   });
   expect(calls).toEqual(["import"]);
-  expect(result.geometry.meshCount).toBe(2);
-  expect(result.surface.meshCount).toBe(2);
-  expect(result.solid.bodyCount).toBe(2);
-  expect(result.solid.closedSolidCount).toBe(1);
-  expect(result.solid.openSurfaceCount).toBe(1);
-  expect(result.intersection.candidatePairCount).toBe(1);
-  expect(result.intersection.intersectingPairCount).toBe(1);
+  expect(result.geometry?.meshCount).toBe(2);
+  expect(result.surface?.meshCount).toBe(2);
+  expect(result.solid?.bodyCount).toBe(2);
+  expect(result.solid?.closedSolidCount).toBe(1);
+  expect(result.solid?.openSurfaceCount).toBe(1);
+  expect(result.intersection?.candidatePairCount).toBe(1);
+  expect(result.intersection?.intersectingPairCount).toBe(1);
   expect(result.pipeline.slice(-4)).toEqual(["geometry-inspected", "surface-inspected", "solid-inspected", "intersection-inspected"]);
   expect(stages).toEqual(["import-started", "geometry-inspected", "surface-inspected", "solid-inspected", "intersection-inspected"]);
   model.traverse((node) => {
