@@ -20,19 +20,29 @@ export function createAurumImportPipelineManager(
     id: "aurum.import.manager" as const,
     version: "1.0.0" as const,
     async load(request: AurumImportRequest): Promise<AurumImportPipelineResult> {
+      const stages = ["import-started"];
       request.onStage?.("import-started", { fileName: request.file.name, format: request.format });
       const imported = await importer.load(request);
-      request.onProgress?.("Analizando geometría...");
-      const geometryReport = geometry.inspect(imported.model);
+
+      request.onProgress?.("Comprobando geometría...");
+      // Import-time inspection keeps essential metrics but skips the optional bounds
+      // traversal and full vertex scan. Detailed validation remains available on demand.
+      const geometryReport = geometry.inspect(imported.model, {
+        includeBounds: false,
+        validatePositions: false,
+      });
+      stages.push(...imported.pipeline, "geometry-inspected");
       request.onStage?.("geometry-inspected", {
         meshes: geometryReport.meshCount,
+        visibleMeshes: geometryReport.visibleMeshCount,
         triangles: geometryReport.triangles,
         vertices: geometryReport.vertices,
       });
+
       return Object.freeze({
         ...imported,
         geometry: geometryReport,
-        pipeline: Object.freeze([...imported.pipeline, "geometry-inspected"]),
+        pipeline: Object.freeze(stages),
       });
     },
   });
