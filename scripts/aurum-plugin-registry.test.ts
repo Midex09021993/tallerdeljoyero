@@ -225,3 +225,28 @@ test("AURUM plugin registry snapshots mutable contract arrays at registration", 
   expect(registry.getState()).toBe("running");
   await registry.dispose();
 });
+
+
+test("AURUM resource scopes await asynchronous tracked resource disposal in reverse order", async () => {
+  const { AurumResourceScope } = await import("../src/lib/aurum/core/context");
+  const scope = new AurumResourceScope();
+  const calls: string[] = [];
+
+  scope.track({
+    async dispose() {
+      await Promise.resolve();
+      calls.push("first");
+    },
+  });
+  scope.track({
+    async dispose() {
+      await Promise.resolve();
+      calls.push("second");
+    },
+  });
+
+  await scope.dispose();
+  expect(calls).toEqual(["second", "first"]);
+  expect(scope.size).toBe(0);
+  expect(scope.isDisposed).toBe(true);
+});
