@@ -52,6 +52,7 @@ import { GEMAS, MATERIALES, ESCENARIOS, VISTAS, ILUMINACIONES, type MaterialId, 
 import { AurumRenderSidebar } from "./AurumRenderSidebar";
 import { AurumPerformanceIndicator, AurumPerformanceMonitorPanel } from "./AurumPerformanceMonitorPanel";
 import { createAurumPerformanceMonitor } from "@/lib/aurum/performance-monitor";
+import { createAurumVideoFramePipeline } from "../lib/aurum/video-frame-pipeline";
 
 
 const normalizarTexto = (v:any) => String(v ?? "").trim().toLowerCase();
@@ -2608,13 +2609,15 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           const renderHeight=videoHeight;
           const renderAspect=outputAspect;
           const previousFastPath=liveFastPathRef.current;
-          const passStates:Array<{pass:any;enabled:boolean}>=(composer?.passes??[]).map((pass:any)=>({pass,enabled:Boolean(pass?.enabled)}));
+          let videoFramePipeline: ReturnType<typeof createAurumVideoFramePipeline> | null = null;
           try{
             const { recordAurumCanvasVideo } = await import("../lib/aurum/video-exporter");
             controles.autoRotate=false;
             loop?.pause?.();
-            // Record with the same direct renderer path as the live viewer.
-            liveFastPathRef.current=true;
+            // Keep the live viewport's visual composition enabled during capture.
+            // The frame pipeline selects the same live beauty passes used by PNG
+            // capture, instead of bypassing EffectComposer with renderer.render().
+            liveFastPathRef.current=false;
             aplicarPerfilLive();
             // Match the WebGL backing buffer and camera projection to the final MP4.
             // The CSS viewport remains unchanged while recording.
@@ -2645,16 +2648,26 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             }
             camara.aspect=renderAspect;
             camara.updateProjectionMatrix?.();
+            videoFramePipeline=createAurumVideoFramePipeline({
+              composer,
+              renderer,
+              scene:escena,
+              camera:camara,
+              diamondBvhRuntime,
+              livePasses:[renderPass,gemMaskPass,fxaaPass,outputPass],
+              width:renderWidth,
+              height:renderHeight,
+              restoreWidth:originalCssWidth,
+              restoreHeight:originalCssHeight,
+            });
             // Keep the same camera distance and target the user composed in the viewer.
             // Fitting the entire model here pulls the camera back (especially for long
             // chains) and makes the jewelry tiny in the video compared with the PNG.
             // Only change the projection aspect; never rescale or refit the model for MP4.
             cameraPosition.copy(camara.position);
             if(controlsTarget && controles.target) controlsTarget.copy(controles.target);
-            // Camera and source bitmap now share the exact output ratio, so the encoder
-            // can fill the final frame without scaling the jewelry non-uniformly.
-            // Do not resize or activate the post-processing composer for video.
-            // The live fast path renders the scene directly, preserving its color response.
+            // Camera and source bitmap share the exact output ratio. Each captured
+            // frame now passes through the live beauty chain before the encoder copies it.
             loop?.setContinuousRendering?.(true);
             await recordAurumCanvasVideo(sourceCanvas,{
               width:options.width,height:options.height,fps:options.fps,duration:duration,
@@ -2704,9 +2717,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                   camara.lookAt(controles.target);
                   controles.update?.();
                 }
-                // Draw each frame through the exact direct path used by live view.
-                diamondBvhRuntime?.update();
-                renderer.render(escena,camara);
+                // Render through the active live viewport composition before capture.
+                videoFramePipeline?.renderFrame();
               }            });
           }finally{
             loop?.setContinuousRendering?.(false);
@@ -2726,9 +2738,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             if(composer && applyPostQuality){
               applyPostQuality({...renderQuality,pixelRatio:originalPixelRatio,qualityId:measuredQualityId});
             }
-            for(const state of passStates){
-              if(state.pass&&"enabled" in state.pass) state.pass.enabled=state.enabled;
-            }
+            videoFramePipeline?.restore();
             controles.autoRotate=previousAutoRotate;
             controles.autoRotateSpeed=previousAutoRotateSpeed;
             camara.position.copy(originalCameraPosition);
