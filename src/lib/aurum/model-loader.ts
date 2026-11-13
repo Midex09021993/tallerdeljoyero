@@ -651,6 +651,34 @@ export function tagAurumGemSourcesForGlb(root: THREE.Object3D) {
   return manifest;
 }
 
+/**
+ * Releases only resources created by the temporary GLTFLoader round-trip scene.
+ * The source CAD scene and its shared materials/textures are never traversed here.
+ */
+function disposeAurumGlbValidationScene(root: THREE.Object3D): void {
+  const geometries = new Set<THREE.BufferGeometry>();
+  const materials = new Set<THREE.Material>();
+  const textures = new Set<THREE.Texture>();
+
+  root.traverse((node: any) => {
+    if (node?.geometry?.isBufferGeometry) geometries.add(node.geometry);
+    const nodeMaterials = Array.isArray(node?.material)
+      ? node.material
+      : node?.material ? [node.material] : [];
+    for (const material of nodeMaterials) {
+      if (!material?.isMaterial) continue;
+      materials.add(material);
+      for (const value of Object.values(material)) {
+        if ((value as any)?.isTexture) textures.add(value as THREE.Texture);
+      }
+    }
+  });
+
+  for (const texture of textures) texture.dispose();
+  for (const material of materials) material.dispose();
+  for (const geometry of geometries) geometry.dispose();
+}
+
 export async function convertAurumToGlb(
   object: THREE.Object3D,
   colorRhinoHex?: (color:any) => string | undefined,
@@ -753,6 +781,7 @@ export async function convertAurumToGlb(
         reject(new Error("No se pudo generar el GLB interno."));
         return;
       }
+      let validationScene: THREE.Object3D | null = null;
       try {
         onProgress?.("Verificando integridad del GLB reabierto");
         const { GLTFLoader } = await import("three/examples/jsm/loaders/GLTFLoader.js");
@@ -760,7 +789,8 @@ export async function convertAurumToGlb(
         // Validate the exact uncompressed binary produced by GLTFExporter. Draco
         // compression runs later, so encoder behaviour cannot mask export losses.
         const reopened = await loader.parseAsync(result.slice(0), "");
-        const reopenedQuality = captureAurumGlbQualitySnapshot(reopened.scene);
+        validationScene = reopened.scene;
+        const reopenedQuality = captureAurumGlbQualitySnapshot(validationScene);
         const report = evaluateAurumGlbQuality(sourceQuality, reopenedQuality);
         console.info("[AURUM][GLB QUALITY GATE]", report);
         if (report.status === "failed") {
@@ -776,6 +806,15 @@ export async function convertAurumToGlb(
           "AURUM GLB QUALITY GATE no pudo reabrir y validar el archivo; se rechaza el GLB por seguridad. "
           + (error instanceof Error ? error.message : String(error))
         ));
+      } finally {
+        if (validationScene) {
+          try {
+            disposeAurumGlbValidationScene(validationScene);
+          } catch (error) {
+            // Validation cleanup must not replace the export/quality-gate result.
+            console.warn("[AURUM][GLB QUALITY GATE] Temporary scene cleanup failed", error);
+          }
+        }
       }
     }, (error: unknown) => reject(error), { binary: true, onlyVisible: true, trs: false });
   });
