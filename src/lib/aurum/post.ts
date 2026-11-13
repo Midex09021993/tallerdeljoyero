@@ -612,6 +612,9 @@ export async function createAurumPostPipeline(
         },
         activePasses: {
           taa: Boolean(taaPass?.enabled),
+          gemstoneEdgeAa: Boolean(fxaaPass?.enabled && gemMaskPass?.enabled),
+          surfaceEdgeAa: Boolean(surfaceEdgeAaPass?.enabled),
+          surfaceEdgeAaStrength: Number(surfaceEdgeAaPass?.material?.uniforms?.strength?.value ?? 0),
           ssr: Boolean(ssrPass?.enabled),
           ssao: Boolean(ssaoPass?.enabled),
           bloom: Boolean(bloomPass?.enabled),
