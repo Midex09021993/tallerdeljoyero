@@ -75,7 +75,11 @@ export function createAurumGemEnvironment(
         const familyReflectionScale = family === "Diamante" ? 1.5 : 1;
         m.envMapIntensity = Math.max(.55, Math.min(2.35, authored * intensityScale * familyReflectionScale));
         const gemEnvironmentUniform = m.userData?.aurumGemEnvironmentUniforms;
-        if (gemEnvironmentUniform?.value) gemEnvironmentUniform.value = m.envMapIntensity;
+        // Uniform value 0 is valid; test the uniform container, not truthiness
+        // of its current numeric value, before synchronizing environment intensity.
+        if (gemEnvironmentUniform && "value" in gemEnvironmentUniform) {
+          gemEnvironmentUniform.value = m.envMapIntensity;
+        }
         const nativeIJEWELRotation = Number(m.userData?.aurumIJEWELParameters?.environmentRotationOffset);
         const oriented = Number(m.userData?.aurumIJEWELParameters?.diamondOrientedEnvMap ?? 0) === 1;
         const worldEuler = new THREE.Euler();
