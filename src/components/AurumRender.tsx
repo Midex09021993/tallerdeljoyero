@@ -925,7 +925,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       // Preserve the original scene background while the live Bokeh preview is active.
       let dofSavedSceneBackground: THREE.Scene["background"] | undefined;
       let dofHasSavedSceneBackground = false;
-      const { composer, ssaoPass, ssrPass, ssrSavePass, ssrCompositePass, bloomPass, setSSRSelects, applyQuality: applyPostQuality, updateTemporal, resetTemporalAccumulation, setTemporalMotion, dofPass, renderPass, taaPass: idleTaaPass, fxaaPass, gemMaskPass, outputPass } = await createAurumPostPipeline(
+      const { composer, ssaoPass, ssrPass, ssrSavePass, ssrCompositePass, bloomPass, setSSRSelects, applyQuality: applyPostQuality, updateTemporal, resetTemporalAccumulation, setTemporalMotion, dofPass, renderPass, taaPass: idleTaaPass, fxaaPass, gemMaskPass, surfaceEdgeAaPass, outputPass } = await createAurumPostPipeline(
         renderer,
         escena,
         camara,
@@ -3597,7 +3597,16 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // Keep the proven interaction pass set. SSAO and shadow-map
             // reactivation during orbit caused a scene-wide tonal shift on some
             // jewelry; restore the stable lightweight path instead.
-            const coreBeautyPasses = new Set([renderPass, gemMaskPass, fxaaPass, outputPass]);
+            // Lightweight interactive edge cleanup: low blend strength, no TAA,
+            // and disabled for extreme CAD budgets or the Low quality profile.
+            const interactiveEdgeAaEligible = measuredQualityId !== "low" && runtimeBudget.tier !== "extreme";
+            const interactiveEdgeAa = Boolean(interactiveEdgeAaEligible && surfaceEdgeAaPass);
+            if (surfaceEdgeAaPass) {
+              const strength = surfaceEdgeAaPass.material?.uniforms?.strength;
+              if (strength) strength.value = interactiveEdgeAa ? 0.035 : 0;
+              surfaceEdgeAaPass.enabled = interactiveEdgeAa;
+            }
+            const coreBeautyPasses = new Set([renderPass, gemMaskPass, fxaaPass, ...(interactiveEdgeAa ? [surfaceEdgeAaPass] : []), outputPass]);
             const interactionPasses = ((composer as any)?.passes ?? []) as any[];
             interactionPasses.forEach((pass) => { pass.enabled = coreBeautyPasses.has(pass); });
             const sameBeautyPipelineAvailable = Boolean(composer && renderPass && gemMaskPass && fxaaPass && outputPass);
@@ -3632,6 +3641,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               renderPass,
               gemMaskPass,
               fxaaPass,
+              ...(surfaceEdgeAaPass && measuredQualityId !== "low" ? [surfaceEdgeAaPass] : []),
               outputPass,
               ...(taaEligible ? [idleTaaPass] : []),
             ]);
@@ -3643,6 +3653,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // Restore the normal settled temporal state. There is no active
             // gem transition to coordinate while progressive blending is suspended.
             setTemporalMotion?.(false);
+            if (surfaceEdgeAaPass) {
+              const strength = surfaceEdgeAaPass.material?.uniforms?.strength;
+              if (strength) strength.value = measuredQualityId === "low" ? 0 : 0.075;
+              surfaceEdgeAaPass.enabled = measuredQualityId !== "low";
+            }
             if (idleTaaPass && !taaEligible) {
               idleTaaPass.enabled = false;
               idleTaaPass.accumulate = false;
