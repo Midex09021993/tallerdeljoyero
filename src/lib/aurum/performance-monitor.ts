@@ -20,6 +20,8 @@ export type AurumPerformanceSnapshot = {
   drawBuffer: string;
   pixelRatio: number;
   webgl: "WebGL 2" | "WebGL 1" | "No disponible";
+  sampleCount: number;
+  hasRecentFrame: boolean;
 };
 
 const WINDOW_MS = 3000;
@@ -38,7 +40,7 @@ export function createAurumPerformanceMonitor() {
     while (frames.length > MAX_FRAMES || (frames[0] && frame.timestamp - frames[0].timestamp > WINDOW_MS)) {
       frames.shift();
     }
-    if (frames.length < 2) maxFrameMs = frame.frameMs;
+    maxFrameMs = frames.reduce((peak, item) => Math.max(peak, item.frameMs), 0);
   };
 
   const snapshot = (renderer: any): AurumPerformanceSnapshot => {
@@ -72,6 +74,8 @@ export function createAurumPerformanceMonitor() {
       drawBuffer: canvas ? `${canvas.width} × ${canvas.height}` : "—",
       pixelRatio: Number(renderer?.getPixelRatio?.() ?? 1),
       webgl,
+      sampleCount: hasRecentFrame ? count : 0,
+      hasRecentFrame,
     };
   };
 
@@ -85,3 +89,16 @@ export function createAurumPerformanceMonitor() {
 }
 
 export type AurumPerformanceMonitor = ReturnType<typeof createAurumPerformanceMonitor>;
+
+export type AurumPerformanceStatus = "idle" | "healthy" | "warning" | "critical";
+
+/**
+ * Classifies recent measured renderer load, not estimated GPU utilization.
+ * The rolling sample window is shared with the performance monitor (3 seconds).
+ */
+export function getAurumPerformanceStatus(snapshot: AurumPerformanceSnapshot): AurumPerformanceStatus {
+  if (!snapshot.hasRecentFrame || snapshot.sampleCount < 2) return "idle";
+  if (snapshot.fps < 30 || snapshot.frameMs >= 50 || snapshot.maxFrameMs >= 250) return "critical";
+  if (snapshot.fps < 50 || snapshot.frameMs >= 25 || snapshot.maxFrameMs >= 100) return "warning";
+  return "healthy";
+}
