@@ -33,8 +33,17 @@ export function createAurumProductionPluginHost(
   const gpuResources = createAurumGpuResourceManager();
   container.register(AURUM_GPU_RESOURCE_SERVICE, gpuResources);
   const definitions: AurumPluginDefinition[] = [];
+  // Snapshot caller-owned module metadata and service maps at composition time.
+  // A host must not change its dependency graph if a caller later mutates an
+  // input array or Map retained outside this boundary.
+  const moduleSnapshots = modules.map((module) => ({
+    ...module,
+    services: new Map(module.services),
+    ...(module.dependencies ? { dependencies: Object.freeze([...module.dependencies]) } : {}),
+    ...(module.requiresServices ? { requiresServices: Object.freeze([...module.requiresServices]) } : {}),
+  }));
 
-  for (const module of modules) {
+  for (const module of moduleSnapshots) {
     const adapterServiceId = `aurum.plugin.${module.id.replace(/\./g, "-")}`;
     container.register(adapterServiceId, module.services);
     container.registerMany(module.services);
