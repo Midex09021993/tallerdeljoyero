@@ -2633,7 +2633,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           const previousFastPath=liveFastPathRef.current;
           let videoFramePipeline: ReturnType<typeof createAurumVideoFramePipeline> | null = null;
           try{
-            const { recordAurumCanvasVideo } = await import("../lib/aurum/video-exporter");
+            const loadVideoRecorder = productionPluginHost.services.get("aurum.media.video-recorder.load");
+            if (typeof loadVideoRecorder !== "function") throw new Error("AURUM Video Export service is not registered.");
+            const recordAurumCanvasVideo = await loadVideoRecorder();
             controles.autoRotate=false;
             loop?.pause?.();
             // Keep the live viewport's visual composition enabled during capture.
@@ -2670,7 +2672,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             }
             camara.aspect=renderAspect;
             camara.updateProjectionMatrix?.();
-            videoFramePipeline=createAurumVideoFramePipeline({
+            const createVideoFramePipeline = productionPluginHost.services.get("aurum.media.video-frame.create");
+            if (typeof createVideoFramePipeline !== "function") throw new Error("AURUM Video Frame Pipeline service is not registered.");
+            videoFramePipeline=createVideoFramePipeline({
               composer,
               renderer,
               scene:escena,
