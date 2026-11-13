@@ -53,6 +53,8 @@ jobs:
         run: bun test scripts/aurum-plugin-registry.test.ts
       - name: AURUM production plugin host tests
         run: bun test scripts/aurum-production-plugin-host.test.ts
+      - name: AURUM GPU resource lifecycle tests
+        run: bun test scripts/aurum-gpu-resource-manager.test.ts
       - name: AURUM viewer adapter tests
         run: bun test scripts/aurum-viewer-adapter.test.ts
       - name: AURUM scene adapter tests
