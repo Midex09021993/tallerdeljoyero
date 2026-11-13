@@ -1,6 +1,7 @@
 import { AurumPluginRegistry, type AurumPluginDefinition } from "./plugin-registry";
 import { AurumServiceContainer } from "./service-container";
 import { createAurumGpuResourceManager } from "./gpu-resource-manager";
+import { createAurumReadonlyMap } from "./readonly-map";
 
 export const AURUM_GPU_RESOURCE_SERVICE = "aurum.gpu.resources" as const;
 
@@ -29,6 +30,36 @@ export function createAurumProductionPluginHost(
   modules: readonly AurumProductionModule[],
   appVersion = "1.0.0",
 ): AurumProductionPluginHost {
+  if (!appVersion.trim()) throw new Error("AURUM production host version cannot be empty.");
+
+  const moduleIds = new Set<string>();
+  for (const module of modules) {
+    if (!/^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)*$/.test(module.id)) {
+      throw new Error(`Invalid AURUM production module id "${module.id}". Use lowercase names separated by dots or hyphens.`);
+    }
+    if (moduleIds.has(module.id)) {
+      throw new Error(`AURUM production module "${module.id}" is duplicated.`);
+    }
+    moduleIds.add(module.id);
+    if (!module.services || typeof module.services[Symbol.iterator] !== "function") {
+      throw new Error(`AURUM production module "${module.id}" must provide a service map.`);
+    }
+    if (module.dependencies?.includes(module.id)) {
+      throw new Error(`AURUM production module "${module.id}" cannot depend on itself.`);
+    }
+    if (new Set(module.dependencies ?? []).size !== (module.dependencies ?? []).length) {
+      throw new Error(`AURUM production module "${module.id}" declares duplicate dependencies.`);
+    }
+    if (new Set(module.requiresServices ?? []).size !== (module.requiresServices ?? []).length) {
+      throw new Error(`AURUM production module "${module.id}" declares duplicate required services.`);
+    }
+    for (const serviceId of [...module.services.keys(), ...(module.requiresServices ?? [])]) {
+      if (!serviceId.trim() || serviceId !== serviceId.trim()) {
+        throw new Error(`AURUM production module "${module.id}" declares a non-canonical service identifier "${serviceId}".`);
+      }
+    }
+  }
+
   const container = new AurumServiceContainer();
   const gpuResources = createAurumGpuResourceManager();
   container.register(AURUM_GPU_RESOURCE_SERVICE, gpuResources);
@@ -38,7 +69,7 @@ export function createAurumProductionPluginHost(
   // input array or Map retained outside this boundary.
   const moduleSnapshots = modules.map((module) => ({
     ...module,
-    services: new Map(module.services),
+    services: createAurumReadonlyMap(module.services),
     ...(module.dependencies ? { dependencies: Object.freeze([...module.dependencies]) } : {}),
     ...(module.requiresServices ? { requiresServices: Object.freeze([...module.requiresServices]) } : {}),
   }));
