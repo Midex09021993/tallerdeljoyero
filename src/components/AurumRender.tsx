@@ -3663,7 +3663,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             setTemporalMotion?.(false);
             if (surfaceEdgeAaPass) {
               const strength = surfaceEdgeAaPass.material?.uniforms?.strength;
-              if (strength) strength.value = measuredQualityId === "low" ? 0 : 0.075;
+              if (strength) strength.value = measuredQualityId === "low" ? 0 : 0.035;
               surfaceEdgeAaPass.enabled = measuredQualityId !== "low";
             }
             if (idleTaaPass && !taaEligible) {
