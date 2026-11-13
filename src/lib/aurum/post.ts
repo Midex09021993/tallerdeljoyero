@@ -46,6 +46,7 @@ export async function createAurumPostPipeline(
   let fxaaPass:any=null;
   let gemMaskPass:any=null;
   let gradingPass:any=null;
+  let composerMsaaSamples=0;
 
   try {
     // The native canvas antialias flag does not antialias EffectComposer's
@@ -54,7 +55,6 @@ export async function createAurumPostPipeline(
     // the post-processing chain. Keep a WebGL2/capability guard and fall back
     // cleanly on devices that cannot provide at least 2 samples.
     composer=new EffectComposer(renderer);
-    let composerMsaaSamples=0;
     const glCapabilities=renderer?.capabilities;
     const maxSamples=Number(glCapabilities?.maxSamples??0);
     if(glCapabilities?.isWebGL2===true && Number.isFinite(maxSamples) && maxSamples>=2){
