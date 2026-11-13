@@ -562,3 +562,27 @@ test("gem mask uses a dedicated camera layer instead of per-frame mesh visibilit
   expect(maskBlock).not.toContain(".visible=false");
   expect(maskBlock).not.toContain("cachedOccluderVisibility");
 });
+
+
+test("initial jewel presentation awaits BVH and synchronizes model and camera before first frame", () => {
+  const componentSource = readFileSync("src/components/AurumRender.tsx", "utf8");
+  const loadStart = componentSource.indexOf("modelo=interno;");
+  const loadEnd = componentSource.indexOf("const shaderTarget=modelo;", loadStart);
+  const loadBlock = componentSource.slice(loadStart, loadEnd);
+  const bvhStart = componentSource.indexOf("const asegurarDiamanteBvh = async");
+  const bvhEnd = componentSource.indexOf("let runtimeBudget", bvhStart);
+  const bvhBlock = componentSource.slice(bvhStart, bvhEnd);
+  const sceneStart = componentSource.indexOf("const aplicarEscenario =");
+  const sceneEnd = componentSource.indexOf("const encuadrar =", sceneStart);
+  const sceneBlock = componentSource.slice(sceneStart, sceneEnd);
+
+  expect(loadBlock).toContain("await asegurarDiamanteBvh();");
+  expect(loadBlock).not.toContain("void asegurarDiamanteBvh();");
+  expect(loadBlock).toContain("diamondBvhRuntime?.update();");
+  expect(loadBlock).toContain("gemMaskPass?.refreshCache?.();");
+  expect(bvhBlock).toContain("modelo.updateMatrixWorld?.(true);");
+  expect(bvhBlock).toContain("camara.updateMatrixWorld?.(true);");
+  expect(bvhBlock).toContain("runtime.refresh(modelo);");
+  expect(bvhBlock).toContain("runtime.update();");
+  expect(sceneBlock).not.toContain("liveFastPathRef.current = true;");
+});
