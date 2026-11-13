@@ -579,7 +579,10 @@ test("initial jewel presentation awaits BVH and synchronizes model and camera be
   expect(loadBlock).toContain("await asegurarDiamanteBvh();");
   expect(loadBlock).not.toContain("void asegurarDiamanteBvh();");
   expect(loadBlock).toContain("diamondBvhRuntime?.update();");
-  expect(loadBlock).toContain("gemMaskPass?.refreshCache?.();");
+  const sceneAddIndex = componentSource.indexOf("escena.add(modelo);", loadStart);
+  const gemMaskRefreshIndex = componentSource.indexOf("gemMaskPass?.refreshCache?.();", sceneAddIndex);
+  expect(sceneAddIndex).toBeGreaterThan(loadStart);
+  expect(gemMaskRefreshIndex).toBeGreaterThan(sceneAddIndex);
   expect(bvhBlock).toContain("modelo.updateMatrixWorld?.(true);");
   expect(bvhBlock).toContain("camara.updateMatrixWorld?.(true);");
   expect(bvhBlock).toContain("runtime.refresh(modelo);");
