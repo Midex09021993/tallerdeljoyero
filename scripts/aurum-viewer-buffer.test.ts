@@ -471,22 +471,26 @@ test("the first settled model frame keeps the anti-aliasing composer active", ()
 });
 
 
-test("Aurum uses direct WebGL during camera motion and restores gem AA after motion", () => {
+test("Aurum uses the same beauty composer chain during camera motion and at rest", () => {
   const componentSource = readFileSync("src/components/AurumRender.tsx", "utf8");
   const start = componentSource.indexOf("onStart: () => {");
   const end = componentSource.indexOf("onEnd: () => {", start);
   const liveBlock = componentSource.slice(start, end);
   const idleEnd = componentSource.indexOf("onStart:", end);
-  const idleBlock = componentSource.slice(end, idleEnd > end ? idleEnd : end + 16000);
+  const idleBlock = componentSource.slice(end, idleEnd > end ? idleEnd : end + 8000);
 
   expect(start).toBeGreaterThan(-1);
-  expect(liveBlock).toContain("liveFastPathRef.current = true;");
-  expect(liveBlock).toContain("pass.enabled = false");
-  expect(liveBlock).not.toContain("liveFxaaEnabled");
-  expect(liveBlock).not.toContain("pass === gemMaskPass");
-  expect(idleBlock).toContain("pass === gemMaskPass");
-  expect(idleBlock).toContain("pass === fxaaPass");
-  expect(idleBlock).toContain("liveFastPathRef.current = extremeGeometry;");
+  for (const block of [liveBlock, idleBlock]) {
+    expect(block).toContain("new Set([renderPass, gemMaskPass, fxaaPass, outputPass])");
+    expect(block).toContain("sameBeautyPipelineAvailable");
+    expect(block).toContain("aplicarPerfilLive(true)");
+  }
+  expect(liveBlock).toContain("liveFastPathRef.current = !sameBeautyPipelineAvailable;");
+  expect(idleBlock).toContain("liveFastPathRef.current = !sameBeautyPipelineAvailable;");
+  expect(idleBlock).toContain("idleTaaPass.enabled = false;");
+  expect(idleBlock).toContain("bloomPass.enabled = false;");
+  expect(idleBlock).toContain("dofPass.enabled = false;");
+  expect(idleBlock).toContain("ssrPass.enabled = false;");
 });
 
 test("the BVH camera update reuses fixed-size snapshots without per-frame arrays", () => {
@@ -507,22 +511,19 @@ test("selection highlight changes do not invalidate the gemstone mask cache", ()
   expect(selectionBlock).not.toContain("gemMaskPass?.refreshCache?.();");
 });
 
-test("the settled viewport preserves the LIVE diamond appearance", () => {
+test("the initial and settled viewport keep temporal and photographic passes out of the shared preview", () => {
   const componentSource = readFileSync("src/components/AurumRender.tsx", "utf8");
   const idleStart = componentSource.indexOf("onEnd: () => {");
   const idleEnd = componentSource.indexOf("onStart:", idleStart);
-  const idleBlock = componentSource.slice(idleStart, idleEnd > idleStart ? idleEnd : idleStart + 16000);
+  const idleBlock = componentSource.slice(idleStart, idleEnd > idleStart ? idleEnd : idleStart + 8000);
   const initialAaStart = componentSource.indexOf("const initialTaaRequested = false;");
   const initialAaEnd = componentSource.indexOf("if (idleTaaPass)", initialAaStart);
   const initialAaBlock = componentSource.slice(initialAaStart, initialAaEnd);
 
   expect(idleStart).toBeGreaterThan(-1);
-  expect(idleBlock).toContain("const settledTaaRequested = false;");
-  expect(idleBlock).toContain("pass === idleRenderPass");
-  expect(idleBlock).toContain("pass === idleOutputPass");
-  expect(idleBlock).toContain("pass === gemMaskPass");
-  expect(idleBlock).toContain("pass === fxaaPass");
-  expect(idleBlock).toContain("const settledComposerRequested = idleSoftEdgeAaAvailable;");
+  expect(idleBlock).toContain("idleTaaPass.enabled = false;");
+  expect(idleBlock).toContain("bloomPass.enabled = false;");
+  expect(idleBlock).toContain("dofPass.enabled = false;");
   expect(initialAaBlock).toContain("const initialTaaRequested = false;");
 });
 
