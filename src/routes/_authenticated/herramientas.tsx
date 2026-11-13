@@ -357,7 +357,7 @@ function HerramientasPage() {
                       <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-2 py-2"><p className="text-xs font-semibold">Service Container</p><p className="text-[10px] text-emerald-700 dark:text-emerald-400">Servicios registrados · solo lectura</p></div>
                       <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-2 py-2"><p className="text-xs font-semibold">Event Bus</p><p className="text-[10px] text-emerald-700 dark:text-emerald-400">Ciclo de vida · fallos aislados y reportados</p></div>
                       <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-2 py-2"><p className="text-xs font-semibold">Resource Scope</p><p className="text-[10px] text-emerald-700 dark:text-emerald-400">Limpieza por plugin · sin ownership GPU implícito</p></div>
-                      <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-2 py-2"><p className="text-xs font-semibold">GPU Resource Manager</p><p className="text-[10px] text-amber-700 dark:text-amber-400">Servicio disponible · adopción controlada</p></div>
+                      <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-2 py-2"><p className="text-xs font-semibold">GPU Resource Manager</p><p className="text-[10px] text-amber-700 dark:text-amber-400">API explícita en CORE · ownership productivo parcial</p></div>
                     </div>
                   </div>
                   <div className="mx-auto h-6 w-px bg-border" />
