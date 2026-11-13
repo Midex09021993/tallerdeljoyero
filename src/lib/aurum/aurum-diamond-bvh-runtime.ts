@@ -125,7 +125,17 @@ export async function createAurumDiamondBvhRuntime(options: {
   const refresh = (model: THREE.Object3D | null | undefined, targetMeshes?: readonly THREE.Mesh[]) => {
     if (!model || disposed) return;
     hasLastCameraState = false;
-    const targetSet = targetMeshes?.length ? new Set(targetMeshes) : null;
+    const isModelDescendant=(object:THREE.Object3D)=>{
+      let current:THREE.Object3D|null=object;
+      while(current){
+        if(current===model)return true;
+        current=current.parent;
+      }
+      return false;
+    };
+    const validTargetMeshes=targetMeshes?.filter(isModelDescendant) ?? [];
+    const targetSet = targetMeshes?.length ? new Set(validTargetMeshes) : null;
+    if(targetMeshes?.length && !targetSet?.size)return;
     const targetedRefresh = Boolean(targetSet);
     const found = new Set<THREE.Mesh>();
     if (!targetedRefresh) {
