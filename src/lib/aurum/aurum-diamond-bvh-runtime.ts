@@ -19,6 +19,8 @@ type RecordEntry = {
 
 export type AurumDiamondBvhRuntime = {
   refresh: (model: THREE.Object3D | null | undefined) => void;
+  /** O(1) membership check for already-resolved gem targets; avoids full-model diagnostics in the selection hot path. */
+  hasActiveMeshes: (targets: readonly THREE.Mesh[]) => boolean;
   update: () => void;
   updateEnvironment: (rotationRadians: number, intensityScale: number) => void;
   /** Temporarily raise diamond-only ray bounces for a still capture. */
@@ -369,6 +371,10 @@ export async function createAurumDiamondBvhRuntime(options: {
 
   return {
     refresh,
+    hasActiveMeshes(targets) {
+      if (disposed || entries.size === 0 || !targets?.length) return false;
+      return targets.some((mesh) => entries.has(mesh));
+    },
     update() {
       if (disposed || entries.size === 0) return;
       const nextCameraState = readCameraState();
