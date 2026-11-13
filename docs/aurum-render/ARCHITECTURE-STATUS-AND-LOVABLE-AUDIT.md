@@ -172,3 +172,34 @@ Ejecutar: `bun test scripts/aurum-plugin-registry.test.ts`.
 ### Límite de esta entrega
 
 No se migraron todos los módulos productivos para declarar `requiresServices`; esto debe hacerse después de inventariar sus dependencias reales, no adivinándolas. Esta entrega establece y prueba el mecanismo, no certifica todavía que todos los módulos estén completamente contratados.
+
+## Integración productiva del host — revisión 2026-11-13
+
+La revisión del punto de composición en `src/components/AurumRender.tsx` confirma que el host ya está instanciado dentro del ciclo de vida del visor y que los siguientes servicios se registran y arrancan:
+
+- `aurum.viewer`: escena, cámara, renderer, controles y nodo anfitrión existentes.
+- `aurum.geometry`: motor de diagnóstico geométrico.
+- `aurum.import`: importador y coordinador de pipeline; la carga de modelos consulta el servicio registrado `aurum.import.manager`.
+- `aurum.scene`: adaptador del controlador de escena productivo.
+- `aurum.lighting`: adaptador del controlador de iluminación productivo.
+- `aurum.metal` y `aurum.gem`: servicios delegados por `material-application.ts`; no sustituyen el motor de materiales ni sus perfiles ópticos.
+- `aurum.final-render`: registro diferido del adaptador de render final; la exportación path-traced lo resuelve desde el host al solicitarse.
+
+El host inicia los plugins después de construir los controladores y se libera durante el cleanup del visor. Si el arranque falla, se registra el error y se conserva el renderer productivo existente. Este comportamiento es deliberadamente fail-soft.
+
+### Límites que siguen abiertos
+
+- La integración se encuentra en el punto de composición de `AurumRender.tsx`; no significa que cada subsistema haya transferido su ownership al host.
+- El GPU Resource Manager permanece disponible como servicio de infraestructura. Los controladores productivos conservan la propiedad y liberación de sus recursos.
+- El adaptador de render final se carga bajo demanda; debe verificarse su exportación real con capturas y escenas de referencia.
+- La validación con archivos CAD reales, modelos de gran tamaño y sesiones prolongadas sigue pendiente.
+- Gem Transition continúa fuera del alcance y no debe activarse como parte de esta integración.
+
+### Corrección del contrato de identificadores
+
+En `production-plugin-host.ts` se corrigió el patrón de validación de IDs con segmentos separados por punto y la normalización del ID para el servicio `aurum.plugin.*`. Se añadió una regresión para el identificador `aurum.viewer`, que debe publicarse como `aurum.plugin.aurum-viewer`.
+
+### Evidencia de CI
+
+Los runs asociados a los commits `121ea81` y `ee8a5d1` finalizaron en fallo, pero GitHub devolvió los jobs sin pasos ni logs (`steps: null`, `logs_url: null`). Por tanto no se puede atribuir el fallo a TypeScript, tests, build o ESLint ni declarar la suite aprobada. La ejecución verificable de calidad sigue siendo un bloqueo previo al cierre.
+
