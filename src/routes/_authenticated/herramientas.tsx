@@ -11,7 +11,7 @@ import { AsistenteImpresion3D } from "@/components/AsistenteImpresion3D";
 import { AurumCausticsLab } from "@/components/aurum-caustics/AurumCausticsLab";
 import { useSesion } from "@/lib/auth";
 import { canViewAurumInternalArchitecture } from "@/lib/aurum/aurum-internal-access";
-import { isAurumGemTransitionEnabled, setAurumGemTransitionEnabled } from "@/lib/aurum/gem-transition";
+
 
 export const Route = createFileRoute("/_authenticated/herramientas")({
   head: () => ({
@@ -42,7 +42,7 @@ function HerramientasPage() {
   const [herramientaActiva, setHerramientaActiva] = useState<HerramientaInterna>(null);
   const [mostrarIntroAurumRender, setMostrarIntroAurumRender] = useState(false);
   const [mostrarArquitecturaAurum, setMostrarArquitecturaAurum] = useState(false);
-  const [transicionGemasActiva, setTransicionGemasActiva] = useState(() => isAurumGemTransitionEnabled());
+
   const [mostrarIntroAurumTransfer, setMostrarIntroAurumTransfer] = useState(false);
   const [mostrarIntroAurumConect, setMostrarIntroAurumConect] = useState(false);
   const [mostrarGuiaAurumConect, setMostrarGuiaAurumConect] = useState(false);
@@ -371,26 +371,19 @@ function HerramientasPage() {
                       <div className="rounded-lg border border-border p-3"><p className="text-xs font-semibold">Light Engine</p><p className="mt-1 text-[10px] text-sky-700 dark:text-sky-400">Registrado en producción</p></div>
                       <div className="rounded-lg border border-border p-3"><p className="text-xs font-semibold">Metal Engine</p><p className="mt-1 text-[10px] text-sky-700 dark:text-sky-400">Registrado en producción</p></div>
                       <div className="rounded-lg border border-border p-3"><p className="text-xs font-semibold">Gem Engine</p><p className="mt-1 text-[10px] text-sky-700 dark:text-sky-400">Registrado en producción</p></div>
-                      <button
-                        type="button"
-                        aria-pressed={transicionGemasActiva}
-                        aria-label={transicionGemasActiva ? "Desactivar transición progresiva de gemas" : "Activar transición progresiva de gemas"}
-                        onClick={() => {
-                          const siguiente = !transicionGemasActiva;
-                          setAurumGemTransitionEnabled(siguiente);
-                          setTransicionGemasActiva(siguiente);
-                        }}
-                        className={`rounded-lg border p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold ${transicionGemasActiva ? "border-emerald-500/40 bg-emerald-500/5 hover:bg-emerald-500/10" : "border-amber-500/40 bg-amber-500/5 hover:bg-amber-500/10"}`}
+                      <div
+                        aria-disabled="true"
+                        className="rounded-lg border border-amber-500/40 bg-amber-500/5 p-3 text-left opacity-90"
                       >
                         <div className="flex items-center justify-between gap-2">
                           <p className="text-xs font-semibold">AURUM GEM TRANSITION</p>
-                          <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase ${transicionGemasActiva ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400" : "bg-amber-500/15 text-amber-700 dark:text-amber-400"}`}>
-                            {transicionGemasActiva ? "Activado" : "Desactivado"}
+                          <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[9px] font-bold uppercase text-amber-700 dark:text-amber-400">
+                            Suspendido
                           </span>
                         </div>
                         <p className="mt-1 text-[10px] text-muted-foreground">Interpolación progresiva · 240 ms</p>
-                        <p className="mt-1 text-[10px] text-muted-foreground">{transicionGemasActiva ? "Clic para desactivar" : "Clic para activar"}</p>
-                      </button>
+                        <p className="mt-1 text-[10px] text-muted-foreground">Desactivado temporalmente para recuperar y validar la apariencia óptica</p>
+                      </div>
                       <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3"><p className="text-xs font-semibold">AURUM IMPORT · aurum.import</p><p className="mt-1 text-[10px] text-sky-700 dark:text-sky-400">Integrado en el host</p></div>
                       <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3"><p className="text-xs font-semibold">Import Pipeline Manager</p><p className="mt-1 text-[10px] text-sky-700 dark:text-sky-400">Orquestación implementada</p></div>
                       <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3"><p className="text-xs font-semibold">AURUM GEOMETRY</p><p className="mt-1 text-[10px] text-sky-700 dark:text-sky-400">Inspección de mallas</p></div>
