@@ -186,3 +186,48 @@ test("import pipeline observes cancellation between Smart Scan and deep diagnost
   })).rejects.toMatchObject({ name: "AbortError" });
   expect(geometryDisposed).toBe(true);
 });
+
+
+test("import pipeline reports advisory file and geometry budgets without rejecting the model", async () => {
+  const model = new THREE.Group();
+  const geometry = new THREE.BoxGeometry();
+  model.add(new THREE.Mesh(geometry, new THREE.MeshBasicMaterial()));
+  const importer = {
+    id: "aurum.import", version: "1.0.0",
+    load: async () => ({ sourceObject: model, model, format: "3dm" as const, pipeline: ["source-decoded"] }),
+  } as AurumImportPlugin;
+  const result = await createAurumImportPipelineManager(importer, createAurumGeometryEngine()).load({
+    file: new File(["12345678"], "large-ring.3dm"),
+    format: "3dm",
+    fallbackMaterial: new THREE.MeshBasicMaterial(),
+    colorRhinoHex: () => undefined,
+    classifyLayer: () => "otro",
+    geometryBudget: { maxMeshes: 0, maxVertices: 1, maxTriangles: 1 },
+  });
+  expect(result.resourceBudget.fileBytes).toBe(8);
+  expect(result.resourceBudget.meshes).toBe(1);
+  expect(result.resourceBudget.vertices).toBe(geometry.getAttribute("position").count);
+  expect(result.resourceBudget.triangles).toBe(12);
+  expect(result.resourceBudget.exceeded).toEqual(["meshes", "vertices", "triangles"]);
+  geometry.dispose();
+});
+
+test("import pipeline enforces an explicitly configured file-size ceiling before decoding", async () => {
+  let importerCalls = 0;
+  const importer = {
+    id: "aurum.import", version: "1.0.0",
+    load: async () => {
+      importerCalls++;
+      throw new Error("Decoder must not run");
+    },
+  } as AurumImportPlugin;
+  await expect(createAurumImportPipelineManager(importer, createAurumGeometryEngine()).load({
+    file: new File(["123456"], "too-large.3dm"),
+    format: "3dm",
+    fallbackMaterial: new THREE.MeshBasicMaterial(),
+    colorRhinoHex: () => undefined,
+    classifyLayer: () => "otro",
+    maxFileBytes: 4,
+  })).rejects.toMatchObject({ name: "AurumImportBudgetError" });
+  expect(importerCalls).toBe(0);
+});
