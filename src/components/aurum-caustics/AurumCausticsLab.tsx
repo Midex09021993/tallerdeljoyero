@@ -177,20 +177,11 @@ export function AurumCausticsLab() {
     observer.observe(host);
     resize();
 
-    let frame = 0;
-    let last = 0;
-    const animate = (time: number) => {
-      frame = requestAnimationFrame(animate);
-      if (time - last < 30) return;
-      last = time;
-      if (isRotating) gem.rotation.y += 0.0035;
-      renderer.render(scene, camera);
-    };
-    frame = requestAnimationFrame(animate);
+    renderer.render(scene, camera);
+    const frame = 0;
     sceneObjectsRef.current = { renderer, scene, camera, gem, material: gemMaterial, frame, observer };
 
     return () => {
-      cancelAnimationFrame(frame);
       observer.disconnect();
       scene.traverse((object) => {
         if (object instanceof THREE.Mesh) {
