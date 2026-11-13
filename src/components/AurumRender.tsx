@@ -32,7 +32,7 @@ import { createAurumImportPipelineManager, type AurumImportPipelineManager } fro
 import { compressAurumGlbWithDraco } from "../lib/draco-export";
 import { getAurumRhinoGeometryType, isAurumRhinoCsgSurface } from "../lib/aurum/metal-union-experiment";
 import { getAurumModelParts } from "../lib/aurum/model-parts";
-import { applyAurumMaterialToModel, applyAurumGemToTarget, clearAurumGemFromTarget, getAurumMaterialAdapterServices } from "../lib/aurum/material-application";
+import { applyAurumMaterialToModel, applyAurumGemToTarget, clearAurumGemFromTarget, getAurumMaterialAdapterServices, prepareAurumGemLayerIndex } from "../lib/aurum/material-application";
 import { inspectAurumMesh } from "../lib/aurum/mesh-preflight";
 
 import { applyAurumInitialModelMaterials } from "../lib/aurum/model-materials";
@@ -2039,6 +2039,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         parteActiva=null;
         limpiarResaltado();
         escena.add(modelo);
+        // Pre-index MatrixGold/Rhino gemstone layers during model setup so
+        // subsequent catalog changes resolve selected CAD layers in O(k).
+        prepareAurumGemLayerIndex(escena);
         gemMaskPass?.refreshCache?.();
         // Start the initial progressive TAA only after the model, camera and
         // gem-mask cache are stable. The demand loop renders a bounded sample
