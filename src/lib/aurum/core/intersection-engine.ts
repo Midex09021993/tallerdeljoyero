@@ -109,10 +109,12 @@ function buildBvh(triangles: readonly Triangle[], leafSize: number): BvhNode | n
   const sorted = [...triangles].sort((a, b) => a.centroid[axis] - b.centroid[axis]);
   const middle = Math.floor(sorted.length / 2);
   if (middle <= 0 || middle >= sorted.length) return { bounds, triangles };
+  const left = buildBvh(sorted.slice(0, middle), leafSize);
+  const right = buildBvh(sorted.slice(middle), leafSize);
   return {
     bounds,
-    left: buildBvh(sorted.slice(0, middle), leafSize) ?? undefined,
-    right: buildBvh(sorted.slice(middle), leafSize) ?? undefined,
+    ...(left ? { left } : {}),
+    ...(right ? { right } : {}),
   };
 }
 

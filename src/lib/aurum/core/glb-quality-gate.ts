@@ -42,19 +42,19 @@ function isVisibleInTree(node: THREE.Object3D): boolean {
 }
 
 function isGemMesh(mesh: THREE.Mesh): boolean {
-  const metadata = (mesh.userData?.aurumRhino ?? {}) as Record<string, unknown>;
-  const source = (mesh.userData?.aurumRhinoSource ?? {}) as Record<string, unknown>;
+  const metadata = (mesh.userData?.["aurumRhino"] ?? {}) as Record<string, unknown>;
+  const source = (mesh.userData?.["aurumRhinoSource"] ?? {}) as Record<string, unknown>;
   const materialNames = (Array.isArray(mesh.material) ? mesh.material : [mesh.material])
     .map((material) => material?.name ?? "")
     .join(" ");
   const identity = [
     mesh.name,
-    metadata.categoria,
-    metadata.capa,
-    source.layerName,
+    metadata["categoria"],
+    metadata["capa"],
+    source["layerName"],
     materialNames,
   ].join(" ").toLowerCase();
-  return metadata.categoria === "gema"
+  return metadata["categoria"] === "gema"
     || /(gem|gema|piedra|diamond|diamante|zafiro|sapphire|rubi|rubí|ruby|esmeralda|emerald|moissanita|citrino|amatista|topacio)/.test(identity);
 }
 
@@ -89,7 +89,7 @@ export function captureAurumGlbQualitySnapshot(root: THREE.Object3D): AurumGlbQu
     const position = mesh.geometry?.getAttribute("position");
     if (!position || position.count < 3) {
       invalidPositionMeshes += 1;
-      continue;
+      return;
     }
     const index = mesh.geometry.getIndex();
     triangleCount += Math.floor((index?.count ?? position.count) / 3);
@@ -102,7 +102,7 @@ export function captureAurumGlbQualitySnapshot(root: THREE.Object3D): AurumGlbQu
     }
     if (!finite) {
       invalidPositionMeshes += 1;
-      continue;
+      return;
     }
     const geometryBounds = new THREE.Box3().setFromBufferAttribute(position as THREE.BufferAttribute);
     geometryBounds.applyMatrix4(mesh.matrixWorld);

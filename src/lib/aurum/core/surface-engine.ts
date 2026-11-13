@@ -49,11 +49,11 @@ type MeshAccumulator = {
 };
 
 function classifyFamily(mesh: THREE.Mesh): "metal" | "gem" | "other" {
-  const data = mesh.userData ?? {};
-  const rhino = data.aurumRhino ?? {};
+  const data = (mesh.userData ?? {}) as Record<string, any>;
+  const rhino = data["aurumRhino"] ?? {};
   const text = [
-    mesh.name, rhino.capa, rhino.category, data.layerName,
-    data.attributes?.layerName,
+    mesh.name, rhino.capa, rhino.category, data["layerName"],
+    data["attributes"]?.layerName,
     ...(Array.isArray(mesh.material) ? mesh.material : [mesh.material]).map((material) => material?.name),
   ].join(" ").toLowerCase();
   if (rhino.categoria === "gema" || /(gem|gema|piedra|diamond|diamante|zafiro|sapphire|rubi|rubí|ruby|esmeralda|emerald|moissanita)/.test(text)) return "gem";
