@@ -6,13 +6,20 @@
  */
 export type AurumServiceId = string;
 
+function validateServiceId(id: AurumServiceId): void {
+  if (!id.trim()) throw new Error("AURUM service id cannot be empty.");
+  if (id !== id.trim()) {
+    throw new Error(`AURUM service id "${id}" cannot contain leading or trailing whitespace.`);
+  }
+}
+
 export class AurumServiceContainer {
   private readonly entries = new Map<AurumServiceId, unknown>();
   private sealed = false;
 
   register<T>(id: AurumServiceId, service: T): T {
     if (this.sealed) throw new Error("AURUM service container is sealed.");
-    if (!id.trim()) throw new Error("AURUM service id cannot be empty.");
+    validateServiceId(id);
     if (service === undefined || service === null) {
       throw new Error(`AURUM service "${id}" cannot be null or undefined.`);
     }
@@ -24,7 +31,7 @@ export class AurumServiceContainer {
   registerMany(services: ReadonlyMap<AurumServiceId, unknown>): void {
     if (this.sealed) throw new Error("AURUM service container is sealed.");
     for (const [id, service] of services) {
-      if (!id.trim()) throw new Error("AURUM service id cannot be empty.");
+      validateServiceId(id);
       if (service === undefined || service === null) {
         throw new Error(`AURUM service "${id}" cannot be null or undefined.`);
       }
