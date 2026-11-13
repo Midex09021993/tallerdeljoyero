@@ -35,6 +35,11 @@ export class AurumEventBus {
     this.listeners.clear();
     this.disposed = true;
   }
+
+  reset(): void {
+    this.listeners.clear();
+    this.disposed = false;
+  }
 }
 
 export class AurumResourceScope {
