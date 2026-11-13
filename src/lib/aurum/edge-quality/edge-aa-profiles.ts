@@ -24,7 +24,7 @@ export function getAurumEdgeAaProfile(
     ? isHighQuality
     : mode === "live"
       ? quality !== "low" && withinInteractiveBudget
-      : isHighQuality && withinInteractiveBudget;
+      : quality !== "low" && withinInteractiveBudget;
 
   return { mode, enabled, strength: enabled ? 0.035 : 0 };
 }
