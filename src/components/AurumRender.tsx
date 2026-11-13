@@ -52,7 +52,7 @@ import { GEMAS, MATERIALES, ESCENARIOS, VISTAS, ILUMINACIONES, type MaterialId, 
 import { AurumRenderSidebar } from "./AurumRenderSidebar";
 import { AurumPerformanceMonitorPanel } from "./AurumPerformanceMonitorPanel";
 import { createAurumPerformanceMonitor } from "@/lib/aurum/performance-monitor";
-import { captureAurumGemTransitionState, createAurumGemTransition, type AurumGemTransitionController } from "@/lib/aurum/gem-transition";
+
 
 const normalizarTexto = (v:any) => String(v ?? "").trim().toLowerCase();
 const colorRhinoHex = (c:any): string | undefined => {
@@ -234,7 +234,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const invalidateRenderRef = useRef<(() => void) | null>(null);
   const viewerLoopRef = useRef<any>(null);
   const resetTemporalAccumulationRef = useRef<(() => void) | null>(null);
-  const gemTransitionRef = useRef<AurumGemTransitionController | null>(null);
   const viewerInteractionActiveRef = useRef(false);
   const [ptSamples, setPtSamples] = useState("256");
   const [ptProgress, setPtProgress] = useState<string|null>(null);
@@ -1523,7 +1522,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       const aplicarPerfilLive = (forceLive?:boolean) => {
         // Material quality is independent from the renderer path (direct vs composer).
         // FXAA availability must never decide whether LIVE or BEAUTY materials are used.
-        const live=forceLive ?? liveFastPathRef.current;
+        // TEMPORARILY DISABLED: LIVE rewrites gemstone transmission and shader
+        // quality. Keep the authored BEAUTY profile until the optical regression
+        // is isolated and the interactive profile is revalidated.
+        void forceLive;
+        const live=false;
         if (!modelo) {
           renderer.shadowMap.enabled=!live && renderQuality.shadows;
           return;
@@ -1551,22 +1554,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
 
       const aplicarGema = (g:GemaConfig, objetivo?:any, aplicarTodas=false, renderImmediately=true) => {
         const target=objetivo||parteActiva;
-        // Resolve and snapshot only the meshes that belong to this exact
-        // clicked gem/layer assignment. Never snapshot the model root.
-        let transitionTargets:any[]=[];
-        let previousGemState:any[]=[];
-        gemTransitionRef.current?.cancel();
-        gemTransitionRef.current=null;
+        // Stable diagnostic mode: apply the selected gemstone profile directly.
+        // Progressive blending is suspended while the optical regression is audited.
         const applied=applyAurumGemToTarget(
           target,
           g,
           aplicarEntornoGema,
           ()=>invalidateRenderRef.current?.(),
           aplicarTodas,
-          (resolvedTargets:any[])=>{
-            transitionTargets=resolvedTargets;
-            previousGemState=captureAurumGemTransitionState(resolvedTargets);
-          },
         );
         if(!applied){
           console.error("[AURUM][GEM APPLICATION FAILED]",{
@@ -1598,97 +1593,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         } else {
           diamondBvhRuntime?.refresh(modelo);
         }
-        // Inspect every mesh material on the actual target. Do not filter by
-        // emerald metadata: the missing metadata is precisely what this audit
-        // needs to reveal. Capture values before and after LIVE overrides.
-        if (String(g?.familia ?? "") === "Esmeralda") {
-          const snapshot=(stage:string)=>{
-            const meshes:any[]=[];
-            const inclusions:any[]=[];
-            target?.traverse?.((node:any)=>{
-              if(node?.userData?.aurumInternalInclusion){
-                inclusions.push({
-                  type:String(node.userData?.aurumInclusionType??"unknown"),
-                  quality:node.userData?.aurumInclusionQuality??null,
-                  visible:Boolean(node.visible),
-                  opacity:Number(node.material?.opacity??1),
-                });
-              }
-              if(!node?.isMesh)return;
-              const list=Array.isArray(node.material)?node.material:[node.material];
-              meshes.push({
-                mesh:node.name||node.uuid,
-                meshUuid:node.uuid,
-                category:node.userData?.aurumRhino?.categoria??node.userData?.attributes?.categoria??node.userData?.attributes?.category??node.userData?.categoria??node.userData?.category??null,
-                layer:node.userData?.aurumRhino?.capa??node.userData?.attributes?.layerName??node.userData?.attributes?.LayerName??node.userData?.layerName??null,
-                materialClassMismatch:(list.filter(Boolean).some((m:any)=>m?.isShaderMaterial)||list.filter(Boolean).some((m:any)=>!m?.isMeshPhysicalMaterial)),
-                activeGemId:node.userData?.aurumActiveGemId??null,
-                applicationToken:node.userData?.aurumGemApplicationToken??null,
-                internalInclusion:Boolean(node.userData?.aurumInternalInclusion),
-                materialCount:list.filter(Boolean).length,
-                materials:list.filter(Boolean).map((m:any)=>({
-                  uuid:m.uuid??null,
-                  name:m.name??"",
-                  type:m.type??m.constructor?.name??"unknown",
-                  grade:m.userData?.aurumEmeraldCatalogGrade??null,
-                  family:m.userData?.aurumGemFamily??null,
-                  profileApplied:Boolean(m.userData?.aurumEmeraldCatalogProfileApplied),
-                  color:m.color?.getHexString?.()??null,
-                  transmission:Number(m.transmission??0),
-                  storedTransmission:m.userData?.aurumLiveTransmissionStored??null,
-                  roughness:Number(m.roughness??0),
-                  ior:Number(m.ior??0),
-                  envMapIntensity:Number(m.envMapIntensity??0),
-                  attenuationColor:m.attenuationColor?.getHexString?.()??null,
-                  attenuationDistance:Number(m.attenuationDistance??0),
-                })),
-              });
-            });
-            return {stage,requestedId:String(g?.id??""),live:liveFastPathRef.current,meshCount:meshes.length,meshes,inclusionCount:inclusions.length,visibleInclusionCount:inclusions.filter((i:any)=>i.visible).length,inclusions:inclusions.slice(0,24)};
-          };
-          const beforeLive=snapshot("before-live-overrides");
-          aplicarPerfilLive();
-          const afterLive=snapshot("after-live-overrides");
-          console.info("[AURUM][EMERALD LIVE RUNTIME AUDIT]",{
-            requested:{id:String(g?.id??""),color:g?.color??null,transmission:g?.transmission??null,roughness:g?.roughness??null,attenuationDistance:g?.attenuationDistance??null,inclusionStrength:g?.inclusionStrength??null},
-            beforeLive,afterLive,
-          });
-        } else {
-          aplicarPerfilLive();
-        }
-        // Keep temporal accumulation out of the short material blend. Each
-        // transition sample is rendered through the interactive beauty path;
-        // the final still image receives a fresh, bounded TAA convergence.
-        setTemporalMotion?.(true);
-        resetTemporalAccumulationRef.current?.();
-        const transition=createAurumGemTransition(
-          transitionTargets,
-          previousGemState,
-          () => {
-            // TAA remains in motion mode during the blend. Resetting its history
-            // on every 30 Hz sample is redundant and adds avoidable CPU work.
-            viewerLoopRef.current?.renderNow?.();
-          },
-          240,
-          () => {
-            gemTransitionRef.current=null;
-            // Rebuild temporal history once, after the final material values
-            // are in place, then run the bounded settled-state convergence.
-            resetTemporalAccumulationRef.current?.();
-            setTemporalMotion?.(false);
-            viewerLoopRef.current?.converge?.(Math.max(1,Math.min(12,Number(postRuntimeConfig.progressiveFrameCount??8))));
-          },
-        );
-        gemTransitionRef.current=transition;
-        if(transition && viewerInteractionActiveRef.current) transition.pause();
-        if(!transition) setTemporalMotion?.(false);
-
-        // The transition controller renders its initial state itself. Avoid
-        // issuing a duplicate immediate render when a transition was created.
-        if(!transition){
-          if(renderImmediately) viewerLoopRef.current?.renderNow?.();
-          else invalidateRenderRef.current?.();
-        }
+        // Do not apply LIVE overrides or transition-specific temporal/TAA
+        // manipulation here. Keep the catalog-authored physical gem material.
+        if(renderImmediately) viewerLoopRef.current?.renderNow?.();
+        else invalidateRenderRef.current?.();
       };
       const aplicarMaterial = (m:MaterialConfig, aplicarTodos=false) => {
         if (!modelo) {
@@ -1956,8 +1864,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         setAurumEmeraldInclusionsVisible(modelo, false);
         setAurumEmeraldInclusionsVisible(modelo, true, "esmeralda_3");
         setAurumEmeraldInclusionsVisible(modelo, true, "esmeralda_inclusiones");
-        liveFastPathRef.current=true;
-        aplicarPerfilLive();
+        // Keep authored/BEAUTY gemstone materials during the diagnostic rollback.
+        // The LIVE material profile is intentionally suspended.
 
         // Precompile only after the first LIVE frame has had a chance to paint.
         // This avoids competing with the initial interactive render.
@@ -2131,10 +2039,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         requestAnimationFrame(() => {
           if (modelo) {
             camaraVista("frontal");
-            // Keep the LIVE gemstone material profile for responsiveness, but
-            // do not switch the renderer to the direct path: that bypasses the
-            // settled composer and silently removes FXAA/TAA until the first orbit.
-            if (!gemTransitionRef.current?.active) aplicarPerfilLive(true);
+            // Do not force LIVE material overrides after initial framing.
             renderer.shadowMap.enabled = false;
             renderer.shadowMap.needsUpdate = false;
             invalidateRenderRef.current?.();
@@ -3555,7 +3460,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           progressiveFrames: Math.max(1, Math.min(32, Math.floor(Number(postRuntimeConfig.progressiveFrameCount ?? 1)))),
           onStart: () => {
             viewerInteractionActiveRef.current=true;
-            gemTransitionRef.current?.pause();
             setTemporalMotion?.(true);
             syncAurumSsrDiagnosticConfig();
 
@@ -3577,9 +3481,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             const sameBeautyPipelineAvailable = Boolean(composer && renderPass && gemMaskPass && fxaaPass && outputPass);
             liveFastPathRef.current = !sameBeautyPipelineAvailable;
 
-            // The LIVE profile is scoped internally to gemstone materials;
-            // it must not rewrite the metal materials during camera movement.
-            aplicarPerfilLive(true);
+            // Keep catalog-authored gemstone materials unchanged during orbit.
             renderer.shadowMap.enabled = false;
             renderer.shadowMap.needsUpdate = false;
             invalidateRenderRef.current?.();
@@ -3616,18 +3518,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
 
             const sameBeautyPipelineAvailable = Boolean(composer && renderPass && gemMaskPass && fxaaPass && outputPass);
             liveFastPathRef.current = !sameBeautyPipelineAvailable;
-            // Keep the same lightweight gem profile before and after orbit.
-            // Beauty/capture restoration remains owned by the capture pipeline.
-            if (!gemTransitionRef.current?.active) aplicarPerfilLive(true);
-            // This transition enables accumulation only when applyQuality()
-            // requested TAA for the current quality profile.
-            if (gemTransitionRef.current?.active) {
-              // A paused material transition must finish before temporal samples
-              // are accumulated; otherwise TAA would blend intermediate colors.
-              setTemporalMotion?.(true);
-            } else {
-              setTemporalMotion?.(false);
-            }
+            // Restore the normal settled temporal state. There is no active
+            // gem transition to coordinate while progressive blending is suspended.
+            setTemporalMotion?.(false);
             if (idleTaaPass && !taaEligible) {
               idleTaaPass.enabled = false;
               idleTaaPass.accumulate = false;
@@ -3658,7 +3551,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             });
             invalidateRenderRef.current?.();
             viewerInteractionActiveRef.current=false;
-            gemTransitionRef.current?.resume();
           },
         }
       );
