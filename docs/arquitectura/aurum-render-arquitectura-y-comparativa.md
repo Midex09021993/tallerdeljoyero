@@ -168,3 +168,129 @@ Esta auditoría se basa en la estructura y los archivos consultados en GitHub. I
 La tabla de iJewel procede de la referencia compartida por el usuario y no constituye una auditoría de su código privado.
 
 **Objetivo:** que AURUM evolucione hacia una plataforma propia de tecnología de renderizado para joyería, conservando la calidad de imagen actual y ganando modularidad, mantenibilidad y capacidad de extensión.
+
+
+---
+
+## 9. Mapa de arquitectura modular — estado real en `main`
+
+**Corte de auditoría:** 12 de noviembre de 2026. Esta sección refleja los contratos y registros encontrados en el código; no confunde registro con propiedad independiente de recursos.
+
+### 9.1 Diagrama de composición actual
+
+```mermaid
+flowchart TB
+  APP["AURUM RENDER · aplicación React / Three.js"]
+  CORE["AURUM CORE"]
+  REG["Plugin Registry"]
+  SERVICES["Service Container · mapa de solo lectura"]
+  EVENTS["Event Bus · eventos de activación / desactivación"]
+  SCOPE["Resource Scope · scope por plugin"]
+  APP --> CORE
+  CORE --> REG
+  CORE --> SERVICES
+  CORE --> EVENTS
+  CORE --> SCOPE
+
+  subgraph PLUGINS["Módulos registrados en producción"]
+    VIEW["aurum.viewer"]
+    IMPORT["aurum.import"]
+    SCENE["aurum.scene"]
+    LIGHT["aurum.lighting"]
+    METAL["aurum.metal"]
+    GEM["aurum.gem"]
+    FINAL["aurum.final-render"]
+  end
+  REG --> VIEW
+  REG --> IMPORT
+  REG --> SCENE
+  REG --> LIGHT
+  REG --> METAL
+  REG --> GEM
+  REG --> FINAL
+  SCENE -. depende de .-> VIEW
+  LIGHT -. depende de .-> VIEW
+  GEM -. depende de .-> METAL
+  FINAL -. depende de .-> VIEW
+
+  subgraph ENGINES["Motores y subsistemas de producción existentes"]
+    GEOM["Carga, normalización y preparación geométrica"]
+    OPTICS["Materiales, gemas, diamante y BVH"]
+    ENV["Iluminación y entornos HDRI"]
+    POST["Postprocesamiento"]
+    CAPTURE["Captura final / path tracing"]
+    LOOP["Viewer loop, cámara y controles"]
+  end
+  IMPORT --> GEOM
+  METAL --> OPTICS
+  GEM --> OPTICS
+  LIGHT --> ENV
+  VIEW --> LOOP
+  FINAL --> CAPTURE
+  APP --> POST
+  APP --> GEOM
+  APP --> OPTICS
+  APP --> ENV
+```
+
+Las líneas continuas indican composición o acceso; las líneas punteadas indican dependencias declaradas en el registro. El diagrama no implica que todos los subsistemas internos sean plugins independientes.
+
+### 9.2 Estado comprobado de los módulos
+
+| ID / capacidad | Estado en código | Qué significa realmente |
+|---|---|---|
+| `aurum.viewer` | Registrado | Publica referencias de escena, cámara, renderer, controles y host. El adaptador no crea ni dispone esos recursos. |
+| `aurum.import` | Registrado | Publica `aurum.import.pipeline`. El pipeline delega en el loader, conversión GLB y normalizador existentes. |
+| `aurum.scene` | Registrado | Expone el controlador de escena ya existente; depende de Viewer. |
+| `aurum.lighting` | Registrado | Expone servicios del controlador de iluminación existente; depende de Viewer. |
+| `aurum.metal` | Registrado | Publica servicios de aplicación/perfiles metálicos mediante el adaptador de materiales. |
+| `aurum.gem` | Registrado | Publica servicios de gemas y depende de Metal. No equivale a extraer por completo el motor óptico. |
+| `aurum.final-render` | Registrado bajo demanda | Registra un cargador dinámico del adaptador de captura; el adaptador se crea cuando se solicita. |
+
+### 9.3 Infraestructura de AURUM CORE
+
+- **Plugin Registry:** valida identificadores, versiones, dependencias, orden de inicialización y ciclo de vida; realiza rollback si falla el arranque.
+- **Service Container:** registra servicios durante la composición y entrega una vista de solo lectura.
+- **Event Bus:** comunica eventos del ciclo de vida de plugins, actualmente activación y desactivación.
+- **Resource Scope:** crea un scope por plugin y permite registrar limpieza; todavía no hay transferencia general de propiedad de recursos GPU a los plugins.
+
+**Límite importante:** el host administra el ciclo de vida de los plugins, pero los controladores actuales siguen siendo propietarios de sus recursos Three.js/GPU. Por eso, Resource Scope no debe dibujarse como si ya gestionara automáticamente renderer, escena, luces, materiales, HDRI o BVH.
+
+### 9.4 Motores internos que todavía no son plugins autónomos
+
+Estos subsistemas existen y participan en producción, pero continúan coordinados desde la aplicación/controladores existentes:
+
+- Geometry / Model Preparation: loader, normalizador, preflight, partes, LOD y presupuesto de runtime.
+- Optical & Material Engines: perfiles de metal, gemas, diamante, shaders, inclusiones y BVH.
+- Environment & Lighting: luces, HDRI de metales y HDRI de gemas.
+- Post Engine: composición y efectos de imagen.
+- Capture / Path Tracing: captura de alta calidad y ruta final.
+
+La separación de estos subsistemas en el mapa es una descripción funcional, no una afirmación de que ya estén aislados como plugins.
+
+### 9.5 Brechas arquitectónicas confirmadas
+
+1. **Importación:** el módulo está registrado, pero el componente de carga aún invoca la instancia local del importador; el siguiente paso es definir un informe estructurado y consumir el contrato de forma coherente.
+2. **Propiedad de recursos:** los scopes existen, pero no se ha completado un modelo de ownership GPU por plugin.
+3. **Adaptadores:** Viewer, Scene, Lighting, Metal y Gem publican contratos; algunas capacidades internas todavía se exponen desde servicios compartidos o siguen en la aplicación.
+4. **Final Render:** el registro publica un loader bajo demanda; no debe describirse como un motor permanentemente activo.
+5. **Tipado del componente principal:** `AurumRender.tsx` conserva `@ts-nocheck`; la modularización no ha eliminado todavía esa deuda.
+
+### 9.6 Próxima secuencia de evolución
+
+1. **IMPORT 1.1 — diagnóstico de importación:** informe de formato, conteos, capas, objetos auxiliares, incidencias y etapas/tiempos disponibles. Solo observación; no cambiar geometría ni materiales automáticamente.
+2. **IMPORT 1.2 — clasificación asistida:** sugerir categorías de capa con posibilidad de corrección manual; no inferir materiales por color RGB.
+3. **IMPORT 1.3 — asignación revisable:** preparar un resumen de asignaciones antes de aplicar materiales.
+4. **Resource Ownership 1.0:** definir contratos explícitos de adquisición/liberación y pruebas de limpieza antes de mover recursos GPU.
+5. **Viewer / Scene / Lighting:** profundizar extracción solo cuando los contratos y pruebas de regresión estén listos.
+6. **Gem / Metal / Final Render:** separar implementación interna gradualmente, preservando shaders, BVH, HDRI y calibraciones.
+
+### 9.7 Criterio de lectura del mapa
+
+Usar siempre tres estados distintos:
+
+- **Implementado:** existe código funcional para la capacidad.
+- **Registrado:** AURUM CORE conoce el módulo y puede iniciar su ciclo de vida.
+- **Autónomo:** el módulo tiene contrato, dependencias y propiedad de recursos suficientemente aislados para evolucionar o sustituirse sin acoplamiento indebido.
+
+Un módulo puede estar implementado y registrado sin ser todavía autónomo ni instalable de forma independiente.
