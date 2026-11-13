@@ -26,10 +26,17 @@ export interface AurumGeometryReport {
   readonly meshes: readonly AurumGeometryMeshReport[];
 }
 
+export interface AurumGeometryInspectOptions {
+  /** Bounds require an additional scene traversal; disable for the import fast path. */
+  readonly includeBounds?: boolean;
+  /** Full vertex validation is diagnostic work and can be disabled for latency-sensitive loads. */
+  readonly validatePositions?: boolean;
+}
+
 export interface AurumGeometryEngine {
   readonly id: "aurum.geometry";
   readonly version: "1.0.0";
-  inspect(root: THREE.Object3D): AurumGeometryReport;
+  inspect(root: THREE.Object3D, options?: AurumGeometryInspectOptions): AurumGeometryReport;
 }
 
 /**
@@ -41,15 +48,17 @@ export function createAurumGeometryEngine(): AurumGeometryEngine {
   return Object.freeze({
     id: "aurum.geometry" as const,
     version: "1.0.0" as const,
-    inspect(root: THREE.Object3D): AurumGeometryReport {
+    inspect(root: THREE.Object3D, options: AurumGeometryInspectOptions = {}): AurumGeometryReport {
+      const includeBounds = options.includeBounds !== false;
+      const validatePositions = options.validatePositions !== false;
       const meshes: AurumGeometryMeshReport[] = [];
       let vertices = 0;
       let triangles = 0;
       let visibleMeshCount = 0;
       let meshesMissingNormals = 0;
       let meshesWithInvalidPositions = 0;
-      const bounds = new THREE.Box3().setFromObject(root);
-      const hasBounds = !bounds.isEmpty();
+      const bounds = includeBounds ? new THREE.Box3().setFromObject(root) : null;
+      const hasBounds = Boolean(bounds && !bounds.isEmpty());
 
       root.traverse((node) => {
         if (!(node as THREE.Mesh).isMesh) return;
@@ -60,11 +69,18 @@ export function createAurumGeometryEngine(): AurumGeometryEngine {
         const vertexCount = position?.count ?? 0;
         const index = geometry?.getIndex();
         const triangleCount = Math.floor((index?.count ?? vertexCount) / 3);
-        let finitePositions = Boolean(position);
+        let finitePositions = validatePositions ? Boolean(position) : true;
 
-        if (position) {
-          for (let i = 0; i < position.count; i += 1) {
-            if (!Number.isFinite(position.getX(i)) || !Number.isFinite(position.getY(i)) || !Number.isFinite(position.getZ(i))) {
+        // Read the backing typed array directly to avoid repeated getX/getY/getZ calls.
+        if (validatePositions && position) {
+          const array = position.array as ArrayLike<number>;
+          const itemSize = position.itemSize;
+          for (let i = 0, offset = 0; i < position.count; i += 1, offset += itemSize) {
+            if (
+              !Number.isFinite(array[offset]) ||
+              !Number.isFinite(array[offset + 1]) ||
+              !Number.isFinite(array[offset + 2])
+            ) {
               finitePositions = false;
               break;
             }
@@ -74,7 +90,16 @@ export function createAurumGeometryEngine(): AurumGeometryEngine {
         const normalsValid = hasNormals && normal!.count === vertexCount;
         if (!normalsValid) meshesMissingNormals += 1;
         if (!finitePositions) meshesWithInvalidPositions += 1;
-        if (mesh.visible) visibleMeshCount += 1;
+
+        // Match renderability semantics: a mesh is hidden if any ancestor is hidden.
+        let visible = true;
+        for (let ancestor: THREE.Object3D | null = mesh; ancestor; ancestor = ancestor.parent) {
+          if (!ancestor.visible) {
+            visible = false;
+            break;
+          }
+        }
+        if (visible) visibleMeshCount += 1;
         vertices += vertexCount;
         triangles += triangleCount;
         meshes.push(Object.freeze({
@@ -85,13 +110,13 @@ export function createAurumGeometryEngine(): AurumGeometryEngine {
           hasNormals,
           normalsValid,
           finitePositions,
-          visible: mesh.visible,
+          visible,
         }));
       });
 
-      const min = hasBounds ? bounds.min.toArray() as [number, number, number] : null;
-      const max = hasBounds ? bounds.max.toArray() as [number, number, number] : null;
-      const sizeVector = hasBounds ? bounds.getSize(new THREE.Vector3()) : null;
+      const min = hasBounds ? bounds!.min.toArray() as [number, number, number] : null;
+      const max = hasBounds ? bounds!.max.toArray() as [number, number, number] : null;
+      const sizeVector = hasBounds ? bounds!.getSize(new THREE.Vector3()) : null;
       const reportBounds = min && max && sizeVector
         ? Object.freeze({ min: Object.freeze(min), max: Object.freeze(max), size: Object.freeze(sizeVector.toArray() as [number, number, number]) })
         : null;
