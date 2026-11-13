@@ -22,9 +22,7 @@ export function getAurumEdgeAaProfile(
   const withinInteractiveBudget = tier !== "extreme";
   const enabled = mode === "capture"
     ? isHighQuality
-    : mode === "live"
-      ? quality !== "low" && withinInteractiveBudget
-      : quality !== "low" && withinInteractiveBudget;
+    : quality !== "low" && withinInteractiveBudget;
 
   return { mode, enabled, strength: enabled ? 0.035 : 0 };
 }
