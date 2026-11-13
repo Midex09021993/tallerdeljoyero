@@ -46,6 +46,7 @@ export async function createAurumPostPipeline(
   let dofPass:any=null;
   let outputPass:any=null;
   let fxaaPass:any=null;
+  let surfaceEdgeAaPass:any=null;
   let gemMaskPass:any=null;
   let gradingPass:any=null;
   let composerMsaaSamples=0;
@@ -385,9 +386,43 @@ export async function createAurumPostPipeline(
           gl_FragColor=vec4(mix(center.rgb,diagonal,blendAmount),center.a);
         }`,
     });
+    // Gem-specific AA keeps its categorical mask so metal pixels never bleed
+    // into gemstone edges. It is enabled only for settled/high-quality frames.
     fxaaPass.enabled=false;
     composer.addPass(gemMaskPass);
     composer.addPass(fxaaPass);
+
+    // Conservative full-surface edge AA for polished metal silhouettes and
+    // CAD curves. It is intentionally disabled during camera motion and uses
+    // a low blend strength to avoid softening specular detail.
+    surfaceEdgeAaPass=new FXAAShaderPass({
+      uniforms:{
+        tDiffuse:{value:null},
+        resolution:{value:new THREE.Vector2(1,1)},
+        strength:{value:0.075},
+        edgeThreshold:{value:0.16},
+      },
+      vertexShader:`varying vec2 vUv; void main(){vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
+      fragmentShader:`uniform sampler2D tDiffuse; uniform vec2 resolution; uniform float strength; uniform float edgeThreshold; varying vec2 vUv;
+        float edgeLuma(vec3 c){return dot(c,vec3(0.2126,0.7152,0.0722));}
+        void main(){
+          vec4 center=texture2D(tDiffuse,vUv);
+          vec2 px=max(resolution,vec2(0.000001));
+          vec3 n0=texture2D(tDiffuse,vUv+vec2(-px.x,-px.y)).rgb;
+          vec3 n1=texture2D(tDiffuse,vUv+vec2( px.x,-px.y)).rgb;
+          vec3 n2=texture2D(tDiffuse,vUv+vec2(-px.x, px.y)).rgb;
+          vec3 n3=texture2D(tDiffuse,vUv+vec2( px.x, px.y)).rgb;
+          float centerLuma=edgeLuma(center.rgb);
+          float lo=min(centerLuma,min(min(edgeLuma(n0),edgeLuma(n1)),min(edgeLuma(n2),edgeLuma(n3))));
+          float hi=max(centerLuma,max(max(edgeLuma(n0),edgeLuma(n1)),max(edgeLuma(n2),edgeLuma(n3))));
+          float edge=smoothstep(edgeThreshold,edgeThreshold*2.0,hi-lo);
+          vec3 diagonal=(n0+n1+n2+n3)*0.25;
+          float blendAmount=edge*strength;
+          gl_FragColor=vec4(mix(center.rgb,diagonal,blendAmount),center.a);
+        }`,
+    });
+    surfaceEdgeAaPass.enabled=false;
+    composer.addPass(surfaceEdgeAaPass);
 
     const { OutputPass }=await import("three/examples/jsm/postprocessing/OutputPass.js");
     outputPass=new OutputPass();
@@ -398,7 +433,7 @@ export async function createAurumPostPipeline(
     console.error("[AURUM][POST] No se pudo inicializar el compositor fotográfico; se usará render directo.", error);
     lutPass?.lut?.dispose?.();
     composer?.dispose?.();
-    composer=null; renderPass=null; taaPass=null; ssrPass=null; ssrSavePass=null; ssrCompositePass=null; ssaoPass=null; bloomPass=null; lutPass=null; gradingPass=null; vignettePass=null; dofPass=null; outputPass=null;
+    composer=null; renderPass=null; taaPass=null; ssrPass=null; ssrSavePass=null; ssrCompositePass=null; ssaoPass=null; bloomPass=null; lutPass=null; gradingPass=null; vignettePass=null; dofPass=null; outputPass=null; fxaaPass=null; surfaceEdgeAaPass=null; gemMaskPass=null;
   }
 
   const diagnosticParams = typeof window !== "undefined"
@@ -444,6 +479,12 @@ export async function createAurumPostPipeline(
     const isLowQuality=qualityId==="low" || (qualityId==="" && Number(q?.pixelRatio??1.5) <= 1.01);
     taaRequested=Boolean(options.capture) || (config.taa===true && config.temporalAA!==false && !isLowQuality);
     const taaEnabled=taaRequested && !temporalMotionActive;
+    // Edge AA is a settled-quality treatment: never add fullscreen filtering
+    // work to the direct-render orbit path. Still captures may use it explicitly.
+    const edgeAaEnabled=high && (!temporalMotionActive || Boolean(options.capture));
+    if(gemMaskPass) gemMaskPass.enabled=edgeAaEnabled;
+    if(fxaaPass) fxaaPass.enabled=edgeAaEnabled;
+    if(surfaceEdgeAaPass) surfaceEdgeAaPass.enabled=edgeAaEnabled;
     // Keep the interactive/settled preview responsive with one convergence frame.
     // Still captures retain the full 32-frame temporal budget for final image quality.
     const progressiveFrames=options.capture
@@ -452,11 +493,22 @@ export async function createAurumPostPipeline(
     const taaSampleLevel=Math.max(0,Math.min(5,Math.ceil(Math.log2(progressiveFrames))));
     const ssrEnabled=!options.capture && (diagnosticForceSSR || (!diagnosticDisableSSR && Boolean(config.ssr))) && high && Boolean(ssrPass) && Boolean(ssrSavePass) && Boolean(ssrCompositePass);
     if(renderPass) renderPass.enabled=true;
-    if(fxaaPass){
-      const width=Math.max(1,renderer.domElement.width||renderer.domElement.clientWidth||1);
-      const height=Math.max(1,renderer.domElement.height||renderer.domElement.clientHeight||1);
-      fxaaPass.material.uniforms.resolution.value.set(1/width,1/height);
-    }
+    const updateEdgeAaResolution=()=>{
+      // Use the actual composer target dimensions (including capture sizing),
+      // not CSS dimensions, so one shader texel maps to one output pixel.
+      const target=composer?.renderTarget1??composer?.readBuffer;
+      const width=Math.max(1,Number(target?.width)||Number(renderer.domElement.width)||Number(renderer.domElement.clientWidth)||1);
+      const height=Math.max(1,Number(target?.height)||Number(renderer.domElement.height)||Number(renderer.domElement.clientHeight)||1);
+      const inverseWidth=1/width;
+      const inverseHeight=1/height;
+      if(fxaaPass?.material?.uniforms?.resolution?.value){
+        fxaaPass.material.uniforms.resolution.value.set(inverseWidth,inverseHeight);
+      }
+      if(surfaceEdgeAaPass?.material?.uniforms?.resolution?.value){
+        surfaceEdgeAaPass.material.uniforms.resolution.value.set(inverseWidth,inverseHeight);
+      }
+    };
+    updateEdgeAaResolution();
     if(taaPass){
       taaPass.enabled=taaEnabled;
       taaPass.accumulate=taaEnabled;
@@ -550,6 +602,7 @@ export async function createAurumPostPipeline(
     }else{
       composer.setSize?.(renderer.domElement.clientWidth||renderer.domElement.width,renderer.domElement.clientHeight||renderer.domElement.height);
     }
+    updateEdgeAaResolution();
     if(ssaoPass && !options.capture){
       // Composer sizes every pass at the full output resolution. Reapply the
       // intentional SSAO quality scale once so AO does not silently move to full DPR.
@@ -690,5 +743,5 @@ export async function createAurumPostPipeline(
     if(!ssrPass)return;
     ssrPass.selects=Array.isArray(objects)?objects:[];
   };
-  return {composer,renderPass,ssaoPass,ssrPass,ssrSavePass,ssrCompositePass,bloomPass,setSSRSelects,applyQuality,updateTemporal,resetTemporalAccumulation,setTemporalMotion,dofPass,taaPass,fxaaPass,gemMaskPass,outputPass,msaaSamples:composerMsaaSamples};
+  return {composer,renderPass,ssaoPass,ssrPass,ssrSavePass,ssrCompositePass,bloomPass,setSSRSelects,applyQuality,updateTemporal,resetTemporalAccumulation,setTemporalMotion,dofPass,taaPass,fxaaPass,surfaceEdgeAaPass,gemMaskPass,outputPass,msaaSamples:composerMsaaSamples};
 }
