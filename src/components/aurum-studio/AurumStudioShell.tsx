@@ -3,7 +3,8 @@ import { ArrowLeft, Box, Camera, Download, FolderOpen, Layers3, LoaderCircle, Ma
 import { Link } from "@tanstack/react-router";
 
 type ThreepipeViewer = {
-  load: (url: string, options?: { autoCenter?: boolean; autoScale?: boolean }) => Promise<unknown>;
+  load: (asset: string | File | Blob, options?: { autoCenter?: boolean; autoScale?: boolean }) => Promise<any>;
+  addPluginSync: (plugin: unknown) => unknown;
   dispose: () => void;
 };
 
@@ -28,16 +29,32 @@ export default function AurumStudioShell() {
       const canvas = canvasRef.current;
       if (!canvas) return;
       try {
-        setStatus("Cargando Threepipe 0.6.0…");
+        setStatus("Cargando Threepipe 0.6.0 + Rhino3dmLoadPlugin…");
         // Keep Threepipe isolated from the existing Three.js/AURUM RENDER bundle.
         const module = await import(/* @vite-ignore */ THREEPIPE_URL) as {
           ThreeViewer: new (options: { canvas: HTMLCanvasElement }) => ThreepipeViewer;
+          Rhino3dmLoadPlugin: new () => {
+            importMaterials: boolean;
+            forceLayerMaterials: boolean;
+            hideLineMesh: boolean;
+            hidePointMesh: boolean;
+            replaceWithInstancedMesh: boolean;
+          };
         };
         if (cancelled) return;
         activeViewer = new module.ThreeViewer({ canvas });
+        // Use Threepipe's native Rhino importer for a clean A/B comparison
+        // against the previous AURUM RENDER conversion adapter.
+        const rhinoPlugin = new module.Rhino3dmLoadPlugin();
+        rhinoPlugin.importMaterials = true;
+        rhinoPlugin.forceLayerMaterials = true;
+        rhinoPlugin.hideLineMesh = true;
+        rhinoPlugin.hidePointMesh = true;
+        rhinoPlugin.replaceWithInstancedMesh = false;
+        activeViewer.addPluginSync(rhinoPlugin);
         viewerRef.current = activeViewer;
         setEngineReady(true);
-        setStatus("Visor listo · Importa un modelo GLB");
+        setStatus("Visor listo · Importador Rhino nativo activo");
       } catch (cause) {
         console.error("[AURUM STUDIO] No se pudo inicializar Threepipe", cause);
         if (!cancelled) {
@@ -67,30 +84,45 @@ export default function AurumStudioShell() {
     }
     setBusy(true);
     setError("");
-    setStatus(extension === "3dm" ? "Preparando archivo Rhino…" : "Cargando modelo…");
-    let url: string | null = null;
+    setStatus(extension === "3dm" ? "Importando 3DM con Rhino3dmLoadPlugin nativo…" : "Cargando modelo…");
+    const startedAt = performance.now();
     try {
-      let modelBlob: Blob = file;
-      if (extension === "3dm") {
-        // Load the shared AURUM CAD pipeline only when a Rhino file is selected.
-        // The conversion produces an in-memory GLB; STUDIO keeps its own renderer.
-        const { prepareAurumStudio3dm } = await import("@/lib/aurum-studio/import-3dm");
-        modelBlob = await prepareAurumStudio3dm(file, (message) => setStatus(message));
-      }
-      if (!viewerRef.current) throw new Error("El visor se cerró antes de terminar la importación.");
-      url = URL.createObjectURL(modelBlob);
-      await viewerRef.current.load(url, { autoCenter: true, autoScale: true });
-      if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
-      objectUrlRef.current = url;
-      url = null;
+      // Threepipe AssetManager accepts local File/Blob inputs directly.
+      // No conversion to GLB and no AURUM RENDER parser in this native test path.
+      const loaded = await viewerRef.current.load(file, { autoCenter: true, autoScale: true });
+      const elapsedMs = Math.round(performance.now() - startedAt);
+      let meshes = 0;
+      let triangles = 0;
+      let namedObjects = 0;
+      let rhinoMetadata = 0;
+      loaded?.traverse?.((node: any) => {
+        if (String(node?.name ?? "").trim()) namedObjects++;
+        if (node?.userData?.attributes || node?.userData?.layerIndex !== undefined) rhinoMetadata++;
+        if (!node?.isMesh || !node.geometry) return;
+        meshes++;
+        const position = node.geometry.getAttribute?.("position");
+        const index = node.geometry.getIndex?.();
+        triangles += Math.floor((index?.count ?? position?.count ?? 0) / 3);
+      });
+      console.info("[AURUM STUDIO][NATIVE RHINO IMPORT]", {
+        file: file.name,
+        bytes: file.size,
+        durationMs: elapsedMs,
+        meshes,
+        triangles,
+        namedObjects,
+        nodesWithRhinoMetadata: rhinoMetadata,
+        importer: extension === "3dm" ? "Threepipe Rhino3dmLoadPlugin" : "Threepipe AssetManager",
+      });
       setFileName(file.name);
-      setStatus(extension === "3dm" ? "3DM procesado · GLB temporal cargado" : "Modelo cargado correctamente");
+      setStatus(extension === "3dm"
+        ? `3DM nativo cargado · ${meshes} mallas · ${elapsedMs} ms`
+        : "Modelo cargado correctamente");
     } catch (cause) {
-      console.error("[AURUM STUDIO] Error importando modelo", cause);
+      console.error("[AURUM STUDIO] Error importando modelo con Threepipe nativo", cause);
       setError(cause instanceof Error ? cause.message : "No se pudo importar el modelo. Verifica el archivo e inténtalo nuevamente.");
       setStatus("Error al importar");
     } finally {
-      if (url) URL.revokeObjectURL(url);
       setBusy(false);
     }
   }
@@ -123,7 +155,7 @@ export default function AurumStudioShell() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="hidden text-xs text-white/45 md:inline">Threepipe 0.6.0 · Modo aislado</span>
+          <span className="hidden text-xs text-white/45 md:inline">Threepipe 0.6.0 · Rhino nativo</span>
           <button type="button" onClick={capture} disabled={!engineReady} className="inline-flex h-9 items-center gap-2 rounded-lg border border-white/10 px-3 text-xs font-medium text-white/75 transition hover:bg-white/5 disabled:opacity-40">
             <Camera className="size-4" /><span className="hidden sm:inline">Capturar</span>
           </button>
@@ -151,7 +183,7 @@ export default function AurumStudioShell() {
                 <div className="max-w-sm text-center text-[#454b55]">
                   <div className="mx-auto mb-4 grid size-16 place-items-center rounded-2xl border border-black/10 bg-white/65 shadow-sm"><Box className="size-8 text-[#a18449]"/></div>
                   <h2 className="text-lg font-semibold">Tu espacio de diseño 3D</h2>
-                  <p className="mt-2 text-sm text-[#68707b]">Importa un modelo Rhino 3DM, GLB o GLTF para comenzar a explorar AURUM STUDIO.</p>
+                  <p className="mt-2 text-sm text-[#68707b]">Importa directamente un archivo Rhino 3DM con el motor nativo de Threepipe, o carga GLB/GLTF.</p>
                   <button type="button" onClick={() => fileInputRef.current?.click()} disabled={!engineReady} className="pointer-events-auto mt-5 inline-flex h-11 items-center gap-2 rounded-xl bg-[#b99652] px-5 text-sm font-semibold text-[#17130b] shadow-sm transition hover:bg-[#c9aa6c] disabled:opacity-50"><FolderOpen className="size-4"/> Importar modelo</button>
                 </div>
               </div>
