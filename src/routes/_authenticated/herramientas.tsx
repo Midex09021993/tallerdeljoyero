@@ -358,7 +358,7 @@ function HerramientasPage() {
                       <div className="rounded-lg border border-border p-3"><p className="text-xs font-semibold">Scene Adapter</p><p className="mt-1 text-[10px] text-emerald-700 dark:text-emerald-400">Conectado</p></div>
                       <div className="rounded-lg border border-border p-3"><p className="text-xs font-semibold">Light Engine</p><p className="mt-1 text-[10px] text-emerald-700 dark:text-emerald-400">Conectado</p></div>
                       <div className="rounded-lg border border-border p-3"><p className="text-xs font-semibold">Metal Engine</p><p className="mt-1 text-[10px] text-emerald-700 dark:text-emerald-400">Conectado</p></div>
-                      <div className="rounded-lg border border-border p-3"><p className="text-xs font-semibold">Gem Engine</p><p className="mt-1 text-[10px] text-muted-foreground">Siguiente fase</p></div>
+                      <div className="rounded-lg border border-border p-3"><p className="text-xs font-semibold">Gem Engine</p><p className="mt-1 text-[10px] text-emerald-700 dark:text-emerald-400">Conectado</p></div>
                       <div className="rounded-lg border border-border p-3"><p className="text-xs font-semibold">Final Render Pipeline</p><p className="mt-1 text-[10px] text-muted-foreground">Siguiente fase</p></div>
                     </div>
                   </div>
@@ -368,7 +368,7 @@ function HerramientasPage() {
                     <p className="mt-1 text-[10px] text-muted-foreground">Escena · Cámara · Renderer · Controles · Geometría · Materiales · HDRI · GPU</p>
                   </div>
                 </div>
-                <p className="mx-auto mt-3 max-w-4xl text-[11px] leading-5 text-muted-foreground">Viewer Adapter, Scene Adapter, Lighting Adapter y Metal Adapter ya exponen el visor, las escenas, la iluminación y el motor PBR de metales mediante contratos estables. El motor conserva sus perfiles y calibraciones de producción; Gem Engine y Final Render Pipeline se conectarán progresivamente.</p>
+                <p className="mx-auto mt-3 max-w-4xl text-[11px] leading-5 text-muted-foreground">Viewer Adapter, Scene Adapter, Lighting Adapter, Metal Adapter y Gem Adapter ya exponen el visor, las escenas, la iluminación y los motores de materiales mediante contratos estables. Gem Adapter delega en los perfiles ópticos de producción; shaders, BVH, HDRI, dispersión, inclusiones y calibraciones permanecen en sus módulos especializados. Final Render Pipeline seguirá en la siguiente fase.</p>
               </div>
               <div className="grid gap-3 p-5 sm:grid-cols-2 sm:p-7 lg:grid-cols-3">
                 <article className="rounded-xl border border-border p-4">
