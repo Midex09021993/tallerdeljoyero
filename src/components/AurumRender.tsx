@@ -3622,8 +3622,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
     }
     apiRef.current=null;
     onCatalogApiReadyRef.current?.(null);
-    gemTransitionRef.current?.cancel();
-    gemTransitionRef.current=null;
     viewerInteractionActiveRef.current=false;
     viewerLoopRef.current=null;
     setPerformanceRenderer(null);
