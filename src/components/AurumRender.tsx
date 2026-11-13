@@ -1584,6 +1584,15 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           return false;
         }
 
+        // Preserve the existing procedural-inclusion visibility policy for
+        // emerald grades while keeping this work out of the material hot path.
+        setAurumInclusionsVisible(target, false);
+        setAurumEmeraldInclusionsVisible(target, false);
+        const selectedEmeraldId=String(g?.id??"");
+        if(selectedEmeraldId==="esmeralda_3" || selectedEmeraldId==="esmeralda_inclusiones"){
+          setAurumEmeraldInclusionsVisible(target, true, selectedEmeraldId);
+        }
+
         // Paint the catalog material immediately. BVH shader preparation is an
         // optional refinement and must never sit in front of this first frame.
         if(renderImmediately) viewerLoopRef.current?.renderNow?.();
