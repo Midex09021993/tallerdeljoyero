@@ -700,6 +700,11 @@ export async function createAurumPostPipeline(
     const next=Boolean(moving);
     const changed=next!==temporalMotionActive;
     temporalMotionActive=next;
+    const settledHighQuality=diagnosticMode==="environment" || lastKnownQualityId==="high" || lastKnownQualityId==="ultra";
+    const edgeAaEnabled=shouldEnableAurumEdgeAa(settledHighQuality,next);
+    if(gemMaskPass) gemMaskPass.enabled=edgeAaEnabled;
+    if(fxaaPass) fxaaPass.enabled=edgeAaEnabled;
+    if(surfaceEdgeAaPass) surfaceEdgeAaPass.enabled=edgeAaEnabled;
     if(!taaPass)return;
     // Hard-disable temporal accumulation on every interaction start, even if
     // a previous state transition left the motion flag unchanged.
