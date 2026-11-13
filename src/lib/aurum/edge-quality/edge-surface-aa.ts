@@ -2,15 +2,15 @@
  * AURUM EDGE QUALITY — conservative surface antialiasing.
  *
  * Applies a low-strength luminance-edge filter to the composed beauty image.
- * The pass is gated to settled/high-quality frames so orbit interaction keeps
- * using the viewer's direct-render fast path without extra fullscreen work.
+ * A shared profile policy gates the same subtle blend in LIVE and SETTLED
+ * states; extreme geometry budgets and Low quality disable the pass.
  */
 export function createAurumSurfaceEdgeAaPass(ShaderPass: any, three: any) {
   const pass = new ShaderPass({
     uniforms: {
       tDiffuse: { value: null },
       resolution: { value: new three.Vector2(1, 1) },
-      strength: { value: 0.075 },
+      strength: { value: 0.035 },
       edgeThreshold: { value: 0.16 },
     },
     vertexShader: `varying vec2 vUv; void main(){vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
