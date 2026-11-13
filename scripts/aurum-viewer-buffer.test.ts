@@ -471,6 +471,42 @@ test("the first settled model frame keeps the anti-aliasing composer active", ()
 });
 
 
+test("Aurum uses direct WebGL during camera motion and restores gem AA after motion", () => {
+  const componentSource = readFileSync("src/components/AurumRender.tsx", "utf8");
+  const start = componentSource.indexOf("onStart: () => {");
+  const end = componentSource.indexOf("onEnd: () => {", start);
+  const liveBlock = componentSource.slice(start, end);
+  const idleEnd = componentSource.indexOf("onStart:", end);
+  const idleBlock = componentSource.slice(end, idleEnd > end ? idleEnd : end + 16000);
+
+  expect(start).toBeGreaterThan(-1);
+  expect(liveBlock).toContain("liveFastPathRef.current = true;");
+  expect(liveBlock).toContain("pass.enabled = false");
+  expect(liveBlock).not.toContain("liveFxaaEnabled");
+  expect(liveBlock).not.toContain("pass === gemMaskPass");
+  expect(idleBlock).toContain("pass === gemMaskPass");
+  expect(idleBlock).toContain("pass === fxaaPass");
+  expect(idleBlock).toContain("liveFastPathRef.current = extremeGeometry;");
+});
+
+test("the BVH camera update reuses fixed-size snapshots without per-frame arrays", () => {
+  const bvhSource = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
+  expect(bvhSource).toContain("const cameraStateBuffer = new Float64Array(12);");
+  expect(bvhSource).toContain("const lastCameraState = new Float64Array(12);");
+  expect(bvhSource).toContain("cameraStateBuffer[11] = camera.far ?? 0;");
+  expect(bvhSource).toContain("lastCameraState.set(nextCameraState);");
+  expect(bvhSource).not.toContain("const readCameraState = (): number[]");
+});
+
+test("selection highlight changes do not invalidate the gemstone mask cache", () => {
+  const componentSource = readFileSync("src/components/AurumRender.tsx", "utf8");
+  const selectionStart = componentSource.indexOf("const limpiarResaltado = () => {");
+  const selectionEnd = componentSource.indexOf("const seleccionarPorClick", selectionStart);
+  const selectionBlock = componentSource.slice(selectionStart, selectionEnd);
+  expect(selectionStart).toBeGreaterThan(-1);
+  expect(selectionBlock).not.toContain("gemMaskPass?.refreshCache?.();");
+});
+
 test("the settled viewport preserves the LIVE diamond appearance", () => {
   const componentSource = readFileSync("src/components/AurumRender.tsx", "utf8");
   const idleStart = componentSource.indexOf("onEnd: () => {");
