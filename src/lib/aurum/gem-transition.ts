@@ -73,7 +73,7 @@ export function createAurumGemTransition(
   const tracks: Array<{ material: any; from: GemMaterialSnapshot; to: GemMaterialSnapshot }> = [];
 
   const visit = (mesh: any) => {
-    if (!mesh?.isMesh || mesh.userData?.aurumInternalInclusion) return;
+    if (!mesh?.isMesh || mesh.userData?.aurumInternalInclusion || !mesh.userData?.aurumActiveGemId) return;
     materialList(mesh).forEach((material, materialIndex) => {
       if (!material?.isMeshPhysicalMaterial) return;
       const from = previousByKey.get(`${mesh.uuid}:${materialIndex}`);
