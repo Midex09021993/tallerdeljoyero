@@ -2,7 +2,6 @@ import {
   configureAurumEdgeQuality,
   createAurumSurfaceEdgeAaPass,
   setAurumEdgeAaResolution,
-  shouldEnableAurumEdgeAa,
   getAurumEdgeAaProfile,
 } from "./edge-quality";
 
