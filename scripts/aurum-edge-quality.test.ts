@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test";
 import { inspectAurumEdgeCapabilities } from "../src/lib/aurum/edge-quality/edge-capabilities";
 import { configureAurumComposerMsaa } from "../src/lib/aurum/edge-quality/edge-msaa";
+import { setAurumEdgeAaResolution, shouldEnableAurumEdgeAa } from "../src/lib/aurum/edge-quality/edge-surface-aa";
 
 test("AURUM edge capabilities clamp requested MSAA to WebGL2 device limits", () => {
   expect(inspectAurumEdgeCapabilities({ capabilities: { isWebGL2: true, maxSamples: 8 } }, 4)).toEqual({
@@ -67,4 +68,19 @@ test("AURUM composer MSAA safely falls back when composer targets are missing", 
     4,
   );
   expect(result).toEqual({ activeSamples: 0, targetCount: 0, supported: false });
+});
+
+
+test("AURUM surface edge AA is enabled only for settled high-quality frames or still captures", () => {
+  expect(shouldEnableAurumEdgeAa(true, false, false)).toBe(true);
+  expect(shouldEnableAurumEdgeAa(true, true, false)).toBe(false);
+  expect(shouldEnableAurumEdgeAa(false, false, false)).toBe(false);
+  expect(shouldEnableAurumEdgeAa(true, true, true)).toBe(true);
+});
+
+test("AURUM edge AA resolution uses physical target dimensions", () => {
+  const value = { x: 0, y: 0, set(x: number, y: number) { this.x = x; this.y = y; } };
+  setAurumEdgeAaResolution({ material: { uniforms: { resolution: { value } } } }, 2400, 1600);
+  expect(value.x).toBeCloseTo(1 / 2400);
+  expect(value.y).toBeCloseTo(1 / 1600);
 });
