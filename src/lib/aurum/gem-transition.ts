@@ -123,14 +123,6 @@ export function createAurumGemTransition(
     }
   };
 
-  const finish = () => {
-    apply(1);
-    active = false;
-    frameId = 0;
-    onFrame();
-    onComplete?.();
-  };
-
   const tick = (timestamp: number) => {
     frameId = 0;
     if (!active || paused) return;
