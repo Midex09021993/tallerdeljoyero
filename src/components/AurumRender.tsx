@@ -958,12 +958,19 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       let gemEnvironmentUrl = getAurumGemHdriUrl("ijewelGem");
       let gemEnvironmentRotation = 0;
       let gemEnvironmentIntensityScale = 1;
-      const aplicarEntornoGema = () => {
+      const aplicarEntornoGema = (targets?:readonly THREE.Mesh[]) => {
         if (!modelo || !entornoGema) return;
-        gemEnvironmentController.applyToModel(modelo, entornoGema, {
-          rotation: gemEnvironmentRotation,
-          intensityScale: gemEnvironmentIntensityScale,
-        });
+        if (targets?.length) {
+          gemEnvironmentController.applyToTargets(targets, entornoGema, {
+            rotation: gemEnvironmentRotation,
+            intensityScale: gemEnvironmentIntensityScale,
+          });
+        } else {
+          gemEnvironmentController.applyToModel(modelo, entornoGema, {
+            rotation: gemEnvironmentRotation,
+            intensityScale: gemEnvironmentIntensityScale,
+          });
+        }
         invalidateRenderRef.current?.();
       };
       let gemEnvironmentRequestId = 0;
