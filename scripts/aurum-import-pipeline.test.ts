@@ -23,7 +23,27 @@ test("geometry engine reports visible mesh metrics without mutating source buffe
   geometry.dispose();
 });
 
-test("geometry engine flags missing normals and non-finite positions", () => {
+test("geometry engine respects hidden ancestors and supports the import fast path", () => {
+  const root = new THREE.Group();
+  const hiddenParent = new THREE.Group();
+  hiddenParent.visible = false;
+  const geometry = new THREE.BoxGeometry();
+  hiddenParent.add(new THREE.Mesh(geometry, new THREE.MeshBasicMaterial()));
+  root.add(hiddenParent);
+
+  const report = createAurumGeometryEngine().inspect(root, {
+    includeBounds: false,
+    validatePositions: false,
+  });
+  expect(report.meshCount).toBe(1);
+  expect(report.visibleMeshCount).toBe(0);
+  expect(report.meshes[0].visible).toBe(false);
+  expect(report.bounds).toBeNull();
+  expect(report.meshes[0].finitePositions).toBe(true);
+  geometry.dispose();
+});
+
+test("geometry engine flags missing normals and non-finite positions in diagnostic mode", () => {
   const root = new THREE.Group();
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute("position", new THREE.Float32BufferAttribute([0, 0, 0, 1, 0, 0, Number.NaN, 1, 0], 3));
@@ -35,7 +55,7 @@ test("geometry engine flags missing normals and non-finite positions", () => {
   geometry.dispose();
 });
 
-test("import pipeline manager sequences import and read-only geometry inspection", async () => {
+test("import pipeline manager returns a complete, ordered stage history", async () => {
   const model = new THREE.Group();
   model.add(new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial()));
   const calls: string[] = [];
@@ -44,7 +64,7 @@ test("import pipeline manager sequences import and read-only geometry inspection
     version: "1.0.0",
     load: async () => {
       calls.push("import");
-      return { sourceObject: model, model, format: "3dm" as const, pipeline: ["source-decoded"] };
+      return { sourceObject: model, model, format: "3dm" as const, pipeline: ["source-decoded", "source-converted-to-glb", "converted-model-normalized"] };
     },
   } as AurumImportPlugin;
   const manager = createAurumImportPipelineManager(importer, createAurumGeometryEngine());
@@ -59,7 +79,15 @@ test("import pipeline manager sequences import and read-only geometry inspection
   });
   expect(calls).toEqual(["import"]);
   expect(result.geometry.meshCount).toBe(1);
-  expect(result.pipeline).toEqual(["source-decoded", "geometry-inspected"]);
+  expect(result.geometry.visibleMeshCount).toBe(1);
+  expect(result.geometry.bounds).toBeNull();
+  expect(result.pipeline).toEqual([
+    "import-started",
+    "source-decoded",
+    "source-converted-to-glb",
+    "converted-model-normalized",
+    "geometry-inspected",
+  ]);
   expect(stages).toEqual(["import-started", "geometry-inspected"]);
   model.traverse((node) => {
     if ((node as THREE.Mesh).isMesh) (node as THREE.Mesh).geometry.dispose();
