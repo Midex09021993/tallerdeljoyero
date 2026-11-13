@@ -368,7 +368,7 @@ function HerramientasPage() {
                     <p className="mt-1 text-[10px] text-muted-foreground">Escena · Cámara · Renderer · Controles · Geometría · Materiales · HDRI · GPU</p>
                   </div>
                 </div>
-                <p className="mx-auto mt-3 max-w-4xl text-[11px] leading-5 text-muted-foreground">Viewer Adapter, Scene Adapter y Lighting Adapter ya exponen el visor, las escenas y el controlador de iluminación mediante contratos estables. Los motores de materiales y gemas siguen funcionando con su implementación actual y se conectarán progresivamente, sin reemplazar ni recalibrar el motor óptico de producción en esta etapa.</p>
+                <p className="mx-auto mt-3 max-w-4xl text-[11px] leading-5 text-muted-foreground">Viewer Adapter, Scene Adapter, Lighting Adapter y Metal Adapter ya exponen el visor, las escenas, la iluminación y el motor PBR de metales mediante contratos estables. El motor conserva sus perfiles y calibraciones de producción; Gem Engine y Final Render Pipeline se conectarán progresivamente.</p>
               </div>
               <div className="grid gap-3 p-5 sm:grid-cols-2 sm:p-7 lg:grid-cols-3">
                 <article className="rounded-xl border border-border p-4">
