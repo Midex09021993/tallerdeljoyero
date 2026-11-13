@@ -1238,7 +1238,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         }
         renderer.setPixelRatio(dpr);
         composer?.setPixelRatio?.(dpr);
-        applyPostQuality?.({...renderQuality, pixelRatio:dpr, qualityId:id});
+        applyPostQuality?.({...renderQuality, pixelRatio:dpr, qualityId:id, runtimeBudgetTier:runtimeBudget.tier});
         liveTransmissionScaleRef.current=transmissionScale;
         (renderer as any).transmissionResolutionScale=transmissionScale;
         renderer.shadowMap.enabled=liveFastPathRef.current ? false : renderQuality.shadows;
@@ -1445,7 +1445,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       });
       // La escena es la fuente de verdad también para la estrategia de iluminación.
       lightingController.applyPreset(photoInicial.lighting);
-      applyPostQuality?.({...renderQuality, qualityId: renderQualityId});
+      applyPostQuality?.({...renderQuality, qualityId: renderQualityId, runtimeBudgetTier:runtimeBudget.tier});
 
       let parteActiva:any = null;
       let resaltado:any = null;
