@@ -257,6 +257,7 @@ function HerramientasPage() {
                   ) : null}
           </>
         ) : mostrarIntroAurumRender ? (
+          <>
           <section className="mx-auto w-full max-w-[1200px] overflow-hidden rounded-2xl border border-border bg-card shadow-card">
             <div className="relative overflow-hidden border-b border-border bg-gradient-to-br from-gold/10 via-card to-card px-6 py-10 sm:px-10 sm:py-14">
               <div className="max-w-3xl">
@@ -364,6 +365,7 @@ function HerramientasPage() {
               </div>
             </section>
           ) : null}
+          </>
         ) : mostrarIntroAurumTransfer ? (
           <section className="mx-auto w-full max-w-[1200px] overflow-hidden rounded-2xl border border-border bg-card shadow-card">
             <div className="relative overflow-hidden border-b border-border bg-gradient-to-br from-gold/10 via-card to-card px-6 py-10 sm:px-10 sm:py-14">
