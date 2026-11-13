@@ -258,6 +258,13 @@ const getAurumGemLayerIndex=(modelRoot:any):AurumGemLayerIndex=>{
   return index;
 };
 
+export const prepareAurumGemLayerIndex=(model:any)=>{
+  let root=model;
+  while(root?.parent)root=root.parent;
+  if(root&&typeof root==="object")return getAurumGemLayerIndex(root);
+  return null;
+};
+
 export const invalidateAurumGemLayerIndex=(model:any)=>{
   let root=model;
   while(root?.parent)root=root.parent;
