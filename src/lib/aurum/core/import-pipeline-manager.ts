@@ -29,12 +29,36 @@ export function createAurumImportPipelineManager(
     version: "1.0.0" as const,
     async load(request: AurumImportRequest): Promise<AurumImportPipelineResult> {
       const stages = ["import-started"];
+      const throwIfAborted = () => {
+        if (request.signal?.aborted) {
+          const error = new Error("La importación fue cancelada.");
+          error.name = "AbortError";
+          throw error;
+        }
+      };
+      const disposeImportedGeometry = (result: AurumImportResult) => {
+        const disposed = new Set<object>();
+        for (const root of [result.sourceObject, result.model]) {
+          root.traverse((node) => {
+            const mesh = node as import("three").Mesh;
+            const geometry = mesh.geometry;
+            if (geometry?.isBufferGeometry && !disposed.has(geometry)) {
+              disposed.add(geometry);
+              geometry.dispose();
+            }
+          });
+        }
+      };
+      throwIfAborted();
       request.onStage?.("import-started", { fileName: request.file.name, format: request.format });
       const imported = await importer.load(request);
+      try {
+        throwIfAborted();
 
       // Cheap metadata triage runs on every import; it never computes topology.
       request.onProgress?.("Clasificando geometría...");
       const smartScan = createAurumSmartScan().inspect(imported.model);
+      throwIfAborted();
       stages.push(...imported.pipeline, "smart-scan-complete");
       request.onStage?.("smart-scan-complete", {
         meshes: smartScan.meshCount,
@@ -60,6 +84,7 @@ export function createAurumImportPipelineManager(
 
       request.onProgress?.("Comprobando geometría...");
       const geometryReport = geometry.inspect(imported.model);
+      throwIfAborted();
       stages.push("geometry-inspected");
       request.onStage?.("geometry-inspected", {
         meshes: geometryReport.meshCount, visibleMeshes: geometryReport.visibleMeshCount,
@@ -70,6 +95,7 @@ export function createAurumImportPipelineManager(
 
       request.onProgress?.("Analizando uniones entre superficies...");
       const surfaceReport = createAurumSurfaceEngine().inspect(imported.model, { tolerance: 1e-5, maxEdges: 250_000 });
+      throwIfAborted();
       stages.push("surface-inspected");
       request.onStage?.("surface-inspected", {
         meshes: surfaceReport.meshCount, boundaryEdges: surfaceReport.boundaryEdges,
@@ -83,6 +109,7 @@ export function createAurumImportPipelineManager(
       const solidReport = createAurumSolidEngine().inspect(imported.model, {
         tolerance: 1e-5, maxPairs: 10_000, maxSamplesPerBody: 96,
       });
+      throwIfAborted();
       stages.push("solid-inspected");
       request.onStage?.("solid-inspected", {
         bodies: solidReport.bodyCount, closedSolids: solidReport.closedSolidCount,
@@ -98,6 +125,7 @@ export function createAurumImportPipelineManager(
       const intersectionReport = createAurumIntersectionEngine().inspect(imported.model, solidReport, {
         tolerance: 1e-5, maxTrianglePairTests: 2_000_000, leafSize: 8,
       });
+      throwIfAborted();
       stages.push("intersection-inspected");
       request.onStage?.("intersection-inspected", {
         totalPossiblePairs: intersectionReport.totalPossiblePairs,
@@ -113,6 +141,18 @@ export function createAurumImportPipelineManager(
         ...imported, smartScan, geometry: geometryReport, surface: surfaceReport,
         solid: solidReport, intersection: intersectionReport, pipeline: Object.freeze(stages),
       });
+      } catch (error) {
+        if (request.signal?.aborted) disposeImportedGeometry(imported);
+        try {
+          request.onStage?.("import-failed", {
+            reason: error instanceof Error ? error.message : String(error),
+            cancelled: request.signal?.aborted === true,
+          });
+        } catch {
+          // Progress observers must not replace the original import failure.
+        }
+        throw error;
+      }
     },
   });
 }
