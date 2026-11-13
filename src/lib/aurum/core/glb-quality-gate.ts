@@ -87,13 +87,13 @@ export function captureAurumGlbQualitySnapshot(root: THREE.Object3D): AurumGlbQu
     if (!mesh.isMesh || !isVisibleInTree(mesh)) return;
     meshCount += 1;
     if (isGemMesh(mesh)) gemMeshCount += 1;
-    const unionSources = Array.isArray(mesh.userData?.aurumUnionSource) ? mesh.userData.aurumUnionSource : null;
-    if (mesh.userData?.aurumMetalUnionExperiment === true && unionSources?.length) {
+    const unionSources = Array.isArray(mesh.userData?.["aurumUnionSource"]) ? (mesh.userData["aurumUnionSource"] as unknown[]) : null;
+    if (mesh.userData?.["aurumMetalUnionExperiment"] === true && unionSources?.length) {
       metalUnionMeshCount += 1;
       metalUnionSourceCount += unionSources.length;
       for (const source of unionSources) {
         const record = source as Record<string, unknown>;
-        const key = String(record.uuid ?? record.objectId ?? record.name ?? "").trim();
+        const key = String(record["uuid"] ?? record["objectId"] ?? record["name"] ?? "").trim();
         if (key) metalUnionSourceKeys.add(key);
       }
     }

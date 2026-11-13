@@ -20,8 +20,9 @@ interface GeometryFacts {
 const geometryCache = new WeakMap<THREE.BufferGeometry, GeometryFacts>();
 function geometrySignature(geometry: THREE.BufferGeometry): string {
   const p = geometry.getAttribute("position"), n = geometry.getAttribute("normal"), i = geometry.getIndex();
-  return [geometry.uuid, p?.version ?? -1, p?.count ?? -1, p?.itemSize ?? -1,
-    n?.version ?? -1, n?.count ?? -1, n?.itemSize ?? -1, i?.version ?? -1, i?.count ?? -1,
+  const version = (attr: unknown): number => (attr as { version?: number } | undefined)?.version ?? -1;
+  return [geometry.uuid, version(p), p?.count ?? -1, p?.itemSize ?? -1,
+    version(n), n?.count ?? -1, n?.itemSize ?? -1, i?.version ?? -1, i?.count ?? -1,
     geometry.groups.length].join(":");
 }
 function inspectGeometry(geometry: THREE.BufferGeometry): GeometryFacts {
@@ -40,11 +41,11 @@ function inspectGeometry(geometry: THREE.BufferGeometry): GeometryFacts {
   return facts;
 }
 function classifyFamily(mesh: THREE.Mesh): AurumSmartFamily {
-  const rhino = (mesh.userData?.aurumRhino ?? {}) as Record<string, unknown>;
+  const rhino = (mesh.userData?.["aurumRhino"] ?? {}) as Record<string, unknown>;
   const names = (Array.isArray(mesh.material) ? mesh.material : [mesh.material]).map((m) => m?.name ?? "").join(" ");
-  const value = [mesh.name, rhino.capa, rhino.categoria, names].join(" ").toLowerCase();
-  if (rhino.categoria === "gema" || /(gem|gema|piedra|diamond|diamante|zafiro|sapphire|rubi|rubí|ruby|esmeralda|emerald|moissanita|citrino|amatista|topacio)/.test(value)) return "gema";
-  if (rhino.categoria === "metal" || /(metal|oro|gold|plata|silver|platino|platinum|acero|steel)/.test(value)) return "metal";
+  const value = [mesh.name, rhino["capa"], rhino["categoria"], names].join(" ").toLowerCase();
+  if (rhino["categoria"] === "gema" || /(gem|gema|piedra|diamond|diamante|zafiro|sapphire|rubi|rubí|ruby|esmeralda|emerald|moissanita|citrino|amatista|topacio)/.test(value)) return "gema";
+  if (rhino["categoria"] === "metal" || /(metal|oro|gold|plata|silver|platino|platinum|acero|steel)/.test(value)) return "metal";
   return "otro";
 }
 function isVisible(mesh: THREE.Mesh): boolean {

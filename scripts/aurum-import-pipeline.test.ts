@@ -101,7 +101,7 @@ test("import pipeline includes geometry, surface, solid and BVH intersection dia
   expect(result.intersection?.candidatePairCount).toBe(1);
   expect(result.intersection?.intersectingPairCount).toBe(1);
   expect(result.pipeline.slice(-4)).toEqual(["geometry-inspected", "surface-inspected", "solid-inspected", "intersection-inspected"]);
-  expect(stages).toEqual(["import-started", "geometry-inspected", "surface-inspected", "solid-inspected", "intersection-inspected"]);
+  expect(stages).toEqual(["import-started", "smart-scan-complete", "geometry-inspected", "surface-inspected", "solid-inspected", "intersection-inspected"]);
   model.traverse((node) => {
     if ((node as THREE.Mesh).isMesh) (node as THREE.Mesh).geometry.dispose();
   });

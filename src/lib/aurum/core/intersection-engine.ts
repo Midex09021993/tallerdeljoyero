@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import type { AurumSolidReport } from "./solid-engine";
+import { buildAurumBroadphase } from "./broadphase";
 
 export type AurumIntersectionKind =
   | "disjoint"
@@ -24,7 +25,10 @@ export interface AurumIntersectionPairReport {
 
 export interface AurumIntersectionReport {
   readonly bodyCount: number;
+  readonly totalPossiblePairs: number;
   readonly candidatePairCount: number;
+  readonly prunedPairCount: number;
+  readonly fallbackPairCount: number;
   readonly intersectingPairCount: number;
   readonly trianglePairTests: number;
   readonly truncated: boolean;
@@ -117,6 +121,12 @@ function buildBvh(triangles: readonly Triangle[], leafSize: number): BvhNode | n
     ...(left ? { left } : {}),
     ...(right ? { right } : {}),
   };
+}
+
+function boxesOverlap(a: THREE.Box3, b: THREE.Box3, tolerance: number): boolean {
+  return a.min.x <= b.max.x + tolerance && a.max.x + tolerance >= b.min.x
+    && a.min.y <= b.max.y + tolerance && a.max.y + tolerance >= b.min.y
+    && a.min.z <= b.max.z + tolerance && a.max.z + tolerance >= b.min.z;
 }
 
 function projectTriangle(triangle: Triangle, axis: THREE.Vector3): [number, number] {
@@ -261,24 +271,24 @@ export function createAurumIntersectionEngine(): AurumIntersectionEngine {
       const pairs: AurumIntersectionPairReport[] = [];
       let trianglePairTests = 0;
       let truncated = false;
-      let candidatePairCount = 0;
-      outer: for (let i = 0; i < meshes.length; i += 1) {
-        for (let j = i + 1; j < meshes.length; j += 1) {
-          const a = meshes[i]!, b = meshes[j]!;
-          if (!boxesOverlap(a.bounds, b.bounds, tolerance)) continue;
-          candidatePairCount += 1;
-          if (!a.bvh || !b.bvh) continue;
-          const counter: PairCounter = { tests: 0, intersections: 0, truncated: false };
-          queryBvhPair(a.bvh, b.bvh, tolerance, maxTests - trianglePairTests, counter);
-          trianglePairTests += counter.tests;
-          truncated ||= counter.truncated;
-          pairs.push(classifyPair(a, b, counter.intersections, counter.tests, counter.truncated, solidReport));
-          if (truncated) break outer;
-        }
+      const broadphase = buildAurumBroadphase(meshes.map((mesh) => mesh.bounds), tolerance);
+      const candidatePairCount = broadphase.candidatePairs.length;
+      for (const pair of broadphase.candidatePairs) {
+        const a = meshes[pair.a]!, b = meshes[pair.b]!;
+        if (!a.bvh || !b.bvh) continue;
+        const counter: PairCounter = { tests: 0, intersections: 0, truncated: false };
+        queryBvhPair(a.bvh, b.bvh, tolerance, maxTests - trianglePairTests, counter);
+        trianglePairTests += counter.tests;
+        truncated ||= counter.truncated;
+        pairs.push(classifyPair(a, b, counter.intersections, counter.tests, counter.truncated, solidReport));
+        if (truncated) break;
       }
       return Object.freeze({
         bodyCount: meshes.length,
+        totalPossiblePairs: broadphase.totalPossiblePairs,
         candidatePairCount,
+        prunedPairCount: broadphase.prunedPairs,
+        fallbackPairCount: broadphase.fallbackPairs,
         intersectingPairCount: pairs.filter((pair) => pair.intersectingTrianglePairs > 0).length,
         trianglePairTests,
         truncated,
