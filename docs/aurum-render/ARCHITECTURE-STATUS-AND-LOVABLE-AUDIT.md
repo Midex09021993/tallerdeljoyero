@@ -270,6 +270,38 @@ El mapa de arquitectura de la sección interna de Herramientas se actualizó par
 - **Video Export / Image Export:** flujos separados que se conectan al visor productivo; no son plugins independientes del Registry.
 - **AURUM GEM TRANSITION:** suspendido. No reactivar.
 
+### Matriz de consumo productivo de los 12 módulos — revisión 2026-11-13
+
+Esta matriz diferencia registro en el host, consumo real de servicios y uso directo de controladores. El registro por sí solo no acredita que un consumidor utilice el contrato del módulo.
+
+| Módulo | Registro en host | Consumo productivo observado | Clasificación |
+|---|---|---|---|
+| `aurum.viewer` | Sí | Viewer Adapter obtiene scene/renderer; el loop y teardown siguen en AurumRender/viewer | Integrado como adaptador read-only |
+| `aurum.geometry` | Sí | Import Manager recibe Geometry Engine por inyección y ejecuta inspección opt-in | Integrado en importación/diagnóstico |
+| `aurum.import` | Sí | AurumRender resuelve `aurum.import.manager` y usa `load()` | Integrado en ruta productiva |
+| `aurum.scene` | Sí | Scene Adapter se usa para preset y fondo; el controlador conserva la lógica | Integrado como fachada |
+| `aurum.lighting` | Sí | El controlador productivo se usa directamente; el host publica sus servicios | Parcial: registro/fachada, consumidor principal aún acoplado |
+| `aurum.metal` | Sí | Material Application usa servicios adaptadores para operaciones de metal | Integrado por delegación; ownership de materiales externo |
+| `aurum.gem` | Sí | Material Application aplica gemas mediante su servicio de aplicación; óptica/BVH siguen en controladores especializados | Integrado por delegación; no autónomo |
+| `aurum.final-render` | Sí | AurumRender resuelve el loader desde el host al solicitar captura final | Integrado bajo demanda |
+| `aurum.glb-quality` | Sí | El Quality Gate se ejecuta dentro de `convertAurumToGlb()`; el host publica snapshots/evaluación como servicios | Integrado en exportación; la ruta usa el módulo directamente |
+| `aurum.edge-quality` | Sí | La configuración se aplica al construir el pipeline; el host publica la función | Integrado en pipeline, no se observó consumo por lookup del host |
+| `aurum.post` | Sí | AurumRender opera composer y controles del pipeline productivo; los servicios también se publican en el host | Integrado en producción; parte del consumo sigue directo |
+| `aurum.media-export` | Sí | AurumRender resuelve por host el frame pipeline y el recorder; path-traced capture se publica pero no se confirmó su invocación desde ese servicio | Parcial: vídeo integrado; captura path-traced expuesta sin consumidor confirmado |
+
+#### Fronteras y pendientes que Lovable debe verificar
+
+- **AURUM IMPORT:** el objeto decodificado conserva metadatos, pero sus geometrías exclusivas se liberan al quedar listo el modelo normalizado. Las geometrías compartidas con el modelo final se preservan. La ruta GLB (source === model) no libera.
+- **AURUM SCENE / LIGHTING / POST / EDGE:** el host gestiona el ciclo de vida del plugin y publica servicios; los controladores productivos siguen ejecutando parte de las operaciones directamente. No migrar consumidores durante esta fase sin pruebas.
+- **AURUM GLB QUALITY:** el round-trip de calidad sí se invoca en `model-loader.ts`; los servicios registrados en host no son el punto de consumo actual.
+- **AURUM MEDIA EXPORT:** vídeo usa servicios del host para crear el pipeline de frames y cargar el recorder. El helper path-traced está disponible, pero disponibilidad no equivale a consumo.
+- **GPU Resource Manager:** continúa sin ownership de recursos productivos del visor. No transferir recursos como parte de esta auditoría.
+- **GEM TRANSITION:** permanece suspendido; Metal Union/Visual Weld permanecen experimentales y desactivados por defecto.
+
+#### Resultado CI de la revisión
+
+Para el commit documental `45bf6088d0f62762a523312c5e6b65efa9348056`, la consulta de estado combinado devolvió cero status checks y la consulta de runs asociados al commit devolvió una lista vacía. No hay evidencia de una ejecución CI para ese commit en la respuesta de GitHub. No se declara build, TypeScript, ESLint ni pruebas aprobadas. Lovable debe ejecutar las validaciones en su entorno y adjuntar logs y SHA exactos.
+
 ### Criterio de cierre de esta fase
 
 La prioridad es completar y verificar integraciones, contratos y dependencias reales. No iniciar optimizaciones, cambios ópticos ni rediseños funcionales antes de que Lovable entregue una auditoría de solo lectura con evidencia por archivo/línea, clasificación de severidad y plan de corrección. La existencia de una tarjeta en el mapa no constituye prueba de integración: cada módulo debe rastrearse hasta su punto de invocación productivo y su propietario de ciclo de vida.
