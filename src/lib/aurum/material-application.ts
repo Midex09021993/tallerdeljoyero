@@ -215,6 +215,55 @@ const selectionLayerIndex=(part:any):number|null=>{
   return null;
 };
 
+type AurumGemLayerIndex = {
+  byLayerName: Map<string, any[]>;
+  byLayerIndex: Map<number, any[]>;
+  byLayerId: Map<string, any[]>;
+  gemMeshCount: number;
+};
+
+// Layer identity is immutable after model preparation. Cache the expensive
+// CAD traversal once per model so repeated catalog changes resolve in O(k)
+// instead of rescanning every mesh for the same MatrixGold layer.
+const AURUM_GEM_LAYER_INDEX = new WeakMap<object, AurumGemLayerIndex>();
+
+const addGemIndexEntry=(map:Map<any,any[]>,key:any,mesh:any)=>{
+  if(key===null||key===undefined||key==="")return;
+  const current=map.get(key);
+  if(current)current.push(mesh);
+  else map.set(key,[mesh]);
+};
+
+const getAurumGemLayerIndex=(modelRoot:any):AurumGemLayerIndex=>{
+  const cached=AURUM_GEM_LAYER_INDEX.get(modelRoot);
+  if(cached)return cached;
+  const index:AurumGemLayerIndex={
+    byLayerName:new Map(),
+    byLayerIndex:new Map(),
+    byLayerId:new Map(),
+    gemMeshCount:0,
+  };
+  modelRoot?.traverse?.((part:any)=>{
+    if(!part?.isMesh||part.userData?.aurumInternalInclusion||selectionCategory(part)!=="gema")return;
+    index.gemMeshCount++;
+    const meta=selectionMeta(part);
+    const layerName=String(meta.capa||part.userData?.attributes?.layerName||part.userData?.attributes?.LayerName||"").trim().toLocaleLowerCase();
+    const layerIndex=selectionLayerIndex(part);
+    const layerId=meta.rhinoLayerId??part.userData?.attributes?.layerId??part.userData?.attributes?.LayerId??part.userData?.layerId??part.userData?.LayerId??null;
+    addGemIndexEntry(index.byLayerName,layerName,part);
+    addGemIndexEntry(index.byLayerIndex,layerIndex,part);
+    if(layerId!==null&&String(layerId).trim()!=="")addGemIndexEntry(index.byLayerId,String(layerId).trim(),part);
+  });
+  AURUM_GEM_LAYER_INDEX.set(modelRoot,index);
+  return index;
+};
+
+export const invalidateAurumGemLayerIndex=(model:any)=>{
+  let root=model;
+  while(root?.parent)root=root.parent;
+  if(root&&typeof root==="object")AURUM_GEM_LAYER_INDEX.delete(root);
+};
+
 export function applyAurumMaterialToModel(model:any,activePart:any,materialConfig:any,sharedMaterial:any,applyAll=false) {
   if (!model) return false;
   if (!activePart?.isMesh && applyAll) {
@@ -320,40 +369,26 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
           ? "rhino-id:"+String(selectedLayerId).trim()
           : "mesh:"+target.uuid;
   const targets:any[]=[];
-  const allGemMeshes:any[]=[];
-  const sameSourceLayer=(part:any):boolean=>{
-    if(!part?.isMesh)return false;
-    const meta=selectionMeta(part);
-    const partLayer=String(meta.capa||part.userData?.attributes?.layerName||part.userData?.attributes?.LayerName||"").trim();
-    const partLayerNormalized=partLayer.toLocaleLowerCase();
-    const partLayerIndex=selectionLayerIndex(part);
-    const partLayerId=meta.rhinoLayerId??part.userData?.attributes?.layerId??part.userData?.attributes?.LayerId??part.userData?.layerId??part.userData?.LayerId??null;
-    const partColor=String(meta.colorCapa??part.userData?.attributes?.layerColor??part.userData?.attributes?.LayerColor??"").trim().toLowerCase();
-
-    // Never fall through to ID/index matching if a source layer name exists:
-    // a mismatched/missing name is safer as a non-match than recoloring other layers.
-    if(selectedLayerNormalized)return partLayerNormalized===selectedLayerNormalized;
-    if(selectedLayerIndex!=null)return partLayerIndex===selectedLayerIndex;
-    if(selectedLayerId!=null&&String(selectedLayerId).trim()!=="")return partLayerId!=null&&String(partLayerId).trim()===String(selectedLayerId).trim();
-    return part.uuid===target.uuid;
-  };
   if(selectedCategory==="otro"){
     // Unknown GLB mesh: apply only to the exact mesh the user clicked.
     targets.push(target);
   }else{
-    modelRoot?.traverse?.((x:any)=>{
-      if(!x.isMesh||x.userData?.aurumInternalInclusion)return;
-      const category=selectionCategory(x);
-      if(category==="gema")allGemMeshes.push(x);
-      if(category==="gema"&&sameSourceLayer(x))targets.push(x);
-    });
+    const index=getAurumGemLayerIndex(modelRoot);
+    const indexedTargets=selectedLayerNormalized
+      ? index.byLayerName.get(selectedLayerNormalized)
+      : selectedLayerIndex!=null
+        ? index.byLayerIndex.get(selectedLayerIndex)
+        : selectedLayerId!=null&&String(selectedLayerId).trim()!==""
+          ? index.byLayerId.get(String(selectedLayerId).trim())
+          : undefined;
+    if(indexedTargets?.length)targets.push(...indexedTargets);
     if(!targets.length){
       console.error("[AURUM][GEM LAYER ASSIGNMENT FAILED]",{
         selectedMesh:target.name||target.uuid,
         selectedLayer,
-        selectedLayerKey: assignmentKey,
+        selectedLayerKey:assignmentKey,
         reason:hasStableLayerIdentity?"No mesh matched the selected raw Rhino layer identity":"Missing stable layer identity; using clicked mesh only",
-        gemLayerMeshes:allGemMeshes.length,
+        gemLayerMeshes:index.gemMeshCount,
       });
       targets.push(target);
     }
