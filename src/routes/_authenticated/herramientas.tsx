@@ -342,25 +342,25 @@ function HerramientasPage() {
                     <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Infraestructura común</p>
                     <p className="mt-1 text-sm font-semibold text-foreground">AURUM CORE</p>
                     <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
-                      <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-2 py-2"><p className="text-xs font-semibold">Plugin Registry</p><p className="text-[10px] text-emerald-700 dark:text-emerald-400">Ciclo de vida conectado</p></div>
-                      <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-2 py-2"><p className="text-xs font-semibold">Service Container</p><p className="text-[10px] text-emerald-700 dark:text-emerald-400">Servicios registrados y sellados</p></div>
-                      <div className="rounded-lg bg-muted/50 px-2 py-2"><p className="text-xs font-semibold">Event Bus</p><p className="text-[10px] text-muted-foreground">Eventos de activación y cierre</p></div>
-                      <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-2 py-2"><p className="text-xs font-semibold">Resource Scope</p><p className="text-[10px] text-emerald-700 dark:text-emerald-400">Recursos propios por plugin</p></div>
+                      <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-2 py-2"><p className="text-xs font-semibold">Plugin Registry</p><p className="text-[10px] text-emerald-700 dark:text-emerald-400">Arranque y cierre conectados</p></div>
+                      <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-2 py-2"><p className="text-xs font-semibold">Service Container</p><p className="text-[10px] text-emerald-700 dark:text-emerald-400">Servicios registrados · solo lectura</p></div>
+                      <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-2 py-2"><p className="text-xs font-semibold">Event Bus</p><p className="text-[10px] text-amber-700 dark:text-amber-400">Eventos de ciclo de vida</p></div>
+                      <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-2 py-2"><p className="text-xs font-semibold">Resource Scope</p><p className="text-[10px] text-amber-700 dark:text-amber-400">Scopes creados · GPU pendiente</p></div>
                     </div>
                   </div>
                   <div className="mx-auto h-6 w-px bg-border" />
                   <div className="rounded-xl border border-border bg-card p-3">
                     <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                       <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Adaptadores y motores especializados</p>
-                      <p className="text-[10px] text-muted-foreground">Conectado = integración inicial · En evolución = siguiente fase</p>
+                      <p className="text-[10px] text-muted-foreground">Registrado = integrado en el host · Bajo demanda = se crea al utilizarlo</p>
                     </div>
                     <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                      <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3"><p className="text-xs font-semibold">Viewer Adapter</p><p className="mt-1 text-[10px] text-emerald-700 dark:text-emerald-400">Conectado</p></div>
-                      <div className="rounded-lg border border-border p-3"><p className="text-xs font-semibold">Scene Adapter</p><p className="mt-1 text-[10px] text-emerald-700 dark:text-emerald-400">Conectado</p></div>
-                      <div className="rounded-lg border border-border p-3"><p className="text-xs font-semibold">Light Engine</p><p className="mt-1 text-[10px] text-emerald-700 dark:text-emerald-400">Conectado</p></div>
-                      <div className="rounded-lg border border-border p-3"><p className="text-xs font-semibold">Metal Engine</p><p className="mt-1 text-[10px] text-emerald-700 dark:text-emerald-400">Conectado</p></div>
-                      <div className="rounded-lg border border-border p-3"><p className="text-xs font-semibold">Gem Engine</p><p className="mt-1 text-[10px] text-emerald-700 dark:text-emerald-400">Conectado</p></div>
-                      <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3"><p className="text-xs font-semibold">Final Render Adapter</p><p className="mt-1 text-[10px] text-emerald-700 dark:text-emerald-400">Conectado</p></div>
+                      <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3"><p className="text-xs font-semibold">Viewer Adapter</p><p className="mt-1 text-[10px] text-sky-700 dark:text-sky-400">Registrado</p></div>
+                      <div className="rounded-lg border border-border p-3"><p className="text-xs font-semibold">Scene Adapter</p><p className="mt-1 text-[10px] text-sky-700 dark:text-sky-400">Registrado</p></div>
+                      <div className="rounded-lg border border-border p-3"><p className="text-xs font-semibold">Light Engine</p><p className="mt-1 text-[10px] text-sky-700 dark:text-sky-400">Registrado</p></div>
+                      <div className="rounded-lg border border-border p-3"><p className="text-xs font-semibold">Metal Engine</p><p className="mt-1 text-[10px] text-sky-700 dark:text-sky-400">Registrado</p></div>
+                      <div className="rounded-lg border border-border p-3"><p className="text-xs font-semibold">Gem Engine</p><p className="mt-1 text-[10px] text-sky-700 dark:text-sky-400">Registrado</p></div>
+                      <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3"><p className="text-xs font-semibold">Final Render Adapter</p><p className="mt-1 text-[10px] text-sky-700 dark:text-sky-400">Bajo demanda</p></div>
                     </div>
                   </div>
                   <div className="mx-auto h-6 w-px bg-border" />
@@ -369,7 +369,7 @@ function HerramientasPage() {
                     <p className="mt-1 text-[10px] text-muted-foreground">Escena · Cámara · Renderer · Controles · Geometría · Materiales · HDRI · GPU</p>
                   </div>
                 </div>
-                <p className="mx-auto mt-3 max-w-4xl text-[11px] leading-5 text-muted-foreground">AURUM CORE registra Viewer, Scene, Lighting, Metal, Gem y Final Render como módulos administrados por Plugin Registry. Service Container publica un snapshot de solo lectura; cada plugin recibe su propio Resource Scope y el Event Bus notifica activaciones y cierres. Los controladores de producción conservan la propiedad de renderer, luces, escena y materiales. Final Render carga el path tracer bajo demanda y no reemplaza el render interactivo ni modifica los shaders ópticos.</p>
+                <p className="mx-auto mt-3 max-w-4xl text-[11px] leading-5 text-muted-foreground">El host de producción registra Viewer, Scene, Lighting, Metal y Gem en Plugin Registry; Final Render publica un cargador que crea su adaptador al solicitar una captura. Service Container entrega un mapa de servicios de solo lectura. Event Bus comunica actualmente los eventos de activación y cierre. Cada plugin recibe un Resource Scope, pero la transferencia de propiedad de recursos GPU todavía no está implementada: renderer, escena, luces y materiales siguen bajo sus controladores de producción. Esta separación preserva el render interactivo y los shaders ópticos.</p>
               </div>
               <div className="grid gap-3 p-5 sm:grid-cols-2 sm:p-7 lg:grid-cols-3">
                 <article className="rounded-xl border border-border p-4">
