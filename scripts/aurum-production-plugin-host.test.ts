@@ -58,3 +58,59 @@ test("AURUM production host snapshots module metadata and service maps", async (
   expect(host.registry.getState()).toBe("running");
   await host.dispose();
 });
+
+
+test("AURUM production host protects the published module service map at runtime", async () => {
+  const source = new Map([["aurum.viewer.renderer", { id: "renderer" }]]);
+  const host = createAurumProductionPluginHost([
+    { id: "aurum.viewer", services: source },
+  ]);
+  const published = host.services.get("aurum.plugin.aurum-viewer") as ReadonlyMap<string, unknown>;
+
+  source.set("aurum.injected", {});
+  expect(published.has("aurum.injected")).toBe(false);
+  expect(typeof (published as any).set).toBe("undefined");
+  expect(typeof (published as any).delete).toBe("undefined");
+  expect(typeof (published as any).clear).toBe("undefined");
+
+  await host.registry.start();
+  await host.dispose();
+  await host.dispose();
+});
+
+test("AURUM production host rejects invalid or duplicate module contracts before composition", () => {
+  const services = new Map([["aurum.viewer.renderer", {}]]);
+  expect(() => createAurumProductionPluginHost([
+    { id: "Aurum.Viewer", services },
+  ])).toThrow("Invalid AURUM production module id");
+  expect(() => createAurumProductionPluginHost([
+    { id: "aurum.viewer", services },
+    { id: "aurum.viewer", services },
+  ])).toThrow("is duplicated");
+  expect(() => createAurumProductionPluginHost([
+    { id: "aurum.viewer", services, dependencies: ["aurum.viewer"] },
+  ])).toThrow("cannot depend on itself");
+  expect(() => createAurumProductionPluginHost([
+    { id: "aurum.viewer", services: new Map([[" aurum.viewer.renderer ", {}]]) },
+  ])).toThrow("non-canonical service identifier");
+  expect(() => createAurumProductionPluginHost([], "   ")).toThrow("version cannot be empty");
+});
+
+test("AURUM production host rejects duplicate service ownership and unresolved module requirements", async () => {
+  const sharedService = { id: "shared" };
+  expect(() => createAurumProductionPluginHost([
+    { id: "aurum.viewer", services: new Map([["aurum.shared.api", sharedService]]) },
+    { id: "aurum.scene", services: new Map([["aurum.shared.api", sharedService]]) },
+  ])).toThrow("already registered");
+
+  const host = createAurumProductionPluginHost([
+    {
+      id: "aurum.scene",
+      services: new Map([["aurum.scene.controller", {}]]),
+      requiresServices: ["aurum.viewer.renderer"],
+    },
+  ]);
+  await expect(host.registry.start()).rejects.toThrow('requires missing service "aurum.viewer.renderer"');
+  expect(host.registry.getState()).toBe("idle");
+  await host.dispose();
+});
