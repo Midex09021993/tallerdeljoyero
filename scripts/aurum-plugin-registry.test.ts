@@ -152,3 +152,42 @@ test("AURUM Event Bus delivers to every subscriber and reports failures together
   bus.clear();
   expect(() => bus.on("viewer.ready", () => undefined)).toThrow("disposed");
 });
+
+
+test("AURUM plugin service contracts reject missing requirements before initialization", async () => {
+  let initialized = false;
+  const registry = new AurumPluginRegistry(createContext());
+  registry.register({
+    id: "aurum.viewer",
+    version: "1.0.0",
+    requiresServices: ["aurum.scene.api"],
+    initialize: () => { initialized = true; },
+  });
+
+  await expect(registry.start()).rejects.toThrow('requires missing service "aurum.scene.api"');
+  expect(initialized).toBe(false);
+  expect(registry.getState()).toBe("idle");
+});
+
+test("AURUM plugin service contracts verify declared providers against the container", async () => {
+  let initialized = false;
+  const registry = new AurumPluginRegistry(createContext());
+  registry.register({
+    id: "aurum.scene",
+    version: "1.0.0",
+    providesServices: ["aurum.scene.api"],
+    initialize: () => { initialized = true; },
+  });
+
+  await expect(registry.start()).rejects.toThrow('declares service "aurum.scene.api" but it is not registered');
+  expect(initialized).toBe(false);
+});
+
+test("AURUM plugin service contracts reject duplicate service providers", async () => {
+  const services = new Map<string, unknown>([["aurum.shared.api", {}]]);
+  const registry = new AurumPluginRegistry({ ...createContext(), services });
+  registry.register({ id: "aurum.scene", version: "1.0.0", providesServices: ["aurum.shared.api"], initialize: () => undefined });
+  registry.register({ id: "aurum.viewer", version: "1.0.0", providesServices: ["aurum.shared.api"], initialize: () => undefined });
+
+  await expect(registry.start()).rejects.toThrow('declared by both "aurum.scene" and "aurum.viewer"');
+});
