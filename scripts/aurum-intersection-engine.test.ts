@@ -32,6 +32,15 @@ test("BVH triangle intersection detects coplanar boundary contact without callin
   expect(report.pairs[0]?.confidence).toBe("medium");
 });
 
+test("intersection classification uses stable body indices when display names repeat", () => {
+  const root = new THREE.Group();
+  root.add(mesh("Duplicado", new THREE.BoxGeometry(2, 2, 2)), mesh("Duplicado", new THREE.PlaneGeometry(3, 3)));
+  const solid = createAurumSolidEngine().inspect(root);
+  const report = createAurumIntersectionEngine().inspect(root, solid);
+  expect(report.pairs[0]?.kind).toBe("surface-penetrates-solid");
+  expect(report.pairs[0]?.samplesInsideB).toBeGreaterThan(0);
+});
+
 test("BVH prunes disjoint bodies and enforces triangle-test budget", () => {
   const root = new THREE.Group();
   root.add(mesh("A", new THREE.BoxGeometry()), mesh("B", new THREE.BoxGeometry(), 5));

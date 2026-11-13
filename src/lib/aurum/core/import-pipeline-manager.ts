@@ -5,10 +5,10 @@ import { createAurumSolidEngine, type AurumSolidReport } from "./solid-engine";
 import { createAurumIntersectionEngine, type AurumIntersectionReport } from "./intersection-engine";
 
 export interface AurumImportPipelineResult extends AurumImportResult {
-  readonly geometry: AurumGeometryReport;
-  readonly surface: AurumSurfaceReport;
-  readonly solid: AurumSolidReport;
-  readonly intersection: AurumIntersectionReport;
+  readonly geometry?: AurumGeometryReport;
+  readonly surface?: AurumSurfaceReport;
+  readonly solid?: AurumSolidReport;
+  readonly intersection?: AurumIntersectionReport;
   readonly pipeline: readonly string[];
 }
 
@@ -29,6 +29,17 @@ export function createAurumImportPipelineManager(
       const stages = ["import-started"];
       request.onStage?.("import-started", { fileName: request.file.name, format: request.format });
       const imported = await importer.load(request);
+
+      // Keep expensive topology and triangle-pair analysis off the production
+      // presentation path. It remains available on demand with diagnostics:true.
+      if (request.diagnostics !== true) {
+        stages.push(...imported.pipeline, "diagnostics-deferred");
+        request.onStage?.("diagnostics-deferred", { reason: "opt-in", format: imported.format });
+        return Object.freeze({
+          ...imported,
+          pipeline: Object.freeze(stages),
+        });
+      }
 
       request.onProgress?.("Comprobando geometría...");
       const geometryReport = geometry.inspect(imported.model);

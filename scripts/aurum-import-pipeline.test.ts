@@ -50,6 +50,24 @@ test("geometry engine flags missing normals and non-finite positions in diagnost
   geometry.dispose();
 });
 
+test("production import defers expensive geometry diagnostics until explicitly requested", async () => {
+  const model = new THREE.Group();
+  model.add(new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial()));
+  const importer = {
+    id: "aurum.import", version: "1.0.0",
+    load: async () => ({ sourceObject: model, model, format: "3dm" as const, pipeline: ["source-decoded"] }),
+  } as AurumImportPlugin;
+  const stages: string[] = [];
+  const result = await createAurumImportPipelineManager(importer, createAurumGeometryEngine()).load({
+    file: new File(["model"], "ring.3dm"), format: "3dm", fallbackMaterial: new THREE.MeshBasicMaterial(),
+    colorRhinoHex: () => undefined, classifyLayer: () => "otro", onStage: (stage) => stages.push(stage),
+  });
+  expect(result.geometry).toBeUndefined();
+  expect(result.solid).toBeUndefined();
+  expect(result.intersection).toBeUndefined();
+  expect(stages).toContain("diagnostics-deferred");
+});
+
 test("import pipeline includes geometry, surface, solid and BVH intersection diagnostics in order", async () => {
   const model = new THREE.Group();
   model.add(new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial()));
@@ -71,6 +89,7 @@ test("import pipeline includes geometry, surface, solid and BVH intersection dia
     fallbackMaterial: new THREE.MeshBasicMaterial(),
     colorRhinoHex: () => undefined,
     classifyLayer: () => "otro",
+    diagnostics: true,
     onStage: (stage) => stages.push(stage),
   });
   expect(calls).toEqual(["import"]);

@@ -12,7 +12,9 @@ export interface AurumImportRequest {
   readonly classifyLayer: (name: string, color?: string) => "metal" | "gema" | "otro";
   readonly onProgress?: (message: string) => void;
   readonly onStage?: (stage: string, details?: Record<string, unknown>) => void;
-  /** Experimental visual CSG union. Disabled unless explicitly requested for a controlled comparison. */
+  /** Run expensive read-only geometry diagnostics during this import. Production defaults to false. */
+  readonly diagnostics?: boolean;
+  /** Visual metal CSG union. Defaults to enabled for Rhino 3DM; can be explicitly disabled. */
   readonly metalUnion?: boolean;
 }
 
@@ -77,7 +79,7 @@ export function createAurumImportPlugin(): AurumImportPlugin {
           colorRhinoHex,
           classifyLayer,
           (message: string) => progress(message),
-          { metalUnion: request.metalUnion === true },
+          { metalUnion: request.metalUnion ?? format === "3dm" },
         );
         stage("source-converted-to-glb", { sourceFormat: format });
         progress("Optimizando estructura para el visor...");

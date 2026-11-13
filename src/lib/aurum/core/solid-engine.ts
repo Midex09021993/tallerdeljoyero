@@ -28,6 +28,8 @@ export type AurumBodyRelationKind =
 export interface AurumBodyRelationReport {
   readonly bodyA: string;
   readonly bodyB: string;
+  readonly bodyAIndex: number;
+  readonly bodyBIndex: number;
   readonly kind: AurumBodyRelationKind;
   readonly confidence: "high" | "medium" | "low";
   readonly samplesInsideA: number;
@@ -239,7 +241,7 @@ function inspectPair(a: BodyWork, b: BodyWork, tolerance: number): AurumBodyRela
   const bodyB = b.report.name;
   if (!a.bounds.intersectsBox(b.bounds)) {
     return Object.freeze({
-      bodyA, bodyB, kind: "disjoint", confidence: "high",
+      bodyA, bodyB, bodyAIndex: a.report.index, bodyBIndex: b.report.index, kind: "disjoint", confidence: "high",
       samplesInsideA: 0, samplesInsideB: 0,
       note: "Las cajas espaciales no se intersectan; los cuerpos están separados.",
     });
@@ -272,7 +274,7 @@ function inspectPair(a: BodyWork, b: BodyWork, tolerance: number): AurumBodyRela
         : "Parte de las muestras de la superficie abierta está dentro del sólido; penetración probable.";
     }
   }
-  return Object.freeze({ bodyA, bodyB, kind, confidence, samplesInsideA: insideA, samplesInsideB: insideB, note });
+  return Object.freeze({ bodyA, bodyB, bodyAIndex: a.report.index, bodyBIndex: b.report.index, kind, confidence, samplesInsideA: insideA, samplesInsideB: insideB, note });
 }
 
 /**

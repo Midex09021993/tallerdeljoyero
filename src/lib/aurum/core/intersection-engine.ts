@@ -58,6 +58,7 @@ interface BvhNode {
   readonly triangles?: readonly Triangle[];
 }
 interface MeshWork {
+  readonly index: number;
   readonly name: string;
   readonly bounds: THREE.Box3;
   readonly triangles: readonly Triangle[];
@@ -193,17 +194,14 @@ function classifyPair(
   solidReport: AurumSolidReport,
 ): AurumIntersectionPairReport {
   const previous = solidReport.relations.find((relation) =>
-    (relation.bodyA === bodyA.name && relation.bodyB === bodyB.name)
-    || (relation.bodyA === bodyB.name && relation.bodyB === bodyA.name)
+    (relation.bodyAIndex === bodyA.index && relation.bodyBIndex === bodyB.index)
+    || (relation.bodyAIndex === bodyB.index && relation.bodyBIndex === bodyA.index)
   );
-  const insideA = previous
-    ? previous.bodyA === bodyA.name ? previous.samplesInsideA : previous.samplesInsideB
-    : 0;
-  const insideB = previous
-    ? previous.bodyA === bodyA.name ? previous.samplesInsideB : previous.samplesInsideA
-    : 0;
-  const solidA = solidReport.bodies.find((body) => body.name === bodyA.name)?.kind === "closed-solid";
-  const solidB = solidReport.bodies.find((body) => body.name === bodyB.name)?.kind === "closed-solid";
+  const sameOrder = previous?.bodyAIndex === bodyA.index;
+  const insideA = previous ? (sameOrder ? previous.samplesInsideA : previous.samplesInsideB) : 0;
+  const insideB = previous ? (sameOrder ? previous.samplesInsideB : previous.samplesInsideA) : 0;
+  const solidA = solidReport.bodies[bodyA.index]?.kind === "closed-solid";
+  const solidB = solidReport.bodies[bodyB.index]?.kind === "closed-solid";
   let kind: AurumIntersectionKind = "unresolved";
   let confidence: "high" | "medium" | "low" = "low";
   let note = "El presupuesto de pruebas se agotó; la relación queda sin resolver.";
@@ -264,7 +262,7 @@ export function createAurumIntersectionEngine(): AurumIntersectionEngine {
         const triangles = buildTriangles(mesh);
         const bounds = new THREE.Box3().makeEmpty();
         for (const triangle of triangles) bounds.union(triangle.bounds);
-        meshes.push({ name: mesh.name || `Mesh ${meshes.length + 1}`, bounds, triangles, bvh: buildBvh(triangles, leafSize) });
+        meshes.push({ index: meshes.length, name: mesh.name || `Mesh ${meshes.length + 1}`, bounds, triangles, bvh: buildBvh(triangles, leafSize) });
       });
       const pairs: AurumIntersectionPairReport[] = [];
       let trianglePairTests = 0;

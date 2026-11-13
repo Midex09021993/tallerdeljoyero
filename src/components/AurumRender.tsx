@@ -1818,6 +1818,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           colorRhinoHex,
           classifyLayer: clasificarCapa,
           onProgress: informar,
+          diagnostics: loadAuditEnabled || new URLSearchParams(window.location.search).get("aurumDiagnostics") === "1",
           onStage: (stage, details) => loadAuditStep(stage, details ?? {}),
         });
         const objeto = importResult.sourceObject;
