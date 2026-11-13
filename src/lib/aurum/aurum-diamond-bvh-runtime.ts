@@ -133,30 +133,40 @@ export async function createAurumDiamondBvhRuntime(options: {
       skippedTargetMeshes.length = 0;
     }
 
-    // Compare diamond sizes within this model so halo/melee stones can use a
-    // calmer internal-ray budget while the largest center stone keeps its
-    // calibrated optical detail. The ratio is scale-independent of CAD units.
-    model.updateMatrixWorld(true);
+    // A targeted non-diamond change must not scan the full CAD assembly.
+    // Only diamond refreshes need the model-wide size ratio used for melee optics.
+    const targetContainsDiamond = !targetSet || [...targetSet].some((mesh) => {
+      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      const family = materials.length === 1
+        ? getGemFamily(materials[0]) || String(mesh.userData?.aurumActiveGemFamily ?? "").toLocaleLowerCase()
+        : "";
+      return family === "diamante";
+    });
+    if (targetContainsDiamond) model.updateMatrixWorld(true);
+    else targetSet?.forEach((mesh) => mesh.updateWorldMatrix(true, false));
+
     const diamondRadiusByMesh = new Map<THREE.Mesh, number>();
     let largestDiamondRadius = 0;
-    model.traverse((object) => {
-      const candidate = object as THREE.Mesh;
-      if (!candidate.isMesh || !candidate.geometry) return;
-      const candidateMaterials = Array.isArray(candidate.material) ? candidate.material : [candidate.material];
-      if (candidateMaterials.length !== 1) return;
-      const candidateFamily = getGemFamily(candidateMaterials[0])
-        || String(candidate.userData?.aurumActiveGemFamily ?? "").toLocaleLowerCase();
-      if (candidateFamily !== "diamante") return;
-      if (!candidate.geometry.boundingSphere) candidate.geometry.computeBoundingSphere();
-      const localRadius = candidate.geometry.boundingSphere?.radius ?? 0;
-      const worldScale = candidate.getWorldScale(new THREE_NS.Vector3());
-      const radius = localRadius * Math.max(Math.abs(worldScale.x), Math.abs(worldScale.y), Math.abs(worldScale.z));
-      if (!Number.isFinite(radius) || radius <= 0) return;
-      diamondRadiusByMesh.set(candidate, radius);
-      largestDiamondRadius = Math.max(largestDiamondRadius, radius);
-    });
+    if (targetContainsDiamond) {
+      model.traverse((object) => {
+        const candidate = object as THREE.Mesh;
+        if (!candidate.isMesh || !candidate.geometry) return;
+        const candidateMaterials = Array.isArray(candidate.material) ? candidate.material : [candidate.material];
+        if (candidateMaterials.length !== 1) return;
+        const candidateFamily = getGemFamily(candidateMaterials[0])
+          || String(candidate.userData?.aurumActiveGemFamily ?? "").toLocaleLowerCase();
+        if (candidateFamily !== "diamante") return;
+        if (!candidate.geometry.boundingSphere) candidate.geometry.computeBoundingSphere();
+        const localRadius = candidate.geometry.boundingSphere?.radius ?? 0;
+        const worldScale = candidate.getWorldScale(new THREE_NS.Vector3());
+        const radius = localRadius * Math.max(Math.abs(worldScale.x), Math.abs(worldScale.y), Math.abs(worldScale.z));
+        if (!Number.isFinite(radius) || radius <= 0) return;
+        diamondRadiusByMesh.set(candidate, radius);
+        largestDiamondRadius = Math.max(largestDiamondRadius, radius);
+      });
+    }
 
-    model.traverse((object) => {
+    const processMesh = (object: THREE.Object3D) => {
       const mesh = object as THREE.Mesh;
       if (!mesh.isMesh || !mesh.geometry || mesh.userData?.["aurumInternalInclusion"]) return;
       if (targetSet && !targetSet.has(mesh)) return;
@@ -371,7 +381,10 @@ export async function createAurumDiamondBvhRuntime(options: {
         // Keep the current physical/scintillation material if BVH setup fails.
         options.onError?.(error);
       }
-    });
+    };
+
+    if (targetSet) targetSet.forEach(processMesh);
+    else model.traverse(processMesh);
 
     for (const mesh of [...entries.keys()]) {
       if (targetSet && !targetSet.has(mesh)) continue;
