@@ -60,6 +60,37 @@ export function createAurumProductionPluginHost(
     }
   }
 
+  // A service supplied by another AURUM module must come from a declared
+  // dependency (direct or transitive). Otherwise registration order can hide
+  // an architectural dependency and the plugin graph cannot guarantee startup.
+  const modulesById = new Map(modules.map((module) => [module.id, module]));
+  const serviceProviders = new Map<string, string>();
+  for (const module of modules) {
+    for (const serviceId of module.services.keys()) {
+      serviceProviders.set(serviceId, module.id);
+    }
+  }
+  const dependsOn = (moduleId: string, targetId: string, visited = new Set<string>()): boolean => {
+    if (visited.has(moduleId)) return false;
+    visited.add(moduleId);
+    const module = modulesById.get(moduleId);
+    if (!module) return false;
+    for (const dependencyId of module.dependencies ?? []) {
+      if (dependencyId === targetId || dependsOn(dependencyId, targetId, visited)) return true;
+    }
+    return false;
+  };
+  for (const module of modules) {
+    for (const serviceId of module.requiresServices ?? []) {
+      const providerId = serviceProviders.get(serviceId);
+      if (providerId && providerId !== module.id && !dependsOn(module.id, providerId)) {
+        throw new Error(
+          `AURUM production module "${module.id}" requires service "${serviceId}" from "${providerId}" but does not declare that module as a dependency.`,
+        );
+      }
+    }
+  }
+
   const container = new AurumServiceContainer();
   const gpuResources = createAurumGpuResourceManager();
   container.register(AURUM_GPU_RESOURCE_SERVICE, gpuResources);
