@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { buildAurumBroadphase } from "./broadphase";
 
 export type AurumBodyKind = "closed-solid" | "open-surface" | "invalid-mesh";
 export type AurumBodyFamily = "metal" | "gem" | "other";
@@ -39,6 +40,10 @@ export interface AurumBodyRelationReport {
 
 export interface AurumSolidReport {
   readonly bodyCount: number;
+  readonly totalPossiblePairs: number;
+  readonly candidatePairCount: number;
+  readonly prunedPairCount: number;
+  readonly fallbackPairCount: number;
   readonly closedSolidCount: number;
   readonly openSurfaceCount: number;
   readonly invalidMeshCount: number;
@@ -61,7 +66,7 @@ export interface AurumSolidInspectOptions {
 
 export interface AurumSolidEngine {
   readonly id: "aurum.solid";
-  readonly version: "1.0.0";
+  readonly version: "1.1.0";
   inspect(root: THREE.Object3D, options?: AurumSolidInspectOptions): AurumSolidReport;
 }
 
@@ -288,7 +293,7 @@ function inspectPair(a: BodyWork, b: BodyWork, tolerance: number): AurumBodyRela
 export function createAurumSolidEngine(): AurumSolidEngine {
   return Object.freeze({
     id: "aurum.solid" as const,
-    version: "1.0.0" as const,
+    version: "1.1.0" as const,
     inspect(root: THREE.Object3D, options: AurumSolidInspectOptions = {}): AurumSolidReport {
       const tolerance = options.tolerance ?? 1e-5;
       const maxPairs = options.maxPairs ?? 10_000;
@@ -304,16 +309,28 @@ export function createAurumSolidEngine(): AurumSolidEngine {
           bodies.push(buildBody(mesh, bodies.length, tolerance, maxSamples));
         }
       });
+      const broadphase = buildAurumBroadphase(bodies.map((body) => body.bounds), tolerance);
       const relations: AurumBodyRelationReport[] = [];
       let truncated = false;
-      outer: for (let i = 0; i < bodies.length; i += 1) {
-        for (let j = i + 1; j < bodies.length; j += 1) {
-          if (relations.length >= maxPairs) { truncated = true; break outer; }
-          relations.push(inspectPair(bodies[i]!, bodies[j]!, tolerance));
-        }
+      for (const candidate of broadphase.candidatePairs) {
+        if (relations.length >= maxPairs) { truncated = true; break; }
+        const a = bodies[candidate.a]!, b = bodies[candidate.b]!;
+        if (candidate.fallback) {
+          relations.push(Object.freeze({
+            bodyA: a.report.name, bodyB: b.report.name,
+            bodyAIndex: a.report.index, bodyBIndex: b.report.index,
+            kind: "aabb-overlap-unresolved", confidence: "low",
+            samplesInsideA: 0, samplesInsideB: 0,
+            note: "Límites no fiables; el par se conserva para no descartar una posible relación.",
+          }));
+        } else relations.push(inspectPair(a, b, tolerance));
       }
       return Object.freeze({
         bodyCount: bodies.length,
+        totalPossiblePairs: broadphase.totalPossiblePairs,
+        candidatePairCount: broadphase.candidatePairs.length,
+        prunedPairCount: broadphase.prunedPairs,
+        fallbackPairCount: broadphase.fallbackPairs,
         closedSolidCount: bodies.filter((body) => body.report.kind === "closed-solid").length,
         openSurfaceCount: bodies.filter((body) => body.report.kind === "open-surface").length,
         invalidMeshCount: bodies.filter((body) => body.report.kind === "invalid-mesh").length,

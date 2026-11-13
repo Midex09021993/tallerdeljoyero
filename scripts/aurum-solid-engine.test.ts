@@ -44,7 +44,10 @@ test("solid engine identifies disjoint solids and conservative unresolved overla
     makeMesh("B", new THREE.BoxGeometry(1, 1, 1), new THREE.Vector3(4, 0, 0)),
   );
   const report = createAurumSolidEngine().inspect(root);
-  expect(report.relations[0]?.kind).toBe("disjoint");
+  expect(report.relations).toHaveLength(0);
+  expect(report.totalPossiblePairs).toBe(1);
+  expect(report.candidatePairCount).toBe(0);
+  expect(report.prunedPairCount).toBe(1);
   expect(report.unresolvedRelationCount).toBe(0);
 });
 

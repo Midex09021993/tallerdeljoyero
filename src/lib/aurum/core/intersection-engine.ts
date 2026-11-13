@@ -119,12 +119,6 @@ function buildBvh(triangles: readonly Triangle[], leafSize: number): BvhNode | n
   };
 }
 
-function boxesOverlap(a: THREE.Box3, b: THREE.Box3, tolerance: number): boolean {
-  return a.min.x <= b.max.x + tolerance && a.max.x + tolerance >= b.min.x
-    && a.min.y <= b.max.y + tolerance && a.max.y + tolerance >= b.min.y
-    && a.min.z <= b.max.z + tolerance && a.max.z + tolerance >= b.min.z;
-}
-
 function projectTriangle(triangle: Triangle, axis: THREE.Vector3): [number, number] {
   const pa = triangle.a.dot(axis), pb = triangle.b.dot(axis), pc = triangle.c.dot(axis);
   return [Math.min(pa, pb, pc), Math.max(pa, pb, pc)];

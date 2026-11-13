@@ -87,6 +87,9 @@ export function createAurumImportPipelineManager(
       request.onStage?.("solid-inspected", {
         bodies: solidReport.bodyCount, closedSolids: solidReport.closedSolidCount,
         openSurfaces: solidReport.openSurfaceCount, invalidMeshes: solidReport.invalidMeshCount,
+        totalPossiblePairs: solidReport.totalPossiblePairs,
+        candidatePairs: solidReport.candidatePairCount, prunedPairs: solidReport.prunedPairCount,
+        fallbackPairs: solidReport.fallbackPairCount,
         relations: solidReport.relationCount, unresolvedRelations: solidReport.unresolvedRelationCount,
         truncated: solidReport.truncated, tolerance: solidReport.tolerance,
       });
@@ -97,7 +100,10 @@ export function createAurumImportPipelineManager(
       });
       stages.push("intersection-inspected");
       request.onStage?.("intersection-inspected", {
+        totalPossiblePairs: intersectionReport.totalPossiblePairs,
         candidatePairs: intersectionReport.candidatePairCount,
+        prunedPairs: intersectionReport.prunedPairCount,
+        fallbackPairs: intersectionReport.fallbackPairCount,
         intersectingPairs: intersectionReport.intersectingPairCount,
         trianglePairTests: intersectionReport.trianglePairTests,
         truncated: intersectionReport.truncated, tolerance: intersectionReport.tolerance,
