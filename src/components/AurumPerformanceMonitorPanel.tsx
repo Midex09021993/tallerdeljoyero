@@ -99,6 +99,13 @@ export function AurumPerformanceMonitorPanel({ open, onClose, renderer, monitor 
 
   if (!open) return null;
   const fpsTone = stats.fps >= 50 ? "text-emerald-300" : stats.fps >= 30 ? "text-amber-300" : "text-rose-300";
+  const overallStatus = getAurumPerformanceStatus(stats);
+  const statusCopy = {
+    idle: { label: "Midiendo actividad", tone: "text-white/50", dot: "bg-white/35" },
+    healthy: { label: "Rendimiento estable", tone: "text-emerald-300", dot: "bg-emerald-400" },
+    warning: { label: "Carga elevada", tone: "text-amber-300", dot: "bg-amber-400" },
+    critical: { label: "Carga crítica", tone: "text-rose-300", dot: "bg-rose-500" },
+  }[overallStatus];
 
   return <section className="absolute right-3 top-3 z-[80] w-[min(350px,calc(100%-24px))] overflow-hidden rounded-xl border border-white/10 bg-[#101216]/95 text-white shadow-2xl backdrop-blur-xl" aria-label="Monitor de rendimiento AURUM">
     <header className="flex items-center justify-between border-b border-white/[.08] px-3 py-2.5">
@@ -109,6 +116,12 @@ export function AurumPerformanceMonitorPanel({ open, onClose, renderer, monitor 
       <button type="button" onClick={onClose} aria-label="Cerrar monitor" className="grid size-7 place-items-center rounded-md text-white/50 transition hover:bg-white/10 hover:text-white"><X size={15}/></button>
     </header>
     <div className="space-y-3 p-3">
+      <div className="flex items-center justify-between rounded-lg border border-white/[.08] bg-white/[.035] px-3 py-2">
+        <span className="text-[9px] font-medium uppercase tracking-[.12em] text-white/40">Estado del visor</span>
+        <span className={`inline-flex items-center gap-1.5 text-[10px] font-semibold ${statusCopy.tone}`}>
+          <span className={`size-1.5 rounded-full ${statusCopy.dot}`}/>{statusCopy.label}
+        </span>
+      </div>
       <div className="grid grid-cols-2 gap-2">
         <div className="rounded-lg border border-white/[.08] bg-white/[.04] p-3">
           <div className="flex items-center gap-1.5 text-[9px] uppercase tracking-[.12em] text-white/45"><Gauge size={11}/> Frecuencia</div>
