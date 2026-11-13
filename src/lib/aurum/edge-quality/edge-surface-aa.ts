@@ -51,3 +51,10 @@ export function shouldEnableAurumEdgeAa(
 ): boolean {
   return Boolean(highQuality && (!cameraMoving || stillCapture));
 }
+
+/** Adjusts the conservative blend strength without rebuilding the shader pass. */
+export function setAurumSurfaceEdgeAaStrength(pass: any, strength: number): void {
+  const uniform = pass?.material?.uniforms?.strength;
+  if (!uniform) return;
+  uniform.value = Math.max(0, Math.min(0.1, Number(strength) || 0));
+}
