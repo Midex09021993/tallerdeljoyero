@@ -607,3 +607,22 @@ test("image export resets temporal accumulation and converges the restored live 
   expect(restoreBlock.indexOf("loop?.resize?.();")).toBeLessThan(restoreBlock.indexOf("loop?.resume?.();"));
   expect(restoreBlock.indexOf("loop?.resume?.();")).toBeLessThan(restoreBlock.indexOf("loop?.converge?.(4);"));
 });
+
+
+test("video export resets temporal accumulation and converges the restored live viewport", () => {
+  const componentSource = readFileSync("src/components/AurumRender.tsx", "utf8");
+  const videoStart = componentSource.indexOf("exportVideo:async");
+  const restoreStart = componentSource.indexOf("// Rebuild the live beauty frame after the temporary video-sized", videoStart);
+  const restoreEnd = componentSource.indexOf("},\n        setDepthOfField:", restoreStart);
+  const restoreBlock = componentSource.slice(restoreStart, restoreEnd);
+
+  expect(videoStart).toBeGreaterThan(-1);
+  expect(restoreStart).toBeGreaterThan(videoStart);
+  expect(restoreBlock).toContain("resetTemporalAccumulationRef.current?.();");
+  expect(restoreBlock).toContain("loop?.resize?.();");
+  expect(restoreBlock).toContain("loop?.invalidate?.();");
+  expect(restoreBlock).toContain("loop?.resume?.();");
+  expect(restoreBlock).toContain("loop?.converge?.(4);");
+  expect(restoreBlock.indexOf("loop?.resize?.();")).toBeLessThan(restoreBlock.indexOf("loop?.resume?.();"));
+  expect(restoreBlock.indexOf("loop?.resume?.();")).toBeLessThan(restoreBlock.indexOf("loop?.converge?.(4);"));
+});
