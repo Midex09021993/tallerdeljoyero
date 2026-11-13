@@ -22,6 +22,41 @@ export type AurumGemTransitionController = {
   readonly active: boolean;
 };
 
+const GEM_TRANSITION_STORAGE_KEY = "aurum.gemTransition.enabled";
+let gemTransitionEnabled = (() => {
+  try {
+    return typeof window === "undefined"
+      ? true
+      : window.localStorage.getItem(GEM_TRANSITION_STORAGE_KEY) !== "false";
+  } catch {
+    return true;
+  }
+})();
+const activeGemTransitions = new Set<{ finish: () => void }>();
+
+/** Read the user-controlled progressive gem transition feature flag. */
+export function isAurumGemTransitionEnabled(): boolean {
+  return gemTransitionEnabled;
+}
+
+/**
+ * Enable/disable only the progressive interpolation. Disabling completes any
+ * in-flight blend immediately, preserving the newly assigned gem material.
+ */
+export function setAurumGemTransitionEnabled(enabled: boolean): void {
+  gemTransitionEnabled = Boolean(enabled);
+  try {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(GEM_TRANSITION_STORAGE_KEY, String(gemTransitionEnabled));
+    }
+  } catch {
+    // The in-memory flag still applies when browser storage is unavailable.
+  }
+  if (!gemTransitionEnabled) {
+    [...activeGemTransitions].forEach((transition) => transition.finish());
+  }
+}
+
 const clamp01 = (value: number) => Math.max(0, Math.min(1, value));
 const easeInOut = (value: number) => {
   const t = clamp01(value);
@@ -73,7 +108,7 @@ export function createAurumGemTransition(
   durationMs = 240,
   onComplete?: () => void,
 ): AurumGemTransitionController | null {
-  if (!target || previous.length === 0) return null;
+  if (!gemTransitionEnabled || !target || previous.length === 0) return null;
   const previousByKey = new Map(previous.map((item) => [`${item.meshUuid}:${item.materialIndex}`, item]));
   const tracks: Array<{ material: any; from: GemMaterialSnapshot; to: GemMaterialSnapshot }> = [];
 
@@ -146,6 +181,7 @@ export function createAurumGemTransition(
     if (progress >= 1) {
       active = false;
       frameId = 0;
+      activeGemTransitions.delete(controller);
       onComplete?.();
       return;
     }
@@ -160,7 +196,7 @@ export function createAurumGemTransition(
   apply(0);
   onFrame();
   schedule();
-  return {
+  const controller: AurumGemTransitionController & { finish: () => void } = {
     pause: () => {
       if (!active || paused) return;
       paused = true;
@@ -178,7 +214,20 @@ export function createAurumGemTransition(
       if (frameId) cancelAnimationFrame(frameId);
       frameId = 0;
       active = false;
+      activeGemTransitions.delete(controller);
+    },
+    finish: () => {
+      if (!active) return;
+      if (frameId) cancelAnimationFrame(frameId);
+      frameId = 0;
+      apply(1);
+      active = false;
+      activeGemTransitions.delete(controller);
+      onFrame();
+      onComplete?.();
     },
     get active() { return active; },
   };
+  activeGemTransitions.add(controller);
+  return controller;
 }
