@@ -3726,18 +3726,12 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
     setAurumConectCanRetry(false);
     setAurumConectStatus("Preparando el visor para recibir el documento…");
     try {
-      // Do not consume the one-time Rhino transfer token until the viewer API
-      // is ready to load the received file.
-      const apiReadyDeadline = Date.now() + 10000;
-      while (typeof apiRef.current?.cargar !== "function" && Date.now() < apiReadyDeadline) {
-        await new Promise((resolve) => window.setTimeout(resolve, 100));
-      }
-      if (typeof apiRef.current?.cargar !== "function") {
-        throw new Error("AURUM RENDER no terminó de inicializarse. Vuelve a intentar la recepción desde Rhino.");
-      }
+      // Start the loopback request synchronously from the retry button's click.
+      // Waiting for the WebGL viewer before fetch can consume Chromium's transient
+      // user activation and prevent the Local Network Access permission prompt.
       setAurumConectStatus("Conectando con Rhino y solicitando acceso al documento…");
       const endpoint = `http://127.0.0.1:${port}/transfer?token=${token}`;
-      const response = await fetch(endpoint, {
+      const responsePromise = fetch(endpoint, {
         method: "GET",
         mode: "cors",
         credentials: "omit",
@@ -3745,6 +3739,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         referrerPolicy: "no-referrer",
         targetAddressSpace: "loopback",
       } as RequestInit & { targetAddressSpace: "loopback" });
+      const response = await responsePromise;
       if (!response.ok) {
         const message = await response.text().catch(() => "");
         if (response.status === 410) throw new Error("La transferencia expiró o ya fue completada. Vuelve a pulsar ACTUALIZAR DISEÑO en Rhino.");
@@ -3760,6 +3755,17 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         type: "application/octet-stream",
         lastModified: Date.now(),
       });
+
+      // The one-time token has now delivered the file. It is safe to wait for
+      // the renderer because the network permission request already completed.
+      const apiReadyDeadline = Date.now() + 10000;
+      while (typeof apiRef.current?.cargar !== "function" && Date.now() < apiReadyDeadline) {
+        await new Promise((resolve) => window.setTimeout(resolve, 100));
+      }
+      if (typeof apiRef.current?.cargar !== "function") {
+        throw new Error("El documento llegó desde Rhino, pero AURUM RENDER no terminó de inicializarse. Vuelve a enviar el diseño desde Rhino.");
+      }
+
       setAurumConectStatus("Documento recibido. Preparando la geometría para AURUM RENDER…");
       const loaded = await cargarArchivo(file, { preserveScene: true });
       if (!loaded) throw new Error("Aurum Render no pudo procesar el archivo 3DM.");
