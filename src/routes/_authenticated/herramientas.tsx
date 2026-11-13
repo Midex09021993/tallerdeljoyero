@@ -36,6 +36,7 @@ const tarjetaBase =
 function HerramientasPage() {
   const [herramientaActiva, setHerramientaActiva] = useState<HerramientaInterna>(null);
   const [mostrarIntroAurumRender, setMostrarIntroAurumRender] = useState(false);
+  const [mostrarArquitecturaAurum, setMostrarArquitecturaAurum] = useState(false);
   const [mostrarIntroAurumTransfer, setMostrarIntroAurumTransfer] = useState(false);
   const [mostrarIntroAurumConect, setMostrarIntroAurumConect] = useState(false);
   const [mostrarGuiaAurumConect, setMostrarGuiaAurumConect] = useState(false);
@@ -290,11 +291,79 @@ function HerramientasPage() {
                 <h3 className="font-semibold">¿Listo para visualizar tu diseño?</h3>
                 <p className="mt-1 text-sm text-muted-foreground">Abre Aurum Render cuando hayas terminado de conocer sus funciones.</p>
               </div>
-              <Link to="/aurum-render" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold">
-                <Gem className="size-4" /> Ir a Aurum Render <ChevronRight className="size-4" />
-              </Link>
+              <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                <button
+                  type="button"
+                  aria-expanded={mostrarArquitecturaAurum}
+                  aria-controls="aurum-render-arquitectura"
+                  onClick={() => setMostrarArquitecturaAurum((visible) => !visible)}
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground transition hover:border-gold/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+                >
+                  <Info className="size-4 text-gold" />
+                  {mostrarArquitecturaAurum ? "Ocultar tecnología" : "Conocer nuestra tecnología"}
+                  <ChevronRight className={`size-4 transition-transform ${mostrarArquitecturaAurum ? "rotate-90" : ""}`} />
+                </button>
+                <Link to="/aurum-render" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold">
+                  <Gem className="size-4" /> Ir a Aurum Render <ChevronRight className="size-4" />
+                </Link>
+              </div>
             </div>
           </section>
+          {mostrarArquitecturaAurum ? (
+            <section id="aurum-render-arquitectura" aria-labelledby="aurum-render-arquitectura-title" className="mx-auto w-full max-w-[1200px] overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+              <div className="border-b border-border bg-gradient-to-br from-gold/10 via-card to-card px-6 py-7 sm:px-8">
+                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-gold">Tecnología desarrollada por AURUM LAB</p>
+                <h2 id="aurum-render-arquitectura-title" className="mt-2 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">¿Cómo está construido AURUM RENDER?</h2>
+                <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">
+                  Utilizamos Three.js y WebGL como base gráfica y desarrollamos sobre ellos módulos especializados para visualizar joyería: materiales, gemas, iluminación, geometría y captura de alta calidad.
+                </p>
+              </div>
+              <div className="grid gap-3 p-5 sm:grid-cols-2 sm:p-7 lg:grid-cols-3">
+                <article className="rounded-xl border border-border p-4">
+                  <div className="mb-3 grid size-9 place-items-center rounded-lg border border-gold/25 bg-gold/10 text-gold"><MonitorDown className="size-4" /></div>
+                  <h3 className="text-sm font-semibold">Base gráfica · Three.js + WebGL</h3>
+                  <p className="mt-2 text-xs leading-5 text-muted-foreground">Gestiona la escena 3D, cámara, geometría y renderizado acelerado por GPU en el navegador.</p>
+                </article>
+                <article className="rounded-xl border border-border p-4">
+                  <div className="mb-3 grid size-9 place-items-center rounded-lg border border-gold/25 bg-gold/10 text-gold"><Gem className="size-4" /></div>
+                  <h3 className="text-sm font-semibold">Gem Engine</h3>
+                  <p className="mt-2 text-xs leading-5 text-muted-foreground">Perfiles por familia de gema, transmisión, índice de refracción, dispersión dinámica y respuesta visual especializada.</p>
+                </article>
+                <article className="rounded-xl border border-border p-4">
+                  <div className="mb-3 grid size-9 place-items-center rounded-lg border border-gold/25 bg-gold/10 text-gold"><Sparkles className="size-4" /></div>
+                  <h3 className="text-sm font-semibold">Metal Engine</h3>
+                  <p className="mt-2 text-xs leading-5 text-muted-foreground">Materiales PBR y perfiles para representar oro, plata, platino y sus diferentes acabados.</p>
+                </article>
+                <article className="rounded-xl border border-border p-4">
+                  <div className="mb-3 grid size-9 place-items-center rounded-lg border border-gold/25 bg-gold/10 text-gold"><Sparkles className="size-4" /></div>
+                  <h3 className="text-sm font-semibold">Light & Environment</h3>
+                  <p className="mt-2 text-xs leading-5 text-muted-foreground">Iluminación de estudio, presets y entornos HDRI diferenciados para metales y gemas.</p>
+                </article>
+                <article className="rounded-xl border border-border p-4">
+                  <div className="mb-3 grid size-9 place-items-center rounded-lg border border-gold/25 bg-gold/10 text-gold"><MonitorDown className="size-4" /></div>
+                  <h3 className="text-sm font-semibold">Geometry & Optimization</h3>
+                  <p className="mt-2 text-xs leading-5 text-muted-foreground">Preparación de modelos, análisis de mallas, aceleración BVH, cachés y calidad adaptativa según la carga.</p>
+                </article>
+                <article className="rounded-xl border border-border p-4">
+                  <div className="mb-3 grid size-9 place-items-center rounded-lg border border-gold/25 bg-gold/10 text-gold"><Gem className="size-4" /></div>
+                  <h3 className="text-sm font-semibold">Final Render Pipeline</h3>
+                  <p className="mt-2 text-xs leading-5 text-muted-foreground">Postprocesamiento y una ruta de captura final especializada que utiliza GPU path tracing.</p>
+                </article>
+              </div>
+              <div className="border-t border-border bg-muted/20 px-5 py-4 sm:px-7">
+                <h3 className="text-sm font-semibold">Una tecnología que evoluciona desde su propia base</h3>
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                  AURUM RENDER no es un motor gráfico creado desde cero: es una tecnología de visualización de joyería desarrollada sobre Three.js, con módulos, perfiles y pipelines propios. Estamos evolucionando su arquitectura para separar estos módulos y habilitar extensiones especializadas sin comprometer la calidad visual del motor.
+                </p>
+                <p className="mt-2 text-[11px] leading-5 text-muted-foreground">Algunas capacidades ópticas avanzadas continúan en fase experimental; no todas representan todavía simulación física completa.</p>
+                <div className="mt-3">
+                  <a href="https://github.com/Midex09021993/tallerdeljoyero/blob/main/docs/arquitectura/aurum-render-arquitectura-y-comparativa.md" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-xs font-semibold text-gold underline-offset-4 hover:underline">
+                    Ver arquitectura técnica y comparativa completa <ChevronRight className="size-3.5" />
+                  </a>
+                </div>
+              </div>
+            </section>
+          ) : null}
         ) : mostrarIntroAurumTransfer ? (
           <section className="mx-auto w-full max-w-[1200px] overflow-hidden rounded-2xl border border-border bg-card shadow-card">
             <div className="relative overflow-hidden border-b border-border bg-gradient-to-br from-gold/10 via-card to-card px-6 py-10 sm:px-10 sm:py-14">
