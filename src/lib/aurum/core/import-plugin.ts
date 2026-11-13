@@ -14,7 +14,7 @@ export interface AurumImportRequest {
   readonly onStage?: (stage: string, details?: Record<string, unknown>) => void;
   /** Run expensive read-only geometry diagnostics during this import. Production defaults to false. */
   readonly diagnostics?: boolean;
-  /** Visual metal CSG union. Defaults to enabled for Rhino 3DM; can be explicitly disabled. */
+  /** Experimental visual metal CSG union. Disabled by default to preserve source CAD surfaces; enable only for controlled A/B tests. */
   readonly metalUnion?: boolean;
 }
 
@@ -79,7 +79,7 @@ export function createAurumImportPlugin(): AurumImportPlugin {
           colorRhinoHex,
           classifyLayer,
           (message: string) => progress(message),
-          { metalUnion: request.metalUnion ?? format === "3dm" },
+          { metalUnion: request.metalUnion === true },
         );
         stage("source-converted-to-glb", { sourceFormat: format });
         progress("Optimizando estructura para el visor...");
