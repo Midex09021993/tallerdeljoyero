@@ -134,3 +134,41 @@ Lovable debe entregar primero un informe de auditoría sin modificar código. De
 ### Estado CI
 
 El workflow de calidad está configurado para build, TypeScript, ESLint, pruebas de regresión AURUM y checks Deno. La existencia de esos pasos no acredita que el commit actual haya pasado: registrar el resultado real de GitHub Actions al momento de la auditoría. Si no hay ejecución disponible, marcarlo como pendiente.
+
+
+## AURUM Module Contracts — primera entrega conservadora
+
+Se amplió el contrato declarativo de plugins sin cambiar la creación de escenas, materiales, geometrías, shaders, HDRI, BVH ni el ciclo de render en vivo.
+
+### Campos nuevos del contrato
+
+- `description`: responsabilidad legible del módulo.
+- `providesServices`: identificadores de servicios que el módulo declara ofrecer.
+- `requiresServices`: identificadores que deben estar disponibles antes de inicializar.
+- `dependencies`: dependencias de plugins existentes, conservando el orden topológico.
+
+### Validaciones previas a inicialización
+
+- Identificadores de servicio vacíos.
+- Servicios provistos duplicados dentro de un módulo.
+- Servicio declarado como provisto que no existe en el contenedor.
+- Dos módulos que declaran el mismo proveedor.
+- Servicios requeridos que no están registrados.
+
+Estas comprobaciones ocurren durante la resolución del grafo y antes de ejecutar cualquier `initialize()`. Los contratos son aditivos y opcionales para no obligar a migrar de golpe los módulos existentes.
+
+### Integración
+
+`AurumProductionModule` ahora admite `description` y `requiresServices`, y el host deriva `providesServices` de las claves del mapa de servicios que recibe. El host sigue siendo propietario del ciclo de vida de plugins; los controladores productivos conservan la propiedad de sus recursos Three.js.
+
+### Pruebas añadidas
+
+- Rechazar servicios requeridos ausentes antes de inicializar.
+- Rechazar servicios declarados como provistos que no están registrados.
+- Rechazar dos módulos que declaran el mismo proveedor.
+
+Ejecutar: `bun test scripts/aurum-plugin-registry.test.ts`.
+
+### Límite de esta entrega
+
+No se migraron todos los módulos productivos para declarar `requiresServices`; esto debe hacerse después de inventariar sus dependencias reales, no adivinándolas. Esta entrega establece y prueba el mecanismo, no certifica todavía que todos los módulos estén completamente contratados.
