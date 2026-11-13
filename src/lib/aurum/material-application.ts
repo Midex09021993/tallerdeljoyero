@@ -430,25 +430,29 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
       [assignmentKey]:assignment,
     },
   };
-  console.info("[AURUM][GEM LAYER ASSIGNMENT]",{
-    selectedMesh:target.name||target.uuid,
-    selectedLayer,
-    selectedLayerKey:assignmentKey,
-    selectedLayerIndex,
-    selectedLayerId:selectedLayerId==null?null:String(selectedLayerId),
-    selectedCategory,
-    gemId:String(gemConfig?.id??""),
-    matchedMeshes:targets.length,
-    identityResolved:hasStableLayerIdentity,
-    matches:targets.map((part:any)=>({
-      mesh:part.name||part.uuid,
-      layer:selectionMeta(part).capa??part.userData?.attributes?.layerName??null,
-      layerKey:selectionMeta(part).layerKey??null,
-      category:selectionCategory(part),
-      layerIndex:selectionLayerIndex(part),
-      layerId:selectionMeta(part).rhinoLayerId??part.userData?.attributes?.layerId??part.userData?.attributes?.LayerId??null,
-    })),
-  });
+  const gemAuditEnabled=typeof window!=="undefined"
+    && new URLSearchParams(window.location.search).get("aurumGemAudit")==="1";
+  if(gemAuditEnabled){
+    console.info("[AURUM][GEM LAYER ASSIGNMENT]",{
+      selectedMesh:target.name||target.uuid,
+      selectedLayer,
+      selectedLayerKey:assignmentKey,
+      selectedLayerIndex,
+      selectedLayerId:selectedLayerId==null?null:String(selectedLayerId),
+      selectedCategory,
+      gemId:String(gemConfig?.id??""),
+      matchedMeshes:targets.length,
+      identityResolved:hasStableLayerIdentity,
+      matches:targets.map((part:any)=>({
+        mesh:part.name||part.uuid,
+        layer:selectionMeta(part).capa??part.userData?.attributes?.layerName??null,
+        layerKey:selectionMeta(part).layerKey??null,
+        category:selectionCategory(part),
+        layerIndex:selectionLayerIndex(part),
+        layerId:selectionMeta(part).rhinoLayerId??part.userData?.attributes?.layerId??part.userData?.attributes?.LayerId??null,
+      })),
+    });
+  }
 
   const physicalModel=resolveAurumGemPhysicalModel(gemConfig);
   const preset:any=presetFromCatalog(gemConfig);
@@ -522,8 +526,6 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
   };
   const activeGemId=String(gemConfig?.id??"");
   const activeGemFamily=String(gemConfig?.familia??"").toLocaleLowerCase();
-  const gemAuditEnabled=typeof window!=="undefined"
-    && new URLSearchParams(window.location.search).get("aurumGemAudit")==="1";
   const scheduleIdle=(callback:()=>void,timeout=900)=>{
     if(typeof window!=="undefined" && typeof (window as any).requestIdleCallback==="function"){
       (window as any).requestIdleCallback(callback,{timeout});
@@ -664,7 +666,14 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
   // The rest of the model is not traversed or rewritten during a catalog change.
   applyGemEnvironment(targets);
   requestRender?.();
-  enrichmentJobs.forEach((job)=>scheduleIdle(job,700));
+  const runNextEnrichmentJob=()=>{
+    const nextJob=enrichmentJobs.shift();
+    nextJob?.();
+    // Large MatrixGold layers are enriched one mesh per idle turn instead of
+    // running every inclusion/diagnostic task in a single long browser task.
+    if(enrichmentJobs.length)scheduleIdle(runNextEnrichmentJob,700);
+  };
+  if(enrichmentJobs.length)scheduleIdle(runNextEnrichmentJob,700);
   return true;
 }
 export function clearAurumGemFromTarget(target:any){if(target)clearAurumInclusions(target);}
