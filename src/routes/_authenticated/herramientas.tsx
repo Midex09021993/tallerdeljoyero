@@ -8,6 +8,7 @@ import { VisorPesoJoyeria } from "@/components/VisorPesoJoyeria";
 import { CalculadoraYeso } from "@/components/CalculadoraYesoAgua";
 import { CalculadoraPesoGemas } from "@/components/CalculadoraPesoGemas";
 import { AsistenteImpresion3D } from "@/components/AsistenteImpresion3D";
+import { AurumCausticsLab } from "@/components/aurum-caustics/AurumCausticsLab";
 
 export const Route = createFileRoute("/_authenticated/herramientas")({
   head: () => ({
@@ -26,6 +27,7 @@ type HerramientaInterna =
   | "gemas"
   | "tallas"
   | "impresion"
+  | "caustics"
   | null;
 
 const tarjetaBase =
@@ -93,6 +95,7 @@ function HerramientasPage() {
     gemas: "Calculadora de peso de gemas",
     tallas: "Conversor de tallas de anillo",
     impresion: "Asistente de impresión 3D",
+    caustics: "AURUM CAUSTICS · Laboratorio óptico",
   };
 
   const opciones = [
@@ -102,6 +105,7 @@ function HerramientasPage() {
     { id: "gemas" as const, titulo: "Peso de gemas", Icono: CircleDot },
     { id: "tallas" as const, titulo: "Tallas de anillo", Icono: Ruler },
     { id: "impresion" as const, titulo: "Impresión 3D", Icono: CircleDot },
+    { id: "caustics" as const, titulo: "AURUM CAUSTICS", Icono: Gem },
   ];
 
   return (
@@ -351,6 +355,7 @@ function HerramientasPage() {
               {herramientaActiva === "gemas" ? <CalculadoraPesoGemas /> : null}
               {herramientaActiva === "tallas" ? <ConversorTallasAnillo /> : null}
               {herramientaActiva === "impresion" ? <AsistenteImpresion3D /> : null}
+              {herramientaActiva === "caustics" ? <AurumCausticsLab /> : null}
             </div>
           </section>
         ) : (
