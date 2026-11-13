@@ -1,4 +1,9 @@
-import { configureAurumEdgeQuality } from "./edge-quality";
+import {
+  configureAurumEdgeQuality,
+  createAurumSurfaceEdgeAaPass,
+  setAurumEdgeAaResolution,
+  shouldEnableAurumEdgeAa,
+} from "./edge-quality";
 
 /**
  * Configure the gem classification target as categorical data.
@@ -395,33 +400,7 @@ export async function createAurumPostPipeline(
     // Conservative full-surface edge AA for polished metal silhouettes and
     // CAD curves. It is intentionally disabled during camera motion and uses
     // a low blend strength to avoid softening specular detail.
-    surfaceEdgeAaPass=new FXAAShaderPass({
-      uniforms:{
-        tDiffuse:{value:null},
-        resolution:{value:new THREE.Vector2(1,1)},
-        strength:{value:0.075},
-        edgeThreshold:{value:0.16},
-      },
-      vertexShader:`varying vec2 vUv; void main(){vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
-      fragmentShader:`uniform sampler2D tDiffuse; uniform vec2 resolution; uniform float strength; uniform float edgeThreshold; varying vec2 vUv;
-        float edgeLuma(vec3 c){return dot(c,vec3(0.2126,0.7152,0.0722));}
-        void main(){
-          vec4 center=texture2D(tDiffuse,vUv);
-          vec2 px=max(resolution,vec2(0.000001));
-          vec3 n0=texture2D(tDiffuse,vUv+vec2(-px.x,-px.y)).rgb;
-          vec3 n1=texture2D(tDiffuse,vUv+vec2( px.x,-px.y)).rgb;
-          vec3 n2=texture2D(tDiffuse,vUv+vec2(-px.x, px.y)).rgb;
-          vec3 n3=texture2D(tDiffuse,vUv+vec2( px.x, px.y)).rgb;
-          float centerLuma=edgeLuma(center.rgb);
-          float lo=min(centerLuma,min(min(edgeLuma(n0),edgeLuma(n1)),min(edgeLuma(n2),edgeLuma(n3))));
-          float hi=max(centerLuma,max(max(edgeLuma(n0),edgeLuma(n1)),max(edgeLuma(n2),edgeLuma(n3))));
-          float edge=smoothstep(edgeThreshold,edgeThreshold*2.0,hi-lo);
-          vec3 diagonal=(n0+n1+n2+n3)*0.25;
-          float blendAmount=edge*strength;
-          gl_FragColor=vec4(mix(center.rgb,diagonal,blendAmount),center.a);
-        }`,
-    });
-    surfaceEdgeAaPass.enabled=false;
+    surfaceEdgeAaPass=createAurumSurfaceEdgeAaPass(FXAAShaderPass,THREE);
     composer.addPass(surfaceEdgeAaPass);
 
     const { OutputPass }=await import("three/examples/jsm/postprocessing/OutputPass.js");
@@ -481,7 +460,7 @@ export async function createAurumPostPipeline(
     const taaEnabled=taaRequested && !temporalMotionActive;
     // Edge AA is a settled-quality treatment: never add fullscreen filtering
     // work to the direct-render orbit path. Still captures may use it explicitly.
-    const edgeAaEnabled=high && (!temporalMotionActive || Boolean(options.capture));
+    const edgeAaEnabled=shouldEnableAurumEdgeAa(high,temporalMotionActive,Boolean(options.capture));
     if(gemMaskPass) gemMaskPass.enabled=edgeAaEnabled;
     if(fxaaPass) fxaaPass.enabled=edgeAaEnabled;
     if(surfaceEdgeAaPass) surfaceEdgeAaPass.enabled=edgeAaEnabled;
@@ -504,9 +483,7 @@ export async function createAurumPostPipeline(
       if(fxaaPass?.material?.uniforms?.resolution?.value){
         fxaaPass.material.uniforms.resolution.value.set(inverseWidth,inverseHeight);
       }
-      if(surfaceEdgeAaPass?.material?.uniforms?.resolution?.value){
-        surfaceEdgeAaPass.material.uniforms.resolution.value.set(inverseWidth,inverseHeight);
-      }
+      setAurumEdgeAaResolution(surfaceEdgeAaPass,width,height);
     };
     updateEdgeAaResolution();
     if(taaPass){
