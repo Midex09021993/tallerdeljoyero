@@ -81,14 +81,18 @@ test("import pipeline manager returns a complete, ordered stage history", async 
   expect(result.geometry.meshCount).toBe(1);
   expect(result.geometry.visibleMeshCount).toBe(1);
   expect(result.geometry.bounds).not.toBeNull();
+  expect(result.surface.meshCount).toBe(1);
+  expect(result.surface.sharedEdgesAcrossBodies).toBe(0);
+  expect(result.surface.truncated).toBe(false);
   expect(result.pipeline).toEqual([
     "import-started",
     "source-decoded",
     "source-converted-to-glb",
     "converted-model-normalized",
     "geometry-inspected",
+    "surface-inspected",
   ]);
-  expect(stages).toEqual(["import-started", "geometry-inspected"]);
+  expect(stages).toEqual(["import-started", "geometry-inspected", "surface-inspected"]);
   model.traverse((node) => {
     if ((node as THREE.Mesh).isMesh) (node as THREE.Mesh).geometry.dispose();
   });

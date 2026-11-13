@@ -611,6 +611,7 @@ export async function convertAurumToGlb(
   colorRhinoHex?: (color:any) => string | undefined,
   clasificarCapa?: (capa:string,colorCapa?:string) => "metal" | "gema" | "otro",
   onProgress?: (message: string, completed?: number, total?: number) => void,
+  options: { metalUnion?: boolean } = {},
 ) {
   // Preserve the original Rhino layer table and each mesh's own source
   // attributes as explicit GLB extras. Do not rely on traversal order or on
@@ -683,14 +684,18 @@ export async function convertAurumToGlb(
   const materialConsolidation = consolidateAurumMetalMaterialsByLayer(object);
   console.info("[AURUM][METAL MATERIAL CONSOLIDATION]", materialConsolidation);
 
-  // Apply the validated accumulated metal union to every imported model.
-  // Rhino Mesh, SubD and unknown geometry types remain excluded by the CSG
-  // eligibility guard; their original source meshes stay intact.
-  try {
-    const unionResult = applyAurumMetalUnionExperiment(object, 16);
-    console.info("[AURUM][METAL UNION]", unionResult);
-  } catch (error) {
-    console.warn("[AURUM][METAL UNION] Failed safely; keeping source meshes", error);
+  // CSG is a visual approximation, not a native Rhino BREP union. It is
+  // deliberately disabled by default: a bounding-box overlap is not proof of
+  // a valid solid intersection, and automatic fusion can erase intentional seams.
+  // Enable only for a controlled, reversible comparison after inspecting the
+  // AURUM SURFACE report and validating the result against the source model.
+  if (options.metalUnion === true) {
+    try {
+      const unionResult = applyAurumMetalUnionExperiment(object, 16);
+      console.info("[AURUM][METAL UNION][EXPLICIT EXPERIMENT]", unionResult);
+    } catch (error) {
+      console.warn("[AURUM][METAL UNION] Failed safely; keeping source meshes", error);
+    }
   }
   onProgress?.("Generando archivo 3D interno");
   const { GLTFExporter } = await import("three/examples/jsm/exporters/GLTFExporter.js");
