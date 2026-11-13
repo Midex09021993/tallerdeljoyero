@@ -394,3 +394,12 @@ Validación pendiente: ejecutar `scripts/aurum-glb-quality-gate.test.ts`, build 
 - Se exponen diagnósticos de activación y pruebas unitarias de la política de habilitación y resolución.
 - No se modificaron shaders ópticos, BVH, HDRI, calibraciones ni materiales.
 - Pendiente: ejecutar pruebas, validar visualmente en navegador/GPU real y medir FPS/tiempo de estabilización antes de certificar el beneficio visual y el coste.
+
+
+### Antialiasing interactivo de baja intensidad — 2026-11-13
+
+- El pase Surface Edge AA ahora forma parte de la cadena ligera de órbita cuando el perfil no es Low y el runtime budget no es Extreme.
+- Durante interacción usa strength 0.035; en reposo vuelve a 0.075.
+- No se activa TAA, SSAO, SSR, Bloom ni DOF por esta mejora.
+- No aumenta el Pixel Ratio de interacción ni modifica el camino directo de fallback.
+- La elegibilidad se limita por perfil y tier geométrico; la validación de FPS y coste GPU en equipos reales sigue pendiente.
