@@ -1,0 +1,172 @@
+/**
+ * AURUM CORE — plugin contracts.
+ *
+ * This contract layer is deliberately renderer-agnostic: plugins receive an
+ * application-owned context and must release only the resources they create.
+ * The existing production renderer is not wired to this registry yet.
+ */
+export type AurumPluginId = string;
+
+export interface AurumPluginContext {
+  readonly appId: "aurum-render";
+  readonly version: string;
+  readonly services: ReadonlyMap<string, unknown>;
+  readonly signal: AbortSignal;
+}
+
+export interface AurumPluginRuntime {
+  activate?: () => void | Promise<void>;
+  deactivate?: () => void | Promise<void>;
+  dispose?: () => void | Promise<void>;
+}
+
+export interface AurumPluginDefinition {
+  readonly id: AurumPluginId;
+  readonly version: string;
+  readonly dependencies?: readonly AurumPluginId[];
+  initialize: (context: AurumPluginContext) => void | AurumPluginRuntime | Promise<void | AurumPluginRuntime>;
+}
+
+export type AurumPluginRegistryState = "idle" | "starting" | "running" | "stopping" | "disposed";
+
+type RegisteredPlugin = {
+  definition: AurumPluginDefinition;
+  runtime: AurumPluginRuntime;
+};
+
+function validatePluginId(id: string): void {
+  if (!/^[a-z][a-z0-9-]*(?:\.[a-z][a-z0-9-]*)*$/.test(id)) {
+    throw new Error(`Invalid AURUM plugin id "${id}". Use lowercase names separated by dots or hyphens.`);
+  }
+}
+
+export class AurumPluginRegistry {
+  private readonly definitions = new Map<AurumPluginId, AurumPluginDefinition>();
+  private readonly initialized: RegisteredPlugin[] = [];
+  private state: AurumPluginRegistryState = "idle";
+  private abortController: AbortController | null = null;
+
+  constructor(private readonly context: Omit<AurumPluginContext, "signal">) {}
+
+  getState(): AurumPluginRegistryState {
+    return this.state;
+  }
+
+  getRegisteredIds(): readonly AurumPluginId[] {
+    return [...this.definitions.keys()];
+  }
+
+  register(definition: AurumPluginDefinition): void {
+    if (this.state !== "idle") {
+      throw new Error("AURUM plugins can only be registered while the registry is idle.");
+    }
+    validatePluginId(definition.id);
+    if (!definition.version.trim()) {
+      throw new Error(`AURUM plugin "${definition.id}" must declare a version.`);
+    }
+    if (this.definitions.has(definition.id)) {
+      throw new Error(`AURUM plugin "${definition.id}" is already registered.`);
+    }
+    if (definition.dependencies?.includes(definition.id)) {
+      throw new Error(`AURUM plugin "${definition.id}" cannot depend on itself.`);
+    }
+    this.definitions.set(definition.id, definition);
+  }
+
+  private resolveOrder(): AurumPluginDefinition[] {
+    const order: AurumPluginDefinition[] = [];
+    const temporary = new Set<AurumPluginId>();
+    const permanent = new Set<AurumPluginId>();
+
+    const visit = (id: AurumPluginId) => {
+      if (permanent.has(id)) return;
+      if (temporary.has(id)) {
+        throw new Error(`Circular AURUM plugin dependency detected at "${id}".`);
+      }
+      const definition = this.definitions.get(id);
+      if (!definition) {
+        throw new Error(`Required AURUM plugin "${id}" is not registered.`);
+      }
+      temporary.add(id);
+      for (const dependency of definition.dependencies ?? []) visit(dependency);
+      temporary.delete(id);
+      permanent.add(id);
+      order.push(definition);
+    };
+
+    for (const id of this.definitions.keys()) visit(id);
+    return order;
+  }
+
+  async start(): Promise<void> {
+    if (this.state === "running") return;
+    if (this.state !== "idle") {
+      throw new Error(`Cannot start AURUM plugin registry from state "${this.state}".`);
+    }
+
+    // Validate the entire graph before initializing any plugin.
+    const order = this.resolveOrder();
+    this.state = "starting";
+    this.abortController = new AbortController();
+    const pluginContext: AurumPluginContext = {
+      ...this.context,
+      signal: this.abortController.signal,
+    };
+
+    try {
+      for (const definition of order) {
+        const runtime = (await definition.initialize(pluginContext)) ?? {};
+        const registered = { definition, runtime };
+        this.initialized.push(registered);
+        await runtime.activate?.();
+      }
+      this.state = "running";
+    } catch (error) {
+      this.abortController.abort();
+      await this.cleanupInitialized();
+      this.state = "idle";
+      this.abortController = null;
+      throw error;
+    }
+  }
+
+  private async cleanupInitialized(): Promise<void> {
+    const failures: unknown[] = [];
+    for (const plugin of [...this.initialized].reverse()) {
+      try {
+        await plugin.runtime.deactivate?.();
+      } catch (error) {
+        failures.push(error);
+      }
+      try {
+        await plugin.runtime.dispose?.();
+      } catch (error) {
+        failures.push(error);
+      }
+    }
+    this.initialized.length = 0;
+    if (failures.length > 0) {
+      throw new AggregateError(failures, "One or more AURUM plugins failed to clean up.");
+    }
+  }
+
+  async dispose(): Promise<void> {
+    if (this.state === "disposed") return;
+    if (this.state === "starting" || this.state === "stopping") {
+      throw new Error(`Cannot dispose AURUM plugin registry while "${this.state}".`);
+    }
+    if (this.state === "idle") {
+      this.state = "disposed";
+      return;
+    }
+
+    this.state = "stopping";
+    this.abortController?.abort();
+    try {
+      await this.cleanupInitialized();
+    } finally {
+      this.abortController = null;
+      this.state = "disposed";
+    }
+  }
+}
