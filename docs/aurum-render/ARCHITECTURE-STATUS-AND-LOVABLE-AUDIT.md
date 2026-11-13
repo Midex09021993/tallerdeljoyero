@@ -400,6 +400,7 @@ Validación pendiente: ejecutar `scripts/aurum-glb-quality-gate.test.ts`, build 
 
 - El pase Surface Edge AA ahora forma parte de la cadena ligera de órbita cuando el perfil no es Low y el runtime budget no es Extreme.
 - Durante interacción y en reposo usa strength 0.035 para mantener una respuesta visual uniforme; en Low permanece desactivado.
+- TAA queda desactivado en ambos estados del visor en vivo; se conserva únicamente para rutas de captura explícita.
 - No se activa TAA, SSAO, SSR, Bloom ni DOF por esta mejora.
 - No aumenta el Pixel Ratio de interacción ni modifica el camino directo de fallback.
 - La elegibilidad se limita por perfil y tier geométrico; la validación de FPS y coste GPU en equipos reales sigue pendiente.
