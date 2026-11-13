@@ -90,7 +90,23 @@ export class AurumPluginRegistry {
     if (new Set(definition.providesServices ?? []).size !== (definition.providesServices ?? []).length) {
       throw new Error(`AURUM plugin "${definition.id}" declares duplicate provided services.`);
     }
-    this.definitions.set(definition.id, definition);
+    // Keep the registry contract stable after registration. TypeScript's
+    // readonly modifiers do not prevent callers from mutating the original
+    // arrays/objects at runtime, which could otherwise alter dependency and
+    // service validation after the plugin has been registered.
+    const snapshot: AurumPluginDefinition = Object.freeze({
+      ...definition,
+      ...(definition.dependencies
+        ? { dependencies: Object.freeze([...definition.dependencies]) }
+        : {}),
+      ...(definition.providesServices
+        ? { providesServices: Object.freeze([...definition.providesServices]) }
+        : {}),
+      ...(definition.requiresServices
+        ? { requiresServices: Object.freeze([...definition.requiresServices]) }
+        : {}),
+    });
+    this.definitions.set(snapshot.id, snapshot);
   }
 
   private resolveOrder(): AurumPluginDefinition[] {
