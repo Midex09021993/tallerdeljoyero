@@ -173,6 +173,18 @@ Ejecutar: `bun test scripts/aurum-plugin-registry.test.ts`.
 
 No se migraron todos los módulos productivos para declarar `requiresServices`; esto debe hacerse después de inventariar sus dependencias reales, no adivinándolas. Esta entrega establece y prueba el mecanismo, no certifica todavía que todos los módulos estén completamente contratados.
 
+## AURUM IMPORT — cancelación segura y limpieza de geometría
+
+El contrato de importación ahora acepta un `AbortSignal` opcional. Se comprueba antes de iniciar, después de decodificar y entre las etapas de conversión/normalización; el manager también comprueba cancelación entre Smart Scan y cada diagnóstico profundo.
+
+- La cancelación se representa como error estándar `AbortError` y publica `import-failed` con el indicador `cancelled`.
+- Si la importación no llega a entregar un resultado, se liberan los `BufferGeometry` decodificados/parciales de origen y modelo, deduplicando referencias compartidas.
+- No se liberan materiales: pueden ser compartidos con el visor y no pertenecen exclusivamente al importador.
+- La ruta normal y el fast path de Smart Scan permanecen sin diagnósticos profundos; surface/solid/intersection siguen siendo opt-in.
+- Límite explícito: los decodificadores actuales de terceros no reciben todavía el AbortSignal. Si se cancela durante una decodificación/conversión síncrona o no cancelable, el resultado se descarta y limpia al alcanzar el siguiente punto seguro; no se promete interrupción inmediata del trabajo interno.
+
+Pruebas añadidas en `scripts/aurum-import-pipeline.test.ts`: solicitud ya cancelada (no invoca el importador), cancelación después de decodificar (libera geometría) y cancelación entre Smart Scan y diagnósticos profundos. La suite ya está integrada en el workflow de calidad.
+
 ## AURUM EDGE QUALITY — cierre de contrato MSAA
 
 La revisión del pipeline confirma que `createAurumPostPipeline()` instancia `EffectComposer` y configura EDGE QUALITY inmediatamente después de su construcción, antes de añadir/renderizar los pases. MSAA se limita a los dos targets ping-pong del compositor.
