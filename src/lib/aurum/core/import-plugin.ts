@@ -16,6 +16,8 @@ export interface AurumImportRequest {
   readonly diagnostics?: boolean;
   /** Experimental visual metal CSG union. Disabled by default to preserve source CAD surfaces; enable only for controlled A/B tests. */
   readonly metalUnion?: boolean;
+  /** Cancels the import at safe stage boundaries. Active third-party decoders may finish before cancellation is observed. */
+  readonly signal?: AbortSignal;
 }
 
 export interface AurumImportResult {
@@ -51,26 +53,48 @@ export function createAurumImportPlugin(): AurumImportPlugin {
       }
 
       const pipeline: string[] = [];
+      const throwIfAborted = () => {
+        if (request.signal?.aborted) {
+          const error = new Error("La importación fue cancelada.");
+          error.name = "AbortError";
+          throw error;
+        }
+      };
+      const disposeGeometry = (root: THREE.Object3D) => {
+        const disposed = new Set<THREE.BufferGeometry>();
+        root.traverse((node) => {
+          const mesh = node as THREE.Mesh;
+          if (mesh.geometry?.isBufferGeometry && !disposed.has(mesh.geometry)) {
+            disposed.add(mesh.geometry);
+            mesh.geometry.dispose();
+          }
+        });
+      };
       const stage = (name: string, details: Record<string, unknown> = {}) => {
         pipeline.push(name);
         request.onStage?.(name, details);
       };
       const progress = (message: string) => request.onProgress?.(message);
 
+      throwIfAborted();
       progress(format === "3dm" ? "Leyendo archivo 3DM..." : "Leyendo archivo...");
       const sourceObject = await parseAurumInput(file, format, fallbackMaterial);
-      stage("source-decoded", { sourceFormat: format, sourceObjects: countObjects(sourceObject) });
+      try {
+        throwIfAborted();
+        stage("source-decoded", { sourceFormat: format, sourceObjects: countObjects(sourceObject) });
 
       // Rhino uses Z-up; the established AURUM scene uses Y-up.
       if (format === "3dm") {
         sourceObject.rotation.x = -Math.PI / 2;
         sourceObject.updateMatrixWorld(true);
       }
+      throwIfAborted();
 
       let model: THREE.Object3D;
       if (format === "glb") {
         progress("Preparando modelo 3D para el visor...");
         model = await normalizeAurumModel(sourceObject, null, format, colorRhinoHex, classifyLayer);
+        throwIfAborted();
         stage("glb-normalized");
       } else {
         progress("Convirtiendo a GLB...");
@@ -81,18 +105,28 @@ export function createAurumImportPlugin(): AurumImportPlugin {
           (message: string) => progress(message),
           { metalUnion: request.metalUnion === true },
         );
+        throwIfAborted();
         stage("source-converted-to-glb", { sourceFormat: format });
         progress("Optimizando estructura para el visor...");
         model = await normalizeAurumModel(sourceObject, glb, format, colorRhinoHex, classifyLayer);
+        throwIfAborted();
         stage("converted-model-normalized");
       }
 
+      throwIfAborted();
       return Object.freeze({
         sourceObject,
         model,
         format,
         pipeline: Object.freeze([...pipeline]),
       });
+      } catch (error) {
+        // The importer owns decoded geometry until a successful result is handed
+        // to the caller. On cancellation/failure, release geometry buffers only;
+        // materials may be shared with the viewer and are deliberately untouched.
+        disposeGeometry(sourceObject);
+        throw error;
+      }
     },
   });
 }
