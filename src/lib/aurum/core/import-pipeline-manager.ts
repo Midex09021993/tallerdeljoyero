@@ -7,6 +7,13 @@ import { createAurumSmartScan, type AurumSmartScanReport } from "./smart-scan";
 
 export interface AurumImportPipelineResult extends AurumImportResult {
   readonly smartScan: AurumSmartScanReport;
+  readonly resourceBudget: {
+    readonly fileBytes: number;
+    readonly meshes: number;
+    readonly vertices: number;
+    readonly triangles: number;
+    readonly exceeded: readonly string[];
+  };
   readonly geometry?: AurumGeometryReport;
   readonly surface?: AurumSurfaceReport;
   readonly solid?: AurumSolidReport;
@@ -50,7 +57,16 @@ export function createAurumImportPipelineManager(
         }
       };
       throwIfAborted();
-      request.onStage?.("import-started", { fileName: request.file.name, format: request.format });
+      const fileBytes = request.file.size;
+      if (request.maxFileBytes !== undefined && (!Number.isFinite(request.maxFileBytes) || request.maxFileBytes <= 0)) {
+        throw new Error("El límite máximo de archivo debe ser un número positivo.");
+      }
+      if (request.maxFileBytes !== undefined && fileBytes > request.maxFileBytes) {
+        const error = new Error(`El archivo supera el límite configurado de ${request.maxFileBytes} bytes.`);
+        error.name = "AurumImportBudgetError";
+        throw error;
+      }
+      request.onStage?.("import-started", { fileName: request.file.name, format: request.format, fileBytes });
       const imported = await importer.load(request);
       try {
         throwIfAborted();
@@ -58,6 +74,17 @@ export function createAurumImportPipelineManager(
       // Cheap metadata triage runs on every import; it never computes topology.
       request.onProgress?.("Clasificando geometría...");
       const smartScan = createAurumSmartScan().inspect(imported.model);
+      const vertices = smartScan.meshes.reduce((sum, mesh) => sum + mesh.vertices, 0);
+      const triangles = smartScan.meshes.reduce((sum, mesh) => sum + mesh.triangles, 0);
+      const exceeded: string[] = [];
+      const budget = request.geometryBudget;
+      if (budget?.maxMeshes !== undefined && smartScan.meshCount > budget.maxMeshes) exceeded.push("meshes");
+      if (budget?.maxVertices !== undefined && vertices > budget.maxVertices) exceeded.push("vertices");
+      if (budget?.maxTriangles !== undefined && triangles > budget.maxTriangles) exceeded.push("triangles");
+      const resourceBudget = Object.freeze({
+        fileBytes, meshes: smartScan.meshCount, vertices, triangles,
+        exceeded: Object.freeze(exceeded),
+      });
       throwIfAborted();
       stages.push(...imported.pipeline, "smart-scan-complete");
       request.onStage?.("smart-scan-complete", {
@@ -68,6 +95,8 @@ export function createAurumImportPipelineManager(
         red: smartScan.redCount,
         cachedGeometryHits: smartScan.cachedGeometryHits,
         deepDiagnosticsRecommended: smartScan.deepDiagnosticsRecommended,
+        resourceBudget,
+        budgetExceeded: exceeded,
       });
 
       // Production remains fast by default. The scan flags risk; it does not
@@ -79,7 +108,7 @@ export function createAurumImportPipelineManager(
           smartScanRisk: smartScan.deepDiagnosticsRecommended ? "review-recommended" : "low-risk",
           format: imported.format,
         });
-        return Object.freeze({ ...imported, smartScan, pipeline: Object.freeze(stages) });
+        return Object.freeze({ ...imported, smartScan, resourceBudget, pipeline: Object.freeze(stages) });
       }
 
       request.onProgress?.("Comprobando geometría...");
@@ -139,7 +168,7 @@ export function createAurumImportPipelineManager(
 
       return Object.freeze({
         ...imported, smartScan, geometry: geometryReport, surface: surfaceReport,
-        solid: solidReport, intersection: intersectionReport, pipeline: Object.freeze(stages),
+        solid: solidReport, intersection: intersectionReport, resourceBudget, pipeline: Object.freeze(stages),
       });
       } catch (error) {
         // The manager did not hand a result to the caller; it therefore releases
