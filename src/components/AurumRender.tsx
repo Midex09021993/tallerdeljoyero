@@ -2499,8 +2499,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         },
         exportPathTraced:async(options:{width?:number;height?:number;format?:"png"|"jpeg"|"webp";samples?:number;signal?:AbortSignal;onProgress?:(d:number,t:number)=>void}={})=>{
           if(!modelo) throw new Error("Carga un modelo antes del render final.");
-          const { createAurumFinalRenderAdapter } = await import("../lib/aurum/core/final-render-adapter");
-          const finalRenderAdapter = createAurumFinalRenderAdapter();
+          const loadFinalRenderAdapter = productionPluginHost.services.get("aurum.final-render.load-adapter");
+          if (typeof loadFinalRenderAdapter !== "function") throw new Error("AURUM Final Render service is not registered.");
+          const finalRenderAdapter = await loadFinalRenderAdapter();
           const format=options.format==="jpeg"||options.format==="webp"?options.format:"png";
           const mime=format==="jpeg"?"image/jpeg":format==="webp"?"image/webp":"image/png";
           const loop:any=viewerLoopRef.current;
