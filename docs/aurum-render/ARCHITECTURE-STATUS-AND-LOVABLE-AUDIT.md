@@ -321,3 +321,19 @@ La preparación del pipeline de vídeo ahora revierte el estado del compositor s
 - El módulo no libera composer, renderer, escena ni pases; su ownership continúa en el visor productivo.
 
 Pruebas añadidas en `scripts/aurum-video-frame-pipeline.test.ts`: rollback ante fallo parcial de configuración y rechazo de render después de restaurar. No se ejecutó Bun/build/TypeScript en este entorno; el cambio requiere validación en CI y exportación real en navegador.
+
+
+### AURUM GLB QUALITY GATE — ownership de la escena temporal — 2026-11-13
+
+La ruta de conversión a GLB realiza un round-trip real: GLTFExporter genera el binario sin compresión, GLTFLoader lo reabre y el Quality Gate compara geometría, triángulos, bounds, materiales y procedencia de gemas/uniones.
+
+Hallazgo corregido:
+- La escena devuelta por `GLTFLoader.parseAsync()` era temporal y se utilizaba solo para tomar el snapshot de calidad.
+- No tenía una liberación explícita después de la comparación, tanto en el caso aprobado como en el rechazado.
+- Ahora la escena temporal se conserva en una referencia local y se libera en `finally`, después de capturar el snapshot y decidir el resultado.
+- La liberación deduplica geometrías, materiales y texturas y actúa exclusivamente sobre recursos de la escena temporal reabierta. No recorre ni libera la escena CAD de origen, ni materiales compartidos del visor.
+- Si la limpieza temporal falla, se registra una advertencia sin reemplazar el resultado o error original del Quality Gate.
+
+Límite: esto cubre el árbol de recursos Three.js enlazados directamente a las propiedades de los materiales del GLTF reabierto. No se hace cierre explícito de ImageBitmap ni se modifica el ciclo de vida del decodificador Draco compartido.
+
+Validación pendiente: ejecutar `scripts/aurum-glb-quality-gate.test.ts`, build y exportaciones reales con GLB que incluya texturas, gemas y múltiples cuerpos. No se certifica CI ni compilación desde esta sesión.
