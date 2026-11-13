@@ -39,7 +39,7 @@ test("geometry engine respects hidden ancestors and supports the import fast pat
   expect(report.visibleMeshCount).toBe(0);
   expect(report.meshes[0].visible).toBe(false);
   expect(report.bounds).toBeNull();
-  expect(report.meshes[0].finitePositions).toBe(true);
+  expect(report.meshes[0].finitePositions).toBeNull();
   geometry.dispose();
 });
 
