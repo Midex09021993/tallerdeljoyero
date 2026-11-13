@@ -8,6 +8,8 @@
 import type { AurumSceneBackground, AurumSceneController } from "../scene";
 import type { AurumScenePreset } from "../../aurum-scene-engine";
 
+import { createAurumReadonlyMap } from "./readonly-map";
+
 export const AURUM_SCENE_SERVICES = {
   controller: "aurum.scene.controller",
 } as const;
@@ -21,10 +23,10 @@ export interface AurumSceneAdapter {
 }
 
 export function createAurumSceneAdapter(controller: AurumSceneController): AurumSceneAdapter {
-  const services = new Map<string, unknown>([[AURUM_SCENE_SERVICES.controller, controller]]);
+  const services = createAurumReadonlyMap(new Map<string, unknown>([[AURUM_SCENE_SERVICES.controller, controller]]));
 
   return Object.freeze({
-    services: services as ReadonlyMap<string, unknown>,
+    services,
     controller,
     apply(id: string, options?: { transparent?: boolean }): AurumScenePreset {
       return controller.apply(id, options);
