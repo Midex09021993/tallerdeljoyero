@@ -277,6 +277,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   // A catalog choice is only armed; the next explicit gem-mesh click consumes it.
   const pendingGemApplicationRef = useRef<GemaConfig | null>(null);
   const vistaRef = useRef<VistaId>("frontal");
+  // Puente entre el selector React y la cámara creada dentro del ciclo del visor.
+  const aplicarVistaRef = useRef<((id: VistaId) => void) | null>(null);
   const autoVistaPorOrbitaRef = useRef(false);
   vistaRef.current = vista;
   const [nombreProyecto, setNombreProyecto] = useState("Diseño de joyería");
@@ -2128,7 +2130,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           camara.updateProjectionMatrix?.();
           controles.update?.();
         }
+        // Sincronizar matrices, acumulación temporal y siguiente frame visible.
+        camara.updateMatrixWorld?.(true);
+        resetTemporalAccumulationRef.current?.();
+        viewerLoopRef.current?.invalidate?.();
+        invalidateRenderRef.current?.();
       };
+      aplicarVistaRef.current = camaraVista;
       apiRef.current=createAurumApi({
         cargar,
         getJewelTransform:()=>modelo?({position:modelo.position.toArray(),rotation:modelo.rotation.toArray(),scale:modelo.scale.toArray()}):null,
@@ -3703,6 +3711,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       // Cleanup completo del Viewer: evita listeners, RAF y contextos WebGL acumulados
       // al entrar/salir de Aurum Render o cambiar de ruta.
       cleanup = () => {
+        aplicarVistaRef.current = null;
         void productionPluginHost.dispose().catch((error) => console.error("[AURUM][CORE] Plugin cleanup failed:", error));
         // Cancel deferred work so it cannot retain the model/renderer after unmount.
         if (shaderPrecompileIdleId !== null && typeof window !== "undefined" && "cancelIdleCallback" in window) {
@@ -4429,7 +4438,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         <div className="flex items-center gap-2">
           <label className="flex h-10 items-center gap-2 rounded-xl border border-[#b99642]/25 bg-white/95 px-3 text-sm text-[#292824] shadow-sm transition hover:border-[#b99642]/60 hover:shadow-[0_3px_12px_rgba(185,150,66,.12)] focus-within:ring-2 focus-within:ring-[#92743b]/20">
             <Gem className="size-4 text-[#92743b]"/>
-            <select aria-label="Seleccionar vista de cámara" value={vista} onChange={e=>{const next=e.target.value as VistaId;vistaRef.current=next;setVista(next);}} className="min-w-0 appearance-none bg-transparent font-medium outline-none cursor-pointer">
+            <select aria-label="Seleccionar vista de cámara" value={vista} onChange={e=>{const next=e.target.value as VistaId;vistaRef.current=next;setVista(next);aplicarVistaRef.current?.(next);}} className="min-w-0 appearance-none bg-transparent font-medium outline-none cursor-pointer">
               <option className="bg-white" value={VISTAS[0]?.id}>{VISTAS[0]?.nombre || "Vista 3D"}</option>
               {VISTAS.slice(1).map(v=><option className="bg-white" key={v.id} value={v.id}>{v.nombre}</option>)}
             </select>
