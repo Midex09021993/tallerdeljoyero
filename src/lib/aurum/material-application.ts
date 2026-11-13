@@ -1,14 +1,8 @@
 import * as THREE from "three";
 import { resolveAurumLayerKey } from "./layer-identity";
 import { getAurumSourceMaterials, hadAurumSourceMaterialArray } from "./gem-material-baseline";
-import {
-  applyAurumGem,
-  applyAurumOpticalProfile,
-  applyAurumDiamondOptics,
-  applyAurumReferenceGemOptics,
-  applyAurumIJEWELReferenceFromMaterial,
-  getAurumOpticalProfile,
-} from "../aurum-material-engine";
+import { applyAurumIJEWELReferenceFromMaterial } from "../aurum-material-engine";
+import { createAurumGemAdapter } from "./core/gem-adapter";
 import { createAurumMetalAdapter } from "./core/metal-adapter";
 import { applyAurumFamilyOpticalResponse } from "./optical-response";
 import { applyAurumDynamicScintillation } from "./scintillation";
@@ -21,6 +15,7 @@ import { resolveAurumGemPhysicalModel, attachAurumGemPhysicalModel } from "./gem
 import { getAurumDiamondPipelineDiagnostics } from "./aurum-diamond-pipeline";
 
 const aurumMetalAdapter=createAurumMetalAdapter();
+const aurumGemAdapter=createAurumGemAdapter();
 
 const inclusionTypeFromCatalog=(style:string|undefined)=>
   style==="diamante" ? "crystal" : style==="silk" ? "silk" : style==="velos" ? "veil" : "none";
@@ -47,7 +42,7 @@ const presetFromCatalog=(g:any):any=>({
 const opticalProfileFromCatalog=(g:any)=>{
   const knownFamilies=new Set(["Diamante","Moissanita","Esmeralda","Rubí","Zafiro"]);
   const base=knownFamilies.has(String(g.familia))
-    ? getAurumOpticalProfile(String(g.familia))
+    ? aurumGemAdapter.getOpticalProfile(String(g.familia))
     : {
         ior:Number(g.ior??1.5),
         transmission:Number(g.transmission??.85),
@@ -415,18 +410,18 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
       depthWrite:true,
     });
     if(base?.name)next.name=String(base.name);
-    applyAurumGem(next,preset,partThickness);
-    applyAurumOpticalProfile(next,opticalProfile);
+    aurumGemAdapter.applyBaseMaterial(next,preset,partThickness);
+    aurumGemAdapter.applyOpticalProfile(next,opticalProfile);
     applyAurumFamilyOpticalResponse(next,opticalProfile);
     applyAurumInternalLightResponse(next,opticalProfile,partThickness);
     attachAurumGemPhysicalModel(next,physicalModel);
-    if(preset.familia==="Diamante")applyAurumDiamondOptics(next);
+    if(preset.familia==="Diamante")aurumGemAdapter.applyDiamondOptics(next);
     applyAurumIJEWELReferenceFromMaterial(next,String(base?.name??next?.name??""));
     // Apply the emerald reference calibration last: a matching source .dmat
     // can otherwise overwrite the selected catalog hue and environment level.
     // Keep the diamond path and its ordering unchanged.
     if(preset.familia==="Esmeralda"){
-      applyAurumReferenceGemOptics(next,preset.familia);
+      aurumGemAdapter.applyReferenceOptics(next,preset.familia);
       // The catalog grade is the source of truth for emerald appearance. The
       // generic engine preset above contains one shared emerald profile and
       // otherwise makes Quality 1/2/3 look alike, especially in the live view.
