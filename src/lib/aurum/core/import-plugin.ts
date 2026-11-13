@@ -116,6 +116,7 @@ export function createAurumImportPlugin(): AurumImportPlugin {
       }
 
       throwIfAborted();
+      if (!model) throw new Error("La importación no produjo un modelo normalizado.");
       return Object.freeze({
         sourceObject,
         model,
