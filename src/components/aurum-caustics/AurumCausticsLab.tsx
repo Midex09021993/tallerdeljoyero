@@ -34,6 +34,16 @@ function createBrilliantGeometry() {
       indices.push(a, b, d, b, c, d);
     }
   }
+  const topCenter = positions.length / 3;
+  positions.push(0, rings[0].y, 0);
+  const bottomPoint = positions.length / 3;
+  positions.push(0, -0.58, 0);
+  for (let i = 0; i < sides; i++) {
+    const next = (i + 1) % sides;
+    indices.push(topCenter, next, i);
+    const lastRing = (rings.length - 1) * sides;
+    indices.push(lastRing + i, lastRing + next, bottomPoint);
+  }
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
   geometry.setIndex(indices);
