@@ -39,6 +39,7 @@ import { createAurumApi, createAurumCatalogApi, type AurumCatalogApi } from "../
 import { createAurumConfiguratorState } from "../lib/aurum/configurator-state";
 import { createAurumViewerAdapter, AURUM_VIEWER_SERVICES } from "../lib/aurum/core/viewer-adapter";
 import { createAurumSceneAdapter } from "../lib/aurum/core/scene-adapter";
+import { createAurumLightingAdapter } from "../lib/aurum/core/lighting-adapter";
 import { AURUM_ASPECT_RATIOS, getAurumAspectRatio, getAurumAspectDimensions, getAurumAspectFrameStyle, type AurumAspectRatioId } from "../lib/aurum/aspect-ratios";
 import { countAurumTriangles, getAurumRuntimeBudget, type AurumRuntimeBudget } from "../lib/aurum/runtime-budget";
 import { prepareAurumLiveGeometry, setAurumLiveGeometryQuality, disposeAurumLiveGeometry } from "../lib/aurum/live-geometry-lod";
@@ -1174,7 +1175,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       };
       let runtimeBudget:AurumRuntimeBudget = getAurumRuntimeBudget(0);
       const liveGeometryPreparing=false;
-      const lightingController = createAurumLightingController(THREE, escena, lightingStudio, shadowConfig, renderQuality);
+      const lightingControllerBase = createAurumLightingController(THREE, escena, lightingStudio, shadowConfig, renderQuality);
+      // Keep the production controller as the sole owner; AURUM CORE provides
+      // a stable adapter surface without changing light creation or calibration.
+      const lightingController = createAurumLightingAdapter(lightingControllerBase);
       const lucesAurum = (lightingController as any).lights ?? {};
 
       // Render Quality changes the actual GPU workload, not just a label:
