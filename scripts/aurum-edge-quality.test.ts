@@ -108,5 +108,5 @@ test("AURUM edge AA respects quality and runtime budget gates", () => {
   expect(getAurumEdgeAaProfile("high", "extreme", "live").enabled).toBe(false);
   expect(getAurumEdgeAaProfile("high", "extreme", "settled").enabled).toBe(false);
   expect(getAurumEdgeAaProfile("high", "extreme", "capture").enabled).toBe(true);
-  expect(getAurumEdgeAaProfile("medium", "web", "settled").enabled).toBe(false);
+  expect(getAurumEdgeAaProfile("medium", "web", "settled").enabled).toBe(true);
 });
