@@ -1141,7 +1141,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           }
           diamondBvhRuntime = runtime;
           diamondBvhRuntimeUrl = requestedEnvironmentUrl;
+          // Resolve the final model and camera transforms before building BVH
+          // camera uniforms, so the first visible frame uses the current framing.
+          modelo.updateMatrixWorld?.(true);
+          camara.updateMatrixWorld?.(true);
+          camara.updateProjectionMatrix?.();
           runtime.refresh(modelo);
+          runtime.update();
           const diagnostics = runtime.diagnostics();
           console.info("[AURUM][GEM BVH]", diagnostics);
           invalidateRenderRef.current?.();
@@ -1652,9 +1658,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       };
 
       const aplicarEscenario = (id:EscenarioId) => {
-        // La escena conserva los controles independientes de HDRI de metales,
-        // pero aplica su calibración fotográfica al entorno óptico de las gemas.
-        liveFastPathRef.current = true;
+        // Cambiar la iluminación no debe alterar la ruta de renderizado:
+        // el pipeline de belleza se controla exclusivamente por el ciclo del visor.
         const scenePreset = sceneController.apply(id);
         if (Number.isFinite(scenePreset.environmentRotation)) {
           environmentController.setRotation(scenePreset.environmentRotation as number);
@@ -1838,9 +1843,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         });
         loadAuditStep("initial-materials-applied", { triangles: countAurumTriangles(interno) });
         modelo=interno;
-        // Opt-in experimental per-pixel BVH ray tracing for diamond meshes only.
-        // The helper leaves every other gem and every metal on the existing pipeline.
-        void asegurarDiamanteBvh();
+        // Prepare the gemstone optical runtime before presenting the initial
+        // settled frame. The BVH keeps its existing safe material fallback on error.
+        await asegurarDiamanteBvh();
         // Hide procedural inclusions by default for performance. The explicit
         // emerald-inclusions profile is re-enabled below for controlled live
         // validation; other emerald grades stay clean.
@@ -1965,6 +1970,22 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
 
         encuadrar();
         setVista("frontal");
+        // frameAurumProduct applies the scene preset; reassert the canonical
+        // viewport chain afterwards so scene setup cannot leave a stale path.
+        if (initialGemAaAvailable) {
+          modelo.updateMatrixWorld?.(true);
+          camara.updateMatrixWorld?.(true);
+          camara.updateProjectionMatrix?.();
+          diamondBvhRuntime?.update();
+          const initialBeautyPasses = new Set([renderPass, gemMaskPass, fxaaPass, outputPass]);
+          ((composer as any)?.passes ?? []).forEach((pass: any) => {
+            pass.enabled = initialBeautyPasses.has(pass);
+          });
+          liveFastPathRef.current = false;
+          gemMaskPass?.refreshCache?.();
+        } else {
+          liveFastPathRef.current = true;
+        }
         // Si el GemEnvironment ya terminó de cargar, aplicarlo ahora al modelo.
         // Si todavía está en red, su callback lo aplicará al terminar.
         if (entornoGema) aplicarEntornoGema();
