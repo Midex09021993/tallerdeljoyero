@@ -35,7 +35,7 @@ export function createAurumProductionPluginHost(
     definitions.push({
       id: module.id,
       version: module.version ?? appVersion,
-      dependencies: module.dependencies,
+      ...(module.dependencies ? { dependencies: module.dependencies } : {}),
       initialize: (context) => {
         for (const serviceId of module.services.keys()) {
           if (!context.services.has(serviceId)) {

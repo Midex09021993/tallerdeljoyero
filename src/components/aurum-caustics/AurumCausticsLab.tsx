@@ -33,10 +33,10 @@ function createBrilliantGeometry() {
   for (let r = 0; r < points.length - 1; r++) {
     for (let i = 0; i < sides; i++) {
       const next = (i + 1) % sides;
-      const a = points[r][i];
-      const b = points[r][next];
-      const c = points[r + 1][next];
-      const d = points[r + 1][i];
+      const a = points[r]![i]!;
+      const b = points[r]![next]!;
+      const c = points[r + 1]![next]!;
+      const d = points[r + 1]![i]!;
       // Alternating diagonals avoid a repetitive, belt-like triangulation.
       if ((i + r) % 2 === 0) {
         pushTriangle(a, b, d);
@@ -47,12 +47,14 @@ function createBrilliantGeometry() {
       }
     }
   }
-  const tableCenter = new THREE.Vector3(0, rings[0].y, 0);
+  const tableCenter = new THREE.Vector3(0, rings[0]!.y, 0);
   const culet = new THREE.Vector3(0, -0.68, 0);
   for (let i = 0; i < sides; i++) {
     const next = (i + 1) % sides;
-    pushTriangle(tableCenter, points[0][i], points[0][next]);
-    pushTriangle(points[points.length - 1][i], culet, points[points.length - 1][next]);
+    const top = points[0]!;
+    const bottom = points[points.length - 1]!;
+    pushTriangle(tableCenter, top[i]!, top[next]!);
+    pushTriangle(bottom[i]!, culet, bottom[next]!);
   }
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute("position", new THREE.Float32BufferAttribute(vertices, 3));
@@ -81,8 +83,8 @@ function createGemMaterial(settings: LabSettings) {
   });
   material.customProgramCacheKey = () => "aurum-caustics-gem-lab-v1";
   material.onBeforeCompile = (shader) => {
-    shader.uniforms.aurumCausticStrength = { value: settings.caustics };
-    shader.uniforms.aurumCausticLight = { value: new THREE.Vector3(-0.55, 0.8, 0.42).normalize() };
+    shader.uniforms["aurumCausticStrength"] = { value: settings.caustics };
+    shader.uniforms["aurumCausticLight"] = { value: new THREE.Vector3(-0.55, 0.8, 0.42).normalize() };
     shader.vertexShader = shader.vertexShader
       .replace("#include <common>", "#include <common>\nvarying vec3 vAurumWorldPosition;\nvarying vec3 vAurumWorldNormal;")
       .replace("#include <worldpos_vertex>", "#include <worldpos_vertex>\nvAurumWorldPosition = (modelMatrix * vec4(transformed, 1.0)).xyz;\nvAurumWorldNormal = normalize(mat3(modelMatrix) * objectNormal);");

@@ -1,6 +1,6 @@
 import * as THREE from "three";
-import { parseAurumInput, convertAurumToGlb } from "./model-loader";
-import { normalizeAurumModel } from "./model-normalizer";
+import { parseAurumInput, convertAurumToGlb } from "../model-loader";
+import { normalizeAurumModel } from "../model-normalizer";
 
 export type AurumImportFormat = "stl" | "obj" | "glb" | "fbx" | "3dm";
 

@@ -42,10 +42,11 @@ export function createAurumFinalRenderAdapter(
     [AURUM_FINAL_RENDER_SERVICES.renderImage, engine.renderImage],
   ]);
 
-  return Object.freeze({
+  const adapter: AurumFinalRenderAdapter = {
     services: services as ReadonlyMap<string, unknown>,
     supported: (renderer) => engine.supported(renderer),
     renderImage: (renderer, model, camera, options) =>
       engine.renderImage(renderer, model, camera, options),
-  });
+  };
+  return Object.freeze(adapter);
 }
