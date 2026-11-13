@@ -2120,7 +2120,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // Keep the LIVE gemstone material profile for responsiveness, but
             // do not switch the renderer to the direct path: that bypasses the
             // settled composer and silently removes FXAA/TAA until the first orbit.
-            aplicarPerfilLive(true);
+            if (!gemTransitionRef.current?.active) aplicarPerfilLive(true);
             renderer.shadowMap.enabled = false;
             renderer.shadowMap.needsUpdate = false;
             invalidateRenderRef.current?.();
@@ -3593,7 +3593,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
 
             const sameBeautyPipelineAvailable = Boolean(composer && renderPass && gemMaskPass && fxaaPass && outputPass);
             liveFastPathRef.current = !sameBeautyPipelineAvailable;
-            aplicarPerfilLive(true);
+            if (!gemTransitionRef.current?.active) aplicarPerfilLive(true);
             // This transition enables accumulation only when applyQuality()
             // requested TAA for the current quality profile.
             if (gemTransitionRef.current?.active) {
