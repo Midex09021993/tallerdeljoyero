@@ -514,9 +514,11 @@ export async function createAurumPostPipeline(
     }
 
     if(ssaoPass){
-      ssaoPass.enabled=!options.capture && Boolean(config.ssao) && high && !diagnosticDisableSSAO;
+      // Diagnostic isolation: keep SSAO disabled in both moving and settled
+      // live-view states so its contribution to the diffuse halo can be tested.
+      // Preserve the profile parameters for a later controlled A/B comparison.
+      ssaoPass.enabled=false;
       ssaoPass.kernelSize=ultra?24:high?20:12;
-      // Keep the live SSAO radius synchronized with the active photographic profile.
       ssaoPass.kernelRadius=Math.max(.01,Number(config.radius??.20));
       ssaoPass.aoClamp=Math.max(0,Math.min(1,(config.ssaoIntensity??.12)*(ultra?.92:.82)));
       ssaoPass.maxDistance=Math.max(.02,Number(config.ssaoFalloff??(ssaoPass.kernelRadius*2.5)));
