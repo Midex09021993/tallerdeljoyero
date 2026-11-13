@@ -51,6 +51,8 @@ jobs:
         run: bun test scripts/aurum-glb-quality-gate.test.ts
       - name: AURUM plugin registry contract tests
         run: bun test scripts/aurum-plugin-registry.test.ts
+      - name: AURUM adapter runtime contract tests
+        run: bun test scripts/aurum-adapter-contracts.test.ts
       - name: AURUM video frame pipeline tests
         run: bun test scripts/aurum-video-frame-pipeline.test.ts
       - name: AURUM production plugin host tests
