@@ -7,7 +7,7 @@ export interface AurumGeometryMeshReport {
   readonly indexed: boolean;
   readonly hasNormals: boolean;
   readonly normalsValid: boolean;
-  readonly finitePositions: boolean;
+  readonly finitePositions: boolean | null;
   readonly visible: boolean;
 }
 
@@ -69,7 +69,7 @@ export function createAurumGeometryEngine(): AurumGeometryEngine {
         const vertexCount = position?.count ?? 0;
         const index = geometry?.getIndex();
         const triangleCount = Math.floor((index?.count ?? vertexCount) / 3);
-        let finitePositions = validatePositions ? Boolean(position) : true;
+        let finitePositions: boolean | null = validatePositions ? Boolean(position) : null;
 
         // Read the backing typed array directly to avoid repeated getX/getY/getZ calls.
         if (validatePositions && position) {
@@ -89,7 +89,7 @@ export function createAurumGeometryEngine(): AurumGeometryEngine {
         const hasNormals = Boolean(normal);
         const normalsValid = hasNormals && normal!.count === vertexCount;
         if (!normalsValid) meshesMissingNormals += 1;
-        if (!finitePositions) meshesWithInvalidPositions += 1;
+        if (finitePositions === false) meshesWithInvalidPositions += 1;
 
         // Match renderability semantics: a mesh is hidden if any ancestor is hidden.
         let visible = true;
