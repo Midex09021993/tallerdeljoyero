@@ -209,23 +209,33 @@ export class AurumPluginRegistry {
 
   private async cleanupInitialized(): Promise<void> {
     const failures: unknown[] = [];
-    for (const plugin of [...this.initialized].reverse()) {
+    const reverseOrder = [...this.initialized].reverse();
+
+    // Teardown is deliberately phased: all plugins deactivate while every
+    // subscription is still alive, then runtimes dispose, then owned resources
+    // are released. This preserves shutdown event delivery across dependencies.
+    for (const plugin of reverseOrder) {
       try {
         await plugin.runtime.deactivate?.();
       } catch (error) {
         failures.push(error);
       }
+    }
+    for (const plugin of reverseOrder) {
       try {
         await plugin.runtime.dispose?.();
       } catch (error) {
         failures.push(error);
       }
+    }
+    for (const plugin of reverseOrder) {
       try {
         await plugin.resources.dispose();
       } catch (error) {
         failures.push(error);
       }
     }
+
     this.initialized.length = 0;
     if (failures.length > 0) {
       throw new AggregateError(failures, "One or more AURUM plugins failed to clean up.");
