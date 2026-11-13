@@ -43,6 +43,8 @@ import { createAurumViewerAdapter, AURUM_VIEWER_SERVICES } from "../lib/aurum/co
 import { createAurumSceneAdapter } from "../lib/aurum/core/scene-adapter";
 import { createAurumLightingAdapter } from "../lib/aurum/core/lighting-adapter";
 import { createAurumProductionPluginHost } from "../lib/aurum/core/production-plugin-host";
+import { captureAurumGlbQualitySnapshot, evaluateAurumGlbQuality } from "../lib/aurum/core/glb-quality-gate";
+import { configureAurumEdgeQuality } from "../lib/aurum/edge-quality";
 import { AURUM_ASPECT_RATIOS, getAurumAspectRatio, getAurumAspectDimensions, getAurumAspectFrameStyle, type AurumAspectRatioId } from "../lib/aurum/aspect-ratios";
 import { countAurumTriangles, getAurumRuntimeBudget, type AurumRuntimeBudget } from "../lib/aurum/runtime-budget";
 import { prepareAurumLiveGeometry, setAurumLiveGeometryQuality, disposeAurumLiveGeometry } from "../lib/aurum/live-geometry-lod";
@@ -1306,6 +1308,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         return createAurumFinalRenderAdapter();
       };
       const productionPluginHost = createAurumProductionPluginHost([
+        { id: "aurum.glb-quality", description: "Valida la integridad del GLB mediante round-trip real.", dependencies: ["aurum.import"], requiresServices: ["aurum.import.pipeline"], services: new Map([
+          ["aurum.glb-quality.snapshot", captureAurumGlbQualitySnapshot],
+          ["aurum.glb-quality.evaluate", evaluateAurumGlbQuality],
+        ]) },
+        { id: "aurum.edge-quality", description: "Coordina capacidades y MSAA del compositor productivo.", dependencies: ["aurum.viewer"], requiresServices: ["aurum.viewer.renderer"], services: new Map([
+          ["aurum.edge-quality.configure", configureAurumEdgeQuality],
+        ]) },
         { id: "aurum.viewer", description: "Referencias read-only al visor WebGL productivo.", services: viewerAdapter.services },
         { id: "aurum.geometry", description: "Diagnóstico geométrico read-only del modelo.", services: new Map([["aurum.geometry.engine", geometryEngine]]) },
         { id: "aurum.import", description: "Orquestación de importación CAD y normalización GLB.", dependencies: ["aurum.geometry"], requiresServices: ["aurum.geometry.engine"], services: new Map([
