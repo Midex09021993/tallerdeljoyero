@@ -1,3 +1,5 @@
+import { AurumEventBus, AurumResourceScope } from "./context";
+
 /**
  * AURUM CORE — plugin contracts.
  *
@@ -12,6 +14,8 @@ export interface AurumPluginContext {
   readonly version: string;
   readonly services: ReadonlyMap<string, unknown>;
   readonly signal: AbortSignal;
+  readonly events: AurumEventBus;
+  readonly resources: AurumResourceScope;
 }
 
 export interface AurumPluginRuntime {
@@ -32,6 +36,7 @@ export type AurumPluginRegistryState = "idle" | "starting" | "running" | "stoppi
 type RegisteredPlugin = {
   definition: AurumPluginDefinition;
   runtime: AurumPluginRuntime;
+  resources: AurumResourceScope;
 };
 
 function validatePluginId(id: string): void {
@@ -45,6 +50,7 @@ export class AurumPluginRegistry {
   private readonly initialized: RegisteredPlugin[] = [];
   private state: AurumPluginRegistryState = "idle";
   private abortController: AbortController | null = null;
+  private readonly events = new AurumEventBus();
 
   constructor(private readonly context: Omit<AurumPluginContext, "signal">) {}
 
@@ -115,8 +121,10 @@ export class AurumPluginRegistry {
 
     try {
       for (const definition of order) {
-        const runtime = (await definition.initialize(pluginContext)) ?? {};
-        const registered = { definition, runtime };
+        const resources = new AurumResourceScope();
+        const scopedContext: AurumPluginContext = { ...pluginContext, resources, events: this.events };
+        const runtime = (await definition.initialize(scopedContext)) ?? {};
+        const registered = { definition, runtime, resources };
         this.initialized.push(registered);
         await runtime.activate?.();
       }
@@ -143,6 +151,11 @@ export class AurumPluginRegistry {
       } catch (error) {
         failures.push(error);
       }
+      try {
+        await plugin.resources.dispose();
+      } catch (error) {
+        failures.push(error);
+      }
     }
     this.initialized.length = 0;
     if (failures.length > 0) {
@@ -165,6 +178,7 @@ export class AurumPluginRegistry {
     try {
       await this.cleanupInitialized();
     } finally {
+      this.events.clear();
       this.abortController = null;
       this.state = "disposed";
     }
