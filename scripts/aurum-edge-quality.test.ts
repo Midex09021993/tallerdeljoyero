@@ -2,6 +2,7 @@ import { expect, test } from "bun:test";
 import { inspectAurumEdgeCapabilities } from "../src/lib/aurum/edge-quality/edge-capabilities";
 import { configureAurumComposerMsaa } from "../src/lib/aurum/edge-quality/edge-msaa";
 import { setAurumEdgeAaResolution, setAurumSurfaceEdgeAaStrength, shouldEnableAurumEdgeAa } from "../src/lib/aurum/edge-quality/edge-surface-aa";
+import { getAurumEdgeAaProfile } from "../src/lib/aurum/edge-quality/edge-aa-profiles";
 
 test("AURUM edge capabilities clamp requested MSAA to WebGL2 device limits", () => {
   expect(inspectAurumEdgeCapabilities({ capabilities: { isWebGL2: true, maxSamples: 8 } }, 4)).toEqual({
@@ -92,4 +93,20 @@ test("AURUM interactive surface edge AA uses a capped low blend strength", () =>
   expect(pass.material.uniforms.strength.value).toBe(0.035);
   setAurumSurfaceEdgeAaStrength(pass, 0.5);
   expect(pass.material.uniforms.strength.value).toBe(0.1);
+});
+
+
+test("AURUM LIVE and SETTLED profiles share a stable low-strength blend", () => {
+  const live = getAurumEdgeAaProfile("high", "dense", "live");
+  const settled = getAurumEdgeAaProfile("high", "dense", "settled");
+  expect(live).toEqual({ mode: "live", enabled: true, strength: 0.035 });
+  expect(settled).toEqual({ mode: "settled", enabled: true, strength: 0.035 });
+});
+
+test("AURUM edge AA respects quality and runtime budget gates", () => {
+  expect(getAurumEdgeAaProfile("low", "web", "live").enabled).toBe(false);
+  expect(getAurumEdgeAaProfile("high", "extreme", "live").enabled).toBe(false);
+  expect(getAurumEdgeAaProfile("high", "extreme", "settled").enabled).toBe(false);
+  expect(getAurumEdgeAaProfile("high", "extreme", "capture").enabled).toBe(true);
+  expect(getAurumEdgeAaProfile("medium", "web", "settled").enabled).toBe(false);
 });
