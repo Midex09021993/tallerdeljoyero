@@ -46,6 +46,7 @@ export function createAurumPerformanceMonitor() {
   const snapshot = (renderer: any): AurumPerformanceSnapshot => {
     const now = performance.now();
     while (frames[0] && now - frames[0].timestamp > WINDOW_MS) frames.shift();
+    maxFrameMs = frames.reduce((peak, item) => Math.max(peak, item.frameMs), 0);
     const latest = latestFrame;
     const count = frames.length;
     const average = (key: "frameMs" | "renderMs" | "bvhMs") =>
