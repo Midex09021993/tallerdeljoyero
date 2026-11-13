@@ -37,6 +37,7 @@ import { applyAurumInitialModelMaterials } from "../lib/aurum/model-materials";
 import { disposeAurumThicknessCacheForTarget } from "../lib/aurum/thickness-map";
 import { createAurumApi, createAurumCatalogApi, type AurumCatalogApi } from "../lib/aurum/api";
 import { createAurumConfiguratorState } from "../lib/aurum/configurator-state";
+import { createAurumViewerAdapter, AURUM_VIEWER_SERVICES } from "../lib/aurum/core/viewer-adapter";
 import { AURUM_ASPECT_RATIOS, getAurumAspectRatio, getAurumAspectDimensions, getAurumAspectFrameStyle, type AurumAspectRatioId } from "../lib/aurum/aspect-ratios";
 import { countAurumTriangles, getAurumRuntimeBudget, type AurumRuntimeBudget } from "../lib/aurum/runtime-budget";
 import { prepareAurumLiveGeometry, setAurumLiveGeometryQuality, disposeAurumLiveGeometry } from "../lib/aurum/live-geometry-lod";
@@ -817,6 +818,17 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         maxDistance: 100,
         controlsClass: (await import("three/examples/jsm/controls/OrbitControls.js")).OrbitControls,
       });
+      // AURUM CORE adapter exposes the existing viewer without taking ownership
+      // of its render loop, GPU resources, or disposal lifecycle.
+      const viewerAdapter = createAurumViewerAdapter({
+        scene: escena,
+        camera: camara,
+        renderer,
+        controls: controles,
+        host: nodo,
+      });
+      const viewerScene = viewerAdapter.get(AURUM_VIEWER_SERVICES.scene);
+      const viewerRenderer = viewerAdapter.get(AURUM_VIEWER_SERVICES.renderer);
       orbitControlsRef.current = controles;
       // Orbit controls calibrated to the supplied iJewel VJSON reference.
       if (controles) {
@@ -1243,8 +1255,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       const groundController = createAurumGround(THREE, escena);
       let suelo:any = groundController.mesh;
       const sceneController = createAurumSceneController(
-        escena,
-        renderer,
+        viewerScene,
+        viewerRenderer,
         groundController,
         nodo
       );
