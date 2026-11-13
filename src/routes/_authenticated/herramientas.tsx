@@ -351,7 +351,7 @@ function HerramientasPage() {
                     </div>
                     <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                       <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3"><p className="text-xs font-semibold">Viewer Adapter</p><p className="mt-1 text-[10px] text-emerald-700 dark:text-emerald-400">Conectado</p></div>
-                      <div className="rounded-lg border border-border p-3"><p className="text-xs font-semibold">Scene Adapter</p><p className="mt-1 text-[10px] text-muted-foreground">Siguiente fase</p></div>
+                      <div className="rounded-lg border border-border p-3"><p className="text-xs font-semibold">Scene Adapter</p><p className="mt-1 text-[10px] text-emerald-700 dark:text-emerald-400">Conectado</p></div>
                       <div className="rounded-lg border border-border p-3"><p className="text-xs font-semibold">Light Engine</p><p className="mt-1 text-[10px] text-muted-foreground">Siguiente fase</p></div>
                       <div className="rounded-lg border border-border p-3"><p className="text-xs font-semibold">Metal Engine</p><p className="mt-1 text-[10px] text-muted-foreground">Siguiente fase</p></div>
                       <div className="rounded-lg border border-border p-3"><p className="text-xs font-semibold">Gem Engine</p><p className="mt-1 text-[10px] text-muted-foreground">Siguiente fase</p></div>
@@ -364,7 +364,7 @@ function HerramientasPage() {
                     <p className="mt-1 text-[10px] text-muted-foreground">Escena · Cámara · Renderer · Controles · Geometría · Materiales · HDRI · GPU</p>
                   </div>
                 </div>
-                <p className="mx-auto mt-3 max-w-4xl text-[11px] leading-5 text-muted-foreground">El Viewer Adapter ya expone el visor existente a través de servicios estables. Los demás motores siguen funcionando con su implementación actual; se conectarán progresivamente, sin reemplazar ni recalibrar el motor óptico de producción en esta etapa.</p>
+                <p className="mx-auto mt-3 max-w-4xl text-[11px] leading-5 text-muted-foreground">Viewer Adapter y Scene Adapter ya exponen el visor y el controlador de escenas existentes mediante contratos estables. Los demás motores siguen funcionando con su implementación actual y se conectarán progresivamente, sin reemplazar ni recalibrar el motor óptico de producción en esta etapa.</p>
               </div>
               <div className="grid gap-3 p-5 sm:grid-cols-2 sm:p-7 lg:grid-cols-3">
                 <article className="rounded-xl border border-border p-4">
