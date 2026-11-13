@@ -1,6 +1,7 @@
 // @ts-nocheck -- AURUM Render engine: strict-mode typing pending; runtime behaviour unchanged.
 import * as THREE from "three";
 import { ADDITION, Brush, Evaluator } from "three-bvh-csg";
+import { applyAurumVisualWeld } from "./visual-weld";
 
 type MeshFamily = "metal" | "gema" | "otro";
 
@@ -36,12 +37,6 @@ function areEquivalentMaterials(a: THREE.Material, b: THREE.Material): boolean {
   } catch {
     return false;
   }
-}
-
-function isPrimaryMetalProcessingLayer(meta: Record<string, unknown>): boolean {
-  if (meta.categoria !== "metal") return false;
-  const name = String(meta.capa ?? "").trim().replace(/\s+/g, " ").toLocaleLowerCase();
-  return /^capa metal 0?[1-4]$/.test(name);
 }
 
 function compatibleAttributes(a: THREE.BufferGeometry, b: THREE.BufferGeometry): boolean {
@@ -124,13 +119,15 @@ export type AurumUnionExperimentResult = {
     rejectedAttributesMismatch: number;
     rejectedNoBoundsIntersection: number;
     csgFailures: number;
+    visualWeldFailures: number;
+    visualWeldedMeshes: number;
   };
 };
 
 /**
  * Rhino 3DM import CSG pass (invoked during internal GLB conversion).
- * Builds an accumulated union for the same source layer, or across the four
- * explicit primary metal layers when serialized material properties match.
+ * Builds an accumulated union for metal bodies with equivalent serialized materials.
+ * Different Rhino layers are allowed after both candidates pass metal-family checks.
  * After A+B succeeds, the next operation is (A+B)+C. Original Rhino meshes remain hidden,
  * not destroyed, so the operation can be rolled back.
  *
@@ -155,6 +152,8 @@ export function applyAurumMetalUnionExperiment(root: THREE.Object3D, maxMerges =
       rejectedAttributesMismatch: 0,
       rejectedNoBoundsIntersection: 0,
       csgFailures: 0,
+      visualWeldFailures: 0,
+      visualWeldedMeshes: 0,
     },
   };
   const evaluator = new Evaluator();
@@ -217,13 +216,9 @@ export function applyAurumMetalUnionExperiment(root: THREE.Object3D, maxMerges =
         result.audit.rejectedMissingLayerKey++;
         continue;
       }
-      const sameSourceLayer = rightLayerKey === layerKey;
-      const samePrimaryMetalFamily = isPrimaryMetalProcessingLayer(seedMeta)
-        && isPrimaryMetalProcessingLayer(rightMeta);
-      if (!sameSourceLayer && !samePrimaryMetalFamily) {
-        result.audit.rejectedLayerMismatch++;
-        continue;
-      }
+      // Layer names are organizational metadata, not a geometric/material boundary.
+      // Both candidates already passed metal-family and equivalent-material checks.
+      // Permit compatible metals across Rhino layers (e.g. brazo, bisel y cuerpo).
       if (!accumulator.geometry || !right.geometry
         || !compatibleAttributes(accumulator.geometry, right.geometry)) {
         result.skipped++;
@@ -264,17 +259,29 @@ export function applyAurumMetalUnionExperiment(root: THREE.Object3D, maxMerges =
         a.position.set(0, 0, 0); a.rotation.set(0, 0, 0); a.scale.set(1, 1, 1); a.updateMatrixWorld(true);
         b.position.set(0, 0, 0); b.rotation.set(0, 0, 0); b.scale.set(1, 1, 1); b.updateMatrixWorld(true);
 
-        const geometry = evaluator.evaluate(a, b, ADDITION).geometry;
-        geometry.setDrawRange(0, Infinity);
-        geometry.clearGroups();
-        geometry.computeBoundingSphere();
-        const outputError = validateUnionOutput(geometry, expectedBounds);
-        const position = geometry.getAttribute("position");
-        const normal = geometry.getAttribute("normal");
-        if (outputError || !normal || normal.count !== position.count
-          || !Number.isFinite(geometry.boundingSphere?.radius ?? NaN)) {
-          geometry.dispose();
-          throw new Error(outputError || "CSG produjo normales o límites incompletos.");
+        const csgGeometry = evaluator.evaluate(a, b, ADDITION).geometry;
+        csgGeometry.setDrawRange(0, Infinity);
+        csgGeometry.clearGroups();
+        csgGeometry.computeBoundingSphere();
+        const outputError = validateUnionOutput(csgGeometry, expectedBounds);
+        if (outputError || !Number.isFinite(csgGeometry.boundingSphere?.radius ?? NaN)) {
+          csgGeometry.dispose();
+          throw new Error(outputError || "CSG produjo límites incompletos.");
+        }
+
+        // Rebuild crease-aware normals on CSG output only. Source meshes, gems,
+        // shaders and optical calibration remain untouched.
+        let geometry: THREE.BufferGeometry;
+        try {
+          const welded = applyAurumVisualWeld(csgGeometry, { creaseAngle: (38 * Math.PI) / 180 });
+          geometry = welded.geometry;
+          result.audit.visualWeldedMeshes++;
+          csgGeometry.dispose();
+          geometry.computeBoundingSphere();
+        } catch (weldError) {
+          result.audit.visualWeldFailures++;
+          csgGeometry.dispose();
+          throw new Error(`Visual Weld falló: ${weldError instanceof Error ? weldError.message : String(weldError)}`);
         }
 
         const nextSources = [...sources, {

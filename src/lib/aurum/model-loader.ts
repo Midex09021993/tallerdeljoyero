@@ -685,11 +685,10 @@ export async function convertAurumToGlb(
   const materialConsolidation = consolidateAurumMetalMaterialsByLayer(object);
   console.info("[AURUM][METAL MATERIAL CONSOLIDATION]", materialConsolidation);
 
-  // CSG is a visual approximation, not a native Rhino BREP union. It is
-  // deliberately disabled by default: a bounding-box overlap is not proof of
-  // a valid solid intersection, and automatic fusion can erase intentional seams.
-  // Enable only for a controlled, reversible comparison after inspecting the
-  // AURUM SURFACE report and validating the result against the source model.
+  // CSG is a visual mesh approximation, not a native Rhino BREP union.
+  // The import-plugin enables it by default for 3DM; callers may explicitly
+  // disable it with metalUnion:false. A successful CSG result receives the
+  // isolated AURUM Visual Weld pass before GLB serialization.
   if (options.metalUnion === true) {
     try {
       const unionResult = applyAurumMetalUnionExperiment(object, 16);
