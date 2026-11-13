@@ -60,16 +60,19 @@ export function createAurumImportPlugin(): AurumImportPlugin {
           throw error;
         }
       };
-      const disposeGeometry = (root: THREE.Object3D) => {
+      const disposeGeometry = (...roots: THREE.Object3D[]) => {
         const disposed = new Set<THREE.BufferGeometry>();
-        root.traverse((node) => {
-          const mesh = node as THREE.Mesh;
-          if (mesh.geometry?.isBufferGeometry && !disposed.has(mesh.geometry)) {
-            disposed.add(mesh.geometry);
-            mesh.geometry.dispose();
-          }
-        });
+        for (const root of roots) {
+          root.traverse((node) => {
+            const mesh = node as THREE.Mesh;
+            if (mesh.geometry?.isBufferGeometry && !disposed.has(mesh.geometry)) {
+              disposed.add(mesh.geometry);
+              mesh.geometry.dispose();
+            }
+          });
+        }
       };
+      let model: THREE.Object3D | null = null;
       const stage = (name: string, details: Record<string, unknown> = {}) => {
         pipeline.push(name);
         request.onStage?.(name, details);
@@ -90,7 +93,6 @@ export function createAurumImportPlugin(): AurumImportPlugin {
       }
       throwIfAborted();
 
-      let model: THREE.Object3D;
       if (format === "glb") {
         progress("Preparando modelo 3D para el visor...");
         model = await normalizeAurumModel(sourceObject, null, format, colorRhinoHex, classifyLayer);
@@ -124,7 +126,7 @@ export function createAurumImportPlugin(): AurumImportPlugin {
         // The importer owns decoded geometry until a successful result is handed
         // to the caller. On cancellation/failure, release geometry buffers only;
         // materials may be shared with the viewer and are deliberately untouched.
-        disposeGeometry(sourceObject);
+        disposeGeometry(sourceObject, ...(model ? [model] : []));
         throw error;
       }
     },
