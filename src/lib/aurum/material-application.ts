@@ -261,7 +261,12 @@ const getAurumGemLayerIndex=(modelRoot:any):AurumGemLayerIndex=>{
 export const prepareAurumGemLayerIndex=(model:any)=>{
   let root=model;
   while(root?.parent)root=root.parent;
-  if(root&&typeof root==="object")return getAurumGemLayerIndex(root);
+  if(root&&typeof root==="object"){
+    // The scene root is reused when a new CAD model is loaded. Rebuild its
+    // index for each model lifecycle so no previous model's meshes survive.
+    AURUM_GEM_LAYER_INDEX.delete(root);
+    return getAurumGemLayerIndex(root);
+  }
   return null;
 };
 
