@@ -15,8 +15,8 @@ Comprobar que el GLB binario generado por AURUM conserva los elementos esenciale
 
 ## Política
 
-- **failed**: pérdida grave de triángulos, pérdida de mallas de gema, geometría inválida, ausencia de mallas o cambio significativo de bounds. El exportador rechaza el GLB y comunica el diagnóstico.
-- **warning**: cambios de nombres de materiales o reducción del número de nodos de malla. La agrupación de primitivas puede ser intencional, por lo que no se bloquea únicamente por ese recuento.
+- **failed**: pérdida grave de triángulos, reducción del número de mallas, pérdida de mallas de gema, geometría inválida, ausencia de mallas o cambio significativo de bounds. El exportador rechaza el GLB y comunica el diagnóstico.
+- **warning**: cambios de nombres de materiales. La reducción del número de mallas sí bloquea la exportación porque el exportador no debe descartar cuerpos de origen.
 - **passed**: no se detectan pérdidas en los criterios anteriores.
 
 Los valores iniciales son 98% de retención de triángulos y 0.5% de desviación máxima relativa de bounds. Son umbrales de control de calidad para la malla triangulada, no una prueba exacta de equivalencia BREP.

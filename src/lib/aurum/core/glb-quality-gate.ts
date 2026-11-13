@@ -135,9 +135,6 @@ function relativeBoundsDelta(
   const sourceSize = [
     source[3] - source[0], source[4] - source[1], source[5] - source[2],
   ];
-  const reopenedSize = [
-    reopened[3] - reopened[0], reopened[4] - reopened[1], reopened[5] - reopened[2],
-  ];
   const sourceDiagonal = Math.max(Math.hypot(...sourceSize), 1e-9);
   const coordinateDelta = Math.max(...source.map((value, index) => Math.abs(value - reopened[index]!)));
   return coordinateDelta / sourceDiagonal;
@@ -196,7 +193,7 @@ export function evaluateAurumGlbQuality(
     add("NAMED_MATERIALS_MISSING", "warning", `No se recuperaron los nombres de estos materiales: ${missingNamedMaterials.join(", ")}.`);
   }
   if (source.meshCount > 0 && reopened.meshCount < source.meshCount) {
-    add("MESH_COUNT_REDUCED", "warning", "El GLB reabierto contiene menos nodos de malla; revisar si la exportación agrupó primitivas de forma intencional.");
+    add("MESH_COUNT_REDUCED", "error", "El GLB reabierto contiene menos nodos de malla que la escena exportada; se bloquea para evitar pérdida silenciosa de cuerpos.");
   }
 
   const hasErrors = issues.some((issue) => issue.severity === "error");

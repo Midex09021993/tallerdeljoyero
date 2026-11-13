@@ -45,6 +45,7 @@ test("quality gate blocks lost triangles, gems, invalid geometry and changed bou
   expect(report.issues.map((issue) => issue.code)).toContain("TRIANGLE_LOSS");
   expect(report.issues.map((issue) => issue.code)).toContain("GEM_MESH_LOSS");
   expect(report.issues.map((issue) => issue.code)).toContain("BOUNDS_CHANGED");
+  expect(report.issues.map((issue) => issue.code)).toContain("MESH_COUNT_REDUCED");
   source.traverse((node) => { if ((node as THREE.Mesh).isMesh) (node as THREE.Mesh).geometry.dispose(); });
   mesh.geometry.dispose();
 });
