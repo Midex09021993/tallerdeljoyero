@@ -250,3 +250,17 @@ test("AURUM resource scopes await asynchronous tracked resource disposal in reve
   expect(scope.size).toBe(0);
   expect(scope.isDisposed).toBe(true);
 });
+
+
+test("AURUM service container rejects non-canonical identifiers and keeps registerMany atomic", async () => {
+  const { AurumServiceContainer } = await import("../src/lib/aurum/core/service-container");
+  const container = new AurumServiceContainer();
+
+  expect(() => container.register(" aurum.viewer ", {})).toThrow("leading or trailing whitespace");
+  expect(() => container.registerMany(new Map([
+    ["aurum.scene", {}],
+    [" aurum.gem ", {}],
+  ]))).toThrow("leading or trailing whitespace");
+  expect(container.has("aurum.scene")).toBe(false);
+  expect(container.size).toBe(0);
+});
