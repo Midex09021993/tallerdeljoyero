@@ -29,6 +29,12 @@ export interface AurumPluginRuntime {
 export interface AurumPluginDefinition {
   readonly id: AurumPluginId;
   readonly version: string;
+  /** Human-readable responsibility for architecture reviews and diagnostics. */
+  readonly description?: string;
+  /** Service identifiers this plugin exposes through the application container. */
+  readonly providesServices?: readonly string[];
+  /** Service identifiers that must exist before this plugin can initialize. */
+  readonly requiresServices?: readonly string[];
   readonly dependencies?: readonly AurumPluginId[];
   initialize: (context: AurumPluginContext) => void | AurumPluginRuntime | Promise<void | AurumPluginRuntime>;
 }
@@ -78,6 +84,12 @@ export class AurumPluginRegistry {
     if (definition.dependencies?.includes(definition.id)) {
       throw new Error(`AURUM plugin "${definition.id}" cannot depend on itself.`);
     }
+    for (const serviceId of [...(definition.providesServices ?? []), ...(definition.requiresServices ?? [])]) {
+      if (!serviceId.trim()) throw new Error(`AURUM plugin "${definition.id}" declares an empty service identifier.`);
+    }
+    if (new Set(definition.providesServices ?? []).size !== (definition.providesServices ?? []).length) {
+      throw new Error(`AURUM plugin "${definition.id}" declares duplicate provided services.`);
+    }
     this.definitions.set(definition.id, definition);
   }
 
@@ -103,6 +115,29 @@ export class AurumPluginRegistry {
     };
 
     for (const id of this.definitions.keys()) visit(id);
+
+    // Validate service contracts before any plugin initializes. This prevents
+    // partially starting a module graph with missing or falsely declared APIs.
+    const providedBy = new Map<string, AurumPluginId>();
+    for (const definition of order) {
+      for (const serviceId of definition.providesServices ?? []) {
+        if (!this.context.services.has(serviceId)) {
+          throw new Error(`Plugin "${definition.id}" declares service "${serviceId}" but it is not registered in the application container.`);
+        }
+        const previous = providedBy.get(serviceId);
+        if (previous) {
+          throw new Error(`Service "${serviceId}" is declared by both "${previous}" and "${definition.id}".`);
+        }
+        providedBy.set(serviceId, definition.id);
+      }
+    }
+    for (const definition of order) {
+      for (const serviceId of definition.requiresServices ?? []) {
+        if (!this.context.services.has(serviceId)) {
+          throw new Error(`Plugin "${definition.id}" requires missing service "${serviceId}".`);
+        }
+      }
+    }
     return order;
   }
 
