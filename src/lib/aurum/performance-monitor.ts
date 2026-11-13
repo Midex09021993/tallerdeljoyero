@@ -28,10 +28,12 @@ const MAX_FRAMES = 180;
 export function createAurumPerformanceMonitor() {
   const frames: AurumPerformanceFrame[] = [];
   let maxFrameMs = 0;
+  let latestFrame: AurumPerformanceFrame | null = null;
 
   const recordFrame = (frame: AurumPerformanceFrame) => {
     if (![frame.frameMs, frame.renderMs, frame.bvhMs].every(Number.isFinite)) return;
     frames.push(frame);
+    latestFrame = frame;
     maxFrameMs = Math.max(maxFrameMs, frame.frameMs);
     while (frames.length > MAX_FRAMES || (frames[0] && frame.timestamp - frames[0].timestamp > WINDOW_MS)) {
       frames.shift();
@@ -40,11 +42,14 @@ export function createAurumPerformanceMonitor() {
   };
 
   const snapshot = (renderer: any): AurumPerformanceSnapshot => {
-    const latest = frames[frames.length - 1];
+    const now = performance.now();
+    while (frames[0] && now - frames[0].timestamp > WINDOW_MS) frames.shift();
+    const latest = latestFrame;
     const count = frames.length;
     const average = (key: "frameMs" | "renderMs" | "bvhMs") =>
       count ? frames.reduce((sum, item) => sum + item[key], 0) / count : 0;
     const elapsed = count > 1 ? Math.max(1, frames[count - 1].timestamp - frames[0].timestamp) : 0;
+    const hasRecentFrame = Boolean(latest && now - latest.timestamp <= WINDOW_MS);
     const gl = renderer?.getContext?.();
     let webgl: AurumPerformanceSnapshot["webgl"] = "No disponible";
     try {
@@ -54,10 +59,10 @@ export function createAurumPerformanceMonitor() {
     }
     const canvas = renderer?.domElement;
     return {
-      fps: elapsed > 0 ? ((count - 1) * 1000) / elapsed : 0,
-      frameMs: average("frameMs"),
-      renderMs: average("renderMs"),
-      bvhMs: average("bvhMs"),
+      fps: hasRecentFrame && elapsed > 0 ? ((count - 1) * 1000) / elapsed : 0,
+      frameMs: count ? average("frameMs") : latest?.frameMs ?? 0,
+      renderMs: count ? average("renderMs") : latest?.renderMs ?? 0,
+      bvhMs: count ? average("bvhMs") : latest?.bvhMs ?? 0,
       maxFrameMs,
       path: latest?.path ?? "—",
       calls: Number(renderer?.info?.render?.calls ?? 0),
@@ -72,6 +77,7 @@ export function createAurumPerformanceMonitor() {
 
   const reset = () => {
     frames.length = 0;
+    latestFrame = null;
     maxFrameMs = 0;
   };
 
