@@ -109,6 +109,25 @@ El núcleo debe poder iniciar una escena básica y cerrarse correctamente sin qu
 | Post Engine | Efectos, calidad y composición de imagen | `post.ts`, `aurum-post-engine.ts`, `aurum-ssao-engine.ts` |
 | Capture Pipeline | Captura de alta calidad y path tracing | `path-traced-capture.ts`, `path-tracer-final.ts` |
 | Pipeline Manager | Coordinar orden, dependencias, perfiles y calidad | Nuevo componente por diseñar |
+| Surface Engine | Diagnóstico de costuras y continuidad entre cuerpos | `surface-engine.ts` (diagnóstico experimental de solo lectura) |
+| Import Pipeline | Decodificación, conversión GLB, normalización e inspección | `core/import-plugin.ts`, `core/import-pipeline-manager.ts`, `core/geometry-engine.ts` |
+
+### Módulos de importación y continuidad de superficies (estado actual)
+
+La capa de importación ya tiene contratos y orquestación separados del componente visual:
+
+| Módulo | Implementación | Estado real |
+|---|---|---|
+| Import Plugin | `src/lib/aurum/core/import-plugin.ts` | Implementado; decodifica formatos y delega en el loader/normalizador existentes |
+| Import Pipeline Manager | `src/lib/aurum/core/import-pipeline-manager.ts` | Implementado; ordena etapas y solicita inspección geométrica completa |
+| Geometry Engine | `src/lib/aurum/core/geometry-engine.ts` | Implementado; inspección de mallas, posiciones, normales y bounds, sin mutación |
+| Surface Engine | `src/lib/aurum/core/surface-engine.ts` | Diagnóstico experimental; detecta aristas de borde coincidentes entre cuerpos, sin soldar ni modificar el modelo |
+| GLB conversion | `convertAurumToGlb` en `model-loader.ts` | Integrada en la ruta de importación para entradas distintas de GLB |
+| GLB normalization | `model-normalizer.ts` | Integrada; reabre el GLB convertido y recupera metadatos Rhino desde el propio GLB |
+
+**Límite importante de AURUM SURFACE:** la primera versión es deliberadamente de solo lectura y no está conectada como transformación automática del GLB. Identifica aristas coincidentes entre cuerpos separados para localizar posibles costuras; no demuestra por sí sola continuidad tangencial G1/G2 ni convierte sólidos Rhino en una superficie NURBS única. La tolerancia debe ajustarse a las unidades y escala del modelo. No se deben fusionar cuerpos ni recalcular normales de forma global, especialmente en gemas facetadas.
+
+La siguiente fase de AURUM SURFACE deberá contrastar estos diagnósticos con modelos 3DM reales y comparar el GLB final reabierto. Solo después se podrá diseñar una reparación selectiva, con conservación de mallas/materiales y fallback al GLB original cuando la validación no sea satisfactoria.
 
 ### Contrato mínimo de plugin (diseño propuesto)
 
