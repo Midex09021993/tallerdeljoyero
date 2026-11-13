@@ -3448,7 +3448,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               composerAvailable: Boolean(composer),
             });
             invalidateRenderRef.current?.();
-          }
           },
         }
       );
