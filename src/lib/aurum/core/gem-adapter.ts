@@ -13,6 +13,8 @@ import {
   getAurumOpticalProfile,
 } from "../../aurum-material-engine";
 
+import { createAurumReadonlyMap } from "./readonly-map";
+
 export const AURUM_GEM_SERVICES = {
   applyBaseMaterial: "aurum.gem.apply-base-material",
   applyOpticalProfile: "aurum.gem.apply-optical-profile",
@@ -31,16 +33,16 @@ export interface AurumGemAdapter {
 }
 
 export function createAurumGemAdapter(): AurumGemAdapter {
-  const services = new Map<string, unknown>([
+  const services = createAurumReadonlyMap(new Map<string, unknown>([
     [AURUM_GEM_SERVICES.applyBaseMaterial, applyAurumGem],
     [AURUM_GEM_SERVICES.applyOpticalProfile, applyAurumOpticalProfile],
     [AURUM_GEM_SERVICES.applyDiamondOptics, applyAurumDiamondOptics],
     [AURUM_GEM_SERVICES.applyReferenceOptics, applyAurumReferenceGemOptics],
     [AURUM_GEM_SERVICES.getOpticalProfile, getAurumOpticalProfile],
-  ]);
+  ]));
 
   return Object.freeze({
-    services: services as ReadonlyMap<string, unknown>,
+    services,
     applyBaseMaterial: (material: unknown, preset: unknown, thickness: number) =>
       applyAurumGem(material, preset as any, thickness),
     applyOpticalProfile: (material: unknown, profile: unknown) =>
