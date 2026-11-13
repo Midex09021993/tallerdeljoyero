@@ -2,15 +2,12 @@ import * as THREE from "three";
 import { resolveAurumLayerKey } from "./layer-identity";
 import { getAurumSourceMaterials, hadAurumSourceMaterialArray } from "./gem-material-baseline";
 import {
-  applyAurumMetal,
   applyAurumGem,
   applyAurumOpticalProfile,
   applyAurumDiamondOptics,
   applyAurumReferenceGemOptics,
-  applyAurumReferenceMetalOptics,
   applyAurumIJEWELReferenceFromMaterial,
   getAurumOpticalProfile,
-  metalPresetFromConfig,
 } from "../aurum-material-engine";
 import { createAurumMetalAdapter } from "./core/metal-adapter";
 import { applyAurumFamilyOpticalResponse } from "./optical-response";
