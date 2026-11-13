@@ -6,3 +6,5 @@ export type { AurumEdgeCapabilities } from "./edge-capabilities";
 export type { AurumMsaaResult } from "./edge-msaa";
 
 export { createAurumSurfaceEdgeAaPass, setAurumEdgeAaResolution, shouldEnableAurumEdgeAa } from "./edge-surface-aa";
+
+export { setAurumSurfaceEdgeAaStrength } from "./edge-surface-aa";
