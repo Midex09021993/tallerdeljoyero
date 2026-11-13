@@ -3585,18 +3585,18 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             setTemporalMotion?.(true);
             syncAurumSsrDiagnosticConfig();
 
-            // Keep the exact same beauty output chain while orbiting and at rest.
-            // Only expensive/optional photographic passes are disabled; RenderPass,
-            // gem mask, gem FXAA and OutputPass remain identical in both states.
+            // Keep the lightweight beauty chain during orbit. Optional photographic
+            // passes stay disabled; a very low-strength surface edge AA pass is
+            // enabled only for non-Low, non-extreme runtime budgets.
             const requestedDpr = Math.max(1, Math.min(2, renderQuality.pixelRatio));
             // Respect selected quality and runtime GPU budget; never upscale for orbit.
             const interactionDpr = Math.min(requestedDpr, runtimeBudget.pixelRatioCap);
             renderer.setPixelRatio(interactionDpr);
             composer?.setPixelRatio?.(interactionDpr);
 
-            // Keep the proven interaction pass set. SSAO and shadow-map
+            // Keep the proven lightweight interaction pass set. SSAO and shadow-map
             // reactivation during orbit caused a scene-wide tonal shift on some
-            // jewelry; restore the stable lightweight path instead.
+            // jewelry; do not reactivate those expensive passes.
             // Lightweight interactive edge cleanup: low blend strength, no TAA,
             // and disabled for extreme CAD budgets or the Low quality profile.
             const interactiveEdgeAaEligible = measuredQualityId !== "low" && runtimeBudget.tier !== "extreme";
@@ -3618,8 +3618,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             invalidateRenderRef.current?.();
           },
           onEnd: () => {
-            // Return to the same exact beauty chain used during orbit. No idle-only
-            // TAA, bloom, DOF or SSR: motion and rest must produce the same image.
+            // Restore the settled beauty chain. No idle-only TAA, bloom, DOF or SSR
+            // are added here; only the surface AA blend strength returns to still quality.
             const requestedDpr = Math.max(1, Math.min(2, renderQuality.pixelRatio));
             const settledDpr = Math.min(
               measuredQualityId === "low" ? requestedDpr : Math.max(requestedDpr, 1.65),
