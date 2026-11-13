@@ -1549,7 +1549,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
 
       const aplicarGema = (g:GemaConfig, objetivo?:any, aplicarTodas=false, renderImmediately=true) => {
         const target=objetivo||parteActiva;
-        const previousGemState=captureAurumGemTransitionState(target);
+        let transitionScope=target;
+        while(transitionScope?.parent) transitionScope=transitionScope.parent;
+        const previousGemState=captureAurumGemTransitionState(transitionScope);
         gemTransitionRef.current?.cancel();
         gemTransitionRef.current=null;
         const applied=applyAurumGemToTarget(target,g,aplicarEntornoGema,()=>invalidateRenderRef.current?.(),aplicarTodas);
@@ -1647,7 +1649,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         setTemporalMotion?.(true);
         resetTemporalAccumulationRef.current?.();
         const transition=createAurumGemTransition(
-          target,
+          transitionScope,
           previousGemState,
           () => {
             resetTemporalAccumulationRef.current?.();
