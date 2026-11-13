@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 
 type LabSettings = {
   caustics: number;
@@ -10,44 +11,53 @@ type LabSettings = {
 };
 
 function createBrilliantGeometry() {
-  const sides = 8;
+  // Round brilliant study model: table, star/crown transition, girdle,
+  // pavilion break and culet. Each triangle gets its own normal so facets
+  // remain optically legible instead of becoming a smooth low-poly shell.
+  const sides = 16;
   const rings = [
-    { y: 0.48, radius: 0.42, offset: Math.PI / 8 },
-    { y: 0.28, radius: 0.72, offset: 0 },
-    { y: 0.18, radius: 0.76, offset: 0 },
-    { y: -0.48, radius: 0.06, offset: Math.PI / 8 },
+    { y: 0.48, radius: 0.43, offset: Math.PI / sides },
+    { y: 0.18, radius: 0.78, offset: 0 },
+    { y: 0.035, radius: 0.82, offset: 0 },
+    { y: -0.08, radius: 0.73, offset: Math.PI / sides },
+    { y: -0.60, radius: 0.075, offset: Math.PI / sides },
   ];
-  const positions: number[] = [];
-  const indices: number[] = [];
-  rings.forEach((ring) => {
+  const vertices: number[] = [];
+  const pushTriangle = (a: THREE.Vector3, b: THREE.Vector3, c: THREE.Vector3) => {
+    vertices.push(a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z);
+  };
+  const points = rings.map((ring) => Array.from({ length: sides }, (_, i) => {
+    const angle = (i / sides) * Math.PI * 2 + ring.offset;
+    return new THREE.Vector3(Math.cos(angle) * ring.radius, ring.y, Math.sin(angle) * ring.radius);
+  }));
+  for (let r = 0; r < points.length - 1; r++) {
     for (let i = 0; i < sides; i++) {
-      const angle = (i / sides) * Math.PI * 2 + ring.offset;
-      positions.push(Math.cos(angle) * ring.radius, ring.y, Math.sin(angle) * ring.radius);
-    }
-  });
-  for (let ring = 0; ring < rings.length - 1; ring++) {
-    for (let i = 0; i < sides; i++) {
-      const a = ring * sides + i;
-      const b = ring * sides + ((i + 1) % sides);
-      const c = (ring + 1) * sides + ((i + 1) % sides);
-      const d = (ring + 1) * sides + i;
-      indices.push(a, b, d, b, c, d);
+      const next = (i + 1) % sides;
+      const a = points[r][i];
+      const b = points[r][next];
+      const c = points[r + 1][next];
+      const d = points[r + 1][i];
+      // Alternating diagonals avoid a repetitive, belt-like triangulation.
+      if ((i + r) % 2 === 0) {
+        pushTriangle(a, b, d);
+        pushTriangle(b, c, d);
+      } else {
+        pushTriangle(a, b, c);
+        pushTriangle(a, c, d);
+      }
     }
   }
-  const topCenter = positions.length / 3;
-  positions.push(0, rings[0].y, 0);
-  const bottomPoint = positions.length / 3;
-  positions.push(0, -0.58, 0);
+  const tableCenter = new THREE.Vector3(0, rings[0].y, 0);
+  const culet = new THREE.Vector3(0, -0.68, 0);
   for (let i = 0; i < sides; i++) {
     const next = (i + 1) % sides;
-    indices.push(topCenter, next, i);
-    const lastRing = (rings.length - 1) * sides;
-    indices.push(lastRing + i, lastRing + next, bottomPoint);
+    pushTriangle(tableCenter, points[0][i], points[0][next]);
+    pushTriangle(points[points.length - 1][i], culet, points[points.length - 1][next]);
   }
   const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
-  geometry.setIndex(indices);
+  geometry.setAttribute("position", new THREE.Float32BufferAttribute(vertices, 3));
   geometry.computeVertexNormals();
+  geometry.computeBoundingSphere();
   return geometry;
 }
 
@@ -62,7 +72,8 @@ function createGemMaterial(settings: LabSettings) {
     dispersion: settings.dispersion,
     specularIntensity: 1,
     specularColor: new THREE.Color("#ffffff"),
-    envMapIntensity: 1.35,
+    envMapIntensity: 2.0,
+    flatShading: true,
     clearcoat: 1,
     clearcoatRoughness: 0.015,
     side: THREE.DoubleSide,
@@ -122,32 +133,36 @@ export function AurumCausticsLab() {
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color("#10151d");
-    const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 50);
-    camera.position.set(2.8, 1.7, 4.2);
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    const room = new RoomEnvironment();
+    const environment = pmrem.fromScene(room, 0.04).texture;
+    scene.environment = environment;
+    const camera = new THREE.PerspectiveCamera(31, 1, 0.1, 50);
+    camera.position.set(2.65, 1.45, 4.9);
     camera.lookAt(0, 0, 0);
 
     const gemMaterial = createGemMaterial(settings);
     const gem = new THREE.Mesh(createBrilliantGeometry(), gemMaterial);
-    gem.rotation.set(0.12, 0.18, 0.04);
+    gem.rotation.set(0.02, 0.12, 0);
     scene.add(gem);
 
     const floor = new THREE.Mesh(
-      new THREE.CircleGeometry(3.2, 64),
-      new THREE.MeshStandardMaterial({ color: "#252b34", roughness: 0.72, metalness: 0.05 }),
+      new THREE.CircleGeometry(2.5, 64),
+      new THREE.MeshStandardMaterial({ color: "#171c25", roughness: 0.88, metalness: 0.02 }),
     );
     floor.rotation.x = -Math.PI / 2;
-    floor.position.y = -0.78;
+    floor.position.y = -0.82;
     scene.add(floor);
 
-    const ambient = new THREE.HemisphereLight("#dce9ff", "#1c2430", 1.7);
+    const ambient = new THREE.HemisphereLight("#dce9ff", "#1c2430", 0.85);
     scene.add(ambient);
     const key = new THREE.DirectionalLight("#ffffff", settings.lightPower);
     key.position.set(-3.5, 4.5, 3.2);
     scene.add(key);
-    const rim = new THREE.DirectionalLight("#8bbcff", 2.4);
+    const rim = new THREE.DirectionalLight("#8bbcff", 3.2);
     rim.position.set(3, 1.2, -3);
     scene.add(rim);
-    const strip = new THREE.PointLight("#ffd9a0", 65, 12, 2);
+    const strip = new THREE.PointLight("#ffd9a0", 38, 12, 2);
     strip.position.set(2.4, 2.3, 2.6);
     scene.add(strip);
 
@@ -184,6 +199,9 @@ export function AurumCausticsLab() {
           materials.forEach((item) => item.dispose());
         }
       });
+      environment.dispose();
+      room.dispose();
+      pmrem.dispose();
       renderer.dispose();
       renderer.domElement.remove();
       sceneObjectsRef.current = null;
@@ -226,7 +244,7 @@ export function AurumCausticsLab() {
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-amber-500">Laboratorio óptico · Prototipo aislado</p>
           <h3 className="mt-1 text-lg font-semibold text-foreground">AURUM CAUSTICS · Diamante</h3>
-          <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">Escena de diamante independiente para estudiar la energía refractada sin alterar el motor de producción.</p>
+          <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">Diamante de talla brillante con facetas planas, entorno de estudio y controles ópticos independientes.</p>
         </div>
         <button type="button" onClick={() => setIsRotating((value) => !value)} className="rounded-xl border border-border px-4 py-2 text-sm font-medium transition hover:border-gold/50">
           {isRotating ? "Pausar giro" : "Reanudar giro"}
@@ -235,7 +253,7 @@ export function AurumCausticsLab() {
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_290px]">
         <div ref={hostRef} className="relative h-[420px] min-w-0 overflow-hidden rounded-2xl border border-border bg-[#10151d] sm:h-[540px]">
           {error ? <div role="alert" className="absolute inset-0 grid place-items-center p-6 text-center text-sm text-red-300">{error}</div> : null}
-          <div className="pointer-events-none absolute left-4 top-4 z-10 rounded-lg border border-white/10 bg-black/35 px-3 py-2 text-[10px] uppercase tracking-[0.16em] text-white/70">Diamante · IOR 2.417</div>
+          <div className="pointer-events-none absolute left-4 top-4 z-10 rounded-lg border border-white/10 bg-black/35 px-3 py-2 text-[10px] uppercase tracking-[0.16em] text-white/70">TALLA BRILLANTE · IOR 2.417</div>
           <div className="pointer-events-none absolute bottom-4 left-4 z-10 rounded-lg border border-white/10 bg-black/35 px-3 py-2 text-[10px] text-white/60">Previsualización óptica experimental</div>
         </div>
         <aside className="space-y-4 rounded-2xl border border-border bg-background p-4">
@@ -244,7 +262,7 @@ export function AurumCausticsLab() {
             <p className="mt-1 text-xs leading-5 text-muted-foreground">Ajustes locales; no cambian los presets guardados.</p>
           </div>
           <label className="block space-y-2">
-            <span className="flex justify-between text-xs text-muted-foreground"><span>Campo experimental</span><strong className="text-foreground">{settings.caustics.toFixed(2)}</strong></span>
+            <span className="flex justify-between text-xs text-muted-foreground"><span>Energía experimental</span><strong className="text-foreground">{settings.caustics.toFixed(2)}</strong></span>
             <input aria-label="Intensidad del campo experimental" type="range" min="0" max="1.5" step="0.05" value={settings.caustics} onChange={(event) => update("caustics", Number(event.target.value))} className="w-full accent-amber-500" />
           </label>
           <label className="block space-y-2">
