@@ -66,8 +66,10 @@ export class AurumResourceScope {
     return disposer;
   }
 
-  track<T extends { dispose?: () => void }>(resource: T): T {
+  track<T extends { dispose?: () => void | Promise<void> }>(resource: T): T {
     if (typeof resource.dispose === "function") {
+      // Preserve async disposal so the scope can await GPU/resource teardown
+      // before the owning plugin or viewer completes its shutdown.
       this.add(() => resource.dispose?.());
     }
     return resource;
