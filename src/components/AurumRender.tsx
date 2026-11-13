@@ -1551,8 +1551,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
 
       const aplicarGema = (g:GemaConfig, objetivo?:any, aplicarTodas=false, renderImmediately=true) => {
         const target=objetivo||parteActiva;
-        let transitionScope=target;
-        while(transitionScope?.parent) transitionScope=transitionScope.parent;
+        // The clicked mesh is the transition boundary. Never climb to the
+        // model root: doing so can capture unrelated gems/materials and make a
+        // single catalog assignment affect geometry outside the selected stone.
+        const transitionScope=target?.isMesh ? target : null;
         const previousGemState=captureAurumGemTransitionState(transitionScope);
         gemTransitionRef.current?.cancel();
         gemTransitionRef.current=null;
@@ -3557,17 +3559,19 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             renderer.setPixelRatio(interactionDpr);
             composer?.setPixelRatio?.(interactionDpr);
 
-            // Keep ambient occlusion for metal contact/depth; its scale is quality-managed.
-            const coreBeautyPasses = new Set([renderPass, ssaoPass, gemMaskPass, fxaaPass, outputPass]);
+            // Keep the proven interaction pass set. SSAO and shadow-map
+            // reactivation during orbit caused a scene-wide tonal shift on some
+            // jewelry; restore the stable lightweight path instead.
+            const coreBeautyPasses = new Set([renderPass, gemMaskPass, fxaaPass, outputPass]);
             const interactionPasses = ((composer as any)?.passes ?? []) as any[];
             interactionPasses.forEach((pass) => { pass.enabled = coreBeautyPasses.has(pass); });
             const sameBeautyPipelineAvailable = Boolean(composer && renderPass && gemMaskPass && fxaaPass && outputPass);
             liveFastPathRef.current = !sameBeautyPipelineAvailable;
 
-            // Preserve authored gem/metal materials while orbiting; LIVE overrides
-            // transmission and clearcoat and visibly changes the optical result.
-            // Shadow maps are static between scene/light edits: reuse the cache.
-            renderer.shadowMap.enabled = Boolean(renderQuality.shadows);
+            // The LIVE profile is scoped internally to gemstone materials;
+            // it must not rewrite the metal materials during camera movement.
+            aplicarPerfilLive(true);
+            renderer.shadowMap.enabled = false;
             renderer.shadowMap.needsUpdate = false;
             invalidateRenderRef.current?.();
           },
@@ -3593,7 +3597,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             );
             const coreBeautyPasses = new Set([
               renderPass,
-              ssaoPass,
               gemMaskPass,
               fxaaPass,
               outputPass,
@@ -3604,7 +3607,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
 
             const sameBeautyPipelineAvailable = Boolean(composer && renderPass && gemMaskPass && fxaaPass && outputPass);
             liveFastPathRef.current = !sameBeautyPipelineAvailable;
-            if (!gemTransitionRef.current?.active) aplicarPerfilLive(false);
+            // Keep the same lightweight gem profile before and after orbit.
+            // Beauty/capture restoration remains owned by the capture pipeline.
+            if (!gemTransitionRef.current?.active) aplicarPerfilLive(true);
             // This transition enables accumulation only when applyQuality()
             // requested TAA for the current quality profile.
             if (gemTransitionRef.current?.active) {
@@ -3629,7 +3634,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               renderPass.clearColor = null;
               renderPass.clearAlpha = 0;
             }
-            renderer.shadowMap.enabled = Boolean(renderQuality.shadows);
+            renderer.shadowMap.enabled = false;
             renderer.shadowMap.needsUpdate = false;
 
             console.info("[AURUM][RENDER PIPELINE]", {
