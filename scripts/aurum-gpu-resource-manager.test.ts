@@ -99,3 +99,21 @@ test("shutdown closes ownership before invoking external dispose callbacks", () 
   expect(disposeCount).toBe(1);
   expect(manager.stats().disposed).toBe(true);
 });
+
+
+test("GPU manager rejects non-canonical owner ids and resource kind changes", () => {
+  const manager = createAurumGpuResourceManager();
+  const texture = disposable();
+
+  expect(() => manager.track(" viewer ", disposable())).toThrow("leading or trailing whitespace");
+  manager.track("viewer", texture, "texture");
+  expect(() => manager.track("final-render", texture, "render-target")).toThrow("cannot be reclassified");
+  expect(manager.stats()).toEqual({
+    resourceCount: 1,
+    ownerCount: 1,
+    referenceCount: 1,
+    disposed: false,
+  });
+  expect(manager.releaseOwner("viewer")).toBe(1);
+  expect(texture.disposeCount).toBe(1);
+});
