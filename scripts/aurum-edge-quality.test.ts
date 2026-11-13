@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { inspectAurumEdgeCapabilities } from "../src/lib/aurum/edge-quality/edge-capabilities";
 import { configureAurumComposerMsaa } from "../src/lib/aurum/edge-quality/edge-msaa";
-import { setAurumEdgeAaResolution, shouldEnableAurumEdgeAa } from "../src/lib/aurum/edge-quality/edge-surface-aa";
+import { setAurumEdgeAaResolution, setAurumSurfaceEdgeAaStrength, shouldEnableAurumEdgeAa } from "../src/lib/aurum/edge-quality/edge-surface-aa";
 
 test("AURUM edge capabilities clamp requested MSAA to WebGL2 device limits", () => {
   expect(inspectAurumEdgeCapabilities({ capabilities: { isWebGL2: true, maxSamples: 8 } }, 4)).toEqual({
@@ -83,4 +83,13 @@ test("AURUM edge AA resolution uses physical target dimensions", () => {
   setAurumEdgeAaResolution({ material: { uniforms: { resolution: { value } } } }, 2400, 1600);
   expect(value.x).toBeCloseTo(1 / 2400);
   expect(value.y).toBeCloseTo(1 / 1600);
+});
+
+
+test("AURUM interactive surface edge AA uses a capped low blend strength", () => {
+  const pass = { material: { uniforms: { strength: { value: 0.075 } } } };
+  setAurumSurfaceEdgeAaStrength(pass, 0.035);
+  expect(pass.material.uniforms.strength.value).toBe(0.035);
+  setAurumSurfaceEdgeAaStrength(pass, 0.5);
+  expect(pass.material.uniforms.strength.value).toBe(0.1);
 });
