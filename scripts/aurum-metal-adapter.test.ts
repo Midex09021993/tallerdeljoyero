@@ -14,8 +14,9 @@ test("AURUM Metal Adapter exposes the existing metal engine functions and preser
   };
   const preset = adapter.createPreset(config);
   const response = adapter.getReflectionResponse(preset);
+  const colorState = { value: 0 };
   const material = {
-    color: { setHex(value: number) { this.value = value; }, getHex() { return this.value ?? 0; } },
+    color: { setHex(value: number) { colorState.value = value; }, getHex() { return colorState.value; } },
     emissive: { setHex(_value: number) {} },
     userData: {},
   } as any;
