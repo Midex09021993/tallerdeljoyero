@@ -234,7 +234,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const invalidateRenderRef = useRef<(() => void) | null>(null);
   const viewerLoopRef = useRef<any>(null);
   const resetTemporalAccumulationRef = useRef<(() => void) | null>(null);
-  const viewerInteractionActiveRef = useRef(false);
   const [ptSamples, setPtSamples] = useState("256");
   const [ptProgress, setPtProgress] = useState<string|null>(null);
   const ptAbortRef = useRef<AbortController|null>(null);
@@ -3459,7 +3458,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         {
           progressiveFrames: Math.max(1, Math.min(32, Math.floor(Number(postRuntimeConfig.progressiveFrameCount ?? 1)))),
           onStart: () => {
-            viewerInteractionActiveRef.current=true;
             setTemporalMotion?.(true);
             syncAurumSsrDiagnosticConfig();
 
@@ -3550,7 +3548,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               composerAvailable: Boolean(composer),
             });
             invalidateRenderRef.current?.();
-            viewerInteractionActiveRef.current=false;
           },
         }
       );
@@ -3622,7 +3619,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
     }
     apiRef.current=null;
     onCatalogApiReadyRef.current?.(null);
-    viewerInteractionActiveRef.current=false;
     viewerLoopRef.current=null;
     setPerformanceRenderer(null);
     performanceMonitorRef.current.reset();
