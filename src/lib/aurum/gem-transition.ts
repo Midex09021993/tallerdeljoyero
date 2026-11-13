@@ -158,6 +158,8 @@ export function createAurumGemTransition(
     frameId = requestAnimationFrame(tick);
   };
 
+  apply(0);
+  onFrame();
   schedule();
   return {
     pause: () => {
