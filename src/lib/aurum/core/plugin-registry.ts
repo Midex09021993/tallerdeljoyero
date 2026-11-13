@@ -52,7 +52,7 @@ export class AurumPluginRegistry {
   private abortController: AbortController | null = null;
   private readonly events = new AurumEventBus();
 
-  constructor(private readonly context: Omit<AurumPluginContext, "signal">) {}
+  constructor(private readonly context: Omit<AurumPluginContext, "signal" | "events" | "resources">) {}
 
   getState(): AurumPluginRegistryState {
     return this.state;
@@ -114,7 +114,7 @@ export class AurumPluginRegistry {
     const order = this.resolveOrder();
     this.state = "starting";
     this.abortController = new AbortController();
-    const pluginContext: AurumPluginContext = {
+    const pluginContext = {
       ...this.context,
       signal: this.abortController.signal,
     };
