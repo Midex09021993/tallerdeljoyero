@@ -196,6 +196,19 @@ El contrato de importación ahora acepta un `AbortSignal` opcional. Se comprueba
 
 Pruebas añadidas en `scripts/aurum-import-pipeline.test.ts`: solicitud ya cancelada (no invoca el importador), cancelación después de decodificar (libera geometría) y cancelación entre Smart Scan y diagnósticos profundos. La suite ya está integrada en el workflow de calidad.
 
+### AURUM IMPORT — liberación de geometría decodificada tras normalización — 2026-11-13
+
+Se cerró la frontera de memoria de la importación exitosa:
+
+- Una vez que el modelo normalizado está listo, el visor conserva ese modelo como activo.
+- Para formatos convertidos (3DM, STL, OBJ y FBX), el importador libera los `BufferGeometry` del objeto decodificado que ya no son referenciados por el modelo normalizado.
+- La liberación compara por identidad las geometrías retenidas por el modelo final y deduplica las geometrías de origen. Si una geometría estuviera compartida, no se libera.
+- La entrada GLB devuelve el mismo objeto como origen y modelo; en ese caso la operación es un no-op.
+- No se liberan materiales, texturas ni recursos del renderer. El contrato del visor sigue siendo propietario del modelo normalizado y de su teardown.
+- La referencia `sourceObject` permanece disponible para metadatos/auditoría, pero sus buffers geométricos exclusivos dejan de ser utilizables después de la entrega del resultado.
+
+Pruebas añadidas en `scripts/aurum-import-pipeline.test.ts`: liberar geometría exclusiva, preservar geometría compartida y no liberar el modelo GLB cuando origen/modelo son la misma instancia. La ejecución real de Bun, TypeScript, build y CI sigue pendiente de confirmación.
+
 ## AURUM EDGE QUALITY — cierre de contrato MSAA
 
 La revisión del pipeline confirma que `createAurumPostPipeline()` instancia `EffectComposer` y configura EDGE QUALITY inmediatamente después de su construcción, antes de añadir/renderizar los pases. MSAA se limita a los dos targets ping-pong del compositor.
