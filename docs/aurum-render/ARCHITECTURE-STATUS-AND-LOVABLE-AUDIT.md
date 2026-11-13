@@ -382,3 +382,15 @@ Hallazgo corregido:
 Límite: esto cubre el árbol de recursos Three.js enlazados directamente a las propiedades de los materiales del GLTF reabierto. No se hace cierre explícito de ImageBitmap ni se modifica el ciclo de vida del decodificador Draco compartido.
 
 Validación pendiente: ejecutar `scripts/aurum-glb-quality-gate.test.ts`, build y exportaciones reales con GLB que incluya texturas, gemas y múltiples cuerpos. No se certifica CI ni compilación desde esta sesión.
+
+
+### Corrección de cobertura AURUM EDGE QUALITY — 2026-11-13
+
+- Se añadió `edge-surface-aa.ts` como responsabilidad explícita del módulo EDGE QUALITY.
+- El nuevo pase de superficie aplica un filtro de borde de baja intensidad (strength 0.075; threshold 0.16) sobre el beauty compuesto para ayudar a suavizar siluetas metálicas y curvas CAD.
+- El pase de superficie y el filtro de gemas se habilitan únicamente en calidad alta/ultra cuando la cámara está estable, o durante captura fija explícita. No se ejecutan en el camino rápido de interacción.
+- El filtro de gemas mantiene su máscara categórica para evitar mezclar píxeles metálicos con gemas.
+- La resolución de ambos filtros se sincroniza con las dimensiones físicas reales del target del compositor, también en capturas.
+- Se exponen diagnósticos de activación y pruebas unitarias de la política de habilitación y resolución.
+- No se modificaron shaders ópticos, BVH, HDRI, calibraciones ni materiales.
+- Pendiente: ejecutar pruebas, validar visualmente en navegador/GPU real y medir FPS/tiempo de estabilización antes de certificar el beneficio visual y el coste.
