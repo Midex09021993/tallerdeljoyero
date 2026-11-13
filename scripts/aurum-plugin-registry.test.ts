@@ -137,3 +137,18 @@ test("AURUM resource scopes reject new resources after disposal and dispose only
   expect(scope.isDisposed).toBe(true);
   expect(() => scope.add(() => undefined)).toThrow("disposed");
 });
+
+
+test("AURUM Event Bus delivers to every subscriber and reports failures together", async () => {
+  const { AurumEventBus } = await import("../src/lib/aurum/core/context");
+  const bus = new AurumEventBus();
+  const calls: string[] = [];
+  bus.on("viewer.ready", () => { calls.push("first"); throw new Error("first failed"); });
+  bus.on("viewer.ready", () => { calls.push("second"); });
+  bus.on("viewer.ready", () => { calls.push("third"); throw new Error("third failed"); });
+
+  expect(() => bus.emit("viewer.ready", {})).toThrow("failing subscribers");
+  expect(calls).toEqual(["first", "second", "third"]);
+  bus.clear();
+  expect(() => bus.on("viewer.ready", () => undefined)).toThrow("disposed");
+});
