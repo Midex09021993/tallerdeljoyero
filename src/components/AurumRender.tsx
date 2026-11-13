@@ -1652,12 +1652,15 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           transitionScope,
           previousGemState,
           () => {
-            resetTemporalAccumulationRef.current?.();
+            // TAA remains in motion mode during the blend. Resetting its history
+            // on every 30 Hz sample is redundant and adds avoidable CPU work.
             viewerLoopRef.current?.renderNow?.();
           },
           240,
           () => {
             gemTransitionRef.current=null;
+            // Rebuild temporal history once, after the final material values
+            // are in place, then run the bounded settled-state convergence.
             resetTemporalAccumulationRef.current?.();
             setTemporalMotion?.(false);
             viewerLoopRef.current?.converge?.(Math.max(1,Math.min(12,Number(postRuntimeConfig.progressiveFrameCount??8))));
@@ -1667,13 +1670,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         if(transition && viewerInteractionActiveRef.current) transition.pause();
         if(!transition) setTemporalMotion?.(false);
 
-        // A catalog batch may touch several meshes; render once after the batch.
-        // For an individual selection, present the new material immediately so
-        // the user never has to orbit the jewel to see the change.
-        if(renderImmediately){
-          viewerLoopRef.current?.renderNow?.();
-        }else{
-          invalidateRenderRef.current?.();
+        // The transition controller renders its initial state itself. Avoid
+        // issuing a duplicate immediate render when a transition was created.
+        if(!transition){
+          if(renderImmediately) viewerLoopRef.current?.renderNow?.();
+          else invalidateRenderRef.current?.();
         }
       };
       const aplicarMaterial = (m:MaterialConfig, aplicarTodos=false) => {
