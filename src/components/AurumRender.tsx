@@ -1551,14 +1551,23 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
 
       const aplicarGema = (g:GemaConfig, objetivo?:any, aplicarTodas=false, renderImmediately=true) => {
         const target=objetivo||parteActiva;
-        // The clicked mesh is the transition boundary. Never climb to the
-        // model root: doing so can capture unrelated gems/materials and make a
-        // single catalog assignment affect geometry outside the selected stone.
-        const transitionScope=target?.isMesh ? target : null;
-        const previousGemState=captureAurumGemTransitionState(transitionScope);
+        // Resolve and snapshot only the meshes that belong to this exact
+        // clicked gem/layer assignment. Never snapshot the model root.
+        let transitionTargets:any[]=[];
+        let previousGemState:any[]=[];
         gemTransitionRef.current?.cancel();
         gemTransitionRef.current=null;
-        const applied=applyAurumGemToTarget(target,g,aplicarEntornoGema,()=>invalidateRenderRef.current?.(),aplicarTodas);
+        const applied=applyAurumGemToTarget(
+          target,
+          g,
+          aplicarEntornoGema,
+          ()=>invalidateRenderRef.current?.(),
+          aplicarTodas,
+          (resolvedTargets:any[])=>{
+            transitionTargets=resolvedTargets;
+            previousGemState=captureAurumGemTransitionState(resolvedTargets);
+          },
+        );
         if(!applied){
           console.error("[AURUM][GEM APPLICATION FAILED]",{
             requestedId:String(g?.id??""),
@@ -1653,7 +1662,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         setTemporalMotion?.(true);
         resetTemporalAccumulationRef.current?.();
         const transition=createAurumGemTransition(
-          transitionScope,
+          transitionTargets,
           previousGemState,
           () => {
             // TAA remains in motion mode during the blend. Resetting its history
