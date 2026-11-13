@@ -29,7 +29,9 @@ test("AURUM production plugin host registers adapters and manages lifecycle with
   expect(host.services.has("aurum.plugin.aurum\\.viewer")).toBe(false);
   expect(host.services.get("aurum.viewer.renderer")).toEqual({ id: "renderer" });
   expect(host.services.get("aurum.scene.controller")).toEqual({ id: "scene" });
-  const gpuResources = host.services.get("aurum.gpu.resources") as ReturnType<typeof import("../src/lib/aurum/core/gpu-resource-manager").createAurumGpuResourceManager>;
+  const gpuResources = host.gpuResources;
+  expect(gpuResources).toBe(host.services.get("aurum.gpu.resources"));
+  expect(gpuResources.stats()).toMatchObject({ resourceCount: 0, ownerCount: 0, referenceCount: 0, disposed: false });
   let gpuDisposed = 0;
   gpuResources.track("gem-engine", { dispose: () => { gpuDisposed += 1; } }, "texture");
   await host.dispose();
