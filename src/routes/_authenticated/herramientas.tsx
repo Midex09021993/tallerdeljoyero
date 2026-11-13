@@ -9,6 +9,7 @@ import { CalculadoraYeso } from "@/components/CalculadoraYesoAgua";
 import { CalculadoraPesoGemas } from "@/components/CalculadoraPesoGemas";
 import { AsistenteImpresion3D } from "@/components/AsistenteImpresion3D";
 import { AurumCausticsLab } from "@/components/aurum-caustics/AurumCausticsLab";
+import { useSesion } from "@/lib/auth";
 
 export const Route = createFileRoute("/_authenticated/herramientas")({
   head: () => ({
@@ -34,6 +35,8 @@ const tarjetaBase =
   "group flex min-h-[220px] w-full flex-col rounded-2xl border border-border bg-card p-5 text-left shadow-card transition duration-200 hover:-translate-y-0.5 hover:border-gold/60 hover:shadow-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold";
 
 function HerramientasPage() {
+  const { data: sesion } = useSesion();
+  const puedeVerTecnologiaInternaAurum = sesion?.participante?.nombre.trim().toLocaleUpperCase() === "FADILAB";
   const [herramientaActiva, setHerramientaActiva] = useState<HerramientaInterna>(null);
   const [mostrarIntroAurumRender, setMostrarIntroAurumRender] = useState(false);
   const [mostrarArquitecturaAurum, setMostrarArquitecturaAurum] = useState(false);
@@ -293,7 +296,7 @@ function HerramientasPage() {
                 <p className="mt-1 text-sm text-muted-foreground">Abre Aurum Render cuando hayas terminado de conocer sus funciones.</p>
               </div>
               <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-                <button
+                {puedeVerTecnologiaInternaAurum ? <button
                   type="button"
                   aria-expanded={mostrarArquitecturaAurum}
                   aria-controls="aurum-render-arquitectura"
@@ -303,14 +306,14 @@ function HerramientasPage() {
                   <Info className="size-4 text-gold" />
                   {mostrarArquitecturaAurum ? "Ocultar tecnología" : "Conocer nuestra tecnología"}
                   <ChevronRight className={`size-4 transition-transform ${mostrarArquitecturaAurum ? "rotate-90" : ""}`} />
-                </button>
+                </button> : null}
                 <Link to="/aurum-render" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold">
                   <Gem className="size-4" /> Ir a Aurum Render <ChevronRight className="size-4" />
                 </Link>
               </div>
             </div>
           </section>
-          {mostrarArquitecturaAurum ? (
+          {puedeVerTecnologiaInternaAurum && mostrarArquitecturaAurum ? (
             <section id="aurum-render-arquitectura" aria-labelledby="aurum-render-arquitectura-title" className="mx-auto w-full max-w-[1200px] overflow-hidden rounded-2xl border border-border bg-card shadow-card">
               <div className="border-b border-border bg-gradient-to-br from-gold/10 via-card to-card px-6 py-7 sm:px-8">
                 <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-gold">Tecnología desarrollada por AURUM LAB</p>
@@ -353,7 +356,7 @@ function HerramientasPage() {
                       <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3"><p className="text-xs font-semibold">Viewer Adapter</p><p className="mt-1 text-[10px] text-emerald-700 dark:text-emerald-400">Conectado</p></div>
                       <div className="rounded-lg border border-border p-3"><p className="text-xs font-semibold">Scene Adapter</p><p className="mt-1 text-[10px] text-emerald-700 dark:text-emerald-400">Conectado</p></div>
                       <div className="rounded-lg border border-border p-3"><p className="text-xs font-semibold">Light Engine</p><p className="mt-1 text-[10px] text-emerald-700 dark:text-emerald-400">Conectado</p></div>
-                      <div className="rounded-lg border border-border p-3"><p className="text-xs font-semibold">Metal Engine</p><p className="mt-1 text-[10px] text-muted-foreground">Siguiente fase</p></div>
+                      <div className="rounded-lg border border-border p-3"><p className="text-xs font-semibold">Metal Engine</p><p className="mt-1 text-[10px] text-emerald-700 dark:text-emerald-400">Conectado</p></div>
                       <div className="rounded-lg border border-border p-3"><p className="text-xs font-semibold">Gem Engine</p><p className="mt-1 text-[10px] text-muted-foreground">Siguiente fase</p></div>
                       <div className="rounded-lg border border-border p-3"><p className="text-xs font-semibold">Final Render Pipeline</p><p className="mt-1 text-[10px] text-muted-foreground">Siguiente fase</p></div>
                     </div>
@@ -404,11 +407,7 @@ function HerramientasPage() {
                   AURUM RENDER no es un motor gráfico creado desde cero: es una tecnología de visualización de joyería desarrollada sobre Three.js, con módulos, perfiles y pipelines propios. Estamos evolucionando su arquitectura para separar estos módulos y habilitar extensiones especializadas sin comprometer la calidad visual del motor.
                 </p>
                 <p className="mt-2 text-[11px] leading-5 text-muted-foreground">Algunas capacidades ópticas avanzadas continúan en fase experimental; no todas representan todavía simulación física completa.</p>
-                <div className="mt-3">
-                  <a href="https://github.com/Midex09021993/tallerdeljoyero/blob/main/docs/arquitectura/aurum-render-arquitectura-y-comparativa.md" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-xs font-semibold text-gold underline-offset-4 hover:underline">
-                    Ver arquitectura técnica y comparativa completa <ChevronRight className="size-3.5" />
-                  </a>
-                </div>
+                <p className="mt-3 text-[11px] font-medium text-muted-foreground">Documentación técnica interna · Acceso exclusivo FADILAB.</p>
               </div>
             </section>
           ) : null}
