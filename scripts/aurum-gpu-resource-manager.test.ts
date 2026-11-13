@@ -83,3 +83,19 @@ test("invalid ownership and non-disposable resources are rejected", () => {
   expect(() => manager.track(" ", disposable())).toThrow("owner id");
   expect(() => manager.track("viewer", {} as { dispose: () => void })).toThrow("dispose()");
 });
+
+test("shutdown closes ownership before invoking external dispose callbacks", () => {
+  const manager = createAurumGpuResourceManager();
+  let disposeCount = 0;
+  manager.track("viewer", {
+    dispose() {
+      disposeCount += 1;
+      expect(() => manager.track("late", disposable())).toThrow("disposed");
+      manager.dispose();
+    },
+  }, "render-target");
+
+  manager.dispose();
+  expect(disposeCount).toBe(1);
+  expect(manager.stats().disposed).toBe(true);
+});
