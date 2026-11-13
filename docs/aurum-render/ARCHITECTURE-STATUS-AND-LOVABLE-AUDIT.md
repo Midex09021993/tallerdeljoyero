@@ -262,3 +262,17 @@ El mapa de arquitectura de la sección interna de Herramientas se actualizó par
 La prioridad es completar y verificar integraciones, contratos y dependencias reales. No iniciar optimizaciones, cambios ópticos ni rediseños funcionales antes de que Lovable entregue una auditoría de solo lectura con evidencia por archivo/línea, clasificación de severidad y plan de corrección. La existencia de una tarjeta en el mapa no constituye prueba de integración: cada módulo debe rastrearse hasta su punto de invocación productivo y su propietario de ciclo de vida.
 
 La actualización visual del mapa no certifica por sí misma que todos los módulos estén integrados. Las conexiones pendientes quedan explícitamente marcadas para la auditoría.
+
+
+### Integración multimedia con AURUM CORE — 2026-11-13
+
+Se registra el módulo `aurum.media-export` en el Production Plugin Host. Declara dependencias con Viewer, Post y Final Render y expone:
+- `aurum.media.video-frame.create`: fábrica del pipeline de frames que usa el compositor live.
+- `aurum.media.video-recorder.load`: carga diferida del codificador MediaRecorder existente.
+- `aurum.media.path-traced.capture`: helper de captura path-traced disponible como servicio.
+
+El flujo productivo de vídeo ahora resuelve desde el host la fábrica del pipeline de frames y el cargador del recorder; deja de invocar esos dos componentes directamente desde AurumRender. El pipeline sigue usando el renderer/compositor y los pases live existentes. No se crea otro renderer ni se altera la óptica.
+
+La captura path-traced se expone como servicio, pero su consumo por la ruta concreta de exportación debe confirmarse en una auditoría de llamadas; el flujo de imagen final existente ya se sirve mediante Final Render Adapter. No confundir disponibilidad del servicio con uso efectivo.
+
+El registro y el cambio de consumidor están en los commits `aab7991` y `08b9b2b`. Pendiente: validar compilación y comportamiento de exportación en navegador real; el workflow asociado terminó en fallo sin pasos ni logs disponibles.
