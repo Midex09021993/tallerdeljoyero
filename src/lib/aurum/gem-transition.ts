@@ -66,6 +66,7 @@ export function createAurumGemTransition(
   previous: GemMaterialSnapshot[],
   onFrame: () => void,
   durationMs = 240,
+  onComplete?: () => void,
 ): AurumGemTransitionController | null {
   if (!target || previous.length === 0) return null;
   const previousByKey = new Map(previous.map((item) => [`${item.meshUuid}:${item.materialIndex}`, item]));
@@ -127,6 +128,7 @@ export function createAurumGemTransition(
     active = false;
     frameId = 0;
     onFrame();
+    onComplete?.();
   };
 
   const tick = (timestamp: number) => {
@@ -145,6 +147,7 @@ export function createAurumGemTransition(
     if (progress >= 1) {
       active = false;
       frameId = 0;
+      onComplete?.();
       return;
     }
     frameId = requestAnimationFrame(tick);
