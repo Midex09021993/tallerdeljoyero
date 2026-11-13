@@ -272,6 +272,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
 
   const [materialAplicarTodos, setMaterialAplicarTodos] = useState(false);
   const [materialId, setMaterialId] = useState<MaterialId>("plata950_pulida"), [gemaId, setGemaId] = useState<GemaId>("diamante_natural"), [escenarioId, setEscenarioId] = useState<EscenarioId>("ijewelReference"), [iluminacionId, setIluminacionId] = useState<IluminacionId>("studioSoft"), [vista, setVista] = useState<VistaId>("frontal");
+  // A catalog choice is only armed; the next explicit gem-mesh click consumes it.
+  const pendingGemApplicationRef = useRef<GemaConfig | null>(null);
   const vistaRef = useRef<VistaId>("frontal");
   const autoVistaPorOrbitaRef = useRef(false);
   vistaRef.current = vista;
@@ -3350,6 +3352,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             escena.add(resaltado);
           }
         }
+        // Catalog choice is non-destructive. Apply only after an explicit click
+        // on a mesh classified as a gemstone.
+        const pendingGem = pendingGemApplicationRef.current;
+        if (pendingGem && categoria === "gema") {
+          pendingGemApplicationRef.current = null;
+          aplicarGema(pendingGem, obj, false, true);
+        }
       };
       const seleccionarPorClick = (event: MouseEvent) => {
         if (!modelo || cargando) return;
@@ -4519,7 +4528,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 <div className="mb-2 flex items-center justify-between gap-2"><div className="min-w-0 truncate text-[10px] font-semibold uppercase tracking-[.12em] text-[#77756f]">{busquedaGemas.trim() ? `Resultados: ${busquedaGemas.trim()}` : familiaGemaActiva==="Predeterminadas"?"Gemas predeterminadas":familiaGemaActiva+" · "+GEMAS.filter(g=>g.familia===familiaGemaActiva).length+" disponibles"}</div><span className="shrink-0 text-[9px] text-[#99968d]">{gemasVisibles.length} visibles</span></div>
                 <div className="grid grid-cols-4 gap-2.5 pb-1">
                   {gemasVisibles.map(g=><button key={g.id} type="button" title={g.nombre} aria-label={g.nombre}
-                    onClick={()=>{setBibliotecaTipo("gemas");setGemaId(g.id);apiRef.current?.gema(g)}}
+                    onClick={()=>{setBibliotecaTipo("gemas");setGemaId(g.id);pendingGemApplicationRef.current=g;}}
                     className={"group relative flex flex-col items-center rounded-2xl border p-2.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b99642]/45 "+(gemaId===g.id?"border-[#b99642]/60 bg-white shadow-[0_4px_14px_rgba(50,42,20,.10)]":"border-transparent bg-white/25 hover:border-[#d8d1c2] hover:bg-white/85")}>
                     <span className={"relative grid size-14 place-items-center rounded-full border transition "+(gemaId===g.id?"border-[#b99642] shadow-[0_0_0_3px_rgba(185,150,66,.10)]":"border-black/10 group-hover:border-black/20")}>
                       <span className="relative size-12 overflow-hidden rounded-full shadow-[inset_-4px_-5px_9px_rgba(0,0,0,.5),inset_4px_3px_8px_rgba(255,255,255,.28),0_3px_8px_rgba(0,0,0,.5)]"
