@@ -288,3 +288,23 @@ El registro y el cambio de consumidor están en los commits `aab7991` y `08b9b2b
 - Próxima auditoría: inventariar por recurso (creador, consumidores, owner actual, evento de liberación, posibilidad de compartir) y decidir adopción uno por uno. No hacer un barrido global de scene.traverse ni dispose implícito.
 
 Commit de contrato: `83e978a`; prueba: `ab57c8a`; estado UI: `22336e7`.
+
+
+### Inventario de ownership y teardown — revisión 2026-11-13
+
+La lectura del código productivo confirma que el cierre del visor tiene dos fronteras separadas:
+
+1. `productionPluginHost.dispose()` cierra el Registry y el GPU Resource Manager del CORE.
+2. `disposeAurumViewer()` sigue siendo el propietario del teardown de recursos del visor: OrbitControls, Lighting Controller, Ground Controller, selección, texturas/entornos, EffectComposer, render lists y WebGLRenderer. El desmontaje también libera Diamond BVH y listeners/loop.
+
+Hallazgos de integración:
+- `AurumLightingController.dispose()` se invoca desde `disposeAurumViewer()`; no se debe registrar su `dispose` como disposer adicional del plugin, porque provocaría doble liberación.
+- Scene Adapter delega en el controlador de escena; no declara un disposer propio.
+- Viewer Adapter es read-only y no debe liberar renderer, scene, camera ni controls.
+- Metal/Gem adapters exponen funciones de aplicación óptica, no ownership de materiales ni texturas; los materiales pueden ser compartidos y siguen bajo los controladores existentes.
+- Video Frame Pipeline restaura tamaño, pixel ratio y estado enabled de passes, pero no es propietario del composer ni del renderer.
+- El host todavía no recibe recursos Three.js productivos mediante `gpuResources.track()`; su manager permanece como frontera opt-in disponible. Por tanto, no afirmar que el teardown productivo esté centralizado en GPU Resource Manager.
+
+Decisión para esta fase: conservar `disposeAurumViewer()` como propietario único del teardown del visor. No migrar objetos al GPU Resource Manager hasta diseñar una transferencia explícita y probar el orden de liberación. La siguiente integración debe ser de observabilidad/trazabilidad del ciclo de vida, no de doble ownership.
+
+Evidencia principal: `src/components/AurumRender.tsx` (cleanup y desmontaje), `src/lib/aurum/viewer.ts` (`disposeAurumViewer`), `src/lib/aurum/lighting.ts` (dispose de luces), adaptadores Viewer/Scene/Lighting/Metal/Gem y `src/lib/aurum/video-frame-pipeline.ts`.
