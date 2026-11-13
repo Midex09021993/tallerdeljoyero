@@ -10,6 +10,7 @@ import { CalculadoraPesoGemas } from "@/components/CalculadoraPesoGemas";
 import { AsistenteImpresion3D } from "@/components/AsistenteImpresion3D";
 import { AurumCausticsLab } from "@/components/aurum-caustics/AurumCausticsLab";
 import { useSesion } from "@/lib/auth";
+import { canViewAurumInternalArchitecture } from "@/lib/aurum/aurum-internal-access";
 
 export const Route = createFileRoute("/_authenticated/herramientas")({
   head: () => ({
@@ -36,7 +37,7 @@ const tarjetaBase =
 
 function HerramientasPage() {
   const { data: sesion } = useSesion();
-  const puedeVerTecnologiaInternaAurum = sesion?.participante?.nombre.trim().toLocaleUpperCase() === "FADILAB";
+  const puedeVerTecnologiaInternaAurum = canViewAurumInternalArchitecture(sesion?.participante?.nombre);
   const [herramientaActiva, setHerramientaActiva] = useState<HerramientaInterna>(null);
   const [mostrarIntroAurumRender, setMostrarIntroAurumRender] = useState(false);
   const [mostrarArquitecturaAurum, setMostrarArquitecturaAurum] = useState(false);
