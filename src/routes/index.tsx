@@ -766,6 +766,37 @@ function InicioPublico() {
                   </p>
                 </div>
               )}
+              <style>{`
+                @keyframes aurum-rhino-connection-pulse {
+                  from { transform: translateX(-110%); }
+                  to { transform: translateX(330%); }
+                }
+                .aurum-rhino-connection-pulse {
+                  animation: aurum-rhino-connection-pulse 3.8s ease-in-out infinite;
+                }
+                @media (prefers-reduced-motion: reduce) {
+                  .aurum-rhino-connection-pulse { animation: none; }
+                }
+              `}</style>
+              <div className="aurum-rhino-connection relative mt-3 overflow-hidden rounded-xl border border-[#d4aa19]/30 bg-[#d4aa19]/[.06] p-3 sm:p-3.5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
+                    <span className="grid size-10 shrink-0 place-items-center rounded-xl border border-[#f8c928]/25 bg-[#f8c928]/10 text-[#f8d85b]">
+                      <MonitorSmartphone className="size-5" />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-bold text-white sm:text-xs">¿Diseñas con Rhino 7?</p>
+                      <p className="mt-0.5 text-[10px] leading-4 text-slate-300">Conoce nuestro plugin para conectar tu flujo de diseño con AURUM RENDER.</p>
+                    </div>
+                  </div>
+                  <Link to="/auth" className="group/rhino inline-flex min-h-9 shrink-0 items-center justify-center gap-2 rounded-lg border border-[#d4aa19]/45 bg-[#f8c928] px-3.5 py-2 text-[10px] font-extrabold text-[#17232d] transition-colors hover:bg-[#ffe071] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white sm:text-[11px]">
+                    Conocer el plugin <ArrowRight className="size-3.5 transition-transform group-hover/rhino:translate-x-0.5" />
+                  </Link>
+                </div>
+                <div className="pointer-events-none absolute inset-x-3 bottom-0 h-px overflow-hidden bg-white/10" aria-hidden="true">
+                  <span className="aurum-rhino-connection-pulse absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-[#f8d85b] to-transparent" />
+                </div>
+              </div>
               <div className="grid grid-cols-3 gap-2 border-t border-white/10 pt-4 text-center">
                 <div className="rounded-lg bg-white/[.04] px-2 py-3"><p className="text-[9px] uppercase tracking-wider text-slate-400">Materiales</p><p className="mt-1 text-xs font-semibold text-white">Metales y gemas</p></div>
                 <div className="rounded-lg bg-white/[.04] px-2 py-3"><p className="text-[9px] uppercase tracking-wider text-slate-400">Iluminación</p><p className="mt-1 text-xs font-semibold text-white">Entornos HDR</p></div>
