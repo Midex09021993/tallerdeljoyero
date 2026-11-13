@@ -26,7 +26,7 @@ import { setAurumInclusionsVisible, setAurumEmeraldInclusionsVisible } from "../
 import { setAurumGemShaderQuality } from "../lib/aurum/scintillation";
 import { createAurumLightingController } from "../lib/aurum/lighting";
 import { frameAurumProduct, disposeAurumViewer, createAurumWebGLViewer, startAurumViewerLoop } from "../lib/aurum/viewer";
-import { createAurumImportPlugin, type AurumImportFormat } from "../lib/aurum/core/import-plugin";
+import { createAurumImportPlugin, type AurumImportFormat, type AurumImportPlugin } from "../lib/aurum/core/import-plugin";
 import { compressAurumGlbWithDraco } from "../lib/draco-export";
 import { getAurumRhinoGeometryType, isAurumRhinoCsgSurface } from "../lib/aurum/metal-union-experiment";
 import { getAurumModelParts } from "../lib/aurum/model-parts";
@@ -1799,7 +1799,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         if (!ext || !["stl","obj","glb","fbx","3dm"].includes(ext)) {
           throw new Error("Formato no compatible. Usa STL, OBJ, GLB, FBX o 3DM.");
         }
-        const importResult = await aurumImportPlugin.load({
+        const importPipeline = productionPluginHost.services.get("aurum.import.pipeline") as AurumImportPlugin | undefined;
+        if (!importPipeline || typeof importPipeline.load !== "function") {
+          throw new Error("AURUM Import service is not registered in AURUM CORE.");
+        }
+        const importResult = await importPipeline.load({
           file,
           format: ext as AurumImportFormat,
           fallbackMaterial: material,
