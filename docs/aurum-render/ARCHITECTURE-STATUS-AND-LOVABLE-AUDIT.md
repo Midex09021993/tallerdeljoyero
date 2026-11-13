@@ -173,6 +173,17 @@ Ejecutar: `bun test scripts/aurum-plugin-registry.test.ts`.
 
 No se migraron todos los módulos productivos para declarar `requiresServices`; esto debe hacerse después de inventariar sus dependencias reales, no adivinándolas. Esta entrega establece y prueba el mecanismo, no certifica todavía que todos los módulos estén completamente contratados.
 
+## AURUM IMPORT — presupuestos de recursos
+
+Se añadieron presupuestos explícitos y configurables sin imponer límites nuevos a los flujos CAD existentes:
+
+- `maxFileBytes`: límite duro opcional, comprobado antes de llamar al decodificador. Si no se especifica, no rechaza archivos por tamaño.
+- `geometryBudget.maxMeshes`, `maxVertices`, `maxTriangles`: umbrales informativos calculados con Smart Scan después de normalizar el modelo. El exceso se devuelve en `resourceBudget.exceeded` y en los detalles de `smart-scan-complete`; no rechaza ni modifica la geometría.
+- `resourceBudget` informa bytes de archivo, meshes, vértices y triángulos estimados por los buffers inspeccionados.
+- El fast path sigue siendo de solo lectura y no lanza diagnósticos topológicos profundos automáticamente.
+
+Pruebas: reporte de exceso de presupuesto sin rechazo y rechazo previo al decodificador cuando se configura explícitamente un máximo de bytes. Los límites geométricos son advertencias, no estimaciones de RAM total ni garantías de memoria GPU; deben calibrarse con archivos CAD reales.
+
 ## AURUM IMPORT — cancelación segura y limpieza de geometría
 
 El contrato de importación ahora acepta un `AbortSignal` opcional. Se comprueba antes de iniciar, después de decodificar y entre las etapas de conversión/normalización; el manager también comprueba cancelación entre Smart Scan y cada diagnóstico profundo.
