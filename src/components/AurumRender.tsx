@@ -50,6 +50,8 @@ import { Camera, ChevronDown, Copy, Download, Expand, FileJson, Gem, Image as Im
 
 import { GEMAS, MATERIALES, ESCENARIOS, VISTAS, ILUMINACIONES, type MaterialId, type EscenarioId, type VistaId, type IluminacionId, type MaterialGrupo, type CategoriaParte, type GemaId, type GemaConfig, type MaterialConfig, type ParteModelo } from "../lib/aurum/catalog";
 import { AurumRenderSidebar } from "./AurumRenderSidebar";
+import { AurumPerformanceMonitorPanel } from "./AurumPerformanceMonitorPanel";
+import { createAurumPerformanceMonitor } from "@/lib/aurum/performance-monitor";
 
 const normalizarTexto = (v:any) => String(v ?? "").trim().toLowerCase();
 const colorRhinoHex = (c:any): string | undefined => {
@@ -223,6 +225,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [snapshotGuide, setSnapshotGuide] = useState<"none"|"thirds"|"complete">("none");
   const [snapshotAspect, setSnapshotAspect] = useState<"16:9"|"1:1"|"4:5"|"9:16"|"3:2"|null>(null);
   const [renderQualityId, setRenderQualityId] = useState<AurumRenderQualityId>("high");
+  const [performanceOpen, setPerformanceOpen] = useState(false);
+  const [performanceRenderer, setPerformanceRenderer] = useState<any>(null);
+  const performanceMonitorRef = useRef(createAurumPerformanceMonitor());
   const composerRef = useRef<any>(null);
   const frameRef = useRef<number | null>(null);
   const invalidateRenderRef = useRef<(() => void) | null>(null);
@@ -826,6 +831,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         maxDistance: 100,
         controlsClass: (await import("three/examples/jsm/controls/OrbitControls.js")).OrbitControls,
       });
+      setPerformanceRenderer(renderer);
+      performanceMonitorRef.current.reset();
       // AURUM CORE adapter exposes the existing viewer without taking ownership
       // of its render loop, GPU resources, or disposal lifecycle.
       const viewerAdapter = createAurumViewerAdapter({
@@ -3477,10 +3484,18 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             }
           }
           const renderCpuMs = performance.now() - renderStartedAt;
+          const measuredFrameMs = performance.now() - frameStartedAt;
           perfTick({
             bvhMs: bvhCpuMs,
             renderMs: renderCpuMs,
-            frameMs: performance.now() - frameStartedAt,
+            frameMs: measuredFrameMs,
+          });
+          performanceMonitorRef.current.recordFrame({
+            bvhMs: bvhCpuMs,
+            renderMs: renderCpuMs,
+            frameMs: measuredFrameMs,
+            path: activeToneAuditPath,
+            timestamp: performance.now(),
           });
         },
         {
@@ -3649,6 +3664,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
     apiRef.current=null;
     onCatalogApiReadyRef.current?.(null);
     viewerLoopRef.current=null;
+    setPerformanceRenderer(null);
+    performanceMonitorRef.current.reset();
     ptAbortRef.current?.abort();
     composerRef.current=null;
     cleanup();
@@ -4576,6 +4593,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               zIndex: 9999,
             } : undefined}
           >
+            <button type="button" onClick={() => setPerformanceOpen((value) => !value)} className="absolute right-3 top-3 z-[79] inline-flex items-center gap-2 rounded-lg border border-white/15 bg-[#101216]/80 px-3 py-2 text-[10px] font-semibold tracking-wide text-white/75 shadow-lg backdrop-blur-md transition hover:border-[#c6a45a]/50 hover:text-white" aria-pressed={performanceOpen} title="Abrir diagnóstico de rendimiento">
+              <span className="size-1.5 rounded-full bg-emerald-400"/>{performanceOpen ? "CERRAR DIAGNÓSTICO" : "PERFORMANCE"}
+            </button>
+            <AurumPerformanceMonitorPanel open={performanceOpen} onClose={() => setPerformanceOpen(false)} renderer={performanceRenderer} monitor={performanceMonitorRef.current}/>
             {arrastrandoArchivo && !embedded && <div className="pointer-events-none absolute inset-3 z-[60] grid place-items-center rounded-2xl border border-dashed border-[#d4af37]/80 bg-[#090b0e]/88 text-center shadow-[inset_0_0_90px_rgba(212,175,55,.12),0_18px_55px_rgba(0,0,0,.22)] backdrop-blur-md" aria-live="polite">
               <div className="px-6 py-8">
                 <span className="mx-auto grid size-[72px] place-items-center rounded-full border border-[#d4af37]/45 bg-gradient-to-br from-[#d4af37]/15 to-transparent text-[#e3bd55] shadow-[0_0_35px_rgba(212,175,55,.12)]"><Upload className="size-7"/></span>
