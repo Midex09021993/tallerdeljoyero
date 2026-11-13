@@ -3302,8 +3302,16 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       let perfTriangles = 0;
       let perfLines = 0;
       let perfPoints = 0;
-      const perfTick = () => {
+      let perfBvhMs = 0;
+      let perfRenderMs = 0;
+      let perfFrameMs = 0;
+      let perfMaxFrameMs = 0;
+      const perfTick = (timings?: { bvhMs?: number; renderMs?: number; frameMs?: number }) => {
         if (!perfEnabled) return;
+        perfBvhMs += Number(timings?.bvhMs ?? 0);
+        perfRenderMs += Number(timings?.renderMs ?? 0);
+        perfFrameMs += Number(timings?.frameMs ?? 0);
+        perfMaxFrameMs = Math.max(perfMaxFrameMs, Number(timings?.frameMs ?? 0));
         perfFrames++;
         const now=performance.now();
         const info=(renderer as any).info;
@@ -3327,6 +3335,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           avgTriangles:Number((perfTriangles/frames).toFixed(1)),
           avgLines:Number((perfLines/frames).toFixed(1)),
           avgPoints:Number((perfPoints/frames).toFixed(1)),
+          avgBvhCpuMs:Number((perfBvhMs/frames).toFixed(3)),
+          avgRenderCpuMs:Number((perfRenderMs/frames).toFixed(3)),
+          avgFrameCpuMs:Number((perfFrameMs/frames).toFixed(3)),
+          maxFrameCpuMs:Number(perfMaxFrameMs.toFixed(3)),
           geometries:info?.memory?.geometries??null,
           textures:info?.memory?.textures??null,
           pixelRatio:renderer.getPixelRatio?.(),
@@ -3340,16 +3352,24 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         perfTriangles=0;
         perfLines=0;
         perfPoints=0;
+        perfBvhMs=0;
+        perfRenderMs=0;
+        perfFrameMs=0;
+        perfMaxFrameMs=0;
       };
 
       const viewerLoop = startAurumViewerLoop(
         { node:nodo, camera:camara, renderer, composer, ssaoPass, controls:controles },
         () => {
+          const frameStartedAt = performance.now();
+          const bvhStartedAt = frameStartedAt;
           try {
             diamondBvhRuntime?.update();
           } catch (error) {
             console.error("[AURUM][DIAMOND][BVH_UPDATE_ERROR] Skipping BVH update for this frame.", error);
           }
+          const bvhCpuMs = performance.now() - bvhStartedAt;
+          const renderStartedAt = performance.now();
           // Keep the interactive path lightweight; use the photographic
           // EffectComposer pipeline only when the settled configuration needs it.
           const activeToneAuditPath = liveFastPathRef.current || !composer ? "direct" : "composer";
@@ -3387,7 +3407,12 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               renderer.render(escena,camara);
             }
           }
-          perfTick();
+          const renderCpuMs = performance.now() - renderStartedAt;
+          perfTick({
+            bvhMs: bvhCpuMs,
+            renderMs: renderCpuMs,
+            frameMs: performance.now() - frameStartedAt,
+          });
         },
         {
           progressiveFrames: Math.max(1, Math.min(32, Math.floor(Number(postRuntimeConfig.progressiveFrameCount ?? 1)))),
