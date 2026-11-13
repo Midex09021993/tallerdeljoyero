@@ -1315,6 +1315,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         { id: "aurum.edge-quality", description: "Coordina capacidades y MSAA del compositor productivo.", dependencies: ["aurum.viewer"], requiresServices: ["aurum.viewer.renderer"], services: new Map([
           ["aurum.edge-quality.configure", configureAurumEdgeQuality],
         ]) },
+        { id: "aurum.post", description: "Expone el compositor y controles del pipeline de postprocesado ya activo.", dependencies: ["aurum.viewer", "aurum.edge-quality"], requiresServices: ["aurum.edge-quality.configure"], services: new Map([
+          ["aurum.post.composer", composer],
+          ["aurum.post.apply-quality", applyPostQuality],
+          ["aurum.post.reset-temporal", resetTemporalAccumulation],
+          ["aurum.post.set-temporal-motion", setTemporalMotion],
+          ["aurum.post.update-temporal", updateTemporal],
+        ]) },
         { id: "aurum.viewer", description: "Referencias read-only al visor WebGL productivo.", services: viewerAdapter.services },
         { id: "aurum.geometry", description: "Diagnóstico geométrico read-only del modelo.", services: new Map([["aurum.geometry.engine", geometryEngine]]) },
         { id: "aurum.import", description: "Orquestación de importación CAD y normalización GLB.", dependencies: ["aurum.geometry"], requiresServices: ["aurum.geometry.engine"], services: new Map([
