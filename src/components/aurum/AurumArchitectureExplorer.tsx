@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Activity, ArrowDown, Boxes, CheckCircle2, ChevronDown, ChevronRight, CircleHelp, GitBranch, Layers3, Network, Search, ShieldAlert, Workflow } from "lucide-react";
 
 type Estado = "integrado" | "parcial" | "auditar" | "experimental" | "suspendido" | "infraestructura";
@@ -62,7 +62,7 @@ export function AurumArchitectureExplorer() {
   const actual = nodos.find(n => n.id === seleccion) ?? nodos[0];
   const conteo = (estado: Estado) => nodos.filter(n => n.estado === estado).length;
   const alternar = (id: string) => setAbiertos(prev => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
-  const renderNodo = (n: Nodo, nivel = 0): React.ReactNode => {
+  const renderNodo = (n: Nodo, nivel = 0): ReactNode => {
     const coincide = !filtro || n.nombre.toLowerCase().includes(filtro.toLowerCase()) || n.tipo.toLowerCase().includes(filtro.toLowerCase());
     const hijosCoinciden = n.hijos?.some(h => h.nombre.toLowerCase().includes(filtro.toLowerCase()) || h.tipo.toLowerCase().includes(filtro.toLowerCase()));
     if (!coincide && !hijosCoinciden && filtro) return null;
