@@ -2472,13 +2472,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         },
         exportPathTraced:async(options:{width?:number;height?:number;format?:"png"|"jpeg"|"webp";samples?:number;signal?:AbortSignal;onProgress?:(d:number,t:number)=>void}={})=>{
           if(!modelo) throw new Error("Carga un modelo antes del render final.");
-          const { renderAurumPathTracedImage } = await import("../lib/aurum/path-tracer-final");
+          const { createAurumFinalRenderAdapter } = await import("../lib/aurum/core/final-render-adapter");
+          const finalRenderAdapter = createAurumFinalRenderAdapter();
           const format=options.format==="jpeg"||options.format==="webp"?options.format:"png";
           const mime=format==="jpeg"?"image/jpeg":format==="webp"?"image/webp":"image/png";
           const loop:any=viewerLoopRef.current;
           loop?.pause?.();
           try{
-            const dataUrl=await renderAurumPathTracedImage(renderer,modelo,camara,{
+            const dataUrl=await finalRenderAdapter.renderImage(renderer,modelo,camara,{
               width:Number(options.width)||2560,height:Number(options.height)||1440,samples:options.samples??256,mimeType:mime as any,
               environmentUrl:environmentController.currentUrl,environmentIntensity:environmentController.intensity,environmentRotationY:environmentController.rotation,
               gemEnvironmentUrl:gemEnvironmentUrl,studioScene:escena,
