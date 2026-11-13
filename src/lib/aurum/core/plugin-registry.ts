@@ -137,10 +137,19 @@ export class AurumPluginRegistry {
       this.state = "running";
     } catch (error) {
       this.abortController.abort();
-      await this.cleanupInitialized();
-      this.events.reset();
-      this.state = "idle";
-      this.abortController = null;
+      let cleanupError: unknown;
+      try {
+        await this.cleanupInitialized();
+      } catch (failure) {
+        cleanupError = failure;
+      } finally {
+        this.events.reset();
+        this.state = "idle";
+        this.abortController = null;
+      }
+      if (cleanupError) {
+        throw new AggregateError([error, cleanupError], "AURUM plugin startup failed and rollback reported cleanup errors.");
+      }
       throw error;
     }
   }
