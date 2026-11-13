@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Activity, Gauge, HardDrive, Monitor, X } from "lucide-react";
-import type { AurumPerformanceMonitor, AurumPerformanceSnapshot } from "@/lib/aurum/performance-monitor";
+import { getAurumPerformanceStatus, type AurumPerformanceMonitor, type AurumPerformanceSnapshot } from "@/lib/aurum/performance-monitor";
 
 type Props = {
   open: boolean;
@@ -25,6 +25,65 @@ function Metric({ label, value, unit = "" }: { label: string; value: string | nu
     <div className="text-[9px] font-medium uppercase tracking-[.12em] text-white/40">{label}</div>
     <div className="mt-1 font-mono text-sm font-semibold tabular-nums text-white">{value}<span className="ml-1 text-[10px] font-normal text-white/40">{unit}</span></div>
   </div>;
+}
+
+type IndicatorProps = {
+  renderer: any;
+  monitor: AurumPerformanceMonitor;
+  onClick: () => void;
+  expanded: boolean;
+};
+
+export function AurumPerformanceIndicator({ renderer, monitor, onClick, expanded }: IndicatorProps) {
+  const [status, setStatus] = useState<"idle" | "healthy" | "warning" | "critical">("idle");
+
+  useEffect(() => {
+    const update = () => setStatus(getAurumPerformanceStatus(monitor.snapshot(renderer)));
+    update();
+    const id = window.setInterval(update, 600);
+    return () => window.clearInterval(id);
+  }, [renderer, monitor]);
+
+  const appearance = {
+    idle: {
+      dot: "bg-white/35",
+      text: "text-white/65",
+      title: "Esperando mediciones de AURUM",
+      label: "Midiendo",
+    },
+    healthy: {
+      dot: "bg-emerald-400 shadow-[0_0_7px_rgba(52,211,153,.7)]",
+      text: "text-white/80",
+      title: "Rendimiento estable: FPS y tiempos de fotograma saludables",
+      label: "Estable",
+    },
+    warning: {
+      dot: "bg-amber-400 shadow-[0_0_7px_rgba(251,191,36,.7)]",
+      text: "text-amber-100",
+      title: "Carga elevada: revisa FPS, tiempo de fotograma y picos",
+      label: "Carga elevada",
+    },
+    critical: {
+      dot: "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,.8)]",
+      text: "text-rose-100",
+      title: "Carga crítica: el visor está sufriendo caídas o bloqueos importantes",
+      label: "Carga crítica",
+    },
+  }[status];
+
+  return <button
+    type="button"
+    onClick={onClick}
+    className={`absolute right-3 top-3 z-[79] inline-flex items-center gap-2 rounded-full border border-white/10 bg-[#25272b]/95 px-3 py-2 text-[10px] font-semibold tracking-wide shadow-lg backdrop-blur-md transition hover:border-white/25 hover:bg-[#303238] ${appearance.text}`}
+    aria-pressed={expanded}
+    aria-label={`AURUM Performance: ${appearance.label}. Abrir diagnóstico`}
+    title={appearance.title}
+  >
+    <span className={`size-1.5 shrink-0 rounded-full ${appearance.dot}`}/>
+    PERFORMANCE
+    {status === "warning" && <span className="sr-only">Carga elevada</span>}
+    {status === "critical" && <span className="sr-only">Carga crítica</span>}
+  </button>;
 }
 
 export function AurumPerformanceMonitorPanel({ open, onClose, renderer, monitor }: Props) {
