@@ -25,16 +25,16 @@ export function createAurumImportPipelineManager(
       const imported = await importer.load(request);
 
       request.onProgress?.("Comprobando geometría...");
-      // Import-time inspection keeps essential metrics but skips the optional bounds
-      // traversal and full vertex scan. Detailed validation remains available on demand.
-      const geometryReport = geometry.inspect(imported.model, {
-        includeBounds: false,
-        validatePositions: false,
-      });
+      // Quality-first import: perform the complete read-only inspection before
+      // accepting the model. Import latency is secondary to detecting damaged geometry.
+      const geometryReport = geometry.inspect(imported.model);
       stages.push(...imported.pipeline, "geometry-inspected");
       request.onStage?.("geometry-inspected", {
         meshes: geometryReport.meshCount,
         visibleMeshes: geometryReport.visibleMeshCount,
+        invalidPositionMeshes: geometryReport.meshesWithInvalidPositions,
+        missingNormalMeshes: geometryReport.meshesMissingNormals,
+        bounds: geometryReport.bounds,
         triangles: geometryReport.triangles,
         vertices: geometryReport.vertices,
       });
