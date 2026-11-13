@@ -86,7 +86,7 @@ test("surface engine reports non-manifold edges and excludes hidden ancestors", 
 
 test("surface engine reports truncation when the diagnostic edge budget is reached", () => {
   const root = new THREE.Group();
-  root.add(new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial()));
+  root.add(new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial()));
   const report = createAurumSurfaceEngine().inspect(root, { maxEdges: 1 });
   expect(report.truncated).toBe(true);
   expect(report.boundaryEdges).toBeGreaterThan(1);
