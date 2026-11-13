@@ -39,6 +39,8 @@ jobs:
         run: bun test scripts/aurum-mesh-preflight.test.ts
       - name: AURUM plugin registry contract tests
         run: bun test scripts/aurum-plugin-registry.test.ts
+      - name: AURUM viewer adapter tests
+        run: bun test scripts/aurum-viewer-adapter.test.ts
 
       - name: Lint
         run: bun run lint
