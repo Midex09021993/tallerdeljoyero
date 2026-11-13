@@ -55,6 +55,8 @@ jobs:
         run: bun test scripts/aurum-adapter-contracts.test.ts
       - name: AURUM video frame pipeline tests
         run: bun test scripts/aurum-video-frame-pipeline.test.ts
+      - name: AURUM edge quality MSAA capability and fallback tests
+        run: bun test scripts/aurum-edge-quality.test.ts
       - name: AURUM production plugin host tests
         run: bun test scripts/aurum-production-plugin-host.test.ts
       - name: AURUM GPU resource lifecycle tests
