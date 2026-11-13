@@ -3373,210 +3373,82 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         {
           progressiveFrames: Math.max(1, Math.min(32, Math.floor(Number(postRuntimeConfig.progressiveFrameCount ?? 1)))),
           onStart: () => {
-            // Pause temporal accumulation immediately when the ring/camera starts
-            // moving. The previous history is discarded and cannot wash out facets.
             setTemporalMotion?.(true);
-            // Fast interactive path: render the same calibrated LIVE materials
-            // directly to the canvas while the camera moves. Native WebGL MSAA
-            // remains enabled; the gem mask + Soft Edge AA are restored onEnd.
-            // Optical shaders, BVH, HDRI, materials and transmission stay unchanged.
             syncAurumSsrDiagnosticConfig();
-            liveFastPathRef.current = true;
+
+            // Keep the exact same beauty output chain while orbiting and at rest.
+            // Only expensive/optional photographic passes are disabled; RenderPass,
+            // gem mask, gem FXAA and OutputPass remain identical in both states.
             const requestedDpr = Math.max(1, Math.min(2, renderQuality.pixelRatio));
-            const sharedRenderDpr = Math.min(
+            const interactionDpr = Math.min(
               measuredQualityId === "low" ? requestedDpr : Math.max(requestedDpr, 1.65),
               runtimeBudget.pixelRatioCap,
             );
-            const interactionDpr = sharedRenderDpr;
-            viewerLoopRef.current = viewerLoop;
             renderer.setPixelRatio(interactionDpr);
             composer?.setPixelRatio?.(interactionDpr);
+
+            const coreBeautyPasses = new Set([renderPass, gemMaskPass, fxaaPass, outputPass]);
             const interactionPasses = ((composer as any)?.passes ?? []) as any[];
-            interactionPasses.forEach((pass) => { pass.enabled = false; });
-            // Preserve the same transmission/refraction render scale as the
-            // settled image; do not trade metal/reflection detail for orbit speed.
-            const sharedTransmissionScale = Math.min(renderQuality.transmissionScale, runtimeBudget.transmissionScaleCap);
-            liveTransmissionScaleRef.current = sharedTransmissionScale;
-            (renderer as any).transmissionResolutionScale = sharedTransmissionScale;
+            interactionPasses.forEach((pass) => { pass.enabled = coreBeautyPasses.has(pass); });
+            const sameBeautyPipelineAvailable = Boolean(composer && renderPass && gemMaskPass && fxaaPass && outputPass);
+            liveFastPathRef.current = !sameBeautyPipelineAvailable;
+
+            // The LIVE gemstone material profile is held constant across both states.
             aplicarPerfilLive(true);
-            syncAurumSsrDiagnosticConfig();
             renderer.shadowMap.enabled = false;
+            renderer.shadowMap.needsUpdate = false;
             invalidateRenderRef.current?.();
           },
           onEnd: () => {
-            // Restore the same gem-only AA composer chain for the settled preview.
-            // Recompute the same quality/budget target used by LIVE interaction.
+            // Return to the same exact beauty chain used during orbit. No idle-only
+            // TAA, bloom, DOF or SSR: motion and rest must produce the same image.
             const requestedDpr = Math.max(1, Math.min(2, renderQuality.pixelRatio));
-            const idleDpr = Math.min(
+            const settledDpr = Math.min(
               measuredQualityId === "low" ? requestedDpr : Math.max(requestedDpr, 1.65),
               runtimeBudget.pixelRatioCap,
             );
-            renderer.setPixelRatio(idleDpr);
-            composer?.setPixelRatio?.(idleDpr);
-            // Controlled TAA trial: only anti-alias the settled preview.
-            // Keep all other post effects disabled so this test isolates TAA.
-            const idlePasses = ((composer as any)?.passes ?? []) as any[];
-            // Use the concrete pass instances returned by the pipeline.
-            // Constructor-name lookup breaks in minified production bundles and
-            // can silently route the settled preview around the gem AA composer.
-            const idleRenderPass = renderPass;
-            const idleOutputPass = outputPass;
-            const idleSoftEdgeAaAvailable = Boolean(idleRenderPass && gemMaskPass && fxaaPass && idleOutputPass);
-            if (idleSoftEdgeAaAvailable) {
-              const width = Math.max(1, renderer.domElement.width || renderer.domElement.clientWidth || 1);
-              const height = Math.max(1, renderer.domElement.height || renderer.domElement.clientHeight || 1);
-              fxaaPass.material?.uniforms?.resolution?.value?.set?.(1 / width, 1 / height);
-            }
-            const idleTaaAvailable = Boolean(idleRenderPass && idleTaaPass && idleOutputPass && idlePasses.includes(idleTaaPass));
-            const extremeGeometry = runtimeBudget.tier === "extreme";
-            // Bloom is captured from the active quality profile, then restored only
-            // in the settled preview; it never runs while the camera is moving.
-            const settledBloomRequested = Boolean(bloomPass?.enabled && !extremeGeometry);
-            idlePasses.forEach((pass) => {
-              // Keep the settled photographic chain explicit. Bokeh must run after
-              // the beauty/TAA image and before OutputPass; it must not be enabled
-              // if its module failed to load or the user disabled live DOF.
-              // Use the actual pass instance returned by the pipeline. Constructor names
-              // can be minified in production bundles, so name-based detection is unreliable.
-              // Match the motion reference exactly: same spatial gem AA chain,
-              // same LIVE materials, and no idle-only temporal/photographic passes.
-              // This prevents diamonds changing contrast, fire or visibility after
-              // the camera stops. High-quality captures keep their separate TAA path.
-              pass.enabled = pass === idleRenderPass
-                || pass === idleOutputPass
-                || pass === gemMaskPass
-                || pass === fxaaPass;
-            });
-            // Controlled LIVE TAA trial: accumulate only after the camera stops.
-            // It is deliberately disabled during orbit and on low/extreme budgets.
-            // Keep the settled gemstone appearance identical to LIVE: temporal
-            // accumulation changes facet contrast, so the gem-only spatial AA is
-            // the sole anti-aliasing stage in both states.
-            // The viewport follows the LIVE reference in both states.
-            // Temporal AA is reserved for final captures, not the settled preview.
-            const settledTaaRequested = false;
-            // Keep the exact LIVE gemstone material/shader profile after motion
-            // so the settled preview does not change diamond contrast or fire.
-            // The gem-only Soft Edge AA composer remains active independently.
-            liveFastPathRef.current = extremeGeometry;
+            renderer.setPixelRatio(settledDpr);
+            composer?.setPixelRatio?.(settledDpr);
+
+            const coreBeautyPasses = new Set([renderPass, gemMaskPass, fxaaPass, outputPass]);
+            const settledPasses = ((composer as any)?.passes ?? []) as any[];
+            settledPasses.forEach((pass) => { pass.enabled = coreBeautyPasses.has(pass); });
+
+            const sameBeautyPipelineAvailable = Boolean(composer && renderPass && gemMaskPass && fxaaPass && outputPass);
+            liveFastPathRef.current = !sameBeautyPipelineAvailable;
             aplicarPerfilLive(true);
             setTemporalMotion?.(false);
+
             if (idleTaaPass) {
-              idleTaaPass.enabled = settledTaaRequested;
-              idleTaaPass.accumulate = settledTaaRequested;
+              idleTaaPass.enabled = false;
+              idleTaaPass.accumulate = false;
               idleTaaPass.accumulateIndex = -1;
-              idleTaaPass.sampleLevel = Math.max(0, Math.min(5, Math.ceil(Math.log2(
-                Math.max(1, Math.min(32, Number(postRuntimeConfig.progressiveFrameCount ?? 1)))
-              ))));
             }
-            // Re-assert the live DOF state after the live profile reapplies post quality.
-            // Without TAA, the composer can still render RenderPass -> BokehPass -> OutputPass.
-            // Keep the direct reference from createAurumPostPipeline; production
-            // minifiers may rename BokehPass.constructor.name.
-            const settledDofPass = dofPass && idlePasses.includes(dofPass) ? dofPass : null;
-            if (settledDofPass) settledDofPass.enabled = postRuntimeConfig.dof === true;
-            if (bloomPass) bloomPass.enabled = settledBloomRequested;
-            // Restore the full-resolution SSR chain after orbit; it was reduced
-            // to 0.35 resolution only for interactive camera movement.
-            syncAurumSsrDiagnosticConfig();
-            const settledSsrEnabled = Boolean(
-              isAurumSsrDiagnosticEnabled() && ssrPass && ssrSavePass && ssrCompositePass
-              && measuredQualityId !== "low" && runtimeBudget.tier !== "extreme"
-            );
-            if (ssrSavePass) ssrSavePass.enabled = settledSsrEnabled;
-            if (ssrPass) {
-              ssrPass.enabled = settledSsrEnabled;
-              ssrPass.resolutionScale = measuredQualityId === "ultra" ? 0.85 : 0.65;
-            }
-            if (ssrCompositePass) ssrCompositePass.enabled = settledSsrEnabled;
-            // The direct canvas is transparent over the white studio shell. Once the
-            // composer is used, make that same studio background explicit; otherwise
-            // RenderPass clears to black and the preview appears on a black field.
-            if (postRuntimeConfig.dof === true) {
-              if (!dofHasSavedSceneBackground) {
-                dofSavedSceneBackground = escena.background;
-                dofHasSavedSceneBackground = true;
-              }
-              escena.background = new THREE.Color(0xffffff);
-            }
+            if (bloomPass) bloomPass.enabled = false;
+            if (dofPass) dofPass.enabled = false;
+            if (ssrSavePass) ssrSavePass.enabled = false;
+            if (ssrPass) ssrPass.enabled = false;
+            if (ssrCompositePass) ssrCompositePass.enabled = false;
+
             if (renderPass) {
-              renderPass.clearColor = postRuntimeConfig.dof ? new THREE.Color(0xffffff) : null;
-              renderPass.clearAlpha = postRuntimeConfig.dof ? 1 : 0;
+              renderPass.clearColor = null;
+              renderPass.clearAlpha = 0;
             }
-            // Temporary diagnostics are opt-in via ?aurumDofDiag=1.
-            if (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("aurumDofDiag")) {
-              console.info("[AURUM][DOF] settled viewer", {
-                requested: postRuntimeConfig.dof === true,
-                bokehFound: Boolean(settledDofPass),
-                bokehEnabled: Boolean(settledDofPass?.enabled),
-                bokehPassIndex: settledDofPass ? idlePasses.indexOf(settledDofPass) : -1,
-                passNames: idlePasses.map((pass) => ({ name: pass?.constructor?.name ?? "unknown", enabled: Boolean(pass?.enabled) })),
-                taaAvailable: idleTaaAvailable,
-                renderPath: settledComposerRequested ? "composer" : "direct",
-                gemOnlyAaAvailable: idleSoftEdgeAaAvailable,
-                gemMaskPassEnabled: Boolean(gemMaskPass?.enabled),
-                gemAaPassEnabled: Boolean(fxaaPass?.enabled),
-                focusDistance: controles?.target ? camara.position.distanceTo(controles.target) : null,
-                aperture: settledDofPass?.uniforms?.aperture?.value ?? null,
-                maxblur: settledDofPass?.uniforms?.maxblur?.value ?? null,
-                focus: settledDofPass?.uniforms?.focus?.value ?? null,
-              });
-            }
-            // Use EffectComposer in settled BEAUTY mode whenever an enabled
-            // post-processing feature actually requires it. TAA, SSR, Bloom and DOF
-            // must not be configured and then silently bypassed by direct rendering.
-            const settledComposerRequested = idleSoftEdgeAaAvailable;
-            // Keep the selective gem AA composer active even on extreme
-            // assemblies; only fall back to direct rendering if its passes are unavailable.
-            liveFastPathRef.current = !settledComposerRequested;
             renderer.shadowMap.enabled = false;
             renderer.shadowMap.needsUpdate = false;
+
             console.info("[AURUM][RENDER PIPELINE]", {
               phase: "settled",
-              path: liveFastPathRef.current ? "direct" : "composer",
-              taaRequested: settledTaaRequested,
+              path: liveFastPathRef.current ? "direct-fallback" : "shared-beauty-composer",
+              sameBeautyPipeline: sameBeautyPipelineAvailable,
               taaEnabled: Boolean(idleTaaPass?.enabled),
-              taaAccumulating: Boolean(idleTaaPass?.accumulate),
               gemMaskEnabled: Boolean(gemMaskPass?.enabled),
               gemSoftEdgeEnabled: Boolean(fxaaPass?.enabled),
               outputEnabled: Boolean(outputPass?.enabled),
-              progressiveFrames: postRuntimeConfig.progressiveFrameCount ?? 1,
               composerAvailable: Boolean(composer),
             });
-            console.info("[AURUM][DIAMOND LIVE DIAGNOSTICS]", {
-              renderQuality: measuredQualityId,
-              runtimeBudget: {
-                triangles: runtimeBudget.triangleCount,
-                tier: runtimeBudget.tier,
-                pixelRatioCap: runtimeBudget.pixelRatioCap,
-                interactionPixelRatio: runtimeBudget.interactionPixelRatio,
-              },
-              renderer: {
-                pixelRatio: renderer.getPixelRatio(),
-                canvasWidth: renderer.domElement.width,
-                canvasHeight: renderer.domElement.height,
-                transmissionResolutionScale: (renderer as any).transmissionResolutionScale,
-              },
-              liveFastPath: liveFastPathRef.current,
-              composer: {
-                available: Boolean(composer),
-                passes: (composer as any)?.passes?.map((pass: any) => ({
-                  name: pass?.constructor?.name ?? "unknown",
-                  enabled: pass?.enabled !== false,
-                  accumulate: pass?.accumulate,
-                  sampleLevel: pass?.sampleLevel,
-                  accumulateIndex: pass?.accumulateIndex,
-                })) ?? [],
-              },
-              diamondBvh: diamondBvhRuntime?.diagnostics() ?? {
-                activeMeshes: 0,
-                triangleCount: 0,
-                diamondMeshes: 0,
-                diamondTriangleCount: 0,
-                enabled: false,
-              },
-            });
             invalidateRenderRef.current?.();
+          }
           },
         }
       );
