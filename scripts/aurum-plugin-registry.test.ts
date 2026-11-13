@@ -264,3 +264,33 @@ test("AURUM service container rejects non-canonical identifiers and keeps regist
   expect(container.has("aurum.scene")).toBe(false);
   expect(container.size).toBe(0);
 });
+
+
+test("AURUM Event Bus validates canonical names and callable handlers", async () => {
+  const { AurumEventBus } = await import("../src/lib/aurum/core/context");
+  const bus = new AurumEventBus();
+
+  expect(() => bus.on(" viewer.ready", () => undefined)).toThrow("leading or trailing whitespace");
+  expect(() => bus.on("viewer.ready ", () => undefined)).toThrow("leading or trailing whitespace");
+  expect(() => bus.on("   ", () => undefined)).toThrow("cannot be empty");
+  expect(() => bus.on("viewer.ready", null as unknown as () => void)).toThrow("must be a function");
+  expect(() => bus.emit(" viewer.ready", {})).toThrow("leading or trailing whitespace");
+});
+
+test("AURUM Event Bus unsubscribe is idempotent and stale disposers cannot remove reset listeners", async () => {
+  const { AurumEventBus } = await import("../src/lib/aurum/core/context");
+  const bus = new AurumEventBus();
+  let received = 0;
+
+  const staleDisposer = bus.on("viewer.ready", () => { received += 1; });
+  staleDisposer();
+  staleDisposer();
+
+  bus.clear();
+  bus.reset();
+  bus.on("viewer.ready", () => { received += 10; });
+  staleDisposer();
+  bus.emit("viewer.ready", {});
+
+  expect(received).toBe(10);
+});
