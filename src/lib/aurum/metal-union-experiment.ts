@@ -18,19 +18,15 @@ function getFamily(mesh: THREE.Mesh): MeshFamily {
 }
 
 
-const materialFingerprintCache = new WeakMap<THREE.Material, string>();
-
 function areEquivalentMaterials(a: THREE.Material, b: THREE.Material): boolean {
   if (a === b) return true;
+  // Three.js materials are mutable. Recompute this fingerprint for each check
+  // so changed optical properties cannot reuse a stale cached comparison.
   const fingerprint = (material: THREE.Material): string => {
-    const cached = materialFingerprintCache.get(material);
-    if (cached) return cached;
     const serialized = material.toJSON() as Record<string, unknown>;
     const normalized = { ...serialized };
     delete normalized.uuid;
-    const value = JSON.stringify(normalized);
-    materialFingerprintCache.set(material, value);
-    return value;
+    return JSON.stringify(normalized);
   };
   try {
     return fingerprint(a) === fingerprint(b);
@@ -220,8 +216,7 @@ export function applyAurumMetalUnionExperiment(root: THREE.Object3D, maxMerges =
       }
       // Layer names are organizational metadata, not a geometric/material boundary.
       // Both candidates already passed metal-family and equivalent-material checks.
-      // Permit compatible metals across Rhino layers (e.g. brazo, bisel y cuerpo).
-      if (rightLayerKey !== layerKey) result.audit.mergedAcrossLayers++;
+      // Cross-layer unions are counted only after CSG output is validated.
       if (!accumulator.geometry || !right.geometry
         || !compatibleAttributes(accumulator.geometry, right.geometry)) {
         result.skipped++;
@@ -286,6 +281,8 @@ export function applyAurumMetalUnionExperiment(root: THREE.Object3D, maxMerges =
           csgGeometry.dispose();
           throw new Error(`Visual Weld falló: ${weldError instanceof Error ? weldError.message : String(weldError)}`);
         }
+
+        if (rightLayerKey !== layerKey) result.audit.mergedAcrossLayers++;
 
         const nextSources = [...sources, {
           uuid: right.uuid, name: right.name, layerKey: rightLayerKey,

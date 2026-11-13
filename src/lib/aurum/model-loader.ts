@@ -555,7 +555,10 @@ type AurumMaterialConsolidationAudit = {
  * untouched. The material JSON fingerprint retains all serialized render
  * properties; only the per-instance UUID is excluded.
  */
-function consolidateAurumMetalMaterialsByLayer(root: THREE.Object3D): AurumMaterialConsolidationAudit {
+export function consolidateAurumMetalMaterialsByLayer(root: THREE.Object3D): AurumMaterialConsolidationAudit {
+  // A Rhino layer is organizational metadata, not an optical property.
+  // Share references across layers only when the complete serialized material
+  // definition is identical; render properties and textures remain in the key.
   const groups = new Map<string, THREE.Material>();
   const layerKeys = new Set<string>();
   const audit: AurumMaterialConsolidationAudit = {
@@ -579,18 +582,13 @@ function consolidateAurumMetalMaterialsByLayer(root: THREE.Object3D): AurumMater
     if (meta.categoria !== "metal") return;
     audit.metalMeshes++;
     const layerKey = String(meta.layerKey ?? "").trim();
-    if (!layerKey) {
-      audit.skippedWithoutLayerIdentity++;
-      audit.materialInstancesBefore += Array.isArray(node.material) ? node.material.length : 1;
-      audit.materialInstancesAfter += Array.isArray(node.material) ? node.material.length : 1;
-      return;
-    }
-    layerKeys.add(layerKey);
+    if (layerKey) layerKeys.add(layerKey);
+
     const materials = Array.isArray(node.material) ? node.material : [node.material];
     const consolidated = materials.map((material: THREE.Material) => {
       if (!material?.isMaterial) return material;
       audit.materialInstancesBefore++;
-      const key = layerKey + "::" + fingerprint(material);
+      const key = fingerprint(material);
       const existing = groups.get(key);
       if (existing) {
         if (existing !== material) audit.consolidatedMaterialReferences++;
@@ -603,7 +601,7 @@ function consolidateAurumMetalMaterialsByLayer(root: THREE.Object3D): AurumMater
   });
 
   audit.distinctLayerKeys = layerKeys.size;
-  audit.materialInstancesAfter += groups.size;
+  audit.materialInstancesAfter = groups.size;
   return audit;
 }
 
