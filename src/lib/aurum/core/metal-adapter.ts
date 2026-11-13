@@ -13,6 +13,8 @@ import {
   type AurumMetalPreset,
 } from "../../aurum-material-engine";
 
+import { createAurumReadonlyMap } from "./readonly-map";
+
 export const AURUM_METAL_SERVICES = {
   apply: "aurum.metal.apply",
   presetFromConfig: "aurum.metal.preset-from-config",
@@ -29,15 +31,15 @@ export interface AurumMetalAdapter {
 }
 
 export function createAurumMetalAdapter(): AurumMetalAdapter {
-  const services = new Map<string, unknown>([
+  const services = createAurumReadonlyMap(new Map<string, unknown>([
     [AURUM_METAL_SERVICES.apply, applyAurumMetal],
     [AURUM_METAL_SERVICES.presetFromConfig, metalPresetFromConfig],
     [AURUM_METAL_SERVICES.reflectionResponse, getAurumMetalReflectionResponse],
     [AURUM_METAL_SERVICES.applyReferenceOptics, applyAurumReferenceMetalOptics],
-  ]);
+  ]));
 
   return Object.freeze({
-    services: services as ReadonlyMap<string, unknown>,
+    services,
     createPreset: (config: unknown) => metalPresetFromConfig(config),
     getReflectionResponse: (preset: AurumMetalPreset) => getAurumMetalReflectionResponse(preset),
     apply: (material: unknown, preset: AurumMetalPreset) => applyAurumMetal(material, preset),
