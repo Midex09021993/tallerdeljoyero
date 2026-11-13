@@ -2077,26 +2077,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         // subsequent catalog changes resolve selected CAD layers in O(k).
         prepareAurumGemLayerIndex(escena);
         gemMaskPass?.refreshCache?.();
-        // Start the initial progressive TAA only after the model, camera and
-        // gem-mask cache are stable. The demand loop renders a bounded sample
-        // budget and then sleeps; interaction start hard-disables accumulation.
-        const initialTaaEligible = Boolean(
-          idleTaaPass
-          && postRuntimeConfig.taa === true
-          && measuredQualityId !== "low"
-        );
-        if (initialTaaEligible) {
-          const initialProgressivePasses = new Set([renderPass, gemMaskPass, fxaaPass, idleTaaPass, outputPass]);
-          ((composer as any)?.passes ?? []).forEach((pass: any) => {
-            pass.enabled = initialProgressivePasses.has(pass);
-          });
-          setTemporalMotion?.(true);
-          setTemporalMotion?.(false);
+        // Live preview keeps TAA disabled in both moving and settled states.
+        // The composer still converges one frame for a stable demand-driven image.
+        if (idleTaaPass) {
+          idleTaaPass.enabled = false;
+          idleTaaPass.accumulate = false;
+          idleTaaPass.accumulateIndex = -1;
         }
-        // Converge only a bounded number of frames. No permanent RAF loop.
-        viewerLoopRef.current?.converge?.(initialTaaEligible
-          ? Math.max(1, Math.min(32, Number(postRuntimeConfig.progressiveFrameCount ?? 8)))
-          : 1);
+        viewerLoopRef.current?.converge?.(1);
         loadAuditStep("model-added-to-scene");
         // No reaplicar el metal globalmente al cargar: el paso anterior ya asignó\n        // materiales por categoría y una aplicación con parteActiva=null sobrescribiría\n        // las gemas recién configuradas. El metal se aplica después solo sobre la capa seleccionada.\n        if (ext!=="3dm" && parteActiva) aplicarMaterial(materialActivo);
         // Presentación inicial: usar la geometría real para encuadrar y
@@ -3636,22 +3624,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             renderer.setPixelRatio(settledDpr);
             composer?.setPixelRatio?.(settledDpr);
 
-            // Progressive TAA is reserved for the settled state. It is deliberately
-            // excluded from onStart(), so orbiting never pays temporal accumulation
-            // cost or blends stale frames. The demand loop supplies a bounded sample
-            // window and stops as soon as it converges.
-            const taaEligible = Boolean(
-              idleTaaPass
-              && postRuntimeConfig.taa === true
-              && measuredQualityId !== "low"
-            );
+            // TAA remains disabled after orbit as well; the settled preview uses
+            // the same non-temporal beauty chain as the interactive state.
             const coreBeautyPasses = new Set([
               renderPass,
               gemMaskPass,
               fxaaPass,
               ...(surfaceEdgeAaPass && measuredQualityId !== "low" ? [surfaceEdgeAaPass] : []),
               outputPass,
-              ...(taaEligible ? [idleTaaPass] : []),
             ]);
             const settledPasses = ((composer as any)?.passes ?? []) as any[];
             settledPasses.forEach((pass) => { pass.enabled = coreBeautyPasses.has(pass); });
@@ -3666,7 +3646,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               if (strength) strength.value = measuredQualityId === "low" ? 0 : 0.035;
               surfaceEdgeAaPass.enabled = measuredQualityId !== "low";
             }
-            if (idleTaaPass && !taaEligible) {
+            if (idleTaaPass) {
               idleTaaPass.enabled = false;
               idleTaaPass.accumulate = false;
               idleTaaPass.accumulateIndex = -1;
