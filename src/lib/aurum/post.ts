@@ -434,6 +434,7 @@ export async function createAurumPostPipeline(
     && diagnosticParams?.get("aurumSSAO") === "off";
   let lastDiagnosticSignature = "";
   let lastKnownQualityId = "";
+  let lastKnownHighQuality = false;
   const applyQuality=(next:any, options:{capture?:boolean;width?:number;height?:number}={})=>{
     if(!composer) return;
     const q=next||{};
@@ -449,6 +450,7 @@ export async function createAurumPostPipeline(
     const diagnosticHigh = diagnosticMode === "environment";
     const high=diagnosticHigh || qualityId==="high" || qualityId==="ultra" || q.pixelRatio>=1.4;
     const ultra=qualityId==="ultra" || q.pixelRatio>=1.55;
+    lastKnownHighQuality=high;
 
     // The photographic profile's canonical switch is "taa". Older preview
     // code also required "temporalAA", a field that the active iJewel profile
@@ -700,7 +702,7 @@ export async function createAurumPostPipeline(
     const next=Boolean(moving);
     const changed=next!==temporalMotionActive;
     temporalMotionActive=next;
-    const settledHighQuality=diagnosticMode==="environment" || lastKnownQualityId==="high" || lastKnownQualityId==="ultra";
+    const settledHighQuality=lastKnownHighQuality;
     const edgeAaEnabled=shouldEnableAurumEdgeAa(settledHighQuality,next);
     if(gemMaskPass) gemMaskPass.enabled=edgeAaEnabled;
     if(fxaaPass) fxaaPass.enabled=edgeAaEnabled;
