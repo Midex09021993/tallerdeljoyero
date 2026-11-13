@@ -16,6 +16,7 @@ function makeScene() {
   const stone = new THREE.Mesh(new THREE.OctahedronGeometry(0.4), gem);
   stone.name = "Esmeralda";
   stone.userData.aurumRhino = { categoria: "gema" };
+  stone.userData.aurumGlbGemSource = { sourceKey: "rhino-gem-emerald-01", sourceObjectId: "emerald-01" };
   root.add(band, stone);
   return root;
 }
@@ -96,6 +97,27 @@ test("quality gate reports named material loss as a warning", () => {
   expect(report.missingNamedMaterials).toContain("Oro 18K");
   expect(report.missingNamedMaterials).toContain("Esmeralda");
   for (const root of [source, reopened]) root.traverse((node) => { if ((node as THREE.Mesh).isMesh) (node as THREE.Mesh).geometry.dispose(); });
+});
+
+test("quality gate blocks missing gem source provenance after GLB round-trip", () => {
+  const source = makeScene();
+  const reopened = makeScene();
+  const sourceSnapshot = captureAurumGlbQualitySnapshot(source);
+  const reopenedSnapshot = captureAurumGlbQualitySnapshot(reopened);
+  expect(sourceSnapshot.gemSourceCount).toBe(1);
+  expect(reopenedSnapshot.gemSourceKeys).toEqual(["rhino-gem-emerald-01"]);
+  expect(evaluateAurumGlbQuality(sourceSnapshot, reopenedSnapshot).status).toBe("passed");
+
+  const damaged = makeScene();
+  damaged.traverse((node) => {
+    if ((node as THREE.Mesh).userData?.aurumGlbGemSource) delete (node as THREE.Mesh).userData.aurumGlbGemSource;
+  });
+  const report = evaluateAurumGlbQuality(sourceSnapshot, captureAurumGlbQualitySnapshot(damaged));
+  expect(report.status).toBe("failed");
+  expect(report.issues.map((issue) => issue.code)).toContain("GEM_SOURCE_PROVENANCE_LOSS");
+  for (const root of [source, reopened, damaged]) root.traverse((node) => {
+    if ((node as THREE.Mesh).isMesh) (node as THREE.Mesh).geometry.dispose();
+  });
 });
 
 test("quality snapshot ignores hidden meshes and flags non-finite positions", () => {

@@ -6,6 +6,8 @@ export interface AurumGlbQualitySnapshot {
   readonly invalidPositionMeshes: number;
   readonly meshesWithoutMaterial: number;
   readonly gemMeshCount: number;
+  readonly gemSourceCount: number;
+  readonly gemSourceKeys: readonly string[];
   /** Visible CSG union meshes carrying source provenance. */
   readonly metalUnionMeshCount: number;
   /** Number of original metal bodies represented by those union meshes. */
@@ -22,7 +24,7 @@ export interface AurumGlbQualityIssue {
 }
 
 export interface AurumGlbQualityReport {
-  readonly version: "2.0.0";
+  readonly version: "2.1.0";
   readonly status: "passed" | "warning" | "failed";
   readonly source: AurumGlbQualitySnapshot;
   readonly reopened: AurumGlbQualitySnapshot;
@@ -78,6 +80,7 @@ export function captureAurumGlbQualitySnapshot(root: THREE.Object3D): AurumGlbQu
   let invalidPositionMeshes = 0;
   let meshesWithoutMaterial = 0;
   let gemMeshCount = 0;
+  const gemSourceKeys = new Set<string>();
   let metalUnionMeshCount = 0;
   let metalUnionSourceCount = 0;
   const metalUnionSourceKeys = new Set<string>();
@@ -87,6 +90,9 @@ export function captureAurumGlbQualitySnapshot(root: THREE.Object3D): AurumGlbQu
     if (!mesh.isMesh || !isVisibleInTree(mesh)) return;
     meshCount += 1;
     if (isGemMesh(mesh)) gemMeshCount += 1;
+    const gemSource = mesh.userData?.["aurumGlbGemSource"] as Record<string, unknown> | undefined;
+    const gemSourceKey = String(gemSource?.["sourceKey"] ?? "").trim();
+    if (gemSourceKey) gemSourceKeys.add(gemSourceKey);
     const unionSources = Array.isArray(mesh.userData?.["aurumUnionSource"]) ? (mesh.userData["aurumUnionSource"] as unknown[]) : null;
     if (mesh.userData?.["aurumMetalUnionExperiment"] === true && unionSources?.length) {
       metalUnionMeshCount += 1;
@@ -141,6 +147,8 @@ export function captureAurumGlbQualitySnapshot(root: THREE.Object3D): AurumGlbQu
     invalidPositionMeshes,
     meshesWithoutMaterial,
     gemMeshCount,
+    gemSourceCount: gemSourceKeys.size,
+    gemSourceKeys: Object.freeze([...gemSourceKeys].sort()),
     metalUnionMeshCount,
     metalUnionSourceCount,
     metalUnionSourceKeys: Object.freeze([...metalUnionSourceKeys].sort()),
@@ -207,6 +215,15 @@ export function evaluateAurumGlbQuality(
   }
   if (source.gemMeshCount > 0 && reopened.gemMeshCount < source.gemMeshCount) {
     add("GEM_MESH_LOSS", "error", `Se detectaron ${source.gemMeshCount} mallas de gema antes de exportar y ${reopened.gemMeshCount} después de reabrir el GLB.`);
+  }
+
+  const sourceGemKeys = [...source.gemSourceKeys].sort();
+  const reopenedGemKeys = [...reopened.gemSourceKeys].sort();
+  const missingGemSourceKeys = sourceGemKeys.filter((key) => !reopenedGemKeys.includes(key));
+  const unexpectedGemSourceKeys = reopenedGemKeys.filter((key) => !sourceGemKeys.includes(key));
+  if (sourceGemKeys.length > 0 && (missingGemSourceKeys.length > 0 || unexpectedGemSourceKeys.length > 0)) {
+    add("GEM_SOURCE_PROVENANCE_LOSS", "error",
+      `La trazabilidad de gemas cambió al reabrir el GLB: ${missingGemSourceKeys.length} identidades faltantes y ${unexpectedGemSourceKeys.length} inesperadas.`);
   }
 
   const sourceUnionKeys = [...source.metalUnionSourceKeys].sort();

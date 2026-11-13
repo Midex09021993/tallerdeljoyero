@@ -605,6 +605,52 @@ export function consolidateAurumMetalMaterialsByLayer(root: THREE.Object3D): Aur
   return audit;
 }
 
+/**
+ * Adds export provenance to gem meshes without changing optical properties,
+ * geometry, transforms, or visibility. GLTFExporter serializes this userData
+ * as glTF extras so the exact source identities can be checked after reopening.
+ */
+export function tagAurumGemSourcesForGlb(root: THREE.Object3D) {
+  root.updateMatrixWorld(true);
+  const sourceKeys = new Set<string>();
+  let meshCount = 0;
+  root.traverse((node: any) => {
+    if (!node?.isMesh || !node.geometry || getAurumMeshFamily(node) !== "gema") return;
+    let ancestor = node.parent;
+    while (ancestor) {
+      if (!ancestor.visible) return;
+      ancestor = ancestor.parent;
+    }
+    if (!node.visible) return;
+    const source = node.userData?.aurumRhinoSource ?? {};
+    const instance = node.userData?.aurumRhinoInstanceSource ?? {};
+    const attrs = node.userData?.attributes ?? {};
+    const objectId = instance.definitionObjectId ?? source.objectId ?? attrs.id ?? attrs.Id ?? null;
+    const instanceId = instance.objectId ?? attrs.instanceReferenceId ?? null;
+    const layerId = instance.layerId ?? source.layerId ?? attrs.layerId ?? attrs.LayerId ?? null;
+    const sourceKey = [String(objectId ?? node.uuid), String(instanceId ?? ""), String(layerId ?? ""), String(node.uuid)].join("::");
+    const materialNames = (Array.isArray(node.material) ? node.material : [node.material])
+      .filter(Boolean).map((material: any) => String(material.name ?? "")).filter(Boolean);
+    node.userData = {
+      ...(node.userData ?? {}),
+      aurumGlbGemSource: {
+        sourceKey,
+        sourceObjectId: objectId == null ? null : String(objectId),
+        instanceReferenceId: instanceId == null ? null : String(instanceId),
+        layerId: layerId == null ? null : String(layerId),
+        layerName: String(instance.layerName ?? source.layerName ?? node.userData?.aurumRhino?.capa ?? ""),
+        objectName: String(node.name ?? source.objectName ?? ""),
+        materialNames,
+      },
+    };
+    sourceKeys.add(sourceKey);
+    meshCount++;
+  });
+  const manifest = Object.freeze({ version: "1.0.0", meshCount, sourceKeys: Object.freeze([...sourceKeys].sort()) });
+  root.userData = { ...(root.userData ?? {}), aurumGlbGemManifest: manifest };
+  return manifest;
+}
+
 export async function convertAurumToGlb(
   object: THREE.Object3D,
   colorRhinoHex?: (color:any) => string | undefined,
@@ -677,6 +723,8 @@ export async function convertAurumToGlb(
     });
   }
   enforceRhinoLayerVisibilityBeforeExport(object);
+  const gemSourceManifest = tagAurumGemSourcesForGlb(object);
+  console.info("[AURUM][GLB GEM SOURCE MANIFEST]", gemSourceManifest);
   onProgress?.("Preparando geometría y normales");
   await preprocessAurumModel(object, onProgress);
   onProgress?.("Consolidando materiales");
