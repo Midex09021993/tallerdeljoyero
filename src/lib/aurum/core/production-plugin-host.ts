@@ -1,6 +1,6 @@
 import { AurumPluginRegistry, type AurumPluginDefinition } from "./plugin-registry";
 import { AurumServiceContainer } from "./service-container";
-import { createAurumGpuResourceManager } from "./gpu-resource-manager";
+import { createAurumGpuResourceManager, type AurumGpuResourceManager } from "./gpu-resource-manager";
 import { createAurumReadonlyMap } from "./readonly-map";
 
 export const AURUM_GPU_RESOURCE_SERVICE = "aurum.gpu.resources" as const;
@@ -18,6 +18,8 @@ export interface AurumProductionPluginHost {
   readonly services: ReadonlyMap<string, unknown>;
   readonly registry: AurumPluginRegistry;
   readonly moduleIds: readonly string[];
+  /** Explicit resource-ownership boundary; production controllers opt in resource by resource. */
+  readonly gpuResources: AurumGpuResourceManager;
   dispose(): Promise<void>;
 }
 
@@ -143,6 +145,7 @@ export function createAurumProductionPluginHost(
     services,
     registry,
     moduleIds: Object.freeze(definitions.map(({ id }) => id)),
+    gpuResources,
     async dispose() {
       const failures: unknown[] = [];
       // Plugins release their own resources first. The host then disposes any
