@@ -30,7 +30,7 @@ import { parseAurumInput, convertAurumToGlb } from "../lib/aurum/model-loader";
 import { compressAurumGlbWithDraco } from "../lib/draco-export";
 import { getAurumRhinoGeometryType, isAurumRhinoCsgSurface } from "../lib/aurum/metal-union-experiment";
 import { getAurumModelParts } from "../lib/aurum/model-parts";
-import { applyAurumMaterialToModel, applyAurumGemToTarget, clearAurumGemFromTarget } from "../lib/aurum/material-application";
+import { applyAurumMaterialToModel, applyAurumGemToTarget, clearAurumGemFromTarget, getAurumMaterialAdapterServices } from "../lib/aurum/material-application";
 import { inspectAurumMesh } from "../lib/aurum/mesh-preflight";
 import { normalizeAurumModel } from "../lib/aurum/model-normalizer";
 import { applyAurumInitialModelMaterials } from "../lib/aurum/model-materials";
@@ -40,6 +40,7 @@ import { createAurumConfiguratorState } from "../lib/aurum/configurator-state";
 import { createAurumViewerAdapter, AURUM_VIEWER_SERVICES } from "../lib/aurum/core/viewer-adapter";
 import { createAurumSceneAdapter } from "../lib/aurum/core/scene-adapter";
 import { createAurumLightingAdapter } from "../lib/aurum/core/lighting-adapter";
+import { createAurumProductionPluginHost } from "../lib/aurum/core/production-plugin-host";
 import { AURUM_ASPECT_RATIOS, getAurumAspectRatio, getAurumAspectDimensions, getAurumAspectFrameStyle, type AurumAspectRatioId } from "../lib/aurum/aspect-ratios";
 import { countAurumTriangles, getAurumRuntimeBudget, type AurumRuntimeBudget } from "../lib/aurum/runtime-budget";
 import { prepareAurumLiveGeometry, setAurumLiveGeometryQuality, disposeAurumLiveGeometry } from "../lib/aurum/live-geometry-lod";
@@ -1271,6 +1272,32 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       // Fondo inicial del visor: blanco puro. Los proyectos guardados pueden
       // restaurar después su propio fondo desde la configuración del proyecto.
       sceneAdapter.setBackground("blanco");
+
+      // AURUM CORE owns plugin lifecycle and service discovery only. Production
+      // viewer/lighting/material controllers retain ownership of their GPU resources.
+      const materialAdapterServices = getAurumMaterialAdapterServices();
+      const finalRenderLoader = async () => {
+        const { createAurumFinalRenderAdapter } = await import("../lib/aurum/core/final-render-adapter");
+        return createAurumFinalRenderAdapter();
+      };
+      const productionPluginHost = createAurumProductionPluginHost([
+        { id: "aurum.viewer", services: viewerAdapter.services },
+        { id: "aurum.scene", dependencies: ["aurum.viewer"], services: sceneAdapter.services },
+        { id: "aurum.lighting", dependencies: ["aurum.viewer"], services: lightingController.services },
+        { id: "aurum.metal", services: materialAdapterServices.metal },
+        { id: "aurum.gem", dependencies: ["aurum.metal"], services: materialAdapterServices.gem },
+        { id: "aurum.final-render", dependencies: ["aurum.viewer"], services: new Map([
+          ["aurum.final-render.load-adapter", finalRenderLoader],
+        ]) },
+      ]);
+      try {
+        await productionPluginHost.registry.start();
+        console.info("[AURUM][CORE] Plugins activos:", productionPluginHost.moduleIds);
+      } catch (pluginError) {
+        // Core composition must never blank the production viewer. If a plugin
+        // fails to initialize, roll back its scope and keep the established renderer.
+        console.error("[AURUM][CORE] Plugin startup failed; production renderer remains active:", pluginError);
+      }
       const photoInicial = getAurumPhotographicProfile("ijewelReference");
       // La escena visual no administra los HDRI ni la exposición: se inicializan
       // aquí una sola vez y permanecen bajo sus controles independientes.
@@ -3532,6 +3559,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       // Cleanup completo del Viewer: evita listeners, RAF y contextos WebGL acumulados
       // al entrar/salir de Aurum Render o cambiar de ruta.
       cleanup = () => {
+        void productionPluginHost.dispose().catch((error) => console.error("[AURUM][CORE] Plugin cleanup failed:", error));
         // Cancel deferred work so it cannot retain the model/renderer after unmount.
         if (shaderPrecompileIdleId !== null && typeof window !== "undefined" && "cancelIdleCallback" in window) {
           (window as any).cancelIdleCallback(shaderPrecompileIdleId);
