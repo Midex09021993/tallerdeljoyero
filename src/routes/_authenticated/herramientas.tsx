@@ -319,6 +319,53 @@ function HerramientasPage() {
                   Utilizamos Three.js y WebGL como base gráfica y desarrollamos sobre ellos módulos especializados para visualizar joyería: materiales, gemas, iluminación, geometría y captura de alta calidad.
                 </p>
               </div>
+              <div className="border-b border-border bg-muted/10 px-5 py-6 sm:px-8">
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold">Mapa de arquitectura</p>
+                    <h3 className="mt-1 text-lg font-semibold text-foreground">AURUM RENDER · Arquitectura modular</h3>
+                  </div>
+                  <span className="rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-[10px] font-semibold text-gold">Evolución por módulos</span>
+                </div>
+                <div className="mx-auto max-w-4xl">
+                  <div className="mx-auto max-w-md rounded-xl border border-gold/40 bg-card px-4 py-3 text-center shadow-sm">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold">Capa de aplicación</p>
+                    <p className="mt-1 text-sm font-semibold text-foreground">AURUM RENDER</p>
+                    <p className="mt-1 text-[11px] text-muted-foreground">Three.js · WebGL · GPU</p>
+                  </div>
+                  <div className="mx-auto h-6 w-px bg-border" />
+                  <div className="mx-auto max-w-2xl rounded-xl border border-border bg-card px-4 py-3 text-center">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Infraestructura común</p>
+                    <p className="mt-1 text-sm font-semibold text-foreground">AURUM CORE</p>
+                    <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                      <div className="rounded-lg bg-muted/50 px-2 py-2"><p className="text-xs font-semibold">Plugin Registry</p><p className="text-[10px] text-muted-foreground">Dependencias y ciclo de vida</p></div>
+                      <div className="rounded-lg bg-muted/50 px-2 py-2"><p className="text-xs font-semibold">Event Bus</p><p className="text-[10px] text-muted-foreground">Comunicación entre módulos</p></div>
+                      <div className="rounded-lg bg-muted/50 px-2 py-2"><p className="text-xs font-semibold">Resource Scope</p><p className="text-[10px] text-muted-foreground">Propiedad y liberación</p></div>
+                    </div>
+                  </div>
+                  <div className="mx-auto h-6 w-px bg-border" />
+                  <div className="rounded-xl border border-border bg-card p-3">
+                    <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Adaptadores y motores especializados</p>
+                      <p className="text-[10px] text-muted-foreground">Conectado = integración inicial · En evolución = siguiente fase</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                      <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3"><p className="text-xs font-semibold">Viewer Adapter</p><p className="mt-1 text-[10px] text-emerald-700 dark:text-emerald-400">Conectado</p></div>
+                      <div className="rounded-lg border border-border p-3"><p className="text-xs font-semibold">Scene Adapter</p><p className="mt-1 text-[10px] text-muted-foreground">Siguiente fase</p></div>
+                      <div className="rounded-lg border border-border p-3"><p className="text-xs font-semibold">Light Engine</p><p className="mt-1 text-[10px] text-muted-foreground">Siguiente fase</p></div>
+                      <div className="rounded-lg border border-border p-3"><p className="text-xs font-semibold">Metal Engine</p><p className="mt-1 text-[10px] text-muted-foreground">Siguiente fase</p></div>
+                      <div className="rounded-lg border border-border p-3"><p className="text-xs font-semibold">Gem Engine</p><p className="mt-1 text-[10px] text-muted-foreground">Siguiente fase</p></div>
+                      <div className="rounded-lg border border-border p-3"><p className="text-xs font-semibold">Final Render Pipeline</p><p className="mt-1 text-[10px] text-muted-foreground">Siguiente fase</p></div>
+                    </div>
+                  </div>
+                  <div className="mx-auto h-6 w-px bg-border" />
+                  <div className="rounded-xl border border-dashed border-border px-4 py-3 text-center">
+                    <p className="text-xs font-semibold text-foreground">Recursos de producción</p>
+                    <p className="mt-1 text-[10px] text-muted-foreground">Escena · Cámara · Renderer · Controles · Geometría · Materiales · HDRI · GPU</p>
+                  </div>
+                </div>
+                <p className="mx-auto mt-3 max-w-4xl text-[11px] leading-5 text-muted-foreground">El Viewer Adapter ya expone el visor existente a través de servicios estables. Los demás motores siguen funcionando con su implementación actual; se conectarán progresivamente, sin reemplazar ni recalibrar el motor óptico de producción en esta etapa.</p>
+              </div>
               <div className="grid gap-3 p-5 sm:grid-cols-2 sm:p-7 lg:grid-cols-3">
                 <article className="rounded-xl border border-border p-4">
                   <div className="mb-3 grid size-9 place-items-center rounded-lg border border-gold/25 bg-gold/10 text-gold"><MonitorDown className="size-4" /></div>
