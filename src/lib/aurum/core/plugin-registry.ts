@@ -123,7 +123,13 @@ export class AurumPluginRegistry {
       for (const definition of order) {
         const resources = new AurumResourceScope();
         const scopedContext: AurumPluginContext = { ...pluginContext, resources, events: this.events };
-        const runtime = (await definition.initialize(scopedContext)) ?? {};
+        let runtime: AurumPluginRuntime;
+        try {
+          runtime = (await definition.initialize(scopedContext)) ?? {};
+        } catch (error) {
+          await resources.dispose();
+          throw error;
+        }
         const registered = { definition, runtime, resources };
         this.initialized.push(registered);
         await runtime.activate?.();
@@ -132,6 +138,7 @@ export class AurumPluginRegistry {
     } catch (error) {
       this.abortController.abort();
       await this.cleanupInitialized();
+      this.events.reset();
       this.state = "idle";
       this.abortController = null;
       throw error;
