@@ -25,6 +25,8 @@ test("AURUM production plugin host registers adapters and manages lifecycle with
   await host.registry.start();
   expect(host.registry.getState()).toBe("running");
   expect(host.moduleIds).toEqual(["aurum.viewer", "aurum.scene"]);
+  expect(host.services.has("aurum.plugin.aurum-viewer")).toBe(true);
+  expect(host.services.has("aurum.plugin.aurum\\.viewer")).toBe(false);
   expect(host.services.get("aurum.viewer.renderer")).toEqual({ id: "renderer" });
   expect(host.services.get("aurum.scene.controller")).toEqual({ id: "scene" });
   const gpuResources = host.services.get("aurum.gpu.resources") as ReturnType<typeof import("../src/lib/aurum/core/gpu-resource-manager").createAurumGpuResourceManager>;
