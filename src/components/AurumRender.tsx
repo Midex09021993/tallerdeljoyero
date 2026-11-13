@@ -3027,7 +3027,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       const limpiarResaltado = () => {
         if (!resaltado) return;
         escena.remove(resaltado);
-        gemMaskPass?.refreshCache?.();
         resaltado.geometry?.dispose?.();
         resaltado.material?.dispose?.();
         resaltado = null;
@@ -3221,7 +3220,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             resaltado.quaternion.copy(obj.getWorldQuaternion(new THREE.Quaternion()));
             resaltado.scale.copy(obj.getWorldScale(new THREE.Vector3()));
             escena.add(resaltado);
-            gemMaskPass?.refreshCache?.();
           }
         }
       };
@@ -3378,17 +3376,12 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // Pause temporal accumulation immediately when the ring/camera starts
             // moving. The previous history is discarded and cannot wash out facets.
             setTemporalMotion?.(true);
-            // Use the restrained AURUM Soft Edge AA pass during LIVE interaction.
-            // It only blends a small amount at strong luminance boundaries;
-            // diamond shaders, BVH, dispersion and ACES calibration stay untouched.
+            // Fast interactive path: render the same calibrated LIVE materials
+            // directly to the canvas while the camera moves. Native WebGL MSAA
+            // remains enabled; the gem mask + Soft Edge AA are restored onEnd.
+            // Optical shaders, BVH, HDRI, materials and transmission stay unchanged.
             syncAurumSsrDiagnosticConfig();
-            const liveFxaaEnabled = true; // Soft Edge AA con máscara exclusiva de gemas.
             liveFastPathRef.current = true;
-            // Camera movement always selects LIVE materials, even when FXAA uses
-            // EffectComposer instead of the direct WebGL path.
-            // Keep raster resolution identical in LIVE and settled modes.
-            // A lower interaction DPR softens metal edges even though the gem mask
-            // correctly excludes metals from the AA shader.
             const requestedDpr = Math.max(1, Math.min(2, renderQuality.pixelRatio));
             const sharedRenderDpr = Math.min(
               measuredQualityId === "low" ? requestedDpr : Math.max(requestedDpr, 1.65),
@@ -3400,15 +3393,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             composer?.setPixelRatio?.(interactionDpr);
             const interactionPasses = ((composer as any)?.passes ?? []) as any[];
             interactionPasses.forEach((pass) => { pass.enabled = false; });
-            if (liveFxaaEnabled) {
-              const width = Math.max(1, renderer.domElement.width || renderer.domElement.clientWidth || 1);
-              const height = Math.max(1, renderer.domElement.height || renderer.domElement.clientHeight || 1);
-              fxaaPass?.material?.uniforms?.resolution?.value?.set?.(1 / width, 1 / height);
-              if (renderPass) renderPass.enabled = true;
-              if (gemMaskPass) gemMaskPass.enabled = true;
-              if (fxaaPass) fxaaPass.enabled = true;
-              if (outputPass) outputPass.enabled = true;
-            }
             // Preserve the same transmission/refraction render scale as the
             // settled image; do not trade metal/reflection detail for orbit speed.
             const sharedTransmissionScale = Math.min(renderQuality.transmissionScale, runtimeBudget.transmissionScaleCap);
@@ -3416,16 +3400,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             (renderer as any).transmissionResolutionScale = sharedTransmissionScale;
             aplicarPerfilLive(true);
             syncAurumSsrDiagnosticConfig();
-            // Route LIVE interaction through the minimal gem-only soft-AA chain.
-            // This pass chain is retained for dense assemblies as well.
-            if (liveFxaaEnabled) {
-              interactionPasses.forEach((pass) => {
-                pass.enabled = pass === renderPass || pass === gemMaskPass || pass === fxaaPass || pass === outputPass;
-              });
-              // The gem-only AA chain is intentionally lightweight and must
-              // not be bypassed by the extreme-geometry direct-render fallback.
-              liveFastPathRef.current = !(renderPass && gemMaskPass && fxaaPass && outputPass);
-            }
             renderer.shadowMap.enabled = false;
             invalidateRenderRef.current?.();
           },
