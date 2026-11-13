@@ -68,10 +68,10 @@ export function applyAurumVisualWeld(
   const cell = (value: number) => Math.floor(value / tolerance);
   const key = (x: number, y: number, z: number) => `${x},${y},${z}`;
   const faceA = new THREE.Vector3();
-  const faceB = new THREE.Vector3();
   const faceNormal = new THREE.Vector3();
   const edgeA = new THREE.Vector3();
   const edgeB = new THREE.Vector3();
+  const authoredNormal = working.getAttribute("normal");
 
   for (let i = 0; i < position.count; i += 3) {
     faceA.set(position.getX(i), position.getY(i), position.getZ(i));
@@ -79,8 +79,8 @@ export function applyAurumVisualWeld(
     edgeB.set(position.getX(i + 2), position.getY(i + 2), position.getZ(i + 2)).sub(faceA);
     faceNormal.crossVectors(edgeA, edgeB);
     const areaWeight = faceNormal.length();
-    if (!Number.isFinite(areaWeight) || areaWeight <= 1e-14) continue;
-    faceNormal.multiplyScalar(1 / areaWeight);
+    const isDegenerate = !Number.isFinite(areaWeight) || areaWeight <= 1e-14;
+    if (!isDegenerate) faceNormal.multiplyScalar(1 / areaWeight);
 
     for (let cornerIndex = 0; cornerIndex < 3; cornerIndex++) {
       const index = i + cornerIndex;
@@ -91,10 +91,26 @@ export function applyAurumVisualWeld(
         working.dispose();
         throw new Error("AURUM VISUAL WELD encontró coordenadas no finitas.");
       }
+      let nx = faceNormal.x, ny = faceNormal.y, nz = faceNormal.z;
+      if (isDegenerate) {
+        if (!authoredNormal || authoredNormal.count !== position.count) {
+          working.dispose();
+          throw new Error("AURUM VISUAL WELD encontró un triángulo degenerado sin normales de respaldo.");
+        }
+        nx = authoredNormal.getX(index);
+        ny = authoredNormal.getY(index);
+        nz = authoredNormal.getZ(index);
+        const normalLength = Math.hypot(nx, ny, nz);
+        if (!Number.isFinite(normalLength) || normalLength <= 1e-14) {
+          working.dispose();
+          throw new Error("AURUM VISUAL WELD encontró una normal de respaldo inválida.");
+        }
+        nx /= normalLength; ny /= normalLength; nz /= normalLength;
+      }
       const corner: Corner = {
         index, face: i / 3, x, y, z,
-        nx: faceNormal.x, ny: faceNormal.y, nz: faceNormal.z,
-        weight: areaWeight,
+        nx, ny, nz,
+        weight: isDegenerate ? 1 : areaWeight,
       };
       corners.push(corner);
       const bucketKey = key(cell(x), cell(y), cell(z));

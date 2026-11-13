@@ -120,7 +120,7 @@ export type AurumUnionExperimentResult = {
     rejectedNoBoundsIntersection: number;
     csgFailures: number;
     visualWeldFailures: number;
-    visualWeldedMeshes: number;
+    visualWeldedMeshes: number;\n    mergedAcrossLayers: number;
   };
 };
 
@@ -153,7 +153,7 @@ export function applyAurumMetalUnionExperiment(root: THREE.Object3D, maxMerges =
       rejectedNoBoundsIntersection: 0,
       csgFailures: 0,
       visualWeldFailures: 0,
-      visualWeldedMeshes: 0,
+      visualWeldedMeshes: 0,\n      mergedAcrossLayers: 0,
     },
   };
   const evaluator = new Evaluator();
@@ -218,7 +218,7 @@ export function applyAurumMetalUnionExperiment(root: THREE.Object3D, maxMerges =
       }
       // Layer names are organizational metadata, not a geometric/material boundary.
       // Both candidates already passed metal-family and equivalent-material checks.
-      // Permit compatible metals across Rhino layers (e.g. brazo, bisel y cuerpo).
+      // Permit compatible metals across Rhino layers (e.g. brazo, bisel y cuerpo).\n      if (rightLayerKey !== layerKey) result.audit.mergedAcrossLayers++;
       if (!accumulator.geometry || !right.geometry
         || !compatibleAttributes(accumulator.geometry, right.geometry)) {
         result.skipped++;
