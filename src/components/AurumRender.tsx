@@ -1553,14 +1553,20 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
 
       const aplicarGema = (g:GemaConfig, objetivo?:any, aplicarTodas=false, renderImmediately=true) => {
         const target=objetivo||parteActiva;
-        // Stable diagnostic mode: apply the selected gemstone profile directly.
-        // Progressive blending is suspended while the optical regression is audited.
+        let resolvedTargets:any[]=[];
+        let targetHadActiveBvh=false;
         const applied=applyAurumGemToTarget(
           target,
           g,
           aplicarEntornoGema,
           ()=>invalidateRenderRef.current?.(),
           aplicarTodas,
+          (targets:any[])=>{
+            resolvedTargets=targets;
+            // Capture this before the material replacement. Only refresh the
+            // expensive BVH runtime when this exact gem layer owned a BVH entry.
+            targetHadActiveBvh=diamondBvhRuntime?.hasActiveMeshes?.(targets)??false;
+          },
         );
         if(!applied){
           console.error("[AURUM][GEM APPLICATION FAILED]",{
@@ -1577,25 +1583,30 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           return;
         }
         // Calidad 3 and the dedicated Inclusiones profile both define visible jardin.
-        // Hide old inclusion meshes first, then enable only the currently selected grade.
         setAurumEmeraldInclusionsVisible(target, false);
         const selectedEmeraldId=String(g?.id ?? "");
         if(selectedEmeraldId==="esmeralda_3" || selectedEmeraldId==="esmeralda_inclusiones"){
           setAurumEmeraldInclusionsVisible(target, true, selectedEmeraldId);
         }
+
         const selectedGemFamily = String(g?.familia ?? "").toLocaleLowerCase();
         const emeraldBvhOptIn = isEmeraldBvhEnabled();
         if (selectedGemFamily === "diamante" || (selectedGemFamily === "esmeralda" && emeraldBvhOptIn)) {
-          // Re-run refresh AFTER the new catalog material is assigned. Without
-          // this, an emerald selected after model load keeps its native material.
+          // Only the families explicitly opted into the experimental BVH path
+          // pay its full-model refresh cost.
           void asegurarDiamanteBvh().then(() => diamondBvhRuntime?.refresh(modelo));
-        } else {
+        } else if (targetHadActiveBvh) {
+          // A formerly-BVH target changed to a native physical gem. Refresh only
+          // in that case so the old experimental material/resources are released.
           diamondBvhRuntime?.refresh(modelo);
         }
-        // Do not apply LIVE overrides or transition-specific temporal/TAA
-        // manipulation here. Keep the catalog-authored physical gem material.
+
+        // The physical catalog material is assigned synchronously by
+        // applyAurumGemToTarget. Render it now; optional BVH cleanup/quality work
+        // must never require a second click to reveal the selected gemstone.
         if(renderImmediately) viewerLoopRef.current?.renderNow?.();
         else invalidateRenderRef.current?.();
+        return true;
       };
       const aplicarMaterial = (m:MaterialConfig, aplicarTodos=false) => {
         if (!modelo) {
