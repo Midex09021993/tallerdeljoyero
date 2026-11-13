@@ -56,7 +56,7 @@ function HerramientasPage() {
   }, [herramientaActiva]);
 
   useEffect(() => {
-    // El release del único .RHP ya está publicado y verificado.
+    // El release oficial 1.0.12 se publica desde el repositorio de construcción del complemento.
     setPaqueteAurumConectDisponible(true);
   }, []);
 
@@ -189,7 +189,7 @@ function HerramientasPage() {
                       <div className="flex flex-col gap-2 sm:flex-row lg:flex-col lg:min-w-[250px]">
                         {paqueteAurumConectDisponible ? (
                           <a
-                            href="https://github.com/Midex09021993/aurum-conect-build/releases/download/v1.0.11/AurumConect-Rhino7-1.0.11.rhp"
+                            href="https://github.com/Midex09021993/aurum-conect-build/releases/download/v1.0.12/AurumConect-Rhino7-1.0.12.rhp"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
@@ -208,7 +208,7 @@ function HerramientasPage() {
                           {mostrarGuiaAurumConect ? "Ocultar guía" : "Ver guía de instalación"} <ChevronRight className={`size-3.5 transition-transform ${mostrarGuiaAurumConect ? "rotate-90" : ""}`} />
                         </button>
                         {!paqueteAurumConectDisponible ? (
-                          <p className="max-w-xs text-[11px] leading-4 text-muted-foreground">Descarga directa de AURUM CONECT 1.0.11 para Rhino 7 x64.</p>
+                          <p className="max-w-xs text-[11px] leading-4 text-muted-foreground">Descarga directa de AURUM CONECT 1.0.12 para Rhino 7 x64.</p>
                         ) : null}
                       </div>
                     </div>
@@ -223,7 +223,7 @@ function HerramientasPage() {
                         <div>
                           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold">Guía integrada · Rhino 7</p>
                           <h3 id="aurum-conect-guia-title" className="mt-1 text-xl font-semibold">Instala AURUM CONECT paso a paso</h3>
-                          <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">Descarga el único archivo .RHP e instálalo desde el administrador de complementos de Rhino 7. La versión 1.0.11 refuerza la recuperación del visor al cambiar el tamaño, minimizar o restaurar la ventana. No necesitas ZIP ni DLL adicionales: las bibliotecas WebView2 están integradas.</p>
+                          <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">Descarga el único archivo .RHP e instálalo desde el administrador de complementos de Rhino 7. La versión 1.0.12 recupera la superficie del visor al maximizar o restaurar la ventana sin reiniciar Chromium ni el motor óptico. WebView2.Core y WebView2Loader están integrados en el .RHP; el Runtime Evergreen debe estar instalado en Windows.</p>
                         </div>
                         <span className="rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-[10px] font-semibold text-gold">Versión beta</span>
                       </div>
@@ -241,16 +241,26 @@ function HerramientasPage() {
                         <div>
                           <h4 className="font-semibold">Instalación en Windows</h4>
                           <ol className="mt-3 space-y-2 text-sm leading-6 text-muted-foreground">
-                            <li><strong className="text-foreground">1.</strong> Descarga <code className="rounded bg-muted px-1.5 py-0.5 text-xs">AurumConect-Rhino7-1.0.11.rhp</code>.</li>
+                            <li><strong className="text-foreground">1.</strong> Descarga <code className="rounded bg-muted px-1.5 py-0.5 text-xs">AurumConect-Rhino7-1.0.12.rhp</code>.</li>
                             <li><strong className="text-foreground">2.</strong> Guarda el archivo .RHP en una carpeta permanente de tu equipo. Puedes usar la carpeta de complementos de Rhino 7, pero no es obligatorio copiarlo a Program Files.</li>
                             <li><strong className="text-foreground">3.</strong> Abre Rhino 7 y escribe <code className="rounded bg-muted px-1.5 py-0.5 text-xs">_PlugInManager</code> en la línea de comandos.</li>
-                            <li><strong className="text-foreground">4.</strong> En _PlugInManager, selecciona «Install» (Instalar), busca <code className="rounded bg-muted px-1.5 py-0.5 text-xs">AurumConect-Rhino7-1.0.11.rhp</code> en la carpeta donde lo guardaste y confirma. Verifica que el complemento quede habilitado.</li>
+                            <li><strong className="text-foreground">4.</strong> En _PlugInManager, selecciona «Install» (Instalar), busca <code className="rounded bg-muted px-1.5 py-0.5 text-xs">AurumConect-Rhino7-1.0.12.rhp</code> en la carpeta donde lo guardaste y confirma. Verifica que el complemento quede habilitado.</li>
                             <li><strong className="text-foreground">5.</strong> En la línea de comandos de Rhino escribe <code className="rounded bg-muted px-1.5 py-0.5 text-xs">AurumConect</code>. Debe abrirse el panel AURUM CONECT.</li>
                             <li><strong className="text-foreground">6.</strong> En el panel pulsa «ABRIR AURUM RENDER · CARGAR DOCUMENTO». AURUM CONECT prepara y transfiere automáticamente una copia del documento Rhino completo y abre la ventana integrada. No necesitas seleccionar objetos ni pulsar un segundo botón de envío.</li>
                           </ol>
                         </div>
                       </div>
                       <div className="mt-6 rounded-xl border border-border bg-muted/30 p-4">
+                        <h4 className="font-semibold">Comandos de Rhino para llamar cada instrucción</h4>
+                        <p className="mt-2 text-sm leading-6 text-muted-foreground">Escribe el comando en la línea inferior de Rhino y pulsa Enter. No necesitas abrir primero el panel.</p>
+                        <ul className="mt-3 space-y-3 text-sm leading-6 text-muted-foreground">
+                          <li><code className="rounded bg-background px-2 py-1 font-semibold text-foreground">AurumConect</code> — abre el panel AURUM CONECT con sus acciones principales.</li>
+                          <li><code className="rounded bg-background px-2 py-1 font-semibold text-foreground">AurumRender</code> — abre la ventana integrada de AURUM RENDER sin transferir un documento nuevo.</li>
+                          <li><code className="rounded bg-background px-2 py-1 font-semibold text-foreground">AurumConectActualizar</code> — genera una copia temporal completa del documento Rhino activo y la envía a AURUM RENDER.</li>
+                        </ul>
+                        <p className="mt-3 text-sm leading-6 text-muted-foreground">La barra nativa opcional incluye tres botones con iconos equivalentes: AURUM RENDER, ENVIAR DISEÑO y PANEL AURUM. Para instalarla junto al complemento, <a className="font-semibold text-gold underline underline-offset-2" href="https://github.com/Midex09021993/aurum-conect-build/releases/download/v1.0.12/AurumConect-Rhino7-1.0.12.zip" target="_blank" rel="noopener noreferrer">descarga el paquete RHP + RUI (.ZIP)</a>, extrae ambos archivos en la misma carpeta y carga el RUI desde <code className="rounded bg-background px-1.5 py-0.5 text-xs">_Toolbar</code> si Rhino no lo abre automáticamente.</p>
+                      </div>
+
                         <h4 className="font-semibold">¿Dónde queda guardado el complemento?</h4>
                         <p className="mt-2 text-sm leading-6 text-muted-foreground">Guarda el .RHP en una ubicación permanente elegida por ti y regístralo desde esa ruta con _PlugInManager. No muevas ni elimines el archivo después de registrarlo; para actualizarlo, cierra Rhino, sustituye la versión anterior y vuelve a registrarla.</p>
                         <h4 className="mt-4 font-semibold">Conexión y primera prueba</h4>
