@@ -12,7 +12,7 @@ type Props = {
 const EMPTY: AurumPerformanceSnapshot = {
   fps: 0, frameMs: 0, renderMs: 0, bvhMs: 0, maxFrameMs: 0,
   path: "—", calls: 0, triangles: 0, geometries: 0, textures: 0,
-  drawBuffer: "—", pixelRatio: 1, webgl: "No disponible",
+  drawBuffer: "—", pixelRatio: 1, webgl: "No disponible", sampleCount: 0, hasRecentFrame: false,
 };
 
 const number = (value: number, digits = 1) =>
@@ -98,8 +98,8 @@ export function AurumPerformanceMonitorPanel({ open, onClose, renderer, monitor 
   }, [open, renderer, monitor]);
 
   if (!open) return null;
-  const fpsTone = stats.fps >= 50 ? "text-emerald-300" : stats.fps >= 30 ? "text-amber-300" : "text-rose-300";
   const overallStatus = getAurumPerformanceStatus(stats);
+  const fpsTone = overallStatus === "idle" ? "text-white/50" : stats.fps >= 50 ? "text-emerald-300" : stats.fps >= 30 ? "text-amber-300" : "text-rose-300";
   const statusCopy = {
     idle: { label: "Midiendo actividad", tone: "text-white/50", dot: "bg-white/35" },
     healthy: { label: "Rendimiento estable", tone: "text-emerald-300", dot: "bg-emerald-400" },
