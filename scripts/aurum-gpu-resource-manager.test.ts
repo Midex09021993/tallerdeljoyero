@@ -117,3 +117,33 @@ test("GPU manager rejects non-canonical owner ids and resource kind changes", ()
   expect(manager.releaseOwner("viewer")).toBe(1);
   expect(texture.disposeCount).toBe(1);
 });
+
+
+test("GPU manager never re-tracks a resource after its final disposal", () => {
+  const manager = createAurumGpuResourceManager();
+  const texture = disposable();
+
+  manager.track("viewer", texture, "texture");
+  expect(manager.releaseOwner("viewer")).toBe(1);
+  expect(texture.disposeCount).toBe(1);
+  expect(() => manager.track("viewer", texture, "texture")).toThrow("already been disposed");
+  expect(texture.disposeCount).toBe(1);
+  expect(manager.stats().resourceCount).toBe(0);
+});
+
+test("GPU manager marks a resource disposed even when its disposer throws", () => {
+  const manager = createAurumGpuResourceManager();
+  let disposeCount = 0;
+  const target = {
+    dispose() {
+      disposeCount += 1;
+      throw new Error("GPU teardown failed");
+    },
+  };
+
+  manager.track("capture", target, "render-target");
+  expect(() => manager.releaseOwner("capture")).toThrow("cleanup failed");
+  expect(disposeCount).toBe(1);
+  expect(() => manager.track("capture", target, "render-target")).toThrow("already been disposed");
+  expect(disposeCount).toBe(1);
+});
