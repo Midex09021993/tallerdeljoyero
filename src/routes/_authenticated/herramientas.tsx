@@ -360,6 +360,10 @@ function HerramientasPage() {
                       <div className="rounded-lg border border-border p-3"><p className="text-xs font-semibold">Light Engine</p><p className="mt-1 text-[10px] text-sky-700 dark:text-sky-400">Registrado</p></div>
                       <div className="rounded-lg border border-border p-3"><p className="text-xs font-semibold">Metal Engine</p><p className="mt-1 text-[10px] text-sky-700 dark:text-sky-400">Registrado</p></div>
                       <div className="rounded-lg border border-border p-3"><p className="text-xs font-semibold">Gem Engine</p><p className="mt-1 text-[10px] text-sky-700 dark:text-sky-400">Registrado</p></div>
+                      <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3"><p className="text-xs font-semibold">Import Plugin</p><p className="mt-1 text-[10px] text-sky-700 dark:text-sky-400">Implementado</p></div>
+                      <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3"><p className="text-xs font-semibold">Import Pipeline Manager</p><p className="mt-1 text-[10px] text-sky-700 dark:text-sky-400">Implementado</p></div>
+                      <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3"><p className="text-xs font-semibold">Geometry Engine</p><p className="mt-1 text-[10px] text-sky-700 dark:text-sky-400">Inspección completa</p></div>
+                      <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3"><p className="text-xs font-semibold">AURUM SURFACE</p><p className="mt-1 text-[10px] text-amber-700 dark:text-amber-400">Diagnóstico experimental</p></div>
                       <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3"><p className="text-xs font-semibold">Final Render Adapter</p><p className="mt-1 text-[10px] text-sky-700 dark:text-sky-400">Bajo demanda</p></div>
                     </div>
                   </div>
@@ -369,7 +373,7 @@ function HerramientasPage() {
                     <p className="mt-1 text-[10px] text-muted-foreground">Escena · Cámara · Renderer · Controles · Geometría · Materiales · HDRI · GPU</p>
                   </div>
                 </div>
-                <p className="mx-auto mt-3 max-w-4xl text-[11px] leading-5 text-muted-foreground">El host de producción registra Viewer, Scene, Lighting, Metal y Gem en Plugin Registry; Final Render publica un cargador que crea su adaptador al solicitar una captura. Service Container entrega un mapa de servicios de solo lectura. Event Bus comunica actualmente los eventos de activación y cierre. Cada plugin recibe un Resource Scope, pero la transferencia de propiedad de recursos GPU todavía no está implementada: renderer, escena, luces y materiales siguen bajo sus controladores de producción. Esta separación preserva el render interactivo y los shaders ópticos.</p>
+                <p className="mx-auto mt-3 max-w-4xl text-[11px] leading-5 text-muted-foreground">El host de producción registra Viewer, Scene, Lighting, Metal y Gem en Plugin Registry; Final Render publica un cargador que crea su adaptador al solicitar una captura. Import Plugin, Import Pipeline Manager y Geometry Engine ya tienen contratos y pruebas para la ruta de carga y la inspección de calidad. AURUM SURFACE añade un diagnóstico experimental de aristas coincidentes entre cuerpos, todavía sin fusionar geometría ni modificar el GLB. Service Container entrega un mapa de servicios de solo lectura. Event Bus comunica actualmente los eventos de activación y cierre. La transferencia de propiedad de recursos GPU todavía no está implementada: renderer, escena, luces y materiales siguen bajo sus controladores de producción.</p>
               </div>
               <div className="grid gap-3 p-5 sm:grid-cols-2 sm:p-7 lg:grid-cols-3">
                 <article className="rounded-xl border border-border p-4">
@@ -396,6 +400,16 @@ function HerramientasPage() {
                   <div className="mb-3 grid size-9 place-items-center rounded-lg border border-gold/25 bg-gold/10 text-gold"><MonitorDown className="size-4" /></div>
                   <h3 className="text-sm font-semibold">Geometry & Optimization</h3>
                   <p className="mt-2 text-xs leading-5 text-muted-foreground">Preparación de modelos, análisis de mallas, aceleración BVH, cachés y calidad adaptativa según la carga.</p>
+                </article>
+                <article className="rounded-xl border border-border p-4">
+                  <div className="mb-3 grid size-9 place-items-center rounded-lg border border-gold/25 bg-gold/10 text-gold"><MonitorDown className="size-4" /></div>
+                  <h3 className="text-sm font-semibold">Import & GLB Pipeline</h3>
+                  <p className="mt-2 text-xs leading-5 text-muted-foreground">Decodifica 3DM, STL, OBJ, FBX y GLB; convierte, reabre y normaliza el GLB para el visor, conservando metadatos Rhino.</p>
+                </article>
+                <article className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4">
+                  <div className="mb-3 grid size-9 place-items-center rounded-lg border border-amber-500/25 bg-amber-500/10 text-amber-700 dark:text-amber-400"><Sparkles className="size-4" /></div>
+                  <h3 className="text-sm font-semibold">AURUM SURFACE</h3>
+                  <p className="mt-2 text-xs leading-5 text-muted-foreground">Diagnóstico experimental y de solo lectura para localizar aristas coincidentes entre cuerpos. La fusión y reparación selectiva aún no están activadas.</p>
                 </article>
                 <article className="rounded-xl border border-border p-4">
                   <div className="mb-3 grid size-9 place-items-center rounded-lg border border-gold/25 bg-gold/10 text-gold"><Gem className="size-4" /></div>
