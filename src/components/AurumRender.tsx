@@ -1560,18 +1560,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
 
       const aplicarGema = (g:GemaConfig, objetivo?:any, aplicarTodas=false, renderImmediately=true) => {
         const target=objetivo||parteActiva;
-        let targetHadActiveBvh=false;
+        let resolvedTargets:any[]=[];
         const applied=applyAurumGemToTarget(
           target,
           g,
           aplicarEntornoGema,
           ()=>invalidateRenderRef.current?.(),
           aplicarTodas,
-          (targets:any[])=>{
-            // Capture this before the material replacement. Only refresh the
-            // expensive BVH runtime when this exact gem layer owned a BVH entry.
-            targetHadActiveBvh=diamondBvhRuntime?.hasActiveMeshes?.(targets)??false;
-          },
+          (targets:any[])=>{ resolvedTargets=targets; },
         );
         if(!applied){
           console.error("[AURUM][GEM APPLICATION FAILED]",{
@@ -1585,32 +1581,55 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             reason:!target?.isMesh?"No active mesh target":"Target is not classified as a gemstone (aurumRhino.categoria !== gema)",
           });
           toast.error("No se aplicó la gema: selecciona una pieza clasificada como gema.");
-          return;
-        }
-        // Calidad 3 and the dedicated Inclusiones profile both define visible jardin.
-        setAurumEmeraldInclusionsVisible(target, false);
-        const selectedEmeraldId=String(g?.id ?? "");
-        if(selectedEmeraldId==="esmeralda_3" || selectedEmeraldId==="esmeralda_inclusiones"){
-          setAurumEmeraldInclusionsVisible(target, true, selectedEmeraldId);
+          return false;
         }
 
-        const selectedGemFamily = String(g?.familia ?? "").toLocaleLowerCase();
-        const emeraldBvhOptIn = isEmeraldBvhEnabled();
-        if (selectedGemFamily === "diamante" || (selectedGemFamily === "esmeralda" && emeraldBvhOptIn)) {
-          // Only the families explicitly opted into the experimental BVH path
-          // pay its full-model refresh cost.
-          void asegurarDiamanteBvh().then(() => diamondBvhRuntime?.refresh(modelo));
-        } else if (targetHadActiveBvh) {
-          // A formerly-BVH target changed to a native physical gem. Refresh only
-          // in that case so the old experimental material/resources are released.
-          diamondBvhRuntime?.refresh(modelo);
-        }
-
-        // The physical catalog material is assigned synchronously by
-        // applyAurumGemToTarget. Render it now; optional BVH cleanup/quality work
-        // must never require a second click to reveal the selected gemstone.
+        // Paint the catalog material immediately. BVH shader preparation is an
+        // optional refinement and must never sit in front of this first frame.
         if(renderImmediately) viewerLoopRef.current?.renderNow?.();
         else invalidateRenderRef.current?.();
+
+        if(renderImmediately && resolvedTargets.length){
+          const applicationSnapshot=resolvedTargets.map((mesh:any)=>({
+            mesh,
+            token:Number(mesh.userData?.aurumGemApplicationToken??0),
+            gemId:String(mesh.userData?.aurumActiveGemId??""),
+          }));
+          const selectedGemFamily=String(g?.familia??"").toLocaleLowerCase();
+          const emeraldBvhOptIn=isEmeraldBvhEnabled();
+          const refreshChangedTargets=()=>{
+            if(!vivo||!modelo)return;
+            const currentTargets=applicationSnapshot
+              .filter(({mesh,token,gemId})=>
+                Number(mesh.userData?.aurumGemApplicationToken??0)===token
+                && String(mesh.userData?.aurumActiveGemId??"")===gemId
+                && gemId===String(g?.id??"")
+              )
+              .map(({mesh})=>mesh);
+            if(!currentTargets.length)return;
+            if(diamondBvhRuntime){
+              // O(k) for non-diamond changes; only the selected meshes are
+              // reconsidered and unrelated BVH entries remain untouched.
+              diamondBvhRuntime.refreshTargets(modelo,currentTargets);
+            }else if(selectedGemFamily==="diamante" || (selectedGemFamily==="esmeralda" && emeraldBvhOptIn)){
+              // First-time runtime loading remains asynchronous and cannot block
+              // the already-painted MeshPhysicalMaterial fallback.
+              void asegurarDiamanteBvh();
+            }
+            invalidateRenderRef.current?.();
+          };
+          const scheduleIdle=()=>{
+            if(typeof window!=="undefined" && typeof (window as any).requestIdleCallback==="function"){
+              (window as any).requestIdleCallback(refreshChangedTargets,{timeout:1500});
+            }else if(typeof window!=="undefined"){
+              window.setTimeout(refreshChangedTargets,100);
+            }
+          };
+          // Let the browser present the immediate physical material before
+          // optional BVH work starts.
+          if(typeof window!=="undefined")window.requestAnimationFrame(scheduleIdle);
+          else scheduleIdle();
+        }
         return true;
       };
       const aplicarMaterial = (m:MaterialConfig, aplicarTodos=false) => {
