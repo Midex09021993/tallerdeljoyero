@@ -3,6 +3,7 @@ import {
   createAurumSurfaceEdgeAaPass,
   setAurumEdgeAaResolution,
   shouldEnableAurumEdgeAa,
+  getAurumEdgeAaProfile,
 } from "./edge-quality";
 
 /**
@@ -434,12 +435,14 @@ export async function createAurumPostPipeline(
     && diagnosticParams?.get("aurumSSAO") === "off";
   let lastDiagnosticSignature = "";
   let lastKnownQualityId = "";
+  let lastKnownBudgetTier = "web";
   let lastKnownHighQuality = false;
   const applyQuality=(next:any, options:{capture?:boolean;width?:number;height?:number}={})=>{
     if(!composer) return;
     const q=next||{};
     const incomingQualityId=String(q?.qualityId??"");
     if(incomingQualityId) lastKnownQualityId=incomingQualityId;
+    if(q?.runtimeBudgetTier) lastKnownBudgetTier=String(q.runtimeBudgetTier);
     // Some scene/profile updates re-apply the render-quality object without
     // its UI ID. Preserve the last selected ID for correct pass gating/diagnostics.
     const qualityId=incomingQualityId || lastKnownQualityId;
@@ -463,10 +466,16 @@ export async function createAurumPostPipeline(
     const taaEnabled=taaRequested && !temporalMotionActive;
     // Edge AA is a settled-quality treatment: never add fullscreen filtering
     // work to the direct-render orbit path. Still captures may use it explicitly.
-    const edgeAaEnabled=shouldEnableAurumEdgeAa(high,temporalMotionActive,Boolean(options.capture));
+    const edgeAaMode=options.capture ? "capture" : "settled";
+    const edgeAaProfile=getAurumEdgeAaProfile(qualityId || (high ? "high" : "low"),lastKnownBudgetTier,edgeAaMode);
+    const edgeAaEnabled=edgeAaProfile.enabled && (!temporalMotionActive || Boolean(options.capture));
     if(gemMaskPass) gemMaskPass.enabled=edgeAaEnabled;
     if(fxaaPass) fxaaPass.enabled=edgeAaEnabled;
-    if(surfaceEdgeAaPass) surfaceEdgeAaPass.enabled=edgeAaEnabled;
+    if(surfaceEdgeAaPass) {
+      surfaceEdgeAaPass.enabled=edgeAaEnabled;
+      const strength=surfaceEdgeAaPass.material?.uniforms?.strength;
+      if(strength) strength.value=edgeAaProfile.strength;
+    }
     // Keep the interactive/settled preview responsive with one convergence frame.
     // Still captures retain the full 32-frame temporal budget for final image quality.
     const progressiveFrames=options.capture
@@ -701,11 +710,15 @@ export async function createAurumPostPipeline(
     const next=Boolean(moving);
     const changed=next!==temporalMotionActive;
     temporalMotionActive=next;
-    const settledHighQuality=lastKnownHighQuality;
-    const edgeAaEnabled=shouldEnableAurumEdgeAa(settledHighQuality,next);
+    const edgeAaProfile=getAurumEdgeAaProfile(lastKnownQualityId || (lastKnownHighQuality ? "high" : "low"),lastKnownBudgetTier,next ? "live" : "settled");
+    const edgeAaEnabled=edgeAaProfile.enabled;
     if(gemMaskPass) gemMaskPass.enabled=edgeAaEnabled;
     if(fxaaPass) fxaaPass.enabled=edgeAaEnabled;
-    if(surfaceEdgeAaPass) surfaceEdgeAaPass.enabled=edgeAaEnabled;
+    if(surfaceEdgeAaPass) {
+      surfaceEdgeAaPass.enabled=edgeAaEnabled;
+      const strength=surfaceEdgeAaPass.material?.uniforms?.strength;
+      if(strength) strength.value=edgeAaProfile.strength;
+    }
     if(!taaPass)return;
     // Hard-disable temporal accumulation on every interaction start, even if
     // a previous state transition left the motion flag unchanged.
