@@ -173,6 +173,19 @@ Ejecutar: `bun test scripts/aurum-plugin-registry.test.ts`.
 
 No se migraron todos los módulos productivos para declarar `requiresServices`; esto debe hacerse después de inventariar sus dependencias reales, no adivinándolas. Esta entrega establece y prueba el mecanismo, no certifica todavía que todos los módulos estén completamente contratados.
 
+## AURUM EDGE QUALITY — cierre de contrato MSAA
+
+La revisión del pipeline confirma que `createAurumPostPipeline()` instancia `EffectComposer` y configura EDGE QUALITY inmediatamente después de su construcción, antes de añadir/renderizar los pases. MSAA se limita a los dos targets ping-pong del compositor.
+
+- MSAA se activa solo cuando el renderer declara WebGL2 y el dispositivo ofrece al menos dos samples.
+- Los samples solicitados se limitan al máximo reportado por el dispositivo.
+- Si alguno de los targets no acepta la configuración, se restauran los valores previos de ambos targets y el compositor conserva su fallback nativo.
+- No se añade un render loop, target extra, pasada adicional ni cambio al renderer productivo.
+- TAA continúa siendo responsabilidad del pipeline existente. SSAA no está implementado.
+- El suavizado FXAA específico de gemas existente continúa aislado mediante su máscara categórica; no se amplía su alcance a metales ni se cambian shaders ópticos.
+
+Pruebas añadidas en `scripts/aurum-edge-quality.test.ts`: límites WebGL2, clamp de samples, configuración simétrica, ausencia de soporte, target faltante y rollback ante target no configurable. El workflow ejecuta esta suite.
+
 ## Integración productiva del host — revisión 2026-11-13
 
 La revisión del punto de composición en `src/components/AurumRender.tsx` confirma que el host ya está instanciado dentro del ciclo de vida del visor y que los siguientes servicios se registran y arrancan:
