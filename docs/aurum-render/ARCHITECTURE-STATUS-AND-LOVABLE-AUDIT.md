@@ -308,3 +308,16 @@ Hallazgos de integración:
 Decisión para esta fase: conservar `disposeAurumViewer()` como propietario único del teardown del visor. No migrar objetos al GPU Resource Manager hasta diseñar una transferencia explícita y probar el orden de liberación. La siguiente integración debe ser de observabilidad/trazabilidad del ciclo de vida, no de doble ownership.
 
 Evidencia principal: `src/components/AurumRender.tsx` (cleanup y desmontaje), `src/lib/aurum/viewer.ts` (`disposeAurumViewer`), `src/lib/aurum/lighting.ts` (dispose de luces), adaptadores Viewer/Scene/Lighting/Metal/Gem y `src/lib/aurum/video-frame-pipeline.ts`.
+
+
+### AURUM MEDIA EXPORT — rollback transaccional de preparación de frames — 2026-11-13
+
+La preparación del pipeline de vídeo ahora revierte el estado del compositor si falla antes de devolver el controlador al consumidor:
+
+- Si falla `setPixelRatio`, `setSize` o la selección de pases durante la inicialización, intenta restaurar pixel ratio, dimensiones y estado original de todos los pases antes de propagar el error original.
+- La restauración intenta completar cada operación aunque una de ellas falle; el primer error de restauración se propaga cuando la restauración fue solicitada explícitamente.
+- `restore()` sigue siendo idempotente.
+- `renderFrame()` rechaza llamadas posteriores a la restauración para evitar reutilizar un pipeline cerrado.
+- El módulo no libera composer, renderer, escena ni pases; su ownership continúa en el visor productivo.
+
+Pruebas añadidas en `scripts/aurum-video-frame-pipeline.test.ts`: rollback ante fallo parcial de configuración y rechazo de render después de restaurar. No se ejecutó Bun/build/TypeScript en este entorno; el cambio requiere validación en CI y exportación real en navegador.
