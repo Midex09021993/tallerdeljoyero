@@ -1635,6 +1635,12 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         } else {
           aplicarPerfilLive();
         }
+        // A material replacement changes the beauty image even when the camera
+        // is stationary. Invalidate temporal history before presenting it;
+        // otherwise TAA can keep showing the previous gemstone until orbit motion
+        // resets the accumulation in updateTemporal().
+        resetTemporalAccumulationRef.current?.();
+
         // A catalog batch may touch several meshes; render once after the batch.
         // For an individual selection, present the new material immediately so
         // the user never has to orbit the jewel to see the change.
