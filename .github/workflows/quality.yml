@@ -41,6 +41,8 @@ jobs:
         run: bun test scripts/aurum-plugin-registry.test.ts
       - name: AURUM viewer adapter tests
         run: bun test scripts/aurum-viewer-adapter.test.ts
+      - name: AURUM scene adapter tests
+        run: bun test scripts/aurum-scene-adapter.test.ts
 
       - name: Lint
         run: bun run lint
