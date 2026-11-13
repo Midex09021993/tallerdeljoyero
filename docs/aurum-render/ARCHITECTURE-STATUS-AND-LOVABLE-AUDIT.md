@@ -93,3 +93,44 @@ No marcar CI como aprobado hasta que GitHub Actions publique resultados exitosos
 ## Entregable esperado
 
 Lovable debe entregar primero un informe de auditoría sin modificar código. Después debe presentar un plan de correcciones ordenado por riesgo. Ningún cambio que afecte el motor óptico, render en vivo, materiales, HDRI, BVH o ownership GPU debe aplicarse sin revisión y autorización.
+
+
+## Actualización de cierre técnico — 2026-11-13
+
+### Cambios de infraestructura incluidos en `main`
+
+- GPU Resource Manager: cierre reentrante seguro; el manager marca su estado como cerrado antes de ejecutar callbacks externos de `dispose()`. Prueba de regresión incluida.
+- Gem Engine: sincronización de uniformes de entorno que admite correctamente el valor numérico cero.
+- Event Bus: entrega el evento a todos los suscriptores registrados incluso si uno falla; después informa los fallos mediante `AggregateError`. La excepción no se silencia y puede activar el rollback del ciclo de vida que emitió el evento.
+- Prueba añadida para comprobar aislamiento de suscriptores y reporte agregado.
+- La suite `aurum-plugin-registry.test.ts` ya está incluida en el workflow de calidad.
+
+### Matriz de madurez para la auditoría
+
+| Área | Estado para auditoría | Límite explícito |
+|---|---|---|
+| Plugin Registry | Implementado y probado | Revisar contratos de activación/desactivación y recuperación |
+| Service Container | Implementado y probado | Snapshot de solo lectura; no resuelve dependencias dinámicas |
+| Event Bus | Implementado; aislamiento de fallos probado | Síncrono; no es una cola/event stream asíncrona |
+| Resource Scope | Implementado y probado | Limpieza genérica; no infiere ownership |
+| GPU Resource Manager | Implementado y probado | Disponible como servicio; adopción productiva sigue siendo explícita y parcial |
+| Viewer / Scene / Lighting / Metal / Gem | Adaptadores de producción | Contratos estables que delegan; no son motores autónomos ni reemplazos |
+| AURUM IMPORT / Pipeline Manager | Integrado y probado | Sigue delegando decodificación, conversión y normalización; ampliar pruebas CAD reales |
+| Smart Scan | Implementado, solo lectura | Triaje ligero; no sustituye diagnóstico profundo |
+| Geometry / Surface / Solid / Intersection / Broadphase | Implementados como diagnósticos | No reparan ni fusionan geometría; revisar precisión y escalabilidad |
+| Metal Union / Visual Weld | Experimental | No habilitar por defecto; revisar CSG, costuras y normales con fixtures CAD |
+| Edge Quality | Parcial | MSAA/TAA existentes; SSAA no implementado |
+| Final Render | Adaptador implementado | Path tracer existente bajo demanda; revisar restauración de estado y coste |
+| Gem Transition | Desactivado | No reactivar durante auditoría |
+
+### Restricciones de validación antes de declarar cierre
+
+- No declarar un módulo autónomo solo porque esté registrado en Plugin Registry.
+- No transferir recursos de renderer/scene/materiales/HDRI/BVH al GPU Resource Manager sin mapear creación, compartición y liberación por propietario.
+- No ampliar Metal Union ni Visual Weld a geometrías Mesh/SubD ni relajar reglas de capas hasta contar con pruebas de manifold, tolerancias, atributos, normales y GLB round-trip.
+- No modificar el motor óptico, shaders, perfiles, HDRI, calibración de metales ni pipeline de interacción para completar la documentación.
+- La auditoría de Lovable debe comenzar en modo solo lectura y entregar evidencias por archivo/línea, severidad, impacto, recomendación y pruebas necesarias.
+
+### Estado CI
+
+El workflow de calidad está configurado para build, TypeScript, ESLint, pruebas de regresión AURUM y checks Deno. La existencia de esos pasos no acredita que el commit actual haya pasado: registrar el resultado real de GitHub Actions al momento de la auditoría. Si no hay ejecución disponible, marcarlo como pendiente.
