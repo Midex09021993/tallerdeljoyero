@@ -119,7 +119,7 @@ Lovable debe entregar primero un informe de auditoría sin modificar código. De
 | Smart Scan | Implementado, solo lectura | Triaje ligero; no sustituye diagnóstico profundo |
 | Geometry / Surface / Solid / Intersection / Broadphase | Implementados como diagnósticos | No reparan ni fusionan geometría; revisar precisión y escalabilidad |
 | Metal Union / Visual Weld | Experimental | No habilitar por defecto; revisar CSG, costuras y normales con fixtures CAD |
-| Edge Quality | Parcial | MSAA/TAA existentes; SSAA no implementado |
+| Edge Quality | Parcial | MSAA integrado; TAA desactivado en el visor en vivo (se conserva para capturas explícitas); SSAA no implementado |
 | Final Render | Adaptador implementado | Path tracer existente bajo demanda; revisar restauración de estado y coste |
 | Gem Transition | Desactivado | No reactivar durante auditoría |
 
@@ -265,7 +265,7 @@ El mapa de arquitectura de la sección interna de Herramientas se actualizó par
 - **GLB Quality Gate:** existe como módulo de validación y tiene pruebas de round-trip. El punto de invocación exacto dentro de cada ruta productiva debe confirmarse durante la auditoría.
 - **Surface:** diagnóstico experimental de solo lectura; no suelda ni repara.
 - **Metal Union / Visual Weld:** experimentales y no habilitados por defecto.
-- **Post / Edge Quality:** MSAA está integrado en los targets del compositor; TAA permanece en el pipeline de postprocesado; SSAA no está implementado.
+- **Post / Edge Quality:** MSAA está integrado en los targets del compositor; TAA está desactivado tanto en movimiento como en reposo del visor en vivo y se conserva para capturas explícitas; SSAA no está implementado.
 - **Final Render / exportación:** el usuario reporta que el flujo ya funciona correctamente. Se refleja como funcional en revisión preliminar, no como validación técnica certificada. La auditoría debe comprobar fidelidad de salida, restauración del visor y limpieza de recursos sin reabrir cambios funcionales innecesarios.
 - **Video Export / Image Export:** flujos separados que se conectan al visor productivo; no son plugins independientes del Registry.
 - **AURUM GEM TRANSITION:** suspendido. No reactivar.
