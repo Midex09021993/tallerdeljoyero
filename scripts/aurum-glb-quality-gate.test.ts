@@ -50,6 +50,38 @@ test("quality gate blocks lost triangles, gems, invalid geometry and changed bou
   mesh.geometry.dispose();
 });
 
+test("quality gate accepts an intentional metal union and verifies source provenance round-trip", () => {
+  const root = new THREE.Group();
+  const metal = new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.9, roughness: 0.2 });
+  metal.name = "Oro 18K";
+  const union = new THREE.Mesh(new THREE.BoxGeometry(2, 0.4, 2), metal);
+  union.name = "AURUM · Metal visual union 1";
+  union.userData.aurumMetalUnionExperiment = true;
+  union.userData.aurumUnionSource = [
+    { uuid: "source-body-a", name: "Aro exterior", layerKey: "metal-main" },
+    { uuid: "source-body-b", name: "Aro interior", layerKey: "metal-main" },
+  ];
+  root.add(union);
+  const source = captureAurumGlbQualitySnapshot(root);
+  const reopened = new THREE.Group();
+  const reopenedUnion = new THREE.Mesh(union.geometry.clone(), metal.clone());
+  reopenedUnion.userData = structuredClone(union.userData);
+  reopened.add(reopenedUnion);
+  const report = evaluateAurumGlbQuality(source, captureAurumGlbQualitySnapshot(reopened));
+  expect(source.meshCount).toBe(1);
+  expect(source.metalUnionMeshCount).toBe(1);
+  expect(source.metalUnionSourceCount).toBe(2);
+  expect(report.status).toBe("passed");
+  expect(report.metalUnionSourceCount).toBe(2);
+  const damaged = new THREE.Group();
+  const lostProvenance = new THREE.Mesh(union.geometry.clone(), metal.clone());
+  damaged.add(lostProvenance);
+  const failed = evaluateAurumGlbQuality(source, captureAurumGlbQualitySnapshot(damaged));
+  expect(failed.status).toBe("failed");
+  expect(failed.issues.map((issue) => issue.code)).toContain("METAL_UNION_PROVENANCE_LOSS");
+  for (const scene of [root, reopened, damaged]) scene.traverse((node) => { if ((node as THREE.Mesh).isMesh) (node as THREE.Mesh).geometry.dispose(); });
+});
+
 test("quality gate reports named material loss as a warning", () => {
   const source = makeScene();
   const reopened = makeScene();

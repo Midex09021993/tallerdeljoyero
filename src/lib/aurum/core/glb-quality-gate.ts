@@ -6,6 +6,11 @@ export interface AurumGlbQualitySnapshot {
   readonly invalidPositionMeshes: number;
   readonly meshesWithoutMaterial: number;
   readonly gemMeshCount: number;
+  /** Visible CSG union meshes carrying source provenance. */
+  readonly metalUnionMeshCount: number;
+  /** Number of original metal bodies represented by those union meshes. */
+  readonly metalUnionSourceCount: number;
+  readonly metalUnionSourceKeys: readonly string[];
   readonly bounds: readonly [number, number, number, number, number, number] | null;
   readonly namedMaterials: readonly string[];
 }
@@ -17,13 +22,14 @@ export interface AurumGlbQualityIssue {
 }
 
 export interface AurumGlbQualityReport {
-  readonly version: "1.0.0";
+  readonly version: "2.0.0";
   readonly status: "passed" | "warning" | "failed";
   readonly source: AurumGlbQualitySnapshot;
   readonly reopened: AurumGlbQualitySnapshot;
   readonly triangleRetention: number;
   readonly boundsRelativeDelta: number | null;
   readonly missingNamedMaterials: readonly string[];
+  readonly metalUnionSourceCount: number;
   readonly issues: readonly AurumGlbQualityIssue[];
 }
 
@@ -72,12 +78,25 @@ export function captureAurumGlbQualitySnapshot(root: THREE.Object3D): AurumGlbQu
   let invalidPositionMeshes = 0;
   let meshesWithoutMaterial = 0;
   let gemMeshCount = 0;
+  let metalUnionMeshCount = 0;
+  let metalUnionSourceCount = 0;
+  const metalUnionSourceKeys = new Set<string>();
 
   root.traverse((node) => {
     const mesh = node as THREE.Mesh;
     if (!mesh.isMesh || !isVisibleInTree(mesh)) return;
     meshCount += 1;
     if (isGemMesh(mesh)) gemMeshCount += 1;
+    const unionSources = Array.isArray(mesh.userData?.aurumUnionSource) ? mesh.userData.aurumUnionSource : null;
+    if (mesh.userData?.aurumMetalUnionExperiment === true && unionSources?.length) {
+      metalUnionMeshCount += 1;
+      metalUnionSourceCount += unionSources.length;
+      for (const source of unionSources) {
+        const record = source as Record<string, unknown>;
+        const key = String(record.uuid ?? record.objectId ?? record.name ?? "").trim();
+        if (key) metalUnionSourceKeys.add(key);
+      }
+    }
     const materials = Array.isArray(mesh.material) ? mesh.material : mesh.material ? [mesh.material] : [];
     if (!materials.length) meshesWithoutMaterial += 1;
     for (const material of materials) {
@@ -122,6 +141,9 @@ export function captureAurumGlbQualitySnapshot(root: THREE.Object3D): AurumGlbQu
     invalidPositionMeshes,
     meshesWithoutMaterial,
     gemMeshCount,
+    metalUnionMeshCount,
+    metalUnionSourceCount,
+    metalUnionSourceKeys: Object.freeze([...metalUnionSourceKeys].sort()),
     bounds: boundsTuple,
     namedMaterials: Object.freeze([...namedMaterials].sort()),
   });
@@ -187,24 +209,38 @@ export function evaluateAurumGlbQuality(
     add("GEM_MESH_LOSS", "error", `Se detectaron ${source.gemMeshCount} mallas de gema antes de exportar y ${reopened.gemMeshCount} después de reabrir el GLB.`);
   }
 
+  const sourceUnionKeys = [...source.metalUnionSourceKeys].sort();
+  const reopenedUnionKeys = [...reopened.metalUnionSourceKeys].sort();
+  const unionProvenancePreserved = source.metalUnionMeshCount === reopened.metalUnionMeshCount
+    && source.metalUnionSourceCount === reopened.metalUnionSourceCount
+    && sourceUnionKeys.length === reopenedUnionKeys.length
+    && sourceUnionKeys.every((key, index) => key === reopenedUnionKeys[index]);
+  if (source.metalUnionMeshCount > 0 && !unionProvenancePreserved) {
+    add("METAL_UNION_PROVENANCE_LOSS", "error", "El GLB no conservó la trazabilidad de los cuerpos metálicos que formaron las uniones visuales.");
+  }
+
   const reopenedMaterials = new Set(reopened.namedMaterials);
   const missingNamedMaterials = source.namedMaterials.filter((name) => !reopenedMaterials.has(name));
   if (missingNamedMaterials.length > 0) {
     add("NAMED_MATERIALS_MISSING", "warning", `No se recuperaron los nombres de estos materiales: ${missingNamedMaterials.join(", ")}.`);
   }
+  // The source snapshot is intentionally captured AFTER Metal Union. Therefore
+  // its reduced visible mesh count already includes every accepted fusion.
+  // Any additional reduction during GLB serialization is still unexpected loss.
   if (source.meshCount > 0 && reopened.meshCount < source.meshCount) {
-    add("MESH_COUNT_REDUCED", "error", "El GLB reabierto contiene menos nodos de malla que la escena exportada; se bloquea para evitar pérdida silenciosa de cuerpos.");
+    add("MESH_COUNT_REDUCED", "error", "El GLB reabierto contiene menos mallas que la escena posterior a Metal Union; se bloquea para evitar pérdida adicional de cuerpos.");
   }
 
   const hasErrors = issues.some((issue) => issue.severity === "error");
   return Object.freeze({
-    version: "1.0.0",
+    version: "2.0.0",
     status: hasErrors ? "failed" : issues.length ? "warning" : "passed",
     source,
     reopened,
     triangleRetention,
     boundsRelativeDelta: boundsDelta,
     missingNamedMaterials: Object.freeze(missingNamedMaterials),
+    metalUnionSourceCount: reopened.metalUnionSourceCount,
     issues: Object.freeze(issues),
   });
 }
