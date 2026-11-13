@@ -55,6 +55,9 @@ const RESOURCE_KINDS: readonly AurumGpuResourceKind[] = [
 export function createAurumGpuResourceManager(): AurumGpuResourceManager {
   const entries = new Map<DisposableResource, ResourceEntry>();
   const owners = new Map<string, Set<DisposableResource>>();
+  // A resource disposed by this manager must never be reintroduced: Three.js
+  // dispose() is not a reset operation and re-tracking would permit double teardown.
+  const disposedResources = new WeakSet<DisposableResource>();
   let disposed = false;
 
   const assertActive = () => {
@@ -74,6 +77,7 @@ export function createAurumGpuResourceManager(): AurumGpuResourceManager {
       entries.delete(resource);
       // Remove ownership before disposal so a throwing disposer cannot cause
       // a second attempt or leave a phantom reference in the manager.
+      disposedResources.add(resource);
       resource.dispose();
     }
     return true;
@@ -92,6 +96,9 @@ export function createAurumGpuResourceManager(): AurumGpuResourceManager {
       }
       if (!resource || typeof resource.dispose !== "function") {
         throw new Error("AURUM GPU resources must expose a dispose() method.");
+      }
+      if (disposedResources.has(resource)) {
+        throw new Error("AURUM GPU resource has already been disposed by this manager.");
       }
       if (!RESOURCE_KINDS.includes(kind)) throw new Error(`Unknown AURUM GPU resource kind "${kind}".`);
 
