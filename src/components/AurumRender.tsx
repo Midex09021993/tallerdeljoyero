@@ -2217,8 +2217,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             gemMeshes++;
             const layer=layerName.toLocaleLowerCase();
             const key=layer||String(meta.layerKey??x.uuid);
+            // applyAurumGemToTarget resolves and updates every mesh in a layer.
+            // Deduplicate here so a CAD layer with many tessellated meshes is
+            // assigned once instead of repeating the same full-layer operation.
+            if(visited.has(key))return;
             visited.add(key);
-            // Apply to every matching mesh, not just the first mesh in a layer.
             aplicarGema(g,x,false,false);
           });
           console.info("[AURUM][CATALOG GEM] Selección aplicada", {gemId:g.id, gemMeshes, layers:visited.size});
@@ -4454,7 +4457,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                     onClick={()=>{
                       setBibliotecaTipo("gemas");
                       setGemaId(g.id);
-                      const hasSelectedGemTarget = parteSeleccionadaCategoria === "gema" && Boolean(parteSeleccionada);
+                      const hasSelectedGemTarget = parteSeleccionadaCategoria !== "metal" && Boolean(parteSeleccionada);
                       if (hasSelectedGemTarget && typeof apiRef.current?.gema === "function") {
                         // Changing the catalog choice updates the already-selected
                         // gemstone immediately; no second click on the 3D model.
