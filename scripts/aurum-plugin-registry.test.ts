@@ -294,3 +294,126 @@ test("AURUM Event Bus unsubscribe is idempotent and stale disposers cannot remov
 
   expect(received).toBe(10);
 });
+
+
+test("AURUM CORE completes the full plugin lifecycle with dependency order, events, abort and resource release", async () => {
+  const calls: string[] = [];
+  const registry = new AurumPluginRegistry(createContext());
+
+  registry.register({
+    id: "aurum.scene",
+    version: "1.0.0",
+    initialize: (context) => {
+      calls.push("scene:initialize");
+      const unsubscribe = context.events.on<{ id: string }>("aurum.module.activated", ({ id }) => {
+        calls.push(`scene:event:${id}`);
+      });
+      context.resources.add(unsubscribe);
+      context.resources.track({
+        async dispose() {
+          await Promise.resolve();
+          calls.push("scene:resource-dispose");
+        },
+      });
+      return {
+        activate: () => {
+          calls.push("scene:activate");
+          context.events.emit("aurum.module.activated", { id: "scene" });
+        },
+        deactivate: () => {
+          calls.push(`scene:deactivate:aborted=${context.signal.aborted}`);
+          context.events.emit("aurum.module.deactivated", { id: "scene" });
+        },
+        dispose: () => { calls.push("scene:runtime-dispose"); },
+      };
+    },
+  });
+
+  registry.register({
+    id: "aurum.viewer",
+    version: "1.0.0",
+    dependencies: ["aurum.scene"],
+    initialize: (context) => {
+      calls.push("viewer:initialize");
+      const unsubscribe = context.events.on<{ id: string }>("aurum.module.deactivated", ({ id }) => {
+        calls.push(`viewer:event:${id}`);
+      });
+      context.resources.add(unsubscribe);
+      return {
+        activate: () => {
+          calls.push("viewer:activate");
+          context.events.emit("aurum.module.activated", { id: "viewer" });
+        },
+        deactivate: () => {
+          calls.push(`viewer:deactivate:aborted=${context.signal.aborted}`);
+        },
+        dispose: () => { calls.push("viewer:runtime-dispose"); },
+      };
+    },
+  });
+
+  await registry.start();
+  expect(registry.getState()).toBe("running");
+  expect(calls).toEqual([
+    "scene:initialize",
+    "scene:activate",
+    "scene:event:scene",
+    "viewer:initialize",
+    "viewer:activate",
+    "scene:event:viewer",
+  ]);
+
+  await registry.dispose();
+  expect(registry.getState()).toBe("disposed");
+  expect(calls.slice(6)).toEqual([
+    "viewer:deactivate:aborted=true",
+    "viewer:runtime-dispose",
+    "scene:deactivate:aborted=true",
+    "viewer:event:scene",
+    "scene:runtime-dispose",
+    "scene:resource-dispose",
+  ]);
+});
+
+test("AURUM CORE rolls back a plugin whose activation fails and remains restart-safe", async () => {
+  const calls: string[] = [];
+  const registry = new AurumPluginRegistry(createContext());
+
+  registry.register({
+    id: "aurum.scene",
+    version: "1.0.0",
+    initialize: (context) => {
+      context.resources.add(() => { calls.push("scene:resource-dispose"); });
+      return {
+        activate: () => { calls.push("scene:activate"); },
+        deactivate: () => { calls.push("scene:deactivate"); },
+        dispose: () => { calls.push("scene:runtime-dispose"); },
+      };
+    },
+  });
+  registry.register({
+    id: "aurum.viewer",
+    version: "1.0.0",
+    dependencies: ["aurum.scene"],
+    initialize: () => ({
+      activate: () => { calls.push("viewer:activate"); throw new Error("viewer activation failed"); },
+      deactivate: () => { calls.push("viewer:deactivate"); },
+      dispose: () => { calls.push("viewer:runtime-dispose"); },
+    }),
+  });
+
+  await expect(registry.start()).rejects.toThrow("viewer activation failed");
+  expect(registry.getState()).toBe("idle");
+  expect(calls).toEqual([
+    "scene:activate",
+    "viewer:activate",
+    "viewer:deactivate",
+    "viewer:runtime-dispose",
+    "scene:deactivate",
+    "scene:runtime-dispose",
+    "scene:resource-dispose",
+  ]);
+
+  await registry.start();
+  expect(registry.getState()).toBe("idle");
+});
