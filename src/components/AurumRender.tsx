@@ -1846,6 +1846,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         // Prepare the gemstone optical runtime before presenting the initial
         // settled frame. The BVH keeps its existing safe material fallback on error.
         await asegurarDiamanteBvh();
+        // Synchronize the newly prepared gemstone BVH with the loaded model
+        // before any initial presentation frame can consume its acceleration data.
+        diamondBvhRuntime?.update();
         // Hide procedural inclusions by default for performance. The explicit
         // emerald-inclusions profile is re-enabled below for controlled live
         // validation; other emerald grades stay clean.
