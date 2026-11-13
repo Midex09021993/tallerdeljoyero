@@ -522,15 +522,11 @@ export async function createAurumPostPipeline(
       ssaoPass.maxDistance=Math.max(.02,Number(config.ssaoFalloff??(ssaoPass.kernelRadius*2.5)));
     }
     if(bloomPass){
-      // Bloom is only active for profiles that explicitly request it and is
-      // excluded from the lightweight PNG AA-only capture path.
-      bloomPass.enabled=!options.capture && Boolean(config.bloom) && high;
-      // The beauty buffer is already tone-mapped by the live material pipeline.
-      // A threshold above 1.0 therefore starves UnrealBloomPass of highlights.
-      // Use a near-white threshold and a restrained radius/strength so only
-      // the brightest specular peaks produce a soft photographic halo.
-      // Keep this conservative: the pass is luminance-selective, not material-
-      // isolated, so it must not create broad glow around ordinary metal reflections.
+      // Diagnostic isolation: disable Bloom in the live composer to verify
+      // whether bright metal reflections are producing the visible halo.
+      // Keep the configured intensity/threshold intact for a later controlled
+      // A/B test; capture paths already select their own pass set.
+      bloomPass.enabled=false;
       bloomPass.strength=Math.min(0.04,Math.max(0,Number(config.bloomIntensity??0.035)));
       bloomPass.threshold=Math.max(0.94,Math.min(0.995,Number(config.bloomThreshold??0.96)));
       bloomPass.radius=Math.min(0.38,Math.max(0,Number(config.bloomRadius??0.32)));
