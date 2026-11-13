@@ -2250,6 +2250,22 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           });
           console.info("[AURUM][CATALOG GEM] Selección aplicada", {gemId:g.id, gemMeshes, layers:visited.size});
           viewerLoopRef.current?.renderNow?.();
+          // Batch public-catalog BVH reconciliation once, after the new physical
+          // materials have painted; do not refresh the full runtime per layer.
+          const refreshCatalogBvh=()=>{
+            if(!vivo||!modelo)return;
+            if(diamondBvhRuntime)diamondBvhRuntime.refresh(modelo);
+            else void asegurarDiamanteBvh();
+            invalidateRenderRef.current?.();
+          };
+          const scheduleCatalogBvh=()=>{
+            if(typeof window!=="undefined" && typeof (window as any).requestIdleCallback==="function"){
+              (window as any).requestIdleCallback(refreshCatalogBvh,{timeout:1800});
+            }else if(typeof window!=="undefined"){
+              window.setTimeout(refreshCatalogBvh,120);
+            }
+          };
+          if(typeof window!=="undefined")window.requestAnimationFrame(scheduleCatalogBvh);
           return gemMeshes > 0;
         },
         escenario:aplicarEscenario,
