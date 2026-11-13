@@ -2747,9 +2747,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             controles.update?.();
             diamondBvhRuntime?.update();
             aplicarPerfilLive();
+            // Rebuild the live beauty frame after the temporary video-sized
+            // composer/buffer has been restored. A demand-driven viewport can
+            // otherwise keep the last export frame until the next user interaction.
+            resetTemporalAccumulationRef.current?.();
+            loop?.resize?.();
             loop?.invalidate?.();
             loop?.resume?.();
-            loop?.resize?.();
+            loop?.converge?.(4);
           }
         },
         setDepthOfField:(enabled:boolean,strength:"soft"|"medium"|"strong"="soft")=>{
