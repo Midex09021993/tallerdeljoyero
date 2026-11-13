@@ -313,3 +313,36 @@ Usar siempre tres estados distintos:
 - **Autónomo:** el módulo tiene contrato, dependencias y propiedad de recursos suficientemente aislados para evolucionar o sustituirse sin acoplamiento indebido.
 
 Un módulo puede estar implementado y registrado sin ser todavía autónomo ni instalable de forma independiente.
+
+## 10. Guía operativa: qué módulo tocar según el problema
+
+Esta guía complementa el mapa visual de Herramientas. La ruta indicada es el primer punto de inspección, no una autorización para modificar directamente el adaptador. Los adaptadores publican contratos; el trabajo real puede seguir perteneciendo a controladores y motores existentes.
+
+| Módulo | Responsabilidad comprobada | Cuándo investigarlo primero | Archivos principales |
+|---|---|---|---|
+| Plugin Registry | Registra plugins, valida dependencias y administra inicialización, rollback y cierre. | Alta/baja de plugins, orden de arranque o errores del ciclo de vida. | `src/lib/aurum/core/plugin-registry.ts` |
+| Service Container | Registra servicios durante la composición y entrega una vista sellada de solo lectura. | Un módulo no encuentra un servicio o cambia el contrato compartido. | `src/lib/aurum/core/service-container.ts` |
+| Event Bus | Publica y distribuye eventos de ciclo de vida; hoy activación y desactivación. | Eventos no recibidos, listeners duplicados o limpieza de suscripciones. | `src/lib/aurum/core/context.ts` |
+| Resource Scope | Agrupa disposers/limpieza por plugin. No posee automáticamente recursos GPU. | Fugas de listeners o recursos que no se liberan al cerrar un plugin. | `src/lib/aurum/core/context.ts` |
+| Viewer Adapter | Expone referencias al renderer, cámara, controles y host; no crea ni dispone esos recursos. | Contrato de acceso al visor. | `src/lib/aurum/core/viewer-adapter.ts` |
+| Scene Adapter | Expone el controlador de escena existente. | Composición y acceso al controlador de escena. | `src/lib/aurum/core/scene-adapter.ts`, `src/lib/aurum/scene.ts` |
+| Light Engine | Acceso al controlador de iluminación, luces, rigs y entornos. | Luces, presets, HDRI o entorno de metales/gemas. | `src/lib/aurum/core/lighting-adapter.ts`, `lighting.ts`, `environment.ts`, `gem-environment.ts` |
+| Metal Engine | Delegación de perfiles/aplicación metálica y respuesta de reflexión; calibración pertenece al motor de materiales. | Material, acabado, reflexión o asignación de metal. | `src/lib/aurum/core/metal-adapter.ts`, `src/lib/aurum-material-engine.ts`, `src/lib/aurum/material-application.ts` |
+| Gem Engine | Delegación de perfiles y aplicación de gemas y respuesta óptica especializada. | Selección, asignación, perfiles o respuesta de gema. | `src/lib/aurum/core/gem-adapter.ts`, `material-application.ts`, `scintillation.ts`, `gem-physical-core.ts` |
+| AURUM IMPORT | Entrada de formatos y delegación a decodificación, conversión y normalización. | Un formato no carga o el GLB resultante es incorrecto. | `src/lib/aurum/core/import-plugin.ts`, `model-loader.ts`, `model-normalizer.ts` |
+| Import Pipeline Manager | Ordena las etapas del pipeline y solicita inspecciones. | Secuencia, coordinación o etapas de importación. | `src/lib/aurum/core/import-pipeline-manager.ts` |
+| AURUM GEOMETRY | Inspección de mallas, posiciones, normales y bounds; diagnósticos sin mutación. | Mallas, sólidos, intersecciones o diagnóstico geométrico. | `src/lib/aurum/core/geometry-engine.ts`, `solid-engine.ts`, `intersection-engine.ts`, `broadphase.ts` |
+| AURUM EDGE QUALITY | Configuración de antialiasing y calidad de bordes; TAA continúa en el pipeline de postprocesado. | Bordes dentados, ghosting, acumulación o artefactos temporales. | `src/lib/aurum/post.ts`, `src/lib/aurum/aurum-post-engine.ts` |
+| AURUM SURFACE | Diagnóstico experimental de aristas coincidentes; no suelda ni repara geometría. | Investigación de costuras y continuidad visual entre cuerpos. | `src/lib/aurum/core/surface-engine.ts` |
+| Final Render Adapter | Publica captura final bajo demanda y delega en la ruta especializada. | Captura final, path tracing o calidad de exportación de imagen. | `src/lib/aurum/core/final-render-adapter.ts`, `path-traced-capture.ts`, `path-tracer-final.ts` |
+
+### Cómo usar esta guía sin introducir regresiones
+
+1. Identificar el síntoma y localizar el módulo responsable en la tabla.
+2. Leer el adaptador y el motor/controlador al que delega antes de editar.
+3. Confirmar si el cambio afecta recursos compartidos, GPU, shaders, BVH, HDRI o calibraciones.
+4. Añadir o actualizar una prueba del contrato/comportamiento afectado.
+5. Ejecutar typecheck, lint, build y pruebas pertinentes; si CI no ejecuta jobs, marcar la validación como pendiente.
+6. Comparar una escena de referencia y medir la interacción antes de aceptar el cambio.
+
+**Regla:** no editar `AurumRender.tsx` por defecto. Es el host de integración y aún concentra responsabilidades; primero determinar si el comportamiento pertenece a un adaptador o motor especializado.
