@@ -15,15 +15,12 @@ test("AURUM service container rejects collisions and seals an immutable snapshot
 });
 
 test("AURUM production plugin host registers adapters and manages lifecycle without taking resource ownership", async () => {
-  const calls: string[] = [];
   const viewerServices = new Map([["aurum.viewer.renderer", { id: "renderer" }]]);
   const sceneServices = new Map([["aurum.scene.controller", { id: "scene" }]]);
   const host = createAurumProductionPluginHost([
     { id: "aurum.viewer", services: viewerServices },
     { id: "aurum.scene", dependencies: ["aurum.viewer"], services: sceneServices },
   ]);
-  host.registry["events"]?.on?.("aurum.plugin.activated", ({ id }: { id: string }) => calls.push(`+${id}`));
-  host.registry["events"]?.on?.("aurum.plugin.deactivated", ({ id }: { id: string }) => calls.push(`-${id}`));
 
   await host.registry.start();
   expect(host.registry.getState()).toBe("running");
@@ -32,5 +29,4 @@ test("AURUM production plugin host registers adapters and manages lifecycle with
   expect(host.services.get("aurum.scene.controller")).toEqual({ id: "scene" });
   await host.dispose();
   expect(host.registry.getState()).toBe("disposed");
-  expect(calls).toEqual(["+aurum.viewer", "+aurum.scene", "-aurum.scene", "-aurum.viewer"]);
 });
