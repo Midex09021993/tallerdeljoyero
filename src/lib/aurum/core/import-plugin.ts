@@ -41,6 +41,35 @@ export interface AurumImportPlugin {
   load(request: AurumImportRequest): Promise<AurumImportResult>;
 }
 
+/**
+ * Releases decoder-side geometry after a distinct normalized model is ready.
+ * Geometries still referenced by the retained viewer model are never disposed.
+ * Materials are intentionally excluded because decoder fallbacks may be shared.
+ */
+export function disposeAurumImportSourceGeometry(
+  sourceObject: THREE.Object3D,
+  retainedModel: THREE.Object3D,
+): number {
+  if (sourceObject === retainedModel) return 0;
+
+  const retained = new Set<THREE.BufferGeometry>();
+  retainedModel.traverse((node) => {
+    const mesh = node as THREE.Mesh;
+    if (mesh.isMesh && mesh.geometry?.isBufferGeometry) retained.add(mesh.geometry);
+  });
+
+  const released = new Set<THREE.BufferGeometry>();
+  sourceObject.traverse((node) => {
+    const mesh = node as THREE.Mesh;
+    const geometry = mesh.isMesh ? mesh.geometry : null;
+    if (geometry?.isBufferGeometry && !retained.has(geometry) && !released.has(geometry)) {
+      released.add(geometry);
+      geometry.dispose();
+    }
+  });
+  return released.size;
+}
+
 const SUPPORTED_FORMATS = new Set<AurumImportFormat>(["stl", "obj", "glb", "fbx", "3dm"]);
 
 /**
@@ -125,6 +154,11 @@ export function createAurumImportPlugin(): AurumImportPlugin {
 
       throwIfAborted();
       if (!model) throw new Error("La importación no produjo un modelo normalizado.");
+      // The viewer consumes the normalized model. Decoder-side source buffers
+      // are no longer needed for converted formats; GLB input aliases model and
+      // is therefore retained without a second disposal.
+      const releasedSourceGeometries = disposeAurumImportSourceGeometry(sourceObject, model);
+      if (releasedSourceGeometries > 0) pipeline.push("source-geometry-released");
       return Object.freeze({
         sourceObject,
         model,
