@@ -1927,15 +1927,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           const initialWidth = Math.max(1, renderer.domElement.width || renderer.domElement.clientWidth || 1);
           const initialHeight = Math.max(1, renderer.domElement.height || renderer.domElement.clientHeight || 1);
           fxaaPass.material?.uniforms?.resolution?.value?.set?.(1 / initialWidth, 1 / initialHeight);
-          renderPass.enabled = true;
-          gemMaskPass.enabled = true;
-          fxaaPass.enabled = true;
-          outputPass.enabled = true;
+          const initialBeautyPasses = new Set([renderPass, gemMaskPass, fxaaPass, outputPass]);
+          ((composer as any)?.passes ?? []).forEach((pass: any) => {
+            pass.enabled = initialBeautyPasses.has(pass);
+          });
 
-          // The motion preview is the visual reference for the entire viewport.
-          // Keep temporal accumulation out of the settled preview: it can alter
-          // diamond facet contrast/fire compared with the spatial LIVE image.
-          // TAA remains available to the dedicated high-quality capture pipeline.
+          // The first frame, orbiting preview and settled preview share the same
+          // image pipeline. Temporal/photographic effects are reserved for capture.
           const initialTaaRequested = false;
           if (idleTaaPass) {
             idleTaaPass.enabled = false;
