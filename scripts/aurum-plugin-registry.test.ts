@@ -414,6 +414,6 @@ test("AURUM CORE rolls back a plugin whose activation fails and remains restart-
     "scene:resource-dispose",
   ]);
 
-  await registry.start();
+  await expect(registry.start()).rejects.toThrow("viewer activation failed");
   expect(registry.getState()).toBe("idle");
 });
