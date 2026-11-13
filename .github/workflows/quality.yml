@@ -47,6 +47,8 @@ jobs:
         run: bun test scripts/aurum-lighting-adapter.test.ts
       - name: AURUM metal adapter tests
         run: bun test scripts/aurum-metal-adapter.test.ts
+      - name: AURUM gem adapter tests
+        run: bun test scripts/aurum-gem-adapter.test.ts
       - name: AURUM internal architecture access tests
         run: bun test scripts/aurum-internal-access.test.ts
 
