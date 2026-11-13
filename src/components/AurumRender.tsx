@@ -26,13 +26,13 @@ import { setAurumInclusionsVisible, setAurumEmeraldInclusionsVisible } from "../
 import { setAurumGemShaderQuality } from "../lib/aurum/scintillation";
 import { createAurumLightingController } from "../lib/aurum/lighting";
 import { frameAurumProduct, disposeAurumViewer, createAurumWebGLViewer, startAurumViewerLoop } from "../lib/aurum/viewer";
-import { parseAurumInput, convertAurumToGlb } from "../lib/aurum/model-loader";
+import { createAurumImportPlugin, type AurumImportFormat } from "../lib/aurum/core/import-plugin";
 import { compressAurumGlbWithDraco } from "../lib/draco-export";
 import { getAurumRhinoGeometryType, isAurumRhinoCsgSurface } from "../lib/aurum/metal-union-experiment";
 import { getAurumModelParts } from "../lib/aurum/model-parts";
 import { applyAurumMaterialToModel, applyAurumGemToTarget, clearAurumGemFromTarget, getAurumMaterialAdapterServices } from "../lib/aurum/material-application";
 import { inspectAurumMesh } from "../lib/aurum/mesh-preflight";
-import { normalizeAurumModel } from "../lib/aurum/model-normalizer";
+
 import { applyAurumInitialModelMaterials } from "../lib/aurum/model-materials";
 import { disposeAurumThicknessCacheForTarget } from "../lib/aurum/thickness-map";
 import { createAurumApi, createAurumCatalogApi, type AurumCatalogApi } from "../lib/aurum/api";
@@ -118,6 +118,9 @@ const GemSwatch = ({ g, selected, onClick }: { g:GemaConfig; selected:boolean; o
 type AurumOriginalSource = { name: string; size: number; lastModified: number; storagePath?: string; contentType?: string };
 type AurumProjectDestination = { rutaCarpeta: string; rutaArchivoOriginal?: string | undefined; nombre: string; archivoNombre?: string | undefined; archivoTamano?: number | undefined; archivoModificado?: number | undefined; nombreProyecto?: string | undefined };
 const EXPORT_LEGADO_VISIBLE: boolean = true;
+
+// Import pipeline is an isolated CORE plugin; optical/rendering engines remain untouched.
+const aurumImportPlugin = createAurumImportPlugin();
 
 type AurumRenderProps = { embedded?: boolean; onCatalogApiReady?: (api: AurumCatalogApi | null) => void };
 
@@ -1282,6 +1285,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       };
       const productionPluginHost = createAurumProductionPluginHost([
         { id: "aurum.viewer", services: viewerAdapter.services },
+        { id: "aurum.import", services: new Map([["aurum.import.pipeline", aurumImportPlugin]]) },
         { id: "aurum.scene", dependencies: ["aurum.viewer"], services: sceneAdapter.services },
         { id: "aurum.lighting", dependencies: ["aurum.viewer"], services: lightingController.services },
         { id: "aurum.metal", services: materialAdapterServices.metal },
@@ -1795,39 +1799,22 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         if (!ext || !["stl","obj","glb","fbx","3dm"].includes(ext)) {
           throw new Error("Formato no compatible. Usa STL, OBJ, GLB, FBX o 3DM.");
         }
-        informar(ext === "3dm" ? "Leyendo archivo 3DM..." : "Leyendo archivo...");
-        const objeto = await parseAurumInput(file,ext,material);
+        const importResult = await aurumImportPlugin.load({
+          file,
+          format: ext as AurumImportFormat,
+          fallbackMaterial: material,
+          colorRhinoHex,
+          classifyLayer: clasificarCapa,
+          onProgress: informar,
+          onStage: (stage, details) => loadAuditStep(stage, details),
+        });
+        const objeto = importResult.sourceObject;
+        const interno = importResult.model;
         informar("Archivo leído. Preparando modelo...");
-        loadAuditStep("parse-input-complete", { sourceFormat: ext, objectCount: (() => { let count = 0; objeto.traverse(() => count++); return count; })() });
-        // Rhino trabaja con Z como eje vertical, mientras que AURUM RENDER/Three.js
-        // usa Y como eje vertical. Convertimos únicamente los 3DM para conservar
-        // la orientación "de pie" con la que el modelo fue diseñado en Rhino.
-        if (ext==="3dm") {
-          objeto.rotation.x = -Math.PI / 2;
-          objeto.updateMatrixWorld(true);
-        }
-
-        // GLB ya es una representación render-ready: conserva índices, normales
-        // y materiales authored. Evitamos el round-trip GLB -> THREE -> GLB ->
-        // THREE, que clonaba geometría, recalculaba/creaseaba normales y consumía
-        // CPU/RAM antes de que el modelo llegara al visor.
-        informar(ext==="glb" ? "Preparando visualización..." : "Convirtiendo a GLB...");
-        let interno:any;
-        if (ext==="glb") {
-          informar("Preparando modelo 3D para el visor...");
-          interno = await normalizeAurumModel(
-            objeto, null, ext, colorRhinoHex, clasificarCapa
-          );
-          loadAuditStep("normalize-glb-complete");
-        } else {
-          const glb = await convertAurumToGlb(objeto, colorRhinoHex, clasificarCapa, (stage) => informar(stage));
-          loadAuditStep("convert-to-glb-complete", { sourceFormat: ext });
-          informar("Optimizando estructura para el visor...");
-          interno = await normalizeAurumModel(
-            objeto, glb, ext, colorRhinoHex, clasificarCapa
-          );
-          loadAuditStep("normalize-converted-model-complete");
-        }
+        loadAuditStep("import-pipeline-complete", {
+          sourceFormat: ext,
+          pipeline: importResult.pipeline,
+        });
         // Reject empty or fully hidden conversions before replacing the current jewel.
         // Rhino may transfer a valid 3DM container that contains only construction
         // curves/points or objects hidden by their layer visibility.
