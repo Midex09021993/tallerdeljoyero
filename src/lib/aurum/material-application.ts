@@ -540,7 +540,10 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
       });
     }
     const expectedMaterials=Array.isArray(part.material)?[...part.material]:[part.material];
-    setTimeout(()=>{
+    // The visible catalog material is already assigned. Bake the optional
+    // per-gem thickness map only after the browser has had a chance to paint,
+    // so its CPU ray/grid work cannot delay the first visual response.
+    const bakeThicknessMap=()=>{
       try{
         let root=part;
         while(root?.parent)root=root.parent;
@@ -567,7 +570,14 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
       }catch(error){
         console.warn("[AURUM][GEM THICKNESS MAP]",error);
       }
-    },0);
+    };
+    if(typeof window!=="undefined" && typeof (window as any).requestIdleCallback==="function"){
+      (window as any).requestIdleCallback(bakeThicknessMap,{timeout:1200});
+    }else if(typeof window!=="undefined"){
+      window.setTimeout(bakeThicknessMap,120);
+    }else{
+      bakeThicknessMap();
+    }
   });
   applyGemEnvironment();
   requestRender?.();
