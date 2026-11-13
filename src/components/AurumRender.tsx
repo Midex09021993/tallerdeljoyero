@@ -3107,9 +3107,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               camara.aspect=originalAspect;
               camara.updateProjectionMatrix?.();
             }
-            invalidateRenderRef.current?.();
-            loop?.resume?.();
+            // Rebuild the settled viewport image after the temporary high-resolution
+            // capture. The export changes composer targets and disables optional
+            // passes; restoring their flags alone does not clear stale temporal
+            // accumulation or guarantee a fresh beauty frame on a demand-driven loop.
+            resetTemporalAccumulationRef.current?.();
             loop?.resize?.();
+            loop?.resume?.();
+            loop?.converge?.(4);
           }
           if(!dataUrl||dataUrl.length<1000) {
             throw new Error("La captura del visor está vacía. Espera a que termine de dibujarse y vuelve a intentar.");
