@@ -341,10 +341,11 @@ function HerramientasPage() {
                   <div className="mx-auto max-w-2xl rounded-xl border border-border bg-card px-4 py-3 text-center">
                     <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Infraestructura común</p>
                     <p className="mt-1 text-sm font-semibold text-foreground">AURUM CORE</p>
-                    <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
-                      <div className="rounded-lg bg-muted/50 px-2 py-2"><p className="text-xs font-semibold">Plugin Registry</p><p className="text-[10px] text-muted-foreground">Dependencias y ciclo de vida</p></div>
-                      <div className="rounded-lg bg-muted/50 px-2 py-2"><p className="text-xs font-semibold">Event Bus</p><p className="text-[10px] text-muted-foreground">Comunicación entre módulos</p></div>
-                      <div className="rounded-lg bg-muted/50 px-2 py-2"><p className="text-xs font-semibold">Resource Scope</p><p className="text-[10px] text-muted-foreground">Propiedad y liberación</p></div>
+                    <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                      <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-2 py-2"><p className="text-xs font-semibold">Plugin Registry</p><p className="text-[10px] text-emerald-700 dark:text-emerald-400">Ciclo de vida conectado</p></div>
+                      <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-2 py-2"><p className="text-xs font-semibold">Service Container</p><p className="text-[10px] text-emerald-700 dark:text-emerald-400">Servicios registrados y sellados</p></div>
+                      <div className="rounded-lg bg-muted/50 px-2 py-2"><p className="text-xs font-semibold">Event Bus</p><p className="text-[10px] text-muted-foreground">Eventos de activación y cierre</p></div>
+                      <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-2 py-2"><p className="text-xs font-semibold">Resource Scope</p><p className="text-[10px] text-emerald-700 dark:text-emerald-400">Recursos propios por plugin</p></div>
                     </div>
                   </div>
                   <div className="mx-auto h-6 w-px bg-border" />
@@ -368,7 +369,7 @@ function HerramientasPage() {
                     <p className="mt-1 text-[10px] text-muted-foreground">Escena · Cámara · Renderer · Controles · Geometría · Materiales · HDRI · GPU</p>
                   </div>
                 </div>
-                <p className="mx-auto mt-3 max-w-4xl text-[11px] leading-5 text-muted-foreground">Viewer Adapter, Scene Adapter, Lighting Adapter, Metal Adapter, Gem Adapter y Final Render Adapter ya exponen servicios estables del motor. Final Render Adapter delega en el path tracer aislado de producción; mantiene su clonación de escena, muestreo progresivo, rebotes, HDRI independiente para gemas y restauración del estado del renderer. No reemplaza el render interactivo ni modifica los shaders ópticos.</p>
+                <p className="mx-auto mt-3 max-w-4xl text-[11px] leading-5 text-muted-foreground">AURUM CORE registra Viewer, Scene, Lighting, Metal, Gem y Final Render como módulos administrados por Plugin Registry. Service Container publica un snapshot de solo lectura; cada plugin recibe su propio Resource Scope y el Event Bus notifica activaciones y cierres. Los controladores de producción conservan la propiedad de renderer, luces, escena y materiales. Final Render carga el path tracer bajo demanda y no reemplaza el render interactivo ni modifica los shaders ópticos.</p>
               </div>
               <div className="grid gap-3 p-5 sm:grid-cols-2 sm:p-7 lg:grid-cols-3">
                 <article className="rounded-xl border border-border p-4">
