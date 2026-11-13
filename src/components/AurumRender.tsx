@@ -3552,22 +3552,22 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // Only expensive/optional photographic passes are disabled; RenderPass,
             // gem mask, gem FXAA and OutputPass remain identical in both states.
             const requestedDpr = Math.max(1, Math.min(2, renderQuality.pixelRatio));
-            const interactionDpr = Math.min(
-              measuredQualityId === "low" ? requestedDpr : Math.max(requestedDpr, 1.65),
-              runtimeBudget.pixelRatioCap,
-            );
+            // Respect selected quality and runtime GPU budget; never upscale for orbit.
+            const interactionDpr = Math.min(requestedDpr, runtimeBudget.pixelRatioCap);
             renderer.setPixelRatio(interactionDpr);
             composer?.setPixelRatio?.(interactionDpr);
 
-            const coreBeautyPasses = new Set([renderPass, gemMaskPass, fxaaPass, outputPass]);
+            // Keep ambient occlusion for metal contact/depth; its scale is quality-managed.
+            const coreBeautyPasses = new Set([renderPass, ssaoPass, gemMaskPass, fxaaPass, outputPass]);
             const interactionPasses = ((composer as any)?.passes ?? []) as any[];
             interactionPasses.forEach((pass) => { pass.enabled = coreBeautyPasses.has(pass); });
             const sameBeautyPipelineAvailable = Boolean(composer && renderPass && gemMaskPass && fxaaPass && outputPass);
             liveFastPathRef.current = !sameBeautyPipelineAvailable;
 
-            // The LIVE gemstone material profile is held constant across both states.
-            aplicarPerfilLive(true);
-            renderer.shadowMap.enabled = false;
+            // Preserve authored gem/metal materials while orbiting; LIVE overrides
+            // transmission and clearcoat and visibly changes the optical result.
+            // Shadow maps are static between scene/light edits: reuse the cache.
+            renderer.shadowMap.enabled = Boolean(renderQuality.shadows);
             renderer.shadowMap.needsUpdate = false;
             invalidateRenderRef.current?.();
           },
@@ -3593,6 +3593,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             );
             const coreBeautyPasses = new Set([
               renderPass,
+              ssaoPass,
               gemMaskPass,
               fxaaPass,
               outputPass,
@@ -3603,7 +3604,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
 
             const sameBeautyPipelineAvailable = Boolean(composer && renderPass && gemMaskPass && fxaaPass && outputPass);
             liveFastPathRef.current = !sameBeautyPipelineAvailable;
-            if (!gemTransitionRef.current?.active) aplicarPerfilLive(true);
+            if (!gemTransitionRef.current?.active) aplicarPerfilLive(false);
             // This transition enables accumulation only when applyQuality()
             // requested TAA for the current quality profile.
             if (gemTransitionRef.current?.active) {
@@ -3628,7 +3629,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               renderPass.clearColor = null;
               renderPass.clearAlpha = 0;
             }
-            renderer.shadowMap.enabled = false;
+            renderer.shadowMap.enabled = Boolean(renderQuality.shadows);
             renderer.shadowMap.needsUpdate = false;
 
             console.info("[AURUM][RENDER PIPELINE]", {
