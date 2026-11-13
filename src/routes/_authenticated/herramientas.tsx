@@ -331,7 +331,7 @@ function HerramientasPage() {
                 <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-gold">Tecnología desarrollada por AURUM LAB</p>
                 <h2 id="aurum-render-arquitectura-title" className="mt-2 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">¿Cómo está construido AURUM RENDER?</h2>
                 <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">
-                  Utilizamos Three.js y WebGL como base gráfica y desarrollamos sobre ellos módulos especializados para visualizar joyería: materiales, gemas, iluminación, geometría y captura de alta calidad.
+                  Three.js y WebGL forman la base gráfica. Sobre ellos, AURUM RENDER integra contratos modulares, motores especializados, pipelines de importación y geometría, y flujos separados de captura de imagen, vídeo y render final.
                 </p>
               </div>
               <div className="border-b border-border bg-muted/10 px-5 py-6 sm:px-8">
@@ -351,12 +351,13 @@ function HerramientasPage() {
                   <div className="mx-auto h-6 w-px bg-border" />
                   <div className="mx-auto max-w-2xl rounded-xl border border-border bg-card px-4 py-3 text-center">
                     <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Infraestructura común</p>
-                    <p className="mt-1 text-sm font-semibold text-foreground">AURUM CORE</p>
-                    <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
-                      <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-2 py-2"><p className="text-xs font-semibold">Plugin Registry</p><p className="text-[10px] text-emerald-700 dark:text-emerald-400">Arranque y cierre conectados</p></div>
+                    <p className="mt-1 text-sm font-semibold text-foreground">AURUM CORE · contratos y ciclo de vida</p>
+                    <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5">
+                      <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-2 py-2"><p className="text-xs font-semibold">Plugin Registry</p><p className="text-[10px] text-emerald-700 dark:text-emerald-400">Contratos, dependencias y ciclo de vida</p></div>
                       <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-2 py-2"><p className="text-xs font-semibold">Service Container</p><p className="text-[10px] text-emerald-700 dark:text-emerald-400">Servicios registrados · solo lectura</p></div>
-                      <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-2 py-2"><p className="text-xs font-semibold">Event Bus</p><p className="text-[10px] text-amber-700 dark:text-amber-400">Eventos de ciclo de vida</p></div>
-                      <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-2 py-2"><p className="text-xs font-semibold">Resource Scope</p><p className="text-[10px] text-amber-700 dark:text-amber-400">Scopes creados · GPU pendiente</p></div>
+                      <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-2 py-2"><p className="text-xs font-semibold">Event Bus</p><p className="text-[10px] text-emerald-700 dark:text-emerald-400">Ciclo de vida · fallos aislados y reportados</p></div>
+                      <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 px-2 py-2"><p className="text-xs font-semibold">Resource Scope</p><p className="text-[10px] text-emerald-700 dark:text-emerald-400">Limpieza por plugin · sin ownership GPU implícito</p></div>
+                      <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-2 py-2"><p className="text-xs font-semibold">GPU Resource Manager</p><p className="text-[10px] text-amber-700 dark:text-amber-400">Servicio disponible · adopción controlada</p></div>
                     </div>
                   </div>
                   <div className="mx-auto h-6 w-px bg-border" />
@@ -365,37 +366,44 @@ function HerramientasPage() {
                       <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Adaptadores y motores especializados</p>
                       <p className="text-[10px] text-muted-foreground">Registrado = integrado en el host · Bajo demanda = se crea al utilizarlo</p>
                     </div>
-                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                      <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3"><p className="text-xs font-semibold">Viewer Adapter</p><p className="mt-1 text-[10px] text-sky-700 dark:text-sky-400">Registrado en producción</p></div>
-                      <div className="rounded-lg border border-border p-3"><p className="text-xs font-semibold">Scene Adapter</p><p className="mt-1 text-[10px] text-sky-700 dark:text-sky-400">Registrado en producción</p></div>
-                      <div className="rounded-lg border border-border p-3"><p className="text-xs font-semibold">Light Engine</p><p className="mt-1 text-[10px] text-sky-700 dark:text-sky-400">Registrado en producción</p></div>
-                      <div className="rounded-lg border border-border p-3"><p className="text-xs font-semibold">Metal Engine</p><p className="mt-1 text-[10px] text-sky-700 dark:text-sky-400">Registrado en producción</p></div>
-                      <div className="rounded-lg border border-border p-3"><p className="text-xs font-semibold">Gem Engine</p><p className="mt-1 text-[10px] text-sky-700 dark:text-sky-400">Registrado en producción</p></div>
-                      <div
-                        aria-disabled="true"
-                        className="rounded-lg border border-amber-500/40 bg-amber-500/5 p-3 text-left opacity-90"
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="text-xs font-semibold">AURUM GEM TRANSITION</p>
-                          <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[9px] font-bold uppercase text-amber-700 dark:text-amber-400">
-                            Suspendido
-                          </span>
-                        </div>
-                        <p className="mt-1 text-[10px] text-muted-foreground">Interpolación progresiva · 240 ms</p>
-                        <p className="mt-1 text-[10px] text-muted-foreground">Desactivado temporalmente para recuperar y validar la apariencia óptica</p>
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+                      <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3"><p className="text-xs font-semibold">Viewer Adapter</p><p className="mt-1 text-[10px] text-sky-700 dark:text-sky-400">Registrado · renderer y cámara compartidos</p></div>
+                      <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3"><p className="text-xs font-semibold">Scene Adapter</p><p className="mt-1 text-[10px] text-sky-700 dark:text-sky-400">Registrado · controlador de escena</p></div>
+                      <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3"><p className="text-xs font-semibold">Light Engine</p><p className="mt-1 text-[10px] text-sky-700 dark:text-sky-400">Registrado · rigs y entornos HDRI</p></div>
+                      <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3"><p className="text-xs font-semibold">Metal Engine</p><p className="mt-1 text-[10px] text-sky-700 dark:text-sky-400">Registrado · adaptador al motor PBR</p></div>
+                      <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3"><p className="text-xs font-semibold">Gem Engine</p><p className="mt-1 text-[10px] text-sky-700 dark:text-sky-400">Registrado · delega en el motor óptico</p></div>
+                      <div aria-disabled="true" className="rounded-lg border border-amber-500/40 bg-amber-500/5 p-3 opacity-90">
+                        <div className="flex items-center justify-between gap-2"><p className="text-xs font-semibold">AURUM GEM TRANSITION</p><span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[9px] font-bold uppercase text-amber-700 dark:text-amber-400">Suspendido</span></div>
+                        <p className="mt-1 text-[10px] text-muted-foreground">Transición progresiva · desactivada mientras se valida la respuesta óptica</p>
                       </div>
-                      <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3"><p className="text-xs font-semibold">AURUM IMPORT · aurum.import</p><p className="mt-1 text-[10px] text-sky-700 dark:text-sky-400">Integrado en el host</p></div>
-                      <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3"><p className="text-xs font-semibold">Import Pipeline Manager</p><p className="mt-1 text-[10px] text-sky-700 dark:text-sky-400">Orquestación implementada</p></div>
-                      <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3"><p className="text-xs font-semibold">AURUM GEOMETRY</p><p className="mt-1 text-[10px] text-sky-700 dark:text-sky-400">Inspección de mallas</p></div>
-                      <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3"><p className="text-xs font-semibold">AURUM EDGE QUALITY</p><p className="mt-1 text-[10px] text-sky-700 dark:text-sky-400">MSAA integrado · TAA existente</p></div>
-                      <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3"><p className="text-xs font-semibold">AURUM SURFACE</p><p className="mt-1 text-[10px] text-amber-700 dark:text-amber-400">Diagnóstico experimental</p></div>
-                      <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3"><p className="text-xs font-semibold">Final Render Adapter</p><p className="mt-1 text-[10px] text-sky-700 dark:text-sky-400">Bajo demanda</p></div>
+                      <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3"><p className="text-xs font-semibold">AURUM IMPORT · aurum.import</p><p className="mt-1 text-[10px] text-sky-700 dark:text-sky-400">Integrado en el host · formatos CAD/3D</p></div>
+                      <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3"><p className="text-xs font-semibold">Import Pipeline Manager</p><p className="mt-1 text-[10px] text-sky-700 dark:text-sky-400">Orquesta etapas de importación</p></div>
+                      <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3"><p className="text-xs font-semibold">Smart Scan</p><p className="mt-1 text-[10px] text-sky-700 dark:text-sky-400">Triaje ligero · solo lectura</p></div>
+                      <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3"><p className="text-xs font-semibold">AURUM GEOMETRY</p><p className="mt-1 text-[10px] text-sky-700 dark:text-sky-400">Inspección de mallas y geometría</p></div>
+                      <div className="rounded-lg border border-border p-3"><p className="text-xs font-semibold">Solid · Intersection · Broadphase</p><p className="mt-1 text-[10px] text-muted-foreground">Diagnósticos geométricos · validar escala y tolerancias</p></div>
+                      <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3"><p className="text-xs font-semibold">AURUM SURFACE</p><p className="mt-1 text-[10px] text-amber-700 dark:text-amber-400">Experimental · diagnóstico de aristas</p></div>
+                      <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3"><p className="text-xs font-semibold">Metal Union · Visual Weld</p><p className="mt-1 text-[10px] text-amber-700 dark:text-amber-400">Experimental · no habilitado por defecto</p></div>
+                      <div className="rounded-lg border border-border p-3"><p className="text-xs font-semibold">AURUM EDGE QUALITY</p><p className="mt-1 text-[10px] text-muted-foreground">MSAA integrado · TAA existente · SSAA pendiente</p></div>
+                      <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3"><p className="text-xs font-semibold">Final Render Adapter</p><p className="mt-1 text-[10px] text-sky-700 dark:text-sky-400">Adaptador bajo demanda · path tracing existente</p></div>
+                    </div>
+                  </div>
+                  <div className="mx-auto h-6 w-px bg-border" />
+                  <div className="rounded-xl border border-gold/25 bg-gold/5 p-3">
+                    <div className="mb-2">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-gold">Pipelines de captura y salida</p>
+                      <p className="mt-1 text-[10px] text-muted-foreground">Flujos integrados en el host del visor; no son plugins independientes del Registry.</p>
+                    </div>
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                      <div className="rounded-lg border border-emerald-500/30 bg-card p-3"><p className="text-xs font-semibold">AURUM IMAGE EXPORT</p><p className="mt-1 text-[10px] text-muted-foreground">Captura del viewport · PNG / JPEG / WebP · composición visual del visor</p></div>
+                      <div className="rounded-lg border border-emerald-500/30 bg-card p-3"><p className="text-xs font-semibold">AURUM VIDEO EXPORT</p><p className="mt-1 text-[10px] text-muted-foreground">Frames del compositor live · MediaRecorder · MP4 cuando está soportado / WebM fallback</p></div>
+                      <div className="rounded-lg border border-border bg-card p-3"><p className="text-xs font-semibold">Aspect Ratio Profiles</p><p className="mt-1 text-[10px] text-muted-foreground">Perfiles compartidos: 16:9 · 1:1 · 4:5 · 9:16 · 3:2</p></div>
+                      <div className="rounded-lg border border-border bg-card p-3"><p className="text-xs font-semibold">Final / Path-Traced Capture</p><p className="mt-1 text-[10px] text-muted-foreground">Captura de alta calidad bajo demanda · validación de restauración pendiente</p></div>
                     </div>
                   </div>
                   <div className="mx-auto h-6 w-px bg-border" />
                   <div className="rounded-xl border border-dashed border-border px-4 py-3 text-center">
                     <p className="text-xs font-semibold text-foreground">Recursos de producción</p>
-                    <p className="mt-1 text-[10px] text-muted-foreground">Escena · Cámara · Renderer · Controles · Geometría · Materiales · HDRI · GPU</p>
+                    <p className="mt-1 text-[10px] text-muted-foreground">Recursos compartidos de producción · la propiedad GPU sigue en los controladores actuales salvo adopción explícita</p>
                   </div>
                 </div>
                 <div className="mx-auto mt-6 max-w-5xl rounded-xl border border-border bg-card p-4 sm:p-5">
@@ -506,7 +514,7 @@ function HerramientasPage() {
                   </div>
                   <p className="mt-4 rounded-lg bg-muted/40 px-3 py-2 text-[10px] leading-5 text-muted-foreground">Regla de seguridad: el adaptador es la puerta de acceso al módulo, no necesariamente el motor que realiza el trabajo. Si el problema está en el resultado óptico, geométrico o de importación, sigue la ruta indicada hasta el motor responsable. No modificar AurumRender.tsx como primera opción sin confirmar que el comportamiento no pertenece a un módulo especializado.</p>
                 </div>
-                <p className="mx-auto mt-3 max-w-4xl text-[11px] leading-5 text-muted-foreground">El host de producción registra Viewer, Scene, Lighting, Metal y Gem en Plugin Registry; Final Render publica un cargador que crea su adaptador al solicitar una captura. AURUM IMPORT (aurum.import) está integrado en el host y orquesta la carga de STL, OBJ, GLB, FBX y 3DM; delega decodificación, conversión y normalización en los componentes de producción. Import Pipeline Manager coordina las etapas de importación y AURUM GEOMETRY inspecciona las mallas. AURUM EDGE QUALITY está separado en módulos y configura MSAA en el compositor; TAA sigue perteneciendo al pipeline de postprocesado existente. SSAA para capturas aún no está implementado. AURUM SURFACE mantiene su diagnóstico experimental de aristas coincidentes, sin fusionar geometría ni modificar el GLB. Service Container entrega un mapa de servicios de solo lectura. Event Bus comunica actualmente los eventos de activación y cierre. La transferencia de propiedad de recursos GPU todavía no está implementada: renderer, escena, luces y materiales siguen bajo sus controladores de producción.</p>
+                <p className="mx-auto mt-3 max-w-4xl text-[11px] leading-5 text-muted-foreground">El Registry gestiona los adaptadores Viewer, Scene, Lighting, Metal y Gem; Final Render se carga bajo demanda. AURUM IMPORT y su Pipeline Manager coordinan la entrada de formatos y delegan decodificación, conversión GLB y normalización en los componentes productivos. Smart Scan y los motores Geometry, Solid, Intersection y Broadphase aportan diagnósticos; Surface y Metal Union / Visual Weld siguen siendo experimentales y no reparan automáticamente el modelo. La salida multimedia está separada en captura de imagen y vídeo: Image Export obtiene la composición del visor; Video Export usa un pipeline de frames del compositor live y codificación MediaRecorder. Los perfiles de relación de aspecto son compartidos entre imagen y vídeo. Esto no convierte esos flujos en plugins autónomos. Edge Quality mantiene MSAA integrado y TAA en el postprocesado; SSAA sigue pendiente. GPU Resource Manager está disponible como servicio, pero la adopción de recursos productivos continúa controlada: renderer, escena, luces, materiales, HDRI y BVH conservan sus propietarios actuales.</p>
               </div>
               <div className="grid gap-3 p-5 sm:grid-cols-2 sm:p-7 lg:grid-cols-3">
                 <article className="rounded-xl border border-border p-4">
@@ -547,7 +555,7 @@ function HerramientasPage() {
                 <article className="rounded-xl border border-border p-4">
                   <div className="mb-3 grid size-9 place-items-center rounded-lg border border-gold/25 bg-gold/10 text-gold"><Gem className="size-4" /></div>
                   <h3 className="text-sm font-semibold">Final Render Pipeline</h3>
-                  <p className="mt-2 text-xs leading-5 text-muted-foreground">Postprocesamiento y una ruta de captura final especializada que utiliza GPU path tracing.</p>
+                  <p className="mt-2 text-xs leading-5 text-muted-foreground">Postprocesamiento, captura de imagen del viewport, exportación de vídeo por frames y ruta de alta calidad con path tracing.</p>
                 </article>
               </div>
               <div className="border-t border-border bg-muted/20 px-5 py-4 sm:px-7">
