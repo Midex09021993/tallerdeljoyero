@@ -383,6 +383,114 @@ function HerramientasPage() {
                     <p className="mt-1 text-[10px] text-muted-foreground">Escena · Cámara · Renderer · Controles · Geometría · Materiales · HDRI · GPU</p>
                   </div>
                 </div>
+                <div className="mx-auto mt-6 max-w-5xl rounded-xl border border-border bg-card p-4 sm:p-5">
+                  <div className="mb-4">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold">Guía de mantenimiento</p>
+                    <h4 className="mt-1 text-base font-semibold text-foreground">¿Qué módulo debo tocar?</h4>
+                    <p className="mt-1 text-xs leading-5 text-muted-foreground">Busca primero el comportamiento que quieres cambiar. La ruta indicada es el punto de entrada para investigar; revisa sus dependencias antes de modificarlo.</p>
+                  </div>
+                  <div className="mb-4">
+                    <p className="mb-2 text-xs font-semibold text-foreground">AURUM CORE · infraestructura compartida</p>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <article className="rounded-lg border border-border p-3">
+                        <p className="text-xs font-semibold">Plugin Registry</p>
+                        <p className="mt-1 text-xs leading-5 text-muted-foreground">Registra módulos, valida dependencias y controla su orden de inicio, activación, rollback y cierre.</p>
+                        <p className="mt-2 font-mono text-[10px] text-sky-700 dark:text-sky-400">src/lib/aurum/core/plugin-registry.ts</p>
+                        <p className="mt-1 text-[10px] text-muted-foreground">Tocar cuando: se incorpora un plugin o se cambia su ciclo de vida.</p>
+                      </article>
+                      <article className="rounded-lg border border-border p-3">
+                        <p className="text-xs font-semibold">Service Container</p>
+                        <p className="mt-1 text-xs leading-5 text-muted-foreground">Registra servicios durante el arranque y entrega un mapa sellado de solo lectura a los módulos.</p>
+                        <p className="mt-2 font-mono text-[10px] text-sky-700 dark:text-sky-400">src/lib/aurum/core/service-container.ts</p>
+                        <p className="mt-1 text-[10px] text-muted-foreground">Tocar cuando: se publica o consume un servicio compartido.</p>
+                      </article>
+                      <article className="rounded-lg border border-border p-3">
+                        <p className="text-xs font-semibold">Event Bus</p>
+                        <p className="mt-1 text-xs leading-5 text-muted-foreground">Distribuye eventos del ciclo de vida entre componentes suscritos; actualmente comunica activación y desactivación.</p>
+                        <p className="mt-2 font-mono text-[10px] text-sky-700 dark:text-sky-400">src/lib/aurum/core/context.ts</p>
+                        <p className="mt-1 text-[10px] text-muted-foreground">Tocar cuando: se añaden eventos o se corrigen suscripciones y limpieza.</p>
+                      </article>
+                      <article className="rounded-lg border border-border p-3">
+                        <p className="text-xs font-semibold">Resource Scope</p>
+                        <p className="mt-1 text-xs leading-5 text-muted-foreground">Agrupa funciones de limpieza asociadas a cada plugin. Todavía no es propietario general de renderer, escena ni recursos GPU.</p>
+                        <p className="mt-2 font-mono text-[10px] text-sky-700 dark:text-sky-400">src/lib/aurum/core/context.ts</p>
+                        <p className="mt-1 text-[10px] text-muted-foreground">Tocar cuando: se registra o libera una suscripción/recurso del plugin.</p>
+                      </article>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="mb-2 text-xs font-semibold text-foreground">Adaptadores y motores · responsabilidades funcionales</p>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <article className="rounded-lg border border-border p-3">
+                        <p className="text-xs font-semibold">Viewer Adapter · aurum.viewer</p>
+                        <p className="mt-1 text-xs leading-5 text-muted-foreground">Expone referencias al renderer, cámara, controles y host del visor. No crea ni dispone esos recursos.</p>
+                        <p className="mt-2 font-mono text-[10px] text-sky-700 dark:text-sky-400">src/lib/aurum/core/viewer-adapter.ts</p>
+                        <p className="mt-1 text-[10px] text-muted-foreground">Tocar cuando: cambia el contrato de acceso al visor o sus servicios publicados.</p>
+                      </article>
+                      <article className="rounded-lg border border-border p-3">
+                        <p className="text-xs font-semibold">Scene Adapter · aurum.scene</p>
+                        <p className="mt-1 text-xs leading-5 text-muted-foreground">Publica el controlador de escena existente y su acceso compartido.</p>
+                        <p className="mt-2 font-mono text-[10px] text-sky-700 dark:text-sky-400">src/lib/aurum/core/scene-adapter.ts · src/lib/aurum/scene.ts</p>
+                        <p className="mt-1 text-[10px] text-muted-foreground">Tocar cuando: cambia la composición o el contrato del controlador de escena.</p>
+                      </article>
+                      <article className="rounded-lg border border-border p-3">
+                        <p className="text-xs font-semibold">Light Engine · aurum.lighting</p>
+                        <p className="mt-1 text-xs leading-5 text-muted-foreground">Coordina luces, rigs, presets y acceso a los entornos HDRI de metales y gemas.</p>
+                        <p className="mt-2 font-mono text-[10px] text-sky-700 dark:text-sky-400">src/lib/aurum/core/lighting-adapter.ts · lighting.ts · environment.ts · gem-environment.ts</p>
+                        <p className="mt-1 text-[10px] text-muted-foreground">Tocar cuando: cambia iluminación, luces o entornos. Proteger calibraciones HDRI.</p>
+                      </article>
+                      <article className="rounded-lg border border-border p-3">
+                        <p className="text-xs font-semibold">Metal Engine · aurum.metal</p>
+                        <p className="mt-1 text-xs leading-5 text-muted-foreground">Aplica perfiles PBR y respuesta de reflexión de los metales; el adaptador delega en el motor de materiales.</p>
+                        <p className="mt-2 font-mono text-[10px] text-sky-700 dark:text-sky-400">src/lib/aurum/core/metal-adapter.ts · src/lib/aurum-material-engine.ts · src/lib/aurum/material-application.ts</p>
+                        <p className="mt-1 text-[10px] text-muted-foreground">Tocar cuando: cambia aplicación, perfil o acabado metálico. No ajustar presets sin pruebas visuales.</p>
+                      </article>
+                      <article className="rounded-lg border border-border p-3">
+                        <p className="text-xs font-semibold">Gem Engine · aurum.gem</p>
+                        <p className="mt-1 text-xs leading-5 text-muted-foreground">Gestiona perfiles y aplicación de gemas y delega la respuesta óptica especializada; depende de Metal.</p>
+                        <p className="mt-2 font-mono text-[10px] text-sky-700 dark:text-sky-400">src/lib/aurum/core/gem-adapter.ts · material-application.ts · scintillation.ts · gem-physical-core.ts</p>
+                        <p className="mt-1 text-[10px] text-muted-foreground">Tocar cuando: cambia selección, perfil o comportamiento de una gema. Proteger shaders y BVH.</p>
+                      </article>
+                      <article className="rounded-lg border border-border p-3">
+                        <p className="text-xs font-semibold">AURUM IMPORT · aurum.import</p>
+                        <p className="mt-1 text-xs leading-5 text-muted-foreground">Recibe formatos de entrada y delega decodificación, conversión a GLB y normalización.</p>
+                        <p className="mt-2 font-mono text-[10px] text-sky-700 dark:text-sky-400">src/lib/aurum/core/import-plugin.ts · model-loader.ts · model-normalizer.ts</p>
+                        <p className="mt-1 text-[10px] text-muted-foreground">Tocar cuando: falla la lectura de un formato o la conversión/entrega del GLB.</p>
+                      </article>
+                      <article className="rounded-lg border border-border p-3">
+                        <p className="text-xs font-semibold">Import Pipeline Manager</p>
+                        <p className="mt-1 text-xs leading-5 text-muted-foreground">Orquesta el orden de etapas de importación y solicita inspecciones; no sustituye al decoder ni transforma por sí solo la geometría.</p>
+                        <p className="mt-2 font-mono text-[10px] text-sky-700 dark:text-sky-400">src/lib/aurum/core/import-pipeline-manager.ts</p>
+                        <p className="mt-1 text-[10px] text-muted-foreground">Tocar cuando: cambia el orden, las etapas o el flujo de importación.</p>
+                      </article>
+                      <article className="rounded-lg border border-border p-3">
+                        <p className="text-xs font-semibold">AURUM GEOMETRY</p>
+                        <p className="mt-1 text-xs leading-5 text-muted-foreground">Inspecciona mallas, posiciones, normales y límites para diagnóstico; la inspección actual es de solo lectura.</p>
+                        <p className="mt-2 font-mono text-[10px] text-sky-700 dark:text-sky-400">src/lib/aurum/core/geometry-engine.ts · solid-engine.ts · intersection-engine.ts · broadphase.ts</p>
+                        <p className="mt-1 text-[10px] text-muted-foreground">Tocar cuando: se investiga geometría, sólidos, intersecciones o rendimiento del análisis.</p>
+                      </article>
+                      <article className="rounded-lg border border-border p-3">
+                        <p className="text-xs font-semibold">AURUM EDGE QUALITY</p>
+                        <p className="mt-1 text-xs leading-5 text-muted-foreground">Configura antialiasing y calidad de bordes en el pipeline de render; MSAA está integrado y TAA pertenece al postprocesado.</p>
+                        <p className="mt-2 font-mono text-[10px] text-sky-700 dark:text-sky-400">src/lib/aurum/post.ts · src/lib/aurum/aurum-post-engine.ts</p>
+                        <p className="mt-1 text-[10px] text-muted-foreground">Tocar cuando: aparecen bordes dentados, ghosting o problemas de acumulación temporal.</p>
+                      </article>
+                      <article className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
+                        <p className="text-xs font-semibold">AURUM SURFACE · experimental</p>
+                        <p className="mt-1 text-xs leading-5 text-muted-foreground">Detecta aristas coincidentes entre cuerpos como diagnóstico. No suelda, no repara ni modifica el GLB.</p>
+                        <p className="mt-2 font-mono text-[10px] text-amber-700 dark:text-amber-400">src/lib/aurum/core/surface-engine.ts</p>
+                        <p className="mt-1 text-[10px] text-muted-foreground">Tocar cuando: se investiga continuidad visual o posibles costuras entre superficies.</p>
+                      </article>
+                      <article className="rounded-lg border border-border p-3">
+                        <p className="text-xs font-semibold">Final Render Adapter</p>
+                        <p className="mt-1 text-xs leading-5 text-muted-foreground">Publica la capacidad de captura final bajo demanda; utiliza la ruta especializada de captura/path tracing.</p>
+                        <p className="mt-2 font-mono text-[10px] text-sky-700 dark:text-sky-400">src/lib/aurum/core/final-render-adapter.ts · path-traced-capture.ts · path-tracer-final.ts</p>
+                        <p className="mt-1 text-[10px] text-muted-foreground">Tocar cuando: falla la captura final o cambia su calidad y proceso.</p>
+                      </article>
+                    </div>
+                  </div>
+                  <p className="mt-4 rounded-lg bg-muted/40 px-3 py-2 text-[10px] leading-5 text-muted-foreground">Regla de seguridad: el adaptador es la puerta de acceso al módulo, no necesariamente el motor que realiza el trabajo. Si el problema está en el resultado óptico, geométrico o de importación, sigue la ruta indicada hasta el motor responsable. No modificar AurumRender.tsx como primera opción sin confirmar que el comportamiento no pertenece a un módulo especializado.</p>
+                </div>
                 <p className="mx-auto mt-3 max-w-4xl text-[11px] leading-5 text-muted-foreground">El host de producción registra Viewer, Scene, Lighting, Metal y Gem en Plugin Registry; Final Render publica un cargador que crea su adaptador al solicitar una captura. AURUM IMPORT (aurum.import) está integrado en el host y orquesta la carga de STL, OBJ, GLB, FBX y 3DM; delega decodificación, conversión y normalización en los componentes de producción. Import Pipeline Manager coordina las etapas de importación y AURUM GEOMETRY inspecciona las mallas. AURUM EDGE QUALITY está separado en módulos y configura MSAA en el compositor; TAA sigue perteneciendo al pipeline de postprocesado existente. SSAA para capturas aún no está implementado. AURUM SURFACE mantiene su diagnóstico experimental de aristas coincidentes, sin fusionar geometría ni modificar el GLB. Service Container entrega un mapa de servicios de solo lectura. Event Bus comunica actualmente los eventos de activación y cierre. La transferencia de propiedad de recursos GPU todavía no está implementada: renderer, escena, luces y materiales siguen bajo sus controladores de producción.</p>
               </div>
               <div className="grid gap-3 p-5 sm:grid-cols-2 sm:p-7 lg:grid-cols-3">
