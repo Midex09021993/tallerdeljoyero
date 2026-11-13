@@ -17,6 +17,14 @@ import { getAurumDiamondPipelineDiagnostics } from "./aurum-diamond-pipeline";
 const aurumMetalAdapter=createAurumMetalAdapter();
 const aurumGemAdapter=createAurumGemAdapter();
 
+/** Read-only service surfaces for AURUM CORE composition; material ownership stays here. */
+export function getAurumMaterialAdapterServices() {
+  return {
+    metal: aurumMetalAdapter.services,
+    gem: aurumGemAdapter.services,
+  } as const;
+}
+
 const inclusionTypeFromCatalog=(style:string|undefined)=>
   style==="diamante" ? "crystal" : style==="silk" ? "silk" : style==="velos" ? "veil" : "none";
 
