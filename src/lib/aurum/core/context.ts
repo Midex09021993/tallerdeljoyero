@@ -28,7 +28,21 @@ export class AurumEventBus {
     if (this.disposed) return;
     const handlers = this.listeners.get(event);
     if (!handlers) return;
-    for (const handler of [...handlers]) handler(payload);
+
+    // One faulty subscriber must not prevent other modules from receiving
+    // the same lifecycle event. Preserve observability by reporting all
+    // handler failures after the complete listener snapshot has been called.
+    const failures: unknown[] = [];
+    for (const handler of [...handlers]) {
+      try {
+        handler(payload);
+      } catch (error) {
+        failures.push(error);
+      }
+    }
+    if (failures.length) {
+      throw new AggregateError(failures, `AURUM event "${event}" had failing subscribers.`);
+    }
   }
 
   clear(): void {
