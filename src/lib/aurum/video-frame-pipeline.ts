@@ -47,16 +47,52 @@ export function createAurumVideoFramePipeline(
   const activePasses = new Set(livePasses.filter(Boolean));
   let restored = false;
 
+  const restoreState = () => {
+    if (!composer) return;
+    // Attempt every restoration even if one composer operation fails.
+    let firstError: unknown;
+    try {
+      composer.setPixelRatio?.(originalComposerPixelRatio);
+    } catch (error) {
+      firstError = error;
+    }
+    try {
+      composer.setSize?.(restoreWidth, restoreHeight);
+    } catch (error) {
+      firstError ??= error;
+    }
+    for (const { pass, enabled } of passStates) {
+      try {
+        if (pass && "enabled" in pass) pass.enabled = enabled;
+      } catch (error) {
+        firstError ??= error;
+      }
+    }
+    if (firstError) throw firstError;
+  };
+
   if (composer) {
-    composer.setPixelRatio?.(1);
-    composer.setSize?.(width, height);
-    for (const { pass } of passStates) {
-      pass.enabled = activePasses.has(pass);
+    try {
+      composer.setPixelRatio?.(1);
+      composer.setSize?.(width, height);
+      for (const { pass } of passStates) {
+        pass.enabled = activePasses.has(pass);
+      }
+    } catch (error) {
+      // Construction has not returned a restore handle yet, so rollback here.
+      restored = true;
+      try {
+        restoreState();
+      } catch {
+        // Preserve the setup error; rollback was best-effort across all state.
+      }
+      throw error;
     }
   }
 
   return {
     renderFrame: () => {
+      if (restored) throw new Error("El pipeline de vídeo ya fue restaurado.");
       diamondBvhRuntime?.update?.();
       if (composer) composer.render();
       else renderer.render(scene, camera);
@@ -64,13 +100,7 @@ export function createAurumVideoFramePipeline(
     restore: () => {
       if (restored) return;
       restored = true;
-      if (composer) {
-        composer.setPixelRatio?.(originalComposerPixelRatio);
-        composer.setSize?.(restoreWidth, restoreHeight);
-        for (const { pass, enabled } of passStates) {
-          if (pass && "enabled" in pass) pass.enabled = enabled;
-        }
-      }
+      restoreState();
     },
   };
 }
