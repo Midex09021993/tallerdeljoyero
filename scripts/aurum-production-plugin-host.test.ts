@@ -35,3 +35,26 @@ test("AURUM production plugin host registers adapters and manages lifecycle with
   expect(gpuResources.stats().disposed).toBe(true);
   expect(host.registry.getState()).toBe("disposed");
 });
+
+
+test("AURUM production host snapshots module metadata and service maps", async () => {
+  const services = new Map([["aurum.viewer.renderer", { id: "renderer" }]]);
+  const dependencies: string[] = [];
+  const modules = [{
+    id: "aurum.viewer",
+    services,
+    dependencies,
+  }];
+  const host = createAurumProductionPluginHost(modules);
+
+  // Mutations to caller-owned input after composition must not alter the host.
+  services.set("aurum.late.service", {});
+  dependencies.push("aurum.missing");
+  modules.push({ id: "aurum.late", services: new Map(), dependencies: [] });
+
+  expect(host.moduleIds).toEqual(["aurum.viewer"]);
+  expect(host.services.has("aurum.late.service")).toBe(false);
+  await host.registry.start();
+  expect(host.registry.getState()).toBe("running");
+  await host.dispose();
+});
