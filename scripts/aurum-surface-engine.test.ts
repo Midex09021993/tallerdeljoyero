@@ -33,8 +33,6 @@ test("surface engine detects coincident boundary edges and tangent-plane hints w
   expect(report.candidateSeamPairs[0]).toContain("Oro cuerpo B");
   expect(Array.from(left.getAttribute("position").array)).toEqual(beforeLeft);
   expect(Array.from(right.getAttribute("position").array)).toEqual(beforeRight);
-  left.geometry?.dispose?.();
-  right.geometry?.dispose?.();
   left.dispose(); right.dispose();
 });
 
