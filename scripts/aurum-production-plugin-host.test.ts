@@ -98,6 +98,42 @@ test("AURUM production host rejects invalid or duplicate module contracts before
   expect(() => createAurumProductionPluginHost([], "   ")).toThrow("version cannot be empty");
 });
 
+test("AURUM production host requires module dependencies for services supplied by other modules", async () => {
+  const viewerServices = new Map([["aurum.viewer.renderer", {}]]);
+  const sceneServices = new Map([["aurum.scene.controller", {}]]);
+
+  expect(() => createAurumProductionPluginHost([
+    { id: "aurum.viewer", services: viewerServices },
+    {
+      id: "aurum.scene",
+      services: sceneServices,
+      requiresServices: ["aurum.viewer.renderer"],
+    },
+  ])).toThrow('does not declare that module as a dependency');
+
+  const host = createAurumProductionPluginHost([
+    { id: "aurum.viewer", services: viewerServices },
+    { id: "aurum.scene", services: sceneServices, dependencies: ["aurum.viewer"], requiresServices: ["aurum.viewer.renderer"] },
+  ]);
+  await host.registry.start();
+  expect(host.registry.getState()).toBe("running");
+  await host.dispose();
+});
+
+test("AURUM production host accepts transitive module dependencies for required services", async () => {
+  const viewerServices = new Map([["aurum.viewer.renderer", {}]]);
+  const sceneServices = new Map([["aurum.scene.controller", {}]]);
+  const lightingServices = new Map([["aurum.lighting.controller", {}]]);
+  const host = createAurumProductionPluginHost([
+    { id: "aurum.viewer", services: viewerServices },
+    { id: "aurum.scene", services: sceneServices, dependencies: ["aurum.viewer"] },
+    { id: "aurum.lighting", services: lightingServices, dependencies: ["aurum.scene"], requiresServices: ["aurum.viewer.renderer"] },
+  ]);
+  await host.registry.start();
+  expect(host.registry.getState()).toBe("running");
+  await host.dispose();
+});
+
 test("AURUM production host rejects duplicate service ownership and unresolved module requirements", async () => {
   const sharedService = { id: "shared" };
   expect(() => createAurumProductionPluginHost([
