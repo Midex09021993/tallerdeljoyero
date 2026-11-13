@@ -87,6 +87,9 @@ export function createAurumGpuResourceManager(): AurumGpuResourceManager {
     ): T {
       assertActive();
       if (!ownerId.trim()) throw new Error("AURUM GPU resource owner id cannot be empty.");
+      if (ownerId !== ownerId.trim()) {
+        throw new Error("AURUM GPU resource owner id cannot contain leading or trailing whitespace.");
+      }
       if (!resource || typeof resource.dispose !== "function") {
         throw new Error("AURUM GPU resources must expose a dispose() method.");
       }
@@ -96,6 +99,10 @@ export function createAurumGpuResourceManager(): AurumGpuResourceManager {
       if (!entry) {
         entry = { resource, kind, owners: new Set<string>() };
         entries.set(resource, entry);
+      } else if (entry.kind !== kind) {
+        throw new Error(
+          `AURUM GPU resource is already tracked as "${entry.kind}" and cannot be reclassified as "${kind}".`,
+        );
       }
       if (!entry.owners.has(ownerId)) {
         entry.owners.add(ownerId);
