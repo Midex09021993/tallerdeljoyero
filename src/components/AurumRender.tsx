@@ -1806,7 +1806,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           colorRhinoHex,
           classifyLayer: clasificarCapa,
           onProgress: informar,
-          onStage: (stage, details) => loadAuditStep(stage, details),
+          onStage: (stage, details) => loadAuditStep(stage, details ?? {}),
         });
         const objeto = importResult.sourceObject;
         const interno = importResult.model;
