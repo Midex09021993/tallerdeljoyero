@@ -44,7 +44,7 @@ import { createAurumSceneAdapter } from "../lib/aurum/core/scene-adapter";
 import { createAurumLightingAdapter } from "../lib/aurum/core/lighting-adapter";
 import { createAurumProductionPluginHost } from "../lib/aurum/core/production-plugin-host";
 import { captureAurumGlbQualitySnapshot, evaluateAurumGlbQuality } from "../lib/aurum/core/glb-quality-gate";
-import { configureAurumEdgeQuality } from "../lib/aurum/edge-quality";
+import { configureAurumEdgeQuality, getAurumEdgeAaProfile } from "../lib/aurum/edge-quality";
 import { AURUM_ASPECT_RATIOS, getAurumAspectRatio, getAurumAspectDimensions, getAurumAspectFrameStyle, type AurumAspectRatioId } from "../lib/aurum/aspect-ratios";
 import { countAurumTriangles, getAurumRuntimeBudget, type AurumRuntimeBudget } from "../lib/aurum/runtime-budget";
 import { prepareAurumLiveGeometry, setAurumLiveGeometryQuality, disposeAurumLiveGeometry } from "../lib/aurum/live-geometry-lod";
@@ -3595,11 +3595,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // jewelry; do not reactivate those expensive passes.
             // Lightweight interactive edge cleanup: low blend strength, no TAA,
             // and disabled for extreme CAD budgets or the Low quality profile.
-            const interactiveEdgeAaEligible = measuredQualityId !== "low" && runtimeBudget.tier !== "extreme";
-            const interactiveEdgeAa = Boolean(interactiveEdgeAaEligible && surfaceEdgeAaPass);
+            const liveEdgeAaProfile = getAurumEdgeAaProfile(measuredQualityId, runtimeBudget.tier, "live");
+            const interactiveEdgeAa = Boolean(liveEdgeAaProfile.enabled && surfaceEdgeAaPass);
             if (surfaceEdgeAaPass) {
               const strength = surfaceEdgeAaPass.material?.uniforms?.strength;
-              if (strength) strength.value = interactiveEdgeAa ? 0.035 : 0;
+              if (strength) strength.value = liveEdgeAaProfile.strength;
               surfaceEdgeAaPass.enabled = interactiveEdgeAa;
             }
             const coreBeautyPasses = new Set([renderPass, gemMaskPass, fxaaPass, ...(interactiveEdgeAa ? [surfaceEdgeAaPass] : []), outputPass]);
@@ -3630,7 +3630,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               renderPass,
               gemMaskPass,
               fxaaPass,
-              ...(surfaceEdgeAaPass && measuredQualityId !== "low" ? [surfaceEdgeAaPass] : []),
+              ...(surfaceEdgeAaPass && getAurumEdgeAaProfile(measuredQualityId, runtimeBudget.tier, "settled").enabled ? [surfaceEdgeAaPass] : []),
               outputPass,
             ]);
             const settledPasses = ((composer as any)?.passes ?? []) as any[];
@@ -3641,10 +3641,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // Restore the normal settled temporal state. There is no active
             // gem transition to coordinate while progressive blending is suspended.
             setTemporalMotion?.(false);
+            const settledEdgeAaProfile = getAurumEdgeAaProfile(measuredQualityId, runtimeBudget.tier, "settled");
             if (surfaceEdgeAaPass) {
               const strength = surfaceEdgeAaPass.material?.uniforms?.strength;
-              if (strength) strength.value = measuredQualityId === "low" ? 0 : 0.035;
-              surfaceEdgeAaPass.enabled = measuredQualityId !== "low";
+              if (strength) strength.value = settledEdgeAaProfile.strength;
+              surfaceEdgeAaPass.enabled = settledEdgeAaProfile.enabled;
             }
             if (idleTaaPass) {
               idleTaaPass.enabled = false;
