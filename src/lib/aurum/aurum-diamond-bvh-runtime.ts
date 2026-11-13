@@ -19,6 +19,8 @@ type RecordEntry = {
 
 export type AurumDiamondBvhRuntime = {
   refresh: (model: THREE.Object3D | null | undefined) => void;
+  /** Rebuild BVH optics only for the assigned stone meshes; unrelated entries remain untouched. */
+  refreshTargets: (model: THREE.Object3D | null | undefined, targets: readonly THREE.Mesh[]) => void;
   /** O(1) membership check for already-resolved gem targets; avoids full-model diagnostics in the selection hot path. */
   hasActiveMeshes: (targets: readonly THREE.Mesh[]) => boolean;
   update: () => void;
@@ -120,12 +122,16 @@ export async function createAurumDiamondBvhRuntime(options: {
     entries.delete(mesh);
   };
 
-  const refresh = (model: THREE.Object3D | null | undefined) => {
+  const refresh = (model: THREE.Object3D | null | undefined, targetMeshes?: readonly THREE.Mesh[]) => {
     if (!model || disposed) return;
     hasLastCameraState = false;
+    const targetSet = targetMeshes?.length ? new Set(targetMeshes) : null;
+    const targetedRefresh = Boolean(targetSet);
     const found = new Set<THREE.Mesh>();
-    for (const key of Object.keys(familyCounts)) delete familyCounts[key];
-    skippedTargetMeshes.length = 0;
+    if (!targetedRefresh) {
+      for (const key of Object.keys(familyCounts)) delete familyCounts[key];
+      skippedTargetMeshes.length = 0;
+    }
 
     // Compare diamond sizes within this model so halo/melee stones can use a
     // calmer internal-ray budget while the largest center stone keeps its
@@ -153,6 +159,7 @@ export async function createAurumDiamondBvhRuntime(options: {
     model.traverse((object) => {
       const mesh = object as THREE.Mesh;
       if (!mesh.isMesh || !mesh.geometry || mesh.userData?.["aurumInternalInclusion"]) return;
+      if (targetSet && !targetSet.has(mesh)) return;
       const existing = entries.get(mesh);
       const currentMaterial = mesh.material as any;
       const activeGemId = String(mesh.userData?.["aurumActiveGemId"] ?? "").toLocaleLowerCase();
@@ -185,9 +192,11 @@ export async function createAurumDiamondBvhRuntime(options: {
       const rawMaterialFamilies = materials.map((material) => getGemFamily(material));
       const canUseLayerFamilyFallback = materials.length === 1 && !rawMaterialFamilies[0] && !!activeGemFamily;
       const materialFamilies = rawMaterialFamilies.map((family) => family || (canUseLayerFamilyFallback ? activeGemFamily : ""));
-      for (const materialFamily of materialFamilies) {
-        const key = materialFamily || "(sin familia)";
-        familyCounts[key] = (familyCounts[key] ?? 0) + 1;
+      if (!targetedRefresh) {
+        for (const materialFamily of materialFamilies) {
+          const key = materialFamily || "(sin familia)";
+          familyCounts[key] = (familyCounts[key] ?? 0) + 1;
+        }
       }
       const uniqueFamilies = [...new Set(materialFamilies)];
       const family = uniqueFamilies.length === 1 ? uniqueFamilies[0] : "";
@@ -205,7 +214,7 @@ export async function createAurumDiamondBvhRuntime(options: {
       // a single shader would overwrite their distinct optical identities.
       if (!isTargetFamily || uniqueFamilies.length !== 1 || !activeFamilyMatches) {
         if (materials.some((material) => targetFamilies.includes(getGemFamily(material)) || activeGemFamily.length > 0)) {
-          if (skippedTargetMeshes.length < 30) {
+          if (!targetedRefresh && skippedTargetMeshes.length < 30) {
             skippedTargetMeshes.push({ mesh: mesh.name || mesh.uuid, materialFamilies: uniqueFamilies, activeGemFamily, reason: !isTargetFamily ? "familia-no-solicitada-o-material-mixto" : uniqueFamilies.length !== 1 ? "familias-mixtas" : "familia-activa-no-coincide" });
           }
           options.onError?.(
@@ -365,12 +374,17 @@ export async function createAurumDiamondBvhRuntime(options: {
     });
 
     for (const mesh of [...entries.keys()]) {
+      if (targetSet && !targetSet.has(mesh)) continue;
       if (!found.has(mesh)) releaseEntry(mesh, mesh.material === entries.get(mesh)?.experimentalMaterial);
     }
   };
 
   return {
     refresh,
+    refreshTargets(model, targets) {
+      if (!targets?.length) return;
+      refresh(model, targets);
+    },
     hasActiveMeshes(targets) {
       if (disposed || entries.size === 0 || !targets?.length) return false;
       return targets.some((mesh) => entries.has(mesh));
