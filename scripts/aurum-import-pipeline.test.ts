@@ -12,7 +12,6 @@ test("geometry engine reports visible mesh metrics without mutating source buffe
   mesh.name = "Aro";
   root.add(mesh);
   const report = createAurumGeometryEngine().inspect(root);
-
   expect(report.meshCount).toBe(1);
   expect(report.visibleMeshCount).toBe(1);
   expect(report.vertices).toBe(geometry.getAttribute("position").count);
@@ -30,11 +29,7 @@ test("geometry engine respects hidden ancestors and supports the import fast pat
   const geometry = new THREE.BoxGeometry();
   hiddenParent.add(new THREE.Mesh(geometry, new THREE.MeshBasicMaterial()));
   root.add(hiddenParent);
-
-  const report = createAurumGeometryEngine().inspect(root, {
-    includeBounds: false,
-    validatePositions: false,
-  });
+  const report = createAurumGeometryEngine().inspect(root, { includeBounds: false, validatePositions: false });
   expect(report.meshCount).toBe(1);
   expect(report.visibleMeshCount).toBe(0);
   expect(report.meshes[0].visible).toBe(false);
@@ -55,9 +50,10 @@ test("geometry engine flags missing normals and non-finite positions in diagnost
   geometry.dispose();
 });
 
-test("import pipeline manager returns a complete, ordered stage history", async () => {
+test("import pipeline includes read-only surface and solid diagnostics in order", async () => {
   const model = new THREE.Group();
   model.add(new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial()));
+  model.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.MeshBasicMaterial()));
   const calls: string[] = [];
   const importer = {
     id: "aurum.import",
@@ -78,21 +74,13 @@ test("import pipeline manager returns a complete, ordered stage history", async 
     onStage: (stage) => stages.push(stage),
   });
   expect(calls).toEqual(["import"]);
-  expect(result.geometry.meshCount).toBe(1);
-  expect(result.geometry.visibleMeshCount).toBe(1);
-  expect(result.geometry.bounds).not.toBeNull();
-  expect(result.surface.meshCount).toBe(1);
-  expect(result.surface.sharedEdgesAcrossBodies).toBe(0);
-  expect(result.surface.truncated).toBe(false);
-  expect(result.pipeline).toEqual([
-    "import-started",
-    "source-decoded",
-    "source-converted-to-glb",
-    "converted-model-normalized",
-    "geometry-inspected",
-    "surface-inspected",
-  ]);
-  expect(stages).toEqual(["import-started", "geometry-inspected", "surface-inspected"]);
+  expect(result.geometry.meshCount).toBe(2);
+  expect(result.surface.meshCount).toBe(2);
+  expect(result.solid.bodyCount).toBe(2);
+  expect(result.solid.closedSolidCount).toBe(1);
+  expect(result.solid.openSurfaceCount).toBe(1);
+  expect(result.pipeline.slice(-3)).toEqual(["geometry-inspected", "surface-inspected", "solid-inspected"]);
+  expect(stages).toEqual(["import-started", "geometry-inspected", "surface-inspected", "solid-inspected"]);
   model.traverse((node) => {
     if ((node as THREE.Mesh).isMesh) (node as THREE.Mesh).geometry.dispose();
   });

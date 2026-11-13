@@ -1,10 +1,12 @@
 import type { AurumImportPlugin, AurumImportRequest, AurumImportResult } from "./import-plugin";
 import type { AurumGeometryEngine, AurumGeometryReport } from "./geometry-engine";
 import { createAurumSurfaceEngine, type AurumSurfaceReport } from "./surface-engine";
+import { createAurumSolidEngine, type AurumSolidReport } from "./solid-engine";
 
 export interface AurumImportPipelineResult extends AurumImportResult {
   readonly geometry: AurumGeometryReport;
   readonly surface: AurumSurfaceReport;
+  readonly solid: AurumSolidReport;
   readonly pipeline: readonly string[];
 }
 
@@ -27,8 +29,7 @@ export function createAurumImportPipelineManager(
       const imported = await importer.load(request);
 
       request.onProgress?.("Comprobando geometría...");
-      // Quality-first import: perform the complete read-only inspection before
-      // accepting the model. Import latency is secondary to detecting damaged geometry.
+      // Quality-first import: complete read-only inspection before accepting the model.
       const geometryReport = geometry.inspect(imported.model);
       stages.push(...imported.pipeline, "geometry-inspected");
       request.onStage?.("geometry-inspected", {
@@ -58,10 +59,29 @@ export function createAurumImportPipelineManager(
         tolerance: surfaceReport.tolerance,
       });
 
+      request.onProgress?.("Analizando sólidos y superficies que los atraviesan...");
+      const solidReport = createAurumSolidEngine().inspect(imported.model, {
+        tolerance: 1e-5,
+        maxPairs: 10_000,
+        maxSamplesPerBody: 96,
+      });
+      stages.push("solid-inspected");
+      request.onStage?.("solid-inspected", {
+        bodies: solidReport.bodyCount,
+        closedSolids: solidReport.closedSolidCount,
+        openSurfaces: solidReport.openSurfaceCount,
+        invalidMeshes: solidReport.invalidMeshCount,
+        relations: solidReport.relationCount,
+        unresolvedRelations: solidReport.unresolvedRelationCount,
+        truncated: solidReport.truncated,
+        tolerance: solidReport.tolerance,
+      });
+
       return Object.freeze({
         ...imported,
         geometry: geometryReport,
         surface: surfaceReport,
+        solid: solidReport,
         pipeline: Object.freeze(stages),
       });
     },
