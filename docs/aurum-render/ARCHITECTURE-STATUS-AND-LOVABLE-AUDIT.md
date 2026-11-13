@@ -276,3 +276,15 @@ El flujo productivo de vídeo ahora resuelve desde el host la fábrica del pipel
 La captura path-traced se expone como servicio, pero su consumo por la ruta concreta de exportación debe confirmarse en una auditoría de llamadas; el flujo de imagen final existente ya se sirve mediante Final Render Adapter. No confundir disponibilidad del servicio con uso efectivo.
 
 El registro y el cambio de consumidor están en los commits `aab7991` y `08b9b2b`. Pendiente: validar compilación y comportamiento de exportación en navegador real; el workflow asociado terminó en fallo sin pasos ni logs disponibles.
+
+
+### GPU Resource Manager — frontera de ownership explícita — 2026-11-13
+
+- El Production Plugin Host expone ahora `gpuResources` como propiedad tipada (`AurumGpuResourceManager`), además del servicio `aurum.gpu.resources` en el contenedor.
+- Ambas rutas apuntan a la misma instancia; se prueba esa identidad y el estado inicial vacío/no-disposed en `scripts/aurum-production-plugin-host.test.ts`.
+- La API admite ownership explícito por ownerId, referencias compartidas y liberación al último propietario. La liberación es terminal para un recurso ya disposed.
+- **No se transfirió todavía ownership de renderer, composer, escena, geometrías, materiales, texturas HDRI ni BVH** desde los controladores productivos. El tracking sigue opt-in y el estado real de adopción productiva es parcial.
+- Esta frontera tipada permite que cada controlador se integre después de forma deliberada, con su ciclo de vida probado. No se debe registrar un recurso compartido en el manager hasta confirmar quién es su propietario y quién ejecuta su cleanup actual.
+- Próxima auditoría: inventariar por recurso (creador, consumidores, owner actual, evento de liberación, posibilidad de compartir) y decidir adopción uno por uno. No hacer un barrido global de scene.traverse ni dispose implícito.
+
+Commit de contrato: `83e978a`; prueba: `ab57c8a`; estado UI: `22336e7`.
