@@ -114,9 +114,6 @@ function HerramientasPage() {
         <section aria-label="Seleccionar herramienta" className="relative rounded-2xl border border-border bg-card p-2 shadow-card">
           <button type="button" onClick={() => desplazarBarra(-1)} aria-label="Desplazar herramientas a la izquierda" className="absolute left-2 top-1/2 z-10 grid size-8 -translate-y-1/2 place-items-center rounded-full border border-border bg-card/95 text-foreground shadow-md backdrop-blur transition hover:border-gold/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"><ChevronLeft className="size-4" /></button>
           <div ref={barraHerramientasRef} className="scrollbar-hidden flex gap-2 overflow-x-auto scroll-smooth px-9 [overscroll-behavior-x:contain] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <Link to="/aurum-studio" className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border border-gold/40 bg-gold/10 px-3.5 text-sm font-semibold text-gold transition hover:border-gold hover:bg-gold/15">
-              <Sparkles className="size-4" /> AURUM STUDIO <span className="rounded-full border border-gold/30 px-1.5 py-0.5 text-[9px] uppercase tracking-wide">Nuevo</span>
-            </Link>
             <button
               type="button"
               onClick={() => { setHerramientaActiva(null); setMostrarIntroAurumRender(true); setMostrarIntroAurumTransfer(false); setMostrarIntroAurumConect(false); setMostrarGuiaAurumConect(false); }}
