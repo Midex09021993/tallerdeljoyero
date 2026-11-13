@@ -18,6 +18,14 @@ export interface AurumImportRequest {
   readonly metalUnion?: boolean;
   /** Cancels the import at safe stage boundaries. Active third-party decoders may finish before cancellation is observed. */
   readonly signal?: AbortSignal;
+  /** Optional hard file-size ceiling. Unset by default to preserve existing CAD workflows. */
+  readonly maxFileBytes?: number;
+  /** Advisory geometry budgets; exceeding them reports a warning but never rejects by default. */
+  readonly geometryBudget?: {
+    readonly maxMeshes?: number;
+    readonly maxVertices?: number;
+    readonly maxTriangles?: number;
+  };
 }
 
 export interface AurumImportResult {
