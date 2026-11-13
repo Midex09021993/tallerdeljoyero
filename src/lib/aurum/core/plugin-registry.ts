@@ -3,9 +3,11 @@ import { AurumEventBus, AurumResourceScope } from "./context";
 /**
  * AURUM CORE — plugin contracts.
  *
- * This contract layer is deliberately renderer-agnostic: plugins receive an
- * application-owned context and must release only the resources they create.
- * The existing production renderer is not wired to this registry yet.
+ * This contract layer is deliberately renderer-agnostic: production adapters
+ * are composed by the AURUM production plugin host and receive an
+ * application-owned context. Plugins must release only resources they create;
+ * existing renderer, scene, lighting and material controllers retain ownership
+ * of their production resources until an explicit hand-off is implemented.
  */
 export type AurumPluginId = string;
 
