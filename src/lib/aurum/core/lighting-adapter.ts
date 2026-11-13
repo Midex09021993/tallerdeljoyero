@@ -7,6 +7,8 @@
  */
 import type { AurumLightingController } from "../lighting";
 
+import { createAurumReadonlyMap } from "./readonly-map";
+
 export const AURUM_LIGHTING_SERVICES = {
   controller: "aurum.lighting.controller",
   lights: "aurum.lighting.lights",
@@ -24,13 +26,13 @@ export interface AurumLightingAdapter {
 }
 
 export function createAurumLightingAdapter(controller: AurumLightingController): AurumLightingAdapter {
-  const services = new Map<string, unknown>([
+  const services = createAurumReadonlyMap(new Map<string, unknown>([
     [AURUM_LIGHTING_SERVICES.controller, controller],
     [AURUM_LIGHTING_SERVICES.lights, controller.lights],
-  ]);
+  ]));
 
   return Object.freeze({
-    services: services as ReadonlyMap<string, unknown>,
+    services,
     lights: controller.lights,
     create: () => controller.create(),
     applyPreset: (id: string) => controller.applyPreset(id),
