@@ -50,7 +50,7 @@ test("geometry engine flags missing normals and non-finite positions in diagnost
   geometry.dispose();
 });
 
-test("import pipeline includes read-only surface and solid diagnostics in order", async () => {
+test("import pipeline includes geometry, surface, solid and BVH intersection diagnostics in order", async () => {
   const model = new THREE.Group();
   model.add(new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial()));
   model.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.MeshBasicMaterial()));
@@ -79,8 +79,10 @@ test("import pipeline includes read-only surface and solid diagnostics in order"
   expect(result.solid.bodyCount).toBe(2);
   expect(result.solid.closedSolidCount).toBe(1);
   expect(result.solid.openSurfaceCount).toBe(1);
-  expect(result.pipeline.slice(-3)).toEqual(["geometry-inspected", "surface-inspected", "solid-inspected"]);
-  expect(stages).toEqual(["import-started", "geometry-inspected", "surface-inspected", "solid-inspected"]);
+  expect(result.intersection.candidatePairCount).toBe(1);
+  expect(result.intersection.intersectingPairCount).toBe(1);
+  expect(result.pipeline.slice(-4)).toEqual(["geometry-inspected", "surface-inspected", "solid-inspected", "intersection-inspected"]);
+  expect(stages).toEqual(["import-started", "geometry-inspected", "surface-inspected", "solid-inspected", "intersection-inspected"]);
   model.traverse((node) => {
     if ((node as THREE.Mesh).isMesh) (node as THREE.Mesh).geometry.dispose();
   });

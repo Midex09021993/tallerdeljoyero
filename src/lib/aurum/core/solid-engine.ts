@@ -132,6 +132,12 @@ function samplePoints(triangles: readonly Triangle[], maxSamples: number): THREE
 function pointInsideClosedMesh(point: THREE.Vector3, triangles: readonly Triangle[], tolerance: number): boolean {
   // A non-axis-aligned ray reduces vertex/edge degeneracy. Duplicate hit distances
   // are collapsed so triangulated faces do not count twice at a shared diagonal.
+  const boundaryCheck = new THREE.Triangle();
+  const closest = new THREE.Vector3();
+  for (const triangle of triangles) {
+    boundaryCheck.set(triangle.a, triangle.b, triangle.c).closestPointToPoint(point, closest);
+    if (closest.distanceToSquared(point) <= tolerance * tolerance) return false;
+  }
   const direction = new THREE.Vector3(1, 0.3713906763541037, 0.217832).normalize();
   const ray = new THREE.Ray(point.clone(), direction);
   const hit = new THREE.Vector3();

@@ -43,6 +43,8 @@ jobs:
         run: bun test scripts/aurum-surface-engine.test.ts
       - name: AURUM solid and surface penetration tests
         run: bun test scripts/aurum-solid-engine.test.ts
+      - name: AURUM BVH triangle intersection tests
+        run: bun test scripts/aurum-intersection-engine.test.ts
       - name: AURUM plugin registry contract tests
         run: bun test scripts/aurum-plugin-registry.test.ts
       - name: AURUM production plugin host tests
