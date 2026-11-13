@@ -34,7 +34,7 @@ export function createAurumProductionPluginHost(
 
   const moduleIds = new Set<string>();
   for (const module of modules) {
-    if (!/^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)*$/.test(module.id)) {
+    if (!/^[a-z][a-z0-9-]*(?:\.[a-z][a-z0-9-]*)*$/.test(module.id)) {
       throw new Error(`Invalid AURUM production module id "${module.id}". Use lowercase names separated by dots or hyphens.`);
     }
     if (moduleIds.has(module.id)) {
