@@ -52,7 +52,7 @@ export class AurumServiceContainer {
     const snapshot = new Map(this.entries);
     const readonlyServices = Object.freeze({
       get size() { return snapshot.size; },
-      get: <T>(id: AurumServiceId) => snapshot.get(id) as T | undefined,
+      get: (id: AurumServiceId) => snapshot.get(id),
       has: (id: AurumServiceId) => snapshot.has(id),
       entries: () => snapshot.entries(),
       keys: () => snapshot.keys(),
@@ -61,6 +61,7 @@ export class AurumServiceContainer {
         snapshot.forEach((value, key) => callback.call(thisArg, value, key, readonlyServices));
       },
       [Symbol.iterator]: () => snapshot[Symbol.iterator](),
+      [Symbol.toStringTag]: "ReadonlyMap",
     });
     return readonlyServices as ReadonlyMap<AurumServiceId, unknown>;
   }
