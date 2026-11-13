@@ -3273,6 +3273,17 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         // Rhino meshes this can freeze the main thread right after selection.
         // Keep the precise edge highlight for modest meshes only; material
         // assignment remains available for larger selected components.
+        // Consume an armed catalog choice before optional edge highlighting.
+        // This keeps selection-to-material feedback ahead of the more expensive
+        // EdgesGeometry construction on dense CAD parts.
+        const pendingGem = pendingGemApplicationRef.current;
+        // A deliberate model click is an explicit target choice. Unknown GLB
+        // meshes ("otro") are supported by applyAurumGemToTarget as exact-mesh
+        // assignments; never consume the pending gem on a known metal mesh.
+        if (pendingGem && (categoria === "gema" || categoria === "otro")) {
+          pendingGemApplicationRef.current = null;
+          aplicarGema(pendingGem, obj, false, true);
+        }
         if (obj.geometry) {
           const positionCount = Number(obj.geometry.attributes?.position?.count ?? 0);
           const indexCount = Number(obj.geometry.index?.count ?? positionCount);
@@ -3286,16 +3297,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             resaltado.scale.copy(obj.getWorldScale(new THREE.Vector3()));
             escena.add(resaltado);
           }
-        }
-        // Catalog choice is non-destructive. Apply only after an explicit click
-        // on a mesh classified as a gemstone.
-        const pendingGem = pendingGemApplicationRef.current;
-        // A deliberate model click is an explicit target choice. Unknown GLB
-        // meshes ("otro") are supported by applyAurumGemToTarget as exact-mesh
-        // assignments; never consume the pending gem on a known metal mesh.
-        if (pendingGem && (categoria === "gema" || categoria === "otro")) {
-          pendingGemApplicationRef.current = null;
-          aplicarGema(pendingGem, obj, false, true);
         }
       };
       const seleccionarPorClick = (event: MouseEvent) => {
