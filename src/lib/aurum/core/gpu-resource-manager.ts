@@ -132,6 +132,9 @@ export function createAurumGpuResourceManager(): AurumGpuResourceManager {
 
     dispose(): void {
       if (disposed) return;
+      // Close the manager before invoking external dispose callbacks so a
+      // callback cannot re-enter cleanup or register new resources mid-shutdown.
+      disposed = true;
       const ownerIds = [...owners.keys()].reverse();
       const failures: unknown[] = [];
       for (const ownerId of ownerIds) {
@@ -149,7 +152,6 @@ export function createAurumGpuResourceManager(): AurumGpuResourceManager {
           failures.push(error);
         }
       }
-      disposed = true;
       entries.clear();
       owners.clear();
       if (failures.length) {
