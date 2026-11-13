@@ -55,6 +55,7 @@ import { AurumRenderSidebar } from "./AurumRenderSidebar";
 import { AurumPerformanceIndicator, AurumPerformanceMonitorPanel } from "./AurumPerformanceMonitorPanel";
 import { createAurumPerformanceMonitor } from "@/lib/aurum/performance-monitor";
 import { createAurumVideoFramePipeline } from "../lib/aurum/video-frame-pipeline";
+import { captureAurumPathTracedScene } from "../lib/aurum/path-traced-capture";
 
 
 const normalizarTexto = (v:any) => String(v ?? "").trim().toLowerCase();
@@ -1321,6 +1322,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           ["aurum.post.reset-temporal", resetTemporalAccumulation],
           ["aurum.post.set-temporal-motion", setTemporalMotion],
           ["aurum.post.update-temporal", updateTemporal],
+        ]) },
+        { id: "aurum.media-export", description: "Servicios de captura de imagen y vídeo sobre el visor y compositor productivos.", dependencies: ["aurum.viewer", "aurum.post", "aurum.final-render"], requiresServices: ["aurum.post.composer", "aurum.final-render.load-adapter"], services: new Map([
+          ["aurum.media.video-frame.create", createAurumVideoFramePipeline],
+          ["aurum.media.video-recorder.load", async () => (await import("../lib/aurum/video-exporter")).recordAurumCanvasVideo],
+          ["aurum.media.path-traced.capture", captureAurumPathTracedScene],
         ]) },
         { id: "aurum.viewer", description: "Referencias read-only al visor WebGL productivo.", services: viewerAdapter.services },
         { id: "aurum.geometry", description: "Diagnóstico geométrico read-only del modelo.", services: new Map([["aurum.geometry.engine", geometryEngine]]) },
