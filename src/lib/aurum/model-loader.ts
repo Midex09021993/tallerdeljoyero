@@ -6,6 +6,7 @@ import { findAurumOverlapCandidates } from "./overlap-experiment";
 import { applyAurumMetalUnionExperiment } from "./metal-union-experiment";
 import { applyAurumVoxelRemeshExperiment } from "./voxel-remesh-experiment";
 import { toCreasedNormals } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+import { captureAurumGlbQualitySnapshot, evaluateAurumGlbQuality } from "./core/glb-quality-gate";
 
 // Reuse one Draco decoder across GLB loads. Decoder assets are served locally
 // from the versioned, Apache-2.0 Google Draco distribution in public/.
@@ -699,11 +700,38 @@ export async function convertAurumToGlb(
   }
   onProgress?.("Generando archivo 3D interno");
   const { GLTFExporter } = await import("three/examples/jsm/exporters/GLTFExporter.js");
+  const sourceQuality = captureAurumGlbQualitySnapshot(object);
   return new Promise<ArrayBuffer>((resolve, reject) => {
     const exporter = new GLTFExporter();
-    exporter.parse(object, (result: ArrayBuffer | { [key: string]: unknown }) => {
-      if (result instanceof ArrayBuffer) resolve(result);
-      else reject(new Error("No se pudo generar el GLB interno."));
+    exporter.parse(object, async (result: ArrayBuffer | { [key: string]: unknown }) => {
+      if (!(result instanceof ArrayBuffer)) {
+        reject(new Error("No se pudo generar el GLB interno."));
+        return;
+      }
+      try {
+        onProgress?.("Verificando integridad del GLB reabierto");
+        const { GLTFLoader } = await import("three/examples/jsm/loaders/GLTFLoader.js");
+        const loader = new GLTFLoader();
+        // Validate the exact uncompressed binary produced by GLTFExporter. Draco
+        // compression runs later, so encoder behaviour cannot mask export losses.
+        const reopened = await loader.parseAsync(result.slice(0), "");
+        const reopenedQuality = captureAurumGlbQualitySnapshot(reopened.scene);
+        const report = evaluateAurumGlbQuality(sourceQuality, reopenedQuality);
+        console.info("[AURUM][GLB QUALITY GATE]", report);
+        if (report.status === "failed") {
+          reject(new Error(
+            "AURUM GLB QUALITY GATE rechazó la exportación: "
+            + report.issues.filter((issue) => issue.severity === "error").map((issue) => issue.message).join(" ")
+          ));
+          return;
+        }
+        resolve(result);
+      } catch (error) {
+        reject(new Error(
+          "AURUM GLB QUALITY GATE no pudo reabrir y validar el archivo; se rechaza el GLB por seguridad. "
+          + (error instanceof Error ? error.message : String(error))
+        ));
+      }
     }, (error: unknown) => reject(error), { binary: true, onlyVisible: true, trs: false });
   });
 }
