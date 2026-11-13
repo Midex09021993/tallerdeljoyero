@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import * as THREE from "three";
 import { createAurumGeometryEngine } from "../src/lib/aurum/core/geometry-engine";
 import { createAurumImportPipelineManager } from "../src/lib/aurum/core/import-pipeline-manager";
-import type { AurumImportPlugin } from "../src/lib/aurum/core/import-plugin";
+import { disposeAurumImportSourceGeometry, type AurumImportPlugin } from "../src/lib/aurum/core/import-plugin";
 
 test("geometry engine reports visible mesh metrics without mutating source buffers", () => {
   const root = new THREE.Group();
@@ -230,4 +230,39 @@ test("import pipeline enforces an explicitly configured file-size ceiling before
     maxFileBytes: 4,
   })).rejects.toMatchObject({ name: "AurumImportBudgetError" });
   expect(importerCalls).toBe(0);
+});
+
+
+test("source geometry cleanup releases only decoder buffers not retained by normalized model", () => {
+  const source = new THREE.Group();
+  const retainedModel = new THREE.Group();
+  const sourceOnlyGeometry = new THREE.BoxGeometry();
+  const sharedGeometry = new THREE.SphereGeometry();
+  let sourceOnlyDisposals = 0;
+  let sharedDisposals = 0;
+  sourceOnlyGeometry.addEventListener("dispose", () => { sourceOnlyDisposals += 1; });
+  sharedGeometry.addEventListener("dispose", () => { sharedDisposals += 1; });
+  source.add(new THREE.Mesh(sourceOnlyGeometry, new THREE.MeshBasicMaterial()));
+  source.add(new THREE.Mesh(sharedGeometry, new THREE.MeshBasicMaterial()));
+  retainedModel.add(new THREE.Mesh(sharedGeometry, new THREE.MeshBasicMaterial()));
+
+  const released = disposeAurumImportSourceGeometry(source, retainedModel);
+
+  expect(released).toBe(1);
+  expect(sourceOnlyDisposals).toBe(1);
+  expect(sharedDisposals).toBe(0);
+  sourceOnlyGeometry.dispose();
+  sharedGeometry.dispose();
+});
+
+test("source geometry cleanup is a no-op when GLB source and viewer model are the same object", () => {
+  const model = new THREE.Group();
+  const geometry = new THREE.BoxGeometry();
+  let disposals = 0;
+  geometry.addEventListener("dispose", () => { disposals += 1; });
+  model.add(new THREE.Mesh(geometry, new THREE.MeshBasicMaterial()));
+
+  expect(disposeAurumImportSourceGeometry(model, model)).toBe(0);
+  expect(disposals).toBe(0);
+  geometry.dispose();
 });
