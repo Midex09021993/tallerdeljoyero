@@ -98,3 +98,42 @@ test("AURUM plugin registry rolls back already initialized plugins when a later 
   expect(registry.getState()).toBe("idle");
   expect(calls).toEqual(["gem:activate", "gem:deactivate", "gem:dispose"]);
 });
+
+
+test("AURUM plugin contexts share events and dispose owned resources in reverse order", async () => {
+  const registry = new AurumPluginRegistry(createContext());
+  const calls: string[] = [];
+  let received = 0;
+
+  registry.register({
+    id: "aurum.gem",
+    version: "1.0.0",
+    initialize: (context) => {
+      context.events.on<{ value: number }>("gem.updated", (payload) => {
+        received += payload.value;
+      });
+      context.resources.add(() => { calls.push("first"); });
+      context.resources.add(() => { calls.push("second"); });
+      return {
+        activate: () => context.events.emit("gem.updated", { value: 2 }),
+      };
+    },
+  });
+
+  await registry.start();
+  expect(received).toBe(2);
+  await registry.dispose();
+  expect(calls).toEqual(["second", "first"]);
+});
+
+test("AURUM resource scopes reject new resources after disposal and dispose only once", async () => {
+  const { AurumResourceScope } = await import("../src/lib/aurum/core/context");
+  const scope = new AurumResourceScope();
+  let disposed = 0;
+  scope.add(() => { disposed++; });
+  await scope.dispose();
+  await scope.dispose();
+  expect(disposed).toBe(1);
+  expect(scope.isDisposed).toBe(true);
+  expect(() => scope.add(() => undefined)).toThrow("disposed");
+});
