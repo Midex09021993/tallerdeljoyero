@@ -289,7 +289,7 @@ export function applyAurumMaterialToModel(model:any,activePart:any,materialConfi
   return applied>0;
 }
 
-export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironment:()=>void,requestRender?:()=>void,applyAll=false,onTargetsResolved?:(targets:any[])=>void) {
+export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironment:(targets?:readonly any[])=>void,requestRender?:()=>void,applyAll=false,onTargetsResolved?:(targets:any[])=>void) {
   if(!target?.isMesh)return false;
   const selectedCategory=selectionCategory(target);
   // GLB meshes without Rhino layer metadata are categorized as "otro".
@@ -473,6 +473,24 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
     next.needsUpdate=true;
     return next;
   };
+  const activeGemId=String(gemConfig?.id??"");
+  const activeGemFamily=String(gemConfig?.familia??"").toLocaleLowerCase();
+  const gemAuditEnabled=typeof window!=="undefined"
+    && new URLSearchParams(window.location.search).get("aurumGemAudit")==="1";
+  const scheduleIdle=(callback:()=>void,timeout=900)=>{
+    if(typeof window!=="undefined" && typeof (window as any).requestIdleCallback==="function"){
+      (window as any).requestIdleCallback(callback,{timeout});
+    }else if(typeof window!=="undefined"){
+      window.setTimeout(callback,80);
+    }else{
+      callback();
+    }
+  };
+
+  // Critical path: assign all physical catalog materials first. No full-model
+  // environment walk, inclusion construction, geometry audit or thickness bake
+  // is allowed to delay the first visible frame.
+  const enrichmentJobs:Array<()=>void>=[];
   targets.forEach((part:any)=>{
     const stableSourceMaterials=getAurumSourceMaterials(part);
     const originalMaterialIsArray=hadAurumSourceMaterialArray(part);
@@ -480,107 +498,126 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
       ? stableSourceMaterials.map((base:any)=>apply(base,part,thickness,null))
       : apply(stableSourceMaterials[0],part,thickness,null);
     const applicationToken=Number(part.userData?.aurumGemApplicationToken??0)+1;
-    const activeGemId=String(gemConfig?.id??"");
     part.userData={
       ...part.userData,
       aurumGemApplicationToken:applicationToken,
       aurumActiveGemId:activeGemId,
-      aurumActiveGemFamily:String(gemConfig?.familia??"").toLocaleLowerCase(),
+      aurumActiveGemFamily:activeGemFamily,
       aurumFacetNormalsApplied:true,
       aurumFacetNormalMode:part.geometry?.attributes?.normal?"authored-or-crease":"flat-fallback",
       aurumOpticalThickness:thickness,
       aurumOpticalThicknessSpace:"local",
       aurumOpticalThicknessMode:"local-bounds-v1",
       aurumGemThicknessMapDiagnostics:null,
-      aurumGemGeometryDiagnostics:inspectAurumGemGeometry(part),
-      ...(String(gemConfig?.familia??"")==="Diamante" ? { aurumDiamondPipelineDiagnostics:getAurumDiamondPipelineDiagnostics(part,"high") } : {}),
+      aurumGemGeometryDiagnostics:null,
+      ...(String(gemConfig?.familia??"")==="Diamante" ? { aurumDiamondPipelineDiagnostics:null } : {}),
+      aurumGemPhysicalModel:{
+        ...physicalModel,
+        crystal:{
+          ...physicalModel.crystal,
+          axisA:physicalModel.crystal.axisA.toArray(),
+          axisB:physicalModel.crystal.axisB.toArray(),
+          axisC:physicalModel.crystal.axisC.toArray(),
+        },
+      },
     };
-    console.warn("[AURUM][GEM MATERIAL APPLIED]",{
-      mesh:part.name||part.uuid,
-      selectedGem:{id:String(gemConfig?.id??""),nombre:String(gemConfig?.nombre??""),familia:String(gemConfig?.familia??""),color:String(gemConfig?.color??"")},
-      material:Array.isArray(part.material)?part.material.map((m:any)=>({color:m?.color?.getHexString?.(),metalness:m?.metalness,transmission:m?.transmission,ior:m?.ior,thickness:m?.thickness})):part.material?{color:part.material.color?.getHexString?.(),metalness:part.material.metalness,transmission:part.material.transmission,ior:part.material.ior,thickness:part.material.thickness}:null
-    });
-    console.warn("[AURUM][GEM GEOMETRY]",{mesh:part.name||part.uuid,diagnostics:part.userData.aurumGemGeometryDiagnostics});
-    part.userData={...part.userData,aurumGemPhysicalModel:{...physicalModel,crystal:{...physicalModel.crystal,axisA:physicalModel.crystal.axisA.toArray(),axisB:physicalModel.crystal.axisB.toArray(),axisC:physicalModel.crystal.axisC.toArray()}}};
-    renderAurumInclusions(THREE,part,gemConfig,9173,preset);
-    applyAurumLatinGemProfile(part,gemConfig);
-    if(String(gemConfig?.familia??"")==="Esmeralda"){
-      const finalMaterials=Array.isArray(part.material)?part.material:[part.material];
-      const textureFields=["map","normalMap","roughnessMap","metalnessMap","alphaMap","aoMap","bumpMap","emissiveMap","displacementMap","thicknessMap"];
-      const inclusionSummary:any[]=[];
-      part.traverse?.((node:any)=>{
-        if(node?.userData?.aurumInternalInclusion){
-          inclusionSummary.push({
-            type:String(node.userData?.aurumInclusionType??"unknown"),
-            gemId:String(node.userData?.aurumInclusionGemId??""),
-            quality:node.userData?.aurumInclusionQuality??null,
-            visible:Boolean(node.visible),
-            renderOrder:Number(node.renderOrder??0),
-            geometryType:node.geometry?.type??null,
-            localPosition:node.position?.toArray?.()??null,
-            localScale:node.scale?.toArray?.()??null,
-            materialType:node.material?.type??null,
-            depthTest:node.material?.depthTest??null,
-            materialOpacity:Number(node.material?.opacity??1),
-          });
-        }
-      });
-      console.info("[AURUM][EMERALD PROFILE TRACE]",{
-        stage:"after-application-and-inclusions",
-        requested:{id:String(gemConfig?.id??""),name:String(gemConfig?.nombre??""),family:String(gemConfig?.familia??"")},
-        catalog:{color:Number(gemConfig?.color??0).toString(16).padStart(6,"0"),transmission:gemConfig?.transmission,ior:gemConfig?.ior,roughness:gemConfig?.roughness,envMapIntensity:gemConfig?.envMapIntensity,attenuationDistance:gemConfig?.attenuationDistance,dispersion:gemConfig?.dispersion,iridescence:gemConfig?.iridescence,inclusionStrength:gemConfig?.inclusionStrength},
-        materials:finalMaterials.filter(Boolean).map((m:any)=>({
-          color:m.color?.getHexString?.()??null,transmission:m.transmission,ior:m.ior,roughness:m.roughness,envMapIntensity:m.envMapIntensity,
-          attenuationColor:m.attenuationColor?.getHexString?.()??null,attenuationDistance:m.attenuationDistance,dispersion:m.dispersion,iridescence:m.iridescence,
-          userDataGrade:m.userData?.aurumEmeraldCatalogGrade??null,
-          textures:Object.fromEntries(textureFields.map((field)=>[field,{present:Boolean(m[field]),name:m[field]?.name||null}])),
-        })),
-        inclusionCount:inclusionSummary.length,
-        inclusions:inclusionSummary.slice(0,24),
-      });
-    }
+    // Remove only this stone's previous internal inclusions. Their replacement
+    // is built after the new material has already been painted.
+    clearAurumInclusions(part);
     const expectedMaterials=Array.isArray(part.material)?[...part.material]:[part.material];
-    // The visible catalog material is already assigned. Bake the optional
-    // per-gem thickness map only after the browser has had a chance to paint,
-    // so its CPU ray/grid work cannot delay the first visual response.
-    const bakeThicknessMap=()=>{
-      try{
-        let root=part;
-        while(root?.parent)root=root.parent;
-        if(root?.userData?.aurumDisposed)return;
-        if(part.userData?.aurumGemApplicationToken!==applicationToken||part.userData?.aurumActiveGemId!==activeGemId)return;
-        const currentMaterials=Array.isArray(part.material)?part.material:[part.material];
-        if(currentMaterials.length!==expectedMaterials.length||currentMaterials.some((mat:any,index:number)=>mat!==expectedMaterials[index]))return;
-        const thicknessResolution=preset.familia==="Diamante"?512:preset.familia==="Moissanita"?384:256;
-        const result=buildAurumThicknessMap(part,preset.thicknessScale,thicknessResolution);
-        if(!result)return;
-        const materials=Array.isArray(part.material)?part.material:[part.material];
-        materials.forEach((mat:any)=>{
-          if(!mat)return;
-          mat.thickness=result.baseThickness;
-          mat.thicknessMap=result.texture;
-          mat.needsUpdate=true;
-        });
-        part.userData={
-          ...part.userData,
-          aurumOpticalThickness:result.baseThickness,
-          aurumGemThicknessMapDiagnostics:{method:result.method,hitRatio:result.hitRatio,minDepth:result.minDepth,maxDepth:result.maxDepth,cacheKey:result.cacheKey,normalMapRes:result.normalMapRes},
-        };
-        requestRender?.();
-      }catch(error){
-        console.warn("[AURUM][GEM THICKNESS MAP]",error);
-      }
+    const isCurrentApplication=()=>{
+      let root=part;
+      while(root?.parent)root=root.parent;
+      if(root?.userData?.aurumDisposed)return false;
+      if(part.userData?.aurumGemApplicationToken!==applicationToken||part.userData?.aurumActiveGemId!==activeGemId)return false;
+      const currentMaterials=Array.isArray(part.material)?part.material:[part.material];
+      return currentMaterials.length===expectedMaterials.length
+        && currentMaterials.every((mat:any,index:number)=>mat===expectedMaterials[index]);
     };
-    if(typeof window!=="undefined" && typeof (window as any).requestIdleCallback==="function"){
-      (window as any).requestIdleCallback(bakeThicknessMap,{timeout:1200});
-    }else if(typeof window!=="undefined"){
-      window.setTimeout(bakeThicknessMap,120);
-    }else{
-      bakeThicknessMap();
-    }
+
+    enrichmentJobs.push(()=>{
+      if(!isCurrentApplication())return;
+      const isCatalogEmeraldGrade=activeGemFamily==="esmeralda"
+        && ["esmeralda_1","esmeralda_2","esmeralda_3","esmeralda_inclusiones"].includes(activeGemId);
+      // Latin catalog profiles already provide their own inclusion geometry.
+      // Avoid creating generic inclusions only to clear and replace them again.
+      if(gemConfig?.perfilInterno && !isCatalogEmeraldGrade){
+        if(!applyAurumLatinGemProfile(part,gemConfig)){
+          renderAurumInclusions(THREE,part,gemConfig,9173,preset);
+        }
+      }else{
+        renderAurumInclusions(THREE,part,gemConfig,9173,preset);
+        if(gemConfig?.perfilInterno)applyAurumLatinGemProfile(part,gemConfig);
+      }
+
+      const geometryDiagnostics=inspectAurumGemGeometry(part);
+      const diamondDiagnostics=String(gemConfig?.familia??"")==="Diamante"
+        ? getAurumDiamondPipelineDiagnostics(part,"high")
+        : null;
+      if(!isCurrentApplication())return;
+      part.userData={
+        ...part.userData,
+        aurumGemGeometryDiagnostics:geometryDiagnostics,
+        ...(diamondDiagnostics?{aurumDiamondPipelineDiagnostics:diamondDiagnostics}:{ }),
+      };
+      if(gemAuditEnabled){
+        const materials=Array.isArray(part.material)?part.material:[part.material];
+        console.info("[AURUM][GEM APPLICATION]",{
+          mesh:part.name||part.uuid,
+          selectedGem:{id:activeGemId,nombre:String(gemConfig?.nombre??""),familia:String(gemConfig?.familia??""),color:String(gemConfig?.color??"")},
+          material:materials.filter(Boolean).map((m:any)=>({
+            color:m.color?.getHexString?.()??null,
+            transmission:m.transmission??null,
+            ior:m.ior??null,
+            roughness:m.roughness??null,
+            thickness:m.thickness??null,
+          })),
+          geometry:geometryDiagnostics,
+          diamond:diamondDiagnostics,
+        });
+      }
+
+      // Per-ray thickness is optional refinement. It runs after paint and only
+      // if this exact application is still current (rapid catalog changes cancel
+      // stale work without touching the new material).
+      scheduleIdle(()=>{
+        if(!isCurrentApplication())return;
+        try{
+          const thicknessResolution=preset.familia==="Diamante"?512:preset.familia==="Moissanita"?384:256;
+          const result=buildAurumThicknessMap(part,preset.thicknessScale,thicknessResolution);
+          if(!result||!isCurrentApplication())return;
+          const materials=Array.isArray(part.material)?part.material:[part.material];
+          materials.forEach((mat:any)=>{
+            if(!mat)return;
+            mat.thickness=result.baseThickness;
+            mat.thicknessMap=result.texture;
+            mat.needsUpdate=true;
+          });
+          part.userData={
+            ...part.userData,
+            aurumOpticalThickness:result.baseThickness,
+            aurumGemThicknessMapDiagnostics:{
+              method:result.method,
+              hitRatio:result.hitRatio,
+              minDepth:result.minDepth,
+              maxDepth:result.maxDepth,
+              cacheKey:result.cacheKey,
+              normalMapRes:result.normalMapRes,
+            },
+          };
+          requestRender?.();
+        }catch(error){
+          if(gemAuditEnabled)console.warn("[AURUM][GEM THICKNESS MAP]",error);
+        }
+      },1400);
+    });
   });
-  applyGemEnvironment();
+
+  // Apply the gem HDR only to the meshes assigned by this click, then paint.
+  // The rest of the model is not traversed or rewritten during a catalog change.
+  applyGemEnvironment(targets);
   requestRender?.();
+  enrichmentJobs.forEach((job)=>scheduleIdle(job,700));
   return true;
 }
 export function clearAurumGemFromTarget(target:any){if(target)clearAurumInclusions(target);}
