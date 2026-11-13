@@ -3506,16 +3506,32 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             renderer.setPixelRatio(settledDpr);
             composer?.setPixelRatio?.(settledDpr);
 
-            const coreBeautyPasses = new Set([renderPass, gemMaskPass, fxaaPass, outputPass]);
+            // Progressive TAA is reserved for the settled state. It is deliberately
+            // excluded from onStart(), so orbiting never pays temporal accumulation
+            // cost or blends stale frames. The demand loop supplies a bounded sample
+            // window and stops as soon as it converges.
+            const taaEligible = Boolean(
+              idleTaaPass
+              && postRuntimeConfig.taa === true
+              && measuredQualityId !== "low"
+            );
+            const coreBeautyPasses = new Set([
+              renderPass,
+              gemMaskPass,
+              fxaaPass,
+              outputPass,
+              ...(taaEligible ? [idleTaaPass] : []),
+            ]);
             const settledPasses = ((composer as any)?.passes ?? []) as any[];
             settledPasses.forEach((pass) => { pass.enabled = coreBeautyPasses.has(pass); });
 
             const sameBeautyPipelineAvailable = Boolean(composer && renderPass && gemMaskPass && fxaaPass && outputPass);
             liveFastPathRef.current = !sameBeautyPipelineAvailable;
             aplicarPerfilLive(true);
+            // This transition enables accumulation only when applyQuality()
+            // requested TAA for the current quality profile.
             setTemporalMotion?.(false);
-
-            if (idleTaaPass) {
+            if (idleTaaPass && !taaEligible) {
               idleTaaPass.enabled = false;
               idleTaaPass.accumulate = false;
               idleTaaPass.accumulateIndex = -1;
