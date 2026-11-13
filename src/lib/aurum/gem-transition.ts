@@ -54,9 +54,10 @@ export function captureAurumGemTransitionState(target: any): GemMaterialSnapshot
       });
     });
   };
-  // A selected gem is a single mesh boundary. Do not walk its ancestors
-  // or descendants: nested/neighboring geometry must never enter this blend.
-  visit(target);
+  // Use only the meshes resolved for this exact assignment. Never walk
+  // the model root, where previously assigned neighboring gems also live.
+  const targets = Array.isArray(target) ? target : [target];
+  targets.forEach(visit);
   return snapshots;
 }
 
@@ -98,8 +99,10 @@ export function createAurumGemTransition(
       });
     });
   };
-  // Match the snapshot boundary exactly: only the clicked mesh may animate.
-  visit(target);
+  // Match the snapshot boundary exactly: animate only meshes belonging
+  // to the currently selected gem assignment/layer.
+  const targets = Array.isArray(target) ? target : [target];
+  targets.forEach(visit);
   if (tracks.length === 0) return null;
 
   let frameId = 0;
