@@ -8,24 +8,44 @@
 export type AurumDisposer = () => void | Promise<void>;
 export type AurumEventHandler<T = unknown> = (payload: T) => void;
 
+function validateEventName(event: string): void {
+  if (!event.trim()) throw new Error("AURUM event name cannot be empty.");
+  if (event !== event.trim()) {
+    throw new Error("AURUM event name cannot have leading or trailing whitespace.");
+  }
+}
+
 export class AurumEventBus {
   private readonly listeners = new Map<string, Set<AurumEventHandler<any>>>();
   private disposed = false;
 
   on<T>(event: string, handler: AurumEventHandler<T>): AurumDisposer {
     if (this.disposed) throw new Error("AURUM event bus is disposed.");
-    if (!event.trim()) throw new Error("AURUM event name cannot be empty.");
+    validateEventName(event);
+    if (typeof handler !== "function") {
+      throw new Error("AURUM event handler must be a function.");
+    }
+
     const handlers = this.listeners.get(event) ?? new Set<AurumEventHandler<any>>();
     handlers.add(handler);
     this.listeners.set(event, handlers);
+    let subscribed = true;
+
     return () => {
+      if (!subscribed) return;
+      subscribed = false;
       handlers.delete(handler);
-      if (handlers.size === 0) this.listeners.delete(event);
+      // Do not let a stale disposer delete a newer listener set created
+      // after clear/reset for the same event name.
+      if (handlers.size === 0 && this.listeners.get(event) === handlers) {
+        this.listeners.delete(event);
+      }
     };
   }
 
   emit<T>(event: string, payload: T): void {
     if (this.disposed) return;
+    validateEventName(event);
     const handlers = this.listeners.get(event);
     if (!handlers) return;
 
