@@ -589,3 +589,21 @@ test("initial jewel presentation awaits BVH and synchronizes model and camera be
   expect(bvhBlock).toContain("runtime.update();");
   expect(sceneBlock).not.toContain("liveFastPathRef.current = true;");
 });
+
+
+test("image export resets temporal accumulation and converges the restored live viewport", () => {
+  const componentSource = readFileSync("src/components/AurumRender.tsx", "utf8");
+  const exportStart = componentSource.indexOf("exportPNG:async");
+  const restoreStart = componentSource.indexOf("// Rebuild the settled viewport image after the temporary high-resolution", exportStart);
+  const restoreEnd = componentSource.indexOf("if(!dataUrl", restoreStart);
+  const restoreBlock = componentSource.slice(restoreStart, restoreEnd);
+
+  expect(exportStart).toBeGreaterThan(-1);
+  expect(restoreStart).toBeGreaterThan(exportStart);
+  expect(restoreBlock).toContain("resetTemporalAccumulationRef.current?.();");
+  expect(restoreBlock).toContain("loop?.resize?.();");
+  expect(restoreBlock).toContain("loop?.resume?.();");
+  expect(restoreBlock).toContain("loop?.converge?.(4);");
+  expect(restoreBlock.indexOf("loop?.resize?.();")).toBeLessThan(restoreBlock.indexOf("loop?.resume?.();"));
+  expect(restoreBlock.indexOf("loop?.resume?.();")).toBeLessThan(restoreBlock.indexOf("loop?.converge?.(4);"));
+});
