@@ -289,7 +289,7 @@ export function applyAurumMaterialToModel(model:any,activePart:any,materialConfi
   return applied>0;
 }
 
-export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironment:()=>void,requestRender?:()=>void,applyAll=false) {
+export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironment:()=>void,requestRender?:()=>void,applyAll=false,onTargetsResolved?:(targets:any[])=>void) {
   if(!target?.isMesh)return false;
   const selectedCategory=selectionCategory(target);
   // GLB meshes without Rhino layer metadata are categorized as "otro".
@@ -358,6 +358,10 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
       targets.push(target);
     }
   }
+
+  // Expose the exact mesh set resolved for this assignment before materials
+  // are replaced, so the transition snapshots only this gemstone/layer.
+  onTargetsResolved?.(targets.slice());
 
   const rootUserData=modelRoot.userData??{};
   const priorAssignments=rootUserData.aurumGemLayerAssignments??{};
