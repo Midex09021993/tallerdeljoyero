@@ -3081,8 +3081,16 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         parteActiva = obj;
         const nombre = (typeof obj.name === "string" && obj.name.trim()) ? obj.name.trim() : "Componente seleccionado";
         const meta = obj.userData?.aurumRhino || {};
-        const capa = meta.capa || obj.userData?.attributes?.layerName || null;
-        const categoria = (meta.categoria || clasificarCapa(capa || "", meta.colorCapa)) as CategoriaParte;
+        const capa = meta.capa || obj.userData?.attributes?.layerName || obj.userData?.attributes?.LayerName || null;
+        const sourceCategory = String(meta.categoria ?? "").toLowerCase();
+        const layerCategory = clasificarCapa(capa || "", meta.colorCapa);
+        // Match the catalog resolver: a stale "otro" tag must not hide an
+        // explicitly gem-named Rhino/GLB layer from the one-click workflow.
+        const categoria = (sourceCategory === "gema"
+          ? "gema"
+          : (!sourceCategory || sourceCategory === "otro")
+            ? layerCategory
+            : sourceCategory) as CategoriaParte;
         setParteSeleccionada(obj.uuid);
         setParteSeleccionadaNombre(nombre);
         setParteSeleccionadaCapa(capa);
@@ -3270,7 +3278,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         // Catalog choice is non-destructive. Apply only after an explicit click
         // on a mesh classified as a gemstone.
         const pendingGem = pendingGemApplicationRef.current;
-        if (pendingGem && categoria === "gema") {
+        // A deliberate model click is an explicit target choice. Unknown GLB
+        // meshes ("otro") are supported by applyAurumGemToTarget as exact-mesh
+        // assignments; never consume the pending gem on a known metal mesh.
+        if (pendingGem && (categoria === "gema" || categoria === "otro")) {
           pendingGemApplicationRef.current = null;
           aplicarGema(pendingGem, obj, false, true);
         }
@@ -4429,7 +4440,21 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 <div className="mb-2 flex items-center justify-between gap-2"><div className="min-w-0 truncate text-[10px] font-semibold uppercase tracking-[.12em] text-[#77756f]">{busquedaGemas.trim() ? `Resultados: ${busquedaGemas.trim()}` : familiaGemaActiva==="Predeterminadas"?"Gemas predeterminadas":familiaGemaActiva+" · "+GEMAS.filter(g=>g.familia===familiaGemaActiva).length+" disponibles"}</div><span className="shrink-0 text-[9px] text-[#99968d]">{gemasVisibles.length} visibles</span></div>
                 <div className="grid grid-cols-4 gap-2.5 pb-1">
                   {gemasVisibles.map(g=><button key={g.id} type="button" title={g.nombre} aria-label={g.nombre}
-                    onClick={()=>{setBibliotecaTipo("gemas");setGemaId(g.id);pendingGemApplicationRef.current=g;}}
+                    onClick={()=>{
+                      setBibliotecaTipo("gemas");
+                      setGemaId(g.id);
+                      const hasSelectedGemTarget = parteSeleccionadaCategoria === "gema" && Boolean(parteSeleccionada);
+                      if (hasSelectedGemTarget && typeof apiRef.current?.gema === "function") {
+                        // Changing the catalog choice updates the already-selected
+                        // gemstone immediately; no second click on the 3D model.
+                        pendingGemApplicationRef.current = null;
+                        apiRef.current.gema(g);
+                      } else {
+                        // If no gemstone is selected yet, arm the choice for the
+                        // next explicit click on a gemstone in the viewport.
+                        pendingGemApplicationRef.current = g;
+                      }
+                    }}
                     className={"group relative flex flex-col items-center rounded-2xl border p-2.5 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b99642]/45 "+(gemaId===g.id?"border-[#b99642]/60 bg-white shadow-[0_4px_14px_rgba(50,42,20,.10)]":"border-transparent bg-white/25 hover:border-[#d8d1c2] hover:bg-white/85")}>
                     <span className={"relative grid size-14 place-items-center rounded-full border transition "+(gemaId===g.id?"border-[#b99642] shadow-[0_0_0_3px_rgba(185,150,66,.10)]":"border-black/10 group-hover:border-black/20")}>
                       <span className="relative size-12 overflow-hidden rounded-full shadow-[inset_-4px_-5px_9px_rgba(0,0,0,.5),inset_4px_3px_8px_rgba(255,255,255,.28),0_3px_8px_rgba(0,0,0,.5)]"
