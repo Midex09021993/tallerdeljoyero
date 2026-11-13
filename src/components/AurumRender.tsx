@@ -1553,7 +1553,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
 
       const aplicarGema = (g:GemaConfig, objetivo?:any, aplicarTodas=false, renderImmediately=true) => {
         const target=objetivo||parteActiva;
-        let resolvedTargets:any[]=[];
         let targetHadActiveBvh=false;
         const applied=applyAurumGemToTarget(
           target,
@@ -1562,7 +1561,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           ()=>invalidateRenderRef.current?.(),
           aplicarTodas,
           (targets:any[])=>{
-            resolvedTargets=targets;
             // Capture this before the material replacement. Only refresh the
             // expensive BVH runtime when this exact gem layer owned a BVH entry.
             targetHadActiveBvh=diamondBvhRuntime?.hasActiveMeshes?.(targets)??false;
