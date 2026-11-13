@@ -81,17 +81,28 @@ export async function createAurumDiamondBvhRuntime(options: {
   // Camera uniforms are shared by all BVH gems. Avoid rewriting them when
   // multiple invalidations/API calls occur without an actual camera change.
   // Reset after refresh so newly-created BVH materials always receive a camera update.
-  let lastCameraState: number[] | null = null;
-  const readCameraState = (): number[] => {
+  // Reuse fixed-size camera snapshots in the hot render loop. A separate
+  // previous-state buffer is required because readCameraState mutates in place.
+  const cameraStateBuffer = new Float64Array(12);
+  const lastCameraState = new Float64Array(12);
+  let hasLastCameraState = false;
+  const readCameraState = (): Float64Array => {
     const camera = options.camera as any;
     const position = camera.position;
     const quaternion = camera.quaternion;
-    return [
-      position?.x ?? 0, position?.y ?? 0, position?.z ?? 0,
-      quaternion?.x ?? 0, quaternion?.y ?? 0, quaternion?.z ?? 0, quaternion?.w ?? 1,
-      camera.zoom ?? 1, camera.fov ?? 0, camera.aspect ?? 0,
-      camera.near ?? 0, camera.far ?? 0,
-    ];
+    cameraStateBuffer[0] = position?.x ?? 0;
+    cameraStateBuffer[1] = position?.y ?? 0;
+    cameraStateBuffer[2] = position?.z ?? 0;
+    cameraStateBuffer[3] = quaternion?.x ?? 0;
+    cameraStateBuffer[4] = quaternion?.y ?? 0;
+    cameraStateBuffer[5] = quaternion?.z ?? 0;
+    cameraStateBuffer[6] = quaternion?.w ?? 1;
+    cameraStateBuffer[7] = camera.zoom ?? 1;
+    cameraStateBuffer[8] = camera.fov ?? 0;
+    cameraStateBuffer[9] = camera.aspect ?? 0;
+    cameraStateBuffer[10] = camera.near ?? 0;
+    cameraStateBuffer[11] = camera.far ?? 0;
+    return cameraStateBuffer;
   };
 
   const familyCounts: Record<string, number> = {};
@@ -109,7 +120,7 @@ export async function createAurumDiamondBvhRuntime(options: {
 
   const refresh = (model: THREE.Object3D | null | undefined) => {
     if (!model || disposed) return;
-    lastCameraState = null;
+    hasLastCameraState = false;
     const found = new Set<THREE.Mesh>();
     for (const key of Object.keys(familyCounts)) delete familyCounts[key];
     skippedTargetMeshes.length = 0;
@@ -361,19 +372,23 @@ export async function createAurumDiamondBvhRuntime(options: {
     update() {
       if (disposed || entries.size === 0) return;
       const nextCameraState = readCameraState();
-      if (
-        lastCameraState
-        && nextCameraState.length === lastCameraState.length
-        && nextCameraState.every((value, index) => value === lastCameraState![index])
-      ) {
-        return;
+      let cameraUnchanged = hasLastCameraState;
+      if (cameraUnchanged) {
+        for (let index = 0; index < nextCameraState.length; index++) {
+          if (nextCameraState[index] !== lastCameraState[index]) {
+            cameraUnchanged = false;
+            break;
+          }
+        }
       }
+      if (cameraUnchanged) return;
       for (const entry of entries.values()) {
         packageApi.updateDiamondCamera(entry.experimentalMaterial, options.camera);
       }
       // Commit only after every material accepted the camera update. If one
       // update throws, the next render frame retries instead of staying stale.
-      lastCameraState = nextCameraState;
+      lastCameraState.set(nextCameraState);
+      hasLastCameraState = true;
     },
     updateEnvironment(rotationRadians, intensityScale) {
       if (disposed) return;
