@@ -1,5 +1,8 @@
 import { AurumPluginRegistry, type AurumPluginDefinition } from "./plugin-registry";
 import { AurumServiceContainer } from "./service-container";
+import { createAurumGpuResourceManager } from "./gpu-resource-manager";
+
+export const AURUM_GPU_RESOURCE_SERVICE = "aurum.gpu.resources" as const;
 
 export interface AurumProductionModule {
   readonly id: string;
@@ -25,6 +28,8 @@ export function createAurumProductionPluginHost(
   appVersion = "1.0.0",
 ): AurumProductionPluginHost {
   const container = new AurumServiceContainer();
+  const gpuResources = createAurumGpuResourceManager();
+  container.register(AURUM_GPU_RESOURCE_SERVICE, gpuResources);
   const definitions: AurumPluginDefinition[] = [];
 
   for (const module of modules) {
@@ -62,6 +67,23 @@ export function createAurumProductionPluginHost(
     services,
     registry,
     moduleIds: Object.freeze(definitions.map(({ id }) => id)),
-    dispose: () => registry.dispose(),
+    async dispose() {
+      const failures: unknown[] = [];
+      // Plugins release their own resources first. The host then disposes any
+      // resources left registered, including shared GPU allocations.
+      try {
+        await registry.dispose();
+      } catch (error) {
+        failures.push(error);
+      }
+      try {
+        gpuResources.dispose();
+      } catch (error) {
+        failures.push(error);
+      }
+      if (failures.length) {
+        throw new AggregateError(failures, "AURUM production host cleanup failed.");
+      }
+    },
   });
 }
