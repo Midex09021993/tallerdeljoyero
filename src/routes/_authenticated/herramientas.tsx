@@ -359,7 +359,7 @@ function HerramientasPage() {
                       <div className="rounded-lg border border-border p-3"><p className="text-xs font-semibold">Light Engine</p><p className="mt-1 text-[10px] text-emerald-700 dark:text-emerald-400">Conectado</p></div>
                       <div className="rounded-lg border border-border p-3"><p className="text-xs font-semibold">Metal Engine</p><p className="mt-1 text-[10px] text-emerald-700 dark:text-emerald-400">Conectado</p></div>
                       <div className="rounded-lg border border-border p-3"><p className="text-xs font-semibold">Gem Engine</p><p className="mt-1 text-[10px] text-emerald-700 dark:text-emerald-400">Conectado</p></div>
-                      <div className="rounded-lg border border-border p-3"><p className="text-xs font-semibold">Final Render Pipeline</p><p className="mt-1 text-[10px] text-muted-foreground">Siguiente fase</p></div>
+                      <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3"><p className="text-xs font-semibold">Final Render Adapter</p><p className="mt-1 text-[10px] text-emerald-700 dark:text-emerald-400">Conectado</p></div>
                     </div>
                   </div>
                   <div className="mx-auto h-6 w-px bg-border" />
@@ -368,7 +368,7 @@ function HerramientasPage() {
                     <p className="mt-1 text-[10px] text-muted-foreground">Escena · Cámara · Renderer · Controles · Geometría · Materiales · HDRI · GPU</p>
                   </div>
                 </div>
-                <p className="mx-auto mt-3 max-w-4xl text-[11px] leading-5 text-muted-foreground">Viewer Adapter, Scene Adapter, Lighting Adapter, Metal Adapter y Gem Adapter ya exponen el visor, las escenas, la iluminación y los motores de materiales mediante contratos estables. Gem Adapter delega en los perfiles ópticos de producción; shaders, BVH, HDRI, dispersión, inclusiones y calibraciones permanecen en sus módulos especializados. Final Render Pipeline seguirá en la siguiente fase.</p>
+                <p className="mx-auto mt-3 max-w-4xl text-[11px] leading-5 text-muted-foreground">Viewer Adapter, Scene Adapter, Lighting Adapter, Metal Adapter, Gem Adapter y Final Render Adapter ya exponen servicios estables del motor. Final Render Adapter delega en el path tracer aislado de producción; mantiene su clonación de escena, muestreo progresivo, rebotes, HDRI independiente para gemas y restauración del estado del renderer. No reemplaza el render interactivo ni modifica los shaders ópticos.</p>
               </div>
               <div className="grid gap-3 p-5 sm:grid-cols-2 sm:p-7 lg:grid-cols-3">
                 <article className="rounded-xl border border-border p-4">
