@@ -439,6 +439,12 @@ function HerramientasPage() {
                         <p className="mt-2 font-mono text-[10px] text-sky-700 dark:text-sky-400">src/lib/aurum/core/context.ts</p>
                         <p className="mt-1 text-[10px] text-muted-foreground">Tocar cuando: se registra o libera una suscripción/recurso del plugin.</p>
                       </article>
+                      <article className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
+                        <p className="text-xs font-semibold">GPU Resource Manager</p>
+                        <p className="mt-1 text-xs leading-5 text-muted-foreground">Gestiona referencias y liberación explícita por propietario. Su adopción sobre recursos de producción sigue siendo parcial y controlada.</p>
+                        <p className="mt-2 font-mono text-[10px] text-amber-700 dark:text-amber-400">src/lib/aurum/core/gpu-resource-manager.ts</p>
+                        <p className="mt-1 text-[10px] text-muted-foreground">Tocar cuando: se planifica transferir ownership de un recurso GPU con pruebas de creación, uso y dispose.</p>
+                      </article>
                     </div>
                   </div>
                   <div>
@@ -509,6 +515,24 @@ function HerramientasPage() {
                         <p className="mt-1 text-xs leading-5 text-muted-foreground">Publica la capacidad de captura final bajo demanda; utiliza la ruta especializada de captura/path tracing.</p>
                         <p className="mt-2 font-mono text-[10px] text-sky-700 dark:text-sky-400">src/lib/aurum/core/final-render-adapter.ts · path-traced-capture.ts · path-tracer-final.ts</p>
                         <p className="mt-1 text-[10px] text-muted-foreground">Tocar cuando: falla la captura final o cambia su calidad y proceso.</p>
+                      </article>
+                      <article className="rounded-lg border border-border p-3">
+                        <p className="text-xs font-semibold">AURUM IMAGE EXPORT</p>
+                        <p className="mt-1 text-xs leading-5 text-muted-foreground">Captura fija desde el viewport con los pases visuales del visor y salida PNG, JPEG o WebP.</p>
+                        <p className="mt-2 font-mono text-[10px] text-sky-700 dark:text-sky-400">src/components/AurumRender.tsx · src/lib/aurum/aspect-ratios.ts</p>
+                        <p className="mt-1 text-[10px] text-muted-foreground">Tocar cuando: el archivo exportado no coincide con la composición visible.</p>
+                      </article>
+                      <article className="rounded-lg border border-border p-3">
+                        <p className="text-xs font-semibold">AURUM VIDEO EXPORT</p>
+                        <p className="mt-1 text-xs leading-5 text-muted-foreground">Captura frames con el compositor live, los entrega a MediaRecorder y restaura el estado del visor al finalizar.</p>
+                        <p className="mt-2 font-mono text-[10px] text-sky-700 dark:text-sky-400">src/lib/aurum/video-frame-pipeline.ts · video-exporter.ts · src/components/AurumRender.tsx</p>
+                        <p className="mt-1 text-[10px] text-muted-foreground">Tocar cuando: el vídeo difiere del visor, falla la codificación o no se restaura el estado.</p>
+                      </article>
+                      <article className="rounded-lg border border-border p-3">
+                        <p className="text-xs font-semibold">Aspect Ratio Profiles</p>
+                        <p className="mt-1 text-xs leading-5 text-muted-foreground">Centraliza las proporciones y dimensiones de salida para imagen y vídeo: 16:9, 1:1, 4:5, 9:16 y 3:2.</p>
+                        <p className="mt-2 font-mono text-[10px] text-sky-700 dark:text-sky-400">src/lib/aurum/aspect-ratios.ts</p>
+                        <p className="mt-1 text-[10px] text-muted-foreground">Tocar cuando: se añade o corrige un formato de encuadre.</p>
                       </article>
                     </div>
                   </div>
