@@ -9,6 +9,8 @@ export interface AurumProductionModule {
   readonly version?: string;
   readonly services: ReadonlyMap<string, unknown>;
   readonly dependencies?: readonly string[];
+  readonly requiresServices?: readonly string[];
+  readonly description?: string;
 }
 
 export interface AurumProductionPluginHost {
@@ -40,6 +42,9 @@ export function createAurumProductionPluginHost(
     definitions.push({
       id: module.id,
       version: module.version ?? appVersion,
+      ...(module.description ? { description: module.description } : {}),
+      providesServices: [...module.services.keys()],
+      ...(module.requiresServices ? { requiresServices: module.requiresServices } : {}),
       ...(module.dependencies ? { dependencies: module.dependencies } : {}),
       initialize: (context) => {
         for (const serviceId of module.services.keys()) {
