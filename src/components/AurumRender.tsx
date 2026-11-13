@@ -38,6 +38,7 @@ import { disposeAurumThicknessCacheForTarget } from "../lib/aurum/thickness-map"
 import { createAurumApi, createAurumCatalogApi, type AurumCatalogApi } from "../lib/aurum/api";
 import { createAurumConfiguratorState } from "../lib/aurum/configurator-state";
 import { createAurumViewerAdapter, AURUM_VIEWER_SERVICES } from "../lib/aurum/core/viewer-adapter";
+import { createAurumSceneAdapter } from "../lib/aurum/core/scene-adapter";
 import { AURUM_ASPECT_RATIOS, getAurumAspectRatio, getAurumAspectDimensions, getAurumAspectFrameStyle, type AurumAspectRatioId } from "../lib/aurum/aspect-ratios";
 import { countAurumTriangles, getAurumRuntimeBudget, type AurumRuntimeBudget } from "../lib/aurum/runtime-budget";
 import { prepareAurumLiveGeometry, setAurumLiveGeometryQuality, disposeAurumLiveGeometry } from "../lib/aurum/live-geometry-lod";
@@ -1260,9 +1261,12 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         groundController,
         nodo
       );
+      // Scene Adapter exposes the established scene controller through AURUM CORE.
+      // The underlying presets, background rules and ground behaviour remain unchanged.
+      const sceneAdapter = createAurumSceneAdapter(sceneController);
       // Fondo inicial del visor: blanco puro. Los proyectos guardados pueden
       // restaurar después su propio fondo desde la configuración del proyecto.
-      sceneController.setBackground("blanco");
+      sceneAdapter.setBackground("blanco");
       const photoInicial = getAurumPhotographicProfile("ijewelReference");
       // La escena visual no administra los HDRI ni la exposición: se inicializan
       // aquí una sola vez y permanecen bajo sus controles independientes.
@@ -1325,7 +1329,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         () => { initialMetalReady = true; confirmarAmbienteInicial(); },
         () => toast.error("No se pudo cargar el HDR inicial de metales.")
       );
-      const presetInicial = sceneController.apply("ijewelReference");
+      const presetInicial = sceneAdapter.apply("ijewelReference");
       // The initial selected UI preset is confirmed only after both HDR maps load.
       cargarEntornoGema(
         "predeterminado",
@@ -1672,7 +1676,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       const aplicarEscenario = (id:EscenarioId) => {
         // Cambiar la iluminación no debe alterar la ruta de renderizado:
         // el pipeline de belleza se controla exclusivamente por el ciclo del visor.
-        const scenePreset = sceneController.apply(id);
+        const scenePreset = sceneAdapter.apply(id);
         if (Number.isFinite(scenePreset.environmentRotation)) {
           environmentController.setRotation(scenePreset.environmentRotation as number);
         }
@@ -1905,7 +1909,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         // Presentación inicial determinista: producto + studioSoft + framing.
         // iJewel separates scene, camera and material configuration; Aurum does
         // the same at load time so the user sees a finished product preview.
-        sceneController.apply("ijewelReference");
+        sceneAdapter.apply("ijewelReference");
         const photoInicialModelo = getAurumPhotographicProfile("ijewelReference");
         calibrarReflejosMetalEscena(photoInicialModelo);
         Object.assign(postRuntimeConfig, {
@@ -2295,7 +2299,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         },
         fondo:(key:string)=>{
           setFondoId(key);
-          sceneController.setBackground(key);
+          sceneAdapter.setBackground(key);
           invalidateRenderRef.current?.();
         },
         sceneStudio:(_patch:any)=>{},
@@ -2897,7 +2901,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               // Export from the scene controller's source-of-truth descriptor.
               // Do not read computed CSS: its serialization is browser-dependent
               // and the renderer effect can outlive the React state that selected it.
-              const selectedBackground = sceneController.getBackground();
+              const selectedBackground = sceneAdapter.getBackground();
               const backgroundColor = selectedBackground.color ?? "#ffffff";
               context.fillStyle = backgroundColor === "transparent" ? "#ffffff" : backgroundColor;
               context.fillRect(0, 0, width, height);
