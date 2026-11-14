@@ -141,6 +141,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
   const diamondBvhRuntimeRef = useRef<Awaited<ReturnType<typeof createAurumDiamondBvhRuntime>> | null>(null);
   const gemEnvironmentReadyRef = useRef<Promise<THREE.Texture | null> | null>(null);
   const bvhCameraStateRef = useRef<Float64Array | null>(null);
+  const bvhCameraPoseBufferRef = useRef(new Float64Array(10));
   const [modelLoadedVersion, setModelLoadedVersion] = useState(0);
   const renderRef = useRef<(() => void) | null>(null);
   const materialIdRef = useRef(materialId);
@@ -552,17 +553,18 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
           const frameStartedAt = framePerf ? performance.now() : 0;
           const previous = bvhCameraStateRef.current;
           const state = previous ?? new Float64Array(10);
+          const current = cameraControls!.writePoseSnapshot(bvhCameraPoseBufferRef.current);
           const cameraChanged = previous === null
-            || Math.abs(camera.position.x - state[0]!) > 1e-7
-            || Math.abs(camera.position.y - state[1]!) > 1e-7
-            || Math.abs(camera.position.z - state[2]!) > 1e-7
-            || Math.abs(camera.quaternion.x - state[3]!) > 1e-7
-            || Math.abs(camera.quaternion.y - state[4]!) > 1e-7
-            || Math.abs(camera.quaternion.z - state[5]!) > 1e-7
-            || Math.abs(camera.quaternion.w - state[6]!) > 1e-7
-            || Math.abs(controls.target.x - state[7]!) > 1e-7
-            || Math.abs(controls.target.y - state[8]!) > 1e-7
-            || Math.abs(controls.target.z - state[9]!) > 1e-7;
+            || Math.abs(current[0]! - state[0]!) > 1e-7
+            || Math.abs(current[1]! - state[1]!) > 1e-7
+            || Math.abs(current[2]! - state[2]!) > 1e-7
+            || Math.abs(current[3]! - state[3]!) > 1e-7
+            || Math.abs(current[4]! - state[4]!) > 1e-7
+            || Math.abs(current[5]! - state[5]!) > 1e-7
+            || Math.abs(current[6]! - state[6]!) > 1e-7
+            || Math.abs(current[7]! - state[7]!) > 1e-7
+            || Math.abs(current[8]! - state[8]!) > 1e-7
+            || Math.abs(current[9]! - state[9]!) > 1e-7;
           let bvhDurationMs = 0;
           if (cameraChanged) {
             const bvhStartedAt = framePerf ? performance.now() : 0;
@@ -571,16 +573,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
               bvhDurationMs = performance.now() - bvhStartedAt;
               framePerf.bvhUpdates += 1;
             }
-            state[0] = camera.position.x;
-            state[1] = camera.position.y;
-            state[2] = camera.position.z;
-            state[3] = camera.quaternion.x;
-            state[4] = camera.quaternion.y;
-            state[5] = camera.quaternion.z;
-            state[6] = camera.quaternion.w;
-            state[7] = controls.target.x;
-            state[8] = controls.target.y;
-            state[9] = controls.target.z;
+            state.set(current);
             bvhCameraStateRef.current = state;
           }
           const renderStartedAt = framePerf ? performance.now() : 0;
