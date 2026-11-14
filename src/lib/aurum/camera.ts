@@ -97,11 +97,10 @@ export function applyAurumCameraView(
   const horizontalHalfFov = Math.atan(Math.tan(verticalHalfFov) * aspect);
   const limitingHalfFov = Math.max(0.01, Math.min(verticalHalfFov, horizontalHalfFov));
   const fitDistance = radius / Math.sin(limitingHalfFov);
-  // 18% de margen fotográfico, ajustado por categoría para conservar aire
-  // adicional en collares, aretes y piezas alargadas.
-  // Reduce the original photographic breathing room slightly so the jewel
-  // occupies a little more of the viewport without changing its proportions.
-  const distance = Math.max(fitDistance * 1.10 * profile.distance, 0.1);
+  // Encuadre inicial ligeramente más cercano: elimina el margen extra del
+  // 10% que dejaba demasiado espacio vacío alrededor de piezas pequeñas.
+  // Los perfiles por categoría siguen añadiendo distancia cuando la necesitan.
+  const distance = Math.max(fitDistance * 1.00 * profile.distance, 0.1);
   const verticalBias = radius * profile.vertical;
 
   controls.target.copy(target);
