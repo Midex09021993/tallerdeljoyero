@@ -75,7 +75,6 @@ export function createAurumObjectSelectionModule(
     },
     dispose() {
       disposed = true;
-      input.onMiss = undefined;
     },
   };
   return Object.freeze(contract);
