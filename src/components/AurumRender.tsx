@@ -41,7 +41,6 @@ import { disposeAurumThicknessCacheForTarget } from "../lib/aurum/thickness-map"
 import { createAurumApi, createAurumCatalogApi, type AurumCatalogApi } from "../lib/aurum/api";
 import { createAurumConfiguratorState } from "../lib/aurum/configurator-state";
 import { createAurumViewerAdapter, AURUM_VIEWER_SERVICES } from "../lib/aurum/core/viewer-adapter";
-import { createAurumCameraControlsContract } from "../lib/aurum/core/camera-controls-contract";
 import { createAurumObjectSelectionModule } from "../lib/aurum/core/object-selection-module";
 import { createAurumSceneAdapter } from "../lib/aurum/core/scene-adapter";
 import { createAurumLightingAdapter } from "../lib/aurum/core/lighting-adapter";
@@ -880,16 +879,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       const nodo = visorRef.current;      if (!vivo || !nodo) return;
       let renderQuality = getAurumRenderQuality(renderQualityId);
       let measuredQualityId: AurumRenderQualityId = renderQualityId;
-      const { scene: escena, camera: camara, renderer, controls: controles } = createAurumWebGLViewer(THREE, nodo, {
+      const { scene: escena, camera: camara, renderer, cameraControls: cameraControlsContract } = createAurumWebGLViewer(THREE, nodo, {
         pixelRatio: renderQuality.pixelRatio,
         maxDistance: 100,
         controlsClass: (await import("three/examples/jsm/controls/OrbitControls.js")).OrbitControls,
       });
+      if (!cameraControlsContract) throw new Error("AURUM CAMERA no pudo inicializar OrbitControls.");
       setPerformanceRenderer(renderer);
       performanceMonitorRef.current.reset();
-      // OrbitControls is now owned and disposed by the AURUM CAMERA contract.
-      // The viewer lifecycle only owns scene/renderer resources and delegates camera input.
-      const cameraControlsContract = createAurumCameraControlsContract(camara, controles);
       // AURUM CORE exposes the scene/renderer plus the single semantic camera
       // contract. Raw camera and OrbitControls are not published to consumers.
       const viewerAdapter = createAurumViewerAdapter({
