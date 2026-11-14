@@ -461,9 +461,11 @@ export async function createAurumPostPipeline(
     // Motion is handled separately by setTemporalMotion(), never by hiding
     // the configured settled TAA request.
     const isLowQuality=qualityId==="low" || (qualityId==="" && Number(q?.pixelRatio??1.5) <= 1.01);
-    // TAA is excluded from both live preview states; keep it available only to explicit captures.
-    taaRequested=Boolean(options.capture);
-    const taaEnabled=false;
+    // TAA remains capture-only; the Post Engine switch controls whether
+    // explicit still captures request temporal accumulation.
+    const postControls=getAurumPostControls();
+    taaRequested=Boolean(options.capture && postControls.taaEnabled);
+    const taaEnabled=taaRequested;
     // Edge AA is a settled-quality treatment: never add fullscreen filtering
     // work to the direct-render orbit path. Still captures may use it explicitly.
     const edgeAaMode=options.capture ? "capture" : "settled";
