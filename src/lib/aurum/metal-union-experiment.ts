@@ -62,6 +62,13 @@ function compatibleAttributes(a: THREE.BufferGeometry, b: THREE.BufferGeometry):
   });
 }
 
+
+/** Exact Box3 broad-phase predicate used by Metal Union; touching faces
+ * retain Three.js intersectsBox semantics, so candidate eligibility is unchanged. */
+export function areAurumMetalUnionBoundsIntersecting(a: THREE.Box3, b: THREE.Box3): boolean {
+  return a.intersectsBox(b);
+}
+
 type UnionSource = { uuid: string; name: string; layerKey: string };
 
 /**
@@ -173,6 +180,10 @@ export function applyAurumMetalUnionExperiment(root: THREE.Object3D, maxMerges =
   const evaluator = new Evaluator();
   const areEquivalentMaterials = createAurumMaterialEquivalenceChecker();
   const candidates: THREE.Mesh[] = [];
+  // Broad-phase bounds are captured once for original Rhino meshes. They stay
+  // valid for the duration of this synchronous pass; only the generated
+  // accumulator receives a refreshed box after each successful CSG operation.
+  const candidateBounds = new WeakMap<THREE.Mesh, THREE.Box3>();
   const preserved = new Set<string>();
   root.updateMatrixWorld(true);
   root.traverse((object) => {
@@ -191,6 +202,7 @@ export function applyAurumMetalUnionExperiment(root: THREE.Object3D, maxMerges =
     result.audit.eligibleBrepSurfaceExtrusion++;
     const meta = (mesh.userData?.aurumRhino ?? {}) as Record<string, unknown>;
     if (typeof meta.layerKey !== "string" || !meta.layerKey) result.audit.excludedMissingLayerKey++;
+    candidateBounds.set(mesh, new THREE.Box3().setFromObject(mesh));
     candidates.push(mesh);
   });
 
@@ -202,6 +214,7 @@ export function applyAurumMetalUnionExperiment(root: THREE.Object3D, maxMerges =
     if (!layerKey) continue;
 
     let accumulator: THREE.Mesh = seed;
+    let accumulatorBounds = candidateBounds.get(seed)?.clone() ?? new THREE.Box3().setFromObject(seed);
     let sources: UnionSource[] = [{
       uuid: seed.uuid, name: seed.name, layerKey,
     }];
@@ -241,10 +254,8 @@ export function applyAurumMetalUnionExperiment(root: THREE.Object3D, maxMerges =
         continue;
       }
 
-      root.updateMatrixWorld(true);
-      const accumulatorBox = new THREE.Box3().setFromObject(accumulator);
-      const rightBox = new THREE.Box3().setFromObject(right);
-      if (!accumulatorBox.intersectsBox(rightBox)) {
+      const rightBox = candidateBounds.get(right);
+      if (!rightBox || !areAurumMetalUnionBoundsIntersecting(accumulatorBounds, rightBox)) {
         result.audit.rejectedNoBoundsIntersection++;
         continue;
       }
@@ -327,6 +338,13 @@ export function applyAurumMetalUnionExperiment(root: THREE.Object3D, maxMerges =
         // Commit this step only after the replacement geometry is fully valid.
         const parent = accumulator.parent;
         parent.add(visualUnion);
+        root.updateMatrixWorld(true);
+        const nextAccumulatorBounds = new THREE.Box3().setFromObject(visualUnion);
+        if (nextAccumulatorBounds.isEmpty()) {
+          parent.remove(visualUnion);
+          geometry.dispose();
+          throw new Error("La unión generada no tiene límites espaciales válidos.");
+        }
         accumulator.visible = false;
         right.visible = false;
         if (accumulator === seed) {
@@ -341,6 +359,7 @@ export function applyAurumMetalUnionExperiment(root: THREE.Object3D, maxMerges =
         right.userData = { ...right.userData, aurumMetalUnionSourceHidden: true };
         preserved.add(right.uuid);
         accumulator = visualUnion;
+        accumulatorBounds = nextAccumulatorBounds;
         sources = nextSources;
         result.merged++;
       } catch (error) {
