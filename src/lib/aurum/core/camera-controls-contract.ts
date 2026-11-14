@@ -20,8 +20,8 @@ export function createAurumCameraControlsContract(
     version: "1.0.0",
     camera,
     controls,
-    applyView(model: Object3D | null, view: AurumCameraView, category = "Otro") {
-      applyAurumCameraView(camera, controls, model, view, category);
+    applyView(model: Object3D | null, view: AurumCameraView, category = "Otro", options = {}) {
+      applyAurumCameraView(camera, controls, model, view, category, options);
     },
     applyReferencePresentation(model: Object3D | null) {
       applyAurumIJEWELPresentationCamera(camera, controls, model);
