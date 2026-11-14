@@ -10,19 +10,15 @@ import type { IAurumCameraControlsContract } from "./module-contracts";
 
 export const AURUM_VIEWER_SERVICES = {
   scene: "aurum.viewer.scene",
-  camera: "aurum.viewer.camera",
   renderer: "aurum.viewer.renderer",
-  controls: "aurum.viewer.controls",
   cameraControls: "aurum.viewer.camera-controls",
   host: "aurum.viewer.host",
 } as const;
 
 export interface AurumViewerAdapterInput {
   readonly scene: unknown;
-  readonly camera: unknown;
   readonly renderer: unknown;
-  readonly controls: unknown;
-  readonly cameraControls?: IAurumCameraControlsContract;
+  readonly cameraControls: IAurumCameraControlsContract;
   readonly host: HTMLElement;
 }
 
@@ -35,10 +31,8 @@ export interface AurumViewerAdapter {
 export function createAurumViewerAdapter(input: AurumViewerAdapterInput): AurumViewerAdapter {
   const services = createAurumReadonlyMap(new Map<string, unknown>([
     [AURUM_VIEWER_SERVICES.scene, input.scene],
-    [AURUM_VIEWER_SERVICES.camera, input.camera],
     [AURUM_VIEWER_SERVICES.renderer, input.renderer],
-    [AURUM_VIEWER_SERVICES.controls, input.controls],
-    ...(input.cameraControls ? [[AURUM_VIEWER_SERVICES.cameraControls, input.cameraControls] as [string, unknown]] : []),
+    [AURUM_VIEWER_SERVICES.cameraControls, input.cameraControls],
     [AURUM_VIEWER_SERVICES.host, input.host],
   ]));
 
