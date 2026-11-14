@@ -457,17 +457,21 @@ test("Mi Nube persists the complete studio lighting configuration", () => {
 });
 
 
-test("the first settled model frame keeps the anti-aliasing composer active", () => {
+test("the first settled model frame uses the AURUM CAMERA contract without a competing delayed preset", () => {
   const componentSource = readFileSync("src/components/AurumRender.tsx", "utf8");
-  const initialFramingStart = componentSource.indexOf('requestAnimationFrame(() => {', componentSource.indexOf('loadAuditStep("load-pipeline-complete"'));
-  const initialFramingEnd = componentSource.indexOf('});', initialFramingStart);
-  const initialFramingBlock = componentSource.slice(initialFramingStart, initialFramingEnd);
+  const framingStart = componentSource.indexOf("const encuadrar = () => {");
+  const framingEnd = componentSource.indexOf("// Adaptadores de entrada", framingStart);
+  const framingBlock = componentSource.slice(framingStart, framingEnd);
+  const loadComplete = componentSource.indexOf('loadAuditStep("load-pipeline-complete"');
+  const loadTail = componentSource.slice(loadComplete, componentSource.indexOf("};", loadComplete));
 
-  expect(initialFramingStart).toBeGreaterThan(-1);
-  expect(initialFramingBlock).toContain("aplicarPerfilLive(true)");
-  expect(initialFramingBlock).toContain("invalidateRenderRef.current?.()");
-  expect(initialFramingBlock).not.toContain("liveFastPathRef.current = true");
-  expect(initialFramingBlock).not.toContain("aplicarPerfilLive()");
+  expect(framingStart).toBeGreaterThan(-1);
+  expect(framingBlock).toContain("frameAurumProduct({");
+  expect(framingBlock).toContain("cameraControls: cameraControlsContract");
+  expect(framingBlock).toContain("invalidateRenderRef.current?.()");
+  expect(loadComplete).toBeGreaterThan(-1);
+  expect(loadTail).not.toContain('camaraVista("frontal")');
+  expect(loadTail).not.toContain("requestAnimationFrame");
 });
 
 
@@ -487,8 +491,8 @@ test("Aurum uses the same beauty composer chain during camera motion and at rest
   expect(idleBlock).toContain("new Set([\n              renderPass,\n              gemMaskPass,\n              fxaaPass,");
   expect(idleBlock).toContain("sameBeautyPipelineAvailable");
   expect(liveBlock).toContain("sameBeautyPipelineAvailable");
-  expect(liveBlock).toContain("aplicarPerfilLive(true)");
-  expect(idleBlock).toContain("aplicarPerfilLive(true)");
+  expect(liveBlock).toContain('renderPipelineContract.setMode("LIVE_MOTION")');
+  expect(idleBlock).toContain('renderPipelineContract.setMode("RESTING_SETTLED")');
   expect(liveBlock).toContain("liveFastPathRef.current = !sameBeautyPipelineAvailable;");
   expect(idleBlock).toContain("liveFastPathRef.current = !sameBeautyPipelineAvailable;");
   expect(idleBlock).toContain("idleTaaPass.enabled = false;");
@@ -613,20 +617,26 @@ test("image export resets temporal accumulation and converges the restored live 
 });
 
 
-test("video export resets temporal accumulation and converges the restored live viewport", () => {
+test("video export restores the original live viewport through bounded cleanup", () => {
   const componentSource = readFileSync("src/components/AurumRender.tsx", "utf8");
   const videoStart = componentSource.indexOf("exportVideo:async");
-  const restoreStart = componentSource.indexOf("// Rebuild the live beauty frame after the temporary video-sized", videoStart);
-  const restoreEnd = componentSource.indexOf("},\n        setDepthOfField:", restoreStart);
+  const restoreStart = componentSource.indexOf("const restoreFailures = runAurumMediaExportCleanup([", videoStart);
+  const restoreEnd = componentSource.indexOf("if(restoreFailures.length)", restoreStart);
   const restoreBlock = componentSource.slice(restoreStart, restoreEnd);
 
   expect(videoStart).toBeGreaterThan(-1);
   expect(restoreStart).toBeGreaterThan(videoStart);
-  expect(restoreBlock).toContain("resetTemporalAccumulationRef.current?.();");
-  expect(restoreBlock).toContain("loop?.resize?.();");
-  expect(restoreBlock).toContain("loop?.invalidate?.();");
-  expect(restoreBlock).toContain("loop?.resume?.();");
-  expect(restoreBlock).toContain("loop?.converge?.(4);");
-  expect(restoreBlock.indexOf("loop?.resize?.();")).toBeLessThan(restoreBlock.indexOf("loop?.resume?.();"));
-  expect(restoreBlock.indexOf("loop?.resume?.();")).toBeLessThan(restoreBlock.indexOf("loop?.converge?.(4);"));
+  expect(restoreBlock).toContain("videoFramePipeline?.restore()");
+  expect(restoreBlock).toContain("camara.position.copy(originalCameraPosition)");
+  expect(restoreBlock).toContain("camara.quaternion.copy(originalCameraQuaternion)");
+  expect(restoreBlock).toContain("controles.update?.()");
+  expect(restoreBlock).toContain("resetTemporalAccumulationRef.current?.()");
+  expect(restoreBlock).toContain("loop?.resize?.()");
+  expect(restoreBlock).toContain("loop?.invalidate?.()");
+  expect(restoreBlock).toContain("loop?.resume?.()");
+  expect(restoreBlock).toContain("loop?.converge?.(4)");
+  expect(restoreBlock.indexOf("videoFramePipeline?.restore()")).toBeLessThan(restoreBlock.indexOf("camara.position.copy(originalCameraPosition)"));
+  expect(restoreBlock.indexOf("camara.position.copy(originalCameraPosition)")).toBeLessThan(restoreBlock.indexOf("controles.update?.()"));
+  expect(restoreBlock.indexOf("loop?.resize?.()")).toBeLessThan(restoreBlock.indexOf("loop?.resume?.()"));
+  expect(restoreBlock.indexOf("loop?.resume?.()")).toBeLessThan(restoreBlock.indexOf("loop?.converge?.(4)"));
 });
