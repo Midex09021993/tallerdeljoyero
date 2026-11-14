@@ -5105,7 +5105,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                   <span className="text-[10px] font-semibold uppercase tracking-[.12em] text-[#81796b]">Vista previa</span>
                   <span className="rounded-full bg-[#f2efe8] px-2 py-1 text-[9px] font-medium text-[#82704b]">PNG</span>
                 </div>
-                <div className="grid aspect-[4/3] place-items-center bg-[#f3f2ef] p-3">
+                <div className="grid aspect-[5/4] place-items-center bg-[#f3f2ef] p-2">
                   {posterPreview ? <img src={posterPreview} alt="Miniatura del póster capturado de la joya" className="h-full w-full object-contain" /> : <div className="flex max-w-[190px] flex-col items-center text-center">
                     <span className="mb-3 grid size-14 place-items-center rounded-2xl border border-[#e4dfd5] bg-white text-[#a18a5c]"><ImageIcon className="size-7"/></span>
                     <span className="text-sm font-medium text-[#55534d]">Todavía no hay póster</span>
