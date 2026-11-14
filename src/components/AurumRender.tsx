@@ -2442,18 +2442,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           const bounds=new THREE.Box3().setFromObject(modelo);
           if(bounds.isEmpty()) return;
           const target=bounds.getCenter(new THREE.Vector3());
-          const delta=target.clone().sub(controles.target);
-          camara.position.add(delta);
-          controles.target.copy(target);
-          camara.lookAt(target);
-          camara.updateProjectionMatrix?.();
-          controles.update?.();
+          cameraControlsContract.centerOn(target);
           diamondBvhRuntime?.update();
           invalidateRenderRef.current?.();
         },
         fitAspect:(aspect?:number)=>{
           if(!modelo) return;
-          fitAurumCameraToAspect(camara,controles,modelo,Number(aspect)||camara.aspect,1.18);
+          cameraControlsContract.fitAspect(modelo,Number(aspect)||camara.aspect,1.18);
           diamondBvhRuntime?.update();
           invalidateRenderRef.current?.();
         },
