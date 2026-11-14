@@ -77,7 +77,8 @@ export function applyAurumCameraView(
   controls: { target: THREE.Vector3; update: () => void },
   model: THREE.Object3D | null,
   view: AurumCameraView,
-  category: string = "Otro"
+  category: string = "Otro",
+  options: { distanceScale?: number } = {},
 ) {
   const bounds = model ? new THREE.Box3().setFromObject(model) : null;
   const target = bounds
@@ -100,7 +101,8 @@ export function applyAurumCameraView(
   // Encuadre inicial ligeramente más cercano: elimina el margen extra del
   // 10% que dejaba demasiado espacio vacío alrededor de piezas pequeñas.
   // Los perfiles por categoría siguen añadiendo distancia cuando la necesitan.
-  const distance = Math.max(fitDistance * 1.00 * profile.distance, 0.1);
+  const distanceScale = Number.isFinite(options.distanceScale) ? Math.max(0.1, Math.min(4, Number(options.distanceScale))) : 1;
+  const distance = Math.max(fitDistance * 1.00 * profile.distance * distanceScale, 0.1);
   const verticalBias = radius * profile.vertical;
 
   // OrbitControls conserva deltas de órbita/pan de la interacción anterior.
