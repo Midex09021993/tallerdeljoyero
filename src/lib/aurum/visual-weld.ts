@@ -124,10 +124,14 @@ export function applyAurumVisualWeld(
   const creaseCos = Math.cos(creaseAngle);
   let matchedCornerCount = 0;
   let smoothedCornerCount = 0;
+  // Reuse one typed marker array instead of allocating a Set for every corner.
+  // A unique stamp per corner preserves the original "one contribution per face"
+  // rule while reducing short-lived allocations on large jewelry meshes.
+  const visitedFaceStamp = new Uint32Array(position.count / 3);
 
   for (const corner of corners) {
     const cx = cell(corner.x), cy = cell(corner.y), cz = cell(corner.z);
-    const adjacentFaces = new Set<number>();
+    const stamp = corner.index + 1;
     let nx = 0, ny = 0, nz = 0;
     let matches = 0;
 
@@ -137,14 +141,14 @@ export function applyAurumVisualWeld(
           const nearby = buckets.get(key(cx + dx, cy + dy, cz + dz));
           if (!nearby) continue;
           for (const candidate of nearby) {
-            if (adjacentFaces.has(candidate.face)) continue;
+            if (visitedFaceStamp[candidate.face] === stamp) continue;
             const px = candidate.x - corner.x;
             const py = candidate.y - corner.y;
             const pz = candidate.z - corner.z;
             if (px * px + py * py + pz * pz > tolerance * tolerance) continue;
             const dot = corner.nx * candidate.nx + corner.ny * candidate.ny + corner.nz * candidate.nz;
             if (dot < creaseCos) continue;
-            adjacentFaces.add(candidate.face);
+            visitedFaceStamp[candidate.face] = stamp;
             nx += candidate.nx * candidate.weight;
             ny += candidate.ny * candidate.weight;
             nz += candidate.nz * candidate.weight;
