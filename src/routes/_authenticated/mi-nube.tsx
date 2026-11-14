@@ -1,5 +1,6 @@
 import { useNuevaVersion } from "@/hooks/use-nueva-version";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { createPortal } from "react-dom";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   AlertCircle,
@@ -2062,7 +2063,7 @@ function MiNubePage() {
                     >
                       {proyectoAbierto === proyecto.nombre ? "Ocultar archivos del proyecto" : "Ver archivos del proyecto"}
                     </button>
-                    {proyectoAbierto === proyecto.nombre && (
+                    {proyectoAbierto === proyecto.nombre && typeof document !== "undefined" && createPortal((
                       <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#171612]/55 p-3 backdrop-blur-sm sm:p-6" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setProyectoAbierto(null); }}><section className="flex max-h-[88dvh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-gold/35 bg-card shadow-[0_24px_80px_rgba(20,18,12,0.32)]" role="dialog" aria-modal="true" aria-label={"Archivos del proyecto " + proyecto.nombre}>
                         <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border px-3 py-2.5">
                           <div className="flex min-w-0 items-center gap-2"><Folder className="size-4 shrink-0 text-gold" /><div className="min-w-0"><h4 className="truncate text-sm font-semibold">{proyecto.nombre}</h4><p className="text-[10px] text-muted-foreground">{proyecto.archivos.length} archivos</p></div></div>
@@ -2167,7 +2168,7 @@ function MiNubePage() {
                         ))}</div>
                         </div>
                       </section></div>
-                    )}
+                    ), document.body)}
 
                   </div>
                 </FichaProyecto>
@@ -2196,7 +2197,7 @@ function MiNubePage() {
                     <p className="border-t border-border pt-3 text-[10px] text-muted-foreground">Solo lectura · acceso vigente hasta que el propietario lo revoque.</p>
                   </div>
                   </FichaProyecto>
-                  {proyectoAbierto === "compartida:" + recibida.id && (
+                  {proyectoAbierto === "compartida:" + recibida.id && typeof document !== "undefined" && createPortal((
             <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#171612]/55 p-3 backdrop-blur-sm sm:p-6" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setProyectoAbierto(null); }}>
             <section className="flex max-h-[88dvh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-gold/35 bg-card shadow-[0_24px_80px_rgba(20,18,12,0.32)]" role="dialog" aria-modal="true" aria-label={"Archivos del proyecto " + recibida.nombre}>
               <div className="sticky top-0 z-20 flex min-w-0 items-center justify-between gap-2 border-b border-border bg-card/95 px-3 py-2.5 shadow-sm backdrop-blur">
@@ -2229,7 +2230,7 @@ function MiNubePage() {
               </div>
             </section>
             </div>
-                  )}
+                  ), document.body)}
                 </div>;
               })}
             </div>
