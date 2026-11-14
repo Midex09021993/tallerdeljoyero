@@ -137,6 +137,30 @@ export function AurumArchitectureExplorer() {
         </div>
       </div>
 
+      <section className="rounded-2xl border border-gold/25 bg-gradient-to-br from-gold/[0.07] to-transparent p-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold">Runtime controls</p><h4 className="mt-1 text-sm font-semibold">Controles operativos del render</h4><p className="mt-1 text-[11px] text-muted-foreground">Cambios aplicados al pipeline real de AURUM RENDER y guardados en este navegador.</p></div>
+          <span className="rounded-full border border-border bg-card px-2.5 py-1 text-[10px] text-muted-foreground">{Object.values(moduleControls).filter(Boolean).length} / 6 habilitados</span>
+        </div>
+        <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {([
+            ["gem-edge-aa", "Gem Mask + FXAA", "Suavizado selectivo de bordes de gemas"],
+            ["surface-edge-aa", "Surface Edge AA", "Suavizado conservador de superficies"],
+            ["dof", "Depth of Field", "Desenfoque óptico de profundidad"],
+            ["lut", "LUT", "Ajuste de color mediante tabla"],
+            ["vignette", "Vignette", "Viñeta fotográfica"],
+            ["grading", "Color Grading", "Contraste y saturación"],
+          ] as [AurumManagedModuleId, string, string][]).map(([id, label, description]) => {
+            const enabled = moduleControls[id];
+            return <button key={id} type="button" role="switch" aria-checked={enabled} onClick={() => toggleModule(id)} className={`flex items-center justify-between gap-3 rounded-xl border p-3 text-left transition ${enabled ? "border-emerald-500/30 bg-emerald-500/5" : "border-border bg-card"}`}>
+              <span className="min-w-0"><span className="block text-xs font-semibold">{label}</span><span className="mt-1 block text-[10px] leading-4 text-muted-foreground">{description}</span></span>
+              <span className={`relative h-6 w-11 shrink-0 rounded-full transition ${enabled ? "bg-emerald-500" : "bg-muted-foreground/40"}`}><span className={`absolute top-1 size-4 rounded-full bg-white shadow transition ${enabled ? "left-6" : "left-1"}`}/></span>
+            </button>;
+          })}
+        </div>
+        <p className="mt-3 text-[10px] leading-4 text-muted-foreground">Los cambios se aplican cuando AURUM RENDER está abierto; si está cerrado, se guardan y se aplican al iniciar. El visor público no recibe estos controles.</p>
+      </section>
+
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(270px,.75fr)]">
         <div className="space-y-3">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
