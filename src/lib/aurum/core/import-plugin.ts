@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { parseAurumInput, convertAurumToGlb } from "../model-loader";
 import { normalizeAurumModel } from "../model-normalizer";
+import type { IAurumGeometryContract } from "./module-contracts";
 
 export type AurumImportFormat = "stl" | "obj" | "glb" | "fbx" | "3dm";
 
@@ -35,7 +36,7 @@ export interface AurumImportResult {
   readonly pipeline: readonly string[];
 }
 
-export interface AurumImportPlugin {
+export interface AurumImportPlugin extends IAurumGeometryContract<AurumImportRequest, AurumImportResult> {
   readonly id: "aurum.import";
   readonly version: "1.0.0";
   load(request: AurumImportRequest): Promise<AurumImportResult>;
