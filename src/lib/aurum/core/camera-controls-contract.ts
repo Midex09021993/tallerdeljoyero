@@ -137,6 +137,15 @@ export function createAurumCameraControlsContract(
     getAutoRotateSpeed() {
       return controls.autoRotateSpeed;
     },
+    addEventListener(type, listener) {
+      controls.addEventListener(type, listener as (event: any) => void);
+    },
+    removeEventListener(type, listener) {
+      controls.removeEventListener(type, listener as (event: any) => void);
+    },
+    dispose() {
+      controls.dispose();
+    },
   };
   return Object.freeze(contract);
 }
