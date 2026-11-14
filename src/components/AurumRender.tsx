@@ -14,7 +14,7 @@ import { getAurumShadowConfig } from "../lib/aurum-shadow-engine";
 import { getAurumPostConfig } from "../lib/aurum-post-engine";
 import { getAurumSsaoConfig } from "../lib/aurum-ssao-engine";
 import { AURUM_LIGHTING_DEFAULT } from "../lib/aurum-lighting-engine";
-import { applyAurumCameraView, applyAurumIJEWELPresentationCamera, applyAurumPublicViewerCamera, fitAurumCameraToAspect, calculateAurumFocalDepth } from "../lib/aurum/camera";
+import { applyAurumCameraView, applyAurumIJEWELPresentationCamera, applyAurumPublicViewerCamera, fitAurumCameraToAspect, calculateAurumFocalDepth, getAurumVisibleProductBounds } from "../lib/aurum/camera";
 import { prepareAurumModel } from "../lib/aurum/model-prep";
 import { createAurumPostPipeline } from "../lib/aurum/post";
 import { createAurumEnvironment } from "../lib/aurum/environment";
@@ -1390,7 +1390,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       const cameraModuleContract = Object.freeze({
         centerJewel: () => {
           if (!modelo) return;
-          const bounds = new THREE.Box3().setFromObject(modelo);
+          const bounds = getAurumVisibleProductBounds(modelo);
           if (bounds.isEmpty()) return;
           const target = bounds.getCenter(new THREE.Vector3());
           const delta = target.clone().sub(controles.target);
