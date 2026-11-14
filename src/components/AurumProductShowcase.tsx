@@ -91,16 +91,48 @@ function MiniHome() {
   </div>;
 }
 function MiniClients() {
-  return <div className="space-y-2.5">
-    <header className="flex items-end justify-between gap-2"><div><h3 className="font-serif text-[14px] sm:text-[16px] leading-tight text-[#182838]">Clientes</h3><p className="mt-1 text-[7px] text-[#71808d]">Directorio comercial, historial y relación con cada cliente.</p></div><div className="flex gap-1.5"><div className="rounded-lg border border-[#c5a36b]/20 bg-white px-2 py-1.5"><p className="text-[5px] font-bold tracking-widest text-[#c5a36b]">DIRECTORIO</p><p className="mt-1 text-[10px] font-semibold text-[#203142]">Clientes</p></div><div className="rounded-lg border border-[#c5a36b]/20 bg-white px-2 py-1.5"><p className="text-[5px] font-bold tracking-widest text-[#c5a36b]">ESTADO</p><p className="mt-1 text-[10px] font-semibold text-[#203142]">Activos</p></div></div></header>
-    <div className="flex gap-1 rounded-lg border border-slate-200 bg-white p-1"><span className="rounded-md bg-[#c5a36b] px-3 py-1 text-[7px] font-semibold text-[#182838]">Clientes</span><span className="px-2 py-1 text-[7px] text-slate-500">♧ Cumpleaños</span><span className="px-2 py-1 text-[7px] text-slate-500">✉ Campañas</span></div>
-    <div className="grid grid-cols-[1.15fr_1fr] gap-2.5">
-      <div className="overflow-hidden rounded-lg border border-[#293b4a]/10 bg-white"><div className="border-b border-slate-100 bg-[#fbfaf7] p-2"><p className="text-[5px] font-bold tracking-[.18em] text-[#a98249]">CRM / DIRECTORIO</p><div className="mt-1 flex items-center justify-between"><h4 className="text-[9px] font-semibold text-[#182838]">Clientes del taller</h4><span className="rounded-full bg-[#f1eee8] px-1.5 py-0.5 text-[5px] text-slate-500">Directorio</span></div><div className="mt-2 flex h-6 items-center gap-1 rounded-md border border-slate-200 px-2 text-[6px] text-slate-400"><Search className="size-2.5"/> Buscar nombre, documento, teléfono…</div></div><div className="divide-y divide-slate-100"><div className="flex items-center gap-2 p-2"><span className="grid size-5 place-items-center rounded-md border border-[#c5a36b]/30 bg-[#f7f0e4] text-[7px] text-[#a98249]"><Users className="size-3"/></span><div><p className="text-[7px] font-semibold text-slate-700">Ficha de cliente</p><p className="text-[6px] text-slate-400">Datos comerciales</p></div><span className="ml-auto rounded-full bg-emerald-50 px-1.5 py-0.5 text-[5px] text-emerald-600">ACTIVO</span></div><div className="flex items-center gap-2 p-2"><span className="grid size-5 place-items-center rounded-md border border-[#c5a36b]/30 bg-[#f7f0e4] text-[7px] text-[#a98249]"><Users className="size-3"/></span><div><p className="text-[7px] font-semibold text-slate-700">Ficha de cliente</p><p className="text-[6px] text-slate-400">Datos comerciales</p></div><span className="ml-auto rounded-full bg-emerald-50 px-1.5 py-0.5 text-[5px] text-emerald-600">ACTIVO</span></div></div></div>
-      <div className="rounded-lg border border-[#293b4a]/10 bg-white p-3"><div className="flex items-center gap-2 border-b border-slate-100 pb-2"><div className="grid size-8 place-items-center rounded-full bg-[#f5ecdc] text-[#a98249]"><Contact className="size-4"/></div><div><p className="text-[8px] font-semibold text-[#203142]">Ficha del cliente</p><p className="text-[6px] text-slate-400">Vista de información</p></div></div><div className="mt-2 space-y-2"><div><p className="text-[6px] uppercase tracking-wider text-slate-400">Información personal</p><p className="mt-0.5 text-[8px] font-medium text-slate-700">Nombre y datos de contacto</p></div><div className="grid grid-cols-2 gap-1"><div className="rounded-md bg-[#f8f7f3] p-1.5"><Mail className="size-2.5 text-[#b9955d]"/><p className="mt-1 text-[6px] text-slate-500">Correo electrónico</p></div><div className="rounded-md bg-[#f8f7f3] p-1.5"><CalendarDays className="size-2.5 text-[#b9955d]"/><p className="mt-1 text-[6px] text-slate-500">Fecha de registro</p></div></div><div className="rounded-md border border-slate-100 p-2"><p className="text-[6px] font-semibold text-slate-600">Historial comercial</p><p className="mt-1 text-[6px] text-slate-400">Pedidos y cotizaciones vinculadas</p></div></div></div>
+  return <div className="space-y-2">
+    <header className="flex items-end justify-between gap-2">
+      <div className="min-w-0"><h3 className="font-serif text-[14px] sm:text-[16px] leading-tight text-[#182838]">Clientes</h3><p className="mt-1 text-[7px] text-[#71808d]">Directorio comercial, historial y relación con cada cliente.</p></div>
+      <div className="flex shrink-0 gap-1.5">
+        <div className="rounded-lg border border-[#c5a36b]/20 bg-white px-2 py-1.5"><p className="text-[5px] font-bold tracking-widest text-[#c5a36b]">DIRECTORIO</p><p className="mt-1 text-[10px] font-semibold text-[#203142]">Clientes</p><p className="text-[5px] text-slate-400">Registrados</p></div>
+        <div className="rounded-lg border border-[#c5a36b]/20 bg-white px-2 py-1.5"><p className="text-[5px] font-bold tracking-widest text-[#c5a36b]">ESTADO</p><p className="mt-1 text-[10px] font-semibold text-[#203142]">Activos</p><p className="text-[5px] text-slate-400">Clientes activos</p></div>
+        <div className="flex min-w-[52px] flex-col justify-between rounded-lg border border-[#c5a36b]/25 bg-white px-2 py-1.5"><Plus className="size-2.5 text-[#b9955d]"/><p className="text-[6px] font-semibold text-[#203142]">Nuevo cliente</p></div>
+      </div>
+    </header>
+
+    <div className="flex gap-1 rounded-lg border border-slate-200 bg-white p-1">
+      <span className="rounded-md bg-[#c5a36b] px-2.5 py-1 text-[6px] font-semibold text-[#182838]">Clientes</span>
+      <span className="inline-flex items-center gap-1 px-2 py-1 text-[6px] text-slate-500"><CalendarDays className="size-2"/>Cumpleaños</span>
+      <span className="inline-flex items-center gap-1 px-2 py-1 text-[6px] text-slate-500"><Mail className="size-2"/>Campañas</span>
+    </div>
+
+    <div className="grid grid-cols-[1.08fr_0.92fr] gap-2">
+      <section className="min-w-0 overflow-hidden rounded-lg border border-[#293b4a]/10 bg-white">
+        <div className="border-b border-slate-200 bg-[#fbfaf7] p-2">
+          <p className="text-[5px] font-bold tracking-[.18em] text-[#a98249]">CRM / DIRECTORIO</p>
+          <div className="mt-1 flex flex-wrap items-center justify-between gap-1"><h4 className="text-[8px] font-semibold text-[#182838]">Clientes del taller</h4><span className="rounded-full bg-[#f1eee8] px-1.5 py-0.5 text-[5px] text-slate-500">Resultados</span></div>
+          <div className="mt-1.5 flex gap-1">
+            <span className="min-w-0 flex-1 rounded-md border border-slate-200 bg-white px-1.5 py-1 text-[5px] text-slate-500">Todos los tipos⌄</span>
+            <span className="min-w-0 flex-1 rounded-md border border-slate-200 bg-white px-1.5 py-1 text-[5px] text-slate-500">Todos los estados⌄</span>
+          </div>
+          <div className="mt-1.5 flex h-5 items-center gap-1 rounded-md border border-slate-200 bg-white px-1.5 text-[5px] text-slate-400"><Search className="size-2 shrink-0"/> Buscar nombre, documento, teléfono, WhatsApp, correo o ciudad…</div>
+        </div>
+        <div className="flex min-h-[82px] items-center justify-center p-2 text-center">
+          <div><Users className="mx-auto size-4 text-[#b9955d]"/><p className="mt-1 text-[6px] font-semibold text-[#203142]">Directorio de clientes</p><p className="mt-0.5 text-[5px] text-slate-400">Particulares y empresas · Estados activo e inactivo</p></div>
+        </div>
+      </section>
+
+      <section className="min-w-0 overflow-hidden rounded-lg border border-[#293b4a]/10 bg-white">
+        <div className="flex min-h-[142px] flex-col items-center justify-center p-3 text-center">
+          <span className="grid size-8 place-items-center rounded-full border border-[#c5a36b]/20 bg-[#f8f4eb] text-[#b9955d]"><Contact className="size-4"/></span>
+          <p className="mt-2 text-[8px] font-semibold text-[#203142]">Selecciona un cliente</p>
+          <p className="mt-1 max-w-[125px] text-[6px] leading-relaxed text-slate-500">Aquí verás sus datos y su relación comercial con el taller.</p>
+        </div>
+      </section>
     </div>
   </div>;
 }
-
 function MiniQuotes() {
   return <div className="space-y-2.5">
     <header className="flex items-end justify-between"><div><h3 className="font-serif text-[14px] sm:text-[16px] leading-tight text-[#182838]">Cotizaciones</h3><p className="mt-1 text-[7px] text-[#71808d]">Presupuestos comerciales conectados con clientes y conceptos de venta.</p></div></header>
