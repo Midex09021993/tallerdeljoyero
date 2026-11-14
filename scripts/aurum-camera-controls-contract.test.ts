@@ -46,7 +46,9 @@ test("AURUM CAMERA applies four distinct presets using real Three.js OrbitContro
 
   const poses = new Map<string, { position: THREE.Vector3; quaternion: THREE.Quaternion }>();
   for (const view of ["frontal", "superior", "lateral", "perspectiva"] as const) {
+    controls.autoRotate = true;
     contract.applyView(model, view, "Anillo");
+    expect(controls.autoRotate).toBe(false);
     camera.updateMatrixWorld(true);
     poses.set(view, { position: camera.position.clone(), quaternion: camera.quaternion.clone() });
 
