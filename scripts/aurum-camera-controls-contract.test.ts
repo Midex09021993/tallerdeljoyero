@@ -59,6 +59,11 @@ test("AURUM CAMERA applies four distinct presets using real Three.js OrbitContro
     expect(orientationDistance(camera.quaternion, quaternionBeforeNextFrame)).toBeLessThan(1e-7);
     expect(controls.enableDamping).toBe(true);
     expect(controls.target.distanceTo(new THREE.Box3().setFromObject(model).getCenter(new THREE.Vector3()))).toBeLessThan(1e-8);
+    if (view === "superior") {
+      const viewDirection = controls.target.clone().sub(camera.position).normalize();
+      expect(camera.up.distanceTo(new THREE.Vector3(0, 0, -1))).toBeLessThan(1e-8);
+      expect(Math.abs(viewDirection.dot(camera.up))).toBeLessThan(1e-5);
+    }
   }
 
   const frontal = poses.get("frontal")!;
@@ -87,7 +92,26 @@ test("AURUM CAMERA applies four distinct presets using real Three.js OrbitContro
   controls.update();
   expect(controls.getDistance()).toBeLessThan(distanceBeforeDolly);
 
+  // Simulate stale transient input state from an interrupted r185 gesture.
+  const r185 = controls as unknown as {
+    state: number;
+    _controlActive: boolean;
+    _scale: number;
+    _performCursorZoom: boolean;
+    _dollyDirection: THREE.Vector3;
+  };
+  r185.state = 0;
+  r185._controlActive = true;
+  r185._scale = 1.25;
+  r185._performCursorZoom = true;
+  r185._dollyDirection.set(1, 0, 0);
+
   contract.applyView(model, "lateral", "Anillo");
+  expect(r185.state).toBe(-1);
+  expect(r185._controlActive).toBe(false);
+  expect(r185._scale).toBe(1);
+  expect(r185._performCursorZoom).toBe(false);
+  expect(r185._dollyDirection.length()).toBeLessThan(1e-8);
   const lateralAfterReset = camera.quaternion.clone();
   controls.update();
   expect(orientationDistance(camera.quaternion, lateralAfterReset)).toBeLessThan(1e-7);
