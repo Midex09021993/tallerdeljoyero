@@ -4894,7 +4894,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         <main className={"relative min-w-0 flex-1 overflow-hidden bg-[#090b0e] " + (embedded ? "rounded-none" : "rounded-2xl")}>
           <div
             ref={visorRef}
-            className="absolute inset-0"
+            className="absolute inset-0 cursor-grab active:cursor-grabbing"
             style={isViewerFullscreen ? {
               position: "fixed",
               inset: 0,
