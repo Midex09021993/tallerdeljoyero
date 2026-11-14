@@ -96,6 +96,12 @@ test("AURUM gem transition snapshots before material replacement and blends only
   expect(source).toContain("gemTransitionRef.current?.cancel?.()");
   expect(source).toContain("gemTransitionRef.current?.cancel?.();");
   expect(source).toContain("gemTransitionRef.current=null;");
-  expect(source).toContain("gemTransitionRef.current=createAurumGemTransition(");
-  expect(source).toContain("gemTransitionRef.current?.cancel?.();");
+  expect(source).toContain("gemTransitionRef.current=previousAppearance.length");
+  expect(source).toContain("gemTransitionRef.current?.active");
+  expect(source).toContain("gemTransitionRef.current=null;");
+  const transitionComplete = source.indexOf("gemTransitionRef.current=null;", transition);
+  const bvhRefresh = source.indexOf("scheduleIdle();", transitionComplete);
+  expect(transitionComplete).toBeGreaterThan(transition);
+  expect(bvhRefresh).toBeGreaterThan(transitionComplete);
+  expect(source).toContain("BVH may replace the physical material, so it must wait");
 });
