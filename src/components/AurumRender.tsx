@@ -3899,7 +3899,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       clearTimeout(presentationTimerRef.current);
       presentationTimerRef.current = null;
     }
-    let cargaCorrecta = false;
     try {
       const cargar = apiRef.current?.cargar;
       if (typeof cargar !== "function") {
@@ -3927,7 +3926,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       setFormatoInterno("GLB");
       // El visor permanece en modo LIVE después de cargar el modelo.
       invalidateRenderRef.current?.();
-      cargaCorrecta = true;
       return true;
     } catch(e) {
       setError(e instanceof Error?e.message:"No se pudo convertir el modelo");
