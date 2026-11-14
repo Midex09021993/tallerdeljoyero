@@ -1957,7 +1957,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         frameAurumProduct({
           camera: camara, controls: controles, lights: lucesAurum,
           groundController, lightingController, scene: escena, renderer,
-        }, modelo, prepareAurumModel, aplicarEscenario, escenarioId, categoriaProyectoRef.current, "publicViewer");
+        }, modelo, prepareAurumModel, aplicarEscenario, escenarioId, categoriaProyectoRef.current, "publicViewer", true);
         // Embedded public configurators have a narrower viewport than the
         // full editor. Pull the camera back slightly so the entire jewel has
         // breathing room without changing framing in the main editor.
@@ -2341,7 +2341,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       };
       const camaraVista=(id:VistaId)=>{
         if (modelo?.userData?.aurumPublicViewerPresentation && id === "frontal") {
-          applyAurumPublicViewerCamera(camara, controles, modelo);
+          applyAurumPublicViewerCamera(camara, controles, modelo, { enablePan: true });
         } else {
           applyAurumCameraView(camara, controles, modelo, id, categoriaProyectoRef.current);
         }
