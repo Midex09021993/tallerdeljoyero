@@ -75,6 +75,10 @@ test("AURUM CAMERA applies four distinct presets using real Three.js OrbitContro
   expect(camera.aspect).toBe(cameraState.aspect);
   expect(controls.autoRotate).toBe(cameraState.autoRotate);
   expect(controls.autoRotateSpeed).toBe(cameraState.autoRotateSpeed);
+  const poseBuffer = new Float64Array(10);
+  expect(contract.writePoseSnapshot(poseBuffer)).toBe(poseBuffer);
+  expect(poseBuffer[0]).toBeCloseTo(cameraState.position.x, 8);
+  expect(poseBuffer[7]).toBeCloseTo(cameraState.target.x, 8);
   expect(contract.id).toBe("aurum.camera.controls");
   expect(Object.isFrozen(contract)).toBe(true);
 
