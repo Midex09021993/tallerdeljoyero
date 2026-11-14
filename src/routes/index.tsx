@@ -725,8 +725,8 @@ function InicioPublico() {
               <div className="aurum-rhino-connection relative mt-3 overflow-hidden rounded-xl border border-[#d4aa19]/30 bg-[#d4aa19]/[.06] p-3 sm:p-3.5">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                   <div className="flex min-w-0 flex-1 items-center gap-3">
-                    <span className="grid size-10 shrink-0 place-items-center rounded-xl border border-[#f8c928]/25 bg-[#f8c928]/10 text-[#f8d85b]">
-                      <MonitorSmartphone className="size-5" />
+                    <span className="grid size-12 shrink-0 place-items-center rounded-xl border border-[#f8c928]/25 bg-white/95 p-1.5 shadow-inner">
+                      <img src="/brand/rhino-plugin-logo.png" alt="Plugin de Rhinoceros con C++" width={100} height={85} loading="lazy" decoding="async" className="h-full w-full object-contain" />
                     </span>
                     <div className="min-w-0">
                       <p className="text-[11px] font-bold text-white sm:text-xs">¿Diseñas con Rhino 7?</p>
