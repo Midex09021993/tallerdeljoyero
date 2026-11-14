@@ -2069,9 +2069,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         applyPostQuality?.(renderQuality);
         renderPipelineContract.setMode("RESTING_SETTLED");
 
-        // The first completed model frame must use the same selective gem-AA
-        // composer as the settled preview. Previously the viewer stayed on the
-        // direct LIVE renderer until the first orbit event enabled these passes.
+        // The interactive viewport uses direct WebGL from its first model frame.
+        // Composer passes remain available for explicit capture/export workflows.
         const initialGemAaAvailable = Boolean(composer && renderPass && outputPass);
         if (initialGemAaAvailable) {
           const initialWidth = Math.max(1, renderer.domElement.width || renderer.domElement.clientWidth || 1);
@@ -2082,8 +2081,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             pass.enabled = initialBeautyPasses.has(pass);
           });
 
-          // The first frame, orbiting preview and settled preview share the same
-          // image pipeline. Temporal/photographic effects are reserved for capture.
+          // The first frame, orbiting preview and settled preview all use direct
+          // WebGL rendering. Temporal/photographic effects are reserved for capture.
           const initialTaaRequested = false;
           if (idleTaaPass) {
             idleTaaPass.enabled = false;
@@ -2115,8 +2114,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
 
         encuadrar();
         setVista("frontal");
-        // frameAurumProduct applies the scene preset; reassert the canonical
-        // viewport chain afterwards so scene setup cannot leave a stale path.
+        // frameAurumProduct applies the scene preset; reassert direct rendering
+        // afterwards so scene setup cannot leave a stale pipeline mode.
         if (initialGemAaAvailable) {
           modelo.updateMatrixWorld?.(true);
           camara.updateMatrixWorld?.(true);
@@ -3637,18 +3636,16 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             renderPipelineContract.setMode("LIVE_MOTION");
             syncAurumSsrDiagnosticConfig();
 
-            // Keep the lightweight beauty chain during orbit. Optional photographic
-            // passes stay disabled; a very low-strength surface edge AA pass is
-            // enabled only for non-Low, non-extreme runtime budgets.
+            // Keep the direct WebGL viewport during orbit. Post-processing passes
+            // are not executed in the interactive preview.
             const requestedDpr = Math.max(1, Math.min(2, renderQuality.pixelRatio));
             // Respect the same Public Viewer ceiling during orbit.
             const interactionDpr = Math.min(requestedDpr, runtimeBudget.pixelRatioCap, getAurumViewportPixelRatio());
             renderer.setPixelRatio(interactionDpr);
             composer?.setPixelRatio?.(interactionDpr);
 
-            // Keep the proven lightweight interaction pass set. SSAO and shadow-map
-            // reactivation during orbit caused a scene-wide tonal shift on some
-            // jewelry; do not reactivate those expensive passes.
+            // Keep expensive post-processing and shadow-map rendering out of the
+            // interactive viewport; the Public Viewer uses the same direct path.
             // Lightweight interactive edge cleanup: low blend strength, no TAA,
             // and disabled for extreme CAD budgets or the Low quality profile.
             const liveEdgeAaProfile = getAurumEdgeAaProfile(measuredQualityId, runtimeBudget.tier, "live");
@@ -3658,9 +3655,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               if (strength) strength.value = liveEdgeAaProfile.strength;
               surfaceEdgeAaPass.enabled = false;
             }
-            // GemMask performs dedicated depth + category renders. Bypass it and
-            // its dependent gemstone AA composite for the entire motion interval;
-            // keep the normal composer and optional Surface Edge AA active.
+            // GemMask and its dependent AA composites are reserved for explicit
+            // capture paths; the live viewport does not execute the composer.
             const coreBeautyPasses = new Set([renderPass, outputPass]);
             const interactionPasses = ((composer as any)?.passes ?? []) as any[];
             interactionPasses.forEach((pass) => { pass.enabled = coreBeautyPasses.has(pass); });
@@ -3674,15 +3670,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             invalidateRenderRef.current?.();
           },
           onEnd: () => {
-            // Restore the settled beauty chain. No idle-only TAA, bloom, DOF or SSR
-            // are added here; only the surface AA blend strength returns to still quality.
+            // Keep the settled viewport on direct WebGL as well. TAA, Bloom, DOF,
+            // SSR and edge-filter passes remain outside the interactive render path.
             const requestedDpr = Math.max(1, Math.min(2, renderQuality.pixelRatio));
             const settledDpr = Math.min(requestedDpr, runtimeBudget.pixelRatioCap, getAurumViewportPixelRatio());
             renderer.setPixelRatio(settledDpr);
             composer?.setPixelRatio?.(settledDpr);
 
-            // TAA remains disabled after orbit as well; the settled preview uses
-            // the same non-temporal beauty chain as the interactive state.
+            // The settled direct-render preview does not accumulate temporal AA.
             const coreBeautyPasses = new Set([renderPass, outputPass]);
             const settledPasses = ((composer as any)?.passes ?? []) as any[];
             settledPasses.forEach((pass) => { pass.enabled = coreBeautyPasses.has(pass); });
