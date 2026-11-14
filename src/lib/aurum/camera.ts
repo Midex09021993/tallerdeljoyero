@@ -105,28 +105,30 @@ export function applyAurumCameraView(
   const distance = Math.max(fitDistance * 1.00 * profile.distance * distanceScale, 0.1);
   const verticalBias = radius * profile.vertical;
 
-  // OrbitControls conserva deltas de órbita/pan de la interacción anterior.
-  // Consumirlos antes de cambiar de preset evita que el siguiente update
-  // reescriba la posición recién calculada.
+  // OrbitControls calcula su orientación interna a partir del camera.up
+  // que tenía al construirse. Cambiar camera.up por preset (por ejemplo,
+  // Z-up en Superior) desincroniza su quaternion interno y puede neutralizar
+  // la vista solicitada. AURUM usa un único sistema Y-up para todos los presets.
+  camera.up.set(0, 1, 0);
+
+  // Consumir deltas de órbita/pan anteriores antes de cambiar el preset.
   const previousDamping = controls.enableDamping;
   if (controls.enableDamping !== undefined) controls.enableDamping = false;
   controls.update?.();
 
   controls.target.copy(target);
   if (view === "frontal") {
-    camera.up.set(0, 1, 0);
     // Elevación mínima: conserva la lectura frontal pero permite que el plano
     // de producto y su sombra de contacto entren en la composición.
     const productLift = radius * 0.06;
     camera.position.set(target.x, target.y + productLift, target.z + distance);
   } else if (view === "superior") {
-    camera.up.set(0, 0, -1);
+    // Vista cenital: la dirección cambia, pero el eje superior de cámara
+    // permanece Y-up para coincidir con el quaternion interno de OrbitControls.
     camera.position.set(target.x, target.y + distance, target.z);
   } else if (view === "lateral") {
-    camera.up.set(0, 1, 0);
     camera.position.set(target.x + distance, target.y, target.z);
   } else {
-    camera.up.set(0, 1, 0);
     // Perspectiva conserva la distancia radial de Frontal y cambia solo
     // la dirección de observación. Antes se sumaban desplazamientos en X/Y/Z
     // sin normalizar, aumentando la distancia real y reduciendo la joya.
