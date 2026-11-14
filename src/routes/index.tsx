@@ -16,13 +16,13 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Software para joyerías: gestiona clientes, cotizaciones y pedidos; calcula aleaciones y pesos; renderiza modelos de joyería con metales, gemas e iluminación en AURUM RENDER.",
+          "Software para joyerías: organiza clientes, cotizaciones y pedidos. Calcula materiales y crea renders 3D con AURUM RENDER.",
       },
       { name: "robots", content: "index, follow, max-image-preview:large" },
       { property: "og:title", content: "AURUM LAB | Software para joyeros y talleres de joyería" },
       {
         property: "og:description",
-        content: "Gestiona tu taller, calcula aleaciones y pesos, y renderiza modelos de joyería con metales, gemas e iluminación en AURUM RENDER.",
+        content: "Organiza tu taller, calcula materiales y crea renders 3D de joyería con AURUM RENDER.",
       },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://www.tallerdeljoyero.com/" },
