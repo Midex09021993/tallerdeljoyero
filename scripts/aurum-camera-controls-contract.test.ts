@@ -83,7 +83,7 @@ test("AURUM CAMERA applies four distinct presets using real Three.js OrbitContro
   const manuallyOrbitedQuaternion = camera.quaternion.clone();
   expect(orientationDistance(manuallyOrbitedQuaternion, perspective.quaternion)).toBeGreaterThan(0.0001);
   const distanceBeforeDolly = controls.getDistance();
-  controls.dollyIn(1.1);
+  controls.dollyOut(1.1);
   controls.update();
   expect(controls.getDistance()).toBeLessThan(distanceBeforeDolly);
 
