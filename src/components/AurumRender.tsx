@@ -3501,6 +3501,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       // retains UI/material/highlight side effects through explicit callbacks.
       const objectSelectionModule = createAurumObjectSelectionModule({
         camera: camara,
+        element: renderer.domElement,
         getModel: () => modelo,
         isBlocked: () => !modelo || cargando,
         onSelect: (object) => seleccionarMalla(object),
