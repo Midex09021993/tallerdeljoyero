@@ -100,17 +100,17 @@ function CursosDiseno3DPage() {
               <Sparkles className="size-3.5" /> Formación y práctica digital
             </p>
             <h1 className="mt-6 max-w-3xl font-display text-4xl italic leading-tight sm:text-6xl">
-              Aprende, crea y desarrolla tu talento en <span className="text-[#e5ca8a]">joyería</span>
+              Diseño 3D aplicado a la fabricación de joyas con <span className="text-[#e5ca8a]">Rhinoceros</span>
             </h1>
             <p className="mt-5 max-w-2xl text-sm leading-7 text-white/65 sm:text-base">
-              Un espacio para descubrir cursos, desarrollar nuevas habilidades y encontrar recursos útiles para estudiantes y profesionales del sector joyero.
+              Aprende desde cero a construir modelos de joyería en 3D. Un curso práctico de nivel inicial, con 20 horas académicas distribuidas en 10 sesiones presenciales de 2 horas.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <a
                 href="#recursos"
                 className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#d8bd7b] px-5 text-sm font-semibold text-[#17140d] transition hover:bg-[#e5ca8a]"
               >
-                Explorar recursos gratuitos <ArrowRight className="size-4" />
+                Acceder al Aula de Formación <ArrowRight className="size-4" />
               </a>
               <Link
                 to="/herramientas"
@@ -120,7 +120,7 @@ function CursosDiseno3DPage() {
               </Link>
             </div>
             <p className="mt-4 max-w-xl text-xs leading-5 text-white/35">
-              La publicación de cursos estará sujeta a revisión y aprobación comercial. La inscripción se habilitará cuando cada curso tenga sus datos y condiciones confirmados.
+              Curso de nivel inicial · 10 sesiones · 20 horas académicas · Modalidad presencial.
             </p>
           </div>
 
@@ -129,16 +129,16 @@ function CursosDiseno3DPage() {
             <div className="relative rounded-[1.75rem] border border-[#d8bd7b]/20 bg-[#181916] p-5 shadow-2xl sm:p-7">
               <div className="flex items-center justify-between border-b border-white/10 pb-4">
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#d8bd7b]">Flujo de aprendizaje</p>
-                  <p className="mt-1 text-sm text-white/75">Diseña · Visualiza · Comparte</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#d8bd7b]">Programa del curso</p>
+                  <p className="mt-1 text-sm text-white/75">10 sesiones prácticas · 2 horas cada una</p>
                 </div>
                 <Gem className="size-6 text-[#d8bd7b]" />
               </div>
               <div className="mt-5 space-y-3">
                 {[
-                  { n: "01", title: "Prepara tu modelo", detail: "Trabaja con tu archivo CAD compatible." },
-                  { n: "02", title: "Explora la presentación", detail: "Abre AURUM Render desde el ecosistema." },
-                  { n: "03", title: "Comparte y revisa", detail: "Utiliza enlaces para intercambiar archivos." },
+                  { n: "01", title: "Interfaz y geometría", detail: "Conoce Rhinoceros, navega y construye geometrías básicas." },
+                  { n: "02", title: "Curvas y precisión", detail: "Domina coordenadas, Osnap, SmartTrack y edición de curvas." },
+                  { n: "03", title: "Modelado para joyería", detail: "Trabaja sólidos, superficies y prepara modelos para fabricación." },
                 ].map((step) => (
                   <div key={step.n} className="flex gap-4 rounded-xl border border-white/[.08] bg-white/[.025] p-4">
                     <span className="grid size-9 shrink-0 place-items-center rounded-lg border border-[#d8bd7b]/25 text-xs font-semibold text-[#d8bd7b]">{step.n}</span>
@@ -151,7 +151,7 @@ function CursosDiseno3DPage() {
               </div>
               <div className="mt-5 flex items-center gap-2 text-xs text-white/40">
                 <CheckCircle2 className="size-4 text-[#d8bd7b]" />
-                Recursos complementarios para acompañar tu aprendizaje.
+                Formación práctica orientada al trabajo joyero.
               </div>
             </div>
           </div>
@@ -159,10 +159,10 @@ function CursosDiseno3DPage() {
 
         <section id="recursos" className="scroll-mt-8 border-t border-white/10 py-12 sm:py-16">
           <div className="max-w-2xl">
-            <p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#d8bd7b]">Tu espacio de práctica</p>
-            <h2 className="mt-3 font-display text-3xl italic sm:text-4xl">Cursos y recursos para aprender</h2>
+            <p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#d8bd7b]">Contenido del programa</p>
+            <h2 className="mt-3 font-display text-3xl italic sm:text-4xl">¿Qué aprenderás?</h2>
             <p className="mt-3 text-sm leading-7 text-white/55">
-              Explora herramientas del ecosistema que pueden complementar tu formación y tus proyectos.
+              Un recorrido progresivo desde los fundamentos de Rhinoceros hasta la preparación de modelos para fabricación digital de joyas.
             </p>
           </div>
           <div className="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -185,14 +185,13 @@ function CursosDiseno3DPage() {
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
             <div className="max-w-2xl">
               <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#d8bd7b]">Siguiente paso</p>
-              <h2 className="mt-2 font-display text-2xl italic sm:text-3xl">Empieza a explorar el ecosistema joyero</h2>
+              <h2 className="mt-2 font-display text-2xl italic sm:text-3xl">Continúa tu formación en el Aula</h2>
               <p className="mt-2 text-sm leading-6 text-white/55">
-                Crea tu acceso para conocer los módulos disponibles. Para fechas, precios e
-                inscripción a los cursos, consulta directamente los canales oficiales de la instructora.
+                Accede con tu cuenta para consultar el aula y los contenidos formativos disponibles.
               </p>
             </div>
             <Link to="/auth" className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#d8bd7b] px-5 text-sm font-semibold text-[#17140d] transition hover:bg-[#e5ca8a]">
-              Crear cuenta o entrar <ArrowRight className="size-4" />
+              Entrar al Aula de Formación <ArrowRight className="size-4" />
             </Link>
           </div>
         </section>
