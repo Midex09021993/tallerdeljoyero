@@ -2628,6 +2628,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           const renderHeight=videoHeight;
           const renderAspect=outputAspect;
           const previousFastPath=liveFastPathRef.current;
+          const originalSurfaceEdgeAaStrength=Number(surfaceEdgeAaPass?.material?.uniforms?.strength?.value ?? 0.035);
           let videoFramePipeline: ReturnType<typeof createAurumVideoFramePipeline> | null = null;
           try{
             const loadVideoRecorder = productionPluginHost.services.get("aurum.media.video-recorder.load");
@@ -2640,6 +2641,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // capture, instead of bypassing EffectComposer with renderer.render().
             liveFastPathRef.current=false;
             aplicarPerfilLive();
+            // Video must use the same subtle edge cleanup as the settled viewer.
+            // TAA remains disabled; this only includes the existing Surface Edge AA pass.
+            const videoEdgeAaProfile=getAurumEdgeAaProfile(measuredQualityId,runtimeBudget.tier,"settled");
+            if(surfaceEdgeAaPass){
+              const strength=surfaceEdgeAaPass.material?.uniforms?.strength;
+              if(strength)strength.value=videoEdgeAaProfile.strength;
+            }
             // Match the WebGL backing buffer and camera projection to the final MP4.
             // The CSS viewport remains unchanged while recording.
             renderer.setPixelRatio(1);
@@ -2677,7 +2685,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               scene:escena,
               camera:camara,
               diamondBvhRuntime,
-              livePasses:[renderPass,gemMaskPass,fxaaPass,outputPass],
+              livePasses:[renderPass,gemMaskPass,fxaaPass,...(surfaceEdgeAaPass&&videoEdgeAaProfile.enabled?[surfaceEdgeAaPass]:[]),outputPass],
               width:renderWidth,
               height:renderHeight,
               restoreWidth:originalCssWidth,
@@ -2760,6 +2768,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               () => { camara.aspect=originalAspect; camara.updateProjectionMatrix?.(); },
               () => { if(composer && applyPostQuality) applyPostQuality({...renderQuality,pixelRatio:originalPixelRatio,qualityId:measuredQualityId}); },
               () => videoFramePipeline?.restore(),
+              () => { const strength=surfaceEdgeAaPass?.material?.uniforms?.strength; if(strength)strength.value=originalSurfaceEdgeAaStrength; },
               () => { controles.autoRotate=previousAutoRotate; },
               () => { controles.autoRotateSpeed=previousAutoRotateSpeed; },
               () => camara.position.copy(originalCameraPosition),
