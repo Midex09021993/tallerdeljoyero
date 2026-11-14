@@ -280,6 +280,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [publicViewerDragActive, setPublicViewerDragActive] = useState(false);
   const publicViewerDragDepthRef = useRef(0);
   const [publicViewerTestUrl, setPublicViewerTestUrl] = useState<string | null>(null);
+  const [publicViewerCameraActions, setPublicViewerCameraActions] = useState<any>(null);
   const publicViewerTestInputRef = useRef<HTMLInputElement>(null);
   const publicViewerTestUrlRef = useRef<string | null>(null);
   const selectPublicViewerTestFile = useCallback((file: File | null) => {
@@ -4822,7 +4823,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               zIndex: 9999,
             } : undefined}
           >
-            <AurumViewerControlsModule
+            {!publicViewerTestOpen && <AurumViewerControlsModule
               performanceOpen={performanceOpen}
               onPerformanceToggle={() => setPerformanceOpen((value) => !value)}
               onPerformanceClose={() => setPerformanceOpen(false)}
@@ -4832,7 +4833,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               selectionName={parteSeleccionadaNombre}
               selectionEnabled={diagnosticoSeleccionHabilitado}
               onSelectionClose={() => { setDiagnosticoSeleccion(null); setDiagnosticoSeleccionHabilitado(false); diagnosticoSeleccionHabilitadoRef.current = false; }}
-            />
+            />}
             {arrastrandoArchivo && !embedded && <div className="pointer-events-none absolute inset-3 z-[60] grid place-items-center rounded-2xl border border-dashed border-[#d4af37]/80 bg-[#090b0e]/88 text-center shadow-[inset_0_0_90px_rgba(212,175,55,.12),0_18px_55px_rgba(0,0,0,.22)] backdrop-blur-md" aria-live="polite">
               <div className="px-6 py-8">
                 <span className="mx-auto grid size-[72px] place-items-center rounded-full border border-[#d4af37]/45 bg-gradient-to-br from-[#d4af37]/15 to-transparent text-[#e3bd55] shadow-[0_0_35px_rgba(212,175,55,.12)]"><Upload className="size-7"/></span>
@@ -5002,12 +5003,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           </div>
           {new URLSearchParams(window.location.search).get("aurumPublicViewer") === "1" && publicViewerTestOpen && (
             <div className="absolute inset-0 z-[75] flex flex-col bg-white">
-              <div className="flex h-11 shrink-0 items-center justify-between border-b border-[#e8e3d9] bg-[#faf9f6] px-3 text-[#514b3e]">
-                <span className="text-[10px] font-semibold uppercase tracking-[.16em]">Prueba · Visor público original</span>
-                <button type="button" onClick={() => setPublicViewerTestOpen(false)} className="rounded-lg border border-[#d8cba9] bg-white px-3 py-1.5 text-[11px] font-semibold hover:bg-[#f7f1e3]">Volver a Aurum Render</button>
-              </div>
-              <div
-                className="relative min-h-0 flex-1"
+              <div className="relative min-h-0 flex-1">
                 onDragEnter={(event) => {
                   event.preventDefault();
                   publicViewerDragDepthRef.current += 1;
@@ -5031,7 +5027,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 }}
               >
                 {publicViewerTestUrl && publicViewerTestFile ? (
-                  <PublicCatalogViewer key={publicViewerTestFile.name + ":" + publicViewerTestFile.size + ":" + publicViewerTestFile.lastModified} modelUrl={publicViewerTestUrl} modelName={publicViewerTestFile.name} materialId={materialId} gemId={gemaId} hideControls={false} />
+                  <PublicCatalogViewer key={publicViewerTestFile.name + ":" + publicViewerTestFile.size + ":" + publicViewerTestFile.lastModified} modelUrl={publicViewerTestUrl} modelName={publicViewerTestFile.name} materialId={materialId} gemId={gemaId} hideControls onCameraActionsReady={setPublicViewerCameraActions} />
+                  <AurumViewerControlsModule performanceOpen={performanceOpen} onPerformanceToggle={() => setPerformanceOpen((value) => !value)} onPerformanceClose={() => setPerformanceOpen(false)} performanceRenderer={performanceRenderer} performanceMonitor={performanceMonitorRef.current} selectionDiagnostic={diagnosticoSeleccion} selectionName={parteSeleccionadaNombre} selectionEnabled={diagnosticoSeleccionHabilitado} onSelectionClose={() => { setDiagnosticoSeleccion(null); setDiagnosticoSeleccionHabilitado(false); diagnosticoSeleccionHabilitadoRef.current = false; }} cameraActions={publicViewerCameraActions} />
                 ) : (
                   <div className="grid h-full place-items-center p-8 text-center">
                     <div className="max-w-md">
