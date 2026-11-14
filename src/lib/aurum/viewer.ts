@@ -130,11 +130,22 @@ export function resizeAurumViewer(viewer: {
   return sizeChanged || aspectChanged;
 }
 
+const disposedAurumViewerRenderers = new WeakSet<object>();
+
+/**
+ * Tears down one viewer exactly once.
+ *
+ * Cleanup is best-effort: a failing controller must not prevent the renderer,
+ * composer, or remaining owners from being released. Gem environments are
+ * released before the metal environment because they are derived through its
+ * PMREM generator.
+ */
 export function disposeAurumViewer(viewer: {
   node: any;
   renderer: any;
   controls?: any;
   observer?: { disconnect: () => void };
+  loop?: { stop?: () => void };
   clickHandler?: (event: MouseEvent) => void;
   groundController?: any;
   lightingController?: any;
@@ -145,20 +156,48 @@ export function disposeAurumViewer(viewer: {
   clearSelection?: () => void;
   composer?: any;
 }) {
-  viewer.observer?.disconnect();
-  if (viewer.clickHandler) viewer.renderer?.domElement?.removeEventListener("click", viewer.clickHandler);
-  viewer.controls?.dispose?.();
-  viewer.lightingController?.dispose?.();
-  viewer.groundController?.dispose?.();
-  viewer.clearSelection?.();
-  viewer.hdriGroundTexture?.dispose?.();
-  viewer.environmentController?.dispose?.();
-  viewer.gemEnvironmentController?.dispose?.();
-  viewer.composer?.dispose?.();
-  viewer.renderer?.renderLists?.dispose?.();
-  viewer.renderer?.dispose?.();
-  if (viewer.renderer?.domElement?.parentElement === viewer.node) {
-    viewer.node.removeChild(viewer.renderer.domElement);
+  const renderer = viewer.renderer;
+  if (renderer && (typeof renderer === "object" || typeof renderer === "function")) {
+    if (disposedAurumViewerRenderers.has(renderer)) return;
+    // Mark before invoking external callbacks to make re-entrant cleanup safe.
+    disposedAurumViewerRenderers.add(renderer);
+  }
+
+  const failures: unknown[] = [];
+  const attempt = (cleanup: (() => void) | undefined) => {
+    if (!cleanup) return;
+    try {
+      cleanup();
+    } catch (error) {
+      failures.push(error);
+    }
+  };
+
+  // Stop RAF and global listeners before destroying anything they can access.
+  attempt(() => viewer.loop?.stop?.());
+  attempt(() => viewer.observer?.disconnect());
+  attempt(() => {
+    if (viewer.clickHandler) renderer?.domElement?.removeEventListener("click", viewer.clickHandler);
+  });
+  attempt(() => viewer.controls?.dispose?.());
+  attempt(() => viewer.clearSelection?.());
+  attempt(() => viewer.lightingController?.dispose?.());
+  attempt(() => viewer.groundController?.dispose?.());
+  attempt(() => viewer.hdriGroundTexture?.dispose?.());
+  // Gem PMREM textures depend on the environment controller's PMREM generator.
+  attempt(() => viewer.gemEnvironmentController?.dispose?.());
+  attempt(() => viewer.environmentController?.dispose?.());
+  attempt(() => viewer.composer?.dispose?.());
+  attempt(() => renderer?.renderLists?.dispose?.());
+  attempt(() => renderer?.dispose?.());
+  attempt(() => {
+    if (renderer?.domElement?.parentElement === viewer.node) {
+      viewer.node.removeChild(renderer.domElement);
+    }
+  });
+
+  if (failures.length) {
+    throw new AggregateError(failures, "AURUM viewer cleanup completed with one or more errors.");
   }
 }
 
