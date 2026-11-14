@@ -1,4 +1,5 @@
-import * as THREE from "three";\nimport type { Object3D, PerspectiveCamera, Vector3 } from "three";
+import * as THREE from "three";
+import type { Object3D, PerspectiveCamera, Vector3 } from "three";
 import { applyAurumCameraView, applyAurumIJEWELPresentationCamera, applyAurumPublicViewerCamera } from "./camera";
 
 export interface AurumViewerFrame {
