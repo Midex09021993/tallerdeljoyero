@@ -278,6 +278,10 @@ export function createAurumWebGLViewer(
 
   const Controls = options.controlsClass;
   const controls = Controls ? new Controls(camera, renderer.domElement) : null;
+  // The browser context menu can interrupt a right-button drag before the
+  // pan gesture completes. Suppress it only on the WebGL canvas.
+  const preventCanvasContextMenu = (event: MouseEvent) => event.preventDefault();
+  renderer.domElement.addEventListener("contextmenu", preventCanvasContextMenu);
   if (controls) {
     controls.enableDamping = true;
     controls.dampingFactor = 0.07;
@@ -299,7 +303,9 @@ export function createAurumWebGLViewer(
   }
 
   nodo.appendChild(renderer.domElement);
-  return { scene, camera, renderer, controls };
+  return { scene, camera, renderer, controls, disposeCanvasContextMenu: () => {
+    renderer.domElement.removeEventListener("contextmenu", preventCanvasContextMenu);
+  } };
 }
 
 export function startAurumViewerLoop(
