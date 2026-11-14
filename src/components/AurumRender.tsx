@@ -310,6 +310,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   // Puente entre el selector React y la cámara creada dentro del ciclo del visor.
   const aplicarVistaRef = useRef<((id: VistaId) => void) | null>(null);
   const autoVistaPorOrbitaRef = useRef(false);
+  const cambioVistaManualRef = useRef(false);
   vistaRef.current = vista;
   const [nombreProyecto, setNombreProyecto] = useState("Diseño de joyería");
   const [categoriaProyecto, setCategoriaProyecto] = useState("Anillo");
@@ -3891,14 +3892,18 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   useEffect(()=>{ apiRef.current?.escenario(escenarioId); invalidateRenderRef.current?.(); },[escenarioId]);
   useEffect(()=>{ apiRef.current?.iluminacion(iluminacionId); invalidateRenderRef.current?.(); },[iluminacionId]);
   useEffect(()=>{
-    // El cambio automático durante el arrastre solo actualiza el nombre de la
-    // vista: no aplicar el preset, porque sobrescribiría la órbita en curso.
+    // Los cambios elegidos explícitamente ya fueron aplicados de forma síncrona
+    // desde el selector; evita una segunda aplicación del mismo preset.
+    if (cambioVistaManualRef.current) {
+      cambioVistaManualRef.current = false;
+      return;
+    }
+    // El arrastre solo actualiza la etiqueta y conserva la órbita del usuario.
     if (autoVistaPorOrbitaRef.current) {
       autoVistaPorOrbitaRef.current = false;
       invalidateRenderRef.current?.();
       return;
     }
-    // Aplicar cada preset desde un único punto, después de confirmar el estado React.
     const cameraApi=apiRef.current;
     if (typeof cameraApi?.vista === "function") cameraApi.vista(vista);
     else aplicarVistaRef.current?.(vista);
@@ -4553,7 +4558,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         <div className="flex items-center gap-2">
           <label className="flex h-10 items-center gap-2 rounded-xl border border-[#b99642]/25 bg-white/95 px-3 text-sm text-[#292824] shadow-sm transition hover:border-[#b99642]/60 hover:shadow-[0_3px_12px_rgba(185,150,66,.12)] focus-within:ring-2 focus-within:ring-[#92743b]/20">
             <Gem className="size-4 text-[#92743b]"/>
-            <select aria-label="Seleccionar vista de cámara" value={vista} onChange={e=>{const next=e.target.value as VistaId;vistaRef.current=next;setVista(next);}} className="min-w-0 appearance-none bg-transparent font-medium outline-none cursor-pointer">
+            <select aria-label="Seleccionar vista de cámara" value={vista} onChange={e=>{const next=e.target.value as VistaId;autoVistaPorOrbitaRef.current=false;cambioVistaManualRef.current=true;vistaRef.current=next;aplicarVistaRef.current?.(next);setVista(next);invalidateRenderRef.current?.();}} className="min-w-0 appearance-none bg-transparent font-medium outline-none cursor-pointer">
               <option className="bg-white" value={VISTAS[0]?.id}>{VISTAS[0]?.nombre || "Vista 3D"}</option>
               {VISTAS.slice(1).map(v=><option className="bg-white" key={v.id} value={v.id}>{v.nombre}</option>)}
             </select>
