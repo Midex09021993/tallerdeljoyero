@@ -102,8 +102,9 @@ export function applyAurumIJEWELPresentationCamera(
  */
 export function applyAurumPublicViewerCamera(
   camera: THREE.PerspectiveCamera,
-  controls: { target: THREE.Vector3; update: () => void; minDistance?: number; maxDistance?: number; enablePan?: boolean; enableRotate?: boolean; enableZoom?: boolean; autoRotate?: boolean; autoRotateSpeed?: number },
+  controls: { target: THREE.Vector3; update: () => void; minDistance?: number; maxDistance?: number; enablePan?: boolean; enableRotate?: boolean; enableZoom?: boolean; autoRotate?: boolean; autoRotateSpeed?: number; screenSpacePanning?: boolean },
   model: THREE.Object3D | null,
+  options: { enablePan?: boolean } = {},
 ) {
   const bounds = model ? new THREE.Box3() : null;
   if (model && bounds) {
@@ -128,7 +129,8 @@ export function applyAurumPublicViewerCamera(
   controls.target.set(0, 0, 0);
   controls.minDistance = radius * 0.6;
   controls.maxDistance = radius * 12;
-  controls.enablePan = false;
+  controls.enablePan = options.enablePan === true;
+  controls.screenSpacePanning = true;
   controls.enableRotate = true;
   controls.enableZoom = true;
   controls.autoRotate = false;
