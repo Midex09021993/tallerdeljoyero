@@ -74,11 +74,20 @@ export function AurumProductShowcase() {
     <style>{`
       @keyframes aurum-showcase-in { from { opacity:0; transform:translate3d(18px,8px,0) scale(.99); filter:blur(3px) } to { opacity:1; transform:translate3d(0,0,0) scale(1); filter:blur(0) } }
       @keyframes aurum-showcase-float { 0%,100% { transform:translateY(0) } 50% { transform:translateY(-6px) } }
+      @keyframes aurum-card-forward { from { opacity:.72; transform:translate3d(0,22px,0) } to { opacity:1; transform:translate3d(0,0,0) } }
       .aurum-showcase-scene { animation: aurum-showcase-in .65s cubic-bezier(.2,.75,.25,1) both; }
       .aurum-showcase-window { animation: aurum-showcase-float 7s ease-in-out infinite; }
-      @media (prefers-reduced-motion: reduce) { .aurum-showcase-scene,.aurum-showcase-window { animation:none!important } }
+      .aurum-showcase-card-front { animation: aurum-card-forward .62s cubic-bezier(.2,.75,.25,1) both; }
+      .aurum-showcase-card-back { position:absolute; inset:0; border:1px solid #dfe5ed; border-radius:1.6rem; background:#fff; pointer-events:none; }
+      .aurum-showcase-card-back-one { transform:translateY(12px); opacity:.82; }
+      .aurum-showcase-card-back-two { transform:translateY(24px); opacity:.58; }
+      @media (prefers-reduced-motion: reduce) { .aurum-showcase-scene,.aurum-showcase-window,.aurum-showcase-card-front { animation:none!important } }
     `}</style>
     <div className="absolute inset-x-8 bottom-0 top-12 rounded-[3rem] bg-gradient-to-br from-[#ffe99a]/70 via-[#f8faff] to-[#e4ecf7] blur-2xl"/>
+    <div className="relative">
+      <div aria-hidden="true" className="aurum-showcase-card-back aurum-showcase-card-back-two"/>
+      <div aria-hidden="true" className="aurum-showcase-card-back aurum-showcase-card-back-one"/>
+      <div key={scene.id} className="aurum-showcase-card-front">
     <div className="aurum-showcase-window relative overflow-hidden rounded-[1.6rem] border border-slate-200 bg-white p-2.5 shadow-[0_25px_80px_rgba(28,40,52,.15)] sm:p-3">
       <div className="flex h-10 items-center gap-2 border-b border-slate-100 px-3"><span className="size-2.5 rounded-full bg-[#ff6b63]"/><span className="size-2.5 rounded-full bg-[#ffce45]"/><span className="size-2.5 rounded-full bg-[#4ac58b]"/><div className="mx-auto mr-12 rounded-full bg-slate-100 px-14 py-1 text-[9px] text-slate-400">TU ESPACIO DIGITAL</div></div>
       <div className="grid min-h-[330px] grid-cols-[100px_minmax(0,1fr)] overflow-hidden rounded-b-xl sm:min-h-[365px] sm:grid-cols-[155px_minmax(0,1fr)]">
@@ -94,6 +103,8 @@ export function AurumProductShowcase() {
           <div key={scene.id} className="aurum-showcase-scene mt-3 min-h-[190px]">{<SceneContent scene={scene}/>}</div>
           <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3"><span className="text-[8px] font-medium text-slate-400">VISTA DEL PRODUCTO · {String(active+1).padStart(2,"0")} / {String(scenes.length).padStart(2,"0")}</span><span className="flex items-center gap-1 text-[8px] font-semibold text-[#987400]"><span className="size-1.5 rounded-full bg-emerald-500"/> DEMOSTRACIÓN</span></div>
         </div>
+      </div>
+    </div>
       </div>
     </div>
     <div className="absolute -bottom-1 left-3 flex max-w-[220px] items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_12px_35px_rgba(28,40,52,.14)] sm:bottom-0 sm:left-0 sm:max-w-[245px] sm:p-4"><span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#fff2bd] text-[#8c6a00]"><Check className="size-5"/></span><div><p className="text-[10px] font-bold text-[#17232d] sm:text-xs">Un espacio para tu taller</p><p className="mt-1 text-[9px] leading-4 text-slate-500 sm:text-[10px]">Herramientas, diseños y gestión conectados.</p></div></div>
