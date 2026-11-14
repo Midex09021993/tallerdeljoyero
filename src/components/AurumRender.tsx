@@ -1333,8 +1333,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         invalidateRenderRef.current?.();
       };
       lucesRef.current = actualizarLucesAurum;
-      // Inicializar las luces configurables desde el arranque del visor.
+      // Inicializar el controlador, then immediately disable its AURUM-only rig.
       lightingController.create();
+      aplicarIluminacionPublica();
 
       const aplicarIluminacion = (id:IluminacionId) => {
         if (PUBLIC_VIEWER_PRESENTATION_MODE) return;
