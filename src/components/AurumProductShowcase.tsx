@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  Boxes, Calculator, Check, ChevronLeft, ChevronRight, Cloud, FileBox, Gem,
-  Folder, Image, Layers3, Pause, Play, ShoppingBag, Users,
+  Boxes, Calculator, Check, Cloud, FileBox, Gem,
+  Folder, Image, Layers3, ShoppingBag, Users,
 } from "lucide-react";
 
 type Scene = {
@@ -39,7 +39,6 @@ function SceneContent({ scene }: { scene: Scene }) {
 
 export function AurumProductShowcase() {
   const [active, setActive] = useState(0);
-  const [paused, setPaused] = useState(false);
   const [visible, setVisible] = useState(true);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const reducedMotion = useRef(false);
@@ -63,12 +62,11 @@ export function AurumProductShowcase() {
   }, []);
 
   useEffect(() => {
-    if (paused || !visible || reducedMotion.current) return;
+    if (!visible || reducedMotion.current) return;
     const timer = window.setInterval(() => setActive(current => (current + 1) % scenes.length), 4800);
     return () => window.clearInterval(timer);
-  }, [paused, visible]);
+  }, [visible]);
 
-  const go = (direction: number) => setActive(current => (current + direction + scenes.length) % scenes.length);
 
   return <div ref={rootRef} className="aurum-showcase-enter relative mx-auto w-full max-w-[720px] pb-7 sm:pb-10" aria-label="Demostración automática de AURUM LAB">
     <style>{`
@@ -108,11 +106,5 @@ export function AurumProductShowcase() {
       </div>
     </div>
     <div className="absolute -bottom-1 left-3 flex max-w-[220px] items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_12px_35px_rgba(28,40,52,.14)] sm:bottom-0 sm:left-0 sm:max-w-[245px] sm:p-4"><span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#fff2bd] text-[#8c6a00]"><Check className="size-5"/></span><div><p className="text-[10px] font-bold text-[#17232d] sm:text-xs">Un espacio para tu taller</p><p className="mt-1 text-[9px] leading-4 text-slate-500 sm:text-[10px]">Herramientas, diseños y gestión conectados.</p></div></div>
-    <div className="absolute -bottom-9 right-1 flex items-center gap-1.5 sm:bottom-0 sm:right-1">
-      <button type="button" onClick={()=>go(-1)} aria-label="Pantalla anterior" className="grid size-8 place-items-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-[#d4aa19]"><ChevronLeft className="size-4"/></button>
-      <button type="button" onClick={()=>setPaused(value=>!value)} aria-label={paused?"Reanudar demostración":"Pausar demostración"} className="grid size-8 place-items-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-[#d4aa19]">{paused?<Play className="size-3.5"/>:<Pause className="size-3.5"/>}</button>
-      <button type="button" onClick={()=>go(1)} aria-label="Pantalla siguiente" className="grid size-8 place-items-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-[#d4aa19]"><ChevronRight className="size-4"/></button>
-      <span className="ml-1 text-[9px] font-semibold tabular-nums text-slate-500">{active+1}/{scenes.length}</span>
-    </div>
   </div>;
 }
