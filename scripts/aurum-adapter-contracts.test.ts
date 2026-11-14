@@ -7,6 +7,7 @@ import { createAurumMetalAdapter } from "../src/lib/aurum/core/metal-adapter";
 import { createAurumGemAdapter } from "../src/lib/aurum/core/gem-adapter";
 import { createAurumRenderPipelineContract } from "../src/lib/aurum/core/render-pipeline-contract";
 import { createAurumMediaExportContract } from "../src/lib/aurum/core/media-export-contract";
+import { createAurumOpticalContract } from "../src/lib/aurum/core/optical-contract";
 
 function expectRuntimeReadonlyMap(map: ReadonlyMap<string, unknown>) {
   expect(typeof (map as any).set).toBe("undefined");
@@ -102,4 +103,13 @@ test("AURUM media export contract exposes the production frame and recorder boun
   const contract = createAurumMediaExportContract();
   expect(typeof contract.createFramePipeline).toBe("function");
   expect(typeof contract.recordCanvas).toBe("function");
+});
+
+
+test("AURUM optical contract composes typed metal and gem boundaries", () => {
+  const optical = createAurumOpticalContract();
+  expect(typeof optical.metal.apply).toBe("function");
+  expect(typeof optical.metal.createPreset).toBe("function");
+  expect(typeof optical.gem.applyBaseMaterial).toBe("function");
+  expect(typeof optical.gem.applyDiamondOptics).toBe("function");
 });
