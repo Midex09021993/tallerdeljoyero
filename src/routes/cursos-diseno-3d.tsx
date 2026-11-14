@@ -9,13 +9,13 @@ import {
 export const Route = createFileRoute("/cursos-diseno-3d")({
   head: () => ({
     meta: [
-      { title: "Curso CAD 3D para Joyería y Manufactura Aditiva | AURUM LAB" },
+      { title: "Curso CAD 3D para Joyería | AURUM LAB" },
       {
         name: "description",
-        content: "Aprende CAD 3D para joyería con Rhinoceros en 10 sesiones prácticas. Incluye laboratorios interactivos y una introducción a la manufactura aditiva.",
+        content: "Aprende CAD 3D para joyería con Rhinoceros. Curso de 10 sesiones con laboratorios prácticos e introducción a la manufactura aditiva.",
       },
       { property: "og:title", content: "Curso CAD 3D para Joyería y Manufactura Aditiva | AURUM LAB" },
-      { property: "og:description", content: "Aprende CAD 3D para joyería con Rhinoceros en 10 sesiones prácticas, con laboratorios interactivos e introducción a la manufactura aditiva." },
+      { property: "og:description", content: "Curso de Rhinoceros para joyería con 10 sesiones prácticas, laboratorios interactivos e introducción a la manufactura aditiva." },
       { property: "og:url", content: "https://www.tallerdeljoyero.com/cursos-diseno-3d" },
       { name: "robots", content: "index, follow, max-image-preview:large" },
     ],
@@ -23,6 +23,31 @@ export const Route = createFileRoute("/cursos-diseno-3d")({
   }),
   component: CursosDiseno3DPage,
 });
+
+const courseStructuredData = {
+  "@context": "https://schema.org",
+  "@type": "Course",
+  "name": "Diseño CAD 3D para Joyería e Introducción a la Manufactura Aditiva Nivel 1",
+  "description": "Curso de CAD 3D para joyería con Rhinoceros. Incluye 10 sesiones, 20 horas académicas, laboratorios interactivos e introducción a la manufactura aditiva.",
+  "inLanguage": "es-PE",
+  "educationalLevel": "Nivel 1",
+  "timeRequired": "PT20H",
+  "provider": {
+    "@type": "Organization",
+    "name": "AURUM LAB",
+    "url": "https://www.tallerdeljoyero.com/"
+  },
+  "hasCourseInstance": {
+    "@type": "CourseInstance",
+    "courseWorkload": "10 sesiones · 20 horas académicas"
+  },
+  "offers": {
+    "@type": "Offer",
+    "price": "549",
+    "priceCurrency": "PEN",
+    "url": "https://www.tallerdeljoyero.com/cursos-diseno-3d#inversion"
+  }
+} as const;
 
 const sesiones = [
   { n: "01", title: "Entorno digital y navegación en Rhinoceros", detail: "Conoce la interfaz, las vistas, los ejes, la configuración inicial y los movimientos de cámara.", practica: "Rhino Viewport Trainer · recorrido guiado por el espacio 3D" },
@@ -38,12 +63,12 @@ const sesiones = [
 ] as const;
 
 const laboratorios = [
-  { icon: MousePointer2, title: "Rhino Viewport Trainer", desc: "Practica navegación, zoom, órbita y control de las vistas." },
-  { icon: Layers3, title: "Geometry Lab y Curve Lab", desc: "Reconoce geometrías y construye curvas básicas en un entorno interactivo." },
-  { icon: Ruler, title: "Coordenadas, Osnap y SmartTrack", desc: "Entrena precisión, referencias y alineaciones con ejercicios guiados." },
-  { icon: PenTool, title: "Curve Editor y NURBS Studio", desc: "Edita perfiles, controla puntos y compara continuidad de curvas." },
-  { icon: Monitor, title: "Laboratorios de sólidos", desc: "Explora extrusión, revolución, construcción de anillos e inspección." },
-  { icon: Target, title: "Prácticas de capas MatrixGold", desc: "Organiza los componentes de una joya mediante capas." },
+  { icon: MousePointer2, title: "Rhino Viewport Trainer", desc: "Aprende a moverte por las vistas 3D, usar zoom y orbitar modelos." },
+  { icon: Layers3, title: "Geometry Lab y Curve Lab", desc: "Crea geometrías y curvas básicas con ejercicios interactivos." },
+  { icon: Ruler, title: "Coordenadas, Osnap y SmartTrack", desc: "Practica coordenadas, referencias y alineaciones paso a paso." },
+  { icon: PenTool, title: "Curve Editor y NURBS Studio", desc: "Edita curvas, mueve puntos y compara su continuidad." },
+  { icon: Monitor, title: "Laboratorios de sólidos", desc: "Practica extrusiones, revoluciones y modelado de anillos." },
+  { icon: Target, title: "Prácticas de capas MatrixGold", desc: "Ordena las piezas de tu proyecto con capas." },
 ] as const;
 
 const complementos = [
@@ -56,7 +81,7 @@ function CursosDiseno3DPage() {
   const [programaAbierto, setProgramaAbierto] = useState(false);
 
   return (
-    <main className="min-h-screen bg-[#f7f6f2] text-[#1d2b39]">
+    <>\n      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(courseStructuredData) }} />\n    <main className="min-h-screen bg-[#f7f6f2] text-[#1d2b39]">
       <header className="sticky top-0 z-30 border-b border-[#e7e2d8] bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-7 lg:px-10">
           <Link to="/herramientas" className="flex items-center gap-2.5">
@@ -79,7 +104,7 @@ function CursosDiseno3DPage() {
           <div>
             <p className="inline-flex items-center gap-2 rounded-full border border-[#e8d7a4] bg-[#fff9e9] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.2em] text-[#967020]"><Sparkles className="size-3.5" /> Formación aplicada a la joyería</p>
             <h1 className="mt-6 max-w-3xl font-display text-4xl font-semibold leading-[1.08] tracking-tight text-[#1d2b39] sm:text-5xl lg:text-6xl">Diseño CAD 3D para Joyería e Introducción a la Manufactura Aditiva <span className="text-[#b58b37]">Nivel 1</span></h1>
-            <p className="mt-6 max-w-2xl text-base leading-8 text-[#52677b] sm:text-lg">Aprende desde nivel inicial a construir y preparar modelos tridimensionales para joyería. Avanza paso a paso con clases prácticas y laboratorios interactivos desarrollados para este programa.</p>
+            <p className="mt-6 max-w-2xl text-base leading-8 text-[#52677b] sm:text-lg">Aprende CAD 3D desde cero. Diseña modelos de joyería en Rhinoceros y prepáralos para fabricar. Practica cada tema en los laboratorios del curso.</p>
             <div className="mt-7 flex flex-wrap gap-3">
               <Link to="/auth" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#e9c65f] px-5 text-sm font-bold text-[#202b35] shadow-md shadow-[#b58b37]/15 transition hover:-translate-y-0.5 hover:bg-[#dfb83e]">Registrarme gratis <ArrowRight className="size-4" /></Link>
               <button type="button" aria-expanded={programaAbierto} aria-controls="programa" onClick={() => setProgramaAbierto((abierto) => !abierto)} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-[#d9e0e6] bg-white px-5 text-sm font-semibold text-[#33485b] transition hover:border-[#c5a45a]">{programaAbierto ? "Ocultar programa" : "Ver las 10 sesiones"} <span aria-hidden="true" className={`transition-transform ${programaAbierto ? "rotate-180" : ""}`}>⌄</span></button>
@@ -98,7 +123,7 @@ function CursosDiseno3DPage() {
               </div>
               <div className="mt-5 rounded-xl border border-[#eadcb7] bg-[#fffaf0] p-4">
                 <p className="text-[10px] font-bold uppercase tracking-[.16em] text-[#98742f]">Al finalizar</p>
-                <p className="mt-1 text-sm leading-6 text-[#53677a]">Habrás recorrido el flujo de trabajo desde la navegación y geometría básica hasta la validación, exportación y presentación de un proyecto de joyería.</p>
+                <p className="mt-1 text-sm leading-6 text-[#53677a]">Aprenderás desde la navegación básica hasta validar y exportar un modelo de joyería.</p>
               </div>
             </div>
           </div>
@@ -109,7 +134,7 @@ function CursosDiseno3DPage() {
         <div className="max-w-3xl">
           <p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#a17a2e]">Programa académico</p>
           <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight text-[#1d2b39] sm:text-4xl">10 sesiones para construir tu base en modelado 3D</h2>
-          <p className="mt-4 text-sm leading-7 text-[#64778a]">Un recorrido secuencial de 20 horas académicas. Cada sesión desarrolla conceptos y los lleva a la práctica con actividades y recursos del Aula de Formación.</p>
+          <p className="mt-4 text-sm leading-7 text-[#64778a]">Son 10 sesiones de 2 horas. Aprenderás un tema por clase y lo practicarás en el Aula de Formación.</p>
         </div>
         <div className="mt-8 grid gap-3 lg:grid-cols-2">
           {sesiones.map((s)=><article key={s.n} className="group rounded-2xl border border-[#e5e8e9] bg-white p-5 shadow-[0_5px_18px_rgba(31,45,58,.035)] transition hover:-translate-y-0.5 hover:border-[#d8bd7b] hover:shadow-md sm:p-6">
@@ -123,11 +148,11 @@ function CursosDiseno3DPage() {
 
       <section id="laboratorios" className="scroll-mt-24 border-y border-[#e2e7eb] bg-[#edf1f4]">
         <div className="mx-auto max-w-7xl px-4 py-14 sm:px-7 lg:px-10 lg:py-18">
-          <div className="max-w-3xl"><p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#9b7835]">Práctica interactiva de CAD 3D</p><h2 className="mt-3 font-display text-3xl font-semibold tracking-tight text-[#1d2b39] sm:text-4xl">Laboratorios interactivos de Rhinoceros para joyería</h2><p className="mt-4 text-sm leading-7 text-[#5e7183]">Aprende diseño CAD 3D para joyería practicando navegación en Rhinoceros, geometría, curvas, coordenadas, Osnap, SmartTrack, superficies y sólidos. El Aula de Formación reúne laboratorios interactivos para aplicar cada concepto con ejercicios guiados y preparar modelos orientados a la fabricación.</p></div>
+          <div className="max-w-3xl"><p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#9b7835]">Práctica interactiva de CAD 3D</p><h2 className="mt-3 font-display text-3xl font-semibold tracking-tight text-[#1d2b39] sm:text-4xl">Laboratorios interactivos de Rhinoceros para joyería</h2><p className="mt-4 text-sm leading-7 text-[#5e7183]">Practica CAD 3D para joyería con Rhinoceros. Entrena navegación, geometría, curvas, coordenadas, Osnap y SmartTrack. También trabaja superficies y sólidos. Cada laboratorio te guía con ejercicios para preparar modelos para fabricación.</p></div>
           <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {laboratorios.map(({icon:Icon,title,desc})=><article key={title} className="rounded-2xl border border-white bg-white p-5 shadow-sm"><span className="grid size-11 place-items-center rounded-xl bg-[#fff3cc] text-[#9d772e]"><Icon className="size-5" /></span><h3 className="mt-4 font-bold text-[#26394b]">{title}</h3><p className="mt-2 text-sm leading-6 text-[#6a7c8d]">{desc}</p></article>)}
           </div>
-          <div className="mt-5 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[#d9e1e7] bg-white p-5"><p className="max-w-2xl text-sm leading-6 text-[#607487]">Los laboratorios se utilizan como apoyo práctico de las sesiones correspondientes; el acceso a los contenidos académicos se gestiona desde el Aula de Formación.</p><Link to="/auth" className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-[#d7bd7d] bg-[#fffaf0] px-4 text-xs font-bold text-[#806126] hover:bg-[#fff2cf]">Conocer el Aula <ArrowRight className="size-4" /></Link></div>
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[#d9e1e7] bg-white p-5"><p className="max-w-2xl text-sm leading-6 text-[#607487]">Los laboratorios complementan las 10 sesiones. Accede a las clases y ejercicios desde el Aula de Formación.</p><Link to="/auth" className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-[#d7bd7d] bg-[#fffaf0] px-4 text-xs font-bold text-[#806126] hover:bg-[#fff2cf]">Conocer el Aula <ArrowRight className="size-4" /></Link></div>
         </div>
       </section>
 
@@ -136,12 +161,12 @@ function CursosDiseno3DPage() {
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#a17a2e]">Diseña en Rhino · Renderiza con AURUM LAB</p>
             <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight text-[#1d2b39] sm:text-4xl">Visualiza tus joyas mientras las diseñas</h2>
-            <p className="mt-4 max-w-2xl text-sm leading-7 text-[#64778a]">Tu aprendizaje no termina en Rhinoceros. Con una cuenta gratuita de AURUM LAB puedes acceder a AURUM RENDER y conectar tu flujo de trabajo mediante nuestros plugins para Rhino. Así puedes enviar tus diseños a renderizar y evaluar materiales, metales y gemas durante el proceso de creación.</p>
+            <p className="mt-4 max-w-2xl text-sm leading-7 text-[#64778a]">Con una cuenta gratuita de AURUM LAB puedes usar AURUM RENDER y nuestros plugins para Rhino. Envía tus modelos a renderizar mientras diseñas. Prueba metales, gemas e iluminación en tu flujo de trabajo.</p>
             <div className="relative mt-6 overflow-visible rounded-2xl border border-[#e5d7b5] bg-gradient-to-r from-[#fffaf0] to-white p-5 pl-24 shadow-sm sm:pl-28">
               <img src="/brand/rhino-cpp-plugin.webp" alt="Plugin de Rhinoceros para conectar con AURUM RENDER" width={325} height={275} loading="lazy" decoding="async" className="pointer-events-none absolute -left-3 top-1/2 h-28 w-28 -translate-y-1/2 object-contain drop-shadow-[0_8px_12px_rgba(31,45,58,.22)] sm:-left-5 sm:h-36 sm:w-36" />
               <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#a17a2e]">Conexión con Rhinoceros</p>
               <h3 className="mt-1 text-base font-bold text-[#24374a]">Tu diseño y tu render, en un mismo flujo</h3>
-              <p className="mt-1 text-xs leading-5 text-[#687b8d]">Conoce el plugin de Rhino y descubre cómo integrar AURUM RENDER a tu trabajo.</p>
+              <p className="mt-1 text-xs leading-5 text-[#687b8d]">Conecta Rhinoceros con AURUM RENDER mediante nuestro plugin.</p>
               <Link to="/auth" className="mt-3 inline-flex min-h-9 items-center gap-2 rounded-lg bg-[#e9c65f] px-3.5 text-xs font-bold text-[#202b35] transition hover:bg-[#dfb83e]">Crear cuenta gratuita <ArrowRight className="size-3.5" /></Link>
             </div>
             <div className="mt-4 grid gap-3 sm:grid-cols-3">{complementos.map(({icon:Icon,title,desc})=><div key={title} className="rounded-xl border border-[#e5e8e9] bg-white p-4"><Icon className="size-5 text-[#a17a2e]" /><h3 className="mt-3 text-sm font-bold text-[#2a3d4f]">{title}</h3><p className="mt-1 text-xs leading-5 text-[#718196]">{desc}</p></div>)}</div>
@@ -174,6 +199,6 @@ function CursosDiseno3DPage() {
         </div>
       </section>
       <footer className="bg-[#203243] text-white"><div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-6 text-xs text-white/65 sm:px-7 lg:px-10"><span>AURUM LAB · Formación para profesionales de la joyería</span><span>El arte de crear. La inteligencia de gestionar.</span></div></footer>
-    </main>
+    </main>\n    </>
   );
 }
