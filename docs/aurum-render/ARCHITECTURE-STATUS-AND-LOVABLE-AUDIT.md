@@ -471,3 +471,15 @@ Esta entrega mejora la seguridad de recuperación de la sesión, pero no certifi
 - **Restauración de vídeo:** la intensidad original de Surface Edge AA se guarda y restaura al terminar la exportación, incluso cuando falla la grabación.
 - **Regresión:** `scripts/aurum-video-frame-pipeline.test.ts` cubre la inclusión/exclusión de Surface Edge AA y la ausencia de TAA. `scripts/aurum-visual-weld.test.ts` se incorpora al workflow de CI.
 - **Validación pendiente:** Lovable debe realizar la comparación visual y mediciones sobre modelos/dispositivos reales. No se declara equivalencia visual certificada ni CI aprobado hasta contar con resultados observables.
+
+
+## Transición progresiva de gemas integrada — 2026-11-14
+
+- Se conectó `gem-transition.ts` al flujo productivo de `AurumRender.tsx`.
+- El estado visual anterior se captura únicamente para los meshes resueltos por el clic/capa seleccionada, antes de reemplazar sus materiales.
+- La aplicación física de la gema ocurre primero; después se interpola la apariencia durante 260 ms con actualizaciones limitadas a ~30 Hz.
+- Un cambio rápido cancela la transición anterior antes de iniciar la siguiente. La transición se cancela también durante el teardown del visor.
+- El alcance de interpolación se limita a color, color de atenuación, roughness, transmission, intensidad de entorno y distancia de atenuación. No interpola IOR, dispersión, shader de diamante, scintillation, inclusiones ni estado BVH.
+- No se altera el motor óptico ni se activa TAA. La preparación BVH continúa en su ruta asíncrona existente.
+- Se amplió `scripts/aurum-gem-application.test.ts` para comprobar el orden de captura, primer pintado y comienzo de transición.
+- Pendiente: ejecución de CI y validación visual real con cambios rápidos de gema y capas con múltiples meshes.
