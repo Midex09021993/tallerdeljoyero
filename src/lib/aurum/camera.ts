@@ -35,24 +35,54 @@ function synchronizeOrbitControlsPreset(
   controls: { target: THREE.Vector3; update: () => void; enableDamping?: boolean },
   target: THREE.Vector3,
   position: THREE.Vector3,
+  up: THREE.Vector3 = camera.up,
 ) {
+  // Three.js r185 OrbitControls keeps these transient values as instance
+  // fields with the exact underscored names below. Clear the complete input
+  // state before applying a semantic preset so damping, an unfinished drag,
+  // or cursor-dolly state cannot pull the camera away on the next frame.
   const orbit = controls as typeof controls & {
+    state?: number;
+    _controlActive?: boolean;
     _sphericalDelta?: THREE.Spherical;
     _panOffset?: THREE.Vector3;
     _scale?: number;
-    _zoomChanged?: boolean;
+    _performCursorZoom?: boolean;
+    _dollyDirection?: THREE.Vector3;
+    _rotateStart?: THREE.Vector2;
+    _rotateEnd?: THREE.Vector2;
+    _rotateDelta?: THREE.Vector2;
+    _panStart?: THREE.Vector2;
+    _panEnd?: THREE.Vector2;
+    _panDelta?: THREE.Vector2;
+    _dollyStart?: THREE.Vector2;
+    _dollyEnd?: THREE.Vector2;
+    _dollyDelta?: THREE.Vector2;
   };
   const previousDamping = controls.enableDamping;
   if (previousDamping !== undefined) controls.enableDamping = false;
 
+  // OrbitControls r185: STATE.NONE is -1.
+  if (typeof orbit.state === "number") orbit.state = -1;
+  if (typeof orbit._controlActive === "boolean") orbit._controlActive = false;
   orbit._sphericalDelta?.set(0, 0, 0);
   orbit._panOffset?.set(0, 0, 0);
   if (typeof orbit._scale === "number") orbit._scale = 1;
-  if (typeof orbit._zoomChanged === "boolean") orbit._zoomChanged = false;
+  if (typeof orbit._performCursorZoom === "boolean") orbit._performCursorZoom = false;
+  orbit._dollyDirection?.set(0, 0, 0);
+  orbit._rotateStart?.set(0, 0);
+  orbit._rotateEnd?.set(0, 0);
+  orbit._rotateDelta?.set(0, 0);
+  orbit._panStart?.set(0, 0);
+  orbit._panEnd?.set(0, 0);
+  orbit._panDelta?.set(0, 0);
+  orbit._dollyStart?.set(0, 0);
+  orbit._dollyEnd?.set(0, 0);
+  orbit._dollyDelta?.set(0, 0);
 
   controls.target.copy(target);
   camera.position.copy(position);
-  camera.up.set(0, 1, 0);
+  camera.up.copy(up);
   camera.lookAt(target);
   camera.updateMatrixWorld(true);
   controls.update();
@@ -152,6 +182,12 @@ export function applyAurumCameraView(
   const verticalBias = radius * profile.vertical;
 
   let position: THREE.Vector3;
+  // A top-down camera cannot use world Y as its up vector because its view
+  // direction is also Y. Use world -Z as screen-up to keep the top preset
+  // deterministic and avoid a near-singular lookAt basis.
+  const cameraUp = view === "superior"
+    ? new THREE.Vector3(0, 0, -1)
+    : new THREE.Vector3(0, 1, 0);
   if (view === "frontal") {
     // Frontal on +Z with a slight elevation for the jewelry silhouette.
     const productLift = radius * 0.06;
@@ -171,7 +207,7 @@ export function applyAurumCameraView(
     position = target.clone().addScaledVector(perspectiveDirection, distance);
   }
 
-  synchronizeOrbitControlsPreset(camera, controls, target, position);
+  synchronizeOrbitControlsPreset(camera, controls, target, position, cameraUp);
   camera.updateProjectionMatrix();
 }
 /** Ajusta la cámara a una proporción de salida sin deformar el modelo.
