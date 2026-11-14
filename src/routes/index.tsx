@@ -653,7 +653,6 @@ function InicioPublico() {
               <li className="flex items-start gap-3"><span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-lg bg-[#fff4c4] text-[#9b7600]"><Check className="size-4" /></span><span>Ten a mano tus clientes, cotizaciones y pedidos.</span></li>
             </ul>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-              <RegistroTaller className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-[#d4aa19] bg-[#f8c928] px-6 py-3 text-sm font-extrabold text-[#17232d] shadow-lg shadow-amber-900/10 transition hover:-translate-y-0.5 hover:bg-[#ffdf65] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19] focus-visible:ring-offset-2" />
               <SolicitarDemo className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-[#d4aa19] bg-[#f8c928] px-6 py-3 text-sm font-extrabold text-[#17232d] shadow-lg shadow-amber-900/10 transition hover:-translate-y-0.5 hover:bg-[#ffdf65] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19] focus-visible:ring-offset-2" />
             </div>
             <p className="mt-4 text-xs text-slate-500">Conoce las herramientas y pide una demostración.</p>
