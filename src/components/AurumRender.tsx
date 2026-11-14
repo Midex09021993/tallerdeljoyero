@@ -150,7 +150,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [aurumConectCanRetry, setAurumConectCanRetry] = useState(false);
   const aurumConectAttemptRef = useRef<string | null>(null);
   const visorRef = useRef<HTMLDivElement>(null), fileRef = useRef<HTMLInputElement>(null);
-  const orbitControlsRef = useRef<any>(null);
+  const cameraControlsRef = useRef<any>(null);
   const [autoRotate360, setAutoRotate360] = useState(false);
   const [isViewerFullscreen, setIsViewerFullscreen] = useState(false);
   const [lightingOpen, setLightingOpen] = useState(false);
@@ -893,14 +893,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       });
       const viewerScene = viewerAdapter.get(AURUM_VIEWER_SERVICES.scene);
       const viewerRenderer = viewerAdapter.get(AURUM_VIEWER_SERVICES.renderer);
-      orbitControlsRef.current = controles;
-      // Orbit controls calibrated to the supplied iJewel VJSON reference.
-      if (controles) {
-        controles.enableDamping = true;
-        controles.dampingFactor = 0.08;
-        controles.zoomSpeed = 0.15;
-        controles.rotateSpeed = 2;
-      }
+      cameraControlsRef.current = cameraControlsContract;
+      // Navigation tuning is configured only by AURUM CAMERA.
+      cameraControlsContract.configure({
+        enableDamping: true,
+        dampingFactor: 0.08,
+        zoomSpeed: 0.15,
+        rotateSpeed: 2,
+      });
       // Render Pro se incorporará en una etapa posterior con el pipeline WebGPU
       // estable. Por ahora el visor WebGL interactivo es el motor oficial.
       const shadowConfig=getAurumShadowConfig();
@@ -956,7 +956,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       if (!vivo) {
         objectSelectionModule.dispose();
         disposeAurumViewer({ node: nodo, renderer, controls: controles, composer });
-        if (orbitControlsRef.current === controles) orbitControlsRef.current = null;
+        if (cameraControlsRef.current === cameraControlsContract) cameraControlsRef.current = null;
         return;
       }
 
@@ -2453,7 +2453,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           invalidateRenderRef.current?.();
         },
         sceneStudio:(_patch:any)=>{},
-        reset:()=>{ controles.autoRotate=false; setAutoRotate360(false); encuadrar(); invalidateRenderRef.current?.(); },
+        reset:()=>{ cameraControlsContract.setAutoRotate(false); setAutoRotate360(false); encuadrar(); invalidateRenderRef.current?.(); },
         centerJewel:()=>{
           if(!modelo) return;
           const bounds=new THREE.Box3().setFromObject(modelo);
@@ -2469,7 +2469,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           diamondBvhRuntime?.update();
           invalidateRenderRef.current?.();
         },
-        autoRotar:(activo:boolean)=>{ controles.autoRotate=activo; controles.autoRotateSpeed=0.65; invalidateRenderRef.current?.(); },
+        autoRotar:(activo:boolean)=>{ cameraControlsContract.setAutoRotate(activo,0.65); invalidateRenderRef.current?.(); },
         limpiar:()=>{quitar();parteActiva=null;limpiarResaltado();setParteSeleccionada(null);setParteSeleccionadaNombre(null);},
         partes:()=>modelo?obtenerPartes(modelo):[],
         seleccionarParte:(id:string)=>{
@@ -4887,7 +4887,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 <button type="button" title="Calidad de render" onClick={()=>{setQualityOpen(v=>!v);setLibraryMenuOpen(false);}} className={"grid size-9 place-items-center rounded-xl "+(qualityOpen?"bg-[#d4af37]/15 text-[#d4af37]":"text-black/70 hover:bg-white/70")}><Sparkles className="size-[17px]"/></button>
                 <button type="button" title="Reiniciar cámara" onClick={()=>apiRef.current?.reset()} className="grid size-9 place-items-center rounded-xl text-black/70 hover:bg-white/70"><RotateCcw className="size-[17px]"/></button>
                 <AurumDepthOfFieldModule otherPanelOpen={libraryMenuOpen || qualityOpen} onChange={(enabled, strength)=>{if(typeof window!=="undefined"&&new URLSearchParams(window.location.search).has("aurumDofDiag"))console.info("[AURUM][DOF] UI toggle",{requested:enabled,apiAvailable:Boolean(apiRef.current?.setDepthOfField)});apiRef.current?.setDepthOfField?.(enabled,strength);}}/>
-                <button type="button" title={autoRotate360 ? "Detener rotación 360°" : "Activar rotación 360°"} aria-label={autoRotate360 ? "Detener rotación 360 grados" : "Activar rotación 360 grados"} aria-pressed={autoRotate360} onClick={()=>{const next=!autoRotate360;setAutoRotate360(next);if(orbitControlsRef.current){orbitControlsRef.current.autoRotate=next;orbitControlsRef.current.autoRotateSpeed=0.8;orbitControlsRef.current.update?.();}invalidateRenderRef.current?.();}} className={"grid size-9 place-items-center rounded-xl transition-colors "+(autoRotate360 ? "bg-[#d4af37]/20 text-[#92743b]" : "text-black/70 hover:bg-white/70")}><span className="text-[10px] font-semibold">360°</span></button>
+                <button type="button" title={autoRotate360 ? "Detener rotación 360°" : "Activar rotación 360°"} aria-label={autoRotate360 ? "Detener rotación 360 grados" : "Activar rotación 360 grados"} aria-pressed={autoRotate360} onClick={()=>{const next=!autoRotate360;setAutoRotate360(next);cameraControlsRef.current?.setAutoRotate(next,0.8);invalidateRenderRef.current?.();}} className={"grid size-9 place-items-center rounded-xl transition-colors "+(autoRotate360 ? "bg-[#d4af37]/20 text-[#92743b]" : "text-black/70 hover:bg-white/70")}><span className="text-[10px] font-semibold">360°</span></button>
                 <button type="button" title={isViewerFullscreen?"Restaurar visor":"Maximizar visor"} aria-label={isViewerFullscreen?"Restaurar visor":"Maximizar visor"} aria-pressed={isViewerFullscreen} onClick={()=>apiRef.current?.fullscreen()} className="grid size-9 place-items-center rounded-xl text-black/70 hover:bg-white/70">{isViewerFullscreen?<Minimize2 className="size-[17px]"/>:<Maximize2 className="size-[17px]"/>}</button>
               </div>
             </div>}
