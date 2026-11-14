@@ -80,6 +80,49 @@ export function applyAurumIJEWELPresentationCamera(
 }
 
 /**
+ * Reproduce el encuadre inicial del Visor Público:
+ * esfera envolvente de geometría visible, FOV 35°, distancia 1.2x
+ * y cámara frontal sobre el eje Z mirando al origen.
+ */
+export function applyAurumPublicViewerCamera(
+  camera: THREE.PerspectiveCamera,
+  controls: { target: THREE.Vector3; update: () => void; minDistance?: number; maxDistance?: number; enablePan?: boolean; enableRotate?: boolean; enableZoom?: boolean; autoRotate?: boolean; autoRotateSpeed?: number },
+  model: THREE.Object3D | null,
+) {
+  const bounds = model ? new THREE.Box3() : null;
+  if (model && bounds) {
+    model.updateWorldMatrix(true, true);
+    model.traverse((object) => {
+      if (!(object as THREE.Mesh).isMesh || !(object as THREE.Mesh).geometry || !object.visible) return;
+      for (let parent = object.parent; parent; parent = parent.parent) {
+        if (!parent.visible) return;
+      }
+      bounds.expandByObject(object);
+    });
+  }
+  if (!bounds || bounds.isEmpty()) return;
+  const sphere = bounds.getBoundingSphere(new THREE.Sphere());
+  const radius = Math.max(sphere.radius, 0.001);
+  camera.fov = 35;
+  const distance = radius / Math.sin(THREE.MathUtils.degToRad(camera.fov / 2)) * 1.2;
+  camera.position.set(0, 0, distance);
+  camera.near = Math.max(radius / 100, 0.001);
+  camera.far = Math.max(distance + radius * 20, 100);
+  camera.up.set(0, 1, 0);
+  controls.target.set(0, 0, 0);
+  controls.minDistance = radius * 0.6;
+  controls.maxDistance = radius * 12;
+  controls.enablePan = false;
+  controls.enableRotate = true;
+  controls.enableZoom = true;
+  controls.autoRotate = false;
+  controls.autoRotateSpeed = 1.25;
+  camera.lookAt(controls.target);
+  camera.updateProjectionMatrix();
+  controls.update();
+}
+
+/**
  * Calcula la composición de cámara usando el volumen real de la joya.
  * El encuadre mantiene una escala coherente entre todas las vistas.
  */
