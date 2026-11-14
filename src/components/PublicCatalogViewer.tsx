@@ -11,6 +11,7 @@ import { applyAurumMetal, applyAurumGem, metalPresetFromConfig, gemPresetFromCon
 import { MATERIALES, GEMAS } from "@/lib/aurum/catalog";
 import { getAurumHdriUrl, getAurumGemHdriUrl } from "@/lib/aurum-photographic-scene-engine";
 import { createAurumDiamondBvhRuntime } from "@/lib/aurum/aurum-diamond-bvh-runtime";
+import { AurumLoadingScreen } from "./AurumLoadingScreen";
 
 type Props = { modelUrl: string; modelName: string; materialId: string; gemId: string; onReady?: () => void; onError?: (message: string) => void; hideControls?: boolean; onResetViewReady?: (reset: (() => void) | null) => void; onCameraActionsReady?: (actions: { reset: () => void; front: () => void; side: () => void; top: () => void; zoom: (direction: "in" | "out") => void; rotate: (enabled: boolean) => void } | null) => void };
 const classifyMesh = (mesh: any): "metal" | "gema" | "otro" => {
@@ -790,6 +791,6 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
       <button type="button" onClick={() => cameraActionsRef.current?.zoom("in")} title="Acercar" aria-label="Acercar" className="grid size-8 place-items-center rounded-full text-[#655b4c] transition hover:bg-white/60 hover:text-[#8b692f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45]"><ZoomIn className="size-4" /></button>
       <button type="button" onClick={() => cameraActionsRef.current?.zoom("out")} title="Alejar" aria-label="Alejar" className="grid size-8 place-items-center rounded-full text-[#655b4c] transition hover:bg-white/60 hover:text-[#8b692f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45]"><ZoomOut className="size-4" /></button>
     </div>}
-    {(status || error) && <div className={"absolute inset-x-3 bottom-3 z-20 rounded-xl px-3 py-2 text-xs " + (error ? "border border-red-300 bg-white/95 text-red-800" : "bg-white/90 text-[#625b54]")}>{error || status}</div>}
+    <AurumLoadingScreen variant="status-bar" loading={Boolean(status) && !error} message={status} error={error} />
   </div>;
 }
