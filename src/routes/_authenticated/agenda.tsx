@@ -171,7 +171,7 @@ function AgendaPage() {
 
   return (
     <AppShell titulo="Agenda" subtitulo="Reserva y administra asesorías de AURUM LAB" atrasMovil={{ to: "/inicio" }}>
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-4 md:p-6">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 p-3 sm:p-4 md:gap-5 md:p-5">
         <header className="rounded-2xl border border-gold/20 bg-gradient-to-br from-card via-card to-gold/5 p-5 md:p-7">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gold-deep">AURUM LAB · ACOMPAÑAMIENTO</p>
           <h1 className="mt-2 font-display text-3xl">Agenda de asesorías</h1>
@@ -196,14 +196,14 @@ function AgendaPage() {
             {!solicitudesDemo.isLoading && !solicitudesDemo.isError && (solicitudesDemo.data ?? []).length === 0 ? <p className="mt-4 rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">Todavía no hay solicitudes de demostración. Cuando alguien complete el formulario público, aparecerá aquí.</p> : null}
           </div>
           <section className="space-y-5">
-            <div className="rounded-2xl border bg-card p-5 shadow-card md:p-6">
+            <div className="rounded-2xl border bg-card p-4 shadow-card md:p-5">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div><h2 className="flex items-center gap-2 text-xl font-semibold"><CalendarDays className="size-5 text-gold-deep" /> Calendario de FADILAB</h2><p className="mt-1 text-sm text-muted-foreground">Organiza tus compromisos. Cada evento bloquea ese horario para las asesorías de los gerentes.</p></div>
                 <div className="flex items-center gap-2"><button type="button" onClick={() => setMesVisible(new Date())} className="rounded-lg border px-3 py-2 text-xs font-semibold">Hoy</button><button type="button" onClick={() => setMesVisible(new Date(mesVisible.getFullYear(),mesVisible.getMonth()-1,1))} className="grid size-9 place-items-center rounded-lg border"><ChevronLeft className="size-4" /></button><button type="button" onClick={() => setMesVisible(new Date(mesVisible.getFullYear(),mesVisible.getMonth()+1,1))} className="grid size-9 place-items-center rounded-lg border"><ChevronRight className="size-4" /></button></div>
               </div>
-              <h3 className="mt-5 font-display text-2xl capitalize">{new Intl.DateTimeFormat("es-PE",{month:"long",year:"numeric"}).format(mesVisible)}</h3>
-              <div className="mt-3 grid grid-cols-7 gap-1.5 md:gap-2">
-                {["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"].map(d=><div key={d} className="py-2 text-center text-[11px] font-semibold uppercase text-muted-foreground">{d}</div>)}
+              <h3 className="mt-4 font-display text-xl capitalize">{new Intl.DateTimeFormat("es-PE",{month:"long",year:"numeric"}).format(mesVisible)}</h3>
+              <div className="mt-2 grid grid-cols-7 gap-1 sm:gap-1.5">
+                {["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"].map(d=><div key={d} className="py-1.5 text-center text-[10px] font-semibold uppercase text-muted-foreground">{d}</div>)}
                 {Array.from({length:42},(_,i)=>{
                   const offset=(inicioMes.getDay()+6)%7;
                   const dia=new Date(inicioMes.getFullYear(),inicioMes.getMonth(),i-offset+1);
@@ -212,9 +212,9 @@ function AgendaPage() {
                   const selected=key===fechaSeleccionada;
                   const ev=(eventos.data||[]).filter(e=>new Date(e.inicio_at).toLocaleDateString("en-CA")===key);
                   const rs=(reservas.data||[]).filter(r=>new Date(r.inicio_at).toLocaleDateString("en-CA")===key&&(r.estado==="pendiente"||r.estado==="confirmada"));
-                  return <button key={key} type="button" onClick={()=>{setFechaSeleccionada(key);setMostrarFormularioEvento(false);}} className={"min-h-[78px] rounded-xl border p-2 text-left transition md:min-h-[105px] "+(selected?"border-gold bg-gold/10 ring-1 ring-gold/40":inMonth?"border-border bg-background hover:border-gold/50":"border-transparent bg-muted/30 text-muted-foreground/50")}>
-                    <div className="flex items-center justify-between"><span className="text-sm font-semibold">{dia.getDate()}</span>{ev.length+rs.length>0?<span className="text-[10px] text-muted-foreground">{ev.length+rs.length}</span>:null}</div>
-                    <div className="mt-1.5 space-y-1">{ev.slice(0,2).map(e=><span key={e.id} className="block truncate rounded bg-amber-100 px-1 py-0.5 text-[9px] font-semibold text-amber-900">{e.titulo}</span>)}{rs.slice(0,1).map(r=><span key={r.id} className="block truncate rounded bg-emerald-100 px-1 py-0.5 text-[9px] font-semibold text-emerald-900">Asesoría · {r.solicitante_nombre}</span>)}</div>
+                  return <button key={key} type="button" onClick={()=>{setFechaSeleccionada(key);setMostrarFormularioEvento(false);}} className={"min-h-[52px] rounded-lg border p-1.5 text-left transition sm:min-h-[60px] sm:rounded-xl sm:p-2 lg:min-h-[68px] "+(selected?"border-gold bg-gold/10 ring-1 ring-gold/40":inMonth?"border-border bg-background hover:border-gold/50":"border-transparent bg-muted/30 text-muted-foreground/50")}>
+                    <div className="flex items-center justify-between"><span className="text-xs font-semibold sm:text-sm">{dia.getDate()}</span>{ev.length+rs.length>0?<span className="text-[10px] text-muted-foreground">{ev.length+rs.length}</span>:null}</div>
+                    <div className="mt-1 space-y-0.5">{ev.slice(0,2).map(e=><span key={e.id} className="block truncate rounded bg-amber-100 px-1 py-0.5 text-[9px] font-semibold text-amber-900">{e.titulo}</span>)}{rs.slice(0,1).map(r=><span key={r.id} className="block truncate rounded bg-emerald-100 px-1 py-0.5 text-[9px] font-semibold text-emerald-900">Asesoría · {r.solicitante_nombre}</span>)}</div>
                   </button>;
                 })}
               </div>
