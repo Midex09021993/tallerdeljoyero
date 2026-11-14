@@ -1157,14 +1157,22 @@ function MiNubePage() {
       toast.success(`${completados} archivo(s) guardados en Mi Nube.`);
     } catch (cause) {
       const mensaje = cause instanceof Error ? cause.message : "No se pudieron subir los archivos.";
+      const codigoCuota = /23514/.test(mensaje);
+      const mensajeVisible = codigoCuota
+        ? "No se pudo completar la subida porque tu plan pudo alcanzar el límite de almacenamiento o de proyectos de Mi Nube. Revisa el espacio disponible o conoce un plan con mayor capacidad."
+        : mensaje;
       if (almacenamientoEnProceso === "nas") {
         setErrorListadoNas(mensaje);
         console.warn("[Mi Nube] Falló una operación de subida al NAS.", mensaje);
       } else {
-        setErrorSubida(mensaje);
+        setErrorSubida(mensajeVisible);
         console.warn("[Mi Nube] Falló una subida a Supabase Storage.", mensaje);
       }
-      toast.error(mensaje);
+      if (almacenamientoEnProceso === "supabase" && codigoCuota) {
+        toast.warning("Tu plan puede haber alcanzado el límite de Mi Nube. Revisa las opciones de almacenamiento.");
+      } else {
+        toast.error(mensaje);
+      }
     } finally {
       setSubiendo(false);
       setEstadoSubida("Preparando subida…");
@@ -1859,7 +1867,20 @@ function MiNubePage() {
               </div>
             </div>
           )}
-          {errorSubida && <p role="alert" className="mt-4 rounded-xl border border-danger/25 bg-danger-soft p-3 text-xs text-danger">{errorSubida}</p>}
+          {errorSubida && (/23514/.test(errorSubida) || /límite de almacenamiento o de proyectos/i.test(errorSubida)) ? (
+            <div role="alert" className="mt-4 flex flex-col gap-3 rounded-2xl border border-gold/35 bg-gold/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex min-w-0 items-start gap-3">
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-gold/15 text-gold"><HardDrive className="size-5" /></span>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Tu espacio de Mi Nube podría estar completo</p>
+                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{errorSubida}</p>
+                </div>
+              </div>
+              <a href="/#planes" className="inline-flex shrink-0 items-center justify-center rounded-xl bg-gold px-4 py-2.5 text-xs font-semibold text-black transition hover:brightness-105">Ver planes y ampliar espacio</a>
+            </div>
+          ) : errorSubida ? (
+            <p role="alert" className="mt-4 rounded-xl border border-danger/25 bg-danger-soft p-3 text-xs text-danger">{errorSubida}</p>
+          ) : null}
         </section>
 
         <section className="rounded-2xl border border-border bg-card p-4 shadow-card sm:p-6">
