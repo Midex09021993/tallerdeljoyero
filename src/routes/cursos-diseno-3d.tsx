@@ -81,7 +81,9 @@ function CursosDiseno3DPage() {
   const [programaAbierto, setProgramaAbierto] = useState(false);
 
   return (
-    <>\n      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(courseStructuredData) }} />\n    <main className="min-h-screen bg-[#f7f6f2] text-[#1d2b39]">
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(courseStructuredData) }} />
+    <main className="min-h-screen bg-[#f7f6f2] text-[#1d2b39]">
       <header className="sticky top-0 z-30 border-b border-[#e7e2d8] bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-7 lg:px-10">
           <Link to="/herramientas" className="flex items-center gap-2.5">
@@ -199,6 +201,7 @@ function CursosDiseno3DPage() {
         </div>
       </section>
       <footer className="bg-[#203243] text-white"><div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-6 text-xs text-white/65 sm:px-7 lg:px-10"><span>AURUM LAB · Formación para profesionales de la joyería</span><span>El arte de crear. La inteligencia de gestionar.</span></div></footer>
-    </main>\n    </>
+    </main>
+    </>
   );
 }
