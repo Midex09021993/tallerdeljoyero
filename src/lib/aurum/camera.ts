@@ -90,7 +90,21 @@ export function applyAurumCameraView(
   view: AurumCameraView,
   category: string = "Otro"
 ) {
-  const bounds = model ? new THREE.Box3().setFromObject(model) : null;
+  // Use the same visible-mesh bounds as model preparation. setFromObject()
+  // includes hidden CAD helpers/invisible Rhino layers and can shift the camera
+  // target away from the product even after the visible model was centered.
+  const bounds = model ? new THREE.Box3() : null;
+  if (model && bounds) {
+    model.updateWorldMatrix(true, true);
+    model.traverse((object) => {
+      if (!(object as THREE.Mesh).isMesh || !(object as THREE.Mesh).geometry || !object.visible) return;
+      for (let parent = object.parent; parent; parent = parent.parent) {
+        if (!parent.visible) return;
+      }
+      bounds.expandByObject(object);
+    });
+    if (bounds.isEmpty()) bounds.setFromCenterAndSize(new THREE.Vector3(), new THREE.Vector3(2.6, 2.6, 2.6));
+  }
   const target = bounds
     ? bounds.getCenter(new THREE.Vector3())
     : new THREE.Vector3(0, 0, 0);
