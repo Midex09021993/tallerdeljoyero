@@ -1635,22 +1635,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         else invalidateRenderRef.current?.();
 
         if(renderImmediately && resolvedTargets.length){
-          // Interpolate appearance only; optical identity and shader/BVH systems stay untouched.
-          const previousAppearance=resolvedTargets.flatMap((mesh:any)=>mesh.userData?.aurumGemTransitionSnapshot??[]);
-          resolvedTargets.forEach((mesh:any)=>{
-            const next={...(mesh.userData??{})};
-            delete next.aurumGemTransitionSnapshot;
-            mesh.userData=next;
-          });
-          if(previousAppearance.length){
-            gemTransitionRef.current=createAurumGemTransition(
-              resolvedTargets,
-              previousAppearance,
-              ()=>invalidateRenderRef.current?.(),
-              260,
-              ()=>{ gemTransitionRef.current=null; },
-            );
-          }
+          // Keep the selected meshes and application token stable across the
+          // transition. BVH may replace the physical material, so it must wait
+          // until this appearance blend has completed.
           const applicationSnapshot=resolvedTargets.map((mesh:any)=>({
             mesh,
             token:Number(mesh.userData?.aurumGemApplicationToken??0),
@@ -1684,12 +1671,35 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               (window as any).requestIdleCallback(refreshChangedTargets,{timeout:1500});
             }else if(typeof window!=="undefined"){
               window.setTimeout(refreshChangedTargets,100);
+            }else{
+              refreshChangedTargets();
             }
           };
-          // Let the browser present the immediate physical material before
-          // optional BVH work starts.
-          if(typeof window!=="undefined")window.requestAnimationFrame(scheduleIdle);
-          else scheduleIdle();
+          // Interpolate appearance only; optical identity and shader/BVH systems stay untouched.
+          const previousAppearance=resolvedTargets.flatMap((mesh:any)=>mesh.userData?.aurumGemTransitionSnapshot??[]);
+          resolvedTargets.forEach((mesh:any)=>{
+            const next={...(mesh.userData??{})};
+            delete next.aurumGemTransitionSnapshot;
+            mesh.userData=next;
+          });
+          gemTransitionRef.current=previousAppearance.length
+            ? createAurumGemTransition(
+                resolvedTargets,
+                previousAppearance,
+                ()=>invalidateRenderRef.current?.(),
+                260,
+                ()=>{
+                  gemTransitionRef.current=null;
+                  scheduleIdle();
+                },
+              )
+            : null;
+          // If no compatible material could be blended, proceed without
+          // delaying BVH. Otherwise the completion callback schedules it.
+          if(!gemTransitionRef.current?.active){
+            if(typeof window!=="undefined")window.requestAnimationFrame(scheduleIdle);
+            else scheduleIdle();
+          }
         }
         return true;
       };
