@@ -14,6 +14,7 @@ import {
 } from "../../aurum-material-engine";
 
 import { createAurumReadonlyMap } from "./readonly-map";
+import type { IAurumGemOpticalContract } from "./module-contracts";
 
 export const AURUM_GEM_SERVICES = {
   applyBaseMaterial: "aurum.gem.apply-base-material",
@@ -23,7 +24,7 @@ export const AURUM_GEM_SERVICES = {
   getOpticalProfile: "aurum.gem.get-optical-profile",
 } as const;
 
-export interface AurumGemAdapter {
+export interface AurumGemAdapter extends IAurumGemOpticalContract {
   readonly services: ReadonlyMap<string, unknown>;
   applyBaseMaterial(material: unknown, preset: unknown, thickness: number): unknown;
   applyOpticalProfile(material: unknown, profile: unknown): unknown;
