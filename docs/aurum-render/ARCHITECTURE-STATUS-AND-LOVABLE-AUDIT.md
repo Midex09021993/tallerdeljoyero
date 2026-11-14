@@ -340,12 +340,12 @@ Commit de contrato: `83e978a`; prueba: `ab57c8a`; estado UI: `22336e7`.
 La lectura del código productivo confirma que el cierre del visor tiene dos fronteras separadas:
 
 1. `productionPluginHost.dispose()` cierra el Registry y el GPU Resource Manager del CORE.
-2. `disposeAurumViewer()` coordina el teardown de recursos del visor. La liberación de OrbitControls se delega exclusivamente en AURUM CAMERA; el resto de owners libera Lighting Controller, Ground Controller, selección, texturas/entornos, EffectComposer, render lists y WebGLRenderer. El desmontaje también libera Diamond BVH y listeners/loop.
+2. `disposeAurumViewer()` sigue siendo el propietario del teardown de recursos del visor: OrbitControls, Lighting Controller, Ground Controller, selección, texturas/entornos, EffectComposer, render lists y WebGLRenderer. El desmontaje también libera Diamond BVH y listeners/loop.
 
 Hallazgos de integración:
 - `AurumLightingController.dispose()` se invoca desde `disposeAurumViewer()`; no se debe registrar su `dispose` como disposer adicional del plugin, porque provocaría doble liberación.
 - Scene Adapter delega en el controlador de escena; no declara un disposer propio.
-- Viewer Adapter es read-only; expone scene, renderer y el contrato semántico AURUM CAMERA, nunca la cámara ni OrbitControls crudos.
+- Viewer Adapter es read-only y no debe liberar renderer, scene, camera ni controls.
 - Metal/Gem adapters exponen funciones de aplicación óptica, no ownership de materiales ni texturas; los materiales pueden ser compartidos y siguen bajo los controladores existentes.
 - Video Frame Pipeline restaura tamaño, pixel ratio y estado enabled de passes, pero no es propietario del composer ni del renderer.
 - El host todavía no recibe recursos Three.js productivos mediante `gpuResources.track()`; su manager permanece como frontera opt-in disponible. Por tanto, no afirmar que el teardown productivo esté centralizado en GPU Resource Manager.

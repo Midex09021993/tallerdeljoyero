@@ -46,8 +46,8 @@ test("AURUM plugin registry initializes dependencies before dependents and dispo
   expect(calls).toEqual([
     "gem:init", "gem:activate",
     "diamond:init", "diamond:activate",
-    "diamond:deactivate", "gem:deactivate",
-    "diamond:dispose", "gem:dispose",
+    "diamond:deactivate", "diamond:dispose",
+    "gem:deactivate", "gem:dispose",
   ]);
 });
 
@@ -367,9 +367,9 @@ test("AURUM CORE completes the full plugin lifecycle with dependency order, even
   expect(registry.getState()).toBe("disposed");
   expect(calls.slice(6)).toEqual([
     "viewer:deactivate:aborted=true",
+    "viewer:runtime-dispose",
     "scene:deactivate:aborted=true",
     "viewer:event:scene",
-    "viewer:runtime-dispose",
     "scene:runtime-dispose",
     "scene:resource-dispose",
   ]);
@@ -408,8 +408,8 @@ test("AURUM CORE rolls back a plugin whose activation fails and remains restart-
     "scene:activate",
     "viewer:activate",
     "viewer:deactivate",
-    "scene:deactivate",
     "viewer:runtime-dispose",
+    "scene:deactivate",
     "scene:runtime-dispose",
     "scene:resource-dispose",
   ]);

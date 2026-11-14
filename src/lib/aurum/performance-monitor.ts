@@ -51,7 +51,7 @@ export function createAurumPerformanceMonitor() {
     const count = frames.length;
     const average = (key: "frameMs" | "renderMs" | "bvhMs") =>
       count ? frames.reduce((sum, item) => sum + item[key], 0) / count : 0;
-    const elapsed = count > 1 ? Math.max(1, frames[count - 1]!.timestamp - frames[0]!.timestamp) : 0;
+    const elapsed = count > 1 ? Math.max(1, frames[count - 1].timestamp - frames[0].timestamp) : 0;
     const hasRecentFrame = Boolean(latest && now - latest.timestamp <= WINDOW_MS);
     const gl = renderer?.getContext?.();
     let webgl: AurumPerformanceSnapshot["webgl"] = "No disponible";

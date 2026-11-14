@@ -24,7 +24,7 @@ function createViewerHarness(calls: string[]) {
     loop: { stop() { calls.push("loop"); } },
     observer: { disconnect() { calls.push("observer"); } },
     clickHandler: () => undefined,
-    cameraControls: { dispose() { calls.push("camera-module"); } },
+    controls: { dispose() { calls.push("controls"); } },
     clearSelection() { calls.push("selection"); },
     lightingController: { dispose() { calls.push("lighting"); } },
     groundController: { dispose() { calls.push("ground"); } },
@@ -45,7 +45,7 @@ test("viewer teardown stops producers first and releases dependent GPU owners in
     "loop",
     "observer",
     "remove-click",
-    "camera-module",
+    "controls",
     "selection",
     "lighting",
     "ground",
@@ -62,8 +62,8 @@ test("viewer teardown stops producers first and releases dependent GPU owners in
 test("viewer teardown is idempotent for a renderer, including after a disposer fails", () => {
   const calls: string[] = [];
   const viewer = createViewerHarness(calls);
-  viewer.cameraControls.dispose = () => {
-    calls.push("camera-module");
+  viewer.controls.dispose = () => {
+    calls.push("controls");
     throw new Error("controls teardown failed");
   };
 

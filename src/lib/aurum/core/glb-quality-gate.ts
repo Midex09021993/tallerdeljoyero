@@ -250,7 +250,7 @@ export function evaluateAurumGlbQuality(
 
   const hasErrors = issues.some((issue) => issue.severity === "error");
   return Object.freeze({
-    version: "2.1.0",
+    version: "2.0.0",
     status: hasErrors ? "failed" : issues.length ? "warning" : "passed",
     source,
     reopened,

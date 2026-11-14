@@ -38,7 +38,7 @@ Este informe separa las recomendaciones expresas de la auditoría de Lovable de 
 | `IAurumMediaExportContract` | `media-export-contract.ts` | `aurum.media-export`; frame pipeline y grabador consumidos desde el host |
 
 Invariantes de integración:
-- AURUM CAMERA es el único propietario de cámara y OrbitControls. Los demás contratos no toman ownership de renderer, composer, scene, texturas HDRI, materiales ni BVH.
+- Los contratos no son propietarios de renderer, composer, scene, camera, controles, texturas HDRI, materiales ni BVH.
 - `disposeAurumViewer()` conserva el teardown único del visor.
 - La fachada óptica delega en los adaptadores actuales: no altera shaders, IOR, dispersión, scintillation, BVH, HDRI ni calibraciones.
 - LIVE y SETTLED no activan TAA. El modo CAPTURE es una etiqueta contractual y no habilita TAA.

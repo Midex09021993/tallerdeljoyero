@@ -3,26 +3,18 @@ import { AURUM_VIEWER_SERVICES, createAurumViewerAdapter } from "../src/lib/auru
 
 test("AURUM Viewer Adapter exposes existing viewer references without taking ownership", () => {
   const scene = { name: "production-scene" };
+  const camera = { name: "production-camera" };
   const renderer = { name: "production-renderer" };
-  const cameraControls = {
-    id: "aurum.camera.controls",
-    version: "1.0.0",
-    applyView: () => undefined,
-    applyReferencePresentation: () => undefined,
-    fitAspect: () => undefined,
-    update: () => undefined,
-    getTarget: () => ({}),
-  } as any;
+  const controls = { name: "production-controls" };
   const host = {} as HTMLElement;
 
-  const adapter = createAurumViewerAdapter({ scene, renderer, cameraControls, host });
+  const adapter = createAurumViewerAdapter({ scene, camera, renderer, controls, host });
 
   expect(adapter.ready).toBe(true);
   expect(adapter.get(AURUM_VIEWER_SERVICES.scene)).toBe(scene);
+  expect(adapter.get(AURUM_VIEWER_SERVICES.camera)).toBe(camera);
   expect(adapter.get(AURUM_VIEWER_SERVICES.renderer)).toBe(renderer);
-  expect(adapter.get(AURUM_VIEWER_SERVICES.cameraControls)).toBe(cameraControls);
+  expect(adapter.get(AURUM_VIEWER_SERVICES.controls)).toBe(controls);
   expect(adapter.get(AURUM_VIEWER_SERVICES.host)).toBe(host);
-  expect(adapter.get("aurum.viewer.camera")).toBeUndefined();
-  expect(adapter.get("aurum.viewer.controls")).toBeUndefined();
   expect(adapter.get("aurum.unknown")).toBeUndefined();
 });

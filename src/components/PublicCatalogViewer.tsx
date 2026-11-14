@@ -6,15 +6,13 @@ import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment
 import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
 import { EXRLoader } from "three/examples/jsm/loaders/EXRLoader.js";
 import { createAurumWebGLViewer, startAurumViewerLoop, disposeAurumViewer } from "@/lib/aurum/viewer";
-import type { IAurumCameraControlsContract } from "@/lib/aurum/core/module-contracts";
 import { parseAurumInput, preprocessAurumModel } from "@/lib/aurum/model-loader";
 import { applyAurumMetal, applyAurumGem, metalPresetFromConfig, gemPresetFromConfig } from "@/lib/aurum-material-engine";
 import { MATERIALES, GEMAS } from "@/lib/aurum/catalog";
 import { getAurumHdriUrl, getAurumGemHdriUrl } from "@/lib/aurum-photographic-scene-engine";
 import { createAurumDiamondBvhRuntime } from "@/lib/aurum/aurum-diamond-bvh-runtime";
-import { AurumLoadingScreen } from "./AurumLoadingScreen";
 
-type Props = { modelUrl: string; modelName: string; materialId: string; gemId: string; onReady?: () => void; onError?: (message: string) => void; hideControls?: boolean; onResetViewReady?: (reset: (() => void) | null) => void; onCameraActionsReady?: (actions: { reset: () => void; front: () => void; side: () => void; top: () => void; zoom: (direction: "in" | "out") => void; rotate: (enabled: boolean) => void } | null) => void };
+type Props = { modelUrl: string; modelName: string; materialId: string; gemId: string; onReady?: () => void; onError?: (message: string) => void; hideControls?: boolean; onResetViewReady?: (reset: (() => void) | null) => void };
 const classifyMesh = (mesh: any): "metal" | "gema" | "otro" => {
   const data = mesh?.userData ?? {};
   const attrs = data?.attributes ?? {};
@@ -133,14 +131,13 @@ const inferGemMeshes = (model: THREE.Object3D): number => {
   return 1;
 };
 
-export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, onReady, onError, hideControls = false, onResetViewReady, onCameraActionsReady }: Props) {
+export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, onReady, onError, hideControls = false, onResetViewReady }: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
   const modelRef = useRef<THREE.Object3D | null>(null);
   const cameraRef = useRef<THREE.Camera | null>(null);
   const diamondBvhRuntimeRef = useRef<Awaited<ReturnType<typeof createAurumDiamondBvhRuntime>> | null>(null);
   const gemEnvironmentReadyRef = useRef<Promise<THREE.Texture | null> | null>(null);
   const bvhCameraStateRef = useRef<Float64Array | null>(null);
-  const bvhCameraPoseBufferRef = useRef(new Float64Array(10));
   const [modelLoadedVersion, setModelLoadedVersion] = useState(0);
   const renderRef = useRef<(() => void) | null>(null);
   const materialIdRef = useRef(materialId);
@@ -165,7 +162,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
     let renderer: any = null;
     let scene: any = null;
     let camera: any = null;
-    let cameraControls: IAurumCameraControlsContract | null = null;
+    let controls: any = null;
     let model: THREE.Object3D | null = null;
     let loop: any = null;
     let zoomFrameId = 0;
@@ -221,8 +218,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         const isCompactViewport = window.matchMedia("(max-width: 767px)").matches;
         const viewerPixelRatio = Math.min(window.devicePixelRatio || 1, isCompactViewport ? 1 : 1.25);
         const viewer = createAurumWebGLViewer(THREE, host, { pixelRatio: viewerPixelRatio, controlsClass: OrbitControls, maxDistance: 100 });
-        ({ scene, camera, renderer, cameraControls } = viewer);
-        if (!cameraControls) throw new Error("AURUM CAMERA no pudo inicializar OrbitControls.");
+        ({ scene, camera, renderer, controls } = viewer);
         // Public viewer only: align highlight roll-off with the photographic reference.
         // Keep this override local; createAurumWebGLViewer is shared with Aurum Render.
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -420,35 +416,41 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
           scene.add(studioShadow);
         }
 
-        // The public viewer uses the same AURUM CAMERA owner as the editor.
-        // This is a presentation profile, not a second camera implementation.
-        const distance = radius / Math.sin(THREE.MathUtils.degToRad(35 / 2)) * 1.2;
-        cameraControls!.configure({
-          fov: 35,
-          near: Math.max(radius / 100, .001),
-          far: Math.max(distance + radius * 20, 100),
-          minDistance: radius * .6,
-          maxDistance: radius * 12,
-          enablePan: true,
-          screenSpacePanning: true,
-          panSpeed: 1,
-          enableRotate: true,
-          enableZoom: true,
-          autoRotateSpeed: 1.25,
-        });
-        const origin = new THREE.Vector3(0, 0, 0);
-        const yUp = new THREE.Vector3(0, 1, 0);
-        const setCameraView = (position: THREE.Vector3, up = yUp) => {
-          cameraControls?.setPose(position, origin, up);
+        camera.fov = 35;
+        // This is the same bounding-sphere camera-fit formula used by the GLB viewer
+        // before the 3DM sizing adjustment, so GLB presentation remains unchanged.
+        const distance = radius / Math.sin(THREE.MathUtils.degToRad(camera.fov / 2)) * 1.2;
+        camera.position.copy(new THREE.Vector3(0, 0, distance));
+        camera.near = Math.max(radius / 100, .001);
+        camera.far = Math.max(distance + radius * 20, 100);
+        camera.lookAt(0, 0, 0);
+        camera.updateProjectionMatrix();
+        controls.target.set(0, 0, 0);
+        controls.minDistance = radius * .6;
+        controls.maxDistance = radius * 12;
+        controls.enablePan = false;
+        controls.enableRotate = true;
+        controls.enableZoom = true;
+        controls.autoRotate = false;
+        controls.autoRotateSpeed = 1.25;
+        controls.update();
+        const setCameraView = (position: THREE.Vector3, up = new THREE.Vector3(0, 1, 0)) => {
+          camera.position.copy(position);
+          camera.up.copy(up);
+          controls.target.set(0, 0, 0);
+          camera.lookAt(controls.target);
+          controls.update();
           loop?.converge?.(3);
         };
         const animateZoom = (direction: "in" | "out") => {
           if (zoomFrameId) cancelAnimationFrame(zoomFrameId);
-          const startDistance = cameraControls?.getDistance() ?? distance;
+          const offset = camera.position.clone().sub(controls.target);
+          const startDistance = offset.length();
+          // The zoom direction is constant for this animation; normalize once,
+          // not with a new Vector3 allocation on every animation frame.
+          offset.normalize();
           const factor = direction === "in" ? 0.88 : 1.12;
-          const minDistance = radius * .6;
-          const maxDistance = radius * 12;
-          const endDistance = THREE.MathUtils.clamp(startDistance * factor, minDistance, maxDistance);
+          const endDistance = THREE.MathUtils.clamp(startDistance * factor, controls.minDistance, controls.maxDistance);
           const distanceDelta = endDistance - startDistance;
           if (Math.abs(distanceDelta) < 0.0001) return;
           const startedAt = performance.now();
@@ -458,7 +460,8 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
             const progress = Math.min((now - startedAt) / duration, 1);
             const eased = 1 - Math.pow(1 - progress, 3);
             const nextDistance = startDistance + distanceDelta * eased;
-            cameraControls?.setDistance(nextDistance);
+            camera.position.copy(controls.target).addScaledVector(offset, nextDistance);
+            controls.update();
             if (progress < 1) {
               zoomFrameId = requestAnimationFrame(step);
             } else {
@@ -469,10 +472,9 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
           };
           zoomFrameId = requestAnimationFrame(step);
         };
-        setCameraView(new THREE.Vector3(0, 0, distance));
         cameraActionsRef.current = {
           reset: () => {
-            cameraControls?.setAutoRotate(false);
+            controls.autoRotate = false;
             loop?.setContinuousRendering?.(false);
             setAutoRotate(false);
             setCameraView(new THREE.Vector3(0, 0, distance));
@@ -481,14 +483,9 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
           side: () => setCameraView(new THREE.Vector3(distance, 0, 0)),
           top: () => setCameraView(new THREE.Vector3(0, distance, 0.001), new THREE.Vector3(0, 0, -1)),
           zoom: (direction) => animateZoom(direction),
-          rotate: (enabled) => {
-            cameraControls?.setAutoRotate(enabled, 1.25);
-            if (enabled) loop?.setContinuousRendering?.(true);
-            else { loop?.setContinuousRendering?.(false); loop?.converge?.(3); }
-          },
+          rotate: (enabled) => { controls.autoRotate = enabled; if (enabled) loop?.setContinuousRendering?.(true); else { loop?.setContinuousRendering?.(false); loop?.converge?.(3); } controls.update(); },
         };
         onResetViewReady?.(() => cameraActionsRef.current?.reset());
-        onCameraActionsReady?.(cameraActionsRef.current);
         setCameraReady(true);
         scene.add(model);
         modelRef.current = model;
@@ -546,23 +543,22 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
           framePerf.frameIntervalTotalMs = 0;
           framePerf.frameIntervalMaxMs = 0;
         };
-        loop = startAurumViewerLoop({ node: host, renderer, cameraControls: cameraControls! }, () => {
+        loop = startAurumViewerLoop({ node: host, camera, renderer, controls }, () => {
           // Reuse one typed buffer: no temporary object/array allocations while dragging.
           const frameStartedAt = framePerf ? performance.now() : 0;
           const previous = bvhCameraStateRef.current;
           const state = previous ?? new Float64Array(10);
-          const current = cameraControls!.writePoseSnapshot(bvhCameraPoseBufferRef.current);
           const cameraChanged = previous === null
-            || Math.abs(current[0]! - state[0]!) > 1e-7
-            || Math.abs(current[1]! - state[1]!) > 1e-7
-            || Math.abs(current[2]! - state[2]!) > 1e-7
-            || Math.abs(current[3]! - state[3]!) > 1e-7
-            || Math.abs(current[4]! - state[4]!) > 1e-7
-            || Math.abs(current[5]! - state[5]!) > 1e-7
-            || Math.abs(current[6]! - state[6]!) > 1e-7
-            || Math.abs(current[7]! - state[7]!) > 1e-7
-            || Math.abs(current[8]! - state[8]!) > 1e-7
-            || Math.abs(current[9]! - state[9]!) > 1e-7;
+            || Math.abs(camera.position.x - state[0]!) > 1e-7
+            || Math.abs(camera.position.y - state[1]!) > 1e-7
+            || Math.abs(camera.position.z - state[2]!) > 1e-7
+            || Math.abs(camera.quaternion.x - state[3]!) > 1e-7
+            || Math.abs(camera.quaternion.y - state[4]!) > 1e-7
+            || Math.abs(camera.quaternion.z - state[5]!) > 1e-7
+            || Math.abs(camera.quaternion.w - state[6]!) > 1e-7
+            || Math.abs(controls.target.x - state[7]!) > 1e-7
+            || Math.abs(controls.target.y - state[8]!) > 1e-7
+            || Math.abs(controls.target.z - state[9]!) > 1e-7;
           let bvhDurationMs = 0;
           if (cameraChanged) {
             const bvhStartedAt = framePerf ? performance.now() : 0;
@@ -571,7 +567,16 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
               bvhDurationMs = performance.now() - bvhStartedAt;
               framePerf.bvhUpdates += 1;
             }
-            state.set(current);
+            state[0] = camera.position.x;
+            state[1] = camera.position.y;
+            state[2] = camera.position.z;
+            state[3] = camera.quaternion.x;
+            state[4] = camera.quaternion.y;
+            state[5] = camera.quaternion.z;
+            state[6] = camera.quaternion.w;
+            state[7] = controls.target.x;
+            state[8] = controls.target.y;
+            state[9] = controls.target.z;
             bvhCameraStateRef.current = state;
           }
           const renderStartedAt = framePerf ? performance.now() : 0;
@@ -621,7 +626,6 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
       cameraRef.current = null;
       cameraActionsRef.current = null;
       onResetViewReady?.(null);
-      onCameraActionsReady?.(null);
       setCameraReady(false);
       if (studioShadow) {
         scene?.remove(studioShadow);
@@ -636,7 +640,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         const materials = Array.isArray(object.material) ? object.material : [object.material];
         materials.forEach((material: any) => material?.dispose?.());
       });
-      if (renderer) disposeAurumViewer({ node: host, renderer, cameraControls: cameraControls! });
+      if (renderer) disposeAurumViewer({ node: host, renderer, controls });
       if (environment && environment !== roomEnvironmentTexture) environment.dispose?.();
       if (gemEnvironment && gemEnvironment !== environment && gemEnvironment !== roomEnvironmentTexture) gemEnvironment.dispose?.();
       roomEnvironmentTexture?.dispose?.();
@@ -784,6 +788,6 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
       <button type="button" onClick={() => cameraActionsRef.current?.zoom("in")} title="Acercar" aria-label="Acercar" className="grid size-8 place-items-center rounded-full text-[#655b4c] transition hover:bg-white/60 hover:text-[#8b692f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45]"><ZoomIn className="size-4" /></button>
       <button type="button" onClick={() => cameraActionsRef.current?.zoom("out")} title="Alejar" aria-label="Alejar" className="grid size-8 place-items-center rounded-full text-[#655b4c] transition hover:bg-white/60 hover:text-[#8b692f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b28b45]"><ZoomOut className="size-4" /></button>
     </div>}
-    <AurumLoadingScreen variant="status-bar" loading={Boolean(status) && !error} message={status} error={error} />
+    {(status || error) && <div className={"absolute inset-x-3 bottom-3 z-20 rounded-xl px-3 py-2 text-xs " + (error ? "border border-red-300 bg-white/95 text-red-800" : "bg-white/90 text-[#625b54]")}>{error || status}</div>}
   </div>;
 }

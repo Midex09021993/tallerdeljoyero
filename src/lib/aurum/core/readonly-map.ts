@@ -10,7 +10,7 @@ export function createAurumReadonlyMap<K, V>(
 ): ReadonlyMap<K, V> {
   const snapshot = new Map(source);
 
-  const readonlyMap = {
+  const readonlyMap: ReadonlyMap<K, V> = {
     get size() {
       return snapshot.size;
     },
@@ -38,7 +38,7 @@ export function createAurumReadonlyMap<K, V>(
     get [Symbol.toStringTag]() {
       return "ReadonlyMap";
     },
-  } as ReadonlyMap<K, V>;
+  };
 
   return Object.freeze(readonlyMap);
 }
