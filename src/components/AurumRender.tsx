@@ -2239,8 +2239,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         applyPostQuality?.(renderQuality);
         renderPipelineContract.setMode("RESTING_SETTLED");
 
-        // The interactive viewport uses direct WebGL from its first model frame.
-        // Composer passes remain available for explicit capture/export workflows.
+        // The interactive viewport uses only the selective gem-mask + FXAA composer
+        // when that module is enabled; otherwise it retains direct WebGL rendering.
         const initialGemAaAvailable = Boolean(composer && renderPass && outputPass);
         if (initialGemAaAvailable) {
           const initialWidth = Math.max(1, renderer.domElement.width || renderer.domElement.clientWidth || 1);
@@ -3809,8 +3809,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             renderPipelineContract.setMode("LIVE_MOTION");
             syncAurumSsrDiagnosticConfig();
 
-            // Keep the direct WebGL viewport during orbit. Post-processing passes
-            // are not executed in the interactive preview.
+            // Keep the interactive path minimal. Only the gem-mask + FXAA pair may
+            // run in the composer; photographic and temporal passes stay disabled.
             const requestedDpr = Math.max(1, Math.min(2, renderQuality.pixelRatio));
             // Respect the same Public Viewer ceiling during orbit.
             const interactionDpr = Math.min(requestedDpr, runtimeBudget.pixelRatioCap, getAurumViewportPixelRatio());
@@ -3828,8 +3828,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               if (strength) strength.value = liveEdgeAaProfile.strength;
               surfaceEdgeAaPass.enabled = false;
             }
-            // GemMask and its dependent AA composites are reserved for explicit
-            // capture paths; the live viewport does not execute the composer.
+            // Respect the module switch during orbit: enable only the two selective
+            // gemstone passes, never full-surface AA or photographic effects.
             const liveGemFxaaEnabled = getAurumPostControls().gemFxaaEnabled;
             const liveBeautyPasses = new Set([renderPass, outputPass]);
             if (liveGemFxaaEnabled) {
@@ -3848,8 +3848,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             invalidateRenderRef.current?.();
           },
           onEnd: () => {
-            // Keep the settled viewport on direct WebGL as well. TAA, Bloom, DOF,
-            // SSR and edge-filter passes remain outside the interactive render path.
+            // Keep the settled viewport on the same minimal beauty path. TAA, Bloom,
+            // DOF, SSR and full-surface edge filtering remain disabled.
             const requestedDpr = Math.max(1, Math.min(2, renderQuality.pixelRatio));
             const settledDpr = Math.min(requestedDpr, runtimeBudget.pixelRatioCap, getAurumViewportPixelRatio());
             renderer.setPixelRatio(settledDpr);
