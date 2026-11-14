@@ -8,9 +8,12 @@ const AurumRender = lazy(() =>
 );
 
 export function AurumRenderShell() {
-  const navigate = useNavigate();
   const publicViewerTest = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("aurumPublicViewer") === "1";
-  if (publicViewerTest) return <AurumPublicViewerTest />;
+  return publicViewerTest ? <AurumPublicViewerTest /> : <AurumRenderEngineShell />;
+}
+
+function AurumRenderEngineShell() {
+  const navigate = useNavigate();
 
   useEffect(() => {
     let disposed = false;
