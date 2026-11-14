@@ -35,6 +35,8 @@ jobs:
         run: bun run typecheck
       - name: AURUM viewer regression tests
         run: bun test scripts/aurum-viewer-buffer.test.ts
+      - name: AURUM viewer lifecycle teardown tests
+        run: bun test scripts/aurum-viewer-lifecycle.test.ts
       - name: AURUM gem application and targeted BVH tests
         run: bun test scripts/aurum-gem-application.test.ts
       - name: AURUM mesh preflight regression tests
