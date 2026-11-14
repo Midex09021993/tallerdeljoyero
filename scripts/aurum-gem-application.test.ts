@@ -89,7 +89,8 @@ test("AURUM gem transition snapshots before material replacement and blends only
   const transition = source.indexOf("createAurumGemTransition(", firstPaint);
 
   expect(capture).toBeGreaterThan(-1);
-  expect(capture).toBeLessThan(apply);
+  expect(capture).toBeGreaterThan(apply);
+  expect(capture).toBeLessThan(firstPaint);
   expect(firstPaint).toBeGreaterThan(apply);
   expect(transition).toBeGreaterThan(firstPaint);
   expect(source).toContain("gemTransitionRef.current?.cancel?.()");
