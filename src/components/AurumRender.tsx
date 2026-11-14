@@ -308,12 +308,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [materialId, setMaterialId] = useState<MaterialId>("plata950_pulida"), [gemaId, setGemaId] = useState<GemaId>("diamante_natural"), [escenarioId, setEscenarioId] = useState<EscenarioId>("ijewelReference"), [iluminacionId, setIluminacionId] = useState<IluminacionId>("studioSoft"), [vista, setVista] = useState<VistaId>("frontal");
   // A catalog choice is only armed; the next explicit gem-mesh click consumes it.
   const pendingGemApplicationRef = useRef<GemaConfig | null>(null);
-  const vistaRef = useRef<VistaId>("frontal");
   // Puente entre el selector React y la cámara creada dentro del ciclo del visor.
-  const aplicarVistaRef = useRef<((id: VistaId) => void) | null>(null);
-  const autoVistaPorOrbitaRef = useRef(false);
-  const cambioVistaManualRef = useRef(false);
-  vistaRef.current = vista;
   const [nombreProyecto, setNombreProyecto] = useState("Diseño de joyería");
   const [categoriaProyecto, setCategoriaProyecto] = useState("Anillo");
   const categoriaProyectoRef = useRef("Anillo");
@@ -1853,20 +1848,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         // ModelPreparation + Camera/Lighting se coordinan desde el adaptador de framing.
         // Mantener esta llamada como único punto de encuadre evita duplicar transformaciones.
         frameAurumProduct({
-          camera: camara, controls: controles, lights: lucesAurum,
-          groundController, lightingController, scene: escena, renderer,
-        }, modelo, prepareAurumModel, aplicarEscenario, escenarioId);
-        // Embedded public configurators have a narrower viewport than the
-        // full editor. Pull the camera back slightly so the entire jewel has
-        // breathing room without changing framing in the main editor.
-        if (embedded && controles?.target && camara?.position) {
-          const target = controles.target;
-          const offset = camara.position.clone().sub(target);
-          offset.multiplyScalar(1.16);
-          camara.position.copy(target).add(offset);
-          camara.updateProjectionMatrix?.();
-          controles.update?.();
-        }
+          cameraControls: cameraControlsContract,
+          lights: lucesAurum,
+          groundController,
+          lightingController,
+          scene: escena,
+          renderer,
+        }, modelo, prepareAurumModel, aplicarEscenario, escenarioId, categoriaProyectoRef.current, embedded ? 1.38 : 1);
         renderer.shadowMap.needsUpdate = true;
         invalidateRenderRef.current?.();
       };
@@ -2157,18 +2145,12 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         // La cámara iJewel de distancia fija dejaba pequeños los modelos Rhino
         // cuyos límites/unidades no coinciden con el modelo de referencia.
         encuadrar();
-        camaraVista("frontal");
         setVista("frontal");
         loadAuditStep("load-pipeline-complete", { triangles: countAurumTriangles(modelo) });
-        requestAnimationFrame(() => {
-          if (modelo) {
-            camaraVista("frontal");
-            // Do not force LIVE material overrides after initial framing.
-            renderer.shadowMap.enabled = false;
-            renderer.shadowMap.needsUpdate = false;
-            invalidateRenderRef.current?.();
-          }
-        });
+        // The initial frame is applied once by frameAurumProduct through AURUM CAMERA.
+        renderer.shadowMap.enabled = false;
+        renderer.shadowMap.needsUpdate = false;
+        invalidateRenderRef.current?.();
       };
       const camaraVista=(id:VistaId)=>{
         // AURUM CAMERA is the sole owner of view presets and framing scale.
@@ -2186,7 +2168,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         viewerLoopRef.current?.invalidate?.();
         invalidateRenderRef.current?.();
       };
-      aplicarVistaRef.current = camaraVista;
       apiRef.current=createAurumApi({
         cargar,
         getJewelTransform:()=>modelo?({position:modelo.position.toArray(),rotation:modelo.rotation.toArray(),scale:modelo.scale.toArray()}):null,
@@ -3755,7 +3736,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       cleanup = () => {
         if (cleanupDone) return;
         cleanupDone = true;
-        aplicarVistaRef.current = null;
         // Stop RAF, ResizeObserver and host listeners before releasing anything
         // they can still access. This is intentionally the first teardown step.
         try {
@@ -3792,10 +3772,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         } finally {
           gemTransitionRef.current = null;
         }
-        renderer.domElement.removeEventListener("pointerdown", handleOrbitPointerDown);
-        renderer.domElement.removeEventListener("pointermove", handleOrbitPointerMove);
-        renderer.domElement.removeEventListener("pointerup", handleOrbitPointerEnd);
-        renderer.domElement.removeEventListener("pointercancel", handleOrbitPointerEnd);
         try {
           quitar();
         } catch (error) {
@@ -3850,21 +3826,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   useEffect(()=>{ apiRef.current?.escenario(escenarioId); invalidateRenderRef.current?.(); },[escenarioId]);
   useEffect(()=>{ apiRef.current?.iluminacion(iluminacionId); invalidateRenderRef.current?.(); },[iluminacionId]);
   useEffect(()=>{
-    // Los cambios elegidos explícitamente ya fueron aplicados de forma síncrona
-    // desde el selector; evita una segunda aplicación del mismo preset.
-    if (cambioVistaManualRef.current) {
-      cambioVistaManualRef.current = false;
-      return;
-    }
-    // El arrastre solo actualiza la etiqueta y conserva la órbita del usuario.
-    if (autoVistaPorOrbitaRef.current) {
-      autoVistaPorOrbitaRef.current = false;
-      invalidateRenderRef.current?.();
-      return;
-    }
+    // Single route: React state -> camera API -> AURUM CAMERA contract.
     const cameraApi=apiRef.current;
     if (typeof cameraApi?.vista === "function") cameraApi.vista(vista);
-    else aplicarVistaRef.current?.(vista);
     invalidateRenderRef.current?.();
   },[vista]);
 
@@ -4269,7 +4233,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                   }
                   if (typeof config.vista === "string" && VISTAS.some((item) => item.id === config.vista)) {
                     setVista(config.vista as VistaId);
-                    apiRef.current?.vista(config.vista);
                   }
                   if (typeof config.fondoId === "string") {
                     setFondoId(config.fondoId);
@@ -4516,7 +4479,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         <div className="flex items-center gap-2">
           <label className="flex h-10 items-center gap-2 rounded-xl border border-[#b99642]/25 bg-white/95 px-3 text-sm text-[#292824] shadow-sm transition hover:border-[#b99642]/60 hover:shadow-[0_3px_12px_rgba(185,150,66,.12)] focus-within:ring-2 focus-within:ring-[#92743b]/20">
             <Gem className="size-4 text-[#92743b]"/>
-            <select aria-label="Seleccionar vista de cámara" value={vista} onChange={e=>{const next=e.target.value as VistaId;autoVistaPorOrbitaRef.current=false;cambioVistaManualRef.current=true;vistaRef.current=next;aplicarVistaRef.current?.(next);setVista(next);invalidateRenderRef.current?.();}} className="min-w-0 appearance-none bg-transparent font-medium outline-none cursor-pointer">
+            <select aria-label="Seleccionar vista de cámara" value={vista} onChange={e=>setVista(e.target.value as VistaId)} className="min-w-0 appearance-none bg-transparent font-medium outline-none cursor-pointer">
               <option className="bg-white" value={VISTAS[0]?.id}>{VISTAS[0]?.nombre || "Vista 3D"}</option>
               {VISTAS.slice(1).map(v=><option className="bg-white" key={v.id} value={v.id}>{v.nombre}</option>)}
             </select>
