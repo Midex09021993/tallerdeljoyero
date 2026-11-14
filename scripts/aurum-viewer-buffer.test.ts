@@ -480,11 +480,15 @@ test("Aurum uses the same beauty composer chain during camera motion and at rest
   const idleBlock = componentSource.slice(end, idleEnd > end ? idleEnd : end + 8000);
 
   expect(start).toBeGreaterThan(-1);
-  for (const block of [liveBlock, idleBlock]) {
-    expect(block).toContain("new Set([renderPass, gemMaskPass, fxaaPass, outputPass])");
-    expect(block).toContain("sameBeautyPipelineAvailable");
-    expect(block).toContain("aplicarPerfilLive(true)");
-  }
+  expect(liveBlock).toContain("new Set([renderPass, ...(interactiveEdgeAa ? [surfaceEdgeAaPass] : []), outputPass])");
+  expect(liveBlock).toContain("if (gemMaskPass) gemMaskPass.enabled = false;");
+  expect(liveBlock).toContain("if (fxaaPass) fxaaPass.enabled = false;");
+  expect(liveBlock).not.toContain("new Set([renderPass, gemMaskPass, fxaaPass");
+  expect(idleBlock).toContain("new Set([\n              renderPass,\n              gemMaskPass,\n              fxaaPass,");
+  expect(idleBlock).toContain("sameBeautyPipelineAvailable");
+  expect(liveBlock).toContain("sameBeautyPipelineAvailable");
+  expect(liveBlock).toContain("aplicarPerfilLive(true)");
+  expect(idleBlock).toContain("aplicarPerfilLive(true)");
   expect(liveBlock).toContain("liveFastPathRef.current = !sameBeautyPipelineAvailable;");
   expect(idleBlock).toContain("liveFastPathRef.current = !sameBeautyPipelineAvailable;");
   expect(idleBlock).toContain("idleTaaPass.enabled = false;");
