@@ -14,6 +14,7 @@ import {
 } from "../../aurum-material-engine";
 
 import { createAurumReadonlyMap } from "./readonly-map";
+import type { IAurumMetalOpticalContract } from "./module-contracts";
 
 export const AURUM_METAL_SERVICES = {
   apply: "aurum.metal.apply",
@@ -22,7 +23,7 @@ export const AURUM_METAL_SERVICES = {
   applyReferenceOptics: "aurum.metal.reference-optics",
 } as const;
 
-export interface AurumMetalAdapter {
+export interface AurumMetalAdapter extends IAurumMetalOpticalContract {
   readonly services: ReadonlyMap<string, unknown>;
   createPreset(config: unknown): AurumMetalPreset;
   getReflectionResponse(preset: AurumMetalPreset): ReturnType<typeof getAurumMetalReflectionResponse>;
