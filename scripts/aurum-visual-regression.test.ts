@@ -76,7 +76,8 @@ test("AURUM visual comparator rejects mismatched dimensions and malformed buffer
 test("AURUM visual comparator passes when every pixel is explicitly masked out", () => {
   const reference = rgba(2, 1, 0);
   const actual = rgba(2, 1, 255);
-  const mask = rgba(2, 1, 0);
+  // Alpha 0 excludes every pixel; rgba() intentionally initializes alpha to 255.
+  const mask = new Uint8Array(2 * 1 * 4);
   const report = compareAurumVisualCaptures(
     { width: 2, height: 1, data: reference },
     { width: 2, height: 1, data: actual },
