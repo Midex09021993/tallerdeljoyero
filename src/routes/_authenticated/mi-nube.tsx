@@ -2181,12 +2181,6 @@ function MiNubePage() {
           {cargandoCompartidas && carpetasRecibidas.length === 0 ? <p className="rounded-xl border border-border p-4 text-sm text-muted-foreground">Buscando carpetas compartidas…</p> : carpetasRecibidas.length === 0 ? <div className="rounded-2xl border border-dashed border-border p-6 text-center"><Folder className="mx-auto size-6 text-muted-foreground" /><p className="mt-2 text-sm font-medium">Todavía no tienes carpetas compartidas</p><p className="mt-1 text-xs text-muted-foreground">Cuando otro taller comparta una carpeta contigo, aparecerá aquí.</p></div> : (
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5">
               {carpetasRecibidas.map((recibida) => {
-                const tipos = [...new Set(recibida.archivos.map((a) => {
-                  if (a.categoria === "fotos") return "Imagen";
-                  if (a.categoria === "modelos-3d") return a.nombre.toLowerCase().endsWith(".3dm") ? "3DM" : a.nombre.toLowerCase().endsWith(".stl") ? "STL" : "3D";
-                  if (a.categoria === "documentos") return "PDF";
-                  return "Archivo";
-                }))];
                 return <div key={recibida.id} className="relative min-w-0">
                   <FichaProyecto portada={recibida.portada} nombre={recibida.nombre} portadaModo="contain">
                   <div className="space-y-3 p-4">
@@ -2197,10 +2191,6 @@ function MiNubePage() {
                       </div>
                       <span className="shrink-0 rounded-full border border-border/80 px-2.5 py-1 text-[9px] font-medium uppercase tracking-[0.12em] text-muted-foreground">Compartida</span>
                     </div>
-                    <div className="flex flex-wrap gap-1">
-                      {tipos.map((tipo) => <span key={tipo} className="rounded-md bg-muted/70 px-2 py-1 text-[10px] font-medium text-muted-foreground">{tipo}</span>)}
-                    </div>
-                    <button type="button" disabled={anadiendoCatalogo === recibida.nombre || recibida.cargandoArchivos} onClick={() => void prepararFichaCompartida(recibida)} className="w-full rounded-lg border border-[#c5a15d]/60 bg-[#c5a15d]/[0.10] px-3 py-2 text-[11px] font-semibold hover:bg-[#c5a15d]/[0.17] disabled:opacity-50">{anadiendoCatalogo === recibida.nombre ? "Preparando ficha…" : "Crear ficha para mi catálogo"}</button>
                     <button type="button" disabled={recibida.cargandoArchivos} onClick={() => { const abierto = proyectoAbierto === "compartida:" + recibida.id; setProyectoAbierto(abierto ? null : "compartida:" + recibida.id); if (!abierto) void cargarArchivosCarpetaRecibida(recibida.id); }} className="w-full rounded-lg border border-border/80 bg-background/70 px-3 py-2 text-[11px] font-medium text-foreground/90 transition-colors hover:border-gold/45 hover:bg-muted/40 disabled:opacity-50">{recibida.cargandoArchivos ? "Cargando archivos…" : proyectoAbierto === "compartida:" + recibida.id ? "Ocultar archivos del proyecto" : recibida.archivosCargados ? "Ver archivos del proyecto" : "Cargar y ver archivos"}</button>
 
                     <p className="border-t border-border pt-3 text-[10px] text-muted-foreground">Solo lectura · acceso vigente hasta que el propietario lo revoque.</p>
