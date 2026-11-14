@@ -133,8 +133,18 @@ function CursosDiseno3DPage() {
 
       <section className="mx-auto max-w-7xl px-4 py-14 sm:px-7 lg:px-10 lg:py-20">
         <div className="grid gap-10 lg:grid-cols-[1fr_.8fr]">
-          <div><p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#a17a2e]">Un aprendizaje conectado</p><h2 className="mt-3 font-display text-3xl font-semibold tracking-tight text-[#1d2b39] sm:text-4xl">Continúa trabajando con herramientas de AURUM LAB</h2><p className="mt-4 max-w-2xl text-sm leading-7 text-[#64778a]">El curso se centra en Rhinoceros y el modelado para joyería. Además, podrás conocer herramientas del ecosistema que complementan el trabajo digital.</p>
-            <div className="mt-6 grid gap-3 sm:grid-cols-3">{complementos.map(({icon:Icon,title,desc})=><div key={title} className="rounded-xl border border-[#e5e8e9] bg-white p-4"><Icon className="size-5 text-[#a17a2e]" /><h3 className="mt-3 text-sm font-bold text-[#2a3d4f]">{title}</h3><p className="mt-1 text-xs leading-5 text-[#718196]">{desc}</p></div>)}</div>
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#a17a2e]">Diseña en Rhino · Renderiza con AURUM LAB</p>
+            <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight text-[#1d2b39] sm:text-4xl">Visualiza tus joyas mientras las diseñas</h2>
+            <p className="mt-4 max-w-2xl text-sm leading-7 text-[#64778a]">Tu aprendizaje no termina en Rhinoceros. Con una cuenta gratuita de AURUM LAB puedes acceder a AURUM RENDER y conectar tu flujo de trabajo mediante nuestros plugins para Rhino. Así puedes enviar tus diseños a renderizar y evaluar materiales, metales y gemas durante el proceso de creación.</p>
+            <div className="relative mt-6 overflow-visible rounded-2xl border border-[#e5d7b5] bg-gradient-to-r from-[#fffaf0] to-white p-5 pl-24 shadow-sm sm:pl-28">
+              <img src="/brand/rhino-cpp-plugin.webp" alt="Plugin de Rhinoceros para conectar con AURUM RENDER" width={325} height={275} loading="lazy" decoding="async" className="pointer-events-none absolute -left-3 top-1/2 h-28 w-28 -translate-y-1/2 object-contain drop-shadow-[0_8px_12px_rgba(31,45,58,.22)] sm:-left-5 sm:h-36 sm:w-36" />
+              <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#a17a2e]">Conexión con Rhinoceros</p>
+              <h3 className="mt-1 text-base font-bold text-[#24374a]">Tu diseño y tu render, en un mismo flujo</h3>
+              <p className="mt-1 text-xs leading-5 text-[#687b8d]">Conoce el plugin de Rhino y descubre cómo integrar AURUM RENDER a tu trabajo.</p>
+              <Link to="/auth" className="mt-3 inline-flex min-h-9 items-center gap-2 rounded-lg bg-[#e9c65f] px-3.5 text-xs font-bold text-[#202b35] transition hover:bg-[#dfb83e]">Crear cuenta gratuita <ArrowRight className="size-3.5" /></Link>
+            </div>
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">{complementos.map(({icon:Icon,title,desc})=><div key={title} className="rounded-xl border border-[#e5e8e9] bg-white p-4"><Icon className="size-5 text-[#a17a2e]" /><h3 className="mt-3 text-sm font-bold text-[#2a3d4f]">{title}</h3><p className="mt-1 text-xs leading-5 text-[#718196]">{desc}</p></div>)}</div>
           </div>
           <aside id="inversion" className="scroll-mt-24 rounded-[1.6rem] border border-[#e4d5ad] bg-white p-6 shadow-[0_18px_55px_rgba(31,45,58,.09)] sm:p-8">
             <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#9b762e]">Matrícula · Lanzamiento</p>
