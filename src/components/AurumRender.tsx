@@ -42,6 +42,7 @@ import { createAurumApi, createAurumCatalogApi, type AurumCatalogApi } from "../
 import { createAurumConfiguratorState } from "../lib/aurum/configurator-state";
 import { createAurumViewerAdapter, AURUM_VIEWER_SERVICES } from "../lib/aurum/core/viewer-adapter";
 import { createAurumCameraControlsContract } from "../lib/aurum/core/camera-controls-contract";
+import { createAurumObjectSelectionModule } from "../lib/aurum/core/object-selection-module";
 import { createAurumSceneAdapter } from "../lib/aurum/core/scene-adapter";
 import { createAurumLightingAdapter } from "../lib/aurum/core/lighting-adapter";
 import { createAurumProductionPluginHost } from "../lib/aurum/core/production-plugin-host";
@@ -987,6 +988,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         renderer.domElement.removeEventListener("pointermove", handleOrbitPointerMove);
         renderer.domElement.removeEventListener("pointerup", handleOrbitPointerEnd);
         renderer.domElement.removeEventListener("pointercancel", handleOrbitPointerEnd);
+        objectSelectionModule.dispose();
         disposeAurumViewer({ node: nodo, renderer, controls: controles, composer });
         if (orbitControlsRef.current === controles) orbitControlsRef.current = null;
         return;
@@ -3495,36 +3497,16 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           }
         }
       };
-      const seleccionarPorClick = (event: MouseEvent) => {
-        if (!modelo || cargando) return;
-        const rect = renderer.domElement.getBoundingClientRect();
-        const pointer = new THREE.Vector2(
-          ((event.clientX - rect.left) / rect.width) * 2 - 1,
-          -((event.clientY - rect.top) / rect.height) * 2 + 1
-        );
-        const raycaster = new THREE.Raycaster();
-        raycaster.setFromCamera(pointer, camara);
-        const objetivos:any[] = [];
-        const worldSphere = new THREE.Sphere();
-        // Broad-phase filtering: only raycast meshes whose existing bounding
-        // spheres intersect the click ray. This avoids triangle-level tests
-        // against every visible part of a dense CAD assembly.
-        modelo.updateMatrixWorld(true);
-        modelo.traverse((x:any) => {
-          if (!x.isMesh || !x.visible || x.userData?.aurumInternalInclusion) return;
-          const sphere = x.geometry?.boundingSphere;
-          if (sphere) {
-            worldSphere.copy(sphere).applyMatrix4(x.matrixWorld);
-            if (!raycaster.ray.intersectsSphere(worldSphere)) return;
-          }
-          objetivos.push(x);
-        });
-        const impacto = raycaster.intersectObjects(objetivos, false)[0];
-        if (impacto?.object?.uuid) {
-          seleccionarMalla(impacto.object);
-        } else {
-          // Clic fuera de la geometría de la joya: limpiar selección y abrir
-          // Ambientes para cambiar la presentación sin buscar el primer icono.
+      // AURUM OBJECT SELECTION owns pointer-to-mesh picking. AurumRender
+      // retains UI/material/highlight side effects through explicit callbacks.
+      const objectSelectionModule = createAurumObjectSelectionModule({
+        camera: camara,
+        getModel: () => modelo,
+        isBlocked: () => !modelo || cargando,
+        onSelect: (object) => seleccionarMalla(object),
+        onMiss: () => {
+          // Click outside the jewel clears the active target and opens
+          // Environments so the user can change presentation.
           setUxSection("ambientes");
           parteActiva = null;
           setParteSeleccionada(null);
@@ -3532,8 +3514,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           setParteSeleccionadaCapa(null);
           setParteSeleccionadaCategoria("otro");
           limpiarResaltado();
-        }
-        invalidateRenderRef.current?.();
+        },
+        onAfterPick: () => invalidateRenderRef.current?.(),
+      });
+      const seleccionarPorClick = (event: MouseEvent) => {
+        objectSelectionModule.handleClick(event);
       };
       renderer.domElement.addEventListener("click", seleccionarPorClick);
 
