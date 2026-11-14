@@ -29,6 +29,7 @@ import { frameAurumProduct, disposeAurumViewer, createAurumWebGLViewer, startAur
 import { createAurumImportPlugin } from "../lib/aurum/core/import-plugin";
 import { createAurumGeometryEngine } from "../lib/aurum/core/geometry-engine";
 import { parseAurumInput, preprocessAurumModel } from "../lib/aurum/model-loader";
+import { classifyMesh as classifyPublicMesh, inferGemMeshes } from "./PublicCatalogViewer";
 import { compressAurumGlbWithDraco } from "../lib/draco-export";
 import { getAurumRhinoGeometryType, isAurumRhinoCsgSurface } from "../lib/aurum/metal-union-experiment";
 import { getAurumModelParts } from "../lib/aurum/model-parts";
@@ -1929,9 +1930,12 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               attributes.LayerName ?? node.name ?? ""
             );
             const materialColor = materials.find((entry: any) => entry?.color)?.color;
-            const detected = meta.categoria === "gema" || meta.categoria === "metal"
-              ? meta.categoria
-              : clasificarCapa(layerName, materialColor ? colorRhinoHex(materialColor) : undefined);
+            const publicFamily = classifyPublicMesh(node);
+            const detected = publicFamily !== "otro"
+              ? publicFamily
+              : meta.categoria === "gema" || meta.categoria === "metal"
+                ? meta.categoria
+                : clasificarCapa(layerName, materialColor ? colorRhinoHex(materialColor) : undefined);
             // The public viewer treats otherwise-unclassified direct 3DM meshes
             // as metal so the selected metal profile remains visible.
             node.userData = { ...(node.userData ?? {}), aurumPublicDefaultMetal: detected === "otro" };
@@ -1950,10 +1954,44 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           loadAuditStep("preprocess-progress", { completed, total });
         });
         const interno = objeto;
+        // Match PublicCatalogViewer post-parse preparation exactly: isolate each
+        // mesh material, infer a central gemstone only when no explicit gem exists,
+        // then center the model using visible renderable geometry only.
+        interno.traverse((node: any) => {
+          if (!node?.isMesh || !node.material) return;
+          node.material = Array.isArray(node.material)
+            ? node.material.map((entry: any) => entry?.clone ? entry.clone() : entry)
+            : (node.material?.clone ? node.material.clone() : node.material);
+        });
+        interno.updateMatrixWorld(true);
+        inferGemMeshes(interno);
+        interno.traverse((node: any) => {
+          if (!node?.isMesh || !node.userData?.aurumPublicInferredGem) return;
+          const meta = node.userData?.aurumRhino ?? {};
+          node.userData.aurumRhino = { ...meta, categoria: "gema", capa: meta.capa ?? node.name ?? "Gema inferida" };
+        });
+        const publicVisibleBounds = new THREE.Box3();
+        interno.traverse((node: any) => {
+          if (!node?.isMesh || !node.geometry || !node.visible) return;
+          let ancestor: any = node.parent;
+          while (ancestor) {
+            if (ancestor.visible === false) return;
+            ancestor = ancestor.parent;
+          }
+          publicVisibleBounds.expandByObject(node);
+        });
+        if (publicVisibleBounds.isEmpty()) {
+          throw new Error("El modelo no contiene mallas visibles para mostrar.");
+        }
+        const publicCenter = publicVisibleBounds.getCenter(new THREE.Vector3());
+        interno.position.sub(publicCenter);
+        interno.updateMatrixWorld(true);
         loadAuditStep("public-viewer-preprocess-complete", {
           sourceFormat: ext,
           preprocessMs: Math.round(performance.now() - preprocessStartedAt),
           triangles: countAurumTriangles(interno),
+          inferredGem: interno.getObjectByProperty("userData.aurumPublicInferredGem", true)?.name ?? null,
+          centeredOnVisibleGeometry: true,
         });
         // Reject empty or fully hidden conversions before replacing the current jewel.
         // Rhino may transfer a valid 3DM container that contains only construction
