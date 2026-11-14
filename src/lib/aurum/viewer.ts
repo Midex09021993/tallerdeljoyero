@@ -17,6 +17,24 @@ export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, pre
   // reaplicar escena/materiales y provocar cambios de color.
   const wasPrepared = !!model.userData?.["aurumInitialFrameApplied"];
 
+  if (presentationMode === "publicViewer") {
+    if (!wasPrepared) {
+      model.updateWorldMatrix(true, true);
+      const visibleBounds = new THREE.Box3();
+      model.traverse((object: any) => {
+        if (!object?.isMesh || !object.geometry || !object.visible || object.userData?.aurumPublicContactShadow) return;
+        for (let parent = object.parent; parent; parent = parent.parent) if (!parent.visible) return;
+        visibleBounds.expandByObject(object);
+      });
+      if (visibleBounds.isEmpty()) throw new Error("El modelo no contiene geometría visible para encuadrar.");
+      model.position.sub(visibleBounds.getCenter(new THREE.Vector3()));
+      model.updateWorldMatrix(true, true);
+      model.userData = { ...(model.userData ?? {}), aurumInitialFrameApplied: true, aurumPublicViewerPresentation: true };
+    }
+    applyAurumPublicViewerCamera(viewer.camera, viewer.controls, model);
+    return;
+  }
+
   if (!wasPrepared) {
     const prepared=prepare(model,sceneId === "ijewelReference" ? 2.0 : 2.6);
     const bounds=prepared.bounds, size=prepared.size, targetY=prepared.targetY;
