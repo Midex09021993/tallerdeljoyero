@@ -5,6 +5,8 @@ import { createAurumSceneAdapter } from "../src/lib/aurum/core/scene-adapter";
 import { createAurumLightingAdapter } from "../src/lib/aurum/core/lighting-adapter";
 import { createAurumMetalAdapter } from "../src/lib/aurum/core/metal-adapter";
 import { createAurumGemAdapter } from "../src/lib/aurum/core/gem-adapter";
+import { createAurumRenderPipelineContract } from "../src/lib/aurum/core/render-pipeline-contract";
+import { createAurumMediaExportContract } from "../src/lib/aurum/core/media-export-contract";
 
 function expectRuntimeReadonlyMap(map: ReadonlyMap<string, unknown>) {
   expect(typeof (map as any).set).toBe("undefined");
@@ -69,4 +71,35 @@ test("AURUM production adapters expose runtime-readonly service contracts", () =
   expect(lighting.services.size).toBe(2);
   expect(metal.services.size).toBe(4);
   expect(gem.services.size).toBe(5);
+});
+
+
+test("AURUM render contract maps motion and settled modes without enabling TAA", () => {
+  const motionStates: boolean[] = [];
+  const taaPass = { enabled: false, accumulate: false };
+  const runtime = {
+    composer: {}, renderPass: {}, gemMaskPass: {}, fxaaPass: {},
+    surfaceEdgeAaPass: {}, outputPass: {}, taaPass,
+    setTemporalMotion: (active: boolean) => motionStates.push(active),
+    updateTemporal: () => undefined,
+    resetTemporalAccumulation: () => undefined,
+    applyQuality: () => undefined,
+  };
+  const contract = createAurumRenderPipelineContract(runtime);
+
+  expect(contract.getMode()).toBe("RESTING_SETTLED");
+  contract.setMode("LIVE_MOTION");
+  expect(contract.getMode()).toBe("LIVE_MOTION");
+  contract.setMode("RESTING_SETTLED");
+  contract.setMode("CAPTURE");
+
+  expect(motionStates).toEqual([false, true, false, false]);
+  expect(taaPass.enabled).toBe(false);
+  expect(taaPass.accumulate).toBe(false);
+});
+
+test("AURUM media export contract exposes the production frame and recorder boundaries", () => {
+  const contract = createAurumMediaExportContract();
+  expect(typeof contract.createFramePipeline).toBe("function");
+  expect(typeof contract.recordCanvas).toBe("function");
 });
