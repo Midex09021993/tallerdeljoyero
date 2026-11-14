@@ -3898,7 +3898,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       invalidateRenderRef.current?.();
       return;
     }
-    apiRef.current?.vista(vista);
+    // Aplicar cada preset desde un único punto, después de confirmar el estado React.
+    const cameraApi=apiRef.current;
+    if (typeof cameraApi?.vista === "function") cameraApi.vista(vista);
+    else aplicarVistaRef.current?.(vista);
     invalidateRenderRef.current?.();
   },[vista]);
 
@@ -4550,7 +4553,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         <div className="flex items-center gap-2">
           <label className="flex h-10 items-center gap-2 rounded-xl border border-[#b99642]/25 bg-white/95 px-3 text-sm text-[#292824] shadow-sm transition hover:border-[#b99642]/60 hover:shadow-[0_3px_12px_rgba(185,150,66,.12)] focus-within:ring-2 focus-within:ring-[#92743b]/20">
             <Gem className="size-4 text-[#92743b]"/>
-            <select aria-label="Seleccionar vista de cámara" value={vista} onChange={e=>{const next=e.target.value as VistaId;vistaRef.current=next;setVista(next);aplicarVistaRef.current?.(next);}} className="min-w-0 appearance-none bg-transparent font-medium outline-none cursor-pointer">
+            <select aria-label="Seleccionar vista de cámara" value={vista} onChange={e=>{const next=e.target.value as VistaId;vistaRef.current=next;setVista(next);}} className="min-w-0 appearance-none bg-transparent font-medium outline-none cursor-pointer">
               <option className="bg-white" value={VISTAS[0]?.id}>{VISTAS[0]?.nombre || "Vista 3D"}</option>
               {VISTAS.slice(1).map(v=><option className="bg-white" key={v.id} value={v.id}>{v.nombre}</option>)}
             </select>
