@@ -63,7 +63,7 @@ export function createAurumObjectSelectionModule(
   };
 
   const contract: IAurumObjectSelectionContract = {
-    readonlyId: "aurum.object-selection",
+    id: "aurum.object-selection",
     version: "1.0.0",
     pick,
     handleClick(event) {
