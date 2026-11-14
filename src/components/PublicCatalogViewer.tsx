@@ -12,7 +12,7 @@ import { MATERIALES, GEMAS } from "@/lib/aurum/catalog";
 import { getAurumHdriUrl, getAurumGemHdriUrl } from "@/lib/aurum-photographic-scene-engine";
 import { createAurumDiamondBvhRuntime } from "@/lib/aurum/aurum-diamond-bvh-runtime";
 
-type Props = { modelUrl: string; modelName: string; materialId: string; gemId: string; onReady?: () => void; onError?: (message: string) => void; hideControls?: boolean; onResetViewReady?: (reset: (() => void) | null) => void };
+type Props = { modelUrl: string; modelName: string; materialId: string; gemId: string; onReady?: () => void; onError?: (message: string) => void; hideControls?: boolean; onResetViewReady?: (reset: (() => void) | null) => void; onCameraActionsReady?: (actions: { reset: () => void; front: () => void; side: () => void; top: () => void; zoom: (direction: "in" | "out") => void; rotate: (enabled: boolean) => void } | null) => void };
 const classifyMesh = (mesh: any): "metal" | "gema" | "otro" => {
   const data = mesh?.userData ?? {};
   const attrs = data?.attributes ?? {};
@@ -131,7 +131,7 @@ const inferGemMeshes = (model: THREE.Object3D): number => {
   return 1;
 };
 
-export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, onReady, onError, hideControls = false, onResetViewReady }: Props) {
+export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, onReady, onError, hideControls = false, onResetViewReady, onCameraActionsReady }: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
   const modelRef = useRef<THREE.Object3D | null>(null);
   const cameraRef = useRef<THREE.Camera | null>(null);
@@ -486,6 +486,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
           rotate: (enabled) => { controls.autoRotate = enabled; if (enabled) loop?.setContinuousRendering?.(true); else { loop?.setContinuousRendering?.(false); loop?.converge?.(3); } controls.update(); },
         };
         onResetViewReady?.(() => cameraActionsRef.current?.reset());
+        onCameraActionsReady?.(cameraActionsRef.current);
         setCameraReady(true);
         scene.add(model);
         modelRef.current = model;
@@ -626,6 +627,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
       cameraRef.current = null;
       cameraActionsRef.current = null;
       onResetViewReady?.(null);
+      onCameraActionsReady?.(null);
       setCameraReady(false);
       if (studioShadow) {
         scene?.remove(studioShadow);
