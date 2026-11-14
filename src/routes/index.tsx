@@ -722,12 +722,10 @@ function InicioPublico() {
                   .aurum-rhino-connection-pulse { animation: none; }
                 }
               `}</style>
-              <div className="aurum-rhino-connection relative mt-3 overflow-hidden rounded-xl border border-[#d4aa19]/30 bg-[#d4aa19]/[.06] p-3 sm:p-3.5">
+              <div className="aurum-rhino-connection relative mt-3 overflow-visible rounded-xl border border-[#d4aa19]/30 bg-[#d4aa19]/[.06] p-3 pl-12 sm:p-3.5 sm:pl-14">
+                <img src="/brand/rhino-plugin-emblem.svg" alt="Emblema vectorial del plugin Rhinoceros C++" width={120} height={120} loading="lazy" decoding="async" className="pointer-events-none absolute -left-7 top-1/2 z-10 h-[5.6rem] w-[5.6rem] -translate-y-1/2 object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,.48)] sm:-left-9 sm:h-28 sm:w-28" />
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                   <div className="flex min-w-0 flex-1 items-center gap-3">
-                    <span className="grid size-12 shrink-0 place-items-center rounded-xl border border-[#f8c928]/25 bg-white/95 p-1.5 shadow-inner">
-                      <img src="/brand/rhino-plugin-logo.png" alt="Plugin de Rhinoceros con C++" width={100} height={85} loading="lazy" decoding="async" className="h-full w-full object-contain" />
-                    </span>
                     <div className="min-w-0">
                       <p className="text-[11px] font-bold text-white sm:text-xs">¿Diseñas con Rhino 7?</p>
                       <p className="mt-0.5 text-[10px] leading-4 text-slate-300">Conoce nuestro plugin para conectar tu flujo de diseño con AURUM RENDER.</p>
