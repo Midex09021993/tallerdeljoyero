@@ -2063,7 +2063,7 @@ function MiNubePage() {
                       {proyectoAbierto === proyecto.nombre ? "Ocultar archivos del proyecto" : "Ver archivos del proyecto"}
                     </button>
                     {proyectoAbierto === proyecto.nombre && (
-                      <div className="absolute inset-0 z-20 flex flex-col overflow-hidden rounded-[1.35rem] border border-gold/40 bg-card shadow-xl">
+                      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#171612]/55 p-3 backdrop-blur-sm sm:p-6" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setProyectoAbierto(null); }}><section className="flex max-h-[88dvh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-gold/35 bg-card shadow-[0_24px_80px_rgba(20,18,12,0.32)]" role="dialog" aria-modal="true" aria-label={"Archivos del proyecto " + proyecto.nombre}>
                         <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border px-3 py-2.5">
                           <div className="flex min-w-0 items-center gap-2"><Folder className="size-4 shrink-0 text-gold" /><div className="min-w-0"><h4 className="truncate text-sm font-semibold">{proyecto.nombre}</h4><p className="text-[10px] text-muted-foreground">{proyecto.archivos.length} archivos</p></div></div>
                           <button type="button" aria-label={`Cerrar archivos de ${proyecto.nombre}`} title="Cerrar ficha" onClick={() => setProyectoAbierto(null)} className="grid size-7 shrink-0 place-items-center rounded-lg border border-border hover:bg-muted"><X className="size-4" /></button>
@@ -2166,7 +2166,7 @@ function MiNubePage() {
                           </div>
                         ))}</div>
                         </div>
-                      </div>
+                      </section></div>
                     )}
 
                   </div>
