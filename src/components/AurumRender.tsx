@@ -1338,8 +1338,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         ]) },
         { id: "aurum.scene", description: "Control de escena delegado al controlador productivo.", dependencies: ["aurum.viewer"], requiresServices: ["aurum.viewer.scene", "aurum.viewer.renderer"], services: sceneAdapter.services },
         { id: "aurum.lighting", description: "Control de iluminación delegado al controlador productivo.", dependencies: ["aurum.viewer"], requiresServices: ["aurum.viewer.scene"], services: lightingController.services },
-        { id: "aurum.metal", description: "Servicios del motor de metales existente; sin ownership de materiales.", requiresServices: ["aurum.viewer.scene"], dependencies: ["aurum.viewer"], services: materialAdapterServices.metal },
-        { id: "aurum.gem", description: "Servicios del motor óptico de gemas existente.", dependencies: ["aurum.metal", "aurum.viewer"], requiresServices: ["aurum.metal.apply", "aurum.viewer.scene"], services: materialAdapterServices.gem },
+        { id: "aurum.metal", description: "Servicios del motor de metales existente; sin ownership de materiales.", services: materialAdapterServices.metal },
+        { id: "aurum.gem", description: "Servicios del motor óptico de gemas existente.", dependencies: ["aurum.metal"], requiresServices: ["aurum.metal.apply"], services: materialAdapterServices.gem },
         { id: "aurum.final-render", description: "Render final bajo demanda mediante el path tracer existente.", dependencies: ["aurum.viewer"], requiresServices: ["aurum.viewer.scene", "aurum.viewer.camera", "aurum.viewer.renderer"], services: new Map([
           ["aurum.final-render.load-adapter", finalRenderLoader],
         ]) },
