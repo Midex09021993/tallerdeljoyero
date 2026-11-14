@@ -882,9 +882,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
        // una vez creado el SceneController.
       renderer.setPixelRatio(Math.min(devicePixelRatio,renderQuality.pixelRatio));
       renderer.outputColorSpace = THREE.SRGBColorSpace;
-      renderer.toneMapping = THREE.AgXToneMapping;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
       // Exposición calibrada para evitar clipping de blancos en metales pulidos y HDRI de estudio.
-      renderer.toneMappingExposure = 0.82;
+      renderer.toneMappingExposure = 1.0;
       // Calibración inicial de fotografía de producto. El preset de escena
       // vuelve a aplicar la exposición final; este valor evita un primer frame
       // excesivamente brillante mientras llegan el HDRI y el modelo.
