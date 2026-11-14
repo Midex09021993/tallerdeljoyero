@@ -47,6 +47,8 @@ jobs:
         run: bun test scripts/aurum-metal-union.test.ts
       - name: AURUM Visual Weld regression tests
         run: bun test scripts/aurum-visual-weld.test.ts
+      - name: AURUM Fast Visual Merge regression tests
+        run: bun test scripts/aurum-fast-visual-merge.test.ts
       - name: AURUM solid and surface penetration tests
         run: bun test scripts/aurum-solid-engine.test.ts
       - name: AURUM BVH triangle intersection tests
