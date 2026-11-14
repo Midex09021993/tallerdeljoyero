@@ -113,7 +113,7 @@ export interface IAurumCameraControlsContract {
   setAspect(aspect: number): void;
   captureState(): IAurumCameraState;
   restoreState(state: IAurumCameraState): void;
-  update(): void;
+  update(): boolean;
   getTarget(): THREE.Vector3;
   getPosition(): THREE.Vector3;
   getUp(): THREE.Vector3;
