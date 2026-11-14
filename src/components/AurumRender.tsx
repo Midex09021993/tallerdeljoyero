@@ -14,7 +14,7 @@ import { getAurumShadowConfig } from "../lib/aurum-shadow-engine";
 import { getAurumPostConfig } from "../lib/aurum-post-engine";
 import { getAurumSsaoConfig } from "../lib/aurum-ssao-engine";
 import { AURUM_LIGHTING_DEFAULT } from "../lib/aurum-lighting-engine";
-import { applyAurumCameraView, applyAurumIJEWELPresentationCamera, fitAurumCameraToAspect, calculateAurumFocalDepth } from "../lib/aurum/camera";
+import { applyAurumCameraView, applyAurumIJEWELPresentationCamera, applyAurumPublicViewerCamera, fitAurumCameraToAspect, calculateAurumFocalDepth } from "../lib/aurum/camera";
 import { prepareAurumModel } from "../lib/aurum/model-prep";
 import { createAurumPostPipeline } from "../lib/aurum/post";
 import { createAurumEnvironment } from "../lib/aurum/environment";
@@ -1857,7 +1857,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         frameAurumProduct({
           camera: camara, controls: controles, lights: lucesAurum,
           groundController, lightingController, scene: escena, renderer,
-        }, modelo, prepareAurumModel, aplicarEscenario, escenarioId);
+        }, modelo, prepareAurumModel, aplicarEscenario, escenarioId, categoriaProyectoRef.current, "publicViewer");
         // Embedded public configurators have a narrower viewport than the
         // full editor. Pull the camera back slightly so the entire jewel has
         // breathing room without changing framing in the main editor.
@@ -2240,7 +2240,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         });
       };
       const camaraVista=(id:VistaId)=>{
-        applyAurumCameraView(camara, controles, modelo, id, categoriaProyectoRef.current);
+        if (modelo?.userData?.aurumPublicViewerPresentation && id === "frontal") {
+          applyAurumPublicViewerCamera(camara, controles, modelo);
+        } else {
+          applyAurumCameraView(camara, controles, modelo, id, categoriaProyectoRef.current);
+        }
         // The public configurator has a much shorter viewport than the editor.
         // Keep the entire jewel visible after view presets are applied as well
         // as after the initial model framing.
