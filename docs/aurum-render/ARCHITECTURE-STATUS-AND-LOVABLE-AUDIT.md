@@ -38,7 +38,7 @@ Revisar la arquitectura modular existente de AURUM RENDER, detectar acoplamiento
 | Solid / Intersection | Diagnósticos implementados | Validar tolerancias, coste y escalabilidad en modelos reales |
 | AURUM EDGE QUALITY | Parcial | MSAA integrado; TAA sigue en el pipeline existente; SSAA no implementado |
 | Final Render Adapter | Adaptador implementado | La implementación de path tracing sigue en el módulo existente |
-| AURUM GEM TRANSITION | Desactivado por configuración reciente | No reactivar durante la auditoría sin autorización y prueba A/B |
+| AURUM GEM TRANSITION | Integrado en el flujo productivo | Captura previa, transición progresiva y coordinación con BVH; validación visual pendiente |
 
 ## GPU Resource Manager
 
@@ -121,7 +121,7 @@ Lovable debe entregar primero un informe de auditoría sin modificar código. De
 | Metal Union / Visual Weld | Experimental | No habilitar por defecto; revisar CSG, costuras y normales con fixtures CAD |
 | Edge Quality | Parcial | MSAA integrado; TAA desactivado en el visor en vivo (se conserva para capturas explícitas); SSAA no implementado |
 | Final Render | Adaptador implementado | Path tracer existente bajo demanda; revisar restauración de estado y coste |
-| Gem Transition | Desactivado | No reactivar durante auditoría |
+| Gem Transition | Integrado en `AurumRender.tsx` | Transición limitada por capa/mesh y BVH posterior a su finalización; validación visual pendiente |
 
 ### Restricciones de validación antes de declarar cierre
 
@@ -242,7 +242,7 @@ El host inicia los plugins después de construir los controladores y se libera d
 - El GPU Resource Manager permanece disponible como servicio de infraestructura. Los controladores productivos conservan la propiedad y liberación de sus recursos.
 - El adaptador de render final se carga bajo demanda; debe verificarse su exportación real con capturas y escenas de referencia.
 - La validación con archivos CAD reales, modelos de gran tamaño y sesiones prolongadas sigue pendiente.
-- Gem Transition continúa fuera del alcance y no debe activarse como parte de esta integración.
+- Gem Transition ya está conectado al flujo de aplicación de gemas; la integración conserva el ownership óptico y difiere el refresco BVH hasta completar la transición.
 
 ### Corrección del contrato de identificadores
 
@@ -268,7 +268,7 @@ El mapa de arquitectura de la sección interna de Herramientas se actualizó par
 - **Post / Edge Quality:** MSAA está integrado en los targets del compositor; TAA está desactivado tanto en movimiento como en reposo del visor en vivo y se conserva para capturas explícitas; SSAA no está implementado.
 - **Final Render / exportación:** el usuario reporta que el flujo ya funciona correctamente. Se refleja como funcional en revisión preliminar, no como validación técnica certificada. La auditoría debe comprobar fidelidad de salida, restauración del visor y limpieza de recursos sin reabrir cambios funcionales innecesarios.
 - **Video Export / Image Export:** flujos separados que se conectan al visor productivo; no son plugins independientes del Registry.
-- **AURUM GEM TRANSITION:** suspendido. No reactivar.
+- **AURUM GEM TRANSITION:** integrado de forma conservadora; solo interpola canales visuales compatibles y no modifica la identidad óptica.
 
 ### Matriz de consumo productivo de los 12 módulos — revisión 2026-11-13
 
@@ -296,7 +296,7 @@ Esta matriz diferencia registro en el host, consumo real de servicios y uso dire
 - **AURUM GLB QUALITY:** el round-trip de calidad sí se invoca en `model-loader.ts`; los servicios registrados en host no son el punto de consumo actual.
 - **AURUM MEDIA EXPORT:** vídeo usa servicios del host para crear el pipeline de frames y cargar el recorder. El helper path-traced está disponible, pero disponibilidad no equivale a consumo.
 - **GPU Resource Manager:** continúa sin ownership de recursos productivos del visor. No transferir recursos como parte de esta auditoría.
-- **GEM TRANSITION:** permanece suspendido; Metal Union/Visual Weld permanecen experimentales y desactivados por defecto.
+- **GEM TRANSITION:** integrado con pruebas de orden transición/BVH; Metal Union/Visual Weld permanecen experimentales y desactivados por defecto.
 
 #### Resultado CI de la revisión
 
@@ -484,3 +484,27 @@ Esta entrega mejora la seguridad de recuperación de la sesión, pero no certifi
 - La reconciliación BVH de los meshes seleccionados ahora espera a que termine la transición visual. Esto evita que el BVH sustituya el `MeshPhysicalMaterial` mientras la interpolación aún lo está actualizando; si no existe una transición compatible, la reconciliación sigue por la ruta asíncrona inmediata.
 - Se amplió `scripts/aurum-gem-application.test.ts` para comprobar captura, primer pintado, transición y orden de finalización antes de refrescar BVH.
 - Pendiente: ejecución de CI y validación visual real con cambios rápidos de gema y capas con múltiples meshes.
+
+## Formalización de Module Contracts — implementación en `main`
+
+Se incorporó una capa canónica de contratos en `src/lib/aurum/core/module-contracts.ts` y se conectó a los módulos productivos. Los contratos describen fronteras de invocación y no trasladan ownership ni reescriben motores existentes.
+
+| Contrato solicitado en la auditoría de Lovable | Implementación | Integración productiva | Invariantes protegidos |
+|---|---|---|---|
+| `IAurumGeometryContract` | `AurumImportPlugin` lo extiende y mantiene `load(request)` tipado | Módulo `aurum.import` expone importer y pipeline manager | Jerarquía/metadata de gemas preservadas por el importador; diagnósticos siguen opt-in |
+| `IAurumOpticalContract` | Fachada compuesta por `IAurumMetalOpticalContract` y `IAurumGemOpticalContract`; adapters implementan cada frontera | Módulo `aurum.optical-contract` depende de `aurum.metal` y `aurum.gem` y publica `aurum.optical.contract` | Sin cambios en shaders, IOR, dispersión, scintillation, BVH, HDRI ni calibraciones |
+| `IAurumRenderPipelineContract` | `createAurumRenderPipelineContract` formaliza `LIVE_MOTION`, `RESTING_SETTLED` y `CAPTURE` | `aurum.post` publica `aurum.post.module-contract`; los cambios de movimiento/reposo del visor pasan por `setMode` | LIVE y SETTLED no activan TAA; CAPTURE es solo una etiqueta de orquestación y tampoco fuerza TAA |
+| `IAurumMediaExportContract` | `createAurumMediaExportContract` unifica creación del frame pipeline y grabación de canvas | `aurum.media-export` publica `aurum.media.module-contract`; el flujo de vídeo usa los servicios registrados | El frame pipeline restaura estado; no toma ownership del renderer, composer, escena ni pases |
+
+### Cobertura de pruebas y CI
+
+- `scripts/aurum-adapter-contracts.test.ts` ahora cubre la composición óptica, el modo LIVE/SETTLED/CAPTURE sin activar TAA y las fronteras de exportación.
+- `scripts/aurum-gem-application.test.ts` cubre el orden de captura de apariencia, primer pintado, transición y refresco BVH posterior.
+- El workflow `Aurum Lab CI` ya incluye ambos archivos de pruebas.
+- Se conservaron los módulos existentes y sus propietarios. No se migraron recursos GPU al Resource Manager y `disposeAurumViewer()` continúa como dueño del teardown del visor.
+
+### Pendientes que no se deben declarar completados
+
+- Ejecutar build, typecheck, lint y pruebas en CI con logs de runner disponibles.
+- Validación de navegador/GPU real para transición de gemas, importación CAD y equivalencia de vídeo/foto.
+- Fases posteriores de la hoja de ruta de Lovable (bypass GemMask LIVE, consolidación no destructiva de metales, vídeo determinista y regresión visual Playwright) son trabajos separados; no forman parte de la formalización de contratos.
