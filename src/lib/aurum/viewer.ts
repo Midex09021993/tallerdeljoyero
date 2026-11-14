@@ -1,4 +1,4 @@
-import type { Object3D, PerspectiveCamera } from "three";
+import type { Object3D } from "three";
 import type { IAurumCameraControlsContract } from "./core/module-contracts";
 
 export interface AurumViewerFrame {
