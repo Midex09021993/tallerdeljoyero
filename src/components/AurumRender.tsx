@@ -3666,9 +3666,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               if (strength) strength.value = liveEdgeAaProfile.strength;
               surfaceEdgeAaPass.enabled = interactiveEdgeAa;
             }
-            const coreBeautyPasses = new Set([renderPass, gemMaskPass, fxaaPass, ...(interactiveEdgeAa ? [surfaceEdgeAaPass] : []), outputPass]);
+            // GemMask performs dedicated depth + category renders. Bypass it and
+            // its dependent gemstone AA composite for the entire motion interval;
+            // keep the normal composer and optional Surface Edge AA active.
+            const coreBeautyPasses = new Set([renderPass, ...(interactiveEdgeAa ? [surfaceEdgeAaPass] : []), outputPass]);
             const interactionPasses = ((composer as any)?.passes ?? []) as any[];
             interactionPasses.forEach((pass) => { pass.enabled = coreBeautyPasses.has(pass); });
+            if (gemMaskPass) gemMaskPass.enabled = false;
+            if (fxaaPass) fxaaPass.enabled = false;
             const sameBeautyPipelineAvailable = Boolean(composer && renderPass && gemMaskPass && fxaaPass && outputPass);
             liveFastPathRef.current = !sameBeautyPipelineAvailable;
 
