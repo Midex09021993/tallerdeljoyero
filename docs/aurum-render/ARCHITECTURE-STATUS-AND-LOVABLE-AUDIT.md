@@ -447,3 +447,19 @@ La suite existente `scripts/aurum-production-plugin-host.test.ts` cubre dependen
 ### Validación pendiente
 
 El cambio requiere ejecutar el workflow `Aurum Lab CI` en el commit resultante. Hasta disponer de resultados reales, build, TypeScript, ESLint y pruebas se consideran pendientes; la presencia de pasos en el workflow no equivale a una ejecución aprobada.
+
+
+## AURUM MEDIA ENGINE — primera entrega: restauración transaccional — 2026-11-13
+
+Se incorporó un coordinador de limpieza de sesión para la exportación de vídeo. La captura ya utilizaba el compositor y los pases de belleza del visor; el nuevo cambio refuerza el cierre de la sesión temporal para que un fallo aislado al restaurar un recurso no interrumpa la recuperación de los demás.
+
+- runAurumMediaExportCleanup ejecuta todas las acciones de restauración en el orden definido y recoge los errores individuales.
+- La exportación registra como pasos independientes la restauración del renderer, pixel ratio, tamaño del canvas, estilos, aspecto de cámara, calidad del compositor, pases, controles, BVH y ciclo de vida del visor.
+- Los fallos de restauración se informan en consola después de intentar todos los pasos restantes.
+- No se crea un segundo renderer, escena, contexto WebGL, materiales ni shaders.
+- No se cambia la ruta óptica, los pases activos durante la captura, la calidad visual ni el movimiento de cámara.
+- Se añaden pruebas para orden, continuidad después de fallos y recuperación ante múltiples errores; la suite queda incorporada al workflow Aurum Lab CI.
+
+### Alcance y validación
+
+Esta entrega mejora la seguridad de recuperación de la sesión, pero no certifica todavía la equivalencia visual/fotográfica entre vídeo y visor en todos los equipos. Tampoco introduce codificación determinista offline: la captura continúa usando MediaRecorder y captureStream. Build, TypeScript, ESLint, pruebas y CI deben ejecutarse sobre el commit resultante antes de cerrar la fase.
