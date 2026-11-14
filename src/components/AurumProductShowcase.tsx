@@ -43,15 +43,53 @@ function Metric({ label, value="—", detail, icon: Icon }: {label:string;value?
 
 function MiniHome() {
   return <div className="space-y-2.5">
-    <header className="flex items-center justify-between rounded-lg border border-[#c5a36b]/25 bg-gradient-to-r from-[#fffefc] to-[#f2ebdd] px-3 py-2"><div><p className="text-[6px] font-bold tracking-[.18em] text-[#a98249]">✧ AURUM LAB / OPERACIONES</p><h3 className="mt-1 font-serif text-[13px] sm:text-[15px] font-semibold leading-tight text-[#182838]">Centro de control</h3><p className="mt-1 text-[7px] text-[#71808d]">Visión general del taller</p></div><div className="rounded-md border border-[#e8e1d6] bg-white px-2 py-1 text-[6px] text-slate-600">Sede de trabajo</div></header>
-    <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4"><Metric label="Pedidos activos" detail="En seguimiento" icon={PackageCheck}/><Metric label="En producción" detail="Trabajo en curso" icon={Package}/><Metric label="Entregas hoy" detail="Compromisos de hoy" icon={CheckCircle2}/><Metric label="Vencidos" detail="Requieren atención" icon={CircleAlert}/></div>
-    <div><p className="text-[6px] font-bold tracking-[.17em] text-[#a98249]">01 / VISIÓN DEL NEGOCIO</p><h4 className="mt-0.5 text-[9px] font-semibold text-[#182838]">Comercial e inventario</h4><p className="text-[6px] text-[#71808d]">Indicadores del taller seleccionado</p></div>
-    <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4"><Metric label="Clientes registrados" detail="Cartera del taller" icon={Users}/><Metric label="Cotizaciones pendientes" detail="Borrador o enviadas" icon={FileText}/><Metric label="Cotizaciones aprobadas" detail="Aprobaciones registradas" icon={CheckCircle2}/><Metric label="Stock bajo o mínimo" detail="Materiales por revisar" icon={Warehouse}/></div>
-    <div className="grid grid-cols-2 gap-1.5"><div className="rounded-lg border border-[#293b4a]/10 bg-white p-2"><p className="text-[7px] font-semibold">Cotizaciones próximas a vencer</p><p className="mt-1 text-[6px] text-slate-500">Pendientes con vencimiento en los próximos 7 días</p></div><div className="rounded-lg border border-[#293b4a]/10 bg-white p-2"><p className="text-[7px] font-semibold">Materiales que requieren revisión</p><p className="mt-1 text-[6px] text-slate-500">Revisión de inventario</p></div></div>
-    <div className="grid grid-cols-[1.4fr_1fr] gap-1.5"><div className="rounded-lg border border-[#293b4a]/10 bg-white p-2"><p className="text-[7px] font-semibold">Atención prioritaria</p><p className="mt-1 text-[6px] text-slate-500">Seguimiento de pedidos que necesitan una acción</p><div className="mt-2 rounded-md bg-[#f7f5f0] p-2 text-center text-[6px] text-slate-500">Panel de seguimiento</div></div><div className="rounded-lg border border-[#293b4a]/10 bg-white p-2"><p className="text-[7px] font-semibold">Estado de producción</p><p className="mt-2 text-[6px] text-slate-500">Carga actual por área</p>{["Diseño 3D","Impresión","Casting"].map(x=><div key={x} className="mt-2 border-t border-slate-100 pt-1 text-[6px] text-slate-600">{x}<div className="mt-1 h-1 rounded bg-slate-100"/></div>)}</div></div>
+    <header className="flex items-center justify-between gap-2 rounded-lg border border-[#c5a36b]/25 bg-gradient-to-r from-[#fffefc] to-[#f2ebdd] px-3 py-2">
+      <div className="min-w-0"><p className="text-[6px] font-bold tracking-[.18em] text-[#a98249]">✧ AURUM LAB / OPERACIONES</p><h3 className="mt-1 text-[12px] font-semibold leading-tight text-[#182838]">Centro de control</h3><p className="mt-1 text-[6px] text-[#71808d]">Visión general del taller</p></div>
+      <div className="shrink-0 rounded-md border border-[#e8e1d6] bg-white px-2 py-1 text-[6px] text-slate-600">Sede de trabajo</div>
+    </header>
+
+    <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+      <Metric label="Pedidos activos" detail="En seguimiento" icon={PackageCheck}/>
+      <Metric label="En producción" detail="Trabajo en curso" icon={Package}/>
+      <Metric label="Entregas hoy" detail="Compromisos de hoy" icon={CheckCircle2}/>
+      <Metric label="Vencidos" detail="Requieren atención" icon={CircleAlert}/>
+    </div>
+
+    <section className="space-y-1.5">
+      <div className="flex items-end justify-between gap-2 border-b border-slate-200 pb-1.5">
+        <div><p className="text-[6px] font-bold tracking-[.17em] text-[#a98249]">01 / VISIÓN DEL NEGOCIO</p><h4 className="mt-0.5 text-[9px] font-semibold text-[#182838]">Comercial e inventario</h4><p className="text-[6px] text-[#71808d]">Indicadores del taller seleccionado</p></div>
+        <span className="text-[5px] text-slate-400">Datos sujetos a permisos</span>
+      </div>
+      <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+        <Metric label="Clientes registrados" detail="Cartera del taller" icon={Users}/>
+        <Metric label="Cotizaciones pendientes" detail="Borrador o enviadas" icon={FileText}/>
+        <Metric label="Cotizaciones aprobadas" detail="Aprobaciones registradas" icon={CheckCircle2}/>
+        <Metric label="Stock bajo o mínimo" detail="Materiales por revisar" icon={Warehouse}/>
+      </div>
+      <div className="grid grid-cols-2 gap-1.5">
+        <div className="flex items-center justify-between gap-2 rounded-lg border border-[#293b4a]/10 bg-white p-2"><div className="min-w-0"><p className="text-[7px] font-semibold">Cotizaciones próximas a vencer</p><p className="mt-0.5 text-[6px] text-slate-500">Pendientes en los próximos 7 días</p></div><span className="font-serif text-[13px] font-semibold">—</span></div>
+        <div className="rounded-lg border border-[#293b4a]/10 bg-white p-2"><div className="flex items-center justify-between gap-1"><p className="text-[7px] font-semibold">Materiales que requieren revisión</p><span className="text-[5px] font-semibold text-[#a98249]">Inventario</span></div><p className="mt-1 text-[6px] text-slate-500">Materiales en mínimo o por debajo del mínimo</p></div>
+      </div>
+    </section>
+
+    <div className="grid grid-cols-[1.55fr_1fr] gap-1.5">
+      <section className="overflow-hidden rounded-lg border border-[#293b4a]/10 bg-[#fffefc]">
+        <div className="border-b border-slate-200 bg-gradient-to-r from-[#fffefc] to-[#f8f5ef] p-2">
+          <div className="flex items-center justify-between gap-1"><div><p className="text-[8px] font-semibold text-[#182838]">Atención prioritaria</p><p className="mt-0.5 text-[6px] text-[#71808d]">Seguimiento de pedidos que necesitan una acción</p></div><span className="text-[5px] font-semibold text-[#a98249]">Ver pedidos ›</span></div>
+          <div className="mt-1.5 flex gap-1"><span className="rounded-md border border-[#c5a36b]/30 bg-[#f5ecdc] px-1.5 py-0.5 text-[5px] font-semibold text-[#92734b]">Todos</span><span className="rounded-md border border-slate-200 px-1.5 py-0.5 text-[5px] text-slate-500">Vencidos</span><span className="rounded-md border border-slate-200 px-1.5 py-0.5 text-[5px] text-slate-500">Por recibir</span></div>
+        </div>
+        <div className="flex min-h-[52px] flex-col items-center justify-center p-2 text-center"><CheckCircle2 className="size-4 text-emerald-600"/><p className="mt-1 text-[7px] font-semibold text-[#203142]">Sin pendientes urgentes</p><p className="mt-0.5 text-[6px] text-slate-500">No hay pedidos vencidos ni recepciones por verificar.</p></div>
+      </section>
+      <div className="space-y-1.5">
+        <section className="overflow-hidden rounded-lg border border-[#293b4a]/10 bg-white">
+          <div className="border-b border-slate-100 p-2"><p className="text-[7px] font-semibold text-[#203142]">Estado de producción</p><p className="text-[6px] text-slate-500">Carga actual por área</p></div>
+          <div className="space-y-1.5 p-2">{["Diseño 3D","Impresión","Casting"].map(x=><div key={x}><div className="flex justify-between text-[6px] text-slate-600"><span>{x}</span><span>—</span></div><div className="mt-0.5 h-1 rounded-full bg-slate-100"/></div>)}</div>
+        </section>
+        <section className="rounded-lg border border-[#293b4a]/10 bg-white p-2"><p className="text-[7px] font-semibold text-[#203142]">Resumen del día</p><div className="mt-1.5 space-y-1">{["En recepción","Entregas vencidas","Sin fecha de entrega"].map(x=><div key={x} className="flex justify-between gap-1 text-[6px] text-slate-500"><span>{x}</span><span className="font-semibold text-slate-700">—</span></div>)}</div></section>
+      </div>
+    </div>
   </div>;
 }
-
 function MiniClients() {
   return <div className="space-y-2.5">
     <header className="flex items-end justify-between gap-2"><div><h3 className="font-serif text-[14px] sm:text-[16px] leading-tight text-[#182838]">Clientes</h3><p className="mt-1 text-[7px] text-[#71808d]">Directorio comercial, historial y relación con cada cliente.</p></div><div className="flex gap-1.5"><div className="rounded-lg border border-[#c5a36b]/20 bg-white px-2 py-1.5"><p className="text-[5px] font-bold tracking-widest text-[#c5a36b]">DIRECTORIO</p><p className="mt-1 text-[10px] font-semibold text-[#203142]">Clientes</p></div><div className="rounded-lg border border-[#c5a36b]/20 bg-white px-2 py-1.5"><p className="text-[5px] font-bold tracking-widest text-[#c5a36b]">ESTADO</p><p className="mt-1 text-[10px] font-semibold text-[#203142]">Activos</p></div></div></header>
