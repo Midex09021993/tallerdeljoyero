@@ -10,7 +10,17 @@ export interface AurumPreparedModel {
 
 export function prepareAurumModel(model: THREE.Object3D, scaleTarget = 2.6): AurumPreparedModel {
   model.updateMatrixWorld(true);
-  const source = new THREE.Box3().setFromObject(model);
+  // Match PublicCatalogViewer: hidden CAD helpers and invisible Rhino layers
+  // must not influence centering, normalization, or camera composition.
+  const source = new THREE.Box3();
+  model.traverse((object) => {
+    if (!(object as THREE.Mesh).isMesh || !(object as THREE.Mesh).geometry || !object.visible) return;
+    for (let parent = object.parent; parent; parent = parent.parent) {
+      if (!parent.visible) return;
+    }
+    source.expandByObject(object);
+  });
+  if (source.isEmpty()) throw new Error("El modelo no contiene geometría visible para preparar el encuadre.");
   const center = source.getCenter(new THREE.Vector3());
   const size = source.getSize(new THREE.Vector3());
   const max = Math.max(size.x,size.y,size.z) || 1;
