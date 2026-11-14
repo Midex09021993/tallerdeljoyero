@@ -5,7 +5,7 @@ type ConsultaComercialInput = {
   nombre: string;
   email: string;
   telefono?: string;
-  interes: "aurum_lab" | "aurum_render" | "joya_personalizada" | "otra_consulta";
+  interes: "aurum_lab" | "aurum_render" | "curso_cad_joyeria" | "joya_personalizada" | "otra_consulta";
   mensaje: string;
   website?: string;
 };
@@ -14,6 +14,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const INTERESES_VALIDOS = new Set([
   "aurum_lab",
   "aurum_render",
+  "curso_cad_joyeria",
   "joya_personalizada",
   "otra_consulta",
 ]);
