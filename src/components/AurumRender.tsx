@@ -56,6 +56,7 @@ import { Camera, ChevronDown, Copy, Download, Expand, FileJson, Gem, Image as Im
 
 import { GEMAS, MATERIALES, ESCENARIOS, VISTAS, ILUMINACIONES, type MaterialId, type EscenarioId, type VistaId, type IluminacionId, type MaterialGrupo, type CategoriaParte, type GemaId, type GemaConfig, type MaterialConfig, type ParteModelo } from "../lib/aurum/catalog";
 import { AurumRenderSidebar } from "./AurumRenderSidebar";
+import { PublicCatalogViewer } from "./PublicCatalogViewer";
 import { AurumPerformanceIndicator, AurumPerformanceMonitorPanel } from "./AurumPerformanceMonitorPanel";
 import { createAurumPerformanceMonitor } from "@/lib/aurum/performance-monitor";
 import { createAurumVideoFramePipeline, getAurumVideoLivePasses } from "../lib/aurum/video-frame-pipeline";
@@ -274,6 +275,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   onCatalogApiReadyRef.current = onCatalogApiReady;
   const [archivo, setArchivo] = useState<string|null>(null), [cargando, setCargando] = useState(false), [estadoCarga, setEstadoCarga] = useState(""), [error, setError] = useState<string|null>(null), [formatoInterno, setFormatoInterno] = useState<string|null>(null);
   const [archivoOriginal, setArchivoOriginal] = useState<File | null>(null);
+  const [publicViewerTestOpen, setPublicViewerTestOpen] = useState(() => new URLSearchParams(window.location.search).get("aurumPublicViewer") === "1");
+  const publicViewerTestUrl = useMemo(() => archivoOriginal ? URL.createObjectURL(archivoOriginal) : null, [archivoOriginal]);
+  useEffect(() => () => { if (publicViewerTestUrl) URL.revokeObjectURL(publicViewerTestUrl); }, [publicViewerTestUrl]);
   const [archivoOriginalInfo, setArchivoOriginalInfo] = useState<AurumOriginalSource | null>(null);
   const [arrastrandoArchivo, setArrastrandoArchivo] = useState(false);
 
@@ -4972,6 +4976,20 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             {!embedded && videoOpen && archivo && videoAspect && <div className="pointer-events-none absolute inset-0 z-[60] flex items-center justify-center overflow-hidden [container-type:size]" aria-hidden="true"><div className="relative border border-[#e5c76a] shadow-[0_0_0_200vmax_rgba(0,0,0,0.55)]" style={getAurumAspectFrameStyle(getAurumAspectRatio(videoAspect))}><div className="absolute inset-0 border border-[#7b612b]/90 drop-shadow-[0_0_1px_rgba(255,255,255,.95)]"/>{snapshotGuide!=="none"&&<><div className="absolute inset-y-0 left-1/3 border-l border-[#7b612b]/90 drop-shadow-[0_0_1px_rgba(255,255,255,.95)]"/><div className="absolute inset-y-0 left-2/3 border-l border-[#7b612b]/90 drop-shadow-[0_0_1px_rgba(255,255,255,.95)]"/><div className="absolute inset-x-0 top-1/3 border-t border-[#7b612b]/90 drop-shadow-[0_0_1px_rgba(255,255,255,.95)]"/><div className="absolute inset-x-0 top-2/3 border-t border-[#7b612b]/90 drop-shadow-[0_0_1px_rgba(255,255,255,.95)]"/></>}{snapshotGuide==="complete"&&<><div className="absolute left-1/2 top-1/2 size-3 -translate-x-1/2 -translate-y-1/2"><span className="absolute left-1/2 top-0 h-3 -translate-x-1/2 border-l border-[#6b5120] drop-shadow-[0_0_1px_rgba(255,255,255,1)]"/><span className="absolute left-0 top-1/2 w-3 -translate-y-1/2 border-t border-[#6b5120] drop-shadow-[0_0_1px_rgba(255,255,255,1)]"/></div><div className="absolute inset-[5%] border border-dashed border-[#6b5120]/90 drop-shadow-[0_0_1px_rgba(255,255,255,1)]"/></>}</div></div>}
             {!embedded && snapshotOpen && archivo && snapshotAspect && <div className="pointer-events-none absolute inset-0 z-[60] flex items-center justify-center overflow-hidden [container-type:size]" aria-hidden="true"><div className="relative border border-[#e5c76a] shadow-[0_0_0_200vmax_rgba(0,0,0,0.55)]" style={getAurumAspectFrameStyle(Math.max(1,Number(snapshotWidth)||1)/Math.max(1,Number(snapshotHeight)||1))}><div className="absolute inset-0 border border-[#7b612b]/90 drop-shadow-[0_0_1px_rgba(255,255,255,.95)]"/>{snapshotGuide!=="none"&&<><div className="absolute inset-y-0 left-1/3 border-l border-[#7b612b]/90 drop-shadow-[0_0_1px_rgba(255,255,255,.95)]"/><div className="absolute inset-y-0 left-2/3 border-l border-[#7b612b]/90 drop-shadow-[0_0_1px_rgba(255,255,255,.95)]"/><div className="absolute inset-x-0 top-1/3 border-t border-[#7b612b]/90 drop-shadow-[0_0_1px_rgba(255,255,255,.95)]"/><div className="absolute inset-x-0 top-2/3 border-t border-[#7b612b]/90 drop-shadow-[0_0_1px_rgba(255,255,255,.95)]"/></>}{snapshotGuide==="complete"&&<><div className="absolute left-1/2 top-1/2 size-3 -translate-x-1/2 -translate-y-1/2"><span className="absolute left-1/2 top-0 h-3 -translate-x-1/2 border-l border-[#6b5120] drop-shadow-[0_0_1px_rgba(255,255,255,1)]"/><span className="absolute left-0 top-1/2 w-3 -translate-y-1/2 border-t border-[#6b5120] drop-shadow-[0_0_1px_rgba(255,255,255,1)]"/></div><div className="absolute inset-[5%] border border-dashed border-[#6b5120]/90 drop-shadow-[0_0_1px_rgba(255,255,255,1)]"/></>}</div></div>}
           </div>
+          {new URLSearchParams(window.location.search).get("aurumPublicViewer") === "1" && (
+            <div className="absolute inset-0 z-[75] flex flex-col bg-white">
+              <div className="flex h-11 shrink-0 items-center justify-between border-b border-[#e8e3d9] bg-[#faf9f6] px-3 text-[#514b3e]">
+                <span className="text-[10px] font-semibold uppercase tracking-[.16em]">Prueba · Visor público original</span>
+                <button type="button" onClick={() => setPublicViewerTestOpen(false)} className="rounded-lg border border-[#d8cba9] bg-white px-3 py-1.5 text-[11px] font-semibold hover:bg-[#f7f1e3]">Volver a Aurum Render</button>
+              </div>
+              <div className="relative min-h-0 flex-1">
+                {publicViewerTestUrl ? <PublicCatalogViewer modelUrl={publicViewerTestUrl} modelName={archivoOriginal?.name ?? "modelo.3dm"} materialId={materialId} gemId={gemaId} hideControls={false} /> : <div className="grid h-full place-items-center p-8 text-center text-sm text-[#766f61]">Carga primero un archivo 3DM en Aurum Render para abrir exactamente el mismo archivo en el visor público.</div>}
+              </div>
+            </div>
+          )}
+          {new URLSearchParams(window.location.search).get("aurumPublicViewer") === "1" && !publicViewerTestOpen && archivoOriginal && (
+            <button type="button" onClick={() => setPublicViewerTestOpen(true)} className="absolute left-4 top-4 z-[76] rounded-xl border border-[#d8cba9] bg-white/95 px-3 py-2 text-xs font-semibold text-[#514b3e] shadow-lg">Abrir visor público de prueba</button>
+          )}
         </main>
          {!embedded && <aside className="hidden w-[min(22vw,360px)] shrink-0 overflow-hidden rounded-2xl border border-[#e6e1d8] bg-[#faf9f6] text-[#292824] shadow-[0_6px_22px_rgba(36,32,20,.035)] xl:flex xl:flex-col">
 {exportOpen&&<div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-[#faf9f6] p-3 text-[#292824]">
