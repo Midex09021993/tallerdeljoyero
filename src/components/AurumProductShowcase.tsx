@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  Activity, ArrowDownToLine, ArrowUpRight, Boxes, Calculator, Check, ChevronLeft,
-  ChevronRight, Cloud, FileBox, Gem, Image, Layers3, Pause, Play, RefreshCw,
-  ShoppingBag, Users, Wallet,
+  Boxes, Calculator, Check, ChevronLeft, ChevronRight, Cloud, FileBox, Gem,
+  Image, Layers3, Pause, Play, Users,
 } from "lucide-react";
 
 type Scene = {
