@@ -89,8 +89,17 @@ export interface IAurumCameraControlsContract {
   applyReferencePresentation(model: THREE.Object3D | null): void;
   fitAspect(model: THREE.Object3D | null, aspect: number, margin?: number): void;
   centerOn(target: THREE.Vector3): void;
+  /** Configure camera projection and navigation limits through the sole camera owner. */
+  configure(options: { fov?: number; near?: number; far?: number; minDistance?: number; maxDistance?: number; enablePan?: boolean; enableRotate?: boolean; enableZoom?: boolean; screenSpacePanning?: boolean; panSpeed?: number; rotateSpeed?: number; autoRotateSpeed?: number }): void;
+  /** Set an explicit camera pose without bypassing OrbitControls synchronization. */
+  setPose(position: THREE.Vector3, target?: THREE.Vector3, up?: THREE.Vector3): void;
+  /** Change camera distance while preserving its current viewing direction. */
+  setDistance(distance: number): void;
+  getDistance(): number;
+  setAutoRotate(enabled: boolean, speed?: number): void;
   update(): void;
   getTarget(): THREE.Vector3;
+  getPosition(): THREE.Vector3;
 }
 
 
