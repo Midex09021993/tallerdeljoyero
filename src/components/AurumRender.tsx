@@ -890,8 +890,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       // OrbitControls is now owned by the AURUM CAMERA contract. The contract
       // receives the existing instance; it does not create or dispose controls.
       const cameraControlsContract = createAurumCameraControlsContract(camara, controles);
-      // AURUM CORE exposes both the raw viewer service (compatibility) and the
-      // semantic camera contract (official preset/control boundary).
+      // AURUM CORE exposes the scene/renderer plus the single semantic camera
+      // contract. Raw camera and OrbitControls are not published to consumers.
       const viewerAdapter = createAurumViewerAdapter({
         scene: escena,
         renderer,
