@@ -2066,12 +2066,12 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         // The first completed model frame must use the same selective gem-AA
         // composer as the settled preview. Previously the viewer stayed on the
         // direct LIVE renderer until the first orbit event enabled these passes.
-        const initialGemAaAvailable = Boolean(composer && renderPass && gemMaskPass && fxaaPass && outputPass);
+        const initialGemAaAvailable = Boolean(composer && renderPass && outputPass);
         if (initialGemAaAvailable) {
           const initialWidth = Math.max(1, renderer.domElement.width || renderer.domElement.clientWidth || 1);
           const initialHeight = Math.max(1, renderer.domElement.height || renderer.domElement.clientHeight || 1);
           fxaaPass.material?.uniforms?.resolution?.value?.set?.(1 / initialWidth, 1 / initialHeight);
-          const initialBeautyPasses = new Set([renderPass, gemMaskPass, fxaaPass, outputPass]);
+          const initialBeautyPasses = new Set([renderPass, outputPass]);
           ((composer as any)?.passes ?? []).forEach((pass: any) => {
             pass.enabled = initialBeautyPasses.has(pass);
           });
@@ -2116,7 +2116,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           camara.updateMatrixWorld?.(true);
           camara.updateProjectionMatrix?.();
           diamondBvhRuntime?.update();
-          const initialBeautyPasses = new Set([renderPass, gemMaskPass, fxaaPass, outputPass]);
+          const initialBeautyPasses = new Set([renderPass, outputPass]);
           ((composer as any)?.passes ?? []).forEach((pass: any) => {
             pass.enabled = initialBeautyPasses.has(pass);
           });
@@ -3675,12 +3675,12 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // GemMask performs dedicated depth + category renders. Bypass it and
             // its dependent gemstone AA composite for the entire motion interval;
             // keep the normal composer and optional Surface Edge AA active.
-            const coreBeautyPasses = new Set([renderPass, ...(interactiveEdgeAa ? [surfaceEdgeAaPass] : []), outputPass]);
+            const coreBeautyPasses = new Set([renderPass, outputPass]);
             const interactionPasses = ((composer as any)?.passes ?? []) as any[];
             interactionPasses.forEach((pass) => { pass.enabled = coreBeautyPasses.has(pass); });
             if (gemMaskPass) gemMaskPass.enabled = false;
             if (fxaaPass) fxaaPass.enabled = false;
-            const sameBeautyPipelineAvailable = Boolean(composer && renderPass && gemMaskPass && fxaaPass && outputPass);
+            const sameBeautyPipelineAvailable = Boolean(composer && renderPass && outputPass);
             liveFastPathRef.current = !sameBeautyPipelineAvailable;
 
             // Keep catalog-authored gemstone materials unchanged during orbit.
@@ -3701,17 +3701,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
 
             // TAA remains disabled after orbit as well; the settled preview uses
             // the same non-temporal beauty chain as the interactive state.
-            const coreBeautyPasses = new Set([
-              renderPass,
-              gemMaskPass,
-              fxaaPass,
-              ...(surfaceEdgeAaPass && getAurumEdgeAaProfile(measuredQualityId, runtimeBudget.tier, "settled").enabled ? [surfaceEdgeAaPass] : []),
-              outputPass,
-            ]);
+            const coreBeautyPasses = new Set([renderPass, outputPass]);
             const settledPasses = ((composer as any)?.passes ?? []) as any[];
             settledPasses.forEach((pass) => { pass.enabled = coreBeautyPasses.has(pass); });
 
-            const sameBeautyPipelineAvailable = Boolean(composer && renderPass && gemMaskPass && fxaaPass && outputPass);
+            const sameBeautyPipelineAvailable = Boolean(composer && renderPass && outputPass);
             liveFastPathRef.current = !sameBeautyPipelineAvailable;
             // Restore the normal settled temporal state. There is no active
             // gem transition to coordinate while progressive blending is suspended.
