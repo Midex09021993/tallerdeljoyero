@@ -2,10 +2,12 @@ import { expect, test } from "bun:test";
 import * as THREE from "three";
 import { createAurumObjectSelectionModule } from "../src/lib/aurum/core/object-selection-module";
 
-function createClickEvent(canvas: HTMLCanvasElement, x = 50, y = 50): MouseEvent {
-  const event = new MouseEvent("click", { clientX: x, clientY: y });
-  Object.defineProperty(event, "currentTarget", { configurable: true, value: canvas });
-  return event;
+function createClickEvent(x = 50, y = 50): MouseEvent {
+  return { clientX: x, clientY: y } as MouseEvent;
+}
+
+function createCanvasStub(): HTMLElement {
+  return { getBoundingClientRect: () => ({ left: 0, top: 0, width: 100, height: 100, right: 100, bottom: 100, x: 0, y: 0, toJSON: () => ({}) }) } as unknown as HTMLElement;
 }
 
 test("AURUM OBJECT SELECTION returns the nearest visible mesh under the pointer", () => {
@@ -18,18 +20,16 @@ test("AURUM OBJECT SELECTION returns the nearest visible mesh under the pointer"
   back.position.z = -1;
   const front = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial());
   model.add(back, front);
-  const canvas = document.createElement("canvas");
-  canvas.width = 100;
-  canvas.height = 100;
-  canvas.getBoundingClientRect = () => ({ left: 0, top: 0, width: 100, height: 100, right: 100, bottom: 100, x: 0, y: 0, toJSON: () => ({}) });
+  const canvas = createCanvasStub();
   const selected: THREE.Object3D[] = [];
   const module = createAurumObjectSelectionModule({
     camera,
+    element: canvas,
     getModel: () => model,
     onSelect: object => selected.push(object),
   });
 
-  module.handleClick(createClickEvent(canvas));
+  module.handleClick(createClickEvent());
   expect(selected).toHaveLength(1);
   expect(selected[0]).toBe(front);
   expect(module.id).toBe("aurum.object-selection");
@@ -54,10 +54,9 @@ test("AURUM OBJECT SELECTION ignores hidden and internal inclusion meshes", () =
   const inclusion = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial());
   inclusion.userData.aurumInternalInclusion = true;
   model.add(hidden, inclusion);
-  const canvas = document.createElement("canvas");
-  canvas.getBoundingClientRect = () => ({ left: 0, top: 0, width: 100, height: 100, right: 100, bottom: 100, x: 0, y: 0, toJSON: () => ({}) });
+  const canvas = createCanvasStub();
   let missed = 0;
-  const module = createAurumObjectSelectionModule({ camera, getModel: () => model, onSelect: () => { throw new Error("Unexpected selection"); }, onMiss: () => { missed += 1; } });
+  const module = createAurumObjectSelectionModule({ camera, element: canvas, getModel: () => model, onSelect: () => { throw new Error("Unexpected selection"); }, onMiss: () => { missed += 1; } });
   module.handleClick(createClickEvent(canvas));
   expect(missed).toBe(1);
   hidden.geometry.dispose();
