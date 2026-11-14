@@ -1,5 +1,5 @@
-import type { Object3D, PerspectiveCamera, Vector3 } from "three";
-import { applyAurumCameraView, applyAurumIJEWELPresentationCamera } from "./camera";
+import * as THREE from "three";\nimport type { Object3D, PerspectiveCamera, Vector3 } from "three";
+import { applyAurumCameraView, applyAurumIJEWELPresentationCamera, applyAurumPublicViewerCamera } from "./camera";
 
 export interface AurumViewerFrame {
   camera: PerspectiveCamera;
@@ -11,7 +11,7 @@ export interface AurumViewerFrame {
   lightingController?: { scaleToModel?: (radius:number,targetY:number)=>void };
 }
 
-export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, prepare: (m:Object3D,scale?:number)=>any, applyScene:(id:any)=>void, sceneId:any, category:string="Anillo") {
+export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, prepare: (m:Object3D,scale?:number)=>any, applyScene:(id:any)=>void, sceneId:any, category:string="Anillo", presentationMode:"aurum"|"publicViewer"="aurum") {
   // Primera llamada: preparar producto y presentar frontalmente.
   // Siguientes llamadas: "Restablecer vista" solo cambia la cámara para no
   // reaplicar escena/materiales y provocar cambios de color.
