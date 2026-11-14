@@ -6,7 +6,6 @@ import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment
 import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
 import { EXRLoader } from "three/examples/jsm/loaders/EXRLoader.js";
 import { createAurumWebGLViewer, startAurumViewerLoop, disposeAurumViewer } from "@/lib/aurum/viewer";
-import { createAurumCameraControlsContract } from "@/lib/aurum/core/camera-controls-contract";
 import type { IAurumCameraControlsContract } from "@/lib/aurum/core/module-contracts";
 import { parseAurumInput, preprocessAurumModel } from "@/lib/aurum/model-loader";
 import { applyAurumMetal, applyAurumGem, metalPresetFromConfig, gemPresetFromConfig } from "@/lib/aurum-material-engine";
@@ -166,7 +165,6 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
     let renderer: any = null;
     let scene: any = null;
     let camera: any = null;
-    let controls: any = null;
     let cameraControls: IAurumCameraControlsContract | null = null;
     let model: THREE.Object3D | null = null;
     let loop: any = null;
@@ -223,8 +221,8 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         const isCompactViewport = window.matchMedia("(max-width: 767px)").matches;
         const viewerPixelRatio = Math.min(window.devicePixelRatio || 1, isCompactViewport ? 1 : 1.25);
         const viewer = createAurumWebGLViewer(THREE, host, { pixelRatio: viewerPixelRatio, controlsClass: OrbitControls, maxDistance: 100 });
-        ({ scene, camera, renderer, controls } = viewer);
-        cameraControls = createAurumCameraControlsContract(camera, controls);
+        ({ scene, camera, renderer, cameraControls } = viewer);
+        if (!cameraControls) throw new Error("AURUM CAMERA no pudo inicializar OrbitControls.");
         // Public viewer only: align highlight roll-off with the photographic reference.
         // Keep this override local; createAurumWebGLViewer is shared with Aurum Render.
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
