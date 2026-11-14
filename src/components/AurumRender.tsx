@@ -855,7 +855,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         return Math.min(window.devicePixelRatio || 1, isCompactViewport ? 1 : 1.25);
       };
       const { scene: escena, camera: camara, renderer, controls: controles } = createAurumWebGLViewer(THREE, nodo, {
-        pixelRatio: Math.min(renderQuality.pixelRatio, getAurumViewportPixelRatio()),
+        pixelRatio: getAurumViewportPixelRatio(),
         maxDistance: 100,
         controlsClass: (await import("three/examples/jsm/controls/OrbitControls.js")).OrbitControls,
       });
@@ -1276,7 +1276,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         // Quality is an intentional render scale. Do not clamp it to devicePixelRatio:
         // otherwise Alta/Ultra are almost identical to Baja on a 1x monitor.
         const requestedDpr = Math.max(1, Math.min(2, renderQuality.pixelRatio));
-        const dpr = Math.min(requestedDpr, runtimeBudget.pixelRatioCap, getAurumViewportPixelRatio());
+        const dpr = PUBLIC_VIEWER_PRESENTATION_MODE
+          ? getAurumViewportPixelRatio()
+          : Math.min(requestedDpr, runtimeBudget.pixelRatioCap, getAurumViewportPixelRatio());
         const transmissionScale = Math.min(renderQuality.transmissionScale, runtimeBudget.transmissionScaleCap);
         if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("aurumDiag") === "environment") {
           console.info("[AURUM][QUALITY][DIAGNOSTIC]", {
