@@ -119,6 +119,9 @@ export interface IAurumCameraControlsContract {
   getUp(): THREE.Vector3;
   getAutoRotate(): boolean;
   getAutoRotateSpeed(): number;
+  addEventListener(type: "start" | "change" | "end", listener: (event: unknown) => void): void;
+  removeEventListener(type: "start" | "change" | "end", listener: (event: unknown) => void): void;
+  dispose(): void;
 }
 
 
