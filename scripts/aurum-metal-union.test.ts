@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import * as THREE from "three";
-import { createAurumMaterialEquivalenceChecker } from "../src/lib/aurum/metal-union-experiment";
+import { areAurumMetalUnionBoundsIntersecting, createAurumMaterialEquivalenceChecker } from "../src/lib/aurum/metal-union-experiment";
 
 test("Metal Union compares equivalent materials and ignores generated UUIDs", () => {
   const first = new THREE.MeshStandardMaterial({ color: 0xc9a227, metalness: 1, roughness: 0.24 });
@@ -50,4 +50,21 @@ test("Metal Union refreshes material fingerprints for a later pass", () => {
 
   first.dispose();
   second.dispose();
+});
+
+
+test("Metal Union broad phase accepts overlapping world-space bounds", () => {
+  const left = new THREE.Box3(new THREE.Vector3(0, 0, 0), new THREE.Vector3(2, 2, 2));
+  const overlapping = new THREE.Box3(new THREE.Vector3(1, 1, 1), new THREE.Vector3(3, 3, 3));
+  const separate = new THREE.Box3(new THREE.Vector3(2.01, 0, 0), new THREE.Vector3(4, 2, 2));
+
+  expect(areAurumMetalUnionBoundsIntersecting(left, overlapping)).toBe(true);
+  expect(areAurumMetalUnionBoundsIntersecting(left, separate)).toBe(false);
+});
+
+test("Metal Union broad phase preserves Box3 face-touching intersection semantics", () => {
+  const left = new THREE.Box3(new THREE.Vector3(0, 0, 0), new THREE.Vector3(1, 1, 1));
+  const touching = new THREE.Box3(new THREE.Vector3(1, 0, 0), new THREE.Vector3(2, 1, 1));
+
+  expect(areAurumMetalUnionBoundsIntersecting(left, touching)).toBe(true);
 });
