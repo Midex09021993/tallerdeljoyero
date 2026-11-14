@@ -151,6 +151,7 @@ test("AURUM video frame plan uses fixed timestamps and an exact frame count", as
 
 test("AURUM video frame plan clamps unsafe duration and frame-rate inputs", async () => {
   const { createAurumVideoFramePlan } = await import("../src/lib/aurum/video-exporter");
-  expect(createAurumVideoFramePlan(0, 1)).toHaveLength(15);
+  // Zero duration uses the 5-second safe default; fps is clamped to the 15 fps minimum.
+  expect(createAurumVideoFramePlan(0, 1)).toHaveLength(75);
   expect(createAurumVideoFramePlan(100, 240)).toHaveLength(2400);
 });
