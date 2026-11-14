@@ -23,10 +23,10 @@ export function AurumViewerControlsModule({
   useEffect(() => { setDiagnosticVisible(true); }, [selectionDiagnostic, selectionEnabled]);
   const diagnostic = selectionDiagnostic;
   return <>
-    <div className="absolute right-3 top-3 z-[70]">
+    <>
       <AurumPerformanceIndicator renderer={performanceRenderer} monitor={performanceMonitor} onClick={onPerformanceToggle} expanded={performanceOpen}/>
       <AurumPerformanceMonitorPanel open={performanceOpen} onClose={onPerformanceClose} renderer={performanceRenderer} monitor={performanceMonitor}/>
-    </div>
+    </>
     {selectionEnabled && diagnostic && diagnosticVisible && <section className="absolute left-3 top-3 z-[75] w-[min(430px,calc(100%-24px))] max-h-[78%] overflow-y-auto rounded-xl border border-[#d4af37]/50 bg-[#101214]/95 p-3 text-[10px] leading-relaxed text-white shadow-2xl backdrop-blur-xl" aria-label="Diagnóstico de selección">
       <header className="flex items-start justify-between gap-3">
         <div className="min-w-0">
