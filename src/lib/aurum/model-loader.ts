@@ -4,6 +4,7 @@ import { inspectAurumMesh } from "./mesh-preflight";
 import { getAurumModelParts } from "./model-parts";
 import { findAurumOverlapCandidates } from "./overlap-experiment";
 import { applyAurumMetalUnionExperiment } from "./metal-union-experiment";
+import { applyAurumFastVisualMerge } from "./fast-visual-merge";
 import { applyAurumVoxelRemeshExperiment } from "./voxel-remesh-experiment";
 import { toCreasedNormals } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { captureAurumGlbQualitySnapshot, evaluateAurumGlbQuality } from "./core/glb-quality-gate";
@@ -684,7 +685,7 @@ export async function convertAurumToGlb(
   colorRhinoHex?: (color:any) => string | undefined,
   clasificarCapa?: (capa:string,colorCapa?:string) => "metal" | "gema" | "otro",
   onProgress?: (message: string, completed?: number, total?: number) => void,
-  options: { metalUnion?: boolean } = {},
+  options: { metalUnion?: boolean; metalFastVisualMerge?: boolean } = {},
 ) {
   // Preserve the original Rhino layer table and each mesh's own source
   // attributes as explicit GLB extras. Do not rely on traversal order or on
@@ -763,7 +764,14 @@ export async function convertAurumToGlb(
   // The import-plugin enables it by default for 3DM; callers may explicitly
   // disable it with metalUnion:false. A successful CSG result receives the
   // isolated AURUM Visual Weld pass before GLB serialization.
-  if (options.metalUnion === true) {
+  if (options.metalFastVisualMerge === true) {
+    try {
+      const mergeResult = applyAurumFastVisualMerge(object);
+      console.info("[AURUM][FAST VISUAL MERGE]", mergeResult);
+    } catch (error) {
+      console.warn("[AURUM][FAST VISUAL MERGE] Failed safely; keeping source meshes", error);
+    }
+  } else if (options.metalUnion === true) {
     try {
       const unionResult = applyAurumMetalUnionExperiment(object, 16);
       console.info("[AURUM][METAL UNION][EXPLICIT EXPERIMENT]", unionResult);
