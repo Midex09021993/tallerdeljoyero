@@ -1318,14 +1318,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         { id: "aurum.edge-quality", description: "Coordina capacidades y MSAA del compositor productivo.", dependencies: ["aurum.viewer"], requiresServices: ["aurum.viewer.renderer"], services: new Map([
           ["aurum.edge-quality.configure", configureAurumEdgeQuality],
         ]) },
-        { id: "aurum.post", description: "Expone el compositor y controles del pipeline de postprocesado ya activo.", dependencies: ["aurum.viewer", "aurum.edge-quality"], requiresServices: ["aurum.edge-quality.configure"], services: new Map([
+        { id: "aurum.post", description: "Expone el compositor y controles del pipeline de postprocesado ya activo.", dependencies: ["aurum.viewer", "aurum.edge-quality"], requiresServices: ["aurum.viewer.renderer", "aurum.edge-quality.configure"], services: new Map([
           ["aurum.post.composer", composer],
           ["aurum.post.apply-quality", applyPostQuality],
           ["aurum.post.reset-temporal", resetTemporalAccumulation],
           ["aurum.post.set-temporal-motion", setTemporalMotion],
           ["aurum.post.update-temporal", updateTemporal],
         ]) },
-        { id: "aurum.media-export", description: "Servicios de captura de imagen y vídeo sobre el visor y compositor productivos.", dependencies: ["aurum.viewer", "aurum.post", "aurum.final-render"], requiresServices: ["aurum.post.composer", "aurum.final-render.load-adapter"], services: new Map([
+        { id: "aurum.media-export", description: "Servicios de captura de imagen y vídeo sobre el visor y compositor productivos.", dependencies: ["aurum.viewer", "aurum.post", "aurum.final-render"], requiresServices: ["aurum.viewer.renderer", "aurum.post.composer", "aurum.final-render.load-adapter"], services: new Map([
           ["aurum.media.video-frame.create", createAurumVideoFramePipeline],
           ["aurum.media.video-recorder.load", async () => (await import("../lib/aurum/video-exporter")).recordAurumCanvasVideo],
           ["aurum.media.path-traced.capture", captureAurumPathTracedScene],
@@ -1338,8 +1338,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         ]) },
         { id: "aurum.scene", description: "Control de escena delegado al controlador productivo.", dependencies: ["aurum.viewer"], requiresServices: ["aurum.viewer.scene", "aurum.viewer.renderer"], services: sceneAdapter.services },
         { id: "aurum.lighting", description: "Control de iluminación delegado al controlador productivo.", dependencies: ["aurum.viewer"], requiresServices: ["aurum.viewer.scene"], services: lightingController.services },
-        { id: "aurum.metal", description: "Servicios del motor de metales existente; sin ownership de materiales.", services: materialAdapterServices.metal },
-        { id: "aurum.gem", description: "Servicios del motor óptico de gemas existente.", dependencies: ["aurum.metal"], requiresServices: ["aurum.metal.apply"], services: materialAdapterServices.gem },
+        { id: "aurum.metal", description: "Servicios del motor de metales existente; sin ownership de materiales.", requiresServices: ["aurum.viewer.scene"], dependencies: ["aurum.viewer"], services: materialAdapterServices.metal },
+        { id: "aurum.gem", description: "Servicios del motor óptico de gemas existente.", dependencies: ["aurum.metal", "aurum.viewer"], requiresServices: ["aurum.metal.apply", "aurum.viewer.scene"], services: materialAdapterServices.gem },
         { id: "aurum.final-render", description: "Render final bajo demanda mediante el path tracer existente.", dependencies: ["aurum.viewer"], requiresServices: ["aurum.viewer.scene", "aurum.viewer.camera", "aurum.viewer.renderer"], services: new Map([
           ["aurum.final-render.load-adapter", finalRenderLoader],
         ]) },
