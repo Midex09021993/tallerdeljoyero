@@ -55,6 +55,7 @@ import { AurumRenderSidebar } from "./AurumRenderSidebar";
 import { AurumPerformanceIndicator, AurumPerformanceMonitorPanel } from "./AurumPerformanceMonitorPanel";
 import { createAurumPerformanceMonitor } from "@/lib/aurum/performance-monitor";
 import { createAurumVideoFramePipeline } from "../lib/aurum/video-frame-pipeline";
+import { runAurumMediaExportCleanup } from "../lib/aurum/media-export-session";
 import { captureAurumPathTracedScene } from "../lib/aurum/path-traced-capture";
 
 
@@ -2743,40 +2744,39 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 videoFramePipeline?.renderFrame();
               }            });
           }finally{
-            loop?.setContinuousRendering?.(false);
-            liveFastPathRef.current=previousFastPath;
-            renderer.setPixelRatio(originalPixelRatio);
-            (renderer as any).transmissionResolutionScale=originalTransmissionScale;
-            renderer.setSize(originalCssWidth,originalCssHeight,false);
-            sourceCanvas.style.width=originalCanvasStyleWidth;
-            sourceCanvas.style.height=originalCanvasStyleHeight;
-            sourceCanvas.style.objectFit=originalCanvasStyleObjectFit;
-            sourceCanvas.style.position=originalCanvasStylePosition;
-            sourceCanvas.style.left=originalCanvasStyleLeft;
-            sourceCanvas.style.top=originalCanvasStyleTop;
-            sourceCanvas.style.transform=originalCanvasStyleTransform;
-            camara.aspect=originalAspect;
-            camara.updateProjectionMatrix?.();
-            if(composer && applyPostQuality){
-              applyPostQuality({...renderQuality,pixelRatio:originalPixelRatio,qualityId:measuredQualityId});
+            const restoreFailures = runAurumMediaExportCleanup([
+              () => loop?.setContinuousRendering?.(false),
+              () => { liveFastPathRef.current=previousFastPath; },
+              () => renderer.setPixelRatio(originalPixelRatio),
+              () => { (renderer as any).transmissionResolutionScale=originalTransmissionScale; },
+              () => renderer.setSize(originalCssWidth,originalCssHeight,false),
+              () => { sourceCanvas.style.width=originalCanvasStyleWidth; },
+              () => { sourceCanvas.style.height=originalCanvasStyleHeight; },
+              () => { sourceCanvas.style.objectFit=originalCanvasStyleObjectFit; },
+              () => { sourceCanvas.style.position=originalCanvasStylePosition; },
+              () => { sourceCanvas.style.left=originalCanvasStyleLeft; },
+              () => { sourceCanvas.style.top=originalCanvasStyleTop; },
+              () => { sourceCanvas.style.transform=originalCanvasStyleTransform; },
+              () => { camara.aspect=originalAspect; camara.updateProjectionMatrix?.(); },
+              () => { if(composer && applyPostQuality) applyPostQuality({...renderQuality,pixelRatio:originalPixelRatio,qualityId:measuredQualityId}); },
+              () => videoFramePipeline?.restore(),
+              () => { controles.autoRotate=previousAutoRotate; },
+              () => { controles.autoRotateSpeed=previousAutoRotateSpeed; },
+              () => camara.position.copy(originalCameraPosition),
+              () => camara.quaternion.copy(originalCameraQuaternion),
+              () => { if(originalControlsTarget && controles.target) controles.target.copy(originalControlsTarget); },
+              () => controles.update?.(),
+              () => diamondBvhRuntime?.update(),
+              () => aplicarPerfilLive(),
+              () => resetTemporalAccumulationRef.current?.(),
+              () => loop?.resize?.(),
+              () => loop?.invalidate?.(),
+              () => loop?.resume?.(),
+              () => loop?.converge?.(4),
+            ]);
+            if(restoreFailures.length){
+              console.error("[AURUM][MEDIA][RESTORE] One or more export restoration steps failed; remaining steps were attempted.", restoreFailures);
             }
-            videoFramePipeline?.restore();
-            controles.autoRotate=previousAutoRotate;
-            controles.autoRotateSpeed=previousAutoRotateSpeed;
-            camara.position.copy(originalCameraPosition);
-            camara.quaternion.copy(originalCameraQuaternion);
-            if(originalControlsTarget && controles.target) controles.target.copy(originalControlsTarget);
-            controles.update?.();
-            diamondBvhRuntime?.update();
-            aplicarPerfilLive();
-            // Rebuild the live beauty frame after the temporary video-sized
-            // composer/buffer has been restored. A demand-driven viewport can
-            // otherwise keep the last export frame until the next user interaction.
-            resetTemporalAccumulationRef.current?.();
-            loop?.resize?.();
-            loop?.invalidate?.();
-            loop?.resume?.();
-            loop?.converge?.(4);
           }
         },
         setDepthOfField:(enabled:boolean,strength:"soft"|"medium"|"strong"="soft")=>{
