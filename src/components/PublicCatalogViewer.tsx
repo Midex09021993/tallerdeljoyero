@@ -6,6 +6,8 @@ import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment
 import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
 import { EXRLoader } from "three/examples/jsm/loaders/EXRLoader.js";
 import { createAurumWebGLViewer, startAurumViewerLoop, disposeAurumViewer } from "@/lib/aurum/viewer";
+import { createAurumCameraControlsContract } from "@/lib/aurum/core/camera-controls-contract";
+import type { IAurumCameraControlsContract } from "@/lib/aurum/core/module-contracts";
 import { parseAurumInput, preprocessAurumModel } from "@/lib/aurum/model-loader";
 import { applyAurumMetal, applyAurumGem, metalPresetFromConfig, gemPresetFromConfig } from "@/lib/aurum-material-engine";
 import { MATERIALES, GEMAS } from "@/lib/aurum/catalog";
@@ -164,6 +166,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
     let scene: any = null;
     let camera: any = null;
     let controls: any = null;
+    let cameraControls: IAurumCameraControlsContract | null = null;
     let model: THREE.Object3D | null = null;
     let loop: any = null;
     let zoomFrameId = 0;
@@ -220,6 +223,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         const viewerPixelRatio = Math.min(window.devicePixelRatio || 1, isCompactViewport ? 1 : 1.25);
         const viewer = createAurumWebGLViewer(THREE, host, { pixelRatio: viewerPixelRatio, controlsClass: OrbitControls, maxDistance: 100 });
         ({ scene, camera, renderer, controls } = viewer);
+        cameraControls = createAurumCameraControlsContract(camera, controls);
         // Public viewer only: align highlight roll-off with the photographic reference.
         // Keep this override local; createAurumWebGLViewer is shared with Aurum Render.
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -417,41 +421,33 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
           scene.add(studioShadow);
         }
 
-        camera.fov = 35;
-        // This is the same bounding-sphere camera-fit formula used by the GLB viewer
-        // before the 3DM sizing adjustment, so GLB presentation remains unchanged.
-        const distance = radius / Math.sin(THREE.MathUtils.degToRad(camera.fov / 2)) * 1.2;
-        camera.position.copy(new THREE.Vector3(0, 0, distance));
-        camera.near = Math.max(radius / 100, .001);
-        camera.far = Math.max(distance + radius * 20, 100);
-        camera.lookAt(0, 0, 0);
-        camera.updateProjectionMatrix();
-        controls.target.set(0, 0, 0);
-        controls.minDistance = radius * .6;
-        controls.maxDistance = radius * 12;
-        controls.enablePan = false;
-        controls.enableRotate = true;
-        controls.enableZoom = true;
-        controls.autoRotate = false;
-        controls.autoRotateSpeed = 1.25;
-        controls.update();
-        const setCameraView = (position: THREE.Vector3, up = new THREE.Vector3(0, 1, 0)) => {
-          camera.position.copy(position);
-          camera.up.copy(up);
-          controls.target.set(0, 0, 0);
-          camera.lookAt(controls.target);
-          controls.update();
+        // The public viewer uses the same AURUM CAMERA owner as the editor.
+        // This is a presentation profile, not a second camera implementation.
+        const distance = radius / Math.sin(THREE.MathUtils.degToRad(35 / 2)) * 1.2;
+        cameraControls.configure({
+          fov: 35,
+          near: Math.max(radius / 100, .001),
+          far: Math.max(distance + radius * 20, 100),
+          minDistance: radius * .6,
+          maxDistance: radius * 12,
+          enablePan: false,
+          enableRotate: true,
+          enableZoom: true,
+          autoRotateSpeed: 1.25,
+        });
+        const origin = new THREE.Vector3(0, 0, 0);
+        const yUp = new THREE.Vector3(0, 1, 0);
+        const setCameraView = (position: THREE.Vector3, up = yUp) => {
+          cameraControls?.setPose(position, origin, up);
           loop?.converge?.(3);
         };
         const animateZoom = (direction: "in" | "out") => {
           if (zoomFrameId) cancelAnimationFrame(zoomFrameId);
-          const offset = camera.position.clone().sub(controls.target);
-          const startDistance = offset.length();
-          // The zoom direction is constant for this animation; normalize once,
-          // not with a new Vector3 allocation on every animation frame.
-          offset.normalize();
+          const startDistance = cameraControls?.getDistance() ?? distance;
           const factor = direction === "in" ? 0.88 : 1.12;
-          const endDistance = THREE.MathUtils.clamp(startDistance * factor, controls.minDistance, controls.maxDistance);
+          const minDistance = radius * .6;
+          const maxDistance = radius * 12;
+          const endDistance = THREE.MathUtils.clamp(startDistance * factor, minDistance, maxDistance);
           const distanceDelta = endDistance - startDistance;
           if (Math.abs(distanceDelta) < 0.0001) return;
           const startedAt = performance.now();
@@ -461,8 +457,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
             const progress = Math.min((now - startedAt) / duration, 1);
             const eased = 1 - Math.pow(1 - progress, 3);
             const nextDistance = startDistance + distanceDelta * eased;
-            camera.position.copy(controls.target).addScaledVector(offset, nextDistance);
-            controls.update();
+            cameraControls?.setDistance(nextDistance);
             if (progress < 1) {
               zoomFrameId = requestAnimationFrame(step);
             } else {
@@ -473,9 +468,10 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
           };
           zoomFrameId = requestAnimationFrame(step);
         };
+        setCameraView(new THREE.Vector3(0, 0, distance));
         cameraActionsRef.current = {
           reset: () => {
-            controls.autoRotate = false;
+            cameraControls?.setAutoRotate(false);
             loop?.setContinuousRendering?.(false);
             setAutoRotate(false);
             setCameraView(new THREE.Vector3(0, 0, distance));
@@ -484,7 +480,11 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
           side: () => setCameraView(new THREE.Vector3(distance, 0, 0)),
           top: () => setCameraView(new THREE.Vector3(0, distance, 0.001), new THREE.Vector3(0, 0, -1)),
           zoom: (direction) => animateZoom(direction),
-          rotate: (enabled) => { controls.autoRotate = enabled; if (enabled) loop?.setContinuousRendering?.(true); else { loop?.setContinuousRendering?.(false); loop?.converge?.(3); } controls.update(); },
+          rotate: (enabled) => {
+            cameraControls?.setAutoRotate(enabled, 1.25);
+            if (enabled) loop?.setContinuousRendering?.(true);
+            else { loop?.setContinuousRendering?.(false); loop?.converge?.(3); }
+          },
         };
         onResetViewReady?.(() => cameraActionsRef.current?.reset());
         onCameraActionsReady?.(cameraActionsRef.current);
