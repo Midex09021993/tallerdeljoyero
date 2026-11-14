@@ -59,7 +59,7 @@ export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, pre
 
 export function resizeAurumViewer(viewer: {
   node: HTMLElement;
-  camera: PerspectiveCamera;
+  cameraControls: IAurumCameraControlsContract;
   renderer: any;
   composer?: any;
   ssaoPass?: any;
@@ -102,11 +102,10 @@ export function resizeAurumViewer(viewer: {
   // Three.js to reassert the drawing buffer and post-processing targets.
   const sizeChanged = forceSurfaceSync || logicalSizeChanged || bufferSizeChanged;
   const nextAspect = w / h;
-  const aspectChanged = Math.abs(Number(viewer.camera.aspect) - nextAspect) > 0.0001;
+  const aspectChanged = Math.abs(viewer.cameraControls.getAspect() - nextAspect) > 0.0001;
 
   if (aspectChanged) {
-    viewer.camera.aspect = nextAspect;
-    viewer.camera.updateProjectionMatrix();
+    viewer.cameraControls.setAspect(nextAspect);
   }
   if (sizeChanged || aspectChanged) {
     // Update the existing renderer and post pipeline in place. Never recreate
@@ -232,7 +231,7 @@ export function createAurumWebGLViewer(
 }
 
 export function startAurumViewerLoop(
-  viewer: { node: HTMLElement; camera: any; renderer: any; composer?: any; ssaoPass?: any; controls?: any; cameraControls: IAurumCameraControlsContract },
+  viewer: { node: HTMLElement; renderer: any; composer?: any; ssaoPass?: any; controls?: any; cameraControls: IAurumCameraControlsContract },
   render: () => void,
   interaction?: { onStart?: () => void; onEnd?: () => void; progressiveFrames?: number }
 ) {
