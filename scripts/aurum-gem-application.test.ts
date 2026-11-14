@@ -83,7 +83,7 @@ test("targeted BVH refresh avoids processing unrelated scene meshes", () => {
 
 test("AURUM gem transition snapshots before material replacement and blends only after first paint", () => {
   const source = readFileSync("src/components/AurumRender.tsx", "utf8");
-  const capture = source.indexOf("captureAurumGemTransitionState(mesh)");
+  const capture = source.indexOf("aurumGemTransitionSnapshot:captureAurumGemTransitionState(mesh)");
   const apply = source.indexOf("const applied=applyAurumGemToTarget");
   const firstPaint = source.indexOf("viewerLoopRef.current?.renderNow?.()", apply);
   const transition = source.indexOf("createAurumGemTransition(", firstPaint);
