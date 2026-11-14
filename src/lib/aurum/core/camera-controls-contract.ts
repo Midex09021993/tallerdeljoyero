@@ -6,6 +6,7 @@
  * calling OrbitControls.update() for presets. GPU and Three.js resources stay
  * owned by the existing viewer lifecycle.
  */
+import * as THREE from "three";
 import { MOUSE, type PerspectiveCamera, type Vector3, type Object3D } from "three";
 import type { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { applyAurumCameraView, applyAurumIJEWELPresentationCamera, fitAurumCameraToAspect, centerAurumCameraOn, type AurumCameraView } from "../camera";
@@ -54,6 +55,9 @@ export function createAurumCameraControlsContract(
       if (typeof options.screenSpacePanning === "boolean") controls.screenSpacePanning = options.screenSpacePanning;
       if (typeof options.panSpeed === "number" && Number.isFinite(options.panSpeed)) controls.panSpeed = options.panSpeed;
       if (typeof options.rotateSpeed === "number" && Number.isFinite(options.rotateSpeed)) controls.rotateSpeed = options.rotateSpeed;
+      if (typeof options.zoomSpeed === "number" && Number.isFinite(options.zoomSpeed)) controls.zoomSpeed = options.zoomSpeed;
+      if (typeof options.enableDamping === "boolean") controls.enableDamping = options.enableDamping;
+      if (typeof options.dampingFactor === "number" && Number.isFinite(options.dampingFactor)) controls.dampingFactor = options.dampingFactor;
       if (typeof options.autoRotateSpeed === "number" && Number.isFinite(options.autoRotateSpeed)) controls.autoRotateSpeed = options.autoRotateSpeed;
       camera.updateProjectionMatrix();
       controls.update();
