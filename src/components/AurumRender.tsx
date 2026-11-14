@@ -962,7 +962,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       // above instead of continuing to allocate scene/GPU resources off-screen.
       if (!vivo) {
         objectSelectionModule.dispose();
-        disposeAurumViewer({ node: nodo, renderer, controls: controles, composer });
+        disposeAurumViewer({ node: nodo, renderer, cameraControls: cameraControlsContract, composer });
         if (cameraControlsRef.current === cameraControlsContract) cameraControlsRef.current = null;
         return;
       }
@@ -3543,7 +3543,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       };
 
       const viewerLoop = startAurumViewerLoop(
-        { node:nodo, renderer, composer, ssaoPass, controls:controles, cameraControls:cameraControlsContract },
+        { node:nodo, renderer, composer, ssaoPass, cameraControls:cameraControlsContract },
         () => {
           const frameStartedAt = performance.now();
           const bvhStartedAt = frameStartedAt;
@@ -3775,7 +3775,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           disposeAurumViewer({
             node:nodo,
             renderer,
-            controls:controles,
+            cameraControls:cameraControlsContract,
             observer:obs,
             clickHandler:seleccionarPorClick,
             lightingController,
