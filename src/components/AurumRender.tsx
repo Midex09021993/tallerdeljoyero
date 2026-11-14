@@ -276,7 +276,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   onCatalogApiReadyRef.current = onCatalogApiReady;
   const [archivo, setArchivo] = useState<string|null>(null), [cargando, setCargando] = useState(false), [estadoCarga, setEstadoCarga] = useState(""), [error, setError] = useState<string|null>(null), [formatoInterno, setFormatoInterno] = useState<string|null>(null);
   const [archivoOriginal, setArchivoOriginal] = useState<File | null>(null);
-  const [publicViewerTestOpen, setPublicViewerTestOpen] = useState(true);
+  const [publicViewerTestOpen, setPublicViewerTestOpen] = useState(false);
   const [publicViewerTestFile, setPublicViewerTestFile] = useState<File | null>(null);
   const [publicViewerDragActive, setPublicViewerDragActive] = useState(false);
   const publicViewerDragDepthRef = useRef(0);
@@ -4888,6 +4888,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           </div>
           {publicViewerTestOpen && (
             <div className="absolute inset-0 z-[75] flex flex-col bg-white">
+              <div className="absolute right-4 top-4 z-30">
+                <button type="button" onClick={() => setPublicViewerTestOpen(false)} className="rounded-xl border border-[#d8cba9] bg-white/95 px-3 py-2 text-xs font-semibold text-[#514b3e] shadow-lg">Volver a AURUM RENDER</button>
+              </div>
               <div
                 ref={publicViewerTestHostRef}
                 className="relative min-h-0 flex-1"
