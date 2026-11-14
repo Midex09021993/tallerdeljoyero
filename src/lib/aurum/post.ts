@@ -1,4 +1,4 @@
-import { getAurumPostControls } from "./post-engine-controls";
+import { getAurumPostControls, subscribeAurumPostControls } from "./post-engine-controls";
 import {
   configureAurumEdgeQuality,
   createAurumSurfaceEdgeAaPass,
@@ -470,7 +470,6 @@ export async function createAurumPostPipeline(
     // work to the direct-render orbit path. Still captures may use it explicitly.
     const edgeAaMode=options.capture ? "capture" : "settled";
     const edgeAaProfile=getAurumEdgeAaProfile(qualityId || (high ? "high" : "low"),lastKnownBudgetTier,edgeAaMode);
-    const postControls=getAurumPostControls();
     const edgeAaEnabled=postControls.gemFxaaEnabled;
     if(gemMaskPass) gemMaskPass.enabled=edgeAaEnabled;
     if(fxaaPass) fxaaPass.enabled=edgeAaEnabled;
@@ -742,6 +741,20 @@ export async function createAurumPostPipeline(
   };
 
   applyQuality(quality);
+  // Reflect Post Engine switches immediately without waiting for a quality/profile rebuild.
+  const unsubscribePostControls=subscribeAurumPostControls((controls)=>{
+    const enabled=Boolean(controls.gemFxaaEnabled);
+    if(gemMaskPass) gemMaskPass.enabled=enabled;
+    if(fxaaPass) fxaaPass.enabled=enabled;
+    if(surfaceEdgeAaPass) surfaceEdgeAaPass.enabled=Boolean(controls.surfaceEdgeAaEnabled);
+  });
+  if(composer?.dispose){
+    const disposeComposer=composer.dispose.bind(composer);
+    composer.dispose=()=>{
+      unsubscribePostControls();
+      disposeComposer();
+    };
+  }
   const setSSRSelects=(objects:any[])=>{
     if(!ssrPass)return;
     ssrPass.selects=Array.isArray(objects)?objects:[];
