@@ -119,6 +119,7 @@ export interface IAurumCameraControlsContract {
   getUp(): THREE.Vector3;
   getAutoRotate(): boolean;
   getAutoRotateSpeed(): number;
+  writePoseSnapshot(target: Float64Array): Float64Array;
   addEventListener(type: "start" | "change" | "end", listener: (event: unknown) => void): void;
   removeEventListener(type: "start" | "change" | "end", listener: (event: unknown) => void): void;
   dispose(): void;
