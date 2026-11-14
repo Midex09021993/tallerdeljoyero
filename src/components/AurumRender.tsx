@@ -847,8 +847,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       const nodo = visorRef.current;      if (!vivo || !nodo) return;
       let renderQuality = getAurumRenderQuality(renderQualityId);
       let measuredQualityId: AurumRenderQualityId = renderQualityId;
+      // Match the Public Viewer drawing-buffer ceiling on every viewport.
+      // Quality presets may lower this value, but never exceed 1.25 desktop / 1.0 mobile.
+      const getAurumViewportPixelRatio = () => {
+        const isCompactViewport = window.matchMedia("(max-width: 767px)").matches;
+        return Math.min(window.devicePixelRatio || 1, isCompactViewport ? 1 : 1.25);
+      };
       const { scene: escena, camera: camara, renderer, controls: controles } = createAurumWebGLViewer(THREE, nodo, {
-        pixelRatio: renderQuality.pixelRatio,
+        pixelRatio: Math.min(renderQuality.pixelRatio, getAurumViewportPixelRatio()),
         maxDistance: 100,
         controlsClass: (await import("three/examples/jsm/controls/OrbitControls.js")).OrbitControls,
       });
@@ -880,7 +886,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       const ssaoConfig=getAurumSsaoConfig();
        // Exposición inicial; los presets de escena son la fuente de verdad
        // una vez creado el SceneController.
-      renderer.setPixelRatio(Math.min(devicePixelRatio,renderQuality.pixelRatio));
+      renderer.setPixelRatio(Math.min(getAurumViewportPixelRatio(), renderQuality.pixelRatio));
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
       // Exposición calibrada para evitar clipping de blancos en metales pulidos y HDRI de estudio.
@@ -1233,7 +1239,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         // Quality is an intentional render scale. Do not clamp it to devicePixelRatio:
         // otherwise Alta/Ultra are almost identical to Baja on a 1x monitor.
         const requestedDpr = Math.max(1, Math.min(2, renderQuality.pixelRatio));
-        const dpr = Math.min(requestedDpr, runtimeBudget.pixelRatioCap);
+        const dpr = Math.min(requestedDpr, runtimeBudget.pixelRatioCap, getAurumViewportPixelRatio());
         const transmissionScale = Math.min(renderQuality.transmissionScale, runtimeBudget.transmissionScaleCap);
         if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("aurumDiag") === "environment") {
           console.info("[AURUM][QUALITY][DIAGNOSTIC]", {
@@ -2084,10 +2090,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             idleTaaPass.accumulate = false;
             idleTaaPass.accumulateIndex = -1;
           }
-          liveFastPathRef.current = false;
+          liveFastPathRef.current = true;
           console.info("[AURUM][RENDER PIPELINE]", {
             phase: "first-model-frame",
-            path: "composer",
+            path: "direct",
             taaConfigured: postRuntimeConfig.taa === true,
             taaEnabled: Boolean(idleTaaPass?.enabled),
             taaAccumulating: Boolean(idleTaaPass?.accumulate),
@@ -2120,7 +2126,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           ((composer as any)?.passes ?? []).forEach((pass: any) => {
             pass.enabled = initialBeautyPasses.has(pass);
           });
-          liveFastPathRef.current = false;
+          liveFastPathRef.current = true;
           gemMaskPass?.refreshCache?.();
         } else {
           liveFastPathRef.current = true;
@@ -3593,9 +3599,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           }
           const bvhCpuMs = performance.now() - bvhStartedAt;
           const renderStartedAt = performance.now();
-          // Keep the interactive path lightweight; use the photographic
-          // EffectComposer pipeline only when the settled configuration needs it.
-          const activeToneAuditPath = liveFastPathRef.current || !composer ? "direct" : "composer";
+          // The interactive viewport always matches the Public Viewer: direct WebGL render.
+          // EffectComposer remains available only for explicit capture/export workflows.
+          const activeToneAuditPath = "direct";
           if (toneAuditEnabled && activeToneAuditPath !== lastToneAuditPath) {
             lastToneAuditPath = activeToneAuditPath;
             console.info("[AURUM][TONE_AUDIT][PATH]", {
@@ -3608,28 +3614,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               dofEnabled: Boolean(postRuntimeConfig.dof),
             });
           }
-          if (liveFastPathRef.current || !composer) {
-            renderer.render(escena,camara);
-          } else {
-            if (postRuntimeConfig.dof === true) {
-              escena.background = new THREE.Color(0xffffff);
-              renderer.setClearColor(0xffffff, 1);
-              if (renderPass) {
-                renderPass.clearColor = new THREE.Color(0xffffff);
-                renderPass.clearAlpha = 1;
-              }
-            }
-            try {
-              composer.render();
-            } catch (error) {
-              // Preserve the jewelry preview if a post-processing pass fails.
-              liveFastPathRef.current = true;
-              ((composer as any)?.passes ?? []).forEach((pass: any) => { pass.enabled = false; });
-              renderer.shadowMap.enabled = false;
-              console.error("[AURUM][POST][COMPOSER_FALLBACK] EffectComposer failed; switched to direct WebGL rendering.", error);
-              renderer.render(escena,camara);
-            }
-          }
+          // Never route the live viewport through EffectComposer.
+          renderer.render(escena,camara);
           const renderCpuMs = performance.now() - renderStartedAt;
           const measuredFrameMs = performance.now() - frameStartedAt;
           perfTick({
@@ -3655,8 +3641,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // passes stay disabled; a very low-strength surface edge AA pass is
             // enabled only for non-Low, non-extreme runtime budgets.
             const requestedDpr = Math.max(1, Math.min(2, renderQuality.pixelRatio));
-            // Respect selected quality and runtime GPU budget; never upscale for orbit.
-            const interactionDpr = Math.min(requestedDpr, runtimeBudget.pixelRatioCap);
+            // Respect the same Public Viewer ceiling during orbit.
+            const interactionDpr = Math.min(requestedDpr, runtimeBudget.pixelRatioCap, getAurumViewportPixelRatio());
             renderer.setPixelRatio(interactionDpr);
             composer?.setPixelRatio?.(interactionDpr);
 
@@ -3681,7 +3667,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             if (gemMaskPass) gemMaskPass.enabled = false;
             if (fxaaPass) fxaaPass.enabled = false;
             const sameBeautyPipelineAvailable = Boolean(composer && renderPass && outputPass);
-            liveFastPathRef.current = !sameBeautyPipelineAvailable;
+            liveFastPathRef.current = true;
 
             // Keep catalog-authored gemstone materials unchanged during orbit.
             renderer.shadowMap.enabled = false;
@@ -3692,10 +3678,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // Restore the settled beauty chain. No idle-only TAA, bloom, DOF or SSR
             // are added here; only the surface AA blend strength returns to still quality.
             const requestedDpr = Math.max(1, Math.min(2, renderQuality.pixelRatio));
-            const settledDpr = Math.min(
-              measuredQualityId === "low" ? requestedDpr : Math.max(requestedDpr, 1.65),
-              runtimeBudget.pixelRatioCap,
-            );
+            const settledDpr = Math.min(requestedDpr, runtimeBudget.pixelRatioCap, getAurumViewportPixelRatio());
             renderer.setPixelRatio(settledDpr);
             composer?.setPixelRatio?.(settledDpr);
 
@@ -3706,7 +3689,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             settledPasses.forEach((pass) => { pass.enabled = coreBeautyPasses.has(pass); });
 
             const sameBeautyPipelineAvailable = Boolean(composer && renderPass && outputPass);
-            liveFastPathRef.current = !sameBeautyPipelineAvailable;
+            liveFastPathRef.current = true;
             // Restore the normal settled temporal state. There is no active
             // gem transition to coordinate while progressive blending is suspended.
             renderPipelineContract.setMode("RESTING_SETTLED");
