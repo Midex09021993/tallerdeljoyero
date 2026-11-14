@@ -826,6 +826,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   useEffect(() => {
     let vivo = true;
     let cleanup = () => {};
+    let cleanupDone = false;
     // Keep deferred shader compilation cancellable when the viewer unmounts.
     let shaderPrecompileIdleId: number | null = null;
     let shaderPrecompileTimeoutId: ReturnType<typeof setTimeout> | null = null;
@@ -3761,7 +3762,16 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       // Cleanup completo del Viewer: evita listeners, RAF y contextos WebGL acumulados
       // al entrar/salir de Aurum Render o cambiar de ruta.
       cleanup = () => {
+        if (cleanupDone) return;
+        cleanupDone = true;
         aplicarVistaRef.current = null;
+        // Stop RAF, ResizeObserver and host listeners before releasing anything
+        // they can still access. This is intentionally the first teardown step.
+        try {
+          viewerLoop.stop();
+        } catch (error) {
+          console.error("[AURUM][VIEWER][LOOP_CLEANUP_FAILED]", error);
+        }
         void productionPluginHost.dispose().catch((error) => console.error("[AURUM][CORE] Plugin cleanup failed:", error));
         // Cancel deferred work so it cannot retain the model/renderer after unmount.
         if (shaderPrecompileIdleId !== null && typeof window !== "undefined" && "cancelIdleCallback" in window) {
@@ -3776,32 +3786,50 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         // usually destroys the JS realm, but route changes/remounts reuse the
         // same tab and must explicitly release large geometry and material GPU
         // resources to avoid accumulating memory across viewer sessions.
-        diamondBvhRuntime?.dispose();
-        diamondBvhRuntime = null;
-        diamondBvhRuntimeUrl = null;
-        gemTransitionRef.current?.cancel?.();
-        gemTransitionRef.current=null;
+        try {
+          diamondBvhRuntime?.dispose();
+        } catch (error) {
+          console.error("[AURUM][VIEWER][BVH_CLEANUP_FAILED]", error);
+        } finally {
+          diamondBvhRuntime = null;
+          diamondBvhRuntimeUrl = null;
+        }
+        try {
+          gemTransitionRef.current?.cancel?.();
+        } catch (error) {
+          console.error("[AURUM][VIEWER][GEM_TRANSITION_CLEANUP_FAILED]", error);
+        } finally {
+          gemTransitionRef.current = null;
+        }
         renderer.domElement.removeEventListener("pointerdown", handleOrbitPointerDown);
         renderer.domElement.removeEventListener("pointermove", handleOrbitPointerMove);
         renderer.domElement.removeEventListener("pointerup", handleOrbitPointerEnd);
         renderer.domElement.removeEventListener("pointercancel", handleOrbitPointerEnd);
-        quitar();
-        disposeAurumViewer({
-          node:nodo,
-          renderer,
-          controls:controles,
-          observer:obs,
-          clickHandler:seleccionarPorClick,
-          lightingController,
-          groundController,
-          clearSelection:limpiarResaltado,
-          environmentController,
-          gemEnvironment:entornoGema,
-          gemEnvironmentController,
-          composer,
-        });
-        viewerLoop.stop();
-        invalidateRenderRef.current = null;
+        try {
+          quitar();
+        } catch (error) {
+          console.error("[AURUM][VIEWER][MODEL_CLEANUP_FAILED]", error);
+        }
+        try {
+          disposeAurumViewer({
+            node:nodo,
+            renderer,
+            controls:controles,
+            observer:obs,
+            clickHandler:seleccionarPorClick,
+            lightingController,
+            groundController,
+            clearSelection:limpiarResaltado,
+            environmentController,
+            gemEnvironment:entornoGema,
+            gemEnvironmentController,
+            composer,
+          });
+        } catch (error) {
+          console.error("[AURUM][VIEWER][GPU_CLEANUP_FAILED]", error);
+        } finally {
+          invalidateRenderRef.current = null;
+        }
       };
 
       // startAurumViewerLoop ya inicia el RAF/render loop.
