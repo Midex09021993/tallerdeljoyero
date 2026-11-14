@@ -10,7 +10,7 @@ export interface AurumViewerFrame {
   lightingController?: { scaleToModel?: (radius:number,targetY:number)=>void };
 }
 
-export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, prepare: (m:Object3D,scale?:number)=>any, applyScene:(id:any)=>void, sceneId:any, category:string="Anillo") {
+export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, prepare: (m:Object3D,scale?:number)=>any, applyScene:(id:any)=>void, sceneId:any, category:string="Anillo", distanceScale=1) {
   // Primera llamada: preparar producto y presentar frontalmente.
   // Siguientes llamadas: "Restablecer vista" solo cambia la cámara para no
   // reaplicar escena/materiales y provocar cambios de color.
@@ -45,27 +45,15 @@ export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, pre
     applyScene(sceneId);
     model.userData={...(model.userData??{}),aurumInitialFrameApplied:true};
     if (sceneId === "ijewelReference") viewer.cameraControls.applyReferencePresentation(model);
-        else viewer.cameraControls.applyView(model, "frontal", category);
+        else viewer.cameraControls.applyView(model, "frontal", category, { distanceScale });
 
-    // AurumRender actualiza el estado de vista al cargar. Ese estado puede
-    // intentar aplicar "perspectiva" inmediatamente después del encuadre.
-    // Reafirmamos el frontal en el siguiente frame, sin tocar materiales ni escena.
-    requestAnimationFrame(() => {
-      if (model.userData?.["aurumInitialFrameApplied"]) {
-        if (sceneId === "ijewelReference") {
-          viewer.cameraControls.applyReferencePresentation(model);
-        } else {
-          viewer.cameraControls.applyView(model, "frontal", category);
-        }
-      }
-    });
     return;
   }
 
   // Restablecer siempre a una vista frontal con encuadre calculado
   // según el tamaño real del modelo. Evita que la cámara fija de referencia
   // vuelva a acercarse demasiado en archivos 3DM con otras unidades.
-  viewer.cameraControls.applyView(model, "frontal", category);
+  viewer.cameraControls.applyView(model, "frontal", category, { distanceScale });
 }
 
 
