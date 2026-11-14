@@ -308,6 +308,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [materialId, setMaterialId] = useState<MaterialId>("plata950_pulida"), [gemaId, setGemaId] = useState<GemaId>("diamante_natural"), [escenarioId, setEscenarioId] = useState<EscenarioId>("ijewelReference"), [iluminacionId, setIluminacionId] = useState<IluminacionId>("studioSoft"), [vista, setVista] = useState<VistaId>("frontal");
   // A catalog choice is only armed; the next explicit gem-mesh click consumes it.
   const pendingGemApplicationRef = useRef<GemaConfig | null>(null);
+  const aplicarVistaRef = useRef<((id: VistaId) => void) | null>(null);
   // Puente entre el selector React y la cámara creada dentro del ciclo del visor.
   const [nombreProyecto, setNombreProyecto] = useState("Diseño de joyería");
   const [categoriaProyecto, setCategoriaProyecto] = useState("Anillo");
@@ -2168,6 +2169,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         viewerLoopRef.current?.invalidate?.();
         invalidateRenderRef.current?.();
       };
+      aplicarVistaRef.current = camaraVista;
       apiRef.current=createAurumApi({
         cargar,
         getJewelTransform:()=>modelo?({position:modelo.position.toArray(),rotation:modelo.rotation.toArray(),scale:modelo.scale.toArray()}):null,
@@ -2462,7 +2464,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           if(encontrado) { seleccionarMalla(encontrado); invalidateRenderRef.current?.(); }
         },
         fullscreen:()=>{if(document.fullscreenElement===nodo){void document.exitFullscreen();}else{void nodo.requestFullscreen?.();}},
-        vista:(id:VistaId)=>{ camaraVista(id); invalidateRenderRef.current?.(); },
+        vista:(id:VistaId)=>{ aplicarVistaRef.current?.(id); setVista(id); invalidateRenderRef.current?.(); },
         calidad:aplicarCalidadRender,
         exportGLB:async(options:{download?:boolean}={})=>{
           if(!modelo) throw new Error("Carga un modelo antes de exportar.");
@@ -3820,12 +3822,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   useEffect(()=>{ apiRef.current?.material(materialActivo); invalidateRenderRef.current?.(); },[materialActivo]);
   useEffect(()=>{ apiRef.current?.escenario(escenarioId); invalidateRenderRef.current?.(); },[escenarioId]);
   useEffect(()=>{ apiRef.current?.iluminacion(iluminacionId); invalidateRenderRef.current?.(); },[iluminacionId]);
-  useEffect(()=>{
-    // Single route: React state -> camera API -> AURUM CAMERA contract.
-    const cameraApi=apiRef.current;
-    if (typeof cameraApi?.vista === "function") cameraApi.vista(vista);
-    invalidateRenderRef.current?.();
-  },[vista]);
 
   const cargarArchivo=useCallback(async(file:File, options: { preserveScene?: boolean } = {})=>{
     try {
@@ -4227,7 +4223,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                     apiRef.current?.iluminacion(config.iluminacionId);
                   }
                   if (typeof config.vista === "string" && VISTAS.some((item) => item.id === config.vista)) {
-                    setVista(config.vista as VistaId);
+                    const nextView = config.vista as VistaId;
+                    aplicarVistaRef.current?.(nextView);
+                    setVista(nextView);
                   }
                   if (typeof config.fondoId === "string") {
                     setFondoId(config.fondoId);
@@ -4474,7 +4472,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         <div className="flex items-center gap-2">
           <label className="flex h-10 items-center gap-2 rounded-xl border border-[#b99642]/25 bg-white/95 px-3 text-sm text-[#292824] shadow-sm transition hover:border-[#b99642]/60 hover:shadow-[0_3px_12px_rgba(185,150,66,.12)] focus-within:ring-2 focus-within:ring-[#92743b]/20">
             <Gem className="size-4 text-[#92743b]"/>
-            <select aria-label="Seleccionar vista de cámara" value={vista} onChange={e=>setVista(e.target.value as VistaId)} className="min-w-0 appearance-none bg-transparent font-medium outline-none cursor-pointer">
+            <select aria-label="Seleccionar vista de cámara" value={vista} onChange={e=>{const next=e.target.value as VistaId;aplicarVistaRef.current?.(next);setVista(next);invalidateRenderRef.current?.();}} className="min-w-0 appearance-none bg-transparent font-medium outline-none cursor-pointer">
               <option className="bg-white" value={VISTAS[0]?.id}>{VISTAS[0]?.nombre || "Vista 3D"}</option>
               {VISTAS.slice(1).map(v=><option className="bg-white" key={v.id} value={v.id}>{v.nombre}</option>)}
             </select>
