@@ -3,6 +3,7 @@ import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabasePublic } from "@/integrations/supabase/client";
 import { RegistroTaller } from "@/components/RegistroTaller";
+import { AurumProductShowcase } from "@/components/AurumProductShowcase";
 import { SolicitarDemo } from "@/components/SolicitarDemo";
 const MiniAurumRender = lazy(() => import("@/components/MiniAurumRender").then((m) => ({ default: m.MiniAurumRender })));
 import { ArrowRight, BookOpen, Boxes, Calculator, Check, Cloud, Gem, Layers3, Menu, MonitorSmartphone, PackageCheck, Sparkles, Sprout, ChartNoAxesCombined, X } from "lucide-react";
@@ -658,64 +659,7 @@ function InicioPublico() {
             <p className="mt-4 text-xs text-slate-500">Agenda un recorrido personalizado para conocer AURUM LAB.</p>
           </div>
 
-          <div className="aurum-hero-enter aurum-hero-enter-delay-2 relative mx-auto w-full max-w-[720px] pb-7 sm:pb-10">
-            <div className="absolute inset-x-8 bottom-0 top-12 rounded-[3rem] bg-gradient-to-br from-[#ffe99a]/70 via-[#f8faff] to-[#e4ecf7] blur-2xl" />
-            <div className="aurum-dashboard-float aurum-preview-glint relative rounded-[1.6rem] border border-slate-200 bg-white p-2.5 shadow-[0_25px_80px_rgba(28,40,52,.15)] sm:p-3">
-              <div className="flex h-10 items-center gap-2 border-b border-slate-100 px-3">
-                <span className="size-2.5 rounded-full bg-[#ff6b63]" /><span className="size-2.5 rounded-full bg-[#ffce45]" /><span className="size-2.5 rounded-full bg-[#4ac58b]" />
-                <div className="mx-auto mr-12 rounded-full bg-slate-100 px-14 py-1 text-[9px] text-slate-400">TU ESPACIO DIGITAL</div>
-              </div>
-              <div className="grid min-h-[310px] grid-cols-[108px_minmax(0,1fr)] overflow-hidden rounded-b-xl sm:min-h-[365px] sm:grid-cols-[155px_minmax(0,1fr)]">
-                <aside className="min-w-0 border-r border-slate-100 bg-[#f8fafc] p-2.5 sm:p-4">
-                  <div className="mb-5 flex items-center gap-2 text-[10px] font-extrabold text-[#17232d] sm:text-xs"><span className="grid size-6 place-items-center rounded-md bg-[#ffcf24]"><Gem className="size-3.5" /></span>AURUM LAB</div>
-                  <p className="mb-2 text-[8px] font-bold uppercase tracking-wider text-slate-400 sm:text-[9px]">Tu espacio</p>
-                  <div className="space-y-1.5 text-[9px] text-slate-600 sm:text-[11px]">
-                    <div className="flex items-center gap-2 rounded-lg bg-[#fff2bd] px-2 py-2 font-semibold text-[#665000]"><Boxes className="size-3.5" /> Resumen</div>
-                    <div className="flex items-center gap-2 px-2 py-2"><Cloud className="size-3.5" /> Mi Nube</div>
-                    <div className="flex items-center gap-2 px-2 py-2"><Gem className="size-3.5" /> Diseños 3D</div>
-                    <div className="flex items-center gap-2 px-2 py-2"><Layers3 className="size-3.5" /> Catálogo</div>
-                  </div>
-                  <div className="mt-6 rounded-lg border border-slate-200 bg-white p-2">
-                    <p className="text-[8px] font-semibold text-slate-700 sm:text-[9px]">¿Necesitas calcular?</p>
-                    <p className="mt-1 text-[8px] leading-4 text-slate-400">Abre las herramientas gratuitas.</p>
-                    <div className="mt-2 h-1.5 rounded-full bg-[#ffcf24]" />
-                  </div>
-                </aside>
-                <div className="min-w-0 p-2.5 sm:p-5">
-                  <div className="flex items-start justify-between gap-2">
-                    <div><p className="text-[9px] text-slate-400 sm:text-[10px]">TU TALLER DIGITAL</p><p className="mt-1 text-sm font-bold text-[#17232d] sm:text-lg">Tu taller, en orden</p></div>
-                    <span className="rounded-full bg-[#e9f8ef] px-2 py-1 text-[8px] font-semibold text-[#27834d] sm:text-[9px]">Espacio de trabajo</span>
-                  </div>
-                  <div className="mt-4 grid grid-cols-2 gap-2 sm:mt-5 sm:gap-3">
-                    <div className="rounded-xl border border-slate-100 bg-white p-2 shadow-sm sm:p-3"><span className="grid size-7 place-items-center rounded-lg bg-[#fff4c4] text-[#967300]"><Calculator className="size-3.5" /></span><p className="mt-2 text-[9px] font-semibold text-slate-700 sm:text-[11px]">Herramientas técnicas</p><p className="mt-1 text-[8px] text-slate-400 sm:text-[9px]">Cálculos para tu oficio</p></div>
-                    <div className="rounded-xl border border-slate-100 bg-white p-2 shadow-sm sm:p-3"><span className="grid size-7 place-items-center rounded-lg bg-[#eaf1ff] text-[#4d6ba5]"><Cloud className="size-3.5" /></span><p className="mt-2 text-[9px] font-semibold text-slate-700 sm:text-[11px]">Mi Nube</p><p className="mt-1 text-[8px] text-slate-400 sm:text-[9px]">Tus archivos organizados</p></div>
-                  </div>
-                  <div className="mt-3 overflow-hidden rounded-xl border border-slate-200 bg-gradient-to-br from-white via-[#fffdf6] to-[#f2f5f8] sm:mt-4">
-                    <div className="flex items-center justify-between border-b border-slate-100 px-3 py-2">
-                      <p className="text-[9px] font-semibold text-slate-700 sm:text-[10px]">Diseña y visualiza tus joyas</p>
-                      <span className="text-[8px] font-semibold tracking-wide text-[#987400]">AURUM RENDER</span>
-                    </div>
-                    <div className="flex min-h-[118px] items-center gap-3 p-3 sm:min-h-[155px] sm:gap-4 sm:p-5">
-                      <div className="grid size-12 shrink-0 place-items-center rounded-2xl border border-[#eadca7] bg-[#fff5ce] text-[#8d6b00] sm:size-16">
-                        <Gem className="size-6 sm:size-8" strokeWidth={1.6} />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs font-bold text-[#17232d] sm:text-sm">Estudio profesional de joyería 3D</p>
-                        <p className="mt-1 text-[10px] leading-4 text-slate-500 sm:text-xs sm:leading-5">Carga un modelo compatible y observa tu diseño en el visor público.</p>
-                        <Link to="/aurum-render-public" className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-[#17232d] px-3 py-2 text-[10px] font-semibold text-white transition hover:bg-[#293b49] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19] sm:text-xs">
-                          Abrir visor 3D <ArrowRight className="size-3.5" />
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="absolute -bottom-1 left-3 flex max-w-[205px] items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_12px_35px_rgba(28,40,52,.14)] sm:bottom-0 sm:left-0 sm:max-w-[235px] sm:p-4">
-              <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#fff2bd] text-[#8c6a00]"><PackageCheck className="size-5" /></span>
-              <div><p className="text-[10px] font-bold text-[#17232d] sm:text-xs">Diseñado para tu oficio</p><p className="mt-1 text-[9px] leading-4 text-slate-500 sm:text-[10px]">Tus herramientas y archivos, en un solo lugar.</p></div>
-            </div>
-          </div>
+          <AurumProductShowcase />
         </div>
       </section>
 
