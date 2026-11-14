@@ -54,7 +54,7 @@ import { GEMAS, MATERIALES, ESCENARIOS, VISTAS, ILUMINACIONES, type MaterialId, 
 import { AurumRenderSidebar } from "./AurumRenderSidebar";
 import { AurumPerformanceIndicator, AurumPerformanceMonitorPanel } from "./AurumPerformanceMonitorPanel";
 import { createAurumPerformanceMonitor } from "@/lib/aurum/performance-monitor";
-import { createAurumVideoFramePipeline } from "../lib/aurum/video-frame-pipeline";
+import { createAurumVideoFramePipeline, getAurumVideoLivePasses } from "../lib/aurum/video-frame-pipeline";
 import { runAurumMediaExportCleanup } from "../lib/aurum/media-export-session";
 import { captureAurumPathTracedScene } from "../lib/aurum/path-traced-capture";
 
@@ -2685,7 +2685,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               scene:escena,
               camera:camara,
               diamondBvhRuntime,
-              livePasses:[renderPass,gemMaskPass,fxaaPass,...(surfaceEdgeAaPass&&videoEdgeAaProfile.enabled?[surfaceEdgeAaPass]:[]),outputPass],
+              livePasses:getAurumVideoLivePasses({
+                renderPass,gemMaskPass,fxaaPass,surfaceEdgeAaPass,
+                surfaceEdgeAaEnabled:videoEdgeAaProfile.enabled,outputPass,
+              }),
               width:renderWidth,
               height:renderHeight,
               restoreWidth:originalCssWidth,
