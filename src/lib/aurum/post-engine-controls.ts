@@ -4,9 +4,11 @@ export type AurumPostControls = {
   taaEnabled: boolean;
 };
 
-const STORAGE_KEY = "aurum:post-engine-controls:v1";
+const STORAGE_KEY = "aurum:post-engine-controls:v2";
+const LEGACY_STORAGE_KEY = "aurum:post-engine-controls:v1";
 const DEFAULTS: AurumPostControls = {
-  gemFxaaEnabled: false,
+  // Gem-only edge cleanup is enabled by default. Surface AA and TAA remain off.
+  gemFxaaEnabled: true,
   surfaceEdgeAaEnabled: false,
   taaEnabled: false,
 };
@@ -15,13 +17,27 @@ export function getAurumPostControls(): AurumPostControls {
   if (typeof window === "undefined") return DEFAULTS;
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return DEFAULTS;
-    const value = JSON.parse(raw);
-    return {
-      gemFxaaEnabled: value.gemFxaaEnabled === true,
-      surfaceEdgeAaEnabled: value.surfaceEdgeAaEnabled === true,
-      taaEnabled: value.taaEnabled === true,
+    if (raw) {
+      const value = JSON.parse(raw);
+      return {
+        gemFxaaEnabled: value.gemFxaaEnabled === true,
+        surfaceEdgeAaEnabled: value.surfaceEdgeAaEnabled === true,
+        taaEnabled: value.taaEnabled === true,
+      };
+    }
+
+    // One-time migration: activate the requested gem-only AA path while
+    // preserving the user's independent Surface Edge AA and TAA preferences.
+    const legacyRaw = window.localStorage.getItem(LEGACY_STORAGE_KEY);
+    if (!legacyRaw) return DEFAULTS;
+    const legacy = JSON.parse(legacyRaw);
+    const migrated: AurumPostControls = {
+      gemFxaaEnabled: true,
+      surfaceEdgeAaEnabled: legacy.surfaceEdgeAaEnabled === true,
+      taaEnabled: legacy.taaEnabled === true,
     };
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
+    return migrated;
   } catch {
     return DEFAULTS;
   }
