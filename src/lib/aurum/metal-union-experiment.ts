@@ -18,21 +18,37 @@ function getFamily(mesh: THREE.Mesh): MeshFamily {
 }
 
 
-function areEquivalentMaterials(a: THREE.Material, b: THREE.Material): boolean {
-  if (a === b) return true;
-  // Three.js materials are mutable. Recompute this fingerprint for each check
-  // so changed optical properties cannot reuse a stale cached comparison.
-  const fingerprint = (material: THREE.Material): string => {
-    const serialized = material.toJSON() as Record<string, unknown>;
-    const normalized = { ...serialized };
-    delete normalized.uuid;
-    return JSON.stringify(normalized);
+/**
+ * Creates a comparison scoped to one synchronous Metal Union pass.
+ * Material fingerprints are computed once per object for this pass, avoiding
+ * repeated toJSON serialization when the same accumulator is checked against
+ * many candidate meshes. The cache is intentionally not shared across imports:
+ * Three.js materials are mutable and a later pass must observe their new state.
+ */
+export function createAurumMaterialEquivalenceChecker() {
+  const fingerprints = new WeakMap<THREE.Material, string | null>();
+  const fingerprint = (material: THREE.Material): string | null => {
+    if (fingerprints.has(material)) return fingerprints.get(material) ?? null;
+    try {
+      const serialized = material.toJSON() as Record<string, unknown>;
+      const normalized = { ...serialized };
+      delete normalized.uuid;
+      const value = JSON.stringify(normalized);
+      fingerprints.set(material, value);
+      return value;
+    } catch {
+      fingerprints.set(material, null);
+      return null;
+    }
   };
-  try {
-    return fingerprint(a) === fingerprint(b);
-  } catch {
-    return false;
-  }
+
+  return (a: THREE.Material, b: THREE.Material): boolean => {
+    if (a === b) return true;
+    const left = fingerprint(a);
+    if (left === null) return false;
+    const right = fingerprint(b);
+    return right !== null && left === right;
+  };
 }
 
 function compatibleAttributes(a: THREE.BufferGeometry, b: THREE.BufferGeometry): boolean {
@@ -155,6 +171,7 @@ export function applyAurumMetalUnionExperiment(root: THREE.Object3D, maxMerges =
     },
   };
   const evaluator = new Evaluator();
+  const areEquivalentMaterials = createAurumMaterialEquivalenceChecker();
   const candidates: THREE.Mesh[] = [];
   const preserved = new Set<string>();
   root.updateMatrixWorld(true);
