@@ -677,7 +677,12 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         destinoProyectoGuardado?.archivoNombre === archivoOriginalInfo.name &&
         destinoProyectoGuardado?.rutaArchivoOriginal?.startsWith(`${rutaCarpeta}/`)
       );
-      if (!originalYaEnCarpeta && !origenYaGuardado) {
+      // Una carpeta ya vinculada representa una actualización, no una importación.
+      // En ese flujo el 3DM fuente es inmutable y nunca se vuelve a subir, aunque
+      // el nombre local del GLB o los metadatos del archivo hayan cambiado.
+      const esActualizacionDeProyectoVinculado =
+        destinoProyectoGuardado?.rutaCarpeta === rutaCarpeta;
+      if (!originalYaEnCarpeta && !origenYaGuardado && !esActualizacionDeProyectoVinculado) {
         let fuenteOriginal: File | null = archivoOriginal;
         if (!fuenteOriginal && archivoOriginalInfo.storagePath) {
           const { data: signed, error: signedError } = await supabase.storage.from("mi-nube").createSignedUrl(archivoOriginalInfo.storagePath, 300);
