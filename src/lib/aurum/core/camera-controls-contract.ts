@@ -19,7 +19,6 @@ export function createAurumCameraControlsContract(
     id: "aurum.camera.controls",
     version: "1.0.0",
     camera,
-    controls,
     applyView(model: Object3D | null, view: AurumCameraView, category = "Otro", options = {}) {
       applyAurumCameraView(camera, controls, model, view, category, options);
     },
