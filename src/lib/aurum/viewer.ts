@@ -232,7 +232,7 @@ export function createAurumWebGLViewer(
 }
 
 export function startAurumViewerLoop(
-  viewer: { node: HTMLElement; camera: any; renderer: any; composer?: any; ssaoPass?: any; controls?: any },
+  viewer: { node: HTMLElement; camera: any; renderer: any; composer?: any; ssaoPass?: any; controls?: any; cameraControls: IAurumCameraControlsContract },
   render: () => void,
   interaction?: { onStart?: () => void; onEnd?: () => void; progressiveFrames?: number }
 ) {
@@ -496,7 +496,7 @@ export function startAurumViewerLoop(
     ticking = true;
     let changedByControls = false;
     try {
-      changedByControls = Boolean(viewer.controls?.update?.());
+      changedByControls = Boolean(viewer.cameraControls.update());
 
       // Wait until OrbitControls damping has actually settled before restoring
       // the beauty path. This prevents a progressive image accumulating while
