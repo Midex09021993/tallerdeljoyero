@@ -77,6 +77,19 @@ export interface IAurumGeometrySceneResult {
 }
 
 
+export interface IAurumCameraState {
+  readonly position: THREE.Vector3;
+  readonly quaternion: THREE.Quaternion;
+  readonly target: THREE.Vector3;
+  readonly up: THREE.Vector3;
+  readonly aspect: number;
+  readonly fov: number;
+  readonly near: number;
+  readonly far: number;
+  readonly autoRotate: boolean;
+  readonly autoRotateSpeed: number;
+}
+
 /**
  * Camera boundary: OrbitControls is owned by AURUM CAMERA and exposed only
  * through semantic view operations to the rest of the application.
@@ -97,9 +110,15 @@ export interface IAurumCameraControlsContract {
   setDistance(distance: number): void;
   getDistance(): number;
   setAutoRotate(enabled: boolean, speed?: number): void;
+  setAspect(aspect: number): void;
+  captureState(): IAurumCameraState;
+  restoreState(state: IAurumCameraState): void;
   update(): void;
   getTarget(): THREE.Vector3;
   getPosition(): THREE.Vector3;
+  getUp(): THREE.Vector3;
+  getAutoRotate(): boolean;
+  getAutoRotateSpeed(): number;
 }
 
 
