@@ -61,6 +61,8 @@ jobs:
         run: bun test scripts/aurum-adapter-contracts.test.ts
       - name: AURUM video frame pipeline tests
         run: bun test scripts/aurum-video-frame-pipeline.test.ts
+      - name: AURUM pixel visual regression tests
+        run: bun test scripts/aurum-visual-regression.test.ts
       - name: AURUM media export session cleanup tests
         run: bun test scripts/aurum-media-export-session.test.ts
       - name: AURUM edge quality MSAA capability and fallback tests
