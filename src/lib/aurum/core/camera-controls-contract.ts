@@ -76,6 +76,9 @@ export function createAurumCameraControlsContract(
     getDistance() {
       return camera.position.distanceTo(controls.target);
     },
+    getAspect() {
+      return camera.aspect;
+    },
     setAutoRotate(enabled, speed) {
       controls.autoRotate = enabled;
       if (typeof speed === "number" && Number.isFinite(speed)) controls.autoRotateSpeed = speed;
