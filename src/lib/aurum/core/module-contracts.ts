@@ -108,6 +108,7 @@ export interface IAurumCameraControlsContract {
   /** Change camera distance while preserving its current viewing direction. */
   setDistance(distance: number): void;
   getDistance(): number;
+  getAspect(): number;
   setAutoRotate(enabled: boolean, speed?: number): void;
   setAspect(aspect: number): void;
   captureState(): IAurumCameraState;
