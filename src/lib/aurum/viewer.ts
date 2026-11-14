@@ -27,8 +27,43 @@ export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, pre
         visibleBounds.expandByObject(object);
       });
       if (visibleBounds.isEmpty()) throw new Error("El modelo no contiene geometría visible para encuadrar.");
-      model.position.sub(visibleBounds.getCenter(new THREE.Vector3()));
+      const sourceCenter = visibleBounds.getCenter(new THREE.Vector3());
+      model.position.sub(sourceCenter);
       model.updateWorldMatrix(true, true);
+      const centeredBounds = new THREE.Box3();
+      model.traverse((object: any) => {
+        if (!object?.isMesh || !object.geometry || !object.visible) return;
+        for (let parent = object.parent; parent; parent = parent.parent) if (!parent.visible) return;
+        centeredBounds.expandByObject(object);
+      });
+      const visibleSphere = centeredBounds.getBoundingSphere(new THREE.Sphere());
+      const radius = Math.max(visibleSphere.radius, 0.001);
+      // Exact lightweight contact shadow used by PublicCatalogViewer.
+      if (typeof document !== "undefined" && viewer.scene) {
+        const shadowCanvas = document.createElement("canvas");
+        shadowCanvas.width = 256;
+        shadowCanvas.height = 256;
+        const context = shadowCanvas.getContext("2d");
+        if (context) {
+          const gradient = context.createRadialGradient(128, 128, 8, 128, 128, 124);
+          gradient.addColorStop(0, "rgba(35, 31, 25, 0.22)");
+          gradient.addColorStop(0.42, "rgba(45, 40, 34, 0.13)");
+          gradient.addColorStop(0.76, "rgba(55, 50, 44, 0.045)");
+          gradient.addColorStop(1, "rgba(55, 50, 44, 0)");
+          context.fillStyle = gradient;
+          context.fillRect(0, 0, 256, 256);
+          const texture = new THREE.CanvasTexture(shadowCanvas);
+          const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, opacity: 0.78, depthWrite: false, toneMapped: false });
+          const geometry = new THREE.PlaneGeometry(radius * 3, radius * 2);
+          const shadow = new THREE.Mesh(geometry, material);
+          shadow.rotation.x = -Math.PI / 2;
+          shadow.position.set(visibleSphere.center.x, centeredBounds.min.y - radius * 0.014, visibleSphere.center.z);
+          shadow.renderOrder = 1;
+          shadow.userData.aurumPublicContactShadow = true;
+          viewer.scene.add(shadow);
+          model.userData = { ...(model.userData ?? {}), aurumPublicContactShadow: shadow };
+        }
+      }
       model.userData = { ...(model.userData ?? {}), aurumInitialFrameApplied: true, aurumPublicViewerPresentation: true };
     }
     applyAurumPublicViewerCamera(viewer.camera, viewer.controls, model);
