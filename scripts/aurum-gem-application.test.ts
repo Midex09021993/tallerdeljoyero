@@ -80,3 +80,21 @@ test("targeted BVH refresh avoids processing unrelated scene meshes", () => {
   expect(source).toContain("if (targetSet) targetSet.forEach(processMesh);");
   expect(source).toContain("const targetContainsDiamond = !targetSet");
 });
+
+test("AURUM gem transition snapshots before material replacement and blends only after first paint", () => {
+  const source = readFileSync("src/components/AurumRender.tsx", "utf8");
+  const capture = source.indexOf("captureAurumGemTransitionState(mesh)");
+  const apply = source.indexOf("const applied=applyAurumGemToTarget");
+  const firstPaint = source.indexOf("viewerLoopRef.current?.renderNow?.()", apply);
+  const transition = source.indexOf("createAurumGemTransition(", firstPaint);
+
+  expect(capture).toBeGreaterThan(-1);
+  expect(capture).toBeLessThan(apply);
+  expect(firstPaint).toBeGreaterThan(apply);
+  expect(transition).toBeGreaterThan(firstPaint);
+  expect(source).toContain("gemTransitionRef.current?.cancel?.()");
+  expect(source).toContain("gemTransitionRef.current?.cancel?.();");
+  expect(source).toContain("gemTransitionRef.current=null;");
+  expect(source).toContain("gemTransitionRef.current=createAurumGemTransition(");
+  expect(source).toContain("gemTransitionRef.current?.cancel?.();");
+});
