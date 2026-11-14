@@ -14,9 +14,8 @@ type Scene = {
 };
 
 const scenes: Scene[] = [
-  { id: "home", title: "Tu taller, en orden", eyebrow: "RESUMEN DEL TALLER", description: "Una vista clara de la actividad y las herramientas de tu taller.", icon: Boxes, nav: ["Resumen", "Mi Nube", "Diseños 3D", "Catálogo"] },
+  { id: "home", title: "Tu taller, en orden", eyebrow: "RESUMEN DEL TALLER", description: "Una vista clara de la actividad y las herramientas de tu taller.", icon: Boxes, nav: ["Resumen", "Mi Nube", "Catálogo", "Clientes"] },
   { id: "cloud", title: "Tus archivos, organizados", eyebrow: "MI NUBE", description: "Reúne modelos, imágenes y documentos en un solo espacio.", icon: Cloud, nav: ["Todos los archivos", "Mis carpetas", "Compartidos", "Papelera"] },
-  { id: "design", title: "Cada diseño, bajo control", eyebrow: "DISEÑOS 3D", description: "Accede a tus proyectos y continúa tu flujo de diseño.", icon: Gem, nav: ["Mis diseños", "Importar modelo", "Recientes", "Colecciones"] },
   { id: "render", title: "Visualiza tus joyas", eyebrow: "AURUM RENDER", description: "Materiales, iluminación y presentación visual para joyería.", icon: Image, nav: ["Estudio 3D", "Metales", "Gemas", "Escena"] },
   { id: "tools", title: "Herramientas para el oficio", eyebrow: "HERRAMIENTAS TÉCNICAS", description: "Calcula aleaciones, pesos y medidas antes de fabricar.", icon: Calculator, nav: ["Aleaciones", "Peso", "Medidas", "Conversores"] },
   { id: "business", title: "Gestión comercial", eyebrow: "ÁREA COMERCIAL", description: "Accede a los módulos comerciales disponibles para tu taller.", icon: Users, nav: ["Clientes", "Cotizaciones", "Contratos", "Pedidos"] },
