@@ -638,3 +638,13 @@ test("video export restores the original live viewport through bounded cleanup",
   expect(restoreBlock.indexOf("loop?.resize?.()")).toBeLessThan(restoreBlock.indexOf("loop?.resume?.()"));
   expect(restoreBlock.indexOf("loop?.resume?.()")).toBeLessThan(restoreBlock.indexOf("loop?.converge?.(4)"));
 });
+
+
+test("camera view requests are retained until AURUM CAMERA and the imported model are ready", () => {
+  const componentSource = readFileSync("src/components/AurumRender.tsx", "utf8");
+  expect(componentSource).toContain('const vistaSolicitadaRef = useRef<VistaId>("frontal");');
+  expect(componentSource).toContain("vistaSolicitadaRef.current = id;");
+  expect(componentSource).toContain("solicitarVistaRef.current(next);");
+  expect(componentSource).toContain("camaraVista(vistaSolicitadaRef.current);");
+  expect(componentSource).not.toContain("aplicarVistaRef.current?.(next);");
+});
