@@ -13,7 +13,7 @@ import { getAurumHdriUrl, getAurumGemHdriUrl } from "@/lib/aurum-photographic-sc
 import { createAurumDiamondBvhRuntime } from "@/lib/aurum/aurum-diamond-bvh-runtime";
 
 type Props = { modelUrl: string; modelName: string; materialId: string; gemId: string; onReady?: () => void; onError?: (message: string) => void; hideControls?: boolean; onResetViewReady?: (reset: (() => void) | null) => void };
-const classifyMesh = (mesh: any): "metal" | "gema" | "otro" => {
+export const classifyMesh = (mesh: any): "metal" | "gema" | "otro" => {
   const data = mesh?.userData ?? {};
   const attrs = data?.attributes ?? {};
   const rhino = data?.aurumRhino ?? {};
@@ -57,7 +57,7 @@ const ensurePhysicalGemMaterial = (material: any): THREE.MeshPhysicalMaterial =>
 
 // Fallback inspired by MiniAurumRender: CAD exports may give every part a generic
 // name. Only run geometry inference when no explicit gemstone mesh was found.
-const inferGemMeshes = (model: THREE.Object3D): number => {
+export const inferGemMeshes = (model: THREE.Object3D): number => {
   const meshes: THREE.Mesh[] = [];
   model.traverse((object) => {
     if (object instanceof THREE.Mesh && object.visible && object.geometry?.getAttribute("position")) meshes.push(object);
