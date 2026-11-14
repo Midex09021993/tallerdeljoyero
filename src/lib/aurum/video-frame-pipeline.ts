@@ -23,6 +23,25 @@ export interface AurumVideoFramePipeline {
   restore: () => void;
 }
 
+/** Compose the existing viewer beauty passes for video without enabling TAA. */
+export function getAurumVideoLivePasses(options: {
+  renderPass: any;
+  gemMaskPass: any;
+  fxaaPass: any;
+  surfaceEdgeAaPass?: any;
+  surfaceEdgeAaEnabled?: boolean;
+  outputPass: any;
+}): any[] {
+  const { renderPass, gemMaskPass, fxaaPass, surfaceEdgeAaPass, surfaceEdgeAaEnabled, outputPass } = options;
+  return [
+    renderPass,
+    gemMaskPass,
+    fxaaPass,
+    ...(surfaceEdgeAaPass && surfaceEdgeAaEnabled ? [surfaceEdgeAaPass] : []),
+    outputPass,
+  ].filter(Boolean);
+}
+
 export function createAurumVideoFramePipeline(
   options: AurumVideoFramePipelineOptions,
 ): AurumVideoFramePipeline {
