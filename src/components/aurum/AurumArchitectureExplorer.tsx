@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { readAurumModuleControls, setAurumModuleControl, type AurumManagedModuleId } from "@/lib/aurum/module-controls";
 import { Activity, ChevronRight, CircleHelp, GitBranch, Network, Search, ShieldAlert, Workflow } from "lucide-react";
 
 type Estado = "desactivado" | "activo";
@@ -52,6 +53,14 @@ const arbol: Nodo[] = [
 
 const todos = (nodes: Nodo[]): Nodo[] => nodes.flatMap(n => [n, ...(n.hijos ? todos(n.hijos) : [])]);
 const badge = (estado: Estado) => <span className={`inline-flex shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${estadoUI[estado].clase}`}>{estadoUI[estado].label}</span>;
+const managedModuleIds: Record<string, AurumManagedModuleId> = {
+  "diamond-edge-aa": "gem-edge-aa",
+  "surface-edge-aa": "surface-edge-aa",
+  dof: "dof",
+  lut: "lut",
+  vignette: "vignette",
+  grading: "grading",
+};
 const sectionIcon = (id: string) => {
   if (id === "core") return <Workflow className="size-5"/>;
   if (id === "engines") return <Activity className="size-5"/>;
@@ -63,6 +72,12 @@ export function AurumArchitectureExplorer() {
   const [vista, setVista] = useState<"overview" | "flow" | "audit">("overview");
   const [seleccion, setSeleccion] = useState("media");
   const [filtro, setFiltro] = useState("");
+  const [moduleControls, setModuleControls] = useState(readAurumModuleControls);
+  const toggleModule = (id: AurumManagedModuleId) => {
+    const enabled = !moduleControls[id];
+    setModuleControls((current) => ({ ...current, [id]: enabled }));
+    setAurumModuleControl(id, enabled);
+  };
   const nodos = useMemo(() => todos(arbol), []);
   const actual = nodos.find(n => n.id === seleccion) ?? nodos[0]!;
   const conteo = (estado: Estado) => nodos.filter(n => n.estado === estado).length;
@@ -77,7 +92,7 @@ export function AurumArchitectureExplorer() {
       <div className="max-w-2xl">
         <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-gold">AURUM LAB · Architecture Center</p>
         <h3 className="mt-1 text-xl font-semibold tracking-tight">Mapa de arquitectura</h3>
-        <p className="mt-1 text-xs leading-5 text-muted-foreground">Inventario de módulos existentes. Se distingue lo activo en el visor Aurum Render actual de lo pendiente de integrar en el nuevo visor público.</p>
+        <p className="mt-1 text-xs leading-5 text-muted-foreground">Centro de control de módulos de AURUM RENDER. Los interruptores disponibles modifican el pipeline real del visor; los componentes con dependencias no aisladas se mantienen protegidos.</p>
       </div>
       <div className="flex flex-wrap gap-2">
         {([
@@ -135,11 +150,20 @@ export function AurumArchitectureExplorer() {
               <span className="text-[10px] text-muted-foreground">{group.visibleChildren.length} módulos</span>
             </button>
             <div className="grid gap-2 p-3 sm:grid-cols-2">
-              {group.visibleChildren.map(n => <button key={n.id} type="button" onClick={() => seleccionar(n)} className={`min-w-0 rounded-xl border p-3 text-left transition hover:border-gold/40 hover:shadow-sm ${seleccion === n.id ? "border-gold/50 bg-gold/5 ring-1 ring-gold/20" : "border-border bg-background/70"}`}>
-                <div className="flex items-start justify-between gap-2"><span className="text-xs font-semibold leading-5">{n.nombre}</span>{badge(n.estado)}</div>
-                <p className="mt-1 line-clamp-2 text-[10px] leading-4 text-muted-foreground">{n.tipo}</p>
-                {n.dependencias?.length ? <p className="mt-2 truncate text-[10px] text-muted-foreground">Depende de: {n.dependencias.join(" · ")}</p> : null}
-              </button>)}
+              {group.visibleChildren.map(n => {
+                const managedId = managedModuleIds[n.id];
+                const enabled = managedId ? moduleControls[managedId] : n.estado === "activo";
+                return <div key={n.id} className={`min-w-0 rounded-xl border p-3 transition ${seleccion === n.id ? "border-gold/50 bg-gold/5 ring-1 ring-gold/20" : "border-border bg-background/70"}`}>
+                  <button type="button" onClick={() => seleccionar(n)} className="w-full text-left">
+                    <div className="flex items-start justify-between gap-2"><span className="text-xs font-semibold leading-5">{n.nombre}</span>{managedId ? <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${enabled ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700" : "border-border bg-muted text-muted-foreground"}`}>{enabled ? "Activado" : "Desactivado"}</span> : badge(n.estado)}</div>
+                    <p className="mt-1 line-clamp-2 text-[10px] leading-4 text-muted-foreground">{n.tipo}</p>
+                    {n.dependencias?.length ? <p className="mt-2 truncate text-[10px] text-muted-foreground">Depende de: {n.dependencias.join(" · ")}</p> : null}
+                  </button>
+                  {managedId ? <button type="button" role="switch" aria-checked={enabled} onClick={() => toggleModule(managedId)} className={`mt-3 flex w-full items-center justify-between rounded-lg border px-2.5 py-2 text-[10px] font-semibold transition ${enabled ? "border-emerald-500/30 bg-emerald-500/5 text-emerald-700" : "border-border bg-muted/60 text-muted-foreground"}`}>
+                    <span>{enabled ? "Módulo activado" : "Módulo desactivado"}</span><span className={`relative h-5 w-9 rounded-full transition ${enabled ? "bg-emerald-500" : "bg-muted-foreground/40"}`}><span className={`absolute top-0.5 size-4 rounded-full bg-white shadow transition ${enabled ? "left-[18px]" : "left-0.5"}`}/></span>
+                  </button> : <p className="mt-3 text-[10px] text-muted-foreground">Control no aislado: requiere gestión de dependencias</p>}
+                </div>;
+              })}
               {!group.visibleChildren.length ? <p className="col-span-full py-3 text-center text-xs text-muted-foreground">No hay módulos que coincidan con el filtro.</p> : null}
             </div>
           </section>)}
@@ -151,7 +175,7 @@ export function AurumArchitectureExplorer() {
           <p className="mt-2 text-xs leading-5 text-muted-foreground">{actual.detalle}</p>
           <div className="mt-4 rounded-xl bg-muted/50 p-3"><p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Evidencia técnica</p><p className="mt-1 break-words font-mono text-[10px] leading-4 text-sky-700 dark:text-sky-400">{actual.evidencia || "Requiere localización exacta en auditoría"}</p></div>
           {actual.dependencias?.length ? <div className="mt-4"><p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Conexiones conocidas</p><div className="mt-2 flex flex-wrap gap-1.5">{actual.dependencias.map(d => <span key={d} className="rounded-lg border border-border bg-background px-2 py-1 text-[10px]">{d}</span>)}</div></div> : null}
-          <div className="mt-4 border-t border-border pt-3"><p className="flex items-center gap-2 text-[10px] font-semibold text-amber-700 dark:text-amber-400"><CircleHelp className="size-3.5"/> Cómo leer los estados</p><p className="mt-1 text-[10px] leading-4 text-muted-foreground">Los estados describen el alcance de integración, no la existencia del código. AURUM CAMERA está activo en el visor Aurum Render actual. Los demás módulos permanecen pendientes de adopción en el nuevo visor público; no se activan automáticamente por aparecer en este inventario.</p></div>
+          <div className="mt-4 border-t border-border pt-3"><p className="flex items-center gap-2 text-[10px] font-semibold text-amber-700 dark:text-amber-400"><CircleHelp className="size-3.5"/> Cómo leer los estados</p><p className="mt-1 text-[10px] leading-4 text-muted-foreground">Los interruptores verdes controlan módulos reales del pipeline de AURUM RENDER y guardan la preferencia en este navegador. Los módulos sin interruptor no están aislados de forma segura o requieren dependencias; no se simula su desactivación.</p></div>
         </aside>
       </div>
     </> : null}
