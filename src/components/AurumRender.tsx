@@ -1198,8 +1198,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           // Resolve the final model and camera transforms before building BVH
           // camera uniforms, so the first visible frame uses the current framing.
           modelo.updateMatrixWorld?.(true);
-          camara.updateMatrixWorld?.(true);
-          camara.updateProjectionMatrix?.();
+          cameraControlsContract.update();
           runtime.refresh(modelo);
           runtime.update();
           const diagnostics = runtime.diagnostics();
@@ -2107,8 +2106,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         // viewport chain afterwards so scene setup cannot leave a stale path.
         if (initialGemAaAvailable) {
           modelo.updateMatrixWorld?.(true);
-          camara.updateMatrixWorld?.(true);
-          camara.updateProjectionMatrix?.();
+          cameraControlsContract.update();
           diamondBvhRuntime?.update();
           const initialBeautyPasses = new Set([renderPass, gemMaskPass, fxaaPass, outputPass]);
           ((composer as any)?.passes ?? []).forEach((pass: any) => {
@@ -2156,7 +2154,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       const camaraVista=(id:VistaId)=>{
         // A fixed camera preset must stop the independent 360° animation first;
         // otherwise OrbitControls immediately moves away from the selected view.
-        controles.autoRotate = false;
+        cameraControlsContract.setAutoRotate(false);
         setAutoRotate360(false);
         // AURUM CAMERA is the sole owner of view presets and framing scale.
         // The embedded viewer uses a wider framing through the same contract;
@@ -2893,7 +2891,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           const originalPixelRatio=renderer.getPixelRatio?.()||1;
           const originalCssWidth=originalBufferWidth/originalPixelRatio;
           const originalCssHeight=originalBufferHeight/originalPixelRatio;
-          const originalAspect=camara.aspect;
+          const originalAspect=cameraControlsContract.captureState().aspect;
           const originalTransmissionResolutionScale=Number((renderer as any).transmissionResolutionScale ?? 1);
           const originalFastPath=liveFastPathRef.current;
           const originalDofConfig = { dof: postRuntimeConfig.dof, dofAperture: postRuntimeConfig.dofAperture, dofMaxBlur: postRuntimeConfig.dofMaxBlur };
