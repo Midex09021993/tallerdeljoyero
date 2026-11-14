@@ -1,3 +1,4 @@
+import { getAurumPostControls } from "./post-engine-controls";
 import {
   configureAurumEdgeQuality,
   createAurumSurfaceEdgeAaPass,
@@ -467,11 +468,12 @@ export async function createAurumPostPipeline(
     // work to the direct-render orbit path. Still captures may use it explicitly.
     const edgeAaMode=options.capture ? "capture" : "settled";
     const edgeAaProfile=getAurumEdgeAaProfile(qualityId || (high ? "high" : "low"),lastKnownBudgetTier,edgeAaMode);
-    const edgeAaEnabled=false; // Isolation phase: no temporal or edge filtering in preview or capture.
+    const postControls=getAurumPostControls();
+    const edgeAaEnabled=postControls.gemFxaaEnabled;
     if(gemMaskPass) gemMaskPass.enabled=edgeAaEnabled;
     if(fxaaPass) fxaaPass.enabled=edgeAaEnabled;
     if(surfaceEdgeAaPass) {
-      surfaceEdgeAaPass.enabled=edgeAaEnabled;
+      surfaceEdgeAaPass.enabled=postControls.surfaceEdgeAaEnabled;
       const strength=surfaceEdgeAaPass.material?.uniforms?.strength;
       if(strength) strength.value=edgeAaProfile.strength;
     }
@@ -710,11 +712,12 @@ export async function createAurumPostPipeline(
     const changed=next!==temporalMotionActive;
     temporalMotionActive=next;
     const edgeAaProfile=getAurumEdgeAaProfile(lastKnownQualityId || (lastKnownHighQuality ? "high" : "low"),lastKnownBudgetTier,next ? "live" : "settled");
-    const edgeAaEnabled=edgeAaProfile.enabled;
+    const postControls=getAurumPostControls();
+    const edgeAaEnabled=postControls.gemFxaaEnabled;
     if(gemMaskPass) gemMaskPass.enabled=edgeAaEnabled;
     if(fxaaPass) fxaaPass.enabled=edgeAaEnabled;
     if(surfaceEdgeAaPass) {
-      surfaceEdgeAaPass.enabled=edgeAaEnabled;
+      surfaceEdgeAaPass.enabled=postControls.surfaceEdgeAaEnabled;
       const strength=surfaceEdgeAaPass.material?.uniforms?.strength;
       if(strength) strength.value=edgeAaProfile.strength;
     }
