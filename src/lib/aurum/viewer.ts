@@ -1,5 +1,6 @@
 import type { Object3D } from "three";
 import type { IAurumCameraControlsContract } from "./core/module-contracts";
+import { createAurumCameraControlsContract } from "./core/camera-controls-contract";
 
 export interface AurumViewerFrame {
   cameraControls: IAurumCameraControlsContract;
@@ -215,19 +216,23 @@ export function createAurumWebGLViewer(
 
   const Controls = options.controlsClass;
   const controls = Controls ? new Controls(camera, renderer.domElement) : null;
-  if (controls) {
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.07;
-    controls.enablePan = true;
-    controls.enableRotate = true;
-    controls.autoRotate = false;
-    controls.autoRotateSpeed = 0.65;
-    controls.minDistance = 0.15;
-    controls.maxDistance = options.maxDistance ?? 100;
-  }
+  const cameraControls = controls
+    ? createAurumCameraControlsContract(camera, controls)
+    : null;
+  cameraControls?.configure({
+    enableDamping: true,
+    dampingFactor: 0.07,
+    enablePan: true,
+    enableRotate: true,
+    autoRotateSpeed: 0.65,
+    minDistance: 0.15,
+    maxDistance: options.maxDistance ?? 100,
+  });
 
   nodo.appendChild(renderer.domElement);
-  return { scene, camera, renderer, controls };
+  // Never publish raw OrbitControls. AURUM CAMERA is the only returned camera
+  // control surface; callers may read the camera for rendering/BVH only.
+  return { scene, camera, renderer, cameraControls };
 }
 
 export function startAurumViewerLoop(
