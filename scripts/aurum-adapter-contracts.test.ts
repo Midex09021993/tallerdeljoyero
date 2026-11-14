@@ -37,9 +37,11 @@ test("AURUM readonly map snapshots entries and exposes no runtime mutation metho
 test("AURUM production adapters expose runtime-readonly service contracts", () => {
   const viewer = createAurumViewerAdapter({
     scene: {},
-    camera: {},
     renderer: {},
-    controls: {},
+    cameraControls: {
+      id: "aurum.camera.controls",
+      version: "1.0.0",
+    } as any,
     host: {} as HTMLElement,
   });
 
@@ -67,7 +69,7 @@ test("AURUM production adapters expose runtime-readonly service contracts", () =
     expectRuntimeReadonlyMap(adapter.services);
   }
 
-  expect(viewer.services.size).toBe(5);
+  expect(viewer.services.size).toBe(4);
   expect(scene.services.size).toBe(1);
   expect(lighting.services.size).toBe(2);
   expect(metal.services.size).toBe(4);
