@@ -103,6 +103,13 @@ export function applyAurumCameraView(
   const distance = Math.max(fitDistance * 1.00 * profile.distance, 0.1);
   const verticalBias = radius * profile.vertical;
 
+  // OrbitControls conserva deltas de órbita/pan de la interacción anterior.
+  // Consumirlos antes de cambiar de preset evita que el siguiente update
+  // reescriba la posición recién calculada.
+  const previousDamping = controls.enableDamping;
+  if (controls.enableDamping !== undefined) controls.enableDamping = false;
+  controls.update?.();
+
   controls.target.copy(target);
   if (view === "frontal") {
     camera.up.set(0, 1, 0);
@@ -127,7 +134,11 @@ export function applyAurumCameraView(
   }
   camera.lookAt(target);
   camera.updateProjectionMatrix();
-  controls.update();
+  // Sin damping, OrbitControls recalcula su estado esférico desde la nueva
+  // posición sin arrastrar la órbita anterior. Se restaura el perfil interactivo.
+  controls.update?.();
+  if (previousDamping !== undefined) controls.enableDamping = previousDamping;
+  camera.updateMatrixWorld(true);
 }
 /** Ajusta la cámara a una proporción de salida sin deformar el modelo.
  * Conserva la dirección actual de observación y centra el volumen real.
