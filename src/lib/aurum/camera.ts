@@ -5,6 +5,22 @@ import { AURUM_IJEWEL_REFERENCE, AURUM_IJEWEL_CAMERA_DIRECTION } from "./ijewel-
 export type AurumCameraView = "perspectiva" | "frontal" | "superior" | "lateral";
 export type AurumProductCategory = "Anillo" | "Arete" | "Collar" | "Pulsera" | "Dije" | "Brazalete" | "Otro";
 
+/** Límites del producto renderizable: excluye mallas ocultas y helpers CAD invisibles. */
+export function getAurumVisibleProductBounds(model: THREE.Object3D | null): THREE.Box3 {
+  const bounds = new THREE.Box3();
+  if (!model) return bounds;
+  model.updateWorldMatrix(true, true);
+  model.traverse((object) => {
+    const mesh = object as THREE.Mesh;
+    if (!mesh.isMesh || !mesh.geometry || !mesh.visible) return;
+    for (let parent = mesh.parent; parent; parent = parent.parent) {
+      if (!parent.visible) return;
+    }
+    bounds.expandByObject(mesh);
+  });
+  return bounds;
+}
+
 export const AURUM_PRODUCT_CAMERA_PROFILES: Record<AurumProductCategory, {
   distance: number;
   vertical: number;
@@ -209,8 +225,8 @@ export function fitAurumCameraToAspect(
   margin = 1.18,
 ) {
   if (!Number.isFinite(aspect) || aspect <= 0) return;
-  const bounds = model ? new THREE.Box3().setFromObject(model) : null;
-  if (!bounds || bounds.isEmpty()) return;
+  const bounds = getAurumVisibleProductBounds(model);
+  if (bounds.isEmpty()) return;
   const target = bounds.getCenter(new THREE.Vector3());
   const size = bounds.getSize(new THREE.Vector3());
   const radius = Math.max(size.length() * 0.5, 0.01);
