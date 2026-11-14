@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  Activity, CalendarDays, CheckCircle2, ChevronRight, CircleAlert, ClipboardList,
+  Activity, CalendarDays, CheckCircle2, ChevronRight, CircleAlert, ClipboardList, Contact,
   Clock3, FileText, Gem, LayoutDashboard, Mail, Package, PackageCheck,
   Plus, Search, Users, Warehouse,
 } from "lucide-react";
@@ -30,15 +30,15 @@ function Sidebar({ active }: { active: Page }) {
       { name: "Casting", icon: Warehouse, id: "none" },
     ] },
   ];
-  return <aside className="hidden w-[15%] shrink-0 flex-col bg-[#192d3d] text-white sm:flex">
+  return <aside className="hidden w-[17%] shrink-0 flex-col bg-[#192d3d] text-white sm:flex">
     <div className="border-b border-white/10 px-3 py-3"><div className="font-serif text-[17px] italic leading-none text-[#d3ae70]">Aurum Lab</div><div className="mt-1 text-[6px] font-bold tracking-[.24em] text-slate-300">FADILAB</div></div>
-    <div className="flex-1 space-y-3 overflow-hidden px-2 py-3">{groups.map(group=><div key={group.label}><p className="mb-1.5 px-2 text-[6px] font-bold tracking-[.16em] text-slate-400">{group.label}</p><div className="space-y-0.5">{group.items.map(item=>{const I=item.icon;const selected=item.id===active;return <div key={item.name} className={`flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-[7px] ${selected?"border border-[#c5a36b]/50 bg-white/10 font-semibold text-[#e8d4ad]":"text-slate-300"}`}><I className="size-2.5 shrink-0"/>{item.name}</div>})}</div></div>)}</div>
+    <div className="flex-1 space-y-3 overflow-hidden px-2 py-3">{groups.map(group=><div key={group.label}><p className="mb-1.5 px-2 text-[7px] font-bold tracking-[.16em] text-slate-400">{group.label}</p><div className="space-y-0.5">{group.items.map(item=>{const I=item.icon;const selected=item.id===active;return <div key={item.name} className={`flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-[8px] ${selected?"border border-[#c5a36b]/50 bg-white/10 font-semibold text-[#e8d4ad]":"text-slate-300"}`}><I className="size-2.5 shrink-0"/>{item.name}</div>})}</div></div>)}</div>
     <div className="border-t border-white/10 px-3 py-3"><div className="text-[7px] font-semibold">AURUM LAB</div><div className="mt-1 text-[6px] text-slate-400">Espacio de trabajo</div></div>
   </aside>;
 }
 
 function Metric({ label, value="—", detail, icon: Icon }: {label:string;value?:string;detail:string;icon:typeof Package}) {
-  return <div className="min-w-0 rounded-lg border border-[#293b4a]/10 bg-[#fffefc] p-2 shadow-[0_5px_14px_-12px_rgba(24,40,56,.4)]"><div className="flex items-start justify-between gap-1"><p className="text-[6px] font-bold uppercase tracking-[.12em] text-[#71808d]">{label}</p><Icon className="size-2.5 shrink-0 text-[#b9955d]"/></div><p className="mt-2 font-serif text-[17px] font-semibold leading-none text-[#203142]">{value}</p><p className="mt-1 text-[6px] text-[#71808d]">{detail}</p></div>;
+  return <div className="min-w-0 rounded-lg border border-[#293b4a]/10 bg-[#fffefc] p-2 shadow-[0_5px_14px_-12px_rgba(24,40,56,.4)]"><div className="flex items-start justify-between gap-1"><p className="text-[7px] font-bold uppercase tracking-[.12em] text-[#71808d]">{label}</p><Icon className="size-2.5 shrink-0 text-[#b9955d]"/></div><p className="mt-2 font-serif text-[19px] font-semibold leading-none text-[#203142]">{value}</p><p className="mt-1 text-[7px] text-[#71808d]">{detail}</p></div>;
 }
 
 function MiniHome() {
@@ -56,9 +56,9 @@ function MiniClients() {
   return <div className="space-y-2.5">
     <header className="flex items-end justify-between gap-2"><div><h3 className="font-serif text-[18px] leading-none text-[#182838]">Clientes</h3><p className="mt-1 text-[7px] text-[#71808d]">Directorio comercial, historial y relación con cada cliente.</p></div><div className="flex gap-1.5"><div className="rounded-lg border border-[#c5a36b]/20 bg-white px-2 py-1.5"><p className="text-[5px] font-bold tracking-widest text-[#c5a36b]">DIRECTORIO</p><p className="mt-1 text-[10px] font-semibold text-[#203142]">Clientes</p></div><div className="rounded-lg border border-[#c5a36b]/20 bg-white px-2 py-1.5"><p className="text-[5px] font-bold tracking-widest text-[#c5a36b]">ESTADO</p><p className="mt-1 text-[10px] font-semibold text-[#203142]">Activos</p></div></div></header>
     <div className="flex gap-1 rounded-lg border border-slate-200 bg-white p-1"><span className="rounded-md bg-[#c5a36b] px-3 py-1 text-[7px] font-semibold text-[#182838]">Clientes</span><span className="px-2 py-1 text-[7px] text-slate-500">♧ Cumpleaños</span><span className="px-2 py-1 text-[7px] text-slate-500">✉ Campañas</span></div>
-    <div className="grid grid-cols-[1.1fr_1fr] gap-2">
+    <div className="grid grid-cols-[1.15fr_1fr] gap-2.5">
       <div className="overflow-hidden rounded-lg border border-[#293b4a]/10 bg-white"><div className="border-b border-slate-100 bg-[#fbfaf7] p-2"><p className="text-[5px] font-bold tracking-[.18em] text-[#a98249]">CRM / DIRECTORIO</p><div className="mt-1 flex items-center justify-between"><h4 className="text-[9px] font-semibold text-[#182838]">Clientes del taller</h4><span className="rounded-full bg-[#f1eee8] px-1.5 py-0.5 text-[5px] text-slate-500">Directorio</span></div><div className="mt-2 flex h-6 items-center gap-1 rounded-md border border-slate-200 px-2 text-[6px] text-slate-400"><Search className="size-2.5"/> Buscar nombre, documento, teléfono…</div></div><div className="divide-y divide-slate-100"><div className="flex items-center gap-2 p-2"><span className="grid size-5 place-items-center rounded-md border border-[#c5a36b]/30 bg-[#f7f0e4] text-[7px] text-[#a98249]"><Users className="size-3"/></span><div><p className="text-[7px] font-semibold text-slate-700">Ficha de cliente</p><p className="text-[6px] text-slate-400">Datos comerciales</p></div><span className="ml-auto rounded-full bg-emerald-50 px-1.5 py-0.5 text-[5px] text-emerald-600">ACTIVO</span></div><div className="flex items-center gap-2 p-2"><span className="grid size-5 place-items-center rounded-md border border-[#c5a36b]/30 bg-[#f7f0e4] text-[7px] text-[#a98249]"><Users className="size-3"/></span><div><p className="text-[7px] font-semibold text-slate-700">Ficha de cliente</p><p className="text-[6px] text-slate-400">Datos comerciales</p></div><span className="ml-auto rounded-full bg-emerald-50 px-1.5 py-0.5 text-[5px] text-emerald-600">ACTIVO</span></div></div></div>
-      <div className="flex min-h-[160px] flex-col items-center justify-center rounded-lg border border-[#293b4a]/10 bg-white p-3 text-center"><div className="grid size-10 place-items-center rounded-full border border-[#c5a36b]/20 text-[#c5a36b]"><Users className="size-4"/></div><p className="mt-2 text-[9px] font-semibold text-[#35495b]">Selecciona un cliente</p><p className="mt-1 max-w-[120px] text-[6px] text-slate-500">Aquí verás sus datos y su relación comercial con el taller.</p></div>
+      <div className="rounded-lg border border-[#293b4a]/10 bg-white p-3"><div className="flex items-center gap-2 border-b border-slate-100 pb-2"><div className="grid size-8 place-items-center rounded-full bg-[#f5ecdc] text-[#a98249]"><Contact className="size-4"/></div><div><p className="text-[8px] font-semibold text-[#203142]">Ficha del cliente</p><p className="text-[6px] text-slate-400">Vista de información</p></div></div><div className="mt-2 space-y-2"><div><p className="text-[6px] uppercase tracking-wider text-slate-400">Información personal</p><p className="mt-0.5 text-[8px] font-medium text-slate-700">Nombre y datos de contacto</p></div><div className="grid grid-cols-2 gap-1"><div className="rounded-md bg-[#f8f7f3] p-1.5"><Mail className="size-2.5 text-[#b9955d]"/><p className="mt-1 text-[6px] text-slate-500">Correo electrónico</p></div><div className="rounded-md bg-[#f8f7f3] p-1.5"><CalendarDays className="size-2.5 text-[#b9955d]"/><p className="mt-1 text-[6px] text-slate-500">Fecha de registro</p></div></div><div className="rounded-md border border-slate-100 p-2"><p className="text-[6px] font-semibold text-slate-600">Historial comercial</p><p className="mt-1 text-[6px] text-slate-400">Pedidos y cotizaciones vinculadas</p></div></div></div>
     </div>
   </div>;
 }
@@ -98,7 +98,7 @@ export function AurumProductShowcase() {
     return () => window.clearInterval(timer);
   }, [visible]);
 
-  return <section ref={rootRef} className="relative mx-auto w-full max-w-[760px]" aria-label="Vista previa de las interfaces de AURUM LAB">
+  return <section ref={rootRef} className="relative mx-auto w-full max-w-[820px]" aria-label="Vista previa de las interfaces de AURUM LAB">
     <style>{`
       @keyframes aurum-mini-page { 0% { opacity:0; transform:translate3d(26px,5px,0) } 100% { opacity:1; transform:translate3d(0,0,0) } }
       .aurum-mini-page { animation:aurum-mini-page .68s cubic-bezier(.2,.72,.2,1) both; }
@@ -107,13 +107,13 @@ export function AurumProductShowcase() {
     <div className="pointer-events-none absolute inset-x-8 top-8 bottom-0 rounded-[28px] bg-gradient-to-br from-[#f6e8c4]/55 via-[#f5f7fa] to-[#e3eaf2] blur-2xl"/>
     <div className="relative overflow-hidden rounded-[20px] border border-slate-200 bg-[#f7f5f0] shadow-[0_24px_70px_rgba(25,39,54,.16)]">
       <div className="flex h-7 items-center justify-between border-b border-slate-200/80 bg-white px-3"><div className="flex gap-1"><span className="size-2 rounded-full bg-[#ff6b63]"/><span className="size-2 rounded-full bg-[#ffce45]"/><span className="size-2 rounded-full bg-[#4ac58b]"/></div><span className="rounded-full bg-slate-100 px-9 py-1 text-[6px] tracking-wide text-slate-400">AURUM LAB · VISTA DEL PRODUCTO</span><span className="w-5"/></div>
-      <div className="flex h-[330px] sm:h-[390px]">
+      <div className="flex h-[390px] sm:h-[450px]">
         <Sidebar active={current.id}/>
         <main key={current.id} className="aurum-mini-page min-w-0 flex-1 overflow-hidden bg-[#f7f5f0] p-2.5 sm:p-3.5">
           <PageContent page={current}/>
         </main>
       </div>
-      <div className="flex h-7 items-center justify-between border-t border-slate-200/80 bg-white px-3"><span className="text-[6px] font-bold tracking-[.17em] text-[#a98249]">AURUM LAB</span><div className="flex items-center gap-1.5"><span className="size-1 rounded-full bg-emerald-500"/><span className="text-[6px] text-slate-500">{current.label} · {String(active+1).padStart(2,"0")} / 03</span></div></div>
+      <div className="flex min-h-9 items-center justify-between gap-2 border-t border-slate-200/80 bg-white px-3 py-1.5"><span className="hidden text-[7px] font-bold tracking-[.17em] text-[#a98249] sm:block">AURUM LAB</span><div className="flex flex-1 items-center justify-center gap-1.5">{pages.map((item,index)=><button key={item.id} type="button" onClick={()=>setActive(index)} aria-label={"Ver pantalla "+item.title} aria-current={active===index?"page":undefined} className={"rounded-full px-2.5 py-1 text-[7px] font-semibold transition-all "+(active===index?"bg-[#192d3d] text-white shadow-sm":"text-slate-500 hover:bg-slate-100")}>{item.label}</button>)}</div><div className="flex shrink-0 items-center gap-1.5"><span className="size-1 rounded-full bg-emerald-500"/><span className="text-[6px] text-slate-500">{String(active+1).padStart(2,"0")} / 03</span></div></div>
     </div>
     <div className="pointer-events-none absolute -bottom-3 right-4 -z-10 h-5 w-[94%] rounded-full bg-slate-300/35 blur-xl"/>
   </section>;
