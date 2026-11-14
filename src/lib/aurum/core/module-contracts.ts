@@ -91,3 +91,13 @@ export interface IAurumCameraControlsContract {
   update(): void;
   getTarget(): THREE.Vector3;
 }
+
+
+/** Object picking boundary; UI and material side effects are callback-owned. */
+export interface IAurumObjectSelectionContract {
+  readonly id: "aurum.object-selection";
+  readonly version: "1.0.0";
+  pick(event: MouseEvent): THREE.Intersection<THREE.Object3D> | null;
+  handleClick(event: MouseEvent): void;
+  dispose(): void;
+}
