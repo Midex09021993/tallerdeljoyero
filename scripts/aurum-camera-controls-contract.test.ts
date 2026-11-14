@@ -41,6 +41,13 @@ test("AURUM CAMERA applies four distinct presets using real Three.js OrbitContro
   const model = new THREE.Mesh(new THREE.BoxGeometry(2, 1, 1), new THREE.MeshBasicMaterial());
   const contract = createAurumCameraControlsContract(camera, controls);
 
+  // Navigation is configured by AURUM CAMERA, not left to OrbitControls defaults.
+  expect(controls.enablePan).toBe(true);
+  expect(controls.screenSpacePanning).toBe(true);
+  expect(controls.panSpeed).toBe(1);
+  expect(controls.mouseButtons.RIGHT).toBe(THREE.MOUSE.PAN);
+  expect(controls.mouseButtons.LEFT).toBe(THREE.MOUSE.ROTATE);
+  expect(controls.mouseButtons.MIDDLE).toBe(THREE.MOUSE.DOLLY);
   expect(contract.id).toBe("aurum.camera.controls");
   expect(Object.isFrozen(contract)).toBe(true);
 
