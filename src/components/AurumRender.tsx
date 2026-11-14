@@ -2246,6 +2246,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           const initialHeight = Math.max(1, renderer.domElement.height || renderer.domElement.clientHeight || 1);
           fxaaPass.material?.uniforms?.resolution?.value?.set?.(1 / initialWidth, 1 / initialHeight);
           const initialBeautyPasses = new Set([renderPass, gemMaskPass, fxaaPass, outputPass]);
+          if (gemMaskPass) gemMaskPass.enabled = true;
+          if (fxaaPass) fxaaPass.enabled = true;
           ((composer as any)?.passes ?? []).forEach((pass: any) => {
             pass.enabled = initialBeautyPasses.has(pass);
           });
@@ -2291,6 +2293,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           camara.updateProjectionMatrix?.();
           diamondBvhRuntime?.update();
           const initialBeautyPasses = new Set([renderPass, gemMaskPass, fxaaPass, outputPass]);
+          if (gemMaskPass) gemMaskPass.enabled = true;
+          if (fxaaPass) fxaaPass.enabled = true;
           ((composer as any)?.passes ?? []).forEach((pass: any) => {
             pass.enabled = initialBeautyPasses.has(pass);
           });
