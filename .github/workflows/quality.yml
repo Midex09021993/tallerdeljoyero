@@ -75,6 +75,8 @@ jobs:
         run: bun test scripts/aurum-gpu-resource-manager.test.ts
       - name: AURUM viewer adapter tests
         run: bun test scripts/aurum-viewer-adapter.test.ts
+      - name: AURUM camera controls contract tests (real Three.js OrbitControls)
+        run: bun test scripts/aurum-camera-controls-contract.test.ts
       - name: AURUM scene adapter tests
         run: bun test scripts/aurum-scene-adapter.test.ts
       - name: AURUM lighting adapter tests
