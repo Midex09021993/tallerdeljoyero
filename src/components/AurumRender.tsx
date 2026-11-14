@@ -58,6 +58,7 @@ import { GEMAS, MATERIALES, ESCENARIOS, VISTAS, ILUMINACIONES, type MaterialId, 
 import { AurumRenderSidebar } from "./AurumRenderSidebar";
 import { PublicCatalogViewer } from "./PublicCatalogViewer";
 import { AurumViewerControlsModule } from "./AurumViewerControlsModule";
+import { AurumDepthOfFieldModule } from "./AurumDepthOfFieldModule";
 import { createAurumPerformanceMonitor } from "@/lib/aurum/performance-monitor";
 import { createAurumVideoFramePipeline, getAurumVideoLivePasses } from "../lib/aurum/video-frame-pipeline";
 import { runAurumMediaExportCleanup } from "../lib/aurum/media-export-session";
@@ -230,9 +231,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [snapshotTransparent, setSnapshotTransparent] = useState(false);
   const [snapshotDof, setSnapshotDof] = useState(false);
   const [snapshotDofStrength, setSnapshotDofStrength] = useState<"soft"|"medium"|"strong">("soft");
-  const [liveDofOpen, setLiveDofOpen] = useState(false);
-  const [liveDof, setLiveDof] = useState(false);
-  const [liveDofStrength, setLiveDofStrength] = useState<"soft"|"medium"|"strong">("soft");
   const [snapshotGuide, setSnapshotGuide] = useState<"none"|"thirds"|"complete">("none");
   const [snapshotAspect, setSnapshotAspect] = useState<"16:9"|"1:1"|"4:5"|"9:16"|"3:2"|null>(null);
   const [renderQualityId, setRenderQualityId] = useState<AurumRenderQualityId>("high");
@@ -4977,16 +4975,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 <button type="button" title="Biblioteca de ambientes y materiales" aria-label="Abrir biblioteca" aria-expanded={libraryMenuOpen} onClick={()=>{setLibraryMenuOpen(v=>!v);setQualityOpen(false);}} className={"grid size-9 place-items-center rounded-xl transition-colors "+(libraryMenuOpen?"bg-[#d4af37]/15 text-[#92743b]":"text-black/70 hover:bg-white/70")}><SlidersHorizontal className="size-[17px]"/></button>
                 <button type="button" title="Calidad de render" onClick={()=>{setQualityOpen(v=>!v);setLibraryMenuOpen(false);}} className={"grid size-9 place-items-center rounded-xl "+(qualityOpen?"bg-[#d4af37]/15 text-[#d4af37]":"text-black/70 hover:bg-white/70")}><Sparkles className="size-[17px]"/></button>
                 <button type="button" title="Reiniciar cámara" onClick={()=>apiRef.current?.reset()} className="grid size-9 place-items-center rounded-xl text-black/70 hover:bg-white/70"><RotateCcw className="size-[17px]"/></button>
-                <button type="button" title="Profundidad de campo en el visor" aria-label="Ajustes de profundidad de campo en el visor" aria-expanded={liveDofOpen} onClick={()=>{setLiveDofOpen(v=>!v);setLibraryMenuOpen(false);setQualityOpen(false);}} className={"grid size-9 place-items-center rounded-xl text-[10px] font-semibold transition-colors "+(liveDof?"bg-[#d4af37]/20 text-[#92743b]":liveDofOpen?"bg-white/80 text-[#92743b]":"text-black/70 hover:bg-white/70")}>DOF</button>
+                <AurumDepthOfFieldModule otherPanelOpen={libraryMenuOpen || qualityOpen} onChange={(enabled, strength)=>{if(typeof window!=="undefined"&&new URLSearchParams(window.location.search).has("aurumDofDiag"))console.info("[AURUM][DOF] UI toggle",{requested:enabled,apiAvailable:Boolean(apiRef.current?.setDepthOfField)});apiRef.current?.setDepthOfField?.(enabled,strength);}}/>
                 <button type="button" title={autoRotate360 ? "Detener rotación 360°" : "Activar rotación 360°"} aria-label={autoRotate360 ? "Detener rotación 360 grados" : "Activar rotación 360 grados"} aria-pressed={autoRotate360} onClick={()=>{const next=!autoRotate360;setAutoRotate360(next);if(orbitControlsRef.current){orbitControlsRef.current.autoRotate=next;orbitControlsRef.current.autoRotateSpeed=0.8;orbitControlsRef.current.update?.();}invalidateRenderRef.current?.();}} className={"grid size-9 place-items-center rounded-xl transition-colors "+(autoRotate360 ? "bg-[#d4af37]/20 text-[#92743b]" : "text-black/70 hover:bg-white/70")}><span className="text-[10px] font-semibold">360°</span></button>
                 <button type="button" title={isViewerFullscreen?"Restaurar visor":"Maximizar visor"} aria-label={isViewerFullscreen?"Restaurar visor":"Maximizar visor"} aria-pressed={isViewerFullscreen} onClick={()=>apiRef.current?.fullscreen()} className="grid size-9 place-items-center rounded-xl text-black/70 hover:bg-white/70">{isViewerFullscreen?<Minimize2 className="size-[17px]"/>:<Maximize2 className="size-[17px]"/>}</button>
               </div>
-            </div>}
-            {!embedded && liveDofOpen&&<div className="absolute right-[70px] top-[calc(50%+52px)] z-40 w-[min(270px,calc(100%-5rem))] rounded-2xl border border-black/10 bg-[#fbfaf7]/95 p-3 text-[#292824] shadow-xl backdrop-blur-2xl">
-              <div className="mb-2 text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Profundidad de campo · visor</div>
-              <label className="flex items-center justify-between gap-3 rounded-lg border border-black/10 bg-white p-3 text-xs"><span><span className="block font-semibold">Previsualizar desenfoque</span><span className="mt-1 block text-[10px] text-[#77756f]">Se aplica al visor al terminar la órbita.</span></span><input type="checkbox" checked={liveDof} onChange={e=>{const enabled=e.target.checked;setLiveDof(enabled);if(typeof window!=="undefined"&&new URLSearchParams(window.location.search).has("aurumDofDiag"))console.info("[AURUM][DOF] UI toggle",{requested:enabled,apiAvailable:Boolean(apiRef.current?.setDepthOfField)});apiRef.current?.setDepthOfField?.(enabled,liveDofStrength);}} className="size-4 accent-[#b99642]"/></label>
-              <label className="mt-2 block text-[10px] text-[#66645e]">Intensidad<select value={liveDofStrength} onChange={e=>{const strength=e.target.value as "soft"|"medium"|"strong";setLiveDofStrength(strength);apiRef.current?.setDepthOfField?.(liveDof,strength);}} className="mt-1 w-full rounded-lg border border-black/15 bg-white px-2 py-2 text-xs text-[#292824]"><option value="soft">Suave · recomendado</option><option value="medium">Medio</option><option value="strong">Intenso</option></select></label>
-              <p className="mt-2 text-[10px] leading-relaxed text-[#858178]">El efecto se pausa durante el movimiento para conservar fluidez y se recupera al estabilizar la cámara.</p>
             </div>}
             {!embedded && libraryMenuOpen&&<div className="absolute right-[70px] top-1/2 z-40 w-[min(260px,calc(100%-6rem))] -translate-y-1/2 rounded-2xl border border-white/75 bg-[#fbfaf7]/75 p-2.5 text-[#292824] shadow-[0_12px_36px_rgba(35,32,24,.14)] backdrop-blur-2xl">
               <div className="px-2 pb-2 text-[9px] font-semibold uppercase tracking-[.16em] text-[#92743b]">Biblioteca de joyería</div>
