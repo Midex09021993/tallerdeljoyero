@@ -283,6 +283,15 @@ export function createAurumWebGLViewer(
     controls.dampingFactor = 0.07;
     controls.enablePan = true;
     controls.enableRotate = true;
+    // Explicit AURUM CAMERA mouse contract: left=orbit, right=pan, middle=dolly.
+    // OrbitControls keeps wheel zoom enabled independently of mouse button mapping.
+    if (THREE.MOUSE && controls.mouseButtons) {
+      controls.mouseButtons = {
+        LEFT: THREE.MOUSE.ROTATE,
+        MIDDLE: THREE.MOUSE.DOLLY,
+        RIGHT: THREE.MOUSE.PAN,
+      };
+    }
     controls.autoRotate = false;
     controls.autoRotateSpeed = 0.65;
     controls.minDistance = 0.15;
