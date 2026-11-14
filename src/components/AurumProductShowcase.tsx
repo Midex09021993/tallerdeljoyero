@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  Boxes, Calculator, Check, Cloud, FileBox, Gem,
+  Boxes, Calculator, Cloud, FileBox, Gem,
   Folder, Image, Layers3, ShoppingBag, Users,
 } from "lucide-react";
 
@@ -72,16 +72,16 @@ export function AurumProductShowcase() {
     <style>{`
       @keyframes aurum-showcase-in { from { opacity:0; transform:translate3d(18px,8px,0) scale(.99); filter:blur(3px) } to { opacity:1; transform:translate3d(0,0,0) scale(1); filter:blur(0) } }
       @keyframes aurum-showcase-float { 0%,100% { transform:translateY(0) } 50% { transform:translateY(-6px) } }
-      @keyframes aurum-card-forward { from { opacity:.72; transform:translate3d(0,22px,0) } to { opacity:1; transform:translate3d(0,0,0) } }
+      @keyframes aurum-card-forward { 0% { opacity:.55; transform:translate3d(22px,18px,0) rotate(.6deg) } 70% { opacity:1; transform:translate3d(-3px,-2px,0) rotate(-.12deg) } 100% { opacity:1; transform:translate3d(0,0,0) rotate(0) } }
       .aurum-showcase-scene { animation: aurum-showcase-in .65s cubic-bezier(.2,.75,.25,1) both; }
       .aurum-showcase-window { animation: aurum-showcase-float 7s ease-in-out infinite; }
       .aurum-showcase-card-front { animation: aurum-card-forward .62s cubic-bezier(.2,.75,.25,1) both; }
       .aurum-showcase-card-back { position:absolute; inset:0; border:1px solid #dfe5ed; border-radius:1.6rem; background:#fff; pointer-events:none; }
-      .aurum-showcase-card-back-one { transform:translateY(12px); opacity:.82; }
-      .aurum-showcase-card-back-two { transform:translateY(24px); opacity:.58; }
+      .aurum-showcase-card-back-one { transform:translate(12px,12px); opacity:.88; box-shadow:0 14px 32px rgba(28,40,52,.055); }
+      .aurum-showcase-card-back-two { transform:translate(24px,24px); opacity:.62; box-shadow:0 18px 36px rgba(28,40,52,.045); }
       @media (prefers-reduced-motion: reduce) { .aurum-showcase-scene,.aurum-showcase-window,.aurum-showcase-card-front { animation:none!important } }
     `}</style>
-    <div className="absolute inset-x-8 bottom-0 top-12 rounded-[3rem] bg-gradient-to-br from-[#ffe99a]/70 via-[#f8faff] to-[#e4ecf7] blur-2xl"/>
+    <div className="absolute inset-x-8 bottom-2 top-8 rounded-[3rem] bg-gradient-to-br from-[#fff0bf]/75 via-[#f8fafc] to-[#e4ebf4] blur-2xl"/>
     <div className="relative">
       <div aria-hidden="true" className="aurum-showcase-card-back aurum-showcase-card-back-two"/>
       <div aria-hidden="true" className="aurum-showcase-card-back aurum-showcase-card-back-one"/>
@@ -105,6 +105,6 @@ export function AurumProductShowcase() {
     </div>
       </div>
     </div>
-    <div className="absolute -bottom-1 left-3 flex max-w-[220px] items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_12px_35px_rgba(28,40,52,.14)] sm:bottom-0 sm:left-0 sm:max-w-[245px] sm:p-4"><span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#fff2bd] text-[#8c6a00]"><Check className="size-5"/></span><div><p className="text-[10px] font-bold text-[#17232d] sm:text-xs">Un espacio para tu taller</p><p className="mt-1 text-[9px] leading-4 text-slate-500 sm:text-[10px]">Herramientas, diseños y gestión conectados.</p></div></div>
+    <div className="relative z-10 mt-5 flex items-center justify-between px-2 text-[9px] text-slate-400 sm:px-3"><span className="font-semibold tracking-[.16em] text-slate-500">AURUM LAB</span><span>El arte de crear. La inteligencia de gestionar.</span></div>
   </div>;
 }
