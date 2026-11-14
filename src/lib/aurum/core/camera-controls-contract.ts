@@ -10,7 +10,7 @@ import * as THREE from "three";
 import { MOUSE, type PerspectiveCamera, type Vector3, type Object3D } from "three";
 import type { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { applyAurumCameraView, applyAurumIJEWELPresentationCamera, fitAurumCameraToAspect, centerAurumCameraOn, type AurumCameraView } from "../camera";
-import type { IAurumCameraControlsContract } from "./module-contracts";
+import type { IAurumCameraControlsContract, IAurumCameraState } from "./module-contracts";
 
 export function createAurumCameraControlsContract(
   camera: PerspectiveCamera,
@@ -82,6 +82,37 @@ export function createAurumCameraControlsContract(
       if (typeof speed === "number" && Number.isFinite(speed)) controls.autoRotateSpeed = speed;
       controls.update();
     },
+    setAspect(aspect) {
+      if (!Number.isFinite(aspect) || aspect <= 0) return;
+      camera.aspect = aspect;
+      camera.updateProjectionMatrix();
+    },
+    captureState(): IAurumCameraState {
+      return {
+        position: camera.position.clone(),
+        quaternion: camera.quaternion.clone(),
+        target: controls.target.clone(),
+        up: camera.up.clone(),
+        aspect: camera.aspect,
+        fov: camera.fov,
+        near: camera.near,
+        far: camera.far,
+        autoRotate: controls.autoRotate,
+        autoRotateSpeed: controls.autoRotateSpeed,
+      };
+    },
+    restoreState(state) {
+      synchronizeOrbitControlsPreset(camera, controls, state.target, state.position, state.up);
+      camera.quaternion.copy(state.quaternion);
+      camera.aspect = state.aspect;
+      camera.fov = state.fov;
+      camera.near = state.near;
+      camera.far = state.far;
+      controls.autoRotate = state.autoRotate;
+      controls.autoRotateSpeed = state.autoRotateSpeed;
+      camera.updateProjectionMatrix();
+      camera.updateMatrixWorld(true);
+    },
     update() {
       controls.update();
       camera.updateMatrixWorld(true);
@@ -91,6 +122,15 @@ export function createAurumCameraControlsContract(
     },
     getPosition() {
       return camera.position;
+    },
+    getUp() {
+      return camera.up;
+    },
+    getAutoRotate() {
+      return controls.autoRotate;
+    },
+    getAutoRotateSpeed() {
+      return controls.autoRotateSpeed;
     },
   };
   return Object.freeze(contract);
