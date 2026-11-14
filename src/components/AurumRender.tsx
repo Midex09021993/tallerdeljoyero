@@ -1990,7 +1990,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           sourceFormat: ext,
           preprocessMs: Math.round(performance.now() - preprocessStartedAt),
           triangles: countAurumTriangles(interno),
-          inferredGem: interno.getObjectByProperty("userData.aurumPublicInferredGem", true)?.name ?? null,
           centeredOnVisibleGeometry: true,
         });
         // Reject empty or fully hidden conversions before replacing the current jewel.
