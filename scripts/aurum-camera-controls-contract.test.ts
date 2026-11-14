@@ -79,7 +79,7 @@ test("AURUM CAMERA applies four distinct presets using real Three.js OrbitContro
     _sphericalDelta: THREE.Spherical;
     _panOffset: THREE.Vector3;
   };
-  controls.rotateLeft(0.35);
+  controls.rotateLeft(0.6);
   const manuallyOrbitedQuaternion = camera.quaternion.clone();
   expect(orientationDistance(manuallyOrbitedQuaternion, perspective.quaternion)).toBeGreaterThan(0.0001);
   const distanceBeforeDolly = controls.getDistance();
