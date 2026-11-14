@@ -547,7 +547,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
           framePerf.frameIntervalTotalMs = 0;
           framePerf.frameIntervalMaxMs = 0;
         };
-        loop = startAurumViewerLoop({ node: host, renderer, controls, cameraControls: cameraControls! }, () => {
+        loop = startAurumViewerLoop({ node: host, renderer, cameraControls: cameraControls! }, () => {
           // Reuse one typed buffer: no temporary object/array allocations while dragging.
           const frameStartedAt = framePerf ? performance.now() : 0;
           const previous = bvhCameraStateRef.current;
@@ -645,7 +645,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         const materials = Array.isArray(object.material) ? object.material : [object.material];
         materials.forEach((material: any) => material?.dispose?.());
       });
-      if (renderer) disposeAurumViewer({ node: host, renderer, controls });
+      if (renderer) disposeAurumViewer({ node: host, renderer, cameraControls: cameraControls! });
       if (environment && environment !== roomEnvironmentTexture) environment.dispose?.();
       if (gemEnvironment && gemEnvironment !== environment && gemEnvironment !== roomEnvironmentTexture) gemEnvironment.dispose?.();
       roomEnvironmentTexture?.dispose?.();
