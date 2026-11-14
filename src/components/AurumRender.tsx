@@ -41,6 +41,7 @@ import { disposeAurumThicknessCacheForTarget } from "../lib/aurum/thickness-map"
 import { createAurumApi, createAurumCatalogApi, type AurumCatalogApi } from "../lib/aurum/api";
 import { createAurumConfiguratorState } from "../lib/aurum/configurator-state";
 import { createAurumViewerAdapter, AURUM_VIEWER_SERVICES } from "../lib/aurum/core/viewer-adapter";
+import { createAurumCameraControlsContract } from "../lib/aurum/core/camera-controls-contract";
 import { createAurumSceneAdapter } from "../lib/aurum/core/scene-adapter";
 import { createAurumLightingAdapter } from "../lib/aurum/core/lighting-adapter";
 import { createAurumProductionPluginHost } from "../lib/aurum/core/production-plugin-host";
@@ -880,13 +881,17 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       });
       setPerformanceRenderer(renderer);
       performanceMonitorRef.current.reset();
-      // AURUM CORE adapter exposes the existing viewer without taking ownership
-      // of its render loop, GPU resources, or disposal lifecycle.
+      // OrbitControls is now owned by the AURUM CAMERA contract. The contract
+      // receives the existing instance; it does not create or dispose controls.
+      const cameraControlsContract = createAurumCameraControlsContract(camara, controles);
+      // AURUM CORE exposes both the raw viewer service (compatibility) and the
+      // semantic camera contract (official preset/control boundary).
       const viewerAdapter = createAurumViewerAdapter({
         scene: escena,
         camera: camara,
         renderer,
         controls: controles,
+        cameraControls: cameraControlsContract,
         host: nodo,
       });
       const viewerScene = viewerAdapter.get(AURUM_VIEWER_SERVICES.scene);
@@ -2194,7 +2199,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         });
       };
       const camaraVista=(id:VistaId)=>{
-        applyAurumCameraView(camara, controles, modelo, id, categoriaProyectoRef.current);
+        cameraControlsContract.applyView(modelo, id, categoriaProyectoRef.current);
         // The public configurator has a much shorter viewport than the editor.
         // Keep the entire jewel visible after view presets are applied as well
         // as after the initial model framing.
