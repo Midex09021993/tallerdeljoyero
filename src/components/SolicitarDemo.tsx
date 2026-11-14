@@ -91,7 +91,7 @@ export function SolicitarDemo({ className = "" }: Props) {
                 <form onSubmit={enviar} className="mt-6 space-y-4">
                   <div className="grid gap-4 sm:grid-cols-2">
                     <label className="text-xs font-semibold text-slate-700 sm:col-span-2">Nombre del taller o empresa *
-                      <input required maxLength={140} autoComplete="organization" value={form.empresa} onChange={e => setForm(v => ({ ...v, empresa: e.target.value }))} className={inputClass + " mt-1.5"} placeholder="Ej. Taller Delgado" />
+                      <input required maxLength={140} autoComplete="organization" value={form.empresa} onChange={e => setForm(v => ({ ...v, empresa: e.target.value }))} className={inputClass + " mt-1.5"} placeholder="Ej. Joyería Aurora" />
                     </label>
                     <label className="text-xs font-semibold text-slate-700">Nombre y apellido *
                       <span className="relative mt-1.5 block"><UserRound className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" /><input required maxLength={120} autoComplete="name" value={form.nombre} onChange={e => setForm(v => ({ ...v, nombre: e.target.value }))} className={inputClass + " pl-10"} placeholder="Tu nombre" /></span>
