@@ -134,7 +134,7 @@ const disposedAurumViewerRenderers = new WeakSet<object>();
 export function disposeAurumViewer(viewer: {
   node: any;
   renderer: any;
-  cameraControls: IAurumCameraControlsContract;
+  cameraControls: Pick<IAurumCameraControlsContract, "dispose">;
   observer?: { disconnect: () => void };
   loop?: { stop?: () => void };
   clickHandler?: (event: MouseEvent) => void;
