@@ -3937,12 +3937,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       setFormatoInterno(null);
       return false;
     } finally {
-      if (cargaCorrecta) {
-        setEstadoCarga("Modelo cargado");
-        window.setTimeout(() => setCargando(false), 1350);
-      } else {
-        setCargando(false);
-      }
+      // Public viewer clears its compact status as soon as setup completes.
+      // Do not hold a full-screen loading state after the model is already ready.
+      setCargando(false);
     }
   },[]);
   const recibirDesdeRhino = useCallback(async () => {
