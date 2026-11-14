@@ -2199,18 +2199,15 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         });
       };
       const camaraVista=(id:VistaId)=>{
-        cameraControlsContract.applyView(modelo, id, categoriaProyectoRef.current);
-        // The public configurator has a much shorter viewport than the editor.
-        // Keep the entire jewel visible after view presets are applied as well
-        // as after the initial model framing.
-        if (embedded && controles?.target && camara?.position) {
-          const target = controles.target;
-          const offset = camara.position.clone().sub(target);
-          offset.multiplyScalar(1.38);
-          camara.position.copy(target).add(offset);
-          camara.updateProjectionMatrix?.();
-          controles.update?.();
-        }
+        // AURUM CAMERA is the sole owner of view presets and framing scale.
+        // The embedded viewer uses a wider framing through the same contract;
+        // no caller mutates camera.position or OrbitControls after the preset.
+        cameraControlsContract.applyView(
+          modelo,
+          id,
+          categoriaProyectoRef.current,
+          { distanceScale: embedded ? 1.38 : 1 },
+        );
         // Sincronizar matrices, acumulación temporal y siguiente frame visible.
         camara.updateMatrixWorld?.(true);
         resetTemporalAccumulationRef.current?.();
