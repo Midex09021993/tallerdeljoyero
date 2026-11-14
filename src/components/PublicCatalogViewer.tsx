@@ -424,7 +424,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
         // The public viewer uses the same AURUM CAMERA owner as the editor.
         // This is a presentation profile, not a second camera implementation.
         const distance = radius / Math.sin(THREE.MathUtils.degToRad(35 / 2)) * 1.2;
-        cameraControls.configure({
+        cameraControls!.configure({
           fov: 35,
           near: Math.max(radius / 100, .001),
           far: Math.max(distance + radius * 20, 100),
