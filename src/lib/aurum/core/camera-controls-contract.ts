@@ -6,7 +6,7 @@
  * calling OrbitControls.update() for presets. GPU and Three.js resources stay
  * owned by the existing viewer lifecycle.
  */
-import type { PerspectiveCamera, Vector3, Object3D } from "three";
+import { MOUSE, type PerspectiveCamera, type Vector3, type Object3D } from "three";
 import type { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { applyAurumCameraView, applyAurumIJEWELPresentationCamera, fitAurumCameraToAspect, centerAurumCameraOn, type AurumCameraView } from "../camera";
 import type { IAurumCameraControlsContract } from "./module-contracts";
@@ -15,6 +15,17 @@ export function createAurumCameraControlsContract(
   camera: PerspectiveCamera,
   controls: OrbitControls,
 ): IAurumCameraControlsContract {
+  // AURUM CAMERA owns navigation semantics. Keep left-drag for orbit and
+  // explicitly bind right-drag to pan so the behavior never depends on the
+  // upstream OrbitControls defaults or another viewer's configuration.
+  controls.enablePan = true;
+  controls.screenSpacePanning = true;
+  controls.panSpeed = 1;
+  controls.mouseButtons = {
+    ...controls.mouseButtons,
+    RIGHT: MOUSE.PAN,
+  };
+
   const contract: IAurumCameraControlsContract = {
     id: "aurum.camera.controls",
     version: "1.0.0",
