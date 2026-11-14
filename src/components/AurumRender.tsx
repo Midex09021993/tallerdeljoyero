@@ -2170,14 +2170,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("aurumCameraDiag") === "1") {
           console.info("[AURUM][CAMERA VIEW]", {
             view: id,
-            position: camara.position.toArray(),
+            position: cameraControlsContract.getPosition().toArray(),
             target: cameraControlsContract.getTarget().toArray(),
-            up: camara.up.toArray(),
-            autoRotate: controles.autoRotate,
+            up: cameraControlsContract.getUp().toArray(),
+            autoRotate: cameraControlsContract.getAutoRotate(),
           });
         }
         // Sincronizar matrices, acumulación temporal y siguiente frame visible.
-        camara.updateMatrixWorld?.(true);
+        cameraControlsContract.update();
         resetTemporalAccumulationRef.current?.();
         viewerLoopRef.current?.invalidate?.();
         invalidateRenderRef.current?.();
@@ -2463,7 +2463,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         },
         fitAspect:(aspect?:number)=>{
           if(!modelo) return;
-          cameraControlsContract.fitAspect(modelo,Number(aspect)||camara.aspect,1.18);
+          cameraControlsContract.fitAspect(modelo,Number(aspect)||cameraControlsContract.captureState().aspect,1.18);
           diamondBvhRuntime?.update();
           invalidateRenderRef.current?.();
         },
