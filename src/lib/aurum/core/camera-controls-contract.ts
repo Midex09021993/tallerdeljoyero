@@ -138,6 +138,19 @@ export function createAurumCameraControlsContract(
     getAutoRotateSpeed() {
       return controls.autoRotateSpeed;
     },
+    writePoseSnapshot(target) {
+      target[0] = camera.position.x;
+      target[1] = camera.position.y;
+      target[2] = camera.position.z;
+      target[3] = camera.quaternion.x;
+      target[4] = camera.quaternion.y;
+      target[5] = camera.quaternion.z;
+      target[6] = camera.quaternion.w;
+      target[7] = controls.target.x;
+      target[8] = controls.target.y;
+      target[9] = controls.target.z;
+      return target;
+    },
     addEventListener(type, listener) {
       controls.addEventListener(type, listener as (event: any) => void);
     },
