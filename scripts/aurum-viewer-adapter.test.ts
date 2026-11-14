@@ -22,5 +22,7 @@ test("AURUM Viewer Adapter exposes existing viewer references without taking own
   expect(adapter.get(AURUM_VIEWER_SERVICES.renderer)).toBe(renderer);
   expect(adapter.get(AURUM_VIEWER_SERVICES.cameraControls)).toBe(cameraControls);
   expect(adapter.get(AURUM_VIEWER_SERVICES.host)).toBe(host);
+  expect(adapter.get("aurum.viewer.camera")).toBeUndefined();
+  expect(adapter.get("aurum.viewer.controls")).toBeUndefined();
   expect(adapter.get("aurum.unknown")).toBeUndefined();
 });
