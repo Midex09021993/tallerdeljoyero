@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { createAurumVideoFramePipeline } from "../src/lib/aurum/video-frame-pipeline";
+import { createAurumVideoFramePipeline, getAurumVideoLivePasses } from "../src/lib/aurum/video-frame-pipeline";
 
 test("AURUM video frames use the live composition passes and restore composer state", () => {
   const calls: string[] = [];
@@ -115,4 +115,24 @@ test("AURUM video pipeline refuses to render after restoration", () => {
   });
   pipeline.restore();
   expect(() => pipeline.renderFrame()).toThrow("ya fue restaurado");
+});
+
+test("AURUM video beauty passes include settled Surface Edge AA when enabled and never add TAA", () => {
+  const renderPass = { name: "render" };
+  const gemMaskPass = { name: "gem-mask" };
+  const fxaaPass = { name: "fxaa" };
+  const surfaceEdgeAaPass = { name: "surface-edge-aa" };
+  const outputPass = { name: "output" };
+  const passes = getAurumVideoLivePasses({
+    renderPass, gemMaskPass, fxaaPass, surfaceEdgeAaPass,
+    surfaceEdgeAaEnabled: true, outputPass,
+  });
+  expect(passes).toEqual([renderPass, gemMaskPass, fxaaPass, surfaceEdgeAaPass, outputPass]);
+
+  const withoutEdgeAa = getAurumVideoLivePasses({
+    renderPass, gemMaskPass, fxaaPass, surfaceEdgeAaPass,
+    surfaceEdgeAaEnabled: false, outputPass,
+  });
+  expect(withoutEdgeAa).toEqual([renderPass, gemMaskPass, fxaaPass, outputPass]);
+  expect(passes.some((pass: any) => pass?.name === "taa")).toBe(false);
 });
