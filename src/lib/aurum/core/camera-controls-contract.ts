@@ -119,8 +119,9 @@ export function createAurumCameraControlsContract(
       camera.updateMatrixWorld(true);
     },
     update() {
-      controls.update();
+      const changed = controls.update();
       camera.updateMatrixWorld(true);
+      return changed;
     },
     getTarget() {
       return controls.target.clone();
