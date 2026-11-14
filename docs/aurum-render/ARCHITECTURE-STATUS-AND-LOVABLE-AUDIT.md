@@ -480,6 +480,7 @@ Esta entrega mejora la seguridad de recuperación de la sesión, pero no certifi
 - La aplicación física de la gema ocurre primero; después se interpola la apariencia durante 260 ms con actualizaciones limitadas a ~30 Hz.
 - Un cambio rápido cancela la transición anterior antes de iniciar la siguiente. La transición se cancela también durante el teardown del visor.
 - El alcance de interpolación se limita a color, color de atenuación, roughness, transmission, intensidad de entorno y distancia de atenuación. No interpola IOR, dispersión, shader de diamante, scintillation, inclusiones ni estado BVH.
-- No se altera el motor óptico ni se activa TAA. La preparación BVH continúa en su ruta asíncrona existente.
-- Se amplió `scripts/aurum-gem-application.test.ts` para comprobar el orden de captura, primer pintado y comienzo de transición.
+- No se altera el motor óptico ni se activa TAA.
+- La reconciliación BVH de los meshes seleccionados ahora espera a que termine la transición visual. Esto evita que el BVH sustituya el `MeshPhysicalMaterial` mientras la interpolación aún lo está actualizando; si no existe una transición compatible, la reconciliación sigue por la ruta asíncrona inmediata.
+- Se amplió `scripts/aurum-gem-application.test.ts` para comprobar captura, primer pintado, transición y orden de finalización antes de refrescar BVH.
 - Pendiente: ejecución de CI y validación visual real con cambios rápidos de gema y capas con múltiples meshes.
