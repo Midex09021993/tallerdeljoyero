@@ -57,7 +57,7 @@ import { Camera, ChevronDown, Copy, Download, Expand, FileJson, Gem, Image as Im
 import { GEMAS, MATERIALES, ESCENARIOS, VISTAS, ILUMINACIONES, type MaterialId, type EscenarioId, type VistaId, type IluminacionId, type MaterialGrupo, type CategoriaParte, type GemaId, type GemaConfig, type MaterialConfig, type ParteModelo } from "../lib/aurum/catalog";
 import { AurumRenderSidebar } from "./AurumRenderSidebar";
 import { PublicCatalogViewer } from "./PublicCatalogViewer";
-import { AurumPerformanceIndicator, AurumPerformanceMonitorPanel } from "./AurumPerformanceMonitorPanel";
+import { AurumViewerControlsModule } from "./AurumViewerControlsModule";
 import { createAurumPerformanceMonitor } from "@/lib/aurum/performance-monitor";
 import { createAurumVideoFramePipeline, getAurumVideoLivePasses } from "../lib/aurum/video-frame-pipeline";
 import { runAurumMediaExportCleanup } from "../lib/aurum/media-export-session";
@@ -4822,13 +4822,17 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               zIndex: 9999,
             } : undefined}
           >
-            <AurumPerformanceIndicator
-              renderer={performanceRenderer}
-              monitor={performanceMonitorRef.current}
-              onClick={() => setPerformanceOpen((value) => !value)}
-              expanded={performanceOpen}
+            <AurumViewerControlsModule
+              performanceOpen={performanceOpen}
+              onPerformanceToggle={() => setPerformanceOpen((value) => !value)}
+              onPerformanceClose={() => setPerformanceOpen(false)}
+              performanceRenderer={performanceRenderer}
+              performanceMonitor={performanceMonitorRef.current}
+              selectionDiagnostic={diagnosticoSeleccion}
+              selectionName={parteSeleccionadaNombre}
+              selectionEnabled={diagnosticoSeleccionHabilitado}
+              onSelectionClose={() => { setDiagnosticoSeleccion(null); setDiagnosticoSeleccionHabilitado(false); diagnosticoSeleccionHabilitadoRef.current = false; }}
             />
-            <AurumPerformanceMonitorPanel open={performanceOpen} onClose={() => setPerformanceOpen(false)} renderer={performanceRenderer} monitor={performanceMonitorRef.current}/>
             {arrastrandoArchivo && !embedded && <div className="pointer-events-none absolute inset-3 z-[60] grid place-items-center rounded-2xl border border-dashed border-[#d4af37]/80 bg-[#090b0e]/88 text-center shadow-[inset_0_0_90px_rgba(212,175,55,.12),0_18px_55px_rgba(0,0,0,.22)] backdrop-blur-md" aria-live="polite">
               <div className="px-6 py-8">
                 <span className="mx-auto grid size-[72px] place-items-center rounded-full border border-[#d4af37]/45 bg-gradient-to-br from-[#d4af37]/15 to-transparent text-[#e3bd55] shadow-[0_0_35px_rgba(212,175,55,.12)]"><Upload className="size-7"/></span>
@@ -4867,7 +4871,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               </div>
             </div>}
             {error&&<div className="absolute bottom-5 left-1/2 z-30 -translate-x-1/2 rounded-xl border border-red-400/20 bg-red-950/80 px-4 py-2 text-xs text-red-200">{error}</div>}
-            {parteSeleccionada&&diagnosticoSeleccion&&diagnosticoSeleccionHabilitado&&<div className="absolute left-3 top-3 z-30 w-[min(430px,calc(100%-24px))] max-h-[78%] overflow-y-auto rounded-xl border border-[#d4af37]/50 bg-[#101214]/95 p-3 text-[10px] leading-relaxed text-white shadow-2xl backdrop-blur-xl">
+            {false&&parteSeleccionada&&diagnosticoSeleccion&&diagnosticoSeleccionHabilitado&&<div className="absolute left-3 top-3 z-30 w-[min(430px,calc(100%-24px))] max-h-[78%] overflow-y-auto rounded-xl border border-[#d4af37]/50 bg-[#101214]/95 p-3 text-[10px] leading-relaxed text-white shadow-2xl backdrop-blur-xl">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="text-[9px] uppercase tracking-[.16em] text-[#d4af37]">Diagnóstico de selección <span className="ml-2 text-white/40">Ctrl+Shift+D</span></div>
