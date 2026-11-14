@@ -17,6 +17,7 @@ import { AURUM_LIGHTING_DEFAULT } from "../lib/aurum-lighting-engine";
 import { calculateAurumFocalDepth } from "../lib/aurum/camera";
 import { prepareAurumModel } from "../lib/aurum/model-prep";
 import { createAurumPostPipeline } from "../lib/aurum/post";
+import { AURUM_MODULE_CONTROL_EVENT, readAurumModuleControls, type AurumManagedModuleId } from "../lib/aurum/module-controls";
 import { createAurumEnvironment } from "../lib/aurum/environment";
 import { createAurumGemEnvironment } from "../lib/aurum/gem-environment";
 import { createAurumDiamondBvhRuntime, type AurumDiamondBvhRuntime } from "../lib/aurum/aurum-diamond-bvh-runtime";
@@ -240,6 +241,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [performanceRenderer, setPerformanceRenderer] = useState<any>(null);
   const performanceMonitorRef = useRef(createAurumPerformanceMonitor());
   const composerRef = useRef<any>(null);
+  const moduleToggleRef = useRef<((id: AurumManagedModuleId, enabled: boolean) => void) | null>(null);
   const frameRef = useRef<number | null>(null);
   const invalidateRenderRef = useRef<(() => void) | null>(null);
   const viewerLoopRef = useRef<any>(null);
@@ -945,7 +947,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       // Preserve the original scene background while the live Bokeh preview is active.
       let dofSavedSceneBackground: THREE.Scene["background"] | undefined;
       let dofHasSavedSceneBackground = false;
-      const { composer, ssaoPass, ssrPass, ssrSavePass, ssrCompositePass, bloomPass, setSSRSelects, applyQuality: applyPostQuality, updateTemporal, resetTemporalAccumulation, setTemporalMotion, dofPass, renderPass, taaPass: idleTaaPass, fxaaPass, gemMaskPass, surfaceEdgeAaPass, outputPass } = await createAurumPostPipeline(
+      const { composer, ssaoPass, ssrPass, ssrSavePass, ssrCompositePass, bloomPass, setSSRSelects, applyQuality: applyPostQuality, updateTemporal, resetTemporalAccumulation, setTemporalMotion, setModuleEnabled, dofPass, renderPass, taaPass: idleTaaPass, fxaaPass, gemMaskPass, surfaceEdgeAaPass, outputPass } = await createAurumPostPipeline(
         renderer,
         escena,
         camara,
@@ -953,6 +955,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         renderQuality
       );
       resetTemporalAccumulationRef.current = resetTemporalAccumulation;
+      moduleToggleRef.current = (id, enabled) => {
+        setModuleEnabled(id, enabled);
+        invalidateRenderRef.current?.();
+      };
+      const savedModuleControls = readAurumModuleControls();
+      (Object.keys(savedModuleControls) as AurumManagedModuleId[]).forEach((id) => {
+        setModuleEnabled(id, savedModuleControls[id]);
+      });
 
       // The post pipeline loads Three.js passes asynchronously. If the route
       // unmounts while those imports are pending, release the renderer created
@@ -3811,9 +3821,19 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
     performanceMonitorRef.current.reset();
     ptAbortRef.current?.abort();
     composerRef.current=null;
+    moduleToggleRef.current=null;
     cleanup();
   };
   },[]);
+  useEffect(() => {
+    const handleModuleToggle = (event: Event) => {
+      const detail = (event as CustomEvent<{ id?: AurumManagedModuleId; enabled?: boolean }>).detail;
+      if (!detail?.id || typeof detail.enabled !== "boolean") return;
+      moduleToggleRef.current?.(detail.id, detail.enabled);
+    };
+    window.addEventListener(AURUM_MODULE_CONTROL_EVENT, handleModuleToggle);
+    return () => window.removeEventListener(AURUM_MODULE_CONTROL_EVENT, handleModuleToggle);
+  }, []);
   useEffect(()=>{ apiRef.current?.material(materialActivo); invalidateRenderRef.current?.(); },[materialActivo]);
   useEffect(()=>{ apiRef.current?.escenario(escenarioId); invalidateRenderRef.current?.(); },[escenarioId]);
   useEffect(()=>{ apiRef.current?.iluminacion(iluminacionId); invalidateRenderRef.current?.(); },[iluminacionId]);
