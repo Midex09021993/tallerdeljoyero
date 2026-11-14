@@ -17,6 +17,7 @@ import { AURUM_LIGHTING_DEFAULT } from "../lib/aurum-lighting-engine";
 import { applyAurumCameraView, applyAurumIJEWELPresentationCamera, applyAurumPublicViewerCamera, fitAurumCameraToAspect, calculateAurumFocalDepth, getAurumVisibleProductBounds } from "../lib/aurum/camera";
 import { prepareAurumModel } from "../lib/aurum/model-prep";
 import { createAurumPostPipeline } from "../lib/aurum/post";
+import { getAurumPostControls } from "../lib/aurum/post-engine-controls";
 import { createAurumEnvironment } from "../lib/aurum/environment";
 import { createAurumGemEnvironment } from "../lib/aurum/gem-environment";
 import { createAurumDiamondBvhRuntime, type AurumDiamondBvhRuntime } from "../lib/aurum/aurum-diamond-bvh-runtime";
@@ -2245,9 +2246,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           const initialWidth = Math.max(1, renderer.domElement.width || renderer.domElement.clientWidth || 1);
           const initialHeight = Math.max(1, renderer.domElement.height || renderer.domElement.clientHeight || 1);
           fxaaPass.material?.uniforms?.resolution?.value?.set?.(1 / initialWidth, 1 / initialHeight);
-          const initialBeautyPasses = new Set([renderPass, gemMaskPass, fxaaPass, outputPass]);
-          if (gemMaskPass) gemMaskPass.enabled = true;
-          if (fxaaPass) fxaaPass.enabled = true;
+          const initialGemFxaaEnabled = getAurumPostControls().gemFxaaEnabled;
+          const initialBeautyPasses = new Set([renderPass, outputPass]);
+          if (initialGemFxaaEnabled) {
+            initialBeautyPasses.add(gemMaskPass);
+            initialBeautyPasses.add(fxaaPass);
+          }
+          if (gemMaskPass) gemMaskPass.enabled = initialGemFxaaEnabled;
+          if (fxaaPass) fxaaPass.enabled = initialGemFxaaEnabled;
           ((composer as any)?.passes ?? []).forEach((pass: any) => {
             pass.enabled = initialBeautyPasses.has(pass);
           });
@@ -2292,9 +2298,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           camara.updateMatrixWorld?.(true);
           camara.updateProjectionMatrix?.();
           diamondBvhRuntime?.update();
-          const initialBeautyPasses = new Set([renderPass, gemMaskPass, fxaaPass, outputPass]);
-          if (gemMaskPass) gemMaskPass.enabled = true;
-          if (fxaaPass) fxaaPass.enabled = true;
+          const initialGemFxaaEnabled = getAurumPostControls().gemFxaaEnabled;
+          const initialBeautyPasses = new Set([renderPass, outputPass]);
+          if (initialGemFxaaEnabled) {
+            initialBeautyPasses.add(gemMaskPass);
+            initialBeautyPasses.add(fxaaPass);
+          }
+          if (gemMaskPass) gemMaskPass.enabled = initialGemFxaaEnabled;
+          if (fxaaPass) fxaaPass.enabled = initialGemFxaaEnabled;
           ((composer as any)?.passes ?? []).forEach((pass: any) => {
             pass.enabled = initialBeautyPasses.has(pass);
           });
@@ -3819,11 +3830,16 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             }
             // GemMask and its dependent AA composites are reserved for explicit
             // capture paths; the live viewport does not execute the composer.
-            const liveBeautyPasses = new Set([renderPass, gemMaskPass, fxaaPass, outputPass]);
+            const liveGemFxaaEnabled = getAurumPostControls().gemFxaaEnabled;
+            const liveBeautyPasses = new Set([renderPass, outputPass]);
+            if (liveGemFxaaEnabled) {
+              liveBeautyPasses.add(gemMaskPass);
+              liveBeautyPasses.add(fxaaPass);
+            }
             const interactionPasses = ((composer as any)?.passes ?? []) as any[];
             interactionPasses.forEach((pass) => { pass.enabled = liveBeautyPasses.has(pass); });
-            if (gemMaskPass) gemMaskPass.enabled = true;
-            if (fxaaPass) fxaaPass.enabled = true;
+            if (gemMaskPass) gemMaskPass.enabled = liveGemFxaaEnabled;
+            if (fxaaPass) fxaaPass.enabled = liveGemFxaaEnabled;
             liveFastPathRef.current = false;
 
             // Keep catalog-authored gemstone materials unchanged during orbit.
@@ -3840,11 +3856,16 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             composer?.setPixelRatio?.(settledDpr);
 
             // The settled direct-render preview does not accumulate temporal AA.
-            const settledBeautyPasses = new Set([renderPass, gemMaskPass, fxaaPass, outputPass]);
+            const settledGemFxaaEnabled = getAurumPostControls().gemFxaaEnabled;
+            const settledBeautyPasses = new Set([renderPass, outputPass]);
+            if (settledGemFxaaEnabled) {
+              settledBeautyPasses.add(gemMaskPass);
+              settledBeautyPasses.add(fxaaPass);
+            }
             const settledPasses = ((composer as any)?.passes ?? []) as any[];
             settledPasses.forEach((pass) => { pass.enabled = settledBeautyPasses.has(pass); });
-            if (gemMaskPass) gemMaskPass.enabled = true;
-            if (fxaaPass) fxaaPass.enabled = true;
+            if (gemMaskPass) gemMaskPass.enabled = settledGemFxaaEnabled;
+            if (fxaaPass) fxaaPass.enabled = settledGemFxaaEnabled;
 
             liveFastPathRef.current = false;
             // Restore the normal settled temporal state. There is no active
