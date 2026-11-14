@@ -2,8 +2,8 @@
  * AURUM CORE — Viewer Adapter.
  *
  * Exposes the already-created production viewer through stable, read-only
- * service keys. It does not create, resize, render, or dispose Three.js
- * objects; ownership remains with AurumRender and the existing viewer loop.
+ * service keys. Raw camera and OrbitControls are intentionally not exposed;
+ * camera operations are available only through AURUM CAMERA.
  */
 import { createAurumReadonlyMap } from "./readonly-map";
 import type { IAurumCameraControlsContract } from "./module-contracts";
