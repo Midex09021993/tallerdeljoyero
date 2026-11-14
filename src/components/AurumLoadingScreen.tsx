@@ -7,6 +7,10 @@ export type AurumLoadingScreenProps = {
   presentationCover?: string | null;
   /** Controls the presentation image's entrance transition. */
   presentationVisible?: boolean;
+  /** Optional error text rendered by the compact status variant. */
+  error?: string | null;
+  /** Overlay for the editor, or compact bottom status bar for the public viewer. */
+  variant?: "overlay" | "status-bar";
 };
 
 /**
@@ -21,7 +25,23 @@ export function AurumLoadingScreen({
   message,
   presentationCover = null,
   presentationVisible = false,
+  error = null,
+  variant = "overlay",
 }: AurumLoadingScreenProps) {
+  if (variant === "status-bar") {
+    if (!loading && !error) return null;
+    return (
+      <div
+        className={"absolute inset-x-3 bottom-3 z-20 rounded-xl px-3 py-2 text-xs " + (error ? "border border-red-300 bg-white/95 text-red-800" : "bg-white/90 text-[#625b54]")}
+        role={error ? "alert" : "status"}
+        aria-live={error ? "assertive" : "polite"}
+        aria-busy={loading && !error}
+        data-module="aurum-loading-screen"
+      >
+        {error || message}
+      </div>
+    );
+  }
   if (!loading && !presentationCover) return null;
 
   const visible = loading || presentationVisible;
