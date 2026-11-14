@@ -2180,7 +2180,7 @@ function MiNubePage() {
           <div className="flex items-end justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold">Colaboración</p><h3 className="mt-1 font-display text-2xl">Compartidas conmigo</h3><p className="mt-1 text-sm text-muted-foreground">Carpetas originales de otros talleres, sin duplicar archivos.</p></div><button type="button" onClick={() => void cargarCompartidas()} disabled={cargandoCompartidas} className="rounded-lg border border-border px-3 py-2 text-xs font-semibold">{cargandoCompartidas ? "Actualizando…" : "Actualizar"}</button></div>
           {cargandoCompartidas && carpetasRecibidas.length === 0 ? <p className="rounded-xl border border-border p-4 text-sm text-muted-foreground">Buscando carpetas compartidas…</p> : carpetasRecibidas.length === 0 ? <div className="rounded-2xl border border-dashed border-border p-6 text-center"><Folder className="mx-auto size-6 text-muted-foreground" /><p className="mt-2 text-sm font-medium">Todavía no tienes carpetas compartidas</p><p className="mt-1 text-xs text-muted-foreground">Cuando otro taller comparta una carpeta contigo, aparecerá aquí.</p></div> : (
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5">
-              {carpetasRecibidas.map((recibida, indiceRecibida) => {
+              {carpetasRecibidas.map((recibida) => {
                 const tipos = [...new Set(recibida.archivos.map((a) => {
                   if (a.categoria === "fotos") return "Imagen";
                   if (a.categoria === "modelos-3d") return a.nombre.toLowerCase().endsWith(".3dm") ? "3DM" : a.nombre.toLowerCase().endsWith(".stl") ? "STL" : "3D";
@@ -2207,7 +2207,8 @@ function MiNubePage() {
                   </div>
                   </FichaProyecto>
                   {proyectoAbierto === "compartida:" + recibida.id && (
-            <section className={"absolute inset-0 z-40 h-full max-h-full w-full min-w-0 overflow-y-auto overflow-x-hidden rounded-2xl border border-gold/40 bg-card shadow-2xl " + (indiceRecibida % 2 === 1 ? "right-0" : "left-0") + " " + (indiceRecibida % 4 >= 2 ? "xl:right-0 xl:left-auto" : "xl:left-0 xl:right-auto") + " " + (indiceRecibida % 5 >= 2 ? "2xl:right-0 2xl:left-auto" : "2xl:left-0 2xl:right-auto")} aria-label={"Archivos de " + recibida.nombre}>
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#171612]/55 p-3 backdrop-blur-sm sm:p-6" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setProyectoAbierto(null); }}>
+            <section className="flex max-h-[88dvh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-gold/35 bg-card shadow-[0_24px_80px_rgba(20,18,12,0.32)]" role="dialog" aria-modal="true" aria-label={"Archivos del proyecto " + recibida.nombre}>
               <div className="sticky top-0 z-20 flex min-w-0 items-center justify-between gap-2 border-b border-border bg-card/95 px-3 py-2.5 shadow-sm backdrop-blur">
                 <div className="flex min-w-0 items-center gap-2">
                   <Folder className="size-4 shrink-0 text-gold" />
@@ -2237,6 +2238,7 @@ function MiNubePage() {
                 </div>
               </div>
             </section>
+            </div>
                   )}
                 </div>;
               })}
