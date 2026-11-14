@@ -873,11 +873,12 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       const viewerScene = viewerAdapter.get(AURUM_VIEWER_SERVICES.scene);
       const viewerRenderer = viewerAdapter.get(AURUM_VIEWER_SERVICES.renderer);
       orbitControlsRef.current = controles;
-      // Orbit controls calibrated to the supplied iJewel VJSON reference.
+      // Match PublicCatalogViewer OrbitControls defaults for scroll and damping.
+      // Public viewer keeps OrbitControls zoomSpeed at 1 and dampingFactor at 0.07.
       if (controles) {
         controles.enableDamping = true;
-        controles.dampingFactor = 0.08;
-        controles.zoomSpeed = 0.15;
+        controles.dampingFactor = 0.07;
+        controles.zoomSpeed = 1;
         controles.rotateSpeed = 2;
       }
       // Render Pro se incorporará en una etapa posterior con el pipeline WebGPU
