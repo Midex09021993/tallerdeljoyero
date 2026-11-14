@@ -180,7 +180,7 @@ export function AurumProductShowcase() {
       <div className="flex h-[390px] sm:h-[450px]">
         <Sidebar active={current.id}/>
         <main key={current.id} className="aurum-mini-page min-w-0 flex-1 overflow-hidden bg-[#f7f5f0] p-2.5 sm:p-3.5">
-          <PageContent page={current}/>
+          <PageContent page={current.id}/>
         </main>
       </div>
       <div className="flex min-h-8 items-center justify-between gap-2 border-t border-slate-200/80 bg-white px-3 py-1.5"><span className="text-[7px] font-bold tracking-[.17em] text-[#a98249]">AURUM LAB</span><div className="flex shrink-0 items-center gap-1.5"><span className="size-1 rounded-full bg-emerald-500"/><span className="text-[6px] text-slate-500">{current.label} · {String(active+1).padStart(2,"0")} / 03</span></div></div>
