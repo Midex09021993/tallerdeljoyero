@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
 import { Activity, ChevronRight, CircleHelp, GitBranch, Network, Search, ShieldAlert, Workflow } from "lucide-react";
 
-type Estado = "desactivado";
+type Estado = "desactivado" | "activo";
 type Nodo = { id: string; nombre: string; tipo: string; estado: Estado; detalle: string; evidencia: string; dependencias?: string[]; hijos?: Nodo[] };
 
 const estadoUI: Record<Estado, { label: string; clase: string }> = {
   desactivado: { label: "Desactivado", clase: "border-border bg-muted text-muted-foreground" },
+  activo: { label: "Activo", clase: "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400" },
 };
 
 const arbol: Nodo[] = [
@@ -17,6 +18,7 @@ const arbol: Nodo[] = [
     { id: "gpu", nombre: "GPU Resource Manager", tipo: "Ownership explícito de recursos", estado: "desactivado", detalle: "El servicio está disponible y probado. La adopción sobre recursos productivos sigue siendo parcial y controlada.", evidencia: "src/lib/aurum/core/gpu-resource-manager.ts" },
   ]},
   { id: "engines", nombre: "MOTORES Y ADAPTADORES", tipo: "Servicios especializados conectados al visor", estado: "desactivado", detalle: "Varios elementos son adaptadores sobre controladores existentes, no motores autónomos.", evidencia: "src/lib/aurum/core/", hijos: [
+    { id: "camera", nombre: "AURUM CAMERA", tipo: "Encuadre inicial · frontal · superior · lateral · perspectiva", estado: "activo", detalle: "Activo en el visor Aurum Render actual. applyAurumCameraView calcula el encuadre según el volumen, el FOV y la proporción del viewport. El encuadre inicial fue ajustado: factor de distancia 1.00× frente al 1.10× anterior, aproximadamente 9.1% menos distancia y cerca de 10% más escala visual. El nuevo visor público conserva su cámara independiente hasta integrar este contrato.", evidencia: "src/lib/aurum/camera.ts · src/lib/aurum/viewer.ts · src/components/AurumRender.tsx", dependencias: ["AURUM RENDER"] },
     { id: "viewer", nombre: "Viewer Adapter", tipo: "Renderer, cámara y controles compartidos", estado: "desactivado", detalle: "Adaptador conectado al host anterior. El nuevo visor reutiliza createAurumWebGLViewer directamente y aún no consume este contrato.", evidencia: "src/lib/aurum/core/viewer-adapter.ts · src/components/PublicCatalogViewer.tsx", dependencias: ["AURUM RENDER"] },
     { id: "scene", nombre: "Scene Adapter", tipo: "Controlador de escena", estado: "desactivado", detalle: "Fachada conectada al controlador de escena del visor anterior; pendiente decidir si el nuevo visor necesita este contrato.", evidencia: "src/lib/aurum/core/scene-adapter.ts", dependencias: ["Viewer"] },
     { id: "lighting", nombre: "Light Engine / HDRI", tipo: "Iluminación base y entornos de metales/gemas", estado: "desactivado", detalle: "El nuevo visor ya reutiliza los helpers HDRI y crea su iluminación de escena. El adaptador Lighting del host anterior no está adoptado; falta formalizar el contrato propio del nuevo visor.", evidencia: "src/components/PublicCatalogViewer.tsx · src/lib/aurum-photographic-scene-engine.ts", dependencias: ["Nuevo Viewer"] },
@@ -74,7 +76,7 @@ export function AurumArchitectureExplorer() {
       <div className="max-w-2xl">
         <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-gold">AURUM LAB · Architecture Center</p>
         <h3 className="mt-1 text-xl font-semibold tracking-tight">Mapa de arquitectura</h3>
-        <p className="mt-1 text-xs leading-5 text-muted-foreground">Inventario completo de módulos existentes. Todos permanecen desactivados mientras construimos el nuevo visor para que primero reproduzca fielmente el comportamiento del visor público.</p>
+        <p className="mt-1 text-xs leading-5 text-muted-foreground">Inventario de módulos existentes. Se distingue lo activo en el visor Aurum Render actual de lo pendiente de integrar en el nuevo visor público.</p>
       </div>
       <div className="flex flex-wrap gap-2">
         {([
@@ -91,12 +93,12 @@ export function AurumArchitectureExplorer() {
         <p className="mt-0.5 text-[10px] text-muted-foreground">Módulos y componentes documentados</p>
       </div>
       <div className="rounded-xl border border-border bg-card px-3.5 py-3">
-        <p className="text-2xl font-semibold tracking-tight tabular-nums">{nodos.length}</p>
-        <p className="mt-0.5 text-[10px] text-muted-foreground">Desactivados · sin integración al nuevo visor</p>
+        <p className="text-2xl font-semibold tracking-tight tabular-nums">{conteo("desactivado")}</p>
+        <p className="mt-0.5 text-[10px] text-muted-foreground">Desactivados / pendientes de integración</p>
       </div>
       <div className="rounded-xl border border-border bg-card px-3.5 py-3">
-        <p className="text-sm font-semibold">Objetivo actual</p>
-        <p className="mt-0.5 text-[10px] text-muted-foreground">Reproducir primero el visor público tal cual, sin activar módulos adicionales.</p>
+        <p className="text-2xl font-semibold tracking-tight tabular-nums">{conteo("activo")}</p>
+        <p className="mt-0.5 text-[10px] text-muted-foreground">Activo en el visor Aurum Render actual</p>
       </div>
     </div>
 
@@ -104,7 +106,7 @@ export function AurumArchitectureExplorer() {
       <div className="flex flex-col gap-3 rounded-2xl border border-border bg-gradient-to-r from-slate-950/[0.04] via-gold/[0.05] to-transparent p-4 dark:from-white/[0.03]">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold">System overview</p><p className="mt-1 text-sm font-semibold">AURUM RENDER · Inventario de módulos</p></div>
-          <span className="rounded-full border border-border bg-card px-3 py-1 text-[10px] text-muted-foreground">Módulos desactivados · base visual del visor público</span>
+          <span className="rounded-full border border-border bg-card px-3 py-1 text-[10px] text-muted-foreground">1 módulo activo en el visor actual · nuevo visor en integración</span>
         </div>
         <div className="grid gap-2 sm:grid-cols-4">
           {grupos.map((group, index) => <div key={group.id} className="relative min-w-0">
@@ -148,7 +150,7 @@ export function AurumArchitectureExplorer() {
           <p className="mt-2 text-xs leading-5 text-muted-foreground">{actual.detalle}</p>
           <div className="mt-4 rounded-xl bg-muted/50 p-3"><p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Evidencia técnica</p><p className="mt-1 break-words font-mono text-[10px] leading-4 text-sky-700 dark:text-sky-400">{actual.evidencia || "Requiere localización exacta en auditoría"}</p></div>
           {actual.dependencias?.length ? <div className="mt-4"><p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Conexiones conocidas</p><div className="mt-2 flex flex-wrap gap-1.5">{actual.dependencias.map(d => <span key={d} className="rounded-lg border border-border bg-background px-2 py-1 text-[10px]">{d}</span>)}</div></div> : null}
-          <div className="mt-4 border-t border-border pt-3"><p className="flex items-center gap-2 text-[10px] font-semibold text-amber-700 dark:text-amber-400"><CircleHelp className="size-3.5"/> Cómo leer los estados</p><p className="mt-1 text-[10px] leading-4 text-muted-foreground">Todos los módulos de este inventario están desactivados. No se inicia ningún plugin, motor, adaptador ni exportador. La primera meta es que el nuevo visor reproduzca la experiencia gráfica del visor público actual; después se evaluará cada módulo por separado.</p></div>
+          <div className="mt-4 border-t border-border pt-3"><p className="flex items-center gap-2 text-[10px] font-semibold text-amber-700 dark:text-amber-400"><CircleHelp className="size-3.5"/> Cómo leer los estados</p><p className="mt-1 text-[10px] leading-4 text-muted-foreground">Los estados describen el alcance de integración, no la existencia del código. AURUM CAMERA está activo en el visor Aurum Render actual. Los demás módulos permanecen pendientes de adopción en el nuevo visor público; no se activan automáticamente por aparecer en este inventario.</p></div>
         </aside>
       </div>
     </> : null}
