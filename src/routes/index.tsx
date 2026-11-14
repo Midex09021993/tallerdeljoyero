@@ -16,13 +16,13 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "AURUM LAB reúne cálculo de aleaciones, diseño 3D y gestión comercial para joyerías.",
+          "Software para talleres de joyería. Calcula aleaciones y pesos, presenta diseños en 3D y organiza clientes, cotizaciones y pedidos con AURUM LAB.",
       },
       { name: "robots", content: "index, follow, max-image-preview:large" },
       { property: "og:title", content: "AURUM LAB | Software para joyeros y talleres de joyería" },
       {
         property: "og:description",
-        content: "Calcula materiales, presenta diseños de joyería en 3D y organiza clientes y pedidos con AURUM LAB.",
+        content: "Calcula aleaciones y pesos, muestra tus diseños de joyería en 3D y lleva el control de clientes y pedidos con AURUM LAB.",
       },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://www.tallerdeljoyero.com/" },
@@ -115,26 +115,26 @@ function PlanesPublicos() {
   const planes = [
     {
       id: "emprendedor", nombre: "Emprendedor", precioMensual: 0, gratis: true,
-      descripcion: "Usa herramientas básicas del taller.",
-      funciones: ["Calculadoras y herramientas", "Visor 3D público", "Conoce AURUM LAB"],
+      descripcion: "Empieza con herramientas para tu taller.",
+      funciones: ["Calculadoras para el taller", "Visor 3D público", "Conoce AURUM LAB"],
       destacado: false, accion: "Explorar herramientas", href: "/herramientas-publicas" as const,
     },
     {
       id: "taller", nombre: "Taller", precioMensual: precios.taller, gratis: false,
-      descripcion: "Organiza el trabajo diario.",
-      funciones: ["Clientes y presupuestos", "Pedidos, ventas y contratos", "Catálogo en línea", "Mi Nube", "Herramientas con límites de uso"],
+      descripcion: "Lleva el control de tu trabajo diario.",
+      funciones: ["Registro de clientes y cotizaciones", "Seguimiento de pedidos, ventas y contratos", "Catálogo digital para tus joyas", "Mi Nube", "Más herramientas según tu plan"],
       destacado: false, accion: "Acceder a la plataforma", href: "/auth" as const,
     },
     {
       id: "profesional", nombre: "Profesional", precioMensual: precios.profesional, gratis: false,
-      descripcion: "Todo el plan Taller, con más capacidad.",
-      funciones: ["Todo lo del plan Taller", "Más capacidad comercial", "Más espacio para archivos", "Más uso de herramientas"],
+      descripcion: "Incluye todo lo del plan Taller y permite trabajar con más capacidad.",
+      funciones: ["Todo lo del plan Taller", "Más espacio para gestionar el trabajo", "Más espacio para guardar archivos", "Más uso de las herramientas"],
       destacado: true, accion: "Acceder a la plataforma", href: "/auth" as const,
     },
     {
       id: "empresarial", nombre: "Empresarial", precioMensual: null, gratis: false,
-      descripcion: "Para equipos y talleres en crecimiento.",
-      funciones: ["Herramientas para equipos", "Varias sedes", "Capacidad por taller", "Asesoría para elegir tu plan"],
+      descripcion: "Para talleres con varias personas o sedes.",
+      funciones: ["Funciones para trabajar en equipo", "Gestión de varias sedes", "Recursos para cada taller", "Ayuda para elegir un plan"],
       destacado: false, accion: "Consultar solución", href: "/auth" as const,
     },
   ];
@@ -560,7 +560,7 @@ function InicioPublico() {
             "@id": "https://www.tallerdeljoyero.com/#webpage",
             "url": "https://www.tallerdeljoyero.com/",
             "name": "AURUM LAB | Software para joyeros y talleres de joyería",
-            "description": "Software para talleres de joyería. Calcula aleaciones y materiales, presenta tus diseños en 3D y organiza clientes, pedidos y archivos con AURUM LAB.",
+            "description": "AURUM LAB ayuda a los talleres de joyería a calcular aleaciones y pesos, mostrar diseños en 3D y organizar clientes, cotizaciones y pedidos.",
             "inLanguage": "es",
             "isPartOf": { "@id": "https://www.tallerdeljoyero.com/#website" },
             "about": { "@id": "https://www.tallerdeljoyero.com/#software" }
