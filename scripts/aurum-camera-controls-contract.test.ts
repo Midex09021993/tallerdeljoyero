@@ -168,7 +168,8 @@ test("AURUM CAMERA applies four distinct presets using real Three.js OrbitContro
   controls.update();
   expect(camera.position.distanceTo(recenteredPosition)).toBeLessThan(1e-7);
 
-  controls.dispose();
+  expect(typeof contract.update()).toBe("boolean");
+  contract.dispose();
   model.geometry.dispose();
   (model.material as THREE.Material).dispose();
 });
