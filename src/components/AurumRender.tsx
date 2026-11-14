@@ -1385,6 +1385,30 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         const { createAurumFinalRenderAdapter } = await import("../lib/aurum/core/final-render-adapter");
         return createAurumFinalRenderAdapter();
       };
+      // AURUM CAMERA groups the existing production camera actions without
+      // creating a second OrbitControls instance or taking ownership of camera resources.
+      const cameraModuleContract = Object.freeze({
+        centerJewel: () => {
+          if (!modelo) return;
+          const bounds = new THREE.Box3().setFromObject(modelo);
+          if (bounds.isEmpty()) return;
+          const target = bounds.getCenter(new THREE.Vector3());
+          const delta = target.clone().sub(controles.target);
+          camara.position.add(delta);
+          controles.target.copy(target);
+          camara.lookAt(target);
+          camara.updateProjectionMatrix?.();
+          controles.update?.();
+          diamondBvhRuntime?.update();
+          invalidateRenderRef.current?.();
+        },
+        fitAspect: (aspect?: number) => {
+          if (!modelo) return;
+          fitAurumCameraToAspect(camara, controles, modelo, Number(aspect) || camara.aspect, 1.18);
+          diamondBvhRuntime?.update();
+          invalidateRenderRef.current?.();
+        },
+      });
       const productionPluginHost = createAurumProductionPluginHost([
         { id: "aurum.glb-quality", description: "Valida la integridad del GLB mediante round-trip real.", dependencies: ["aurum.import"], requiresServices: ["aurum.import.pipeline"], services: new Map([
           ["aurum.glb-quality.snapshot", captureAurumGlbQualitySnapshot],
@@ -1406,6 +1430,12 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           ["aurum.media.video-recorder", mediaExportContract.recordCanvas],
           ["aurum.media.module-contract", mediaExportContract],
           ["aurum.media.path-traced.capture", captureAurumPathTracedScene],
+        ]) },
+        { id: "aurum.camera", description: "Controles de cámara y encuadre del visor productivo; reutiliza OrbitControls y la cámara existentes.", dependencies: ["aurum.viewer"], requiresServices: ["aurum.viewer.camera", "aurum.viewer.controls"], services: new Map([
+          ["aurum.camera.center-jewel", cameraModuleContract.centerJewel],
+          ["aurum.camera.fit-aspect", cameraModuleContract.fitAspect],
+          ["aurum.camera.orbit-controls", viewerAdapter.get(AURUM_VIEWER_SERVICES.controls)],
+          ["aurum.camera.instance", viewerAdapter.get(AURUM_VIEWER_SERVICES.camera)],
         ]) },
         { id: "aurum.viewer", description: "Referencias read-only al visor WebGL productivo.", services: viewerAdapter.services },
         { id: "aurum.geometry", description: "Diagnóstico geométrico read-only del modelo.", services: new Map([["aurum.geometry.engine", geometryEngine]]) },
@@ -2602,26 +2632,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         },
         sceneStudio:(_patch:any)=>{},
         reset:()=>{ controles.autoRotate=false; setAutoRotate360(false); encuadrar(); invalidateRenderRef.current?.(); },
-        centerJewel:()=>{
-          if(!modelo) return;
-          const bounds=new THREE.Box3().setFromObject(modelo);
-          if(bounds.isEmpty()) return;
-          const target=bounds.getCenter(new THREE.Vector3());
-          const delta=target.clone().sub(controles.target);
-          camara.position.add(delta);
-          controles.target.copy(target);
-          camara.lookAt(target);
-          camara.updateProjectionMatrix?.();
-          controles.update?.();
-          diamondBvhRuntime?.update();
-          invalidateRenderRef.current?.();
-        },
-        fitAspect:(aspect?:number)=>{
-          if(!modelo) return;
-          fitAurumCameraToAspect(camara,controles,modelo,Number(aspect)||camara.aspect,1.18);
-          diamondBvhRuntime?.update();
-          invalidateRenderRef.current?.();
-        },
+        centerJewel: cameraModuleContract.centerJewel,
+        fitAspect: cameraModuleContract.fitAspect,
         autoRotar:(activo:boolean)=>{ controles.autoRotate=activo; controles.autoRotateSpeed=0.65; invalidateRenderRef.current?.(); },
         limpiar:()=>{quitar();parteActiva=null;limpiarResaltado();setParteSeleccionada(null);setParteSeleccionadaNombre(null);},
         partes:()=>modelo?obtenerPartes(modelo):[],
