@@ -2640,13 +2640,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           if(!modelo) throw new Error("Carga una joya antes de grabar el vídeo.");
           const sourceCanvas=renderer.domElement as HTMLCanvasElement;
           if(!sourceCanvas || sourceCanvas.width<2 || sourceCanvas.height<2) throw new Error("El visor todavía no tiene una imagen para grabar.");
-          const originalCameraPosition=camara.position.clone();
-          const originalCameraQuaternion=camara.quaternion.clone();
-          const originalControlsTarget=controles.target?.clone?.();
-          const cameraPosition=camara.position.clone();
-          const controlsTarget=controles.target?.clone?.();
-          const previousAutoRotate=Boolean(controles.autoRotate);
-          const previousAutoRotateSpeed=Number(controles.autoRotateSpeed ?? 0.65);
+          const originalCameraState=cameraControlsContract.captureState();
+          const cameraPosition=originalCameraState.position.clone();
+          const controlsTarget=originalCameraState.target.clone();
           const automatic=options.mode!=="manual";
           const duration=Math.max(1,Math.min(20,Number(options.duration)||5));
           const loop:any=viewerLoopRef.current;
@@ -2662,7 +2658,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           const originalCanvasStyleLeft=sourceCanvas.style.left;
           const originalCanvasStyleTop=sourceCanvas.style.top;
           const originalCanvasStyleTransform=sourceCanvas.style.transform;
-          const originalAspect=camara.aspect;
+          const originalAspect=originalCameraState.aspect;
           const originalTransmissionScale=Number((renderer as any).transmissionResolutionScale??1);
           const videoWidth=Math.max(320,Math.min(3840,Math.round(Number(options.width)||1280)));
           const videoHeight=Math.max(320,Math.min(3840,Math.round(Number(options.height)||720)));
@@ -2687,7 +2683,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           try{
             const recordVideo = productionPluginHost.services.get("aurum.media.video-recorder") as ((source:HTMLCanvasElement,options:any)=>Promise<void>)|undefined;
             if (!recordVideo) throw new Error("AURUM Media Export Contract is not registered.");
-            controles.autoRotate=false;
+            cameraControlsContract.setAutoRotate(false);
             loop?.pause?.();
             // Keep the live viewport's visual composition enabled during capture.
             // The frame pipeline selects the same live beauty passes used by PNG
@@ -2728,8 +2724,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               sourceCanvas.style.top="50%";
               sourceCanvas.style.transform="translate(-50%, -50%)";
             }
-            camara.aspect=renderAspect;
-            camara.updateProjectionMatrix?.();
+            cameraControlsContract.setAspect(renderAspect);
             const createVideoFramePipeline = productionPluginHost.services.get("aurum.media.video-frame.create");
             if (typeof createVideoFramePipeline !== "function") throw new Error("AURUM Video Frame Pipeline service is not registered.");
             videoFramePipeline=createVideoFramePipeline({
@@ -2751,8 +2746,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // Fitting the entire model here pulls the camera back (especially for long
             // chains) and makes the jewelry tiny in the video compared with the PNG.
             // Only change the projection aspect; never rescale or refit the model for MP4.
-            cameraPosition.copy(camara.position);
-            if(controlsTarget && controles.target) controlsTarget.copy(controles.target);
+            // Camera pose and target were captured by AURUM CAMERA before recording.
             // Camera and source bitmap share the exact output ratio. Each captured
             // frame now passes through the live beauty chain before the encoder copies it.
             loop?.setContinuousRendering?.(true);
@@ -2760,7 +2754,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               width:options.width,height:options.height,fps:options.fps,duration:duration,
               signal:options.signal,onProgress:options.onProgress,
               onFrame:(elapsed,total)=>{
-                if(automatic && controlsTarget){
+                if(automatic){
                   const progress=Math.max(0,Math.min(1,elapsed/total));
                   const smooth=progress*progress*(3-2*progress);
                   const dx=cameraPosition.x-controlsTarget.x;
@@ -2790,19 +2784,18 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                     angle=Math.PI*2*progress;
                   }
                   const cos=Math.cos(angle),sin=Math.sin(angle);
-                  camara.position.set(
-                    controlsTarget.x+dx*cos*zoomFactor,
-                    cameraPosition.y+(targetY-controlsTarget.y),
-                    controlsTarget.z-dx*sin*zoomFactor+dz*zoomFactor,
-                  );
+                  let nextX=controlsTarget.x+dx*cos*zoomFactor;
+                  let nextZ=controlsTarget.z-dx*sin*zoomFactor+dz*zoomFactor;
                   // Keep the horizontal orbit mathematically anchored around the original target.
                   if(options.mode==="automatic"||options.mode==="orbit180-return"||options.mode==="slow360"||options.mode==="catalog"){
-                    camara.position.x=controlsTarget.x+dx*cos*zoomFactor+dz*sin*zoomFactor;
-                    camara.position.z=controlsTarget.z-dx*sin*zoomFactor+dz*cos*zoomFactor;
+                    nextX=controlsTarget.x+dx*cos*zoomFactor+dz*sin*zoomFactor;
+                    nextZ=controlsTarget.z-dx*sin*zoomFactor+dz*cos*zoomFactor;
                   }
-                  controles.target.set(controlsTarget.x,targetY,controlsTarget.z);
-                  camara.lookAt(controles.target);
-                  controles.update?.();
+                  cameraControlsContract.setPose(
+                    new THREE.Vector3(nextX,cameraPosition.y+(targetY-controlsTarget.y),nextZ),
+                    new THREE.Vector3(controlsTarget.x,targetY,controlsTarget.z),
+                    originalCameraState.up,
+                  );
                 }
                 // Render through the active live viewport composition before capture.
                 videoFramePipeline?.renderFrame();
@@ -2821,16 +2814,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               () => { sourceCanvas.style.left=originalCanvasStyleLeft; },
               () => { sourceCanvas.style.top=originalCanvasStyleTop; },
               () => { sourceCanvas.style.transform=originalCanvasStyleTransform; },
-              () => { camara.aspect=originalAspect; camara.updateProjectionMatrix?.(); },
+              () => cameraControlsContract.setAspect(originalAspect),
               () => { if(composer && applyPostQuality) applyPostQuality({...renderQuality,pixelRatio:originalPixelRatio,qualityId:measuredQualityId}); },
               () => videoFramePipeline?.restore(),
               () => { const strength=surfaceEdgeAaPass?.material?.uniforms?.strength; if(strength)strength.value=originalSurfaceEdgeAaStrength; },
-              () => { controles.autoRotate=previousAutoRotate; },
-              () => { controles.autoRotateSpeed=previousAutoRotateSpeed; },
-              () => camara.position.copy(originalCameraPosition),
-              () => camara.quaternion.copy(originalCameraQuaternion),
-              () => { if(originalControlsTarget && controles.target) controles.target.copy(originalControlsTarget); },
-              () => controles.update?.(),
+              () => cameraControlsContract.restoreState(originalCameraState),
               () => diamondBvhRuntime?.update(),
               () => aplicarPerfilLive(),
               () => resetTemporalAccumulationRef.current?.(),
@@ -2975,10 +2963,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           const originalFxaaResolution = fxaaPass?.material?.uniforms?.resolution?.value?.clone?.() ?? null;
           const originalRenderPassClearColor = renderPass?.clearColor?.clone?.() ?? renderPass?.clearColor ?? null;
           const originalRenderPassClearAlpha = renderPass?.clearAlpha;
-          const originalCameraPosition = camara.position.clone();
-          const originalCameraQuaternion = camara.quaternion.clone();
-          const originalControlsTarget = controles?.target?.clone?.() ?? null;
-          const posterCameraTarget = isPoster && controles?.target?.clone ? controles.target.clone() : null;
+          const originalCameraState = cameraControlsContract.captureState();
+          const originalCameraPosition = originalCameraState.position.clone();
+          const originalControlsTarget = originalCameraState.target.clone();
+          const posterCameraTarget = isPoster ? originalCameraState.target.clone() : null;
           try {
             // Render slightly above the requested dimensions for spatial
             // supersampling; the final file still uses exactly width x height.
@@ -2990,11 +2978,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             liveFastPathRef.current=false;
             // Give Mi Nube poster captures extra breathing room without changing the live view.
             if (isPoster && posterCameraTarget) {
-              camara.position.copy(posterCameraTarget).addScaledVector(
-                originalCameraPosition.clone().sub(posterCameraTarget),
-                1.3,
+              cameraControlsContract.setPose(
+                posterCameraTarget.clone().addScaledVector(originalCameraPosition.clone().sub(posterCameraTarget),1.3),
+                posterCameraTarget,
+                originalCameraState.up,
               );
-              camara.updateMatrixWorld?.();
             }
             renderer.setSize(renderWidth,renderHeight,false);
             if (composer && !options.depthOfField) {
@@ -3019,10 +3007,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 capturePassStates.push({ pass, enabled: Boolean(pass?.enabled) });
               }
             }
-            if(typeof camara.aspect==="number") {
-              camara.aspect=renderWidth/renderHeight;
-              camara.updateProjectionMatrix?.();
-            }
+            cameraControlsContract.setAspect(renderWidth/renderHeight);
             // Keep the user's exact live camera framing for product snapshots.
             // The on-screen composition frame represents a crop of this view; auto-fitting
             // the whole model here would pull the camera back and export extra whitespace,
@@ -3188,17 +3173,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             for(const state of capturePassStates){
               if(state.pass && "enabled" in state.pass) state.pass.enabled=state.enabled;
             }
-            camara.position.copy(originalCameraPosition);
-            camara.quaternion.copy(originalCameraQuaternion);
-            camara.updateMatrixWorld?.();
-            if (originalControlsTarget && controles?.target) {
-              controles.target.copy(originalControlsTarget);
-              controles.update?.();
-            }
-            if(typeof originalAspect==="number") {
-              camara.aspect=originalAspect;
-              camara.updateProjectionMatrix?.();
-            }
+            cameraControlsContract.restoreState(originalCameraState);
             // Rebuild the settled viewport image after the temporary high-resolution
             // capture. The export changes composer targets and disables optional
             // passes; restoring their flags alone does not clear stale temporal
