@@ -71,3 +71,28 @@ test("AURUM visual comparator rejects mismatched dimensions and malformed buffer
   expect(() => compareAurumVisualCaptures(valid, { width: 2, height: 1, data: rgba(2, 1) })).toThrow("mismas dimensiones");
   expect(() => compareAurumVisualCaptures(valid, { width: 1, height: 1, data: new Uint8Array(3) })).toThrow("buffer RGBA");
 });
+
+
+test("AURUM visual comparator passes when every pixel is explicitly masked out", () => {
+  const reference = rgba(2, 1, 0);
+  const actual = rgba(2, 1, 255);
+  const mask = rgba(2, 1, 0);
+  const report = compareAurumVisualCaptures(
+    { width: 2, height: 1, data: reference },
+    { width: 2, height: 1, data: actual },
+    { mask, maximumChangedPixelRatio: 0 },
+  );
+  expect(report.status).toBe("passed");
+  expect(report.comparedPixels).toBe(0);
+  expect(report.changedPixels).toBe(0);
+  expect(report.meanAbsoluteError).toBe(0);
+});
+
+test("AURUM visual comparator rejects malformed masks and invalid reference dimensions", () => {
+  const valid = { width: 1, height: 1, data: rgba(1, 1) };
+  expect(() => compareAurumVisualCaptures(valid, valid, { mask: new Uint8Array(3) })).toThrow("máscara");
+  expect(() => compareAurumVisualCaptures(
+    { width: 0, height: 1, data: new Uint8Array(0) },
+    { width: 0, height: 1, data: new Uint8Array(0) },
+  )).toThrow("dimensiones de referencia inválidas");
+});
