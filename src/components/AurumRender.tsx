@@ -44,6 +44,8 @@ import { createAurumViewerAdapter, AURUM_VIEWER_SERVICES } from "../lib/aurum/co
 import { createAurumSceneAdapter } from "../lib/aurum/core/scene-adapter";
 import { createAurumLightingAdapter } from "../lib/aurum/core/lighting-adapter";
 import { createAurumProductionPluginHost } from "../lib/aurum/core/production-plugin-host";
+import { createAurumRenderPipelineContract } from "../lib/aurum/core/render-pipeline-contract";
+import { createAurumMediaExportContract } from "../lib/aurum/core/media-export-contract";
 import { captureAurumGlbQualitySnapshot, evaluateAurumGlbQuality } from "../lib/aurum/core/glb-quality-gate";
 import { configureAurumEdgeQuality, getAurumEdgeAaProfile } from "../lib/aurum/edge-quality";
 import { AURUM_ASPECT_RATIOS, getAurumAspectRatio, getAurumAspectDimensions, getAurumAspectFrameStyle, type AurumAspectRatioId } from "../lib/aurum/aspect-ratios";
@@ -1307,6 +1309,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       // AURUM CORE owns plugin lifecycle and service discovery only. Production
       // viewer/lighting/material controllers retain ownership of their GPU resources.
       const materialAdapterServices = getAurumMaterialAdapterServices();
+      const renderPipelineContract = createAurumRenderPipelineContract({
+        composer,renderPass,gemMaskPass,fxaaPass,surfaceEdgeAaPass,outputPass,taaPass:idleTaaPass,
+        setTemporalMotion:(active:boolean)=>setTemporalMotion?.(active),
+        updateTemporal:(camera:any,options?:any)=>updateTemporal?.(camera,options),
+        resetTemporalAccumulation:()=>resetTemporalAccumulation?.(),
+        applyQuality:(quality:any,options?:any)=>applyPostQuality?.(quality,options),
+      });
+      const mediaExportContract = createAurumMediaExportContract();
       const geometryEngine = createAurumGeometryEngine();
       const importPipelineManager = createAurumImportPipelineManager(aurumImportPlugin, geometryEngine);
       const finalRenderLoader = async () => {
@@ -1327,10 +1337,12 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           ["aurum.post.reset-temporal", resetTemporalAccumulation],
           ["aurum.post.set-temporal-motion", setTemporalMotion],
           ["aurum.post.update-temporal", updateTemporal],
+          ["aurum.post.module-contract", renderPipelineContract],
         ]) },
         { id: "aurum.media-export", description: "Servicios de captura de imagen y vídeo sobre el visor y compositor productivos.", dependencies: ["aurum.viewer", "aurum.post", "aurum.final-render"], requiresServices: ["aurum.viewer.renderer", "aurum.post.composer", "aurum.final-render.load-adapter"], services: new Map([
-          ["aurum.media.video-frame.create", createAurumVideoFramePipeline],
-          ["aurum.media.video-recorder.load", async () => (await import("../lib/aurum/video-exporter")).recordAurumCanvasVideo],
+          ["aurum.media.video-frame.create", mediaExportContract.createFramePipeline],
+          ["aurum.media.video-recorder", mediaExportContract.recordCanvas],
+          ["aurum.media.module-contract", mediaExportContract],
           ["aurum.media.path-traced.capture", captureAurumPathTracedScene],
         ]) },
         { id: "aurum.viewer", description: "Referencias read-only al visor WebGL productivo.", services: viewerAdapter.services },
@@ -2038,7 +2050,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         // been copied into postRuntimeConfig. The previous order configured
         // TAA from stale defaults before the model's iJewel profile was applied.
         applyPostQuality?.(renderQuality);
-        setTemporalMotion?.(false);
+        renderPipelineContract.setMode("RESTING_SETTLED");
 
         // The first completed model frame must use the same selective gem-AA
         // composer as the settled preview. Previously the viewer stayed on the
@@ -2739,7 +2751,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // Camera and source bitmap share the exact output ratio. Each captured
             // frame now passes through the live beauty chain before the encoder copies it.
             loop?.setContinuousRendering?.(true);
-            await recordAurumCanvasVideo(sourceCanvas,{
+            const recordVideo = productionPluginHost.services.get("aurum.media.video-recorder") as ((source:HTMLCanvasElement,options:any)=>Promise<void>)|undefined;
+            if(!recordVideo) throw new Error("AURUM Media Export Contract is not registered.");
+            await recordVideo(sourceCanvas,{
               width:options.width,height:options.height,fps:options.fps,duration:duration,
               signal:options.signal,onProgress:options.onProgress,
               onFrame:(elapsed,total)=>{
@@ -3626,7 +3640,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         {
           progressiveFrames: Math.max(1, Math.min(32, Math.floor(Number(postRuntimeConfig.progressiveFrameCount ?? 1)))),
           onStart: () => {
-            setTemporalMotion?.(true);
+            renderPipelineContract.setMode("LIVE_MOTION");
             syncAurumSsrDiagnosticConfig();
 
             // Keep the lightweight beauty chain during orbit. Optional photographic
