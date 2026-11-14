@@ -36,6 +36,7 @@ function synchronizeOrbitControlsPreset(
   target: THREE.Vector3,
   position: THREE.Vector3,
   up: THREE.Vector3 = camera.up,
+  stopAutoRotate = false,
 ) {
   // Three.js r185 OrbitControls keeps these transient values as instance
   // fields with the exact underscored names below. Clear the complete input
@@ -43,6 +44,7 @@ function synchronizeOrbitControlsPreset(
   // or cursor-dolly state cannot pull the camera away on the next frame.
   const orbit = controls as typeof controls & {
     state?: number;
+    autoRotate?: boolean;
     _controlActive?: boolean;
     _sphericalDelta?: THREE.Spherical;
     _panOffset?: THREE.Vector3;
@@ -64,6 +66,7 @@ function synchronizeOrbitControlsPreset(
 
   // OrbitControls r185: STATE.NONE is -1.
   if (typeof orbit.state === "number") orbit.state = -1;
+  if (stopAutoRotate && typeof orbit.autoRotate === "boolean") orbit.autoRotate = false;
   if (typeof orbit._controlActive === "boolean") orbit._controlActive = false;
   orbit._sphericalDelta?.set(0, 0, 0);
   orbit._panOffset?.set(0, 0, 0);
@@ -140,7 +143,7 @@ export function applyAurumIJEWELPresentationCamera(
   // Keep the viewer's Y-up convention stable and synchronize OrbitControls
   // atomically so pending user deltas cannot restore the previous pose.
   const position = target.clone().add(direction.multiplyScalar(distance));
-  synchronizeOrbitControlsPreset(camera, controls, target, position);
+  synchronizeOrbitControlsPreset(camera, controls, target, position, new THREE.Vector3(0, 1, 0));
   camera.updateProjectionMatrix();
 }
 
@@ -207,7 +210,7 @@ export function applyAurumCameraView(
     position = target.clone().addScaledVector(perspectiveDirection, distance);
   }
 
-  synchronizeOrbitControlsPreset(camera, controls, target, position, cameraUp);
+  synchronizeOrbitControlsPreset(camera, controls, target, position, cameraUp, true);
   camera.updateProjectionMatrix();
 }
 /** Ajusta la cámara a una proporción de salida sin deformar el modelo.
