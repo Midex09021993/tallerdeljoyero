@@ -90,7 +90,7 @@ export function AurumArchitectureExplorer() {
       </div>
     </div>
 
-    <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
       {(["conectado", "parcial", "registrado", "auditar", "experimental", "suspendido"] as Estado[]).map(s => <div key={s} className="relative overflow-hidden rounded-xl border border-border bg-card px-3.5 py-3">
         <div className="flex items-center justify-between gap-2"><p className="text-2xl font-semibold tracking-tight tabular-nums">{conteo(s)}</p><span className={`size-2 rounded-full ${s === "conectado" ? "bg-emerald-500" : s === "parcial" ? "bg-sky-500" : s === "registrado" ? "bg-violet-500" : s === "auditar" ? "bg-amber-500" : s === "experimental" ? "bg-orange-500" : "bg-rose-500"}`}/></div>
         <p className="mt-0.5 text-[10px] text-muted-foreground">{estadoUI[s].label}</p>
@@ -156,10 +156,10 @@ export function AurumArchitectureExplorer() {
         <p className="mt-1 text-xs text-muted-foreground">Vista conceptual de los principales recorridos de AURUM RENDER.</p>
         <div className="mt-4 grid gap-2 md:grid-cols-4">
           {[
-            {title:"01 · Entrada CAD",desc:"AURUM IMPORT · Rhino / GLB · normalización",ids:["import-plugin","manager"]},
+            {title:"01 · Entrada CAD",desc:"Carga directa · Rhino / GLB · normalización",ids:["import-plugin","glb"]},
             {title:"02 · Escena 3D",desc:"Viewer · Scene · Lighting · materiales",ids:["viewer","scene","lighting","metal","gem"]},
-            {title:"03 · Procesamiento",desc:"Geometría · BVH · Edge Quality · Post",ids:["geometry","solid","diamond","edge","post"]},
-            {title:"04 · Entrega visual",desc:"Imagen · vídeo · render final",ids:["image","video","final","path"]},
+            {title:"03 · Procesamiento",desc:"BVH y calidad de imagen · diagnósticos opt-in",ids:["diamond","edge","post","geometry","solid"]},
+            {title:"04 · Entrega visual",desc:"Captura de imagen/vídeo · render final opcional",ids:["image","video","final","path"]},
           ].map((step,i) => <div key={step.title} className="relative rounded-xl border border-border bg-background p-3">
             <span className="text-[10px] font-bold tracking-wider text-gold">{step.title}</span><p className="mt-2 text-xs font-semibold leading-5">{step.desc}</p>
             <div className="mt-3 flex flex-wrap gap-1">{step.ids.map(id => {const n=nodos.find(x=>x.id===id);return n?<button key={id} type="button" onClick={()=>{seleccionar(n);setVista("overview");}} className="rounded-md border border-border bg-card px-2 py-1 text-[10px] hover:border-gold/40">{n.nombre}</button>:null;})}</div>
