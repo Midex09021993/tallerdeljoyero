@@ -10,6 +10,7 @@ import type { IAurumObjectSelectionContract } from "./module-contracts";
 
 export interface AurumObjectSelectionInput {
   readonly camera: THREE.Camera;
+  readonly element: HTMLElement;
   readonly getModel: () => THREE.Object3D | null;
   readonly isBlocked?: () => boolean;
   readonly onSelect: (object: THREE.Object3D, intersection: THREE.Intersection) => void;
@@ -29,13 +30,7 @@ export function createAurumObjectSelectionModule(
     if (disposed || input.isBlocked?.()) return null;
     const model = input.getModel();
     if (!model) return null;
-    const element = event.currentTarget instanceof HTMLElement
-      ? event.currentTarget
-      : event.target instanceof HTMLElement
-        ? event.target
-        : null;
-    if (!element) return null;
-    const rect = element.getBoundingClientRect();
+    const rect = input.element.getBoundingClientRect();
     if (rect.width <= 0 || rect.height <= 0) return null;
 
     pointer.set(
