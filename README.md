@@ -10,9 +10,9 @@ This project was built with [Lovable](https://lovable.dev).
 
 Continue developing this project in the [Lovable editor](https://lovable.dev/projects/3f43608a-8955-40c1-ac49-2b415ca87164).
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
+- **Ship faster**: describe what you want to build and Lovable handles it.
 - **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+- **Full ownership**: this code is yours. Push to `main` on GitHub and these changes sync back into Lovable.
 
 ## Development
 
@@ -27,3 +27,4 @@ npm run dev
 
 <!-- Lovable sync trigger -->
 <!-- Sync test: 2026-11-14 -->
+<!-- Sync test 2: 2026-11-14 -->
