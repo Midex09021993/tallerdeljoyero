@@ -159,10 +159,10 @@ function CursosDiseno3DPage() {
 
         <section id="recursos" className="scroll-mt-8 border-t border-white/10 py-12 sm:py-16">
           <div className="max-w-2xl">
-            <p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#d8bd7b]">Contenido del programa</p>
-            <h2 className="mt-3 font-display text-3xl italic sm:text-4xl">¿Qué aprenderás?</h2>
+            <p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#d8bd7b]">Herramientas complementarias</p>
+            <h2 className="mt-3 font-display text-3xl italic sm:text-4xl">Continúa practicando con AURUM LAB</h2>
             <p className="mt-3 text-sm leading-7 text-white/55">
-              Un recorrido progresivo desde los fundamentos de Rhinoceros hasta la preparación de modelos para fabricación digital de joyas.
+              Complementa lo aprendido con herramientas para visualizar modelos, compartir archivos y realizar cálculos técnicos para joyería.
             </p>
           </div>
           <div className="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
