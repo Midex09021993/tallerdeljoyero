@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { Activity, ChevronRight, CircleHelp, GitBranch, Network, Search, ShieldAlert, Workflow } from "lucide-react";
+import { Activity, ChevronRight, CircleHelp, GitBranch, Network, Search, ShieldAlert, Workflow, Power } from "lucide-react";
+import { getAurumPostControls, setAurumPostControls } from "@/lib/aurum/post-engine-controls";
 
 type Estado = "conectado" | "parcial" | "registrado" | "auditar" | "experimental" | "suspendido" | "infraestructura";
 type Nodo = { id: string; nombre: string; tipo: string; estado: Estado; detalle: string; evidencia: string; dependencias?: string[]; hijos?: Nodo[] };
@@ -64,6 +65,8 @@ export function AurumArchitectureExplorer() {
   const [vista, setVista] = useState<"overview" | "flow" | "audit">("overview");
   const [seleccion, setSeleccion] = useState("media");
   const [filtro, setFiltro] = useState("");
+  const [postControls, setPostControls] = useState(getAurumPostControls);
+  const updatePostControl = (key: "gemFxaaEnabled" | "surfaceEdgeAaEnabled", enabled: boolean) => setPostControls(setAurumPostControls({ [key]: enabled }));
   const nodos = useMemo(() => todos(arbol), []);
   const actual = nodos.find(n => n.id === seleccion) ?? nodos[0]!;
   const modulos = useMemo(() => nodos.filter(n => !n.hijos?.length), [nodos]);
@@ -143,6 +146,21 @@ export function AurumArchitectureExplorer() {
           <div className="flex items-center justify-between gap-2"><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold">Module brief</p>{badge(actual.estado)}</div>
           <h4 className="mt-3 text-base font-semibold leading-6">{actual.nombre}</h4>
           <p className="mt-2 text-xs leading-5 text-muted-foreground">{actual.detalle}</p>
+          {actual.id === "post" ? <div className="mt-4 space-y-3 rounded-xl border border-border bg-muted/20 p-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0"><p className="text-xs font-semibold">Gem Mask + FXAA</p><p className="text-[10px] leading-4 text-muted-foreground">Se activan y desactivan juntos; la máscara protege los bordes de las gemas.</p></div>
+              <button type="button" role="switch" aria-checked={postControls.gemFxaaEnabled} onClick={() => updatePostControl("gemFxaaEnabled", !postControls.gemFxaaEnabled)} className={`relative h-6 w-11 shrink-0 rounded-full transition ${postControls.gemFxaaEnabled ? "bg-emerald-500" : "bg-muted-foreground/30"}`}><span className={`absolute top-0.5 size-5 rounded-full bg-white shadow transition-all ${postControls.gemFxaaEnabled ? "left-[22px]" : "left-0.5"}`}/></button>
+            </div>
+            <div className="flex items-center justify-between gap-3 border-t border-border pt-3">
+              <div className="min-w-0"><p className="text-xs font-semibold">Surface Edge AA</p><p className="text-[10px] leading-4 text-muted-foreground">Suavizado de bordes de superficies metálicas.</p></div>
+              <button type="button" role="switch" aria-checked={postControls.surfaceEdgeAaEnabled} onClick={() => updatePostControl("surfaceEdgeAaEnabled", !postControls.surfaceEdgeAaEnabled)} className={`relative h-6 w-11 shrink-0 rounded-full transition ${postControls.surfaceEdgeAaEnabled ? "bg-emerald-500" : "bg-muted-foreground/30"}`}><span className={`absolute top-0.5 size-5 rounded-full bg-white shadow transition-all ${postControls.surfaceEdgeAaEnabled ? "left-[22px]" : "left-0.5"}`}/></button>
+            </div>
+            <div className="flex items-center justify-between gap-3 border-t border-border pt-3">
+              <div><p className="text-xs font-semibold">TAA</p><p className="text-[10px] text-muted-foreground">Desactivado por la configuración vigente.</p></div>
+              <span className="rounded-full border border-border px-2 py-1 text-[10px] text-muted-foreground">Bloqueado</span>
+            </div>
+            <p className="text-[10px] leading-4 text-muted-foreground"><Power className="mr-1 inline size-3"/> Los cambios quedan guardados y se aplican al volver a montar AURUM RENDER.</p>
+          </div> : null}
           <div className="mt-4 rounded-xl bg-muted/50 p-3"><p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Evidencia técnica</p><p className="mt-1 break-words font-mono text-[10px] leading-4 text-sky-700 dark:text-sky-400">{actual.evidencia || "Requiere localización exacta en auditoría"}</p></div>
           {actual.dependencias?.length ? <div className="mt-4"><p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Conexiones conocidas</p><div className="mt-2 flex flex-wrap gap-1.5">{actual.dependencias.map(d => <span key={d} className="rounded-lg border border-border bg-background px-2 py-1 text-[10px]">{d}</span>)}</div></div> : null}
           <div className="mt-4 border-t border-border pt-3"><p className="flex items-center gap-2 text-[10px] font-semibold text-amber-700 dark:text-amber-400"><CircleHelp className="size-3.5"/> Cómo leer los estados</p><p className="mt-1 text-[10px] leading-4 text-muted-foreground">“Conectado” significa que existe un consumidor en el flujo productivo; no equivale a certificación visual. “Parcial” indica conexión limitada o condicional. “Registrado” significa que existe en CORE, pero no participa directamente en el flujo normal.</p></div>
