@@ -463,3 +463,11 @@ Se incorporó un coordinador de limpieza de sesión para la exportación de víd
 ### Alcance y validación
 
 Esta entrega mejora la seguridad de recuperación de la sesión, pero no certifica todavía la equivalencia visual/fotográfica entre vídeo y visor en todos los equipos. Tampoco introduce codificación determinista offline: la captura continúa usando MediaRecorder y captureStream. Build, TypeScript, ESLint, pruebas y CI deben ejecutarse sobre el commit resultante antes de cerrar la fase.
+
+## Implementaciones conservadoras adicionales — 2026-11-14
+
+- **Visual Weld:** se reemplazó la asignación de un `Set` por vértice por un marcador tipado reutilizable por cara. Se conserva la regla de una contribución por cara, el umbral de pliegue y las posiciones originales. No modifica topología, materiales ni shaders.
+- **Vídeo / Surface Edge AA:** la selección de pases de vídeo se centralizó en `getAurumVideoLivePasses`. La exportación incorpora Surface Edge AA cuando el perfil SETTLED lo habilita y usa su intensidad configurada (`0.035` en los perfiles habilitados). TAA no se añade.
+- **Restauración de vídeo:** la intensidad original de Surface Edge AA se guarda y restaura al terminar la exportación, incluso cuando falla la grabación.
+- **Regresión:** `scripts/aurum-video-frame-pipeline.test.ts` cubre la inclusión/exclusión de Surface Edge AA y la ausencia de TAA. `scripts/aurum-visual-weld.test.ts` se incorpora al workflow de CI.
+- **Validación pendiente:** Lovable debe realizar la comparación visual y mediciones sobre modelos/dispositivos reales. No se declara equivalencia visual certificada ni CI aprobado hasta contar con resultados observables.
