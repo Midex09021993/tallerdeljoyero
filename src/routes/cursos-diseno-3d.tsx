@@ -9,12 +9,12 @@ import {
 export const Route = createFileRoute("/cursos-diseno-3d")({
   head: () => ({
     meta: [
-      { title: "Diseño 3D para joyería con Rhinoceros | AURUM LAB" },
+      { title: "Diseño CAD 3D para Joyería e Introducción a la Manufactura Aditiva Nivel 1 | AURUM LAB" },
       {
         name: "description",
-        content: "Aprende Rhinoceros aplicado a joyería en 10 sesiones prácticas. 20 horas académicas, laboratorios interactivos y formación desde nivel inicial.",
+        content: "Diseño CAD 3D para Joyería e Introducción a la Manufactura Aditiva Nivel 1. 10 sesiones prácticas, 20 horas académicas y laboratorios interactivos.",
       },
-      { property: "og:title", content: "Diseño 3D aplicado a la fabricación de joyas con Rhinoceros" },
+      { property: "og:title", content: "Diseño CAD 3D para Joyería e Introducción a la Manufactura Aditiva Nivel 1" },
       { property: "og:description", content: "10 sesiones prácticas, 20 horas académicas y laboratorios interactivos para aprender modelado 3D aplicado a joyería." },
       { property: "og:url", content: "https://www.tallerdeljoyero.com/cursos-diseno-3d" },
       { name: "robots", content: "index, follow, max-image-preview:large" },
@@ -78,7 +78,7 @@ function CursosDiseno3DPage() {
         <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-4 py-14 sm:px-7 sm:py-20 lg:grid-cols-[1.05fr_.95fr] lg:px-10 lg:py-24">
           <div>
             <p className="inline-flex items-center gap-2 rounded-full border border-[#e8d7a4] bg-[#fff9e9] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.2em] text-[#967020]"><Sparkles className="size-3.5" /> Formación aplicada a la joyería</p>
-            <h1 className="mt-6 max-w-3xl font-display text-4xl font-semibold leading-[1.08] tracking-tight text-[#1d2b39] sm:text-5xl lg:text-6xl">Diseño 3D aplicado a la fabricación de joyas con <span className="text-[#b58b37]">Rhinoceros</span></h1>
+            <h1 className="mt-6 max-w-3xl font-display text-4xl font-semibold leading-[1.08] tracking-tight text-[#1d2b39] sm:text-5xl lg:text-6xl">Diseño CAD 3D para Joyería e Introducción a la Manufactura Aditiva <span className="text-[#b58b37]">Nivel 1</span></h1>
             <p className="mt-6 max-w-2xl text-base leading-8 text-[#52677b] sm:text-lg">Aprende desde nivel inicial a construir y preparar modelos tridimensionales para joyería. Avanza paso a paso con clases prácticas y laboratorios interactivos desarrollados para este programa.</p>
             <div className="mt-7 flex flex-wrap gap-3">
               <Link to="/auth" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#e9c65f] px-5 text-sm font-bold text-[#202b35] shadow-md shadow-[#b58b37]/15 transition hover:-translate-y-0.5 hover:bg-[#dfb83e]">Registrarme gratis <ArrowRight className="size-4" /></Link>
