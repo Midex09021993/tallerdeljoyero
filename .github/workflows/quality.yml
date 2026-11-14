@@ -43,6 +43,8 @@ jobs:
         run: bun test scripts/aurum-import-pipeline.test.ts
       - name: AURUM surface seam diagnostic tests
         run: bun test scripts/aurum-surface-engine.test.ts
+      - name: AURUM Metal Union material compatibility tests
+        run: bun test scripts/aurum-metal-union.test.ts
       - name: AURUM solid and surface penetration tests
         run: bun test scripts/aurum-solid-engine.test.ts
       - name: AURUM BVH triangle intersection tests
