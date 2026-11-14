@@ -891,7 +891,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       // Mantiene suficiente resolución para la transmisión de gemas sin convertirla
       // en un render pesado en equipos normales.
       (renderer as any).transmissionResolutionScale = renderQuality.transmissionScale;
-      renderer.shadowMap.enabled = renderQuality.shadows;
+      renderer.shadowMap.enabled = false; // Isolation phase: disable shadow-map rendering.
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       // Lighting and geometry are static between user changes. Build the shadow map only
       // when a light/model/quality change explicitly marks it dirty.
@@ -3666,11 +3666,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // Lightweight interactive edge cleanup: low blend strength, no TAA,
             // and disabled for extreme CAD budgets or the Low quality profile.
             const liveEdgeAaProfile = getAurumEdgeAaProfile(measuredQualityId, runtimeBudget.tier, "live");
-            const interactiveEdgeAa = Boolean(liveEdgeAaProfile.enabled && surfaceEdgeAaPass);
+            const interactiveEdgeAa = false; // Isolation phase: disable Surface Edge AA.
             if (surfaceEdgeAaPass) {
               const strength = surfaceEdgeAaPass.material?.uniforms?.strength;
               if (strength) strength.value = liveEdgeAaProfile.strength;
-              surfaceEdgeAaPass.enabled = interactiveEdgeAa;
+              surfaceEdgeAaPass.enabled = false;
             }
             // GemMask performs dedicated depth + category renders. Bypass it and
             // its dependent gemstone AA composite for the entire motion interval;
@@ -3714,7 +3714,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             if (surfaceEdgeAaPass) {
               const strength = surfaceEdgeAaPass.material?.uniforms?.strength;
               if (strength) strength.value = settledEdgeAaProfile.strength;
-              surfaceEdgeAaPass.enabled = settledEdgeAaProfile.enabled;
+              surfaceEdgeAaPass.enabled = false;
             }
             if (idleTaaPass) {
               idleTaaPass.enabled = false;
