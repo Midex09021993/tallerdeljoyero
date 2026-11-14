@@ -17,6 +17,8 @@ export interface AurumImportRequest {
   readonly diagnostics?: boolean;
   /** Experimental visual metal CSG union. Disabled by default to preserve source CAD surfaces; enable only for controlled A/B tests. */
   readonly metalUnion?: boolean;
+  /** Experimental non-CSG metal draw-call consolidation. Disabled by default; source meshes remain hidden and recoverable. */
+  readonly metalFastVisualMerge?: boolean;
   /** Cancels the import at safe stage boundaries. Active third-party decoders may finish before cancellation is observed. */
   readonly signal?: AbortSignal;
   /** Optional hard file-size ceiling. Unset by default to preserve existing CAD workflows. */
@@ -143,7 +145,7 @@ export function createAurumImportPlugin(): AurumImportPlugin {
           colorRhinoHex,
           classifyLayer,
           (message: string) => progress(message),
-          { metalUnion: request.metalUnion === true },
+          { metalUnion: request.metalUnion === true, metalFastVisualMerge: request.metalFastVisualMerge === true },
         );
         throwIfAborted();
         stage("source-converted-to-glb", { sourceFormat: format });
