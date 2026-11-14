@@ -1,12 +1,14 @@
 export type AurumPostControls = {
   gemFxaaEnabled: boolean;
   surfaceEdgeAaEnabled: boolean;
+  taaEnabled: boolean;
 };
 
 const STORAGE_KEY = "aurum:post-engine-controls:v1";
 const DEFAULTS: AurumPostControls = {
   gemFxaaEnabled: false,
   surfaceEdgeAaEnabled: false,
+  taaEnabled: false,
 };
 
 export function getAurumPostControls(): AurumPostControls {
@@ -18,6 +20,7 @@ export function getAurumPostControls(): AurumPostControls {
     return {
       gemFxaaEnabled: value.gemFxaaEnabled === true,
       surfaceEdgeAaEnabled: value.surfaceEdgeAaEnabled === true,
+      taaEnabled: value.taaEnabled === true,
     };
   } catch {
     return DEFAULTS;
