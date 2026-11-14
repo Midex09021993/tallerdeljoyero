@@ -120,13 +120,13 @@ export function createAurumCameraControlsContract(
       camera.updateMatrixWorld(true);
     },
     getTarget() {
-      return controls.target;
+      return controls.target.clone();
     },
     getPosition() {
-      return camera.position;
+      return camera.position.clone();
     },
     getUp() {
-      return camera.up;
+      return camera.up.clone();
     },
     getAutoRotate() {
       return controls.autoRotate;
