@@ -404,3 +404,46 @@ Validación pendiente: ejecutar `scripts/aurum-glb-quality-gate.test.ts`, build 
 - No se activa TAA, SSAO, SSR, Bloom ni DOF por esta mejora.
 - No aumenta el Pixel Ratio de interacción ni modifica el camino directo de fallback.
 - La elegibilidad se limita por perfil y tier geométrico; la validación de FPS y coste GPU en equipos reales sigue pendiente.
+
+
+## Segunda entrega — contratos explícitos de módulos productivos — 2026-11-13
+
+Se completó la declaración de dependencias de servicios en el punto real de composición de `src/components/AurumRender.tsx`. Los contratos se basan en los servicios que cada adaptador consume; no se añadieron dependencias por conveniencia ni se trasladó ownership.
+
+### Dependencias formalizadas
+
+| Módulo consumidor | Dependencias declaradas | Servicios requeridos explícitamente |
+|---|---|---|
+| `aurum.glb-quality` | `aurum.import` | `aurum.import.pipeline` |
+| `aurum.edge-quality` | `aurum.viewer` | `aurum.viewer.renderer` |
+| `aurum.post` | `aurum.viewer`, `aurum.edge-quality` | `aurum.viewer.renderer`, `aurum.edge-quality.configure` |
+| `aurum.media-export` | `aurum.viewer`, `aurum.post`, `aurum.final-render` | `aurum.viewer.renderer`, `aurum.post.composer`, `aurum.final-render.load-adapter` |
+| `aurum.import` | `aurum.geometry` | `aurum.geometry.engine` |
+| `aurum.scene` | `aurum.viewer` | `aurum.viewer.scene`, `aurum.viewer.renderer` |
+| `aurum.lighting` | `aurum.viewer` | `aurum.viewer.scene` |
+| `aurum.gem` | `aurum.metal` | `aurum.metal.apply` |
+| `aurum.final-render` | `aurum.viewer` | `aurum.viewer.scene`, `aurum.viewer.camera`, `aurum.viewer.renderer` |
+
+Los módulos `aurum.viewer`, `aurum.geometry` y `aurum.metal` no reciben dependencias artificiales: sus servicios declarados no necesitan consumir servicios de otro módulo para inicializar sus adaptadores. `aurum.gem` depende del contrato de aplicación de metales porque así está expresado en el flujo de aplicación productivo.
+
+### Comprobaciones del host
+
+El host valida antes de inicializar plugins:
+- que cada servicio requerido exista en el contenedor;
+- que el proveedor del servicio pertenezca a una dependencia directa o transitiva declarada;
+- que no existan dependencias de módulos inexistentes, ciclos ni proveedores duplicados;
+- que los identificadores y mapas de servicios permanezcan estables después de componer el host.
+
+La suite existente `scripts/aurum-production-plugin-host.test.ts` cubre dependencias directas y transitivas, servicios ausentes, proveedores duplicados y snapshots inmutables. `scripts/aurum-plugin-registry.test.ts` cubre validación del grafo antes de inicializar.
+
+### Fronteras que permanecen intencionalmente sin cambios
+
+- Los adaptadores Metal y Gem siguen delegando al motor de materiales existente. No se tocaron shaders, IOR, dispersión, scintillation, BVH, HDRI ni calibraciones.
+- Viewer, Scene, Lighting, Metal y Gem no transfieren recursos Three.js al GPU Resource Manager.
+- El compositor, renderer, pases, path tracer y pipeline de vídeo mantienen sus propietarios actuales.
+- La dependencia de `aurum.media-export` con `aurum.final-render` formaliza disponibilidad del servicio de captura final; no hace que el path tracer se ejecute al iniciar el visor.
+- No se cambió el orden funcional del render, la calidad visual ni el perfil de rendimiento.
+
+### Validación pendiente
+
+El cambio requiere ejecutar el workflow `Aurum Lab CI` en el commit resultante. Hasta disponer de resultados reales, build, TypeScript, ESLint y pruebas se consideran pendientes; la presencia de pasos en el workflow no equivale a una ejecución aprobada.
