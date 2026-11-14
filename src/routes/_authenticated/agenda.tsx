@@ -14,6 +14,7 @@ export const Route = createFileRoute("/_authenticated/agenda")({
 
 type Horario = { id: string; inicio_at: string; fin_at: string; zona_horaria: string; };
 type Evento = { id: string; titulo: string; tipo: "reunion" | "capacitacion" | "evento" | "bloqueo" | "vacaciones" | "otro"; descripcion: string | null; inicio_at: string; fin_at: string; todo_el_dia: boolean; };
+type SolicitudDemo = { id: string; empresa: string; nombre: string; telefono: string; email: string; interes: string; horario_preferido: string | null; estado: "pendiente" | "contactado" | "demo_agendada" | "cerrado"; created_at: string; };
 type Reserva = {
   id: string; horario_id: string; tema: string; descripcion: string | null; estado: "pendiente" | "confirmada" | "cancelada" | "realizada";
   enlace_reunion: string | null; nota_administrador: string | null; created_at: string; inicio_at: string; fin_at: string;
@@ -77,6 +78,16 @@ function AgendaPage() {
       return (data ?? []) as Evento[];
     },
   });
+  const solicitudesDemo = useQuery<SolicitudDemo[]>({
+    queryKey: ["agenda-solicitudes-demo"],
+    enabled: Boolean(sesion?.user.id && esAdministrador),
+    queryFn: async () => {
+      const { data, error } = await db.rpc("agenda_listar_solicitudes_demo");
+      if (error) throw error;
+      return (data ?? []) as SolicitudDemo[];
+    },
+    refetchInterval: 30_000,
+  });
   const reservas = useQuery<Reserva[]>({
     queryKey: ["agenda-reservas", sesion?.user.id, esAdministrador],
     enabled: Boolean(sesion?.user.id),
@@ -91,6 +102,7 @@ function AgendaPage() {
       qc.invalidateQueries({ queryKey: ["agenda-horarios"] }),
       qc.invalidateQueries({ queryKey: ["agenda-reservas"] }),
       qc.invalidateQueries({ queryKey: ["agenda-eventos"] }),
+      qc.invalidateQueries({ queryKey: ["agenda-solicitudes-demo"] }),
     ]);
   };
   const reservar = useMutation({
@@ -138,6 +150,14 @@ function AgendaPage() {
     onSuccess: async () => { toast.success("Reserva actualizada"); await invalidar(); },
     onError: (error: Error) => toast.error("No se pudo actualizar", { description: error.message }),
   });
+  const actualizarSolicitudDemo = useMutation({
+    mutationFn: async ({ id, estado }: { id: string; estado: SolicitudDemo["estado"] }) => {
+      const { error } = await db.rpc("agenda_actualizar_solicitud_demo", { _solicitud_id: id, _estado: estado });
+      if (error) throw error;
+    },
+    onSuccess: async () => { toast.success("Solicitud actualizada"); await qc.invalidateQueries({ queryKey: ["agenda-solicitudes-demo"] }); },
+    onError: (error: Error) => toast.error("No se pudo actualizar la solicitud", { description: error.message }),
+  });
   const cancelar = useMutation({
     mutationFn: async (id: string) => { const { error } = await db.rpc("agenda_cancelar_reserva", { _reserva_id: id }); if (error) throw error; },
     onSuccess: async () => { toast.success("Solicitud cancelada"); await invalidar(); },
@@ -159,6 +179,22 @@ function AgendaPage() {
         </header>
 
         {esAdministrador ? (
+          <div className="rounded-2xl border border-gold/25 bg-card p-5 shadow-card md:p-6">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div><h2 className="flex items-center gap-2 text-xl font-semibold"><UserRound className="size-5 text-gold-deep" /> Solicitudes de demostración</h2><p className="mt-1 text-sm text-muted-foreground">Los formularios enviados desde la página pública aparecen aquí para que FADILAB contacte al interesado y coordine una fecha.</p></div>
+              <span className="rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800">{(solicitudesDemo.data ?? []).filter(x => x.estado === "pendiente").length} pendientes</span>
+            </div>
+            {solicitudesDemo.isLoading ? <p className="py-6 text-center text-sm text-muted-foreground">Cargando solicitudes…</p> : null}
+            {solicitudesDemo.isError ? <p className="mt-4 rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">No se pudieron cargar las solicitudes. Verifica que Lovable haya aplicado la migración SQL de integración con Agenda.</p> : null}
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+              {(solicitudesDemo.data ?? []).map((d) => <article key={d.id} className="rounded-xl border bg-background p-4">
+                <div className="flex flex-wrap items-start justify-between gap-2"><div><p className="font-semibold">{d.empresa}</p><p className="mt-1 text-xs text-muted-foreground">{d.nombre} · {fechaHora(d.created_at)}</p></div><span className={"rounded-full border px-2.5 py-1 text-[11px] font-semibold " + (d.estado === "pendiente" ? "border-amber-300 bg-amber-50 text-amber-800" : d.estado === "contactado" ? "border-sky-300 bg-sky-50 text-sky-800" : "border-emerald-300 bg-emerald-50 text-emerald-800")}>{d.estado === "pendiente" ? "Pendiente" : d.estado === "contactado" ? "Contactado" : "Demo coordinada"}</span></div>
+                <div className="mt-3 space-y-1 text-sm text-muted-foreground"><p>{d.email}</p><p>{d.telefono}</p><p className="pt-1 text-xs">Interés: {d.interes}</p>{d.horario_preferido ? <p className="text-xs">Horario preferido: {d.horario_preferido}</p> : null}</div>
+                <div className="mt-4 flex flex-wrap gap-2"><a href={"https://wa.me/" + d.telefono.replace(/\D/g, "")} target="_blank" rel="noreferrer" className="rounded-lg border px-3 py-2 text-xs font-semibold hover:bg-accent">WhatsApp</a><a href={"mailto:" + d.email} className="rounded-lg border px-3 py-2 text-xs font-semibold hover:bg-accent">Correo</a>{d.estado === "pendiente" ? <button type="button" onClick={() => actualizarSolicitudDemo.mutate({id:d.id,estado:"contactado"})} className="rounded-lg bg-ink px-3 py-2 text-xs font-semibold text-ink-foreground">Marcar contactado</button> : null}{d.estado !== "demo_agendada" ? <button type="button" onClick={() => actualizarSolicitudDemo.mutate({id:d.id,estado:"demo_agendada"})} className="rounded-lg border border-emerald-300 px-3 py-2 text-xs font-semibold text-emerald-800">Marcar demo coordinada</button> : null}<button type="button" onClick={() => actualizarSolicitudDemo.mutate({id:d.id,estado:"cerrado"})} className="rounded-lg border px-3 py-2 text-xs font-semibold text-muted-foreground">Cerrar</button></div>
+              </article>)}
+            </div>
+            {!solicitudesDemo.isLoading && !solicitudesDemo.isError && (solicitudesDemo.data ?? []).length === 0 ? <p className="mt-4 rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">Todavía no hay solicitudes de demostración. Cuando alguien complete el formulario público, aparecerá aquí.</p> : null}
+          </div>
           <section className="space-y-5">
             <div className="rounded-2xl border bg-card p-5 shadow-card md:p-6">
               <div className="flex flex-wrap items-center justify-between gap-3">
