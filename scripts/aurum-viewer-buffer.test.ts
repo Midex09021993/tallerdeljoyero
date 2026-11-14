@@ -633,7 +633,7 @@ test("video export restores the original live viewport through bounded cleanup",
   expect(restoreBlock).toContain("loop?.invalidate?.()");
   expect(restoreBlock).toContain("loop?.resume?.()");
   expect(restoreBlock).toContain("loop?.converge?.(4)");
-  expect(restoreBlock.indexOf("videoFramePipeline?.restore()")).toBeLessThan(restoreBlock.indexOf("camara.position.copy(originalCameraPosition)"));
+  expect(restoreBlock.indexOf("videoFramePipeline?.restore()")).toBeLessThan(restoreBlock.indexOf("cameraControlsContract.restoreState(originalCameraState)"));
   expect(restoreBlock.indexOf("cameraControlsContract.restoreState(originalCameraState)")).toBeGreaterThan(-1);
   expect(restoreBlock.indexOf("loop?.resize?.()")).toBeLessThan(restoreBlock.indexOf("loop?.resume?.()"));
   expect(restoreBlock.indexOf("loop?.resume?.()")).toBeLessThan(restoreBlock.indexOf("loop?.converge?.(4)"));
