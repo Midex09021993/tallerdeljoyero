@@ -1,12 +1,13 @@
 import { useMemo, useState } from "react";
 import { Activity, ChevronRight, CircleHelp, GitBranch, Network, Search, ShieldAlert, Workflow } from "lucide-react";
 
-type Estado = "integrado" | "parcial" | "auditar" | "experimental" | "suspendido" | "infraestructura";
+type Estado = "conectado" | "parcial" | "registrado" | "auditar" | "experimental" | "suspendido" | "infraestructura";
 type Nodo = { id: string; nombre: string; tipo: string; estado: Estado; detalle: string; evidencia: string; dependencias?: string[]; hijos?: Nodo[] };
 
 const estadoUI: Record<Estado, { label: string; clase: string }> = {
-  integrado: { label: "Integrado", clase: "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400" },
+  conectado: { label: "Conectado", clase: "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400" },
   parcial: { label: "Parcial", clase: "border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-400" },
+  registrado: { label: "Registrado · sin consumo directo", clase: "border-violet-500/30 bg-violet-500/10 text-violet-700 dark:text-violet-400" },
   auditar: { label: "Por auditar", clase: "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400" },
   experimental: { label: "Experimental", clase: "border-orange-500/30 bg-orange-500/10 text-orange-700 dark:text-orange-400" },
   suspendido: { label: "Suspendido", clase: "border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-400" },
@@ -15,32 +16,32 @@ const estadoUI: Record<Estado, { label: string; clase: string }> = {
 
 const arbol: Nodo[] = [
   { id: "core", nombre: "AURUM CORE", tipo: "Infraestructura común · contratos y ciclo de vida", estado: "infraestructura", detalle: "Infraestructura que registra módulos, resuelve servicios, distribuye eventos y agrupa tareas de limpieza. No sustituye la propiedad de los controladores productivos.", evidencia: "src/lib/aurum/core/", hijos: [
-    { id: "registry", nombre: "Plugin Registry", tipo: "Contratos y dependencias", estado: "integrado", detalle: "Resuelve dependencias y ciclo de vida de plugins antes de inicializarlos.", evidencia: "src/lib/aurum/core/plugin-registry.ts" },
-    { id: "services", nombre: "Service Container", tipo: "Servicios registrados · solo lectura", estado: "integrado", detalle: "Publica un mapa sellado de servicios para los módulos.", evidencia: "src/lib/aurum/core/service-container.ts" },
-    { id: "events", nombre: "Event Bus", tipo: "Eventos de ciclo de vida", estado: "integrado", detalle: "Entrega eventos a suscriptores y reporta fallos aislados.", evidencia: "src/lib/aurum/core/context.ts" },
-    { id: "scope", nombre: "Resource Scope", tipo: "Limpieza por plugin", estado: "integrado", detalle: "Agrupa funciones de limpieza; no infiere ownership GPU.", evidencia: "src/lib/aurum/core/context.ts" },
+    { id: "registry", nombre: "Plugin Registry", tipo: "Contratos y dependencias", estado: "conectado", detalle: "Resuelve dependencias y ciclo de vida de plugins antes de inicializarlos.", evidencia: "src/lib/aurum/core/plugin-registry.ts" },
+    { id: "services", nombre: "Service Container", tipo: "Servicios registrados · solo lectura", estado: "conectado", detalle: "Publica un mapa sellado de servicios para los módulos.", evidencia: "src/lib/aurum/core/service-container.ts" },
+    { id: "events", nombre: "Event Bus", tipo: "Eventos de ciclo de vida", estado: "conectado", detalle: "Entrega eventos a suscriptores y reporta fallos aislados.", evidencia: "src/lib/aurum/core/context.ts" },
+    { id: "scope", nombre: "Resource Scope", tipo: "Limpieza por plugin", estado: "conectado", detalle: "Agrupa funciones de limpieza; no infiere ownership GPU.", evidencia: "src/lib/aurum/core/context.ts" },
     { id: "gpu", nombre: "GPU Resource Manager", tipo: "Servicio registrado · ownership no transferido", estado: "parcial", detalle: "Está implementado, registrado y probado como servicio. No administra todavía la propiedad ni liberación general de renderer, geometrías, materiales, texturas, HDRI o BVH; esos recursos siguen bajo sus controladores productivos.", evidencia: "src/lib/aurum/core/gpu-resource-manager.ts · src/lib/aurum/viewer.ts" },
   ]},
   { id: "engines", nombre: "MOTORES Y ADAPTADORES", tipo: "Servicios especializados conectados al visor", estado: "infraestructura", detalle: "Varios elementos son adaptadores sobre controladores existentes, no motores autónomos.", hijos: [
-    { id: "viewer", nombre: "Viewer Adapter", tipo: "Renderer, cámara y controles compartidos", estado: "integrado", detalle: "Expone referencias al visor productivo. El teardown sigue bajo disposeAurumViewer().", evidencia: "src/lib/aurum/core/viewer-adapter.ts", dependencias: ["AURUM RENDER"] },
-    { id: "scene", nombre: "Scene Adapter", tipo: "Controlador de escena", estado: "integrado", detalle: "Fachada al controlador de escena existente.", evidencia: "src/lib/aurum/core/scene-adapter.ts", dependencias: ["Viewer"] },
+    { id: "viewer", nombre: "Viewer Adapter", tipo: "Renderer, cámara y controles compartidos", estado: "conectado", detalle: "Expone referencias al visor productivo. El teardown sigue bajo disposeAurumViewer().", evidencia: "src/lib/aurum/core/viewer-adapter.ts", dependencias: ["AURUM RENDER"] },
+    { id: "scene", nombre: "Scene Adapter", tipo: "Controlador de escena", estado: "conectado", detalle: "Fachada al controlador de escena existente.", evidencia: "src/lib/aurum/core/scene-adapter.ts", dependencias: ["Viewer"] },
     { id: "lighting", nombre: "Light Engine", tipo: "Adaptador registrado · consumo directo del controlador", estado: "parcial", detalle: "El adaptador y sus servicios están registrados. La iluminación productiva continúa ejecutándose principalmente mediante el controlador existente; no es un motor autónomo ni se ha transferido su ownership.", evidencia: "src/lib/aurum/core/lighting-adapter.ts · src/lib/aurum/lighting.ts · environment.ts · gem-environment.ts", dependencias: ["Viewer", "Scene"] },
-    { id: "metal", nombre: "Metal Engine", tipo: "Adaptador de materiales PBR", estado: "integrado", detalle: "Delegación al motor de materiales productivo; no reemplaza perfiles ni calibraciones.", evidencia: "src/lib/aurum/material-application.ts", dependencias: ["Lighting"] },
-    { id: "gem", nombre: "Gem Engine", tipo: "Adaptador al motor óptico", estado: "integrado", detalle: "Delega en el motor óptico productivo. No implica cambios a shaders, BVH ni calibración.", evidencia: "src/lib/aurum/material-application.ts", dependencias: ["Lighting", "Metal"] },
+    { id: "metal", nombre: "Metal Engine", tipo: "Adaptador de materiales PBR", estado: "conectado", detalle: "Delegación al motor de materiales productivo; no reemplaza perfiles ni calibraciones.", evidencia: "src/lib/aurum/material-application.ts", dependencias: ["Lighting"] },
+    { id: "gem", nombre: "Gem Engine", tipo: "Adaptador al motor óptico", estado: "conectado", detalle: "Delega en el motor óptico productivo. No implica cambios a shaders, BVH ni calibración.", evidencia: "src/lib/aurum/material-application.ts", dependencias: ["Lighting", "Metal"] },
     { id: "diamond", nombre: "Diamond Pipeline / BVH", tipo: "Runtime óptico productivo · no plugin autónomo", estado: "parcial", detalle: "El runtime especializado existe y participa en el procesamiento óptico de gemas. No está extraído como plugin independiente del Registry; su ownership y activación siguen en los controladores ópticos.", evidencia: "src/lib/aurum/aurum-diamond-bvh-runtime.ts · aurum-diamond-pipeline.ts · scintillation.ts", dependencias: ["Gem Engine"] },
-    { id: "transition", nombre: "AURUM GEM TRANSITION", tipo: "Transición progresiva por capa / malla", estado: "integrado", detalle: "Conectado al flujo de aplicación de gemas para interpolar canales visuales compatibles. La identidad óptica se conserva y el refresco BVH se difiere hasta terminar la transición; validación visual amplia aún pendiente.", evidencia: "src/components/AurumRender.tsx · src/lib/aurum/material-application.ts", dependencias: ["Gem Engine", "Diamond Pipeline / BVH"] },
+    { id: "transition", nombre: "AURUM GEM TRANSITION", tipo: "Transición progresiva por capa / malla", estado: "conectado", detalle: "Conectado al flujo de aplicación de gemas para interpolar canales visuales compatibles. La identidad óptica se conserva y el refresco BVH se difiere hasta terminar la transición; validación visual amplia aún pendiente.", evidencia: "src/components/AurumRender.tsx · src/lib/aurum/material-application.ts", dependencias: ["Gem Engine", "Diamond Pipeline / BVH"] },
     { id: "final", nombre: "Final Render Adapter", tipo: "Adaptador registrado · carga bajo demanda", estado: "parcial", detalle: "El host registra el loader y AurumRender resuelve el adaptador al solicitar la captura final. El path tracer existe; falta certificar fidelidad, restauración de estado, coste y limpieza con escenas de referencia.", evidencia: "src/lib/aurum/core/final-render-adapter.ts · src/lib/aurum/path-traced-capture.ts · src/components/AurumRender.tsx", dependencias: ["Viewer", "Post"] },
     { id: "edge", nombre: "AURUM EDGE QUALITY", tipo: "MSAA en compositor · TAA fuera del visor en vivo", estado: "parcial", detalle: "MSAA está conectado a los targets ping-pong del compositor con fallback. TAA está desactivado en el visor en vivo y se reserva para capturas explícitas; SSAA no está implementado.", evidencia: "src/lib/aurum/edge-quality.ts · src/lib/aurum/post.ts · src/components/AurumRender.tsx", dependencias: ["Post"] },
     { id: "post", nombre: "Post Engine", tipo: "Composición y efectos", estado: "parcial", detalle: "Usa el compositor productivo. Confirmar consumidores y contratos sin duplicar pases ni loops.", evidencia: "src/lib/aurum/ · post pipeline", dependencias: ["Viewer", "Edge Quality"] },
   ]},
   { id: "import", nombre: "IMPORTACIÓN Y GEOMETRÍA", tipo: "CAD / 3D · loader directo y diagnósticos opt-in", estado: "parcial", detalle: "La carga directa y preparación básica están activas; el Import Pipeline Manager y Smart Scan no participan en la ruta actual de carga que se alineó con el Visor Público.", evidencia: "src/components/AurumRender.tsx · src/lib/aurum/model-loader.ts · src/lib/aurum/core/", hijos: [
     { id: "import-plugin", nombre: "AURUM IMPORT", tipo: "Loader directo activo · plugin registrado", estado: "parcial", detalle: "El cargador compartido parseAurumInput + preprocessAurumModel está activo. Atención: la ruta de carga de archivos de AurumRender se cambió para igualar al Visor Público y ahora evita el Import Pipeline Manager; por ello el plugin registrado no gobierna esa ruta directa.", evidencia: "src/components/AurumRender.tsx · src/lib/aurum/model-loader.ts · src/lib/aurum/core/import-plugin.ts", dependencias: ["Viewer"] },
-    { id: "manager", nombre: "Import Pipeline Manager", tipo: "Orquestador disponible · fuera de la carga directa actual", estado: "parcial", detalle: "El manager y sus contratos de cancelación, presupuestos y limpieza existen y tienen pruebas. La carga actual de archivos en AurumRender lo omite deliberadamente para seguir la ruta directa del Visor Público; no debe figurar como consumidor activo de esa carga.", evidencia: "src/lib/aurum/core/import-pipeline-manager.ts · src/components/AurumRender.tsx", dependencias: ["AURUM IMPORT"] },
-    { id: "geometry", nombre: "AURUM GEOMETRY / Smart Scan", tipo: "Diagnóstico de solo lectura · opt-in", estado: "parcial", detalle: "El motor de geometría está registrado y puede ser inyectado al manager para Smart Scan y diagnósticos. La ruta de carga directa que iguala al Visor Público no ejecuta automáticamente Smart Scan ni diagnósticos profundos.", evidencia: "src/lib/aurum/core/geometry-engine.ts · src/lib/aurum/core/import-pipeline-manager.ts · src/components/AurumRender.tsx", dependencias: ["AURUM IMPORT"] },
+    { id: "manager", nombre: "Import Pipeline Manager", tipo: "Orquestador disponible · fuera de la carga directa actual", estado: "registrado", detalle: "El manager y sus contratos de cancelación, presupuestos y limpieza existen y tienen pruebas, pero la carga directa actual de AurumRender lo omite para seguir la ruta del Visor Público. No participa en la importación normal.", evidencia: "src/lib/aurum/core/import-pipeline-manager.ts · src/components/AurumRender.tsx", dependencias: ["AURUM IMPORT"] },
+    { id: "geometry", nombre: "AURUM GEOMETRY / Smart Scan", tipo: "Diagnóstico de solo lectura · opt-in", estado: "registrado", detalle: "El motor de geometría está registrado y puede inyectarse al manager para Smart Scan y diagnósticos opt-in. No se ejecuta automáticamente en la ruta normal de carga directa.", evidencia: "src/lib/aurum/core/geometry-engine.ts · src/lib/aurum/core/import-pipeline-manager.ts · src/components/AurumRender.tsx", dependencias: ["AURUM IMPORT"] },
     { id: "solid", nombre: "Solid · Intersection · Broadphase", tipo: "Diagnósticos geométricos", estado: "auditar", detalle: "Revisar tolerancias, precisión y escalabilidad con modelos CAD representativos.", evidencia: "src/lib/aurum/geometry/" },
     { id: "surface", nombre: "AURUM SURFACE", tipo: "Diagnóstico de aristas", estado: "experimental", detalle: "Solo lectura; no equivale a continuidad G1/G2 CAD/BREP ni a reparación de superficies.", evidencia: "src/lib/aurum/" },
     { id: "weld", nombre: "Metal Union · Visual Weld", tipo: "Unión visual experimental", estado: "experimental", detalle: "No habilitado por defecto. Mantener aislado hasta contar con pruebas geométricas y round-trip.", evidencia: "src/lib/aurum/" },
-    { id: "glb", nombre: "GLB Quality Gate", tipo: "Validación round-trip en conversión GLB", estado: "integrado", detalle: "La validación round-trip se invoca en convertAurumToGlb() y dispone de pruebas. No se ejecuta en la carga directa de GLB ni en la ruta de carga directa que evita conversiones.", evidencia: "src/lib/aurum/model-loader.ts · src/lib/aurum/core/glb-quality-gate.ts", dependencias: ["AURUM IMPORT"] },
+    { id: "glb", nombre: "GLB Quality Gate", tipo: "Validación condicional · solo conversión GLB", estado: "parcial", detalle: "Se invoca en convertAurumToGlb() y dispone de pruebas. No participa en la carga directa de GLB ni en la ruta que evita conversiones; no es una validación global de todos los modelos.", evidencia: "src/lib/aurum/model-loader.ts · src/lib/aurum/core/glb-quality-gate.ts", dependencias: ["AURUM IMPORT"] },
   ]},
   { id: "media", nombre: "CAPTURA Y EXPORTACIÓN", tipo: "Flujos productivos · no son plugins independientes del Registry", estado: "auditar", detalle: "Prioridad de auditoría: la salida debe reflejar fielmente el visor en tiempo real y restaurar su estado después de capturar.", evidencia: "src/components/AurumRender.tsx · src/lib/aurum/", hijos: [
     { id: "image", nombre: "AURUM IMAGE EXPORT", tipo: "PNG · JPEG · WebP", estado: "parcial", detalle: "El flujo de captura está conectado al visor productivo. Su fidelidad respecto al frame en vivo, color, resolución y restauración debe certificarse con comparativas de referencia; no se marca como validado solo por existir.", evidencia: "src/components/AurumRender.tsx · src/lib/aurum/", dependencias: ["Viewer", "Post"] },
@@ -65,7 +66,8 @@ export function AurumArchitectureExplorer() {
   const [filtro, setFiltro] = useState("");
   const nodos = useMemo(() => todos(arbol), []);
   const actual = nodos.find(n => n.id === seleccion) ?? nodos[0]!;
-  const conteo = (estado: Estado) => nodos.filter(n => n.estado === estado).length;
+  const modulos = useMemo(() => nodos.filter(n => !n.hijos?.length), [nodos]);
+  const conteo = (estado: Estado) => modulos.filter(n => n.estado === estado).length;
   const seleccionar = (n: Nodo) => setSeleccion(n.id);
   const grupos = arbol.map(group => ({
     ...group,
@@ -77,7 +79,7 @@ export function AurumArchitectureExplorer() {
       <div className="max-w-2xl">
         <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-gold">AURUM LAB · Architecture Center</p>
         <h3 className="mt-1 text-xl font-semibold tracking-tight">Mapa de arquitectura</h3>
-        <p className="mt-1 text-xs leading-5 text-muted-foreground">Una vista por sistemas y responsabilidades. Explora cada módulo para consultar su estado, función y evidencia técnica.</p>
+        <p className="mt-1 text-xs leading-5 text-muted-foreground">Inventario de conexiones reales: distingue lo que consume el visor, lo que solo está registrado y lo que sigue pendiente de validación.</p>
       </div>
       <div className="flex flex-wrap gap-2">
         {([
@@ -89,8 +91,8 @@ export function AurumArchitectureExplorer() {
     </div>
 
     <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-      {(["integrado", "parcial", "auditar", "experimental", "suspendido"] as Estado[]).map(s => <div key={s} className="relative overflow-hidden rounded-xl border border-border bg-card px-3.5 py-3">
-        <div className="flex items-center justify-between gap-2"><p className="text-2xl font-semibold tracking-tight tabular-nums">{conteo(s)}</p><span className={`size-2 rounded-full ${s === "integrado" ? "bg-emerald-500" : s === "parcial" ? "bg-sky-500" : s === "auditar" ? "bg-amber-500" : s === "experimental" ? "bg-orange-500" : "bg-rose-500"}`}/></div>
+      {(["conectado", "parcial", "registrado", "auditar", "experimental", "suspendido"] as Estado[]).map(s => <div key={s} className="relative overflow-hidden rounded-xl border border-border bg-card px-3.5 py-3">
+        <div className="flex items-center justify-between gap-2"><p className="text-2xl font-semibold tracking-tight tabular-nums">{conteo(s)}</p><span className={`size-2 rounded-full ${s === "conectado" ? "bg-emerald-500" : s === "parcial" ? "bg-sky-500" : s === "registrado" ? "bg-violet-500" : s === "auditar" ? "bg-amber-500" : s === "experimental" ? "bg-orange-500" : "bg-rose-500"}`}/></div>
         <p className="mt-0.5 text-[10px] text-muted-foreground">{estadoUI[s].label}</p>
       </div>)}
     </div>
@@ -143,7 +145,7 @@ export function AurumArchitectureExplorer() {
           <p className="mt-2 text-xs leading-5 text-muted-foreground">{actual.detalle}</p>
           <div className="mt-4 rounded-xl bg-muted/50 p-3"><p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Evidencia técnica</p><p className="mt-1 break-words font-mono text-[10px] leading-4 text-sky-700 dark:text-sky-400">{actual.evidencia || "Requiere localización exacta en auditoría"}</p></div>
           {actual.dependencias?.length ? <div className="mt-4"><p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Conexiones conocidas</p><div className="mt-2 flex flex-wrap gap-1.5">{actual.dependencias.map(d => <span key={d} className="rounded-lg border border-border bg-background px-2 py-1 text-[10px]">{d}</span>)}</div></div> : null}
-          <div className="mt-4 border-t border-border pt-3"><p className="flex items-center gap-2 text-[10px] font-semibold text-amber-700 dark:text-amber-400"><CircleHelp className="size-3.5"/> Cómo leer los estados</p><p className="mt-1 text-[10px] leading-4 text-muted-foreground">“Integrado” indica conexión productiva conocida. La certificación requiere pruebas ejecutadas y evidencia en CI o validación funcional.</p></div>
+          <div className="mt-4 border-t border-border pt-3"><p className="flex items-center gap-2 text-[10px] font-semibold text-amber-700 dark:text-amber-400"><CircleHelp className="size-3.5"/> Cómo leer los estados</p><p className="mt-1 text-[10px] leading-4 text-muted-foreground">“Conectado” significa que existe un consumidor en el flujo productivo; no equivale a certificación visual. “Parcial” indica conexión limitada o condicional. “Registrado” significa que existe en CORE, pero no participa directamente en el flujo normal.</p></div>
         </aside>
       </div>
     </> : null}
@@ -164,7 +166,7 @@ export function AurumArchitectureExplorer() {
             {i<3?<div className="pointer-events-none absolute -right-3 top-1/2 z-10 hidden -translate-y-1/2 rounded-full border border-gold/30 bg-card p-1 text-gold md:block"><ChevronRight className="size-3"/></div>:null}
           </div>)}
         </div>
-        <p className="mt-3 rounded-lg bg-sky-500/5 p-3 text-[10px] leading-4 text-muted-foreground"><Network className="mr-1.5 inline size-3.5 text-sky-600"/>Flujo conceptual basado en responsabilidades y consumidores conocidos; las dependencias exactas deben confirmarse durante la auditoría de código.</p>
+        <p className="mt-3 rounded-lg bg-sky-500/5 p-3 text-[10px] leading-4 text-muted-foreground"><Network className="mr-1.5 inline size-3.5 text-sky-600"/>Flujo resumido según los consumidores identificados en el código. Los módulos registrados o de uso opt-in no se presentan como etapas obligatorias de la carga normal.</p>
       </div>
       <div className="rounded-xl border border-border bg-card p-4"><h4 className="text-xs font-semibold">Infraestructura transversal</h4><div className="mt-3 grid gap-2 sm:grid-cols-5">{(arbol[0].hijos ?? []).map(n=><button key={n.id} onClick={()=>{seleccionar(n);setVista("overview");}} className="rounded-lg border border-border bg-muted/30 p-2 text-left hover:border-gold/40"><p className="text-[11px] font-semibold">{n.nombre}</p><div className="mt-1">{badge(n.estado)}</div></button>)}</div></div>
     </div> : null}
@@ -181,6 +183,6 @@ export function AurumArchitectureExplorer() {
       ].map(([title,desc]) => <div key={title} className="flex items-start gap-3 rounded-xl border border-border bg-card p-3"><Activity className="mt-0.5 size-4 shrink-0 text-gold"/><div className="min-w-0 flex-1"><p className="text-xs font-semibold">{title}</p><p className="mt-1 text-xs leading-5 text-muted-foreground">{desc}</p></div><span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] text-amber-700 dark:text-amber-400">Pendiente</span></div>)}
     </div> : null}
 
-    <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3 text-[10px] text-muted-foreground"><GitBranch className="size-3.5"/> Inventario técnico actualizado al 14/11/2026 <span>·</span><Workflow className="size-3.5"/> Vista documental, sin modificar el motor óptico</div>
+    <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3 text-[10px] text-muted-foreground"><GitBranch className="size-3.5"/> Inventario de conexiones revisado al 14/11/2026 <span>·</span><Workflow className="size-3.5"/> Vista documental, sin modificar el motor óptico</div>
   </div>;
 }
