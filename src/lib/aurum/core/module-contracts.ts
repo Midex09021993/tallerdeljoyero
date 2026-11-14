@@ -86,7 +86,7 @@ export interface IAurumCameraControlsContract {
   readonly version: "1.0.0";
   readonly camera: THREE.PerspectiveCamera;
   readonly controls: unknown;
-  applyView(model: THREE.Object3D | null, view: "perspectiva" | "frontal" | "superior" | "lateral", category?: string): void;
+  applyView(model: THREE.Object3D | null, view: "perspectiva" | "frontal" | "superior" | "lateral", category?: string, options?: { distanceScale?: number }): void;
   applyReferencePresentation(model: THREE.Object3D | null): void;
   fitAspect(model: THREE.Object3D | null, aspect: number, margin?: number): void;
   update(): void;
