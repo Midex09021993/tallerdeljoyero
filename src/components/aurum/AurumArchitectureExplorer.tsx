@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState } from "react";
 import { Activity, ChevronRight, CircleHelp, GitBranch, Network, Search, ShieldAlert, Workflow } from "lucide-react";
 
 type Estado = "integrado" | "parcial" | "auditar" | "experimental" | "suspendido" | "infraestructura";
@@ -64,7 +64,7 @@ export function AurumArchitectureExplorer() {
   const [seleccion, setSeleccion] = useState("media");
   const [filtro, setFiltro] = useState("");
   const nodos = useMemo(() => todos(arbol), []);
-  const actual = nodos.find(n => n.id === seleccion) ?? nodos[0];
+  const actual = nodos.find(n => n.id === seleccion) ?? nodos[0]!;
   const conteo = (estado: Estado) => nodos.filter(n => n.estado === estado).length;
   const seleccionar = (n: Nodo) => setSeleccion(n.id);
   const grupos = arbol.map(group => ({
