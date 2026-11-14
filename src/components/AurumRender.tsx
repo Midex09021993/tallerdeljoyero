@@ -930,32 +930,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       renderer.shadowMap.autoUpdate = false;
       renderer.shadowMap.needsUpdate = true;
       renderer.domElement.className = "block h-full w-full";
-      // La vista ortográfica se conserva mientras el usuario solo hace clic.
-      // Al detectar desplazamiento real del puntero, OrbitControls ya está
-      // orbitando la cámara; actualizamos únicamente la etiqueta, sin aplicar
-      // un preset de perspectiva ni reiniciar el movimiento.
-      let orbitPointerStart: { id: number; x: number; y: number } | null = null;
-      const handleOrbitPointerDown = (event: PointerEvent) => {
-        const startsOrbit = event.pointerType === "touch" || (event.button === 0 && !event.ctrlKey);
-        if (startsOrbit) orbitPointerStart = { id: event.pointerId, x: event.clientX, y: event.clientY };
-      };
-      const handleOrbitPointerMove = (event: PointerEvent) => {
-        if (!orbitPointerStart || event.pointerId !== orbitPointerStart.id || vistaRef.current === "perspectiva") return;
-        const dx = event.clientX - orbitPointerStart.x;
-        const dy = event.clientY - orbitPointerStart.y;
-        if ((dx * dx) + (dy * dy) < 9) return;
-        orbitPointerStart = null;
-        autoVistaPorOrbitaRef.current = true;
-        vistaRef.current = "perspectiva";
-        setVista("perspectiva");
-      };
-      const handleOrbitPointerEnd = (event: PointerEvent) => {
-        if (orbitPointerStart?.id === event.pointerId) orbitPointerStart = null;
-      };
-      renderer.domElement.addEventListener("pointerdown", handleOrbitPointerDown, { passive: true });
-      renderer.domElement.addEventListener("pointermove", handleOrbitPointerMove, { passive: true });
-      renderer.domElement.addEventListener("pointerup", handleOrbitPointerEnd, { passive: true });
-      renderer.domElement.addEventListener("pointercancel", handleOrbitPointerEnd, { passive: true });
       nodo.appendChild(renderer.domElement);
       // SSR is globally disabled in the primary Aurum Render viewer until
       // reflection audits and A/B verification are complete. URL/profile
@@ -984,10 +958,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       // unmounts while those imports are pending, release the renderer created
       // above instead of continuing to allocate scene/GPU resources off-screen.
       if (!vivo) {
-        renderer.domElement.removeEventListener("pointerdown", handleOrbitPointerDown);
-        renderer.domElement.removeEventListener("pointermove", handleOrbitPointerMove);
-        renderer.domElement.removeEventListener("pointerup", handleOrbitPointerEnd);
-        renderer.domElement.removeEventListener("pointercancel", handleOrbitPointerEnd);
         objectSelectionModule.dispose();
         disposeAurumViewer({ node: nodo, renderer, controls: controles, composer });
         if (orbitControlsRef.current === controles) orbitControlsRef.current = null;
