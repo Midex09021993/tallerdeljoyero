@@ -279,18 +279,17 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [publicViewerTestFile, setPublicViewerTestFile] = useState<File | null>(null);
   const [publicViewerTestUrl, setPublicViewerTestUrl] = useState<string | null>(null);
   const publicViewerTestInputRef = useRef<HTMLInputElement>(null);
+  const publicViewerTestUrlRef = useRef<string | null>(null);
   const selectPublicViewerTestFile = useCallback((file: File | null) => {
-    setPublicViewerTestUrl((current) => {
-      if (current) URL.revokeObjectURL(current);
-      return file ? URL.createObjectURL(file) : null;
-    });
+    if (publicViewerTestUrlRef.current) URL.revokeObjectURL(publicViewerTestUrlRef.current);
+    const nextUrl = file ? URL.createObjectURL(file) : null;
+    publicViewerTestUrlRef.current = nextUrl;
+    setPublicViewerTestUrl(nextUrl);
     setPublicViewerTestFile(file);
   }, []);
   useEffect(() => () => {
-    setPublicViewerTestUrl((current) => {
-      if (current) URL.revokeObjectURL(current);
-      return null;
-    });
+    if (publicViewerTestUrlRef.current) URL.revokeObjectURL(publicViewerTestUrlRef.current);
+    publicViewerTestUrlRef.current = null;
   }, []);
   useEffect(() => {
     if (!publicViewerTestOpen) return;
