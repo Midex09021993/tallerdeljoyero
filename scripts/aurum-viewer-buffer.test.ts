@@ -475,7 +475,6 @@ test("Aurum keeps the interactive viewport on direct WebGL rendering with Public
   const componentSource = readFileSync("src/components/AurumRender.tsx", "utf8");
   const start = componentSource.indexOf("onStart: () => {");
   const end = componentSource.indexOf("onEnd: () => {", start);
-  const idleEnd = componentSource.indexOf("        }", end + 20);
   const liveBlock = componentSource.slice(start, end);
   const idleBlock = componentSource.slice(end, componentSource.indexOf("viewerLoopRef.current = viewerLoop", end));
   const renderStart = componentSource.indexOf("const viewerLoop = startAurumViewerLoop(");
