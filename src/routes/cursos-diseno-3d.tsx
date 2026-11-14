@@ -43,8 +43,8 @@ const courseStructuredData = {
   },
   "offers": {
     "@type": "Offer",
-    "price": "549",
-    "priceCurrency": "PEN",
+    "price": "230",
+    "priceCurrency": "USD",
     "url": "https://www.tallerdeljoyero.com/cursos-diseno-3d#inversion"
   }
 } as const;
@@ -178,9 +178,9 @@ function CursosDiseno3DPage() {
             <h2 className="mt-2 text-xl font-bold text-[#24374a]">Invierte en tu formación profesional</h2>
             <div className="mt-6 rounded-xl bg-[#fff9e9] p-5">
               <p className="text-xs font-semibold text-[#7a8793]">Precio regular</p>
-              <p className="mt-1 text-2xl font-semibold text-[#89939d] line-through">S/ 690</p>
-              <div className="mt-4 flex items-end gap-2"><span className="text-sm font-bold text-[#9b762e]">Hoy</span><span className="text-5xl font-bold tracking-tight text-[#1e3042]">S/ 549</span></div>
-              <p className="mt-2 inline-flex rounded-full bg-[#e7f3ec] px-3 py-1 text-xs font-bold text-[#26724f]">Ahorras S/ 141 · 20.4% de descuento</p>
+              <p className="mt-1 text-2xl font-semibold text-[#89939d] line-through">US$ 250</p>
+              <div className="mt-4 flex items-end gap-2"><span className="text-sm font-bold text-[#9b762e]">Hoy</span><span className="text-5xl font-bold tracking-tight text-[#1e3042]">US$ 230</span></div>
+              <p className="mt-2 inline-flex rounded-full bg-[#e7f3ec] px-3 py-1 text-xs font-bold text-[#26724f]">Ahorras US$ 20 · 8% de descuento</p>
             </div>
             <ul className="mt-5 space-y-3 text-sm text-[#5d7183]">
               <li className="flex gap-2"><CheckCircle2 className="size-4 shrink-0 text-[#a17a2e]" /> 10 sesiones · 20 horas académicas</li>
