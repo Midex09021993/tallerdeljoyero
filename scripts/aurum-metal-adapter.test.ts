@@ -24,7 +24,7 @@ test("AURUM Metal Adapter exposes the existing metal engine functions and preser
   expect(adapter.services.has(AURUM_METAL_SERVICES.apply)).toBe(true);
   expect(adapter.services.has(AURUM_METAL_SERVICES.presetFromConfig)).toBe(true);
   expect(preset.id).toBe("oro18_verde_blanco_ijewel");
-  expect(response.family).toBe("yellow-gold");
+  expect(response.family).toBe("green-gold");
   expect(adapter.apply(material, preset)).toBe(material);
   expect(material.metalness).toBe(preset.metalness);
   expect(material.roughness).toBe(preset.roughness);
