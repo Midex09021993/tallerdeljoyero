@@ -12,17 +12,17 @@ import heroColgante from "@/assets/diseno-colgante.jpg";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "AURUM LAB | Software para joyeros y talleres de joyería" },
+      { title: "AURUM LAB | Software de gestión para joyerías y render 3D" },
       {
         name: "description",
         content:
-          "Software para talleres de joyería. Calcula aleaciones y pesos, presenta diseños en 3D y organiza clientes, cotizaciones y pedidos con AURUM LAB.",
+          "Software para joyerías: gestiona clientes, cotizaciones y pedidos; calcula aleaciones y pesos; renderiza modelos de joyería con metales, gemas e iluminación en AURUM RENDER.",
       },
       { name: "robots", content: "index, follow, max-image-preview:large" },
       { property: "og:title", content: "AURUM LAB | Software para joyeros y talleres de joyería" },
       {
         property: "og:description",
-        content: "Calcula aleaciones y pesos, muestra tus diseños de joyería en 3D y lleva el control de clientes y pedidos con AURUM LAB.",
+        content: "Gestiona tu taller, calcula aleaciones y pesos, y renderiza modelos de joyería con metales, gemas e iluminación en AURUM RENDER.",
       },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://www.tallerdeljoyero.com/" },
@@ -48,11 +48,11 @@ const soluciones = [
     numero: "02",
     etiqueta: "PRESENTA MEJOR",
     icon: Gem,
-    titulo: "Mira tu diseño antes de hacerlo",
-    texto: "Enseña cada joya en 3D antes de fabricarla.",
-    beneficio: "Revisa el diseño antes de fabricar",
+    titulo: "Renderiza tus modelos de joyería",
+    texto: "Aplica metales, gemas e iluminación para crear presentaciones realistas de tus modelos.",
+    beneficio: "Presenta tus modelos con un render profesional",
     enlace: "/aurum-render-public" as const,
-    accion: "Explorar visor 3D",
+    accion: "Conocer AURUM RENDER",
   },
   {
     numero: "03",
@@ -645,11 +645,11 @@ function InicioPublico() {
         <div className="mx-auto grid max-w-[1440px] items-center gap-12 px-5 pb-16 pt-12 sm:px-8 sm:pb-20 sm:pt-16 lg:grid-cols-[.92fr_1.08fr] lg:gap-8 lg:px-12 lg:pb-24 lg:pt-20">
           <div className="aurum-hero-enter relative z-10 max-w-[650px]">
             <span className="aurum-hero-badge inline-flex items-center gap-2 rounded-full border border-[#e5c04a]/50 bg-[#fff9df] px-3.5 py-2 text-[10px] font-bold uppercase tracking-[.16em] text-[#785b00]"><Sparkles className="size-3.5" /> AURUM LAB · TECNOLOGÍA PARA JOYEROS</span>
-            <h1 className="mt-6 text-[2.65rem] font-extrabold leading-[1.06] tracking-[-.045em] text-[#17232d] sm:text-5xl lg:text-[3.8rem]">Software para tu taller de joyería.</h1>
-            <p className="mt-6 max-w-xl text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">Con <strong>AURUM LAB</strong> tienes herramientas para calcular materiales, ver tus joyas en 3D y llevar el trabajo del taller.</p>
+            <h1 className="mt-6 text-[2.65rem] font-extrabold leading-[1.06] tracking-[-.045em] text-[#17232d] sm:text-5xl lg:text-[3.8rem]">Software de gestión para joyerías y render 3D.</h1>
+            <p className="mt-6 max-w-xl text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">Con <strong>AURUM LAB</strong> gestionas clientes, cotizaciones y pedidos, calculas aleaciones y pesos, y renderizas tus modelos de joyería con metales, gemas e iluminación profesional.</p>
             <ul className="mt-7 space-y-4 text-sm font-medium text-[#25323b] sm:text-[15px]">
               <li className="flex items-start gap-3"><span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-lg bg-[#fff4c4] text-[#9b7600]"><Check className="size-4" /></span><span>Calcula cuánto metal necesitas para cada pieza.</span></li>
-              <li className="flex items-start gap-3"><span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-lg bg-[#fff4c4] text-[#9b7600]"><Check className="size-4" /></span><span>Muestra tus diseños con distintos metales, gemas y luces en <strong>AURUM RENDER</strong>.</span></li>
+              <li className="flex items-start gap-3"><span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-lg bg-[#fff4c4] text-[#9b7600]"><Check className="size-4" /></span><span>Renderiza tus modelos con distintos metales, gemas e iluminación en <strong>AURUM RENDER</strong>.</span></li>
               <li className="flex items-start gap-3"><span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-lg bg-[#fff4c4] text-[#9b7600]"><Check className="size-4" /></span><span>Ten a mano tus clientes, cotizaciones y pedidos.</span></li>
             </ul>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
