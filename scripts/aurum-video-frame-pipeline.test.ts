@@ -136,3 +136,21 @@ test("AURUM video beauty passes include settled Surface Edge AA when enabled and
   expect(withoutEdgeAa).toEqual([renderPass, gemMaskPass, fxaaPass, outputPass]);
   expect(passes.some((pass: any) => pass?.name === "taa")).toBe(false);
 });
+
+
+test("AURUM video frame plan uses fixed timestamps and an exact frame count", async () => {
+  const { createAurumVideoFramePlan } = await import("../src/lib/aurum/video-exporter");
+  const plan = createAurumVideoFramePlan(2, 30);
+  expect(plan).toHaveLength(60);
+  expect(plan[0]).toEqual({ index: 0, timestampSeconds: 0 });
+  expect(plan[1]?.timestampSeconds).toBeCloseTo(1 / 30);
+  expect(plan[59]?.timestampSeconds).toBeCloseTo(59 / 30);
+  expect(Object.isFrozen(plan)).toBe(true);
+  expect(Object.isFrozen(plan[0])).toBe(true);
+});
+
+test("AURUM video frame plan clamps unsafe duration and frame-rate inputs", async () => {
+  const { createAurumVideoFramePlan } = await import("../src/lib/aurum/video-exporter");
+  expect(createAurumVideoFramePlan(0, 1)).toHaveLength(15);
+  expect(createAurumVideoFramePlan(100, 240)).toHaveLength(2400);
+});
