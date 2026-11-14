@@ -3666,7 +3666,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             interactionPasses.forEach((pass) => { pass.enabled = coreBeautyPasses.has(pass); });
             if (gemMaskPass) gemMaskPass.enabled = false;
             if (fxaaPass) fxaaPass.enabled = false;
-            const sameBeautyPipelineAvailable = Boolean(composer && renderPass && outputPass);
             liveFastPathRef.current = true;
 
             // Keep catalog-authored gemstone materials unchanged during orbit.
@@ -3688,7 +3687,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             const settledPasses = ((composer as any)?.passes ?? []) as any[];
             settledPasses.forEach((pass) => { pass.enabled = coreBeautyPasses.has(pass); });
 
-            const sameBeautyPipelineAvailable = Boolean(composer && renderPass && outputPass);
             liveFastPathRef.current = true;
             // Restore the normal settled temporal state. There is no active
             // gem transition to coordinate while progressive blending is suspended.
