@@ -280,6 +280,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [publicViewerTestUrl, setPublicViewerTestUrl] = useState<string | null>(null);
   const [publicViewerCameraActions, setPublicViewerCameraActions] = useState<any>(null);
   const publicViewerTestInputRef = useRef<HTMLInputElement>(null);
+  const publicViewerTestHostRef = useRef<HTMLDivElement>(null);
   const publicViewerTestUrlRef = useRef<string | null>(null);
   const selectPublicViewerTestFile = useCallback((file: File | null) => {
     if (publicViewerTestUrlRef.current) URL.revokeObjectURL(publicViewerTestUrlRef.current);
@@ -4996,6 +4997,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           {publicViewerTestOpen && (
             <div className="absolute inset-0 z-[75] flex flex-col bg-white">
               <div
+                ref={publicViewerTestHostRef}
                 className="relative min-h-0 flex-1"
                 onDragEnter={(event) => {
                   event.preventDefault();
@@ -5022,7 +5024,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 {publicViewerTestUrl && publicViewerTestFile ? (
                   <>
                   <PublicCatalogViewer key={publicViewerTestFile.name + ":" + publicViewerTestFile.size + ":" + publicViewerTestFile.lastModified} modelUrl={publicViewerTestUrl} modelName={publicViewerTestFile.name} materialId={materialId} gemId={gemaId} hideControls onCameraActionsReady={setPublicViewerCameraActions} />
-                  <AurumViewerControlsModule performanceOpen={performanceOpen} onPerformanceToggle={() => setPerformanceOpen((value) => !value)} onPerformanceClose={() => setPerformanceOpen(false)} performanceRenderer={performanceRenderer} performanceMonitor={performanceMonitorRef.current} selectionDiagnostic={diagnosticoSeleccion} selectionName={parteSeleccionadaNombre} selectionEnabled={diagnosticoSeleccionHabilitado} onSelectionClose={() => { setDiagnosticoSeleccion(null); setDiagnosticoSeleccionHabilitado(false); diagnosticoSeleccionHabilitadoRef.current = false; }} cameraActions={publicViewerCameraActions} />
+                  <AurumViewerControlsModule performanceOpen={performanceOpen} onPerformanceToggle={() => setPerformanceOpen((value) => !value)} onPerformanceClose={() => setPerformanceOpen(false)} performanceRenderer={performanceRenderer} performanceMonitor={performanceMonitorRef.current} selectionDiagnostic={diagnosticoSeleccion} selectionName={parteSeleccionadaNombre} selectionEnabled={diagnosticoSeleccionHabilitado} onSelectionClose={() => { setDiagnosticoSeleccion(null); setDiagnosticoSeleccionHabilitado(false); diagnosticoSeleccionHabilitadoRef.current = false; }} cameraActions={publicViewerCameraActions} onFullscreen={() => { const host = publicViewerTestHostRef.current; if (!host) return; if (document.fullscreenElement === host) void document.exitFullscreen(); else void host.requestFullscreen?.(); }} />
                   </>
                 ) : (
                   <div className="grid h-full place-items-center p-8 text-center">
