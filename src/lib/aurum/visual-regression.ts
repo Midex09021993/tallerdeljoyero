@@ -26,6 +26,45 @@ export interface AurumVisualRegressionReport {
 }
 
 /**
+ * Reads the rendered WebGL canvas into a detached 2D pixel buffer.
+ * Capture must be performed after the viewer has reached its settled state.
+ */
+export function captureAurumCanvasRgba(canvas: HTMLCanvasElement): AurumRgbaImage {
+  if (typeof document === "undefined") {
+    throw new Error("AURUM visual regression: la captura del canvas requiere un navegador.");
+  }
+  if (!canvas || canvas.width <= 0 || canvas.height <= 0) {
+    throw new Error("AURUM visual regression: el canvas de origen no tiene dimensiones válidas.");
+  }
+
+  const scratch = document.createElement("canvas");
+  scratch.width = canvas.width;
+  scratch.height = canvas.height;
+  const context = scratch.getContext("2d", { willReadFrequently: true });
+  if (!context) {
+    throw new Error("AURUM visual regression: no se pudo crear el contexto 2D de captura.");
+  }
+
+  try {
+    context.drawImage(canvas, 0, 0);
+    const pixels = context.getImageData(0, 0, scratch.width, scratch.height);
+    return Object.freeze({
+      width: scratch.width,
+      height: scratch.height,
+      data: new Uint8ClampedArray(pixels.data),
+    });
+  } catch (error) {
+    throw new Error(
+      "AURUM visual regression: no se pudo leer el canvas WebGL; comprueba origen, permisos y estado del contexto.",
+      { cause: error },
+    );
+  } finally {
+    scratch.width = 0;
+    scratch.height = 0;
+  }
+}
+
+/**
  * Compares two same-size RGBA captures without browser or GPU dependencies.
  * This is deliberately a comparator only: callers own screenshot acquisition
  * and must use the same camera, viewport, quality profile and color space.
