@@ -75,3 +75,18 @@ export interface IAurumGeometrySceneResult {
   readonly format: string;
   readonly pipeline: readonly string[];
 }
+
+
+/**
+ * Camera boundary: OrbitControls is owned by AURUM CAMERA and exposed only
+ * through semantic view operations to the rest of the application.
+ */
+export interface IAurumCameraControlsContract {
+  readonly id: "aurum.camera.controls";
+  readonly version: "1.0.0";
+  readonly camera: THREE.PerspectiveCamera;
+  readonly controls: unknown;
+  applyView(model: THREE.Object3D | null, view: "perspectiva" | "frontal" | "superior" | "lateral", category?: string): void;
+  update(): void;
+  getTarget(): THREE.Vector3;
+}
