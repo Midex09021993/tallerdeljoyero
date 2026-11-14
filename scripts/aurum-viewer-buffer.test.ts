@@ -61,7 +61,7 @@ test("the viewer pauses on WebGL context loss and resumes after restoration", ()
       clientHeight: 600,
       getBoundingClientRect: () => ({ width: 800, height: 600 }),
     },
-    cameraControls: { getAspect: () => 1, setAspect: () => undefined, update: () => false },
+    cameraControls: { getAspect: () => 1, setAspect: () => undefined, update: () => false, addEventListener: () => undefined, removeEventListener: () => undefined, dispose: () => undefined },
     renderer: { domElement: canvas, setSize() { resizeCount++; } },
     controls: null,
   };
@@ -170,7 +170,7 @@ test("the demand-driven loop retries a transient frame exception with bounded re
       node: {
         getBoundingClientRect: () => ({ width: 640, height: 480 }),
       },
-      cameraControls: { getAspect: () => 1, setAspect: () => undefined, update: () => false },
+      cameraControls: { getAspect: () => 1, setAspect: () => undefined, update: () => false, addEventListener: () => undefined, removeEventListener: () => undefined, dispose: () => undefined },
       renderer: { domElement: new EventTarget(), setSize() {} },
       controls: null,
     } as any, () => {
@@ -249,7 +249,7 @@ test("the viewer recovers on host wake when WebGL is available but restoration e
   try {
     const loop = startAurumViewerLoop({
       node: { getBoundingClientRect: () => ({ width: 800, height: 600 }) },
-      cameraControls: { getAspect: () => 1, setAspect: () => undefined, update: () => false },
+      cameraControls: { getAspect: () => 1, setAspect: () => undefined, update: () => false, addEventListener: () => undefined, removeEventListener: () => undefined, dispose: () => undefined },
       renderer: {
         domElement: canvas,
         getContext: () => context,
@@ -336,7 +336,7 @@ test("the viewer reasserts the WebGL drawing surface on host wake without a cont
   try {
     const loop = startAurumViewerLoop({
       node: { getBoundingClientRect: () => ({ width: 800, height: 600 }) },
-      cameraControls: { getAspect: () => 800 / 600, setAspect: () => undefined, update: () => false },
+      cameraControls: { getAspect: () => 800 / 600, setAspect: () => undefined, update: () => false, addEventListener: () => undefined, removeEventListener: () => undefined, dispose: () => undefined },
       renderer: {
         domElement: canvas,
         getSize(target: { set: (width: number, height: number) => unknown }) {
@@ -392,7 +392,7 @@ test("viewer resize delegates post-processing target sizing to the composer exac
   const canvas = { width: 1600, height: 1200 };
   const viewer = {
     node: { getBoundingClientRect: () => ({ width: 800, height: 600 }) },
-    cameraControls: { getAspect: () => 4 / 3, setAspect: () => undefined, update: () => false },
+    cameraControls: { getAspect: () => 4 / 3, setAspect: () => undefined, update: () => false, addEventListener: () => undefined, removeEventListener: () => undefined, dispose: () => undefined },
     renderer: {
       domElement: canvas,
       getPixelRatio: () => 2,
