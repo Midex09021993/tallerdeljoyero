@@ -2154,6 +2154,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         invalidateRenderRef.current?.();
       };
       const camaraVista=(id:VistaId)=>{
+        // A fixed camera preset must stop the independent 360° animation first;
+        // otherwise OrbitControls immediately moves away from the selected view.
+        controles.autoRotate = false;
+        setAutoRotate360(false);
         // AURUM CAMERA is the sole owner of view presets and framing scale.
         // The embedded viewer uses a wider framing through the same contract;
         // no caller mutates camera.position or OrbitControls after the preset.
