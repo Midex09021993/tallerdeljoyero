@@ -61,6 +61,17 @@ function synchronizeOrbitControlsPreset(
   camera.updateMatrixWorld(true);
 }
 
+/** Recenter the current camera direction on a new target without bypassing OrbitControls. */
+export function centerAurumCameraOn(
+  camera: THREE.PerspectiveCamera,
+  controls: { target: THREE.Vector3; update: () => void; enableDamping?: boolean },
+  target: THREE.Vector3,
+) {
+  const offset = camera.position.clone().sub(controls.target);
+  synchronizeOrbitControlsPreset(camera, controls, target, target.clone().add(offset));
+}
+
+
 /**
  * Presentación inicial calibrada con los valores exactos de cámara del VJSON iJewel
  * suministrado. No sustituye la dirección de referencia por un ángulo fotográfico.
