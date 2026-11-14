@@ -43,7 +43,7 @@ export function createAurumObjectSelectionModule(
     const candidates: THREE.Object3D[] = [];
     model.traverse((object) => {
       const mesh = object as THREE.Mesh;
-      if (!mesh.isMesh || !mesh.visible || mesh.userData?.aurumInternalInclusion) return;
+      if (!mesh.isMesh || !mesh.visible || mesh.userData?.["aurumInternalInclusion"]) return;
       const geometry = mesh.geometry;
       if (geometry && !geometry.boundingSphere) geometry.computeBoundingSphere();
       const sphere = geometry?.boundingSphere;
