@@ -84,26 +84,26 @@ export function RegistroTaller({ className = "" }: Props) {
       </button>
 
       {abierto ? createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto bg-black/80 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="registro-taller-title">
-          <div className="max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-2xl border border-gold/25 bg-[#111315] p-6 shadow-2xl sm:p-8">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto bg-[#17232d]/55 p-4 backdrop-blur-md" role="dialog" aria-modal="true" aria-labelledby="registro-taller-title">
+          <div className="max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-3xl border border-[#e8dfca] bg-white p-6 shadow-[0_28px_90px_rgba(23,35,45,.22)] sm:p-8">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-[10px] uppercase tracking-[0.25em] text-gold">Aurum Lab · Tu taller</p>
-                <h2 id="registro-taller-title" className="mt-2 text-2xl font-semibold text-white">Crea tu taller</h2>
-                <p className="mt-2 text-sm leading-relaxed text-white/55">
+                <p className="text-[10px] uppercase tracking-[0.25em] text-[#987400]">Aurum Lab · Tu taller</p>
+                <h2 id="registro-taller-title" className="mt-2 text-2xl font-extrabold tracking-tight text-[#17232d]">Crea tu taller</h2>
+                <p className="mt-2 text-sm leading-relaxed text-slate-600">
                   Un solo registro. Aurum crea tu taller, tu cuenta y tu acceso automáticamente.
                 </p>
               </div>
-              <button type="button" onClick={cerrar} className="rounded-lg p-2 text-white/50 hover:bg-white/5 hover:text-white" aria-label="Cerrar">
+              <button type="button" onClick={cerrar} className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-[#17232d]" aria-label="Cerrar">
                 <X className="size-5" />
               </button>
             </div>
 
             {creado ? (
-              <div className="mt-8 rounded-xl border border-gold/25 bg-gold/5 p-6 text-center">
+              <div className="mt-8 rounded-2xl border border-[#eadca8] bg-[#fffaf0] p-6 text-center">
                 <Building2 className="mx-auto size-8 text-gold" />
                 <p className="mt-3 text-lg font-semibold text-gold">Tu taller está listo</p>
-                <p className="mt-2 text-sm leading-relaxed text-white/60">
+                <p className="mt-2 text-sm leading-relaxed text-slate-600">
                   {correoEnviado
                     ? "Tu cuenta y tu taller fueron creados. También enviamos a tu correo el acceso y el enlace para entrar."
                     : "Tu cuenta y tu taller fueron creados. Puedes entrar ahora; el correo de bienvenida quedó pendiente de configuración de envío."}
@@ -112,73 +112,73 @@ export function RegistroTaller({ className = "" }: Props) {
             ) : (
               <form onSubmit={registrar} className="mt-7 space-y-5">
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <label className="block text-[10px] uppercase tracking-wider text-white/45">
+                  <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">
                     Tu nombre
                     <span className="relative mt-2 block">
-                      <UserRound className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-white/40" />
-                      <input required maxLength={120} value={form.nombre} onChange={(e) => setForm((v) => ({ ...v, nombre: e.target.value }))} className="w-full rounded-lg border border-white/10 bg-black/25 py-3 pl-10 pr-3 text-sm text-white outline-none focus:border-gold" />
+                      <UserRound className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                      <input required maxLength={120} value={form.nombre} onChange={(e) => setForm((v) => ({ ...v, nombre: e.target.value }))} className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-3 text-sm text-[#17232d] outline-none transition placeholder:text-slate-400 focus:border-[#c59a18] focus:ring-2 focus:ring-[#f8c928]/25" />
                     </span>
                   </label>
 
-                  <label className="block text-[10px] uppercase tracking-wider text-white/45">
+                  <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">
                     Nombre del taller
                     <span className="relative mt-2 block">
-                      <Building2 className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-white/40" />
-                      <input required maxLength={160} value={form.taller} onChange={(e) => setForm((v) => ({ ...v, taller: e.target.value }))} className="w-full rounded-lg border border-white/10 bg-black/25 py-3 pl-10 pr-3 text-sm text-white outline-none focus:border-gold" />
+                      <Building2 className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                      <input required maxLength={160} value={form.taller} onChange={(e) => setForm((v) => ({ ...v, taller: e.target.value }))} className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-3 text-sm text-[#17232d] outline-none transition placeholder:text-slate-400 focus:border-[#c59a18] focus:ring-2 focus:ring-[#f8c928]/25" />
                     </span>
                   </label>
 
-                  <label className="block text-[10px] uppercase tracking-wider text-white/45">
+                  <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">
                     Correo
                     <span className="relative mt-2 block">
-                      <Mail className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-white/40" />
-                      <input required type="email" maxLength={160} autoComplete="email" value={form.email} onChange={(e) => setForm((v) => ({ ...v, email: e.target.value }))} className="w-full rounded-lg border border-white/10 bg-black/25 py-3 pl-10 pr-3 text-sm text-white outline-none focus:border-gold" />
+                      <Mail className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                      <input required type="email" maxLength={160} autoComplete="email" value={form.email} onChange={(e) => setForm((v) => ({ ...v, email: e.target.value }))} className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-3 text-sm text-[#17232d] outline-none transition placeholder:text-slate-400 focus:border-[#c59a18] focus:ring-2 focus:ring-[#f8c928]/25" />
                     </span>
                   </label>
 
-                  <label className="block text-[10px] uppercase tracking-wider text-white/45">
+                  <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">
                     WhatsApp / teléfono
                     <span className="relative mt-2 block">
-                      <Phone className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-white/40" />
-                      <input maxLength={30} autoComplete="tel" value={form.telefono} onChange={(e) => setForm((v) => ({ ...v, telefono: e.target.value }))} className="w-full rounded-lg border border-white/10 bg-black/25 py-3 pl-10 pr-3 text-sm text-white outline-none focus:border-gold" />
+                      <Phone className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                      <input maxLength={30} autoComplete="tel" value={form.telefono} onChange={(e) => setForm((v) => ({ ...v, telefono: e.target.value }))} className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-3 text-sm text-[#17232d] outline-none transition placeholder:text-slate-400 focus:border-[#c59a18] focus:ring-2 focus:ring-[#f8c928]/25" />
                     </span>
                   </label>
 
-                  <label className="block text-[10px] uppercase tracking-wider text-white/45">
+                  <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">
                     Ciudad
                     <span className="relative mt-2 block">
-                      <MapPin className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-white/40" />
-                      <input maxLength={80} value={form.ciudad} onChange={(e) => setForm((v) => ({ ...v, ciudad: e.target.value }))} className="w-full rounded-lg border border-white/10 bg-black/25 py-3 pl-10 pr-3 text-sm text-white outline-none focus:border-gold" />
+                      <MapPin className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                      <input maxLength={80} value={form.ciudad} onChange={(e) => setForm((v) => ({ ...v, ciudad: e.target.value }))} className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-3 text-sm text-[#17232d] outline-none transition placeholder:text-slate-400 focus:border-[#c59a18] focus:ring-2 focus:ring-[#f8c928]/25" />
                     </span>
                   </label>
 
-                  <label className="block text-[10px] uppercase tracking-wider text-white/45">
+                  <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">
                     Contraseña
                     <span className="relative mt-2 block">
-                      <input required minLength={8} maxLength={128} type={mostrarPassword ? "text" : "password"} autoComplete="new-password" value={form.password} onChange={(e) => setForm((v) => ({ ...v, password: e.target.value }))} className="w-full rounded-lg border border-white/10 bg-black/25 py-3 pl-3 pr-10 text-sm text-white outline-none focus:border-gold" />
-                      <button type="button" onClick={() => setMostrarPassword((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-gold" aria-label={mostrarPassword ? "Ocultar contraseña" : "Mostrar contraseña"}>
+                      <input required minLength={8} maxLength={128} type={mostrarPassword ? "text" : "password"} autoComplete="new-password" value={form.password} onChange={(e) => setForm((v) => ({ ...v, password: e.target.value }))} className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-3 pr-10 text-sm text-[#17232d] outline-none transition placeholder:text-slate-400 focus:border-[#c59a18] focus:ring-2 focus:ring-[#f8c928]/25" />
+                      <button type="button" onClick={() => setMostrarPassword((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#987400]" aria-label={mostrarPassword ? "Ocultar contraseña" : "Mostrar contraseña"}>
                         {mostrarPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                       </button>
                     </span>
                   </label>
                 </div>
 
-                <div className="rounded-lg border border-gold/25 bg-gold/5 p-4 text-sm leading-relaxed text-white/75">
+                <div className="rounded-2xl border border-[#eadca8] bg-[#fffaf0] p-4 text-sm leading-relaxed text-slate-700">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="font-semibold text-gold">Plan Emprendedor</p>
-                    <span className="rounded-full border border-gold/35 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-gold">Gratis</span>
+                    <p className="font-semibold text-[#987400]">Plan Emprendedor</p>
+                    <span className="rounded-full border border-[#d9bd68] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[#987400]">Gratis</span>
                   </div>
                   <p className="mt-2">Empieza sin pagar y utiliza las herramientas públicas gratuitas. La propuesta del plan incluye funciones comerciales básicas para organizar clientes, cotizaciones y pedidos; la disponibilidad de límites y funciones por plan se habilitará cuando terminemos su configuración.</p>
-                  <p className="mt-2 text-xs text-white/60">Este registro crea tu taller y tu primera cuenta con rol de <span className="font-semibold text-gold">gerente</span>. Después podrás incorporar a tu equipo. No se activa ninguna suscripción de pago.</p>
+                  <p className="mt-2 text-xs text-slate-500">Este registro crea tu taller y tu primera cuenta con rol de <span className="font-semibold text-[#987400]">gerente</span>. Después podrás incorporar a tu equipo. No se activa ninguna suscripción de pago.</p>
                 </div>
 
                 {error ? <p role="alert" className="text-xs text-danger">{error}</p> : null}
 
                 <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-                  <button type="button" onClick={cerrar} className="rounded-lg border border-white/10 px-5 py-3 text-xs font-semibold uppercase tracking-wider text-white/60 hover:bg-white/5">
+                  <button type="button" onClick={cerrar} className="rounded-xl border border-slate-200 px-5 py-3 text-xs font-semibold uppercase tracking-wider text-slate-600 transition hover:bg-slate-50">
                     Cancelar
                   </button>
-                  <button type="submit" disabled={cargando} className="rounded-lg bg-gold px-5 py-3 text-xs font-semibold uppercase tracking-wider text-ink disabled:opacity-50">
+                  <button type="submit" disabled={cargando} className="rounded-xl bg-[#f8c928] px-5 py-3 text-xs font-bold uppercase tracking-wider text-[#17232d] shadow-sm transition hover:bg-[#ffdf65] disabled:opacity-50">
                     {cargando ? "Creando taller…" : "Crear mi taller"}
                   </button>
                 </div>
