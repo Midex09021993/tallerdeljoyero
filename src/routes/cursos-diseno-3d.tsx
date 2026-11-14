@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight, BookOpen, CheckCircle2, Clock3, Gem, GraduationCap,
@@ -52,6 +53,8 @@ const complementos = [
 ] as const;
 
 function CursosDiseno3DPage() {
+  const [programaAbierto, setProgramaAbierto] = useState(false);
+
   return (
     <main className="min-h-screen bg-[#f7f6f2] text-[#1d2b39]">
       <header className="sticky top-0 z-30 border-b border-[#e7e2d8] bg-white/95 backdrop-blur">
@@ -79,7 +82,7 @@ function CursosDiseno3DPage() {
             <p className="mt-6 max-w-2xl text-base leading-8 text-[#52677b] sm:text-lg">Aprende desde nivel inicial a construir y preparar modelos tridimensionales para joyería. Avanza paso a paso con clases prácticas y laboratorios interactivos desarrollados para este programa.</p>
             <div className="mt-7 flex flex-wrap gap-3">
               <Link to="/auth" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#e9c65f] px-5 text-sm font-bold text-[#202b35] shadow-md shadow-[#b58b37]/15 transition hover:-translate-y-0.5 hover:bg-[#dfb83e]">Registrarme gratis <ArrowRight className="size-4" /></Link>
-              <a href="#programa" className="inline-flex min-h-12 items-center justify-center rounded-xl border border-[#d9e0e6] bg-white px-5 text-sm font-semibold text-[#33485b] transition hover:border-[#c5a45a]">Ver las 10 sesiones</a>
+              <button type="button" aria-expanded={programaAbierto} aria-controls="programa" onClick={() => setProgramaAbierto((abierto) => !abierto)} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-[#d9e0e6] bg-white px-5 text-sm font-semibold text-[#33485b] transition hover:border-[#c5a45a]">{programaAbierto ? "Ocultar programa" : "Ver las 10 sesiones"} <span aria-hidden="true" className={`transition-transform ${programaAbierto ? "rotate-180" : ""}`}>⌄</span></button>
             </div>
             <p className="mt-4 text-xs text-[#738397]">Crear tu cuenta en AURUM LAB es gratuito. La matrícula del curso es independiente.</p>
           </div>
@@ -102,7 +105,7 @@ function CursosDiseno3DPage() {
         </div>
       </section>
 
-      <section id="programa" className="scroll-mt-24 mx-auto max-w-7xl px-4 py-14 sm:px-7 lg:px-10 lg:py-20">
+      {programaAbierto && <section id="programa" className="scroll-mt-24 mx-auto max-w-7xl px-4 py-14 sm:px-7 lg:px-10 lg:py-20" aria-label="Programa académico">
         <div className="max-w-3xl">
           <p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#a17a2e]">Programa académico</p>
           <h2 className="mt-3 font-display text-3xl font-semibold tracking-tight text-[#1d2b39] sm:text-4xl">10 sesiones para construir tu base en modelado 3D</h2>
@@ -116,7 +119,7 @@ function CursosDiseno3DPage() {
             </div>
           </article>)}
         </div>
-      </section>
+      </section>}
 
       <section id="laboratorios" className="scroll-mt-24 border-y border-[#e2e7eb] bg-[#edf1f4]">
         <div className="mx-auto max-w-7xl px-4 py-14 sm:px-7 lg:px-10 lg:py-18">
