@@ -48,6 +48,21 @@ test("AURUM CAMERA applies four distinct presets using real Three.js OrbitContro
   expect(controls.mouseButtons.RIGHT).toBe(THREE.MOUSE.PAN);
   expect(controls.mouseButtons.LEFT).toBe(THREE.MOUSE.ROTATE);
   expect(controls.mouseButtons.MIDDLE).toBe(THREE.MOUSE.DOLLY);
+  contract.configure({ fov: 35, minDistance: 0.5, maxDistance: 20, enablePan: false });
+  expect(camera.fov).toBe(35);
+  expect(controls.minDistance).toBe(0.5);
+  expect(controls.maxDistance).toBe(20);
+  expect(controls.enablePan).toBe(false);
+  contract.configure({ enablePan: true, screenSpacePanning: true });
+  contract.setPose(new THREE.Vector3(0, 0, 8), new THREE.Vector3(0, 0, 0));
+  expect(contract.getDistance()).toBeCloseTo(8, 8);
+  contract.setDistance(6);
+  expect(contract.getDistance()).toBeCloseTo(6, 8);
+  contract.setAutoRotate(true, 0.8);
+  expect(controls.autoRotate).toBe(true);
+  expect(controls.autoRotateSpeed).toBe(0.8);
+  contract.setAutoRotate(false);
+  expect(controls.autoRotate).toBe(false);
   expect(contract.id).toBe("aurum.camera.controls");
   expect(Object.isFrozen(contract)).toBe(true);
 
