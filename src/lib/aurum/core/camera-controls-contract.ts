@@ -1,26 +1,14 @@
 /**
- * AURUM CAMERA — internal control contract.
+ * AURUM CAMERA — internal OrbitControls contract.
  *
- * OrbitControls is an implementation detail owned by the camera subsystem.
- * Callers request semantic views; they never mutate OrbitControls directly
- * when changing a camera preset. The contract does not own/dispose Three.js
- * resources and leaves manual orbit/zoom available between preset changes.
+ * OrbitControls is owned by AURUM CAMERA. Application code requests semantic
+ * views through this contract instead of mutating camera position/up or
+ * calling OrbitControls.update() for presets. GPU and Three.js resources stay
+ * owned by the existing viewer lifecycle.
  */
 import type { PerspectiveCamera, Vector3, Object3D } from "three";
 import type { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import type { AurumCameraView } from "../camera";
-
-export interface IAurumCameraControlsContract {
-  readonly id: "aurum.camera.controls";
-  readonly version: "1.0.0";
-  readonly camera: PerspectiveCamera;
-  readonly controls: OrbitControls;
-  applyView(model: Object3D | null, view: AurumCameraView, category?: string): void;
-  update(): void;
-  getTarget(): Vector3;
-}
-
-import { applyAurumCameraView } from "../camera";
+import { applyAurumCameraView, applyAurumIJEWELPresentationCamera, fitAurumCameraToAspect, type AurumCameraView } from "../camera";
 import type { IAurumCameraControlsContract } from "./module-contracts";
 
 export function createAurumCameraControlsContract(
@@ -32,8 +20,14 @@ export function createAurumCameraControlsContract(
     version: "1.0.0",
     camera,
     controls,
-    applyView(model, view, category = "Otro") {
+    applyView(model: Object3D | null, view: AurumCameraView, category = "Otro") {
       applyAurumCameraView(camera, controls, model, view, category);
+    },
+    applyReferencePresentation(model: Object3D | null) {
+      applyAurumIJEWELPresentationCamera(camera, controls, model);
+    },
+    fitAspect(model: Object3D | null, aspect: number, margin = 1.18) {
+      fitAurumCameraToAspect(camera, controls, model, aspect, margin);
     },
     update() {
       controls.update();
