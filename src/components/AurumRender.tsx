@@ -2167,6 +2167,17 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           categoriaProyectoRef.current,
           { distanceScale: embedded ? 1.38 : 1 },
         );
+        // One event-scoped diagnostic makes it possible to distinguish a camera
+        // preset failure from a model-axis mismatch without per-frame overhead.
+        if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("aurumCameraDiag") === "1") {
+          console.info("[AURUM][CAMERA VIEW]", {
+            view: id,
+            position: camara.position.toArray(),
+            target: cameraControlsContract.getTarget().toArray(),
+            up: camara.up.toArray(),
+            autoRotate: controles.autoRotate,
+          });
+        }
         // Sincronizar matrices, acumulación temporal y siguiente frame visible.
         camara.updateMatrixWorld?.(true);
         resetTemporalAccumulationRef.current?.();
