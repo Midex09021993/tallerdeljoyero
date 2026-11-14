@@ -32,12 +32,23 @@ export function applyAurumIJEWELPresentationCamera(
   controls: { target: THREE.Vector3; update: () => void },
   model: THREE.Object3D | null,
 ) {
-  const bounds = model ? new THREE.Box3().setFromObject(model) : null;
-  const target = bounds
-    ? bounds.getCenter(new THREE.Vector3())
+  const bounds = model ? new THREE.Box3() : null;
+  if (model && bounds) {
+    model.updateWorldMatrix(true, true);
+    model.traverse((object) => {
+      if (!(object as THREE.Mesh).isMesh || !(object as THREE.Mesh).geometry || !object.visible) return;
+      for (let parent = object.parent; parent; parent = parent.parent) {
+        if (!parent.visible) return;
+      }
+      bounds.expandByObject(object);
+    });
+  }
+  const hasVisibleBounds = Boolean(bounds && !bounds.isEmpty());
+  const target = hasVisibleBounds
+    ? bounds!.getCenter(new THREE.Vector3())
     : new THREE.Vector3(0, 0, 0);
-  const size = bounds
-    ? bounds.getSize(new THREE.Vector3())
+  const size = hasVisibleBounds
+    ? bounds!.getSize(new THREE.Vector3())
     : new THREE.Vector3(2.6, 2.6, 2.6);
   const radius = Math.max(size.length() * .5, 1.3);
   // The VJSON coordinates are stored in the viewer coordinate system; after
