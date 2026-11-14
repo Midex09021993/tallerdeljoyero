@@ -592,7 +592,7 @@ test("initial jewel presentation awaits BVH and synchronizes model and camera be
   expect(sceneAddIndex).toBeGreaterThan(loadStart);
   expect(gemMaskRefreshIndex).toBeGreaterThan(sceneAddIndex);
   expect(bvhBlock).toContain("modelo.updateMatrixWorld?.(true);");
-  expect(bvhBlock).toContain("camara.updateMatrixWorld?.(true);");
+  expect(bvhBlock).toContain("cameraControlsContract.update();");
   expect(bvhBlock).toContain("runtime.refresh(modelo);");
   expect(bvhBlock).toContain("runtime.update();");
   expect(sceneBlock).not.toContain("liveFastPathRef.current = true;");
@@ -627,16 +627,14 @@ test("video export restores the original live viewport through bounded cleanup",
   expect(videoStart).toBeGreaterThan(-1);
   expect(restoreStart).toBeGreaterThan(videoStart);
   expect(restoreBlock).toContain("videoFramePipeline?.restore()");
-  expect(restoreBlock).toContain("camara.position.copy(originalCameraPosition)");
-  expect(restoreBlock).toContain("camara.quaternion.copy(originalCameraQuaternion)");
-  expect(restoreBlock).toContain("controles.update?.()");
+  expect(restoreBlock).toContain("cameraControlsContract.restoreState(originalCameraState)");
   expect(restoreBlock).toContain("resetTemporalAccumulationRef.current?.()");
   expect(restoreBlock).toContain("loop?.resize?.()");
   expect(restoreBlock).toContain("loop?.invalidate?.()");
   expect(restoreBlock).toContain("loop?.resume?.()");
   expect(restoreBlock).toContain("loop?.converge?.(4)");
   expect(restoreBlock.indexOf("videoFramePipeline?.restore()")).toBeLessThan(restoreBlock.indexOf("camara.position.copy(originalCameraPosition)"));
-  expect(restoreBlock.indexOf("camara.position.copy(originalCameraPosition)")).toBeLessThan(restoreBlock.indexOf("controles.update?.()"));
+  expect(restoreBlock.indexOf("cameraControlsContract.restoreState(originalCameraState)")).toBeGreaterThan(-1);
   expect(restoreBlock.indexOf("loop?.resize?.()")).toBeLessThan(restoreBlock.indexOf("loop?.resume?.()"));
   expect(restoreBlock.indexOf("loop?.resume?.()")).toBeLessThan(restoreBlock.indexOf("loop?.converge?.(4)"));
 });
