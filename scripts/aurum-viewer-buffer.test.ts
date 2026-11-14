@@ -249,7 +249,7 @@ test("the viewer recovers on host wake when WebGL is available but restoration e
   try {
     const loop = startAurumViewerLoop({
       node: { getBoundingClientRect: () => ({ width: 800, height: 600 }) },
-      camera: { aspect: 1, updateProjectionMatrix() {} },
+      cameraControls: { getAspect: () => 1, setAspect: () => undefined, update: () => false },
       renderer: {
         domElement: canvas,
         getContext: () => context,
