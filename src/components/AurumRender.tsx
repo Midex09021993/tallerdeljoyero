@@ -894,9 +894,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       // semantic camera contract (official preset/control boundary).
       const viewerAdapter = createAurumViewerAdapter({
         scene: escena,
-        camera: camara,
         renderer,
-        controls: controles,
         cameraControls: cameraControlsContract,
         host: nodo,
       });
