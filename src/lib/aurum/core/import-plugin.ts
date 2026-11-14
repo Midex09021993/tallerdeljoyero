@@ -19,8 +19,6 @@ export interface AurumImportRequest {
   readonly metalUnion?: boolean;
   /** Experimental non-CSG metal draw-call consolidation. Disabled by default; source meshes remain hidden and recoverable. */
   readonly metalFastVisualMerge?: boolean;
-  /** Experimental: retain decoded Rhino 3DM geometry as the viewer model, bypassing GLB conversion. */
-  readonly direct3dm?: boolean;
   /** Cancels the import at safe stage boundaries. Active third-party decoders may finish before cancellation is observed. */
   readonly signal?: AbortSignal;
   /** Optional hard file-size ceiling. Unset by default to preserve existing CAD workflows. */
@@ -135,13 +133,7 @@ export function createAurumImportPlugin(): AurumImportPlugin {
       }
       throwIfAborted();
 
-      if (format === "3dm" && request.direct3dm === true) {
-        // Controlled A/B path: retain Rhino decoded geometry and bypass GLB conversion.
-        // sourceObject === model prevents decoder cleanup from releasing live viewer buffers.
-        progress("Preparando geometría Rhino directa para el visor...");
-        model = sourceObject;
-        stage("rhino-direct-model-ready", { sourceFormat: format, bypassedGlbConversion: true });
-      } else if (format === "glb") {
+      if (format === "glb") {
         progress("Preparando modelo 3D para el visor...");
         model = await normalizeAurumModel(sourceObject, null, format, colorRhinoHex, classifyLayer);
         throwIfAborted();

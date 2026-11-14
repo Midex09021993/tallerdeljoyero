@@ -152,7 +152,7 @@ export function AurumProductShowcase() {
   const [active, setActive] = useState(0);
   const [visible, setVisible] = useState(true);
   const rootRef = useRef<HTMLDivElement | null>(null);
-  const current = (pages[active] ?? pages[0])!;
+  const current = pages[active];
 
   useEffect(() => {
     const node = rootRef.current;

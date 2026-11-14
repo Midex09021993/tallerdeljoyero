@@ -1,9 +1,9 @@
-import type { Object3D } from "three";
-import type { IAurumCameraControlsContract } from "./core/module-contracts";
-import { createAurumCameraControlsContract } from "./core/camera-controls-contract";
+import type { Object3D, PerspectiveCamera, Vector3 } from "three";
+import { applyAurumCameraView, applyAurumIJEWELPresentationCamera } from "./camera";
 
 export interface AurumViewerFrame {
-  cameraControls: IAurumCameraControlsContract;
+  camera: PerspectiveCamera;
+  controls: { target: Vector3; update: () => void };
   lights: Record<string, any>;
   groundController: any;
   scene: any;
@@ -11,7 +11,7 @@ export interface AurumViewerFrame {
   lightingController?: { scaleToModel?: (radius:number,targetY:number)=>void };
 }
 
-export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, prepare: (m:Object3D,scale?:number)=>any, applyScene:(id:any)=>void, sceneId:any, category:string="Anillo", distanceScale=1) {
+export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, prepare: (m:Object3D,scale?:number)=>any, applyScene:(id:any)=>void, sceneId:any, category:string="Anillo") {
   // Primera llamada: preparar producto y presentar frontalmente.
   // Siguientes llamadas: "Restablecer vista" solo cambia la cámara para no
   // reaplicar escena/materiales y provocar cambios de color.
@@ -45,22 +45,29 @@ export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, pre
     }
     applyScene(sceneId);
     model.userData={...(model.userData??{}),aurumInitialFrameApplied:true};
-    if (sceneId === "ijewelReference") viewer.cameraControls.applyReferencePresentation(model);
-        else viewer.cameraControls.applyView(model, "frontal", category, { distanceScale });
+    if (sceneId === "ijewelReference") applyAurumIJEWELPresentationCamera(viewer.camera, viewer.controls, model); else applyAurumCameraView(viewer.camera, viewer.controls, model, "frontal", category);
 
+    // AurumRender actualiza el estado de vista al cargar. Ese estado puede
+    // intentar aplicar "perspectiva" inmediatamente después del encuadre.
+    // Reafirmamos el frontal en el siguiente frame, sin tocar materiales ni escena.
+    requestAnimationFrame(() => {
+      if (model.userData?.["aurumInitialFrameApplied"]) {
+        if (sceneId === "ijewelReference") applyAurumIJEWELPresentationCamera(viewer.camera, viewer.controls, model); else applyAurumCameraView(viewer.camera, viewer.controls, model, "frontal", category);
+      }
+    });
     return;
   }
 
   // Restablecer siempre a una vista frontal con encuadre calculado
   // según el tamaño real del modelo. Evita que la cámara fija de referencia
   // vuelva a acercarse demasiado en archivos 3DM con otras unidades.
-  viewer.cameraControls.applyView(model, "frontal", category, { distanceScale });
+  applyAurumCameraView(viewer.camera, viewer.controls, model, "frontal", category);
 }
 
 
 export function resizeAurumViewer(viewer: {
   node: HTMLElement;
-  cameraControls: IAurumCameraControlsContract;
+  camera: PerspectiveCamera;
   renderer: any;
   composer?: any;
   ssaoPass?: any;
@@ -103,10 +110,11 @@ export function resizeAurumViewer(viewer: {
   // Three.js to reassert the drawing buffer and post-processing targets.
   const sizeChanged = forceSurfaceSync || logicalSizeChanged || bufferSizeChanged;
   const nextAspect = w / h;
-  const aspectChanged = Math.abs(viewer.cameraControls.getAspect() - nextAspect) > 0.0001;
+  const aspectChanged = Math.abs(Number(viewer.camera.aspect) - nextAspect) > 0.0001;
 
   if (aspectChanged) {
-    viewer.cameraControls.setAspect(nextAspect);
+    viewer.camera.aspect = nextAspect;
+    viewer.camera.updateProjectionMatrix();
   }
   if (sizeChanged || aspectChanged) {
     // Update the existing renderer and post pipeline in place. Never recreate
@@ -135,7 +143,7 @@ const disposedAurumViewerRenderers = new WeakSet<object>();
 export function disposeAurumViewer(viewer: {
   node: any;
   renderer: any;
-  cameraControls: Pick<IAurumCameraControlsContract, "dispose">;
+  controls?: any;
   observer?: { disconnect: () => void };
   loop?: { stop?: () => void };
   clickHandler?: (event: MouseEvent) => void;
@@ -171,7 +179,7 @@ export function disposeAurumViewer(viewer: {
   attempt(() => {
     if (viewer.clickHandler) renderer?.domElement?.removeEventListener("click", viewer.clickHandler);
   });
-  attempt(() => viewer.cameraControls.dispose());
+  attempt(() => viewer.controls?.dispose?.());
   attempt(() => viewer.clearSelection?.());
   attempt(() => viewer.lightingController?.dispose?.());
   attempt(() => viewer.groundController?.dispose?.());
@@ -216,33 +224,29 @@ export function createAurumWebGLViewer(
 
   const Controls = options.controlsClass;
   const controls = Controls ? new Controls(camera, renderer.domElement) : null;
-  const cameraControls = controls
-    ? createAurumCameraControlsContract(camera, controls)
-    : null;
-  cameraControls?.configure({
-    enableDamping: true,
-    dampingFactor: 0.07,
-    enablePan: true,
-    enableRotate: true,
-    autoRotateSpeed: 0.65,
-    minDistance: 0.15,
-    maxDistance: options.maxDistance ?? 100,
-  });
+  if (controls) {
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.07;
+    controls.enablePan = true;
+    controls.enableRotate = true;
+    controls.autoRotate = false;
+    controls.autoRotateSpeed = 0.65;
+    controls.minDistance = 0.15;
+    controls.maxDistance = options.maxDistance ?? 100;
+  }
 
   nodo.appendChild(renderer.domElement);
-  // Never publish raw OrbitControls. AURUM CAMERA is the only returned camera
-  // control surface; callers may read the camera for rendering/BVH only.
-  return { scene, camera, renderer, cameraControls };
+  return { scene, camera, renderer, controls };
 }
 
 export function startAurumViewerLoop(
-  viewer: { node: HTMLElement; renderer: any; composer?: any; ssaoPass?: any; cameraControls: IAurumCameraControlsContract },
+  viewer: { node: HTMLElement; camera: any; renderer: any; composer?: any; ssaoPass?: any; controls?: any },
   render: () => void,
   interaction?: { onStart?: () => void; onEnd?: () => void; progressiveFrames?: number }
 ) {
   // AURUM is a product configurator, not a continuously animated game scene.
-  // Render only when the camera/scene actually changes. AURUM CAMERA owns
-  // per-frame OrbitControls updates while damping is active, but no RAF is kept
+  // Render only when the camera/scene actually changes. OrbitControls still
+  // receives per-frame updates while damping is active, but no RAF is kept
   // alive once the image is stable.
   let frame = 0;
   let ticking = false;
@@ -490,9 +494,9 @@ export function startAurumViewerLoop(
     requestRender();
   };
 
-  viewer.cameraControls.addEventListener("start", onControlStart);
-  viewer.cameraControls.addEventListener("change", onControlChange);
-  viewer.cameraControls.addEventListener("end", onControlEnd);
+  viewer.controls?.addEventListener?.("start", onControlStart);
+  viewer.controls?.addEventListener?.("change", onControlChange);
+  viewer.controls?.addEventListener?.("end", onControlEnd);
 
   const tick = () => {
     frame = 0;
@@ -500,7 +504,7 @@ export function startAurumViewerLoop(
     ticking = true;
     let changedByControls = false;
     try {
-      changedByControls = Boolean(viewer.cameraControls.update());
+      changedByControls = Boolean(viewer.controls?.update?.());
 
       // Wait until OrbitControls damping has actually settled before restoring
       // the beauty path. This prevents a progressive image accumulating while
@@ -599,9 +603,9 @@ export function startAurumViewerLoop(
       clearFrameRetry(true);
       if (frame) cancelAnimationFrame(frame);
       frame = 0;
-      viewer.cameraControls.removeEventListener("start", onControlStart);
-      viewer.cameraControls.removeEventListener("change", onControlChange);
-      viewer.cameraControls.removeEventListener("end", onControlEnd);
+      viewer.controls?.removeEventListener?.("start", onControlStart);
+      viewer.controls?.removeEventListener?.("change", onControlChange);
+      viewer.controls?.removeEventListener?.("end", onControlEnd);
       window.removeEventListener("resize", scheduleHostResize);
       window.removeEventListener("aurum-host-resize", scheduleHostResize);
       document.removeEventListener("fullscreenchange", scheduleHostResize);

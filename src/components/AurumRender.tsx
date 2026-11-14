@@ -14,10 +14,9 @@ import { getAurumShadowConfig } from "../lib/aurum-shadow-engine";
 import { getAurumPostConfig } from "../lib/aurum-post-engine";
 import { getAurumSsaoConfig } from "../lib/aurum-ssao-engine";
 import { AURUM_LIGHTING_DEFAULT } from "../lib/aurum-lighting-engine";
-import { calculateAurumFocalDepth } from "../lib/aurum/camera";
+import { applyAurumCameraView, applyAurumIJEWELPresentationCamera, fitAurumCameraToAspect, calculateAurumFocalDepth } from "../lib/aurum/camera";
 import { prepareAurumModel } from "../lib/aurum/model-prep";
 import { createAurumPostPipeline } from "../lib/aurum/post";
-import { AURUM_MODULE_CONTROL_EVENT, readAurumModuleControls, type AurumManagedModuleId } from "../lib/aurum/module-controls";
 import { createAurumEnvironment } from "../lib/aurum/environment";
 import { createAurumGemEnvironment } from "../lib/aurum/gem-environment";
 import { createAurumDiamondBvhRuntime, type AurumDiamondBvhRuntime } from "../lib/aurum/aurum-diamond-bvh-runtime";
@@ -42,7 +41,6 @@ import { disposeAurumThicknessCacheForTarget } from "../lib/aurum/thickness-map"
 import { createAurumApi, createAurumCatalogApi, type AurumCatalogApi } from "../lib/aurum/api";
 import { createAurumConfiguratorState } from "../lib/aurum/configurator-state";
 import { createAurumViewerAdapter, AURUM_VIEWER_SERVICES } from "../lib/aurum/core/viewer-adapter";
-import { createAurumObjectSelectionModule } from "../lib/aurum/core/object-selection-module";
 import { createAurumSceneAdapter } from "../lib/aurum/core/scene-adapter";
 import { createAurumLightingAdapter } from "../lib/aurum/core/lighting-adapter";
 import { createAurumProductionPluginHost } from "../lib/aurum/core/production-plugin-host";
@@ -58,10 +56,7 @@ import { Camera, ChevronDown, Copy, Download, Expand, FileJson, Gem, Image as Im
 
 import { GEMAS, MATERIALES, ESCENARIOS, VISTAS, ILUMINACIONES, type MaterialId, type EscenarioId, type VistaId, type IluminacionId, type MaterialGrupo, type CategoriaParte, type GemaId, type GemaConfig, type MaterialConfig, type ParteModelo } from "../lib/aurum/catalog";
 import { AurumRenderSidebar } from "./AurumRenderSidebar";
-import { PublicCatalogViewer } from "./PublicCatalogViewer";
-import { AurumViewerControlsModule } from "./AurumViewerControlsModule";
-import { AurumLoadingScreen } from "./AurumLoadingScreen";
-import { AurumDepthOfFieldModule } from "./AurumDepthOfFieldModule";
+import { AurumPerformanceIndicator, AurumPerformanceMonitorPanel } from "./AurumPerformanceMonitorPanel";
 import { createAurumPerformanceMonitor } from "@/lib/aurum/performance-monitor";
 import { createAurumVideoFramePipeline, getAurumVideoLivePasses } from "../lib/aurum/video-frame-pipeline";
 import { runAurumMediaExportCleanup } from "../lib/aurum/media-export-session";
@@ -150,7 +145,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [aurumConectCanRetry, setAurumConectCanRetry] = useState(false);
   const aurumConectAttemptRef = useRef<string | null>(null);
   const visorRef = useRef<HTMLDivElement>(null), fileRef = useRef<HTMLInputElement>(null);
-  const cameraControlsRef = useRef<any>(null);
+  const orbitControlsRef = useRef<any>(null);
   const [autoRotate360, setAutoRotate360] = useState(false);
   const [isViewerFullscreen, setIsViewerFullscreen] = useState(false);
   const [lightingOpen, setLightingOpen] = useState(false);
@@ -234,6 +229,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [snapshotTransparent, setSnapshotTransparent] = useState(false);
   const [snapshotDof, setSnapshotDof] = useState(false);
   const [snapshotDofStrength, setSnapshotDofStrength] = useState<"soft"|"medium"|"strong">("soft");
+  const [liveDofOpen, setLiveDofOpen] = useState(false);
+  const [liveDof, setLiveDof] = useState(false);
+  const [liveDofStrength, setLiveDofStrength] = useState<"soft"|"medium"|"strong">("soft");
   const [snapshotGuide, setSnapshotGuide] = useState<"none"|"thirds"|"complete">("none");
   const [snapshotAspect, setSnapshotAspect] = useState<"16:9"|"1:1"|"4:5"|"9:16"|"3:2"|null>(null);
   const [renderQualityId, setRenderQualityId] = useState<AurumRenderQualityId>("high");
@@ -241,7 +239,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [performanceRenderer, setPerformanceRenderer] = useState<any>(null);
   const performanceMonitorRef = useRef(createAurumPerformanceMonitor());
   const composerRef = useRef<any>(null);
-  const moduleToggleRef = useRef<((id: AurumManagedModuleId, enabled: boolean) => void) | null>(null);
   const frameRef = useRef<number | null>(null);
   const invalidateRenderRef = useRef<(() => void) | null>(null);
   const viewerLoopRef = useRef<any>(null);
@@ -277,31 +274,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   onCatalogApiReadyRef.current = onCatalogApiReady;
   const [archivo, setArchivo] = useState<string|null>(null), [cargando, setCargando] = useState(false), [estadoCarga, setEstadoCarga] = useState(""), [error, setError] = useState<string|null>(null), [formatoInterno, setFormatoInterno] = useState<string|null>(null);
   const [archivoOriginal, setArchivoOriginal] = useState<File | null>(null);
-  const [publicViewerTestOpen, setPublicViewerTestOpen] = useState(false);
-  const [publicViewerTestFile, setPublicViewerTestFile] = useState<File | null>(null);
-  const [publicViewerDragActive, setPublicViewerDragActive] = useState(false);
-  const publicViewerDragDepthRef = useRef(0);
-  const [publicViewerTestUrl, setPublicViewerTestUrl] = useState<string | null>(null);
-  const [publicViewerCameraActions, setPublicViewerCameraActions] = useState<any>(null);
-  const publicViewerTestInputRef = useRef<HTMLInputElement>(null);
-  const publicViewerTestHostRef = useRef<HTMLDivElement>(null);
-  const publicViewerTestUrlRef = useRef<string | null>(null);
-  const selectPublicViewerTestFile = useCallback((file: File | null) => {
-    if (publicViewerTestUrlRef.current) URL.revokeObjectURL(publicViewerTestUrlRef.current);
-    const nextUrl = file ? URL.createObjectURL(file) : null;
-    publicViewerTestUrlRef.current = nextUrl;
-    setPublicViewerTestUrl(nextUrl);
-    setPublicViewerTestFile(file);
-  }, []);
-  useEffect(() => () => {
-    if (publicViewerTestUrlRef.current) URL.revokeObjectURL(publicViewerTestUrlRef.current);
-    publicViewerTestUrlRef.current = null;
-  }, []);
-  useEffect(() => {
-    if (!publicViewerTestOpen) return;
-    viewerLoopRef.current?.pause?.();
-    return () => viewerLoopRef.current?.resume?.();
-  }, [publicViewerTestOpen]);
   const [archivoOriginalInfo, setArchivoOriginalInfo] = useState<AurumOriginalSource | null>(null);
   const [arrastrandoArchivo, setArrastrandoArchivo] = useState(false);
 
@@ -309,17 +281,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [materialId, setMaterialId] = useState<MaterialId>("plata950_pulida"), [gemaId, setGemaId] = useState<GemaId>("diamante_natural"), [escenarioId, setEscenarioId] = useState<EscenarioId>("ijewelReference"), [iluminacionId, setIluminacionId] = useState<IluminacionId>("studioSoft"), [vista, setVista] = useState<VistaId>("frontal");
   // A catalog choice is only armed; the next explicit gem-mesh click consumes it.
   const pendingGemApplicationRef = useRef<GemaConfig | null>(null);
-  const aplicarVistaRef = useRef<((id: VistaId) => void) | null>(null);
-  const vistaSolicitadaRef = useRef<VistaId>("frontal");
-  const solicitarVistaRef = useRef<(id: VistaId) => void>(() => {});
-  solicitarVistaRef.current = (id) => {
-    vistaSolicitadaRef.current = id;
-    setVista(id);
-    // If the viewer is still booting, retain the requested preset. Model-load
-    // completion applies it once AURUM CAMERA and the real model are both ready.
-    aplicarVistaRef.current?.(id);
-  };
+  const vistaRef = useRef<VistaId>("frontal");
   // Puente entre el selector React y la cámara creada dentro del ciclo del visor.
+  const aplicarVistaRef = useRef<((id: VistaId) => void) | null>(null);
+  const autoVistaPorOrbitaRef = useRef(false);
+  vistaRef.current = vista;
   const [nombreProyecto, setNombreProyecto] = useState("Diseño de joyería");
   const [categoriaProyecto, setCategoriaProyecto] = useState("Anillo");
   const categoriaProyectoRef = useRef("Anillo");
@@ -881,32 +847,32 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       const nodo = visorRef.current;      if (!vivo || !nodo) return;
       let renderQuality = getAurumRenderQuality(renderQualityId);
       let measuredQualityId: AurumRenderQualityId = renderQualityId;
-      const { scene: escena, camera: camara, renderer, cameraControls: cameraControlsContract } = createAurumWebGLViewer(THREE, nodo, {
+      const { scene: escena, camera: camara, renderer, controls: controles } = createAurumWebGLViewer(THREE, nodo, {
         pixelRatio: renderQuality.pixelRatio,
         maxDistance: 100,
         controlsClass: (await import("three/examples/jsm/controls/OrbitControls.js")).OrbitControls,
       });
-      if (!cameraControlsContract) throw new Error("AURUM CAMERA no pudo inicializar OrbitControls.");
       setPerformanceRenderer(renderer);
       performanceMonitorRef.current.reset();
-      // AURUM CORE exposes the scene/renderer plus the single semantic camera
-      // contract. Raw camera and OrbitControls are not published to consumers.
+      // AURUM CORE adapter exposes the existing viewer without taking ownership
+      // of its render loop, GPU resources, or disposal lifecycle.
       const viewerAdapter = createAurumViewerAdapter({
         scene: escena,
+        camera: camara,
         renderer,
-        cameraControls: cameraControlsContract,
+        controls: controles,
         host: nodo,
       });
       const viewerScene = viewerAdapter.get(AURUM_VIEWER_SERVICES.scene);
       const viewerRenderer = viewerAdapter.get(AURUM_VIEWER_SERVICES.renderer);
-      cameraControlsRef.current = cameraControlsContract;
-      // Navigation tuning is configured only by AURUM CAMERA.
-      cameraControlsContract.configure({
-        enableDamping: true,
-        dampingFactor: 0.08,
-        zoomSpeed: 0.15,
-        rotateSpeed: 2,
-      });
+      orbitControlsRef.current = controles;
+      // Orbit controls calibrated to the supplied iJewel VJSON reference.
+      if (controles) {
+        controles.enableDamping = true;
+        controles.dampingFactor = 0.08;
+        controles.zoomSpeed = 0.15;
+        controles.rotateSpeed = 2;
+      }
       // Render Pro se incorporará en una etapa posterior con el pipeline WebGPU
       // estable. Por ahora el visor WebGL interactivo es el motor oficial.
       const shadowConfig=getAurumShadowConfig();
@@ -932,6 +898,32 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       renderer.shadowMap.autoUpdate = false;
       renderer.shadowMap.needsUpdate = true;
       renderer.domElement.className = "block h-full w-full";
+      // La vista ortográfica se conserva mientras el usuario solo hace clic.
+      // Al detectar desplazamiento real del puntero, OrbitControls ya está
+      // orbitando la cámara; actualizamos únicamente la etiqueta, sin aplicar
+      // un preset de perspectiva ni reiniciar el movimiento.
+      let orbitPointerStart: { id: number; x: number; y: number } | null = null;
+      const handleOrbitPointerDown = (event: PointerEvent) => {
+        const startsOrbit = event.pointerType === "touch" || (event.button === 0 && !event.ctrlKey);
+        if (startsOrbit) orbitPointerStart = { id: event.pointerId, x: event.clientX, y: event.clientY };
+      };
+      const handleOrbitPointerMove = (event: PointerEvent) => {
+        if (!orbitPointerStart || event.pointerId !== orbitPointerStart.id || vistaRef.current === "perspectiva") return;
+        const dx = event.clientX - orbitPointerStart.x;
+        const dy = event.clientY - orbitPointerStart.y;
+        if ((dx * dx) + (dy * dy) < 9) return;
+        orbitPointerStart = null;
+        autoVistaPorOrbitaRef.current = true;
+        vistaRef.current = "perspectiva";
+        setVista("perspectiva");
+      };
+      const handleOrbitPointerEnd = (event: PointerEvent) => {
+        if (orbitPointerStart?.id === event.pointerId) orbitPointerStart = null;
+      };
+      renderer.domElement.addEventListener("pointerdown", handleOrbitPointerDown, { passive: true });
+      renderer.domElement.addEventListener("pointermove", handleOrbitPointerMove, { passive: true });
+      renderer.domElement.addEventListener("pointerup", handleOrbitPointerEnd, { passive: true });
+      renderer.domElement.addEventListener("pointercancel", handleOrbitPointerEnd, { passive: true });
       nodo.appendChild(renderer.domElement);
       // SSR is globally disabled in the primary Aurum Render viewer until
       // reflection audits and A/B verification are complete. URL/profile
@@ -947,7 +939,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       // Preserve the original scene background while the live Bokeh preview is active.
       let dofSavedSceneBackground: THREE.Scene["background"] | undefined;
       let dofHasSavedSceneBackground = false;
-      const { composer, ssaoPass, ssrPass, ssrSavePass, ssrCompositePass, bloomPass, setSSRSelects, applyQuality: applyPostQuality, updateTemporal, resetTemporalAccumulation, setTemporalMotion, setModuleEnabled, dofPass, renderPass, taaPass: idleTaaPass, fxaaPass, gemMaskPass, surfaceEdgeAaPass, outputPass } = await createAurumPostPipeline(
+      const { composer, ssaoPass, ssrPass, ssrSavePass, ssrCompositePass, bloomPass, setSSRSelects, applyQuality: applyPostQuality, updateTemporal, resetTemporalAccumulation, setTemporalMotion, dofPass, renderPass, taaPass: idleTaaPass, fxaaPass, gemMaskPass, surfaceEdgeAaPass, outputPass } = await createAurumPostPipeline(
         renderer,
         escena,
         camara,
@@ -955,22 +947,17 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         renderQuality
       );
       resetTemporalAccumulationRef.current = resetTemporalAccumulation;
-      moduleToggleRef.current = (id, enabled) => {
-        setModuleEnabled(id, enabled);
-        invalidateRenderRef.current?.();
-      };
-      const savedModuleControls = readAurumModuleControls();
-      (Object.keys(savedModuleControls) as AurumManagedModuleId[]).forEach((id) => {
-        setModuleEnabled(id, savedModuleControls[id]);
-      });
 
       // The post pipeline loads Three.js passes asynchronously. If the route
       // unmounts while those imports are pending, release the renderer created
       // above instead of continuing to allocate scene/GPU resources off-screen.
       if (!vivo) {
-        objectSelectionModule.dispose();
-        disposeAurumViewer({ node: nodo, renderer, cameraControls: cameraControlsContract, composer });
-        if (cameraControlsRef.current === cameraControlsContract) cameraControlsRef.current = null;
+        renderer.domElement.removeEventListener("pointerdown", handleOrbitPointerDown);
+        renderer.domElement.removeEventListener("pointermove", handleOrbitPointerMove);
+        renderer.domElement.removeEventListener("pointerup", handleOrbitPointerEnd);
+        renderer.domElement.removeEventListener("pointercancel", handleOrbitPointerEnd);
+        disposeAurumViewer({ node: nodo, renderer, controls: controles, composer });
+        if (orbitControlsRef.current === controles) orbitControlsRef.current = null;
         return;
       }
 
@@ -1212,7 +1199,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           // Resolve the final model and camera transforms before building BVH
           // camera uniforms, so the first visible frame uses the current framing.
           modelo.updateMatrixWorld?.(true);
-          cameraControlsContract.update();
+          camara.updateMatrixWorld?.(true);
+          camara.updateProjectionMatrix?.();
           runtime.refresh(modelo);
           runtime.update();
           const diagnostics = runtime.diagnostics();
@@ -1862,13 +1850,20 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         // ModelPreparation + Camera/Lighting se coordinan desde el adaptador de framing.
         // Mantener esta llamada como único punto de encuadre evita duplicar transformaciones.
         frameAurumProduct({
-          cameraControls: cameraControlsContract,
-          lights: lucesAurum,
-          groundController,
-          lightingController,
-          scene: escena,
-          renderer,
-        }, modelo, prepareAurumModel, aplicarEscenario, escenarioId, categoriaProyectoRef.current, embedded ? 1.38 : 1);
+          camera: camara, controls: controles, lights: lucesAurum,
+          groundController, lightingController, scene: escena, renderer,
+        }, modelo, prepareAurumModel, aplicarEscenario, escenarioId);
+        // Embedded public configurators have a narrower viewport than the
+        // full editor. Pull the camera back slightly so the entire jewel has
+        // breathing room without changing framing in the main editor.
+        if (embedded && controles?.target && camara?.position) {
+          const target = controles.target;
+          const offset = camara.position.clone().sub(target);
+          offset.multiplyScalar(1.16);
+          camara.position.copy(target).add(offset);
+          camara.updateProjectionMatrix?.();
+          controles.update?.();
+        }
         renderer.shadowMap.needsUpdate = true;
         invalidateRenderRef.current?.();
       };
@@ -1908,8 +1903,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         const importResult = await importPipeline.load({
           file,
           format: ext as AurumImportFormat,
-          // Direct Rhino geometry is the default A/B path; append ?aurumDirect3dm=0 to restore the GLB conversion path.
-          direct3dm: ext === "3dm" && new URLSearchParams(window.location.search).get("aurumDirect3dm") !== "0",
           fallbackMaterial: material,
           colorRhinoHex,
           classifyLayer: clasificarCapa,
@@ -2115,12 +2108,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         }
 
         encuadrar();
-        setVista(vistaSolicitadaRef.current);
+        setVista("frontal");
         // frameAurumProduct applies the scene preset; reassert the canonical
         // viewport chain afterwards so scene setup cannot leave a stale path.
         if (initialGemAaAvailable) {
           modelo.updateMatrixWorld?.(true);
-          cameraControlsContract.update();
+          camara.updateMatrixWorld?.(true);
+          camara.updateProjectionMatrix?.();
           diamondBvhRuntime?.update();
           const initialBeautyPasses = new Set([renderPass, gemMaskPass, fxaaPass, outputPass]);
           ((composer as any)?.passes ?? []).forEach((pass: any) => {
@@ -2158,42 +2152,34 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         // La cámara iJewel de distancia fija dejaba pequeños los modelos Rhino
         // cuyos límites/unidades no coinciden con el modelo de referencia.
         encuadrar();
-        // Apply the last requested view only after the imported model is ready.
-        // This prevents selector clicks during asynchronous boot/load from being lost.
-        camaraVista(vistaSolicitadaRef.current);
+        camaraVista("frontal");
+        setVista("frontal");
         loadAuditStep("load-pipeline-complete", { triangles: countAurumTriangles(modelo) });
-        // The initial frame is applied once by frameAurumProduct through AURUM CAMERA.
-        renderer.shadowMap.enabled = false;
-        renderer.shadowMap.needsUpdate = false;
-        invalidateRenderRef.current?.();
+        requestAnimationFrame(() => {
+          if (modelo) {
+            camaraVista("frontal");
+            // Do not force LIVE material overrides after initial framing.
+            renderer.shadowMap.enabled = false;
+            renderer.shadowMap.needsUpdate = false;
+            invalidateRenderRef.current?.();
+          }
+        });
       };
       const camaraVista=(id:VistaId)=>{
-        // A fixed camera preset must stop the independent 360° animation first;
-        // otherwise OrbitControls immediately moves away from the selected view.
-        cameraControlsContract.setAutoRotate(false);
-        setAutoRotate360(false);
-        // AURUM CAMERA is the sole owner of view presets and framing scale.
-        // The embedded viewer uses a wider framing through the same contract;
-        // no caller mutates camera.position or OrbitControls after the preset.
-        cameraControlsContract.applyView(
-          modelo,
-          id,
-          categoriaProyectoRef.current,
-          { distanceScale: embedded ? 1.38 : 1 },
-        );
-        // One event-scoped diagnostic makes it possible to distinguish a camera
-        // preset failure from a model-axis mismatch without per-frame overhead.
-        if (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("aurumCameraDiag") === "1") {
-          console.info("[AURUM][CAMERA VIEW]", {
-            view: id,
-            position: cameraControlsContract.getPosition().toArray(),
-            target: cameraControlsContract.getTarget().toArray(),
-            up: cameraControlsContract.getUp().toArray(),
-            autoRotate: cameraControlsContract.getAutoRotate(),
-          });
+        applyAurumCameraView(camara, controles, modelo, id, categoriaProyectoRef.current);
+        // The public configurator has a much shorter viewport than the editor.
+        // Keep the entire jewel visible after view presets are applied as well
+        // as after the initial model framing.
+        if (embedded && controles?.target && camara?.position) {
+          const target = controles.target;
+          const offset = camara.position.clone().sub(target);
+          offset.multiplyScalar(1.38);
+          camara.position.copy(target).add(offset);
+          camara.updateProjectionMatrix?.();
+          controles.update?.();
         }
         // Sincronizar matrices, acumulación temporal y siguiente frame visible.
-        cameraControlsContract.update();
+        camara.updateMatrixWorld?.(true);
         resetTemporalAccumulationRef.current?.();
         viewerLoopRef.current?.invalidate?.();
         invalidateRenderRef.current?.();
@@ -2467,23 +2453,28 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           invalidateRenderRef.current?.();
         },
         sceneStudio:(_patch:any)=>{},
-        reset:()=>{ cameraControlsContract.setAutoRotate(false); setAutoRotate360(false); encuadrar(); invalidateRenderRef.current?.(); },
+        reset:()=>{ controles.autoRotate=false; setAutoRotate360(false); encuadrar(); invalidateRenderRef.current?.(); },
         centerJewel:()=>{
           if(!modelo) return;
           const bounds=new THREE.Box3().setFromObject(modelo);
           if(bounds.isEmpty()) return;
           const target=bounds.getCenter(new THREE.Vector3());
-          cameraControlsContract.centerOn(target);
+          const delta=target.clone().sub(controles.target);
+          camara.position.add(delta);
+          controles.target.copy(target);
+          camara.lookAt(target);
+          camara.updateProjectionMatrix?.();
+          controles.update?.();
           diamondBvhRuntime?.update();
           invalidateRenderRef.current?.();
         },
         fitAspect:(aspect?:number)=>{
           if(!modelo) return;
-          cameraControlsContract.fitAspect(modelo,Number(aspect)||cameraControlsContract.captureState().aspect,1.18);
+          fitAurumCameraToAspect(camara,controles,modelo,Number(aspect)||camara.aspect,1.18);
           diamondBvhRuntime?.update();
           invalidateRenderRef.current?.();
         },
-        autoRotar:(activo:boolean)=>{ cameraControlsContract.setAutoRotate(activo,0.65); invalidateRenderRef.current?.(); },
+        autoRotar:(activo:boolean)=>{ controles.autoRotate=activo; controles.autoRotateSpeed=0.65; invalidateRenderRef.current?.(); },
         limpiar:()=>{quitar();parteActiva=null;limpiarResaltado();setParteSeleccionada(null);setParteSeleccionadaNombre(null);},
         partes:()=>modelo?obtenerPartes(modelo):[],
         seleccionarParte:(id:string)=>{
@@ -2493,7 +2484,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           if(encontrado) { seleccionarMalla(encontrado); invalidateRenderRef.current?.(); }
         },
         fullscreen:()=>{if(document.fullscreenElement===nodo){void document.exitFullscreen();}else{void nodo.requestFullscreen?.();}},
-        vista:(id:VistaId)=>{ solicitarVistaRef.current(id); invalidateRenderRef.current?.(); },
+        vista:(id:VistaId)=>{ camaraVista(id); invalidateRenderRef.current?.(); },
         calidad:aplicarCalidadRender,
         exportGLB:async(options:{download?:boolean}={})=>{
           if(!modelo) throw new Error("Carga un modelo antes de exportar.");
@@ -2654,9 +2645,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           if(!modelo) throw new Error("Carga una joya antes de grabar el vídeo.");
           const sourceCanvas=renderer.domElement as HTMLCanvasElement;
           if(!sourceCanvas || sourceCanvas.width<2 || sourceCanvas.height<2) throw new Error("El visor todavía no tiene una imagen para grabar.");
-          const originalCameraState=cameraControlsContract.captureState();
-          const cameraPosition=originalCameraState.position.clone();
-          const controlsTarget=originalCameraState.target.clone();
+          const originalCameraPosition=camara.position.clone();
+          const originalCameraQuaternion=camara.quaternion.clone();
+          const originalControlsTarget=controles.target?.clone?.();
+          const cameraPosition=camara.position.clone();
+          const controlsTarget=controles.target?.clone?.();
+          const previousAutoRotate=Boolean(controles.autoRotate);
+          const previousAutoRotateSpeed=Number(controles.autoRotateSpeed ?? 0.65);
           const automatic=options.mode!=="manual";
           const duration=Math.max(1,Math.min(20,Number(options.duration)||5));
           const loop:any=viewerLoopRef.current;
@@ -2672,7 +2667,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           const originalCanvasStyleLeft=sourceCanvas.style.left;
           const originalCanvasStyleTop=sourceCanvas.style.top;
           const originalCanvasStyleTransform=sourceCanvas.style.transform;
-          const originalAspect=originalCameraState.aspect;
+          const originalAspect=camara.aspect;
           const originalTransmissionScale=Number((renderer as any).transmissionResolutionScale??1);
           const videoWidth=Math.max(320,Math.min(3840,Math.round(Number(options.width)||1280)));
           const videoHeight=Math.max(320,Math.min(3840,Math.round(Number(options.height)||720)));
@@ -2697,7 +2692,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           try{
             const recordVideo = productionPluginHost.services.get("aurum.media.video-recorder") as ((source:HTMLCanvasElement,options:any)=>Promise<void>)|undefined;
             if (!recordVideo) throw new Error("AURUM Media Export Contract is not registered.");
-            cameraControlsContract.setAutoRotate(false);
+            controles.autoRotate=false;
             loop?.pause?.();
             // Keep the live viewport's visual composition enabled during capture.
             // The frame pipeline selects the same live beauty passes used by PNG
@@ -2738,7 +2733,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               sourceCanvas.style.top="50%";
               sourceCanvas.style.transform="translate(-50%, -50%)";
             }
-            cameraControlsContract.setAspect(renderAspect);
+            camara.aspect=renderAspect;
+            camara.updateProjectionMatrix?.();
             const createVideoFramePipeline = productionPluginHost.services.get("aurum.media.video-frame.create");
             if (typeof createVideoFramePipeline !== "function") throw new Error("AURUM Video Frame Pipeline service is not registered.");
             videoFramePipeline=createVideoFramePipeline({
@@ -2760,7 +2756,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // Fitting the entire model here pulls the camera back (especially for long
             // chains) and makes the jewelry tiny in the video compared with the PNG.
             // Only change the projection aspect; never rescale or refit the model for MP4.
-            // Camera pose and target were captured by AURUM CAMERA before recording.
+            cameraPosition.copy(camara.position);
+            if(controlsTarget && controles.target) controlsTarget.copy(controles.target);
             // Camera and source bitmap share the exact output ratio. Each captured
             // frame now passes through the live beauty chain before the encoder copies it.
             loop?.setContinuousRendering?.(true);
@@ -2768,7 +2765,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               width:options.width,height:options.height,fps:options.fps,duration:duration,
               signal:options.signal,onProgress:options.onProgress,
               onFrame:(elapsed,total)=>{
-                if(automatic){
+                if(automatic && controlsTarget){
                   const progress=Math.max(0,Math.min(1,elapsed/total));
                   const smooth=progress*progress*(3-2*progress);
                   const dx=cameraPosition.x-controlsTarget.x;
@@ -2798,18 +2795,19 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                     angle=Math.PI*2*progress;
                   }
                   const cos=Math.cos(angle),sin=Math.sin(angle);
-                  let nextX=controlsTarget.x+dx*cos*zoomFactor;
-                  let nextZ=controlsTarget.z-dx*sin*zoomFactor+dz*zoomFactor;
+                  camara.position.set(
+                    controlsTarget.x+dx*cos*zoomFactor,
+                    cameraPosition.y+(targetY-controlsTarget.y),
+                    controlsTarget.z-dx*sin*zoomFactor+dz*zoomFactor,
+                  );
                   // Keep the horizontal orbit mathematically anchored around the original target.
                   if(options.mode==="automatic"||options.mode==="orbit180-return"||options.mode==="slow360"||options.mode==="catalog"){
-                    nextX=controlsTarget.x+dx*cos*zoomFactor+dz*sin*zoomFactor;
-                    nextZ=controlsTarget.z-dx*sin*zoomFactor+dz*cos*zoomFactor;
+                    camara.position.x=controlsTarget.x+dx*cos*zoomFactor+dz*sin*zoomFactor;
+                    camara.position.z=controlsTarget.z-dx*sin*zoomFactor+dz*cos*zoomFactor;
                   }
-                  cameraControlsContract.setPose(
-                    new THREE.Vector3(nextX,cameraPosition.y+(targetY-controlsTarget.y),nextZ),
-                    new THREE.Vector3(controlsTarget.x,targetY,controlsTarget.z),
-                    originalCameraState.up,
-                  );
+                  controles.target.set(controlsTarget.x,targetY,controlsTarget.z);
+                  camara.lookAt(controles.target);
+                  controles.update?.();
                 }
                 // Render through the active live viewport composition before capture.
                 videoFramePipeline?.renderFrame();
@@ -2828,11 +2826,16 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               () => { sourceCanvas.style.left=originalCanvasStyleLeft; },
               () => { sourceCanvas.style.top=originalCanvasStyleTop; },
               () => { sourceCanvas.style.transform=originalCanvasStyleTransform; },
-              () => cameraControlsContract.setAspect(originalAspect),
+              () => { camara.aspect=originalAspect; camara.updateProjectionMatrix?.(); },
               () => { if(composer && applyPostQuality) applyPostQuality({...renderQuality,pixelRatio:originalPixelRatio,qualityId:measuredQualityId}); },
               () => videoFramePipeline?.restore(),
               () => { const strength=surfaceEdgeAaPass?.material?.uniforms?.strength; if(strength)strength.value=originalSurfaceEdgeAaStrength; },
-              () => cameraControlsContract.restoreState(originalCameraState),
+              () => { controles.autoRotate=previousAutoRotate; },
+              () => { controles.autoRotateSpeed=previousAutoRotateSpeed; },
+              () => camara.position.copy(originalCameraPosition),
+              () => camara.quaternion.copy(originalCameraQuaternion),
+              () => { if(originalControlsTarget && controles.target) controles.target.copy(originalControlsTarget); },
+              () => controles.update?.(),
               () => diamondBvhRuntime?.update(),
               () => aplicarPerfilLive(),
               () => resetTemporalAccumulationRef.current?.(),
@@ -2887,7 +2890,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             });
           }
           applyPostQuality?.({...renderQuality,pixelRatio:renderQuality.pixelRatio,qualityId:measuredQualityId});
-          updateTemporal?.(modelo ? calculateAurumFocalDepth(camara, { target: cameraControlsContract.getTarget() }, modelo) : undefined);
+          updateTemporal?.(modelo ? calculateAurumFocalDepth(camara, controles, modelo) : undefined);
           invalidateRenderRef.current?.();
           viewerLoopRef.current?.invalidate?.();
         },
@@ -2907,7 +2910,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           const originalPixelRatio=renderer.getPixelRatio?.()||1;
           const originalCssWidth=originalBufferWidth/originalPixelRatio;
           const originalCssHeight=originalBufferHeight/originalPixelRatio;
-          const originalAspect=cameraControlsContract.captureState().aspect;
+          const originalAspect=camara.aspect;
           const originalTransmissionResolutionScale=Number((renderer as any).transmissionResolutionScale ?? 1);
           const originalFastPath=liveFastPathRef.current;
           const originalDofConfig = { dof: postRuntimeConfig.dof, dofAperture: postRuntimeConfig.dofAperture, dofMaxBlur: postRuntimeConfig.dofMaxBlur };
@@ -2977,10 +2980,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           const originalFxaaResolution = fxaaPass?.material?.uniforms?.resolution?.value?.clone?.() ?? null;
           const originalRenderPassClearColor = renderPass?.clearColor?.clone?.() ?? renderPass?.clearColor ?? null;
           const originalRenderPassClearAlpha = renderPass?.clearAlpha;
-          const originalCameraState = cameraControlsContract.captureState();
-          const originalCameraPosition = originalCameraState.position.clone();
-          const originalControlsTarget = originalCameraState.target.clone();
-          const posterCameraTarget = isPoster ? originalCameraState.target.clone() : null;
+          const originalCameraPosition = camara.position.clone();
+          const originalCameraQuaternion = camara.quaternion.clone();
+          const originalControlsTarget = controles?.target?.clone?.() ?? null;
+          const posterCameraTarget = isPoster && controles?.target?.clone ? controles.target.clone() : null;
           try {
             // Render slightly above the requested dimensions for spatial
             // supersampling; the final file still uses exactly width x height.
@@ -2992,11 +2995,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             liveFastPathRef.current=false;
             // Give Mi Nube poster captures extra breathing room without changing the live view.
             if (isPoster && posterCameraTarget) {
-              cameraControlsContract.setPose(
-                posterCameraTarget.clone().addScaledVector(originalCameraPosition.clone().sub(posterCameraTarget),1.3),
-                posterCameraTarget,
-                originalCameraState.up,
+              camara.position.copy(posterCameraTarget).addScaledVector(
+                originalCameraPosition.clone().sub(posterCameraTarget),
+                1.3,
               );
+              camara.updateMatrixWorld?.();
             }
             renderer.setSize(renderWidth,renderHeight,false);
             if (composer && !options.depthOfField) {
@@ -3021,7 +3024,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 capturePassStates.push({ pass, enabled: Boolean(pass?.enabled) });
               }
             }
-            cameraControlsContract.setAspect(renderWidth/renderHeight);
+            if(typeof camara.aspect==="number") {
+              camara.aspect=renderWidth/renderHeight;
+              camara.updateProjectionMatrix?.();
+            }
             // Keep the user's exact live camera framing for product snapshots.
             // The on-screen composition frame represents a crop of this view; auto-fitting
             // the whole model here would pull the camera back and export extra whitespace,
@@ -3040,7 +3046,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               const strength = options.dofStrength === "strong" ? { aperture: 0.0011, maxBlur: 0.012 } : options.dofStrength === "medium" ? { aperture: 0.0008, maxBlur: 0.008 } : { aperture: 0.0005, maxBlur: 0.004 };
               Object.assign(postRuntimeConfig, { dof: true, dofAperture: strength.aperture, dofMaxBlur: strength.maxBlur });
               applyPostQuality?.({ ...renderQuality, pixelRatio: 1, qualityId: "ultra" }, { capture: true, width: renderWidth, height: renderHeight });
-              updateTemporal?.(Number.isFinite(options.focusDistance) ? Number(options.focusDistance) : calculateAurumFocalDepth(camara, { target: cameraControlsContract.getTarget() }, modelo));
+              updateTemporal?.(Number.isFinite(options.focusDistance) ? Number(options.focusDistance) : calculateAurumFocalDepth(camara, controles, modelo));
             }
             if (transparent) {
               escena.background=null;
@@ -3187,7 +3193,17 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             for(const state of capturePassStates){
               if(state.pass && "enabled" in state.pass) state.pass.enabled=state.enabled;
             }
-            cameraControlsContract.restoreState(originalCameraState);
+            camara.position.copy(originalCameraPosition);
+            camara.quaternion.copy(originalCameraQuaternion);
+            camara.updateMatrixWorld?.();
+            if (originalControlsTarget && controles?.target) {
+              controles.target.copy(originalControlsTarget);
+              controles.update?.();
+            }
+            if(typeof originalAspect==="number") {
+              camara.aspect=originalAspect;
+              camara.updateProjectionMatrix?.();
+            }
             // Rebuild the settled viewport image after the temporary high-resolution
             // capture. The export changes composer targets and disables optional
             // passes; restoring their flags alone does not clear stale temporal
@@ -3449,17 +3465,36 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           }
         }
       };
-      // AURUM OBJECT SELECTION owns pointer-to-mesh picking. AurumRender
-      // retains UI/material/highlight side effects through explicit callbacks.
-      const objectSelectionModule = createAurumObjectSelectionModule({
-        camera: camara,
-        element: renderer.domElement,
-        getModel: () => modelo,
-        isBlocked: () => !modelo || cargando,
-        onSelect: (object) => seleccionarMalla(object),
-        onMiss: () => {
-          // Click outside the jewel clears the active target and opens
-          // Environments so the user can change presentation.
+      const seleccionarPorClick = (event: MouseEvent) => {
+        if (!modelo || cargando) return;
+        const rect = renderer.domElement.getBoundingClientRect();
+        const pointer = new THREE.Vector2(
+          ((event.clientX - rect.left) / rect.width) * 2 - 1,
+          -((event.clientY - rect.top) / rect.height) * 2 + 1
+        );
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(pointer, camara);
+        const objetivos:any[] = [];
+        const worldSphere = new THREE.Sphere();
+        // Broad-phase filtering: only raycast meshes whose existing bounding
+        // spheres intersect the click ray. This avoids triangle-level tests
+        // against every visible part of a dense CAD assembly.
+        modelo.updateMatrixWorld(true);
+        modelo.traverse((x:any) => {
+          if (!x.isMesh || !x.visible || x.userData?.aurumInternalInclusion) return;
+          const sphere = x.geometry?.boundingSphere;
+          if (sphere) {
+            worldSphere.copy(sphere).applyMatrix4(x.matrixWorld);
+            if (!raycaster.ray.intersectsSphere(worldSphere)) return;
+          }
+          objetivos.push(x);
+        });
+        const impacto = raycaster.intersectObjects(objetivos, false)[0];
+        if (impacto?.object?.uuid) {
+          seleccionarMalla(impacto.object);
+        } else {
+          // Clic fuera de la geometría de la joya: limpiar selección y abrir
+          // Ambientes para cambiar la presentación sin buscar el primer icono.
           setUxSection("ambientes");
           parteActiva = null;
           setParteSeleccionada(null);
@@ -3467,11 +3502,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           setParteSeleccionadaCapa(null);
           setParteSeleccionadaCategoria("otro");
           limpiarResaltado();
-        },
-        onAfterPick: () => invalidateRenderRef.current?.(),
-      });
-      const seleccionarPorClick = (event: MouseEvent) => {
-        objectSelectionModule.handleClick(event);
+        }
+        invalidateRenderRef.current?.();
       };
       renderer.domElement.addEventListener("click", seleccionarPorClick);
 
@@ -3550,7 +3582,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       };
 
       const viewerLoop = startAurumViewerLoop(
-        { node:nodo, renderer, composer, ssaoPass, cameraControls:cameraControlsContract },
+        { node:nodo, camera:camara, renderer, composer, ssaoPass, controls:controles },
         () => {
           const frameStartedAt = performance.now();
           const bvhStartedAt = frameStartedAt;
@@ -3737,6 +3769,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       cleanup = () => {
         if (cleanupDone) return;
         cleanupDone = true;
+        aplicarVistaRef.current = null;
         // Stop RAF, ResizeObserver and host listeners before releasing anything
         // they can still access. This is intentionally the first teardown step.
         try {
@@ -3773,6 +3806,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         } finally {
           gemTransitionRef.current = null;
         }
+        renderer.domElement.removeEventListener("pointerdown", handleOrbitPointerDown);
+        renderer.domElement.removeEventListener("pointermove", handleOrbitPointerMove);
+        renderer.domElement.removeEventListener("pointerup", handleOrbitPointerEnd);
+        renderer.domElement.removeEventListener("pointercancel", handleOrbitPointerEnd);
         try {
           quitar();
         } catch (error) {
@@ -3782,7 +3819,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           disposeAurumViewer({
             node:nodo,
             renderer,
-            cameraControls:cameraControlsContract,
+            controls:controles,
             observer:obs,
             clickHandler:seleccionarPorClick,
             lightingController,
@@ -3816,27 +3853,27 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
     apiRef.current=null;
     onCatalogApiReadyRef.current?.(null);
     viewerLoopRef.current=null;
-    cameraControlsRef.current=null;
     setPerformanceRenderer(null);
     performanceMonitorRef.current.reset();
     ptAbortRef.current?.abort();
     composerRef.current=null;
-    moduleToggleRef.current=null;
     cleanup();
   };
   },[]);
-  useEffect(() => {
-    const handleModuleToggle = (event: Event) => {
-      const detail = (event as CustomEvent<{ id?: AurumManagedModuleId; enabled?: boolean }>).detail;
-      if (!detail?.id || typeof detail.enabled !== "boolean") return;
-      moduleToggleRef.current?.(detail.id, detail.enabled);
-    };
-    window.addEventListener(AURUM_MODULE_CONTROL_EVENT, handleModuleToggle);
-    return () => window.removeEventListener(AURUM_MODULE_CONTROL_EVENT, handleModuleToggle);
-  }, []);
   useEffect(()=>{ apiRef.current?.material(materialActivo); invalidateRenderRef.current?.(); },[materialActivo]);
   useEffect(()=>{ apiRef.current?.escenario(escenarioId); invalidateRenderRef.current?.(); },[escenarioId]);
   useEffect(()=>{ apiRef.current?.iluminacion(iluminacionId); invalidateRenderRef.current?.(); },[iluminacionId]);
+  useEffect(()=>{
+    // El cambio automático durante el arrastre solo actualiza el nombre de la
+    // vista: no aplicar el preset, porque sobrescribiría la órbita en curso.
+    if (autoVistaPorOrbitaRef.current) {
+      autoVistaPorOrbitaRef.current = false;
+      invalidateRenderRef.current?.();
+      return;
+    }
+    apiRef.current?.vista(vista);
+    invalidateRenderRef.current?.();
+  },[vista]);
 
   const cargarArchivo=useCallback(async(file:File, options: { preserveScene?: boolean } = {})=>{
     try {
@@ -4238,8 +4275,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                     apiRef.current?.iluminacion(config.iluminacionId);
                   }
                   if (typeof config.vista === "string" && VISTAS.some((item) => item.id === config.vista)) {
-                    const nextView = config.vista as VistaId;
-                    solicitarVistaRef.current(nextView);
+                    setVista(config.vista as VistaId);
+                    apiRef.current?.vista(config.vista);
                   }
                   if (typeof config.fondoId === "string") {
                     setFondoId(config.fondoId);
@@ -4486,7 +4523,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         <div className="flex items-center gap-2">
           <label className="flex h-10 items-center gap-2 rounded-xl border border-[#b99642]/25 bg-white/95 px-3 text-sm text-[#292824] shadow-sm transition hover:border-[#b99642]/60 hover:shadow-[0_3px_12px_rgba(185,150,66,.12)] focus-within:ring-2 focus-within:ring-[#92743b]/20">
             <Gem className="size-4 text-[#92743b]"/>
-            <select aria-label="Seleccionar vista de cámara" value={vista} onChange={e=>{const next=e.target.value as VistaId;solicitarVistaRef.current(next);invalidateRenderRef.current?.();}} className="min-w-0 appearance-none bg-transparent font-medium outline-none cursor-pointer">
+            <select aria-label="Seleccionar vista de cámara" value={vista} onChange={e=>{const next=e.target.value as VistaId;vistaRef.current=next;setVista(next);aplicarVistaRef.current?.(next);}} className="min-w-0 appearance-none bg-transparent font-medium outline-none cursor-pointer">
               <option className="bg-white" value={VISTAS[0]?.id}>{VISTAS[0]?.nombre || "Vista 3D"}</option>
               {VISTAS.slice(1).map(v=><option className="bg-white" key={v.id} value={v.id}>{v.nombre}</option>)}
             </select>
@@ -4759,17 +4796,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               zIndex: 9999,
             } : undefined}
           >
-            {!publicViewerTestOpen && <AurumViewerControlsModule
-              performanceOpen={performanceOpen}
-              onPerformanceToggle={() => setPerformanceOpen((value) => !value)}
-              onPerformanceClose={() => setPerformanceOpen(false)}
-              performanceRenderer={performanceRenderer}
-              performanceMonitor={performanceMonitorRef.current}
-              selectionDiagnostic={diagnosticoSeleccion}
-              selectionName={parteSeleccionadaNombre}
-              selectionEnabled={diagnosticoSeleccionHabilitado}
-              onSelectionClose={() => { setDiagnosticoSeleccion(null); setDiagnosticoSeleccionHabilitado(false); diagnosticoSeleccionHabilitadoRef.current = false; }}
-            />}
+            <AurumPerformanceIndicator
+              renderer={performanceRenderer}
+              monitor={performanceMonitorRef.current}
+              onClick={() => setPerformanceOpen((value) => !value)}
+              expanded={performanceOpen}
+            />
+            <AurumPerformanceMonitorPanel open={performanceOpen} onClose={() => setPerformanceOpen(false)} renderer={performanceRenderer} monitor={performanceMonitorRef.current}/>
             {arrastrandoArchivo && !embedded && <div className="pointer-events-none absolute inset-3 z-[60] grid place-items-center rounded-2xl border border-dashed border-[#d4af37]/80 bg-[#090b0e]/88 text-center shadow-[inset_0_0_90px_rgba(212,175,55,.12),0_18px_55px_rgba(0,0,0,.22)] backdrop-blur-md" aria-live="polite">
               <div className="px-6 py-8">
                 <span className="mx-auto grid size-[72px] place-items-center rounded-full border border-[#d4af37]/45 bg-gradient-to-br from-[#d4af37]/15 to-transparent text-[#e3bd55] shadow-[0_0_35px_rgba(212,175,55,.12)]"><Upload className="size-7"/></span>
@@ -4778,7 +4811,35 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               </div>
             </div>}
             {!embedded&&!archivo&&!cargando&&<div className="absolute inset-0 z-10 grid place-items-center p-8 text-center"><div><input ref={fileRef} type="file" accept=".stl,.obj,.glb,.fbx,.3dm" className="hidden" onChange={(e)=>{const file=e.target.files?.[0];if(file)cargarArchivo(file)}}/><button type="button" onClick={()=>fileRef.current?.click()} className="group rounded-2xl px-8 py-6 transition hover:bg-white/[.025]"><span className="mx-auto grid size-20 place-items-center rounded-3xl border border-[#d4af37]/30 bg-[#d4af37]/10 text-[#d4af37] shadow-[0_0_30px_rgba(212,175,55,.08)] transition group-hover:border-[#d4af37]/60 group-hover:bg-[#d4af37]/15"><Upload className="size-8"/></span><h2 className="mt-5 text-xl font-semibold text-white">Carga tu diseño de joyería</h2><p className="mt-2 text-sm text-white/40">STL · OBJ · GLB · FBX · Rhino 3DM</p><span className="mt-4 inline-flex rounded-lg bg-[#d4af37] px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-black">Seleccionar archivo</span><p className="mt-3 text-[10px] tracking-wide text-white/35">o arrastra tu archivo aquí</p></button></div></div>}
-            <AurumLoadingScreen loading={cargando} message={estadoCarga} presentationCover={presentationCover} presentationVisible={presentationVisible} />
+            {(cargando || presentationCover) && <div
+              className={"absolute inset-0 z-40 overflow-hidden transform-gpu transition-[opacity,transform] duration-[1000ms] ease-[cubic-bezier(0.22,1,0.36,1)] "+((cargando || presentationVisible)?"pointer-events-auto scale-100 opacity-100":"pointer-events-none scale-[0.992] opacity-0")}
+              aria-live="polite"
+            >
+              {presentationCover
+                ? <img src={presentationCover} alt="Presentación del diseño" className={"absolute inset-0 h-full w-full object-cover transition-transform duration-[1200ms] "+(presentationVisible?"scale-100":"scale-[1.015]")} />
+                : <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_38%,#ffffff_0%,#f2f2f0_48%,#d8d9d7_100%)]" />
+              }
+              <div className="absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-black/10" />
+              {!presentationCover && <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_43%,rgba(255,255,255,.35)_0%,transparent_54%)]" />}
+              <div className="absolute inset-0 flex items-center justify-center px-6">
+                <div className={"flex w-full max-w-sm flex-col items-center text-center "+(presentationCover?"opacity-0":"opacity-100")}>
+                  <div className="relative mb-7 grid size-[92px] place-items-center">
+                    <div className="absolute inset-0 rounded-full bg-[#d8bd7c]/20 blur-2xl" />
+                    <div className="absolute inset-0 rounded-full border border-[#c8a45b]/25" />
+                    <div className="absolute inset-[-5px] animate-spin rounded-full border border-transparent border-t-[#b99642] [animation-duration:2.8s]" />
+                    <div className="relative grid size-[76px] place-items-center rounded-full border border-[#c9a65e]/35 bg-white shadow-[0_8px_24px_rgba(123,91,31,.10)]">
+                      <img src="/brand/aurum-symbol.svg" alt="" aria-hidden="true" width="54" height="54" className="size-[54px] object-contain" />
+                    </div>
+                  </div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[.24em] text-[#a18443]">AURUM RENDER</p>
+
+                  <h2 className="mt-3 text-lg font-medium tracking-[-.02em] text-[#292824] sm:text-xl">{estadoCarga}</h2>
+                  <div className="mt-7 h-[2px] w-32 overflow-hidden rounded-full bg-[#e7e3da]">
+                    <div className="h-full w-2/5 animate-pulse rounded-full bg-gradient-to-r from-[#b99642] via-[#e4cb83] to-[#b99642]" />
+                  </div>
+                </div>
+              </div>
+            </div>}
             {error&&<div className="absolute bottom-5 left-1/2 z-30 -translate-x-1/2 rounded-xl border border-red-400/20 bg-red-950/80 px-4 py-2 text-xs text-red-200">{error}</div>}
             {parteSeleccionada&&diagnosticoSeleccion&&diagnosticoSeleccionHabilitado&&<div className="absolute left-3 top-3 z-30 w-[min(430px,calc(100%-24px))] max-h-[78%] overflow-y-auto rounded-xl border border-[#d4af37]/50 bg-[#101214]/95 p-3 text-[10px] leading-relaxed text-white shadow-2xl backdrop-blur-xl">
               <div className="flex items-start justify-between gap-3">
@@ -4885,10 +4946,16 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 <button type="button" title="Biblioteca de ambientes y materiales" aria-label="Abrir biblioteca" aria-expanded={libraryMenuOpen} onClick={()=>{setLibraryMenuOpen(v=>!v);setQualityOpen(false);}} className={"grid size-9 place-items-center rounded-xl transition-colors "+(libraryMenuOpen?"bg-[#d4af37]/15 text-[#92743b]":"text-black/70 hover:bg-white/70")}><SlidersHorizontal className="size-[17px]"/></button>
                 <button type="button" title="Calidad de render" onClick={()=>{setQualityOpen(v=>!v);setLibraryMenuOpen(false);}} className={"grid size-9 place-items-center rounded-xl "+(qualityOpen?"bg-[#d4af37]/15 text-[#d4af37]":"text-black/70 hover:bg-white/70")}><Sparkles className="size-[17px]"/></button>
                 <button type="button" title="Reiniciar cámara" onClick={()=>apiRef.current?.reset()} className="grid size-9 place-items-center rounded-xl text-black/70 hover:bg-white/70"><RotateCcw className="size-[17px]"/></button>
-                <AurumDepthOfFieldModule otherPanelOpen={libraryMenuOpen || qualityOpen} onChange={(enabled, strength)=>{if(typeof window!=="undefined"&&new URLSearchParams(window.location.search).has("aurumDofDiag"))console.info("[AURUM][DOF] UI toggle",{requested:enabled,apiAvailable:Boolean(apiRef.current?.setDepthOfField)});apiRef.current?.setDepthOfField?.(enabled,strength);}}/>
-                <button type="button" title={autoRotate360 ? "Detener rotación 360°" : "Activar rotación 360°"} aria-label={autoRotate360 ? "Detener rotación 360 grados" : "Activar rotación 360 grados"} aria-pressed={autoRotate360} onClick={()=>{const next=!autoRotate360;setAutoRotate360(next);cameraControlsRef.current?.setAutoRotate(next,0.8);invalidateRenderRef.current?.();}} className={"grid size-9 place-items-center rounded-xl transition-colors "+(autoRotate360 ? "bg-[#d4af37]/20 text-[#92743b]" : "text-black/70 hover:bg-white/70")}><span className="text-[10px] font-semibold">360°</span></button>
+                <button type="button" title="Profundidad de campo en el visor" aria-label="Ajustes de profundidad de campo en el visor" aria-expanded={liveDofOpen} onClick={()=>{setLiveDofOpen(v=>!v);setLibraryMenuOpen(false);setQualityOpen(false);}} className={"grid size-9 place-items-center rounded-xl text-[10px] font-semibold transition-colors "+(liveDof?"bg-[#d4af37]/20 text-[#92743b]":liveDofOpen?"bg-white/80 text-[#92743b]":"text-black/70 hover:bg-white/70")}>DOF</button>
+                <button type="button" title={autoRotate360 ? "Detener rotación 360°" : "Activar rotación 360°"} aria-label={autoRotate360 ? "Detener rotación 360 grados" : "Activar rotación 360 grados"} aria-pressed={autoRotate360} onClick={()=>{const next=!autoRotate360;setAutoRotate360(next);if(orbitControlsRef.current){orbitControlsRef.current.autoRotate=next;orbitControlsRef.current.autoRotateSpeed=0.8;orbitControlsRef.current.update?.();}invalidateRenderRef.current?.();}} className={"grid size-9 place-items-center rounded-xl transition-colors "+(autoRotate360 ? "bg-[#d4af37]/20 text-[#92743b]" : "text-black/70 hover:bg-white/70")}><span className="text-[10px] font-semibold">360°</span></button>
                 <button type="button" title={isViewerFullscreen?"Restaurar visor":"Maximizar visor"} aria-label={isViewerFullscreen?"Restaurar visor":"Maximizar visor"} aria-pressed={isViewerFullscreen} onClick={()=>apiRef.current?.fullscreen()} className="grid size-9 place-items-center rounded-xl text-black/70 hover:bg-white/70">{isViewerFullscreen?<Minimize2 className="size-[17px]"/>:<Maximize2 className="size-[17px]"/>}</button>
               </div>
+            </div>}
+            {!embedded && liveDofOpen&&<div className="absolute right-[70px] top-[calc(50%+52px)] z-40 w-[min(270px,calc(100%-5rem))] rounded-2xl border border-black/10 bg-[#fbfaf7]/95 p-3 text-[#292824] shadow-xl backdrop-blur-2xl">
+              <div className="mb-2 text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]">Profundidad de campo · visor</div>
+              <label className="flex items-center justify-between gap-3 rounded-lg border border-black/10 bg-white p-3 text-xs"><span><span className="block font-semibold">Previsualizar desenfoque</span><span className="mt-1 block text-[10px] text-[#77756f]">Se aplica al visor al terminar la órbita.</span></span><input type="checkbox" checked={liveDof} onChange={e=>{const enabled=e.target.checked;setLiveDof(enabled);if(typeof window!=="undefined"&&new URLSearchParams(window.location.search).has("aurumDofDiag"))console.info("[AURUM][DOF] UI toggle",{requested:enabled,apiAvailable:Boolean(apiRef.current?.setDepthOfField)});apiRef.current?.setDepthOfField?.(enabled,liveDofStrength);}} className="size-4 accent-[#b99642]"/></label>
+              <label className="mt-2 block text-[10px] text-[#66645e]">Intensidad<select value={liveDofStrength} onChange={e=>{const strength=e.target.value as "soft"|"medium"|"strong";setLiveDofStrength(strength);apiRef.current?.setDepthOfField?.(liveDof,strength);}} className="mt-1 w-full rounded-lg border border-black/15 bg-white px-2 py-2 text-xs text-[#292824]"><option value="soft">Suave · recomendado</option><option value="medium">Medio</option><option value="strong">Intenso</option></select></label>
+              <p className="mt-2 text-[10px] leading-relaxed text-[#858178]">El efecto se pausa durante el movimiento para conservar fluidez y se recupera al estabilizar la cámara.</p>
             </div>}
             {!embedded && libraryMenuOpen&&<div className="absolute right-[70px] top-1/2 z-40 w-[min(260px,calc(100%-6rem))] -translate-y-1/2 rounded-2xl border border-white/75 bg-[#fbfaf7]/75 p-2.5 text-[#292824] shadow-[0_12px_36px_rgba(35,32,24,.14)] backdrop-blur-2xl">
               <div className="px-2 pb-2 text-[9px] font-semibold uppercase tracking-[.16em] text-[#92743b]">Biblioteca de joyería</div>
@@ -4903,68 +4970,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             {!embedded && videoOpen && archivo && videoAspect && <div className="pointer-events-none absolute inset-0 z-[60] flex items-center justify-center overflow-hidden [container-type:size]" aria-hidden="true"><div className="relative border border-[#e5c76a] shadow-[0_0_0_200vmax_rgba(0,0,0,0.55)]" style={getAurumAspectFrameStyle(getAurumAspectRatio(videoAspect))}><div className="absolute inset-0 border border-[#7b612b]/90 drop-shadow-[0_0_1px_rgba(255,255,255,.95)]"/>{snapshotGuide!=="none"&&<><div className="absolute inset-y-0 left-1/3 border-l border-[#7b612b]/90 drop-shadow-[0_0_1px_rgba(255,255,255,.95)]"/><div className="absolute inset-y-0 left-2/3 border-l border-[#7b612b]/90 drop-shadow-[0_0_1px_rgba(255,255,255,.95)]"/><div className="absolute inset-x-0 top-1/3 border-t border-[#7b612b]/90 drop-shadow-[0_0_1px_rgba(255,255,255,.95)]"/><div className="absolute inset-x-0 top-2/3 border-t border-[#7b612b]/90 drop-shadow-[0_0_1px_rgba(255,255,255,.95)]"/></>}{snapshotGuide==="complete"&&<><div className="absolute left-1/2 top-1/2 size-3 -translate-x-1/2 -translate-y-1/2"><span className="absolute left-1/2 top-0 h-3 -translate-x-1/2 border-l border-[#6b5120] drop-shadow-[0_0_1px_rgba(255,255,255,1)]"/><span className="absolute left-0 top-1/2 w-3 -translate-y-1/2 border-t border-[#6b5120] drop-shadow-[0_0_1px_rgba(255,255,255,1)]"/></div><div className="absolute inset-[5%] border border-dashed border-[#6b5120]/90 drop-shadow-[0_0_1px_rgba(255,255,255,1)]"/></>}</div></div>}
             {!embedded && snapshotOpen && archivo && snapshotAspect && <div className="pointer-events-none absolute inset-0 z-[60] flex items-center justify-center overflow-hidden [container-type:size]" aria-hidden="true"><div className="relative border border-[#e5c76a] shadow-[0_0_0_200vmax_rgba(0,0,0,0.55)]" style={getAurumAspectFrameStyle(Math.max(1,Number(snapshotWidth)||1)/Math.max(1,Number(snapshotHeight)||1))}><div className="absolute inset-0 border border-[#7b612b]/90 drop-shadow-[0_0_1px_rgba(255,255,255,.95)]"/>{snapshotGuide!=="none"&&<><div className="absolute inset-y-0 left-1/3 border-l border-[#7b612b]/90 drop-shadow-[0_0_1px_rgba(255,255,255,.95)]"/><div className="absolute inset-y-0 left-2/3 border-l border-[#7b612b]/90 drop-shadow-[0_0_1px_rgba(255,255,255,.95)]"/><div className="absolute inset-x-0 top-1/3 border-t border-[#7b612b]/90 drop-shadow-[0_0_1px_rgba(255,255,255,.95)]"/><div className="absolute inset-x-0 top-2/3 border-t border-[#7b612b]/90 drop-shadow-[0_0_1px_rgba(255,255,255,.95)]"/></>}{snapshotGuide==="complete"&&<><div className="absolute left-1/2 top-1/2 size-3 -translate-x-1/2 -translate-y-1/2"><span className="absolute left-1/2 top-0 h-3 -translate-x-1/2 border-l border-[#6b5120] drop-shadow-[0_0_1px_rgba(255,255,255,1)]"/><span className="absolute left-0 top-1/2 w-3 -translate-y-1/2 border-t border-[#6b5120] drop-shadow-[0_0_1px_rgba(255,255,255,1)]"/></div><div className="absolute inset-[5%] border border-dashed border-[#6b5120]/90 drop-shadow-[0_0_1px_rgba(255,255,255,1)]"/></>}</div></div>}
           </div>
-          {publicViewerTestOpen && (
-            <div className="absolute inset-0 z-[75] flex flex-col bg-white">
-              <div className="absolute right-4 top-4 z-30">
-                <button type="button" onClick={() => setPublicViewerTestOpen(false)} className="rounded-xl border border-[#d8cba9] bg-white/95 px-3 py-2 text-xs font-semibold text-[#514b3e] shadow-lg">Volver a AURUM RENDER</button>
-              </div>
-              <div
-                ref={publicViewerTestHostRef}
-                className="relative min-h-0 flex-1"
-                onDragEnter={(event) => {
-                  event.preventDefault();
-                  publicViewerDragDepthRef.current += 1;
-                  setPublicViewerDragActive(true);
-                }}
-                onDragOver={(event) => {
-                  event.preventDefault();
-                  if (event.dataTransfer) event.dataTransfer.dropEffect = "copy";
-                }}
-                onDragLeave={(event) => {
-                  event.preventDefault();
-                  publicViewerDragDepthRef.current = Math.max(0, publicViewerDragDepthRef.current - 1);
-                  if (publicViewerDragDepthRef.current === 0) setPublicViewerDragActive(false);
-                }}
-                onDrop={(event) => {
-                  event.preventDefault();
-                  publicViewerDragDepthRef.current = 0;
-                  setPublicViewerDragActive(false);
-                  const file = Array.from(event.dataTransfer.files).find((candidate) => /\.(3dm|glb|gltf|stl|obj|fbx)$/i.test(candidate.name));
-                  if (file) selectPublicViewerTestFile(file);
-                }}
-              >
-                {publicViewerTestUrl && publicViewerTestFile ? (
-                  <>
-                  <PublicCatalogViewer key={publicViewerTestFile.name + ":" + publicViewerTestFile.size + ":" + publicViewerTestFile.lastModified} modelUrl={publicViewerTestUrl} modelName={publicViewerTestFile.name} materialId={materialId} gemId={gemaId} hideControls onCameraActionsReady={setPublicViewerCameraActions} />
-                  <AurumViewerControlsModule performanceOpen={performanceOpen} onPerformanceToggle={() => setPerformanceOpen((value) => !value)} onPerformanceClose={() => setPerformanceOpen(false)} performanceRenderer={performanceRenderer} performanceMonitor={performanceMonitorRef.current} selectionDiagnostic={diagnosticoSeleccion} selectionName={parteSeleccionadaNombre} selectionEnabled={diagnosticoSeleccionHabilitado} onSelectionClose={() => { setDiagnosticoSeleccion(null); setDiagnosticoSeleccionHabilitado(false); diagnosticoSeleccionHabilitadoRef.current = false; }} cameraActions={publicViewerCameraActions} onFullscreen={() => { const host = publicViewerTestHostRef.current; if (!host) return; if (document.fullscreenElement === host) void document.exitFullscreen(); else void host.requestFullscreen?.(); }} />
-                  </>
-                ) : (
-                  <div className="grid h-full place-items-center p-8 text-center">
-                    <div className="max-w-md">
-                      <div className="mx-auto mb-4 grid size-16 place-items-center rounded-2xl border border-[#d8cba9] bg-[#faf7ef] text-[#a48643]"><Upload className="size-7"/></div>
-                      <div className="text-base font-semibold text-[#514b3e]">Carga tu diseño de joyería</div>
-                      <p className="mt-2 text-sm text-[#827a6d]">Selecciona el archivo que quieres abrir directamente en el visor público. No necesitas cargarlo antes en el visor de Aurum Render.</p>
-                      <input ref={publicViewerTestInputRef} type="file" accept=".3dm,.glb,.stl,.obj,.fbx" className="hidden" onChange={(event) => selectPublicViewerTestFile(event.target.files?.[0] ?? null)} />
-                      <button type="button" onClick={() => publicViewerTestInputRef.current?.click()} className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#d4af37] px-5 py-3 text-sm font-semibold text-[#292824] shadow-sm hover:bg-[#e1bf50]"><Upload className="size-4"/> Seleccionar archivo</button>
-                      <p className="mt-3 text-[10px] uppercase tracking-[.14em] text-[#aaa18f]">3DM · GLB · STL · OBJ · FBX</p>
-                    </div>
-                  </div>
-                )}
-                {publicViewerDragActive && (
-                  <div className="pointer-events-none absolute inset-3 z-20 grid place-items-center rounded-2xl border-2 border-dashed border-[#d4af37] bg-white/90 text-center shadow-[0_12px_45px_rgba(90,70,25,.12)] backdrop-blur-sm" aria-live="polite">
-                    <div className="px-6 py-8">
-                      <span className="mx-auto grid size-16 place-items-center rounded-2xl border border-[#d8cba9] bg-[#faf7ef] text-[#a48643]"><Upload className="size-7"/></span>
-                      <div className="mt-4 text-lg font-semibold text-[#514b3e]">Suelta el archivo para abrirlo</div>
-                      <p className="mt-2 text-xs uppercase tracking-[.14em] text-[#93866d]">3DM · GLB · STL · OBJ · FBX</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-          {!publicViewerTestOpen && archivoOriginal && (
-            <button type="button" onClick={() => setPublicViewerTestOpen(true)} className="absolute left-4 top-4 z-[76] rounded-xl border border-[#d8cba9] bg-white/95 px-3 py-2 text-xs font-semibold text-[#514b3e] shadow-lg">Abrir visor público de prueba</button>
-          )}
         </main>
          {!embedded && <aside className="hidden w-[min(22vw,360px)] shrink-0 overflow-hidden rounded-2xl border border-[#e6e1d8] bg-[#faf9f6] text-[#292824] shadow-[0_6px_22px_rgba(36,32,20,.035)] xl:flex xl:flex-col">
 {exportOpen&&<div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-[#faf9f6] p-3 text-[#292824]">

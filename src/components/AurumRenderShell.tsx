@@ -7,10 +7,6 @@ const AurumRender = lazy(() =>
 );
 
 export function AurumRenderShell() {
-  return <AurumRenderEngineShell />;
-}
-
-function AurumRenderEngineShell() {
   const navigate = useNavigate();
 
   useEffect(() => {

@@ -23,88 +23,6 @@ export const getAurumProductCameraProfile = (category: string) =>
   AURUM_PRODUCT_CAMERA_PROFILES[category as AurumProductCategory] ??
   AURUM_PRODUCT_CAMERA_PROFILES.Otro;
 
-
-/**
- * Synchronize a semantic camera preset with the real OrbitControls state.
- * OrbitControls reads the camera's Cartesian position on update(), then
- * applies its pending spherical/pan deltas. Clear those deltas first so an
- * older gesture cannot overwrite the requested preset on the next frame.
- */
-function synchronizeOrbitControlsPreset(
-  camera: THREE.PerspectiveCamera,
-  controls: { target: THREE.Vector3; update: () => void; enableDamping?: boolean },
-  target: THREE.Vector3,
-  position: THREE.Vector3,
-  up: THREE.Vector3 = camera.up,
-  stopAutoRotate = false,
-) {
-  // Three.js r185 OrbitControls keeps these transient values as instance
-  // fields with the exact underscored names below. Clear the complete input
-  // state before applying a semantic preset so damping, an unfinished drag,
-  // or cursor-dolly state cannot pull the camera away on the next frame.
-  const orbit = controls as typeof controls & {
-    state?: number;
-    autoRotate?: boolean;
-    _controlActive?: boolean;
-    _sphericalDelta?: THREE.Spherical;
-    _panOffset?: THREE.Vector3;
-    _scale?: number;
-    _performCursorZoom?: boolean;
-    _dollyDirection?: THREE.Vector3;
-    _rotateStart?: THREE.Vector2;
-    _rotateEnd?: THREE.Vector2;
-    _rotateDelta?: THREE.Vector2;
-    _panStart?: THREE.Vector2;
-    _panEnd?: THREE.Vector2;
-    _panDelta?: THREE.Vector2;
-    _dollyStart?: THREE.Vector2;
-    _dollyEnd?: THREE.Vector2;
-    _dollyDelta?: THREE.Vector2;
-  };
-  const previousDamping = controls.enableDamping;
-  if (previousDamping !== undefined) controls.enableDamping = false;
-
-  // OrbitControls r185: STATE.NONE is -1.
-  if (typeof orbit.state === "number") orbit.state = -1;
-  if (stopAutoRotate && typeof orbit.autoRotate === "boolean") orbit.autoRotate = false;
-  if (typeof orbit._controlActive === "boolean") orbit._controlActive = false;
-  orbit._sphericalDelta?.set(0, 0, 0);
-  orbit._panOffset?.set(0, 0, 0);
-  if (typeof orbit._scale === "number") orbit._scale = 1;
-  if (typeof orbit._performCursorZoom === "boolean") orbit._performCursorZoom = false;
-  orbit._dollyDirection?.set(0, 0, 0);
-  orbit._rotateStart?.set(0, 0);
-  orbit._rotateEnd?.set(0, 0);
-  orbit._rotateDelta?.set(0, 0);
-  orbit._panStart?.set(0, 0);
-  orbit._panEnd?.set(0, 0);
-  orbit._panDelta?.set(0, 0);
-  orbit._dollyStart?.set(0, 0);
-  orbit._dollyEnd?.set(0, 0);
-  orbit._dollyDelta?.set(0, 0);
-
-  controls.target.copy(target);
-  camera.position.copy(position);
-  camera.up.copy(up);
-  camera.lookAt(target);
-  camera.updateMatrixWorld(true);
-  controls.update();
-
-  if (previousDamping !== undefined) controls.enableDamping = previousDamping;
-  camera.updateMatrixWorld(true);
-}
-
-/** Recenter the current camera direction on a new target without bypassing OrbitControls. */
-export function centerAurumCameraOn(
-  camera: THREE.PerspectiveCamera,
-  controls: { target: THREE.Vector3; update: () => void; enableDamping?: boolean },
-  target: THREE.Vector3,
-) {
-  const offset = camera.position.clone().sub(controls.target);
-  synchronizeOrbitControlsPreset(camera, controls, target, target.clone().add(offset));
-}
-
-
 /**
  * Presentación inicial calibrada con los valores exactos de cámara del VJSON iJewel
  * suministrado. No sustituye la dirección de referencia por un ángulo fotográfico.
@@ -140,11 +58,14 @@ export function applyAurumIJEWELPresentationCamera(
   // the calibrated iJewel viewing direction and keeping the complete jewel visible.
   const distance = AURUM_IJEWEL_REFERENCE.camera.distance * 0.94;
   camera.fov = AURUM_IJEWEL_REFERENCE.camera.fov;
-  // Keep the viewer's Y-up convention stable and synchronize OrbitControls
-  // atomically so pending user deltas cannot restore the previous pose.
-  const position = target.clone().add(direction.multiplyScalar(distance));
-  synchronizeOrbitControlsPreset(camera, controls, target, position, new THREE.Vector3(0, 1, 0));
+  camera.up.set(...AURUM_IJEWEL_REFERENCE.camera.up);
+  // Center the actual normalized product volume. The iJewel reference frame
+  // is visually centered; using world origin here shifts grounded models upward.
+  controls.target.copy(target);
+  camera.position.copy(target).add(direction.multiplyScalar(distance));
+  camera.lookAt(target);
   camera.updateProjectionMatrix();
+  controls.update();
 }
 
 /**
@@ -156,8 +77,7 @@ export function applyAurumCameraView(
   controls: { target: THREE.Vector3; update: () => void },
   model: THREE.Object3D | null,
   view: AurumCameraView,
-  category: string = "Otro",
-  options: { distanceScale?: number } = {},
+  category: string = "Otro"
 ) {
   const bounds = model ? new THREE.Box3().setFromObject(model) : null;
   const target = bounds
@@ -177,41 +97,38 @@ export function applyAurumCameraView(
   const horizontalHalfFov = Math.atan(Math.tan(verticalHalfFov) * aspect);
   const limitingHalfFov = Math.max(0.01, Math.min(verticalHalfFov, horizontalHalfFov));
   const fitDistance = radius / Math.sin(limitingHalfFov);
-  // Encuadre inicial ligeramente más cercano: elimina el margen extra del
-  // 10% que dejaba demasiado espacio vacío alrededor de piezas pequeñas.
-  // Los perfiles por categoría siguen añadiendo distancia cuando la necesitan.
-  const distanceScale = Number.isFinite(options.distanceScale) ? Math.max(0.1, Math.min(4, Number(options.distanceScale))) : 1;
-  const distance = Math.max(fitDistance * 1.00 * profile.distance * distanceScale, 0.1);
+  // 18% de margen fotográfico, ajustado por categoría para conservar aire
+  // adicional en collares, aretes y piezas alargadas.
+  // Reduce the original photographic breathing room slightly so the jewel
+  // occupies a little more of the viewport without changing its proportions.
+  const distance = Math.max(fitDistance * 1.10 * profile.distance, 0.1);
   const verticalBias = radius * profile.vertical;
 
-  let position: THREE.Vector3;
-  // A top-down camera cannot use world Y as its up vector because its view
-  // direction is also Y. Use world -Z as screen-up to keep the top preset
-  // deterministic and avoid a near-singular lookAt basis.
-  const cameraUp = view === "superior"
-    ? new THREE.Vector3(0, 0, -1)
-    : new THREE.Vector3(0, 1, 0);
+  controls.target.copy(target);
   if (view === "frontal") {
-    // Frontal on +Z with a slight elevation for the jewelry silhouette.
+    camera.up.set(0, 1, 0);
+    // Elevación mínima: conserva la lectura frontal pero permite que el plano
+    // de producto y su sombra de contacto entren en la composición.
     const productLift = radius * 0.06;
-    position = new THREE.Vector3(target.x, target.y + productLift, target.z + distance);
+    camera.position.set(target.x, target.y + productLift, target.z + distance);
   } else if (view === "superior") {
-    // A tiny +Z offset avoids the polar singularity at phi = 0 while
-    // remaining visually indistinguishable from a true top-down view.
-    position = new THREE.Vector3(
-      target.x,
-      target.y + distance,
-      target.z + Math.max(distance * 0.0001, 0.00001),
-    );
+    camera.up.set(0, 0, -1);
+    camera.position.set(target.x, target.y + distance, target.z);
   } else if (view === "lateral") {
-    position = new THREE.Vector3(target.x + distance, target.y, target.z);
+    camera.up.set(0, 1, 0);
+    camera.position.set(target.x + distance, target.y, target.z);
   } else {
+    camera.up.set(0, 1, 0);
+    // Perspectiva conserva la distancia radial de Frontal y cambia solo
+    // la dirección de observación. Antes se sumaban desplazamientos en X/Y/Z
+    // sin normalizar, aumentando la distancia real y reduciendo la joya.
+    // Vista 3/4 con elevación suficiente para que el plano del aro se lea en diagonal y la corona de la gema quede visible. Dirección normalizada: no aumenta la distancia ni altera el modelo.
     const perspectiveDirection = new THREE.Vector3(0.62, Math.max(profile.vertical * 2.1, 0.78), 1).normalize();
-    position = target.clone().addScaledVector(perspectiveDirection, distance);
+    camera.position.copy(target).addScaledVector(perspectiveDirection, distance);
   }
-
-  synchronizeOrbitControlsPreset(camera, controls, target, position, cameraUp, true);
+  camera.lookAt(target);
   camera.updateProjectionMatrix();
+  controls.update();
 }
 /** Ajusta la cámara a una proporción de salida sin deformar el modelo.
  * Conserva la dirección actual de observación y centra el volumen real.
@@ -236,14 +153,16 @@ export function fitAurumCameraToAspect(
   const direction = camera.position.clone().sub(controls.target);
   if (direction.lengthSq() < 1e-8) direction.set(0, 0, 1);
   direction.normalize();
-  const position = target.clone().addScaledVector(direction, distance);
+  controls.target.copy(target);
+  camera.position.copy(target).addScaledVector(direction, distance);
   // Do not change the live viewport's projection aspect when the user is only
   // previewing a different output ratio. The renderer canvas may still be
   // landscape; forcing a portrait camera aspect here visibly stretches the
   // jewel in that landscape canvas. Exporters set their own aspect before
   // calling this helper, so preserving camera.aspect also keeps export correct.
-  synchronizeOrbitControlsPreset(camera, controls, target, position);
+  camera.lookAt(target);
   camera.updateProjectionMatrix();
+  controls.update();
 }
 
 

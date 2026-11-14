@@ -80,7 +80,7 @@ export function RegistroTaller({ className = "" }: Props) {
         }}
         className={className || "inline-flex items-center gap-2 rounded-lg border border-gold/50 px-5 py-3 text-xs font-semibold uppercase tracking-wider text-gold transition hover:bg-gold/10"}
       >
-        Crear mi cuenta
+        Crear mi taller
       </button>
 
       {abierto ? createPortal(
@@ -89,9 +89,9 @@ export function RegistroTaller({ className = "" }: Props) {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-[10px] uppercase tracking-[0.25em] text-[#987400]">Aurum Lab · Tu taller</p>
-                <h2 id="registro-taller-title" className="mt-2 text-2xl font-extrabold tracking-tight text-[#17232d]">Crea tu cuenta</h2>
+                <h2 id="registro-taller-title" className="mt-2 text-2xl font-extrabold tracking-tight text-[#17232d]">Crea tu taller</h2>
                 <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                  Un solo registro para crear tu cuenta y configurar tu taller en AURUM LAB.
+                  Un solo registro. Aurum crea tu taller, tu cuenta y tu acceso automáticamente.
                 </p>
               </div>
               <button type="button" onClick={cerrar} className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-[#17232d]" aria-label="Cerrar">
@@ -102,11 +102,11 @@ export function RegistroTaller({ className = "" }: Props) {
             {creado ? (
               <div className="mt-8 rounded-2xl border border-[#eadca8] bg-[#fffaf0] p-6 text-center">
                 <Building2 className="mx-auto size-8 text-gold" />
-                <p className="mt-3 text-lg font-semibold text-gold">Tu cuenta está lista</p>
+                <p className="mt-3 text-lg font-semibold text-gold">Tu taller está listo</p>
                 <p className="mt-2 text-sm leading-relaxed text-slate-600">
                   {correoEnviado
-                    ? "Tu cuenta y tu espacio de trabajo fueron creados. Enviamos a tu correo los datos para acceder."
-                    : "Tu cuenta y tu espacio de trabajo fueron creados. Ya puedes comenzar a utilizar AURUM LAB."}
+                    ? "Tu cuenta y tu taller fueron creados. También enviamos a tu correo el acceso y el enlace para entrar."
+                    : "Tu cuenta y tu taller fueron creados. Puedes entrar ahora; el correo de bienvenida quedó pendiente de configuración de envío."}
                 </p>
               </div>
             ) : (
@@ -179,7 +179,7 @@ export function RegistroTaller({ className = "" }: Props) {
                     Cancelar
                   </button>
                   <button type="submit" disabled={cargando} className="rounded-xl bg-[#f8c928] px-5 py-3 text-xs font-bold uppercase tracking-wider text-[#17232d] shadow-sm transition hover:bg-[#ffdf65] disabled:opacity-50">
-                    {cargando ? "Creando cuenta…" : "Crear mi cuenta"}
+                    {cargando ? "Creando taller…" : "Crear mi taller"}
                   </button>
                 </div>
               </form>
