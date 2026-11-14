@@ -101,6 +101,9 @@ export function createAurumCameraControlsContract(
       };
     },
     restoreState(state) {
+      // Prevent auto-rotation from advancing one extra step while restoring
+      // the captured pose; restore its enabled state only after synchronization.
+      controls.autoRotate = false;
       synchronizeOrbitControlsPreset(camera, controls, state.target, state.position, state.up);
       camera.quaternion.copy(state.quaternion);
       camera.aspect = state.aspect;
