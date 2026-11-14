@@ -55,6 +55,10 @@ export async function createAurumPostPipeline(
   let gemMaskPass:any=null;
   let gradingPass:any=null;
   let composerMsaaSamples=0;
+  type ManagedPostModule = "gem-edge-aa" | "surface-edge-aa" | "dof" | "lut" | "vignette" | "grading";
+  const moduleOverrides: Partial<Record<ManagedPostModule, boolean>> = {};
+  let lastCaptureMode = false;
+  const moduleEnabled = (id: ManagedPostModule, fallback: boolean) => moduleOverrides[id] ?? fallback;
 
   try {
     composer=new EffectComposer(renderer);
@@ -439,6 +443,7 @@ export async function createAurumPostPipeline(
   const applyQuality=(next:any, options:{capture?:boolean;width?:number;height?:number}={})=>{
     if(!composer) return;
     const q=next||{};
+    lastCaptureMode = Boolean(options.capture);
     const incomingQualityId=String(q?.qualityId??"");
     if(incomingQualityId) lastKnownQualityId=incomingQualityId;
     if(q?.runtimeBudgetTier) lastKnownBudgetTier=String(q.runtimeBudgetTier);
@@ -468,10 +473,12 @@ export async function createAurumPostPipeline(
     const edgeAaMode=options.capture ? "capture" : "settled";
     const edgeAaProfile=getAurumEdgeAaProfile(qualityId || (high ? "high" : "low"),lastKnownBudgetTier,edgeAaMode);
     const edgeAaEnabled=edgeAaProfile.enabled && (!temporalMotionActive || Boolean(options.capture));
-    if(gemMaskPass) gemMaskPass.enabled=edgeAaEnabled;
-    if(fxaaPass) fxaaPass.enabled=edgeAaEnabled;
+    const gemEdgeEnabled = edgeAaEnabled && moduleEnabled("gem-edge-aa", true);
+    const surfaceEdgeEnabled = edgeAaEnabled && moduleEnabled("surface-edge-aa", true);
+    if(gemMaskPass) gemMaskPass.enabled=gemEdgeEnabled;
+    if(fxaaPass) fxaaPass.enabled=gemEdgeEnabled;
     if(surfaceEdgeAaPass) {
-      surfaceEdgeAaPass.enabled=edgeAaEnabled;
+      surfaceEdgeAaPass.enabled=surfaceEdgeEnabled;
       const strength=surfaceEdgeAaPass.material?.uniforms?.strength;
       if(strength) strength.value=edgeAaProfile.strength;
     }
@@ -543,18 +550,18 @@ export async function createAurumPostPipeline(
       bloomPass.radius=Math.min(0.38,Math.max(0,Number(config.bloomRadius??0.32)));
     }
     if(gradingPass){
-      gradingPass.enabled=!options.capture && Boolean(config.gradeEnabled);
+      gradingPass.enabled=moduleEnabled("grading", Boolean(config.gradeEnabled)) && !options.capture;
       gradingPass.uniforms.contrast.value=Math.max(.5,Math.min(1.8,Number(config.gradeContrast??1)));
       gradingPass.uniforms.saturation.value=Math.max(0,Math.min(2,Number(config.gradeSaturation??1)));
     }
     if(lutPass){
-      lutPass.enabled=!options.capture && config.lut!==false && !isLowQuality;
+      lutPass.enabled=moduleEnabled("lut", config.lut!==false) && !options.capture && !isLowQuality;
       lutPass.intensity=Math.max(0,Math.min(1,(config.lutIntensity??.08)*(ultra?1:high?.82:.62)));
     }
     if(dofPass){
       // DOF is explicitly opt-in and should work at every viewer quality tier;
       // the viewer's direct-render interaction path keeps it off during orbit/zoom.
-      dofPass.enabled=config.dof===true;
+      dofPass.enabled=moduleEnabled("dof", config.dof===true);
       if(dofPass.uniforms){
         dofPass.uniforms.aperture.value=Math.max(0,Number(config.dofAperture??0.00065));
         dofPass.uniforms.maxblur.value=Math.max(0,Number(config.dofMaxBlur??0.006));
@@ -575,7 +582,7 @@ export async function createAurumPostPipeline(
       }
     }
     if(vignettePass){
-      vignettePass.enabled=!options.capture && config.vignette!==false && !isLowQuality;
+      vignettePass.enabled=moduleEnabled("vignette", config.vignette!==false) && !options.capture && !isLowQuality;
       vignettePass.uniforms.darkness.value=Math.max(0,Math.min(.18,Number(config.vignetteDarkness??.055)));
       vignettePass.uniforms.offset.value=Math.max(.55,Math.min(1.4,Number(config.vignetteOffset??1.0)));
     }
@@ -711,10 +718,12 @@ export async function createAurumPostPipeline(
     temporalMotionActive=next;
     const edgeAaProfile=getAurumEdgeAaProfile(lastKnownQualityId || (lastKnownHighQuality ? "high" : "low"),lastKnownBudgetTier,next ? "live" : "settled");
     const edgeAaEnabled=edgeAaProfile.enabled;
-    if(gemMaskPass) gemMaskPass.enabled=edgeAaEnabled;
-    if(fxaaPass) fxaaPass.enabled=edgeAaEnabled;
+    const gemEdgeEnabled = edgeAaEnabled && moduleEnabled("gem-edge-aa", true);
+    const surfaceEdgeEnabled = edgeAaEnabled && moduleEnabled("surface-edge-aa", true);
+    if(gemMaskPass) gemMaskPass.enabled=gemEdgeEnabled;
+    if(fxaaPass) fxaaPass.enabled=gemEdgeEnabled;
     if(surfaceEdgeAaPass) {
-      surfaceEdgeAaPass.enabled=edgeAaEnabled;
+      surfaceEdgeAaPass.enabled=surfaceEdgeEnabled;
       const strength=surfaceEdgeAaPass.material?.uniforms?.strength;
       if(strength) strength.value=edgeAaProfile.strength;
     }
@@ -736,10 +745,32 @@ export async function createAurumPostPipeline(
     }
   };
 
+  const setModuleEnabled = (id: ManagedPostModule, enabled: boolean) => {
+    moduleOverrides[id] = Boolean(enabled);
+    switch (id) {
+      case "gem-edge-aa": {
+        const profile = getAurumEdgeAaProfile(lastKnownQualityId || (lastKnownHighQuality ? "high" : "low"), lastKnownBudgetTier, temporalMotionActive ? "live" : "settled");
+        const active = Boolean(enabled && profile.enabled);
+        if (gemMaskPass) gemMaskPass.enabled = active;
+        if (fxaaPass) fxaaPass.enabled = active;
+        break;
+      }
+      case "surface-edge-aa": {
+        const profile = getAurumEdgeAaProfile(lastKnownQualityId || (lastKnownHighQuality ? "high" : "low"), lastKnownBudgetTier, temporalMotionActive ? "live" : "settled");
+        if (surfaceEdgeAaPass) surfaceEdgeAaPass.enabled = Boolean(enabled && profile.enabled);
+        break;
+      }
+      case "dof": if (dofPass) dofPass.enabled = Boolean(enabled); break;
+      case "lut": if (lutPass) lutPass.enabled = Boolean(enabled && !lastCaptureMode); break;
+      case "vignette": if (vignettePass) vignettePass.enabled = Boolean(enabled && !lastCaptureMode); break;
+      case "grading": if (gradingPass) gradingPass.enabled = Boolean(enabled && !lastCaptureMode); break;
+    }
+  };
+
   applyQuality(quality);
   const setSSRSelects=(objects:any[])=>{
     if(!ssrPass)return;
     ssrPass.selects=Array.isArray(objects)?objects:[];
   };
-  return {composer,renderPass,ssaoPass,ssrPass,ssrSavePass,ssrCompositePass,bloomPass,setSSRSelects,applyQuality,updateTemporal,resetTemporalAccumulation,setTemporalMotion,dofPass,taaPass,fxaaPass,surfaceEdgeAaPass,gemMaskPass,outputPass,msaaSamples:composerMsaaSamples};
+  return {composer,renderPass,ssaoPass,ssrPass,ssrSavePass,ssrCompositePass,bloomPass,setSSRSelects,applyQuality,updateTemporal,resetTemporalAccumulation,setTemporalMotion,setModuleEnabled,dofPass,taaPass,fxaaPass,surfaceEdgeAaPass,gemMaskPass,outputPass,msaaSamples:composerMsaaSamples};
 }
