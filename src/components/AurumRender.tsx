@@ -14,7 +14,7 @@ import { getAurumShadowConfig } from "../lib/aurum-shadow-engine";
 import { getAurumPostConfig } from "../lib/aurum-post-engine";
 import { getAurumSsaoConfig } from "../lib/aurum-ssao-engine";
 import { AURUM_LIGHTING_DEFAULT } from "../lib/aurum-lighting-engine";
-import { applyAurumCameraView, applyAurumIJEWELPresentationCamera, fitAurumCameraToAspect, calculateAurumFocalDepth } from "../lib/aurum/camera";
+import { fitAurumCameraToAspect, calculateAurumFocalDepth } from "../lib/aurum/camera";
 import { prepareAurumModel } from "../lib/aurum/model-prep";
 import { createAurumPostPipeline } from "../lib/aurum/post";
 import { createAurumEnvironment } from "../lib/aurum/environment";
