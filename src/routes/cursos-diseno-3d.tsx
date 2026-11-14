@@ -9,13 +9,13 @@ import {
 export const Route = createFileRoute("/cursos-diseno-3d")({
   head: () => ({
     meta: [
-      { title: "Diseño CAD 3D para Joyería e Introducción a la Manufactura Aditiva Nivel 1 | AURUM LAB" },
+      { title: "Curso CAD 3D para Joyería y Manufactura Aditiva | AURUM LAB" },
       {
         name: "description",
-        content: "Diseño CAD 3D para Joyería e Introducción a la Manufactura Aditiva Nivel 1. 10 sesiones prácticas, 20 horas académicas y laboratorios interactivos.",
+        content: "Aprende CAD 3D para joyería con Rhinoceros en 10 sesiones prácticas. Incluye laboratorios interactivos y una introducción a la manufactura aditiva.",
       },
-      { property: "og:title", content: "Diseño CAD 3D para Joyería e Introducción a la Manufactura Aditiva Nivel 1" },
-      { property: "og:description", content: "10 sesiones prácticas, 20 horas académicas y laboratorios interactivos para aprender modelado 3D aplicado a joyería." },
+      { property: "og:title", content: "Curso CAD 3D para Joyería y Manufactura Aditiva | AURUM LAB" },
+      { property: "og:description", content: "Aprende CAD 3D para joyería con Rhinoceros en 10 sesiones prácticas, con laboratorios interactivos e introducción a la manufactura aditiva." },
       { property: "og:url", content: "https://www.tallerdeljoyero.com/cursos-diseno-3d" },
       { name: "robots", content: "index, follow, max-image-preview:large" },
     ],
@@ -123,7 +123,7 @@ function CursosDiseno3DPage() {
 
       <section id="laboratorios" className="scroll-mt-24 border-y border-[#e2e7eb] bg-[#edf1f4]">
         <div className="mx-auto max-w-7xl px-4 py-14 sm:px-7 lg:px-10 lg:py-18">
-          <div className="max-w-3xl"><p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#9b7835]">Práctica interactiva</p><h2 className="mt-3 font-display text-3xl font-semibold tracking-tight text-[#1d2b39] sm:text-4xl">No solo leas: practica en los laboratorios</h2><p className="mt-4 text-sm leading-7 text-[#5e7183]">El Aula integra espacios interactivos para entrenar herramientas, visualizar conceptos y comprobar ejercicios. Estos son algunos de los laboratorios que acompañan el programa.</p></div>
+          <div className="max-w-3xl"><p className="text-[10px] font-bold uppercase tracking-[.22em] text-[#9b7835]">Práctica interactiva de CAD 3D</p><h2 className="mt-3 font-display text-3xl font-semibold tracking-tight text-[#1d2b39] sm:text-4xl">Laboratorios interactivos de Rhinoceros para joyería</h2><p className="mt-4 text-sm leading-7 text-[#5e7183]">Aprende diseño CAD 3D para joyería practicando navegación en Rhinoceros, geometría, curvas, coordenadas, Osnap, SmartTrack, superficies y sólidos. El Aula de Formación reúne laboratorios interactivos para aplicar cada concepto con ejercicios guiados y preparar modelos orientados a la fabricación.</p></div>
           <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {laboratorios.map(({icon:Icon,title,desc})=><article key={title} className="rounded-2xl border border-white bg-white p-5 shadow-sm"><span className="grid size-11 place-items-center rounded-xl bg-[#fff3cc] text-[#9d772e]"><Icon className="size-5" /></span><h3 className="mt-4 font-bold text-[#26394b]">{title}</h3><p className="mt-2 text-sm leading-6 text-[#6a7c8d]">{desc}</p></article>)}
           </div>
