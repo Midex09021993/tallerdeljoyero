@@ -58,6 +58,7 @@ import { GEMAS, MATERIALES, ESCENARIOS, VISTAS, ILUMINACIONES, type MaterialId, 
 import { AurumRenderSidebar } from "./AurumRenderSidebar";
 import { PublicCatalogViewer } from "./PublicCatalogViewer";
 import { AurumViewerControlsModule } from "./AurumViewerControlsModule";
+import { AurumLoadingScreen } from "./AurumLoadingScreen";
 import { AurumDepthOfFieldModule } from "./AurumDepthOfFieldModule";
 import { createAurumPerformanceMonitor } from "@/lib/aurum/performance-monitor";
 import { createAurumVideoFramePipeline, getAurumVideoLivePasses } from "../lib/aurum/video-frame-pipeline";
@@ -4841,35 +4842,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               </div>
             </div>}
             {!embedded&&!archivo&&!cargando&&<div className="absolute inset-0 z-10 grid place-items-center p-8 text-center"><div><input ref={fileRef} type="file" accept=".stl,.obj,.glb,.fbx,.3dm" className="hidden" onChange={(e)=>{const file=e.target.files?.[0];if(file)cargarArchivo(file)}}/><button type="button" onClick={()=>fileRef.current?.click()} className="group rounded-2xl px-8 py-6 transition hover:bg-white/[.025]"><span className="mx-auto grid size-20 place-items-center rounded-3xl border border-[#d4af37]/30 bg-[#d4af37]/10 text-[#d4af37] shadow-[0_0_30px_rgba(212,175,55,.08)] transition group-hover:border-[#d4af37]/60 group-hover:bg-[#d4af37]/15"><Upload className="size-8"/></span><h2 className="mt-5 text-xl font-semibold text-white">Carga tu diseño de joyería</h2><p className="mt-2 text-sm text-white/40">STL · OBJ · GLB · FBX · Rhino 3DM</p><span className="mt-4 inline-flex rounded-lg bg-[#d4af37] px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-black">Seleccionar archivo</span><p className="mt-3 text-[10px] tracking-wide text-white/35">o arrastra tu archivo aquí</p></button></div></div>}
-            {(cargando || presentationCover) && <div
-              className={"absolute inset-0 z-40 overflow-hidden transform-gpu transition-[opacity,transform] duration-[1000ms] ease-[cubic-bezier(0.22,1,0.36,1)] "+((cargando || presentationVisible)?"pointer-events-auto scale-100 opacity-100":"pointer-events-none scale-[0.992] opacity-0")}
-              aria-live="polite"
-            >
-              {presentationCover
-                ? <img src={presentationCover} alt="Presentación del diseño" className={"absolute inset-0 h-full w-full object-cover transition-transform duration-[1200ms] "+(presentationVisible?"scale-100":"scale-[1.015]")} />
-                : <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_38%,#ffffff_0%,#f2f2f0_48%,#d8d9d7_100%)]" />
-              }
-              <div className="absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-black/10" />
-              {!presentationCover && <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_43%,rgba(255,255,255,.35)_0%,transparent_54%)]" />}
-              <div className="absolute inset-0 flex items-center justify-center px-6">
-                <div className={"flex w-full max-w-sm flex-col items-center text-center "+(presentationCover?"opacity-0":"opacity-100")}>
-                  <div className="relative mb-7 grid size-[92px] place-items-center">
-                    <div className="absolute inset-0 rounded-full bg-[#d8bd7c]/20 blur-2xl" />
-                    <div className="absolute inset-0 rounded-full border border-[#c8a45b]/25" />
-                    <div className="absolute inset-[-5px] animate-spin rounded-full border border-transparent border-t-[#b99642] [animation-duration:2.8s]" />
-                    <div className="relative grid size-[76px] place-items-center rounded-full border border-[#c9a65e]/35 bg-white shadow-[0_8px_24px_rgba(123,91,31,.10)]">
-                      <img src="/brand/aurum-symbol.svg" alt="" aria-hidden="true" width="54" height="54" className="size-[54px] object-contain" />
-                    </div>
-                  </div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[.24em] text-[#a18443]">AURUM RENDER</p>
-
-                  <h2 className="mt-3 text-lg font-medium tracking-[-.02em] text-[#292824] sm:text-xl">{estadoCarga}</h2>
-                  <div className="mt-7 h-[2px] w-32 overflow-hidden rounded-full bg-[#e7e3da]">
-                    <div className="h-full w-2/5 animate-pulse rounded-full bg-gradient-to-r from-[#b99642] via-[#e4cb83] to-[#b99642]" />
-                  </div>
-                </div>
-              </div>
-            </div>}
+            <AurumLoadingScreen loading={cargando} message={estadoCarga} presentationCover={presentationCover} presentationVisible={presentationVisible} />
             {error&&<div className="absolute bottom-5 left-1/2 z-30 -translate-x-1/2 rounded-xl border border-red-400/20 bg-red-950/80 px-4 py-2 text-xs text-red-200">{error}</div>}
             {false&&parteSeleccionada&&diagnosticoSeleccion&&diagnosticoSeleccionHabilitado&&<div className="absolute left-3 top-3 z-30 w-[min(430px,calc(100%-24px))] max-h-[78%] overflow-y-auto rounded-xl border border-[#d4af37]/50 bg-[#101214]/95 p-3 text-[10px] leading-relaxed text-white shadow-2xl backdrop-blur-xl">
               <div className="flex items-start justify-between gap-3">
