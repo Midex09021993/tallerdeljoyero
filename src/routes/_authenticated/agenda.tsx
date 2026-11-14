@@ -179,6 +179,7 @@ function AgendaPage() {
         </header>
 
         {esAdministrador ? (
+          <>
           <div className="rounded-2xl border border-gold/25 bg-card p-5 shadow-card md:p-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div><h2 className="flex items-center gap-2 text-xl font-semibold"><UserRound className="size-5 text-gold-deep" /> Solicitudes de demostración</h2><p className="mt-1 text-sm text-muted-foreground">Los formularios enviados desde la página pública aparecen aquí para que FADILAB contacte al interesado y coordine una fecha.</p></div>
@@ -243,6 +244,7 @@ function AgendaPage() {
               </div>:null}
             </div>
           </section>
+          </>
         ) : (
           <section className="grid gap-5 lg:grid-cols-[1.05fr_.95fr]">
             <div className="rounded-2xl border bg-card p-5 shadow-card">
