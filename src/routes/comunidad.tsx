@@ -35,13 +35,13 @@ const destinos = [
     destacado: false,
   },
   {
-    titulo: "Cursos y formación",
-    descripcion: "Encuentra propuestas de aprendizaje para desarrollar habilidades de diseño y trabajo digital en joyería.",
-    etiqueta: "Formación profesional",
+    titulo: "Diseño 3D Aplicado a la Fabricación de Joyas con Rhinoceros – Nivel 1",
+    descripcion: "Aprende modelado 3D para joyería con un programa práctico de 20 horas académicas, organizado en 10 sesiones. Nivel inicial.",
+    etiqueta: "Curso destacado · 20 horas académicas",
     href: "/cursos-diseno-3d" as const,
-    accion: "Ver formación",
+    accion: "Conocer el curso",
     icon: GraduationCap,
-    destacado: false,
+    destacado: true,
   },
 ];
 
