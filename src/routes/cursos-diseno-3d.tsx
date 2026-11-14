@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight, BookOpen, CheckCircle2, Clock3, Gem, GraduationCap,
   Layers3, Monitor, MousePointer2, PenTool, Ruler, ShieldCheck,
-  Sparkles, Target, Wallet,
+  Sparkles, Target,
 } from "lucide-react";
 
 export const Route = createFileRoute("/cursos-diseno-3d")({
