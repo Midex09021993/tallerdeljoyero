@@ -3543,7 +3543,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       };
 
       const viewerLoop = startAurumViewerLoop(
-        { node:nodo, camera:camara, renderer, composer, ssaoPass, controls:controles, cameraControls:cameraControlsContract },
+        { node:nodo, renderer, composer, ssaoPass, controls:controles, cameraControls:cameraControlsContract },
         () => {
           const frameStartedAt = performance.now();
           const bvhStartedAt = frameStartedAt;
