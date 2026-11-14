@@ -42,12 +42,51 @@ export function createAurumCameraControlsContract(
     centerOn(target: Vector3) {
       centerAurumCameraOn(camera, controls, target);
     },
+    configure(options) {
+      if (typeof options.fov === "number" && Number.isFinite(options.fov)) camera.fov = options.fov;
+      if (typeof options.near === "number" && Number.isFinite(options.near)) camera.near = Math.max(0.0001, options.near);
+      if (typeof options.far === "number" && Number.isFinite(options.far)) camera.far = Math.max(camera.near + 0.001, options.far);
+      if (typeof options.minDistance === "number" && Number.isFinite(options.minDistance)) controls.minDistance = Math.max(0, options.minDistance);
+      if (typeof options.maxDistance === "number" && Number.isFinite(options.maxDistance)) controls.maxDistance = Math.max(controls.minDistance, options.maxDistance);
+      if (typeof options.enablePan === "boolean") controls.enablePan = options.enablePan;
+      if (typeof options.enableRotate === "boolean") controls.enableRotate = options.enableRotate;
+      if (typeof options.enableZoom === "boolean") controls.enableZoom = options.enableZoom;
+      if (typeof options.screenSpacePanning === "boolean") controls.screenSpacePanning = options.screenSpacePanning;
+      if (typeof options.panSpeed === "number" && Number.isFinite(options.panSpeed)) controls.panSpeed = options.panSpeed;
+      if (typeof options.rotateSpeed === "number" && Number.isFinite(options.rotateSpeed)) controls.rotateSpeed = options.rotateSpeed;
+      if (typeof options.autoRotateSpeed === "number" && Number.isFinite(options.autoRotateSpeed)) controls.autoRotateSpeed = options.autoRotateSpeed;
+      camera.updateProjectionMatrix();
+      controls.update();
+      camera.updateMatrixWorld(true);
+    },
+    setPose(position, target = controls.target, up = camera.up) {
+      synchronizeOrbitControlsPreset(camera, controls, target, position, up, true);
+      camera.updateProjectionMatrix();
+    },
+    setDistance(distance) {
+      if (!Number.isFinite(distance) || distance <= 0) return;
+      const offset = camera.position.clone().sub(controls.target);
+      if (offset.lengthSq() < 1e-12) offset.set(0, 0, 1);
+      offset.setLength(THREE.MathUtils.clamp(distance, controls.minDistance, controls.maxDistance));
+      synchronizeOrbitControlsPreset(camera, controls, controls.target.clone(), controls.target.clone().add(offset));
+    },
+    getDistance() {
+      return camera.position.distanceTo(controls.target);
+    },
+    setAutoRotate(enabled, speed) {
+      controls.autoRotate = enabled;
+      if (typeof speed === "number" && Number.isFinite(speed)) controls.autoRotateSpeed = speed;
+      controls.update();
+    },
     update() {
       controls.update();
       camera.updateMatrixWorld(true);
     },
     getTarget() {
       return controls.target;
+    },
+    getPosition() {
+      return camera.position;
     },
   };
   return Object.freeze(contract);
