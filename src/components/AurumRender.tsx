@@ -276,8 +276,22 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [archivo, setArchivo] = useState<string|null>(null), [cargando, setCargando] = useState(false), [estadoCarga, setEstadoCarga] = useState(""), [error, setError] = useState<string|null>(null), [formatoInterno, setFormatoInterno] = useState<string|null>(null);
   const [archivoOriginal, setArchivoOriginal] = useState<File | null>(null);
   const [publicViewerTestOpen, setPublicViewerTestOpen] = useState(() => new URLSearchParams(window.location.search).get("aurumPublicViewer") === "1");
-  const publicViewerTestUrl = useMemo(() => archivoOriginal ? URL.createObjectURL(archivoOriginal) : null, [archivoOriginal]);
-  useEffect(() => () => { if (publicViewerTestUrl) URL.revokeObjectURL(publicViewerTestUrl); }, [publicViewerTestUrl]);
+  const [publicViewerTestFile, setPublicViewerTestFile] = useState<File | null>(null);
+  const [publicViewerTestUrl, setPublicViewerTestUrl] = useState<string | null>(null);
+  const publicViewerTestInputRef = useRef<HTMLInputElement>(null);
+  const selectPublicViewerTestFile = useCallback((file: File | null) => {
+    setPublicViewerTestUrl((current) => {
+      if (current) URL.revokeObjectURL(current);
+      return file ? URL.createObjectURL(file) : null;
+    });
+    setPublicViewerTestFile(file);
+  }, []);
+  useEffect(() => () => {
+    setPublicViewerTestUrl((current) => {
+      if (current) URL.revokeObjectURL(current);
+      return null;
+    });
+  }, []);
   useEffect(() => {
     if (!publicViewerTestOpen) return;
     viewerLoopRef.current?.pause?.();
@@ -4988,7 +5002,20 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 <button type="button" onClick={() => setPublicViewerTestOpen(false)} className="rounded-lg border border-[#d8cba9] bg-white px-3 py-1.5 text-[11px] font-semibold hover:bg-[#f7f1e3]">Volver a Aurum Render</button>
               </div>
               <div className="relative min-h-0 flex-1">
-                {publicViewerTestUrl ? <PublicCatalogViewer modelUrl={publicViewerTestUrl} modelName={archivoOriginal?.name ?? "modelo.3dm"} materialId={materialId} gemId={gemaId} hideControls={false} /> : <div className="grid h-full place-items-center p-8 text-center text-sm text-[#766f61]">Carga primero un archivo 3DM en Aurum Render para abrir exactamente el mismo archivo en el visor público.</div>}
+                {publicViewerTestUrl && publicViewerTestFile ? (
+                  <PublicCatalogViewer key={publicViewerTestFile.name + ":" + publicViewerTestFile.size + ":" + publicViewerTestFile.lastModified} modelUrl={publicViewerTestUrl} modelName={publicViewerTestFile.name} materialId={materialId} gemId={gemaId} hideControls={false} />
+                ) : (
+                  <div className="grid h-full place-items-center p-8 text-center">
+                    <div className="max-w-md">
+                      <div className="mx-auto mb-4 grid size-16 place-items-center rounded-2xl border border-[#d8cba9] bg-[#faf7ef] text-[#a48643]"><Upload className="size-7"/></div>
+                      <div className="text-base font-semibold text-[#514b3e]">Carga tu diseño de joyería</div>
+                      <p className="mt-2 text-sm text-[#827a6d]">Selecciona el archivo que quieres abrir directamente en el visor público. No necesitas cargarlo antes en el visor de Aurum Render.</p>
+                      <input ref={publicViewerTestInputRef} type="file" accept=".3dm,.glb,.stl,.obj,.fbx" className="hidden" onChange={(event) => selectPublicViewerTestFile(event.target.files?.[0] ?? null)} />
+                      <button type="button" onClick={() => publicViewerTestInputRef.current?.click()} className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#d4af37] px-5 py-3 text-sm font-semibold text-[#292824] shadow-sm hover:bg-[#e1bf50]"><Upload className="size-4"/> Seleccionar archivo</button>
+                      <p className="mt-3 text-[10px] uppercase tracking-[.14em] text-[#aaa18f]">3DM · GLB · STL · OBJ · FBX</p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
