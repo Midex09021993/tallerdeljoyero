@@ -12,13 +12,14 @@ type Props = {
   selectionEnabled: boolean;
   onSelectionClose: () => void;
   cameraActions?: { reset: () => void; front: () => void; side: () => void; top: () => void; zoom: (direction: "in" | "out") => void; rotate: (enabled: boolean) => void } | null;
+  onFullscreen?: () => void;
 };
 
 /** Controles de diagnóstico del visor original; no crea ni modifica el renderer. */
 export function AurumViewerControlsModule({
   performanceOpen, onPerformanceToggle, onPerformanceClose,
   performanceRenderer, performanceMonitor,
-  selectionDiagnostic, selectionName, selectionEnabled, onSelectionClose, cameraActions,
+  selectionDiagnostic, selectionName, selectionEnabled, onSelectionClose, cameraActions, onFullscreen,
 }: Props) {
   const [diagnosticVisible, setDiagnosticVisible] = useState(true);
   const [autoRotate, setAutoRotate] = useState(false);
@@ -33,7 +34,7 @@ export function AurumViewerControlsModule({
     {cameraActions && <nav className="absolute right-5 top-1/2 z-[78] flex -translate-y-1/2 flex-col items-center gap-1 rounded-2xl border border-white/70 bg-white/65 p-1.5 text-[#292824] shadow-[0_8px_28px_rgba(36,32,20,.10)] backdrop-blur-2xl" aria-label="Controles originales de AURUM VIEWER">
       <button type="button" onClick={() => cameraActions.reset()} title="Reiniciar cámara" aria-label="Reiniciar cámara" className="grid size-9 place-items-center rounded-xl text-black/70 transition-colors hover:bg-white/80 hover:text-[#92743b]"><span className="text-lg leading-none">↺</span></button>
       <button type="button" onClick={() => { const next = !autoRotate; setAutoRotate(next); cameraActions.rotate(next); }} title={autoRotate ? "Detener rotación 360°" : "Activar rotación 360°"} aria-label={autoRotate ? "Detener rotación 360 grados" : "Activar rotación 360 grados"} aria-pressed={autoRotate} className={"grid size-9 place-items-center rounded-xl text-[10px] font-semibold transition-colors " + (autoRotate ? "bg-[#d4af37]/20 text-[#92743b]" : "text-black/70 hover:bg-white/80 hover:text-[#92743b]")}>360°</button>
-      <button type="button" onClick={() => { const host = document.fullscreenElement; if (host) void document.exitFullscreen(); else void (document.querySelector('[aria-label="Controles originales de AURUM VIEWER"]')?.parentElement?.parentElement as HTMLElement | null)?.requestFullscreen?.(); }} title="Pantalla completa" aria-label="Pantalla completa" className="grid size-9 place-items-center rounded-xl text-black/70 transition-colors hover:bg-white/80 hover:text-[#92743b]"><span className="text-base leading-none">⛶</span></button>
+      <button type="button" onClick={() => onFullscreen?.()} title="Pantalla completa" aria-label="Pantalla completa" className="grid size-9 place-items-center rounded-xl text-black/70 transition-colors hover:bg-white/80 hover:text-[#92743b]"><span className="text-base leading-none">⛶</span></button>
     </nav>}
     {cameraActions && <div className="absolute bottom-6 right-6 z-[78] flex gap-1 rounded-xl border border-white/35 bg-white/75 p-1 text-black/55 shadow-sm backdrop-blur-2xl" aria-label="Estado del visor">
       <span className="rounded-lg border border-black/10 px-2 py-1 text-[9px]">HDRI</span>
