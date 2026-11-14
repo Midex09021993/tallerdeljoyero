@@ -4201,6 +4201,45 @@ export type Database = {
         }
         Relationships: []
       }
+      solicitudes_demo: {
+        Row: {
+          created_at: string
+          email: string
+          empresa: string
+          estado: string
+          horario_preferido: string | null
+          id: string
+          interes: string
+          nombre: string
+          origen: string
+          telefono: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          empresa: string
+          estado?: string
+          horario_preferido?: string | null
+          id?: string
+          interes: string
+          nombre: string
+          origen?: string
+          telefono: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          empresa?: string
+          estado?: string
+          horario_preferido?: string | null
+          id?: string
+          interes?: string
+          nombre?: string
+          origen?: string
+          telefono?: string
+        }
+        Relationships: []
+      }
       tareas_taller: {
         Row: {
           banco: string
@@ -4743,6 +4782,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      agenda_actualizar_solicitud_demo: {
+        Args: { _estado: string; _solicitud_id: string }
+        Returns: undefined
+      }
       agenda_cancelar_reserva: {
         Args: { _reserva_id: string }
         Returns: undefined
@@ -4777,6 +4820,20 @@ export type Database = {
           solicitante_nombre: string
           taller_nombre: string
           tema: string
+        }[]
+      }
+      agenda_listar_solicitudes_demo: {
+        Args: never
+        Returns: {
+          created_at: string
+          email: string
+          empresa: string
+          estado: string
+          horario_preferido: string
+          id: string
+          interes: string
+          nombre: string
+          telefono: string
         }[]
       }
       agenda_reservar: {
