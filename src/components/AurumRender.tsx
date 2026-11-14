@@ -133,6 +133,8 @@ const GemSwatch = ({ g, selected, onClick }: { g:GemaConfig; selected:boolean; o
 type AurumOriginalSource = { name: string; size: number; lastModified: number; storagePath?: string; contentType?: string };
 type AurumProjectDestination = { rutaCarpeta: string; rutaArchivoOriginal?: string | undefined; nombre: string; archivoNombre?: string | undefined; archivoTamano?: number | undefined; archivoModificado?: number | undefined; nombreProyecto?: string | undefined };
 const EXPORT_LEGADO_VISIBLE: boolean = true;
+// Shared presentation profile must be initialized before the viewer mount effect runs.
+const PUBLIC_VIEWER_PRESENTATION_MODE = true;
 
 // Import pipeline is an isolated CORE plugin; optical/rendering engines remain untouched.
 const aurumImportPlugin = createAurumImportPlugin();
@@ -1235,7 +1237,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       // a stable adapter surface without changing light creation or calibration.
       const lightingController = createAurumLightingAdapter(lightingControllerBase);
       const lucesAurum = (lightingController as any).lights ?? {};
-      const PUBLIC_VIEWER_PRESENTATION_MODE = true;
       const aplicarIluminacionPublica = () => {
         if (!PUBLIC_VIEWER_PRESENTATION_MODE) return;
         // Disable the AURUM-only studio rig. Use the exact three-light setup
