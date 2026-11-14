@@ -680,7 +680,16 @@ function InicioPublico() {
 
           <div className="relative mx-auto w-full max-w-[560px]">
             <div className="absolute inset-8 rounded-full bg-[#b58b00]/20 blur-3xl" />
-            <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-[#29343e] via-[#171f27] to-[#090d11] p-5 shadow-[0_25px_80px_rgba(0,0,0,.35)] sm:p-7">
+            <div className="relative overflow-visible rounded-[2rem] border border-white/10 bg-gradient-to-br from-[#29343e] via-[#171f27] to-[#090d11] p-5 shadow-[0_25px_80px_rgba(0,0,0,.35)] sm:p-7">
+              <img
+                src="/brand/rhino-cpp-plugin.webp"
+                alt="Emblema del plugin de Rhinoceros con C++"
+                width={325}
+                height={275}
+                loading="lazy"
+                decoding="async"
+                className="pointer-events-none absolute -left-9 bottom-[5.5rem] z-20 h-24 w-28 object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,.55)] sm:-left-12 sm:bottom-24 sm:h-28 sm:w-32"
+              />
               <div className="flex items-center justify-between border-b border-white/10 pb-4">
                 <div>
                   <p className="text-[9px] font-bold uppercase tracking-[.24em] text-[#f3d66e]">ESTUDIO DIGITAL DE JOYERÍA</p>
@@ -723,7 +732,6 @@ function InicioPublico() {
                 }
               `}</style>
               <div className="aurum-rhino-connection relative mt-3 overflow-visible rounded-xl border border-[#d4aa19]/30 bg-[#d4aa19]/[.06] p-3 pl-12 sm:p-3.5 sm:pl-14">
-                <img src="/brand/rhino-cpp-plugin.webp" alt="Emblema del plugin de Rhinoceros con C++" width={325} height={275} loading="lazy" decoding="async" className="pointer-events-none absolute -left-8 top-1/2 z-10 h-24 w-28 -translate-y-1/2 object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,.48)] sm:-left-10 sm:h-28 sm:w-32" />
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                   <div className="flex min-w-0 flex-1 items-center gap-3">
                     <div className="min-w-0">
