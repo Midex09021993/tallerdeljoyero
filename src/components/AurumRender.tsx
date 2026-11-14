@@ -879,7 +879,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         controles.enableDamping = true;
         controles.dampingFactor = 0.07;
         controles.zoomSpeed = 1;
-        controles.rotateSpeed = 2;
+        controles.rotateSpeed = 1;
       }
       // Render Pro se incorporará en una etapa posterior con el pipeline WebGPU
       // estable. Por ahora el visor WebGL interactivo es el motor oficial.
