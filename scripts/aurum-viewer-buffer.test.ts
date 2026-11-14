@@ -61,7 +61,7 @@ test("the viewer pauses on WebGL context loss and resumes after restoration", ()
       clientHeight: 600,
       getBoundingClientRect: () => ({ width: 800, height: 600 }),
     },
-    camera: { aspect: 1, updateProjectionMatrix() {} },
+    cameraControls: { getAspect: () => 1, setAspect: () => undefined, update: () => false },
     renderer: { domElement: canvas, setSize() { resizeCount++; } },
     controls: null,
   };
