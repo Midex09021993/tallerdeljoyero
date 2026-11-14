@@ -134,7 +134,7 @@ const disposedAurumViewerRenderers = new WeakSet<object>();
 export function disposeAurumViewer(viewer: {
   node: any;
   renderer: any;
-  controls?: any;
+  cameraControls: IAurumCameraControlsContract;
   observer?: { disconnect: () => void };
   loop?: { stop?: () => void };
   clickHandler?: (event: MouseEvent) => void;
@@ -170,7 +170,7 @@ export function disposeAurumViewer(viewer: {
   attempt(() => {
     if (viewer.clickHandler) renderer?.domElement?.removeEventListener("click", viewer.clickHandler);
   });
-  attempt(() => viewer.controls?.dispose?.());
+  attempt(() => viewer.cameraControls.dispose());
   attempt(() => viewer.clearSelection?.());
   attempt(() => viewer.lightingController?.dispose?.());
   attempt(() => viewer.groundController?.dispose?.());
@@ -231,7 +231,7 @@ export function createAurumWebGLViewer(
 }
 
 export function startAurumViewerLoop(
-  viewer: { node: HTMLElement; renderer: any; composer?: any; ssaoPass?: any; controls?: any; cameraControls: IAurumCameraControlsContract },
+  viewer: { node: HTMLElement; renderer: any; composer?: any; ssaoPass?: any; cameraControls: IAurumCameraControlsContract },
   render: () => void,
   interaction?: { onStart?: () => void; onEnd?: () => void; progressiveFrames?: number }
 ) {
@@ -485,9 +485,9 @@ export function startAurumViewerLoop(
     requestRender();
   };
 
-  viewer.controls?.addEventListener?.("start", onControlStart);
-  viewer.controls?.addEventListener?.("change", onControlChange);
-  viewer.controls?.addEventListener?.("end", onControlEnd);
+  viewer.cameraControls.addEventListener("start", onControlStart);
+  viewer.cameraControls.addEventListener("change", onControlChange);
+  viewer.cameraControls.addEventListener("end", onControlEnd);
 
   const tick = () => {
     frame = 0;
@@ -594,9 +594,9 @@ export function startAurumViewerLoop(
       clearFrameRetry(true);
       if (frame) cancelAnimationFrame(frame);
       frame = 0;
-      viewer.controls?.removeEventListener?.("start", onControlStart);
-      viewer.controls?.removeEventListener?.("change", onControlChange);
-      viewer.controls?.removeEventListener?.("end", onControlEnd);
+      viewer.cameraControls.removeEventListener("start", onControlStart);
+      viewer.cameraControls.removeEventListener("change", onControlChange);
+      viewer.cameraControls.removeEventListener("end", onControlEnd);
       window.removeEventListener("resize", scheduleHostResize);
       window.removeEventListener("aurum-host-resize", scheduleHostResize);
       document.removeEventListener("fullscreenchange", scheduleHostResize);
