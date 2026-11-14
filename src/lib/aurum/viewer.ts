@@ -12,7 +12,7 @@ export interface AurumViewerFrame {
   lightingController?: { scaleToModel?: (radius:number,targetY:number)=>void };
 }
 
-export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, prepare: (m:Object3D,scale?:number)=>any, applyScene:(id:any)=>void, sceneId:any, category:string="Anillo", presentationMode:"aurum"|"publicViewer"="aurum") {
+export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, prepare: (m:Object3D,scale?:number)=>any, applyScene:(id:any)=>void, sceneId:any, category:string="Anillo", presentationMode:"aurum"|"publicViewer"="aurum", allowPan = false) {
   // Primera llamada: preparar producto y presentar frontalmente.
   // Siguientes llamadas: "Restablecer vista" solo cambia la cámara para no
   // reaplicar escena/materiales y provocar cambios de color.
@@ -67,7 +67,7 @@ export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, pre
       }
       model.userData = { ...(model.userData ?? {}), aurumInitialFrameApplied: true, aurumPublicViewerPresentation: true };
     }
-    applyAurumPublicViewerCamera(viewer.camera, viewer.controls, model);
+    applyAurumPublicViewerCamera(viewer.camera, viewer.controls, model, { enablePan: allowPan });
     return;
   }
 
