@@ -33,6 +33,7 @@ import { compressAurumGlbWithDraco } from "../lib/draco-export";
 import { getAurumRhinoGeometryType, isAurumRhinoCsgSurface } from "../lib/aurum/metal-union-experiment";
 import { getAurumModelParts } from "../lib/aurum/model-parts";
 import { applyAurumMaterialToModel, applyAurumGemToTarget, clearAurumGemFromTarget, getAurumMaterialAdapterServices, prepareAurumGemLayerIndex } from "../lib/aurum/material-application";
+import { captureAurumGemTransitionState, createAurumGemTransition } from "../lib/aurum/gem-transition";
 import { inspectAurumMesh } from "../lib/aurum/mesh-preflight";
 
 import { applyAurumInitialModelMaterials } from "../lib/aurum/model-materials";
@@ -288,6 +289,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   categoriaProyectoRef.current = categoriaProyecto;
   const liveFastPathRef = useRef(true);
   const liveTransmissionScaleRef = useRef(0.42);
+  const gemTransitionRef = useRef<any>(null);
   const [presentationCover, setPresentationCover] = useState<string | null>(null);
   const [presentationVisible, setPresentationVisible] = useState(false);
   const presentationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -1593,7 +1595,15 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           aplicarEntornoGema,
           ()=>invalidateRenderRef.current?.(),
           aplicarTodas,
-          (targets:any[])=>{ resolvedTargets=targets; },
+          (targets:any[])=>{
+            resolvedTargets=targets;
+            // Snapshot the exact resolved meshes before their materials are replaced.
+            gemTransitionRef.current?.cancel?.();
+            gemTransitionRef.current=null;
+            resolvedTargets.forEach((mesh:any)=>{
+              mesh.userData={...(mesh.userData??{}),aurumGemTransitionSnapshot:captureAurumGemTransitionState(mesh)};
+            });
+          },
         );
         if(!applied){
           console.error("[AURUM][GEM APPLICATION FAILED]",{
@@ -1625,6 +1635,22 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         else invalidateRenderRef.current?.();
 
         if(renderImmediately && resolvedTargets.length){
+          // Interpolate appearance only; optical identity and shader/BVH systems stay untouched.
+          const previousAppearance=resolvedTargets.flatMap((mesh:any)=>mesh.userData?.aurumGemTransitionSnapshot??[]);
+          resolvedTargets.forEach((mesh:any)=>{
+            const next={...(mesh.userData??{})};
+            delete next.aurumGemTransitionSnapshot;
+            mesh.userData=next;
+          });
+          if(previousAppearance.length){
+            gemTransitionRef.current=createAurumGemTransition(
+              resolvedTargets,
+              previousAppearance,
+              ()=>invalidateRenderRef.current?.(),
+              260,
+              ()=>{ gemTransitionRef.current=null; },
+            );
+          }
           const applicationSnapshot=resolvedTargets.map((mesh:any)=>({
             mesh,
             token:Number(mesh.userData?.aurumGemApplicationToken??0),
@@ -3722,6 +3748,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         diamondBvhRuntime?.dispose();
         diamondBvhRuntime = null;
         diamondBvhRuntimeUrl = null;
+        gemTransitionRef.current?.cancel?.();
+        gemTransitionRef.current=null;
         renderer.domElement.removeEventListener("pointerdown", handleOrbitPointerDown);
         renderer.domElement.removeEventListener("pointermove", handleOrbitPointerMove);
         renderer.domElement.removeEventListener("pointerup", handleOrbitPointerEnd);
