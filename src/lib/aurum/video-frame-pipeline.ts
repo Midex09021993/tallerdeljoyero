@@ -1,3 +1,5 @@
+import type { IAurumVideoFramePipelineContract } from "./core/module-contracts";
+
 /**
  * AURUM MEDIA EXPORT — Video frame pipeline.
  *
@@ -18,7 +20,7 @@ export interface AurumVideoFramePipelineOptions {
   restoreHeight: number;
 }
 
-export interface AurumVideoFramePipeline {
+export interface AurumVideoFramePipeline extends IAurumVideoFramePipelineContract {
   renderFrame: () => void;
   restore: () => void;
 }
