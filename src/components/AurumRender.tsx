@@ -46,6 +46,7 @@ import { createAurumLightingAdapter } from "../lib/aurum/core/lighting-adapter";
 import { createAurumProductionPluginHost } from "../lib/aurum/core/production-plugin-host";
 import { createAurumRenderPipelineContract } from "../lib/aurum/core/render-pipeline-contract";
 import { createAurumMediaExportContract } from "../lib/aurum/core/media-export-contract";
+import { createAurumOpticalContract } from "../lib/aurum/core/optical-contract";
 import { captureAurumGlbQualitySnapshot, evaluateAurumGlbQuality } from "../lib/aurum/core/glb-quality-gate";
 import { configureAurumEdgeQuality, getAurumEdgeAaProfile } from "../lib/aurum/edge-quality";
 import { AURUM_ASPECT_RATIOS, getAurumAspectRatio, getAurumAspectDimensions, getAurumAspectFrameStyle, type AurumAspectRatioId } from "../lib/aurum/aspect-ratios";
@@ -1317,6 +1318,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         applyQuality:(quality:any,options?:any)=>applyPostQuality?.(quality,options),
       });
       const mediaExportContract = createAurumMediaExportContract();
+      const opticalContract = createAurumOpticalContract();
       const geometryEngine = createAurumGeometryEngine();
       const importPipelineManager = createAurumImportPipelineManager(aurumImportPlugin, geometryEngine);
       const finalRenderLoader = async () => {
@@ -1355,6 +1357,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         { id: "aurum.lighting", description: "Control de iluminación delegado al controlador productivo.", dependencies: ["aurum.viewer"], requiresServices: ["aurum.viewer.scene"], services: lightingController.services },
         { id: "aurum.metal", description: "Servicios del motor de metales existente; sin ownership de materiales.", services: materialAdapterServices.metal },
         { id: "aurum.gem", description: "Servicios del motor óptico de gemas existente.", dependencies: ["aurum.metal"], requiresServices: ["aurum.metal.apply"], services: materialAdapterServices.gem },
+        { id: "aurum.optical-contract", description: "Fachada tipada que reúne los contratos independientes de metales y gemas.", dependencies: ["aurum.metal", "aurum.gem"], requiresServices: ["aurum.metal.apply", "aurum.gem.apply-base-material"], services: new Map([
+          ["aurum.optical.contract", opticalContract],
+        ]) },
         { id: "aurum.final-render", description: "Render final bajo demanda mediante el path tracer existente.", dependencies: ["aurum.viewer"], requiresServices: ["aurum.viewer.scene", "aurum.viewer.camera", "aurum.viewer.renderer"], services: new Map([
           ["aurum.final-render.load-adapter", finalRenderLoader],
         ]) },
