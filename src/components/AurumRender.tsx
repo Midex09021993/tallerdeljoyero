@@ -941,7 +941,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         postRuntimeConfig.ssr = false;
         return false;
       };
-      const postRuntimeConfig = { ...ssaoConfig, ...postConfig, ssr: false };
+      const postRuntimeConfig = {
+        ...ssaoConfig, ...postConfig, ssr: false,
+        ...(PUBLIC_VIEWER_PRESENTATION_MODE ? {
+          ssao: false, bloom: false, lut: false, gradeEnabled: false,
+          taa: false, dof: false, vignette: false,
+        } : {}),
+      };
       syncAurumSsrDiagnosticConfig();
       // Preserve the original scene background while the live Bokeh preview is active.
       let dofSavedSceneBackground: THREE.Scene["background"] | undefined;
@@ -1228,6 +1234,36 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       // a stable adapter surface without changing light creation or calibration.
       const lightingController = createAurumLightingAdapter(lightingControllerBase);
       const lucesAurum = (lightingController as any).lights ?? {};
+      const PUBLIC_VIEWER_PRESENTATION_MODE = true;
+      const aplicarIluminacionPublica = () => {
+        if (!PUBLIC_VIEWER_PRESENTATION_MODE) return;
+        // Disable the AURUM-only studio rig. Use the exact three-light setup
+        // from PublicCatalogViewer instead.
+        Object.values(lucesAurum).forEach((light: any) => {
+          if (light) light.visible = false;
+        });
+        if (!escena.userData.aurumPublicViewerLights) {
+          const hemisphere = new THREE.HemisphereLight(0xffffff, 0x77716a, 0.6);
+          hemisphere.name = "PublicViewer Hemisphere";
+          const key = new THREE.DirectionalLight(0xffffff, 2.1);
+          key.name = "PublicViewer Key";
+          key.position.set(4, 7, 5);
+          const fill = new THREE.DirectionalLight(0xffffff, 1.0);
+          fill.name = "PublicViewer Fill";
+          fill.position.set(-5, 2, -3);
+          const rim = new THREE.DirectionalLight(0xffffff, 0.55);
+          rim.name = "PublicViewer Rim";
+          rim.position.set(-1, 4, -6);
+          [hemisphere, key, fill, rim].forEach((light) => {
+            light.userData.aurumPublicViewerLight = true;
+            escena.add(light);
+          });
+          escena.userData.aurumPublicViewerLights = [hemisphere, key, fill, rim];
+        }
+        renderer.shadowMap.enabled = false;
+        renderer.shadowMap.autoUpdate = false;
+      };
+      aplicarIluminacionPublica();
 
       // Render Quality changes the actual GPU workload, not just a label:
       // drawing-buffer resolution, shadow-map precision and gem transmission
@@ -1260,7 +1296,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         applyPostQuality?.({...renderQuality, pixelRatio:dpr, qualityId:id, runtimeBudgetTier:runtimeBudget.tier});
         liveTransmissionScaleRef.current=transmissionScale;
         (renderer as any).transmissionResolutionScale=transmissionScale;
-        renderer.shadowMap.enabled=liveFastPathRef.current ? false : renderQuality.shadows;
+        renderer.shadowMap.enabled = PUBLIC_VIEWER_PRESENTATION_MODE ? false : (liveFastPathRef.current ? false : renderQuality.shadows);
         // Existing shadow maps must be rebuilt at the selected precision.
         // create() is intentionally called only after disposing the previous maps;
         // the controller itself is idempotent and does not need the redundant call.
@@ -1271,6 +1307,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           }
         });
         lightingController.create();
+        aplicarIluminacionPublica();
         renderer.shadowMap.needsUpdate = true;
         if (modelo) {
           setAurumInclusionsVisible(modelo, false);
@@ -1287,6 +1324,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         setRenderQualityId(id);
       };
       const actualizarLucesAurum = (patch:any) => {
+        if (PUBLIC_VIEWER_PRESENTATION_MODE) return;
         lightingController.update(patch);
         // Lighting changes affect both the beauty frame and the shadow map.
         renderer.shadowMap.needsUpdate = true;
@@ -1297,6 +1335,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       lightingController.create();
 
       const aplicarIluminacion = (id:IluminacionId) => {
+        if (PUBLIC_VIEWER_PRESENTATION_MODE) return;
         lightingController.applyPreset(id);
         renderer.shadowMap.needsUpdate = true;
         resetTemporalAccumulationRef.current?.();
@@ -1306,6 +1345,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
 
       // HDRI Ground is managed by groundController and remains disabled for now.
       const groundController = createAurumGround(THREE, escena);
+      if (PUBLIC_VIEWER_PRESENTATION_MODE) {
+        groundController.setVisible(false);
+        groundController.setBakedShadowVisible(false);
+      }
       let suelo:any = groundController.mesh;
       const sceneController = createAurumSceneController(
         viewerScene,
@@ -1399,7 +1442,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           ? THREE.NoToneMapping
           : THREE.ACESFilmicToneMapping;
       renderer.toneMapping = toneModeOverride;
-      renderer.toneMappingExposure = photoInicial.exposure;
+      renderer.toneMappingExposure = PUBLIC_VIEWER_PRESENTATION_MODE ? 1.0 : photoInicial.exposure;
       const toneMappingLabel = (value: number) => value === THREE.ACESFilmicToneMapping
         ? "ACESFilmic"
         : value === THREE.AgXToneMapping
@@ -1438,44 +1481,45 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         });
       };
       cargarHDRI(
-        ambientInicial.metalKey ?? photoInicial.environmentKey,
+        PUBLIC_VIEWER_PRESENTATION_MODE ? "ijewelMetal" : (ambientInicial.metalKey ?? photoInicial.environmentKey),
         undefined,
-        ambientInicial.metalRotation ?? Math.PI * photoInicial.environmentRotation,
-        ambientInicial.metalIntensity ?? photoInicial.environmentIntensity,
+        PUBLIC_VIEWER_PRESENTATION_MODE ? 0 : (ambientInicial.metalRotation ?? Math.PI * photoInicial.environmentRotation),
+        PUBLIC_VIEWER_PRESENTATION_MODE ? 1 : (ambientInicial.metalIntensity ?? photoInicial.environmentIntensity),
         () => { initialMetalReady = true; confirmarAmbienteInicial(); },
         () => toast.error("No se pudo cargar el HDR inicial de metales.")
       );
-      const presetInicial = sceneAdapter.apply("ijewelReference");
+      const presetInicial = PUBLIC_VIEWER_PRESENTATION_MODE ? null : sceneAdapter.apply("ijewelReference");
       // The initial selected UI preset is confirmed only after both HDR maps load.
       cargarEntornoGema(
-        "predeterminado",
-        ambientInicial.rotation,
-        ambientInicial.intensity,
+        PUBLIC_VIEWER_PRESENTATION_MODE ? "ijewelGem" : "predeterminado",
+        PUBLIC_VIEWER_PRESENTATION_MODE ? 0 : ambientInicial.rotation,
+        PUBLIC_VIEWER_PRESENTATION_MODE ? 1 : ambientInicial.intensity,
         () => { initialGemReady = true; confirmarAmbienteInicial(); },
         () => toast.error("No se pudo cargar el HDR inicial de gemas.")
       );
       Object.assign(postRuntimeConfig, {
-        ssao: photoInicial.post.ssao,
+        ssao: PUBLIC_VIEWER_PRESENTATION_MODE ? false : photoInicial.post.ssao,
         ssaoIntensity: photoInicial.post.ssaoIntensity,
         ssaoFalloff: photoInicial.post.ssaoFalloff,
-        bloom: photoInicial.post.bloom,
+        bloom: PUBLIC_VIEWER_PRESENTATION_MODE ? false : photoInicial.post.bloom,
         bloomIntensity: photoInicial.post.bloomIntensity,
         bloomThreshold: photoInicial.post.bloomThreshold,
         bloomRadius: photoInicial.post.bloomRadius,
-        lut: photoInicial.post.lut,
+        lut: PUBLIC_VIEWER_PRESENTATION_MODE ? false : photoInicial.post.lut,
         lutIntensity: photoInicial.post.lutIntensity,
-        gradeEnabled: photoInicial.post.gradeEnabled,
+        gradeEnabled: PUBLIC_VIEWER_PRESENTATION_MODE ? false : photoInicial.post.gradeEnabled,
         gradeContrast: photoInicial.post.gradeContrast,
         gradeSaturation: photoInicial.post.gradeSaturation,
-        taa: photoInicial.post.taa,
-        dof: photoInicial.post.dof,
+        taa: PUBLIC_VIEWER_PRESENTATION_MODE ? false : photoInicial.post.taa,
+        dof: PUBLIC_VIEWER_PRESENTATION_MODE ? false : photoInicial.post.dof,
         dofAperture: photoInicial.post.dofAperture,
         dofMaxBlur: photoInicial.post.dofMaxBlur,
-        vignette: photoInicial.post.vignette,
+        vignette: PUBLIC_VIEWER_PRESENTATION_MODE ? false : photoInicial.post.vignette,
         vignetteDarkness: photoInicial.post.vignetteDarkness,
       });
       // La escena es la fuente de verdad también para la estrategia de iluminación.
-      lightingController.applyPreset(photoInicial.lighting);
+      if (!PUBLIC_VIEWER_PRESENTATION_MODE) lightingController.applyPreset(photoInicial.lighting);
+      aplicarIluminacionPublica();
       applyPostQuality?.({...renderQuality, qualityId: renderQualityId, runtimeBudgetTier:runtimeBudget.tier});
 
       let parteActiva:any = null;
@@ -1811,6 +1855,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       };
 
       const aplicarEscenario = (id:EscenarioId) => {
+        if (PUBLIC_VIEWER_PRESENTATION_MODE) {
+          aplicarIluminacionPublica();
+          invalidateRenderRef.current?.();
+          return;
+        }
         // Cambiar la iluminación no debe alterar la ruta de renderizado:
         // el pipeline de belleza se controla exclusivamente por el ciclo del visor.
         const scenePreset = sceneAdapter.apply(id);
