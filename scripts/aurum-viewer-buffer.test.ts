@@ -471,32 +471,30 @@ test("the first settled model frame keeps the anti-aliasing composer active", ()
 });
 
 
-test("Aurum uses the same beauty composer chain during camera motion and at rest", () => {
+test("Aurum keeps the interactive viewport on direct WebGL rendering with Public Viewer pixel-ratio caps", () => {
   const componentSource = readFileSync("src/components/AurumRender.tsx", "utf8");
   const start = componentSource.indexOf("onStart: () => {");
   const end = componentSource.indexOf("onEnd: () => {", start);
+  const idleEnd = componentSource.indexOf("        }", end + 20);
   const liveBlock = componentSource.slice(start, end);
-  const idleEnd = componentSource.indexOf("onStart:", end);
-  const idleBlock = componentSource.slice(end, idleEnd > end ? idleEnd : end + 8000);
+  const idleBlock = componentSource.slice(end, componentSource.indexOf("viewerLoopRef.current = viewerLoop", end));
+  const renderStart = componentSource.indexOf("const viewerLoop = startAurumViewerLoop(");
+  const renderEnd = componentSource.indexOf("const renderCpuMs =", renderStart);
+  const renderBlock = componentSource.slice(renderStart, renderEnd);
 
   expect(start).toBeGreaterThan(-1);
-  expect(liveBlock).toContain("new Set([renderPass, ...(interactiveEdgeAa ? [surfaceEdgeAaPass] : []), outputPass])");
-  expect(liveBlock).toContain("if (gemMaskPass) gemMaskPass.enabled = false;");
-  expect(liveBlock).toContain("if (fxaaPass) fxaaPass.enabled = false;");
-  expect(liveBlock).not.toContain("new Set([renderPass, gemMaskPass, fxaaPass");
-  expect(idleBlock).toContain("new Set([\n              renderPass,\n              gemMaskPass,\n              fxaaPass,");
-  expect(idleBlock).toContain("sameBeautyPipelineAvailable");
-  expect(liveBlock).toContain("sameBeautyPipelineAvailable");
-  expect(liveBlock).toContain("aplicarPerfilLive(true)");
-  expect(idleBlock).toContain("aplicarPerfilLive(true)");
-  expect(liveBlock).toContain("liveFastPathRef.current = !sameBeautyPipelineAvailable;");
-  expect(idleBlock).toContain("liveFastPathRef.current = !sameBeautyPipelineAvailable;");
-  expect(idleBlock).toContain("idleTaaPass.enabled = false;");
-  expect(idleBlock).toContain("bloomPass.enabled = false;");
-  expect(idleBlock).toContain("dofPass.enabled = false;");
-  expect(idleBlock).toContain("ssrPass.enabled = false;");
+  expect(componentSource).toContain('window.matchMedia("(max-width: 767px)").matches');
+  expect(componentSource).toContain("isCompactViewport ? 1 : 1.25");
+  expect(componentSource).toContain("runtimeBudget.pixelRatioCap, getAurumViewportPixelRatio()");
+  expect(liveBlock).toContain("liveFastPathRef.current = true;");
+  expect(idleBlock).toContain("liveFastPathRef.current = true;");
+  expect(renderBlock).toContain('const activeToneAuditPath = "direct";');
+  expect(renderBlock).toContain("renderer.render(escena,camara);");
+  expect(renderBlock).not.toContain("composer.render()");
+  expect(componentSource).toContain("if (composer && (options.depthOfField || !liveFastPathRef.current)) composer.render();");
+  expect(componentSource).toContain("liveFastPathRef.current=false");
 });
-
+ 
 test("the BVH camera update reuses fixed-size snapshots without per-frame arrays", () => {
   const bvhSource = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
   expect(bvhSource).toContain("const cameraStateBuffer = new Float64Array(12);");
