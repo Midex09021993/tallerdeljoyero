@@ -28,6 +28,9 @@ test("AURUM CAMERA contract applies semantic presets through its owned OrbitCont
   const superiorPosition = camera.position.clone();
   contract.applyView(model, "lateral", "Anillo");
   expect(camera.position.x).toBeGreaterThan(superiorPosition.x);
+  const lateralDistance = camera.position.distanceTo(controls.target);
+  contract.applyView(model, "lateral", "Anillo", { distanceScale: 1.38 });
+  expect(camera.position.distanceTo(controls.target)).toBeGreaterThan(lateralDistance * 1.3);
   expect(controls.enableDamping).toBe(true);
 
   contract.applyView(model, "perspectiva", "Anillo");
