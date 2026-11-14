@@ -237,8 +237,8 @@ export function startAurumViewerLoop(
   interaction?: { onStart?: () => void; onEnd?: () => void; progressiveFrames?: number }
 ) {
   // AURUM is a product configurator, not a continuously animated game scene.
-  // Render only when the camera/scene actually changes. OrbitControls still
-  // receives per-frame updates while damping is active, but no RAF is kept
+  // Render only when the camera/scene actually changes. AURUM CAMERA owns
+  // per-frame OrbitControls updates while damping is active, but no RAF is kept
   // alive once the image is stable.
   let frame = 0;
   let ticking = false;
