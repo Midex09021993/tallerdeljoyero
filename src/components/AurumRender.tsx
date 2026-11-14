@@ -1903,6 +1903,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         const importResult = await importPipeline.load({
           file,
           format: ext as AurumImportFormat,
+          // Direct Rhino geometry is the default A/B path; append ?aurumDirect3dm=0 to restore the GLB conversion path.
+          direct3dm: ext === "3dm" && new URLSearchParams(window.location.search).get("aurumDirect3dm") !== "0",
           fallbackMaterial: material,
           colorRhinoHex,
           classifyLayer: clasificarCapa,
