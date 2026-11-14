@@ -2880,7 +2880,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             });
           }
           applyPostQuality?.({...renderQuality,pixelRatio:renderQuality.pixelRatio,qualityId:measuredQualityId});
-          updateTemporal?.(modelo ? calculateAurumFocalDepth(camara, controles, modelo) : undefined);
+          updateTemporal?.(modelo ? calculateAurumFocalDepth(camara, { target: cameraControlsContract.getTarget() }, modelo) : undefined);
           invalidateRenderRef.current?.();
           viewerLoopRef.current?.invalidate?.();
         },
@@ -3033,7 +3033,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               const strength = options.dofStrength === "strong" ? { aperture: 0.0011, maxBlur: 0.012 } : options.dofStrength === "medium" ? { aperture: 0.0008, maxBlur: 0.008 } : { aperture: 0.0005, maxBlur: 0.004 };
               Object.assign(postRuntimeConfig, { dof: true, dofAperture: strength.aperture, dofMaxBlur: strength.maxBlur });
               applyPostQuality?.({ ...renderQuality, pixelRatio: 1, qualityId: "ultra" }, { capture: true, width: renderWidth, height: renderHeight });
-              updateTemporal?.(Number.isFinite(options.focusDistance) ? Number(options.focusDistance) : calculateAurumFocalDepth(camara, controles, modelo));
+              updateTemporal?.(Number.isFinite(options.focusDistance) ? Number(options.focusDistance) : calculateAurumFocalDepth(camara, { target: cameraControlsContract.getTarget() }, modelo));
             }
             if (transparent) {
               escena.background=null;
