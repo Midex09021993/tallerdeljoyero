@@ -545,7 +545,7 @@ export function PublicCatalogViewer({ modelUrl, modelName, materialId, gemId, on
           framePerf.frameIntervalTotalMs = 0;
           framePerf.frameIntervalMaxMs = 0;
         };
-        loop = startAurumViewerLoop({ node: host, camera, renderer, controls }, () => {
+        loop = startAurumViewerLoop({ node: host, camera, renderer, controls, cameraControls: cameraControls! }, () => {
           // Reuse one typed buffer: no temporary object/array allocations while dragging.
           const frameStartedAt = framePerf ? performance.now() : 0;
           const previous = bvhCameraStateRef.current;
