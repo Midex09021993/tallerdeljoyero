@@ -21,7 +21,7 @@ const arbol: Nodo[] = [
     { id: "scope", nombre: "Resource Scope", tipo: "Limpieza por plugin", estado: "integrado", detalle: "Agrupa funciones de limpieza; no infiere ownership GPU.", evidencia: "src/lib/aurum/core/context.ts" },
     { id: "gpu", nombre: "GPU Resource Manager", tipo: "Ownership explícito de recursos", estado: "parcial", detalle: "El servicio está disponible y probado. La adopción sobre recursos productivos sigue siendo parcial y controlada.", evidencia: "src/lib/aurum/core/gpu-resource-manager.ts" },
   ]},
-  { id: "engines", nombre: "MOTORES Y ADAPTADORES", tipo: "Servicios especializados conectados al visor", estado: "infraestructura", detalle: "Varios elementos son adaptadores sobre controladores existentes, no motores autónomos.", hijos: [
+  { id: "engines", nombre: "MOTORES Y ADAPTADORES", tipo: "Servicios especializados conectados al visor", estado: "infraestructura", detalle: "Varios elementos son adaptadores sobre controladores existentes, no motores autónomos.", evidencia: "src/lib/aurum/core/", hijos: [
     { id: "viewer", nombre: "Viewer Adapter", tipo: "Renderer, cámara y controles compartidos", estado: "integrado", detalle: "Expone referencias al visor productivo. El teardown sigue bajo disposeAurumViewer().", evidencia: "src/lib/aurum/core/viewer-adapter.ts", dependencias: ["AURUM RENDER"] },
     { id: "scene", nombre: "Scene Adapter", tipo: "Controlador de escena", estado: "integrado", detalle: "Fachada al controlador de escena existente.", evidencia: "src/lib/aurum/core/scene-adapter.ts", dependencias: ["Viewer"] },
     { id: "lighting", nombre: "Light Engine", tipo: "Rigs y entornos HDRI", estado: "parcial", detalle: "Adaptador registrado; el controlador productivo conserva la responsabilidad de iluminación y HDRI.", evidencia: "src/lib/aurum/core/lighting-adapter.ts · src/lib/aurum/lighting.ts", dependencias: ["Viewer", "Scene"] },
@@ -166,7 +166,7 @@ export function AurumArchitectureExplorer() {
         </div>
         <p className="mt-3 rounded-lg bg-sky-500/5 p-3 text-[10px] leading-4 text-muted-foreground"><Network className="mr-1.5 inline size-3.5 text-sky-600"/>Flujo conceptual basado en responsabilidades y consumidores conocidos; las dependencias exactas deben confirmarse durante la auditoría de código.</p>
       </div>
-      <div className="rounded-xl border border-border bg-card p-4"><h4 className="text-xs font-semibold">Infraestructura transversal</h4><div className="mt-3 grid gap-2 sm:grid-cols-5">{(arbol[0].hijos ?? []).map(n=><button key={n.id} onClick={()=>{seleccionar(n);setVista("overview");}} className="rounded-lg border border-border bg-muted/30 p-2 text-left hover:border-gold/40"><p className="text-[11px] font-semibold">{n.nombre}</p><div className="mt-1">{badge(n.estado)}</div></button>)}</div></div>
+      <div className="rounded-xl border border-border bg-card p-4"><h4 className="text-xs font-semibold">Infraestructura transversal</h4><div className="mt-3 grid gap-2 sm:grid-cols-5">{(arbol[0]?.hijos ?? []).map(n=><button key={n.id} onClick={()=>{seleccionar(n);setVista("overview");}} className="rounded-lg border border-border bg-muted/30 p-2 text-left hover:border-gold/40"><p className="text-[11px] font-semibold">{n.nombre}</p><div className="mt-1">{badge(n.estado)}</div></button>)}</div></div>
     </div> : null}
 
     {vista === "audit" ? <div className="space-y-3">

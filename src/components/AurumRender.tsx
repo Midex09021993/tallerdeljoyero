@@ -5003,7 +5003,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           </div>
           {new URLSearchParams(window.location.search).get("aurumPublicViewer") === "1" && publicViewerTestOpen && (
             <div className="absolute inset-0 z-[75] flex flex-col bg-white">
-              <div className="relative min-h-0 flex-1">
+              <div
+                className="relative min-h-0 flex-1"
                 onDragEnter={(event) => {
                   event.preventDefault();
                   publicViewerDragDepthRef.current += 1;
@@ -5027,8 +5028,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 }}
               >
                 {publicViewerTestUrl && publicViewerTestFile ? (
+                  <>
                   <PublicCatalogViewer key={publicViewerTestFile.name + ":" + publicViewerTestFile.size + ":" + publicViewerTestFile.lastModified} modelUrl={publicViewerTestUrl} modelName={publicViewerTestFile.name} materialId={materialId} gemId={gemaId} hideControls onCameraActionsReady={setPublicViewerCameraActions} />
                   <AurumViewerControlsModule performanceOpen={performanceOpen} onPerformanceToggle={() => setPerformanceOpen((value) => !value)} onPerformanceClose={() => setPerformanceOpen(false)} performanceRenderer={performanceRenderer} performanceMonitor={performanceMonitorRef.current} selectionDiagnostic={diagnosticoSeleccion} selectionName={parteSeleccionadaNombre} selectionEnabled={diagnosticoSeleccionHabilitado} onSelectionClose={() => { setDiagnosticoSeleccion(null); setDiagnosticoSeleccionHabilitado(false); diagnosticoSeleccionHabilitadoRef.current = false; }} cameraActions={publicViewerCameraActions} />
+                  </>
                 ) : (
                   <div className="grid h-full place-items-center p-8 text-center">
                     <div className="max-w-md">
