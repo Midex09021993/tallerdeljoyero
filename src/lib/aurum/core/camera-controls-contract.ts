@@ -8,7 +8,7 @@
  */
 import type { PerspectiveCamera, Vector3, Object3D } from "three";
 import type { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { applyAurumCameraView, applyAurumIJEWELPresentationCamera, fitAurumCameraToAspect, type AurumCameraView } from "../camera";
+import { applyAurumCameraView, applyAurumIJEWELPresentationCamera, fitAurumCameraToAspect, centerAurumCameraOn, type AurumCameraView } from "../camera";
 import type { IAurumCameraControlsContract } from "./module-contracts";
 
 export function createAurumCameraControlsContract(
@@ -27,6 +27,9 @@ export function createAurumCameraControlsContract(
     },
     fitAspect(model: Object3D | null, aspect: number, margin = 1.18) {
       fitAurumCameraToAspect(camera, controls, model, aspect, margin);
+    },
+    centerOn(target: Vector3) {
+      centerAurumCameraOn(camera, controls, target);
     },
     update() {
       controls.update();
