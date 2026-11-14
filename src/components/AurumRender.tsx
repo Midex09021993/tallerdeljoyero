@@ -277,6 +277,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [archivoOriginal, setArchivoOriginal] = useState<File | null>(null);
   const [publicViewerTestOpen, setPublicViewerTestOpen] = useState(() => new URLSearchParams(window.location.search).get("aurumPublicViewer") === "1");
   const [publicViewerTestFile, setPublicViewerTestFile] = useState<File | null>(null);
+  const [publicViewerDragActive, setPublicViewerDragActive] = useState(false);
+  const publicViewerDragDepthRef = useRef(0);
   const [publicViewerTestUrl, setPublicViewerTestUrl] = useState<string | null>(null);
   const publicViewerTestInputRef = useRef<HTMLInputElement>(null);
   const publicViewerTestUrlRef = useRef<string | null>(null);
@@ -5000,7 +5002,30 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 <span className="text-[10px] font-semibold uppercase tracking-[.16em]">Prueba · Visor público original</span>
                 <button type="button" onClick={() => setPublicViewerTestOpen(false)} className="rounded-lg border border-[#d8cba9] bg-white px-3 py-1.5 text-[11px] font-semibold hover:bg-[#f7f1e3]">Volver a Aurum Render</button>
               </div>
-              <div className="relative min-h-0 flex-1">
+              <div
+                className="relative min-h-0 flex-1"
+                onDragEnter={(event) => {
+                  event.preventDefault();
+                  publicViewerDragDepthRef.current += 1;
+                  setPublicViewerDragActive(true);
+                }}
+                onDragOver={(event) => {
+                  event.preventDefault();
+                  if (event.dataTransfer) event.dataTransfer.dropEffect = "copy";
+                }}
+                onDragLeave={(event) => {
+                  event.preventDefault();
+                  publicViewerDragDepthRef.current = Math.max(0, publicViewerDragDepthRef.current - 1);
+                  if (publicViewerDragDepthRef.current === 0) setPublicViewerDragActive(false);
+                }}
+                onDrop={(event) => {
+                  event.preventDefault();
+                  publicViewerDragDepthRef.current = 0;
+                  setPublicViewerDragActive(false);
+                  const file = Array.from(event.dataTransfer.files).find((candidate) => /\.(3dm|glb|gltf|stl|obj|fbx)$/i.test(candidate.name));
+                  if (file) selectPublicViewerTestFile(file);
+                }}
+              >
                 {publicViewerTestUrl && publicViewerTestFile ? (
                   <PublicCatalogViewer key={publicViewerTestFile.name + ":" + publicViewerTestFile.size + ":" + publicViewerTestFile.lastModified} modelUrl={publicViewerTestUrl} modelName={publicViewerTestFile.name} materialId={materialId} gemId={gemaId} hideControls={false} />
                 ) : (
@@ -5012,6 +5037,15 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                       <input ref={publicViewerTestInputRef} type="file" accept=".3dm,.glb,.stl,.obj,.fbx" className="hidden" onChange={(event) => selectPublicViewerTestFile(event.target.files?.[0] ?? null)} />
                       <button type="button" onClick={() => publicViewerTestInputRef.current?.click()} className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#d4af37] px-5 py-3 text-sm font-semibold text-[#292824] shadow-sm hover:bg-[#e1bf50]"><Upload className="size-4"/> Seleccionar archivo</button>
                       <p className="mt-3 text-[10px] uppercase tracking-[.14em] text-[#aaa18f]">3DM · GLB · STL · OBJ · FBX</p>
+                    </div>
+                  </div>
+                )}
+                {publicViewerDragActive && (
+                  <div className="pointer-events-none absolute inset-3 z-20 grid place-items-center rounded-2xl border-2 border-dashed border-[#d4af37] bg-white/90 text-center shadow-[0_12px_45px_rgba(90,70,25,.12)] backdrop-blur-sm" aria-live="polite">
+                    <div className="px-6 py-8">
+                      <span className="mx-auto grid size-16 place-items-center rounded-2xl border border-[#d8cba9] bg-[#faf7ef] text-[#a48643]"><Upload className="size-7"/></span>
+                      <div className="mt-4 text-lg font-semibold text-[#514b3e]">Suelta el archivo para abrirlo</div>
+                      <p className="mt-2 text-xs uppercase tracking-[.14em] text-[#93866d]">3DM · GLB · STL · OBJ · FBX</p>
                     </div>
                   </div>
                 )}
