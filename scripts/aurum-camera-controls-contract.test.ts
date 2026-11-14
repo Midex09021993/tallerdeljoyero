@@ -5,8 +5,14 @@ import { createAurumCameraControlsContract } from "../src/lib/aurum/core/camera-
 
 function createControls(camera: THREE.PerspectiveCamera) {
   const listeners = new Map<string, Set<EventListener>>();
+  const root = {
+    addEventListener() {},
+    removeEventListener() {},
+  };
   const element = {
-    style: { touchAction: "" },
+    style: { touchAction: "", cursor: "auto" },
+    ownerDocument: root,
+    getRootNode: () => root,
     addEventListener(type: string, listener: EventListener) {
       const group = listeners.get(type) ?? new Set<EventListener>();
       group.add(listener);
@@ -73,16 +79,18 @@ test("AURUM CAMERA applies four distinct presets using real Three.js OrbitContro
     _sphericalDelta: THREE.Spherical;
     _panOffset: THREE.Vector3;
   };
-  orbitInternals._sphericalDelta.set(0.25, 0.35, 0);
-  controls.update();
+  controls.rotateLeft(0.35);
   const manuallyOrbitedQuaternion = camera.quaternion.clone();
   expect(orientationDistance(manuallyOrbitedQuaternion, perspective.quaternion)).toBeGreaterThan(0.0001);
+  const distanceBeforeDolly = controls.getDistance();
+  controls.dollyIn(1.1);
+  expect(controls.getDistance()).toBeLessThan(distanceBeforeDolly);
 
   contract.applyView(model, "lateral", "Anillo");
   const lateralAfterReset = camera.quaternion.clone();
   controls.update();
   expect(orientationDistance(camera.quaternion, lateralAfterReset)).toBeLessThan(1e-7);
-  expect(orbitInternals._sphericalDelta.length()).toBeLessThan(1e-8);
+  expect(Math.abs(orbitInternals._sphericalDelta.theta) + Math.abs(orbitInternals._sphericalDelta.phi)).toBeLessThan(1e-8);
   expect(orbitInternals._panOffset.length()).toBeLessThan(1e-8);
 
   const normalDistance = camera.position.distanceTo(controls.target);
