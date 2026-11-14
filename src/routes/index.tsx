@@ -723,7 +723,7 @@ function InicioPublico() {
                 }
               `}</style>
               <div className="aurum-rhino-connection relative mt-3 overflow-visible rounded-xl border border-[#d4aa19]/30 bg-[#d4aa19]/[.06] p-3 pl-12 sm:p-3.5 sm:pl-14">
-                <img src="https://www.rhino3d.com/reseller/graphics/Rhino6Logo.svg" alt="Logotipo oficial de Rhinoceros de Robert McNeel & Associates" width={220} height={120} loading="lazy" decoding="async" className="pointer-events-none absolute -left-7 top-1/2 z-10 h-[5.6rem] w-[9rem] -translate-y-1/2 object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,.48)] sm:-left-9 sm:h-28 sm:w-40" />
+                <img src="https://www.rhino3d.com/reseller/graphics/RhinoLogo.svg" alt="Logotipo oficial de Rhinoceros de Robert McNeel & Associates" width={220} height={120} loading="lazy" decoding="async" className="pointer-events-none absolute -left-5 top-1/2 z-10 h-16 w-28 -translate-y-1/2 object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,.48)] sm:-left-7 sm:h-20 sm:w-32" />
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                   <div className="flex min-w-0 flex-1 items-center gap-3">
                     <div className="min-w-0">
