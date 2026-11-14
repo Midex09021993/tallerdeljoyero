@@ -51,7 +51,7 @@ const arbol: Nodo[] = [
 ];
 
 const todos = (nodes: Nodo[]): Nodo[] => nodes.flatMap(n => [n, ...(n.hijos ? todos(n.hijos) : [])]);
-const badge = (estado: Estado) => <span className={\`inline-flex shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold \${estadoUI[estado].clase}\`}>{estadoUI[estado].label}</span>;
+const badge = (estado: Estado) => <span className={`inline-flex shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${estadoUI[estado].clase}`}>{estadoUI[estado].label}</span>;
 const sectionIcon = (id: string) => {
   if (id === "core") return <Workflow className="size-5"/>;
   if (id === "engines") return <Activity className="size-5"/>;
@@ -84,13 +84,13 @@ export function AurumArchitectureExplorer() {
           ["overview", "Panorama"],
           ["flow", "Flujo del sistema"],
           ["audit", "Plan de auditoría"],
-        ] as const).map(([id, label]) => <button key={id} type="button" onClick={() => setVista(id)} aria-pressed={vista === id} className={\`rounded-xl border px-3.5 py-2 text-xs font-semibold transition \${vista === id ? "border-gold/40 bg-gold/10 text-gold shadow-sm" : "border-border bg-card text-muted-foreground hover:border-gold/40 hover:text-foreground"}\`}>{label}</button>)}
+        ] as const).map(([id, label]) => <button key={id} type="button" onClick={() => setVista(id)} aria-pressed={vista === id} className={`rounded-xl border px-3.5 py-2 text-xs font-semibold transition ${vista === id ? "border-gold/40 bg-gold/10 text-gold shadow-sm" : "border-border bg-card text-muted-foreground hover:border-gold/40 hover:text-foreground"}`}>{label}</button>)}
       </div>
     </div>
 
     <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
       {(["integrado", "parcial", "auditar", "experimental", "suspendido"] as Estado[]).map(s => <div key={s} className="relative overflow-hidden rounded-xl border border-border bg-card px-3.5 py-3">
-        <div className="flex items-center justify-between gap-2"><p className="text-2xl font-semibold tracking-tight tabular-nums">{conteo(s)}</p><span className={\`size-2 rounded-full \${s === "integrado" ? "bg-emerald-500" : s === "parcial" ? "bg-sky-500" : s === "auditar" ? "bg-amber-500" : s === "experimental" ? "bg-orange-500" : "bg-rose-500"}\`}/></div>
+        <div className="flex items-center justify-between gap-2"><p className="text-2xl font-semibold tracking-tight tabular-nums">{conteo(s)}</p><span className={`size-2 rounded-full ${s === "integrado" ? "bg-emerald-500" : s === "parcial" ? "bg-sky-500" : s === "auditar" ? "bg-amber-500" : s === "experimental" ? "bg-orange-500" : "bg-rose-500"}`}/></div>
         <p className="mt-0.5 text-[10px] text-muted-foreground">{estadoUI[s].label}</p>
       </div>)}
     </div>
@@ -103,7 +103,7 @@ export function AurumArchitectureExplorer() {
         </div>
         <div className="grid gap-2 sm:grid-cols-4">
           {grupos.map((group, index) => <div key={group.id} className="relative min-w-0">
-            <button type="button" onClick={() => seleccionar(group)} className={\`group flex h-full w-full flex-col rounded-xl border p-3 text-left transition hover:-translate-y-0.5 hover:shadow-md \${seleccion === group.id ? "border-gold/50 bg-gold/10 ring-1 ring-gold/20" : "border-border bg-card hover:border-gold/40"}\`}>
+            <button type="button" onClick={() => seleccionar(group)} className={`group flex h-full w-full flex-col rounded-xl border p-3 text-left transition hover:-translate-y-0.5 hover:shadow-md ${seleccion === group.id ? "border-gold/50 bg-gold/10 ring-1 ring-gold/20" : "border-border bg-card hover:border-gold/40"}`}>
               <div className="flex items-center justify-between gap-2"><span className="grid size-9 place-items-center rounded-xl border border-gold/20 bg-gold/10 text-gold">{sectionIcon(group.id)}</span><span className="text-[10px] text-muted-foreground">{String(index + 1).padStart(2, "0")}</span></div>
               <p className="mt-3 text-xs font-bold leading-4">{group.nombre}</p>
               <p className="mt-1 line-clamp-2 text-[10px] leading-4 text-muted-foreground">{group.tipo}</p>
@@ -121,13 +121,13 @@ export function AurumArchitectureExplorer() {
             <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3"><Search className="size-3.5 text-muted-foreground"/><input value={filtro} onChange={e => setFiltro(e.target.value)} placeholder="Filtrar módulos…" className="h-9 w-full min-w-0 bg-transparent text-xs outline-none sm:w-48"/></div>
           </div>
           {grupos.map(group => <section key={group.id} className="overflow-hidden rounded-xl border border-border bg-card">
-            <button type="button" onClick={() => seleccionar(group)} className={\`flex w-full items-center gap-3 border-b border-border px-3.5 py-3 text-left transition \${seleccion === group.id ? "bg-gold/10" : "bg-muted/20 hover:bg-muted/40"}\`}>
+            <button type="button" onClick={() => seleccionar(group)} className={`flex w-full items-center gap-3 border-b border-border px-3.5 py-3 text-left transition ${seleccion === group.id ? "bg-gold/10" : "bg-muted/20 hover:bg-muted/40"}`}>
               <span className="grid size-8 place-items-center rounded-lg bg-gold/10 text-gold">{sectionIcon(group.id)}</span>
               <span className="min-w-0 flex-1"><span className="block text-xs font-bold">{group.nombre}</span><span className="mt-0.5 block text-[10px] text-muted-foreground">{group.tipo}</span></span>
               <span className="text-[10px] text-muted-foreground">{group.visibleChildren.length} módulos</span>
             </button>
             <div className="grid gap-2 p-3 sm:grid-cols-2">
-              {group.visibleChildren.map(n => <button key={n.id} type="button" onClick={() => seleccionar(n)} className={\`min-w-0 rounded-xl border p-3 text-left transition hover:border-gold/40 hover:shadow-sm \${seleccion === n.id ? "border-gold/50 bg-gold/5 ring-1 ring-gold/20" : "border-border bg-background/70"}\`}>
+              {group.visibleChildren.map(n => <button key={n.id} type="button" onClick={() => seleccionar(n)} className={`min-w-0 rounded-xl border p-3 text-left transition hover:border-gold/40 hover:shadow-sm ${seleccion === n.id ? "border-gold/50 bg-gold/5 ring-1 ring-gold/20" : "border-border bg-background/70"}`}>
                 <div className="flex items-start justify-between gap-2"><span className="text-xs font-semibold leading-5">{n.nombre}</span>{badge(n.estado)}</div>
                 <p className="mt-1 line-clamp-2 text-[10px] leading-4 text-muted-foreground">{n.tipo}</p>
                 {n.dependencias?.length ? <p className="mt-2 truncate text-[10px] text-muted-foreground">Depende de: {n.dependencias.join(" · ")}</p> : null}
