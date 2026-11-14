@@ -26,9 +26,9 @@ import { setAurumInclusionsVisible, setAurumEmeraldInclusionsVisible } from "../
 import { setAurumGemShaderQuality } from "../lib/aurum/scintillation";
 import { createAurumLightingController } from "../lib/aurum/lighting";
 import { frameAurumProduct, disposeAurumViewer, createAurumWebGLViewer, startAurumViewerLoop } from "../lib/aurum/viewer";
-import { createAurumImportPlugin, type AurumImportFormat } from "../lib/aurum/core/import-plugin";
+import { createAurumImportPlugin } from "../lib/aurum/core/import-plugin";
 import { createAurumGeometryEngine } from "../lib/aurum/core/geometry-engine";
-import { createAurumImportPipelineManager, type AurumImportPipelineManager } from "../lib/aurum/core/import-pipeline-manager";
+import { parseAurumInput, preprocessAurumModel } from "../lib/aurum/model-loader";
 import { compressAurumGlbWithDraco } from "../lib/draco-export";
 import { getAurumRhinoGeometryType, isAurumRhinoCsgSurface } from "../lib/aurum/metal-union-experiment";
 import { getAurumModelParts } from "../lib/aurum/model-parts";
@@ -1332,7 +1332,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       const mediaExportContract = createAurumMediaExportContract();
       const opticalContract = createAurumOpticalContract();
       const geometryEngine = createAurumGeometryEngine();
-      const importPipelineManager = createAurumImportPipelineManager(aurumImportPlugin, geometryEngine);
       const finalRenderLoader = async () => {
         const { createAurumFinalRenderAdapter } = await import("../lib/aurum/core/final-render-adapter");
         return createAurumFinalRenderAdapter();
@@ -1363,7 +1362,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         { id: "aurum.geometry", description: "Diagnóstico geométrico read-only del modelo.", services: new Map([["aurum.geometry.engine", geometryEngine]]) },
         { id: "aurum.import", description: "Orquestación de importación CAD y normalización GLB.", dependencies: ["aurum.geometry"], requiresServices: ["aurum.geometry.engine"], services: new Map([
           ["aurum.import.pipeline", aurumImportPlugin],
-          ["aurum.import.manager", importPipelineManager],
         ]) },
         { id: "aurum.scene", description: "Control de escena delegado al controlador productivo.", dependencies: ["aurum.viewer"], requiresServices: ["aurum.viewer.scene", "aurum.viewer.renderer"], services: sceneAdapter.services },
         { id: "aurum.lighting", description: "Control de iluminación delegado al controlador productivo.", dependencies: ["aurum.viewer"], requiresServices: ["aurum.viewer.scene"], services: lightingController.services },
@@ -1902,26 +1900,60 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         if (!ext || !["stl","obj","glb","fbx","3dm"].includes(ext)) {
           throw new Error("Formato no compatible. Usa STL, OBJ, GLB, FBX o 3DM.");
         }
-        const importPipeline = productionPluginHost.services.get("aurum.import.manager") as AurumImportPipelineManager | undefined;
-        if (!importPipeline || typeof importPipeline.load !== "function") {
-          throw new Error("AURUM Import Pipeline Manager is not registered in AURUM CORE.");
+        // Match PublicCatalogViewer: decode the original file directly and
+        // preprocess that Object3D. Do not route through ImportPipelineManager,
+        // intermediate GLB conversion, Smart Scan or deep geometry diagnostics.
+        const objeto = await parseAurumInput(file, ext, material);
+        if (!objeto) throw new Error("No se pudo interpretar la geometría del modelo 3D.");
+
+        // Match the public viewer's Rhino Z-up -> Three.js Y-up correction and
+        // its fallback classification for meshes without explicit CAD family.
+        if (ext === "3dm") {
+          objeto.rotation.x = -Math.PI / 2;
+          objeto.updateMatrixWorld(true);
+          objeto.userData = {
+            ...(objeto.userData ?? {}),
+            aurumPublicSourceFormat: "3dm",
+            aurumSourceFormat: "3dm",
+          };
+          objeto.traverse((node: any) => {
+            if (!node?.isMesh || !node.material) return;
+            const meta = node.userData?.aurumRhino ?? {};
+            const source = node.userData?.aurumRhinoSource ?? {};
+            const instanceSource = node.userData?.aurumRhinoInstanceSource ?? {};
+            const attributes = node.userData?.attributes ?? {};
+            const materials = Array.isArray(node.material) ? node.material : [node.material];
+            const layerName = String(
+              meta.capa ?? meta.layerName ?? source.layerName ??
+              instanceSource.layerName ?? attributes.layerName ??
+              attributes.LayerName ?? node.name ?? ""
+            );
+            const materialColor = materials.find((entry: any) => entry?.color)?.color;
+            const detected = meta.categoria === "gema" || meta.categoria === "metal"
+              ? meta.categoria
+              : clasificarCapa(layerName, materialColor ? colorRhinoHex(materialColor) : undefined);
+            // The public viewer treats otherwise-unclassified direct 3DM meshes
+            // as metal so the selected metal profile remains visible.
+            node.userData = { ...(node.userData ?? {}), aurumPublicDefaultMetal: detected === "otro" };
+            node.userData.aurumRhino = {
+              ...meta,
+              categoria: detected === "otro" ? "metal" : detected,
+              capa: meta.capa ?? layerName,
+            };
+          });
         }
-        const importResult = await importPipeline.load({
-          file,
-          format: ext as AurumImportFormat,
-          fallbackMaterial: material,
-          colorRhinoHex,
-          classifyLayer: clasificarCapa,
-          onProgress: informar,
-          diagnostics: loadAuditEnabled || new URLSearchParams(window.location.search).get("aurumDiagnostics") === "1",
-          onStage: (stage, details) => loadAuditStep(stage, details ?? {}),
-        });
-        const objeto = importResult.sourceObject;
-        const interno = importResult.model;
+
         informar("Archivo leído. Preparando modelo...");
-        loadAuditStep("import-pipeline-complete", {
+        const preprocessStartedAt = performance.now();
+        await preprocessAurumModel(objeto, (message: string, completed: number, total: number) => {
+          informar(message);
+          loadAuditStep("preprocess-progress", { completed, total });
+        });
+        const interno = objeto;
+        loadAuditStep("public-viewer-preprocess-complete", {
           sourceFormat: ext,
-          pipeline: importResult.pipeline,
+          preprocessMs: Math.round(performance.now() - preprocessStartedAt),
+          triangles: countAurumTriangles(interno),
         });
         // Reject empty or fully hidden conversions before replacing the current jewel.
         // Rhino may transfer a valid 3DM container that contains only construction
