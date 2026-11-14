@@ -2684,9 +2684,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           const originalSurfaceEdgeAaStrength=Number(surfaceEdgeAaPass?.material?.uniforms?.strength?.value ?? 0.035);
           let videoFramePipeline: ReturnType<typeof createAurumVideoFramePipeline> | null = null;
           try{
-            const loadVideoRecorder = productionPluginHost.services.get("aurum.media.video-recorder.load");
-            if (typeof loadVideoRecorder !== "function") throw new Error("AURUM Video Export service is not registered.");
-            const recordAurumCanvasVideo = await loadVideoRecorder();
+            const recordVideo = productionPluginHost.services.get("aurum.media.video-recorder") as ((source:HTMLCanvasElement,options:any)=>Promise<void>)|undefined;
+            if (!recordVideo) throw new Error("AURUM Media Export Contract is not registered.");
             controles.autoRotate=false;
             loop?.pause?.();
             // Keep the live viewport's visual composition enabled during capture.
@@ -2756,8 +2755,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // Camera and source bitmap share the exact output ratio. Each captured
             // frame now passes through the live beauty chain before the encoder copies it.
             loop?.setContinuousRendering?.(true);
-            const recordVideo = productionPluginHost.services.get("aurum.media.video-recorder") as ((source:HTMLCanvasElement,options:any)=>Promise<void>)|undefined;
-            if(!recordVideo) throw new Error("AURUM Media Export Contract is not registered.");
             await recordVideo(sourceCanvas,{
               width:options.width,height:options.height,fps:options.fps,duration:duration,
               signal:options.signal,onProgress:options.onProgress,
@@ -3707,7 +3704,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             liveFastPathRef.current = !sameBeautyPipelineAvailable;
             // Restore the normal settled temporal state. There is no active
             // gem transition to coordinate while progressive blending is suspended.
-            setTemporalMotion?.(false);
+            renderPipelineContract.setMode("RESTING_SETTLED");
             const settledEdgeAaProfile = getAurumEdgeAaProfile(measuredQualityId, runtimeBudget.tier, "settled");
             if (surfaceEdgeAaPass) {
               const strength = surfaceEdgeAaPass.material?.uniforms?.strength;
