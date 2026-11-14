@@ -11,15 +11,18 @@ type Props = {
   selectionName: string | null;
   selectionEnabled: boolean;
   onSelectionClose: () => void;
+  cameraActions?: { reset: () => void; front: () => void; side: () => void; top: () => void; zoom: (direction: "in" | "out") => void; rotate: (enabled: boolean) => void } | null;
 };
 
 /** Controles de diagnóstico del visor original; no crea ni modifica el renderer. */
 export function AurumViewerControlsModule({
   performanceOpen, onPerformanceToggle, onPerformanceClose,
   performanceRenderer, performanceMonitor,
-  selectionDiagnostic, selectionName, selectionEnabled, onSelectionClose,
+  selectionDiagnostic, selectionName, selectionEnabled, onSelectionClose, cameraActions,
 }: Props) {
   const [diagnosticVisible, setDiagnosticVisible] = useState(true);
+  const [autoRotate, setAutoRotate] = useState(false);
+  useEffect(() => { setAutoRotate(false); }, [cameraActions]);
   useEffect(() => { setDiagnosticVisible(true); }, [selectionDiagnostic, selectionEnabled]);
   const diagnostic = selectionDiagnostic;
   return <>
@@ -27,6 +30,18 @@ export function AurumViewerControlsModule({
       <AurumPerformanceIndicator renderer={performanceRenderer} monitor={performanceMonitor} onClick={onPerformanceToggle} expanded={performanceOpen}/>
       <AurumPerformanceMonitorPanel open={performanceOpen} onClose={onPerformanceClose} renderer={performanceRenderer} monitor={performanceMonitor}/>
     </>
+    {cameraActions && <nav className="absolute right-3 top-1/2 z-[78] flex -translate-y-1/2 flex-col items-center gap-1 rounded-2xl border border-[#e8e1d4] bg-white/90 p-2 text-[#655b4c] shadow-[0_10px_28px_-16px_rgba(45,35,20,.32)] backdrop-blur-xl" aria-label="AURUM VIEWER CONTROLS">
+      <div className="px-1 pb-1 text-[8px] font-semibold uppercase tracking-[.12em] text-[#9b7b3d]">AURUM VIEWER</div>
+      <button type="button" onClick={() => { const next = !autoRotate; setAutoRotate(next); cameraActions.rotate(next); }} title={autoRotate ? "Pausar rotación" : "Rotación automática"} aria-label={autoRotate ? "Pausar rotación" : "Iniciar rotación automática"} className={"grid size-9 place-items-center rounded-xl transition " + (autoRotate ? "bg-[#f5efe3] text-[#8b692f]" : "hover:bg-[#f5efe3] hover:text-[#8b692f]")}>{autoRotate ? "Ⅱ" : "▶"}</button>
+      <div className="my-1 h-px w-7 bg-[#eee8dd]"/>
+      <button type="button" onClick={() => cameraActions.reset()} title="Restablecer vista" aria-label="Restablecer vista" className="grid size-9 place-items-center rounded-xl hover:bg-[#f5efe3] hover:text-[#8b692f]"><span className="text-sm">↺</span></button>
+      <button type="button" onClick={() => cameraActions.front()} title="Vista frontal" aria-label="Vista frontal" className="grid size-9 place-items-center rounded-xl hover:bg-[#f5efe3] hover:text-[#8b692f]"><span className="text-[10px] font-semibold">F</span></button>
+      <button type="button" onClick={() => cameraActions.side()} title="Vista lateral" aria-label="Vista lateral" className="grid size-9 place-items-center rounded-xl hover:bg-[#f5efe3] hover:text-[#8b692f]"><span className="text-[10px] font-semibold">L</span></button>
+      <button type="button" onClick={() => cameraActions.top()} title="Vista superior" aria-label="Vista superior" className="grid size-9 place-items-center rounded-xl hover:bg-[#f5efe3] hover:text-[#8b692f]"><span className="text-[10px] font-semibold">S</span></button>
+      <div className="my-1 h-px w-7 bg-[#eee8dd]"/>
+      <button type="button" onClick={() => cameraActions.zoom("in")} title="Acercar" aria-label="Acercar" className="grid size-9 place-items-center rounded-xl hover:bg-[#f5efe3] hover:text-[#8b692f]">＋</button>
+      <button type="button" onClick={() => cameraActions.zoom("out")} title="Alejar" aria-label="Alejar" className="grid size-9 place-items-center rounded-xl hover:bg-[#f5efe3] hover:text-[#8b692f]">－</button>
+    </nav>}
     {selectionEnabled && diagnostic && diagnosticVisible && <section className="absolute left-3 top-3 z-[75] w-[min(430px,calc(100%-24px))] max-h-[78%] overflow-y-auto rounded-xl border border-[#d4af37]/50 bg-[#101214]/95 p-3 text-[10px] leading-relaxed text-white shadow-2xl backdrop-blur-xl" aria-label="Diagnóstico de selección">
       <header className="flex items-start justify-between gap-3">
         <div className="min-w-0">
