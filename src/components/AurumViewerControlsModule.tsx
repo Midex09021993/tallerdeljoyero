@@ -31,7 +31,7 @@ export function AurumViewerControlsModule({
       <AurumPerformanceMonitorPanel open={performanceOpen} onClose={onPerformanceClose} renderer={performanceRenderer} monitor={performanceMonitor}/>
     </>
     {cameraActions && <nav className="absolute right-3 top-1/2 z-[78] flex -translate-y-1/2 flex-col items-center gap-1 rounded-2xl border border-[#e8e1d4] bg-white/90 p-2 text-[#655b4c] shadow-[0_10px_28px_-16px_rgba(45,35,20,.32)] backdrop-blur-xl" aria-label="AURUM VIEWER CONTROLS">
-      <div className="px-1 pb-1 text-[8px] font-semibold uppercase tracking-[.12em] text-[#9b7b3d]">AURUM VIEWER</div>
+      <div className="px-1 pb-1 text-[8px] font-semibold uppercase tracking-[.12em] text-[#9b7b3d]">AURUM VIEWER CONTROLS</div>
       <button type="button" onClick={() => { const next = !autoRotate; setAutoRotate(next); cameraActions.rotate(next); }} title={autoRotate ? "Pausar rotación" : "Rotación automática"} aria-label={autoRotate ? "Pausar rotación" : "Iniciar rotación automática"} className={"grid size-9 place-items-center rounded-xl transition " + (autoRotate ? "bg-[#f5efe3] text-[#8b692f]" : "hover:bg-[#f5efe3] hover:text-[#8b692f]")}>{autoRotate ? "Ⅱ" : "▶"}</button>
       <div className="my-1 h-px w-7 bg-[#eee8dd]"/>
       <button type="button" onClick={() => cameraActions.reset()} title="Restablecer vista" aria-label="Restablecer vista" className="grid size-9 place-items-center rounded-xl hover:bg-[#f5efe3] hover:text-[#8b692f]"><span className="text-sm">↺</span></button>
