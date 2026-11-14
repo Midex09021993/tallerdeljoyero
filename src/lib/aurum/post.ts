@@ -462,12 +462,12 @@ export async function createAurumPostPipeline(
     const isLowQuality=qualityId==="low" || (qualityId==="" && Number(q?.pixelRatio??1.5) <= 1.01);
     // TAA is excluded from both live preview states; keep it available only to explicit captures.
     taaRequested=Boolean(options.capture);
-    const taaEnabled=taaRequested && !temporalMotionActive;
+    const taaEnabled=false;
     // Edge AA is a settled-quality treatment: never add fullscreen filtering
     // work to the direct-render orbit path. Still captures may use it explicitly.
     const edgeAaMode=options.capture ? "capture" : "settled";
     const edgeAaProfile=getAurumEdgeAaProfile(qualityId || (high ? "high" : "low"),lastKnownBudgetTier,edgeAaMode);
-    const edgeAaEnabled=edgeAaProfile.enabled && (!temporalMotionActive || Boolean(options.capture));
+    const edgeAaEnabled=false; // Isolation phase: no temporal or edge filtering in preview or capture.
     if(gemMaskPass) gemMaskPass.enabled=edgeAaEnabled;
     if(fxaaPass) fxaaPass.enabled=edgeAaEnabled;
     if(surfaceEdgeAaPass) {
@@ -481,7 +481,7 @@ export async function createAurumPostPipeline(
       ? 32
       : Math.max(1,Math.min(32,Math.floor(Number(config.progressiveFrameCount??1))));
     const taaSampleLevel=Math.max(0,Math.min(5,Math.ceil(Math.log2(progressiveFrames))));
-    const ssrEnabled=!options.capture && (diagnosticForceSSR || (!diagnosticDisableSSR && Boolean(config.ssr))) && high && Boolean(ssrPass) && Boolean(ssrSavePass) && Boolean(ssrCompositePass);
+    const ssrEnabled=false;
     if(renderPass) renderPass.enabled=true;
     const updateEdgeAaResolution=()=>{
       // Use the actual composer target dimensions (including capture sizing),
@@ -543,18 +543,18 @@ export async function createAurumPostPipeline(
       bloomPass.radius=Math.min(0.38,Math.max(0,Number(config.bloomRadius??0.32)));
     }
     if(gradingPass){
-      gradingPass.enabled=!options.capture && Boolean(config.gradeEnabled);
+      gradingPass.enabled=false;
       gradingPass.uniforms.contrast.value=Math.max(.5,Math.min(1.8,Number(config.gradeContrast??1)));
       gradingPass.uniforms.saturation.value=Math.max(0,Math.min(2,Number(config.gradeSaturation??1)));
     }
     if(lutPass){
-      lutPass.enabled=!options.capture && config.lut!==false && !isLowQuality;
+      lutPass.enabled=false;
       lutPass.intensity=Math.max(0,Math.min(1,(config.lutIntensity??.08)*(ultra?1:high?.82:.62)));
     }
     if(dofPass){
       // DOF is explicitly opt-in and should work at every viewer quality tier;
       // the viewer's direct-render interaction path keeps it off during orbit/zoom.
-      dofPass.enabled=config.dof===true;
+      dofPass.enabled=false;
       if(dofPass.uniforms){
         dofPass.uniforms.aperture.value=Math.max(0,Number(config.dofAperture??0.00065));
         dofPass.uniforms.maxblur.value=Math.max(0,Number(config.dofMaxBlur??0.006));
@@ -575,7 +575,7 @@ export async function createAurumPostPipeline(
       }
     }
     if(vignettePass){
-      vignettePass.enabled=!options.capture && config.vignette!==false && !isLowQuality;
+      vignettePass.enabled=false;
       vignettePass.uniforms.darkness.value=Math.max(0,Math.min(.18,Number(config.vignetteDarkness??.055)));
       vignettePass.uniforms.offset.value=Math.max(.55,Math.min(1.4,Number(config.vignetteOffset??1.0)));
     }
