@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { AurumPublicViewerTest } from "@/components/AurumPublicViewerTest";
 
 // Mantiene el motor 3D fuera del paquete inicial de rutas públicas, incluido /auth.
 const AurumRender = lazy(() =>
@@ -8,6 +9,8 @@ const AurumRender = lazy(() =>
 
 export function AurumRenderShell() {
   const navigate = useNavigate();
+  const publicViewerTest = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("aurumPublicViewer") === "1";
+  if (publicViewerTest) return <AurumPublicViewerTest />;
 
   useEffect(() => {
     let disposed = false;
