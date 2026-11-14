@@ -98,6 +98,15 @@ test("AURUM CAMERA applies four distinct presets using real Three.js OrbitContro
   expect(camera.position.distanceTo(controls.target)).toBeGreaterThan(normalDistance * 1.3);
   expect(controls.enableDamping).toBe(true);
 
+  const previousOffset = camera.position.clone().sub(controls.target);
+  const recenteredTarget = new THREE.Vector3(1, 2, 3);
+  contract.centerOn(recenteredTarget);
+  expect(controls.target.distanceTo(recenteredTarget)).toBeLessThan(1e-8);
+  expect(camera.position.distanceTo(recenteredTarget.clone().add(previousOffset))).toBeLessThan(1e-7);
+  const recenteredPosition = camera.position.clone();
+  controls.update();
+  expect(camera.position.distanceTo(recenteredPosition)).toBeLessThan(1e-7);
+
   controls.dispose();
   model.geometry.dispose();
   (model.material as THREE.Material).dispose();
