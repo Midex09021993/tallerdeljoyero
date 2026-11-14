@@ -44,7 +44,7 @@ function Metric({ label, value="—", detail, icon: Icon }: {label:string;value?
 function MiniHome() {
   return <div className="space-y-2.5">
     <header className="flex items-center justify-between gap-2 rounded-lg border border-[#c5a36b]/25 bg-gradient-to-r from-[#fffefc] to-[#f2ebdd] px-3 py-2">
-      <div className="min-w-0"><p className="text-[6px] font-bold tracking-[.18em] text-[#a98249]">✧ AURUM LAB / OPERACIONES</p><h3 className="mt-1 text-[12px] font-semibold leading-tight text-[#182838]">Centro de control</h3><p className="mt-1 text-[6px] text-[#71808d]">Visión general del taller</p></div>
+      <div className="min-w-0"><p className="text-[6px] font-bold tracking-[.18em] text-[#a98249]">✧ AURUM LAB / OPERACIONES</p><div className="mt-1 text-[12px] font-semibold leading-tight text-[#182838]">Centro de control</div><p className="mt-1 text-[6px] text-[#71808d]">Visión general del taller</p></div>
       <div className="shrink-0 rounded-md border border-[#e8e1d6] bg-white px-2 py-1 text-[6px] text-slate-600">Sede de trabajo</div>
     </header>
 
@@ -57,7 +57,7 @@ function MiniHome() {
 
     <section className="space-y-1.5">
       <div className="flex items-end justify-between gap-2 border-b border-slate-200 pb-1.5">
-        <div><p className="text-[6px] font-bold tracking-[.17em] text-[#a98249]">01 / VISIÓN DEL NEGOCIO</p><h4 className="mt-0.5 text-[9px] font-semibold text-[#182838]">Comercial e inventario</h4><p className="text-[6px] text-[#71808d]">Indicadores del taller seleccionado</p></div>
+        <div><p className="text-[6px] font-bold tracking-[.17em] text-[#a98249]">01 / VISIÓN DEL NEGOCIO</p><div className="mt-0.5 text-[9px] font-semibold text-[#182838]">Comercial e inventario</div><p className="text-[6px] text-[#71808d]">Indicadores del taller seleccionado</p></div>
         <span className="text-[5px] text-slate-400">Datos sujetos a permisos</span>
       </div>
       <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
@@ -93,7 +93,7 @@ function MiniHome() {
 function MiniClients() {
   return <div className="space-y-2">
     <header className="flex items-end justify-between gap-2">
-      <div className="min-w-0"><h3 className="font-serif text-[14px] sm:text-[16px] leading-tight text-[#182838]">Clientes</h3><p className="mt-1 text-[7px] text-[#71808d]">Directorio comercial, historial y relación con cada cliente.</p></div>
+      <div className="min-w-0"><div className="font-serif text-[14px] sm:text-[16px] leading-tight text-[#182838]">Clientes</div><p className="mt-1 text-[7px] text-[#71808d]">Directorio comercial, historial y relación con cada cliente.</p></div>
       <div className="flex shrink-0 gap-1.5">
         <div className="rounded-lg border border-[#c5a36b]/20 bg-white px-2 py-1.5"><p className="text-[5px] font-bold tracking-widest text-[#c5a36b]">DIRECTORIO</p><p className="mt-1 text-[10px] font-semibold text-[#203142]">Clientes</p><p className="text-[5px] text-slate-400">Registrados</p></div>
         <div className="rounded-lg border border-[#c5a36b]/20 bg-white px-2 py-1.5"><p className="text-[5px] font-bold tracking-widest text-[#c5a36b]">ESTADO</p><p className="mt-1 text-[10px] font-semibold text-[#203142]">Activos</p><p className="text-[5px] text-slate-400">Clientes activos</p></div>
@@ -111,7 +111,7 @@ function MiniClients() {
       <section className="min-w-0 overflow-hidden rounded-lg border border-[#293b4a]/10 bg-white">
         <div className="border-b border-slate-200 bg-[#fbfaf7] p-2">
           <p className="text-[5px] font-bold tracking-[.18em] text-[#a98249]">CRM / DIRECTORIO</p>
-          <div className="mt-1 flex flex-wrap items-center justify-between gap-1"><h4 className="text-[8px] font-semibold text-[#182838]">Clientes del taller</h4><span className="rounded-full bg-[#f1eee8] px-1.5 py-0.5 text-[5px] text-slate-500">Resultados</span></div>
+          <div className="mt-1 flex flex-wrap items-center justify-between gap-1"><div className="text-[8px] font-semibold text-[#182838]">Clientes del taller</div><span className="rounded-full bg-[#f1eee8] px-1.5 py-0.5 text-[5px] text-slate-500">Resultados</span></div>
           <div className="mt-1.5 flex gap-1">
             <span className="min-w-0 flex-1 rounded-md border border-slate-200 bg-white px-1.5 py-1 text-[5px] text-slate-500">Todos los tipos⌄</span>
             <span className="min-w-0 flex-1 rounded-md border border-slate-200 bg-white px-1.5 py-1 text-[5px] text-slate-500">Todos los estados⌄</span>
@@ -135,10 +135,10 @@ function MiniClients() {
 }
 function MiniQuotes() {
   return <div className="space-y-2.5">
-    <header className="flex items-end justify-between"><div><h3 className="font-serif text-[14px] sm:text-[16px] leading-tight text-[#182838]">Cotizaciones</h3><p className="mt-1 text-[7px] text-[#71808d]">Presupuestos comerciales conectados con clientes y conceptos de venta.</p></div></header>
+    <header className="flex items-end justify-between"><div><div className="font-serif text-[14px] sm:text-[16px] leading-tight text-[#182838]">Cotizaciones</div><p className="mt-1 text-[7px] text-[#71808d]">Presupuestos comerciales conectados con clientes y conceptos de venta.</p></div></header>
     <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3"><Metric label="Cotizaciones" detail="Presupuestos vigentes" icon={FileText}/><Metric label="Enviadas" detail="Al cliente" icon={Activity}/><Metric label="Requieren revisión" detail="Cambios solicitados" icon={Clock3}/><Metric label="Aprobadas" detail="Aprobaciones registradas" icon={CheckCircle2}/><Metric label="Total aprobado" detail="Valor comercial" icon={Gem}/><div className="flex min-h-[54px] flex-col justify-between rounded-lg border border-[#c5a36b]/25 bg-white p-2"><Plus className="size-3 text-[#b9955d]"/><p className="text-[7px] font-semibold text-[#35495b]">Nueva cotización</p></div></div>
-    <section className="overflow-hidden rounded-lg border border-[#c5a36b]/20 bg-white"><div className="flex items-center justify-between border-b border-slate-100 p-2"><div><p className="text-[5px] font-bold tracking-[.18em] text-[#c5a36b]">ENTRADA COMERCIAL</p><h4 className="mt-0.5 text-[9px] font-semibold text-[#182838]">Solicitudes del catálogo</h4><p className="text-[6px] text-slate-500">Consultas recibidas desde las fichas públicas de tus joyas.</p></div><span className="rounded-full border border-[#c5a36b]/20 px-2 py-1 text-[5px] text-slate-500">Pendientes de cotización</span></div><div className="flex min-h-[54px] flex-col items-center justify-center p-2 text-center"><FileText className="size-4 text-[#c5a36b]"/><p className="mt-1 text-[7px] font-medium">Todavía no hay solicitudes del catálogo</p></div></section>
-    <section className="overflow-hidden rounded-lg border border-[#c5a36b]/20 bg-white"><div className="flex items-center justify-between border-b border-slate-100 p-2"><div><p className="text-[5px] font-bold tracking-[.18em] text-[#c5a36b]">GESTIÓN COMERCIAL</p><h4 className="mt-0.5 text-[9px] font-semibold text-[#182838]">Cotizaciones del taller</h4><p className="text-[6px] text-slate-500">Presupuestos vinculados a clientes y conceptos comerciales.</p></div><span className="flex items-center gap-1 text-[5px] text-slate-500"><Clock3 className="size-2"/> Seguimiento comercial</span></div><div className="flex h-6 items-center gap-1 border-b border-slate-100 px-2 text-[6px] text-slate-400"><Search className="size-2.5"/> Buscar por número, cliente o estado…</div><div className="grid grid-cols-5 bg-[#f8f7f3] px-2 py-1.5 text-[5px] font-semibold uppercase text-slate-500">{["Cotización","Cliente","Taller","Estado","Total"].map(x=><span key={x}>{x}</span>)}</div><div className="p-3 text-center text-[6px] text-slate-400">Listado de cotizaciones</div></section>
+    <section className="overflow-hidden rounded-lg border border-[#c5a36b]/20 bg-white"><div className="flex items-center justify-between border-b border-slate-100 p-2"><div><p className="text-[5px] font-bold tracking-[.18em] text-[#c5a36b]">ENTRADA COMERCIAL</p><div className="mt-0.5 text-[9px] font-semibold text-[#182838]">Solicitudes del catálogo</div><p className="text-[6px] text-slate-500">Consultas recibidas desde las fichas públicas de tus joyas.</p></div><span className="rounded-full border border-[#c5a36b]/20 px-2 py-1 text-[5px] text-slate-500">Pendientes de cotización</span></div><div className="flex min-h-[54px] flex-col items-center justify-center p-2 text-center"><FileText className="size-4 text-[#c5a36b]"/><p className="mt-1 text-[7px] font-medium">Todavía no hay solicitudes del catálogo</p></div></section>
+    <section className="overflow-hidden rounded-lg border border-[#c5a36b]/20 bg-white"><div className="flex items-center justify-between border-b border-slate-100 p-2"><div><p className="text-[5px] font-bold tracking-[.18em] text-[#c5a36b]">GESTIÓN COMERCIAL</p><div className="mt-0.5 text-[9px] font-semibold text-[#182838]">Cotizaciones del taller</div><p className="text-[6px] text-slate-500">Presupuestos vinculados a clientes y conceptos comerciales.</p></div><span className="flex items-center gap-1 text-[5px] text-slate-500"><Clock3 className="size-2"/> Seguimiento comercial</span></div><div className="flex h-6 items-center gap-1 border-b border-slate-100 px-2 text-[6px] text-slate-400"><Search className="size-2.5"/> Buscar por número, cliente o estado…</div><div className="grid grid-cols-5 bg-[#f8f7f3] px-2 py-1.5 text-[5px] font-semibold uppercase text-slate-500">{["Cotización","Cliente","Taller","Estado","Total"].map(x=><span key={x}>{x}</span>)}</div><div className="p-3 text-center text-[6px] text-slate-400">Listado de cotizaciones</div></section>
   </div>;
 }
 
