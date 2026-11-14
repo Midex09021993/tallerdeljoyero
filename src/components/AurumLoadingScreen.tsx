@@ -1,5 +1,3 @@
-import type { CSSProperties } from "react";
-
 export type AurumLoadingScreenProps = {
   /** True while the viewer is actively loading a model. */
   loading: boolean;
@@ -27,10 +25,6 @@ export function AurumLoadingScreen({
   if (!loading && !presentationCover) return null;
 
   const visible = loading || presentationVisible;
-  const coverStyle: CSSProperties | undefined = presentationCover
-    ? { backgroundImage: `url("${presentationCover.replace(/["\\]/g, "")}")` }
-    : undefined;
-
   return (
     <div
       className={
@@ -50,7 +44,6 @@ export function AurumLoadingScreen({
             "absolute inset-0 h-full w-full object-cover transition-transform duration-[1200ms] " +
             (presentationVisible ? "scale-100" : "scale-[1.015]")
           }
-          style={coverStyle}
         />
       ) : (
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_38%,#ffffff_0%,#f2f2f0_48%,#d8d9d7_100%)]" />
