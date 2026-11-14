@@ -170,7 +170,7 @@ test("the demand-driven loop retries a transient frame exception with bounded re
       node: {
         getBoundingClientRect: () => ({ width: 640, height: 480 }),
       },
-      camera: { aspect: 1, updateProjectionMatrix() {} },
+      cameraControls: { getAspect: () => 1, setAspect: () => undefined, update: () => false },
       renderer: { domElement: new EventTarget(), setSize() {} },
       controls: null,
     } as any, () => {
@@ -336,7 +336,7 @@ test("the viewer reasserts the WebGL drawing surface on host wake without a cont
   try {
     const loop = startAurumViewerLoop({
       node: { getBoundingClientRect: () => ({ width: 800, height: 600 }) },
-      camera: { aspect: 800 / 600, updateProjectionMatrix() {} },
+      cameraControls: { getAspect: () => 800 / 600, setAspect: () => undefined, update: () => false },
       renderer: {
         domElement: canvas,
         getSize(target: { set: (width: number, height: number) => unknown }) {
@@ -392,7 +392,7 @@ test("viewer resize delegates post-processing target sizing to the composer exac
   const canvas = { width: 1600, height: 1200 };
   const viewer = {
     node: { getBoundingClientRect: () => ({ width: 800, height: 600 }) },
-    camera: { aspect: 4 / 3, updateProjectionMatrix() {} },
+    cameraControls: { getAspect: () => 4 / 3, setAspect: () => undefined, update: () => false },
     renderer: {
       domElement: canvas,
       getPixelRatio: () => 2,
