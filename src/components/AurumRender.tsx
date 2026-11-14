@@ -3800,6 +3800,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
     apiRef.current=null;
     onCatalogApiReadyRef.current?.(null);
     viewerLoopRef.current=null;
+    cameraControlsRef.current=null;
     setPerformanceRenderer(null);
     performanceMonitorRef.current.reset();
     ptAbortRef.current?.abort();
