@@ -66,7 +66,7 @@ export function AurumArchitectureExplorer() {
   const [seleccion, setSeleccion] = useState("media");
   const [filtro, setFiltro] = useState("");
   const [postControls, setPostControls] = useState(getAurumPostControls);
-  const updatePostControl = (key: "gemFxaaEnabled" | "surfaceEdgeAaEnabled", enabled: boolean) => setPostControls(setAurumPostControls({ [key]: enabled }));
+  const updatePostControl = (key: "gemFxaaEnabled" | "surfaceEdgeAaEnabled" | "taaEnabled", enabled: boolean) => setPostControls(setAurumPostControls({ [key]: enabled }));
   const nodos = useMemo(() => todos(arbol), []);
   const actual = nodos.find(n => n.id === seleccion) ?? nodos[0]!;
   const modulos = useMemo(() => nodos.filter(n => !n.hijos?.length), [nodos]);
@@ -186,7 +186,7 @@ export function AurumArchitectureExplorer() {
         </div>
         <p className="mt-3 rounded-lg bg-sky-500/5 p-3 text-[10px] leading-4 text-muted-foreground"><Network className="mr-1.5 inline size-3.5 text-sky-600"/>Flujo resumido según los consumidores identificados en el código. Los módulos registrados o de uso opt-in no se presentan como etapas obligatorias de la carga normal.</p>
       </div>
-      <div className="rounded-xl border border-border bg-card p-4"><h4 className="text-xs font-semibold">Infraestructura transversal</h4><div className="mt-3 grid gap-2 sm:grid-cols-5">{(arbol[0].hijos ?? []).map(n=><button key={n.id} onClick={()=>{seleccionar(n);setVista("overview");}} className="rounded-lg border border-border bg-muted/30 p-2 text-left hover:border-gold/40"><p className="text-[11px] font-semibold">{n.nombre}</p><div className="mt-1">{badge(n.estado)}</div></button>)}</div></div>
+      <div className="rounded-xl border border-border bg-card p-4"><h4 className="text-xs font-semibold">Infraestructura transversal</h4><div className="mt-3 grid gap-2 sm:grid-cols-5">{(arbol[0]?.hijos ?? []).map(n=><button key={n.id} onClick={()=>{seleccionar(n);setVista("overview");}} className="rounded-lg border border-border bg-muted/30 p-2 text-left hover:border-gold/40"><p className="text-[11px] font-semibold">{n.nombre}</p><div className="mt-1">{badge(n.estado)}</div></button>)}</div></div>
     </div> : null}
 
     {vista === "audit" ? <div className="space-y-3">
