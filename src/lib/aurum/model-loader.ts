@@ -101,65 +101,146 @@ function isRhinoObjectHiddenForExport(attributes: any): boolean {
     || mode === 1 || modeText === "hidden" || modeText === "hidden_object" || modeText === "hiddenobject";
 }
 
-function enforceRhinoLayerVisibilityBeforeExport(object: THREE.Object3D) {
-  const layers = Array.isArray((object as any)?.userData?.layers) ? (object as any).userData.layers : [];
-  if (!layers.length) return;
-  const byId = new Map<string, any>(), byName = new Map<string, any>();
-  for (const layer of layers) {
+export function enforceRhinoLayerVisibilityBeforeExport(object: THREE.Object3D) {
+  const rootData = (object as any)?.userData ?? {};
+  // Rhino3dmLoader versions and the GLB round-trip expose the same layer table
+  // under different keys. Resolve all supported forms instead of silently
+  // skipping visibility enforcement when one alias is absent.
+  const layers = [
+    rootData.layers,
+    rootData.rhinoLayers,
+    rootData.aurumRhinoSourceLayers,
+  ].find((value:any) => Array.isArray(value) && value.length) ?? [];
+  const byId = new Map<string, any>();
+  const byName = new Map<string, any>();
+  layers.forEach((layer:any,index:number) => {
     const id = layer?.id ?? layer?.Id;
     if (id != null) byId.set(String(id), layer);
     const name = String(layer?.name ?? layer?.Name ?? "").trim().toLowerCase();
     if (name) byName.set(name, layer);
-  }
+    // Source-layer manifests preserve the original position explicitly.
+    if (layer?.index == null) layer.index = index;
+  });
+
   const cache = new Map<number, boolean>();
-  const directVisible = (layer: any) => {
+  const directVisible = (layer:any) => {
     if (!layer) return true;
     const mode = layer.mode ?? layer.Mode ?? layer.visibilityMode ?? layer.VisibilityMode;
     const modeText = typeof mode === "string" ? mode.toLowerCase() : "";
-    return layer.visible !== false && layer.Visible !== false && layer.isVisible !== false && layer.visibility !== false
+    return layer.visible !== false && layer.visible !== 0
+      && layer.Visible !== false && layer.Visible !== 0
+      && layer.isVisible !== false && layer.isVisible !== 0
+      && layer.visibility !== false && layer.visibility !== 0
       && mode !== 1 && modeText !== "hidden" && modeText !== "hidden_layer" && modeText !== "hiddenlayer";
   };
-  const effectiveVisible = (index: number, trail = new Set<number>()): boolean => {
+  const effectiveVisible = (index:number, trail = new Set<number>()): boolean => {
     if (index < 0 || index >= layers.length) return true;
     if (cache.has(index)) return cache.get(index)!;
     if (trail.has(index)) return true;
     const layer = layers[index];
-    if (!directVisible(layer)) { cache.set(index, false); return false; }
+    if (!directVisible(layer)) {
+      cache.set(index,false);
+      return false;
+    }
     const parentId = layer?.parentLayerId ?? layer?.parentId ?? layer?.parentLayerID ?? layer?.ParentLayerId;
     if (parentId != null && String(parentId) && String(parentId) !== "00000000-0000-0000-0000-000000000000") {
       const parent = byId.get(String(parentId));
       if (parent) {
         const parentIndex = layers.indexOf(parent);
         if (parentIndex >= 0) {
-          const nextTrail = new Set(trail); nextTrail.add(index);
-          const visible = effectiveVisible(parentIndex, nextTrail);
-          cache.set(index, visible); return visible;
+          const nextTrail = new Set(trail);
+          nextTrail.add(index);
+          const visible = effectiveVisible(parentIndex,nextTrail);
+          cache.set(index,visible);
+          return visible;
         }
       }
     }
-    cache.set(index, true); return true;
+    cache.set(index,true);
+    return true;
   };
-  const resolveLayerIndex = (x: any) => {
-    const candidates = [x?.userData?.attributes?.layerIndex, x?.userData?.attributes?.LayerIndex, x?.userData?.layerIndex, x?.userData?.LayerIndex];
-    for (const value of candidates) { const n = Number(value); if (Number.isInteger(n) && n >= 0) return n; }
+  const firstValidIndex = (values:any[]) => {
+    for (const value of values) {
+      if (value === null || value === undefined || value === "") continue;
+      const index = Number(value);
+      if (Number.isInteger(index) && index >= 0 && index < layers.length) return index;
+    }
     return -1;
   };
-  object.traverse((x: any) => {
-    if (!x.isMesh) return;
-    const attrs = x.userData?.attributes || {};
-    const index = resolveLayerIndex(x);
-    let layerVisible = true;
-    if (index >= 0) layerVisible = effectiveVisible(index);
-    else {
-      const layerName = String(x.userData?.attributes?.layerName ?? x.userData?.layerName ?? "").trim().toLowerCase();
-      if (layerName && byName.has(layerName)) layerVisible = effectiveVisible(layers.indexOf(byName.get(layerName)));
+  const resolveLayer = (node:any) => {
+    const data = node?.userData ?? {};
+    const attrs = data.attributes ?? {};
+    const instance = data.aurumRhinoInstanceReference ?? {};
+    const instanceSource = data.aurumRhinoInstanceSource ?? {};
+    const source = data.aurumRhinoSource ?? {};
+    const rhino = data.aurumRhino ?? {};
+    const index = firstValidIndex([
+      instance.layerIndex,
+      instanceSource.layerIndex,
+      source.layerIndex,
+      attrs.layerIndex, attrs.LayerIndex,
+      data.layerIndex, data.LayerIndex,
+      rhino.layerIndex,
+    ]);
+    const layerId = instance.layerId ?? instanceSource.layerId ?? source.layerId
+      ?? attrs.layerId ?? attrs.LayerId ?? data.layerId ?? data.LayerId ?? rhino.rhinoLayerId;
+    const layerName = String(instance.layerName ?? instanceSource.layerName ?? source.layerName
+      ?? attrs.layerName ?? attrs.LayerName ?? data.layerName ?? data.LayerName ?? rhino.capa ?? "").trim().toLowerCase();
+    let resolvedIndex = index;
+    if (resolvedIndex < 0 && layerId != null) {
+      const match = byId.get(String(layerId));
+      if (match) resolvedIndex = layers.indexOf(match);
     }
-    const objectVisible = !isRhinoObjectHiddenForExport(attrs);
-    const visible = objectVisible && layerVisible;
-    if (!visible) x.visible = false;
-    x.userData = { ...x.userData, aurumRhinoVisibility: { enforcedBeforeExport:true, layerIndex:index, layerVisible, objectVisible, visible } };
+    if (resolvedIndex < 0 && layerName) {
+      const match = byName.get(layerName);
+      if (match) resolvedIndex = layers.indexOf(match);
+    }
+    const layer = resolvedIndex >= 0 ? layers[resolvedIndex] : null;
+    return {
+      index: resolvedIndex,
+      id: layer?.id ?? layer?.Id ?? layerId ?? null,
+      name: layer?.name ?? layer?.Name ?? (layerName || null),
+      visible: resolvedIndex >= 0 ? effectiveVisible(resolvedIndex) : true,
+    };
+  };
+
+  let hiddenByLayer = 0;
+  let hiddenByObject = 0;
+  let preservedHidden = 0;
+  object.traverse((node:any) => {
+    const data = node?.userData ?? {};
+    const attrs = data.attributes ?? {};
+    const instance = data.aurumRhinoInstanceReference ?? {};
+    const instanceVisibility = instance.objectVisibility ?? {};
+    const layer = resolveLayer(node);
+    const objectVisible = !isRhinoObjectHiddenForExport(attrs)
+      && !isRhinoObjectHiddenForExport(instanceVisibility);
+    const layerVisible = layer.visible;
+    const wasAlreadyHidden = node.visible === false;
+    const visible = !wasAlreadyHidden && objectVisible && layerVisible;
+
+    if (!objectVisible) hiddenByObject++;
+    if (!layerVisible) hiddenByLayer++;
+    if (wasAlreadyHidden) preservedHidden++;
+    if (!visible) node.visible = false;
+
+    node.userData = {
+      ...data,
+      aurumRhinoVisibility: {
+        enforcedBeforeExport: true,
+        layerIndex: layer.index,
+        layerId: layer.id,
+        layerName: layer.name,
+        layerVisible,
+        objectVisible,
+        visible: node.visible !== false,
+      },
+    };
   });
   object.updateMatrixWorld(true);
+  const audit = { layerCount: layers.length, hiddenByLayer, hiddenByObject, preservedHidden };
+  (object as any).userData = { ...((object as any).userData ?? {}), aurumRhinoVisibilityAudit: audit };
+  console.info("[AURUM][RHINO VISIBILITY]",audit);
 }
 
 export async function preprocessAurumModel(
