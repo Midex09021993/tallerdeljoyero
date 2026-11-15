@@ -4959,23 +4959,23 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 <p className="mt-2 text-[10px] font-medium uppercase tracking-[.2em] text-white/45">STL · OBJ · GLB · FBX · 3DM</p>
               </div>
             </div>}
-            {!embedded&&!archivo&&!cargando&&<div className="absolute inset-0 z-10 grid place-items-center overflow-hidden bg-[#0b0e12] px-6 py-10 text-center">
-              <div className="pointer-events-none absolute inset-0" style={{background:"radial-gradient(ellipse at 50% 42%, rgba(183,145,55,.13) 0%, rgba(183,145,55,.035) 28%, transparent 62%), linear-gradient(145deg,#11161d 0%,#090c10 52%,#12151a 100%)"}}/>
-              <div className="pointer-events-none absolute inset-5 rounded-[26px] border border-white/[.055]"/>
-              <div className="pointer-events-none absolute inset-x-[18%] top-1/2 h-px bg-gradient-to-r from-transparent via-[#d4af37]/20 to-transparent"/>
+            {!embedded&&!archivo&&!cargando&&<div className="absolute inset-0 z-10 grid place-items-center overflow-hidden bg-[#f4f1e9] px-6 py-10 text-center">
+              <div className="pointer-events-none absolute inset-0" style={{background:"radial-gradient(ellipse at 50% 42%, rgba(212,175,55,.16) 0%, rgba(212,175,55,.055) 30%, transparent 66%), linear-gradient(145deg,#fbfaf7 0%,#f1eee7 54%,#eae6dc 100%)"}}/>
+              <div className="pointer-events-none absolute inset-5 rounded-[26px] border border-[#b9a77d]/25"/>
+              <div className="pointer-events-none absolute inset-x-[18%] top-1/2 h-px bg-gradient-to-r from-transparent via-[#b99642]/25 to-transparent"/>
               <div className="relative z-10 flex w-full max-w-md flex-col items-center">
-                <div className="mb-7 grid size-[92px] place-items-center rounded-[28px] border border-[#d4af37]/30 bg-gradient-to-br from-[#d4af37]/15 to-[#d4af37]/[.035] text-[#e0b94e] shadow-[0_12px_50px_rgba(0,0,0,.3),0_0_42px_rgba(212,175,55,.08)] transition duration-300">
+                <div className="mb-7 grid size-[92px] place-items-center rounded-[28px] border border-[#b99642]/35 bg-gradient-to-br from-white/95 to-[#eee7d8]/80 text-[#a88435] shadow-[0_12px_38px_rgba(80,65,35,.10),0_0_32px_rgba(212,175,55,.10)] transition duration-300">
                   <Upload className="size-9 stroke-[1.5]"/>
                 </div>
-                <p className="text-[9px] font-semibold uppercase tracking-[.34em] text-[#d4af37]/80">AURUM RENDER · STUDIO</p>
-                <h2 className="mt-3 text-[25px] font-semibold tracking-[-.035em] text-white">Tu próximo diseño empieza aquí</h2>
-                <p className="mt-2 max-w-xs text-[12px] leading-relaxed text-white/45">Abre un modelo 3D y prepáralo en tu espacio de trabajo.</p>
+                <p className="text-[9px] font-semibold uppercase tracking-[.34em] text-[#92743b]">AURUM RENDER · STUDIO</p>
+                <h2 className="mt-3 text-[25px] font-semibold tracking-[-.035em] text-[#292824]">Tu próximo diseño empieza aquí</h2>
+                <p className="mt-2 max-w-xs text-[12px] leading-relaxed text-[#77756f]">Abre un modelo 3D y prepáralo en tu espacio de trabajo.</p>
                 <input ref={fileRef} type="file" accept=".stl,.obj,.glb,.fbx,.3dm" className="hidden" onChange={(e)=>{const file=e.target.files?.[0];if(file)cargarArchivo(file)}}/>
                 <button type="button" onClick={()=>fileRef.current?.click()} className="mt-7 inline-flex items-center gap-2.5 rounded-xl border border-[#e0b94e]/70 bg-gradient-to-b from-[#e0bd55] to-[#c69b2e] px-7 py-3 text-[11px] font-bold uppercase tracking-[.12em] text-[#17140c] shadow-[0_8px_28px_rgba(0,0,0,.28),0_0_24px_rgba(212,175,55,.12)] transition hover:-translate-y-0.5 hover:brightness-110 active:translate-y-0">
                   <Upload className="size-4"/> Seleccionar archivo
                 </button>
-                <p className="mt-5 text-[9px] font-medium uppercase tracking-[.2em] text-white/30">STL <span className="mx-2 text-[#d4af37]/50">·</span> OBJ <span className="mx-2 text-[#d4af37]/50">·</span> GLB <span className="mx-2 text-[#d4af37]/50">·</span> FBX <span className="mx-2 text-[#d4af37]/50">·</span> RHINO 3DM</p>
-                <div className="mt-8 flex items-center gap-2 text-[9px] tracking-wide text-white/25"><span className="h-px w-8 bg-white/10"/><span>ARRASTRA Y SUELTA TU ARCHIVO</span><span className="h-px w-8 bg-white/10"/></div>
+                <p className="mt-5 text-[9px] font-medium uppercase tracking-[.2em] text-[#8a857b]">STL <span className="mx-2 text-[#d4af37]/50">·</span> OBJ <span className="mx-2 text-[#d4af37]/50">·</span> GLB <span className="mx-2 text-[#d4af37]/50">·</span> FBX <span className="mx-2 text-[#d4af37]/50">·</span> RHINO 3DM</p>
+                <div className="mt-8 flex items-center gap-2 text-[9px] tracking-wide text-[#9a9488]"><span className="h-px w-8 bg-[#b9a77d]/35"/><span>ARRASTRA Y SUELTA TU ARCHIVO</span><span className="h-px w-8 bg-[#b9a77d]/35"/></div>
               </div>
             </div>}
             {presentationCover && <div className={"pointer-events-none absolute inset-0 z-20 overflow-hidden transition-opacity duration-500 "+(presentationVisible?"opacity-100":"opacity-0")}>
