@@ -10,8 +10,9 @@ const LEGACY_STORAGE_KEY = "aurum:post-engine-controls:v1";
 const DEFAULTS: AurumPostControls = {
   // Selective diamond-only supersampling is enabled by default. Its compositor
   // replaces pixels inside the center-diamond mask only and runs only while settled.
-  // FXAA, Surface Edge AA and TAA remain opt-in.
-  gemFxaaEnabled: false,
+  // FXAA complements diamond SSAA but is restricted to the outer girdle silhouette.
+  // It does not filter internal facet boundaries.
+  gemFxaaEnabled: true,
   diamondSsaaEnabled: true,
   surfaceEdgeAaEnabled: false,
   taaEnabled: false,
