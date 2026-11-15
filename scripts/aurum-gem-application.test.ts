@@ -59,6 +59,16 @@ test("gem layer index is prepared once and rebuilt for a reused scene root", () 
   material.dispose();
 });
 
+test("all gemstone families render both face orientations to prevent missing colored facets", () => {
+  const source = readFileSync("src/lib/aurum/material-application.ts", "utf8");
+  const start = source.indexOf("export function applyAurumGemToTarget");
+  const end = source.indexOf("export function clearAurumGemFromTarget", start);
+  const apply = source.slice(start, end);
+  expect(apply).toContain("side:THREE.DoubleSide");
+  expect(apply).not.toContain('side:preset.familia==="Diamante"?THREE.DoubleSide');
+  expect(apply).toContain("inconsistent face winding");
+});
+
 test("selected gem paints before optional enrichment and thickness work", () => {
   const source = readFileSync("src/lib/aurum/material-application.ts", "utf8");
   const start = source.indexOf("export function applyAurumGemToTarget");
