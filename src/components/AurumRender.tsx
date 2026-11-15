@@ -956,7 +956,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       // Preserve the original scene background while the live Bokeh preview is active.
       let dofSavedSceneBackground: THREE.Scene["background"] | undefined;
       let dofHasSavedSceneBackground = false;
-      const { composer, ssaoPass, ssrPass, ssrSavePass, ssrCompositePass, bloomPass, setSSRSelects, applyQuality: applyPostQuality, updateTemporal, resetTemporalAccumulation, setTemporalMotion, dofPass, renderPass, taaPass: idleTaaPass, fxaaPass, gemMaskPass, surfaceEdgeAaPass, outputPass } = await createAurumPostPipeline(
+      const { composer, ssaoPass, ssrPass, ssrSavePass, ssrCompositePass, bloomPass, setSSRSelects, applyQuality: applyPostQuality, updateTemporal, resetTemporalAccumulation, setTemporalMotion, setDiamondSupersamplingSettled, diamondSupersamplePass, diamondSupersampleCompositePass, dofPass, renderPass, taaPass: idleTaaPass, fxaaPass, gemMaskPass, surfaceEdgeAaPass, outputPass } = await createAurumPostPipeline(
         renderer,
         escena,
         camara,
@@ -964,6 +964,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         renderQuality
       );
       resetTemporalAccumulationRef.current = resetTemporalAccumulation;
+      // Initialize the optional diamond-only SSAA module in its settled state.
+      setDiamondSupersamplingSettled?.(true);
 
       // The post pipeline loads Three.js passes asynchronously. If the route
       // unmounts while those imports are pending, release the renderer created
@@ -3813,6 +3815,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         {
           progressiveFrames: Math.max(1, Math.min(32, Math.floor(Number(postRuntimeConfig.progressiveFrameCount ?? 1)))),
           onStart: () => {
+            // High-resolution reference rendering is suspended during camera motion.
+            setDiamondSupersamplingSettled?.(false);
             renderPipelineContract.setMode("LIVE_MOTION");
             syncAurumSsrDiagnosticConfig();
 
@@ -3879,6 +3883,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             invalidateRenderRef.current?.();
           },
           onEnd: () => {
+            // Resume selective 2x diamond supersampling only after camera motion ends.
+            const diamondSsaaActive = Boolean(setDiamondSupersamplingSettled?.(true));
             // Keep the settled viewport on the same minimal beauty path. TAA, Bloom,
             // DOF, SSR and full-surface edge filtering remain disabled.
             const requestedDpr = Math.max(1, Math.min(2, renderQuality.pixelRatio));
@@ -3887,10 +3893,12 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             composer?.setPixelRatio?.(settledDpr);
 
             // Gem Mask + FXAA disabled: retain only the ordinary beauty output.
-            const settledBeautyPasses = new Set([renderPass, outputPass]);
+            const settledBeautyPasses = new Set([renderPass, ...(diamondSsaaActive ? [diamondSupersamplePass, gemMaskPass, diamondSupersampleCompositePass] : []), outputPass]);
             const settledPasses = ((composer as any)?.passes ?? []) as any[];
             settledPasses.forEach((pass) => { pass.enabled = settledBeautyPasses.has(pass); });
-            if (gemMaskPass) gemMaskPass.enabled = false;
+            if (gemMaskPass) gemMaskPass.enabled = diamondSsaaActive;
+            if (diamondSupersamplePass) diamondSupersamplePass.enabled = diamondSsaaActive;
+            if (diamondSupersampleCompositePass) diamondSupersampleCompositePass.enabled = diamondSsaaActive;
             if (fxaaPass) fxaaPass.enabled = false;
 
             liveFastPathRef.current = false;
