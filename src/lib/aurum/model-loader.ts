@@ -305,7 +305,7 @@ export async function preprocessAurumModel(
   return object;
 }
 
-export async function parseAurumInput(file: File, ext: string, fallbackMaterial: THREE.Material) {
+export async function parseAurumInput(file: File, ext: string, fallbackMaterial: THREE.Material, onProgress?: (message: string) => void) {
   const loadAuditEnabled = typeof window !== "undefined"
     && new URLSearchParams(window.location.search).get("aurumLoadAudit") === "1";
   const auditStarted = performance.now();
@@ -322,9 +322,11 @@ export async function parseAurumInput(file: File, ext: string, fallbackMaterial:
     });
     auditPrevious = now;
   };
+  onProgress?.("Leyendo archivo de origen");
   const buffer = await file.arrayBuffer();
   auditStep("file-arraybuffer-ready", { bytes: buffer.byteLength, format: ext });
   if (ext === "stl") {
+    onProgress?.("Interpretando geometría STL");
     const { STLLoader } = await import("three/examples/jsm/loaders/STLLoader.js");
     const geometry = new STLLoader().parse(buffer);
     geometry.computeBoundingBox();
@@ -347,9 +349,10 @@ export async function parseAurumInput(file: File, ext: string, fallbackMaterial:
     model.userData["aurumStlDimensions"] = { x: size.x, y: size.y, z: size.z };
     return model;
   }
-  if (ext === "obj") { const { OBJLoader } = await import("three/examples/jsm/loaders/OBJLoader.js"); return new OBJLoader().parse(new TextDecoder().decode(buffer)); }
-  if (ext === "fbx") { const { FBXLoader } = await import("three/examples/jsm/loaders/FBXLoader.js"); return new FBXLoader().parse(buffer, ""); }
+  if (ext === "obj") { onProgress?.("Interpretando geometría OBJ"); const { OBJLoader } = await import("three/examples/jsm/loaders/OBJLoader.js"); return new OBJLoader().parse(new TextDecoder().decode(buffer)); }
+  if (ext === "fbx") { onProgress?.("Interpretando geometría FBX"); const { FBXLoader } = await import("three/examples/jsm/loaders/FBXLoader.js"); return new FBXLoader().parse(buffer, ""); }
   if (ext === "glb") {
+    onProgress?.("Interpretando archivo GLB");
     const [{ GLTFLoader }, dracoLoader] = await Promise.all([
       import("three/examples/jsm/loaders/GLTFLoader.js"),
       getAurumDracoLoader(),
@@ -359,6 +362,7 @@ export async function parseAurumInput(file: File, ext: string, fallbackMaterial:
     return (await loader.parseAsync(buffer, "")).scene;
   }
   if (ext === "3dm") {
+    onProgress?.("Interpretando archivo Rhino 3DM");
     const { Rhino3dmLoader } = await import("three/examples/jsm/loaders/3DMLoader.js");
     auditStep("rhino-loader-module-ready");
     const loader:any = new Rhino3dmLoader();
