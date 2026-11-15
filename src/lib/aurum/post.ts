@@ -826,9 +826,10 @@ export async function createAurumPostPipeline(
     temporalMotionActive=next;
     const edgeAaProfile=getAurumEdgeAaProfile(lastKnownQualityId || (lastKnownHighQuality ? "high" : "low"),lastKnownBudgetTier,next ? "live" : "settled");
     const postControls=getAurumPostControls();
-    const edgeAaEnabled=postControls.gemFxaaEnabled;
-    if(gemMaskPass) gemMaskPass.enabled=edgeAaEnabled;
-    if(fxaaPass) fxaaPass.enabled=edgeAaEnabled;
+    // The selective SSAA module is settled-only; motion suspends its 2x
+    // reference render and restores the optional masked FXAA fallback.
+    diamondSupersamplingSettled=!next;
+    applyDiamondPostModules(postControls);
     if(surfaceEdgeAaPass) {
       surfaceEdgeAaPass.enabled=postControls.surfaceEdgeAaEnabled;
       const strength=surfaceEdgeAaPass.material?.uniforms?.strength;
