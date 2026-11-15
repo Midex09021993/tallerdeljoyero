@@ -144,6 +144,41 @@ export function applyAurumPublicViewerCamera(
  * Calcula la composición de cámara usando el volumen real de la joya.
  * El encuadre mantiene una escala coherente entre todas las vistas.
  */
+/**
+ * Calcula una esfera envolvente de las mallas visibles en coordenadas de mundo.
+ * A diferencia de la diagonal de una Box3, su radio no cambia al observar el
+ * producto desde frontal, lateral, superior o perspectiva.
+ */
+function getAurumVisibleProductSphere(model: THREE.Object3D | null): THREE.Sphere {
+  const result = new THREE.Sphere(new THREE.Vector3(), 0);
+  if (!model) return result;
+  model.updateWorldMatrix(true, true);
+  let hasSphere = false;
+  model.traverse((object) => {
+    const mesh = object as THREE.Mesh;
+    if (!mesh.isMesh || !mesh.geometry || !mesh.visible) return;
+    for (let parent = mesh.parent; parent; parent = parent.parent) {
+      if (!parent.visible) return;
+    }
+    if (!mesh.geometry.boundingSphere) mesh.geometry.computeBoundingSphere();
+    const localSphere = mesh.geometry.boundingSphere;
+    if (!localSphere) return;
+    const worldSphere = localSphere.clone().applyMatrix4(mesh.matrixWorld);
+    if (!hasSphere) {
+      result.copy(worldSphere);
+      hasSphere = true;
+    } else {
+      result.union(worldSphere);
+    }
+  });
+  return result;
+}
+
+/**
+ * Las vistas ortogonales y perspectiva comparten una esfera de referencia y
+ * una única distancia focal. Así la joya conserva su escala aparente al cambiar
+ * de orientación; solo cambia la dirección desde la que se observa.
+ */
 export function applyAurumCameraView(
   camera: THREE.PerspectiveCamera,
   controls: { target: THREE.Vector3; update: () => void },
@@ -151,52 +186,28 @@ export function applyAurumCameraView(
   view: AurumCameraView,
   category: string = "Otro"
 ) {
-  // Use the same visible-mesh bounds as model preparation. setFromObject()
-  // includes hidden CAD helpers/invisible Rhino layers and can shift the camera
-  // target away from the product even after the visible model was centered.
-  const bounds = model ? new THREE.Box3() : null;
-  if (model && bounds) {
-    model.updateWorldMatrix(true, true);
-    model.traverse((object) => {
-      if (!(object as THREE.Mesh).isMesh || !(object as THREE.Mesh).geometry || !object.visible) return;
-      for (let parent = object.parent; parent; parent = parent.parent) {
-        if (!parent.visible) return;
-      }
-      bounds.expandByObject(object);
-    });
-    if (bounds.isEmpty()) bounds.setFromCenterAndSize(new THREE.Vector3(), new THREE.Vector3(2.6, 2.6, 2.6));
-  }
-  const target = bounds
-    ? bounds.getCenter(new THREE.Vector3())
+  const sphere = getAurumVisibleProductSphere(model);
+  const target = sphere.radius > 0
+    ? sphere.center.clone()
     : new THREE.Vector3(0, 0, 0);
-  const size = bounds
-    ? bounds.getSize(new THREE.Vector3())
-    : new THREE.Vector3(2.6, 2.6, 2.6);
-  const radius = Math.max(size.length() * 0.5, 0.01);
+  const radius = Math.max(sphere.radius, 0.01);
   const profile = getAurumProductCameraProfile(category);
 
-  // Encuadre automático por volumen real y campo de visión. La esfera que
-  // envuelve la pieza debe caber tanto en vertical como en horizontal; esto
-  // evita que modelos altos/anchos se recorten en visores con otra proporción.
+  // Una esfera envolvente independiente de la orientación evita que la vista
+  // lateral parezca más pequeña que la frontal por tener otro ancho/profundidad.
   const aspect = Number.isFinite(camera.aspect) && camera.aspect > 0 ? camera.aspect : 1;
   const verticalHalfFov = THREE.MathUtils.degToRad(camera.fov) * 0.5;
   const horizontalHalfFov = Math.atan(Math.tan(verticalHalfFov) * aspect);
   const limitingHalfFov = Math.max(0.01, Math.min(verticalHalfFov, horizontalHalfFov));
-  const fitDistance = radius / Math.sin(limitingHalfFov);
-  // 18% de margen fotográfico, ajustado por categoría para conservar aire
-  // adicional en collares, aretes y piezas alargadas.
-  // Reduce the original photographic breathing room slightly so the jewel
-  // occupies a little more of the viewport without changing its proportions.
-  const distance = Math.max(fitDistance * 1.10 * profile.distance, 0.1);
-  const verticalBias = radius * profile.vertical;
+  const distance = Math.max(
+    (radius / Math.sin(limitingHalfFov)) * 1.10 * profile.distance,
+    0.1,
+  );
 
   controls.target.copy(target);
   if (view === "frontal") {
     camera.up.set(0, 1, 0);
-    // Elevación mínima: conserva la lectura frontal pero permite que el plano
-    // de producto y su sombra de contacto entren en la composición.
-    const productLift = radius * 0.06;
-    camera.position.set(target.x, target.y + productLift, target.z + distance);
+    camera.position.set(target.x, target.y + radius * 0.06, target.z + distance);
   } else if (view === "superior") {
     camera.up.set(0, 0, -1);
     camera.position.set(target.x, target.y + distance, target.z);
@@ -205,11 +216,11 @@ export function applyAurumCameraView(
     camera.position.set(target.x + distance, target.y, target.z);
   } else {
     camera.up.set(0, 1, 0);
-    // Perspectiva conserva la distancia radial de Frontal y cambia solo
-    // la dirección de observación. Antes se sumaban desplazamientos en X/Y/Z
-    // sin normalizar, aumentando la distancia real y reduciendo la joya.
-    // Vista 3/4 con elevación suficiente para que el plano del aro se lea en diagonal y la corona de la gema quede visible. Dirección normalizada: no aumenta la distancia ni altera el modelo.
-    const perspectiveDirection = new THREE.Vector3(0.62, Math.max(profile.vertical * 2.1, 0.78), 1).normalize();
+    const perspectiveDirection = new THREE.Vector3(
+      0.62,
+      Math.max(profile.vertical * 2.1, 0.78),
+      1,
+    ).normalize();
     camera.position.copy(target).addScaledVector(perspectiveDirection, distance);
   }
   camera.lookAt(target);
