@@ -32,6 +32,7 @@ export function createAurumGround(THREE: any, scene: any): AurumGroundController
   let hdriGround:any = null;
   let hdriGroundTexture:any = null;
   let bakedShadowUserVisible = true;
+  let bakedShadowPositioned = false;
   let presetGroundVisible = true;
   let presetShadowVisible = false;
   let groundVisibilityOverride: boolean | null = null;
@@ -39,7 +40,8 @@ export function createAurumGround(THREE: any, scene: any): AurumGroundController
   const syncGroundVisibility = () => {
     const visible = groundVisibilityOverride ?? presetGroundVisible;
     mesh.visible = visible;
-    bakedShadow.visible = visible && bakedShadowUserVisible && presetShadowVisible;
+    // Never reveal the procedural shadow until it has been positioned against real model bounds.
+    bakedShadow.visible = visible && bakedShadowPositioned && bakedShadowUserVisible && presetShadowVisible;
     // The HDRI studio floor is a separate mesh; keep it under the same user toggle.
     if (hdriGround) hdriGround.visible = visible;
   };
@@ -122,7 +124,8 @@ export function createAurumGround(THREE: any, scene: any): AurumGroundController
       bakedShadow.position.set(center.x, mesh.position.y + .002, center.z);
       const sx=Math.max(size.x*1.12,.12), sz=Math.max(size.z*1.12,.12);
       bakedShadow.scale.set(sx,sz,1);
-      bakedShadow.visible = bakedShadowUserVisible && presetShadowVisible && mesh.visible && size.x > .001 && size.z > .001;
+      bakedShadowPositioned = size.x > .001 && size.z > .001;
+      syncGroundVisibility();
     },
     updateFromPreset(preset) {
       if (!preset) return;
