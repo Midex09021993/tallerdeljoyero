@@ -7,8 +7,8 @@ export type AurumPostControls = {
 const STORAGE_KEY = "aurum:post-engine-controls:v2";
 const LEGACY_STORAGE_KEY = "aurum:post-engine-controls:v1";
 const DEFAULTS: AurumPostControls = {
-  // Gem-only edge cleanup is enabled by default. Surface AA and TAA remain off.
-  gemFxaaEnabled: true,
+  // Gem Mask + FXAA are disabled by default. Surface AA and TAA remain off.
+  gemFxaaEnabled: false,
   surfaceEdgeAaEnabled: false,
   taaEnabled: false,
 };
@@ -32,7 +32,7 @@ export function getAurumPostControls(): AurumPostControls {
     if (!legacyRaw) return DEFAULTS;
     const legacy = JSON.parse(legacyRaw);
     const migrated: AurumPostControls = {
-      gemFxaaEnabled: true,
+      gemFxaaEnabled: false,
       surfaceEdgeAaEnabled: legacy.surfaceEdgeAaEnabled === true,
       taaEnabled: legacy.taaEnabled === true,
     };
