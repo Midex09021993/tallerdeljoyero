@@ -531,7 +531,8 @@ test("standard image export reproduces the LIVE gem-mask and FXAA composer", () 
 
   expect(exportStart).toBeGreaterThan(-1);
   expect(exportBlock).toContain("liveFastPathRef.current=false");
-  expect(exportBlock).toContain("const liveCapturePasses = new Set([renderPass, outputPass]);");
+  expect(exportBlock).toContain("...(diamondSupersamplePass?.enabled ? [diamondSupersamplePass] : [])");
+  expect(exportBlock).toContain("...(fxaaPass?.enabled ? [fxaaPass] : [])");
   expect(exportBlock).toContain("composer.setPixelRatio?.(1)");
   expect(exportBlock).toContain("composer.setSize?.(renderWidth, renderHeight)");
   expect(exportBlock).toContain("resolution?.set?.(1 / renderWidth, 1 / renderHeight)");
