@@ -77,7 +77,7 @@ export function ActividadComunidad({ slug, compact = false }: { slug?: string; c
         .select("id,participante_id,actor_name,activity_type,title,summary,created_at,target_url")
         .eq("is_public", true)
         .order("created_at", { ascending: false })
-        .limit(6);
+        .limit(30);
       if (error) throw error;
       return (data ?? []) as CommunityActivity[];
     },
@@ -98,7 +98,7 @@ export function ActividadComunidad({ slug, compact = false }: { slug?: string; c
     refetchInterval: 5 * 60_000,
     retry: 1,
   });
-  const activities = (activitiesQuery.data ?? []).filter(item => filter === "all" || item.activity_type === filter);
+  const activities = (activitiesQuery.data ?? []).filter(item => filter === "all" || item.activity_type === filter).slice(0, compact ? 30 : 6);
   const stats = statsQuery.data?.length ? statsQuery.data : previewStats;
 
   return (
