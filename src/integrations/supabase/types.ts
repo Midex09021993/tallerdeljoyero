@@ -4768,6 +4768,69 @@ export type Database = {
         }
         Relationships: []
       }
+      aurum_community_activity: {
+        Row: {
+          actor_name: string
+          activity_type: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_public: boolean
+          summary: string | null
+          title: string
+        }
+        Insert: {
+          actor_name: string
+          activity_type: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_public?: boolean
+          summary?: string | null
+          title: string
+        }
+        Update: {
+          actor_name?: string
+          activity_type?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_public?: boolean
+          summary?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
+      aurum_community_stats: {
+        Row: {
+          display_order: number
+          label: string
+          metric_key: string
+          prefix: string | null
+          suffix: string | null
+          updated_at: string
+          value: number
+        }
+        Insert: {
+          display_order?: number
+          label: string
+          metric_key: string
+          prefix?: string | null
+          suffix?: string | null
+          updated_at?: string
+          value?: number
+        }
+        Update: {
+          display_order?: number
+          label?: string
+          metric_key?: string
+          prefix?: string | null
+          suffix?: string | null
+          updated_at?: string
+          value?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
