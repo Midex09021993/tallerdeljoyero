@@ -2368,7 +2368,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       };
       const camaraVista=(id:VistaId)=>{
         if (modelo?.userData?.aurumPublicViewerPresentation && id === "frontal") {
-          applyAurumPublicViewerCamera(camara, controles, modelo, { enablePan: true, framingScale: 0.60 });
+          applyAurumPublicViewerCamera(camara, controles, modelo, { enablePan: true, framingScale: 0.88 });
         } else {
           applyAurumCameraView(camara, controles, modelo, id, categoriaProyectoRef.current);
         }
