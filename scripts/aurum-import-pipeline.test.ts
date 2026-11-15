@@ -338,6 +338,60 @@ test("hidden Rhino block instances remain hidden even when their definition mesh
   definitionMesh.geometry.dispose();
 });
 
+test("Rhino instance geometry remains hidden when its definition layer is hidden but its instance layer is visible", () => {
+  const root = new THREE.Group();
+  root.userData.layers = [
+    { id: "definition-hidden", name: "Gem 03", visible: false },
+    { id: "instance-visible", name: "Setting", visible: true },
+  ];
+  const instance = new THREE.Group();
+  instance.userData.aurumRhinoInstanceReference = { layerIndex: 1, objectVisibility: { visible: true } };
+  const mesh = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial());
+  mesh.userData.aurumRhinoInstanceSource = { layerIndex: 1, definitionLayerIndex: 0 };
+  mesh.userData.attributes = { layerIndex: 1, definitionLayerIndex: 0 };
+  instance.add(mesh);
+  root.add(instance);
+
+  enforceRhinoLayerVisibilityBeforeExport(root);
+
+  expect(instance.visible).toBe(true);
+  expect(mesh.visible).toBe(false);
+  expect(mesh.userData.aurumRhinoVisibility).toMatchObject({
+    instanceLayerVisible: true,
+    definitionLayerIndex: 0,
+    definitionLayerVisible: false,
+    layerVisible: false,
+    visible: false,
+  });
+  mesh.geometry.dispose();
+});
+
+test("Rhino instance geometry is hidden when its instance layer is hidden even if definition layer is visible", () => {
+  const root = new THREE.Group();
+  root.userData.layers = [
+    { id: "definition-visible", name: "Gem", visible: true },
+    { id: "instance-hidden", name: "Gem 03", visible: false },
+  ];
+  const instance = new THREE.Group();
+  instance.userData.aurumRhinoInstanceReference = { layerIndex: 1, objectVisibility: { visible: true } };
+  const mesh = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial());
+  mesh.userData.aurumRhinoInstanceSource = { layerIndex: 1, definitionLayerIndex: 0 };
+  mesh.userData.attributes = { layerIndex: 1, definitionLayerIndex: 0 };
+  instance.add(mesh);
+  root.add(instance);
+
+  enforceRhinoLayerVisibilityBeforeExport(root);
+
+  expect(instance.visible).toBe(false);
+  expect(mesh.visible).toBe(false);
+  expect(mesh.userData.aurumRhinoVisibility).toMatchObject({
+    instanceLayerVisible: false,
+    definitionLayerVisible: true,
+    visible: false,
+  });
+  mesh.geometry.dispose();
+});
+
 test("hidden Rhino objects are excluded even when no layer table is available", () => {
   const root = new THREE.Group();
   const hidden = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial());
