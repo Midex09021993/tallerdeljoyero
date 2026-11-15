@@ -17,7 +17,6 @@ import { AURUM_LIGHTING_DEFAULT } from "../lib/aurum-lighting-engine";
 import { applyAurumCameraView, applyAurumIJEWELPresentationCamera, applyAurumPublicViewerCamera, fitAurumCameraToAspect, calculateAurumFocalDepth, getAurumVisibleProductBounds } from "../lib/aurum/camera";
 import { prepareAurumModel } from "../lib/aurum/model-prep";
 import { createAurumPostPipeline } from "../lib/aurum/post";
-import { getAurumPostControls } from "../lib/aurum/post-engine-controls";
 import { createAurumEnvironment } from "../lib/aurum/environment";
 import { createAurumGemEnvironment } from "../lib/aurum/gem-environment";
 import { createAurumDiamondBvhRuntime, type AurumDiamondBvhRuntime } from "../lib/aurum/aurum-diamond-bvh-runtime";
@@ -2295,14 +2294,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           camara.updateMatrixWorld?.(true);
           camara.updateProjectionMatrix?.();
           diamondBvhRuntime?.update();
-          const initialGemFxaaEnabled = getAurumPostControls().gemFxaaEnabled;
+          // Keep the post-processing passes out of the live preview.
           const initialBeautyPasses = new Set([renderPass, outputPass]);
-          if (initialGemFxaaEnabled) {
-            initialBeautyPasses.add(gemMaskPass);
-            initialBeautyPasses.add(fxaaPass);
-          }
-          if (gemMaskPass) gemMaskPass.enabled = initialGemFxaaEnabled;
-          if (fxaaPass) fxaaPass.enabled = initialGemFxaaEnabled;
+          if (gemMaskPass) gemMaskPass.enabled = false;
+          if (fxaaPass) fxaaPass.enabled = false;
           ((composer as any)?.passes ?? []).forEach((pass: any) => {
             pass.enabled = initialBeautyPasses.has(pass);
           });
