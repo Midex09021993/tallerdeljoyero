@@ -125,7 +125,7 @@ export function createAurumDiamondMicroPipeline(scene: any, camera: any, getView
     const sortedDiameters = projected.map(item => item.diameter).sort((a, b) => b - a);
     const largest = sortedDiameters[0] ?? 0;
     const secondLargest = sortedDiameters[1] ?? 0;
-    const hasDistinctCenter = projected.length === 1 || (largest > 36 && largest > Math.max(secondLargest, 0.01) * 1.35);
+    const hasDistinctCenter = projected.length === 1 || (largest > 12 && largest > Math.max(secondLargest, 0.01) * 1.35);
     const centerMesh = projected.find(item => item.diameter === largest)?.mesh;
 
     for (const { mesh, diameter } of projected) {
