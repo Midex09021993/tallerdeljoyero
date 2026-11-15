@@ -217,14 +217,30 @@ export async function createAurumPostPipeline(
       color:0xffffff,side:THREE.DoubleSide,depthTest:true,depthWrite:false,
       depthFunc:THREE.EqualDepth,toneMapped:false
     });
-    const getAurumRenderCategory=(object:any):string=>{
+    const isAurumDiamondMesh=(object:any):boolean=>{
       let current=object;
+      let isGem=false;
+      let isMetal=false;
+      const identity:string[]=[];
       while(current){
-        const category=String(current.userData?.aurumRhino?.categoria??"").trim().toLowerCase();
-        if(category) return category;
+        const metadata=current.userData?.aurumRhino??{};
+        const category=String(metadata.categoria??"").trim().toLowerCase();
+        if(category==="gema") isGem=true;
+        if(category==="metal") isMetal=true;
+        identity.push(
+          current.name,
+          metadata.capa,
+          metadata.nombre,
+          metadata.tipo,
+          current.userData?.attributes?.layerName,
+          current.userData?.attributes?.LayerName,
+          ...(Array.isArray(current.material)?current.material:[current.material]).map((material:any)=>material?.name)
+        );
         current=current.parent;
       }
-      return "otro";
+      const name=identity.map(value=>String(value??"")).join(" ").toLowerCase();
+      const isDiamond=/\\b(diamond|diamante)\\b/.test(name);
+      return !isMetal && isDiamond && (isGem || isDiamond);
     };
     // Scene classification is stable between model/selection-geometry changes.
     // Reuse these arrays on every frame instead of traversing the whole scene
@@ -259,7 +275,7 @@ export async function createAurumPostPipeline(
       cachedGemMeshes.length=0;
       scene.traverse((object:any)=>{
         if(!object?.isMesh) return;
-        if(getAurumRenderCategory(object)!=="gema") return;
+        if(!isAurumDiamondMesh(object)) return;
         cachedGemMeshes.push(object);
         if(object.layers){
           previousGemLayerMasks.set(object,object.layers.mask);
@@ -270,6 +286,7 @@ export async function createAurumPostPipeline(
     refreshGemMaskCache();
     gemMaskPass={
       enabled:false,needsSwap:false,clear:false,renderToScreen:false,
+      get hasDiamondMeshes(){ return cachedGemMeshes.length>0; },
       refreshCache:refreshGemMaskCache,
       setSize(width:number,height:number){
         gemMaskTarget.setSize(Math.max(1,width),Math.max(1,height));
