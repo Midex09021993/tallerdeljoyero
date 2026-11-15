@@ -1982,7 +1982,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       // sigue exactamente el mismo flujo: Object3D -> GLB interno -> WebGL.
       const obtenerPartes = (objeto:any):ParteModelo[] => getAurumModelParts(objeto, colorRhinoHex, clasificarCapa);
 
-      const cargar = async(file:File, informar:(paso:string)=>void) => {
+      const cargar = async(file:File, informar:(paso:string, completed?:number, total?:number)=>void) => {
         // Opt-in load diagnostics: append ?aurumLoadAudit=1 to measure each stage
         // without changing the production rendering path or model geometry.
         const loadAuditEnabled = typeof window !== "undefined"
