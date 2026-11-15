@@ -3204,8 +3204,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             }
             renderer.setSize(renderWidth,renderHeight,false);
             if (composer && !options.depthOfField) {
-              // Snapshot only the four LIVE viewport passes. TAA and photographic
-              // effects are intentionally excluded so the export matches motion.
+              // Preserve the live diamond mask, SSAA composite and perimeter-only FXAA.
+              // TAA and photographic effects remain excluded so the export matches the viewport.
               const liveCapturePasses = new Set([
                 renderPass,
                 ...(diamondSupersamplePass?.enabled ? [diamondSupersamplePass] : []),
@@ -3899,7 +3899,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             if (diamondSupersamplePass) diamondSupersamplePass.enabled = liveDiamondSsaaActive;
             if (diamondSupersampleCompositePass) diamondSupersampleCompositePass.enabled = liveDiamondSsaaActive;
             if (fxaaPass) {
-              fxaaPass.enabled = liveDiamondAaEnabled && !liveDiamondSsaaActive;
+              // Keep perimeter-only FXAA active alongside SSAA when enabled by Post Engine.
+              fxaaPass.enabled = liveDiamondAaEnabled && fxaaPass.enabled;
               const strength = fxaaPass.material?.uniforms?.strength;
               if (strength) strength.value = liveDiamondAaEnabled ? 0.34 : 0.65;
             }
@@ -3939,8 +3940,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             if (gemMaskPass) gemMaskPass.enabled = diamondSsaaActive;
             if (diamondSupersamplePass) diamondSupersamplePass.enabled = diamondSsaaActive;
             if (diamondSupersampleCompositePass) diamondSupersampleCompositePass.enabled = diamondSsaaActive;
-            if (fxaaPass) fxaaPass.enabled = false;
-
             liveFastPathRef.current = false;
             // Restore the normal settled temporal state. There is no active
             // gem transition to coordinate while progressive blending is suspended.
