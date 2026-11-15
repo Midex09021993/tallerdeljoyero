@@ -524,6 +524,8 @@ export async function createAurumPostPipeline(
     // pipeline failed: PNG capture diagnostics need the original exception.
     console.error("[AURUM][POST] No se pudo inicializar el compositor fotográfico; se usará render directo.", error);
     lutPass?.lut?.dispose?.();
+    diamondSupersampleTarget?.dispose?.();
+    diamondSupersampleTarget=null;
     composer?.dispose?.();
     composer=null; renderPass=null; taaPass=null; ssrPass=null; ssrSavePass=null; ssrCompositePass=null; ssaoPass=null; bloomPass=null; lutPass=null; gradingPass=null; vignettePass=null; dofPass=null; outputPass=null; fxaaPass=null; surfaceEdgeAaPass=null; gemMaskPass=null;
   }
@@ -858,7 +860,7 @@ export async function createAurumPostPipeline(
   let diamondSupersamplingSettled=true;
   const applyDiamondPostModules=(controls:any)=>{
     const hasDiamond=Boolean(gemMaskPass?.hasDiamondMeshes);
-    const ssaaEnabled=Boolean(controls.diamondSsaaEnabled && hasDiamond && diamondSupersamplingSettled && renderer.capabilities?.isWebGL2 !== false);
+    const ssaaEnabled=Boolean(controls.diamondSsaaEnabled && hasDiamond && diamondSupersamplingSettled && renderer.capabilities?.isWebGL2 !== false && renderer.extensions?.has?.("EXT_color_buffer_float") !== false);
     const fxaaEnabled=Boolean(controls.gemFxaaEnabled && hasDiamond && !ssaaEnabled);
     if(diamondSupersamplePass) diamondSupersamplePass.enabled=ssaaEnabled;
     if(diamondSupersampleCompositePass) diamondSupersampleCompositePass.enabled=ssaaEnabled;
