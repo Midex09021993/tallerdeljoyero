@@ -529,8 +529,10 @@ export async function createAurumPostPipeline(
         tDiffuse:{value:null},
         gemMask:{value:gemMaskTarget.texture},
         resolution:{value:new THREE.Vector2(1,1)},
-        strength:{value:0.65},
-        edgeThreshold:{value:0.24},
+        // Stronger, lower-threshold filtering is confined to the gemstone mask.
+        // This improves the girdle silhouette without touching metal pixels.
+        strength:{value:0.76},
+        edgeThreshold:{value:0.18},
       },
       vertexShader:`varying vec2 vUv; void main(){vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
       fragmentShader:`uniform sampler2D tDiffuse; uniform sampler2D gemMask; uniform vec2 resolution; uniform float strength; uniform float edgeThreshold; varying vec2 vUv;
