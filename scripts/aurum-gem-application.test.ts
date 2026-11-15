@@ -151,7 +151,9 @@ test("diamond perimeter AA uses the stronger masked edge profile", () => {
   const source = readFileSync("src/lib/aurum/post.ts", "utf8");
   expect(source).toContain("strength:{value:0.76}");
   expect(source).toContain("edgeThreshold:{value:0.18}");
-  expect(source).toContain("if(texture2D(gemMask,vUv).r<0.5){gl_FragColor=center;return;}");
+  expect(source).toContain("float centerMask=texture2D(gemMask,vUv).r;");
+  expect(source).toContain("float outsideNeighbor=1.0-min(min(m0,m1),min(m2,m3));");
+  expect(source).toContain("float blendAmount=edge*strength*outsideNeighbor;");
 });
 
 test("diamond SSAA scale cap is updated through the pipeline-owned state", () => {
@@ -167,6 +169,8 @@ test("live camera motion keeps diamond-only supersampling active at a reduced ad
   const render = readFileSync("src/components/AurumRender.tsx", "utf8");
   expect(post).toContain("diamondSupersamplePass?.setScaleCap?.(next?diamondLiveSupersampleScaleCap:diamondSupersampleScaleCap)");
   expect(post).toContain("controls.diamondSsaaEnabled && hasDiamond && renderer.capabilities?.isWebGL2 !== false");
+  expect(post).toContain("controls.gemFxaaEnabled && hasDiamond");
+  expect(post).toContain("if(fxaaPass) fxaaPass.enabled=fxaaEnabled;");
   expect(post).not.toContain("hasDiamond && diamondSupersamplingSettled && renderer.capabilities");
   expect(render).toContain("runtimeBudget.diamondLiveSupersampleScaleCap");
   expect(render).toContain("diamondSupersamplingEnabled: liveDiamondSsaaActive");
