@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, BookOpen, Box, ChevronLeft, ChevronRight, Gem, HeartHandshake, MessageCircle, Search, Share2, ShoppingBag, Sparkles, Minus, Plus, Trash2, X, Menu, Instagram, Youtube, Facebook, Music2, Pin } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabasePublic as supabase } from "@/integrations/supabase/client";
+import { ActividadComunidad } from "@/components/ActividadComunidad";
 
 export const Route = createFileRoute("/$slug/")({
   head: ({ params }) => ({
@@ -685,6 +686,7 @@ function CatalogoPublicoPage() {
         </section>
       ) : null}
 
+      <ActividadComunidad slug={slugNormalizado} compact />
       <section id="preguntas-frecuentes" className="border-y border-[#1f1b1815] bg-[#f8f4ef]">
         <div className="mx-auto max-w-4xl px-5 py-12 sm:px-8 sm:py-16">
           <p className="text-[10px] font-bold uppercase tracking-[.24em] text-[#8a6b36]">Estamos para ayudarte</p>
