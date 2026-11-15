@@ -230,7 +230,7 @@ export async function createAurumPostPipeline(
       return diamondSupersampleScale>=1.15;
     };
     const ensureDiamondSupersampleTarget=()=>{
-      updateDiamondSupersampleScale();
+      if(!updateDiamondSupersampleScale()) return null;
       if(!diamondSupersampleTarget){
         diamondSupersampleTarget=new THREE.WebGLRenderTarget(
           Math.max(2,Math.floor(diamondSupersampleBaseWidth*diamondSupersampleScale)),
