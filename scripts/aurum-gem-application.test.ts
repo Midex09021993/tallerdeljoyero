@@ -184,6 +184,8 @@ test("colored gemstones use the native LIVE color pipeline and restore BEAUTY op
   });
   const beautyCompile = () => {};
   const beautyCacheKey = () => "aurum-beauty-ruby";
+  material.onBeforeCompile = beautyCompile;
+  material.customProgramCacheKey = beautyCacheKey;
   material.userData = {
     aurumGemFamily: "Rubí",
     aurumBeautyOnBeforeCompile: beautyCompile,
@@ -214,6 +216,8 @@ test("the dedicated diamond shader remains active when the viewport switches to 
   const material = new THREE.MeshPhysicalMaterial({ dispersion: 0.18, iridescence: 0.1 });
   const beautyCompile = () => {};
   const beautyCacheKey = () => "aurum-diamond-beauty";
+  material.onBeforeCompile = beautyCompile;
+  material.customProgramCacheKey = beautyCacheKey;
   material.userData = {
     aurumGemFamily: "Diamante",
     aurumBeautyOnBeforeCompile: beautyCompile,
