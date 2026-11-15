@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Gem, GraduationCap, Store, UsersRound } from "lucide-react";
+import { ActividadComunidad } from "@/components/ActividadComunidad";
 
 export const Route = createFileRoute("/comunidad")({
   head: () => ({
@@ -70,6 +71,12 @@ function ComunidadPage() {
           <div className="mt-7 flex flex-wrap gap-3">
             <Link to="/directorio" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#17232d] px-5 text-sm font-semibold text-white transition hover:bg-[#293b49]">Encontrar talleres <ArrowRight className="size-4" /></Link>
           </div>
+        </div>
+      </section>
+
+      <section className="border-b border-slate-200 bg-[#fbfaf7]">
+        <div className="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14">
+          <ActividadComunidad />
         </div>
       </section>
 
