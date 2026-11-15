@@ -22,18 +22,79 @@ function esc(value: string) {
   }[char] ?? char));
 }
 
+const DEFAULT_LOGIN_URL = "https://www.tallerdeljoyero.com/auth";
+const ALLOWED_LOGIN_ORIGINS = new Set([
+  "https://www.tallerdeljoyero.com",
+  "https://tallerdeljoyero.com",
+  "https://tallerdeljoyero.lovable.app",
+]);
+const EMAIL_RE = /^[^\s@<>"']{1,64}@[^\s@<>"']{1,190}\.[a-z]{2,24}$/i;
+
+/** Sólo el servidor de la app (con la clave de servicio) puede invocar este envío. */
+async function esLlamadaInterna(req: Request): Promise<boolean> {
+  const bearer = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "").trim();
+  const apikey = (req.headers.get("apikey") ?? "").trim();
+  const candidatos = [...new Set([bearer, apikey].filter((v) => v.length > 0))];
+  if (!candidatos.length) return false;
+
+  const claves = [
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"),
+    Deno.env.get("SUPABASE_SECRET_KEY"),
+  ].filter((v): v is string => typeof v === "string" && v.length > 0);
+  if (candidatos.some((c) => claves.includes(c))) return true;
+
+  // Verificación con el servidor de autenticación: sólo una clave de servicio
+  // válida puede listar usuarios en la API de administración.
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  if (!supabaseUrl) return false;
+  for (const clave of candidatos) {
+    try {
+      const headers: Record<string, string> = { apikey: clave };
+      if (!clave.startsWith("sb_")) headers.Authorization = `Bearer ${clave}`;
+      const res = await fetch(`${supabaseUrl}/auth/v1/admin/users?page=1&per_page=1`, { headers });
+      await res.body?.cancel();
+      if (res.ok) return true;
+    } catch {
+      // continuar con el siguiente candidato
+    }
+  }
+  return false;
+}
+
+function loginUrlSeguro(valor: string | undefined): string {
+  if (!valor) return DEFAULT_LOGIN_URL;
+  try {
+    const url = new URL(valor);
+    if (!ALLOWED_LOGIN_ORIGINS.has(url.origin)) return DEFAULT_LOGIN_URL;
+    return `${url.origin}/auth`;
+  } catch {
+    return DEFAULT_LOGIN_URL;
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
+  if (req.method !== "POST") {
+    return Response.json({ ok: false, error: "Método no permitido" }, { status: 405, headers: corsHeaders });
+  }
+
+  if (!(await esLlamadaInterna(req))) {
+    return Response.json({ ok: false, error: "No autorizado" }, { status: 403, headers: corsHeaders });
+  }
+
   try {
     const body = (await req.json()) as WelcomePayload;
-    const nombre = body.nombre?.trim();
-    const taller = body.taller?.trim();
-    const email = body.email?.trim().toLowerCase();
-    const loginUrl = body.loginUrl?.trim();
+    const nombre = typeof body.nombre === "string" ? body.nombre.trim() : "";
+    const taller = typeof body.taller === "string" ? body.taller.trim() : "";
+    const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+    const loginUrl = loginUrlSeguro(typeof body.loginUrl === "string" ? body.loginUrl.trim() : undefined);
 
-    if (!nombre || !taller || !email || !loginUrl) {
+    if (!nombre || !taller || !email) {
       return Response.json({ ok: false, error: "Datos de bienvenida incompletos" }, { status: 400, headers: corsHeaders });
+    }
+    if (nombre.length > 120 || taller.length > 120 || email.length > 254 || !EMAIL_RE.test(email)) {
+      return Response.json({ ok: false, error: "Datos de bienvenida no válidos" }, { status: 400, headers: corsHeaders });
     }
 
     const apiKey = Deno.env.get("RESEND_API_KEY");
