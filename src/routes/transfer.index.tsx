@@ -167,7 +167,7 @@ function TransferPage() {
             Volver a Aurum Lab
           </Link>
           <div className="flex items-center gap-2 text-[#d7ad48]">
-            <Gem className="size-5" aria-hidden="true" />
+            <img src="/brand/aurum-symbol.svg" alt="Logotipo de AURUM LAB" width="24" height="24" className="size-6 object-contain" />
             <span className="text-xs font-semibold uppercase tracking-[.22em]">Aurum Lab</span>
           </div>
         </nav>
