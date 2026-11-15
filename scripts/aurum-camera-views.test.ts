@@ -14,7 +14,27 @@ function createFixture(aspect = 16 / 9) {
   return { model, camera, controls };
 }
 
-test("all four camera views preserve the same product scale and center", () => {
+function projectedFootprint(model: THREE.Object3D, camera: THREE.PerspectiveCamera) {
+  model.updateMatrixWorld(true);
+  camera.updateMatrixWorld(true);
+  const bounds = new THREE.Box3().setFromObject(model);
+  const corners = [
+    new THREE.Vector3(bounds.min.x, bounds.min.y, bounds.min.z),
+    new THREE.Vector3(bounds.min.x, bounds.min.y, bounds.max.z),
+    new THREE.Vector3(bounds.min.x, bounds.max.y, bounds.min.z),
+    new THREE.Vector3(bounds.min.x, bounds.max.y, bounds.max.z),
+    new THREE.Vector3(bounds.max.x, bounds.min.y, bounds.min.z),
+    new THREE.Vector3(bounds.max.x, bounds.min.y, bounds.max.z),
+    new THREE.Vector3(bounds.max.x, bounds.max.y, bounds.min.z),
+    new THREE.Vector3(bounds.max.x, bounds.max.y, bounds.max.z),
+  ];
+  return corners.reduce((max, point) => {
+    point.project(camera);
+    return Math.max(max, Math.abs(point.x), Math.abs(point.y));
+  }, 0);
+}
+
+test("all four camera views fit the complete product with a consistent screen margin", () => {
   const views = ["frontal", "lateral", "superior", "perspectiva"] as const;
   const distances: number[] = [];
 
@@ -22,7 +42,7 @@ test("all four camera views preserve the same product scale and center", () => {
     const { model, camera, controls } = createFixture();
     applyAurumCameraView(camera, controls, model, view, "Anillo", 1);
     const bounds = new THREE.Box3().setFromObject(model);
-    const center = bounds.getBoundingSphere(new THREE.Sphere()).center;
+    const center = bounds.getCenter(new THREE.Vector3());
 
     expect(controls.target.distanceTo(center)).toBeLessThan(1e-6);
     expect(camera.position.distanceTo(controls.target)).toBeGreaterThan(0);
@@ -31,23 +51,25 @@ test("all four camera views preserve the same product scale and center", () => {
     if (view === "frontal") expect(camera.position.z).toBeGreaterThan(controls.target.z);
     if (view === "lateral") expect(camera.position.x).toBeGreaterThan(controls.target.x);
     if (view === "superior") expect(camera.position.y).toBeGreaterThan(controls.target.y);
+
+    const footprint = projectedFootprint(model, camera);
+    expect(footprint).toBeLessThanOrEqual(0.91);
+    expect(footprint).toBeGreaterThan(0.65);
   }
 
-  for (const distance of distances) {
-    expect(Math.abs(distance - distances[0]!)).toBeLessThan(1e-6);
-  }
+  // Different orientations can need different distances; projected occupancy,
+  // rather than raw camera distance, is the quantity that must stay consistent.
+  expect(new Set(distances.map((distance) => distance.toFixed(3))).size).toBeGreaterThan(1);
 });
 
-test("camera view framing respects narrow and wide viewport aspect ratios", () => {
-  const distances = [0.62, 1, 1.78].map((aspect) => {
+test("camera view framing adapts to portrait, square and landscape viewport ratios", () => {
+  for (const aspect of [0.62, 1, 1.78]) {
     const { model, camera, controls } = createFixture(aspect);
     applyAurumCameraView(camera, controls, model, "frontal", "Anillo", 1);
-    return camera.position.distanceTo(controls.target);
-  });
-
-  // Portrait/square layouts must not be framed tighter than the landscape layout.
-  expect(distances[0]).toBeGreaterThanOrEqual(distances[1]!);
-  expect(distances[1]).toBeGreaterThanOrEqual(distances[2]!);
+    const footprint = projectedFootprint(model, camera);
+    expect(footprint).toBeLessThanOrEqual(0.91);
+    expect(footprint).toBeGreaterThan(0.65);
+  }
 });
 
 test("the UI applies the neutral framing scale to every manual camera view", () => {
