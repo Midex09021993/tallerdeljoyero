@@ -554,20 +554,22 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         float ijSpectralPeak=max(max(ijAccum.r,ijAccum.g),ijAccum.b);
         float ijSpectralFloor=min(min(ijAccum.r,ijAccum.g),ijAccum.b);
         float ijSpectralSpread=max(ijSpectralPeak-ijSpectralFloor,0.0);
-        float ijFireEnergy=smoothstep(0.035,0.28,ijSpectralSpread);
+        // Broaden the low-energy response so fire transitions across adjacent facets
+        // instead of breaking into isolated RGB specks.
+        float ijFireEnergy=smoothstep(0.025,0.22,ijSpectralSpread)
+          *smoothstep(0.015,0.12,ijSpectralPeak);
         // Keep a restrained spectral-fire contribution on face-on crown facets.
         // The previous view-angle gate suppressed fire almost entirely when
         // ijCosTheta approached 1.0, which explains the grey top-view result.
         // Grazing facets retain the full response; face-on facets receive 55%.
         float ijFaceOnFire=mix(0.55,1.0,1.0-smoothstep(0.78,0.98,ijCosTheta));
         float ijFireFacet=smoothstep(0.10,0.42,ijFresnel)*ijFaceOnFire;
-        float ijFireMask=clamp(ijFireEnergy*ijFireFacet*0.16,0.0,${AURUM_DIAMOND_LIVE_TUNING.fireMax.toFixed(3)});
-        vec3 ijFireColor=vec3(
-          max(ijAccum.r-ijAccum.g*0.72,0.0),
-          max(ijAccum.g-max(ijAccum.r,ijAccum.b)*0.78,0.0),
-          max(ijAccum.b-ijAccum.g*0.72,0.0)
-        );
-        ijInternal+=ijFireColor*ijFireMask;
+        float ijFireMask=clamp(ijFireEnergy*ijFireFacet*0.13,0.0,${AURUM_DIAMOND_LIVE_TUNING.fireMax.toFixed(3)});
+        float ijSpectralLuma=dot(ijAccum,vec3(0.2126,0.7152,0.0722));
+        vec3 ijFireColor=max(ijAccum-vec3(ijSpectralLuma*0.88),vec3(0.0));
+        float ijFireColorPeak=max(max(ijFireColor.r,ijFireColor.g),ijFireColor.b);
+        ijFireColor/=max(ijFireColorPeak,0.0001);
+        ijInternal+=ijFireColor*ijFireMask*min(ijSpectralPeak,1.0);
         // Live-view anti-milky calibration: let the dedicated internal gem-HDR
         // estimate carry more of the final diamond color while retaining a
         // controlled share of the physical PBR/Fresnel surface for highlights.
@@ -580,7 +582,10 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // Diamond-only HDR highlight shoulder: reduce clipped white reflections
         // while preserving the RGB ratios that carry the subtle spectral fire.
         float ijHighlightPeak=max(max(gl_FragColor.r,gl_FragColor.g),gl_FragColor.b);
-        float ijHighlightCompression=1.0/(1.0+max(ijHighlightPeak-1.02,0.0)*${AURUM_DIAMOND_LIVE_TUNING.highlightShoulder.toFixed(2)});
+        // Engage the shoulder before the display ceiling to retain central
+        // table-facet edges instead of allowing them to collapse to flat white.
+        float ijHighlightExcess=max(ijHighlightPeak-0.90,0.0);
+        float ijHighlightCompression=1.0/(1.0+pow(ijHighlightExcess,1.12)*${AURUM_DIAMOND_LIVE_TUNING.highlightShoulder.toFixed(2)}*1.35);
         gl_FragColor.rgb*=ijHighlightCompression;
         // Selective real-time glint response for very bright diamond facets.
         // This is a lightweight shader highlight, not a screen-space bloom pass.
