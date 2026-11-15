@@ -965,7 +965,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       // Preserve the original scene background while the live Bokeh preview is active.
       let dofSavedSceneBackground: THREE.Scene["background"] | undefined;
       let dofHasSavedSceneBackground = false;
-      const { composer, ssaoPass, ssrPass, ssrSavePass, ssrCompositePass, bloomPass, setSSRSelects, applyQuality: applyPostQuality, updateTemporal, resetTemporalAccumulation, setTemporalMotion, setDiamondSupersamplingSettled, diamondSupersamplePass, diamondSupersampleCompositePass, dofPass, renderPass, taaPass: idleTaaPass, fxaaPass, gemMaskPass, surfaceEdgeAaPass, outputPass } = await createAurumPostPipeline(
+      const { composer, ssaoPass, ssrPass, ssrSavePass, ssrCompositePass, bloomPass, setSSRSelects, applyQuality: applyPostQuality, updateTemporal, resetTemporalAccumulation, setTemporalMotion, setDiamondSupersamplingSettled, setDiamondSupersampleScaleCap, diamondSupersamplePass, diamondSupersampleCompositePass, dofPass, renderPass, taaPass: idleTaaPass, fxaaPass, gemMaskPass, surfaceEdgeAaPass, outputPass } = await createAurumPostPipeline(
         renderer,
         escena,
         camara,
@@ -2144,6 +2144,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         // This keeps CAD-heavy jewelry responsive without changing authored geometry.
         informar("Configurando calidad de visualización...");
         runtimeBudget = getAurumRuntimeBudget(countAurumTriangles(interno));
+        // The auxiliary 2x target is composited only through the center-diamond mask.
+        // Keep the renderer/composer DPR shared cap unchanged for all metal pixels.
+        setDiamondSupersampleScaleCap?.(runtimeBudget.diamondSupersampleScaleCap);
         if (perfEnabled) {
           console.warn("[AURUM][RUNTIME BUDGET]", runtimeBudget);
         }
