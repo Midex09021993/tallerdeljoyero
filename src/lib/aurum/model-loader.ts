@@ -118,8 +118,6 @@ export function enforceRhinoLayerVisibilityBeforeExport(object: THREE.Object3D) 
     if (id != null) byId.set(String(id), layer);
     const name = String(layer?.name ?? layer?.Name ?? "").trim().toLowerCase();
     if (name) byName.set(name, layer);
-    // Source-layer manifests preserve the original position explicitly.
-    if (layer?.index == null) layer.index = index;
   });
 
   const cache = new Map<number, boolean>();
@@ -566,6 +564,12 @@ export async function parseAurumInput(file: File, ext: string, fallbackMaterial:
           layerId: sourceLayer?.id ?? sourceLayer?.Id ?? null,
           layerName: sourceLayer?.name ?? sourceLayer?.Name ?? null,
           layerColor: sourceLayer?.color ?? sourceLayer?.Color ?? null,
+          // Preserve the instance's own visibility state; the block definition's
+          // mesh attributes are not authoritative for an individual placement.
+          objectVisibility: {
+            visible: attrs.visible ?? attrs.Visible ?? attrs.isVisible ?? null,
+            mode: attrs.mode ?? attrs.Mode ?? attrs.objectMode ?? attrs.ObjectMode ?? null,
+          },
           materialSource: attrs.materialSource ?? null,
         };
         group.userData = { ...group.userData, aurumRhinoInstanceReference: referenceIdentity };
