@@ -2370,7 +2370,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         if (modelo?.userData?.aurumPublicViewerPresentation && id === "frontal") {
           applyAurumPublicViewerCamera(camara, controles, modelo, { enablePan: true, framingScale: 0.88 });
         } else {
-          applyAurumCameraView(camara, controles, modelo, id, categoriaProyectoRef.current);
+          applyAurumCameraView(camara, controles, modelo, id, categoriaProyectoRef.current, 0.88);
         }
         // The public configurator has a much shorter viewport than the editor.
         // Keep the entire jewel visible after view presets are applied as well
