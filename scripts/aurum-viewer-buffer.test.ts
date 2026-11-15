@@ -501,8 +501,6 @@ test("Aurum enables Gem Mask + FXAA only for diamonds in settled preview", () =>
   expect(componentSource).toContain("const initialDiamondAa = Boolean(gemMaskPass?.hasDiamondMeshes);");
 });
 
-});
-
 test("the BVH camera update reuses fixed-size snapshots without per-frame arrays", () => {
   const bvhSource = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
   expect(bvhSource).toContain("const cameraStateBuffer = new Float64Array(12);");
