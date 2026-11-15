@@ -160,8 +160,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   ambienteIdRef.current = ambienteId;
   const [ambienteMetalInfluence, setAmbienteMetalInfluence] = useState(45);
   const [fondoId, setFondoId] = useState("blanco");
-  const [sombraContactoVisible, setSombraContactoVisible] = useState(true);
-  const [sueloVisible, setSueloVisible] = useState(true);
+  const [sombraContactoVisible, setSombraContactoVisible] = useState(false);
+  const [sueloVisible, setSueloVisible] = useState(false);
   const [sueloColor, setSueloColor] = useState("#ffffff");
   const [sueloRugosidad, setSueloRugosidad] = useState(1);
   const [sueloMetalness, setSueloMetalness] = useState(0);
@@ -1587,7 +1587,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           dispose(modelo);
           modelo=null;
         }
-        if (suelo) { escena.remove(suelo); suelo.geometry.dispose(); suelo.material.dispose(); suelo=null; }
+        // Keep the ground controller-owned meshes in the scene for the next model;
+        // hide them together instead of disposing only the floor and orphaning bakedShadow.
+        groundController.setVisible(false);
+        groundController.setBakedShadowVisible(false);
         gemMaskPass?.refreshCache?.();
       };
       const configurarMaterial = (mat:any, m:MaterialConfig) => {
