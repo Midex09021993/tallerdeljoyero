@@ -220,6 +220,8 @@ export async function createAurumPostPipeline(
     let diamondSupersampleBaseHeight=Math.max(1,renderer.domElement.height);
     let diamondSupersampleScale=2;
     let diamondSupersampleScaleCap=2;
+    let diamondLiveSupersampleScaleCap=1.5;
+    let diamondSupersamplingSettled=true;
     const updateDiamondSupersampleScale=()=>{
       const basePixels=diamondSupersampleBaseWidth*diamondSupersampleBaseHeight;
       // Bound the auxiliary target to about 8.5 MP to avoid unbounded GPU
@@ -899,6 +901,8 @@ export async function createAurumPostPipeline(
     const next=Boolean(moving);
     const changed=next!==temporalMotionActive;
     temporalMotionActive=next;
+    diamondSupersamplingSettled=!next;
+    diamondSupersamplePass?.setScaleCap?.(next?diamondLiveSupersampleScaleCap:diamondSupersampleScaleCap);
     const edgeAaProfile=getAurumEdgeAaProfile(lastKnownQualityId || (lastKnownHighQuality ? "high" : "low"),lastKnownBudgetTier,next ? "live" : "settled");
     const postControls=getAurumPostControls();
     // The selective SSAA module is settled-only; motion suspends its 2x
@@ -930,10 +934,9 @@ export async function createAurumPostPipeline(
 
   applyQuality(quality);
   // Reflect Post Engine switches immediately without waiting for a quality/profile rebuild.
-  let diamondSupersamplingSettled=true;
   const applyDiamondPostModules=(controls:any)=>{
     const hasDiamond=Boolean(gemMaskPass?.hasDiamondMeshes);
-    const ssaaEnabled=Boolean(controls.diamondSsaaEnabled && hasDiamond && diamondSupersamplingSettled && renderer.capabilities?.isWebGL2 !== false && renderer.extensions?.has?.("EXT_color_buffer_float") !== false && diamondSupersamplePass?.canRender?.());
+    const ssaaEnabled=Boolean(controls.diamondSsaaEnabled && hasDiamond && renderer.capabilities?.isWebGL2 !== false && renderer.extensions?.has?.("EXT_color_buffer_float") !== false && diamondSupersamplePass?.canRender?.());
     const fxaaEnabled=Boolean(controls.gemFxaaEnabled && hasDiamond && !ssaaEnabled);
     if(diamondSupersamplePass) diamondSupersamplePass.enabled=ssaaEnabled;
     if(diamondSupersampleCompositePass) diamondSupersampleCompositePass.enabled=ssaaEnabled;
@@ -941,11 +944,14 @@ export async function createAurumPostPipeline(
     if(fxaaPass) fxaaPass.enabled=fxaaEnabled;
     return ssaaEnabled;
   };
-  const setDiamondSupersampleScaleCap=(cap:number)=>{
-    diamondSupersamplePass?.setScaleCap?.(cap);
+  const setDiamondSupersampleScaleCap=(settledCap:number,liveCap?:number)=>{
+    diamondSupersampleScaleCap=Math.max(1,Math.min(2,Number(settledCap)||1));
+    diamondLiveSupersampleScaleCap=Math.max(1,Math.min(diamondSupersampleScaleCap,Number(liveCap??settledCap)||1));
+    diamondSupersamplePass?.setScaleCap?.(diamondSupersamplingSettled?diamondSupersampleScaleCap:diamondLiveSupersampleScaleCap);
   };
   const setDiamondSupersamplingSettled=(settled:boolean)=>{
     diamondSupersamplingSettled=Boolean(settled);
+    diamondSupersamplePass?.setScaleCap?.(diamondSupersamplingSettled?diamondSupersampleScaleCap:diamondLiveSupersampleScaleCap);
     return applyDiamondPostModules(getAurumPostControls());
   };
   const unsubscribePostControls=subscribeAurumPostControls((controls)=>{
