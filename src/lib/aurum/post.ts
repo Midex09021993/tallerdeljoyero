@@ -59,6 +59,21 @@ export async function createAurumPostPipeline(
   let diamondSupersampleTarget:any=null;
   let gradingPass:any=null;
   let composerMsaaSamples=0;
+  // Shared SSAA state lives at the pipeline scope because motion controls are
+  // exposed after the composer-initialization try block has completed.
+  let diamondSupersampleBaseWidth=Math.max(1,renderer.domElement.width);
+  let diamondSupersampleBaseHeight=Math.max(1,renderer.domElement.height);
+  let diamondSupersampleScale=2;
+  let diamondSupersampleScaleCap=2;
+  let diamondLiveSupersampleScaleCap=1.5;
+  let diamondSupersamplingSettled=true;
+  const updateDiamondSupersampleScale=()=>{
+    const basePixels=diamondSupersampleBaseWidth*diamondSupersampleBaseHeight;
+    diamondSupersampleScale=basePixels>8_500_000
+      ? 1
+      : Math.min(diamondSupersampleScaleCap,Math.sqrt(8_500_000/Math.max(1,basePixels)));
+    return diamondSupersampleScale>=1.15;
+  };
 
   try {
     composer=new EffectComposer(renderer);
@@ -216,22 +231,7 @@ export async function createAurumPostPipeline(
     // Optional 2x reference render. It renders the complete scene so the
     // diamond keeps physically correct transmission/refraction and occlusion.
     // Its result is composited ONLY through the center-diamond mask.
-    let diamondSupersampleBaseWidth=Math.max(1,renderer.domElement.width);
-    let diamondSupersampleBaseHeight=Math.max(1,renderer.domElement.height);
-    let diamondSupersampleScale=2;
-    let diamondSupersampleScaleCap=2;
-    let diamondLiveSupersampleScaleCap=1.5;
-    let diamondSupersamplingSettled=true;
-    const updateDiamondSupersampleScale=()=>{
-      const basePixels=diamondSupersampleBaseWidth*diamondSupersampleBaseHeight;
-      // Bound the auxiliary target to about 8.5 MP to avoid unbounded GPU
-      // memory growth on large/4K viewports. At 4K the native image is already
-      // sufficiently dense, so the optional module gracefully stays inactive.
-      diamondSupersampleScale=basePixels>8_500_000
-        ? 1
-        : Math.min(diamondSupersampleScaleCap,Math.sqrt(8_500_000/Math.max(1,basePixels)));
-      return diamondSupersampleScale>=1.15;
-    };
+    // Shared SSAA state is declared at pipeline scope for motion-control access.
     const ensureDiamondSupersampleTarget=()=>{
       if(!updateDiamondSupersampleScale()) return null;
       if(!diamondSupersampleTarget){
