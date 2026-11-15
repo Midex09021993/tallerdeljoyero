@@ -4,15 +4,25 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 
-/** Resuelve el correo de Auth a partir del nombre de usuario visible en el login. */
-export const resolverEmailInicioSesion = createServerFn({ method: "POST" })
-  .inputValidator((input: { usuario: string }) => input)
-  .handler(async ({ data }) => {
-    const usuario = data.usuario?.trim();
+/**
+ * Inicia sesión con el nombre de usuario visible en el login.
+ * El correo de Auth se resuelve y se usa sólo en el servidor: nunca se devuelve
+ * al navegador, de modo que nadie puede averiguar el correo de una cuenta a
+ * partir de su nombre de usuario. Sólo se devuelven tokens si la contraseña es válida.
+ */
+export const iniciarSesionUsuario = createServerFn({ method: "POST" })
+  .inputValidator((input: { usuario: string; password: string }) => {
+    const usuario = typeof input?.usuario === "string" ? input.usuario.trim() : "";
+    const password = typeof input?.password === "string" ? input.password : "";
     if (!usuario || usuario.length > 120) throw new Error("Ingresa tu usuario.");
-
     // El login acepta exclusivamente el nombre registrado, nunca el correo.
     if (usuario.includes("@")) throw new Error("Ingresa tu nombre de usuario, no tu correo electrónico.");
+    if (!password || password.length > 256) throw new Error("Usuario o contraseña incorrectos");
+    return { usuario, password };
+  })
+  .handler(async ({ data }) => {
+    const { usuario, password } = data;
+    const credencialesInvalidas = "Usuario o contraseña incorrectos";
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     // Resolver únicamente por la credencial guardada en profiles.usuario.
@@ -32,13 +42,35 @@ export const resolverEmailInicioSesion = createServerFn({ method: "POST" })
       typeof perfil.usuario === "string" &&
       perfil.usuario.trim().toLocaleLowerCase() === usuarioNormalizado
     );
-    if (coincidencias.length !== 1) {
-      throw new Error("Usuario o contraseña incorrectos");
-    }
+    if (coincidencias.length !== 1) throw new Error(credencialesInvalidas);
 
     const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.getUserById(coincidencias[0].id);
-    if (authError || !authUser.user?.email) throw new Error("Usuario o contraseña incorrectos");
-    return { email: authUser.user.email };
+    const email = authUser?.user?.email;
+    if (authError || !email) throw new Error(credencialesInvalidas);
+
+    const SUPABASE_URL = process.env["SUPABASE_URL"];
+    const SUPABASE_PUBLISHABLE_KEY = process.env["SUPABASE_PUBLISHABLE_KEY"];
+    if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) throw new Error("El acceso no está disponible en este momento.");
+
+    const { createClient } = await import("@supabase/supabase-js");
+    const authClient = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storage: undefined },
+      global: {
+        fetch: (input, init) => {
+          const headers = new Headers(init?.headers);
+          if (headers.get("Authorization") === `Bearer ${SUPABASE_PUBLISHABLE_KEY}`) headers.delete("Authorization");
+          headers.set("apikey", SUPABASE_PUBLISHABLE_KEY);
+          return fetch(input, { ...init, headers });
+        },
+      },
+    });
+    const { data: sesion, error: loginError } = await authClient.auth.signInWithPassword({ email, password });
+    if (loginError || !sesion.session) throw new Error(credencialesInvalidas);
+
+    return {
+      access_token: sesion.session.access_token,
+      refresh_token: sesion.session.refresh_token,
+    };
   });
 
 const AREAS_VALIDAS = [
@@ -154,8 +186,19 @@ function validar(input: NuevoUsuario): NuevoUsuario {
 }
 
 /** Comprueba server-side si el proyecto todavía no tiene ninguna cuenta. */
+/**
+ * El alta del primer dueño sólo está habilitada si el servidor tiene configurado
+ * un código de instalación (AURUM_BOOTSTRAP_TOKEN) y quien llama lo conoce.
+ * Sin ese código, nadie puede reclamar el rol de dueño aunque el sistema esté vacío.
+ */
+function codigoInstalacionConfigurado(): string | null {
+  const token = process.env["AURUM_BOOTSTRAP_TOKEN"];
+  return token && token.length >= 16 ? token : null;
+}
+
 export const sistemaSinDuenos = createServerFn({ method: "GET" }).handler(async () => {
   try {
+    if (!codigoInstalacionConfigurado()) return { vacio: false, disponible: false };
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const [{ count: rolesCount }, { data: usuarios, error: usuariosError }] = await Promise.all([
@@ -382,8 +425,17 @@ export const registrarTaller = createServerFn({ method: "POST" })
 
 /** Alta del primer dueño general. Sólo funciona mientras Auth y roles estén vacíos. */
 export const registrarPrimerDueno = createServerFn({ method: "POST" })
-  .inputValidator(validar)
+  .inputValidator((input: NuevoUsuario & { codigoInstalacion?: string }) => {
+    const validado = validar(input);
+    const codigoInstalacion = typeof input?.codigoInstalacion === "string" ? input.codigoInstalacion.trim() : "";
+    if (!codigoInstalacion || codigoInstalacion.length > 256) throw new Error("Ingresa el código de instalación.");
+    return { ...validado, codigoInstalacion };
+  })
   .handler(async ({ data }) => {
+    const codigoEsperado = codigoInstalacionConfigurado();
+    if (!codigoEsperado || data.codigoInstalacion !== codigoEsperado) {
+      throw new Error("El alta inicial no está habilitada o el código de instalación no es válido.");
+    }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const [{ count: rolesCount }, { data: usuarios, error: usuariosError }] = await Promise.all([

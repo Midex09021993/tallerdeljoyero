@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { esVistaMovilTablet, inicioSegunRol, useSesion } from "@/lib/auth";
 import { ArrowRight, Boxes, Calculator, Eye, EyeOff, Gem, Grid2X2, Headphones, HelpCircle, Home, LockKeyhole, Menu, X, Monitor, Network, PackageCheck, ShieldCheck, ShoppingBag, Sparkles, UserRound, UsersRound, type LucideIcon } from "lucide-react";
-import { registrarPrimerDueno, resolverEmailInicioSesion, sistemaSinDuenos } from "@/lib/cuentas.functions";
+import { iniciarSesionUsuario, registrarPrimerDueno, sistemaSinDuenos } from "@/lib/cuentas.functions";
 import { registrarEvento } from "@/lib/analytics";
 
 const RegistroTaller = lazy(() => import("@/components/RegistroTaller").then((module) => ({ default: module.RegistroTaller })));
@@ -66,6 +66,7 @@ function LoginPage() {
   const [nombre, setNombre] = useState("");
   const [apellidos, setApellidos] = useState("");
   const [dni, setDni] = useState("");
+  const [codigoInstalacion, setCodigoInstalacion] = useState("");
   const [error, setError] = useState("");
   const [cargando, setCargando] = useState(false);
   const [mostrarPassword, setMostrarPassword] = useState(false);
@@ -138,7 +139,6 @@ function LoginPage() {
     setCargando(true);
     registrarEvento("login_started", { mode: modoAlta ? "initial_owner" : "existing_user" });
     try {
-      const email = modoAlta ? emailRegistro.trim().toLowerCase() : (await resolverEmailInicioSesion({ data: { usuario } })).email;
       if (modoAlta) {
         await registrarPrimerDueno({
           data: {
@@ -152,11 +152,14 @@ function LoginPage() {
             rol: "dueno",
             sede_id: null,
             areas: [],
+            codigoInstalacion,
           },
         });
         await qc.invalidateQueries({ queryKey: ["sistema-vacio"] });
       }
-      const { data: authData, error: err } = await supabase.auth.signInWithPassword({ email, password });
+      // El correo de la cuenta se resuelve sólo en el servidor; aquí sólo llegan los tokens.
+      const tokens = await iniciarSesionUsuario({ data: { usuario, password } });
+      const { data: authData, error: err } = await supabase.auth.setSession(tokens);
       if (err) throw new Error("Usuario o contraseña incorrectos");
 
       // Resolver primero el estado de acceso para mostrar un mensaje útil
@@ -284,6 +287,10 @@ function LoginPage() {
 
             {modoAlta ? (
               <>
+                <label className="mb-4 block text-xs font-medium text-slate-600">
+                  Código de instalación
+                  <input required type="password" name="codigo-instalacion" autoComplete="off" maxLength={256} value={codigoInstalacion} onChange={(e) => setCodigoInstalacion(e.target.value)} className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-sm text-[#17232d] outline-none focus:border-[#c7a52d]" />
+                </label>
                 <label className="mb-4 block text-xs font-medium text-slate-600">
                   Correo electrónico de recuperación
                   <input required type="email" name="email" autoComplete="email" maxLength={254} value={emailRegistro} onChange={(e) => setEmailRegistro(e.target.value)} className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-sm text-[#17232d] outline-none focus:border-[#c7a52d]" />

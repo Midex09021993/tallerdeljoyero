@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent, type ChangeEvent 
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { listarDirectorioAlumnosFormacion, listarInscripcionesAlumnoFormacion } from "@/lib/aula-formacion.functions";
+import { listarDirectorioAlumnosFormacion, listarInscripcionesAlumnoFormacion, matricularAlumnosFormacion } from "@/lib/aula-formacion.functions";
 import { BookOpen, Users, Plus, Upload, FileText, Download, CalendarDays, ShieldCheck, Send, Pencil, Trash2, CheckCircle2, ChevronLeft, ChevronRight, ChevronDown, ArrowRight, BookOpenCheck, FolderOpen, ClipboardCheck, Layers, Eye, Lock, Unlock, RotateCcw, Command } from "lucide-react";
 import { AppShell, Panel } from "@/components/AppShell";
 import LaboratorioCurvasNurbs from "@/components/aula/LaboratorioCurvasNurbs";
@@ -512,6 +512,7 @@ function AulaFormacionPage() {
   const [busquedaAlumno, setBusquedaAlumno] = useState("");
   const [alumnosSeleccionados, setAlumnosSeleccionados] = useState<string[]>([]);
   const listarDirectorio = useServerFn(listarDirectorioAlumnosFormacion);
+  const matricularAlumnos = useServerFn(matricularAlumnosFormacion);
   const listarInscripcionesAlumno = useServerFn(listarInscripcionesAlumnoFormacion);
   const [numeroSesion, setNumeroSesion] = useState("1");
   const [tituloSesion, setTituloSesion] = useState("");
@@ -898,7 +899,7 @@ function AulaFormacionPage() {
   const alumnosFiltrados = alumnosDirectorio.filter((alumno: any) => {
     const coincideTaller = tallerAlumnoFiltro === "todos" || alumno.participanteIds.includes(tallerAlumnoFiltro);
     const termino = busquedaAlumno.trim().toLocaleLowerCase();
-    const coincideBusqueda = !termino || [alumno.nombre, alumno.usuario, alumno.email, alumno.taller]
+    const coincideBusqueda = !termino || [alumno.nombre, alumno.usuario, alumno.taller]
       .some((valor) => String(valor ?? "").toLocaleLowerCase().includes(termino));
     return coincideTaller && coincideBusqueda;
   });
@@ -1533,28 +1534,20 @@ function AulaFormacionPage() {
     if (!participanteId || !cursoActivoId || alumnosSeleccionados.length === 0) return;
     setOcupado(true); setMensaje("");
     try {
-      const seleccionados = alumnosDirectorio.filter((a: any) => alumnosSeleccionados.includes(a.userId));
-      const existentes = (inscripcionesQuery.data ?? []) as Array<{ email_alumno: string; estado: string }>;
-      const yaInscritos = new Set(existentes.map(i => i.email_alumno.toLowerCase()));
-      const nuevos = seleccionados.filter((a: any) => a.email && !yaInscritos.has(a.email.toLowerCase()));
-      if (!nuevos.length) {
+      const yaInscritos = new Set(((inscripcionesQuery.data ?? []) as Array<{ alumno_user_id?: string | null }>).map(i => i.alumno_user_id).filter(Boolean));
+      const pendientes = alumnosSeleccionados.filter(id => !yaInscritos.has(id));
+      if (!pendientes.length) {
         setMensaje("Los alumnos seleccionados ya están inscritos en este curso.");
         return;
       }
-      const { error } = await (supabase as any).from("formacion_inscripciones").insert(
-        nuevos.map((alumno: any) => ({
-          participante_id: participanteId,
-          curso_id: cursoActivoId,
-          email_alumno: alumno.email.toLowerCase(),
-          nombre_alumno: alumno.nombre,
-          alumno_user_id: alumno.userId,
-          estado: "activo",
-        })),
-      );
-      if (error) throw error;
+      const resultado = await matricularAlumnos({ data: { participanteDocenteId: participanteId, cursoId: cursoActivoId, userIds: pendientes } });
+      if (!resultado.inscritos) {
+        setMensaje("Los alumnos seleccionados ya están inscritos en este curso.");
+        return;
+      }
       setAlumnosSeleccionados([]);
       await qc.invalidateQueries({ queryKey: ["aula-formacion-inscripciones", participanteId, cursoActivoId] });
-      setMensaje(`${nuevos.length} alumno(s) inscrito(s) correctamente.`);
+      setMensaje(`${resultado.inscritos} alumno(s) inscrito(s) correctamente.`);
     } catch (err) { setMensaje(err instanceof Error ? err.message : "No se pudo completar la inscripción."); }
     finally { setOcupado(false); }
   }
@@ -2993,7 +2986,7 @@ function AulaFormacionPage() {
                     </select>
                   </label>
                   <label className="block text-xs font-semibold text-[#425466]">Buscar alumno
-                    <input value={busquedaAlumno} onChange={e => setBusquedaAlumno(e.target.value)} placeholder="Nombre, usuario, correo o taller" className="mt-2 w-full rounded-xl border border-[#dce4ec] bg-white px-3 py-2.5 text-sm font-normal text-[#253446] outline-none placeholder:text-[#9aa7b5] focus:border-[#8ba6bd] focus:ring-2 focus:ring-[#8ba6bd]/15" />
+                    <input value={busquedaAlumno} onChange={e => setBusquedaAlumno(e.target.value)} placeholder="Nombre, usuario o taller" className="mt-2 w-full rounded-xl border border-[#dce4ec] bg-white px-3 py-2.5 text-sm font-normal text-[#253446] outline-none placeholder:text-[#9aa7b5] focus:border-[#8ba6bd] focus:ring-2 focus:ring-[#8ba6bd]/15" />
                   </label>
                 </div>
                 <div className="max-h-80 space-y-2 overflow-y-auto rounded-xl border border-[#e4e9ef] bg-[#fbfcfd] p-2">
@@ -3004,8 +2997,7 @@ function AulaFormacionPage() {
                       <input type="checkbox" checked={alumnosSeleccionados.includes(alumno.userId)} onChange={e => setAlumnosSeleccionados(actual => e.target.checked ? [...actual, alumno.userId] : actual.filter(id => id !== alumno.userId))} className="mt-1 size-4 accent-[#496782]" />
                       <span className="min-w-0 flex-1">
                         <span className="block text-sm font-semibold text-[#253446]">{alumno.nombre}</span>
-                        {alumno.usuario && alumno.usuario.trim().toLowerCase() !== alumno.email?.trim().toLowerCase() && <span className="mt-0.5 block text-xs text-[#718096]">Usuario: {alumno.usuario}</span>}
-                        <span className="block break-all text-xs text-[#718096]">{alumno.email}</span>
+                        {alumno.usuario && <span className="mt-0.5 block text-xs text-[#718096]">Usuario: {alumno.usuario}</span>}
                         <span className="mt-2 inline-flex rounded-md bg-[#f4f6f8] px-2 py-1 text-[11px] font-medium text-[#60758a]">{alumno.taller} · {alumno.roles.join(", ")}</span>
                       </span>
                     </label>)}
