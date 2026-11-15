@@ -2246,14 +2246,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           const initialWidth = Math.max(1, renderer.domElement.width || renderer.domElement.clientWidth || 1);
           const initialHeight = Math.max(1, renderer.domElement.height || renderer.domElement.clientHeight || 1);
           fxaaPass.material?.uniforms?.resolution?.value?.set?.(1 / initialWidth, 1 / initialHeight);
-          const initialGemFxaaEnabled = getAurumPostControls().gemFxaaEnabled;
+          // Gem Mask + FXAA are intentionally excluded from the LIVE viewport.
+          // The passes remain available to explicit capture workflows.
           const initialBeautyPasses = new Set([renderPass, outputPass]);
-          if (initialGemFxaaEnabled) {
-            initialBeautyPasses.add(gemMaskPass);
-            initialBeautyPasses.add(fxaaPass);
-          }
-          if (gemMaskPass) gemMaskPass.enabled = initialGemFxaaEnabled;
-          if (fxaaPass) fxaaPass.enabled = initialGemFxaaEnabled;
+          if (gemMaskPass) gemMaskPass.enabled = false;
+          if (fxaaPass) fxaaPass.enabled = false;
           ((composer as any)?.passes ?? []).forEach((pass: any) => {
             pass.enabled = initialBeautyPasses.has(pass);
           });
@@ -3768,9 +3765,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           }
           const bvhCpuMs = performance.now() - bvhStartedAt;
           const renderStartedAt = performance.now();
-          // Live preview uses only the selective gemstone mask + FXAA chain.
-          // All photographic/temporal passes remain disabled for predictable FPS.
-          const useLiveGemAa = Boolean(composer && renderPass && gemMaskPass?.enabled && fxaaPass?.enabled && outputPass);
+          // The live viewport always uses direct WebGL. Gem Mask + FXAA are
+          // reserved for explicit capture paths and never run in the live view.
+          const useLiveGemAa = false;
           const activeToneAuditPath = useLiveGemAa ? "composer" : "direct";
           if (toneAuditEnabled && activeToneAuditPath !== lastToneAuditPath) {
             lastToneAuditPath = activeToneAuditPath;
@@ -3828,18 +3825,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               if (strength) strength.value = liveEdgeAaProfile.strength;
               surfaceEdgeAaPass.enabled = false;
             }
-            // Respect the module switch during orbit: enable only the two selective
-            // gemstone passes, never full-surface AA or photographic effects.
-            const liveGemFxaaEnabled = getAurumPostControls().gemFxaaEnabled;
+            // LIVE orbit always bypasses Gem Mask + FXAA, regardless of saved
+            // module preferences. Only the ordinary render/output path is retained.
             const liveBeautyPasses = new Set([renderPass, outputPass]);
-            if (liveGemFxaaEnabled) {
-              liveBeautyPasses.add(gemMaskPass);
-              liveBeautyPasses.add(fxaaPass);
-            }
             const interactionPasses = ((composer as any)?.passes ?? []) as any[];
             interactionPasses.forEach((pass) => { pass.enabled = liveBeautyPasses.has(pass); });
-            if (gemMaskPass) gemMaskPass.enabled = liveGemFxaaEnabled;
-            if (fxaaPass) fxaaPass.enabled = liveGemFxaaEnabled;
+            if (gemMaskPass) gemMaskPass.enabled = false;
+            if (fxaaPass) fxaaPass.enabled = false;
             liveFastPathRef.current = false;
 
             // Keep catalog-authored gemstone materials unchanged during orbit.
@@ -3856,16 +3848,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             composer?.setPixelRatio?.(settledDpr);
 
             // The settled direct-render preview does not accumulate temporal AA.
-            const settledGemFxaaEnabled = getAurumPostControls().gemFxaaEnabled;
             const settledBeautyPasses = new Set([renderPass, outputPass]);
-            if (settledGemFxaaEnabled) {
-              settledBeautyPasses.add(gemMaskPass);
-              settledBeautyPasses.add(fxaaPass);
-            }
             const settledPasses = ((composer as any)?.passes ?? []) as any[];
             settledPasses.forEach((pass) => { pass.enabled = settledBeautyPasses.has(pass); });
-            if (gemMaskPass) gemMaskPass.enabled = settledGemFxaaEnabled;
-            if (fxaaPass) fxaaPass.enabled = settledGemFxaaEnabled;
+            if (gemMaskPass) gemMaskPass.enabled = false;
+            if (fxaaPass) fxaaPass.enabled = false;
 
             liveFastPathRef.current = false;
             // Restore the normal settled temporal state. There is no active
