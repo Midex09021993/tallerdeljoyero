@@ -180,7 +180,8 @@ export function applyAurumCameraView(
   controls: { target: THREE.Vector3; update: () => void },
   model: THREE.Object3D | null,
   view: AurumCameraView,
-  category: string = "Otro"
+  category: string = "Otro",
+  framingScale: number = 1,
 ) {
   const sphere = getAurumVisibleProductSphere(model);
   const target = sphere.radius > 0
@@ -196,7 +197,7 @@ export function applyAurumCameraView(
   const horizontalHalfFov = Math.atan(Math.tan(verticalHalfFov) * aspect);
   const limitingHalfFov = Math.max(0.01, Math.min(verticalHalfFov, horizontalHalfFov));
   const distance = Math.max(
-    (radius / Math.sin(limitingHalfFov)) * 1.10 * profile.distance,
+    (radius / Math.sin(limitingHalfFov)) * 1.10 * profile.distance * Math.max(0.7, Math.min(1, framingScale)),
     0.1,
   );
 
