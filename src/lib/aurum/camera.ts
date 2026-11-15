@@ -184,44 +184,63 @@ export function applyAurumCameraView(
   category: string = "Otro",
   framingScale: number = 1,
 ) {
-  const sphere = getAurumVisibleProductSphere(model);
-  const target = sphere.radius > 0
-    ? sphere.center.clone()
-    : new THREE.Vector3(0, 0, 0);
-  const radius = Math.max(sphere.radius, 0.01);
+  const bounds = getAurumVisibleProductBounds(model);
+  const target = bounds.isEmpty()
+    ? new THREE.Vector3()
+    : bounds.getCenter(new THREE.Vector3());
   const profile = getAurumProductCameraProfile(category);
+  const direction = view === "frontal"
+    ? new THREE.Vector3(0, 0.06, 1).normalize()
+    : view === "superior"
+      ? new THREE.Vector3(0, 1, 0)
+      : view === "lateral"
+        ? new THREE.Vector3(1, 0, 0)
+        : new THREE.Vector3(0.62, Math.max(profile.vertical * 2.1, 0.78), 1).normalize();
+  const requestedUp = view === "superior"
+    ? new THREE.Vector3(0, 0, -1)
+    : new THREE.Vector3(0, 1, 0);
 
-  // Una esfera envolvente independiente de la orientación evita que la vista
-  // lateral parezca más pequeña que la frontal por tener otro ancho/profundidad.
+  // Build an orthonormal camera basis for the selected view.
+  const right = requestedUp.clone().cross(direction).normalize();
+  const cameraUp = direction.clone().cross(right).normalize();
   const aspect = Number.isFinite(camera.aspect) && camera.aspect > 0 ? camera.aspect : 1;
   const verticalHalfFov = THREE.MathUtils.degToRad(camera.fov) * 0.5;
   const horizontalHalfFov = Math.atan(Math.tan(verticalHalfFov) * aspect);
-  const limitingHalfFov = Math.max(0.01, Math.min(verticalHalfFov, horizontalHalfFov));
-  const distance = Math.max(
-    (radius / Math.sin(limitingHalfFov)) * 1.10 * profile.distance * Math.max(0.25, Math.min(1, framingScale)),
-    0.1,
-  );
+  const tanVertical = Math.max(Math.tan(verticalHalfFov), 1e-4);
+  const tanHorizontal = Math.max(Math.tan(horizontalHalfFov), 1e-4);
+  const margin = 1.12;
+  const scale = Number.isFinite(framingScale) ? Math.max(0.25, Math.min(1.5, framingScale)) : 1;
 
-  controls.target.copy(target);
-  if (view === "frontal") {
-    camera.up.set(0, 1, 0);
-    const frontalDirection = new THREE.Vector3(0, 0.06, 1).normalize();
-    camera.position.copy(target).addScaledVector(frontalDirection, distance);
-  } else if (view === "superior") {
-    camera.up.set(0, 0, -1);
-    camera.position.set(target.x, target.y + distance, target.z);
-  } else if (view === "lateral") {
-    camera.up.set(0, 1, 0);
-    camera.position.set(target.x + distance, target.y, target.z);
-  } else {
-    camera.up.set(0, 1, 0);
-    const perspectiveDirection = new THREE.Vector3(
-      0.62,
-      Math.max(profile.vertical * 2.1, 0.78),
-      1,
-    ).normalize();
-    camera.position.copy(target).addScaledVector(perspectiveDirection, distance);
+  // Fit the actual projected model bounds, not a rotation-invariant sphere.
+  // This keeps the visible product footprint consistent between frontal,
+  // lateral, superior and perspective views without distorting geometry.
+  const corners = bounds.isEmpty() ? [] : [
+    new THREE.Vector3(bounds.min.x, bounds.min.y, bounds.min.z),
+    new THREE.Vector3(bounds.min.x, bounds.min.y, bounds.max.z),
+    new THREE.Vector3(bounds.min.x, bounds.max.y, bounds.min.z),
+    new THREE.Vector3(bounds.min.x, bounds.max.y, bounds.max.z),
+    new THREE.Vector3(bounds.max.x, bounds.min.y, bounds.min.z),
+    new THREE.Vector3(bounds.max.x, bounds.min.y, bounds.max.z),
+    new THREE.Vector3(bounds.max.x, bounds.max.y, bounds.min.z),
+    new THREE.Vector3(bounds.max.x, bounds.max.y, bounds.max.z),
+  ];
+  let distance = 0.1;
+  for (const corner of corners) {
+    const relative = corner.sub(target);
+    const depthOffset = relative.dot(direction);
+    const horizontal = Math.abs(relative.dot(right));
+    const vertical = Math.abs(relative.dot(cameraUp));
+    distance = Math.max(
+      distance,
+      depthOffset + (horizontal * margin * profile.distance * scale) / tanHorizontal,
+      depthOffset + (vertical * margin * profile.distance * scale) / tanVertical,
+    );
   }
+  distance = Math.max(distance + 0.02, 0.1);
+
+  camera.up.copy(cameraUp);
+  controls.target.copy(target);
+  camera.position.copy(target).addScaledVector(direction, distance);
   camera.lookAt(target);
   camera.updateProjectionMatrix();
   controls.update();
