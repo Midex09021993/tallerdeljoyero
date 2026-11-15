@@ -7,10 +7,10 @@ import type { AurumOpticalProfile } from "../aurum-material-engine";
  * physical IOR, dispersion calibration, BVH geometry, or post-processing cost.
  */
 export const AURUM_DIAMOND_LIVE_TUNING = Object.freeze({
-  internalContrast: 1.08,
-  highlightShoulder: 0.48,
-  faceBrightness: 1.06,
-  rimEnergy: 0.060,
+  internalContrast: 1.15,
+  highlightShoulder: 0.70,
+  faceBrightness: 1.01,
+  rimEnergy: 0.025,
   fireMax: 0.095,
 });
 
@@ -554,7 +554,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         float ijSpectralPeak=max(max(ijAccum.r,ijAccum.g),ijAccum.b);
         float ijSpectralFloor=min(min(ijAccum.r,ijAccum.g),ijAccum.b);
         float ijSpectralSpread=max(ijSpectralPeak-ijSpectralFloor,0.0);
-        float ijFireEnergy=smoothstep(0.055,0.22,ijSpectralSpread);
+        float ijFireEnergy=smoothstep(0.035,0.28,ijSpectralSpread);
         // Keep a restrained spectral-fire contribution on face-on crown facets.
         // The previous view-angle gate suppressed fire almost entirely when
         // ijCosTheta approached 1.0, which explains the grey top-view result.
