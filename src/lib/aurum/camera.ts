@@ -81,7 +81,7 @@ export function applyAurumIJEWELPresentationCamera(
   // VJSON camera distance is |position| around the origin. Because the
   // reference model is normalized to the documented autoScaleRadius=2,
   // preserve the measured distance instead of re-fitting the camera.
-  // Slightly tighter default product framing: about 6% closer while preserving
+  // Slightly tighter default product framing: about 12% closer while preserving
   // the calibrated iJewel viewing direction and keeping the complete jewel visible.
   const distance = AURUM_IJEWEL_REFERENCE.camera.distance * 0.88;
   camera.fov = AURUM_IJEWEL_REFERENCE.camera.fov;
