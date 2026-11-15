@@ -471,7 +471,7 @@ test("the first settled model frame keeps the anti-aliasing composer active", ()
 });
 
 
-test("Aurum uses only the toggle-controlled gem FXAA composer in live and settled preview", () => {
+test("Aurum keeps Gem Mask + FXAA out of live and settled preview", () => {
   const componentSource = readFileSync("src/components/AurumRender.tsx", "utf8");
   const start = componentSource.indexOf("onStart: () => {");
   const end = componentSource.indexOf("onEnd: () => {", start);
@@ -487,14 +487,12 @@ test("Aurum uses only the toggle-controlled gem FXAA composer in live and settle
   expect(componentSource).toContain("runtimeBudget.pixelRatioCap, getAurumViewportPixelRatio()");
   expect(liveBlock).toContain("liveFastPathRef.current = false;");
   expect(idleBlock).toContain("liveFastPathRef.current = false;");
-  expect(liveBlock).toContain("const liveGemFxaaEnabled = getAurumPostControls().gemFxaaEnabled;");
-  expect(liveBlock).toContain("gemMaskPass.enabled = liveGemFxaaEnabled;");
-  expect(liveBlock).toContain("fxaaPass.enabled = liveGemFxaaEnabled;");
-  expect(idleBlock).toContain("const settledGemFxaaEnabled = getAurumPostControls().gemFxaaEnabled;");
-  expect(idleBlock).toContain("gemMaskPass.enabled = settledGemFxaaEnabled;");
-  expect(idleBlock).toContain("fxaaPass.enabled = settledGemFxaaEnabled;");
-  expect(liveBlock).not.toContain("gemMaskPass.enabled = true;");
-  expect(idleBlock).not.toContain("fxaaPass.enabled = true;");
+  expect(liveBlock).toContain("gemMaskPass.enabled = false;");
+  expect(liveBlock).toContain("fxaaPass.enabled = false;");
+  expect(idleBlock).toContain("gemMaskPass.enabled = false;");
+  expect(idleBlock).toContain("fxaaPass.enabled = false;");
+  expect(renderBlock).toContain("const useLiveGemAa = false;");
+  expect(renderBlock).toContain("else renderer.render(escena,camara);");
   expect(renderBlock).toContain('const activeToneAuditPath = useLiveGemAa ? "composer" : "direct";');
   expect(renderBlock).toContain("if (useLiveGemAa) composer.render();");
   expect(renderBlock).toContain("else renderer.render(escena,camara);");
@@ -502,14 +500,7 @@ test("Aurum uses only the toggle-controlled gem FXAA composer in live and settle
   expect(componentSource).toContain("liveFastPathRef.current=false");
 });
  
-test("Gem Mask + FXAA is enabled by default while surface AA and TAA remain opt-in", () => {
-  const controlsSource = readFileSync("src/lib/aurum/post-engine-controls.ts", "utf8");
-  expect(controlsSource).toContain("gemFxaaEnabled: true");
-  expect(controlsSource).toContain("surfaceEdgeAaEnabled: false");
-  expect(controlsSource).toContain("taaEnabled: false");
-  expect(controlsSource).toContain('const STORAGE_KEY = "aurum:post-engine-controls:v2";');
-  expect(controlsSource).toContain("gemFxaaEnabled: true,");
-});
+
 
 test("the BVH camera update reuses fixed-size snapshots without per-frame arrays", () => {
   const bvhSource = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
