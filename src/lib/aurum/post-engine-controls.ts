@@ -1,5 +1,6 @@
 export type AurumPostControls = {
   gemFxaaEnabled: boolean;
+  diamondSsaaEnabled: boolean;
   surfaceEdgeAaEnabled: boolean;
   taaEnabled: boolean;
 };
@@ -9,7 +10,8 @@ const LEGACY_STORAGE_KEY = "aurum:post-engine-controls:v1";
 const DEFAULTS: AurumPostControls = {
   // Gem Mask + FXAA are disabled by default. Surface AA and TAA remain off.
   gemFxaaEnabled: false,
-  surfaceEdgeAaEnabled: false,
+  diamondSsaaEnabled: false,
+  surfaceEdgeAaEnabled: false;
   taaEnabled: false,
 };
 
@@ -21,6 +23,7 @@ export function getAurumPostControls(): AurumPostControls {
       const value = JSON.parse(raw);
       return {
         gemFxaaEnabled: value.gemFxaaEnabled === true,
+        diamondSsaaEnabled: value.diamondSsaaEnabled === true,
         surfaceEdgeAaEnabled: value.surfaceEdgeAaEnabled === true,
         taaEnabled: value.taaEnabled === true,
       };
@@ -33,6 +36,7 @@ export function getAurumPostControls(): AurumPostControls {
     const legacy = JSON.parse(legacyRaw);
     const migrated: AurumPostControls = {
       gemFxaaEnabled: false,
+      diamondSsaaEnabled: false,
       surfaceEdgeAaEnabled: legacy.surfaceEdgeAaEnabled === true,
       taaEnabled: legacy.taaEnabled === true,
     };
