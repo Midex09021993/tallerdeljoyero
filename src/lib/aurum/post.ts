@@ -218,11 +218,23 @@ export async function createAurumPostPipeline(
     // Its result is composited ONLY through the center-diamond mask.
     let diamondSupersampleBaseWidth=Math.max(1,renderer.domElement.width);
     let diamondSupersampleBaseHeight=Math.max(1,renderer.domElement.height);
+    let diamondSupersampleScale=2;
+    const updateDiamondSupersampleScale=()=>{
+      const basePixels=diamondSupersampleBaseWidth*diamondSupersampleBaseHeight;
+      // Bound the auxiliary target to about 8.5 MP to avoid unbounded GPU
+      // memory growth on large/4K viewports. At 4K the native image is already
+      // sufficiently dense, so the optional module gracefully stays inactive.
+      diamondSupersampleScale=basePixels>8_500_000
+        ? 1
+        : Math.min(2,Math.sqrt(8_500_000/Math.max(1,basePixels)));
+      return diamondSupersampleScale>=1.15;
+    };
     const ensureDiamondSupersampleTarget=()=>{
+      updateDiamondSupersampleScale();
       if(!diamondSupersampleTarget){
         diamondSupersampleTarget=new THREE.WebGLRenderTarget(
-          Math.max(2,diamondSupersampleBaseWidth*2),
-          Math.max(2,diamondSupersampleBaseHeight*2),
+          Math.max(2,Math.floor(diamondSupersampleBaseWidth*diamondSupersampleScale)),
+          Math.max(2,Math.floor(diamondSupersampleBaseHeight*diamondSupersampleScale)),
           {format:THREE.RGBAFormat,type:THREE.HalfFloatType,depthBuffer:true,stencilBuffer:false}
         );
         diamondSupersampleTarget.texture.minFilter=THREE.LinearFilter;
@@ -410,14 +422,25 @@ export async function createAurumPostPipeline(
       setSize(width:number,height:number){
         diamondSupersampleBaseWidth=Math.max(1,Math.floor(width));
         diamondSupersampleBaseHeight=Math.max(1,Math.floor(height));
-        diamondSupersampleTarget?.setSize?.(Math.max(2,diamondSupersampleBaseWidth*2),Math.max(2,diamondSupersampleBaseHeight*2));
+        updateDiamondSupersampleScale();
+        const targetWidth=Math.max(2,Math.floor(diamondSupersampleBaseWidth*diamondSupersampleScale));
+        const targetHeight=Math.max(2,Math.floor(diamondSupersampleBaseHeight*diamondSupersampleScale));
+        diamondSupersampleTarget?.setSize?.(targetWidth,targetHeight);
         if(diamondSupersampleTarget && diamondSupersampleCompositePass){
           diamondSupersampleCompositePass.material.uniforms.hiResTexel.value.set(1/diamondSupersampleTarget.width,1/diamondSupersampleTarget.height);
         }
       },
+      canRender(){ return updateDiamondSupersampleScale(); },
       render(activeRenderer:any){
-        const activeTarget=ensureDiamondSupersampleTarget();
-        if(!activeTarget) return;
+        let activeTarget:any=null;
+        try { activeTarget=ensureDiamondSupersampleTarget(); }
+        catch(error){
+          diamondSupersamplePass.enabled=false;
+          diamondSupersampleCompositePass && (diamondSupersampleCompositePass.enabled=false);
+          console.warn("[AURUM][DIAMOND SSAA] Auxiliary target unavailable; module suspended.",error);
+          return;
+        }
+        if(!activeTarget || !updateDiamondSupersampleScale()) return;
         const previousTarget=activeRenderer.getRenderTarget();
         const previousAutoClear=activeRenderer.autoClear;
         const previousViewport=new THREE.Vector4();
@@ -436,6 +459,10 @@ export async function createAurumPostPipeline(
           activeRenderer.setClearColor(previousClearColor,previousClearAlpha);
           activeRenderer.clear(true,true,true);
           activeRenderer.render(scene,camera);
+        }catch(error){
+          diamondSupersamplePass.enabled=false;
+          diamondSupersampleCompositePass && (diamondSupersampleCompositePass.enabled=false);
+          console.warn("[AURUM][DIAMOND SSAA] Reference render failed; module suspended.",error);
         }finally{
           activeRenderer.setRenderTarget(previousTarget);
           activeRenderer.setViewport(previousViewport);
@@ -452,7 +479,7 @@ export async function createAurumPostPipeline(
         tDiffuse:{value:null},
         tDiamondHiRes:{value:diamondSupersampleTarget?.texture??null},
         gemMask:{value:gemMaskTarget.texture},
-        hiResTexel:{value:new THREE.Vector2(1/Math.max(2,diamondSupersampleBaseWidth*2),1/Math.max(2,diamondSupersampleBaseHeight*2))},
+        hiResTexel:{value:new THREE.Vector2(1/Math.max(2,Math.floor(diamondSupersampleBaseWidth*diamondSupersampleScale)),1/Math.max(2,Math.floor(diamondSupersampleBaseHeight*diamondSupersampleScale)))},
       },
       vertexShader:`varying vec2 vUv; void main(){vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
       fragmentShader:`uniform sampler2D tDiffuse; uniform sampler2D tDiamondHiRes; uniform sampler2D gemMask; uniform vec2 hiResTexel; varying vec2 vUv;
@@ -471,8 +498,9 @@ export async function createAurumPostPipeline(
     diamondSupersampleCompositePass.setSize=(width:number,height:number)=>{
       diamondSupersampleBaseWidth=Math.max(1,Math.floor(width));
       diamondSupersampleBaseHeight=Math.max(1,Math.floor(height));
-      const hiWidth=Math.max(2,diamondSupersampleBaseWidth*2);
-      const hiHeight=Math.max(2,diamondSupersampleBaseHeight*2);
+      updateDiamondSupersampleScale();
+      const hiWidth=Math.max(2,Math.floor(diamondSupersampleBaseWidth*diamondSupersampleScale));
+      const hiHeight=Math.max(2,Math.floor(diamondSupersampleBaseHeight*diamondSupersampleScale));
       diamondSupersampleTarget?.setSize?.(hiWidth,hiHeight);
       diamondSupersampleCompositePass.material.uniforms.hiResTexel.value.set(1/hiWidth,1/hiHeight);
     };
@@ -612,6 +640,7 @@ export async function createAurumPostPipeline(
       && !temporalMotionActive
       && renderer.capabilities?.isWebGL2 !== false
       && renderer.extensions?.has?.("EXT_color_buffer_float") !== false
+      && diamondSupersamplePass?.canRender?.()
     );
     if(diamondSupersamplePass) diamondSupersamplePass.enabled=ssaaActive;
     if(diamondSupersampleCompositePass) diamondSupersampleCompositePass.enabled=ssaaActive;
@@ -890,7 +919,7 @@ export async function createAurumPostPipeline(
   let diamondSupersamplingSettled=true;
   const applyDiamondPostModules=(controls:any)=>{
     const hasDiamond=Boolean(gemMaskPass?.hasDiamondMeshes);
-    const ssaaEnabled=Boolean(controls.diamondSsaaEnabled && hasDiamond && diamondSupersamplingSettled && renderer.capabilities?.isWebGL2 !== false && renderer.extensions?.has?.("EXT_color_buffer_float") !== false);
+    const ssaaEnabled=Boolean(controls.diamondSsaaEnabled && hasDiamond && diamondSupersamplingSettled && renderer.capabilities?.isWebGL2 !== false && renderer.extensions?.has?.("EXT_color_buffer_float") !== false && diamondSupersamplePass?.canRender?.());
     const fxaaEnabled=Boolean(controls.gemFxaaEnabled && hasDiamond && !ssaaEnabled);
     if(diamondSupersamplePass) diamondSupersamplePass.enabled=ssaaEnabled;
     if(diamondSupersampleCompositePass) diamondSupersampleCompositePass.enabled=ssaaEnabled;
