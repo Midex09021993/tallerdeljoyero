@@ -585,8 +585,18 @@ export async function createAurumPostPipeline(
     const edgeAaMode=options.capture ? "capture" : "settled";
     const edgeAaProfile=getAurumEdgeAaProfile(qualityId || (high ? "high" : "low"),lastKnownBudgetTier,edgeAaMode);
     const edgeAaEnabled=postControls.gemFxaaEnabled;
-    if(gemMaskPass) gemMaskPass.enabled=edgeAaEnabled;
-    if(fxaaPass) fxaaPass.enabled=edgeAaEnabled;
+    const ssaaActive=Boolean(
+      postControls.diamondSsaaEnabled
+      && gemMaskPass?.hasDiamondMeshes
+      && !options.capture
+      && !temporalMotionActive
+      && renderer.capabilities?.isWebGL2 !== false
+      && renderer.extensions?.has?.("EXT_color_buffer_float") !== false
+    );
+    if(diamondSupersamplePass) diamondSupersamplePass.enabled=ssaaActive;
+    if(diamondSupersampleCompositePass) diamondSupersampleCompositePass.enabled=ssaaActive;
+    if(gemMaskPass) gemMaskPass.enabled=ssaaActive || (edgeAaEnabled && !ssaaActive);
+    if(fxaaPass) fxaaPass.enabled=edgeAaEnabled && !ssaaActive;
     if(surfaceEdgeAaPass) {
       surfaceEdgeAaPass.enabled=postControls.surfaceEdgeAaEnabled;
       const strength=surfaceEdgeAaPass.material?.uniforms?.strength;
