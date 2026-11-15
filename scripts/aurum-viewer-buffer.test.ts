@@ -471,8 +471,9 @@ test("the first settled model frame keeps the anti-aliasing composer active", ()
 });
 
 
-test("Aurum keeps Gem Mask + FXAA out of live and settled preview", () => {
+test("Aurum enables Gem Mask + FXAA only for diamonds in settled preview", () => {
   const componentSource = readFileSync("src/components/AurumRender.tsx", "utf8");
+  const postSource = readFileSync("src/lib/aurum/post.ts", "utf8");
   const start = componentSource.indexOf("onStart: () => {");
   const end = componentSource.indexOf("onEnd: () => {", start);
   const liveBlock = componentSource.slice(start, end);
@@ -485,22 +486,22 @@ test("Aurum keeps Gem Mask + FXAA out of live and settled preview", () => {
   expect(componentSource).toContain('window.matchMedia("(max-width: 767px)").matches');
   expect(componentSource).toContain("isCompactViewport ? 1 : 1.25");
   expect(componentSource).toContain("runtimeBudget.pixelRatioCap, getAurumViewportPixelRatio()");
-  expect(liveBlock).toContain("liveFastPathRef.current = false;");
-  expect(idleBlock).toContain("liveFastPathRef.current = false;");
   expect(liveBlock).toContain("gemMaskPass.enabled = false;");
   expect(liveBlock).toContain("fxaaPass.enabled = false;");
-  expect(idleBlock).toContain("gemMaskPass.enabled = false;");
-  expect(idleBlock).toContain("fxaaPass.enabled = false;");
-  expect(renderBlock).toContain("const useLiveGemAa = false;");
-  expect(renderBlock).toContain("else renderer.render(escena,camara);");
-  expect(renderBlock).toContain('const activeToneAuditPath = useLiveGemAa ? "composer" : "direct";');
+  expect(idleBlock).toContain("const settledDiamondAa = Boolean(gemMaskPass?.hasDiamondMeshes);");
+  expect(idleBlock).toContain("gemMaskPass.enabled = settledDiamondAa;");
+  expect(idleBlock).toContain("fxaaPass.enabled = settledDiamondAa;");
+  expect(renderBlock).toContain("!liveFastPathRef.current");
+  expect(renderBlock).toContain("gemMaskPass?.hasDiamondMeshes");
   expect(renderBlock).toContain("if (useLiveGemAa) composer.render();");
   expect(renderBlock).toContain("else renderer.render(escena,camara);");
-  expect(componentSource).toContain("if (composer && (options.depthOfField || !liveFastPathRef.current)) composer.render();");
-  expect(componentSource).toContain("liveFastPathRef.current=false");
+  expect(postSource).toContain("const isAurumDiamondMesh=(object:any):boolean=>");
+  expect(postSource).toContain("const isDiamond=/\\\\b(diamond|diamante)\\\\b/.test(name);");
+  expect(postSource).toContain("get hasDiamondMeshes(){ return cachedGemMeshes.length>0; }");
+  expect(componentSource).toContain("const initialDiamondAa = Boolean(gemMaskPass?.hasDiamondMeshes);");
 });
- 
 
+});
 
 test("the BVH camera update reuses fixed-size snapshots without per-frame arrays", () => {
   const bvhSource = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
