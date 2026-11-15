@@ -1693,11 +1693,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       const aplicarPerfilLive = (forceLive?:boolean) => {
         // Material quality is independent from the renderer path (direct vs composer).
         // FXAA availability must never decide whether LIVE or BEAUTY materials are used.
-        // TEMPORARILY DISABLED: LIVE rewrites gemstone transmission and shader
-        // quality. Keep the authored BEAUTY profile until the optical regression
-        // is isolated and the interactive profile is revalidated.
-        void forceLive;
-        const live=false;
+        // The interactive viewport and standard PNG capture use the LIVE profile.
+        // The diamond keeps its dedicated spectral shader; colored gems use the
+        // native MeshPhysicalMaterial output path to preserve their catalog body hue.
+        const live=forceLive ?? true;
         if (!modelo) {
           renderer.shadowMap.enabled=!live && renderQuality.shadows;
           return;
@@ -1756,6 +1755,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           toast.error("No se aplicó la gema: selecciona una pieza clasificada como gema.");
           return false;
         }
+
+        // Newly assigned catalog materials are created in BEAUTY by the gem
+        // adapter. Reapply the interactive profile immediately so every newly
+        // selected stone uses the same color pipeline as the rest of the viewport.
+        aplicarPerfilLive();
 
         // Rebuild the central-diamond mask after catalog identity/material metadata changes.
         gemMaskPass?.refreshCache?.();
