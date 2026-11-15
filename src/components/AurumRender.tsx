@@ -3833,6 +3833,12 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             const interactionDpr = Math.min(requestedDpr, interactionDprCap, getAurumViewportPixelRatio());
             renderer.setPixelRatio(interactionDpr);
             composer?.setPixelRatio?.(interactionDpr);
+            // Keep the masked FXAA texel size aligned with the actual composer
+            // target after the interactive DPR change.
+            const liveGemAaTarget = (composer as any)?.renderTarget1 ?? (composer as any)?.readBuffer;
+            const liveGemAaWidth = Math.max(1, Number(liveGemAaTarget?.width) || Number(renderer.domElement.width) || 1);
+            const liveGemAaHeight = Math.max(1, Number(liveGemAaTarget?.height) || Number(renderer.domElement.height) || 1);
+            fxaaPass?.material?.uniforms?.resolution?.value?.set?.(1 / liveGemAaWidth, 1 / liveGemAaHeight);
 
             const liveEdgeAaProfile = getAurumEdgeAaProfile(measuredQualityId, runtimeBudget.tier, "live");
             if (surfaceEdgeAaPass) {
