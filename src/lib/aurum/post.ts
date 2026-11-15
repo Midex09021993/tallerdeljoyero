@@ -219,13 +219,11 @@ export async function createAurumPostPipeline(
     });
     const isAurumDiamondMesh=(object:any):boolean=>{
       let current=object;
-      let isGem=false;
       let isMetal=false;
       const identity:string[]=[];
       while(current){
         const metadata=current.userData?.aurumRhino??{};
         const category=String(metadata.categoria??"").trim().toLowerCase();
-        if(category==="gema") isGem=true;
         if(category==="metal") isMetal=true;
         identity.push(
           current.name,
@@ -240,7 +238,7 @@ export async function createAurumPostPipeline(
       }
       const name=identity.map(value=>String(value??"")).join(" ").toLowerCase();
       const isDiamond=/(^|[^a-z])(diamond|diamante)([^a-z]|$)/.test(name);
-      return !isMetal && isDiamond && (isGem || isDiamond);
+      return !isMetal && isDiamond;
     };
     // Scene classification is stable between model/selection-geometry changes.
     // Reuse these arrays on every frame instead of traversing the whole scene
