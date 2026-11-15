@@ -211,6 +211,19 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
     shader.uniforms.aurumScintillationStrength={value:strength};
     shader.uniforms.aurumScintillationContrast={value:contrastStrength};
     shader.uniforms.aurumRuntimeDispersion={value:(diamondTestProfile?.dispersion??baseDispersion)*familyDispersionScale};
+    shader.uniforms.aurumDiamondMicroVirtualFacetWeight={value:virtualFacetWeight};
+    shader.uniforms.aurumDiamondMicroFireScale={value:1};
+    material.userData={...(material.userData??{}),aurumDiamondMicroUniforms:{
+      scintillationStrength:shader.uniforms.aurumScintillationStrength,
+      baseScintillationStrength:strength,
+      facetContrast:shader.uniforms.aurumScintillationContrast,
+      baseFacetContrast:contrastStrength,
+      dispersion:shader.uniforms.aurumRuntimeDispersion,
+      baseDispersion:(diamondTestProfile?.dispersion??baseDispersion)*familyDispersionScale,
+      virtualFacetWeight:shader.uniforms.aurumDiamondMicroVirtualFacetWeight,
+      baseVirtualFacetWeight:virtualFacetWeight,
+      fireScale:shader.uniforms.aurumDiamondMicroFireScale,
+    }};
     shader.uniforms.aurumGemEnvironmentIntensity={value:Math.max(.55,Math.min(2.35,Number(material.envMapIntensity??1)))};
     material.userData={...(material.userData??{}),aurumGemEnvironmentUniforms:shader.uniforms.aurumGemEnvironmentIntensity};
     const gemLightState=material.userData?.aurumGemLightState??{};
@@ -300,6 +313,8 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
       uniform float aurumScintillationStrength;
       uniform float aurumScintillationContrast;
       uniform float aurumRuntimeDispersion;
+      uniform float aurumDiamondMicroVirtualFacetWeight;
+      uniform float aurumDiamondMicroFireScale;
       uniform float aurumGemEnvironmentIntensity;
       uniform vec3 aurumColorChangeFluorescent;
       uniform vec3 aurumColorChangeIncandescent;
@@ -520,7 +535,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
           vec3 ijVirtualWorldB=inverseTransformDirection(ijVirtualDirB,viewMatrix);
           vec3 ijVirtualEnvA=textureCubeUV(envMap,envMapRotation*ijVirtualWorldA,0.0).rgb;
           vec3 ijVirtualEnvB=textureCubeUV(envMap,envMapRotation*ijVirtualWorldB,0.0).rgb;
-          ijAccum+=(ijVirtualEnvA+ijVirtualEnvB)*(${virtualFacetWeight.toFixed(2)}*ijDepth);
+          ijAccum+=(ijVirtualEnvA+ijVirtualEnvB)*(aurumDiamondMicroVirtualFacetWeight*ijDepth);
         }
         // The custom internal-ray samples bypass MeshPhysicalMaterial's
         // envMapIntensity uniform. Apply a restrained diamond-only energy lift
@@ -564,7 +579,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // Grazing facets retain the full response; face-on facets receive 55%.
         float ijFaceOnFire=mix(0.55,1.0,1.0-smoothstep(0.78,0.98,ijCosTheta));
         float ijFireFacet=smoothstep(0.10,0.42,ijFresnel)*ijFaceOnFire;
-        float ijFireMask=clamp(ijFireEnergy*ijFireFacet*0.13,0.0,${AURUM_DIAMOND_LIVE_TUNING.fireMax.toFixed(3)});
+        float ijFireMask=clamp(ijFireEnergy*ijFireFacet*0.13*aurumDiamondMicroFireScale,0.0,${AURUM_DIAMOND_LIVE_TUNING.fireMax.toFixed(3)});
         float ijSpectralLuma=dot(ijAccum,vec3(0.2126,0.7152,0.0722));
         vec3 ijFireColor=max(ijAccum-vec3(ijSpectralLuma*0.88),vec3(0.0));
         float ijFireColorPeak=max(max(ijFireColor.r,ijFireColor.g),ijFireColor.b);
