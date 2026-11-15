@@ -19,6 +19,8 @@ export type AurumRuntimeBudget = {
   interactionPixelRatio:number;
   /** Maximum auxiliary supersampling scale applied only inside the center-diamond mask. */
   diamondSupersampleScaleCap:number;
+  /** Lower-cost auxiliary scale used only while the camera is moving. */
+  diamondLiveSupersampleScaleCap:number;
 };
 
 export function countAurumTriangles(root:any):number {
@@ -37,13 +39,13 @@ export function getAurumRuntimeBudget(triangleCount:number):AurumRuntimeBudget {
   const triangles=Math.max(0,Math.floor(Number(triangleCount)||0));
 
   if(triangles<=200_000){
-    return {triangleCount:triangles,tier:"web",pixelRatioCap:1.72,transmissionScaleCap:.50,interactionTransmissionScale:.38,interactionPixelRatio:1.72,diamondSupersampleScaleCap:2.0};
+    return {triangleCount:triangles,tier:"web",pixelRatioCap:1.72,transmissionScaleCap:.50,interactionTransmissionScale:.38,interactionPixelRatio:1.72,diamondSupersampleScaleCap:2.0,diamondLiveSupersampleScaleCap:1.5};
   }
   if(triangles<=500_000){
-    return {triangleCount:triangles,tier:"dense",pixelRatioCap:1.60,transmissionScaleCap:.32,interactionTransmissionScale:.32,interactionPixelRatio:1.60,diamondSupersampleScaleCap:1.6};
+    return {triangleCount:triangles,tier:"dense",pixelRatioCap:1.60,transmissionScaleCap:.32,interactionTransmissionScale:.32,interactionPixelRatio:1.60,diamondSupersampleScaleCap:1.6,diamondLiveSupersampleScaleCap:1.35};
   }
   if(triangles<=900_000){
-    return {triangleCount:triangles,tier:"very-dense",pixelRatioCap:1.40,transmissionScaleCap:.25,interactionTransmissionScale:.25,interactionPixelRatio:1.40,diamondSupersampleScaleCap:1.4};
+    return {triangleCount:triangles,tier:"very-dense",pixelRatioCap:1.40,transmissionScaleCap:.25,interactionTransmissionScale:.25,interactionPixelRatio:1.40,diamondSupersampleScaleCap:1.4,diamondLiveSupersampleScaleCap:1.25};
   }
-  return {triangleCount:triangles,tier:"extreme",pixelRatioCap:1.25,transmissionScaleCap:.20,interactionTransmissionScale:.18,interactionPixelRatio:1.25,diamondSupersampleScaleCap:1.25};
+  return {triangleCount:triangles,tier:"extreme",pixelRatioCap:1.25,transmissionScaleCap:.20,interactionTransmissionScale:.18,interactionPixelRatio:1.25,diamondSupersampleScaleCap:1.25,diamondLiveSupersampleScaleCap:1.15};
 }
