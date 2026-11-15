@@ -16,6 +16,7 @@ create index if not exists aurum_community_activity_public_created_idx
   where is_public = true;
 
 alter table public.aurum_community_activity enable row level security;
+grant select on public.aurum_community_activity to anon, authenticated;
 
 drop policy if exists "Public can read published community activity" on public.aurum_community_activity;
 create policy "Public can read published community activity"
@@ -35,6 +36,7 @@ create table if not exists public.aurum_community_stats (
 );
 
 alter table public.aurum_community_stats enable row level security;
+grant select on public.aurum_community_stats to anon, authenticated;
 
 drop policy if exists "Public can read community stats" on public.aurum_community_stats;
 create policy "Public can read community stats"
