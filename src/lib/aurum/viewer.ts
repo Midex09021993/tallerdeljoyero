@@ -102,14 +102,14 @@ export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, pre
     }
     applyScene(sceneId);
     model.userData={...(model.userData??{}),aurumInitialFrameApplied:true};
-    if (sceneId === "ijewelReference") applyAurumIJEWELPresentationCamera(viewer.camera, viewer.controls, model); else applyAurumCameraView(viewer.camera, viewer.controls, model, "frontal", category, 0.82);
+    if (sceneId === "ijewelReference") applyAurumIJEWELPresentationCamera(viewer.camera, viewer.controls, model); else applyAurumCameraView(viewer.camera, viewer.controls, model, "frontal", category, 0.76);
 
     // AurumRender actualiza el estado de vista al cargar. Ese estado puede
     // intentar aplicar "perspectiva" inmediatamente después del encuadre.
     // Reafirmamos el frontal en el siguiente frame, sin tocar materiales ni escena.
     requestAnimationFrame(() => {
       if (model.userData?.["aurumInitialFrameApplied"]) {
-        if (sceneId === "ijewelReference") applyAurumIJEWELPresentationCamera(viewer.camera, viewer.controls, model); else applyAurumCameraView(viewer.camera, viewer.controls, model, "frontal", category, 0.82);
+        if (sceneId === "ijewelReference") applyAurumIJEWELPresentationCamera(viewer.camera, viewer.controls, model); else applyAurumCameraView(viewer.camera, viewer.controls, model, "frontal", category, 0.76);
       }
     });
     return;
@@ -118,7 +118,7 @@ export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, pre
   // Restablecer siempre a una vista frontal con encuadre calculado
   // según el tamaño real del modelo. Evita que la cámara fija de referencia
   // vuelva a acercarse demasiado en archivos 3DM con otras unidades.
-  applyAurumCameraView(viewer.camera, viewer.controls, model, "frontal", category, 0.82);
+  applyAurumCameraView(viewer.camera, viewer.controls, model, "frontal", category, 0.76);
 }
 
 
