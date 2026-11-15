@@ -2273,7 +2273,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           // The passes remain available to explicit capture workflows.
           const initialBeautyPasses = new Set([renderPass, outputPass]);
           if (gemMaskPass) gemMaskPass.enabled = false;
-          if (fxaaPass) fxaaPass.enabled = false;
+          if (fxaaPass) fxaaPass.enabled = diamondSsaaActive && fxaaPass.enabled;
           ((composer as any)?.passes ?? []).forEach((pass: any) => {
             pass.enabled = initialBeautyPasses.has(pass);
           });
@@ -3206,7 +3206,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             if (composer && !options.depthOfField) {
               // Snapshot only the four LIVE viewport passes. TAA and photographic
               // effects are intentionally excluded so the export matches motion.
-              const liveCapturePasses = new Set([renderPass, outputPass]);
+              const liveCapturePasses = new Set([
+                renderPass,
+                ...(diamondSupersamplePass?.enabled ? [diamondSupersamplePass] : []),
+                ...(gemMaskPass?.enabled ? [gemMaskPass] : []),
+                ...(diamondSupersampleCompositePass?.enabled ? [diamondSupersampleCompositePass] : []),
+                ...(fxaaPass?.enabled ? [fxaaPass] : []),
+                outputPass,
+              ]);
               const allComposerPasses = ((composer as any)?.passes ?? []) as any[];
               for (const pass of allComposerPasses) {
                 capturePassStates.push({ pass, enabled: Boolean(pass?.enabled) });
@@ -3879,8 +3886,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // The existing Gem Mask identifies only the center-diamond meshes.
             // Enable its masked FXAA pair in LIVE without filtering metal pixels.
             const liveDiamondAaPasses = liveDiamondSsaaActive
-              ? [diamondSupersamplePass, gemMaskPass, diamondSupersampleCompositePass]
-              : liveDiamondAaEnabled ? [gemMaskPass, fxaaPass] : [];
+              ? [diamondSupersamplePass, gemMaskPass, diamondSupersampleCompositePass, ...(fxaaPass?.enabled ? [fxaaPass] : [])]
+              : liveDiamondAaEnabled ? [gemMaskPass, ...(fxaaPass?.enabled ? [fxaaPass] : [])] : [];
             const liveBeautyPasses = new Set([
               renderPass,
               ...liveDiamondAaPasses,
@@ -3926,7 +3933,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             composer?.setPixelRatio?.(settledDpr);
 
             // Gem Mask + FXAA disabled: retain only the ordinary beauty output.
-            const settledBeautyPasses = new Set([renderPass, ...(diamondSsaaActive ? [diamondSupersamplePass, gemMaskPass, diamondSupersampleCompositePass] : []), outputPass]);
+            const settledBeautyPasses = new Set([renderPass, ...(diamondSsaaActive ? [diamondSupersamplePass, gemMaskPass, diamondSupersampleCompositePass] : []), ...(fxaaPass?.enabled ? [fxaaPass] : []), outputPass]);
             const settledPasses = ((composer as any)?.passes ?? []) as any[];
             settledPasses.forEach((pass) => { pass.enabled = settledBeautyPasses.has(pass); });
             if (gemMaskPass) gemMaskPass.enabled = diamondSsaaActive;
