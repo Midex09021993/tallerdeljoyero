@@ -905,9 +905,8 @@ export async function createAurumPostPipeline(
     diamondSupersamplePass?.setScaleCap?.(next?diamondLiveSupersampleScaleCap:diamondSupersampleScaleCap);
     const edgeAaProfile=getAurumEdgeAaProfile(lastKnownQualityId || (lastKnownHighQuality ? "high" : "low"),lastKnownBudgetTier,next ? "live" : "settled");
     const postControls=getAurumPostControls();
-    // The selective SSAA module is settled-only; motion suspends its 2x
-    // reference render and restores the optional masked FXAA fallback.
-    diamondSupersamplingSettled=!next;
+    // Apply the active live/settled supersampling cap before selecting the
+    // diamond-only SSAA path; masked FXAA remains the capability fallback.
     applyDiamondPostModules(postControls);
     if(surfaceEdgeAaPass) {
       surfaceEdgeAaPass.enabled=postControls.surfaceEdgeAaEnabled;
