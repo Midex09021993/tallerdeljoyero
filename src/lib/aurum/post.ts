@@ -54,6 +54,9 @@ export async function createAurumPostPipeline(
   let fxaaPass:any=null;
   let surfaceEdgeAaPass:any=null;
   let gemMaskPass:any=null;
+  let diamondSupersamplePass:any=null;
+  let diamondSupersampleCompositePass:any=null;
+  let diamondSupersampleTarget:any=null;
   let gradingPass:any=null;
   let composerMsaaSamples=0;
 
@@ -210,6 +213,18 @@ export async function createAurumPostPipeline(
     // This is a categorical ID mask, not an image: never interpolate metal
     // and gemstone coverage at their shared boundary.
     configureAurumGemMaskTexture(gemMaskTarget.texture,THREE);
+    // Optional 2x reference render. It renders the complete scene so the
+    // diamond keeps physically correct transmission/refraction and occlusion.
+    // Its result is composited ONLY through the center-diamond mask.
+    diamondSupersampleTarget=new THREE.WebGLRenderTarget(
+      Math.max(2,renderer.domElement.width*2),
+      Math.max(2,renderer.domElement.height*2),
+      {format:THREE.RGBAFormat,type:THREE.HalfFloatType,depthBuffer:true,stencilBuffer:false}
+    );
+    diamondSupersampleTarget.texture.minFilter=THREE.LinearFilter;
+    diamondSupersampleTarget.texture.magFilter=THREE.LinearFilter;
+    diamondSupersampleTarget.texture.generateMipmaps=false;
+    diamondSupersampleTarget.texture.colorSpace=THREE.NoColorSpace;
     const depthOnlyMaterial=new THREE.MeshBasicMaterial({
       color:0x000000,side:THREE.DoubleSide,depthTest:true,depthWrite:true,colorWrite:false
     });
@@ -375,6 +390,73 @@ export async function createAurumPostPipeline(
         gemMaskMaterial.dispose();
       }
     };
+    // AURUM DIAMOND SSAA MODULE: render the full optical scene at 2x while
+    // stationary, then replace only pixels covered by the center-diamond mask.
+    // Rendering the full scene is essential: a detached diamond render would
+    // lose the ring/environment contribution required by transmission.
+    diamondSupersamplePass={
+      enabled:false,needsSwap:false,clear:false,renderToScreen:false,
+      setSize(width:number,height:number){
+        diamondSupersampleTarget?.setSize?.(Math.max(2,Math.floor(width*2)),Math.max(2,Math.floor(height*2)));
+      },
+      render(activeRenderer:any){
+        if(!diamondSupersampleTarget) return;
+        const previousTarget=activeRenderer.getRenderTarget();
+        const previousAutoClear=activeRenderer.autoClear;
+        const previousViewport=new THREE.Vector4();
+        const previousScissor=new THREE.Vector4();
+        const previousScissorTest=activeRenderer.getScissorTest?.()??false;
+        const previousClearColor=new THREE.Color();
+        const previousClearAlpha=activeRenderer.getClearAlpha();
+        activeRenderer.getViewport(previousViewport);
+        activeRenderer.getScissor(previousScissor);
+        activeRenderer.getClearColor(previousClearColor);
+        try{
+          activeRenderer.setRenderTarget(diamondSupersampleTarget);
+          activeRenderer.setViewport(0,0,diamondSupersampleTarget.width,diamondSupersampleTarget.height);
+          activeRenderer.setScissorTest(false);
+          activeRenderer.autoClear=false;
+          activeRenderer.setClearColor(previousClearColor,previousClearAlpha);
+          activeRenderer.clear(true,true,true);
+          activeRenderer.render(scene,camera);
+        }finally{
+          activeRenderer.setRenderTarget(previousTarget);
+          activeRenderer.setViewport(previousViewport);
+          activeRenderer.setScissor(previousScissor);
+          activeRenderer.setScissorTest(previousScissorTest);
+          activeRenderer.autoClear=previousAutoClear;
+          activeRenderer.setClearColor(previousClearColor,previousClearAlpha);
+        }
+      },
+      dispose(){ diamondSupersampleTarget?.dispose?.(); diamondSupersampleTarget=null; },
+    };
+    diamondSupersampleCompositePass=new FXAAShaderPass({
+      uniforms:{
+        tDiffuse:{value:null},
+        tDiamondHiRes:{value:diamondSupersampleTarget.texture},
+        gemMask:{value:gemMaskTarget.texture},
+        hiResTexel:{value:new THREE.Vector2(1/Math.max(2,diamondSupersampleTarget.width),1/Math.max(2,diamondSupersampleTarget.height))},
+      },
+      vertexShader:`varying vec2 vUv; void main(){vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
+      fragmentShader:`uniform sampler2D tDiffuse; uniform sampler2D tDiamondHiRes; uniform sampler2D gemMask; uniform vec2 hiResTexel; varying vec2 vUv;
+        void main(){
+          vec4 base=texture2D(tDiffuse,vUv);
+          if(texture2D(gemMask,vUv).r<0.5){gl_FragColor=base;return;}
+          vec2 h=hiResTexel*0.5;
+          vec4 a=texture2D(tDiamondHiRes,vUv+vec2(-h.x,-h.y));
+          vec4 b=texture2D(tDiamondHiRes,vUv+vec2( h.x,-h.y));
+          vec4 c=texture2D(tDiamondHiRes,vUv+vec2(-h.x, h.y));
+          vec4 d=texture2D(tDiamondHiRes,vUv+vec2( h.x, h.y));
+          gl_FragColor=(a+b+c+d)*0.25;
+        }`,
+    });
+    diamondSupersampleCompositePass.enabled=false;
+    // Insert the auxiliary render immediately after the base beauty pass. It
+    // never swaps composer buffers; the composite pass swaps only the diamond.
+    composer.addPass(diamondSupersamplePass);
+    composer.passes.splice(composer.passes.indexOf(diamondSupersamplePass),1);
+    composer.passes.splice(composer.passes.indexOf(renderPass)+1,0,diamondSupersamplePass);
+
     // AURUM Soft Edge AA is composited only inside pixels belonging to visible
     // gemstone meshes. Metals and all other geometry retain their original pixels.
     fxaaPass=new FXAAShaderPass({
@@ -415,7 +497,13 @@ export async function createAurumPostPipeline(
     // into gemstone edges. It is enabled only for settled/high-quality frames.
     fxaaPass.enabled=false;
     composer.addPass(gemMaskPass);
+    composer.addPass(diamondSupersampleCompositePass);
     composer.addPass(fxaaPass);
+    // Keep the strict order: base beauty -> high-res scene -> mask -> selective
+    // composite -> optional masked FXAA. Other scene pixels pass through.
+    const compositeIndex=composer.passes.indexOf(diamondSupersampleCompositePass);
+    composer.passes.splice(compositeIndex,1);
+    composer.passes.splice(composer.passes.indexOf(gemMaskPass)+1,0,diamondSupersampleCompositePass);
 
     // Conservative full-surface edge AA for polished metal silhouettes and
     // CAD curves. It is intentionally disabled during camera motion and uses
@@ -761,16 +849,29 @@ export async function createAurumPostPipeline(
 
   applyQuality(quality);
   // Reflect Post Engine switches immediately without waiting for a quality/profile rebuild.
+  let diamondSupersamplingSettled=true;
+  const applyDiamondPostModules=(controls:any)=>{
+    const hasDiamond=Boolean(gemMaskPass?.hasDiamondMeshes);
+    const ssaaEnabled=Boolean(controls.diamondSsaaEnabled && hasDiamond && diamondSupersamplingSettled);
+    const fxaaEnabled=Boolean(controls.gemFxaaEnabled && hasDiamond && !ssaaEnabled);
+    if(diamondSupersamplePass) diamondSupersamplePass.enabled=ssaaEnabled;
+    if(diamondSupersampleCompositePass) diamondSupersampleCompositePass.enabled=ssaaEnabled;
+    if(gemMaskPass) gemMaskPass.enabled=ssaaEnabled || fxaaEnabled;
+    if(fxaaPass) fxaaPass.enabled=fxaaEnabled;
+  };
+  const setDiamondSupersamplingSettled=(settled:boolean)=>{
+    diamondSupersamplingSettled=Boolean(settled);
+    applyDiamondPostModules(getAurumPostControls());
+  };
   const unsubscribePostControls=subscribeAurumPostControls((controls)=>{
-    const enabled=Boolean(controls.gemFxaaEnabled);
-    if(gemMaskPass) gemMaskPass.enabled=enabled;
-    if(fxaaPass) fxaaPass.enabled=enabled;
+    applyDiamondPostModules(controls);
     if(surfaceEdgeAaPass) surfaceEdgeAaPass.enabled=Boolean(controls.surfaceEdgeAaEnabled);
   });
   if(composer?.dispose){
     const disposeComposer=composer.dispose.bind(composer);
     composer.dispose=()=>{
       unsubscribePostControls();
+      diamondSupersamplePass?.dispose?.();
       disposeComposer();
     };
   }
@@ -778,5 +879,5 @@ export async function createAurumPostPipeline(
     if(!ssrPass)return;
     ssrPass.selects=Array.isArray(objects)?objects:[];
   };
-  return {composer,renderPass,ssaoPass,ssrPass,ssrSavePass,ssrCompositePass,bloomPass,setSSRSelects,applyQuality,updateTemporal,resetTemporalAccumulation,setTemporalMotion,dofPass,taaPass,fxaaPass,surfaceEdgeAaPass,gemMaskPass,outputPass,msaaSamples:composerMsaaSamples};
+  return {composer,renderPass,ssaoPass,ssrPass,ssrSavePass,ssrCompositePass,bloomPass,setSSRSelects,applyQuality,updateTemporal,resetTemporalAccumulation,setTemporalMotion,setDiamondSupersamplingSettled,diamondSupersamplePass,diamondSupersampleCompositePass,dofPass,taaPass,fxaaPass,surfaceEdgeAaPass,gemMaskPass,outputPass,msaaSamples:composerMsaaSamples};
 }
