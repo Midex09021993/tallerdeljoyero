@@ -2273,7 +2273,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           // The passes remain available to explicit capture workflows.
           const initialBeautyPasses = new Set([renderPass, outputPass]);
           if (gemMaskPass) gemMaskPass.enabled = false;
-          if (fxaaPass) fxaaPass.enabled = diamondSsaaActive && fxaaPass.enabled;
           ((composer as any)?.passes ?? []).forEach((pass: any) => {
             pass.enabled = initialBeautyPasses.has(pass);
           });
