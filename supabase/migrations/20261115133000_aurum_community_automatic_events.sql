@@ -140,7 +140,8 @@ set search_path = ''
 as $$
 begin
   if new.visible is true and (
-    old.visible is distinct from new.visible
+    tg_op = 'INSERT'
+    or old.visible is distinct from new.visible
     or old.nombre_publico is distinct from new.nombre_publico
     or old.descripcion is distinct from new.descripcion
     or old.logo_url is distinct from new.logo_url
@@ -159,7 +160,7 @@ $$;
 
 drop trigger if exists aurum_evento_catalogo_actualizado_trg on public.catalogo_configuracion;
 create trigger aurum_evento_catalogo_actualizado_trg
-after update of visible, nombre_publico, descripcion, logo_url on public.catalogo_configuracion
+after insert or update of visible, nombre_publico, descripcion, logo_url on public.catalogo_configuracion
 for each row execute function public.aurum_evento_catalogo_actualizado();
 
 create or replace function public.aurum_evento_perfil_completado()
@@ -167,43 +168,41 @@ returns trigger
 language plpgsql
 security definer
 set search_path = ''
-as $$
+as $
 declare
-  v_profile jsonb := to_jsonb(new);
-  v_participante uuid;
+  v_participante uuid := new.id;
   v_campos integer := 0;
+  v_metadata jsonb := coalesce(new.metadata, '{}'::jsonb);
 begin
-  v_participante := nullif(v_profile->>'participante_id','')::uuid;
-  if v_participante is null then return new; end if;
-
   select count(*) into v_campos
   from (values
-    (nullif(btrim(coalesce(v_profile->>'nombre','')),'')),
-    (nullif(btrim(coalesce(v_profile->>'telefono','')),'')),
-    (nullif(btrim(coalesce(v_profile->>'email','')),'')),
-    (nullif(btrim(coalesce(v_profile->>'avatar_url','')),'')),
-    (nullif(btrim(coalesce(v_profile->>'ciudad','')),'')),
-    (nullif(btrim(coalesce(v_profile->>'pais','')),'')),
-    (nullif(btrim(coalesce(v_profile->>'especialidad','')),'')),
-    (nullif(btrim(coalesce(v_profile->>'biografia','')),''))
+    (nullif(btrim(coalesce(new.nombre,'')),'')),
+    (nullif(btrim(coalesce(new.razon_social,'')),'')),
+    (nullif(btrim(coalesce(new.ciudad,'')),'')),
+    (nullif(btrim(coalesce(new.email,'')),'')),
+    (nullif(btrim(coalesce(new.telefono,'')),'')),
+    (nullif(btrim(coalesce(new.descripcion,'')),'')),
+    (case when v_metadata <> '{}'::jsonb then 'metadata' end)
   ) as campos(valor)
   where valor is not null;
 
   if v_campos >= 4 then
     perform public.aurum_emitir_actividad_comunidad(
       v_participante, 'profile_completed', 'completó su perfil profesional',
-      'El perfil del taller ya cuenta con información profesional.',
+      'La ficha pública del taller ya cuenta con información profesional.',
       'profile-complete:' || v_participante::text, null,
-      jsonb_build_object('completion_threshold', 4)
+      jsonb_build_object('completion_threshold', 4, 'available_fields', 7)
     );
   end if;
   return new;
 end;
-$$;
+$;
 
 drop trigger if exists aurum_evento_perfil_completado_trg on public.profiles;
+drop trigger if exists aurum_evento_perfil_completado_trg on public.ecosistema_participantes;
 create trigger aurum_evento_perfil_completado_trg
-after insert or update on public.profiles
+after insert or update of nombre, razon_social, ciudad, email, telefono, descripcion, metadata
+on public.ecosistema_participantes
 for each row execute function public.aurum_evento_perfil_completado();
 
 -- La relación queda detectada como referido solo cuando la fila lo declara
