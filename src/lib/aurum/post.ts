@@ -451,6 +451,11 @@ export async function createAurumPostPipeline(
         }`,
     });
     diamondSupersampleCompositePass.enabled=false;
+    diamondSupersampleCompositePass.setSize=(width:number,height:number)=>{
+      const hiWidth=Math.max(2,Math.floor(width*2));
+      const hiHeight=Math.max(2,Math.floor(height*2));
+      diamondSupersampleCompositePass.material.uniforms.hiResTexel.value.set(1/hiWidth,1/hiHeight);
+    };
     // Insert the auxiliary render immediately after the base beauty pass. It
     // never swaps composer buffers; the composite pass swaps only the diamond.
     composer.addPass(diamondSupersamplePass);
@@ -852,16 +857,17 @@ export async function createAurumPostPipeline(
   let diamondSupersamplingSettled=true;
   const applyDiamondPostModules=(controls:any)=>{
     const hasDiamond=Boolean(gemMaskPass?.hasDiamondMeshes);
-    const ssaaEnabled=Boolean(controls.diamondSsaaEnabled && hasDiamond && diamondSupersamplingSettled);
+    const ssaaEnabled=Boolean(controls.diamondSsaaEnabled && hasDiamond && diamondSupersamplingSettled && renderer.capabilities?.isWebGL2 !== false);
     const fxaaEnabled=Boolean(controls.gemFxaaEnabled && hasDiamond && !ssaaEnabled);
     if(diamondSupersamplePass) diamondSupersamplePass.enabled=ssaaEnabled;
     if(diamondSupersampleCompositePass) diamondSupersampleCompositePass.enabled=ssaaEnabled;
     if(gemMaskPass) gemMaskPass.enabled=ssaaEnabled || fxaaEnabled;
     if(fxaaPass) fxaaPass.enabled=fxaaEnabled;
+    return ssaaEnabled;
   };
   const setDiamondSupersamplingSettled=(settled:boolean)=>{
     diamondSupersamplingSettled=Boolean(settled);
-    applyDiamondPostModules(getAurumPostControls());
+    return applyDiamondPostModules(getAurumPostControls());
   };
   const unsubscribePostControls=subscribeAurumPostControls((controls)=>{
     applyDiamondPostModules(controls);
