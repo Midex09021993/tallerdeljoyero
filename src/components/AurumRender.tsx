@@ -1743,6 +1743,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           return false;
         }
 
+        // Rebuild the central-diamond mask after catalog identity/material metadata changes.
+        gemMaskPass?.refreshCache?.();
+
         // Preserve the existing procedural-inclusion visibility policy for
         // emerald grades while keeping this work out of the material hot path.
         setAurumInclusionsVisible(target, false);
