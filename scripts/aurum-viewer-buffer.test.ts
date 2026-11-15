@@ -496,7 +496,7 @@ test("Aurum enables Gem Mask + FXAA only for diamonds in settled preview", () =>
   expect(renderBlock).toContain("if (useLiveGemAa) composer.render();");
   expect(renderBlock).toContain("else renderer.render(escena,camara);");
   expect(postSource).toContain("const isAurumDiamondMesh=(object:any):boolean=>");
-  expect(postSource).toContain("const isDiamond=/\\\\b(diamond|diamante)\\\\b/.test(name);");
+  expect(postSource).toContain("const isDiamond=/(^|[^a-z])(diamond|diamante)([^a-z]|$)/.test(name);");
   expect(postSource).toContain("get hasDiamondMeshes(){ return cachedGemMeshes.length>0; }");
   expect(componentSource).toContain("const initialDiamondAa = Boolean(gemMaskPass?.hasDiamondMeshes);");
 });
