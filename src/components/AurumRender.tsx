@@ -58,6 +58,7 @@ import { Camera, ChevronDown, Copy, Download, Expand, FileJson, Gem, Image as Im
 import { GEMAS, MATERIALES, ESCENARIOS, VISTAS, ILUMINACIONES, type MaterialId, type EscenarioId, type VistaId, type IluminacionId, type MaterialGrupo, type CategoriaParte, type GemaId, type GemaConfig, type MaterialConfig, type ParteModelo } from "../lib/aurum/catalog";
 import { AurumRenderSidebar } from "./AurumRenderSidebar";
 import { AurumPerformanceIndicator, AurumPerformanceMonitorPanel } from "./AurumPerformanceMonitorPanel";
+import { AurumLoadingExperience } from "./AurumLoadingExperience";
 import { createAurumPerformanceMonitor } from "@/lib/aurum/performance-monitor";
 import { createAurumVideoFramePipeline, getAurumVideoLivePasses } from "../lib/aurum/video-frame-pipeline";
 import { runAurumMediaExportCleanup } from "../lib/aurum/media-export-session";
@@ -275,7 +276,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const apiRef = useRef<any>(null);
   const onCatalogApiReadyRef = useRef(onCatalogApiReady);
   onCatalogApiReadyRef.current = onCatalogApiReady;
-  const [archivo, setArchivo] = useState<string|null>(null), [cargando, setCargando] = useState(false), [estadoCarga, setEstadoCarga] = useState(""), [error, setError] = useState<string|null>(null), [formatoInterno, setFormatoInterno] = useState<string|null>(null);
+  const [archivo, setArchivo] = useState<string|null>(null), [cargando, setCargando] = useState(false), [estadoCarga, setEstadoCarga] = useState<{ message: string; completed?: number; total?: number } | null>(null), [error, setError] = useState<string|null>(null), [formatoInterno, setFormatoInterno] = useState<string|null>(null);
   const [archivoOriginal, setArchivoOriginal] = useState<File | null>(null);
   const [archivoOriginalInfo, setArchivoOriginalInfo] = useState<AurumOriginalSource | null>(null);
   const [arrastrandoArchivo, setArrastrandoArchivo] = useState(false);
@@ -2007,7 +2008,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         // Match PublicCatalogViewer: decode the original file directly and
         // preprocess that Object3D. Do not route through ImportPipelineManager,
         // intermediate GLB conversion, Smart Scan or deep geometry diagnostics.
-        const objeto = await parseAurumInput(file, ext, material);
+        const objeto = await parseAurumInput(file, ext, material, (message) => informar(message));
         if (!objeto) throw new Error("No se pudo interpretar la geometría del modelo 3D.");
 
         // Match the public viewer's Rhino Z-up -> Three.js Y-up correction and
@@ -2053,7 +2054,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         informar("Archivo leído. Preparando modelo...");
         const preprocessStartedAt = performance.now();
         await preprocessAurumModel(objeto, (message: string, completed: number, total: number) => {
-          informar(message);
+          informar(message, completed, total);
           loadAuditStep("preprocess-progress", { completed, total });
         });
         const interno = objeto;
@@ -4031,7 +4032,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
     } catch {
       sessionStorage.removeItem("aurum-render-poster-destino");
     }
-    setEstadoCarga(file.name.toLowerCase().endsWith(".3dm") ? "Cargando archivo 3DM…" : "Cargando archivo…");
+    setEstadoCarga(null);
     setCargando(true);
     setError(null);
     setPresentationCover(null);
@@ -4045,9 +4046,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       if (typeof cargar !== "function") {
         throw new Error("El visor AURUM RENDER todavía está inicializándose. Espera unos segundos y vuelve a intentar la recepción.");
       }
-      await cargar(file,(paso:string)=>{
-        const etapa = String(paso ?? "").toLowerCase();
-        setEstadoCarga(etapa.includes("leyendo") ? (file.name.toLowerCase().endsWith(".3dm") ? "Cargando archivo 3DM…" : "Cargando archivo…") : "Procesando modelo…");
+      await cargar(file,(message:string, completed?:number, total?:number)=>{
+        setEstadoCarga({ message, completed, total });
       });
       // El GLB guardado ya contiene los materiales del visor: no aplicar el perfil inicial
       // al reabrirlo, porque sobrescribiría el acabado que el usuario había guardado.
@@ -4952,9 +4952,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             {presentationCover && <div className={"pointer-events-none absolute inset-0 z-20 overflow-hidden transition-opacity duration-500 "+(presentationVisible?"opacity-100":"opacity-0")}>
               <img src={presentationCover} alt="Presentación del diseño" className="h-full w-full object-cover" />
             </div>}
-            {cargando && <div role="status" aria-live="polite" className="absolute inset-x-3 bottom-3 z-30 rounded-xl bg-white/90 px-3 py-2 text-xs text-[#625b54] shadow-sm backdrop-blur-sm">
-              {estadoCarga || "Preparando el visor 3D…"}
-            </div>}
+            {cargando && estadoCarga && <AurumLoadingExperience message={estadoCarga.message} completed={estadoCarga.completed} total={estadoCarga.total} />}
             {error&&<div className="absolute bottom-5 left-1/2 z-30 -translate-x-1/2 rounded-xl border border-red-400/20 bg-red-950/80 px-4 py-2 text-xs text-red-200">{error}</div>}
             {parteSeleccionada&&diagnosticoSeleccion&&diagnosticoSeleccionHabilitado&&<div className="absolute left-3 top-3 z-30 w-[min(430px,calc(100%-24px))] max-h-[78%] overflow-y-auto rounded-xl border border-[#d4af37]/50 bg-[#101214]/95 p-3 text-[10px] leading-relaxed text-white shadow-2xl backdrop-blur-xl">
               <div className="flex items-start justify-between gap-3">
