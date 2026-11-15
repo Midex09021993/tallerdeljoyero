@@ -114,7 +114,9 @@ test("diamond live optical tuning matches the approved diamond-only calibration"
   expect(source).toContain("faceBrightness: 1.01");
   expect(source).toContain("rimEnergy: 0.025");
   expect(source).toContain('const isDiamond=family.trim().toLowerCase()==="diamante"');
-  expect(source).toContain("smoothstep(0.035,0.28,ijSpectralSpread)");
+  expect(source).toContain("smoothstep(0.025,0.22,ijSpectralSpread)");
+  expect(source).toContain("ijSpectralLuma*0.88");
+  expect(source).toContain("ijHighlightPeak-0.90");
 });
 
 test("runtime DPR remains unchanged to avoid changing shared metal rendering resolution", () => {
@@ -137,4 +139,18 @@ test("web-tier models receive 2x diamond-only supersampling without raising shar
   expect(post).toContain("Math.min(diamondSupersampleScaleCap,Math.sqrt(8_500_000/Math.max(1,basePixels)))");
   expect(post).toContain("if(texture2D(gemMask,vUv).r<0.5){gl_FragColor=base;return;}");
   expect(post).toContain("setDiamondSupersampleScaleCap");
+});
+
+test("diamond perimeter AA uses the stronger masked edge profile", () => {
+  const source = readFileSync("src/lib/aurum/post.ts", "utf8");
+  expect(source).toContain("strength:{value:0.76}");
+  expect(source).toContain("edgeThreshold:{value:0.18}");
+  expect(source).toContain("if(texture2D(gemMask,vUv).r<0.5){gl_FragColor=center;return;}");
+});
+
+test("diamond SSAA scale cap is changed through the pass-owned closure", () => {
+  const source = readFileSync("src/lib/aurum/post.ts", "utf8");
+  expect(source).toContain("setScaleCap(cap:number)");
+  expect(source).toContain("diamondSupersamplePass?.setScaleCap?.(cap)");
+  expect(source).not.toContain("diamondSupersampleScaleCap=THREE.MathUtils");
 });
