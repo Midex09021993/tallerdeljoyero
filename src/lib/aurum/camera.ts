@@ -208,12 +208,11 @@ export function applyAurumCameraView(
   const horizontalHalfFov = Math.atan(Math.tan(verticalHalfFov) * aspect);
   const tanVertical = Math.max(Math.tan(verticalHalfFov), 1e-4);
   const tanHorizontal = Math.max(Math.tan(horizontalHalfFov), 1e-4);
-  const margin = 1.12;
-  const scale = Number.isFinite(framingScale) ? Math.max(0.25, Math.min(1.5, framingScale)) : 1;
+  const targetNdc = THREE.MathUtils.clamp(0.72 / scale, 0.35, 0.92);
 
-  // Fit the actual projected model bounds, not a rotation-invariant sphere.
-  // This keeps the visible product footprint consistent between frontal,
-  // lateral, superior and perspective views without distorting geometry.
+  // Measure the complete projected silhouette envelope for this orientation.
+  // Solve camera distance so every preset uses the same maximum screen-space
+  // footprint, rather than merely ensuring that the model does not get clipped.
   const corners = bounds.isEmpty() ? [] : [
     new THREE.Vector3(bounds.min.x, bounds.min.y, bounds.min.z),
     new THREE.Vector3(bounds.min.x, bounds.min.y, bounds.max.z),
@@ -224,19 +223,28 @@ export function applyAurumCameraView(
     new THREE.Vector3(bounds.max.x, bounds.max.y, bounds.min.z),
     new THREE.Vector3(bounds.max.x, bounds.max.y, bounds.max.z),
   ];
-  let distance = 0.1;
-  for (const corner of corners) {
-    const relative = corner.sub(target);
-    const depthOffset = relative.dot(direction);
-    const horizontal = Math.abs(relative.dot(right));
-    const vertical = Math.abs(relative.dot(cameraUp));
-    distance = Math.max(
-      distance,
-      depthOffset + (horizontal * margin * profile.distance * scale) / tanHorizontal,
-      depthOffset + (vertical * margin * profile.distance * scale) / tanVertical,
-    );
+  const projectedExtent = (distance: number) => {
+    let extent = 0;
+    for (const corner of corners) {
+      const relative = corner.clone().sub(target);
+      const depth = distance - relative.dot(direction);
+      if (depth <= 1e-5) return Number.POSITIVE_INFINITY;
+      const horizontalNdc = Math.abs(relative.dot(right)) / (depth * tanHorizontal);
+      const verticalNdc = Math.abs(relative.dot(cameraUp)) / (depth * tanVertical);
+      extent = Math.max(extent, horizontalNdc, verticalNdc);
+    }
+    return extent;
+  };
+
+  let low = Math.max(0.01, ...corners.map((corner) => corner.clone().sub(target).dot(direction) + 0.01));
+  let high = Math.max(low + 1, 1);
+  while (projectedExtent(high) > targetNdc && high < 1e7) high *= 2;
+  for (let i = 0; i < 48; i += 1) {
+    const mid = (low + high) * 0.5;
+    if (projectedExtent(mid) > targetNdc) low = mid;
+    else high = mid;
   }
-  distance = Math.max(distance + 0.02, 0.1);
+  const distance = Math.max(high, 0.1);
 
   camera.up.copy(cameraUp);
   controls.target.copy(target);
