@@ -197,7 +197,7 @@ export function applyAurumCameraView(
   const horizontalHalfFov = Math.atan(Math.tan(verticalHalfFov) * aspect);
   const limitingHalfFov = Math.max(0.01, Math.min(verticalHalfFov, horizontalHalfFov));
   const distance = Math.max(
-    (radius / Math.sin(limitingHalfFov)) * 1.10 * profile.distance * Math.max(0.7, Math.min(1, framingScale)),
+    (radius / Math.sin(limitingHalfFov)) * 1.10 * profile.distance * Math.max(0.65, Math.min(1, framingScale)),
     0.1,
   );
 
