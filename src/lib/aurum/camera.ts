@@ -104,7 +104,7 @@ export function applyAurumPublicViewerCamera(
   camera: THREE.PerspectiveCamera,
   controls: { target: THREE.Vector3; update: () => void; minDistance?: number; maxDistance?: number; enablePan?: boolean; enableRotate?: boolean; enableZoom?: boolean; autoRotate?: boolean; autoRotateSpeed?: number; screenSpacePanning?: boolean },
   model: THREE.Object3D | null,
-  options: { enablePan?: boolean } = {},
+  options: { enablePan?: boolean; framingScale?: number } = {},
 ) {
   const bounds = model ? new THREE.Box3() : null;
   if (model && bounds) {
@@ -121,7 +121,8 @@ export function applyAurumPublicViewerCamera(
   const sphere = bounds.getBoundingSphere(new THREE.Sphere());
   const radius = Math.max(sphere.radius, 0.001);
   camera.fov = 35;
-  const distance = radius / Math.sin(THREE.MathUtils.degToRad(camera.fov / 2)) * 1.2;
+  const framingScale = Number.isFinite(options.framingScale) ? Math.max(0.25, Math.min(1, options.framingScale!)) : 1;
+  const distance = radius / Math.sin(THREE.MathUtils.degToRad(camera.fov / 2)) * 1.2 * framingScale;
   camera.position.set(0, 0, distance);
   camera.near = Math.max(radius / 100, 0.001);
   camera.far = Math.max(distance + radius * 20, 100);
