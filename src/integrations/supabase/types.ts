@@ -261,6 +261,7 @@ export type Database = {
       aurum_community_stats: {
         Row: {
           display_order: number
+          is_public: boolean
           label: string
           metric_key: string
           prefix: string | null
@@ -270,6 +271,7 @@ export type Database = {
         }
         Insert: {
           display_order?: number
+          is_public?: boolean
           label: string
           metric_key: string
           prefix?: string | null
@@ -279,6 +281,7 @@ export type Database = {
         }
         Update: {
           display_order?: number
+          is_public?: boolean
           label?: string
           metric_key?: string
           prefix?: string | null

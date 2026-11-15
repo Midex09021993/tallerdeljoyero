@@ -40,6 +40,34 @@ function randomToken() {
 }
 
 type InFile = { name: string; size: number; type?: string };
+
+// Tipos de contenido activo (páginas web, scripts, ejecutables) que no se aceptan:
+// AURUM Transfer es para modelos 3D, imágenes, documentos y archivos comprimidos.
+const BLOCKED_EXTENSIONS = new Set([
+  "html", "htm", "xhtml", "shtml", "svg", "svgz", "xml", "xsl", "js", "mjs", "cjs", "jsx", "ts", "tsx",
+  "php", "phtml", "asp", "aspx", "jsp", "cgi", "pl", "py", "rb", "sh", "bash", "ps1", "psm1", "vbs", "vbe",
+  "wsf", "hta", "bat", "cmd", "com", "exe", "msi", "msp", "scr", "pif", "cpl", "dll", "jar", "apk", "app",
+  "dmg", "pkg", "deb", "rpm", "reg", "lnk", "swf",
+]);
+const BLOCKED_MIME = [
+  /^text\/html/i, /^application\/xhtml/i, /^image\/svg/i, /xml$/i, /javascript/i, /ecmascript/i,
+  /^text\/x-(sh|shellscript|php|perl|python|script)/i, /^application\/x-(sh|csh|php|perl|python|msdownload|msdos-program|executable|httpd)/i,
+  /^application\/(vnd\.microsoft\.portable-executable|java-archive|vnd\.android\.package-archive|hta)/i,
+];
+const MIME_RE = /^[a-z0-9][a-z0-9!#$&^_.+-]{0,126}\/[a-z0-9][a-z0-9!#$&^_.+-]{0,126}$/i;
+
+function blockedFile(name: string, type: string): boolean {
+  const ext = name.toLowerCase().split(".").pop() ?? "";
+  if (name.includes(".") && BLOCKED_EXTENSIONS.has(ext)) return true;
+  return BLOCKED_MIME.some((re) => re.test(type));
+}
+
+function normalizeType(type: unknown): string | null {
+  if (type === undefined || type === null || type === "") return "application/octet-stream";
+  if (typeof type !== "string") return null;
+  const clean = type.split(";")[0].trim().toLowerCase();
+  return MIME_RE.test(clean) ? clean : null;
+}
 type Meta = { name: string; size: number; type: string; path: string };
 
 function validate(files: unknown): InFile[] | string {
@@ -47,7 +75,11 @@ function validate(files: unknown): InFile[] | string {
   if (files.length > MAX_FILES) return `Máximo ${MAX_FILES} archivos por transferencia.`;
   let total = 0;
   for (const f of files) {
-    if (!f || typeof f.name !== "string" || typeof f.size !== "number" || f.size < 0) return "Archivo inválido.";
+    if (!f || typeof f.name !== "string" || !f.name.trim() || f.name.length > 255 || typeof f.size !== "number" || !Number.isFinite(f.size) || f.size < 0) return "Archivo inválido.";
+    const type = normalizeType(f.type);
+    if (!type) return `Tipo de archivo no válido: ${safeName(f.name)}.`;
+    if (blockedFile(f.name, type)) return `Tipo de archivo no permitido: ${safeName(f.name)}.`;
+    f.type = type;
     total += f.size;
   }
   if (total > MAX_TOTAL_BYTES) return "La transferencia supera el límite de 2 GB.";
@@ -90,6 +122,7 @@ Deno.serve(async (req) => {
       const { data: listed, error: listError } = await supabase.storage.from(BUCKET).list(token, { limit: 100 });
       if (listError) throw listError;
       const sizes = new Map((listed ?? []).map((o) => [`${token}/${o.name}`, Number(o.metadata?.size ?? -1)]));
+      const storedTypes = new Map((listed ?? []).map((o) => [`${token}/${o.name}`, String(o.metadata?.mimetype ?? "")]));
 
       const metadata: Meta[] = [];
       let total = 0;
@@ -97,6 +130,12 @@ Deno.serve(async (req) => {
         const path = String(f.path ?? "");
         if (!path.startsWith(`${token}/`) || !sizes.has(path)) return json({ error: `Falta subir ${f.name}.` }, 400);
         const size = sizes.get(path)!;
+        // Comprobar también el tipo con el que realmente se guardó el archivo.
+        const storedType = storedTypes.get(path) ?? "";
+        if (blockedFile(path, storedType) || blockedFile(f.name, storedType)) {
+          await supabase.storage.from(BUCKET).remove((listed ?? []).map((o) => `${token}/${o.name}`));
+          return json({ error: `Tipo de archivo no permitido: ${safeName(f.name)}.` }, 400);
+        }
         total += size;
         metadata.push({ name: safeName(f.name), size, type: f.type || "application/octet-stream", path });
       }
