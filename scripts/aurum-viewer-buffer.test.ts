@@ -611,6 +611,6 @@ test("video export restores the viewer and resumes the demand-driven loop", () =
   const videoBlock = componentSource.slice(videoStart, videoEnd);
 
   expect(videoStart).toBeGreaterThan(-1);
-  expect(videoBlock).toContain("loop?.resume?.();");
-  expect(videoBlock).toContain("loop?.resize?.();");
+  expect(videoBlock).toContain("() => loop?.resume?.(),");
+  expect(videoBlock).toContain("() => loop?.resize?.(),");
 });
