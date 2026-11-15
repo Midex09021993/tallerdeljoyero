@@ -141,10 +141,6 @@ export function applyAurumPublicViewerCamera(
 }
 
 /**
- * Calcula la composición de cámara usando el volumen real de la joya.
- * El encuadre mantiene una escala coherente entre todas las vistas.
- */
-/**
  * Calcula una esfera envolvente de las mallas visibles en coordenadas de mundo.
  * A diferencia de la diagonal de una Box3, su radio no cambia al observar el
  * producto desde frontal, lateral, superior o perspectiva.
@@ -207,7 +203,8 @@ export function applyAurumCameraView(
   controls.target.copy(target);
   if (view === "frontal") {
     camera.up.set(0, 1, 0);
-    camera.position.set(target.x, target.y + radius * 0.06, target.z + distance);
+    const frontalDirection = new THREE.Vector3(0, 0.06, 1).normalize();
+    camera.position.copy(target).addScaledVector(frontalDirection, distance);
   } else if (view === "superior") {
     camera.up.set(0, 0, -1);
     camera.position.set(target.x, target.y + distance, target.z);
