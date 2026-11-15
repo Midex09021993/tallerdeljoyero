@@ -239,7 +239,7 @@ export async function createAurumPostPipeline(
         current=current.parent;
       }
       const name=identity.map(value=>String(value??"")).join(" ").toLowerCase();
-      const isDiamond=/\\b(diamond|diamante)\\b/.test(name);
+      const isDiamond=/(^|[^a-z])(diamond|diamante)([^a-z]|$)/.test(name);
       return !isMetal && isDiamond && (isGem || isDiamond);
     };
     // Scene classification is stable between model/selection-geometry changes.
