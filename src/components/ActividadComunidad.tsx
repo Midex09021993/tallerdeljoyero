@@ -40,13 +40,7 @@ const activityIcons: Record<string, LucideIcon> = {
   achievement: Award,
   milestone: BookOpen,
 };
-const previewStats: CommunityStat[] = [
-  { metric_key: "workshops", label: "Talleres registrados", value: 120, prefix: "+", suffix: null, display_order: 1 },
-  { metric_key: "countries", label: "Países representados", value: 8, prefix: "+", suffix: null, display_order: 2 },
-  { metric_key: "calculations", label: "Cálculos realizados", value: 15000, prefix: "+", suffix: null, display_order: 3 },
-  { metric_key: "designs", label: "Diseños almacenados", value: 500, prefix: "+", suffix: null, display_order: 4 },
-  { metric_key: "shared_files", label: "Archivos compartidos", value: 2000, prefix: "+", suffix: null, display_order: 5 },
-];
+
 
 function tiempoRelativo(fecha: string) {
   const date = new Date(fecha);
@@ -103,7 +97,8 @@ export function ActividadComunidad({ slug, compact = false }: { slug?: string; c
     .filter(item => item.actor_name.trim().toLocaleLowerCase("es") !== "fadilab")
     .filter(item => filter === "all" || item.activity_type === filter)
     .slice(0, compact ? 30 : 6);
-  const stats = statsQuery.data?.length ? statsQuery.data : previewStats;
+  // No mostrar cifras sembradas como demostración: hasta conectar métricas verificables, se informa que están en preparación.
+  const stats = (statsQuery.data ?? []).filter(stat => stat.metric_key.startsWith("verified_"));
 
   return (
     <section id={compact ? "actividad-taller" : "actividad-comunidad"} aria-label={compact ? "Actividad del taller" : "Actividad reciente de la comunidad"} className={compact ? "border-y border-[#1f1b1815] bg-white/70" : "relative isolate overflow-hidden border-y border-[#e8e3d9] bg-[#fbfaf7]"}>
@@ -143,8 +138,14 @@ export function ActividadComunidad({ slug, compact = false }: { slug?: string; c
           {!compact && <aside className="flex flex-col gap-4">
             <div className="rounded-2xl border border-[#e8e3d9] bg-white p-5 shadow-[0_12px_36px_rgba(23,35,45,.035)]">
               <div className="flex items-center gap-2"><span className="grid size-9 place-items-center rounded-xl bg-[#fff4d5] text-[#96732e]"><Globe2 className="size-[18px]" /></span><div><h3 className="text-sm font-bold text-[#17232d]">La comunidad en cifras</h3><p className="mt-0.5 text-[10px] text-slate-500">Una red que sigue creciendo</p></div></div>
-              <div className="mt-4 grid grid-cols-2 gap-2.5">{stats.map((stat,index)=><div key={stat.metric_key} className={`rounded-xl border border-[#eeeae2] bg-[#fdfcf9] p-2.5 ${index === stats.length - 1 ? "col-span-2" : ""}`}><p className="text-lg font-bold leading-tight text-[#17232d]">{stat.prefix ?? ""}{new Intl.NumberFormat("es").format(stat.value)}{stat.suffix ?? ""}</p><p className="mt-1 text-[9px] leading-4 text-[#77828a]">{stat.label}</p></div>)}</div>
-              {!statsQuery.data?.length && <p className="mt-3 text-[10px] text-[#9a8b6b]">Cifras de referencia pendientes de validar.</p>}
+              {stats.length > 0 ? (
+                <div className="mt-4 grid grid-cols-2 gap-2.5">{stats.map((stat,index)=><div key={stat.metric_key} className={`rounded-xl border border-[#eeeae2] bg-[#fdfcf9] p-2.5 ${index === stats.length - 1 ? "col-span-2" : ""}`}><p className="text-lg font-bold leading-tight text-[#17232d]">{stat.prefix ?? ""}{new Intl.NumberFormat("es").format(stat.value)}{stat.suffix ?? ""}</p><p className="mt-1 text-[9px] leading-4 text-[#77828a]">{stat.label}</p></div>)}</div>
+              ) : (
+                <div className="mt-4 rounded-xl border border-dashed border-[#e8e3d9] bg-[#fdfcf9] px-4 py-5">
+                  <p className="text-sm font-semibold text-[#17232d]">Cifras reales en preparación</p>
+                  <p className="mt-1 text-[11px] leading-5 text-[#77828a]">Pronto mostraremos datos verificados de talleres, diseños y actividad de la comunidad.</p>
+                </div>
+              )}
             </div>
             <div className="rounded-2xl bg-[#17232d] p-5 text-white"><p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#e7cb78]">Tu próximo paso</p><h3 className="mt-2 text-xl font-extrabold">¿Quieres formar parte de la comunidad?</h3><p className="mt-2 text-xs leading-5 text-slate-300">Crea el espacio de tu taller y conecta tu trabajo con una red de profesionales.</p><RegistroTaller className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-[#f1d58b] px-4 py-3 text-xs font-extrabold text-[#17232d] hover:bg-[#ffe7a8]" /></div>
           </aside>}
