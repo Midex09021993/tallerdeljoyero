@@ -219,6 +219,7 @@ export async function createAurumPostPipeline(
     let diamondSupersampleBaseWidth=Math.max(1,renderer.domElement.width);
     let diamondSupersampleBaseHeight=Math.max(1,renderer.domElement.height);
     let diamondSupersampleScale=2;
+    let diamondSupersampleScaleCap=2;
     const updateDiamondSupersampleScale=()=>{
       const basePixels=diamondSupersampleBaseWidth*diamondSupersampleBaseHeight;
       // Bound the auxiliary target to about 8.5 MP to avoid unbounded GPU
@@ -226,7 +227,7 @@ export async function createAurumPostPipeline(
       // sufficiently dense, so the optional module gracefully stays inactive.
       diamondSupersampleScale=basePixels>8_500_000
         ? 1
-        : Math.min(2,Math.sqrt(8_500_000/Math.max(1,basePixels)));
+        : Math.min(diamondSupersampleScaleCap,Math.sqrt(8_500_000/Math.max(1,basePixels)));
       return diamondSupersampleScale>=1.15;
     };
     const ensureDiamondSupersampleTarget=()=>{
@@ -927,6 +928,12 @@ export async function createAurumPostPipeline(
     if(fxaaPass) fxaaPass.enabled=fxaaEnabled;
     return ssaaEnabled;
   };
+  const setDiamondSupersampleScaleCap=(cap:number)=>{
+    diamondSupersampleScaleCap=THREE.MathUtils.clamp(Number(cap)||1,1,2);
+    updateDiamondSupersampleScale();
+    diamondSupersamplePass?.setSize?.(diamondSupersampleBaseWidth,diamondSupersampleBaseHeight);
+    diamondSupersampleCompositePass?.setSize?.(diamondSupersampleBaseWidth,diamondSupersampleBaseHeight);
+  };
   const setDiamondSupersamplingSettled=(settled:boolean)=>{
     diamondSupersamplingSettled=Boolean(settled);
     return applyDiamondPostModules(getAurumPostControls());
@@ -947,5 +954,5 @@ export async function createAurumPostPipeline(
     if(!ssrPass)return;
     ssrPass.selects=Array.isArray(objects)?objects:[];
   };
-  return {composer,renderPass,ssaoPass,ssrPass,ssrSavePass,ssrCompositePass,bloomPass,setSSRSelects,applyQuality,updateTemporal,resetTemporalAccumulation,setTemporalMotion,setDiamondSupersamplingSettled,diamondSupersamplePass,diamondSupersampleCompositePass,dofPass,taaPass,fxaaPass,surfaceEdgeAaPass,gemMaskPass,outputPass,msaaSamples:composerMsaaSamples};
+  return {composer,renderPass,ssaoPass,ssrPass,ssrSavePass,ssrCompositePass,bloomPass,setSSRSelects,applyQuality,updateTemporal,resetTemporalAccumulation,setTemporalMotion,setDiamondSupersamplingSettled,setDiamondSupersampleScaleCap,diamondSupersamplePass,diamondSupersampleCompositePass,dofPass,taaPass,fxaaPass,surfaceEdgeAaPass,gemMaskPass,outputPass,msaaSamples:composerMsaaSamples};
 }
