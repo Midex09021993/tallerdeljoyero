@@ -8,9 +8,11 @@ export type AurumPostControls = {
 const STORAGE_KEY = "aurum:post-engine-controls:v2";
 const LEGACY_STORAGE_KEY = "aurum:post-engine-controls:v1";
 const DEFAULTS: AurumPostControls = {
-  // Gem Mask + FXAA are disabled by default. Surface AA and TAA remain off.
+  // Selective diamond-only supersampling is enabled by default. Its compositor
+  // replaces pixels inside the center-diamond mask only and runs only while settled.
+  // FXAA, Surface Edge AA and TAA remain opt-in.
   gemFxaaEnabled: false,
-  diamondSsaaEnabled: false,
+  diamondSsaaEnabled: true,
   surfaceEdgeAaEnabled: false,
   taaEnabled: false,
 };
