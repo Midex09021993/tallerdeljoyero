@@ -2321,18 +2321,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         // subsequent catalog changes resolve selected CAD layers in O(k).
         prepareAurumGemLayerIndex(escena);
         gemMaskPass?.refreshCache?.();
-        // Controlled first trial: activate the selective mask only when the loaded
-        // model contains a diamond. The moving path remains direct WebGL.
-        const initialDiamondAa = Boolean(gemMaskPass?.hasDiamondMeshes);
-        if (initialDiamondAa) {
-          const diamondAaPasses = new Set([renderPass, gemMaskPass, fxaaPass, outputPass]);
-          ((composer as any)?.passes ?? []).forEach((pass: any) => {
-            pass.enabled = diamondAaPasses.has(pass);
-          });
-          if (gemMaskPass) gemMaskPass.enabled = true;
-          if (fxaaPass) fxaaPass.enabled = true;
-          liveFastPathRef.current = false;
-        }
+        // Gem Mask + FXAA remain disabled for the entire viewer session.
+        if (gemMaskPass) gemMaskPass.enabled = false;
+        if (fxaaPass) fxaaPass.enabled = false;
         // Live preview keeps TAA disabled in both moving and settled states.
         // The composer still converges one frame for a stable demand-driven image.
         if (idleTaaPass) {
@@ -2928,6 +2919,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               livePasses:getAurumVideoLivePasses({
                 renderPass,gemMaskPass,fxaaPass,surfaceEdgeAaPass,
                 surfaceEdgeAaEnabled:videoEdgeAaProfile.enabled,outputPass,
+                gemFxaaEnabled:false,
               }),
               width:renderWidth,
               height:renderHeight,
@@ -3187,7 +3179,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             if (composer && !options.depthOfField) {
               // Snapshot only the four LIVE viewport passes. TAA and photographic
               // effects are intentionally excluded so the export matches motion.
-              const liveCapturePasses = new Set([renderPass, gemMaskPass, fxaaPass, outputPass]);
+              const liveCapturePasses = new Set([renderPass, outputPass]);
               const allComposerPasses = ((composer as any)?.passes ?? []) as any[];
               for (const pass of allComposerPasses) {
                 capturePassStates.push({ pass, enabled: Boolean(pass?.enabled) });
@@ -3775,10 +3767,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           }
           const bvhCpuMs = performance.now() - bvhStartedAt;
           const renderStartedAt = performance.now();
-          // The diamond-only Gem Mask + FXAA path runs only while settled.
-          // Orbit always returns to direct WebGL to preserve interaction latency.
-          const useLiveGemAa = !liveFastPathRef.current
-            && Boolean(gemMaskPass?.enabled && fxaaPass?.enabled && gemMaskPass?.hasDiamondMeshes);
+          // Gem Mask and its selective FXAA pass are disabled in all viewer modes.
+          const useLiveGemAa = false;
           const activeToneAuditPath = useLiveGemAa ? "composer" : "direct";
           if (toneAuditEnabled && activeToneAuditPath !== lastToneAuditPath) {
             lastToneAuditPath = activeToneAuditPath;
@@ -3858,19 +3848,12 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             renderer.setPixelRatio(settledDpr);
             composer?.setPixelRatio?.(settledDpr);
 
-            // Settled preview: enable selective AA only for diamond meshes.
-            // The mask's depth prepass still includes every object, so metal occludes
-            // the diamond correctly while metal pixels remain outside the AA filter.
-            const settledDiamondAa = Boolean(gemMaskPass?.hasDiamondMeshes);
-            const settledBeautyPasses = new Set(
-              settledDiamondAa
-                ? [renderPass, gemMaskPass, fxaaPass, outputPass]
-                : [renderPass, outputPass]
-            );
+            // Gem Mask + FXAA disabled: retain only the ordinary beauty output.
+            const settledBeautyPasses = new Set([renderPass, outputPass]);
             const settledPasses = ((composer as any)?.passes ?? []) as any[];
             settledPasses.forEach((pass) => { pass.enabled = settledBeautyPasses.has(pass); });
-            if (gemMaskPass) gemMaskPass.enabled = settledDiamondAa;
-            if (fxaaPass) fxaaPass.enabled = settledDiamondAa;
+            if (gemMaskPass) gemMaskPass.enabled = false;
+            if (fxaaPass) fxaaPass.enabled = false;
 
             liveFastPathRef.current = false;
             // Restore the normal settled temporal state. There is no active
