@@ -216,15 +216,25 @@ export async function createAurumPostPipeline(
     // Optional 2x reference render. It renders the complete scene so the
     // diamond keeps physically correct transmission/refraction and occlusion.
     // Its result is composited ONLY through the center-diamond mask.
-    diamondSupersampleTarget=new THREE.WebGLRenderTarget(
-      Math.max(2,renderer.domElement.width*2),
-      Math.max(2,renderer.domElement.height*2),
-      {format:THREE.RGBAFormat,type:THREE.HalfFloatType,depthBuffer:true,stencilBuffer:false}
-    );
-    diamondSupersampleTarget.texture.minFilter=THREE.LinearFilter;
-    diamondSupersampleTarget.texture.magFilter=THREE.LinearFilter;
-    diamondSupersampleTarget.texture.generateMipmaps=false;
-    diamondSupersampleTarget.texture.colorSpace=THREE.NoColorSpace;
+    let diamondSupersampleBaseWidth=Math.max(1,renderer.domElement.width);
+    let diamondSupersampleBaseHeight=Math.max(1,renderer.domElement.height);
+    const ensureDiamondSupersampleTarget=()=>{
+      if(!diamondSupersampleTarget){
+        diamondSupersampleTarget=new THREE.WebGLRenderTarget(
+          Math.max(2,diamondSupersampleBaseWidth*2),
+          Math.max(2,diamondSupersampleBaseHeight*2),
+          {format:THREE.RGBAFormat,type:THREE.HalfFloatType,depthBuffer:true,stencilBuffer:false}
+        );
+        diamondSupersampleTarget.texture.minFilter=THREE.LinearFilter;
+        diamondSupersampleTarget.texture.magFilter=THREE.LinearFilter;
+        diamondSupersampleTarget.texture.generateMipmaps=false;
+        diamondSupersampleTarget.texture.colorSpace=THREE.NoColorSpace;
+        if(diamondSupersampleCompositePass){
+          diamondSupersampleCompositePass.material.uniforms.tDiamondHiRes.value=diamondSupersampleTarget.texture;
+        }
+      }
+      return diamondSupersampleTarget;
+    };
     const depthOnlyMaterial=new THREE.MeshBasicMaterial({
       color:0x000000,side:THREE.DoubleSide,depthTest:true,depthWrite:true,colorWrite:false
     });
@@ -310,6 +320,7 @@ export async function createAurumPostPipeline(
       get hasDiamondMeshes(){ return cachedGemMeshes.length>0; },
       refreshCache:refreshGemMaskCache,
       setSize(width:number,height:number){
+        lastGemMaskCameraState=null;
         gemMaskTarget.setSize(Math.max(1,width),Math.max(1,height));
       },
       render(activeRenderer:any){
@@ -397,10 +408,16 @@ export async function createAurumPostPipeline(
     diamondSupersamplePass={
       enabled:false,needsSwap:false,clear:false,renderToScreen:false,
       setSize(width:number,height:number){
-        diamondSupersampleTarget?.setSize?.(Math.max(2,Math.floor(width*2)),Math.max(2,Math.floor(height*2)));
+        diamondSupersampleBaseWidth=Math.max(1,Math.floor(width));
+        diamondSupersampleBaseHeight=Math.max(1,Math.floor(height));
+        diamondSupersampleTarget?.setSize?.(Math.max(2,diamondSupersampleBaseWidth*2),Math.max(2,diamondSupersampleBaseHeight*2));
+        if(diamondSupersampleTarget && diamondSupersampleCompositePass){
+          diamondSupersampleCompositePass.material.uniforms.hiResTexel.value.set(1/diamondSupersampleTarget.width,1/diamondSupersampleTarget.height);
+        }
       },
       render(activeRenderer:any){
-        if(!diamondSupersampleTarget) return;
+        const activeTarget=ensureDiamondSupersampleTarget();
+        if(!activeTarget) return;
         const previousTarget=activeRenderer.getRenderTarget();
         const previousAutoClear=activeRenderer.autoClear;
         const previousViewport=new THREE.Vector4();
@@ -412,8 +429,8 @@ export async function createAurumPostPipeline(
         activeRenderer.getScissor(previousScissor);
         activeRenderer.getClearColor(previousClearColor);
         try{
-          activeRenderer.setRenderTarget(diamondSupersampleTarget);
-          activeRenderer.setViewport(0,0,diamondSupersampleTarget.width,diamondSupersampleTarget.height);
+          activeRenderer.setRenderTarget(activeTarget);
+          activeRenderer.setViewport(0,0,activeTarget.width,activeTarget.height);
           activeRenderer.setScissorTest(false);
           activeRenderer.autoClear=false;
           activeRenderer.setClearColor(previousClearColor,previousClearAlpha);
@@ -433,9 +450,9 @@ export async function createAurumPostPipeline(
     diamondSupersampleCompositePass=new FXAAShaderPass({
       uniforms:{
         tDiffuse:{value:null},
-        tDiamondHiRes:{value:diamondSupersampleTarget.texture},
+        tDiamondHiRes:{value:diamondSupersampleTarget?.texture??null},
         gemMask:{value:gemMaskTarget.texture},
-        hiResTexel:{value:new THREE.Vector2(1/Math.max(2,diamondSupersampleTarget.width),1/Math.max(2,diamondSupersampleTarget.height))},
+        hiResTexel:{value:new THREE.Vector2(1/Math.max(2,diamondSupersampleBaseWidth*2),1/Math.max(2,diamondSupersampleBaseHeight*2))},
       },
       vertexShader:`varying vec2 vUv; void main(){vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
       fragmentShader:`uniform sampler2D tDiffuse; uniform sampler2D tDiamondHiRes; uniform sampler2D gemMask; uniform vec2 hiResTexel; varying vec2 vUv;
@@ -452,8 +469,11 @@ export async function createAurumPostPipeline(
     });
     diamondSupersampleCompositePass.enabled=false;
     diamondSupersampleCompositePass.setSize=(width:number,height:number)=>{
-      const hiWidth=Math.max(2,Math.floor(width*2));
-      const hiHeight=Math.max(2,Math.floor(height*2));
+      diamondSupersampleBaseWidth=Math.max(1,Math.floor(width));
+      diamondSupersampleBaseHeight=Math.max(1,Math.floor(height));
+      const hiWidth=Math.max(2,diamondSupersampleBaseWidth*2);
+      const hiHeight=Math.max(2,diamondSupersampleBaseHeight*2);
+      diamondSupersampleTarget?.setSize?.(hiWidth,hiHeight);
       diamondSupersampleCompositePass.material.uniforms.hiResTexel.value.set(1/hiWidth,1/hiHeight);
     };
     // Insert the auxiliary render immediately after the base beauty pass. It
