@@ -198,11 +198,26 @@ export function enforceRhinoLayerVisibilityBeforeExport(object: THREE.Object3D) 
       if (match) resolvedIndex = layers.indexOf(match);
     }
     const layer = resolvedIndex >= 0 ? layers[resolvedIndex] : null;
+    // Instanced Rhino geometry has two independent layer memberships:
+    // the definition object's layer and the placed InstanceReference layer.
+    // Both must be visible; the instance layer must never overwrite the
+    // definition layer's visibility decision.
+    const definitionIndex = firstValidIndex([
+      instance.definitionLayerIndex,
+      instanceSource.definitionLayerIndex,
+      attrs.definitionLayerIndex,
+      source.definitionLayerIndex,
+    ]);
+    const instanceLayerVisible = resolvedIndex >= 0 ? effectiveVisible(resolvedIndex) : true;
+    const definitionLayerVisible = definitionIndex >= 0 ? effectiveVisible(definitionIndex) : true;
     return {
       index: resolvedIndex,
       id: layer?.id ?? layer?.Id ?? layerId ?? null,
       name: layer?.name ?? layer?.Name ?? (layerName || null),
-      visible: resolvedIndex >= 0 ? effectiveVisible(resolvedIndex) : true,
+      visible: instanceLayerVisible && definitionLayerVisible,
+      instanceLayerVisible,
+      definitionLayerIndex: definitionIndex,
+      definitionLayerVisible,
     };
   };
 
@@ -234,6 +249,9 @@ export function enforceRhinoLayerVisibilityBeforeExport(object: THREE.Object3D) 
         layerId: layer.id,
         layerName: layer.name,
         layerVisible,
+        instanceLayerVisible: layer.instanceLayerVisible ?? layerVisible,
+        definitionLayerIndex: layer.definitionLayerIndex ?? -1,
+        definitionLayerVisible: layer.definitionLayerVisible ?? true,
         objectVisible,
         visible: node.visible !== false,
       },
@@ -625,6 +643,12 @@ export async function parseAurumInput(file: File, ext: string, fallbackMaterial:
         objectBuildMs: Number(objectBuildMs.toFixed(1)),
         workerLimit,
       });
+      // Apply Rhino layer/object visibility on the direct 3DM load path.
+      // This runs immediately after Rhino3dmLoader has built the Object3D,
+      // before AurumRender or PublicCatalogViewer preprocess or display it.
+      enforceRhinoLayerVisibilityBeforeExport(model);
+      const visibilityAudit = model.userData?.aurumRhinoVisibilityAudit ?? {};
+      auditStep("rhino-visibility-enforced", visibilityAudit);
       resolve(model);
     }, (error:any) => {
       auditStep("rhino-parse-error", { message: String(error?.message ?? error) });
