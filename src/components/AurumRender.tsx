@@ -197,6 +197,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const videoAbortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
+    const invalidateAurumPostModules = () => {
+      invalidateRenderRef.current?.();
+    };
+    window.addEventListener("aurum-post-controls-change", invalidateAurumPostModules);
+    return () => window.removeEventListener("aurum-post-controls-change", invalidateAurumPostModules);
+  }, []);
+
+  useEffect(() => {
     let resizeFrame = 0;
     let settleFrame = 0;
     const syncFullscreenState = () => {
