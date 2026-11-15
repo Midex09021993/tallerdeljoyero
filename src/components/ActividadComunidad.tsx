@@ -82,11 +82,11 @@ export function ActividadComunidad({ slug, compact = false, preview = false }: {
     retry: 1,
   });
   const statsQuery = useQuery({
-    queryKey: ["aurum-community-stats-home"],
+    queryKey: ["aurum-community-verified-metrics"],
     enabled: !compact,
     queryFn: async () => {
-      const { data, error } = await (supabasePublic as any).from("aurum_community_stats")
-        .select("metric_key,label,value,prefix,suffix,display_order").order("display_order", { ascending: true });
+      const { data, error } = await (supabasePublic as any)
+        .rpc("obtener_metricas_reales_comunidad");
       if (error) throw error;
       return (data ?? []) as CommunityStat[];
     },
@@ -99,7 +99,7 @@ export function ActividadComunidad({ slug, compact = false, preview = false }: {
     .filter(item => filter === "all" || item.activity_type === filter)
     .slice(0, compact ? 30 : 6);
   // No mostrar cifras sembradas como demostración: hasta conectar métricas verificables, se informa que están en preparación.
-  const stats = (statsQuery.data ?? []).filter(stat => stat.metric_key.startsWith("verified_"));
+  const stats = statsQuery.data ?? [];
 
   if (preview) {
     return (
@@ -175,7 +175,7 @@ export function ActividadComunidad({ slug, compact = false, preview = false }: {
               ) : (
                 <div className="mt-4 rounded-xl border border-dashed border-[#e8e3d9] bg-[#fdfcf9] px-4 py-5">
                   <p className="text-sm font-semibold text-[#17232d]">Cifras reales en preparación</p>
-                  <p className="mt-1 text-[11px] leading-5 text-[#77828a]">Pronto mostraremos datos verificados de talleres, diseños y actividad de la comunidad.</p>
+                  <p className="mt-1 text-[11px] leading-5 text-[#77828a]">Las cifras se calculan directamente desde los registros públicos de talleres, catálogos, diseños y renders.</p>
                 </div>
               )}
             </div>
