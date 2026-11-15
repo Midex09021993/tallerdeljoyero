@@ -4,6 +4,7 @@ import * as THREE from "three";
 import { createAurumGemEnvironment } from "../src/lib/aurum/gem-environment";
 import { prepareAurumGemLayerIndex } from "../src/lib/aurum/material-application";
 import { getAurumRuntimeBudget } from "../src/lib/aurum/runtime-budget";
+import { setAurumGemShaderQuality } from "../src/lib/aurum/scintillation";
 
 test("gem environment updates only the meshes resolved for the selected stone", () => {
   const controller = createAurumGemEnvironment({}, class {}, class {});
@@ -170,4 +171,72 @@ test("live camera motion keeps diamond-only supersampling active at a reduced ad
   expect(render).toContain("runtimeBudget.diamondLiveSupersampleScaleCap");
   expect(render).toContain("diamondSupersamplingEnabled: liveDiamondSsaaActive");
   expect(render).toContain("[diamondSupersamplePass, gemMaskPass, diamondSupersampleCompositePass]");
+});
+
+
+test("colored gemstones use the native LIVE color pipeline and restore BEAUTY optics", () => {
+  const material = new THREE.MeshPhysicalMaterial({
+    color: 0xb00024,
+    transmission: 0.62,
+    ior: 1.76,
+    dispersion: 0.12,
+    iridescence: 0.25,
+  });
+  const beautyCompile = () => {};
+  const beautyCacheKey = () => "aurum-beauty-ruby";
+  material.userData = {
+    aurumGemFamily: "Rubí",
+    aurumBeautyOnBeforeCompile: beautyCompile,
+    aurumBeautyProgramCacheKey: beautyCacheKey,
+    aurumLiveShaderQuality: "beauty",
+  };
+
+  setAurumGemShaderQuality(material, "live");
+  expect(material.userData.aurumLiveShaderQuality).toBe("live");
+  expect(material.onBeforeCompile).not.toBe(beautyCompile);
+  expect(material.dispersion).toBe(0);
+  expect(material.iridescence).toBe(0);
+  expect(material.transmission).toBe(0.62);
+  expect(material.ior).toBe(1.76);
+
+  setAurumGemShaderQuality(material, "beauty");
+  expect(material.userData.aurumLiveShaderQuality).toBe("beauty");
+  expect(material.onBeforeCompile).toBe(beautyCompile);
+  expect(material.customProgramCacheKey).toBe(beautyCacheKey);
+  expect(material.dispersion).toBe(0.12);
+  expect(material.iridescence).toBe(0.25);
+  expect(material.transmission).toBe(0.62);
+
+  material.dispose();
+});
+
+test("the dedicated diamond shader remains active when the viewport switches to LIVE", () => {
+  const material = new THREE.MeshPhysicalMaterial({ dispersion: 0.18, iridescence: 0.1 });
+  const beautyCompile = () => {};
+  const beautyCacheKey = () => "aurum-diamond-beauty";
+  material.userData = {
+    aurumGemFamily: "Diamante",
+    aurumBeautyOnBeforeCompile: beautyCompile,
+    aurumBeautyProgramCacheKey: beautyCacheKey,
+    aurumLiveShaderQuality: "beauty",
+  };
+
+  setAurumGemShaderQuality(material, "live");
+
+  expect(material.userData.aurumLiveShaderQuality).toBe("beauty");
+  expect(material.onBeforeCompile).toBe(beautyCompile);
+  expect(material.dispersion).toBe(0.18);
+  expect(material.iridescence).toBe(0.1);
+
+  material.dispose();
+});
+
+test("Aurum Render enables LIVE gemstone quality and reapplies it after catalog material changes", () => {
+  const source = readFileSync("src/components/AurumRender.tsx", "utf8");
+  expect(source).toContain("const live=forceLive ?? true;");
+  const applyGem = source.indexOf("const aplicarGema =");
+  const liveReapply = source.indexOf("aplicarPerfilLive();", applyGem);
+  const maskRefresh = source.indexOf("gemMaskPass?.refreshCache?.();", liveReapply);
+  expect(liveReapply).toBeGreaterThan(applyGem);
+  expect(maskRefresh).toBeGreaterThan(liveReapply);
 });
