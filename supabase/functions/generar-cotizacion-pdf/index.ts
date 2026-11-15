@@ -50,6 +50,19 @@ function money(value: number, currency: string) {
   }
 }
 
+/** Sólo se descargan logos guardados en el almacenamiento público del propio proyecto. */
+function logoUrlPermitida(value: string, supabaseUrl: string): string | null {
+  try {
+    const url = new URL(value);
+    const base = new URL(supabaseUrl);
+    if (url.origin !== base.origin || url.username || url.password) return null;
+    if (!url.pathname.startsWith("/storage/v1/object/public/")) return null;
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
 function clean(value: unknown) {
   return String(value ?? "").replace(/\s+/g, " ").trim();
 }
@@ -196,7 +209,9 @@ Deno.serve(async (req) => {
     let embeddedLogo: any = null;
     if (clean(identity.logo_url)) {
       try {
-        const response = await fetch(clean(identity.logo_url));
+        const logoUrl = logoUrlPermitida(clean(identity.logo_url), supabaseUrl);
+        if (!logoUrl) throw new Error("logo fuera del almacenamiento");
+        const response = await fetch(logoUrl, { redirect: "error" });
         if (response.ok) {
           const bytes = new Uint8Array(await response.arrayBuffer());
           const type = response.headers.get("content-type") ?? "";
