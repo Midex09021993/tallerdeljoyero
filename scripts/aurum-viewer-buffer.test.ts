@@ -471,34 +471,18 @@ test("the first settled model frame keeps the anti-aliasing composer active", ()
 });
 
 
-test("Aurum enables Gem Mask + FXAA only for diamonds in settled preview", () => {
-  const componentSource = readFileSync("src/components/AurumRender.tsx", "utf8");
+test("Gem Mask selects only the central diamond using CAD metadata and geometry", () => {
   const postSource = readFileSync("src/lib/aurum/post.ts", "utf8");
-  const start = componentSource.indexOf("onStart: () => {");
-  const end = componentSource.indexOf("onEnd: () => {", start);
-  const liveBlock = componentSource.slice(start, end);
-  const idleBlock = componentSource.slice(end, componentSource.indexOf("viewerLoopRef.current = viewerLoop", end));
-  const renderStart = componentSource.indexOf("const viewerLoop = startAurumViewerLoop(");
-  const renderEnd = componentSource.indexOf("const renderCpuMs =", renderStart);
-  const renderBlock = componentSource.slice(renderStart, renderEnd);
-
-  expect(start).toBeGreaterThan(-1);
-  expect(componentSource).toContain('window.matchMedia("(max-width: 767px)").matches');
-  expect(componentSource).toContain("isCompactViewport ? 1 : 1.25");
-  expect(componentSource).toContain("runtimeBudget.pixelRatioCap, getAurumViewportPixelRatio()");
-  expect(liveBlock).toContain("gemMaskPass.enabled = false;");
-  expect(liveBlock).toContain("fxaaPass.enabled = false;");
-  expect(idleBlock).toContain("const settledDiamondAa = Boolean(gemMaskPass?.hasDiamondMeshes);");
-  expect(idleBlock).toContain("gemMaskPass.enabled = settledDiamondAa;");
-  expect(idleBlock).toContain("fxaaPass.enabled = settledDiamondAa;");
-  expect(renderBlock).toContain("!liveFastPathRef.current");
-  expect(renderBlock).toContain("gemMaskPass?.hasDiamondMeshes");
-  expect(renderBlock).toContain("if (useLiveGemAa) composer.render();");
-  expect(renderBlock).toContain("else renderer.render(escena,camara);");
-  expect(postSource).toContain("const isAurumDiamondMesh=(object:any):boolean=>");
-  expect(postSource).toContain("const isDiamond=/(^|[^a-z])(diamond|diamante)([^a-z]|$)/.test(name);");
-  expect(postSource).toContain("get hasDiamondMeshes(){ return cachedGemMeshes.length>0; }");
-  expect(componentSource).toContain("const initialDiamondAa = Boolean(gemMaskPass?.hasDiamondMeshes);");
+  const componentSource = readFileSync("src/components/AurumRender.tsx", "utf8");
+  expect(postSource).toContain("findAurumCenterDiamondMeshes");
+  expect(postSource).toContain("object.userData?.aurumActiveGemFamily");
+  expect(postSource).toContain("object.userData?.aurumActiveGemId");
+  expect(postSource).toContain("metadata.matrixSlot");
+  expect(postSource).toContain("candidates.sort((a,b)=>b.radius-a.radius)");
+  expect(postSource).toContain("depthFunc:THREE.LessEqualDepth");
+  expect(postSource).toContain("strength:{value:0.65}");
+  expect(componentSource).toContain("gemMaskPass?.refreshCache?.();");
+  expect(componentSource).toContain("const settledDiamondAa = Boolean(gemMaskPass?.hasDiamondMeshes);");
 });
 
 test("the BVH camera update reuses fixed-size snapshots without per-frame arrays", () => {
