@@ -2,6 +2,22 @@ import * as THREE from "three";
 
 export type AurumDiamondMicroTier = "micro" | "small" | "brilliant" | "mixed";
 
+
+export type AurumDiamondMicroOpticalProfile = {
+  scintillationScale: number;
+  facetContrastScale: number;
+  dispersionScale: number;
+  virtualFacetWeight: number;
+  fireScale: number;
+};
+
+/** Per-stone live optics. Brilliant stones (including the protected center) retain the calibrated baseline. */
+export function getAurumDiamondMicroOpticalProfile(tier: Exclude<AurumDiamondMicroTier, "mixed">): AurumDiamondMicroOpticalProfile {
+  if (tier === "micro") return { scintillationScale: 0.58, facetContrastScale: 0.84, dispersionScale: 0.94, virtualFacetWeight: 0.025, fireScale: 0.76 };
+  if (tier === "small") return { scintillationScale: 0.80, facetContrastScale: 0.92, dispersionScale: 0.98, virtualFacetWeight: 0.045, fireScale: 0.90 };
+  return { scintillationScale: 1, facetContrastScale: 1, dispersionScale: 1, virtualFacetWeight: 0.06, fireScale: 1 };
+}
+
 export type AurumDiamondMicroProfile = {
   tier: AurumDiamondMicroTier;
   minDiameterPx: number;
@@ -61,9 +77,9 @@ function median(values: number[]): number {
 }
 
 /**
- * Screen-space analyzer for the dedicated micro-diamond pipeline.
- * It is diagnostic-only in this first stage: it never edits materials, normals,
- * metal pixels, BVH data, or the existing central-diamond optical calibration.
+ * Per-stone screen-space optics for diamonds. The renderer applies the selected
+ * profile through material uniform references in each mesh's onBeforeRender.
+ * Shared materials remain shared; no geometry, normals, BVH or metal state changes.
  */
 export function createAurumDiamondMicroPipeline(scene: any, camera: any, getViewportHeight: () => number) {
   const meshes: any[] = [];
@@ -74,17 +90,54 @@ export function createAurumDiamondMicroPipeline(scene: any, camera: any, getView
 
   let lastSignature = "";
   let lastReport: AurumDiamondMicroProfile[] = [];
+  const originalCallbacks = new Map<any, (...args: any[]) => void>();
+
+  const applyMeshOptics = (mesh: any) => {
+    const tier = (mesh.userData?.aurumDiamondMicroTier ?? "brilliant") as Exclude<AurumDiamondMicroTier, "mixed">;
+    const profile = getAurumDiamondMicroOpticalProfile(tier);
+    for (const material of getMaterials(mesh)) {
+      if (!isDiamondMaterial(material)) continue;
+      const uniforms = material.userData?.aurumDiamondMicroUniforms;
+      if (!uniforms) continue;
+      if (uniforms.scintillationStrength) uniforms.scintillationStrength.value = uniforms.baseScintillationStrength * profile.scintillationScale;
+      if (uniforms.facetContrast) uniforms.facetContrast.value = uniforms.baseFacetContrast * profile.facetContrastScale;
+      if (uniforms.dispersion) uniforms.dispersion.value = uniforms.baseDispersion * profile.dispersionScale;
+      if (uniforms.virtualFacetWeight) uniforms.virtualFacetWeight.value = profile.virtualFacetWeight;
+      if (uniforms.fireScale) uniforms.fireScale.value = profile.fireScale;
+    }
+    mesh.userData = { ...(mesh.userData ?? {}), aurumDiamondMicroOpticalProfile: profile };
+  };
+
+  for (const mesh of meshes) {
+    const original = typeof mesh.onBeforeRender === "function" ? mesh.onBeforeRender : () => {};
+    originalCallbacks.set(mesh, original);
+    mesh.onBeforeRender = (...args: any[]) => {
+      original.apply(mesh, args);
+      applyMeshOptics(mesh);
+    };
+  }
 
   const update = () => {
     const viewportHeight = Number(getViewportHeight?.() ?? 0);
     if (!Number.isFinite(viewportHeight) || viewportHeight < 2 || !meshes.length) return lastReport;
     const byMaterial = new Map<any, number[]>();
-    for (const mesh of meshes) {
-      const diameter = getAurumDiamondProjectedDiameterPx(mesh, camera, viewportHeight);
+    const projected = meshes.map(mesh => ({ mesh, diameter: getAurumDiamondProjectedDiameterPx(mesh, camera, viewportHeight) }));
+    const sortedDiameters = projected.map(item => item.diameter).sort((a, b) => b - a);
+    const largest = sortedDiameters[0] ?? 0;
+    const secondLargest = sortedDiameters[1] ?? 0;
+    const hasDistinctCenter = projected.length === 1 || (largest > 36 && largest > Math.max(secondLargest, 0.01) * 1.35);
+    const centerMesh = projected.find(item => item.diameter === largest)?.mesh;
+
+    for (const { mesh, diameter } of projected) {
+      const explicitlyProtected = Boolean(mesh.userData?.aurumDiamondCenter || mesh.userData?.aurumDiamondIsCenter)
+        || /center|central|main|principal/i.test(String(mesh.userData?.aurumDiamondRole ?? ""));
+      const isProtectedCenter = explicitlyProtected || (hasDistinctCenter && mesh === centerMesh);
+      const tier = isProtectedCenter ? "brilliant" : classifyAurumDiamondScreenSize(diameter);
       mesh.userData = {
         ...(mesh.userData ?? {}),
         aurumDiamondMicroScreenDiameterPx: Number(diameter.toFixed(2)),
-        aurumDiamondMicroTier: classifyAurumDiamondScreenSize(diameter),
+        aurumDiamondMicroTier: tier,
+        aurumDiamondMicroCenterProtected: isProtectedCenter,
       };
       for (const material of getMaterials(mesh)) {
         if (!isDiamondMaterial(material)) continue;
@@ -134,7 +187,7 @@ export function createAurumDiamondMicroPipeline(scene: any, camera: any, getView
         }, {}),
         sharedAcrossTiers: report.filter(item => item.sharedAcrossTiers).length,
         report,
-        mode: "analysis-only; optical uniforms unchanged",
+        mode: "per-mesh optical uniforms; shared materials retained",
       });
     } else {
       lastReport = report;
@@ -147,11 +200,27 @@ export function createAurumDiamondMicroPipeline(scene: any, camera: any, getView
     diagnostics: () => ({ diamondMeshes: meshes.length, materialGroups: lastReport.length, profiles: lastReport }),
     dispose: () => {
       for (const mesh of meshes) {
+        const original = originalCallbacks.get(mesh);
+        if (original) mesh.onBeforeRender = original;
         if (mesh.userData) {
           delete mesh.userData.aurumDiamondMicroScreenDiameterPx;
           delete mesh.userData.aurumDiamondMicroTier;
+          delete mesh.userData.aurumDiamondMicroCenterProtected;
+          delete mesh.userData.aurumDiamondMicroOpticalProfile;
         }
       }
+      for (const mesh of meshes) {
+        for (const material of getMaterials(mesh)) {
+          const uniforms = material.userData?.aurumDiamondMicroUniforms;
+          if (!uniforms) continue;
+          if (uniforms.scintillationStrength) uniforms.scintillationStrength.value = uniforms.baseScintillationStrength;
+          if (uniforms.facetContrast) uniforms.facetContrast.value = uniforms.baseFacetContrast;
+          if (uniforms.dispersion) uniforms.dispersion.value = uniforms.baseDispersion;
+          if (uniforms.virtualFacetWeight) uniforms.virtualFacetWeight.value = uniforms.baseVirtualFacetWeight;
+          if (uniforms.fireScale) uniforms.fireScale.value = 1;
+        }
+      }
+      originalCallbacks.clear();
       meshes.length = 0;
       lastReport = [];
       lastSignature = "";
