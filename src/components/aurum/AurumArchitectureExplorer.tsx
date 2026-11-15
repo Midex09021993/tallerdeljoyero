@@ -25,8 +25,9 @@ const arbol: Nodo[] = [
   ]},
   { id: "engines", nombre: "MOTORES Y ADAPTADORES", tipo: "Servicios especializados conectados al visor", estado: "infraestructura", detalle: "Varios elementos son adaptadores sobre controladores existentes, no motores autónomos.", hijos: [
     { id: "viewer", nombre: "Viewer Adapter", tipo: "Renderer, cámara y controles compartidos", estado: "conectado", detalle: "Expone referencias al visor productivo. El teardown sigue bajo disposeAurumViewer().", evidencia: "src/lib/aurum/core/viewer-adapter.ts", dependencias: ["AURUM RENDER"] },
-    { id: "camera", nombre: "AURUM CAMERA", tipo: "Órbita · Pan · Zoom · Centrado · Proporción", estado: "conectado", detalle: "Módulo registrado en AURUM CORE. Agrupa la navegación OrbitControls y las acciones de centrar joya y ajustar encuadre; reutiliza la cámara y los controles del visor sin crear instancias duplicadas ni asumir su ciclo de vida.", evidencia: "src/components/AurumRender.tsx · src/lib/aurum/core/viewer-adapter.ts · src/lib/aurum/api.ts", dependencias: ["Viewer"] },
+    { id: "camera", nombre: "AURUM CAMERA", tipo: "Órbita · Pan · Zoom · Centrado · Proporción", estado: "conectado", detalle: "Módulo registrado en AURUM CORE. Agrupa la navegación OrbitControls y las acciones de centrar joya y ajustar encuadre. El encuadre frontal inicial ahora aplica un factor de distancia 0.82 (aprox. 22 % más cerca), calculado sobre los límites reales del modelo; conserva proporciones y controles manuales.", evidencia: "src/components/AurumRender.tsx · src/lib/aurum/core/viewer-adapter.ts · src/lib/aurum/api.ts", dependencias: ["Viewer"] },
     { id: "scene", nombre: "Scene Adapter", tipo: "Controlador de escena", estado: "conectado", detalle: "Fachada al controlador de escena existente.", evidencia: "src/lib/aurum/core/scene-adapter.ts", dependencias: ["Viewer"] },
+    { id: "floor", nombre: "Studio Floor · Contact Shadow", tipo: "Plano de estudio · sombra de contacto", estado: "conectado", detalle: "Controlador de suelo integrado en la escena. El interruptor Mostrar suelo inicia activado y gobierna el plano y la sombra de contacto; la sombra solo aparece después de posicionarse con los límites reales del modelo. El suelo HDRI permanece desactivado.", evidencia: "src/lib/aurum/ground.ts · src/components/AurumRender.tsx", dependencias: ["Scene Adapter", "Viewer"] },
     { id: "lighting", nombre: "Light Engine", tipo: "Adaptador registrado · consumo directo del controlador", estado: "parcial", detalle: "El adaptador y sus servicios están registrados. La iluminación productiva continúa ejecutándose principalmente mediante el controlador existente; no es un motor autónomo ni se ha transferido su ownership.", evidencia: "src/lib/aurum/core/lighting-adapter.ts · src/lib/aurum/lighting.ts · environment.ts · gem-environment.ts", dependencias: ["Viewer", "Scene"] },
     { id: "metal", nombre: "Metal Engine", tipo: "Adaptador de materiales PBR", estado: "conectado", detalle: "Delegación al motor de materiales productivo; no reemplaza perfiles ni calibraciones.", evidencia: "src/lib/aurum/material-application.ts", dependencias: ["Lighting"] },
     { id: "gem", nombre: "Gem Engine", tipo: "Adaptador al motor óptico", estado: "conectado", detalle: "Delega en el motor óptico productivo. No implica cambios a shaders, BVH ni calibración.", evidencia: "src/lib/aurum/material-application.ts", dependencias: ["Lighting", "Metal"] },
@@ -84,7 +85,7 @@ export function AurumArchitectureExplorer() {
       <div className="max-w-2xl">
         <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-gold">AURUM LAB · Architecture Center</p>
         <h3 className="mt-1 text-xl font-semibold tracking-tight">Mapa de arquitectura</h3>
-        <p className="mt-1 text-xs leading-5 text-muted-foreground">Inventario de conexiones reales: distingue lo que consume el visor, lo que solo está registrado y lo que sigue pendiente de validación.</p>
+        <p className="mt-1 text-xs leading-5 text-muted-foreground">Inventario actualizado al 15/11/2026: conexiones reales, módulos registrados, mejoras recientes y validaciones todavía pendientes.</p>
       </div>
       <div className="flex flex-wrap gap-2">
         {([
@@ -215,6 +216,6 @@ export function AurumArchitectureExplorer() {
       ].map(([title,desc]) => <div key={title} className="flex items-start gap-3 rounded-xl border border-border bg-card p-3"><Activity className="mt-0.5 size-4 shrink-0 text-gold"/><div className="min-w-0 flex-1"><p className="text-xs font-semibold">{title}</p><p className="mt-1 text-xs leading-5 text-muted-foreground">{desc}</p></div><span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] text-amber-700 dark:text-amber-400">Pendiente</span></div>)}
     </div> : null}
 
-    <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3 text-[10px] text-muted-foreground"><GitBranch className="size-3.5"/> Inventario de conexiones revisado al 14/11/2026 <span>·</span><Workflow className="size-3.5"/> Vista documental, sin modificar el motor óptico</div>
+    <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3 text-[10px] text-muted-foreground"><GitBranch className="size-3.5"/> Inventario de conexiones revisado al 15/11/2026 <span>·</span><Workflow className="size-3.5"/> Vista documental, sin modificar el motor óptico</div>
   </div>;
 }
