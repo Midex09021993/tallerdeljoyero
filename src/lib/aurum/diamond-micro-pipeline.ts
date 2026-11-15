@@ -95,8 +95,12 @@ export function createAurumDiamondMicroPipeline(scene: any, camera: any, getView
 
     const report: AurumDiamondMicroProfile[] = [];
     for (const [material, sizes] of byMaterial) {
-      const min = Math.min(...sizes);
-      const max = Math.max(...sizes);
+      let min = Number.POSITIVE_INFINITY;
+      let max = 0;
+      for (const size of sizes) {
+        min = Math.min(min, size);
+        max = Math.max(max, size);
+      }
       const mid = median(sizes);
       const minTier = classifyAurumDiamondScreenSize(min);
       const maxTier = classifyAurumDiamondScreenSize(max);
