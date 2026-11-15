@@ -102,7 +102,7 @@ export function createAurumDiamondMicroPipeline(scene: any, camera: any, getView
       if (uniforms.scintillationStrength) uniforms.scintillationStrength.value = uniforms.baseScintillationStrength * profile.scintillationScale;
       if (uniforms.facetContrast) uniforms.facetContrast.value = uniforms.baseFacetContrast * profile.facetContrastScale;
       if (uniforms.dispersion) uniforms.dispersion.value = uniforms.baseDispersion * profile.dispersionScale;
-      if (uniforms.virtualFacetWeight) uniforms.virtualFacetWeight.value = profile.virtualFacetWeight;
+      if (uniforms.virtualFacetWeight) uniforms.virtualFacetWeight.value = tier === "brilliant" ? uniforms.baseVirtualFacetWeight : profile.virtualFacetWeight;
       if (uniforms.fireScale) uniforms.fireScale.value = profile.fireScale;
     }
     mesh.userData = { ...(mesh.userData ?? {}), aurumDiamondMicroOpticalProfile: profile };
@@ -177,7 +177,7 @@ export function createAurumDiamondMicroPipeline(scene: any, camera: any, getView
     if (signature && signature !== lastSignature) {
       lastSignature = signature;
       lastReport = report;
-      console.info("[AURUM][DIAMOND MICRO PIPELINE][ANALYSIS]", {
+      console.info("[AURUM][DIAMOND MICRO PIPELINE][PROFILE]", {
         viewportHeight,
         diamondMeshes: meshes.length,
         materialGroups: report.length,
