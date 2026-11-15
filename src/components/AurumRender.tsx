@@ -24,6 +24,7 @@ import { createAurumSceneController } from "../lib/aurum/scene";
 import { createAurumGround } from "../lib/aurum/ground";
 import { setAurumInclusionsVisible, setAurumEmeraldInclusionsVisible } from "../lib/aurum/gems";
 import { setAurumGemShaderQuality } from "../lib/aurum/scintillation";
+import { createAurumDiamondMicroPipeline } from "../lib/aurum/diamond-micro-pipeline";
 import { createAurumLightingController } from "../lib/aurum/lighting";
 import { frameAurumProduct, disposeAurumViewer, createAurumWebGLViewer, startAurumViewerLoop } from "../lib/aurum/viewer";
 import { createAurumImportPlugin } from "../lib/aurum/core/import-plugin";
@@ -3774,6 +3775,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         perfMaxFrameMs=0;
       };
 
+      const diamondMicroPipeline = createAurumDiamondMicroPipeline(escena, camara, () => renderer.domElement.height);
+
       const viewerLoop = startAurumViewerLoop(
         { node:nodo, camera:camara, renderer, composer, ssaoPass, controls:controles },
         () => {
@@ -3783,6 +3786,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             diamondBvhRuntime?.update();
           } catch (error) {
             console.error("[AURUM][DIAMOND][BVH_UPDATE_ERROR] Skipping BVH update for this frame.", error);
+          }
+          try {
+            diamondMicroPipeline.update();
+          } catch (error) {
+            console.warn("[AURUM][DIAMOND MICRO PIPELINE] Screen-space analysis skipped for this frame.", error);
           }
           const bvhCpuMs = performance.now() - bvhStartedAt;
           const renderStartedAt = performance.now();
@@ -3974,6 +3982,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         } catch (error) {
           console.error("[AURUM][VIEWER][LOOP_CLEANUP_FAILED]", error);
         }
+        diamondMicroPipeline.dispose();
         void productionPluginHost.dispose().catch((error) => console.error("[AURUM][CORE] Plugin cleanup failed:", error));
         // Cancel deferred work so it cannot retain the model/renderer after unmount.
         if (shaderPrecompileIdleId !== null && typeof window !== "undefined" && "cancelIdleCallback" in window) {
