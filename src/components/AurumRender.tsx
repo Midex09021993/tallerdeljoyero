@@ -3808,8 +3808,16 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           }
           const bvhCpuMs = performance.now() - bvhStartedAt;
           const renderStartedAt = performance.now();
-          // Gem Mask and its selective FXAA pass are disabled in all viewer modes.
-          const useLiveGemAa = false;
+          // Activate selective Gem Mask + FXAA only when a center diamond
+          // exists and both passes are enabled; all other scenes keep direct rendering.
+          const useLiveGemAa = Boolean(
+            composer
+            && renderPass
+            && outputPass
+            && gemMaskPass?.enabled
+            && gemMaskPass?.hasDiamondMeshes
+            && fxaaPass?.enabled
+          );
           const activeToneAuditPath = useLiveGemAa ? "composer" : "direct";
           if (toneAuditEnabled && activeToneAuditPath !== lastToneAuditPath) {
             lastToneAuditPath = activeToneAuditPath;
@@ -3937,7 +3945,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             const settledBeautyPasses = new Set([renderPass, ...(diamondSsaaActive ? [diamondSupersamplePass, diamondSupersampleCompositePass] : []), ...(diamondSsaaActive || fxaaPass?.enabled ? [gemMaskPass] : []), ...(fxaaPass?.enabled ? [fxaaPass] : []), outputPass]);
             const settledPasses = ((composer as any)?.passes ?? []) as any[];
             settledPasses.forEach((pass) => { pass.enabled = settledBeautyPasses.has(pass); });
-            if (gemMaskPass) gemMaskPass.enabled = diamondSsaaActive;
+            if (gemMaskPass) gemMaskPass.enabled = diamondSsaaActive || Boolean(fxaaPass?.enabled && gemMaskPass.hasDiamondMeshes);
             if (diamondSupersamplePass) diamondSupersamplePass.enabled = diamondSsaaActive;
             if (diamondSupersampleCompositePass) diamondSupersampleCompositePass.enabled = diamondSsaaActive;
             liveFastPathRef.current = false;
