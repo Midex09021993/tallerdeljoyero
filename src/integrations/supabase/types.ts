@@ -205,6 +205,89 @@ export type Database = {
         }
         Relationships: []
       }
+      aurum_community_activity: {
+        Row: {
+          activity_type: string
+          actor_name: string
+          created_at: string
+          created_by: string | null
+          dedupe_key: string | null
+          id: string
+          is_public: boolean
+          metadata: Json
+          participante_id: string | null
+          summary: string | null
+          target_url: string | null
+          title: string
+        }
+        Insert: {
+          activity_type: string
+          actor_name: string
+          created_at?: string
+          created_by?: string | null
+          dedupe_key?: string | null
+          id?: string
+          is_public?: boolean
+          metadata?: Json
+          participante_id?: string | null
+          summary?: string | null
+          target_url?: string | null
+          title: string
+        }
+        Update: {
+          activity_type?: string
+          actor_name?: string
+          created_at?: string
+          created_by?: string | null
+          dedupe_key?: string | null
+          id?: string
+          is_public?: boolean
+          metadata?: Json
+          participante_id?: string | null
+          summary?: string | null
+          target_url?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aurum_community_activity_participante_id_fkey"
+            columns: ["participante_id"]
+            isOneToOne: false
+            referencedRelation: "ecosistema_participantes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      aurum_community_stats: {
+        Row: {
+          display_order: number
+          label: string
+          metric_key: string
+          prefix: string | null
+          suffix: string | null
+          updated_at: string
+          value: number
+        }
+        Insert: {
+          display_order?: number
+          label: string
+          metric_key: string
+          prefix?: string | null
+          suffix?: string | null
+          updated_at?: string
+          value?: number
+        }
+        Update: {
+          display_order?: number
+          label?: string
+          metric_key?: string
+          prefix?: string | null
+          suffix?: string | null
+          updated_at?: string
+          value?: number
+        }
+        Relationships: []
+      }
       aurum_plan_quotas: {
         Row: {
           almacenamiento_mib: number
@@ -4768,69 +4851,6 @@ export type Database = {
         }
         Relationships: []
       }
-      aurum_community_activity: {
-        Row: {
-          actor_name: string
-          activity_type: string
-          created_at: string
-          created_by: string | null
-          id: string
-          is_public: boolean
-          summary: string | null
-          title: string
-        }
-        Insert: {
-          actor_name: string
-          activity_type: string
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          is_public?: boolean
-          summary?: string | null
-          title: string
-        }
-        Update: {
-          actor_name?: string
-          activity_type?: string
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          is_public?: boolean
-          summary?: string | null
-          title?: string
-        }
-        Relationships: []
-      }
-      aurum_community_stats: {
-        Row: {
-          display_order: number
-          label: string
-          metric_key: string
-          prefix: string | null
-          suffix: string | null
-          updated_at: string
-          value: number
-        }
-        Insert: {
-          display_order?: number
-          label: string
-          metric_key: string
-          prefix?: string | null
-          suffix?: string | null
-          updated_at?: string
-          value?: number
-        }
-        Update: {
-          display_order?: number
-          label?: string
-          metric_key?: string
-          prefix?: string | null
-          suffix?: string | null
-          updated_at?: string
-          value?: number
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never
@@ -4914,6 +4934,18 @@ export type Database = {
       aurum_contar_productos_catalogo_owner: {
         Args: { p_participante_id: string }
         Returns: number
+      }
+      aurum_emitir_actividad_comunidad: {
+        Args: {
+          _dedupe_key?: string
+          _metadata?: Json
+          _participante_id: string
+          _resumen?: string
+          _target_url?: string
+          _tipo: string
+          _titulo: string
+        }
+        Returns: undefined
       }
       aurum_resumen_mi_nube_owner: {
         Args: { p_participante_id: string }
@@ -5196,6 +5228,29 @@ export type Database = {
         }[]
       }
       normaliza_area: { Args: { _area: string }; Returns: string }
+      obtener_actividad_comunidad_por_slug: {
+        Args: { _slug: string }
+        Returns: {
+          activity_type: string
+          actor_name: string
+          created_at: string
+          created_by: string | null
+          dedupe_key: string | null
+          id: string
+          is_public: boolean
+          metadata: Json
+          participante_id: string | null
+          summary: string | null
+          target_url: string | null
+          title: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "aurum_community_activity"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       obtener_analitica_aurum_lab: { Args: { _dias?: number }; Returns: Json }
       obtener_carrusel_enlaces_catalogo_publico: {
         Args: { _slug: string }
