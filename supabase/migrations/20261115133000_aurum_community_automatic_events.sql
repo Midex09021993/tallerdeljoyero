@@ -11,6 +11,8 @@ alter table public.aurum_community_activity
 alter table public.aurum_community_activity
   drop constraint if exists aurum_community_activity_type_check;
 alter table public.aurum_community_activity
+  drop constraint if exists aurum_community_activity_activity_type_check;
+alter table public.aurum_community_activity
   add constraint aurum_community_activity_type_check
   check (activity_type in (
     'workshop_registered',
