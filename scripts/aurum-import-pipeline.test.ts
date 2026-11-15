@@ -3,6 +3,7 @@ import * as THREE from "three";
 import { createAurumGeometryEngine } from "../src/lib/aurum/core/geometry-engine";
 import { createAurumImportPipelineManager } from "../src/lib/aurum/core/import-pipeline-manager";
 import { disposeAurumImportSourceGeometry, type AurumImportPlugin } from "../src/lib/aurum/core/import-plugin";
+import { enforceRhinoLayerVisibilityBeforeExport } from "../src/lib/aurum/model-loader";
 
 test("geometry engine reports visible mesh metrics without mutating source buffers", () => {
   const root = new THREE.Group();
@@ -265,4 +266,87 @@ test("source geometry cleanup is a no-op when GLB source and viewer model are th
   expect(disposeAurumImportSourceGeometry(model, model)).toBe(0);
   expect(disposals).toBe(0);
   geometry.dispose();
+});
+
+
+test("Rhino hidden layers remain hidden when the layer table is exposed as rhinoLayers", () => {
+  const root = new THREE.Group();
+  root.userData.rhinoLayers = [
+    { id: "hidden-layer", name: "Gemas ocultas", visible: false },
+    { id: "visible-layer", name: "Engaste", visible: true },
+  ];
+  const hidden = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial());
+  hidden.userData.attributes = { layerIndex: 0 };
+  const visible = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial());
+  visible.userData.attributes = { layerIndex: 1 };
+  root.add(hidden, visible);
+
+  enforceRhinoLayerVisibilityBeforeExport(root);
+
+  expect(hidden.visible).toBe(false);
+  expect(hidden.userData.aurumRhinoVisibility).toMatchObject({
+    enforcedBeforeExport: true, layerIndex: 0, layerVisible: false, visible: false,
+  });
+  expect(visible.visible).toBe(true);
+  expect(root.userData.aurumRhinoVisibilityAudit).toMatchObject({ layerCount: 2, hiddenByLayer: 1 });
+  hidden.geometry.dispose();
+  visible.geometry.dispose();
+});
+
+test("a visible Rhino child layer remains hidden when its parent layer is hidden", () => {
+  const root = new THREE.Group();
+  root.userData.layers = [
+    { id: "parent", name: "Conjunto", visible: false },
+    { id: "child", name: "Piedras", visible: true, parentLayerId: "parent" },
+  ];
+  const mesh = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial());
+  mesh.userData.attributes = { layerIndex: 1 };
+  root.add(mesh);
+
+  enforceRhinoLayerVisibilityBeforeExport(root);
+
+  expect(mesh.visible).toBe(false);
+  expect(mesh.userData.aurumRhinoVisibility).toMatchObject({
+    layerIndex: 1, layerVisible: false, visible: false,
+  });
+  mesh.geometry.dispose();
+});
+
+test("hidden Rhino block instances remain hidden even when their definition meshes are on visible layers", () => {
+  const root = new THREE.Group();
+  root.userData.layers = [
+    { id: "definition", name: "Definición", visible: true },
+    { id: "instance", name: "Instancia oculta", visible: true },
+  ];
+  const instance = new THREE.Group();
+  instance.userData.aurumRhinoInstanceReference = {
+    layerIndex: 1,
+    objectVisibility: { visible: false, mode: 1 },
+  };
+  const definitionMesh = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial());
+  definitionMesh.userData.attributes = { layerIndex: 0 };
+  instance.add(definitionMesh);
+  root.add(instance);
+
+  enforceRhinoLayerVisibilityBeforeExport(root);
+
+  expect(instance.visible).toBe(false);
+  expect(definitionMesh.visible).toBe(true);
+  expect(instance.userData.aurumRhinoVisibility).toMatchObject({
+    layerIndex: 1, objectVisible: false, visible: false,
+  });
+  definitionMesh.geometry.dispose();
+});
+
+test("hidden Rhino objects are excluded even when no layer table is available", () => {
+  const root = new THREE.Group();
+  const hidden = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial());
+  hidden.userData.attributes = { visible: false };
+  root.add(hidden);
+
+  enforceRhinoLayerVisibilityBeforeExport(root);
+
+  expect(hidden.visible).toBe(false);
+  expect(root.userData.aurumRhinoVisibilityAudit).toMatchObject({ layerCount: 0, hiddenByObject: 1 });
+  hidden.geometry.dispose();
 });
