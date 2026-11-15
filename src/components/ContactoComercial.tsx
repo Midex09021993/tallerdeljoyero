@@ -94,7 +94,7 @@ export function ContactoComercial({ className = "" }: { className?: string }) {
                 <CheckCircle2 className="mx-auto size-12 text-[#a98535]" />
                 <h2 id="contacto-comercial-titulo" className="mt-5 font-display text-3xl text-[#27333e]">¡Gracias por escribirnos!</h2>
                 <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-[#687580]">Tu consulta quedó registrada. Revisaremos tu mensaje y nos pondremos en contacto contigo.</p>
-                <button type="button" onClick={cerrar} className="mt-7 rounded-xl border border-[#d8bd7b]/45 px-5 py-3 text-xs font-semibold uppercase tracking-wider text-[#a98535] hover:bg-white/5">Cerrar</button>
+                <button type="button" onClick={cerrar} className="mt-7 rounded-xl border border-[#c7a65b]/55 px-5 py-3 text-xs font-semibold uppercase tracking-wider text-[#96732e] hover:bg-[#f7f2e6]">Cerrar</button>
               </div>
             )}
           </section>
