@@ -4,7 +4,7 @@ import { createAurumWebGLViewer, resizeAurumViewer, startAurumViewerLoop } from 
 
 test("the demand-driven viewer preserves its final WebGL frame", () => {
   let rendererOptions: Record<string, unknown> = {};
-  const canvas = { className: "" };
+  const canvas = Object.assign(new EventTarget(), { className: "" });
   const THREE = {
     Scene: class {},
     PerspectiveCamera: class {},
@@ -464,22 +464,28 @@ test("the first settled model frame keeps the anti-aliasing composer active", ()
   const initialFramingBlock = componentSource.slice(initialFramingStart, initialFramingEnd);
 
   expect(initialFramingStart).toBeGreaterThan(-1);
-  expect(initialFramingBlock).toContain("aplicarPerfilLive(true)");
+  expect(initialFramingBlock).toContain('camaraVista("frontal")');
   expect(initialFramingBlock).toContain("invalidateRenderRef.current?.()");
   expect(initialFramingBlock).not.toContain("liveFastPathRef.current = true");
   expect(initialFramingBlock).not.toContain("aplicarPerfilLive()");
 });
 
 
-test("Aurum disables Gem Mask + FXAA in preview and PNG capture", () => {
+test("Aurum exposes diamond-only AA and SSAA as independent modules", () => {
   const componentSource = readFileSync("src/components/AurumRender.tsx", "utf8");
   const controlsSource = readFileSync("src/lib/aurum/post-engine-controls.ts", "utf8");
-  expect(componentSource).toContain("const useLiveGemAa = false;");
-  expect(componentSource).toContain("const settledBeautyPasses = new Set([renderPass, outputPass]);");
-  expect(componentSource).toContain("const liveCapturePasses = new Set([renderPass, outputPass]);");
-  expect(componentSource).toContain("if (gemMaskPass) gemMaskPass.enabled = false;");
-  expect(componentSource).toContain("if (fxaaPass) fxaaPass.enabled = false;");
+  const architectureSource = readFileSync("src/components/aurum/AurumArchitectureExplorer.tsx", "utf8");
+  const postSource = readFileSync("src/lib/aurum/post.ts", "utf8");
+  expect(componentSource).toContain("const liveDiamondAaEnabled = hasCenterDiamond");
+  expect(componentSource).toContain("setDiamondSupersamplingSettled?.(false)");
+  expect(componentSource).toContain("const diamondSsaaActive = Boolean(setDiamondSupersamplingSettled?.(true))");
   expect(controlsSource).toContain("gemFxaaEnabled: false");
+  expect(controlsSource).toContain("diamondSsaaEnabled: false");
+  expect(architectureSource).toContain('id: "diamond-ssaa"');
+  expect(architectureSource).toContain('updatePostControl("diamondSsaaEnabled"');
+  expect(postSource).toContain("AURUM DIAMOND SSAA MODULE");
+  expect(postSource).toContain("tDiamondHiRes");
+  expect(postSource).toContain("if(texture2D(gemMask,vUv).r<0.5){gl_FragColor=base;return;}");
 });
 
 test("the BVH camera update reuses fixed-size snapshots without per-frame arrays", () => {
@@ -525,7 +531,7 @@ test("standard image export reproduces the LIVE gem-mask and FXAA composer", () 
 
   expect(exportStart).toBeGreaterThan(-1);
   expect(exportBlock).toContain("liveFastPathRef.current=false");
-  expect(exportBlock).toContain("new Set([renderPass, gemMaskPass, fxaaPass, outputPass])");
+  expect(exportBlock).toContain("const liveCapturePasses = new Set([renderPass, outputPass]);");
   expect(exportBlock).toContain("composer.setPixelRatio?.(1)");
   expect(exportBlock).toContain("composer.setSize?.(renderWidth, renderHeight)");
   expect(exportBlock).toContain("resolution?.set?.(1 / renderWidth, 1 / renderHeight)");
@@ -543,7 +549,7 @@ test("gem mask uses a dedicated camera layer instead of per-frame mesh visibilit
 
   expect(maskStart).toBeGreaterThan(-1);
   expect(maskBlock).toContain("const gemMaskLayer=31;");
-  expect(maskBlock).toContain("object.layers.enable(gemMaskLayer)");
+  expect(maskBlock).toContain("mesh.layers.enable(gemMaskLayer)");
   expect(maskBlock).toContain("camera.layers.mask=gemMaskLayerBit");
   expect(maskBlock).toContain("previousGemLayerMasks");
   expect(maskBlock).toContain("camera.layers.mask=previousCameraLayerMask");
