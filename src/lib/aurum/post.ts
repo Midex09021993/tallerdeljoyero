@@ -422,9 +422,9 @@ export async function createAurumPostPipeline(
       setSize(width:number,height:number){
         diamondSupersampleBaseWidth=Math.max(1,Math.floor(width));
         diamondSupersampleBaseHeight=Math.max(1,Math.floor(height));
-        updateDiamondSupersampleScale();
-        const targetWidth=Math.max(2,Math.floor(diamondSupersampleBaseWidth*diamondSupersampleScale));
-        const targetHeight=Math.max(2,Math.floor(diamondSupersampleBaseHeight*diamondSupersampleScale));
+        const canRender=updateDiamondSupersampleScale();
+        const targetWidth=canRender?Math.max(2,Math.floor(diamondSupersampleBaseWidth*diamondSupersampleScale)):2;
+        const targetHeight=canRender?Math.max(2,Math.floor(diamondSupersampleBaseHeight*diamondSupersampleScale)):2;
         diamondSupersampleTarget?.setSize?.(targetWidth,targetHeight);
         if(diamondSupersampleTarget && diamondSupersampleCompositePass){
           diamondSupersampleCompositePass.material.uniforms.hiResTexel.value.set(1/diamondSupersampleTarget.width,1/diamondSupersampleTarget.height);
