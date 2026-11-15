@@ -3816,32 +3816,55 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             renderPipelineContract.setMode("LIVE_MOTION");
             syncAurumSsrDiagnosticConfig();
 
-            // Keep the interactive path minimal. Only the gem-mask + FXAA pair may
-            // run in the composer; photographic and temporal passes stay disabled.
+            // Keep the interactive path minimal. Only the diamond mask + soft-edge
+            // pass may run during orbit; photographic, temporal and surface-wide
+            // post-processing remain disabled.
+            const hasCenterDiamond = Boolean(gemMaskPass?.hasDiamondMeshes);
+            const liveDiamondAaEnabled = hasCenterDiamond
+              && runtimeBudget.tier !== "extreme"
+              && measuredQualityId !== "low";
+            // First controlled resolution step: 1.8 only for the standard web tier
+            // when the dedicated center-diamond mask confirms a diamond is present.
+            // Denser CAD scenes retain their existing conservative DPR ceilings.
+            const interactionDprCap = liveDiamondAaEnabled && runtimeBudget.tier === "web"
+              ? 1.8
+              : runtimeBudget.pixelRatioCap;
             const requestedDpr = Math.max(1, Math.min(2, renderQuality.pixelRatio));
-            // Respect the same Public Viewer ceiling during orbit.
-            const interactionDpr = Math.min(requestedDpr, runtimeBudget.pixelRatioCap, getAurumViewportPixelRatio());
+            const interactionDpr = Math.min(requestedDpr, interactionDprCap, getAurumViewportPixelRatio());
             renderer.setPixelRatio(interactionDpr);
             composer?.setPixelRatio?.(interactionDpr);
 
-            // Keep expensive post-processing and shadow-map rendering out of the
-            // interactive viewport; the Public Viewer uses the same direct path.
-            // Lightweight interactive edge cleanup: low blend strength, no TAA,
-            // and disabled for extreme CAD budgets or the Low quality profile.
             const liveEdgeAaProfile = getAurumEdgeAaProfile(measuredQualityId, runtimeBudget.tier, "live");
-            const interactiveEdgeAa = false; // Isolation phase: disable Surface Edge AA.
             if (surfaceEdgeAaPass) {
               const strength = surfaceEdgeAaPass.material?.uniforms?.strength;
               if (strength) strength.value = liveEdgeAaProfile.strength;
               surfaceEdgeAaPass.enabled = false;
             }
-            // LIVE orbit always bypasses Gem Mask + FXAA, regardless of saved
-            // module preferences. Only the ordinary render/output path is retained.
-            const liveBeautyPasses = new Set([renderPass, outputPass]);
+            // The existing Gem Mask identifies only the center-diamond meshes.
+            // Enable its masked FXAA pair in LIVE without filtering metal pixels.
+            const liveBeautyPasses = new Set([
+              renderPass,
+              ...(liveDiamondAaEnabled ? [gemMaskPass, fxaaPass] : []),
+              outputPass,
+            ]);
             const interactionPasses = ((composer as any)?.passes ?? []) as any[];
             interactionPasses.forEach((pass) => { pass.enabled = liveBeautyPasses.has(pass); });
-            if (gemMaskPass) gemMaskPass.enabled = false;
-            if (fxaaPass) fxaaPass.enabled = false;
+            if (gemMaskPass) gemMaskPass.enabled = liveDiamondAaEnabled;
+            if (fxaaPass) {
+              fxaaPass.enabled = liveDiamondAaEnabled;
+              const strength = fxaaPass.material?.uniforms?.strength;
+              if (strength) strength.value = liveDiamondAaEnabled ? 0.42 : 0.65;
+            }
+            console.info("[AURUM][DIAMOND][LIVE_QUALITY]", {
+              hasCenterDiamond,
+              gemMaskEnabled: Boolean(gemMaskPass?.enabled),
+              fxaaEnabled: Boolean(fxaaPass?.enabled),
+              interactionDpr,
+              interactionDprCap,
+              runtimeTier: runtimeBudget.tier,
+              qualityId: measuredQualityId,
+              note: "DPR 1.8 is a controlled first step; DPR 2.0 remains pending performance validation.",
+            });
             liveFastPathRef.current = false;
 
             // Keep catalog-authored gemstone materials unchanged during orbit.
