@@ -11,7 +11,7 @@ const DEFAULTS: AurumPostControls = {
   // Gem Mask + FXAA are disabled by default. Surface AA and TAA remain off.
   gemFxaaEnabled: false,
   diamondSsaaEnabled: false,
-  surfaceEdgeAaEnabled: false;
+  surfaceEdgeAaEnabled: false,
   taaEnabled: false,
 };
 
