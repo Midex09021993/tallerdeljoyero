@@ -471,18 +471,15 @@ test("the first settled model frame keeps the anti-aliasing composer active", ()
 });
 
 
-test("Gem Mask selects only the central diamond using CAD metadata and geometry", () => {
-  const postSource = readFileSync("src/lib/aurum/post.ts", "utf8");
+test("Aurum disables Gem Mask + FXAA in preview and PNG capture", () => {
   const componentSource = readFileSync("src/components/AurumRender.tsx", "utf8");
-  expect(postSource).toContain("findAurumCenterDiamondMeshes");
-  expect(postSource).toContain("object.userData?.aurumActiveGemFamily");
-  expect(postSource).toContain("object.userData?.aurumActiveGemId");
-  expect(postSource).toContain("metadata.matrixSlot");
-  expect(postSource).toContain("candidates.sort((a,b)=>b.radius-a.radius)");
-  expect(postSource).toContain("depthFunc:THREE.LessEqualDepth");
-  expect(postSource).toContain("strength:{value:0.65}");
-  expect(componentSource).toContain("gemMaskPass?.refreshCache?.();");
-  expect(componentSource).toContain("const settledDiamondAa = Boolean(gemMaskPass?.hasDiamondMeshes);");
+  const controlsSource = readFileSync("src/lib/aurum/post-engine-controls.ts", "utf8");
+  expect(componentSource).toContain("const useLiveGemAa = false;");
+  expect(componentSource).toContain("const settledBeautyPasses = new Set([renderPass, outputPass]);");
+  expect(componentSource).toContain("const liveCapturePasses = new Set([renderPass, outputPass]);");
+  expect(componentSource).toContain("if (gemMaskPass) gemMaskPass.enabled = false;");
+  expect(componentSource).toContain("if (fxaaPass) fxaaPass.enabled = false;");
+  expect(controlsSource).toContain("gemFxaaEnabled: false");
 });
 
 test("the BVH camera update reuses fixed-size snapshots without per-frame arrays", () => {
