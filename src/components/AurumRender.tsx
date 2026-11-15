@@ -2146,7 +2146,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         runtimeBudget = getAurumRuntimeBudget(countAurumTriangles(interno));
         // The auxiliary 2x target is composited only through the center-diamond mask.
         // Keep the renderer/composer DPR shared cap unchanged for all metal pixels.
-        setDiamondSupersampleScaleCap?.(runtimeBudget.diamondSupersampleScaleCap);
+        setDiamondSupersampleScaleCap?.(runtimeBudget.diamondSupersampleScaleCap, runtimeBudget.diamondLiveSupersampleScaleCap);
         if (perfEnabled) {
           console.warn("[AURUM][RUNTIME BUDGET]", runtimeBudget);
         }
@@ -3834,8 +3834,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         {
           progressiveFrames: Math.max(1, Math.min(32, Math.floor(Number(postRuntimeConfig.progressiveFrameCount ?? 1)))),
           onStart: () => {
-            // High-resolution reference rendering is suspended during camera motion.
-            setDiamondSupersamplingSettled?.(false);
             renderPipelineContract.setMode("LIVE_MOTION");
             syncAurumSsrDiagnosticConfig();
 
@@ -3846,6 +3844,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             const liveDiamondAaEnabled = hasCenterDiamond
               && runtimeBudget.tier !== "extreme"
               && measuredQualityId !== "low";
+            // Enable a reduced 1.15x–1.5x reference render while moving.
+            // Its full-scene input preserves transmission, but the output is
+            // composited only inside the center-diamond mask.
+            const liveDiamondSsaaActive = liveDiamondAaEnabled
+              && Boolean(setDiamondSupersamplingSettled?.(false));
             // First controlled resolution step: 1.8 only for the standard web tier
             // when the dedicated center-diamond mask confirms a diamond is present.
             // Denser CAD scenes retain their existing conservative DPR ceilings.
@@ -3871,16 +3874,21 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             }
             // The existing Gem Mask identifies only the center-diamond meshes.
             // Enable its masked FXAA pair in LIVE without filtering metal pixels.
+            const liveDiamondAaPasses = liveDiamondSsaaActive
+              ? [diamondSupersamplePass, gemMaskPass, diamondSupersampleCompositePass]
+              : liveDiamondAaEnabled ? [gemMaskPass, fxaaPass] : [];
             const liveBeautyPasses = new Set([
               renderPass,
-              ...(liveDiamondAaEnabled ? [gemMaskPass, fxaaPass] : []),
+              ...liveDiamondAaPasses,
               outputPass,
             ]);
             const interactionPasses = ((composer as any)?.passes ?? []) as any[];
             interactionPasses.forEach((pass) => { pass.enabled = liveBeautyPasses.has(pass); });
-            if (gemMaskPass) gemMaskPass.enabled = liveDiamondAaEnabled;
+            if (gemMaskPass) gemMaskPass.enabled = liveDiamondSsaaActive || (liveDiamondAaEnabled && !liveDiamondSsaaActive);
+            if (diamondSupersamplePass) diamondSupersamplePass.enabled = liveDiamondSsaaActive;
+            if (diamondSupersampleCompositePass) diamondSupersampleCompositePass.enabled = liveDiamondSsaaActive;
             if (fxaaPass) {
-              fxaaPass.enabled = liveDiamondAaEnabled;
+              fxaaPass.enabled = liveDiamondAaEnabled && !liveDiamondSsaaActive;
               const strength = fxaaPass.material?.uniforms?.strength;
               if (strength) strength.value = liveDiamondAaEnabled ? 0.34 : 0.65;
             }
@@ -3888,6 +3896,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               hasCenterDiamond,
               gemMaskEnabled: Boolean(gemMaskPass?.enabled),
               fxaaEnabled: Boolean(fxaaPass?.enabled),
+              diamondSupersamplingEnabled: liveDiamondSsaaActive,
+              diamondLiveSupersampleScaleCap: runtimeBudget.diamondLiveSupersampleScaleCap,
               interactionDpr,
               interactionDprCap,
               runtimeTier: runtimeBudget.tier,
