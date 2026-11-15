@@ -63,7 +63,7 @@ export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, pre
           shadow.rotation.x = -Math.PI / 2;
           shadow.position.set(visibleSphere.center.x, centeredBounds.min.y - radius * 0.014, visibleSphere.center.z);
           shadow.renderOrder = 1;
-          shadow.userData.aurumPublicContactShadow = true;
+          shadow.userData["aurumPublicContactShadow"] = true;
           viewer.scene.add(shadow);
           model.userData = { ...(model.userData ?? {}), aurumPublicContactShadow: shadow };
         }

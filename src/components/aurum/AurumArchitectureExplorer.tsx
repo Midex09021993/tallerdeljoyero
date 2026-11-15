@@ -3,7 +3,7 @@ import { Activity, ChevronRight, CircleHelp, GitBranch, Network, Search, ShieldA
 import { getAurumPostControls, setAurumPostControls } from "@/lib/aurum/post-engine-controls";
 
 type Estado = "conectado" | "parcial" | "registrado" | "auditar" | "experimental" | "suspendido" | "infraestructura";
-type Nodo = { id: string; nombre: string; tipo: string; estado: Estado; detalle: string; evidencia: string; dependencias?: string[]; hijos?: Nodo[] };
+type Nodo = { id: string; nombre: string; tipo: string; estado: Estado; detalle: string; evidencia?: string; dependencias?: string[]; hijos?: Nodo[] };
 
 const estadoUI: Record<Estado, { label: string; clase: string }> = {
   conectado: { label: "Conectado", clase: "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400" },

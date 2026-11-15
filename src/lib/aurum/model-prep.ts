@@ -24,7 +24,7 @@ export function prepareAurumModel(model: THREE.Object3D, scaleTarget = 2.6): Aur
   model.updateMatrixWorld(true);
   // Preserve the imported 3DM root transform/origin as source metadata before
   // presentation normalization changes the root transform for viewport scale.
-  if (!model.userData?.aurumSourceTransform) {
+  if (!model.userData?.["aurumSourceTransform"]) {
     const sourceWorldPosition = model.getWorldPosition(new THREE.Vector3());
     model.userData = {
       ...(model.userData ?? {}),

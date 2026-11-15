@@ -247,7 +247,7 @@ export async function createAurumPostPipeline(
       const explicitCenter=candidates.filter(candidate=>candidate.slot===1);
       if(explicitCenter.length) return explicitCenter.map(candidate=>candidate.mesh);
       candidates.sort((a,b)=>b.radius-a.radius);
-      return [candidates[0].mesh];
+      return [candidates[0]!.mesh];
     };
     // Scene classification is stable between model/selection-geometry changes.
     // Reuse these arrays on every frame instead of traversing the whole scene

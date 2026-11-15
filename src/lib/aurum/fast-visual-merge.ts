@@ -33,7 +33,7 @@ export function applyAurumFastVisualMerge(root: THREE.Object3D): AurumFastVisual
   root.traverse((node) => {
     const mesh = node as THREE.Mesh;
     if (!mesh.isMesh || !mesh.visible || !mesh.geometry || !mesh.material || Array.isArray(mesh.material)) return;
-    if (mesh.userData?.aurumRhino?.categoria !== "metal") return;
+    if (mesh.userData?.["aurumRhino"]?.categoria !== "metal") return;
     // Keep only ordinary, static BufferGeometry meshes with a complete triangle list.
     const position = mesh.geometry.getAttribute("position");
     if (!position || position.count < 3 || position.count % 3 !== 0 && !mesh.geometry.index) return;
@@ -98,7 +98,7 @@ export function applyAurumFastVisualMerge(root: THREE.Object3D): AurumFastVisual
         aurumFastVisualMergeSources: group.meshes.map((mesh) => ({
           uuid: mesh.uuid,
           name: mesh.name,
-          layerKey: mesh.userData?.aurumRhino?.layerKey ?? null,
+          layerKey: mesh.userData?.["aurumRhino"]?.layerKey ?? null,
         })),
         aurumOriginalMeshesPreserved: true,
       };

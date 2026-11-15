@@ -35,10 +35,8 @@ export function createAurumReadonlyMap<K, V>(
     [Symbol.iterator]() {
       return snapshot[Symbol.iterator]();
     },
-    get [Symbol.toStringTag]() {
-      return "ReadonlyMap";
-    },
-  };
+  } as ReadonlyMap<K, V>;
+  Object.defineProperty(readonlyMap, Symbol.toStringTag, { get: () => "ReadonlyMap" });
 
   return Object.freeze(readonlyMap);
 }
