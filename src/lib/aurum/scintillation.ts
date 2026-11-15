@@ -7,11 +7,11 @@ import type { AurumOpticalProfile } from "../aurum-material-engine";
  * physical IOR, dispersion calibration, BVH geometry, or post-processing cost.
  */
 export const AURUM_DIAMOND_LIVE_TUNING = Object.freeze({
-  internalContrast: 1.05,
-  highlightShoulder: 0.42,
+  internalContrast: 1.08,
+  highlightShoulder: 0.48,
   faceBrightness: 1.06,
-  rimEnergy: 0.075,
-  fireMax: 0.085,
+  rimEnergy: 0.060,
+  fireMax: 0.095,
 });
 
 /**
