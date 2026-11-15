@@ -37,6 +37,9 @@ export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, pre
         for (let parent = object.parent; parent; parent = parent.parent) if (!parent.visible) return;
         centeredBounds.expandByObject(object);
       });
+      // In public-viewer presentation the early return below bypasses the standard framing path.
+      // Position the studio floor from the actual centered model bounds before exposing its toggle.
+      viewer.groundController?.positionUnderModel?.(centeredBounds);
       const visibleSphere = centeredBounds.getBoundingSphere(new THREE.Sphere());
       const radius = Math.max(visibleSphere.radius, 0.001);
       // Exact lightweight contact shadow used by PublicCatalogViewer.
