@@ -541,15 +541,21 @@ export async function createAurumPostPipeline(
         float luma(vec3 c){return dot(c,vec3(0.2126,0.7152,0.0722));}
         void main(){
           vec4 center=texture2D(tDiffuse,vUv);
-          if(texture2D(gemMask,vUv).r<0.5){gl_FragColor=center;return;}
+          float centerMask=texture2D(gemMask,vUv).r;
+          if(centerMask<0.5){gl_FragColor=center;return;}
           vec2 px=max(resolution,vec2(0.000001));
           vec2 uv0=vUv+vec2(-px.x,-px.y);
           vec2 uv1=vUv+vec2( px.x,-px.y);
           vec2 uv2=vUv+vec2(-px.x, px.y);
           vec2 uv3=vUv+vec2( px.x, px.y);
-          // The output pixel is gated by the center-diamond mask above.
-          // Neighbor samples may cross the silhouette so the diamond edge can
-          // actually be filtered; pixels belonging to metal are never modified.
+          // Restrict this complementary FXAA pass to the diamond silhouette.
+          // Internal facet boundaries keep their original crisp optical detail.
+          float m0=texture2D(gemMask,uv0).r;
+          float m1=texture2D(gemMask,uv1).r;
+          float m2=texture2D(gemMask,uv2).r;
+          float m3=texture2D(gemMask,uv3).r;
+          float outsideNeighbor=1.0-min(min(m0,m1),min(m2,m3));
+          if(outsideNeighbor<0.5){gl_FragColor=center;return;}
           vec3 n0=texture2D(tDiffuse,uv0).rgb;
           vec3 n1=texture2D(tDiffuse,uv1).rgb;
           vec3 n2=texture2D(tDiffuse,uv2).rgb;
@@ -558,7 +564,7 @@ export async function createAurumPostPipeline(
           float hi=max(luma(center.rgb),max(max(luma(n0),luma(n1)),max(luma(n2),luma(n3))));
           float edge=smoothstep(edgeThreshold,edgeThreshold*2.0,hi-lo);
           vec3 diagonal=(n0+n1+n2+n3)*0.25;
-          float blendAmount=edge*strength;
+          float blendAmount=edge*strength*outsideNeighbor;
           gl_FragColor=vec4(mix(center.rgb,diagonal,blendAmount),center.a);
         }`,
     });
@@ -648,7 +654,7 @@ export async function createAurumPostPipeline(
     // work to the direct-render orbit path. Still captures may use it explicitly.
     const edgeAaMode=options.capture ? "capture" : "settled";
     const edgeAaProfile=getAurumEdgeAaProfile(qualityId || (high ? "high" : "low"),lastKnownBudgetTier,edgeAaMode);
-    const edgeAaEnabled=postControls.gemFxaaEnabled;
+    const edgeAaEnabled=Boolean(postControls.gemFxaaEnabled && gemMaskPass?.hasDiamondMeshes);
     const ssaaActive=Boolean(
       postControls.diamondSsaaEnabled
       && gemMaskPass?.hasDiamondMeshes
@@ -660,8 +666,8 @@ export async function createAurumPostPipeline(
     );
     if(diamondSupersamplePass) diamondSupersamplePass.enabled=ssaaActive;
     if(diamondSupersampleCompositePass) diamondSupersampleCompositePass.enabled=ssaaActive;
-    if(gemMaskPass) gemMaskPass.enabled=ssaaActive || (edgeAaEnabled && !ssaaActive);
-    if(fxaaPass) fxaaPass.enabled=edgeAaEnabled && !ssaaActive;
+    if(gemMaskPass) gemMaskPass.enabled=ssaaActive || edgeAaEnabled;
+    if(fxaaPass) fxaaPass.enabled=edgeAaEnabled;
     if(surfaceEdgeAaPass) {
       surfaceEdgeAaPass.enabled=postControls.surfaceEdgeAaEnabled;
       const strength=surfaceEdgeAaPass.material?.uniforms?.strength;
@@ -936,7 +942,7 @@ export async function createAurumPostPipeline(
   const applyDiamondPostModules=(controls:any)=>{
     const hasDiamond=Boolean(gemMaskPass?.hasDiamondMeshes);
     const ssaaEnabled=Boolean(controls.diamondSsaaEnabled && hasDiamond && renderer.capabilities?.isWebGL2 !== false && renderer.extensions?.has?.("EXT_color_buffer_float") !== false && diamondSupersamplePass?.canRender?.());
-    const fxaaEnabled=Boolean(controls.gemFxaaEnabled && hasDiamond && !ssaaEnabled);
+    const fxaaEnabled=Boolean(controls.gemFxaaEnabled && hasDiamond);
     if(diamondSupersamplePass) diamondSupersamplePass.enabled=ssaaEnabled;
     if(diamondSupersampleCompositePass) diamondSupersampleCompositePass.enabled=ssaaEnabled;
     if(gemMaskPass) gemMaskPass.enabled=ssaaEnabled || fxaaEnabled;
