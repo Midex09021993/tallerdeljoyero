@@ -208,6 +208,7 @@ export function applyAurumCameraView(
   const horizontalHalfFov = Math.atan(Math.tan(verticalHalfFov) * aspect);
   const tanVertical = Math.max(Math.tan(verticalHalfFov), 1e-4);
   const tanHorizontal = Math.max(Math.tan(horizontalHalfFov), 1e-4);
+  const scale = Number.isFinite(framingScale) ? THREE.MathUtils.clamp(framingScale, 0.25, 1.5) : 1;
   const targetNdc = THREE.MathUtils.clamp(0.72 / scale, 0.35, 0.92);
 
   // Measure the complete projected silhouette envelope for this orientation.
