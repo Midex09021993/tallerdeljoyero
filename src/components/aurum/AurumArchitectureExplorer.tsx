@@ -149,7 +149,7 @@ export function AurumArchitectureExplorer() {
           <p className="mt-2 text-xs leading-5 text-muted-foreground">{actual.detalle}</p>
           {actual.id === "post" ? <div className="mt-4 space-y-3 rounded-xl border border-border bg-muted/20 p-3">
             <div className="flex items-center justify-between gap-3">
-              <div className="min-w-0"><p className="text-xs font-semibold">Gem Mask + FXAA</p><p className="text-[10px] leading-4 text-muted-foreground">Se activan y desactivan juntos; la máscara protege los bordes de las gemas.</p></div>
+              <div className="min-w-0"><p className="text-xs font-semibold">Gem Mask + FXAA</p><p className="text-[10px] leading-4 text-muted-foreground">Desactivado en la vista en vivo; reservado para flujos de captura.</p></div>
               <button type="button" role="switch" aria-checked={postControls.gemFxaaEnabled} onClick={() => updatePostControl("gemFxaaEnabled", !postControls.gemFxaaEnabled)} className={`relative h-6 w-11 shrink-0 rounded-full transition ${postControls.gemFxaaEnabled ? "bg-emerald-500" : "bg-muted-foreground/30"}`}><span className={`absolute top-0.5 size-5 rounded-full bg-white shadow transition-all ${postControls.gemFxaaEnabled ? "left-[22px]" : "left-0.5"}`}/></button>
             </div>
             <div className="flex items-center justify-between gap-3 border-t border-border pt-3">
@@ -160,7 +160,7 @@ export function AurumArchitectureExplorer() {
               <div className="min-w-0"><p className="text-xs font-semibold">TAA</p><p className="text-[10px] leading-4 text-muted-foreground">Acumulación temporal disponible para capturas de imagen; no se ejecuta en el visor en vivo.</p></div>
               <button type="button" role="switch" aria-checked={postControls.taaEnabled} onClick={() => updatePostControl("taaEnabled", !postControls.taaEnabled)} className={`relative h-6 w-11 shrink-0 rounded-full transition ${postControls.taaEnabled ? "bg-emerald-500" : "bg-muted-foreground/30"}`}><span className={`absolute top-0.5 size-5 rounded-full bg-white shadow transition-all ${postControls.taaEnabled ? "left-[22px]" : "left-0.5"}`}/></button>
             </div>
-            <p className="text-[10px] leading-4 text-muted-foreground"><Power className="mr-1 inline size-3"/> Los cambios quedan guardados. El TAA se aplica en la siguiente captura de imagen; Gem Mask + FXAA y Surface Edge AA cambian al instante en el visor.</p>
+            <p className="text-[10px] leading-4 text-muted-foreground"><Power className="mr-1 inline size-3"/> Los cambios quedan guardados. Gem Mask + FXAA no se ejecuta en la vista en vivo; el TAA se reserva para captura y Surface Edge AA permanece independiente.</p>
           </div> : null}
           <div className="mt-4 rounded-xl bg-muted/50 p-3"><p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Evidencia técnica</p><p className="mt-1 break-words font-mono text-[10px] leading-4 text-sky-700 dark:text-sky-400">{actual.evidencia || "Requiere localización exacta en auditoría"}</p></div>
           {actual.dependencias?.length ? <div className="mt-4"><p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Conexiones conocidas</p><div className="mt-2 flex flex-wrap gap-1.5">{actual.dependencias.map(d => <span key={d} className="rounded-lg border border-border bg-background px-2 py-1 text-[10px]">{d}</span>)}</div></div> : null}
