@@ -465,12 +465,10 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
     // Preserve only neutral render state from the source material, never its class.
     const next=new THREE.MeshPhysicalMaterial({
       color:base?.color?.clone?.()??new THREE.Color(0xffffff),
-      // Imported gemstone CAD meshes can contain inconsistent face winding
-      // across crown, pavilion and girdle facets. FrontSide culls the reversed
-      // triangles and leaves visible holes where the gem body color disappears.
-      // Gems are thin closed optical solids, so render both orientations; keep
-      // this local to gemstone materials and do not change metal sidedness.
-      side:THREE.DoubleSide,
+      // Imported diamond CAD meshes can contain inconsistent face winding.
+      // DoubleSide prevents those crown/pavilion facets from disappearing at
+      // grazing angles; keep the original sidedness for every other gemstone.
+      side:preset.familia==="Diamante"?THREE.DoubleSide:(base?.side??THREE.FrontSide),
       depthTest:base?.depthTest??true,
       depthWrite:true,
     });
