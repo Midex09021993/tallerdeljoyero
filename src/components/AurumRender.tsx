@@ -2557,10 +2557,16 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         },
         sombraContacto:(visible:boolean)=>{
           groundController.setBakedShadowVisible(visible);
+          const publicContactShadow = modelo?.userData?.aurumPublicContactShadow;
+          if (publicContactShadow) publicContactShadow.visible = visible;
           invalidateRenderRef.current?.();
         },
         sueloVisible:(visible:boolean)=>{
           groundController.setVisible(visible);
+          // The visible halo in the viewer can be the lightweight contact-shadow
+          // plane created by frameAurumProduct, not the AURUM Ground plane.
+          const publicContactShadow = modelo?.userData?.aurumPublicContactShadow;
+          if (publicContactShadow) publicContactShadow.visible = visible;
           invalidateRenderRef.current?.();
         },
         sueloMaterial:(config:any)=>{
