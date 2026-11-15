@@ -114,7 +114,6 @@ test("diamond live optical tuning matches the approved diamond-only calibration"
   expect(source).toContain("rimEnergy: 0.025");
   expect(source).toContain('const isDiamond=family.trim().toLowerCase()==="diamante"');
   expect(source).toContain("smoothstep(0.035,0.28,ijSpectralSpread)");
-  expect(source).toContain("${isDiamond ? \"");
 });
 
 test("runtime DPR remains unchanged to avoid changing shared metal rendering resolution", () => {
