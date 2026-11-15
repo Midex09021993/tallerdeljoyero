@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { metaCompleteRegistration, metaPageView } from "@/lib/meta-pixel";
 
 export type AurumAnalyticsEvent =
   | "page_view"
@@ -43,6 +44,13 @@ export function registrarEvento(
   metadata: Record<string, unknown> = {},
 ): void {
   if (typeof window === "undefined") return;
+
+  try {
+    if (event === "page_view") metaPageView();
+    if (event === "registration_completed" || (event === "login_completed" && metadata["mode"] === "initial_owner")) metaCompleteRegistration();
+  } catch {
+    // El píxel nunca debe romper la app.
+  }
 
   const payload = {
     event_name: event,
