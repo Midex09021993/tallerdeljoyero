@@ -220,7 +220,7 @@ function LoginPage() {
           <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_20%_20%,rgba(255,255,255,.7),transparent_45%),radial-gradient(ellipse_at_90%_75%,rgba(255,210,48,.18),transparent_38%)]" />
           <div className="relative z-10 mx-auto w-full max-w-[510px]">
             <Link to="/" aria-label="AURUM LAB: ir a la página principal" className="group mx-auto inline-flex flex-col items-center rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-[#967100] focus-visible:ring-offset-4">
-              <span className="grid size-14 place-items-center rounded-2xl bg-[#ffcf24] text-[#17232d] shadow-sm transition-transform group-hover:scale-105"><Gem className="size-7" /></span>
+              <img src="/brand/aurum-symbol.svg" alt="Símbolo oficial de AURUM LAB" width="56" height="56" className="size-14 object-contain transition-transform group-hover:scale-105" />
               <span className="mt-4 text-lg font-extrabold tracking-tight text-[#17232d]">AURUM LAB</span>
               <span className="mt-1 text-[10px] font-semibold uppercase tracking-[.22em] text-[#7d650d]">Tecnología para joyeros</span>
             </Link>
@@ -246,7 +246,7 @@ function LoginPage() {
           <div className="w-full max-w-[520px]">
             <div className="mb-8 text-center">
               <Link to="/" aria-label="AURUM LAB: ir a la página principal" className="mx-auto flex w-fit items-center justify-center gap-3 rounded-xl outline-none transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-[#967100] focus-visible:ring-offset-4">
-                <span className="grid size-11 place-items-center rounded-xl bg-[#ffcf24] text-[#17232d]"><Gem className="size-6" /></span>
+                <img src="/brand/aurum-symbol.svg" alt="Símbolo oficial de AURUM LAB" width="44" height="44" className="size-11 object-contain" />
                 <span className="text-2xl font-extrabold tracking-tight text-[#17232d]">AURUM <span className="text-[#a27b00]">LAB</span></span>
               </Link>
               <p className="mt-3 text-sm text-slate-600">{modoAlta ? "Configura el acceso inicial de tu plataforma" : "Bienvenido de nuevo a tu espacio de trabajo"}</p>
