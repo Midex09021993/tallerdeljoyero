@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import * as THREE from "three";
 import { createAurumGemEnvironment } from "../src/lib/aurum/gem-environment";
 import { prepareAurumGemLayerIndex } from "../src/lib/aurum/material-application";
+import { getAurumRuntimeBudget } from "../src/lib/aurum/runtime-budget";
 
 test("gem environment updates only the meshes resolved for the selected stone", () => {
   const controller = createAurumGemEnvironment({}, class {}, class {});
@@ -120,4 +121,20 @@ test("runtime DPR remains unchanged to avoid changing shared metal rendering res
   const source = readFileSync("src/lib/aurum/runtime-budget.ts", "utf8");
   expect(source).toContain("pixelRatioCap:1.72");
   expect(source).toContain("interactionPixelRatio:1.72");
+});
+
+test("web-tier models receive 2x diamond-only supersampling without raising shared DPR", () => {
+  const web = getAurumRuntimeBudget(200_000);
+  expect(web.diamondSupersampleScaleCap).toBe(2);
+  expect(web.pixelRatioCap).toBe(1.72);
+  expect(web.interactionPixelRatio).toBe(1.72);
+
+  const dense = getAurumRuntimeBudget(200_001);
+  expect(dense.diamondSupersampleScaleCap).toBe(1.6);
+  expect(dense.pixelRatioCap).toBe(1.6);
+
+  const post = readFileSync("src/lib/aurum/post.ts", "utf8");
+  expect(post).toContain("Math.min(diamondSupersampleScaleCap,Math.sqrt(8_500_000/Math.max(1,basePixels)))");
+  expect(post).toContain("if(texture2D(gemMask,vUv).r<0.5){gl_FragColor=base;return;}");
+  expect(post).toContain("setDiamondSupersampleScaleCap");
 });
