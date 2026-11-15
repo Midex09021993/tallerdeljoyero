@@ -4907,7 +4907,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                       onClick={() => {
                         const next = !sueloVisible;
                         setSueloVisible(next);
+                        setSombraContactoVisible(next);
                         apiRef.current?.sueloVisible?.(next);
+                        apiRef.current?.sombraContacto?.(next);
                       }}
                       className={"relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b99642]/60 " + (sueloVisible ? "bg-[#a88743]" : "bg-[#c9c6bf]")}>
                       <span className={"inline-block size-4 rounded-full bg-white shadow-sm transition-transform " + (sueloVisible ? "translate-x-6" : "translate-x-1")} />
