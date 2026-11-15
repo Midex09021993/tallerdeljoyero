@@ -35,6 +35,7 @@ const arbol: Nodo[] = [
     { id: "final", nombre: "Final Render Adapter", tipo: "Adaptador registrado · carga bajo demanda", estado: "parcial", detalle: "El host registra el loader y AurumRender resuelve el adaptador al solicitar la captura final. El path tracer existe; falta certificar fidelidad, restauración de estado, coste y limpieza con escenas de referencia.", evidencia: "src/lib/aurum/core/final-render-adapter.ts · src/lib/aurum/path-traced-capture.ts · src/components/AurumRender.tsx", dependencias: ["Viewer", "Post"] },
     { id: "edge", nombre: "AURUM EDGE QUALITY", tipo: "MSAA en compositor · TAA fuera del visor en vivo", estado: "parcial", detalle: "MSAA está conectado a los targets ping-pong del compositor con fallback. TAA está desactivado en el visor en vivo y se reserva para capturas explícitas; SSAA no está implementado.", evidencia: "src/lib/aurum/edge-quality.ts · src/lib/aurum/post.ts · src/components/AurumRender.tsx", dependencias: ["Post"] },
     { id: "post", nombre: "Post Engine", tipo: "Composición y efectos", estado: "parcial", detalle: "Usa el compositor productivo. Confirmar consumidores y contratos sin duplicar pases ni loops.", evidencia: "src/lib/aurum/ · post pipeline", dependencias: ["Viewer", "Edge Quality"] },
+    { id: "diamond-ssaa", nombre: "DIAMOND SSAA · 2×", tipo: "Supermuestreo selectivo · solo diamante central", estado: "experimental", detalle: "Render auxiliar de la escena completa a 2× para conservar transmisión y refracción. La composición reemplaza únicamente píxeles dentro de Gem Mask; se suspende durante el movimiento de cámara y requiere WebGL2. No modifica los píxeles de salida de los metales.", evidencia: "src/lib/aurum/post.ts · src/lib/aurum/post-engine-controls.ts · src/components/AurumRender.tsx", dependencias: ["Post Engine", "Gem Mask"] },
   ]},
   { id: "import", nombre: "IMPORTACIÓN Y GEOMETRÍA", tipo: "CAD / 3D · loader directo y diagnósticos opt-in", estado: "parcial", detalle: "La carga directa y preparación básica están activas; el Import Pipeline Manager y Smart Scan no participan en la ruta actual de carga que se alineó con el Visor Público.", evidencia: "src/components/AurumRender.tsx · src/lib/aurum/model-loader.ts · src/lib/aurum/core/", hijos: [
     { id: "import-plugin", nombre: "AURUM IMPORT", tipo: "Loader directo activo · plugin registrado", estado: "parcial", detalle: "El cargador compartido parseAurumInput + preprocessAurumModel está activo. Atención: la ruta de carga de archivos de AurumRender se cambió para igualar al Visor Público y ahora evita el Import Pipeline Manager; por ello el plugin registrado no gobierna esa ruta directa.", evidencia: "src/components/AurumRender.tsx · src/lib/aurum/model-loader.ts · src/lib/aurum/core/import-plugin.ts", dependencias: ["Viewer"] },
@@ -67,7 +68,7 @@ export function AurumArchitectureExplorer() {
   const [seleccion, setSeleccion] = useState("media");
   const [filtro, setFiltro] = useState("");
   const [postControls, setPostControls] = useState(getAurumPostControls);
-  const updatePostControl = (key: "gemFxaaEnabled" | "surfaceEdgeAaEnabled" | "taaEnabled", enabled: boolean) => setPostControls(setAurumPostControls({ [key]: enabled }));
+  const updatePostControl = (key: "gemFxaaEnabled" | "diamondSsaaEnabled" | "surfaceEdgeAaEnabled" | "taaEnabled", enabled: boolean) => setPostControls(setAurumPostControls({ [key]: enabled }));
   const nodos = useMemo(() => todos(arbol), []);
   const actual = nodos.find(n => n.id === seleccion) ?? nodos[0]!;
   const modulos = useMemo(() => nodos.filter(n => !n.hijos?.length), [nodos]);
@@ -147,6 +148,18 @@ export function AurumArchitectureExplorer() {
           <div className="flex items-center justify-between gap-2"><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold">Module brief</p>{badge(actual.estado)}</div>
           <h4 className="mt-3 text-base font-semibold leading-6">{actual.nombre}</h4>
           <p className="mt-2 text-xs leading-5 text-muted-foreground">{actual.detalle}</p>
+          {actual.id === "diamond-ssaa" ? <div className="mt-4 space-y-3 rounded-xl border border-border bg-muted/20 p-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0"><p className="text-xs font-semibold">Supermuestreo selectivo 2×</p><p className="text-[10px] leading-4 text-muted-foreground">Render de referencia de escena completa; solo se compone sobre el diamante central identificado por Gem Mask.</p></div>
+              <button type="button" role="switch" aria-checked={postControls.diamondSsaaEnabled} onClick={() => updatePostControl("diamondSsaaEnabled", !postControls.diamondSsaaEnabled)} className={"relative h-6 w-11 shrink-0 rounded-full transition " + (postControls.diamondSsaaEnabled ? "bg-emerald-500" : "bg-muted-foreground/30")}><span className={"absolute top-0.5 size-5 rounded-full bg-white shadow transition-all " + (postControls.diamondSsaaEnabled ? "left-[22px]" : "left-0.5")}/></button>
+            </div>
+            <div className="rounded-lg border border-border bg-background/60 p-2 text-[10px] leading-4 text-muted-foreground">
+              <p><span className="font-semibold text-foreground">Modo:</span> reposo; se pausa durante el movimiento para proteger el rendimiento.</p>
+              <p><span className="font-semibold text-foreground">Compatibilidad:</span> WebGL2 y diamante central detectado.</p>
+              <p><span className="font-semibold text-foreground">Aislamiento:</span> no sustituye píxeles fuera de la máscara del diamante.</p>
+            </div>
+            <p className="text-[10px] leading-4 text-muted-foreground"><Power className="mr-1 inline size-3"/> El módulo queda guardado como preferencia. La activación efectiva depende de que el visor detecte el diamante central y el dispositivo admita WebGL2.</p>
+          </div> : null}
           {actual.id === "post" ? <div className="mt-4 space-y-3 rounded-xl border border-border bg-muted/20 p-3">
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0"><p className="text-xs font-semibold">Gem Mask + FXAA</p><p className="text-[10px] leading-4 text-muted-foreground">Desactivado en la vista en vivo; reservado para flujos de captura.</p></div>
@@ -160,7 +173,7 @@ export function AurumArchitectureExplorer() {
               <div className="min-w-0"><p className="text-xs font-semibold">TAA</p><p className="text-[10px] leading-4 text-muted-foreground">Acumulación temporal disponible para capturas de imagen; no se ejecuta en el visor en vivo.</p></div>
               <button type="button" role="switch" aria-checked={postControls.taaEnabled} onClick={() => updatePostControl("taaEnabled", !postControls.taaEnabled)} className={`relative h-6 w-11 shrink-0 rounded-full transition ${postControls.taaEnabled ? "bg-emerald-500" : "bg-muted-foreground/30"}`}><span className={`absolute top-0.5 size-5 rounded-full bg-white shadow transition-all ${postControls.taaEnabled ? "left-[22px]" : "left-0.5"}`}/></button>
             </div>
-            <p className="text-[10px] leading-4 text-muted-foreground"><Power className="mr-1 inline size-3"/> Los cambios quedan guardados. Gem Mask + FXAA no se ejecuta en la vista en vivo; el TAA se reserva para captura y Surface Edge AA permanece independiente.</p>
+            <p className="text-[10px] leading-4 text-muted-foreground"><Power className="mr-1 inline size-3"/> Los cambios quedan guardados. Cada módulo mantiene su propio control y ciclo de ejecución.</p>
           </div> : null}
           <div className="mt-4 rounded-xl bg-muted/50 p-3"><p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Evidencia técnica</p><p className="mt-1 break-words font-mono text-[10px] leading-4 text-sky-700 dark:text-sky-400">{actual.evidencia || "Requiere localización exacta en auditoría"}</p></div>
           {actual.dependencias?.length ? <div className="mt-4"><p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Conexiones conocidas</p><div className="mt-2 flex flex-wrap gap-1.5">{actual.dependencias.map(d => <span key={d} className="rounded-lg border border-border bg-background px-2 py-1 text-[10px]">{d}</span>)}</div></div> : null}
