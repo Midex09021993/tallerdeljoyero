@@ -127,7 +127,7 @@ function GuiasPage() {
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex min-h-[68px] max-w-7xl items-center justify-between gap-4 px-5 sm:px-8">
           <Link to="/" className="flex items-center gap-2.5" aria-label="AURUM LAB, inicio">
-            <span className="grid size-9 place-items-center rounded-lg bg-[#f8c928] text-[#17232d]"><Gem className="size-5" strokeWidth={2.5} /></span>
+            <img src="/brand/aurum-symbol.svg" alt="Logotipo de AURUM LAB" width="36" height="36" className="size-9 object-contain" />
             <span className="leading-tight"><span className="block text-[17px] font-extrabold tracking-tight">AURUM<span className="text-[#bd8d00]"> LAB</span></span><span className="block text-[9px] font-medium uppercase tracking-[.15em] text-slate-500">Guías técnicas</span></span>
           </Link>
           <nav className="flex items-center gap-4 text-sm font-medium text-slate-600 sm:gap-6" aria-label="Navegación de guías">
