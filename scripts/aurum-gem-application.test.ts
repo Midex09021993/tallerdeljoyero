@@ -128,12 +128,17 @@ test("runtime DPR remains unchanged to avoid changing shared metal rendering res
 test("web-tier models receive 2x diamond-only supersampling without raising shared DPR", () => {
   const web = getAurumRuntimeBudget(200_000);
   expect(web.diamondSupersampleScaleCap).toBe(2);
+  expect(web.diamondLiveSupersampleScaleCap).toBe(1.5);
   expect(web.pixelRatioCap).toBe(1.72);
   expect(web.interactionPixelRatio).toBe(1.72);
 
   const dense = getAurumRuntimeBudget(200_001);
   expect(dense.diamondSupersampleScaleCap).toBe(1.6);
+  expect(dense.diamondLiveSupersampleScaleCap).toBe(1.35);
   expect(dense.pixelRatioCap).toBe(1.6);
+
+  expect(getAurumRuntimeBudget(500_001).diamondLiveSupersampleScaleCap).toBe(1.25);
+  expect(getAurumRuntimeBudget(900_001).diamondLiveSupersampleScaleCap).toBe(1.15);
 
   const post = readFileSync("src/lib/aurum/post.ts", "utf8");
   expect(post).toContain("Math.min(diamondSupersampleScaleCap,Math.sqrt(8_500_000/Math.max(1,basePixels)))");
@@ -153,4 +158,15 @@ test("diamond SSAA scale cap is changed through the pass-owned closure", () => {
   expect(source).toContain("setScaleCap(cap:number)");
   expect(source).toContain("diamondSupersamplePass?.setScaleCap?.(cap)");
   expect(source).not.toContain("diamondSupersampleScaleCap=THREE.MathUtils");
+});
+
+test("live camera motion keeps diamond-only supersampling active at a reduced adaptive scale", () => {
+  const post = readFileSync("src/lib/aurum/post.ts", "utf8");
+  const render = readFileSync("src/components/AurumRender.tsx", "utf8");
+  expect(post).toContain("diamondSupersamplePass?.setScaleCap?.(next?diamondLiveSupersampleScaleCap:diamondSupersampleScaleCap)");
+  expect(post).toContain("controls.diamondSsaaEnabled && hasDiamond && renderer.capabilities?.isWebGL2 !== false");
+  expect(post).not.toContain("hasDiamond && diamondSupersamplingSettled && renderer.capabilities");
+  expect(render).toContain("runtimeBudget.diamondLiveSupersampleScaleCap");
+  expect(render).toContain("diamondSupersamplingEnabled: liveDiamondSsaaActive");
+  expect(render).toContain("[diamondSupersamplePass, gemMaskPass, diamondSupersampleCompositePass]");
 });
