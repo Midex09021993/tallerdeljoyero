@@ -83,7 +83,7 @@ export function applyAurumIJEWELPresentationCamera(
   // preserve the measured distance instead of re-fitting the camera.
   // Slightly tighter default product framing: about 12% closer while preserving
   // the calibrated iJewel viewing direction and keeping the complete jewel visible.
-  const distance = AURUM_IJEWEL_REFERENCE.camera.distance * 0.88;
+  const distance = AURUM_IJEWEL_REFERENCE.camera.distance * 0.84;
   camera.fov = AURUM_IJEWEL_REFERENCE.camera.fov;
   camera.up.set(...AURUM_IJEWEL_REFERENCE.camera.up);
   // Center the actual normalized product volume. The iJewel reference frame
