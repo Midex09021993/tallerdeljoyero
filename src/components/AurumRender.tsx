@@ -160,8 +160,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   ambienteIdRef.current = ambienteId;
   const [ambienteMetalInfluence, setAmbienteMetalInfluence] = useState(45);
   const [fondoId, setFondoId] = useState("blanco");
-  const [sombraContactoVisible, setSombraContactoVisible] = useState(false);
-  const [sueloVisible, setSueloVisible] = useState(false);
+  const [sombraContactoVisible, setSombraContactoVisible] = useState(true);
+  const [sueloVisible, setSueloVisible] = useState(true);
   const [sueloColor, setSueloColor] = useState("#ffffff");
   const [sueloRugosidad, setSueloRugosidad] = useState(1);
   const [sueloMetalness, setSueloMetalness] = useState(0);
@@ -1361,9 +1361,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
 
       // HDRI Ground is managed by groundController and remains disabled for now.
       const groundController = createAurumGround(THREE, escena);
-      // Keep the rectangular studio floor hidden by default; the user can reveal it with Mostrar suelo.
-      groundController.setVisible(false);
-      groundController.setBakedShadowVisible(false);
+      // Mostrar suelo inicia activado: mantener sincronizados el plano y su sombra de contacto.
+      groundController.setVisible(true);
+      groundController.setBakedShadowVisible(true);
       let suelo:any = groundController.mesh;
       const sceneController = createAurumSceneController(
         viewerScene,
