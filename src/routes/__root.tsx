@@ -82,6 +82,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
       { name: "apple-mobile-web-app-title", content: "Taller del Joyero" },
       { name: "google", content: "notranslate" },
+      { name: "google-site-verification", content: "49aJ2jM3v8am3NB35oWtwgwSFmdGB1cIuUxyxT0UdDM" },
     ],
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
