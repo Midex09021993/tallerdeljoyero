@@ -432,6 +432,17 @@ export async function createAurumPostPipeline(
         }
       },
       canRender(){ return updateDiamondSupersampleScale(); },
+      setScaleCap(cap:number){
+        diamondSupersampleScaleCap=Math.max(1,Math.min(2,Number(cap)||1));
+        updateDiamondSupersampleScale();
+        const targetWidth=Math.max(2,Math.floor(diamondSupersampleBaseWidth*diamondSupersampleScale));
+        const targetHeight=Math.max(2,Math.floor(diamondSupersampleBaseHeight*diamondSupersampleScale));
+        diamondSupersampleTarget?.setSize?.(targetWidth,targetHeight);
+        if(diamondSupersampleTarget && diamondSupersampleCompositePass){
+          diamondSupersampleCompositePass.material.uniforms.hiResTexel.value.set(1/targetWidth,1/targetHeight);
+          diamondSupersampleCompositePass.material.uniforms.tDiamondHiRes.value=diamondSupersampleTarget.texture;
+        }
+      },
       render(activeRenderer:any){
         let activeTarget:any=null;
         try { activeTarget=ensureDiamondSupersampleTarget(); }
@@ -929,10 +940,7 @@ export async function createAurumPostPipeline(
     return ssaaEnabled;
   };
   const setDiamondSupersampleScaleCap=(cap:number)=>{
-    diamondSupersampleScaleCap=THREE.MathUtils.clamp(Number(cap)||1,1,2);
-    updateDiamondSupersampleScale();
-    diamondSupersamplePass?.setSize?.(diamondSupersampleBaseWidth,diamondSupersampleBaseHeight);
-    diamondSupersampleCompositePass?.setSize?.(diamondSupersampleBaseWidth,diamondSupersampleBaseHeight);
+    diamondSupersamplePass?.setScaleCap?.(cap);
   };
   const setDiamondSupersamplingSettled=(settled:boolean)=>{
     diamondSupersamplingSettled=Boolean(settled);
