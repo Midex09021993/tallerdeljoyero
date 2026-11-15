@@ -3859,7 +3859,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             if (fxaaPass) {
               fxaaPass.enabled = liveDiamondAaEnabled;
               const strength = fxaaPass.material?.uniforms?.strength;
-              if (strength) strength.value = liveDiamondAaEnabled ? 0.42 : 0.65;
+              if (strength) strength.value = liveDiamondAaEnabled ? 0.34 : 0.65;
             }
             console.info("[AURUM][DIAMOND][LIVE_QUALITY]", {
               hasCenterDiamond,
