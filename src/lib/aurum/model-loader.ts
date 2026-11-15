@@ -125,10 +125,14 @@ export function enforceRhinoLayerVisibilityBeforeExport(object: THREE.Object3D) 
     if (!layer) return true;
     const mode = layer.mode ?? layer.Mode ?? layer.visibilityMode ?? layer.VisibilityMode;
     const modeText = typeof mode === "string" ? mode.toLowerCase() : "";
-    return layer.visible !== false && layer.visible !== 0
+    const hiddenFlag = layer.hidden ?? layer.isHidden ?? layer.Hidden ?? layer.IsHidden;
+    const visibilityText = String(layer.visibility ?? layer.Visibility ?? "").trim().toLowerCase();
+    return hiddenFlag !== true && hiddenFlag !== 1
+      && layer.visible !== false && layer.visible !== 0
       && layer.Visible !== false && layer.Visible !== 0
       && layer.isVisible !== false && layer.isVisible !== 0
       && layer.visibility !== false && layer.visibility !== 0
+      && visibilityText !== "hidden" && visibilityText !== "off"
       && mode !== 1 && modeText !== "hidden" && modeText !== "hidden_layer" && modeText !== "hiddenlayer";
   };
   const effectiveVisible = (index:number, trail = new Set<number>()): boolean => {
@@ -791,6 +795,10 @@ export async function convertAurumToGlb(
       name: layer?.name ?? layer?.Name ?? null,
       color: layer?.color ?? layer?.Color ?? null,
       parentLayerId: layer?.parentLayerId ?? layer?.parentId ?? layer?.ParentLayerId ?? null,
+      visible: layer?.visible ?? layer?.Visible ?? layer?.isVisible ?? null,
+      visibility: layer?.visibility ?? layer?.Visibility ?? null,
+      hidden: layer?.hidden ?? layer?.isHidden ?? layer?.Hidden ?? layer?.IsHidden ?? null,
+      mode: layer?.mode ?? layer?.Mode ?? layer?.visibilityMode ?? layer?.VisibilityMode ?? null,
     })),
   };
   object.traverse((x:any) => {
