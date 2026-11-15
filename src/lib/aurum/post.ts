@@ -215,30 +215,39 @@ export async function createAurumPostPipeline(
     });
     const gemMaskMaterial=new THREE.MeshBasicMaterial({
       color:0xffffff,side:THREE.DoubleSide,depthTest:true,depthWrite:false,
-      depthFunc:THREE.EqualDepth,toneMapped:false
+      depthFunc:THREE.LessEqualDepth,toneMapped:false
     });
-    const isAurumDiamondMesh=(object:any):boolean=>{
-      let current=object;
-      let isMetal=false;
-      const identity:string[]=[];
-      while(current){
-        const metadata=current.userData?.aurumRhino??{};
-        const category=String(metadata.categoria??"").trim().toLowerCase();
-        if(category==="metal") isMetal=true;
-        identity.push(
-          current.name,
-          metadata.capa,
-          metadata.nombre,
-          metadata.tipo,
-          current.userData?.attributes?.layerName,
-          current.userData?.attributes?.LayerName,
-          ...(Array.isArray(current.material)?current.material:[current.material]).map((material:any)=>material?.name)
-        );
-        current=current.parent;
-      }
-      const name=identity.map(value=>String(value??"")).join(" ").toLowerCase();
-      const isDiamond=/(^|[^a-z])(diamond|diamante)([^a-z]|$)/.test(name);
-      return !isMetal && isDiamond;
+    const findAurumCenterDiamondMeshes=():any[]=>{
+      const candidates:Array<{mesh:any;radius:number;slot:number|null}>=[];
+      scene.updateMatrixWorld?.(true);
+      scene.traverse((object:any)=>{
+        if(!object?.isMesh||!object.geometry||object.userData?.aurumInternalInclusion) return;
+        const metadata=object.userData?.aurumRhino??{};
+        const materials=Array.isArray(object.material)?object.material:[object.material];
+        const family=String(
+          object.userData?.aurumActiveGemFamily
+          ?? materials.find((material:any)=>material?.userData?.aurumGemFamily)?.userData?.aurumGemFamily
+          ?? ""
+        ).trim().toLowerCase();
+        const gemId=String(object.userData?.aurumActiveGemId??"").trim().toLowerCase();
+        const isGem=String(metadata.categoria??"").trim().toLowerCase()==="gema";
+        const isDiamond=isGem && (family==="diamante" || gemId.startsWith("diamante"));
+        if(!isDiamond) return;
+        if(!object.geometry.boundingSphere) object.geometry.computeBoundingSphere();
+        const localRadius=Number(object.geometry.boundingSphere?.radius??0);
+        const scale=object.getWorldScale(new THREE.Vector3());
+        const radius=localRadius*Math.max(Math.abs(scale.x),Math.abs(scale.y),Math.abs(scale.z));
+        if(!Number.isFinite(radius)||radius<=0) return;
+        const rawSlot=Number(metadata.matrixSlot);
+        const layer=String(metadata.capa??"");
+        const slot=rawSlot===1 || /(?:gem|gema)[\\s_-]*0?1\\b/i.test(layer) ? 1 : Number.isFinite(rawSlot)&&rawSlot>1 ? rawSlot : null;
+        candidates.push({mesh:object,radius,slot});
+      });
+      if(!candidates.length) return [];
+      const explicitCenter=candidates.filter(candidate=>candidate.slot===1);
+      if(explicitCenter.length) return explicitCenter.map(candidate=>candidate.mesh);
+      candidates.sort((a,b)=>b.radius-a.radius);
+      return [candidates[0].mesh];
     };
     // Scene classification is stable between model/selection-geometry changes.
     // Reuse these arrays on every frame instead of traversing the whole scene
@@ -271,13 +280,12 @@ export async function createAurumPostPipeline(
       }
       previousGemLayerMasks.clear();
       cachedGemMeshes.length=0;
-      scene.traverse((object:any)=>{
-        if(!object?.isMesh) return;
-        if(!isAurumDiamondMesh(object)) return;
-        cachedGemMeshes.push(object);
-        if(object.layers){
-          previousGemLayerMasks.set(object,object.layers.mask);
-          object.layers.enable(gemMaskLayer);
+      const centerDiamondMeshes=findAurumCenterDiamondMeshes();
+      centerDiamondMeshes.forEach((mesh:any)=>{
+        cachedGemMeshes.push(mesh);
+        if(mesh.layers){
+          previousGemLayerMasks.set(mesh,mesh.layers.mask);
+          mesh.layers.enable(gemMaskLayer);
         }
       });
     };
@@ -374,7 +382,7 @@ export async function createAurumPostPipeline(
         tDiffuse:{value:null},
         gemMask:{value:gemMaskTarget.texture},
         resolution:{value:new THREE.Vector2(1,1)},
-        strength:{value:0.16},
+        strength:{value:0.65},
         edgeThreshold:{value:0.20},
       },
       vertexShader:`varying vec2 vUv; void main(){vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
@@ -388,21 +396,17 @@ export async function createAurumPostPipeline(
           vec2 uv1=vUv+vec2( px.x,-px.y);
           vec2 uv2=vUv+vec2(-px.x, px.y);
           vec2 uv3=vUv+vec2( px.x, px.y);
-          // Only gemstone samples may contribute to the filtered gemstone pixel.
-          // Metal/background samples are excluded from the neighborhood entirely.
-          float m0=step(0.5,texture2D(gemMask,uv0).r);
-          float m1=step(0.5,texture2D(gemMask,uv1).r);
-          float m2=step(0.5,texture2D(gemMask,uv2).r);
-          float m3=step(0.5,texture2D(gemMask,uv3).r);
-          vec3 n0=mix(center.rgb,texture2D(tDiffuse,uv0).rgb,m0);
-          vec3 n1=mix(center.rgb,texture2D(tDiffuse,uv1).rgb,m1);
-          vec3 n2=mix(center.rgb,texture2D(tDiffuse,uv2).rgb,m2);
-          vec3 n3=mix(center.rgb,texture2D(tDiffuse,uv3).rgb,m3);
+          // The output pixel is gated by the center-diamond mask above.
+          // Neighbor samples may cross the silhouette so the diamond edge can
+          // actually be filtered; pixels belonging to metal are never modified.
+          vec3 n0=texture2D(tDiffuse,uv0).rgb;
+          vec3 n1=texture2D(tDiffuse,uv1).rgb;
+          vec3 n2=texture2D(tDiffuse,uv2).rgb;
+          vec3 n3=texture2D(tDiffuse,uv3).rgb;
           float lo=min(luma(center.rgb),min(min(luma(n0),luma(n1)),min(luma(n2),luma(n3))));
           float hi=max(luma(center.rgb),max(max(luma(n0),luma(n1)),max(luma(n2),luma(n3))));
           float edge=smoothstep(edgeThreshold,edgeThreshold*2.0,hi-lo);
-          float sampleWeight=max(0.0001,m0+m1+m2+m3);
-          vec3 diagonal=(n0*m0+n1*m1+n2*m2+n3*m3)/sampleWeight;
+          vec3 diagonal=(n0+n1+n2+n3)*0.25;
           float blendAmount=edge*strength;
           gl_FragColor=vec4(mix(center.rgb,diagonal,blendAmount),center.a);
         }`,
