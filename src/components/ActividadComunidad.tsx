@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Award, BookOpen, Gem, Globe2, Layers3, Store, UsersRound, UserRoundCheck, Share2, type LucideIcon } from "lucide-react";
 import { supabasePublic } from "@/integrations/supabase/client";
@@ -56,7 +57,7 @@ function tiempoRelativo(fecha: string) {
   return new Intl.DateTimeFormat("es", { day: "numeric", month: "short" }).format(date);
 }
 
-export function ActividadComunidad({ slug, compact = false }: { slug?: string; compact?: boolean }) {
+export function ActividadComunidad({ slug, compact = false, preview = false }: { slug?: string; compact?: boolean; preview?: boolean }) {
   const [filter, setFilter] = useState<"all" | ActivityType>("all");
   const activitiesQuery = useQuery({
     queryKey: ["aurum-community-activity", slug ?? "global"],
@@ -100,6 +101,37 @@ export function ActividadComunidad({ slug, compact = false }: { slug?: string; c
   // No mostrar cifras sembradas como demostración: hasta conectar métricas verificables, se informa que están en preparación.
   const stats = (statsQuery.data ?? []).filter(stat => stat.metric_key.startsWith("verified_"));
 
+  if (preview) {
+    return (
+      <div className="mt-5 overflow-hidden rounded-2xl border border-[#e8e3d9] bg-white shadow-[0_10px_30px_rgba(23,35,45,.035)]">
+        {activitiesQuery.isLoading ? (
+          <div className="px-5 py-7 text-center text-xs text-slate-400">Cargando novedades…</div>
+        ) : activities.length ? (
+          <div className="divide-y divide-[#f0ede7]">
+            {activities.slice(0, 3).map(activity => {
+              const Icon = activityIcons[activity.activity_type] ?? UsersRound;
+              return (
+                <article key={activity.id} className="flex items-center gap-3.5 px-4 py-3.5 sm:px-5">
+                  <span className="grid size-9 shrink-0 place-items-center rounded-xl border border-[#eee4cb] bg-[#fbf6e9] text-[#98752f]"><Icon className="size-4" strokeWidth={1.8} /></span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs leading-5 text-[#4c5861]"><strong className="font-bold text-[#17232d]">{activity.actor_name}</strong> {activity.title}</p>
+                    {activity.summary && <p className="mt-0.5 truncate text-[10px] text-[#899198]">{activity.summary}</p>}
+                  </div>
+                  <time dateTime={activity.created_at} className="shrink-0 text-[10px] text-[#9aa0a4]">{tiempoRelativo(activity.created_at)}</time>
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="px-5 py-6 text-center text-xs text-[#899198]">{activitiesQuery.isError ? "Las novedades no están disponibles en este momento." : "Pronto verás aquí las últimas novedades de los talleres."}</p>
+        )}
+        <div className="flex items-center justify-between gap-3 border-t border-[#f0ede7] bg-[#fdfcf9] px-4 py-3 sm:px-5">
+          <span className="text-[10px] text-[#899198]">Actividad pública de la comunidad</span>
+          <Link to="/comunidad" className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#876500] hover:text-[#5f4900]">Ver toda la actividad <Share2 className="size-3.5" /></Link>
+        </div>
+      </div>
+    );
+  }
   return (
     <section id={compact ? "actividad-taller" : "actividad-comunidad"} aria-label={compact ? "Actividad del taller" : "Actividad reciente de la comunidad"} className={compact ? "border-y border-[#1f1b1815] bg-white/70" : "relative isolate overflow-hidden border-y border-[#e8e3d9] bg-[#fbfaf7]"}>
       <div className="mx-auto max-w-[1440px] px-5 py-10 sm:px-8 sm:py-14 lg:px-12">
