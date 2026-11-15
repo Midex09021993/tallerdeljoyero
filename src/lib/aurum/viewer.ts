@@ -70,7 +70,7 @@ export function frameAurumProduct(viewer: AurumViewerFrame, model: Object3D, pre
       }
       model.userData = { ...(model.userData ?? {}), aurumInitialFrameApplied: true, aurumPublicViewerPresentation: true };
     }
-    applyAurumPublicViewerCamera(viewer.camera, viewer.controls, model, { enablePan: allowPan, framingScale: 0.50 });
+    applyAurumPublicViewerCamera(viewer.camera, viewer.controls, model, { enablePan: allowPan, framingScale: 0.60 });
     return;
   }
 
