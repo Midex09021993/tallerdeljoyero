@@ -674,7 +674,7 @@ function InicioPublico() {
           </div>
           <ClientOnly fallback={<div className="mt-5 h-24 animate-pulse rounded-2xl border border-[#e8e3d9] bg-white" />}>
             <Suspense fallback={<div className="mt-5 h-24 animate-pulse rounded-2xl border border-[#e8e3d9] bg-white" />}>
-              <ActividadComunidad preview />
+              <ActividadComunidad preview compact />
             </Suspense>
           </ClientOnly>
         </div>
