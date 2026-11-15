@@ -111,7 +111,7 @@ test("AURUM gem transition snapshots before material replacement and blends only
 test("diamond live optical tuning matches the approved diamond-only calibration", () => {
   const source = readFileSync("src/lib/aurum/scintillation.ts", "utf8");
   expect(source).toContain("internalContrast: 1.15");
-  expect(source).toContain("highlightShoulder: 0.70");
+  expect(source).toContain("highlightShoulder: 0.82");
   expect(source).toContain("faceBrightness: 1.01");
   expect(source).toContain("rimEnergy: 0.025");
   expect(source).toContain('const isDiamond=family.trim().toLowerCase()==="diamante"');
