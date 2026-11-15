@@ -5,6 +5,7 @@ import { supabasePublic } from "@/integrations/supabase/client";
 import { RegistroTaller } from "@/components/RegistroTaller";
 import { AurumProductShowcase } from "@/components/AurumProductShowcase";
 import { SolicitarDemo } from "@/components/SolicitarDemo";
+import { ActividadComunidad } from "@/components/ActividadComunidad";
 const MiniAurumRender = lazy(() => import("@/components/MiniAurumRender").then((m) => ({ default: m.MiniAurumRender })));
 import { ArrowRight, BookOpen, Boxes, Calculator, Check, Cloud, Gem, Layers3, Menu, MonitorSmartphone, PackageCheck, Sparkles, Sprout, ChartNoAxesCombined, X } from "lucide-react";
 import heroColgante from "@/assets/diseno-colgante.jpg";
@@ -662,6 +663,7 @@ function InicioPublico() {
         </div>
       </section>
 
+      <ActividadComunidad />
 
       <section ref={demo3DSectionRef} id="aurum-render" style={{ contentVisibility: "auto", containIntrinsicSize: "auto 760px" }} className="overflow-hidden border-y border-[#263743] bg-[#111a22] text-white">
         <div className="mx-auto grid max-w-[1440px] items-center gap-9 px-5 py-14 sm:px-8 sm:py-16 lg:grid-cols-[1.05fr_.95fr] lg:gap-14 lg:px-12 lg:py-20">
