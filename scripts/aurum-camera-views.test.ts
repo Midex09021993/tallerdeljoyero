@@ -53,8 +53,8 @@ test("all four camera views fit the complete product with a consistent screen ma
     if (view === "superior") expect(camera.position.y).toBeGreaterThan(controls.target.y);
 
     const footprint = projectedFootprint(model, camera);
-    expect(footprint).toBeLessThanOrEqual(0.91);
-    expect(footprint).toBeGreaterThan(0.65);
+    expect(footprint).toBeGreaterThan(0.69);
+    expect(footprint).toBeLessThan(0.75);
   }
 
   // Different orientations can need different distances; projected occupancy,
@@ -67,8 +67,8 @@ test("camera view framing adapts to portrait, square and landscape viewport rati
     const { model, camera, controls } = createFixture(aspect);
     applyAurumCameraView(camera, controls, model, "frontal", "Anillo", 1);
     const footprint = projectedFootprint(model, camera);
-    expect(footprint).toBeLessThanOrEqual(0.91);
-    expect(footprint).toBeGreaterThan(0.65);
+    expect(footprint).toBeGreaterThan(0.69);
+    expect(footprint).toBeLessThan(0.75);
   }
 });
 
