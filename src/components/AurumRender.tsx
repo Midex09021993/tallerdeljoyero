@@ -3934,7 +3934,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             composer?.setPixelRatio?.(settledDpr);
 
             // Gem Mask + FXAA disabled: retain only the ordinary beauty output.
-            const settledBeautyPasses = new Set([renderPass, ...(diamondSsaaActive ? [diamondSupersamplePass, gemMaskPass, diamondSupersampleCompositePass] : []), ...(fxaaPass?.enabled ? [fxaaPass] : []), outputPass]);
+            const settledBeautyPasses = new Set([renderPass, ...(diamondSsaaActive ? [diamondSupersamplePass, diamondSupersampleCompositePass] : []), ...(diamondSsaaActive || fxaaPass?.enabled ? [gemMaskPass] : []), ...(fxaaPass?.enabled ? [fxaaPass] : []), outputPass]);
             const settledPasses = ((composer as any)?.passes ?? []) as any[];
             settledPasses.forEach((pass) => { pass.enabled = settledBeautyPasses.has(pass); });
             if (gemMaskPass) gemMaskPass.enabled = diamondSsaaActive;
