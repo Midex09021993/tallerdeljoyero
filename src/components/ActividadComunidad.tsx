@@ -76,6 +76,7 @@ export function ActividadComunidad({ slug, compact = false }: { slug?: string; c
         .from("aurum_community_activity")
         .select("id,participante_id,actor_name,activity_type,title,summary,created_at,target_url")
         .eq("is_public", true)
+        .not("actor_name", "ilike", "FADILAB")
         .order("created_at", { ascending: false })
         .limit(30);
       if (error) throw error;
@@ -98,7 +99,10 @@ export function ActividadComunidad({ slug, compact = false }: { slug?: string; c
     refetchInterval: 5 * 60_000,
     retry: 1,
   });
-  const activities = (activitiesQuery.data ?? []).filter(item => filter === "all" || item.activity_type === filter).slice(0, compact ? 30 : 6);
+  const activities = (activitiesQuery.data ?? [])
+    .filter(item => item.actor_name.trim().toLocaleLowerCase("es") !== "fadilab")
+    .filter(item => filter === "all" || item.activity_type === filter)
+    .slice(0, compact ? 30 : 6);
   const stats = statsQuery.data?.length ? statsQuery.data : previewStats;
 
   return (
