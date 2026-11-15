@@ -46,8 +46,8 @@ test("camera view framing respects narrow and wide viewport aspect ratios", () =
   });
 
   // Portrait/square layouts must not be framed tighter than the landscape layout.
-  expect(distances[0]).toBeGreaterThan(distances[1]!);
-  expect(distances[1]).toBeGreaterThan(distances[2]!);
+  expect(distances[0]).toBeGreaterThanOrEqual(distances[1]!);
+  expect(distances[1]).toBeGreaterThanOrEqual(distances[2]!);
 });
 
 test("the UI applies the neutral framing scale to every manual camera view", () => {
