@@ -153,10 +153,11 @@ test("diamond perimeter AA uses the stronger masked edge profile", () => {
   expect(source).toContain("if(texture2D(gemMask,vUv).r<0.5){gl_FragColor=center;return;}");
 });
 
-test("diamond SSAA scale cap is changed through the pass-owned closure", () => {
+test("diamond SSAA scale cap is updated through the pipeline-owned state", () => {
   const source = readFileSync("src/lib/aurum/post.ts", "utf8");
   expect(source).toContain("setScaleCap(cap:number)");
-  expect(source).toContain("diamondSupersamplePass?.setScaleCap?.(cap)");
+  expect(source).toContain("diamondSupersampleScaleCap=Math.max(1,Math.min(2,Number(settledCap)||1))");
+  expect(source).toContain("diamondSupersamplePass?.setScaleCap?.(diamondSupersamplingSettled?diamondSupersampleScaleCap:diamondLiveSupersampleScaleCap)");
   expect(source).not.toContain("diamondSupersampleScaleCap=THREE.MathUtils");
 });
 
