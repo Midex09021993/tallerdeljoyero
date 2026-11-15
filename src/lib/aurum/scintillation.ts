@@ -8,7 +8,7 @@ import type { AurumOpticalProfile } from "../aurum-material-engine";
  */
 export const AURUM_DIAMOND_LIVE_TUNING = Object.freeze({
   internalContrast: 1.15,
-  highlightShoulder: 0.70,
+  highlightShoulder: 0.82,
   faceBrightness: 1.01,
   rimEnergy: 0.025,
   fireMax: 0.095,
