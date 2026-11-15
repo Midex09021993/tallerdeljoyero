@@ -17,14 +17,12 @@ function createFixture(aspect = 16 / 9) {
 test("all four camera views preserve the same product scale and center", () => {
   const views = ["frontal", "lateral", "superior", "perspectiva"] as const;
   const distances: number[] = [];
-  let expectedCenter: THREE.Vector3 | null = null;
 
   for (const view of views) {
     const { model, camera, controls } = createFixture();
     applyAurumCameraView(camera, controls, model, view, "Anillo", 1);
     const bounds = new THREE.Box3().setFromObject(model);
     const center = bounds.getBoundingSphere(new THREE.Sphere()).center;
-    expectedCenter ??= center.clone();
 
     expect(controls.target.distanceTo(center)).toBeLessThan(1e-6);
     expect(camera.position.distanceTo(controls.target)).toBeGreaterThan(0);
