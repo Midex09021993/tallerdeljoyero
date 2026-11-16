@@ -326,6 +326,7 @@ export async function createAurumDiamondBvhRuntime(options: {
               ? 0
               : (emeraldProfile?.transmission ?? rubyProfile?.transmission ?? sapphireProfile?.transmission ?? (isImperialTopaz ? 0.88 : isParaibaTourmaline ? 0.91 : 0)),
           environmentMap,
+          adaptiveRayEpsilon: family === "diamante",
           camera: options.camera,
           // Keep small secondary diamonds on interactive quality initially;
           // higher bounce counts are reserved for explicit high/final capture.
@@ -384,7 +385,7 @@ export async function createAurumDiamondBvhRuntime(options: {
               const isSmall = nextTier === "small";
               const baseEnvironment = activeGemId === "diamante_vs" ? 1.82
                 : activeGemId === "diamante_inclusiones" ? 2.05 : 1.92;
-              const baseDispersion = activeGemId === "diamante_natural" ? 0.01 : CENTER_DIAMOND_DISPERSION;
+              const baseDispersion = mesh.userData?.aurumDiamondMicroCenterProtected ? CENTER_DIAMOND_DISPERSION : activeGemId === "diamante_natural" ? 0.01 : 0.006;
               packageApi.setDiamondOptions(prepared.material, {
                 rgbBoost: isMicro ? [1.06, 1.06, 1.06] : isSmall ? [1.09, 1.09, 1.09] : [1.08, 1.08, 1.08],
                 environmentIntensity: isMicro ? 1.28 : isSmall ? 1.38 : baseEnvironment,
