@@ -1011,7 +1011,11 @@ export async function createAurumPostPipeline(
     const canSupersample=Boolean(diamondSupersamplePass?.canRender?.());
     const diamondMaskReady=maskEnabled && hasMaskTarget && hasDiamondMeshes;
     const ssaaEnabled=diamondMaskReady && controls?.diamondSsaaEnabled===true && canSupersample;
-    const fxaaEnabled=diamondMaskReady && controls?.gemFxaaEnabled===true;
+    // TAA accumulation is unsafe while the camera moves: it causes trails.
+    // Keep the TAA request useful in LIVE by using the same diamond-masked
+    // spatial FXAA as a motion-safe fallback, then restore real TAA at rest.
+    const taaMotionFallback=diamondMaskReady && controls?.diamondTaaEnabled===true && temporalMotionActive;
+    const fxaaEnabled=diamondMaskReady && (controls?.gemFxaaEnabled===true || taaMotionFallback);
     const taaEnabled=diamondMaskReady && controls?.diamondTaaEnabled===true && !temporalMotionActive && Boolean(taaPass && diamondTaaSavePass && diamondTaaCompositePass);
 
     if(gemMaskPass) gemMaskPass.enabled=maskEnabled && hasMaskTarget;
@@ -1038,6 +1042,7 @@ export async function createAurumPostPipeline(
       ssaa: Boolean(diamondSupersamplePass?.enabled && diamondSupersampleCompositePass?.enabled),
       fxaa: Boolean(fxaaPass?.enabled),
       taa: Boolean(taaPass?.enabled && diamondTaaCompositePass?.enabled),
+      taaMotionFallback: Boolean(taaMotionFallback && fxaaPass?.enabled),
       blockedByMask: !maskEnabled && Boolean(controls?.diamondSsaaEnabled || controls?.gemFxaaEnabled || controls?.diamondTaaEnabled),
       hasDiamondMeshes: Boolean(gemMaskPass?.hasDiamondMeshes),
     };
