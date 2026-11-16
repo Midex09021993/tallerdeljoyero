@@ -3972,9 +3972,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           if(diamondFxaaOverlayRequested){
             const renderedWithDiamondFxaaOverlay=Boolean(renderDiamondFxaaOverlay?.(renderer));
             if(!renderedWithDiamondFxaaOverlay){
-              const safeControls=setAurumPostControls({gemFxaaEnabled:false});
-              setDiamondPostControls(safeControls);
-              // Repaint the untouched base frame if an overlay draw failed partway.
+              // Preserve the user's requested FXAA state. The overlay reports
+              // its own failure and retries on the next frame; repaint the
+              // untouched beauty frame if a partial overlay reached the canvas.
               renderer.render(escena,camara);
               if(gemMaskPass.enabled) gemMaskPass.render(renderer);
             }
