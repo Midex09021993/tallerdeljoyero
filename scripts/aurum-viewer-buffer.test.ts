@@ -509,7 +509,7 @@ test("Aurum exposes diamond-only AA and SSAA as independent modules", () => {
   expect(postSource).toContain("activeRenderer.render(scene,camera);");
   expect(postSource).toContain("if(sampleMask>=0.5 && abs(weight)>0.000001)");
   expect(postSource).toContain("if(abs(totalWeight)<0.00001) discard;");
-  expect(postSource).toContain("render the full optical scene at higher");
+  expect(postSource).toContain("Layer 31 is enabled only on classified diamond meshes.");
 });
 
 test("the BVH camera update reuses fixed-size snapshots without per-frame arrays", () => {
@@ -550,7 +550,7 @@ test("diamond SSAA high-resolution beauty target renders diamond materials only"
 
 test("diamond SSAA never changes the full-scene renderer or composer DPR during motion", () => {
   const componentSource = readFileSync("src/components/AurumRender.tsx", "utf8");
-  const motionStart = componentSource.indexOf("onStart: () => {", componentSource.indexOf("liveDiamondSsaaActive"));
+  const motionStart = componentSource.indexOf("onStart: () => {", componentSource.indexOf("progressiveFrames:"));
   const motionEnd = componentSource.indexOf("onEnd: () => {", motionStart);
   const settledEnd = componentSource.indexOf("onCancel:", motionEnd);
   const motionBlock = componentSource.slice(motionStart, motionEnd);
