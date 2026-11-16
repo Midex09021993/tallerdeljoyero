@@ -72,6 +72,12 @@ test("gem environment updates only the meshes resolved for the selected stone", 
   expect(targetMaterial.envMap).toBe(environment);
   expect(targetMaterial.userData.aurumGemEnvironmentUniforms.value).toBe(targetMaterial.envMapIntensity);
   expect(unrelatedMaterial.envMap).toBeNull();
+  expect(controller.diagnostics()).toMatchObject({
+    loaded: false,
+    url: null,
+    appliedMeshes: 1,
+    appliedMaterials: 1,
+  });
 
   environment.dispose();
   targetMaterial.dispose();
@@ -555,4 +561,14 @@ test("diamond FXAA preference survives a failed masked overlay and retries on th
   expect(frameFallback).toContain("renderer.render(escena,camara);");
   expect(frameFallback).not.toContain("setAurumPostControls({gemFxaaEnabled:false})");
   expect(frameFallback).not.toContain("setDiamondPostControls(safeControls)");
+});
+
+
+test("diamond scintillation widens only the diamond angular response and reports BVH-owned gem HDR separately", () => {
+  const scintillation = readFileSync("src/lib/aurum/scintillation.ts", "utf8");
+  const bvh = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
+  expect(scintillation).toContain('smoothstep(${isDiamond ? "0.92" : "0.94"}-aurumDiamondFacetAA,0.997+aurumDiamondFacetAA,aurumFacing)');
+  expect(bvh).toContain("gemEnvironment: {");
+  expect(bvh).toContain("loaded: Boolean(environmentMap?.isTexture)");
+  expect(bvh).toContain("textureUuid: environmentMap?.uuid ?? null");
 });
