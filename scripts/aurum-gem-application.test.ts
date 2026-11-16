@@ -298,12 +298,30 @@ test("native FXAA target preserves renderer state and applies output color conve
   expect(pass).toContain("previousScissor");
   expect(pass).toContain("previousAutoClear");
   expect(pass).not.toContain("diamondSupersample");
-  expect(post).toContain("diamondFxaaSnapshotTexture.colorSpace=activeRenderer.outputColorSpace??THREE.SRGBColorSpace");
+  expect(post).toContain("diamondFxaaSnapshotTexture.colorSpace=THREE.NoColorSpace");
+  expect(post).toContain("aurumSrgbToLinear(sampledCenter.rgb)");
+  expect(post).toContain("return aurumSrgbToLinear(texture2D(tDiffuse,uv).rgb);");
   expect(post).toContain("#include <colorspace_fragment>");
   expect(post).toContain("fxaaPass.material.toneMapped=false");
   expect(post).toContain("fxaaPass.material.depthTest=false");
   expect(post).toContain("fxaaPass.material.depthWrite=false");
   expect(post).toContain("fxaaPass.material.blending=THREE.NoBlending");
+});
+
+test("SSAA mask is generated once natively and once at auxiliary resolution, then FXAA overlays after reconstruction", () => {
+  const post = readFileSync("src/lib/aurum/post.ts", "utf8");
+  const render = readFileSync("src/components/AurumRender.tsx", "utf8");
+  const ssaaStart = post.indexOf("const renderDiamondSupersampleOverlay=(activeRenderer:any)=>");
+  const ssaaEnd = post.indexOf("const resetTemporalAccumulation=", ssaaStart);
+  const ssaaBlock = post.slice(ssaaStart, ssaaEnd);
+  const frameStart = render.indexOf("const diamondFxaaOverlayRequested =");
+  const frameEnd = render.indexOf("const renderCpuMs", frameStart);
+  const frameBlock = render.slice(frameStart, frameEnd);
+  expect(ssaaStart).toBeGreaterThan(-1);
+  expect(ssaaBlock).not.toContain("gemMaskPass.render(activeRenderer)");
+  expect(ssaaBlock).toContain("diamondSupersamplePass.render(activeRenderer)");
+  expect(frameBlock.indexOf("renderDiamondSupersampleOverlay?.(renderer)")).toBeLessThan(frameBlock.indexOf("renderDiamondFxaaOverlay?.(renderer)"));
+  expect(frameBlock).not.toContain("&& !diamondSupersamplePass?.enabled");
 });
 
 test("diamond perimeter AA uses the stronger masked edge profile", () => {
@@ -385,7 +403,9 @@ test("live camera motion keeps diamond-only supersampling active at a reduced ad
   expect(render).toContain("runtimeBudget.diamondLiveSupersampleScaleCap");
   expect(render).toContain("renderDiamondSupersampleOverlay?.(renderer)");
   expect(render).not.toContain("const diamondSsaaOverlayActive=");
-  expect(render).toContain('const activeToneAuditPath = diamondFxaaOverlayRequested ? "direct+diamond-fxaa-overlay" : diamondOverlayRequested ? "direct+diamond-overlay" : "direct";');
+  expect(render).toContain('? (diamondFxaaOverlayRequested ? "direct+diamond-ssaa+diamond-fxaa" : "direct+diamond-ssaa")');
+  expect(render).toContain("if(diamondOverlayRequested) renderDiamondSupersampleOverlay?.(renderer);");
+  expect(render).toContain("if(diamondFxaaOverlayRequested)");
   expect(render).toContain("renderer.render(escena,camara);");
   expect(post).not.toContain("composer.addPass(fxaaPass)");
 });
