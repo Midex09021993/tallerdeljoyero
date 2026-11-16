@@ -1021,7 +1021,12 @@ export async function createAurumPostPipeline(
       const wasEnabled=Boolean(taaPass.enabled);
       taaPass.enabled=taaEnabled;
       taaPass.accumulate=taaEnabled;
-      if(taaEnabled && !wasEnabled) taaPass.accumulateIndex=-1;
+      if(taaEnabled){
+        // A deliberate TAA opt-in gets a useful temporal sample budget even
+        // when the ordinary live profile requests only one convergence frame.
+        taaPass.sampleLevel=5;
+        if(!wasEnabled) taaPass.accumulateIndex=-1;
+      }
     }
     if(diamondTaaSavePass) diamondTaaSavePass.enabled=taaEnabled;
     if(diamondTaaCompositePass) diamondTaaCompositePass.enabled=taaEnabled;
