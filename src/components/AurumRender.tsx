@@ -306,6 +306,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const liveFastPathRef = useRef(true);
   const liveTransmissionScaleRef = useRef(0.42);
   const gemTransitionRef = useRef<any>(null);
+  const diamondMicroPipelineRef = useRef<any>(null);
   const [presentationCover, setPresentationCover] = useState<string | null>(null);
   const [presentationVisible, setPresentationVisible] = useState(false);
   const presentationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -1755,6 +1756,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           toast.error("No se aplicó la gema: selecciona una pieza clasificada como gema.");
           return false;
         }
+
+        // Reconcile the screen-space diamond analyzer after gem assignment:
+        // a mesh may become a diamond (or cease to be one) during this session.
+        diamondMicroPipelineRef.current?.refresh?.();
 
         // Newly assigned catalog materials are created in BEAUTY by the gem
         // adapter. Reapply the interactive profile immediately so every newly
@@ -3806,6 +3811,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       };
 
       const diamondMicroPipeline = createAurumDiamondMicroPipeline(escena, camara, () => renderer.domElement.height);
+      diamondMicroPipelineRef.current = diamondMicroPipeline;
 
       const viewerLoop = startAurumViewerLoop(
         { node:nodo, camera:camara, renderer, composer, ssaoPass, controls:controles },
@@ -4030,6 +4036,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           console.error("[AURUM][VIEWER][LOOP_CLEANUP_FAILED]", error);
         }
         diamondMicroPipeline.dispose();
+        if (diamondMicroPipelineRef.current === diamondMicroPipeline) diamondMicroPipelineRef.current = null;
         void productionPluginHost.dispose().catch((error) => console.error("[AURUM][CORE] Plugin cleanup failed:", error));
         // Cancel deferred work so it cannot retain the model/renderer after unmount.
         if (shaderPrecompileIdleId !== null && typeof window !== "undefined" && "cancelIdleCallback" in window) {
