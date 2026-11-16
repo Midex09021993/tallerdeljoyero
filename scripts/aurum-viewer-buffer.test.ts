@@ -553,6 +553,7 @@ test("diamond SSAA high-resolution beauty target preserves the complete optical 
 
 test("diamond SSAA never changes the full-scene renderer or composer DPR during motion", () => {
   const componentSource = readFileSync("src/components/AurumRender.tsx", "utf8");
+  const postSource = readFileSync("src/lib/aurum/post.ts", "utf8");
   const motionStart = componentSource.indexOf("onStart: () => {", componentSource.indexOf("progressiveFrames:"));
   const motionEnd = componentSource.indexOf("onEnd: () => {", motionStart);
   const settledEnd = componentSource.indexOf("onCancel:", motionEnd);
