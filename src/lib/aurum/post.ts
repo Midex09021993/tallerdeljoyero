@@ -1076,16 +1076,10 @@ export async function createAurumPostPipeline(
     // Motion is handled separately by setTemporalMotion(), never by hiding
     // the configured settled TAA request.
     const isLowQuality=qualityId==="low" || (qualityId==="" && Number(q?.pixelRatio??1.5) <= 1.01);
-    // Restore the unfiltered beauty render while the diamond optics are recovered.
+    // TAA remains fail-closed while the diamond-only SSAA/FXAA modules are
+    // owned exclusively by applyDiamondPostModules(). A quality/profile refresh
+    // must never overwrite the user's Gem Mask-protected module selections.
     taaRequested = false;
-    const taaEnabled = false;
-    const edgeAaEnabled = false;
-    const ssaaActive = false;
-    const fxaaActive = false;
-    if(diamondSupersamplePass) diamondSupersamplePass.enabled=false;
-    if(diamondSupersampleCompositePass) diamondSupersampleCompositePass.enabled=false;
-    if(gemMaskPass) gemMaskPass.enabled=false;
-    if(fxaaPass) fxaaPass.enabled=fxaaActive;
     if(taaPass) { taaPass.enabled=false; taaPass.accumulate=false; }
     if(diamondTaaSavePass) diamondTaaSavePass.enabled=false;
     if(diamondTaaCompositePass) diamondTaaCompositePass.enabled=false;
@@ -1496,6 +1490,9 @@ export async function createAurumPostPipeline(
     diamondSupersamplePass?.setScaleCap?.(diamondSupersamplingSettled?diamondSupersampleScaleCap:diamondLiveSupersampleScaleCap);
     return Boolean(applyDiamondPostModules(getAurumPostControls())?.ssaa);
   };
+  // Apply persisted controls once after the quality profile has initialized.
+  // Subsequent quality refreshes leave these independently managed states intact.
+  applyDiamondPostModules(getAurumPostControls());
   const unsubscribePostControls=subscribeAurumPostControls((controls)=>{
     applyDiamondPostModules(controls);
     // The current diamond-only scope must never activate a full-surface pass.
