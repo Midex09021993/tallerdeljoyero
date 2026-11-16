@@ -2410,18 +2410,19 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         const initialDiamondSsaaActive = Boolean(setDiamondSupersamplingSettled?.(true));
         const initialDiamondTaaActive = Boolean(idleTaaPass?.enabled && diamondTaaSavePass?.enabled && diamondTaaCompositePass?.enabled);
         const initialDiamondFxaaActive = Boolean(fxaaPass?.enabled && gemMaskPass?.hasDiamondMeshes);
+        const initialGemMaskActive = Boolean(gemMaskPass?.enabled);
         const initialDiamondBeautyPasses = new Set([
           renderPass,
           ...(initialDiamondSsaaActive ? [diamondSupersamplePass, diamondSupersampleCompositePass] : []),
           ...(initialDiamondTaaActive ? [diamondTaaSavePass, idleTaaPass, diamondTaaCompositePass] : []),
-          ...(initialDiamondSsaaActive || initialDiamondFxaaActive || initialDiamondTaaActive ? [gemMaskPass] : []),
+          ...(initialGemMaskActive ? [gemMaskPass] : []),
           ...(initialDiamondFxaaActive ? [fxaaPass] : []),
           outputPass,
         ]);
         ((composer as any)?.passes ?? []).forEach((pass: any) => {
           pass.enabled = initialDiamondBeautyPasses.has(pass);
         });
-        liveFastPathRef.current = !initialDiamondFxaaActive && !initialDiamondSsaaActive;
+        liveFastPathRef.current = !(initialGemMaskActive || initialDiamondFxaaActive || initialDiamondSsaaActive || initialDiamondTaaActive);
         console.info("[AURUM][DIAMOND][INITIAL_QUALITY]", {
           hasCenterDiamond: Boolean(gemMaskPass?.hasDiamondMeshes),
           gemMaskEnabled: Boolean(gemMaskPass?.enabled),
@@ -4031,10 +4032,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
 
             // Gem Mask + FXAA disabled: retain only the ordinary beauty output.
             const settledDiamondTaaActive = Boolean(idleTaaPass?.enabled && diamondTaaSavePass?.enabled && diamondTaaCompositePass?.enabled);
-            const settledBeautyPasses = new Set([renderPass, ...(diamondSsaaActive ? [diamondSupersamplePass, diamondSupersampleCompositePass] : []), ...(settledDiamondTaaActive ? [diamondTaaSavePass, idleTaaPass, diamondTaaCompositePass] : []), ...(diamondSsaaActive || fxaaPass?.enabled || settledDiamondTaaActive ? [gemMaskPass] : []), ...(fxaaPass?.enabled ? [fxaaPass] : []), outputPass]);
+            const settledGemMaskActive = Boolean(gemMaskPass?.enabled);
+            const settledBeautyPasses = new Set([renderPass, ...(diamondSsaaActive ? [diamondSupersamplePass, diamondSupersampleCompositePass] : []), ...(settledDiamondTaaActive ? [diamondTaaSavePass, idleTaaPass, diamondTaaCompositePass] : []), ...(settledGemMaskActive ? [gemMaskPass] : []), ...(fxaaPass?.enabled ? [fxaaPass] : []), outputPass]);
             const settledPasses = ((composer as any)?.passes ?? []) as any[];
             settledPasses.forEach((pass) => { pass.enabled = settledBeautyPasses.has(pass); });
-            if (gemMaskPass) gemMaskPass.enabled = diamondSsaaActive || settledDiamondTaaActive || Boolean(fxaaPass?.enabled && gemMaskPass.hasDiamondMeshes);
             if (diamondSupersamplePass) diamondSupersamplePass.enabled = diamondSsaaActive;
             if (diamondSupersampleCompositePass) diamondSupersampleCompositePass.enabled = diamondSsaaActive;
             liveFastPathRef.current = false;
@@ -4938,7 +4939,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 const blocked=dependent && enabled && !diamondPostControls.gemMaskEnabled;
                 return <div key={item.key} className="flex items-center justify-between gap-3 border-t border-black/[.05] py-2 first:border-t-0 first:pt-0">
                   <div className="min-w-0"><div className="text-[11px] font-semibold text-[#292824]">{item.label}</div><p className="mt-0.5 text-[9px] leading-relaxed text-[#77756f]">{item.description}</p>{blocked&&<p className="mt-1 text-[9px] font-semibold text-amber-700">En espera: activa Gem Mask para ejecutarlo.</p>}</div>
-                  <button type="button" role="switch" aria-label={item.label} aria-checked={enabled} onClick={()=>{const next=setAurumPostControls({[item.key]:!enabled});setDiamondPostControls(next);viewerLoopRef.current?.invalidate?.();}} className={"relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors "+(enabled?"bg-[#a88743]":"bg-[#c9c6bf]")}><span className={"inline-block size-3.5 rounded-full bg-white shadow-sm transition-transform "+(enabled?"translate-x-[18px]":"translate-x-1")}/></button>
+                  <button type="button" role="switch" aria-label={item.label} aria-checked={enabled} onClick={()=>{const next=setAurumPostControls({[item.key]:!enabled});setDiamondPostControls(next);liveFastPathRef.current=!next.gemMaskEnabled;if(next.gemMaskEnabled){viewerLoopRef.current?.converge?.(next.diamondTaaEnabled?32:1);}else{viewerLoopRef.current?.invalidate?.();}}} className={"relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors "+(enabled?"bg-[#a88743]":"bg-[#c9c6bf]")}><span className={"inline-block size-3.5 rounded-full bg-white shadow-sm transition-transform "+(enabled?"translate-x-[18px]":"translate-x-1")}/></button>
                 </div>;
               })}
               <div className="mt-2 border-t border-black/[.06] pt-2 text-[9px] leading-relaxed text-[#8a857b]">Surface Edge AA y TAA de pantalla completa permanecen bloqueados para proteger metales y ambiente.</div>
