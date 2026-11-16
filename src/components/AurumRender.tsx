@@ -1583,7 +1583,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           : value === THREE.NoToneMapping
             ? "None"
             : "Other";
-      let lastToneAuditPath: "direct" | "composer" | null = null;
+      let lastToneAuditPath: string | null = null;
       if (toneAuditEnabled) {
         console.info("[AURUM][TONE_AUDIT][INITIAL]", {
           requestedToneMode: requestedToneMode ?? "default",
@@ -3955,16 +3955,24 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           const activeToneAuditPath = diamondOverlayRequested
             ? (diamondFxaaOverlayRequested ? "direct+diamond-ssaa+diamond-fxaa" : "direct+diamond-ssaa")
             : diamondFxaaOverlayRequested ? "direct+diamond-fxaa-overlay" : "direct";
-          if (toneAuditEnabled && activeToneAuditPath !== lastToneAuditPath) {
+          if (activeToneAuditPath !== lastToneAuditPath) {
             lastToneAuditPath = activeToneAuditPath;
-            console.info("[AURUM][TONE_AUDIT][PATH]", {
+            console.info("[AURUM][DIAMOND_AA][EXECUTION]", {
               path: activeToneAuditPath,
+              toneAuditEnabled,
+              nativeWidth: renderer.domElement.width,
+              nativeHeight: renderer.domElement.height,
+              gemMaskEnabled: Boolean(gemMaskPass?.enabled),
+              ssaaEnabled: Boolean(diamondSupersamplePass?.enabled && diamondSupersampleCompositePass?.enabled),
+              ssaaScale: Number(diamondSupersamplePass?.scale ?? 1),
+              ssaaTargetWidth: Number(diamondSupersamplePass?.targetWidth ?? 0),
+              ssaaTargetHeight: Number(diamondSupersamplePass?.targetHeight ?? 0),
+              ssaaRenderCount: Number(diamondSupersamplePass?.renderCount ?? 0),
+              fxaaEnabled: Boolean(fxaaPass?.enabled),
               toneMapping: renderer.toneMapping,
               toneMappingName: toneMappingLabel(renderer.toneMapping),
               toneMappingExposure: renderer.toneMappingExposure,
               outputColorSpace: renderer.outputColorSpace,
-              outputPassEnabled: Boolean(outputPass?.enabled),
-              dofEnabled: Boolean(postRuntimeConfig.dof),
             });
           }
           // Preserve the original beauty frame first. The mask and optional
