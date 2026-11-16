@@ -660,16 +660,8 @@ export async function createAurumPostPipeline(
     const taaEnabled=taaRequested;
     // Edge AA is a settled-quality treatment: never add fullscreen filtering
     // work to the direct-render orbit path. Still captures may use it explicitly.
-    const edgeAaEnabled=Boolean(postControls.gemFxaaEnabled && gemMaskPass?.hasDiamondMeshes);
-    const ssaaActive=Boolean(
-      postControls.diamondSsaaEnabled
-      && gemMaskPass?.hasDiamondMeshes
-      && !options.capture
-      && !temporalMotionActive
-      && renderer.capabilities?.isWebGL2 !== false
-      && renderer.extensions?.has?.("EXT_color_buffer_float") !== false
-      && diamondSupersamplePass?.canRender?.()
-    );
+    const edgeAaEnabled=false; // Emergency rollback: disable all added diamond AA.
+    const ssaaActive=false; // Emergency rollback: restore the original unfiltered beauty render.
     if(diamondSupersamplePass) diamondSupersamplePass.enabled=ssaaActive;
     if(diamondSupersampleCompositePass) diamondSupersampleCompositePass.enabled=ssaaActive;
     if(gemMaskPass) gemMaskPass.enabled=ssaaActive || edgeAaEnabled;
@@ -940,9 +932,10 @@ export async function createAurumPostPipeline(
   applyQuality(quality);
   // Reflect Post Engine switches immediately without waiting for a quality/profile rebuild.
   const applyDiamondPostModules=(controls:any)=>{
-    const hasDiamond=Boolean(gemMaskPass?.hasDiamondMeshes);
-    const ssaaEnabled=Boolean(controls.diamondSsaaEnabled && hasDiamond && renderer.capabilities?.isWebGL2 !== false && renderer.extensions?.has?.("EXT_color_buffer_float") !== false && diamondSupersamplePass?.canRender?.());
-    const fxaaEnabled=Boolean(controls.gemFxaaEnabled && hasDiamond);
+    // Emergency rollback: disable all additional AA paths until the original
+    // metal/environment appearance is confirmed visually.
+    const ssaaEnabled=false;
+    const fxaaEnabled=false;
     if(diamondSupersamplePass) diamondSupersamplePass.enabled=ssaaEnabled;
     if(diamondSupersampleCompositePass) diamondSupersampleCompositePass.enabled=ssaaEnabled;
     if(gemMaskPass) gemMaskPass.enabled=ssaaEnabled || fxaaEnabled;
