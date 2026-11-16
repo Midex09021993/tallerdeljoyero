@@ -198,19 +198,15 @@ export function applyAurumCameraView(
     ? new THREE.Vector3(0, 0, -1)
     : new THREE.Vector3(0, 1, 0);
 
-  // A single model-space bounding sphere is the framing reference for every
-  // camera preset. Do not fit each view to its projected bounding-box corners:
-  // doing so changes camera distance and makes the same jewel appear to zoom
-  // in/out when switching between front, side, top and perspective.
-  const right = requestedUp.clone().cross(direction).normalize();
+  // Use one shared world-space product center, then normalize each view's
+  // projected visible bounds. Camera distance may differ to compensate for
+  // foreshortening, while the jewel keeps a consistent screen-space footprint.
   const cameraUp = direction.clone().cross(right).normalize();
   const aspect = Number.isFinite(camera.aspect) && camera.aspect > 0 ? camera.aspect : 1;
   const verticalHalfFov = THREE.MathUtils.degToRad(camera.fov) * 0.5;
   const horizontalHalfFov = Math.atan(Math.tan(verticalHalfFov) * aspect);
-  const limitingHalfFov = Math.max(1e-4, Math.min(verticalHalfFov, horizontalHalfFov));
   const scale = Number.isFinite(framingScale) ? THREE.MathUtils.clamp(framingScale, 0.25, 1.5) : 1;
   const targetNdc = THREE.MathUtils.clamp(0.72 / scale, 0.35, 0.92);
-  const tangent = Math.tan(limitingHalfFov) * targetNdc;
   // Normalize the *projected* footprint, not just the model-space sphere.
   // A sphere keeps the same camera distance but a ring viewed edge-on occupies
   // far fewer pixels than the same ring viewed face-on. Fit the visible world
@@ -268,7 +264,6 @@ export function fitAurumCameraToAspect(
   const radius = Math.max(size.length() * 0.5, 0.01);
   const verticalHalfFov = THREE.MathUtils.degToRad(camera.fov) * 0.5;
   const horizontalHalfFov = Math.atan(Math.tan(verticalHalfFov) * aspect);
-  const limitingHalfFov = Math.max(0.01, Math.min(verticalHalfFov, horizontalHalfFov));
   const distance = (radius / Math.sin(limitingHalfFov)) * Math.max(1, margin);
   const direction = camera.position.clone().sub(controls.target);
   if (direction.lengthSq() < 1e-8) direction.set(0, 0, 1);
