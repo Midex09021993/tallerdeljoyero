@@ -510,10 +510,9 @@ export async function createAurumPostPipeline(
         nonDiamondMaskMaterial.dispose();
       }
     };
-    // AURUM DIAMOND SSAA MODULE: render only classified diamond meshes at
-    // higher resolution into a transparent target. The existing beauty frame
-    // remains untouched and supplies every non-diamond pixel; the SSAA target
-    // cannot rerender or replace environment, metal, shadow or background color.
+    // AURUM DIAMOND SSAA MODULE: render the complete optical scene into an
+    // auxiliary linear-HDR target to preserve transmission and refraction.
+    // A categorical mask restricts the final composite to the visible diamond.
     diamondSupersamplePass={
       enabled:false,needsSwap:false,clear:false,renderToScreen:false,
       setSize(width:number,height:number){
@@ -1291,6 +1290,7 @@ export async function createAurumPostPipeline(
       originalComposerSetSize(width,height);
       const actualWidth=Math.max(1,Number(renderer.domElement.width)||Math.floor(width));
       const actualHeight=Math.max(1,Number(renderer.domElement.height)||Math.floor(height));
+      gemMaskPass?.setSize?.(actualWidth,actualHeight);
       diamondSupersamplePass?.setSize?.(actualWidth,actualHeight);
       diamondSupersampleCompositePass?.setSize?.(actualWidth,actualHeight);
     };

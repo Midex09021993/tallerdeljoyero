@@ -220,12 +220,11 @@ test("diamond SSAA restores the complete renderer and scene state after its auxi
     "previousSortObjects",
     "previousSceneOverride",
     "previousSceneBackground",
-    "previousCameraLayerMask",
   ]) expect(pass).toContain(state);
   expect(pass).toContain("activeRenderer.outputColorSpace=previousOutputColorSpace;");
   expect(pass).toContain("scene.overrideMaterial=previousSceneOverride;");
   expect(pass).toContain("scene.background=previousSceneBackground;");
-  expect(pass).toContain("camera.layers.mask=previousCameraLayerMask;");
+  expect(pass).toContain("renderGemMaskWithOcclusion(activeRenderer,activeMaskTarget);");
 });
 
 test("diamond-only post composites preserve every pixel outside the diamond mask", () => {
@@ -248,18 +247,16 @@ test("live camera motion keeps diamond-only supersampling active at a reduced ad
   const post = readFileSync("src/lib/aurum/post.ts", "utf8");
   const render = readFileSync("src/components/AurumRender.tsx", "utf8");
   expect(post).toContain("diamondSupersamplePass?.setScaleCap?.(next?diamondLiveSupersampleScaleCap:diamondSupersampleScaleCap)");
-  expect(post).toContain("const ssaaEnabled=false;");
-  expect(post).toContain("const fxaaEnabled=false;");
+  expect(post).toContain("const ssaaRequested=controls?.diamondSsaaEnabled===true;");
+  expect(post).toContain("const fxaaRequested=controls?.gemFxaaEnabled===true;");
   expect(post).toContain("if(fxaaPass) fxaaPass.enabled=fxaaEnabled;");
   expect(post).not.toContain("hasDiamond && diamondSupersamplingSettled && renderer.capabilities");
   expect(render).toContain("runtimeBudget.diamondLiveSupersampleScaleCap");
-  expect(render).not.toContain("renderDiamondSupersampleOverlay?.(renderer)");
+  expect(render).toContain("renderDiamondSupersampleOverlay?.(renderer)");
   expect(render).not.toContain("const diamondSsaaOverlayActive=");
-  expect(render).toContain('const activeToneAuditPath = "direct";');
+  expect(render).toContain('const activeToneAuditPath = diamondOverlayRequested ? "direct+diamond-overlay" : "direct";');
   expect(render).toContain("renderer.render(escena,camara);");
-  expect(post).toContain("const fxaaEnabled=false;");
   expect(post).not.toContain("composer.addPass(fxaaPass)");
-  expect(post).toContain("const ssaaEnabled=false;");
 });
 
 

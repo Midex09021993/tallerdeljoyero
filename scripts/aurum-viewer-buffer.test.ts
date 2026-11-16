@@ -476,9 +476,9 @@ test("Aurum exposes diamond-only AA and SSAA as independent modules", () => {
   const controlsSource = readFileSync("src/lib/aurum/post-engine-controls.ts", "utf8");
   const architectureSource = readFileSync("src/components/aurum/AurumArchitectureExplorer.tsx", "utf8");
   const postSource = readFileSync("src/lib/aurum/post.ts", "utf8");
-  expect(componentSource).toContain("const liveDiamondAaEnabled = false;");
+  expect(componentSource).toContain("const liveDiamondAaEnabled = Boolean(livePostControls.gemFxaaEnabled && hasCenterDiamond);");
   expect(componentSource).toContain("setDiamondSupersamplingSettled?.(false)");
-  expect(componentSource).toContain("const diamondSsaaActive = false;");
+  expect(componentSource).toContain("const diamondSsaaActive = Boolean(diamondSupersamplePass?.enabled && diamondSupersampleCompositePass?.enabled);");
   expect(controlsSource).toContain("gemFxaaEnabled: false");
   expect(controlsSource).toContain("diamondSsaaEnabled: false");
   expect(architectureSource).toContain('id: "diamond-ssaa"');
@@ -486,9 +486,9 @@ test("Aurum exposes diamond-only AA and SSAA as independent modules", () => {
   expect(postSource).toContain("AURUM DIAMOND SSAA MODULE");
   expect(postSource).toContain("tDiamondHiRes");
   expect(postSource).toContain("float sampleMask=texture2D(tDiamondHiResMask,sampleUv).r;");
-  expect(postSource).toContain("const ssaaEnabled=false;");
-  expect(postSource).toContain("const renderDiamondSupersampleOverlay=(_activeRenderer:any)=>false;");
-  expect(postSource).not.toContain("diamondSupersampleCompositePass.render(activeRenderer,null,null,0,false)");
+  expect(postSource).toContain("const ssaaRequested=controls?.diamondSsaaEnabled===true;");
+  expect(postSource).toContain("const renderDiamondSupersampleOverlay=(activeRenderer:any)=>{");
+  expect(postSource).toContain("diamondSupersampleCompositePass.render(activeRenderer,null,null,0,false)");
   expect(postSource).toContain("const centerDiamondMeshes:any[]=[];");
   expect(postSource).toContain("const previousViewport=activeRenderer.getViewport(new THREE.Vector4()).clone();");
   expect(postSource).toContain("const previousScissor=activeRenderer.getScissor(new THREE.Vector4()).clone();");
@@ -498,23 +498,23 @@ test("Aurum exposes diamond-only AA and SSAA as independent modules", () => {
   expect(postSource).toContain("data.aurumDetectedCategory");
   expect(postSource).toContain("#include <tonemapping_fragment>");
   expect(componentSource).toContain("&& !diamondSupersamplePass?.enabled");
-  expect(componentSource).not.toContain("renderDiamondSupersampleOverlay?.(renderer)");
+  expect(componentSource).toContain("renderDiamondSupersampleOverlay?.(renderer)");
   const liveBeautyStart = componentSource.indexOf('const activeToneAuditPath = "direct";');
   const liveBeautyEnd = componentSource.indexOf("const renderCpuMs", liveBeautyStart);
   const liveBeautyBlock = componentSource.slice(liveBeautyStart, liveBeautyEnd);
   expect(liveBeautyStart).toBeGreaterThan(-1);
   expect(liveBeautyBlock).not.toContain("composer.render();");
-  expect(postSource).toContain("const ssaaEnabled=false;");
+  expect(postSource).toContain("const ssaaRequested=controls?.diamondSsaaEnabled===true;");
   expect(postSource).not.toContain("composer.addPass(diamondSupersampleCompositePass)");
-  expect(componentSource).toContain('const activeToneAuditPath = "direct";');
-  expect(componentSource).not.toContain("renderDiamondSupersampleOverlay?.(renderer)");
+  expect(componentSource).toContain('const activeToneAuditPath = diamondOverlayRequested ? "direct+diamond-overlay" : "direct";');
+  expect(componentSource).toContain("renderDiamondSupersampleOverlay?.(renderer)");
   expect(componentSource).not.toContain("const interactionDprCap = liveDiamondAaEnabled && runtimeBudget.tier === \"web\"");
   expect(postSource).toContain("ensureDiamondSupersampleMaskTarget");
-  expect(postSource).toContain("Legacy direct-framebuffer SSAA is deliberately retired.");
+  expect(postSource).toContain("Render the complete optical scene at auxiliary resolution");
   expect(postSource).toContain("activeRenderer.render(scene,camera);");
   expect(postSource).toContain("if(sampleMask>=0.5 && abs(weight)>0.000001)");
   expect(postSource).toContain("if(abs(totalWeight)<0.00001) discard;");
-  expect(postSource).toContain("Layer 31 is enabled only on classified diamond meshes.");
+  expect(postSource).toContain("mesh.layers.enable(gemMaskLayer)");
 });
 
 test("the BVH camera update reuses fixed-size snapshots without per-frame arrays", () => {
@@ -535,22 +535,20 @@ test("selection highlight changes do not invalidate the gemstone mask cache", ()
   expect(selectionBlock).not.toContain("gemMaskPass?.refreshCache?.();");
 });
 
-test("diamond SSAA high-resolution beauty target renders diamond materials only", () => {
+test("diamond SSAA high-resolution beauty target preserves the complete optical scene and masks only the composite", () => {
   const postSource = readFileSync("src/lib/aurum/post.ts", "utf8");
-  expect(postSource).toContain("const diamondSupersampleMaterialsByMesh=new Map<any,any>();");
-  expect(postSource).toContain("diamondSupersampleMaterialsByMesh.set(object,materials.map((material:any,index:number)=>slots.has(index)?material:nonDiamondMaskMaterial));");
-  expect(postSource).toContain("if(camera.layers) camera.layers.mask=gemMaskLayerBit;");
-  expect(postSource).toContain("mesh.material=diamondSupersampleMaterialsByMesh.get(mesh)??mesh.material;");
-  expect(postSource).toContain("activeRenderer.setClearColor(0x000000,0);");
   expect(postSource).toContain("activeRenderer.render(scene,camera);");
-  expect(postSource).toContain("diamondSupersampleMaterialsByMesh.clear();");
+  expect(postSource).toContain("renderGemMaskWithOcclusion(activeRenderer,activeMaskTarget);");
+  expect(postSource).toContain("diamondSupersampleCompositePass.material.uniforms.tDiamondHiRes.value=activeTarget.texture;");
+  expect(postSource).toContain("if(texture2D(gemMask,vUv).r<0.5) discard;");
+  expect(postSource).toContain("activeRenderer.setClearColor(0x000000,0);");
   const ssaaStart = postSource.indexOf("diamondSupersamplePass={");
   const ssaaEnd = postSource.indexOf("diamondSupersampleCompositePass=", ssaaStart);
   const ssaaBlock = postSource.slice(ssaaStart, ssaaEnd);
   expect(ssaaStart).toBeGreaterThan(-1);
   expect(ssaaBlock).not.toContain("activeRenderer.render(scene,camera);\\n          } finally {\\n            activeRenderer.toneMapping=previousToneMapping;");
-  expect(ssaaBlock).toContain("scene.background=null;");
-  expect(ssaaBlock).toContain("originalDiamondMaterials");
+  expect(ssaaBlock).not.toContain("scene.background=null;");
+  expect(ssaaBlock).toContain("activeRenderer.render(scene,camera);");
 });
 
 test("diamond SSAA never changes the full-scene renderer or composer DPR during motion", () => {
@@ -587,18 +585,17 @@ test("diamond AA stays masked in interactive and settled preview modes", () => {
   expect(idleBlock).toContain("settledDiamondTaaActive");
   expect(idleBlock).toContain("bloomPass.enabled = false;");
   expect(idleBlock).toContain("dofPass.enabled = false;");
-  expect(liveBlock).toContain("const liveDiamondAaEnabled = false;");
-  expect(liveBlock).toContain("fxaaPass.enabled = false;");
+  expect(liveBlock).toContain("const liveDiamondAaEnabled = Boolean(livePostControls.gemFxaaEnabled && hasCenterDiamond);");
   expect(liveBlock).toContain("setDiamondSupersamplingSettled?.(false)");
   expect(liveBlock).toContain("liveFastPathRef.current = false;");
   expect(postSource).toContain("taaMotionFallback");
-  expect(postSource).toContain("const fxaaEnabled=false;");
+  expect(postSource).toContain("const fxaaRequested=controls?.gemFxaaEnabled===true;");
   expect(postSource).not.toContain("composer.addPass(fxaaPass)");
   expect(initialAaBlock).toContain("const initialTaaRequested = false;");
 });
 
 
-test("standard image export keeps retired diamond FXAA and SSAA disabled", () => {
+test("standard image export composites isolated diamond reconstruction after beauty rendering", () => {
   const componentSource = readFileSync("src/components/AurumRender.tsx", "utf8");
   const exportStart = componentSource.indexOf("exportPNG:async");
   const exportEnd = componentSource.indexOf("exportGLB:", exportStart);
@@ -608,8 +605,8 @@ test("standard image export keeps retired diamond FXAA and SSAA disabled", () =>
   expect(exportBlock).toContain("liveFastPathRef.current=false");
   expect(exportBlock).toContain("...(diamondSupersamplePass?.enabled ? [diamondSupersamplePass] : [])");
   expect(exportBlock).toContain("...(fxaaPass?.enabled ? [fxaaPass] : [])");
-  expect(postSource).toContain("const fxaaEnabled=false;");
-  expect(postSource).toContain("const ssaaEnabled=false;");
+  expect(postSource).toContain("const fxaaRequested=controls?.gemFxaaEnabled===true;");
+  expect(postSource).toContain("const ssaaRequested=controls?.diamondSsaaEnabled===true;");
   expect(exportBlock).toContain("composer.setPixelRatio?.(1)");
   expect(exportBlock).toContain("composer.setSize?.(renderWidth, renderHeight)");
   expect(exportBlock).toContain("resolution?.set?.(1 / renderWidth, 1 / renderHeight)");

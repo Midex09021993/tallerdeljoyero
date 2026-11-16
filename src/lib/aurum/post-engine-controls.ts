@@ -40,8 +40,8 @@ export function getAurumPostControls(): AurumPostControls {
       if (!legacy) continue;
       const migrated = normalize(JSON.parse(legacy));
       // Old builds had no independently controlled mask/TAA-diamond switches.
-      // Legacy SSAA/FXAA preferences are intentionally discarded while the
-      // isolated diamond compositor is under reconstruction.
+      // Legacy SSAA/FXAA preferences remain disabled during schema migration;
+      // the new isolated controls can be enabled explicitly after migration.
       migrated.gemMaskEnabled = false;
       migrated.diamondTaaEnabled = false;
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
