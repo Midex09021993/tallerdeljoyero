@@ -148,7 +148,7 @@ export function prepareAurumDiamondBvhExperiment(
     }
     material.fragmentShader = material.fragmentShader.replace(
       uniformAnchor,
-      `${uniformAnchor}\\n uniform float aurumDiamondFireIntensity;\\n uniform float aurumDiamondScintillationIntensity;`,
+      `${uniformAnchor}\n uniform float aurumDiamondFireIntensity;\n uniform float aurumDiamondScintillationIntensity;`,
     );
     const hdrOutput = "gl_FragColor = vec4(hdrColor, 1.0);";
     const effectOutput = `float aurumFacetView = clamp(abs(dot(normalize(view), normalize(worldNormal))), 0.0, 1.0);
