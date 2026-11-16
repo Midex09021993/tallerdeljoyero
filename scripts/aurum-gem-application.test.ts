@@ -5,6 +5,47 @@ import { createAurumGemEnvironment } from "../src/lib/aurum/gem-environment";
 import { prepareAurumGemLayerIndex } from "../src/lib/aurum/material-application";
 import { getAurumRuntimeBudget } from "../src/lib/aurum/runtime-budget";
 import { setAurumGemShaderQuality } from "../src/lib/aurum/scintillation";
+import { createAurumDiamondMicroPipeline } from "../src/lib/aurum/diamond-micro-pipeline";
+
+test("diamond micro classifier protects the center from active catalog identity before BVH metadata exists", () => {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+  camera.position.set(0, 0, 5);
+  camera.lookAt(0, 0, 0);
+  camera.updateProjectionMatrix();
+
+  const diamondGeometry = new THREE.SphereGeometry(1, 16, 12);
+  const diamondMaterial = new THREE.MeshPhysicalMaterial();
+  const diamond = new THREE.Mesh(diamondGeometry, diamondMaterial);
+  diamond.userData = {
+    aurumActiveGemFamily: "Diamante",
+    aurumActiveGemId: "diamante_natural",
+    aurumRhino: { categoria: "gema", capa: "Gem 01" },
+  };
+  scene.add(diamond);
+
+  const emeraldGeometry = new THREE.SphereGeometry(0.35, 12, 8);
+  const emeraldMaterial = new THREE.MeshPhysicalMaterial();
+  emeraldMaterial.userData = { aurumGemFamily: "Esmeralda" };
+  const emerald = new THREE.Mesh(emeraldGeometry, emeraldMaterial);
+  emerald.userData = { aurumRhino: { categoria: "gema", capa: "Gem 02" } };
+  emerald.position.x = 1.5;
+  scene.add(emerald);
+
+  const pipeline = createAurumDiamondMicroPipeline(scene, camera, () => 600);
+  pipeline.refresh();
+  pipeline.update();
+
+  expect(pipeline.diagnostics().diamondMeshes).toBe(1);
+  expect(diamond.userData.aurumDiamondMicroCenterProtected).toBe(true);
+  expect(emerald.userData.aurumDiamondMicroCenterProtected).toBeUndefined();
+
+  pipeline.dispose();
+  diamondGeometry.dispose();
+  diamondMaterial.dispose();
+  emeraldGeometry.dispose();
+  emeraldMaterial.dispose();
+});
 
 test("gem environment updates only the meshes resolved for the selected stone", () => {
   const controller = createAurumGemEnvironment({}, class {}, class {});
