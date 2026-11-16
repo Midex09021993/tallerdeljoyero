@@ -797,10 +797,13 @@ export async function createAurumPostPipeline(
       fragmentShader:`#include <tonemapping_pars_fragment>
         #include <colorspace_pars_fragment>
         uniform sampler2D tDiamondHiRes; uniform sampler2D gemMask; uniform sampler2D tDiamondHiResMask; uniform vec2 hiResTexel; uniform float reconstructionScale; varying vec2 vUv;
-        float aurumPositiveCubicWeight(float x){
+        // Catmull-Rom reconstruction (B=0, C=0.5) retains more facet
+        // microcontrast than the previous positive B-spline. Negative lobes
+        // are bounded below by the min/max of valid diamond samples.
+        float aurumCatmullRomWeight(float x){
           x=abs(x);
-          if(x<1.0) return (4.0-6.0*x*x+3.0*x*x*x)/6.0;
-          if(x<2.0){ float remainder=2.0-x; return remainder*remainder*remainder/6.0; }
+          if(x<1.0) return 1.5*x*x*x-2.5*x*x+1.0;
+          if(x<2.0) return -0.5*x*x*x+2.5*x*x-4.0*x+2.0;
           return 0.0;
         }
         void main(){
@@ -821,18 +824,23 @@ export async function createAurumPostPipeline(
           // every tap outside the diamond mask. This prevents background,
           // metal and mask-exterior colors from bleeding into the girdle.
           vec4 accumulated=vec4(0.0);
+          vec4 minimumSample=vec4(1.0e20);
+          vec4 maximumSample=vec4(-1.0e20);
           float totalWeight=0.0;
           for(int y=0;y<4;y++){
             float oy=float(y)-1.5;
-            float wy=aurumPositiveCubicWeight(oy/reconstructionScale);
+            float wy=aurumCatmullRomWeight(oy/reconstructionScale);
             for(int x=0;x<4;x++){
               float ox=float(x)-1.5;
-              float wx=aurumPositiveCubicWeight(ox/reconstructionScale);
+              float wx=aurumCatmullRomWeight(ox/reconstructionScale);
               float weight=wx*wy;
               vec2 sampleUv=clamp(vUv+vec2(ox,oy)*hiResTexel,vec2(0.0),vec2(1.0));
               float sampleMask=texture2D(tDiamondHiResMask,sampleUv).r;
               if(sampleMask>=0.5 && abs(weight)>0.000001){
-                accumulated+=texture2D(tDiamondHiRes,sampleUv)*weight;
+                vec4 sampleColor=texture2D(tDiamondHiRes,sampleUv);
+                accumulated+=sampleColor*weight;
+                minimumSample=min(minimumSample,sampleColor);
+                maximumSample=max(maximumSample,sampleColor);
                 totalWeight+=weight;
               }
             }
@@ -840,7 +848,10 @@ export async function createAurumPostPipeline(
           // Near a very thin silhouette there may be no valid high-res tap.
           // Preserve the original pixel rather than borrowing the environment.
           if(totalWeight<0.00001) discard;
-          gl_FragColor=accumulated/totalWeight;
+          vec4 reconstructed=accumulated/totalWeight;
+          // Bound Catmull-Rom ringing to the valid diamond neighborhood.
+          reconstructed=clamp(reconstructed,minimumSample,maximumSample);
+          gl_FragColor=reconstructed;
           #include <tonemapping_fragment>
           #include <colorspace_fragment>
         }`,
