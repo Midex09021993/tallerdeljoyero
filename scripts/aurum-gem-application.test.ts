@@ -259,12 +259,12 @@ test("Gem Mask stays internal after visual validation and never tints the beauty
   expect(component).toContain("viewerLoopRef.current?.invalidate?.();");
 });
 
-test("masked native-resolution FXAA is independent from SSAA; SSAA and TAA remain fail-closed", () => {
+test("masked diamond SSAA and native-resolution FXAA are independently toggleable; TAA remains fail-closed", () => {
   const controls = readFileSync("src/lib/aurum/post-engine-controls.ts", "utf8");
   const post = readFileSync("src/lib/aurum/post.ts", "utf8");
   const render = readFileSync("src/components/AurumRender.tsx", "utf8");
   expect(controls).toContain("gemFxaaEnabled: value?.gemMaskEnabled === true && value?.gemFxaaEnabled === true");
-  expect(controls).toContain("diamondSsaaEnabled: false");
+  expect(controls).toContain("diamondSsaaEnabled: value?.gemMaskEnabled === true && value?.diamondSsaaEnabled === true");
   expect(controls).toContain("diamondTaaEnabled: false");
   expect(post).toContain("const fxaaEnabled=diamondMaskReady && fxaaRequested;");
   expect(post).toContain("const renderDiamondFxaaOverlay=(activeRenderer:any)=>");
@@ -274,7 +274,8 @@ test("masked native-resolution FXAA is independent from SSAA; SSAA and TAA remai
   expect(post).toContain("if(centerMask<0.5) discard;");
   expect(post).not.toContain("ensureDiamondSupersampleFxaaTarget");
   expect(post).not.toContain("renderFxaa(activeRenderer,enabled:boolean)");
-  expect(render).toContain('const blocked=item.key==="diamondSsaaEnabled"||item.key==="diamondTaaEnabled"||(item.key==="gemFxaaEnabled"&&!diamondPostControls.gemMaskEnabled);');
+  expect(render).toContain('const blocked=item.key==="diamondTaaEnabled"||((item.key==="diamondSsaaEnabled"||item.key==="gemFxaaEnabled")&&!diamondPostControls.gemMaskEnabled);');
+  expect(render).toContain("setAurumPostControls({diamondSsaaEnabled:!enabled})");
   expect(render).toContain("subscribeAurumPostControls((controls) => {");
   expect(render).toContain("setDiamondPostControls(controls);");
   expect(render).toContain("return subscribeAurumPostControls((controls) => {");
