@@ -3819,15 +3819,17 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         () => {
           const frameStartedAt = performance.now();
           const bvhStartedAt = frameStartedAt;
-          try {
-            diamondBvhRuntime?.update();
-          } catch (error) {
-            console.error("[AURUM][DIAMOND][BVH_UPDATE_ERROR] Skipping BVH update for this frame.", error);
-          }
+          // Publish the shared screen-space tier before the BVH runtime consumes it.
+          // BVH optics are retuned only when a diamond crosses a tier boundary.
           try {
             diamondMicroPipeline.update();
           } catch (error) {
             console.warn("[AURUM][DIAMOND MICRO PIPELINE] Screen-space analysis skipped for this frame.", error);
+          }
+          try {
+            diamondBvhRuntime?.update();
+          } catch (error) {
+            console.error("[AURUM][DIAMOND][BVH_UPDATE_ERROR] Skipping BVH update for this frame.", error);
           }
           const bvhCpuMs = performance.now() - bvhStartedAt;
           const renderStartedAt = performance.now();
