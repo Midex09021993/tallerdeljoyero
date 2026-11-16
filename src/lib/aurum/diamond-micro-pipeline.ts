@@ -87,11 +87,22 @@ function getMaterials(mesh: any): any[] {
 }
 
 function isDiamondMaterial(material: any, mesh?: any): boolean {
-  // BVH replaces the physical material; the mesh-level marker survives that swap.
-  const meshFamily = String(mesh?.userData?.aurumDiamondOpticalFamily ?? "").trim().toLowerCase();
+  // The active catalog assignment exists before BVH publishes its optical marker.
+  // Accept the same stable mesh identity used by Gem Mask so the screen-space
+  // classifier can protect the center stone before the mask cache is synchronized.
+  const data = mesh?.userData ?? {};
+  const meshFamilies = [
+    data.aurumDiamondOpticalFamily,
+    data.aurumActiveGemFamily,
+    data.aurumGemFamily,
+  ].map((value: any) => String(value ?? "").trim().toLowerCase());
+  const meshIds = [data.aurumActiveGemId, data.aurumGemId]
+    .map((value: any) => String(value ?? "").trim().toLowerCase());
+  const meshIsDiamond = meshFamilies.includes("diamante")
+    || meshIds.some((value: string) => value.startsWith("diamante"));
   const family = String(material?.userData?.aurumGemFamily ?? "").trim().toLowerCase();
   const name = String(material?.name ?? "").trim().toLowerCase();
-  return meshFamily === "diamante" || family === "diamante" || Boolean(material?.userData?.aurumDiamondMaterial)
+  return meshIsDiamond || family === "diamante" || Boolean(material?.userData?.aurumDiamondMaterial)
     || /diamond|diamante/.test(name);
 }
 
