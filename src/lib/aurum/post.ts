@@ -71,6 +71,7 @@ export async function createAurumPostPipeline(
   let diamondSupersampleScaleCap=2;
   let diamondLiveSupersampleScaleCap=1.5;
   let diamondSupersamplingSettled=true;
+  let diamondSupersampleRenderCount=0;
   const updateDiamondSupersampleScale=()=>{
     const basePixels=diamondSupersampleBaseWidth*diamondSupersampleBaseHeight;
     diamondSupersampleScale=basePixels>8_500_000
@@ -660,6 +661,9 @@ export async function createAurumPostPipeline(
     diamondSupersamplePass={
       enabled:false,needsSwap:false,clear:false,renderToScreen:false,
       get scale(){ return diamondSupersampleScale; },
+      get targetWidth(){ return diamondSupersampleTarget?.width??0; },
+      get targetHeight(){ return diamondSupersampleTarget?.height??0; },
+      get renderCount(){ return diamondSupersampleRenderCount; },
       setSize(width:number,height:number){
         diamondSupersampleBaseWidth=Math.max(1,Math.floor(width));
         diamondSupersampleBaseHeight=Math.max(1,Math.floor(height));
@@ -706,6 +710,7 @@ export async function createAurumPostPipeline(
         }
         const activeMaskTarget=ensureDiamondSupersampleMaskTarget();
         if(!activeMaskTarget) return;
+        diamondSupersampleRenderCount+=1;
         const previousTarget=activeRenderer.getRenderTarget();
         const previousAutoClear=activeRenderer.autoClear;
         const previousViewport=new THREE.Vector4();
@@ -900,7 +905,11 @@ export async function createAurumPostPipeline(
         vec3 aurumSrgbToLinear(vec3 c){
           vec3 low=c/12.92;
           vec3 high=pow((c+0.055)/1.055,vec3(2.4));
-          return mix(high,low,lessThanEqual(c,vec3(0.04045)));
+          return vec3(
+            c.r<=0.04045?low.r:high.r,
+            c.g<=0.04045?low.g:high.g,
+            c.b<=0.04045?low.b:high.b
+          );
         }
         float luma(vec3 c){return dot(c,vec3(0.2126,0.7152,0.0722));}
         vec3 sampleGem(vec2 uv,vec3 fallbackColor){
