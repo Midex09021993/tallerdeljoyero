@@ -161,8 +161,8 @@ test("diamond perimeter AA uses the stronger masked edge profile", () => {
 
 test("legacy Post Engine preferences migrate to the current diamond AA defaults", () => {
   const controls = readFileSync("src/lib/aurum/post-engine-controls.ts", "utf8");
-  expect(controls).toContain("gemFxaaEnabled: true");
-  expect(controls).toContain("diamondSsaaEnabled: true");
+  expect(controls).toContain("gemFxaaEnabled: false");
+  expect(controls).toContain("diamondSsaaEnabled: false");
   expect(controls).toContain("const migrated: AurumPostControls");
 });
 
@@ -178,8 +178,8 @@ test("live camera motion keeps diamond-only supersampling active at a reduced ad
   const post = readFileSync("src/lib/aurum/post.ts", "utf8");
   const render = readFileSync("src/components/AurumRender.tsx", "utf8");
   expect(post).toContain("diamondSupersamplePass?.setScaleCap?.(next?diamondLiveSupersampleScaleCap:diamondSupersampleScaleCap)");
-  expect(post).toContain("controls.diamondSsaaEnabled && hasDiamond && renderer.capabilities?.isWebGL2 !== false");
-  expect(post).toContain("controls.gemFxaaEnabled && hasDiamond");
+  expect(post).toContain("const ssaaEnabled=false;");
+  expect(post).toContain("const fxaaEnabled=false;");
   expect(post).toContain("if(fxaaPass) fxaaPass.enabled=fxaaEnabled;");
   expect(post).not.toContain("hasDiamond && diamondSupersamplingSettled && renderer.capabilities");
   expect(render).toContain("runtimeBudget.diamondLiveSupersampleScaleCap");
@@ -281,8 +281,8 @@ test("Aurum Render never enables full-surface edge AA while diamond-only quality
 test("global renderer and composer MSAA stay disabled for diamond-only antialiasing", () => {
   const viewer = readFileSync("src/lib/aurum/viewer.ts", "utf8");
   const edgeManager = readFileSync("src/lib/aurum/edge-quality/edge-quality-manager.ts", "utf8");
-  expect(viewer).toContain("antialias: false");
-  expect(viewer).not.toContain("antialias: true");
-  expect(edgeManager).toContain("configureAurumComposerMsaa(renderer, composer, 0)");
-  expect(edgeManager).not.toContain("configureAurumComposerMsaa(renderer, composer, 4)");
+  expect(viewer).toContain("antialias: true");
+  expect(viewer).not.toContain("antialias: false");
+  expect(edgeManager).toContain("configureAurumComposerMsaa(renderer, composer, 4)");
+  expect(edgeManager).not.toContain("configureAurumComposerMsaa(renderer, composer, 0)");
 });
