@@ -34,9 +34,9 @@ function projectedFootprint(model: THREE.Object3D, camera: THREE.PerspectiveCame
   }, 0);
 }
 
-test("all four camera views fit the complete product with a consistent screen margin", () => {
+test("all four camera views preserve the same camera distance and fit the complete product", () => {
   const views = ["frontal", "lateral", "superior", "perspectiva"] as const;
-  const footprints: number[] = [];
+  const distances: number[] = [];
 
   for (const view of views) {
     const { model, camera, controls } = createFixture();
@@ -45,23 +45,27 @@ test("all four camera views fit the complete product with a consistent screen ma
     const center = bounds.getCenter(new THREE.Vector3());
 
     expect(controls.target.distanceTo(center)).toBeLessThan(1e-6);
-    expect(camera.position.distanceTo(controls.target)).toBeGreaterThan(0);
     const distance = camera.position.distanceTo(controls.target);
     expect(Number.isFinite(distance)).toBe(true);
+    expect(distance).toBeGreaterThan(0);
+    distances.push(distance);
 
     if (view === "frontal") expect(camera.position.z).toBeGreaterThan(controls.target.z);
     if (view === "lateral") expect(camera.position.x).toBeGreaterThan(controls.target.x);
     if (view === "superior") expect(camera.position.y).toBeGreaterThan(controls.target.y);
+    if (view === "perspectiva") {
+      expect(camera.position.x).toBeGreaterThan(controls.target.x);
+      expect(camera.position.y).toBeGreaterThan(controls.target.y);
+      expect(camera.position.z).toBeGreaterThan(controls.target.z);
+    }
 
     const footprint = projectedFootprint(model, camera);
     expect(footprint).toBeGreaterThan(0);
     expect(footprint).toBeLessThan(0.75);
-    footprints.push(footprint);
   }
 
-  // Each view may use a different camera distance to compensate for
-  // foreshortening, but the visible product occupies the same screen fraction.
-  expect(Math.max(...footprints) - Math.min(...footprints)).toBeLessThan(0.04);
+  // A view preset changes orientation, never the apparent camera scale.
+  expect(Math.max(...distances) - Math.min(...distances)).toBeLessThan(1e-6);
 });
 
 test("camera view framing adapts to portrait, square and landscape viewport ratios", () => {
