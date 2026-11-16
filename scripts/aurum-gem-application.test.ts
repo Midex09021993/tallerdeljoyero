@@ -266,3 +266,13 @@ test("Aurum Render enables LIVE gemstone quality and reapplies it after catalog 
   expect(liveReapply).toBeGreaterThan(applyGem);
   expect(maskRefresh).toBeGreaterThan(liveReapply);
 });
+
+
+test("Aurum Render never enables full-surface edge AA while diamond-only quality is in scope", () => {
+  const post = readFileSync("src/lib/aurum/post.ts", "utf8");
+  const render = readFileSync("src/components/AurumRender.tsx", "utf8");
+  expect(post).toContain("if(surfaceEdgeAaPass) surfaceEdgeAaPass.enabled=false;");
+  expect(post).not.toContain("surfaceEdgeAaPass.enabled=postControls.surfaceEdgeAaEnabled");
+  expect(post).not.toContain("surfaceEdgeAaPass.enabled=Boolean(controls.surfaceEdgeAaEnabled)");
+  expect(render).toContain("surfaceEdgeAaEnabled:false,outputPass");
+});
