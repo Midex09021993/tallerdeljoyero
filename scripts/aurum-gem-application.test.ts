@@ -201,7 +201,7 @@ test("web-tier models receive 2x diamond-only supersampling without raising shar
   expect(post).toContain("requestDiagnostics(){");
   expect(post).toContain("cachedCenterMeshes:cachedGemMeshes.length,");
   expect(post).toContain("maskCoveragePercent:gemMaskCoveragePercent,");
-  expect(post).toContain("Math.min(diamondSupersampleScaleCap,Math.sqrt(8_500_000/Math.max(1,basePixels)))");
+  expect(post).toContain("Math.min(diamondSupersampleScaleCap,Math.sqrt(4_500_000/Math.max(1,basePixels)))");
   expect(post).toContain("if(texture2D(gemMask,vUv).r<0.5){gl_FragColor=base;return;}");
   expect(post).toContain("setDiamondSupersampleScaleCap");
 });
@@ -259,14 +259,18 @@ test("Gem Mask stays internal after visual validation and never tints the beauty
   expect(component).toContain("viewerLoopRef.current?.invalidate?.();");
 });
 
-test("masked diamond SSAA and native-resolution FXAA are independently toggleable; TAA remains fail-closed", () => {
+test("masked diamond SSAA remains fail-closed while native-resolution FXAA stays independently toggleable", () => {
   const controls = readFileSync("src/lib/aurum/post-engine-controls.ts", "utf8");
   const post = readFileSync("src/lib/aurum/post.ts", "utf8");
   const render = readFileSync("src/components/AurumRender.tsx", "utf8");
   expect(controls).toContain("gemFxaaEnabled: value?.gemMaskEnabled === true && value?.gemFxaaEnabled === true");
-  expect(controls).toContain("diamondSsaaEnabled: value?.gemMaskEnabled === true && value?.diamondSsaaEnabled === true");
+  expect(controls).toContain("diamondSsaaEnabled: false");
+  expect(controls).not.toContain("diamondSsaaEnabled: value?.gemMaskEnabled");
   expect(controls).toContain("diamondTaaEnabled: false");
   expect(post).toContain("const fxaaEnabled=diamondMaskReady && fxaaRequested;");
+  expect(post).toContain("float aurumPositiveCubicWeight(float x){");
+  expect(post).not.toContain("aurumCatmullRomWeight");
+  expect(post).toContain("if(totalWeight<0.00001) discard;");
   expect(post).toContain("const renderDiamondFxaaOverlay=(activeRenderer:any)=>");
   expect(post).toContain("let gemMaskTarget:any=null;");
   expect(post).toContain("let ensureDiamondFxaaSnapshotTexture:any=null;");
