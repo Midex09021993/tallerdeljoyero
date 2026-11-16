@@ -303,7 +303,7 @@ export async function createAurumPostPipeline(
       const materials=Array.isArray(mesh?.material)?mesh.material:[mesh?.material];
       const data=mesh?.userData??{};
       const rhino=data.aurumRhino??{};
-      const family=isDiamondFamily(data.aurumActiveGemFamily??data.aurumGemFamily)
+      const family=isDiamondFamily(data.aurumActiveGemFamily??data.aurumGemFamily??data.aurumDiamondOpticalFamily)
         || String(data.aurumActiveGemId??data.aurumGemId??"").trim().toLowerCase().startsWith("diamante");
       const category=String(rhino.categoria??data.aurumDetectedCategory??data.aurumCategory??"").trim().toLowerCase();
       const layerName=String(
