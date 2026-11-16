@@ -442,6 +442,9 @@ export async function createAurumDiamondBvhRuntime(options: {
             rayBounces: prepared.diagnostics.rayBounces,
             environmentIntensity: prepared.diagnostics.environmentIntensity,
             toneMapping: "HDR lineal; ACES interno retirado",
+            fireEffect: prepared.material.uniforms?.aurumDiamondFireIntensity?.value ?? "inactive",
+            scintillationEffect: prepared.material.uniforms?.aurumDiamondScintillationIntensity?.value ?? "inactive",
+            internalExitAccumulation: true,
           });
         }
         found.add(mesh);
