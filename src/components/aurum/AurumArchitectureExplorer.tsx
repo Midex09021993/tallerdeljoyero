@@ -159,12 +159,12 @@ export function AurumArchitectureExplorer() {
               <p><span className="font-semibold text-foreground">Estado:</span> suspendido temporalmente; la prueba visual detectó artefactos en el modelo.</p>
               <p><span className="font-semibold text-foreground">Protección:</span> no se ejecuta hasta corregir y validar la composición sobre modelos reales.</p>
             </div>
-            <p className="text-[10px] leading-4 text-muted-foreground"><Power className="mr-1 inline size-3"/> SSAA y FXAA están bloqueados para preservar el render base mientras se corrige el aislamiento.</p>
+            <p className="text-[10px] leading-4 text-muted-foreground"><Power className="mr-1 inline size-3"/> FXAA está disponible para validación desde el visor principal y se limita a la máscara del diamante. SSAA permanece bloqueado.</p>
           </div> : null}
           {actual.id === "post" ? <div className="mt-4 space-y-3 rounded-xl border border-border bg-muted/20 p-3">
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0"><p className="text-xs font-semibold">Gem Mask + FXAA</p><p className="text-[10px] leading-4 text-muted-foreground">FXAA se procesa en un target auxiliar y se limita a la silueta del diamante.</p></div>
-              <button type="button" role="switch" aria-checked={false} aria-disabled="true" disabled title="FXAA suspendido por regresión visual" className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${postControls.gemFxaaEnabled ? "bg-gold" : "bg-muted-foreground/20"}`}><span className={`absolute top-0.5 size-5 rounded-full bg-white shadow transition-all ${postControls.gemFxaaEnabled ? "left-[22px]" : "left-0.5"}`}/></button>
+              <button type="button" role="switch" aria-checked={false} aria-disabled="true" disabled title="FXAA disponible desde el control del visor" className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${postControls.gemFxaaEnabled ? "bg-gold" : "bg-muted-foreground/20"}`}><span className={`absolute top-0.5 size-5 rounded-full bg-white shadow transition-all ${postControls.gemFxaaEnabled ? "left-[22px]" : "left-0.5"}`}/></button>
             </div>
             <div className="flex items-center justify-between gap-3 border-t border-border pt-3">
               <div className="min-w-0"><p className="text-xs font-semibold">Surface Edge AA</p><p className="text-[10px] leading-4 text-muted-foreground">Suspendido para impedir cualquier postprocesado global de metal y ambiente.</p></div>
