@@ -1295,7 +1295,6 @@ export async function createAurumPostPipeline(
     if(!fxaaPass?.enabled || !gemMaskPass?.enabled || !gemMaskPass?.hasDiamondMeshes) return false;
     const width=Math.max(1,Number(activeRenderer.domElement?.width)||1);
     const height=Math.max(1,Number(activeRenderer.domElement?.height)||1);
-    const target=ensureDiamondFxaaBeautyTarget(width,height);
     const previousTarget=activeRenderer.getRenderTarget();
     const previousViewport=activeRenderer.getViewport(new THREE.Vector4()).clone();
     const previousScissor=activeRenderer.getScissor(new THREE.Vector4()).clone();
@@ -1306,9 +1305,11 @@ export async function createAurumPostPipeline(
     const previousRenderToScreen=fxaaPass.renderToScreen;
     const uniforms=fxaaPass.material?.uniforms??{};
     const previousMask=uniforms.gemMask?.value;
+    const previousDiffuse=uniforms.tDiffuse?.value;
     const previousResolution=uniforms.resolution?.value?.clone?.();
     let failed=false;
     try{
+      const target=ensureDiamondFxaaBeautyTarget(width,height);
       activeRenderer.setRenderTarget(target);
       activeRenderer.setViewport(0,0,width,height);
       activeRenderer.setScissorTest(false);
@@ -1325,6 +1326,7 @@ export async function createAurumPostPipeline(
       console.warn("[AURUM][DIAMOND FXAA] Native-resolution masked pass failed; restoring the direct beauty path.",error);
     }finally{
       if(uniforms.gemMask) uniforms.gemMask.value=previousMask;
+      if(uniforms.tDiffuse) uniforms.tDiffuse.value=previousDiffuse;
       if(uniforms.resolution?.value&&previousResolution) uniforms.resolution.value.copy(previousResolution);
       fxaaPass.renderToScreen=previousRenderToScreen;
       activeRenderer.setRenderTarget(previousTarget);
