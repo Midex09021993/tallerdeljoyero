@@ -434,6 +434,7 @@ export async function createAurumDiamondBvhRuntime(options: {
             mesh: mesh.name || mesh.uuid,
             gemId: activeGemId,
             dispersion: prepared.material.uniforms?.dispersion?.value ?? CENTER_DIAMOND_DISPERSION,
+            rayEpsilon: prepared.material.uniforms?.aurumRayEpsilon?.value ?? "upstream fallback",
             rayBounces: prepared.diagnostics.rayBounces,
             environmentIntensity: prepared.diagnostics.environmentIntensity,
             toneMapping: "HDR lineal; ACES interno retirado",
