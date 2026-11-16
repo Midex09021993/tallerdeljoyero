@@ -44,6 +44,8 @@ export type AurumDiamondBvhSetupOptions = {
   gamma?: number;
   /** Apply scale-aware ray origin bias only to diamond BVH materials. */
   adaptiveRayEpsilon?: boolean;
+  /** Accumulate all internal refracted exits for the focal diamond only. */
+  accumulateInternalExits?: boolean;
 };
 
 export type AurumDiamondBvhSetup = {
@@ -133,6 +135,44 @@ export function prepareAurumDiamondBvhExperiment(
     acesOutput,
     "gl_FragColor = vec4(hdrColor, 1.0);",
   );
+  if (options.accumulateInternalExits) {
+    const declarations = [
+      "    vec3 internalExitR = ray;",
+      "    vec3 internalExitG = ray;",
+      "    vec3 internalExitB = ray;",
+      "    float internalExitWeight = 0.0;",
+    ].join("\\n");
+    const strongestOnlyBranch = [
+      "          } else if (exitWeight > internalExitWeight) {",
+      "            internalExitR = length(exitR) > 0.001 ? exitR : exitG;",
+      "            internalExitG = exitG;",
+      "            internalExitB = length(exitB) > 0.001 ? exitB : exitG;",
+      "            internalExitWeight = exitWeight;",
+      "          }",
+    ].join("\\n");
+    const strongestOnlyTail = [
+      "    if (internalExitWeight > 0.001) {",
+      "      accumulated += sampleChromaticEnv(internalExitR, internalExitG, internalExitB) * internalExitWeight;",
+      "    }",
+    ].join("\\n");
+    if (!material.fragmentShader.includes(declarations)
+      || !material.fragmentShader.includes(strongestOnlyBranch)
+      || !material.fragmentShader.includes(strongestOnlyTail)) {
+      throw new Error("[AURUM diamond BVH] No se pudo adaptar la acumulación de rebotes; se conserva el material original.");
+    }
+    material.fragmentShader = material.fragmentShader
+      .replace(declarations, "    vec3 accumulatedInternalExits = vec3(0.0);")
+      .replace(strongestOnlyBranch, `          } else {
+            // Sum every internal refracted exit branch. Fresnel reflection
+            // weight is carried forward to the next internal bounce.
+            accumulatedInternalExits += sampleChromaticEnv(
+              length(exitR) > 0.001 ? exitR : exitG,
+              exitG,
+              length(exitB) > 0.001 ? exitB : exitG
+            ) * exitWeight;
+          }`)
+      .replace(strongestOnlyTail, "    accumulated += accumulatedInternalExits;");
+  }
   // The upstream BVH uses a fixed 1e-4 ray-origin offset. CAD jewelry may
   // be authored in millimetres or metres, so use a scale-aware bias for diamond
   // meshes only. If the upstream bundle changes, leave its shader untouched.
