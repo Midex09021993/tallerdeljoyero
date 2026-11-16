@@ -141,6 +141,11 @@ test("web-tier models receive 2x diamond-only supersampling without raising shar
   expect(getAurumRuntimeBudget(500_001).diamondLiveSupersampleScaleCap).toBe(1.25);
   expect(getAurumRuntimeBudget(900_001).diamondLiveSupersampleScaleCap).toBe(1.15);
 
+  const bvh = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
+  const micro = readFileSync("src/lib/aurum/diamond-micro-pipeline.ts", "utf8");
+  expect(bvh).toContain("aurumDiamondOpticalFamily: \"diamante\"");
+  expect(bvh).toContain("originalDiamondOpticalFamily");
+  expect(micro).toContain("meshFamily === \"diamante\"");
   const post = readFileSync("src/lib/aurum/post.ts", "utf8");
   expect(post).toContain("Math.min(diamondSupersampleScaleCap,Math.sqrt(8_500_000/Math.max(1,basePixels)))");
   expect(post).toContain("if(texture2D(gemMask,vUv).r<0.5){gl_FragColor=base;return;}");
