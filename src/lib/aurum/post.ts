@@ -477,11 +477,10 @@ export async function createAurumPostPipeline(
         nonDiamondMaskMaterial.dispose();
       }
     };
-    // AURUM DIAMOND SSAA MODULE: render the full optical scene at higher
-    // resolution so diamond transmission/refraction still sees the ring and
-    // environment. The reconstruction shader below samples and replaces only
-    // center-diamond pixels; no high-resolution metal/background pixels may
-    // enter the reconstructed diamond edge.
+    // AURUM DIAMOND SSAA MODULE: render only classified diamond meshes at
+    // higher resolution into a transparent target. The existing beauty frame
+    // remains untouched and supplies every non-diamond pixel; the SSAA target
+    // cannot rerender or replace environment, metal, shadow or background color.
     diamondSupersamplePass={
       enabled:false,needsSwap:false,clear:false,renderToScreen:false,
       setSize(width:number,height:number){
