@@ -3987,7 +3987,26 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           if(gemMaskPass.enabled) gemMaskPass.render(renderer);
           // SSAA reconstructs the diamond first. FXAA, when also requested,
           // runs afterward on that reconstructed native-resolution result.
-          if(diamondOverlayRequested) renderDiamondSupersampleOverlay?.(renderer);
+          let diamondSsaaOverlayRendered=false;
+          if(diamondOverlayRequested){
+            diamondSsaaOverlayRendered=Boolean(renderDiamondSupersampleOverlay?.(renderer));
+            const ssaaTargetWidth=Number(diamondSupersamplePass?.targetWidth??0);
+            const ssaaTargetHeight=Number(diamondSupersamplePass?.targetHeight??0);
+            const ssaaRenderCount=Number(diamondSupersamplePass?.renderCount??0);
+            if(ssaaRenderCount>0||!diamondSsaaOverlayRendered){
+              console.info("[AURUM][DIAMOND_AA][SSAA_RESULT]",{
+                requested:true,
+                rendered:diamondSsaaOverlayRendered,
+                scale:Number(diamondSupersamplePass?.scale??1),
+                targetWidth:ssaaTargetWidth,
+                targetHeight:ssaaTargetHeight,
+                renderCount:ssaaRenderCount,
+                maskEnabled:Boolean(gemMaskPass?.enabled),
+                compositeEnabled:Boolean(diamondSupersampleCompositePass?.enabled),
+                note:"Post-render status; unlike DIAMOND_AA/EXECUTION this is captured after the auxiliary render attempt.",
+              });
+            }
+          }
           if(diamondFxaaOverlayRequested){
             const renderedWithDiamondFxaaOverlay=Boolean(renderDiamondFxaaOverlay?.(renderer));
             if(!renderedWithDiamondFxaaOverlay){
@@ -3996,7 +4015,16 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               // on the next frame without changing the user's stored preference.
               renderer.render(escena,camara);
               if(gemMaskPass.enabled) gemMaskPass.render(renderer);
-              if(diamondOverlayRequested) renderDiamondSupersampleOverlay?.(renderer);
+              if(diamondOverlayRequested){
+                diamondSsaaOverlayRendered=Boolean(renderDiamondSupersampleOverlay?.(renderer));
+                console.info("[AURUM][DIAMOND_AA][SSAA_RETRY]",{
+                  rendered:diamondSsaaOverlayRendered,
+                  scale:Number(diamondSupersamplePass?.scale??1),
+                  targetWidth:Number(diamondSupersamplePass?.targetWidth??0),
+                  targetHeight:Number(diamondSupersamplePass?.targetHeight??0),
+                  renderCount:Number(diamondSupersamplePass?.renderCount??0),
+                });
+              }
             }
           }
           const renderCpuMs = performance.now() - renderStartedAt;
