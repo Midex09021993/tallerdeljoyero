@@ -653,7 +653,11 @@ export async function createAurumPostPipeline(
       const ssaaIndex = composer.passes.indexOf(diamondSupersamplePass);
       composer.passes.splice(ssaaIndex + 1, 0, diamondTaaSavePass, taaPass);
       const maskIndex = composer.passes.indexOf(gemMaskPass);
+      const ssaaCompositeIndex = composer.passes.indexOf(diamondSupersampleCompositePass);
       composer.passes.splice(maskIndex + 1, 0, diamondTaaCompositePass);
+      // TAA is the final diamond reconstruction stage; it must run after SSAA.
+      composer.passes.splice(composer.passes.indexOf(diamondTaaCompositePass), 1);
+      composer.passes.splice(composer.passes.indexOf(diamondSupersampleCompositePass) + 1, 0, diamondTaaCompositePass);
     }
 
     // Conservative full-surface edge AA for polished metal silhouettes and
