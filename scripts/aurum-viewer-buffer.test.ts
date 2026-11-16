@@ -489,6 +489,11 @@ test("Aurum exposes diamond-only AA and SSAA as independent modules", () => {
   expect(postSource).toContain("if(texture2D(gemMask,vUv).r<0.5) discard;");
   expect(postSource).toContain("renderDiamondSupersampleOverlay");
   expect(postSource).toContain("diamondSupersampleCompositePass.render(activeRenderer,null,null,0,false)");
+  expect(postSource).toContain("return activeDiamonds;");
+  expect(postSource).toContain("data.aurumDetectedCategory");
+  expect(postSource).toContain("#include <tonemapping_fragment>");
+  expect(componentSource).toContain("&& !diamondSupersamplePass?.enabled");
+  expect(componentSource).toContain("if(captureDiamondSsaa&&!options.depthOfField) renderDiamondSupersampleOverlay?.(renderer);");
   expect(postSource).toContain("if(texture2D(gemMask,vUv).r<0.5) discard;");
   expect(postSource).not.toContain("composer.addPass(diamondSupersampleCompositePass)");
   expect(componentSource).toContain("if (useLiveGemAa) composer.render();");
