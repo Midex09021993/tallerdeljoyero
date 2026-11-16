@@ -3,7 +3,6 @@ import {
   configureAurumEdgeQuality,
   createAurumSurfaceEdgeAaPass,
   setAurumEdgeAaResolution,
-  getAurumEdgeAaProfile,
 } from "./edge-quality";
 
 /**
@@ -661,8 +660,6 @@ export async function createAurumPostPipeline(
     const taaEnabled=taaRequested;
     // Edge AA is a settled-quality treatment: never add fullscreen filtering
     // work to the direct-render orbit path. Still captures may use it explicitly.
-    const edgeAaMode=options.capture ? "capture" : "settled";
-    const edgeAaProfile=getAurumEdgeAaProfile(qualityId || (high ? "high" : "low"),lastKnownBudgetTier,edgeAaMode);
     const edgeAaEnabled=Boolean(postControls.gemFxaaEnabled && gemMaskPass?.hasDiamondMeshes);
     const ssaaActive=Boolean(
       postControls.diamondSsaaEnabled
@@ -916,7 +913,6 @@ export async function createAurumPostPipeline(
     temporalMotionActive=next;
     diamondSupersamplingSettled=!next;
     diamondSupersamplePass?.setScaleCap?.(next?diamondLiveSupersampleScaleCap:diamondSupersampleScaleCap);
-    const edgeAaProfile=getAurumEdgeAaProfile(lastKnownQualityId || (lastKnownHighQuality ? "high" : "low"),lastKnownBudgetTier,next ? "live" : "settled");
     const postControls=getAurumPostControls();
     // Apply the active live/settled supersampling cap before selecting the
     // diamond-only SSAA path; masked FXAA remains the capability fallback.
