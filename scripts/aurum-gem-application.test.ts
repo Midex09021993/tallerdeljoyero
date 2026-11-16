@@ -159,6 +159,13 @@ test("diamond perimeter AA uses the stronger masked edge profile", () => {
   expect(source).not.toContain("vec3 diagonal=(n0+n1+n2+n3)*0.25");
 });
 
+test("legacy Post Engine preferences migrate to the current diamond AA defaults", () => {
+  const controls = readFileSync("src/lib/aurum/post-engine-controls.ts", "utf8");
+  expect(controls).toContain("gemFxaaEnabled: true");
+  expect(controls).toContain("diamondSsaaEnabled: true");
+  expect(controls).toContain("const migrated: AurumPostControls");
+});
+
 test("diamond SSAA scale cap is updated through the pipeline-owned state", () => {
   const source = readFileSync("src/lib/aurum/post.ts", "utf8");
   expect(source).toContain("setScaleCap(cap:number)");
