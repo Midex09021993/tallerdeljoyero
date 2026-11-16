@@ -22,8 +22,9 @@ const DEFAULTS: AurumPostControls = {
 
 const normalize = (value: any): AurumPostControls => ({
   gemMaskEnabled: value?.gemMaskEnabled === true,
-  diamondSsaaEnabled: value?.diamondSsaaEnabled === true,
-  gemFxaaEnabled: value?.gemFxaaEnabled === true,
+  // Retired until the independent diamond-only compositor is validated.
+  diamondSsaaEnabled: false,
+  gemFxaaEnabled: false,
   diamondTaaEnabled: value?.diamondTaaEnabled === true,
   surfaceEdgeAaEnabled: false,
   taaEnabled: false,
@@ -40,8 +41,8 @@ export function getAurumPostControls(): AurumPostControls {
       if (!legacy) continue;
       const migrated = normalize(JSON.parse(legacy));
       // Old builds had no independently controlled mask/TAA-diamond switches.
-      // Keep previously saved diamond SSAA/FXAA preferences, but leave new
-      // modules off until the user explicitly enables them.
+      // Legacy SSAA/FXAA preferences are intentionally discarded while the
+      // isolated diamond compositor is under reconstruction.
       migrated.gemMaskEnabled = false;
       migrated.diamondTaaEnabled = false;
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
