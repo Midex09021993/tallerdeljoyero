@@ -147,6 +147,21 @@ test("web-tier models receive 2x diamond-only supersampling without raising shar
   expect(post).toContain("setDiamondSupersampleScaleCap");
 });
 
+test("diamond SSAA keeps the auxiliary render linear HDR and applies native tone mapping only in the overlay", () => {
+  const post = readFileSync("src/lib/aurum/post.ts", "utf8");
+  const auxiliaryStart = post.indexOf("const previousToneMapping=activeRenderer.toneMapping;");
+  const auxiliaryEnd = post.indexOf("activeRenderer.toneMapping=previousToneMapping;", auxiliaryStart);
+  const auxiliaryBlock = post.slice(auxiliaryStart, auxiliaryEnd + "activeRenderer.toneMapping=previousToneMapping;".length);
+  expect(auxiliaryStart).toBeGreaterThan(-1);
+  expect(auxiliaryBlock).toContain("activeRenderer.toneMapping=THREE.NoToneMapping;");
+  expect(auxiliaryBlock).toContain("activeRenderer.render(scene,camera);");
+  expect(auxiliaryBlock).toContain("activeRenderer.toneMapping=previousToneMapping;");
+  expect(post).toContain("diamondSupersampleCompositePass.material.toneMapped=true;");
+  expect(post).toContain("#include <tonemapping_fragment>");
+  expect(post).toContain("#include <colorspace_fragment>");
+  expect(post).toContain("type:THREE.HalfFloatType");
+});
+
 test("diamond perimeter AA uses the stronger masked edge profile", () => {
   const source = readFileSync("src/lib/aurum/post.ts", "utf8");
   expect(source).toContain("strength:{value:0.76}");
