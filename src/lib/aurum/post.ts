@@ -359,13 +359,22 @@ export async function createAurumPostPipeline(
       });
     };
     const renderGemMaskWithOcclusion=(activeRenderer:any,target:any)=>{
+      // A mask render is an isolated GPU transaction. Render targets carry
+      // their own viewport state in Three.js, so restoring only the target is
+      // insufficient: the next beauty/composer pass can inherit mask sizing.
       const previousTarget=activeRenderer.getRenderTarget();
+      const previousViewport=activeRenderer.getViewport(new THREE.Vector4()).clone();
+      const previousScissor=activeRenderer.getScissor(new THREE.Vector4()).clone();
+      const previousScissorTest=activeRenderer.getScissorTest?.()??false;
       const previousOverride=scene.overrideMaterial;
       const previousBackground=scene.background;
       const previousAutoClear=activeRenderer.autoClear;
       const previousCameraLayerMask=camera.layers?.mask;
       const previousClearColor=activeRenderer.getClearColor(new THREE.Color()).clone();
       const previousClearAlpha=activeRenderer.getClearAlpha();
+      const previousToneMapping=activeRenderer.toneMapping;
+      const previousToneMappingExposure=activeRenderer.toneMappingExposure;
+      const previousOutputColorSpace=activeRenderer.outputColorSpace;
       const originalMaterials:any[]=[];
       try{
         activeRenderer.setRenderTarget(target);
@@ -398,8 +407,14 @@ export async function createAurumPostPipeline(
         scene.overrideMaterial=previousOverride;
         scene.background=previousBackground;
         activeRenderer.autoClear=previousAutoClear;
+        activeRenderer.toneMapping=previousToneMapping;
+        activeRenderer.toneMappingExposure=previousToneMappingExposure;
+        activeRenderer.outputColorSpace=previousOutputColorSpace;
         activeRenderer.setClearColor(previousClearColor,previousClearAlpha);
         activeRenderer.setRenderTarget(previousTarget);
+        activeRenderer.setViewport(previousViewport);
+        activeRenderer.setScissor(previousScissor);
+        activeRenderer.setScissorTest(previousScissorTest);
       }
     };
     refreshGemMaskCache();
