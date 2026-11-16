@@ -3973,18 +3973,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               && runtimeBudget.tier !== "extreme"
               && measuredQualityId !== "low"
               && Boolean(setDiamondSupersamplingSettled?.(false));
-            // First controlled resolution step: 1.8 only for the standard web tier
-            // when the dedicated center-diamond mask confirms a diamond is present.
-            // Denser CAD scenes retain their existing conservative DPR ceilings.
-            // SSAA must not change the full-scene canvas DPR. Its extra
-            // resolution exists only in the detached diamond render target.
+            // Diamond SSAA must never resize the full-scene drawing buffer.
+            // Keep the renderer and composer at the DPR selected by the normal
+            // quality controller; only the detached diamond targets may scale.
+            const interactionDpr = renderer.getPixelRatio();
             const interactionDprCap = runtimeBudget.pixelRatioCap;
-            const requestedDpr = Math.max(1, Math.min(2, renderQuality.pixelRatio));
-            const interactionDpr = Math.min(requestedDpr, interactionDprCap, getAurumViewportPixelRatio());
-            renderer.setPixelRatio(interactionDpr);
-            composer?.setPixelRatio?.(interactionDpr);
-            // Keep the masked FXAA texel size aligned with the actual composer
-            // target after the interactive DPR change.
+            // Keep the masked FXAA texel size aligned with the existing composer
+            // target without changing either renderer's global pixel ratio.
             const liveGemAaTarget = (composer as any)?.renderTarget1 ?? (composer as any)?.readBuffer;
             const liveGemAaWidth = Math.max(1, Number(liveGemAaTarget?.width) || Number(renderer.domElement.width) || 1);
             const liveGemAaHeight = Math.max(1, Number(liveGemAaTarget?.height) || Number(renderer.domElement.height) || 1);
@@ -4044,10 +4039,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             const diamondSsaaActive = Boolean(setDiamondSupersamplingSettled?.(true));
             // Keep the settled viewport on the same minimal beauty path. TAA, Bloom,
             // DOF, SSR and full-surface edge filtering remain disabled.
-            const requestedDpr = Math.max(1, Math.min(2, renderQuality.pixelRatio));
-            const settledDpr = Math.min(requestedDpr, runtimeBudget.pixelRatioCap, getAurumViewportPixelRatio());
-            renderer.setPixelRatio(settledDpr);
-            composer?.setPixelRatio?.(settledDpr);
+            // Restore the ordinary settled camera/pass state only. SSAA is
+            // isolated to its own targets and must not alter full-scene DPR.
+            const settledDpr = renderer.getPixelRatio();
 
             // Gem Mask + FXAA disabled: retain only the ordinary beauty output.
             const settledDiamondTaaActive = Boolean(idleTaaPass?.enabled && diamondTaaSavePass?.enabled && diamondTaaCompositePass?.enabled);
