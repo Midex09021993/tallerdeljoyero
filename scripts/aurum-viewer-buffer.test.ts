@@ -471,6 +471,23 @@ test("the first settled model frame keeps the anti-aliasing composer active", ()
 });
 
 
+test("quality refreshes do not force-disable Gem Mask-protected diamond AA modules", () => {
+  const postSource = readFileSync("src/lib/aurum/post.ts", "utf8");
+  const qualityStart = postSource.indexOf("const applyQuality=");
+  const qualityEnd = postSource.indexOf("const resetTemporalAccumulation=", qualityStart);
+  const qualityBlock = postSource.slice(qualityStart, qualityEnd);
+  expect(qualityStart).toBeGreaterThan(-1);
+  expect(qualityBlock).not.toContain("diamondSupersamplePass.enabled=false");
+  expect(qualityBlock).not.toContain("diamondSupersampleCompositePass.enabled=false");
+  expect(qualityBlock).not.toContain("gemMaskPass.enabled=false");
+  expect(qualityBlock).not.toContain("fxaaPass.enabled=fxaaActive");
+  expect(postSource).toContain("applyDiamondPostModules(getAurumPostControls());");
+  expect(postSource).toContain("const ssaaEnabled=diamondMaskReady && ssaaRequested && canReconstruct");
+  expect(postSource).toContain("const fxaaEnabled=diamondMaskReady && fxaaRequested");
+  // TAA is intentionally still fail-closed until its temporal path is validated.
+  expect(qualityBlock).toContain("taaPass.enabled=false");
+});
+
 test("Aurum exposes diamond-only AA and SSAA as independent modules", () => {
   const componentSource = readFileSync("src/components/AurumRender.tsx", "utf8");
   const controlsSource = readFileSync("src/lib/aurum/post-engine-controls.ts", "utf8");
