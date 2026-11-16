@@ -36,6 +36,7 @@ export interface AurumGemEnvironmentController {
     texture:any,
     options?:{rotation?:number; intensityScale?:number}
   )=>void;
+  diagnostics: () => { loaded:boolean; url:string|null; textureUuid:string|null; appliedMeshes:number; appliedMaterials:number; };
   dispose: (texture?:any)=>void;
 }
 
@@ -45,6 +46,9 @@ export function createAurumGemEnvironment(
   EXRLoader?:any
 ): AurumGemEnvironmentController {
   let current:any = null;
+  let currentUrl:string|null = null;
+  let appliedMeshes = 0;
+  let appliedMaterials = 0;
   const cache = new Map<string, any>();
   const MAX_CACHE = 2;
 
@@ -54,6 +58,8 @@ export function createAurumGemEnvironment(
     options:{rotation?:number; intensityScale?:number} = {}
   ) => {
     if (!texture || !targets?.length) return;
+    let nextAppliedMeshes = 0;
+    let nextAppliedMaterials = 0;
     const rotation = Number.isFinite(options.rotation) ? Number(options.rotation) : 0;
     const intensityScale = Number.isFinite(options.intensityScale)
       ? Math.max(.75, Math.min(1.35, Number(options.intensityScale)))
@@ -65,6 +71,7 @@ export function createAurumGemEnvironment(
         if (!m?.userData?.aurumOpticalProfile) return m;
         const requiresShaderUpdate = !m.envMap;
         m.envMap = texture;
+        nextAppliedMaterials += 1;
         const family = String(m.userData?.aurumGemFamily ?? m.userData?.aurumOpticalProfile?.familia ?? "default");
         const profile = getAurumGemEnvironmentProfile(family);
         const authored = Number.isFinite(m.userData?.aurumGemBaseEnvIntensity)
@@ -100,8 +107,12 @@ export function createAurumGemEnvironment(
         if (requiresShaderUpdate) m.needsUpdate = true;
         return m;
       };
+      const before = nextAppliedMaterials;
       x.material = Array.isArray(x.material) ? x.material.map(apply) : apply(x.material);
+      if (nextAppliedMaterials > before) nextAppliedMeshes += 1;
     }
+    appliedMeshes = nextAppliedMeshes;
+    appliedMaterials = nextAppliedMaterials;
   };
 
   const applyToModel = (
@@ -122,6 +133,7 @@ export function createAurumGemEnvironment(
         // Do not let an older cached request supersede a newer selection.
         if (!isCurrent()) return;
         current = cached;
+        currentUrl = url;
         onLoaded(cached);
         return;
       }
@@ -148,6 +160,7 @@ export function createAurumGemEnvironment(
             oldTexture?.dispose?.();
           }
           current = next;
+          currentUrl = url;
           onLoaded(next);
         } catch (error) {
           hdrTexture.dispose?.();
@@ -161,18 +174,30 @@ export function createAurumGemEnvironment(
     },
     applyToModel,
     applyToTargets,
+    diagnostics() {
+      return {
+        loaded: Boolean(current),
+        url: currentUrl,
+        textureUuid: current?.uuid ?? null,
+        appliedMeshes,
+        appliedMaterials,
+      };
+    },
     dispose(texture?:any) {
       if (texture) {
         for (const [url, cached] of cache) {
           if (cached === texture) cache.delete(url);
         }
         texture.dispose?.();
-        if (texture === current) current = null;
+        if (texture === current) { current = null; currentUrl = null; appliedMeshes = 0; appliedMaterials = 0; }
         return;
       }
       for (const cached of cache.values()) cached?.dispose?.();
       cache.clear();
       current = null;
+      currentUrl = null;
+      appliedMeshes = 0;
+      appliedMaterials = 0;
     }
   };
 }
