@@ -86,3 +86,38 @@ test("applies per-mesh optical profiles to diamonds sharing one material and res
   expect(large.userData.aurumDiamondMicroTier).toBeUndefined();
   expect(material.userData.aurumDiamondMicroUniforms.scintillationStrength.value).toBeCloseTo(0.16);
 });
+
+test("refresh discovers meshes reassigned to diamond and releases meshes reassigned away", () => {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+  camera.position.set(0, 0, 10);
+  camera.lookAt(0, 0, 0);
+  camera.updateMatrixWorld(true);
+  const originalCallback = () => {};
+  const mesh = new THREE.Mesh(new THREE.SphereGeometry(0.05), new THREE.MeshBasicMaterial());
+  mesh.onBeforeRender = originalCallback;
+  scene.add(mesh);
+  const pipeline = createAurumDiamondMicroPipeline(scene, camera, () => 600);
+
+  const diamondMaterial = new THREE.MeshPhysicalMaterial();
+  diamondMaterial.userData.aurumGemFamily = "Diamante";
+  diamondMaterial.userData.aurumDiamondMicroUniforms = {
+    scintillationStrength: { value: 0.16 }, baseScintillationStrength: 0.16,
+    facetContrast: { value: 0.88 }, baseFacetContrast: 0.88,
+    dispersion: { value: 0.01 }, baseDispersion: 0.01,
+    virtualFacetWeight: { value: 0.06 }, baseVirtualFacetWeight: 0.06,
+    fireScale: { value: 1 },
+  };
+  mesh.material = diamondMaterial;
+  expect(pipeline.refresh()).toBe(1);
+  pipeline.update();
+  mesh.onBeforeRender(null as any, scene, camera, mesh.geometry, diamondMaterial, null as any);
+  expect(mesh.userData.aurumDiamondMicroTier).toBe("micro");
+  expect(diamondMaterial.userData.aurumDiamondMicroUniforms.scintillationStrength.value).toBeCloseTo(0.16 * 0.58);
+
+  mesh.material = new THREE.MeshBasicMaterial();
+  pipeline.refresh();
+  expect(mesh.onBeforeRender).toBe(originalCallback);
+  expect(mesh.userData.aurumDiamondMicroTier).toBeUndefined();
+  pipeline.dispose();
+});
