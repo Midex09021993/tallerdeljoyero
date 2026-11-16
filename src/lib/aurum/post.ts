@@ -232,7 +232,9 @@ export async function createAurumPostPipeline(
         diamondFxaaSnapshotTexture.minFilter=THREE.LinearFilter;
         diamondFxaaSnapshotTexture.magFilter=THREE.LinearFilter;
         diamondFxaaSnapshotTexture.generateMipmaps=false;
-        diamondFxaaSnapshotTexture.colorSpace=activeRenderer.outputColorSpace??THREE.SRGBColorSpace;
+        // copyFramebufferToTexture copies display-encoded bytes. Keep this as
+        // raw data; the FXAA shader explicitly decodes sRGB before filtering.
+        diamondFxaaSnapshotTexture.colorSpace=THREE.NoColorSpace;
       }else if(
         diamondFxaaSnapshotTexture.image?.width!==targetWidth
         || diamondFxaaSnapshotTexture.image?.height!==targetHeight
@@ -240,13 +242,6 @@ export async function createAurumPostPipeline(
         diamondFxaaSnapshotTexture.dispose();
         diamondFxaaSnapshotTexture=null;
         return ensureDiamondFxaaSnapshotTexture(targetWidth,targetHeight,activeRenderer);
-      }
-      // The copied framebuffer already contains the renderer's display-referred
-      // beauty. Decode it for FXAA sampling, then encode once in the overlay shader.
-      const outputColorSpace=activeRenderer.outputColorSpace??THREE.SRGBColorSpace;
-      if(diamondFxaaSnapshotTexture.colorSpace!==outputColorSpace){
-        diamondFxaaSnapshotTexture.colorSpace=outputColorSpace;
-        diamondFxaaSnapshotTexture.needsUpdate=true;
       }
       return diamondFxaaSnapshotTexture;
     };
@@ -902,15 +897,21 @@ export async function createAurumPostPipeline(
       vertexShader:`varying vec2 vUv; void main(){vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
       fragmentShader:`#include <colorspace_pars_fragment>
         uniform sampler2D tDiffuse; uniform sampler2D gemMask; uniform vec2 resolution; uniform float strength; uniform float edgeThreshold; varying vec2 vUv;
+        vec3 aurumSrgbToLinear(vec3 c){
+          vec3 low=c/12.92;
+          vec3 high=pow((c+0.055)/1.055,vec3(2.4));
+          return mix(high,low,lessThanEqual(c,vec3(0.04045)));
+        }
         float luma(vec3 c){return dot(c,vec3(0.2126,0.7152,0.0722));}
         vec3 sampleGem(vec2 uv,vec3 fallbackColor){
           if(texture2D(gemMask,uv).r<0.5) return fallbackColor;
-          return texture2D(tDiffuse,uv).rgb;
+          return aurumSrgbToLinear(texture2D(tDiffuse,uv).rgb);
         }
         void main(){
           float centerMask=texture2D(gemMask,vUv).r;
           if(centerMask<0.5) discard;
-          vec4 center=texture2D(tDiffuse,vUv);
+          vec4 sampledCenter=texture2D(tDiffuse,vUv);
+          vec4 center=vec4(aurumSrgbToLinear(sampledCenter.rgb),sampledCenter.a);
           vec3 result=center.rgb;
           vec2 px=max(resolution,vec2(0.000001));
           if(centerMask>=0.5){
@@ -1359,7 +1360,8 @@ export async function createAurumPostPipeline(
   const renderDiamondSupersampleOverlay=(activeRenderer:any)=>{
     if(!gemMaskPass?.enabled || !diamondSupersamplePass?.enabled || !diamondSupersampleCompositePass?.enabled) return false;
     try{
-      gemMaskPass.render(activeRenderer);
+      // The native mask was already rendered once by the main frame loop.
+      // This pass only generates the high-resolution mask inside SSAA render().
       diamondSupersamplePass.render(activeRenderer);
       if(!diamondSupersamplePass.enabled || !diamondSupersampleCompositePass.enabled) return false;
       const previousTarget=activeRenderer.getRenderTarget();
