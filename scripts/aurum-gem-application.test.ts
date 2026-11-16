@@ -268,6 +268,10 @@ test("masked diamond SSAA and native-resolution FXAA are independently toggleabl
   expect(controls).toContain("diamondTaaEnabled: false");
   expect(post).toContain("const fxaaEnabled=diamondMaskReady && fxaaRequested;");
   expect(post).toContain("const renderDiamondFxaaOverlay=(activeRenderer:any)=>");
+  expect(post).toContain("let gemMaskTarget:any=null;");
+  expect(post).toContain("let ensureDiamondFxaaSnapshotTexture:any=null;");
+  expect(post).toContain("ensureDiamondFxaaSnapshotTexture=(width:number,height:number,activeRenderer:any)=>{");
+  expect(post).toContain("gemMaskTarget=new THREE.WebGLRenderTarget(");
   expect(post).toContain("ensureDiamondFxaaSnapshotTexture(width,height,activeRenderer)");
   expect(post).toContain("activeRenderer.copyFramebufferToTexture(snapshot,new THREE.Vector2(0,0))");
   expect(post).toContain("fxaaPass.render(activeRenderer,null,{texture:snapshot},0,false)");
