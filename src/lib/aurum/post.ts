@@ -681,7 +681,6 @@ export async function createAurumPostPipeline(
           diamondSupersampleCompositePass.material.uniforms.reconstructionScale.value=diamondSupersampleScale;
           if(diamondSupersampleTarget) diamondSupersampleCompositePass.material.uniforms.tDiamondHiRes.value=diamondSupersampleTarget.texture;
         }
-        ensureDiamondSupersampleMaskTarget();
       },
       canRender(){ return updateDiamondSupersampleScale(); },
       setScaleCap(cap:number){
@@ -695,7 +694,6 @@ export async function createAurumPostPipeline(
           diamondSupersampleCompositePass.material.uniforms.reconstructionScale.value=diamondSupersampleScale;
           if(diamondSupersampleTarget) diamondSupersampleCompositePass.material.uniforms.tDiamondHiRes.value=diamondSupersampleTarget.texture;
         }
-        ensureDiamondSupersampleMaskTarget();
       },
       render(activeRenderer:any){
         let activeTarget:any=null;
