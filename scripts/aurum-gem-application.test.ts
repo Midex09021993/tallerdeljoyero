@@ -150,7 +150,14 @@ test("web-tier models receive 2x diamond-only supersampling without raising shar
   expect(component).toContain("diamondMicroPipeline.refresh();\n        diamondMicroPipeline.update();\n        // Synchronize the newly prepared gemstone BVH");
   expect(component).toContain("diamondBvhRuntime.refresh(modelo);\n              // Re-index after BVH material replacement");
   const post = readFileSync("src/lib/aurum/post.ts", "utf8");
-  expect(post).toContain("data.aurumActiveGemFamily??data.aurumGemFamily??data.aurumDiamondOpticalFamily");
+  expect(post).toContain("const firstNonEmpty=(values:any[])=>values.map(value=>String(value??\\\"\\\").trim()).find(Boolean)??\\\"\\\";");
+  expect(post).toContain("data.aurumActiveGemFamily,");
+  expect(post).toContain("data.aurumGemFamily,");
+  expect(post).toContain("data.aurumDiamondOpticalFamily,");
+  expect(post).toContain("readRenderTargetPixels(gemMaskTarget,0,0,width,height,pixels)");
+  expect(post).toContain("requestDiagnostics(){");
+  expect(post).toContain("cachedCenterMeshes:cachedGemMeshes.length,");
+  expect(post).toContain("maskCoveragePercent:gemMaskCoveragePercent,");
   expect(post).toContain("Math.min(diamondSupersampleScaleCap,Math.sqrt(8_500_000/Math.max(1,basePixels)))");
   expect(post).toContain("if(texture2D(gemMask,vUv).r<0.5){gl_FragColor=base;return;}");
   expect(post).toContain("setDiamondSupersampleScaleCap");
@@ -202,6 +209,10 @@ test("Gem Mask exposes an independent diagnostic overlay without enabling AA", (
   expect(post).toContain("coverage<0.5) discard");
   expect(component).toContain("gemMaskPass.enabled=getAurumPostControls().gemMaskEnabled");
   expect(component).toContain("gemMaskPass.renderDiagnosticOverlay?.(renderer)");
+  expect(component).toContain("gemMaskDiagnosticsRef.current = gemMaskPass;");
+  expect(component).toContain("requestGemMaskDiagnostics");
+  expect(component).toContain("aurum-gem-mask-diagnostics-ready");
+  expect(component).toContain("diamondControlDiagnostics.gemMask?.maskCoveragePercent");
   expect(component).toContain("viewerLoopRef.current?.invalidate?.();");
 });
 
