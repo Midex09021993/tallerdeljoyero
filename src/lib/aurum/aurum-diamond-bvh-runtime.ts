@@ -400,7 +400,7 @@ export async function createAurumDiamondBvhRuntime(options: {
               packageApi.setDiamondOptions(prepared.material, {
                 // Fewer internal bounces on tiny white melee reduce unstable
                 // high-frequency sparkle; the center and colored variants stay calibrated.
-                rayBounces: isNeutralMicroDiamond ? 2 : isNeutralSmallDiamond ? 3 : isSmallSecondaryDiamond ? 4 : isBlueDiamond ? 6 : 5,
+                rayBounces: currentDiamondTier === "micro" ? 2 : currentDiamondTier === "small" ? 3 : isBlueDiamond ? 6 : 5,
               });
               return;
             }
