@@ -4915,9 +4915,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             <section className="mb-3 rounded-xl border border-[#e6e1d8] bg-white p-3">
               <div className="mb-2 text-[10px] font-semibold uppercase tracking-[.12em] text-[#92743b]">Cadena óptica actual</div>
               <div className="space-y-2 text-[10px] text-[#55534d]">
-                <div className="flex items-center justify-between gap-2"><span>Material físico + shader iJewel</span><span className="font-semibold">{(diamondControlDiagnostics?.bvh?.diamondMeshes??0)>0?"Reemplazado en mallas BVH":"Ruta física en uso"}</span></div>
-                <div className="flex items-center justify-between gap-2"><span>Scintillation</span><span className="font-semibold">{(diamondControlDiagnostics?.bvh?.diamondMeshes??0)>0?"No corre en esas mallas":"Disponible en shader físico"}</span></div>
-                <div className="flex items-center justify-between gap-2"><span>Dispersión</span><span className="font-semibold">{(diamondControlDiagnostics?.bvh?.diamondMeshes??0)>0?"BVH":"Shader físico"}</span></div>
+                <div className="flex items-center justify-between gap-2"><span>Material físico + shader iJewel</span><span className="font-semibold">{!diamondControlDiagnostics?.bvh?"Pendiente de diagnóstico":(diamondControlDiagnostics.bvh.diamondMeshes??0)>0?"Reemplazado en mallas BVH":"Ruta física en uso"}</span></div>
+                <div className="flex items-center justify-between gap-2"><span>Scintillation</span><span className="font-semibold">{!diamondControlDiagnostics?.bvh?"Pendiente":(diamondControlDiagnostics.bvh.diamondMeshes??0)>0?"No corre en esas mallas":"Disponible en shader físico"}</span></div>
+                <div className="flex items-center justify-between gap-2"><span>Dispersión</span><span className="font-semibold">{!diamondControlDiagnostics?.bvh?"Pendiente":(diamondControlDiagnostics.bvh.diamondMeshes??0)>0?"BVH":"Shader físico"}</span></div>
                 <div className="flex items-center justify-between gap-2"><span>SSAA / FXAA / TAA dedicado</span><span className="font-semibold">Desactivados</span></div>
               </div>
               <p className="mt-2 border-t border-black/[.06] pt-2 text-[9px] leading-relaxed text-[#8a857b]">El BVH reemplaza el material físico en las mallas que procesa. Por eso Scintillation no debe contarse como activa simultáneamente en esas mismas mallas.</p>
