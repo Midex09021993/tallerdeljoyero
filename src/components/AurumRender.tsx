@@ -4976,7 +4976,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             </section>
             <section className="mb-3 rounded-xl border border-[#e6e1d8] bg-white p-3">
               <div className="mb-2 text-[10px] font-semibold uppercase tracking-[.12em] text-[#92743b]">Antialiasing del diamante</div>
-              <p className="mb-3 text-[9px] leading-relaxed text-[#77756f]">Gem Mask delimita el diamante central. FXAA suaviza a resolución nativa y SSAA reconstruye el diamante a mayor resolución. TAA permanece bloqueado para validación independiente.</p>
+              <p className="mb-3 text-[9px] leading-relaxed text-[#77756f]">Gem Mask delimita el diamante central. FXAA suaviza el contorno a resolución nativa dentro de Gem Mask. SSAA y TAA permanecen bloqueados hasta completar su validación independiente.</p>
               {([
                 {key:"gemMaskEnabled",label:"Gem Mask",description:"Máscara interna del diamante central; delimita el área donde puede trabajar FXAA sin modificar metal ni ambiente."},
                 {key:"diamondSsaaEnabled",label:"SSAA",description:"Render auxiliar de mayor resolución para el diamante."},
@@ -4984,14 +4984,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 {key:"diamondTaaEnabled",label:"TAA",description:"Acumula muestras del diamante cuando la cámara está fija."},
               ] as const).map((item)=>{
                 const enabled=diamondPostControls[item.key];
-                const blocked=item.key==="diamondTaaEnabled"||((item.key==="diamondSsaaEnabled"||item.key==="gemFxaaEnabled")&&!diamondPostControls.gemMaskEnabled);
-                const blockedMessage=item.key==="gemFxaaEnabled"?"Activa Gem Mask para habilitar FXAA.":item.key==="diamondSsaaEnabled"?"Activa Gem Mask para habilitar SSAA.":"Bloqueado hasta completar la validación independiente.";
+                const blocked=item.key==="diamondTaaEnabled"||item.key==="diamondSsaaEnabled"||(item.key==="gemFxaaEnabled"&&!diamondPostControls.gemMaskEnabled);
+                const blockedMessage=item.key==="gemFxaaEnabled"?"Activa Gem Mask para habilitar FXAA.":item.key==="diamondSsaaEnabled"?"SSAA suspendido hasta completar la validación visual.":"Bloqueado hasta completar la validación independiente.";
                 return <div key={item.key} className="flex items-center justify-between gap-3 border-t border-black/[.05] py-2 first:border-t-0 first:pt-0">
                   <div className="min-w-0"><div className="text-[11px] font-semibold text-[#292824]">{item.label}</div><p className="mt-0.5 text-[9px] leading-relaxed text-[#77756f]">{item.description}</p>{blocked&&<p className="mt-1 text-[9px] font-semibold text-amber-700">{blockedMessage}</p>}</div>
                   <button type="button" role="switch" aria-label={item.label} aria-checked={enabled} aria-disabled={blocked} disabled={blocked} title={blocked?blockedMessage:"Activar o desactivar "+item.label} onClick={()=>{if(blocked)return;const next=item.key==="gemMaskEnabled"?setAurumPostControls({gemMaskEnabled:!enabled}):item.key==="diamondSsaaEnabled"?setAurumPostControls({diamondSsaaEnabled:!enabled}):item.key==="gemFxaaEnabled"?setAurumPostControls({gemFxaaEnabled:!enabled}):setAurumPostControls({diamondTaaEnabled:!enabled});setDiamondPostControls(next);viewerLoopRef.current?.invalidate?.();}} className={"relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors "+(blocked?"cursor-not-allowed opacity-50 ":"")+(enabled?"bg-[#a88743]":"bg-[#c9c6bf")}><span className={"inline-block size-3.5 rounded-full bg-white shadow-sm transition-transform "+(enabled?"translate-x-[18px]":"translate-x-1")}/></button>
                 </div>;
               })}
-              <div className="mt-2 border-t border-black/[.06] pt-2 text-[9px] leading-relaxed text-[#8a857b]">FXAA procesa el fotograma nativo. SSAA utiliza un render auxiliar de mayor resolución y compone únicamente dentro de Gem Mask. TAA permanece bloqueado.</div>
+              <div className="mt-2 border-t border-black/[.06] pt-2 text-[9px] leading-relaxed text-[#8a857b]">FXAA procesa el fotograma nativo únicamente dentro de Gem Mask. SSAA está suspendido por regresión visual y TAA permanece bloqueado.</div>
             </section>
             <section className="rounded-xl border border-[#e6e1d8] bg-white p-3">
               <div className="mb-2 flex items-center justify-between gap-2"><div className="text-[10px] font-semibold uppercase tracking-[.12em] text-[#92743b]">Diagnóstico de ejecución</div><button type="button" onClick={requestGemMaskDiagnostics} disabled={gemMaskDiagnosticStatus==="pending"} className="rounded-lg border border-black/10 px-2 py-1 text-[9px] font-semibold text-[#6d5523]">Actualizar</button></div>
