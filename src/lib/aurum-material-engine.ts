@@ -50,10 +50,13 @@ export const getAurumMetalReflectionResponse=(preset:AurumMetalPreset)=>{
   // Green gold has a deliberately olive alloy color. Classify it by its catalog
   // identity before the broad RGB test, otherwise it is incorrectly treated as
   // yellow gold and receives the yellow-gold roughness adjustment below.
-  if(presetId.includes("verde") || presetId.includes("green-gold")){
+  // The iJewel green/white bicolor is the explicit exception: its blended preset
+  // is intentionally warm yellow and must retain its yellow-gold family identity.
+  const isYellowBicolorIjeWel=presetId==="oro18_verde_blanco_ijewel";
+  if((presetId.includes("verde") && !isYellowBicolorIjeWel) || presetId.includes("green-gold")){
     scale=.70;
     family="green-gold";
-  }else if(r>b*1.28 && g>b*1.10){
+  }else if(isYellowBicolorIjeWel || (r>b*1.28 && g>b*1.10)){
     // Yellow gold: preserve stronger studio-HDR reflections for crisp polished
     // highlights while avoiding the overly broad response of the previous tuning.
     scale=.70;
