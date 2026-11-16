@@ -204,6 +204,30 @@ test("legacy Post Engine preferences cannot reactivate full-frame AA or TAA", ()
   expect(post).not.toContain("taaRequested=Boolean(options.capture && postControls.taaEnabled)");
 });
 
+test("diamond SSAA restores the complete renderer and scene state after its auxiliary transaction", () => {
+  const post = readFileSync("src/lib/aurum/post.ts", "utf8");
+  const start = post.indexOf("diamondSupersamplePass={");
+  const end = post.indexOf("diamondSupersampleCompositePass=new FXAAShaderPass", start);
+  const pass = post.slice(start, end);
+  for (const state of [
+    "previousToneMapping",
+    "previousToneMappingExposure",
+    "previousOutputColorSpace",
+    "previousLocalClippingEnabled",
+    "previousClippingPlanes",
+    "previousShadowAutoUpdate",
+    "previousXrEnabled",
+    "previousSortObjects",
+    "previousSceneOverride",
+    "previousSceneBackground",
+    "previousCameraLayerMask",
+  ]) expect(pass).toContain(state);
+  expect(pass).toContain("activeRenderer.outputColorSpace=previousOutputColorSpace;");
+  expect(pass).toContain("scene.overrideMaterial=previousSceneOverride;");
+  expect(pass).toContain("scene.background=previousSceneBackground;");
+  expect(pass).toContain("camera.layers.mask=previousCameraLayerMask;");
+});
+
 test("diamond-only post composites preserve every pixel outside the diamond mask", () => {
   const post = readFileSync("src/lib/aurum/post.ts", "utf8");
   expect(post).toContain("if(texture2D(gemMask,vUv).r<0.5){gl_FragColor=base;return;}");
