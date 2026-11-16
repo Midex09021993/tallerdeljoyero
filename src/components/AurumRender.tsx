@@ -3341,8 +3341,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               escena.background=null;
               renderer.setClearColor(0x000000,0);
             }
-            if (composer && (options.depthOfField || !liveFastPathRef.current)) composer.render();
+            const captureDiamondSsaa=Boolean(diamondSupersamplePass?.enabled&&diamondSupersampleCompositePass?.enabled&&gemMaskPass?.enabled&&gemMaskPass?.hasDiamondMeshes);
+            if (composer && options.depthOfField) composer.render();
             else renderer.render(escena,camara);
+            if(captureDiamondSsaa&&!options.depthOfField) renderDiamondSupersampleOverlay?.(renderer);
             const captureComposerBuffer = options.depthOfField && composer ? { width: renderer.domElement.width, height: renderer.domElement.height } : null;
             const captureTaaPass = null as null | { enabled?: boolean; accumulate?: boolean; sampleLevel?: number; accumulateIndex?: number };
             console.info("[AURUM][PNG CAPTURE DIAGNOSTICS]", {
@@ -3901,6 +3903,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             && outputPass
             && gemMaskPass?.enabled
             && gemMaskPass?.hasDiamondMeshes
+            && !diamondSupersamplePass?.enabled
             && (fxaaPass?.enabled || (idleTaaPass?.enabled && diamondTaaSavePass?.enabled && diamondTaaCompositePass?.enabled))
           );
           const activeToneAuditPath = useLiveGemAa ? "composer" : (diamondSupersamplePass?.enabled ? "direct+diamond-overlay" : "direct");
