@@ -34,6 +34,31 @@ export function classifyAurumDiamondScreenSize(diameterPx: number): Exclude<Auru
   return "brilliant";
 }
 
+/** Shared screen-space classification used by both the physical and BVH diamond paths. */
+export function classifyAurumDiamondMeshTiers(
+  meshes: readonly any[],
+  camera: any,
+  viewportHeight: number,
+): Map<any, Exclude<AurumDiamondMicroTier, "mixed">> {
+  const projected = meshes.map(mesh => ({
+    mesh,
+    diameter: getAurumDiamondProjectedDiameterPx(mesh, camera, viewportHeight),
+  }));
+  const sorted = projected.map(item => item.diameter).sort((a, b) => b - a);
+  const largest = sorted[0] ?? 0;
+  const secondLargest = sorted[1] ?? 0;
+  const hasDistinctCenter = projected.length === 1 || (largest > 12 && largest > Math.max(secondLargest, 0.01) * 1.35);
+  const centerMesh = projected.find(item => item.diameter === largest)?.mesh;
+  const tiers = new Map<any, Exclude<AurumDiamondMicroTier, "mixed">>();
+  for (const { mesh, diameter } of projected) {
+    const explicitlyProtected = Boolean(mesh.userData?.aurumDiamondCenter || mesh.userData?.aurumDiamondIsCenter)
+      || /center|central|main|principal/i.test(String(mesh.userData?.aurumDiamondRole ?? ""));
+    const protectedCenter = explicitlyProtected || (hasDistinctCenter && mesh === centerMesh);
+    tiers.set(mesh, protectedCenter ? "brilliant" : classifyAurumDiamondScreenSize(diameter));
+  }
+  return tiers;
+}
+
 export function getAurumDiamondProjectedDiameterPx(mesh: any, camera: any, viewportHeight: number): number {
   if (!mesh?.geometry || !camera || !Number.isFinite(viewportHeight) || viewportHeight <= 0) return 0;
   const geometry = mesh.geometry;
