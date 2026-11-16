@@ -270,7 +270,7 @@ test("only masked diamond FXAA can be enabled; SSAA and TAA remain fail-closed",
   expect(post).toContain("if(fxaaPass) fxaaPass.enabled=fxaaEnabled;");
   expect(render).toContain('item.key==="gemFxaaEnabled"?setAurumPostControls({gemFxaaEnabled:!enabled})');
   expect(render).toContain('item.key==="diamondSsaaEnabled"||item.key==="diamondTaaEnabled"');
-  expect(render).toContain("diamondSupersamplePass.renderFxaa(activeRenderer,Boolean(fxaaPass?.enabled))");
+  expect(post).toContain("diamondSupersamplePass.renderFxaa(activeRenderer,Boolean(fxaaPass?.enabled))");
 });
 
 test("diamond perimeter AA uses the stronger masked edge profile", () => {
