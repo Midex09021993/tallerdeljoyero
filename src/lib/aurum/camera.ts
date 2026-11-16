@@ -184,10 +184,8 @@ export function applyAurumCameraView(
   category: string = "Otro",
   framingScale: number = 1,
 ) {
-  const bounds = getAurumVisibleProductBounds(model);
-  const target = bounds.isEmpty()
-    ? new THREE.Vector3()
-    : bounds.getCenter(new THREE.Vector3());
+  const productSphere = getAurumVisibleProductSphere(model);
+  const target = productSphere.center.clone();
   const profile = getAurumProductCameraProfile(category);
   const direction = view === "frontal"
     ? new THREE.Vector3(0, 0.06, 1).normalize()
@@ -200,52 +198,21 @@ export function applyAurumCameraView(
     ? new THREE.Vector3(0, 0, -1)
     : new THREE.Vector3(0, 1, 0);
 
-  // Build an orthonormal camera basis for the selected view.
+  // A single model-space bounding sphere is the framing reference for every
+  // camera preset. Do not fit each view to its projected bounding-box corners:
+  // doing so changes camera distance and makes the same jewel appear to zoom
+  // in/out when switching between front, side, top and perspective.
   const right = requestedUp.clone().cross(direction).normalize();
   const cameraUp = direction.clone().cross(right).normalize();
   const aspect = Number.isFinite(camera.aspect) && camera.aspect > 0 ? camera.aspect : 1;
   const verticalHalfFov = THREE.MathUtils.degToRad(camera.fov) * 0.5;
   const horizontalHalfFov = Math.atan(Math.tan(verticalHalfFov) * aspect);
-  const tanVertical = Math.max(Math.tan(verticalHalfFov), 1e-4);
-  const tanHorizontal = Math.max(Math.tan(horizontalHalfFov), 1e-4);
+  const limitingHalfFov = Math.max(1e-4, Math.min(verticalHalfFov, horizontalHalfFov));
   const scale = Number.isFinite(framingScale) ? THREE.MathUtils.clamp(framingScale, 0.25, 1.5) : 1;
   const targetNdc = THREE.MathUtils.clamp(0.72 / scale, 0.35, 0.92);
-
-  // Measure the complete projected silhouette envelope for this orientation.
-  // Solve camera distance so every preset uses the same maximum screen-space
-  // footprint, rather than merely ensuring that the model does not get clipped.
-  const corners = bounds.isEmpty() ? [] : [
-    new THREE.Vector3(bounds.min.x, bounds.min.y, bounds.min.z),
-    new THREE.Vector3(bounds.min.x, bounds.min.y, bounds.max.z),
-    new THREE.Vector3(bounds.min.x, bounds.max.y, bounds.min.z),
-    new THREE.Vector3(bounds.min.x, bounds.max.y, bounds.max.z),
-    new THREE.Vector3(bounds.max.x, bounds.min.y, bounds.min.z),
-    new THREE.Vector3(bounds.max.x, bounds.min.y, bounds.max.z),
-    new THREE.Vector3(bounds.max.x, bounds.max.y, bounds.min.z),
-    new THREE.Vector3(bounds.max.x, bounds.max.y, bounds.max.z),
-  ];
-  const projectedExtent = (distance: number) => {
-    let extent = 0;
-    for (const corner of corners) {
-      const relative = corner.clone().sub(target);
-      const depth = distance - relative.dot(direction);
-      if (depth <= 1e-5) return Number.POSITIVE_INFINITY;
-      const horizontalNdc = Math.abs(relative.dot(right)) / (depth * tanHorizontal);
-      const verticalNdc = Math.abs(relative.dot(cameraUp)) / (depth * tanVertical);
-      extent = Math.max(extent, horizontalNdc, verticalNdc);
-    }
-    return extent;
-  };
-
-  let low = Math.max(0.01, ...corners.map((corner) => corner.clone().sub(target).dot(direction) + 0.01));
-  let high = Math.max(low + 1, 1);
-  while (projectedExtent(high) > targetNdc && high < 1e7) high *= 2;
-  for (let i = 0; i < 48; i += 1) {
-    const mid = (low + high) * 0.5;
-    if (projectedExtent(mid) > targetNdc) low = mid;
-    else high = mid;
-  }
-  const distance = Math.max(high, 0.1);
+  const tangent = Math.tan(limitingHalfFov) * targetNdc;
+  const radius = Math.max(productSphere.radius, 0.001);
+  const distance = radius / Math.sin(Math.atan(tangent));
 
   camera.up.copy(cameraUp);
   controls.target.copy(target);
