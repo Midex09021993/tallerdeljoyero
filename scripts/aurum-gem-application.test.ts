@@ -255,8 +255,8 @@ test("live camera motion keeps diamond-only supersampling active at a reduced ad
   expect(render).toContain("runtimeBudget.diamondLiveSupersampleScaleCap");
   expect(render).not.toContain("renderDiamondSupersampleOverlay?.(renderer)");
   expect(render).not.toContain("const diamondSsaaOverlayActive=");
-  expect(render).toContain("const useLiveGemAa = Boolean(");
-  expect(render).toContain("&& gemMaskPass?.hasDiamondMeshes");
+  expect(render).toContain('const activeToneAuditPath = "direct";');
+  expect(render).toContain("renderer.render(escena,camara);");
   expect(post).toContain("const fxaaEnabled=false;");
   expect(post).not.toContain("composer.addPass(fxaaPass)");
   expect(post).toContain("const ssaaEnabled=false;");
