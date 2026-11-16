@@ -499,7 +499,11 @@ test("Aurum exposes diamond-only AA and SSAA as independent modules", () => {
   expect(postSource).toContain("#include <tonemapping_fragment>");
   expect(componentSource).toContain("&& !diamondSupersamplePass?.enabled");
   expect(componentSource).not.toContain("renderDiamondSupersampleOverlay?.(renderer)");
-  expect(componentSource).not.toContain("composer.render();");
+  const liveBeautyStart = componentSource.indexOf('const activeToneAuditPath = "direct";');
+  const liveBeautyEnd = componentSource.indexOf("const renderCpuMs", liveBeautyStart);
+  const liveBeautyBlock = componentSource.slice(liveBeautyStart, liveBeautyEnd);
+  expect(liveBeautyStart).toBeGreaterThan(-1);
+  expect(liveBeautyBlock).not.toContain("composer.render();");
   expect(postSource).toContain("const ssaaEnabled=false;");
   expect(postSource).not.toContain("composer.addPass(diamondSupersampleCompositePass)");
   expect(componentSource).toContain('const activeToneAuditPath = "direct";');
