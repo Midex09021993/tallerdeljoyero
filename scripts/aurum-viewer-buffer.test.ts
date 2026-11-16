@@ -743,7 +743,7 @@ test("extreme scenes allow stronger settled diamond SSAA while preserving the li
 test("diamond optical A/B modes isolate the iJewel-inspired shader without changing physical IOR", () => {
   const scintillationSource = readFileSync("src/lib/aurum/scintillation.ts", "utf8");
   const materialSource = readFileSync("src/lib/aurum-material-engine.ts", "utf8");
-  expect(scintillationSource).toContain('get("aurumDiamondTest")');
+  expect(scintillationSource).toContain('get("aurumDiamondTest") ?? "c"');
   expect(scintillationSource).toContain('b:{label:"iJewel reference · physical IOR",ior:2.417,dispersion:0.01,rayBounces:5}');
   expect(scintillationSource).toContain('const ijewelEnabled=isDiamond && diamondTestMode!=="a"');
   expect(scintillationSource).toContain('diamondTestMode??"no-diamond-ab-test"');
