@@ -481,7 +481,12 @@ test("Aurum exposes diamond-only AA and SSAA as independent modules", () => {
   expect(componentSource).toContain("const diamondSsaaActive = Boolean(diamondSupersamplePass?.enabled && diamondSupersampleCompositePass?.enabled);");
   expect(controlsSource).toContain("gemFxaaEnabled: false");
   expect(controlsSource).toContain("diamondSsaaEnabled: false");
-  expect(controlsSource).toContain("const normalize = (_value: any): AurumPostControls");
+  expect(controlsSource).toContain("const normalize = (value: any): AurumPostControls");
+  expect(controlsSource).toContain("gemMaskEnabled: value?.gemMaskEnabled === true");
+  expect(controlsSource).toContain("diamondSsaaEnabled: false");
+  expect(controlsSource).toContain("gemFxaaEnabled: false");
+  expect(componentSource).toContain("Bloqueado temporalmente hasta validar Gem Mask sobre el modelo real.");
+  expect(componentSource).toContain("disabled={blocked}");
   expect(architectureSource).toContain('id: "diamond-ssaa"');
   expect(architectureSource).toContain('aria-disabled="true" disabled title="SSAA suspendido por regresión visual"');
   expect(architectureSource).toContain('aria-disabled="true" disabled title="FXAA suspendido por regresión visual"');

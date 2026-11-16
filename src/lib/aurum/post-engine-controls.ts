@@ -20,10 +20,10 @@ const DEFAULTS: AurumPostControls = {
   taaEnabled: false,
 };
 
-// Fail closed after a visual regression in the live jewelry model.
-// Stored preferences cannot reactivate experimental diamond reconstruction.
-const normalize = (_value: any): AurumPostControls => ({
-  gemMaskEnabled: false,
+// Gem Mask is a safe, independent gate and can be armed for inspection.
+// Reconstruction and temporal effects remain fail-closed until visual sign-off.
+const normalize = (value: any): AurumPostControls => ({
+  gemMaskEnabled: value?.gemMaskEnabled === true,
   diamondSsaaEnabled: false,
   gemFxaaEnabled: false,
   diamondTaaEnabled: false,
