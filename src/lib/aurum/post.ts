@@ -58,6 +58,7 @@ export async function createAurumPostPipeline(
   let diamondSupersamplePass:any=null;
   let diamondSupersampleCompositePass:any=null;
   let diamondSupersampleTarget:any=null;
+  let diamondSupersampleMaskTarget:any=null;
   let gradingPass:any=null;
   let composerMsaaSamples=0;
   // Shared SSAA state lives at the pipeline scope because motion controls are
@@ -251,6 +252,23 @@ export async function createAurumPostPipeline(
       }
       return diamondSupersampleTarget;
     };
+    const ensureDiamondSupersampleMaskTarget=()=>{
+      if(!updateDiamondSupersampleScale()) return null;
+      const width=Math.max(2,Math.floor(diamondSupersampleBaseWidth*diamondSupersampleScale));
+      const height=Math.max(2,Math.floor(diamondSupersampleBaseHeight*diamondSupersampleScale));
+      if(!diamondSupersampleMaskTarget){
+        diamondSupersampleMaskTarget=new THREE.WebGLRenderTarget(width,height,{
+          format:THREE.RGBAFormat,type:THREE.UnsignedByteType,depthBuffer:true,stencilBuffer:false
+        });
+        configureAurumGemMaskTexture(diamondSupersampleMaskTarget.texture,THREE);
+      }else if(diamondSupersampleMaskTarget.width!==width||diamondSupersampleMaskTarget.height!==height){
+        diamondSupersampleMaskTarget.setSize(width,height);
+      }
+      if(diamondSupersampleCompositePass?.material?.uniforms?.tDiamondHiResMask){
+        diamondSupersampleCompositePass.material.uniforms.tDiamondHiResMask.value=diamondSupersampleMaskTarget.texture;
+      }
+      return diamondSupersampleMaskTarget;
+    };
     const depthOnlyMaterial=new THREE.MeshBasicMaterial({
       color:0x000000,side:THREE.DoubleSide,depthTest:true,depthWrite:true,colorWrite:false
     });
@@ -437,6 +455,7 @@ export async function createAurumPostPipeline(
         if(diamondSupersampleTarget && diamondSupersampleCompositePass){
           diamondSupersampleCompositePass.material.uniforms.hiResTexel.value.set(1/diamondSupersampleTarget.width,1/diamondSupersampleTarget.height);
         }
+        ensureDiamondSupersampleMaskTarget();
       },
       canRender(){ return updateDiamondSupersampleScale(); },
       setScaleCap(cap:number){
@@ -450,6 +469,7 @@ export async function createAurumPostPipeline(
           diamondSupersampleCompositePass.material.uniforms.tDiamondHiRes.value=diamondSupersampleTarget.texture;
           diamondSupersampleCompositePass.material.uniforms.reconstructionScale.value=diamondSupersampleScale;
         }
+        ensureDiamondSupersampleMaskTarget();
       },
       render(activeRenderer:any){
         let activeTarget:any=null;
@@ -461,6 +481,8 @@ export async function createAurumPostPipeline(
           return;
         }
         if(!activeTarget || !updateDiamondSupersampleScale()) return;
+        const activeMaskTarget=ensureDiamondSupersampleMaskTarget();
+        if(!activeMaskTarget) return;
         const previousTarget=activeRenderer.getRenderTarget();
         const previousAutoClear=activeRenderer.autoClear;
         const previousViewport=new THREE.Vector4();
@@ -479,6 +501,31 @@ export async function createAurumPostPipeline(
           activeRenderer.setClearColor(previousClearColor,previousClearAlpha);
           activeRenderer.clear(true,true,true);
           activeRenderer.render(scene,camera);
+
+          // Rasterize the exact same visible center-diamond silhouette at the
+          // SSAA resolution. The low-resolution Gem Mask cannot safely gate
+          // subpixel reconstruction taps at a higher sampling frequency.
+          const previousOverride=scene.overrideMaterial;
+          const previousBackground=scene.background;
+          const previousCameraLayerMask=camera.layers?.mask;
+          try{
+            activeRenderer.setRenderTarget(activeMaskTarget);
+            activeRenderer.setViewport(0,0,activeMaskTarget.width,activeMaskTarget.height);
+            activeRenderer.setClearColor(0x000000,0);
+            activeRenderer.autoClear=false;
+            activeRenderer.clear(true,true,true);
+            scene.background=null;
+            scene.overrideMaterial=depthOnlyMaterial;
+            if(camera.layers && previousCameraLayerMask!==undefined) camera.layers.mask=previousCameraLayerMask;
+            activeRenderer.render(scene,camera);
+            scene.overrideMaterial=gemMaskMaterial;
+            if(camera.layers) camera.layers.mask=gemMaskLayerBit;
+            activeRenderer.render(scene,camera);
+          }finally{
+            if(camera.layers && previousCameraLayerMask!==undefined) camera.layers.mask=previousCameraLayerMask;
+            scene.overrideMaterial=previousOverride;
+            scene.background=previousBackground;
+          }
         }catch(error){
           diamondSupersamplePass.enabled=false;
           diamondSupersampleCompositePass && (diamondSupersampleCompositePass.enabled=false);
@@ -492,18 +539,24 @@ export async function createAurumPostPipeline(
           activeRenderer.setClearColor(previousClearColor,previousClearAlpha);
         }
       },
-      dispose(){ diamondSupersampleTarget?.dispose?.(); diamondSupersampleTarget=null; },
+      dispose(){
+        diamondSupersampleTarget?.dispose?.();
+        diamondSupersampleTarget=null;
+        diamondSupersampleMaskTarget?.dispose?.();
+        diamondSupersampleMaskTarget=null;
+      },
     };
     diamondSupersampleCompositePass=new FXAAShaderPass({
       uniforms:{
         tDiffuse:{value:null},
         tDiamondHiRes:{value:diamondSupersampleTarget?.texture??null},
         gemMask:{value:gemMaskTarget.texture},
+        tDiamondHiResMask:{value:diamondSupersampleMaskTarget?.texture??null},
         hiResTexel:{value:new THREE.Vector2(1/Math.max(2,Math.floor(diamondSupersampleBaseWidth*diamondSupersampleScale)),1/Math.max(2,Math.floor(diamondSupersampleBaseHeight*diamondSupersampleScale)))},
         reconstructionScale:{value:diamondSupersampleScale},
       },
       vertexShader:`varying vec2 vUv; void main(){vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
-      fragmentShader:`uniform sampler2D tDiffuse; uniform sampler2D tDiamondHiRes; uniform sampler2D gemMask; uniform vec2 hiResTexel; uniform float reconstructionScale; varying vec2 vUv;
+      fragmentShader:`uniform sampler2D tDiffuse; uniform sampler2D tDiamondHiRes; uniform sampler2D gemMask; uniform sampler2D tDiamondHiResMask; uniform vec2 hiResTexel; uniform float reconstructionScale; varying vec2 vUv;
         float aurumCatmullRomWeight(float x){
           x=abs(x);
           if(x<1.0) return 1.5*x*x*x-2.5*x*x+1.0;
@@ -526,7 +579,7 @@ export async function createAurumPostPipeline(
               float wx=aurumCatmullRomWeight(ox/reconstructionScale);
               float weight=wx*wy;
               vec2 sampleUv=clamp(vUv+vec2(ox,oy)*hiResTexel,vec2(0.0),vec2(1.0));
-              float sampleMask=texture2D(gemMask,sampleUv).r;
+              float sampleMask=texture2D(tDiamondHiResMask,sampleUv).r;
               if(sampleMask>=0.5 && abs(weight)>0.000001){
                 accumulated+=texture2D(tDiamondHiRes,sampleUv)*weight;
                 totalWeight+=weight;
