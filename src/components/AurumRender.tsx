@@ -1099,6 +1099,12 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             intensityScale: gemEnvironmentIntensityScale,
           });
         }
+        const gemEnvironmentDiagnostics = gemEnvironmentController.diagnostics?.();
+        console.info("[AURUM][GEM HDR][ASSIGNMENT]", gemEnvironmentDiagnostics ?? {
+          loaded: Boolean(entornoGema),
+          url: gemEnvironmentUrl,
+          note: "El HDR de gemas se informa por separado del envMap del material BVH.",
+        });
         invalidateRenderRef.current?.();
       };
       let gemEnvironmentRequestId = 0;
