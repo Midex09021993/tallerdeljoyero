@@ -13,8 +13,8 @@ export type AurumDiamondMicroOpticalProfile = {
 
 /** Per-stone live optics. Brilliant stones (including the protected center) retain the calibrated baseline. */
 export function getAurumDiamondMicroOpticalProfile(tier: Exclude<AurumDiamondMicroTier, "mixed">): AurumDiamondMicroOpticalProfile {
-  if (tier === "micro") return { scintillationScale: 0.58, facetContrastScale: 0.84, dispersionScale: 0.94, virtualFacetWeight: 0.025, fireScale: 0.76 };
-  if (tier === "small") return { scintillationScale: 0.80, facetContrastScale: 0.92, dispersionScale: 0.98, virtualFacetWeight: 0.045, fireScale: 0.90 };
+  if (tier === "micro") return { scintillationScale: 0.22, facetContrastScale: 0.72, dispersionScale: 0.72, virtualFacetWeight: 0.004, fireScale: 0.38 };
+  if (tier === "small") return { scintillationScale: 0.62, facetContrastScale: 0.84, dispersionScale: 0.86, virtualFacetWeight: 0.022, fireScale: 0.72 };
   return { scintillationScale: 1, facetContrastScale: 1, dispersionScale: 1, virtualFacetWeight: 0.06, fireScale: 1 };
 }
 
