@@ -277,36 +277,28 @@ export async function createAurumPostPipeline(
       depthFunc:THREE.LessEqualDepth,toneMapped:false
     });
     const findAurumCenterDiamondMeshes=():any[]=>{
-      const candidates:Array<{mesh:any;radius:number;slot:number|null}>=[];
+      const activeDiamonds:any[]=[];
       scene.updateMatrixWorld?.(true);
       scene.traverse((object:any)=>{
         if(!object?.isMesh||!object.geometry||object.userData?.aurumInternalInclusion) return;
-        const metadata=object.userData?.aurumRhino??{};
+        const data=object.userData??{};
+        const rhino=data.aurumRhino??{};
         const materials=Array.isArray(object.material)?object.material:[object.material];
-        const family=String(
-          object.userData?.aurumActiveGemFamily
-          ?? materials.find((material:any)=>material?.userData?.aurumGemFamily)?.userData?.aurumGemFamily
-          ?? ""
-        ).trim().toLowerCase();
-        const gemId=String(object.userData?.aurumActiveGemId??"").trim().toLowerCase();
-        const isGem=String(metadata.categoria??"").trim().toLowerCase()==="gema";
-        const isDiamond=isGem && (family==="diamante" || gemId.startsWith("diamante"));
-        if(!isDiamond) return;
+        const materialFamily=materials.find((material:any)=>String(material?.userData?.aurumGemFamily??"").trim().toLowerCase()==="diamante")?.userData?.aurumGemFamily;
+        const family=String(data.aurumActiveGemFamily??data.aurumGemFamily??materialFamily??"").trim().toLowerCase();
+        const gemId=String(data.aurumActiveGemId??data.aurumGemId??"").trim().toLowerCase();
+        const category=String(rhino.categoria??data.aurumDetectedCategory??data.aurumCategory??"").trim().toLowerCase();
+        const isDiamond=family==="diamante"||gemId.startsWith("diamante");
+        const isGem=category==="gema"||isDiamond;
+        if(!isGem||!isDiamond) return;
         if(!object.geometry.boundingSphere) object.geometry.computeBoundingSphere();
-        const localRadius=Number(object.geometry.boundingSphere?.radius??0);
-        const scale=object.getWorldScale(new THREE.Vector3());
-        const radius=localRadius*Math.max(Math.abs(scale.x),Math.abs(scale.y),Math.abs(scale.z));
+        const radius=Number(object.geometry.boundingSphere?.radius??0);
         if(!Number.isFinite(radius)||radius<=0) return;
-        const rawSlot=Number(metadata.matrixSlot);
-        const layer=String(metadata.capa??"");
-        const slot=rawSlot===1 || /(?:gem|gema)[\\s_-]*0?1\\b/i.test(layer) ? 1 : Number.isFinite(rawSlot)&&rawSlot>1 ? rawSlot : null;
-        candidates.push({mesh:object,radius,slot});
+        activeDiamonds.push(object);
       });
-      if(!candidates.length) return [];
-      const explicitCenter=candidates.filter(candidate=>candidate.slot===1);
-      if(explicitCenter.length) return explicitCenter.map(candidate=>candidate.mesh);
-      candidates.sort((a,b)=>b.radius-a.radius);
-      return [candidates[0]!.mesh];
+      // SSAA mode covers every active diamond in the scene (halos, pavé,
+      // multi-stone pieces and library gems), not only Rhino slot 1.
+      return activeDiamonds;
     };
     // Scene classification is stable between model/selection-geometry changes.
     // Reuse these arrays on every frame instead of traversing the whole scene
@@ -550,12 +542,15 @@ export async function createAurumPostPipeline(
       uniforms:{
         tDiamondHiRes:{value:diamondSupersampleTarget?.texture??null},
         gemMask:{value:gemMaskTarget.texture},
+        toneMappingExposure:{value:renderer.toneMappingExposure??1},
         tDiamondHiResMask:{value:diamondSupersampleMaskTarget?.texture??null},
         hiResTexel:{value:new THREE.Vector2(1/Math.max(2,Math.floor(diamondSupersampleBaseWidth*diamondSupersampleScale)),1/Math.max(2,Math.floor(diamondSupersampleBaseHeight*diamondSupersampleScale)))},
         reconstructionScale:{value:diamondSupersampleScale},
       },
       vertexShader:`varying vec2 vUv; void main(){vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
-      fragmentShader:`uniform sampler2D tDiamondHiRes; uniform sampler2D gemMask; uniform sampler2D tDiamondHiResMask; uniform vec2 hiResTexel; uniform float reconstructionScale; varying vec2 vUv;
+      fragmentShader:`#include <tonemapping_pars_fragment>
+        #include <colorspace_pars_fragment>
+        uniform sampler2D tDiamondHiRes; uniform sampler2D gemMask; uniform sampler2D tDiamondHiResMask; uniform vec2 hiResTexel; uniform float reconstructionScale; varying vec2 vUv;
         float aurumCatmullRomWeight(float x){
           x=abs(x);
           if(x<1.0) return 1.5*x*x*x-2.5*x*x+1.0;
@@ -590,6 +585,7 @@ export async function createAurumPostPipeline(
           // Preserve the original pixel rather than borrowing the environment.
           if(abs(totalWeight)<0.00001) discard;
           gl_FragColor=accumulated/totalWeight;
+          #include <tonemapping_fragment>
           #include <colorspace_fragment>
         }`,
     });
@@ -1039,6 +1035,8 @@ export async function createAurumPostPipeline(
     activeRenderer.getViewport(previousViewport);
     activeRenderer.getScissor(previousScissor);
     try{
+      // Match the native renderer's exposure for the floating-point overlay.
+      diamondSupersampleCompositePass.material.uniforms.toneMappingExposure.value=activeRenderer.toneMappingExposure??1;
       // Refresh the base-resolution mask, render the high-resolution optical
       // reference, then draw only fragments belonging to that mask on top of
       // the already-rendered direct beauty frame.
