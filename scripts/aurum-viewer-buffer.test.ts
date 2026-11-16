@@ -487,11 +487,11 @@ test("Aurum exposes diamond-only AA and SSAA as independent modules", () => {
   expect(componentSource).not.toContain("gemMaskPass.renderDiagnosticOverlay?.(renderer)");
   expect(controlsSource).toContain("diamondSsaaEnabled: false");
   expect(controlsSource).toContain("gemFxaaEnabled: false");
-  expect(componentSource).toContain("FXAA suspendido por artefactos visuales; en revisión.");
+  expect(componentSource).toContain("FXAA trabaja sobre el fotograma normal a resolución nativa; SSAA y TAA permanecen bloqueados.");
   expect(componentSource).toContain("disabled={blocked}");
   expect(architectureSource).toContain('id: "diamond-ssaa"');
   expect(architectureSource).toContain('aria-disabled="true" disabled title="SSAA suspendido por regresión visual"');
-  expect(architectureSource).toContain('aria-disabled="true" disabled title="FXAA suspendido por regresión visual"');
+  expect(architectureSource).toContain('onClick={()=>updatePostControl("gemFxaaEnabled",!postControls.gemFxaaEnabled)}');
   expect(postSource).toContain("AURUM DIAMOND SSAA MODULE");
   expect(postSource).toContain("tDiamondHiRes");
   expect(postSource).toContain("float sampleMask=texture2D(tDiamondHiResMask,sampleUv).r;");
@@ -621,7 +621,7 @@ test("standard image export composites isolated diamond reconstruction after bea
   expect(exportStart).toBeGreaterThan(-1);
   expect(exportBlock).toContain("liveFastPathRef.current=false");
   expect(exportBlock).toContain("...(diamondSupersamplePass?.enabled ? [diamondSupersamplePass] : [])");
-  expect(exportBlock).toContain("...(fxaaPass?.enabled ? [fxaaPass] : [])");
+  expect(exportBlock).not.toContain("...(fxaaPass?.enabled ? [fxaaPass] : [])");
   expect(postSource).toContain("const fxaaRequested=controls?.gemFxaaEnabled===true;");
   expect(postSource).toContain("const ssaaRequested=controls?.diamondSsaaEnabled===true;");
   expect(exportBlock).toContain("composer.setPixelRatio?.(1)");
