@@ -259,13 +259,12 @@ test("Gem Mask stays internal after visual validation and never tints the beauty
   expect(component).toContain("viewerLoopRef.current?.invalidate?.();");
 });
 
-test("masked diamond SSAA remains fail-closed while native-resolution FXAA stays independently toggleable", () => {
+test("masked diamond SSAA is opt-in behind Gem Mask while TAA stays fail-closed", () => {
   const controls = readFileSync("src/lib/aurum/post-engine-controls.ts", "utf8");
   const post = readFileSync("src/lib/aurum/post.ts", "utf8");
   const render = readFileSync("src/components/AurumRender.tsx", "utf8");
   expect(controls).toContain("gemFxaaEnabled: value?.gemMaskEnabled === true && value?.gemFxaaEnabled === true");
-  expect(controls).toContain("diamondSsaaEnabled: false");
-  expect(controls).not.toContain("diamondSsaaEnabled: value?.gemMaskEnabled");
+  expect(controls).toContain("diamondSsaaEnabled: value?.gemMaskEnabled === true && value?.diamondSsaaEnabled === true");
   expect(controls).toContain("diamondTaaEnabled: false");
   expect(post).toContain("const fxaaEnabled=diamondMaskReady && fxaaRequested;");
   expect(post).toContain("float aurumPositiveCubicWeight(float x){");
@@ -282,7 +281,7 @@ test("masked diamond SSAA remains fail-closed while native-resolution FXAA stays
   expect(post).toContain("if(centerMask<0.5) discard;");
   expect(post).not.toContain("ensureDiamondSupersampleFxaaTarget");
   expect(post).not.toContain("renderFxaa(activeRenderer,enabled:boolean)");
-  expect(render).toContain('const blocked=item.key==="diamondTaaEnabled"||item.key==="diamondSsaaEnabled"||(item.key==="gemFxaaEnabled"&&!diamondPostControls.gemMaskEnabled);');
+  expect(render).toContain('const blocked=item.key==="diamondTaaEnabled"||((item.key==="diamondSsaaEnabled"||item.key==="gemFxaaEnabled")&&!diamondPostControls.gemMaskEnabled);');
   expect(render).toContain("setAurumPostControls({diamondSsaaEnabled:!enabled})");
   expect(render).toContain("subscribeAurumPostControls((controls) => {");
   expect(render).toContain("setDiamondPostControls(controls);");
