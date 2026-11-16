@@ -492,7 +492,16 @@ export async function createAurumPostPipeline(
           activeRenderer.autoClear=false;
           activeRenderer.setClearColor(previousClearColor,previousClearAlpha);
           activeRenderer.clear(true,true,true);
-          activeRenderer.render(scene,camera);
+          // Keep the auxiliary RGBA16F scene in linear HDR. The native renderer's
+          // tone mapping and output color-space conversion are applied exactly once
+          // by the diamond overlay shader, never to the base canvas or shared scene.
+          const previousToneMapping=activeRenderer.toneMapping;
+          try {
+            activeRenderer.toneMapping=THREE.NoToneMapping;
+            activeRenderer.render(scene,camera);
+          } finally {
+            activeRenderer.toneMapping=previousToneMapping;
+          }
 
           // Rasterize the exact same visible center-diamond silhouette at the
           // SSAA resolution. The low-resolution Gem Mask cannot safely gate
@@ -592,7 +601,9 @@ export async function createAurumPostPipeline(
     diamondSupersampleCompositePass.enabled=false;
     diamondSupersampleCompositePass.clear=false;
     diamondSupersampleCompositePass.renderToScreen=true;
-    if(diamondSupersampleCompositePass.material) diamondSupersampleCompositePass.material.toneMapped=false;
+    // This pass owns the one and only tone-mapping/output conversion for the
+    // linear HDR auxiliary render. It must participate in renderer tone mapping.
+    if(diamondSupersampleCompositePass.material) diamondSupersampleCompositePass.material.toneMapped=true;
     diamondSupersampleCompositePass.setSize=(width:number,height:number)=>{
       diamondSupersampleBaseWidth=Math.max(1,Math.floor(width));
       diamondSupersampleBaseHeight=Math.max(1,Math.floor(height));
