@@ -13,6 +13,7 @@ type RecordEntry = {
   family: string;
   gemId: string;
   activeGemFamily: string;
+  originalDiamondOpticalFamily: unknown;
   baseEnvironmentIntensity: number;
   setQuality: (quality: "interactive" | "high" | "final") => void;
   readonly tier: "micro" | "small" | "brilliant";
@@ -126,6 +127,10 @@ export async function createAurumDiamondBvhRuntime(options: {
     if (!entry) return;
     if (restore && mesh.material === entry.experimentalMaterial) {
       mesh.material = entry.originalMaterial;
+    }
+    if (entry.family === "diamante") {
+      if (entry.originalDiamondOpticalFamily === undefined) delete mesh.userData.aurumDiamondOpticalFamily;
+      else mesh.userData.aurumDiamondOpticalFamily = entry.originalDiamondOpticalFamily;
     }
     entry.dispose();
     entries.delete(mesh);
@@ -376,6 +381,7 @@ export async function createAurumDiamondBvhRuntime(options: {
           family,
           gemId: activeGemId,
           activeGemFamily,
+          originalDiamondOpticalFamily: mesh.userData?.aurumDiamondOpticalFamily,
           baseEnvironmentIntensity: prepared.diagnostics.environmentIntensity,
           get tier() { return currentDiamondTier; },
           setTier: (nextTier) => {
@@ -432,6 +438,12 @@ export async function createAurumDiamondBvhRuntime(options: {
         // transitions, leaving emeralds at the shader package's generic default.
         entries.get(mesh)?.setQuality(family === "diamante" ? "high" : (options.quality ?? "interactive"));
         mesh.material = prepared.material;
+        // Preserve the CAD stone identity on the mesh while BVH replaces its physical material.
+        // Downstream diamond-only classifiers must not depend on experimental shader metadata.
+        if (family === "diamante") {
+          mesh.userData = { ...(mesh.userData ?? {}), aurumDiamondOpticalFamily: "diamante" };
+          prepared.material.userData = { ...(prepared.material.userData ?? {}), aurumGemFamily: "Diamante", aurumDiamondMaterial: true };
+        }
         if (family === "diamante" && mesh.userData?.aurumDiamondMicroCenterProtected) {
           console.info("[AURUM][DIAMOND][BVH] Perfil óptico central activo", {
             mesh: mesh.name || mesh.uuid,
