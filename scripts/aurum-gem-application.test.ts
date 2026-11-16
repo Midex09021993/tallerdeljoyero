@@ -413,20 +413,29 @@ test("diamond SSAA scale cap is updated through the pipeline-owned state", () =>
   const source = readFileSync("src/lib/aurum/post.ts", "utf8");
   expect(source).toContain("setScaleCap(cap:number)");
   expect(source).toContain("diamondSupersampleScaleCap=Math.max(1,Math.min(2.2,Number(settledCap)||1))");
-  expect(source).toContain("diamondSupersamplePass?.setScaleCap?.(diamondSupersamplingSettled?diamondSupersampleScaleCap:diamondLiveSupersampleScaleCap)");
+  expect(source).toContain("diamondSupersampleActiveScaleCap=diamondSupersamplingSettled?diamondSupersampleScaleCap:diamondLiveSupersampleScaleCap;");
+  expect(source).toContain("diamondSupersampleActiveScaleCap=Math.max(1,Math.min(2.2,Number(cap)||1));");
+  expect(source).toContain("get settledScaleCap(){ return diamondSupersampleScaleCap; }");
+  expect(source).toContain("get liveScaleCap(){ return diamondLiveSupersampleScaleCap; }");
+  expect(source).toContain("get activeScaleCap(){ return diamondSupersampleActiveScaleCap; }");
   expect(source).not.toContain("diamondSupersampleScaleCap=THREE.MathUtils");
 });
 
 test("live camera motion keeps diamond-only supersampling active at a reduced adaptive scale", () => {
   const post = readFileSync("src/lib/aurum/post.ts", "utf8");
   const render = readFileSync("src/components/AurumRender.tsx", "utf8");
-  expect(post).toContain("diamondSupersamplePass?.setScaleCap?.(next?diamondLiveSupersampleScaleCap:diamondSupersampleScaleCap)");
+  expect(post).toContain("diamondSupersampleActiveScaleCap=next?diamondLiveSupersampleScaleCap:diamondSupersampleScaleCap;");
+  expect(post).toContain("diamondSupersamplePass?.setScaleCap?.(diamondSupersampleActiveScaleCap);");
   expect(post).toContain("const ssaaRequested=controls?.diamondSsaaEnabled===true;");
   expect(post).toContain("const fxaaRequested=controls?.gemFxaaEnabled===true;");
   expect(post).toContain("if(fxaaPass) fxaaPass.enabled=fxaaEnabled;");
   expect(post).not.toContain("hasDiamond && diamondSupersamplingSettled && renderer.capabilities");
   expect(render).toContain("runtimeBudget.diamondLiveSupersampleScaleCap");
   expect(render).toContain("renderDiamondSupersampleOverlay?.(renderer)");
+  expect(render).toContain("motionState:String(diamondSupersamplePass?.motionState??\"unknown\")");
+  expect(render).toContain("settledScaleCap:Number(diamondSupersamplePass?.settledScaleCap??0)");
+  expect(render).toContain("liveScaleCap:Number(diamondSupersamplePass?.liveScaleCap??0)");
+  expect(render).toContain("activeScaleCap:Number(diamondSupersamplePass?.activeScaleCap??0)");
   expect(render).not.toContain("const diamondSsaaOverlayActive=");
   expect(render).toContain('? (diamondFxaaOverlayRequested ? "direct+diamond-ssaa+diamond-fxaa" : "direct+diamond-ssaa")');
   expect(render).toContain("if(diamondOverlayRequested) renderDiamondSupersampleOverlay?.(renderer);");
