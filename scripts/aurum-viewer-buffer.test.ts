@@ -735,8 +735,8 @@ test("video export restores the viewer and resumes the demand-driven loop", () =
 test("extreme scenes allow stronger settled diamond SSAA while preserving the live-motion cap", () => {
   const budget = getAurumRuntimeBudget(900_001);
   expect(budget.tier).toBe("extreme");
-  expect(budget.diamondSupersampleScaleCap).toBe(1.4);
-  expect(budget.diamondLiveSupersampleScaleCap).toBe(1.15);
+  expect(budget.diamondSupersampleScaleCap).toBe(1.5);
+  expect(budget.diamondLiveSupersampleScaleCap).toBe(1.2);
 });
 
 
