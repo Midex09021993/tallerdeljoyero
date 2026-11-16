@@ -159,7 +159,7 @@ test("diamond SSAA mask isolates material groups and never paints adjacent metal
   expect(post).toContain(').trim().toLowerCase().replace(/[_-]+/g," ").replace(/\\s+/g," ")');
   expect(post).toContain('isGemLayer&&category==="gema"&&family');
   expect(post).toContain('isGemLayer&&category==="gema"&&(');
-  expect(post).toContain("diamondMaskMaterialsByMesh.set(object,materials.map");
+  expect(post).toContain("diamondMaskMaterialsByMesh.set(mesh,materials.map");
   expect(post).toContain("colorWrite:false,toneMapped:false");
   expect(post).toContain("scene.overrideMaterial=null;");
   expect(post).toContain("mesh.material=diamondMaskMaterialsByMesh.get(mesh)??gemMaskMaterial;");
