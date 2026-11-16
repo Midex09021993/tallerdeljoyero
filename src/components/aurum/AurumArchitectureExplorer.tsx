@@ -156,11 +156,10 @@ export function AurumArchitectureExplorer() {
               <button type="button" role="switch" aria-checked={false} aria-disabled="true" disabled title="Suspendido hasta validar el compositor aislado" className="relative h-6 w-11 shrink-0 cursor-not-allowed rounded-full bg-muted-foreground/20 opacity-60"><span className={"absolute top-0.5 size-5 rounded-full bg-white shadow transition-all " + (postControls.diamondSsaaEnabled ? "left-[22px]" : "left-0.5")}/></button>
             </div>
             <div className="rounded-lg border border-border bg-background/60 p-2 text-[10px] leading-4 text-muted-foreground">
-              <p><span className="font-semibold text-foreground">Modo:</span> reposo; se pausa durante el movimiento para proteger el rendimiento.</p>
-              <p><span className="font-semibold text-foreground">Compatibilidad:</span> WebGL2 y diamante central detectado.</p>
-              <p><span className="font-semibold text-foreground">Aislamiento:</span> no sustituye píxeles fuera de la máscara del diamante.</p>
+              <p><span className="font-semibold text-foreground">Estado:</span> desactivado temporalmente en visor y capturas.</p>
+              <p><span className="font-semibold text-foreground">Motivo:</span> compositor aislado pendiente de reconstrucción y prueba de identidad de píxeles.</p>
             </div>
-            <p className="text-[10px] leading-4 text-muted-foreground"><Power className="mr-1 inline size-3"/> El módulo queda guardado como preferencia. La activación efectiva depende de que el visor detecte el diamante central y el dispositivo admita WebGL2.</p>
+            <p className="text-[10px] leading-4 text-muted-foreground"><Power className="mr-1 inline size-3"/> El interruptor permanecerá bloqueado hasta que el pase aislado esté validado.</p>
           </div> : null}
           {actual.id === "post" ? <div className="mt-4 space-y-3 rounded-xl border border-border bg-muted/20 p-3">
             <div className="flex items-center justify-between gap-3">
@@ -168,12 +167,12 @@ export function AurumArchitectureExplorer() {
               <button type="button" role="switch" aria-checked={false} aria-disabled="true" disabled title="Suspendido hasta validar el compositor aislado" className="relative h-6 w-11 shrink-0 cursor-not-allowed rounded-full bg-muted-foreground/20 opacity-60"><span className={`absolute top-0.5 size-5 rounded-full bg-white shadow transition-all ${postControls.gemFxaaEnabled ? "left-[22px]" : "left-0.5"}`}/></button>
             </div>
             <div className="flex items-center justify-between gap-3 border-t border-border pt-3">
-              <div className="min-w-0"><p className="text-xs font-semibold">Surface Edge AA</p><p className="text-[10px] leading-4 text-muted-foreground">Suavizado de bordes de superficies metálicas.</p></div>
-              <button type="button" role="switch" aria-checked={postControls.surfaceEdgeAaEnabled} onClick={() => updatePostControl("surfaceEdgeAaEnabled", !postControls.surfaceEdgeAaEnabled)} className={`relative h-6 w-11 shrink-0 rounded-full transition ${postControls.surfaceEdgeAaEnabled ? "bg-emerald-500" : "bg-muted-foreground/30"}`}><span className={`absolute top-0.5 size-5 rounded-full bg-white shadow transition-all ${postControls.surfaceEdgeAaEnabled ? "left-[22px]" : "left-0.5"}`}/></button>
+              <div className="min-w-0"><p className="text-xs font-semibold">Surface Edge AA</p><p className="text-[10px] leading-4 text-muted-foreground">Suspendido para impedir cualquier postprocesado global de metal y ambiente.</p></div>
+              <button type="button" role="switch" aria-checked={false} aria-disabled="true" disabled title="Procesado global suspendido" className="relative h-6 w-11 shrink-0 cursor-not-allowed rounded-full bg-muted-foreground/20 opacity-60"><span className={`absolute top-0.5 size-5 rounded-full bg-white shadow transition-all ${postControls.surfaceEdgeAaEnabled ? "left-[22px]" : "left-0.5"}`}/></button>
             </div>
             <div className="flex items-center justify-between gap-3 border-t border-border pt-3">
-              <div className="min-w-0"><p className="text-xs font-semibold">TAA</p><p className="text-[10px] leading-4 text-muted-foreground">Acumulación temporal disponible para capturas de imagen; no se ejecuta en el visor en vivo.</p></div>
-              <button type="button" role="switch" aria-checked={postControls.taaEnabled} onClick={() => updatePostControl("taaEnabled", !postControls.taaEnabled)} className={`relative h-6 w-11 shrink-0 rounded-full transition ${postControls.taaEnabled ? "bg-emerald-500" : "bg-muted-foreground/30"}`}><span className={`absolute top-0.5 size-5 rounded-full bg-white shadow transition-all ${postControls.taaEnabled ? "left-[22px]" : "left-0.5"}`}/></button>
+              <div className="min-w-0"><p className="text-xs font-semibold">TAA</p><p className="text-[10px] leading-4 text-muted-foreground">Suspendido hasta reconstruir la composición exclusiva del diamante.</p></div>
+              <button type="button" role="switch" aria-checked={false} aria-disabled="true" disabled title="TAA suspendido hasta validar el compositor" className="relative h-6 w-11 shrink-0 cursor-not-allowed rounded-full bg-muted-foreground/20 opacity-60"><span className={`absolute top-0.5 size-5 rounded-full bg-white shadow transition-all ${postControls.taaEnabled ? "left-[22px]" : "left-0.5"}`}/></button>
             </div>
             <p className="text-[10px] leading-4 text-muted-foreground"><Power className="mr-1 inline size-3"/> Los cambios quedan guardados. Cada módulo mantiene su propio control y ciclo de ejecución.</p>
           </div> : null}
