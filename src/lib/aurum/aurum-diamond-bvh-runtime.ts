@@ -615,6 +615,14 @@ export async function createAurumDiamondBvhRuntime(options: {
         familyCounts: { ...familyCounts },
         skippedTargetMeshes: [...skippedTargetMeshes],
         overlappingGemPairs,
+        gemEnvironment: {
+          loaded: Boolean(environmentMap?.isTexture),
+          url: options.url,
+          textureUuid: environmentMap?.uuid ?? null,
+          mapping: environmentMap?.mapping ?? null,
+          colorSpace: environmentMap?.colorSpace ?? null,
+          ownedByRuntime: ownsEnvironmentMap,
+        },
         enabled: entries.size > 0,
       };
     },
