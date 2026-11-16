@@ -140,8 +140,8 @@ export function prepareAurumDiamondBvhExperiment(
     "gl_FragColor = vec4(hdrColor, 1.0);",
   );
   if (options.enableDiamondEffects) {
-    const fireIntensity = Math.max(0, Math.min(0.2, options.fireIntensity ?? 0.12));
-    const scintillationIntensity = Math.max(0, Math.min(0.15, options.scintillationIntensity ?? 0.08));
+    const fireIntensity = Math.max(0, Math.min(0.75, options.fireIntensity ?? 0.55));
+    const scintillationIntensity = Math.max(0, Math.min(0.35, options.scintillationIntensity ?? 0.22));
     const uniformAnchor = "  precision highp float;";
     if (!material.fragmentShader.includes(uniformAnchor)) {
       throw new Error("[AURUM diamond BVH] No se pudo insertar los uniformes de efectos.");
@@ -155,7 +155,7 @@ export function prepareAurumDiamondBvhExperiment(
     float aurumFireLobe = pow(clamp(1.0 - aurumFacetView, 0.0, 1.0), 7.0);
     float aurumScintillationLobe = pow(max(dot(reflect(incident, worldNormal), view), 0.0), 48.0);
     vec3 aurumFireSpectrum = vec3(0.32, 0.62, 1.0) * aurumFireLobe * aurumDiamondFireIntensity;
-    hdrColor += aurumFireSpectrum * max(internalTransmission, vec3(0.0)) * 0.22;
+    hdrColor += aurumFireSpectrum * max(internalTransmission, vec3(0.0)) * 0.42;
     hdrColor *= 1.0 + aurumScintillationLobe * aurumDiamondScintillationIntensity;
     gl_FragColor = vec4(hdrColor, 1.0);`;
     if (!material.fragmentShader.includes(hdrOutput)) {
