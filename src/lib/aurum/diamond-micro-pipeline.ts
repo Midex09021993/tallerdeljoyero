@@ -11,10 +11,14 @@ export type AurumDiamondMicroOpticalProfile = {
   fireScale: number;
 };
 
-/** Per-stone live optics. Brilliant stones (including the protected center) retain the calibrated baseline. */
-export function getAurumDiamondMicroOpticalProfile(tier: Exclude<AurumDiamondMicroTier, "mixed">): AurumDiamondMicroOpticalProfile {
+/** Per-stone live optics. The neutral center receives a restrained diamond-only lift; other brilliant/colored stones retain baseline. */
+export function getAurumDiamondMicroOpticalProfile(
+  tier: Exclude<AurumDiamondMicroTier, "mixed">,
+  isNeutralCenter = false,
+): AurumDiamondMicroOpticalProfile {
   if (tier === "micro") return { scintillationScale: 0.22, facetContrastScale: 0.72, dispersionScale: 0.72, virtualFacetWeight: 0.004, fireScale: 0.38 };
   if (tier === "small") return { scintillationScale: 0.62, facetContrastScale: 0.84, dispersionScale: 0.86, virtualFacetWeight: 0.022, fireScale: 0.72 };
+  if (isNeutralCenter) return { scintillationScale: 1.10, facetContrastScale: 1.08, dispersionScale: 1.08, virtualFacetWeight: 0.07, fireScale: 1.08 };
   return { scintillationScale: 1, facetContrastScale: 1, dispersionScale: 1, virtualFacetWeight: 0.06, fireScale: 1 };
 }
 
@@ -114,9 +118,12 @@ export function createAurumDiamondMicroPipeline(scene: any, camera: any, getView
   let lastReport: AurumDiamondMicroProfile[] = [];
   const applyMeshOptics = (mesh: any) => {
     const tier = (mesh.userData?.aurumDiamondMicroTier ?? "brilliant") as Exclude<AurumDiamondMicroTier, "mixed">;
-    const profile = getAurumDiamondMicroOpticalProfile(tier);
     for (const material of getMaterials(mesh)) {
       if (!isDiamondMaterial(material)) continue;
+      const presetId = String(material.userData?.aurumDiamondPresetId ?? material.userData?.aurumGemId ?? "").toLowerCase();
+      const isColoredDiamond = presetId.includes("azul") || presetId.includes("blue") || presetId.includes("rosa") || presetId.includes("pink");
+      const isNeutralCenter = Boolean(mesh.userData?.aurumDiamondMicroCenterProtected) && !isColoredDiamond;
+      const profile = getAurumDiamondMicroOpticalProfile(tier, isNeutralCenter);
       const uniforms = material.userData?.aurumDiamondMicroUniforms;
       if (!uniforms) continue;
       if (uniforms.scintillationStrength) uniforms.scintillationStrength.value = uniforms.baseScintillationStrength * profile.scintillationScale;
