@@ -176,13 +176,13 @@ test("runtime DPR remains unchanged to avoid changing shared metal rendering res
 test("web-tier models receive 2x diamond-only supersampling without raising shared DPR", () => {
   const web = getAurumRuntimeBudget(200_000);
   expect(web.diamondSupersampleScaleCap).toBe(2.2);
-  expect(web.diamondLiveSupersampleScaleCap).toBe(1.7);
+  expect(web.diamondLiveSupersampleScaleCap).toBe(1.75);
   expect(web.pixelRatioCap).toBe(1.72);
   expect(web.interactionPixelRatio).toBe(1.72);
 
   const dense = getAurumRuntimeBudget(200_001);
   expect(dense.diamondSupersampleScaleCap).toBe(1.8);
-  expect(dense.diamondLiveSupersampleScaleCap).toBe(1.45);
+  expect(dense.diamondLiveSupersampleScaleCap).toBe(1.5);
   expect(dense.pixelRatioCap).toBe(1.6);
 
   expect(getAurumRuntimeBudget(500_001).diamondLiveSupersampleScaleCap).toBe(1.3);
