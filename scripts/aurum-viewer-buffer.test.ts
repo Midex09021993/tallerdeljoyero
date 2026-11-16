@@ -481,6 +481,7 @@ test("Aurum exposes diamond-only AA and SSAA as independent modules", () => {
   expect(componentSource).toContain("const diamondSsaaActive = Boolean(diamondSupersamplePass?.enabled && diamondSupersampleCompositePass?.enabled);");
   expect(controlsSource).toContain("gemFxaaEnabled: false");
   expect(controlsSource).toContain("diamondSsaaEnabled: false");
+  expect(controlsSource).toContain("const normalize = (_value: any): AurumPostControls");
   expect(architectureSource).toContain('id: "diamond-ssaa"');
   expect(architectureSource).toContain('updatePostControl("diamondSsaaEnabled"');
   expect(postSource).toContain("AURUM DIAMOND SSAA MODULE");

@@ -20,11 +20,13 @@ const DEFAULTS: AurumPostControls = {
   taaEnabled: false,
 };
 
-const normalize = (value: any): AurumPostControls => ({
-  gemMaskEnabled: value?.gemMaskEnabled === true,
-  diamondSsaaEnabled: value?.diamondSsaaEnabled === true,
-  gemFxaaEnabled: value?.gemFxaaEnabled === true,
-  diamondTaaEnabled: value?.diamondTaaEnabled === true,
+// Fail closed after a visual regression in the live jewelry model.
+// Stored preferences cannot reactivate experimental diamond reconstruction.
+const normalize = (_value: any): AurumPostControls => ({
+  gemMaskEnabled: false,
+  diamondSsaaEnabled: false,
+  gemFxaaEnabled: false,
+  diamondTaaEnabled: false,
   surfaceEdgeAaEnabled: false,
   taaEnabled: false,
 });
