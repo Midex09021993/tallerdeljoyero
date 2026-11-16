@@ -60,7 +60,7 @@ export async function createAurumPostPipeline(
   let diamondSupersampleCompositePass:any=null;
   let diamondSupersampleTarget:any=null;
   let diamondSupersampleMaskTarget:any=null;
-  let diamondFxaaBeautyTarget:any=null;
+  let diamondFxaaSnapshotTexture:any=null;
   let gradingPass:any=null;
   let composerMsaaSamples=0;
   // Shared SSAA state lives at the pipeline scope because motion controls are
@@ -78,36 +78,7 @@ export async function createAurumPostPipeline(
       : Math.max(1,Math.min(diamondSupersampleScaleCap,Math.sqrt(8_500_000/Math.max(1,basePixels))));
     return diamondSupersampleScale>=1;
   };
-  const activeRendererAntialiasEnabled=()=>{
-    try{return renderer.getContext?.()?.getContextAttributes?.()?.antialias===true;}
-    catch{return false;}
-  };
-  const ensureDiamondFxaaBeautyTarget=(width:number,height:number)=>{
-    const targetWidth=Math.max(1,Math.floor(width));
-    const targetHeight=Math.max(1,Math.floor(height));
-    if(!diamondFxaaBeautyTarget){
-      diamondFxaaBeautyTarget=new THREE.WebGLRenderTarget(targetWidth,targetHeight,{
-        format:THREE.RGBAFormat,type:THREE.HalfFloatType,depthBuffer:true,stencilBuffer:false
-      });
-      const contextAntialias=activeRendererAntialiasEnabled();
-      const maxSamples=Math.max(0,Number(renderer.capabilities?.maxSamples)||0);
-      // Match the canvas' MSAA when the default framebuffer uses it, so the
-      // offscreen redirect cannot silently degrade metal or prong edges.
-      diamondFxaaBeautyTarget.samples=contextAntialias?Math.min(4,maxSamples):0;
-      if(contextAntialias&&diamondFxaaBeautyTarget.samples<1){
-        diamondFxaaBeautyTarget.dispose();
-        diamondFxaaBeautyTarget=null;
-        throw new Error("FXAA nativo requiere conservar el MSAA del framebuffer; no hay muestras compatibles.");
-      }
-      diamondFxaaBeautyTarget.texture.minFilter=THREE.NearestFilter;
-      diamondFxaaBeautyTarget.texture.magFilter=THREE.NearestFilter;
-      diamondFxaaBeautyTarget.texture.generateMipmaps=false;
-      diamondFxaaBeautyTarget.texture.colorSpace=THREE.NoColorSpace;
-    }else if(diamondFxaaBeautyTarget.width!==targetWidth||diamondFxaaBeautyTarget.height!==targetHeight){
-      diamondFxaaBeautyTarget.setSize(targetWidth,targetHeight);
-    }
-    return diamondFxaaBeautyTarget;
-  };
+
 
   try {
     composer=new EffectComposer(renderer);
@@ -251,6 +222,28 @@ export async function createAurumPostPipeline(
 
     const { ShaderPass: FXAAShaderPass }=await import("three/examples/jsm/postprocessing/ShaderPass.js");
     THREE=await import("three");
+    const ensureDiamondFxaaSnapshotTexture=(width:number,height:number,activeRenderer:any)=>{
+      const targetWidth=Math.max(1,Math.floor(width));
+      const targetHeight=Math.max(1,Math.floor(height));
+      if(!diamondFxaaSnapshotTexture){
+        diamondFxaaSnapshotTexture=new THREE.FramebufferTexture(targetWidth,targetHeight);
+        diamondFxaaSnapshotTexture.format=THREE.RGBAFormat;
+        diamondFxaaSnapshotTexture.type=THREE.UnsignedByteType;
+        diamondFxaaSnapshotTexture.minFilter=THREE.LinearFilter;
+        diamondFxaaSnapshotTexture.magFilter=THREE.LinearFilter;
+        diamondFxaaSnapshotTexture.generateMipmaps=false;
+      }else if(
+        diamondFxaaSnapshotTexture.image?.width!==targetWidth
+        || diamondFxaaSnapshotTexture.image?.height!==targetHeight
+      ){
+        diamondFxaaSnapshotTexture.setSize(targetWidth,targetHeight);
+      }
+      // The copied framebuffer already contains the renderer's display-referred
+      // beauty. Decode it for FXAA sampling, then encode once in the overlay shader.
+      diamondFxaaSnapshotTexture.colorSpace=activeRenderer.outputColorSpace??THREE.SRGBColorSpace;
+      diamondFxaaSnapshotTexture.needsUpdate=true;
+      return diamondFxaaSnapshotTexture;
+    };
     // Render a material-ID mask using existing Rhino metadata. The depth prepass
     // includes every object, while the color pass writes white only for gems.
     // This keeps foreground metal occlusion correct without touching materials.
@@ -957,8 +950,19 @@ export async function createAurumPostPipeline(
           #include <colorspace_fragment>
         }`,
     });
-    // FXAA is a native-resolution final-frame filter. It is not part of
-    // EffectComposer and never requests or reuses the SSAA reconstruction target.
+    // FXAA is a native-resolution diamond-only overlay. The source texture is
+    // rebound after ShaderPass construction because cloned sampler uniforms must
+    // point at the live mask render target, not a cloned texture wrapper.
+    if(fxaaPass.material?.uniforms?.gemMask){
+      fxaaPass.material.uniforms.gemMask.value=gemMaskTarget.texture;
+    }
+    if(fxaaPass.material){
+      fxaaPass.material.transparent=false;
+      fxaaPass.material.depthTest=false;
+      fxaaPass.material.depthWrite=false;
+      fxaaPass.material.blending=THREE.NoBlending;
+      fxaaPass.material.toneMapped=false;
+    }
     fxaaPass.enabled=false;
     fxaaPass.renderToScreen=true;
     fxaaPass.clear=false;
@@ -1288,9 +1292,10 @@ export async function createAurumPostPipeline(
     }
   };
 
-  // Render the ordinary beauty scene once at native resolution, then run a
-  // mask-clamped FXAA blit. This path never allocates or invokes SSAA targets.
-  const renderDiamondFxaaFrame=(activeRenderer:any)=>{
+  // Copy the already-rendered native framebuffer, then write FXAA pixels
+  // only where the center-diamond mask is set. The base beauty frame is never
+  // replaced and no second scene render or multisampled beauty target is used.
+  const renderDiamondFxaaOverlay=(activeRenderer:any)=>{
     if(!fxaaPass?.enabled || !gemMaskPass?.enabled || !gemMaskPass?.hasDiamondMeshes) return false;
     const width=Math.max(1,Number(activeRenderer.domElement?.width)||1);
     const height=Math.max(1,Number(activeRenderer.domElement?.height)||1);
@@ -1299,8 +1304,6 @@ export async function createAurumPostPipeline(
     const previousScissor=activeRenderer.getScissor(new THREE.Vector4()).clone();
     const previousScissorTest=activeRenderer.getScissorTest?.()??false;
     const previousAutoClear=activeRenderer.autoClear;
-    const previousClearColor=activeRenderer.getClearColor(new THREE.Color()).clone();
-    const previousClearAlpha=activeRenderer.getClearAlpha();
     const previousRenderToScreen=fxaaPass.renderToScreen;
     const uniforms=fxaaPass.material?.uniforms??{};
     const previousMask=uniforms.gemMask?.value;
@@ -1308,24 +1311,26 @@ export async function createAurumPostPipeline(
     const previousResolution=uniforms.resolution?.value?.clone?.();
     let failed=false;
     try{
-      const target=ensureDiamondFxaaBeautyTarget(width,height);
-      activeRenderer.setRenderTarget(target);
+      const snapshot=ensureDiamondFxaaSnapshotTexture(width,height,activeRenderer);
+      activeRenderer.setRenderTarget(null);
       activeRenderer.setViewport(0,0,width,height);
       activeRenderer.setScissorTest(false);
-      activeRenderer.autoClear=true;
-      activeRenderer.render(scene,camera);
-      gemMaskPass.render(activeRenderer);
+      activeRenderer.autoClear=false;
+      activeRenderer.copyFramebufferToTexture(new THREE.Vector2(0,0),snapshot);
+      // Bind the exact live textures immediately before drawing the overlay.
+      if(uniforms.gemMask) uniforms.gemMask.value=gemMaskTarget.texture;
+      if(uniforms.tDiffuse) uniforms.tDiffuse.value=snapshot;
       if(uniforms.resolution?.value) uniforms.resolution.value.set(1/width,1/height);
       fxaaPass.enabled=true;
       fxaaPass.renderToScreen=true;
       fxaaPass.clear=false;
-      fxaaPass.render(activeRenderer,null,target,0,false);
+      fxaaPass.render(activeRenderer,null,{texture:snapshot},0,false);
     }catch(error){
       failed=true;
-      console.warn("[AURUM][DIAMOND FXAA] Native-resolution masked pass failed; restoring the direct beauty path.",error);
+      console.warn("[AURUM][DIAMOND FXAA] Masked overlay failed; preserving the direct beauty frame.",error);
     }finally{
-      if(uniforms.gemMask) uniforms.gemMask.value=previousMask;
-      if(uniforms.tDiffuse) uniforms.tDiffuse.value=previousDiffuse;
+      if(uniforms.gemMask) uniforms.gemMask.value=previousMask??gemMaskTarget.texture;
+      if(uniforms.tDiffuse) uniforms.tDiffuse.value=previousDiffuse??null;
       if(uniforms.resolution?.value&&previousResolution) uniforms.resolution.value.copy(previousResolution);
       fxaaPass.renderToScreen=previousRenderToScreen;
       activeRenderer.setRenderTarget(previousTarget);
@@ -1333,7 +1338,6 @@ export async function createAurumPostPipeline(
       activeRenderer.setScissor(previousScissor);
       activeRenderer.setScissorTest(previousScissorTest);
       activeRenderer.autoClear=previousAutoClear;
-      activeRenderer.setClearColor(previousClearColor,previousClearAlpha);
     }
     if(failed){
       fxaaPass.enabled=false;
@@ -1476,8 +1480,8 @@ export async function createAurumPostPipeline(
       unsubscribePostControls();
       gemMaskPass?.dispose?.();
       diamondSupersamplePass?.dispose?.();
-      diamondFxaaBeautyTarget?.dispose?.();
-      diamondFxaaBeautyTarget=null;
+      diamondFxaaSnapshotTexture?.dispose?.();
+      diamondFxaaSnapshotTexture=null;
       diamondSupersampleCompositePass?.material?.dispose?.();
       diamondSupersampleCompositePass?.fsQuad?.dispose?.();
       fxaaPass?.material?.dispose?.();
@@ -1493,7 +1497,7 @@ export async function createAurumPostPipeline(
       const actualWidth=Math.max(1,Number(renderer.domElement.width)||Math.floor(width));
       const actualHeight=Math.max(1,Number(renderer.domElement.height)||Math.floor(height));
       gemMaskPass?.setSize?.(actualWidth,actualHeight);
-      diamondFxaaBeautyTarget?.setSize?.(actualWidth,actualHeight);
+      diamondFxaaSnapshotTexture?.setSize?.(actualWidth,actualHeight);
       diamondSupersamplePass?.setSize?.(actualWidth,actualHeight);
       diamondSupersampleCompositePass?.setSize?.(actualWidth,actualHeight);
     };
@@ -1502,5 +1506,5 @@ export async function createAurumPostPipeline(
     if(!ssrPass)return;
     ssrPass.selects=Array.isArray(objects)?objects:[];
   };
-  return {composer,renderPass,ssaoPass,ssrPass,ssrSavePass,ssrCompositePass,bloomPass,setSSRSelects,applyQuality,updateTemporal,resetTemporalAccumulation,setTemporalMotion,setDiamondSupersamplingSettled,setDiamondSupersampleScaleCap,renderDiamondFxaaFrame,renderDiamondSupersampleOverlay,diamondSupersamplePass,diamondSupersampleCompositePass,diamondTaaSavePass,diamondTaaCompositePass,dofPass,taaPass,fxaaPass,surfaceEdgeAaPass,gemMaskPass,outputPass,msaaSamples:composerMsaaSamples};
+  return {composer,renderPass,ssaoPass,ssrPass,ssrSavePass,ssrCompositePass,bloomPass,setSSRSelects,applyQuality,updateTemporal,resetTemporalAccumulation,setTemporalMotion,setDiamondSupersamplingSettled,setDiamondSupersampleScaleCap,renderDiamondFxaaOverlay,renderDiamondSupersampleOverlay,diamondSupersamplePass,diamondSupersampleCompositePass,diamondTaaSavePass,diamondTaaCompositePass,dofPass,taaPass,fxaaPass,surfaceEdgeAaPass,gemMaskPass,outputPass,msaaSamples:composerMsaaSamples};
 }
