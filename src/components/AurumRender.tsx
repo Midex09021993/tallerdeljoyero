@@ -2921,7 +2921,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // Video must use the same subtle edge cleanup as the settled viewer.
             // TAA remains disabled; this only includes the existing Surface Edge AA pass.
             // Video export follows the same diamond-only scope: do not filter metal edges.
-            const videoEdgeAaProfile=getAurumEdgeAaProfile(measuredQualityId,runtimeBudget.tier,"settled");
             if(surfaceEdgeAaPass) surfaceEdgeAaPass.enabled=false;
             // Match the WebGL backing buffer and camera projection to the final MP4.
             // The CSS viewport remains unchanged while recording.
