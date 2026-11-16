@@ -563,9 +563,18 @@ export async function createAurumPostPipeline(
           float lo=min(luma(center.rgb),min(min(luma(n0),luma(n1)),min(luma(n2),luma(n3))));
           float hi=max(luma(center.rgb),max(max(luma(n0),luma(n1)),max(luma(n2),luma(n3))));
           float edge=smoothstep(edgeThreshold,edgeThreshold*2.0,hi-lo);
-          vec3 diagonal=(n0+n1+n2+n3)*0.25;
+          // Build the edge reference from gemstone-covered neighbors only.
+          // Sampling outside-mask colors here would pull metal/background tones
+          // into the diamond girdle and create a colored fringe.
+          float gem0=step(0.5,m0);
+          float gem1=step(0.5,m1);
+          float gem2=step(0.5,m2);
+          float gem3=step(0.5,m3);
+          float gemNeighborCount=gem0+gem1+gem2+gem3;
+          if(gemNeighborCount<0.5){gl_FragColor=center;return;}
+          vec3 gemNeighborColor=(n0*gem0+n1*gem1+n2*gem2+n3*gem3)/gemNeighborCount;
           float blendAmount=edge*strength*outsideNeighbor;
-          gl_FragColor=vec4(mix(center.rgb,diagonal,blendAmount),center.a);
+          gl_FragColor=vec4(mix(center.rgb,gemNeighborColor,blendAmount),center.a);
         }`,
     });
     // Gem-specific AA keeps its categorical mask so metal pixels never bleed
