@@ -486,7 +486,7 @@ test("Aurum exposes diamond-only AA and SSAA as independent modules", () => {
   expect(postSource).toContain("AURUM DIAMOND SSAA MODULE");
   expect(postSource).toContain("tDiamondHiRes");
   expect(postSource).toContain("float sampleMask=texture2D(tDiamondHiResMask,sampleUv).r;");
-  expect(postSource).toContain("if(texture2D(gemMask,vUv).r<0.5) discard;");
+  expect(postSource).toContain("const ssaaEnabled=false;");
   expect(postSource).toContain("const renderDiamondSupersampleOverlay=(_activeRenderer:any)=>false;");
   expect(postSource).not.toContain("diamondSupersampleCompositePass.render(activeRenderer,null,null,0,false)");
   expect(postSource).toContain("const centerDiamondMeshes:any[]=[];");
@@ -499,13 +499,13 @@ test("Aurum exposes diamond-only AA and SSAA as independent modules", () => {
   expect(postSource).toContain("#include <tonemapping_fragment>");
   expect(componentSource).toContain("&& !diamondSupersamplePass?.enabled");
   expect(componentSource).not.toContain("renderDiamondSupersampleOverlay?.(renderer)");
-  expect(postSource).toContain("if(texture2D(gemMask,vUv).r<0.5) discard;");
+  expect(postSource).toContain("const ssaaEnabled=false;");
   expect(postSource).not.toContain("composer.addPass(diamondSupersampleCompositePass)");
   expect(componentSource).toContain("if (useLiveGemAa) composer.render();");
   expect(componentSource).not.toContain("renderDiamondSupersampleOverlay?.(renderer)");
   expect(componentSource).not.toContain("const interactionDprCap = liveDiamondAaEnabled && runtimeBudget.tier === \"web\"");
   expect(postSource).toContain("ensureDiamondSupersampleMaskTarget");
-  expect(postSource).toContain("This is a true overlay: discard means the framebuffer is not");
+  expect(postSource).toContain("Legacy direct-framebuffer SSAA is deliberately retired.");
   expect(postSource).toContain("activeRenderer.render(scene,camera);");
   expect(postSource).toContain("if(sampleMask>=0.5 && abs(weight)>0.000001)");
   expect(postSource).toContain("if(abs(totalWeight)<0.00001) discard;");
