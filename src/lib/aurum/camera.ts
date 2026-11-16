@@ -176,6 +176,13 @@ function getAurumVisibleProductSphere(model: THREE.Object3D | null): THREE.Spher
  * una única distancia focal. Así la joya conserva su escala aparente al cambiar
  * de orientación; solo cambia la dirección desde la que se observa.
  */
+/**
+ * Las cuatro vistas comparten una única escala angular basada en la esfera
+ * envolvente del producto. La cámara solo cambia de orientación: no recalcula
+ * el zoom según la silueta proyectada (que hacía variar el tamaño aparente).
+ *
+ * Perspectiva conserva exactamente la distancia focal de frontal y gira 3/4.
+ */
 export function applyAurumCameraView(
   camera: THREE.PerspectiveCamera,
   controls: { target: THREE.Vector3; update: () => void },
@@ -194,53 +201,32 @@ export function applyAurumCameraView(
       : view === "lateral"
         ? new THREE.Vector3(1, 0, 0)
         : new THREE.Vector3(0.62, Math.max(profile.vertical * 2.1, 0.78), 1).normalize();
+
   const requestedUp = view === "superior"
     ? new THREE.Vector3(0, 0, -1)
     : new THREE.Vector3(0, 1, 0);
 
-  // Use one shared world-space product center, then normalize each view's
-  // projected visible bounds. Camera distance may differ to compensate for
-  // foreshortening, while the jewel keeps a consistent screen-space footprint.
-  const right = requestedUp.clone().cross(direction).normalize();
-  const cameraUp = direction.clone().cross(right).normalize();
+  // Calcular UNA distancia para todas las orientaciones. La esfera circunscrita
+  // garantiza que la pieza completa permanezca dentro del encuadre incluso
+  // cuando se observa de canto; su diámetro aparente no depende de la vista.
   const aspect = Number.isFinite(camera.aspect) && camera.aspect > 0 ? camera.aspect : 1;
   const verticalHalfFov = THREE.MathUtils.degToRad(camera.fov) * 0.5;
   const horizontalHalfFov = Math.atan(Math.tan(verticalHalfFov) * aspect);
-  const scale = Number.isFinite(framingScale) ? THREE.MathUtils.clamp(framingScale, 0.25, 1.5) : 1;
+  const limitingTangent = Math.max(
+    1e-4,
+    Math.min(Math.tan(verticalHalfFov), Math.tan(horizontalHalfFov)),
+  );
+  const scale = Number.isFinite(framingScale)
+    ? THREE.MathUtils.clamp(framingScale, 0.25, 1.5)
+    : 1;
   const targetNdc = THREE.MathUtils.clamp(0.72 / scale, 0.35, 0.92);
-  // Normalize the *projected* footprint, not just the model-space sphere.
-  // A sphere keeps the same camera distance but a ring viewed edge-on occupies
-  // far fewer pixels than the same ring viewed face-on. Fit the visible world
-  // bounds in this camera basis so every preset uses the same screen occupancy.
-  const bounds = getAurumVisibleProductBounds(model);
-  const corners = bounds.isEmpty() ? [] : [
-    new THREE.Vector3(bounds.min.x, bounds.min.y, bounds.min.z),
-    new THREE.Vector3(bounds.min.x, bounds.min.y, bounds.max.z),
-    new THREE.Vector3(bounds.min.x, bounds.max.y, bounds.min.z),
-    new THREE.Vector3(bounds.min.x, bounds.max.y, bounds.max.z),
-    new THREE.Vector3(bounds.max.x, bounds.min.y, bounds.min.z),
-    new THREE.Vector3(bounds.max.x, bounds.min.y, bounds.max.z),
-    new THREE.Vector3(bounds.max.x, bounds.max.y, bounds.min.z),
-    new THREE.Vector3(bounds.max.x, bounds.max.y, bounds.max.z),
-  ];
-  const horizontalTangent = Math.max(1e-4, Math.tan(horizontalHalfFov) * targetNdc);
-  const verticalTangent = Math.max(1e-4, Math.tan(verticalHalfFov) * targetNdc);
-  let distance = 0;
-  for (const corner of corners) {
-    const relative = corner.sub(target);
-    const projectedRight = Math.abs(relative.dot(right));
-    const projectedUp = Math.abs(relative.dot(cameraUp));
-    const depthAlongView = relative.dot(direction);
-    distance = Math.max(
-      distance,
-      depthAlongView + projectedRight / horizontalTangent,
-      depthAlongView + projectedUp / verticalTangent,
-    );
-  }
-  // Keep a safe non-zero distance for empty/degenerate geometry.
-  distance = Math.max(distance, productSphere.radius * 0.05, 0.001);
+  const radius = Math.max(productSphere.radius, 0.001);
+  const distance = radius / (limitingTangent * targetNdc);
 
-  camera.up.copy(cameraUp);
+  // Asegurar planos de recorte válidos para modelos de distintas unidades.
+  camera.near = Math.max(radius * 0.001, 0.001);
+  camera.far = Math.max(distance + radius * 20, 100);
+  camera.up.copy(requestedUp);
   controls.target.copy(target);
   camera.position.copy(target).addScaledVector(direction, distance);
   camera.lookAt(target);
