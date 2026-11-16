@@ -303,6 +303,15 @@ export async function createAurumPostPipeline(
       const materials=Array.isArray(mesh?.material)?mesh.material:[mesh?.material];
       const data=mesh?.userData??{};
       const rhino=data.aurumRhino??{};
+      // The micro analyzer publishes this flag every frame. Only its protected
+      // center stone may enter the AA mask; pavé/melee and secondary diamonds
+      // remain on the untouched native beauty render.
+      const centerRole=String(data.aurumDiamondRole??"");
+      const isProtectedCenter=data.aurumDiamondMicroCenterProtected===true
+        || data.aurumDiamondCenter===true
+        || data.aurumDiamondIsCenter===true
+        || /center|central|main|principal/i.test(centerRole);
+      if(!isProtectedCenter) return new Set<number>();
       const family=isDiamondFamily(data.aurumActiveGemFamily??data.aurumGemFamily)
         || String(data.aurumActiveGemId??data.aurumGemId??"").trim().toLowerCase().startsWith("diamante");
       const category=String(rhino.categoria??data.aurumDetectedCategory??data.aurumCategory??"").trim().toLowerCase();

@@ -150,6 +150,8 @@ test("web-tier models receive 2x diamond-only supersampling without raising shar
 test("diamond SSAA mask isolates material groups and never paints adjacent metal groups", () => {
   const post = readFileSync("src/lib/aurum/post.ts", "utf8");
   expect(post).toContain("const getDiamondMaterialSlots=(mesh:any):Set<number>");
+  expect(post).toContain("data.aurumDiamondMicroCenterProtected===true");
+  expect(post).toContain("if(!isProtectedCenter) return new Set<number>();");
   expect(post).toContain("materials.length===1&&objectIsDiamond");
   expect(post).toContain('const isGemLayer=/^gem 0?[1-4]$/.test(layerName);');
   expect(post).toContain(').trim().toLowerCase().replace(/[_-]+/g," ").replace(/\\s+/g," ")');
