@@ -151,6 +151,10 @@ test("diamond SSAA mask isolates material groups and never paints adjacent metal
   const post = readFileSync("src/lib/aurum/post.ts", "utf8");
   expect(post).toContain("const getDiamondMaterialSlots=(mesh:any):Set<number>");
   expect(post).toContain("materials.length===1&&objectIsDiamond");
+  expect(post).toContain('const isGemLayer=/^gem 0?[1-4]$/.test(layerName);');
+  expect(post).toContain('layerName.replace(/[_-]+/g," ").replace(/\\s+/g," ")');
+  expect(post).toContain('isGemLayer&&category==="gema"&&family');
+  expect(post).toContain('isGemLayer&&category==="gema"&&(');
   expect(post).toContain("diamondMaskMaterialsByMesh.set(object,materials.map");
   expect(post).toContain("colorWrite:false,toneMapped:false");
   expect(post).toContain("scene.overrideMaterial=null;");
