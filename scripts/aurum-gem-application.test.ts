@@ -269,7 +269,7 @@ test("masked native-resolution FXAA is independent from SSAA; SSAA and TAA remai
   expect(post).toContain("const fxaaEnabled=diamondMaskReady && fxaaRequested;");
   expect(post).toContain("const renderDiamondFxaaOverlay=(activeRenderer:any)=>");
   expect(post).toContain("ensureDiamondFxaaSnapshotTexture(width,height,activeRenderer)");
-  expect(post).toContain("activeRenderer.copyFramebufferToTexture(new THREE.Vector2(0,0),snapshot)");
+  expect(post).toContain("activeRenderer.copyFramebufferToTexture(snapshot,new THREE.Vector2(0,0))");
   expect(post).toContain("fxaaPass.render(activeRenderer,null,{texture:snapshot},0,false)");
   expect(post).toContain("if(centerMask<0.5) discard;");
   expect(post).not.toContain("ensureDiamondSupersampleFxaaTarget");
@@ -288,7 +288,7 @@ test("native FXAA target preserves renderer state and applies output color conve
   const pass = post.slice(start, end);
   expect(start).toBeGreaterThan(-1);
   expect(pass).toContain("activeRenderer.setRenderTarget(null)");
-  expect(pass).toContain("activeRenderer.copyFramebufferToTexture(new THREE.Vector2(0,0),snapshot)");
+  expect(pass).toContain("activeRenderer.copyFramebufferToTexture(snapshot,new THREE.Vector2(0,0))");
   expect(pass).toContain("previousTarget");
   expect(pass).toContain("previousViewport");
   expect(pass).toContain("previousScissor");
