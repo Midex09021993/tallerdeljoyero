@@ -201,6 +201,7 @@ export function applyAurumCameraView(
   // Use one shared world-space product center, then normalize each view's
   // projected visible bounds. Camera distance may differ to compensate for
   // foreshortening, while the jewel keeps a consistent screen-space footprint.
+  const right = requestedUp.clone().cross(direction).normalize();
   const cameraUp = direction.clone().cross(right).normalize();
   const aspect = Number.isFinite(camera.aspect) && camera.aspect > 0 ? camera.aspect : 1;
   const verticalHalfFov = THREE.MathUtils.degToRad(camera.fov) * 0.5;
@@ -264,6 +265,7 @@ export function fitAurumCameraToAspect(
   const radius = Math.max(size.length() * 0.5, 0.01);
   const verticalHalfFov = THREE.MathUtils.degToRad(camera.fov) * 0.5;
   const horizontalHalfFov = Math.atan(Math.tan(verticalHalfFov) * aspect);
+  const limitingHalfFov = Math.max(0.01, Math.min(verticalHalfFov, horizontalHalfFov));
   const distance = (radius / Math.sin(limitingHalfFov)) * Math.max(1, margin);
   const direction = camera.position.clone().sub(controls.target);
   if (direction.lengthSq() < 1e-8) direction.set(0, 0, 1);
