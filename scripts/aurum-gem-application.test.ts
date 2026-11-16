@@ -166,7 +166,7 @@ test("diamond SSAA mask isolates material groups and never paints adjacent metal
 
 test("diamond SSAA keeps the auxiliary render linear HDR and applies native tone mapping only in the overlay", () => {
   const post = readFileSync("src/lib/aurum/post.ts", "utf8");
-  const auxiliaryStart = post.indexOf("const previousToneMapping=activeRenderer.toneMapping;");
+  const auxiliaryStart = post.indexOf("const previousToneMapping=activeRenderer.toneMapping;", post.indexOf("diamondSupersamplePass={"));
   const auxiliaryEnd = post.indexOf("activeRenderer.toneMapping=previousToneMapping;", auxiliaryStart);
   const auxiliaryBlock = post.slice(auxiliaryStart, auxiliaryEnd + "activeRenderer.toneMapping=previousToneMapping;".length);
   expect(auxiliaryStart).toBeGreaterThan(-1);
