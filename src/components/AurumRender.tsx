@@ -966,7 +966,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       // Preserve the original scene background while the live Bokeh preview is active.
       let dofSavedSceneBackground: THREE.Scene["background"] | undefined;
       let dofHasSavedSceneBackground = false;
-      const { composer, ssaoPass, ssrPass, ssrSavePass, ssrCompositePass, bloomPass, setSSRSelects, applyQuality: applyPostQuality, updateTemporal, resetTemporalAccumulation, setTemporalMotion, setDiamondSupersamplingSettled, setDiamondSupersampleScaleCap, diamondSupersamplePass, diamondSupersampleCompositePass, dofPass, renderPass, taaPass: idleTaaPass, fxaaPass, gemMaskPass, surfaceEdgeAaPass, outputPass } = await createAurumPostPipeline(
+      const { composer, ssaoPass, ssrPass, ssrSavePass, ssrCompositePass, bloomPass, setSSRSelects, applyQuality: applyPostQuality, updateTemporal, resetTemporalAccumulation, setTemporalMotion, setDiamondSupersamplingSettled, setDiamondSupersampleScaleCap, diamondSupersamplePass, diamondSupersampleCompositePass, diamondTaaSavePass, diamondTaaCompositePass, dofPass, renderPass, taaPass: idleTaaPass, fxaaPass, gemMaskPass, surfaceEdgeAaPass, outputPass } = await createAurumPostPipeline(
         renderer,
         escena,
         camara,
@@ -2361,11 +2361,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         // This makes the first settled frame match the later camera-rest state,
         // without requiring the user to orbit the model to activate the passes.
         const initialDiamondSsaaActive = Boolean(setDiamondSupersamplingSettled?.(true));
+        const initialDiamondTaaActive = Boolean(idleTaaPass?.enabled && diamondTaaSavePass?.enabled && diamondTaaCompositePass?.enabled);
         const initialDiamondFxaaActive = Boolean(fxaaPass?.enabled && gemMaskPass?.hasDiamondMeshes);
         const initialDiamondBeautyPasses = new Set([
           renderPass,
           ...(initialDiamondSsaaActive ? [diamondSupersamplePass, diamondSupersampleCompositePass] : []),
-          ...(initialDiamondSsaaActive || initialDiamondFxaaActive ? [gemMaskPass] : []),
+          ...(initialDiamondTaaActive ? [diamondTaaSavePass, idleTaaPass, diamondTaaCompositePass] : []),
+          ...(initialDiamondSsaaActive || initialDiamondFxaaActive || initialDiamondTaaActive ? [gemMaskPass] : []),
           ...(initialDiamondFxaaActive ? [fxaaPass] : []),
           outputPass,
         ]);
@@ -2380,13 +2382,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           diamondSupersamplingEnabled: initialDiamondSsaaActive,
           renderPath: initialDiamondFxaaActive || initialDiamondSsaaActive ? "composer" : "direct",
         });
-        // Live preview keeps TAA disabled in both moving and settled states.
-        // The composer still converges one frame for a stable demand-driven image.
-        if (idleTaaPass) {
-          idleTaaPass.enabled = false;
-          idleTaaPass.accumulate = false;
-          idleTaaPass.accumulateIndex = -1;
-        }
+        // TAA remains enabled only through the masked center-diamond composite.
+        // Its accumulation is disabled automatically when camera motion begins.
         viewerLoopRef.current?.converge?.(1);
         loadAuditStep("model-added-to-scene");
         // No reaplicar el metal globalmente al cargar: el paso anterior ya asignó\n        // materiales por categoría y una aplicación con parteActiva=null sobrescribiría\n        // las gemas recién configuradas. El metal se aplica después solo sobre la capa seleccionada.\n        if (ext!=="3dm" && parteActiva) aplicarMaterial(materialActivo);
@@ -3855,7 +3852,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             && outputPass
             && gemMaskPass?.enabled
             && gemMaskPass?.hasDiamondMeshes
-            && (fxaaPass?.enabled || (diamondSupersamplePass?.enabled && diamondSupersampleCompositePass?.enabled))
+            && (fxaaPass?.enabled || (diamondSupersamplePass?.enabled && diamondSupersampleCompositePass?.enabled) || (idleTaaPass?.enabled && diamondTaaSavePass?.enabled && diamondTaaCompositePass?.enabled))
           );
           const activeToneAuditPath = useLiveGemAa ? "composer" : "direct";
           if (toneAuditEnabled && activeToneAuditPath !== lastToneAuditPath) {
@@ -3981,7 +3978,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             composer?.setPixelRatio?.(settledDpr);
 
             // Gem Mask + FXAA disabled: retain only the ordinary beauty output.
-            const settledBeautyPasses = new Set([renderPass, ...(diamondSsaaActive ? [diamondSupersamplePass, diamondSupersampleCompositePass] : []), ...(diamondSsaaActive || fxaaPass?.enabled ? [gemMaskPass] : []), ...(fxaaPass?.enabled ? [fxaaPass] : []), outputPass]);
+            const settledDiamondTaaActive = Boolean(idleTaaPass?.enabled && diamondTaaSavePass?.enabled && diamondTaaCompositePass?.enabled);
+            const settledBeautyPasses = new Set([renderPass, ...(diamondSsaaActive ? [diamondSupersamplePass, diamondSupersampleCompositePass] : []), ...(settledDiamondTaaActive ? [diamondTaaSavePass, idleTaaPass, diamondTaaCompositePass] : []), ...(diamondSsaaActive || fxaaPass?.enabled || settledDiamondTaaActive ? [gemMaskPass] : []), ...(fxaaPass?.enabled ? [fxaaPass] : []), outputPass]);
             const settledPasses = ((composer as any)?.passes ?? []) as any[];
             settledPasses.forEach((pass) => { pass.enabled = settledBeautyPasses.has(pass); });
             if (gemMaskPass) gemMaskPass.enabled = diamondSsaaActive || Boolean(fxaaPass?.enabled && gemMaskPass.hasDiamondMeshes);
@@ -3997,11 +3995,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               if (strength) strength.value = settledEdgeAaProfile.strength;
               surfaceEdgeAaPass.enabled = false;
             }
-            if (idleTaaPass) {
-              idleTaaPass.enabled = false;
-              idleTaaPass.accumulate = false;
-              idleTaaPass.accumulateIndex = -1;
-            }
+            // Settled TAA is enabled only for the center-diamond masked composite.
             if (bloomPass) bloomPass.enabled = false;
             if (dofPass) dofPass.enabled = false;
             if (ssrSavePass) ssrSavePass.enabled = false;
