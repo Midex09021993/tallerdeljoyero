@@ -1007,10 +1007,12 @@ export async function createAurumPostPipeline(
     // Disabling Gem Mask therefore safely suspends its dependent effects.
     const maskEnabled=controls?.gemMaskEnabled===true;
     const hasMaskTarget=Boolean(gemMaskPass);
+    const hasDiamondMeshes=Boolean(gemMaskPass?.hasDiamondMeshes);
     const canSupersample=Boolean(diamondSupersamplePass?.canRender?.());
-    const ssaaEnabled=maskEnabled && controls?.diamondSsaaEnabled===true && canSupersample;
-    const fxaaEnabled=maskEnabled && controls?.gemFxaaEnabled===true;
-    const taaEnabled=maskEnabled && controls?.diamondTaaEnabled===true && !temporalMotionActive && Boolean(taaPass && diamondTaaSavePass && diamondTaaCompositePass);
+    const diamondMaskReady=maskEnabled && hasMaskTarget && hasDiamondMeshes;
+    const ssaaEnabled=diamondMaskReady && controls?.diamondSsaaEnabled===true && canSupersample;
+    const fxaaEnabled=diamondMaskReady && controls?.gemFxaaEnabled===true;
+    const taaEnabled=diamondMaskReady && controls?.diamondTaaEnabled===true && !temporalMotionActive && Boolean(taaPass && diamondTaaSavePass && diamondTaaCompositePass);
 
     if(gemMaskPass) gemMaskPass.enabled=maskEnabled && hasMaskTarget;
     if(diamondSupersamplePass) diamondSupersamplePass.enabled=ssaaEnabled;
