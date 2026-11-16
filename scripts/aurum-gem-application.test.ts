@@ -154,6 +154,9 @@ test("diamond perimeter AA uses the stronger masked edge profile", () => {
   expect(source).toContain("float centerMask=texture2D(gemMask,vUv).r;");
   expect(source).toContain("float outsideNeighbor=1.0-min(min(m0,m1),min(m2,m3));");
   expect(source).toContain("float blendAmount=edge*strength*outsideNeighbor;");
+  expect(source).toContain("float gemNeighborCount=gem0+gem1+gem2+gem3;");
+  expect(source).toContain("(n0*gem0+n1*gem1+n2*gem2+n3*gem3)/gemNeighborCount");
+  expect(source).not.toContain("vec3 diagonal=(n0+n1+n2+n3)*0.25");
 });
 
 test("diamond SSAA scale cap is updated through the pipeline-owned state", () => {
@@ -179,6 +182,9 @@ test("live camera motion keeps diamond-only supersampling active at a reduced ad
   expect(render).toContain("diamondSupersamplingEnabled: liveDiamondSsaaActive");
   expect(render).not.toContain("fxaaPass.enabled = diamondSsaaActive");
   expect(render).toContain("[diamondSupersamplePass, gemMaskPass, diamondSupersampleCompositePass, ...(fxaaPass?.enabled ? [fxaaPass] : [])]");
+  expect(render).toContain("const initialDiamondSsaaActive = Boolean(setDiamondSupersamplingSettled?.(true));");
+  expect(render).toContain("const initialDiamondFxaaActive = Boolean(fxaaPass?.enabled && gemMaskPass?.hasDiamondMeshes);");
+  expect(render).toContain('renderPath: initialDiamondFxaaActive || initialDiamondSsaaActive ? "composer" : "direct"');
 });
 
 
