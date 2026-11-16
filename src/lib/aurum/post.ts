@@ -681,7 +681,6 @@ export async function createAurumPostPipeline(
           if(diamondSupersampleTarget) diamondSupersampleCompositePass.material.uniforms.tDiamondHiRes.value=diamondSupersampleTarget.texture;
         }
         ensureDiamondSupersampleMaskTarget();
-        ensureDiamondSupersampleFxaaTarget();
       },
       render(activeRenderer:any){
         let activeTarget:any=null;
