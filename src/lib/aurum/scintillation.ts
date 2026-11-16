@@ -625,7 +625,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // bounded expansion prevents temporal edge popping without a scene pass.
         float aurumDiamondFacetAA=${isDiamond ? "clamp(max(fwidth(aurumFacing), max(max(fwidth(aurumN.x), fwidth(aurumN.y)), fwidth(aurumN.z))) * 0.5, 0.0005, 0.015)" : "0.0"};
         // Broader angular transition reduces abrupt sparkle popping during camera orbit.
-        float aurumFlash=smoothstep(0.94-aurumDiamondFacetAA,0.997+aurumDiamondFacetAA,aurumFacing)*aurumScintillationStrength;
+        float aurumFlash=smoothstep(${isDiamond ? "0.92" : "0.94"}-aurumDiamondFacetAA,0.997+aurumDiamondFacetAA,aurumFacing)*aurumScintillationStrength;
 
         // Keep scintillation energy bounded: additive white flashes can clip
         // the crown facets in bright studio environments. Modulate existing
