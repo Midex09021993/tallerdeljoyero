@@ -202,7 +202,7 @@ test("legacy Post Engine preferences cannot reactivate full-frame AA or TAA", ()
   expect(controls).toContain("migrated.gemMaskEnabled = false;");
   expect(controls).toContain("migrated.diamondTaaEnabled = false;");
   expect(post).toContain("taaRequested=false;");
-  expect(post).toContain("const taaEnabled=false;");
+  expect(post).toContain("const taaEnabled=diamondMaskReady && controls?.diamondTaaEnabled===true && !temporalMotionActive");
   expect(post).not.toContain("taaRequested=Boolean(options.capture && postControls.taaEnabled)");
 });
 
