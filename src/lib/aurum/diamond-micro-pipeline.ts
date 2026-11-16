@@ -112,7 +112,9 @@ export function createAurumDiamondMicroPipeline(scene: any, camera: any, getView
 
   let lastSignature = "";
   let lastReport: AurumDiamondMicroProfile[] = [];
+  let enabled = true;
   const applyMeshOptics = (mesh: any) => {
+    if (!enabled) return;
     const tier = (mesh.userData?.aurumDiamondMicroTier ?? "brilliant") as Exclude<AurumDiamondMicroTier, "mixed">;
     const profile = getAurumDiamondMicroOpticalProfile(tier);
     for (const material of getMaterials(mesh)) {
@@ -172,7 +174,7 @@ export function createAurumDiamondMicroPipeline(scene: any, camera: any, getView
 
   const update = () => {
     const viewportHeight = Number(getViewportHeight?.() ?? 0);
-    if (!Number.isFinite(viewportHeight) || viewportHeight < 2 || !meshes.length) return lastReport;
+    if (!enabled || !Number.isFinite(viewportHeight) || viewportHeight < 2 || !meshes.length) return lastReport;
     const byMaterial = new Map<any, number[]>();
     const projected = meshes.map(mesh => ({ mesh, diameter: getAurumDiamondProjectedDiameterPx(mesh, camera, viewportHeight) }));
     const sortedDiameters = projected.map(item => item.diameter).sort((a, b) => b - a);
@@ -250,7 +252,29 @@ export function createAurumDiamondMicroPipeline(scene: any, camera: any, getView
 
   return {
     update,
-    diagnostics: () => ({ diamondMeshes: meshes.length, materialGroups: lastReport.length, profiles: lastReport }),
+    setEnabled(next: boolean) {
+      const value = Boolean(next);
+      if (enabled === value) return;
+      enabled = value;
+      if (!enabled) {
+        for (const mesh of meshes) {
+          for (const material of getMaterials(mesh)) {
+            const uniforms = material.userData?.aurumDiamondMicroUniforms;
+            if (!uniforms) continue;
+            if (uniforms.scintillationStrength) uniforms.scintillationStrength.value = uniforms.baseScintillationStrength;
+            if (uniforms.facetContrast) uniforms.facetContrast.value = uniforms.baseFacetContrast;
+            if (uniforms.dispersion) uniforms.dispersion.value = uniforms.baseDispersion;
+            if (uniforms.virtualFacetWeight) uniforms.virtualFacetWeight.value = uniforms.baseVirtualFacetWeight;
+            if (uniforms.fireScale) uniforms.fireScale.value = 1;
+          }
+        }
+      } else {
+        lastSignature = "";
+        update();
+        meshes.forEach(applyMeshOptics);
+      }
+    },
+    diagnostics: () => ({ enabled, diamondMeshes: meshes.length, materialGroups: lastReport.length, profiles: lastReport }),
     refresh,
     dispose: () => {
       for (const mesh of meshes) {
