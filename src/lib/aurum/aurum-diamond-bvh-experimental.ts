@@ -9,6 +9,8 @@ import * as THREE from "three";
  * This keeps the current production viewer and its fallback buildable while
  * the experiment is being wired and verified.
  */
+const MAX_DIAMOND_DISPERSION = 0.044;
+
 export type AurumDiamondBvhApi = {
   createDiamondBVH: (geometry: THREE.BufferGeometry) => {
     bvh: unknown;
@@ -100,7 +102,7 @@ export function prepareAurumDiamondBvhExperiment(
     environmentMap: options.environmentMap,
     bvh,
     ior: Math.max(1, options.ior ?? 2.417),
-    dispersion: Math.max(0, Math.min(0.044, options.dispersion ?? 0.006)),
+    dispersion: Math.max(0, Math.min(MAX_DIAMOND_DISPERSION, options.dispersion ?? 0.006)),
     environmentIntensity: Math.max(0, Math.min(2.5, options.environmentIntensity ?? 1.14)),
     rayBounces,
     facetSharpness: 1,
