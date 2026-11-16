@@ -548,6 +548,17 @@ export async function createAurumPostPipeline(
         const previousScissorTest=activeRenderer.getScissorTest?.()??false;
         const previousClearColor=new THREE.Color();
         const previousClearAlpha=activeRenderer.getClearAlpha();
+        const previousToneMapping=activeRenderer.toneMapping;
+        const previousToneMappingExposure=activeRenderer.toneMappingExposure;
+        const previousOutputColorSpace=activeRenderer.outputColorSpace;
+        const previousLocalClippingEnabled=activeRenderer.localClippingEnabled;
+        const previousClippingPlanes=activeRenderer.clippingPlanes;
+        const previousShadowAutoUpdate=activeRenderer.shadowMap?.autoUpdate;
+        const previousXrEnabled=activeRenderer.xr?.enabled;
+        const previousSortObjects=activeRenderer.sortObjects;
+        const previousSceneOverride=scene.overrideMaterial;
+        const previousSceneBackground=scene.background;
+        const previousCameraLayerMask=camera.layers?.mask;
         activeRenderer.getViewport(previousViewport);
         activeRenderer.getScissor(previousScissor);
         activeRenderer.getClearColor(previousClearColor);
@@ -601,6 +612,17 @@ export async function createAurumPostPipeline(
           activeRenderer.setScissorTest(previousScissorTest);
           activeRenderer.autoClear=previousAutoClear;
           activeRenderer.setClearColor(previousClearColor,previousClearAlpha);
+          activeRenderer.toneMapping=previousToneMapping;
+          activeRenderer.toneMappingExposure=previousToneMappingExposure;
+          activeRenderer.outputColorSpace=previousOutputColorSpace;
+          activeRenderer.localClippingEnabled=previousLocalClippingEnabled;
+          activeRenderer.clippingPlanes=previousClippingPlanes;
+          if(activeRenderer.shadowMap&&previousShadowAutoUpdate!==undefined) activeRenderer.shadowMap.autoUpdate=previousShadowAutoUpdate;
+          if(activeRenderer.xr&&previousXrEnabled!==undefined) activeRenderer.xr.enabled=previousXrEnabled;
+          activeRenderer.sortObjects=previousSortObjects;
+          scene.overrideMaterial=previousSceneOverride;
+          scene.background=previousSceneBackground;
+          if(camera.layers&&previousCameraLayerMask!==undefined) camera.layers.mask=previousCameraLayerMask;
         }
       },
       dispose(){
