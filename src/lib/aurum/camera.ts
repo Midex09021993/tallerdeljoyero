@@ -233,6 +233,54 @@ export function applyAurumCameraView(
   camera.position.copy(target).addScaledVector(direction, distance);
   camera.lookAt(target);
   camera.updateProjectionMatrix();
+
+  // En lateral, la silueta proyectada del anillo no queda simétrica respecto
+  // al centro geométrico (la montura y el brazo cargan más volumen arriba).
+  // Corregimos solo el encuadre: desplazamos cámara y target juntos en el
+  // plano de imagen, sin cambiar distancia, orientación ni escala.
+  if (view === "lateral" && model) {
+    camera.updateMatrixWorld(true);
+    const bounds = getAurumVisibleProductBounds(model);
+    if (!bounds.isEmpty()) {
+      const corners = [
+        new THREE.Vector3(bounds.min.x, bounds.min.y, bounds.min.z),
+        new THREE.Vector3(bounds.min.x, bounds.min.y, bounds.max.z),
+        new THREE.Vector3(bounds.min.x, bounds.max.y, bounds.min.z),
+        new THREE.Vector3(bounds.min.x, bounds.max.y, bounds.max.z),
+        new THREE.Vector3(bounds.max.x, bounds.min.y, bounds.min.z),
+        new THREE.Vector3(bounds.max.x, bounds.min.y, bounds.max.z),
+        new THREE.Vector3(bounds.max.x, bounds.max.y, bounds.min.z),
+        new THREE.Vector3(bounds.max.x, bounds.max.y, bounds.max.z),
+      ];
+      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+      let depthSum = 0;
+      for (const corner of corners) {
+        const viewPoint = corner.clone().applyMatrix4(camera.matrixWorldInverse);
+        const projected = corner.clone().project(camera);
+        minX = Math.min(minX, projected.x);
+        maxX = Math.max(maxX, projected.x);
+        minY = Math.min(minY, projected.y);
+        maxY = Math.max(maxY, projected.y);
+        depthSum += -viewPoint.z;
+      }
+      const centerNdcX = (minX + maxX) * 0.5;
+      const centerNdcY = (minY + maxY) * 0.5;
+      const depth = Math.max(depthSum / corners.length, camera.near);
+      const verticalHalfFov = THREE.MathUtils.degToRad(camera.fov) * 0.5;
+      const horizontalHalfFov = Math.atan(Math.tan(verticalHalfFov) * aspect);
+      const shiftRight = centerNdcX * depth * Math.tan(horizontalHalfFov);
+      const shiftUp = centerNdcY * depth * Math.tan(verticalHalfFov);
+      const right = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0).normalize();
+      const up = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 1).normalize();
+      const framingShift = right.multiplyScalar(shiftRight).add(up.multiplyScalar(shiftUp));
+      camera.position.add(framingShift);
+      target.add(framingShift);
+      controls.target.copy(target);
+      camera.lookAt(target);
+      camera.updateMatrixWorld(true);
+    }
+  }
+
   controls.update();
 }
 /** Ajusta la cámara a una proporción de salida sin deformar el modelo.
