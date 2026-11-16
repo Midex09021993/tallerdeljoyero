@@ -350,20 +350,7 @@ export async function createAurumPostPipeline(
     const gemMaskLayer=31;
     const gemMaskLayerBit=1<<gemMaskLayer;
     const cachedClearColor=new THREE.Color();
-    let lastGemMaskCameraState:number[]|null=null;
-    const readGemMaskCameraState=():number[]=>{
-      const position=camera.position;
-      const quaternion=camera.quaternion;
-      const projection=camera.projectionMatrix?.elements??[];
-      const world=camera.matrixWorld?.elements??[];
-      return [
-        position?.x??0,position?.y??0,position?.z??0,
-        quaternion?.x??0,quaternion?.y??0,quaternion?.z??0,quaternion?.w??1,
-        ...projection,...world,
-      ];
-    };
     const refreshGemMaskCache=()=>{
-      lastGemMaskCameraState=null;
       for(const [mesh,originalMask] of previousGemLayerMasks){
         if(mesh?.layers) mesh.layers.mask=originalMask;
       }
@@ -462,13 +449,12 @@ export async function createAurumPostPipeline(
       get hasDiamondMeshes(){ return cachedGemMeshes.length>0; },
       refreshCache:refreshGemMaskCache,
       setSize(width:number,height:number){
-        lastGemMaskCameraState=null;
         gemMaskTarget.setSize(Math.max(1,width),Math.max(1,height));
       },
       render(activeRenderer:any){
-        const cameraState=readGemMaskCameraState();
-        if(lastGemMaskCameraState&&cameraState.length===lastGemMaskCameraState.length&&cameraState.every((value,index)=>value===lastGemMaskCameraState![index])) return;
-        lastGemMaskCameraState=cameraState;
+        // Rebuild the native-resolution occlusion mask for every composed frame.
+        // Camera-only caching left stale silhouettes when CAD meshes moved,
+        // were replaced, or changed transforms without a camera change.
         if(cachedGemMeshes.length===0){
           const previousTarget=activeRenderer.getRenderTarget();
           const previousViewport=activeRenderer.getViewport(new THREE.Vector4()).clone();
@@ -687,8 +673,9 @@ export async function createAurumPostPipeline(
           return 0.0;
         }
         void main(){
-          // This is a true overlay: discard means the framebuffer is not
-          // written at all outside the original-resolution diamond mask.
+            // Native-resolution mask is the hard write boundary. The auxiliary
+          // high-resolution mask may refine samples, but can never expand the
+          // output footprint onto metal, prongs, shank, or environment.
           if(texture2D(gemMask,vUv).r<0.5) discard;
           // FXAA-only mode renders at native resolution: copy that result
           // directly instead of applying the supersampling reconstruction filter.

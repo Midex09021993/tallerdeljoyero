@@ -483,7 +483,8 @@ test("Aurum exposes diamond-only AA and SSAA as independent modules", () => {
   expect(controlsSource).toContain("diamondSsaaEnabled: false");
   expect(controlsSource).toContain("const normalize = (_value: any): AurumPostControls");
   expect(architectureSource).toContain('id: "diamond-ssaa"');
-  expect(architectureSource).toContain('updatePostControl("diamondSsaaEnabled"');
+  expect(architectureSource).toContain('aria-disabled="true" disabled title="SSAA suspendido por regresión visual"');
+  expect(architectureSource).toContain('aria-disabled="true" disabled title="FXAA suspendido por regresión visual"');
   expect(postSource).toContain("AURUM DIAMOND SSAA MODULE");
   expect(postSource).toContain("tDiamondHiRes");
   expect(postSource).toContain("float sampleMask=texture2D(tDiamondHiResMask,sampleUv).r;");
@@ -491,6 +492,8 @@ test("Aurum exposes diamond-only AA and SSAA as independent modules", () => {
   expect(postSource).toContain("const renderDiamondSupersampleOverlay=(activeRenderer:any)=>{");
   expect(postSource).toContain("diamondSupersampleCompositePass.render(activeRenderer,null,null,0,false)");
   expect(postSource).toContain("const centerDiamondMeshes:any[]=[];");
+  expect(postSource).toContain("Rebuild the native-resolution occlusion mask for every composed frame.");
+  expect(postSource).not.toContain("lastGemMaskCameraState");
   expect(postSource).toContain("const previousViewport=activeRenderer.getViewport(new THREE.Vector4()).clone();");
   expect(postSource).toContain("const previousScissor=activeRenderer.getScissor(new THREE.Vector4()).clone();");
   expect(postSource).toContain("activeRenderer.setViewport(previousViewport);");
