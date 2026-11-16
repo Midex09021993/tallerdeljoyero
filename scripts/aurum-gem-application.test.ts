@@ -282,7 +282,7 @@ test("masked diamond SSAA remains fail-closed while native-resolution FXAA stays
   expect(post).toContain("if(centerMask<0.5) discard;");
   expect(post).not.toContain("ensureDiamondSupersampleFxaaTarget");
   expect(post).not.toContain("renderFxaa(activeRenderer,enabled:boolean)");
-  expect(render).toContain('const blocked=item.key==="diamondTaaEnabled"||((item.key==="diamondSsaaEnabled"||item.key==="gemFxaaEnabled")&&!diamondPostControls.gemMaskEnabled);');
+  expect(render).toContain('const blocked=item.key==="diamondTaaEnabled"||item.key==="diamondSsaaEnabled"||(item.key==="gemFxaaEnabled"&&!diamondPostControls.gemMaskEnabled);');
   expect(render).toContain("setAurumPostControls({diamondSsaaEnabled:!enabled})");
   expect(render).toContain("subscribeAurumPostControls((controls) => {");
   expect(render).toContain("setDiamondPostControls(controls);");
