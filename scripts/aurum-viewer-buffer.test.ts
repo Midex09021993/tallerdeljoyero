@@ -486,6 +486,10 @@ test("Aurum exposes diamond-only AA and SSAA as independent modules", () => {
   expect(postSource).toContain("AURUM DIAMOND SSAA MODULE");
   expect(postSource).toContain("tDiamondHiRes");
   expect(postSource).toContain("if(texture2D(gemMask,vUv).r<0.5){gl_FragColor=base;return;}");
+  expect(postSource).toContain("float sampleMask=texture2D(gemMask,sampleUv).r;");
+  expect(postSource).toContain("if(sampleMask>=0.5 && abs(weight)>0.000001)");
+  expect(postSource).toContain("if(abs(totalWeight)<0.00001){gl_FragColor=base;return;}");
+  expect(postSource).toContain("render the full optical scene at higher");
 });
 
 test("the BVH camera update reuses fixed-size snapshots without per-frame arrays", () => {
