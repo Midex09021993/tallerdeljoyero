@@ -307,6 +307,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const liveTransmissionScaleRef = useRef(0.42);
   const gemTransitionRef = useRef<any>(null);
   const diamondMicroPipelineRef = useRef<any>(null);
+  const diamondBvhRuntimeRef = useRef<any>(null);
+  const diamondBvhEnabledRef = useRef(true);
+  const diamondMicroEnabledRef = useRef(true);
   const [presentationCover, setPresentationCover] = useState<string | null>(null);
   const [presentationVisible, setPresentationVisible] = useState(false);
   const presentationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -338,7 +341,38 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
     return () => window.removeEventListener("keydown", handleDiagnosticShortcut);
   }, []);
   const [panel, setPanel] = useState<"materiales" | "escenas" | "iluminacion">("materiales");
-  const [uxSection, setUxSection] = useState<"materiales"|"gemas"|"ambientes"|"escenas"|"hdrMetales"|"hdrGemas"|"fondos"|"rhino-export"|"cad-tree"|"positions">("materiales");
+  const [uxSection, setUxSection] = useState<"materiales"|"gemas"|"ambientes"|"escenas"|"hdrMetales"|"hdrGemas"|"fondos"|"rhino-export"|"cad-tree"|"positions"|"diamond-control">("materiales");
+  const [diamondBvhEnabled, setDiamondBvhEnabled] = useState(true);
+  const [diamondMicroEnabled, setDiamondMicroEnabled] = useState(true);
+  const [diamondControlDiagnostics, setDiamondControlDiagnostics] = useState<any>(null);
+  useEffect(() => {
+    const refreshDiagnostics = () => {
+      setDiamondControlDiagnostics({
+        bvh: diamondBvhRuntimeRef.current?.diagnostics?.() ?? null,
+        micro: diamondMicroPipelineRef.current?.diagnostics?.() ?? null,
+      });
+    };
+    const handleDiamondControl = (event: Event) => {
+      const detail = (event as CustomEvent<{type?:string;enabled?:boolean}>).detail ?? {};
+      if (detail.type === "bvh" && typeof detail.enabled === "boolean") {
+        diamondBvhEnabledRef.current = detail.enabled;
+        diamondBvhRuntimeRef.current?.setFamilyEnabled?.("diamante", detail.enabled);
+        setDiamondBvhEnabled(detail.enabled);
+      } else if (detail.type === "micro" && typeof detail.enabled === "boolean") {
+        diamondMicroEnabledRef.current = detail.enabled;
+        diamondMicroPipelineRef.current?.setEnabled?.(detail.enabled);
+        setDiamondMicroEnabled(detail.enabled);
+      }
+      refreshDiagnostics();
+      viewerLoopRef.current?.invalidate?.();
+    };
+    window.addEventListener("aurum-diamond-control", handleDiamondControl);
+    window.addEventListener("aurum-diamond-control-refresh", refreshDiagnostics);
+    return () => {
+      window.removeEventListener("aurum-diamond-control", handleDiamondControl);
+      window.removeEventListener("aurum-diamond-control-refresh", refreshDiagnostics);
+    };
+  }, []);
   const [cadTreeItems,setCadTreeItems] = useState<Array<{uuid:string;name:string;type:string;layer:string;visible:boolean;sourceId:string|null}>>([]);
   const [cadModelDiagnostics,setCadModelDiagnostics] = useState<any|null>(null);
   const refreshCadTree = () => {
@@ -1045,6 +1079,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             if (diamondBvhRuntime && diamondBvhRuntimeUrl !== gemEnvironmentUrl) {
               diamondBvhRuntime.dispose();
               diamondBvhRuntime = null;
+              diamondBvhRuntimeRef.current = null;
               diamondBvhRuntimeUrl = null;
             }
             if (diamondBvhRuntime && diamondBvhRuntimeUrl === gemEnvironmentUrl) {
@@ -1225,6 +1260,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             return;
           }
           diamondBvhRuntime = runtime;
+          diamondBvhRuntimeRef.current = runtime;
           diamondBvhRuntimeUrl = requestedEnvironmentUrl;
           // Resolve the final model and camera transforms before building BVH
           // camera uniforms, so the first visible frame uses the current framing.
@@ -1232,8 +1268,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           camara.updateMatrixWorld?.(true);
           camara.updateProjectionMatrix?.();
           runtime.refresh(modelo);
+          if (!diamondBvhEnabledRef.current) runtime.setFamilyEnabled("diamante", false);
           runtime.update();
           const diagnostics = runtime.diagnostics();
+          setDiamondControlDiagnostics({ bvh: diagnostics, micro: diamondMicroPipelineRef.current?.diagnostics?.() ?? null });
           console.info("[AURUM][GEM BVH]", diagnostics);
           invalidateRenderRef.current?.();
         } catch (error) {
@@ -3831,6 +3869,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
 
       const diamondMicroPipeline = createAurumDiamondMicroPipeline(escena, camara, () => renderer.domElement.height);
       diamondMicroPipelineRef.current = diamondMicroPipeline;
+      if (!diamondMicroEnabledRef.current) diamondMicroPipeline.setEnabled(false);
 
       const viewerLoop = startAurumViewerLoop(
         { node:nodo, camera:camara, renderer, composer, ssaoPass, controls:controles },
@@ -4079,6 +4118,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           console.error("[AURUM][VIEWER][BVH_CLEANUP_FAILED]", error);
         } finally {
           diamondBvhRuntime = null;
+          diamondBvhRuntimeRef.current = null;
           diamondBvhRuntimeUrl = null;
         }
         try {
@@ -4853,8 +4893,48 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       </div>}
       
       <div className={embedded ? "flex min-h-0 flex-1 overflow-hidden bg-[#090b0e]" : "flex min-h-0 flex-1 gap-3 overflow-hidden rounded-2xl border border-[#e7e2d9] bg-[#f9f8f5] p-3"}>
-        <AurumRenderSidebar activeToolId={uxSection} onAmbientesClick={() => setUxSection("ambientes")} onGemHdrClick={() => setUxSection("hdrGemas")} onBackgroundClick={() => setUxSection("fondos")} onSceneClick={() => setUxSection("escenas")} onMaterialsClick={() => setUxSection("materiales")} onGemsClick={() => {setUxSection("gemas");setBibliotecaTipo("gemas");setFamiliaGemaActiva("Predeterminadas");setMostrarTodasGemas(false);setBusquedaGemas("");}} onCadTreeClick={() => {setUxSection("cad-tree");refreshCadTree();}} onPositionsClick={() => setUxSection("positions")} onRhinoExportClick={() => {setExportOpen(false);setRhinoExportError(null);setRhinoExportReport(null);setUxSection("rhino-export");}} />
+        <AurumRenderSidebar activeToolId={uxSection} onAmbientesClick={() => setUxSection("ambientes")} onGemHdrClick={() => setUxSection("hdrGemas")} onBackgroundClick={() => setUxSection("fondos")} onSceneClick={() => setUxSection("escenas")} onMaterialsClick={() => setUxSection("materiales")} onGemsClick={() => {setUxSection("gemas");setBibliotecaTipo("gemas");setFamiliaGemaActiva("Predeterminadas");setMostrarTodasGemas(false);setBusquedaGemas("");}} onCadTreeClick={() => {setUxSection("cad-tree");refreshCadTree();}} onPositionsClick={() => setUxSection("positions")} onRhinoExportClick={() => {setExportOpen(false);setRhinoExportError(null);setRhinoExportReport(null);setUxSection("rhino-export");}} onDiamondControlClick={() => {setUxSection("diamond-control");window.dispatchEvent(new CustomEvent("aurum-diamond-control-refresh"));}} />
         <aside className={"relative z-20 flex h-full min-h-0 w-[min(22vw,336px)] min-w-[240px] shrink-0 flex-col overflow-hidden rounded-r-2xl border border-l-0 border-[#e7e2d9] bg-[#f9f8f5] text-[#292824] " + (embedded ? "" : "-ml-3")}>
+          {uxSection==="diamond-control"&&<div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-[#f9f8f5] px-3 py-3">
+            <div className="mb-3">
+              <div className="text-[10px] font-semibold uppercase tracking-[.16em] text-[#92743b]">AURUM RENDER · ÓPTICA</div>
+              <h2 className="mt-1 text-base font-semibold text-[#292824]">Control del diamante</h2>
+              <p className="mt-1 text-[10px] leading-relaxed text-[#77756f]">Controles limitados a las mallas identificadas como diamante. No modifican metales, ambiente ni otras familias de gemas.</p>
+            </div>
+            <section className="mb-3 rounded-xl border border-[#e6e1d8] bg-white p-3">
+              <div className="mb-2 flex items-center justify-between gap-2"><div><div className="text-xs font-semibold text-[#292824]">BVH óptico</div><p className="mt-0.5 text-[9px] text-[#77756f]">Sustituye el material físico solo en diamantes compatibles.</p></div>
+                <button type="button" role="switch" aria-label="BVH del diamante" aria-checked={diamondBvhEnabled} onClick={()=>window.dispatchEvent(new CustomEvent("aurum-diamond-control",{detail:{type:"bvh",enabled:!diamondBvhEnabled}}))} className={"relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors "+(diamondBvhEnabled?"bg-[#a88743]":"bg-[#c9c6bf]")}><span className={"inline-block size-3.5 rounded-full bg-white shadow-sm transition-transform "+(diamondBvhEnabled?"translate-x-[18px]":"translate-x-1")}/></button>
+              </div>
+              <div className="mt-2 text-[9px] text-[#77756f]">{diamondBvhEnabled?"Solicitado: activado":"Solicitado: desactivado"} · El material original se restaura al desactivar.</div>
+            </section>
+            <section className="mb-3 rounded-xl border border-[#e6e1d8] bg-white p-3">
+              <div className="flex items-center justify-between gap-2"><div><div className="text-xs font-semibold text-[#292824]">Micro Pipeline</div><p className="mt-0.5 text-[9px] text-[#77756f]">Clasificación MICRO / SMALL / BRILLIANT por tamaño en pantalla.</p></div>
+                <button type="button" role="switch" aria-label="Micro Pipeline del diamante" aria-checked={diamondMicroEnabled} onClick={()=>window.dispatchEvent(new CustomEvent("aurum-diamond-control",{detail:{type:"micro",enabled:!diamondMicroEnabled}}))} className={"relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors "+(diamondMicroEnabled?"bg-[#a88743]":"bg-[#c9c6bf]")}><span className={"inline-block size-3.5 rounded-full bg-white shadow-sm transition-transform "+(diamondMicroEnabled?"translate-x-[18px]":"translate-x-1")}/></button>
+              </div>
+            </section>
+            <section className="mb-3 rounded-xl border border-[#e6e1d8] bg-white p-3">
+              <div className="mb-2 text-[10px] font-semibold uppercase tracking-[.12em] text-[#92743b]">Cadena óptica actual</div>
+              <div className="space-y-2 text-[10px] text-[#55534d]">
+                <div className="flex items-center justify-between gap-2"><span>Material físico + shader iJewel</span><span className="font-semibold">{diamondBvhEnabled?"Reemplazado en BVH activo":"Ruta física disponible"}</span></div>
+                <div className="flex items-center justify-between gap-2"><span>Scintillation</span><span className="font-semibold">{diamondBvhEnabled?"No se ejecuta sobre mallas BVH":"Incluida en shader físico"}</span></div>
+                <div className="flex items-center justify-between gap-2"><span>Dispersión</span><span className="font-semibold">{diamondBvhEnabled?"BVH":"Shader físico"}</span></div>
+                <div className="flex items-center justify-between gap-2"><span>SSAA / FXAA / TAA dedicado</span><span className="font-semibold">Desactivados</span></div>
+              </div>
+              <p className="mt-2 border-t border-black/[.06] pt-2 text-[9px] leading-relaxed text-[#8a857b]">El BVH reemplaza el material físico en las mallas que procesa. Por eso Scintillation no debe contarse como activa simultáneamente en esas mismas mallas.</p>
+            </section>
+            <section className="rounded-xl border border-[#e6e1d8] bg-white p-3">
+              <div className="mb-2 flex items-center justify-between gap-2"><div className="text-[10px] font-semibold uppercase tracking-[.12em] text-[#92743b]">Diagnóstico de ejecución</div><button type="button" onClick={()=>window.dispatchEvent(new CustomEvent("aurum-diamond-control-refresh"))} className="rounded-lg border border-black/10 px-2 py-1 text-[9px] font-semibold text-[#6d5523]">Actualizar</button></div>
+              {diamondControlDiagnostics?.bvh?<>
+                <div className="grid grid-cols-2 gap-2 text-[10px]">
+                  <div><strong className="text-base tabular-nums">{diamondControlDiagnostics.bvh.diamondMeshes??0}</strong><div className="text-[#77756f]">Diamantes BVH</div></div>
+                  <div><strong className="text-base tabular-nums">{(diamondControlDiagnostics.bvh.diamondTriangleCount??0).toLocaleString("es-PE")}</strong><div className="text-[#77756f]">Triángulos BVH</div></div>
+                  <div><strong className="text-base tabular-nums">{diamondControlDiagnostics.micro?.diamondMeshes??0}</strong><div className="text-[#77756f]">Mallas detectadas</div></div>
+                  <div><strong className="text-base tabular-nums">{diamondControlDiagnostics.micro?.materialGroups??0}</strong><div className="text-[#77756f]">Grupos de material</div></div>
+                </div>
+                <div className="mt-2 text-[9px] text-[#77756f]">BVH: {diamondControlDiagnostics.bvh.enabled?"con entradas activas":"sin entradas activas"} · Micro: {diamondControlDiagnostics.micro?.enabled?"activo":"inactivo"}</div>
+              </>:<p className="text-[10px] text-[#8a857b]">{archivo?"Runtime aún no disponible o pendiente de inicialización. Pulsa Actualizar tras cargar el modelo.":"Carga un modelo para consultar los sistemas en ejecución."}</p>}
+            </section>
+          </div>}
           {uxSection==="cad-tree"&&<div className="flex shrink-0 items-center justify-between gap-2 border-b border-black/[.06] bg-white/70 px-3 py-2">
             <span className="px-1 text-[10px] font-semibold uppercase tracking-[.12em] text-[#92743b]">Árbol CAD</span>
             <button type="button" onClick={()=>setUxSection("ambientes")} className="rounded-lg border border-black/[.08] bg-white px-2.5 py-2 text-[10px] font-semibold text-[#77756f] hover:bg-[#f8f6f0]">Biblioteca</button>
