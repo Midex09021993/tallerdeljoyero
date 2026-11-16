@@ -310,6 +310,9 @@ export async function createAurumPostPipeline(
     };
     const cachedGemMeshes:any[]=[];
     const diamondMaskMaterialsByMesh=new Map<any,any>();
+    // Beauty materials used by the isolated SSAA pass. Multi-material meshes
+    // keep their original diamond slots; every non-diamond slot is colorless.
+    const diamondSupersampleMaterialsByMesh=new Map<any,any>();
     const previousGemLayerMasks=new Map<any,number>();
     const gemMaskLayer=31;
     const gemMaskLayerBit=1<<gemMaskLayer;
@@ -334,6 +337,7 @@ export async function createAurumPostPipeline(
       previousGemLayerMasks.clear();
       cachedGemMeshes.length=0;
       diamondMaskMaterialsByMesh.clear();
+      diamondSupersampleMaterialsByMesh.clear();
       const centerDiamondMeshes:any[]=[];
       scene.updateMatrixWorld?.(true);
       scene.traverse((object:any)=>{
@@ -345,8 +349,10 @@ export async function createAurumPostPipeline(
           const groups=Array.isArray(object.geometry.groups)?object.geometry.groups:[];
           if(!groups.some((group:any)=>slots.has(Number(group?.materialIndex??0)))) return;
           diamondMaskMaterialsByMesh.set(object,materials.map((_:any,index:number)=>slots.has(index)?gemMaskMaterial:nonDiamondMaskMaterial));
+          diamondSupersampleMaterialsByMesh.set(object,materials.map((material:any,index:number)=>slots.has(index)?material:nonDiamondMaskMaterial));
         }else{
           diamondMaskMaterialsByMesh.set(object,gemMaskMaterial);
+          diamondSupersampleMaterialsByMesh.set(object,object.material);
         }
         centerDiamondMeshes.push(object);
       });
@@ -464,6 +470,7 @@ export async function createAurumPostPipeline(
         }
         previousGemLayerMasks.clear();
         diamondMaskMaterialsByMesh.clear();
+        diamondSupersampleMaterialsByMesh.clear();
         gemMaskTarget.dispose();
         depthOnlyMaterial.dispose();
         gemMaskMaterial.dispose();
@@ -533,23 +540,39 @@ export async function createAurumPostPipeline(
           activeRenderer.setViewport(0,0,activeTarget.width,activeTarget.height);
           activeRenderer.setScissorTest(false);
           activeRenderer.autoClear=false;
-          activeRenderer.setClearColor(previousClearColor,previousClearAlpha);
+          // Transparent clear: the high-resolution target contains diamond
+          // radiance only. The existing beauty frame remains the sole source for
+          // every environment, metal, shadow and non-diamond pixel.
+          activeRenderer.setClearColor(0x000000,0);
           activeRenderer.clear(true,true,true);
-          // Keep the auxiliary RGBA16F scene in linear HDR. The native renderer's
-          // tone mapping and output color-space conversion are applied exactly once
-          // by the diamond overlay shader, never to the base canvas or shared scene.
           const previousToneMapping=activeRenderer.toneMapping;
+          const previousBackground=scene.background;
+          const previousCameraLayerMask=camera.layers?.mask;
+          const originalDiamondMaterials:any[]=[];
           try {
             activeRenderer.toneMapping=THREE.NoToneMapping;
+            scene.background=null;
+            // Layer 31 is enabled only on classified diamond meshes. For
+            // multi-material meshes, suppress every non-diamond material slot
+            // so a shared CAD mesh cannot leak prongs or metal into this target.
+            for(const mesh of cachedGemMeshes){
+              originalDiamondMaterials.push([mesh,mesh.material]);
+              mesh.material=diamondSupersampleMaterialsByMesh.get(mesh)??mesh.material;
+            }
+            if(camera.layers) camera.layers.mask=gemMaskLayerBit;
             activeRenderer.render(scene,camera);
           } finally {
+            for(let index=originalDiamondMaterials.length-1;index>=0;index--){
+              const [mesh,material]=originalDiamondMaterials[index];
+              mesh.material=material;
+            }
+            if(camera.layers&&previousCameraLayerMask!==undefined) camera.layers.mask=previousCameraLayerMask;
+            scene.background=previousBackground;
             activeRenderer.toneMapping=previousToneMapping;
           }
 
-          // Rasterize the exact same visible center-diamond silhouette at the
-          // SSAA resolution. The low-resolution Gem Mask cannot safely gate
-          // subpixel reconstruction taps at a higher sampling frequency.
-          // Reuse the exact group-aware, full-scene-occlusion mask at SSAA resolution.
+          // This separate depth/membership mask is used only to reject hidden
+          // diamond samples. It never contributes color to the SSAA beauty target.
           renderGemMaskWithOcclusion(activeRenderer,activeMaskTarget);
         }catch(error){
           diamondSupersamplePass.enabled=false;
