@@ -320,6 +320,13 @@ test("SSAA mask is generated once natively and once at auxiliary resolution, the
   expect(ssaaStart).toBeGreaterThan(-1);
   expect(ssaaBlock).not.toContain("gemMaskPass.render(activeRenderer)");
   expect(ssaaBlock).toContain("diamondSupersamplePass.render(activeRenderer)");
+  expect(post).toContain("get targetWidth(){ return diamondSupersampleTarget?.width??0; }");
+  expect(post).toContain("get targetHeight(){ return diamondSupersampleTarget?.height??0; }");
+  expect(post).toContain("get renderCount(){ return diamondSupersampleRenderCount; }");
+  expect(post).toContain("diamondSupersampleRenderCount+=1;");
+  expect(render).toContain('[AURUM][DIAMOND_AA][EXECUTION]');
+  expect(render).toContain("ssaaTargetWidth: Number(diamondSupersamplePass?.targetWidth ?? 0)");
+  expect(render).toContain("ssaaRenderCount: Number(diamondSupersamplePass?.renderCount ?? 0)");
   expect(frameBlock.indexOf("renderDiamondSupersampleOverlay?.(renderer)")).toBeLessThan(frameBlock.indexOf("renderDiamondFxaaOverlay?.(renderer)"));
   expect(frameBlock).not.toContain("&& !diamondSupersamplePass?.enabled");
 });
