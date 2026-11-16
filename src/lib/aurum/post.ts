@@ -290,14 +290,31 @@ export async function createAurumPostPipeline(
       const family=isDiamondFamily(data.aurumActiveGemFamily??data.aurumGemFamily)
         || String(data.aurumActiveGemId??data.aurumGemId??"").trim().toLowerCase().startsWith("diamante");
       const category=String(rhino.categoria??data.aurumDetectedCategory??data.aurumCategory??"").trim().toLowerCase();
-      const objectIsDiamond=family&&(category==="gema"||family);
+      const layerName=String(
+        rhino.capa
+        ?? data.aurumDetectedLayer
+        ?? data.aurumRhinoSource?.layerName
+        ?? data.aurumRhinoInstanceSource?.layerName
+        ?? data.attributes?.layerName
+        ?? data.attributes?.LayerName
+        ?? data.layerName
+        ?? ""
+      ).trim().toLowerCase().replace(/[_-]+/g," ").replace(/\\s+/g," ");
+      // Rhino's Gem 01–04 layers define the gemstone domain, not the
+      // gemstone identity by themselves. Require the explicit gema category
+      // AND diamond family metadata so metal meshes sharing a layer cannot
+      // enter the diamond mask.
+      const isGemLayer=/^gem 0?[1-4]$/.test(layerName);
+      const objectIsDiamond=isGemLayer&&category==="gema"&&family;
       const diamondSlots=new Set<number>();
       materials.forEach((material:any,index:number)=>{
         // For multi-material meshes, trust each slot's own family metadata.
         // Object-level tags may classify a single-material mesh only; they must
         // never turn adjacent metal groups into diamond mask pixels.
-        const slotIsDiamond=isDiamondFamily(material?.userData?.aurumGemFamily)
-          || (materials.length===1&&objectIsDiamond);
+        const slotIsDiamond=isGemLayer&&category==="gema"&&(
+          isDiamondFamily(material?.userData?.aurumGemFamily)
+          || (materials.length===1&&objectIsDiamond)
+        );
         if(slotIsDiamond) diamondSlots.add(index);
       });
       if(materials.length===1&&objectIsDiamond&&!mesh?.geometry?.groups?.length) return diamondSlots;
