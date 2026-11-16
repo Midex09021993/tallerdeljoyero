@@ -323,7 +323,7 @@ export async function createAurumPostPipeline(
         data.attributes?.layerName,
         data.attributes?.LayerName,
         data.layerName,
-      ]).toLowerCase().replace(/[_-]+/g," ").replace(/\\s+/g," ");
+      ]).toLowerCase().replace(/[_-]+/g," ").replace(/\s+/g," ");
       // Rhino's Gem 01–04 layers define the gemstone domain, not the
       // gemstone identity by themselves. Require the explicit gema category
       // AND diamond family metadata so metal meshes sharing a layer cannot
