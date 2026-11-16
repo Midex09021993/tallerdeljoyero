@@ -72,6 +72,7 @@ export async function createAurumPostPipeline(
   let diamondSupersampleScale=2;
   let diamondSupersampleScaleCap=2;
   let diamondLiveSupersampleScaleCap=1.5;
+  let diamondSupersampleActiveScaleCap=2;
   let diamondSupersamplingSettled=true;
   let diamondSupersampleRenderCount=0;
   const updateDiamondSupersampleScale=()=>{
@@ -83,7 +84,7 @@ export async function createAurumPostPipeline(
       diamondSupersampleScale=1;
       return false;
     }
-    diamondSupersampleScale=Math.max(1,Math.min(diamondSupersampleScaleCap,Math.sqrt(4_500_000/Math.max(1,basePixels))));
+    diamondSupersampleScale=Math.max(1,Math.min(diamondSupersampleActiveScaleCap,Math.sqrt(4_500_000/Math.max(1,basePixels))));
     return diamondSupersampleScale>1.001;
   };
 
@@ -677,6 +678,10 @@ export async function createAurumPostPipeline(
       get targetWidth(){ return diamondSupersampleTarget?.width??0; },
       get targetHeight(){ return diamondSupersampleTarget?.height??0; },
       get renderCount(){ return diamondSupersampleRenderCount; },
+      get motionState(){ return diamondSupersamplingSettled?"RESTING_SETTLED":"LIVE_MOTION"; },
+      get settledScaleCap(){ return diamondSupersampleScaleCap; },
+      get liveScaleCap(){ return diamondLiveSupersampleScaleCap; },
+      get activeScaleCap(){ return diamondSupersampleActiveScaleCap; },
       setSize(width:number,height:number){
         diamondSupersampleBaseWidth=Math.max(1,Math.floor(width));
         diamondSupersampleBaseHeight=Math.max(1,Math.floor(height));
@@ -695,7 +700,7 @@ export async function createAurumPostPipeline(
       },
       canRender(){ return updateDiamondSupersampleScale(); },
       setScaleCap(cap:number){
-        diamondSupersampleScaleCap=Math.max(1,Math.min(2.2,Number(cap)||1));
+        diamondSupersampleActiveScaleCap=Math.max(1,Math.min(2.2,Number(cap)||1));
         updateDiamondSupersampleScale();
         const targetWidth=Math.max(2,Math.floor(diamondSupersampleBaseWidth*diamondSupersampleScale));
         const targetHeight=Math.max(2,Math.floor(diamondSupersampleBaseHeight*diamondSupersampleScale));
@@ -1431,7 +1436,8 @@ export async function createAurumPostPipeline(
     const changed=next!==temporalMotionActive;
     temporalMotionActive=next;
     diamondSupersamplingSettled=!next;
-    diamondSupersamplePass?.setScaleCap?.(next?diamondLiveSupersampleScaleCap:diamondSupersampleScaleCap);
+    diamondSupersampleActiveScaleCap=next?diamondLiveSupersampleScaleCap:diamondSupersampleScaleCap;
+    diamondSupersamplePass?.setScaleCap?.(diamondSupersampleActiveScaleCap);
     const postControls=getAurumPostControls();
     // Apply the active live/settled supersampling cap only to the independent
     // SSAA path; native-resolution FXAA does not consume that scale.
@@ -1468,6 +1474,7 @@ export async function createAurumPostPipeline(
     const requestedScale=ssaaRequested
       ? (diamondSupersamplingSettled?diamondSupersampleScaleCap:diamondLiveSupersampleScaleCap)
       : 1;
+    diamondSupersampleActiveScaleCap=requestedScale;
     diamondSupersamplePass?.setScaleCap?.(requestedScale);
     const canReconstruct=Boolean(diamondSupersamplePass?.canRender?.());
     const ssaaEnabled=diamondMaskReady && ssaaRequested && canReconstruct && Number(diamondSupersamplePass?.scale??1)>1.001;
@@ -1504,11 +1511,13 @@ export async function createAurumPostPipeline(
   const setDiamondSupersampleScaleCap=(settledCap:number,liveCap?:number)=>{
     diamondSupersampleScaleCap=Math.max(1,Math.min(2.2,Number(settledCap)||1));
     diamondLiveSupersampleScaleCap=Math.max(1,Math.min(diamondSupersampleScaleCap,Number(liveCap??settledCap)||1));
-    diamondSupersamplePass?.setScaleCap?.(diamondSupersamplingSettled?diamondSupersampleScaleCap:diamondLiveSupersampleScaleCap);
+    diamondSupersampleActiveScaleCap=diamondSupersamplingSettled?diamondSupersampleScaleCap:diamondLiveSupersampleScaleCap;
+    diamondSupersamplePass?.setScaleCap?.(diamondSupersampleActiveScaleCap);
   };
   const setDiamondSupersamplingSettled=(settled:boolean)=>{
     diamondSupersamplingSettled=Boolean(settled);
-    diamondSupersamplePass?.setScaleCap?.(diamondSupersamplingSettled?diamondSupersampleScaleCap:diamondLiveSupersampleScaleCap);
+    diamondSupersampleActiveScaleCap=diamondSupersamplingSettled?diamondSupersampleScaleCap:diamondLiveSupersampleScaleCap;
+    diamondSupersamplePass?.setScaleCap?.(diamondSupersampleActiveScaleCap);
     return Boolean(applyDiamondPostModules(getAurumPostControls())?.ssaa);
   };
   // Apply persisted controls once after the quality profile has initialized.
