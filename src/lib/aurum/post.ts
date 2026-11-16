@@ -343,6 +343,11 @@ export async function createAurumPostPipeline(
     };
     const cachedGemMeshes:any[]=[];
     const diamondMeshCandidates:any[]=[];
+    let gemMaskSceneMeshCount=0;
+    let gemMaskMaskPixelCount:number|null=null;
+    let gemMaskCoveragePercent:number|null=null;
+    let gemMaskReadbackAt:number|null=null;
+    let gemMaskReadbackRequested=false;
     const diamondMaskMaterialsByMesh=new Map<any,any>();
     // Beauty materials used by the isolated SSAA pass. Multi-material meshes
     // keep their original diamond slots; every non-diamond slot is colorless.
@@ -403,12 +408,39 @@ export async function createAurumPostPipeline(
       diamondMaskMaterialsByMesh.clear();
       diamondSupersampleMaterialsByMesh.clear();
       scene.updateMatrixWorld?.(true);
+      gemMaskSceneMeshCount=0;
       scene.traverse((object:any)=>{
         if(!object?.isMesh||!object.geometry||object.userData?.aurumInternalInclusion) return;
+        gemMaskSceneMeshCount++;
         if(getDiamondMaterialSlots(object).size===0) return;
         diamondMeshCandidates.push(object);
       });
+      gemMaskMaskPixelCount=null;
+      gemMaskCoveragePercent=null;
+      gemMaskReadbackAt=null;
       syncCenterDiamondCache(true);
+    };
+    const captureGemMaskReadback=(activeRenderer:any)=>{
+      if(!gemMaskReadbackRequested) return;
+      gemMaskReadbackRequested=false;
+      const width=Math.max(1,gemMaskTarget.width);
+      const height=Math.max(1,gemMaskTarget.height);
+      const pixels=new Uint8Array(width*height*4);
+      try{
+        activeRenderer.readRenderTargetPixels(gemMaskTarget,0,0,width,height,pixels);
+        let covered=0;
+        for(let index=0;index<pixels.length;index+=4){
+          if(pixels[index]>=128) covered++;
+        }
+        gemMaskMaskPixelCount=covered;
+        gemMaskCoveragePercent=Number((covered/(width*height)*100).toFixed(4));
+        gemMaskReadbackAt=Date.now();
+      }catch(error){
+        gemMaskMaskPixelCount=-1;
+        gemMaskCoveragePercent=null;
+        gemMaskReadbackAt=Date.now();
+        console.warn("[AURUM][GEM MASK] GPU readback unavailable",error);
+      }
     };
     const renderGemMaskWithOcclusion=(activeRenderer:any,target:any)=>{
       // A mask render is an isolated GPU transaction. Render targets carry
@@ -521,7 +553,32 @@ export async function createAurumPostPipeline(
         }else{
           renderGemMaskWithOcclusion(activeRenderer,gemMaskTarget);
         }
+        captureGemMaskReadback(activeRenderer);
         fxaaPass.material.uniforms.gemMask.value=gemMaskTarget.texture;
+      },
+      requestDiagnostics(){
+        gemMaskReadbackRequested=true;
+        return this.diagnostics();
+      },
+      diagnostics(){
+        syncCenterDiamondCache();
+        const materialSlots=cachedGemMeshes.reduce((total:number,mesh:any)=>{
+          const slots=getDiamondMaterialSlots(mesh);
+          return total+slots.size;
+        },0);
+        return {
+          sceneMeshes:gemMaskSceneMeshCount,
+          diamondCandidates:diamondMeshCandidates.length,
+          protectedCandidates:diamondMeshCandidates.filter(isProtectedCenterDiamond).length,
+          cachedCenterMeshes:cachedGemMeshes.length,
+          materialSlots,
+          maskWidth:gemMaskTarget.width,
+          maskHeight:gemMaskTarget.height,
+          maskPixels:gemMaskMaskPixelCount,
+          maskCoveragePercent:gemMaskCoveragePercent,
+          readbackAt:gemMaskReadbackAt,
+          readbackPending:gemMaskReadbackRequested,
+        };
       },
       renderDiagnosticOverlay(activeRenderer:any){
         const previousTarget=activeRenderer.getRenderTarget();
