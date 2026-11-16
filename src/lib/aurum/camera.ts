@@ -221,11 +221,9 @@ export function applyAurumCameraView(
     : 1;
   const targetNdc = THREE.MathUtils.clamp(0.72 / scale, 0.35, 0.92);
   const radius = Math.max(productSphere.radius, 0.001);
-  const referenceDistance = radius / (limitingTangent * targetNdc);
-  // La vista lateral pierde una pequeña fracción de altura aparente por la
-  // profundidad en perspectiva. Compensar solo un 5% mantiene su escala visual
-  // alineada con frontal sin alterar las otras tres orientaciones.
-  const distance = view === "lateral" ? referenceDistance * 0.95 : referenceDistance;
+  // La escala es idéntica en las cuatro vistas. Cambiar de vista equivale
+  // únicamente a rotar la cámara alrededor del mismo objetivo, sin zoom extra.
+  const distance = radius / (limitingTangent * targetNdc);
 
   // Asegurar planos de recorte válidos para modelos de distintas unidades.
   camera.near = Math.max(radius * 0.001, 0.001);
