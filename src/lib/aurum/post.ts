@@ -1080,6 +1080,7 @@ export async function createAurumPostPipeline(
     // owned exclusively by applyDiamondPostModules(). A quality/profile refresh
     // must never overwrite the user's Gem Mask-protected module selections.
     taaRequested = false;
+    const taaEnabled = false; // TAA remains fail-closed; diamond AA is managed separately.
     if(taaPass) { taaPass.enabled=false; taaPass.accumulate=false; }
     if(diamondTaaSavePass) diamondTaaSavePass.enabled=false;
     if(diamondTaaCompositePass) diamondTaaCompositePass.enabled=false;
