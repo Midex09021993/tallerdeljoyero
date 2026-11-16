@@ -303,15 +303,6 @@ export async function createAurumPostPipeline(
       const materials=Array.isArray(mesh?.material)?mesh.material:[mesh?.material];
       const data=mesh?.userData??{};
       const rhino=data.aurumRhino??{};
-      // The micro analyzer publishes this flag every frame. Only its protected
-      // center stone may enter the AA mask; pavé/melee and secondary diamonds
-      // remain on the untouched native beauty render.
-      const centerRole=String(data.aurumDiamondRole??"");
-      const isProtectedCenter=data.aurumDiamondMicroCenterProtected===true
-        || data.aurumDiamondCenter===true
-        || data.aurumDiamondIsCenter===true
-        || /center|central|main|principal/i.test(centerRole);
-      if(!isProtectedCenter) return new Set<number>();
       const family=isDiamondFamily(data.aurumActiveGemFamily??data.aurumGemFamily)
         || String(data.aurumActiveGemId??data.aurumGemId??"").trim().toLowerCase().startsWith("diamante");
       const category=String(rhino.categoria??data.aurumDetectedCategory??data.aurumCategory??"").trim().toLowerCase();
@@ -351,6 +342,7 @@ export async function createAurumPostPipeline(
       return diamondSlots;
     };
     const cachedGemMeshes:any[]=[];
+    const diamondMeshCandidates:any[]=[];
     const diamondMaskMaterialsByMesh=new Map<any,any>();
     // Beauty materials used by the isolated SSAA pass. Multi-material meshes
     // keep their original diamond slots; every non-diamond slot is colorless.
@@ -359,7 +351,21 @@ export async function createAurumPostPipeline(
     const gemMaskLayer=31;
     const gemMaskLayerBit=1<<gemMaskLayer;
     const cachedClearColor=new THREE.Color();
-    const refreshGemMaskCache=()=>{
+    const isProtectedCenterDiamond=(mesh:any)=>{
+      const data=mesh?.userData??{};
+      const role=String(data.aurumDiamondRole??"");
+      return data.aurumDiamondMicroCenterProtected===true
+        || data.aurumDiamondCenter===true
+        || data.aurumDiamondIsCenter===true
+        || /center|central|main|principal/i.test(role);
+    };
+    const syncCenterDiamondCache=(force=false)=>{
+      // The screen-space analyzer can change the protected center as the view
+      // changes. Re-evaluate only known diamond candidates, not the whole CAD scene.
+      const nextCenter=diamondMeshCandidates.filter(isProtectedCenterDiamond);
+      const unchanged=!force&&nextCenter.length===cachedGemMeshes.length
+        && nextCenter.every((mesh:any,index:number)=>mesh===cachedGemMeshes[index]);
+      if(unchanged) return;
       for(const [mesh,originalMask] of previousGemLayerMasks){
         if(mesh?.layers) mesh.layers.mask=originalMask;
       }
@@ -367,31 +373,42 @@ export async function createAurumPostPipeline(
       cachedGemMeshes.length=0;
       diamondMaskMaterialsByMesh.clear();
       diamondSupersampleMaterialsByMesh.clear();
-      const centerDiamondMeshes:any[]=[];
-      scene.updateMatrixWorld?.(true);
-      scene.traverse((object:any)=>{
-        if(!object?.isMesh||!object.geometry||object.userData?.aurumInternalInclusion) return;
-        const slots=getDiamondMaterialSlots(object);
+      nextCenter.forEach((mesh:any)=>{
+        const slots=getDiamondMaterialSlots(mesh);
         if(slots.size===0) return;
-        const materials=Array.isArray(object.material)?object.material:[object.material];
+        const materials=Array.isArray(mesh.material)?mesh.material:[mesh.material];
         if(materials.length>1){
-          const groups=Array.isArray(object.geometry.groups)?object.geometry.groups:[];
+          const groups=Array.isArray(mesh.geometry?.groups)?mesh.geometry.groups:[];
           if(!groups.some((group:any)=>slots.has(Number(group?.materialIndex??0)))) return;
-          diamondMaskMaterialsByMesh.set(object,materials.map((_:any,index:number)=>slots.has(index)?gemMaskMaterial:nonDiamondMaskMaterial));
-          diamondSupersampleMaterialsByMesh.set(object,materials.map((material:any,index:number)=>slots.has(index)?material:nonDiamondMaskMaterial));
+          diamondMaskMaterialsByMesh.set(mesh,materials.map((_:any,index:number)=>slots.has(index)?gemMaskMaterial:nonDiamondMaskMaterial));
+          diamondSupersampleMaterialsByMesh.set(mesh,materials.map((material:any,index:number)=>slots.has(index)?material:nonDiamondMaskMaterial));
         }else{
-          diamondMaskMaterialsByMesh.set(object,gemMaskMaterial);
-          diamondSupersampleMaterialsByMesh.set(object,object.material);
+          diamondMaskMaterialsByMesh.set(mesh,gemMaskMaterial);
+          diamondSupersampleMaterialsByMesh.set(mesh,mesh.material);
         }
-        centerDiamondMeshes.push(object);
-      });
-      centerDiamondMeshes.forEach((mesh:any)=>{
         cachedGemMeshes.push(mesh);
         if(mesh.layers){
           previousGemLayerMasks.set(mesh,mesh.layers.mask);
           mesh.layers.enable(gemMaskLayer);
         }
       });
+    };
+    const refreshGemMaskCache=()=>{
+      for(const [mesh,originalMask] of previousGemLayerMasks){
+        if(mesh?.layers) mesh.layers.mask=originalMask;
+      }
+      previousGemLayerMasks.clear();
+      cachedGemMeshes.length=0;
+      diamondMeshCandidates.length=0;
+      diamondMaskMaterialsByMesh.clear();
+      diamondSupersampleMaterialsByMesh.clear();
+      scene.updateMatrixWorld?.(true);
+      scene.traverse((object:any)=>{
+        if(!object?.isMesh||!object.geometry||object.userData?.aurumInternalInclusion) return;
+        if(getDiamondMaterialSlots(object).size===0) return;
+        diamondMeshCandidates.push(object);
+      });
+      syncCenterDiamondCache(true);
     };
     const renderGemMaskWithOcclusion=(activeRenderer:any,target:any)=>{
       // A mask render is an isolated GPU transaction. Render targets carry
@@ -455,12 +472,13 @@ export async function createAurumPostPipeline(
     refreshGemMaskCache();
     gemMaskPass={
       enabled:false,needsSwap:false,clear:false,renderToScreen:false,
-      get hasDiamondMeshes(){ return cachedGemMeshes.length>0; },
+      get hasDiamondMeshes(){ syncCenterDiamondCache(); return cachedGemMeshes.length>0; },
       refreshCache:refreshGemMaskCache,
       setSize(width:number,height:number){
         gemMaskTarget.setSize(Math.max(1,width),Math.max(1,height));
       },
       render(activeRenderer:any){
+        syncCenterDiamondCache();
         // Rebuild the native-resolution occlusion mask for every composed frame.
         // Camera-only caching left stale silhouettes when CAD meshes moved,
         // were replaced, or changed transforms without a camera change.

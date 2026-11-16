@@ -491,7 +491,9 @@ test("Aurum exposes diamond-only AA and SSAA as independent modules", () => {
   expect(postSource).toContain("const ssaaRequested=controls?.diamondSsaaEnabled===true;");
   expect(postSource).toContain("const renderDiamondSupersampleOverlay=(activeRenderer:any)=>{");
   expect(postSource).toContain("diamondSupersampleCompositePass.render(activeRenderer,null,null,0,false)");
-  expect(postSource).toContain("const centerDiamondMeshes:any[]=[];");
+  expect(postSource).toContain("const diamondMeshCandidates:any[]=[];");
+  expect(postSource).toContain("const syncCenterDiamondCache=(force=false)=>{");
+  expect(postSource).toContain("const isProtectedCenterDiamond=(mesh:any)=>{");
   expect(postSource).toContain("Rebuild the native-resolution occlusion mask for every composed frame.");
   expect(postSource).not.toContain("lastGemMaskCameraState");
   expect(postSource).toContain("const previousViewport=activeRenderer.getViewport(new THREE.Vector4()).clone();");
