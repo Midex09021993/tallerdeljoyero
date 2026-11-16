@@ -66,6 +66,7 @@ export async function createAurumPostPipeline(
   let diamondSupersampleScaleCap=2;
   let diamondLiveSupersampleScaleCap=1.5;
   let diamondSupersamplingSettled=true;
+  const diamondSsaaOptedIn=()=>typeof window!=="undefined" && new URLSearchParams(window.location.search).get("aurumDiamondSsaa")==="1";
   const updateDiamondSupersampleScale=()=>{
     const basePixels=diamondSupersampleBaseWidth*diamondSupersampleBaseHeight;
     diamondSupersampleScale=basePixels>8_500_000
@@ -425,6 +426,9 @@ export async function createAurumPostPipeline(
         diamondSupersampleBaseWidth=Math.max(1,Math.floor(width));
         diamondSupersampleBaseHeight=Math.max(1,Math.floor(height));
         const canRender=updateDiamondSupersampleScale();
+        if(diamondSupersampleCompositePass?.material?.uniforms?.reconstructionScale){
+          diamondSupersampleCompositePass.material.uniforms.reconstructionScale.value=diamondSupersampleScale;
+        }
         const targetWidth=canRender?Math.max(2,Math.floor(diamondSupersampleBaseWidth*diamondSupersampleScale)):2;
         const targetHeight=canRender?Math.max(2,Math.floor(diamondSupersampleBaseHeight*diamondSupersampleScale)):2;
         diamondSupersampleTarget?.setSize?.(targetWidth,targetHeight);
@@ -442,6 +446,7 @@ export async function createAurumPostPipeline(
         if(diamondSupersampleTarget && diamondSupersampleCompositePass){
           diamondSupersampleCompositePass.material.uniforms.hiResTexel.value.set(1/targetWidth,1/targetHeight);
           diamondSupersampleCompositePass.material.uniforms.tDiamondHiRes.value=diamondSupersampleTarget.texture;
+          diamondSupersampleCompositePass.material.uniforms.reconstructionScale.value=diamondSupersampleScale;
         }
       },
       render(activeRenderer:any){
@@ -493,13 +498,16 @@ export async function createAurumPostPipeline(
         tDiamondHiRes:{value:diamondSupersampleTarget?.texture??null},
         gemMask:{value:gemMaskTarget.texture},
         hiResTexel:{value:new THREE.Vector2(1/Math.max(2,Math.floor(diamondSupersampleBaseWidth*diamondSupersampleScale)),1/Math.max(2,Math.floor(diamondSupersampleBaseHeight*diamondSupersampleScale)))},
+        reconstructionScale:{value:diamondSupersampleScale},
       },
       vertexShader:`varying vec2 vUv; void main(){vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
-      fragmentShader:`uniform sampler2D tDiffuse; uniform sampler2D tDiamondHiRes; uniform sampler2D gemMask; uniform vec2 hiResTexel; varying vec2 vUv;
+      fragmentShader:`uniform sampler2D tDiffuse; uniform sampler2D tDiamondHiRes; uniform sampler2D gemMask; uniform vec2 hiResTexel; uniform float reconstructionScale; varying vec2 vUv;
         void main(){
           vec4 base=texture2D(tDiffuse,vUv);
           if(texture2D(gemMask,vUv).r<0.5){gl_FragColor=base;return;}
-          vec2 h=hiResTexel*0.5;
+          // Keep the four subpixel taps at a fixed quarter of a base-resolution
+          // pixel, regardless of whether the auxiliary target is 1.5x or 2x.
+          vec2 h=hiResTexel*(reconstructionScale*0.25);
           vec4 a=texture2D(tDiamondHiRes,vUv+vec2(-h.x,-h.y));
           vec4 b=texture2D(tDiamondHiRes,vUv+vec2( h.x,-h.y));
           vec4 c=texture2D(tDiamondHiRes,vUv+vec2(-h.x, h.y));
@@ -516,6 +524,7 @@ export async function createAurumPostPipeline(
       const hiHeight=Math.max(2,Math.floor(diamondSupersampleBaseHeight*diamondSupersampleScale));
       diamondSupersampleTarget?.setSize?.(hiWidth,hiHeight);
       diamondSupersampleCompositePass.material.uniforms.hiResTexel.value.set(1/hiWidth,1/hiHeight);
+      diamondSupersampleCompositePass.material.uniforms.reconstructionScale.value=diamondSupersampleScale;
     };
     // Insert the auxiliary render immediately after the base beauty pass. It
     // never swaps composer buffers; the composite pass swaps only the diamond.
@@ -661,8 +670,10 @@ export async function createAurumPostPipeline(
     const taaEnabled=false;
     // Edge AA is a settled-quality treatment: never add fullscreen filtering
     // work to the direct-render orbit path. Still captures may use it explicitly.
-    const edgeAaEnabled=false; // Emergency rollback: disable all added diamond AA.
-    const ssaaActive=false; // Emergency rollback: restore the original unfiltered beauty render.
+    const edgeAaEnabled=false; // FXAA remains off; preserve crisp internal facets.
+    const ssaaActive=diamondSsaaOptedIn() && Boolean(gemMaskPass?.hasDiamondMeshes)
+      && !isLowQuality && !["low","extreme"].includes(lastKnownBudgetTier)
+      && Boolean(diamondSupersamplePass?.canRender?.());
     if(diamondSupersamplePass) diamondSupersamplePass.enabled=ssaaActive;
     if(diamondSupersampleCompositePass) diamondSupersampleCompositePass.enabled=ssaaActive;
     if(gemMaskPass) gemMaskPass.enabled=ssaaActive || edgeAaEnabled;
@@ -933,9 +944,11 @@ export async function createAurumPostPipeline(
   applyQuality(quality);
   // Reflect Post Engine switches immediately without waiting for a quality/profile rebuild.
   const applyDiamondPostModules=(controls:any)=>{
-    // Emergency rollback: disable all additional AA paths until the original
-    // metal/environment appearance is confirmed visually.
-    const ssaaEnabled=false;
+    // Selective SSAA is opt-in for controlled A/B validation. Its output is
+    // composited only through the categorical center-diamond mask; FXAA stays off.
+    const ssaaEnabled=diamondSsaaOptedIn() && Boolean(gemMaskPass?.hasDiamondMeshes)
+      && !["low","extreme"].includes(lastKnownBudgetTier) && lastKnownQualityId!=="low"
+      && Boolean(diamondSupersamplePass?.canRender?.());
     const fxaaEnabled=false;
     if(diamondSupersamplePass) diamondSupersamplePass.enabled=ssaaEnabled;
     if(diamondSupersampleCompositePass) diamondSupersampleCompositePass.enabled=ssaaEnabled;
