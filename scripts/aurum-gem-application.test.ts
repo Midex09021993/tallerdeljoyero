@@ -159,11 +159,26 @@ test("diamond perimeter AA uses the stronger masked edge profile", () => {
   expect(source).not.toContain("vec3 diagonal=(n0+n1+n2+n3)*0.25");
 });
 
-test("legacy Post Engine preferences migrate to the current diamond AA defaults", () => {
+test("legacy Post Engine preferences cannot reactivate full-frame AA or TAA", () => {
   const controls = readFileSync("src/lib/aurum/post-engine-controls.ts", "utf8");
+  const post = readFileSync("src/lib/aurum/post.ts", "utf8");
   expect(controls).toContain("gemFxaaEnabled: false");
   expect(controls).toContain("diamondSsaaEnabled: false");
+  expect(controls).toContain("surfaceEdgeAaEnabled: false");
+  expect(controls).toContain("taaEnabled: false");
+  expect(controls).toContain("surfaceEdgeAaEnabled: false,\\n    taaEnabled: false,");
   expect(controls).toContain("const migrated: AurumPostControls");
+  expect(post).toContain("taaRequested=false;");
+  expect(post).toContain("const taaEnabled=false;");
+  expect(post).not.toContain("taaRequested=Boolean(options.capture && postControls.taaEnabled)");
+});
+
+test("diamond-only post composites preserve every pixel outside the diamond mask", () => {
+  const post = readFileSync("src/lib/aurum/post.ts", "utf8");
+  expect(post).toContain("if(texture2D(gemMask,vUv).r<0.5){gl_FragColor=base;return;}");
+  expect(post).toContain("if(centerMask<0.5){gl_FragColor=center;return;}");
+  expect(post).toContain("float blendAmount=edge*strength*outsideNeighbor;");
+  expect(post).toContain("if(surfaceEdgeAaPass) surfaceEdgeAaPass.enabled=false;");
 });
 
 test("diamond SSAA scale cap is updated through the pipeline-owned state", () => {
