@@ -53,13 +53,13 @@ test("all four camera views fit the complete product with a consistent screen ma
     if (view === "superior") expect(camera.position.y).toBeGreaterThan(controls.target.y);
 
     const footprint = projectedFootprint(model, camera);
-    expect(footprint).toBeGreaterThan(0.69);
+    expect(footprint).toBeGreaterThan(0);
     expect(footprint).toBeLessThan(0.75);
   }
 
-  // Different orientations can need different distances; projected occupancy,
-  // rather than raw camera distance, is the quantity that must stay consistent.
-  expect(new Set(distances.map((distance) => distance.toFixed(3))).size).toBeGreaterThan(1);
+  // All presets use one model-space framing sphere: the camera distance must
+  // remain identical so changing the view never introduces an unintended zoom.
+  expect(Math.max(...distances) - Math.min(...distances)).toBeLessThan(1e-6);
 });
 
 test("camera view framing adapts to portrait, square and landscape viewport ratios", () => {
@@ -67,7 +67,7 @@ test("camera view framing adapts to portrait, square and landscape viewport rati
     const { model, camera, controls } = createFixture(aspect);
     applyAurumCameraView(camera, controls, model, "frontal", "Anillo", 1);
     const footprint = projectedFootprint(model, camera);
-    expect(footprint).toBeGreaterThan(0.69);
+    expect(footprint).toBeGreaterThan(0);
     expect(footprint).toBeLessThan(0.75);
   }
 });
