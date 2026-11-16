@@ -1038,7 +1038,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       // Preserve the original scene background while the live Bokeh preview is active.
       let dofSavedSceneBackground: THREE.Scene["background"] | undefined;
       let dofHasSavedSceneBackground = false;
-      const { composer, ssaoPass, ssrPass, ssrSavePass, ssrCompositePass, bloomPass, setSSRSelects, applyQuality: applyPostQuality, updateTemporal, resetTemporalAccumulation, setTemporalMotion, setDiamondSupersamplingSettled, setDiamondSupersampleScaleCap, renderDiamondFxaaFrame, renderDiamondSupersampleOverlay, diamondSupersamplePass, diamondSupersampleCompositePass, diamondTaaSavePass, diamondTaaCompositePass, dofPass, renderPass, taaPass: idleTaaPass, fxaaPass, gemMaskPass, surfaceEdgeAaPass, outputPass } = await createAurumPostPipeline(
+      const { composer, ssaoPass, ssrPass, ssrSavePass, ssrCompositePass, bloomPass, setSSRSelects, applyQuality: applyPostQuality, updateTemporal, resetTemporalAccumulation, setTemporalMotion, setDiamondSupersamplingSettled, setDiamondSupersampleScaleCap, renderDiamondFxaaOverlay, renderDiamondSupersampleOverlay, diamondSupersamplePass, diamondSupersampleCompositePass, diamondTaaSavePass, diamondTaaCompositePass, dofPass, renderPass, taaPass: idleTaaPass, fxaaPass, gemMaskPass, surfaceEdgeAaPass, outputPass } = await createAurumPostPipeline(
         renderer,
         escena,
         camara,
@@ -3938,13 +3938,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           }
           const bvhCpuMs = performance.now() - bvhStartedAt;
           const renderStartedAt = performance.now();
-          // FXAA uses the native-resolution beauty frame as its input. SSAA
-          // remains a separate, explicitly requested high-resolution module.
+          // The direct scene render is unconditional. FXAA is applied only
+          // afterward as a masked overlay, never as a replacement framebuffer.
           gemMaskPass.enabled=getAurumPostControls().gemMaskEnabled;
           const hasCenterDiamond = Boolean(gemMaskPass?.hasDiamondMeshes);
-          const diamondFxaaFrameRequested = Boolean(gemMaskPass?.enabled && fxaaPass?.enabled && hasCenterDiamond && !diamondSupersamplePass?.enabled);
+          const diamondFxaaOverlayRequested = Boolean(gemMaskPass?.enabled && fxaaPass?.enabled && hasCenterDiamond && !diamondSupersamplePass?.enabled);
           const diamondOverlayRequested = Boolean(gemMaskPass?.enabled && diamondSupersamplePass?.enabled && diamondSupersampleCompositePass?.enabled);
-          const activeToneAuditPath = diamondFxaaFrameRequested ? "direct+diamond-fxaa" : diamondOverlayRequested ? "direct+diamond-overlay" : "direct";
+          const activeToneAuditPath = diamondFxaaOverlayRequested ? "direct+diamond-fxaa-overlay" : diamondOverlayRequested ? "direct+diamond-overlay" : "direct";
           if (toneAuditEnabled && activeToneAuditPath !== lastToneAuditPath) {
             lastToneAuditPath = activeToneAuditPath;
             console.info("[AURUM][TONE_AUDIT][PATH]", {
@@ -3957,21 +3957,19 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               dofEnabled: Boolean(postRuntimeConfig.dof),
             });
           }
-          // FXAA redirects this same native-resolution beauty render into a
-          // linear target, then applies one mask-clamped fullscreen blit.
-          // On failure, fail closed and restore the untouched direct frame.
-          let renderedWithDiamondFxaa=false;
-          if(diamondFxaaFrameRequested){
-            renderedWithDiamondFxaa=Boolean(renderDiamondFxaaFrame?.(renderer));
-            if(!renderedWithDiamondFxaa){
+          // Preserve the original beauty frame first. The mask and optional
+          // FXAA overlay may only run after the native canvas has been painted.
+          renderer.render(escena,camara);
+          if(gemMaskPass.enabled) gemMaskPass.render(renderer);
+          if(diamondFxaaOverlayRequested){
+            const renderedWithDiamondFxaaOverlay=Boolean(renderDiamondFxaaOverlay?.(renderer));
+            if(!renderedWithDiamondFxaaOverlay){
               const safeControls=setAurumPostControls({gemFxaaEnabled:false});
               setDiamondPostControls(safeControls);
+              // Repaint the untouched base frame if an overlay draw failed partway.
               renderer.render(escena,camara);
               if(gemMaskPass.enabled) gemMaskPass.render(renderer);
             }
-          }else{
-            renderer.render(escena,camara);
-            if(gemMaskPass.enabled) gemMaskPass.render(renderer);
           }
           // SSAA composites only the classified diamond pixels over the beauty frame.
           if(diamondOverlayRequested) renderDiamondSupersampleOverlay?.(renderer);
