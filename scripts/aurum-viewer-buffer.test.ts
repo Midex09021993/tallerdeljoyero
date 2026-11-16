@@ -485,7 +485,6 @@ test("Aurum exposes diamond-only AA and SSAA as independent modules", () => {
   expect(architectureSource).toContain('updatePostControl("diamondSsaaEnabled"');
   expect(postSource).toContain("AURUM DIAMOND SSAA MODULE");
   expect(postSource).toContain("tDiamondHiRes");
-  expect(postSource).toContain("if(texture2D(gemMask,vUv).r<0.5){gl_FragColor=base;return;}");
   expect(postSource).toContain("float sampleMask=texture2D(tDiamondHiResMask,sampleUv).r;");
   expect(postSource).toContain("if(texture2D(gemMask,vUv).r<0.5) discard;");
   expect(postSource).toContain("renderDiamondSupersampleOverlay");
@@ -496,10 +495,10 @@ test("Aurum exposes diamond-only AA and SSAA as independent modules", () => {
   expect(componentSource).toContain("if(diamondSsaaOverlayActive) renderDiamondSupersampleOverlay?.(renderer);");
   expect(componentSource).not.toContain("const interactionDprCap = liveDiamondAaEnabled && runtimeBudget.tier === \"web\"");
   expect(postSource).toContain("ensureDiamondSupersampleMaskTarget");
-  expect(postSource).toContain("Rasterize the exact same visible center-diamond silhouette at the SSAA resolution.");
+  expect(postSource).toContain("This is a true overlay: discard means the framebuffer is not");
   expect(postSource).toContain("activeRenderer.render(scene,camera);");
   expect(postSource).toContain("if(sampleMask>=0.5 && abs(weight)>0.000001)");
-  expect(postSource).toContain("if(abs(totalWeight)<0.00001){gl_FragColor=base;return;}");
+  expect(postSource).toContain("if(abs(totalWeight)<0.00001) discard;");
   expect(postSource).toContain("render the full optical scene at higher");
 });
 
