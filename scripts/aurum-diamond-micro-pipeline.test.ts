@@ -39,6 +39,18 @@ test("shares screen-space tiers across diamond paths and protects an explicitly 
   expect(tiers.get(melee)).toBe("micro");
 });
 
+test("does not auto-protect a lone melee diamond as the center stone", () => {
+  const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+  camera.position.set(0, 0, 10);
+  camera.lookAt(0, 0, 0);
+  camera.updateMatrixWorld(true);
+  const material = new THREE.MeshPhysicalMaterial();
+  material.userData.aurumGemFamily = "Diamante";
+  const melee = new THREE.Mesh(new THREE.SphereGeometry(0.05), material);
+  const tiers = classifyAurumDiamondMeshTiers([melee], camera, 600);
+  expect(tiers.get(melee)).toBe("micro");
+});
+
 test("flags mixed stone sizes sharing one material without changing its optical settings", () => {
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
