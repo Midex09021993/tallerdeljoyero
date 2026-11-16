@@ -263,13 +263,13 @@ test("only masked diamond FXAA can be enabled; SSAA and TAA remain fail-closed",
   const controls = readFileSync("src/lib/aurum/post-engine-controls.ts", "utf8");
   const post = readFileSync("src/lib/aurum/post.ts", "utf8");
   const render = readFileSync("src/components/AurumRender.tsx", "utf8");
-  expect(controls).toContain("gemFxaaEnabled: value?.gemMaskEnabled === true && value?.gemFxaaEnabled === true");
+  expect(controls).toContain("gemFxaaEnabled: false");
   expect(controls).toContain("diamondSsaaEnabled: false");
   expect(controls).toContain("diamondTaaEnabled: false");
   expect(post).toContain("const fxaaEnabled=diamondMaskReady && fxaaRequested && canReconstruct;");
   expect(post).toContain("if(fxaaPass) fxaaPass.enabled=fxaaEnabled;");
-  expect(render).toContain('item.key==="gemFxaaEnabled"?setAurumPostControls({gemFxaaEnabled:!enabled})');
-  expect(render).toContain('item.key==="diamondSsaaEnabled"||item.key==="diamondTaaEnabled"');
+  expect(render).toContain('const blocked=item.key==="diamondSsaaEnabled"||item.key==="diamondTaaEnabled"||item.key==="gemFxaaEnabled";');
+  expect(render).toContain("FXAA suspendido por artefactos visuales; en revisión.");
   expect(post).toContain("diamondSupersamplePass.renderFxaa(activeRenderer,Boolean(fxaaPass?.enabled))");
 });
 
