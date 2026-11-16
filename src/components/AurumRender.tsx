@@ -3950,9 +3950,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           // afterward as a masked overlay, never as a replacement framebuffer.
           gemMaskPass.enabled=getAurumPostControls().gemMaskEnabled;
           const hasCenterDiamond = Boolean(gemMaskPass?.hasDiamondMeshes);
-          const diamondFxaaOverlayRequested = Boolean(gemMaskPass?.enabled && fxaaPass?.enabled && hasCenterDiamond && !diamondSupersamplePass?.enabled);
+          const diamondFxaaOverlayRequested = Boolean(gemMaskPass?.enabled && fxaaPass?.enabled && hasCenterDiamond);
           const diamondOverlayRequested = Boolean(gemMaskPass?.enabled && diamondSupersamplePass?.enabled && diamondSupersampleCompositePass?.enabled);
-          const activeToneAuditPath = diamondFxaaOverlayRequested ? "direct+diamond-fxaa-overlay" : diamondOverlayRequested ? "direct+diamond-overlay" : "direct";
+          const activeToneAuditPath = diamondOverlayRequested
+            ? (diamondFxaaOverlayRequested ? "direct+diamond-ssaa+diamond-fxaa" : "direct+diamond-ssaa")
+            : diamondFxaaOverlayRequested ? "direct+diamond-fxaa-overlay" : "direct";
           if (toneAuditEnabled && activeToneAuditPath !== lastToneAuditPath) {
             lastToneAuditPath = activeToneAuditPath;
             console.info("[AURUM][TONE_AUDIT][PATH]", {
@@ -3969,18 +3971,20 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           // FXAA overlay may only run after the native canvas has been painted.
           renderer.render(escena,camara);
           if(gemMaskPass.enabled) gemMaskPass.render(renderer);
+          // SSAA reconstructs the diamond first. FXAA, when also requested,
+          // runs afterward on that reconstructed native-resolution result.
+          if(diamondOverlayRequested) renderDiamondSupersampleOverlay?.(renderer);
           if(diamondFxaaOverlayRequested){
             const renderedWithDiamondFxaaOverlay=Boolean(renderDiamondFxaaOverlay?.(renderer));
             if(!renderedWithDiamondFxaaOverlay){
-              // Preserve the user's requested FXAA state. The overlay reports
-              // its own failure and retries on the next frame; repaint the
-              // untouched beauty frame if a partial overlay reached the canvas.
+              // Preserve both requested features if FXAA fails after SSAA:
+              // repaint beauty, restore the mask, then reapply SSAA. FXAA retries
+              // on the next frame without changing the user's stored preference.
               renderer.render(escena,camara);
               if(gemMaskPass.enabled) gemMaskPass.render(renderer);
+              if(diamondOverlayRequested) renderDiamondSupersampleOverlay?.(renderer);
             }
           }
-          // SSAA composites only the classified diamond pixels over the beauty frame.
-          if(diamondOverlayRequested) renderDiamondSupersampleOverlay?.(renderer);
           const renderCpuMs = performance.now() - renderStartedAt;
           const measuredFrameMs = performance.now() - frameStartedAt;
           perfTick({
