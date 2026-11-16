@@ -620,16 +620,22 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // direction. Using reflect(+V,N) here reverses the ray and suppresses
         // the facet response on crown faces that look toward the camera.
         float aurumFacing=max(dot(aurumR,aurumV),0.0);
+        // Derivative-aware facet coverage is compiled only for diamonds. The
+        // normal footprint estimates sub-pixel facet transitions; the small
+        // bounded expansion prevents temporal edge popping without a scene pass.
+        float aurumDiamondFacetAA=\${isDiamond ? `clamp(max(fwidth(aurumFacing), max(max(fwidth(aurumN.x), fwidth(aurumN.y)), fwidth(aurumN.z))) * 0.5, 0.0005, 0.015)` : `0.0`};
         // Broader angular transition reduces abrupt sparkle popping during camera orbit.
-        float aurumFlash=smoothstep(0.94,0.997,aurumFacing)*aurumScintillationStrength;
+        float aurumFlash=smoothstep(0.94-aurumDiamondFacetAA,0.997+aurumDiamondFacetAA,aurumFacing)*aurumScintillationStrength;
 
         // Keep scintillation energy bounded: additive white flashes can clip
         // the crown facets in bright studio environments. Modulate existing
         // reflected energy instead of adding an unbounded white contribution.
         gl_FragColor.rgb *= 1.0 + aurumFlash * 0.08;
 
-        // Slightly broaden the facet-response transition to reduce abrupt contrast changes during orbit.
-        float aurumFacetContrast=smoothstep(0.56,0.92,aurumFacing);
+        // Apply the same bounded pixel-footprint correction to the facet
+        // contrast ramp. Colored gemstones receive zero correction and retain
+        // their existing response exactly.
+        float aurumFacetContrast=smoothstep(0.56-aurumDiamondFacetAA,0.92+aurumDiamondFacetAA,aurumFacing);
         // Stronger diamond-only facet separation addresses the washed-out crown
         // seen against the iJewel reference. This is contrast, not extra exposure:
         // preserve the colored-gem response and leave PBR refraction untouched.
