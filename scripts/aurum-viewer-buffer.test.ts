@@ -587,7 +587,8 @@ test("diamond AA stays masked in interactive and settled preview modes", () => {
   expect(idleBlock).toContain("settledDiamondTaaActive");
   expect(idleBlock).toContain("bloomPass.enabled = false;");
   expect(idleBlock).toContain("dofPass.enabled = false;");
-  expect(liveBlock).toContain("livePostControls.gemMaskEnabled");
+  expect(liveBlock).toContain("const liveDiamondAaEnabled = false;");
+  expect(liveBlock).toContain("fxaaPass.enabled = false;");
   expect(liveBlock).toContain("setDiamondSupersamplingSettled?.(false)");
   expect(liveBlock).toContain("liveFastPathRef.current = false;");
   expect(postSource).toContain("taaMotionFallback");
