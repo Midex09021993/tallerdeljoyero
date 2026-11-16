@@ -378,6 +378,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
     if (loop?.renderNow) loop.renderNow();
     else loop?.invalidate?.();
   }, [refreshDiamondDiagnostics]);
+  useEffect(() => {
     const handleGemMaskDiagnosticsReady = (event: Event) => {
       const detail=(event as CustomEvent<any>).detail??{};
       const maskPixels = Number(detail.maskPixels);
@@ -409,7 +410,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       window.removeEventListener("aurum-diamond-control-refresh", requestGemMaskDiagnostics);
       window.removeEventListener("aurum-gem-mask-diagnostics-ready", handleGemMaskDiagnosticsReady);
     };
-  }, []);
+  }, [refreshDiamondDiagnostics, requestGemMaskDiagnostics]);
   const [cadTreeItems,setCadTreeItems] = useState<Array<{uuid:string;name:string;type:string;layer:string;visible:boolean;sourceId:string|null}>>([]);
   const [cadModelDiagnostics,setCadModelDiagnostics] = useState<any|null>(null);
   const refreshCadTree = () => {
