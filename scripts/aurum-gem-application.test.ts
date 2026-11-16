@@ -340,6 +340,11 @@ test("SSAA mask is generated once natively and once at auxiliary resolution, the
   expect(render).toContain('[AURUM][DIAMOND_AA][EXECUTION]');
   expect(render).toContain("ssaaTargetWidth: Number(diamondSupersamplePass?.targetWidth ?? 0)");
   expect(render).toContain("ssaaRenderCount: Number(diamondSupersamplePass?.renderCount ?? 0)");
+  expect(render).toContain('[AURUM][DIAMOND_AA][SSAA_RESULT]');
+  expect(render).toContain("diamondSsaaOverlayRendered=Boolean(renderDiamondSupersampleOverlay?.(renderer))");
+  expect(post).toContain("diamondSupersampleTarget.setSize(width,height);");
+  expect(post).toContain("diamondSupersampleScaleCap=Math.max(1,Math.min(2.2,Number(cap)||1))");
+  expect(post).toContain("// Count only completed auxiliary beauty + mask renders.");
   expect(frameBlock.indexOf("renderDiamondSupersampleOverlay?.(renderer)")).toBeLessThan(frameBlock.indexOf("renderDiamondFxaaOverlay?.(renderer)"));
   expect(frameBlock).not.toContain("&& !diamondSupersamplePass?.enabled");
 });
