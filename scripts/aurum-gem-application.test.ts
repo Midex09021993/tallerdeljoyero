@@ -187,7 +187,6 @@ test("Gem Mask exposes an independent diagnostic overlay without enabling AA", (
   const post = readFileSync("src/lib/aurum/post.ts", "utf8");
   expect(post).toContain("gemMaskDiagnosticCamera.position.z=1;");
   expect(post).toContain("gemMaskDiagnosticMaterial.uniforms[\"uMask\"]!.value=gemMaskTarget.texture");
-  const post = readFileSync("src/lib/aurum/post.ts", "utf8");
   const component = readFileSync("src/components/AurumRender.tsx", "utf8");
   expect(post).toContain("renderDiagnosticOverlay(activeRenderer:any)");
   expect(post).toContain("gemMaskDiagnosticScene");
