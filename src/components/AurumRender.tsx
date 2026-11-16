@@ -2468,7 +2468,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           gemMaskEnabled: Boolean(gemMaskPass?.enabled),
           fxaaEnabled: Boolean(fxaaPass?.enabled),
           diamondSupersamplingEnabled: initialDiamondSsaaActive,
-          renderPath: initialDiamondFxaaActive ? "composer" : (initialDiamondSsaaActive ? "direct+diamond-overlay" : "direct"),
+          renderPath: initialDiamondFxaaActive ? "direct+diamond-fxaa" : (initialDiamondSsaaActive ? "direct+diamond-overlay" : "direct"),
         });
         // TAA remains enabled only through the masked center-diamond composite.
         // Its accumulation is disabled automatically when camera motion begins.
@@ -3315,9 +3315,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // supersampling; the final file still uses exactly width x height.
             // Camera, materials, lights and both independent HDR environments stay unchanged.
             renderer.setPixelRatio(1);
-            // Fidelity-first capture: reproduce the actual LIVE viewport chain.
-            // The interactive reference uses LIVE gemstone materials plus the selective
-            // gem-mask/FXAA composer; bypassing it here made exports differ from the screen.
+            // Fidelity-first capture: preserve the established export beauty chain.
+            // Native-resolution viewer FXAA is not a Composer pass and is omitted from
+            // capture until a matching isolated export path is validated.
             liveFastPathRef.current=false;
             // Give Mi Nube poster captures extra breathing room without changing the live view.
             if (isPoster && posterCameraTarget) {
@@ -3329,14 +3329,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             }
             renderer.setSize(renderWidth,renderHeight,false);
             if (composer && !options.depthOfField) {
-              // Preserve the live diamond mask, SSAA composite and perimeter-only FXAA.
+              // Preserve the live diamond mask and SSAA composite. Native FXAA is
+              // a viewer final-frame pass and is intentionally not inserted into Composer.
               // TAA and photographic effects remain excluded so the export matches the viewport.
               const liveCapturePasses = new Set([
                 renderPass,
                 ...(diamondSupersamplePass?.enabled ? [diamondSupersamplePass] : []),
                 ...(gemMaskPass?.enabled ? [gemMaskPass] : []),
                 ...(diamondSupersampleCompositePass?.enabled ? [diamondSupersampleCompositePass] : []),
-                ...(fxaaPass?.enabled ? [fxaaPass] : []),
                 outputPass,
               ]);
               const allComposerPasses = ((composer as any)?.passes ?? []) as any[];
@@ -4039,6 +4039,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               hasCenterDiamond,
               gemMaskEnabled: Boolean(gemMaskPass?.enabled),
               fxaaEnabled: Boolean(fxaaPass?.enabled),
+              diamondFxaaRequested: liveDiamondAaEnabled,
               diamondSupersamplingEnabled: liveDiamondSsaaActive,
               diamondLiveSupersampleScaleCap: runtimeBudget.diamondLiveSupersampleScaleCap,
               interactionDpr,
