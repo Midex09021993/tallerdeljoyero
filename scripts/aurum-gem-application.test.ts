@@ -298,7 +298,7 @@ test("native FXAA target preserves renderer state and applies output color conve
 test("diamond perimeter AA uses the stronger masked edge profile", () => {
   const source = readFileSync("src/lib/aurum/post.ts", "utf8");
   expect(source).toContain("strength:{value:0.76}");
-  expect(source).toContain("edgeThreshold:{value:0.18}");
+  expect(source).toContain("edgeThreshold:{value:0.0312}");
   expect(source).toContain("float centerMask=texture2D(gemMask,vUv).r;");
   expect(source).toContain("float boundary=1.0-min(min(min(mN,mS),min(mE,mW)),min(min(mNW,mNE),min(mSW,mSE)));");
   expect(source).toContain("vec3 sampleGem(vec2 uv,vec3 fallbackColor)");
