@@ -2422,7 +2422,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         ((composer as any)?.passes ?? []).forEach((pass: any) => {
           pass.enabled = initialDiamondBeautyPasses.has(pass);
         });
-        liveFastPathRef.current = !(initialGemMaskActive || initialDiamondFxaaActive || initialDiamondTaaActive);
+        liveFastPathRef.current = !(initialDiamondFxaaActive || initialDiamondTaaActive);
         console.info("[AURUM][DIAMOND][INITIAL_QUALITY]", {
           hasCenterDiamond: Boolean(gemMaskPass?.hasDiamondMeshes),
           gemMaskEnabled: Boolean(gemMaskPass?.enabled),
