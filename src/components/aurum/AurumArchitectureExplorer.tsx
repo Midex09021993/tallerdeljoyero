@@ -152,8 +152,8 @@ export function AurumArchitectureExplorer() {
           <p className="mt-2 text-xs leading-5 text-muted-foreground">{actual.detalle}</p>
           {actual.id === "diamond-ssaa" ? <div className="mt-4 space-y-3 rounded-xl border border-border bg-muted/20 p-3">
             <div className="flex items-center justify-between gap-3">
-              <div className="min-w-0"><p className="text-xs font-semibold">Supermuestreo selectivo hasta 2×</p><p className="text-[10px] leading-4 text-muted-foreground">Render auxiliar de diamantes identificados en Gem 01–04; categoría gema y familia Diamante obligatorias.</p></div>
-              <button type="button" role="switch" aria-checked={postControls.diamondSsaaEnabled} onClick={() => updatePostControl("diamondSsaaEnabled", !postControls.diamondSsaaEnabled)} className={"relative h-6 w-11 shrink-0 rounded-full transition " + (postControls.diamondSsaaEnabled ? "bg-emerald-500" : "bg-muted-foreground/30")}><span className={"absolute top-0.5 size-5 rounded-full bg-white shadow transition-all " + (postControls.diamondSsaaEnabled ? "left-[22px]" : "left-0.5")}/></button>
+              <div className="min-w-0"><p className="text-xs font-semibold">Supermuestreo selectivo hasta 2×</p><p className="text-[10px] leading-4 text-muted-foreground">Suspendido: se está reconstruyendo el compositor aislado para no modificar metal ni ambiente.</p></div>
+              <button type="button" role="switch" aria-checked={false} aria-disabled="true" disabled title="Suspendido hasta validar el compositor aislado" className="relative h-6 w-11 shrink-0 cursor-not-allowed rounded-full bg-muted-foreground/20 opacity-60"><span className={"absolute top-0.5 size-5 rounded-full bg-white shadow transition-all " + (postControls.diamondSsaaEnabled ? "left-[22px]" : "left-0.5")}/></button>
             </div>
             <div className="rounded-lg border border-border bg-background/60 p-2 text-[10px] leading-4 text-muted-foreground">
               <p><span className="font-semibold text-foreground">Modo:</span> reposo; se pausa durante el movimiento para proteger el rendimiento.</p>
@@ -164,8 +164,8 @@ export function AurumArchitectureExplorer() {
           </div> : null}
           {actual.id === "post" ? <div className="mt-4 space-y-3 rounded-xl border border-border bg-muted/20 p-3">
             <div className="flex items-center justify-between gap-3">
-              <div className="min-w-0"><p className="text-xs font-semibold">Gem Mask + FXAA</p><p className="text-[10px] leading-4 text-muted-foreground">Desactivado en la vista en vivo; reservado para flujos de captura.</p></div>
-              <button type="button" role="switch" aria-checked={postControls.gemFxaaEnabled} onClick={() => updatePostControl("gemFxaaEnabled", !postControls.gemFxaaEnabled)} className={`relative h-6 w-11 shrink-0 rounded-full transition ${postControls.gemFxaaEnabled ? "bg-emerald-500" : "bg-muted-foreground/30"}`}><span className={`absolute top-0.5 size-5 rounded-full bg-white shadow transition-all ${postControls.gemFxaaEnabled ? "left-[22px]" : "left-0.5"}`}/></button>
+              <div className="min-w-0"><p className="text-xs font-semibold">Gem Mask + FXAA</p><p className="text-[10px] leading-4 text-muted-foreground">Suspendido: FXAA global retirado; volverá solo como pase exclusivo del diamante.</p></div>
+              <button type="button" role="switch" aria-checked={false} aria-disabled="true" disabled title="Suspendido hasta validar el compositor aislado" className="relative h-6 w-11 shrink-0 cursor-not-allowed rounded-full bg-muted-foreground/20 opacity-60"><span className={`absolute top-0.5 size-5 rounded-full bg-white shadow transition-all ${postControls.gemFxaaEnabled ? "left-[22px]" : "left-0.5"}`}/></button>
             </div>
             <div className="flex items-center justify-between gap-3 border-t border-border pt-3">
               <div className="min-w-0"><p className="text-xs font-semibold">Surface Edge AA</p><p className="text-[10px] leading-4 text-muted-foreground">Suavizado de bordes de superficies metálicas.</p></div>
