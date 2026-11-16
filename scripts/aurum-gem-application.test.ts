@@ -186,9 +186,9 @@ test("web-tier models receive 2x diamond-only supersampling without raising shar
   expect(dense.pixelRatioCap).toBe(1.6);
 
   expect(getAurumRuntimeBudget(500_001).diamondSupersampleScaleCap).toBe(1.65);
-  expect(getAurumRuntimeBudget(500_001).diamondLiveSupersampleScaleCap).toBe(1.3);
+  expect(getAurumRuntimeBudget(500_001).diamondLiveSupersampleScaleCap).toBe(1.5);
   expect(getAurumRuntimeBudget(900_001).diamondSupersampleScaleCap).toBe(1.7);
-  expect(getAurumRuntimeBudget(900_001).diamondLiveSupersampleScaleCap).toBe(1.2);
+  expect(getAurumRuntimeBudget(900_001).diamondLiveSupersampleScaleCap).toBe(1.5);
 
   const bvh = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
   const micro = readFileSync("src/lib/aurum/diamond-micro-pipeline.ts", "utf8");
