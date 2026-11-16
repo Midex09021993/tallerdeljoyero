@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { createAurumWebGLViewer, resizeAurumViewer, startAurumViewerLoop } from "../src/lib/aurum/viewer";
+import { getAurumRuntimeBudget } from "../src/lib/aurum/runtime-budget";
 
 test("the demand-driven viewer preserves its final WebGL frame", () => {
   let rendererOptions: Record<string, unknown> = {};
@@ -727,4 +728,12 @@ test("video export restores the viewer and resumes the demand-driven loop", () =
   expect(videoStart).toBeGreaterThan(-1);
   expect(videoBlock).toContain("() => loop?.resume?.(),");
   expect(videoBlock).toContain("() => loop?.resize?.(),");
+});
+
+
+test("extreme scenes allow stronger settled diamond SSAA while preserving the live-motion cap", () => {
+  const budget = getAurumRuntimeBudget(900_001);
+  expect(budget.tier).toBe("extreme");
+  expect(budget.diamondSupersampleScaleCap).toBe(1.4);
+  expect(budget.diamondLiveSupersampleScaleCap).toBe(1.15);
 });
