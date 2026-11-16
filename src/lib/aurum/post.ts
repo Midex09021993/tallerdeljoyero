@@ -76,10 +76,15 @@ export async function createAurumPostPipeline(
   let diamondSupersampleRenderCount=0;
   const updateDiamondSupersampleScale=()=>{
     const basePixels=diamondSupersampleBaseWidth*diamondSupersampleBaseHeight;
-    diamondSupersampleScale=basePixels>8_500_000
-      ? 1
-      : Math.max(1,Math.min(diamondSupersampleScaleCap,Math.sqrt(8_500_000/Math.max(1,basePixels))));
-    return diamondSupersampleScale>=1;
+    const maxTextureSize=Math.max(1,Number(renderer?.capabilities?.maxTextureSize??4096));
+    const dimensionsSupported=diamondSupersampleBaseWidth<=maxTextureSize&&diamondSupersampleBaseHeight<=maxTextureSize;
+    const pixelBudgetSupported=basePixels<=4_500_000;
+    if(!dimensionsSupported||!pixelBudgetSupported){
+      diamondSupersampleScale=1;
+      return false;
+    }
+    diamondSupersampleScale=Math.max(1,Math.min(diamondSupersampleScaleCap,Math.sqrt(4_500_000/Math.max(1,basePixels))));
+    return diamondSupersampleScale>1.001;
   };
 
 
@@ -792,10 +797,10 @@ export async function createAurumPostPipeline(
       fragmentShader:`#include <tonemapping_pars_fragment>
         #include <colorspace_pars_fragment>
         uniform sampler2D tDiamondHiRes; uniform sampler2D gemMask; uniform sampler2D tDiamondHiResMask; uniform vec2 hiResTexel; uniform float reconstructionScale; varying vec2 vUv;
-        float aurumCatmullRomWeight(float x){
+        float aurumPositiveCubicWeight(float x){
           x=abs(x);
-          if(x<1.0) return 1.5*x*x*x-2.5*x*x+1.0;
-          if(x<2.0) return -0.5*x*x*x+2.5*x*x-4.0*x+2.0;
+          if(x<1.0) return (4.0-6.0*x*x+3.0*x*x*x)/6.0;
+          if(x<2.0){ float remainder=2.0-x; return remainder*remainder*remainder/6.0; }
           return 0.0;
         }
         void main(){
@@ -819,10 +824,10 @@ export async function createAurumPostPipeline(
           float totalWeight=0.0;
           for(int y=0;y<4;y++){
             float oy=float(y)-1.5;
-            float wy=aurumCatmullRomWeight(oy/reconstructionScale);
+            float wy=aurumPositiveCubicWeight(oy/reconstructionScale);
             for(int x=0;x<4;x++){
               float ox=float(x)-1.5;
-              float wx=aurumCatmullRomWeight(ox/reconstructionScale);
+              float wx=aurumPositiveCubicWeight(ox/reconstructionScale);
               float weight=wx*wy;
               vec2 sampleUv=clamp(vUv+vec2(ox,oy)*hiResTexel,vec2(0.0),vec2(1.0));
               float sampleMask=texture2D(tDiamondHiResMask,sampleUv).r;
@@ -834,7 +839,7 @@ export async function createAurumPostPipeline(
           }
           // Near a very thin silhouette there may be no valid high-res tap.
           // Preserve the original pixel rather than borrowing the environment.
-          if(abs(totalWeight)<0.00001) discard;
+          if(totalWeight<0.00001) discard;
           gl_FragColor=accumulated/totalWeight;
           #include <tonemapping_fragment>
           #include <colorspace_fragment>
