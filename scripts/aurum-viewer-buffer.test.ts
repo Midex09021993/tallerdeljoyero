@@ -487,6 +487,10 @@ test("Aurum exposes diamond-only AA and SSAA as independent modules", () => {
   expect(postSource).toContain("tDiamondHiRes");
   expect(postSource).toContain("if(texture2D(gemMask,vUv).r<0.5){gl_FragColor=base;return;}");
   expect(postSource).toContain("float sampleMask=texture2D(tDiamondHiResMask,sampleUv).r;");
+  expect(postSource).toContain("if(texture2D(gemMask,vUv).r<0.5) discard;");
+  expect(postSource).toContain("renderDiamondSupersampleOverlay");
+  expect(postSource).toContain("diamondSupersampleCompositePass.render(activeRenderer,null,null,0,false)");
+  expect(postSource).not.toContain("composer.addPass(diamondSupersampleCompositePass)");
   expect(postSource).toContain("ensureDiamondSupersampleMaskTarget");
   expect(postSource).toContain("Rasterize the exact same visible center-diamond silhouette at the SSAA resolution.");
   expect(postSource).toContain("activeRenderer.render(scene,camera);");
