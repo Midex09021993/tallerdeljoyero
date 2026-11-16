@@ -487,8 +487,8 @@ test("Aurum exposes diamond-only AA and SSAA as independent modules", () => {
   expect(postSource).toContain("tDiamondHiRes");
   expect(postSource).toContain("float sampleMask=texture2D(tDiamondHiResMask,sampleUv).r;");
   expect(postSource).toContain("if(texture2D(gemMask,vUv).r<0.5) discard;");
-  expect(postSource).toContain("renderDiamondSupersampleOverlay");
-  expect(postSource).toContain("diamondSupersampleCompositePass.render(activeRenderer,null,null,0,false)");
+  expect(postSource).toContain("const renderDiamondSupersampleOverlay=(_activeRenderer:any)=>false;");
+  expect(postSource).not.toContain("diamondSupersampleCompositePass.render(activeRenderer,null,null,0,false)");
   expect(postSource).toContain("const centerDiamondMeshes:any[]=[];");
   expect(postSource).toContain("const previousViewport=activeRenderer.getViewport(new THREE.Vector4()).clone();");
   expect(postSource).toContain("const previousScissor=activeRenderer.getScissor(new THREE.Vector4()).clone();");
@@ -498,11 +498,11 @@ test("Aurum exposes diamond-only AA and SSAA as independent modules", () => {
   expect(postSource).toContain("data.aurumDetectedCategory");
   expect(postSource).toContain("#include <tonemapping_fragment>");
   expect(componentSource).toContain("&& !diamondSupersamplePass?.enabled");
-  expect(componentSource).toContain("if(captureDiamondSsaa&&!options.depthOfField) renderDiamondSupersampleOverlay?.(renderer);");
+  expect(componentSource).not.toContain("renderDiamondSupersampleOverlay?.(renderer)");
   expect(postSource).toContain("if(texture2D(gemMask,vUv).r<0.5) discard;");
   expect(postSource).not.toContain("composer.addPass(diamondSupersampleCompositePass)");
   expect(componentSource).toContain("if (useLiveGemAa) composer.render();");
-  expect(componentSource).toContain("if(diamondSsaaOverlayActive) renderDiamondSupersampleOverlay?.(renderer);");
+  expect(componentSource).not.toContain("renderDiamondSupersampleOverlay?.(renderer)");
   expect(componentSource).not.toContain("const interactionDprCap = liveDiamondAaEnabled && runtimeBudget.tier === \"web\"");
   expect(postSource).toContain("ensureDiamondSupersampleMaskTarget");
   expect(postSource).toContain("This is a true overlay: discard means the framebuffer is not");
@@ -586,7 +586,8 @@ test("diamond AA stays masked in interactive and settled preview modes", () => {
   expect(liveBlock).toContain("setDiamondSupersamplingSettled?.(false)");
   expect(liveBlock).toContain("liveFastPathRef.current = false;");
   expect(postSource).toContain("taaMotionFallback");
-  expect(postSource).toContain("const fxaaEnabled=diamondMaskReady && (controls?.gemFxaaEnabled===true || taaMotionFallback)");
+  expect(postSource).toContain("const fxaaEnabled=false;");
+  expect(postSource).not.toContain("composer.addPass(fxaaPass)");
   expect(initialAaBlock).toContain("const initialTaaRequested = false;");
 });
 
