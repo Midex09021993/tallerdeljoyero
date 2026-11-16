@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import * as THREE from "three";
-import { classifyAurumDiamondScreenSize, createAurumDiamondMicroPipeline, getAurumDiamondProjectedDiameterPx, getAurumDiamondMicroOpticalProfile } from "../src/lib/aurum/diamond-micro-pipeline";
+import { classifyAurumDiamondScreenSize, classifyAurumDiamondMeshTiers, createAurumDiamondMicroPipeline, getAurumDiamondProjectedDiameterPx, getAurumDiamondMicroOpticalProfile } from "../src/lib/aurum/diamond-micro-pipeline";
 
 test("classifies projected diamond sizes into stable screen-space tiers", () => {
   expect(classifyAurumDiamondScreenSize(5)).toBe("micro");
@@ -21,6 +21,22 @@ test("measures projected diameter with a perspective camera", () => {
   const diameter = getAurumDiamondProjectedDiameterPx(mesh, camera, 600);
   expect(diameter).toBeGreaterThan(100);
   expect(diameter).toBeLessThan(150);
+});
+
+test("shares screen-space tiers across diamond paths and protects an explicitly marked center", () => {
+  const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+  camera.position.set(0, 0, 10);
+  camera.lookAt(0, 0, 0);
+  camera.updateMatrixWorld(true);
+  const material = new THREE.MeshPhysicalMaterial();
+  material.userData.aurumGemFamily = "Diamante";
+  const center = new THREE.Mesh(new THREE.SphereGeometry(0.12), material);
+  center.userData.aurumDiamondRole = "principal";
+  const melee = new THREE.Mesh(new THREE.SphereGeometry(0.025), material);
+  melee.position.x = 1;
+  const tiers = classifyAurumDiamondMeshTiers([center, melee], camera, 600);
+  expect(tiers.get(center)).toBe("brilliant");
+  expect(tiers.get(melee)).toBe("micro");
 });
 
 test("flags mixed stone sizes sharing one material without changing its optical settings", () => {
