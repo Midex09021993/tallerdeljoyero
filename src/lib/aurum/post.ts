@@ -1347,7 +1347,9 @@ export async function createAurumPostPipeline(
       activeRenderer.autoClear=previousAutoClear;
     }
     if(failed){
-      fxaaPass.enabled=false;
+      // Keep the user's FXAA preference and the pass armed. A transient
+      // framebuffer/overlay failure must not silently turn the feature off;
+      // the next live frame can retry while the untouched beauty frame remains.
       return false;
     }
     return true;
