@@ -345,7 +345,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [uxSection, setUxSection] = useState<"materiales"|"gemas"|"ambientes"|"escenas"|"hdrMetales"|"hdrGemas"|"fondos"|"rhino-export"|"cad-tree"|"positions"|"diamond-control">("materiales");
   const [diamondBvhEnabled, setDiamondBvhEnabled] = useState(true);
   const [diamondMicroEnabled, setDiamondMicroEnabled] = useState(true);
-  const [diamondPostControls, setDiamondPostControls] = useState<AurumPostControls>(() => getAurumPostControls());
+  const [diamondPostControls, setDiamondPostControls] = useState<AurumPostControls>({gemMaskEnabled:false,diamondSsaaEnabled:false,gemFxaaEnabled:false,diamondTaaEnabled:false,surfaceEdgeAaEnabled:false,taaEnabled:false});
+  useEffect(() => { setDiamondPostControls(getAurumPostControls()); }, []);
   const [diamondControlDiagnostics, setDiamondControlDiagnostics] = useState<any>(null);
   useEffect(() => {
     const refreshDiagnostics = () => {
