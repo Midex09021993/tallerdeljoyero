@@ -472,6 +472,9 @@ export async function createAurumPostPipeline(
     refreshGemMaskCache();
     const gemMaskDiagnosticScene=new THREE.Scene();
     const gemMaskDiagnosticCamera=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
+    // Keep the fullscreen diagnostic quad in front of the camera near plane.
+    // A camera at the origin clips a z=0 quad, making a valid mask look empty.
+    gemMaskDiagnosticCamera.position.z=1;
     const gemMaskDiagnosticMaterial=new THREE.ShaderMaterial({
       uniforms:{uMask:{value:gemMaskTarget.texture}},
       vertexShader:`varying vec2 vUv; void main(){vUv=uv;gl_Position=vec4(position.xy,0.0,1.0);}`,
