@@ -441,6 +441,19 @@ export async function createAurumPostPipeline(
         gemMaskReadbackAt=Date.now();
         console.warn("[AURUM][GEM MASK] GPU readback unavailable",error);
       }
+      if(typeof window!=="undefined"){
+        window.dispatchEvent(new CustomEvent("aurum-gem-mask-diagnostics-ready",{
+          detail:{
+            sceneMeshes:gemMaskSceneMeshCount,
+            diamondCandidates:diamondMeshCandidates.length,
+            protectedCandidates:diamondMeshCandidates.filter(isProtectedCenterDiamond).length,
+            cachedCenterMeshes:cachedGemMeshes.length,
+            maskPixels:gemMaskMaskPixelCount,
+            maskCoveragePercent:gemMaskCoveragePercent,
+            readbackAt:gemMaskReadbackAt,
+          }
+        }));
+      }
     };
     const renderGemMaskWithOcclusion=(activeRenderer:any,target:any)=>{
       // A mask render is an isolated GPU transaction. Render targets carry
