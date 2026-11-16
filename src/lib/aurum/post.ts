@@ -722,7 +722,7 @@ export async function createAurumPostPipeline(
     // the configured settled TAA request.
     const isLowQuality=qualityId==="low" || (qualityId==="" && Number(q?.pixelRatio??1.5) <= 1.01);
     // TAA is requested for the masked diamond composite, never the full frame.
-    taaRequested = config.taa !== false;
+    taaRequested = true;
     const taaEnabled = false; // applyDiamondPostModules enables it after mask discovery.
     const edgeAaEnabled = false; // Masked FXAA is controlled separately.
     const ssaaActive=diamondSsaaEnabled() && Boolean(gemMaskPass?.hasDiamondMeshes)
