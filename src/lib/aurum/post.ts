@@ -502,17 +502,30 @@ export async function createAurumPostPipeline(
       },
       vertexShader:`varying vec2 vUv; void main(){vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
       fragmentShader:`uniform sampler2D tDiffuse; uniform sampler2D tDiamondHiRes; uniform sampler2D gemMask; uniform vec2 hiResTexel; uniform float reconstructionScale; varying vec2 vUv;
+        float aurumCatmullRomWeight(float x){
+          x=abs(x);
+          if(x<1.0) return 1.5*x*x*x-2.5*x*x+1.0;
+          if(x<2.0) return -0.5*x*x*x+2.5*x*x-4.0*x+2.0;
+          return 0.0;
+        }
         void main(){
           vec4 base=texture2D(tDiffuse,vUv);
           if(texture2D(gemMask,vUv).r<0.5){gl_FragColor=base;return;}
-          // Keep the four subpixel taps at a fixed quarter of a base-resolution
-          // pixel, regardless of whether the auxiliary target is 1.5x or 2x.
-          vec2 h=hiResTexel*(reconstructionScale*0.25);
-          vec4 a=texture2D(tDiamondHiRes,vUv+vec2(-h.x,-h.y));
-          vec4 b=texture2D(tDiamondHiRes,vUv+vec2( h.x,-h.y));
-          vec4 c=texture2D(tDiamondHiRes,vUv+vec2(-h.x, h.y));
-          vec4 d=texture2D(tDiamondHiRes,vUv+vec2( h.x, h.y));
-          gl_FragColor=(a+b+c+d)*0.25;
+          // 4x4 Catmull-Rom reconstruction, restricted to diamond-mask pixels.
+          vec4 accumulated=vec4(0.0);
+          float totalWeight=0.0;
+          for(int y=0;y<4;y++){
+            float oy=float(y)-1.5;
+            float wy=aurumCatmullRomWeight(oy/reconstructionScale);
+            for(int x=0;x<4;x++){
+              float ox=float(x)-1.5;
+              float wx=aurumCatmullRomWeight(ox/reconstructionScale);
+              float weight=wx*wy;
+              accumulated+=texture2D(tDiamondHiRes,vUv+vec2(ox,oy)*hiResTexel)*weight;
+              totalWeight+=weight;
+            }
+          }
+          gl_FragColor=accumulated/max(totalWeight,0.00001);
         }`,
     });
     diamondSupersampleCompositePass.enabled=false;
