@@ -3888,11 +3888,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           }
           const bvhCpuMs = performance.now() - bvhStartedAt;
           const renderStartedAt = performance.now();
-          // Activate selective Gem Mask + diamond SSAA only when the center
-          // diamond exists and both SSAA passes are enabled; FXAA remains disabled.
-          // The live beauty frame always uses the native renderer. No
-          // composer, FXAA or SSAA path may rewrite full-scene pixels until
-          // the isolated diamond compositor passes pixel-diff validation.
+          // Activate the detached diamond pipeline only when a classified
+          // diamond and the required mask/reconstruction passes are available.
+          // The full-scene auxiliary render preserves transmission; the final
+          // composite discards every pixel outside the diamond mask.
           const diamondOverlayRequested = Boolean(gemMaskPass?.enabled && diamondSupersamplePass?.enabled && diamondSupersampleCompositePass?.enabled);
           const activeToneAuditPath = diamondOverlayRequested ? "direct+diamond-overlay" : "direct";
           if (toneAuditEnabled && activeToneAuditPath !== lastToneAuditPath) {
@@ -3907,8 +3906,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               dofEnabled: Boolean(postRuntimeConfig.dof),
             });
           }
-          // Route the live viewport through the minimal gem-AA composer only when both
-          // selective passes are active; otherwise retain the direct fast path.
+          // Keep the native direct beauty render as the base frame; the optional
+          // diamond overlay is executed separately after this render.
           renderer.render(escena,camara);
           // Detached diamond reconstruction only composites the classified
           // diamond pixels over the untouched beauty frame.
@@ -3935,8 +3934,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             renderPipelineContract.setMode("LIVE_MOTION");
             syncAurumSsrDiagnosticConfig();
 
-            // Keep the interactive path minimal. Only the diamond mask + soft-edge
-            // pass may run during orbit; photographic, temporal and surface-wide
+            // Keep the interactive path minimal. Only the isolated diamond FXAA/SSAA
+            // targets may run during orbit; photographic, temporal and surface-wide
             // post-processing remain disabled.
             const hasCenterDiamond = Boolean(gemMaskPass?.hasDiamondMeshes);
             const livePostControls = getAurumPostControls();

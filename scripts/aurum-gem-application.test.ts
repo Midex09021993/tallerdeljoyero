@@ -85,7 +85,7 @@ test("targeted BVH refresh avoids processing unrelated scene meshes", () => {
 
 test("AURUM gem transition snapshots before material replacement and blends only after first paint", () => {
   const source = readFileSync("src/components/AurumRender.tsx", "utf8");
-  const capture = source.indexOf("aurumGemTransitionSnapshot:captureAurumGemTransitionState(mesh)");
+  const capture = source.indexOf("next.aurumGemTransitionSnapshot=captureAurumGemTransitionState(mesh);");
   const apply = source.indexOf("const applied=applyAurumGemToTarget");
   const firstPaint = source.indexOf("viewerLoopRef.current?.renderNow?.()", apply);
   const transition = source.indexOf("createAurumGemTransition(", firstPaint);
@@ -152,7 +152,7 @@ test("diamond SSAA mask isolates material groups and never paints adjacent metal
   expect(post).toContain("const getDiamondMaterialSlots=(mesh:any):Set<number>");
   expect(post).toContain("materials.length===1&&objectIsDiamond");
   expect(post).toContain('const isGemLayer=/^gem 0?[1-4]$/.test(layerName);');
-  expect(post).toContain('layerName.replace(/[_-]+/g," ").replace(/\\s+/g," ")');
+  expect(post).toContain(').trim().toLowerCase().replace(/[_-]+/g," ").replace(/\\s+/g," ")');
   expect(post).toContain('isGemLayer&&category==="gema"&&family');
   expect(post).toContain('isGemLayer&&category==="gema"&&(');
   expect(post).toContain("diamondMaskMaterialsByMesh.set(object,materials.map");
@@ -198,7 +198,9 @@ test("legacy Post Engine preferences cannot reactivate full-frame AA or TAA", ()
   expect(controls).toContain("diamondSsaaEnabled: false");
   expect(controls).toContain("surfaceEdgeAaEnabled: false");
   expect(controls).toContain("taaEnabled: false");
-  expect(controls).toContain("const migrated: AurumPostControls");
+  expect(controls).toContain("const migrated = normalize(JSON.parse(legacy));");
+  expect(controls).toContain("migrated.gemMaskEnabled = false;");
+  expect(controls).toContain("migrated.diamondTaaEnabled = false;");
   expect(post).toContain("taaRequested=false;");
   expect(post).toContain("const taaEnabled=false;");
   expect(post).not.toContain("taaRequested=Boolean(options.capture && postControls.taaEnabled)");
