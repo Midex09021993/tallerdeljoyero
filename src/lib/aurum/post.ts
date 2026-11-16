@@ -1006,10 +1006,13 @@ export async function createAurumPostPipeline(
     // adaptive GPU budget permit it. Its output remains mask-confined; FXAA stays off.
     const hasCenterDiamond=Boolean(gemMaskPass?.hasDiamondMeshes);
     const qualityAllowsDiamondAa=!["low","extreme"].includes(lastKnownBudgetTier) && lastKnownQualityId!=="low";
-    const ssaaEnabled=diamondSsaaEnabled() && hasCenterDiamond && qualityAllowsDiamondAa
-      && Boolean(diamondSupersamplePass?.canRender?.());
     const taaEnabled=hasCenterDiamond && qualityAllowsDiamondAa && Boolean(taaRequested)
       && Boolean(taaPass && diamondTaaSavePass && diamondTaaCompositePass) && !temporalMotionActive;
+    // TAARenderPass re-renders the scene temporally; running SSAA after it would
+    // replace that history, while running TAA after SSAA would replace SSAA.
+    // Use settled TAA as the primary quality path and SSAA during camera motion.
+    const ssaaEnabled=!taaEnabled && diamondSsaaEnabled() && hasCenterDiamond && qualityAllowsDiamondAa
+      && Boolean(diamondSupersamplePass?.canRender?.());
     const fxaaEnabled=hasCenterDiamond && qualityAllowsDiamondAa;
     if(diamondSupersamplePass) diamondSupersamplePass.enabled=ssaaEnabled;
     if(diamondSupersampleCompositePass) diamondSupersampleCompositePass.enabled=ssaaEnabled;
