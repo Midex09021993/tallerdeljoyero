@@ -237,7 +237,9 @@ export async function createAurumPostPipeline(
         diamondFxaaSnapshotTexture.image?.width!==targetWidth
         || diamondFxaaSnapshotTexture.image?.height!==targetHeight
       ){
-        diamondFxaaSnapshotTexture.setSize(targetWidth,targetHeight);
+        diamondFxaaSnapshotTexture.dispose();
+        diamondFxaaSnapshotTexture=null;
+        return ensureDiamondFxaaSnapshotTexture(targetWidth,targetHeight,activeRenderer);
       }
       // The copied framebuffer already contains the renderer's display-referred
       // beauty. Decode it for FXAA sampling, then encode once in the overlay shader.
@@ -1321,7 +1323,7 @@ export async function createAurumPostPipeline(
       activeRenderer.setViewport(0,0,width,height);
       activeRenderer.setScissorTest(false);
       activeRenderer.autoClear=false;
-      activeRenderer.copyFramebufferToTexture(new THREE.Vector2(0,0),snapshot);
+      activeRenderer.copyFramebufferToTexture(snapshot,new THREE.Vector2(0,0));
       // Bind the exact live textures immediately before drawing the overlay.
       if(uniforms.gemMask) uniforms.gemMask.value=gemMaskTarget.texture;
       if(uniforms.tDiffuse) uniforms.tDiffuse.value=snapshot;
@@ -1502,7 +1504,10 @@ export async function createAurumPostPipeline(
       const actualWidth=Math.max(1,Number(renderer.domElement.width)||Math.floor(width));
       const actualHeight=Math.max(1,Number(renderer.domElement.height)||Math.floor(height));
       gemMaskPass?.setSize?.(actualWidth,actualHeight);
-      diamondFxaaSnapshotTexture?.setSize?.(actualWidth,actualHeight);
+      if(diamondFxaaSnapshotTexture&&(diamondFxaaSnapshotTexture.image?.width!==actualWidth||diamondFxaaSnapshotTexture.image?.height!==actualHeight)){
+        diamondFxaaSnapshotTexture.dispose();
+        diamondFxaaSnapshotTexture=null;
+      }
       diamondSupersamplePass?.setSize?.(actualWidth,actualHeight);
       diamondSupersampleCompositePass?.setSize?.(actualWidth,actualHeight);
     };
