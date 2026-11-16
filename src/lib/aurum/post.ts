@@ -723,7 +723,6 @@ export async function createAurumPostPipeline(
         }
         const activeMaskTarget=ensureDiamondSupersampleMaskTarget();
         if(!activeMaskTarget) return;
-        diamondSupersampleRenderCount+=1;
         const previousTarget=activeRenderer.getRenderTarget();
         const previousAutoClear=activeRenderer.autoClear;
         const previousViewport=new THREE.Vector4();
@@ -757,6 +756,10 @@ export async function createAurumPostPipeline(
           activeRenderer.toneMapping=THREE.NoToneMapping;
           activeRenderer.render(scene,camera);
           renderGemMaskWithOcclusion(activeRenderer,activeMaskTarget);
+          // Count only completed auxiliary beauty + mask renders. Failed GPU
+          // attempts remain visible through the warning, but cannot masquerade
+          // as successful SSAA frames in the execution diagnostics.
+          diamondSupersampleRenderCount+=1;
           if(diamondSupersampleCompositePass?.material?.uniforms?.tDiamondHiRes){
             diamondSupersampleCompositePass.material.uniforms.tDiamondHiRes.value=activeTarget.texture;
           }
