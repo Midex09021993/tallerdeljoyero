@@ -299,23 +299,31 @@ export async function createAurumPostPipeline(
       colorWrite:false,toneMapped:false
     });
     const isDiamondFamily=(value:any)=>String(value??"").trim().toLowerCase()==="diamante";
+    const firstNonEmpty=(values:any[])=>values.map(value=>String(value??"").trim()).find(Boolean)??"";
     const getDiamondMaterialSlots=(mesh:any):Set<number>=>{
       const materials=Array.isArray(mesh?.material)?mesh.material:[mesh?.material];
       const data=mesh?.userData??{};
       const rhino=data.aurumRhino??{};
-      const family=isDiamondFamily(data.aurumActiveGemFamily??data.aurumGemFamily??data.aurumDiamondOpticalFamily)
-        || String(data.aurumActiveGemId??data.aurumGemId??"").trim().toLowerCase().startsWith("diamante");
-      const category=String(rhino.categoria??data.aurumDetectedCategory??data.aurumCategory??"").trim().toLowerCase();
-      const layerName=String(
-        rhino.capa
-        ?? data.aurumDetectedLayer
-        ?? data.aurumRhinoSource?.layerName
-        ?? data.aurumRhinoInstanceSource?.layerName
-        ?? data.attributes?.layerName
-        ?? data.attributes?.LayerName
-        ?? data.layerName
-        ?? ""
-      ).trim().toLowerCase().replace(/[_-]+/g," ").replace(/\s+/g," ");
+      const family=isDiamondFamily(firstNonEmpty([
+        data.aurumActiveGemFamily,
+        data.aurumGemFamily,
+        data.aurumDiamondOpticalFamily,
+      ]))
+        || firstNonEmpty([data.aurumActiveGemId,data.aurumGemId]).toLowerCase().startsWith("diamante");
+      const category=firstNonEmpty([
+        rhino.categoria,
+        data.aurumDetectedCategory,
+        data.aurumCategory,
+      ]).toLowerCase();
+      const layerName=firstNonEmpty([
+        rhino.capa,
+        data.aurumDetectedLayer,
+        data.aurumRhinoSource?.layerName,
+        data.aurumRhinoInstanceSource?.layerName,
+        data.attributes?.layerName,
+        data.attributes?.LayerName,
+        data.layerName,
+      ]).toLowerCase().replace(/[_-]+/g," ").replace(/\\s+/g," ");
       // Rhino's Gem 01–04 layers define the gemstone domain, not the
       // gemstone identity by themselves. Require the explicit gema category
       // AND diamond family metadata so metal meshes sharing a layer cannot
