@@ -329,8 +329,8 @@ export async function createAurumDiamondBvhRuntime(options: {
           adaptiveRayEpsilon: family === "diamante",
           accumulateInternalExits: family === "diamante" && Boolean(mesh.userData?.aurumDiamondMicroCenterProtected),
           enableDiamondEffects: family === "diamante" && Boolean(mesh.userData?.aurumDiamondMicroCenterProtected),
-          fireIntensity: 0.12,
-          scintillationIntensity: 0.08,
+          fireIntensity: 0.55,
+          scintillationIntensity: 0.22,
           camera: options.camera,
           // Keep small secondary diamonds on interactive quality initially;
           // higher bounce counts are reserved for explicit high/final capture.
