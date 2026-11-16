@@ -3889,6 +3889,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         {
           progressiveFrames: Math.max(1, Math.min(32, Math.floor(Number(postRuntimeConfig.progressiveFrameCount ?? 1)))),
           onStart: () => {
+            setTemporalMotion?.(true);
             renderPipelineContract.setMode("LIVE_MOTION");
             syncAurumSsrDiagnosticConfig();
 
@@ -3968,6 +3969,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             invalidateRenderRef.current?.();
           },
           onEnd: () => {
+            // End temporal motion first: this restarts TAA accumulation for the
+            // settled center diamond before the final pass set is assembled.
+            setTemporalMotion?.(false);
             // Resume selective 2x diamond supersampling only after camera motion ends.
             const diamondSsaaActive = Boolean(setDiamondSupersamplingSettled?.(true));
             // Keep the settled viewport on the same minimal beauty path. TAA, Bloom,
@@ -3982,7 +3986,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             const settledBeautyPasses = new Set([renderPass, ...(diamondSsaaActive ? [diamondSupersamplePass, diamondSupersampleCompositePass] : []), ...(settledDiamondTaaActive ? [diamondTaaSavePass, idleTaaPass, diamondTaaCompositePass] : []), ...(diamondSsaaActive || fxaaPass?.enabled || settledDiamondTaaActive ? [gemMaskPass] : []), ...(fxaaPass?.enabled ? [fxaaPass] : []), outputPass]);
             const settledPasses = ((composer as any)?.passes ?? []) as any[];
             settledPasses.forEach((pass) => { pass.enabled = settledBeautyPasses.has(pass); });
-            if (gemMaskPass) gemMaskPass.enabled = diamondSsaaActive || Boolean(fxaaPass?.enabled && gemMaskPass.hasDiamondMeshes);
+            if (gemMaskPass) gemMaskPass.enabled = diamondSsaaActive || settledDiamondTaaActive || Boolean(fxaaPass?.enabled && gemMaskPass.hasDiamondMeshes);
             if (diamondSupersamplePass) diamondSupersamplePass.enabled = diamondSsaaActive;
             if (diamondSupersampleCompositePass) diamondSupersampleCompositePass.enabled = diamondSsaaActive;
             liveFastPathRef.current = false;
