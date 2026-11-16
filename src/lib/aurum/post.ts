@@ -232,6 +232,7 @@ export async function createAurumPostPipeline(
         diamondFxaaSnapshotTexture.minFilter=THREE.LinearFilter;
         diamondFxaaSnapshotTexture.magFilter=THREE.LinearFilter;
         diamondFxaaSnapshotTexture.generateMipmaps=false;
+        diamondFxaaSnapshotTexture.colorSpace=activeRenderer.outputColorSpace??THREE.SRGBColorSpace;
       }else if(
         diamondFxaaSnapshotTexture.image?.width!==targetWidth
         || diamondFxaaSnapshotTexture.image?.height!==targetHeight
@@ -240,8 +241,11 @@ export async function createAurumPostPipeline(
       }
       // The copied framebuffer already contains the renderer's display-referred
       // beauty. Decode it for FXAA sampling, then encode once in the overlay shader.
-      diamondFxaaSnapshotTexture.colorSpace=activeRenderer.outputColorSpace??THREE.SRGBColorSpace;
-      diamondFxaaSnapshotTexture.needsUpdate=true;
+      const outputColorSpace=activeRenderer.outputColorSpace??THREE.SRGBColorSpace;
+      if(diamondFxaaSnapshotTexture.colorSpace!==outputColorSpace){
+        diamondFxaaSnapshotTexture.colorSpace=outputColorSpace;
+        diamondFxaaSnapshotTexture.needsUpdate=true;
+      }
       return diamondFxaaSnapshotTexture;
     };
     // Render a material-ID mask using existing Rhino metadata. The depth prepass
@@ -902,10 +906,11 @@ export async function createAurumPostPipeline(
           return texture2D(tDiffuse,uv).rgb;
         }
         void main(){
+          float centerMask=texture2D(gemMask,vUv).r;
+          if(centerMask<0.5) discard;
           vec4 center=texture2D(tDiffuse,vUv);
           vec3 result=center.rgb;
           vec2 px=max(resolution,vec2(0.000001));
-          float centerMask=texture2D(gemMask,vUv).r;
           if(centerMask>=0.5){
             float mN=texture2D(gemMask,vUv+vec2(0.0,px.y)).r;
             float mS=texture2D(gemMask,vUv-vec2(0.0,px.y)).r;
