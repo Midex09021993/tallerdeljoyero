@@ -86,10 +86,12 @@ function getMaterials(mesh: any): any[] {
   return (Array.isArray(mesh?.material) ? mesh.material : [mesh?.material]).filter(Boolean);
 }
 
-function isDiamondMaterial(material: any): boolean {
+function isDiamondMaterial(material: any, mesh?: any): boolean {
+  // BVH replaces the physical material; the mesh-level marker survives that swap.
+  const meshFamily = String(mesh?.userData?.aurumDiamondOpticalFamily ?? "").trim().toLowerCase();
   const family = String(material?.userData?.aurumGemFamily ?? "").trim().toLowerCase();
   const name = String(material?.name ?? "").trim().toLowerCase();
-  return family === "diamante" || Boolean(material?.userData?.aurumDiamondMaterial)
+  return meshFamily === "diamante" || family === "diamante" || Boolean(material?.userData?.aurumDiamondMaterial)
     || /diamond|diamante/.test(name);
 }
 
@@ -118,7 +120,7 @@ export function createAurumDiamondMicroPipeline(scene: any, camera: any, getView
     const tier = (mesh.userData?.aurumDiamondMicroTier ?? "brilliant") as Exclude<AurumDiamondMicroTier, "mixed">;
     const profile = getAurumDiamondMicroOpticalProfile(tier);
     for (const material of getMaterials(mesh)) {
-      if (!isDiamondMaterial(material)) continue;
+      if (!isDiamondMaterial(material, mesh)) continue;
       const uniforms = material.userData?.aurumDiamondMicroUniforms;
       if (!uniforms) continue;
       if (uniforms.scintillationStrength) uniforms.scintillationStrength.value = uniforms.baseScintillationStrength * profile.scintillationScale;
@@ -133,7 +135,7 @@ export function createAurumDiamondMicroPipeline(scene: any, camera: any, getView
   const refresh = () => {
     const currentDiamonds = new Set<any>();
     scene?.traverse?.((object: any) => {
-      if (object?.isMesh && object.geometry && getMaterials(object).some(isDiamondMaterial)) {
+      if (object?.isMesh && object.geometry && getMaterials(object).some((material) => isDiamondMaterial(material, object))) {
         currentDiamonds.add(object);
       }
     });
