@@ -68,7 +68,6 @@ export async function createAurumPostPipeline(
   let diamondSupersampleScaleCap=2;
   let diamondLiveSupersampleScaleCap=1.5;
   let diamondSupersamplingSettled=true;
-  const diamondSsaaEnabled=()=>typeof window==="undefined" || new URLSearchParams(window.location.search).get("aurumDiamondSsaa")!=="0";
   const updateDiamondSupersampleScale=()=>{
     const basePixels=diamondSupersampleBaseWidth*diamondSupersampleBaseHeight;
     diamondSupersampleScale=basePixels>8_500_000
@@ -917,6 +916,8 @@ export async function createAurumPostPipeline(
         console.info("[AURUM][POST][DIAGNOSTIC]", state);
       }
     }
+    // Re-apply the user's diamond-only switches after quality changes reset pass state.
+    applyDiamondPostModules(getAurumPostControls());
   };
 
   let taaRequested=false;
@@ -1001,22 +1002,39 @@ export async function createAurumPostPipeline(
 
   applyQuality(quality);
   // Reflect Post Engine switches immediately without waiting for a quality/profile rebuild.
-  const applyDiamondPostModules=(controls:any)=>{
-    // Restore the known-stable unfiltered beauty path while diamond optics are recovered.
-    // No TAA, SSAA or FXAA pass may alter the diamond or any other scene pixel.
-    const ssaaEnabled=false;
-    const taaEnabled=false;
-    const fxaaEnabled=false;
-    if(diamondSupersamplePass) diamondSupersamplePass.enabled=false;
-    if(diamondSupersampleCompositePass) diamondSupersampleCompositePass.enabled=false;
-    if(taaPass){taaPass.enabled=false;taaPass.accumulate=false;}
-    if(diamondTaaSavePass) diamondTaaSavePass.enabled=false;
-    if(diamondTaaCompositePass) diamondTaaCompositePass.enabled=false;
-    if(gemMaskPass) gemMaskPass.enabled=false;
-    if(fxaaPass) fxaaPass.enabled=false;
+  function applyDiamondPostModules(controls:any){
+    // All image reconstruction is gated by the categorical center-diamond mask.
+    // Disabling Gem Mask therefore safely suspends its dependent effects.
+    const maskEnabled=controls?.gemMaskEnabled===true;
+    const hasMaskTarget=Boolean(gemMaskPass);
+    const canSupersample=Boolean(diamondSupersamplePass?.canRender?.());
+    const ssaaEnabled=maskEnabled && controls?.diamondSsaaEnabled===true && canSupersample;
+    const fxaaEnabled=maskEnabled && controls?.gemFxaaEnabled===true;
+    const taaEnabled=maskEnabled && controls?.diamondTaaEnabled===true && !temporalMotionActive && Boolean(taaPass && diamondTaaSavePass && diamondTaaCompositePass);
+
+    if(gemMaskPass) gemMaskPass.enabled=maskEnabled && hasMaskTarget;
+    if(diamondSupersamplePass) diamondSupersamplePass.enabled=ssaaEnabled;
+    if(diamondSupersampleCompositePass) diamondSupersampleCompositePass.enabled=ssaaEnabled;
+    if(taaPass){
+      const wasEnabled=Boolean(taaPass.enabled);
+      taaPass.enabled=taaEnabled;
+      taaPass.accumulate=taaEnabled;
+      if(taaEnabled && !wasEnabled) taaPass.accumulateIndex=-1;
+    }
+    if(diamondTaaSavePass) diamondTaaSavePass.enabled=taaEnabled;
+    if(diamondTaaCompositePass) diamondTaaCompositePass.enabled=taaEnabled;
+    if(fxaaPass) fxaaPass.enabled=fxaaEnabled;
+    // Full-surface AA is deliberately never enabled from this diamond panel.
     if(surfaceEdgeAaPass) surfaceEdgeAaPass.enabled=false;
-    return false;
-  };
+    return {
+      gemMask: Boolean(gemMaskPass?.enabled),
+      ssaa: Boolean(diamondSupersamplePass?.enabled && diamondSupersampleCompositePass?.enabled),
+      fxaa: Boolean(fxaaPass?.enabled),
+      taa: Boolean(taaPass?.enabled && diamondTaaCompositePass?.enabled),
+      blockedByMask: !maskEnabled && Boolean(controls?.diamondSsaaEnabled || controls?.gemFxaaEnabled || controls?.diamondTaaEnabled),
+      hasDiamondMeshes: Boolean(gemMaskPass?.hasDiamondMeshes),
+    };
+  }
   const setDiamondSupersampleScaleCap=(settledCap:number,liveCap?:number)=>{
     diamondSupersampleScaleCap=Math.max(1,Math.min(2,Number(settledCap)||1));
     diamondLiveSupersampleScaleCap=Math.max(1,Math.min(diamondSupersampleScaleCap,Number(liveCap??settledCap)||1));
