@@ -417,10 +417,11 @@ export async function createAurumPostPipeline(
         gemMaskMaterial.dispose();
       }
     };
-    // AURUM DIAMOND SSAA MODULE: render the full optical scene at 2x while
-    // stationary, then replace only pixels covered by the center-diamond mask.
-    // Rendering the full scene is essential: a detached diamond render would
-    // lose the ring/environment contribution required by transmission.
+    // AURUM DIAMOND SSAA MODULE: render the full optical scene at higher
+    // resolution so diamond transmission/refraction still sees the ring and
+    // environment. The reconstruction shader below samples and replaces only
+    // center-diamond pixels; no high-resolution metal/background pixels may
+    // enter the reconstructed diamond edge.
     diamondSupersamplePass={
       enabled:false,needsSwap:false,clear:false,renderToScreen:false,
       setSize(width:number,height:number){
@@ -512,7 +513,9 @@ export async function createAurumPostPipeline(
         void main(){
           vec4 base=texture2D(tDiffuse,vUv);
           if(texture2D(gemMask,vUv).r<0.5){gl_FragColor=base;return;}
-          // 4x4 Catmull-Rom reconstruction, restricted to diamond-mask pixels.
+          // Reconstruct from the high-resolution optical scene, but reject
+          // every tap outside the diamond mask. This prevents background,
+          // metal and mask-exterior colors from bleeding into the girdle.
           vec4 accumulated=vec4(0.0);
           float totalWeight=0.0;
           for(int y=0;y<4;y++){
@@ -522,11 +525,18 @@ export async function createAurumPostPipeline(
               float ox=float(x)-1.5;
               float wx=aurumCatmullRomWeight(ox/reconstructionScale);
               float weight=wx*wy;
-              accumulated+=texture2D(tDiamondHiRes,vUv+vec2(ox,oy)*hiResTexel)*weight;
-              totalWeight+=weight;
+              vec2 sampleUv=clamp(vUv+vec2(ox,oy)*hiResTexel,vec2(0.0),vec2(1.0));
+              float sampleMask=texture2D(gemMask,sampleUv).r;
+              if(sampleMask>=0.5 && abs(weight)>0.000001){
+                accumulated+=texture2D(tDiamondHiRes,sampleUv)*weight;
+                totalWeight+=weight;
+              }
             }
           }
-          gl_FragColor=accumulated/max(totalWeight,0.00001);
+          // Near a very thin silhouette there may be no valid high-res tap.
+          // Preserve the original pixel rather than borrowing the environment.
+          if(abs(totalWeight)<0.00001){gl_FragColor=base;return;}
+          gl_FragColor=accumulated/totalWeight;
         }`,
     });
     diamondSupersampleCompositePass.enabled=false;
