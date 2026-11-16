@@ -36,7 +36,7 @@ function projectedFootprint(model: THREE.Object3D, camera: THREE.PerspectiveCame
 
 test("all four camera views fit the complete product with a consistent screen margin", () => {
   const views = ["frontal", "lateral", "superior", "perspectiva"] as const;
-  const distances: number[] = [];
+  const footprints: number[] = [];
 
   for (const view of views) {
     const { model, camera, controls } = createFixture();
@@ -46,7 +46,8 @@ test("all four camera views fit the complete product with a consistent screen ma
 
     expect(controls.target.distanceTo(center)).toBeLessThan(1e-6);
     expect(camera.position.distanceTo(controls.target)).toBeGreaterThan(0);
-    distances.push(camera.position.distanceTo(controls.target));
+    const distance = camera.position.distanceTo(controls.target);
+    expect(Number.isFinite(distance)).toBe(true);
 
     if (view === "frontal") expect(camera.position.z).toBeGreaterThan(controls.target.z);
     if (view === "lateral") expect(camera.position.x).toBeGreaterThan(controls.target.x);
@@ -55,11 +56,12 @@ test("all four camera views fit the complete product with a consistent screen ma
     const footprint = projectedFootprint(model, camera);
     expect(footprint).toBeGreaterThan(0);
     expect(footprint).toBeLessThan(0.75);
+    footprints.push(footprint);
   }
 
-  // All presets use one model-space framing sphere: the camera distance must
-  // remain identical so changing the view never introduces an unintended zoom.
-  expect(Math.max(...distances) - Math.min(...distances)).toBeLessThan(1e-6);
+  // Each view may use a different camera distance to compensate for
+  // foreshortening, but the visible product occupies the same screen fraction.
+  expect(Math.max(...footprints) - Math.min(...footprints)).toBeLessThan(0.04);
 });
 
 test("camera view framing adapts to portrait, square and landscape viewport ratios", () => {
