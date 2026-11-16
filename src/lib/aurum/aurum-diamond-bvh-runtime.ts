@@ -327,6 +327,7 @@ export async function createAurumDiamondBvhRuntime(options: {
               : (emeraldProfile?.transmission ?? rubyProfile?.transmission ?? sapphireProfile?.transmission ?? (isImperialTopaz ? 0.88 : isParaibaTourmaline ? 0.91 : 0)),
           environmentMap,
           adaptiveRayEpsilon: family === "diamante",
+          accumulateInternalExits: family === "diamante" && Boolean(mesh.userData?.aurumDiamondMicroCenterProtected),
           camera: options.camera,
           // Keep small secondary diamonds on interactive quality initially;
           // higher bounce counts are reserved for explicit high/final capture.
