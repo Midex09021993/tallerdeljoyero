@@ -1033,9 +1033,11 @@ export async function createAurumPostPipeline(
     if(!diamondSupersamplePass?.enabled || !diamondSupersampleCompositePass || !gemMaskPass?.enabled || !gemMaskPass?.hasDiamondMeshes) return false;
     const previousTarget=activeRenderer.getRenderTarget();
     const previousAutoClear=activeRenderer.autoClear;
-    const previousViewport=new (gemMaskPass as any).THREE?.Vector4?.() ?? null;
-    const previousScissor=new (gemMaskPass as any).THREE?.Vector4?.() ?? null;
+    const previousViewport={x:0,y:0,z:0,w:0,copy(value:any){this.x=value.x;this.y=value.y;this.z=value.z;this.w=value.w;return this;}};
+    const previousScissor={x:0,y:0,z:0,w:0,copy(value:any){this.x=value.x;this.y=value.y;this.z=value.z;this.w=value.w;return this;}};
     const previousScissorTest=activeRenderer.getScissorTest?.()??false;
+    activeRenderer.getViewport(previousViewport);
+    activeRenderer.getScissor(previousScissor);
     try{
       // Refresh the base-resolution mask, render the high-resolution optical
       // reference, then draw only fragments belonging to that mask on top of
@@ -1055,8 +1057,8 @@ export async function createAurumPostPipeline(
     }finally{
       diamondSupersampleCompositePass.renderToScreen=true;
       activeRenderer.setRenderTarget(previousTarget);
-      if(previousViewport) activeRenderer.setViewport(previousViewport);
-      if(previousScissor) activeRenderer.setScissor(previousScissor);
+      activeRenderer.setViewport(previousViewport.x,previousViewport.y,previousViewport.z,previousViewport.w);
+      activeRenderer.setScissor(previousScissor.x,previousScissor.y,previousScissor.z,previousScissor.w);
       activeRenderer.setScissorTest(previousScissorTest);
       activeRenderer.autoClear=previousAutoClear;
     }
