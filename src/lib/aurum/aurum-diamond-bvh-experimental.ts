@@ -42,6 +42,8 @@ export type AurumDiamondBvhSetupOptions = {
   rgbBoost?: [number, number, number];
   /** Match per-material gamma stored in the iJewel diamond material. */
   gamma?: number;
+  /** Apply scale-aware ray origin bias only to diamond BVH materials. */
+  adaptiveRayEpsilon?: boolean;
 };
 
 export type AurumDiamondBvhSetup = {
@@ -131,7 +133,36 @@ export function prepareAurumDiamondBvhExperiment(
     acesOutput,
     "gl_FragColor = vec4(hdrColor, 1.0);",
   );
-  material.needsUpdate = true;
+  // The upstream BVH uses a fixed 1e-4 ray-origin offset. CAD jewelry may
+  // be authored in millimetres or metres, so use a scale-aware bias for diamond
+  // meshes only. If the upstream bundle changes, leave its shader untouched.
+  let adaptiveRayEpsilon: number | null = null;
+  if (options.adaptiveRayEpsilon) {
+    geometry.computeBoundingBox?.();
+    const boundsSize = geometry.boundingBox?.getSize(new THREE.Vector3());
+    const diagonal = boundsSize?.length?.() ?? 0;
+    adaptiveRayEpsilon = Number.isFinite(diagonal) && diagonal > 0
+      ? Math.max(1e-7, Math.min(1e-3, diagonal * 1e-5))
+      : 1e-4;
+    const rayOffsetPattern = /position\\s*=\\s*hitPosition\\s*\\+\\s*ray\\s*\\*\\s*0\\.0001\\s*;/;
+    if (rayOffsetPattern.test(material.fragmentShader)) {
+      const precisionPattern = /(precision\\s+highp\\s+float\\s*;)/;
+      if (precisionPattern.test(material.fragmentShader)) {
+        material.fragmentShader = material.fragmentShader.replace(
+          precisionPattern,
+          `$1\\n uniform float aurumRayEpsilon;`,
+        ).replace(rayOffsetPattern, "position = hitPosition + ray * aurumRayEpsilon;");
+        material.uniforms.aurumRayEpsilon = { value: adaptiveRayEpsilon };
+        material.needsUpdate = true;
+      } else {
+        console.warn("[AURUM][DIAMOND][BVH] No se encontró la declaración de precisión GLSL; se conserva el epsilon original.");
+        adaptiveRayEpsilon = null;
+      }
+    } else {
+      console.warn("[AURUM][DIAMOND][BVH] El paquete cambió el avance de rayo; se conserva el epsilon original.");
+      adaptiveRayEpsilon = null;
+    }
+  }
 
   const rotation = THREE.MathUtils.radToDeg(options.environmentRotationRadians ?? 0);
   api.setDiamondEnvironmentRotation?.(material, { x: 0, y: rotation, z: 0 });
