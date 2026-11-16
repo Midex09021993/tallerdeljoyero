@@ -1001,30 +1001,20 @@ export async function createAurumPostPipeline(
   applyQuality(quality);
   // Reflect Post Engine switches immediately without waiting for a quality/profile rebuild.
   const applyDiamondPostModules=(controls:any)=>{
-    // Selective SSAA is enabled by default when the center-diamond mask and
-    // adaptive GPU budget permit it. Its output remains mask-confined; FXAA stays off.
-    const hasCenterDiamond=Boolean(gemMaskPass?.hasDiamondMeshes);
-    const qualityAllowsDiamondAa=!["low","extreme"].includes(lastKnownBudgetTier) && lastKnownQualityId!=="low";
-    const taaEnabled=hasCenterDiamond && qualityAllowsDiamondAa && Boolean(taaRequested)
-      && Boolean(taaPass && diamondTaaSavePass && diamondTaaCompositePass) && !temporalMotionActive;
-    // TAARenderPass re-renders the scene temporally; running SSAA after it would
-    // replace that history, while running TAA after SSAA would replace SSAA.
-    // Use settled TAA as the primary quality path and SSAA during camera motion.
-    const ssaaEnabled=!taaEnabled && diamondSsaaEnabled() && hasCenterDiamond && qualityAllowsDiamondAa
-      && Boolean(diamondSupersamplePass?.canRender?.());
-    const fxaaEnabled=hasCenterDiamond && qualityAllowsDiamondAa;
-    if(diamondSupersamplePass) diamondSupersamplePass.enabled=ssaaEnabled;
-    if(diamondSupersampleCompositePass) diamondSupersampleCompositePass.enabled=ssaaEnabled;
-    if(taaPass){
-      taaPass.enabled=taaEnabled;
-      taaPass.accumulate=taaEnabled;
-      if(taaEnabled && taaPass.accumulateIndex < 0) taaPass.sampleLevel=4;
-    }
-    if(diamondTaaSavePass) diamondTaaSavePass.enabled=taaEnabled;
-    if(diamondTaaCompositePass) diamondTaaCompositePass.enabled=taaEnabled;
-    if(gemMaskPass) gemMaskPass.enabled=ssaaEnabled || fxaaEnabled || taaEnabled;
-    if(fxaaPass) fxaaPass.enabled=fxaaEnabled;
-    return ssaaEnabled || taaEnabled || fxaaEnabled;
+    // Restore the known-stable unfiltered beauty path while diamond optics are recovered.
+    // No TAA, SSAA or FXAA pass may alter the diamond or any other scene pixel.
+    const ssaaEnabled=false;
+    const taaEnabled=false;
+    const fxaaEnabled=false;
+    if(diamondSupersamplePass) diamondSupersamplePass.enabled=false;
+    if(diamondSupersampleCompositePass) diamondSupersampleCompositePass.enabled=false;
+    if(taaPass){taaPass.enabled=false;taaPass.accumulate=false;}
+    if(diamondTaaSavePass) diamondTaaSavePass.enabled=false;
+    if(diamondTaaCompositePass) diamondTaaCompositePass.enabled=false;
+    if(gemMaskPass) gemMaskPass.enabled=false;
+    if(fxaaPass) fxaaPass.enabled=false;
+    if(surfaceEdgeAaPass) surfaceEdgeAaPass.enabled=false;
+    return false;
   };
   const setDiamondSupersampleScaleCap=(settledCap:number,liveCap?:number)=>{
     diamondSupersampleScaleCap=Math.max(1,Math.min(2,Number(settledCap)||1));
