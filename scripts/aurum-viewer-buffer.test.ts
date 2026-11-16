@@ -476,9 +476,9 @@ test("Aurum exposes diamond-only AA and SSAA as independent modules", () => {
   const controlsSource = readFileSync("src/lib/aurum/post-engine-controls.ts", "utf8");
   const architectureSource = readFileSync("src/components/aurum/AurumArchitectureExplorer.tsx", "utf8");
   const postSource = readFileSync("src/lib/aurum/post.ts", "utf8");
-  expect(componentSource).toContain("const liveDiamondAaEnabled = hasCenterDiamond");
+  expect(componentSource).toContain("const liveDiamondAaEnabled = false;");
   expect(componentSource).toContain("setDiamondSupersamplingSettled?.(false)");
-  expect(componentSource).toContain("const diamondSsaaActive = Boolean(setDiamondSupersamplingSettled?.(true))");
+  expect(componentSource).toContain("const diamondSsaaActive = false;");
   expect(controlsSource).toContain("gemFxaaEnabled: false");
   expect(controlsSource).toContain("diamondSsaaEnabled: false");
   expect(architectureSource).toContain('id: "diamond-ssaa"');
@@ -499,9 +499,10 @@ test("Aurum exposes diamond-only AA and SSAA as independent modules", () => {
   expect(postSource).toContain("#include <tonemapping_fragment>");
   expect(componentSource).toContain("&& !diamondSupersamplePass?.enabled");
   expect(componentSource).not.toContain("renderDiamondSupersampleOverlay?.(renderer)");
+  expect(componentSource).not.toContain("composer.render();");
   expect(postSource).toContain("const ssaaEnabled=false;");
   expect(postSource).not.toContain("composer.addPass(diamondSupersampleCompositePass)");
-  expect(componentSource).toContain("if (useLiveGemAa) composer.render();");
+  expect(componentSource).toContain('const activeToneAuditPath = "direct";');
   expect(componentSource).not.toContain("renderDiamondSupersampleOverlay?.(renderer)");
   expect(componentSource).not.toContain("const interactionDprCap = liveDiamondAaEnabled && runtimeBudget.tier === \"web\"");
   expect(postSource).toContain("ensureDiamondSupersampleMaskTarget");
@@ -592,7 +593,7 @@ test("diamond AA stays masked in interactive and settled preview modes", () => {
 });
 
 
-test("standard image export reproduces the LIVE gem-mask and FXAA composer", () => {
+test("standard image export keeps retired diamond FXAA and SSAA disabled", () => {
   const componentSource = readFileSync("src/components/AurumRender.tsx", "utf8");
   const exportStart = componentSource.indexOf("exportPNG:async");
   const exportEnd = componentSource.indexOf("exportGLB:", exportStart);
@@ -602,6 +603,8 @@ test("standard image export reproduces the LIVE gem-mask and FXAA composer", () 
   expect(exportBlock).toContain("liveFastPathRef.current=false");
   expect(exportBlock).toContain("...(diamondSupersamplePass?.enabled ? [diamondSupersamplePass] : [])");
   expect(exportBlock).toContain("...(fxaaPass?.enabled ? [fxaaPass] : [])");
+  expect(postSource).toContain("const fxaaEnabled=false;");
+  expect(postSource).toContain("const ssaaEnabled=false;");
   expect(exportBlock).toContain("composer.setPixelRatio?.(1)");
   expect(exportBlock).toContain("composer.setSize?.(renderWidth, renderHeight)");
   expect(exportBlock).toContain("resolution?.set?.(1 / renderWidth, 1 / renderHeight)");
