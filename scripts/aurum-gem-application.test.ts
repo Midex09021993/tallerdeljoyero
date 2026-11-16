@@ -407,7 +407,7 @@ test("diamond-only post composites preserve every pixel outside the diamond mask
 test("diamond SSAA scale cap is updated through the pipeline-owned state", () => {
   const source = readFileSync("src/lib/aurum/post.ts", "utf8");
   expect(source).toContain("setScaleCap(cap:number)");
-  expect(source).toContain("diamondSupersampleScaleCap=Math.max(1,Math.min(2,Number(settledCap)||1))");
+  expect(source).toContain("diamondSupersampleScaleCap=Math.max(1,Math.min(2.2,Number(settledCap)||1))");
   expect(source).toContain("diamondSupersamplePass?.setScaleCap?.(diamondSupersamplingSettled?diamondSupersampleScaleCap:diamondLiveSupersampleScaleCap)");
   expect(source).not.toContain("diamondSupersampleScaleCap=THREE.MathUtils");
 });
