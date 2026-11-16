@@ -1726,6 +1726,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
 
       const aplicarGema = (g:GemaConfig, objetivo?:any, aplicarTodas=false, renderImmediately=true) => {
         const target=objetivo||parteActiva;
+        const isDiamondSelection=String(g?.familia??"").toLocaleLowerCase()==="diamante";
         let resolvedTargets:any[]=[];
         const applied=applyAurumGemToTarget(
           target,
@@ -1735,11 +1736,17 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           aplicarTodas,
           (targets:any[])=>{
             resolvedTargets=targets;
-            // Snapshot the exact resolved meshes before their materials are replaced.
+            // A diamond catalog switch must not wait for an appearance animation:
+            // cancel any previous blend and apply the new optical profile directly.
             gemTransitionRef.current?.cancel?.();
             gemTransitionRef.current=null;
             resolvedTargets.forEach((mesh:any)=>{
-              mesh.userData={...(mesh.userData??{}),aurumGemTransitionSnapshot:captureAurumGemTransitionState(mesh)};
+              const next={...(mesh.userData??{})};
+              delete next.aurumGemTransitionSnapshot;
+              if(!isDiamondSelection){
+                next.aurumGemTransitionSnapshot=captureAurumGemTransitionState(mesh);
+              }
+              mesh.userData=next;
             });
           },
         );
