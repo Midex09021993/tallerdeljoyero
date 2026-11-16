@@ -270,6 +270,10 @@ export async function createAurumPostPipeline(
       }
       return diamondSupersampleMaskTarget;
     };
+    const activeRendererAntialiasEnabled=()=>{
+      try{return renderer.getContext?.()?.getContextAttributes?.()?.antialias===true;}
+      catch{return false;}
+    };
     const ensureDiamondFxaaBeautyTarget=(width:number,height:number)=>{
       const targetWidth=Math.max(1,Math.floor(width));
       const targetHeight=Math.max(1,Math.floor(height));
@@ -277,6 +281,16 @@ export async function createAurumPostPipeline(
         diamondFxaaBeautyTarget=new THREE.WebGLRenderTarget(targetWidth,targetHeight,{
           format:THREE.RGBAFormat,type:THREE.HalfFloatType,depthBuffer:true,stencilBuffer:false
         });
+        const contextAntialias=activeRendererAntialiasEnabled();
+        const maxSamples=Math.max(0,Number(renderer.capabilities?.maxSamples)||0);
+        // Match the canvas' MSAA when the default framebuffer uses it, so the
+        // offscreen redirect cannot silently degrade metal or prong edges.
+        diamondFxaaBeautyTarget.samples=contextAntialias?Math.min(4,maxSamples):0;
+        if(contextAntialias&&diamondFxaaBeautyTarget.samples<1){
+          diamondFxaaBeautyTarget.dispose();
+          diamondFxaaBeautyTarget=null;
+          throw new Error("FXAA nativo requiere conservar el MSAA del framebuffer; no hay muestras compatibles.");
+        }
         diamondFxaaBeautyTarget.texture.minFilter=THREE.NearestFilter;
         diamondFxaaBeautyTarget.texture.magFilter=THREE.NearestFilter;
         diamondFxaaBeautyTarget.texture.generateMipmaps=false;
@@ -885,7 +899,7 @@ export async function createAurumPostPipeline(
         // Stronger, lower-threshold filtering is confined to the gemstone mask.
         // This improves the girdle silhouette without touching metal pixels.
         strength:{value:0.76},
-        edgeThreshold:{value:0.18},
+        edgeThreshold:{value:0.0312},
       },
       vertexShader:`varying vec2 vUv; void main(){vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
       fragmentShader:`#include <colorspace_pars_fragment>
@@ -1372,8 +1386,8 @@ export async function createAurumPostPipeline(
     diamondSupersamplingSettled=!next;
     diamondSupersamplePass?.setScaleCap?.(next?diamondLiveSupersampleScaleCap:diamondSupersampleScaleCap);
     const postControls=getAurumPostControls();
-    // Apply the active live/settled supersampling cap before selecting the
-    // diamond-only SSAA path; masked FXAA remains the capability fallback.
+    // Apply the active live/settled supersampling cap only to the independent
+    // SSAA path; native-resolution FXAA does not consume that scale.
     applyDiamondPostModules(postControls);
     // Preserve metal pixels: Surface Edge AA is deliberately excluded.
     if(surfaceEdgeAaPass) surfaceEdgeAaPass.enabled=false;
