@@ -144,13 +144,13 @@ export function prepareAurumDiamondBvhExperiment(
     adaptiveRayEpsilon = Number.isFinite(diagonal) && diagonal > 0
       ? Math.max(1e-7, Math.min(1e-3, diagonal * 1e-5))
       : 1e-4;
-    const rayOffsetPattern = /position\\s*=\\s*hitPosition\\s*\\+\\s*ray\\s*\\*\\s*0\\.0001\\s*;/;
+    const rayOffsetPattern = /position\s*=\s*hitPosition\s*\+\s*ray\s*\*\s*0\.0001\s*;/;
     if (rayOffsetPattern.test(material.fragmentShader)) {
-      const precisionPattern = /(precision\\s+highp\\s+float\\s*;)/;
+      const precisionPattern = /(precision\s+highp\s+float\s*;)/;
       if (precisionPattern.test(material.fragmentShader)) {
         material.fragmentShader = material.fragmentShader.replace(
           precisionPattern,
-          `$1\\n uniform float aurumRayEpsilon;`,
+          `$1\n uniform float aurumRayEpsilon;`,
         ).replace(rayOffsetPattern, "position = hitPosition + ray * aurumRayEpsilon;");
         material.uniforms.aurumRayEpsilon = { value: adaptiveRayEpsilon };
         material.needsUpdate = true;
