@@ -790,14 +790,9 @@ export async function createAurumPostPipeline(
     // into gemstone edges. It is enabled only for settled/high-quality frames.
     fxaaPass.enabled=false;
     composer.addPass(gemMaskPass);
-    // diamondSupersampleCompositePass is invoked directly as a masked overlay,
-    // never as a full-frame composer pass.
-    composer.addPass(fxaaPass);
-    // Keep the strict order: base beauty -> high-res scene -> mask -> selective
-    // composite -> optional masked FXAA. Other scene pixels pass through.
-    const compositeIndex=composer.passes.indexOf(diamondSupersampleCompositePass);
-    composer.passes.splice(compositeIndex,1);
-    composer.passes.splice(composer.passes.indexOf(gemMaskPass)+1,0,diamondSupersampleCompositePass);
+    // Diamond SSAA and FXAA are intentionally detached from EffectComposer.
+    // Their legacy implementations remain suspended until a separate-target
+    // compositor can preserve the base frame outside the diamond mask.
     if (diamondTaaSavePass && diamondTaaCompositePass && taaPass) {
       composer.addPass(diamondTaaSavePass);
       composer.addPass(diamondTaaCompositePass);
@@ -1121,42 +1116,10 @@ export async function createAurumPostPipeline(
     }
   };
 
-  const renderDiamondSupersampleOverlay=(activeRenderer:any)=>{
-    if(!diamondSupersamplePass?.enabled || !diamondSupersampleCompositePass || !gemMaskPass?.enabled || !gemMaskPass?.hasDiamondMeshes) return false;
-    const previousTarget=activeRenderer.getRenderTarget();
-    const previousAutoClear=activeRenderer.autoClear;
-    const previousViewport={x:0,y:0,z:0,w:0,copy(value:any){this.x=value.x;this.y=value.y;this.z=value.z;this.w=value.w;return this;}};
-    const previousScissor={x:0,y:0,z:0,w:0,copy(value:any){this.x=value.x;this.y=value.y;this.z=value.z;this.w=value.w;return this;}};
-    const previousScissorTest=activeRenderer.getScissorTest?.()??false;
-    activeRenderer.getViewport(previousViewport);
-    activeRenderer.getScissor(previousScissor);
-    try{
-      // Match the native renderer's exposure for the floating-point overlay.
-      diamondSupersampleCompositePass.material.uniforms.toneMappingExposure.value=activeRenderer.toneMappingExposure??1;
-      // Refresh the base-resolution mask, render the high-resolution optical
-      // reference, then draw only fragments belonging to that mask on top of
-      // the already-rendered direct beauty frame.
-      gemMaskPass.render(activeRenderer);
-      diamondSupersamplePass.render(activeRenderer);
-      activeRenderer.setRenderTarget(null);
-      activeRenderer.setViewport(0,0,Math.max(1,renderer.domElement.width),Math.max(1,renderer.domElement.height));
-      activeRenderer.setScissorTest(false);
-      activeRenderer.autoClear=false;
-      diamondSupersampleCompositePass.renderToScreen=true;
-      diamondSupersampleCompositePass.render(activeRenderer,null,null,0,false);
-      return true;
-    }catch(error){
-      console.warn("[AURUM][DIAMOND SSAA] Overlay composition failed; direct beauty frame retained.",error);
-      return false;
-    }finally{
-      diamondSupersampleCompositePass.renderToScreen=true;
-      activeRenderer.setRenderTarget(previousTarget);
-      activeRenderer.setViewport(previousViewport.x,previousViewport.y,previousViewport.z,previousViewport.w);
-      activeRenderer.setScissor(previousScissor.x,previousScissor.y,previousScissor.z,previousScissor.w);
-      activeRenderer.setScissorTest(previousScissorTest);
-      activeRenderer.autoClear=previousAutoClear;
-    }
-  };
+  // Legacy direct-framebuffer SSAA is deliberately retired. It must never
+  // draw over the live beauty buffer; the replacement will use an independent
+  // destination target and an explicit base-frame passthrough.
+  const renderDiamondSupersampleOverlay=(_activeRenderer:any)=>false;
 
   const resetTemporalAccumulation=()=>{
     if(!taaPass)return;
@@ -1215,7 +1178,7 @@ export async function createAurumPostPipeline(
     // Keep the TAA request useful in LIVE by using the same diamond-masked
     // spatial FXAA as a motion-safe fallback, then restore real TAA at rest.
     const taaMotionFallback=diamondMaskReady && controls?.diamondTaaEnabled===true && temporalMotionActive;
-    const fxaaEnabled=diamondMaskReady && (controls?.gemFxaaEnabled===true || taaMotionFallback);
+    const fxaaEnabled=false;
     const taaEnabled=diamondMaskReady && controls?.diamondTaaEnabled===true && !temporalMotionActive && Boolean(taaPass && diamondTaaSavePass && diamondTaaCompositePass);
 
     if(gemMaskPass) gemMaskPass.enabled=maskEnabled && hasMaskTarget;
