@@ -348,12 +348,26 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [diamondPostControls, setDiamondPostControls] = useState<AurumPostControls>({gemMaskEnabled:false,diamondSsaaEnabled:false,gemFxaaEnabled:false,diamondTaaEnabled:false,surfaceEdgeAaEnabled:false,taaEnabled:false});
   useEffect(() => { setDiamondPostControls(getAurumPostControls()); }, []);
   const [diamondControlDiagnostics, setDiamondControlDiagnostics] = useState<any>(null);
+  const gemMaskDiagnosticsRef = useRef<any>(null);
   useEffect(() => {
     const refreshDiagnostics = () => {
       setDiamondControlDiagnostics({
         bvh: diamondBvhRuntimeRef.current?.diagnostics?.() ?? null,
         micro: diamondMicroPipelineRef.current?.diagnostics?.() ?? null,
+        gemMask: gemMaskDiagnosticsRef.current?.diagnostics?.() ?? null,
       });
+    };
+    const requestGemMaskDiagnostics = () => {
+      gemMaskDiagnosticsRef.current?.requestDiagnostics?.();
+      refreshDiagnostics();
+      viewerLoopRef.current?.invalidate?.();
+    };
+    const handleGemMaskDiagnosticsReady = (event: Event) => {
+      const detail=(event as CustomEvent<any>).detail??{};
+      setDiamondControlDiagnostics((current:any)=>({
+        ...(current??{}),
+        gemMask:{...(gemMaskDiagnosticsRef.current?.diagnostics?.()??{}),...detail},
+      }));
     };
     const handleDiamondControl = (event: Event) => {
       const detail = (event as CustomEvent<{type?:string;enabled?:boolean}>).detail ?? {};
@@ -370,10 +384,12 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       viewerLoopRef.current?.invalidate?.();
     };
     window.addEventListener("aurum-diamond-control", handleDiamondControl);
-    window.addEventListener("aurum-diamond-control-refresh", refreshDiagnostics);
+    window.addEventListener("aurum-diamond-control-refresh", requestGemMaskDiagnostics);
+    window.addEventListener("aurum-gem-mask-diagnostics-ready", handleGemMaskDiagnosticsReady);
     return () => {
       window.removeEventListener("aurum-diamond-control", handleDiamondControl);
-      window.removeEventListener("aurum-diamond-control-refresh", refreshDiagnostics);
+      window.removeEventListener("aurum-diamond-control-refresh", requestGemMaskDiagnostics);
+      window.removeEventListener("aurum-gem-mask-diagnostics-ready", handleGemMaskDiagnosticsReady);
     };
   }, []);
   const [cadTreeItems,setCadTreeItems] = useState<Array<{uuid:string;name:string;type:string;layer:string;visible:boolean;sourceId:string|null}>>([]);
@@ -1011,6 +1027,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         renderQuality
       );
       resetTemporalAccumulationRef.current = resetTemporalAccumulation;
+      gemMaskDiagnosticsRef.current = gemMaskPass;
       // Initialize the optional diamond-only SSAA module in its settled state.
       setDiamondSupersamplingSettled?.(true);
 
@@ -4941,7 +4958,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                   <div><strong className="text-base tabular-nums">{diamondControlDiagnostics.micro?.diamondMeshes??0}</strong><div className="text-[#77756f]">Mallas detectadas</div></div>
                   <div><strong className="text-base tabular-nums">{diamondControlDiagnostics.micro?.materialGroups??0}</strong><div className="text-[#77756f]">Grupos de material</div></div>
                 </div>
-                <div className="mt-2 text-[9px] text-[#77756f]">BVH diamante: {(diamondControlDiagnostics.bvh.diamondMeshes??0)>0?"activo":"sin entradas activas"} · Micro: {diamondControlDiagnostics.micro?.enabled?"activo":"inactivo"}</div>
+                <div className="mt-2 grid grid-cols-2 gap-2 border-t border-black/[.06] pt-2 text-[10px]">
+                  <div><strong className="text-sm tabular-nums">{diamondControlDiagnostics.gemMask?.diamondCandidates??0}</strong><div className="text-[#77756f]">Candidatos de máscara</div></div>
+                  <div><strong className="text-sm tabular-nums">{diamondControlDiagnostics.gemMask?.cachedCenterMeshes??0}</strong><div className="text-[#77756f]">Diamantes centrales</div></div>
+                  <div><strong className="text-sm tabular-nums">{diamondControlDiagnostics.gemMask?.maskPixels===null||diamondControlDiagnostics.gemMask?.maskPixels===undefined?"—":diamondControlDiagnostics.gemMask.maskPixels<0?"Error":diamondControlDiagnostics.gemMask.maskPixels.toLocaleString("es-PE")}</strong><div className="text-[#77756f]">Píxeles de máscara</div></div>
+                  <div><strong className="text-sm tabular-nums">{diamondControlDiagnostics.gemMask?.maskCoveragePercent===null||diamondControlDiagnostics.gemMask?.maskCoveragePercent===undefined?"—":String(diamondControlDiagnostics.gemMask.maskCoveragePercent)+"%"}</strong><div className="text-[#77756f]">Cobertura GPU</div></div>
+                </div>
+                <div className="mt-2 text-[9px] text-[#77756f]">BVH diamante: {(diamondControlDiagnostics.bvh.diamondMeshes??0)>0?"activo":"sin entradas activas"} · Micro: {diamondControlDiagnostics.micro?.enabled?"activo":"inactivo"} · Máscara: {(diamondControlDiagnostics.gemMask?.cachedCenterMeshes??0)>0?"centro clasificado":"sin centro clasificado"}</div>
+                <div className="mt-1 text-[9px] leading-relaxed text-[#8a857b]">Pulsa Actualizar para solicitar una lectura GPU puntual. La lectura no se ejecuta en cada fotograma.</div>
               </>:<p className="text-[10px] text-[#8a857b]">{archivo?"Runtime aún no disponible o pendiente de inicialización. Pulsa Actualizar tras cargar el modelo.":"Carga un modelo para consultar los sistemas en ejecución."}</p>}
             </section>
           </div>}
