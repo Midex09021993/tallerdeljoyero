@@ -22,9 +22,8 @@ const DEFAULTS: AurumPostControls = {
 
 const normalize = (value: any): AurumPostControls => ({
   gemMaskEnabled: value?.gemMaskEnabled === true,
-  // Retired until the independent diamond-only compositor is validated.
-  diamondSsaaEnabled: false,
-  gemFxaaEnabled: false,
+  diamondSsaaEnabled: value?.diamondSsaaEnabled === true,
+  gemFxaaEnabled: value?.gemFxaaEnabled === true,
   diamondTaaEnabled: value?.diamondTaaEnabled === true,
   surfaceEdgeAaEnabled: false,
   taaEnabled: false,

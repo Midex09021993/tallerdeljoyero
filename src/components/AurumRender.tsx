@@ -2408,21 +2408,15 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         // Initialize the selective diamond AA after the model is in the scene.
         // This makes the first settled frame match the later camera-rest state,
         // without requiring the user to orbit the model to activate the passes.
-        const initialDiamondSsaaActive = Boolean(setDiamondSupersamplingSettled?.(true));
+        setDiamondSupersamplingSettled?.(true);
+        const initialDiamondSsaaActive = Boolean(diamondSupersamplePass?.enabled && diamondSupersampleCompositePass?.enabled);
         const initialDiamondTaaActive = Boolean(idleTaaPass?.enabled && diamondTaaSavePass?.enabled && diamondTaaCompositePass?.enabled);
-        const initialDiamondFxaaActive = Boolean(fxaaPass?.enabled && gemMaskPass?.hasDiamondMeshes);
-        const initialGemMaskActive = Boolean(gemMaskPass?.enabled);
-        const initialDiamondBeautyPasses = new Set([
-          renderPass,
-          ...(initialDiamondTaaActive ? [diamondTaaSavePass, idleTaaPass, diamondTaaCompositePass] : []),
-          ...(initialGemMaskActive ? [gemMaskPass] : []),
-          ...(initialDiamondFxaaActive ? [fxaaPass] : []),
-          outputPass,
-        ]);
+        const initialDiamondFxaaActive = Boolean(fxaaPass?.enabled && gemMaskPass?.enabled && gemMaskPass?.hasDiamondMeshes);
+        const initialDiamondBeautyPasses = new Set([renderPass, ...(initialDiamondTaaActive ? [diamondTaaSavePass, idleTaaPass, diamondTaaCompositePass] : []), outputPass]);
         ((composer as any)?.passes ?? []).forEach((pass: any) => {
           pass.enabled = initialDiamondBeautyPasses.has(pass);
         });
-        liveFastPathRef.current = !(initialDiamondFxaaActive || initialDiamondTaaActive);
+        liveFastPathRef.current = true;
         console.info("[AURUM][DIAMOND][INITIAL_QUALITY]", {
           hasCenterDiamond: Boolean(gemMaskPass?.hasDiamondMeshes),
           gemMaskEnabled: Boolean(gemMaskPass?.enabled),
@@ -3343,6 +3337,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             }
             if (composer && options.depthOfField) composer.render();
             else renderer.render(escena,camara);
+            renderDiamondSupersampleOverlay?.(renderer);
             const captureComposerBuffer = options.depthOfField && composer ? { width: renderer.domElement.width, height: renderer.domElement.height } : null;
             const captureTaaPass = null as null | { enabled?: boolean; accumulate?: boolean; sampleLevel?: number; accumulateIndex?: number };
             console.info("[AURUM][PNG CAPTURE DIAGNOSTICS]", {
@@ -3898,7 +3893,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           // The live beauty frame always uses the native renderer. No
           // composer, FXAA or SSAA path may rewrite full-scene pixels until
           // the isolated diamond compositor passes pixel-diff validation.
-          const activeToneAuditPath = "direct";
+          const diamondOverlayRequested = Boolean(gemMaskPass?.enabled && diamondSupersamplePass?.enabled && diamondSupersampleCompositePass?.enabled);
+          const activeToneAuditPath = diamondOverlayRequested ? "direct+diamond-overlay" : "direct";
           if (toneAuditEnabled && activeToneAuditPath !== lastToneAuditPath) {
             lastToneAuditPath = activeToneAuditPath;
             console.info("[AURUM][TONE_AUDIT][PATH]", {
@@ -3914,8 +3910,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           // Route the live viewport through the minimal gem-AA composer only when both
           // selective passes are active; otherwise retain the direct fast path.
           renderer.render(escena,camara);
-          // Legacy direct-framebuffer SSAA was retired; keep the live beauty
-          // render untouched until the independent diamond compositor exists.
+          // Detached diamond reconstruction only composites the classified
+          // diamond pixels over the untouched beauty frame.
+          if(diamondOverlayRequested) renderDiamondSupersampleOverlay?.(renderer);
           const renderCpuMs = performance.now() - renderStartedAt;
           const measuredFrameMs = performance.now() - frameStartedAt;
           perfTick({
@@ -3946,11 +3943,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // Keep the mask/FXAA path available in every runtime tier. SSAA
             // remains budget-capped separately so low-end devices still get
             // a responsive masked edge treatment instead of losing all AA.
-            const liveDiamondAaEnabled = false;
+            const liveDiamondAaEnabled = Boolean(livePostControls.gemFxaaEnabled && hasCenterDiamond);
             // Enable a reduced 1.15x–1.5x reference render while moving.
             // Its full-scene input preserves transmission, but the output is
             // composited only inside the center-diamond mask.
-            const liveDiamondSsaaActive = false;
+            const liveDiamondSsaaActive = Boolean(livePostControls.diamondSsaaEnabled && hasCenterDiamond);
             setDiamondSupersamplingSettled?.(false);
             // Diamond SSAA must never resize the full-scene drawing buffer.
             // Keep the renderer and composer at the DPR selected by the normal
@@ -3972,25 +3969,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             }
             // The existing Gem Mask identifies only the center-diamond meshes.
             // Enable its masked FXAA pair in LIVE without filtering metal pixels.
-            const liveDiamondAaPasses = liveDiamondAaEnabled
-              ? [gemMaskPass, ...(fxaaPass?.enabled ? [fxaaPass] : [])]
-              : [];
-            const liveBeautyPasses = new Set([
-              renderPass,
-              ...liveDiamondAaPasses,
-              outputPass,
-            ]);
+            const liveBeautyPasses = new Set([renderPass, outputPass]);
             const interactionPasses = ((composer as any)?.passes ?? []) as any[];
             interactionPasses.forEach((pass) => { pass.enabled = liveBeautyPasses.has(pass); });
-            if (gemMaskPass) gemMaskPass.enabled = liveDiamondSsaaActive || (liveDiamondAaEnabled && !liveDiamondSsaaActive);
-            if (diamondSupersamplePass) diamondSupersamplePass.enabled = liveDiamondSsaaActive;
-            if (diamondSupersampleCompositePass) diamondSupersampleCompositePass.enabled = liveDiamondSsaaActive;
-            if (fxaaPass) {
-              // Keep perimeter-only FXAA active alongside SSAA when enabled by Post Engine.
-              fxaaPass.enabled = false;
-              const strength = fxaaPass.material?.uniforms?.strength;
-              if (strength) strength.value = liveDiamondAaEnabled ? 0.34 : 0.65;
-            }
+            // Detached diamond passes are configured by setTemporalMotion() and
+            // applyDiamondPostModules(); they never enter the scene-wide composer.
             console.info("[AURUM][DIAMOND][LIVE_QUALITY]", {
               hasCenterDiamond,
               gemMaskEnabled: Boolean(gemMaskPass?.enabled),
@@ -4015,18 +3998,15 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // settled center diamond before the final pass set is assembled.
             setTemporalMotion?.(false);
             // Resume selective 2x diamond supersampling only after camera motion ends.
-            const diamondSsaaActive = false;
-            setDiamondSupersamplingSettled?.(false);
+            setDiamondSupersamplingSettled?.(true);
+            const diamondSsaaActive = Boolean(diamondSupersamplePass?.enabled && diamondSupersampleCompositePass?.enabled);
             // Keep the settled viewport on the same minimal beauty path. TAA, Bloom,
             // DOF, SSR and full-surface edge filtering remain disabled.
             // Restore the ordinary settled camera/pass state only. SSAA is
             // isolated to its own targets and must not alter full-scene DPR.
             // Gem Mask + FXAA disabled: retain only the ordinary beauty output.
             const settledDiamondTaaActive = Boolean(idleTaaPass?.enabled && diamondTaaSavePass?.enabled && diamondTaaCompositePass?.enabled);
-            const settledGemMaskActive = false;
-            if (gemMaskPass) gemMaskPass.enabled = false;
-            if (fxaaPass) fxaaPass.enabled = false;
-            const settledBeautyPasses = new Set([renderPass, ...(settledDiamondTaaActive ? [diamondTaaSavePass, idleTaaPass, diamondTaaCompositePass] : []), ...(settledGemMaskActive ? [gemMaskPass] : []), ...(fxaaPass?.enabled ? [fxaaPass] : []), outputPass]);
+            const settledBeautyPasses = new Set([renderPass, ...(settledDiamondTaaActive ? [diamondTaaSavePass, idleTaaPass, diamondTaaCompositePass] : []), outputPass]);
             const settledPasses = ((composer as any)?.passes ?? []) as any[];
             settledPasses.forEach((pass) => { pass.enabled = settledBeautyPasses.has(pass); });
             if (diamondSupersamplePass) diamondSupersamplePass.enabled = diamondSsaaActive;
