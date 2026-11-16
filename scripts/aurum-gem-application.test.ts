@@ -242,7 +242,7 @@ test("diamond SSAA keeps the auxiliary render linear HDR and applies native tone
   expect(post).toContain("type:THREE.HalfFloatType");
 });
 
-test("Gem Mask exposes an independent diagnostic overlay without enabling AA", () => {
+test("Gem Mask stays internal after visual validation and never tints the beauty render", () => {
   const post = readFileSync("src/lib/aurum/post.ts", "utf8");
   expect(post).toContain("gemMaskDiagnosticCamera.position.z=1;");
   expect(post).toContain("gemMaskDiagnosticMaterial.uniforms[\"uMask\"]!.value=gemMaskTarget.texture");
@@ -251,12 +251,26 @@ test("Gem Mask exposes an independent diagnostic overlay without enabling AA", (
   expect(post).toContain("gemMaskDiagnosticScene");
   expect(post).toContain("coverage<0.5) discard");
   expect(component).toContain("gemMaskPass.enabled=getAurumPostControls().gemMaskEnabled");
-  expect(component).toContain("gemMaskPass.renderDiagnosticOverlay?.(renderer)");
+  expect(component).not.toContain("gemMaskPass.renderDiagnosticOverlay?.(renderer)");
   expect(component).toContain("gemMaskDiagnosticsRef.current = gemMaskPass;");
   expect(component).toContain("requestGemMaskDiagnostics");
   expect(component).toContain("aurum-gem-mask-diagnostics-ready");
   expect(component).toContain("diamondControlDiagnostics.gemMask?.maskCoveragePercent");
   expect(component).toContain("viewerLoopRef.current?.invalidate?.();");
+});
+
+test("only masked diamond FXAA can be enabled; SSAA and TAA remain fail-closed", () => {
+  const controls = readFileSync("src/lib/aurum/post-engine-controls.ts", "utf8");
+  const post = readFileSync("src/lib/aurum/post.ts", "utf8");
+  const render = readFileSync("src/components/AurumRender.tsx", "utf8");
+  expect(controls).toContain("gemFxaaEnabled: value?.gemMaskEnabled === true && value?.gemFxaaEnabled === true");
+  expect(controls).toContain("diamondSsaaEnabled: false");
+  expect(controls).toContain("diamondTaaEnabled: false");
+  expect(post).toContain("const fxaaEnabled=diamondMaskReady && fxaaRequested && canReconstruct;");
+  expect(post).toContain("if(fxaaPass) fxaaPass.enabled=fxaaEnabled;");
+  expect(render).toContain('item.key==="gemFxaaEnabled"?setAurumPostControls({gemFxaaEnabled:!enabled})');
+  expect(render).toContain('item.key==="diamondSsaaEnabled"||item.key==="diamondTaaEnabled"');
+  expect(render).toContain("diamondSupersamplePass.renderFxaa(activeRenderer,Boolean(fxaaPass?.enabled))");
 });
 
 test("diamond perimeter AA uses the stronger masked edge profile", () => {
