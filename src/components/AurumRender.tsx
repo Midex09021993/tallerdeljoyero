@@ -3344,7 +3344,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             const captureDiamondSsaa=Boolean(diamondSupersamplePass?.enabled&&diamondSupersampleCompositePass?.enabled&&gemMaskPass?.enabled&&gemMaskPass?.hasDiamondMeshes);
             if (composer && options.depthOfField) composer.render();
             else renderer.render(escena,camara);
-            if(captureDiamondSsaa&&!options.depthOfField) renderDiamondSupersampleOverlay?.(renderer);
             const captureComposerBuffer = options.depthOfField && composer ? { width: renderer.domElement.width, height: renderer.domElement.height } : null;
             const captureTaaPass = null as null | { enabled?: boolean; accumulate?: boolean; sampleLevel?: number; accumulateIndex?: number };
             console.info("[AURUM][PNG CAPTURE DIAGNOSTICS]", {
@@ -3923,16 +3922,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           // selective passes are active; otherwise retain the direct fast path.
           if (useLiveGemAa) composer.render();
           else renderer.render(escena,camara);
-          // SSAA is a separate direct-framebuffer overlay. It never routes the
-          // beauty scene through EffectComposer and discards every fragment
-          // outside the center-diamond mask.
-          const diamondSsaaOverlayActive=Boolean(
-            diamondSupersamplePass?.enabled
-            && diamondSupersampleCompositePass?.enabled
-            && gemMaskPass?.enabled
-            && gemMaskPass?.hasDiamondMeshes
-          );
-          if(diamondSsaaOverlayActive) renderDiamondSupersampleOverlay?.(renderer);
+          // Legacy direct-framebuffer SSAA was retired; keep the live beauty
+          // render untouched until the independent diamond compositor exists.
           const renderCpuMs = performance.now() - renderStartedAt;
           const measuredFrameMs = performance.now() - frameStartedAt;
           perfTick({
