@@ -273,11 +273,11 @@ export async function createAurumDiamondBvhRuntime(options: {
       mesh.userData = {
         ...(mesh.userData ?? {}),
         aurumDiamondMicroTier: screenTier,
-        aurumDiamondMicroCenterProtected: screenTier === "brilliant" && (
-          Boolean(mesh.userData?.aurumDiamondCenter || mesh.userData?.aurumDiamondIsCenter)
-          || /center|central|main|principal/i.test(String(mesh.userData?.aurumDiamondRole ?? ""))
-          || (screenTiers.size > 0 && screenTiers.get(mesh) === "brilliant")
-        ),
+        // Preserve the screen-space pipeline's explicit center decision.
+        // A large secondary stone may also be "brilliant" without being the center.
+        aurumDiamondMicroCenterProtected: Boolean(mesh.userData?.aurumDiamondMicroCenterProtected)
+          || Boolean(mesh.userData?.aurumDiamondCenter || mesh.userData?.aurumDiamondIsCenter)
+          || /center|central|main|principal/i.test(String(mesh.userData?.aurumDiamondRole ?? "")),
       };
       const isSmallSecondaryDiamond = family === "diamante" && screenTier !== "brilliant";
       const isNeutralMicroDiamond = family === "diamante" && screenTier === "micro" && !isBlueDiamond && !isPinkDiamond;
