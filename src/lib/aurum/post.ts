@@ -417,7 +417,7 @@ export async function createAurumPostPipeline(
       const originalMaterials:any[]=[];
       try{
         activeRenderer.setRenderTarget(target);
-        activeRenderer.setViewport(0,0,target.width,target.height);
+        /* target viewport is applied by setRenderTarget; keep the renderer DPR out of this size */
         activeRenderer.setScissorTest(false);
         activeRenderer.setClearColor(0x000000,0);
         activeRenderer.autoClear=false;
@@ -479,7 +479,7 @@ export async function createAurumPostPipeline(
           const previousClearAlpha=activeRenderer.getClearAlpha();
           try{
             activeRenderer.setRenderTarget(gemMaskTarget);
-            activeRenderer.setViewport(0,0,gemMaskTarget.width,gemMaskTarget.height);
+            
             activeRenderer.setScissorTest(false);
             activeRenderer.setClearColor(0x000000,0);
             activeRenderer.autoClear=false;
@@ -588,7 +588,7 @@ export async function createAurumPostPipeline(
         activeRenderer.getClearColor(previousClearColor);
         try{
           activeRenderer.setRenderTarget(activeTarget);
-          activeRenderer.setViewport(0,0,activeTarget.width,activeTarget.height);
+          
           activeRenderer.setScissorTest(false);
           activeRenderer.autoClear=false;
           // Render the complete optical scene at auxiliary resolution so
@@ -1177,7 +1177,7 @@ export async function createAurumPostPipeline(
       const previousScissorTest=activeRenderer.getScissorTest?.()??false;
       try{
         activeRenderer.setRenderTarget(null);
-        activeRenderer.setViewport(0,0,Math.max(1,activeRenderer.domElement.width),Math.max(1,activeRenderer.domElement.height));
+        
         activeRenderer.setScissorTest(false);
         activeRenderer.autoClear=false;
         diamondSupersampleCompositePass.render(activeRenderer,null,null,0,false);

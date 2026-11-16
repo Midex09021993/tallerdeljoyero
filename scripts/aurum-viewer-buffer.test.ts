@@ -565,6 +565,8 @@ test("diamond SSAA never changes the full-scene renderer or composer DPR during 
   expect(motionBlock).not.toContain("composer?.setPixelRatio?.(");
   expect(settledBlock).not.toContain("renderer.setPixelRatio(");
   expect(settledBlock).not.toContain("composer?.setPixelRatio?.(");
+  expect(postSource).not.toContain("setViewport(0,0,target.width,target.height)");
+  expect(postSource).not.toContain("setViewport(0,0,activeTarget.width,activeTarget.height)");
 });
 
 test("diamond AA stays masked in interactive and settled preview modes", () => {
