@@ -11,7 +11,7 @@ import { logAurumEdgeQualityDiagnostics } from "./edge-diagnostics";
  */
 export function configureAurumEdgeQuality(renderer: any, composer: any) {
   const capabilities = inspectAurumEdgeCapabilities(renderer, 4);
-  const msaa = configureAurumComposerMsaa(renderer, composer, 0);
+  const msaa = configureAurumComposerMsaa(renderer, composer, 4);
   logAurumEdgeQualityDiagnostics(capabilities, msaa);
   return { capabilities, msaa };
 }
