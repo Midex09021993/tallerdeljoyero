@@ -38,6 +38,7 @@ export async function createAurumPostPipeline(
   const { RenderPass } = await import("three/examples/jsm/postprocessing/RenderPass.js");
   const { SSAOPass } = await import("three/examples/jsm/postprocessing/SSAOPass.js");
 
+  let THREE:any=null;
   let composer:any=null;
   let renderPass:any=null;
   let taaPass:any=null;
@@ -76,6 +77,36 @@ export async function createAurumPostPipeline(
       ? 1
       : Math.max(1,Math.min(diamondSupersampleScaleCap,Math.sqrt(8_500_000/Math.max(1,basePixels))));
     return diamondSupersampleScale>=1;
+  };
+  const activeRendererAntialiasEnabled=()=>{
+    try{return renderer.getContext?.()?.getContextAttributes?.()?.antialias===true;}
+    catch{return false;}
+  };
+  const ensureDiamondFxaaBeautyTarget=(width:number,height:number)=>{
+    const targetWidth=Math.max(1,Math.floor(width));
+    const targetHeight=Math.max(1,Math.floor(height));
+    if(!diamondFxaaBeautyTarget){
+      diamondFxaaBeautyTarget=new THREE.WebGLRenderTarget(targetWidth,targetHeight,{
+        format:THREE.RGBAFormat,type:THREE.HalfFloatType,depthBuffer:true,stencilBuffer:false
+      });
+      const contextAntialias=activeRendererAntialiasEnabled();
+      const maxSamples=Math.max(0,Number(renderer.capabilities?.maxSamples)||0);
+      // Match the canvas' MSAA when the default framebuffer uses it, so the
+      // offscreen redirect cannot silently degrade metal or prong edges.
+      diamondFxaaBeautyTarget.samples=contextAntialias?Math.min(4,maxSamples):0;
+      if(contextAntialias&&diamondFxaaBeautyTarget.samples<1){
+        diamondFxaaBeautyTarget.dispose();
+        diamondFxaaBeautyTarget=null;
+        throw new Error("FXAA nativo requiere conservar el MSAA del framebuffer; no hay muestras compatibles.");
+      }
+      diamondFxaaBeautyTarget.texture.minFilter=THREE.NearestFilter;
+      diamondFxaaBeautyTarget.texture.magFilter=THREE.NearestFilter;
+      diamondFxaaBeautyTarget.texture.generateMipmaps=false;
+      diamondFxaaBeautyTarget.texture.colorSpace=THREE.NoColorSpace;
+    }else if(diamondFxaaBeautyTarget.width!==targetWidth||diamondFxaaBeautyTarget.height!==targetHeight){
+      diamondFxaaBeautyTarget.setSize(targetWidth,targetHeight);
+    }
+    return diamondFxaaBeautyTarget;
   };
 
   try {
@@ -219,7 +250,7 @@ export async function createAurumPostPipeline(
     composer.addPass(vignettePass);
 
     const { ShaderPass: FXAAShaderPass }=await import("three/examples/jsm/postprocessing/ShaderPass.js");
-    const THREE=await import("three");
+    THREE=await import("three");
     // Render a material-ID mask using existing Rhino metadata. The depth prepass
     // includes every object, while the color pass writes white only for gems.
     // This keeps foreground metal occlusion correct without touching materials.
@@ -269,36 +300,6 @@ export async function createAurumPostPipeline(
         diamondSupersampleCompositePass.material.uniforms.tDiamondHiResMask.value=diamondSupersampleMaskTarget.texture;
       }
       return diamondSupersampleMaskTarget;
-    };
-    const activeRendererAntialiasEnabled=()=>{
-      try{return renderer.getContext?.()?.getContextAttributes?.()?.antialias===true;}
-      catch{return false;}
-    };
-    const ensureDiamondFxaaBeautyTarget=(width:number,height:number)=>{
-      const targetWidth=Math.max(1,Math.floor(width));
-      const targetHeight=Math.max(1,Math.floor(height));
-      if(!diamondFxaaBeautyTarget){
-        diamondFxaaBeautyTarget=new THREE.WebGLRenderTarget(targetWidth,targetHeight,{
-          format:THREE.RGBAFormat,type:THREE.HalfFloatType,depthBuffer:true,stencilBuffer:false
-        });
-        const contextAntialias=activeRendererAntialiasEnabled();
-        const maxSamples=Math.max(0,Number(renderer.capabilities?.maxSamples)||0);
-        // Match the canvas' MSAA when the default framebuffer uses it, so the
-        // offscreen redirect cannot silently degrade metal or prong edges.
-        diamondFxaaBeautyTarget.samples=contextAntialias?Math.min(4,maxSamples):0;
-        if(contextAntialias&&diamondFxaaBeautyTarget.samples<1){
-          diamondFxaaBeautyTarget.dispose();
-          diamondFxaaBeautyTarget=null;
-          throw new Error("FXAA nativo requiere conservar el MSAA del framebuffer; no hay muestras compatibles.");
-        }
-        diamondFxaaBeautyTarget.texture.minFilter=THREE.NearestFilter;
-        diamondFxaaBeautyTarget.texture.magFilter=THREE.NearestFilter;
-        diamondFxaaBeautyTarget.texture.generateMipmaps=false;
-        diamondFxaaBeautyTarget.texture.colorSpace=THREE.NoColorSpace;
-      }else if(diamondFxaaBeautyTarget.width!==targetWidth||diamondFxaaBeautyTarget.height!==targetHeight){
-        diamondFxaaBeautyTarget.setSize(targetWidth,targetHeight);
-      }
-      return diamondFxaaBeautyTarget;
     };
     const depthOnlyMaterial=new THREE.MeshBasicMaterial({
       color:0x000000,side:THREE.DoubleSide,depthTest:true,depthWrite:true,colorWrite:false
