@@ -66,7 +66,7 @@ export async function createAurumPostPipeline(
   let diamondSupersampleScaleCap=2;
   let diamondLiveSupersampleScaleCap=1.5;
   let diamondSupersamplingSettled=true;
-  const diamondSsaaOptedIn=()=>typeof window!=="undefined" && new URLSearchParams(window.location.search).get("aurumDiamondSsaa")==="1";
+  const diamondSsaaEnabled=()=>typeof window==="undefined" || new URLSearchParams(window.location.search).get("aurumDiamondSsaa")!=="0";
   const updateDiamondSupersampleScale=()=>{
     const basePixels=diamondSupersampleBaseWidth*diamondSupersampleBaseHeight;
     diamondSupersampleScale=basePixels>8_500_000
@@ -671,7 +671,7 @@ export async function createAurumPostPipeline(
     // Edge AA is a settled-quality treatment: never add fullscreen filtering
     // work to the direct-render orbit path. Still captures may use it explicitly.
     const edgeAaEnabled=false; // FXAA remains off; preserve crisp internal facets.
-    const ssaaActive=diamondSsaaOptedIn() && Boolean(gemMaskPass?.hasDiamondMeshes)
+    const ssaaActive=diamondSsaaEnabled() && Boolean(gemMaskPass?.hasDiamondMeshes)
       && !isLowQuality && !["low","extreme"].includes(lastKnownBudgetTier)
       && Boolean(diamondSupersamplePass?.canRender?.());
     if(diamondSupersamplePass) diamondSupersamplePass.enabled=ssaaActive;
@@ -946,7 +946,7 @@ export async function createAurumPostPipeline(
   const applyDiamondPostModules=(controls:any)=>{
     // Selective SSAA is opt-in for controlled A/B validation. Its output is
     // composited only through the categorical center-diamond mask; FXAA stays off.
-    const ssaaEnabled=diamondSsaaOptedIn() && Boolean(gemMaskPass?.hasDiamondMeshes)
+    const ssaaEnabled=diamondSsaaEnabled() && Boolean(gemMaskPass?.hasDiamondMeshes)
       && !["low","extreme"].includes(lastKnownBudgetTier) && lastKnownQualityId!=="low"
       && Boolean(diamondSupersamplePass?.canRender?.());
     const fxaaEnabled=false;
