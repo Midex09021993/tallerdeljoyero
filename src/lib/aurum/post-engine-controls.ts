@@ -20,11 +20,11 @@ const DEFAULTS: AurumPostControls = {
   taaEnabled: false,
 };
 
-// Gem Mask is a safe, independent gate and can be armed for inspection.
-// Reconstruction and temporal effects remain fail-closed until visual sign-off.
+// Gem Mask is the safety boundary for diamond-only reconstruction and temporal effects.
+// SSAA is user-toggleable behind that boundary; TAA remains fail-closed pending its own sign-off.
 const normalize = (value: any): AurumPostControls => ({
   gemMaskEnabled: value?.gemMaskEnabled === true,
-  diamondSsaaEnabled: false,
+  diamondSsaaEnabled: value?.gemMaskEnabled === true && value?.diamondSsaaEnabled === true,
   gemFxaaEnabled: value?.gemMaskEnabled === true && value?.gemFxaaEnabled === true,
   diamondTaaEnabled: false,
   surfaceEdgeAaEnabled: false,
