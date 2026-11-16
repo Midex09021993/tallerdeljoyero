@@ -3835,7 +3835,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             && outputPass
             && gemMaskPass?.enabled
             && gemMaskPass?.hasDiamondMeshes
-            && fxaaPass?.enabled
+            && (fxaaPass?.enabled || (diamondSupersamplePass?.enabled && diamondSupersampleCompositePass?.enabled))
           );
           const activeToneAuditPath = useLiveGemAa ? "composer" : "direct";
           if (toneAuditEnabled && activeToneAuditPath !== lastToneAuditPath) {
