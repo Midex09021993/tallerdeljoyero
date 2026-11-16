@@ -259,18 +259,40 @@ test("Gem Mask stays internal after visual validation and never tints the beauty
   expect(component).toContain("viewerLoopRef.current?.invalidate?.();");
 });
 
-test("only masked diamond FXAA can be enabled; SSAA and TAA remain fail-closed", () => {
+test("masked native-resolution FXAA is independent from SSAA; SSAA and TAA remain fail-closed", () => {
   const controls = readFileSync("src/lib/aurum/post-engine-controls.ts", "utf8");
   const post = readFileSync("src/lib/aurum/post.ts", "utf8");
   const render = readFileSync("src/components/AurumRender.tsx", "utf8");
-  expect(controls).toContain("gemFxaaEnabled: false");
+  expect(controls).toContain("gemFxaaEnabled: value?.gemMaskEnabled === true && value?.gemFxaaEnabled === true");
   expect(controls).toContain("diamondSsaaEnabled: false");
   expect(controls).toContain("diamondTaaEnabled: false");
-  expect(post).toContain("const fxaaEnabled=diamondMaskReady && fxaaRequested && canReconstruct;");
-  expect(post).toContain("if(fxaaPass) fxaaPass.enabled=fxaaEnabled;");
-  expect(render).toContain('const blocked=item.key==="diamondSsaaEnabled"||item.key==="diamondTaaEnabled"||item.key==="gemFxaaEnabled";');
-  expect(render).toContain("FXAA suspendido por artefactos visuales; en revisión.");
-  expect(post).toContain("diamondSupersamplePass.renderFxaa(activeRenderer,Boolean(fxaaPass?.enabled))");
+  expect(post).toContain("const fxaaEnabled=diamondMaskReady && fxaaRequested;");
+  expect(post).toContain("const renderDiamondFxaaFrame=(activeRenderer:any)=>");
+  expect(post).toContain("ensureDiamondFxaaBeautyTarget(width,height)");
+  expect(post).toContain("fxaaPass.render(activeRenderer,null,target,0,false)");
+  expect(post).not.toContain("ensureDiamondSupersampleFxaaTarget");
+  expect(post).not.toContain("renderFxaa(activeRenderer,enabled:boolean)");
+  expect(render).toContain('const blocked=item.key==="diamondSsaaEnabled"||item.key==="diamondTaaEnabled"||(item.key==="gemFxaaEnabled"&&!diamondPostControls.gemMaskEnabled);');
+  expect(render).toContain("renderDiamondFxaaFrame?.(renderer)");
+  expect(post).not.toContain("composer.addPass(fxaaPass)");
+});
+
+test("native FXAA target preserves renderer state and applies output color conversion only once", () => {
+  const post = readFileSync("src/lib/aurum/post.ts", "utf8");
+  const start = post.indexOf("const renderDiamondFxaaFrame=(activeRenderer:any)=>");
+  const end = post.indexOf("const renderDiamondSupersampleOverlay=", start);
+  const pass = post.slice(start, end);
+  expect(start).toBeGreaterThan(-1);
+  expect(pass).toContain("activeRenderer.setRenderTarget(target)");
+  expect(pass).toContain("gemMaskPass.render(activeRenderer)");
+  expect(pass).toContain("previousTarget");
+  expect(pass).toContain("previousViewport");
+  expect(pass).toContain("previousScissor");
+  expect(pass).toContain("previousAutoClear");
+  expect(pass).not.toContain("diamondSupersample");
+  expect(post).toContain("diamondFxaaBeautyTarget.texture.colorSpace=THREE.NoColorSpace");
+  expect(post).toContain("#include <colorspace_fragment>");
+  expect(post).toContain("fxaaPass.material.toneMapped=false");
 });
 
 test("diamond perimeter AA uses the stronger masked edge profile", () => {
@@ -278,17 +300,18 @@ test("diamond perimeter AA uses the stronger masked edge profile", () => {
   expect(source).toContain("strength:{value:0.76}");
   expect(source).toContain("edgeThreshold:{value:0.18}");
   expect(source).toContain("float centerMask=texture2D(gemMask,vUv).r;");
-  expect(source).toContain("float outsideNeighbor=1.0-min(min(m0,m1),min(m2,m3));");
-  expect(source).toContain("float blendAmount=edge*strength*outsideNeighbor;");
-  expect(source).toContain("float gemNeighborCount=gem0+gem1+gem2+gem3;");
-  expect(source).toContain("(n0*gem0+n1*gem1+n2*gem2+n3*gem3)/gemNeighborCount");
-  expect(source).not.toContain("vec3 diagonal=(n0+n1+n2+n3)*0.25");
+  expect(source).toContain("float boundary=1.0-min(min(min(mN,mS),min(mE,mW)),min(min(mNW,mNE),min(mSW,mSE)));");
+  expect(source).toContain("vec3 sampleGem(vec2 uv,vec3 fallbackColor)");
+  expect(source).toContain("float dirX=-((lNW+lNE)-(lSW+lSE));");
+  expect(source).toContain("float threshold=max(edgeThreshold,lMax*0.125);");
+  expect(source).toContain("#include <colorspace_fragment>");
+  expect(source).not.toContain("outsideNeighbor=1.0-min(min(m0,m1),min(m2,m3))");
 });
 
 test("legacy Post Engine preferences cannot reactivate full-frame AA or TAA", () => {
   const controls = readFileSync("src/lib/aurum/post-engine-controls.ts", "utf8");
   const post = readFileSync("src/lib/aurum/post.ts", "utf8");
-  expect(controls).toContain("gemFxaaEnabled: false");
+  expect(controls).toContain("migrated.gemFxaaEnabled = false;");
   expect(controls).toContain("diamondSsaaEnabled: false");
   expect(controls).toContain("surfaceEdgeAaEnabled: false");
   expect(controls).toContain("taaEnabled: false");
@@ -326,8 +349,9 @@ test("diamond SSAA restores the complete renderer and scene state after its auxi
 test("diamond-only post composites preserve every pixel outside the diamond mask", () => {
   const post = readFileSync("src/lib/aurum/post.ts", "utf8");
   expect(post).toContain("if(texture2D(gemMask,vUv).r<0.5){gl_FragColor=base;return;}");
-  expect(post).toContain("if(centerMask<0.5){gl_FragColor=center;return;}");
-  expect(post).toContain("float blendAmount=edge*strength*outsideNeighbor;");
+  expect(post).toContain("if(texture2D(gemMask,uv).r<0.5) return fallbackColor;");
+  expect(post).toContain("vec3 result=center.rgb;");
+  expect(post).toContain("gl_FragColor=vec4(result,center.a);");
   expect(post).toContain("if(surfaceEdgeAaPass) surfaceEdgeAaPass.enabled=false;");
 });
 
@@ -350,7 +374,7 @@ test("live camera motion keeps diamond-only supersampling active at a reduced ad
   expect(render).toContain("runtimeBudget.diamondLiveSupersampleScaleCap");
   expect(render).toContain("renderDiamondSupersampleOverlay?.(renderer)");
   expect(render).not.toContain("const diamondSsaaOverlayActive=");
-  expect(render).toContain('const activeToneAuditPath = diamondOverlayRequested ? "direct+diamond-overlay" : "direct";');
+  expect(render).toContain('const activeToneAuditPath = diamondFxaaFrameRequested ? "direct+diamond-fxaa" : diamondOverlayRequested ? "direct+diamond-overlay" : "direct";');
   expect(render).toContain("renderer.render(escena,camara);");
   expect(post).not.toContain("composer.addPass(fxaaPass)");
 });
