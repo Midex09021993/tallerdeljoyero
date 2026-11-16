@@ -38,8 +38,10 @@ export function getAurumPostControls(): AurumPostControls {
     if (!legacyRaw) return DEFAULTS;
     const legacy = JSON.parse(legacyRaw);
     const migrated: AurumPostControls = {
-      gemFxaaEnabled: false,
-      diamondSsaaEnabled: false,
+      // The v2 selective diamond pipeline is the current default. Preserve
+      // independent user choices for surface AA and TAA from the legacy store.
+      gemFxaaEnabled: true,
+      diamondSsaaEnabled: true,
       surfaceEdgeAaEnabled: legacy.surfaceEdgeAaEnabled === true,
       taaEnabled: legacy.taaEnabled === true,
     };
