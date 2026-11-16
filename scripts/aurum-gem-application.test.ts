@@ -253,16 +253,13 @@ test("live camera motion keeps diamond-only supersampling active at a reduced ad
   expect(post).toContain("if(fxaaPass) fxaaPass.enabled=fxaaEnabled;");
   expect(post).not.toContain("hasDiamond && diamondSupersamplingSettled && renderer.capabilities");
   expect(render).toContain("runtimeBudget.diamondLiveSupersampleScaleCap");
+  expect(render).not.toContain("renderDiamondSupersampleOverlay?.(renderer)");
+  expect(render).not.toContain("const diamondSsaaOverlayActive=");
   expect(render).toContain("const useLiveGemAa = Boolean(");
   expect(render).toContain("&& gemMaskPass?.hasDiamondMeshes");
-  expect(render).toContain("&& fxaaPass?.enabled");
-  expect(render).toContain("(fxaaPass?.enabled || (diamondSupersamplePass?.enabled && diamondSupersampleCompositePass?.enabled))");
-  expect(render).toContain("diamondSupersamplingEnabled: liveDiamondSsaaActive");
-  expect(render).not.toContain("fxaaPass.enabled = diamondSsaaActive");
-  expect(render).toContain("[diamondSupersamplePass, gemMaskPass, diamondSupersampleCompositePass, ...(fxaaPass?.enabled ? [fxaaPass] : [])]");
-  expect(render).toContain("const initialDiamondSsaaActive = Boolean(setDiamondSupersamplingSettled?.(true));");
-  expect(render).toContain("const initialDiamondFxaaActive = Boolean(fxaaPass?.enabled && gemMaskPass?.hasDiamondMeshes);");
-  expect(render).toContain('renderPath: initialDiamondFxaaActive || initialDiamondSsaaActive ? "composer" : "direct"');
+  expect(post).toContain("const fxaaEnabled=false;");
+  expect(post).not.toContain("composer.addPass(fxaaPass)");
+  expect(post).toContain("const ssaaEnabled=false;");
 });
 
 
