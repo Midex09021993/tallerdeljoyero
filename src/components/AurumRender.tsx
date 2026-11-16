@@ -17,7 +17,7 @@ import { AURUM_LIGHTING_DEFAULT } from "../lib/aurum-lighting-engine";
 import { applyAurumCameraView, applyAurumIJEWELPresentationCamera, applyAurumPublicViewerCamera, fitAurumCameraToAspect, calculateAurumFocalDepth, getAurumVisibleProductBounds } from "../lib/aurum/camera";
 import { prepareAurumModel } from "../lib/aurum/model-prep";
 import { createAurumPostPipeline } from "../lib/aurum/post";
-import { getAurumPostControls, setAurumPostControls, type AurumPostControls } from "../lib/aurum/post-engine-controls";
+import { getAurumPostControls, setAurumPostControls, subscribeAurumPostControls, type AurumPostControls } from "../lib/aurum/post-engine-controls";
 import { createAurumEnvironment } from "../lib/aurum/environment";
 import { createAurumGemEnvironment } from "../lib/aurum/gem-environment";
 import { createAurumDiamondBvhRuntime, type AurumDiamondBvhRuntime } from "../lib/aurum/aurum-diamond-bvh-runtime";
@@ -346,7 +346,15 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [diamondBvhEnabled, setDiamondBvhEnabled] = useState(true);
   const [diamondMicroEnabled, setDiamondMicroEnabled] = useState(true);
   const [diamondPostControls, setDiamondPostControls] = useState<AurumPostControls>({gemMaskEnabled:false,diamondSsaaEnabled:false,gemFxaaEnabled:false,diamondTaaEnabled:false,surfaceEdgeAaEnabled:false,taaEnabled:false});
-  useEffect(() => { setDiamondPostControls(getAurumPostControls()); }, []);
+  useEffect(() => {
+    // Keep the panel in sync with the canonical post-engine state. The engine
+    // and UI can update independently (including from other controls/runtime
+    // fallbacks), so a one-time read leaves FXAA incorrectly disabled.
+    setDiamondPostControls(getAurumPostControls());
+    return subscribeAurumPostControls((controls) => {
+      setDiamondPostControls(controls);
+    });
+  }, []);
   const [diamondControlDiagnostics, setDiamondControlDiagnostics] = useState<any>(null);
   const [gemMaskDiagnosticStatus, setGemMaskDiagnosticStatus] = useState<"idle"|"pending"|"ready"|"error"|"unavailable">("idle");
   const gemMaskDiagnosticsRef = useRef<any>(null);
