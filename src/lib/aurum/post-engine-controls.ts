@@ -9,12 +9,12 @@ export type AurumPostControls = {
   taaEnabled: boolean;
 };
 
-const STORAGE_KEY = "aurum:post-engine-controls:v3";
-const LEGACY_STORAGE_KEYS = ["aurum:post-engine-controls:v2", "aurum:post-engine-controls:v1"];
+const STORAGE_KEY = "aurum:post-engine-controls:v4";
+const LEGACY_STORAGE_KEYS = ["aurum:post-engine-controls:v3", "aurum:post-engine-controls:v2", "aurum:post-engine-controls:v1"];
 const DEFAULTS: AurumPostControls = {
-  gemMaskEnabled: false,
-  diamondSsaaEnabled: false,
-  gemFxaaEnabled: false,
+  gemMaskEnabled: true,
+  diamondSsaaEnabled: true,
+  gemFxaaEnabled: true,
   diamondTaaEnabled: false,
   surfaceEdgeAaEnabled: false,
   taaEnabled: false,
@@ -41,12 +41,15 @@ export function getAurumPostControls(): AurumPostControls {
       const legacy = window.localStorage.getItem(key);
       if (!legacy) continue;
       const migrated = normalize(JSON.parse(legacy));
-      // Old builds had no independently controlled mask/TAA-diamond switches.
-      // Legacy SSAA/FXAA preferences remain disabled during schema migration;
-      // the new isolated controls can be enabled explicitly after migration.
-      migrated.gemMaskEnabled = false;
-      migrated.diamondSsaaEnabled = false;
-      migrated.gemFxaaEnabled = false;
+      // v3 introduced the isolated diamond-only controls but shipped them
+      // opt-in. Promote an untouched all-off v3 state to the approved default;
+      // preserve any explicit partial/user selection.
+      const isV3 = legacy === window.localStorage.getItem("aurum:post-engine-controls:v3");
+      if (isV3 && !migrated.gemMaskEnabled && !migrated.diamondSsaaEnabled && !migrated.gemFxaaEnabled) {
+        migrated.gemMaskEnabled = true;
+        migrated.diamondSsaaEnabled = true;
+        migrated.gemFxaaEnabled = true;
+      }
       migrated.diamondTaaEnabled = false;
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
       return migrated;
