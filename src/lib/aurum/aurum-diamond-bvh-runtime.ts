@@ -1,5 +1,6 @@
 // @ts-nocheck -- AURUM Render engine: strict-mode typing pending; runtime behaviour unchanged.
 import * as THREE from "three";
+import { classifyAurumDiamondMeshTiers } from "./diamond-micro-pipeline";
 import { resolveAurumCatalogGemBvhColor, resolveAurumEmeraldBvhProfile, resolveAurumRubyBvhProfile, resolveAurumSapphireBvhProfile } from "./aurum-gem-bvh-profiles";
 import {
   prepareAurumDiamondBvhExperiment,
@@ -54,6 +55,8 @@ export async function createAurumDiamondBvhRuntime(options: {
   /** Defaults to true for internally loaded maps; external maps remain caller-owned. */
   ownsEnvironmentMap?: boolean;
   camera: THREE.Camera;
+  /** Renderer viewport height, used to share the exact screen-space diamond tiers. */
+  getViewportHeight?: () => number;
   quality?: "interactive" | "high" | "final";
   targetFamilies?: string[];
   onError?: (error: unknown) => void;
@@ -156,6 +159,7 @@ export async function createAurumDiamondBvhRuntime(options: {
     else targetSet?.forEach((mesh) => mesh.updateWorldMatrix(true, false));
 
     const diamondRadiusByMesh = new Map<THREE.Mesh, number>();
+    const diamondMeshes: THREE.Mesh[] = [];
     let largestDiamondRadius = 0;
     if (targetContainsDiamond) {
       model.traverse((object) => {
@@ -172,9 +176,14 @@ export async function createAurumDiamondBvhRuntime(options: {
         const radius = localRadius * Math.max(Math.abs(worldScale.x), Math.abs(worldScale.y), Math.abs(worldScale.z));
         if (!Number.isFinite(radius) || radius <= 0) return;
         diamondRadiusByMesh.set(candidate, radius);
+        diamondMeshes.push(candidate);
         largestDiamondRadius = Math.max(largestDiamondRadius, radius);
       });
     }
+    const viewportHeight = Number(options.getViewportHeight?.() ?? 0);
+    const screenTiers = viewportHeight > 1
+      ? classifyAurumDiamondMeshTiers(diamondMeshes, options.camera, viewportHeight)
+      : new Map<THREE.Mesh, "micro" | "small" | "brilliant">();
 
     const processMesh = (object: THREE.Object3D) => {
       const mesh = object as THREE.Mesh;
@@ -251,12 +260,24 @@ export async function createAurumDiamondBvhRuntime(options: {
       const isPinkDiamond = activeGemId === "diamante_rosa";
       const diamondRadius = diamondRadiusByMesh.get(mesh) ?? 0;
       const diamondSizeRatio = largestDiamondRadius > 0 ? diamondRadius / largestDiamondRadius : 1;
-      // Secondary stones at <=42% of the largest diamond receive fewer internal
-      // reflections and a gentler dispersion profile; center stones are unchanged.
-      const isSmallSecondaryDiamond = family === "diamante"
-        && diamondRadius > 0
-        && largestDiamondRadius > 0
-        && diamondSizeRatio <= 0.42;
+      // Use the same screen-space tier as the physical shader. The legacy
+      // radius ratio is only a fallback for callers that cannot provide viewport size.
+      const screenTier = screenTiers.get(mesh)
+        ?? (mesh.userData?.aurumDiamondMicroTier === "micro" || mesh.userData?.aurumDiamondMicroTier === "small"
+          ? mesh.userData.aurumDiamondMicroTier
+          : mesh.userData?.aurumDiamondMicroCenterProtected
+            ? "brilliant"
+            : (diamondRadius > 0 && largestDiamondRadius > 0 && diamondSizeRatio <= 0.42 ? "small" : "brilliant"));
+      mesh.userData = {
+        ...(mesh.userData ?? {}),
+        aurumDiamondMicroTier: screenTier,
+        aurumDiamondMicroCenterProtected: screenTier === "brilliant" && (
+          Boolean(mesh.userData?.aurumDiamondCenter || mesh.userData?.aurumDiamondIsCenter)
+          || /center|central|main|principal/i.test(String(mesh.userData?.aurumDiamondRole ?? ""))
+          || (screenTiers.size > 0 && screenTiers.get(mesh) === "brilliant")
+        ),
+      };
+      const isSmallSecondaryDiamond = family === "diamante" && screenTier !== "brilliant";
       const useEmeraldBvhOptics = isEmerald;
       const isRuby = family === "rubí" || family === "rubi";
       const isSapphire = family === "zafiro" || family === "sapphire";
