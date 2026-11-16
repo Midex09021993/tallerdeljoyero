@@ -83,15 +83,10 @@ function median(values: number[]): number {
  */
 export function createAurumDiamondMicroPipeline(scene: any, camera: any, getViewportHeight: () => number) {
   const meshes: any[] = [];
-  scene?.traverse?.((object: any) => {
-    if (!object?.isMesh || !object.geometry) return;
-    if (getMaterials(object).some(isDiamondMaterial)) meshes.push(object);
-  });
+  const originalCallbacks = new Map<any, { original: (...args: any[]) => void; wrapped: (...args: any[]) => void }>();
 
   let lastSignature = "";
   let lastReport: AurumDiamondMicroProfile[] = [];
-  const originalCallbacks = new Map<any, (...args: any[]) => void>();
-
   const applyMeshOptics = (mesh: any) => {
     const tier = (mesh.userData?.aurumDiamondMicroTier ?? "brilliant") as Exclude<AurumDiamondMicroTier, "mixed">;
     const profile = getAurumDiamondMicroOpticalProfile(tier);
@@ -108,14 +103,47 @@ export function createAurumDiamondMicroPipeline(scene: any, camera: any, getView
     mesh.userData = { ...(mesh.userData ?? {}), aurumDiamondMicroOpticalProfile: profile };
   };
 
-  for (const mesh of meshes) {
-    const original = typeof mesh.onBeforeRender === "function" ? mesh.onBeforeRender : () => {};
-    originalCallbacks.set(mesh, original);
-    mesh.onBeforeRender = (...args: any[]) => {
-      original.apply(mesh, args);
-      applyMeshOptics(mesh);
-    };
-  }
+  const refresh = () => {
+    const currentDiamonds = new Set<any>();
+    scene?.traverse?.((object: any) => {
+      if (object?.isMesh && object.geometry && getMaterials(object).some(isDiamondMaterial)) {
+        currentDiamonds.add(object);
+      }
+    });
+
+    for (const mesh of [...meshes]) {
+      if (currentDiamonds.has(mesh)) continue;
+      const callbacks = originalCallbacks.get(mesh);
+      if (callbacks && mesh.onBeforeRender === callbacks.wrapped) {
+        mesh.onBeforeRender = callbacks.original;
+      }
+      originalCallbacks.delete(mesh);
+      const index = meshes.indexOf(mesh);
+      if (index >= 0) meshes.splice(index, 1);
+      if (mesh.userData) {
+        delete mesh.userData.aurumDiamondMicroScreenDiameterPx;
+        delete mesh.userData.aurumDiamondMicroTier;
+        delete mesh.userData.aurumDiamondMicroCenterProtected;
+        delete mesh.userData.aurumDiamondMicroOpticalProfile;
+      }
+    }
+
+    for (const mesh of currentDiamonds) {
+      if (originalCallbacks.has(mesh)) continue;
+      const original = typeof mesh.onBeforeRender === "function" ? mesh.onBeforeRender : () => {};
+      const wrapped = (...args: any[]) => {
+        original.apply(mesh, args);
+        applyMeshOptics(mesh);
+      };
+      originalCallbacks.set(mesh, { original, wrapped });
+      mesh.onBeforeRender = wrapped;
+      meshes.push(mesh);
+    }
+    lastSignature = "";
+    return meshes.length;
+  };
+
+  refresh();
 
   const update = () => {
     const viewportHeight = Number(getViewportHeight?.() ?? 0);
@@ -198,10 +226,11 @@ export function createAurumDiamondMicroPipeline(scene: any, camera: any, getView
   return {
     update,
     diagnostics: () => ({ diamondMeshes: meshes.length, materialGroups: lastReport.length, profiles: lastReport }),
+    refresh,
     dispose: () => {
       for (const mesh of meshes) {
-        const original = originalCallbacks.get(mesh);
-        if (original) mesh.onBeforeRender = original;
+        const callbacks = originalCallbacks.get(mesh);
+        if (callbacks && mesh.onBeforeRender === callbacks.wrapped) mesh.onBeforeRender = callbacks.original;
         if (mesh.userData) {
           delete mesh.userData.aurumDiamondMicroScreenDiameterPx;
           delete mesh.userData.aurumDiamondMicroTier;
