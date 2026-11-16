@@ -531,7 +531,7 @@ export async function createAurumPostPipeline(
         const previousClearColor=activeRenderer.getClearColor(new THREE.Color()).clone();
         const previousClearAlpha=activeRenderer.getClearAlpha();
         try{
-          gemMaskDiagnosticMaterial.uniforms.uMask.value=gemMaskTarget.texture;
+          gemMaskDiagnosticMaterial.uniforms["uMask"]!.value=gemMaskTarget.texture;
           activeRenderer.setRenderTarget(null);
           activeRenderer.setScissorTest(false);
           activeRenderer.autoClear=false;
