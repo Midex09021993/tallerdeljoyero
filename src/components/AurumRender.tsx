@@ -3341,7 +3341,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               escena.background=null;
               renderer.setClearColor(0x000000,0);
             }
-            const captureDiamondSsaa=Boolean(diamondSupersamplePass?.enabled&&diamondSupersampleCompositePass?.enabled&&gemMaskPass?.enabled&&gemMaskPass?.hasDiamondMeshes);
             if (composer && options.depthOfField) composer.render();
             else renderer.render(escena,camara);
             const captureComposerBuffer = options.depthOfField && composer ? { width: renderer.domElement.width, height: renderer.domElement.height } : null;
