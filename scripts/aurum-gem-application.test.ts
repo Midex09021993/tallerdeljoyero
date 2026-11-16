@@ -501,3 +501,23 @@ test("Gem Mask diagnostics button requests a one-shot readback and renders the d
   expect(render).toContain('setGemMaskDiagnosticStatus(maskPixels < 0 ? "error" : "ready")');
   expect(viewer).toContain("renderNow: () => {");
 });
+
+
+test("diamond FXAA preference survives a failed masked overlay and retries on the next frame", () => {
+  const post = readFileSync("src/lib/aurum/post.ts", "utf8");
+  const render = readFileSync("src/components/AurumRender.tsx", "utf8");
+  const start = post.indexOf("const renderDiamondFxaaOverlay=(activeRenderer:any)=>");
+  const end = post.indexOf("const renderDiamondSupersampleOverlay=", start);
+  const overlay = post.slice(start, end);
+  expect(start).toBeGreaterThan(-1);
+  expect(overlay).toContain("Masked overlay failed; preserving the direct beauty frame.");
+  expect(overlay).toContain("if(failed){");
+  expect(overlay).not.toContain("fxaaPass.enabled=false");
+  const frameStart = render.indexOf("const renderedWithDiamondFxaaOverlay=Boolean(renderDiamondFxaaOverlay?.(renderer));");
+  const frameEnd = render.indexOf("// SSAA composites only the classified diamond pixels", frameStart);
+  const frameFallback = render.slice(frameStart, frameEnd);
+  expect(frameStart).toBeGreaterThan(-1);
+  expect(frameFallback).toContain("renderer.render(escena,camara);");
+  expect(frameFallback).not.toContain("setAurumPostControls({gemFxaaEnabled:false})");
+  expect(frameFallback).not.toContain("setDiamondPostControls(safeControls)");
+});
