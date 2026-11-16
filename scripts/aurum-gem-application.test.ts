@@ -414,6 +414,16 @@ test("Aurum Render enables LIVE gemstone quality and reapplies it after catalog 
 });
 
 
+test("loading a CAD model refreshes the screen-space diamond analyzer before Gem Mask cache", () => {
+  const source = readFileSync("src/components/AurumRender.tsx", "utf8");
+  const addModel = source.indexOf("escena.add(modelo);");
+  const microRefresh = source.indexOf("diamondMicroPipelineRef.current?.refresh?.();", addModel);
+  const maskRefresh = source.indexOf("gemMaskPass?.refreshCache?.();", microRefresh);
+  expect(addModel).toBeGreaterThanOrEqual(0);
+  expect(microRefresh).toBeGreaterThan(addModel);
+  expect(maskRefresh).toBeGreaterThan(microRefresh);
+});
+
 test("Aurum Render never enables full-surface edge AA while diamond-only quality is in scope", () => {
   const post = readFileSync("src/lib/aurum/post.ts", "utf8");
   const render = readFileSync("src/components/AurumRender.tsx", "utf8");
