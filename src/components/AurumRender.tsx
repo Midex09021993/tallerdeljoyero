@@ -17,6 +17,7 @@ import { AURUM_LIGHTING_DEFAULT } from "../lib/aurum-lighting-engine";
 import { applyAurumCameraView, applyAurumIJEWELPresentationCamera, applyAurumPublicViewerCamera, fitAurumCameraToAspect, calculateAurumFocalDepth, getAurumVisibleProductBounds } from "../lib/aurum/camera";
 import { prepareAurumModel } from "../lib/aurum/model-prep";
 import { createAurumPostPipeline } from "../lib/aurum/post";
+import { getAurumPostControls, setAurumPostControls, type AurumPostControls } from "../lib/aurum/post-engine-controls";
 import { createAurumEnvironment } from "../lib/aurum/environment";
 import { createAurumGemEnvironment } from "../lib/aurum/gem-environment";
 import { createAurumDiamondBvhRuntime, type AurumDiamondBvhRuntime } from "../lib/aurum/aurum-diamond-bvh-runtime";
@@ -344,6 +345,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [uxSection, setUxSection] = useState<"materiales"|"gemas"|"ambientes"|"escenas"|"hdrMetales"|"hdrGemas"|"fondos"|"rhino-export"|"cad-tree"|"positions"|"diamond-control">("materiales");
   const [diamondBvhEnabled, setDiamondBvhEnabled] = useState(true);
   const [diamondMicroEnabled, setDiamondMicroEnabled] = useState(true);
+  const [diamondPostControls, setDiamondPostControls] = useState<AurumPostControls>(() => getAurumPostControls());
   const [diamondControlDiagnostics, setDiamondControlDiagnostics] = useState<any>(null);
   useEffect(() => {
     const refreshDiagnostics = () => {
@@ -4918,9 +4920,28 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 <div className="flex items-center justify-between gap-2"><span>Material físico + shader iJewel</span><span className="font-semibold">{!diamondControlDiagnostics?.bvh?"Pendiente de diagnóstico":(diamondControlDiagnostics.bvh.diamondMeshes??0)>0?"Reemplazado en mallas BVH":"Ruta física en uso"}</span></div>
                 <div className="flex items-center justify-between gap-2"><span>Scintillation</span><span className="font-semibold">{!diamondControlDiagnostics?.bvh?"Pendiente":(diamondControlDiagnostics.bvh.diamondMeshes??0)>0?"No corre en esas mallas":"Disponible en shader físico"}</span></div>
                 <div className="flex items-center justify-between gap-2"><span>Dispersión</span><span className="font-semibold">{!diamondControlDiagnostics?.bvh?"Pendiente":(diamondControlDiagnostics.bvh.diamondMeshes??0)>0?"BVH":"Shader físico"}</span></div>
-                <div className="flex items-center justify-between gap-2"><span>SSAA / FXAA / TAA dedicado</span><span className="font-semibold">Desactivados</span></div>
+                <div className="flex items-center justify-between gap-2"><span>SSAA / FXAA / TAA dedicado</span><span className="font-semibold">{[diamondPostControls.diamondSsaaEnabled,diamondPostControls.gemFxaaEnabled,diamondPostControls.diamondTaaEnabled].filter(Boolean).length} solicitados</span></div>
               </div>
               <p className="mt-2 border-t border-black/[.06] pt-2 text-[9px] leading-relaxed text-[#8a857b]">El BVH reemplaza el material físico en las mallas que procesa. Por eso Scintillation no debe contarse como activa simultáneamente en esas mismas mallas.</p>
+            </section>
+            <section className="mb-3 rounded-xl border border-[#e6e1d8] bg-white p-3">
+              <div className="mb-2 text-[10px] font-semibold uppercase tracking-[.12em] text-[#92743b]">Antialiasing del diamante</div>
+              <p className="mb-3 text-[9px] leading-relaxed text-[#77756f]">Cada efecto se controla por separado. SSAA, FXAA y TAA solo procesan píxeles dentro de Gem Mask.</p>
+              {([
+                {key:"gemMaskEnabled",label:"Gem Mask",description:"Aísla el diamante central; no modifica el color de la escena."},
+                {key:"diamondSsaaEnabled",label:"SSAA",description:"Render auxiliar de mayor resolución para el diamante."},
+                {key:"gemFxaaEnabled",label:"FXAA",description:"Suavizado selectivo del contorno del diamante."},
+                {key:"diamondTaaEnabled",label:"TAA",description:"Acumulación temporal selectiva; se pausa durante el movimiento."},
+              ] as const).map((item)=>{
+                const enabled=diamondPostControls[item.key];
+                const dependent=item.key!=="gemMaskEnabled";
+                const blocked=dependent && enabled && !diamondPostControls.gemMaskEnabled;
+                return <div key={item.key} className="flex items-center justify-between gap-3 border-t border-black/[.05] py-2 first:border-t-0 first:pt-0">
+                  <div className="min-w-0"><div className="text-[11px] font-semibold text-[#292824]">{item.label}</div><p className="mt-0.5 text-[9px] leading-relaxed text-[#77756f]">{item.description}</p>{blocked&&<p className="mt-1 text-[9px] font-semibold text-amber-700">En espera: activa Gem Mask para ejecutarlo.</p>}</div>
+                  <button type="button" role="switch" aria-label={item.label} aria-checked={enabled} onClick={()=>{const next=setAurumPostControls({[item.key]:!enabled});setDiamondPostControls(next);viewerLoopRef.current?.invalidate?.();}} className={"relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors "+(enabled?"bg-[#a88743]":"bg-[#c9c6bf]")}><span className={"inline-block size-3.5 rounded-full bg-white shadow-sm transition-transform "+(enabled?"translate-x-[18px]":"translate-x-1")}/></button>
+                </div>;
+              })}
+              <div className="mt-2 border-t border-black/[.06] pt-2 text-[9px] leading-relaxed text-[#8a857b]">Surface Edge AA y TAA de pantalla completa permanecen bloqueados para proteger metales y ambiente.</div>
             </section>
             <section className="rounded-xl border border-[#e6e1d8] bg-white p-3">
               <div className="mb-2 flex items-center justify-between gap-2"><div className="text-[10px] font-semibold uppercase tracking-[.12em] text-[#92743b]">Diagnóstico de ejecución</div><button type="button" onClick={()=>window.dispatchEvent(new CustomEvent("aurum-diamond-control-refresh"))} className="rounded-lg border border-black/10 px-2 py-1 text-[9px] font-semibold text-[#6d5523]">Actualizar</button></div>
