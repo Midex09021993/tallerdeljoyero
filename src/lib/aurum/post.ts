@@ -276,34 +276,40 @@ export async function createAurumPostPipeline(
       color:0xffffff,side:THREE.DoubleSide,depthTest:true,depthWrite:false,
       depthFunc:THREE.LessEqualDepth,toneMapped:false
     });
-    const findAurumCenterDiamondMeshes=():any[]=>{
-      const activeDiamonds:any[]=[];
-      scene.updateMatrixWorld?.(true);
-      scene.traverse((object:any)=>{
-        if(!object?.isMesh||!object.geometry||object.userData?.aurumInternalInclusion) return;
-        const data=object.userData??{};
-        const rhino=data.aurumRhino??{};
-        const materials=Array.isArray(object.material)?object.material:[object.material];
-        const materialFamily=materials.find((material:any)=>String(material?.userData?.aurumGemFamily??"").trim().toLowerCase()==="diamante")?.userData?.aurumGemFamily;
-        const family=String(data.aurumActiveGemFamily??data.aurumGemFamily??materialFamily??"").trim().toLowerCase();
-        const gemId=String(data.aurumActiveGemId??data.aurumGemId??"").trim().toLowerCase();
-        const category=String(rhino.categoria??data.aurumDetectedCategory??data.aurumCategory??"").trim().toLowerCase();
-        const isDiamond=family==="diamante"||gemId.startsWith("diamante");
-        const isGem=category==="gema"||isDiamond;
-        if(!isGem||!isDiamond) return;
-        if(!object.geometry.boundingSphere) object.geometry.computeBoundingSphere();
-        const radius=Number(object.geometry.boundingSphere?.radius??0);
-        if(!Number.isFinite(radius)||radius<=0) return;
-        activeDiamonds.push(object);
+    // Non-diamond material groups participate in the full-scene depth prepass,
+    // but cannot write color or depth during the diamond-only mask pass.
+    const nonDiamondMaskMaterial=new THREE.MeshBasicMaterial({
+      color:0x000000,side:THREE.DoubleSide,depthTest:true,depthWrite:false,
+      colorWrite:false,toneMapped:false
+    });
+    const isDiamondFamily=(value:any)=>String(value??"").trim().toLowerCase()==="diamante";
+    const getDiamondMaterialSlots=(mesh:any):Set<number>=>{
+      const materials=Array.isArray(mesh?.material)?mesh.material:[mesh?.material];
+      const data=mesh?.userData??{};
+      const rhino=data.aurumRhino??{};
+      const family=isDiamondFamily(data.aurumActiveGemFamily??data.aurumGemFamily)
+        || String(data.aurumActiveGemId??data.aurumGemId??"").trim().toLowerCase().startsWith("diamante");
+      const category=String(rhino.categoria??data.aurumDetectedCategory??data.aurumCategory??"").trim().toLowerCase();
+      const objectIsDiamond=family&&(category==="gema"||family);
+      const diamondSlots=new Set<number>();
+      materials.forEach((material:any,index:number)=>{
+        // For multi-material meshes, trust each slot's own family metadata.
+        // Object-level tags may classify a single-material mesh only; they must
+        // never turn adjacent metal groups into diamond mask pixels.
+        const slotIsDiamond=isDiamondFamily(material?.userData?.aurumGemFamily)
+          || (materials.length===1&&objectIsDiamond);
+        if(slotIsDiamond) diamondSlots.add(index);
       });
-      // SSAA mode covers every active diamond in the scene (halos, pavé,
-      // multi-stone pieces and library gems), not only Rhino slot 1.
-      return activeDiamonds;
+      if(materials.length===1&&objectIsDiamond&&!mesh?.geometry?.groups?.length) return diamondSlots;
+      if(materials.length>1){
+        const groups=Array.isArray(mesh?.geometry?.groups)?mesh.geometry.groups:[];
+        const visibleDiamondGroup=groups.some((group:any)=>diamondSlots.has(Number(group?.materialIndex??0)));
+        if(!visibleDiamondGroup) diamondSlots.clear();
+      }
+      return diamondSlots;
     };
-    // Scene classification is stable between model/selection-geometry changes.
-    // Reuse these arrays on every frame instead of traversing the whole scene
-    // and allocating visibility snapshots inside the hot render path.
     const cachedGemMeshes:any[]=[];
+    const diamondMaskMaterialsByMesh=new Map<any,any>();
     const previousGemLayerMasks=new Map<any,number>();
     const gemMaskLayer=31;
     const gemMaskLayerBit=1<<gemMaskLayer;
@@ -321,17 +327,29 @@ export async function createAurumPostPipeline(
       ];
     };
     const refreshGemMaskCache=()=>{
-      // A scene/model refresh invalidates the cached mask even if the camera
-      // happens to remain at the same transform.
       lastGemMaskCameraState=null;
-      // Restore any previous classification before rebuilding. This keeps the
-      // dedicated mask layer isolated from the beauty camera and other systems.
       for(const [mesh,originalMask] of previousGemLayerMasks){
         if(mesh?.layers) mesh.layers.mask=originalMask;
       }
       previousGemLayerMasks.clear();
       cachedGemMeshes.length=0;
-      const centerDiamondMeshes=findAurumCenterDiamondMeshes();
+      diamondMaskMaterialsByMesh.clear();
+      const centerDiamondMeshes:any[]=[];
+      scene.updateMatrixWorld?.(true);
+      scene.traverse((object:any)=>{
+        if(!object?.isMesh||!object.geometry||object.userData?.aurumInternalInclusion) return;
+        const slots=getDiamondMaterialSlots(object);
+        if(slots.size===0) return;
+        const materials=Array.isArray(object.material)?object.material:[object.material];
+        if(materials.length>1){
+          const groups=Array.isArray(object.geometry.groups)?object.geometry.groups:[];
+          if(!groups.some((group:any)=>slots.has(Number(group?.materialIndex??0)))) return;
+          diamondMaskMaterialsByMesh.set(object,materials.map((_:any,index:number)=>slots.has(index)?gemMaskMaterial:nonDiamondMaskMaterial));
+        }else{
+          diamondMaskMaterialsByMesh.set(object,gemMaskMaterial);
+        }
+        centerDiamondMeshes.push(object);
+      });
       centerDiamondMeshes.forEach((mesh:any)=>{
         cachedGemMeshes.push(mesh);
         if(mesh.layers){
@@ -339,6 +357,50 @@ export async function createAurumPostPipeline(
           mesh.layers.enable(gemMaskLayer);
         }
       });
+    };
+    const renderGemMaskWithOcclusion=(activeRenderer:any,target:any)=>{
+      const previousTarget=activeRenderer.getRenderTarget();
+      const previousOverride=scene.overrideMaterial;
+      const previousBackground=scene.background;
+      const previousAutoClear=activeRenderer.autoClear;
+      const previousCameraLayerMask=camera.layers?.mask;
+      const previousClearColor=activeRenderer.getClearColor(new THREE.Color()).clone();
+      const previousClearAlpha=activeRenderer.getClearAlpha();
+      const originalMaterials:any[]=[];
+      try{
+        activeRenderer.setRenderTarget(target);
+        activeRenderer.setViewport(0,0,target.width,target.height);
+        activeRenderer.setScissorTest(false);
+        activeRenderer.setClearColor(0x000000,0);
+        activeRenderer.autoClear=false;
+        activeRenderer.clear(true,true,true);
+        scene.background=null;
+        // Pass 1: every visible scene surface writes depth, so metal prongs
+        // correctly occlude the diamond without becoming mask color themselves.
+        scene.overrideMaterial=depthOnlyMaterial;
+        if(camera.layers&&previousCameraLayerMask!==undefined) camera.layers.mask=previousCameraLayerMask;
+        activeRenderer.render(scene,camera);
+        // Pass 2: render only diamond material groups. Non-diamond groups use
+        // colorWrite=false and depthWrite=false; they cannot leak into the mask.
+        scene.overrideMaterial=null;
+        for(const mesh of cachedGemMeshes){
+          originalMaterials.push([mesh,mesh.material]);
+          mesh.material=diamondMaskMaterialsByMesh.get(mesh)??gemMaskMaterial;
+        }
+        if(camera.layers) camera.layers.mask=gemMaskLayerBit;
+        activeRenderer.render(scene,camera);
+      }finally{
+        for(let index=originalMaterials.length-1;index>=0;index--){
+          const [mesh,material]=originalMaterials[index];
+          mesh.material=material;
+        }
+        if(camera.layers&&previousCameraLayerMask!==undefined) camera.layers.mask=previousCameraLayerMask;
+        scene.overrideMaterial=previousOverride;
+        scene.background=previousBackground;
+        activeRenderer.autoClear=previousAutoClear;
+        activeRenderer.setClearColor(previousClearColor,previousClearAlpha);
+        activeRenderer.setRenderTarget(previousTarget);
+      }
     };
     refreshGemMaskCache();
     gemMaskPass={
@@ -350,25 +412,13 @@ export async function createAurumPostPipeline(
         gemMaskTarget.setSize(Math.max(1,width),Math.max(1,height));
       },
       render(activeRenderer:any){
-        const gemMeshes=cachedGemMeshes;
         const cameraState=readGemMaskCameraState();
-        if(
-          lastGemMaskCameraState
-          && cameraState.length===lastGemMaskCameraState.length
-          && cameraState.every((value,index)=>value===lastGemMaskCameraState![index])
-        ){
-          // Progressive settled frames reuse the exact same camera-space mask.
-          // Camera motion or refreshGemMaskCache() invalidates it automatically.
-          return;
-        }
+        if(lastGemMaskCameraState&&cameraState.length===lastGemMaskCameraState.length&&cameraState.every((value,index)=>value===lastGemMaskCameraState![index])) return;
         lastGemMaskCameraState=cameraState;
-        const previousTarget=activeRenderer.getRenderTarget();
-        if(gemMeshes.length===0){
-          // Clear stale pixels when a model has no gemstone meshes; never let a
-          // previous model's mask cause AA to appear on unrelated metal geometry.
+        if(cachedGemMeshes.length===0){
+          const previousTarget=activeRenderer.getRenderTarget();
           const previousAutoClear=activeRenderer.autoClear;
-          activeRenderer.getClearColor(cachedClearColor);
-          const previousClearColor=cachedClearColor;
+          const previousClearColor=activeRenderer.getClearColor(new THREE.Color()).clone();
           const previousClearAlpha=activeRenderer.getClearAlpha();
           try{
             activeRenderer.setRenderTarget(gemMaskTarget);
@@ -380,40 +430,8 @@ export async function createAurumPostPipeline(
             activeRenderer.setClearColor(previousClearColor,previousClearAlpha);
             activeRenderer.setRenderTarget(previousTarget);
           }
-          fxaaPass.material.uniforms.gemMask.value=gemMaskTarget.texture;
-          return;
-        }
-        const previousOverride=scene.overrideMaterial;
-        const previousBackground=scene.background;
-        const previousAutoClear=activeRenderer.autoClear;
-        const previousCameraLayerMask=camera.layers?.mask;
-        activeRenderer.getClearColor(cachedClearColor);
-        const previousClearColor=cachedClearColor;
-        const previousClearAlpha=activeRenderer.getClearAlpha();
-        try{
-          activeRenderer.setRenderTarget(gemMaskTarget);
-          activeRenderer.setClearColor(0x000000,0);
-          activeRenderer.autoClear=false;
-          activeRenderer.clear(true,true,true);
-          scene.background=null;
-          // Pass 1: preserve the camera's original layer mask so every visible
-          // surface (including foreground metal) writes depth for occlusion.
-          scene.overrideMaterial=depthOnlyMaterial;
-          activeRenderer.render(scene,camera);
-          // Pass 2: render only gems through a dedicated layer. This replaces
-          // per-frame visibility snapshots and N mesh.visible writes/restores.
-          scene.overrideMaterial=gemMaskMaterial;
-          if(camera.layers) camera.layers.mask=gemMaskLayerBit;
-          activeRenderer.render(scene,camera);
-        }finally{
-          if(camera.layers && previousCameraLayerMask!==undefined){
-            camera.layers.mask=previousCameraLayerMask;
-          }
-          scene.overrideMaterial=previousOverride;
-          scene.background=previousBackground;
-          activeRenderer.autoClear=previousAutoClear;
-          activeRenderer.setClearColor(previousClearColor,previousClearAlpha);
-          activeRenderer.setRenderTarget(previousTarget);
+        }else{
+          renderGemMaskWithOcclusion(activeRenderer,gemMaskTarget);
         }
         fxaaPass.material.uniforms.gemMask.value=gemMaskTarget.texture;
       },
@@ -422,9 +440,11 @@ export async function createAurumPostPipeline(
           if(mesh?.layers) mesh.layers.mask=originalMask;
         }
         previousGemLayerMasks.clear();
+        diamondMaskMaterialsByMesh.clear();
         gemMaskTarget.dispose();
         depthOnlyMaterial.dispose();
         gemMaskMaterial.dispose();
+        nonDiamondMaskMaterial.dispose();
       }
     };
     // AURUM DIAMOND SSAA MODULE: render the full optical scene at higher
@@ -506,27 +526,8 @@ export async function createAurumPostPipeline(
           // Rasterize the exact same visible center-diamond silhouette at the
           // SSAA resolution. The low-resolution Gem Mask cannot safely gate
           // subpixel reconstruction taps at a higher sampling frequency.
-          const previousOverride=scene.overrideMaterial;
-          const previousBackground=scene.background;
-          const previousCameraLayerMask=camera.layers?.mask;
-          try{
-            activeRenderer.setRenderTarget(activeMaskTarget);
-            activeRenderer.setViewport(0,0,activeMaskTarget.width,activeMaskTarget.height);
-            activeRenderer.setClearColor(0x000000,0);
-            activeRenderer.autoClear=false;
-            activeRenderer.clear(true,true,true);
-            scene.background=null;
-            scene.overrideMaterial=depthOnlyMaterial;
-            if(camera.layers && previousCameraLayerMask!==undefined) camera.layers.mask=previousCameraLayerMask;
-            activeRenderer.render(scene,camera);
-            scene.overrideMaterial=gemMaskMaterial;
-            if(camera.layers) camera.layers.mask=gemMaskLayerBit;
-            activeRenderer.render(scene,camera);
-          }finally{
-            if(camera.layers && previousCameraLayerMask!==undefined) camera.layers.mask=previousCameraLayerMask;
-            scene.overrideMaterial=previousOverride;
-            scene.background=previousBackground;
-          }
+          // Reuse the exact group-aware, full-scene-occlusion mask at SSAA resolution.
+          renderGemMaskWithOcclusion(activeRenderer,activeMaskTarget);
         }catch(error){
           diamondSupersamplePass.enabled=false;
           diamondSupersampleCompositePass && (diamondSupersampleCompositePass.enabled=false);
