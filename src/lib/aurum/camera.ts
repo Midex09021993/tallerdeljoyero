@@ -195,7 +195,7 @@ export function applyAurumCameraView(
   const target = productSphere.center.clone();
   const profile = getAurumProductCameraProfile(category);
   const direction = view === "frontal"
-    ? new THREE.Vector3(0, 0.06, 1).normalize()
+    ? new THREE.Vector3(0, 0, 1)
     : view === "superior"
       ? new THREE.Vector3(0, 1, 0)
       : view === "lateral"
