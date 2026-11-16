@@ -25,7 +25,7 @@ const DEFAULTS: AurumPostControls = {
 const normalize = (value: any): AurumPostControls => ({
   gemMaskEnabled: value?.gemMaskEnabled === true,
   diamondSsaaEnabled: false,
-  gemFxaaEnabled: false,
+  gemFxaaEnabled: value?.gemMaskEnabled === true && value?.gemFxaaEnabled === true,
   diamondTaaEnabled: false,
   surfaceEdgeAaEnabled: false,
   taaEnabled: false,
