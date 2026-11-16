@@ -34,6 +34,8 @@ export type AurumDiamondBvhRuntime = {
   diagnostics: () => { activeMeshes: number; triangleCount: number; diamondMeshes: number; diamondTriangleCount: number; familyCounts: Record<string, number>; skippedTargetMeshes: Array<{ mesh: string; materialFamilies: string[]; activeGemFamily: string; reason: string }>; overlappingGemPairs: Array<{ meshA: string; familyA: string; meshB: string; familyB: string; overlapRatio: number }>; enabled: boolean };
 };
 
+const CENTER_DIAMOND_DISPERSION = 0.044;
+
 const getGemFamily = (material: any) =>
   String(
     material?.userData?.aurumGemFamily ??
@@ -346,7 +348,7 @@ export async function createAurumDiamondBvhRuntime(options: {
           // Chromatic splitting is restrained on small white melee to avoid
           // unstable sub-pixel color fragments that read as moving particles.
           dispersion: family === "diamante"
-            ? (isNeutralMicroDiamond ? 0.0012 : isNeutralSmallDiamond ? 0.0022 : isSmallSecondaryDiamond ? 0.0035 : isBlueDiamond ? 0.004 : isPinkDiamond ? 0.012 : mesh.userData?.aurumDiamondMicroCenterProtected ? 0.044 : activeGemId === "diamante_natural" ? 0.01 : 0.006)
+            ? (isNeutralMicroDiamond ? 0.0012 : isNeutralSmallDiamond ? 0.0022 : isSmallSecondaryDiamond ? 0.0035 : isBlueDiamond ? 0.004 : isPinkDiamond ? 0.012 : mesh.userData?.aurumDiamondMicroCenterProtected ? CENTER_DIAMOND_DISPERSION : activeGemId === "diamante_natural" ? 0.01 : 0.006)
             : useEmeraldBvhOptics ? 0 : (emeraldProfile?.dispersion ?? rubyProfile?.dispersion ?? sapphireProfile?.dispersion ?? (isRuby ? 0.001 : isSapphire ? 0.001 : isAmethyst || isAquamarine || isCitrine || isBlueTopaz || isImperialTopaz || isParaibaTourmaline || isTanzanite || isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 0.0002 : isZircon ? 0.001 : isMoissanite ? 0.009 : 0.01)),
           ior: emeraldProfile?.ior ?? rubyProfile?.ior ?? sapphireProfile?.ior ?? (family === "diamante" ? 2.417 : isEmerald ? 1.58 : isRuby ? 1.762 : isSapphire ? 1.762 : isAmethyst ? 1.55 : isAquamarine ? 1.577 : isCitrine || isQuartz ? 1.544 : isBlueTopaz || isImperialTopaz ? 1.63 : isParaibaTourmaline || isOtherTourmaline ? 1.62 : isTanzanite ? 1.695 : isMoissanite ? 2.65 : isSpinel ? 1.718 : isGarnet ? 1.78 : isPeridot ? 1.65 : isMorganite ? 1.58 : isZircon ? 1.92 : isChrysoberyl ? 1.75 : 1.55),
           // Match the catalog's iJewel inclusion reference (absorption 1.6)
@@ -382,7 +384,7 @@ export async function createAurumDiamondBvhRuntime(options: {
               const isSmall = nextTier === "small";
               const baseEnvironment = activeGemId === "diamante_vs" ? 1.82
                 : activeGemId === "diamante_inclusiones" ? 2.05 : 1.92;
-              const baseDispersion = activeGemId === "diamante_natural" ? 0.01 : 0.044;
+              const baseDispersion = activeGemId === "diamante_natural" ? 0.01 : CENTER_DIAMOND_DISPERSION;
               packageApi.setDiamondOptions(prepared.material, {
                 rgbBoost: isMicro ? [1.06, 1.06, 1.06] : isSmall ? [1.09, 1.09, 1.09] : [1.08, 1.08, 1.08],
                 environmentIntensity: isMicro ? 1.28 : isSmall ? 1.38 : baseEnvironment,
@@ -426,6 +428,16 @@ export async function createAurumDiamondBvhRuntime(options: {
         // transitions, leaving emeralds at the shader package's generic default.
         entries.get(mesh)?.setQuality(family === "diamante" ? "high" : (options.quality ?? "interactive"));
         mesh.material = prepared.material;
+        if (family === "diamante" && mesh.userData?.aurumDiamondMicroCenterProtected) {
+          console.info("[AURUM][DIAMOND][BVH] Perfil óptico central activo", {
+            mesh: mesh.name || mesh.uuid,
+            gemId: activeGemId,
+            dispersion: prepared.material.uniforms?.dispersion?.value ?? CENTER_DIAMOND_DISPERSION,
+            rayBounces: prepared.diagnostics.rayBounces,
+            environmentIntensity: prepared.diagnostics.environmentIntensity,
+            toneMapping: "HDR lineal; ACES interno retirado",
+          });
+        }
         found.add(mesh);
         if (isEmerald && targetFamilies.includes("esmeralda")) {
           console.info("[AURUM][EMERALD BVH] Prototipo aplicado", {
