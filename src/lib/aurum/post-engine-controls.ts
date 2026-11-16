@@ -8,10 +8,8 @@ export type AurumPostControls = {
 const STORAGE_KEY = "aurum:post-engine-controls:v2";
 const LEGACY_STORAGE_KEY = "aurum:post-engine-controls:v1";
 const DEFAULTS: AurumPostControls = {
-  // Selective diamond-only supersampling is enabled by default. Its compositor
-  // replaces pixels inside the center-diamond mask only and runs only while settled.
-  // FXAA complements diamond SSAA but is restricted to the outer girdle silhouette.
-  // It does not filter internal facet boundaries.
+  // Emergency rollback: keep all additional AA treatments disabled until
+  // the original metal/environment appearance is visually confirmed.
   gemFxaaEnabled: false,
   diamondSsaaEnabled: false,
   surfaceEdgeAaEnabled: false,
@@ -38,7 +36,7 @@ export function getAurumPostControls(): AurumPostControls {
     // Full-surface AA and temporal accumulation are deliberately not migrated.
     const legacyRaw = window.localStorage.getItem(LEGACY_STORAGE_KEY);
     if (!legacyRaw) return DEFAULTS;
-    const legacy = JSON.parse(legacyRaw);
+    JSON.parse(legacyRaw); // Validate legacy data, but do not restore its unsafe flags.
     const migrated: AurumPostControls = {
       // The emergency rollback keeps all added diamond treatments disabled.
       // Legacy full-surface AA and TAA preferences are intentionally discarded.
