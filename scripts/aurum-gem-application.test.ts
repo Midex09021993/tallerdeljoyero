@@ -267,32 +267,39 @@ test("masked native-resolution FXAA is independent from SSAA; SSAA and TAA remai
   expect(controls).toContain("diamondSsaaEnabled: false");
   expect(controls).toContain("diamondTaaEnabled: false");
   expect(post).toContain("const fxaaEnabled=diamondMaskReady && fxaaRequested;");
-  expect(post).toContain("const renderDiamondFxaaFrame=(activeRenderer:any)=>");
-  expect(post).toContain("ensureDiamondFxaaBeautyTarget(width,height)");
-  expect(post).toContain("fxaaPass.render(activeRenderer,null,target,0,false)");
+  expect(post).toContain("const renderDiamondFxaaOverlay=(activeRenderer:any)=>");
+  expect(post).toContain("ensureDiamondFxaaSnapshotTexture(width,height,activeRenderer)");
+  expect(post).toContain("activeRenderer.copyFramebufferToTexture(new THREE.Vector2(0,0),snapshot)");
+  expect(post).toContain("fxaaPass.render(activeRenderer,null,{texture:snapshot},0,false)");
+  expect(post).toContain("if(centerMask<0.5) discard;");
   expect(post).not.toContain("ensureDiamondSupersampleFxaaTarget");
   expect(post).not.toContain("renderFxaa(activeRenderer,enabled:boolean)");
   expect(render).toContain('const blocked=item.key==="diamondSsaaEnabled"||item.key==="diamondTaaEnabled"||(item.key==="gemFxaaEnabled"&&!diamondPostControls.gemMaskEnabled);');
-  expect(render).toContain("renderDiamondFxaaFrame?.(renderer)");
+  expect(render).toContain("renderDiamondFxaaOverlay?.(renderer)");
+  expect(render).toContain("renderer.render(escena,camara);");
+  expect(render).not.toContain("renderDiamondFxaaFrame?.(renderer)");
   expect(post).not.toContain("composer.addPass(fxaaPass)");
 });
 
 test("native FXAA target preserves renderer state and applies output color conversion only once", () => {
   const post = readFileSync("src/lib/aurum/post.ts", "utf8");
-  const start = post.indexOf("const renderDiamondFxaaFrame=(activeRenderer:any)=>");
+  const start = post.indexOf("const renderDiamondFxaaOverlay=(activeRenderer:any)=>");
   const end = post.indexOf("const renderDiamondSupersampleOverlay=", start);
   const pass = post.slice(start, end);
   expect(start).toBeGreaterThan(-1);
-  expect(pass).toContain("activeRenderer.setRenderTarget(target)");
-  expect(pass).toContain("gemMaskPass.render(activeRenderer)");
+  expect(pass).toContain("activeRenderer.setRenderTarget(null)");
+  expect(pass).toContain("activeRenderer.copyFramebufferToTexture(new THREE.Vector2(0,0),snapshot)");
   expect(pass).toContain("previousTarget");
   expect(pass).toContain("previousViewport");
   expect(pass).toContain("previousScissor");
   expect(pass).toContain("previousAutoClear");
   expect(pass).not.toContain("diamondSupersample");
-  expect(post).toContain("diamondFxaaBeautyTarget.texture.colorSpace=THREE.NoColorSpace");
+  expect(post).toContain("diamondFxaaSnapshotTexture.colorSpace=activeRenderer.outputColorSpace??THREE.SRGBColorSpace");
   expect(post).toContain("#include <colorspace_fragment>");
   expect(post).toContain("fxaaPass.material.toneMapped=false");
+  expect(post).toContain("fxaaPass.material.depthTest=false");
+  expect(post).toContain("fxaaPass.material.depthWrite=false");
+  expect(post).toContain("fxaaPass.material.blending=THREE.NoBlending");
 });
 
 test("diamond perimeter AA uses the stronger masked edge profile", () => {
@@ -374,7 +381,7 @@ test("live camera motion keeps diamond-only supersampling active at a reduced ad
   expect(render).toContain("runtimeBudget.diamondLiveSupersampleScaleCap");
   expect(render).toContain("renderDiamondSupersampleOverlay?.(renderer)");
   expect(render).not.toContain("const diamondSsaaOverlayActive=");
-  expect(render).toContain('const activeToneAuditPath = diamondFxaaFrameRequested ? "direct+diamond-fxaa" : diamondOverlayRequested ? "direct+diamond-overlay" : "direct";');
+  expect(render).toContain('const activeToneAuditPath = diamondFxaaOverlayRequested ? "direct+diamond-fxaa-overlay" : diamondOverlayRequested ? "direct+diamond-overlay" : "direct";');
   expect(render).toContain("renderer.render(escena,camara);");
   expect(post).not.toContain("composer.addPass(fxaaPass)");
 });
