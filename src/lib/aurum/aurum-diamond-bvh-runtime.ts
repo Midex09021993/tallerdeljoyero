@@ -30,6 +30,8 @@ export type AurumDiamondBvhRuntime = {
   updateEnvironment: (rotationRadians: number, intensityScale: number) => void;
   /** Temporarily raise diamond-only ray bounces for a still capture. */
   setDiamondQuality: (quality: "interactive" | "high" | "final") => void;
+  /** Enable/disable one gemstone family without disturbing other BVH entries. */
+  setFamilyEnabled: (family: string, enabled: boolean) => void;
   dispose: () => void;
   diagnostics: () => { activeMeshes: number; triangleCount: number; diamondMeshes: number; diamondTriangleCount: number; familyCounts: Record<string, number>; skippedTargetMeshes: Array<{ mesh: string; materialFamilies: string[]; activeGemFamily: string; reason: string }>; overlappingGemPairs: Array<{ meshA: string; familyA: string; meshB: string; familyB: string; overlapRatio: number }>; enabled: boolean };
 };
@@ -85,6 +87,8 @@ export async function createAurumDiamondBvhRuntime(options: {
   });
 
   const entries = new Map<THREE.Mesh, RecordEntry>();
+  const disabledFamilies = new Set<string>();
+  let lastModel: THREE.Object3D | null = null;
   let disposed = false;
 
   // Camera uniforms are shared by all BVH gems. Avoid rewriting them when
@@ -129,6 +133,7 @@ export async function createAurumDiamondBvhRuntime(options: {
 
   const refresh = (model: THREE.Object3D | null | undefined, targetMeshes?: readonly THREE.Mesh[]) => {
     if (!model || disposed) return;
+    lastModel = model;
     hasLastCameraState = false;
     const isModelDescendant=(object:THREE.Object3D)=>{
       let current:THREE.Object3D|null=object;
@@ -231,6 +236,7 @@ export async function createAurumDiamondBvhRuntime(options: {
       }
       const uniqueFamilies = [...new Set(materialFamilies)];
       const family = uniqueFamilies.length === 1 ? uniqueFamilies[0] : "";
+      if (family && disabledFamilies.has(family)) return;
       const isParaibaCatalogId = /^turmalina_paraiba(?:_|$)/.test(activeGemId);
       const isTargetFamily = materials.length > 0 && materialFamilies.every((materialFamily) => targetFamilies.includes(materialFamily) || (isParaibaCatalogId && materialFamily === "turmalina"));
       const activeFamilyMatches = !activeGemFamily || activeGemFamily === family
@@ -519,6 +525,20 @@ export async function createAurumDiamondBvhRuntime(options: {
     setDiamondQuality(quality) {
       if (disposed) return;
       for (const entry of entries.values()) entry.setQuality(quality);
+    },
+    setFamilyEnabled(family, enabled) {
+      if (disposed) return;
+      const key = String(family ?? "").trim().toLocaleLowerCase();
+      if (!key) return;
+      if (enabled) {
+        if (!disabledFamilies.delete(key)) return;
+        if (lastModel) refresh(lastModel);
+        return;
+      }
+      disabledFamilies.add(key);
+      for (const [mesh, entry] of [...entries]) {
+        if (entry.family === key) releaseEntry(mesh, true);
+      }
     },
     dispose() {
       if (disposed) return;
