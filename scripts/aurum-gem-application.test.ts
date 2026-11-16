@@ -147,6 +147,19 @@ test("web-tier models receive 2x diamond-only supersampling without raising shar
   expect(post).toContain("setDiamondSupersampleScaleCap");
 });
 
+test("diamond SSAA mask isolates material groups and never paints adjacent metal groups", () => {
+  const post = readFileSync("src/lib/aurum/post.ts", "utf8");
+  expect(post).toContain("const getDiamondMaterialSlots=(mesh:any):Set<number>");
+  expect(post).toContain("materials.length===1&&objectIsDiamond");
+  expect(post).toContain("diamondMaskMaterialsByMesh.set(object,materials.map");
+  expect(post).toContain("colorWrite:false,toneMapped:false");
+  expect(post).toContain("scene.overrideMaterial=null;");
+  expect(post).toContain("mesh.material=diamondMaskMaterialsByMesh.get(mesh)??gemMaskMaterial;");
+  expect(post).toContain("mesh.material=material;");
+  expect(post).toContain("renderGemMaskWithOcclusion(activeRenderer,activeMaskTarget);");
+  expect(post).toContain("renderGemMaskWithOcclusion(activeRenderer,gemMaskTarget);");
+});
+
 test("diamond SSAA keeps the auxiliary render linear HDR and applies native tone mapping only in the overlay", () => {
   const post = readFileSync("src/lib/aurum/post.ts", "utf8");
   const auxiliaryStart = post.indexOf("const previousToneMapping=activeRenderer.toneMapping;");
