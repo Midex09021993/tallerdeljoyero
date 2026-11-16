@@ -724,17 +724,18 @@ export async function createAurumPostPipeline(
     // Motion is handled separately by setTemporalMotion(), never by hiding
     // the configured settled TAA request.
     const isLowQuality=qualityId==="low" || (qualityId==="" && Number(q?.pixelRatio??1.5) <= 1.01);
-    // TAA is requested for the masked diamond composite, never the full frame.
-    taaRequested = true;
-    const taaEnabled = false; // applyDiamondPostModules enables it after mask discovery.
-    const edgeAaEnabled = false; // Masked FXAA is controlled separately.
-    const ssaaActive=diamondSsaaEnabled() && Boolean(gemMaskPass?.hasDiamondMeshes)
-      && !isLowQuality && !["low","extreme"].includes(lastKnownBudgetTier)
-      && Boolean(diamondSupersamplePass?.canRender?.());
-    if(diamondSupersamplePass) diamondSupersamplePass.enabled=ssaaActive;
-    if(diamondSupersampleCompositePass) diamondSupersampleCompositePass.enabled=ssaaActive;
-    if(gemMaskPass) gemMaskPass.enabled=ssaaActive || edgeAaEnabled;
-    if(fxaaPass) fxaaPass.enabled=edgeAaEnabled;
+    // Restore the unfiltered beauty render while the diamond optics are recovered.
+    taaRequested = false;
+    const taaEnabled = false;
+    const edgeAaEnabled = false;
+    const ssaaActive = false;
+    if(diamondSupersamplePass) diamondSupersamplePass.enabled=false;
+    if(diamondSupersampleCompositePass) diamondSupersampleCompositePass.enabled=false;
+    if(gemMaskPass) gemMaskPass.enabled=false;
+    if(fxaaPass) fxaaPass.enabled=false;
+    if(taaPass) { taaPass.enabled=false; taaPass.accumulate=false; }
+    if(diamondTaaSavePass) diamondTaaSavePass.enabled=false;
+    if(diamondTaaCompositePass) diamondTaaCompositePass.enabled=false;
     // Metal is out of scope for the diamond-quality work: never run the
     // full-surface edge filter in the live/capture composer.
     if(surfaceEdgeAaPass) surfaceEdgeAaPass.enabled=false;
