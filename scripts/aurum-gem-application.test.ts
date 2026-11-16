@@ -186,6 +186,7 @@ test("live camera motion keeps diamond-only supersampling active at a reduced ad
   expect(render).toContain("const useLiveGemAa = Boolean(");
   expect(render).toContain("&& gemMaskPass?.hasDiamondMeshes");
   expect(render).toContain("&& fxaaPass?.enabled");
+  expect(render).toContain("(fxaaPass?.enabled || (diamondSupersamplePass?.enabled && diamondSupersampleCompositePass?.enabled))");
   expect(render).toContain("diamondSupersamplingEnabled: liveDiamondSsaaActive");
   expect(render).not.toContain("fxaaPass.enabled = diamondSsaaActive");
   expect(render).toContain("[diamondSupersamplePass, gemMaskPass, diamondSupersampleCompositePass, ...(fxaaPass?.enabled ? [fxaaPass] : [])]");
