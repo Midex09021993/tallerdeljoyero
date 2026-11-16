@@ -1043,7 +1043,7 @@ export async function createAurumPostPipeline(
   const setDiamondSupersamplingSettled=(settled:boolean)=>{
     diamondSupersamplingSettled=Boolean(settled);
     diamondSupersamplePass?.setScaleCap?.(diamondSupersamplingSettled?diamondSupersampleScaleCap:diamondLiveSupersampleScaleCap);
-    return applyDiamondPostModules(getAurumPostControls());
+    return Boolean(applyDiamondPostModules(getAurumPostControls())?.ssaa);
   };
   const unsubscribePostControls=subscribeAurumPostControls((controls)=>{
     applyDiamondPostModules(controls);
