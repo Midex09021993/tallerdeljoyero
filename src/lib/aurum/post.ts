@@ -41,6 +41,8 @@ export async function createAurumPostPipeline(
   let composer:any=null;
   let renderPass:any=null;
   let taaPass:any=null;
+  let diamondTaaSavePass:any=null;
+  let diamondTaaCompositePass:any=null;
   let ssrPass:any=null;
   let ssrSavePass:any=null;
   let ssrCompositePass:any=null;
@@ -545,6 +547,35 @@ export async function createAurumPostPipeline(
     composer.passes.splice(composer.passes.indexOf(diamondSupersamplePass),1);
     composer.passes.splice(composer.passes.indexOf(renderPass)+1,0,diamondSupersamplePass);
 
+
+    // Diamond-only TAA: save the pre-TAA beauty and composite the temporal result
+    // only through the center-diamond mask, preserving every metal/environment pixel.
+    try {
+      const { SavePass } = await import("three/examples/jsm/postprocessing/SavePass.js");
+      const { ShaderPass } = await import("three/examples/jsm/postprocessing/ShaderPass.js");
+      diamondTaaSavePass = new SavePass();
+      diamondTaaSavePass.enabled = false;
+      diamondTaaCompositePass = new ShaderPass({
+        uniforms: {
+          tDiffuse: { value: null },
+          tDiamondBase: { value: diamondTaaSavePass.renderTarget.texture },
+          gemMask: { value: gemMaskTarget.texture },
+        },
+        vertexShader: `varying vec2 vUv; void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
+        fragmentShader: `uniform sampler2D tDiffuse; uniform sampler2D tDiamondBase; uniform sampler2D gemMask; varying vec2 vUv;
+          void main(){
+            vec4 base=texture2D(tDiamondBase,vUv);
+            if(texture2D(gemMask,vUv).r<0.5){gl_FragColor=base;return;}
+            gl_FragColor=texture2D(tDiffuse,vUv);
+          }`,
+      });
+      diamondTaaCompositePass.enabled = false;
+    } catch (error) {
+      diamondTaaSavePass = null;
+      diamondTaaCompositePass = null;
+      console.warn("[AURUM][DIAMOND TAA] Masked temporal composite unavailable.", error);
+    }
+
     // AURUM Soft Edge AA is composited only inside pixels belonging to visible
     // gemstone meshes. Metals and all other geometry retain their original pixels.
     fxaaPass=new FXAAShaderPass({
@@ -609,6 +640,21 @@ export async function createAurumPostPipeline(
     const compositeIndex=composer.passes.indexOf(diamondSupersampleCompositePass);
     composer.passes.splice(compositeIndex,1);
     composer.passes.splice(composer.passes.indexOf(gemMaskPass)+1,0,diamondSupersampleCompositePass);
+    if (diamondTaaSavePass && diamondTaaCompositePass && taaPass) {
+      composer.addPass(diamondTaaSavePass);
+      composer.addPass(diamondTaaCompositePass);
+      const removePass = (pass:any) => {
+        const index = composer.passes.indexOf(pass);
+        if (index >= 0) composer.passes.splice(index, 1);
+      };
+      removePass(taaPass);
+      removePass(diamondTaaSavePass);
+      removePass(diamondTaaCompositePass);
+      const ssaaIndex = composer.passes.indexOf(diamondSupersamplePass);
+      composer.passes.splice(ssaaIndex + 1, 0, diamondTaaSavePass, taaPass);
+      const maskIndex = composer.passes.indexOf(gemMaskPass);
+      composer.passes.splice(maskIndex + 1, 0, diamondTaaCompositePass);
+    }
 
     // Conservative full-surface edge AA for polished metal silhouettes and
     // CAD curves. It is intentionally disabled during camera motion and uses
@@ -675,15 +721,10 @@ export async function createAurumPostPipeline(
     // Motion is handled separately by setTemporalMotion(), never by hiding
     // the configured settled TAA request.
     const isLowQuality=qualityId==="low" || (qualityId==="" && Number(q?.pixelRatio??1.5) <= 1.01);
-    // TAA remains capture-only; the Post Engine switch controls whether
-    // explicit still captures request temporal accumulation.
-    // TAA is a full-frame temporal filter, so it is excluded from the
-    // diamond-only scope even during still-image capture.
-    taaRequested=false;
-    const taaEnabled=false;
-    // Edge AA is a settled-quality treatment: never add fullscreen filtering
-    // work to the direct-render orbit path. Still captures may use it explicitly.
-    const edgeAaEnabled=false; // FXAA remains off; preserve crisp internal facets.
+    // TAA is requested for the masked diamond composite, never the full frame.
+    taaRequested = config.taa !== false;
+    const taaEnabled = false; // applyDiamondPostModules enables it after mask discovery.
+    const edgeAaEnabled = false; // Masked FXAA is controlled separately.
     const ssaaActive=diamondSsaaEnabled() && Boolean(gemMaskPass?.hasDiamondMeshes)
       && !isLowQuality && !["low","extreme"].includes(lastKnownBudgetTier)
       && Boolean(diamondSupersamplePass?.canRender?.());
@@ -937,19 +978,19 @@ export async function createAurumPostPipeline(
     // Preserve metal pixels: Surface Edge AA is deliberately excluded.
     if(surfaceEdgeAaPass) surfaceEdgeAaPass.enabled=false;
     if(!taaPass)return;
-    // Hard-disable temporal accumulation on every interaction start, even if
-    // a previous state transition left the motion flag unchanged.
+    // Never accumulate while the camera moves; restart temporal history at rest.
     if(next){
       taaPass.enabled=false;
       taaPass.accumulate=false;
       taaPass.accumulateIndex=-1;
+      if(diamondTaaSavePass) diamondTaaSavePass.enabled=false;
+      if(diamondTaaCompositePass) diamondTaaCompositePass.enabled=false;
       return;
     }
-    // At rest, start a fresh history only when the settled profile requested TAA.
     if(changed){
       taaPass.accumulate=false;
       taaPass.accumulateIndex=-1;
-      taaPass.enabled=taaRequested;
+      applyDiamondPostModules(postControls);
       if(taaPass.enabled)taaPass.accumulate=true;
     }
   };
@@ -959,15 +1000,25 @@ export async function createAurumPostPipeline(
   const applyDiamondPostModules=(controls:any)=>{
     // Selective SSAA is enabled by default when the center-diamond mask and
     // adaptive GPU budget permit it. Its output remains mask-confined; FXAA stays off.
-    const ssaaEnabled=diamondSsaaEnabled() && Boolean(gemMaskPass?.hasDiamondMeshes)
-      && !["low","extreme"].includes(lastKnownBudgetTier) && lastKnownQualityId!=="low"
+    const hasCenterDiamond=Boolean(gemMaskPass?.hasDiamondMeshes);
+    const qualityAllowsDiamondAa=!["low","extreme"].includes(lastKnownBudgetTier) && lastKnownQualityId!=="low";
+    const ssaaEnabled=diamondSsaaEnabled() && hasCenterDiamond && qualityAllowsDiamondAa
       && Boolean(diamondSupersamplePass?.canRender?.());
-    const fxaaEnabled=false;
+    const taaEnabled=hasCenterDiamond && qualityAllowsDiamondAa && Boolean(taaRequested)
+      && Boolean(taaPass && diamondTaaSavePass && diamondTaaCompositePass) && !temporalMotionActive;
+    const fxaaEnabled=hasCenterDiamond && qualityAllowsDiamondAa;
     if(diamondSupersamplePass) diamondSupersamplePass.enabled=ssaaEnabled;
     if(diamondSupersampleCompositePass) diamondSupersampleCompositePass.enabled=ssaaEnabled;
-    if(gemMaskPass) gemMaskPass.enabled=ssaaEnabled || fxaaEnabled;
+    if(taaPass){
+      taaPass.enabled=taaEnabled;
+      taaPass.accumulate=taaEnabled;
+      if(taaEnabled && taaPass.accumulateIndex < 0) taaPass.sampleLevel=4;
+    }
+    if(diamondTaaSavePass) diamondTaaSavePass.enabled=taaEnabled;
+    if(diamondTaaCompositePass) diamondTaaCompositePass.enabled=taaEnabled;
+    if(gemMaskPass) gemMaskPass.enabled=ssaaEnabled || fxaaEnabled || taaEnabled;
     if(fxaaPass) fxaaPass.enabled=fxaaEnabled;
-    return ssaaEnabled;
+    return ssaaEnabled || taaEnabled || fxaaEnabled;
   };
   const setDiamondSupersampleScaleCap=(settledCap:number,liveCap?:number)=>{
     diamondSupersampleScaleCap=Math.max(1,Math.min(2,Number(settledCap)||1));
