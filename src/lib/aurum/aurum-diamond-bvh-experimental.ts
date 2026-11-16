@@ -46,6 +46,10 @@ export type AurumDiamondBvhSetupOptions = {
   adaptiveRayEpsilon?: boolean;
   /** Accumulate all internal refracted exits for the focal diamond only. */
   accumulateInternalExits?: boolean;
+  /** Enable bounded facet fire and view-dependent scintillation on the focal diamond only. */
+  enableDiamondEffects?: boolean;
+  fireIntensity?: number;
+  scintillationIntensity?: number;
 };
 
 export type AurumDiamondBvhSetup = {
@@ -135,6 +139,33 @@ export function prepareAurumDiamondBvhExperiment(
     acesOutput,
     "gl_FragColor = vec4(hdrColor, 1.0);",
   );
+  if (options.enableDiamondEffects) {
+    const fireIntensity = Math.max(0, Math.min(0.2, options.fireIntensity ?? 0.12));
+    const scintillationIntensity = Math.max(0, Math.min(0.15, options.scintillationIntensity ?? 0.08));
+    const uniformAnchor = "  precision highp float;";
+    if (!material.fragmentShader.includes(uniformAnchor)) {
+      throw new Error("[AURUM diamond BVH] No se pudo insertar los uniformes de efectos.");
+    }
+    material.fragmentShader = material.fragmentShader.replace(
+      uniformAnchor,
+      `${uniformAnchor}\\n uniform float aurumDiamondFireIntensity;\\n uniform float aurumDiamondScintillationIntensity;`,
+    );
+    const hdrOutput = "gl_FragColor = vec4(hdrColor, 1.0);";
+    const effectOutput = `float aurumFacetView = clamp(abs(dot(normalize(view), normalize(worldNormal))), 0.0, 1.0);
+    float aurumFireLobe = pow(clamp(1.0 - aurumFacetView, 0.0, 1.0), 7.0);
+    float aurumScintillationLobe = pow(max(dot(reflect(incident, worldNormal), view), 0.0), 48.0);
+    vec3 aurumFireSpectrum = vec3(0.32, 0.62, 1.0) * aurumFireLobe * aurumDiamondFireIntensity;
+    hdrColor += aurumFireSpectrum * max(internalTransmission, vec3(0.0)) * 0.22;
+    hdrColor *= 1.0 + aurumScintillationLobe * aurumDiamondScintillationIntensity;
+    gl_FragColor = vec4(hdrColor, 1.0);`;
+    if (!material.fragmentShader.includes(hdrOutput)) {
+      throw new Error("[AURUM diamond BVH] No se encontró la salida HDR para activar los efectos.");
+    }
+    material.fragmentShader = material.fragmentShader.replace(hdrOutput, effectOutput);
+    material.uniforms.aurumDiamondFireIntensity = { value: fireIntensity };
+    material.uniforms.aurumDiamondScintillationIntensity = { value: scintillationIntensity };
+    material.needsUpdate = true;
+  }
   if (options.accumulateInternalExits) {
     const declarations = [
       "    vec3 internalExitR = ray;",
