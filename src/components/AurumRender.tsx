@@ -3961,8 +3961,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           gemMaskPass.enabled=getAurumPostControls().gemMaskEnabled;
           renderer.render(escena,camara);
           if(gemMaskPass.enabled){
+            // Keep the categorical mask internal to diamond-only processing.
+            // The cyan diagnostic overlay was for validation only and must never
+            // tint the beauty render while FXAA is active.
             gemMaskPass.render(renderer);
-            gemMaskPass.renderDiagnosticOverlay?.(renderer);
           }
           // Detached diamond reconstruction only composites the classified
           // diamond pixels over the untouched beauty frame.
@@ -4956,20 +4958,20 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               <div className="mb-2 text-[10px] font-semibold uppercase tracking-[.12em] text-[#92743b]">Antialiasing del diamante</div>
               <p className="mb-3 text-[9px] leading-relaxed text-[#77756f]">Gem Mask ya puede activarse para comprobar el aislamiento. SSAA, FXAA y TAA siguen bloqueados hasta aprobar la validación visual.</p>
               {([
-                {key:"gemMaskEnabled",label:"Gem Mask",description:"Visualiza temporalmente en cian la máscara del diamante central; apágala para volver al render normal."},
+                {key:"gemMaskEnabled",label:"Gem Mask",description:"Máscara interna del diamante central; delimita el área donde puede trabajar FXAA sin modificar metal ni ambiente."},
                 {key:"diamondSsaaEnabled",label:"SSAA",description:"Render auxiliar de mayor resolución para el diamante."},
-                {key:"gemFxaaEnabled",label:"FXAA",description:"Suavizado selectivo del contorno del diamante."},
-                {key:"diamondTaaEnabled",label:"TAA",description:"Acumula muestras cuando está fijo; al mover la cámara usa FXAA selectivo para evitar estelas."},
+                {key:"gemFxaaEnabled",label:"FXAA",description:"Suavizado selectivo del contorno del diamante, limitado por Gem Mask."},
+                {key:"diamondTaaEnabled",label:"TAA",description:"Acumula muestras del diamante cuando la cámara está fija."},
               ] as const).map((item)=>{
                 const enabled=diamondPostControls[item.key];
-                const dependent=item.key!=="gemMaskEnabled";
-                const blocked=dependent;
+                const blocked=item.key==="diamondSsaaEnabled"||item.key==="diamondTaaEnabled"||(item.key==="gemFxaaEnabled"&&!diamondPostControls.gemMaskEnabled);
+                const blockedMessage=item.key==="gemFxaaEnabled"?"Activa Gem Mask para habilitar FXAA.":"Bloqueado hasta validar FXAA de forma independiente.";
                 return <div key={item.key} className="flex items-center justify-between gap-3 border-t border-black/[.05] py-2 first:border-t-0 first:pt-0">
-                  <div className="min-w-0"><div className="text-[11px] font-semibold text-[#292824]">{item.label}</div><p className="mt-0.5 text-[9px] leading-relaxed text-[#77756f]">{item.description}</p>{blocked&&<p className="mt-1 text-[9px] font-semibold text-amber-700">Bloqueado temporalmente hasta validar Gem Mask sobre el modelo real.</p>}</div>
-                  <button type="button" role="switch" aria-label={item.label} aria-checked={enabled} aria-disabled={blocked} disabled={blocked} title={blocked?"Pendiente de validación visual":"Activar o desactivar Gem Mask"} onClick={()=>{if(blocked)return;const next=setAurumPostControls({gemMaskEnabled:!enabled});setDiamondPostControls(next);viewerLoopRef.current?.invalidate?.();}} className={"relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors "+(blocked?"cursor-not-allowed opacity-50 ":"")+(enabled?"bg-[#a88743]":"bg-[#c9c6bf]")}><span className={"inline-block size-3.5 rounded-full bg-white shadow-sm transition-transform "+(enabled?"translate-x-[18px]":"translate-x-1")}/></button>
+                  <div className="min-w-0"><div className="text-[11px] font-semibold text-[#292824]">{item.label}</div><p className="mt-0.5 text-[9px] leading-relaxed text-[#77756f]">{item.description}</p>{blocked&&<p className="mt-1 text-[9px] font-semibold text-amber-700">{blockedMessage}</p>}</div>
+                  <button type="button" role="switch" aria-label={item.label} aria-checked={enabled} aria-disabled={blocked} disabled={blocked} title={blocked?blockedMessage:"Activar o desactivar "+item.label} onClick={()=>{if(blocked)return;const next=item.key==="gemMaskEnabled"?setAurumPostControls({gemMaskEnabled:!enabled}):item.key==="gemFxaaEnabled"?setAurumPostControls({gemFxaaEnabled:!enabled}):getAurumPostControls();setDiamondPostControls(next);viewerLoopRef.current?.invalidate?.();}} className={"relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors "+(blocked?"cursor-not-allowed opacity-50 ":"")+(enabled?"bg-[#a88743]":"bg-[#c9c6bf")}><span className={"inline-block size-3.5 rounded-full bg-white shadow-sm transition-transform "+(enabled?"translate-x-[18px]":"translate-x-1")}/></button>
                 </div>;
               })}
-              <div className="mt-2 border-t border-black/[.06] pt-2 text-[9px] leading-relaxed text-[#8a857b]">La visualización cian es solo diagnóstico. Al apagar Gem Mask se restaura el render original. Surface Edge AA y TAA global permanecen bloqueados.</div>
+              <div className="mt-2 border-t border-black/[.06] pt-2 text-[9px] leading-relaxed text-[#8a857b]">La máscara permanece invisible en el render normal y solo delimita el procesamiento del diamante. SSAA y TAA siguen bloqueados durante esta prueba.</div>
             </section>
             <section className="rounded-xl border border-[#e6e1d8] bg-white p-3">
               <div className="mb-2 flex items-center justify-between gap-2"><div className="text-[10px] font-semibold uppercase tracking-[.12em] text-[#92743b]">Diagnóstico de ejecución</div><button type="button" onClick={requestGemMaskDiagnostics} disabled={gemMaskDiagnosticStatus==="pending"} className="rounded-lg border border-black/10 px-2 py-1 text-[9px] font-semibold text-[#6d5523]">Actualizar</button></div>
