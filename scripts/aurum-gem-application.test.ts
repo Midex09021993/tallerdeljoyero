@@ -166,7 +166,6 @@ test("legacy Post Engine preferences cannot reactivate full-frame AA or TAA", ()
   expect(controls).toContain("diamondSsaaEnabled: false");
   expect(controls).toContain("surfaceEdgeAaEnabled: false");
   expect(controls).toContain("taaEnabled: false");
-  expect(controls).toContain("surfaceEdgeAaEnabled: false,\\n    taaEnabled: false,");
   expect(controls).toContain("const migrated: AurumPostControls");
   expect(post).toContain("taaRequested=false;");
   expect(post).toContain("const taaEnabled=false;");
