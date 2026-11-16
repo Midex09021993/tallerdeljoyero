@@ -34,7 +34,7 @@ function projectedFootprint(model: THREE.Object3D, camera: THREE.PerspectiveCame
   }, 0);
 }
 
-test("all four camera views preserve the same camera distance and fit the complete product", () => {
+test("all four camera views preserve reference scale with a small lateral compensation", () => {
   const views = ["frontal", "lateral", "superior", "perspectiva"] as const;
   const distances: number[] = [];
 
@@ -64,8 +64,11 @@ test("all four camera views preserve the same camera distance and fit the comple
     expect(footprint).toBeLessThan(0.75);
   }
 
-  // A view preset changes orientation, never the apparent camera scale.
-  expect(Math.max(...distances) - Math.min(...distances)).toBeLessThan(1e-6);
+  // Frontal, superior and 3/4 perspective share the reference distance.
+  expect(Math.abs(distances[0] - distances[2])).toBeLessThan(1e-6);
+  expect(Math.abs(distances[0] - distances[3])).toBeLessThan(1e-6);
+  // Lateral alone is 5% closer to compensate its measured smaller framing.
+  expect(Math.abs(distances[1] / distances[0] - 0.95)).toBeLessThan(1e-6);
 });
 
 test("camera view framing adapts to portrait, square and landscape viewport ratios", () => {
