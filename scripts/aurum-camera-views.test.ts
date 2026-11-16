@@ -34,6 +34,25 @@ function projectedFootprint(model: THREE.Object3D, camera: THREE.PerspectiveCame
   }, 0);
 }
 
+function projectedBoundsCenter(model: THREE.Object3D, camera: THREE.PerspectiveCamera) {
+  model.updateMatrixWorld(true);
+  camera.updateMatrixWorld(true);
+  const bounds = new THREE.Box3().setFromObject(model);
+  const corners = [
+    new THREE.Vector3(bounds.min.x, bounds.min.y, bounds.min.z),
+    new THREE.Vector3(bounds.min.x, bounds.min.y, bounds.max.z),
+    new THREE.Vector3(bounds.min.x, bounds.max.y, bounds.min.z),
+    new THREE.Vector3(bounds.min.x, bounds.max.y, bounds.max.z),
+    new THREE.Vector3(bounds.max.x, bounds.min.y, bounds.min.z),
+    new THREE.Vector3(bounds.max.x, bounds.min.y, bounds.max.z),
+    new THREE.Vector3(bounds.max.x, bounds.max.y, bounds.min.z),
+    new THREE.Vector3(bounds.max.x, bounds.max.y, bounds.max.z),
+  ].map(point => point.project(camera));
+  const xs = corners.map(point => point.x);
+  const ys = corners.map(point => point.y);
+  return { x: (Math.min(...xs) + Math.max(...xs)) * 0.5, y: (Math.min(...ys) + Math.max(...ys)) * 0.5 };
+}
+
 test("all four camera views use exactly the same scale and differ only by orientation", () => {
   const views = ["frontal", "lateral", "superior", "perspectiva"] as const;
   const distances: number[] = [];
@@ -66,6 +85,15 @@ test("all four camera views use exactly the same scale and differ only by orient
 
   // Every preset is a pure camera rotation around the same target and scale.
   expect(Math.max(...distances) - Math.min(...distances)).toBeLessThan(1e-6);
+});
+
+test("lateral view centers the projected jewel without changing camera distance", () => {
+  const { model, camera, controls } = createFixture();
+  applyAurumCameraView(camera, controls, model, "lateral", "Anillo", 1);
+  const center = projectedBoundsCenter(model, camera);
+  expect(Math.abs(center.x)).toBeLessThan(1e-5);
+  expect(Math.abs(center.y)).toBeLessThan(1e-5);
+  expect(camera.position.distanceTo(controls.target)).toBeGreaterThan(0);
 });
 
 test("camera view framing adapts to portrait, square and landscape viewport ratios", () => {
