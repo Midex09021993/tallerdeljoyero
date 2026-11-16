@@ -276,3 +276,13 @@ test("Aurum Render never enables full-surface edge AA while diamond-only quality
   expect(post).not.toContain("surfaceEdgeAaPass.enabled=Boolean(controls.surfaceEdgeAaEnabled)");
   expect(render).toContain("surfaceEdgeAaEnabled:false,outputPass");
 });
+
+
+test("global renderer and composer MSAA stay disabled for diamond-only antialiasing", () => {
+  const viewer = readFileSync("src/lib/aurum/viewer.ts", "utf8");
+  const edgeManager = readFileSync("src/lib/aurum/edge-quality/edge-quality-manager.ts", "utf8");
+  expect(viewer).toContain("antialias: false");
+  expect(viewer).not.toContain("antialias: true");
+  expect(edgeManager).toContain("configureAurumComposerMsaa(renderer, composer, 0)");
+  expect(edgeManager).not.toContain("configureAurumComposerMsaa(renderer, composer, 4)");
+});
