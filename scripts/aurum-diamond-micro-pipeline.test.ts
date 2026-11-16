@@ -65,8 +65,10 @@ test("provides conservative optical tiers while preserving the brilliant baselin
   const micro = getAurumDiamondMicroOpticalProfile("micro");
   const small = getAurumDiamondMicroOpticalProfile("small");
   const brilliant = getAurumDiamondMicroOpticalProfile("brilliant");
+  expect(micro).toEqual({ scintillationScale: 0.22, facetContrastScale: 0.72, dispersionScale: 0.72, virtualFacetWeight: 0.004, fireScale: 0.38 });
+  expect(small).toEqual({ scintillationScale: 0.62, facetContrastScale: 0.84, dispersionScale: 0.86, virtualFacetWeight: 0.022, fireScale: 0.72 });
   expect(micro.scintillationScale).toBeLessThan(small.scintillationScale);
-  expect(small.scintillationScale).toBeLessThan(1);
+  expect(micro.dispersionScale).toBeLessThan(small.dispersionScale);
   expect(micro.virtualFacetWeight).toBeLessThan(small.virtualFacetWeight);
   expect(brilliant).toEqual({ scintillationScale: 1, facetContrastScale: 1, dispersionScale: 1, virtualFacetWeight: 0.06, fireScale: 1 });
 });
