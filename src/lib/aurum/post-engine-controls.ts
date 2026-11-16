@@ -12,8 +12,8 @@ const DEFAULTS: AurumPostControls = {
   // replaces pixels inside the center-diamond mask only and runs only while settled.
   // FXAA complements diamond SSAA but is restricted to the outer girdle silhouette.
   // It does not filter internal facet boundaries.
-  gemFxaaEnabled: true,
-  diamondSsaaEnabled: true,
+  gemFxaaEnabled: false,
+  diamondSsaaEnabled: false,
   surfaceEdgeAaEnabled: false,
   taaEnabled: false,
 };
@@ -40,8 +40,8 @@ export function getAurumPostControls(): AurumPostControls {
     const migrated: AurumPostControls = {
       // The v2 selective diamond pipeline is the current default. Preserve
       // independent user choices for surface AA and TAA from the legacy store.
-      gemFxaaEnabled: true,
-      diamondSsaaEnabled: true,
+      gemFxaaEnabled: false,
+      diamondSsaaEnabled: false,
       surfaceEdgeAaEnabled: legacy.surfaceEdgeAaEnabled === true,
       taaEnabled: legacy.taaEnabled === true,
     };
