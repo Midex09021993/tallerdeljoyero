@@ -150,6 +150,7 @@ test("web-tier models receive 2x diamond-only supersampling without raising shar
   expect(component).toContain("diamondMicroPipeline.refresh();\n        diamondMicroPipeline.update();\n        // Synchronize the newly prepared gemstone BVH");
   expect(component).toContain("diamondBvhRuntime.refresh(modelo);\n              // Re-index after BVH material replacement");
   const post = readFileSync("src/lib/aurum/post.ts", "utf8");
+  expect(post).toContain("data.aurumActiveGemFamily??data.aurumGemFamily??data.aurumDiamondOpticalFamily");
   expect(post).toContain("Math.min(diamondSupersampleScaleCap,Math.sqrt(8_500_000/Math.max(1,basePixels)))");
   expect(post).toContain("if(texture2D(gemMask,vUv).r<0.5){gl_FragColor=base;return;}");
   expect(post).toContain("setDiamondSupersampleScaleCap");
