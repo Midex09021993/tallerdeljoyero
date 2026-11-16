@@ -438,7 +438,7 @@ export async function createAurumPostPipeline(
         activeRenderer.readRenderTargetPixels(gemMaskTarget,0,0,width,height,pixels);
         let covered=0;
         for(let index=0;index<pixels.length;index+=4){
-          if(pixels[index]>=128) covered++;
+          if((pixels[index]??0)>=128) covered++;
         }
         gemMaskMaskPixelCount=covered;
         gemMaskCoveragePercent=Number((covered/(width*height)*100).toFixed(4));
