@@ -515,6 +515,7 @@ export async function createAurumPostPipeline(
     // A categorical mask restricts the final composite to the visible diamond.
     diamondSupersamplePass={
       enabled:false,needsSwap:false,clear:false,renderToScreen:false,
+      get scale(){ return diamondSupersampleScale; },
       setSize(width:number,height:number){
         diamondSupersampleBaseWidth=Math.max(1,Math.floor(width));
         diamondSupersampleBaseHeight=Math.max(1,Math.floor(height));
@@ -525,8 +526,10 @@ export async function createAurumPostPipeline(
         const targetWidth=canRender?Math.max(2,Math.floor(diamondSupersampleBaseWidth*diamondSupersampleScale)):2;
         const targetHeight=canRender?Math.max(2,Math.floor(diamondSupersampleBaseHeight*diamondSupersampleScale)):2;
         diamondSupersampleTarget?.setSize?.(targetWidth,targetHeight);
-        if(diamondSupersampleTarget && diamondSupersampleCompositePass){
-          diamondSupersampleCompositePass.material.uniforms.hiResTexel.value.set(1/diamondSupersampleTarget.width,1/diamondSupersampleTarget.height);
+        if(diamondSupersampleCompositePass){
+          diamondSupersampleCompositePass.material.uniforms.hiResTexel.value.set(1/targetWidth,1/targetHeight);
+          diamondSupersampleCompositePass.material.uniforms.reconstructionScale.value=diamondSupersampleScale;
+          if(diamondSupersampleTarget) diamondSupersampleCompositePass.material.uniforms.tDiamondHiRes.value=diamondSupersampleTarget.texture;
         }
         ensureDiamondSupersampleMaskTarget();
         ensureDiamondSupersampleFxaaTarget();
@@ -538,10 +541,10 @@ export async function createAurumPostPipeline(
         const targetWidth=Math.max(2,Math.floor(diamondSupersampleBaseWidth*diamondSupersampleScale));
         const targetHeight=Math.max(2,Math.floor(diamondSupersampleBaseHeight*diamondSupersampleScale));
         diamondSupersampleTarget?.setSize?.(targetWidth,targetHeight);
-        if(diamondSupersampleTarget && diamondSupersampleCompositePass){
+        if(diamondSupersampleCompositePass){
           diamondSupersampleCompositePass.material.uniforms.hiResTexel.value.set(1/targetWidth,1/targetHeight);
-          diamondSupersampleCompositePass.material.uniforms.tDiamondHiRes.value=diamondSupersampleTarget.texture;
           diamondSupersampleCompositePass.material.uniforms.reconstructionScale.value=diamondSupersampleScale;
+          if(diamondSupersampleTarget) diamondSupersampleCompositePass.material.uniforms.tDiamondHiRes.value=diamondSupersampleTarget.texture;
         }
         ensureDiamondSupersampleMaskTarget();
         ensureDiamondSupersampleFxaaTarget();
@@ -556,6 +559,11 @@ export async function createAurumPostPipeline(
           return;
         }
         if(!activeTarget || !updateDiamondSupersampleScale()) return;
+        if(diamondSupersampleCompositePass?.material?.uniforms){
+          diamondSupersampleCompositePass.material.uniforms.tDiamondHiRes.value=activeTarget.texture;
+          diamondSupersampleCompositePass.material.uniforms.hiResTexel.value.set(1/activeTarget.width,1/activeTarget.height);
+          diamondSupersampleCompositePass.material.uniforms.reconstructionScale.value=diamondSupersampleScale;
+        }
         const activeMaskTarget=ensureDiamondSupersampleMaskTarget();
         if(!activeMaskTarget) return;
         const previousTarget=activeRenderer.getRenderTarget();
@@ -682,6 +690,15 @@ export async function createAurumPostPipeline(
           // This is a true overlay: discard means the framebuffer is not
           // written at all outside the original-resolution diamond mask.
           if(texture2D(gemMask,vUv).r<0.5) discard;
+          // FXAA-only mode renders at native resolution: copy that result
+          // directly instead of applying the supersampling reconstruction filter.
+          if(reconstructionScale<=1.001){
+            if(texture2D(tDiamondHiResMask,vUv).r<0.5) discard;
+            gl_FragColor=texture2D(tDiamondHiRes,vUv);
+            #include <tonemapping_fragment>
+            #include <colorspace_fragment>
+            return;
+          }
           // Reconstruct from the high-resolution optical scene, but reject
           // every tap outside the diamond mask. This prevents background,
           // metal and mask-exterior colors from bleeding into the girdle.
@@ -1230,7 +1247,7 @@ export async function createAurumPostPipeline(
       : 1;
     diamondSupersamplePass?.setScaleCap?.(requestedScale);
     const canReconstruct=Boolean(diamondSupersamplePass?.canRender?.());
-    const ssaaEnabled=diamondMaskReady && ssaaRequested && canReconstruct;
+    const ssaaEnabled=diamondMaskReady && ssaaRequested && canReconstruct && Number(diamondSupersamplePass?.scale??1)>1.001;
     const fxaaEnabled=diamondMaskReady && fxaaRequested && canReconstruct;
     const reconstructionEnabled=ssaaEnabled || fxaaEnabled;
     const taaMotionFallback=diamondMaskReady && controls?.diamondTaaEnabled===true && temporalMotionActive;

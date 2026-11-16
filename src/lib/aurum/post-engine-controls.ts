@@ -43,6 +43,8 @@ export function getAurumPostControls(): AurumPostControls {
       // Legacy SSAA/FXAA preferences remain disabled during schema migration;
       // the new isolated controls can be enabled explicitly after migration.
       migrated.gemMaskEnabled = false;
+      migrated.diamondSsaaEnabled = false;
+      migrated.gemFxaaEnabled = false;
       migrated.diamondTaaEnabled = false;
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
       return migrated;
