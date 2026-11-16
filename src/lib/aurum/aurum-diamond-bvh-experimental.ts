@@ -141,7 +141,7 @@ export function prepareAurumDiamondBvhExperiment(
       "    vec3 internalExitG = ray;",
       "    vec3 internalExitB = ray;",
       "    float internalExitWeight = 0.0;",
-    ].join("\\n");
+    ].join("\n");
     const strongestOnlyBranch = [
       "          } else if (exitWeight > internalExitWeight) {",
       "            internalExitR = length(exitR) > 0.001 ? exitR : exitG;",
@@ -149,12 +149,12 @@ export function prepareAurumDiamondBvhExperiment(
       "            internalExitB = length(exitB) > 0.001 ? exitB : exitG;",
       "            internalExitWeight = exitWeight;",
       "          }",
-    ].join("\\n");
+    ].join("\n");
     const strongestOnlyTail = [
       "    if (internalExitWeight > 0.001) {",
       "      accumulated += sampleChromaticEnv(internalExitR, internalExitG, internalExitB) * internalExitWeight;",
       "    }",
-    ].join("\\n");
+    ].join("\n");
     if (!material.fragmentShader.includes(declarations)
       || !material.fragmentShader.includes(strongestOnlyBranch)
       || !material.fragmentShader.includes(strongestOnlyTail)) {
