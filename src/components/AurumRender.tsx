@@ -3947,13 +3947,19 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // pass may run during orbit; photographic, temporal and surface-wide
             // post-processing remain disabled.
             const hasCenterDiamond = Boolean(gemMaskPass?.hasDiamondMeshes);
+            const livePostControls = getAurumPostControls();
+            // Keep the mask/FXAA path available in every runtime tier. SSAA
+            // remains budget-capped separately so low-end devices still get
+            // a responsive masked edge treatment instead of losing all AA.
             const liveDiamondAaEnabled = hasCenterDiamond
-              && runtimeBudget.tier !== "extreme"
-              && measuredQualityId !== "low";
+              && livePostControls.gemMaskEnabled
+              && (livePostControls.gemFxaaEnabled || livePostControls.diamondTaaEnabled || livePostControls.diamondSsaaEnabled);
             // Enable a reduced 1.15x–1.5x reference render while moving.
             // Its full-scene input preserves transmission, but the output is
             // composited only inside the center-diamond mask.
             const liveDiamondSsaaActive = liveDiamondAaEnabled
+              && runtimeBudget.tier !== "extreme"
+              && measuredQualityId !== "low"
               && Boolean(setDiamondSupersamplingSettled?.(false));
             // First controlled resolution step: 1.8 only for the standard web tier
             // when the dedicated center-diamond mask confirms a diamond is present.
@@ -4933,7 +4939,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 {key:"gemMaskEnabled",label:"Gem Mask",description:"Aísla el diamante central; no modifica el color de la escena."},
                 {key:"diamondSsaaEnabled",label:"SSAA",description:"Render auxiliar de mayor resolución para el diamante."},
                 {key:"gemFxaaEnabled",label:"FXAA",description:"Suavizado selectivo del contorno del diamante."},
-                {key:"diamondTaaEnabled",label:"TAA",description:"Acumulación temporal selectiva; se pausa durante el movimiento."},
+                {key:"diamondTaaEnabled",label:"TAA",description:"Acumula muestras cuando está fijo; al mover la cámara usa FXAA selectivo para evitar estelas."},
               ] as const).map((item)=>{
                 const enabled=diamondPostControls[item.key];
                 const dependent=item.key!=="gemMaskEnabled";
