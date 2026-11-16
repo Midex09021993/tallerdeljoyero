@@ -506,19 +506,29 @@ test("selection highlight changes do not invalidate the gemstone mask cache", ()
   expect(selectionBlock).not.toContain("gemMaskPass?.refreshCache?.();");
 });
 
-test("the initial and settled viewport keep temporal and photographic passes out of the shared preview", () => {
+test("diamond AA stays masked in interactive and settled preview modes", () => {
   const componentSource = readFileSync("src/components/AurumRender.tsx", "utf8");
+  const postSource = readFileSync("src/lib/aurum/post.ts", "utf8");
   const idleStart = componentSource.indexOf("onEnd: () => {");
   const idleEnd = componentSource.indexOf("onStart:", idleStart);
   const idleBlock = componentSource.slice(idleStart, idleEnd > idleStart ? idleEnd : idleStart + 8000);
+  const liveStart = componentSource.indexOf("onStart: () => {", componentSource.indexOf("progressiveFrames:"));
+  const liveEnd = componentSource.indexOf("onEnd:", liveStart);
+  const liveBlock = componentSource.slice(liveStart, liveEnd);
   const initialAaStart = componentSource.indexOf("const initialTaaRequested = false;");
   const initialAaEnd = componentSource.indexOf("if (idleTaaPass)", initialAaStart);
   const initialAaBlock = componentSource.slice(initialAaStart, initialAaEnd);
 
   expect(idleStart).toBeGreaterThan(-1);
-  expect(idleBlock).toContain("idleTaaPass.enabled = false;");
+  expect(idleBlock).toContain("setTemporalMotion?.(false)");
+  expect(idleBlock).toContain("settledDiamondTaaActive");
   expect(idleBlock).toContain("bloomPass.enabled = false;");
   expect(idleBlock).toContain("dofPass.enabled = false;");
+  expect(liveBlock).toContain("livePostControls.gemMaskEnabled");
+  expect(liveBlock).toContain("setDiamondSupersamplingSettled?.(false)");
+  expect(liveBlock).toContain("liveFastPathRef.current = false;");
+  expect(postSource).toContain("taaMotionFallback");
+  expect(postSource).toContain("const fxaaEnabled=diamondMaskReady && (controls?.gemFxaaEnabled===true || taaMotionFallback)");
   expect(initialAaBlock).toContain("const initialTaaRequested = false;");
 });
 
