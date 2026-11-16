@@ -470,6 +470,16 @@ export async function createAurumPostPipeline(
       }
     };
     refreshGemMaskCache();
+    const gemMaskDiagnosticScene=new THREE.Scene();
+    const gemMaskDiagnosticCamera=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
+    const gemMaskDiagnosticMaterial=new THREE.ShaderMaterial({
+      uniforms:{uMask:{value:gemMaskTarget.texture}},
+      vertexShader:`varying vec2 vUv; void main(){vUv=uv;gl_Position=vec4(position.xy,0.0,1.0);}`,
+      fragmentShader:`uniform sampler2D uMask; varying vec2 vUv; void main(){float coverage=texture2D(uMask,vUv).r; if(coverage<0.5) discard; gl_FragColor=vec4(0.0,0.82,1.0,0.42);}`,
+      transparent:true,depthTest:false,depthWrite:false,blending:THREE.NormalBlending,toneMapped:false,
+    });
+    const gemMaskDiagnosticQuad=new THREE.Mesh(new THREE.PlaneGeometry(2,2),gemMaskDiagnosticMaterial);
+    gemMaskDiagnosticScene.add(gemMaskDiagnosticQuad);
     gemMaskPass={
       enabled:false,needsSwap:false,clear:false,renderToScreen:false,
       get hasDiamondMeshes(){ syncCenterDiamondCache(); return cachedGemMeshes.length>0; },
@@ -510,6 +520,34 @@ export async function createAurumPostPipeline(
         }
         fxaaPass.material.uniforms.gemMask.value=gemMaskTarget.texture;
       },
+      renderDiagnosticOverlay(activeRenderer:any){
+        const previousTarget=activeRenderer.getRenderTarget();
+        const previousViewport=activeRenderer.getViewport(new THREE.Vector4()).clone();
+        const previousScissor=activeRenderer.getScissor(new THREE.Vector4()).clone();
+        const previousScissorTest=activeRenderer.getScissorTest?.()??false;
+        const previousAutoClear=activeRenderer.autoClear;
+        const previousToneMapping=activeRenderer.toneMapping;
+        const previousOutputColorSpace=activeRenderer.outputColorSpace;
+        const previousClearColor=activeRenderer.getClearColor(new THREE.Color()).clone();
+        const previousClearAlpha=activeRenderer.getClearAlpha();
+        try{
+          gemMaskDiagnosticMaterial.uniforms.uMask.value=gemMaskTarget.texture;
+          activeRenderer.setRenderTarget(null);
+          activeRenderer.setScissorTest(false);
+          activeRenderer.autoClear=false;
+          activeRenderer.toneMapping=THREE.NoToneMapping;
+          activeRenderer.render(gemMaskDiagnosticScene,gemMaskDiagnosticCamera);
+        }finally{
+          activeRenderer.autoClear=previousAutoClear;
+          activeRenderer.toneMapping=previousToneMapping;
+          activeRenderer.outputColorSpace=previousOutputColorSpace;
+          activeRenderer.setClearColor(previousClearColor,previousClearAlpha);
+          activeRenderer.setRenderTarget(previousTarget);
+          activeRenderer.setViewport(previousViewport);
+          activeRenderer.setScissor(previousScissor);
+          activeRenderer.setScissorTest(previousScissorTest);
+        }
+      },
       dispose(){
         for(const [mesh,originalMask] of previousGemLayerMasks){
           if(mesh?.layers) mesh.layers.mask=originalMask;
@@ -518,6 +556,8 @@ export async function createAurumPostPipeline(
         diamondMaskMaterialsByMesh.clear();
         diamondSupersampleMaterialsByMesh.clear();
         gemMaskTarget.dispose();
+        gemMaskDiagnosticMaterial.dispose();
+        gemMaskDiagnosticQuad.geometry.dispose();
         depthOnlyMaterial.dispose();
         gemMaskMaterial.dispose();
         nonDiamondMaskMaterial.dispose();

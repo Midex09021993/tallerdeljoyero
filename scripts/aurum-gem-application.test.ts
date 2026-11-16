@@ -183,6 +183,17 @@ test("diamond SSAA keeps the auxiliary render linear HDR and applies native tone
   expect(post).toContain("type:THREE.HalfFloatType");
 });
 
+test("Gem Mask exposes an independent diagnostic overlay without enabling AA", () => {
+  const post = readFileSync("src/lib/aurum/post.ts", "utf8");
+  const component = readFileSync("src/components/AurumRender.tsx", "utf8");
+  expect(post).toContain("renderDiagnosticOverlay(activeRenderer:any)");
+  expect(post).toContain("gemMaskDiagnosticScene");
+  expect(post).toContain("coverage<0.5) discard");
+  expect(component).toContain("gemMaskPass.enabled=getAurumPostControls().gemMaskEnabled");
+  expect(component).toContain("gemMaskPass.renderDiagnosticOverlay?.(renderer)");
+  expect(component).toContain("viewerLoopRef.current?.invalidate?.();");
+});
+
 test("diamond perimeter AA uses the stronger masked edge profile", () => {
   const source = readFileSync("src/lib/aurum/post.ts", "utf8");
   expect(source).toContain("strength:{value:0.76}");

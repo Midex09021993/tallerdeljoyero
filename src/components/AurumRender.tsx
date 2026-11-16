@@ -2333,10 +2333,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           const initialWidth = Math.max(1, renderer.domElement.width || renderer.domElement.clientWidth || 1);
           const initialHeight = Math.max(1, renderer.domElement.height || renderer.domElement.clientHeight || 1);
           fxaaPass.material?.uniforms?.resolution?.value?.set?.(1 / initialWidth, 1 / initialHeight);
-          // Gem Mask + FXAA are intentionally excluded from the LIVE viewport.
-          // The passes remain available to explicit capture workflows.
+          // Gem Mask is an independent diagnostic and never enters the beauty composer.
           const initialBeautyPasses = new Set([renderPass, outputPass]);
-          if (gemMaskPass) gemMaskPass.enabled = false;
+          if (gemMaskPass) gemMaskPass.enabled = getAurumPostControls().gemMaskEnabled;
           ((composer as any)?.passes ?? []).forEach((pass: any) => {
             pass.enabled = initialBeautyPasses.has(pass);
           });
@@ -2381,9 +2380,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           camara.updateMatrixWorld?.(true);
           camara.updateProjectionMatrix?.();
           diamondBvhRuntime?.update();
-          // Keep the post-processing passes out of the live preview.
+          // Keep scene-wide post-processing out of the live preview.
           const initialBeautyPasses = new Set([renderPass, outputPass]);
-          if (gemMaskPass) gemMaskPass.enabled = false;
+          if (gemMaskPass) gemMaskPass.enabled = getAurumPostControls().gemMaskEnabled;
           if (fxaaPass) fxaaPass.enabled = false;
           ((composer as any)?.passes ?? []).forEach((pass: any) => {
             pass.enabled = initialBeautyPasses.has(pass);
@@ -3906,9 +3905,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               dofEnabled: Boolean(postRuntimeConfig.dof),
             });
           }
-          // Keep the native direct beauty render as the base frame; the optional
-          // diamond overlay is executed separately after this render.
+          // Read the independent control every frame so the UI switch arms the
+          // mask pass without routing the scene through EffectComposer.
+          gemMaskPass.enabled=getAurumPostControls().gemMaskEnabled;
           renderer.render(escena,camara);
+          if(gemMaskPass.enabled){
+            gemMaskPass.render(renderer);
+            gemMaskPass.renderDiagnosticOverlay?.(renderer);
+          }
           // Detached diamond reconstruction only composites the classified
           // diamond pixels over the untouched beauty frame.
           if(diamondOverlayRequested) renderDiamondSupersampleOverlay?.(renderer);
@@ -4901,7 +4905,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               <div className="mb-2 text-[10px] font-semibold uppercase tracking-[.12em] text-[#92743b]">Antialiasing del diamante</div>
               <p className="mb-3 text-[9px] leading-relaxed text-[#77756f]">Gem Mask ya puede activarse para comprobar el aislamiento. SSAA, FXAA y TAA siguen bloqueados hasta aprobar la validación visual.</p>
               {([
-                {key:"gemMaskEnabled",label:"Gem Mask",description:"Aísla el diamante central; no modifica el color de la escena."},
+                {key:"gemMaskEnabled",label:"Gem Mask",description:"Visualiza temporalmente en cian la máscara del diamante central; apágala para volver al render normal."},
                 {key:"diamondSsaaEnabled",label:"SSAA",description:"Render auxiliar de mayor resolución para el diamante."},
                 {key:"gemFxaaEnabled",label:"FXAA",description:"Suavizado selectivo del contorno del diamante."},
                 {key:"diamondTaaEnabled",label:"TAA",description:"Acumula muestras cuando está fijo; al mover la cámara usa FXAA selectivo para evitar estelas."},
@@ -4911,10 +4915,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 const blocked=dependent;
                 return <div key={item.key} className="flex items-center justify-between gap-3 border-t border-black/[.05] py-2 first:border-t-0 first:pt-0">
                   <div className="min-w-0"><div className="text-[11px] font-semibold text-[#292824]">{item.label}</div><p className="mt-0.5 text-[9px] leading-relaxed text-[#77756f]">{item.description}</p>{blocked&&<p className="mt-1 text-[9px] font-semibold text-amber-700">Bloqueado temporalmente hasta validar Gem Mask sobre el modelo real.</p>}</div>
-                  <button type="button" role="switch" aria-label={item.label} aria-checked={enabled} aria-disabled={blocked} disabled={blocked} title={blocked?"Pendiente de validación visual":"Activar o desactivar Gem Mask"} onClick={()=>{if(blocked)return;const next=setAurumPostControls({gemMaskEnabled:!enabled});setDiamondPostControls(next);liveFastPathRef.current=!next.gemMaskEnabled;if(next.gemMaskEnabled){viewerLoopRef.current?.converge?.(1);}else{viewerLoopRef.current?.invalidate?.();}}} className={"relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors "+(blocked?"cursor-not-allowed opacity-50 ":"")+(enabled?"bg-[#a88743]":"bg-[#c9c6bf]")}><span className={"inline-block size-3.5 rounded-full bg-white shadow-sm transition-transform "+(enabled?"translate-x-[18px]":"translate-x-1")}/></button>
+                  <button type="button" role="switch" aria-label={item.label} aria-checked={enabled} aria-disabled={blocked} disabled={blocked} title={blocked?"Pendiente de validación visual":"Activar o desactivar Gem Mask"} onClick={()=>{if(blocked)return;const next=setAurumPostControls({gemMaskEnabled:!enabled});setDiamondPostControls(next);viewerLoopRef.current?.invalidate?.();}} className={"relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors "+(blocked?"cursor-not-allowed opacity-50 ":"")+(enabled?"bg-[#a88743]":"bg-[#c9c6bf]")}><span className={"inline-block size-3.5 rounded-full bg-white shadow-sm transition-transform "+(enabled?"translate-x-[18px]":"translate-x-1")}/></button>
                 </div>;
               })}
-              <div className="mt-2 border-t border-black/[.06] pt-2 text-[9px] leading-relaxed text-[#8a857b]">Surface Edge AA y TAA de pantalla completa permanecen bloqueados para proteger metales y ambiente.</div>
+              <div className="mt-2 border-t border-black/[.06] pt-2 text-[9px] leading-relaxed text-[#8a857b]">La visualización cian es solo diagnóstico. Al apagar Gem Mask se restaura el render original. Surface Edge AA y TAA global permanecen bloqueados.</div>
             </section>
             <section className="rounded-xl border border-[#e6e1d8] bg-white p-3">
               <div className="mb-2 flex items-center justify-between gap-2"><div className="text-[10px] font-semibold uppercase tracking-[.12em] text-[#92743b]">Diagnóstico de ejecución</div><button type="button" onClick={()=>window.dispatchEvent(new CustomEvent("aurum-diamond-control-refresh"))} className="rounded-lg border border-black/10 px-2 py-1 text-[9px] font-semibold text-[#6d5523]">Actualizar</button></div>
