@@ -21,10 +21,10 @@ const DEFAULTS: AurumPostControls = {
 };
 
 // Gem Mask is the safety boundary for diamond-only reconstruction.
-// SSAA remains fail-closed globally until visual regression testing signs it off; FXAA stays independently user-toggleable behind Gem Mask.
+// SSAA is explicitly user-toggleable only behind Gem Mask; TAA remains fail-closed.
 const normalize = (value: any): AurumPostControls => ({
   gemMaskEnabled: value?.gemMaskEnabled === true,
-  diamondSsaaEnabled: false,
+  diamondSsaaEnabled: value?.gemMaskEnabled === true && value?.diamondSsaaEnabled === true,
   gemFxaaEnabled: value?.gemMaskEnabled === true && value?.gemFxaaEnabled === true,
   diamondTaaEnabled: false,
   surfaceEdgeAaEnabled: false,
