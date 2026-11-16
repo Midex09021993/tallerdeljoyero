@@ -4931,7 +4931,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                   <div><strong className="text-base tabular-nums">{diamondControlDiagnostics.micro?.diamondMeshes??0}</strong><div className="text-[#77756f]">Mallas detectadas</div></div>
                   <div><strong className="text-base tabular-nums">{diamondControlDiagnostics.micro?.materialGroups??0}</strong><div className="text-[#77756f]">Grupos de material</div></div>
                 </div>
-                <div className="mt-2 text-[9px] text-[#77756f]">BVH: {diamondControlDiagnostics.bvh.enabled?"con entradas activas":"sin entradas activas"} · Micro: {diamondControlDiagnostics.micro?.enabled?"activo":"inactivo"}</div>
+                <div className="mt-2 text-[9px] text-[#77756f]">BVH diamante: {(diamondControlDiagnostics.bvh.diamondMeshes??0)>0?"activo":"sin entradas activas"} · Micro: {diamondControlDiagnostics.micro?.enabled?"activo":"inactivo"}</div>
               </>:<p className="text-[10px] text-[#8a857b]">{archivo?"Runtime aún no disponible o pendiente de inicialización. Pulsa Actualizar tras cargar el modelo.":"Carga un modelo para consultar los sistemas en ejecución."}</p>}
             </section>
           </div>}
