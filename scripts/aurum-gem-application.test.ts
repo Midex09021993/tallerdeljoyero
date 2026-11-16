@@ -275,6 +275,9 @@ test("masked native-resolution FXAA is independent from SSAA; SSAA and TAA remai
   expect(post).not.toContain("ensureDiamondSupersampleFxaaTarget");
   expect(post).not.toContain("renderFxaa(activeRenderer,enabled:boolean)");
   expect(render).toContain('const blocked=item.key==="diamondSsaaEnabled"||item.key==="diamondTaaEnabled"||(item.key==="gemFxaaEnabled"&&!diamondPostControls.gemMaskEnabled);');
+  expect(render).toContain("subscribeAurumPostControls((controls) => {");
+  expect(render).toContain("setDiamondPostControls(controls);");
+  expect(render).toContain("return subscribeAurumPostControls((controls) => {");
   expect(render).toContain("renderDiamondFxaaOverlay?.(renderer)");
   expect(render).toContain("renderer.render(escena,camara);");
   expect(render).not.toContain("renderDiamondFxaaFrame?.(renderer)");
