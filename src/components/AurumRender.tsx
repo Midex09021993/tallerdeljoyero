@@ -348,22 +348,40 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [diamondPostControls, setDiamondPostControls] = useState<AurumPostControls>({gemMaskEnabled:false,diamondSsaaEnabled:false,gemFxaaEnabled:false,diamondTaaEnabled:false,surfaceEdgeAaEnabled:false,taaEnabled:false});
   useEffect(() => { setDiamondPostControls(getAurumPostControls()); }, []);
   const [diamondControlDiagnostics, setDiamondControlDiagnostics] = useState<any>(null);
+  const [gemMaskDiagnosticStatus, setGemMaskDiagnosticStatus] = useState<"idle"|"pending"|"ready"|"error"|"unavailable">("idle");
   const gemMaskDiagnosticsRef = useRef<any>(null);
-  useEffect(() => {
-    const refreshDiagnostics = () => {
-      setDiamondControlDiagnostics({
-        bvh: diamondBvhRuntimeRef.current?.diagnostics?.() ?? null,
-        micro: diamondMicroPipelineRef.current?.diagnostics?.() ?? null,
-        gemMask: gemMaskDiagnosticsRef.current?.diagnostics?.() ?? null,
-      });
-    };
-    const requestGemMaskDiagnostics = () => {
-      gemMaskDiagnosticsRef.current?.requestDiagnostics?.();
-      refreshDiagnostics();
-      viewerLoopRef.current?.invalidate?.();
-    };
+  const refreshDiamondDiagnostics = useCallback(() => {
+    setDiamondControlDiagnostics({
+      bvh: diamondBvhRuntimeRef.current?.diagnostics?.() ?? null,
+      micro: diamondMicroPipelineRef.current?.diagnostics?.() ?? null,
+      gemMask: gemMaskDiagnosticsRef.current?.diagnostics?.() ?? null,
+    });
+  }, []);
+  const requestGemMaskDiagnostics = useCallback(() => {
+    const maskPass = gemMaskDiagnosticsRef.current;
+    if (!maskPass?.requestDiagnostics) {
+      setGemMaskDiagnosticStatus("unavailable");
+      refreshDiamondDiagnostics();
+      return;
+    }
+    if (!getAurumPostControls().gemMaskEnabled) {
+      setGemMaskDiagnosticStatus("idle");
+      refreshDiamondDiagnostics();
+      return;
+    }
+    setGemMaskDiagnosticStatus("pending");
+    maskPass.requestDiagnostics();
+    refreshDiamondDiagnostics();
+    // A demand-driven viewer may be asleep after the last stable frame.
+    // Render synchronously so Gem Mask consumes the one-shot GPU readback request.
+    const loop = viewerLoopRef.current;
+    if (loop?.renderNow) loop.renderNow();
+    else loop?.invalidate?.();
+  }, [refreshDiamondDiagnostics]);
     const handleGemMaskDiagnosticsReady = (event: Event) => {
       const detail=(event as CustomEvent<any>).detail??{};
+      const maskPixels = Number(detail.maskPixels);
+      setGemMaskDiagnosticStatus(maskPixels < 0 ? "error" : "ready");
       setDiamondControlDiagnostics((current:any)=>({
         ...(current??{}),
         gemMask:{...(gemMaskDiagnosticsRef.current?.diagnostics?.()??{}),...detail},
@@ -380,7 +398,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         diamondMicroPipelineRef.current?.setEnabled?.(detail.enabled);
         setDiamondMicroEnabled(detail.enabled);
       }
-      refreshDiagnostics();
+      refreshDiamondDiagnostics();
       viewerLoopRef.current?.invalidate?.();
     };
     window.addEventListener("aurum-diamond-control", handleDiamondControl);
@@ -4950,7 +4968,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               <div className="mt-2 border-t border-black/[.06] pt-2 text-[9px] leading-relaxed text-[#8a857b]">La visualización cian es solo diagnóstico. Al apagar Gem Mask se restaura el render original. Surface Edge AA y TAA global permanecen bloqueados.</div>
             </section>
             <section className="rounded-xl border border-[#e6e1d8] bg-white p-3">
-              <div className="mb-2 flex items-center justify-between gap-2"><div className="text-[10px] font-semibold uppercase tracking-[.12em] text-[#92743b]">Diagnóstico de ejecución</div><button type="button" onClick={()=>window.dispatchEvent(new CustomEvent("aurum-diamond-control-refresh"))} className="rounded-lg border border-black/10 px-2 py-1 text-[9px] font-semibold text-[#6d5523]">Actualizar</button></div>
+              <div className="mb-2 flex items-center justify-between gap-2"><div className="text-[10px] font-semibold uppercase tracking-[.12em] text-[#92743b]">Diagnóstico de ejecución</div><button type="button" onClick={requestGemMaskDiagnostics} disabled={gemMaskDiagnosticStatus==="pending"} className="rounded-lg border border-black/10 px-2 py-1 text-[9px] font-semibold text-[#6d5523]">Actualizar</button></div>
               {diamondControlDiagnostics?.bvh?<>
                 <div className="grid grid-cols-2 gap-2 text-[10px]">
                   <div><strong className="text-base tabular-nums">{diamondControlDiagnostics.bvh.diamondMeshes??0}</strong><div className="text-[#77756f]">Diamantes BVH</div></div>
@@ -4965,7 +4983,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                   <div><strong className="text-sm tabular-nums">{diamondControlDiagnostics.gemMask?.maskCoveragePercent===null||diamondControlDiagnostics.gemMask?.maskCoveragePercent===undefined?"—":String(diamondControlDiagnostics.gemMask.maskCoveragePercent)+"%"}</strong><div className="text-[#77756f]">Cobertura GPU</div></div>
                 </div>
                 <div className="mt-2 text-[9px] text-[#77756f]">BVH diamante: {(diamondControlDiagnostics.bvh.diamondMeshes??0)>0?"activo":"sin entradas activas"} · Micro: {diamondControlDiagnostics.micro?.enabled?"activo":"inactivo"} · Máscara: {(diamondControlDiagnostics.gemMask?.cachedCenterMeshes??0)>0?"centro clasificado":"sin centro clasificado"}</div>
-                <div className="mt-1 text-[9px] leading-relaxed text-[#8a857b]">Pulsa Actualizar para solicitar una lectura GPU puntual. La lectura no se ejecuta en cada fotograma.</div>
+                <div className="mt-1 text-[9px] leading-relaxed text-[#8a857b]">{gemMaskDiagnosticStatus==="pending"?"Solicitando lectura GPU…":gemMaskDiagnosticStatus==="ready"?"Lectura GPU completada.":gemMaskDiagnosticStatus==="error"?"La lectura GPU falló; revisa la consola WebGL.":gemMaskDiagnosticStatus==="unavailable"?"El pase Gem Mask todavía no está inicializado.":!diamondPostControls.gemMaskEnabled?"Activa Gem Mask para solicitar la lectura GPU.":"Pulsa Actualizar para solicitar una lectura GPU puntual. No se ejecuta en cada fotograma."}</div>
               </>:<p className="text-[10px] text-[#8a857b]">{archivo?"Runtime aún no disponible o pendiente de inicialización. Pulsa Actualizar tras cargar el modelo.":"Carga un modelo para consultar los sistemas en ejecución."}</p>}
             </section>
           </div>}
