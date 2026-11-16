@@ -97,9 +97,9 @@ test("applies per-mesh optical profiles to diamonds sharing one material and res
   large.onBeforeRender(null as any, scene, camera, large.geometry, material, null as any);
   expect(material.userData.aurumDiamondMicroUniforms.scintillationStrength.value).toBeCloseTo(0.16);
   tiny.onBeforeRender(null as any, scene, camera, tiny.geometry, material, null as any);
-  expect(material.userData.aurumDiamondMicroUniforms.scintillationStrength.value).toBeCloseTo(0.16 * 0.58);
-  expect(material.userData.aurumDiamondMicroUniforms.virtualFacetWeight.value).toBeCloseTo(0.025);
-  expect(tiny.userData.aurumDiamondMicroOpticalProfile.scintillationScale).toBe(0.58);
+  expect(material.userData.aurumDiamondMicroUniforms.scintillationStrength.value).toBeCloseTo(0.16 * 0.22);
+  expect(material.userData.aurumDiamondMicroUniforms.virtualFacetWeight.value).toBeCloseTo(0.004);
+  expect(tiny.userData.aurumDiamondMicroOpticalProfile.scintillationScale).toBe(0.22);
   pipeline.dispose();
   expect(large.userData.aurumDiamondMicroTier).toBeUndefined();
   expect(material.userData.aurumDiamondMicroUniforms.scintillationStrength.value).toBeCloseTo(0.16);
@@ -131,7 +131,7 @@ test("refresh discovers meshes reassigned to diamond and releases meshes reassig
   pipeline.update();
   mesh.onBeforeRender(null as any, scene, camera, mesh.geometry, diamondMaterial, null as any);
   expect(mesh.userData.aurumDiamondMicroTier).toBe("micro");
-  expect(diamondMaterial.userData.aurumDiamondMicroUniforms.scintillationStrength.value).toBeCloseTo(0.16 * 0.58);
+  expect(diamondMaterial.userData.aurumDiamondMicroUniforms.scintillationStrength.value).toBeCloseTo(0.16 * 0.22);
 
   mesh.material = new THREE.MeshBasicMaterial();
   pipeline.refresh();
