@@ -655,9 +655,10 @@ export async function createAurumPostPipeline(
     const isLowQuality=qualityId==="low" || (qualityId==="" && Number(q?.pixelRatio??1.5) <= 1.01);
     // TAA remains capture-only; the Post Engine switch controls whether
     // explicit still captures request temporal accumulation.
-    const postControls=getAurumPostControls();
-    taaRequested=Boolean(options.capture && postControls.taaEnabled);
-    const taaEnabled=taaRequested;
+    // TAA is a full-frame temporal filter, so it is excluded from the
+    // diamond-only scope even during still-image capture.
+    taaRequested=false;
+    const taaEnabled=false;
     // Edge AA is a settled-quality treatment: never add fullscreen filtering
     // work to the direct-render orbit path. Still captures may use it explicitly.
     const edgeAaEnabled=false; // Emergency rollback: disable all added diamond AA.
