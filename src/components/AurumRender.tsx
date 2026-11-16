@@ -1205,6 +1205,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             EXRLoader,
             url: requestedEnvironmentUrl,
             camera: camara,
+            getViewportHeight: () => renderer.domElement.height,
             quality: "interactive",
             // Diagnostic modes let us isolate the emerald and diamond BVH paths.
             // With no test parameter, preserve the existing default family selection.
