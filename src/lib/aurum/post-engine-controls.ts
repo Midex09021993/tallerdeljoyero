@@ -27,23 +27,25 @@ export function getAurumPostControls(): AurumPostControls {
       return {
         gemFxaaEnabled: value.gemFxaaEnabled === true,
         diamondSsaaEnabled: value.diamondSsaaEnabled === true,
-        surfaceEdgeAaEnabled: value.surfaceEdgeAaEnabled === true,
-        taaEnabled: value.taaEnabled === true,
+        // Full-surface AA and temporal accumulation are outside the approved
+        // diamond-only scope. Ignore stale persisted values from older builds.
+        surfaceEdgeAaEnabled: false,
+        taaEnabled: false,
       };
     }
 
-    // One-time migration: activate the requested gem-only AA path while
-    // preserving the user's independent Surface Edge AA and TAA preferences.
+    // One-time migration: retain only the diamond-scoped preferences.
+    // Full-surface AA and temporal accumulation are deliberately not migrated.
     const legacyRaw = window.localStorage.getItem(LEGACY_STORAGE_KEY);
     if (!legacyRaw) return DEFAULTS;
     const legacy = JSON.parse(legacyRaw);
     const migrated: AurumPostControls = {
-      // The v2 selective diamond pipeline is the current default. Preserve
-      // independent user choices for surface AA and TAA from the legacy store.
+      // The emergency rollback keeps all added diamond treatments disabled.
+      // Legacy full-surface AA and TAA preferences are intentionally discarded.
       gemFxaaEnabled: false,
       diamondSsaaEnabled: false,
-      surfaceEdgeAaEnabled: legacy.surfaceEdgeAaEnabled === true,
-      taaEnabled: legacy.taaEnabled === true,
+      surfaceEdgeAaEnabled: false,
+      taaEnabled: false,
     };
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
     return migrated;
@@ -53,7 +55,14 @@ export function getAurumPostControls(): AurumPostControls {
 }
 
 export function setAurumPostControls(next: Partial<AurumPostControls>): AurumPostControls {
-  const value = { ...getAurumPostControls(), ...next };
+  const value: AurumPostControls = {
+    ...getAurumPostControls(),
+    ...next,
+    // Never allow a stale UI action or saved preference to enable processing
+    // that changes metal/environment pixels or accumulates the full image.
+    surfaceEdgeAaEnabled: false,
+    taaEnabled: false,
+  };
   if (typeof window !== "undefined") {
     try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(value)); } catch { /* storage may be unavailable */ }
     window.dispatchEvent(new CustomEvent("aurum-post-controls-change", { detail: value }));
