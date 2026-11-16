@@ -208,7 +208,9 @@ export function createAurumDiamondMicroPipeline(scene: any, camera: any, getView
         aurumDiamondMicroCenterProtected: isProtectedCenter,
       };
       for (const material of getMaterials(mesh)) {
-        if (!isDiamondMaterial(material)) continue;
+        // Pass the owning mesh so active catalog identity and Rhino layer metadata
+        // participate in the same classification used during scene discovery.
+        if (!isDiamondMaterial(material, mesh)) continue;
         const values = byMaterial.get(material) ?? [];
         values.push(diameter);
         byMaterial.set(material, values);
