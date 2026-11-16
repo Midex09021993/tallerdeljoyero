@@ -4041,8 +4041,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // DOF, SSR and full-surface edge filtering remain disabled.
             // Restore the ordinary settled camera/pass state only. SSAA is
             // isolated to its own targets and must not alter full-scene DPR.
-            const settledDpr = renderer.getPixelRatio();
-
             // Gem Mask + FXAA disabled: retain only the ordinary beauty output.
             const settledDiamondTaaActive = Boolean(idleTaaPass?.enabled && diamondTaaSavePass?.enabled && diamondTaaCompositePass?.enabled);
             const settledGemMaskActive = Boolean(gemMaskPass?.enabled);
