@@ -530,6 +530,22 @@ test("selection highlight changes do not invalidate the gemstone mask cache", ()
   expect(selectionBlock).not.toContain("gemMaskPass?.refreshCache?.();");
 });
 
+test("diamond SSAA never changes the full-scene renderer or composer DPR during motion", () => {
+  const componentSource = readFileSync("src/components/AurumRender.tsx", "utf8");
+  const motionStart = componentSource.indexOf("onStart: () => {", componentSource.indexOf("liveDiamondSsaaActive"));
+  const motionEnd = componentSource.indexOf("onEnd: () => {", motionStart);
+  const settledEnd = componentSource.indexOf("onCancel:", motionEnd);
+  const motionBlock = componentSource.slice(motionStart, motionEnd);
+  const settledBlock = componentSource.slice(motionEnd, settledEnd > motionEnd ? settledEnd : motionEnd + 9000);
+  expect(motionStart).toBeGreaterThan(-1);
+  expect(motionEnd).toBeGreaterThan(motionStart);
+  expect(motionBlock).toContain("const interactionDpr = renderer.getPixelRatio();");
+  expect(motionBlock).not.toContain("renderer.setPixelRatio(");
+  expect(motionBlock).not.toContain("composer?.setPixelRatio?.(");
+  expect(settledBlock).not.toContain("renderer.setPixelRatio(");
+  expect(settledBlock).not.toContain("composer?.setPixelRatio?.(");
+});
+
 test("diamond AA stays masked in interactive and settled preview modes", () => {
   const componentSource = readFileSync("src/components/AurumRender.tsx", "utf8");
   const postSource = readFileSync("src/lib/aurum/post.ts", "utf8");
