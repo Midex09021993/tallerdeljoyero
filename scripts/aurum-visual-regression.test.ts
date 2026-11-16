@@ -77,6 +77,8 @@ test("AURUM visual comparator passes when every pixel is explicitly masked out",
   const reference = rgba(2, 1, 0);
   const actual = rgba(2, 1, 255);
   const mask = rgba(2, 1, 0);
+  mask[3] = 0;
+  mask[7] = 0;
   const report = compareAurumVisualCaptures(
     { width: 2, height: 1, data: reference },
     { width: 2, height: 1, data: actual },
