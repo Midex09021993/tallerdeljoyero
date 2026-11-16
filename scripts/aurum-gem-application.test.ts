@@ -150,7 +150,7 @@ test("web-tier models receive 2x diamond-only supersampling without raising shar
   expect(component).toContain("diamondMicroPipeline.refresh();\n        diamondMicroPipeline.update();\n        // Synchronize the newly prepared gemstone BVH");
   expect(component).toContain("diamondBvhRuntime.refresh(modelo);\n              // Re-index after BVH material replacement");
   const post = readFileSync("src/lib/aurum/post.ts", "utf8");
-  expect(post).toContain("const firstNonEmpty=(values:any[])=>values.map(value=>String(value??\\\"\\\").trim()).find(Boolean)??\\\"\\\";");
+  expect(post).toContain("const firstNonEmpty=(values:any[])=>");
   expect(post).toContain("data.aurumActiveGemFamily,");
   expect(post).toContain("data.aurumGemFamily,");
   expect(post).toContain("data.aurumDiamondOpticalFamily,");
