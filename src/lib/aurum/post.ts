@@ -957,8 +957,8 @@ export async function createAurumPostPipeline(
   applyQuality(quality);
   // Reflect Post Engine switches immediately without waiting for a quality/profile rebuild.
   const applyDiamondPostModules=(controls:any)=>{
-    // Selective SSAA is opt-in for controlled A/B validation. Its output is
-    // composited only through the categorical center-diamond mask; FXAA stays off.
+    // Selective SSAA is enabled by default when the center-diamond mask and
+    // adaptive GPU budget permit it. Its output remains mask-confined; FXAA stays off.
     const ssaaEnabled=diamondSsaaEnabled() && Boolean(gemMaskPass?.hasDiamondMeshes)
       && !["low","extreme"].includes(lastKnownBudgetTier) && lastKnownQualityId!=="low"
       && Boolean(diamondSupersamplePass?.canRender?.());
