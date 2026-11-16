@@ -3833,8 +3833,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           }
           const bvhCpuMs = performance.now() - bvhStartedAt;
           const renderStartedAt = performance.now();
-          // Activate selective Gem Mask + FXAA only when a center diamond
-          // exists and both passes are enabled; all other scenes keep direct rendering.
+          // Activate selective Gem Mask + diamond SSAA only when the center
+          // diamond exists and both SSAA passes are enabled; FXAA remains disabled.
           const useLiveGemAa = Boolean(
             composer
             && renderPass
