@@ -497,9 +497,9 @@ test("Aurum exposes diamond-only AA and SSAA as independent modules", () => {
   expect(postSource).toContain("activeRenderer.setScissorTest(previousScissorTest);");
   expect(postSource).toContain("data.aurumDetectedCategory");
   expect(postSource).toContain("#include <tonemapping_fragment>");
-  expect(componentSource).toContain("&& !diamondSupersamplePass?.enabled");
+  expect(componentSource).toContain("if(diamondOverlayRequested) renderDiamondSupersampleOverlay?.(renderer);");
   expect(componentSource).toContain("renderDiamondSupersampleOverlay?.(renderer)");
-  const liveBeautyStart = componentSource.indexOf('const activeToneAuditPath = "direct";');
+  const liveBeautyStart = componentSource.indexOf("const diamondOverlayRequested = Boolean");
   const liveBeautyEnd = componentSource.indexOf("const renderCpuMs", liveBeautyStart);
   const liveBeautyBlock = componentSource.slice(liveBeautyStart, liveBeautyEnd);
   expect(liveBeautyStart).toBeGreaterThan(-1);
@@ -597,6 +597,7 @@ test("diamond AA stays masked in interactive and settled preview modes", () => {
 
 test("standard image export composites isolated diamond reconstruction after beauty rendering", () => {
   const componentSource = readFileSync("src/components/AurumRender.tsx", "utf8");
+  const postSource = readFileSync("src/lib/aurum/post.ts", "utf8");
   const exportStart = componentSource.indexOf("exportPNG:async");
   const exportEnd = componentSource.indexOf("exportGLB:", exportStart);
   const exportBlock = componentSource.slice(exportStart, exportEnd);
