@@ -677,11 +677,9 @@ export async function createAurumPostPipeline(
     if(diamondSupersampleCompositePass) diamondSupersampleCompositePass.enabled=ssaaActive;
     if(gemMaskPass) gemMaskPass.enabled=ssaaActive || edgeAaEnabled;
     if(fxaaPass) fxaaPass.enabled=edgeAaEnabled;
-    if(surfaceEdgeAaPass) {
-      surfaceEdgeAaPass.enabled=postControls.surfaceEdgeAaEnabled;
-      const strength=surfaceEdgeAaPass.material?.uniforms?.strength;
-      if(strength) strength.value=edgeAaProfile.strength;
-    }
+    // Metal is out of scope for the diamond-quality work: never run the
+    // full-surface edge filter in the live/capture composer.
+    if(surfaceEdgeAaPass) surfaceEdgeAaPass.enabled=false;
     // Keep the interactive/settled preview responsive with one convergence frame.
     // Still captures retain the full 32-frame temporal budget for final image quality.
     const progressiveFrames=options.capture
@@ -923,11 +921,8 @@ export async function createAurumPostPipeline(
     // Apply the active live/settled supersampling cap before selecting the
     // diamond-only SSAA path; masked FXAA remains the capability fallback.
     applyDiamondPostModules(postControls);
-    if(surfaceEdgeAaPass) {
-      surfaceEdgeAaPass.enabled=postControls.surfaceEdgeAaEnabled;
-      const strength=surfaceEdgeAaPass.material?.uniforms?.strength;
-      if(strength) strength.value=edgeAaProfile.strength;
-    }
+    // Preserve metal pixels: Surface Edge AA is deliberately excluded.
+    if(surfaceEdgeAaPass) surfaceEdgeAaPass.enabled=false;
     if(!taaPass)return;
     // Hard-disable temporal accumulation on every interaction start, even if
     // a previous state transition left the motion flag unchanged.
@@ -970,7 +965,8 @@ export async function createAurumPostPipeline(
   };
   const unsubscribePostControls=subscribeAurumPostControls((controls)=>{
     applyDiamondPostModules(controls);
-    if(surfaceEdgeAaPass) surfaceEdgeAaPass.enabled=Boolean(controls.surfaceEdgeAaEnabled);
+    // The current diamond-only scope must never activate a full-surface pass.
+    if(surfaceEdgeAaPass) surfaceEdgeAaPass.enabled=false;
   });
   if(composer?.dispose){
     const disposeComposer=composer.dispose.bind(composer);
