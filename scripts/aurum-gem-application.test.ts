@@ -432,3 +432,14 @@ test("global renderer and composer MSAA stay disabled for diamond-only antialias
   expect(edgeManager).toContain("configureAurumComposerMsaa(renderer, composer, 4)");
   expect(edgeManager).not.toContain("configureAurumComposerMsaa(renderer, composer, 0)");
 });
+
+test("Gem Mask diagnostics button requests a one-shot readback and renders the demand-driven viewer immediately", () => {
+  const render = readFileSync("src/components/AurumRender.tsx", "utf8");
+  const viewer = readFileSync("src/lib/aurum/viewer.ts", "utf8");
+  expect(render).toContain("onClick={requestGemMaskDiagnostics}");
+  expect(render).toContain("maskPass.requestDiagnostics();");
+  expect(render).toContain("if (loop?.renderNow) loop.renderNow();");
+  expect(render).toContain('setGemMaskDiagnosticStatus("pending")');
+  expect(render).toContain('setGemMaskDiagnosticStatus(maskPixels < 0 ? "error" : "ready")');
+  expect(viewer).toContain("renderNow: () => {");
+});
