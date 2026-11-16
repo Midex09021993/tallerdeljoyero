@@ -4956,7 +4956,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             </section>
             <section className="mb-3 rounded-xl border border-[#e6e1d8] bg-white p-3">
               <div className="mb-2 text-[10px] font-semibold uppercase tracking-[.12em] text-[#92743b]">Antialiasing del diamante</div>
-              <p className="mb-3 text-[9px] leading-relaxed text-[#77756f]">Gem Mask ya puede activarse para comprobar el aislamiento. SSAA, FXAA y TAA siguen bloqueados hasta aprobar la validación visual.</p>
+              <p className="mb-3 text-[9px] leading-relaxed text-[#77756f]">Gem Mask delimita internamente el diamante central. FXAA ya está disponible para una prueba aislada; SSAA y TAA permanecen bloqueados.</p>
               {([
                 {key:"gemMaskEnabled",label:"Gem Mask",description:"Máscara interna del diamante central; delimita el área donde puede trabajar FXAA sin modificar metal ni ambiente."},
                 {key:"diamondSsaaEnabled",label:"SSAA",description:"Render auxiliar de mayor resolución para el diamante."},
