@@ -270,19 +270,25 @@ export async function createAurumPostPipeline(
     // Shared SSAA state is declared at pipeline scope for motion-control access.
     const ensureDiamondSupersampleTarget=()=>{
       if(!updateDiamondSupersampleScale()) return null;
+      const width=Math.max(2,Math.floor(diamondSupersampleBaseWidth*diamondSupersampleScale));
+      const height=Math.max(2,Math.floor(diamondSupersampleBaseHeight*diamondSupersampleScale));
       if(!diamondSupersampleTarget){
         diamondSupersampleTarget=new THREE.WebGLRenderTarget(
-          Math.max(2,Math.floor(diamondSupersampleBaseWidth*diamondSupersampleScale)),
-          Math.max(2,Math.floor(diamondSupersampleBaseHeight*diamondSupersampleScale)),
+          width,height,
           {format:THREE.RGBAFormat,type:THREE.HalfFloatType,depthBuffer:true,stencilBuffer:false}
         );
         diamondSupersampleTarget.texture.minFilter=THREE.LinearFilter;
         diamondSupersampleTarget.texture.magFilter=THREE.LinearFilter;
         diamondSupersampleTarget.texture.generateMipmaps=false;
         diamondSupersampleTarget.texture.colorSpace=THREE.NoColorSpace;
-        if(diamondSupersampleCompositePass){
-          diamondSupersampleCompositePass.material.uniforms.tDiamondHiRes.value=diamondSupersampleTarget.texture;
-        }
+      }else if(diamondSupersampleTarget.width!==width||diamondSupersampleTarget.height!==height){
+        // Recreate the auxiliary dimensions after viewport/DPR changes. A stale
+        // target otherwise keeps old dimensions while the composite samples it
+        // with texel sizes from the new viewport.
+        diamondSupersampleTarget.setSize(width,height);
+      }
+      if(diamondSupersampleCompositePass){
+        diamondSupersampleCompositePass.material.uniforms.tDiamondHiRes.value=diamondSupersampleTarget.texture;
       }
       return diamondSupersampleTarget;
     };
@@ -689,7 +695,7 @@ export async function createAurumPostPipeline(
       },
       canRender(){ return updateDiamondSupersampleScale(); },
       setScaleCap(cap:number){
-        diamondSupersampleScaleCap=Math.max(1,Math.min(2,Number(cap)||1));
+        diamondSupersampleScaleCap=Math.max(1,Math.min(2.2,Number(cap)||1));
         updateDiamondSupersampleScale();
         const targetWidth=Math.max(2,Math.floor(diamondSupersampleBaseWidth*diamondSupersampleScale));
         const targetHeight=Math.max(2,Math.floor(diamondSupersampleBaseHeight*diamondSupersampleScale));
