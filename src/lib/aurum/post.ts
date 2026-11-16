@@ -1206,7 +1206,11 @@ export async function createAurumPostPipeline(
     const hasDiamondMeshes=Boolean(gemMaskPass?.hasDiamondMeshes);
     const canSupersample=Boolean(diamondSupersamplePass?.canRender?.());
     const diamondMaskReady=maskEnabled && hasMaskTarget && hasDiamondMeshes;
-    const ssaaEnabled=diamondMaskReady && controls?.diamondSsaaEnabled===true && canSupersample;
+    // SAFETY HOLD: the legacy direct-to-framebuffer overlay is not allowed to
+    // run until the independent base-frame compositor is implemented and
+    // pixel-diff validated. This prevents any auxiliary pass from changing
+    // the environment, metal, or other non-diamond pixels.
+    const ssaaEnabled=false;
     // TAA accumulation is unsafe while the camera moves: it causes trails.
     // Keep the TAA request useful in LIVE by using the same diamond-masked
     // spatial FXAA as a motion-safe fallback, then restore real TAA at rest.
