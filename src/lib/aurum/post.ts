@@ -1493,7 +1493,7 @@ export async function createAurumPostPipeline(
     };
   }
   const setDiamondSupersampleScaleCap=(settledCap:number,liveCap?:number)=>{
-    diamondSupersampleScaleCap=Math.max(1,Math.min(2,Number(settledCap)||1));
+    diamondSupersampleScaleCap=Math.max(1,Math.min(2.2,Number(settledCap)||1));
     diamondLiveSupersampleScaleCap=Math.max(1,Math.min(diamondSupersampleScaleCap,Number(liveCap??settledCap)||1));
     diamondSupersamplePass?.setScaleCap?.(diamondSupersamplingSettled?diamondSupersampleScaleCap:diamondLiveSupersampleScaleCap);
   };
