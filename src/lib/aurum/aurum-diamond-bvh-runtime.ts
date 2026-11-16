@@ -278,6 +278,8 @@ export async function createAurumDiamondBvhRuntime(options: {
         ),
       };
       const isSmallSecondaryDiamond = family === "diamante" && screenTier !== "brilliant";
+      const isNeutralMicroDiamond = family === "diamante" && screenTier === "micro" && !isBlueDiamond && !isPinkDiamond;
+      const isNeutralSmallDiamond = family === "diamante" && screenTier === "small" && !isBlueDiamond && !isPinkDiamond;
       const useEmeraldBvhOptics = isEmerald;
       const isRuby = family === "rubí" || family === "rubi";
       const isSapphire = family === "zafiro" || family === "sapphire";
@@ -329,17 +331,20 @@ export async function createAurumDiamondBvhRuntime(options: {
           // compact facets read bright instead of graphite-grey; keep colored
           // diamonds and the center stone on their existing calibrated values.
           rgbBoost: family === "diamante"
-            ? (isSmallSecondaryDiamond && !isBlueDiamond && !isPinkDiamond
-              ? [1.14, 1.14, 1.14]
-              : isBlueDiamond ? [2, 2, 2] : isPinkDiamond ? [1.3, 1, 1] : [1.08, 1.08, 1.08])
+            ? (isNeutralMicroDiamond ? [1.06, 1.06, 1.06]
+              : isNeutralSmallDiamond ? [1.09, 1.09, 1.09]
+              : isSmallSecondaryDiamond && !isBlueDiamond && !isPinkDiamond
+                ? [1.14, 1.14, 1.14]
+                : isBlueDiamond ? [2, 2, 2] : isPinkDiamond ? [1.3, 1, 1] : [1.08, 1.08, 1.08])
             : undefined,
-          // Calibración visual de los tres blancos según la referencia iJewel: VS con más contraste, inclusiones más claras; el azul queda intacto.
-          environmentIntensity: family === "diamante" ? (isSmallSecondaryDiamond ? 1.55 : isBlueDiamond ? 1.5 : isPinkDiamond ? 1.33 : activeGemId === "diamante_vs" ? 1.82 : activeGemId === "diamante_inclusiones" ? 2.05 : 1.92) : useEmeraldBvhOptics ? 1 : emeraldProfile?.environmentIntensity ?? rubyProfile?.environmentIntensity ?? sapphireProfile?.environmentIntensity ?? (isEmerald ? 1.5 : isRuby ? 1.0 : isSapphire ? 1.2 : isAmethyst ? 1.35 : isAquamarine ? 1.25 : isCitrine ? 1.2 : isBlueTopaz ? 1.25 : isImperialTopaz ? 1.22 : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 1.55 : 1.3) : isTanzanite ? 1.25 : isMoissanite ? 1.35 : isZircon ? 1.2 : isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 1.18 : 1.14),
-          // Emerald test: disable dispersion entirely while isolating BVH speckles.
-          // The green color is authored by the profile; chromatic splitting is not
-          // required for emerald and may amplify unstable ray/intersection artifacts.
+          // Small white melee: lower internal energy to prevent dense, sand-like
+          // flicker while retaining enough neutral radiance to read as diamond.
+          // Center, blue/pink diamonds and every non-diamond gemstone keep their calibration.
+          environmentIntensity: family === "diamante" ? (isNeutralMicroDiamond ? 1.28 : isNeutralSmallDiamond ? 1.38 : isSmallSecondaryDiamond ? 1.55 : isBlueDiamond ? 1.5 : isPinkDiamond ? 1.33 : activeGemId === "diamante_vs" ? 1.82 : activeGemId === "diamante_inclusiones" ? 2.05 : 1.92) : useEmeraldBvhOptics ? 1 : emeraldProfile?.environmentIntensity ?? rubyProfile?.environmentIntensity ?? sapphireProfile?.environmentIntensity ?? (isEmerald ? 1.5 : isRuby ? 1.0 : isSapphire ? 1.2 : isAmethyst ? 1.35 : isAquamarine ? 1.25 : isCitrine ? 1.2 : isBlueTopaz ? 1.25 : isImperialTopaz ? 1.22 : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 1.55 : 1.3) : isTanzanite ? 1.25 : isMoissanite ? 1.35 : isZircon ? 1.2 : isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 1.18 : 1.14),
+          // Chromatic splitting is restrained on small white melee to avoid
+          // unstable sub-pixel color fragments that read as moving particles.
           dispersion: family === "diamante"
-            ? (isSmallSecondaryDiamond ? 0.0035 : activeGemId === "diamante_natural" ? 0.01 : isBlueDiamond ? 0.004 : isPinkDiamond ? 0.012 : 0.006)
+            ? (isNeutralMicroDiamond ? 0.0012 : isNeutralSmallDiamond ? 0.0022 : isSmallSecondaryDiamond ? 0.0035 : activeGemId === "diamante_natural" ? 0.01 : isBlueDiamond ? 0.004 : isPinkDiamond ? 0.012 : 0.006)
             : useEmeraldBvhOptics ? 0 : (emeraldProfile?.dispersion ?? rubyProfile?.dispersion ?? sapphireProfile?.dispersion ?? (isRuby ? 0.001 : isSapphire ? 0.001 : isAmethyst || isAquamarine || isCitrine || isBlueTopaz || isImperialTopaz || isParaibaTourmaline || isTanzanite || isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 0.0002 : isZircon ? 0.001 : isMoissanite ? 0.009 : 0.01)),
           ior: emeraldProfile?.ior ?? rubyProfile?.ior ?? sapphireProfile?.ior ?? (family === "diamante" ? 2.417 : isEmerald ? 1.58 : isRuby ? 1.762 : isSapphire ? 1.762 : isAmethyst ? 1.55 : isAquamarine ? 1.577 : isCitrine || isQuartz ? 1.544 : isBlueTopaz || isImperialTopaz ? 1.63 : isParaibaTourmaline || isOtherTourmaline ? 1.62 : isTanzanite ? 1.695 : isMoissanite ? 2.65 : isSpinel ? 1.718 : isGarnet ? 1.78 : isPeridot ? 1.65 : isMorganite ? 1.58 : isZircon ? 1.92 : isChrysoberyl ? 1.75 : 1.55),
           // Match the catalog's iJewel inclusion reference (absorption 1.6)
@@ -369,7 +374,9 @@ export async function createAurumDiamondBvhRuntime(options: {
               // Match the audited secondary-diamond minimum while preserving calibrated center/blue values.
               // Secondary melee uses 4; blue uses 6 and center white references use 5.
               packageApi.setDiamondOptions(prepared.material, {
-                rayBounces: isSmallSecondaryDiamond ? 4 : isBlueDiamond ? 6 : 5,
+                // Fewer internal bounces on tiny white melee reduce unstable
+                // high-frequency sparkle; the center and colored variants stay calibrated.
+                rayBounces: isNeutralMicroDiamond ? 2 : isNeutralSmallDiamond ? 3 : isSmallSecondaryDiamond ? 4 : isBlueDiamond ? 6 : 5,
               });
               return;
             }
