@@ -266,7 +266,7 @@ export function createAurumWebGLViewer(
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(38, 1, 0.001, 1000);
   const renderer = new THREE.WebGLRenderer({
-    antialias: false,
+    antialias: true,
     alpha: true,
     // The demand-driven loop stops once the image settles. Preserve the last
     // frame so browser compositing cannot clear the idle interactive canvas.
