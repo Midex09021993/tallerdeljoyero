@@ -3895,11 +3895,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           const renderStartedAt = performance.now();
           // Activate selective Gem Mask + diamond SSAA only when the center
           // diamond exists and both SSAA passes are enabled; FXAA remains disabled.
-          // Keep the original direct renderer as the only active beauty path.
-          // Global composer routing is retired until a separate-target diamond
-          // compositor proves pixel identity outside the gemstone mask.
-          const useLiveGemAa = false;
-          const activeToneAuditPath = useLiveGemAa ? "composer" : (diamondSupersamplePass?.enabled ? "direct+diamond-overlay" : "direct");
+          // The live beauty frame always uses the native renderer. No
+          // composer, FXAA or SSAA path may rewrite full-scene pixels until
+          // the isolated diamond compositor passes pixel-diff validation.
+          const activeToneAuditPath = "direct";
           if (toneAuditEnabled && activeToneAuditPath !== lastToneAuditPath) {
             lastToneAuditPath = activeToneAuditPath;
             console.info("[AURUM][TONE_AUDIT][PATH]", {
@@ -3914,8 +3913,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           }
           // Route the live viewport through the minimal gem-AA composer only when both
           // selective passes are active; otherwise retain the direct fast path.
-          if (useLiveGemAa) composer.render();
-          else renderer.render(escena,camara);
+          renderer.render(escena,camara);
           // Legacy direct-framebuffer SSAA was retired; keep the live beauty
           // render untouched until the independent diamond compositor exists.
           const renderCpuMs = performance.now() - renderStartedAt;
