@@ -139,3 +139,41 @@ test("refresh discovers meshes reassigned to diamond and releases meshes reassig
   expect(mesh.userData.aurumDiamondMicroTier).toBeUndefined();
   pipeline.dispose();
 });
+
+
+test("micro pipeline can be paused and resumed without leaving optical scaling behind", () => {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+  camera.position.set(0, 0, 10);
+  camera.lookAt(0, 0, 0);
+  camera.updateMatrixWorld(true);
+  const material = new THREE.MeshPhysicalMaterial();
+  material.userData.aurumGemFamily = "Diamante";
+  material.userData.aurumDiamondMicroUniforms = {
+    scintillationStrength: { value: 0.16 }, baseScintillationStrength: 0.16,
+    facetContrast: { value: 0.88 }, baseFacetContrast: 0.88,
+    dispersion: { value: 0.01 }, baseDispersion: 0.01,
+    virtualFacetWeight: { value: 0.06 }, baseVirtualFacetWeight: 0.06,
+    fireScale: { value: 1 },
+  };
+  const mesh = new THREE.Mesh(new THREE.SphereGeometry(0.05), material);
+  scene.add(mesh);
+  const pipeline = createAurumDiamondMicroPipeline(scene, camera, () => 600);
+  pipeline.update();
+  mesh.onBeforeRender(null as any, scene, camera, mesh.geometry, material, null as any);
+  expect(material.userData.aurumDiamondMicroUniforms.scintillationStrength.value).toBeLessThan(0.16);
+
+  pipeline.setEnabled(false);
+  expect(pipeline.diagnostics().enabled).toBe(false);
+  expect(material.userData.aurumDiamondMicroUniforms.scintillationStrength.value).toBeCloseTo(0.16);
+  mesh.onBeforeRender(null as any, scene, camera, mesh.geometry, material, null as any);
+  expect(material.userData.aurumDiamondMicroUniforms.scintillationStrength.value).toBeCloseTo(0.16);
+
+  pipeline.setEnabled(true);
+  expect(pipeline.diagnostics().enabled).toBe(true);
+  mesh.onBeforeRender(null as any, scene, camera, mesh.geometry, material, null as any);
+  expect(material.userData.aurumDiamondMicroUniforms.scintillationStrength.value).toBeLessThan(0.16);
+  pipeline.dispose();
+  mesh.geometry.dispose();
+  material.dispose();
+});
