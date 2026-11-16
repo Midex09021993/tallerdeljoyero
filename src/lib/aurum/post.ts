@@ -432,11 +432,16 @@ export async function createAurumPostPipeline(
         lastGemMaskCameraState=cameraState;
         if(cachedGemMeshes.length===0){
           const previousTarget=activeRenderer.getRenderTarget();
+          const previousViewport=activeRenderer.getViewport(new THREE.Vector4()).clone();
+          const previousScissor=activeRenderer.getScissor(new THREE.Vector4()).clone();
+          const previousScissorTest=activeRenderer.getScissorTest?.()??false;
           const previousAutoClear=activeRenderer.autoClear;
           const previousClearColor=activeRenderer.getClearColor(new THREE.Color()).clone();
           const previousClearAlpha=activeRenderer.getClearAlpha();
           try{
             activeRenderer.setRenderTarget(gemMaskTarget);
+            activeRenderer.setViewport(0,0,gemMaskTarget.width,gemMaskTarget.height);
+            activeRenderer.setScissorTest(false);
             activeRenderer.setClearColor(0x000000,0);
             activeRenderer.autoClear=false;
             activeRenderer.clear(true,true,true);
@@ -444,6 +449,9 @@ export async function createAurumPostPipeline(
             activeRenderer.autoClear=previousAutoClear;
             activeRenderer.setClearColor(previousClearColor,previousClearAlpha);
             activeRenderer.setRenderTarget(previousTarget);
+            activeRenderer.setViewport(previousViewport);
+            activeRenderer.setScissor(previousScissor);
+            activeRenderer.setScissorTest(previousScissorTest);
           }
         }else{
           renderGemMaskWithOcclusion(activeRenderer,gemMaskTarget);
