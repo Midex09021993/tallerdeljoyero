@@ -113,11 +113,12 @@ export function RegistroTaller({ className = "" }: Props) {
               <form onSubmit={registrar} className="mt-7 space-y-5">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-                    Tu nombre
+                    Nombre / usuario
                     <span className="relative mt-2 block">
                       <UserRound className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-                      <input required maxLength={120} value={form.nombre} onChange={(e) => setForm((v) => ({ ...v, nombre: e.target.value }))} className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-3 text-sm text-[#17232d] outline-none transition placeholder:text-slate-400 focus:border-[#c59a18] focus:ring-2 focus:ring-[#f8c928]/25" />
+                      <input required maxLength={120} autoComplete="username" aria-label="Nombre y usuario de acceso" value={form.nombre} onChange={(e) => setForm((v) => ({ ...v, nombre: e.target.value }))} className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-3 text-sm text-[#17232d] outline-none transition placeholder:text-slate-400 focus:border-[#c59a18] focus:ring-2 focus:ring-[#f8c928]/25" />
                     </span>
+                    <span className="mt-1.5 block text-[10px] font-normal normal-case tracking-normal text-slate-400">También será tu usuario para iniciar sesión.</span>
                   </label>
 
                   <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-500">
