@@ -44,7 +44,7 @@ export function getAurumPostControls(): AurumPostControls {
       // v3 introduced the isolated diamond-only controls but shipped them
       // opt-in. Promote an untouched all-off v3 state to the approved default;
       // preserve any explicit partial/user selection.
-      const isV3 = legacy === window.localStorage.getItem("aurum:post-engine-controls:v3");
+      const isV3 = key === "aurum:post-engine-controls:v3";
       if (isV3 && !migrated.gemMaskEnabled && !migrated.diamondSsaaEnabled && !migrated.gemFxaaEnabled) {
         migrated.gemMaskEnabled = true;
         migrated.diamondSsaaEnabled = true;
