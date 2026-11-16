@@ -1280,7 +1280,13 @@ export async function createAurumPostPipeline(
     const disposeComposer=composer.dispose.bind(composer);
     composer.dispose=()=>{
       unsubscribePostControls();
+      gemMaskPass?.dispose?.();
       diamondSupersamplePass?.dispose?.();
+      diamondSupersampleCompositePass?.material?.dispose?.();
+      diamondSupersampleCompositePass?.fsQuad?.dispose?.();
+      fxaaPass?.material?.dispose?.();
+      fxaaPass?.fsQuad?.dispose?.();
+      surfaceEdgeAaPass?.dispose?.();
       disposeComposer();
     };
   }
