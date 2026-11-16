@@ -548,7 +548,6 @@ export async function createAurumPostPipeline(
     };
     diamondSupersampleCompositePass=new FXAAShaderPass({
       uniforms:{
-        tDiffuse:{value:null},
         tDiamondHiRes:{value:diamondSupersampleTarget?.texture??null},
         gemMask:{value:gemMaskTarget.texture},
         tDiamondHiResMask:{value:diamondSupersampleMaskTarget?.texture??null},
@@ -556,7 +555,7 @@ export async function createAurumPostPipeline(
         reconstructionScale:{value:diamondSupersampleScale},
       },
       vertexShader:`varying vec2 vUv; void main(){vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
-      fragmentShader:`uniform sampler2D tDiffuse; uniform sampler2D tDiamondHiRes; uniform sampler2D gemMask; uniform sampler2D tDiamondHiResMask; uniform vec2 hiResTexel; uniform float reconstructionScale; varying vec2 vUv;
+      fragmentShader:`uniform sampler2D tDiamondHiRes; uniform sampler2D gemMask; uniform sampler2D tDiamondHiResMask; uniform vec2 hiResTexel; uniform float reconstructionScale; varying vec2 vUv;
         float aurumCatmullRomWeight(float x){
           x=abs(x);
           if(x<1.0) return 1.5*x*x*x-2.5*x*x+1.0;
@@ -564,8 +563,9 @@ export async function createAurumPostPipeline(
           return 0.0;
         }
         void main(){
-          vec4 base=texture2D(tDiffuse,vUv);
-          if(texture2D(gemMask,vUv).r<0.5){gl_FragColor=base;return;}
+          // This is a true overlay: discard means the framebuffer is not
+          // written at all outside the original-resolution diamond mask.
+          if(texture2D(gemMask,vUv).r<0.5) discard;
           // Reconstruct from the high-resolution optical scene, but reject
           // every tap outside the diamond mask. This prevents background,
           // metal and mask-exterior colors from bleeding into the girdle.
@@ -588,11 +588,15 @@ export async function createAurumPostPipeline(
           }
           // Near a very thin silhouette there may be no valid high-res tap.
           // Preserve the original pixel rather than borrowing the environment.
-          if(abs(totalWeight)<0.00001){gl_FragColor=base;return;}
+          if(abs(totalWeight)<0.00001) discard;
           gl_FragColor=accumulated/totalWeight;
+          #include <colorspace_fragment>
         }`,
     });
     diamondSupersampleCompositePass.enabled=false;
+    diamondSupersampleCompositePass.clear=false;
+    diamondSupersampleCompositePass.renderToScreen=true;
+    if(diamondSupersampleCompositePass.material) diamondSupersampleCompositePass.material.toneMapped=false;
     diamondSupersampleCompositePass.setSize=(width:number,height:number)=>{
       diamondSupersampleBaseWidth=Math.max(1,Math.floor(width));
       diamondSupersampleBaseHeight=Math.max(1,Math.floor(height));
@@ -603,11 +607,10 @@ export async function createAurumPostPipeline(
       diamondSupersampleCompositePass.material.uniforms.hiResTexel.value.set(1/hiWidth,1/hiHeight);
       diamondSupersampleCompositePass.material.uniforms.reconstructionScale.value=diamondSupersampleScale;
     };
-    // Insert the auxiliary render immediately after the base beauty pass. It
-    // never swaps composer buffers; the composite pass swaps only the diamond.
-    composer.addPass(diamondSupersamplePass);
-    composer.passes.splice(composer.passes.indexOf(diamondSupersamplePass),1);
-    composer.passes.splice(composer.passes.indexOf(renderPass)+1,0,diamondSupersamplePass);
+    // SSAA is deliberately NOT inserted into EffectComposer. It is executed
+    // after the normal direct beauty render as a framebuffer overlay with
+    // discard outside Gem Mask, so composer MSAA/8-bit ping-pong buffers and
+    // OutputPass can never rewrite the metals or environment because of SSAA.
 
 
     // Diamond-only TAA: save the pre-TAA beauty and composite the temporal result
@@ -695,7 +698,8 @@ export async function createAurumPostPipeline(
     // into gemstone edges. It is enabled only for settled/high-quality frames.
     fxaaPass.enabled=false;
     composer.addPass(gemMaskPass);
-    composer.addPass(diamondSupersampleCompositePass);
+    // diamondSupersampleCompositePass is invoked directly as a masked overlay,
+    // never as a full-frame composer pass.
     composer.addPass(fxaaPass);
     // Keep the strict order: base beauty -> high-res scene -> mask -> selective
     // composite -> optional masked FXAA. Other scene pixels pass through.
@@ -1025,6 +1029,39 @@ export async function createAurumPostPipeline(
     }
   };
 
+  const renderDiamondSupersampleOverlay=(activeRenderer:any)=>{
+    if(!diamondSupersamplePass?.enabled || !diamondSupersampleCompositePass || !gemMaskPass?.enabled || !gemMaskPass?.hasDiamondMeshes) return false;
+    const previousTarget=activeRenderer.getRenderTarget();
+    const previousAutoClear=activeRenderer.autoClear;
+    const previousViewport=new (gemMaskPass as any).THREE?.Vector4?.() ?? null;
+    const previousScissor=new (gemMaskPass as any).THREE?.Vector4?.() ?? null;
+    const previousScissorTest=activeRenderer.getScissorTest?.()??false;
+    try{
+      // Refresh the base-resolution mask, render the high-resolution optical
+      // reference, then draw only fragments belonging to that mask on top of
+      // the already-rendered direct beauty frame.
+      gemMaskPass.render(activeRenderer);
+      diamondSupersamplePass.render(activeRenderer);
+      activeRenderer.setRenderTarget(null);
+      activeRenderer.setViewport(0,0,Math.max(1,renderer.domElement.width),Math.max(1,renderer.domElement.height));
+      activeRenderer.setScissorTest(false);
+      activeRenderer.autoClear=false;
+      diamondSupersampleCompositePass.renderToScreen=true;
+      diamondSupersampleCompositePass.render(activeRenderer,null,null,0,false);
+      return true;
+    }catch(error){
+      console.warn("[AURUM][DIAMOND SSAA] Overlay composition failed; direct beauty frame retained.",error);
+      return false;
+    }finally{
+      diamondSupersampleCompositePass.renderToScreen=true;
+      activeRenderer.setRenderTarget(previousTarget);
+      if(previousViewport) activeRenderer.setViewport(previousViewport);
+      if(previousScissor) activeRenderer.setScissor(previousScissor);
+      activeRenderer.setScissorTest(previousScissorTest);
+      activeRenderer.autoClear=previousAutoClear;
+    }
+  };
+
   const resetTemporalAccumulation=()=>{
     if(!taaPass)return;
     // A scene-lighting change invalidates the accumulated beauty frame even
@@ -1133,9 +1170,19 @@ export async function createAurumPostPipeline(
       disposeComposer();
     };
   }
+  const originalComposerSetSize=composer?.setSize?.bind(composer);
+  if(composer && originalComposerSetSize){
+    composer.setSize=(width:number,height:number)=>{
+      originalComposerSetSize(width,height);
+      const actualWidth=Math.max(1,Number(renderer.domElement.width)||Math.floor(width));
+      const actualHeight=Math.max(1,Number(renderer.domElement.height)||Math.floor(height));
+      diamondSupersamplePass?.setSize?.(actualWidth,actualHeight);
+      diamondSupersampleCompositePass?.setSize?.(actualWidth,actualHeight);
+    };
+  }
   const setSSRSelects=(objects:any[])=>{
     if(!ssrPass)return;
     ssrPass.selects=Array.isArray(objects)?objects:[];
   };
-  return {composer,renderPass,ssaoPass,ssrPass,ssrSavePass,ssrCompositePass,bloomPass,setSSRSelects,applyQuality,updateTemporal,resetTemporalAccumulation,setTemporalMotion,setDiamondSupersamplingSettled,setDiamondSupersampleScaleCap,diamondSupersamplePass,diamondSupersampleCompositePass,diamondTaaSavePass,diamondTaaCompositePass,dofPass,taaPass,fxaaPass,surfaceEdgeAaPass,gemMaskPass,outputPass,msaaSamples:composerMsaaSamples};
+  return {composer,renderPass,ssaoPass,ssrPass,ssrSavePass,ssrCompositePass,bloomPass,setSSRSelects,applyQuality,updateTemporal,resetTemporalAccumulation,setTemporalMotion,setDiamondSupersamplingSettled,setDiamondSupersampleScaleCap,renderDiamondSupersampleOverlay,diamondSupersamplePass,diamondSupersampleCompositePass,diamondTaaSavePass,diamondTaaCompositePass,dofPass,taaPass,fxaaPass,surfaceEdgeAaPass,gemMaskPass,outputPass,msaaSamples:composerMsaaSamples};
 }
