@@ -1805,6 +1805,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               )
               .map(({mesh})=>mesh);
             if(!currentTargets.length)return;
+            // Gem assignments can turn previously non-diamond meshes into
+            // diamonds. Rebuild the lightweight mesh registry only on this
+            // material-change path, then publish tiers before BVH reconciliation.
+            diamondMicroPipeline.refresh();
+            diamondMicroPipeline.update();
             if(diamondBvhRuntime){
               // O(k) for non-diamond changes; only the selected meshes are
               // reconsidered and unrelated BVH entries remain untouched.
@@ -2184,8 +2189,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         });
         loadAuditStep("initial-materials-applied", { triangles: countAurumTriangles(interno) });
         modelo=interno;
-        // Prepare the gemstone optical runtime before presenting the initial
-        // settled frame. The BVH keeps its existing safe material fallback on error.
+        // Register the loaded model's diamond meshes before BVH setup. The micro
+        // pipeline was created with an empty scene, so its initial refresh cannot
+        // discover gems that are loaded later.
+        diamondMicroPipeline.refresh();
+        diamondMicroPipeline.update();
+        // Prepare the gemstone optical runtime only after screen-space tiers
+        // have been published for the initial BVH material configuration.
         await asegurarDiamanteBvh();
         // Synchronize the newly prepared gemstone BVH with the loaded model
         // before any initial presentation frame can consume its acceleration data.
@@ -2582,6 +2592,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           // materials have painted; do not refresh the full runtime per layer.
           const refreshCatalogBvh=()=>{
             if(!vivo||!modelo)return;
+            // Catalog-wide material changes may add/remove diamond meshes.
+            // Refresh once per catalog operation, never from the render loop.
+            diamondMicroPipeline.refresh();
+            diamondMicroPipeline.update();
             if(diamondBvhRuntime)diamondBvhRuntime.refresh(modelo);
             else void asegurarDiamanteBvh();
             invalidateRenderRef.current?.();
