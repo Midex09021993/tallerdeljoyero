@@ -61,6 +61,8 @@ export async function createAurumPostPipeline(
   let diamondSupersampleTarget:any=null;
   let diamondSupersampleMaskTarget:any=null;
   let diamondFxaaSnapshotTexture:any=null;
+  let gemMaskTarget:any=null;
+  let ensureDiamondFxaaSnapshotTexture:any=null;
   let gradingPass:any=null;
   let composerMsaaSamples=0;
   // Shared SSAA state lives at the pipeline scope because motion controls are
@@ -223,7 +225,7 @@ export async function createAurumPostPipeline(
 
     const { ShaderPass: FXAAShaderPass }=await import("three/examples/jsm/postprocessing/ShaderPass.js");
     THREE=await import("three");
-    const ensureDiamondFxaaSnapshotTexture=(width:number,height:number,activeRenderer:any)=>{
+    ensureDiamondFxaaSnapshotTexture=(width:number,height:number,activeRenderer:any)=>{
       const targetWidth=Math.max(1,Math.floor(width));
       const targetHeight=Math.max(1,Math.floor(height));
       if(!diamondFxaaSnapshotTexture){
@@ -249,7 +251,7 @@ export async function createAurumPostPipeline(
     // Render a material-ID mask using existing Rhino metadata. The depth prepass
     // includes every object, while the color pass writes white only for gems.
     // This keeps foreground metal occlusion correct without touching materials.
-    const gemMaskTarget=new THREE.WebGLRenderTarget(
+    gemMaskTarget=new THREE.WebGLRenderTarget(
       Math.max(1,renderer.domElement.width),
       Math.max(1,renderer.domElement.height),
       {format:THREE.RGBAFormat,type:THREE.UnsignedByteType,depthBuffer:true,stencilBuffer:false}
