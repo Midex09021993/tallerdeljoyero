@@ -789,7 +789,9 @@ export async function createAurumPostPipeline(
     // Gem-specific AA keeps its categorical mask so metal pixels never bleed
     // into gemstone edges. It is enabled only for settled/high-quality frames.
     fxaaPass.enabled=false;
-    composer.addPass(gemMaskPass);
+    // The diagnostic mask may be rendered on demand, but it is never part of
+    // the beauty composer. Diamond FXAA/SSAA stay detached until the isolated
+    // compositor is implemented and pixel-diff validated.
     // Diamond SSAA and FXAA are intentionally detached from EffectComposer.
     // Their legacy implementations remain suspended until a separate-target
     // compositor can preserve the base frame outside the diamond mask.
@@ -816,7 +818,8 @@ export async function createAurumPostPipeline(
     // CAD curves. It is intentionally disabled during camera motion and uses
     // a low blend strength to avoid softening specular detail.
     surfaceEdgeAaPass=createAurumSurfaceEdgeAaPass(FXAAShaderPass,THREE);
-    composer.addPass(surfaceEdgeAaPass);
+    // Full-surface edge AA is retired from the beauty composer; it can alter
+    // metal and environment pixels and is outside the diamond-only scope.
 
     const { OutputPass }=await import("three/examples/jsm/postprocessing/OutputPass.js");
     outputPass=new OutputPass();
@@ -882,10 +885,11 @@ export async function createAurumPostPipeline(
     const taaEnabled = false;
     const edgeAaEnabled = false;
     const ssaaActive = false;
+    const fxaaActive = false;
     if(diamondSupersamplePass) diamondSupersamplePass.enabled=false;
     if(diamondSupersampleCompositePass) diamondSupersampleCompositePass.enabled=false;
     if(gemMaskPass) gemMaskPass.enabled=false;
-    if(fxaaPass) fxaaPass.enabled=false;
+    if(fxaaPass) fxaaPass.enabled=fxaaActive;
     if(taaPass) { taaPass.enabled=false; taaPass.accumulate=false; }
     if(diamondTaaSavePass) diamondTaaSavePass.enabled=false;
     if(diamondTaaCompositePass) diamondTaaCompositePass.enabled=false;
