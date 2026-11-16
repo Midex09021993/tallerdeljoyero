@@ -211,8 +211,37 @@ export function applyAurumCameraView(
   const scale = Number.isFinite(framingScale) ? THREE.MathUtils.clamp(framingScale, 0.25, 1.5) : 1;
   const targetNdc = THREE.MathUtils.clamp(0.72 / scale, 0.35, 0.92);
   const tangent = Math.tan(limitingHalfFov) * targetNdc;
-  const radius = Math.max(productSphere.radius, 0.001);
-  const distance = radius / Math.sin(Math.atan(tangent));
+  // Normalize the *projected* footprint, not just the model-space sphere.
+  // A sphere keeps the same camera distance but a ring viewed edge-on occupies
+  // far fewer pixels than the same ring viewed face-on. Fit the visible world
+  // bounds in this camera basis so every preset uses the same screen occupancy.
+  const bounds = getAurumVisibleProductBounds(model);
+  const corners = bounds.isEmpty() ? [] : [
+    new THREE.Vector3(bounds.min.x, bounds.min.y, bounds.min.z),
+    new THREE.Vector3(bounds.min.x, bounds.min.y, bounds.max.z),
+    new THREE.Vector3(bounds.min.x, bounds.max.y, bounds.min.z),
+    new THREE.Vector3(bounds.min.x, bounds.max.y, bounds.max.z),
+    new THREE.Vector3(bounds.max.x, bounds.min.y, bounds.min.z),
+    new THREE.Vector3(bounds.max.x, bounds.min.y, bounds.max.z),
+    new THREE.Vector3(bounds.max.x, bounds.max.y, bounds.min.z),
+    new THREE.Vector3(bounds.max.x, bounds.max.y, bounds.max.z),
+  ];
+  const horizontalTangent = Math.max(1e-4, Math.tan(horizontalHalfFov) * targetNdc);
+  const verticalTangent = Math.max(1e-4, Math.tan(verticalHalfFov) * targetNdc);
+  let distance = 0;
+  for (const corner of corners) {
+    const relative = corner.sub(target);
+    const projectedRight = Math.abs(relative.dot(right));
+    const projectedUp = Math.abs(relative.dot(cameraUp));
+    const depthAlongView = relative.dot(direction);
+    distance = Math.max(
+      distance,
+      depthAlongView + projectedRight / horizontalTangent,
+      depthAlongView + projectedUp / verticalTangent,
+    );
+  }
+  // Keep a safe non-zero distance for empty/degenerate geometry.
+  distance = Math.max(distance, productSphere.radius * 0.05, 0.001);
 
   camera.up.copy(cameraUp);
   controls.target.copy(target);
