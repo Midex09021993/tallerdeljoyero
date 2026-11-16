@@ -1862,6 +1862,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               // O(k) for non-diamond changes; only the selected meshes are
               // reconsidered and unrelated BVH entries remain untouched.
               diamondBvhRuntime.refreshTargets(modelo,currentTargets);
+              // BVH swaps the material after the initial micro registry refresh.
+              // Re-index from the stable mesh-level diamond identity it publishes.
+              diamondMicroPipeline.refresh();
+              diamondMicroPipeline.update();
             }else if(selectedGemFamily==="diamante" || (selectedGemFamily==="esmeralda" && emeraldBvhOptIn)){
               // First-time runtime loading remains asynchronous and cannot block
               // the already-painted MeshPhysicalMaterial fallback.
@@ -2245,6 +2249,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         // Prepare the gemstone optical runtime only after screen-space tiers
         // have been published for the initial BVH material configuration.
         await asegurarDiamanteBvh();
+        // BVH replaces the original physical material; refresh the micro registry
+        // afterwards so the stable mesh identity keeps the diamond classified.
+        diamondMicroPipeline.refresh();
+        diamondMicroPipeline.update();
         // Synchronize the newly prepared gemstone BVH with the loaded model
         // before any initial presentation frame can consume its acceleration data.
         diamondBvhRuntime?.update();
@@ -2634,8 +2642,12 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // Refresh once per catalog operation, never from the render loop.
             diamondMicroPipeline.refresh();
             diamondMicroPipeline.update();
-            if(diamondBvhRuntime)diamondBvhRuntime.refresh(modelo);
-            else void asegurarDiamanteBvh();
+            if(diamondBvhRuntime) {
+              diamondBvhRuntime.refresh(modelo);
+              // Re-index after BVH material replacement; the mesh marker is authoritative.
+              diamondMicroPipeline.refresh();
+              diamondMicroPipeline.update();
+            } else void asegurarDiamanteBvh();
             invalidateRenderRef.current?.();
           };
           const scheduleCatalogBvh=()=>{
