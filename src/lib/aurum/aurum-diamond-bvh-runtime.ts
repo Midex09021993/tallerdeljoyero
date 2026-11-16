@@ -15,6 +15,8 @@ type RecordEntry = {
   activeGemFamily: string;
   baseEnvironmentIntensity: number;
   setQuality: (quality: "interactive" | "high" | "final") => void;
+  readonly tier: "micro" | "small" | "brilliant";
+  setTier: (tier: "micro" | "small" | "brilliant") => void;
   dispose: () => void;
 };
 
@@ -361,6 +363,7 @@ export async function createAurumDiamondBvhRuntime(options: {
           gamma: family === "diamante" ? (isBlueDiamond ? 1.09 : 1) : 1.09,
           environmentRotationRadians: Number(currentMaterial?.userData?.aurumGemEnvironmentRotation ?? 0),
         });
+        let currentDiamondTier: "micro" | "small" | "brilliant" = screenTier;
         entries.set(mesh, {
           originalMaterial: mesh.material,
           experimentalMaterial: prepared.material,
@@ -368,6 +371,27 @@ export async function createAurumDiamondBvhRuntime(options: {
           gemId: activeGemId,
           activeGemFamily,
           baseEnvironmentIntensity: prepared.diagnostics.environmentIntensity,
+          get tier() { return currentDiamondTier; },
+          setTier: (nextTier) => {
+            if (family !== "diamante" || nextTier === currentDiamondTier || !packageApi.setDiamondOptions) return;
+            // Keep blue/pink catalog calibrations untouched. Neutral white diamonds
+            // follow the same MICRO/SMALL profiles as the physical shader, and
+            // restore their original center/natural profile when they grow again.
+            if (!isBlueDiamond && !isPinkDiamond) {
+              const isMicro = nextTier === "micro";
+              const isSmall = nextTier === "small";
+              const baseEnvironment = activeGemId === "diamante_vs" ? 1.82
+                : activeGemId === "diamante_inclusiones" ? 2.05 : 1.92;
+              const baseDispersion = activeGemId === "diamante_natural" ? 0.01 : 0.006;
+              packageApi.setDiamondOptions(prepared.material, {
+                rgbBoost: isMicro ? [1.06, 1.06, 1.06] : isSmall ? [1.09, 1.09, 1.09] : [1.08, 1.08, 1.08],
+                environmentIntensity: isMicro ? 1.28 : isSmall ? 1.38 : baseEnvironment,
+                dispersion: isMicro ? 0.0012 : isSmall ? 0.0022 : baseDispersion,
+                rayBounces: isMicro ? 2 : isSmall ? 3 : 5,
+              });
+            }
+            currentDiamondTier = nextTier;
+          },
           setQuality: (quality) => {
             if (!packageApi.setDiamondOptions) return;
             if (family === "diamante") {
@@ -450,6 +474,16 @@ export async function createAurumDiamondBvhRuntime(options: {
             cameraUnchanged = false;
             break;
           }
+        }
+      }
+      // The physical diamond pipeline runs immediately before this update and
+      // publishes the shared screen-space tier on each mesh. Retune only when a
+      // BVH diamond crosses a tier boundary; never rebuild its BVH for zoom/orbit.
+      for (const [mesh, entry] of entries) {
+        if (entry.family !== "diamante") continue;
+        const nextTier = mesh.userData?.aurumDiamondMicroTier;
+        if ((nextTier === "micro" || nextTier === "small" || nextTier === "brilliant") && nextTier !== entry.tier) {
+          entry.setTier(nextTier);
         }
       }
       if (cameraUnchanged) return;
