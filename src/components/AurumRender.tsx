@@ -2341,9 +2341,29 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         // subsequent catalog changes resolve selected CAD layers in O(k).
         prepareAurumGemLayerIndex(escena);
         gemMaskPass?.refreshCache?.();
-        // Gem Mask + FXAA remain disabled for the entire viewer session.
-        if (gemMaskPass) gemMaskPass.enabled = false;
-        if (fxaaPass) fxaaPass.enabled = false;
+        // Initialize the selective diamond AA after the model is in the scene.
+        // This makes the first settled frame match the later camera-rest state,
+        // without requiring the user to orbit the model to activate the passes.
+        const initialDiamondSsaaActive = Boolean(setDiamondSupersamplingSettled?.(true));
+        const initialDiamondFxaaActive = Boolean(fxaaPass?.enabled && gemMaskPass?.hasDiamondMeshes);
+        const initialDiamondBeautyPasses = new Set([
+          renderPass,
+          ...(initialDiamondSsaaActive ? [diamondSupersamplePass, diamondSupersampleCompositePass] : []),
+          ...(initialDiamondSsaaActive || initialDiamondFxaaActive ? [gemMaskPass] : []),
+          ...(initialDiamondFxaaActive ? [fxaaPass] : []),
+          outputPass,
+        ]);
+        ((composer as any)?.passes ?? []).forEach((pass: any) => {
+          pass.enabled = initialDiamondBeautyPasses.has(pass);
+        });
+        liveFastPathRef.current = !initialDiamondFxaaActive && !initialDiamondSsaaActive;
+        console.info("[AURUM][DIAMOND][INITIAL_QUALITY]", {
+          hasCenterDiamond: Boolean(gemMaskPass?.hasDiamondMeshes),
+          gemMaskEnabled: Boolean(gemMaskPass?.enabled),
+          fxaaEnabled: Boolean(fxaaPass?.enabled),
+          diamondSupersamplingEnabled: initialDiamondSsaaActive,
+          renderPath: initialDiamondFxaaActive || initialDiamondSsaaActive ? "composer" : "direct",
+        });
         // Live preview keeps TAA disabled in both moving and settled states.
         // The composer still converges one frame for a stable demand-driven image.
         if (idleTaaPass) {
