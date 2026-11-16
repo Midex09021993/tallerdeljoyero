@@ -530,6 +530,24 @@ test("selection highlight changes do not invalidate the gemstone mask cache", ()
   expect(selectionBlock).not.toContain("gemMaskPass?.refreshCache?.();");
 });
 
+test("diamond SSAA high-resolution beauty target renders diamond materials only", () => {
+  const postSource = readFileSync("src/lib/aurum/post.ts", "utf8");
+  expect(postSource).toContain("const diamondSupersampleMaterialsByMesh=new Map<any,any>();");
+  expect(postSource).toContain("diamondSupersampleMaterialsByMesh.set(object,materials.map((material:any,index:number)=>slots.has(index)?material:nonDiamondMaskMaterial));");
+  expect(postSource).toContain("if(camera.layers) camera.layers.mask=gemMaskLayerBit;");
+  expect(postSource).toContain("mesh.material=diamondSupersampleMaterialsByMesh.get(mesh)??mesh.material;");
+  expect(postSource).toContain("activeRenderer.setClearColor(0x000000,0);");
+  expect(postSource).toContain("activeRenderer.render(scene,camera);");
+  expect(postSource).toContain("diamondSupersampleMaterialsByMesh.clear();");
+  const ssaaStart = postSource.indexOf("diamondSupersamplePass={");
+  const ssaaEnd = postSource.indexOf("diamondSupersampleCompositePass=", ssaaStart);
+  const ssaaBlock = postSource.slice(ssaaStart, ssaaEnd);
+  expect(ssaaStart).toBeGreaterThan(-1);
+  expect(ssaaBlock).not.toContain("activeRenderer.render(scene,camera);\\n          } finally {\\n            activeRenderer.toneMapping=previousToneMapping;");
+  expect(ssaaBlock).toContain("scene.background=null;");
+  expect(ssaaBlock).toContain("originalDiamondMaterials");
+});
+
 test("diamond SSAA never changes the full-scene renderer or composer DPR during motion", () => {
   const componentSource = readFileSync("src/components/AurumRender.tsx", "utf8");
   const motionStart = componentSource.indexOf("onStart: () => {", componentSource.indexOf("liveDiamondSsaaActive"));
