@@ -489,7 +489,12 @@ test("Aurum exposes diamond-only AA and SSAA as independent modules", () => {
   expect(postSource).toContain("if(texture2D(gemMask,vUv).r<0.5) discard;");
   expect(postSource).toContain("renderDiamondSupersampleOverlay");
   expect(postSource).toContain("diamondSupersampleCompositePass.render(activeRenderer,null,null,0,false)");
-  expect(postSource).toContain("return activeDiamonds;");
+  expect(postSource).toContain("const centerDiamondMeshes:any[]=[];");
+  expect(postSource).toContain("const previousViewport=activeRenderer.getViewport(new THREE.Vector4()).clone();");
+  expect(postSource).toContain("const previousScissor=activeRenderer.getScissor(new THREE.Vector4()).clone();");
+  expect(postSource).toContain("activeRenderer.setViewport(previousViewport);");
+  expect(postSource).toContain("activeRenderer.setScissor(previousScissor);");
+  expect(postSource).toContain("activeRenderer.setScissorTest(previousScissorTest);");
   expect(postSource).toContain("data.aurumDetectedCategory");
   expect(postSource).toContain("#include <tonemapping_fragment>");
   expect(componentSource).toContain("&& !diamondSupersamplePass?.enabled");
