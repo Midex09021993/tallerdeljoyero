@@ -2444,6 +2444,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         parteActiva=null;
         limpiarResaltado();
         escena.add(modelo);
+        // The micro pipeline is created with the viewer, before a CAD model may
+        // be loaded. Re-discover its diamond meshes now that this model is in scene.
+        diamondMicroPipelineRef.current?.refresh?.();
         // Pre-index MatrixGold/Rhino gemstone layers during model setup so
         // subsequent catalog changes resolve selected CAD layers in O(k).
         prepareAurumGemLayerIndex(escena);
