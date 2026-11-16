@@ -550,7 +550,6 @@ test("Aurum exposes diamond-only AA and SSAA as independent modules", () => {
   expect(postSource).toContain("float aurumCatmullRomWeight(float x){");
   expect(postSource).toContain("reconstructed=clamp(reconstructed,minimumSample,maximumSample);");
   expect(postSource).toContain("if(sampleMask>=0.5 && abs(weight)>0.000001){");
-  expect(postSource).not.toContain("aurumCatmullRomWeight");
   expect(postSource).toContain("if(totalWeight<0.00001) discard;");
   expect(postSource).toContain("mesh.layers.enable(gemMaskLayer)");
 });
@@ -738,4 +737,18 @@ test("extreme scenes allow stronger settled diamond SSAA while preserving the li
   expect(budget.tier).toBe("extreme");
   expect(budget.diamondSupersampleScaleCap).toBe(1.4);
   expect(budget.diamondLiveSupersampleScaleCap).toBe(1.15);
+});
+
+
+test("diamond optical A/B modes isolate the iJewel-inspired shader without changing physical IOR", () => {
+  const scintillationSource = readFileSync("src/lib/aurum/scintillation.ts", "utf8");
+  const materialSource = readFileSync("src/lib/aurum-material-engine.ts", "utf8");
+  expect(scintillationSource).toContain('get("aurumDiamondTest")');
+  expect(scintillationSource).toContain('b:{label:"iJewel reference · physical IOR",ior:2.417,dispersion:0.01,rayBounces:5}');
+  expect(scintillationSource).toContain('const ijewelEnabled=isDiamond && diamondTestMode!=="a"');
+  expect(scintillationSource).toContain('diamondTestMode??"no-diamond-ab-test"');
+  expect(scintillationSource).toContain('enabled:ijewelEnabled');
+  expect(materialSource).toContain("const physicalIor=Math.max(1.01,Math.min(2.65,Number(material.ior??p.refractiveIndex)));");
+  expect(materialSource).toContain("material.ior=physicalIor;");
+  expect(materialSource).toContain("aurumIJEWELActive:false");
 });
