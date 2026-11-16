@@ -554,7 +554,7 @@ export async function createAurumPostPipeline(
         try { activeTarget=ensureDiamondSupersampleTarget(); }
         catch(error){
           diamondSupersamplePass.enabled=false;
-          diamondSupersampleCompositePass && (diamondSupersampleCompositePass.enabled=false);
+          if(diamondSupersampleCompositePass) diamondSupersampleCompositePass.enabled=false;
           console.warn("[AURUM][DIAMOND SSAA] Auxiliary target unavailable; module suspended.",error);
           return;
         }
@@ -604,7 +604,7 @@ export async function createAurumPostPipeline(
           }
         }catch(error){
           diamondSupersamplePass.enabled=false;
-          diamondSupersampleCompositePass && (diamondSupersampleCompositePass.enabled=false);
+          if(diamondSupersampleCompositePass) diamondSupersampleCompositePass.enabled=false;
           console.warn("[AURUM][DIAMOND SSAA] Reference render failed; module suspended.",error);
         }finally{
           activeRenderer.setRenderTarget(previousTarget);

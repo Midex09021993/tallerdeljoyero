@@ -1408,7 +1408,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       // Mostrar suelo inicia activado: mantener sincronizados el plano y su sombra de contacto.
       groundController.setVisible(true);
       groundController.setBakedShadowVisible(true);
-      let suelo:any = groundController.mesh;
+      const suelo:any = groundController.mesh;
       const sceneController = createAurumSceneController(
         viewerScene,
         viewerRenderer,
