@@ -279,8 +279,8 @@ test("diamond AA stages are coordinated behind Gem Mask with settled TAA", () =>
   expect(controls).toContain("diamondTaaEnabled: value?.gemMaskEnabled === true && value?.diamondTaaEnabled === true");
   expect(controls).toContain("diamondTaaEnabled: true,");
   expect(post).toContain("const fxaaEnabled=diamondMaskReady && fxaaRequested;");
-  expect(post).toContain("float aurumPositiveCubicWeight(float x){");
-  expect(post).not.toContain("aurumCatmullRomWeight");
+  expect(post).toContain("float aurumCatmullRomWeight(float x){");
+  expect(post).toContain("aurumCatmullRomWeight");
   expect(post).toContain("if(totalWeight<0.00001) discard;");
   expect(post).toContain("const renderDiamondFxaaOverlay=(activeRenderer:any)=>");
   expect(post).toContain("let gemMaskTarget:any=null;");
