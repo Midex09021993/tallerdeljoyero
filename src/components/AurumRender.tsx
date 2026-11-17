@@ -3988,7 +3988,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           ? "gema"
           : sourceCategory === "metal" || layerCategory === "metal" || semanticCategory === "metal"
             ? "metal"
-            : sourceCategory === "otro" || !sourceCategory ? "otro" : sourceCategory)) as CategoriaParte;
+            : sourceCategory === "otro" || !sourceCategory ? "otro" : sourceCategory) as CategoriaParte;
         setParteSeleccionada(obj.uuid);
         setParteSeleccionadaNombre(nombre);
         setParteSeleccionadaCapa(capa);
