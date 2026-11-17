@@ -2533,7 +2533,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         });
         // TAA remains enabled only through the masked center-diamond composite.
         // Its accumulation is disabled automatically when camera motion begins.
-        viewerLoopRef.current?.converge?.(1);
+        viewerLoopRef.current?.converge?.(initialDiamondTaaActive ? 32 : 1);
         loadAuditStep("model-added-to-scene");
         // No reaplicar el metal globalmente al cargar: el paso anterior ya asignó\n        // materiales por categoría y una aplicación con parteActiva=null sobrescribiría\n        // las gemas recién configuradas. El metal se aplica después solo sobre la capa seleccionada.\n        if (ext!=="3dm" && parteActiva) aplicarMaterial(materialActivo);
         // Presentación inicial: usar la geometría real para encuadrar y
