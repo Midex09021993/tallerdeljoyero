@@ -821,26 +821,22 @@ export async function createAurumPostPipeline(
           return 0.0;
         }
         void main(){
-            // Native-resolution mask is the hard write boundary. The auxiliary
-          // high-resolution mask may refine samples, but can never expand the
-          // output footprint onto metal, prongs, shank, or environment.
-          if(texture2D(gemMask,vUv).r<0.5) discard;
-          // FXAA-only mode renders at native resolution: copy that result
-          // directly instead of applying the supersampling reconstruction filter.
+          // The high-resolution categorical mask supplies subpixel silhouette
+          // coverage. A native binary-mask discard here would reintroduce jagged
+          // edges after SSAA, even when the auxiliary render is 2x or greater.
           if(reconstructionScale<=1.001){
+            if(texture2D(gemMask,vUv).r<0.5) discard;
             if(texture2D(tDiamondHiResMask,vUv).r<0.5) discard;
             gl_FragColor=texture2D(tDiamondHiRes,vUv);
             #include <tonemapping_fragment>
             #include <colorspace_fragment>
             return;
           }
-          // Reconstruct from the high-resolution optical scene, but reject
-          // every tap outside the diamond mask. This prevents background,
-          // metal and mask-exterior colors from bleeding into the girdle.
           vec4 accumulated=vec4(0.0);
           vec4 minimumSample=vec4(1.0e20);
           vec4 maximumSample=vec4(-1.0e20);
           float totalWeight=0.0;
+          float coveredSamples=0.0;
           for(int y=0;y<4;y++){
             float oy=float(y)-1.5;
             float wy=aurumCatmullRomWeight(oy/reconstructionScale);
@@ -850,7 +846,12 @@ export async function createAurumPostPipeline(
               float weight=wx*wy;
               vec2 sampleUv=clamp(vUv+vec2(ox,oy)*hiResTexel,vec2(0.0),vec2(1.0));
               float sampleMask=texture2D(tDiamondHiResMask,sampleUv).r;
-              if(sampleMask>=0.5 && abs(weight)>0.000001){
+              coveredSamples+=step(0.5,sampleMask);
+              // The auxiliary beauty buffer already contains the correctly
+              // occluded full scene. Include its metal/background subpixel taps
+              // at the silhouette so coverage is antialiased rather than clipped
+              // back to a hard binary edge. Interior diamond pixels are unchanged.
+              if(abs(weight)>0.000001){
                 vec4 sampleColor=texture2D(tDiamondHiRes,sampleUv);
                 accumulated+=sampleColor*weight;
                 minimumSample=min(minimumSample,sampleColor);
@@ -859,11 +860,10 @@ export async function createAurumPostPipeline(
               }
             }
           }
-          // Near a very thin silhouette there may be no valid high-res tap.
-          // Preserve the original pixel rather than borrowing the environment.
-          if(totalWeight<0.00001) discard;
+          // Only pixels whose high-resolution footprint actually intersects
+          // the visible center-diamond mask may be written by this overlay.
+          if(coveredSamples<0.5 || totalWeight<0.00001) discard;
           vec4 reconstructed=accumulated/totalWeight;
-          // Bound Catmull-Rom ringing to the valid diamond neighborhood.
           reconstructed=clamp(reconstructed,minimumSample,maximumSample);
           gl_FragColor=reconstructed;
           #include <tonemapping_fragment>
