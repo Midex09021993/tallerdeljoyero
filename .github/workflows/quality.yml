@@ -33,6 +33,8 @@ jobs:
 
       - name: TypeScript
         run: bun run typecheck
+      - name: AURUM manual layer category override tests
+        run: bun test scripts/aurum-layer-category-overrides.test.ts
       - name: AURUM viewer regression tests
         run: bun test scripts/aurum-viewer-buffer.test.ts
       - name: AURUM camera view proportions tests
@@ -47,8 +49,6 @@ jobs:
         run: bun test scripts/aurum-mesh-preflight.test.ts
       - name: AURUM import and geometry pipeline tests
         run: bun test scripts/aurum-import-pipeline.test.ts
-      - name: AURUM manual layer category override tests
-        run: bun test scripts/aurum-layer-category-overrides.test.ts
       - name: AURUM surface seam diagnostic tests
         run: bun test scripts/aurum-surface-engine.test.ts
       - name: AURUM Metal Union material compatibility tests
