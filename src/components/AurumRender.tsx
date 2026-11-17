@@ -311,6 +311,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       setCameraCalibrationReferences(references);
       calibratedCameraViewsRef.current = references;
       cameraCalibrationLoadedRef.current = true;
+      // Apply the shared master reference even when the model mounted before
+      // the asynchronous global calibration query completed.
+      requestAnimationFrame(() => aplicarVistaRef.current?.(vistaRef.current));
     })();
     return () => { cancelled = true; };
   }, []);
