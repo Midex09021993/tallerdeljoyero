@@ -50,7 +50,7 @@ export function createAurumSceneController(
         id === "estudioFotografico"
           ? "/backgrounds/aurum-estudio-fotografico.svg"
           : id === "auroraBlue"
-            ? "AURORA_BLUE_DATA_URL"
+            ? AURORA_BLUE_DATA_URL
           : id === "degradadoGrisBlanco"
             ? "linear-gradient(135deg, #ffffff 0%, #eeeeec 48%, #bfc1c0 100%)"
             : null;
