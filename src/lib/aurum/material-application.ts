@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { resolveAurumLayerKey } from "./layer-identity";
+import { classifyAurumSemanticObject } from "./semantic-object-recognition";
 import { getAurumSourceMaterials, hadAurumSourceMaterialArray } from "./gem-material-baseline";
 import { applyAurumIJEWELReferenceFromMaterial } from "../aurum-material-engine";
 import { createAurumGemAdapter } from "./core/gem-adapter";
@@ -197,7 +198,14 @@ const inspectAurumGemGeometry=(target:any)=>{
 };
 
 const selectionMeta=(part:any)=>part?.userData?.aurumRhino||{};
-const selectionCategory=(part:any)=>String(selectionMeta(part).categoria||"").toLowerCase();
+const selectionCategory=(part:any)=>{
+  const declared=String(selectionMeta(part).categoria||"").toLowerCase();
+  if(declared==="metal"||declared==="gema")return declared;
+  const semantic=classifyAurumSemanticObject(part,null);
+  return semantic.confidence>=.7 && (semantic.classification==="metal"||semantic.classification==="gem")
+    ? semantic.classification==="gem"?"gema":"metal"
+    : declared||"otro";
+};
 const selectionLayerIndex=(part:any):number|null=>{
   const meta=selectionMeta(part);
   const candidates=[
