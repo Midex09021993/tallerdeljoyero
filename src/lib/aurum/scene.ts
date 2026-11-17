@@ -1,5 +1,7 @@
 import { getAurumScenePreset, type AurumScenePreset } from "../aurum-scene-engine";
 
+const AURORA_BLUE_DATA_URL = "data:image/svg+xml;charset=utf-8," + encodeURIComponent("<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 1600 900\" preserveAspectRatio=\"none\"><defs><linearGradient id=\"base\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"1\"><stop offset=\"0\" stop-color=\"#e9aa9e\"/><stop offset=\".42\" stop-color=\"#c4a9c0\"/><stop offset=\".72\" stop-color=\"#7899c8\"/><stop offset=\"1\" stop-color=\"#2868b1\"/></linearGradient><radialGradient id=\"coral\" cx=\"0\" cy=\"0\" r=\"1\" gradientTransform=\"matrix(1.05 0 0 1.45 0 .48)\"><stop offset=\"0\" stop-color=\"#ffae97\" stop-opacity=\".94\"/><stop offset=\".24\" stop-color=\"#f4a69e\" stop-opacity=\".78\"/><stop offset=\".52\" stop-color=\"#caa3b8\" stop-opacity=\".42\"/><stop offset=\".76\" stop-color=\"#919dca\" stop-opacity=\".12\"/><stop offset=\"1\" stop-color=\"#919dca\" stop-opacity=\"0\"/></radialGradient><radialGradient id=\"blue\" cx=\"0\" cy=\"0\" r=\"1\" gradientTransform=\"matrix(1 0 0 1.45 1 .52)\"><stop offset=\"0\" stop-color=\"#1b5bae\" stop-opacity=\".92\"/><stop offset=\".34\" stop-color=\"#3070c1\" stop-opacity=\".78\"/><stop offset=\".62\" stop-color=\"#5c8bc9\" stop-opacity=\".38\"/><stop offset=\"1\" stop-color=\"#5c8bc9\" stop-opacity=\"0\"/></radialGradient></defs><rect width=\"1600\" height=\"900\" fill=\"url(#base)\"/><rect width=\"1600\" height=\"900\" fill=\"url(#coral)\"/><rect width=\"1600\" height=\"900\" fill=\"url(#blue)\"/></svg>");
+
 export interface AurumSceneBackground {
   id: string;
   color: string | null;
@@ -31,7 +33,7 @@ export function createAurumSceneController(
       backgroundElement.style.backgroundImage = image
         ? (isCssGradient ? image : `url("${image}")`)
         : "none";
-      backgroundElement.style.backgroundSize = image ? "cover" : "";
+      backgroundElement.style.backgroundSize = image ? (image.startsWith("data:image/svg+xml") ? "100% 100%" : "cover") : "";
       backgroundElement.style.backgroundPosition = image ? "center center" : "";
       backgroundElement.style.backgroundRepeat = image ? "no-repeat" : "";
     }
@@ -48,7 +50,7 @@ export function createAurumSceneController(
         id === "estudioFotografico"
           ? "/backgrounds/aurum-estudio-fotografico.svg"
           : id === "auroraBlue"
-            ? "radial-gradient(ellipse 105% 145% at 0% 48%, rgba(255,174,151,.94) 0%, rgba(244,166,158,.78) 24%, rgba(202,163,184,.42) 52%, rgba(145,157,202,.12) 76%, transparent 100%), radial-gradient(ellipse 100% 145% at 100% 52%, rgba(27,91,174,.92) 0%, rgba(48,112,193,.78) 34%, rgba(92,139,201,.38) 62%, transparent 100%), linear-gradient(112deg, #e9aa9e 0%, #c4a9c0 42%, #7899c8 72%, #2868b1 100%)"
+            ? "AURORA_BLUE_DATA_URL"
           : id === "degradadoGrisBlanco"
             ? "linear-gradient(135deg, #ffffff 0%, #eeeeec 48%, #bfc1c0 100%)"
             : null;
