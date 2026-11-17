@@ -5658,7 +5658,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       {cameraCalibrationOpen && <AurumCameraCalibrationPanel
         hasModel={Boolean(archivo && !cargando)}
         onClose={() => setCameraCalibrationOpen(false)}
-        onSelectView={(id) => { vistaRef.current = id; setVista(id); aplicarVistaRef.current?.(id); }}
+        onSelectView={(id) => { vistaRef.current = id; setVista(id); }}
         captureSnapshot={(id) => cameraCalibrationRuntimeRef.current?.capture?.(id) ?? null}
         applySnapshot={(snapshot) => Boolean(cameraCalibrationRuntimeRef.current?.apply?.(snapshot))}
       />}
