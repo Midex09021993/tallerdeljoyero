@@ -3456,6 +3456,24 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           const context=output.getContext("2d");
           if(!context) throw new Error("No se pudo preparar la imagen de salida.");
           let dataUrl="";
+          const drawAuroraBackground=async(imageSrc:string|null)=>{
+            if(!imageSrc?.startsWith("data:image/svg+xml")) {
+              throw new Error("Aurora Blue no tiene el recurso de fondo compartido del visor.");
+            }
+            const backgroundImage=new Image();
+            backgroundImage.decoding="async";
+            backgroundImage.src=imageSrc;
+            try {
+              if(typeof backgroundImage.decode==="function") await backgroundImage.decode();
+              else await new Promise<void>((resolve,reject)=>{
+                backgroundImage.onload=()=>resolve();
+                backgroundImage.onerror=()=>reject(new Error("No se pudo decodificar el fondo Aurora Blue."));
+              });
+            } catch {
+              throw new Error("No se pudo decodificar el fondo Aurora Blue compartido con el visor.");
+            }
+            context.drawImage(backgroundImage,0,0,width,height);
+          };
 
           // Standard still exports are snapshots of the already-composited live
           // viewport. Do not resize the renderer, rerun the scene, or rebuild the
@@ -3470,38 +3488,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               context.fillRect(0,0,width,height);
 
               if(selectedBackground.id==="auroraBlue") {
-                const base=context.createLinearGradient(0,0,width,height);
-                base.addColorStop(0,"#e9aa9e");
-                base.addColorStop(.42,"#c4a9c0");
-                base.addColorStop(.72,"#7899c8");
-                base.addColorStop(1,"#2868b1");
-                context.fillStyle=base;
-                context.fillRect(0,0,width,height);
-
-                context.save();
-                context.translate(0,height*.48);
-                context.scale(width*1.05,height*1.45);
-                const glowA=context.createRadialGradient(0,0,0,0,0,1);
-                glowA.addColorStop(0,"rgba(255,174,151,.94)");
-                glowA.addColorStop(.24,"rgba(244,166,158,.78)");
-                glowA.addColorStop(.52,"rgba(202,163,184,.42)");
-                glowA.addColorStop(.76,"rgba(145,157,202,.12)");
-                glowA.addColorStop(1,"rgba(145,157,202,0)");
-                context.fillStyle=glowA;
-                context.fillRect(0,-.48/1.45,1/1.05,(1-.48)/1.45);
-                context.restore();
-
-                context.save();
-                context.translate(width,height*.52);
-                context.scale(width,height*1.45);
-                const glowB=context.createRadialGradient(0,0,0,0,0,1);
-                glowB.addColorStop(0,"rgba(27,91,174,.92)");
-                glowB.addColorStop(.34,"rgba(48,112,193,.78)");
-                glowB.addColorStop(.62,"rgba(92,139,201,.38)");
-                glowB.addColorStop(1,"rgba(92,139,201,0)");
-                context.fillStyle=glowB;
-                context.fillRect(-1,-.52/1.45,1,(1-.52)/1.45);
-                context.restore();
+                await drawAuroraBackground(selectedBackground.image);
               } else if(selectedBackground.id==="degradadoGrisBlanco") {
                 const gradient=context.createLinearGradient(0,0,width,height);
                 gradient.addColorStop(0,"#ffffff");
@@ -3751,42 +3738,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               context.fillRect(0, 0, width, height);
 
               if (selectedBackground.id === "auroraBlue") {
-                // Match the three CSS layers used by the live Aurora Blue backdrop.
-                const base = context.createLinearGradient(0, 0, width, height);
-                base.addColorStop(0, "#e9aa9e");
-                base.addColorStop(0.42, "#c4a9c0");
-                base.addColorStop(0.72, "#7899c8");
-                base.addColorStop(1, "#2868b1");
-                context.fillStyle = base;
-                context.fillRect(0, 0, width, height);
-
-                // Match the live Aurora Blue CSS ellipses. Each transformed radial
-                // gradient paints the ENTIRE output canvas so no clipped fillRect
-                // edge can introduce a horizontal or vertical seam in the PNG.
-                context.save();
-                context.translate(0, height * 0.48);
-                context.scale(width * 1.05, height * 1.45);
-                const glowA = context.createRadialGradient(0, 0, 0, 0, 0, 1);
-                glowA.addColorStop(0, "rgba(255,174,151,.94)");
-                glowA.addColorStop(0.24, "rgba(244,166,158,.78)");
-                glowA.addColorStop(0.52, "rgba(202,163,184,.42)");
-                glowA.addColorStop(0.76, "rgba(145,157,202,.12)");
-                glowA.addColorStop(1, "rgba(145,157,202,0)");
-                context.fillStyle = glowA;
-                context.fillRect(-0 / 1.05, -0.48 / 1.45, 1 / 1.05, (1 - 0.48) / 1.45);
-                context.restore();
-
-                context.save();
-                context.translate(width, height * 0.52);
-                context.scale(width * 1.00, height * 1.45);
-                const glowB = context.createRadialGradient(0, 0, 0, 0, 0, 1);
-                glowB.addColorStop(0, "rgba(27,91,174,.92)");
-                glowB.addColorStop(0.34, "rgba(48,112,193,.78)");
-                glowB.addColorStop(0.62, "rgba(92,139,201,.38)");
-                glowB.addColorStop(1, "rgba(92,139,201,0)");
-                context.fillStyle = glowB;
-                context.fillRect(-1, -0.52 / 1.45, 1, (1 - 0.52) / 1.45);
-                context.restore();
+                await drawAuroraBackground(selectedBackground.image);
               } else if (selectedBackground.id === "degradadoGrisBlanco") {
                 const gradient = context.createLinearGradient(0, 0, width, height);
                 gradient.addColorStop(0, "#ffffff");
