@@ -4331,6 +4331,12 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   useEffect(()=>{ apiRef.current?.escenario(escenarioId); invalidateRenderRef.current?.(); },[escenarioId]);
   useEffect(()=>{ apiRef.current?.iluminacion(iluminacionId); invalidateRenderRef.current?.(); },[iluminacionId]);
   useEffect(()=>{
+    // Durante la calibración, cambiar la referencia seleccionada solo etiqueta
+    // la captura. Nunca debe aplicar un preset ni mover la cámara del usuario.
+    if (cameraCalibrationOpen) {
+      invalidateRenderRef.current?.();
+      return;
+    }
     // El cambio automático durante el arrastre solo actualiza el nombre de la
     // vista: no aplicar el preset, porque sobrescribiría la órbita en curso.
     if (autoVistaPorOrbitaRef.current) {
