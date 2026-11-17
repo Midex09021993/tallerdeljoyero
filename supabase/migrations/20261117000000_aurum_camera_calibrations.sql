@@ -2,10 +2,10 @@
 -- Run manually in Lovable Cloud / Supabase SQL Editor.
 create table if not exists public.aurum_camera_calibrations (
   user_id uuid primary key references auth.users(id) on delete cascade,
-  references jsonb not null default '{}'::jsonb,
+  calibration_data jsonb not null default '{}'::jsonb,
   updated_at timestamptz not null default now(),
-  constraint aurum_camera_calibrations_references_object
-    check (jsonb_typeof(references) = 'object')
+  constraint aurum_camera_calibrations_data_object
+    check (jsonb_typeof(calibration_data) = 'object')
 );
 
 alter table public.aurum_camera_calibrations enable row level security;
