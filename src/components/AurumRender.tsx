@@ -3610,35 +3610,39 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               if (selectedBackground.id === "auroraBlue") {
                 // Match the three CSS layers used by the live Aurora Blue backdrop.
                 const base = context.createLinearGradient(0, 0, width, height);
-                base.addColorStop(0, "#f2b5a7");
-                base.addColorStop(0.38, "#b7b1d3");
-                base.addColorStop(0.68, "#7399d0");
-                base.addColorStop(1, "#0751a8");
+                base.addColorStop(0, "#e9aa9e");
+                base.addColorStop(0.42, "#c4a9c0");
+                base.addColorStop(0.72, "#7899c8");
+                base.addColorStop(1, "#2868b1");
                 context.fillStyle = base;
                 context.fillRect(0, 0, width, height);
 
-                // CSS uses elliptical radial gradients; scale the Canvas coordinate
-                // system so the exported glow keeps the same horizontal/vertical radii.
+                // Match the live Aurora Blue CSS ellipses. Each transformed radial
+                // gradient paints the ENTIRE output canvas so no clipped fillRect
+                // edge can introduce a horizontal or vertical seam in the PNG.
                 context.save();
-                context.translate(0, height * 0.28);
-                context.scale(width * 0.42, height * 0.70);
+                context.translate(0, height * 0.48);
+                context.scale(width * 1.05, height * 1.45);
                 const glowA = context.createRadialGradient(0, 0, 0, 0, 0, 1);
-                glowA.addColorStop(0, "rgba(255,151,111,.98)");
-                glowA.addColorStop(0.42, "rgba(255,181,157,.72)");
-                glowA.addColorStop(1, "rgba(255,181,157,0)");
+                glowA.addColorStop(0, "rgba(255,174,151,.94)");
+                glowA.addColorStop(0.24, "rgba(244,166,158,.78)");
+                glowA.addColorStop(0.52, "rgba(202,163,184,.42)");
+                glowA.addColorStop(0.76, "rgba(145,157,202,.12)");
+                glowA.addColorStop(1, "rgba(145,157,202,0)");
                 context.fillStyle = glowA;
-                context.fillRect(0, -0.28 / 0.70, 1 / 0.42, (1 - 0.28) / 0.70);
+                context.fillRect(-0 / 1.05, -0.48 / 1.45, 1 / 1.05, (1 - 0.48) / 1.45);
                 context.restore();
 
                 context.save();
-                context.translate(width, height);
-                context.scale(width * 0.58, height * 0.90);
+                context.translate(width, height * 0.52);
+                context.scale(width * 1.00, height * 1.45);
                 const glowB = context.createRadialGradient(0, 0, 0, 0, 0, 1);
-                glowB.addColorStop(0, "rgba(0,65,164,.98)");
-                glowB.addColorStop(0.48, "rgba(30,104,202,.78)");
-                glowB.addColorStop(1, "rgba(30,104,202,0)");
+                glowB.addColorStop(0, "rgba(27,91,174,.92)");
+                glowB.addColorStop(0.34, "rgba(48,112,193,.78)");
+                glowB.addColorStop(0.62, "rgba(92,139,201,.38)");
+                glowB.addColorStop(1, "rgba(92,139,201,0)");
                 context.fillStyle = glowB;
-                context.fillRect(-1 / 0.58, -1 / 0.90, 1 / 0.58, 1 / 0.90);
+                context.fillRect(-1, -0.52 / 1.45, 1, (1 - 0.52) / 1.45);
                 context.restore();
               } else if (selectedBackground.id === "degradadoGrisBlanco") {
                 const gradient = context.createLinearGradient(0, 0, width, height);
