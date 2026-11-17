@@ -7,7 +7,7 @@ export type AurumSemanticResult = {
 };
 
 const RULES: Array<{ category: AurumSemanticClass; pattern: RegExp; weight: number; source: string }> = [
-  { category: "gem", pattern: /\b(gem|gema|piedra|stone|diamond|diamante|sapphire|zafiro|ruby|rubi|rubí|esmeralda|emerald|moissanite|moissanita|topaz|topacio|amethyst|amatista)\b/i, weight: 5, source: "nombre/material explícito de gema" },
+  { category: "gem", pattern: /\b(gems?|gemstones?|gema|gemas|piedra|piedras|stone|stones|diamond|diamante|sapphire|zafiro|ruby|rubi|rubí|esmeralda|emerald|moissanite|moissanita|topaz|topacio|amethyst|amatista)\b/i, weight: 5, source: "nombre/material explícito de gema" },
   { category: "metal", pattern: /\b(metal|oro|gold|plata|silver|platino|platinum|steel|acero|brass|laton|latón|copper|cobre|palladium|paladio)\b/i, weight: 5, source: "nombre/material explícito de metal" },
   { category: "engraving", pattern: /\b(engraving|engrave|grabado|inscripcion|inscripción|texto|lettering|marcado|marca|logo|serial)\b/i, weight: 5, source: "nombre explícito de grabado" },
   { category: "relief", pattern: /\b(relief|emboss|embossed|relieve|repujado|alto relieve|bajo relieve|ornament|ornamento|decoracion|decoración|filigree|filigrana)\b/i, weight: 5, source: "nombre explícito de relieve/decoración" },
