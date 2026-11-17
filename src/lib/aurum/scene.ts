@@ -20,7 +20,8 @@ export function createAurumSceneController(
   scene: any,
   renderer: any,
   groundController: any,
-  backgroundElement?: { style: { backgroundColor: string; backgroundImage?: string; backgroundSize?: string; backgroundPosition?: string; backgroundRepeat?: string } }
+  backgroundElement?: { style: { backgroundColor: string; backgroundImage?: string; backgroundSize?: string; backgroundPosition?: string; backgroundRepeat?: string } },
+  THREE?: any
 ): AurumSceneController {
   let currentPreset = getAurumScenePreset("ijewelReference");
   let backgroundOverride: string | null = null;
@@ -62,7 +63,6 @@ export function createAurumSceneController(
       if (!productRoot || id === "transparente" || id === "estudioRosaPremium") return;
       // Use the product's world-space bounds; the stage remains a sibling of the
       // model so it cannot alter gem hierarchy, material assignment or exports.
-      const THREE = (renderer as any).__aurumThree;
       if (!THREE?.Box3 || !THREE?.Vector3) return;
       const box = new THREE.Box3().setFromObject(productRoot);
       if (box.isEmpty()) return;
