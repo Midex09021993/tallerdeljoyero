@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import * as THREE from "three";
-import { classifyAurumDiamondScreenSize, classifyAurumDiamondMeshTiers, createAurumDiamondMicroPipeline, getAurumDiamondProjectedDiameterPx, getAurumDiamondMicroOpticalProfile } from "../src/lib/aurum/diamond-micro-pipeline";
+import { classifyAurumDiamondScreenSize, classifyAurumDiamondMeshTiers, createAurumDiamondMicroPipeline, getAurumDiamondProjectedDiameterPx, getAurumDiamondMicroOpticalProfile, stabilizeAurumDiamondScreenTier } from "../src/lib/aurum/diamond-micro-pipeline";
 
 test("classifies projected diamond sizes into stable screen-space tiers", () => {
   expect(classifyAurumDiamondScreenSize(5)).toBe("micro");
@@ -9,6 +9,17 @@ test("classifies projected diamond sizes into stable screen-space tiers", () => 
   expect(classifyAurumDiamondScreenSize(36)).toBe("small");
   expect(classifyAurumDiamondScreenSize(80)).toBe("brilliant");
   expect(classifyAurumDiamondScreenSize(Number.NaN)).toBe("micro");
+});
+
+test("uses hysteresis around tier boundaries without delaying large zoom changes", () => {
+  expect(stabilizeAurumDiamondScreenTier(13, "micro")).toBe("micro");
+  expect(stabilizeAurumDiamondScreenTier(14.1, "micro")).toBe("small");
+  expect(stabilizeAurumDiamondScreenTier(11, "small")).toBe("small");
+  expect(stabilizeAurumDiamondScreenTier(10, "small")).toBe("micro");
+  expect(stabilizeAurumDiamondScreenTier(38, "brilliant")).toBe("small");
+  expect(stabilizeAurumDiamondScreenTier(33, "brilliant")).toBe("brilliant");
+  expect(stabilizeAurumDiamondScreenTier(45, "small")).toBe("brilliant");
+  expect(stabilizeAurumDiamondScreenTier(5)).toBe("micro");
 });
 
 test("measures projected diameter with a perspective camera", () => {
@@ -177,6 +188,8 @@ test("micro pipeline can be paused and resumed without leaving optical scaling b
 
   pipeline.setEnabled(false);
   expect(pipeline.diagnostics().enabled).toBe(false);
+  expect(mesh.userData.aurumDiamondMicroTier).toBe("brilliant");
+  expect(mesh.userData.aurumDiamondMicroOpticalProfile.scintillationScale).toBe(1);
   expect(material.userData.aurumDiamondMicroUniforms.scintillationStrength.value).toBeCloseTo(0.16);
   mesh.onBeforeRender(null as any, scene, camera, mesh.geometry, material, null as any);
   expect(material.userData.aurumDiamondMicroUniforms.scintillationStrength.value).toBeCloseTo(0.16);
