@@ -3,6 +3,27 @@ import { readFileSync } from "node:fs";
 import { createAurumWebGLViewer, resizeAurumViewer, startAurumViewerLoop } from "../src/lib/aurum/viewer";
 import { getAurumRuntimeBudget } from "../src/lib/aurum/runtime-budget";
 
+test("PNG capture resizes and restores the isolated gem render targets", () => {
+  const componentSource = readFileSync("src/components/AurumRender.tsx", "utf8");
+  const captureStart = componentSource.indexOf("exportPNG:async");
+  const captureEnd = componentSource.indexOf("exportGLB:", captureStart);
+  const captureBlock = componentSource.slice(captureStart, captureEnd);
+  expect(captureStart).toBeGreaterThan(-1);
+  expect(captureBlock).toContain("gemMaskPass?.setSize?.(width,height)");
+  expect(captureBlock).toContain("diamondSupersamplePass?.setSize?.(width,height)");
+  expect(captureBlock).toContain("gemMaskPass?.setSize?.(originalBufferWidth,originalBufferHeight)");
+  expect(captureBlock).toContain("diamondSupersamplePass?.setSize?.(originalBufferWidth,originalBufferHeight)");
+});
+
+test("Aurora Blue uses the same SVG asset in the viewer and PNG export", () => {
+  const sceneSource = readFileSync("src/lib/aurum/scene.ts", "utf8");
+  const componentSource = readFileSync("src/components/AurumRender.tsx", "utf8");
+  expect(sceneSource).toContain("AURORA_BLUE_DATA_URL");
+  expect(sceneSource).toContain('image.startsWith("data:image/svg+xml")');
+  expect(componentSource).toContain("drawAuroraBackground(selectedBackground.image)");
+  expect(componentSource).not.toContain('context.fillRect(-1, -0.52 / 1.45, 1, (1 - 0.52) / 1.45)');
+});
+
 test("the demand-driven viewer preserves its final WebGL frame", () => {
   let rendererOptions: Record<string, unknown> = {};
   const canvas = Object.assign(new EventTarget(), { className: "" });
