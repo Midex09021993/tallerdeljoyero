@@ -4333,15 +4333,22 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           }
           const bvhCpuMs = performance.now() - bvhStartedAt;
           const renderStartedAt = performance.now();
-          // The direct scene render is unconditional. FXAA is applied only
-          // afterward as a masked overlay, never as a replacement framebuffer.
+          // Select exactly one settled/live reconstruction path. TAA runs through
+          // the composer only while the camera is still and its diamond-only
+          // save/accumulate/mask-composite chain is fully available.
           gemMaskPass.enabled=getAurumPostControls().gemMaskEnabled;
           const hasCenterDiamond = Boolean(gemMaskPass?.hasDiamondMeshes);
+          const diamondTaaOverlayRequested = Boolean(
+            gemMaskPass?.enabled && hasCenterDiamond
+            && idleTaaPass?.enabled && diamondTaaSavePass?.enabled && diamondTaaCompositePass?.enabled
+          );
           const diamondFxaaOverlayRequested = Boolean(gemMaskPass?.enabled && fxaaPass?.enabled && hasCenterDiamond);
           const diamondOverlayRequested = Boolean(gemMaskPass?.enabled && diamondSupersamplePass?.enabled && diamondSupersampleCompositePass?.enabled);
-          const activeToneAuditPath = diamondOverlayRequested
-            ? (diamondFxaaOverlayRequested ? "direct+diamond-ssaa+diamond-fxaa" : "direct+diamond-ssaa")
-            : diamondFxaaOverlayRequested ? "direct+diamond-fxaa-overlay" : "direct";
+          const activeToneAuditPath = diamondTaaOverlayRequested
+            ? (diamondFxaaOverlayRequested ? "composer+diamond-taa+diamond-fxaa" : "composer+diamond-taa")
+            : diamondOverlayRequested
+              ? (diamondFxaaOverlayRequested ? "direct+diamond-ssaa+diamond-fxaa" : "direct+diamond-ssaa")
+              : diamondFxaaOverlayRequested ? "direct+diamond-fxaa-overlay" : "direct";
           if (activeToneAuditPath !== lastToneAuditPath) {
             lastToneAuditPath = activeToneAuditPath;
             console.info("[AURUM][DIAMOND_AA][EXECUTION]", {
@@ -4356,20 +4363,37 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               ssaaTargetHeight: Number(diamondSupersamplePass?.targetHeight ?? 0),
               ssaaRenderCount: Number(diamondSupersamplePass?.renderCount ?? 0),
               fxaaEnabled: Boolean(fxaaPass?.enabled),
+              taaRequested: Boolean(getAurumPostControls().diamondTaaEnabled),
+              taaEnabled: Boolean(idleTaaPass?.enabled && diamondTaaSavePass?.enabled && diamondTaaCompositePass?.enabled),
               toneMapping: renderer.toneMapping,
               toneMappingName: toneMappingLabel(renderer.toneMapping),
               toneMappingExposure: renderer.toneMappingExposure,
               outputColorSpace: renderer.outputColorSpace,
             });
           }
-          // Preserve the original beauty frame first. The mask and optional
-          // FXAA overlay may only run after the native canvas has been painted.
-          renderer.render(escena,camara);
+          // Refresh the mask before either composer TAA or detached overlays.
+          // The TAA composite restores the saved beauty outside this exact mask.
           if(gemMaskPass.enabled) gemMaskPass.render(renderer);
-          // SSAA reconstructs the diamond first. FXAA, when also requested,
-          // runs afterward on that reconstructed native-resolution result.
+          let diamondTaaRendered=false;
+          if(diamondTaaOverlayRequested && composer?.render){
+            try{
+              composer.render();
+              diamondTaaRendered=true;
+            }catch(error){
+              // A failed temporal frame must never blank the viewer or affect
+              // other materials: fall back to the untouched direct beauty frame.
+              console.warn("[AURUM][DIAMOND TAA] Composer frame failed; direct beauty fallback retained.",error);
+              renderer.render(escena,camara);
+              if(gemMaskPass.enabled) gemMaskPass.render(renderer);
+            }
+          }else{
+            renderer.render(escena,camara);
+            if(gemMaskPass.enabled) gemMaskPass.render(renderer);
+          }
+          // SSAA is the live-motion path. At rest TAA owns the diamond; FXAA
+          // remains an optional final masked edge pass after either path.
           let diamondSsaaOverlayRendered=false;
-          if(diamondOverlayRequested){
+          if(!diamondTaaRendered && diamondOverlayRequested){
             diamondSsaaOverlayRendered=Boolean(renderDiamondSupersampleOverlay?.(renderer));
             const ssaaTargetWidth=Number(diamondSupersamplePass?.targetWidth??0);
             const ssaaTargetHeight=Number(diamondSupersamplePass?.targetHeight??0);
@@ -4438,9 +4462,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             renderPipelineContract.setMode("LIVE_MOTION");
             syncAurumSsrDiagnosticConfig();
 
-            // Keep the interactive path minimal. Native-resolution masked FXAA may run
-            // during orbit; SSAA remains a separate high-resolution path and
-            // photographic, temporal and surface-wide processing stay disabled.
+            // During orbit, disable temporal accumulation and use the lower-cost
+            // masked SSAA/FXAA path. Settled TAA is restarted after damping ends.
             const hasCenterDiamond = Boolean(gemMaskPass?.hasDiamondMeshes);
             const livePostControls = getAurumPostControls();
             // Keep native-resolution masked FXAA independent of the SSAA scale cap.
@@ -4498,8 +4521,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // Resume selective 2x diamond supersampling only after camera motion ends.
             setDiamondSupersamplingSettled?.(true);
             const diamondSsaaActive = Boolean(diamondSupersamplePass?.enabled && diamondSupersampleCompositePass?.enabled);
-            // Keep the settled viewport on the same minimal beauty path. TAA, Bloom,
-            // DOF, SSR and full-surface edge filtering remain disabled.
+            // Restore the diamond-only settled TAA chain when selected. Other
+            // photographic and full-surface passes remain disabled.
             // Restore the ordinary settled camera/pass state only. SSAA is
             // isolated to its own targets and must not alter full-scene DPR.
             // Restore the ordinary settled beauty path; the detached native FXAA module
