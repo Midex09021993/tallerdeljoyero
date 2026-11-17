@@ -21,6 +21,18 @@ export function getAurumLayerCategoryKeys(identity: AurumLayerCategoryIdentity):
   return keys;
 }
 
+function sameLayerIdentity(a: AurumLayerCategoryIdentity, b: AurumLayerCategoryIdentity): boolean {
+  const aId = a.layerId == null ? "" : String(a.layerId).trim();
+  const bId = b.layerId == null ? "" : String(b.layerId).trim();
+  if (aId && bId) return aId === bId;
+  const aIndex = a.layerIndex == null || a.layerIndex === "" ? -1 : Number(a.layerIndex);
+  const bIndex = b.layerIndex == null || b.layerIndex === "" ? -1 : Number(b.layerIndex);
+  if (Number.isInteger(aIndex) && aIndex >= 0 && Number.isInteger(bIndex) && bIndex >= 0) return aIndex === bIndex;
+  const aName = normalizeName(a.layerName);
+  const bName = normalizeName(b.layerName);
+  return Boolean(aName && bName && aName === bName);
+}
+
 function identityForMesh(mesh: any): AurumLayerCategoryIdentity {
   const meta = mesh?.userData?.aurumRhino ?? {};
   const source = mesh?.userData?.aurumRhinoSource ?? {};
@@ -38,11 +50,12 @@ export function getAurumLayerCategoryOverride(
   identity: AurumLayerCategoryIdentity
 ): AurumLayerCategoryOverride | undefined {
   if (!overrides) return undefined;
-  for (const key of getAurumLayerCategoryKeys(identity)) {
-    const value = overrides[key];
-    if (value === "metal" || value === "gema" || value === "otro") return value;
-  }
-  return undefined;
+  const keys = getAurumLayerCategoryKeys(identity);
+  // Never fall through from a conflicting stable ID/index to a duplicate
+  // layer name. Name is only a fallback when stronger identity is absent.
+  const preferredKey = keys[0];
+  const value = preferredKey ? overrides[preferredKey] : undefined;
+  return value === "metal" || value === "gema" || value === "otro" ? value : undefined;
 }
 
 export function applyAurumLayerCategoryOverrides(
@@ -93,8 +106,7 @@ export function setAurumLayerCategoryOverride(
   let changed = 0;
   model.traverse?.((mesh: any) => {
     if (!mesh?.isMesh) return;
-    const meshKeys = getAurumLayerCategoryKeys(identityForMesh(mesh));
-    if (!meshKeys.some((key) => keys.includes(key))) return;
+    if (!sameLayerIdentity(identity, identityForMesh(mesh))) return;
     const meta = mesh.userData?.aurumRhino ?? {};
     if (category) {
       mesh.userData = {
