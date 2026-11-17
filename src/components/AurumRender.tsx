@@ -36,6 +36,7 @@ import { compressAurumGlbWithDraco } from "../lib/draco-export";
 import { getAurumRhinoGeometryType, isAurumRhinoCsgSurface } from "../lib/aurum/metal-union-experiment";
 import { getAurumModelParts } from "../lib/aurum/model-parts";
 import { resolveAurumLayerKey } from "../lib/aurum/layer-identity";
+import { applyAurumLayerCategoryOverrides, getAurumLayerCategoryOverride, setAurumLayerCategoryOverride, type AurumLayerCategoryOverride } from "../lib/aurum/layer-category-overrides";
 import { applyAurumMaterialToModel, applyAurumGemToTarget, clearAurumGemFromTarget, getAurumMaterialAdapterServices, prepareAurumGemLayerIndex } from "../lib/aurum/material-application";
 import { captureAurumGemTransitionState, createAurumGemTransition } from "../lib/aurum/gem-transition";
 import { inspectAurumMesh } from "../lib/aurum/mesh-preflight";
@@ -349,6 +350,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [parteSeleccionadaNombre, setParteSeleccionadaNombre] = useState<string | null>(null);
   const [parteSeleccionadaCapa, setParteSeleccionadaCapa] = useState<string | null>(null);
   const [parteSeleccionadaCategoria, setParteSeleccionadaCategoria] = useState<"metal" | "gema" | "otro">("otro");
+  const [layerCategoryOverrides, setLayerCategoryOverrides] = useState<Record<string, AurumLayerCategoryOverride>>({});
   const [diagnosticoSeleccion, setDiagnosticoSeleccion] = useState<any | null>(null);
   const [diagnosticoSeleccionHabilitado, setDiagnosticoSeleccionHabilitado] = useState(false);
   const diagnosticoSeleccionHabilitadoRef = useRef(false);
@@ -733,6 +735,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       // las opciones propias del visor sin acoplarlas a la portada PNG.
       const configuracionAurum = {
         schemaVersion: 1,
+        layerCategoryOverrides,
         nombreProyecto: nombreVisibleProyecto,
         categoriaProyecto,
         materialId,
@@ -2685,6 +2688,27 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         cargar,
         getJewelTransform:()=>modelo?({position:modelo.position.toArray(),rotation:modelo.rotation.toArray(),scale:modelo.scale.toArray()}):null,
         setJewelTransform:(value:any)=>{if(!modelo||!value)return false;try{if(Array.isArray(value.position)&&value.position.length===3)modelo.position.fromArray(value.position);if(Array.isArray(value.rotation)&&value.rotation.length>=3)modelo.rotation.set(value.rotation[0],value.rotation[1],value.rotation[2],value.rotation[3]||"XYZ");if(Array.isArray(value.scale)&&value.scale.length===3)modelo.scale.fromArray(value.scale);modelo.updateMatrixWorld?.(true);invalidateRenderRef.current?.();return true;}catch{return false;}},
+        setLayerCategoryOverride:(identity:any, category:AurumLayerCategoryOverride|null)=>{
+          if(!modelo)return {changed:0,overrides:layerCategoryOverrides};
+          const result=setAurumLayerCategoryOverride(modelo,identity,category);
+          setLayerCategoryOverrides(result.overrides);
+          modelo.updateMatrixWorld?.(true);
+          if(parteActiva?.isMesh) seleccionarMalla(parteActiva);
+          invalidateRenderRef.current?.();
+          return {changed:result.changed,overrides:result.overrides};
+        },
+        setLayerCategoryOverrides:(overrides:any)=>{
+          if(!modelo||!overrides||typeof overrides!=="object"||Array.isArray(overrides))return 0;
+          const safe=Object.fromEntries(Object.entries(overrides).filter(([key,value])=>
+            typeof key==="string"&&(value==="metal"||value==="gema"||value==="otro")
+          )) as Record<string,AurumLayerCategoryOverride>;
+          setLayerCategoryOverrides(safe);
+          const changed=applyAurumLayerCategoryOverrides(modelo,safe);
+          modelo.updateMatrixWorld?.(true);
+          if(parteActiva?.isMesh) seleccionarMalla(parteActiva);
+          invalidateRenderRef.current?.();
+          return changed;
+        },
         getModelDiagnostics:()=>{
           if(!modelo)return null;
           let meshes=0,visibleMeshes=0,hiddenMeshes=0,curves=0,points=0;
@@ -3918,6 +3942,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           layerId: selectedLayerId, layerIndex: selectedLayerIndex, layerName: capa,
           layerColor: selectedLayerColor, category: meta.categoria ?? clasificarCapa(capa ?? ""),
         }) ?? "");
+        const manualLayerOverride = getAurumLayerCategoryOverride(modelo?.userData?.aurumLayerCategoryOverrides, {
+          layerId: selectedLayerId, layerIndex: selectedLayerIndex, layerName: capa,
+        });
         const sourceCategory = String(meta.categoria ?? "").toLowerCase();
         const layerCategory = clasificarCapa(capa || "", colorRhinoHex(selectedLayerColor) ?? meta.colorCapa);
         // Match the catalog resolver: a stale "otro" tag must not hide an
@@ -3926,11 +3953,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         const semanticCategory = semantic.confidence >= .7
           ? semantic.classification === "gem" ? "gema" : semantic.classification === "metal" ? "metal" : null
           : null;
-        const categoria = (sourceCategory === "gema" || layerCategory === "gema" || semanticCategory === "gema"
+        const categoria = manualLayerOverride ?? (sourceCategory === "gema" || layerCategory === "gema" || semanticCategory === "gema"
           ? "gema"
           : sourceCategory === "metal" || layerCategory === "metal" || semanticCategory === "metal"
             ? "metal"
-            : sourceCategory === "otro" || !sourceCategory ? "otro" : sourceCategory) as CategoriaParte;
+            : sourceCategory === "otro" || !sourceCategory ? "otro" : sourceCategory)) as CategoriaParte;
         setParteSeleccionada(obj.uuid);
         setParteSeleccionadaNombre(nombre);
         setParteSeleccionadaCapa(capa);
@@ -4997,8 +5024,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             try {
               const configResponse = await fetch(datos.configuracionUrl);
               if (configResponse.ok) {
-                const config = await configResponse.json() as { schemaVersion?: unknown; nombreProyecto?: unknown; categoriaProyecto?: unknown; materialId?: unknown; gemaId?: unknown; escenarioId?: unknown; iluminacionId?: unknown; vista?: unknown; fondoId?: unknown; sueloVisible?: unknown; sombraContactoVisible?: unknown; ambienteId?: unknown; ambienteMetalInfluence?: unknown; metalHdriId?: unknown; gemHdriId?: unknown; lucesEstudio?: unknown };
+                const config = await configResponse.json() as { schemaVersion?: unknown; nombreProyecto?: unknown; categoriaProyecto?: unknown; materialId?: unknown; gemaId?: unknown; escenarioId?: unknown; iluminacionId?: unknown; vista?: unknown; fondoId?: unknown; sueloVisible?: unknown; sombraContactoVisible?: unknown; ambienteId?: unknown; ambienteMetalInfluence?: unknown; metalHdriId?: unknown; gemHdriId?: unknown; lucesEstudio?: unknown; layerCategoryOverrides?: unknown };
                 if (config.schemaVersion === 1) {
+                  if (config.layerCategoryOverrides && typeof config.layerCategoryOverrides === "object" && !Array.isArray(config.layerCategoryOverrides)) {
+                    apiRef.current?.setLayerCategoryOverrides?.(config.layerCategoryOverrides);
+                  }
                   if (typeof config.nombreProyecto === "string") {
                     setNombreProyecto(config.nombreProyecto);
                     setNombreProyectoGuardar(config.nombreProyecto);
