@@ -349,22 +349,22 @@ export async function createAurumDiamondBvhRuntime(options: {
           // compact facets read bright instead of graphite-grey; keep colored
           // diamonds and the center stone on their existing calibrated values.
           rgbBoost: family === "diamante"
-            ? (isNeutralMicroDiamond ? [1.06, 1.06, 1.06]
-              : isNeutralSmallDiamond ? [1.09, 1.09, 1.09]
+            ? (isNeutralMicroDiamond ? [1.10, 1.10, 1.10]
+              : isNeutralSmallDiamond ? [1.14, 1.14, 1.14]
               : isSmallSecondaryDiamond && !isBlueDiamond && !isPinkDiamond
-                ? [1.14, 1.14, 1.14]
-                : isBlueDiamond ? [2, 2, 2] : isPinkDiamond ? [1.3, 1, 1] : mesh.userData?.aurumDiamondMicroCenterProtected ? [1.10, 1.10, 1.10] : [1.08, 1.08, 1.08])
+                ? [1.16, 1.16, 1.16]
+                : isBlueDiamond ? [2, 2, 2] : isPinkDiamond ? [1.3, 1, 1] : mesh.userData?.aurumDiamondMicroCenterProtected ? [1.20, 1.20, 1.20] : [1.15, 1.15, 1.15])
             : undefined,
           // Small white melee: lower internal energy to prevent dense, sand-like
           // flicker while retaining enough neutral radiance to read as diamond.
           // Center, blue/pink diamonds and every non-diamond gemstone keep their calibration.
           environmentIntensity: family === "diamante"
-            ? (isNeutralMicroDiamond ? 1.15
-              : isNeutralSmallDiamond ? 1.22
-              : isSmallSecondaryDiamond ? 1.25
+            ? (isNeutralMicroDiamond ? 1.20
+              : isNeutralSmallDiamond ? 1.30
+              : isSmallSecondaryDiamond ? 1.32
               : isBlueDiamond ? 1.30
               : isPinkDiamond ? 1.25
-              : 1.30)
+              : 1.38)
             : useEmeraldBvhOptics ? 1 : emeraldProfile?.environmentIntensity ?? rubyProfile?.environmentIntensity ?? sapphireProfile?.environmentIntensity ?? (isEmerald ? 1.5 : isRuby ? 1.0 : isSapphire ? 1.2 : isAmethyst ? 1.35 : isAquamarine ? 1.25 : isCitrine ? 1.2 : isBlueTopaz ? 1.25 : isImperialTopaz ? 1.22 : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 1.55 : 1.3) : isTanzanite ? 1.25 : isMoissanite ? 1.35 : isZircon ? 1.2 : isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 1.18 : 1.14),
           // Chromatic splitting is restrained on small white melee to avoid
           // unstable sub-pixel color fragments that read as moving particles.
@@ -407,11 +407,11 @@ export async function createAurumDiamondBvhRuntime(options: {
             if (!isBlueDiamond && !isPinkDiamond) {
               const isMicro = nextTier === "micro";
               const isSmall = nextTier === "small";
-              const baseEnvironment = 1.30;
+              const baseEnvironment = 1.38;
               const baseDispersion = activeGemId === "diamante_natural" ? 0.008 : 0.005;
               packageApi.setDiamondOptions(prepared.material, {
-                rgbBoost: isMicro ? [1.06, 1.06, 1.06] : isSmall ? [1.09, 1.09, 1.09] : [1.08, 1.08, 1.08],
-                environmentIntensity: isMicro ? 1.15 : isSmall ? 1.22 : baseEnvironment,
+                rgbBoost: isMicro ? [1.10, 1.10, 1.10] : isSmall ? [1.14, 1.14, 1.14] : [1.15, 1.15, 1.15],
+                environmentIntensity: isMicro ? 1.20 : isSmall ? 1.30 : baseEnvironment,
                 dispersion: isMicro ? 0.0003 : isSmall ? 0.0008 : baseDispersion,
                 rayBounces: isMicro ? 2 : isSmall ? 3 : 5,
               });
