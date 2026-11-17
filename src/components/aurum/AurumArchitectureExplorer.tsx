@@ -129,10 +129,25 @@ export function AurumArchitectureExplorer() {
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(270px,.75fr)]">
         <div className="space-y-3">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div><h4 className="text-sm font-semibold">Sistemas y módulos</h4><p className="text-[11px] text-muted-foreground">{mostrarTodas ? "Vista completa del inventario." : "Mostrando únicamente la sección seleccionada."}</p></div>
-            <div className="flex items-center gap-2">
-              {!mostrarTodas ? <button type="button" onClick={() => { setMostrarTodas(true); setFiltro(""); }} className="rounded-xl border border-border bg-card px-3 py-2 text-[11px] font-semibold text-muted-foreground transition hover:border-gold/40 hover:text-foreground">Ver todas</button> : <button type="button" onClick={() => { setMostrarTodas(false); setSeleccion("core"); setFiltro(""); }} className="rounded-xl border border-gold/30 bg-gold/10 px-3 py-2 text-[11px] font-semibold text-gold">Volver a sección</button>}</div></div>
-            <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3"><Search className="size-3.5 text-muted-foreground"/><input value={filtro} onChange={e => setFiltro(e.target.value)} placeholder="Filtrar módulos…" className="h-9 w-full min-w-0 bg-transparent text-xs outline-none sm:w-48"/></div>
+            <div>
+              <h4 className="text-sm font-semibold">Sistemas y módulos</h4>
+              <p className="text-[11px] text-muted-foreground">{mostrarTodas ? "Vista completa del inventario." : "Mostrando únicamente la sección seleccionada."}</p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {!mostrarTodas ? (
+                <button type="button" onClick={() => { setMostrarTodas(true); setFiltro(""); }} className="rounded-xl border border-border bg-card px-3 py-2 text-[11px] font-semibold text-muted-foreground transition hover:border-gold/40 hover:text-foreground">
+                  Ver todas
+                </button>
+              ) : (
+                <button type="button" onClick={() => { setMostrarTodas(false); setSeleccion("core"); setFiltro(""); }} className="rounded-xl border border-gold/30 bg-gold/10 px-3 py-2 text-[11px] font-semibold text-gold">
+                  Volver a sección
+                </button>
+              )}
+              <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3">
+                <Search className="size-3.5 text-muted-foreground"/>
+                <input value={filtro} onChange={e => setFiltro(e.target.value)} placeholder="Filtrar módulos…" className="h-9 w-full min-w-0 bg-transparent text-xs outline-none sm:w-48"/>
+              </div>
+            </div>
           </div>
           {grupos.map(group => <section key={group.id} className="overflow-hidden rounded-xl border border-border bg-card">
             <button type="button" onClick={() => seleccionar(group)} className={`flex w-full items-center gap-3 border-b border-border px-3.5 py-3 text-left transition ${seleccion === group.id ? "bg-gold/10" : "bg-muted/20 hover:bg-muted/40"}`}>
