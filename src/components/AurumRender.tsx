@@ -3232,8 +3232,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               diamondBvhRuntime,
               livePasses:getAurumVideoLivePasses({
                 renderPass,gemMaskPass,fxaaPass,surfaceEdgeAaPass,
+                gemFxaaEnabled:getAurumPostControls().gemMaskEnabled && getAurumPostControls().gemFxaaEnabled,
                 surfaceEdgeAaEnabled:false,outputPass,
-                gemFxaaEnabled:false,
               }),
               width:renderWidth,
               height:renderHeight,
