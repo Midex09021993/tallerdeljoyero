@@ -5666,6 +5666,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         onClose={() => setCameraCalibrationOpen(false)}
         onSelectView={(id) => { vistaRef.current = id; setVista(id); }}
         captureSnapshot={(id) => cameraCalibrationRuntimeRef.current?.capture?.(id) ?? null}
+        readLiveSnapshot={(id) => cameraCalibrationRuntimeRef.current?.capture?.(id) ?? null}
         applySnapshot={(snapshot) => Boolean(cameraCalibrationRuntimeRef.current?.apply?.(snapshot))}
       />}
       {limiteMiNubeModal && <div className="fixed inset-0 z-[120] flex items-center justify-center bg-[#171613]/55 p-4 backdrop-blur-md" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setLimiteMiNubeModal(null); }}>
