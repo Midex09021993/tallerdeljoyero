@@ -661,22 +661,25 @@ test("standard image export composites isolated diamond reconstruction after bea
 });
 
 
-test("standard image export snapshots the exact live viewport without rerendering the scene", () => {
+test("standard image export renders at native output resolution through the live diamond pipeline", () => {
   const componentSource = readFileSync("src/components/AurumRender.tsx", "utf8");
   const exportStart = componentSource.indexOf("exportPNG:async");
-  const directStart = componentSource.indexOf("if(!isPoster && !options.depthOfField)", exportStart);
-  const directEnd = componentSource.indexOf("// Prevent the live animation loop", directStart);
-  const directBlock = componentSource.slice(directStart, directEnd);
+  const captureStart = componentSource.indexOf("// Render the same live beauty sequence at the requested output size.", exportStart);
+  const captureEnd = componentSource.indexOf("if(options.onCapture)", captureStart);
+  const captureBlock = componentSource.slice(captureStart, captureEnd);
 
-  expect(directStart).toBeGreaterThan(exportStart);
-  expect(directEnd).toBeGreaterThan(directStart);
-  expect(directBlock).toContain("context.drawImage(liveCanvas");
-  expect(directBlock).toContain("context.imageSmoothingQuality=\"high\"");
-  expect(directBlock).toContain("rendererRerendered:false");
-  expect(directBlock).toContain("composerReconfigured:false");
-  expect(directBlock).not.toContain("renderer.render(");
-  expect(directBlock).not.toContain("composer.render(");
-  expect(directBlock).not.toContain("renderer.setSize(");
+  expect(captureStart).toBeGreaterThan(exportStart);
+  expect(captureEnd).toBeGreaterThan(captureStart);
+  expect(captureBlock).toContain("renderer.setSize(width,height,false)");
+  expect(captureBlock).toContain("camara.aspect=width/height");
+  expect(captureBlock).toContain("renderer.render(escena,camara)");
+  expect(captureBlock).toContain("if(gemMaskPass.enabled) gemMaskPass.render(renderer)");
+  expect(captureBlock).toContain("renderDiamondSupersampleOverlay?.(renderer)");
+  expect(captureBlock).toContain("renderDiamondFxaaOverlay?.(renderer)");
+  expect(captureBlock).toContain("context.drawImage(renderer.domElement,0,0,width,height)");
+  expect(captureBlock).toContain("upscaled:false");
+  expect(captureBlock).not.toContain("context.drawImage(liveCanvas");
+  expect(captureBlock).toContain("captureLoop?.resume?.()");
 });
 
 test("gem mask uses a dedicated camera layer instead of per-frame mesh visibility mutation", () => {
