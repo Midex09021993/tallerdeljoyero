@@ -373,7 +373,7 @@ test("diamond perimeter AA uses the stronger masked edge profile", () => {
 test("legacy Post Engine preferences migrate to mask-isolated AA without enabling full-frame AA", () => {
   const controls = readFileSync("src/lib/aurum/post-engine-controls.ts", "utf8");
   const post = readFileSync("src/lib/aurum/post.ts", "utf8");
-  expect(controls).toContain("diamondSsaaEnabled: false");
+  expect(controls).toContain("diamondSsaaEnabled: value?.gemMaskEnabled === true && value?.diamondSsaaEnabled === true");
   expect(controls).toContain("surfaceEdgeAaEnabled: false");
   expect(controls).toContain("taaEnabled: false");
   expect(controls).toContain("const migrated = normalize(JSON.parse(legacy));");
