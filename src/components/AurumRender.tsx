@@ -2326,6 +2326,16 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         });
         loadAuditStep("initial-materials-applied", { triangles: countAurumTriangles(interno) });
         modelo=interno;
+        const embeddedLayerOverrides=interno.userData?.aurumLayerCategoryOverrides;
+        if(embeddedLayerOverrides&&typeof embeddedLayerOverrides==="object"&&!Array.isArray(embeddedLayerOverrides)){
+          const safeOverrides=Object.fromEntries(Object.entries(embeddedLayerOverrides).filter(([key,value])=>
+            typeof key==="string"&&(value==="metal"||value==="gema"||value==="otro")
+          )) as Record<string,AurumLayerCategoryOverride>;
+          setLayerCategoryOverrides(safeOverrides);
+          applyAurumLayerCategoryOverrides(interno,safeOverrides);
+        } else {
+          setLayerCategoryOverrides({});
+        }
         // Register the loaded model's diamond meshes before BVH setup. The micro
         // pipeline was created with an empty scene, so its initial refresh cannot
         // discover gems that are loaded later.
@@ -5715,6 +5725,34 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                   <div className="mt-1 break-all text-[9px] text-white/45">{diagnosticoSeleccion.selected.uuid}</div>
                 </div>
                 <button type="button" title="Cerrar diagnóstico" onClick={()=>{setParteSeleccionada(null);setDiagnosticoSeleccion(null);}} className="rounded-md px-2 py-1 text-white/60 hover:bg-white/10 hover:text-white">✕</button>
+              </div>
+              <div className="mt-2 rounded-lg border border-[#d4af37]/35 bg-[#d4af37]/[.06] p-2">
+                <div className="mb-1 font-semibold text-[#e2bd58]">Corregir clasificación de capa</div>
+                <p className="mb-2 text-[9px] leading-relaxed text-white/60">La corrección se aplica a todas las mallas de esta capa y prevalece sobre los metadatos importados.</p>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {([{id:"metal",label:"Metal"},{id:"gema",label:"Gema"},{id:"otro",label:"Otro"}] as const).map(option=><button key={option.id} type="button" aria-pressed={diagnosticoSeleccion.selected.category===option.id} onClick={()=>{
+                    const selected=diagnosticoSeleccion.selected;
+                    const result=apiRef.current?.setLayerCategoryOverride?.({
+                      layerId:selected.layerId,layerIndex:selected.layerIndex,layerName:selected.layer,
+                    },option.id);
+                    if(!result?.changed){toast.error("No se pudo corregir la capa: falta una identidad de capa válida.");return;}
+                    toast.success("Clasificación actualizada en "+result.changed+" mallas.");
+                    if(option.id==="metal"){setBibliotecaTipo("metales");setUxSection("materiales");}
+                    else if(option.id==="gema"){setBibliotecaTipo("gemas");setUxSection("gemas");}
+                  }} className={"rounded-md border px-2 py-2 text-[10px] font-semibold transition "+(diagnosticoSeleccion.selected.category===option.id?"border-[#d4af37] bg-[#d4af37]/20 text-[#f0d88c]":"border-white/10 bg-white/[.04] text-white/75 hover:bg-white/[.09]")}>{option.label}</button>)}
+                </div>
+                {getAurumLayerCategoryOverride(layerCategoryOverrides,{
+                  layerId:diagnosticoSeleccion.selected.layerId,
+                  layerIndex:diagnosticoSeleccion.selected.layerIndex,
+                  layerName:diagnosticoSeleccion.selected.layer,
+                })&&<button type="button" onClick={()=>{
+                  const selected=diagnosticoSeleccion.selected;
+                  const result=apiRef.current?.setLayerCategoryOverride?.({
+                    layerId:selected.layerId,layerIndex:selected.layerIndex,layerName:selected.layer,
+                  },null);
+                  if(!result?.changed){toast.error("No se pudo restaurar la clasificación original.");return;}
+                  toast.success("Se restauró la clasificación original de la capa.");
+                }} className="mt-2 w-full rounded-md border border-white/10 px-2 py-1.5 text-[9px] font-medium text-white/65 hover:bg-white/[.07]">Deshacer corrección</button>}
               </div>
               <div className="mt-2 grid grid-cols-2 gap-1.5">
                 <div className="rounded-lg bg-white/[.06] p-2"><div className="text-white/45">Categoría</div><div className="font-semibold">{diagnosticoSeleccion.selected.category}</div></div>
