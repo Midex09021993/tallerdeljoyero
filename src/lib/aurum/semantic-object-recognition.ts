@@ -39,12 +39,24 @@ export function classifyAurumSemanticObject(node: any, layer: any): AurumSemanti
   const source = data.aurumRhinoSource ?? {};
   const rhino = data.aurumRhino ?? {};
   const layerName = readText(layer?.name ?? layer?.Name ?? source.layerName ?? rhino.capa);
-  const objectName = readText(source.objectName ?? attrs.name ?? attrs.Name ?? data.objectName ?? node?.name);
+  const objectNames: string[] = [];
+  // GLB exporters often keep the meaningful CAD name on a parent/group node
+  // while child meshes have generic names. Include ancestor names as evidence.
+  let namedNode = node;
+  while (namedNode) {
+    const name = readText(
+      namedNode === node
+        ? (source.objectName ?? attrs.name ?? attrs.Name ?? data.objectName ?? namedNode.name)
+        : namedNode.name
+    );
+    if (name && !objectNames.includes(name)) objectNames.push(name);
+    namedNode = namedNode.parent;
+  }
   const materialList = (Array.isArray(node?.material) ? node.material : [node?.material]).filter(Boolean);
   const materialNames = materialList.map((material: any) => readText(material?.name)).filter(Boolean);
   const geometryType = readText(data.aurumRhinoGeometryType ?? source.objectType ?? attrs.geometryType ?? attrs.GeometryType);
   const combined = [
-    ["objeto", objectName],
+    ["objeto", objectNames.join(" ")],
     ["capa", layerName],
     ["material", materialNames.join(" ")],
     ["tipo", geometryType],
@@ -54,7 +66,9 @@ export function classifyAurumSemanticObject(node: any, layer: any): AurumSemanti
   for (const [origin, value] of combined) {
     if (!value) continue;
     for (const rule of RULES) {
-      if (rule.pattern.test(value)) add(rule.category, rule.weight, origin + ": " + rule.source);
+      // Rhino/GLB names commonly use underscores or hyphens as separators.
+      const searchableValue = value.replace(/[_-]+/g, " ").replace(/([a-z])([A-Z])/g, "$1 $2");
+      if (rule.pattern.test(searchableValue)) add(rule.category, rule.weight, origin + ": " + rule.source);
     }
   }
 
