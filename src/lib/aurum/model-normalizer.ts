@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { getAurumModelParts } from "./model-parts";
 import { resolveAurumLayerKey } from "./layer-identity";
+import { getAurumLayerCategoryOverride } from "./layer-category-overrides";
 import { classifyAurumSemanticObject } from "./semantic-object-recognition";
 
 function isRhinoObjectHidden(attributes:any): boolean {
@@ -298,14 +299,19 @@ function hydrateRhinoLayerMetadata(
     // imported GLB extras may contain a stale "gema" tag for an ordinary CAD
     // layer (for example Uho26). Keep only explicit manual assignments;
     // otherwise require the current layer name/color rule or strong semantics.
-    const manualCategory = existing.aurumManualGemAssignment === true && existing.categoria === "gema"
-      ? "gema"
-      : existing.aurumManualGemAssignment === true && existing.categoria === "metal"
-        ? "metal"
+    const overrideCategory = getAurumLayerCategoryOverride(object?.userData?.aurumLayerCategoryOverrides, {
+      layerId: layer?.id ?? layer?.Id ?? layerId ?? existing.rhinoLayerId,
+      layerIndex: layerIndex >= 0 ? layerIndex : existing.layerIndex,
+      layerName: layerName || existing.capa,
+    });
+    const manualCategory = existing.aurumManualCategoryAssignment === true
+      ? existing.categoria
+      : existing.aurumManualGemAssignment === true && existing.categoria === "gema"
+        ? "gema"
         : undefined;
-    const category = layerCategory !== "otro"
+    const category = overrideCategory ?? manualCategory ?? (layerCategory !== "otro"
       ? layerCategory
-      : (semanticGem ? "gema" : (manualCategory ?? "otro"));
+      : (semanticGem ? "gema" : "otro"));
     const resolvedLayerIndex=layerIndex>=0?layerIndex:(Number.isInteger(existing.layerIndex)&&existing.layerIndex>=0?existing.layerIndex:-1);
     const resolvedLayerId=layer?.id??layer?.Id??layerId??existing.rhinoLayerId??null;
     const layerKey=resolveAurumLayerKey({layerId:resolvedLayerId,layerIndex:resolvedLayerIndex,layerName:layerName||existing.capa,layerColor:color||existing.colorCapa,category,existingKey:existing.layerKey});
