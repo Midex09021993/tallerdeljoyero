@@ -199,6 +199,7 @@ export function applyAurumCameraView(
     : view === "superior"
       ? new THREE.Vector3(0, 1, 0)
       : view === "lateral"
+        // Lateral técnica: azimut 90° exactos y elevación 0° (eje +X, sin componente Y/Z).
         ? new THREE.Vector3(1, 0, 0)
         : new THREE.Vector3(0.62, Math.max(profile.vertical * 2.1, 0.78), 1).normalize();
 
