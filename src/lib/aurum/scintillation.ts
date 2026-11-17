@@ -98,8 +98,8 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
   // Controlled diamond A/B laboratory. It is read once when the material
   // shader is prepared; the normal production path has no extra per-frame work.
   const diamondTestMode=isDiamond && typeof window!=="undefined"
-    ? (new URLSearchParams(window.location.search).get("aurumDiamondTest") ?? "c")
-    : "c";
+    ? (new URLSearchParams(window.location.search).get("aurumDiamondTest") ?? "b")
+    : "b";
   const diamondTestProfiles:Record<string,{label:string;ior:number;dispersion:number;rayBounces:number}>={
     b:{label:"iJewel reference · physical IOR",ior:2.417,dispersion:0.01,rayBounces:5},
     c:{label:"Higher dispersion · physical IOR",ior:2.417,dispersion:0.02,rayBounces:5},
