@@ -34,6 +34,28 @@ export function classifyAurumDiamondScreenSize(diameterPx: number): Exclude<Auru
   return "brilliant";
 }
 
+/**
+ * Hysteresis for live zoom/orbit classification. Separate enter/exit thresholds
+ * prevent a stone hovering at a boundary from switching optical profiles every frame.
+ */
+export function stabilizeAurumDiamondScreenTier(
+  diameterPx: number,
+  previousTier?: Exclude<AurumDiamondMicroTier, "mixed">,
+): Exclude<AurumDiamondMicroTier, "mixed"> {
+  const px = Number.isFinite(diameterPx) ? Math.max(0, diameterPx) : 0;
+  if (!previousTier) return classifyAurumDiamondScreenSize(px);
+  if (previousTier === "micro") {
+    if (px > 40) return "brilliant";
+    return px > 14 ? "small" : "micro";
+  }
+  if (previousTier === "small") {
+    if (px <= 10) return "micro";
+    return px > 40 ? "brilliant" : "small";
+  }
+  if (px <= 10) return "micro";
+  return px <= 32 ? "small" : "brilliant";
+}
+
 /** Shared screen-space classification used by both the physical and BVH diamond paths. */
 export function classifyAurumDiamondMeshTiers(
   meshes: readonly any[],
@@ -200,7 +222,8 @@ export function createAurumDiamondMicroPipeline(scene: any, camera: any, getView
       const explicitlyProtected = Boolean(mesh.userData?.aurumDiamondCenter || mesh.userData?.aurumDiamondIsCenter)
         || /center|central|main|principal/i.test(String(mesh.userData?.aurumDiamondRole ?? ""));
       const isProtectedCenter = explicitlyProtected || (hasDistinctCenter && mesh === centerMesh);
-      const tier = isProtectedCenter ? "brilliant" : classifyAurumDiamondScreenSize(diameter);
+      const previousTier = mesh.userData?.aurumDiamondMicroTier as Exclude<AurumDiamondMicroTier, "mixed"> | undefined;
+      const tier = isProtectedCenter ? "brilliant" : stabilizeAurumDiamondScreenTier(diameter, previousTier);
       mesh.userData = {
         ...(mesh.userData ?? {}),
         aurumDiamondMicroScreenDiameterPx: Number(diameter.toFixed(2)),
@@ -273,6 +296,14 @@ export function createAurumDiamondMicroPipeline(scene: any, camera: any, getView
       enabled = value;
       if (!enabled) {
         for (const mesh of meshes) {
+          // Publish the calibrated baseline tier as well as restoring shader uniforms.
+          // The BVH runtime consumes this metadata on its next frame, so it must
+          // not retain a stale MICRO/SMALL profile while this analyzer is paused.
+          mesh.userData = {
+            ...(mesh.userData ?? {}),
+            aurumDiamondMicroTier: "brilliant",
+            aurumDiamondMicroOpticalProfile: getAurumDiamondMicroOpticalProfile("brilliant"),
+          };
           for (const material of getMaterials(mesh)) {
             const uniforms = material.userData?.aurumDiamondMicroUniforms;
             if (!uniforms) continue;
