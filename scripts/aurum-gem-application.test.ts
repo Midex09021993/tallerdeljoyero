@@ -270,13 +270,14 @@ test("Gem Mask stays internal after visual validation and never tints the beauty
   expect(component).toContain("viewerLoopRef.current?.invalidate?.();");
 });
 
-test("masked diamond SSAA is opt-in behind Gem Mask while TAA stays fail-closed", () => {
+test("diamond AA stages are coordinated behind Gem Mask with settled TAA", () => {
   const controls = readFileSync("src/lib/aurum/post-engine-controls.ts", "utf8");
   const post = readFileSync("src/lib/aurum/post.ts", "utf8");
   const render = readFileSync("src/components/AurumRender.tsx", "utf8");
   expect(controls).toContain("gemFxaaEnabled: value?.gemMaskEnabled === true && value?.gemFxaaEnabled === true");
   expect(controls).toContain("diamondSsaaEnabled: value?.gemMaskEnabled === true && value?.diamondSsaaEnabled === true");
-  expect(controls).toContain("diamondTaaEnabled: false");
+  expect(controls).toContain("diamondTaaEnabled: value?.gemMaskEnabled === true && value?.diamondTaaEnabled === true");
+  expect(controls).toContain("diamondTaaEnabled: true,");
   expect(post).toContain("const fxaaEnabled=diamondMaskReady && fxaaRequested;");
   expect(post).toContain("float aurumPositiveCubicWeight(float x){");
   expect(post).not.toContain("aurumCatmullRomWeight");
@@ -292,7 +293,9 @@ test("masked diamond SSAA is opt-in behind Gem Mask while TAA stays fail-closed"
   expect(post).toContain("if(centerMask<0.5) discard;");
   expect(post).not.toContain("ensureDiamondSupersampleFxaaTarget");
   expect(post).not.toContain("renderFxaa(activeRenderer,enabled:boolean)");
-  expect(render).toContain('const blocked=item.key==="diamondTaaEnabled"||((item.key==="diamondSsaaEnabled"||item.key==="gemFxaaEnabled")&&!diamondPostControls.gemMaskEnabled);');
+  expect(render).toContain('const blocked=item.key!=="gemMaskEnabled"&&!diamondPostControls.gemMaskEnabled;');
+  expect(render).toContain("composer.render()");
+  expect(render).toContain("progressiveFrames: getAurumPostControls().diamondTaaEnabled ? 32");
   expect(render).toContain("setAurumPostControls({diamondSsaaEnabled:!enabled})");
   expect(render).toContain("subscribeAurumPostControls((controls) => {");
   expect(render).toContain("setDiamondPostControls(controls);");
@@ -376,8 +379,9 @@ test("legacy Post Engine preferences cannot reactivate full-frame AA or TAA", ()
   expect(controls).toContain("taaEnabled: false");
   expect(controls).toContain("const migrated = normalize(JSON.parse(legacy));");
   expect(controls).toContain("migrated.gemMaskEnabled = false;");
-  expect(controls).toContain("migrated.diamondTaaEnabled = false;");
-  expect(post).toContain("taaRequested=false;");
+  expect(controls).toContain("migrated.diamondTaaEnabled = migrated.gemMaskEnabled;");
+  expect(post).toContain("removePass(taaPass);");
+  expect(post).toContain("diamondTaaSavePass, taaPass, diamondTaaCompositePass");
   expect(post).toContain("const taaEnabled=diamondMaskReady && controls?.diamondTaaEnabled===true && !temporalMotionActive");
   expect(post).not.toContain("taaRequested=Boolean(options.capture && postControls.taaEnabled)");
 });
