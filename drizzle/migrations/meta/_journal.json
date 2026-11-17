@@ -15,6 +15,13 @@
       "when": 1794761556094,
       "tag": "0001_community_stats_publish_flag",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794880169249,
+      "tag": "0002_restrict_aurum_camera_calibration_read",
+      "breakpoints": true
     }
   ]
 }
