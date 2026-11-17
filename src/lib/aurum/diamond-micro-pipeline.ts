@@ -327,10 +327,12 @@ export function createAurumDiamondMicroPipeline(scene: any, camera: any, getView
         const callbacks = originalCallbacks.get(mesh);
         if (callbacks && mesh.onBeforeRender === callbacks.wrapped) mesh.onBeforeRender = callbacks.original;
         if (mesh.userData) {
+          // Keep a neutral tier marker after teardown: the BVH runtime may outlive
+          // this analyzer and must not retain a stale MICRO/SMALL optical profile.
+          mesh.userData.aurumDiamondMicroTier = "brilliant";
+          mesh.userData.aurumDiamondMicroOpticalProfile = getAurumDiamondMicroOpticalProfile("brilliant");
           delete mesh.userData.aurumDiamondMicroScreenDiameterPx;
-          delete mesh.userData.aurumDiamondMicroTier;
           delete mesh.userData.aurumDiamondMicroCenterProtected;
-          delete mesh.userData.aurumDiamondMicroOpticalProfile;
         }
       }
       for (const mesh of meshes) {
