@@ -81,7 +81,8 @@ test("flags mixed stone sizes sharing one material without changing its optical 
   expect(report[0].tier).toBe("mixed");
   expect(material.userData.aurumDiamondMicroProfile.tier).toBe("mixed");
   pipeline.dispose();
-  expect(large.userData.aurumDiamondMicroTier).toBeUndefined();
+  expect(large.userData.aurumDiamondMicroTier).toBe("brilliant");
+  expect(large.userData.aurumDiamondMicroOpticalProfile).toEqual(getAurumDiamondMicroOpticalProfile("brilliant"));
   expect(material.userData.aurumGemFamily).toBe("Diamante");
 });
 test("provides conservative optical tiers while preserving the brilliant baseline", () => {
@@ -124,7 +125,8 @@ test("applies per-mesh optical profiles to diamonds sharing one material and res
   expect(material.userData.aurumDiamondMicroUniforms.virtualFacetWeight.value).toBeCloseTo(0.004);
   expect(tiny.userData.aurumDiamondMicroOpticalProfile.scintillationScale).toBe(0.22);
   pipeline.dispose();
-  expect(large.userData.aurumDiamondMicroTier).toBeUndefined();
+  expect(large.userData.aurumDiamondMicroTier).toBe("brilliant");
+  expect(large.userData.aurumDiamondMicroOpticalProfile).toEqual(getAurumDiamondMicroOpticalProfile("brilliant"));
   expect(material.userData.aurumDiamondMicroUniforms.scintillationStrength.value).toBeCloseTo(0.16);
 });
 
