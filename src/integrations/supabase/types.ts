@@ -205,6 +205,24 @@ export type Database = {
         }
         Relationships: []
       }
+      aurum_camera_calibration_global: {
+        Row: {
+          calibration_data: Json
+          id: number
+          updated_at: string
+        }
+        Insert: {
+          calibration_data?: Json
+          id?: number
+          updated_at?: string
+        }
+        Update: {
+          calibration_data?: Json
+          id?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       aurum_community_activity: {
         Row: {
           activity_type: string
