@@ -221,9 +221,46 @@ export function applyAurumCameraView(
     : 1;
   const targetNdc = THREE.MathUtils.clamp(0.72 / scale, 0.35, 0.92);
   const radius = Math.max(productSphere.radius, 0.001);
-  // La escala es idéntica en las cuatro vistas. Cambiar de vista equivale
-  // únicamente a rotar la cámara alrededor del mismo objetivo, sin zoom extra.
-  const distance = radius / (limitingTangent * targetNdc);
+  // La escala de referencia nace en frontal. En una cámara perspectiva,
+  // la profundidad de cada punto puede cambiar unos píxeles la altura aparente
+  // al girar 90°. Calibramos lateral contra la proyección frontal del MISMO
+  // volumen, sin escalar ni deformar la geometría.
+  const referenceDistance = radius / (limitingTangent * targetNdc);
+  let distance = referenceDistance;
+  if (view === "lateral" && model) {
+    const bounds = getAurumVisibleProductBounds(model);
+    if (!bounds.isEmpty()) {
+      const corners = [
+        new THREE.Vector3(bounds.min.x, bounds.min.y, bounds.min.z),
+        new THREE.Vector3(bounds.min.x, bounds.min.y, bounds.max.z),
+        new THREE.Vector3(bounds.min.x, bounds.max.y, bounds.min.z),
+        new THREE.Vector3(bounds.min.x, bounds.max.y, bounds.max.z),
+        new THREE.Vector3(bounds.max.x, bounds.min.y, bounds.min.z),
+        new THREE.Vector3(bounds.max.x, bounds.min.y, bounds.max.z),
+        new THREE.Vector3(bounds.max.x, bounds.max.y, bounds.min.z),
+        new THREE.Vector3(bounds.max.x, bounds.max.y, bounds.max.z),
+      ];
+      const projectedHeight = (viewDirection: THREE.Vector3, cameraDistance: number) => {
+        const probe = new THREE.PerspectiveCamera(camera.fov, aspect, camera.near, camera.far);
+        probe.up.set(0, 1, 0);
+        probe.position.copy(target).addScaledVector(viewDirection, cameraDistance);
+        probe.lookAt(target);
+        probe.updateMatrixWorld(true);
+        const ys = corners.map(point => point.clone().project(probe).y);
+        return Math.max(...ys) - Math.min(...ys);
+      };
+      const frontalHeight = projectedHeight(new THREE.Vector3(0, 0, 1), referenceDistance);
+      const lateralHeight = projectedHeight(new THREE.Vector3(1, 0, 0), referenceDistance);
+      if (frontalHeight > 1e-6 && lateralHeight > 1e-6) {
+        // Repetir la corrección una vez reduce el error de perspectiva residual.
+        distance = referenceDistance * THREE.MathUtils.clamp(lateralHeight / frontalHeight, 0.8, 1.2);
+        const correctedHeight = projectedHeight(new THREE.Vector3(1, 0, 0), distance);
+        if (correctedHeight > 1e-6) {
+          distance *= THREE.MathUtils.clamp(correctedHeight / frontalHeight, 0.95, 1.05);
+        }
+      }
+    }
+  }
 
   // Asegurar planos de recorte válidos para modelos de distintas unidades.
   camera.near = Math.max(radius * 0.001, 0.001);
