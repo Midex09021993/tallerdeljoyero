@@ -35,6 +35,7 @@ import { classifyMesh as classifyPublicMesh, inferGemMeshes } from "./PublicCata
 import { compressAurumGlbWithDraco } from "../lib/draco-export";
 import { getAurumRhinoGeometryType, isAurumRhinoCsgSurface } from "../lib/aurum/metal-union-experiment";
 import { getAurumModelParts } from "../lib/aurum/model-parts";
+import { resolveAurumLayerKey } from "../lib/aurum/layer-identity";
 import { applyAurumMaterialToModel, applyAurumGemToTarget, clearAurumGemFromTarget, getAurumMaterialAdapterServices, prepareAurumGemLayerIndex } from "../lib/aurum/material-application";
 import { captureAurumGemTransitionState, createAurumGemTransition } from "../lib/aurum/gem-transition";
 import { inspectAurumMesh } from "../lib/aurum/mesh-preflight";
@@ -3754,7 +3755,35 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         parteActiva = obj;
         const nombre = (typeof obj.name === "string" && obj.name.trim()) ? obj.name.trim() : "Componente seleccionado";
         const meta = obj.userData?.aurumRhino || {};
-        const capa = meta.capa || obj.userData?.attributes?.layerName || obj.userData?.attributes?.LayerName || null;
+        const sourceAttrsForLayer = obj.userData?.attributes ?? {};
+        const sourceIdentityForLayer = obj.userData?.aurumRhinoSource ?? {};
+        const sourceInstanceForLayer = obj.userData?.aurumRhinoInstanceSource ?? {};
+        const sourceLayerManifest = Array.isArray(modelo?.userData?.aurumRhinoSourceLayers) && modelo.userData.aurumRhinoSourceLayers.length
+          ? modelo.userData.aurumRhinoSourceLayers
+          : Array.isArray(modelo?.userData?.layers) ? modelo.userData.layers
+          : Array.isArray(modelo?.userData?.rhinoLayers) ? modelo.userData.rhinoLayers : [];
+        const rawSelectedLayerIndex = sourceInstanceForLayer.layerIndex ?? sourceIdentityForLayer.layerIndex
+          ?? sourceAttrsForLayer.layerIndex ?? sourceAttrsForLayer.LayerIndex
+          ?? obj.userData?.layerIndex ?? obj.userData?.LayerIndex ?? meta.layerIndex;
+        const selectedLayerIndex = rawSelectedLayerIndex !== null && rawSelectedLayerIndex !== undefined
+          && rawSelectedLayerIndex !== "" && Number.isInteger(Number(rawSelectedLayerIndex)) && Number(rawSelectedLayerIndex) >= 0
+          ? Number(rawSelectedLayerIndex) : null;
+        const rawSelectedLayerId = sourceInstanceForLayer.layerId ?? sourceIdentityForLayer.layerId
+          ?? sourceAttrsForLayer.layerId ?? sourceAttrsForLayer.LayerId ?? meta.rhinoLayerId;
+        const selectedLayerByIndex = selectedLayerIndex !== null ? sourceLayerManifest[selectedLayerIndex] : null;
+        const selectedLayerById = rawSelectedLayerId != null
+          ? sourceLayerManifest.find((layer:any) => String(layer?.id ?? layer?.Id ?? "") === String(rawSelectedLayerId)) : null;
+        const selectedLayerRecord = selectedLayerByIndex ?? selectedLayerById ?? null;
+        const capa = String(selectedLayerRecord?.name ?? selectedLayerRecord?.Name
+          ?? sourceInstanceForLayer.layerName ?? sourceIdentityForLayer.layerName
+          ?? sourceAttrsForLayer.layerName ?? sourceAttrsForLayer.LayerName ?? meta.capa ?? "").trim() || null;
+        const selectedLayerId = selectedLayerRecord?.id ?? selectedLayerRecord?.Id ?? rawSelectedLayerId ?? null;
+        const selectedLayerColor = selectedLayerRecord?.color ?? selectedLayerRecord?.Color
+          ?? sourceIdentityForLayer.layerColor ?? sourceAttrsForLayer.layerColor ?? sourceAttrsForLayer.LayerColor ?? meta.colorCapa ?? null;
+        const selectedLayerKey = String(meta.layerKey ?? resolveAurumLayerKey({
+          layerId: selectedLayerId, layerIndex: selectedLayerIndex, layerName: capa,
+          layerColor: selectedLayerColor, category: meta.categoria ?? clasificarCapa(capa ?? ""),
+        }) ?? "");
         const sourceCategory = String(meta.categoria ?? "").toLowerCase();
         const layerCategory = clasificarCapa(capa || "", meta.colorCapa);
         // Match the catalog resolver: a stale "otro" tag must not hide an
@@ -3778,36 +3807,47 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           // Diagnostic snapshot of the selected mesh and all gem-layer identities.
           const sourceAttrs = obj.userData?.attributes ?? {};
           const preservedSource = obj.userData?.aurumRhinoSource ?? {};
-          const sourceLayerId = preservedSource.layerId ?? sourceAttrs.layerId ?? sourceAttrs.LayerId ?? meta.rhinoLayerId ?? null;
-          const sourceLayerIndexRaw = preservedSource.layerIndex ?? sourceAttrs.layerIndex ?? sourceAttrs.LayerIndex ?? obj.userData?.layerIndex ?? obj.userData?.LayerIndex ?? meta.layerIndex;
-          const sourceLayerIndex = sourceLayerIndexRaw !== null && sourceLayerIndexRaw !== undefined && sourceLayerIndexRaw !== "" && Number.isInteger(Number(sourceLayerIndexRaw)) && Number(sourceLayerIndexRaw) >= 0
-            ? Number(sourceLayerIndexRaw) : null;
-          const sourceLayerKey = String(meta.layerKey ?? "");
-          const sourceLayerName = String(preservedSource.layerName ?? sourceAttrs.layerName ?? sourceAttrs.LayerName ?? capa ?? "").trim();
+          const sourceLayerId = selectedLayerId;
+          const sourceLayerIndex = selectedLayerIndex;
+          const sourceLayerKey = selectedLayerKey;
+          const sourceLayerName = String(capa ?? "").trim();
           const diagnosticMeshes:any[] = [];
           modelo?.traverse((mesh:any) => {
             if (!mesh?.isMesh || mesh.userData?.aurumInternalInclusion) return;
             const meshMeta = mesh.userData?.aurumRhino ?? {};
             const sourceMeta = mesh.userData?.aurumRhinoSource ?? {};
             const meshAttrs = mesh.userData?.attributes ?? {};
-            const meshLayerName = String(sourceMeta.layerName ?? meshMeta.capa ?? meshAttrs.layerName ?? meshAttrs.LayerName ?? "").trim();
-            const meshLayerId = sourceMeta.layerId ?? meshMeta.rhinoLayerId ?? meshAttrs.layerId ?? meshAttrs.LayerId ?? null;
-            const meshLayerIndexRaw = sourceMeta.layerIndex ?? meshAttrs.layerIndex ?? meshAttrs.LayerIndex ?? mesh.userData?.layerIndex ?? mesh.userData?.LayerIndex ?? meshMeta.layerIndex;
-            const meshLayerIndex = Number.isInteger(Number(meshLayerIndexRaw)) && Number(meshLayerIndexRaw) >= 0 ? Number(meshLayerIndexRaw) : null;
-            const meshCategory = String(meshMeta.categoria ?? clasificarCapa(meshLayerName, meshMeta.colorCapa));
+            const meshInstanceSource = mesh.userData?.aurumRhinoInstanceSource ?? {};
+            const meshLayerIndexRaw = meshInstanceSource.layerIndex ?? sourceMeta.layerIndex ?? meshAttrs.layerIndex ?? meshAttrs.LayerIndex ?? mesh.userData?.layerIndex ?? mesh.userData?.LayerIndex ?? meshMeta.layerIndex;
+            const meshLayerIndex = meshLayerIndexRaw !== null && meshLayerIndexRaw !== undefined && meshLayerIndexRaw !== ""
+              && Number.isInteger(Number(meshLayerIndexRaw)) && Number(meshLayerIndexRaw) >= 0 ? Number(meshLayerIndexRaw) : null;
+            const meshLayerIdRaw = meshInstanceSource.layerId ?? sourceMeta.layerId ?? meshMeta.rhinoLayerId ?? meshAttrs.layerId ?? meshAttrs.LayerId ?? null;
+            const meshLayerRecord = (meshLayerIndex !== null ? sourceLayerManifest[meshLayerIndex] : null)
+              ?? (meshLayerIdRaw != null ? sourceLayerManifest.find((layer:any) => String(layer?.id ?? layer?.Id ?? "") === String(meshLayerIdRaw)) : null);
+            const meshLayerName = String(meshLayerRecord?.name ?? meshLayerRecord?.Name ?? meshInstanceSource.layerName
+              ?? sourceMeta.layerName ?? meshMeta.capa ?? meshAttrs.layerName ?? meshAttrs.LayerName ?? "").trim();
+            const meshLayerId = meshLayerRecord?.id ?? meshLayerRecord?.Id ?? meshLayerIdRaw;
+            const meshLayerColor = meshLayerRecord?.color ?? meshLayerRecord?.Color ?? sourceMeta.layerColor
+              ?? meshMeta.colorCapa ?? meshAttrs.layerColor ?? meshAttrs.LayerColor ?? null;
+            const meshCategory = String(meshMeta.categoria ?? clasificarCapa(meshLayerName, colorRhinoHex(meshLayerColor)));
+            const meshLayerKey = String(meshMeta.layerKey ?? resolveAurumLayerKey({
+              layerId: meshLayerId, layerIndex: meshLayerIndex, layerName: meshLayerName,
+              layerColor: meshLayerColor, category: meshCategory,
+            }) ?? "");
             const materials = (Array.isArray(mesh.material) ? mesh.material : [mesh.material]).filter(Boolean);
-            const sameLayer = sourceLayerName
-              ? meshLayerName.toLocaleLowerCase() === sourceLayerName.toLocaleLowerCase()
-              : sourceLayerKey
-                ? String(meshMeta.layerKey ?? "") === sourceLayerKey
-                : sourceLayerId != null
-                  ? String(meshLayerId ?? "") === String(sourceLayerId)
-                  : sourceLayerIndex != null && meshLayerIndex === sourceLayerIndex;
+            const sameLayer = sourceLayerKey && meshLayerKey
+              ? meshLayerKey === sourceLayerKey
+              : sourceLayerId != null && meshLayerId != null
+                ? String(meshLayerId) === String(sourceLayerId)
+                : sourceLayerIndex !== null && meshLayerIndex !== null
+                  ? meshLayerIndex === sourceLayerIndex
+                  : Boolean(sourceLayerName && meshLayerName
+                    && meshLayerName.toLocaleLowerCase() === sourceLayerName.toLocaleLowerCase());
             diagnosticMeshes.push({
               name: mesh.name || "(sin nombre)", uuid: mesh.uuid, category: meshCategory,
               layer: meshLayerName || null, layerId: meshLayerId == null ? null : String(meshLayerId),
-              layerIndex: meshLayerIndex, layerKey: meshMeta.layerKey ?? null,
-              layerColor: meshMeta.colorCapa ?? meshAttrs.layerColor ?? meshAttrs.LayerColor ?? null,
+              layerIndex: meshLayerIndex, layerKey: meshLayerKey || null,
+              layerColor: meshLayerColor ?? null,
               rawAttributes: {
                 preservedSource: sourceMeta,
                 layerName: meshAttrs.layerName ?? meshAttrs.LayerName ?? null,
@@ -3847,14 +3887,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             selected: {
               name: nombre, uuid: obj.uuid, category: categoria,
               layer: sourceLayerName || null,
-              layerColor: meta.colorCapa ?? sourceAttrs.layerColor ?? sourceAttrs.LayerColor ?? null,
+              layerColor: selectedLayerColor ?? null,
               layerId: sourceLayerId == null ? null : String(sourceLayerId), layerIndex: sourceLayerIndex,
-              layerKey: meta.layerKey ?? null, matrixSlot: meta.matrixSlot ?? null,
+              layerKey: sourceLayerKey || null, matrixSlot: meta.matrixSlot ?? null,
               metadataResolution: meta.metadataResolution ?? null,
               preservedSource: {
-                layerIndex: preservedSource.layerIndex ?? null,
-                layerName: preservedSource.layerName ?? null,
-                layerId: preservedSource.layerId ?? null,
+                layerIndex: preservedSource.layerIndex ?? selectedLayerIndex,
+                layerName: preservedSource.layerName ?? sourceLayerName ?? null,
+                layerId: preservedSource.layerId ?? sourceLayerId ?? null,
                 layerColor: preservedSource.layerColor ?? null,
                 rawLayerIndex: preservedSource.rawLayerIndex ?? null,
                 rawLayerName: preservedSource.rawLayerName ?? null,
@@ -3862,7 +3902,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 materialIndex: preservedSource.materialIndex ?? null,
                 objectId: preservedSource.objectId ?? null,
               },
-              resolvedLayer: { layerIndex: meta.layerIndex ?? null, layerName: meta.capa ?? null, layerId: meta.rhinoLayerId ?? null, layerKey: meta.layerKey ?? null },
+              resolvedLayer: { layerIndex: sourceLayerIndex, layerName: sourceLayerName || null, layerId: sourceLayerId ?? null, layerKey: sourceLayerKey || null, source: selectedLayerRecord ? "tabla original de capas 3DM" : "metadatos del objeto" },
               visible: obj.visible !== false,
               objectType: obj.type ?? null,
               rhinoGeometryType: getAurumRhinoGeometryType(obj) || null,
