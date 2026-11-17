@@ -64,6 +64,7 @@ export function AurumModelStage({onApply}:{onApply:(preset:AurumModelStagePreset
       </div>
     </div>
 
+    <p className="mb-3 rounded-lg border border-[#e6e1d8] bg-white/70 px-2.5 py-2 text-[9px] leading-relaxed text-[#77756f]">El preset aplica el acabado a las piezas metálicas compatibles y conserva las gemas. También configura escena, iluminación y fondo.</p>
     <div className="mb-2 flex items-center justify-between">
       <span className="text-[10px] font-semibold uppercase tracking-[.13em] text-[#92743b]">Model stages</span>
       <span className="text-[9px] text-[#99968d]">{PRESETS.length} configuraciones</span>
