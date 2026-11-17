@@ -13,7 +13,7 @@ type Snapshot = {
 };
 const VIEWS: {id:View;label:string;hint:string}[] = [
   {id:"frontal",label:"Frontal",hint:"Referencia maestra"},
-  {id:"lateral",label:"Lateral",hint:"Giro de 90°"},
+  {id:"lateral",label:"Lateral",hint:"Azimut 90° · elevación 0°"},
   {id:"superior",label:"Superior",hint:"Cámara desde arriba"},
   {id:"perspectiva",label:"Perspectiva 3/4",hint:"Vista de presentación"},
 ];
