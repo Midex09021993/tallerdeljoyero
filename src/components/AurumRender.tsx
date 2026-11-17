@@ -61,6 +61,7 @@ import { Camera, ChevronDown, Copy, Download, Expand, FileJson, Gem, Image as Im
 
 import { GEMAS, MATERIALES, ESCENARIOS, VISTAS, ILUMINACIONES, type MaterialId, type EscenarioId, type VistaId, type IluminacionId, type MaterialGrupo, type CategoriaParte, type GemaId, type GemaConfig, type MaterialConfig, type ParteModelo } from "../lib/aurum/catalog";
 import { AurumRenderSidebar } from "./AurumRenderSidebar";
+import { AurumModelStage } from "./AurumModelStage";
 import { AurumCameraCalibrationPanel } from "./AurumCameraCalibrationPanel";
 import { AurumPerformanceIndicator, AurumPerformanceMonitorPanel } from "./AurumPerformanceMonitorPanel";
 import { AurumLoadingExperience } from "./AurumLoadingExperience";
@@ -373,7 +374,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
     return () => window.removeEventListener("keydown", handleDiagnosticShortcut);
   }, []);
   const [panel, setPanel] = useState<"materiales" | "escenas" | "iluminacion">("materiales");
-  const [uxSection, setUxSection] = useState<"materiales"|"gemas"|"ambientes"|"escenas"|"hdrMetales"|"hdrGemas"|"fondos"|"rhino-export"|"cad-tree"|"positions"|"diamond-control">("materiales");
+  const [uxSection, setUxSection] = useState<"materiales"|"gemas"|"ambientes"|"escenas"|"modelstage"|"hdrMetales"|"hdrGemas"|"fondos"|"rhino-export"|"cad-tree"|"positions"|"diamond-control">("materiales");
   const [diamondBvhEnabled, setDiamondBvhEnabled] = useState(true);
   const [diamondMicroEnabled, setDiamondMicroEnabled] = useState(true);
   const [diamondPostControls, setDiamondPostControls] = useState<AurumPostControls>({gemMaskEnabled:false,diamondSsaaEnabled:false,gemFxaaEnabled:false,diamondTaaEnabled:false,surfaceEdgeAaEnabled:false,taaEnabled:false});
@@ -5328,7 +5329,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       </div>}
       
       <div className={embedded ? "flex min-h-0 flex-1 overflow-hidden bg-[#090b0e]" : "flex min-h-0 flex-1 gap-3 overflow-hidden rounded-2xl border border-[#e7e2d9] bg-[#f9f8f5] p-3"}>
-        <AurumRenderSidebar activeToolId={uxSection} onAmbientesClick={() => setUxSection("ambientes")} onGemHdrClick={() => setUxSection("hdrGemas")} onBackgroundClick={() => setUxSection("fondos")} onSceneClick={() => setUxSection("escenas")} onMaterialsClick={() => setUxSection("materiales")} onGemsClick={() => {setUxSection("gemas");setBibliotecaTipo("gemas");setFamiliaGemaActiva("Predeterminadas");setMostrarTodasGemas(false);setBusquedaGemas("");}} onCadTreeClick={() => {setUxSection("cad-tree");refreshCadTree();}} onPositionsClick={() => setUxSection("positions")} onRhinoExportClick={() => {setExportOpen(false);setRhinoExportError(null);setRhinoExportReport(null);setUxSection("rhino-export");}} onDiamondControlClick={() => {setUxSection("diamond-control");window.dispatchEvent(new CustomEvent("aurum-diamond-control-refresh"));}} />
+        <AurumRenderSidebar activeToolId={uxSection} onAmbientesClick={() => setUxSection("ambientes")} onGemHdrClick={() => setUxSection("hdrGemas")} onBackgroundClick={() => setUxSection("fondos")} onSceneClick={() => setUxSection("escenas")} onMaterialsClick={() => setUxSection("materiales")} onGemsClick={() => {setUxSection("gemas");setBibliotecaTipo("gemas");setFamiliaGemaActiva("Predeterminadas");setMostrarTodasGemas(false);setBusquedaGemas("");}} onCadTreeClick={() => {setUxSection("cad-tree");refreshCadTree();}} onPositionsClick={() => setUxSection("positions")} onRhinoExportClick={() => {setExportOpen(false);setRhinoExportError(null);setRhinoExportReport(null);setUxSection("rhino-export");}} onDiamondControlClick={() => {setUxSection("diamond-control");window.dispatchEvent(new CustomEvent("aurum-diamond-control-refresh"));}} onModelStageClick={() => setUxSection("modelstage")} />
         <aside className={"relative z-20 flex h-full min-h-0 w-[min(22vw,336px)] min-w-[240px] shrink-0 flex-col overflow-hidden rounded-r-2xl border border-l-0 border-[#e7e2d9] bg-[#f9f8f5] text-[#292824] " + (embedded ? "" : "-ml-3")}>
           {uxSection==="diamond-control"&&<div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-[#f9f8f5] px-3 py-3">
             <div className="mb-3">
@@ -5440,6 +5441,33 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           </div>}
           {uxSection!=="rhino-export"&&uxSection!=="cad-tree"&&uxSection!=="positions"&&uxSection!=="diamond-control"&&<div className="h-full overflow-y-auto">
             <section className="px-4 py-1">
+              {uxSection==="modelstage"&&<AurumModelStage onApply={(preset)=>{
+                if(!archivo){
+                  toast.error("Carga primero un modelo 3D para aplicar un ModelStage.");
+                  return false;
+                }
+                const material=MATERIALES.find(item=>item.id===preset.materialId);
+                if(!material){
+                  toast.error("El material de este preset ya no está disponible.");
+                  return false;
+                }
+                const applied=apiRef.current?.materialCatalogo?.(material);
+                if(applied===false){
+                  toast.error("No se pudo aplicar el material: no se encontraron piezas metálicas compatibles.");
+                  return false;
+                }
+                setMaterialId(material.id);
+                setEscenarioId(preset.sceneId as EscenarioId);
+                apiRef.current?.escenario(preset.sceneId as EscenarioId);
+                setIluminacionId(preset.lightingId as IluminacionId);
+                apiRef.current?.iluminacion(preset.lightingId as IluminacionId);
+                setFondoId(preset.backgroundId);
+                apiRef.current?.fondo(preset.backgroundId);
+                invalidateRenderRef.current?.();
+                toast.success("ModelStage aplicado: "+preset.name);
+                return true;
+              }}/>}
+
               {uxSection==="materiales"&&<div className="pt-3 pb-5">
                 <label className="mb-3 flex h-9 items-center gap-2 rounded-xl border border-black/[.08] bg-white px-3 text-[#77756f] focus-within:border-[#92743b]/50"><ImageIcon className="size-3.5 shrink-0"/><input value={busquedaMateriales} onChange={e=>setBusquedaMateriales(e.target.value)} placeholder="Buscar material o acabado…" className="min-w-0 flex-1 bg-transparent text-xs text-[#292824] outline-none placeholder:text-[#99968d]"/></label>
                 <div className="mb-2 grid grid-cols-3 gap-1.5" role="group" aria-label="Familias principales de materiales">{familiasMateriales.map(familia=><button key={familia} type="button" onClick={()=>{setFamiliaMaterialActiva(familia);setAcabadoMaterialActivo("Todos");}} aria-pressed={familiaMaterialActiva===familia} className={"min-w-0 rounded-xl border px-2 py-2 text-[11px] font-semibold transition "+(familiaMaterialActiva===familia?"border-[#b99642]/55 bg-[#b99642]/12 text-[#6d5523] shadow-[0_2px_8px_rgba(50,42,20,.06)]":"border-black/[.07] bg-white/65 text-[#77756f] hover:border-[#d8d1c2] hover:bg-white")}><span className="block truncate">{familia==="Todas"?"Predeterminados":familia}</span><span className="mt-0.5 block text-[9px] font-normal opacity-70">{familia==="Todas"?9:MATERIALES.filter(m=>familiaPrincipalMaterial(m.grupo)===familia).length} {familia==="Todas"?"predeterminados":"materiales"}</span></button>)}</div>
