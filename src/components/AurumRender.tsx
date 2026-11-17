@@ -4456,7 +4456,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           });
         },
         {
-          progressiveFrames: Math.max(1, Math.min(32, Math.floor(Number(postRuntimeConfig.progressiveFrameCount ?? 1)))),
+          progressiveFrames: getAurumPostControls().diamondTaaEnabled ? 32 : Math.max(1, Math.min(32, Math.floor(Number(postRuntimeConfig.progressiveFrameCount ?? 1)))),
           onStart: () => {
             setTemporalMotion?.(true);
             renderPipelineContract.setMode("LIVE_MOTION");
@@ -5444,7 +5444,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             </section>
             <section className="mb-3 rounded-xl border border-[#e6e1d8] bg-white p-3">
               <div className="mb-2 text-[10px] font-semibold uppercase tracking-[.12em] text-[#92743b]">Antialiasing del diamante</div>
-              <p className="mb-3 text-[9px] leading-relaxed text-[#77756f]">Gem Mask delimita el diamante central. SSAA reconstruye el diamante desde un render auxiliar de mayor resolución; FXAA permanece independiente. TAA sigue bloqueado.</p>
+              <p className="mb-3 text-[9px] leading-relaxed text-[#77756f]">Gem Mask protege el área del diamante. Durante el movimiento trabaja SSAA; al detener la cámara, TAA acumula muestras. FXAA puede refinar el borde al final.</p>
               {([
                 {key:"gemMaskEnabled",label:"Gem Mask",description:"Máscara interna del diamante central; delimita el área donde puede trabajar FXAA sin modificar metal ni ambiente."},
                 {key:"diamondSsaaEnabled",label:"SSAA",description:"Render auxiliar de mayor resolución para el diamante."},
@@ -5452,14 +5452,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 {key:"diamondTaaEnabled",label:"TAA",description:"Acumula muestras del diamante cuando la cámara está fija."},
               ] as const).map((item)=>{
                 const enabled=diamondPostControls[item.key];
-                const blocked=item.key==="diamondTaaEnabled"||((item.key==="diamondSsaaEnabled"||item.key==="gemFxaaEnabled")&&!diamondPostControls.gemMaskEnabled);
+                const blocked=item.key!=="gemMaskEnabled"&&!diamondPostControls.gemMaskEnabled;
                 const blockedMessage=item.key==="gemFxaaEnabled"?"Activa Gem Mask para habilitar FXAA.":item.key==="diamondSsaaEnabled"?"Activa Gem Mask para habilitar SSAA.":"Bloqueado hasta completar la validación independiente.";
                 return <div key={item.key} className="flex items-center justify-between gap-3 border-t border-black/[.05] py-2 first:border-t-0 first:pt-0">
                   <div className="min-w-0"><div className="text-[11px] font-semibold text-[#292824]">{item.label}</div><p className="mt-0.5 text-[9px] leading-relaxed text-[#77756f]">{item.description}</p>{blocked&&<p className="mt-1 text-[9px] font-semibold text-amber-700">{blockedMessage}</p>}</div>
-                  <button type="button" role="switch" aria-label={item.label} aria-checked={enabled} aria-disabled={blocked} disabled={blocked} title={blocked?blockedMessage:"Activar o desactivar "+item.label} onClick={()=>{if(blocked)return;const next=item.key==="gemMaskEnabled"?setAurumPostControls({gemMaskEnabled:!enabled}):item.key==="diamondSsaaEnabled"?setAurumPostControls({diamondSsaaEnabled:!enabled}):item.key==="gemFxaaEnabled"?setAurumPostControls({gemFxaaEnabled:!enabled}):setAurumPostControls({diamondTaaEnabled:!enabled});setDiamondPostControls(next);viewerLoopRef.current?.invalidate?.();}} className={"relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors "+(blocked?"cursor-not-allowed opacity-50 ":"")+(enabled?"bg-[#a88743]":"bg-[#c9c6bf")}><span className={"inline-block size-3.5 rounded-full bg-white shadow-sm transition-transform "+(enabled?"translate-x-[18px]":"translate-x-1")}/></button>
+                  <button type="button" role="switch" aria-label={item.label} aria-checked={enabled} aria-disabled={blocked} disabled={blocked} title={blocked?blockedMessage:"Activar o desactivar "+item.label} onClick={()=>{if(blocked)return;const next=item.key==="gemMaskEnabled"?setAurumPostControls({gemMaskEnabled:!enabled}):item.key==="diamondSsaaEnabled"?setAurumPostControls({diamondSsaaEnabled:!enabled}):item.key==="gemFxaaEnabled"?setAurumPostControls({gemFxaaEnabled:!enabled}):setAurumPostControls({diamondTaaEnabled:!enabled});setDiamondPostControls(next);if(item.key==="diamondTaaEnabled"&&!enabled)viewerLoopRef.current?.converge?.(32);else viewerLoopRef.current?.invalidate?.();}} className={"relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors "+(blocked?"cursor-not-allowed opacity-50 ":"")+(enabled?"bg-[#a88743]":"bg-[#c9c6bf")}><span className={"inline-block size-3.5 rounded-full bg-white shadow-sm transition-transform "+(enabled?"translate-x-[18px]":"translate-x-1")}/></button>
                 </div>;
               })}
-              <div className="mt-2 border-t border-black/[.06] pt-2 text-[9px] leading-relaxed text-[#8a857b]">SSAA usa un render auxiliar y compone únicamente dentro de Gem Mask. Si la GPU no admite la escala segura, el módulo permanece inactivo. TAA continúa bloqueado.</div>
+              <div className="mt-2 border-t border-black/[.06] pt-2 text-[9px] leading-relaxed text-[#8a857b]">Cadena coordinada: Gem Mask limita el diamante; SSAA trabaja durante el movimiento; TAA acumula hasta 32 muestras con la cámara quieta y toma el relevo de SSAA; FXAA se aplica al final. Los metales y el entorno conservan la imagen base.</div>
             </section>
             <section className="rounded-xl border border-[#e6e1d8] bg-white p-3">
               <div className="mb-2 flex items-center justify-between gap-2"><div className="text-[10px] font-semibold uppercase tracking-[.12em] text-[#92743b]">Diagnóstico de ejecución</div><button type="button" onClick={requestGemMaskDiagnostics} disabled={gemMaskDiagnosticStatus==="pending"} className="rounded-lg border border-black/10 px-2 py-1 text-[9px] font-semibold text-[#6d5523]">Actualizar</button></div>
