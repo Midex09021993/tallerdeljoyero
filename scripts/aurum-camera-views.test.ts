@@ -135,3 +135,17 @@ test("the UI applies the neutral framing scale to every manual camera view", () 
   const source = readFileSync(new URL("../src/components/AurumRender.tsx", import.meta.url), "utf8");
   expect(source).toContain('applyAurumCameraView(camara, controles, modelo, id, categoriaProyectoRef.current, 1.0)');
 });
+
+
+test("camera calibration panel stores four view references and exports measurements", () => {
+  const panel = readFileSync(new URL("../src/components/AurumCameraCalibrationPanel.tsx", import.meta.url), "utf8");
+  const viewer = readFileSync(new URL("../src/components/AurumRender.tsx", import.meta.url), "utf8");
+  expect(panel).toContain("frontal");
+  expect(panel).toContain("lateral");
+  expect(panel).toContain("superior");
+  expect(panel).toContain("perspectiva");
+  expect(panel).toContain("aurum-camera-calibration-session");
+  expect(panel).toContain("aurum-camera-calibration.json");
+  expect(viewer).toContain("projectedPixelWidth");
+  expect(viewer).toContain("cameraCalibrationRuntimeRef.current");
+});
