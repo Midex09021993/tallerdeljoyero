@@ -297,18 +297,18 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const cameraCalibrationLoadedForUserRef = useRef<string | null>(null);
   useEffect(() => {
     const userId = sesion?.user?.id;
-    if (!cameraCalibrationOpen || !userId || cameraCalibrationLoadedForUserRef.current === userId) return;
+    if (!userId || cameraCalibrationLoadedForUserRef.current === userId) return;
     let cancelled = false;
     void (async () => {
       const { data, error } = await supabase.from("aurum_camera_calibrations" as any)
-        .select("references").eq("user_id", userId).maybeSingle();
+        .select("calibration_data").eq("user_id", userId).maybeSingle();
       if (cancelled) return;
       if (error) {
         console.error("[AURUM camera] No se pudo cargar la calibración global:", error.message);
         toast.error("No se pudo cargar la calibración global. Comprueba la migración de Supabase.");
         return;
       }
-      const references = (data as any)?.references ?? {};
+      const references = (data as any)?.calibration_data ?? {};
       setCameraCalibrationReferences(references);
       calibratedCameraViewsRef.current = references;
       cameraCalibrationLoadedForUserRef.current = userId;
@@ -5757,7 +5757,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           if (!userId) throw new Error("Inicia sesión para guardar la calibración global.");
           const { error } = await supabase.from("aurum_camera_calibrations" as any).upsert({
             user_id: userId,
-            references,
+            calibration_data: references,
             updated_at: new Date().toISOString(),
           }, { onConflict: "user_id" });
           if (error) throw error;
