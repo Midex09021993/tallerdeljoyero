@@ -294,6 +294,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
 
   const [cameraCalibrationOpen, setCameraCalibrationOpen] = useState(false);
   const cameraCalibrationRuntimeRef = useRef<any>(null);
+  // Referencias calibradas que sustituyen los presets de cámara durante la sesión del modelo actual.
+  const calibratedCameraViewsRef = useRef<Partial<Record<VistaId, any>>>({});
   const [materialAplicarTodos, setMaterialAplicarTodos] = useState(false);
   const [materialId, setMaterialId] = useState<MaterialId>("plata950_pulida"), [gemaId, setGemaId] = useState<GemaId>("diamante_natural"), [escenarioId, setEscenarioId] = useState<EscenarioId>("ijewelReference"), [iluminacionId, setIluminacionId] = useState<IluminacionId>("studioSoft"), [vista, setVista] = useState<VistaId>("frontal");
   // A catalog choice is only armed; the next explicit gem-mesh click consumes it.
@@ -2511,7 +2513,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         });
       };
       const camaraVista=(id:VistaId)=>{
-        if (modelo?.userData?.aurumPublicViewerPresentation && id === "frontal") {
+        const calibratedSnapshot = calibratedCameraViewsRef.current[id];
+        if (calibratedSnapshot && cameraCalibrationRuntimeRef.current?.apply?.(calibratedSnapshot)) {
+          // La ficha principal usa la última referencia capturada para esta vista.
+        } else if (modelo?.userData?.aurumPublicViewerPresentation && id === "frontal") {
           applyAurumPublicViewerCamera(camara, controles, modelo, { enablePan: true, framingScale: 0.88 });
         } else {
           applyAurumCameraView(camara, controles, modelo, id, categoriaProyectoRef.current, 1.0);
@@ -2548,7 +2553,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           ].map((point: THREE.Vector3) => point.project(camara));
           const xs = corners.map((point: THREE.Vector3) => point.x), ys = corners.map((point: THREE.Vector3) => point.y);
           const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
-          return {
+          const snapshot = {
             view, capturedAt: new Date().toISOString(),
             position: camara.position.toArray(), quaternion: camara.quaternion.toArray(),
             target: controles.target.toArray(), up: camara.up.toArray(),
@@ -2560,6 +2565,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             projectedPixelHeight: (maxY - minY) * renderer.domElement.clientHeight * 0.5,
             projectedCenter: [(minX + maxX) * 0.5, (minY + maxY) * 0.5],
           };
+          calibratedCameraViewsRef.current[view as VistaId] = snapshot;
+          return snapshot;
         },
         adjust: (axis: string, delta: number) => {
           if (!modelo || !Number.isFinite(delta)) return false;
