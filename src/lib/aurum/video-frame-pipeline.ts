@@ -30,15 +30,16 @@ export function getAurumVideoLivePasses(options: {
   renderPass: any;
   gemMaskPass: any;
   fxaaPass: any;
+  gemFxaaEnabled?: boolean;
   surfaceEdgeAaPass?: any;
   surfaceEdgeAaEnabled?: boolean;
   outputPass: any;
 }): any[] {
-  const { renderPass, gemMaskPass, fxaaPass, surfaceEdgeAaPass, surfaceEdgeAaEnabled, outputPass } = options;
+  const { renderPass, gemMaskPass, fxaaPass, gemFxaaEnabled = false, surfaceEdgeAaPass, surfaceEdgeAaEnabled, outputPass } = options;
   return [
     renderPass,
     gemMaskPass,
-    fxaaPass,
+    ...(gemFxaaEnabled ? [fxaaPass] : []),
     ...(surfaceEdgeAaPass && surfaceEdgeAaEnabled ? [surfaceEdgeAaPass] : []),
     outputPass,
   ].filter(Boolean);
