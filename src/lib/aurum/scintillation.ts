@@ -7,11 +7,11 @@ import type { AurumOpticalProfile } from "../aurum-material-engine";
  * physical IOR, dispersion calibration, BVH geometry, or post-processing cost.
  */
 export const AURUM_DIAMOND_LIVE_TUNING = Object.freeze({
-  internalContrast: 1.15,
-  highlightShoulder: 0.95,
-  faceBrightness: 1.01,
+  internalContrast: 1.04,
+  highlightShoulder: 0.85,
+  faceBrightness: 1.00,
   rimEnergy: 0.025,
-  fireMax: 0.075,
+  fireMax: 0.065,
 });
 
 /**
@@ -559,7 +559,9 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // Diamond-only microcontrast: separate adjacent bright/dark facets
         // without increasing the scene exposure. Keep the pivot near mid-grey
         // and clamp negative energy so this cannot create invalid HDR values.
-        ijInternal=max((ijInternal-vec3(0.46))*${AURUM_DIAMOND_LIVE_TUNING.internalContrast.toFixed(3)}+vec3(0.46),vec3(0.0));
+        vec3 ijAmbientFloor=vec3(0.18);
+        ijInternal=mix(ijAmbientFloor,ijInternal,smoothstep(0.0,0.55,ijInternal));
+        ijInternal=pow(max(ijInternal,vec3(0.0)),vec3(0.96));
 
         // Internal fire from the wavelength-separated environment rays above.
         // Use the actual R/G/B ray samples and their energy spread as a mask;
@@ -639,7 +641,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // Stronger diamond-only facet separation addresses the washed-out crown
         // seen against the iJewel reference. This is contrast, not extra exposure:
         // preserve the colored-gem response and leave PBR refraction untouched.
-        float aurumFacetFloor=${isDiamond ? "0.81" : "0.992"};
+        float aurumFacetFloor=${isDiamond ? "0.93" : "0.992"};
         float aurumContrast=mix(aurumFacetFloor,1.0,aurumScintillationContrast*aurumFacetContrast);
         gl_FragColor.rgb*=aurumContrast;
         ${isDiamond ? `
