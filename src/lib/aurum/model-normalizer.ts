@@ -294,12 +294,18 @@ function hydrateRhinoLayerMetadata(
     // In that case, accept a high-confidence explicit gem identity from the
     // mesh or its named parent (for example, Diamond_Heart) as a safe fallback.
     const semanticGem = semantic.classification === "gem" && semantic.confidence >= 0.7;
-    const existingCategory = existing.categoria === "metal" || existing.categoria === "gema"
-      ? existing.categoria
-      : undefined;
+    // A cached categoria is not authoritative: previous normalization or
+    // imported GLB extras may contain a stale "gema" tag for an ordinary CAD
+    // layer (for example Uho26). Keep only explicit manual assignments;
+    // otherwise require the current layer name/color rule or strong semantics.
+    const manualCategory = existing.aurumManualGemAssignment === true && existing.categoria === "gema"
+      ? "gema"
+      : existing.aurumManualGemAssignment === true && existing.categoria === "metal"
+        ? "metal"
+        : undefined;
     const category = layerCategory !== "otro"
       ? layerCategory
-      : (semanticGem ? "gema" : (existingCategory ?? "otro"));
+      : (semanticGem ? "gema" : (manualCategory ?? "otro"));
     const resolvedLayerIndex=layerIndex>=0?layerIndex:(Number.isInteger(existing.layerIndex)&&existing.layerIndex>=0?existing.layerIndex:-1);
     const resolvedLayerId=layer?.id??layer?.Id??layerId??existing.rhinoLayerId??null;
     const layerKey=resolveAurumLayerKey({layerId:resolvedLayerId,layerIndex:resolvedLayerIndex,layerName:layerName||existing.capa,layerColor:color||existing.colorCapa,category,existingKey:existing.layerKey});
