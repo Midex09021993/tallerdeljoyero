@@ -386,7 +386,7 @@ export async function createAurumDiamondBvhRuntime(options: {
           reflectivity: family === "diamante" ? (isBlueDiamond ? 0.46 : 0.46) : isEmerald
             ? (activeGemId === "esmeralda_2" ? 0.31 : activeGemId === "esmeralda_1" || activeGemId === "esmeralda_3" || activeGemId === "esmeralda_inclusiones" ? 0.5 : emeraldProfile?.reflectivity ?? 0.16)
             : rubyProfile?.reflectivity ?? sapphireProfile?.reflectivity ?? (isEmerald ? 0.26 : isRuby ? 0.38 : isSapphire ? 0.38 : isAmethyst ? 0.32 : isAquamarine ? 0.30 : isCitrine ? 0.30 : isBlueTopaz ? 0.30 : isImperialTopaz ? 0.30 : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 0.38 : 0.32) : isTanzanite ? 0.32 : isMoissanite ? 0.48 : isZircon ? 0.36 : isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 0.30 : 0.46),
-          gamma: family === "diamante" ? (isBlueDiamond ? 1.09 : 1) : 1.09,
+          gamma: family === "diamante" ? (isBlueDiamond ? 1.09 : isNeutralMicroDiamond ? 0.96 : isNeutralSmallDiamond ? 0.94 : 0.90) : 1.09,
           environmentRotationRadians: Number(currentMaterial?.userData?.aurumGemEnvironmentRotation ?? 0),
         });
         let currentDiamondTier: "micro" | "small" | "brilliant" = screenTier;
@@ -410,9 +410,10 @@ export async function createAurumDiamondBvhRuntime(options: {
               const baseEnvironment = 1.42;
               const baseDispersion = activeGemId === "diamante_natural" ? 0.006 : 0.004;
               packageApi.setDiamondOptions(prepared.material, {
-                rgbBoost: isMicro ? [1.10, 1.10, 1.10] : isSmall ? [1.14, 1.14, 1.14]  : [1.18, 1.18, 1.18],
+                rgbBoost: isMicro ? [1.10, 1.10, 1.10] : isSmall ? [1.14, 1.14, 1.14] : [1.18, 1.18, 1.18],
                 environmentIntensity: isMicro ? 1.20 : isSmall ? 1.30 : baseEnvironment,
                 dispersion: isMicro ? 0.0003 : isSmall ? 0.0008 : baseDispersion,
+                gamma: isMicro ? 0.96 : isSmall ? 0.94 : 0.90,
                 rayBounces: isMicro ? 2 : isSmall ? 3 : 5,
               });
             }
