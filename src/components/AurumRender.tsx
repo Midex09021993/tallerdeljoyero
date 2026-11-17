@@ -293,6 +293,28 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [arrastrandoArchivo, setArrastrandoArchivo] = useState(false);
 
   const [cameraCalibrationOpen, setCameraCalibrationOpen] = useState(false);
+  const [cameraCalibrationReferences, setCameraCalibrationReferences] = useState<any>({});
+  const cameraCalibrationLoadedForUserRef = useRef<string | null>(null);
+  useEffect(() => {
+    const userId = sesion?.user?.id;
+    if (!cameraCalibrationOpen || !userId || cameraCalibrationLoadedForUserRef.current === userId) return;
+    let cancelled = false;
+    void (async () => {
+      const { data, error } = await supabase.from("aurum_camera_calibrations" as any)
+        .select("references").eq("user_id", userId).maybeSingle();
+      if (cancelled) return;
+      if (error) {
+        console.error("[AURUM camera] No se pudo cargar la calibración global:", error.message);
+        toast.error("No se pudo cargar la calibración global. Comprueba la migración de Supabase.");
+        return;
+      }
+      const references = (data as any)?.references ?? {};
+      setCameraCalibrationReferences(references);
+      calibratedCameraViewsRef.current = references;
+      cameraCalibrationLoadedForUserRef.current = userId;
+    })();
+    return () => { cancelled = true; };
+  }, [cameraCalibrationOpen, sesion?.user?.id]);
   const cameraCalibrationRuntimeRef = useRef<any>(null);
   // Referencias calibradas que sustituyen los presets de cámara durante la sesión del modelo actual.
   const calibratedCameraViewsRef = useRef<Partial<Record<VistaId, any>>>({});
@@ -2565,6 +2587,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             projectedPixelHeight: (maxY - minY) * renderer.domElement.clientHeight * 0.5,
             projectedCenter: [(minX + maxX) * 0.5, (minY + maxY) * 0.5],
           };
+          return snapshot;
+        },
+        save: (view: string) => {
+          const snapshot = cameraCalibrationRuntimeRef.current?.capture?.(view);
+          if (!snapshot) return null;
           calibratedCameraViewsRef.current[view as VistaId] = snapshot;
           return snapshot;
         },
@@ -5722,8 +5749,21 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         hasModel={Boolean(archivo && !cargando)}
         onClose={() => setCameraCalibrationOpen(false)}
         onSelectView={(id) => { vistaRef.current = id; setVista(id); }}
-        captureSnapshot={(id) => cameraCalibrationRuntimeRef.current?.capture?.(id) ?? null}
+        captureSnapshot={(id) => cameraCalibrationRuntimeRef.current?.save?.(id) ?? null}
         readLiveSnapshot={(id) => cameraCalibrationRuntimeRef.current?.capture?.(id) ?? null}
+        initialSnapshots={cameraCalibrationReferences}
+        onPersistSnapshots={async (references) => {
+          const userId = sesion?.user?.id;
+          if (!userId) throw new Error("Inicia sesión para guardar la calibración global.");
+          const { error } = await supabase.from("aurum_camera_calibrations" as any).upsert({
+            user_id: userId,
+            references,
+            updated_at: new Date().toISOString(),
+          }, { onConflict: "user_id" });
+          if (error) throw error;
+          calibratedCameraViewsRef.current = references as Partial<Record<VistaId, any>>;
+          setCameraCalibrationReferences(references);
+        }}
         applySnapshot={(snapshot) => Boolean(cameraCalibrationRuntimeRef.current?.apply?.(snapshot))}
         adjustCamera={(axis, delta) => Boolean(cameraCalibrationRuntimeRef.current?.adjust?.(axis, delta))}
       />}
