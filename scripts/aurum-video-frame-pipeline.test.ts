@@ -131,9 +131,16 @@ test("AURUM video beauty passes include settled Surface Edge AA when enabled and
 
   const withoutEdgeAa = getAurumVideoLivePasses({
     renderPass, gemMaskPass, fxaaPass, surfaceEdgeAaPass,
-    surfaceEdgeAaEnabled: false, outputPass,
+    gemFxaaEnabled: true, surfaceEdgeAaEnabled: false, outputPass,
   });
   expect(withoutEdgeAa).toEqual([renderPass, gemMaskPass, fxaaPass, outputPass]);
+
+  const withFxaaDisabled = getAurumVideoLivePasses({
+    renderPass, gemMaskPass, fxaaPass, surfaceEdgeAaPass,
+    gemFxaaEnabled: false, surfaceEdgeAaEnabled: false, outputPass,
+  });
+  expect(withFxaaDisabled).toEqual([renderPass, gemMaskPass, outputPass]);
+  expect(withFxaaDisabled).not.toContain(fxaaPass);
   expect(passes.some((pass: any) => pass?.name === "taa")).toBe(false);
 });
 
