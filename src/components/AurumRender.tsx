@@ -1495,7 +1495,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         viewerScene,
         viewerRenderer,
         groundController,
-        nodo
+        nodo,
+        THREE
       );
       // Scene Adapter exposes the established scene controller through AURUM CORE.
       // The underlying presets, background rules and ground behaviour remain unchanged.
