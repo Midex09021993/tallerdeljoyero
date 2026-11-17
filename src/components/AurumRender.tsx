@@ -3456,6 +3456,114 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           const context=output.getContext("2d");
           if(!context) throw new Error("No se pudo preparar la imagen de salida.");
           let dataUrl="";
+
+          // Standard still exports are snapshots of the already-composited live
+          // viewport. Do not resize the renderer, rerun the scene, or rebuild the
+          // diamond mask/AA pipeline: that created visible differences between
+          // what the user saw and the exported image. High-resolution dimensions
+          // are produced by a single high-quality canvas resample of this exact frame.
+          if(!isPoster && !options.depthOfField) {
+            if(!transparent) {
+              const selectedBackground=sceneAdapter.getBackground();
+              const backgroundColor=selectedBackground.color??"#ffffff";
+              context.fillStyle=backgroundColor==="transparent"?"#ffffff":backgroundColor;
+              context.fillRect(0,0,width,height);
+
+              if(selectedBackground.id==="auroraBlue") {
+                const base=context.createLinearGradient(0,0,width,height);
+                base.addColorStop(0,"#e9aa9e");
+                base.addColorStop(.42,"#c4a9c0");
+                base.addColorStop(.72,"#7899c8");
+                base.addColorStop(1,"#2868b1");
+                context.fillStyle=base;
+                context.fillRect(0,0,width,height);
+
+                context.save();
+                context.translate(0,height*.48);
+                context.scale(width*1.05,height*1.45);
+                const glowA=context.createRadialGradient(0,0,0,0,0,1);
+                glowA.addColorStop(0,"rgba(255,174,151,.94)");
+                glowA.addColorStop(.24,"rgba(244,166,158,.78)");
+                glowA.addColorStop(.52,"rgba(202,163,184,.42)");
+                glowA.addColorStop(.76,"rgba(145,157,202,.12)");
+                glowA.addColorStop(1,"rgba(145,157,202,0)");
+                context.fillStyle=glowA;
+                context.fillRect(0,-.48/1.45,1/1.05,(1-.48)/1.45);
+                context.restore();
+
+                context.save();
+                context.translate(width,height*.52);
+                context.scale(width,height*1.45);
+                const glowB=context.createRadialGradient(0,0,0,0,0,1);
+                glowB.addColorStop(0,"rgba(27,91,174,.92)");
+                glowB.addColorStop(.34,"rgba(48,112,193,.78)");
+                glowB.addColorStop(.62,"rgba(92,139,201,.38)");
+                glowB.addColorStop(1,"rgba(92,139,201,0)");
+                context.fillStyle=glowB;
+                context.fillRect(-1,-.52/1.45,1,(1-.52)/1.45);
+                context.restore();
+              } else if(selectedBackground.id==="degradadoGrisBlanco") {
+                const gradient=context.createLinearGradient(0,0,width,height);
+                gradient.addColorStop(0,"#ffffff");
+                gradient.addColorStop(.48,"#eeeeec");
+                gradient.addColorStop(1,"#bfc1c0");
+                context.fillStyle=gradient;
+                context.fillRect(0,0,width,height);
+              } else if(selectedBackground.id==="estudioFotografico" && selectedBackground.image) {
+                const backgroundImage=new Image();
+                backgroundImage.crossOrigin="anonymous";
+                backgroundImage.decoding="async";
+                backgroundImage.src=selectedBackground.image;
+                try {
+                  if(typeof backgroundImage.decode==="function") await backgroundImage.decode();
+                  else await new Promise<void>((resolve,reject)=>{
+                    backgroundImage.onload=()=>resolve();
+                    backgroundImage.onerror=()=>reject(new Error("No se pudo cargar la fotografía de Estudio fotográfico."));
+                  });
+                } catch {
+                  throw new Error("No se pudo incorporar la fotografía de Estudio fotográfico. Comprueba los permisos CORS de la imagen.");
+                }
+                if(!backgroundImage.naturalWidth||!backgroundImage.naturalHeight) {
+                  throw new Error("La fotografía de Estudio fotográfico no devolvió una imagen válida.");
+                }
+                const scale=Math.max(width/backgroundImage.naturalWidth,height/backgroundImage.naturalHeight);
+                const drawWidth=backgroundImage.naturalWidth*scale;
+                const drawHeight=backgroundImage.naturalHeight*scale;
+                context.drawImage(backgroundImage,(width-drawWidth)/2,(height-drawHeight)/2,drawWidth,drawHeight);
+              }
+            }
+
+            context.imageSmoothingEnabled=true;
+            context.imageSmoothingQuality="high";
+            // Preserve the live frame's aspect ratio and complete composition.
+            const scale=Math.min(width/originalBufferWidth,height/originalBufferHeight);
+            const drawWidth=originalBufferWidth*scale;
+            const drawHeight=originalBufferHeight*scale;
+            context.drawImage(liveCanvas,(width-drawWidth)/2,(height-drawHeight)/2,drawWidth,drawHeight);
+            dataUrl=output.toDataURL(mime,0.94);
+            if(!dataUrl||dataUrl.length<1000) {
+              throw new Error("La captura del visor está vacía. Espera a que termine de dibujarse y vuelve a intentar.");
+            }
+            console.info("[AURUM][PNG LIVE-FRAME EXPORT]",{
+              sourceCanvas:{width:originalBufferWidth,height:originalBufferHeight},
+              output:{width,height},
+              sourceAspect:originalBufferWidth/originalBufferHeight,
+              outputAspect:width/height,
+              resampleScale:scale,
+              background:sceneAdapter.getBackground().id,
+              rendererRerendered:false,
+              composerReconfigured:false,
+            });
+            if(options.onCapture) {
+              options.onCapture(dataUrl);
+              return;
+            }
+            const link=document.createElement("a");
+            link.download="aurum-render-"+width+"x"+height+"."+format;
+            link.href=dataUrl;
+            link.click();
+            return;
+          }
           // Prevent the live animation loop from clearing/replacing the high-resolution
           // capture between progress-frame yields. The browser can still paint React UI.
           const loop:any=viewerLoopRef.current;
