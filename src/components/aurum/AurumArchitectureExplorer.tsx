@@ -71,7 +71,7 @@ export function AurumArchitectureExplorer() {
   const [mostrarTodas, setMostrarTodas] = useState(false);
   const [filtro, setFiltro] = useState("");
   const [postControls, setPostControls] = useState(getAurumPostControls);
-  const updatePostControl = (key: "gemMaskEnabled" | "gemFxaaEnabled" | "diamondSsaaEnabled" | "surfaceEdgeAaEnabled" | "taaEnabled", enabled: boolean) => setPostControls(setAurumPostControls({ [key]: enabled, ...(enabled && (key === "gemFxaaEnabled" || key === "diamondSsaaEnabled") ? { gemMaskEnabled: true } : {}) }));
+  const updatePostControl = (key: "gemMaskEnabled" | "gemFxaaEnabled" | "diamondSsaaEnabled" | "surfaceEdgeAaEnabled" | "diamondTaaEnabled", enabled: boolean) => setPostControls(setAurumPostControls({ [key]: enabled, ...(enabled && (key === "gemFxaaEnabled" || key === "diamondSsaaEnabled" || key === "diamondTaaEnabled") ? { gemMaskEnabled: true } : {}) }));
   const nodos = useMemo(() => todos(arbol), []);
   const actual = nodos.find(n => n.id === seleccion) ?? nodos[0]!;
   const modulos = useMemo(() => nodos.filter(n => !n.hijos?.length), [nodos]);
@@ -191,8 +191,8 @@ export function AurumArchitectureExplorer() {
               <button type="button" role="switch" aria-checked={false} aria-disabled="true" disabled title="Procesado global suspendido" className="relative h-6 w-11 shrink-0 cursor-not-allowed rounded-full bg-muted-foreground/20 opacity-60"><span className={`absolute top-0.5 size-5 rounded-full bg-white shadow transition-all ${postControls.surfaceEdgeAaEnabled ? "left-[22px]" : "left-0.5"}`}/></button>
             </div>
             <div className="flex items-center justify-between gap-3 border-t border-border pt-3">
-              <div className="min-w-0"><p className="text-xs font-semibold">TAA</p><p className="text-[10px] leading-4 text-muted-foreground">Suspendido hasta reconstruir la composición exclusiva del diamante.</p></div>
-              <button type="button" role="switch" aria-checked={false} aria-disabled="true" disabled title="TAA suspendido hasta validar el compositor" className="relative h-6 w-11 shrink-0 cursor-not-allowed rounded-full bg-muted-foreground/20 opacity-60"><span className={`absolute top-0.5 size-5 rounded-full bg-white shadow transition-all ${postControls.taaEnabled ? "left-[22px]" : "left-0.5"}`}/></button>
+              <div className="min-w-0"><p className="text-xs font-semibold">TAA dedicado al diamante</p><p className="text-[10px] leading-4 text-muted-foreground">Acumula hasta 32 muestras cuando la cámara está quieta; SSAA retoma el trabajo durante el movimiento.</p></div>
+              <button type="button" role="switch" aria-checked={postControls.diamondTaaEnabled} aria-disabled={!postControls.gemMaskEnabled} disabled={!postControls.gemMaskEnabled} title={postControls.gemMaskEnabled ? "Activar o desactivar TAA del diamante" : "Activa Gem Mask primero"} onClick={()=>updatePostControl("diamondTaaEnabled",!postControls.diamondTaaEnabled)} className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${!postControls.gemMaskEnabled ? "cursor-not-allowed opacity-50 " : ""}${postControls.diamondTaaEnabled ? "bg-gold" : "bg-muted-foreground/20"}`}><span className={`absolute top-0.5 size-5 rounded-full bg-white shadow transition-all ${postControls.diamondTaaEnabled ? "left-[22px]" : "left-0.5"}`}/></button>
             </div>
             <p className="text-[10px] leading-4 text-muted-foreground"><Power className="mr-1 inline size-3"/> Los cambios quedan guardados. Cada módulo mantiene su propio control y ciclo de ejecución.</p>
           </div> : null}
