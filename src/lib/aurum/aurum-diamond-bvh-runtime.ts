@@ -275,10 +275,15 @@ export async function createAurumDiamondBvhRuntime(options: {
       const diamondSizeRatio = largestDiamondRadius > 0 ? diamondRadius / largestDiamondRadius : 1;
       // Use the same screen-space tier as the physical shader. The legacy
       // radius ratio is only a fallback for callers that cannot provide viewport size.
-      const screenTier = screenTiers.get(mesh)
-        ?? (mesh.userData?.aurumDiamondMicroTier === "micro" || mesh.userData?.aurumDiamondMicroTier === "small"
-          ? mesh.userData.aurumDiamondMicroTier
-          : mesh.userData?.aurumDiamondMicroCenterProtected
+      const publishedTier = mesh.userData?.aurumDiamondMicroTier;
+      // Prefer the live analyzer's hysteresis-stabilized tier when present.
+      // This keeps refresh/rebuild consistent with per-frame classification and
+      // lets teardown publish "brilliant" before the analyzer releases the mesh.
+      const hasPublishedTier = publishedTier === "micro" || publishedTier === "small" || publishedTier === "brilliant";
+      const screenTier = hasPublishedTier
+        ? publishedTier
+        : screenTiers.get(mesh)
+          ?? (mesh.userData?.aurumDiamondMicroCenterProtected
             ? "brilliant"
             : (diamondRadius > 0 && largestDiamondRadius > 0 && diamondSizeRatio <= 0.42 ? "small" : "brilliant"));
       mesh.userData = {
