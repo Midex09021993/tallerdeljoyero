@@ -2431,8 +2431,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         applyPostQuality?.(renderQuality);
         renderPipelineContract.setMode("RESTING_SETTLED");
 
-        // The interactive viewport uses only the selective gem-mask + FXAA composer
-        // when that module is enabled; otherwise it retains direct WebGL rendering.
+        // The interactive viewport uses direct beauty during motion and a Gem Mask-isolated
+        // TAA composer chain while settled; detached SSAA covers the live-motion path.
         const initialGemAaAvailable = Boolean(composer && renderPass && outputPass);
         if (initialGemAaAvailable) {
           const initialWidth = Math.max(1, renderer.domElement.width || renderer.domElement.clientWidth || 1);
@@ -2445,8 +2445,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             pass.enabled = initialBeautyPasses.has(pass);
           });
 
-          // The first frame, orbiting preview and settled preview all use direct
-          // WebGL rendering. Temporal/photographic effects are reserved for capture.
+          // Before the model is attached, keep the preview on direct WebGL. The
+          // diamond-only TAA chain is activated after its center mask is indexed.
           const initialTaaRequested = false;
           if (idleTaaPass) {
             idleTaaPass.enabled = false;
@@ -2529,7 +2529,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           gemMaskEnabled: Boolean(gemMaskPass?.enabled),
           fxaaEnabled: Boolean(fxaaPass?.enabled),
           diamondSupersamplingEnabled: initialDiamondSsaaActive,
-          renderPath: initialDiamondFxaaActive ? "direct+diamond-fxaa" : (initialDiamondSsaaActive ? "direct+diamond-overlay" : "direct"),
+          renderPath: initialDiamondTaaActive ? "composer+diamond-taa" : (initialDiamondFxaaActive ? "direct+diamond-fxaa" : (initialDiamondSsaaActive ? "direct+diamond-overlay" : "direct")),
         });
         // TAA remains enabled only through the masked center-diamond composite.
         // Its accumulation is disabled automatically when camera motion begins.
