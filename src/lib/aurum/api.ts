@@ -52,6 +52,8 @@ export function createAurumApi(options:any){
   return {
     getCadTree: options.getCadTree,
     getModelDiagnostics: options.getModelDiagnostics,
+    setLayerCategoryOverride: options.setLayerCategoryOverride,
+    setLayerCategoryOverrides: options.setLayerCategoryOverrides,
     getJewelTransform: options.getJewelTransform,
     setJewelTransform: options.setJewelTransform,
     setCadObjectVisible: options.setCadObjectVisible,
