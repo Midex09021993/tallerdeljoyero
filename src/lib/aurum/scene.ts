@@ -91,11 +91,13 @@ export function createAurumSceneController(
         return mesh;
       };
       const radius = width * 0.62;
-      const platformHeight = Math.max(width * 0.045, 0.025);
+      const platformHeight = Math.max(height * 0.025, 0.012);
+      const platformTopY = box.min.y - Math.max(height * 0.008, 0.002);
       const platform = makeMesh(new THREE.CylinderGeometry(radius * 0.94, radius, platformHeight, 96, 1), colors.side);
-      platform.position.set(center.x, floorY - platformHeight * 0.5, center.z);
-      const top = makeMesh(new THREE.CylinderGeometry(radius * 0.94, radius * 0.94, Math.max(platformHeight * 0.18, 0.008), 96, 1), colors.top, 0.48);
-      top.position.set(center.x, floorY + platformHeight * 0.08, center.z);
+      platform.position.set(center.x, platformTopY - platformHeight * 0.5, center.z);
+      const topThickness = Math.max(platformHeight * 0.18, 0.004);
+      const top = makeMesh(new THREE.CylinderGeometry(radius * 0.94, radius * 0.94, topThickness, 96, 1), colors.top, 0.48);
+      top.position.set(center.x, platformTopY - topThickness * 0.5, center.z);
       const ringRadius = Math.max(width, height * 0.72) * 0.57;
       const arch = makeMesh(new THREE.TorusGeometry(ringRadius, Math.max(width * 0.009, 0.006), 12, 96), colors.arch, 0.58);
       arch.position.set(center.x, box.min.y + height * 0.56, box.min.z - Math.max(size.z * 0.28, width * 0.16));
