@@ -34,6 +34,23 @@ function projectedFootprint(model: THREE.Object3D, camera: THREE.PerspectiveCame
   }, 0);
 }
 
+function projectedHeight(model: THREE.Object3D, camera: THREE.PerspectiveCamera) {
+  model.updateMatrixWorld(true);
+  camera.updateMatrixWorld(true);
+  const bounds = new THREE.Box3().setFromObject(model);
+  const corners = [
+    new THREE.Vector3(bounds.min.x, bounds.min.y, bounds.min.z),
+    new THREE.Vector3(bounds.min.x, bounds.min.y, bounds.max.z),
+    new THREE.Vector3(bounds.min.x, bounds.max.y, bounds.min.z),
+    new THREE.Vector3(bounds.min.x, bounds.max.y, bounds.max.z),
+    new THREE.Vector3(bounds.max.x, bounds.min.y, bounds.min.z),
+    new THREE.Vector3(bounds.max.x, bounds.min.y, bounds.max.z),
+    new THREE.Vector3(bounds.max.x, bounds.max.y, bounds.min.z),
+    new THREE.Vector3(bounds.max.x, bounds.max.y, bounds.max.z),
+  ].map(point => point.project(camera).y);
+  return Math.max(...corners) - Math.min(...corners);
+}
+
 function projectedBoundsCenter(model: THREE.Object3D, camera: THREE.PerspectiveCamera) {
   model.updateMatrixWorld(true);
   camera.updateMatrixWorld(true);
@@ -53,9 +70,10 @@ function projectedBoundsCenter(model: THREE.Object3D, camera: THREE.PerspectiveC
   return { x: (Math.min(...xs) + Math.max(...xs)) * 0.5, y: (Math.min(...ys) + Math.max(...ys)) * 0.5 };
 }
 
-test("all four camera views use exactly the same scale and differ only by orientation", () => {
+test("all four views match frontal projected height while preserving orientation", () => {
   const views = ["frontal", "lateral", "superior", "perspectiva"] as const;
   const distances: number[] = [];
+  const heights: number[] = [];
 
   for (const view of views) {
     const { model, camera, controls } = createFixture();
@@ -68,6 +86,7 @@ test("all four camera views use exactly the same scale and differ only by orient
     expect(Number.isFinite(distance)).toBe(true);
     expect(distance).toBeGreaterThan(0);
     distances.push(distance);
+    heights.push(projectedHeight(model, camera));
 
     if (view === "frontal") expect(camera.position.z).toBeGreaterThan(controls.target.z);
     if (view === "lateral") expect(camera.position.x).toBeGreaterThan(controls.target.x);
@@ -83,8 +102,14 @@ test("all four camera views use exactly the same scale and differ only by orient
     expect(footprint).toBeLessThan(0.75);
   }
 
-  // Every preset is a pure camera rotation around the same target and scale.
-  expect(Math.max(...distances) - Math.min(...distances)).toBeLessThan(1e-6);
+  // Frontal defines the reference; lateral compensates only perspective
+  // depth so the visible vertical size remains equal without distorting mesh.
+  for (const height of heights) {
+    expect(Math.abs(height / heights[0] - 1)).toBeLessThan(0.015);
+  }
+  // Superior and 3/4 retain the shared reference camera distance.
+  expect(Math.abs(distances[0] - distances[2])).toBeLessThan(1e-6);
+  expect(Math.abs(distances[0] - distances[3])).toBeLessThan(1e-6);
 });
 
 test("lateral view centers the projected jewel without changing camera distance", () => {
