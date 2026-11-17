@@ -294,27 +294,26 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
 
   const [cameraCalibrationOpen, setCameraCalibrationOpen] = useState(false);
   const [cameraCalibrationReferences, setCameraCalibrationReferences] = useState<any>({});
-  const cameraCalibrationLoadedForUserRef = useRef<string | null>(null);
+  const cameraCalibrationLoadedRef = useRef(false);
   useEffect(() => {
-    const userId = sesion?.user?.id;
-    if (!userId || cameraCalibrationLoadedForUserRef.current === userId) return;
+    if (cameraCalibrationLoadedRef.current) return;
     let cancelled = false;
     void (async () => {
-      const { data, error } = await supabase.from("aurum_camera_calibrations" as any)
-        .select("calibration_data").eq("user_id", userId).maybeSingle();
+      const { data, error } = await supabase.from("aurum_camera_calibration_global" as any)
+        .select("calibration_data").eq("id", 1).maybeSingle();
       if (cancelled) return;
       if (error) {
-        console.error("[AURUM camera] No se pudo cargar la calibración global:", error.message);
-        toast.error("No se pudo cargar la calibración global. Comprueba la migración de Supabase.");
+        console.error("[AURUM camera] No se pudo cargar la calibración maestra:", error.message);
+        toast.error("No se pudo cargar la calibración maestra. Comprueba la migración de Supabase.");
         return;
       }
       const references = (data as any)?.calibration_data ?? {};
       setCameraCalibrationReferences(references);
       calibratedCameraViewsRef.current = references;
-      cameraCalibrationLoadedForUserRef.current = userId;
+      cameraCalibrationLoadedRef.current = true;
     })();
     return () => { cancelled = true; };
-  }, [cameraCalibrationOpen, sesion?.user?.id]);
+  }, []);
   const cameraCalibrationRuntimeRef = useRef<any>(null);
   // Referencias calibradas que sustituyen los presets de cámara durante la sesión del modelo actual.
   const calibratedCameraViewsRef = useRef<Partial<Record<VistaId, any>>>({});
@@ -5102,7 +5101,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             </select>
             <ChevronDown aria-hidden="true" className="pointer-events-none size-4 shrink-0 text-[#a17d38]"/>
           </label>
-           <button type="button" disabled={!archivo || cargando} aria-pressed={cameraCalibrationOpen} title={cameraCalibrationOpen ? "Ocultar calibración de cámaras (Ctrl + Alt + C)" : "Mostrar calibración de cámaras (Ctrl + Alt + C)"} onClick={() => setCameraCalibrationOpen((open) => !open)} className={"flex h-10 items-center gap-2 rounded-xl border px-3 text-sm font-semibold shadow-sm transition-colors disabled:cursor-not-allowed disabled:opacity-45 "+(cameraCalibrationOpen?"border-[#b99642] bg-[#e8dcc0] text-[#5d4820]":"border-[#b99642]/45 bg-[#f5efdf] text-[#725b2d] hover:bg-[#eee3c6]")}><Camera className="size-4"/><span className="hidden xl:inline">{cameraCalibrationOpen ? "Ocultar cámaras" : "Calibrar cámaras"}</span></button>
+           <button type="button" aria-pressed={cameraCalibrationOpen} title={cameraCalibrationOpen ? "Ocultar calibración de cámaras (Ctrl + Alt + C)" : "Mostrar calibración de cámaras (Ctrl + Alt + C)"} onClick={() => setCameraCalibrationOpen((open) => !open)} className={"flex h-10 items-center gap-2 rounded-xl border px-3 text-sm font-semibold shadow-sm transition-colors disabled:cursor-not-allowed disabled:opacity-45 "+(cameraCalibrationOpen?"border-[#b99642] bg-[#e8dcc0] text-[#5d4820]":"border-[#b99642]/45 bg-[#f5efdf] text-[#725b2d] hover:bg-[#eee3c6]")}><Camera className="size-4"/><span className="hidden xl:inline">{cameraCalibrationOpen ? "Ocultar cámaras" : "Calibrar cámaras"}</span></button>
           <button type="button" disabled={!archivo || cargando || guardandoProyectoNube} onClick={() => void abrirGuardarEnMiNube()} className="flex h-10 items-center gap-2 rounded-xl border border-black/[.10] bg-white/90 px-3 text-sm font-semibold text-[#292824] shadow-sm transition-colors hover:border-[#b99642]/50 hover:bg-[#d4af37]/10 disabled:cursor-not-allowed disabled:opacity-45"><Upload className="size-4 text-[#92743b]"/><span>{destinoProyectoGuardado?.rutaCarpeta ? "Actualizar en Mi Nube" : "Guardar en Mi Nube"}</span></button>
           {destinoProyectoGuardado?.rutaCarpeta && <button type="button" onClick={()=>window.location.assign("/mi-nube")} className="flex h-10 items-center gap-2 rounded-xl border border-[#b99642]/45 bg-[#d4af37]/15 px-3 text-sm font-semibold text-[#6d5523] shadow-sm transition-colors hover:bg-[#d4af37]/25" title="Ir a Mi Nube"><Cloud className="size-4"/><span>Ir a Mi Nube</span></button>}
           <button type="button" aria-controls="aurum-export-title" aria-expanded={exportOpen} onClick={()=>{setExportOpen(v=>!v);setLibraryMenuOpen(false);setQualityOpen(false);setLightingOpen(false);}} className={"flex h-10 items-center gap-2 rounded-xl border px-3 text-sm font-semibold shadow-sm transition-colors "+(exportOpen?"border-[#b99642]/50 bg-[#d4af37]/15 text-[#6d5523]":"border-[#d4af37]/45 bg-[#d4af37] text-[#292824] hover:bg-[#e1bf50]")}><Download className="size-4"/><span>Exportar</span></button>
@@ -5774,14 +5773,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         captureSnapshot={(id) => cameraCalibrationRuntimeRef.current?.save?.(id) ?? null}
         readLiveSnapshot={(id) => cameraCalibrationRuntimeRef.current?.capture?.(id) ?? null}
         initialSnapshots={cameraCalibrationReferences}
+        canEdit={Boolean(sesion?.esAdmin)}
         onPersistSnapshots={async (references) => {
-          const userId = sesion?.user?.id;
-          if (!userId) throw new Error("Inicia sesión para guardar la calibración global.");
-          const { error } = await supabase.from("aurum_camera_calibrations" as any).upsert({
-            user_id: userId,
+          if (!sesion?.esAdmin) throw new Error("Solo un dueño o administrador puede modificar las referencias maestras.");
+          const { error } = await supabase.from("aurum_camera_calibration_global" as any).upsert({
+            id: 1,
             calibration_data: references,
             updated_at: new Date().toISOString(),
-          }, { onConflict: "user_id" });
+          }, { onConflict: "id" });
           if (error) throw error;
           calibratedCameraViewsRef.current = references as Partial<Record<VistaId, any>>;
           setCameraCalibrationReferences(references);
