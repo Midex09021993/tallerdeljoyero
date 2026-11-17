@@ -115,7 +115,7 @@ const opticalProfileFromCatalog=(g:any)=>{
     : family==="Rubí"
       ? {enabled:true,lw:new THREE.Color(0xff1830),sw:new THREE.Color(0xff2538),strength:.78}
       : family==="Diamante"
-        ? {enabled:true,lw:new THREE.Color(0x73a9ff),sw:new THREE.Color(0x507cff),strength:.22}
+        ? undefined
         : family==="Esmeralda"
           ? {enabled:true,lw:new THREE.Color(0x55ff86),sw:new THREE.Color(0x35d96b),strength:.12}
           : family==="Zafiro"
