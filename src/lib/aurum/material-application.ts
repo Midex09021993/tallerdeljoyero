@@ -291,8 +291,13 @@ export function applyAurumMaterialToModel(model:any,activePart:any,materialConfi
   const selectedLayerId=selectedMeta.rhinoLayerId??activePart?.userData?.attributes?.layerId??activePart?.userData?.attributes?.LayerId??activePart?.userData?.layerId??activePart?.userData?.LayerId??null;
   const selectedLayerKey=resolveAurumLayerKey({layerId:selectedLayerId,layerIndex:selectedLayerIndex,layerName:selectedLayer,layerColor:selectedMeta.colorCapa,category:selectedCategory,existingKey:selectedMeta.layerKey});
   if(selectedCategory!=="metal"&&selectedCategory!=="otro") return false;
-  aurumMetalAdapter.apply(sharedMaterial,aurumMetalAdapter.createPreset(materialConfig));
-  aurumMetalAdapter.applyReferenceOptics(sharedMaterial,String(materialConfig?.id??""));
+  const isWaxMaterial=String(materialConfig?.id??"")==="cera_microfusion_roja";
+  // La cera tiene un perfil físico independiente: nunca pasa por la calibración
+  // ni por la óptica de referencia de los metales.
+  if(!isWaxMaterial){
+    aurumMetalAdapter.apply(sharedMaterial,aurumMetalAdapter.createPreset(materialConfig));
+    aurumMetalAdapter.applyReferenceOptics(sharedMaterial,String(materialConfig?.id??""));
+  }
   let applied=0;
   const auditedMaterials:any[]=[];
   model.traverse((x:any)=>{
@@ -308,7 +313,52 @@ export function applyAurumMaterialToModel(model:any,activePart:any,materialConfi
     const sameLayer=sameLayerIdentity&&category===selectedCategory;
     const shouldApply=applyAll ? (category==="metal"||category==="otro") : (x.uuid===activePart.uuid||(selectedCategory==="otro"&&sameLayer)||(selectedCategory==="metal"&&sameLayer));
     if(shouldApply){
-      const apply=(base:any)=>{const next=base?.clone?base.clone():sharedMaterial.clone();aurumMetalAdapter.apply(next,aurumMetalAdapter.createPreset(materialConfig));aurumMetalAdapter.applyReferenceOptics(next,String(materialConfig?.id??""));return next;};
+      const apply=(base:any)=>{
+        if(isWaxMaterial){
+          const wax=new THREE.MeshPhysicalMaterial({
+            color:0xa20d1a,
+            metalness:0,
+            roughness:.48,
+            envMapIntensity:.42,
+            clearcoat:.06,
+            clearcoatRoughness:.28,
+            transmission:.035,
+            thickness:.35,
+            ior:1.46,
+            attenuationColor:new THREE.Color(0x650812),
+            attenuationDistance:.55,
+            specularIntensity:.58,
+            specularColor:new THREE.Color(0xffffff),
+            side:base?.side??THREE.FrontSide,
+            depthTest:base?.depthTest??true,
+            depthWrite:true,
+          });
+          wax.name="AURUM · Cera roja GEMMEX";
+          wax.userData={
+            ...(base?.userData??{}),
+            aurumMaterialKind:"jewelry-casting-wax",
+            aurumWaxProfile:{
+              reference:"GEMMEX / Flashforge FFWJ1200 visual reference",
+              color:"#A20D1A",
+              metalness:0,
+              roughness:.48,
+              envMapIntensity:.42,
+              clearcoat:.06,
+              clearcoatRoughness:.28,
+              transmission:.035,
+              thickness:.35,
+              ior:1.46,
+              attenuationColor:"#650812",
+              attenuationDistance:.55,
+            },
+          };
+          return wax;
+        }
+        const next=base?.clone?base.clone():sharedMaterial.clone();
+        aurumMetalAdapter.apply(next,aurumMetalAdapter.createPreset(materialConfig));
+        aurumMetalAdapter.applyReferenceOptics(next,String(materialConfig?.id??""));
+        return next;
+      };
       x.material=Array.isArray(x.material)?x.material.map(apply):apply(x.material);
       const finalMaterials=Array.isArray(x.material)?x.material:[x.material];
       auditedMaterials.push(...finalMaterials.filter(Boolean).map((m:any)=>({mesh:x.name||x.uuid,material:m})));
@@ -316,7 +366,7 @@ export function applyAurumMaterialToModel(model:any,activePart:any,materialConfi
     }
   });
   if(applied>0){
-    console.info("[AURUM][METAL MATERIAL AUDIT]",{
+    console.info(isWaxMaterial?"[AURUM][WAX MATERIAL AUDIT]":"[AURUM][METAL MATERIAL AUDIT]",{
       mesh:activePart.name||activePart.uuid,
       requestedProfile:{
         id:String(materialConfig?.id??""),
