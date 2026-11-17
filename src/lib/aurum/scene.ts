@@ -10,8 +10,6 @@ export interface AurumSceneBackground {
 
 export interface AurumSceneController {
   apply: (id: string, opts?: { transparent?: boolean }) => AurumScenePreset;
-  applyStage: (id: string, productRoot?: any) => void;
-  clearStage: () => void;
   setBackground: (id: string) => void;
   getBackground: () => AurumSceneBackground;
 }
@@ -27,19 +25,6 @@ export function createAurumSceneController(
   let backgroundOverride: string | null = null;
   let backgroundImageOverride: string | null = null;
   let activeBackgroundId = "blanco";
-  let stageGroup: any = null;
-  const clearStage = () => {
-    if (!stageGroup) return;
-    scene.remove(stageGroup);
-    stageGroup.traverse((object: any) => {
-      if (object.geometry && object.userData?.aurumPresentationStage) object.geometry.dispose?.();
-      if (object.material && object.userData?.aurumPresentationStage) {
-        if (Array.isArray(object.material)) object.material.forEach((material: any) => material.dispose?.());
-        else object.material.dispose?.();
-      }
-    });
-    stageGroup = null;
-  };
   const applyBackground = (color:string | null, image:string | null = null) => {
     if (backgroundElement?.style) {
       backgroundElement.style.backgroundColor = color ?? ("#" + Number(currentPreset.background).toString(16).padStart(6, "0"));
@@ -57,57 +42,6 @@ export function createAurumSceneController(
   };
 
   return {
-    clearStage,
-    applyStage(id: string, productRoot?: any) {
-      clearStage();
-      if (!productRoot || id === "transparente" || id === "estudioRosaPremium") return;
-      // Use the product's world-space bounds; the stage remains a sibling of the
-      // model so it cannot alter gem hierarchy, material assignment or exports.
-      if (!THREE?.Box3 || !THREE?.Vector3) return;
-      const box = new THREE.Box3().setFromObject(productRoot);
-      if (box.isEmpty()) return;
-      const size = box.getSize(new THREE.Vector3());
-      const center = box.getCenter(new THREE.Vector3());
-      const width = Math.max(size.x, size.z, 0.25);
-      const height = Math.max(size.y, 0.25);
-      const floorY = box.min.y - Math.max(height * 0.035, 0.015);
-      const palette: Record<string, { top: number; side: number; arch: number }> = {
-        ijewel11: { top: 0x9f3038, side: 0x571b22, arch: 0xc45b60 },
-        ijewel12: { top: 0x496887, side: 0x263d59, arch: 0x8da9c4 },
-        ijewel09: { top: 0x242830, side: 0x11151c, arch: 0x596575 },
-        ijewel10: { top: 0x343a45, side: 0x171c25, arch: 0x8793a4 },
-      };
-      const colors = palette[id] ?? { top: 0xe8e6e1, side: 0xb9b5ad, arch: 0xd1c7b5 };
-      const group = new THREE.Group();
-      group.name = "AURUM_MODEL_STAGE";
-      group.userData.aurumPresentationStage = true;
-      const makeMesh = (geometry: any, color: number, roughness = 0.72) => {
-        const material = new THREE.MeshStandardMaterial({ color, metalness: 0, roughness });
-        const mesh = new THREE.Mesh(geometry, material);
-        mesh.userData.aurumPresentationStage = true;
-        mesh.receiveShadow = true;
-        mesh.castShadow = false;
-        group.add(mesh);
-        return mesh;
-      };
-      const radius = width * 0.62;
-      const platformHeight = Math.max(height * 0.025, 0.012);
-      const platformTopY = box.min.y - Math.max(height * 0.008, 0.002);
-      const platform = makeMesh(new THREE.CylinderGeometry(radius * 0.94, radius, platformHeight, 96, 1), colors.side);
-      platform.position.set(center.x, platformTopY - platformHeight * 0.5, center.z);
-      const topThickness = Math.max(platformHeight * 0.18, 0.004);
-      const top = makeMesh(new THREE.CylinderGeometry(radius * 0.94, radius * 0.94, topThickness, 96, 1), colors.top, 0.48);
-      top.position.set(center.x, platformTopY - topThickness * 0.5, center.z);
-      const ringRadius = Math.max(width, height * 0.72) * 0.57;
-      const arch = makeMesh(new THREE.TorusGeometry(ringRadius, Math.max(width * 0.009, 0.006), 12, 96), colors.arch, 0.58);
-      arch.position.set(center.x, box.min.y + height * 0.56, box.min.z - Math.max(size.z * 0.28, width * 0.16));
-      arch.scale.y = Math.max(0.72, Math.min(1.25, height / Math.max(width, 0.01)));
-      group.traverse((object: any) => {
-        if (object.isMesh) object.userData.aurumPresentationStage = true;
-      });
-      scene.add(group);
-      stageGroup = group;
-    },
     setBackground(id:string) {
       activeBackgroundId = id;
       const backgrounds:Record<string,string> = {
