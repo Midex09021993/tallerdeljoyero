@@ -48,7 +48,7 @@ export function createAurumSceneController(
         id === "estudioFotografico"
           ? "/backgrounds/aurum-estudio-fotografico.svg"
           : id === "auroraBlue"
-            ? "radial-gradient(ellipse 42% 70% at 0% 28%, rgba(255,151,111,.98) 0%, rgba(255,181,157,.72) 42%, transparent 100%), radial-gradient(ellipse 58% 90% at 100% 100%, rgba(0,65,164,.98) 0%, rgba(30,104,202,.78) 48%, transparent 100%), linear-gradient(125deg, #f2b5a7 0%, #b7b1d3 38%, #7399d0 68%, #0751a8 100%)"
+            ? "radial-gradient(ellipse 105% 145% at 0% 48%, rgba(255,174,151,.94) 0%, rgba(244,166,158,.78) 24%, rgba(202,163,184,.42) 52%, rgba(145,157,202,.12) 76%, transparent 100%), radial-gradient(ellipse 100% 145% at 100% 52%, rgba(27,91,174,.92) 0%, rgba(48,112,193,.78) 34%, rgba(92,139,201,.38) 62%, transparent 100%), linear-gradient(112deg, #e9aa9e 0%, #c4a9c0 42%, #7899c8 72%, #2868b1 100%)"
           : id === "degradadoGrisBlanco"
             ? "linear-gradient(135deg, #ffffff 0%, #eeeeec 48%, #bfc1c0 100%)"
             : null;
