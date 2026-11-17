@@ -59,6 +59,7 @@ import { Camera, ChevronDown, Copy, Download, Expand, FileJson, Gem, Image as Im
 
 import { GEMAS, MATERIALES, ESCENARIOS, VISTAS, ILUMINACIONES, type MaterialId, type EscenarioId, type VistaId, type IluminacionId, type MaterialGrupo, type CategoriaParte, type GemaId, type GemaConfig, type MaterialConfig, type ParteModelo } from "../lib/aurum/catalog";
 import { AurumRenderSidebar } from "./AurumRenderSidebar";
+import { AurumCameraCalibrationPanel } from "./AurumCameraCalibrationPanel";
 import { AurumPerformanceIndicator, AurumPerformanceMonitorPanel } from "./AurumPerformanceMonitorPanel";
 import { AurumLoadingExperience } from "./AurumLoadingExperience";
 import { createAurumPerformanceMonitor } from "@/lib/aurum/performance-monitor";
@@ -291,6 +292,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [archivoOriginalInfo, setArchivoOriginalInfo] = useState<AurumOriginalSource | null>(null);
   const [arrastrandoArchivo, setArrastrandoArchivo] = useState(false);
 
+  const [cameraCalibrationOpen, setCameraCalibrationOpen] = useState(false);
+  const cameraCalibrationRuntimeRef = useRef<any>(null);
   const [materialAplicarTodos, setMaterialAplicarTodos] = useState(false);
   const [materialId, setMaterialId] = useState<MaterialId>("plata950_pulida"), [gemaId, setGemaId] = useState<GemaId>("diamante_natural"), [escenarioId, setEscenarioId] = useState<EscenarioId>("ijewelReference"), [iluminacionId, setIluminacionId] = useState<IluminacionId>("studioSoft"), [vista, setVista] = useState<VistaId>("frontal");
   // A catalog choice is only armed; the next explicit gem-mesh click consumes it.
@@ -2529,6 +2532,51 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         resetTemporalAccumulationRef.current?.();
         viewerLoopRef.current?.invalidate?.();
         invalidateRenderRef.current?.();
+      };
+      cameraCalibrationRuntimeRef.current = {
+        capture: (view: string) => {
+          if (!modelo) return null;
+          modelo.updateWorldMatrix(true, true);
+          camara.updateMatrixWorld(true);
+          const bounds = getAurumVisibleProductBounds(modelo);
+          if (bounds.isEmpty()) return null;
+          const corners = [
+            new THREE.Vector3(bounds.min.x, bounds.min.y, bounds.min.z), new THREE.Vector3(bounds.min.x, bounds.min.y, bounds.max.z),
+            new THREE.Vector3(bounds.min.x, bounds.max.y, bounds.min.z), new THREE.Vector3(bounds.min.x, bounds.max.y, bounds.max.z),
+            new THREE.Vector3(bounds.max.x, bounds.min.y, bounds.min.z), new THREE.Vector3(bounds.max.x, bounds.min.y, bounds.max.z),
+            new THREE.Vector3(bounds.max.x, bounds.max.y, bounds.min.z), new THREE.Vector3(bounds.max.x, bounds.max.y, bounds.max.z),
+          ].map((point: THREE.Vector3) => point.project(camara));
+          const xs = corners.map((point: THREE.Vector3) => point.x), ys = corners.map((point: THREE.Vector3) => point.y);
+          const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+          return {
+            view, capturedAt: new Date().toISOString(),
+            position: camara.position.toArray(), quaternion: camara.quaternion.toArray(),
+            target: controles.target.toArray(), up: camara.up.toArray(),
+            fov: camara.fov, aspect: camara.aspect, zoom: camara.zoom, near: camara.near, far: camara.far,
+            distance: camara.position.distanceTo(controles.target),
+            projectedWidth: maxX - minX, projectedHeight: maxY - minY,
+            projectedCenter: [(minX + maxX) * 0.5, (minY + maxY) * 0.5],
+          };
+        },
+        apply: (snapshot: any) => {
+          if (!snapshot || !Array.isArray(snapshot.position) || !Array.isArray(snapshot.quaternion) || !Array.isArray(snapshot.target)) return false;
+          camara.position.fromArray(snapshot.position);
+          camara.quaternion.fromArray(snapshot.quaternion);
+          controles.target.fromArray(snapshot.target);
+          if (Array.isArray(snapshot.up)) camara.up.fromArray(snapshot.up);
+          if (Number.isFinite(snapshot.fov)) camara.fov = snapshot.fov;
+          if (Number.isFinite(snapshot.aspect) && snapshot.aspect > 0) camara.aspect = snapshot.aspect;
+          if (Number.isFinite(snapshot.zoom) && snapshot.zoom > 0) camara.zoom = snapshot.zoom;
+          if (Number.isFinite(snapshot.near) && snapshot.near > 0) camara.near = snapshot.near;
+          if (Number.isFinite(snapshot.far) && snapshot.far > camara.near) camara.far = snapshot.far;
+          camara.updateProjectionMatrix();
+          camara.updateMatrixWorld(true);
+          controles.update();
+          resetTemporalAccumulationRef.current?.();
+          viewerLoopRef.current?.invalidate?.();
+          invalidateRenderRef.current?.();
+          return true;
+        },
       };
       aplicarVistaRef.current = camaraVista;
       apiRef.current=createAurumApi({
@@ -4939,6 +4987,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             </select>
             <ChevronDown aria-hidden="true" className="pointer-events-none size-4 shrink-0 text-[#a17d38]"/>
           </label>
+           <button type="button" disabled={!archivo || cargando} onClick={() => setCameraCalibrationOpen(true)} className="flex h-10 items-center gap-2 rounded-xl border border-[#b99642]/45 bg-[#f5efdf] px-3 text-sm font-semibold text-[#725b2d] shadow-sm transition-colors hover:bg-[#eee3c6] disabled:cursor-not-allowed disabled:opacity-45"><Camera className="size-4"/><span className="hidden xl:inline">Calibrar cámaras</span></button>
           <button type="button" disabled={!archivo || cargando || guardandoProyectoNube} onClick={() => void abrirGuardarEnMiNube()} className="flex h-10 items-center gap-2 rounded-xl border border-black/[.10] bg-white/90 px-3 text-sm font-semibold text-[#292824] shadow-sm transition-colors hover:border-[#b99642]/50 hover:bg-[#d4af37]/10 disabled:cursor-not-allowed disabled:opacity-45"><Upload className="size-4 text-[#92743b]"/><span>{destinoProyectoGuardado?.rutaCarpeta ? "Actualizar en Mi Nube" : "Guardar en Mi Nube"}</span></button>
           {destinoProyectoGuardado?.rutaCarpeta && <button type="button" onClick={()=>window.location.assign("/mi-nube")} className="flex h-10 items-center gap-2 rounded-xl border border-[#b99642]/45 bg-[#d4af37]/15 px-3 text-sm font-semibold text-[#6d5523] shadow-sm transition-colors hover:bg-[#d4af37]/25" title="Ir a Mi Nube"><Cloud className="size-4"/><span>Ir a Mi Nube</span></button>}
           <button type="button" aria-controls="aurum-export-title" aria-expanded={exportOpen} onClick={()=>{setExportOpen(v=>!v);setLibraryMenuOpen(false);setQualityOpen(false);setLightingOpen(false);}} className={"flex h-10 items-center gap-2 rounded-xl border px-3 text-sm font-semibold shadow-sm transition-colors "+(exportOpen?"border-[#b99642]/50 bg-[#d4af37]/15 text-[#6d5523]":"border-[#d4af37]/45 bg-[#d4af37] text-[#292824] hover:bg-[#e1bf50]")}><Download className="size-4"/><span>Exportar</span></button>
@@ -5603,6 +5652,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         </>}
         </aside>}
       </div>
+      {cameraCalibrationOpen && <AurumCameraCalibrationPanel
+        hasModel={Boolean(archivo && !cargando)}
+        onClose={() => setCameraCalibrationOpen(false)}
+        onSelectView={(id) => { vistaRef.current = id; setVista(id); aplicarVistaRef.current?.(id); }}
+        captureSnapshot={(id) => cameraCalibrationRuntimeRef.current?.capture?.(id) ?? null}
+        applySnapshot={(snapshot) => Boolean(cameraCalibrationRuntimeRef.current?.apply?.(snapshot))}
+      />}
       {limiteMiNubeModal && <div className="fixed inset-0 z-[120] flex items-center justify-center bg-[#171613]/55 p-4 backdrop-blur-md" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setLimiteMiNubeModal(null); }}>
         <section role="dialog" aria-modal="true" aria-labelledby="aurum-nube-limit-title" aria-describedby="aurum-nube-limit-description" className="relative w-full max-w-[440px] overflow-hidden rounded-[26px] border border-[#d7c18b]/60 bg-[#fbfaf7] text-[#292824] shadow-[0_28px_100px_rgba(0,0,0,.34)]">
           <div className="h-1.5 w-full bg-gradient-to-r from-[#9a7832] via-[#e1c36d] to-[#9a7832]" />
