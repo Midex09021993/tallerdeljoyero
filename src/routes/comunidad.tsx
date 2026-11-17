@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Gem, GraduationCap, Store, UsersRound } from "lucide-react";
-import { ActividadComunidad } from "@/components/ActividadComunidad";
 
 export const Route = createFileRoute("/comunidad")({
   head: () => ({
@@ -17,6 +16,15 @@ export const Route = createFileRoute("/comunidad")({
 });
 
 const destinos = [
+  {
+    titulo: "Diseño 3D Aplicado a la Fabricación de Joyas con Rhinoceros – Nivel 1",
+    descripcion: "Aprende modelado 3D para joyería con un programa práctico de 20 horas académicas, organizado en 10 sesiones. Nivel inicial.",
+    etiqueta: "Curso destacado · 20 horas académicas",
+    href: "/cursos-diseno-3d" as const,
+    accion: "Conocer el curso",
+    icon: GraduationCap,
+    destacado: true,
+  },
   {
     titulo: "Directorio de talleres y formación",
     descripcion: "Descubre talleres, joyerías y propuestas formativas que forman parte de la comunidad.",
@@ -35,15 +43,7 @@ const destinos = [
     icon: Store,
     destacado: false,
   },
-  {
-    titulo: "Diseño 3D Aplicado a la Fabricación de Joyas con Rhinoceros – Nivel 1",
-    descripcion: "Aprende modelado 3D para joyería con un programa práctico de 20 horas académicas, organizado en 10 sesiones. Nivel inicial.",
-    etiqueta: "Curso destacado · 20 horas académicas",
-    href: "/cursos-diseno-3d" as const,
-    accion: "Conocer el curso",
-    icon: GraduationCap,
-    destacado: true,
-  },
+
 ];
 
 function ComunidadPage() {
@@ -69,14 +69,9 @@ function ComunidadPage() {
           <h1 className="mt-4 max-w-3xl text-3xl font-extrabold leading-tight tracking-tight sm:text-5xl">Conocimiento y conexiones para el oficio joyero.</h1>
           <p className="mt-4 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base sm:leading-7">Accede a recursos técnicos, encuentra profesionales y descubre herramientas y archivos digitales que acompañan el trabajo de tu taller.</p>
           <div className="mt-7 flex flex-wrap gap-3">
-            <Link to="/directorio" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#17232d] px-5 text-sm font-semibold text-white transition hover:bg-[#293b49]">Encontrar talleres <ArrowRight className="size-4" /></Link>
+            <Link to="/cursos-diseno-3d" className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#17232d] px-5 text-sm font-semibold text-white transition hover:bg-[#293b49]">Conocer el curso <ArrowRight className="size-4" /></Link>
+            <Link to="/directorio" className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 text-sm font-semibold text-[#17232d] transition hover:border-[#d4aa19]">Encontrar talleres</Link>
           </div>
-        </div>
-      </section>
-
-      <section className="border-b border-slate-200 bg-[#fbfaf7]">
-        <div className="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14">
-          <ActividadComunidad />
         </div>
       </section>
 
