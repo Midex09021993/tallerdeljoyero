@@ -224,7 +224,8 @@ export const MATERIALES: MaterialConfig[] = [
   { id:"rodio_negro", grupo:"Especiales", nombre:"Rodio Negro", color:0x2b3035, metalness:1, roughness:.13, envMapIntensity:1.62, clearcoat:.16 },
   { id:"titanio_pulido", grupo:"Especiales", nombre:"Titanio Pulido", color:0x90989f, metalness:.96, roughness:.15, envMapIntensity:1.68, clearcoat:.12 },
   // Material visual no metálico para simular patrones de cera roja de microfusión; no representa parámetros de una impresora específica.
-  { id:"cera_microfusion_roja", grupo:"Especiales", nombre:"Cera roja · Microfusión", color:0xb9232f, metalness:0, roughness:.72, envMapIntensity:.28, clearcoat:.015, anisotropy:0 },
+    // Perfil visual de referencia GEMMEX/FFWJ1200; acabado de cera no metálico.
+{ id:"cera_microfusion_roja", grupo:"Especiales", nombre:"Cera roja · Microfusión", color:0xa20d1a, metalness:0, roughness:.48, envMapIntensity:.42, clearcoat:.06, anisotropy:0 },
 ];
 
 export const ESCENARIOS: { id: EscenarioId; nombre: string; clase: string; descripcion:string; activo:boolean; numero?:string; horneado?: "A"|"B" }[] = [
