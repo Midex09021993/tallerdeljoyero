@@ -3533,27 +3533,62 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               }
             }
 
-            context.imageSmoothingEnabled=true;
-            context.imageSmoothingQuality="high";
-            // Preserve the live frame's aspect ratio and complete composition.
-            const scale=Math.min(width/originalBufferWidth,height/originalBufferHeight);
-            const drawWidth=originalBufferWidth*scale;
-            const drawHeight=originalBufferHeight*scale;
-            context.drawImage(liveCanvas,(width-drawWidth)/2,(height-drawHeight)/2,drawWidth,drawHeight);
-            dataUrl=output.toDataURL(mime,0.94);
-            if(!dataUrl||dataUrl.length<1000) {
+            // Render the same live beauty sequence at the requested output size.
+            // This is not an enlarged screenshot: geometry, camera, materials and
+            // the diamond-only mask/SSAA/FXAA overlays are rendered at native 4K.
+            const captureLoop:any=viewerLoopRef.current;
+            const originalFxaaResolution=fxaaPass?.material?.uniforms?.resolution?.value?.clone?.()??null;
+            const originalGemMaskEnabled=Boolean(gemMaskPass?.enabled);
+            let captureRendered=false;
+            captureLoop?.pause?.();
+            try {
+              renderer.setPixelRatio(1);
+              renderer.setSize(width,height,false);
+              camara.aspect=width/height;
+              camara.updateProjectionMatrix?.();
+              diamondBvhRuntime?.update();
+              gemMaskPass.enabled=getAurumPostControls().gemMaskEnabled;
+              renderer.render(escena,camara);
+              if(gemMaskPass.enabled) gemMaskPass.render(renderer);
+              const hasCaptureDiamond=Boolean(gemMaskPass?.hasDiamondMeshes);
+              const captureSsaaRequested=Boolean(gemMaskPass?.enabled && diamondSupersamplePass?.enabled && diamondSupersampleCompositePass?.enabled);
+              const captureFxaaRequested=Boolean(gemMaskPass?.enabled && fxaaPass?.enabled && hasCaptureDiamond);
+              if(captureSsaaRequested) renderDiamondSupersampleOverlay?.(renderer);
+              if(captureFxaaRequested) {
+                const fxaaResolution=fxaaPass?.material?.uniforms?.resolution?.value;
+                fxaaResolution?.set?.(1/width,1/height);
+                renderDiamondFxaaOverlay?.(renderer);
+              }
+              context.imageSmoothingEnabled=true;
+              context.imageSmoothingQuality="high";
+              context.drawImage(renderer.domElement,0,0,width,height);
+              captureRendered=true;
+              dataUrl=output.toDataURL(mime,0.94);
+              console.info("[AURUM][PNG LIVE-PIPELINE EXPORT]",{
+                output:{width,height},
+                cameraAspect:camara.aspect,
+                gemMask:Boolean(gemMaskPass?.enabled),
+                diamondSsaa:captureSsaaRequested,
+                diamondFxaa:captureFxaaRequested,
+                sourceResolution:{width:renderer.domElement.width,height:renderer.domElement.height},
+                upscaled:false,
+              });
+            } finally {
+              gemMaskPass.enabled=originalGemMaskEnabled;
+              if(originalFxaaResolution) fxaaPass?.material?.uniforms?.resolution?.value?.copy?.(originalFxaaResolution);
+              renderer.setPixelRatio(originalPixelRatio);
+              renderer.setSize(originalCssWidth,originalCssHeight,false);
+              camara.aspect=originalAspect;
+              camara.updateProjectionMatrix?.();
+              diamondBvhRuntime?.update();
+              resetTemporalAccumulationRef.current?.();
+              captureLoop?.resize?.();
+              captureLoop?.resume?.();
+              captureLoop?.converge?.(4);
+            }
+            if(!captureRendered||!dataUrl||dataUrl.length<1000) {
               throw new Error("La captura del visor está vacía. Espera a que termine de dibujarse y vuelve a intentar.");
             }
-            console.info("[AURUM][PNG LIVE-FRAME EXPORT]",{
-              sourceCanvas:{width:originalBufferWidth,height:originalBufferHeight},
-              output:{width,height},
-              sourceAspect:originalBufferWidth/originalBufferHeight,
-              outputAspect:width/height,
-              resampleScale:scale,
-              background:sceneAdapter.getBackground().id,
-              rendererRerendered:false,
-              composerReconfigured:false,
-            });
             if(options.onCapture) {
               options.onCapture(dataUrl);
               return;
