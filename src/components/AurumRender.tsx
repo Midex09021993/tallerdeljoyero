@@ -2561,6 +2561,44 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             projectedCenter: [(minX + maxX) * 0.5, (minY + maxY) * 0.5],
           };
         },
+        adjust: (axis: string, delta: number) => {
+          if (!modelo || !Number.isFinite(delta)) return false;
+          const offset = camara.position.clone().sub(controles.target);
+          const distance = Math.max(offset.length(), 1e-6);
+          const right = new THREE.Vector3().setFromMatrixColumn(camara.matrixWorld, 0).normalize();
+          const up = new THREE.Vector3().setFromMatrixColumn(camara.matrixWorld, 1).normalize();
+          if (axis === "distance") {
+            const nextDistance = THREE.MathUtils.clamp(distance * Math.exp(delta), distance * 0.1, distance * 10);
+            offset.setLength(nextDistance);
+            camara.position.copy(controles.target).add(offset);
+          } else if (axis === "fov") {
+            camara.fov = THREE.MathUtils.clamp(camara.fov + delta, 5, 100);
+            camara.updateProjectionMatrix();
+          } else if (axis === "azimuth") {
+            offset.applyAxisAngle(camara.up.clone().normalize(), THREE.MathUtils.degToRad(delta));
+            camara.position.copy(controles.target).add(offset);
+          } else if (axis === "elevation") {
+            offset.applyAxisAngle(right, THREE.MathUtils.degToRad(delta));
+            camara.position.copy(controles.target).add(offset);
+          } else if (axis === "centerX" || axis === "centerY") {
+            const verticalSpan = 2 * distance * Math.tan(THREE.MathUtils.degToRad(camara.fov) * 0.5);
+            const horizontalSpan = verticalSpan * camara.aspect;
+            const shift = axis === "centerX"
+              ? right.multiplyScalar(delta * horizontalSpan * 0.5)
+              : up.multiplyScalar(delta * verticalSpan * 0.5);
+            camara.position.add(shift);
+            controles.target.add(shift);
+          } else {
+            return false;
+          }
+          camara.lookAt(controles.target);
+          camara.updateMatrixWorld(true);
+          controles.update();
+          resetTemporalAccumulationRef.current?.();
+          viewerLoopRef.current?.invalidate?.();
+          invalidateRenderRef.current?.();
+          return true;
+        },
         apply: (snapshot: any) => {
           if (!snapshot || !Array.isArray(snapshot.position) || !Array.isArray(snapshot.quaternion) || !Array.isArray(snapshot.target)) return false;
           camara.position.fromArray(snapshot.position);
