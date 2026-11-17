@@ -26,7 +26,7 @@ create policy "AURUM admins can create master camera calibration"
     exists (
       select 1 from public.user_roles ur
       where ur.user_id = auth.uid()
-        and ur.role in ('dueno', 'gerente')
+        and ur.role::text in ('dueno', 'gerente')
     )
   );
 
