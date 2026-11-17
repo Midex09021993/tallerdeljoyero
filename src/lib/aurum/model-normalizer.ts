@@ -288,10 +288,18 @@ function hydrateRhinoLayerMetadata(
     const semantic = classifyAurumSemanticObject(x,layer);
     audit.semanticCounts[semantic.classification]=(audit.semanticCounts[semantic.classification]??0)+1;
     if(semantic.confidence>0 && semantic.confidence<0.7) audit.lowConfidenceSemanticMeshes++;
-    const hasResolvedLayer=Boolean(layerName||color||layerIndex>=0||layerId!=null);
-    const category=hasResolvedLayer
-      ? classifyRhinoLayer(layerName,color,clasificarCapa)
-      : (existing.categoria??classifyRhinoLayer(String(existing.capa??""),existing.colorCapa,clasificarCapa));
+    const layerCategory = classifyRhinoLayer(layerName,color,clasificarCapa);
+    // A layer index alone is not a semantic classification: direct GLB files
+    // may retain rhino-index:N while omitting the Rhino layer table/name.
+    // In that case, accept a high-confidence explicit gem identity from the
+    // mesh or its named parent (for example, Diamond_Heart) as a safe fallback.
+    const semanticGem = semantic.classification === "gem" && semantic.confidence >= 0.7;
+    const existingCategory = existing.categoria === "metal" || existing.categoria === "gema"
+      ? existing.categoria
+      : undefined;
+    const category = layerCategory !== "otro"
+      ? layerCategory
+      : (semanticGem ? "gema" : (existingCategory ?? "otro"));
     const resolvedLayerIndex=layerIndex>=0?layerIndex:(Number.isInteger(existing.layerIndex)&&existing.layerIndex>=0?existing.layerIndex:-1);
     const resolvedLayerId=layer?.id??layer?.Id??layerId??existing.rhinoLayerId??null;
     const layerKey=resolveAurumLayerKey({layerId:resolvedLayerId,layerIndex:resolvedLayerIndex,layerName:layerName||existing.capa,layerColor:color||existing.colorCapa,category,existingKey:existing.layerKey});
