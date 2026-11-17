@@ -89,7 +89,12 @@ test("all four views match frontal projected height while preserving orientation
     heights.push(projectedHeight(model, camera));
 
     if (view === "frontal") expect(camera.position.z).toBeGreaterThan(controls.target.z);
-    if (view === "lateral") expect(camera.position.x).toBeGreaterThan(controls.target.x);
+    if (view === "lateral") {
+      expect(camera.position.x).toBeGreaterThan(controls.target.x);
+      // La lateral debe quedar exactamente sobre +X: sin elevación ni giro residual.
+      expect(Math.abs(camera.position.y - controls.target.y)).toBeLessThan(1e-9);
+      expect(Math.abs(camera.position.z - controls.target.z)).toBeLessThan(1e-9);
+    }
     if (view === "superior") expect(camera.position.y).toBeGreaterThan(controls.target.y);
     if (view === "perspectiva") {
       expect(camera.position.x).toBeGreaterThan(controls.target.x);
