@@ -148,4 +148,7 @@ test("camera calibration panel stores four view references and exports measureme
   expect(panel).toContain("aurum-camera-calibration.json");
   expect(viewer).toContain("projectedPixelWidth");
   expect(viewer).toContain("cameraCalibrationRuntimeRef.current");
+  // Selecting a calibration slot must not apply its named camera preset.
+  expect(viewer).toContain("if (cameraCalibrationOpen)");
+  expect(viewer).toContain("Durante la calibración");
 });
