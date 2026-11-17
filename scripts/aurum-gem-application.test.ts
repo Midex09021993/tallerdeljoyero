@@ -158,13 +158,13 @@ test("AURUM gem transition snapshots before material replacement and blends only
 test("diamond live optical tuning matches the approved diamond-only calibration", () => {
   const source = readFileSync("src/lib/aurum/scintillation.ts", "utf8");
   expect(source).toContain("internalContrast: 1.15");
-  expect(source).toContain("highlightShoulder: 0.82");
+  expect(source).toContain("highlightShoulder: 0.95");
   expect(source).toContain("faceBrightness: 1.01");
   expect(source).toContain("rimEnergy: 0.025");
   expect(source).toContain('const isDiamond=family.trim().toLowerCase()==="diamante"');
   expect(source).toContain("smoothstep(0.025,0.22,ijSpectralSpread)");
   expect(source).toContain("ijSpectralLuma*0.88");
-  expect(source).toContain("ijHighlightPeak-0.90");
+  expect(source).toContain("ijHighlightPeak-0.86");
 });
 
 test("runtime DPR remains unchanged to avoid changing shared metal rendering resolution", () => {

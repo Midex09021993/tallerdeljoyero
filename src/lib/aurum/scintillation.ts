@@ -8,10 +8,10 @@ import type { AurumOpticalProfile } from "../aurum-material-engine";
  */
 export const AURUM_DIAMOND_LIVE_TUNING = Object.freeze({
   internalContrast: 1.15,
-  highlightShoulder: 0.82,
+  highlightShoulder: 0.95,
   faceBrightness: 1.01,
   rimEnergy: 0.025,
-  fireMax: 0.095,
+  fireMax: 0.075,
 });
 
 /**
@@ -599,7 +599,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         float ijHighlightPeak=max(max(gl_FragColor.r,gl_FragColor.g),gl_FragColor.b);
         // Engage the shoulder before the display ceiling to retain central
         // table-facet edges instead of allowing them to collapse to flat white.
-        float ijHighlightExcess=max(ijHighlightPeak-0.90,0.0);
+        float ijHighlightExcess=max(ijHighlightPeak-0.86,0.0);
         float ijHighlightCompression=1.0/(1.0+pow(ijHighlightExcess,1.12)*${AURUM_DIAMOND_LIVE_TUNING.highlightShoulder.toFixed(2)}*1.35);
         gl_FragColor.rgb*=ijHighlightCompression;
         // Selective real-time glint response for very bright diamond facets.
@@ -623,7 +623,7 @@ ${ijewelEnabled ? `\n        // Native iJewel parameter path. This source file e
         // Derivative-aware facet coverage is compiled only for diamonds. The
         // normal footprint estimates sub-pixel facet transitions; the small
         // bounded expansion prevents temporal edge popping without a scene pass.
-        float aurumDiamondFacetAA=${isDiamond ? "clamp(max(fwidth(aurumFacing), max(max(fwidth(aurumN.x), fwidth(aurumN.y)), fwidth(aurumN.z))) * 0.5, 0.0005, 0.015)" : "0.0"};
+        float aurumDiamondFacetAA=${isDiamond ? "clamp(max(fwidth(aurumFacing), max(max(fwidth(aurumN.x), fwidth(aurumN.y)), fwidth(aurumN.z))) * 0.75, 0.0005, 0.03)" : "0.0"};
         // Broader angular transition reduces abrupt sparkle popping during camera orbit.
         float aurumFlash=smoothstep(${isDiamond ? "0.92" : "0.94"}-aurumDiamondFacetAA,0.997+aurumDiamondFacetAA,aurumFacing)*aurumScintillationStrength;
 

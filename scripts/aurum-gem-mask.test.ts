@@ -26,5 +26,5 @@ test("diamond live tuning stays restrained and isolated from physical calibratio
   expect(AURUM_DIAMOND_LIVE_TUNING.highlightShoulder).toBe(0.42);
   expect(AURUM_DIAMOND_LIVE_TUNING.faceBrightness).toBe(1.06);
   expect(AURUM_DIAMOND_LIVE_TUNING.rimEnergy).toBe(0.075);
-  expect(AURUM_DIAMOND_LIVE_TUNING.fireMax).toBe(0.085);
+  expect(AURUM_DIAMOND_LIVE_TUNING.fireMax).toBe(0.075);
 });
