@@ -4579,7 +4579,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       // The model may have finished loading before the demand-driven loop was
       // created. Start its bounded beauty convergence now, not on first orbit.
       if (modelo && !liveFastPathRef.current) {
-        viewerLoop.converge?.(postRuntimeConfig.progressiveFrameCount ?? 1);
+        viewerLoop.converge?.(getAurumPostControls().diamondTaaEnabled ? 32 : (postRuntimeConfig.progressiveFrameCount ?? 1));
       }
       const obs = viewerLoop.observer;
 
