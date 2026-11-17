@@ -22,9 +22,9 @@ test("gem classification mask uses categorical sampling without mipmaps or color
 test("diamond live tuning stays restrained and isolated from physical calibration", async () => {
   const { AURUM_DIAMOND_LIVE_TUNING } = await import("../src/lib/aurum/scintillation");
 
-  expect(AURUM_DIAMOND_LIVE_TUNING.internalContrast).toBe(1.05);
-  expect(AURUM_DIAMOND_LIVE_TUNING.highlightShoulder).toBe(0.42);
-  expect(AURUM_DIAMOND_LIVE_TUNING.faceBrightness).toBe(1.06);
-  expect(AURUM_DIAMOND_LIVE_TUNING.rimEnergy).toBe(0.075);
-  expect(AURUM_DIAMOND_LIVE_TUNING.fireMax).toBe(0.075);
+  expect(AURUM_DIAMOND_LIVE_TUNING.internalContrast).toBe(1.04);
+  expect(AURUM_DIAMOND_LIVE_TUNING.highlightShoulder).toBe(0.85);
+  expect(AURUM_DIAMOND_LIVE_TUNING.faceBrightness).toBe(1.00);
+  expect(AURUM_DIAMOND_LIVE_TUNING.rimEnergy).toBe(0.025);
+  expect(AURUM_DIAMOND_LIVE_TUNING.fireMax).toBe(0.065);
 });
