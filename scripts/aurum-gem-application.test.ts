@@ -370,15 +370,13 @@ test("diamond perimeter AA uses the stronger masked edge profile", () => {
   expect(source).not.toContain("outsideNeighbor=1.0-min(min(m0,m1),min(m2,m3))");
 });
 
-test("legacy Post Engine preferences cannot reactivate full-frame AA or TAA", () => {
+test("legacy Post Engine preferences migrate to mask-isolated AA without enabling full-frame AA", () => {
   const controls = readFileSync("src/lib/aurum/post-engine-controls.ts", "utf8");
   const post = readFileSync("src/lib/aurum/post.ts", "utf8");
-  expect(controls).toContain("migrated.gemFxaaEnabled = false;");
   expect(controls).toContain("diamondSsaaEnabled: false");
   expect(controls).toContain("surfaceEdgeAaEnabled: false");
   expect(controls).toContain("taaEnabled: false");
   expect(controls).toContain("const migrated = normalize(JSON.parse(legacy));");
-  expect(controls).toContain("migrated.gemMaskEnabled = false;");
   expect(controls).toContain("migrated.diamondTaaEnabled = migrated.gemMaskEnabled;");
   expect(post).toContain("removePass(taaPass);");
   expect(post).toContain("diamondTaaSavePass, taaPass, diamondTaaCompositePass");
