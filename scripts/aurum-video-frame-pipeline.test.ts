@@ -117,15 +117,21 @@ test("AURUM video pipeline refuses to render after restoration", () => {
   expect(() => pipeline.renderFrame()).toThrow("ya fue restaurado");
 });
 
-test("AURUM video beauty passes include settled Surface Edge AA when enabled and never add TAA", () => {
+test("AURUM video beauty passes respect diamond FXAA preference and settled Surface Edge AA without TAA", () => {
   const renderPass = { name: "render" };
   const gemMaskPass = { name: "gem-mask" };
   const fxaaPass = { name: "fxaa" };
   const surfaceEdgeAaPass = { name: "surface-edge-aa" };
   const outputPass = { name: "output" };
+
+  const defaultPasses = getAurumVideoLivePasses({
+    renderPass, gemMaskPass, fxaaPass, surfaceEdgeAaPass, outputPass,
+  });
+  expect(defaultPasses).toEqual([renderPass, gemMaskPass, outputPass]);
+
   const passes = getAurumVideoLivePasses({
     renderPass, gemMaskPass, fxaaPass, surfaceEdgeAaPass,
-    surfaceEdgeAaEnabled: true, outputPass,
+    gemFxaaEnabled: true, surfaceEdgeAaEnabled: true, outputPass,
   });
   expect(passes).toEqual([renderPass, gemMaskPass, fxaaPass, surfaceEdgeAaPass, outputPass]);
 
