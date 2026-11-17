@@ -3785,7 +3785,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           layerColor: selectedLayerColor, category: meta.categoria ?? clasificarCapa(capa ?? ""),
         }) ?? "");
         const sourceCategory = String(meta.categoria ?? "").toLowerCase();
-        const layerCategory = clasificarCapa(capa || "", meta.colorCapa);
+        const layerCategory = clasificarCapa(capa || "", colorRhinoHex(selectedLayerColor) ?? meta.colorCapa);
         // Match the catalog resolver: a stale "otro" tag must not hide an
         // explicitly gem-named Rhino/GLB layer from the one-click workflow.
         const categoria = (sourceCategory === "gema"
@@ -3940,9 +3940,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             },
             relatedGemMeshes: relatedGemMeshes.slice(0, 60),
             sameLayerMeshes: sameLayerMeshes.slice(0, 60),
-            sourceLayerTable: (Array.isArray(modelo?.userData?.aurumRhinoSourceLayers) && modelo.userData.aurumRhinoSourceLayers.length
-              ? modelo.userData.aurumRhinoSourceLayers
-              : Array.isArray(modelo?.userData?.layers) ? modelo.userData.layers : []).map((layer:any,index:number) => ({
+            sourceLayerTable: (Array.isArray(sourceLayerManifest) ? sourceLayerManifest : []).map((layer:any,index:number) => ({
               index: layer?.index ?? index,
               name: layer?.name ?? layer?.Name ?? null,
               id: layer?.id ?? layer?.Id ?? null,
