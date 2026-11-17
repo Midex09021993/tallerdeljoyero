@@ -114,7 +114,7 @@ export function AurumArchitectureExplorer() {
           <span className="rounded-full border border-border bg-card px-3 py-1 text-[10px] text-muted-foreground">Three.js + WebGL</span>
         </div>
         <div className="grid gap-2 sm:grid-cols-4">
-          {grupos.map((group, index) => <div key={group.id} className="relative min-w-0">
+          {arbol.map((group, index) => <div key={group.id} className="relative min-w-0">
             <button type="button" onClick={() => seleccionar(group)} className={`group flex h-full w-full flex-col rounded-xl border p-3 text-left transition hover:-translate-y-0.5 hover:shadow-md ${seleccion === group.id ? "border-gold/50 bg-gold/10 ring-1 ring-gold/20" : "border-border bg-card hover:border-gold/40"}`}>
               <div className="flex items-center justify-between gap-2"><span className="grid size-9 place-items-center rounded-xl border border-gold/20 bg-gold/10 text-gold">{sectionIcon(group.id)}</span><span className="text-[10px] text-muted-foreground">{String(index + 1).padStart(2, "0")}</span></div>
               <p className="mt-3 text-xs font-bold leading-4">{group.nombre}</p>
