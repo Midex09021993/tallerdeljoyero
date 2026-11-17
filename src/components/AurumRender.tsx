@@ -2575,10 +2575,17 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           ].map((point: THREE.Vector3) => point.project(camara));
           const xs = corners.map((point: THREE.Vector3) => point.x), ys = corners.map((point: THREE.Vector3) => point.y);
           const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+          // Store camera framing relative to the jewel bounds so the same global
+          // calibration remains meaningful for models with different origins/scales.
+          const calibrationSphere = bounds.getBoundingSphere(new THREE.Sphere());
+          const calibrationCenter = calibrationSphere.center;
+          const calibrationScale = Math.max(calibrationSphere.radius, 1e-6);
           const snapshot = {
             view, capturedAt: new Date().toISOString(),
             position: camara.position.toArray(), quaternion: camara.quaternion.toArray(),
             target: controles.target.toArray(), up: camara.up.toArray(),
+            normalizedPosition: camara.position.clone().sub(calibrationCenter).multiplyScalar(1 / calibrationScale).toArray(),
+            normalizedTarget: controles.target.clone().sub(calibrationCenter).multiplyScalar(1 / calibrationScale).toArray(),
             fov: camara.fov, aspect: camara.aspect, zoom: camara.zoom, near: camara.near, far: camara.far,
             distance: camara.position.distanceTo(controles.target),
             projectedWidth: maxX - minX, projectedHeight: maxY - minY,
@@ -2635,9 +2642,24 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         },
         apply: (snapshot: any) => {
           if (!snapshot || !Array.isArray(snapshot.position) || !Array.isArray(snapshot.quaternion) || !Array.isArray(snapshot.target)) return false;
-          camara.position.fromArray(snapshot.position);
+          if (modelo && Array.isArray(snapshot.normalizedPosition) && Array.isArray(snapshot.normalizedTarget)) {
+            modelo.updateWorldMatrix(true, true);
+            const currentBounds = getAurumVisibleProductBounds(modelo);
+            if (!currentBounds.isEmpty()) {
+              const currentSphere = currentBounds.getBoundingSphere(new THREE.Sphere());
+              const scale = Math.max(currentSphere.radius, 1e-6);
+              camara.position.fromArray(snapshot.normalizedPosition).multiplyScalar(scale).add(currentSphere.center);
+              controles.target.fromArray(snapshot.normalizedTarget).multiplyScalar(scale).add(currentSphere.center);
+            } else {
+              camara.position.fromArray(snapshot.position);
+              controles.target.fromArray(snapshot.target);
+            }
+          } else {
+            // Backward compatibility for calibration snapshots captured before normalization.
+            camara.position.fromArray(snapshot.position);
+            controles.target.fromArray(snapshot.target);
+          }
           camara.quaternion.fromArray(snapshot.quaternion);
-          controles.target.fromArray(snapshot.target);
           if (Array.isArray(snapshot.up)) camara.up.fromArray(snapshot.up);
           if (Number.isFinite(snapshot.fov)) camara.fov = snapshot.fov;
           if (Number.isFinite(snapshot.aspect) && snapshot.aspect > 0) camara.aspect = snapshot.aspect;
