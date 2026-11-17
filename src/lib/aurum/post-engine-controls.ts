@@ -5,28 +5,28 @@ export type AurumPostControls = {
   diamondTaaEnabled: boolean;
   /** Full-surface processing is intentionally excluded from diamond controls. */
   surfaceEdgeAaEnabled: boolean;
-  /** Legacy full-frame TAA remains permanently disabled. */
+  /** Legacy full-frame TAA remains disabled; diamond TAA is mask-isolated. */
   taaEnabled: boolean;
 };
 
-const STORAGE_KEY = "aurum:post-engine-controls:v4";
-const LEGACY_STORAGE_KEYS = ["aurum:post-engine-controls:v3", "aurum:post-engine-controls:v2", "aurum:post-engine-controls:v1"];
+const STORAGE_KEY = "aurum:post-engine-controls:v5";
+const LEGACY_STORAGE_KEYS = ["aurum:post-engine-controls:v4", "aurum:post-engine-controls:v3", "aurum:post-engine-controls:v2", "aurum:post-engine-controls:v1"];
 const DEFAULTS: AurumPostControls = {
   gemMaskEnabled: true,
   diamondSsaaEnabled: true,
   gemFxaaEnabled: true,
-  diamondTaaEnabled: false,
+  diamondTaaEnabled: true,
   surfaceEdgeAaEnabled: false,
   taaEnabled: false,
 };
 
-// Gem Mask is the safety boundary for diamond-only reconstruction.
-// SSAA is explicitly user-toggleable only behind Gem Mask; TAA remains fail-closed.
+// Gem Mask is the safety boundary for every diamond-only reconstruction stage.
+// TAA is enabled by default but can only run when the mask is enabled.
 const normalize = (value: any): AurumPostControls => ({
   gemMaskEnabled: value?.gemMaskEnabled === true,
   diamondSsaaEnabled: value?.gemMaskEnabled === true && value?.diamondSsaaEnabled === true,
   gemFxaaEnabled: value?.gemMaskEnabled === true && value?.gemFxaaEnabled === true,
-  diamondTaaEnabled: false,
+  diamondTaaEnabled: value?.gemMaskEnabled === true && value?.diamondTaaEnabled === true,
   surfaceEdgeAaEnabled: false,
   taaEnabled: false,
 });
@@ -50,7 +50,9 @@ export function getAurumPostControls(): AurumPostControls {
         migrated.diamondSsaaEnabled = true;
         migrated.gemFxaaEnabled = true;
       }
-      migrated.diamondTaaEnabled = false;
+      // Earlier releases exposed the TAA switch but hard-disabled it in code;
+      // migrate that ineffective persisted false to the now-implemented default.
+      migrated.diamondTaaEnabled = migrated.gemMaskEnabled;
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
       return migrated;
     }
