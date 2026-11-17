@@ -1726,6 +1726,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         // hide them together instead of disposing only the floor and orphaning bakedShadow.
         groundController.setVisible(false);
         groundController.setBakedShadowVisible(false);
+        sceneController.clearStage();
         gemMaskPass?.refreshCache?.();
       };
       const configurarMaterial = (mat:any, m:MaterialConfig) => {
@@ -2080,6 +2081,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         // Cambiar la iluminación no debe alterar la ruta de renderizado:
         // el pipeline de belleza se controla exclusivamente por el ciclo del visor.
         const scenePreset = sceneAdapter.apply(id);
+        sceneController.applyStage(id, modelo);
         if (Number.isFinite(scenePreset.environmentRotation)) {
           environmentController.setRotation(scenePreset.environmentRotation as number);
         }
@@ -2383,6 +2385,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         // iJewel separates scene, camera and material configuration; Aurum does
         // the same at load time so the user sees a finished product preview.
         sceneAdapter.apply("ijewelReference");
+        sceneController.applyStage("ijewel01", modelo);
         const photoInicialModelo = getAurumPhotographicProfile("ijewelReference");
         calibrarReflejosMetalEscena(photoInicialModelo);
         Object.assign(postRuntimeConfig, {
