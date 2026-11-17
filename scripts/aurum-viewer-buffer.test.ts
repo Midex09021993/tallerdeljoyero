@@ -661,6 +661,24 @@ test("standard image export composites isolated diamond reconstruction after bea
 });
 
 
+test("standard image export snapshots the exact live viewport without rerendering the scene", () => {
+  const componentSource = readFileSync("src/components/AurumRender.tsx", "utf8");
+  const exportStart = componentSource.indexOf("exportPNG:async");
+  const directStart = componentSource.indexOf("if(!isPoster && !options.depthOfField)", exportStart);
+  const directEnd = componentSource.indexOf("// Prevent the live animation loop", directStart);
+  const directBlock = componentSource.slice(directStart, directEnd);
+
+  expect(directStart).toBeGreaterThan(exportStart);
+  expect(directEnd).toBeGreaterThan(directStart);
+  expect(directBlock).toContain("context.drawImage(liveCanvas");
+  expect(directBlock).toContain("context.imageSmoothingQuality=\"high\"");
+  expect(directBlock).toContain("rendererRerendered:false");
+  expect(directBlock).toContain("composerReconfigured:false");
+  expect(directBlock).not.toContain("renderer.render(");
+  expect(directBlock).not.toContain("composer.render(");
+  expect(directBlock).not.toContain("renderer.setSize(");
+});
+
 test("gem mask uses a dedicated camera layer instead of per-frame mesh visibility mutation", () => {
   const postSource = readFileSync("src/lib/aurum/post.ts", "utf8");
   const maskStart = postSource.indexOf("const cachedGemMeshes:any[]=[];");
