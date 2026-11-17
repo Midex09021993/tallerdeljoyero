@@ -506,8 +506,8 @@ test("quality refreshes do not force-disable Gem Mask-protected diamond AA modul
   expect(postSource).toContain("applyDiamondPostModules(getAurumPostControls());");
   expect(postSource).toContain("const ssaaEnabled=diamondMaskReady && ssaaRequested && canReconstruct");
   expect(postSource).toContain("const fxaaEnabled=diamondMaskReady && fxaaRequested");
-  // TAA is intentionally still fail-closed until its temporal path is validated.
-  expect(qualityBlock).toContain("taaPass.enabled=false");
+  // Quality refreshes delegate settled diamond TAA to the Gem Mask-protected coordinator.
+  expect(qualityBlock).toContain("Diamond TAA is owned by applyDiamondPostModules()");
 });
 
 test("Aurum exposes diamond-only AA and SSAA as independent modules", () => {
@@ -522,17 +522,19 @@ test("Aurum exposes diamond-only AA and SSAA as independent modules", () => {
   expect(controlsSource).toContain("diamondSsaaEnabled: value?.gemMaskEnabled === true && value?.diamondSsaaEnabled === true");
   expect(controlsSource).toContain("const normalize = (value: any): AurumPostControls");
   expect(controlsSource).toContain("gemMaskEnabled: value?.gemMaskEnabled === true");
-  expect(controlsSource).toContain('const STORAGE_KEY = "aurum:post-engine-controls:v4";');
+  expect(controlsSource).toContain('const STORAGE_KEY = "aurum:post-engine-controls:v5";');
   expect(controlsSource).toContain("migrated.gemMaskEnabled = true;");
   expect(controlsSource).toContain("migrated.diamondSsaaEnabled = true;");
   expect(controlsSource).toContain("migrated.gemFxaaEnabled = true;");
   expect(componentSource).toContain("gemMaskPass.enabled=getAurumPostControls().gemMaskEnabled");
+  expect(componentSource).toContain("composer.render()");
+  expect(componentSource).toContain("diamondTaaRendered");
   expect(componentSource).not.toContain("gemMaskPass.renderDiagnosticOverlay?.(renderer)");
   expect(controlsSource).toContain("diamondSsaaEnabled: value?.gemMaskEnabled === true && value?.diamondSsaaEnabled === true");
   expect(controlsSource).toContain("gemFxaaEnabled: true");
-  expect(componentSource).toContain("SSAA usa un render auxiliar y compone únicamente dentro de Gem Mask. Si la GPU no admite la escala segura, el módulo permanece inactivo. TAA continúa bloqueado.");
+  expect(componentSource).toContain("Cadena coordinada: Gem Mask limita el diamante; SSAA trabaja durante el movimiento; TAA acumula hasta 32 muestras con la cámara quieta y toma el relevo de SSAA; FXAA se aplica al final. Los metales y el entorno conservan la imagen base.");
   expect(controlsSource).toContain("diamondSsaaEnabled: true,");
-  expect(componentSource).toContain('item.key==="diamondTaaEnabled"||((item.key==="diamondSsaaEnabled"||item.key==="gemFxaaEnabled")&&!diamondPostControls.gemMaskEnabled)');
+  expect(componentSource).toContain('item.key!=="gemMaskEnabled"&&!diamondPostControls.gemMaskEnabled');
   expect(architectureSource).toContain('estado: "experimental"');
   expect(componentSource).toContain("disabled={blocked}");
   expect(architectureSource).toContain('id: "diamond-ssaa"');
