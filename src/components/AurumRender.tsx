@@ -3531,6 +3531,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             try {
               renderer.setPixelRatio(1);
               renderer.setSize(width,height,false);
+              // The gem mask and isolated diamond SSAA targets are independent
+              // render targets; resizing only the WebGL canvas leaves them at the
+              // viewport's old dimensions and misaligns the gem composite in 4K.
+              gemMaskPass?.setSize?.(width,height);
+              diamondSupersamplePass?.setSize?.(width,height);
+              const captureFxaaResolution=fxaaPass?.material?.uniforms?.resolution?.value;
+              captureFxaaResolution?.set?.(1/width,1/height);
               camara.aspect=width/height;
               camara.updateProjectionMatrix?.();
               diamondBvhRuntime?.update();
@@ -3562,6 +3569,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               });
             } finally {
               gemMaskPass.enabled=originalGemMaskEnabled;
+              gemMaskPass?.setSize?.(originalBufferWidth,originalBufferHeight);
+              diamondSupersamplePass?.setSize?.(originalBufferWidth,originalBufferHeight);
               if(originalFxaaResolution) fxaaPass?.material?.uniforms?.resolution?.value?.copy?.(originalFxaaResolution);
               renderer.setPixelRatio(originalPixelRatio);
               renderer.setSize(originalCssWidth,originalCssHeight,false);
