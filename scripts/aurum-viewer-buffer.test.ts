@@ -504,7 +504,7 @@ test("quality refreshes do not force-disable Gem Mask-protected diamond AA modul
   expect(qualityBlock).not.toContain("gemMaskPass.enabled=false");
   expect(qualityBlock).not.toContain("fxaaPass.enabled=fxaaActive");
   expect(postSource).toContain("applyDiamondPostModules(getAurumPostControls());");
-  expect(postSource).toContain("const ssaaEnabled=diamondMaskReady && ssaaRequested && canReconstruct");
+  expect(postSource).toContain("const ssaaEnabled=diamondMaskReady && ssaaRequested && !taaEnabled && canReconstruct");
   expect(postSource).toContain("const fxaaEnabled=diamondMaskReady && fxaaRequested");
   // Quality refreshes delegate settled diamond TAA to the Gem Mask-protected coordinator.
   expect(qualityBlock).toContain("Diamond TAA is owned by applyDiamondPostModules()");
