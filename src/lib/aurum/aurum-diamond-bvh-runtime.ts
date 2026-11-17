@@ -335,7 +335,7 @@ export async function createAurumDiamondBvhRuntime(options: {
           // the shader's optical response is validated; 0.08 visibly risks excess
           // see-through without adding distinct facet structure.
           transmission: family === "diamante"
-            ? (activeGemId === "diamante_inclusiones" ? 0 : 0)
+            ? 0.05
             : (useEmeraldBvhOptics || isRuby || isSapphire)
               ? 0
               : (emeraldProfile?.transmission ?? rubyProfile?.transmission ?? sapphireProfile?.transmission ?? (isImperialTopaz ? 0.88 : isParaibaTourmaline ? 0.91 : 0)),
@@ -358,11 +358,21 @@ export async function createAurumDiamondBvhRuntime(options: {
           // Small white melee: lower internal energy to prevent dense, sand-like
           // flicker while retaining enough neutral radiance to read as diamond.
           // Center, blue/pink diamonds and every non-diamond gemstone keep their calibration.
-          environmentIntensity: family === "diamante" ? (isNeutralMicroDiamond ? 1.28 : isNeutralSmallDiamond ? 1.38 : isSmallSecondaryDiamond ? 1.55 : isBlueDiamond ? 1.5 : isPinkDiamond ? 1.33 : mesh.userData?.aurumDiamondMicroCenterProtected ? (activeGemId === "diamante_vs" ? 1.89 : activeGemId === "diamante_inclusiones" ? 2.13 : 2.00) : activeGemId === "diamante_vs" ? 1.82 : activeGemId === "diamante_inclusiones" ? 2.05 : 1.92) : useEmeraldBvhOptics ? 1 : emeraldProfile?.environmentIntensity ?? rubyProfile?.environmentIntensity ?? sapphireProfile?.environmentIntensity ?? (isEmerald ? 1.5 : isRuby ? 1.0 : isSapphire ? 1.2 : isAmethyst ? 1.35 : isAquamarine ? 1.25 : isCitrine ? 1.2 : isBlueTopaz ? 1.25 : isImperialTopaz ? 1.22 : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 1.55 : 1.3) : isTanzanite ? 1.25 : isMoissanite ? 1.35 : isZircon ? 1.2 : isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 1.18 : 1.14),
+          environmentIntensity: family === "diamante"
+            ? (isNeutralMicroDiamond ? 1.15
+              : isNeutralSmallDiamond ? 1.22
+              : isSmallSecondaryDiamond ? 1.25
+              : isBlueDiamond ? 1.30
+              : isPinkDiamond ? 1.25
+              : 1.30)
+            : useEmeraldBvhOptics ? 1 : emeraldProfile?.environmentIntensity ?? rubyProfile?.environmentIntensity ?? sapphireProfile?.environmentIntensity ?? (isEmerald ? 1.5 : isRuby ? 1.0 : isSapphire ? 1.2 : isAmethyst ? 1.35 : isAquamarine ? 1.25 : isCitrine ? 1.2 : isBlueTopaz ? 1.25 : isImperialTopaz ? 1.22 : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 1.55 : 1.3) : isTanzanite ? 1.25 : isMoissanite ? 1.35 : isZircon ? 1.2 : isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 1.18 : 1.14),
           // Chromatic splitting is restrained on small white melee to avoid
           // unstable sub-pixel color fragments that read as moving particles.
           dispersion: family === "diamante"
-            ? (isNeutralMicroDiamond ? 0.0012 : isNeutralSmallDiamond ? 0.0022 : isSmallSecondaryDiamond ? 0.0035 : isBlueDiamond ? 0.004 : isPinkDiamond ? 0.012 : activeGemId === "diamante_natural" ? 0.01 : 0.006)
+            ? (isNeutralMicroDiamond ? 0.0003
+              : isNeutralSmallDiamond ? 0.0008
+              : isSmallSecondaryDiamond ? 0.0015
+              : activeGemId === "diamante_natural" ? 0.008 : 0.005)
             : useEmeraldBvhOptics ? 0 : (emeraldProfile?.dispersion ?? rubyProfile?.dispersion ?? sapphireProfile?.dispersion ?? (isRuby ? 0.001 : isSapphire ? 0.001 : isAmethyst || isAquamarine || isCitrine || isBlueTopaz || isImperialTopaz || isParaibaTourmaline || isTanzanite || isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 0.0002 : isZircon ? 0.001 : isMoissanite ? 0.009 : 0.01)),
           ior: emeraldProfile?.ior ?? rubyProfile?.ior ?? sapphireProfile?.ior ?? (family === "diamante" ? 2.417 : isEmerald ? 1.58 : isRuby ? 1.762 : isSapphire ? 1.762 : isAmethyst ? 1.55 : isAquamarine ? 1.577 : isCitrine || isQuartz ? 1.544 : isBlueTopaz || isImperialTopaz ? 1.63 : isParaibaTourmaline || isOtherTourmaline ? 1.62 : isTanzanite ? 1.695 : isMoissanite ? 2.65 : isSpinel ? 1.718 : isGarnet ? 1.78 : isPeridot ? 1.65 : isMorganite ? 1.58 : isZircon ? 1.92 : isChrysoberyl ? 1.75 : 1.55),
           // Match the catalog's iJewel inclusion reference (absorption 1.6)
@@ -397,13 +407,12 @@ export async function createAurumDiamondBvhRuntime(options: {
             if (!isBlueDiamond && !isPinkDiamond) {
               const isMicro = nextTier === "micro";
               const isSmall = nextTier === "small";
-              const baseEnvironment = activeGemId === "diamante_vs" ? 1.82
-                : activeGemId === "diamante_inclusiones" ? 2.05 : 1.92;
-              const baseDispersion = activeGemId === "diamante_natural" ? 0.01 : 0.006;
+              const baseEnvironment = 1.30;
+              const baseDispersion = activeGemId === "diamante_natural" ? 0.008 : 0.005;
               packageApi.setDiamondOptions(prepared.material, {
                 rgbBoost: isMicro ? [1.06, 1.06, 1.06] : isSmall ? [1.09, 1.09, 1.09] : [1.08, 1.08, 1.08],
-                environmentIntensity: isMicro ? 1.28 : isSmall ? 1.38 : baseEnvironment,
-                dispersion: isMicro ? 0.0012 : isSmall ? 0.0022 : baseDispersion,
+                environmentIntensity: isMicro ? 1.15 : isSmall ? 1.22 : baseEnvironment,
+                dispersion: isMicro ? 0.0003 : isSmall ? 0.0008 : baseDispersion,
                 rayBounces: isMicro ? 2 : isSmall ? 3 : 5,
               });
             }
