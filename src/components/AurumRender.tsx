@@ -2790,6 +2790,20 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               if(!x?.isMesh||x.userData?.aurumInternalInclusion){ignoredMeshes++;return;}
               const meta=x.userData?.aurumRhino??{};
               const attrs=x.userData?.attributes??{};
+              const source=x.userData?.aurumRhinoSource??{};
+              const instance=x.userData?.aurumRhinoInstanceSource??{};
+              const manualOverride=getAurumLayerCategoryOverride(modelo.userData?.aurumLayerCategoryOverrides,{
+                layerId:instance.layerId??source.layerId??attrs.layerId??attrs.LayerId??meta.rhinoLayerId,
+                layerIndex:instance.layerIndex??source.layerIndex??attrs.layerIndex??attrs.LayerIndex??meta.layerIndex,
+                layerName:instance.layerName??source.layerName??attrs.layerName??attrs.LayerName??meta.capa,
+              });
+              if(manualOverride){
+                x.userData={...(x.userData??{}),aurumRhino:{...meta,categoria:manualOverride,aurumManualCategoryAssignment:true,aurumManualGemAssignment:manualOverride==="gema"}};
+                if(manualOverride==="metal")metalCandidates++;
+                else if(manualOverride==="gema")protectedGemMeshes++;
+                else ignoredMeshes++;
+                return;
+              }
               const name=[x.name,meta.capa,attrs.layerName,attrs.LayerName].filter(Boolean).join(" ");
               const mats=Array.isArray(x.material)?x.material:[x.material];
               const semantic=classifyAurumSemanticObject(x,null);
@@ -2846,15 +2860,22 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // Prefer an explicit gem category. If metadata is absent or only
             // says "otro", recover the category from a clearly named source layer.
             // Never infer gem identity from color or recolor the whole model.
+            const source=x.userData?.aurumRhinoSource??{};
+            const instance=x.userData?.aurumRhinoInstanceSource??{};
+            const manualOverride=getAurumLayerCategoryOverride(modelo.userData?.aurumLayerCategoryOverrides,{
+              layerId:instance.layerId??source.layerId??attrs.layerId??attrs.LayerId??meta.rhinoLayerId,
+              layerIndex:instance.layerIndex??source.layerIndex??attrs.layerIndex??attrs.LayerIndex??meta.layerIndex,
+              layerName:instance.layerName??source.layerName??attrs.layerName??attrs.LayerName??meta.capa,
+            });
             const sourceCategory=String(meta.categoria??"").toLowerCase();
             const layerCategory=clasificarCapa(layerName,colorRhinoHex(meta.colorCapa));
             const semantic=classifyAurumSemanticObject(x,null);
             const semanticCategory=semantic.confidence>=.7
               ? semantic.classification==="gem" ? "gema" : semantic.classification==="metal" ? "metal" : null
               : null;
-            const category=sourceCategory==="gema" || layerCategory==="gema" || semanticCategory==="gema" ? "gema" :
+            const category=manualOverride ?? (sourceCategory==="gema" || layerCategory==="gema" || semanticCategory==="gema" ? "gema" :
               sourceCategory==="metal" || layerCategory==="metal" || semanticCategory==="metal" ? "metal" :
-              sourceCategory || "otro";
+              sourceCategory || "otro");
             if(category!=="gema")return;
             gemMeshes++;
             const layer=layerName.toLocaleLowerCase();
