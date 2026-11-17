@@ -369,11 +369,22 @@ export const renderAurumInclusions=(THREE: typeof import("three"),target: import
   // Catalog inclusionStrength is the grade-specific source of truth for gems.
   // The engine presets for emerald grades intentionally have lower generic
   // densities, which previously masked the catalog differences (especially Q1).
-  if(preset.familia==="Esmeralda") config.density=Math.max(0,Math.min(1,Number(g.inclusionStrength??preset.inclusionDensity)));
-  const enabled=preset.inclusions || (!!g.inclusionStrength && g.inclusionStyle!=="ninguna");
+  const catalogStrength=Math.max(0,Math.min(1,Number(g.inclusionStrength??preset.inclusionDensity??0)));
+  if(Number.isFinite(catalogStrength)) config.density=catalogStrength;
+  // Commercial gems stay optically clean unless the catalog explicitly names
+  // an inclusion grade. Phenomenal effects and the emerald jardin grades keep
+  // their dedicated, intentionally authored structures.
+  const explicitInclusionGrade=/(?:^|[_-])inclusiones(?:$|[_-])/i.test(String(g.id??""));
+  const isEmeraldGrade=preset.familia==="Esmeralda" && catalogStrength>0;
+  const hasOpticalPhenomenon=!!g.fenomenoOptico;
+  const enabled=explicitInclusionGrade || isEmeraldGrade || hasOpticalPhenomenon;
   if(!enabled || config.density<=0)return;
-  const box=new THREE.Box3().setFromObject(target);
-  const size=box.getSize(new THREE.Vector3());
+  const meshTarget=target as any;
+  const geometry=meshTarget.geometry;
+  if(geometry && !geometry.boundingBox && typeof geometry.computeBoundingBox==="function") geometry.computeBoundingBox();
+  const localBounds=geometry?.boundingBox;
+  const center=localBounds?.getCenter?.(new THREE.Vector3()) ?? new THREE.Vector3();
+  const size=localBounds?.getSize?.(new THREE.Vector3()) ?? new THREE.Box3().setFromObject(target).getSize(new THREE.Vector3());
 
   // Emeralds get a dedicated inclusion scene instead of the generic particle
   // system used by other gemstones.
@@ -425,7 +436,11 @@ export const renderAurumInclusions=(THREE: typeof import("three"),target: import
     else if(config.type==="feather"||config.type==="veil")geometry=new THREE.TetrahedronGeometry(p.size*1.6,0);
     else geometry=new THREE.IcosahedronGeometry(p.size,1);
     const inclusion=new THREE.Mesh(geometry,material);
-    inclusion.position.set(p.x*size.x*.46,p.y*size.y*.46,p.z*size.z*.46);
+    inclusion.position.set(
+      center.x+p.x*size.x*.46,
+      center.y+p.y*size.y*.46,
+      center.z+p.z*size.z*.46,
+    );
     inclusion.rotation.set(p.y*3.1,p.z*4.7,p.x*5.3);
     if(config.type==="silk"||config.type==="needle")inclusion.scale.set(1,1,.35);
     inclusion.userData["aurumInternalInclusion"]=true;
