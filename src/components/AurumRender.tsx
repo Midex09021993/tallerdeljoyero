@@ -2555,6 +2555,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             fov: camara.fov, aspect: camara.aspect, zoom: camara.zoom, near: camara.near, far: camara.far,
             distance: camara.position.distanceTo(controles.target),
             projectedWidth: maxX - minX, projectedHeight: maxY - minY,
+            viewportWidth: renderer.domElement.clientWidth, viewportHeight: renderer.domElement.clientHeight,
+            projectedPixelWidth: (maxX - minX) * renderer.domElement.clientWidth * 0.5,
+            projectedPixelHeight: (maxY - minY) * renderer.domElement.clientHeight * 0.5,
             projectedCenter: [(minX + maxX) * 0.5, (minY + maxY) * 0.5],
           };
         },
