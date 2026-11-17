@@ -39,6 +39,7 @@ import { resolveAurumLayerKey } from "../lib/aurum/layer-identity";
 import { applyAurumMaterialToModel, applyAurumGemToTarget, clearAurumGemFromTarget, getAurumMaterialAdapterServices, prepareAurumGemLayerIndex } from "../lib/aurum/material-application";
 import { captureAurumGemTransitionState, createAurumGemTransition } from "../lib/aurum/gem-transition";
 import { inspectAurumMesh } from "../lib/aurum/mesh-preflight";
+import { classifyAurumSemanticObject } from "../lib/aurum/semantic-object-recognition";
 
 import { applyAurumInitialModelMaterials } from "../lib/aurum/model-materials";
 import { disposeAurumThicknessCacheForTarget } from "../lib/aurum/thickness-map";
@@ -2766,7 +2767,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               const attrs=x.userData?.attributes??{};
               const name=[x.name,meta.capa,attrs.layerName,attrs.LayerName].filter(Boolean).join(" ");
               const mats=Array.isArray(x.material)?x.material:[x.material];
-              const hasExplicitGemSignal=gemNamePattern.test(name)||mats.some((mat:any)=>{
+              const semantic=classifyAurumSemanticObject(x,null);
+              const hasExplicitGemSignal=semantic.classification==="gem"&&semantic.confidence>=.7
+                || gemNamePattern.test(name)||mats.some((mat:any)=>{
                 const materialName=String(mat?.name??"");
                 const metalness=Number(mat?.metalness??0);
                 return Boolean(mat?.userData?.aurumDiamondShader)||
@@ -2820,8 +2823,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // Never infer gem identity from color or recolor the whole model.
             const sourceCategory=String(meta.categoria??"").toLowerCase();
             const layerCategory=clasificarCapa(layerName,colorRhinoHex(meta.colorCapa));
-            const category=sourceCategory==="gema" ? "gema" :
-              (!sourceCategory || sourceCategory==="otro") ? layerCategory : sourceCategory;
+            const semantic=classifyAurumSemanticObject(x,null);
+            const semanticCategory=semantic.confidence>=.7
+              ? semantic.classification==="gem" ? "gema" : semantic.classification==="metal" ? "metal" : null
+              : null;
+            const category=sourceCategory==="gema" || layerCategory==="gema" || semanticCategory==="gema" ? "gema" :
+              sourceCategory==="metal" || layerCategory==="metal" || semanticCategory==="metal" ? "metal" :
+              sourceCategory || "otro";
             if(category!=="gema")return;
             gemMeshes++;
             const layer=layerName.toLocaleLowerCase();
@@ -2833,6 +2841,23 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             visited.add(key);
             aplicarGema(g,x,false,false);
           });
+          // An explicit CAD-tree/viewport selection is a safe manual target
+          // when an imported GLB has no semantic or Rhino layer metadata.
+          // Never fan this fallback out to neighboring meshes.
+          if(gemMeshes===0 && parteActiva?.isMesh){
+            const selectedMeta=parteActiva.userData?.aurumRhino??{};
+            const selectedSemantic=classifyAurumSemanticObject(parteActiva,null);
+            const selectedCategory=String(selectedMeta.categoria??"").toLowerCase();
+            if(selectedCategory!=="metal" && selectedSemantic.classification!=="metal"){
+              parteActiva.userData={
+                ...(parteActiva.userData??{}),
+                aurumRhino:{...selectedMeta,categoria:"gema",aurumManualGemAssignment:true},
+              };
+              gemMeshes=1;
+              visited.add("manual-selection:"+parteActiva.uuid);
+              aplicarGema(g,parteActiva,false,false);
+            }
+          }
           console.info("[AURUM][CATALOG GEM] Selección aplicada", {gemId:g.id, gemMeshes, layers:visited.size});
           viewerLoopRef.current?.renderNow?.();
           // Batch public-catalog BVH reconciliation once, after the new physical
@@ -3788,11 +3813,15 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         const layerCategory = clasificarCapa(capa || "", colorRhinoHex(selectedLayerColor) ?? meta.colorCapa);
         // Match the catalog resolver: a stale "otro" tag must not hide an
         // explicitly gem-named Rhino/GLB layer from the one-click workflow.
-        const categoria = (sourceCategory === "gema"
+        const semantic = classifyAurumSemanticObject(obj, selectedLayerRecord ?? (capa ? { name: capa } : null));
+        const semanticCategory = semantic.confidence >= .7
+          ? semantic.classification === "gem" ? "gema" : semantic.classification === "metal" ? "metal" : null
+          : null;
+        const categoria = (sourceCategory === "gema" || layerCategory === "gema" || semanticCategory === "gema"
           ? "gema"
-          : (!sourceCategory || sourceCategory === "otro")
-            ? layerCategory
-            : sourceCategory) as CategoriaParte;
+          : sourceCategory === "metal" || layerCategory === "metal" || semanticCategory === "metal"
+            ? "metal"
+            : sourceCategory === "otro" || !sourceCategory ? "otro" : sourceCategory) as CategoriaParte;
         setParteSeleccionada(obj.uuid);
         setParteSeleccionadaNombre(nombre);
         setParteSeleccionadaCapa(capa);
