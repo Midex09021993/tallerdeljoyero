@@ -624,6 +624,15 @@ export async function createAurumPostPipeline(
           maskCoveragePercent:gemMaskCoveragePercent,
           readbackAt:gemMaskReadbackAt,
           readbackPending:gemMaskReadbackRequested,
+          postModules:{
+            gemMask:Boolean(gemMaskPass?.enabled),
+            ssaa:Boolean(diamondSupersamplePass?.enabled && diamondSupersampleCompositePass?.enabled),
+            fxaa:Boolean(fxaaPass?.enabled),
+            taa:Boolean(taaPass?.enabled && diamondTaaSavePass?.enabled && diamondTaaCompositePass?.enabled),
+            taaAccumulating:Boolean(taaPass?.accumulate),
+            taaSampleIndex:Number(taaPass?.accumulateIndex??-1),
+            taaSampleLevel:Number(taaPass?.sampleLevel??-1),
+          },
         };
       },
       renderDiagnosticOverlay(activeRenderer:any){
