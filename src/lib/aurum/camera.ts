@@ -255,7 +255,7 @@ export function applyAurumCameraView(
       ];
       const projectedHeight = (viewDirection: THREE.Vector3, cameraDistance: number) => {
         const probe = new THREE.PerspectiveCamera(camera.fov, aspect, camera.near, camera.far);
-        probe.up.set(0, 1, 0);
+        probe.up.copy(superiorDirection);
         probe.position.copy(target).addScaledVector(viewDirection, cameraDistance);
         probe.lookAt(target);
         probe.updateMatrixWorld(true);
