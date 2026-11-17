@@ -24,10 +24,10 @@ const PRESETS: AurumModelStagePreset[] = [
 ];
 
 export function AurumModelStage({onApply}:{onApply:(preset:AurumModelStagePreset)=>boolean|void}) {
-  const [selectedId,setSelectedId]=useState(PRESETS[0].id);
+  const [selectedId,setSelectedId]=useState(PRESETS[0]!.id);
   const [autoApply,setAutoApply]=useState(false);
   const [lastAppliedId,setLastAppliedId]=useState<string|null>(null);
-  const selected=useMemo(()=>PRESETS.find(p=>p.id===selectedId)??PRESETS[0],[selectedId]);
+  const selected=useMemo(()=>PRESETS.find(p=>p.id===selectedId)??PRESETS[0]!,[selectedId]);
   const lastApplied=PRESETS.find(p=>p.id===lastAppliedId);
 
   const apply=(preset:AurumModelStagePreset)=>{
