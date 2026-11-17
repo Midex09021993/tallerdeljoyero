@@ -191,21 +191,33 @@ export function applyAurumCameraView(
   category: string = "Otro",
   framingScale: number = 1,
 ) {
+  if (model) model.updateWorldMatrix(true, true);
   const productSphere = getAurumVisibleProductSphere(model);
   const target = productSphere.center.clone();
   const profile = getAurumProductCameraProfile(category);
+
+  // Define las vistas en los ejes propios del modelo, no en los globales.
+  // Los modelos Rhino/GLB pueden llegar con una orientación distinta; usar
+  // +X global producía una lateral incorrecta aunque el selector funcionara.
+  const modelWorldQuaternion = model
+    ? model.getWorldQuaternion(new THREE.Quaternion())
+    : new THREE.Quaternion();
+  const modelAxis = (x: number, y: number, z: number) =>
+    new THREE.Vector3(x, y, z).applyQuaternion(modelWorldQuaternion).normalize();
+  const frontalDirection = modelAxis(0, 0, 1);
+  const lateralDirection = modelAxis(1, 0, 0);
+  const superiorDirection = modelAxis(0, 1, 0);
   const direction = view === "frontal"
-    ? new THREE.Vector3(0, 0, 1)
+    ? frontalDirection
     : view === "superior"
-      ? new THREE.Vector3(0, 1, 0)
+      ? superiorDirection
       : view === "lateral"
-        // Lateral técnica: azimut 90° exactos y elevación 0° (eje +X, sin componente Y/Z).
-        ? new THREE.Vector3(1, 0, 0)
-        : new THREE.Vector3(0.62, Math.max(profile.vertical * 2.1, 0.78), 1).normalize();
+        ? lateralDirection
+        : modelAxis(0.62, Math.max(profile.vertical * 2.1, 0.78), 1);
 
   const requestedUp = view === "superior"
-    ? new THREE.Vector3(0, 0, -1)
-    : new THREE.Vector3(0, 1, 0);
+    ? modelAxis(0, 0, -1)
+    : superiorDirection;
 
   // Calcular UNA distancia para todas las orientaciones. La esfera circunscrita
   // garantiza que la pieza completa permanezca dentro del encuadre incluso
@@ -250,12 +262,12 @@ export function applyAurumCameraView(
         const ys = corners.map(point => point.clone().project(probe).y);
         return Math.max(...ys) - Math.min(...ys);
       };
-      const frontalHeight = projectedHeight(new THREE.Vector3(0, 0, 1), referenceDistance);
-      const lateralHeight = projectedHeight(new THREE.Vector3(1, 0, 0), referenceDistance);
+      const frontalHeight = projectedHeight(frontalDirection, referenceDistance);
+      const lateralHeight = projectedHeight(lateralDirection, referenceDistance);
       if (frontalHeight > 1e-6 && lateralHeight > 1e-6) {
         // Repetir la corrección una vez reduce el error de perspectiva residual.
         distance = referenceDistance * THREE.MathUtils.clamp(lateralHeight / frontalHeight, 0.8, 1.2);
-        const correctedHeight = projectedHeight(new THREE.Vector3(1, 0, 0), distance);
+        const correctedHeight = projectedHeight(lateralDirection, distance);
         if (correctedHeight > 1e-6) {
           distance *= THREE.MathUtils.clamp(correctedHeight / frontalHeight, 0.95, 1.05);
         }
