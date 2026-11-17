@@ -24,7 +24,7 @@ export type MaterialId =
   | "platino_pulido" | "platino_mate"
   | "oro24_pulido" | "oro18_champan" | "oro18_verde" | "oro18_verde_blanco_ijewel" | "oro18_verde_blanco_glb"
   | "oro18a_artesanal_pulido" | "oro18a_calido" | "oro18_naranja" | "oro18_rojo" | "oro18_purpura" | "oro18_azul" | "oro18_gris" | "oro18_martillado"
-  | "paladio_pulido" | "rodio_negro" | "titanio_pulido";
+  | "paladio_pulido" | "rodio_negro" | "titanio_pulido" | "cera_microfusion_roja";
 export type EscenarioId = "oscuro" | "claro" | "luxury" | "marmol" | "transparente" | "producto" | "galeria" | "oroCalido" | "gemaClara" | "ijewelReference" | "ijewelReflectiveReference" | "ijewelEnvironmentReference" | "estudioRosaPremium" | "ijewel01" | "ijewel02" | "ijewel03" | "ijewel04" | "ijewel05" | "ijewel06" | "ijewel07" | "ijewel08" | "ijewel09" | "ijewel10" | "ijewel11" | "ijewel12";
 export type VistaId = "perspectiva" | "frontal" | "superior" | "lateral";
 export type IluminacionId = "studioSoft" | "studioHard" | "jewelry" | "luxury";
@@ -223,6 +223,8 @@ export const MATERIALES: MaterialConfig[] = [
   { id:"paladio_pulido", grupo:"Especiales", nombre:"Paladio Pulido", color:0xd1d5d9, metalness:1, roughness:.085, envMapIntensity:2.05, clearcoat:.18 },
   { id:"rodio_negro", grupo:"Especiales", nombre:"Rodio Negro", color:0x2b3035, metalness:1, roughness:.13, envMapIntensity:1.62, clearcoat:.16 },
   { id:"titanio_pulido", grupo:"Especiales", nombre:"Titanio Pulido", color:0x90989f, metalness:.96, roughness:.15, envMapIntensity:1.68, clearcoat:.12 },
+  // Material visual no metálico para simular patrones de cera roja de microfusión; no representa parámetros de una impresora específica.
+  { id:"cera_microfusion_roja", grupo:"Especiales", nombre:"Cera roja · Microfusión", color:0xb9232f, metalness:0, roughness:.72, envMapIntensity:.28, clearcoat:.015, anisotropy:0 },
 ];
 
 export const ESCENARIOS: { id: EscenarioId; nombre: string; clase: string; descripcion:string; activo:boolean; numero?:string; horneado?: "A"|"B" }[] = [
