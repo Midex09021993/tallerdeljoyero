@@ -2345,17 +2345,27 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         // dimensions, color, or a metal/prong mesh.
         const initialDiamond=GEMAS.find((gem:any)=>gem.id==="diamante_natural");
         if(initialDiamond){
-          const assignedGemLayers=new Set<string>();
-          let initialDiamondMeshes=0;
+          const gemLayers=new Map<string,{target:any;hasSavedAssignment:boolean}>();
           interno.traverse((mesh:any)=>{
             if(!mesh?.isMesh||mesh.userData?.aurumInternalInclusion)return;
             const meta=mesh.userData?.aurumRhino??{};
             if(String(meta.categoria??"").toLowerCase()!=="gema")return;
-            if(String(mesh.userData?.aurumActiveGemId??"").trim())return;
             const layerKey=String(meta.layerKey??meta.capa??mesh.uuid).trim().toLocaleLowerCase();
-            if(assignedGemLayers.has(layerKey))return;
-            assignedGemLayers.add(layerKey);
-            if(aplicarGema(initialDiamond,mesh,false,false))initialDiamondMeshes++;
+            const current=gemLayers.get(layerKey);
+            if(current){
+              if(String(mesh.userData?.aurumActiveGemId??"").trim())current.hasSavedAssignment=true;
+              return;
+            }
+            gemLayers.set(layerKey,{
+              target:mesh,
+              hasSavedAssignment:Boolean(String(mesh.userData?.aurumActiveGemId??"").trim()),
+            });
+          });
+          let initialDiamondMeshes=0;
+          gemLayers.forEach(({target,hasSavedAssignment})=>{
+            // A saved/materialized gem choice on any mesh protects the entire CAD layer.
+            if(hasSavedAssignment)return;
+            if(aplicarGema(initialDiamond,target,false,false))initialDiamondMeshes++;
           });
           if(initialDiamondMeshes>0){
             console.info("[AURUM][GEM INITIAL]",{
