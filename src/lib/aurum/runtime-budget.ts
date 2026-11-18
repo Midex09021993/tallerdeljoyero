@@ -47,5 +47,5 @@ export function getAurumRuntimeBudget(triangleCount:number):AurumRuntimeBudget {
   if(triangles<=900_000){
     return {triangleCount:triangles,tier:"very-dense",pixelRatioCap:1.40,transmissionScaleCap:.25,interactionTransmissionScale:.25,interactionPixelRatio:1.40,diamondSupersampleScaleCap:1.65,diamondLiveSupersampleScaleCap:1.5};
   }
-  return {triangleCount:triangles,tier:"extreme",pixelRatioCap:1.25,transmissionScaleCap:.20,interactionTransmissionScale:.18,interactionPixelRatio:1.25,diamondSupersampleScaleCap:1.7,diamondLiveSupersampleScaleCap:1.5};
+  return {triangleCount:triangles,tier:"extreme",pixelRatioCap:1.25,transmissionScaleCap:.20,interactionTransmissionScale:.18,interactionPixelRatio:1.25,diamondSupersampleScaleCap:1.5,diamondLiveSupersampleScaleCap:1.5};
 }
