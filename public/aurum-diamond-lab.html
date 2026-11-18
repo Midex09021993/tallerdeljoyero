@@ -167,6 +167,9 @@ async function startComparison(){
   const meshA=new THREE.Mesh(ga,matA);meshA.onBeforeRender=()=>diamondApi.updateDiamondCamera(matA,a.camera);a.scene.add(meshA);
   const matB=createShaderMaterial(gb,state.env,b.camera,settings);const meshB=new THREE.Mesh(gb,matB);meshB.onBeforeRender=()=>matB.userData.updateForMesh(b.camera,meshB);b.scene.add(meshB);
   await startMu(gc,state.env);
+  const linked=[a.controls,b.controls,state.mu.controls];let syncing=false;
+  linked.forEach(source=>source.addEventListener("change",()=>{if(syncing)return;syncing=true;for(const target of linked){if(target===source)continue;target.target.copy(source.target);target.object.position.copy(source.object.position);target.object.quaternion.copy(source.object.quaternion);target.update();}syncing=false;}));
+  state.applySettings=(v)=>{diamondApi.setDiamondOptions?.(matA,{ior:v.ior,dispersion:v.disp,environmentIntensity:v.env});matB.uniforms.uIor.value=v.ior;matB.uniforms.uDispersion.value=v.disp;matB.uniforms.uExposure.value=v.exp;matB.uniformsNeedUpdate=true;state.mu.material.ior=v.ior;state.mu.material.dispersion=v.disp;state.mu.material.envMapIntensity=v.env;state.mu.engine.update?.();};
   const render=()=>{state.raf=requestAnimationFrame(render);a.controls.update();b.controls.update();a.renderer.render(a.scene,a.camera);b.renderer.render(b.scene,b.camera)};
   render();$("reloadBtn").disabled=false;setStatus("Tres motores activos · "+(state.selected.name||"diamante seleccionado"));
  }catch(err){console.error(err);setStatus("No se pudo iniciar: "+(err?.message||err));$("reloadBtn").disabled=false;}
