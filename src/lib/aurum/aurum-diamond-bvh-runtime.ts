@@ -402,9 +402,7 @@ export async function createAurumDiamondBvhRuntime(options: {
           // unstable sub-pixel color fragments that read as moving particles.
           // Neutral white diamonds keep a unified gamma of 1.0 at every size tier.
           dispersion: family === "diamante"
-            ? (isNeutralMicroDiamond ? 0.0003
-              : isNeutralSmallDiamond ? 0.0008
-              : isNeutralWhiteDiamond ? 0.010
+            ? (isNeutralWhiteDiamond ? 0.010
               : isSmallSecondaryDiamond ? 0.0015
               : 0.004)
             : useEmeraldBvhOptics ? 0 : (emeraldProfile?.dispersion ?? rubyProfile?.dispersion ?? sapphireProfile?.dispersion ?? (isRuby ? 0.001 : isSapphire ? 0.001 : isAmethyst || isAquamarine || isCitrine || isBlueTopaz || isImperialTopaz || isParaibaTourmaline || isTanzanite || isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 0.0002 : isZircon ? 0.001 : isMoissanite ? 0.009 : 0.01)),
@@ -448,7 +446,7 @@ export async function createAurumDiamondBvhRuntime(options: {
                 transmission: isMicro || isSmall ? 0.05 : 0,
                 rgbBoost: [1, 1, 1],
                 environmentIntensity: isMicro ? 1.20 : 1.30,
-                dispersion: isMicro ? 0.0003 : isSmall ? 0.0008 : 0.010,
+                dispersion: 0.010,
                 gamma: 1.0,
                 rayBounces: 5,
               });
