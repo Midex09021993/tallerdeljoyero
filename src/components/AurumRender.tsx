@@ -2472,11 +2472,17 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               ??(nameKey?savedGemAssignments[nameKey]:undefined)
               ??(indexKey?savedGemAssignments[indexKey]:undefined)
               ??(idKey?savedGemAssignments[idKey]:undefined)
-              ??Object.values(savedGemAssignments).find((assignment:any)=>
-                (layerName&&String(assignment?.layerName??"").trim().toLocaleLowerCase()===layerName.toLocaleLowerCase())
-                ||(layerIndex!=null&&assignment?.layerIndex!=null&&String(assignment.layerIndex)===String(layerIndex))
-                ||(layerId&&String(assignment?.layerId??"").trim()===layerId)
-              );
+              // Resolve persisted assignments by the strongest available layer identity.
+              // Never let a duplicated Rhino layer ID make Gem 02–04 inherit Gem 01's choice.
+              ??(layerName?Object.values(savedGemAssignments).find((assignment:any)=>
+                String(assignment?.layerName??"").trim().toLocaleLowerCase()===layerName.toLocaleLowerCase()
+              ):undefined)
+              ??(layerIndex!=null?Object.values(savedGemAssignments).find((assignment:any)=>
+                assignment?.layerIndex!=null&&String(assignment.layerIndex)===String(layerIndex)
+              ):undefined)
+              ??(layerId?Object.values(savedGemAssignments).find((assignment:any)=>
+                String(assignment?.layerId??"").trim()===layerId
+              ):undefined);
             const activeGemId=String(mesh.userData?.aurumActiveGemId??"").trim();
             const pendingGemId=String(mesh.userData?.aurumPendingInitialGemId??mesh.userData?.aurumInitialLayerGemId??"").trim();
             const inheritedGemId=String(context.metadata?.gemId??context.source?.gemId??context.instance?.gemId??"").trim();
@@ -2486,17 +2492,19 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           let initialDiamondMeshes=0;
           let assignedLayers=0;
           let failedLayers=0;
+          const assignedLayerNames:string[]=[];
           gemLayers.forEach(({target,gemId,layerName,layerIndex,layerId})=>{
             const selectedGem=GEMAS.find((gem:any)=>gem.id===gemId)||initialDiamond;
             if(aplicarGema(selectedGem,target,false,false)){
               assignedLayers++;
+              assignedLayerNames.push(layerName||"sin-nombre");
               if(selectedGem.id===initialDiamond.id)initialDiamondMeshes++;
             }else{
               failedLayers++;
               console.error("[AURUM][GEM INITIAL APPLICATION FAILED]",{targetName:target?.name??null,layerName,layerIndex,layerId,requestedGemId:selectedGem.id});
             }
           });
-          console.info("[AURUM][GEM INITIAL]",{defaultGemId:initialDiamond.id,classifiedGemMeshes,assignedLayers,defaultDiamondLayers:initialDiamondMeshes,failedLayers,manualOverrideGemMeshes:overriddenGemMeshes,resolver:"ancestry-and-rhino-layer-manifest"});
+          console.info("[AURUM][GEM INITIAL]",{defaultGemId:initialDiamond.id,classifiedGemMeshes,assignedLayers,assignedLayerNames,defaultDiamondLayers:initialDiamondMeshes,failedLayers,manualOverrideGemMeshes:overriddenGemMeshes,resolver:"ancestry-and-rhino-layer-manifest"});
         }
         // Register the loaded model's diamond meshes before BVH setup. The micro
         // pipeline was created with an empty scene, so its initial refresh cannot
