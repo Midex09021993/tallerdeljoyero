@@ -339,15 +339,19 @@ export async function createAurumDiamondBvhRuntime(options: {
         const emeraldProfile = useEmeraldBvhOptics ? resolveAurumEmeraldBvhProfile(materials[0]) : null;
         const rubyProfile = isRuby ? resolveAurumRubyBvhProfile(materials[0]) : null;
         const sapphireProfile = isSapphire ? resolveAurumSapphireBvhProfile(materials[0]) : null;
+        // Match the approved isolated AURUM BVH optical reference only on the
+        // protected center white diamond. Secondary/colored diamonds retain
+        // their existing calibrated profiles and tier-dependent energy controls.
+        const isCenterWhiteDiamond = family === "diamante"
+          && Boolean(mesh.userData?.aurumDiamondMicroCenterProtected)
+          && !isBlueDiamond
+          && !isPinkDiamond;
         const prepared = prepareAurumDiamondBvhExperiment(packageApi, mesh, {
           ...(emeraldProfile ?? rubyProfile ?? sapphireProfile ?? {}),
-          // Controlled test: only the inclusions emerald gets a slight BVH transmission (0.08); other emeralds remain at zero to isolate the visual difference.
-          // iJewel's inclusion reference uses transmission 0. Keep the BVH
-          // experiment opaque to direct refracted-environment contribution until
-          // the shader's optical response is validated; 0.08 visibly risks excess
-          // see-through without adding distinct facet structure.
+          // The approved A/B reference uses zero direct transmission; internal
+          // BVH refraction supplies the visible diamond response.
           transmission: family === "diamante"
-            ? 0.05
+            ? (isCenterWhiteDiamond ? 0 : 0.05)
             : (useEmeraldBvhOptics || isRuby || isSapphire)
               ? 0
               : (emeraldProfile?.transmission ?? rubyProfile?.transmission ?? sapphireProfile?.transmission ?? (isImperialTopaz ? 0.88 : isParaibaTourmaline ? 0.91 : 0)),
@@ -361,11 +365,12 @@ export async function createAurumDiamondBvhRuntime(options: {
           // compact facets read bright instead of graphite-grey; keep colored
           // diamonds and the center stone on their existing calibrated values.
           rgbBoost: family === "diamante"
-            ? (isNeutralMicroDiamond ? [1.10, 1.10, 1.10]
+            ? (isCenterWhiteDiamond ? undefined
+              : isNeutralMicroDiamond ? [1.10, 1.10, 1.10]
               : isNeutralSmallDiamond ? [1.14, 1.14, 1.14]
               : isSmallSecondaryDiamond && !isBlueDiamond && !isPinkDiamond
                 ? [1.16, 1.16, 1.16]
-                : isBlueDiamond ? [2, 2, 2] : isPinkDiamond ? [1.3, 1, 1] : mesh.userData?.aurumDiamondMicroCenterProtected ? [1.25, 1.25, 1.25] : [1.18, 1.18, 1.18])
+                : isBlueDiamond ? [2, 2, 2] : isPinkDiamond ? [1.3, 1, 1] : [1.18, 1.18, 1.18])
             : undefined,
           // Small white melee: lower internal energy to prevent dense, sand-like
           // flicker while retaining enough neutral radiance to read as diamond.
@@ -374,6 +379,7 @@ export async function createAurumDiamondBvhRuntime(options: {
             ? (isNeutralMicroDiamond ? 1.20
               : isNeutralSmallDiamond ? 1.30
               : isSmallSecondaryDiamond ? 1.32
+              : isCenterWhiteDiamond ? 1.40
               : isBlueDiamond ? 1.30
               : isPinkDiamond ? 1.25
               : 1.42)
@@ -398,7 +404,7 @@ export async function createAurumDiamondBvhRuntime(options: {
           reflectivity: family === "diamante" ? (isBlueDiamond ? 0.46 : 0.46) : isEmerald
             ? (activeGemId === "esmeralda_2" ? 0.31 : activeGemId === "esmeralda_1" || activeGemId === "esmeralda_3" || activeGemId === "esmeralda_inclusiones" ? 0.5 : emeraldProfile?.reflectivity ?? 0.16)
             : rubyProfile?.reflectivity ?? sapphireProfile?.reflectivity ?? (isEmerald ? 0.26 : isRuby ? 0.38 : isSapphire ? 0.38 : isAmethyst ? 0.32 : isAquamarine ? 0.30 : isCitrine ? 0.30 : isBlueTopaz ? 0.30 : isImperialTopaz ? 0.30 : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 0.38 : 0.32) : isTanzanite ? 0.32 : isMoissanite ? 0.48 : isZircon ? 0.36 : isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 0.30 : 0.46),
-          gamma: family === "diamante" ? (isBlueDiamond ? 1.09 : isNeutralMicroDiamond ? 0.96 : isNeutralSmallDiamond ? 0.94 : 0.90) : 1.09,
+          gamma: family === "diamante" ? (isCenterWhiteDiamond || isBlueDiamond ? 1.09 : isNeutralMicroDiamond ? 0.96 : isNeutralSmallDiamond ? 0.94 : 0.90) : 1.09,
           environmentRotationRadians: Number(currentMaterial?.userData?.aurumGemEnvironmentRotation ?? 0),
         });
         let currentDiamondTier: "micro" | "small" | "brilliant" = screenTier;
@@ -416,7 +422,7 @@ export async function createAurumDiamondBvhRuntime(options: {
             // Keep blue/pink catalog calibrations untouched. Neutral white diamonds
             // follow the same MICRO/SMALL profiles as the physical shader, and
             // restore their original center/natural profile when they grow again.
-            if (!isBlueDiamond && !isPinkDiamond) {
+            if (!isBlueDiamond && !isPinkDiamond && !isCenterWhiteDiamond) {
               const isMicro = nextTier === "micro";
               const isSmall = nextTier === "small";
               const baseEnvironment = 1.42;
@@ -439,7 +445,7 @@ export async function createAurumDiamondBvhRuntime(options: {
               packageApi.setDiamondOptions(prepared.material, {
                 // Fewer internal bounces on tiny white melee reduce unstable
                 // high-frequency sparkle; the center and colored variants stay calibrated.
-                rayBounces: currentDiamondTier === "micro" ? 2 : currentDiamondTier === "small" ? 3 : isBlueDiamond ? 6 : 5,
+                rayBounces: currentDiamondTier === "micro" ? 2 : currentDiamondTier === "small" ? 3 : isBlueDiamond ? 6 : isCenterWhiteDiamond ? 4 : 5,
               });
               return;
             }
