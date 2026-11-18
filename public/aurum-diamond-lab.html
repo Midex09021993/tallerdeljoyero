@@ -40,7 +40,7 @@ canvas{width:100%;height:420px;display:block;background:#f4f4f2}
 <div class="toolbar">
 <label class="filelabel" for="modelFile">Cargar diamante GLB</label><input id="modelFile" type="file" accept=".glb,.gltf">
 <select id="meshSelect" disabled><option>Selecciona la malla del diamante</option></select>
-<button id="resetBtn">Restablecer cámaras</button><button id="reloadBtn" class="primary" disabled>Aplicar geometría</button>
+<button id="resetBtn">Restablecer cámaras</button><button id="reloadBtn" class="primary" disabled>Aplicar geometría y ajustes</button>
 <span class="status" id="status">Carga un GLB para iniciar la comparación.</span>
 </div>
 <section class="grid">
@@ -68,7 +68,7 @@ import * as diamondApi from "realistic-diamond-shader";
 const $=id=>document.getElementById(id);
 const canvases=["aurumCanvas","dslCanvas","muCanvas"].map($);
 const hdrUrl="https://raw.githubusercontent.com/ehsanwwe/diamond-shader-lab/main/public/environments/afrikaans-church-interior-2k.hdr";
-const state={source:null,selected:null,env:null,views:[],renderers:[],controls:[],raf:0,mu:null,disposed:[]};
+const state={source:null,selected:null,env:null,views:[],renderers:[],controls:[],raf:0,mu:null,disposed:[],applySettings:null};
 const MAX_PLANES=96;
 const envLoader=new RGBELoader();
 const setStatus=(s)=>$("status").textContent=s;
@@ -91,7 +91,7 @@ function clearRenderers(){
  if(state.raf)cancelAnimationFrame(state.raf);
  state.mu?.loop?.dispose();state.mu?.sync?.dispose();state.mu?.engine?.dispose();state.mu=null;
  for(const c of state.controls)c.dispose();for(const r of state.renderers)r.dispose();
- state.controls=[];state.renderers=[];state.disposed.forEach(x=>x.dispose?.());state.disposed=[];
+ state.controls=[];state.renderers=[];state.applySettings=null;state.disposed.forEach(x=>x.dispose?.());state.disposed=[];
 }
 function centerGeometry(mesh){
  const g=mesh.geometry.clone();mesh.updateWorldMatrix(true,false);
@@ -178,7 +178,7 @@ $("modelFile").addEventListener("change",async e=>{
 $("meshSelect").addEventListener("change",e=>{state.selected=state.meshOptions?.[+e.target.value]?.mesh||null;});
 $("reloadBtn").addEventListener("click",startComparison);
 $("resetBtn").addEventListener("click",()=>{if(state.selected)startComparison()});
-for(const id of ["ior","disp","env","exp"]){$(id).addEventListener("input",()=>{const v=values();$("iorOut").textContent=v.ior.toFixed(3);$("dispOut").textContent=v.disp.toFixed(4);$("envOut").textContent=v.env.toFixed(2);$("expOut").textContent=v.exp.toFixed(2);if(state.mu?.material){state.mu.material.ior=v.ior;state.mu.material.dispersion=v.disp;state.mu.material.envMapIntensity=v.env;state.mu.engine.update?.();}})}
+for(const id of ["ior","disp","env","exp"]){$(id).addEventListener("input",()=>{const v=values();$("iorOut").textContent=v.ior.toFixed(3);$("dispOut").textContent=v.disp.toFixed(4);$("envOut").textContent=v.env.toFixed(2);$("expOut").textContent=v.exp.toFixed(2);if(state.applySettings)state.applySettings(v);else if(state.mu?.material){state.mu.material.ior=v.ior;state.mu.material.dispersion=v.disp;state.mu.material.envMapIntensity=v.env;state.mu.engine.update?.();}})}
 window.addEventListener("resize",()=>{for(const r of state.renderers){const w=r.domElement.clientWidth,h=r.domElement.clientHeight;r.setSize(w,h,false)}});
 window.addEventListener("pagehide",clearRenderers);
 envLoader.load(hdrUrl,texture=>{texture.mapping=THREE.EquirectangularReflectionMapping;texture.colorSpace=THREE.LinearSRGBColorSpace;state.env=texture;setStatus("HDRI cargado. Carga tu GLB para comenzar.");},undefined,err=>{console.error(err);setStatus("No se pudo cargar el HDRI de prueba.");});
