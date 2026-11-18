@@ -180,13 +180,15 @@ export async function createAurumDiamondBvhRuntime(options: {
     root.add(proxy);
 
     const cameraPosition = new THREE_NS.Vector3();
+    const cameraWorldPosition = new THREE_NS.Vector3();
     const cameraInverseRoot = new THREE_NS.Matrix4();
     const cameraProxy = {
       position: cameraPosition,
       update: () => {
         root.updateMatrixWorld(true);
         cameraInverseRoot.copy(root.matrixWorld).invert();
-        cameraPosition.copy(options.camera.position).applyMatrix4(cameraInverseRoot).sub(center);
+        options.camera.getWorldPosition(cameraWorldPosition);
+        cameraPosition.copy(cameraWorldPosition).applyMatrix4(cameraInverseRoot).sub(center);
         return cameraProxy;
       },
     };
