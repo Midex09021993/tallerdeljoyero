@@ -64,6 +64,8 @@ export async function createAurumDiamondBvhRuntime(options: {
   url: string;
   /** Shared gem HDR texture owned by the public viewer when supplied. */
   environmentMap?: THREE.Texture;
+  /** Global gem EXR rotation selected by the scene controller. */
+  environmentRotationRadians?: number;
   /** Defaults to true for internally loaded maps; external maps remain caller-owned. */
   ownsEnvironmentMap?: boolean;
   camera: THREE.Camera;
@@ -113,6 +115,12 @@ export async function createAurumDiamondBvhRuntime(options: {
   const disabledFamilies = new Set<string>();
   let lastModel: THREE.Object3D | null = null;
   let disposed = false;
+  // One global EXR correction derived from the protected/inferred center stone.
+  // Every diamond receives the same corrected environment orientation.
+  let centerEnvironmentRotationOffsetRadians = 0;
+  const requestedEnvironmentRotationRadians = Number.isFinite(options.environmentRotationRadians)
+    ? Number(options.environmentRotationRadians)
+    : 0;
 
   // Camera uniforms are shared by all BVH gems. Avoid rewriting them when
   // multiple invalidations/API calls occur without an actual camera change.
@@ -236,6 +244,18 @@ export async function createAurumDiamondBvhRuntime(options: {
       && (!secondLargestProjectedDiamond || largestProjectedDiamond.diameterPx >= secondLargestProjectedDiamond.diameterPx * 1.5)
       ? largestProjectedDiamond.mesh
       : null;
+    const explicitCenterMesh = diamondMeshes.find((mesh) => isAurumDiamondBvhCenterTarget(mesh));
+    const centerReferenceMesh = explicitCenterMesh ?? inferredCenterMesh;
+    if (centerReferenceMesh) {
+      centerReferenceMesh.updateWorldMatrix(true, false);
+      const centerWorldQuaternion = centerReferenceMesh.getWorldQuaternion(new THREE_NS.Quaternion());
+      const centerWorldEuler = new THREE_NS.Euler().setFromQuaternion(centerWorldQuaternion, "YXZ");
+      centerEnvironmentRotationOffsetRadians = -centerWorldEuler.y;
+    } else {
+      centerEnvironmentRotationOffsetRadians = 0;
+    }
+    const effectiveCenterEnvironmentRotationRadians =
+      requestedEnvironmentRotationRadians + centerEnvironmentRotationOffsetRadians;
 
     const processMesh = (object: THREE.Object3D) => {
       const mesh = object as THREE.Mesh;
@@ -451,7 +471,7 @@ export async function createAurumDiamondBvhRuntime(options: {
           // environment rotation is applied uniformly through updateEnvironment().
           // Per-mesh family offsets must not rotate melee stones away from the center.
           environmentRotationRadians: family === "diamante"
-            ? 0
+            ? effectiveCenterEnvironmentRotationRadians
             : Number(currentMaterial?.userData?.aurumGemEnvironmentRotation ?? 0),
         });
         let currentDiamondTier: "micro" | "small" | "brilliant" = screenTier;
@@ -620,7 +640,10 @@ export async function createAurumDiamondBvhRuntime(options: {
     updateEnvironment(rotationRadians, intensityScale) {
       if (disposed) return;
       const safeScale = Number.isFinite(intensityScale) ? Math.max(0.75, Math.min(1.35, intensityScale)) : 1;
-      const rotationDegrees = THREE_NS.MathUtils.radToDeg(Number.isFinite(rotationRadians) ? rotationRadians : 0);
+      const requestedRotation = Number.isFinite(rotationRadians) ? rotationRadians : 0;
+      const rotationDegrees = THREE_NS.MathUtils.radToDeg(
+        requestedRotation + centerEnvironmentRotationOffsetRadians,
+      );
       for (const entry of entries.values()) {
         packageApi.setDiamondEnvironmentRotation?.(entry.experimentalMaterial, { x: 0, y: rotationDegrees, z: 0 });
         packageApi.setDiamondOptions?.(entry.experimentalMaterial, {
