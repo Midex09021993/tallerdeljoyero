@@ -825,6 +825,16 @@ test("diamond environment compensation composes a complete 3D optical-frame quat
   expect(Math.abs(euler.x) + Math.abs(euler.z)).toBeGreaterThan(1);
 });
 
+test("Aurum gem HDR A/B diagnostic is opt-in and leaves production rotation unchanged by default", () => {
+  const source = readFileSync("src/components/AurumRender.tsx", "utf8");
+  expect(source).toContain('get("aurumGemHdriTest")');
+  expect(source).toContain('value === "180" ? Math.PI : 0');
+  expect(source).toContain('mode: diagnosticOffset ? "B_ROTATED_180" : "A_BASELINE"');
+  expect(source).toContain("baselineRotationRadians: baselineRotation");
+  expect(source).toContain("metalEnvironmentUntouched: true");
+  expect(source).toContain("gemEnvironmentRotation = baselineRotation + diagnosticOffset");
+});
+
 test("each diamond EXR orientation is compensated from its geometry-derived table frame", () => {
   const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
   const editor = readFileSync("src/components/AurumRender.tsx", "utf8");
