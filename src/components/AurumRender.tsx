@@ -3075,7 +3075,8 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               };
               gemMeshes=1;
               visited.add("manual-selection:"+parteActiva.uuid);
-              aplicarGema(g,parteActiva,false,false);
+              if(aplicarGema(g,parteActiva,false,false))appliedLayers++;
+              else failedLayers++;
             }
           }
           console.info("[AURUM][CATALOG GEM] Selección aplicada", {
