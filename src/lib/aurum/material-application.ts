@@ -210,7 +210,7 @@ const selectionLayerIdentity=(part:any)=>{
     layerId:instance.layerId??source.layerId??attrs.layerId??attrs.LayerId??data.layerId??data.LayerId??meta.rhinoLayerId??null,
   };
 };
-const normalizeGemLayerName=(value:any)=>{
+export const normalizeAurumGemLayerName=(value:any)=>{
   const raw=String(value??"").trim();
   const segments=raw.split(/::|[\\/]/).filter(Boolean).map((part)=>
     part.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLocaleLowerCase().replace(/[_-]+/g," ").replace(/\s+/g," ").trim()
@@ -225,11 +225,11 @@ const normalizeGemLayerName=(value:any)=>{
 const selectionLayerName=(part:any)=>selectionLayerIdentity(part).layerName;
 export const getAurumGemLayerIdentity=(part:any)=>{
   const identity=selectionLayerIdentity(part);
-  return {...identity,layerName:normalizeGemLayerName(identity.layerName),layerIndex:selectionLayerIndex(part)};
+  return {...identity,layerName:normalizeAurumGemLayerName(identity.layerName),layerIndex:selectionLayerIndex(part)};
 };
 export const isAurumGemTarget=(part:any)=>selectionCategory(part)==="gema";
 const isExplicitGemSlot=(part:any)=>{
-  const layerName=normalizeGemLayerName(selectionLayerName(part));
+  const layerName=normalizeAurumGemLayerName(selectionLayerName(part));
   // MatrixGold/Rhino gemstone slots are authoritative even when an imported
   // material or stale semantic tag incorrectly labels the mesh as metal.
   return /\b(?:gem|gema|piedra|stone|diamond|diamante)\s*[_-]?\s*0?[1-4]\b/.test(layerName);
@@ -296,7 +296,7 @@ const getAurumGemLayerIndex=(modelRoot:any):AurumGemLayerIndex=>{
     if(!part?.isMesh||part.userData?.aurumInternalInclusion||selectionCategory(part)!=="gema")return;
     index.gemMeshCount++;
     const identity=selectionLayerIdentity(part);
-    const layerName=normalizeGemLayerName(identity.layerName);
+    const layerName=normalizeAurumGemLayerName(identity.layerName);
     const layerIndex=selectionLayerIndex(part);
     const layerId=identity.layerId;
     addGemIndexEntry(index.byLayerName,layerName,part);
@@ -462,7 +462,7 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
   const selectedMeta=selectionMeta(target);
   const selectedIdentity=selectionLayerIdentity(target);
   const selectedLayer=selectedIdentity.layerName;
-  const selectedLayerNormalized=normalizeGemLayerName(selectedLayer);
+  const selectedLayerNormalized=normalizeAurumGemLayerName(selectedLayer);
   const selectedLayerIndex=selectionLayerIndex(target);
   const selectedLayerId=selectedIdentity.layerId;
   const selectedLayerColor=String(selectedMeta.colorCapa??target.userData?.aurumRhinoSource?.layerColor??target.userData?.attributes?.layerColor??target.userData?.attributes?.LayerColor??"").trim().toLowerCase();
