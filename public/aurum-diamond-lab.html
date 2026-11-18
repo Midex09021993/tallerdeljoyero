@@ -95,10 +95,18 @@ function clearRenderers(){
 }
 function centerGeometry(mesh){
  const g=mesh.geometry.clone();mesh.updateWorldMatrix(true,false);
- const inv=new THREE.Matrix4().copy(mesh.matrixWorld);const p=g.getAttribute("position");
- const v=new THREE.Vector3();for(let i=0;i<p.count;i++){v.fromBufferAttribute(p,i).applyMatrix4(inv);p.setXYZ(i,v.x,v.y,v.z)}p.needsUpdate=true;g.computeVertexNormals();g.computeBoundingSphere();return g;
+ const inv=new THREE.Matrix4().copy(mesh.matrixWorld),p=g.getAttribute("position"),v=new THREE.Vector3();
+ for(let i=0;i<p.count;i++){v.fromBufferAttribute(p,i).applyMatrix4(inv);p.setXYZ(i,v.x,v.y,v.z)}
+ p.needsUpdate=true;g.computeVertexNormals();
+ const box=new THREE.Box3().setFromBufferAttribute(p),center=box.getCenter(new THREE.Vector3());
+ g.translate(-center.x,-center.y,-center.z);g.computeBoundingSphere();return g;
 }
-function fitCamera(camera,controls,geometry){const b=new THREE.Box3().setFromBufferAttribute(geometry.getAttribute("position"));const center=b.getCenter(new THREE.Vector3()),size=b.getSize(new THREE.Vector3());geometry.translate(-center.x,-center.y,-center.z);geometry.computeBoundingSphere();const radius=Math.max(size.x,size.y,size.z)*.5||1;camera.position.set(0,0,radius*3.4);camera.near=radius*.001;camera.far=radius*30;camera.updateProjectionMatrix();controls.target.set(0,0,0);controls.update();}
+function fitCamera(camera,controls,geometry){
+ const box=new THREE.Box3().setFromBufferAttribute(geometry.getAttribute("position")),size=box.getSize(new THREE.Vector3());
+ const radius=Math.max(size.x,size.y,size.z)*.5||1;
+ camera.position.set(0,0,radius*3.4);camera.near=radius*.001;camera.far=radius*30;camera.updateProjectionMatrix();
+ controls.target.set(0,0,0);controls.update();
+}
 function extractHull(geometry){
  const pos=geometry.getAttribute("position"),pts=[];for(let i=0;i<pos.count;i++)pts.push(new THREE.Vector3().fromBufferAttribute(pos,i));
  const hull=new ConvexHull().setFromPoints(pts),planes=[];
@@ -137,7 +145,7 @@ async function startMu(geometry,env){
  scene.environment=env;scene.add(new THREE.HemisphereLight(0xffffff,0x777777,.8));
  const key=new THREE.DirectionalLight(0xffffff,1.5);key.position.set(3,4,4);scene.add(key);
  scene.add(new THREE.Mesh(geometry.clone(),mat));
- const engine=new Engine({canvas,backend:"auto"});const sync=new THREESync(engine,{scene,camera,controls});const loop=new RenderLoop(engine,{sync,final:{bounces:8,maxSamples:512}});
+ const engine=new Engine({canvas,backend:"auto"});engine.display.setSize(canvas.clientWidth*Math.min(devicePixelRatio,1.75),canvas.clientHeight*Math.min(devicePixelRatio,1.75));const sync=new THREESync(engine,{scene,camera,controls});const loop=new RenderLoop(engine,{sync,final:{bounces:8,maxSamples:512}});
  engine.on?.("error",err=>{console.error("[MuTracer]",err);$("muInfo").textContent="Error MuTracer: "+(err?.message||err)});
  state.mu={engine,sync,loop,material:mat,controls};state.controls.push(controls);loop.start();
  $("muInfo").textContent="MuTracer · WebGPU/WebGL2 · path tracing progresivo · IOR "+values().ior.toFixed(3);
@@ -157,7 +165,7 @@ async function startComparison(){
   if(matA.fragmentShader?.includes(acesOutput)){matA.fragmentShader=matA.fragmentShader.replace(acesOutput,"gl_FragColor = vec4(hdrColor, 1.0);");matA.needsUpdate=true;}
   diamondApi.setDiamondEnvironmentRotation?.(matA,{x:0,y:0,z:0});
   const meshA=new THREE.Mesh(ga,matA);meshA.onBeforeRender=()=>diamondApi.updateDiamondCamera(matA,a.camera);a.scene.add(meshA);
-  const matB=createShaderMaterial(gb,state.env,b.camera,settings);const meshB=new THREE.Mesh(gb,matB);b.scene.add(meshB);
+  const matB=createShaderMaterial(gb,state.env,b.camera,settings);const meshB=new THREE.Mesh(gb,matB);meshB.onBeforeRender=()=>matB.userData.updateForMesh(b.camera,meshB);b.scene.add(meshB);
   await startMu(gc,state.env);
   const render=()=>{state.raf=requestAnimationFrame(render);a.controls.update();b.controls.update();a.renderer.render(a.scene,a.camera);b.renderer.render(b.scene,b.camera)};
   render();$("reloadBtn").disabled=false;setStatus("Tres motores activos · "+(state.selected.name||"diamante seleccionado"));
