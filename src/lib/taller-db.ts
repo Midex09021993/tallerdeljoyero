@@ -1,0 +1,2674 @@
+/* eslint-disable-next-line @typescript-eslint/ban-ts-comment -- excepción temporal: corregir tipos heredados requiere una tarea separada */
+// @ts-nocheck
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import type { Database, Json, TablesInsert } from "@/integrations/supabase/types";
+import { normalizarArea } from "@/lib/auth";
+import { notificarNuevoPedidoADueno } from "@/lib/pwa-push";
+
+type PedidoUpdate = Database["public"]["Tables"]["pedidos"]["Update"];
+type PedidoComercialInsert = Database["public"]["Tables"]["pedido_comercial"]["Insert"];
+type PedidoComercialUpdate = Database["public"]["Tables"]["pedido_comercial"]["Update"];
+type ContratoInsert = Database["public"]["Tables"]["contratos"]["Insert"];
+type PagoContratoInsert = Database["public"]["Tables"]["contrato_pagos"]["Insert"];
+
+export type Estado =
+  "Recibido" | "En Producción" | "Listo para Entrega" | "En Camino" | "Entregado" | "Cancelado";
+
+export const estados: Estado[] = [
+  "Recibido",
+  "En Producción",
+  "Listo para Entrega",
+  "En Camino",
+  "Entregado",
+  "Cancelado",
+];
+
+/** Estados que el cliente ve en el seguimiento público (sin "Cancelado"). */
+export const ESTADOS_FLUJO: Estado[] = [
+  "Recibido",
+  "En Producción",
+  "Listo para Entrega",
+  "En Camino",
+  "Entregado",
+];
+
+export const estadoClases: Record<string, string> = {
+  Recibido: "bg-surface-muted text-muted-foreground",
+  "En Producción": "bg-warning-soft text-warning",
+  "Listo para Entrega": "bg-accent text-foreground",
+  "En Camino": "bg-info-soft text-info",
+  Entregado: "bg-success-soft text-success",
+  Cancelado: "bg-danger-soft text-danger",
+};
+
+const estadosObsoletosPorArea = new Set([
+  "Pedidos",
+  "Diseño 3D",
+  "Impresión 3D",
+  "Casting",
+  "Corte Láser",
+  "Servicio láser",
+  "Corte láser",
+  "Corte Laser",
+  "Taller",
+  "Taller / Engaste",
+]);
+
+export function esEstadoPedido(valor: string | null | undefined): valor is Estado {
+  return estados.includes(valor as Estado);
+}
+
+export function esEstadoFinalPedido(valor: string | null | undefined) {
+  return valor === "Entregado" || valor === "Cancelado";
+}
+
+/** Pedido registrado que todavía no ha entrado a producción. */
+export function pedidoEnRecepcion(valor: string | null | undefined) {
+  return valor === "Recibido";
+}
+
+/** Pedido que ya fue registrado con una ruta productiva, pero aún no ha sido autorizado para entrar al flujo. */
+export function pedidoPendienteAutorizacionProduccion(pedido: Pick<Pedido, "estado" | "area_actual" | "ruta">) {
+  return (
+    pedidoEnRecepcion(pedido.estado) &&
+    areaOperativa(pedido.area_actual) === "Pedidos" &&
+    primeraAreaProduccion(pedido) != null
+  );
+}
+
+/**
+ * Normaliza estados antiguos al modelo oficial:
+ * Evaluación → Recibido · Área de Ventas → Listo para Entrega · Enviado → En Camino
+ */
+export function normalizarEstadoPedido(
+  estado: string | null | undefined,
+  areaActual: string | null | undefined,
+): Estado {
+  if (esEstadoPedido(estado)) return estado;
+  const area = normalizarArea(areaActual || estado || "");
+  if (estado === "Evaluación" || estado === "Espera material") return "Recibido";
+  if (
+    estado === "Área de Ventas" ||
+    estado === "En Ventas" ||
+    estado === "En packing" ||
+    estado === "Recibido en ventas" ||
+    estado === "Terminado" ||
+    estado === "Área ventas" ||
+    estado === "Ventas"
+  ) {
+    return "Listo para Entrega";
+  }
+  if (estado === "Enviado" || estado === "Despachado") return "En Camino";
+  if (area === "Pedidos") return "Recibido";
+  if (area === "Área ventas") return "Listo para Entrega";
+  if (estadosObsoletosPorArea.has(estado ?? "")) return "En Producción";
+  return "Recibido";
+}
+
+/** Sub-estado interno del área de ventas, con los nombres oficiales nuevos. */
+export function normalizarEstadoVentas(valor: string | null | undefined) {
+  const v = (valor ?? "").trim();
+  if (!v) return "Pendiente";
+  if (
+    ["Área de Ventas", "En Ventas", "En packing", "Recibido en ventas", "Terminado"].includes(v)
+  ) {
+    return "Pendiente";
+  }
+  if (["Enviado", "Despachado"].includes(v)) return "En Camino";
+  return v;
+}
+
+function areaOperativa(area: string | null | undefined) {
+  return normalizarArea(area || "Pedidos") || "Pedidos";
+}
+
+function estadoPorDestino(destino: string, _direccion: "avanzar" | "devolver" | "enviar"): Estado {
+  const area = areaOperativa(destino);
+  if (area === "Pedidos") return "Recibido";
+  if (area === "Área ventas") return "Listo para Entrega";
+  return "En Producción";
+}
+
+function cambiosMovimientoDirecto(
+  destino: string,
+  ahora: string,
+): Partial<PedidoNuevo> & {
+  area_desde: string;
+} {
+  const area = areaOperativa(destino);
+  if (area !== "Pedidos") {
+    return {
+      area_actual: area,
+      estado: estadoPorDestino(area, "enviar"),
+      area_desde: ahora,
+    };
+  }
+
+  return {
+    area_actual: "Pedidos",
+    estado: "Recibido",
+    area_desde: ahora,
+    ventas_estado: "",
+    packing_estado: "",
+    medio_envio: "",
+    guia_envio: "",
+    fecha_envio: null,
+    fecha_entregado: null,
+    fecha_listo_entrega: null,
+    listo_entrega_observaciones: "",
+    receptor_envio: "",
+    notas_ventas: "",
+    notas_envio: "",
+    notas_entrega: "",
+    usuario_listo_entrega: null,
+    usuario_envio: null,
+    usuario_entrega: null,
+    ventas_actualizado_por: null,
+    ventas_actualizado_en: null,
+    enviado_at: null,
+    entregado_at: null,
+  };
+}
+
+const camposVentasTrazables = new Set([
+  "fecha_listo_entrega",
+  "listo_entrega_observaciones",
+  "notas_envio",
+  "notas_entrega",
+  "usuario_listo_entrega",
+  "usuario_envio",
+  "usuario_entrega",
+  "ventas_actualizado_por",
+  "ventas_actualizado_en",
+  "enviado_at",
+  "entregado_at",
+]);
+
+const camposVentasBase = new Set([
+  "ventas_estado",
+  "packing_estado",
+  "medio_envio",
+  "guia_envio",
+  "fecha_envio",
+  "fecha_entregado",
+  "receptor_envio",
+  "notas_ventas",
+]);
+
+function omitirCampos(objeto: PedidoUpdate, campos: Set<string>): PedidoUpdate {
+  return Object.fromEntries(Object.entries(objeto).filter(([campo]) => !campos.has(campo)));
+}
+
+function detalleErrorSupabase(error: { message?: string; code?: string; details?: string }) {
+  return [error.code, error.message, error.details].filter(Boolean).join(" · ");
+}
+
+async function actualizarPedidoConReinicioFlexible(
+  pedidoId: string,
+  cambios: Partial<PedidoNuevo> & { area_desde: string },
+) {
+  const { pedido, comercial, tieneComerciales } = separarDatosComerciales(cambios);
+  const intentos = [pedido as PedidoUpdate];
+  let ultimoError: { message?: string; code?: string; details?: string } | null = null;
+
+  for (const payload of intentos) {
+    const { error } = await supabase.from("pedidos").update(payload).eq("id", pedidoId);
+    if (!error) break;
+    ultimoError = error;
+    if (!esErrorCampoFaltante(error)) {
+      throw new Error(`No se pudo reiniciar el flujo: ${detalleErrorSupabase(error)}`);
+    }
+  }
+
+  if (ultimoError) {
+    throw new Error(`No se pudo reiniciar el flujo: ${detalleErrorSupabase(ultimoError)}`);
+  }
+
+  if (tieneComerciales) {
+    const { error } = await supabase
+      .from("pedido_comercial")
+      .update(comercial)
+      .eq("pedido_id", pedidoId);
+    if (error) throw error;
+  }
+}
+
+
+function secuenciaPedido(pedido: Pedido) {
+  const ruta = (Array.isArray(pedido.ruta) ? pedido.ruta : [])
+    .map(areaOperativa)
+    .filter((area) => area !== "Pedidos" && area !== "Área ventas");
+  const unicas = [...new Set(ruta)];
+  return ["Pedidos", ...unicas, "Área ventas"];
+}
+
+function primeraAreaProduccion(pedido: Pick<Pedido, "ruta">) {
+  return (Array.isArray(pedido.ruta) ? pedido.ruta : [])
+    .map(areaOperativa)
+    .find((area) => area !== "Pedidos" && area !== "Área ventas");
+}
+
+function actualizarPedidoEnCache(
+  pedidos: Pedido[] | undefined,
+  id: string,
+  cambios: Partial<Pedido>,
+) {
+  if (!pedidos) return pedidos;
+  return pedidos.map((pedido) => (pedido.id === id ? { ...pedido, ...cambios } : pedido));
+}
+
+function invalidarPedidosActivos(qc: ReturnType<typeof useQueryClient>) {
+  return qc.invalidateQueries({ queryKey: ["pedidos"], refetchType: "active" });
+}
+
+function prefijoContrato(numero: string) {
+  const limpio = numero.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+  return limpio.slice(-2) || "YA";
+}
+
+function esUuid(valor: string | null | undefined) {
+  return Boolean(
+    valor?.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i),
+  );
+}
+
+export function siguienteReferenciaContrato(numeroContrato: string, refs: string[]) {
+  const prefijo = prefijoContrato(numeroContrato);
+  const re = new RegExp(`^${prefijo}-(\\d+)$`, "i");
+  const max = refs.reduce((acc, ref) => {
+    const m = re.exec((ref ?? "").trim());
+    return m ? Math.max(acc, Number(m[1])) : acc;
+  }, 0);
+  return `${prefijo}-${String(max + 1).padStart(3, "0")}`;
+}
+
+export type Pedido = {
+  id: string;
+  referencia: string;
+  pieza: string;
+  cliente: string;
+  cliente_id: string | null;
+  material: string;
+  estado: string;
+  entrega: string;
+  importe: number;
+  a_cuenta: number;
+  saldo: number;
+  sede_id: string | null;
+  participante_id: string | null;
+  participante_nombre: string | null;
+  sede_nombre: string | null;
+  telefono: string;
+  origen: string;
+  origen_comercial: "cotizacion" | "directo";
+  canal_captacion: string;
+  tipo_operacion: "fabricacion" | "reparacion" | "venta_stock";
+  contrato: string;
+  contrato_id: string | null;
+  cotizacion_id: string | null;
+  proyecto_joya_id: string | null;
+  cotizacion_detalles: Json;
+  especificaciones_comerciales: Json;
+  trabajo: string;
+  fecha_ingreso: string;
+  fecha_entrega: string | null;
+  area_actual: string;
+  ruta: string[];
+  area_desde: string;
+  notas: string;
+  talla: string;
+  cantidad_piezas: number;
+  piedras: string;
+  peso_estimado: string;
+  corte_texto: string;
+  corte_tipografia: string;
+  corte_ubicacion: string;
+  corte_observaciones: string;
+  ventas_estado: string;
+  packing_estado: string;
+  medio_envio: string;
+  guia_envio: string;
+  fecha_envio: string | null;
+  fecha_entregado: string | null;
+  fecha_listo_entrega: string | null;
+  listo_entrega_observaciones: string;
+  receptor_envio: string;
+  notas_ventas: string;
+  notas_envio: string;
+  notas_entrega: string;
+  usuario_listo_entrega: string | null;
+  usuario_envio: string | null;
+  usuario_entrega: string | null;
+  ventas_actualizado_por: string | null;
+  ventas_actualizado_en: string | null;
+  enviado_at: string | null;
+  entregado_at: string | null;
+};
+
+export type Contrato = {
+  id: string;
+  numero: string;
+  cliente: string;
+  telefono: string;
+  origen: string;
+  total: number;
+  abonado: number;
+  saldo: number;
+  sede_id: string | null;
+  sede_nombre: string | null;
+  notas: string;
+  created_at: string;
+  cotizacion_id: string | null;
+  moneda: string;
+  estado_firma: "pendiente" | "firmado_documento_subido" | "firmado_presencial" | "firmado_certificado";
+  firma_validada_at: string | null;
+  firma_observacion: string | null;
+};
+
+export type EstadoFinanciero = "Pendiente" | "Pago parcial" | "Pagado";
+
+export type PagoContrato = {
+  id: string;
+  contrato_id: string;
+  contrato_numero: string;
+  fecha: string;
+  concepto: string;
+  monto: number;
+  usuario_id: string | null;
+  usuario_nombre: string | null;
+  created_at: string;
+};
+
+export type ResumenFinancieroContrato = {
+  total: number;
+  abonado: number;
+  saldo: number;
+  estado: EstadoFinanciero;
+  origen: "contrato" | "sin_contrato";
+};
+
+export type Sede = {
+  id: string;
+  nombre: string;
+  ciudad: string;
+  modo: string;
+  activa: boolean;
+};
+
+export type Material = {
+  id: string;
+  material: string;
+  stock: number;
+  unidad: string;
+  minimo: number;
+  categoria: string;
+  activo: boolean;
+  sede_id: string | null;
+  areas: string[];
+};
+
+export const CATEGORIAS_MATERIAL = [
+  "Oro",
+  "Plata",
+  "Resina",
+  "Piedras",
+  "Soldadura",
+  "Herramientas",
+  "Otros insumos",
+] as const;
+
+export type MovimientoInventario = {
+  id: string;
+  material_id: string;
+  material: string;
+  cantidad: number;
+  tipo: string;
+  motivo: string;
+  area: string;
+  pedido_id: string | null;
+  pedido_referencia: string;
+  created_at: string;
+};
+
+export type PedidoNuevo = {
+  /** Origen comercial del pedido: no obliga a una ruta productiva. */
+  origen_comercial?: "cotizacion" | "directo";
+  tipo_operacion?: "fabricacion" | "reparacion" | "venta_stock";
+  canal_captacion?: string | null;
+  referencia: string;
+  pieza: string;
+  cliente: string;
+  cliente_id?: string | null;
+  material: string;
+  estado: string;
+  entrega: string;
+  importe: number;
+  a_cuenta: number;
+  saldo?: number;
+  sede_id: string | null;
+  telefono: string;
+  origen: string;
+  contrato: string;
+  contrato_id?: string | null;
+  cotizacion_id?: string | null;
+  proyecto_joya_id?: string | null;
+  cotizacion_detalles?: Json;
+  especificaciones_comerciales?: Json;
+  trabajo: string;
+  fecha_ingreso: string;
+  fecha_entrega: string | null;
+  area_actual: string;
+  ruta: string[];
+  notas: string;
+  talla: string;
+  cantidad_piezas: number;
+  piedras: string;
+  peso_estimado: string;
+  corte_texto?: string;
+  corte_tipografia?: string;
+  corte_ubicacion?: string;
+  corte_observaciones?: string;
+  ventas_estado?: string;
+  packing_estado?: string;
+  medio_envio?: string;
+  guia_envio?: string;
+  fecha_envio?: string | null;
+  fecha_entregado?: string | null;
+  fecha_listo_entrega?: string | null;
+  listo_entrega_observaciones?: string;
+  receptor_envio?: string;
+  notas_ventas?: string;
+  notas_envio?: string;
+  notas_entrega?: string;
+  usuario_listo_entrega?: string | null;
+  usuario_envio?: string | null;
+  usuario_entrega?: string | null;
+  ventas_actualizado_por?: string | null;
+  ventas_actualizado_en?: string | null;
+  enviado_at?: string | null;
+  entregado_at?: string | null;
+};
+
+const CAMPOS_PEDIDO_BASE =
+  "id, referencia, pieza, cliente, cliente_id, material, estado, entrega, sede_id, participante_id, origen, origen_comercial, tipo_operacion, contrato, contrato_id, cotizacion_id, proyecto_joya_id, trabajo, fecha_ingreso, fecha_entrega, area_actual, ruta, area_desde, notas, talla, cantidad_piezas, piedras, peso_estimado, corte_texto, corte_tipografia, corte_ubicacion, corte_observaciones";
+
+const CAMPOS_PEDIDO_COMERCIAL =
+  "pedido_id, telefono, importe, a_cuenta, saldo, cotizacion_detalles, especificaciones_comerciales, ventas_estado, packing_estado, medio_envio, guia_envio, fecha_envio, fecha_entregado, receptor_envio, notas_ventas, fecha_listo_entrega, listo_entrega_observaciones, notas_envio, notas_entrega, usuario_listo_entrega, usuario_envio, usuario_entrega, ventas_actualizado_por, ventas_actualizado_en, enviado_at, entregado_at";
+function esErrorCampoFaltante(error: { message?: string; code?: string }) {
+  const mensaje = (error.message ?? "").toLowerCase();
+  return (
+    error.code === "42703" ||
+    mensaje.includes("could not find") ||
+    mensaje.includes("schema cache") ||
+    mensaje.includes("column") ||
+    mensaje.includes("ventas_estado") ||
+    mensaje.includes("packing_estado") ||
+    mensaje.includes("contrato_id") ||
+    mensaje.includes("contratos")
+  );
+}
+
+function textoCampo(registro: Record<string, unknown>, campo: string, fallback = "") {
+  const valor = registro[campo];
+  return typeof valor === "string" ? valor : fallback;
+}
+
+export type PedidoSelector = Pick<
+  Pedido,
+  "id" | "referencia" | "pieza" | "cliente" | "trabajo" | "contrato" | "estado" | "sede_id" | "sede_nombre" | "area_actual" | "ruta" | "fecha_entrega" | "entrega" | "area_desde" | "fecha_ingreso" | "material" | "talla" | "cantidad_piezas" | "piedras" | "peso_estimado"
+>;
+
+const CAMPOS_PEDIDO_SELECTOR =
+  "id, referencia, pieza, cliente, trabajo, contrato, estado, sede_id, material, talla, cantidad_piezas, piedras, peso_estimado, fecha_entrega, entrega, area_actual, area_desde, fecha_ingreso, ruta, sedes(nombre)";
+
+export function usePedidosSelector() {
+  return useQuery({
+    // Comparte el prefijo de pedidos para recibir invalidaciones de mutaciones.
+    // Dos minutos evitan recargas repetidas al alternar entre bandejas y selectores.
+    queryKey: ["pedidos", "selector"],
+    staleTime: 120_000,
+    queryFn: async (): Promise<PedidoSelector[]> => {
+      const { data, error } = await supabase
+        .from("pedidos")
+        .select(CAMPOS_PEDIDO_SELECTOR)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      return (data ?? []).map((p) => ({
+        id: p.id,
+        referencia: p.referencia ?? "",
+        pieza: p.pieza ?? "",
+        cliente: p.cliente ?? "",
+        trabajo: p.trabajo ?? "",
+        material: p.material ?? "",
+        talla: p.talla ?? "",
+        cantidad_piezas: Number(p.cantidad_piezas) || 1,
+        piedras: p.piedras ?? "",
+        peso_estimado: p.peso_estimado ?? "",
+        contrato: p.contrato ?? "",
+        estado: normalizarEstadoPedido(p.estado, p.area_actual),
+        sede_id: p.sede_id ?? null,
+        sede_nombre: p.sedes?.nombre ?? "",
+        fecha_entrega: p.fecha_entrega ?? null,
+        entrega: p.entrega ?? null,
+        area_actual: areaOperativa(p.area_actual),
+        area_desde: p.area_desde ?? "",
+        fecha_ingreso: p.fecha_ingreso ?? "",
+        ruta: Array.isArray(p.ruta) ? p.ruta.filter((item): item is string => typeof item === "string") : [],
+      }));
+    },
+  });
+}
+
+export function usePedidos() {
+  return useQuery({
+    queryKey: ["pedidos"],
+    // Las mutaciones invalidan este prefijo; la caché evita refetch al volver a la pantalla.
+    staleTime: 120_000,
+    queryFn: async (): Promise<Pedido[]> => {
+      // La tabla pedidos es la fuente principal de esta bandeja.
+      // Los datos comerciales son enriquecimiento opcional: un problema de RLS,
+      // esquema o permisos en esa tabla nunca debe ocultar pedidos operativos.
+      const pedidoSelectMinimo =
+        "id, referencia, pieza, cliente, material, estado, entrega, sede_id, origen, contrato, trabajo, fecha_ingreso, fecha_entrega, area_actual, ruta, area_desde, notas, talla, cantidad_piezas, piedras, peso_estimado";
+
+      let pedidosData: Array<Record<string, unknown>> | null = null;
+      let pedidosError: { message?: string; code?: string; details?: string } | null = null;
+
+      const principal = await supabase
+        .from("pedidos")
+        .select(CAMPOS_PEDIDO_BASE)
+        .order("created_at", { ascending: false });
+
+      pedidosData = (principal.data ?? null) as Array<Record<string, unknown>> | null;
+      pedidosError = principal.error;
+
+      // Si el backend oficial todavía tiene un desfase de esquema, la bandeja no
+      // debe desaparecer completa por una columna opcional. Reintentamos con el
+      // núcleo histórico que no depende de las ampliaciones recientes.
+      if (pedidosError) {
+        const minimo = await supabase
+          .from("pedidos")
+          .select(pedidoSelectMinimo)
+          .order("created_at", { ascending: false });
+
+        pedidosData = (minimo.data ?? null) as Array<Record<string, unknown>> | null;
+        pedidosError = minimo.error;
+
+        if (pedidosError) {
+          throw pedidosError;
+        }
+      }
+
+      // La identidad operativa del pedido puede venir por participante_id (canónica)
+      // o por sede_id (compatibilidad histórica). Resolvemos ambas para que nunca
+      // aparezca "Taller no asignado" cuando el pedido sí tiene taller.
+      const participanteIds = [
+        ...new Set(
+          ((pedidosData ?? []) as Array<Record<string, unknown>>)
+            .map((pedido) => pedido["participante_id"])
+            .filter((id): id is string => typeof id === "string" && id.length > 0),
+        ),
+      ];
+      const sedeIds = [
+        ...new Set(
+          ((pedidosData ?? []) as Array<Record<string, unknown>>)
+            .map((pedido) => pedido["sede_id"])
+            .filter((id): id is string => typeof id === "string" && id.length > 0),
+        ),
+      ];
+      // Ambos directorios dependen de los pedidos cargados, pero no entre sí.
+      // Consultarlos en paralelo evita sumar una ida y vuelta de red al tiempo de carga.
+      const pedidoIds = [...new Set(
+        ((pedidosData ?? []) as Array<Record<string, unknown>>)
+          .map((pedido) => pedido["id"])
+          .filter((id): id is string => typeof id === "string" && id.length > 0),
+      )];
+
+      // Limitar el enriquecimiento comercial a los pedidos de esta bandeja evita
+      // descargar registros históricos ajenos al conjunto visible.
+      const [
+        { data: comercialesData, error: comercialesError },
+        { data: participantesData, error: participantesError },
+        { data: sedesData, error: sedesError },
+      ] = await Promise.all([
+        pedidoIds.length
+          ? supabase.from("pedido_comercial").select(CAMPOS_PEDIDO_COMERCIAL).in("pedido_id", pedidoIds)
+          : Promise.resolve({ data: [], error: null }),
+        participanteIds.length
+          ? supabase.from("ecosistema_participantes").select("id,nombre,sede_id").in("id", participanteIds)
+          : Promise.resolve({ data: [], error: null }),
+        sedeIds.length
+          ? supabase.from("sedes").select("id,nombre").in("id", sedeIds)
+          : Promise.resolve({ data: [], error: null }),
+      ]);
+
+      if (comercialesError && !esErrorCampoFaltante(comercialesError)) {
+        console.warn("[Pedidos] No se pudo cargar el enriquecimiento comercial; se muestran los pedidos igualmente.", comercialesError);
+      }
+
+      if (participantesError) {
+        console.warn("[Pedidos] No se pudo cargar el nombre del participante; se usa la sede como respaldo.", participantesError);
+      }
+
+      if (sedesError) {
+        console.warn("[Pedidos] No se pudo cargar el nombre de la sede.", sedesError);
+      }
+
+      const nombresParticipante = new Map(
+        ((participantesData ?? []) as Array<{ id: string; nombre: string | null }>).map((participante) => [
+          participante.id,
+          participante.nombre ?? "",
+        ]),
+      );
+      const nombresSede = new Map(
+        ((sedesData ?? []) as Array<{ id: string; nombre: string | null }>).map((sede) => [
+          sede.id,
+          sede.nombre ?? "",
+        ]),
+      );
+
+      const comercialesPorPedido = new Map(
+        ((comercialesData ?? []) as Array<Record<string, unknown>>).map((comercial) => [
+          textoCampo(comercial, "pedido_id"), comercial,
+        ]),
+      );
+
+      return ((pedidosData ?? []) as Array<Record<string, unknown>>).map((p) => {
+        const comercial = comercialesPorPedido.get(textoCampo(p, "id")) ?? {};
+        return {
+          ...p,
+          id: textoCampo(p, "id"),
+          referencia: textoCampo(p, "referencia"),
+          pieza: textoCampo(p, "pieza"),
+          cliente: textoCampo(p, "cliente"),
+          cliente_id: typeof p["cliente_id"] === "string" ? p["cliente_id"] : null,
+          material: textoCampo(p, "material"),
+          estado: normalizarEstadoPedido(textoCampo(p, "estado"), textoCampo(p, "area_actual", "Pedidos")),
+          entrega: textoCampo(p, "entrega"),
+          importe: Number(comercial["importe"]) || 0,
+          a_cuenta: Number(comercial["a_cuenta"]) || 0,
+          saldo: Math.max((Number(comercial["importe"]) || 0) - (Number(comercial["a_cuenta"]) || 0), 0),
+          participante_id: typeof p["participante_id"] === "string" ? p["participante_id"] : null,
+          participante_nombre: nombresParticipante.get(textoCampo(p, "participante_id")) ?? null,
+          sede_nombre:
+            nombresParticipante.get(textoCampo(p, "participante_id")) ??
+            nombresSede.get(textoCampo(p, "sede_id")) ??
+            null,
+          sede_id: typeof p["sede_id"] === "string" ? p["sede_id"] : null,
+          telefono: textoCampo(comercial, "telefono"),
+          origen: textoCampo(p, "origen"),
+          origen_comercial: p["origen_comercial"] === "cotizacion" ? "cotizacion" : "directo",
+          // Estos campos son nuevos y no deben bloquear la bandeja si la migración aún no llegó al backend oficial.
+          canal_captacion: textoCampo(p, "canal_captacion"),
+          tipo_operacion: (p["tipo_operacion"] === "reparacion" || p["tipo_operacion"] === "venta_stock" ? p["tipo_operacion"] : "fabricacion"),
+          contrato: textoCampo(p, "contrato"),
+          contrato_id: typeof p["contrato_id"] === "string" ? p["contrato_id"] : null,
+          cotizacion_id: typeof p["cotizacion_id"] === "string" ? p["cotizacion_id"] : null,
+          proyecto_joya_id: typeof p["proyecto_joya_id"] === "string" ? p["proyecto_joya_id"] : null,
+          cotizacion_detalles: (comercial["cotizacion_detalles"] as Json) ?? [],
+          especificaciones_comerciales: (comercial["especificaciones_comerciales"] as Json) ?? {},
+          trabajo: textoCampo(p, "trabajo"),
+          fecha_ingreso: textoCampo(p, "fecha_ingreso"),
+          fecha_entrega: typeof p["fecha_entrega"] === "string" ? p["fecha_entrega"] : null,
+          area_actual: areaOperativa(textoCampo(p, "area_actual", "Pedidos")),
+          ruta: Array.isArray(p["ruta"]) ? p["ruta"].filter((area) => typeof area === "string").map(areaOperativa).filter((area) => area !== "Pedidos" && area !== "Área ventas") : [],
+          area_desde: textoCampo(p, "area_desde", textoCampo(p, "fecha_ingreso", new Date().toISOString())),
+          notas: textoCampo(p, "notas"),
+          talla: textoCampo(p, "talla"),
+          cantidad_piezas: Number(p["cantidad_piezas"]) || 1,
+          piedras: textoCampo(p, "piedras"),
+          peso_estimado: textoCampo(p, "peso_estimado"),
+          corte_texto: textoCampo(p, "corte_texto"),
+          corte_tipografia: textoCampo(p, "corte_tipografia"),
+          corte_ubicacion: textoCampo(p, "corte_ubicacion"),
+          corte_observaciones: textoCampo(p, "corte_observaciones"),
+          ventas_estado: normalizarEstadoVentas(textoCampo(comercial, "ventas_estado")),
+          packing_estado: textoCampo(comercial, "packing_estado", "Pendiente"),
+          medio_envio: textoCampo(comercial, "medio_envio"),
+          guia_envio: textoCampo(comercial, "guia_envio"),
+          fecha_envio: typeof comercial["fecha_envio"] === "string" ? comercial["fecha_envio"] : null,
+          fecha_entregado: typeof comercial["fecha_entregado"] === "string" ? comercial["fecha_entregado"] : null,
+          fecha_listo_entrega: typeof comercial["fecha_listo_entrega"] === "string" ? comercial["fecha_listo_entrega"] : null,
+          listo_entrega_observaciones: textoCampo(comercial, "listo_entrega_observaciones"),
+          receptor_envio: textoCampo(comercial, "receptor_envio"),
+          notas_ventas: textoCampo(comercial, "notas_ventas"),
+          notas_envio: textoCampo(comercial, "notas_envio"),
+          notas_entrega: textoCampo(comercial, "notas_entrega"),
+          usuario_listo_entrega: typeof comercial["usuario_listo_entrega"] === "string" ? comercial["usuario_listo_entrega"] : null,
+          usuario_envio: typeof comercial["usuario_envio"] === "string" ? comercial["usuario_envio"] : null,
+          usuario_entrega: typeof comercial["usuario_entrega"] === "string" ? comercial["usuario_entrega"] : null,
+          ventas_actualizado_por: typeof comercial["ventas_actualizado_por"] === "string" ? comercial["ventas_actualizado_por"] : null,
+          ventas_actualizado_en: typeof comercial["ventas_actualizado_en"] === "string" ? comercial["ventas_actualizado_en"] : null,
+          enviado_at: typeof comercial["enviado_at"] === "string" ? comercial["enviado_at"] : null,
+          entregado_at: typeof comercial["entregado_at"] === "string" ? comercial["entregado_at"] : null,
+        };
+      });
+    },
+  });
+}
+
+
+function separarDatosComerciales(cambios: Partial<PedidoNuevo>) {
+  const campos = new Set([
+    "telefono", "importe", "a_cuenta", "saldo", "cotizacion_detalles", "especificaciones_comerciales",
+    "ventas_estado", "packing_estado", "medio_envio", "guia_envio", "fecha_envio", "fecha_entregado",
+    "receptor_envio", "notas_ventas", "fecha_listo_entrega", "listo_entrega_observaciones", "notas_envio",
+    "notas_entrega", "usuario_listo_entrega", "usuario_envio", "usuario_entrega", "ventas_actualizado_por",
+    "ventas_actualizado_en", "enviado_at", "entregado_at",
+  ]);
+  const comercial: PedidoComercialUpdate = {};
+  const pedido: Record<string, unknown> = { ...cambios };
+  let tieneComerciales = false;
+  for (const campo of campos) {
+    if (Object.prototype.hasOwnProperty.call(cambios, campo)) {
+      (comercial as Record<string, unknown>)[campo] = (cambios as Record<string, unknown>)[campo];
+      delete pedido[campo];
+      tieneComerciales = true;
+    }
+  }
+  return { pedido: pedido as Partial<PedidoNuevo>, comercial, tieneComerciales };
+}
+
+async function upsertPedidoComercial(pedidoId: string, cambios: Partial<PedidoNuevo>) {
+  const { comercial, tieneComerciales } = separarDatosComerciales(cambios);
+  if (!tieneComerciales) return;
+  const { error } = await supabase.from("pedido_comercial").upsert(
+    { ...comercial, pedido_id: pedidoId },
+    { onConflict: "pedido_id" },
+  );
+  if (error) throw error;
+}
+
+async function crearContratoComercialAtomico({
+  numero,
+  cliente,
+  telefono,
+  origen,
+  importe,
+  sede_id,
+  notas,
+  cotizacion_id,
+}: {
+  numero?: string;
+  cliente: string;
+  telefono: string;
+  origen: string;
+  importe: number;
+  sede_id: string | null;
+  notas: string;
+  cotizacion_id?: string | null;
+}) {
+  const { data, error } = await supabase.rpc("crear_contrato_comercial", {
+    _cliente: cliente.trim(),
+    _telefono: telefono.trim(),
+    _origen: origen.trim(),
+    _total: Math.max(0, Number(importe) || 0),
+    _sede_id: sede_id,
+    _notas: notas,
+    _cotizacion_id: cotizacion_id ?? null,
+  });
+  if (error) throw error;
+
+  const resultado = data as { id?: string; numero?: string; creado?: boolean } | null;
+  if (!resultado?.id || !resultado.numero) {
+    throw new Error("La base de datos no devolvió el contrato creado.");
+  }
+  return { id: resultado.id, numero: resultado.numero, creado: Boolean(resultado.creado) };
+}
+
+async function asegurarContratoParaPedido(pedido: PedidoNuevo) {
+  if (pedido.contrato_id) {
+    return { id: pedido.contrato_id, numero: pedido.contrato.trim(), creado: false };
+  }
+
+  if (pedido.contrato.trim()) {
+    let consulta = supabase.from("contratos").select("id, numero").eq("numero", pedido.contrato.trim());
+    consulta = pedido.sede_id ? consulta.eq("sede_id", pedido.sede_id) : consulta.is("sede_id", null);
+    const { data: existente, error } = await consulta.maybeSingle();
+    if (error && !esErrorCampoFaltante(error)) throw error;
+    if (existente?.id) return { id: existente.id, numero: existente.numero, creado: false };
+  }
+
+  return crearContratoComercialAtomico({
+    cliente: pedido.cliente,
+    telefono: pedido.telefono,
+    origen: pedido.origen,
+    importe: pedido.importe,
+    sede_id: pedido.sede_id,
+    notas: "",
+  });
+}
+
+async function asegurarContratoComercial({
+  numero: _numero,
+  cliente,
+  telefono,
+  origen,
+  importe,
+  sede_id,
+  notas,
+  cotizacion_id,
+}: {
+  numero: string;
+  cliente: string;
+  telefono: string;
+  origen: string;
+  importe: number;
+  sede_id: string | null;
+  notas: string;
+  cotizacion_id?: string | null;
+}) {
+  return crearContratoComercialAtomico({
+    numero: _numero,
+    cliente,
+    telefono,
+    origen,
+    importe,
+    sede_id,
+    notas,
+    cotizacion_id,
+  });
+}
+
+export function useCrearContrato() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (datos: {
+      numero: string;
+      cliente: string;
+      telefono?: string;
+      origen?: string;
+      total?: number;
+      sede_id?: string | null;
+      notas?: string;
+      cotizacion_id?: string | null;
+    }) => {
+      if (!datos.cliente.trim()) throw new Error("El cliente es obligatorio.");
+
+      const contrato = await asegurarContratoComercial({
+        numero: datos.numero.trim(),
+        cliente: datos.cliente.trim(),
+        telefono: datos.telefono?.trim() ?? "",
+        origen: datos.origen?.trim() ?? "Contrato Aurum",
+        importe: Number(datos.total) || 0,
+        sede_id: datos.sede_id ?? null,
+        notas: datos.notas?.trim() ?? "",
+        cotizacion_id: datos.cotizacion_id ?? null,
+      });
+
+      if (!contrato.id) throw new Error("No se pudo crear el contrato.");
+      return contrato;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["contratos"] });
+    },
+  });
+}
+
+export function useContratos(incluirFinanzas = true) {
+  return useQuery({
+    queryKey: ["contratos", incluirFinanzas],
+    staleTime: 60_000,
+    queryFn: async (): Promise<Contrato[]> => {
+      const { data, error } = await supabase
+        .from("contratos")
+        .select(
+          incluirFinanzas
+            ? "id, numero, cliente, telefono, origen, total, abonado, sede_id, notas, created_at, cotizacion_id, sedes(nombre)"
+            : "id, numero, cliente, origen, sede_id, notas, created_at, cotizacion_id, sedes(nombre)",
+        )
+        .order("created_at", { ascending: false });
+      if (error) {
+        if (esErrorCampoFaltante(error)) return [];
+        throw error;
+      }
+
+      const filas = (data ?? []) as unknown as Array<Record<string, unknown>>;
+      const cotizacionIds = [...new Set(filas.map((c) => textoCampo(c, "cotizacion_id")).filter(Boolean))];
+      const sedeIds = [...new Set(filas.map((c) => textoCampo(c, "sede_id")).filter(Boolean))];
+      const [{ data: cotizacionesMoneda }, { data: identidadesMoneda }] = await Promise.all([
+        cotizacionIds.length
+          ? supabase.from("cotizaciones").select("id,moneda").in("id", cotizacionIds)
+          : Promise.resolve({ data: [] as Array<{ id: string; moneda: string }> }),
+        sedeIds.length
+          ? supabase.from("identidades_comerciales").select("sede_id,moneda_codigo,updated_at").in("sede_id", sedeIds).eq("activa", true).order("updated_at", { ascending: false })
+          : Promise.resolve({ data: [] as Array<{ sede_id: string; moneda_codigo: string; updated_at: string }> }),
+      ]);
+      const monedaPorCotizacion = new Map((cotizacionesMoneda ?? []).map((q) => [q.id, q.moneda || "PEN"]));
+      const monedaPorSede = new Map<string, string>();
+      for (const identidad of identidadesMoneda ?? []) {
+        if (identidad.sede_id && !monedaPorSede.has(identidad.sede_id)) {
+          monedaPorSede.set(identidad.sede_id, identidad.moneda_codigo || "PEN");
+        }
+      }
+
+      return filas.map(({ sedes, ...c }) => {
+        const total = Number(c["total"]) || 0;
+        const abonado = Number(c["abonado"]) || 0;
+        const cotizacionId = textoCampo(c, "cotizacion_id");
+        const sedeId = typeof c["sede_id"] === "string" ? c["sede_id"] : null;
+        return {
+          id: textoCampo(c, "id"),
+          numero: textoCampo(c, "numero"),
+          cliente: textoCampo(c, "cliente"),
+          telefono: incluirFinanzas ? textoCampo(c, "telefono") : "",
+          origen: textoCampo(c, "origen"),
+          total: incluirFinanzas ? total : 0,
+          abonado: incluirFinanzas ? abonado : 0,
+          saldo: incluirFinanzas ? Math.max(0, total - abonado) : 0,
+          sede_id: sedeId,
+          sede_nombre: (sedes as { nombre: string } | null)?.nombre ?? null,
+          notas: textoCampo(c, "notas"),
+          created_at: textoCampo(c, "created_at"),
+          cotizacion_id: cotizacionId || null,
+          moneda: monedaPorCotizacion.get(cotizacionId) ?? (sedeId ? monedaPorSede.get(sedeId) : undefined) ?? "PEN",
+        };
+      });
+    },
+  });
+}
+
+export function calcularEstadoFinanciero(total: number, abonado: number): EstadoFinanciero {
+  const saldo = Math.max(0, total - abonado);
+  if (total > 0 && saldo <= 0) return "Pagado";
+  if (abonado > 0 && saldo > 0) return "Pago parcial";
+  return "Pendiente";
+}
+
+export function resumenFinancieroContrato(
+  contrato: Pick<Contrato, "id" | "total" | "abonado"> | null | undefined,
+  pagos: PagoContrato[] = [],
+): ResumenFinancieroContrato {
+  if (!contrato || !esUuid(contrato.id)) {
+    return {
+      total: 0,
+      abonado: 0,
+      saldo: 0,
+      estado: "Pendiente",
+      origen: "sin_contrato",
+    };
+  }
+  const total = Number(contrato.total) || 0;
+  const abonadoPagos = pagos.reduce((acc, pago) => acc + (Number(pago.monto) || 0), 0);
+  const abonado = pagos.length > 0 ? abonadoPagos : Number(contrato.abonado) || 0;
+  const saldo = Math.max(0, total - abonado);
+  return {
+    total,
+    abonado,
+    saldo,
+    estado: calcularEstadoFinanciero(total, abonado),
+    origen: "contrato",
+  };
+}
+
+function pagosDesdeRows(rows: Array<Record<string, unknown>>): PagoContrato[] {
+  return rows.map(({ profiles, ...p }) => ({
+    id: textoCampo(p, "id"),
+    contrato_id: textoCampo(p, "contrato_id"),
+    contrato_numero: textoCampo(p, "contrato_numero"),
+    fecha: textoCampo(p, "fecha"),
+    concepto: textoCampo(p, "concepto"),
+    monto: Number(p["monto"]) || 0,
+    usuario_id: typeof p["usuario_id"] === "string" ? p["usuario_id"] : null,
+    usuario_nombre:
+      ((profiles as { nombre?: string } | null | undefined)?.nombre as string | undefined) ?? null,
+    created_at: textoCampo(p, "created_at"),
+  }));
+}
+
+export function usePagosContrato(contrato: Pick<Contrato, "id" | "numero"> | null | undefined, habilitado = true) {
+  return useQuery({
+    queryKey: ["contrato_pagos", contrato?.id, contrato?.numero],
+    staleTime: 60_000,
+    queryFn: async (): Promise<PagoContrato[]> => {
+      if (!contrato) return [];
+      const selector = esUuid(contrato.id) ? "contrato_id" : "contrato_numero";
+      const valor = esUuid(contrato.id) ? contrato.id : contrato.numero;
+      const { data, error } = await supabase
+        .from("contrato_pagos")
+        .select(
+          "id, contrato_id, contrato_numero, fecha, concepto, monto, usuario_id, created_at, profiles(nombre)",
+        )
+        .eq(selector, valor)
+        .order("fecha", { ascending: false })
+        .order("created_at", { ascending: false });
+      if (error) {
+        if (esErrorCampoFaltante(error)) return [];
+        throw error;
+      }
+      return pagosDesdeRows((data ?? []) as Array<Record<string, unknown>>);
+    },
+    enabled: habilitado && Boolean(contrato),
+  });
+}
+
+export function usePagosContratos(
+  contratos: Pick<Contrato, "id" | "numero">[],
+  habilitado = true,
+) {
+  const ids = contratos.map((c) => c.id).filter(esUuid);
+  const numeros = contratos.map((c) => c.numero).filter(Boolean);
+  return useQuery({
+    queryKey: ["contrato_pagos", ids.slice().sort(), numeros.slice().sort()],
+    staleTime: 60_000,
+    queryFn: async (): Promise<PagoContrato[]> => {
+      if (ids.length === 0 && numeros.length === 0) return [];
+      const consultas = await Promise.all([
+        ids.length > 0
+          ? supabase
+              .from("contrato_pagos")
+              .select(
+                "id, contrato_id, contrato_numero, fecha, concepto, monto, usuario_id, created_at, profiles(nombre)",
+              )
+              .in("contrato_id", ids)
+          : Promise.resolve({ data: [], error: null }),
+        numeros.length > 0
+          ? supabase
+              .from("contrato_pagos")
+              .select(
+                "id, contrato_id, contrato_numero, fecha, concepto, monto, usuario_id, created_at, profiles(nombre)",
+              )
+              .in("contrato_numero", numeros)
+          : Promise.resolve({ data: [], error: null }),
+      ]);
+      const error = consultas.find((r) => r.error)?.error;
+      if (error) {
+        if (esErrorCampoFaltante(error)) return [];
+        throw error;
+      }
+      const porId = new Map<string, Record<string, unknown>>();
+      consultas.forEach((r) => {
+        ((r.data ?? []) as Array<Record<string, unknown>>).forEach((p) => {
+          const id = textoCampo(p, "id");
+          if (id) porId.set(id, p);
+        });
+      });
+      return pagosDesdeRows([...porId.values()]).sort(
+        (a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime(),
+      );
+    },
+    enabled: habilitado && contratos.length > 0,
+  });
+}
+
+export function useRegistrarPagoContrato() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      contrato,
+      fecha,
+      concepto,
+      monto,
+      usuarioId,
+    }: {
+      contrato: Contrato;
+      fecha: string;
+      concepto: string;
+      monto: number;
+      usuarioId: string | null;
+    }) => {
+      if (monto <= 0) throw new Error("El monto del pago debe ser mayor que cero.");
+      if (!esUuid(contrato.id)) {
+        throw new Error("No existe un documento comercial asociado.");
+      }
+      const pago: PagoContratoInsert = {
+        contrato_id: contrato.id,
+        contrato_numero: contrato.numero,
+        fecha,
+        concepto,
+        monto,
+        usuario_id: usuarioId,
+      };
+      const { error } = await supabase.from("contrato_pagos").insert(pago);
+      if (error) throw error;
+    },
+    onSuccess: (_data, variables) => {
+      toast.success("Pago registrado en el contrato");
+      void qc.invalidateQueries({ queryKey: ["contratos"] });
+      void qc.invalidateQueries({ queryKey: ["contrato", variables.contrato.id] });
+      void qc.invalidateQueries({ queryKey: ["contrato", variables.contrato.numero] });
+      void qc.invalidateQueries({ queryKey: ["contrato_pagos"] });
+      void qc.invalidateQueries({ queryKey: ["pedidos"] });
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "No se pudo registrar el pago");
+    },
+  });
+}
+
+async function sumarImporteAContrato(contratoId: string | null | undefined, importe: number) {
+  if (!contratoId || !esUuid(contratoId) || importe <= 0) return;
+  const { data, error } = await supabase
+    .from("contratos")
+    .select("total")
+    .eq("id", contratoId)
+    .maybeSingle();
+  if (error) {
+    if (esErrorCampoFaltante(error)) return;
+    throw error;
+  }
+  const totalActual = Number((data as { total?: number } | null)?.total) || 0;
+  const { error: errorUpdate } = await supabase
+    .from("contratos")
+    .update({ total: totalActual + importe })
+    .eq("id", contratoId);
+  if (errorUpdate) {
+    if (esErrorCampoFaltante(errorUpdate)) return;
+    throw errorUpdate;
+  }
+}
+
+async function recalcularTotalContrato(numero: string, contratoId: string | null | undefined) {
+  if (!numero.trim() || !contratoId || !esUuid(contratoId)) return;
+
+  const { data: pedidosData, error: pedidosError } = await supabase
+    .from("pedidos")
+    .select("id")
+    .eq("contrato", numero.trim());
+  if (pedidosError) throw pedidosError;
+
+  const ids = ((pedidosData ?? []) as Array<{ id: string }>).map((p) => p.id);
+  if (ids.length === 0) {
+    const { error } = await supabase.from("contratos").update({ total: 0 }).eq("id", contratoId);
+    if (error) throw error;
+    return;
+  }
+
+  const { data: comerciales, error: comercialError } = await supabase
+    .from("pedido_comercial")
+    .select("importe")
+    .in("pedido_id", ids);
+  if (comercialError) throw comercialError;
+
+  const total = ((comerciales ?? []) as Array<{ importe?: number }>).reduce(
+    (acc, pedido) => acc + (Number(pedido.importe) || 0),
+    0,
+  );
+
+  const { error: errorUpdate } = await supabase.from("contratos").update({ total }).eq("id", contratoId);
+  if (errorUpdate) throw errorUpdate;
+}
+
+
+async function vincularPedidosPorNumeroContrato(numero: string, contratoId: string | null) {
+  if (!numero.trim() || !contratoId || !esUuid(contratoId)) return;
+  const { error } = await supabase
+    .from("pedidos")
+    .update({ contrato_id: contratoId })
+    .eq("contrato", numero.trim());
+
+  if (error && !esErrorCampoFaltante(error)) throw error;
+}
+
+export function useCrearContratoDesdePedido() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (pedido: Pedido) => {
+      const numero = pedido.contrato.trim() || `DOC-${pedido.referencia || Date.now()}`;
+      const contrato = await asegurarContratoComercial({
+        numero,
+        cliente: pedido.cliente,
+        telefono: pedido.telefono,
+        origen: pedido.origen,
+        importe: pedido.importe,
+        sede_id: pedido.sede_id,
+        notas: "Contrato creado desde un pedido existente.",
+      });
+
+      if (!contrato.id) {
+        throw new Error("No se pudo crear el contrato financiero.");
+      }
+
+      const { error: errorPedido } = await supabase
+        .from("pedidos")
+        .update({ contrato: contrato.numero, contrato_id: contrato.id })
+        .eq(
+          pedido.contrato.trim() ? "contrato" : "id",
+          pedido.contrato.trim() ? contrato.numero : pedido.id,
+        );
+      if (errorPedido) {
+        if (!esErrorCampoFaltante(errorPedido)) throw errorPedido;
+        const { error: errorCompat } = await supabase
+          .from("pedidos")
+          .update({ contrato: contrato.numero })
+          .eq(
+            pedido.contrato.trim() ? "contrato" : "id",
+            pedido.contrato.trim() ? contrato.numero : pedido.id,
+          );
+        if (errorCompat) throw errorCompat;
+      }
+
+      await vincularPedidosPorNumeroContrato(contrato.numero, contrato.id);
+      await recalcularTotalContrato(contrato.numero, contrato.id);
+
+      return { contratoId: contrato.id, numero: contrato.numero };
+    },
+    onSuccess: (resultado, pedido) => {
+      toast.success(`Contrato ${resultado.numero || pedido.contrato} creado y asociado`);
+      void qc.invalidateQueries({ queryKey: ["contratos"] });
+      void qc.invalidateQueries({ queryKey: ["contrato", resultado.numero || pedido.contrato] });
+      void qc.invalidateQueries({ queryKey: ["contrato_pagos"] });
+      void qc.invalidateQueries({ queryKey: ["pedidos"] });
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "No se pudo crear el contrato");
+    },
+  });
+}
+
+export function useContrato(id: string, habilitado = true) {
+  return useQuery({
+    queryKey: ["contrato", id],
+    staleTime: 60_000,
+    queryFn: async (): Promise<Contrato | null> => {
+      const selector = esUuid(id) ? "id" : "numero";
+      let { data, error } = await supabase
+        .from("contratos")
+        .select(
+          "id, numero, cliente, telefono, origen, total, abonado, sede_id, notas, created_at, cotizacion_id, estado_firma, firma_validada_at, firma_observacion, sedes(nombre)",
+        )
+        .eq(selector, id)
+        .maybeSingle();
+      // La UI sigue cargando mientras el SQL de firma se aplica; los controles de firma
+      // permanecen inactivos hasta que los campos nuevos estén disponibles.
+      if (error && esErrorCampoFaltante(error)) {
+        const legacy = await supabase
+          .from("contratos")
+          .select("id, numero, cliente, telefono, origen, total, abonado, sede_id, notas, created_at, sedes(nombre)")
+          .eq(selector, id)
+          .maybeSingle();
+        data = legacy.data as typeof data;
+        error = legacy.error;
+      }
+      if (error) {
+        if (esErrorCampoFaltante(error)) return contratoDesdePedidos(id);
+        throw error;
+      }
+      if (!data) return contratoDesdePedidos(id);
+      const row = data as Record<string, unknown> & { sedes?: { nombre: string } | null };
+      const total = Number(row["total"]) || 0;
+      const abonado = Number(row["abonado"]) || 0;
+      const cotizacionId = textoCampo(row, "cotizacion_id");
+      const sedeId = typeof row["sede_id"] === "string" ? row["sede_id"] : null;
+      let moneda = "PEN";
+      if (cotizacionId) {
+        const { data: cotizacion } = await supabase.from("cotizaciones").select("moneda").eq("id", cotizacionId).maybeSingle();
+        moneda = cotizacion?.moneda || moneda;
+      } else if (sedeId) {
+        const { data: identidad } = await supabase.from("identidades_comerciales").select("moneda_codigo").eq("sede_id", sedeId).eq("activa", true).order("updated_at", { ascending: false }).limit(1).maybeSingle();
+        moneda = identidad?.moneda_codigo || moneda;
+      }
+      return {
+        id: textoCampo(row, "id"),
+        numero: textoCampo(row, "numero"),
+        cliente: textoCampo(row, "cliente"),
+        telefono: textoCampo(row, "telefono"),
+        origen: textoCampo(row, "origen"),
+        total,
+        abonado,
+        saldo: Math.max(0, total - abonado),
+        sede_id: typeof row["sede_id"] === "string" ? row["sede_id"] : null,
+        sede_nombre: row.sedes?.nombre ?? null,
+        notas: textoCampo(row, "notas"),
+        created_at: textoCampo(row, "created_at"),
+        cotizacion_id: cotizacionId || null,
+        moneda,
+        estado_firma: textoCampo(row, "estado_firma", "pendiente") as Contrato["estado_firma"],
+        firma_validada_at: typeof row["firma_validada_at"] === "string" ? row["firma_validada_at"] : null,
+        firma_observacion: textoCampo(row, "firma_observacion"),
+      };
+    },
+    enabled: habilitado && Boolean(id),
+  });
+}
+
+async function contratoDesdePedidos(numeroContrato: string): Promise<Contrato | null> {
+  if (!numeroContrato || esUuid(numeroContrato)) return null;
+
+  const { data: pedidosData, error } = await supabase
+    .from("pedidos")
+    .select("id, contrato, cliente, origen, sede_id, sedes(nombre), created_at")
+    .eq("contrato", numeroContrato);
+  if (error) throw error;
+
+  const ids = ((pedidosData ?? []) as Array<{ id: string }>).map((p) => p.id);
+  const { data: comerciales, error: comercialError } = ids.length
+    ? await supabase.from("pedido_comercial").select("pedido_id, telefono, importe").in("pedido_id", ids)
+    : { data: [], error: null };
+  if (comercialError) throw comercialError;
+
+  const comercialesPorPedido = new Map(
+    ((comerciales ?? []) as Array<Record<string, unknown>>).map((row) => [
+      textoCampo(row, "pedido_id"), row,
+    ]),
+  );
+
+  const filas = ((pedidosData ?? []) as Array<Record<string, unknown>>).map((pedido) => ({
+    ...pedido,
+    ...(comercialesPorPedido.get(textoCampo(pedido, "id")) ?? {}),
+  }));
+  return construirContratoTemporal(numeroContrato, filas);
+}
+
+
+function construirContratoTemporal(
+  numeroContrato: string,
+  pedidos: Array<Record<string, unknown>>,
+) {
+  if (pedidos.length === 0) return null;
+  const primero = pedidos[0]!;
+  const total = pedidos.reduce((acc, pedido) => acc + (Number(pedido["importe"]) || 0), 0);
+  return {
+    id: numeroContrato,
+    numero: numeroContrato,
+    cliente: textoCampo(primero, "cliente"),
+    telefono: textoCampo(primero, "telefono"),
+    origen: textoCampo(primero, "origen"),
+    total,
+    abonado: 0,
+    saldo: total,
+    sede_id: typeof primero["sede_id"] === "string" ? primero["sede_id"] : null,
+    sede_nombre:
+      ((primero["sedes"] as { nombre?: string } | null | undefined)?.nombre as
+        string | undefined) ?? null,
+    notas: "Contrato reconstruido desde pedidos existentes.",
+    created_at: textoCampo(primero, "created_at", new Date().toISOString()),
+  };
+}
+
+export function usePedidosContrato(contrato: Pick<Contrato, "id" | "numero"> | null | undefined) {
+  const { data: pedidos = [], isLoading } = usePedidos();
+  return {
+    isLoading,
+    pedidos: pedidos.filter((pedido) =>
+      contrato ? pedido.contrato_id === contrato.id || pedido.contrato === contrato.numero : false,
+    ),
+  };
+}
+
+export function useCrearPedido() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (pedido: PedidoNuevo) => {
+      // Un Pedido puede nacer sin Cotización. Cuando la recepción registra una
+      // venta directa con precio, se crea aquí su documento financiero antes de
+      // persistir el pedido y se vincula por contrato_id. Así el precio y los
+      // pagos tienen una única fuente de verdad desde el primer momento.
+      const origenComercial = pedido.cotizacion_id ? "cotizacion" : "directo";
+      const pedidoConContexto = {
+        ...pedido,
+        cliente: pedido.cliente.trim() || "Cliente pendiente de registrar",
+        contrato: pedido.contrato?.trim() ?? "",
+        cliente_id: pedido.cliente_id ?? null,
+        cotizacion_id: pedido.cotizacion_id ?? null,
+        contrato_id: pedido.contrato_id ?? null,
+      };
+
+      let contratoDirecto: { id: string | null; numero: string; creado: boolean } | null = null;
+      let pedidoCreadoId: string | null = null;
+
+      try {
+        if (origenComercial === "directo") {
+          const importe = Number(pedidoConContexto.importe) || 0;
+          if (importe <= 0) {
+            throw new Error("La venta directa debe tener un importe mayor que cero.");
+          }
+          if (!pedidoConContexto.sede_id) {
+            throw new Error("El pedido debe pertenecer a una sede para crear su documento financiero.");
+          }
+
+          // Cada venta directa necesita un contrato financiero interno vinculado.
+          // La referencia escrita por el taller se conserva como dato de trazabilidad.
+          contratoDirecto = await asegurarContratoComercial({
+            numero: `DOC-${pedidoConContexto.referencia.trim()}`,
+            cliente: pedidoConContexto.cliente,
+            telefono: pedidoConContexto.telefono ?? "",
+            origen: "Pedido directo",
+            importe,
+            sede_id: pedidoConContexto.sede_id,
+            notas: "Documento financiero generado automáticamente desde un pedido directo.",
+          });
+          if (!contratoDirecto.id) {
+            throw new Error("No se pudo crear el documento financiero del pedido directo.");
+          }
+          pedidoConContexto.contrato_id = contratoDirecto.id;
+        }
+
+        if (origenComercial === "cotizacion" && !pedidoConContexto.cotizacion_id) {
+          throw new Error("El pedido con origen Cotización debe conservar la cotización de origen.");
+        }
+
+        const { pedido: datosOperativos } = separarDatosComerciales(pedidoConContexto);
+        const respuesta = await supabase
+          .from("pedidos")
+          .insert(datosOperativos as unknown as TablesInsert<"pedidos">)
+          .select("id, referencia, cliente, sede_id")
+          .single();
+
+        const { contrato_id: _contratoIdOmitido, ...sinContratoId } = datosOperativos;
+        const { data, error } =
+          respuesta.error &&
+          esErrorCampoFaltante(respuesta.error) &&
+          "contrato_id" in pedidoConContexto
+            ? await supabase
+                .from("pedidos")
+                .insert(sinContratoId as unknown as TablesInsert<"pedidos">)
+                .select("id, referencia, cliente, sede_id")
+                .single()
+            : respuesta;
+
+        if (error) throw error;
+        if (!data?.id) throw new Error("No se pudo obtener el pedido creado.");
+        pedidoCreadoId = data.id;
+        await upsertPedidoComercial(data.id, pedidoConContexto);
+
+        const anticipoInicial = Math.max(0, Number(pedidoConContexto.a_cuenta) || 0);
+        if (origenComercial === "directo" && anticipoInicial > 0 && contratoDirecto?.creado && contratoDirecto.id) {
+          const { data: usuarioActual } = await supabase.auth.getUser();
+          if (!usuarioActual.user?.id) {
+            throw new Error("No se pudo identificar al usuario que registra el anticipo.");
+          }
+          const { error: errorAnticipo } = await supabase.from("contrato_pagos").insert({
+            contrato_id: contratoDirecto.id,
+            contrato_numero: contratoDirecto.numero,
+            fecha: new Date().toISOString().slice(0, 10),
+            concepto: "Anticipo inicial del pedido",
+            monto: anticipoInicial,
+            usuario_id: usuarioActual.user.id,
+          });
+          if (errorAnticipo) throw errorAnticipo;
+        }
+
+        return data;
+      } catch (error) {
+        // Compensación para no dejar un documento financiero huérfano si falla
+        // la creación del pedido o su información comercial.
+        if (pedidoCreadoId) {
+          await supabase.from("pedidos").delete().eq("id", pedidoCreadoId);
+        }
+        if (contratoDirecto?.creado && contratoDirecto.id) {
+          await supabase.from("contratos").delete().eq("id", contratoDirecto.id);
+        }
+        throw error;
+      }
+    },
+    onSuccess: (pedido) => {
+      void qc.invalidateQueries({ queryKey: ["pedidos"] });
+      void qc.invalidateQueries({ queryKey: ["contratos"] });
+      // Crear un pedido directo puede registrar un anticipo en contrato_pagos.
+      void qc.invalidateQueries({ queryKey: ["contrato_pagos"] });
+      if (pedido) void notificarNuevoPedidoADueno(pedido);
+    },
+  });
+}
+
+
+export function useCrearTrabajoContrato() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ contrato, pedido, referenciasExistentes }: { contrato: Contrato; pedido: Omit<PedidoNuevo, "referencia" | "contrato_id">; referenciasExistentes: string[] }) => {
+      const referencia = siguienteReferenciaContrato(contrato.numero, referenciasExistentes);
+      const nuevo: PedidoNuevo = { ...pedido, referencia, cliente: contrato.cliente, contrato: contrato.numero, contrato_id: esUuid(contrato.id) ? contrato.id : null, sede_id: contrato.sede_id };
+      const { pedido: datosOperativos } = separarDatosComerciales(nuevo);
+      const respuesta = await supabase.from("pedidos").insert(datosOperativos as unknown as TablesInsert<"pedidos">).select("id, referencia, cliente, sede_id").single();
+      const { contrato_id: _contratoIdOmitido, ...sinContratoId } = datosOperativos;
+      const { data, error } =
+        respuesta.error && (esErrorCampoFaltante(respuesta.error) || respuesta.error.code === "22P02")
+          ? await supabase.from("pedidos").insert(sinContratoId as unknown as TablesInsert<"pedidos">).select("id, referencia, cliente, sede_id").single()
+          : respuesta;
+      if (error) throw error;
+      if (!data?.id) throw new Error("No se pudo obtener el pedido creado.");
+      await upsertPedidoComercial(data.id, nuevo);
+      await sumarImporteAContrato(esUuid(contrato.id) ? contrato.id : null, nuevo.importe);
+      return data;
+    },
+    onSuccess: (pedido) => {
+      void qc.invalidateQueries({ queryKey: ["pedidos"] });
+      void qc.invalidateQueries({ queryKey: ["contratos"] });
+      if (pedido) void notificarNuevoPedidoADueno(pedido);
+    },
+  });
+}
+
+
+export function useActualizarPedido() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...cambios }: Partial<PedidoNuevo> & { id: string; area_desde?: string }) => {
+      const { pedido: cambiosPedido, comercial, tieneComerciales } = separarDatosComerciales(cambios);
+      let payload = cambiosPedido as PedidoUpdate;
+
+      // Contrato Aurum y referencia externa son conceptos distintos:
+      // - contrato_id: vínculo con un contrato nativo de Aurum.
+      // - contrato: referencia/número externo informado por el taller.
+      // Editar una referencia externa nunca crea automáticamente un contrato nativo.
+      if (Object.prototype.hasOwnProperty.call(cambios, "contrato")) {
+        payload = {
+          ...payload,
+          contrato: String(cambios.contrato ?? "").trim(),
+        } as PedidoUpdate;
+      }
+
+      // La creación/vinculación de un contrato nativo se realiza mediante
+      // useCrearContratoDesdePedido, de forma explícita.
+      if (Object.prototype.hasOwnProperty.call(cambios, "contrato_id")) {
+        const contratoId = cambios.contrato_id;
+        payload = {
+          ...payload,
+          contrato_id: typeof contratoId === "string" && contratoId.trim() ? contratoId : null,
+        } as PedidoUpdate;
+      }
+
+      if (Object.keys(payload).length > 0) {
+        const { error } = await supabase.from("pedidos").update(payload).eq("id", id);
+        if (error) throw error;
+      }
+      if (tieneComerciales) {
+        const { error } = await supabase.from("pedido_comercial").update(comercial).eq("pedido_id", id);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["pedidos"] });
+      void qc.invalidateQueries({ queryKey: ["contratos"] });
+      void qc.invalidateQueries({ queryKey: ["contrato_pagos"] });
+    },
+  });
+}
+
+
+export function useBorrarPedido() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("pedidos").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["pedidos"] }),
+  });
+}
+
+/** Avanza o devuelve el pedido siguiendo su propia ruta. */
+export function useMoverPedido() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      pedido,
+      direccion,
+      usuarioId,
+    }: {
+      pedido: Pedido;
+      direccion: "avanzar" | "devolver";
+      usuarioId: string | null;
+    }) => {
+      const secuencia = secuenciaPedido(pedido);
+      const areaActual = areaOperativa(pedido.area_actual);
+      const i = Math.max(0, secuencia.indexOf(areaActual));
+      const destino =
+        direccion === "avanzar"
+          ? secuencia[Math.min(secuencia.length - 1, i + 1)]
+          : secuencia[Math.max(0, i - 1)];
+      if (!destino || destino === areaActual) return null;
+
+      const ahora = new Date().toISOString();
+      const estado = estadoPorDestino(destino, direccion);
+      const { error } = await supabase
+        .from("pedidos")
+        .update({
+          area_actual: destino,
+          estado,
+          area_desde: ahora,
+        })
+        .eq("id", pedido.id);
+      if (error) throw error;
+      await supabase.from("pedido_movimientos").insert({
+        pedido_id: pedido.id,
+        area_origen: areaActual,
+        area_destino: destino,
+        accion: direccion,
+        nota: "",
+        usuario_id: usuarioId,
+      });
+      return { pedido, destino, estado, area_desde: ahora };
+    },
+    onMutate: async ({ pedido, direccion }) => {
+      await qc.cancelQueries({ queryKey: ["pedidos"] });
+      const anterior = qc.getQueryData<Pedido[]>(["pedidos"]);
+      const secuencia = secuenciaPedido(pedido);
+      const areaActual = areaOperativa(pedido.area_actual);
+      const i = Math.max(0, secuencia.indexOf(areaActual));
+      const destino =
+        direccion === "avanzar"
+          ? secuencia[Math.min(secuencia.length - 1, i + 1)]
+          : secuencia[Math.max(0, i - 1)];
+      if (destino && destino !== areaActual) {
+        qc.setQueryData<Pedido[]>(["pedidos"], (pedidos) =>
+          actualizarPedidoEnCache(pedidos, pedido.id, {
+            area_actual: destino,
+            estado: estadoPorDestino(destino, direccion),
+            area_desde: new Date().toISOString(),
+          }),
+        );
+      }
+      return { anterior };
+    },
+    onError: (error, _variables, contexto) => {
+      if (contexto?.anterior) qc.setQueryData(["pedidos"], contexto.anterior);
+      toast.error(error instanceof Error ? error.message : "No se pudo mover el pedido");
+    },
+    onSuccess: (resultado) => {
+      if (resultado) toast.success(`Pedido movido a ${normalizarArea(resultado.destino)}`);
+    },
+    onSettled: () => {
+      void invalidarPedidosActivos(qc);
+    },
+  });
+}
+
+/** Autoriza el pedido para entrar a producción y lo ubica en la primera área de su ruta. */
+export function useAutorizarProduccion() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ pedido, usuarioId }: { pedido: Pedido; usuarioId: string | null }) => {
+      const destino = primeraAreaProduccion(pedido);
+      if (!destino) throw new Error("El pedido no tiene áreas productivas asignadas.");
+
+      const areaActual = areaOperativa(pedido.area_actual);
+      const ahora = new Date().toISOString();
+      const { error } = await supabase
+        .from("pedidos")
+        .update({
+          area_actual: destino,
+          estado: "En Producción",
+          area_desde: ahora,
+        })
+        .eq("id", pedido.id);
+      if (error) throw error;
+
+      await supabase.from("pedido_movimientos").insert({
+        pedido_id: pedido.id,
+        area_origen: areaActual,
+        area_destino: destino,
+        accion: "autorizar_produccion",
+        usuario_id: usuarioId,
+      });
+      return { pedido, destino, area_desde: ahora };
+    },
+    onMutate: async ({ pedido }) => {
+      await qc.cancelQueries({ queryKey: ["pedidos"] });
+      const anterior = qc.getQueryData<Pedido[]>(["pedidos"]);
+      const destino = primeraAreaProduccion(pedido);
+      if (destino) {
+        qc.setQueryData<Pedido[]>(["pedidos"], (pedidos) =>
+          actualizarPedidoEnCache(pedidos, pedido.id, {
+            area_actual: destino,
+            estado: "En Producción",
+            area_desde: new Date().toISOString(),
+          }),
+        );
+      }
+      return { anterior };
+    },
+    onError: (error, _variables, contexto) => {
+      if (contexto?.anterior) qc.setQueryData(["pedidos"], contexto.anterior);
+      toast.error(error instanceof Error ? error.message : "No se pudo autorizar producción");
+    },
+    onSuccess: (resultado) => {
+      toast.success(`Producción autorizada en ${normalizarArea(resultado.destino)}`);
+    },
+    onSettled: () => {
+      void invalidarPedidosActivos(qc);
+    },
+  });
+}
+
+export function destinosMovimientoPedido(
+  pedido: Pick<Pedido, "area_actual" | "ruta">,
+  opciones?: { esAdmin?: boolean; areasUsuario?: string[] },
+) {
+  const areaActual = areaOperativa(pedido.area_actual);
+  const rutaPedido = (Array.isArray(pedido.ruta) ? pedido.ruta : [])
+    .map(areaOperativa)
+    .filter((area) => area !== "Pedidos");
+  const destinosBase = opciones?.esAdmin
+    ? ["Pedidos", ...rutaPedido, "Área ventas"]
+    : [...rutaPedido, "Área ventas"];
+  const areasUsuario = (opciones?.areasUsuario ?? []).map(areaOperativa);
+  const permitidos = opciones?.esAdmin
+    ? destinosBase
+    : destinosBase.filter(
+        (area) =>
+          area === "Área ventas" || areasUsuario.length === 0 || areasUsuario.includes(area),
+      );
+
+  return [...new Set(permitidos)].filter((area) => area && area !== areaActual);
+}
+
+/** Mueve el pedido directamente a un área seleccionada. */
+export function useEnviarAArea() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      pedido,
+      destino,
+      usuarioId: _usuarioId,
+      motivo,
+    }: {
+      pedido: Pick<Pedido, "id" | "area_actual" | "ruta">;
+      destino: string;
+      usuarioId: string | null;
+      motivo?: string;
+    }) => {
+      if (!destino || destino === pedido.area_actual) return null;
+
+      const destinoNormalizado = areaOperativa(destino);
+      const areaActual = areaOperativa(pedido.area_actual);
+      if (!destinoNormalizado || destinoNormalizado === areaActual) return null;
+
+      const motivoLimpio = motivo?.trim();
+      const { data, error } = await supabase.rpc("mover_pedido_a_area", {
+        _pedido_id: pedido.id,
+        _destino: destinoNormalizado,
+        ...(motivoLimpio ? { _motivo: motivoLimpio } : {}),
+      });
+
+      if (error) {
+        console.error("[pedidos:mover] Error al mover pedido de forma atomica", {
+          pedidoId: pedido.id,
+          destino: destinoNormalizado,
+          error: detalleErrorSupabase(error),
+        });
+        throw new Error(`No se pudo mover el pedido: ${detalleErrorSupabase(error)}`);
+      }
+
+      const resultado = data?.[0];
+      if (!resultado) {
+        throw new Error("No se pudo confirmar el movimiento del pedido.");
+      }
+
+      return {
+        pedido,
+        destino: resultado.destino,
+        estado: resultado.estado,
+        area_desde: resultado.area_desde,
+        reiniciaFlujo: resultado.reinicia_flujo,
+      };
+    },
+    onMutate: async ({ pedido, destino }) => {
+      await qc.cancelQueries({ queryKey: ["pedidos"] });
+      const anterior = qc.getQueryData<Pedido[]>(["pedidos"]);
+      const destinoNormalizado = areaOperativa(destino);
+      const areaActual = areaOperativa(pedido.area_actual);
+      if (destinoNormalizado && destinoNormalizado !== areaActual) {
+        const ahora = new Date().toISOString();
+        const cambios = cambiosMovimientoDirecto(destinoNormalizado, ahora);
+        qc.setQueryData<Pedido[]>(["pedidos"], (pedidos) =>
+          actualizarPedidoEnCache(pedidos, pedido.id, cambios as Partial<Pedido>),
+        );
+      }
+      return { anterior };
+    },
+    onError: (error, _variables, contexto) => {
+      if (contexto?.anterior) qc.setQueryData(["pedidos"], contexto.anterior);
+      console.error("[pedidos:mover] Movimiento fallido", error);
+      toast.error(error instanceof Error ? error.message : "No se pudo mover el pedido");
+    },
+    onSuccess: (resultado) => {
+      if (!resultado) return;
+      toast.success(
+        resultado.reiniciaFlujo
+          ? "Pedido devuelto a Pedidos y flujo reiniciado"
+          : `Pedido movido a ${normalizarArea(resultado.destino)}`,
+      );
+    },
+    onSettled: () => {
+      void invalidarPedidosActivos(qc);
+    },
+  });
+}
+
+export function useSedes() {
+  return useQuery({
+    // La clave se conserva para compatibilidad con componentes existentes.
+    // Las altas, ediciones y bajas de participantes invalidan esta caché.
+    // Cinco minutos reducen recargas al cambiar entre pantallas que comparten el selector.
+    queryKey: ["sedes"],
+    staleTime: 5 * 60_000,
+    queryFn: async (): Promise<Sede[]> => {
+      const { data, error } = await supabase
+        .from("ecosistema_participantes")
+        .select("id, nombre, ciudad, sede_id, estado")
+        .eq("estado", "activo")
+        .not("sede_id", "is", null)
+        .order("nombre");
+      if (error) throw error;
+      return (data ?? []).map((participante) => ({
+        id: participante.sede_id as string,
+        nombre: participante.nombre,
+        ciudad: participante.ciudad ?? "",
+        modo: "ecosistema",
+        activa: true,
+      }));
+    },
+  });
+}
+
+export type Usuario = {
+  id: string;
+  usuario: string;
+  nombre: string;
+  apellidos: string;
+  dni: string;
+  telefono: string;
+  sede_id: string | null;
+  activo: boolean;
+  acceso_desde: string | null;
+  acceso_hasta: string | null;
+  roles: string[];
+  areas: string[];
+};
+
+export function useUsuarios() {
+  return useQuery({
+    // Separa la exportación basada en Supabase del listado servido por la API.
+    // Las invalidaciones con el prefijo ["usuarios"] siguen actualizando ambas.
+    queryKey: ["usuarios", "respaldo"],
+    staleTime: 60_000,
+    queryFn: async (): Promise<Usuario[]> => {
+      const [{ data: perfiles, error }, { data: roles }, { data: areas }] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select(
+            "id, usuario, nombre, apellidos, dni, telefono, sede_id, activo, acceso_desde, acceso_hasta",
+          )
+          .order("nombre"),
+        supabase.from("user_roles").select("user_id, role"),
+        supabase.from("user_areas").select("user_id, area"),
+      ]);
+      if (error) throw error;
+      return (perfiles ?? []).map((p) => ({
+        ...p,
+        roles: (roles ?? []).filter((r) => r.user_id === p.id).map((r) => r.role as string),
+        areas: (areas ?? []).filter((a) => a.user_id === p.id).map((a) => a.area),
+      }));
+    },
+  });
+}
+
+export function useInventario() {
+  return useQuery({
+    queryKey: ["inventario"],
+    staleTime: 60_000,
+    queryFn: async (): Promise<Material[]> => {
+      const { data, error } = await supabase
+        .from("inventario")
+        .select("id, material, stock, unidad, minimo, categoria, activo, sede_id")
+        .order("material");
+      if (error) throw error;
+      const { data: asignaciones } = await supabase
+        .from("material_areas")
+        .select("material_id, area");
+      return (data ?? []).map((m) => ({
+        ...m,
+        stock: Number(m.stock),
+        minimo: Number(m.minimo),
+        areas: (asignaciones ?? []).filter((a) => a.material_id === m.id).map((a) => a.area),
+      }));
+    },
+  });
+}
+
+export function useActualizarStock() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, stock }: { id: string; stock: number }) => {
+      const { data: actual, error: lecturaError } = await supabase
+        .from("inventario")
+        .select("stock")
+        .eq("id", id)
+        .single();
+      if (lecturaError) throw lecturaError;
+      const anterior = Number(actual.stock);
+      const objetivo = Math.max(0, Number(stock));
+      const delta = objetivo - anterior;
+      if (Math.abs(delta) < 0.000001) return;
+      const { error } = await supabase.from("inventario_movimientos").insert({
+        material_id: id,
+        cantidad: Math.abs(delta),
+        tipo: delta > 0 ? "ajuste_positivo" : "ajuste_negativo",
+        area: "Almacén",
+        motivo: "Ajuste manual de inventario",
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["inventario"] });
+      void qc.invalidateQueries({ queryKey: ["inventario-movimientos"] });
+    },
+  });
+}
+
+export type Gasto = {
+  id: string;
+  sede_id: string | null;
+  concepto: string;
+  categoria: string;
+  importe: number;
+  fecha: string;
+};
+
+export function useGastos() {
+  return useQuery({
+    queryKey: ["gastos"],
+    staleTime: 60_000,
+    queryFn: async (): Promise<Gasto[]> => {
+      const { data, error } = await supabase
+        .from("gastos")
+        .select("id, sede_id, concepto, categoria, importe, fecha")
+        .order("fecha", { ascending: false });
+      if (error) throw error;
+      return (data ?? []).map((g) => ({ ...g, importe: Number(g.importe) }));
+    },
+  });
+}
+
+export function useCrearGasto() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (gasto: Omit<Gasto, "id">) => {
+      const { error } = await supabase.from("gastos").insert(gasto);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["gastos"] }),
+  });
+}
+
+export function useBorrarGasto() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("gastos").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["gastos"] }),
+  });
+}
+
+export type ConfigArea = {
+  id: string;
+  sede_id: string | null;
+  area: string;
+  horas_objetivo: number;
+  alerta_activa: boolean;
+};
+
+export type ConfigSistema = {
+  clave: string;
+  valor: Json;
+};
+
+export function useConfigAreas() {
+  return useQuery({
+    queryKey: ["config_areas"],
+    staleTime: 60_000,
+    queryFn: async (): Promise<ConfigArea[]> => {
+      const { data, error } = await supabase
+        .from("config_areas")
+        .select("id, sede_id, area, horas_objetivo, alerta_activa");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+}
+
+export function useGuardarConfigArea() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (cfg: {
+      sede_id: string | null;
+      area: string;
+      horas_objetivo: number;
+      alerta_activa: boolean;
+    }) => {
+      const { error } = await supabase
+        .from("config_areas")
+        .upsert(cfg, { onConflict: "sede_id,area" });
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["config_areas"] }),
+  });
+}
+
+export function useConfigSistema(clave: string) {
+  return useQuery({
+    queryKey: ["config_sistema", clave],
+    staleTime: 60_000,
+    queryFn: async (): Promise<ConfigSistema | null> => {
+      const { data, error } = await supabase
+        .from("config_sistema")
+        .select("clave, valor")
+        .eq("clave", clave)
+        .maybeSingle();
+      if (error) {
+        const mensaje = (error.message ?? "").toLowerCase();
+        if (error.code === "42P01" || error.code === "42501" || mensaje.includes("config_sistema") || mensaje.includes("permission")) return null;
+        throw error;
+      }
+      return (data as ConfigSistema | null) ?? null;
+    },
+  });
+}
+
+export function useGuardarConfigSistema() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (cfg: ConfigSistema) => {
+      const { error } = await supabase.from("config_sistema").upsert(cfg, { onConflict: "clave" });
+      if (error) throw error;
+    },
+    onSuccess: (_data, cfg) => qc.invalidateQueries({ queryKey: ["config_sistema", cfg.clave] }),
+  });
+}
+
+/** Alta de un material del inventario. */
+export function useCrearMaterial() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (nuevo: {
+      material: string;
+      categoria: string;
+      unidad: string;
+      stock: number;
+      minimo: number;
+      sede_id: string | null;
+      areas: string[];
+    }) => {
+      const { data, error } = await supabase
+        .from("inventario")
+        .insert({
+          material: nuevo.material,
+          categoria: nuevo.categoria,
+          unidad: nuevo.unidad,
+          minimo: nuevo.minimo,
+          sede_id: nuevo.sede_id,
+        })
+        .select("id")
+        .single();
+      if (error) throw error;
+
+      if (nuevo.stock > 0) {
+        const { error: movimientoError } = await supabase.from("inventario_movimientos").insert({
+          material_id: data.id,
+          cantidad: nuevo.stock,
+          tipo: "entrada",
+          area: "Almacén",
+          motivo: "Stock inicial",
+        });
+        if (movimientoError) throw movimientoError;
+      }
+
+      if (nuevo.areas.length > 0) {
+        const { error: areasError } = await supabase
+          .from("material_areas")
+          .insert(nuevo.areas.map((area) => ({ material_id: data.id, area })));
+        if (areasError) throw areasError;
+      }
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["inventario"] });
+      void qc.invalidateQueries({ queryKey: ["inventario-movimientos"] });
+    },
+  });
+}
+
+/** Actualiza los datos base de un material. */
+export function useActualizarMaterial() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      cambios,
+    }: {
+      id: string;
+      cambios: Partial<{ material: string; categoria: string; unidad: string; minimo: number }>;
+    }) => {
+      const { error } = await supabase.from("inventario").update(cambios).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["inventario"] }),
+  });
+}
+
+/** Asigna o quita un material de un área del taller. */
+export function useAsignarArea() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      materialId,
+      area,
+      activo,
+    }: {
+      materialId: string;
+      area: string;
+      activo: boolean;
+    }) => {
+      if (activo) {
+        const { error } = await supabase
+          .from("material_areas")
+          .insert({ material_id: materialId, area });
+        if (error && !/duplicate/i.test(error.message)) throw error;
+      } else {
+        const { error } = await supabase
+          .from("material_areas")
+          .delete()
+          .eq("material_id", materialId)
+          .eq("area", area);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["inventario"] }),
+  });
+}
+
+export function useBorrarMaterial() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("inventario").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["inventario"] }),
+  });
+}
+
+export function useMovimientosInventario() {
+  return useQuery({
+    queryKey: ["inventario-movimientos"],
+    staleTime: 60_000,
+    queryFn: async (): Promise<MovimientoInventario[]> => {
+      const { data, error } = await supabase
+        .from("inventario_movimientos")
+        .select("id, material_id, cantidad, tipo, motivo, area, pedido_id, created_at, inventario(material), pedidos(referencia)")
+        .order("created_at", { ascending: false })
+        .limit(200);
+      if (error) throw error;
+      return (data ?? []).map((m) => {
+        const { inventario, ...resto } = m as typeof m & {
+          inventario: { material: string } | null;
+        };
+        return {
+          ...resto,
+          cantidad: Number(resto.cantidad),
+          material: inventario?.material ?? "",
+          pedido_id: typeof resto.pedido_id === "string" ? resto.pedido_id : null,
+          pedido_referencia: (resto as typeof resto & { pedidos?: { referencia: string } | null }).pedidos?.referencia ?? "",
+        };
+      });
+    },
+  });
+}
+
+/** Registra un consumo o entrada: el stock general se ajusta en automático. */
+export function useRegistrarMovimiento() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (mov: {
+      material_id: string;
+      cantidad: number;
+      tipo:
+        | "entrada"
+        | "consumo"
+        | "devolucion"
+        | "merma"
+        | "ajuste_positivo"
+        | "ajuste_negativo";
+      area: string;
+      motivo: string;
+      pedido_id?: string | null;
+      referencia_externa?: string;
+    }) => {
+      const { data: userData } = await supabase.auth.getUser();
+      const { error } = await supabase.from("inventario_movimientos").insert({
+        material_id: mov.material_id,
+        cantidad: Math.abs(mov.cantidad),
+        tipo: mov.tipo,
+        area: mov.area,
+        motivo: mov.motivo,
+        pedido_id: mov.pedido_id ?? null,
+        referencia_externa: mov.referencia_externa ?? "",
+        usuario_id: userData.user?.id ?? null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["inventario"] });
+      void qc.invalidateQueries({ queryKey: ["inventario-movimientos"] });
+    },
+  });
+}
+
+export type ArchivoPedido = {
+  id: string;
+  pedido_id: string;
+  tipo: string;
+  nombre: string;
+  url: string;
+  es_enlace: boolean;
+  created_at: string;
+  grupo: string;
+  version: number;
+  poster: string;
+  referencia: string;
+  cliente: string;
+  trabajo: string;
+  area_actual: string;
+};
+
+/** Archivos subidos en todos los pedidos visibles (biblioteca del taller). */
+export function useArchivosPedidos() {
+  return useQuery({
+    queryKey: ["archivos-pedidos"],
+    // Cinco minutos evitan releer hasta 300 archivos y volver a firmar miniaturas al volver a la biblioteca.
+    // Las subidas conocidas invalidan esta clave; las URLs firmadas duran una hora.
+    staleTime: 5 * 60_000,
+    queryFn: async (): Promise<ArchivoPedido[]> => {
+      const { data, error } = await supabase
+        .from("pedido_archivos")
+        .select(
+          "id, pedido_id, tipo, nombre, url, es_enlace, created_at, grupo, version, poster, pedidos(referencia, cliente, trabajo, area_actual)",
+        )
+        .order("created_at", { ascending: false })
+        .limit(300);
+      if (error) throw error;
+
+      const archivos = (data ?? []).map((a) => {
+        const { pedidos, ...resto } = a as typeof a & {
+          pedidos: {
+            referencia: string;
+            cliente: string;
+            trabajo: string;
+            area_actual: string;
+          } | null;
+        };
+        return { pedidos, resto };
+      });
+
+      // Firma en una sola operación las imágenes que todavía no tienen póster.
+      const rutasParaFirmar = [...new Set(
+        archivos
+          .filter(({ resto }) => !resto.poster && !resto.es_enlace && resto.url && !/^https?:\/\//i.test(resto.url) && /\.(jpe?g|png|webp|gif)$/i.test(resto.nombre || ""))
+          .map(({ resto }) => resto.url as string),
+      )];
+      const postersFirmados = new Map<string, string>();
+      if (rutasParaFirmar.length > 0) {
+        const { data: firmados, error: errorFirmas } = await supabase.storage
+          .from("pedidos")
+          .createSignedUrls(rutasParaFirmar, 3600);
+        if (errorFirmas) {
+          console.warn("[Archivos de pedidos] No se pudieron firmar todas las imágenes.", errorFirmas.message);
+        } else {
+          for (const firmado of firmados ?? []) {
+            if (firmado.path && firmado.signedUrl && !firmado.error) {
+              postersFirmados.set(firmado.path, firmado.signedUrl);
+            }
+          }
+        }
+      }
+
+      return archivos.map(({ pedidos, resto }) => ({
+        ...resto,
+        poster: resto.poster || (resto.url ? postersFirmados.get(resto.url) : undefined) || "",
+        referencia: pedidos?.referencia ?? "",
+        cliente: pedidos?.cliente ?? "",
+        trabajo: pedidos?.trabajo ?? "",
+        area_actual: pedidos?.area_actual ?? "",
+      }));
+    },
+  });
+}
+
+
+/* -------------------------------------------------------------------------- */
+/* Inventario real: saldo derivado de movimientos + catálogo de joyas.         */
+/* -------------------------------------------------------------------------- */
+
+export type MaterialInventarioReal = {
+  id: string;
+  material: string;
+  codigo: string;
+  categoria: string;
+  unidad: string;
+  stock: number;
+  minimo: number;
+  costo_unitario: number;
+  lote: string;
+  proveedor: string;
+  ubicacion: string;
+  activo: boolean;
+  sede_id: string | null;
+  areas: string[];
+};
+
+export type MovimientoInventarioReal = {
+  id: string;
+  material_id: string;
+  material: string;
+  cantidad: number;
+  tipo: string;
+  motivo: string;
+  area: string;
+  pedido_id: string | null;
+  pedido_referencia: string;
+  usuario_id: string | null;
+  created_at: string;
+  stock_anterior: number | null;
+  stock_posterior: number | null;
+  referencia_externa: string;
+};
+
+export type JoyaInventario = {
+  id: string;
+  sede_id: string;
+  importacion_id: string;
+  codigo: string;
+  nombre: string;
+  metal: string;
+  ley: string;
+  peso: number | null;
+  talla: string;
+  piedras: string;
+  cantidad: number;
+  estado: string;
+  origen: string;
+  metadata: Json;
+  created_at: string;
+  updated_at: string;
+};
+
+const CAMPOS_INVENTARIO_REAL =
+  "id, material, codigo, categoria, unidad, stock, minimo, costo_unitario, lote, proveedor, ubicacion, activo, sede_id";
+
+export function useInventarioReal() {
+  return useQuery({
+    queryKey: ["inventario-real"],
+    staleTime: 60_000,
+    queryFn: async (): Promise<MaterialInventarioReal[]> => {
+      const { data, error } = await supabase
+        .from("inventario")
+        .select(`${CAMPOS_INVENTARIO_REAL}, material_areas(area)`)
+        .eq("activo", true)
+        .order("material");
+      if (error) throw error;
+
+      return (data ?? []).map((m) => ({
+        ...m,
+        stock: Number(m.stock),
+        minimo: Number(m.minimo),
+        costo_unitario: Number(m.costo_unitario),
+        areas: (m.material_areas ?? []).map((asignacion) => asignacion.area),
+      })) as MaterialInventarioReal[];
+    },
+  });
+}
+
+export function useCrearMaterialReal() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (nuevo: {
+      material: string;
+      codigo?: string;
+      categoria: string;
+      unidad: string;
+      stockInicial: number;
+      minimo: number;
+      costo_unitario: number;
+      lote?: string;
+      proveedor?: string;
+      ubicacion?: string;
+      sede_id: string | null;
+      areas: string[];
+    }) => {
+      const { data, error } = await supabase
+        .from("inventario")
+        .insert({
+          material: nuevo.material.trim(),
+          codigo: nuevo.codigo?.trim() ?? "",
+          categoria: nuevo.categoria,
+          unidad: nuevo.unidad || "g",
+          minimo: Math.max(0, nuevo.minimo),
+          costo_unitario: Math.max(0, nuevo.costo_unitario),
+          lote: nuevo.lote?.trim() ?? "",
+          proveedor: nuevo.proveedor?.trim() ?? "",
+          ubicacion: nuevo.ubicacion?.trim() ?? "",
+          activo: true,
+          sede_id: nuevo.sede_id,
+        })
+        .select("id")
+        .single();
+      if (error) throw error;
+
+      if (nuevo.stockInicial > 0) {
+        const { error: movimientoError } = await supabase
+          .from("inventario_movimientos")
+          .insert({
+            material_id: data.id,
+            cantidad: nuevo.stockInicial,
+            tipo: "entrada",
+            motivo: "Stock inicial",
+            area: "Almacén",
+          });
+        if (movimientoError) {
+          await supabase.from("inventario").delete().eq("id", data.id);
+          throw movimientoError;
+        }
+      }
+
+      if (nuevo.areas.length > 0) {
+        const { error: areasError } = await supabase
+          .from("material_areas")
+          .insert(nuevo.areas.map((area) => ({ material_id: data.id, area })));
+        if (areasError) throw areasError;
+      }
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["inventario-real"] });
+      void qc.invalidateQueries({ queryKey: ["inventario"] });
+      void qc.invalidateQueries({ queryKey: ["compras-materiales"] });
+      void qc.invalidateQueries({ queryKey: ["inventario-movimientos"] });
+      void qc.invalidateQueries({ queryKey: ["inventario-movimientos-real"] });
+    },
+  });
+}
+
+export function useActualizarMaterialReal() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      cambios,
+    }: {
+      id: string;
+      cambios: Partial<{
+        material: string;
+        codigo: string;
+        categoria: string;
+        unidad: string;
+        minimo: number;
+        costo_unitario: number;
+        lote: string;
+        proveedor: string;
+        ubicacion: string;
+        activo: boolean;
+      }>;
+    }) => {
+      const { error } = await supabase.from("inventario").update(cambios).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["inventario-real"] });
+      void qc.invalidateQueries({ queryKey: ["inventario"] });
+      void qc.invalidateQueries({ queryKey: ["compras-materiales"] });
+    },
+  });
+}
+
+export function useRegistrarMovimientoReal() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (mov: {
+      material_id: string;
+      cantidad: number;
+      tipo:
+        | "entrada"
+        | "consumo"
+        | "devolucion"
+        | "merma"
+        | "ajuste_positivo"
+        | "ajuste_negativo";
+      area: string;
+      motivo: string;
+      pedido_id?: string | null;
+      referencia_externa?: string;
+    }) => {
+      const { data: userData } = await supabase.auth.getUser();
+      const { error } = await supabase.from("inventario_movimientos").insert({
+        material_id: mov.material_id,
+        cantidad: Math.abs(mov.cantidad),
+        tipo: mov.tipo,
+        area: mov.area,
+        motivo: mov.motivo,
+        pedido_id: mov.pedido_id ?? null,
+        referencia_externa: mov.referencia_externa ?? "",
+        usuario_id: userData.user?.id ?? null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["inventario-real"] });
+      void qc.invalidateQueries({ queryKey: ["inventario"] });
+      void qc.invalidateQueries({ queryKey: ["inventario-movimientos"] });
+      void qc.invalidateQueries({ queryKey: ["inventario-movimientos-real"] });
+    },
+  });
+}
+
+export function useMovimientosInventarioReal() {
+  return useQuery({
+    queryKey: ["inventario-movimientos-real"],
+    staleTime: 60_000,
+    queryFn: async (): Promise<MovimientoInventarioReal[]> => {
+      const { data, error } = await supabase
+        .from("inventario_movimientos")
+        .select(
+          "id, material_id, cantidad, tipo, motivo, area, pedido_id, usuario_id, created_at, stock_anterior, stock_posterior, referencia_externa, inventario(material), pedidos(referencia)",
+        )
+        .order("created_at", { ascending: false })
+        .limit(300);
+      if (error) throw error;
+      return (data ?? []).map((row) => {
+        const item = row as typeof row & {
+          inventario: { material: string } | null;
+          pedidos: { referencia: string } | null;
+        };
+        return {
+          ...row,
+          cantidad: Number(row.cantidad),
+          stock_anterior: row.stock_anterior == null ? null : Number(row.stock_anterior),
+          stock_posterior: row.stock_posterior == null ? null : Number(row.stock_posterior),
+          material: item.inventario?.material ?? "",
+          pedido_referencia: item.pedidos?.referencia ?? "",
+        } as MovimientoInventarioReal;
+      });
+    },
+  });
+}
+
+export function useInventarioJoyas() {
+  return useQuery({
+    queryKey: ["inventario-joyas"],
+    staleTime: 60_000,
+    queryFn: async (): Promise<JoyaInventario[]> => {
+      const { data, error } = await supabase
+        .from("inventario_joyas")
+        .select(
+          "id, sede_id, importacion_id, codigo, nombre, metal, ley, peso, talla, piedras, cantidad, estado, origen, metadata, created_at, updated_at",
+        )
+        .order("updated_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []).map((j) => ({
+        ...j,
+        peso: j.peso == null ? null : Number(j.peso),
+        cantidad: Number(j.cantidad),
+      })) as JoyaInventario[];
+    },
+  });
+}
+
+export function useCrearJoyaInventario() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (joya: {
+      sede_id: string;
+      codigo: string;
+      nombre: string;
+      metal?: string;
+      ley?: string;
+      peso?: number | null;
+      talla?: string;
+      piedras?: string;
+      cantidad?: number;
+      estado?: string;
+      origen?: string;
+      metadata?: Json;
+    }) => {
+      const { error } = await supabase.from("inventario_joyas").insert({
+        ...joya,
+        codigo: joya.codigo.trim(),
+        nombre: joya.nombre.trim(),
+        metal: joya.metal ?? "",
+        ley: joya.ley ?? "",
+        peso: joya.peso ?? null,
+        talla: joya.talla ?? "",
+        piedras: joya.piedras ?? "",
+        cantidad: joya.cantidad ?? 1,
+        estado: joya.estado ?? "disponible",
+        origen: joya.origen ?? "app",
+        metadata: joya.metadata ?? {},
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["inventario-joyas"] }),
+  });
+}
+
+export function useActualizarJoyaInventario() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      cambios,
+    }: {
+      id: string;
+      cambios: Partial<Omit<JoyaInventario, "id" | "sede_id" | "created_at" | "updated_at">>;
+    }) => {
+      const { error } = await supabase.from("inventario_joyas").update(cambios).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["inventario-joyas"] }),
+  });
+}
+
+export function useBorrarJoyaInventario() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("inventario_joyas").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["inventario-joyas"] }),
+  });
+}

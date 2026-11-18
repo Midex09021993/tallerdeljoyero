@@ -1,0 +1,41 @@
+# Taller del Joyero
+
+> Taller del Joyero es el sitio de AURUM LAB, una plataforma digital especializada para talleres de joyería. Reúne herramientas técnicas, recursos de aprendizaje, visualización 3D y funciones de gestión para el trabajo joyero.
+
+El contenido público está dirigido a joyeros, talleres, diseñadores y profesionales que necesitan calcular materiales, consultar procedimientos y explorar herramientas digitales para su oficio.
+
+## Sitio principal
+
+- [Inicio de AURUM LAB](https://www.tallerdeljoyero.com/): presentación de la plataforma, sus herramientas, recursos y planes.
+
+## Herramientas para joyeros
+
+- [Herramientas públicas](https://www.tallerdeljoyero.com/herramientas-publicas): índice de calculadoras y utilidades técnicas disponibles sin iniciar sesión.
+- [Cálculo de aleaciones de oro](https://www.tallerdeljoyero.com/herramientas-publicas/aleacion-oro): herramienta para calcular proporciones de aleación según la ley del oro.
+- [Peso de joyas 3D](https://www.tallerdeljoyero.com/herramientas-publicas/peso-joya-3d): estimación de peso de modelos tridimensionales.
+- [Cálculo de yeso y agua](https://www.tallerdeljoyero.com/herramientas-publicas/yeso-agua): apoyo para calcular proporciones de revestimiento.
+- [Conversión de tallas de anillos](https://www.tallerdeljoyero.com/herramientas-publicas/tallas-anillos): consulta de equivalencias de tallas.
+- [Peso de gemas](https://www.tallerdeljoyero.com/herramientas-publicas/peso-gemas): estimación de peso de gemas a partir de sus medidas.
+
+## Guías técnicas
+
+- [Todas las guías técnicas](https://www.tallerdeljoyero.com/guias): índice de contenidos técnicos para el oficio joyero.
+- [Calcular el peso de gemas por medidas](https://www.tallerdeljoyero.com/guias/calcular-peso-gemas-por-medidas): criterios y cálculos para estimar el peso de gemas.
+- [Convertir tallas de anillos entre España, Europa y Estados Unidos](https://www.tallerdeljoyero.com/guias/convertir-tallas-anillos-espana-europa-usa): equivalencias de sistemas de tallaje.
+- [Calcular el peso de una joya desde un modelo 3D](https://www.tallerdeljoyero.com/guias/calcular-peso-joya-modelo-3d): estimación de peso a partir de geometría tridimensional.
+- [Calcular aleaciones de oro de 18K, 14K y 9K](https://www.tallerdeljoyero.com/guias/calcular-aleaciones-oro-18k-14k-9k): proporciones de oro fino y metales de liga.
+- [Distribución de un taller de joyería](https://www.tallerdeljoyero.com/guias/distribucion-taller-joyeria): organización funcional del espacio de trabajo.
+- [Impresión 3D para joyería](https://www.tallerdeljoyero.com/guias/impresion-3d-joyeria): conceptos y procesos de impresión 3D aplicados a joyería.
+- [Fundición de joyería y revestimiento Omni Cast](https://www.tallerdeljoyero.com/guias/fundicion-joyeria-revestimiento-omni-cast): información técnica sobre revestimiento y fundición.
+
+## Comunidad y formación
+
+- [Comunidad](https://www.tallerdeljoyero.com/comunidad): espacio de comunidad y recursos para profesionales.
+- [Directorio](https://www.tallerdeljoyero.com/directorio): directorio relacionado con el sector joyero.
+- [Cursos de diseño 3D](https://www.tallerdeljoyero.com/cursos-diseno-3d): información sobre formación en diseño tridimensional.
+
+## Información para agentes
+
+- El sitio publica contenido informativo y herramientas web para uso interactivo.
+- No se anuncia aquí ningún servidor MCP, API pública ni agente autónomo. El catálogo ARD se mantiene sin entradas hasta que exista un servicio de ese tipo publicado y documentado.
+- Consulta las páginas enlazadas para conocer el alcance, las condiciones y la disponibilidad real de cada herramienta.

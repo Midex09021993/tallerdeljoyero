@@ -1,0 +1,6 @@
+drop policy if exists "compras gestionar admin" on public.compras;
+create policy "compras insertar admin" on public.compras for insert to authenticated with check (es_admin(auth.uid()) and ve_sede(auth.uid(),sede_id));
+create policy "compras actualizar admin" on public.compras for update to authenticated using (es_admin(auth.uid()) and ve_sede(auth.uid(),sede_id)) with check (es_admin(auth.uid()) and ve_sede(auth.uid(),sede_id));
+drop policy if exists "compra detalles gestionar admin" on public.compra_detalles;
+create policy "compra detalles insertar admin" on public.compra_detalles for insert to authenticated with check (exists(select 1 from public.compras c where c.id=compra_id and es_admin(auth.uid()) and ve_sede(auth.uid(),c.sede_id)));
+create policy "compra detalles actualizar admin" on public.compra_detalles for update to authenticated using (exists(select 1 from public.compras c where c.id=compra_id and es_admin(auth.uid()) and ve_sede(auth.uid(),c.sede_id))) with check (exists(select 1 from public.compras c where c.id=compra_id and es_admin(auth.uid()) and ve_sede(auth.uid(),c.sede_id)));

@@ -1,0 +1,1 @@
+ALTER TABLE public.pedidos ADD COLUMN peso_estimado text NOT NULL DEFAULT '';

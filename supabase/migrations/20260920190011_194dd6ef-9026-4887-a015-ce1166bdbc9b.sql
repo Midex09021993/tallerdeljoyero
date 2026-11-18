@@ -1,0 +1,98 @@
+alter table public.pedido_comercial
+  add column if not exists seguimiento_token uuid not null default gen_random_uuid();
+
+create unique index if not exists pedido_comercial_seguimiento_token_uidx
+  on public.pedido_comercial (seguimiento_token);
+
+drop function if exists public.seguimiento_pedido(text);
+
+create function public.seguimiento_pedido(_ref text)
+returns table (
+  referencia text,
+  trabajo text,
+  cliente text,
+  area_actual text,
+  estado text,
+  ventas_estado text,
+  ruta text[],
+  fecha_entrega date,
+  fecha_envio date,
+  fecha_entregado date,
+  medio_envio text,
+  guia_envio text,
+  receptor_envio text,
+  sede text
+)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select
+    p.referencia,
+    coalesce(nullif(p.trabajo, ''), p.pieza),
+    split_part(p.cliente, ' ', 1),
+    p.area_actual,
+    p.estado,
+    pc.ventas_estado,
+    p.ruta,
+    p.fecha_entrega,
+    pc.fecha_envio,
+    pc.fecha_entregado,
+    pc.medio_envio,
+    pc.guia_envio,
+    pc.receptor_envio,
+    s.nombre
+  from public.pedido_comercial pc
+  join public.pedidos p on p.id = pc.pedido_id
+  left join public.sedes s on s.id = p.sede_id
+  where pc.seguimiento_token::text = lower(trim(_ref))
+  limit 1;
+$$;
+
+revoke all on function public.seguimiento_pedido(text) from public, anon, authenticated;
+grant execute on function public.seguimiento_pedido(text) to anon, authenticated;
+
+-- clientes por sede
+drop policy if exists "clientes manage" on public.clientes;
+drop policy if exists "clientes update" on public.clientes;
+
+create policy "clientes manage"
+on public.clientes
+for insert
+to authenticated
+with check (
+  sede_id is not null
+  and (
+    has_role((select auth.uid()), 'dueno'::app_role)
+    or (
+      has_role((select auth.uid()), 'gerente'::app_role)
+      and sede_id = mi_sede((select auth.uid()))
+    )
+  )
+);
+
+create policy "clientes update"
+on public.clientes
+for update
+to authenticated
+using (
+  sede_id is not null
+  and (
+    has_role((select auth.uid()), 'dueno'::app_role)
+    or (
+      has_role((select auth.uid()), 'gerente'::app_role)
+      and sede_id = mi_sede((select auth.uid()))
+    )
+  )
+)
+with check (
+  sede_id is not null
+  and (
+    has_role((select auth.uid()), 'dueno'::app_role)
+    or (
+      has_role((select auth.uid()), 'gerente'::app_role)
+      and sede_id = mi_sede((select auth.uid()))
+    )
+  )
+);

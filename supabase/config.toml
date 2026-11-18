@@ -1,0 +1,61 @@
+# Lovable Cloud manages the connected Supabase backend.
+# This project_id is only the local Supabase CLI identifier; it is not a remote project binding.
+project_id = "tallerdeljoyero"
+
+[functions.generar-cotizacion-pdf]
+verify_jwt = true
+
+[functions.ver-cotizacion-pdf]
+verify_jwt = false
+
+[functions.aurum-transfer-create]
+verify_jwt = false
+
+[functions.aurum-transfer-download]
+verify_jwt = false
+
+[functions.aurum-transfer-import]
+verify_jwt = true
+
+[functions.aurum-welcome-email]
+verify_jwt = true
+
+[functions.generar-contrato-pdf]
+verify_jwt = true
+
+[functions.nextcloud-status]
+verify_jwt = true
+
+[functions.nextcloud-video-files]
+verify_jwt = true
+
+[functions.catalogo-modelo-3d-publico]
+verify_jwt = false
+
+[functions.resolver-enlace-visor-3d]
+verify_jwt = false
+
+# La función valida el JWT con auth.getUser() dentro del handler.
+[functions.crear-enlace-visor-3d]
+verify_jwt = false
+
+[functions.entregar-modelo-visor-3d]
+verify_jwt = false
+
+[functions.revocar-enlace-visor-3d]
+verify_jwt = true
+
+[functions.catalogo-extraer-ficha-pdf]
+verify_jwt = true
+
+[functions.catalogo-generar-descripcion]
+verify_jwt = true
+
+[functions.marketplace-descargar-archivo]
+verify_jwt = true
+
+[functions.marketplace-iniciar-pago]
+verify_jwt = true
+
+[functions.marketplace-pago-webhook]
+verify_jwt = false

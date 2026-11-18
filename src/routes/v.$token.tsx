@@ -1,0 +1,80 @@
+import { lazy, Suspense, useEffect, useState } from "react";
+import { ClientOnly, createFileRoute } from "@tanstack/react-router";
+import { AlertCircle } from "lucide-react";
+const PublicJewelConfigurator = lazy(() => import("@/components/PublicJewelConfigurator").then((m) => ({ default: m.PublicJewelConfigurator })));
+import { supabase } from "@/integrations/supabase/client";
+
+export const Route = createFileRoute("/v/$token")({
+  head: () => ({
+    meta: [
+      { title: "Visor 3D compartido — Taller del Joyero" },
+      { name: "description", content: "Visualizador 3D público para revisar una joya compartida." },
+    ],
+  }),
+  component: VisorCortoPage,
+});
+
+type EnlaceVisor = { url: string; nombre: string; expira_en: string };
+
+function VisorCortoPage() {
+  const { token } = Route.useParams();
+  const [enlace, setEnlace] = useState<EnlaceVisor | null>(null);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    let activo = true;
+    void supabase.functions.invoke("resolver-enlace-visor-3d", { body: { token } })
+      .then(({ data, error: functionError }) => {
+        if (!activo) return;
+
+        const url = data?.url;
+        const nombre = data?.nombre;
+        const expiraEn = data?.expira_en;
+        const fechaExpiracion = typeof expiraEn === "string" ? new Date(expiraEn).getTime() : NaN;
+
+        if (
+          functionError ||
+          data?.ok !== true ||
+          typeof url !== "string" ||
+          !url.startsWith("https://") ||
+          typeof nombre !== "string" ||
+          typeof expiraEn !== "string" ||
+          !Number.isFinite(fechaExpiracion) ||
+          fechaExpiracion <= Date.now()
+        ) {
+          setError(true);
+        } else {
+          setEnlace({ url, nombre, expira_en: expiraEn });
+        }
+        setCargando(false);
+      }, () => {
+        if (activo) { setError(true); setCargando(false); }
+      });
+    return () => { activo = false; };
+  }, [token]);
+
+  if (cargando) {
+    return <main className="grid min-h-screen place-items-center bg-[#f7f6f2] text-sm text-[#77756f]">Preparando el visor 3D…</main>;
+  }
+
+  if (error || !enlace) {
+    return (
+      <main className="grid min-h-screen place-items-center bg-[#f7f6f2] px-4 text-[#292824]">
+        <section className="w-full max-w-md rounded-2xl border border-[#e7e2d8] bg-white p-7 text-center shadow-sm">
+          <AlertCircle className="mx-auto size-8 text-[#a66b26]" />
+          <h1 className="mt-3 text-base font-semibold">Enlace caducado o no válido</h1>
+          <p className="mt-2 text-sm text-[#77756f]">Pide a quien compartió la joya que genere un nuevo enlace desde Mi Nube.</p>
+        </section>
+      </main>
+    );
+  }
+
+  return (
+    <main className="min-h-screen bg-[#f7f6f2] text-[#292824] md:h-[100svh] md:min-h-0 md:overflow-hidden md:p-3 lg:p-4">
+      <div className="mx-auto w-full max-w-none md:h-full md:min-h-0">
+        <ClientOnly fallback={null}><Suspense fallback={null}><PublicJewelConfigurator sharedModelUrl={enlace.url} sharedModelName={enlace.nombre} /></Suspense></ClientOnly>
+      </div>
+    </main>
+  );
+}

@@ -1,0 +1,487 @@
+import * as THREE from "three";
+import { getAurumModelParts } from "./model-parts";
+import { resolveAurumLayerKey } from "./layer-identity";
+import { getAurumLayerCategoryOverride } from "./layer-category-overrides";
+import { classifyAurumSemanticObject } from "./semantic-object-recognition";
+
+function isRhinoObjectHidden(attributes:any): boolean {
+  if (!attributes) return false;
+
+  // Rhino/rhino3dm puede exponer la visibilidad con nombres distintos según
+  // la versión del loader. Tratamos explícitamente todos los estados ocultos.
+  const mode = attributes.mode ?? attributes.Mode ?? attributes.objectMode ?? attributes.ObjectMode;
+  const modeText = typeof mode === "string" ? mode.toLowerCase() : "";
+  return attributes.visible === false
+    || attributes.Visible === false
+    || attributes.isVisible === false
+    || mode === 1
+    || modeText === "hidden"
+    || modeText === "hidden_object"
+    || modeText === "hiddenobject";
+}
+
+function buildRhinoLayerVisibility(layers:any[]) {
+  const byId = new Map<string, any>();
+  const byName = new Map<string, any>();
+  for (const layer of layers) {
+    const id = layer?.id ?? layer?.Id;
+    if (id != null) byId.set(String(id), layer);
+    const name = String(layer?.name ?? layer?.Name ?? "").trim().toLowerCase();
+    if (name) byName.set(name, layer);
+  }
+
+  const cache = new Map<number, boolean>();
+
+  const layerIsDirectlyVisible = (layer:any): boolean => {
+    if (!layer) return true;
+    const mode = layer.mode ?? layer.Mode ?? layer.visibilityMode ?? layer.VisibilityMode;
+    const modeText = typeof mode === "string" ? mode.toLowerCase() : "";
+    return layer.visible !== false
+      && layer.Visible !== false
+      && layer.isVisible !== false
+      && layer.visibility !== false
+      && mode !== 1
+      && modeText !== "hidden"
+      && modeText !== "hidden_layer"
+      && modeText !== "hiddenlayer";
+  };
+
+  const isLayerEffectivelyVisible = (index:number, trail = new Set<number>()): boolean => {
+    if (index < 0 || index >= layers.length) return true;
+    if (cache.has(index)) return cache.get(index)!;
+    if (trail.has(index)) return true;
+
+    const layer = layers[index];
+    if (!layer) return true;
+
+    if (!layerIsDirectlyVisible(layer)) {
+      cache.set(index, false);
+      return false;
+    }
+
+    const parentId = layer.parentLayerId ?? layer.parentId ?? layer.parentLayerID ?? layer.ParentLayerId;
+    if (parentId != null && String(parentId) && String(parentId) !== "00000000-0000-0000-0000-000000000000") {
+      const parent = byId.get(String(parentId));
+      if (parent) {
+        const parentIndex = layers.indexOf(parent);
+        if (parentIndex >= 0) {
+          const nextTrail = new Set(trail);
+          nextTrail.add(index);
+          const visible = isLayerEffectivelyVisible(parentIndex, nextTrail);
+          cache.set(index, visible);
+          return visible;
+        }
+      }
+    }
+
+    cache.set(index, true);
+    return true;
+  };
+
+  return (index:number, layerName?:string): boolean => {
+    if (Number.isInteger(index) && index >= 0 && index < layers.length) {
+      return isLayerEffectivelyVisible(index);
+    }
+
+    const name = String(layerName ?? "").trim().toLowerCase();
+    if (name) {
+      const layer = byName.get(name);
+      if (layer) {
+        const resolvedIndex = layers.indexOf(layer);
+        if (resolvedIndex >= 0) return isLayerEffectivelyVisible(resolvedIndex);
+      }
+    }
+
+    return true;
+  };
+}
+
+function findRhinoLayerManifest(object:any): any[] {
+  const rootData = object?.userData ?? {};
+  const rootCandidates = [rootData.aurumRhinoSourceLayers, rootData.layers, rootData.rhinoLayers];
+  for (const candidate of rootCandidates) {
+    if (Array.isArray(candidate) && candidate.length) return candidate;
+  }
+  // GLTFLoader attaches extras to the node that owns them, not always the scene root.
+  let discovered: any[] = [];
+  object?.traverse?.((node:any) => {
+    if (discovered.length) return;
+    const data = node?.userData ?? {};
+    const match = [data.aurumRhinoSourceLayers, data.layers, data.rhinoLayers].find((value:any) => Array.isArray(value) && value.length);
+    if (match) discovered = match;
+  });
+  return discovered;
+}
+function resolveRhinoLayerIndex(x:any): number {
+  const candidates = [
+    x?.userData?.aurumRhinoSource?.layerIndex,
+    x?.userData?.rhinoLayer?.layerIndex,
+    x?.userData?.rhinoLayer?.index,
+    x?.userData?.RhinoLayer?.layerIndex,
+    x?.userData?.RhinoLayer?.index,
+    x?.userData?.attributes?.layerIndex,
+    x?.userData?.attributes?.LayerIndex,
+    x?.userData?.layerIndex,
+    x?.userData?.LayerIndex,
+    x?.userData?.aurumRhino?.layerIndex,
+  ];
+  for (const value of candidates) {
+    if (value === null || value === undefined || value === "") continue;
+    const n = typeof value === "number" ? value : Number(value);
+    if (Number.isInteger(n) && n >= 0) return n;
+  }
+  return -1;
+}
+
+function colorToHex(color:any): string | undefined {
+  if (typeof color === "string") {
+    const match = color.match(/^#?([0-9a-f]{6})$/i);
+    return match?.[1] ? "#" + match[1].toLowerCase() : undefined;
+  }
+  let channels:any[] | undefined;
+  if (Array.isArray(color) && color.length >= 3) channels = color.slice(0,3);
+  else if (color && typeof color === "object") {
+    if (color.r !== undefined || color.R !== undefined) channels = [color.r ?? color.R, color.g ?? color.G, color.b ?? color.B];
+    else if (color.red !== undefined || color.Red !== undefined) channels = [color.red ?? color.Red, color.green ?? color.Green, color.blue ?? color.Blue];
+  }
+  if (!channels || !channels.every((v:any) => Number.isFinite(Number(v)))) return undefined;
+  let rgb = channels.map((v:any) => Number(v));
+  // Some exporters expose normalized 0..1 RGB; Rhino layer colors are commonly 0..255.
+  if (Math.max(...rgb) <= 1) rgb = rgb.map(v => v * 255);
+  return "#" + rgb.map(v => Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,"0")).join("");
+}
+
+function classifyRhinoLayer(name:string,colorCapa?:string,clasificarCapa?:(capa:string,colorCapa?:string)=>"metal"|"gema"|"otro"):"metal"|"gema"|"otro" {
+  const normalizedName=String(name??"").trim().toLowerCase();
+  if (/(gema|gem|piedra|stone|diamante|diamond|zafiro|sapphire|rubi|rub[ií]|ruby|esmeralda|emerald|moissanita|moissanite|citrino|amatista|topacio)/.test(normalizedName)) return "gema";
+  if (/(metal|oro|gold|plata|silver|platino|platinum|acero|steel|met[aá]lico)/.test(normalizedName)) return "metal";
+  // Color alone is not sufficient to decide between gemstone and metal.
+  // MatrixGold layer RGB values must be explicitly mapped from the user's template.
+  return clasificarCapa?.(name,colorCapa) ?? "otro";
+}
+
+function matrixSlotFromLayer(name:string,category:"metal"|"gema"|"otro",_colorCapa?:string):number|undefined {
+  if (category==="otro") return undefined;
+  const match=String(name??"").trim().toLowerCase().match(/(?:metal|gema|gem|piedra|stone)[\s_-]*([1-4])\b/);
+  return match ? Number(match[1]) : undefined;
+}
+
+/**
+ * Resolve each mesh from its own Rhino layer index/name and the root layer table.
+ * Never pair source and exported meshes by traversal order: GLTF export may reorder nodes.
+ */
+function normalizeRhinoObjectType(value:any):string {
+  const raw=String(value?.name??value??"").trim();
+  return raw.replace(/^ObjectType_/i,"").replace(/([a-z])([A-Z])/g,"$1 $2").trim()||"Unknown";
+}
+
+/** Capture Rhino object metadata before construction curves are removed. */
+function auditRhinoSourceObjects(object:any) {
+  const layers=findRhinoLayerManifest(object);
+  const byLayer:Record<string,number>={};
+  const byType:Record<string,number>={};
+  const records:Array<{id:string|null;name:string;type:string;layer:string|null;layerId:string|null;geometry:Record<string,unknown>}>=[];
+  let nodesWithSourceIdentity=0;
+  let curveNodes=0;
+  let linePrimitives=0;
+  let pointPrimitives=0;
+  object?.traverse?.((node:any)=>{
+    if(node===object)return;
+    const data=node?.userData??{};
+    const attrs=data.attributes??{};
+    const geometry=attrs.geometry??attrs.Geometry??{};
+    const geometryType=normalizeRhinoObjectType(data.objectType??data.aurumRhinoGeometryType??geometry.objectType??geometry.ObjectType);
+    const rhinoLayer=data.rhinoLayer??data.RhinoLayer??{};
+    const layerIndexValue=attrs.layerIndex??attrs.LayerIndex??data.layerIndex??data.LayerIndex;
+    const hasLayerIndex=layerIndexValue!==null&&layerIndexValue!==undefined&&layerIndexValue!=="";
+    const layerIndex=hasLayerIndex&&Number.isInteger(Number(layerIndexValue))?Number(layerIndexValue):-1;
+    const layer=layers[layerIndex]??null;
+    const layerName=String(rhinoLayer.fullPath??rhinoLayer.FullPath??rhinoLayer.name??rhinoLayer.Name??layer?.fullPath??layer?.FullPath??layer?.name??layer?.Name??"").trim()||null;
+    const layerId=rhinoLayer.id??rhinoLayer.Id??layer?.id??layer?.Id??null;
+    const objectId=attrs.id??attrs.Id??data.objectId??data.ObjectId??data.id??data.Id??null;
+    const objectName=String(attrs.name??attrs.Name??data.objectName??data.ObjectName??node.name??"").trim();
+    const hasRhinoMetadata=Boolean(objectId!=null||layerName||layerId!=null||data.objectType||geometry.objectType);
+    if(!hasRhinoMetadata)return;
+    if(objectId!=null)nodesWithSourceIdentity++;
+    byType[geometryType]=(byType[geometryType]??0)+1;
+    const layerKey=layerName??(layerId!=null?"ID "+String(layerId):"Sin capa");
+    byLayer[layerKey]=(byLayer[layerKey]??0)+1;
+    if(geometryType.toLowerCase()==="curve")curveNodes++;
+    if(node.isLine||node.isLineSegments||node.isLineLoop)linePrimitives++;
+    if(node.isPoints)pointPrimitives++;
+    const source=data.aurumRhinoSource??{};
+    node.userData={...data,aurumRhinoSource:{...source,objectId:objectId??source.objectId??null,objectName:objectName||source.objectName||null,objectType:geometryType!=="Unknown"?geometryType:(source.objectType??null),layerIndex:layerIndex>=0?layerIndex:(source.layerIndex??null),layerId:layerId??source.layerId??null,layerName:layerName??source.layerName??null}};
+    records.push({id:objectId!=null?String(objectId):null,name:objectName,type:geometryType,layer:layerName,layerId:layerId!=null?String(layerId):null,geometry:{isSolid:geometry.isSolid??null,isManifold:geometry.isManifold??null,isSurface:geometry.isSurface??null,isClosed:geometry.isClosed??null,hasBrepForm:geometry.hasBrepForm??null,dimension:geometry.dimension??null,segmentCount:geometry.segmentCount??null,spanCount:geometry.spanCount??null,degree:geometry.degree??null,isValid:geometry.isValid??null}});
+  });
+  const audit={totalSourceObjects:records.length,nodesWithSourceIdentity,byGeometryType:byType,byLayer,curveNodes,linePrimitives,pointPrimitives,sourceLayerCount:layers.length,objects:records};
+  object.userData={...(object.userData??{}),aurumSourceObjectAudit:audit};
+  console.info("[AURUM][RHINO SOURCE OBJECT AUDIT]",audit);
+  return audit;
+}
+function hideGlbConstructionPrimitives(object:any) {
+  const hiddenNodes:any[]=[];
+  const counts={lines:0,points:0};
+  object?.traverse?.((node:any)=>{
+    if(node===object)return;
+    if(node?.isLine||node?.isLineSegments||node?.isLineLoop||node?.isPoints){
+      hiddenNodes.push(node);
+      if(node.isPoints)counts.points++;else counts.lines++;
+    }
+  });
+  for(const node of hiddenNodes)node.visible=false;
+  if(counts.lines||counts.points){
+    object.userData={...(object.userData??{}),aurumConstructionGeometry:{...counts,hidden:true,removed:false,retainedInHierarchy:hiddenNodes.length,source:"GLB line/point primitives"}};
+    console.info("[AURUM][GLB] Geometría auxiliar oculta y conservada",object.userData.aurumConstructionGeometry);
+  }
+  object.updateMatrixWorld?.(true);
+  return counts;
+}
+
+function hydrateRhinoLayerMetadata(
+  object:any,
+  clasificarCapa:(capa:string,colorCapa?:string)=>"metal"|"gema"|"otro"
+) {
+  const layers=findRhinoLayerManifest(object);
+  const sourceLayerManifest=layers;
+  const byId=new Map<string,any>();
+  const byName=new Map<string,any>();
+  layers.forEach((layer:any,index:number)=>{
+    const id=layer?.id??layer?.Id;
+    if(id!=null)byId.set(String(id),layer);
+    const name=String(layer?.name??layer?.Name??"").trim().toLowerCase();
+    if(name)byName.set(name,layer);
+    // Keep index lookup implicit through the original array.
+    void index;
+  });
+
+  const audit={
+    meshes:0,
+    meshesWithLayerKey:0,
+    unresolvedMeshes:0,
+    meshesWithoutSourceIdentity:0,
+    duplicateLayerKeys:[] as Array<{layerKey:string;meshCount:number;sourceIds:string[];layerNames:string[]}>,
+    categoryCounts:{metal:0,gema:0,otro:0} as Record<string,number>,
+    semanticCounts:{metal:0,gem:0,engraving:0,relief:0,auxiliary:0,unknown:0} as Record<string,number>,
+    lowConfidenceSemanticMeshes:0,
+    layers:{} as Record<string,number>,
+  };
+  const layerSources=new Map<string,{meshCount:number;sourceIds:Set<string>;layerNames:Set<string>}>();
+  object?.traverse?.((x:any)=>{
+    if(!x?.isMesh)return;
+    audit.meshes++;
+    const data=x.userData??{};
+    const attrs=data.attributes??{};
+    const existing=data.aurumRhino??{};
+    const layerIndex=resolveRhinoLayerIndex(x);
+    const source=data.aurumRhinoSource??{};
+    const rhinoLayer=data.rhinoLayer??data.RhinoLayer??{};
+    const objectId=source.objectId??attrs.id??attrs.Id??data.objectId??data.ObjectId??data.id??data.Id??null;
+    const objectName=String(source.objectName??attrs.name??attrs.Name??data.objectName??data.ObjectName??x.name??"").trim();
+    const layerId=source.layerId??rhinoLayer.id??rhinoLayer.Id??attrs.layerId??attrs.LayerId??data.layerId??data.LayerId??existing.rhinoLayerId;
+    let layer=layerIndex>=0?layers[layerIndex]:undefined;
+    if(!layer&&layerId!=null)layer=byId.get(String(layerId));
+    const rawName=layer?.name??layer?.Name??source.layerName??rhinoLayer.name??rhinoLayer.Name??
+      attrs.layerName??attrs.LayerName??data.layerName??data.LayerName??existing.capa??"";
+    const layerName=String(rawName??"").trim();
+    if(!layer&&layerName)layer=byName.get(layerName.toLowerCase());
+    const color=colorToHex(layer?.color??layer?.Color??source.layerColor??rhinoLayer.color??rhinoLayer.Color??
+      attrs.layerColor??attrs.LayerColor??existing.colorCapa);
+    const semantic = classifyAurumSemanticObject(x,layer);
+    audit.semanticCounts[semantic.classification]=(audit.semanticCounts[semantic.classification]??0)+1;
+    if(semantic.confidence>0 && semantic.confidence<0.7) audit.lowConfidenceSemanticMeshes++;
+    const layerCategory = classifyRhinoLayer(layerName,color,clasificarCapa);
+    // A layer index alone is not a semantic classification: direct GLB files
+    // may retain rhino-index:N while omitting the Rhino layer table/name.
+    // In that case, accept a high-confidence explicit gem identity from the
+    // mesh or its named parent (for example, Diamond_Heart) as a safe fallback.
+    const semanticGem = semantic.classification === "gem" && semantic.confidence >= 0.7;
+    // A cached categoria is not authoritative: previous normalization or
+    // imported GLB extras may contain a stale "gema" tag for an ordinary CAD
+    // layer (for example Uho26). Keep only explicit manual assignments;
+    // otherwise require the current layer name/color rule or strong semantics.
+    const overrideCategory = getAurumLayerCategoryOverride(object?.userData?.aurumLayerCategoryOverrides, {
+      layerId: layer?.id ?? layer?.Id ?? layerId ?? existing.rhinoLayerId,
+      layerIndex: layerIndex >= 0 ? layerIndex : existing.layerIndex,
+      layerName: layerName || existing.capa,
+    });
+    const manualCategory = existing.aurumManualCategoryAssignment === true
+      ? existing.categoria
+      : existing.aurumManualGemAssignment === true && existing.categoria === "gema"
+        ? "gema"
+        : undefined;
+    const category = overrideCategory ?? manualCategory ?? (layerCategory !== "otro"
+      ? layerCategory
+      : (semanticGem ? "gema" : "otro"));
+    const resolvedLayerIndex=layerIndex>=0?layerIndex:(Number.isInteger(existing.layerIndex)&&existing.layerIndex>=0?existing.layerIndex:-1);
+    const resolvedLayerId=layer?.id??layer?.Id??layerId??existing.rhinoLayerId??null;
+    const layerKey=resolveAurumLayerKey({layerId:resolvedLayerId,layerIndex:resolvedLayerIndex,layerName:layerName||existing.capa,layerColor:color||existing.colorCapa,category,existingKey:existing.layerKey});
+    const matrixSlot=matrixSlotFromLayer(layerName,category,color)??existing.matrixSlot;
+    const hasAnyLayerEvidence=Boolean(layerName||color||layerIndex>=0||layerId!=null||existing.capa||existing.layerKey);
+    const sourceIdentity=resolvedLayerId!=null
+      ? "id:"+String(resolvedLayerId)
+      : resolvedLayerIndex>=0
+        ? "index:"+String(resolvedLayerIndex)
+        : layerName
+          ? "name:"+layerName.toLocaleLowerCase()
+          : "";
+    if(!sourceIdentity)audit.meshesWithoutSourceIdentity++;
+    if(!hasAnyLayerEvidence||!layerKey){
+      audit.unresolvedMeshes++;
+      audit.categoryCounts["otro"]=(audit.categoryCounts["otro"]??0)+1;
+      if (objectName && !String(x.name??"").trim()) x.name=objectName;
+      x.userData={
+        ...data,
+        aurumRhinoSource:{
+          ...source,
+          objectId,
+          objectName: objectName || source.objectName || null,
+          objectType: data.aurumRhinoGeometryType ?? source.objectType ?? null,
+          layerIndex: resolvedLayerIndex,
+          layerId: resolvedLayerId,
+        },
+        aurumSemantic:semantic,
+        aurumRhino:{
+          ...existing,
+          capa:layerName||existing.capa||(resolvedLayerIndex>=0?`Capa ${resolvedLayerIndex+1}`:undefined),
+          colorCapa:color||existing.colorCapa||undefined,
+          categoria:category,
+          aurumOriginalCategory: overrideCategory ? (existing.aurumOriginalCategory ?? existing.categoria ?? "otro") : existing.aurumOriginalCategory,
+          aurumManualCategoryAssignment: overrideCategory ? true : existing.aurumManualCategoryAssignment,
+          aurumManualGemAssignment: overrideCategory ? overrideCategory === "gema" : existing.aurumManualGemAssignment,
+          layerIndex:resolvedLayerIndex,
+          layerKey:layerKey??null,
+          matrixSlot,
+          rhinoLayerId:resolvedLayerId,
+          metadataResolution:"unresolved",
+        },
+      };
+      return;
+    }
+
+    if(layerKey){
+      audit.meshesWithLayerKey++;
+      audit.layers[layerKey]=(audit.layers[layerKey]??0)+1;
+      const source=layerSources.get(layerKey)??{meshCount:0,sourceIds:new Set<string>(),layerNames:new Set<string>()};
+      source.meshCount++;
+      if(sourceIdentity)source.sourceIds.add(sourceIdentity);
+      if(layerName)source.layerNames.add(layerName);
+      layerSources.set(layerKey,source);
+    }
+    audit.categoryCounts[category]=(audit.categoryCounts[category]??0)+1;
+    if (objectName && !String(x.name??"").trim()) x.name=objectName;
+    x.userData={
+      ...data,
+      aurumSemantic:semantic,
+      aurumRhinoSource:{
+        ...source,
+        objectId,
+        objectName: objectName || source.objectName || null,
+        objectType: data.aurumRhinoGeometryType ?? source.objectType ?? null,
+        layerIndex:resolvedLayerIndex,
+        layerId:resolvedLayerId,
+        layerName:layerName||source.layerName||null,
+        layerColor:color||source.layerColor||null,
+        materialIndex:attrs.materialIndex??attrs.MaterialIndex??source.materialIndex??null,
+      },
+      aurumRhino:{
+        ...existing,
+        capa:layerName||existing.capa||(resolvedLayerIndex>=0?`Capa ${resolvedLayerIndex+1}`:undefined),
+        colorCapa:color||existing.colorCapa||undefined,
+        categoria:category,
+        aurumOriginalCategory: overrideCategory ? (existing.aurumOriginalCategory ?? existing.categoria ?? "otro") : existing.aurumOriginalCategory,
+        aurumManualCategoryAssignment: overrideCategory ? true : existing.aurumManualCategoryAssignment,
+        aurumManualGemAssignment: overrideCategory ? overrideCategory === "gema" : existing.aurumManualGemAssignment,
+        layerIndex:resolvedLayerIndex,
+        layerKey,
+        matrixSlot,
+        rhinoLayerId:resolvedLayerId,
+        rhinoMaterialIndex:attrs.materialIndex??existing.rhinoMaterialIndex??null,
+        visible:x.visible!==false,
+        hiddenByRhino:x.visible===false,
+        metadataResolution:"resolved",
+      },
+    };
+  });
+  for(const [layerKey,source] of layerSources){
+    if(source.sourceIds.size>1||source.layerNames.size>1){
+      audit.duplicateLayerKeys.push({
+        layerKey,
+        meshCount:source.meshCount,
+        sourceIds:Array.from(source.sourceIds),
+        layerNames:Array.from(source.layerNames),
+      });
+    }
+  }
+    let hierarchyGroups = 0;
+  let namedNodes = 0;
+  object?.traverse?.((node:any) => {
+    if (node === object) return;
+    if (node?.children?.length) hierarchyGroups++;
+    if (String(node?.name ?? "").trim()) namedNodes++;
+  });
+  object.userData={...(object.userData??{}),aurumLayerMetadataAudit:{
+    ...audit,
+    source: sourceLayerManifest.length ? "GLB nested/root node extras + source layer table" : "GLB node extras (layer table not found)",
+    layerTableFound: sourceLayerManifest.length > 0,
+    sourceLayerCount: sourceLayerManifest.length,
+    hierarchyGroups,
+    namedNodes,
+    semanticCounts:audit.semanticCounts,
+    lowConfidenceSemanticMeshes:audit.lowConfidenceSemanticMeshes,
+  }};
+  if(audit.unresolvedMeshes>0||audit.meshesWithLayerKey!==audit.meshes||audit.duplicateLayerKeys.length>0){
+    console.warn("[AURUM][LAYER METADATA AUDIT]",object.userData.aurumLayerMetadataAudit);
+  }else{
+    console.info("[AURUM][LAYER METADATA AUDIT]",object.userData.aurumLayerMetadataAudit);
+  }
+  object.updateMatrixWorld?.(true);
+}
+
+export async function normalizeAurumModel(
+  object:any,
+  glb:ArrayBuffer | null,
+  extension:string,
+  colorRhinoHex:(color:any)=>string|undefined,
+  clasificarCapa:(capa:string,colorCapa?:string)=> "metal"|"gema"|"otro"
+) {
+  // The source mesh metadata is stamped before export; the internal GLB is then
+  // hydrated from each node's stable Rhino layer identity.
+  // 3DM es la entrada oficial. Su representación de ejecución es el GLB
+  // generado internamente. El Object3D Rhino se usa para preparar/exportar,
+  // pero el visor trabaja finalmente sobre el GLB, igual que el activo oficial.
+  if (extension === "3dm") {
+    if (!glb) throw new Error("No se generó el GLB interno del archivo 3DM.");
+    const { GLTFLoader } = await import("three/examples/jsm/loaders/GLTFLoader.js");
+    const interno = (await new GLTFLoader().parseAsync(glb,"")).scene;
+    auditRhinoSourceObjects(interno);
+    // The exported GLB already carries the layer metadata used by
+    // iJewel. Read it from the GLB itself instead of matching meshes by
+    // traversal index. Mesh order is not a stable MatrixGold layer identity.
+    hydrateRhinoLayerMetadata(interno,clasificarCapa);
+
+    // Do not assign source metadata by mesh traversal order: the GLB exporter can
+    // reorder or split meshes. Unresolved meshes remain category "otro" and can be
+    // selected individually; never silently apply a wrong layer's material.
+    interno.updateMatrixWorld(true);
+    return interno;
+  }
+
+  // GLB ya fue parseado por parseAurumInput(). No lo serializamos ni
+  // parseamos una segunda vez: conservar el Object3D original evita una
+  // conversión redundante y mantiene intactas sus normales/materiales authored.
+  if (extension === "glb") {
+    // Audit original Rhino object types/IDs before hiding construction curves and points.
+    auditRhinoSourceObjects(object);
+    // Surface meshes and their authored materials/normals remain untouched.
+    hideGlbConstructionPrimitives(object);
+    // Official iJewel-style GLBs carry the layer assignment in node extras.
+    // Hydrate it directly so the same MatrixGold layer rules work for GLB input.
+    hydrateRhinoLayerMetadata(object,clasificarCapa);
+    object?.updateMatrixWorld?.(true);
+    return object;
+  }
+
+  const { GLTFLoader } = await import("three/examples/jsm/loaders/GLTFLoader.js");
+  const interno = (await new GLTFLoader().parseAsync(glb as ArrayBuffer,"")).scene;
+  return interno;
+}

@@ -1,0 +1,40 @@
+-- Costeo real por OP: corrige agregación por pedido y recalcula automáticamente.
+create or replace function public.recalcular_costos_orden(_orden_id uuid)
+returns jsonb language plpgsql security definer set search_path=''
+as $$
+declare v_sede uuid; v_pedido uuid; v_venta numeric:=0; v_estimado numeric:=0; v_mat numeric:=0; v_lab numeric:=0; v_ext numeric:=0; v_ind numeric:=0; v_adj numeric:=0; v_real numeric:=0; v_rate numeric; r record;
+begin
+ select sede_id,pedido_id into v_sede,v_pedido from public.ordenes_produccion where id=_orden_id;
+ if v_sede is null or not public.ve_sede((select auth.uid()),v_sede) then raise exception 'No tienes acceso a esta orden de producción'; end if;
+ select coalesce(importe,0) into v_venta from public.pedidos where id=v_pedido;
+ select coalesce(c.subtotal_costo,0) into v_estimado from public.cotizaciones c join public.pedidos p on p.cotizacion_id=c.id where p.id=v_pedido;
+ delete from public.orden_produccion_costos where orden_produccion_id=_orden_id and origen='calculado';
+ for r in select m.material_id,m.tipo,sum(m.cantidad) cantidad,i.material,i.unidad,coalesce(m.costo_unitario,i.costo_unitario,0) costo_unitario from public.inventario_movimientos m join public.inventario i on i.id=m.material_id where m.orden_produccion_id=_orden_id and m.tipo in ('consumo','merma') group by m.material_id,m.tipo,i.material,i.unidad,i.costo_unitario,m.costo_unitario loop
+  insert into public.orden_produccion_costos(orden_produccion_id,categoria,concepto,referencia_id,cantidad,unidad,costo_unitario,importe,origen) values(_orden_id,'material',case when r.tipo='merma' then 'Merma · ' else 'Consumo · ' end||r.material,r.material_id,r.cantidad,r.unidad,r.costo_unitario,r.cantidad*r.costo_unitario,'calculado');
+  v_mat:=v_mat+r.cantidad*r.costo_unitario;
+ end loop;
+ for r in select t.id,t.area,t.responsable_user_id,coalesce(sum(coalesce(tt.segundos_acumulados,0)+case when tt.fin is null then extract(epoch from now()-tt.inicio) else 0 end),0) segundos from public.trabajos t left join public.trabajo_tiempos tt on tt.trabajo_id=t.id where t.orden_produccion_id=_orden_id group by t.id,t.area,t.responsable_user_id loop
+  select tm.tarifa_hora into v_rate from public.tarifas_mano_obra tm where tm.activo and tm.sede_id=v_sede and (tm.usuario_id=r.responsable_user_id or tm.usuario_id is null) and (tm.area='' or lower(trim(tm.area))=lower(trim(coalesce(r.area,'')))) and tm.vigente_desde<=current_date and (tm.vigente_hasta is null or tm.vigente_hasta>=current_date) order by (tm.usuario_id is not null) desc,(tm.area<>'') desc,tm.vigente_desde desc limit 1;
+  v_rate:=coalesce(v_rate,0);
+  if v_rate>0 and r.segundos>0 then
+   insert into public.orden_produccion_costos(orden_produccion_id,categoria,concepto,referencia_id,cantidad,unidad,costo_unitario,importe,origen) values(_orden_id,'mano_obra','Mano de obra · '||coalesce(r.area,'Operación'),r.id,r.segundos/3600.0,'hora',v_rate,(r.segundos/3600.0)*v_rate,'calculado');
+   v_lab:=v_lab+(r.segundos/3600.0)*v_rate;
+  end if;
+ end loop;
+ select coalesce(sum(case when categoria='externo' then importe else 0 end),0),coalesce(sum(case when categoria='indirecto' then importe else 0 end),0),coalesce(sum(case when categoria='ajuste' then importe else 0 end),0) into v_ext,v_ind,v_adj from public.orden_produccion_costos where orden_produccion_id=_orden_id;
+ v_real:=v_mat+v_lab+v_ext+v_ind+v_adj;
+ insert into public.orden_produccion_resumen_costos(orden_produccion_id,costo_estimado,costo_materiales,costo_mano_obra,costo_externo,costo_indirecto,costo_ajustes,costo_real,venta,margen,margen_porcentaje,calculado_por) values(_orden_id,v_estimado,v_mat,v_lab,v_ext,v_ind,v_adj,v_real,v_venta,v_venta-v_real,case when v_venta<>0 then ((v_venta-v_real)/v_venta)*100 else null end,(select auth.uid())) on conflict(orden_produccion_id) do update set costo_estimado=excluded.costo_estimado,costo_materiales=excluded.costo_materiales,costo_mano_obra=excluded.costo_mano_obra,costo_externo=excluded.costo_externo,costo_indirecto=excluded.costo_indirecto,costo_ajustes=excluded.costo_ajustes,costo_real=excluded.costo_real,venta=excluded.venta,margen=excluded.margen,margen_porcentaje=excluded.margen_porcentaje,calculado_por=excluded.calculado_por,calculado_at=now(),updated_at=now();
+ return jsonb_build_object('orden_produccion_id',_orden_id,'costo_real',v_real,'venta',v_venta,'margen',v_venta-v_real,'margen_porcentaje',case when v_venta<>0 then ((v_venta-v_real)/v_venta)*100 else null end);
+end $$;
+revoke execute on function public.recalcular_costos_orden(uuid) from public,anon;
+grant execute on function public.recalcular_costos_orden(uuid) to authenticated;
+
+create or replace function public.recalcular_costos_op_desde_movimiento() returns trigger language plpgsql security definer set search_path='' as $$ begin if new.orden_produccion_id is not null then perform public.recalcular_costos_orden(new.orden_produccion_id); end if; return new; end $$;
+drop trigger if exists trg_recalcular_costos_movimiento on public.inventario_movimientos;
+create trigger trg_recalcular_costos_movimiento after insert on public.inventario_movimientos for each row execute function public.recalcular_costos_op_desde_movimiento();
+
+create or replace function public.recalcular_costos_op_desde_tiempo() returns trigger language plpgsql security definer set search_path='' as $$ declare v_op uuid; begin select orden_produccion_id into v_op from public.trabajos where id=new.trabajo_id; if v_op is not null then perform public.recalcular_costos_orden(v_op); end if; return new; end $$;
+drop trigger if exists trg_recalcular_costos_tiempo on public.trabajo_tiempos;
+create trigger trg_recalcular_costos_tiempo after insert or update on public.trabajo_tiempos for each row execute function public.recalcular_costos_op_desde_tiempo();
+revoke execute on function public.recalcular_costos_op_desde_movimiento() from public,anon,authenticated;
+revoke execute on function public.recalcular_costos_op_desde_tiempo() from public,anon,authenticated;

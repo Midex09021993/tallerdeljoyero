@@ -1,0 +1,150 @@
+import { useEffect, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
+import { Boxes, Calculator, ChevronRight, Droplets, Gem, Ruler, Scale, Send, Wrench } from "lucide-react";
+import { CalculadoraAleacionOro } from "@/components/CalculadoraAleacionOro";
+import { ConversorTallasAnillo } from "@/components/ConversorTallasAnillo";
+import { CalculadoraPesoGemas } from "@/components/CalculadoraPesoGemas";
+import { CalculadoraYeso } from "@/components/CalculadoraYesoAgua";
+
+type Herramienta = {
+  id: string;
+  nombre: string;
+  icono: typeof Calculator;
+  disponible: boolean;
+};
+
+const HERRAMIENTAS: Herramienta[] = [
+  { id: "aurum-render", nombre: "AURUM RENDER", icono: Gem, disponible: true },
+  { id: "yeso", nombre: "Calculadora Yeso/Agua", icono: Droplets, disponible: true },
+  { id: "oro", nombre: "Calculadora de Aleación de Oro", icono: Gem, disponible: true },
+  { id: "peso3d", nombre: "Visualizador y Peso 3D", icono: Boxes, disponible: true },
+  { id: "tallas", nombre: "Conversor de Tallas de Anillo", icono: Ruler, disponible: true },
+  { id: "peso", nombre: "Peso de Gemas", icono: Scale, disponible: true },
+  { id: "transfer", nombre: "AURUM TRANSFER", icono: Send, disponible: true },
+  { id: "horno", nombre: "Programador de Rampas de Horno", icono: Wrench, disponible: false },
+  { id: "volumen", nombre: "Calculadora de Volumen", icono: Calculator, disponible: false },
+  { id: "medidas", nombre: "Conversor de Medidas", icono: Ruler, disponible: false },
+];
+
+/** Menú lateral flotante de herramientas públicas para la pantalla de acceso. */
+export function HerramientasFlotantes({ herramientaInicial }: { herramientaInicial?: string | null }) {
+  const navigate = useNavigate();
+  const [abierto, setAbierto] = useState(false);
+  const [activa, setActiva] = useState<string>(herramientaInicial || "yeso");
+
+  useEffect(() => {
+    if (!herramientaInicial) return;
+    setActiva(herramientaInicial);
+    setAbierto(true);
+  }, [herramientaInicial]);
+
+  return (
+    <div className="fixed bottom-20 left-0 z-50 flex items-center md:bottom-auto md:left-0 md:top-1/2 md:-translate-y-1/2">
+      {/* Pestaña colapsada */}
+      <button
+        type="button"
+        onClick={() => setAbierto((v) => !v)}
+        aria-expanded={abierto}
+        aria-label={abierto ? "Cerrar herramientas" : "Abrir herramientas"}
+        className="flex h-28 w-9 flex-col items-center justify-center gap-1.5 rounded-r-2xl sm:h-36 sm:w-10 sm:gap-2 border border-l-0 border-[#d4af37] bg-ink text-ink-foreground/70 shadow-[0_0_10px_rgba(212,175,55,.85),0_0_24px_rgba(212,175,55,.5),inset_0_0_8px_rgba(212,175,55,.2)] backdrop-blur transition-all duration-300 hover:text-gold hover:shadow-[0_0_14px_rgba(212,175,55,1),0_0_32px_rgba(212,175,55,.7),inset_0_0_10px_rgba(212,175,55,.3)]"
+      >
+        <Wrench className="size-4" aria-hidden="true" />
+        <span className="text-[10px] font-semibold uppercase tracking-[0.25em] [writing-mode:vertical-rl]">
+          Herramientas
+        </span>
+      </button>
+
+      {/* Panel desplegable */}
+      <div
+        className={`overflow-hidden border-y border-l border-ink-foreground/15 bg-ink/95 shadow-2xl backdrop-blur transition-all duration-300 ease-out ${
+          abierto ? "w-[calc(100vw-2.25rem)] max-w-[440px] opacity-100" : "w-0 opacity-0"
+        }`}
+      >
+        <div className="max-h-[calc(100vh-7rem)] w-full overflow-y-auto rounded-r-2xl p-3 sm:max-h-[80vh] sm:w-[min(94vw,440px)] sm:p-4">
+          <div className="mb-3 flex items-center justify-between">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-gold">
+              Herramientas
+            </p>
+            <button
+              type="button"
+              onClick={() => setAbierto(false)}
+              className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-ink-foreground/15 text-ink-foreground/60 transition hover:border-gold hover:text-gold"
+              aria-label="Cerrar herramientas"
+            >
+              <ChevronRight className="size-4" aria-hidden="true" />
+            </button>
+          </div>
+
+          <nav className="space-y-1">
+            {HERRAMIENTAS.map((h) => {
+              const Icono = h.icono;
+              const seleccionada = activa === h.id;
+              return (
+                <button
+                  key={h.id}
+                  type="button"
+                  disabled={!h.disponible}
+                  onClick={() => {
+                    if (h.id === "aurum-render") {
+                      navigate({ to: "/aurum-render-public" });
+                      return;
+                    }
+                    if (h.id === "transfer") {
+                      navigate({ to: "/transfer" });
+                      setAbierto(false);
+                      return;
+                    }
+                    setActiva(h.id);
+                  }}
+                  className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-xs transition ${
+                    seleccionada
+                      ? "bg-gold/15 text-gold"
+                      : h.disponible
+                        ? "text-ink-foreground/75 hover:bg-ink-foreground/5 hover:text-ink-foreground"
+                        : "cursor-not-allowed text-ink-foreground/30"
+                  }`}
+                >
+                  <Icono className="size-4 shrink-0" aria-hidden="true" />
+                  <span className="flex-1">{h.nombre}</span>
+                  {!h.disponible ? (
+                    <span className="text-[9px] uppercase tracking-wider text-ink-foreground/30">
+                      Próximamente
+                    </span>
+                  ) : null}
+                </button>
+              );
+            })}
+          </nav>
+
+          {activa === "yeso" ? (
+            <div className="mt-4 rounded-xl bg-background p-1.5 text-foreground">
+              <CalculadoraYeso compacto />
+            </div>
+          ) : null}
+          {activa === "oro" ? (
+            <div className="mt-4 rounded-xl bg-background p-1.5 text-foreground">
+              <CalculadoraAleacionOro compacto />
+            </div>
+          ) : null}
+          {activa === "tallas" ? (
+            <div className="mt-4 rounded-xl bg-background p-1.5 text-foreground">
+              <ConversorTallasAnillo compacto />
+            </div>
+          ) : null}
+          {activa === "peso" ? (
+            <div className="mt-4 rounded-xl bg-background p-1.5 text-foreground">
+              <CalculadoraPesoGemas compacto />
+            </div>
+          ) : null}
+          {activa === "peso3d" ? (
+            <div className="mt-4 rounded-xl border border-gold/25 bg-background p-4 text-foreground">
+              <p className="text-sm font-semibold">Visualizador y Peso 3D</p>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">Usa el visualizador oficial dentro de Aurum Lab para trabajar con el mismo cálculo y guardar análisis en Mi Nube.</p>
+              <button type="button" onClick={() => navigate({ to: "/auth" })} className="mt-3 inline-flex min-h-10 w-full items-center justify-center rounded-xl bg-gold px-4 py-2 text-sm font-semibold text-black">Entrar a Aurum Lab</button>
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,159 @@
+name: Aurum Lab CI
+
+permissions:
+  contents: read
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+
+      - name: Install dependencies
+        run: bun ci
+
+      # TanStack Router generates src/routeTree.gen.ts during the Vite build.
+      # Build first so TypeScript checks the generated route tree, including new file routes.
+      - name: Build
+        run: bun run build
+
+      - name: TypeScript
+        run: bun run typecheck
+      - name: Lint
+        run: bun run lint
+      - name: AURUM manual layer category override tests
+        run: bun test scripts/aurum-layer-category-overrides.test.ts
+      - name: AURUM viewer regression tests
+        run: bun test scripts/aurum-viewer-buffer.test.ts
+      - name: AURUM camera view proportions tests
+        run: bun test scripts/aurum-camera-views.test.ts
+      - name: AURUM viewer lifecycle teardown tests
+        run: bun test scripts/aurum-viewer-lifecycle.test.ts
+      - name: AURUM gem application and targeted BVH tests
+        run: bun test scripts/aurum-gem-application.test.ts
+      - name: AURUM diamond micro pipeline analyzer tests
+        run: bun test scripts/aurum-diamond-micro-pipeline.test.ts
+      - name: AURUM mesh preflight regression tests
+        run: bun test scripts/aurum-mesh-preflight.test.ts
+      - name: AURUM import and geometry pipeline tests
+        run: bun test scripts/aurum-import-pipeline.test.ts
+      - name: AURUM surface seam diagnostic tests
+        run: bun test scripts/aurum-surface-engine.test.ts
+      - name: AURUM Metal Union material compatibility tests
+        run: bun test scripts/aurum-metal-union.test.ts
+      - name: AURUM Visual Weld regression tests
+        run: bun test scripts/aurum-visual-weld.test.ts
+      - name: AURUM Fast Visual Merge regression tests
+        run: bun test scripts/aurum-fast-visual-merge.test.ts
+      - name: AURUM solid and surface penetration tests
+        run: bun test scripts/aurum-solid-engine.test.ts
+      - name: AURUM BVH triangle intersection tests
+        run: bun test scripts/aurum-intersection-engine.test.ts
+      - name: AURUM GLB round-trip quality gate tests
+        run: bun test scripts/aurum-glb-quality-gate.test.ts
+      - name: AURUM plugin registry contract tests
+        run: bun test scripts/aurum-plugin-registry.test.ts
+      - name: AURUM adapter runtime contract tests
+        run: bun test scripts/aurum-adapter-contracts.test.ts
+      - name: AURUM video frame pipeline tests
+        run: bun test scripts/aurum-video-frame-pipeline.test.ts
+      - name: AURUM pixel visual regression tests
+        run: bun test scripts/aurum-visual-regression.test.ts
+      - name: AURUM media export session cleanup tests
+        run: bun test scripts/aurum-media-export-session.test.ts
+      - name: AURUM edge quality MSAA capability and fallback tests
+        run: bun test scripts/aurum-edge-quality.test.ts
+      - name: AURUM production plugin host tests
+        run: bun test scripts/aurum-production-plugin-host.test.ts
+      - name: AURUM GPU resource lifecycle tests
+        run: bun test scripts/aurum-gpu-resource-manager.test.ts
+      - name: AURUM viewer adapter tests
+        run: bun test scripts/aurum-viewer-adapter.test.ts
+      - name: AURUM scene adapter tests
+        run: bun test scripts/aurum-scene-adapter.test.ts
+      - name: AURUM lighting adapter tests
+        run: bun test scripts/aurum-lighting-adapter.test.ts
+      - name: AURUM metal adapter tests
+        run: bun test scripts/aurum-metal-adapter.test.ts
+      - name: AURUM gem adapter tests
+        run: bun test scripts/aurum-gem-adapter.test.ts
+      - name: AURUM final render adapter tests
+        run: bun test scripts/aurum-final-render-adapter.test.ts
+      - name: AURUM internal architecture access tests
+        run: bun test scripts/aurum-internal-access.test.ts
+
+
+  edge-functions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Type-check quotation PDF generator
+        run: deno check supabase/functions/generar-cotizacion-pdf/index.ts
+
+      - name: Type-check contract PDF generator
+        run: deno check supabase/functions/generar-contrato-pdf/index.ts
+
+      - name: Type-check Nextcloud video files
+        run: deno check supabase/functions/nextcloud-video-files/index.ts
+
+      - name: Type-check public viewer link creator
+        run: deno check supabase/functions/crear-enlace-visor-3d/index.ts
+
+      - name: Type-check public viewer model delivery
+        run: deno check supabase/functions/entregar-modelo-visor-3d/index.ts
+
+      - name: Type-check public viewer link resolver
+        run: deno check supabase/functions/resolver-enlace-visor-3d/index.ts
+
+      - name: Type-check public viewer link revocation
+        run: deno check supabase/functions/revocar-enlace-visor-3d/index.ts
+      - name: Type-check Public quotation PDF viewer
+        run: deno check supabase/functions/ver-cotizacion-pdf/index.ts
+      - name: Type-check AURUM transfer creation
+        run: deno check supabase/functions/aurum-transfer-create/index.ts
+      - name: Type-check AURUM transfer download
+        run: deno check supabase/functions/aurum-transfer-download/index.ts
+      - name: Type-check AURUM transfer import
+        run: deno check supabase/functions/aurum-transfer-import/index.ts
+      - name: Type-check AURUM welcome email
+        run: deno check supabase/functions/aurum-welcome-email/index.ts
+      - name: Type-check new order owner notification
+        run: deno check supabase/functions/notify-new-order-owner/index.ts
+      - name: Type-check jewelry inventory import
+        run: deno check supabase/functions/importar-inventario-joyas/index.ts
+      - name: Type-check Nextcloud status
+        run: deno check supabase/functions/nextcloud-status/index.ts
+      - name: Type-check Public catalog 3D model delivery
+        run: deno check supabase/functions/catalogo-modelo-3d-publico/index.ts
+      - name: Type-check Catalog technical sheet PDF extraction
+        run: deno check supabase/functions/catalogo-extraer-ficha-pdf/index.ts
+      - name: Type-check Catalog description generation
+        run: deno check supabase/functions/catalogo-generar-descripcion/index.ts
+      - name: Type-check Marketplace file download
+        run: deno check supabase/functions/marketplace-descargar-archivo/index.ts
+      - name: Type-check Marketplace payment initialization
+        run: deno check supabase/functions/marketplace-iniciar-pago/index.ts
+      - name: Type-check Marketplace payment webhook
+        run: deno check supabase/functions/marketplace-pago-webhook/index.ts

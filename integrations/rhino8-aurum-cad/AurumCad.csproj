@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net48;net8.0</TargetFrameworks>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <TargetExt>.rhp</TargetExt>
+    <AssemblyName>AurumCad</AssemblyName>
+    <RootNamespace>AurumCad</RootNamespace>
+    <Version>0.1.0</Version>
+    <Company>Taller del Joyero</Company>
+    <Product>AURUM CAD</Product>
+    <Description>Jewelry design tools for Rhinoceros 8.</Description>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Platforms>AnyCPU</Platforms>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="RhinoCommon" Version="8.33.26188.13001" ExcludeAssets="runtime" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,171 @@
+export interface AurumGroundController {
+  mesh: any;
+  hdriGround?: any;
+  setVisible: (visible: boolean) => void;
+  setBakedShadowVisible: (visible: boolean) => void;
+  setMaterial: (config: { color?: number; roughness?: number; metalness?: number }) => void;
+  setShadowIntensity: (intensity: number) => void;
+  setHdriGroundTexture: (texture:any) => void;
+  setHdriGroundEnabled: (enabled:boolean) => void;
+  updateFromPreset: (preset: any) => void;
+  positionUnderModel: (box: any) => void;
+  positionBakedShadow: (box:any) => void;
+  dispose: () => void;
+}
+
+export function createAurumGround(THREE: any, scene: any): AurumGroundController {
+  const material = new THREE.MeshStandardMaterial({
+    color: 0xe3e1dd,
+    metalness: .02,
+    roughness: .82,
+    transparent: true,
+    opacity: .96,
+    depthWrite: false
+  });
+  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), material);
+  mesh.rotation.x = -Math.PI / 2;
+  mesh.position.y = -.02;
+  mesh.renderOrder = -1;
+  mesh.receiveShadow = true;
+  scene.add(mesh);
+
+  let hdriGround:any = null;
+  let hdriGroundTexture:any = null;
+  let bakedShadowUserVisible = true;
+  let bakedShadowPositioned = false;
+  let presetGroundVisible = true;
+  let presetShadowVisible = false;
+  let groundVisibilityOverride: boolean | null = null;
+  let hdriGroundEnabled = false;
+  const syncGroundVisibility = () => {
+    const visible = groundVisibilityOverride ?? presetGroundVisible;
+    mesh.visible = visible;
+    // Never reveal the procedural shadow until it has been positioned against real model bounds.
+    bakedShadow.visible = visible && bakedShadowPositioned && bakedShadowUserVisible && presetShadowVisible;
+    // The HDRI studio floor is a separate mesh; keep it under the same user toggle.
+    if (hdriGround) hdriGround.visible = visible;
+  };
+  const shadowSize=128;
+  const shadowData=new Uint8Array(shadowSize*shadowSize*4);
+  for(let sy=0;sy<shadowSize;sy++) for(let sx=0;sx<shadowSize;sx++){
+    const dx=(sx/(shadowSize-1))*.5-.25, dy=(sy/(shadowSize-1))-.5;
+    const radial=Math.max(0,1-Math.sqrt((dx/.25)*(dx/.25)+(dy/.5)*(dy/.5)));
+    const alpha=Math.pow(radial,1.8)*255;
+    const i=(sy*shadowSize+sx)*4; shadowData[i]=0; shadowData[i+1]=0; shadowData[i+2]=0; shadowData[i+3]=Math.round(alpha);
+  }
+  const bakedShadowTexture=new THREE.DataTexture(shadowData,shadowSize,shadowSize,THREE.RGBAFormat,THREE.UnsignedByteType);
+  bakedShadowTexture.colorSpace=THREE.NoColorSpace; bakedShadowTexture.minFilter=THREE.LinearFilter; bakedShadowTexture.magFilter=THREE.LinearFilter; bakedShadowTexture.needsUpdate=true;
+  const bakedShadowMaterial = new THREE.MeshBasicMaterial({map:bakedShadowTexture,color:0x000000,transparent:true,opacity:.26,depthWrite:false,depthTest:true,toneMapped:false});
+  const bakedShadow = new THREE.Mesh(new THREE.PlaneGeometry(1,1),bakedShadowMaterial);
+  bakedShadow.rotation.x = -Math.PI / 2;
+  bakedShadow.renderOrder = -0.5;
+  bakedShadow.visible = false;
+  scene.add(bakedShadow);
+
+  const updateHdriGround = () => {
+    if (hdriGround) {
+      scene.remove(hdriGround);
+      hdriGround.geometry?.dispose?.();
+      hdriGround.material?.dispose?.();
+      hdriGround = null;
+    }
+    if (!hdriGroundEnabled || !hdriGroundTexture) return;
+    const radius = 20;
+    const geometry = new THREE.SphereGeometry(radius, 64, 32, 0, Math.PI * 2, 0, Math.PI * .5);
+    const materialHdri = new THREE.MeshBasicMaterial({
+      map: hdriGroundTexture,
+      side: THREE.BackSide,
+      transparent: true,
+      opacity: .9,
+      depthWrite: false
+    });
+    hdriGround = new THREE.Mesh(geometry, materialHdri);
+    hdriGround.rotation.x = Math.PI;
+    hdriGround.renderOrder = -10;
+    scene.add(hdriGround);
+    syncGroundVisibility();
+  };
+
+  return {
+    mesh,
+    get hdriGround() { return hdriGround; },
+    setVisible(visible) {
+      groundVisibilityOverride = visible;
+      syncGroundVisibility();
+    },
+    setBakedShadowVisible(visible) {
+      bakedShadowUserVisible = visible;
+      syncGroundVisibility();
+    },
+    setMaterial(config) {
+      if (config.color !== undefined) mesh.material.color.setHex(config.color);
+      if (config.roughness !== undefined) mesh.material.roughness = Math.max(0, Math.min(1, config.roughness));
+      if (config.metalness !== undefined) mesh.material.metalness = Math.max(0, Math.min(1, config.metalness));
+      mesh.material.needsUpdate = true;
+    },
+    setShadowIntensity(intensity) {
+      const strength = Math.max(0, Math.min(1, Number(intensity) || 0));
+      bakedShadowMaterial.opacity = Math.max(.12, Math.min(.32, .12 + strength * .48));
+    },
+    setHdriGroundTexture(texture) {
+      hdriGroundTexture = texture;
+      updateHdriGround();
+    },
+    setHdriGroundEnabled(enabled) {
+      hdriGroundEnabled = enabled;
+      updateHdriGround();
+    },
+    positionBakedShadow(box) {
+      if (!box) return;
+      const size = new THREE.Vector3();
+      box.getSize(size);
+      const center = new THREE.Vector3();
+      box.getCenter(center);
+      bakedShadow.position.set(center.x, mesh.position.y + .002, center.z);
+      const sx=Math.max(size.x*1.12,.12), sz=Math.max(size.z*1.12,.12);
+      bakedShadow.scale.set(sx,sz,1);
+      bakedShadowPositioned = size.x > .001 && size.z > .001;
+      syncGroundVisibility();
+    },
+    updateFromPreset(preset) {
+      if (!preset) return;
+      presetGroundVisible = preset.groundVisible !== false;
+      mesh.userData.aurumGroundReflectionRequested = preset.groundReflection === true;
+      // Match the authored iJewel floor footprint (8 for matte, 10 for reflective).
+      const groundSize = Number(preset.groundSize);
+      mesh.scale.setScalar(Number.isFinite(groundSize) && groundSize > 0 ? groundSize / 40 : 1);
+      const shadowStrength = Number.isFinite(Number(preset.shadowIntensity)) ? Number(preset.shadowIntensity) : .22;
+      // Keep a subtle photographic contact shadow in every grounded product scene,
+      // not only the iJewel reference preset. Transparent scenes remain shadow-free.
+      bakedShadowMaterial.opacity = Math.max(.12, Math.min(.32, .12 + shadowStrength * .48));
+      presetShadowVisible = shadowStrength > .03;
+      syncGroundVisibility();
+      if (preset.ground != null) mesh.material.color.setHex(preset.ground);
+      if (preset.groundRoughness != null) mesh.material.roughness = preset.groundRoughness;
+      if (preset.groundMetalness != null) mesh.material.metalness = preset.groundMetalness;
+    },
+    positionUnderModel(box) {
+      if (!box) return;
+      const size = new THREE.Vector3();
+      box.getSize(size);
+      mesh.position.y = box.min.y - Math.max(size.y * .035, .015);
+    },
+    dispose() {
+      scene.remove(mesh);
+      mesh.geometry?.dispose?.();
+      mesh.material?.dispose?.();
+      scene.remove(bakedShadow);
+      bakedShadow.geometry?.dispose?.();
+      bakedShadow.material?.dispose?.();
+      bakedShadowTexture.dispose?.();
+      if (hdriGround) {
+        scene.remove(hdriGround);
+        hdriGround.geometry?.dispose?.();
+        hdriGround.material?.dispose?.();
+        hdriGround = null;
+      }
+      hdriGroundTexture?.dispose?.();
+      hdriGroundTexture = null;
+    }
+  };
+}

@@ -1,0 +1,20 @@
+-- Cumpleaños integrados en Clientes; plantilla privada por taller.
+begin;
+alter table public.clientes add column if not exists fecha_nacimiento date, add column if not exists participante_id uuid references public.ecosistema_participantes(id) on delete restrict;
+update public.clientes c set participante_id=ep.id from public.ecosistema_participantes ep where c.participante_id is null and c.sede_id=ep.sede_id;
+create index if not exists clientes_fecha_nacimiento_idx on public.clientes(fecha_nacimiento) where fecha_nacimiento is not null;
+create index if not exists clientes_participante_cumpleanos_idx on public.clientes(participante_id,fecha_nacimiento) where fecha_nacimiento is not null;
+create table if not exists public.mensajes_automaticos_taller(participante_id uuid primary key references public.ecosistema_participantes(id) on delete cascade,mensaje_cumpleanos text not null default E'🎉 Feliz cumpleaños {nombre_cliente}\n\nTodo el equipo de {nombre_taller} te desea un excelente día.\n\nGracias por confiar en nosotros.',actualizado_por uuid references auth.users(id) on delete set null,created_at timestamptz not null default now(),updated_at timestamptz not null default now(),constraint mensaje_cumpleanos_variables_check check(position('{nombre_cliente}' in mensaje_cumpleanos)>0 and position('{nombre_taller}' in mensaje_cumpleanos)>0));
+alter table public.mensajes_automaticos_taller enable row level security;
+revoke all on table public.mensajes_automaticos_taller from anon,public;
+grant select,insert,update on table public.mensajes_automaticos_taller to authenticated;
+drop policy if exists mensajes_cumpleanos_select_taller on public.mensajes_automaticos_taller;
+create policy mensajes_cumpleanos_select_taller on public.mensajes_automaticos_taller for select to authenticated using((select public.has_role((select auth.uid()),'dueno'::public.app_role)) or exists(select 1 from public.participante_cuentas pc where pc.participante_id=mensajes_automaticos_taller.participante_id and pc.user_id=(select auth.uid()) and pc.estado='activo'));
+drop policy if exists mensajes_cumpleanos_insert_taller on public.mensajes_automaticos_taller;
+create policy mensajes_cumpleanos_insert_taller on public.mensajes_automaticos_taller for insert to authenticated with check((select public.has_role((select auth.uid()),'dueno'::public.app_role)) or exists(select 1 from public.participante_cuentas pc where pc.participante_id=mensajes_automaticos_taller.participante_id and pc.user_id=(select auth.uid()) and pc.estado='activo'));
+drop policy if exists mensajes_cumpleanos_update_taller on public.mensajes_automaticos_taller;
+create policy mensajes_cumpleanos_update_taller on public.mensajes_automaticos_taller for update to authenticated using((select public.has_role((select auth.uid()),'dueno'::public.app_role)) or exists(select 1 from public.participante_cuentas pc where pc.participante_id=mensajes_automaticos_taller.participante_id and pc.user_id=(select auth.uid()) and pc.estado='activo')) with check((select public.has_role((select auth.uid()),'dueno'::public.app_role)) or exists(select 1 from public.participante_cuentas pc where pc.participante_id=mensajes_automaticos_taller.participante_id and pc.user_id=(select auth.uid()) and pc.estado='activo'));
+create or replace function public.touch_mensajes_automaticos_taller() returns trigger language plpgsql set search_path='' as $$ begin new.updated_at=now();return new;end;$$;
+drop trigger if exists trg_touch_mensajes_automaticos_taller on public.mensajes_automaticos_taller;
+create trigger trg_touch_mensajes_automaticos_taller before update on public.mensajes_automaticos_taller for each row execute function public.touch_mensajes_automaticos_taller();
+commit;

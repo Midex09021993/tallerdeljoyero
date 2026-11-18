@@ -1,0 +1,432 @@
+import { Calculator, Check, Droplets, RotateCcw } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "@tanstack/react-router";
+import { Panel } from "@/components/AppShell";
+import { FichaCilindrosTallerA4, type CilindroFicha } from "@/components/FichaCilindrosTallerA4";
+import { useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
+import { CLAVES_CALCULADORAS, calcularMezclaYeso, leerConfigYeso } from "@/lib/calculadoras-config";
+import { registrarEvento } from "@/lib/analytics";
+import { useConfigSistema } from "@/lib/taller-db";
+import { useSesion } from "@/lib/auth";
+
+// Medidas tomadas del archivo de cubiletes proporcionado por el usuario.
+// Los diámetros en pulgadas se convierten a centímetros porque la calculadora trabaja en cm.
+const presetsRapidos = [
+  { nombre: '2"', etiqueta: 'Ø 2" × 11 cm', diametro: 5.08, altura: 11 },
+  { nombre: '2.5"', etiqueta: 'Ø 2.5" × 14 cm', diametro: 6.35, altura: 14 },
+  { nombre: '3"', etiqueta: 'Ø 3" × 16 cm', diametro: 7.62, altura: 16 },
+  { nombre: '3.5"', etiqueta: 'Ø 3.5" × 22 cm', diametro: 8.89, altura: 22 },
+  { nombre: '4"', etiqueta: 'Ø 4" × 25 cm', diametro: 10.16, altura: 25 },
+  { nombre: '4.5 cm', etiqueta: 'Ø 4.5 × 8 cm', diametro: 4.5, altura: 8 },
+  { nombre: '3.8 cm', etiqueta: 'Ø 3.8 × 8 cm', diametro: 3.8, altura: 8 },
+] as const;
+
+const tiposTarro = {
+  liso: {
+    etiqueta: "Tarro liso",
+    toleranciaInicial: -5,
+    ayuda: "Descuenta tolerancia por cilindro liso.",
+  },
+  perforado: {
+    etiqueta: "Tarro perforado",
+    toleranciaInicial: 20,
+    ayuda: "Agrega tolerancia por perforaciones y mayor consumo.",
+  },
+} as const;
+
+type TipoTarro = keyof typeof tiposTarro;
+
+function formatearCantidad(valor: number, decimales = 1) {
+  return new Intl.NumberFormat("es-PE", {
+    maximumFractionDigits: decimales,
+    minimumFractionDigits: valor > 0 ? decimales : 0,
+  }).format(valor);
+}
+
+function formatearResultado(valor: number, decimales: 0 | 1 | 2 = 0) {
+  return new Intl.NumberFormat("es-PE", {
+    minimumFractionDigits: decimales,
+    maximumFractionDigits: decimales,
+  }).format(valor);
+}
+
+function formatearEntero(valor: number) {
+  return formatearResultado(Math.round(valor), 0);
+}
+
+function validarMedida(valor: string) {
+  const numero = Number(valor);
+  return Number.isFinite(numero) && numero > 0;
+}
+
+export function CalculadoraYeso({ compacto = false }: { compacto?: boolean }) {
+  const { esDueno } = useSedeFiltroDueno();
+  const { data: sesionCalculadora } = useSesion();
+  const { data: configYeso } = useConfigSistema(CLAVES_CALCULADORAS.yeso);
+  const configuracion = leerConfigYeso(configYeso?.valor);
+  const [diametro, setDiametro] = useState("");
+  const [altura, setAltura] = useState("");
+  const [tipoTarro, setTipoTarro] = useState<TipoTarro>("perforado");
+const [precisionResultados, setPrecisionResultados] = useState<0 | 1 | 2>(0);
+  const [nombreCilindro, setNombreCilindro] = useState("");
+  const [cilindrosGuardados, setCilindrosGuardados] = useState<CilindroFicha[]>([]);
+  const [cilindrosScope, setCilindrosScope] = useState("");
+  const scopeCilindros = sesionCalculadora?.participante?.id ?? sesionCalculadora?.perfil?.participante_id ?? sesionCalculadora?.user?.id ?? "public";
+  const claveCilindros = `aurum:cilindros-taller:v1:${scopeCilindros}`;
+
+  useEffect(() => {
+    try {
+      const guardados = window.localStorage.getItem(claveCilindros);
+      const parsed: unknown = guardados ? JSON.parse(guardados) : [];
+      const validos = Array.isArray(parsed) ? parsed.filter((item): item is CilindroFicha =>
+        item && typeof item.id === "string" && typeof item.nombre === "string" &&
+        Number.isFinite(item.diametroCm) && item.diametroCm > 0 &&
+        Number.isFinite(item.alturaCm) && item.alturaCm > 0 &&
+        (item.tipoTarro === "liso" || item.tipoTarro === "perforado")
+      ) : [];
+      setCilindrosGuardados(validos);
+    } catch {
+      setCilindrosGuardados([]);
+    }
+    setCilindrosScope(claveCilindros);
+  }, [claveCilindros]);
+
+  const guardarListaCilindros = (nuevaLista: CilindroFicha[]) => {
+    setCilindrosGuardados(nuevaLista);
+    setCilindrosScope(claveCilindros);
+    try {
+      window.localStorage.setItem(claveCilindros, JSON.stringify(nuevaLista));
+    } catch {
+      // Si el navegador bloquea el almacenamiento, la lista sigue disponible durante esta sesión.
+    }
+  };
+
+  const guardarCilindroActual = () => {
+    if (!medidasCompletas) return;
+    const nombre = nombreCilindro.trim() || `Cilindro Ø${diametro} × ${altura} cm`;
+    const cilindro: CilindroFicha = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      nombre,
+      diametroCm: Number(diametro),
+      alturaCm: Number(altura),
+      tipoTarro,
+    };
+    guardarListaCilindros([...cilindrosGuardados, cilindro]);
+    setNombreCilindro("");
+  };
+
+  const cargarCilindro = (cilindro: CilindroFicha) => {
+    setDiametro(String(cilindro.diametroCm));
+    setAltura(String(cilindro.alturaCm));
+    setTipoTarro(cilindro.tipoTarro);
+  };
+
+
+  const volumenBase = useMemo(() => {
+    const d = Number(diametro);
+    const h = Number(altura);
+    if (!Number.isFinite(d) || !Number.isFinite(h) || d <= 0 || h <= 0) return 0;
+    const radio = d / 2;
+    return Math.PI * radio * radio * h;
+  }, [altura, diametro]);
+
+  const volumen = useMemo(() => {
+    if (volumenBase <= 0) return 0;
+    return volumenBase * (1 + configuracion.tolerancias[tipoTarro] / 100);
+  }, [tipoTarro, configuracion.tolerancias, volumenBase]);
+
+  const medidasCompletas = validarMedida(diametro) && validarMedida(altura) && volumenBase > 0;
+
+  const inicioAnalitica = useRef(false);
+  const resultadoAnalitica = useRef(false);
+  useEffect(() => {
+    if (diametro.trim() && altura.trim() && !inicioAnalitica.current) {
+      inicioAnalitica.current = true;
+      registrarEvento("tool_started", { tool_id: "yeso" });
+    }
+  }, [diametro, altura]);
+  useEffect(() => {
+    if (medidasCompletas && !resultadoAnalitica.current) {
+      resultadoAnalitica.current = true;
+      registrarEvento("tool_completed", { tool_id: "yeso" });
+    } else if (!medidasCompletas) {
+      resultadoAnalitica.current = false;
+    }
+  }, [medidasCompletas]);
+  const limpiar = () => {
+    setDiametro("");
+    setAltura("");
+    setTipoTarro("perforado");
+  };
+
+  return (
+    <Panel
+      titulo="Calculadora de yeso"
+      accion={
+        <span className="hidden items-center gap-1.5 rounded-full border border-gold/20 bg-accent px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-accent-foreground sm:inline-flex">
+          <Droplets className="size-3" aria-hidden="true" />
+          Mezcla para fundición
+        </span>
+      }
+    >
+      <div className={`space-y-4 p-3 sm:space-y-4 sm:p-4 lg:p-5 ${compacto ? "" : "mx-auto w-full max-w-6xl"}`}>
+        <div className="mb-2 flex items-center gap-2">
+          <span className="text-xs font-semibold">Proporción de mezcla</span>
+          <span
+            title="Referencia técnica: 38/62 corresponde a una relación agua/yeso de 0,38 y produce una mezcla más consistente; 40/60 corresponde a 0,40 y es intermedia; 42/58 corresponde a 0,42 y es más fluida, pudiendo favorecer el llenado de detalles finos. La relación adecuada depende de la inversión utilizada y debe respetar la ficha técnica del fabricante."
+            aria-label="Información técnica sobre las proporciones de mezcla"
+            className="inline-flex h-5 w-5 cursor-help items-center justify-center rounded-full border border-border text-[10px] font-bold text-muted-foreground transition hover:border-gold hover:text-gold"
+          >
+            i
+          </span>
+        </div>
+        <section className="rounded-2xl border border-border bg-card/60 p-4 sm:p-4">
+          <div className="mb-4 flex items-center gap-2.5">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-gold/10 text-gold">
+              <Calculator className="size-4" aria-hidden="true" />
+            </div>
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-foreground">Medidas del cilindro</p>
+              <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">Introduce las medidas reales del tarro antes de preparar la mezcla.</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <label className="min-w-0 space-y-2">
+              <span className="block text-[11px] font-semibold text-muted-foreground">Diámetro</span>
+              <div className="relative">
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  step="0.01"
+                  value={diametro}
+                  onChange={(e) => setDiametro(e.target.value)}
+                  placeholder="7.50"
+                  aria-label="Diámetro del cilindro en centímetros"
+                  className="h-14 w-full rounded-2xl border border-input bg-background px-3 pr-12 text-lg font-semibold text-foreground outline-none transition placeholder:text-muted-foreground/75 focus:border-gold focus:ring-4 focus:ring-gold/10"
+                />
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">cm</span>
+              </div>
+            </label>
+
+            <label className="min-w-0 space-y-2">
+              <span className="block text-[11px] font-semibold text-muted-foreground">Altura</span>
+              <div className="relative">
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  step="0.01"
+                  value={altura}
+                  onChange={(e) => setAltura(e.target.value)}
+                  placeholder="10.00"
+                  aria-label="Altura del cilindro en centímetros"
+                  className="h-14 w-full rounded-2xl border border-input bg-background px-3 pr-12 text-lg font-semibold text-foreground outline-none transition placeholder:text-muted-foreground/75 focus:border-gold focus:ring-4 focus:ring-gold/10"
+                />
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">cm</span>
+              </div>
+            </label>
+          </div>
+          {(diametro !== "" && !validarMedida(diametro)) || (altura !== "" && !validarMedida(altura)) ? (
+            <p role="alert" className="mt-3 rounded-2xl border border-destructive/20 bg-destructive/5 px-3 py-2.5 text-[11px] font-medium text-destructive">
+              Introduce valores mayores que 0 en diámetro y altura.
+            </p>
+          ) : null}
+        </section>
+
+        <section className="rounded-2xl border border-border bg-card/60 p-4">
+          <p className="mb-3 text-xs font-bold uppercase tracking-[0.16em] text-foreground">Medidas rápidas</p>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+            {presetsRapidos.map((preset) => (
+              <button key={preset.nombre} type="button" onClick={() => { setDiametro(String(preset.diametro)); setAltura(String(preset.altura)); setTipoTarro("perforado"); }} className="min-h-12 rounded-xl border border-input bg-background px-3 py-2 text-left text-xs font-semibold text-foreground transition hover:border-gold/60 hover:bg-gold/5">
+                <span className="block">{preset.nombre}</span>
+                <span className="mt-1 block text-[10px] font-normal text-muted-foreground">{preset.etiqueta}</span>
+              </button>
+            ))}
+          </div>
+          <p className="mt-2 text-[10px] text-muted-foreground">Diámetros en pulgadas convertidos a cm para el cálculo. Medidas tomadas de tu lista; verifica el cubilete físico antes de preparar la mezcla.</p>
+        </section>
+
+        <section className="rounded-3xl border border-border bg-card/60 p-4 sm:p-5">
+          <div className="mb-4 flex items-start justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-gold/10 text-gold">
+                <Droplets className="size-4" aria-hidden="true" />
+              </div>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-foreground">Tipo de tarro</p>
+                <p className="mt-0.5 text-[11px] text-muted-foreground">Selecciona el que vas a utilizar.</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            {(Object.keys(tiposTarro) as TipoTarro[]).map((tipo) => {
+              const seleccionado = tipoTarro === tipo;
+              return (
+                <button
+                  key={tipo}
+                  type="button"
+                  onClick={() => setTipoTarro(tipo)}
+                  aria-pressed={seleccionado}
+                  className={`min-h-14 rounded-2xl border px-3 py-3 text-left transition active:scale-[0.98] ${
+                    seleccionado
+                      ? "border-gold bg-gradient-to-b from-gold/20 to-gold/5 text-foreground shadow-[0_6px_18px_rgba(180,140,50,0.10)]"
+                      : "border-input bg-background text-muted-foreground hover:border-gold/60 hover:text-foreground"
+                  }`}
+                >
+                  <span className="flex items-center justify-between gap-2 text-sm font-semibold">
+                    {tiposTarro[tipo].etiqueta}
+                    {seleccionado ? <Check className="size-4 shrink-0 text-gold" aria-hidden="true" /> : null}
+                  </span>
+                  <span className="mt-1 block text-[10px] opacity-70">
+                    {tipo === "liso" ? "Cilindro estándar" : "Cilindro perforado"}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="space-y-3 rounded-2xl border border-gold/20 bg-gold/5 p-4">
+          {!sesionCalculadora?.user ? (
+            <div className="rounded-xl border border-gold/30 bg-background p-4 sm:p-5">
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gold-deep">Gratis para todos · Ventajas para tu taller</p>
+              <h3 className="mt-2 text-base font-semibold text-foreground">Tus medidas listas para la próxima fundición</h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                La calculadora seguirá siendo gratuita sin registrarte. Crea tu taller en Aurum Lab para descubrir las herramientas de gestión y producción y organizar tu trabajo en un solo lugar.
+              </p>
+              <Link
+                to="/auth"
+                hash="crear-taller"
+                className="mt-3 inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-gold px-4 py-2 text-sm font-semibold text-ink transition hover:opacity-90"
+              >
+                Crear mi taller gratis <span aria-hidden="true">→</span>
+              </Link>
+              <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
+                Las medidas que guardes aquí permanecen en este navegador; todavía no se transfieren automáticamente a una cuenta.
+              </p>
+            </div>
+          ) : null}
+          <div>
+            <h3 className="text-xs font-bold uppercase tracking-[0.16em] text-foreground">Cilindros guardados</h3>
+            <p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">Se guardan localmente en este navegador, separados por taller cuando hay sesión. No se sincronizan entre dispositivos; si el navegador bloquea el almacenamiento, solo duran durante esta sesión.</p>
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <input type="text" value={nombreCilindro} onChange={(event) => setNombreCilindro(event.target.value)} placeholder="Nombre del cilindro (opcional)" aria-label="Nombre del cilindro" maxLength={60} className="h-11 min-w-0 flex-1 rounded-xl border border-input bg-background px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-gold" />
+            <button type="button" onClick={guardarCilindroActual} disabled={!medidasCompletas} className="min-h-11 rounded-xl bg-gold px-4 py-2 text-xs font-bold text-[#17160f] transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50">Guardar cilindro actual</button>
+          </div>
+          {cilindrosScope === claveCilindros && cilindrosGuardados.length > 0 ? (
+            <ul className="space-y-2">
+              {cilindrosGuardados.map((cilindro) => (
+                <li key={cilindro.id} className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-background p-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs font-semibold text-foreground">{cilindro.nombre}</p>
+                    <p className="mt-1 text-[10px] text-muted-foreground">Ø {formatearCantidad(cilindro.diametroCm, 2)} × {formatearCantidad(cilindro.alturaCm, 2)} cm · {tiposTarro[cilindro.tipoTarro].etiqueta}</p>
+                  </div>
+                  <button type="button" onClick={() => cargarCilindro(cilindro)} className="min-h-9 rounded-lg border border-input px-3 text-xs font-semibold text-foreground hover:border-gold/60">Cargar</button>
+                  <button type="button" onClick={() => guardarListaCilindros(cilindrosGuardados.filter((item) => item.id !== cilindro.id))} className="min-h-9 rounded-lg border border-destructive/30 px-3 text-[10px] font-semibold text-destructive hover:bg-destructive/5">Eliminar</button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="rounded-xl border border-dashed border-border bg-background px-3 py-4 text-center text-sm font-medium text-foreground">Aún no hay cilindros guardados en este navegador.</p>
+          )}
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
+            <p className="text-xs font-medium text-foreground">La ficha usa los cálculos y tolerancias configurados actualmente.</p>
+            <FichaCilindrosTallerA4 cilindros={cilindrosScope === claveCilindros ? cilindrosGuardados : []} configuracion={configuracion} identidad={{ nombre: sesionCalculadora?.participante?.nombre ?? sesionCalculadora?.sede?.nombre ?? null }} />
+          </div>
+        </section>
+
+        {esDueno && medidasCompletas ? (
+          <section className="rounded-2xl border border-gold/20 bg-gold/5 p-4 shadow-[0_6px_24px_rgba(180,140,50,0.06)]">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Vista técnica · Dueño</p>
+                <p className="mt-2 text-2xl font-semibold text-foreground">
+                  {volumen > 0 ? `${formatearEntero(volumen)} ml` : "—"}
+                </p>
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Base: {volumenBase > 0 ? `${formatearEntero(volumenBase)} cm³` : "0 cm³"} · {tiposTarro[tipoTarro].etiqueta} {configuracion.tolerancias[tipoTarro] >= 0 ? "+" : ""}{formatearCantidad(configuracion.tolerancias[tipoTarro], 2)}%
+                </p>
+              </div>
+            </div>
+          </section>
+        ) : null}
+
+        <section aria-live="polite" className="rounded-2xl border border-gold/25 bg-gradient-to-br from-card via-card to-gold/5 p-4 shadow-[0_10px_30px_rgba(180,140,50,0.08)]">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-foreground">Mezcla recomendada</p>
+              <p className="mt-0.5 text-[11px] text-muted-foreground">
+                {medidasCompletas ? `Para ${formatearEntero(volumen)} ml de volumen ajustado` : "Completa diámetro y altura para calcular"}
+              </p>
+            </div>
+            {medidasCompletas ? (
+              <span className="rounded-full bg-gold px-2.5 py-1 text-[10px] font-bold text-gold-foreground">Lista</span>
+            ) : null}
+          </div>
+
+          <div className={`grid grid-cols-1 gap-3 ${compacto ? "" : "sm:grid-cols-3"}`}>
+            {configuracion.proporciones.map((p) => {
+              const { agua, yeso } = calcularMezclaYeso(
+                volumen,
+                p.agua,
+                p.yeso,
+                configuracion.volumenPorGramo,
+                configuracion.factorCorreccion,
+              );
+              return (
+                <article
+                  key={`${p.agua}-${p.yeso}`}
+                  className={`rounded-2xl border p-4 sm:p-5 ${
+                    p.recomendada
+                      ? "border-gold bg-background shadow-[0_8px_24px_rgba(180,140,50,0.10)]"
+                      : "border-border bg-background/70"
+                  }`}
+                >
+                  <div className="mb-4 flex items-center justify-between gap-2">
+                    <div>
+                      <p className="text-xl font-bold tracking-tight text-foreground">{p.agua}/{p.yeso}</p>
+                      <p className="mt-0.5 text-[10px] font-medium text-muted-foreground">agua / yeso</p>
+                    </div>
+                    {p.recomendada ? (
+                      <span className="rounded-full border border-gold/30 bg-gold/10 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-gold">Recomendada</span>
+                    ) : null}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="rounded-2xl bg-surface-muted p-3">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Agua</p>
+                      <p className="mt-2 text-2xl font-semibold leading-none text-foreground">
+                        {medidasCompletas ? formatearResultado(agua, precisionResultados) : "—"} <span className="text-xs font-medium text-muted-foreground">ml</span>
+                      </p>
+                    </div>
+                    <div className="rounded-2xl bg-surface-muted p-3">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Yeso</p>
+                      <p className="mt-2 text-2xl font-semibold leading-none text-foreground">
+                        {medidasCompletas ? formatearResultado(yeso, precisionResultados) : "—"} <span className="text-xs font-medium text-muted-foreground">g</span>
+                      </p>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={limpiar}
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-input bg-background px-4 text-xs font-semibold text-muted-foreground transition hover:border-gold/60 hover:text-foreground active:scale-[0.98]"
+          >
+            <RotateCcw className="size-4" aria-hidden="true" />
+            Limpiar
+          </button>
+        </div>
+      </div>
+    </Panel>
+  );
+}

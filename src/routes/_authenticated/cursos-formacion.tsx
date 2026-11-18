@@ -1,0 +1,289 @@
+import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { Copy, ExternalLink, Eye, EyeOff, GraduationCap, Save, MessageCircle, Smartphone, Upload, Image as ImageIcon, Trash2, Link2 } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { AppShell, Panel } from "@/components/AppShell";
+import { useSesion } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
+
+export const Route = createFileRoute("/_authenticated/cursos-formacion")({
+  head: () => ({
+    meta: [
+      { title: "Cursos y formación — Taller del Joyero" },
+      { name: "description", content: "Configura y comparte la página publicitaria de formación de tu taller." },
+    ],
+  }),
+  component: CursosFormacionPage,
+});
+
+type FormacionConfig = {
+  slug: string | null;
+  nombre_publico: string;
+  descripcion: string | null;
+  logo_url: string | null;
+  whatsapp: string | null;
+  formacion_visible: boolean;
+  formacion_titulo: string | null;
+  formacion_descripcion: string | null;
+  formacion_imagen_url: string | null;
+};
+
+function CursosFormacionPage() {
+  const { data: sesion } = useSesion();
+  const queryClient = useQueryClient();
+  const participanteId = sesion?.participante?.id ?? null;
+  const [titulo, setTitulo] = useState("");
+  const [descripcion, setDescripcion] = useState("");
+  const [imagenUrl, setImagenUrl] = useState("");
+  const [visible, setVisible] = useState(false);
+  const [guardando, setGuardando] = useState(false);
+  const [subiendoImagen, setSubiendoImagen] = useState(false);
+  const [eliminandoImagen, setEliminandoImagen] = useState(false);
+  const [imagenesPendientesLimpiar, setImagenesPendientesLimpiar] = useState<string[]>([]);
+  const [mensaje, setMensaje] = useState<string | null>(null);
+
+  const configQuery = useQuery({
+    queryKey: ["formacion-publicidad-config", participanteId],
+    enabled: Boolean(participanteId),
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("catalogo_configuracion")
+        .select("slug,nombre_publico,descripcion,logo_url,whatsapp,formacion_visible,formacion_titulo,formacion_descripcion,formacion_imagen_url")
+        .eq("participante_id", participanteId!)
+        .maybeSingle();
+      if (error) throw error;
+      return data as FormacionConfig | null;
+    },
+  });
+  const config = configQuery.data;
+
+  useEffect(() => {
+    if (!config) return;
+    setTitulo(config.formacion_titulo ?? "");
+    setDescripcion(config.formacion_descripcion ?? "");
+    setImagenUrl(config.formacion_imagen_url ?? "");
+    setVisible(config.formacion_visible ?? false);
+  }, [config]);
+
+  const urlPublica = config?.slug
+    ? `${typeof window !== "undefined" ? window.location.origin : "https://www.tallerdeljoyero.com"}/formacion/${encodeURIComponent(config.slug)}`
+    : null;
+
+  const guardar = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!participanteId || !config) return;
+    setGuardando(true);
+    setMensaje(null);
+    try {
+      const { error } = await (supabase as any)
+        .from("catalogo_configuracion")
+        .update({
+          formacion_titulo: titulo.trim() || null,
+          formacion_descripcion: descripcion.trim() || null,
+          formacion_imagen_url: imagenUrl.trim() || null,
+          formacion_visible: visible,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("participante_id", participanteId);
+      if (error) throw error;
+      let avisoLimpieza = "";
+      const imagenGuardada = imagenUrl.trim();
+      const marcador = "/storage/v1/object/public/catalogo-joyas/";
+      const imagenesParaLimpiar = new Set([
+        config.formacion_imagen_url?.trim() ?? "",
+        ...imagenesPendientesLimpiar.map(url => url.trim()),
+      ].filter(url => url && url !== imagenGuardada));
+      const rutasParaLimpiar: string[] = [];
+      for (const url of imagenesParaLimpiar) {
+        const posicion = url.indexOf(marcador);
+        if (posicion < 0) continue;
+        const ruta = decodeURIComponent(url.slice(posicion + marcador.length).split("?")[0] ?? "");
+        // Solo limpiar archivos del espacio de formación de este participante.
+        if (ruta.startsWith(`${participanteId}/formacion/`)) rutasParaLimpiar.push(ruta);
+      }
+      if (rutasParaLimpiar.length) {
+        const { error: errorEliminar } = await supabase.storage.from("catalogo-joyas").remove(rutasParaLimpiar);
+        if (errorEliminar) avisoLimpieza = " La publicación se guardó, pero no se pudieron limpiar todos los archivos anteriores.";
+      }
+      setImagenesPendientesLimpiar([]);
+      await queryClient.invalidateQueries({ queryKey: ["formacion-publicidad-config", participanteId] });
+      setMensaje((visible ? "Configuración guardada. Abre Vista pública para comprobar que el enlace ya muestra tu publicación." : "Configuración guardada. La publicidad está desactivada y el enlace público permanecerá oculto.") + avisoLimpieza);
+    } catch (error) {
+      setMensaje(error instanceof Error ? error.message : "No se pudo guardar. Comprueba que hayas aplicado el SQL de publicidad formativa.");
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  const copiarEnlace = async () => {
+    if (!urlPublica) return;
+    try {
+      await navigator.clipboard.writeText(urlPublica);
+      setMensaje("Enlace copiado. Ya puedes compartirlo con tus alumnos.");
+    } catch {
+      setMensaje(urlPublica);
+    }
+  };
+
+  const compartirWhatsApp = () => {
+    if (!urlPublica) return;
+    const texto = `Te comparto nuestra propuesta de cursos y formación en joyería: ${urlPublica}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, "_blank", "noopener,noreferrer");
+  };
+  const subirImagenPromocional = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file || !participanteId) return;
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) { setMensaje("Usa una imagen JPG, PNG o WebP."); return; }
+    if (file.size > 5 * 1024 * 1024) { setMensaje("La imagen no puede superar los 5 MB."); return; }
+    setSubiendoImagen(true);
+    setMensaje(null);
+    try {
+      const extension = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
+      const ruta = participanteId + "/formacion/" + crypto.randomUUID() + "." + extension;
+      const { error: uploadError } = await supabase.storage.from("catalogo-joyas").upload(ruta, file, { contentType: file.type, cacheControl: "31536000", upsert: false });
+      if (uploadError) throw uploadError;
+      const { data } = supabase.storage.from("catalogo-joyas").getPublicUrl(ruta);
+      if (!data?.publicUrl) throw new Error("No se pudo obtener la URL pública de la imagen.");
+      const imagenSeleccionada = imagenUrl.trim();
+      if (imagenSeleccionada && imagenSeleccionada !== config?.formacion_imagen_url?.trim()) {
+        setImagenesPendientesLimpiar(actuales => [...new Set([...actuales, imagenSeleccionada])]);
+      }
+      setImagenUrl(data.publicUrl);
+      setMensaje("Imagen subida. Guarda la configuración para publicarla.");
+    } catch (error) {
+      setMensaje(error instanceof Error ? error.message : "No se pudo subir la imagen promocional.");
+    } finally { setSubiendoImagen(false); }
+  };
+
+
+  const eliminarImagenPromocional = async () => {
+    if (!imagenUrl.trim()) return;
+    const confirmar = window.confirm("¿Quieres quitar la imagen promocional? El cambio se aplicará a la publicación al guardar la configuración.");
+    if (!confirmar) return;
+    setEliminandoImagen(true);
+    setMensaje(null);
+    setImagenesPendientesLimpiar(actuales => [...new Set([...actuales, imagenUrl.trim()])]);
+    setImagenUrl("");
+    setMensaje("Imagen retirada de la vista previa. Guarda la configuración para actualizar la página pública y eliminar el archivo anterior.");
+    setEliminandoImagen(false);
+  };
+
+  if (!participanteId) {
+    return <AppShell titulo="Cursos y formación" subtitulo="Página publicitaria de tu taller">
+      <Panel titulo="Cuenta de taller requerida"><p className="p-5 text-sm text-muted-foreground">Esta sección necesita una cuenta vinculada a un participante del ecosistema.</p></Panel>
+    </AppShell>;
+  }
+
+  return (
+    <AppShell titulo="Cursos y formación" subtitulo="Configura una página pública y comparte el enlace con tus alumnos">
+      <div className="mx-auto max-w-5xl space-y-5">
+        {configQuery.isLoading ? (
+          <Panel titulo="Cargando configuración"><p className="p-5 text-sm text-muted-foreground">Recuperando los datos del taller…</p></Panel>
+        ) : configQuery.error ? (
+          <Panel titulo="No se pudo cargar la configuración"><p className="p-5 text-sm text-muted-foreground">{configQuery.error.message}. Si las columnas de publicidad aún no existen, aplica el SQL de publicidad formativa.</p></Panel>
+        ) : !config ? (
+          <Panel titulo="Falta configurar el catálogo base"><p className="p-5 text-sm text-muted-foreground">Primero completa en Catálogo la configuración pública del taller. Reutilizaremos su nombre, logo, descripción y enlace base, sin duplicar esos datos.</p></Panel>
+        ) : (
+          <>
+            <section className="rounded-2xl border border-gold/20 bg-gradient-to-br from-gold/10 via-card to-card p-5 sm:p-8">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="flex min-w-0 items-center gap-4">
+                  {config.logo_url ? <img src={config.logo_url} alt="" className="size-16 rounded-xl border border-border object-cover" /> : <div className="flex size-16 items-center justify-center rounded-xl border border-gold/25 bg-gold/10 text-gold-deep"><GraduationCap className="size-7" /></div>}
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-widest text-gold-deep">Publicidad formativa</p>
+                    <h2 className="mt-1 text-xl font-semibold">{config.nombre_publico}</h2>
+                    <p className="mt-1 text-sm text-muted-foreground">Identidad reutilizada desde la configuración del catálogo</p>
+                  </div>
+                </div>
+                <span className={visible ? "inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-700" : "inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1.5 text-xs font-semibold text-muted-foreground"}>
+                  {visible ? <Eye className="size-4" /> : <EyeOff className="size-4" />}{visible ? "Publicidad activada" : "Publicidad desactivada"}
+                </span>
+              </div>
+              {urlPublica && <div className="mt-5 flex flex-wrap items-center gap-2 rounded-xl border border-border bg-background/70 p-3">
+                <span className="min-w-0 flex-1 break-all text-sm">{urlPublica}</span>
+                <button type="button" onClick={() => void copiarEnlace()} className="inline-flex items-center gap-2 rounded-lg bg-gold px-3 py-2 text-sm font-semibold text-black"><Copy className="size-4" /> Copiar enlace</button>
+                <a href={urlPublica} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm"><ExternalLink className="size-4" /> Vista pública</a>
+                <button type="button" onClick={compartirWhatsApp} className="inline-flex items-center gap-2 rounded-lg border border-emerald-600/30 px-3 py-2 text-sm text-emerald-700 transition hover:bg-emerald-500/10"><MessageCircle className="size-4" /> Compartir WhatsApp</button>
+              </div>}
+            </section>
+
+            <form onSubmit={guardar} className="grid gap-5 lg:grid-cols-[1.1fr_.9fr]">
+              <Panel titulo="Contenido de la publicación">
+                <div className="space-y-4 p-5">
+                  <label className="block space-y-1.5"><span className="text-sm font-medium">Título destacado</span><input maxLength={140} value={titulo} onChange={e => setTitulo(e.target.value)} placeholder="Ej. Aprende Diseño 3D para Joyería" className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm" /></label>
+                  <label className="block space-y-1.5"><span className="text-sm font-medium">Descripción promocional</span><textarea maxLength={3000} rows={5} value={descripcion} onChange={e => setDescripcion(e.target.value)} placeholder="Presenta el curso, sus beneficios y a quién está dirigido…" className="w-full resize-y rounded-lg border border-border bg-background px-3 py-2.5 text-sm" /></label>
+                  <div className="space-y-3">
+                    <span className="block text-sm font-medium">Imagen promocional</span>
+                    {imagenUrl.trim() ? (
+                      <div className="overflow-hidden rounded-xl border border-border">
+                        <img src={imagenUrl.trim()} alt="Vista previa de la imagen promocional" className="max-h-64 w-full object-cover" />
+                        <div className="flex flex-wrap items-center justify-between gap-2 p-3"><span className="text-xs text-muted-foreground">Imagen seleccionada</span><button type="button" onClick={() => void eliminarImagenPromocional()} disabled={eliminandoImagen || subiendoImagen} className="inline-flex items-center gap-1.5 rounded-lg border border-destructive/30 px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/5 disabled:opacity-50"><Trash2 className="size-3.5" />{eliminandoImagen ? "Eliminando…" : "Eliminar imagen"}</button></div>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center rounded-xl border border-dashed border-gold/40 bg-gold/5 px-5 py-7 text-center">
+                        <span className="flex size-11 items-center justify-center rounded-xl bg-gold/10 text-gold-deep"><ImageIcon className="size-5" /></span>
+                        <p className="mt-3 text-sm font-medium">Añade una imagen para promocionar tu formación</p><p className="mt-1 text-xs text-muted-foreground">JPG, PNG o WebP · máximo 5 MB</p>
+                      </div>
+                    )}
+                    <label className="inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-semibold transition hover:bg-surface-muted">
+                      <Upload className="size-4" />{subiendoImagen ? "Subiendo imagen…" : imagenUrl.trim() ? "Cambiar imagen desde el equipo" : "Subir imagen desde el equipo"}
+                      <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" disabled={subiendoImagen} onChange={subirImagenPromocional} />
+                    </label>
+                    {subiendoImagen ? (
+                      <div role="status" aria-live="polite" className="space-y-2 rounded-lg border border-border p-3">
+                        <div className="flex items-center justify-between gap-3 text-xs"><span className="font-medium">Subiendo imagen al almacenamiento…</span><span className="text-muted-foreground">En curso</span></div>
+                        <div className="h-2 w-full overflow-hidden rounded-full bg-muted"><div className="h-full w-1/3 animate-pulse rounded-full bg-gold" /></div>
+                        <p className="text-xs text-muted-foreground">No cierres esta pantalla hasta que termine la carga.</p>
+                      </div>
+                    ) : null}
+                    <details className="rounded-lg border border-border px-3 py-2.5">
+                      <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-medium"><Link2 className="size-4" /> Usar URL de imagen en su lugar</summary>
+                      <div className="pt-3"><input type="url" value={imagenUrl} onChange={e => setImagenUrl(e.target.value)} placeholder="https://…" className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm" /><p className="mt-2 text-xs text-muted-foreground">Pega aquí una URL pública de imagen si no quieres subir un archivo.</p></div>
+                    </details>
+                    <p className="text-xs text-muted-foreground">Opcional. Si no añades una imagen, se mostrará el logo del taller. Guarda la configuración después de subir o cambiar la imagen.</p>
+                  </div>
+                  <button type="submit" disabled={guardando} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-gold px-5 text-sm font-semibold text-black disabled:opacity-50"><Save className="size-4" />{guardando ? "Guardando…" : "Guardar configuración"}</button>
+                  {mensaje && <p role="status" className="break-words text-sm text-muted-foreground">{mensaje}</p>}
+                </div>
+              </Panel>
+              <Panel titulo="Publicación externa">
+                <div className="space-y-4 p-5">
+                  <div className="rounded-xl border border-border bg-surface-muted p-4">
+                    <p className="text-sm font-semibold">Identidad del taller</p>
+                    <p className="mt-1 text-sm text-muted-foreground">{config.descripcion || "Añade una descripción en la configuración existente del catálogo para presentar tu taller."}</p>
+                    {config.whatsapp && <p className="mt-2 text-sm">WhatsApp de contacto: {config.whatsapp}</p>}
+                  </div>
+                  <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-border p-4">
+                    <input type="checkbox" checked={visible} onChange={e => setVisible(e.target.checked)} className="mt-1 size-4 accent-amber-600" />
+                    <span><span className="block text-sm font-semibold">Habilitar publicación pública</span><span className="mt-1 block text-xs leading-5 text-muted-foreground">Independiente de la visibilidad del catálogo de joyas. Desactívala para ocultar la página formativa sin afectar el catálogo.</span></span>
+                  </label>
+                  <p className="text-xs leading-5 text-muted-foreground">El enlace usa el identificador público existente del taller. Los alumnos no necesitan iniciar sesión para consultar la página.</p>
+                </div>
+              </Panel>
+            </form>
+
+            <Panel titulo="Vista previa de la publicación">
+              <div className="overflow-hidden rounded-xl border border-gold/20 bg-gradient-to-br from-gold/10 via-card to-card">
+                {imagenUrl.trim() ? <img src={imagenUrl.trim()} alt="" className="max-h-72 w-full object-cover" /> : null}
+                <div className="p-5 sm:p-7">
+                  <div className="flex items-center gap-3">
+                    {config.logo_url ? <img src={config.logo_url} alt="" className="size-12 rounded-xl border border-border object-cover" /> : <div className="flex size-12 items-center justify-center rounded-xl border border-gold/25 bg-gold/10 text-gold-deep"><GraduationCap className="size-6" /></div>}
+                    <div className="min-w-0"><p className="text-xs font-semibold uppercase tracking-widest text-gold-deep">Cursos y formación</p><p className="font-semibold">{config.nombre_publico}</p></div>
+                  </div>
+                  <h3 className="mt-5 text-xl font-semibold sm:text-2xl">{titulo.trim() || "Aprende, crea y desarrolla tu talento joyero"}</h3>
+                  <p className="mt-3 whitespace-pre-line text-sm leading-6 text-muted-foreground">{descripcion.trim() || "Aquí aparecerá la descripción de tu propuesta formativa."}</p>
+                  <div className="mt-5 flex flex-wrap gap-2">
+                    {config.whatsapp ? <span className="inline-flex items-center gap-2 rounded-lg bg-gold px-3 py-2 text-sm font-semibold text-black"><MessageCircle className="size-4" /> Solicitar información</span> : null}
+                    <span className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm"><Smartphone className="size-4" /> Recursos para estudiantes</span>
+                  </div>
+                  <p className="mt-4 text-xs text-muted-foreground">Vista previa: los cambios se reflejan en la página pública después de guardar.</p>
+                </div>
+              </div>
+            </Panel>
+          </>
+        )}
+      </div>
+    </AppShell>
+  );
+}

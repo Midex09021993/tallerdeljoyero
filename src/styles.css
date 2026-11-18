@@ -1,0 +1,235 @@
+@import "tailwindcss" source(none);
+@import "tw-animate-css";
+@source "../src";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Design system — Taller de joyería "Aurum Lab".
+ * Dirección: Artisanal precision luxe (oro apagado sobre neutros cálidos).
+ *
+ * ESTÁNDAR DE FICHAS AURUM LAB — ERP:
+ * - Fondo de ficha: bg-card / superficie clara.
+ * - Fondo secundario: bg-surface-sunken.
+ * - Acento: gold / gold-deep.
+ * - Estados: success, warning, danger, info mediante tokens semánticos.
+ * - Bordes: border / gold con baja opacidad.
+ * - Elevación: shadow-card / shadow-raised.
+ * - Componentes: preferir FichaAurum o FichaDorada antes de crear una ficha nueva.
+ * - NO usar bg-ink, fondos negros, text-white ni gradientes oscuros en fichas del ERP.
+ * - Excepciones: AURUM Render y pantallas de autenticación pueden conservar su identidad
+ *   visual propia porque son experiencias independientes del sistema de fichas del ERP.
+ */
+/* PRUEBA MIGUEL */
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  --font-display: var(--font-display-family);
+  --font-sans: var(--font-sans-family);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+  --color-gold: var(--gold);
+  --color-gold-bright: var(--gold-bright);
+  --color-gold-deep: var(--gold-deep);
+  --color-ink: var(--ink);
+  --color-ink-foreground: var(--ink-foreground);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-viewer: var(--viewer);
+  --color-viewer-foreground: var(--viewer-foreground);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --shadow-card: 0 1px 2px oklch(0.2 0.01 80 / 0.05), 0 8px 24px -16px oklch(0.2 0.01 80 / 0.25);
+  --shadow-raised:
+    0 1px 2px oklch(0.2 0.01 80 / 0.06), 0 12px 30px -18px oklch(0.2 0.01 80 / 0.35);
+  --shadow-inset-soft: inset 0 1px 0 oklch(1 0 0 / 0.7);
+  --color-chart-1: var(--gold);
+  --color-chart-2: var(--info);
+  --color-chart-3: var(--success);
+  --color-chart-4: var(--warning);
+  --color-chart-5: var(--danger);
+  --color-sidebar: var(--ink);
+  --color-sidebar-foreground: var(--ink-foreground);
+  --color-sidebar-primary: var(--gold);
+  --color-sidebar-primary-foreground: var(--ink);
+  --color-sidebar-accent: var(--surface-muted);
+  --color-sidebar-accent-foreground: var(--ink);
+  --color-sidebar-border: var(--border);
+  --color-sidebar-ring: var(--ring);
+}
+
+:root {
+  --radius: 0.75rem;
+  --font-display-family: "Playfair Display", ui-serif, Georgia, serif;
+  --font-sans-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  --background: oklch(0.991 0.002 95);
+  --foreground: oklch(0.223 0.006 250);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.223 0.006 250);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.223 0.006 250);
+
+  --gold: oklch(0.712 0.083 84);
+  --gold-bright: oklch(0.836 0.077 84);
+  --gold-deep: oklch(0.52 0.088 82);
+  --ink: oklch(0.223 0.006 250);
+  --ink-foreground: oklch(0.985 0.002 95);
+  --surface: oklch(1 0 0);
+  --surface-muted: oklch(0.972 0.003 250);
+  --surface-sunken: oklch(0.958 0.005 90);
+  --viewer: oklch(0.17 0.006 250);
+  --viewer-foreground: oklch(0.985 0.002 95);
+
+  --primary: oklch(0.712 0.083 84);
+  --primary-foreground: oklch(0.223 0.006 250);
+  --secondary: oklch(0.972 0.003 250);
+  --secondary-foreground: oklch(0.223 0.006 250);
+  --muted: oklch(0.972 0.003 250);
+  --muted-foreground: oklch(0.556 0.011 250);
+  --accent: oklch(0.955 0.02 84);
+  --accent-foreground: oklch(0.223 0.006 250);
+
+  --success: oklch(0.63 0.14 155);
+  --success-soft: oklch(0.955 0.035 155);
+  --info: oklch(0.58 0.15 255);
+  --info-soft: oklch(0.955 0.03 255);
+  --warning: oklch(0.72 0.14 70);
+  --warning-soft: oklch(0.96 0.045 80);
+  --danger: oklch(0.6 0.2 25);
+  --danger-soft: oklch(0.955 0.03 25);
+
+  --destructive: oklch(0.6 0.2 25);
+  --destructive-foreground: oklch(0.985 0.002 95);
+  --border: oklch(0.223 0.006 250 / 0.08);
+  --input: oklch(0.223 0.006 250 / 0.12);
+  --ring: oklch(0.712 0.083 84);
+}
+
+/*
+ * AURUM LAB — Midnight Champagne 1.0
+ * Alcance: ERP administrativo/comercial/operativo.
+ * Aula de Formación, sus laboratorios y AURUM Render quedan fuera de este tema.
+ */
+.aurum-erp-theme {
+  color-scheme: light;
+
+  --background: #F6F4EF;
+  --foreground: #293B4A;
+  --card: #FFFEFC;
+  --card-foreground: #293B4A;
+  --popover: #FFFEFC;
+  --popover-foreground: #293B4A;
+
+  --primary: #182838;
+  --primary-foreground: #F8F5EF;
+  --secondary: #EAE6DE;
+  --secondary-foreground: #293B4A;
+  --muted: #EEEAE2;
+  --muted-foreground: #687887;
+  --accent: #F0E8DA;
+  --accent-foreground: #293B4A;
+
+  --gold: #C5A36B;
+  --gold-bright: #D9BD8B;
+  --gold-deep: #92734B;
+  --ink: #182838;
+  --ink-foreground: #F5F1E8;
+  --surface: #FFFEFC;
+  --surface-muted: #F0EDE6;
+  --surface-sunken: #EAE6DE;
+
+  --border: rgb(41 59 74 / 11%);
+  --input: rgb(41 59 74 / 17%);
+  --ring: #C5A36B;
+
+  --shadow-card: 0 1px 2px rgb(24 40 56 / 4%), 0 8px 24px -16px rgb(24 40 56 / 20%);
+  --shadow-raised: 0 2px 5px rgb(24 40 56 / 5%), 0 14px 32px -18px rgb(24 40 56 / 24%);
+  --shadow-inset-soft: inset 0 1px 0 rgb(255 255 255 / 85%);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  .scrollbar-hidden {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans-family);
+  }
+}
+
+@layer components {
+  .auth-shell {
+    background:
+      radial-gradient(circle at top left, oklch(0.955 0.035 155 / 0.55), transparent 32rem),
+      linear-gradient(180deg, oklch(0.982 0.004 120), oklch(0.948 0.006 120));
+  }
+
+  .auth-card {
+    border: 1px solid oklch(0.223 0.006 250 / 0.1);
+    border-radius: 0.5rem;
+    background: oklch(1 0 0);
+    padding: 1.125rem;
+    box-shadow: 0 16px 38px oklch(0.223 0.006 250 / 0.12);
+  }
+
+  @media (max-width: 640px) {
+    .auth-card {
+      padding: 0.875rem;
+    }
+  }
+}
+
+/* Ocultar badge flotante de Lovable en preview/publicación */
+[data-lovable-badge],
+.lovable-badge,
+a[href*="lovable.dev"][target="_blank"],
+iframe[src*="lovable"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}

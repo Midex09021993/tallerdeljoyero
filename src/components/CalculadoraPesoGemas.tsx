@@ -1,0 +1,67 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+import { registrarEvento } from "@/lib/analytics";
+import { Info, Scale } from "lucide-react";
+import { leerConfigPesoGemas } from "@/lib/calculadoras-config";
+import { useConfigSistema } from "@/lib/taller-db";
+
+const FUENTES = [
+  { nombre: "GIA · Carat Weight", detalle: "1 ct = 0,20 g; 1 ct = 100 puntos.", url: "https://www.gia.edu/gia-about/4cs-carat" },
+  { nombre: "GIA · Estimating Weights of Mounted Colored Gemstones", detalle: "Dimensiones, gravedad específica, factor de forma y corrección de perfil.", url: "https://www.gia.edu/doc/Estimating-Weights-of-Mounted-Colored-Stones.pdf" },
+];
+
+type Talla = "redonda" | "oval" | "esmeralda" | "rectangular" | "marquise" | "pera" | "cuadrada" | "cushion" | "cabujon";
+const NOMBRES: Record<Talla, string> = { redonda:"Redonda facetada", oval:"Oval", esmeralda:"Esmeralda", rectangular:"Rectangular / Radiant", marquise:"Marquise", pera:"Pera", cuadrada:"Cuadrada", cushion:"Cushion", cabujon:"Cabujón" };
+const n=(v:string)=>{const x=Number(v.replace(",","."));return Number.isFinite(x)&&x>0?x:0;};
+
+export function CalculadoraPesoGemas({ compacto=false }:{ compacto?:boolean }){
+ const {data:configData}=useConfigSistema("calculadora_peso_gemas");
+ const config=useMemo(()=>leerConfigPesoGemas(configData?.valor),[configData?.valor]);
+ const [modo,setModo]=useState<"peso"|"medidas">("peso"),[gramos,setGramos]=useState(""),[piedra,setPiedra]=useState("Diamante"),[talla,setTalla]=useState<Talla>("oval"),[largo,setLargo]=useState(""),[ancho,setAncho]=useState(""),[profundidad,setProfundidad]=useState(""),[correccion,setCorreccion]=useState("0");
+ const peso=useMemo(()=>{const g=n(gramos);return g?g*5:0},[gramos]);
+ const estimado=useMemo(()=>{const l=n(largo),a=n(ancho),p=n(profundidad),sg=config.piedras.find(x=>x.nombre===piedra)?.sg??0;if(!l||!a||!p||!sg)return null;const factor=config.factores[talla];const base=(talla==="redonda"||talla==="cuadrada"?l*l*p:l*a*p)*sg*factor;const ct=base*(1+n(correccion)/100),m=config.margenEstimacion/100;return{ct,g:ct*.2,sg,min:ct*(1-m),max:ct*(1+m)}},[largo,ancho,profundidad,piedra,talla,correccion,config]);
+ const inicioRegistrado = useRef(false);
+ const resultadoRegistrado = useRef(false);
+ const hayDatos = modo === "peso" ? gramos.trim().length > 0 : Boolean(largo.trim() || ancho.trim() || profundidad.trim());
+
+ useEffect(() => {
+  if (hayDatos && !inicioRegistrado.current) {
+   inicioRegistrado.current = true;
+   registrarEvento("tool_started", { tool_id: "gemas" });
+  }
+ }, [hayDatos]);
+
+ const resultadoValido = modo === "peso" ? peso > 0 : Boolean(estimado);
+ useEffect(() => {
+  if (resultadoValido && !resultadoRegistrado.current) {
+   resultadoRegistrado.current = true;
+   registrarEvento("tool_completed", { tool_id: "gemas" });
+  } else if (!resultadoValido) {
+   resultadoRegistrado.current = false;
+  }
+ }, [resultadoValido]);
+
+ return <section className={`rounded-2xl border border-border bg-card shadow-card ${compacto?"p-3":"p-5 sm:p-6"}`}>
+  <div className="flex items-start gap-3"><div className="grid size-10 shrink-0 place-items-center rounded-xl bg-gold/10 text-gold-deep"><Scale className="size-5"/></div><div><p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold-deep">Gemología</p><h2 className="mt-1 text-xl font-semibold">Calculadora de Peso de Gemas</h2><p className="mt-1 text-sm text-muted-foreground">Convierte peso real o estima el quilataje por medidas.</p></div></div>
+  <div className="mt-5 grid grid-cols-2 rounded-xl border border-border bg-surface-muted p-1">{([["peso","Peso real"],["medidas","Estimar por medidas"]] as const).map(([id,label])=><button key={id} type="button" onClick={()=>setModo(id)} className={`rounded-lg px-3 py-2 text-xs font-semibold ${modo===id?"bg-card text-foreground shadow-sm":"text-muted-foreground"}`}>{label}</button>)}</div>
+  {modo==="peso"?<div className="mt-5"><label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Peso de la piedra<div className="mt-1 flex gap-2"><input inputMode="decimal" value={gramos} onChange={e=>setGramos(e.target.value)} placeholder="0.00" className="min-w-0 flex-1 rounded-lg border border-border bg-background px-3 py-3 text-base text-foreground outline-none placeholder:text-muted-foreground/75 focus:ring-1 focus:ring-gold"/><span className="grid place-items-center rounded-lg border border-border bg-surface-muted px-3 text-xs font-semibold">gramos</span></div></label>{peso?<div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3"><Resultado etiqueta="Quilates" valor={peso.toFixed(2)} unidad="ct"/><Resultado etiqueta="Puntos" valor={Math.round(peso*100).toString()} unidad="pt"/><Resultado etiqueta="Miligramos" valor={Math.round(n(gramos)*1000).toString()} unidad="mg"/></div>:<p className="mt-4 text-xs text-muted-foreground">Ingresa el peso para obtener la conversión.</p>}<p className="mt-3 text-[10px] text-muted-foreground">Conversión exacta: 1 ct = 0,20 g · 100 puntos.</p><div className="mt-2 flex justify-end"><a href={FUENTES[0]?.url} target="_blank" rel="noreferrer" className="text-[10px] text-muted-foreground hover:text-foreground">Referencia técnica · GIA</a></div></div>
+  :<div className="mt-5 space-y-4"><div className="grid gap-3 sm:grid-cols-2"><label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Material<select value={piedra} onChange={e=>setPiedra(e.target.value)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-3 text-sm text-foreground">{config.piedras.map(item=><option key={item.nombre}>{item.nombre}</option>)}</select></label><label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Talla / forma<select value={talla} onChange={e=>setTalla(e.target.value as Talla)} className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-3 text-sm text-foreground">{(Object.entries(NOMBRES) as [Talla,string][]).map(([id,name])=><option key={id} value={id}>{name}</option>)}</select></label></div>
+  <div className="grid grid-cols-3 gap-2">{([["Largo",largo,setLargo],["Ancho",ancho,setAncho],["Profundidad",profundidad,setProfundidad]] as const).map(([label,value,setter])=><label key={label} className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">{label}<input inputMode="decimal" value={value} onChange={e=>setter(e.target.value)} placeholder="0.0" className="mt-1 w-full rounded-lg border border-border bg-background px-2 py-3 text-sm text-foreground"/><span className="mt-1 block text-[9px] normal-case">mm</span></label>)}</div>
+  <label className="block max-w-sm text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Corrección por perfil / proporción<div className="mt-1 flex gap-2"><input inputMode="decimal" value={correccion} onChange={e=>setCorreccion(e.target.value)} placeholder="0" className="w-32 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"/><span className="grid place-items-center text-xs">%</span></div><span className="mt-1 block text-[9px] font-normal normal-case">Ajuste manual para corona, pabellón, cintura, domo o proporciones fuera de la talla media.</span></label>
+  {estimado?<div className="grid grid-cols-2 gap-3 sm:grid-cols-4"><Resultado etiqueta="Peso estimado" valor={estimado.ct.toFixed(2)} unidad="ct"/><Resultado etiqueta="Gramos" valor={estimado.g.toFixed(3)} unidad="g"/><Resultado etiqueta="Puntos" valor={Math.round(estimado.ct*100).toString()} unidad="pt"/><Resultado etiqueta="SG" valor={estimado.sg.toFixed(2)} unidad=""/></div>:<p className="text-xs text-muted-foreground">Completa las tres medidas en milímetros.</p>}
+  {estimado?<div className="rounded-xl border border-border bg-surface-muted/50 p-3"><p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Rango orientativo</p><p className="mt-1 text-lg font-semibold">{estimado.min.toFixed(2)}–{estimado.max.toFixed(2)} ct</p><p className="mt-1 text-[10px] text-muted-foreground">Margen configurado: ±{config.margenEstimacion}%. La estimación no sustituye el pesaje directo.</p></div>:null}
+  <div className="flex gap-2 rounded-xl border border-info/20 bg-info-soft/40 p-3 text-xs text-muted-foreground"><Info className="size-4 shrink-0 text-info"/><p>Método: dimensiones × gravedad específica × factor de forma × corrección de perfil. GIA señala que las variaciones del perfil pueden cambiar significativamente el peso estimado.</p></div>
+  <div className="mt-3 flex items-center justify-end">
+    <div className="group relative">
+      <button type="button" className="inline-flex items-center gap-1.5 text-[10px] font-medium text-muted-foreground hover:text-foreground" aria-label="Fuentes técnicas">
+        <span className="grid size-4 place-items-center rounded-full border border-border text-[9px]">i</span>
+        Referencias técnicas
+      </button>
+      <div className="pointer-events-none absolute bottom-full right-0 z-30 mb-2 hidden w-80 rounded-xl border border-border bg-popover p-3 text-left shadow-xl group-hover:block group-focus-within:block">
+        {FUENTES.map((fuente) => <a key={fuente.url} href={fuente.url} target="_blank" rel="noreferrer" className="pointer-events-auto block rounded-lg p-2 hover:bg-accent"><strong className="block text-[10px] text-gold-deep">{fuente.nombre}</strong><span className="mt-1 block text-[10px] text-muted-foreground">{fuente.detalle}</span></a>)}
+      </div>
+    </div>
+  </div>
+  </div>}
+ </section>;
+}
+function Resultado({etiqueta,valor,unidad}:{etiqueta:string;valor:string;unidad:string}){return <div className="rounded-xl border border-border bg-surface-muted/50 p-3"><p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">{etiqueta}</p><p className="mt-1 text-xl font-semibold">{valor} <span className="text-xs font-normal text-muted-foreground">{unidad}</span></p></div>}

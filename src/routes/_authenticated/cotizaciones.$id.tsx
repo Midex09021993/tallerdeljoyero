@@ -1,0 +1,892 @@
+/* eslint-disable-next-line @typescript-eslint/ban-ts-comment -- excepción temporal: corregir tipos heredados requiere una tarea separada */
+// @ts-nocheck
+import { useEffect, useMemo, useState } from "react";
+import { FichaCotizacionA4, type FichaCotizacionIdentidad } from "@/components/FichaCotizacionA4";
+import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
+import { AppShell, Panel } from "@/components/AppShell";
+import { supabase } from "@/integrations/supabase/client";
+import { useSesion } from "@/lib/auth";
+import { TODAS_LAS_SEDES, useSedeFiltroDueno } from "@/hooks/use-sede-filtro-dueno";
+
+export const Route = createFileRoute("/_authenticated/cotizaciones/$id")({
+  head: () => ({
+    meta: [
+      { title: "Detalle de cotización — Aurum Lab" },
+      { name: "description", content: "Detalle y seguimiento de una cotización comercial." },
+    ],
+  }),
+  component: CotizacionDetallePage,
+});
+
+type Cotizacion = {
+  id: string; numero: string; version: number; estado: string; seguimiento_codigo: string | null; sede_id: string | null; participante_id: string | null; reemplaza_id: string | null; fecha_emision: string;
+  fecha_vencimiento: string | null; fecha_entrega_solicitada: string | null; moneda: string; subtotal_costo: number; subtotal: number;
+  descuento: number; impuestos: number; total: number; anticipo: number;
+  notas_cliente: string; notas_internas: string; cliente_id: string | null; proyecto_joya_id: string | null;
+  identidad_comercial?: FichaCotizacionIdentidad | null;
+};
+type Detalle = {
+  id: string; orden: number; tipo: string; descripcion: string; cantidad: number; unidad: string;
+  costo_unitario: number; precio_unitario: number; total_costo: number; total_precio: number;
+};
+type Cliente = { id: string; nombre: string; telefono: string | null; whatsapp: string | null; email: string | null };
+type Proyecto = { id: string; codigo: string; nombre: string; descripcion: string; metal: string | null; ley: string | null; peso_estimado: number | null; talla: string | null; piedras: string | null };
+type RespuestaCliente = { id: string; accion: string; comentario: string; created_at: string };
+
+const estados = [
+  ["borrador", "Borrador"], ["enviada", "Enviada"], ["requiere_revision", "Requiere cambios"], ["aprobada", "Aprobada"],
+  ["rechazada", "Rechazada"], ["vencida", "Vencida"], ["cancelada", "Cancelada"],
+] as const;
+
+const paisesWhatsapp = [
+  { codigo: "51", nombre: "Perú" },
+  { codigo: "57", nombre: "Colombia" },
+  { codigo: "56", nombre: "Chile" },
+  { codigo: "593", nombre: "Ecuador" },
+  { codigo: "591", nombre: "Bolivia" },
+  { codigo: "54", nombre: "Argentina" },
+  { codigo: "55", nombre: "Brasil" },
+  { codigo: "52", nombre: "México" },
+  { codigo: "1", nombre: "Estados Unidos / Canadá" },
+  { codigo: "34", nombre: "España" },
+] as const;
+
+const tiposPartida = [
+  ["modelo", "Joya / Producto"],
+  ["metal", "Metal"],
+  ["piedras", "Piedra / Gema"],
+  ["fundicion", "Fundición"],
+  ["ajustes", "Ajustes"],
+  ["engaste", "Engaste"],
+  ["acabado", "Acabado"],
+  ["mano_obra", "Mano de obra"],
+  ["render", "Renderizado 3D"],
+  ["otro", "Otro"],
+] as const;
+
+function money(n: number, moneda: string) {
+  const codigo = /^[A-Z]{3}$/.test(moneda) ? moneda : "PEN";
+  const locale = ({ ARS: "es-AR", BOB: "es-BO", BRL: "pt-BR", CLP: "es-CL", COP: "es-CO", DOP: "es-DO", GYD: "en-GY", MXN: "es-MX", PEN: "es-PE", PYG: "es-PY", SRD: "nl-SR", USD: "en-US", UYU: "es-UY", VES: "es-VE" } as Record<string, string>)[codigo] ?? "es";
+  try { return new Intl.NumberFormat(locale, { style: "currency", currency: codigo, maximumFractionDigits: 2 }).format(Number(n) || 0); }
+  catch { return `${codigo} ${(Number(n) || 0).toFixed(2)}`; }
+}
+function etiquetaEstado(estado: string) {
+  return estados.find(([value]) => value === estado)?.[1] ?? estado;
+}
+function etiquetaRespuesta(accion: string) {
+  if (accion === "aprobada") return "Aprobó la cotización";
+  if (accion === "requiere_revision") return "Solicitó cambios";
+  if (accion === "rechazada") return "Rechazó la cotización";
+  return accion;
+}
+
+function CotizacionDetallePage() {
+  const { id } = useParams({ from: "/_authenticated/cotizaciones/$id" });
+  const navigate = useNavigate();
+  const { data: sesion, isPending: cargandoSesion } = useSesion();
+  const { esDueno, sedeFiltro } = useSedeFiltroDueno();
+  const puedeGestionarCotizaciones =
+    Boolean(sesion?.esAdmin) ||
+    Boolean(sesion?.areas.some((area) => area.trim().toLowerCase() === "área ventas"));
+  const [cotizacion, setCotizacion] = useState<Cotizacion | null>(null);
+  const [detalles, setDetalles] = useState<Detalle[]>([]);
+  const [respuestasCliente, setRespuestasCliente] = useState<RespuestaCliente[]>([]);
+  const [respuestaVersionAnterior, setRespuestaVersionAnterior] = useState<RespuestaCliente | null>(null);
+  const [versiones, setVersiones] = useState<Cotizacion[]>([]);
+  const [cliente, setCliente] = useState<Cliente | null>(null);
+  const [proyecto, setProyecto] = useState<Proyecto | null>(null);
+  const [sedeNombre, setSedeNombre] = useState<string | null>(null);
+  const [identidadFicha, setIdentidadFicha] = useState<FichaCotizacionIdentidad | null>(null);
+  const [mostrarFichaA4, setMostrarFichaA4] = useState(false);
+  const [imprimirFichaAlAbrir, setImprimirFichaAlAbrir] = useState(false);
+  const [cargando, setCargando] = useState(true);
+  const [editando, setEditando] = useState(false);
+  const [guardando, setGuardando] = useState(false);
+  const [creandoVersion, setCreandoVersion] = useState(false);
+  const [convirtiendoPedido, setConvirtiendoPedido] = useState(false);
+  const [pedidoId, setPedidoId] = useState<string | null>(null);
+  const [contratoId, setContratoId] = useState<string | null>(null);
+  const [contratoNumero, setContratoNumero] = useState<string | null>(null);
+  const [error, setError] = useState("");
+  const [generandoPdf, setGenerandoPdf] = useState(false);
+  const [enlacePdf, setEnlacePdf] = useState<string | null>(null);
+  const [copiado, setCopiado] = useState<"enlace" | "pdf" | null>(null);
+  const [mostrarOpcionesEnvio, setMostrarOpcionesEnvio] = useState(false);
+  const [paisWhatsapp, setPaisWhatsapp] = useState("51");
+  const [numeroWhatsapp, setNumeroWhatsapp] = useState("");
+  const [guardandoWhatsapp, setGuardandoWhatsapp] = useState(false);
+  const [borradorDetalles, setBorradorDetalles] = useState<Detalle[]>([]);
+
+  const cargar = async () => {
+    setCargando(true); setError("");
+    const { data: q, error: qError } = await supabase.from("cotizaciones")
+      .select("id,numero,version,estado,seguimiento_codigo,sede_id,participante_id,reemplaza_id,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal_costo,subtotal,descuento,impuestos,total,anticipo,notas_cliente,notas_internas,cliente_id,proyecto_joya_id,identidad_comercial")
+      .eq("id", id).maybeSingle();
+    if (qError || !q) {
+      setError(qError?.message ?? "No se encontró la cotización.");
+      setCargando(false); return;
+    }
+    if (esDueno && sedeFiltro !== TODAS_LAS_SEDES && q.sede_id !== sedeFiltro) {
+      setCotizacion(null);
+      setError("Esta cotización pertenece a otra sede. Cambia la sede desde Inicio para consultarla.");
+      setCargando(false);
+      return;
+    }
+    const [{ data: d }, { data: c }, { data: p }, { data: respuestas, error: respuestasError }, { data: pedidoExistente }, { data: contratoExistente }] = await Promise.all([
+      supabase.from("cotizacion_detalles").select("id,orden,tipo,descripcion,cantidad,unidad,costo_unitario,precio_unitario,total_costo,total_precio").eq("cotizacion_id", id).order("orden"),
+      q.cliente_id
+        ? supabase.from("clientes").select("id,nombre,telefono,whatsapp,email").eq("id", q.cliente_id).maybeSingle()
+        : Promise.resolve({ data: null }),
+      q.proyecto_joya_id
+        ? supabase.from("proyectos_joya").select("id,codigo,nombre,descripcion,metal,ley,peso_estimado,talla,piedras").eq("id", q.proyecto_joya_id).maybeSingle()
+        : Promise.resolve({ data: null }),
+      supabase.rpc("listar_respuestas_cotizacion", { _cotizacion_id: id }),
+      supabase.from("pedidos").select("id,contrato_id,contrato").eq("cotizacion_id", id).maybeSingle(),
+      supabase.from("contratos").select("id,numero").eq("cotizacion_id", id).maybeSingle(),
+    ]);
+    setCotizacion(q as Cotizacion);
+    // Recupera la identidad comercial activa para conservar la vista A4 anterior.
+    let identidadActual: FichaCotizacionIdentidad | null = null;
+    const camposIdentidad = "nombre_comercial,razon_social,ruc,rnp_bienes,rpp_servicios,logo_url,direccion,ciudad,telefono,whatsapp,email,sitio_web,color_principal,pie_documento,metadata";
+    if (q.participante_id) {
+      const { data: identidad } = await supabase.from("identidades_comerciales")
+        .select(camposIdentidad).eq("participante_id", q.participante_id).eq("activa", true)
+        .order("updated_at", { ascending: false }).limit(1).maybeSingle();
+      identidadActual = identidad as FichaCotizacionIdentidad | null;
+    } else if (q.sede_id) {
+      const { data: identidad } = await supabase.from("identidades_comerciales")
+        .select(camposIdentidad).eq("sede_id", q.sede_id).eq("activa", true)
+        .order("updated_at", { ascending: false }).limit(1).maybeSingle();
+      identidadActual = identidad as FichaCotizacionIdentidad | null;
+    }
+    const identidadHistorica = q.identidad_comercial && typeof q.identidad_comercial === "object"
+      ? q.identidad_comercial as FichaCotizacionIdentidad
+      : null;
+    setIdentidadFicha(identidadActual ? { ...identidadActual, ...(identidadHistorica ?? {}) } : identidadHistorica);
+    let versionesRelacionadasQuery = supabase
+      .from("cotizaciones")
+      .select("id,numero,version,estado,seguimiento_codigo,sede_id,participante_id,reemplaza_id,fecha_emision,fecha_vencimiento,fecha_entrega_solicitada,moneda,subtotal_costo,subtotal,descuento,impuestos,total,anticipo,notas_cliente,notas_internas,cliente_id,proyecto_joya_id")
+      .eq("numero", q.numero)
+      .order("version", { ascending: false });
+    if (q.participante_id) versionesRelacionadasQuery = versionesRelacionadasQuery.eq("participante_id", q.participante_id);
+    else if (q.sede_id) versionesRelacionadasQuery = versionesRelacionadasQuery.eq("sede_id", q.sede_id);
+    const { data: versionesRelacionadas } = await versionesRelacionadasQuery;
+    setVersiones(versionesRelacionadas ?? [q]);
+
+    // Si esta versión nació de otra, mostramos la respuesta del cliente
+    // que provocó la creación de esta nueva versión. La respuesta sigue
+    // vinculada a la versión original; aquí solo la contextualizamos.
+    if (q.reemplaza_id) {
+      const { data: respuestaAnterior } = await supabase
+        .rpc("listar_respuestas_cotizacion", { _cotizacion_id: q.reemplaza_id });
+      const ultimaRevision = (respuestaAnterior ?? [])
+        .filter((respuesta) => respuesta.accion === "requiere_revision")
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0] ?? null;
+      setRespuestaVersionAnterior(ultimaRevision);
+    } else {
+      setRespuestaVersionAnterior(null);
+    }
+
+    setDetalles(d ?? []);
+    setCliente(c ?? null);
+    setProyecto(p ?? null);
+    setRespuestasCliente(respuestas ?? []);
+    if (respuestasError) {
+      setError(respuestasError.message);
+    }
+    if (q.participante_id) {
+      const { data: participante } = await supabase.from("ecosistema_participantes").select("nombre").eq("id", q.participante_id).maybeSingle();
+      setSedeNombre(participante?.nombre ?? null);
+    } else {
+      setSedeNombre(null);
+    }
+    setPedidoId(pedidoExistente?.id ?? null);
+    setContratoId(contratoExistente?.id ?? pedidoExistente?.contrato_id ?? null);
+    setContratoNumero(contratoExistente?.numero ?? pedidoExistente?.contrato ?? null);
+    setCargando(false);
+  };
+
+  useEffect(() => {
+    if (cargandoSesion) return;
+    if (!puedeGestionarCotizaciones) {
+      setCargando(false);
+      return;
+    }
+    void cargar();
+  }, [id, cargandoSesion, puedeGestionarCotizaciones, esDueno, sedeFiltro]);
+
+  const margen = useMemo(() => cotizacion ? Number(cotizacion.subtotal) - Number(cotizacion.subtotal_costo) : 0, [cotizacion]);
+
+  const fichaCotizacion = useMemo(() => {
+    if (!cotizacion) return null;
+    const identidadSnapshot = cotizacion.identidad_comercial && typeof cotizacion.identidad_comercial === "object"
+      ? cotizacion.identidad_comercial as FichaCotizacionIdentidad
+      : null;
+    const identidad = identidadFicha ?? identidadSnapshot;
+    return {
+      numero: cotizacion.numero, version: cotizacion.version, fecha: cotizacion.fecha_emision,
+      vencimiento: cotizacion.fecha_vencimiento, entrega: cotizacion.fecha_entrega_solicitada,
+      moneda: cotizacion.moneda,
+      cliente: { nombre: cliente?.nombre ?? "Cliente", telefono: cliente?.telefono ?? cliente?.whatsapp, email: cliente?.email },
+      tallerNombre: sedeNombre, identidad,
+      detalles: detalles.map((item) => ({ tipo: item.tipo, descripcion: item.descripcion, cantidad: Number(item.cantidad) || 0, unidad: item.unidad, precio_unitario: Number(item.precio_unitario) || 0, total_precio: Number(item.total_precio) || 0 })),
+      subtotal: Number(cotizacion.subtotal) || 0, descuento: Number(cotizacion.descuento) || 0,
+      impuestos: Number(cotizacion.impuestos) || 0, total: Number(cotizacion.total) || 0,
+      notas: cotizacion.notas_cliente || "",
+    };
+  }, [cotizacion, cliente, sedeNombre, detalles, identidadFicha]);
+
+  useEffect(() => {
+    if (!mostrarFichaA4 || !imprimirFichaAlAbrir || !fichaCotizacion) return;
+    const timer = window.setTimeout(() => { window.print(); setImprimirFichaAlAbrir(false); }, 350);
+    return () => window.clearTimeout(timer);
+  }, [mostrarFichaA4, imprimirFichaAlAbrir, fichaCotizacion]);
+
+  function abrirEditor() {
+    if (!cotizacion || cotizacion.estado !== "borrador") return;
+    setBorradorDetalles(detalles.map((d) => ({ ...d })));
+    setEditando(true);
+    setError("");
+  }
+
+  function agregarPartida() {
+    setBorradorDetalles((actuales) => [
+      ...actuales,
+      {
+        id: crypto.randomUUID(),
+        orden: actuales.length + 1,
+        tipo: "otro",
+        descripcion: "",
+        cantidad: 1,
+        unidad: "und",
+        costo_unitario: 0,
+        precio_unitario: 0,
+        total_costo: 0,
+        total_precio: 0,
+      },
+    ]);
+  }
+
+  function actualizarPartida(id: string, cambios: Partial<Detalle>) {
+    setBorradorDetalles((actuales) =>
+      actuales.map((d) => d.id === id ? { ...d, ...cambios } : d),
+    );
+  }
+
+  function eliminarPartida(id: string) {
+    setBorradorDetalles((actuales) =>
+      actuales.filter((d) => d.id !== id).map((d, i) => ({ ...d, orden: i + 1 })),
+    );
+  }
+
+  async function guardarPartidas() {
+    if (!cotizacion || !sesion?.esAdmin || cotizacion.estado !== "borrador") return;
+    if (borradorDetalles.length === 0 || borradorDetalles.some((d) => !d.descripcion.trim())) {
+      setError("Agrega al menos una partida y completa su descripción.");
+      return;
+    }
+    setGuardando(true);
+    setError("");
+    const payload = borradorDetalles.map((d, i) => ({
+      orden: i + 1,
+      tipo: d.tipo,
+      descripcion: d.descripcion.trim(),
+      cantidad: Number(d.cantidad) || 1,
+      unidad: d.unidad.trim() || "und",
+      costo_unitario: Math.max(0, Number(d.costo_unitario) || 0),
+      precio_unitario: Math.max(0, Number(d.precio_unitario) || 0),
+    }));
+    const { error: saveError } = await supabase.rpc("guardar_detalles_cotizacion", {
+      _cotizacion_id: cotizacion.id,
+      _detalles: payload,
+    });
+    if (saveError) {
+      setError(saveError.message);
+      setGuardando(false);
+      return;
+    }
+    setEditando(false);
+    setGuardando(false);
+    await cargar();
+  }
+
+  async function crearVersion() {
+    if (!cotizacion || !sesion?.esAdmin || !["enviada", "requiere_revision", "rechazada", "vencida"].includes(cotizacion.estado)) return;
+    setCreandoVersion(true);
+    setError("");
+    const { data: nuevoId, error: versionError } = await supabase.rpc("crear_version_cotizacion", {
+      _cotizacion_id: cotizacion.id,
+    });
+    if (versionError || !nuevoId) {
+      setError(versionError?.message ?? "No se pudo crear la nueva versión.");
+      setCreandoVersion(false);
+      return;
+    }
+    await navigate({ to: "/cotizaciones/$id", params: { id: nuevoId } });
+    setCreandoVersion(false);
+  }
+
+  async function convertirAPedido() {
+    if (!cotizacion || cotizacion.estado !== "aprobada" || !sesion?.esAdmin) return;
+    setConvirtiendoPedido(true);
+    setError("");
+    const { data, error: conversionError } = await supabase.rpc("convertir_cotizacion_a_pedido", {
+      _cotizacion_id: cotizacion.id,
+    });
+    if (conversionError || !data) {
+      const detalle = [
+        conversionError?.message,
+        conversionError?.details,
+        conversionError?.hint,
+        conversionError?.code,
+      ].filter(Boolean).join(" · ");
+      console.error("convertir_cotizacion_a_pedido", conversionError);
+      setError(detalle || "No se pudo crear el pedido.");
+      setConvirtiendoPedido(false);
+      return;
+    }
+    const resultado = data as { pedido_id?: string };
+    setPedidoId(resultado.pedido_id ?? null);
+    setContratoId(null);
+    setContratoNumero(null);
+    setConvirtiendoPedido(false);
+  }
+
+  async function copiarTexto(texto: string, tipo: "enlace" | "pdf"): Promise<boolean> {
+    try {
+      await navigator.clipboard.writeText(texto);
+      setCopiado(tipo);
+      window.setTimeout(() => setCopiado(null), 1800);
+      return true;
+    } catch {
+      setError("No se pudo copiar el enlace. Puedes copiarlo manualmente.");
+      return false;
+    }
+  }
+
+  async function generarPdfCotizacion(): Promise<string | null> {
+    if (!cotizacion || generandoPdf) return null;
+    setGenerandoPdf(true);
+    setError("");
+    try {
+      const { data, error: pdfError } = await supabase.functions.invoke("generar-cotizacion-pdf", {
+        body: { cotizacion_id: cotizacion.id },
+      });
+      if (pdfError || !data?.url) {
+        setError(pdfError?.message ?? data?.error ?? "No se pudo generar el PDF.");
+        return null;
+      }
+      setEnlacePdf(data.url);
+      return data.url as string;
+    } finally {
+      setGenerandoPdf(false);
+    }
+  }
+
+  function enlacePdfCliente() {
+    const codigo = cotizacion?.seguimiento_codigo?.trim().toUpperCase();
+    return codigo ? `${window.location.origin}/c/${codigo}` : enlacePdf;
+  }
+
+  async function marcarComoEnviada() {
+    if (!cotizacion || cotizacion.estado !== "borrador") return true;
+    const { error: estadoError } = await supabase.rpc("cambiar_estado_cotizacion", {
+      _cotizacion_id: cotizacion.id,
+      _nuevo_estado: "enviada",
+    });
+    if (estadoError) {
+      setError(estadoError.message);
+      return false;
+    }
+    setCotizacion((actual) => actual ? { ...actual, estado: "enviada" } : actual);
+    return true;
+  }
+
+  async function copiarEnlacePdf() {
+    const enlace = enlacePdfCliente();
+    if (!enlace) return;
+
+    const copiadoCorrectamente = await copiarTexto(enlace, "pdf");
+    if (copiadoCorrectamente) await marcarComoEnviada();
+  }
+
+  function numeroWhatsAppRegistrado() {
+    return (cliente?.whatsapp || cliente?.telefono || "").replace(/\D/g, "");
+  }
+
+  async function registrarWhatsAppYEnviar() {
+    if (!cliente || guardandoWhatsapp) return;
+    const numero = numeroWhatsapp.replace(/\D/g, "");
+    if (numero.length < 6) {
+      setError("Ingresa un número de WhatsApp válido.");
+      return;
+    }
+
+    const numeroInternacional = paisWhatsapp + numero;
+    setGuardandoWhatsapp(true);
+    setError("");
+    const { error: updateError } = await supabase
+      .from("clientes")
+      .update({ whatsapp: numeroInternacional })
+      .eq("id", cliente.id);
+
+    if (updateError) {
+      setError(updateError.message);
+      setGuardandoWhatsapp(false);
+      return;
+    }
+
+    const clienteActualizado = { ...cliente, whatsapp: numeroInternacional };
+    setCliente(clienteActualizado);
+    setNumeroWhatsapp("");
+    setGuardandoWhatsapp(false);
+    abrirWhatsApp(clienteActualizado.whatsapp);
+  }
+
+  async function abrirWhatsApp(numeroForzado?: string | null) {
+    const telefono = (numeroForzado || numeroWhatsAppRegistrado()).replace(/\D/g, "");
+    if (!telefono) {
+      setError("Este cliente no tiene un número registrado. Ingresa su número de WhatsApp para guardarlo y continuar.");
+      setMostrarOpcionesEnvio(true);
+      return;
+    }
+    const codigoSeguimiento = cotizacion?.seguimiento_codigo?.trim().toUpperCase();
+    if (!codigoSeguimiento) {
+      setError("Esta cotización todavía no tiene un código de seguimiento. Actualiza la base de datos con la migración del portal público antes de enviarla.");
+      return;
+    }
+
+    const ventana = window.open("about:blank", "_blank");
+    if (!ventana) {
+      setError("El navegador bloqueó la ventana de WhatsApp. Permite ventanas emergentes para este sitio.");
+      return;
+    }
+
+    const enlaceCliente = `${window.location.origin}/c/${codigoSeguimiento}`;
+    const mensaje = [
+      "Hola" + (cliente?.nombre ? ` ${cliente.nombre}` : ""),
+      "",
+      `Te enviamos la cotización ${cotizacion?.numero ?? ""}` + (cotizacion?.version ? ` (versión ${cotizacion.version})` : "") + ".",
+      "Puedes revisar la propuesta y responderla aquí:",
+      enlaceCliente,
+    ].join("\n");
+    const destino = `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`;
+    ventana.location.href = destino;
+    await marcarComoEnviada();
+  }
+
+  async function descargarPdf(urlPdf: string) {
+    try {
+      setError("");
+      const response = await fetch(urlPdf);
+      if (!response.ok) throw new Error("No se pudo descargar el PDF.");
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `${cotizacion?.numero ?? "cotizacion"}-v${cotizacion?.version ?? 1}.pdf`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+    } catch (downloadError) {
+      setError(downloadError instanceof Error ? downloadError.message : "No se pudo descargar el PDF.");
+    }
+  }
+
+  if (cargando) return <AppShell titulo="Cotización" subtitulo="Cargando…" atrasMovil={{ to: "/cotizaciones" }}><p className="text-sm text-muted-foreground">Cargando cotización…</p></AppShell>;
+  if (!cotizacion) return <AppShell titulo="Cotización no encontrada" atrasMovil={{ to: "/cotizaciones" }}><p className="text-sm text-muted-foreground">{error || "La cotización no existe o no tienes acceso."}</p></AppShell>;
+
+  if (!puedeGestionarCotizaciones) {
+    return (
+      <AppShell titulo="Cotización" subtitulo="Acceso restringido al área comercial.">
+        <Panel titulo="Acceso restringido"><p className="p-6 text-sm text-muted-foreground">Esta sección contiene información comercial y financiera.</p></Panel>
+      </AppShell>
+    );
+  }
+
+  return (
+    <>
+      <div className="cotizacion-app"><AppShell titulo={cotizacion.numero} subtitulo={"Versión " + cotizacion.version + " · " + etiquetaEstado(cotizacion.estado)} atrasMovil={{ to: "/cotizaciones" }}>
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <Link to="/cotizaciones" className="text-sm text-muted-foreground hover:text-foreground">← Volver a cotizaciones</Link>
+          {sesion?.esAdmin ? <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-full border border-border bg-surface-muted px-3 py-1.5 text-xs font-semibold text-foreground">
+              Estado: {etiquetaEstado(cotizacion.estado)}
+            </span>
+            {["enviada", "requiere_revision", "rechazada", "vencida"].includes(cotizacion.estado) ? (
+              <button type="button" disabled={creandoVersion} onClick={() => void crearVersion()} className="rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground">
+                {creandoVersion ? "Creando…" : "Crear nueva versión"}
+              </button>
+            ) : null}
+          </div> : null}
+        </div>
+        {error ? <div className="rounded-xl border border-danger/20 bg-danger-soft px-4 py-3 text-sm text-danger">{error}</div> : null}
+
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="space-y-4">
+            <Panel titulo="Datos comerciales">
+              <div className="grid gap-4 p-4 sm:grid-cols-2 lg:p-6">
+                <Dato label="Cliente" valor={cliente?.nombre ?? "—"} />
+                <Dato label="Teléfono" valor={cliente?.telefono || "—"} />
+                <Dato label="Correo" valor={cliente?.email || "—"} />
+                <Dato label="Emisión" valor={cotizacion.fecha_emision} />
+                <Dato label="Válida hasta" valor={cotizacion.fecha_vencimiento || "Sin fecha"} />
+                <Dato label="Entrega solicitada" valor={cotizacion.fecha_entrega_solicitada || "Sin fecha"} />
+                <Dato label="Proyecto" valor={proyecto ? proyecto.codigo + " · " + proyecto.nombre : "Sin proyecto"} />
+              </div>
+            </Panel>
+
+            {proyecto ? <Panel titulo="Especificación de la joya">
+              <div className="grid gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3 lg:p-6">
+                <Dato label="Metal" valor={proyecto.metal || "—"} />
+                <Dato label="Ley" valor={proyecto.ley || "—"} />
+                <Dato label="Peso estimado" valor={proyecto.peso_estimado != null ? proyecto.peso_estimado + " g" : "—"} />
+                <Dato label="Talla" valor={proyecto.talla || "—"} />
+                <Dato label="Piedras" valor={proyecto.piedras || "—"} />
+                <Dato label="Descripción" valor={proyecto.descripcion || "—"} />
+              </div>
+            </Panel> : null}
+
+            <Panel titulo="Partidas de la cotización" accion={
+              sesion?.esAdmin && cotizacion.estado === "borrador"
+                ? <button type="button" onClick={abrirEditor} className="rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground">Editar partidas</button>
+                : undefined
+            }>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[720px] text-left text-sm">
+                  <thead><tr className="border-y border-border bg-surface-muted text-[10px] uppercase tracking-wider text-muted-foreground">
+                    {["Tipo","Descripción","Cant.","Costo unit.","Precio unit.","Total"].map(h => <th key={h} className="px-4 py-3">{h}</th>)}
+                  </tr></thead>
+                  <tbody className="divide-y divide-border">
+                    {detalles.map(d => <tr key={d.id}>
+                      <td className="px-4 py-3 text-xs uppercase text-muted-foreground">{d.tipo}</td>
+                      <td className="px-4 py-3 font-medium">{d.descripcion}</td>
+                      <td className="px-4 py-3">{d.cantidad} {d.unidad}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{money(d.costo_unitario, cotizacion.moneda)}</td>
+                      <td className="px-4 py-3">{money(d.precio_unitario, cotizacion.moneda)}</td>
+                      <td className="px-4 py-3 font-semibold">{money(d.total_precio, cotizacion.moneda)}</td>
+                    </tr>)}
+                    {detalles.length === 0 ? <tr><td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">Sin partidas.</td></tr> : null}
+                  </tbody>
+                </table>
+              </div>
+            </Panel>
+
+        {editando ? <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4">
+          <div className="max-h-[92vh] w-full max-w-5xl overflow-y-auto rounded-2xl border border-border bg-card p-5 shadow-2xl sm:p-6">
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div>
+                <h2 className="font-display text-2xl">Editar partidas</h2>
+                <p className="text-sm text-muted-foreground">Agrega, elimina o ajusta partidas. Los totales se recalculan en la base de datos.</p>
+              </div>
+              <button type="button" onClick={() => setEditando(false)} disabled={guardando} className="rounded-full border border-border px-3 py-1">×</button>
+            </div>
+            <div className="space-y-3">
+              {borradorDetalles.map((d, i) => <div key={d.id} className="rounded-xl border border-border bg-background/40 p-4">
+                <div className="mb-3 flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-gold/80">Partida {i + 1}</span>
+                    <p className="mt-0.5 text-[11px] text-muted-foreground">Define qué se está cobrando en esta línea.</p>
+                  </div>
+                  <button type="button" onClick={() => eliminarPartida(d.id)} disabled={guardando || borradorDetalles.length === 1} className="rounded-lg px-2 py-1 text-xs text-danger transition hover:bg-danger-soft disabled:opacity-40">Eliminar</button>
+                </div>
+                <div className="grid gap-3 lg:grid-cols-12">
+                  <label className="text-xs text-muted-foreground lg:col-span-3">Tipo<select value={d.tipo} onChange={e => actualizarPartida(d.id, { tipo: e.target.value })} className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm">
+                    {tiposPartida.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                  </select></label>
+                  <label className="text-xs text-muted-foreground lg:col-span-9">Descripción<input value={d.descripcion} onChange={e => actualizarPartida(d.id, { descripcion: e.target.value })} placeholder="Ej. Anillo de oro 18K con diamante" className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm" /></label>
+                  <label className="text-xs text-muted-foreground lg:col-span-2">Cantidad<input type="number" min="0.001" step="0.001" value={d.cantidad} onChange={e => actualizarPartida(d.id, { cantidad: Number(e.target.value) || 1 })} className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm" /></label>
+                  <label className="text-xs text-muted-foreground lg:col-span-2">Unidad<input value={d.unidad} onChange={e => actualizarPartida(d.id, { unidad: e.target.value })} className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm" placeholder="und / g / ct" /></label>
+                  <label className="text-xs text-muted-foreground lg:col-span-3">Costo interno<input type="number" min="0" step="0.01" value={d.costo_unitario} onChange={e => actualizarPartida(d.id, { costo_unitario: Number(e.target.value) || 0 })} className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm" /></label>
+                  <label className="text-xs text-muted-foreground lg:col-span-3">Precio cliente<input type="number" min="0" step="0.01" value={d.precio_unitario} onChange={e => actualizarPartida(d.id, { precio_unitario: Number(e.target.value) || 0 })} className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm" /></label>
+                  <div className="flex items-end justify-between rounded-lg border border-gold/10 bg-gold/[0.025] px-3 py-2 lg:col-span-2">
+                    <span className="text-[10px] text-muted-foreground">Total</span>
+                    <strong className="text-sm tabular-nums">{money((Number(d.cantidad) || 0) * (Number(d.precio_unitario) || 0), cotizacion.moneda)}</strong>
+                  </div>
+                </div>
+              </div>)}              <button type="button" onClick={agregarPartida} disabled={guardando} className="w-full rounded-xl border border-dashed border-border px-4 py-3 text-sm font-medium hover:bg-surface-muted">+ Agregar partida</button>
+            </div>
+            <div className="mt-5 flex flex-wrap justify-end gap-2">
+              <button type="button" onClick={() => setEditando(false)} disabled={guardando} className="rounded-lg border border-border px-4 py-2.5 text-sm">Cancelar</button>
+              <button type="button" onClick={() => void guardarPartidas()} disabled={guardando || borradorDetalles.length === 0} className="rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground">{guardando ? "Guardando…" : "Guardar partidas"}</button>
+            </div>
+          </div>
+        </div> : null}
+
+            {cotizacion.estado === "requiere_revision" || respuestasCliente.length > 0 ? (
+              <Panel titulo="Respuesta del cliente">
+                <div className="space-y-4 p-4 lg:p-6">
+                  {cotizacion.estado === "requiere_revision" ? (
+                    <div className="rounded-xl border border-gold/30 bg-gold/10 p-4">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold/90">Atención comercial</p>
+                      <p className="mt-1 text-sm font-semibold">El cliente solicitó cambios en esta cotización.</p>
+                      <p className="mt-1 text-xs text-muted-foreground">Revisa el comentario, ajusta la propuesta y crea una nueva versión para volver a enviarla.</p>
+                    </div>
+                  ) : null}
+                  {respuestasCliente.length > 0 ? (
+                    <div className="space-y-3">
+                      {respuestasCliente.map((respuesta) => (
+                        <div key={respuesta.id} className="rounded-xl border border-border bg-surface/60 p-4">
+                          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                            <p className="text-sm font-semibold">{etiquetaRespuesta(respuesta.accion)}</p>
+                            <p className="text-[11px] text-muted-foreground">{new Date(respuesta.created_at).toLocaleString("es-PE")}</p>
+                          </div>
+                          {respuesta.comentario ? (
+                            <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-foreground">{respuesta.comentario}</p>
+                          ) : (
+                            <p className="mt-2 text-xs text-muted-foreground">Sin comentario adicional.</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">La cotización está marcada para revisión, pero no se encontró un comentario del cliente.</p>
+                  )}
+                </div>
+              </Panel>
+            ) : null}
+
+            {respuestaVersionAnterior ? (
+              <Panel titulo="Cambios solicitados por el cliente">
+                <div className="space-y-4 p-4 lg:p-6">
+                  <div className="rounded-xl border border-gold/25 bg-gold/10 p-4">
+                    <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                      <p className="text-sm font-semibold">Solicitud recibida en la versión anterior</p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {new Date(respuestaVersionAnterior.created_at).toLocaleString("es-PE")}
+                      </p>
+                    </div>
+                    <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-foreground">
+                      {respuestaVersionAnterior.comentario || "El cliente solicitó cambios sin agregar un comentario."}
+                    </p>
+                    <Link
+                      to="/cotizaciones/$id"
+                      params={{ id: cotizacion.reemplaza_id! }}
+                      className="mt-4 inline-flex text-xs font-semibold text-primary hover:underline"
+                    >
+                      Ver la versión que recibió esta solicitud →
+                    </Link>
+                  </div>
+                </div>
+              </Panel>
+            ) : null}
+
+            <Panel titulo="Historial de versiones">
+              <div className="space-y-2 p-4 lg:p-6">
+                <p className="text-xs text-muted-foreground">
+                  Todas las versiones pertenecen a la misma cotización. Aquí se conserva el historial sin duplicarla en el directorio comercial.
+                </p>
+                <div className="space-y-2">
+                  {versiones.map((version) => (
+                    <Link
+                      key={version.id}
+                      to="/cotizaciones/$id"
+                      params={{ id: version.id }}
+                      className={"flex items-center justify-between gap-3 rounded-xl border px-3 py-3 transition hover:bg-surface-muted " + (version.id === cotizacion.id ? "border-gold/30 bg-gold/[0.05]" : "border-border")}
+                    >
+                      <div>
+                        <p className="text-sm font-semibold">{version.numero} · v{version.version}</p>
+                        <p className="mt-0.5 text-[11px] text-muted-foreground">
+                          {etiquetaEstado(version.estado)} · {version.fecha_emision}
+                        </p>
+                      </div>
+                      {version.id === cotizacion.id ? (
+                        <span className="rounded-full border border-gold/20 bg-gold/10 px-2 py-1 text-[9px] font-semibold uppercase tracking-wider text-gold">
+                          Actual
+                        </span>
+                      ) : null}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </Panel>
+
+            <Panel titulo="Notas">
+              <div className="grid gap-4 p-4 sm:grid-cols-2 lg:p-6">
+                <div><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Para el cliente</p><p className="mt-2 whitespace-pre-wrap text-sm">{cotizacion.notas_cliente || "Sin notas."}</p></div>
+                <div><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Internas</p><p className="mt-2 whitespace-pre-wrap text-sm">{cotizacion.notas_internas || "Sin notas."}</p></div>
+              </div>
+            </Panel>
+          </div>
+
+          <aside className="h-fit space-y-4">
+            <Panel titulo="Resumen financiero">
+              <div className="space-y-3 p-4">
+                <Fila label="Costo interno" valor={money(cotizacion.subtotal_costo, cotizacion.moneda)} />
+                <Fila label="Subtotal cliente" valor={money(cotizacion.subtotal, cotizacion.moneda)} />
+                <Fila label="Descuento" valor={money(cotizacion.descuento, cotizacion.moneda)} />
+                <Fila label="Impuestos" valor={money(cotizacion.impuestos, cotizacion.moneda)} />
+                <div className="border-t border-border pt-3"><Fila label="Total" valor={money(cotizacion.total, cotizacion.moneda)} fuerte /></div>
+                <Fila label="Anticipo" valor={money(cotizacion.anticipo, cotizacion.moneda)} />
+                <Fila label="Margen bruto" valor={money(margen, cotizacion.moneda)} />
+              </div>
+            </Panel>
+            <Panel titulo="Documento para el cliente">
+              <div className="space-y-3 p-4">
+                <p className="text-xs text-muted-foreground">Consulta la ficha comercial en formato A4 e imprime o guarda el PDF desde su vista previa.</p>
+                <button type="button" disabled={!fichaCotizacion} onClick={() => { setImprimirFichaAlAbrir(false); setMostrarFichaA4(true); }} className="w-full rounded-lg border border-gold/40 bg-gold/10 px-4 py-2.5 text-sm font-semibold text-gold-deep hover:bg-gold/20 disabled:opacity-50">
+                  Ver ficha A4
+                </button>
+              </div>
+            </Panel>
+            <Panel titulo="Acciones">
+              <div className="space-y-2 p-4">
+                <div className="rounded-xl border border-gold/15 bg-gold/[0.025] p-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold/80">Flujo comercial</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{cotizacion.estado === "borrador" ? "Revisa la ficha y prepara el envío; el estado cambiará cuando compartas la propuesta." : cotizacion.estado === "enviada" ? "Cotización enviada: comparte de nuevo el enlace o consulta la respuesta." : cotizacion.estado === "aprobada" ? "Cotización aprobada: crea un contrato opcional o continúa con el pedido." : cotizacion.estado === "requiere_revision" ? "Revisa los comentarios y crea una nueva versión." : "Consulta el historial y las respuestas de esta cotización."}</p>
+                </div>
+                {cotizacion.estado === "borrador" ? (
+                  <>
+                    <button type="button" onClick={abrirEditor} className="w-full rounded-lg border border-border px-4 py-2.5 text-sm font-semibold hover:bg-surface-muted">Editar cotización</button>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (!cotizacion.seguimiento_codigo?.trim()) {
+                          setError("Esta cotización no tiene código de seguimiento. Verifica la configuración del portal público antes de enviarla.");
+                          return;
+                        }
+                        setMostrarOpcionesEnvio(true);
+                      }}
+                      className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
+                    >
+                      Preparar envío
+                    </button>
+                  </>
+                ) : cotizacion.estado === "enviada" ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!cotizacion.seguimiento_codigo?.trim()) {
+                        setError("Esta cotización no tiene código de seguimiento. Verifica la configuración del portal público antes de compartirla.");
+                        return;
+                      }
+                      setMostrarOpcionesEnvio((visible) => !visible);
+                    }}
+                    className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
+                  >
+                    {mostrarOpcionesEnvio ? "Ocultar opciones" : "Compartir cotización"}
+                  </button>
+                ) : null}
+                {mostrarOpcionesEnvio ? (
+                      <div className="space-y-2 rounded-xl border border-border bg-surface-muted/40 p-3">
+                        <p className="text-xs text-muted-foreground">Comparte la cotización mediante una de estas opciones:</p>
+                        {cotizacion.seguimiento_codigo?.trim() ? (
+                          <>
+                            {numeroWhatsAppRegistrado() ? (
+                              <button type="button" onClick={() => abrirWhatsApp()} className="w-full rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-sm font-semibold text-emerald-700 hover:bg-emerald-500/15">
+                                Enviar por WhatsApp
+                              </button>
+                            ) : (
+                              <div className="space-y-3 rounded-lg border border-border bg-background p-3">
+                                <div>
+                                  <p className="text-sm font-semibold">Registrar WhatsApp del cliente</p>
+                                  <p className="mt-1 text-xs text-muted-foreground">No encontramos un número guardado. Regístralo una vez y lo guardaremos automáticamente en la ficha del cliente.</p>
+                                </div>
+                                <div className="grid gap-2 sm:grid-cols-[150px_1fr]">
+                                  <label className="text-xs text-muted-foreground">
+                                    País
+                                    <select value={paisWhatsapp} onChange={(e) => setPaisWhatsapp(e.target.value)} className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm">
+                                      {paisesWhatsapp.map((pais) => <option key={pais.codigo} value={pais.codigo}>+{pais.codigo} · {pais.nombre}</option>)}
+                                    </select>
+                                  </label>
+                                  <label className="text-xs text-muted-foreground">
+                                    Número
+                                    <input
+                                      value={numeroWhatsapp}
+                                      onChange={(e) => setNumeroWhatsapp(e.target.value.replace(/[^0-9\s()+-]/g, ""))}
+                                      placeholder="987 654 321"
+                                      inputMode="tel"
+                                      autoComplete="tel"
+                                      className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm"
+                                    />
+                                  </label>
+                                </div>
+                                <button type="button" disabled={guardandoWhatsapp} onClick={() => void registrarWhatsAppYEnviar()} className="w-full rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">
+                                  {guardandoWhatsapp ? "Guardando número…" : "Guardar y enviar por WhatsApp"}
+                                </button>
+                              </div>
+                            )}
+                            <button type="button" onClick={() => void copiarEnlacePdf()} className="w-full rounded-lg border border-border px-4 py-2.5 text-sm font-semibold hover:bg-surface-muted">
+                              {copiado === "pdf" ? "✓ Enlace corto copiado" : "Copiar enlace corto"}
+                            </button>
+                          </>
+                        ) : (
+                          <p className="text-xs text-muted-foreground">No hay código de seguimiento para esta cotización. Verifica la configuración del portal público antes de compartirla.</p>
+                        )}
+                      </div>
+                ) : null}
+                {cotizacion.estado === "requiere_revision" ? (
+                  <div className="rounded-xl border border-gold/25 bg-gold/10 px-3 py-3">
+                    <p className="text-sm font-semibold">Cambios solicitados por el cliente</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Revisa la sección “Respuesta del cliente” y crea una nueva versión cuando estés listo para editar la propuesta.</p>
+                    <button type="button" disabled={creandoVersion} onClick={() => void crearVersion()} className="mt-3 w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+                      {creandoVersion ? "Creando nueva versión…" : "Crear nueva versión"}
+                    </button>
+                  </div>
+                ) : null}
+                {cotizacion.estado === "aprobada" ? (
+                  <>
+                  {contratoId ? (
+                    <Link to="/contratos/$id" params={{ id: contratoId }} search={{ nuevoPedido: false }} className="block w-full rounded-lg border border-border px-4 py-2.5 text-center text-sm font-semibold">
+                      Ver contrato {contratoNumero ? `· ${contratoNumero}` : ""}
+                    </Link>
+                  ) : (
+                    <button type="button" onClick={() => void navigate({ to: "/contratos/nuevo", search: { cotizacionId: cotizacion.id } })} className="w-full rounded-lg border border-border px-4 py-2.5 text-sm font-semibold">
+                      Crear contrato (opcional)
+                    </button>
+                  )}
+                  {pedidoId ? (
+                    <div className="space-y-2">
+                      <div className="rounded-lg border border-border bg-muted/30 px-3 py-2 text-sm">
+                        <p className="font-medium">✓ Operación comercial creada</p>
+                        {contratoNumero ? <p className="mt-1 text-xs text-muted-foreground">Contrato: {contratoNumero}</p> : null}
+                      </div>
+                      <Link to="/pedidos/$id" params={{ id: pedidoId }} className="block w-full rounded-lg bg-primary px-4 py-2.5 text-center text-sm font-semibold text-primary-foreground">Ver pedido creado</Link>
+                    </div>
+                  ) : contratoId ? (
+                    <p className="rounded-lg border border-warning/30 bg-warning/10 px-3 py-2 text-sm text-muted-foreground">
+                      El contrato está vinculado. El pedido quedará habilitado cuando se complete la firma y validación del contrato.
+                    </p>
+                  ) : (
+                    <button type="button" disabled={convirtiendoPedido} onClick={() => void convertirAPedido()} className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground">
+                      {convirtiendoPedido ? "Creando pedido…" : "Crear pedido"}
+                    </button>
+                  )}
+                  </>
+                ) : (
+                  <p className="text-sm text-muted-foreground">Cuando sea aprobada podrás crear un contrato opcional y vinculado a esta cotización, o continuar sin contrato cuando corresponda.</p>
+                )}
+                <button type="button" onClick={() => void navigate({ to: "/cotizaciones" })} className="w-full rounded-lg border border-border px-4 py-2.5 text-sm">Volver al listado</button>
+              </div>
+            </Panel>
+          </aside>
+        </div>
+      </div>
+
+    {mostrarFichaA4 && fichaCotizacion ? (
+      <div className="fixed inset-0 z-[100] flex flex-col overflow-auto bg-slate-900/90 p-3 sm:p-6 print-ficha-overlay" role="dialog" aria-modal="true" aria-label="Ficha A4 de cotización">
+        <style>{`@page { size: A4; margin: 0; } @media print { body * { visibility: hidden !important; } .print-ficha-overlay, .print-ficha-overlay * { visibility: visible !important; } .print-ficha-overlay { position: absolute !important; inset: 0 !important; display: block !important; overflow: visible !important; padding: 0 !important; background: white !important; } .print-ficha-toolbar { display: none !important; } .print-ficha-paper { width: 210mm !important; min-height: 297mm !important; max-width: none !important; margin: 0 !important; box-shadow: none !important; } }`}</style>
+        <div className="print-ficha-toolbar mx-auto mb-3 flex w-full max-w-[210mm] items-center justify-end gap-2">
+          <button type="button" onClick={() => { setImprimirFichaAlAbrir(false); window.print(); }} className="rounded-lg bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow">Imprimir / Guardar PDF</button>
+          <button type="button" onClick={() => setMostrarFichaA4(false)} className="rounded-lg bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow">Cerrar ficha</button>
+        </div>
+        <div className="print-ficha-paper mx-auto w-full max-w-[210mm]">
+          <FichaCotizacionA4 data={fichaCotizacion as import("@/components/FichaCotizacionA4").FichaCotizacionProps} />
+        </div>
+      </div>
+    ) : null}
+    </AppShell>
+      </div>
+
+    </>
+  );
+}
+
+function Dato({ label, valor }: { label: string; valor: string }) {
+  return <div><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</p><p className="mt-1 text-sm font-medium">{valor}</p></div>;
+}
+function Fila({ label, valor, fuerte = false }: { label: string; valor: string; fuerte?: boolean }) {
+  return <div className={"flex items-center justify-between gap-3 text-sm " + (fuerte ? "font-semibold text-base" : "")}><span className="text-muted-foreground">{label}</span><span>{valor}</span></div>;
+}

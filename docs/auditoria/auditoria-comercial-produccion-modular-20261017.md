@@ -1,0 +1,150 @@
+# Auditoría de Comercial y límites de integración con Producción
+Fecha: 2026-10-17
+Rama auditada: `main`
+Repositorio: `Midex09021993/tallerdeljoyero`
+
+## Decisión arquitectónica obligatoria
+
+**Los módulos y los talleres deben seguir siendo independientes. Integrar no significa fusionar sus modelos internos ni crear dependencias indiscriminadas.**
+
+- Comercial mantiene la propiedad de clientes, cotizaciones, contratos, pagos/ventas y compromisos con el cliente.
+- Cada taller mantiene su sede/participante, capacidades, usuarios, permisos, configuración y operaciones.
+- Producción mantiene sus órdenes, trabajos, piezas y estados internos.
+- Servicios externos mantiene su ciclo de salida, recepción y seguimiento.
+- La integración ocurre mediante contratos de datos explícitos y puntos de entrada controlados. Un módulo no debe asumir ni modificar detalles internos de otro módulo.
+- La incorporación de talleres es incremental: habilitar, probar y validar un taller sin exigir que los demás adopten la misma modalidad ni alterar sus datos.
+- Las relaciones entre entidades deben incluir y validar el ámbito del taller (sede/participante según el modelo canónico). Nunca se debe confiar solo en filtros de interfaz.
+
+## Flujo comercial observado en código
+
+1. Cliente y proyecto de joya alimentan la cotización.
+2. La cotización aprobada puede convertirse en pedido mediante `public.convertir_cotizacion_a_pedido(uuid)`.
+3. El contrato es opcional en el flujo general, pero si se crea desde una cotización, la aplicación exige que la firma se reciba y sea validada antes de vincular un pedido a ese contrato.
+4. El pedido es el punto de transferencia de requisitos a la operación: conserva `cotizacion_id`, `proyecto_joya_id`, los detalles comerciales y una instantánea de especificaciones.
+5. La preparación de producción usa la ruta del pedido para generar una orden de producción, trabajos y piezas.
+6. Ventas consulta pedidos, contratos y pagos para cartera, cobros, despacho y entrega.
+
+Archivos de referencia revisados:
+- `src/routes/_authenticated/cotizaciones.$id.tsx`
+- `src/routes/_authenticated/contratos.nuevo.tsx`
+- `src/routes/_authenticated/pedidos.nuevo.tsx`
+- `src/routes/_authenticated/pedidos.index.tsx`
+- `src/routes/_authenticated/ventas.tsx`
+- `src/hooks/use-pedidos-area.ts`
+- `src/lib/taller-db.ts`
+- `supabase/migrations/20261009100000_p0_consolidar_capacidades_y_comercial.sql`
+- `supabase/migrations/20261008203100_respetar_modalidades_produccion.sql`
+- `supabase/migrations/20261010200000_firma_y_validacion_contratos.sql`
+- `supabase/migrations/20261011010000_un_contrato_por_cotizacion.sql`
+
+## Hallazgos y estado
+
+### H1 — La conversión comercial tiene un contrato de retorno definido
+La RPC canónica devuelve JSON con `pedido_id`, y la pantalla de detalle de cotización consume esa propiedad. La conversión guarda los detalles y las especificaciones en la información comercial del pedido.
+
+**Pendiente de validación:** confirmar que la definición instalada en Supabase coincide con la migración canónica actual y que las reglas de acceso reales coinciden con el flujo de usuario previsto.
+
+### H2 — La pantalla de cotización permite entrar a Ventas, pero la conversión está reservada a administración
+
+Evidencia contrastada:
+- `src/routes/_authenticated/cotizaciones.$id.tsx` permite acceder a la pantalla a `esAdmin` o a quien tenga el área `Área ventas`.
+- En la misma pantalla, `convertirAPedido()` retorna sin hacer nada si `!sesion?.esAdmin`; el botón “Crear pedido” también depende de ese control.
+- La RPC `convertir_cotizacion_a_pedido(uuid)` en la migración canónica `20261009100000_p0_consolidar_capacidades_y_comercial.sql` valida únicamente `es_admin(auth.uid())`.
+- La RPC de conversión con contrato opcional tiene la misma restricción.
+- La función `private.usuario_puede_ventas(uid, sede)` define un alcance diferente: dueño, o gerente con acceso a esa sede y el área de ventas.
+
+**Impacto:** un usuario de Ventas autorizado a consultar/gestionar una cotización puede abrir su detalle, pero no convertirla en pedido desde ese flujo. La base de datos también rechazaría la conversión aunque se llamara directamente.
+
+**Decisión pendiente antes de corregir:** confirmar si la conversión aprobada corresponde solo a administración o también al equipo comercial autorizado del mismo taller. No ampliar permisos de forma implícita. Si se habilita para Ventas, frontend y ambas RPC deben aplicar la misma autorización acotada a la sede/participante de la cotización, y se deben probar intentos cruzados entre talleres.
+
+### H2 — La autorización de conversión es más restrictiva que la gestión comercial general
+La RPC de conversión y el botón correspondiente comprueban `es_admin`. Otras políticas históricas permiten determinadas operaciones a usuarios del área de ventas de su sede.
+
+**No se declara defecto sin confirmar la regla de negocio.** Antes de cambiar permisos hay que decidir explícitamente si convertir una cotización aprobada es una acción exclusiva de administración o también corresponde a ventas/gerencia, y verificarlo tanto en frontend como en RLS/RPC.
+
+### H3 — La firma validada es una barrera de integridad del contrato
+La migración de firma impide vincular un pedido a un contrato originado en cotización mientras la firma no esté recibida y validada. Este control debe mantenerse en la base de datos; no debe depender solo de deshabilitar un botón.
+
+### H4 — Producción consulta directamente la entidad Pedido
+Las áreas operativas consultan pedidos y su ruta; la RPC `preparar_produccion_pedido` crea la orden de producción, los trabajos y las piezas.
+
+**Riesgo arquitectónico:** si cada área comienza a depender de columnas internas de Comercial o actualiza directamente sus datos, la independencia se erosiona. El pedido debe funcionar como un paquete de transferencia versionable, con campos comerciales de solo lectura para Producción y campos operativos de propiedad de Producción.
+
+### H5 — Las modalidades de cada taller condicionan la derivación
+La preparación de producción comprueba las modalidades configuradas para la sede y valida la ruta. Este comportamiento es coherente con la incorporación gradual, pero debe probarse con talleres que tengan Producción activa, desactivada y Servicios externos activados/desactivados.
+
+### H6 — GitHub no acredita por sí solo el estado de la base de datos desplegada
+El mapa de dependencias ya registra historial de redefiniciones de RPC y posibles diferencias entre GitHub y producción. La consulta de estado de checks para el último commit de `main` no devolvió checks; no se debe interpretar como Build/TypeScript aprobados. Tampoco se obtuvo evidencia directa del esquema/RPC que está instalado en Supabase.
+
+## Hallazgo funcional confirmado y corrección preparada
+
+### H7 — La ausencia de configuración de modalidades podía no bloquear la preparación de Producción
+
+En la función de `supabase/migrations/20261008203100_respetar_modalidades_produccion.sql`, el `SELECT ... INTO` de `sede_modalidades` asigna `NULL` a las variables cuando la sede no tiene fila de configuración. En PL/pgSQL, una condición `IF NOT boolean_variable` cuyo valor es `NULL` no entra en la rama de bloqueo. Por eso, los controles `if not v_produccion_activa` y `if v_tipo = 'externo' and not v_servicios_externos_activos` no bloqueaban de forma fiable el caso sin fila.
+
+**Corrección añadida a GitHub en una migración nueva y aislada:**
+- Archivo: `supabase/migrations/20261017120000_bloquear_produccion_sin_configuracion_modalidades.sql`
+- Commit: `0f9b61ef310b3712bee8ade9a01848e05d44d511`
+- Normaliza ambos booleanos con `coalesce(variable, false)` inmediatamente después de leer la configuración.
+- Conserva el resto de la función canónica de preparación y sus permisos; no cambia la configuración ni los datos de ningún taller.
+
+Esta corrección es deliberadamente conservadora: una sede sin configuración explícita se trata como si Producción y Servicios externos estuvieran desactivados. El cambio está **registrado en GitHub, pero no se afirma desplegado en Supabase ni probado en producción**. Antes de considerarlo terminado, ejecutar la migración en el entorno previsto y comprobar: (a) sede sin fila, (b) Producción desactivada, (c) Producción activa con Servicios externos desactivados y ruta externa, (d) ambas modalidades activas, (e) taller distinto sin cambios.
+
+### H8 — Idempotencia de la preparación de Producción
+
+La función bloquea el pedido, busca una orden existente y utiliza un bloqueo transaccional por pedido antes de crear la OP. Además, existe una restricción única `ordenes_produccion_pedido_unique` sobre `pedido_id`. El código evita volver a generar trabajos y piezas si ya encuentra los existentes.
+
+Debe validarse mediante dos llamadas concurrentes al mismo pedido y mediante reintento después de un error. La restricción única y la transacción son defensas importantes, pero no sustituyen las pruebas de concurrencia.
+
+### H9 — Contratos y entregas tienen protecciones de integridad en base de datos
+
+- `contratos_una_cotizacion_un_contrato` limita a un contrato del sistema por cotización.
+- `revisar_firma_contrato` requiere firma recibida y un archivo de firma, pero la migración revisada restringe esta revisión a `es_admin`.
+- `exigir_firma_validada_para_pedido` bloquea la vinculación del pedido a contratos originados en cotización mientras la firma no esté validada.
+- `transicionar_entrega_pedido` comprueba el acceso a la sede y el permiso de ventas; exige packing antes de despachar y receptor al registrar la entrega, y controla el saldo pendiente.
+
+Estas protecciones deben conservarse al integrar talleres. No se debe permitir que un cambio de estado operativo modifique por sí mismo pagos, saldo o firma comercial.
+
+## Contrato de integración propuesto
+
+### Comercial → Pedido de fabricación
+Transferir únicamente:
+- identificadores de cotización, proyecto, cliente y taller;
+- referencia del pedido y fecha comprometida;
+- descripción de pieza, cantidad, metal, piedras, talla, peso y referencias visuales;
+- especificaciones comerciales congeladas/versionadas necesarias para fabricar;
+- ruta de trabajo solicitada y notas pertinentes;
+- requisitos de calidad y entrega que correspondan.
+
+Los precios, pagos, saldo, firma y documentos comerciales permanecen bajo control de Comercial. Producción no recalcula ni sobrescribe estos valores.
+
+### Pedido → Producción
+Una operación explícita y segura debe:
+- validar que el pedido pertenece al taller actual;
+- validar que la modalidad y la ruta estén habilitadas;
+- crear como máximo una orden de producción por pedido;
+- conservar trazabilidad de la versión de especificaciones recibida;
+- generar trabajos de las áreas solicitadas sin crear dependencias entre sus pantallas;
+- permitir que cada área gestione sus propios estados y registrar los eventos de transferencia;
+- devolver errores claros sin dejar registros parciales.
+
+### Producción → Comercial
+Producción devuelve estados de operación y cumplimiento (en proceso, control de calidad, terminada, lista para entrega, incidencias y fechas). No modifica pagos ni cierra una venta por su cuenta. Comercial decide el cobro, despacho y entrega al cliente.
+
+### Aislamiento entre talleres
+Todas las lecturas y escrituras deben validarse en servidor contra el taller/participante autorizado. Las referencias entre tablas deben comprobar que ambas entidades pertenecen al mismo ámbito cuando corresponda. No se debe usar un selector de sede del frontend como mecanismo de seguridad.
+
+## Plan incremental de verificación
+
+1. **Congelar el contrato:** definir campos transferidos, propietario de cada campo, estados y reglas de edición.
+2. **Reconciliar producción:** comparar migraciones con RPC, triggers, constraints, grants y políticas RLS realmente instaladas.
+3. **Validar Comercial:** cliente → cotización → aprobación → contrato opcional/firma → pedido, incluyendo repetición de acciones y prevención de duplicados.
+4. **Piloto de un taller:** activar una sola modalidad/ruta y comprobar que los demás talleres no cambian.
+5. **Probar aislamiento:** usuario de taller A no puede leer, cambiar ni preparar pedidos del taller B.
+6. **Probar fallos y reintentos:** ruta no disponible, modalidad desactivada, firma pendiente, doble clic, reintento de RPC y pedido ya preparado.
+7. **Verificar CI:** Build, TypeScript, lint y pruebas disponibles; registrar explícitamente los checks ausentes.
+8. **Expandir por etapas:** solo incorporar otra área/taller cuando el piloto pase las verificaciones.
+
+## Límites de esta entrega
+
+Esta entrega documenta el análisis de archivos y migraciones en GitHub. No se ejecutaron consultas contra la base de datos de producción ni pruebas visuales/E2E. No se modificaron funciones, permisos, tablas ni datos de la aplicación. La auditoría no se considera cerrada hasta reconciliar el esquema real y ejecutar las pruebas indicadas.
