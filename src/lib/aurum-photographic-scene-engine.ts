@@ -49,21 +49,25 @@ export const AURUM_GEM_HDRI_ASSET_URL = "/env_gem_002_30251392af.exr";
 export const AURUM_GEM_HDRI_APPROVED_URL = "/env_gem_001_b9c4533e70.exr";
 export const AURUM_GEM_HDRI_APPROVED_2_URL = "/env_gem_004_13d65af3ba.exr";
 export const AURUM_GEM_HDRI_URLS:Record<string,string>={
+  // One library source of truth: changing the central EXR updates every
+  // legacy tier key (central, medium, small and micro) together.
   gemDiamond:AURUM_GEM_HDRI_ASSET_URL,
   gemWhite:AURUM_GEM_HDRI_ASSET_URL,
   gemNeutral:AURUM_GEM_HDRI_ASSET_URL,
   gemColor:AURUM_GEM_HDRI_ASSET_URL,
   gemLuxury:AURUM_GEM_HDRI_ASSET_URL,
   ijewelGem:AURUM_GEM_HDRI_ASSET_URL,
-  gemDiamondWhite1:AURUM_GEM_HDRI_APPROVED_URL,
-  gemDiamondWhite2:AURUM_GEM_HDRI_APPROVED_2_URL,
-  gemDiamondWhite3:"/env_gem_005_314acddf6c.exr",
-  gemDiamondWhite4:"/env_gem_006_c9c284167f.exr",
-  gemDiamondWhite5:"/env_gem_007_a_edf3febd3c.exr",
-  gemDiamondWhite6:"/env_gem_007_b_ee3338abf6.exr",
-  gemDiamondWhite7:"/env_gem_007_c_c264662992.exr",
+  gemDiamondWhite1:AURUM_GEM_HDRI_ASSET_URL,
+  gemDiamondWhite2:AURUM_GEM_HDRI_ASSET_URL,
+  gemDiamondWhite3:AURUM_GEM_HDRI_ASSET_URL,
+  gemDiamondWhite4:AURUM_GEM_HDRI_ASSET_URL,
+  gemDiamondWhite5:AURUM_GEM_HDRI_ASSET_URL,
+  gemDiamondWhite6:AURUM_GEM_HDRI_ASSET_URL,
+  gemDiamondWhite7:AURUM_GEM_HDRI_ASSET_URL,
 };
 export const getAurumGemHdriUrl=(key:string)=>AURUM_GEM_HDRI_URLS[key]??AURUM_GEM_HDRI_ASSET_URL;
+
+export const AURUM_AMBIENT_PRESETS:Record<string,{id:string;name:string;url:string;rotation:number;intensity:number;previewClass:string;metalKey?:string;metalRotation?:number;metalIntensity?:number}>=
 
 /** One coordinated studio preset. Gem illumination always uses the supplied
  * optical-lab EXR; only the metal environment varies independently. */
@@ -83,70 +87,17 @@ export const AURUM_AMBIENT_PRESETS:Record<string,{id:string;name:string;url:stri
 
 // The gem selector intentionally exposes one calibrated HDRI only.
 export const AURUM_GEM_ENVIRONMENT_PRESETS:Record<string,{id:string;name:string;url:string;rotation:number;intensity:number;previewClass:string}>={
-  gemUserHdr:{
-    id:"gemUserHdr",
-    name:"env-gem-002-30251392",
-    url:AURUM_GEM_HDRI_ASSET_URL,
-    rotation:0,
-    intensity:1,
-    previewClass:"bg-[radial-gradient(ellipse_at_50%_22%,#fffdf4_0%,#e9dfc5_22%,#9da3a6_48%,#4c5359_72%,#171b20_100%)]",
-  },
-  gemDiamondWhite1:{
-    id:"gemDiamondWhite1",
-    name:"env-gem-001-b9c4533e70",
-    url:AURUM_GEM_HDRI_APPROVED_URL,
-    rotation:0,
-    intensity:1,
-    previewClass:"bg-[radial-gradient(ellipse_at_50%_22%,#fffdf4_0%,#e9dfc5_22%,#9da3a6_48%,#4c5359_72%,#171b20_100%)]",
-  },
-  gemDiamondWhite2:{
-    id:"gemDiamondWhite2",
-    name:"env-gem-004-13d65af3ba",
-    url:AURUM_GEM_HDRI_APPROVED_2_URL,
-    rotation:0,
-    intensity:1,
-    previewClass:"bg-[radial-gradient(ellipse_at_50%_22%,#fffdf4_0%,#e9dfc5_22%,#9da3a6_48%,#4c5359_72%,#171b20_100%)]",
-  },
-  gemDiamondWhite3:{
-    id:"gemDiamondWhite3",
-    name:"env-gem-005-314acddf6c",
-    url:"/env_gem_005_314acddf6c.exr",
-    rotation:0,
-    intensity:1,
-    previewClass:"bg-[radial-gradient(ellipse_at_50%_22%,#fffdf4_0%,#e9dfc5_22%,#9da3a6_48%,#4c5359_72%,#171b20_100%)]",
-  },
-  gemDiamondWhite4:{
-    id:"gemDiamondWhite4",
-    name:"env-gem-006-c9c284167f",
-    url:"/env_gem_006_c9c284167f.exr",
-    rotation:0,
-    intensity:1,
-    previewClass:"bg-[radial-gradient(ellipse_at_50%_22%,#fffdf4_0%,#e9dfc5_22%,#9da3a6_48%,#4c5359_72%,#171b20_100%)]",
-  },
-  gemDiamondWhite5:{
-    id:"gemDiamondWhite5",
-    name:"env-gem-007-a-edf3febd3c",
-    url:"/env_gem_007_a_edf3febd3c.exr",
-    rotation:0,
-    intensity:1,
-    previewClass:"bg-[radial-gradient(ellipse_at_50%_22%,#fffdf4_0%,#e9dfc5_22%,#9da3a6_48%,#4c5359_72%,#171b20_100%)]",
-  },
-  gemDiamondWhite6:{
-    id:"gemDiamondWhite6",
-    name:"env-gem-007-b-ee3338abf6",
-    url:"/env_gem_007_b_ee3338abf6.exr",
-    rotation:0,
-    intensity:1,
-    previewClass:"bg-[radial-gradient(ellipse_at_50%_22%,#fffdf4_0%,#e9dfc5_22%,#9da3a6_48%,#4c5359_72%,#171b20_100%)]",
-  },
-  gemDiamondWhite7:{
-    id:"gemDiamondWhite7",
-    name:"env-gem-007-c-c264662992",
-    url:"/env_gem_007_c_c264662992.exr",
-    rotation:0,
-    intensity:1,
-    previewClass:"bg-[radial-gradient(ellipse_at_50%_22%,#fffdf4_0%,#e9dfc5_22%,#9da3a6_48%,#4c5359_72%,#171b20_100%)]",
-  },
+  // Keep legacy selector entries for saved projects, but every option resolves
+  // to the central library EXR. Tier-specific optical response lives in the
+  // diamond micro pipeline, never in a different environment asset.
+  gemUserHdr:{id:"gemUserHdr",name:"EXR central de biblioteca",url:AURUM_GEM_HDRI_ASSET_URL,rotation:0,intensity:1,previewClass:"bg-[radial-gradient(ellipse_at_50%_22%,#fffdf4_0%,#e9dfc5_22%,#9da3a6_48%,#4c5359_72%,#171b20_100%)]"},
+  gemDiamondWhite1:{id:"gemDiamondWhite1",name:"Diamante blanco 1 · EXR compartido",url:AURUM_GEM_HDRI_ASSET_URL,rotation:0,intensity:1,previewClass:"bg-[radial-gradient(ellipse_at_50%_22%,#fffdf4_0%,#e9dfc5_22%,#9da3a6_48%,#4c5359_72%,#171b20_100%)]"},
+  gemDiamondWhite2:{id:"gemDiamondWhite2",name:"Diamante blanco 2 · EXR compartido",url:AURUM_GEM_HDRI_ASSET_URL,rotation:0,intensity:1,previewClass:"bg-[radial-gradient(ellipse_at_50%_22%,#fffdf4_0%,#e9dfc5_22%,#9da3a6_48%,#4c5359_72%,#171b20_100%)]"},
+  gemDiamondWhite3:{id:"gemDiamondWhite3",name:"Diamante blanco 3 · EXR compartido",url:AURUM_GEM_HDRI_ASSET_URL,rotation:0,intensity:1,previewClass:"bg-[radial-gradient(ellipse_at_50%_22%,#fffdf4_0%,#e9dfc5_22%,#9da3a6_48%,#4c5359_72%,#171b20_100%)]"},
+  gemDiamondWhite4:{id:"gemDiamondWhite4",name:"Diamante blanco 4 · EXR compartido",url:AURUM_GEM_HDRI_ASSET_URL,rotation:0,intensity:1,previewClass:"bg-[radial-gradient(ellipse_at_50%_22%,#fffdf4_0%,#e9dfc5_22%,#9da3a6_48%,#4c5359_72%,#171b20_100%)]"},
+  gemDiamondWhite5:{id:"gemDiamondWhite5",name:"Diamante blanco 5 · EXR compartido",url:AURUM_GEM_HDRI_ASSET_URL,rotation:0,intensity:1,previewClass:"bg-[radial-gradient(ellipse_at_50%_22%,#fffdf4_0%,#e9dfc5_22%,#9da3a6_48%,#4c5359_72%,#171b20_100%)]"},
+  gemDiamondWhite6:{id:"gemDiamondWhite6",name:"Diamante blanco 6 · EXR compartido",url:AURUM_GEM_HDRI_ASSET_URL,rotation:0,intensity:1,previewClass:"bg-[radial-gradient(ellipse_at_50%_22%,#fffdf4_0%,#e9dfc5_22%,#9da3a6_48%,#4c5359_72%,#171b20_100%)]"},
+  gemDiamondWhite7:{id:"gemDiamondWhite7",name:"Diamante blanco 7 · EXR compartido",url:AURUM_GEM_HDRI_ASSET_URL,rotation:0,intensity:1,previewClass:"bg-[radial-gradient(ellipse_at_50%_22%,#fffdf4_0%,#e9dfc5_22%,#9da3a6_48%,#4c5359_72%,#171b20_100%)]"},
 };
 
 
