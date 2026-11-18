@@ -129,34 +129,38 @@ function createShaderMaterial(geometry,env,camera,settings){
  return material;
 }
 async function startMu(geometry,env){
- const canvas=$("muCanvas");const rendererScene=new THREE.Scene();rendererScene.background=new THREE.Color(0xf4f4f2);
- const camera=new THREE.PerspectiveCamera(32,canvas.clientWidth/canvas.clientHeight,.01,100);camera.position.set(0,0,3.5);
- const controls=new OrbitControls(camera,canvas);controls.enableDamping=true;
- const material=new THREE.MeshPhysicalMaterial({color:0xffffff,metalness:0,roughness:0,transmission:1,thickness:1,ior:values().ior,dispersion:values().disp,envMap:env,envMapIntensity:values().env,side:THREE.DoubleSide});
- const mesh=new THREE.Mesh(geometry.clone(),material);rendererScene.add(mesh);
- const engine=new Engine({canvas,backend:"auto"});const sync=new THREESync(engine,{scene:rendererScene,camera,controls});const loop=new RenderLoop(engine,{sync,final:{bounces:8,maxSamples:512}});
- state.mu={engine,sync,loop,material,controls};state.controls.push(controls);
- $("muInfo").textContent="MuTracer · WebGPU/WebGL2 · material físico transmisivo. Dispersión depende de compatibilidad del backend.";
+ const canvas=$("muCanvas"),scene=new THREE.Scene();scene.background=new THREE.Color(0xf4f4f2);
+ const camera=new THREE.PerspectiveCamera(32,canvas.clientWidth/canvas.clientHeight,.01,100);
+ const controls=new OrbitControls(camera,canvas);controls.enableDamping=true;controls.enablePan=false;
+ fitCamera(camera,controls,geometry);
+ const mat=new THREE.MeshPhysicalMaterial({color:0xffffff,metalness:0,roughness:0,transmission:1,thickness:1,ior:values().ior,dispersion:values().disp,envMap:env,envMapIntensity:values().env,side:THREE.DoubleSide});
+ scene.environment=env;scene.add(new THREE.HemisphereLight(0xffffff,0x777777,.8));
+ const key=new THREE.DirectionalLight(0xffffff,1.5);key.position.set(3,4,4);scene.add(key);
+ scene.add(new THREE.Mesh(geometry.clone(),mat));
+ const engine=new Engine({canvas,backend:"auto"});const sync=new THREESync(engine,{scene,camera,controls});const loop=new RenderLoop(engine,{sync,final:{bounces:8,maxSamples:512}});
+ engine.on?.("error",err=>{console.error("[MuTracer]",err);$("muInfo").textContent="Error MuTracer: "+(err?.message||err)});
+ state.mu={engine,sync,loop,material:mat,controls};state.controls.push(controls);loop.start();
+ $("muInfo").textContent="MuTracer · WebGPU/WebGL2 · path tracing progresivo · IOR "+values().ior.toFixed(3);
 }
 async function startComparison(){
  if(!state.selected||!state.env)return;clearRenderers();const geom=centerGeometry(state.selected);const settings=values();
  try{
-  // Three independent canvases, same centered CAD geometry and HDR source.
-  const a=makeBase(canvases[0]);state.renderers.push(a.renderer);state.controls.push(a.controls);fitCamera(a.camera,a.controls,geom.clone());
-  const b=makeBase(canvases[1]);state.renderers.push(b.renderer);state.controls.push(b.controls);fitCamera(b.camera,b.controls,geom.clone());
-  const c=makeBase(canvases[2]);state.renderers.push(c.renderer);state.controls.push(c.controls);fitCamera(c.camera,c.controls,geom.clone());
+  const a=makeBase(canvases[0]);state.renderers.push(a.renderer);state.controls.push(a.controls);fitCamera(a.camera,a.controls,geom);
+  const b=makeBase(canvases[1]);state.renderers.push(b.renderer);state.controls.push(b.controls);fitCamera(b.camera,b.controls,geom);
   const pmA=new THREE.PMREMGenerator(a.renderer);const pmB=new THREE.PMREMGenerator(b.renderer);
   const envA=pmA.fromEquirectangular(state.env).texture;const envB=pmB.fromEquirectangular(state.env).texture;state.disposed.push(pmA,pmB,envA,envB);
-  a.scene.environment=envA;b.scene.environment=envB;c.scene.environment=envA;
+  a.scene.environment=envA;b.scene.environment=envB;
   const ga=geom.clone(),gb=geom.clone(),gc=geom.clone();
-  const matA=diamondApi.createDiamondMaterial({environmentMap:state.env,bvh:diamondApi.createDiamondBVH(ga).bvh,ior:settings.ior,dispersion:settings.disp,environmentIntensity:settings.env,rayBounces:4,facetSharpness:1,reflectivity:.46,color:0xffffff,absorption:1,transmission:0,gamma:1.09});
-  const meshA=new THREE.Mesh(ga,matA);a.scene.add(meshA);
+  const bvh=diamondApi.createDiamondBVH(ga).bvh;
+  const matA=diamondApi.createDiamondMaterial({environmentMap:state.env,bvh,ior:settings.ior,dispersion:settings.disp,environmentIntensity:settings.env,rayBounces:4,facetSharpness:1,reflectivity:.46,color:0xffffff,absorption:1,transmission:0,gamma:1.09});
+  const acesOutput="gl_FragColor = vec4(aces(hdrColor), 1.0);";
+  if(matA.fragmentShader?.includes(acesOutput)){matA.fragmentShader=matA.fragmentShader.replace(acesOutput,"gl_FragColor = vec4(hdrColor, 1.0);");matA.needsUpdate=true;}
+  diamondApi.setDiamondEnvironmentRotation?.(matA,{x:0,y:0,z:0});
+  const meshA=new THREE.Mesh(ga,matA);meshA.onBeforeRender=()=>diamondApi.updateDiamondCamera(matA,a.camera);a.scene.add(meshA);
   const matB=createShaderMaterial(gb,state.env,b.camera,settings);const meshB=new THREE.Mesh(gb,matB);b.scene.add(meshB);
-  const matC=new THREE.MeshPhysicalMaterial({color:0xffffff,metalness:0,roughness:0,transmission:1,thickness:1,ior:settings.ior,dispersion:settings.disp,envMap:envA,envMapIntensity:settings.env,side:THREE.DoubleSide});const meshC=new THREE.Mesh(gc,matC);c.scene.add(meshC);
-  await startMu(gc,envA);
-  const render=()=>{state.raf=requestAnimationFrame(render);for(const x of [a,b,c]){x.controls.update();x.renderer.render(x.scene,x.camera)}};
-  render();
-  $("reloadBtn").disabled=false;setStatus("Tres motores activos · "+(state.selected.name||"diamante seleccionado"));
+  await startMu(gc,state.env);
+  const render=()=>{state.raf=requestAnimationFrame(render);a.controls.update();b.controls.update();a.renderer.render(a.scene,a.camera);b.renderer.render(b.scene,b.camera)};
+  render();$("reloadBtn").disabled=false;setStatus("Tres motores activos · "+(state.selected.name||"diamante seleccionado"));
  }catch(err){console.error(err);setStatus("No se pudo iniciar: "+(err?.message||err));$("reloadBtn").disabled=false;}
 }
 $("modelFile").addEventListener("change",async e=>{
@@ -166,7 +170,7 @@ $("modelFile").addEventListener("change",async e=>{
 $("meshSelect").addEventListener("change",e=>{state.selected=state.meshOptions?.[+e.target.value]?.mesh||null;});
 $("reloadBtn").addEventListener("click",startComparison);
 $("resetBtn").addEventListener("click",()=>{if(state.selected)startComparison()});
-for(const id of ["ior","disp","env","exp"]){$(id).addEventListener("input",()=>{const v=values();$("iorOut").textContent=v.ior.toFixed(3);$("dispOut").textContent=v.disp.toFixed(4);$("envOut").textContent=v.env.toFixed(2);$("expOut").textContent=v.exp.toFixed(2);if(state.mu?.material){state.mu.material.ior=v.ior;state.mu.material.dispersion=v.disp;state.mu.material.envMapIntensity=v.env;}})}
+for(const id of ["ior","disp","env","exp"]){$(id).addEventListener("input",()=>{const v=values();$("iorOut").textContent=v.ior.toFixed(3);$("dispOut").textContent=v.disp.toFixed(4);$("envOut").textContent=v.env.toFixed(2);$("expOut").textContent=v.exp.toFixed(2);if(state.mu?.material){state.mu.material.ior=v.ior;state.mu.material.dispersion=v.disp;state.mu.material.envMapIntensity=v.env;state.mu.engine.update?.();}})}
 window.addEventListener("resize",()=>{for(const r of state.renderers){const w=r.domElement.clientWidth,h=r.domElement.clientHeight;r.setSize(w,h,false)}});
 window.addEventListener("pagehide",clearRenderers);
 envLoader.load(hdrUrl,texture=>{texture.mapping=THREE.EquirectangularReflectionMapping;texture.colorSpace=THREE.LinearSRGBColorSpace;state.env=texture;setStatus("HDRI cargado. Carga tu GLB para comenzar.");},undefined,err=>{console.error(err);setStatus("No se pudo cargar el HDRI de prueba.");});
