@@ -768,3 +768,30 @@ test("diamond BVH quality is authoritative and independent of screen-space tier"
   expect(runtime).toContain('quality: family === "diamante" ? "high"');
   expect(runtime).toContain('"[AURUM][DIAMOND][BVH_QUALITY_APPLIED]"');
 });
+
+
+test("all neutral white diamond sizes use the center optical profile and expose per-mesh BVH diagnostics", () => {
+  const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
+  const tierStart = runtime.indexOf("setTier: (nextTier) => {");
+  const qualityStart = runtime.indexOf("setQuality: (quality) => {", tierStart);
+  const tierBlock = runtime.slice(tierStart, qualityStart);
+  const profileStart = runtime.indexOf("const prepared = prepareAurumDiamondBvhExperiment");
+  const profileEnd = runtime.indexOf("let currentDiamondTier", profileStart);
+  const profile = runtime.slice(profileStart, profileEnd);
+
+  expect(profile).toContain('transmission: family === "diamante"');
+  expect(profile).toContain('? (!isBlueDiamond && !isPinkDiamond ? 0 : 0.05)');
+  expect(profile).toContain('environmentIntensity: family === "diamante"');
+  expect(profile).toContain('? (!isBlueDiamond && !isPinkDiamond ? 1.30');
+  expect(profile).toContain('dispersion: family === "diamante"');
+  expect(profile).toContain('? 0.004');
+  expect(profile).toContain('family === "diamante" ? 2.417');
+  expect(profile).toContain('reflectivity: family === "diamante" ? 0.46');
+  expect(profile).toContain('gamma: family === "diamante" && isPinkDiamond ? 0.90 : 1.09');
+  expect(tierBlock).not.toContain("setDiamondOptions");
+  expect(tierBlock).toContain("currentDiamondTier = nextTier");
+  expect(runtime).toContain("diamondOpticalDiagnostics");
+  expect(runtime).toContain('"white-shared-center-profile"');
+  expect(runtime).toContain("environmentTextureUuid: environmentMap?.uuid ?? null");
+  expect(runtime).toContain("skippedTargetMeshes: [...skippedTargetMeshes]");
+});
