@@ -603,3 +603,17 @@ test("diamond scintillation widens only the diamond angular response and reports
   expect(bvh).toContain("loaded: Boolean(environmentMap?.isTexture)");
   expect(bvh).toContain("textureUuid: environmentMap?.uuid ?? null");
 });
+
+test("MatrixGold Gem 01–04 always initialize as Diamante blanco 1 without cross-matching stale Rhino IDs", () => {
+  const initialMaterials = readFileSync("src/lib/aurum/model-materials.ts", "utf8");
+  const render = readFileSync("src/components/AurumRender.tsx", "utf8");
+  expect(initialMaterials).toContain('const isDefaultWhiteDiamondLayer=/^gem\\s*0*[1-4]$/i.test(layerName);');
+  expect(initialMaterials).toContain('const assignedGemId=isDefaultWhiteDiamondLayer');
+  expect(initialMaterials).toContain('"diamante_natural"');
+  expect(initialMaterials).toContain('String(assignment?.layerName??"").trim().toLocaleLowerCase()===layerName.toLocaleLowerCase()');
+  expect(initialMaterials).not.toContain('(layerId && String(assignment?.layerId??"").trim()===layerId)');
+  expect(render).toContain('const isDefaultWhiteDiamondLayer=/^gem\\s*0*[1-4]$/i.test(layerName);');
+  expect(render).toContain('const resolvedGemId=isDefaultWhiteDiamondLayer');
+  expect(render).toContain('initialDiamond.id');
+  expect(render).toContain('String(assignment?.layerName??"").trim().toLocaleLowerCase()===layerName.toLocaleLowerCase()');
+});
