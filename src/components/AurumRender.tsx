@@ -2235,7 +2235,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             : (node.material?.clone ? node.material.clone() : node.material);
         });
         interno.updateMatrixWorld(true);
-        inferGemMeshes(interno);
+        // Aurum must still resolve an unnamed center diamond when the CAD file
+        // already contains explicitly named melee/side gems. The shared public
+        // viewer keeps its conservative default inference policy.
+        inferGemMeshes(interno,{allowCentralInferenceAlongsideExplicitGems:true});
         interno.traverse((node: any) => {
           if (!node?.isMesh || !node.userData?.aurumPublicInferredGem) return;
           const meta = node.userData?.aurumRhino ?? {};
