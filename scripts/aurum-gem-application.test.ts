@@ -698,3 +698,17 @@ test("diamond scintillation widens only the diamond angular response and reports
   expect(bvh).toContain("loaded: Boolean(environmentMap?.isTexture)");
   expect(bvh).toContain("textureUuid: environmentMap?.uuid ?? null");
 });
+
+
+test("Aurum Render production BVH includes ruby while keeping center-only restriction exclusive to diamonds", () => {
+  const render = readFileSync("src/components/AurumRender.tsx", "utf8");
+  const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
+  const profiles = readFileSync("src/lib/aurum/aurum-gem-bvh-profiles.ts", "utf8");
+
+  expect(render).toContain('targetFamilies: getBvhTestMode() === "off" ? [] : ["Diamante", "Rubí", "rubi"]');
+  expect(render).toContain("diamondCenterOnly: true");
+  expect(runtime).toContain('const isRuby = family === "rubí" || family === "rubi"');
+  expect(runtime).toContain("if (family === \"diamante\" && options.diamondCenterOnly)");
+  expect(runtime).toContain("resolveAurumRubyBvhProfile(materials[0])");
+  expect(profiles).toContain("export function resolveAurumRubyBvhProfile");
+});
