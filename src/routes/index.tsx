@@ -1054,7 +1054,6 @@ function InicioPublico() {
       <section id="guias-tecnicas" style={{ contentVisibility: "auto", containIntrinsicSize: "auto 560px" }} className="scroll-mt-24 border-y border-slate-200 bg-white">
         <div className="mx-auto max-w-[1440px] px-5 py-8 sm:px-8 sm:py-10 lg:px-12">
           <CarruselHerramientas />
-          </div>
         </div>
       </section>
 
