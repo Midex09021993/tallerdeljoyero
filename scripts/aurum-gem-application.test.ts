@@ -740,3 +740,13 @@ test("Aurum Render requests BVH for secondary SMALL and MICRO diamonds, not only
   expect(centerOnlyGate).toBeGreaterThan(-1);
   expect(centerIdentity).toBeLessThan(centerOnlyGate);
 });
+
+
+test("all BVH diamond tiers share the same central EXR environment texture", () => {
+  const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
+  const scenes = readFileSync("src/lib/aurum-photographic-scene-engine.ts", "utf8");
+  expect(runtime).toContain("const sharedDiamondEnvironmentMap = environmentMap");
+  expect(runtime).toContain("environmentMap: sharedDiamondEnvironmentMap");
+  expect(scenes).toContain('export const AURUM_GEM_HDRI_ASSET_URL = "/env_gem_002_30251392af.exr"');
+  expect(scenes).toContain("ijewelGem:AURUM_GEM_HDRI_ASSET_URL");
+});
