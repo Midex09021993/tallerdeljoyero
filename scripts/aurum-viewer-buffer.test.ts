@@ -564,7 +564,8 @@ test("Aurum exposes diamond-only AA and SSAA as independent modules", () => {
   const liveBeautyEnd = componentSource.indexOf("const renderCpuMs", liveBeautyStart);
   const liveBeautyBlock = componentSource.slice(liveBeautyStart, liveBeautyEnd);
   expect(liveBeautyStart).toBeGreaterThan(-1);
-  expect(liveBeautyBlock).not.toContain("composer.render();");
+  expect(liveBeautyBlock).toContain("if(diamondTaaOverlayRequested && composer?.render){");
+  expect(liveBeautyBlock).toContain("composer.render();");
   expect(postSource).toContain("const ssaaRequested=controls?.diamondSsaaEnabled===true;");
   expect(postSource).not.toContain("composer.addPass(diamondSupersampleCompositePass)");
   expect(componentSource).toContain('? (diamondFxaaOverlayRequested ? "direct+diamond-ssaa+diamond-fxaa" : "direct+diamond-ssaa")');
