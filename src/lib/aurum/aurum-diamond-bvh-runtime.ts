@@ -63,14 +63,17 @@ const getGemFamily = (material: any) =>
 const getMeshGemFamilies = (mesh: THREE.Mesh) => {
   const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
   const materialFamilies = materials.map((material) => getGemFamily(material));
+  const data = mesh.userData ?? {};
   const meshFamily = normalizeGemFamily(
-    mesh.userData?.aurumActiveGemFamily ??
-    mesh.userData?.aurumGemFamily ??
-    mesh.userData?.aurumDiamondOpticalFamily ??
-    "",
+    data.aurumActiveGemFamily ??
+    data.aurumGemFamily ??
+    data.aurumDiamondOpticalFamily ??
+    (String(data.aurumActiveGemId ?? data.aurumGemId ?? "").toLowerCase().startsWith("diamante") ? "diamante" : ""),
   );
-  const hasAnyMaterialFamily = materialFamilies.some(Boolean);
-  return materialFamilies.map((family) => family || (!hasAnyMaterialFamily ? meshFamily : ""));
+  const explicitFamilies = [...new Set(materialFamilies.filter(Boolean))];
+  const safeMeshFallback = explicitFamilies.length === 0
+    || (explicitFamilies.length === 1 && explicitFamilies[0] === meshFamily);
+  return materialFamilies.map((family) => family || (safeMeshFallback ? meshFamily : ""));
 };
 
 /**
@@ -239,9 +242,14 @@ export async function createAurumDiamondBvhRuntime(options: {
       const existing = entries.get(mesh);
       const currentMaterial = mesh.material as any;
       const activeGemId = String(mesh.userData?.["aurumActiveGemId"] ?? "").toLocaleLowerCase();
-      const activeGemFamily = String(mesh.userData?.["aurumActiveGemFamily"] ?? "").toLocaleLowerCase();
+      const activeGemFamily = normalizeGemFamily(
+        mesh.userData?.["aurumActiveGemFamily"] ??
+        mesh.userData?.["aurumGemFamily"] ??
+        mesh.userData?.["aurumDiamondOpticalFamily"] ??
+        (String(mesh.userData?.["aurumActiveGemId"] ?? mesh.userData?.["aurumGemId"] ?? "").toLowerCase().startsWith("diamante") ? "diamante" : ""),
+      );
       if (existing
-        && (currentMaterial === existing.experimentalMaterial || currentMaterial === existing.invisibleMaterial)
+        && currentMaterial === existing.experimentalMaterial
         && existing.gemId === activeGemId
         && existing.activeGemFamily === activeGemFamily) {
         found.add(mesh);
