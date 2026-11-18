@@ -2468,25 +2468,33 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // Rhino layer IDs can be duplicated across Gem 01–04 in imported files. Group by the explicit layer name first so every CAD gem layer receives its own initial material assignment.
             const layerKey=nameKey||indexKey||idKey||context.layerKey||("mesh:"+mesh.uuid);
             const ownMeta=mesh.userData?.aurumRhino??{};
-            const savedAssignment=savedGemAssignments[layerKey]
-              ??(nameKey?savedGemAssignments[nameKey]:undefined)
-              ??(indexKey?savedGemAssignments[indexKey]:undefined)
-              ??(idKey?savedGemAssignments[idKey]:undefined)
-              // Resolve persisted assignments by the strongest available layer identity.
-              // Never let a duplicated Rhino layer ID make Gem 02–04 inherit Gem 01's choice.
-              ??(layerName?Object.values(savedGemAssignments).find((assignment:any)=>
-                String(assignment?.layerName??"").trim().toLocaleLowerCase()===layerName.toLocaleLowerCase()
-              ):undefined)
-              ??(layerIndex!=null?Object.values(savedGemAssignments).find((assignment:any)=>
-                assignment?.layerIndex!=null&&String(assignment.layerIndex)===String(layerIndex)
-              ):undefined)
-              ??(layerId?Object.values(savedGemAssignments).find((assignment:any)=>
-                String(assignment?.layerId??"").trim()===layerId
-              ):undefined);
+            const isDefaultWhiteDiamondLayer=/^gem\\s*0*[1-4]$/i.test(layerName);
+            // Gem 01–04 always start with the approved Diamante blanco 1 profile.
+            // Ignore stale embedded/saved IDs for these layers; they came from
+            // previous catalog generations and must not override the current default.
+            // For other named layers, match by exact name only. Use index/ID only
+            // when no layer name exists, preventing shared Rhino IDs from cross-matching.
+            const savedAssignment=isDefaultWhiteDiamondLayer
+              ? undefined
+              : layerName
+                ? (nameKey?savedGemAssignments[nameKey]:undefined)
+                  ??Object.values(savedGemAssignments).find((assignment:any)=>
+                    String(assignment?.layerName??"").trim().toLocaleLowerCase()===layerName.toLocaleLowerCase()
+                  )
+                : layerIndex!=null
+                  ? (indexKey?savedGemAssignments[indexKey]:undefined)
+                    ??Object.values(savedGemAssignments).find((assignment:any)=>
+                      assignment?.layerIndex!=null&&String(assignment.layerIndex)===String(layerIndex)
+                    )
+                  : layerId
+                    ? savedGemAssignments[idKey]
+                    : undefined;
             const activeGemId=String(mesh.userData?.aurumActiveGemId??"").trim();
             const pendingGemId=String(mesh.userData?.aurumPendingInitialGemId??mesh.userData?.aurumInitialLayerGemId??"").trim();
             const inheritedGemId=String(context.metadata?.gemId??context.source?.gemId??context.instance?.gemId??"").trim();
-            const resolvedGemId=String(savedAssignment?.gemId??pendingGemId??activeGemId??ownMeta.gemId??inheritedGemId??initialDiamond.id);
+            const resolvedGemId=isDefaultWhiteDiamondLayer
+              ? initialDiamond.id
+              : String(savedAssignment?.gemId??pendingGemId??activeGemId??ownMeta.gemId??inheritedGemId??initialDiamond.id);
             if(!gemLayers.has(layerKey))gemLayers.set(layerKey,{target:mesh,gemId:resolvedGemId,layerName,layerIndex,layerId});
           });
           let initialDiamondMeshes=0;
