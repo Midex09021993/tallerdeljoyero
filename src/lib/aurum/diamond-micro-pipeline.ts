@@ -13,8 +13,11 @@ export type AurumDiamondMicroOpticalProfile = {
 
 /** Per-stone live optics. Brilliant stones (including the protected center) retain the calibrated baseline. */
 export function getAurumDiamondMicroOpticalProfile(tier: Exclude<AurumDiamondMicroTier, "mixed">): AurumDiamondMicroOpticalProfile {
-  if (tier === "micro") return { scintillationScale: 0.22, facetContrastScale: 0.72, dispersionScale: 0.72, virtualFacetWeight: 0.004, fireScale: 0.38 };
-  if (tier === "small") return { scintillationScale: 0.62, facetContrastScale: 0.84, dispersionScale: 0.86, virtualFacetWeight: 0.022, fireScale: 0.72 };
+  // Keep the internal-facet environment response at its calibrated baseline
+  // for every diamond size. Screen-space tiers may soften sparkle frequency,
+  // but must never suppress the facet/reflection energy that makes melee stones visible.
+  if (tier === "micro") return { scintillationScale: 0.42, facetContrastScale: 0.88, dispersionScale: 1, virtualFacetWeight: 0.06, fireScale: 1 };
+  if (tier === "small") return { scintillationScale: 0.68, facetContrastScale: 0.94, dispersionScale: 1, virtualFacetWeight: 0.06, fireScale: 1 };
   return { scintillationScale: 1, facetContrastScale: 1, dispersionScale: 1, virtualFacetWeight: 0.06, fireScale: 1 };
 }
 
