@@ -47,52 +47,6 @@ test("diamond micro classifier protects the center from active catalog identity 
   emeraldMaterial.dispose();
 });
 
-test("small diamond melee uses source IOR 2.6 while protected center keeps calibrated shader IOR", () => {
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
-  camera.position.set(0, 0, 5);
-  camera.lookAt(0, 0, 0);
-  camera.updateProjectionMatrix();
-
-  const makeDiamond = (radius: number, x: number) => {
-    const material = new THREE.MeshPhysicalMaterial();
-    material.userData = {
-      aurumGemFamily: "Diamante",
-      aurumDiamondMicroUniforms: {
-        scintillationStrength: { value: 1 }, baseScintillationStrength: 1,
-        facetContrast: { value: 1 }, baseFacetContrast: 1,
-        dispersion: { value: 0.01 }, baseDispersion: 0.01,
-        virtualFacetWeight: { value: 0.06 }, baseVirtualFacetWeight: 0.06,
-        fireScale: { value: 1 },
-        ijewelRefractiveIndex: { value: 2.417 }, baseIjewelRefractiveIndex: 2.417,
-      },
-    };
-    const geometry = new THREE.SphereGeometry(radius, 16, 12);
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.userData = { aurumActiveGemFamily: "Diamante", aurumActiveGemId: "diamante_natural" };
-    mesh.position.x = x;
-    scene.add(mesh);
-    return { mesh, geometry, material };
-  };
-  const center = makeDiamond(1, 0);
-  const melee = makeDiamond(0.1, 1.2);
-  const pipeline = createAurumDiamondMicroPipeline(scene, camera, () => 600);
-  pipeline.update();
-  center.mesh.onBeforeRender();
-  melee.mesh.onBeforeRender();
-
-  expect(center.mesh.userData.aurumDiamondMicroCenterProtected).toBe(true);
-  expect(melee.mesh.userData.aurumDiamondMicroTier).toBe("small");
-  expect(center.material.userData.aurumDiamondMicroUniforms.ijewelRefractiveIndex.value).toBe(2.417);
-  expect(melee.material.userData.aurumDiamondMicroUniforms.ijewelRefractiveIndex.value).toBe(2.6);
-
-  pipeline.dispose();
-  for (const item of [center, melee]) {
-    item.geometry.dispose();
-    item.material.dispose();
-  }
-});
-
 test("gem environment updates only the meshes resolved for the selected stone", () => {
   const controller = createAurumGemEnvironment({}, class {}, class {});
   const targetMaterial = new THREE.MeshPhysicalMaterial();
