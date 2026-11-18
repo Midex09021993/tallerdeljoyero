@@ -594,6 +594,30 @@ export async function createAurumDiamondBvhRuntime(options: {
       if (targetSet && !targetSet.has(mesh)) continue;
       if (!found.has(mesh)) releaseEntry(mesh, mesh.material === entries.get(mesh)?.experimentalMaterial);
     }
+
+    // A center-reference change must update already-created diamond materials,
+    // not only meshes prepared after this refresh.
+    const alignedRotationDegrees = THREE_NS.MathUtils.radToDeg(
+      requestedEnvironmentRotationRadians + centerEnvironmentRotationOffsetRadians,
+    );
+    for (const entry of entries.values()) {
+      if (entry.family === "diamante") {
+        packageApi.setDiamondEnvironmentRotation?.(entry.experimentalMaterial, {
+          x: 0,
+          y: alignedRotationDegrees,
+          z: 0,
+        });
+      }
+    }
+    console.info("[AURUM][DIAMOND][CENTER_EXR_ALIGNMENT]", {
+      referenceMesh: centerReferenceMesh?.name || centerReferenceMesh?.uuid || null,
+      requestedRotationRadians: requestedEnvironmentRotationRadians,
+      centerWorldYawRadians: centerReferenceMesh
+        ? -centerEnvironmentRotationOffsetRadians
+        : null,
+      appliedRotationRadians: THREE_NS.MathUtils.degToRad(alignedRotationDegrees),
+      alignedDiamondMeshes: [...entries.values()].filter((entry) => entry.family === "diamante").length,
+    });
   };
 
   return {
