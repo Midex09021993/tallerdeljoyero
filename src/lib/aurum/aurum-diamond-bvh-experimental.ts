@@ -30,6 +30,8 @@ export type AurumDiamondBvhSetupOptions = {
   environmentIntensity?: number;
   dispersion?: number;
   environmentRotationRadians?: number;
+  /** Fully composed world-space YXZ environment orientation in degrees. */
+  environmentRotationEuler?: { x: number; y: number; z: number };
   ior?: number;
   absorption?: number;
   color?: THREE.ColorRepresentation;
@@ -132,7 +134,10 @@ export function prepareAurumDiamondBvhExperiment(
   material.needsUpdate = true;
 
   const rotation = THREE.MathUtils.radToDeg(options.environmentRotationRadians ?? 0);
-  api.setDiamondEnvironmentRotation?.(material, { x: 0, y: rotation, z: 0 });
+  api.setDiamondEnvironmentRotation?.(
+    material,
+    options.environmentRotationEuler ?? { x: 0, y: rotation, z: 0 },
+  );
 
   let disposed = false;
   return {
