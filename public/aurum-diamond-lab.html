@@ -14,8 +14,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 
-MuTracer is loaded as an external package under its MIT license:
-Copyright (c) 2022-present Yi Shen.
+Advanced Jewelry Renderer Web shader adaptation (MIT License)
+Copyright (c) 2026 Mingyi Liu; original BVH diamond shader by N8python (2022).
 -->
 
 <html lang="es">
@@ -73,7 +73,7 @@ canvas{width:100%;height:420px;display:block;background:#f4f4f2}
 <div class="control"><label>Intensidad HDRI <output id="envOut">1.40</output></label><input id="env" type="range" min=".3" max="2.5" step=".05" value="1.4"></div>
 <div class="control"><label>Exposición <output id="expOut">1.00</output></label><input id="exp" type="range" min=".5" max="2" step=".05" value="1"></div>
 </section>
-<div class="notice"><strong>Créditos:</strong> El trazador de facetas está adaptado de <a href="https://github.com/ehsanwwe/diamond-shader-lab" target="_blank" rel="noreferrer">Diamond Shader Lab</a> (MIT). El tercer motor adapta el shader BVH de <a href="https://github.com/itlmy/Advanced-Jewelry-Renderer-Web" target="_blank" rel="noreferrer">Advanced Jewelry Renderer Web</a> (MIT), basado en N8python/diamonds. <strong>Importante:</strong> cada motor tiene un modelo óptico distinto. MuTracer convierte materiales Three.js a OpenPBR y no reproduce automáticamente el shader de dispersión de AURUM. La comparación evalúa calidad visual y comportamiento, no equivalencia física perfecta. Para una prueba válida, usa el GLB del mismo diamante central que estás evaluando en AURUM.</div>
+<div class="notice"><strong>Créditos:</strong> El trazador de facetas está adaptado de <a href="https://github.com/ehsanwwe/diamond-shader-lab" target="_blank" rel="noreferrer">Diamond Shader Lab</a> (MIT). El tercer motor adapta el shader BVH de <a href="https://github.com/itlmy/Advanced-Jewelry-Renderer-Web" target="_blank" rel="noreferrer">Advanced Jewelry Renderer Web</a> (MIT), basado en N8python/diamonds. <strong>Importante:</strong> cada motor tiene un modelo óptico distinto. El tercer panel adapta el shader BVH de Advanced Jewelry Renderer Web, basado en N8python/diamonds. La comparación evalúa calidad visual y comportamiento, no equivalencia física perfecta. Para una prueba válida, usa el GLB del mismo diamante central que estás evaluando en AURUM.</div>
 </main>
 <script type="module">
 import * as THREE from "three";
@@ -206,8 +206,8 @@ async function startComparison(){
  }catch(err){panelError("dslInfo","Diamond Shader Lab",err);}
  try{
   const gc=geom.clone();state.disposed.push(gc);const c=await startAJRW(gc,state.env);views.push(c);
- }catch(err){panelError("muInfo","MuTracer",err);}
- const linked=views.map(v=>v.controls).filter(Boolean);if(state.mu?.controls&&!linked.includes(state.mu.controls))linked.push(state.mu.controls);let syncing=false;
+ }catch(err){panelError("muInfo","Advanced Jewelry Renderer",err);}
+ const linked=views.map(v=>v.controls).filter(Boolean);if(state.ajrw?.controls&&!linked.includes(state.ajrw.controls))linked.push(state.ajrw.controls);let syncing=false;
  linked.forEach(source=>source.addEventListener("change",()=>{if(syncing)return;syncing=true;for(const target of linked){if(target===source)continue;target.target.copy(source.target);target.object.position.copy(source.object.position);target.object.quaternion.copy(source.object.quaternion);target.update();}syncing=false;}));
  state.applySettings=(v)=>{
   const aMat=views.find(vw=>vw.id==="aurum")?.scene.children.find(o=>o.isMesh)?.material;
@@ -217,7 +217,7 @@ async function startComparison(){
   if(state.ajrw?.material){state.ajrw.material.uniforms.ior.value=v.ior;state.ajrw.material.uniforms.aberrationStrength.value=Math.max(.001,v.disp*12);state.ajrw.renderer.toneMappingExposure=v.exp;}
  };
  const render=()=>{state.raf=requestAnimationFrame(render);for(const view of views){view.controls?.update();view.renderer?.render(view.scene,view.camera);}};
- if(views.some(v=>v.renderer)||state.mu){
+ if(views.some(v=>v.renderer)||state.ajrw){
   render();$("reloadBtn").disabled=false;
   const active=views.map(v=>v.id==="aurum"?"AURUM BVH":v.id==="dsl"?"Diamond Shader Lab":"Advanced Jewelry Renderer").join(" + ");
   setStatus("Escenas preparadas: "+active+" · El tercer motor calcula refracción BVH por fotograma, sin acumulación progresiva.");
