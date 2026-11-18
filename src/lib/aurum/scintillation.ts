@@ -223,10 +223,6 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
       virtualFacetWeight:shader.uniforms.aurumDiamondMicroVirtualFacetWeight,
       baseVirtualFacetWeight:virtualFacetWeight,
       fireScale:shader.uniforms.aurumDiamondMicroFireScale,
-      // Small melee uses the source DiamondMaterial IOR (2.6) while the
-      // protected center retains its already-calibrated shader IOR.
-      ijewelRefractiveIndex:ijewelEnabled?shader.uniforms.aurumIJEWELRefractiveIndex:null,
-      baseIjewelRefractiveIndex:ijewelEnabled?Number(shader.uniforms.aurumIJEWELRefractiveIndex.value):null,
     }};
     shader.uniforms.aurumGemEnvironmentIntensity={value:Math.max(.55,Math.min(2.35,Number(material.envMapIntensity??1)))};
     material.userData={...(material.userData??{}),aurumGemEnvironmentUniforms:shader.uniforms.aurumGemEnvironmentIntensity};
@@ -241,15 +237,11 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
     }};
     if(ijewelEnabled){
       // Keep the two optical models separate:
-      // MeshPhysicalMaterial.ior remains the physical PBR value, while this
-      // custom environment-ray path consumes the source DiamondMaterial IOR.
-      // The micro pipeline can override this uniform per stone without changing
-      // the protected center's already-calibrated baseline.
-      shader.uniforms.aurumIJEWELRefractiveIndex={value:Math.max(1.01,Math.min(2.65,Number(effectiveIewel.ior??2.6)))};
-      if(material.userData?.aurumDiamondMicroUniforms){
-        material.userData.aurumDiamondMicroUniforms.ijewelRefractiveIndex=shader.uniforms.aurumIJEWELRefractiveIndex;
-        material.userData.aurumDiamondMicroUniforms.baseIjewelRefractiveIndex=Number(shader.uniforms.aurumIJEWELRefractiveIndex.value);
-      }
+      // MeshPhysicalMaterial.ior remains the physical diamond IOR (2.417),
+      // while this custom iJewel-inspired environment-ray path consumes the
+      // source DiamondMaterial refractiveIndex (2.6) from calibration metadata.
+      // This does not change the physical PBR material or claim shader parity.
+      shader.uniforms.aurumIJEWELRefractiveIndex={value:Math.max(1.01,Math.min(2.65,Number(effectiveIewel.ior??2.417)))};
       shader.uniforms.aurumIJEWELRayBounces={value:Math.max(1,Math.min(8,Math.floor(Number(effectiveIewel.rayBounces??5))))};
       shader.uniforms.aurumIJEWELDispersionScale={value:ijewelDispersionScale};
       shader.uniforms.aurumIJEWELReflectivity={value:Number(ijewel.reflectivity??.5)};
