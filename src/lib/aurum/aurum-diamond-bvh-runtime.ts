@@ -419,9 +419,11 @@ export async function createAurumDiamondBvhRuntime(options: {
               : (emeraldProfile?.transmission ?? rubyProfile?.transmission ?? sapphireProfile?.transmission ?? (isImperialTopaz ? 0.88 : isParaibaTourmaline ? 0.91 : 0)),
           environmentMap: sharedDiamondEnvironmentMap,
           camera: options.camera,
-          // Keep small secondary diamonds on interactive quality initially;
-          // higher bounce counts are reserved for explicit high/final capture.
-          quality: family === "diamante" && !isSmallSecondaryDiamond ? "high" : (options.quality ?? "interactive"),
+          // All diamond sizes use the same high-quality BVH path as the
+          // center stone. Screen-space tiers still control optical energy,
+          // dispersion and stability independently of BVH render quality.
+          // Non-diamond gemstone families retain the caller-selected quality.
+          quality: family === "diamante" ? "high" : (options.quality ?? "interactive"),
           // Restore the original diamond BVH fire/brightness settings; the emerald experiment remains isolated.
           // Small white melee stones need a gentle neutral energy lift so their
           // compact facets read bright instead of graphite-grey; keep colored
