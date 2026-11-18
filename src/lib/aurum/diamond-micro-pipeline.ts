@@ -172,11 +172,6 @@ export function createAurumDiamondMicroPipeline(scene: any, camera: any, getView
       if (uniforms.dispersion) uniforms.dispersion.value = uniforms.baseDispersion * profile.dispersionScale;
       if (uniforms.virtualFacetWeight) uniforms.virtualFacetWeight.value = tier === "brilliant" ? uniforms.baseVirtualFacetWeight : profile.virtualFacetWeight;
       if (uniforms.fireScale) uniforms.fireScale.value = profile.fireScale;
-      if (uniforms.ijewelRefractiveIndex) {
-        uniforms.ijewelRefractiveIndex.value = tier === "micro" || tier === "small"
-          ? 2.6
-          : Number(uniforms.baseIjewelRefractiveIndex ?? uniforms.ijewelRefractiveIndex.value ?? 2.417);
-      }
     }
     mesh.userData = { ...(mesh.userData ?? {}), aurumDiamondMicroOpticalProfile: profile };
   };
@@ -328,7 +323,6 @@ export function createAurumDiamondMicroPipeline(scene: any, camera: any, getView
             if (uniforms.dispersion) uniforms.dispersion.value = uniforms.baseDispersion;
             if (uniforms.virtualFacetWeight) uniforms.virtualFacetWeight.value = uniforms.baseVirtualFacetWeight;
             if (uniforms.fireScale) uniforms.fireScale.value = 1;
-            if (uniforms.ijewelRefractiveIndex) uniforms.ijewelRefractiveIndex.value = Number(uniforms.baseIjewelRefractiveIndex ?? 2.417);
           }
         }
       } else {
