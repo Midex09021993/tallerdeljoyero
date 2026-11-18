@@ -151,14 +151,16 @@ export async function createAurumDiamondBvhRuntime(options: {
   // Optical Lab 01 geometry preparation, adapted to CAD assemblies without
   // mutating the source geometry or its transform.
   const createOpticalLabDiamondProxy = (source: THREE.Mesh) => {
-    let root: THREE.Object3D = source;
-    while (root.parent) root = root.parent;
-    root.updateMatrixWorld(true);
+    let sceneRoot: THREE.Object3D = source;
+    while (sceneRoot.parent) sceneRoot = sceneRoot.parent;
+    sceneRoot.updateMatrixWorld(true);
     source.updateWorldMatrix(true, false);
-    const inverseRoot = new THREE_NS.Matrix4().copy(root.matrixWorld).invert();
-    const toRoot = new THREE_NS.Matrix4().multiplyMatrices(inverseRoot, source.matrixWorld);
+
+    // Exact same coordinate-space operation as public/aurum-diamond-lab.html:
+    // bake source.matrixWorld into vertices, recompute normals, center at 0,
+    // and add the render mesh to the scene at identity transform.
     const geometry = source.geometry.clone();
-    geometry.applyMatrix4(toRoot);
+    geometry.applyMatrix4(source.matrixWorld);
     geometry.computeVertexNormals();
     const position = geometry.getAttribute("position");
     if (!position?.count) {
@@ -171,42 +173,36 @@ export async function createAurumDiamondBvhRuntime(options: {
     geometry.computeBoundingSphere();
 
     const proxy = new THREE_NS.Mesh(geometry, source.material);
-    proxy.position.copy(center);
+    // Identity transform is essential: the BVH shader expects centered
+    // geometry and camera coordinates in the same world-relative frame.
+    proxy.position.set(0, 0, 0);
+    proxy.quaternion.identity();
+    proxy.scale.set(1, 1, 1);
     proxy.userData = { ...source.userData, aurumOpticalLabProxy: true };
     proxy.layers.mask = source.layers.mask;
     proxy.renderOrder = source.renderOrder;
     proxy.frustumCulled = false;
     proxy.raycast = () => undefined;
-    root.add(proxy);
+    sceneRoot.add(proxy);
 
-    // The shader package validates camera instanceof THREE.Camera.
-    // Use a real cloned camera, transformed into the proxy's local coordinate
-    // space; a lightweight object with only position is not accepted.
+    // The lab's centered mesh is at identity, so its camera is the original
+    // world camera translated by the same geometry center, not by the CAD root.
     const cameraProxy = options.camera.clone() as THREE.Camera;
     const cameraWorldPosition = new THREE_NS.Vector3();
-    const rootWorldPosition = new THREE_NS.Vector3();
-    const rootWorldQuaternion = new THREE_NS.Quaternion();
-    const rootWorldScale = new THREE_NS.Vector3();
-    const inverseRootQuaternion = new THREE_NS.Quaternion();
-    const cameraWorldQuaternion = new THREE_NS.Quaternion();
-    const cameraLocalQuaternion = new THREE_NS.Quaternion();
-    const updateCameraProxy = () => {
-      root.updateMatrixWorld(true);
-      options.camera.updateWorldMatrix(true, false);
-      root.matrixWorld.decompose(rootWorldPosition, rootWorldQuaternion, rootWorldScale);
-      options.camera.getWorldPosition(cameraWorldPosition);
-      options.camera.getWorldQuaternion(cameraWorldQuaternion);
-      inverseRootQuaternion.copy(rootWorldQuaternion).invert();
-      cameraProxy.position.copy(cameraWorldPosition).applyMatrix4(inverseRoot).sub(center);
-      cameraLocalQuaternion.copy(inverseRootQuaternion).multiply(cameraWorldQuaternion);
-      cameraProxy.quaternion.copy(cameraLocalQuaternion);
-      cameraProxy.scale.set(1, 1, 1);
-      cameraProxy.updateMatrix();
-      cameraProxy.updateMatrixWorld(true);
-      return cameraProxy;
+    const cameraProxyAdapter = {
+      update: () => {
+        options.camera.updateWorldMatrix(true, false);
+        options.camera.getWorldPosition(cameraWorldPosition);
+        cameraProxy.position.copy(cameraWorldPosition).sub(center);
+        options.camera.getWorldQuaternion(cameraProxy.quaternion);
+        cameraProxy.scale.set(1, 1, 1);
+        cameraProxy.updateMatrix();
+        cameraProxy.updateMatrixWorld(true);
+        return cameraProxy;
+      },
     };
-    const cameraProxyAdapter = { update: updateCameraProxy };
-    updateCameraProxy();
+    cameraProxyAdapter.update();
+
     return {
       mesh: proxy,
       geometry,
