@@ -219,7 +219,7 @@ export const normalizeAurumGemLayerName=(value:any)=>{
   // Collapse only Rhino’s generic Gem::Gem 0N container prefix. Preserve
   // meaningful parent paths so two separate CAD groups with a repeated
   // leaf name can never be merged accidentally.
-  const genericGemContainer=segments.length===2&&/^(?:gem|gems|gemstone|gemstones)$/.test(segments[0]);
+  const genericGemContainer=segments.length===2&&/^(?:gem|gems|gemstone|gemstones)$/.test(segments[0]??"");
   return (genericGemContainer?[leaf]:segments).filter(Boolean).join("::");
 };
 const selectionLayerName=(part:any)=>selectionLayerIdentity(part).layerName;
