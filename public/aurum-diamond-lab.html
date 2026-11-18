@@ -89,7 +89,7 @@ const canvases=["aurumCanvas","dslCanvas","muCanvas"].map($);
 const hdrUrl="/env_gem_002_30251392af.exr";
 const state={source:null,selected:null,env:null,views:[],renderers:[],controls:[],cameras:[],raf:0,ajrw:null,disposed:[],applySettings:null};
 const MAX_PLANES=256;
-const envLoader=new EXRLoader();
+const envLoader=new EXRLoader().setDataType(THREE.FloatType);
 const setStatus=(s)=>$("status").textContent=s;
 const values=()=>({ior:+$("ior").value,disp:+$("disp").value,env:+$("env").value,exp:+$("exp").value});
 function makeRenderer(canvas){const r=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});r.setPixelRatio(Math.min(devicePixelRatio,1.75));r.setSize(canvas.clientWidth,canvas.clientHeight,false);r.outputColorSpace=THREE.SRGBColorSpace;r.toneMapping=THREE.ACESFilmicToneMapping;return r}
@@ -233,6 +233,6 @@ $("resetBtn").addEventListener("click",()=>{if(state.selected)startComparison()}
 for(const id of ["ior","disp","env","exp"]){$(id).addEventListener("input",()=>{const v=values();$("iorOut").textContent=v.ior.toFixed(3);$("dispOut").textContent=v.disp.toFixed(4);$("envOut").textContent=v.env.toFixed(2);$("expOut").textContent=v.exp.toFixed(2);if(state.applySettings)state.applySettings(v);else if(state.ajrw?.material){state.ajrw.material.uniforms.ior.value=v.ior;state.ajrw.material.uniforms.aberrationStrength.value=Math.max(.001,v.disp*12);state.ajrw.renderer.toneMappingExposure=v.exp;}})}
 window.addEventListener("resize",()=>{for(const r of state.renderers){const w=r.domElement.clientWidth,h=r.domElement.clientHeight;r.setSize(w,h,false);for(const camera of state.cameras){camera.aspect=w/Math.max(h,1);camera.updateProjectionMatrix();}}if(state.ajrw){const c=$("muCanvas"),w=c.clientWidth,h=c.clientHeight;state.ajrw.renderer.setSize(w,h,false);state.ajrw.camera.aspect=w/Math.max(h,1);state.ajrw.camera.updateProjectionMatrix();state.ajrw.material.uniforms.resolution.value.set(c.width,c.height);}});
 window.addEventListener("pagehide",clearRenderers);
-envLoader.load(hdrUrl,texture=>{texture.mapping=THREE.EquirectangularReflectionMapping;texture.colorSpace=THREE.LinearSRGBColorSpace;state.env=texture;setStatus("HDRI EXR de gemas cargado. Carga tu GLB para comenzar.");},undefined,err=>{console.error(err);setStatus("No se pudo cargar el EXR de gemas desde /env_gem_002_30251392af.exr.");});
+envLoader.load(hdrUrl,texture=>{texture.mapping=THREE.EquirectangularReflectionMapping;texture.colorSpace=THREE.LinearSRGBColorSpace;texture.generateMipmaps=false;texture.minFilter=THREE.LinearFilter;texture.magFilter=THREE.LinearFilter;texture.needsUpdate=true;state.env=texture;setStatus("EXR de gemas cargado en Float32. Carga tu GLB para comenzar.");},undefined,err=>{console.error("[AURUM EXR]",err);const detail=err?.message||err?.type||String(err);setStatus("Error EXRLoader: "+detail+". Revisa consola (F12).");});
 </script>
 </body></html>
