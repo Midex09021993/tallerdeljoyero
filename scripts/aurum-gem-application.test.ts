@@ -172,16 +172,16 @@ test("diamond live optical tuning matches the approved diamond-only calibration"
 
 test("runtime DPR remains unchanged to avoid changing shared metal rendering resolution", () => {
   const source = readFileSync("src/lib/aurum/runtime-budget.ts", "utf8");
-  expect(source).toContain("pixelRatioCap:1.72");
-  expect(source).toContain("interactionPixelRatio:1.72");
+  expect(source).toContain("pixelRatioCap:1.75");
+  expect(source).toContain("interactionPixelRatio:1.75");
 });
 
 test("web-tier models receive 2x diamond-only supersampling without raising shared DPR", () => {
   const web = getAurumRuntimeBudget(200_000);
   expect(web.diamondSupersampleScaleCap).toBe(2.2);
   expect(web.diamondLiveSupersampleScaleCap).toBe(1.75);
-  expect(web.pixelRatioCap).toBe(1.72);
-  expect(web.interactionPixelRatio).toBe(1.72);
+  expect(web.pixelRatioCap).toBe(1.75);
+  expect(web.interactionPixelRatio).toBe(1.75);
 
   const dense = getAurumRuntimeBudget(200_001);
   expect(dense.diamondSupersampleScaleCap).toBe(1.8);
