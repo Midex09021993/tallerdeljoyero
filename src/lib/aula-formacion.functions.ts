@@ -12,8 +12,16 @@ function validarDirectorioInput(input: DirectorioInput): DirectorioInput {
   return { participanteDocenteId, cursoId };
 }
 
-/** Comprueba con la sesión del usuario que es docente del espacio y que el curso le pertenece. */
-async function verificarDocenteCurso(supabase: any, participanteDocenteId: string, cursoId: string) {
+/**
+ * Comprueba con la sesión del usuario que es docente del espacio y que el curso le pertenece.
+ * Devuelve si el docente es Dueño de la plataforma: solo él puede ver alumnos de otros talleres.
+ */
+async function verificarDocenteCurso(
+  supabase: any,
+  userId: string,
+  participanteDocenteId: string,
+  cursoId: string,
+): Promise<{ alcanceGlobal: boolean }> {
   const { data: autorizado, error: permisoError } = await supabase.rpc(
     "formacion_es_docente",
     { _participante_id: participanteDocenteId },
@@ -29,19 +37,27 @@ async function verificarDocenteCurso(supabase: any, participanteDocenteId: strin
     .eq("participante_id", participanteDocenteId)
     .maybeSingle();
   if (cursoError || !curso) throw new Error("El curso no pertenece al espacio docente autorizado.");
+
+  const { data: esDueno, error: rolError } = await supabase.rpc("has_role", { _user_id: userId, _role: "dueno" });
+  if (rolError) throw new Error("No se pudo verificar el alcance del directorio académico.");
+  return { alcanceGlobal: esDueno === true };
 }
 
 /**
  * Directorio de candidatos (sin datos de contacto). Sólo devuelve nombre visible,
  * usuario, taller y roles; los correos nunca salen del servidor.
+ * Alcance: el Dueño de la plataforma ve los talleres activos del ecosistema; cualquier
+ * otro docente solo ve a las cuentas de su propio taller.
  */
-async function construirDirectorio(supabaseAdmin: any, participanteDocenteId: string) {
+async function construirDirectorio(supabaseAdmin: any, participanteDocenteId: string, alcanceGlobal: boolean) {
+  const consultaTalleres = supabaseAdmin.from("ecosistema_participantes")
+    .select("id,nombre,estado")
+    .eq("estado", "activo");
   const [{ data: talleres, error: talleresError }, { data: roles, error: rolesError }] = await Promise.all([
-    supabaseAdmin.from("ecosistema_participantes")
-      .select("id,nombre,estado")
-      .eq("estado", "activo")
-      .neq("id", participanteDocenteId)
-      .order("nombre"),
+    (alcanceGlobal
+      ? consultaTalleres.neq("id", participanteDocenteId)
+      : consultaTalleres.eq("id", participanteDocenteId)
+    ).order("nombre"),
     supabaseAdmin.from("user_roles")
       .select("user_id,role")
       .in("role", ["gerente", "operario"]),
@@ -107,9 +123,9 @@ export const listarDirectorioAlumnosFormacion = createServerFn({ method: "POST" 
   .inputValidator(validarDirectorioInput)
   .handler(async ({ data, context }) => {
     const { participanteDocenteId, cursoId } = data;
-    await verificarDocenteCurso(context.supabase, participanteDocenteId, cursoId);
+    const { alcanceGlobal } = await verificarDocenteCurso(context.supabase, context.userId, participanteDocenteId, cursoId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    return construirDirectorio(supabaseAdmin, participanteDocenteId);
+    return construirDirectorio(supabaseAdmin, participanteDocenteId, alcanceGlobal);
   });
 
 type MatricularInput = DirectorioInput & { userIds: string[] };
@@ -132,11 +148,11 @@ export const matricularAlumnosFormacion = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }) => {
     const { participanteDocenteId, cursoId, userIds } = data;
-    const { supabase } = context;
-    await verificarDocenteCurso(supabase, participanteDocenteId, cursoId);
+    const { supabase, userId } = context;
+    const { alcanceGlobal } = await verificarDocenteCurso(supabase, userId, participanteDocenteId, cursoId);
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { alumnos } = await construirDirectorio(supabaseAdmin, participanteDocenteId);
+    const { alumnos } = await construirDirectorio(supabaseAdmin, participanteDocenteId, alcanceGlobal);
     const permitidos = new Map(alumnos.map((a) => [a.userId, a]));
     const seleccionados = userIds.map((id) => permitidos.get(id)).filter(Boolean) as typeof alumnos;
     if (!seleccionados.length) throw new Error("Los alumnos seleccionados no están disponibles en el directorio.");

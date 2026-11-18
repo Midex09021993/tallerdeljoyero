@@ -52,13 +52,12 @@ Deno.serve(async (req: Request) => {
       return json({ error: "El modelo debe ser un GLB perteneciente a tu Mi Nube." }, 400);
     }
 
-    const admin = createClient(url, serviceKey, {
-      auth: { persistSession: false, autoRefreshToken: false },
-    });
     const separator = modelPath.lastIndexOf("/");
     const folderPath = separator >= 0 ? modelPath.slice(0, separator) : "";
     const fileName = modelPath.slice(separator + 1);
-    const { data: storedObjects, error: objectError } = await admin.storage
+    // Se consulta con la sesión del usuario para que apliquen las reglas de Mi Nube:
+    // solo cuentas y talleres activos pueden ver (y por tanto compartir) sus archivos.
+    const { data: storedObjects, error: objectError } = await authClient.storage
       .from("mi-nube")
       .list(folderPath, { limit: 1000, search: fileName });
 
@@ -66,6 +65,10 @@ Deno.serve(async (req: Request) => {
     if (!(storedObjects ?? []).some((item) => item.name === fileName)) {
       return json({ error: "No se encontró el GLB en tu Mi Nube." }, 404);
     }
+
+    const admin = createClient(url, serviceKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
 
     const tokenBytes = crypto.getRandomValues(new Uint8Array(12));
     const token = Array.from(tokenBytes, (byte) => byte.toString(16).padStart(2, "0")).join("");

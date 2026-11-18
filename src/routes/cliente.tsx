@@ -170,7 +170,7 @@ function SeguimientoCliente() {
     ): Promise<{ tipo: "cotizacion"; data: SeguimientoCotizacion } | { tipo: "pedido"; data: SeguimientoPedido } | null> => {
       const db = supabasePublic;
 
-      const esCodigoCorto = /^[A-Z0-9]{8}$/i.test(seguimientoToken);
+      const esCodigoCorto = /^[0-9A-F]{20,64}$/i.test(seguimientoToken);
       const { data: cotizacion, error: cotizacionError } = await db.rpc(
         esCodigoCorto ? "seguimiento_cotizacion_codigo" : "seguimiento_cotizacion",
         esCodigoCorto ? { _codigo: seguimientoToken } : { _token: seguimientoToken },
@@ -233,7 +233,7 @@ function SeguimientoCliente() {
   const resultado = consulta.data ?? null;
   const pedido = resultado?.tipo === "pedido" ? resultado.data : null;
   const cotizacion = resultado?.tipo === "cotizacion" ? resultado.data : null;
-  const codigoConsulta = /^[A-Z0-9]{8}$/i.test(valor.trim()) ? valor.trim().toUpperCase() : codigo?.trim().toUpperCase();
+  const codigoConsulta = /^[0-9A-F]{20,64}$/i.test(valor.trim()) ? valor.trim().toUpperCase() : codigo?.trim().toUpperCase();
   const nombreTaller = String(cotizacion?.identidad_comercial?.['nombre_comercial'] ?? "").trim();
   const estaVencida = cotizacionVencida(cotizacion?.fecha_vencimiento ?? null);
   const estadoVisible = estaVencida && cotizacion?.estado === "enviada" ? "vencida" : cotizacion?.estado;

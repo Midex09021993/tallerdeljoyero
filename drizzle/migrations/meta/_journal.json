@@ -22,6 +22,13 @@
       "when": 1794880169249,
       "tag": "0002_restrict_aurum_camera_calibration_read",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1795026037850,
+      "tag": "0003_reforzar_codigo_seguimiento_cotizaciones",
+      "breakpoints": true
     }
   ]
 }

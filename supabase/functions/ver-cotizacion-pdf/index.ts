@@ -25,7 +25,8 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const codigo = String(body?.codigo ?? "").trim().toUpperCase();
 
-    if (!/^[A-Z0-9]{8}$/.test(codigo)) {
+    // Solo se aceptan códigos de alta entropía (20+ caracteres hexadecimales).
+    if (!/^[0-9A-F]{20,64}$/.test(codigo)) {
       return errorResponse("Código de cotización no válido.", 400);
     }
 
