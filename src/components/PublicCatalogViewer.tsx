@@ -76,9 +76,9 @@ export const inferGemMeshes = (model: THREE.Object3D): number => {
   model.traverse((object) => {
     if (!(object instanceof THREE.Mesh) || !object.visible || !object.geometry?.getAttribute("position")) return;
     const explicit = explicitlyIdentified.has(object);
-    // In a mixed model, only unclassified meshes may be inferred; never
-    // reinterpret a mesh explicitly classified as metal.
-    if (explicitlyIdentified.size > 0 && (explicit || classifyMesh(object) === "metal")) return;
+    // Explicit gems remain candidates and win when they are already the central
+    // stone. Explicit metals are never eligible for geometric inference.
+    if (classifyMesh(object) === "metal") return;
     const materials = Array.isArray(object.material) ? object.material : [object.material];
     if (materials.length !== 1) return;
     object.updateWorldMatrix(true, false);
