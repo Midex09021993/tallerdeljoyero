@@ -482,13 +482,17 @@ export function applyAurumGemToTarget(target:any,gemConfig:any,applyGemEnvironme
     targets.push(target);
   }else{
     const index=getAurumGemLayerIndex(modelRoot);
-    const indexedTargets=selectedLayerNormalized
+    // Prefer the canonical leaf name. If a GLB sibling omitted its name
+    // but retained the same Rhino index/ID, use those stable identities only
+    // when no exact-name group exists; never merge a conflicting ID into a
+    // successfully resolved named layer.
+    const indexedTargets=(selectedLayerNormalized
       ? index.byLayerName.get(selectedLayerNormalized)
-      : selectedLayerIndex!=null
-        ? index.byLayerIndex.get(selectedLayerIndex)
-        : selectedLayerId!=null&&String(selectedLayerId).trim()!==""
-          ? index.byLayerId.get(String(selectedLayerId).trim())
-          : undefined;
+      : undefined)
+      ??(selectedLayerIndex!=null ? index.byLayerIndex.get(selectedLayerIndex) : undefined)
+      ??(selectedLayerId!=null&&String(selectedLayerId).trim()!==""
+        ? index.byLayerId.get(String(selectedLayerId).trim())
+        : undefined);
     if(indexedTargets?.length)targets.push(...indexedTargets);
     if(!targets.length){
       console.error("[AURUM][GEM LAYER ASSIGNMENT FAILED]",{
