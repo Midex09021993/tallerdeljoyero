@@ -220,6 +220,20 @@ export async function createAurumDiamondBvhRuntime(options: {
     const screenTiers = viewportHeight > 1
       ? classifyAurumDiamondMeshTiers(diamondMeshes, options.camera, viewportHeight)
       : new Map<THREE.Mesh, "micro" | "small" | "brilliant">();
+    // Infer the protected center only when one diamond is clearly larger
+    // than the next candidate. This recovers Rhino/GLB models that carry no
+    // explicit center marker while keeping secondary melee on physical optics.
+    const projectedDiamondSizes = diamondMeshes.map((mesh) => ({
+      mesh,
+      diameterPx: getAurumDiamondProjectedDiameterPx(mesh, options.camera, viewportHeight),
+    })).filter((entry) => Number.isFinite(entry.diameterPx) && entry.diameterPx > 0)
+      .sort((a, b) => b.diameterPx - a.diameterPx);
+    const largestProjectedDiamond = projectedDiamondSizes[0];
+    const secondLargestProjectedDiamond = projectedDiamondSizes[1];
+    const inferredCenterMesh = largestProjectedDiamond
+      && (!secondLargestProjectedDiamond || largestProjectedDiamond.diameterPx >= secondLargestProjectedDiamond.diameterPx * 1.5)
+      ? largestProjectedDiamond.mesh
+      : null;
 
     const processMesh = (object: THREE.Object3D) => {
       const mesh = object as THREE.Mesh;
@@ -322,7 +336,9 @@ export async function createAurumDiamondBvhRuntime(options: {
       // The production editor can opt into BVH for the center stone only.
       // Secondary diamonds remain on their existing MeshPhysicalMaterial path.
       if (family === "diamante" && options.diamondCenterOnly) {
-        const centerProtected = isAurumDiamondBvhCenterTarget(mesh);
+        const explicitlyProtected = isAurumDiamondBvhCenterTarget(mesh);
+        const inferredCenter = mesh === inferredCenterMesh;
+        const centerProtected = explicitlyProtected || inferredCenter;
         if (centerTargetDiagnostics.length < 60) {
           centerTargetDiagnostics.push({
             mesh: mesh.name || mesh.uuid,
@@ -333,8 +349,11 @@ export async function createAurumDiamondBvhRuntime(options: {
             tier: screenTier,
             projectedDiameterPx: Number(getAurumDiamondProjectedDiameterPx(mesh, options.camera, viewportHeight).toFixed(2)),
             accepted: centerProtected,
-            reason: centerProtected ? "centro-protegido" : "sin-marca-de-centro",
+            reason: explicitlyProtected ? "centro-protegido-explicito" : inferredCenter ? "centro-inferido-por-tamano" : "sin-marca-de-centro",
           });
+        }
+        if (inferredCenter && !explicitlyProtected) {
+          mesh.userData = { ...(mesh.userData ?? {}), aurumDiamondMicroCenterProtected: true, aurumDiamondCenterDetection: "projected-size" };
         }
         if (!centerProtected) return;
       }
