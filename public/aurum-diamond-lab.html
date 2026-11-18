@@ -49,7 +49,7 @@ canvas{width:100%;height:420px;display:block;background:#f4f4f2}
 "three":"https://esm.sh/three@0.185.1",
 "three/addons/":"https://esm.sh/three@0.185.1/examples/jsm/",
 "realistic-diamond-shader":"https://esm.sh/realistic-diamond-shader@0.1.2?external=three",
-"@meimu/mutracer":"https://esm.sh/@meimu/mutracer@0.3.1?external=three"
+"three-mesh-bvh":"https://esm.sh/three-mesh-bvh@0.9.16?external=three"
 }}
 </script>
 </head>
@@ -65,7 +65,7 @@ canvas{width:100%;height:420px;display:block;background:#f4f4f2}
 <section class="grid">
 <article class="panel"><div class="panelhead"><strong>01 · AURUM BVH</strong><span class="tag">BASE ACTUAL</span></div><canvas id="aurumCanvas"></canvas><div class="panelfoot" id="aurumInfo">realistic-diamond-shader · BVH · IOR 2.417 · rebotes configurados por calidad</div></article>
 <article class="panel"><div class="panelhead"><strong>02 · DIAMOND SHADER LAB</strong><span class="tag">FACET HULL</span></div><canvas id="dslCanvas"></canvas><div class="panelfoot" id="dslInfo">Convex hull · Fresnel · cinco rebotes internos · dispersión RGB</div></article>
-<article class="panel"><div class="panelhead"><strong>03 · MUTRACER</strong><span class="tag">PATH TRACING</span></div><canvas id="muCanvas"></canvas><div class="panelfoot" id="muInfo">WebGPU / WebGL 2 · transporte progresivo · material transmisivo</div></article>
+<article class="panel"><div class="panelhead"><strong>03 · ADVANCED JEWELRY RENDERER</strong><span class="tag">BVH RAY SHADER</span></div><canvas id="muCanvas"></canvas><div class="panelfoot" id="muInfo">BVH · refracción interna · dispersión RGB · render por fotograma</div></article>
 </section>
 <section class="controls">
 <div class="control"><label>IOR <output id="iorOut">2.417</output></label><input id="ior" type="range" min="2.30" max="2.60" step=".001" value="2.417"></div>
@@ -73,7 +73,7 @@ canvas{width:100%;height:420px;display:block;background:#f4f4f2}
 <div class="control"><label>Intensidad HDRI <output id="envOut">1.40</output></label><input id="env" type="range" min=".3" max="2.5" step=".05" value="1.4"></div>
 <div class="control"><label>Exposición <output id="expOut">1.00</output></label><input id="exp" type="range" min=".5" max="2" step=".05" value="1"></div>
 </section>
-<div class="notice"><strong>Créditos:</strong> El trazador de facetas está adaptado de <a href="https://github.com/ehsanwwe/diamond-shader-lab" target="_blank" rel="noreferrer">Diamond Shader Lab</a> (MIT). MuTracer se carga desde <a href="https://github.com/pissang/mutracer" target="_blank" rel="noreferrer">su proyecto oficial</a> (MIT). <strong>Importante:</strong> cada motor tiene un modelo óptico distinto. MuTracer convierte materiales Three.js a OpenPBR y no reproduce automáticamente el shader de dispersión de AURUM. La comparación evalúa calidad visual y comportamiento, no equivalencia física perfecta. Para una prueba válida, usa el GLB del mismo diamante central que estás evaluando en AURUM.</div>
+<div class="notice"><strong>Créditos:</strong> El trazador de facetas está adaptado de <a href="https://github.com/ehsanwwe/diamond-shader-lab" target="_blank" rel="noreferrer">Diamond Shader Lab</a> (MIT). El tercer motor adapta el shader BVH de <a href="https://github.com/itlmy/Advanced-Jewelry-Renderer-Web" target="_blank" rel="noreferrer">Advanced Jewelry Renderer Web</a> (MIT), basado en N8python/diamonds. <strong>Importante:</strong> cada motor tiene un modelo óptico distinto. MuTracer convierte materiales Three.js a OpenPBR y no reproduce automáticamente el shader de dispersión de AURUM. La comparación evalúa calidad visual y comportamiento, no equivalencia física perfecta. Para una prueba válida, usa el GLB del mismo diamante central que estás evaluando en AURUM.</div>
 </main>
 <script type="module">
 import * as THREE from "three";
@@ -81,13 +81,13 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { ConvexHull } from "three/addons/math/ConvexHull.js";
 import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
-import { Engine, RenderLoop, THREESync } from "@meimu/mutracer";
+import { MeshBVH, MeshBVHUniformStruct, shaderStructs, shaderIntersectFunction, SAH } from "three-mesh-bvh";
 import * as diamondApi from "realistic-diamond-shader";
 
 const $=id=>document.getElementById(id);
 const canvases=["aurumCanvas","dslCanvas","muCanvas"].map($);
 const hdrUrl="https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/1k/white_studio_03_1k.hdr";
-const state={source:null,selected:null,env:null,views:[],renderers:[],controls:[],cameras:[],raf:0,mu:null,disposed:[],applySettings:null};
+const state={source:null,selected:null,env:null,views:[],renderers:[],controls:[],cameras:[],raf:0,ajrw:null,disposed:[],applySettings:null};
 const MAX_PLANES=256;
 const envLoader=new RGBELoader();
 const setStatus=(s)=>$("status").textContent=s;
@@ -108,7 +108,7 @@ function getCandidateMeshes(root){
 }
 function clearRenderers(){
  if(state.raf)cancelAnimationFrame(state.raf);
- state.mu?.loop?.dispose();state.mu?.sync?.dispose();state.mu?.engine?.dispose();state.mu=null;
+ state.ajrw?.bvhUniform?.dispose();state.ajrw?.cubeTarget?.dispose();state.ajrw=null;
  for(const c of state.controls)c.dispose();for(const r of state.renderers)r.dispose();
  state.controls=[];state.renderers=[];state.cameras=[];state.applySettings=null;state.disposed.forEach(x=>x.dispose?.());state.disposed=[];
 }
@@ -155,22 +155,27 @@ function createShaderMaterial(geometry,env,camera,settings){
  material.userData.syncSettings=(v)=>{uniforms.uIor.value=v.ior;uniforms.uDispersion.value=v.disp;uniforms.uExposure.value=v.exp;material.uniformsNeedUpdate=true;};
  return material;
 }
-async function startMu(geometry,env){
- const canvas=$("muCanvas"),scene=new THREE.Scene();scene.background=new THREE.Color(0xf4f4f2);
- const camera=new THREE.PerspectiveCamera(32,canvas.clientWidth/canvas.clientHeight,.01,100);
- const controls=new OrbitControls(camera,canvas);controls.enableDamping=true;controls.enablePan=false;
- fitCamera(camera,controls,geometry);
- const mat=new THREE.MeshPhysicalMaterial({color:0xffffff,metalness:0,roughness:0,transmission:1,thickness:1,ior:values().ior,dispersion:values().disp,envMap:env,envMapIntensity:values().env,side:THREE.DoubleSide});
- scene.environment=env;scene.add(new THREE.HemisphereLight(0xffffff,0x777777,.8));
- const key=new THREE.DirectionalLight(0xffffff,1.5);key.position.set(3,4,4);scene.add(key);
- scene.add(new THREE.Mesh(geometry.clone(),mat));
- const engine=new Engine({canvas});
- const sync=new THREESync(engine,{scene,camera,controls});
- const loop=new RenderLoop(engine,{sync});
- engine.on("error",err=>{console.error("[MuTracer]",err);$("muInfo").textContent="Error MuTracer: "+(err?.message||String(err));});
- state.mu={engine,sync,loop,material:mat,controls,camera,scene};state.controls.push(controls);
- $("muInfo").textContent="Inicializando MuTracer · compilando shaders y preparando el primer muestreo…";
- loop.start();
+async function startAJRW(geometry,env){
+ const canvas=$("muCanvas"),base=makeBase(canvas),{renderer,scene,camera,controls}=base;
+ state.renderers.push(renderer);state.controls.push(controls);state.cameras.push(camera);fitCamera(camera,controls,geometry);
+ const cubeTarget=new THREE.WebGLCubeRenderTarget(256,{generateMipmaps:true,minFilter:THREE.LinearMipmapLinearFilter});cubeTarget.fromEquirectangularTexture(renderer,env);
+ const geo=geometry.toNonIndexed(),count=geo.getAttribute("position").count;
+ geo.setAttribute("color",new THREE.Float32BufferAttribute(new Float32Array(count*3).fill(.98),3));
+ geo.setAttribute("color2",new THREE.Float32BufferAttribute(new Float32Array(count*3).fill(1),3));geo.computeVertexNormals();
+ const bvh=new MeshBVH(geo,{strategy:SAH}),bvhUniform=new MeshBVHUniformStruct();bvhUniform.updateFrom(bvh);
+ const material=new THREE.ShaderMaterial({
+ uniforms:{envMap:{value:cubeTarget.texture},bvh:{value:bvhUniform},bounces:{value:4},ior:{value:values().ior},fresnel:{value:.78},projectionMatrixInv:{value:camera.projectionMatrixInverse},viewMatrixInv:{value:camera.matrixWorld},aberrationStrength:{value:Math.max(.001,values().disp*12)},resolution:{value:new THREE.Vector2(canvas.width,canvas.height)}},
+ vertexShader:`attribute vec3 color;attribute vec3 color2;varying vec3 vWorldPosition;varying vec3 vNormal;varying vec3 vColor;varying vec3 vColor2;uniform mat4 viewMatrixInv;void main(){vColor=color;vColor2=color2;vWorldPosition=(modelMatrix*vec4(position,1.)).xyz;vNormal=(viewMatrixInv*vec4(normalMatrix*normal,0.)).xyz;gl_Position=projectionMatrix*viewMatrix*modelMatrix*vec4(position,1.);}`,
+ fragmentShader:`precision highp float;precision highp isampler2D;precision highp usampler2D;varying vec3 vWorldPosition;varying vec3 vNormal;varying vec3 vColor;varying vec3 vColor2;uniform samplerCube envMap;uniform float bounces;uniform BVH bvh;uniform float ior;uniform float fresnel;uniform mat4 projectionMatrixInv;uniform mat4 viewMatrixInv;uniform mat4 modelMatrix;uniform vec2 resolution;uniform float aberrationStrength;${shaderStructs}${shaderIntersectFunction}
+ vec3 internalRay(vec3 rd,vec3 n,float eta,mat4 modelInv){vec3 ray=refract(rd,n,1./eta);vec3 origin=vWorldPosition+ray*.001;origin=(modelInv*vec4(origin,1.)).xyz;ray=normalize((modelInv*vec4(ray,0.)).xyz);for(int i=0;i<8;i++){if(float(i)>=bounces)break;uvec4 fi=uvec4(0u);vec3 fn=vec3(0.,0.,1.);vec3 bary=vec3(0.);float side=1.;float dist=0.;bvhIntersectFirstHit(bvh,origin,ray,fi,fn,bary,side,dist);if(dist<=0.)break;vec3 hit=origin+ray*max(dist-.001,0.);vec3 tr=refract(ray,fn,eta);if(length(tr)>.0001){ray=tr;break;}ray=reflect(ray,fn);origin=hit+ray*.002;}return normalize((modelMatrix*vec4(ray,0.)).xyz);}
+ void main(){vec3 rd=normalize(vWorldPosition-cameraPosition),n=normalize(vNormal);mat4 modelInv=inverse(modelMatrix);float d=max(aberrationStrength,.0001);vec3 r=internalRay(rd,n,ior*(1.-d),modelInv),g=internalRay(rd,n,ior,modelInv),b=internalRay(rd,n,ior*(1.+d),modelInv);vec2 uv=gl_FragCoord.xy/resolution;vec3 viewRay=normalize((viewMatrixInv*vec4((projectionMatrixInv*vec4(uv*2.-1.,0.,1.)).xyz,0.)).xyz);vec3 t=vec3(textureGrad(envMap,r,dFdx(viewRay),dFdy(viewRay)).r,textureGrad(envMap,g,dFdx(viewRay),dFdy(viewRay)).g,textureGrad(envMap,b,dFdx(viewRay),dFdy(viewRay)).b);vec3 refl=texture(envMap,reflect(rd,n)).rgb;float f0=pow((1.-ior)/(1.+ior),2.);float f=f0+(1.-f0)*pow(1.-max(dot(-rd,n),0.),5.);gl_FragColor=vec4(mix(t,refl,clamp(f*fresnel*1.25,0.,.96)),1.);}`
+ });
+ const mesh=new THREE.Mesh(geo,material);mesh.frustumCulled=false;scene.add(mesh);
+ const light=new THREE.DirectionalLight(0xffffff,.2);light.position.set(3,4,4);scene.add(light);
+ mesh.onBeforeRender=()=>{camera.updateMatrixWorld();material.uniforms.viewMatrixInv.value.copy(camera.matrixWorld);material.uniforms.projectionMatrixInv.value.copy(camera.projectionMatrixInverse);material.uniforms.ior.value=values().ior;material.uniforms.aberrationStrength.value=Math.max(.001,values().disp*12);material.uniforms.resolution.value.set(canvas.width,canvas.height);};
+ state.disposed.push(geo,material);state.ajrw={renderer,scene,camera,controls,cubeTarget,bvhUniform,material,bvh};
+ $("muInfo").textContent="Activo · Advanced Jewelry Renderer · BVH · refracción interna · 4 rebotes · dispersión RGB";
+ return {id:"ajrw",renderer,scene,camera,controls};
 }
 async function startComparison(){
  if(!state.selected||!state.env){setStatus("Selecciona una malla y espera a que cargue el HDRI.");return;}
@@ -200,8 +205,7 @@ async function startComparison(){
   $("dslInfo").textContent="Activo · Facet Hull · Fresnel · 5 rebotes";
  }catch(err){panelError("dslInfo","Diamond Shader Lab",err);}
  try{
-  const gc=geom.clone();state.disposed.push(gc);await startMu(gc,state.env);
-  if(state.mu?.camera){state.cameras.push(state.mu.camera);views.push({id:"mu",camera:state.mu.camera,controls:state.mu.controls});}
+  const gc=geom.clone();state.disposed.push(gc);const c=await startAJRW(gc,state.env);views.push(c);
  }catch(err){panelError("muInfo","MuTracer",err);}
  const linked=views.map(v=>v.controls).filter(Boolean);if(state.mu?.controls&&!linked.includes(state.mu.controls))linked.push(state.mu.controls);let syncing=false;
  linked.forEach(source=>source.addEventListener("change",()=>{if(syncing)return;syncing=true;for(const target of linked){if(target===source)continue;target.target.copy(source.target);target.object.position.copy(source.object.position);target.object.quaternion.copy(source.object.quaternion);target.update();}syncing=false;}));
@@ -210,13 +214,13 @@ async function startComparison(){
   if(aMat)diamondApi.setDiamondOptions?.(aMat,{ior:v.ior,dispersion:v.disp,environmentIntensity:v.env});
   const bMat=views.find(vw=>vw.id==="dsl")?.scene.children.find(o=>o.isMesh)?.material;
   if(bMat)bMat.userData.syncSettings(v);
-  if(state.mu?.material){state.mu.material.ior=v.ior;state.mu.material.dispersion=v.disp;state.mu.material.envMapIntensity=v.env;state.mu.sync?.update?.();}
+  if(state.ajrw?.material){state.ajrw.material.uniforms.ior.value=v.ior;state.ajrw.material.uniforms.aberrationStrength.value=Math.max(.001,v.disp*12);state.ajrw.renderer.toneMappingExposure=v.exp;}
  };
  const render=()=>{state.raf=requestAnimationFrame(render);for(const view of views){view.controls?.update();view.renderer?.render(view.scene,view.camera);}};
  if(views.some(v=>v.renderer)||state.mu){
   render();$("reloadBtn").disabled=false;
-  const active=views.map(v=>v.id==="aurum"?"AURUM BVH":v.id==="dsl"?"Diamond Shader Lab":"MuTracer").join(" + ");
-  setStatus("Escenas preparadas: "+active+" · MuTracer puede tardar varios segundos en mostrar su primer fotograma.");
+  const active=views.map(v=>v.id==="aurum"?"AURUM BVH":v.id==="dsl"?"Diamond Shader Lab":"Advanced Jewelry Renderer").join(" + ");
+  setStatus("Escenas preparadas: "+active+" · El tercer motor calcula refracción BVH por fotograma, sin acumulación progresiva.");
  }else{setStatus("No se pudo iniciar ningún motor. Revisa los mensajes de cada panel.");}
 }
 $("modelFile").addEventListener("change",async e=>{
@@ -226,8 +230,8 @@ $("modelFile").addEventListener("change",async e=>{
 $("meshSelect").addEventListener("change",e=>{state.selected=state.meshOptions?.[+e.target.value]?.mesh||null;});
 $("reloadBtn").addEventListener("click",startComparison);
 $("resetBtn").addEventListener("click",()=>{if(state.selected)startComparison()});
-for(const id of ["ior","disp","env","exp"]){$(id).addEventListener("input",()=>{const v=values();$("iorOut").textContent=v.ior.toFixed(3);$("dispOut").textContent=v.disp.toFixed(4);$("envOut").textContent=v.env.toFixed(2);$("expOut").textContent=v.exp.toFixed(2);if(state.applySettings)state.applySettings(v);else if(state.mu?.material){state.mu.material.ior=v.ior;state.mu.material.dispersion=v.disp;state.mu.material.envMapIntensity=v.env;state.mu.sync?.update?.();}})}
-window.addEventListener("resize",()=>{for(const r of state.renderers){const w=r.domElement.clientWidth,h=r.domElement.clientHeight;r.setSize(w,h,false);for(const camera of state.cameras){camera.aspect=w/Math.max(h,1);camera.updateProjectionMatrix();}}if(state.mu){state.mu.sync?.update?.();}});
+for(const id of ["ior","disp","env","exp"]){$(id).addEventListener("input",()=>{const v=values();$("iorOut").textContent=v.ior.toFixed(3);$("dispOut").textContent=v.disp.toFixed(4);$("envOut").textContent=v.env.toFixed(2);$("expOut").textContent=v.exp.toFixed(2);if(state.applySettings)state.applySettings(v);else if(state.ajrw?.material){state.ajrw.material.uniforms.ior.value=v.ior;state.ajrw.material.uniforms.aberrationStrength.value=Math.max(.001,v.disp*12);state.ajrw.renderer.toneMappingExposure=v.exp;}})}
+window.addEventListener("resize",()=>{for(const r of state.renderers){const w=r.domElement.clientWidth,h=r.domElement.clientHeight;r.setSize(w,h,false);for(const camera of state.cameras){camera.aspect=w/Math.max(h,1);camera.updateProjectionMatrix();}}if(state.ajrw){const c=$("muCanvas"),w=c.clientWidth,h=c.clientHeight;state.ajrw.renderer.setSize(w,h,false);state.ajrw.camera.aspect=w/Math.max(h,1);state.ajrw.camera.updateProjectionMatrix();state.ajrw.material.uniforms.resolution.value.set(c.width,c.height);}});
 window.addEventListener("pagehide",clearRenderers);
 envLoader.load(hdrUrl,texture=>{texture.mapping=THREE.EquirectangularReflectionMapping;texture.colorSpace=THREE.LinearSRGBColorSpace;state.env=texture;setStatus("HDRI cargado. Carga tu GLB para comenzar.");},undefined,err=>{console.error(err);setStatus("No se pudo cargar el HDRI de prueba.");});
 </script>
