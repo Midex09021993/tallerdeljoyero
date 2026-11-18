@@ -182,7 +182,7 @@ $("meshSelect").addEventListener("change",e=>{state.selected=state.meshOptions?.
 $("reloadBtn").addEventListener("click",startComparison);
 $("resetBtn").addEventListener("click",()=>{if(state.selected)startComparison()});
 for(const id of ["ior","disp","env","exp"]){$(id).addEventListener("input",()=>{const v=values();$("iorOut").textContent=v.ior.toFixed(3);$("dispOut").textContent=v.disp.toFixed(4);$("envOut").textContent=v.env.toFixed(2);$("expOut").textContent=v.exp.toFixed(2);if(state.applySettings)state.applySettings(v);else if(state.mu?.material){state.mu.material.ior=v.ior;state.mu.material.dispersion=v.disp;state.mu.material.envMapIntensity=v.env;state.mu.engine.update?.();}})}
-window.addEventListener("resize",()=>{for(const r of state.renderers){const w=r.domElement.clientWidth,h=r.domElement.clientHeight;r.setSize(w,h,false)}});
+window.addEventListener("resize",()=>{for(const r of state.renderers){const w=r.domElement.clientWidth,h=r.domElement.clientHeight;r.setSize(w,h,false);const camera=state.controls.find(x=>x.object===r.domElement.__aurumCamera)?.object;if(camera){camera.aspect=w/Math.max(h,1);camera.updateProjectionMatrix();}}if(state.mu){const canvas=$("muCanvas"),ratio=Math.min(devicePixelRatio,1.75);state.mu.engine.display.setSize(canvas.clientWidth*ratio,canvas.clientHeight*ratio);state.mu.engine.update?.();}});
 window.addEventListener("pagehide",clearRenderers);
 envLoader.load(hdrUrl,texture=>{texture.mapping=THREE.EquirectangularReflectionMapping;texture.colorSpace=THREE.LinearSRGBColorSpace;state.env=texture;setStatus("HDRI cargado. Carga tu GLB para comenzar.");},undefined,err=>{console.error(err);setStatus("No se pudo cargar el HDRI de prueba.");});
 </script>
