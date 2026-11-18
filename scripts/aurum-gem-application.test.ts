@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import * as THREE from "three";
 import { createAurumGemEnvironment } from "../src/lib/aurum/gem-environment";
-import { prepareAurumGemLayerIndex } from "../src/lib/aurum/material-application";
+import { applyAurumGemToTarget, prepareAurumGemLayerIndex } from "../src/lib/aurum/material-application";
 import { getAurumRuntimeBudget } from "../src/lib/aurum/runtime-budget";
 import { setAurumGemShaderQuality } from "../src/lib/aurum/scintillation";
 import { createAurumDiamondMicroPipeline } from "../src/lib/aurum/diamond-micro-pipeline";
@@ -104,6 +104,65 @@ test("gem layer index is prepared once and rebuilt for a reused scene root", () 
   scene.remove(gem);
   geometry.dispose();
   material.dispose();
+});
+
+test("source-only Rhino Gem 02 metadata assigns every mesh in the selected layer", () => {
+  const scene = new THREE.Scene();
+  const makeMesh = (name: string, layerName: string) => {
+    const mesh = new THREE.Mesh(
+      new THREE.BoxGeometry(0.4, 0.4, 0.4),
+      new THREE.MeshStandardMaterial(),
+    );
+    mesh.name = name;
+    // Simulate GLB hydration where the original Rhino layer identity survives
+    // only in aurumRhinoSource, with no normalized aurumRhino category object.
+    mesh.userData = { aurumRhinoSource: { layerName } };
+    scene.add(mesh);
+    return mesh;
+  };
+  const gem02a = makeMesh("Gem02-A", "Gem 02");
+  const gem02b = makeMesh("Gem02-B-selected", "Gem 02");
+  const gem02c = makeMesh("Gem02-C", "Gem 02");
+  const gem03 = makeMesh("Gem03-control", "Gem 03");
+  const untouchedMaterial = gem03.material;
+  const resolvedEnvironments: readonly any[][] = [];
+
+  prepareAurumGemLayerIndex(scene);
+  const applied = applyAurumGemToTarget(
+    gem02b,
+    {
+      id: "diamante_blanco_1",
+      nombre: "Diamante Blanco 1",
+      familia: "Diamante",
+      color: 0xffffff,
+      transmission: 1,
+      ior: 2.42,
+      roughness: 0,
+      dispersion: 0.044,
+      envMapIntensity: 1,
+      thicknessScale: 1,
+    },
+    (targets) => resolvedEnvironments.push([...(targets ?? [])]),
+  );
+
+  expect(applied).toBe(true);
+  expect(resolvedEnvironments).toHaveLength(1);
+  expect(resolvedEnvironments[0]).toEqual([gem02a, gem02b, gem02c]);
+  for (const mesh of [gem02a, gem02b, gem02c]) {
+    expect(mesh.material).toBeInstanceOf(THREE.MeshPhysicalMaterial);
+    expect(mesh.userData.aurumActiveGemId).toBe("diamante_blanco_1");
+    expect(mesh.userData.aurumActiveGemFamily).toBe("diamante");
+  }
+  expect(gem03.material).toBe(untouchedMaterial);
+  expect(gem03.userData.aurumActiveGemId).toBeUndefined();
+
+  scene.traverse((object) => {
+    if (object instanceof THREE.Mesh) {
+      object.geometry.dispose();
+      const materials = Array.isArray(object.material) ? object.material : [object.material];
+      materials.forEach((material) => material.dispose());
+    }
+  });
 });
 
 test("selected gem paints before optional enrichment and thickness work", () => {
