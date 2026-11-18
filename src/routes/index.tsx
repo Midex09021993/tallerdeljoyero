@@ -6,7 +6,7 @@ import { RegistroTaller } from "@/components/RegistroTaller";
 import { AurumProductShowcase } from "@/components/AurumProductShowcase";
 import { SolicitarDemo } from "@/components/SolicitarDemo";
 const MiniAurumRender = lazy(() => import("@/components/MiniAurumRender").then((m) => ({ default: m.MiniAurumRender })));
-import { ArrowLeft, ArrowRight, ArrowRightLeft, BookOpen, Boxes, Calculator, Check, CircleDot, Cloud, Coins, Eye, FlaskConical, Gem, Layers3, Menu, MonitorSmartphone, PackageCheck, Ruler, Scale, Sparkles, Sprout, ChartNoAxesCombined, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, ArrowRightLeft, BookOpen, Boxes, Calculator, Check, CircleDot, Cloud, Coins, Eye, FlaskConical, Gem, Layers3, Menu, MonitorSmartphone, PackageCheck, Pause, Play, Ruler, Scale, Sparkles, Sprout, ChartNoAxesCombined, X } from "lucide-react";
 import heroColgante from "@/assets/diseno-colgante.jpg";
 
 export const Route = createFileRoute("/")({
@@ -413,47 +413,159 @@ const herramientasDestacadas = [
 
 function CarruselHerramientas() {
   const trackRef = useRef<HTMLDivElement | null>(null);
-  const mover = (direccion: -1 | 1) => {
+  const activeIndexRef = useRef(0);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [pausado, setPausado] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const carouselRef = useRef<HTMLDivElement | null>(null);
+
+  const irA = (index: number, behavior: ScrollBehavior = "smooth") => {
     const track = trackRef.current;
-    if (!track) return;
-    const tarjeta = track.querySelector<HTMLElement>("[data-tool-card]");
-    const desplazamiento = tarjeta ? tarjeta.offsetWidth + 16 : 288;
-    track.scrollBy({ left: direccion * desplazamiento, behavior: "smooth" });
+    const cards = track?.querySelectorAll<HTMLElement>("[data-tool-card]");
+    if (!track || !cards?.length) return;
+    const safeIndex = (index + cards.length) % cards.length;
+    const card = cards[safeIndex];
+    const left = card.getBoundingClientRect().left - track.getBoundingClientRect().left + track.scrollLeft;
+    track.scrollTo({ left, behavior });
+    activeIndexRef.current = safeIndex;
+    setActiveIndex(safeIndex);
   };
 
+  const mover = (direccion: -1 | 1) => irA(activeIndexRef.current + direccion);
+
+  useEffect(() => {
+    const track = trackRef.current;
+    const root = carouselRef.current;
+    if (!track || !root) return;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let observer: IntersectionObserver | null = null;
+    const updateVisibility = () => setVisible(document.visibilityState === "visible");
+    updateVisibility();
+    document.addEventListener("visibilitychange", updateVisibility);
+    if (typeof IntersectionObserver !== "undefined") {
+      observer = new IntersectionObserver(([entry]) => setVisible(Boolean(entry?.isIntersecting) && document.visibilityState === "visible"), { threshold: 0.2 });
+      observer.observe(root);
+    } else {
+      setVisible(true);
+    }
+    const onScroll = () => {
+      const cards = Array.from(track.querySelectorAll<HTMLElement>("[data-tool-card]"));
+      if (!cards.length) return;
+      const trackLeft = track.getBoundingClientRect().left;
+      let nearest = 0;
+      let distance = Number.POSITIVE_INFINITY;
+      cards.forEach((card, index) => {
+        const current = Math.abs(card.getBoundingClientRect().left - trackLeft);
+        if (current < distance) { distance = current; nearest = index; }
+      });
+      activeIndexRef.current = nearest;
+      setActiveIndex(nearest);
+    };
+    track.addEventListener("scroll", onScroll, { passive: true });
+    if (reduceMotion.matches) {
+      return () => {
+        observer?.disconnect();
+        document.removeEventListener("visibilitychange", updateVisibility);
+        track.removeEventListener("scroll", onScroll);
+      };
+    }
+    return () => {
+      observer?.disconnect();
+      document.removeEventListener("visibilitychange", updateVisibility);
+      track.removeEventListener("scroll", onScroll);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (pausado || !visible || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const timer = window.setInterval(() => irA(activeIndexRef.current + 1), 4400);
+    return () => window.clearInterval(timer);
+  }, [pausado, visible]);
+
+  const pausarPorInteraccion = () => setPausado(true);
+
   return (
-    <div data-aurum-reveal className="min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-[#f8fafc] shadow-[0_8px_30px_rgba(23,35,45,.045)]">
-      <div className="flex items-center justify-between gap-3 border-b border-slate-200 px-5 py-4 sm:px-6">
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#987400]">AURUM LAB · Herramientas</p>
-          <h3 className="mt-1 text-base font-bold text-[#17232d] sm:text-lg">Soluciones para cada etapa del oficio</h3>
-          <p className="mt-1 text-xs text-slate-500">Explora lo que puedes resolver desde una sola plataforma.</p>
+    <div
+      ref={carouselRef}
+      data-aurum-reveal
+      className="aurum-tools-carousel group relative min-w-0 overflow-hidden rounded-[22px] border border-[#dce3eb] bg-[linear-gradient(145deg,#fbfcfe_0%,#f4f7fa_100%)] shadow-[0_18px_48px_rgba(21,35,48,.075),0_2px_8px_rgba(21,35,48,.035)]"
+      onMouseEnter={pausarPorInteraccion}
+      onFocusCapture={pausarPorInteraccion}
+      onTouchStart={pausarPorInteraccion}
+    >
+      <div className="relative flex items-center justify-between gap-3 border-b border-[#e1e7ee] px-5 py-4 sm:px-6 sm:py-[18px]">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="h-px w-5 bg-[#c69b22]" />
+            <p className="text-[9px] font-bold uppercase tracking-[.22em] text-[#9a7408]">AURUM LAB · Herramientas</p>
+            <span className="rounded-full border border-[#e8dba9] bg-[#fff9e8] px-2 py-0.5 text-[8px] font-semibold uppercase tracking-[.12em] text-[#92700d]">Suite profesional</span>
+          </div>
+          <h3 className="mt-2 text-[17px] font-semibold tracking-[-.025em] text-[#17232d] sm:text-[19px]">Soluciones para cada etapa del oficio</h3>
+          <p className="mt-1 text-xs text-[#687789]">Herramientas especializadas para diseñar, calcular y fabricar mejor.</p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <button type="button" onClick={() => mover(-1)} aria-label="Ver herramientas anteriores" className="grid size-9 place-items-center rounded-full border border-slate-300 bg-white text-slate-700 transition hover:border-[#d4aa19] hover:text-[#876500] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19]">
+          <button type="button" onClick={() => mover(-1)} aria-label="Ver herramientas anteriores" className="grid size-9 place-items-center rounded-full border border-[#d6dee8] bg-white/90 text-[#344456] shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-[#c9a43a] hover:bg-[#fffaf0] hover:text-[#8a6809] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c9a43a]">
             <ArrowLeft className="size-4" />
           </button>
-          <button type="button" onClick={() => mover(1)} aria-label="Ver más herramientas" className="grid size-9 place-items-center rounded-full border border-slate-300 bg-white text-slate-700 transition hover:border-[#d4aa19] hover:text-[#876500] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19]">
+          <button type="button" onClick={() => mover(1)} aria-label="Ver más herramientas" className="grid size-9 place-items-center rounded-full border border-[#d6dee8] bg-white/90 text-[#344456] shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-[#c9a43a] hover:bg-[#fffaf0] hover:text-[#8a6809] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c9a43a]">
             <ArrowRight className="size-4" />
           </button>
         </div>
       </div>
-      <div ref={trackRef} role="region" aria-label="Carrusel de herramientas de AURUM LAB" tabIndex={0} className="flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain px-5 py-5 [scrollbar-width:thin] sm:px-6">
-        {herramientasDestacadas.map(({ id, titulo, detalle, etiqueta, icono: Icono, ruta }) => (
-          <Link key={id} to={ruta as any} data-tool-card className="group flex w-[min(78vw,260px)] shrink-0 snap-start flex-col rounded-xl border border-slate-200 bg-white p-4 transition duration-200 hover:-translate-y-0.5 hover:border-[#dfbd4b] hover:shadow-[0_10px_24px_rgba(23,35,45,.07)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19] sm:w-[260px]">
-            <span className="grid size-10 place-items-center rounded-xl border border-[#eadca7] bg-[#fff4c4] text-[#8f6b00]">
-              <Icono className="size-5" />
-            </span>
-            <span className="mt-4 text-[9px] font-bold uppercase tracking-[.16em] text-[#987400]">{etiqueta}</span>
-            <span className="mt-1.5 text-sm font-bold leading-snug text-[#17232d]">{titulo}</span>
-            <span className="mt-2 flex-1 text-xs leading-5 text-slate-600">{detalle}</span>
-            <span className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-[#765900]">Conocer herramienta <ArrowRight className="size-3.5 transition group-hover:translate-x-1" /></span>
-          </Link>
-        ))}
+
+      <div className="aurum-tools-track-wrap relative">
+        <div
+          ref={trackRef}
+          role="region"
+          aria-label="Carrusel automático de herramientas de AURUM LAB"
+          aria-roledescription="carrusel"
+          tabIndex={0}
+          onWheel={pausarPorInteraccion}
+          onPointerDown={pausarPorInteraccion}
+          className="aurum-tools-track flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain px-5 py-5 sm:gap-[18px] sm:px-6 sm:py-[21px]"
+        >
+          {herramientasDestacadas.map(({ id, titulo, detalle, etiqueta, icono: Icono, ruta }, index) => (
+            <Link
+              key={id}
+              to={ruta as any}
+              data-tool-card
+              aria-label={`${titulo}: ${detalle}`}
+              className="group/tool relative flex min-h-[224px] w-[min(78vw,264px)] shrink-0 snap-start flex-col overflow-hidden rounded-[17px] border border-[#e0e6ed] bg-white p-[17px] shadow-[0_3px_12px_rgba(23,35,45,.025)] transition-all duration-300 hover:-translate-y-1 hover:border-[#d6bd72] hover:shadow-[0_14px_30px_rgba(23,35,45,.09)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c9a43a] sm:w-[264px]"
+            >
+              <span className="pointer-events-none absolute inset-x-0 top-0 h-[2px] origin-left scale-x-0 bg-gradient-to-r from-[#b38a18] via-[#e8d18a] to-transparent transition-transform duration-500 group-hover/tool:scale-x-100" />
+              <span className="flex items-start justify-between">
+                <span className="grid size-10 place-items-center rounded-[13px] border border-[#eadca9] bg-gradient-to-br from-[#fff8dc] to-[#ffefb5] text-[#987100] shadow-[inset_0_1px_0_rgba(255,255,255,.9)]">
+                  <Icono className="size-[19px]" strokeWidth={1.8} />
+                </span>
+                <span className="pt-1 text-[9px] font-medium tabular-nums tracking-[.16em] text-[#a4afbb]">{String(index + 1).padStart(2, "0")} / {String(herramientasDestacadas.length).padStart(2, "0")}</span>
+              </span>
+              <span className="mt-[17px] text-[9px] font-bold uppercase tracking-[.18em] text-[#a17b0b]">{etiqueta}</span>
+              <span className="mt-1.5 text-[14px] font-semibold leading-snug tracking-[-.015em] text-[#1b2935]">{titulo}</span>
+              <span className="mt-2 flex-1 text-[11.5px] leading-[1.65] text-[#657487]">{detalle}</span>
+              <span className="mt-4 inline-flex items-center gap-2 text-[11px] font-semibold text-[#876600] transition-colors group-hover/tool:text-[#17232d]">Explorar herramienta <ArrowRight className="size-3.5 transition-transform group-hover/tool:translate-x-1" /></span>
+            </Link>
+          ))}
+        </div>
+        <div className="pointer-events-none absolute inset-y-0 left-0 w-5 bg-gradient-to-r from-[#f8fafc] to-transparent sm:w-7" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-7 bg-gradient-to-l from-[#f5f8fb] to-transparent sm:w-9" />
       </div>
-      <div className="flex items-center justify-between gap-3 border-t border-slate-200 bg-white px-5 py-3 text-[11px] text-slate-500 sm:px-6">
-        <span>Desliza para descubrir más herramientas</span>
-        <Link to="/herramientas-publicas" className="shrink-0 font-semibold text-[#765900] hover:text-[#17232d]">Ver todas <ArrowRight className="ml-1 inline size-3.5" /></Link>
+
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-[#e1e7ee] bg-white/80 px-5 py-3 sm:px-6">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5" aria-label={`Herramienta ${activeIndex + 1} de ${herramientasDestacadas.length}`}>
+            {herramientasDestacadas.map((item, index) => (
+              <button key={item.id} type="button" aria-label={`Ir a ${item.titulo}`} aria-current={activeIndex === index ? "true" : undefined} onClick={() => irA(index)} className={`h-1.5 rounded-full transition-all duration-300 ${activeIndex === index ? "w-6 bg-[#b38a18]" : "w-1.5 bg-[#d7dee7] hover:bg-[#b9a46b]"}`} />
+            ))}
+          </div>
+          <span className="text-[10px] text-[#8794a3]">Desplazamiento automático</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <button type="button" onClick={() => setPausado((value) => !value)} aria-label={pausado ? "Reanudar carrusel automático" : "Pausar carrusel automático"} className="inline-flex items-center gap-1.5 text-[10px] font-medium text-[#758294] transition hover:text-[#8a6809]">
+            {pausado ? <Play className="size-3" /> : <Pause className="size-3" />}
+            {pausado ? "Reanudar" : "Pausar"}
+          </button>
+          <Link to="/herramientas-publicas" className="shrink-0 text-[11px] font-semibold text-[#806006] transition hover:text-[#17232d]">Ver todas <ArrowRight className="ml-1 inline size-3.5" /></Link>
+        </div>
       </div>
     </div>
   );
@@ -580,6 +692,12 @@ function InicioPublico() {
         @keyframes aurum-card-sheen {
           from { transform: translateX(-130%) skewX(-18deg); }
           to { transform: translateX(230%) skewX(-18deg); }
+        }
+        .aurum-tools-track { scrollbar-width: none; -ms-overflow-style: none; scroll-behavior: smooth; }
+        .aurum-tools-track::-webkit-scrollbar { display: none; }
+        @media (prefers-reduced-motion: reduce) {
+          .aurum-tools-track { scroll-behavior: auto; }
+          .aurum-tools-track [data-tool-card] { transition: none !important; }
         }
         .aurum-hero-enter { animation: aurum-hero-enter .9s cubic-bezier(.2,.75,.25,1) both; }
         .aurum-hero-enter-delay-1 { animation-delay: .12s; }
