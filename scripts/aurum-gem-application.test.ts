@@ -712,3 +712,13 @@ test("Aurum Render production BVH includes ruby while keeping center-only restri
   expect(runtime).toContain("resolveAurumRubyBvhProfile(materials[0])");
   expect(profiles).toContain("export function resolveAurumRubyBvhProfile");
 });
+
+
+test("Aurum Render BVH master switch disables and restores diamond and ruby families together", () => {
+  const render = readFileSync("src/components/AurumRender.tsx", "utf8");
+  expect(render).toContain('for (const family of ["diamante", "rubí", "rubi"])');
+  expect(render).toContain('if (!diamondBvhEnabledRef.current) {');
+  expect(render).toContain('runtime.setFamilyEnabled(family, false)');
+  expect(render).toContain('setFamilyEnabled?.(family, detail.enabled)');
+  expect(render).toContain("diamante central y los rubíes compatibles");
+});
