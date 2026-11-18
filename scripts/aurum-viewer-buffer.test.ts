@@ -574,7 +574,8 @@ test("Aurum exposes diamond-only AA and SSAA as independent modules", () => {
   expect(postSource).toContain("ensureDiamondSupersampleMaskTarget");
   expect(postSource).toContain("Render the complete optical scene at auxiliary resolution");
   expect(postSource).toContain("activeRenderer.render(scene,camera);");
-  expect(postSource).toContain("if(sampleMask>=0.5 && abs(weight)>0.000001)");
+  expect(postSource).toContain("coveredSamples+=step(0.5,sampleMask);");
+  expect(postSource).toContain("if(abs(weight)>0.000001){");
   expect(postSource).toContain("float aurumCatmullRomWeight(float x){");
   expect(postSource).toContain("reconstructed=clamp(reconstructed,minimumSample,maximumSample);");
   expect(postSource).toContain("if(sampleMask>=0.5 && abs(weight)>0.000001){");
