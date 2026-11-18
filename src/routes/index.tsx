@@ -6,7 +6,7 @@ import { RegistroTaller } from "@/components/RegistroTaller";
 import { AurumProductShowcase } from "@/components/AurumProductShowcase";
 import { SolicitarDemo } from "@/components/SolicitarDemo";
 const MiniAurumRender = lazy(() => import("@/components/MiniAurumRender").then((m) => ({ default: m.MiniAurumRender })));
-import { ArrowRight, BookOpen, Boxes, Calculator, Check, Cloud, Gem, Layers3, Menu, MonitorSmartphone, PackageCheck, Sparkles, Sprout, ChartNoAxesCombined, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, ArrowRightLeft, BookOpen, Boxes, Calculator, Check, CircleDot, Cloud, Coins, Eye, FlaskConical, Gem, Layers3, Menu, MonitorSmartphone, PackageCheck, Ruler, Scale, Sparkles, Sprout, ChartNoAxesCombined, X } from "lucide-react";
 import heroColgante from "@/assets/diseno-colgante.jpg";
 
 export const Route = createFileRoute("/")({
@@ -349,6 +349,113 @@ function TalleresDeLaComunidad() {
         )}
       </div>
     </section>
+  );
+}
+
+const herramientasDestacadas = [
+  {
+    id: "aleacion",
+    titulo: "Calculadora de aleaciones",
+    detalle: "Prepara oro de 18K, 14K y 9K calculando el oro fino y los metales de liga.",
+    etiqueta: "Metalurgia",
+    icono: Coins,
+    ruta: "/herramientas-publicas/aleacion-oro",
+  },
+  {
+    id: "peso-3d",
+    titulo: "Peso de joyas 3D",
+    detalle: "Estima el peso del metal de una pieza a partir de un archivo 3D compatible.",
+    etiqueta: "Diseño y fabricación",
+    icono: Scale,
+    ruta: "/herramientas-publicas/peso-joya-3d",
+  },
+  {
+    id: "gemas",
+    titulo: "Calculadora de gemas",
+    detalle: "Estima los quilates de una piedra usando sus medidas y tipo de gema.",
+    etiqueta: "Gemología",
+    icono: CircleDot,
+    ruta: "/herramientas-publicas/peso-gemas",
+  },
+  {
+    id: "tallas",
+    titulo: "Conversor de tallas",
+    detalle: "Compara medidas y equivalencias entre sistemas de tallaje de anillos.",
+    etiqueta: "Medición",
+    icono: Ruler,
+    ruta: "/herramientas-publicas/tallas-anillos",
+  },
+  {
+    id: "revestimiento",
+    titulo: "Revestimiento y agua",
+    detalle: "Calcula las cantidades para preparar el revestimiento del cilindro de fundición.",
+    etiqueta: "Microfundición",
+    icono: FlaskConical,
+    ruta: "/herramientas-publicas/yeso-agua",
+  },
+  {
+    id: "render",
+    titulo: "AURUM RENDER",
+    detalle: "Visualiza tus diseños 3D con materiales, metales, gemas e iluminación especializada.",
+    etiqueta: "Visualización 3D",
+    icono: Eye,
+    ruta: "/aurum-render-public",
+  },
+  {
+    id: "transfers",
+    titulo: "AURUM TRANSFERS",
+    detalle: "Comparte archivos y diseños de joyería mediante el flujo de transferencia de AURUM LAB.",
+    etiqueta: "Intercambio de archivos",
+    icono: ArrowRightLeft,
+    ruta: "/transfer",
+  },
+] as const;
+
+function CarruselHerramientas() {
+  const trackRef = useRef<HTMLDivElement | null>(null);
+  const mover = (direccion: -1 | 1) => {
+    const track = trackRef.current;
+    if (!track) return;
+    const tarjeta = track.querySelector<HTMLElement>("[data-tool-card]");
+    const desplazamiento = tarjeta ? tarjeta.offsetWidth + 16 : 288;
+    track.scrollBy({ left: direccion * desplazamiento, behavior: "smooth" });
+  };
+
+  return (
+    <div data-aurum-reveal className="min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-[#f8fafc] shadow-[0_8px_30px_rgba(23,35,45,.045)]">
+      <div className="flex items-center justify-between gap-3 border-b border-slate-200 px-5 py-4 sm:px-6">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#987400]">AURUM LAB · Herramientas</p>
+          <h3 className="mt-1 text-base font-bold text-[#17232d] sm:text-lg">Soluciones para cada etapa del oficio</h3>
+          <p className="mt-1 text-xs text-slate-500">Explora lo que puedes resolver desde una sola plataforma.</p>
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <button type="button" onClick={() => mover(-1)} aria-label="Ver herramientas anteriores" className="grid size-9 place-items-center rounded-full border border-slate-300 bg-white text-slate-700 transition hover:border-[#d4aa19] hover:text-[#876500] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19]">
+            <ArrowLeft className="size-4" />
+          </button>
+          <button type="button" onClick={() => mover(1)} aria-label="Ver más herramientas" className="grid size-9 place-items-center rounded-full border border-slate-300 bg-white text-slate-700 transition hover:border-[#d4aa19] hover:text-[#876500] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19]">
+            <ArrowRight className="size-4" />
+          </button>
+        </div>
+      </div>
+      <div ref={trackRef} role="region" aria-label="Carrusel de herramientas de AURUM LAB" tabIndex={0} className="flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain px-5 py-5 [scrollbar-width:thin] sm:px-6">
+        {herramientasDestacadas.map(({ id, titulo, detalle, etiqueta, icono: Icono, ruta }) => (
+          <Link key={id} to={ruta as any} data-tool-card className="group flex w-[min(78vw,260px)] shrink-0 snap-start flex-col rounded-xl border border-slate-200 bg-white p-4 transition duration-200 hover:-translate-y-0.5 hover:border-[#dfbd4b] hover:shadow-[0_10px_24px_rgba(23,35,45,.07)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19] sm:w-[260px]">
+            <span className="grid size-10 place-items-center rounded-xl border border-[#eadca7] bg-[#fff4c4] text-[#8f6b00]">
+              <Icono className="size-5" />
+            </span>
+            <span className="mt-4 text-[9px] font-bold uppercase tracking-[.16em] text-[#987400]">{etiqueta}</span>
+            <span className="mt-1.5 text-sm font-bold leading-snug text-[#17232d]">{titulo}</span>
+            <span className="mt-2 flex-1 text-xs leading-5 text-slate-600">{detalle}</span>
+            <span className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-[#765900]">Conocer herramienta <ArrowRight className="size-3.5 transition group-hover:translate-x-1" /></span>
+          </Link>
+        ))}
+      </div>
+      <div className="flex items-center justify-between gap-3 border-t border-slate-200 bg-white px-5 py-3 text-[11px] text-slate-500 sm:px-6">
+        <span>Desliza para descubrir más herramientas</span>
+        <Link to="/herramientas-publicas" className="shrink-0 font-semibold text-[#765900] hover:text-[#17232d]">Ver todas <ArrowRight className="ml-1 inline size-3.5" /></Link>
+      </div>
+    </div>
   );
 }
 
@@ -830,24 +937,7 @@ function InicioPublico() {
               <p className="mt-4 text-sm leading-7 text-slate-600 sm:text-base">Encuentra explicaciones sencillas sobre metales, gemas y técnicas de joyería.</p>
               <Link to="/guias" className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-[#17232d] transition hover:border-[#d4aa19] hover:bg-[#fffbee] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19]">Explorar todas las guías <ArrowRight className="size-4" /></Link>
             </div>
-            <article data-aurum-reveal className="group overflow-hidden rounded-2xl border border-slate-200 bg-[#f8fafc] shadow-[0_8px_30px_rgba(23,35,45,.045)] transition hover:border-[#dfbd4b] hover:shadow-[0_16px_36px_rgba(23,35,45,.08)]">
-              <div className="flex items-start gap-4 p-5 sm:p-7">
-                <span className="grid size-12 shrink-0 place-items-center rounded-xl border border-[#eadca7] bg-[#fff4c4] text-[#8f6b00]"><Calculator className="size-5" /></span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#987400]">Metalurgia y materiales · Guía técnica</p>
-                  <h3 className="mt-2 text-xl font-bold leading-snug text-[#17232d] sm:text-2xl">Cómo preparar aleaciones de oro de 18K, 14K y 9K</h3>
-                  <p className="mt-3 text-sm leading-6 text-slate-600">Mira cómo hacer el cálculo paso a paso con un ejemplo de 10 gramos.</p>
-                  <div className="mt-5 flex flex-wrap items-center gap-3">
-                    <Link to="/herramientas-publicas/$herramienta" params={{ herramienta: "aleacion-oro" }} className="inline-flex min-h-10 items-center gap-2 text-xs font-semibold text-[#765900] hover:text-[#17232d]">Abrir calculadora <Calculator className="size-3.5" /></Link>
-                  </div>
-                </div>
-              </div>
-              <div className="grid gap-3 border-t border-slate-200 bg-white px-5 py-4 text-xs text-slate-600 sm:grid-cols-3 sm:px-7">
-                <div className="flex items-center gap-2"><Check className="size-4 shrink-0 text-emerald-600" /> Fórmulas explicadas</div>
-                <div className="flex items-center gap-2"><Check className="size-4 shrink-0 text-emerald-600" /> Ejemplos en gramos</div>
-                <div className="flex items-center gap-2"><Check className="size-4 shrink-0 text-emerald-600" /> Herramienta relacionada</div>
-              </div>
-            </article>
+            <CarruselHerramientas />
           </div>
         </div>
       </section>
