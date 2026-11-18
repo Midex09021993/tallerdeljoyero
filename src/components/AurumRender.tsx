@@ -4732,7 +4732,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             console.info("[AURUM][RENDER PIPELINE]", {
               phase: "settled",
               path: liveFastPathRef.current ? "direct-fallback" : "shared-beauty-composer",
-              sameBeautyPipeline: sameBeautyPipelineAvailable,
+              sameBeautyPipeline: Boolean(composer && renderPass && outputPass),
               taaEnabled: Boolean(idleTaaPass?.enabled),
               gemMaskEnabled: Boolean(gemMaskPass?.enabled),
               gemSoftEdgeEnabled: Boolean(fxaaPass?.enabled),
