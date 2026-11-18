@@ -12,9 +12,7 @@
 export const AURUM_DIAMOND_MATERIAL_VERSION = "1.0.0";
 
 export const AURUM_DIAMOND_MATERIAL_DEFAULTS = Object.freeze({
-  // Preserve the supplied DiamondMaterial source reference; small-stone shader
-  // uniforms consume this 2.6 value independently of Three.js physical IOR.
-  refractiveIndex: 2.6,
+  refractiveIndex: 2.417,
   reflectivity: 0.5,
   rayBounces: 5,
   // Experimental virtual internal-facet PMREM sampling. Does not modify CAD geometry.
@@ -38,9 +36,8 @@ export function activateAurumDiamondMaterial<T = any>(material: T, preset?: Reco
     aurumIJEWELParameters: {
       ...AURUM_DIAMOND_MATERIAL_DEFAULTS,
       ...supplied,
-      // Preserve the original iJewel DiamondMaterial reference IOR (2.6).
-      // The Three.js physical material IOR remains independently calibrated.
-      refractiveIndex: 2.6,
+      // Enforce the physical diamond sodium-D refractive index; do not retain legacy 2.6 calibration metadata.
+      refractiveIndex: 2.417,
       reflectivity: Number(supplied.reflectivity ?? AURUM_DIAMOND_MATERIAL_DEFAULTS.reflectivity),
       rayBounces: Math.max(1, Math.min(8, Math.floor(Number(supplied.rayBounces ?? AURUM_DIAMOND_MATERIAL_DEFAULTS.rayBounces)))),
     },
