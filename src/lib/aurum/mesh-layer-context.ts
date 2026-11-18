@@ -24,7 +24,7 @@ const validIndex=(value:any):number|null=>{
 };
 const layerCategory=(value:string):"metal"|"gema"|"otro"=>{
   const segments=value.split(/::|[\\/]/).map(part=>part.trim().toLowerCase().replace(/[_-]+/g," "));
-  const gem=/^(?:gem|gems|gemstone|gemstones|gema|gemas|piedra|piedras|stone|stones|diamond|diamonds|diamante|diamantes|zafiro|sapphire|rubi|ruby|esmeralda|emerald|moissanita|moissanite|citrino|amatista|topacio)(?:\s*0*\\d+(?:\.\\d+)?(?:\s*mm)?(?:\s*[- ]\s*[a-z0-9 .-]+)?)?$/;
+  const gem=/^(?:gem|gems|gemstone|gemstones|gema|gemas|piedra|piedras|stone|stones|diamond|diamonds|diamante|diamantes|zafiro|sapphire|rubi|ruby|esmeralda|emerald|moissanita|moissanite|citrino|amatista|topacio)(?:\s*0*\d+(?:\.\d+)?(?:\s*mm)?(?:\s*[- ]\s*[a-z0-9 .-]+)?)?$/;
   if(segments.some(segment=>gem.test(segment)))return "gema";
   if(/(?:metal|oro|gold|plata|silver|platino|platinum|metalico|metálico|acero|steel)/i.test(value))return "metal";
   return "otro";
@@ -39,7 +39,10 @@ export function resolveAurumMeshLayerContext(node:any, rootOverride?:any):AurumM
   const chain:any[]=[];
   let current=node;
   while(current){chain.push(current);current=current.parent;}
-  const root=rootOverride??chain[chain.length-1]??node;
+  const root=rootOverride??chain.find(item=>{
+    const data=item?.userData??{};
+    return [data.aurumRhinoSourceLayers,data.layers,data.rhinoLayers].some(value=>Array.isArray(value)&&value.length);
+  })??chain[chain.length-1]??node;
   const entries=chain.map(item=>{
     const data=item?.userData??{};
     return {

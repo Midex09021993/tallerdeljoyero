@@ -1,1 +1,0 @@
-REVOKE EXECUTE ON FUNCTION public.aplicar_movimiento_inventario() FROM PUBLIC, anon, authenticated;
