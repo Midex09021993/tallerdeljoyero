@@ -382,12 +382,10 @@ export async function createAurumDiamondBvhRuntime(options: {
           // compact facets read bright instead of graphite-grey; keep colored
           // diamonds and the center stone on their existing calibrated values.
           rgbBoost: family === "diamante"
-            ? (isCenterWhiteDiamond ? undefined
-              : isNeutralMicroDiamond ? [1.10, 1.10, 1.10]
+            ? (isNeutralMicroDiamond ? [1.10, 1.10, 1.10]
               : isNeutralSmallDiamond ? [1.14, 1.14, 1.14]
-              : isSmallSecondaryDiamond && !isBlueDiamond && !isPinkDiamond
-                ? [1.16, 1.16, 1.16]
-                : isBlueDiamond ? [2, 2, 2] : isPinkDiamond ? [1.3, 1, 1] : [1.18, 1.18, 1.18])
+              : isNeutralWhiteDiamond ? [1, 1, 1]
+              : isBlueDiamond ? [2, 2, 2] : isPinkDiamond ? [1.3, 1, 1] : [1.18, 1.18, 1.18])
             : undefined,
           // Small white melee: lower internal energy to prevent dense, sand-like
           // flicker while retaining enough neutral radiance to read as diamond.
@@ -445,15 +443,14 @@ export async function createAurumDiamondBvhRuntime(options: {
             if (!isBlueDiamond && !isPinkDiamond && !isCenterWhiteDiamond) {
               const isMicro = nextTier === "micro";
               const isSmall = nextTier === "small";
-              const isNaturalWhiteOne = activeGemId === "diamante_natural";
-              const baseEnvironment = isNaturalWhiteOne ? 1.30 : 1.42;
-              const baseDispersion = isNaturalWhiteOne ? 0.010 : 0.004;
               packageApi.setDiamondOptions(prepared.material, {
-                rgbBoost: isMicro ? [1.10, 1.10, 1.10] : isSmall ? [1.14, 1.14, 1.14] : [1.18, 1.18, 1.18],
-                environmentIntensity: isMicro ? 1.20 : isSmall ? 1.30 : baseEnvironment,
-                dispersion: isMicro ? 0.0003 : isSmall ? 0.0008 : baseDispersion,
-                gamma: isNaturalWhiteOne ? 1.0 : isMicro ? 0.96 : isSmall ? 0.94 : 0.90,
-                rayBounces: isNaturalWhiteOne || !isBlueDiamond && !isPinkDiamond ? 5 : isMicro ? 2 : isSmall ? 3 : 5,
+                ior: 2.6,
+                transmission: isMicro || isSmall ? 0.05 : 0,
+                rgbBoost: isMicro ? [1.10, 1.10, 1.10] : isSmall ? [1.14, 1.14, 1.14] : [1, 1, 1],
+                environmentIntensity: isMicro ? 1.20 : 1.30,
+                dispersion: isMicro ? 0.0003 : isSmall ? 0.0008 : 0.010,
+                gamma: isMicro ? 0.96 : isSmall ? 0.94 : 1.0,
+                rayBounces: 5,
               });
             }
             currentDiamondTier = nextTier;
