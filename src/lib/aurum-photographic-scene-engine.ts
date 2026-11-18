@@ -42,44 +42,31 @@ export const AURUM_HDRI_URLS:Record<string,string>={
 };
 export const getAurumHdriUrl=(key:string)=>AURUM_HDRI_URLS[key]??AURUM_HDRI_URLS["jewelry"]!;
 
+// One controlled gem environment: the EXR supplied for AURUM diamond calibration.
+// All legacy gem-environment keys remain aliases to this single asset so existing
+// scene profiles cannot silently load a different gem HDRI.
+export const AURUM_GEM_HDRI_ASSET_URL = "/aurum/hdri/env_gem_002_30251392af.exr";
 export const AURUM_GEM_HDRI_URLS:Record<string,string>={
-  gemDiamond:"https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/story_studio_05_2k.hdr",
-  gemWhite:"https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/white_studio_06_2k.hdr",
-  gemNeutral:"https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/monochrome_studio_02_2k.hdr",
-  gemColor:"https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/story_studio_02_2k.hdr",
-  gemLuxury:"https://dl.polyhaven.org/file/ph-assets/HDRIs/hdr/2k/studio_small_03_2k.hdr",
-  // External gem environment map preserved from the supplied calibration files.
-  ijewelGem:"https://playground.ijewel3d.com/assetspro/hdrmaps/gem/env-gem-010.exr",
+  gemDiamond:AURUM_GEM_HDRI_ASSET_URL,
+  gemWhite:AURUM_GEM_HDRI_ASSET_URL,
+  gemNeutral:AURUM_GEM_HDRI_ASSET_URL,
+  gemColor:AURUM_GEM_HDRI_ASSET_URL,
+  gemLuxury:AURUM_GEM_HDRI_ASSET_URL,
+  ijewelGem:AURUM_GEM_HDRI_ASSET_URL,
 };
-export const getAurumGemHdriUrl=(key:string)=>AURUM_GEM_HDRI_URLS[key]??AURUM_GEM_HDRI_URLS["gemDiamond"]!;
+export const getAurumGemHdriUrl=(key:string)=>AURUM_GEM_HDRI_URLS[key]??AURUM_GEM_HDRI_ASSET_URL;
 
-/** Presets únicos de gemas extraídos de los VJSON recibidos.
- * Se conserva el antiguo Ambiente 10 como entorno predeterminado; las variantes
- * duplicadas del mismo HDR con otras rotaciones se excluyen del selector. */
-export const AURUM_AMBIENT_PRESETS:Record<string,{id:string;name:string;url:string;rotation:number;intensity:number;previewClass:string;metalKey?:string;metalRotation?:number;metalIntensity?:number}>={
-  // Each selectable environment is a coordinated pair: gem HDR + metal HDR.
-  // Metal keys reference only resources already registered in AURUM_HDRI_URLS.
-  predeterminado:{id:"predeterminado",name:"Ambiente Premium",url:"https://playground.ijewel3d.com/assetspro/hdrmaps/gem/env-gem-010.exr",rotation:2.1541748571363173,intensity:1,previewClass:"bg-[radial-gradient(ellipse_at_50%_24%,#fff8f0_0%,#d9c6a1_22%,#786448_55%,#211b16_100%)]",metalKey:"ijewelMetal",metalRotation:0,metalIntensity:1},
-  ambiente01:{id:"ambiente01",name:"Ambiente 01",url:"https://playground.ijewel3d.com/assetspro/hdrmaps/gem/env-gem-001.exr",rotation:0,intensity:1,previewClass:"bg-[radial-gradient(ellipse_at_50%_24%,#f5fbff_0%,#b9d4e5_24%,#526b80_60%,#171f2b_100%)]",metalKey:"studioSoft",metalRotation:0,metalIntensity:.72},
-  ambiente02:{id:"ambiente02",name:"Ambiente 02",url:"https://playground.ijewel3d.com/assetspro/hdrmaps/gem/env-gem-002.exr",rotation:0,intensity:1,previewClass:"bg-[radial-gradient(ellipse_at_50%_24%,#fff4df_0%,#d9a75d_20%,#69452c_55%,#17110e_100%)]",metalKey:"studioHard",metalRotation:0,metalIntensity:.68},
-  ambiente03:{id:"ambiente03",name:"Ambiente 03",url:"https://playground.ijewel3d.com/assetspro/hdrmaps/gem/env-gem-003.hdr",rotation:1.615631142852238,intensity:1,previewClass:"bg-[radial-gradient(ellipse_at_50%_24%,#fff5e9_0%,#e2b58b_24%,#8b5b47_58%,#251a1a_100%)]",metalKey:"jewelry",metalRotation:0,metalIntensity:.72},
-  ambiente04:{id:"ambiente04",name:"Ambiente 04",url:"https://playground.ijewel3d.com/assetspro/hdrmaps/gem/env-gem-004.exr",rotation:1.615631142852238,intensity:1,previewClass:"bg-[radial-gradient(ellipse_at_50%_24%,#f6efff_0%,#b9a0d0_24%,#59476f_58%,#17141f_100%)]",metalKey:"luxury",metalRotation:0,metalIntensity:.68},
-  ambiente05:{id:"ambiente05",name:"Ambiente 05",url:"https://playground.ijewel3d.com/assetspro/hdrmaps/gem/env-gem-005.exr",rotation:1.615631142852238,intensity:1,previewClass:"bg-[radial-gradient(ellipse_at_50%_24%,#ffffff_0%,#c9cccf_24%,#6c737b_58%,#1b1e22_100%)]",metalKey:"monochrome",metalRotation:0,metalIntensity:.72},
-  ijewel002:{id:"ijewel002",name:"Estudio HDR 002",url:"https://playground.ijewel3d.com/assetspro/hdrmaps/gem/env-gem-002.exr",rotation:0,intensity:.6,previewClass:"bg-[radial-gradient(ellipse_at_50%_24%,#fff6df_0%,#d6b56e_22%,#6c5630_58%,#1a1711_100%)]",metalKey:"ijewelMetalVjson",metalRotation:0,metalIntensity:.6},
-  // Same gem HDR capture as environment 002, paired with a distinct white-studio metal HDR.
-  estudioRosaPremium:{id:"estudioRosaPremium",name:"Estudio Rosa Premium",url:"https://playground.ijewel3d.com/assetspro/hdrmaps/gem/env-gem-002.exr",rotation:.18,intensity:.72,previewClass:"bg-[radial-gradient(ellipse_at_50%_24%,#fff8fb_0%,#e7c6d1_24%,#8d6474_58%,#241a22_100%)]",metalKey:"white",metalRotation:0,metalIntensity:.76},
+// The gem selector intentionally exposes one calibrated HDRI only.
+export const AURUM_GEM_ENVIRONMENT_PRESETS:Record<string,{id:string;name:string;url:string;rotation:number;intensity:number;previewClass:string}>={
+  gemUserHdr:{
+    id:"gemUserHdr",
+    name:"HDR Diamante · Personalizado",
+    url:AURUM_GEM_HDRI_ASSET_URL,
+    rotation:0,
+    intensity:1,
+    previewClass:"bg-[radial-gradient(ellipse_at_50%_22%,#fffdf4_0%,#e9dfc5_22%,#9da3a6_48%,#4c5359_72%,#171b20_100%)]",
+  },
 };
-
-
-/** Presets exclusivos del entorno óptico de gemas.
- * Se proyectan desde la biblioteca de ambientes para reutilizar sus HDR,
- * rotaciones e intensidades sin exponer ni aplicar la pareja de metales.
- */
-export const AURUM_GEM_ENVIRONMENT_PRESETS:Record<string,{id:string;name:string;url:string;rotation:number;intensity:number;previewClass:string}>=Object.fromEntries(
-  Object.values(AURUM_AMBIENT_PRESETS).map(({id,name,url,rotation,intensity,previewClass})=>[
-    id,{id,name,url,rotation,intensity,previewClass},
-  ])
-);
 
 
 const post=(ssao:boolean,ssaoIntensity:number,lutIntensity:number,extra:any={})=>({ssao,ssaoIntensity,bloom:false,bloomIntensity:.012,bloomThreshold:1.8,lut:true,lutIntensity,taa:true,dof:false,dofAperture:.0005,dofMaxBlur:.004,vignette:true,vignetteDarkness:.035,...extra});
