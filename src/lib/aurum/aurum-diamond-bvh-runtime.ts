@@ -324,20 +324,28 @@ export async function createAurumDiamondBvhRuntime(options: {
           ?? (mesh.userData?.aurumDiamondMicroCenterProtected
             ? "brilliant"
             : (diamondRadius > 0 && largestDiamondRadius > 0 && diamondSizeRatio <= 0.42 ? "small" : "brilliant"));
+      const inferredCenter = family === "diamante" && mesh === inferredCenterMesh;
+      const explicitlyProtected = family === "diamante" && isAurumDiamondBvhCenterTarget(mesh);
+      // Center identity is optical metadata, not an eligibility restriction.
+      // Keep detecting the center even when BVH is enabled for every diamond size,
+      // so the center retains its approved white-diamond profile.
+      if (inferredCenter && !explicitlyProtected) {
+        mesh.userData = {
+          ...(mesh.userData ?? {}),
+          aurumDiamondMicroCenterProtected: true,
+          aurumDiamondCenterDetection: "projected-size",
+        };
+      }
       mesh.userData = {
         ...(mesh.userData ?? {}),
         aurumDiamondMicroTier: screenTier,
-        // Preserve the screen-space pipeline's explicit center decision.
-        // A large secondary stone may also be "brilliant" without being the center.
-        aurumDiamondMicroCenterProtected: Boolean(mesh.userData?.aurumDiamondMicroCenterProtected)
-          || Boolean(mesh.userData?.aurumDiamondCenter || mesh.userData?.aurumDiamondIsCenter)
-          || /center|central|main|principal/i.test(String(mesh.userData?.aurumDiamondRole ?? "")),
+        // Preserve explicit and inferred center identity for optical calibration.
+        aurumDiamondMicroCenterProtected: explicitlyProtected || inferredCenter
+          || Boolean(mesh.userData?.aurumDiamondMicroCenterProtected),
       };
-      // The production editor can opt into BVH for the center stone only.
-      // Secondary diamonds remain on their existing MeshPhysicalMaterial path.
+      // Optional center-only mode limits eligibility, but center identification
+      // above remains active in all-size production mode.
       if (family === "diamante" && options.diamondCenterOnly) {
-        const explicitlyProtected = isAurumDiamondBvhCenterTarget(mesh);
-        const inferredCenter = mesh === inferredCenterMesh;
         const centerProtected = explicitlyProtected || inferredCenter;
         if (centerTargetDiagnostics.length < 60) {
           centerTargetDiagnostics.push({
