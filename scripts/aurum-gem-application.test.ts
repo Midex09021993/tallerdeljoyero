@@ -799,11 +799,15 @@ test("all neutral white diamond sizes use the center optical profile and expose 
 
 
 
-test("diamond environment compensation composes around the world table normal instead of forcing Y-only rotation", () => {
-  const axis = new THREE.Vector3(1, 0, 0);
+test("diamond environment compensation composes a complete 3D optical-frame quaternion", () => {
+  const correction = new THREE.Quaternion().setFromEuler(new THREE.Euler(
+    THREE.MathUtils.degToRad(19),
+    THREE.MathUtils.degToRad(-37),
+    THREE.MathUtils.degToRad(82),
+    "XYZ",
+  ));
   const baseRadians = THREE.MathUtils.degToRad(30);
-  const correctionRadians = THREE.MathUtils.degToRad(-90);
-  const euler = getAurumDiamondEnvironmentRotationEuler(baseRadians, axis, correctionRadians);
+  const euler = getAurumDiamondEnvironmentRotationEuler(baseRadians, correction);
   const actual = new THREE.Matrix4().makeRotationFromEuler(
     new THREE.Euler(
       THREE.MathUtils.degToRad(euler.x),
@@ -814,11 +818,9 @@ test("diamond environment compensation composes around the world table normal in
   );
   const expected = new THREE.Matrix4()
     .makeRotationFromEuler(new THREE.Euler(0, baseRadians, 0, "YXZ"))
-    .multiply(new THREE.Matrix4().makeRotationAxis(axis, correctionRadians));
-  const actualElements = actual.elements;
-  const expectedElements = expected.elements;
+    .multiply(new THREE.Matrix4().makeRotationFromQuaternion(correction));
   for (let index = 0; index < 16; index += 1) {
-    expect(actualElements[index]).toBeCloseTo(expectedElements[index] ?? 0, 8);
+    expect(actual.elements[index]).toBeCloseTo(expected.elements[index] ?? 0, 8);
   }
   expect(Math.abs(euler.x) + Math.abs(euler.z)).toBeGreaterThan(1);
 });
@@ -838,7 +840,9 @@ test("each diamond EXR orientation is compensated from its geometry-derived tabl
   expect(runtime).not.toContain("centerWorldYawRadians = centerWorldEuler.y");
   expect(runtime).not.toContain("const offsetRadians = centerWorldYawRadians - worldEuler.y");
   expect(runtime).toContain("getAurumDiamondEnvironmentRotationEuler");
-  expect(runtime).toContain("entry.environmentRotationAxisWorld");
+  expect(runtime).toContain("correctionMatrix = centerOpticalFrame.opticalBasis.clone()");
+  expect(runtime).toContain("inPlaneTwistDegrees");
+  expect(runtime).toContain("entry.environmentRotationCorrection");
   expect(runtime).toContain("requestedRotation,");
   expect(runtime).not.toContain("setDiamondEnvironmentRotation?.(entry.experimentalMaterial, { x: 0, y: rotationDegrees, z: 0 })");
   expect(runtime).toContain('"[AURUM][DIAMOND][CENTER_RELATIVE_EXR_ALIGNMENT]"');
