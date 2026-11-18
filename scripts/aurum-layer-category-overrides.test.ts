@@ -75,3 +75,27 @@ test("a conflicting stable layer ID never falls through to a duplicate name", ()
     layerName: "Uho26",
   })).toBeUndefined();
 });
+
+
+test("source-only Rhino layer metadata remains assignable after GLB hydration", () => {
+  const sourceOnlyMesh = {
+    isMesh: true,
+    userData: {
+      aurumRhinoSource: {
+        layerId: "rhino-gem-layer",
+        layerIndex: 7,
+        layerName: "Gem 02",
+      },
+    },
+  };
+  const root = model([sourceOnlyMesh]);
+  const result = setAurumLayerCategoryOverride(root, {
+    layerId: "rhino-gem-layer",
+    layerIndex: 7,
+    layerName: "Gem 02",
+  }, "gema");
+
+  expect(result.changed).toBe(1);
+  expect(sourceOnlyMesh.userData.aurumRhino.categoria).toBe("gema");
+  expect(sourceOnlyMesh.userData.aurumRhino.aurumManualGemAssignment).toBe(true);
+});
