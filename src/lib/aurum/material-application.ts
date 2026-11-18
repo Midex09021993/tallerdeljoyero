@@ -198,8 +198,22 @@ const inspectAurumGemGeometry=(target:any)=>{
 };
 
 const selectionMeta=(part:any)=>part?.userData?.aurumRhino||{};
+const selectionLayerName=(part:any)=>String(
+  selectionMeta(part).capa
+  || part?.userData?.attributes?.layerName
+  || part?.userData?.attributes?.LayerName
+  || part?.userData?.aurumRhinoSource?.layerName
+  || "",
+).trim();
+const isExplicitGemSlot=(part:any)=>{
+  const layerName=selectionLayerName(part).normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").toLowerCase();
+  // MatrixGold/Rhino gemstone slots are authoritative even when an imported
+  // material or stale semantic tag incorrectly labels the mesh as metal.
+  return /\\b(?:gem|gema|piedra|stone|diamond|diamante)\\s*[_-]?\\s*0?[1-4]\\b/.test(layerName);
+};
 const selectionCategory=(part:any)=>{
   const declared=String(selectionMeta(part).categoria||"").toLowerCase();
+  if(isExplicitGemSlot(part))return "gema";
   if(declared==="metal"||declared==="gema")return declared;
   const semantic=classifyAurumSemanticObject(part,null);
   return semantic.confidence>=.7 && (semantic.classification==="metal"||semantic.classification==="gem")
