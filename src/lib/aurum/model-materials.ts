@@ -67,8 +67,8 @@ function inferInitialLayerCategory(layerName:string):"gema"|"metal"|undefined{
   const name=String(layerName??"").trim().toLocaleLowerCase().replace(/[_-]+/g," ").replace(/\s+/g," ");
   // Gem 01, Gem_02, Gema 03, Piedra 01 and Stone 01 are explicit CAD layer
   // conventions. Do not classify prongs, settings, or other jewelry geometry.
-  if(/^(?:gem|gema|piedra|stone)(?:\s*0*\\d+)?$/.test(name))return "gema";
-  if(/^(?:metal|metales|oro|gold|plata|silver|platino|platinum|metalico|metálico)(?:\s*0*\\d+)?$/.test(name))return "metal";
+  if(/^(?:gem|gema|piedra|stone)(?:\s*0*\d+)?$/.test(name))return "gema";
+  if(/^(?:metal|metales|oro|gold|plata|silver|platino|platinum|metalico|metálico)(?:\s*0*\d+)?$/.test(name))return "metal";
   return undefined;
 }
 
