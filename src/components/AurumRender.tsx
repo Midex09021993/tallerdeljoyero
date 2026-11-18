@@ -1331,16 +1331,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             camera: camara,
             getViewportHeight: () => renderer.domElement.height,
             quality: "interactive",
-            // Diagnostic modes let us isolate the emerald and diamond BVH paths.
-            // With no test parameter, preserve the existing default family selection.
-            // Mixed-material meshes remain protected by the runtime.
-            targetFamilies: (() => {
-              const mode = getBvhTestMode();
-              if (mode === "off") return [];
-              if (mode === "emerald-only") return ["Esmeralda"];
-              if (mode === "diamond-only") return ["Diamante"];
-              return ["Diamante", "Rubí", "Rubi", "Esmeralda", "Zafiro", "Sapphire", "Amatista", "Amethyst", "Aguamarina", "Aquamarine", "Citrino", "Citrine", "Topacio", "Topacio Azul", "topacio_azul", "Blue Topaz", "BlueTopaz", "Moissanita", "Moissanite", "Turmalina Paraíba", "Turmalina Paraiba", "turmalina_paraiba", "Paraiba Tourmaline", "Paraiba", "Turmalina", "Tourmaline", "Espinela", "Spinel", "Granate", "Garnet", "Peridoto", "Peridot", "Morganita", "Morganite", "Zircon", "Zircón", "Crisoberilo", "Chrysoberyl", "Alejandrita", "Alexandrite", "Ametrino", "Ametrine", "Cuarzo", "Quartz"];
-            })(),
+            // Production BVH is deliberately restricted to the white/colored
+            // center diamond. Other gemstone families and melee diamonds keep
+            // their existing material pipelines; ?aurumBvhTest=off disables it.
+            targetFamilies: getBvhTestMode() === "off" ? [] : ["Diamante"],
+            diamondCenterOnly: true,
             onError: (error) => console.warn("[AURUM][GEM BVH] Se conserva el shader anterior para esta malla:", error),
           });
           if (!vivo || requestedEnvironmentUrl !== gemEnvironmentUrl) {
@@ -1356,6 +1351,11 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           modelo.updateMatrixWorld?.(true);
           camara.updateMatrixWorld?.(true);
           camara.updateProjectionMatrix?.();
+          // Publish the same center/secondary decision used by the live diamond
+          // optics before BVH target selection. If no unambiguous center exists,
+          // BVH fails closed and every stone keeps its physical fallback.
+          diamondMicroPipelineRef.current?.refresh?.();
+          diamondMicroPipelineRef.current?.update?.();
           runtime.refresh(modelo);
           if (!diamondBvhEnabledRef.current) runtime.setFamilyEnabled("diamante", false);
           runtime.update();
