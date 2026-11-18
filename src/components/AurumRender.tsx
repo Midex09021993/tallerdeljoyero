@@ -80,9 +80,12 @@ const colorRhinoHex = (c:any): string | undefined => {
   return "#" + channels.map(n=>Math.max(0,Math.min(255,Math.round(n))).toString(16).padStart(2,"0")).join("");
 };
 const clasificarCapa = (nombre:string, color?:string): CategoriaParte => {
-  const n = normalizarTexto(nombre);
-  if (/(piedra|gema|gem|diamante|diamond|zafiro|sapphire|rubi|rubí|ruby|esmeralda|emerald|moissanita|moissanite|citrino|amatista|topacio)/.test(n)) return "gema";
-  if (/(metal|oro|gold|plata|silver|platino|platinum|metalico|metálico|acero|steel)/.test(n)) return "metal";
+  const segments=String(nombre??"").split(/::|[\\/]/).map((part)=>
+    normalizarTexto(part).replace(/[_-]+/g," ").replace(/\s+/g," ").trim()
+  );
+  const gemLayer=/^(?:gem|gems|gemstone|gemstones|gema|gemas|piedra|piedras|stone|stones|diamond|diamonds|diamante|diamantes|zafiro|sapphire|rubi|ruby|esmeralda|emerald|moissanita|moissanite|citrino|amatista|topacio)(?:\s*0*\d+(?:\.\d+)?(?:\s*mm)?(?:\s*[- ]\s*[a-z0-9 .-]+)?)?$/;
+  if (segments.some((segment)=>gemLayer.test(segment))) return "gema";
+  if (/(metal|oro|gold|plata|silver|platino|platinum|metalico|metálico|acero|steel)/.test(normalizarTexto(nombre))) return "metal";
   // RGB is retained as source metadata only. Do not infer a material family by color.
   void color;
   return "otro";
