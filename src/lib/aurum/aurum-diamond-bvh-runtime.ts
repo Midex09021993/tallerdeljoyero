@@ -367,9 +367,6 @@ export async function createAurumDiamondBvhRuntime(options: {
         }
         if (!centerProtected) return;
       }
-      const isSmallSecondaryDiamond = family === "diamante" && screenTier !== "brilliant";
-      const isNeutralMicroDiamond = family === "diamante" && screenTier === "micro" && !isBlueDiamond && !isPinkDiamond;
-      const isNeutralSmallDiamond = family === "diamante" && screenTier === "small" && !isBlueDiamond && !isPinkDiamond;
       const useEmeraldBvhOptics = isEmerald;
       const isRuby = family === "rubí" || family === "rubi";
       const isSapphire = family === "zafiro" || family === "sapphire";
@@ -402,10 +399,6 @@ export async function createAurumDiamondBvhRuntime(options: {
         // Match the approved isolated AURUM BVH optical reference only on the
         // protected center white diamond. Secondary/colored diamonds retain
         // their existing calibrated profiles and tier-dependent energy controls.
-        const isCenterWhiteDiamond = family === "diamante"
-          && Boolean(mesh.userData?.aurumDiamondMicroCenterProtected)
-          && !isBlueDiamond
-          && !isPinkDiamond;
         // All diamond tiers deliberately share this one central gem EXR texture.
         // MICRO/SMALL/BRILLIANT may vary optical energy and dispersion below,
         // but must never select or load a different environment map by size.
