@@ -156,11 +156,11 @@ export async function createAurumDiamondBvhRuntime(options: {
     sceneRoot.updateMatrixWorld(true);
     source.updateWorldMatrix(true, false);
 
-    // Exact same coordinate-space operation as public/aurum-diamond-lab.html:
-    // bake source.matrixWorld into vertices, recompute normals, center at 0,
-    // and add the render mesh to the scene at identity transform.
+    // Preserve exact CAD placement by baking only source-to-scene-root transform.
+    const inverseRoot = new THREE_NS.Matrix4().copy(sceneRoot.matrixWorld).invert();
+    const sourceToRoot = new THREE_NS.Matrix4().multiplyMatrices(inverseRoot, source.matrixWorld);
     const geometry = source.geometry.clone();
-    geometry.applyMatrix4(source.matrixWorld);
+    geometry.applyMatrix4(sourceToRoot);
     geometry.computeVertexNormals();
     const position = geometry.getAttribute("position");
     if (!position?.count) {
@@ -180,9 +180,8 @@ export async function createAurumDiamondBvhRuntime(options: {
     geometry.computeBoundingSphere();
 
     const proxy = new THREE_NS.Mesh(geometry, source.material);
-    // Identity transform is essential: the BVH shader expects centered
-    // geometry and camera coordinates in the same world-relative frame.
-    proxy.position.set(0, 0, 0);
+    // Restore the center so the render proxy occupies the original CAD position.
+    proxy.position.copy(center);
     proxy.quaternion.identity();
     proxy.scale.set(1, 1, 1);
     proxy.userData = { ...source.userData, aurumOpticalLabProxy: true };
@@ -196,18 +195,29 @@ export async function createAurumDiamondBvhRuntime(options: {
     // world camera translated by the same geometry center, not by the CAD root.
     const cameraProxy = options.camera.clone() as THREE.Camera;
     const cameraWorldPosition = new THREE_NS.Vector3();
+    const cameraLocalPosition = new THREE_NS.Vector3();
+    const rootWorldPosition = new THREE_NS.Vector3();
+    const rootWorldQuaternion = new THREE_NS.Quaternion();
+    const rootWorldScale = new THREE_NS.Vector3();
+    const inverseRootQuaternion = new THREE_NS.Quaternion();
+    const cameraWorldQuaternion = new THREE_NS.Quaternion();
+    const cameraLocalQuaternion = new THREE_NS.Quaternion();
     const cameraDirection = new THREE_NS.Vector3();
     const cameraProxyAdapter = {
       update: () => {
+        sceneRoot.updateMatrixWorld(true);
         options.camera.updateWorldMatrix(true, false);
+        sceneRoot.matrixWorld.decompose(rootWorldPosition, rootWorldQuaternion, rootWorldScale);
         options.camera.getWorldPosition(cameraWorldPosition);
-        cameraDirection.copy(cameraWorldPosition).sub(center);
+        cameraLocalPosition.copy(cameraWorldPosition).applyMatrix4(inverseRoot);
+        cameraDirection.copy(cameraLocalPosition).sub(center);
         if (cameraDirection.lengthSq() < 1e-12) cameraDirection.set(0, 0, 1);
         cameraDirection.normalize().multiplyScalar(labCameraDistance);
-        // Match the lab's optical camera distance while preserving the user's
-        // current viewing direction. The production camera itself is untouched.
         cameraProxy.position.copy(cameraDirection);
-        options.camera.getWorldQuaternion(cameraProxy.quaternion);
+        options.camera.getWorldQuaternion(cameraWorldQuaternion);
+        inverseRootQuaternion.copy(rootWorldQuaternion).invert();
+        cameraLocalQuaternion.copy(inverseRootQuaternion).multiply(cameraWorldQuaternion);
+        cameraProxy.quaternion.copy(cameraLocalQuaternion);
         cameraProxy.scale.set(1, 1, 1);
         cameraProxy.updateMatrix();
         cameraProxy.updateMatrixWorld(true);
