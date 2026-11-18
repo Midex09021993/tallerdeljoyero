@@ -68,9 +68,9 @@ canvas{width:100%;height:420px;display:block;background:#f4f4f2}
 <article class="panel"><div class="panelhead"><strong>03 · ADVANCED JEWELRY RENDERER</strong><span class="tag">BVH RAY SHADER</span></div><canvas id="muCanvas"></canvas><div class="panelfoot" id="muInfo">BVH · refracción interna · dispersión RGB · render por fotograma</div></article>
 </section>
 <section class="controls">
-<div class="control"><label>IOR <output id="iorOut">2.417</output></label><input id="ior" type="range" min="2.30" max="2.60" step=".001" value="2.417"></div>
-<div class="control"><label>Dispersión <output id="dispOut">0.006</output></label><input id="disp" type="range" min="0" max=".03" step=".0005" value=".006"></div>
-<div class="control"><label>Intensidad HDRI <output id="envOut">1.40</output></label><input id="env" type="range" min=".3" max="2.5" step=".05" value="1.4"></div>
+<div class="control"><label>IOR <output id="iorOut">2.600</output></label><input id="ior" type="range" min="2.30" max="2.60" step=".001" value="2.600"></div>
+<div class="control"><label>Dispersión <output id="dispOut">0.0100</output></label><input id="disp" type="range" min="0" max=".03" step=".0005" value=".010"></div>
+<div class="control"><label>Intensidad HDRI <output id="envOut">1.30</output></label><input id="env" type="range" min=".3" max="2.5" step=".05" value="1.3"></div>
 <div class="control"><label>Exposición <output id="expOut">1.00</output></label><input id="exp" type="range" min=".5" max="2" step=".05" value="1"></div>
 </section>
 <div class="notice"><strong>Créditos:</strong> El trazador de facetas está adaptado de <a href="https://github.com/ehsanwwe/diamond-shader-lab" target="_blank" rel="noreferrer">Diamond Shader Lab</a> (MIT). El tercer motor adapta el shader BVH de <a href="https://github.com/itlmy/Advanced-Jewelry-Renderer-Web" target="_blank" rel="noreferrer">Advanced Jewelry Renderer Web</a> (MIT), basado en N8python/diamonds. <strong>Importante:</strong> cada motor tiene un modelo óptico distinto. El tercer panel adapta el shader BVH de Advanced Jewelry Renderer Web, basado en N8python/diamonds. La comparación evalúa calidad visual y comportamiento, no equivalencia física perfecta. Para una prueba válida, usa el GLB del mismo diamante central que estás evaluando en AURUM.</div>
@@ -92,7 +92,7 @@ const MAX_PLANES=256;
 const envLoader=new EXRLoader().setDataType(THREE.FloatType);
 const setStatus=(s)=>$("status").textContent=s;
 const values=()=>({ior:+$("ior").value,disp:+$("disp").value,env:+$("env").value,exp:+$("exp").value});
-function makeRenderer(canvas){const r=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});r.setPixelRatio(Math.min(devicePixelRatio,1.75));r.setSize(canvas.clientWidth,canvas.clientHeight,false);r.outputColorSpace=THREE.SRGBColorSpace;r.toneMapping=THREE.ACESFilmicToneMapping;return r}
+function makeRenderer(canvas){const r=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});r.setPixelRatio(Math.min(devicePixelRatio,1.75));r.setSize(canvas.clientWidth,canvas.clientHeight,false);r.outputColorSpace=THREE.SRGBColorSpace;r.toneMapping=THREE.ACESFilmicToneMapping;r.toneMappingExposure=1.0;return r}
 function makeBase(canvas){
  const renderer=makeRenderer(canvas),scene=new THREE.Scene();scene.background=new THREE.Color(0xf4f4f2);
  const camera=new THREE.PerspectiveCamera(32,canvas.clientWidth/canvas.clientHeight,.01,100);camera.position.set(0,0,3.6);
@@ -165,7 +165,7 @@ async function startAJRW(geometry,env){
  const bvh=new MeshBVH(geo,{strategy:SAH}),bvhUniform=new MeshBVHUniformStruct();bvhUniform.updateFrom(bvh);
  const material=new THREE.ShaderMaterial({
  glslVersion:THREE.GLSL3,
- uniforms:{envMap:{value:cubeTarget.texture},bvh:{value:bvhUniform},bounces:{value:4},ior:{value:values().ior},fresnel:{value:.78},projectionMatrixInv:{value:camera.projectionMatrixInverse},viewMatrixInv:{value:camera.matrixWorld},aberrationStrength:{value:Math.max(.001,values().disp*12)},resolution:{value:new THREE.Vector2(canvas.width,canvas.height)}},
+ uniforms:{envMap:{value:cubeTarget.texture},bvh:{value:bvhUniform},bounces:{value:5},ior:{value:values().ior},fresnel:{value:.78},projectionMatrixInv:{value:camera.projectionMatrixInverse},viewMatrixInv:{value:camera.matrixWorld},aberrationStrength:{value:Math.max(.001,values().disp*12)},resolution:{value:new THREE.Vector2(canvas.width,canvas.height)}},
  vertexShader:`attribute vec3 color;attribute vec3 color2;varying vec3 vWorldPosition;varying vec3 vNormal;varying vec3 vColor;varying vec3 vColor2;uniform mat4 viewMatrixInv;void main(){vColor=color;vColor2=color2;vWorldPosition=(modelMatrix*vec4(position,1.)).xyz;vNormal=(viewMatrixInv*vec4(normalMatrix*normal,0.)).xyz;gl_Position=projectionMatrix*viewMatrix*modelMatrix*vec4(position,1.);}`,
  fragmentShader:`precision highp float;precision highp isampler2D;precision highp usampler2D;varying vec3 vWorldPosition;varying vec3 vNormal;varying vec3 vColor;varying vec3 vColor2;uniform samplerCube envMap;uniform float bounces;uniform BVH bvh;uniform float ior;uniform float fresnel;uniform mat4 projectionMatrixInv;uniform mat4 viewMatrixInv;uniform mat4 modelMatrix;uniform vec2 resolution;uniform float aberrationStrength;${shaderStructs}${shaderIntersectFunction}
  vec3 internalRay(vec3 rd,vec3 n,float eta,mat4 modelInv){vec3 ray=refract(rd,n,1./eta);vec3 origin=vWorldPosition+ray*.001;origin=(modelInv*vec4(origin,1.)).xyz;ray=normalize((modelInv*vec4(ray,0.)).xyz);for(int i=0;i<8;i++){if(float(i)>=bounces)break;uvec4 fi=uvec4(0u);vec3 fn=vec3(0.,0.,1.);vec3 bary=vec3(0.);float side=1.;float dist=0.;bvhIntersectFirstHit(bvh,origin,ray,fi,fn,bary,side,dist);if(dist<=0.)break;vec3 hit=origin+ray*max(dist-.001,0.);vec3 tr=refract(ray,fn,eta);if(length(tr)>.0001){ray=tr;break;}ray=reflect(ray,fn);origin=hit+ray*.002;}return normalize((modelMatrix*vec4(ray,0.)).xyz);}
@@ -189,7 +189,7 @@ async function startComparison(){
   // El shader de diamante consume el EXR equirectangular directamente; no requiere PMREM.
   const ga=geom.clone();state.disposed.push(ga);
   const bvhResult=diamondApi.createDiamondBVH(ga),bvh=bvhResult?.bvh||bvhResult;
-  const matA=diamondApi.createDiamondMaterial({environmentMap:state.env,bvh,ior:settings.ior,dispersion:settings.disp,environmentIntensity:settings.env,rayBounces:4,facetSharpness:1,reflectivity:.46,color:0xffffff,absorption:1,transmission:0,gamma:1.09});
+  const matA=diamondApi.createDiamondMaterial({environmentMap:state.env,bvh,ior:settings.ior,dispersion:settings.disp,environmentIntensity:settings.env,rayBounces:5,facetSharpness:1,reflectivity:.5,color:0xffffff,absorption:1,transmission:0,gamma:1});
   state.disposed.push(matA);
   const acesOutput="gl_FragColor = vec4(aces(hdrColor), 1.0);";
   if(matA.fragmentShader?.includes(acesOutput)){matA.fragmentShader=matA.fragmentShader.replace(acesOutput,"gl_FragColor = vec4(hdrColor, 1.0);");matA.needsUpdate=true;}
@@ -212,7 +212,7 @@ async function startComparison(){
  linked.forEach(source=>source.addEventListener("change",()=>{if(syncing)return;syncing=true;for(const target of linked){if(target===source)continue;target.target.copy(source.target);target.object.position.copy(source.object.position);target.object.quaternion.copy(source.object.quaternion);target.update();}syncing=false;}));
  state.applySettings=(v)=>{
   const aMat=views.find(vw=>vw.id==="aurum")?.scene.children.find(o=>o.isMesh)?.material;
-  if(aMat)diamondApi.setDiamondOptions?.(aMat,{ior:v.ior,dispersion:v.disp,environmentIntensity:v.env});
+  if(aMat)diamondApi.setDiamondOptions?.(aMat,{ior:v.ior,dispersion:v.disp,environmentIntensity:v.env,rayBounces:5,reflectivity:.5,color:0xffffff,absorption:1,transmission:0,gamma:1});
   const bMat=views.find(vw=>vw.id==="dsl")?.scene.children.find(o=>o.isMesh)?.material;
   if(bMat)bMat.userData.syncSettings(v);
   if(state.ajrw?.material){state.ajrw.material.uniforms.ior.value=v.ior;state.ajrw.material.uniforms.aberrationStrength.value=Math.max(.001,v.disp*12);state.ajrw.renderer.toneMappingExposure=v.exp;}
