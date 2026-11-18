@@ -17,11 +17,43 @@ type RecordEntry = {
   baseEnvironmentIntensity: number;
   /** Per-mesh yaw compensation relative to the center diamond reference. */
   environmentRotationOffsetRadians: number;
+  environmentRotationAxisWorld: [number, number, number] | null;
   setQuality: (quality: "interactive" | "high" | "final") => void;
   readonly tier: "micro" | "small" | "brilliant";
   setTier: (tier: "micro" | "small" | "brilliant") => void;
   dispose: () => void;
 };
+
+export type AurumDiamondEnvironmentRotationEuler = { x: number; y: number; z: number };
+
+/**
+ * Compose the global YXZ environment rotation with a per-stone correction
+ * around the reference table normal. The shader applies this matrix to WORLD
+ * ray directions, so the correction axis must also be expressed in world space.
+ */
+export function getAurumDiamondEnvironmentRotationEuler(
+  baseRotationRadians: number,
+  correctionAxisWorld: THREE.Vector3 | readonly [number, number, number] | null = null,
+  correctionRadians = 0,
+): AurumDiamondEnvironmentRotationEuler {
+  const base = new THREE.Matrix4().makeRotationFromEuler(
+    new THREE.Euler(0, Number.isFinite(baseRotationRadians) ? baseRotationRadians : 0, 0, "YXZ"),
+  );
+  const axis = correctionAxisWorld instanceof THREE.Vector3
+    ? correctionAxisWorld.clone()
+    : correctionAxisWorld
+      ? new THREE.Vector3(...correctionAxisWorld)
+      : null;
+  if (axis && axis.lengthSq() > 1e-12 && Number.isFinite(correctionRadians) && Math.abs(correctionRadians) > 1e-12) {
+    base.multiply(new THREE.Matrix4().makeRotationAxis(axis.normalize(), correctionRadians));
+  }
+  const euler = new THREE.Euler().setFromRotationMatrix(base, "YXZ");
+  return {
+    x: THREE.MathUtils.radToDeg(euler.x),
+    y: THREE.MathUtils.radToDeg(euler.y),
+    z: THREE.MathUtils.radToDeg(euler.z),
+  };
+}
 
 export type AurumDiamondBvhRuntime = {
   refresh: (model: THREE.Object3D | null | undefined) => void;
@@ -277,6 +309,8 @@ export async function createAurumDiamondBvhRuntime(options: {
         return {
           offsetRadians: 0,
           rotationRadians: requestedEnvironmentRotationRadians,
+          rotationEuler: getAurumDiamondEnvironmentRotationEuler(requestedEnvironmentRotationRadians), 
+          correctionAxisWorld: null,
           opticalAxisAlignmentDegrees: null,
           tableNormal: frame?.worldNormal.toArray() ?? null,
           referenceAxis: frame?.worldReference.toArray() ?? null,
@@ -299,6 +333,8 @@ export async function createAurumDiamondBvhRuntime(options: {
       return {
         offsetRadians: -signedAngle,
         rotationRadians: requestedEnvironmentRotationRadians - signedAngle,
+        rotationEuler: getAurumDiamondEnvironmentRotationEuler(requestedEnvironmentRotationRadians, centerNormal, -signedAngle),
+        correctionAxisWorld: centerNormal.toArray(),
         opticalAxisAlignmentDegrees: THREE_NS.MathUtils.radToDeg(Math.acos(THREE_NS.MathUtils.clamp(centerNormal.dot(meshNormal), -1, 1))),
         tableNormal: frame.worldNormal.toArray(),
         referenceAxis: frame.worldReference.toArray(),
@@ -526,6 +562,7 @@ export async function createAurumDiamondBvhRuntime(options: {
           environmentRotationRadians: family === "diamante"
             ? meshEnvironmentAlignment.rotationRadians
             : Number(currentMaterial?.userData?.aurumGemEnvironmentRotation ?? 0),
+          ...(family === "diamante" ? { environmentRotationEuler: meshEnvironmentAlignment.rotationEuler } : {}),
         });
         let currentDiamondTier: "micro" | "small" | "brilliant" = screenTier;
         let currentRayBounces = prepared.diagnostics.rayBounces;
@@ -538,6 +575,7 @@ export async function createAurumDiamondBvhRuntime(options: {
           originalDiamondOpticalFamily: mesh.userData?.aurumDiamondOpticalFamily,
           baseEnvironmentIntensity: prepared.diagnostics.environmentIntensity,
           environmentRotationOffsetRadians: meshEnvironmentAlignment.offsetRadians,
+          environmentRotationAxisWorld: meshEnvironmentAlignment.correctionAxisWorld,
           get tier() { return currentDiamondTier; },
           setTier: (nextTier) => {
             if (family !== "diamante" || nextTier === currentDiamondTier) return;
@@ -655,8 +693,8 @@ export async function createAurumDiamondBvhRuntime(options: {
       .map(([mesh, entry]) => {
         const alignment = getMeshEnvironmentRotation(mesh);
         entry.environmentRotationOffsetRadians = alignment.offsetRadians;
-        const rotationDegrees = THREE_NS.MathUtils.radToDeg(alignment.rotationRadians);
-        packageApi.setDiamondEnvironmentRotation?.(entry.experimentalMaterial, { x: 0, y: rotationDegrees, z: 0 });
+        entry.environmentRotationAxisWorld = alignment.correctionAxisWorld;
+        packageApi.setDiamondEnvironmentRotation?.(entry.experimentalMaterial, alignment.rotationEuler);
         return {
           mesh: mesh.name || mesh.uuid,
           relativeOpticalRotationRadians: alignment.offsetRadians,
@@ -726,10 +764,14 @@ export async function createAurumDiamondBvhRuntime(options: {
       const safeScale = Number.isFinite(intensityScale) ? Math.max(0.75, Math.min(1.35, intensityScale)) : 1;
       const requestedRotation = Number.isFinite(rotationRadians) ? rotationRadians : 0;
       for (const entry of entries.values()) {
-        const rotationDegrees = THREE_NS.MathUtils.radToDeg(
-          requestedRotation + entry.environmentRotationOffsetRadians,
-        );
-        packageApi.setDiamondEnvironmentRotation?.(entry.experimentalMaterial, { x: 0, y: rotationDegrees, z: 0 });
+        const rotationEuler = entry.family === "diamante"
+          ? getAurumDiamondEnvironmentRotationEuler(
+              requestedRotation,
+              entry.environmentRotationAxisWorld,
+              entry.environmentRotationOffsetRadians,
+            )
+          : { x: 0, y: THREE_NS.MathUtils.radToDeg(requestedRotation), z: 0 };
+        packageApi.setDiamondEnvironmentRotation?.(entry.experimentalMaterial, rotationEuler);
         packageApi.setDiamondOptions?.(entry.experimentalMaterial, {
           environmentIntensity: Math.max(0, Math.min(2.5, entry.baseEnvironmentIntensity * safeScale)),
         });
