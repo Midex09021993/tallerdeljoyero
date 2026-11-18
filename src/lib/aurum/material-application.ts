@@ -206,10 +206,10 @@ const selectionLayerName=(part:any)=>String(
   || "",
 ).trim();
 const isExplicitGemSlot=(part:any)=>{
-  const layerName=selectionLayerName(part).normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").toLowerCase();
+  const layerName=selectionLayerName(part).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
   // MatrixGold/Rhino gemstone slots are authoritative even when an imported
   // material or stale semantic tag incorrectly labels the mesh as metal.
-  return /\\b(?:gem|gema|piedra|stone|diamond|diamante)\\s*[_-]?\\s*0?[1-4]\\b/.test(layerName);
+  return /\b(?:gem|gema|piedra|stone|diamond|diamante)\s*[_-]?\s*0?[1-4]\b/.test(layerName);
 };
 const selectionCategory=(part:any)=>{
   const declared=String(selectionMeta(part).categoria||"").toLowerCase();
