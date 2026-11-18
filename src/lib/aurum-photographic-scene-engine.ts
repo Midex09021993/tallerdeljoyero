@@ -46,6 +46,7 @@ export const getAurumHdriUrl=(key:string)=>AURUM_HDRI_URLS[key]??AURUM_HDRI_URLS
 // All legacy gem-environment keys remain aliases to this single asset so existing
 // scene profiles cannot silently load a different gem HDRI.
 export const AURUM_GEM_HDRI_ASSET_URL = "/env_gem_002_30251392af.exr";
+export const AURUM_GEM_HDRI_APPROVED_URL = "/env_gem_001_b9c4533e70.exr";
 export const AURUM_GEM_HDRI_URLS:Record<string,string>={
   gemDiamond:AURUM_GEM_HDRI_ASSET_URL,
   gemWhite:AURUM_GEM_HDRI_ASSET_URL,
@@ -53,6 +54,7 @@ export const AURUM_GEM_HDRI_URLS:Record<string,string>={
   gemColor:AURUM_GEM_HDRI_ASSET_URL,
   gemLuxury:AURUM_GEM_HDRI_ASSET_URL,
   ijewelGem:AURUM_GEM_HDRI_ASSET_URL,
+  gemDiamondWhite1:AURUM_GEM_HDRI_APPROVED_URL,
 };
 export const getAurumGemHdriUrl=(key:string)=>AURUM_GEM_HDRI_URLS[key]??AURUM_GEM_HDRI_ASSET_URL;
 
@@ -78,6 +80,14 @@ export const AURUM_GEM_ENVIRONMENT_PRESETS:Record<string,{id:string;name:string;
     id:"gemUserHdr",
     name:"env-gem-002-30251392",
     url:AURUM_GEM_HDRI_ASSET_URL,
+    rotation:0,
+    intensity:1,
+    previewClass:"bg-[radial-gradient(ellipse_at_50%_22%,#fffdf4_0%,#e9dfc5_22%,#9da3a6_48%,#4c5359_72%,#171b20_100%)]",
+  },
+  gemDiamondWhite1:{
+    id:"gemDiamondWhite1",
+    name:"env-gem-001-b9c4533e70",
+    url:AURUM_GEM_HDRI_APPROVED_URL,
     rotation:0,
     intensity:1,
     previewClass:"bg-[radial-gradient(ellipse_at_50%_22%,#fffdf4_0%,#e9dfc5_22%,#9da3a6_48%,#4c5359_72%,#171b20_100%)]",
