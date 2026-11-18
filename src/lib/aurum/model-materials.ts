@@ -173,7 +173,7 @@ export function applyAurumInitialModelMaterials(
           (layerIndex!=null && assignment?.layerIndex!=null && String(assignment.layerIndex)===String(layerIndex)) ||
           (layerId && String(assignment?.layerId??"").trim()===layerId)
         );
-      const assignedGemId=String(savedAssignment?.gemId??options.initialGemByLayer?.[layerKey]??(layerNameKey ? options.initialGemByLayer?.[layerNameKey] : "")??meta?.gemId??"");
+      const assignedGemId=String(savedAssignment?.gemId??options.initialGemByLayer?.[layerKey]??(layerNameKey ? options.initialGemByLayer?.[layerNameKey] : "")??x.userData?.aurumActiveGemId??meta?.gemId??"");
       const initialGemId=assignedGemId || String(options.initialGemId??"");
       const gem=initialGemId ? options.gems.find((g:any)=>g.id===initialGemId) : undefined;
       if(gem){
