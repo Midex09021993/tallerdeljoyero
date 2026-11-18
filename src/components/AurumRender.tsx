@@ -1153,15 +1153,15 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       let gemEnvironmentRequestId = 0;
       let metalHdriOverride: string | null = null;
       let gemHdriOverride: string | null = null;
-      // Controlled A/B diagnostic: append ?aurumGemHdriTest=180 to rotate
-      // ONLY the gemstone environment by 180 degrees. No production default,
-      // metal HDRI, material, geometry, BVH profile or intensity is changed.
+      // Production calibration: 90 degrees was visually preferred in the
+      // controlled A/B/C comparison. URL overrides keep the test reversible:
+      // ?aurumGemHdriTest=0 (original), =90 or =180.
       const getGemHdriDiagnosticOffset = () => {
-        if (typeof window === "undefined") return 0;
+        if (typeof window === "undefined") return Math.PI / 2;
         const value = new URLSearchParams(window.location.search).get("aurumGemHdriTest");
-        if (value === "90") return Math.PI / 2;
+        if (value === "0") return 0;
         if (value === "180") return Math.PI;
-        return 0;
+        return Math.PI / 2;
       };
       const cargarEntornoGema = (key="ijewelGem", rotation=0, intensityScale=1, onLoaded?:()=>void, onError?:()=>void) => {
         gemEnvironmentUrl = AURUM_GEM_ENVIRONMENT_PRESETS[key]?.url ?? getAurumGemHdriUrl(key);
@@ -1174,7 +1174,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           diagnosticOffsetRadians: diagnosticOffset,
           diagnosticOffsetDegrees: Math.round(diagnosticOffset * 180 / Math.PI),
           appliedRotationRadians: gemEnvironmentRotation,
-          restoresProductionDefault: diagnosticOffset === 0,
+          restoresProductionDefault: diagnosticOffset === Math.PI / 2,
           metalEnvironmentUntouched: true,
         });
         gemEnvironmentIntensityScale = Number.isFinite(intensityScale) ? intensityScale : .98;
