@@ -186,7 +186,7 @@ test("web-tier models receive 2x diamond-only supersampling without raising shar
   const dense = getAurumRuntimeBudget(200_001);
   expect(dense.diamondSupersampleScaleCap).toBe(1.8);
   expect(dense.diamondLiveSupersampleScaleCap).toBe(1.5);
-  expect(dense.pixelRatioCap).toBe(1.6);
+  expect(dense.pixelRatioCap).toBe(1.75);
 
   expect(getAurumRuntimeBudget(500_001).diamondSupersampleScaleCap).toBe(1.65);
   expect(getAurumRuntimeBudget(500_001).diamondLiveSupersampleScaleCap).toBe(1.5);
