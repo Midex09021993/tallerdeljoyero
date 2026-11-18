@@ -785,7 +785,7 @@ test("all neutral white diamond sizes use the center optical profile and expose 
   expect(profile).toContain('? (!isBlueDiamond && !isPinkDiamond ? 1.30');
   expect(profile).toContain('dispersion: family === "diamante"');
   expect(profile).toContain('? 0.010');
-  expect(profile).toContain('family === "diamante" ? 2.486');
+  expect(profile).toContain('family === "diamante" ? 20.6');
   expect(profile).toContain('reflectivity: family === "diamante" ? 0.46');
   expect(profile).toContain('gamma: family === "diamante" && isPinkDiamond ? 0.90 : 1.09');
   expect(tierBlock).not.toContain("packageApi.setDiamondOptions(");
