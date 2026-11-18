@@ -750,3 +750,21 @@ test("all BVH diamond tiers share the same central EXR environment texture", () 
   expect(scenes).toContain('export const AURUM_GEM_HDRI_ASSET_URL = "/env_gem_002_30251392af.exr"');
   expect(scenes).toContain("ijewelGem:AURUM_GEM_HDRI_ASSET_URL");
 });
+
+
+test("diamond BVH quality is authoritative and independent of screen-space tier", () => {
+  const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
+  const tierStart = runtime.indexOf("setTier: (nextTier) => {");
+  const qualityStart = runtime.indexOf("setQuality: (quality) => {", tierStart);
+  const qualityEnd = runtime.indexOf("dispose: prepared.dispose", qualityStart);
+  const tierBlock = runtime.slice(tierStart, qualityStart);
+  const qualityBlock = runtime.slice(qualityStart, qualityEnd);
+
+  expect(tierStart).toBeGreaterThan(-1);
+  expect(qualityStart).toBeGreaterThan(tierStart);
+  expect(tierBlock).not.toContain("rayBounces:");
+  expect(qualityBlock).toContain('quality === "final" ? 5 : quality === "high" ? 4 : 3');
+  expect(runtime).toContain('environmentRotationRadians: family === "diamante"');
+  expect(runtime).toContain('quality: family === "diamante" ? "high"');
+  expect(runtime).toContain('"[AURUM][DIAMOND][BVH_QUALITY_APPLIED]"');
+});
