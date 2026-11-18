@@ -1339,6 +1339,14 @@ export async function createAurumPostPipeline(
     }
   };
 
+  const resetTemporalAccumulation=()=>{
+    if(!taaPass)return;
+    // A scene-lighting change invalidates the accumulated beauty frame even
+    // when the camera is stationary. Keep the existing TAA quality/settings.
+    taaPass.accumulateIndex=-1;
+    taaPass.accumulate=Boolean(taaPass.enabled && !temporalMotionActive);
+  };
+
   // Copy the already-rendered native framebuffer, then write FXAA pixels
   // only where the center-diamond mask is set. The base beauty frame is never
   // replaced and no second scene render or multisampled beauty target is used.
@@ -1424,14 +1432,6 @@ export async function createAurumPostPipeline(
       console.warn("[AURUM][DIAMOND COMPOSITE] Isolated overlay failed; base beauty frame preserved.",error);
       return false;
     }
-  };
-
-  const resetTemporalAccumulation=()=>{
-    if(!taaPass)return;
-    // A scene-lighting change invalidates the accumulated beauty frame even
-    // when the camera is stationary. Keep the existing TAA quality/settings.
-    taaPass.accumulateIndex=-1;
-    taaPass.accumulate=Boolean(taaPass.enabled && !temporalMotionActive);
   };
 
   const setTemporalMotion=(moving:boolean)=>{
