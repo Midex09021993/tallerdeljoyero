@@ -84,14 +84,6 @@ export const AURUM_AMBIENT_PRESETS:Record<string,{id:string;name:string;url:stri
 
 // The gem selector intentionally exposes one calibrated HDRI only.
 export const AURUM_GEM_ENVIRONMENT_PRESETS:Record<string,{id:string;name:string;url:string;rotation:number;intensity:number;previewClass:string}>={
-  gemUserHdr:{
-    id:"gemUserHdr",
-    name:"env-gem-002-30251392",
-    url:AURUM_GEM_HDRI_ASSET_URL,
-    rotation:0,
-    intensity:1,
-    previewClass:"bg-[radial-gradient(ellipse_at_50%_22%,#fffdf4_0%,#e9dfc5_22%,#9da3a6_48%,#4c5359_72%,#171b20_100%)]",
-  },
   gemDiamondWhite0:{
     id:"gemDiamondWhite0",
     name:"env-gem-001-b9c4533e70",
