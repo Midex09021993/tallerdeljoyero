@@ -452,7 +452,13 @@ function CarruselHerramientas() {
 
   const handleTouchEnd = (event: React.TouchEvent<HTMLDivElement>) => {
     if (touchStartX.current === null) return;
-    const delta = event.changedTouches[0].clientX - touchStartX.current;
+    const changedTouch = event.changedTouches[0];
+    if (!changedTouch) {
+      touchStartX.current = null;
+      setInteractuando(false);
+      return;
+    }
+    const delta = changedTouch.clientX - touchStartX.current;
     if (Math.abs(delta) > 42) avanzar(delta < 0 ? 1 : -1);
     touchStartX.current = null;
     setInteractuando(false);
