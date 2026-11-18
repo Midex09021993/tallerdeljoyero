@@ -1,6 +1,6 @@
 // @ts-nocheck -- AURUM Render engine: strict-mode typing pending; runtime behaviour unchanged.
 import * as THREE from "three";
-import { classifyAurumDiamondMeshTiers } from "./diamond-micro-pipeline";
+import { classifyAurumDiamondMeshTiers, getAurumDiamondProjectedDiameterPx } from "./diamond-micro-pipeline";
 import { resolveAurumCatalogGemBvhColor, resolveAurumEmeraldBvhProfile, resolveAurumRubyBvhProfile, resolveAurumSapphireBvhProfile } from "./aurum-gem-bvh-profiles";
 import {
   prepareAurumDiamondBvhExperiment,
@@ -34,7 +34,7 @@ export type AurumDiamondBvhRuntime = {
   /** Enable/disable one gemstone family without disturbing other BVH entries. */
   setFamilyEnabled: (family: string, enabled: boolean) => void;
   dispose: () => void;
-  diagnostics: () => { activeMeshes: number; triangleCount: number; diamondMeshes: number; diamondTriangleCount: number; familyCounts: Record<string, number>; skippedTargetMeshes: Array<{ mesh: string; materialFamilies: string[]; activeGemFamily: string; reason: string }>; centerTargetDiagnostics: Array<{ mesh: string; gemId: string; activeGemFamily: string; centerProtected: boolean; role: string; tier: string; accepted: boolean; reason: string }>; overlappingGemPairs: Array<{ meshA: string; familyA: string; meshB: string; familyB: string; overlapRatio: number }>; enabled: boolean };
+  diagnostics: () => { activeMeshes: number; triangleCount: number; diamondMeshes: number; diamondTriangleCount: number; familyCounts: Record<string, number>; skippedTargetMeshes: Array<{ mesh: string; materialFamilies: string[]; activeGemFamily: string; reason: string }>; centerTargetDiagnostics: Array<{ mesh: string; gemId: string; activeGemFamily: string; centerProtected: boolean; role: string; tier: string; projectedDiameterPx: number; accepted: boolean; reason: string }>; overlappingGemPairs: Array<{ meshA: string; familyA: string; meshB: string; familyB: string; overlapRatio: number }>; enabled: boolean };
 };
 
 /** True only for the center stone protected by the shared screen-space analyzer or explicit CAD metadata. */
@@ -331,6 +331,7 @@ export async function createAurumDiamondBvhRuntime(options: {
             centerProtected,
             role: String(mesh.userData?.aurumDiamondRole ?? ""),
             tier: screenTier,
+            projectedDiameterPx: Number(getAurumDiamondProjectedDiameterPx(mesh, options.camera, viewportHeight).toFixed(2)),
             accepted: centerProtected,
             reason: centerProtected ? "centro-protegido" : "sin-marca-de-centro",
           });
