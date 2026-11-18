@@ -2448,12 +2448,9 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             const layerKey=String(meta.layerKey??meta.capa??mesh.uuid).trim().toLocaleLowerCase();
             const activeGemId=String(mesh.userData?.aurumActiveGemId??"").trim();
             const pendingGemId=String(mesh.userData?.aurumPendingInitialGemId??mesh.userData?.aurumInitialLayerGemId??"").trim();
-            const resolvedGemId=activeGemId||pendingGemId||initialDiamond.id;
+            const resolvedGemId=pendingGemId||activeGemId||initialDiamond.id;
             const current=gemLayers.get(layerKey);
-            if(current){
-              if(activeGemId&&GEMAS.some((gem:any)=>gem.id===activeGemId))current.gemId=activeGemId;
-              return;
-            }
+            if(current)return;
             gemLayers.set(layerKey,{target:mesh,gemId:resolvedGemId});
           });
           let initialDiamondMeshes=0;
