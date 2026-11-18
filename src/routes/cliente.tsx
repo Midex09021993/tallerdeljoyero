@@ -170,7 +170,7 @@ function SeguimientoCliente() {
     ): Promise<{ tipo: "cotizacion"; data: SeguimientoCotizacion } | { tipo: "pedido"; data: SeguimientoPedido } | null> => {
       const db = supabasePublic;
 
-      const esCodigoCorto = /^[A-Z0-9]{20}$/i.test(seguimientoToken);
+      const esCodigoCorto = /^[A-Z0-9]{8}$/i.test(seguimientoToken);
       const { data: cotizacion, error: cotizacionError } = await db.rpc(
         esCodigoCorto ? "seguimiento_cotizacion_codigo" : "seguimiento_cotizacion",
         esCodigoCorto ? { _codigo: seguimientoToken } : { _token: seguimientoToken },
@@ -233,7 +233,7 @@ function SeguimientoCliente() {
   const resultado = consulta.data ?? null;
   const pedido = resultado?.tipo === "pedido" ? resultado.data : null;
   const cotizacion = resultado?.tipo === "cotizacion" ? resultado.data : null;
-  const codigoConsulta = /^[A-Z0-9]{20}$/i.test(valor.trim()) ? valor.trim().toUpperCase() : codigo?.trim().toUpperCase();
+  const codigoConsulta = /^[A-Z0-9]{8}$/i.test(valor.trim()) ? valor.trim().toUpperCase() : codigo?.trim().toUpperCase();
   const nombreTaller = String(cotizacion?.identidad_comercial?.['nombre_comercial'] ?? "").trim();
   const estaVencida = cotizacionVencida(cotizacion?.fecha_vencimiento ?? null);
   const estadoVisible = estaVencida && cotizacion?.estado === "enviada" ? "vencida" : cotizacion?.estado;
@@ -268,7 +268,7 @@ function SeguimientoCliente() {
             <input
               value={valor}
               onChange={(e) => setValor(e.target.value)}
-              placeholder="Ej. 4B197DE5A1C93F0E7D2B"
+              placeholder="Ej. 4B197DE5"
               aria-label="Código seguro de consulta"
               className="min-h-12 flex-1 rounded-xl border border-border bg-surface px-4 py-3 text-base font-medium tracking-wide outline-none transition focus:border-gold focus:ring-2 focus:ring-gold/15 sm:text-sm"
             />

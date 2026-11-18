@@ -49,14 +49,13 @@ export const AURUM_GEM_HDRI_ASSET_URL = "/env_gem_002_30251392af.exr";
 export const AURUM_GEM_HDRI_APPROVED_URL = "/env_gem_001_b9c4533e70.exr";
 export const AURUM_GEM_HDRI_APPROVED_2_URL = "/env_gem_004_13d65af3ba.exr";
 export const AURUM_GEM_HDRI_URLS:Record<string,string>={
-  gemDiamondWhite0:"/env_gem_001_b9c4533e70.exr",
   gemDiamond:AURUM_GEM_HDRI_ASSET_URL,
   gemWhite:AURUM_GEM_HDRI_ASSET_URL,
   gemNeutral:AURUM_GEM_HDRI_ASSET_URL,
   gemColor:AURUM_GEM_HDRI_ASSET_URL,
   gemLuxury:AURUM_GEM_HDRI_ASSET_URL,
   ijewelGem:AURUM_GEM_HDRI_ASSET_URL,
-  gemDiamondWhite1:AURUM_GEM_HDRI_ASSET_URL,
+  gemDiamondWhite1:AURUM_GEM_HDRI_APPROVED_URL,
   gemDiamondWhite2:AURUM_GEM_HDRI_APPROVED_2_URL,
   gemDiamondWhite3:"/env_gem_005_314acddf6c.exr",
   gemDiamondWhite4:"/env_gem_006_c9c284167f.exr",
@@ -66,8 +65,8 @@ export const AURUM_GEM_HDRI_URLS:Record<string,string>={
 };
 export const getAurumGemHdriUrl=(key:string)=>AURUM_GEM_HDRI_URLS[key]??AURUM_GEM_HDRI_ASSET_URL;
 
-/** Studio presets for the Ambientes panel control the metal HDR only.
- * Gem illumination is selected independently through the HDR Gemas controls. */
+/** One coordinated studio preset. Gem illumination always uses the supplied
+ * optical-lab EXR; only the metal environment varies independently. */
 export const AURUM_AMBIENT_PRESETS:Record<string,{id:string;name:string;url:string;rotation:number;intensity:number;previewClass:string;metalKey?:string;metalRotation?:number;metalIntensity?:number}>={
   predeterminado:{
     id:"predeterminado",
@@ -84,18 +83,18 @@ export const AURUM_AMBIENT_PRESETS:Record<string,{id:string;name:string;url:stri
 
 // The gem selector intentionally exposes one calibrated HDRI only.
 export const AURUM_GEM_ENVIRONMENT_PRESETS:Record<string,{id:string;name:string;url:string;rotation:number;intensity:number;previewClass:string}>={
-  gemDiamondWhite0:{
-    id:"gemDiamondWhite0",
-    name:"env-gem-001-b9c4533e70",
-    url:AURUM_GEM_HDRI_APPROVED_URL,
+  gemUserHdr:{
+    id:"gemUserHdr",
+    name:"env-gem-002-30251392",
+    url:AURUM_GEM_HDRI_ASSET_URL,
     rotation:0,
     intensity:1,
     previewClass:"bg-[radial-gradient(ellipse_at_50%_22%,#fffdf4_0%,#e9dfc5_22%,#9da3a6_48%,#4c5359_72%,#171b20_100%)]",
   },
   gemDiamondWhite1:{
     id:"gemDiamondWhite1",
-    name:"env-gem-002-30251392",
-    url:AURUM_GEM_HDRI_ASSET_URL,
+    name:"env-gem-001-b9c4533e70",
+    url:AURUM_GEM_HDRI_APPROVED_URL,
     rotation:0,
     intensity:1,
     previewClass:"bg-[radial-gradient(ellipse_at_50%_22%,#fffdf4_0%,#e9dfc5_22%,#9da3a6_48%,#4c5359_72%,#171b20_100%)]",
