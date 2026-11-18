@@ -18,7 +18,7 @@ type RecordEntry = {
   invisibleMaterial?: THREE.Material;
   proxyMesh?: THREE.Mesh;
   proxyGeometry?: THREE.BufferGeometry;
-  cameraProxy?: { position: THREE.Vector3; update: () => { position: THREE.Vector3 } };
+  cameraProxy?: { update: () => THREE.Camera };
   setQuality: (quality: "interactive" | "high" | "final") => void;
   readonly tier: "micro" | "small" | "brilliant";
   setTier: (tier: "micro" | "small" | "brilliant") => void;
@@ -179,24 +179,39 @@ export async function createAurumDiamondBvhRuntime(options: {
     proxy.raycast = () => undefined;
     root.add(proxy);
 
-    const cameraPosition = new THREE_NS.Vector3();
+    // The shader package validates camera instanceof THREE.Camera.
+    // Use a real cloned camera, transformed into the proxy's local coordinate
+    // space; a lightweight object with only position is not accepted.
+    const cameraProxy = options.camera.clone() as THREE.Camera;
     const cameraWorldPosition = new THREE_NS.Vector3();
-    const cameraInverseRoot = new THREE_NS.Matrix4();
-    const cameraProxy = {
-      position: cameraPosition,
-      update: () => {
-        root.updateMatrixWorld(true);
-        cameraInverseRoot.copy(root.matrixWorld).invert();
-        options.camera.getWorldPosition(cameraWorldPosition);
-        cameraPosition.copy(cameraWorldPosition).applyMatrix4(cameraInverseRoot).sub(center);
-        return cameraProxy;
-      },
+    const rootWorldPosition = new THREE_NS.Vector3();
+    const rootWorldQuaternion = new THREE_NS.Quaternion();
+    const rootWorldScale = new THREE_NS.Vector3();
+    const inverseRootQuaternion = new THREE_NS.Quaternion();
+    const cameraWorldQuaternion = new THREE_NS.Quaternion();
+    const cameraLocalQuaternion = new THREE_NS.Quaternion();
+    const updateCameraProxy = () => {
+      root.updateMatrixWorld(true);
+      options.camera.updateWorldMatrix(true, false);
+      root.matrixWorld.decompose(rootWorldPosition, rootWorldQuaternion, rootWorldScale);
+      options.camera.getWorldPosition(cameraWorldPosition);
+      options.camera.getWorldQuaternion(cameraWorldQuaternion);
+      inverseRootQuaternion.copy(rootWorldQuaternion).invert();
+      cameraProxy.position.copy(cameraWorldPosition).applyMatrix4(inverseRoot).sub(center);
+      cameraLocalQuaternion.copy(inverseRootQuaternion).multiply(cameraWorldQuaternion);
+      cameraProxy.quaternion.copy(cameraLocalQuaternion);
+      cameraProxy.scale.set(1, 1, 1);
+      cameraProxy.updateMatrix();
+      cameraProxy.updateMatrixWorld(true);
+      return cameraProxy;
     };
-    cameraProxy.update();
+    const cameraProxyAdapter = { update: updateCameraProxy };
+    updateCameraProxy();
     return {
       mesh: proxy,
       geometry,
       camera: cameraProxy,
+      cameraAdapter: cameraProxyAdapter,
       dispose: () => {
         if (proxy.parent) proxy.parent.remove(proxy);
         geometry.dispose();
@@ -495,7 +510,7 @@ export async function createAurumDiamondBvhRuntime(options: {
           invisibleMaterial,
           proxyMesh: labProxy?.mesh,
           proxyGeometry: labProxy?.geometry,
-          cameraProxy: labProxy?.camera,
+          cameraProxy: labProxy?.cameraAdapter,
           gemId: activeGemId,
           activeGemFamily,
           originalDiamondOpticalFamily: mesh.userData?.aurumDiamondOpticalFamily,
