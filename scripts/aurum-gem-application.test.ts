@@ -734,4 +734,9 @@ test("Aurum Render requests BVH for secondary SMALL and MICRO diamonds, not only
   expect(runtime).toContain('const isNeutralMicroDiamond = family === "diamante" && screenTier === "micro"');
   expect(runtime).toContain('const isNeutralSmallDiamond = family === "diamante" && screenTier === "small"');
   expect(runtime).toContain('setTier: (nextTier) => {');
+  const centerIdentity = runtime.indexOf("Center identity is optical metadata, not an eligibility restriction.");
+  const centerOnlyGate = runtime.indexOf('if (family === "diamante" && options.diamondCenterOnly)');
+  expect(centerIdentity).toBeGreaterThan(-1);
+  expect(centerOnlyGate).toBeGreaterThan(-1);
+  expect(centerIdentity).toBeLessThan(centerOnlyGate);
 });
