@@ -1495,7 +1495,10 @@ export async function createAurumPostPipeline(
       taaPass.enabled=taaEnabled;
       taaPass.accumulate=taaEnabled;
       if(taaEnabled){
-        taaPass.sampleLevel=5;
+        // Progressive temporal convergence: one jittered sample per idle frame.
+        // The viewer schedules 32 settled frames; avoid rendering 32 samples
+        // synchronously in a single frame (sampleLevel 5).
+        taaPass.sampleLevel=0;
         if(!wasEnabled) taaPass.accumulateIndex=-1;
       }
     }
