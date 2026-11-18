@@ -34,7 +34,7 @@ export type AurumDiamondBvhRuntime = {
   /** Enable/disable one gemstone family without disturbing other BVH entries. */
   setFamilyEnabled: (family: string, enabled: boolean) => void;
   dispose: () => void;
-  diagnostics: () => { activeMeshes: number; triangleCount: number; diamondMeshes: number; diamondTriangleCount: number; familyCounts: Record<string, number>; skippedTargetMeshes: Array<{ mesh: string; materialFamilies: string[]; activeGemFamily: string; reason: string }>; centerTargetDiagnostics: Array<{ mesh: string; gemId: string; activeGemFamily: string; centerProtected: boolean; role: string; tier: string; projectedDiameterPx: number; accepted: boolean; reason: string }>; overlappingGemPairs: Array<{ meshA: string; familyA: string; meshB: string; familyB: string; overlapRatio: number }>; enabled: boolean };
+  diagnostics: () => { activeMeshes: number; triangleCount: number; diamondMeshes: number; diamondTriangleCount: number; familyCounts: Record<string, number>; skippedTargetMeshes: Array<{ mesh: string; materialFamilies: string[]; activeGemFamily: string; reason: string }>; diamondOpticalDiagnostics: Array<{ mesh: string; gemId: string; tier: string; opticalProfile: string; ior: number; transmission: number; dispersion: number; gamma: number; reflectivity: number; environmentIntensity: number; rayBounces: number; environmentTextureUuid: string | null }>; centerTargetDiagnostics: Array<{ mesh: string; gemId: string; activeGemFamily: string; centerProtected: boolean; role: string; tier: string; projectedDiameterPx: number; accepted: boolean; reason: string }>; overlappingGemPairs: Array<{ meshA: string; familyA: string; meshB: string; familyB: string; overlapRatio: number }>; enabled: boolean };
 };
 
 /** True only for the center stone protected by the shared screen-space analyzer or explicit CAD metadata. */
@@ -143,6 +143,7 @@ export async function createAurumDiamondBvhRuntime(options: {
 
   const familyCounts: Record<string, number> = {};
   const skippedTargetMeshes: Array<{ mesh: string; materialFamilies: string[]; activeGemFamily: string; reason: string }> = [];
+  const diamondOpticalDiagnostics: Array<{ mesh: string; gemId: string; tier: string; opticalProfile: string; ior: number; transmission: number; dispersion: number; gamma: number; reflectivity: number; environmentIntensity: number; rayBounces: number; environmentTextureUuid: string | null }> = [];
   const centerTargetDiagnostics: Array<{ mesh: string; gemId: string; activeGemFamily: string; centerProtected: boolean; role: string; tier: string; accepted: boolean; reason: string }> = [];
 
   const releaseEntry = (mesh: THREE.Mesh, restore: boolean) => {
@@ -179,6 +180,7 @@ export async function createAurumDiamondBvhRuntime(options: {
     if (!targetedRefresh) {
       for (const key of Object.keys(familyCounts)) delete familyCounts[key];
       skippedTargetMeshes.length = 0;
+      diamondOpticalDiagnostics.length = 0;
       centerTargetDiagnostics.length = 0;
     }
 
@@ -439,7 +441,7 @@ export async function createAurumDiamondBvhRuntime(options: {
             ? (!isBlueDiamond && !isPinkDiamond ? 1.30 : isBlueDiamond ? 1.30 : 1.25)
             : useEmeraldBvhOptics ? 1 : emeraldProfile?.environmentIntensity ?? rubyProfile?.environmentIntensity ?? sapphireProfile?.environmentIntensity ?? (isEmerald ? 1.5 : isRuby ? 1.0 : isSapphire ? 1.2 : isAmethyst ? 1.35 : isAquamarine ? 1.25 : isCitrine ? 1.2 : isBlueTopaz ? 1.25 : isImperialTopaz ? 1.22 : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 1.55 : 1.3) : isTanzanite ? 1.25 : isMoissanite ? 1.35 : isZircon ? 1.2 : isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 1.18 : 1.14),
           dispersion: family === "diamante"
-            ? (!isBlueDiamond && !isPinkDiamond ? 0.004 : 0.004)
+            ? 0.004
             : useEmeraldBvhOptics ? 0 : (emeraldProfile?.dispersion ?? rubyProfile?.dispersion ?? sapphireProfile?.dispersion ?? (isRuby ? 0.001 : isSapphire ? 0.001 : isAmethyst || isAquamarine || isCitrine || isBlueTopaz || isImperialTopaz || isParaibaTourmaline || isTanzanite || isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 0.0002 : isZircon ? 0.001 : isMoissanite ? 0.009 : 0.01)),
           ior: emeraldProfile?.ior ?? rubyProfile?.ior ?? sapphireProfile?.ior ?? (family === "diamante" ? 2.417 : isEmerald ? 1.58 : isRuby ? 1.762 : isSapphire ? 1.762 : isAmethyst ? 1.55 : isAquamarine ? 1.577 : isCitrine || isQuartz ? 1.544 : isBlueTopaz || isImperialTopaz ? 1.63 : isParaibaTourmaline || isOtherTourmaline ? 1.62 : isTanzanite ? 1.695 : isMoissanite ? 2.65 : isSpinel ? 1.718 : isGarnet ? 1.78 : isPeridot ? 1.65 : isMorganite ? 1.58 : isZircon ? 1.92 : isChrysoberyl ? 1.75 : 1.55),
           absorption: useEmeraldBvhOptics
@@ -448,10 +450,10 @@ export async function createAurumDiamondBvhRuntime(options: {
           color: isEmerald
             ? (activeGemId === "esmeralda_1" ? 0x22dfa3 : activeGemId === "esmeralda_2" ? 0x4fd5b3 : activeGemId === "esmeralda_3" ? 0x19d597 : activeGemId === "esmeralda_inclusiones" ? 0x09e09d : emeraldProfile?.color ?? 0x05683d)
             : rubyProfile?.color ?? sapphireProfile?.color ?? (family === "diamante" ? (isBlueDiamond ? 0xb5cbdd : isPinkDiamond ? 0xf9dfec : 0xffffff) : resolveAurumCatalogGemBvhColor(materials[0], isEmerald ? 0x05683d : isRuby ? 0x9b001b : isSapphire ? 0x123c9a : isAmethyst ? 0x7650b9 : isAquamarine ? 0x72c9df : isCitrine ? 0xd49a22 : isBlueTopaz ? 0x65b9e8 : isImperialTopaz ? (activeGemId.includes("topacio_imperial_minas") ? 0xd88943 : 0xd79b4b) : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 0x00cfc3 : activeGemId.includes("mozambique") ? 0x27d4cf : activeGemId.includes("etiopia") ? 0x3ad9d1 : 0x19d6d0) : isTanzanite ? 0x5140a8 : isMoissanite ? 0xf4f8ff : 0xffffff)),
-          reflectivity: family === "diamante" ? (!isBlueDiamond && !isPinkDiamond ? 0.46 : 0.46) : isEmerald
+          reflectivity: family === "diamante" ? 0.46 : isEmerald
             ? (activeGemId === "esmeralda_2" ? 0.31 : activeGemId === "esmeralda_1" || activeGemId === "esmeralda_3" || activeGemId === "esmeralda_inclusiones" ? 0.5 : emeraldProfile?.reflectivity ?? 0.16)
             : rubyProfile?.reflectivity ?? sapphireProfile?.reflectivity ?? (isEmerald ? 0.26 : isRuby ? 0.38 : isSapphire ? 0.38 : isAmethyst ? 0.32 : isAquamarine ? 0.30 : isCitrine ? 0.30 : isBlueTopaz ? 0.30 : isImperialTopaz ? 0.30 : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 0.38 : 0.32) : isTanzanite ? 0.32 : isMoissanite ? 0.48 : isZircon ? 0.36 : isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 0.30 : 0.46),
-          gamma: family === "diamante" ? (!isBlueDiamond && !isPinkDiamond ? 1.09 : 1.09) : 1.09,
+          gamma: 1.09,
           // Every diamond starts with the same EXR orientation. Later global
           // environment rotation is applied uniformly through updateEnvironment().
           // Per-mesh family offsets must not rotate melee stones away from the center.
@@ -517,6 +519,20 @@ export async function createAurumDiamondBvhRuntime(options: {
         // transitions, leaving emeralds at the shader package's generic default.
         entries.get(mesh)?.setQuality(family === "diamante" ? "high" : (options.quality ?? "interactive"));
         if (family === "diamante") {
+          diamondOpticalDiagnostics.push({
+            mesh: mesh.name || mesh.uuid,
+            gemId: activeGemId,
+            tier: currentDiamondTier,
+            opticalProfile: !isBlueDiamond && !isPinkDiamond ? "white-shared-center-profile" : isBlueDiamond ? "blue-calibrated" : "pink-calibrated",
+            ior: family === "diamante" ? 2.417 : prepared.diagnostics.ior,
+            transmission: !isBlueDiamond && !isPinkDiamond ? 0 : 0.05,
+            dispersion: 0.004,
+            gamma: 1.09,
+            reflectivity: 0.46,
+            environmentIntensity: 1.30,
+            rayBounces: currentRayBounces,
+            environmentTextureUuid: environmentMap?.uuid ?? null,
+          });
           console.info("[AURUM][DIAMOND][BVH_QUALITY_APPLIED]", {
             mesh: mesh.name || mesh.uuid,
             tier: currentDiamondTier,
@@ -702,6 +718,7 @@ export async function createAurumDiamondBvhRuntime(options: {
         // entries that successfully received a BVH material.
         familyCounts: { ...familyCounts },
         skippedTargetMeshes: [...skippedTargetMeshes],
+        diamondOpticalDiagnostics: [...diamondOpticalDiagnostics],
         centerTargetDiagnostics: [...centerTargetDiagnostics],
         overlappingGemPairs,
         gemEnvironment: {
