@@ -412,165 +412,136 @@ const herramientasDestacadas = [
 ] as const;
 
 function CarruselHerramientas() {
-  const trackRef = useRef<HTMLDivElement | null>(null);
-  const activeIndexRef = useRef(0);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [pausado, setPausado] = useState(false);
   const [interactuando, setInteractuando] = useState(false);
   const [visible, setVisible] = useState(false);
   const carouselRef = useRef<HTMLDivElement | null>(null);
+  const touchStartX = useRef<number | null>(null);
 
-  const irA = useCallback((index: number, behavior: ScrollBehavior = "smooth") => {
-    const track = trackRef.current;
-    const cards = track?.querySelectorAll<HTMLElement>("[data-tool-card]");
-    if (!track || !cards?.length) return;
-    const safeIndex = (index + cards.length) % cards.length;
-    const card = cards[safeIndex];
-    if (!card) return;
-    const left = card.getBoundingClientRect().left - track.getBoundingClientRect().left + track.scrollLeft;
-    track.scrollTo({ left, behavior });
-    activeIndexRef.current = safeIndex;
-    setActiveIndex(safeIndex);
+  const avanzar = useCallback((step = 1) => {
+    setActiveIndex((current) => (current + step + herramientasDestacadas.length) % herramientasDestacadas.length);
   }, []);
 
-  const mover = (direccion: -1 | 1) => irA(activeIndexRef.current + direccion);
-
   useEffect(() => {
-    const track = trackRef.current;
     const root = carouselRef.current;
-    if (!track || !root) return;
+    if (!root) return;
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-    let observer: IntersectionObserver | null = null;
-    const intersectandoRef = { current: false };
-    const updateVisibility = () => setVisible(intersectandoRef.current && document.visibilityState === "visible");
-    updateVisibility();
+    let intersecting = false;
+    const updateVisibility = () => setVisible(intersecting && document.visibilityState === "visible");
     document.addEventListener("visibilitychange", updateVisibility);
-    if (typeof IntersectionObserver !== "undefined") {
-      observer = new IntersectionObserver(([entry]) => { intersectandoRef.current = Boolean(entry?.isIntersecting); updateVisibility(); }, { threshold: 0.2 });
-      observer.observe(root);
-    } else {
-      intersectandoRef.current = true;
-      updateVisibility();
-    }
-    const onScroll = () => {
-      const cards = Array.from(track.querySelectorAll<HTMLElement>("[data-tool-card]"));
-      if (!cards.length) return;
-      const trackLeft = track.getBoundingClientRect().left;
-      let nearest = 0;
-      let distance = Number.POSITIVE_INFINITY;
-      cards.forEach((card, index) => {
-        const current = Math.abs(card.getBoundingClientRect().left - trackLeft);
-        if (current < distance) { distance = current; nearest = index; }
-      });
-      activeIndexRef.current = nearest;
-      setActiveIndex(nearest);
-    };
-    track.addEventListener("scroll", onScroll, { passive: true });
-    if (reduceMotion.matches) {
-      return () => {
-        observer?.disconnect();
-        document.removeEventListener("visibilitychange", updateVisibility);
-        track.removeEventListener("scroll", onScroll);
-      };
-    }
+    const observer = typeof IntersectionObserver !== "undefined"
+      ? new IntersectionObserver(([entry]) => {
+          intersecting = Boolean(entry?.isIntersecting);
+          updateVisibility();
+        }, { threshold: 0.15 })
+      : null;
+    if (observer) observer.observe(root);
+    else { intersecting = true; updateVisibility(); }
+    if (reduceMotion.matches) setVisible(false);
     return () => {
       observer?.disconnect();
       document.removeEventListener("visibilitychange", updateVisibility);
-      track.removeEventListener("scroll", onScroll);
     };
   }, []);
 
   useEffect(() => {
-    if (pausado || interactuando || !visible || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const timer = window.setInterval(() => irA(activeIndexRef.current + 1), 4400);
+    if (interactuando || !visible || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const timer = window.setInterval(() => avanzar(1), 4200);
     return () => window.clearInterval(timer);
-  }, [pausado, interactuando, visible, irA]);
+  }, [interactuando, visible, avanzar]);
+
+  const handleTouchEnd = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (touchStartX.current === null) return;
+    const delta = event.changedTouches[0].clientX - touchStartX.current;
+    if (Math.abs(delta) > 42) avanzar(delta < 0 ? 1 : -1);
+    touchStartX.current = null;
+    setInteractuando(false);
+  };
 
   return (
     <div
       ref={carouselRef}
       data-aurum-reveal
-      className="aurum-tools-carousel group relative min-w-0 w-full"
+      className="aurum-tools-coverflow w-full min-w-0"
       onMouseEnter={() => setInteractuando(true)}
       onMouseLeave={() => setInteractuando(false)}
       onFocusCapture={() => setInteractuando(true)}
       onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setInteractuando(false); }}
-      onTouchStart={() => setInteractuando(true)}
-      onTouchEnd={() => setInteractuando(false)}
+      onTouchStart={(event) => { touchStartX.current = event.touches[0]?.clientX ?? null; setInteractuando(true); }}
+      onTouchEnd={handleTouchEnd}
+      onTouchCancel={() => { touchStartX.current = null; setInteractuando(false); }}
     >
-      <div className="relative flex items-end justify-between gap-4 pb-4 sm:pb-5">
+      <div className="mb-3 flex items-end justify-between gap-4 sm:mb-5">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <span className="h-px w-5 bg-[#c69b22]" />
             <p className="text-[9px] font-bold uppercase tracking-[.22em] text-[#9a7408]">AURUM LAB · Herramientas</p>
             <span className="rounded-full border border-[#e8dba9] bg-[#fff9e8] px-2 py-0.5 text-[8px] font-semibold uppercase tracking-[.12em] text-[#92700d]">Suite profesional</span>
           </div>
-          <h3 className="mt-2 text-[17px] font-semibold tracking-[-.025em] text-[#17232d] sm:text-[19px]">Soluciones para cada etapa del oficio</h3>
+          <h3 className="mt-2 text-[18px] font-semibold tracking-[-.025em] text-[#17232d] sm:text-[21px]">Soluciones para cada etapa del oficio</h3>
           <p className="mt-1 text-xs text-[#687789]">Herramientas especializadas para diseñar, calcular y fabricar mejor.</p>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <button type="button" onClick={() => mover(-1)} aria-label="Ver herramientas anteriores" className="grid size-9 place-items-center rounded-full border border-[#d6dee8] bg-white/90 text-[#344456] shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-[#c9a43a] hover:bg-[#fffaf0] hover:text-[#8a6809] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c9a43a]">
-            <ArrowLeft className="size-4" />
-          </button>
-          <button type="button" onClick={() => mover(1)} aria-label="Ver más herramientas" className="grid size-9 place-items-center rounded-full border border-[#d6dee8] bg-white/90 text-[#344456] shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-[#c9a43a] hover:bg-[#fffaf0] hover:text-[#8a6809] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c9a43a]">
-            <ArrowRight className="size-4" />
-          </button>
-        </div>
+        <span className="hidden shrink-0 pb-1 text-[10px] font-medium uppercase tracking-[.16em] text-[#9aa5b2] sm:block">Explora AURUM LAB</span>
       </div>
 
-      <div className="aurum-tools-track-wrap relative">
-        <div
-          ref={trackRef}
-          role="region"
-          aria-label="Carrusel automático de herramientas de AURUM LAB"
-          aria-roledescription="carrusel"
-          tabIndex={0}
-          onWheel={() => setInteractuando(true)}
-          onPointerDown={() => setInteractuando(true)}
-          className="aurum-tools-track flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain py-2 sm:gap-4 sm:py-3"
-        >
-          {herramientasDestacadas.map(({ id, titulo, detalle, etiqueta, icono: Icono, ruta }, index) => (
+      <div
+        className="aurum-tools-coverflow-stage relative isolate h-[340px] overflow-hidden sm:h-[370px] lg:h-[390px]"
+        role="region"
+        aria-label="Carrusel 3D automático de herramientas de AURUM LAB"
+        aria-roledescription="carrusel"
+        tabIndex={0}
+        onKeyDown={(event) => {
+          if (event.key === "ArrowRight") { event.preventDefault(); avanzar(1); }
+          if (event.key === "ArrowLeft") { event.preventDefault(); avanzar(-1); }
+        }}
+      >
+        <div className="aurum-tools-coverflow-glow pointer-events-none absolute left-1/2 top-1/2 h-[72%] w-[72%] -translate-x-1/2 -translate-y-1/2 rounded-full" />
+        {herramientasDestacadas.map(({ id, titulo, detalle, etiqueta, icono: Icono, ruta }, index) => {
+          const count = herramientasDestacadas.length;
+          let distance = (index - activeIndex + count) % count;
+          if (distance > count / 2) distance -= count;
+          const absoluteDistance = Math.abs(distance);
+          const scale = absoluteDistance === 0 ? 1 : absoluteDistance === 1 ? 0.88 : 0.72;
+          const opacity = absoluteDistance > 2 ? 0 : absoluteDistance === 2 ? 0.38 : absoluteDistance === 1 ? 0.78 : 1;
+          return (
             <Link
               key={id}
               to={ruta as any}
               data-tool-card
               aria-label={`${titulo}: ${detalle}`}
-              className="group/tool relative flex min-h-[218px] w-[min(84vw,340px)] shrink-0 snap-start flex-col overflow-hidden rounded-[18px] border border-[#e3e8ef] bg-white p-5 shadow-[0_5px_18px_rgba(23,35,45,.035)] transition-all duration-300 hover:-translate-y-1 hover:border-[#d6bd72] hover:shadow-[0_16px_34px_rgba(23,35,45,.085)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c9a43a] sm:w-[min(48vw,390px)] lg:w-[calc((100%-2rem)/3)]"
+              aria-current={distance === 0 ? "true" : undefined}
+              tabIndex={absoluteDistance > 1 ? -1 : 0}
+              onClick={(event) => {
+                if (distance !== 0) {
+                  event.preventDefault();
+                  setActiveIndex(index);
+                }
+              }}
+              className="aurum-tools-coverflow-card group/tool absolute left-1/2 top-1/2 flex h-[270px] w-[min(76vw,390px)] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-[22px] border border-[#e1e6ed] bg-white p-5 sm:h-[292px] sm:w-[min(54vw,430px)] sm:p-6"
+              style={{
+                transform: `translate(-50%, -50%) translateX(calc(${distance} * var(--aurum-coverflow-offset))) rotateY(${distance * -25}deg) scale(${scale})`,
+                opacity,
+                zIndex: 20 - absoluteDistance,
+                pointerEvents: absoluteDistance > 1 ? "none" : "auto",
+                filter: absoluteDistance === 0 ? "none" : "saturate(.78)",
+              }}
             >
-              <span className="pointer-events-none absolute inset-x-0 top-0 h-[2px] origin-left scale-x-0 bg-gradient-to-r from-[#b38a18] via-[#e8d18a] to-transparent transition-transform duration-500 group-hover/tool:scale-x-100" />
-              <span className="flex items-start justify-between">
-                <span className="grid size-10 place-items-center rounded-[13px] border border-[#eadca9] bg-gradient-to-br from-[#fff8dc] to-[#ffefb5] text-[#987100] shadow-[inset_0_1px_0_rgba(255,255,255,.9)]">
-                  <Icono className="size-[19px]" strokeWidth={1.8} />
+              <span className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-[#b58a18] via-[#f0d991] to-transparent opacity-80" />
+              <span className="pointer-events-none absolute -right-16 -top-20 size-56 rounded-full bg-[radial-gradient(circle,rgba(226,202,130,.16),transparent_68%)] transition-transform duration-700 group-hover/tool:scale-125" />
+              <span className="relative flex items-start justify-between">
+                <span className="grid size-12 place-items-center rounded-[15px] border border-[#eadca9] bg-gradient-to-br from-[#fff9e2] to-[#ffedb1] text-[#987100] shadow-[inset_0_1px_0_rgba(255,255,255,.95)] sm:size-[54px]">
+                  <Icono className="size-6" strokeWidth={1.65} />
                 </span>
-                <span className="pt-1 text-[9px] font-medium tabular-nums tracking-[.16em] text-[#a4afbb]">{String(index + 1).padStart(2, "0")} / {String(herramientasDestacadas.length).padStart(2, "0")}</span>
+                <span className="pt-1 text-[10px] font-medium tabular-nums tracking-[.18em] text-[#a4afbb]">{String(index + 1).padStart(2, "0")} / {String(count).padStart(2, "0")}</span>
               </span>
-              <span className="mt-[17px] text-[9px] font-bold uppercase tracking-[.18em] text-[#a17b0b]">{etiqueta}</span>
-              <span className="mt-1.5 text-[14px] font-semibold leading-snug tracking-[-.015em] text-[#1b2935]">{titulo}</span>
-              <span className="mt-2 flex-1 text-[11.5px] leading-[1.65] text-[#657487]">{detalle}</span>
-              <span className="mt-4 inline-flex items-center gap-2 text-[11px] font-semibold text-[#876600] transition-colors group-hover/tool:text-[#17232d]">Explorar herramienta <ArrowRight className="size-3.5 transition-transform group-hover/tool:translate-x-1" /></span>
+              <span className="relative mt-6 text-[9px] font-bold uppercase tracking-[.2em] text-[#a17b0b]">{etiqueta}</span>
+              <span className="relative mt-2 text-[19px] font-semibold leading-tight tracking-[-.025em] text-[#17232d] sm:text-[21px]">{titulo}</span>
+              <span className="relative mt-3 max-w-[34ch] flex-1 text-[12px] leading-[1.75] text-[#657487] sm:text-[13px]">{detalle}</span>
+              <span className="relative mt-4 inline-flex items-center gap-2 text-[11px] font-semibold text-[#876600] transition-colors group-hover/tool:text-[#17232d]">Explorar herramienta <ArrowRight className="size-3.5 transition-transform group-hover/tool:translate-x-1" /></span>
+              <span className="pointer-events-none absolute bottom-0 right-0 h-24 w-32 bg-gradient-to-tl from-[#f8f5eb]/70 to-transparent" />
             </Link>
-          ))}
-        </div>
-        <div className="pointer-events-none absolute inset-y-0 left-0 w-5 bg-gradient-to-r from-[#f8fafc] to-transparent sm:w-7" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 w-7 bg-gradient-to-l from-[#f5f8fb] to-transparent sm:w-9" />
-      </div>
-
-      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 pt-3">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5" aria-label={`Herramienta ${activeIndex + 1} de ${herramientasDestacadas.length}`}>
-            {herramientasDestacadas.map((item, index) => (
-              <button key={item.id} type="button" aria-label={`Ir a ${item.titulo}`} aria-current={activeIndex === index ? "true" : undefined} onClick={() => irA(index)} className={`h-1.5 rounded-full transition-all duration-300 ${activeIndex === index ? "w-6 bg-[#b38a18]" : "w-1.5 bg-[#d7dee7] hover:bg-[#b9a46b]"}`} />
-            ))}
-          </div>
-          <span className="text-[10px] text-[#8794a3]">Desplazamiento automático</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <button type="button" onClick={() => setPausado((value) => !value)} aria-label={pausado ? "Reanudar carrusel automático" : "Pausar carrusel automático"} className="inline-flex items-center gap-1.5 text-[10px] font-medium text-[#758294] transition hover:text-[#8a6809]">
-            {pausado ? <Play className="size-3" /> : <Pause className="size-3" />}
-            {pausado ? "Reanudar" : "Pausar"}
-          </button>
-          <Link to="/herramientas-publicas" className="shrink-0 text-[11px] font-semibold text-[#806006] transition hover:text-[#17232d]">Ver todas <ArrowRight className="ml-1 inline size-3.5" /></Link>
-        </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -698,6 +669,12 @@ function InicioPublico() {
           from { transform: translateX(-130%) skewX(-18deg); }
           to { transform: translateX(230%) skewX(-18deg); }
         }
+        .aurum-tools-coverflow-stage { perspective: 1500px; perspective-origin: 50% 48%; --aurum-coverflow-offset: clamp(170px, 27vw, 350px); }
+        .aurum-tools-coverflow-card { transform-style: preserve-3d; backface-visibility: hidden; box-shadow: 0 18px 46px rgba(23,35,45,.11), 0 3px 10px rgba(23,35,45,.045); transition: transform 950ms cubic-bezier(.2,.75,.2,1), opacity 850ms ease, filter 850ms ease, box-shadow 850ms ease; }
+        .aurum-tools-coverflow-card[aria-current="true"] { box-shadow: 0 28px 64px rgba(23,35,45,.16), 0 8px 20px rgba(23,35,45,.06); }
+        .aurum-tools-coverflow-glow { background: radial-gradient(ellipse, rgba(224,204,151,.18) 0%, rgba(232,237,243,.22) 38%, transparent 72%); filter: blur(18px); }
+        @media (max-width: 640px) { .aurum-tools-coverflow-stage { --aurum-coverflow-offset: clamp(150px, 45vw, 205px); } }
+        @media (prefers-reduced-motion: reduce) { .aurum-tools-coverflow-card { transition: none !important; } }
         .aurum-tools-track { scrollbar-width: none; -ms-overflow-style: none; scroll-behavior: smooth; }
         .aurum-tools-track::-webkit-scrollbar { display: none; }
         @media (prefers-reduced-motion: reduce) {
