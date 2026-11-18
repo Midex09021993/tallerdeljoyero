@@ -617,3 +617,15 @@ test("MatrixGold Gem 01–04 always initialize as Diamante blanco 1 without cros
   expect(render).toContain('initialDiamond.id');
   expect(render).toContain('String(assignment?.layerName??"").trim().toLocaleLowerCase()===layerName.toLocaleLowerCase()');
 });
+
+
+test("Aurum startup loads approved Gem HDRI 1 alongside the default diamond assignment", () => {
+  const render = readFileSync("src/components/AurumRender.tsx", "utf8");
+  const photographic = readFileSync("src/lib/aurum-photographic-scene-engine.ts", "utf8");
+  const initialLoad = render.slice(render.indexOf("const presetInicial ="), render.indexOf("const presetInicial =") + 900);
+  expect(initialLoad).toContain('"gemDiamondWhite1"');
+  expect(initialLoad).not.toContain('"predeterminado"');
+  expect(photographic).toContain('gemDiamondWhite1:{');
+  expect(photographic).toContain('url:AURUM_GEM_HDRI_APPROVED_URL');
+  expect(render).toContain('if (entornoGema) aplicarEntornoGema();');
+});
