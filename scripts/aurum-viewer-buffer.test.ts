@@ -558,7 +558,7 @@ test("Aurum exposes diamond-only AA and SSAA as independent modules", () => {
   expect(postSource).toContain("activeRenderer.setScissorTest(previousScissorTest);");
   expect(postSource).toContain("data.aurumDetectedCategory");
   expect(postSource).toContain("#include <tonemapping_fragment>");
-  expect(componentSource).toContain("if(diamondOverlayRequested) renderDiamondSupersampleOverlay?.(renderer);");
+  expect(componentSource).toContain("if(!diamondTaaRendered && diamondOverlayRequested){");
   expect(componentSource).toContain("renderDiamondSupersampleOverlay?.(renderer)");
   const liveBeautyStart = componentSource.indexOf("const diamondOverlayRequested = Boolean");
   const liveBeautyEnd = componentSource.indexOf("const renderCpuMs", liveBeautyStart);
