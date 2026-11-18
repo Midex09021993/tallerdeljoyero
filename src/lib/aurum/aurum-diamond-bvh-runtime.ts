@@ -34,7 +34,7 @@ export type AurumDiamondBvhRuntime = {
   /** Enable/disable one gemstone family without disturbing other BVH entries. */
   setFamilyEnabled: (family: string, enabled: boolean) => void;
   dispose: () => void;
-  diagnostics: () => { activeMeshes: number; triangleCount: number; diamondMeshes: number; diamondTriangleCount: number; familyCounts: Record<string, number>; skippedTargetMeshes: Array<{ mesh: string; materialFamilies: string[]; activeGemFamily: string; reason: string }>; overlappingGemPairs: Array<{ meshA: string; familyA: string; meshB: string; familyB: string; overlapRatio: number }>; enabled: boolean };
+  diagnostics: () => { activeMeshes: number; triangleCount: number; diamondMeshes: number; diamondTriangleCount: number; familyCounts: Record<string, number>; skippedTargetMeshes: Array<{ mesh: string; materialFamilies: string[]; activeGemFamily: string; reason: string }>; centerTargetDiagnostics: Array<{ mesh: string; gemId: string; activeGemFamily: string; centerProtected: boolean; role: string; tier: string; accepted: boolean; reason: string }>; overlappingGemPairs: Array<{ meshA: string; familyA: string; meshB: string; familyB: string; overlapRatio: number }>; enabled: boolean };
 };
 
 /** True only for the center stone protected by the shared screen-space analyzer or explicit CAD metadata. */
@@ -143,6 +143,7 @@ export async function createAurumDiamondBvhRuntime(options: {
 
   const familyCounts: Record<string, number> = {};
   const skippedTargetMeshes: Array<{ mesh: string; materialFamilies: string[]; activeGemFamily: string; reason: string }> = [];
+  const centerTargetDiagnostics: Array<{ mesh: string; gemId: string; activeGemFamily: string; centerProtected: boolean; role: string; tier: string; accepted: boolean; reason: string }> = [];
 
   const releaseEntry = (mesh: THREE.Mesh, restore: boolean) => {
     const entry = entries.get(mesh);
@@ -178,6 +179,7 @@ export async function createAurumDiamondBvhRuntime(options: {
     if (!targetedRefresh) {
       for (const key of Object.keys(familyCounts)) delete familyCounts[key];
       skippedTargetMeshes.length = 0;
+      centerTargetDiagnostics.length = 0;
     }
 
     // A targeted non-diamond change must not scan the full CAD assembly.
@@ -319,7 +321,22 @@ export async function createAurumDiamondBvhRuntime(options: {
       };
       // The production editor can opt into BVH for the center stone only.
       // Secondary diamonds remain on their existing MeshPhysicalMaterial path.
-      if (family === "diamante" && options.diamondCenterOnly && !isAurumDiamondBvhCenterTarget(mesh)) return;
+      if (family === "diamante" && options.diamondCenterOnly) {
+        const centerProtected = isAurumDiamondBvhCenterTarget(mesh);
+        if (centerTargetDiagnostics.length < 60) {
+          centerTargetDiagnostics.push({
+            mesh: mesh.name || mesh.uuid,
+            gemId: activeGemId,
+            activeGemFamily,
+            centerProtected,
+            role: String(mesh.userData?.aurumDiamondRole ?? ""),
+            tier: screenTier,
+            accepted: centerProtected,
+            reason: centerProtected ? "centro-protegido" : "sin-marca-de-centro",
+          });
+        }
+        if (!centerProtected) return;
+      }
       const isSmallSecondaryDiamond = family === "diamante" && screenTier !== "brilliant";
       const isNeutralMicroDiamond = family === "diamante" && screenTier === "micro" && !isBlueDiamond && !isPinkDiamond;
       const isNeutralSmallDiamond = family === "diamante" && screenTier === "small" && !isBlueDiamond && !isPinkDiamond;
@@ -663,6 +680,7 @@ export async function createAurumDiamondBvhRuntime(options: {
         // entries that successfully received a BVH material.
         familyCounts: { ...familyCounts },
         skippedTargetMeshes: [...skippedTargetMeshes],
+        centerTargetDiagnostics: [...centerTargetDiagnostics],
         overlappingGemPairs,
         gemEnvironment: {
           loaded: Boolean(environmentMap?.isTexture),
