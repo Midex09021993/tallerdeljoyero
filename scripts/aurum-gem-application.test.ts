@@ -130,7 +130,7 @@ test("source-only Rhino Gem 02 metadata assigns every mesh in the selected layer
   expect(getAurumGemLayerIdentity(gem02a).layerName).toBe("gem 02");
   expect(isAurumGemTarget(gem02a)).toBe(true);
   const untouchedMaterial = gem03.material;
-  const resolvedEnvironments: readonly any[][] = [];
+  const resolvedEnvironments: any[][] = [];
 
   prepareAurumGemLayerIndex(scene);
   const applied = applyAurumGemToTarget(
