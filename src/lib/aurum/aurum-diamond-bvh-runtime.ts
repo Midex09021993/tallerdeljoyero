@@ -378,12 +378,11 @@ export async function createAurumDiamondBvhRuntime(options: {
           // higher bounce counts are reserved for explicit high/final capture.
           quality: isNeutralWhiteDiamond ? "final" : family === "diamante" && !isSmallSecondaryDiamond ? "high" : (options.quality ?? "interactive"),
           // Restore the original diamond BVH fire/brightness settings; the emerald experiment remains isolated.
-          // Small white melee stones need a gentle neutral energy lift so their
-          // compact facets read bright instead of graphite-grey; keep colored
-          // diamonds and the center stone on their existing calibrated values.
+          // White diamonds use neutral RGB energy (1, 1, 1) across every size tier;
+          // optical differences remain controlled by their dedicated parameters.
           rgbBoost: family === "diamante"
-            ? (isNeutralMicroDiamond ? [1.10, 1.10, 1.10]
-              : isNeutralSmallDiamond ? [1.14, 1.14, 1.14]
+            ? (isNeutralMicroDiamond ? [1, 1, 1]
+              : isNeutralSmallDiamond ? [1, 1, 1]
               : isNeutralWhiteDiamond ? [1, 1, 1]
               : isBlueDiamond ? [2, 2, 2] : isPinkDiamond ? [1.3, 1, 1] : [1.18, 1.18, 1.18])
             : undefined,
@@ -446,7 +445,7 @@ export async function createAurumDiamondBvhRuntime(options: {
               packageApi.setDiamondOptions(prepared.material, {
                 ior: 2.6,
                 transmission: isMicro || isSmall ? 0.05 : 0,
-                rgbBoost: isMicro ? [1.10, 1.10, 1.10] : isSmall ? [1.14, 1.14, 1.14] : [1, 1, 1],
+                rgbBoost: [1, 1, 1],
                 environmentIntensity: isMicro ? 1.20 : 1.30,
                 dispersion: isMicro ? 0.0003 : isSmall ? 0.0008 : 0.010,
                 gamma: isMicro ? 0.96 : isSmall ? 0.94 : 1.0,
