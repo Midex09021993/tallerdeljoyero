@@ -1099,6 +1099,7 @@ function MiNubePage() {
           almacenamientoEnProceso = "nas";
           const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
           if (sessionError || !sessionData.session?.access_token) throw new Error("Tu sesión caducó. Vuelve a entrar e inténtalo de nuevo.");
+          if (file.size > 10 * 1024 * 1024 * 1024) throw new Error(`“${file.name}” supera el máximo de 10 GB por vídeo.`);
           const uploadId = crypto.randomUUID();
           const filename = `${Date.now()}-${nombre}`;
           const chunkSize = 4 * 1024 * 1024;
