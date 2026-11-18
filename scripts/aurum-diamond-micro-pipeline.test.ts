@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test";
 import * as THREE from "three";
 import { classifyAurumDiamondScreenSize, classifyAurumDiamondMeshTiers, createAurumDiamondMicroPipeline, getAurumDiamondProjectedDiameterPx, getAurumDiamondMicroOpticalProfile, stabilizeAurumDiamondScreenTier } from "../src/lib/aurum/diamond-micro-pipeline";
+import { isAurumDiamondBvhCenterTarget } from "../src/lib/aurum/aurum-diamond-bvh-runtime";
 
 test("classifies projected diamond sizes into stable screen-space tiers", () => {
   expect(classifyAurumDiamondScreenSize(5)).toBe("micro");
@@ -203,4 +204,15 @@ test("micro pipeline can be paused and resumed without leaving optical scaling b
   pipeline.dispose();
   mesh.geometry.dispose();
   material.dispose();
+});
+
+
+test("limits the production BVH target to the explicitly protected center diamond", () => {
+  const center = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshBasicMaterial());
+  center.userData.aurumDiamondMicroCenterProtected = true;
+  const secondary = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshBasicMaterial());
+  expect(isAurumDiamondBvhCenterTarget(center)).toBe(true);
+  expect(isAurumDiamondBvhCenterTarget(secondary)).toBe(false);
+  secondary.userData.aurumDiamondRole = "principal";
+  expect(isAurumDiamondBvhCenterTarget(secondary)).toBe(true);
 });
