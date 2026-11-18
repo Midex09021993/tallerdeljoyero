@@ -4479,12 +4479,13 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           // save/accumulate/mask-composite chain is fully available.
           gemMaskPass.enabled=getAurumPostControls().gemMaskEnabled;
           const hasCenterDiamond = Boolean(gemMaskPass?.hasDiamondMeshes);
-          const diamondTaaOverlayRequested = Boolean(
-            gemMaskPass?.enabled && hasCenterDiamond
-            && idleTaaPass?.enabled && diamondTaaSavePass?.enabled && diamondTaaCompositePass?.enabled
-          );
-          const diamondFxaaOverlayRequested = Boolean(gemMaskPass?.enabled && fxaaPass?.enabled && hasCenterDiamond);
-          const diamondOverlayRequested = Boolean(gemMaskPass?.enabled && diamondSupersamplePass?.enabled && diamondSupersampleCompositePass?.enabled);
+          // Optical Lab 01 renders the diamond material directly. Do not run
+          // AURUM-specific diamond TAA/SSAA/FXAA overlays over its output:
+          // they alter the laboratory shader's appearance and can reintroduce
+          // edge shimmer. Generic scene post-processing remains independent.
+          const diamondTaaOverlayRequested = false;
+          const diamondFxaaOverlayRequested = false;
+          const diamondOverlayRequested = false;
           const activeToneAuditPath = diamondTaaOverlayRequested
             ? (diamondFxaaOverlayRequested ? "composer+diamond-taa+diamond-fxaa" : "composer+diamond-taa")
             : diamondOverlayRequested
