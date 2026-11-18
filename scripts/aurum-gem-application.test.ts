@@ -797,17 +797,21 @@ test("all neutral white diamond sizes use the center optical profile and expose 
 });
 
 
-test("each diamond EXR orientation is compensated relative to the center stone world yaw", () => {
+test("each diamond EXR orientation is compensated from its geometry-derived table frame", () => {
   const runtime = readFileSync("src/lib/aurum/aurum-diamond-bvh-runtime.ts", "utf8");
   const editor = readFileSync("src/components/AurumRender.tsx", "utf8");
 
-  expect(runtime).toContain("environmentRotationRadians?: number");
-  expect(runtime).toContain("const centerReferenceMesh = explicitCenterMesh ?? inferredCenterMesh");
-  expect(runtime).toContain("centerWorldYawRadians = centerWorldEuler.y");
-  expect(runtime).toContain("const offsetRadians = centerWorldYawRadians - worldEuler.y");
-  expect(runtime).toContain("environmentRotationOffsetRadians: meshEnvironmentAlignment.offsetRadians");
+  expect(runtime).toContain("const getDiamondOpticalFrame = (mesh: THREE.Mesh)");
+  expect(runtime).toContain("geometry.computeBoundingBox()");
+  expect(runtime).toContain("applyQuaternion(worldQuaternion)");
+  expect(runtime).toContain("centerOpticalFrame.worldNormal");
+  expect(runtime).toContain("relativeOpticalRotationRadians");
+  expect(runtime).toContain("opticalAxisAlignmentDegrees");
+  expect(runtime).toContain("tableNormalWorld");
+  expect(runtime).toContain("frameValid");
+  expect(runtime).not.toContain("centerWorldYawRadians = centerWorldEuler.y");
+  expect(runtime).not.toContain("const offsetRadians = centerWorldYawRadians - worldEuler.y");
   expect(runtime).toContain("requestedRotation + entry.environmentRotationOffsetRadians");
   expect(runtime).toContain('"[AURUM][DIAMOND][CENTER_RELATIVE_EXR_ALIGNMENT]"');
-  expect(runtime).toContain("perDiamondAlignment");
   expect(editor).toContain("environmentRotationRadians: gemEnvironmentRotation");
 });
