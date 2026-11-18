@@ -163,7 +163,7 @@ export function applyAurumInitialModelMaterials(
       const layerId=String(meta?.rhinoLayerId??meta?.layerId??"").trim();
       const layerIndexKey=layerIndex!=null ? "rhino-index:"+String(layerIndex) : "";
       const layerIdKey=layerId ? "rhino-id:"+layerId : "";
-      const isDefaultWhiteDiamondLayer=/^gem\\s*0*[1-4]$/i.test(layerName);
+      const isDefaultWhiteDiamondLayer=/^gem\s*0*[1-4]$/i.test(layerName);
       // For the four MatrixGold gem layers, Diamante blanco 1 is the explicit
       // first-load standard. Ignore stale per-mesh/material IDs from older
       // imports so an obsolete preset cannot silently override the catalog.
