@@ -32,55 +32,53 @@ async function verificarDocenteCurso(supabase: any, participanteDocenteId: strin
 }
 
 /**
- * Candidatos a alumno (sin datos de contacto), limitados SIEMPRE a las cuentas
- * indicadas en `userIds`. Nunca se devuelve el directorio completo de otros
- * talleres: el docente debe identificar a cada alumno por su usuario exacto.
- * Sólo devuelve nombre visible, usuario, taller y roles; los correos nunca salen del servidor.
+ * Directorio de candidatos (sin datos de contacto). Sólo devuelve nombre visible,
+ * usuario, taller y roles; los correos nunca salen del servidor.
  */
-async function construirCandidatos(supabaseAdmin: any, participanteDocenteId: string, userIds: string[]) {
-  const ids = [...new Set(userIds)].filter((id) => UUID_RE.test(id)).slice(0, 200);
-  if (!ids.length) return { talleres: [] as any[], alumnos: [] as any[] };
-
-  const [{ data: roles, error: rolesError }, { data: membresias, error: membresiasError }, { data: perfiles, error: perfilesError }] = await Promise.all([
+async function construirDirectorio(supabaseAdmin: any, participanteDocenteId: string) {
+  const [{ data: talleres, error: talleresError }, { data: roles, error: rolesError }] = await Promise.all([
+    supabaseAdmin.from("ecosistema_participantes")
+      .select("id,nombre,estado")
+      .eq("estado", "activo")
+      .neq("id", participanteDocenteId)
+      .order("nombre"),
     supabaseAdmin.from("user_roles")
       .select("user_id,role")
-      .in("user_id", ids)
       .in("role", ["gerente", "operario"]),
-    supabaseAdmin.from("participante_cuentas")
-      .select("participante_id,user_id,estado")
-      .in("user_id", ids)
-      .eq("estado", "activo")
-      .neq("participante_id", participanteDocenteId),
-    supabaseAdmin.from("profiles")
-      .select("id,usuario,nombre,apellidos,activo")
-      .in("id", ids),
   ]);
+  if (talleresError) throw new Error("No se pudieron consultar los talleres activos.");
   if (rolesError) throw new Error("No se pudieron consultar los roles de los usuarios.");
-  if (membresiasError) throw new Error("No se pudieron consultar las vinculaciones de los talleres.");
-  if (perfilesError) throw new Error("No se pudieron consultar los perfiles de los alumnos.");
+
+  const tallerIds = (talleres ?? []).map((t: any) => t.id);
+  if (!tallerIds.length || !roles?.length) return { talleres: [] as any[], alumnos: [] as any[] };
 
   const roleByUser = new Map<string, string[]>();
-  for (const role of (roles ?? []) as any[]) {
+  for (const role of roles as any[]) {
     const current = roleByUser.get(role.user_id) ?? [];
     current.push(role.role);
     roleByUser.set(role.user_id, current);
   }
 
-  const tallerIds = [...new Set((membresias ?? []).map((m: any) => m.participante_id))];
-  if (!tallerIds.length || !roleByUser.size) return { talleres: [] as any[], alumnos: [] as any[] };
+  const { data: membresias, error: membresiasError } = await supabaseAdmin
+    .from("participante_cuentas")
+    .select("participante_id,user_id,estado")
+    .in("participante_id", tallerIds)
+    .eq("estado", "activo");
+  if (membresiasError) throw new Error("No se pudieron consultar las vinculaciones de los talleres.");
 
-  const { data: talleres, error: talleresError } = await supabaseAdmin.from("ecosistema_participantes")
-    .select("id,nombre,estado")
-    .in("id", tallerIds)
-    .eq("estado", "activo")
-    .order("nombre");
-  if (talleresError) throw new Error("No se pudieron consultar los talleres activos.");
+  const candidatas = (membresias ?? []).filter((m: any) => roleByUser.has(m.user_id));
+  const userIds = [...new Set(candidatas.map((m: any) => m.user_id))];
+  if (!userIds.length) return { talleres: talleres ?? [], alumnos: [] as any[] };
+
+  const { data: perfiles, error: perfilesError } = await supabaseAdmin.from("profiles")
+    .select("id,usuario,nombre,apellidos,activo")
+    .in("id", userIds);
+  if (perfilesError) throw new Error("No se pudieron consultar los perfiles de los alumnos.");
 
   const perfilById = new Map((perfiles ?? []).map((p: any) => [p.id, p]));
   const tallerById = new Map((talleres ?? []).map((t: any) => [t.id, t]));
   const membresiasPorUsuario = new Map<string, any[]>();
-  for (const membresia of (membresias ?? []) as any[]) {
-    if (!roleByUser.has(membresia.user_id) || !tallerById.has(membresia.participante_id)) continue;
+  for (const membresia of candidatas as any[]) {
     const lista = membresiasPorUsuario.get(membresia.user_id) ?? [];
     lista.push(membresia);
     membresiasPorUsuario.set(membresia.user_id, lista);
@@ -101,38 +99,17 @@ async function construirCandidatos(supabaseAdmin: any, participanteDocenteId: st
     };
   }).filter(Boolean) as Array<{ userId: string; participanteIds: string[]; taller: string; nombre: string; usuario: string; roles: string[] }>;
 
-  const talleresUsados = new Set(alumnos.flatMap((a) => a.participanteIds));
-  return { talleres: (talleres ?? []).filter((t: any) => talleresUsados.has(t.id)), alumnos };
+  return { talleres: talleres ?? [], alumnos };
 }
 
-type BuscarAlumnoInput = DirectorioInput & { usuario: string };
-
-/**
- * Busca un alumno por su nombre de usuario EXACTO (sin distinguir mayúsculas).
- * No permite listar ni explorar cuentas de otros talleres.
- */
 export const listarDirectorioAlumnosFormacion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: BuscarAlumnoInput) => {
-    const base = validarDirectorioInput(input);
-    const usuario = typeof input?.usuario === "string" ? input.usuario.trim() : "";
-    if (usuario.length < 3 || usuario.length > 80 || Array.from(usuario).some((caracter) => caracter.charCodeAt(0) <= 0x1f)) {
-      throw new Error("Escribe el usuario exacto del alumno (mínimo 3 caracteres).");
-    }
-    return { ...base, usuario };
-  })
+  .inputValidator(validarDirectorioInput)
   .handler(async ({ data, context }) => {
-    const { participanteDocenteId, cursoId, usuario } = data;
+    const { participanteDocenteId, cursoId } = data;
     await verificarDocenteCurso(context.supabase, participanteDocenteId, cursoId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const patron = usuario.replace(/[\\%_]/g, (c) => "\\" + c);
-    const { data: perfiles, error } = await supabaseAdmin.from("profiles")
-      .select("id")
-      .ilike("usuario", patron)
-      .eq("activo", true)
-      .limit(5);
-    if (error) throw new Error("No se pudo buscar el alumno.");
-    return construirCandidatos(supabaseAdmin, participanteDocenteId, (perfiles ?? []).map((p: any) => p.id));
+    return construirDirectorio(supabaseAdmin, participanteDocenteId);
   });
 
 type MatricularInput = DirectorioInput & { userIds: string[] };
@@ -159,7 +136,7 @@ export const matricularAlumnosFormacion = createServerFn({ method: "POST" })
     await verificarDocenteCurso(supabase, participanteDocenteId, cursoId);
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { alumnos } = await construirCandidatos(supabaseAdmin, participanteDocenteId, userIds);
+    const { alumnos } = await construirDirectorio(supabaseAdmin, participanteDocenteId);
     const permitidos = new Map(alumnos.map((a) => [a.userId, a]));
     const seleccionados = userIds.map((id) => permitidos.get(id)).filter(Boolean) as typeof alumnos;
     if (!seleccionados.length) throw new Error("Los alumnos seleccionados no están disponibles en el directorio.");

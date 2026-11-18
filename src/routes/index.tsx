@@ -1,12 +1,12 @@
 import { ClientOnly, createFileRoute, Link } from "@tanstack/react-router";
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabasePublic } from "@/integrations/supabase/client";
 import { RegistroTaller } from "@/components/RegistroTaller";
 import { AurumProductShowcase } from "@/components/AurumProductShowcase";
 import { SolicitarDemo } from "@/components/SolicitarDemo";
 const MiniAurumRender = lazy(() => import("@/components/MiniAurumRender").then((m) => ({ default: m.MiniAurumRender })));
-import { ArrowLeft, ArrowRight, ArrowRightLeft, BookOpen, Boxes, Calculator, Check, CircleDot, Cloud, Coins, Eye, FlaskConical, Gem, Layers3, Menu, MonitorSmartphone, PackageCheck, Pause, Play, Ruler, Scale, Sparkles, Sprout, ChartNoAxesCombined, X } from "lucide-react";
+import { ArrowRight, BookOpen, Boxes, Calculator, Check, Cloud, Gem, Layers3, Menu, MonitorSmartphone, PackageCheck, Sparkles, Sprout, ChartNoAxesCombined, X } from "lucide-react";
 import heroColgante from "@/assets/diseno-colgante.jpg";
 
 export const Route = createFileRoute("/")({
@@ -352,207 +352,6 @@ function TalleresDeLaComunidad() {
   );
 }
 
-const herramientasDestacadas = [
-  {
-    id: "aleacion",
-    titulo: "Calculadora de aleaciones",
-    detalle: "Prepara oro de 18K, 14K y 9K calculando el oro fino y los metales de liga.",
-    etiqueta: "Metalurgia",
-    icono: Coins,
-    ruta: "/herramientas-publicas/aleacion-oro",
-  },
-  {
-    id: "peso-3d",
-    titulo: "Peso de joyas 3D",
-    detalle: "Estima el peso del metal de una pieza a partir de un archivo 3D compatible.",
-    etiqueta: "Diseño y fabricación",
-    icono: Scale,
-    ruta: "/herramientas-publicas/peso-joya-3d",
-  },
-  {
-    id: "gemas",
-    titulo: "Calculadora de gemas",
-    detalle: "Estima los quilates de una piedra usando sus medidas y tipo de gema.",
-    etiqueta: "Gemología",
-    icono: CircleDot,
-    ruta: "/herramientas-publicas/peso-gemas",
-  },
-  {
-    id: "tallas",
-    titulo: "Conversor de tallas",
-    detalle: "Compara medidas y equivalencias entre sistemas de tallaje de anillos.",
-    etiqueta: "Medición",
-    icono: Ruler,
-    ruta: "/herramientas-publicas/tallas-anillos",
-  },
-  {
-    id: "revestimiento",
-    titulo: "Revestimiento y agua",
-    detalle: "Calcula las cantidades para preparar el revestimiento del cilindro de fundición.",
-    etiqueta: "Microfundición",
-    icono: FlaskConical,
-    ruta: "/herramientas-publicas/yeso-agua",
-  },
-  {
-    id: "render",
-    titulo: "AURUM RENDER",
-    detalle: "Visualiza tus diseños 3D con materiales, metales, gemas e iluminación especializada.",
-    etiqueta: "Visualización 3D",
-    icono: Eye,
-    ruta: "/aurum-render-public",
-  },
-  {
-    id: "transfers",
-    titulo: "AURUM TRANSFERS",
-    detalle: "Comparte archivos y diseños de joyería mediante el flujo de transferencia de AURUM LAB.",
-    etiqueta: "Intercambio de archivos",
-    icono: ArrowRightLeft,
-    ruta: "/transfer",
-  },
-] as const;
-
-function CarruselHerramientas() {
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [interactuando, setInteractuando] = useState(false);
-  const [visible, setVisible] = useState(false);
-  const carouselRef = useRef<HTMLDivElement | null>(null);
-  const touchStartX = useRef<number | null>(null);
-
-  const avanzar = useCallback((step = 1) => {
-    setActiveIndex((current) => (current + step + herramientasDestacadas.length) % herramientasDestacadas.length);
-  }, []);
-
-  useEffect(() => {
-    const root = carouselRef.current;
-    if (!root) return;
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-    let intersecting = false;
-    const updateVisibility = () => setVisible(intersecting && document.visibilityState === "visible");
-    document.addEventListener("visibilitychange", updateVisibility);
-    const observer = typeof IntersectionObserver !== "undefined"
-      ? new IntersectionObserver(([entry]) => {
-          intersecting = Boolean(entry?.isIntersecting);
-          updateVisibility();
-        }, { threshold: 0.15 })
-      : null;
-    if (observer) observer.observe(root);
-    else { intersecting = true; updateVisibility(); }
-    if (reduceMotion.matches) setVisible(false);
-    return () => {
-      observer?.disconnect();
-      document.removeEventListener("visibilitychange", updateVisibility);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (interactuando || !visible || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const timer = window.setInterval(() => avanzar(1), 4200);
-    return () => window.clearInterval(timer);
-  }, [interactuando, visible, avanzar]);
-
-  const handleTouchEnd = (event: React.TouchEvent<HTMLDivElement>) => {
-    if (touchStartX.current === null) return;
-    const changedTouch = event.changedTouches[0];
-    if (!changedTouch) {
-      touchStartX.current = null;
-      setInteractuando(false);
-      return;
-    }
-    const delta = changedTouch.clientX - touchStartX.current;
-    if (Math.abs(delta) > 42) avanzar(delta < 0 ? 1 : -1);
-    touchStartX.current = null;
-    setInteractuando(false);
-  };
-
-  return (
-    <div
-      ref={carouselRef}
-      data-aurum-reveal
-      className="aurum-tools-coverflow w-full min-w-0"
-      onMouseEnter={() => setInteractuando(true)}
-      onMouseLeave={() => setInteractuando(false)}
-      onFocusCapture={() => setInteractuando(true)}
-      onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setInteractuando(false); }}
-      onTouchStart={(event) => { touchStartX.current = event.touches[0]?.clientX ?? null; setInteractuando(true); }}
-      onTouchEnd={handleTouchEnd}
-      onTouchCancel={() => { touchStartX.current = null; setInteractuando(false); }}
-    >
-      <div className="mb-3 flex items-end justify-between gap-4 sm:mb-5">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="h-px w-5 bg-[#c69b22]" />
-            <p className="text-[9px] font-bold uppercase tracking-[.22em] text-[#9a7408]">AURUM LAB · Herramientas</p>
-            <span className="rounded-full border border-[#e8dba9] bg-[#fff9e8] px-2 py-0.5 text-[8px] font-semibold uppercase tracking-[.12em] text-[#92700d]">Suite profesional</span>
-          </div>
-          <h3 className="mt-2 text-[18px] font-semibold tracking-[-.025em] text-[#17232d] sm:text-[21px]">Soluciones para cada etapa del oficio</h3>
-          <p className="mt-1 text-xs text-[#687789]">Herramientas especializadas para diseñar, calcular y fabricar mejor.</p>
-        </div>
-        <span className="hidden shrink-0 pb-1 text-[10px] font-medium uppercase tracking-[.16em] text-[#9aa5b2] sm:block">Explora AURUM LAB</span>
-      </div>
-
-      <div
-        className="aurum-tools-coverflow-stage relative isolate h-[340px] overflow-hidden sm:h-[370px] lg:h-[390px]"
-        role="region"
-        aria-label="Carrusel 3D automático de herramientas de AURUM LAB"
-        aria-roledescription="carrusel"
-        tabIndex={0}
-        onKeyDown={(event) => {
-          if (event.key === "ArrowRight") { event.preventDefault(); avanzar(1); }
-          if (event.key === "ArrowLeft") { event.preventDefault(); avanzar(-1); }
-        }}
-      >
-        <div className="aurum-tools-coverflow-glow pointer-events-none absolute left-1/2 top-1/2 h-[72%] w-[72%] -translate-x-1/2 -translate-y-1/2 rounded-full" />
-        {herramientasDestacadas.map(({ id, titulo, detalle, etiqueta, icono: Icono, ruta }, index) => {
-          const count = herramientasDestacadas.length;
-          let distance = (index - activeIndex + count) % count;
-          if (distance > count / 2) distance -= count;
-          const absoluteDistance = Math.abs(distance);
-          const scale = absoluteDistance === 0 ? 1 : absoluteDistance === 1 ? 0.88 : 0.72;
-          const opacity = absoluteDistance > 2 ? 0 : absoluteDistance === 2 ? 0.38 : absoluteDistance === 1 ? 0.78 : 1;
-          return (
-            <Link
-              key={id}
-              to={ruta as any}
-              data-tool-card
-              aria-label={`${titulo}: ${detalle}`}
-              aria-current={distance === 0 ? "true" : undefined}
-              tabIndex={absoluteDistance > 1 ? -1 : 0}
-              onClick={(event) => {
-                if (distance !== 0) {
-                  event.preventDefault();
-                  setActiveIndex(index);
-                }
-              }}
-              className="aurum-tools-coverflow-card group/tool absolute left-1/2 top-1/2 flex h-[270px] w-[min(76vw,390px)] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-[22px] border border-[#e1e6ed] bg-white p-5 sm:h-[292px] sm:w-[min(54vw,430px)] sm:p-6"
-              style={{
-                transform: `translate(-50%, -50%) translateX(calc(${distance} * var(--aurum-coverflow-offset))) rotateY(${distance * -25}deg) scale(${scale})`,
-                opacity,
-                zIndex: 20 - absoluteDistance,
-                pointerEvents: absoluteDistance > 1 ? "none" : "auto",
-                filter: absoluteDistance === 0 ? "none" : "saturate(.78)",
-              }}
-            >
-              <span className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-[#b58a18] via-[#f0d991] to-transparent opacity-80" />
-              <span className="pointer-events-none absolute -right-16 -top-20 size-56 rounded-full bg-[radial-gradient(circle,rgba(226,202,130,.16),transparent_68%)] transition-transform duration-700 group-hover/tool:scale-125" />
-              <span className="relative flex items-start justify-between">
-                <span className="grid size-12 place-items-center rounded-[15px] border border-[#eadca9] bg-gradient-to-br from-[#fff9e2] to-[#ffedb1] text-[#987100] shadow-[inset_0_1px_0_rgba(255,255,255,.95)] sm:size-[54px]">
-                  <Icono className="size-6" strokeWidth={1.65} />
-                </span>
-                <span className="pt-1 text-[10px] font-medium tabular-nums tracking-[.18em] text-[#a4afbb]">{String(index + 1).padStart(2, "0")} / {String(count).padStart(2, "0")}</span>
-              </span>
-              <span className="relative mt-6 text-[9px] font-bold uppercase tracking-[.2em] text-[#a17b0b]">{etiqueta}</span>
-              <span className="relative mt-2 text-[19px] font-semibold leading-tight tracking-[-.025em] text-[#17232d] sm:text-[21px]">{titulo}</span>
-              <span className="relative mt-3 max-w-[34ch] flex-1 text-[12px] leading-[1.75] text-[#657487] sm:text-[13px]">{detalle}</span>
-              <span className="relative mt-4 inline-flex items-center gap-2 text-[11px] font-semibold text-[#876600] transition-colors group-hover/tool:text-[#17232d]">Explorar herramienta <ArrowRight className="size-3.5 transition-transform group-hover/tool:translate-x-1" /></span>
-              <span className="pointer-events-none absolute bottom-0 right-0 h-24 w-32 bg-gradient-to-tl from-[#f8f5eb]/70 to-transparent" />
-            </Link>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 function InicioPublico() {
   const [mostrarDemo3D, setMostrarDemo3D] = useState(false);
   const mainRef = useRef<HTMLElement | null>(null);
@@ -674,18 +473,6 @@ function InicioPublico() {
         @keyframes aurum-card-sheen {
           from { transform: translateX(-130%) skewX(-18deg); }
           to { transform: translateX(230%) skewX(-18deg); }
-        }
-        .aurum-tools-coverflow-stage { perspective: 1500px; perspective-origin: 50% 48%; --aurum-coverflow-offset: clamp(170px, 27vw, 350px); }
-        .aurum-tools-coverflow-card { transform-style: preserve-3d; backface-visibility: hidden; box-shadow: 0 18px 46px rgba(23,35,45,.11), 0 3px 10px rgba(23,35,45,.045); transition: transform 950ms cubic-bezier(.2,.75,.2,1), opacity 850ms ease, filter 850ms ease, box-shadow 850ms ease; }
-        .aurum-tools-coverflow-card[aria-current="true"] { box-shadow: 0 28px 64px rgba(23,35,45,.16), 0 8px 20px rgba(23,35,45,.06); }
-        .aurum-tools-coverflow-glow { background: radial-gradient(ellipse, rgba(224,204,151,.18) 0%, rgba(232,237,243,.22) 38%, transparent 72%); filter: blur(18px); }
-        @media (max-width: 640px) { .aurum-tools-coverflow-stage { --aurum-coverflow-offset: clamp(150px, 45vw, 205px); } }
-        @media (prefers-reduced-motion: reduce) { .aurum-tools-coverflow-card { transition: none !important; } }
-        .aurum-tools-track { scrollbar-width: none; -ms-overflow-style: none; scroll-behavior: smooth; }
-        .aurum-tools-track::-webkit-scrollbar { display: none; }
-        @media (prefers-reduced-motion: reduce) {
-          .aurum-tools-track { scroll-behavior: auto; }
-          .aurum-tools-track [data-tool-card] { transition: none !important; }
         }
         .aurum-hero-enter { animation: aurum-hero-enter .9s cubic-bezier(.2,.75,.25,1) both; }
         .aurum-hero-enter-delay-1 { animation-delay: .12s; }
@@ -1035,8 +822,33 @@ function InicioPublico() {
       </section>
 
       <section id="guias-tecnicas" style={{ contentVisibility: "auto", containIntrinsicSize: "auto 560px" }} className="scroll-mt-24 border-y border-slate-200 bg-white">
-        <div className="mx-auto max-w-[1440px] px-5 py-8 sm:px-8 sm:py-10 lg:px-12">
-          <CarruselHerramientas />
+        <div className="mx-auto max-w-[1440px] px-5 py-14 sm:px-8 sm:py-16 lg:px-12">
+          <div className="grid items-start gap-8 lg:grid-cols-[.85fr_1.15fr] lg:gap-14">
+            <div className="max-w-xl">
+              <p className="inline-flex items-center gap-2 rounded-full border border-[#eadca8] bg-[#fff9df] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.2em] text-[#876500]"><BookOpen className="size-3.5" /> Biblioteca práctica del oficio</p>
+              <h2 className="mt-4 text-2xl font-extrabold leading-tight tracking-tight text-[#17232d] sm:text-3xl lg:text-4xl">Aprende sobre joyería y materiales.</h2>
+              <p className="mt-4 text-sm leading-7 text-slate-600 sm:text-base">Encuentra explicaciones sencillas sobre metales, gemas y técnicas de joyería.</p>
+              <Link to="/guias" className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-[#17232d] transition hover:border-[#d4aa19] hover:bg-[#fffbee] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4aa19]">Explorar todas las guías <ArrowRight className="size-4" /></Link>
+            </div>
+            <article data-aurum-reveal className="group overflow-hidden rounded-2xl border border-slate-200 bg-[#f8fafc] shadow-[0_8px_30px_rgba(23,35,45,.045)] transition hover:border-[#dfbd4b] hover:shadow-[0_16px_36px_rgba(23,35,45,.08)]">
+              <div className="flex items-start gap-4 p-5 sm:p-7">
+                <span className="grid size-12 shrink-0 place-items-center rounded-xl border border-[#eadca7] bg-[#fff4c4] text-[#8f6b00]"><Calculator className="size-5" /></span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#987400]">Metalurgia y materiales · Guía técnica</p>
+                  <h3 className="mt-2 text-xl font-bold leading-snug text-[#17232d] sm:text-2xl">Cómo preparar aleaciones de oro de 18K, 14K y 9K</h3>
+                  <p className="mt-3 text-sm leading-6 text-slate-600">Mira cómo hacer el cálculo paso a paso con un ejemplo de 10 gramos.</p>
+                  <div className="mt-5 flex flex-wrap items-center gap-3">
+                    <Link to="/herramientas-publicas/$herramienta" params={{ herramienta: "aleacion-oro" }} className="inline-flex min-h-10 items-center gap-2 text-xs font-semibold text-[#765900] hover:text-[#17232d]">Abrir calculadora <Calculator className="size-3.5" /></Link>
+                  </div>
+                </div>
+              </div>
+              <div className="grid gap-3 border-t border-slate-200 bg-white px-5 py-4 text-xs text-slate-600 sm:grid-cols-3 sm:px-7">
+                <div className="flex items-center gap-2"><Check className="size-4 shrink-0 text-emerald-600" /> Fórmulas explicadas</div>
+                <div className="flex items-center gap-2"><Check className="size-4 shrink-0 text-emerald-600" /> Ejemplos en gramos</div>
+                <div className="flex items-center gap-2"><Check className="size-4 shrink-0 text-emerald-600" /> Herramienta relacionada</div>
+              </div>
+            </article>
+          </div>
         </div>
       </section>
 

@@ -41,7 +41,6 @@ import { applyAurumMaterialToModel, applyAurumGemToTarget, clearAurumGemFromTarg
 import { captureAurumGemTransitionState, createAurumGemTransition } from "../lib/aurum/gem-transition";
 import { inspectAurumMesh } from "../lib/aurum/mesh-preflight";
 import { classifyAurumSemanticObject } from "../lib/aurum/semantic-object-recognition";
-import { resolveAurumMeshLayerContext } from "../lib/aurum/mesh-layer-context";
 
 import { applyAurumInitialModelMaterials } from "../lib/aurum/model-materials";
 import { disposeAurumThicknessCacheForTarget } from "../lib/aurum/thickness-map";
@@ -164,7 +163,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
   const [isViewerFullscreen, setIsViewerFullscreen] = useState(false);
   const [lightingOpen, setLightingOpen] = useState(false);
   const [metalHdriId, setMetalHdriId] = useState("ijewelMetal");
-  const [gemHdriId, setGemHdriId] = useState("gemDiamondWhite1");
+  const [gemHdriId, setGemHdriId] = useState("gemUserHdr");
   const [ambienteId, setAmbienteId] = useState<string|null>(null);
   const ambienteIdRef = useRef<string|null>(null);
   ambienteIdRef.current = ambienteId;
@@ -981,9 +980,12 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       const nodo = visorRef.current;      if (!vivo || !nodo) return;
       let renderQuality = getAurumRenderQuality(renderQualityId);
       let measuredQualityId: AurumRenderQualityId = renderQualityId;
-      // Match the diamond laboratory drawing-buffer ceiling on every viewport.
-      // Dense CAD scenes retain their separate runtime-budget cap.
-      const getAurumViewportPixelRatio = () => Math.min(window.devicePixelRatio || 1, 1.75);
+      // Match the Public Viewer drawing-buffer ceiling on every viewport.
+      // Quality presets may lower this value, but never exceed 1.25 desktop / 1.0 mobile.
+      const getAurumViewportPixelRatio = () => {
+        const isCompactViewport = window.matchMedia("(max-width: 767px)").matches;
+        return Math.min(window.devicePixelRatio || 1, isCompactViewport ? 1 : 1.25);
+      };
       const { scene: escena, camera: camara, renderer, controls: controles } = createAurumWebGLViewer(THREE, nodo, {
         pixelRatio: getAurumViewportPixelRatio(),
         maxDistance: 100,
@@ -1225,45 +1227,69 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         );
       };
 
-      const aplicarAmbienteMetal = (key:string) => {
+      const aplicarAmbienteCombinado = (key:string) => {
         const preset = AURUM_AMBIENT_PRESETS[key];
         if (!preset?.metalKey || !(preset.metalKey in AURUM_HDRI_URLS)) {
-          console.warn("[AURUM][AMBIENT METAL] Preset sin HDR de metal válido:", key);
-          toast.error("Este ambiente no tiene un HDR válido para metales.");
+          console.warn("[AURUM][AMBIENT] Preset sin pareja HDR válida:", key);
+          toast.error("Este ambiente no tiene una pareja HDR válida de metales y gemas.");
           return;
         }
 
         const requestId = ++ambientSelectionRequestId;
+        let metalReady = false;
+        let gemReady = false;
+        let failed = false;
+        const finalize = () => {
+          if (failed || requestId !== ambientSelectionRequestId || !metalReady || !gemReady) return;
+          setMetalHdriId(preset.metalKey!);
+          setGemHdriId(key);
+          ambienteIdRef.current = key;
+          setAmbienteId(key);
+          console.info("[AURUM][AMBIENT][ACTIVE]", {
+            id: key,
+            metalKey: preset.metalKey,
+            metalUrl: AURUM_HDRI_URLS[preset.metalKey!],
+            gemUrl: preset.url,
+            metalReady,
+            gemReady,
+          });
+          toast.success(`${preset.name}: HDR de metales y gemas aplicado`);
+        };
+        const fail = (kind:"metales"|"gemas") => {
+          if (requestId !== ambientSelectionRequestId || failed) return;
+          failed = true;
+          console.error("[AURUM][AMBIENT][LOAD FAILED]", { id:key, kind, metalReady, gemReady });
+          toast.error(`No se pudo completar ${preset.name}: falló el HDR de ${kind}. Se restaurará el último ambiente confirmado.`);
+          const previousKey = ambienteIdRef.current;
+          if (previousKey && previousKey !== key && AURUM_AMBIENT_PRESETS[previousKey]) {
+            // A paired selection can finish one side before the other fails.
+            // Reapply the last fully confirmed pair so the UI and renderer agree.
+            aplicarAmbienteCombinado(previousKey);
+          }
+        };
+
         metalHdriOverride = preset.metalKey;
-        console.info("[AURUM][AMBIENT METAL][REQUEST]", {
+        gemHdriOverride = key;
+        console.info("[AURUM][AMBIENT][REQUEST]", {
           id:key,
           metalKey:preset.metalKey,
           metalUrl:AURUM_HDRI_URLS[preset.metalKey],
-          gemEnvironmentUntouched:true,
+          gemUrl:preset.url,
         });
         cargarHDRI(
           preset.metalKey,
           undefined,
           preset.metalRotation ?? 0,
           preset.metalIntensity ?? 1,
-          () => {
-            if (requestId !== ambientSelectionRequestId) return;
-            setMetalHdriId(preset.metalKey!);
-            ambienteIdRef.current = key;
-            setAmbienteId(key);
-            console.info("[AURUM][AMBIENT METAL][ACTIVE]", {
-              id:key,
-              metalKey:preset.metalKey,
-              metalUrl:AURUM_HDRI_URLS[preset.metalKey!],
-              gemEnvironmentUntouched:true,
-            });
-            toast.success(`${preset.name}: HDR de metales aplicado; las gemas conservan su HDR independiente`);
-          },
-          () => {
-            if (requestId !== ambientSelectionRequestId) return;
-            console.error("[AURUM][AMBIENT METAL][LOAD FAILED]", { id:key, metalKey:preset.metalKey });
-            toast.error(`No se pudo cargar el HDR de metales para ${preset.name}. Se conserva el ambiente anterior.`);
-          }
+          () => { metalReady = true; finalize(); },
+          () => fail("metales")
+        );
+        cargarEntornoGema(
+          key,
+          preset.rotation,
+          preset.intensity,
+          () => { gemReady = true; finalize(); },
+          () => fail("gemas")
         );
       };
 
@@ -1312,9 +1338,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             // center diamond. Other gemstone families and melee diamonds keep
             // their existing material pipelines; ?aurumBvhTest=off disables it.
             targetFamilies: getBvhTestMode() === "off" ? [] : ["Diamante"],
-            // Every diamond in Gem 01–04, including melee stones, receives the diamond BVH path.
-            // Screen-space tiers still tune quality/energy for tiny stones; center-only is not a material eligibility rule.
-            diamondCenterOnly: false,
+            diamondCenterOnly: true,
             onError: (error) => console.warn("[AURUM][GEM BVH] Se conserva el shader anterior para esta malla:", error),
           });
           if (!vivo || requestedEnvironmentUrl !== gemEnvironmentUrl) {
@@ -1597,7 +1621,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           ? THREE.NoToneMapping
           : THREE.ACESFilmicToneMapping;
       renderer.toneMapping = toneModeOverride;
-      renderer.toneMappingExposure = 1.0;
+      renderer.toneMappingExposure = PUBLIC_VIEWER_PRESENTATION_MODE ? 1.0 : photoInicial.exposure;
       const toneMappingLabel = (value: number) => value === THREE.ACESFilmicToneMapping
         ? "ACESFilmic"
         : value === THREE.AgXToneMapping
@@ -1624,14 +1648,15 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
       }
       const ambientInicial = AURUM_AMBIENT_PRESETS.predeterminado;
       let initialMetalReady = false;
+      let initialGemReady = false;
       const confirmarAmbienteInicial = () => {
-        if (!initialMetalReady) return;
+        if (!initialMetalReady || !initialGemReady) return;
         ambienteIdRef.current = "predeterminado";
         setAmbienteId("predeterminado");
-        console.info("[AURUM][AMBIENT METAL][INITIAL ACTIVE]", {
+        console.info("[AURUM][AMBIENT][INITIAL ACTIVE]", {
           id:"predeterminado",
           metalKey:ambientInicial.metalKey,
-          gemEnvironmentUntouched:true,
+          gemUrl:ambientInicial.url,
         });
       };
       cargarHDRI(
@@ -1643,12 +1668,12 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         () => toast.error("No se pudo cargar el HDR inicial de metales.")
       );
       const presetInicial = PUBLIC_VIEWER_PRESENTATION_MODE ? null : sceneAdapter.apply("ijewelReference");
-      // Gem HDR is initialized independently; the Ambientes selector never controls it.
+      // The initial selected UI preset is confirmed only after both HDR maps load.
       cargarEntornoGema(
-        "gemDiamondWhite1",
-        0,
-        1,
-        () => console.info("[AURUM][GEM HDR][INITIAL ACTIVE]", { key:"gemDiamondWhite1", rotation:0, intensityScale:1 }),
+        PUBLIC_VIEWER_PRESENTATION_MODE ? "ijewelGem" : "predeterminado",
+        PUBLIC_VIEWER_PRESENTATION_MODE ? 0 : ambientInicial.rotation,
+        PUBLIC_VIEWER_PRESENTATION_MODE ? 1 : ambientInicial.intensity,
+        () => { initialGemReady = true; confirmarAmbienteInicial(); },
         () => toast.error("No se pudo cargar el HDR inicial de gemas.")
       );
       Object.assign(postRuntimeConfig, {
@@ -2418,73 +2443,52 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         // dimensions, color, or a metal/prong mesh.
         const initialDiamond=GEMAS.find((gem:any)=>gem.id==="diamante_natural");
         if(initialDiamond){
-          const gemLayers=new Map<string,{target:any;gemId:string;layerName:string;layerIndex:number|null;layerId:string|null}>();
+          const gemLayers=new Map<string,{target:any;gemId:string}>();
           const savedGemAssignments=interno.userData?.aurumGemLayerAssignments??{};
-          let classifiedGemMeshes=0;
-          let overriddenGemMeshes=0;
           interno.traverse((mesh:any)=>{
             if(!mesh?.isMesh||mesh.userData?.aurumInternalInclusion)return;
-            // Share the ancestry + Rhino layer-manifest resolver with the material picker and CAD tree.
-            const context=resolveAurumMeshLayerContext(mesh,interno);
-            const layerName=String(context.layerName??"").trim();
-            const layerIndex=Number.isInteger(context.layerIndex)?context.layerIndex:null;
-            const layerId=context.layerId==null?null:String(context.layerId).trim();
-            const manualOverride=getAurumLayerCategoryOverride(interno.userData?.aurumLayerCategoryOverrides,{layerId,layerIndex,layerName});
-            const category=manualOverride??context.category;
-            if(category!=="gema")return;
-            classifiedGemMeshes++;
-            if(manualOverride==="gema")overriddenGemMeshes++;
+            const meta=mesh.userData?.aurumRhino??{};
+            if(String(meta.categoria??"").toLowerCase()!=="gema")return;
+            const layerName=String(meta.capa??meta.layerName??"").trim();
+            const layerKey=String(meta.layerKey??layerName??mesh.uuid).trim().toLocaleLowerCase();
+            const layerIndex=meta.indice??meta.layerIndex??null;
+            const layerId=String(meta.rhinoLayerId??meta.layerId??"").trim();
             const nameKey=layerName?"rhino-layer:"+encodeURIComponent(layerName.toLocaleLowerCase()):"";
             const indexKey=layerIndex!=null?"rhino-index:"+String(layerIndex):"";
             const idKey=layerId?"rhino-id:"+layerId:"";
-            // Rhino layer IDs can be duplicated across Gem 01–04 in imported files. Group by the explicit layer name first so every CAD gem layer receives its own initial material assignment.
-            const layerKey=nameKey||indexKey||idKey||context.layerKey||("mesh:"+mesh.uuid);
-            const ownMeta=mesh.userData?.aurumRhino??{};
-            const isDefaultWhiteDiamondLayer=/^gem\s*0*[1-4]$/i.test(layerName);
-            // Gem 01–04 always start with the approved Diamante blanco 1 profile.
-            // Ignore stale embedded/saved IDs for these layers; they came from
-            // previous catalog generations and must not override the current default.
-            // For other named layers, match by exact name only. Use index/ID only
-            // when no layer name exists, preventing shared Rhino IDs from cross-matching.
-            const savedAssignment=isDefaultWhiteDiamondLayer
-              ? undefined
-              : layerName
-                ? (nameKey?savedGemAssignments[nameKey]:undefined)
-                  ??Object.values(savedGemAssignments).find((assignment:any)=>
-                    String(assignment?.layerName??"").trim().toLocaleLowerCase()===layerName.toLocaleLowerCase()
-                  )
-                : layerIndex!=null
-                  ? (indexKey?savedGemAssignments[indexKey]:undefined)
-                    ??Object.values(savedGemAssignments).find((assignment:any)=>
-                      assignment?.layerIndex!=null&&String(assignment.layerIndex)===String(layerIndex)
-                    )
-                  : layerId
-                    ? savedGemAssignments[idKey]
-                    : undefined;
+            const savedAssignment=savedGemAssignments[layerKey]
+              ??(nameKey?savedGemAssignments[nameKey]:undefined)
+              ??(indexKey?savedGemAssignments[indexKey]:undefined)
+              ??(idKey?savedGemAssignments[idKey]:undefined)
+              ??Object.values(savedGemAssignments).find((assignment:any)=>
+                (layerName&&String(assignment?.layerName??"").trim().toLocaleLowerCase()===layerName.toLocaleLowerCase())
+                ||(layerIndex!=null&&assignment?.layerIndex!=null&&String(assignment.layerIndex)===String(layerIndex))
+                ||(layerId&&String(assignment?.layerId??"").trim()===layerId)
+              );
             const activeGemId=String(mesh.userData?.aurumActiveGemId??"").trim();
             const pendingGemId=String(mesh.userData?.aurumPendingInitialGemId??mesh.userData?.aurumInitialLayerGemId??"").trim();
-            const inheritedGemId=String(context.metadata?.gemId??context.source?.gemId??context.instance?.gemId??"").trim();
-            const resolvedGemId=isDefaultWhiteDiamondLayer
-              ? initialDiamond.id
-              : String(savedAssignment?.gemId??pendingGemId??activeGemId??ownMeta.gemId??inheritedGemId??initialDiamond.id);
-            if(!gemLayers.has(layerKey))gemLayers.set(layerKey,{target:mesh,gemId:resolvedGemId,layerName,layerIndex,layerId});
+            const resolvedGemId=String(savedAssignment?.gemId??pendingGemId??activeGemId??meta.gemId??initialDiamond.id);
+            const current=gemLayers.get(layerKey);
+            if(current)return;
+            gemLayers.set(layerKey,{target:mesh,gemId:resolvedGemId});
           });
           let initialDiamondMeshes=0;
           let assignedLayers=0;
-          let failedLayers=0;
-          const assignedLayerNames:string[]=[];
-          gemLayers.forEach(({target,gemId,layerName,layerIndex,layerId})=>{
+          gemLayers.forEach(({target,gemId})=>{
             const selectedGem=GEMAS.find((gem:any)=>gem.id===gemId)||initialDiamond;
             if(aplicarGema(selectedGem,target,false,false)){
               assignedLayers++;
-              assignedLayerNames.push(layerName||"sin-nombre");
               if(selectedGem.id===initialDiamond.id)initialDiamondMeshes++;
-            }else{
-              failedLayers++;
-              console.error("[AURUM][GEM INITIAL APPLICATION FAILED]",{targetName:target?.name??null,layerName,layerIndex,layerId,requestedGemId:selectedGem.id});
             }
           });
-          console.info("[AURUM][GEM INITIAL]",{defaultGemId:initialDiamond.id,classifiedGemMeshes,assignedLayers,assignedLayerNames,defaultDiamondLayers:initialDiamondMeshes,failedLayers,manualOverrideGemMeshes:overriddenGemMeshes,resolver:"ancestry-and-rhino-layer-manifest"});
+          if(assignedLayers>0){
+            console.info("[AURUM][GEM INITIAL]",{
+              defaultGemId:initialDiamond.id,
+              assignedLayers,
+              defaultDiamondLayers:initialDiamondMeshes,
+              reason:"official-gem-application-after-layer-classification",
+            });
+          }
         }
         // Register the loaded model's diamond meshes before BVH setup. The micro
         // pipeline was created with an empty scene, so its initial refresh cannot
@@ -2948,13 +2952,14 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             let ignoredMeshes=0;
             modelo.traverse((x:any)=>{
               if(!x?.isMesh||x.userData?.aurumInternalInclusion){ignoredMeshes++;return;}
-              const context=resolveAurumMeshLayerContext(x,modelo);
               const meta=x.userData?.aurumRhino??{};
               const attrs=x.userData?.attributes??{};
+              const source=x.userData?.aurumRhinoSource??{};
+              const instance=x.userData?.aurumRhinoInstanceSource??{};
               const manualOverride=getAurumLayerCategoryOverride(modelo.userData?.aurumLayerCategoryOverrides,{
-                layerId:context.layerId,
-                layerIndex:context.layerIndex,
-                layerName:context.layerName,
+                layerId:instance.layerId??source.layerId??attrs.layerId??attrs.LayerId??meta.rhinoLayerId,
+                layerIndex:instance.layerIndex??source.layerIndex??attrs.layerIndex??attrs.LayerIndex??meta.layerIndex,
+                layerName:instance.layerName??source.layerName??attrs.layerName??attrs.LayerName??meta.capa,
               });
               if(manualOverride){
                 x.userData={...(x.userData??{}),aurumRhino:{...meta,categoria:manualOverride,aurumManualCategoryAssignment:true,aurumManualGemAssignment:manualOverride==="gema"}};
@@ -2963,10 +2968,10 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                 else ignoredMeshes++;
                 return;
               }
-              const name=[x.name,context.layerName].filter(Boolean).join(" ");
+              const name=[x.name,meta.capa,attrs.layerName,attrs.LayerName].filter(Boolean).join(" ");
               const mats=Array.isArray(x.material)?x.material:[x.material];
-              const semantic=classifyAurumSemanticObject(x,context.layer);
-              const sourceCategory=context.category;
+              const semantic=classifyAurumSemanticObject(x,null);
+              const sourceCategory=String(meta.categoria??"").toLowerCase();
               const hasExplicitGemSignal=sourceCategory==="gema"
                 || semantic.classification==="gem"&&semantic.confidence>=.7
                 || Boolean(x.userData?.aurumActiveGemId)
@@ -3019,18 +3024,32 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           let gemMeshes=0;
           modelo.traverse((x:any)=>{
             if(!x.isMesh||x.userData?.aurumInternalInclusion)return;
-            const context=resolveAurumMeshLayerContext(x,modelo);
             const meta=x.userData?.aurumRhino??{};
-            const layerName=context.layerName||String(x.name??"").trim();
+            const attrs=x.userData?.attributes??{};
+            const layerName=String(meta.capa??attrs.layerName??attrs.LayerName??x.name??"").trim();
+            // Prefer an explicit gem category. If metadata is absent or only
+            // says "otro", recover the category from a clearly named source layer.
+            // Never infer gem identity from color or recolor the whole model.
+            const source=x.userData?.aurumRhinoSource??{};
+            const instance=x.userData?.aurumRhinoInstanceSource??{};
             const manualOverride=getAurumLayerCategoryOverride(modelo.userData?.aurumLayerCategoryOverrides,{
-              layerId:context.layerId,
-              layerIndex:context.layerIndex,
-              layerName,
+              layerId:instance.layerId??source.layerId??attrs.layerId??attrs.LayerId??meta.rhinoLayerId,
+              layerIndex:instance.layerIndex??source.layerIndex??attrs.layerIndex??attrs.LayerIndex??meta.layerIndex,
+              layerName:instance.layerName??source.layerName??attrs.layerName??attrs.LayerName??meta.capa,
             });
-            const category=manualOverride??context.category;
+            const sourceCategory=String(meta.categoria??"").toLowerCase();
+            const layerCategory=clasificarCapa(layerName,colorRhinoHex(meta.colorCapa));
+            const semantic=classifyAurumSemanticObject(x,null);
+            const semanticCategory=semantic.confidence>=.7
+              ? semantic.classification==="gem" ? "gema" : semantic.classification==="metal" ? "metal" : null
+              : null;
+            const category=manualOverride ?? (sourceCategory==="gema" || layerCategory==="gema" || semanticCategory==="gema" ? "gema" :
+              sourceCategory==="metal" || layerCategory==="metal" || semanticCategory==="metal" ? "metal" :
+              sourceCategory || "otro");
             if(category!=="gema")return;
             gemMeshes++;
-            const key=context.layerKey??("mesh:"+x.uuid);
+            const layer=layerName.toLocaleLowerCase();
+            const key=layer||String(meta.layerKey??x.uuid);
             // applyAurumGemToTarget resolves and updates every mesh in a layer.
             // Deduplicate here so a CAD layer with many tessellated meshes is
             // assigned once instead of repeating the same full-layer operation.
@@ -3139,7 +3158,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           );
         },
         ambiente:(key:string)=>{
-          aplicarAmbienteMetal(key);
+          aplicarAmbienteCombinado(key);
         },
         influenciaMetalAmbiente:(percent:number)=>{
           const value=Math.max(0,Math.min(100,Number.isFinite(percent)?percent:45));
@@ -4479,13 +4498,12 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
           // save/accumulate/mask-composite chain is fully available.
           gemMaskPass.enabled=getAurumPostControls().gemMaskEnabled;
           const hasCenterDiamond = Boolean(gemMaskPass?.hasDiamondMeshes);
-          // Optical Lab 01 renders the diamond material directly. Do not run
-          // AURUM-specific diamond TAA/SSAA/FXAA overlays over its output:
-          // they alter the laboratory shader's appearance and can reintroduce
-          // edge shimmer. Generic scene post-processing remains independent.
-          const diamondTaaOverlayRequested = false;
-          const diamondFxaaOverlayRequested = false;
-          const diamondOverlayRequested = false;
+          const diamondTaaOverlayRequested = Boolean(
+            gemMaskPass?.enabled && hasCenterDiamond
+            && idleTaaPass?.enabled && diamondTaaSavePass?.enabled && diamondTaaCompositePass?.enabled
+          );
+          const diamondFxaaOverlayRequested = Boolean(gemMaskPass?.enabled && fxaaPass?.enabled && hasCenterDiamond);
+          const diamondOverlayRequested = Boolean(gemMaskPass?.enabled && diamondSupersamplePass?.enabled && diamondSupersampleCompositePass?.enabled);
           const activeToneAuditPath = diamondTaaOverlayRequested
             ? (diamondFxaaOverlayRequested ? "composer+diamond-taa+diamond-fxaa" : "composer+diamond-taa")
             : diamondOverlayRequested
@@ -5752,7 +5770,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                     <span className="mt-2 block text-[10px] leading-tight">{preset.name}</span>
                   </button>)}
                 </div>
-                <p className="mt-2 px-1 text-[10px] leading-relaxed text-[#77756f]">Controla exclusivamente el HDR de metales. No modifica el HDR ni la óptica de los diamantes y demás gemas.</p>
+                <p className="mt-2 px-1 text-[10px] leading-relaxed text-[#77756f]">Ambientes combinados: HDR de metales y gemas independientes de la escena y de los materiales.</p>
               </div>}
               {uxSection==="hdrMetales"&&<div className="space-y-4 pb-5">
                 <div className="rounded-xl border border-black/[.07] bg-white p-3">

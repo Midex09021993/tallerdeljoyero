@@ -1,4 +1,4 @@
-import { resolveAurumMeshLayerContext } from "./mesh-layer-context";
+import { resolveAurumLayerKey } from "./layer-identity";
 
 export type AurumModelPart = {
   id: string;
@@ -15,6 +15,32 @@ export type AurumModelPart = {
   /** Stable Rhino source identity; id remains the Three.js UUID for selection compatibility. */
   sourceId?: string;
 };
+
+function explicitLayerCategory(name:string): "metal" | "gema" | "otro" | undefined {
+  const n=String(name||"").trim().toLowerCase();
+  if (/(metal|oro|gold|plata|silver|platino|platinum|met[aá]lico|^head[s]?\b)/.test(n)) return "metal";
+  if (/(gema|gem|piedra|stone|diamante|diamond|zafiro|sapphire|rubi|rub[ií]|ruby|esmeralda|emerald|moissanita|moissanite|citrino|amatista|topacio)/.test(n)) return "gema";
+  return undefined;
+}
+
+function matrixFamilyCategory(layer:any,index:number,colorCapa:string|undefined,clasificarCapa:(capa:string,colorCapa?:string)=>"metal"|"gema"|"otro"):"metal"|"gema"|"otro" {
+  const name=String(layer?.name??"").trim();
+
+  // Rhino/iJewel-compatible rule: an explicit layer name is authoritative.
+  // The layer itself defines which material family it represents. Positional
+  // MatrixGold conventions are only a fallback for files whose layers carry
+  // no recognizable material name.
+  const explicit=explicitLayerCategory(name);
+  if(explicit) return explicit;
+
+  const classified=clasificarCapa(name,colorCapa);
+  if(classified!=="otro") return classified;
+
+  // Never infer a material family from traversal/layer position alone.
+  // If name and color are unavailable, keep the part neutral instead of
+  // assigning the wrong metal/gem to an unrelated layer.
+  return "otro";
+}
 
 function matrixLayerSlot(layer:any, index:number, category:"metal"|"gema"|"otro", colorCapa?:string):number|undefined {
   if (category==="otro" || index<0) return undefined;
@@ -34,32 +60,50 @@ export function getAurumModelParts(
   clasificarCapa: (capa: string, colorCapa?: string) => "metal" | "gema" | "otro"
 ): AurumModelPart[] {
   const result: AurumModelPart[] = [];
+  const rootData = object?.userData ?? {};
+  // Use the same source-layer manifest in both classification and post-GLB
+  // hydration. This is the exact table captured before GLTFExporter runs.
+  const sourceLayerManifest = Array.isArray(rootData.aurumRhinoSourceLayers) && rootData.aurumRhinoSourceLayers.length
+    ? rootData.aurumRhinoSourceLayers
+    : Array.isArray(rootData.layers) ? rootData.layers
+    : Array.isArray(rootData.rhinoLayers) ? rootData.rhinoLayers : [];
+  const layers = sourceLayerManifest;
+
   object.traverse((x: any) => {
     if (x === object) return;
     const isMesh = !!x.isMesh;
     const hasChildren = Array.isArray(x.children) && x.children.length > 0;
     if (!isMesh && !hasChildren) return;
 
-    const context=resolveAurumMeshLayerContext(x,object);
-    const attrs=x.userData?.attributes||{};
-    const sourceMeta=context.source;
-    const sourceId=sourceMeta["objectId"]??attrs.id??attrs.Id??x.userData?.objectId??x.userData?.ObjectId;
-    const sourceName=sourceMeta["objectName"]??attrs.name??attrs.Name??x.userData?.objectName??x.userData?.ObjectName;
-    const nombre=typeof x.name==="string"&&x.name.trim()
+    const attrs = x.userData?.attributes || {};
+    const meta = x.userData?.aurumRhino;
+    const sourceMeta = x.userData?.aurumRhinoSource ?? {};
+    const sourceId = sourceMeta.objectId ?? attrs.id ?? attrs.Id ?? x.userData?.objectId ?? x.userData?.ObjectId;
+    const sourceName = sourceMeta.objectName ?? attrs.name ?? attrs.Name ?? x.userData?.objectName ?? x.userData?.ObjectName;
+    const nombre = typeof x.name === "string" && x.name.trim()
       ? x.name.trim()
-      : (typeof sourceName==="string"&&sourceName.trim()
+      : (typeof sourceName === "string" && sourceName.trim()
         ? sourceName.trim()
-        : (sourceId?`${isMesh ? "Objeto" : "Grupo"} ${String(sourceId).slice(0,8)}` : (isMesh?"Malla":"Componente")));
-    const layerIndex=context.layerIndex??-1;
-    const capa=context.layerName||undefined;
-    const colorCapa=colorRhinoHex(context.layerColor)||undefined;
-    const layerId=context.layerId;
-    const categoria=context.category;
-    const matrixSlot=Number.isFinite(Number(context.metadata?.["matrixSlot"]))
-      ? Number(context.metadata["matrixSlot"])
-      : (layerIndex>=0&&context.layer?matrixLayerSlot(context.layer,layerIndex,categoria,colorCapa):undefined);
-    const layerKey=context.layerKey;
+        : (sourceId ? `${isMesh ? "Objeto" : "Grupo"} ${String(sourceId).slice(0,8)}` : (isMesh ? "Malla" : "Componente")));
+    // Follow the same source-of-truth order as the GLB hydrator: preserved
+    // source identity first, then importer attributes, then cached metadata.
+    const indexCandidates=[sourceMeta.layerIndex,attrs.layerIndex,attrs.LayerIndex,x.userData?.layerIndex,x.userData?.LayerIndex,meta?.layerIndex];
+    const layerIndex=indexCandidates.map((value:any)=>value===null||value===undefined||value===""?-1:Number(value))
+      .find((value:number)=>Number.isInteger(value)&&value>=0)??-1;
+    const layer = layerIndex >= 0 ? layers[layerIndex] : undefined;
+    const capa = String(layer?.name||layer?.Name||sourceMeta.layerName||attrs.layerName||attrs.LayerName||x.userData?.layerName||meta?.capa||"").trim()||undefined;
+    const colorCapa = colorRhinoHex(layer?.color??layer?.Color)||colorRhinoHex(sourceMeta.layerColor)||colorRhinoHex(attrs.layerColor??attrs.LayerColor)||meta?.colorCapa;
+    const layerId = layer?.id ?? layer?.Id ?? sourceMeta.layerId ?? attrs.layerId ?? attrs.LayerId ?? x.userData?.layerId ?? x.userData?.LayerId ?? meta?.rhinoLayerId;
+    const hasLayerClassification=Boolean(layer||capa||colorCapa);
+    const categoria = hasLayerClassification
+      ? (layer ? matrixFamilyCategory(layer,layerIndex,colorCapa,clasificarCapa) : clasificarCapa(capa||"",colorCapa))
+      : (meta?.categoria==="metal"||meta?.categoria==="gema" ? meta.categoria : "otro");
     const nivel = Math.min(2, Math.max(0, x.parent && x.parent !== object ? 1 : 0));
+    const matrixSlot = Number.isFinite(Number(meta?.matrixSlot))
+      ? Number(meta.matrixSlot)
+      : (layerIndex>=0 && layer ? matrixLayerSlot(layer,layerIndex,categoria,colorCapa) : undefined);
+
+    const layerKey=resolveAurumLayerKey({layerId,layerIndex,layerName:capa,layerColor:colorCapa,category:categoria,existingKey:meta?.layerKey});
     result.push({ id: x.uuid, nombre, tipo: isMesh ? "malla" : "grupo", nivel, ...(sourceId != null ? { sourceId: String(sourceId) } : {}), ...(capa ? { capa } : {}), ...(colorCapa ? { colorCapa } : {}), categoria, layerIndex, ...(layerId != null ? { layerId } : {}), ...(layerKey ? { layerKey } : {}), ...(matrixSlot !== undefined ? { matrixSlot } : {}) });
   });
 
