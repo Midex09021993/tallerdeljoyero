@@ -1053,7 +1053,7 @@ function InicioPublico() {
 
       <TalleresDeLaComunidad />
 
-      <footer id="contacto" className="border-t border-[#263743] bg-[#17232d] text-slate-300">
+      <footer id="contacto" className="border-t border-[#8c7446] bg-[#17232d] text-slate-300">
         <div className="mx-auto max-w-[1440px] px-5 py-9 sm:px-8 sm:py-10 lg:px-12">
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr] lg:gap-12">
             <div>
