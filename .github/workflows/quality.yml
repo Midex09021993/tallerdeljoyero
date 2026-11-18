@@ -44,6 +44,7 @@ jobs:
       - name: AURUM viewer lifecycle teardown tests
         run: bun test scripts/aurum-viewer-lifecycle.test.ts
       - name: AURUM gem application and targeted BVH tests
+        if: always()
         run: bun test scripts/aurum-gem-application.test.ts
       - name: AURUM diamond micro pipeline analyzer tests
         run: bun test scripts/aurum-diamond-micro-pipeline.test.ts
