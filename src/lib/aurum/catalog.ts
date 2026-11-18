@@ -228,20 +228,8 @@ export const MATERIALES: MaterialConfig[] = [
 { id:"cera_microfusion_roja", grupo:"Especiales", nombre:"Cera roja · Microfusión", color:0xa20d1a, metalness:0, roughness:.48, envMapIntensity:.42, clearcoat:.06, anisotropy:0 },
 ];
 
-export const ESCENARIOS: { id: EscenarioId; nombre: string; clase: string; descripcion:string; activo:boolean; numero?:string; horneado?: "A"|"B" }[] = [
-  { id:"ijewel01", activo:true, numero:"01", horneado:"A", nombre:"AURUM · Escena 01", descripcion:"Perfil de referencia 01 · perfil de horneado A · rotación de entorno 0.0° · suelo blanco", clase:"bg-[radial-gradient(ellipse_at_50%_68%,#ffffff_0%,#e7e7e4_42%,#b8b8b5_100%)]" },
-  { id:"ijewel02", activo:true, numero:"02", horneado:"A", nombre:"AURUM · Escena 02", descripcion:"Perfil de referencia 02 · perfil de horneado A · rotación de entorno 0.0° · suelo blanco", clase:"bg-[radial-gradient(ellipse_at_50%_68%,#ffffff_0%,#e7e7e4_42%,#b8b8b5_100%)]" },
-  { id:"ijewel03", activo:true, numero:"03", horneado:"A", nombre:"AURUM · Escena 03", descripcion:"Perfil de referencia 03 · perfil de horneado A · rotación de entorno 0.0° · suelo blanco", clase:"bg-[radial-gradient(ellipse_at_50%_68%,#ffffff_0%,#e7e7e4_42%,#b8b8b5_100%)]" },
-  { id:"ijewel04", activo:true, numero:"04", horneado:"A", nombre:"AURUM · Escena 04", descripcion:"Perfil de referencia 04 · perfil de horneado A · rotación de entorno 92.6° · suelo blanco", clase:"bg-[radial-gradient(ellipse_at_30%_65%,#ffffff_0%,#d9e0e7_36%,#7d8994_100%)]" },
-  { id:"ijewel05", activo:true, numero:"05", horneado:"A", nombre:"AURUM · Escena 05", descripcion:"Perfil de referencia 05 · perfil de horneado A · rotación de entorno 92.6° · suelo blanco", clase:"bg-[radial-gradient(ellipse_at_30%_65%,#ffffff_0%,#d9e0e7_36%,#7d8994_100%)]" },
-  { id:"ijewel06", activo:true, numero:"06", horneado:"A", nombre:"AURUM · Escena 06", descripcion:"Perfil de referencia 06 · perfil de horneado A · rotación de entorno 92.6° · suelo blanco", clase:"bg-[radial-gradient(ellipse_at_30%_65%,#ffffff_0%,#d9e0e7_36%,#7d8994_100%)]" },
-  { id:"ijewel07", activo:true, numero:"07", horneado:"A", nombre:"AURUM · Escena 07", descripcion:"Perfil de referencia 07 · perfil de horneado A · rotación de entorno 123.4° · suelo blanco", clase:"bg-[radial-gradient(ellipse_at_70%_65%,#ffffff_0%,#d6d2c9_36%,#6d6961_100%)]" },
-  { id:"ijewel08", activo:true, numero:"08", horneado:"A", nombre:"AURUM · Escena 08", descripcion:"Perfil de referencia 08 · perfil de horneado A · rotación de entorno 123.4° · suelo blanco", clase:"bg-[radial-gradient(ellipse_at_70%_65%,#ffffff_0%,#d6d2c9_36%,#6d6961_100%)]" },
-  { id:"ijewel09", activo:true, numero:"09", horneado:"A", nombre:"AURUM · Escena 09", descripcion:"Perfil de referencia 09 · perfil de horneado A · rotación de entorno 123.4° · suelo blanco", clase:"bg-[radial-gradient(ellipse_at_70%_65%,#ffffff_0%,#d6d2c9_36%,#6d6961_100%)]" },
-  { id:"ijewel10", activo:true, numero:"10", horneado:"A", nombre:"AURUM · Escena 10", descripcion:"Perfil de referencia 10 · perfil de horneado A · rotación de entorno 123.4° · suelo blanco", clase:"bg-[radial-gradient(ellipse_at_70%_65%,#ffffff_0%,#d6d2c9_36%,#6d6961_100%)]" },
-  { id:"ijewel11", activo:true, numero:"11", horneado:"B", nombre:"AURUM · Escena 11", descripcion:"Perfil de referencia 11 · perfil de horneado B · rotación de entorno 123.4° · suelo rojo", clase:"bg-[radial-gradient(ellipse_at_50%_68%,#AE3737_0%,#AE3737bb_34%,#343434_100%)]" },
-  { id:"ijewel12", activo:true, numero:"12", horneado:"B", nombre:"AURUM · Escena 12", descripcion:"Perfil de referencia 12 · perfil de horneado B · rotación de entorno 123.4° · suelo azul", clase:"bg-[radial-gradient(ellipse_at_50%_68%,#516D8E_0%,#516D8Ebb_34%,#343434_100%)]" },
-];
+export const ESCENARIOS: { id: EscenarioId; nombre: string; clase: string; descripcion:string; activo:boolean; numero?:string; horneado?: "A"|"B" }[] = [];
+// Colección de escenas vacía intencionalmente: se incorporarán los nuevos VJSON del usuario.
 export const VISTAS: { id: VistaId; nombre: string }[] = [
   { id:"perspectiva", nombre:"Perspectiva" }, { id:"frontal", nombre:"Frontal" }, { id:"superior", nombre:"Superior" }, { id:"lateral", nombre:"Lateral" },
 ];
