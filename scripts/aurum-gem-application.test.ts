@@ -527,6 +527,13 @@ test("Aurum Render enables LIVE gemstone quality and reapplies it after catalog 
 });
 
 
+test("Aurum Render assigns initial gems by explicit Gem 01–04 layer identity and enables BVH for every diamond size", () => {
+  const source = readFileSync("src/components/AurumRender.tsx", "utf8");
+  expect(source).toContain("const layerKey=nameKey||indexKey||idKey||context.layerKey");
+  expect(source).toContain("diamondCenterOnly: false");
+  expect(source).toContain("Every diamond in Gem 01–04, including melee stones");
+});
+
 test("loading a CAD model refreshes the screen-space diamond analyzer before Gem Mask cache", () => {
   const source = readFileSync("src/components/AurumRender.tsx", "utf8");
   const addModel = source.indexOf("escena.add(modelo);");
