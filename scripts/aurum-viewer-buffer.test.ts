@@ -579,7 +579,7 @@ test("Aurum exposes diamond-only AA and SSAA as independent modules", () => {
   expect(postSource).toContain("float aurumCatmullRomWeight(float x){");
   expect(postSource).toContain("reconstructed=clamp(reconstructed,minimumSample,maximumSample);");
   expect(postSource).toContain("if(abs(weight)>0.000001){");
-  expect(postSource).toContain("if(totalWeight<0.00001) discard;");
+  expect(postSource).toContain("if(coveredSamples<0.5 || totalWeight<0.00001) discard;");
   expect(postSource).toContain("mesh.layers.enable(gemMaskLayer)");
 });
 
