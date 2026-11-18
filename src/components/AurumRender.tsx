@@ -5615,7 +5615,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
             <div className="mb-3">
               <div className="text-[10px] font-semibold uppercase tracking-[.16em] text-[#92743b]">AURUM RENDER · ÓPTICA</div>
               <h2 className="mt-1 text-base font-semibold text-[#292824]">Control del diamante</h2>
-              <p className="mt-1 text-[10px] leading-relaxed text-[#77756f]">Controla el BVH óptico del diamante central y los rubíes compatibles. No modifica metales ni el ambiente.</p>
+              <p className="mt-1 text-[10px] leading-relaxed text-[#77756f]">Controla el BVH óptico de diamantes de todos los tamaños y rubíes compatibles. No modifica metales ni el ambiente.</p>
             </div>
             <section className="mb-3 rounded-xl border border-[#e6e1d8] bg-white p-3">
               <div className="mb-2 flex items-center justify-between gap-2"><div><div className="text-xs font-semibold text-[#292824]">BVH óptico</div><p className="mt-0.5 text-[9px] text-[#77756f]">Sustituye el material físico en diamantes centrales y rubíes compatibles.</p></div>
