@@ -65,8 +65,8 @@ export const AURUM_GEM_HDRI_URLS:Record<string,string>={
 };
 export const getAurumGemHdriUrl=(key:string)=>AURUM_GEM_HDRI_URLS[key]??AURUM_GEM_HDRI_ASSET_URL;
 
-/** One coordinated studio preset. Gem illumination always uses the supplied
- * optical-lab EXR; only the metal environment varies independently. */
+/** Studio presets for the Ambientes panel control the metal HDR only.
+ * Gem illumination is selected independently through the HDR Gemas controls. */
 export const AURUM_AMBIENT_PRESETS:Record<string,{id:string;name:string;url:string;rotation:number;intensity:number;previewClass:string;metalKey?:string;metalRotation?:number;metalIntensity?:number}>={
   predeterminado:{
     id:"predeterminado",
