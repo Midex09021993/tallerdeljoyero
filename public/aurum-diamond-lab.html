@@ -1,4 +1,23 @@
-<!doctype html>
+<!doctype html>\n<!--
+Diamond Shader Lab algorithm adaptation (MIT License)
+Copyright (c) 2026 Ehsan Moradi
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+
+MuTracer is loaded as an external package under its MIT license:
+Copyright (c) 2022-present Yi Shen.
+-->
+
 <html lang="es">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -54,7 +73,7 @@ canvas{width:100%;height:420px;display:block;background:#f4f4f2}
 <div class="control"><label>Intensidad HDRI <output id="envOut">1.40</output></label><input id="env" type="range" min=".3" max="2.5" step=".05" value="1.4"></div>
 <div class="control"><label>Exposición <output id="expOut">1.00</output></label><input id="exp" type="range" min=".5" max="2" step=".05" value="1"></div>
 </section>
-<div class="notice"><strong>Importante:</strong> cada motor tiene un modelo óptico distinto. MuTracer convierte materiales Three.js a OpenPBR y no reproduce automáticamente el shader de dispersión de AURUM. La comparación evalúa calidad visual y comportamiento, no equivalencia física perfecta. Para una prueba válida, usa el GLB del mismo diamante central que estás evaluando en AURUM.</div>
+<div class="notice"><strong>Créditos:</strong> El trazador de facetas está adaptado de <a href="https://github.com/ehsanwwe/diamond-shader-lab" target="_blank" rel="noreferrer">Diamond Shader Lab</a> (MIT). MuTracer se carga desde <a href="https://github.com/pissang/mutracer" target="_blank" rel="noreferrer">su proyecto oficial</a> (MIT). <strong>Importante:</strong> cada motor tiene un modelo óptico distinto. MuTracer convierte materiales Three.js a OpenPBR y no reproduce automáticamente el shader de dispersión de AURUM. La comparación evalúa calidad visual y comportamiento, no equivalencia física perfecta. Para una prueba válida, usa el GLB del mismo diamante central que estás evaluando en AURUM.</div>
 </main>
 <script type="module">
 import * as THREE from "three";
