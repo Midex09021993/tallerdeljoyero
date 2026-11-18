@@ -2440,33 +2440,37 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
         // dimensions, color, or a metal/prong mesh.
         const initialDiamond=GEMAS.find((gem:any)=>gem.id==="diamante_natural");
         if(initialDiamond){
-          const gemLayers=new Map<string,{target:any;hasSavedAssignment:boolean}>();
+          const gemLayers=new Map<string,{target:any;gemId:string}>();
           interno.traverse((mesh:any)=>{
             if(!mesh?.isMesh||mesh.userData?.aurumInternalInclusion)return;
             const meta=mesh.userData?.aurumRhino??{};
             if(String(meta.categoria??"").toLowerCase()!=="gema")return;
             const layerKey=String(meta.layerKey??meta.capa??mesh.uuid).trim().toLocaleLowerCase();
+            const activeGemId=String(mesh.userData?.aurumActiveGemId??"").trim();
+            const pendingGemId=String(mesh.userData?.aurumPendingInitialGemId??mesh.userData?.aurumInitialLayerGemId??"").trim();
+            const resolvedGemId=activeGemId||pendingGemId||initialDiamond.id;
             const current=gemLayers.get(layerKey);
             if(current){
-              if(String(mesh.userData?.aurumActiveGemId??"").trim())current.hasSavedAssignment=true;
+              if(activeGemId&&GEMAS.some((gem:any)=>gem.id===activeGemId))current.gemId=activeGemId;
               return;
             }
-            gemLayers.set(layerKey,{
-              target:mesh,
-              hasSavedAssignment:Boolean(String(mesh.userData?.aurumActiveGemId??"").trim()),
-            });
+            gemLayers.set(layerKey,{target:mesh,gemId:resolvedGemId});
           });
           let initialDiamondMeshes=0;
-          gemLayers.forEach(({target,hasSavedAssignment})=>{
-            // A saved/materialized gem choice on any mesh protects the entire CAD layer.
-            if(hasSavedAssignment)return;
-            if(aplicarGema(initialDiamond,target,false,false))initialDiamondMeshes++;
+          let assignedLayers=0;
+          gemLayers.forEach(({target,gemId})=>{
+            const selectedGem=GEMAS.find((gem:any)=>gem.id===gemId)||initialDiamond;
+            if(aplicarGema(selectedGem,target,false,false)){
+              assignedLayers++;
+              if(selectedGem.id===initialDiamond.id)initialDiamondMeshes++;
+            }
           });
-          if(initialDiamondMeshes>0){
+          if(assignedLayers>0){
             console.info("[AURUM][GEM INITIAL]",{
-              gemId:initialDiamond.id,
-              assignedLayers:initialDiamondMeshes,
-              reason:"gem-layer-classified-after-initial-material-pass",
+              defaultGemId:initialDiamond.id,
+              assignedLayers,
+              defaultDiamondLayers:initialDiamondMeshes,
+              reason:"official-gem-application-after-layer-classification",
             });
           }
         }
@@ -2951,18 +2955,24 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               const name=[x.name,meta.capa,attrs.layerName,attrs.LayerName].filter(Boolean).join(" ");
               const mats=Array.isArray(x.material)?x.material:[x.material];
               const semantic=classifyAurumSemanticObject(x,null);
-              const hasExplicitGemSignal=semantic.classification==="gem"&&semantic.confidence>=.7
+              const sourceCategory=String(meta.categoria??"").toLowerCase();
+              const hasExplicitGemSignal=sourceCategory==="gema"
+                || semantic.classification==="gem"&&semantic.confidence>=.7
+                || Boolean(x.userData?.aurumActiveGemId)
                 || gemNamePattern.test(name)||mats.some((mat:any)=>{
                 const materialName=String(mat?.name??"");
                 const metalness=Number(mat?.metalness??0);
-                return Boolean(mat?.userData?.aurumDiamondShader)||
-                  Boolean(mat?.userData?.aurumGemPhysicalModel)||
-                  Boolean(mat?.userData?.aurumGemOpticalProfile)||
+                const materialData=mat?.userData??{};
+                return Boolean(materialData.aurumDiamondShader)||
+                  Boolean(materialData.aurumDiamondShaderMode)||
+                  Boolean(materialData.aurumGemPhysicalModel)||
+                  Boolean(materialData.aurumGemOpticalProfile)||
+                  Boolean(materialData.aurumOpticalProfile)||
+                  Boolean(materialData.aurumIJEWELActive)||
                   /diamond|gem|gema|diamante|emerald|ruby|sapphire|amethyst|stone|piedra/i.test(materialName)||
                   (metalness<.5&&Number(mat?.transmission??0)>.12);
               });
-              const sourceCategory=String(meta.categoria??"").toLowerCase();
-              if(hasExplicitGemSignal||(sourceCategory==="gema"&&mats.some((mat:any)=>Number(mat?.metalness??0)<.5))){
+              if(hasExplicitGemSignal){
                 protectedGemMeshes++;
                 if(sourceCategory!=="gema")x.userData={...x.userData,aurumRhino:{...meta,categoria:"gema"}};
                 return;
