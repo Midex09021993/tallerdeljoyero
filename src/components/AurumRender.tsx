@@ -5641,8 +5641,6 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
                   })}
                 </div>
                 </div>
-
-                </div>
               </div>}
               {uxSection==="escenas"&&<div className="space-y-4 pb-5">
                 <div className="mb-2 flex items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-[.14em] text-[#92743b]"><span>Escenas de estudio · {ESCENARIOS.length}</span><span className="font-normal tracking-normal text-[#858178]">12 perfiles</span></div>
