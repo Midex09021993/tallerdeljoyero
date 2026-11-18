@@ -223,6 +223,10 @@ export const applyAurumDynamicScintillation=(material:any,profile:AurumOpticalPr
       virtualFacetWeight:shader.uniforms.aurumDiamondMicroVirtualFacetWeight,
       baseVirtualFacetWeight:virtualFacetWeight,
       fireScale:shader.uniforms.aurumDiamondMicroFireScale,
+      // Small melee uses the source DiamondMaterial IOR (2.6) while the
+      // protected center retains its already-calibrated shader IOR.
+      ijewelRefractiveIndex:ijewelEnabled?shader.uniforms.aurumIJEWELRefractiveIndex:null,
+      baseIjewelRefractiveIndex:ijewelEnabled?Number(shader.uniforms.aurumIJEWELRefractiveIndex.value):null,
     }};
     shader.uniforms.aurumGemEnvironmentIntensity={value:Math.max(.55,Math.min(2.35,Number(material.envMapIntensity??1)))};
     material.userData={...(material.userData??{}),aurumGemEnvironmentUniforms:shader.uniforms.aurumGemEnvironmentIntensity};
