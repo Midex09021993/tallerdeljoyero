@@ -17,7 +17,7 @@ type RecordEntry = {
   baseEnvironmentIntensity: number;
   /** Per-mesh yaw compensation relative to the center diamond reference. */
   environmentRotationOffsetRadians: number;
-  environmentRotationAxisWorld: [number, number, number] | null;
+  environmentRotationCorrection: [number, number, number, number] | null;
   setQuality: (quality: "interactive" | "high" | "final") => void;
   readonly tier: "micro" | "small" | "brilliant";
   setTier: (tier: "micro" | "small" | "brilliant") => void;
@@ -27,25 +27,23 @@ type RecordEntry = {
 export type AurumDiamondEnvironmentRotationEuler = { x: number; y: number; z: number };
 
 /**
- * Compose the global YXZ environment rotation with a per-stone correction
- * around the reference table normal. The shader applies this matrix to WORLD
- * ray directions, so the correction axis must also be expressed in world space.
+ * Compose the global YXZ environment rotation with a complete optical-frame
+ * correction. The shader applies this matrix to WORLD ray directions.
  */
 export function getAurumDiamondEnvironmentRotationEuler(
   baseRotationRadians: number,
-  correctionAxisWorld: THREE.Vector3 | readonly [number, number, number] | null = null,
-  correctionRadians = 0,
+  correctionQuaternion: THREE.Quaternion | readonly [number, number, number, number] | null = null,
 ): AurumDiamondEnvironmentRotationEuler {
   const base = new THREE.Matrix4().makeRotationFromEuler(
     new THREE.Euler(0, Number.isFinite(baseRotationRadians) ? baseRotationRadians : 0, 0, "YXZ"),
   );
-  const axis = correctionAxisWorld instanceof THREE.Vector3
-    ? correctionAxisWorld.clone()
-    : correctionAxisWorld
-      ? new THREE.Vector3(...correctionAxisWorld)
+  const correction = correctionQuaternion instanceof THREE.Quaternion
+    ? correctionQuaternion.clone()
+    : correctionQuaternion
+      ? new THREE.Quaternion(...correctionQuaternion)
       : null;
-  if (axis && axis.lengthSq() > 1e-12 && Number.isFinite(correctionRadians) && Math.abs(correctionRadians) > 1e-12) {
-    base.multiply(new THREE.Matrix4().makeRotationAxis(axis.normalize(), correctionRadians));
+  if (correction && correction.lengthSq() > 1e-12) {
+    base.multiply(new THREE.Matrix4().makeRotationFromQuaternion(correction.normalize()));
   }
   const euler = new THREE.Euler().setFromRotationMatrix(base, "YXZ");
   return {
@@ -277,9 +275,8 @@ export async function createAurumDiamondBvhRuntime(options: {
       : null;
     const explicitCenterMesh = diamondMeshes.find((mesh) => isAurumDiamondBvhCenterTarget(mesh));
     const centerReferenceMesh = explicitCenterMesh ?? inferredCenterMesh;
-    // Derive each diamond's optical frame from local geometry: the thinnest
-    // bounding-box axis approximates the table normal; the longest remaining
-    // axis supplies an in-plane reference direction for elongated cuts.
+    // Derive each stone's optical frame from its table normal and in-plane axis.
+    // The thin bounding-box axis is an estimate; the correction aligns the full 3D frame.
     const getDiamondOpticalFrame = (mesh: THREE.Mesh) => {
       const geometry = mesh.geometry;
       if (!geometry.boundingBox) geometry.computeBoundingBox();
@@ -295,12 +292,13 @@ export async function createAurumDiamondBvhRuntime(options: {
       const axisVector = (axis: number) => new THREE_NS.Vector3(axis === 0 ? 1 : 0, axis === 1 ? 1 : 0, axis === 2 ? 1 : 0);
       mesh.updateWorldMatrix(true, false);
       const worldQuaternion = mesh.getWorldQuaternion(new THREE_NS.Quaternion());
-      return {
-        worldNormal: axisVector(normalAxis).applyQuaternion(worldQuaternion).normalize(),
-        worldReference: axisVector(referenceAxis).applyQuaternion(worldQuaternion).normalize(),
-        localNormalAxis: normalAxis,
-        localReferenceAxis: referenceAxis,
-      };
+      const worldNormal = axisVector(normalAxis).applyQuaternion(worldQuaternion).normalize();
+      const worldReference = axisVector(referenceAxis).applyQuaternion(worldQuaternion).normalize();
+      worldReference.addScaledVector(worldNormal, -worldReference.dot(worldNormal)).normalize();
+      if (worldReference.lengthSq() < 1e-10) return null;
+      const worldSide = new THREE_NS.Vector3().crossVectors(worldReference, worldNormal).normalize();
+      const opticalBasis = new THREE_NS.Matrix4().makeBasis(worldReference, worldNormal, worldSide);
+      return { worldNormal, worldReference, opticalBasis, localNormalAxis: normalAxis, localReferenceAxis: referenceAxis };
     };
     const centerOpticalFrame = centerReferenceMesh ? getDiamondOpticalFrame(centerReferenceMesh) : null;
     const getMeshEnvironmentRotation = (mesh: THREE.Mesh) => {
@@ -309,9 +307,10 @@ export async function createAurumDiamondBvhRuntime(options: {
         return {
           offsetRadians: 0,
           rotationRadians: requestedEnvironmentRotationRadians,
-          rotationEuler: getAurumDiamondEnvironmentRotationEuler(requestedEnvironmentRotationRadians), 
-          correctionAxisWorld: null,
+          rotationEuler: getAurumDiamondEnvironmentRotationEuler(requestedEnvironmentRotationRadians),
+          correctionQuaternion: null,
           opticalAxisAlignmentDegrees: null,
+          inPlaneTwistDegrees: null,
           tableNormal: frame?.worldNormal.toArray() ?? null,
           referenceAxis: frame?.worldReference.toArray() ?? null,
           localNormalAxis: frame?.localNormalAxis ?? null,
@@ -322,20 +321,26 @@ export async function createAurumDiamondBvhRuntime(options: {
       const centerNormal = centerOpticalFrame.worldNormal.clone();
       const meshNormal = frame.worldNormal.clone();
       if (centerNormal.dot(meshNormal) < 0) meshNormal.negate();
-      const centerReference = centerOpticalFrame.worldReference.clone()
-        .addScaledVector(centerNormal, -centerOpticalFrame.worldReference.dot(centerNormal)).normalize();
-      const meshReference = frame.worldReference.clone()
-        .addScaledVector(centerNormal, -frame.worldReference.dot(centerNormal)).normalize();
-      const signedAngle = Math.atan2(
-        centerNormal.dot(new THREE_NS.Vector3().crossVectors(centerReference, meshReference)),
-        THREE_NS.MathUtils.clamp(centerReference.dot(meshReference), -1, 1),
+      const normalAlignmentDegrees = THREE_NS.MathUtils.radToDeg(
+        Math.acos(THREE_NS.MathUtils.clamp(centerNormal.dot(meshNormal), -1, 1)),
+      );
+      const meshBasis = frame.opticalBasis.clone();
+      if (centerNormal.dot(frame.worldNormal) < 0) {
+        meshBasis.premultiply(new THREE_NS.Matrix4().makeRotationAxis(frame.worldReference, Math.PI));
+      }
+      const correctionMatrix = centerOpticalFrame.opticalBasis.clone().multiply(meshBasis.clone().invert());
+      const correctionQuaternion = new THREE_NS.Quaternion().setFromRotationMatrix(correctionMatrix).normalize();
+      const referenceAngle = Math.atan2(
+        centerNormal.dot(new THREE_NS.Vector3().crossVectors(centerOpticalFrame.worldReference, frame.worldReference)),
+        THREE_NS.MathUtils.clamp(centerOpticalFrame.worldReference.dot(frame.worldReference), -1, 1),
       );
       return {
-        offsetRadians: -signedAngle,
-        rotationRadians: requestedEnvironmentRotationRadians - signedAngle,
-        rotationEuler: getAurumDiamondEnvironmentRotationEuler(requestedEnvironmentRotationRadians, centerNormal, -signedAngle),
-        correctionAxisWorld: centerNormal.toArray(),
-        opticalAxisAlignmentDegrees: THREE_NS.MathUtils.radToDeg(Math.acos(THREE_NS.MathUtils.clamp(centerNormal.dot(meshNormal), -1, 1))),
+        offsetRadians: -referenceAngle,
+        rotationRadians: requestedEnvironmentRotationRadians - referenceAngle,
+        rotationEuler: getAurumDiamondEnvironmentRotationEuler(requestedEnvironmentRotationRadians, correctionQuaternion),
+        correctionQuaternion: correctionQuaternion.toArray() as [number, number, number, number],
+        opticalAxisAlignmentDegrees: normalAlignmentDegrees,
+        inPlaneTwistDegrees: THREE_NS.MathUtils.radToDeg(referenceAngle),
         tableNormal: frame.worldNormal.toArray(),
         referenceAxis: frame.worldReference.toArray(),
         localNormalAxis: frame.localNormalAxis,
@@ -575,7 +580,7 @@ export async function createAurumDiamondBvhRuntime(options: {
           originalDiamondOpticalFamily: mesh.userData?.aurumDiamondOpticalFamily,
           baseEnvironmentIntensity: prepared.diagnostics.environmentIntensity,
           environmentRotationOffsetRadians: meshEnvironmentAlignment.offsetRadians,
-          environmentRotationAxisWorld: meshEnvironmentAlignment.correctionAxisWorld,
+          environmentRotationCorrection: meshEnvironmentAlignment.correctionQuaternion,
           get tier() { return currentDiamondTier; },
           setTier: (nextTier) => {
             if (family !== "diamante" || nextTier === currentDiamondTier) return;
@@ -693,13 +698,15 @@ export async function createAurumDiamondBvhRuntime(options: {
       .map(([mesh, entry]) => {
         const alignment = getMeshEnvironmentRotation(mesh);
         entry.environmentRotationOffsetRadians = alignment.offsetRadians;
-        entry.environmentRotationAxisWorld = alignment.correctionAxisWorld;
+        entry.environmentRotationCorrection = alignment.correctionQuaternion;
         packageApi.setDiamondEnvironmentRotation?.(entry.experimentalMaterial, alignment.rotationEuler);
         return {
           mesh: mesh.name || mesh.uuid,
           relativeOpticalRotationRadians: alignment.offsetRadians,
           appliedRotationRadians: alignment.rotationRadians,
           opticalAxisAlignmentDegrees: alignment.opticalAxisAlignmentDegrees,
+          inPlaneTwistDegrees: alignment.inPlaneTwistDegrees,
+          correctionQuaternion: alignment.correctionQuaternion,
           tableNormalWorld: alignment.tableNormal,
           inPlaneReferenceWorld: alignment.referenceAxis,
           localNormalAxis: alignment.localNormalAxis,
@@ -767,8 +774,7 @@ export async function createAurumDiamondBvhRuntime(options: {
         const rotationEuler = entry.family === "diamante"
           ? getAurumDiamondEnvironmentRotationEuler(
               requestedRotation,
-              entry.environmentRotationAxisWorld,
-              entry.environmentRotationOffsetRadians,
+              entry.environmentRotationCorrection,
             )
           : { x: 0, y: THREE_NS.MathUtils.radToDeg(requestedRotation), z: 0 };
         packageApi.setDiamondEnvironmentRotation?.(entry.experimentalMaterial, rotationEuler);
