@@ -37,7 +37,7 @@ import { getAurumRhinoGeometryType, isAurumRhinoCsgSurface } from "../lib/aurum/
 import { getAurumModelParts } from "../lib/aurum/model-parts";
 import { resolveAurumLayerKey } from "../lib/aurum/layer-identity";
 import { applyAurumLayerCategoryOverrides, getAurumLayerCategoryOverride, setAurumLayerCategoryOverride, type AurumLayerCategoryOverride } from "../lib/aurum/layer-category-overrides";
-import { applyAurumMaterialToModel, applyAurumGemToTarget, clearAurumGemFromTarget, getAurumMaterialAdapterServices, getAurumGemLayerIdentity, isAurumGemTarget, prepareAurumGemLayerIndex, invalidateAurumGemLayerIndex } from "../lib/aurum/material-application";
+import { applyAurumMaterialToModel, applyAurumGemToTarget, clearAurumGemFromTarget, getAurumMaterialAdapterServices, getAurumGemLayerIdentity, isAurumGemTarget, normalizeAurumGemLayerName, prepareAurumGemLayerIndex, invalidateAurumGemLayerIndex } from "../lib/aurum/material-application";
 import { captureAurumGemTransitionState, createAurumGemTransition } from "../lib/aurum/gem-transition";
 import { inspectAurumMesh } from "../lib/aurum/mesh-preflight";
 import { classifyAurumSemanticObject } from "../lib/aurum/semantic-object-recognition";
@@ -2464,7 +2464,7 @@ export function AurumRender({ embedded = false, onCatalogApiReady }: AurumRender
               ??(indexKey?savedGemAssignments[indexKey]:undefined)
               ??(idKey?savedGemAssignments[idKey]:undefined)
               ??Object.values(savedGemAssignments).find((assignment:any)=>
-                (layerName&&getAurumGemLayerIdentity({userData:{aurumRhinoSource:{layerName:assignment?.layerName}}}).layerName===layerName.toLocaleLowerCase())
+                (layerName&&normalizeAurumGemLayerName(assignment?.layerName)===layerName.toLocaleLowerCase())
                 ||(layerIndex!=null&&assignment?.layerIndex!=null&&String(assignment.layerIndex)===String(layerIndex))
                 ||(layerId&&String(assignment?.layerId??"").trim()===layerId)
               );
