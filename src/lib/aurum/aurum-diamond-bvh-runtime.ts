@@ -15,6 +15,8 @@ type RecordEntry = {
   activeGemFamily: string;
   originalDiamondOpticalFamily: unknown;
   baseEnvironmentIntensity: number;
+  /** Per-mesh yaw compensation relative to the center diamond reference. */
+  environmentRotationOffsetRadians: number;
   setQuality: (quality: "interactive" | "high" | "final") => void;
   readonly tier: "micro" | "small" | "brilliant";
   setTier: (tier: "micro" | "small" | "brilliant") => void;
@@ -115,9 +117,10 @@ export async function createAurumDiamondBvhRuntime(options: {
   const disabledFamilies = new Set<string>();
   let lastModel: THREE.Object3D | null = null;
   let disposed = false;
-  // One global EXR correction derived from the protected/inferred center stone.
-  // Every diamond receives the same corrected environment orientation.
-  let centerEnvironmentRotationOffsetRadians = 0;
+  // The center stone defines the reference orientation. Each secondary
+  // diamond receives its own inverse world-yaw compensation so mirrored CAD
+  // placements see the same EXR direction in their local optical frame.
+  let centerWorldYawRadians = 0;
   const requestedEnvironmentRotationRadians = Number.isFinite(options.environmentRotationRadians)
     ? Number(options.environmentRotationRadians)
     : 0;
@@ -250,12 +253,21 @@ export async function createAurumDiamondBvhRuntime(options: {
       centerReferenceMesh.updateWorldMatrix(true, false);
       const centerWorldQuaternion = centerReferenceMesh.getWorldQuaternion(new THREE_NS.Quaternion());
       const centerWorldEuler = new THREE_NS.Euler().setFromQuaternion(centerWorldQuaternion, "YXZ");
-      centerEnvironmentRotationOffsetRadians = -centerWorldEuler.y;
+      centerWorldYawRadians = centerWorldEuler.y;
     } else {
-      centerEnvironmentRotationOffsetRadians = 0;
+      centerWorldYawRadians = 0;
     }
-    const effectiveCenterEnvironmentRotationRadians =
-      requestedEnvironmentRotationRadians + centerEnvironmentRotationOffsetRadians;
+    const getMeshEnvironmentRotation = (mesh: THREE.Mesh) => {
+      mesh.updateWorldMatrix(true, false);
+      const worldQuaternion = mesh.getWorldQuaternion(new THREE_NS.Quaternion());
+      const worldEuler = new THREE_NS.Euler().setFromQuaternion(worldQuaternion, "YXZ");
+      const offsetRadians = centerWorldYawRadians - worldEuler.y;
+      return {
+        offsetRadians,
+        rotationRadians: requestedEnvironmentRotationRadians + offsetRadians,
+        worldYawRadians: worldEuler.y,
+      };
+    };
 
     const processMesh = (object: THREE.Object3D) => {
       const mesh = object as THREE.Mesh;
@@ -419,10 +431,12 @@ export async function createAurumDiamondBvhRuntime(options: {
         // Match the approved isolated AURUM BVH optical reference only on the
         // protected center white diamond. Secondary/colored diamonds retain
         // their existing calibrated profiles and tier-dependent energy controls.
-        // All diamond tiers deliberately share this one central gem EXR texture.
-        // MICRO/SMALL/BRILLIANT may vary optical energy and dispersion below,
-        // but must never select or load a different environment map by size.
+        // All diamond tiers share the same EXR texture. Each mesh gets a
+        // yaw-only environment correction relative to the center stone.
         const sharedDiamondEnvironmentMap = environmentMap;
+        const meshEnvironmentAlignment = family === "diamante"
+          ? getMeshEnvironmentRotation(mesh)
+          : { offsetRadians: 0, rotationRadians: requestedEnvironmentRotationRadians, worldYawRadians: 0 };
         const prepared = prepareAurumDiamondBvhExperiment(packageApi, mesh, {
           ...(emeraldProfile ?? rubyProfile ?? sapphireProfile ?? {}),
           // The approved A/B reference uses zero direct transmission; internal
@@ -471,7 +485,7 @@ export async function createAurumDiamondBvhRuntime(options: {
           // environment rotation is applied uniformly through updateEnvironment().
           // Per-mesh family offsets must not rotate melee stones away from the center.
           environmentRotationRadians: family === "diamante"
-            ? effectiveCenterEnvironmentRotationRadians
+            ? meshEnvironmentAlignment.rotationRadians
             : Number(currentMaterial?.userData?.aurumGemEnvironmentRotation ?? 0),
         });
         let currentDiamondTier: "micro" | "small" | "brilliant" = screenTier;
@@ -484,6 +498,7 @@ export async function createAurumDiamondBvhRuntime(options: {
           activeGemFamily,
           originalDiamondOpticalFamily: mesh.userData?.aurumDiamondOpticalFamily,
           baseEnvironmentIntensity: prepared.diagnostics.environmentIntensity,
+          environmentRotationOffsetRadians: meshEnvironmentAlignment.offsetRadians,
           get tier() { return currentDiamondTier; },
           setTier: (nextTier) => {
             if (family !== "diamante" || nextTier === currentDiamondTier) return;
@@ -595,28 +610,32 @@ export async function createAurumDiamondBvhRuntime(options: {
       if (!found.has(mesh)) releaseEntry(mesh, mesh.material === entries.get(mesh)?.experimentalMaterial);
     }
 
-    // A center-reference change must update already-created diamond materials,
-    // not only meshes prepared after this refresh.
-    const alignedRotationDegrees = THREE_NS.MathUtils.radToDeg(
-      requestedEnvironmentRotationRadians + centerEnvironmentRotationOffsetRadians,
-    );
-    for (const entry of entries.values()) {
-      if (entry.family === "diamante") {
+    // Apply each stone's own inverse yaw relative to the center reference.
+    // This compensates mirrored CAD placements without changing geometry/normals.
+    const perDiamondAlignment = [...entries.entries()]
+      .filter(([, entry]) => entry.family === "diamante")
+      .map(([mesh, entry]) => {
+        const alignment = getMeshEnvironmentRotation(mesh);
+        entry.environmentRotationOffsetRadians = alignment.offsetRadians;
+        const rotationDegrees = THREE_NS.MathUtils.radToDeg(alignment.rotationRadians);
         packageApi.setDiamondEnvironmentRotation?.(entry.experimentalMaterial, {
           x: 0,
-          y: alignedRotationDegrees,
+          y: rotationDegrees,
           z: 0,
         });
-      }
-    }
-    console.info("[AURUM][DIAMOND][CENTER_EXR_ALIGNMENT]", {
+        return {
+          mesh: mesh.name || mesh.uuid,
+          worldYawRadians: alignment.worldYawRadians,
+          relativeYawRadians: alignment.offsetRadians,
+          appliedRotationRadians: alignment.rotationRadians,
+        };
+      });
+    console.info("[AURUM][DIAMOND][CENTER_RELATIVE_EXR_ALIGNMENT]", {
       referenceMesh: centerReferenceMesh?.name || centerReferenceMesh?.uuid || null,
+      centerWorldYawRadians,
       requestedRotationRadians: requestedEnvironmentRotationRadians,
-      centerWorldYawRadians: centerReferenceMesh
-        ? -centerEnvironmentRotationOffsetRadians
-        : null,
-      appliedRotationRadians: THREE_NS.MathUtils.degToRad(alignedRotationDegrees),
-      alignedDiamondMeshes: [...entries.values()].filter((entry) => entry.family === "diamante").length,
+      alignedDiamondMeshes: perDiamondAlignment.length,
+      perDiamondAlignment,
     });
   };
 
@@ -665,10 +684,10 @@ export async function createAurumDiamondBvhRuntime(options: {
       if (disposed) return;
       const safeScale = Number.isFinite(intensityScale) ? Math.max(0.75, Math.min(1.35, intensityScale)) : 1;
       const requestedRotation = Number.isFinite(rotationRadians) ? rotationRadians : 0;
-      const rotationDegrees = THREE_NS.MathUtils.radToDeg(
-        requestedRotation + centerEnvironmentRotationOffsetRadians,
-      );
       for (const entry of entries.values()) {
+        const rotationDegrees = THREE_NS.MathUtils.radToDeg(
+          requestedRotation + entry.environmentRotationOffsetRadians,
+        );
         packageApi.setDiamondEnvironmentRotation?.(entry.experimentalMaterial, { x: 0, y: rotationDegrees, z: 0 });
         packageApi.setDiamondOptions?.(entry.experimentalMaterial, {
           environmentIntensity: Math.max(0, Math.min(2.5, entry.baseEnvironmentIntensity * safeScale)),
