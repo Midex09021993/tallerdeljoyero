@@ -336,9 +336,6 @@ export async function createAurumDiamondBvhRuntime(options: {
       // The production editor can opt into BVH for the center stone only.
       // Secondary diamonds remain on their existing MeshPhysicalMaterial path.
       if (family === "diamante" && options.diamondCenterOnly && !isAurumDiamondBvhCenterTarget(mesh)) return;
-      const isSmallSecondaryDiamond = family === "diamante" && screenTier !== "brilliant";
-      const isNeutralMicroDiamond = family === "diamante" && screenTier === "micro" && !isBlueDiamond && !isPinkDiamond;
-      const isNeutralSmallDiamond = family === "diamante" && screenTier === "small" && !isBlueDiamond && !isPinkDiamond;
       const useEmeraldBvhOptics = isEmerald;
       const isRuby = family === "rubí" || family === "rubi";
       const isSapphire = family === "zafiro" || family === "sapphire";
@@ -376,9 +373,6 @@ export async function createAurumDiamondBvhRuntime(options: {
           && !isBlueDiamond
           && !isPinkDiamond;
         // Blanco 1 uses the large center stone as the optical master.
-        // White melee keeps the same IOR/BVH depth and only compensates energy,
-        // dispersion and gamma for its screen-space size.
-        const isNeutralWhiteDiamond = family === "diamante" && !isBlueDiamond && !isPinkDiamond;
         // Use the original imported CAD mesh and its untouched BufferGeometry.
         const prepared = prepareAurumDiamondBvhExperiment(packageApi, mesh, {
           ...(emeraldProfile ?? rubyProfile ?? sapphireProfile ?? {}),
@@ -402,9 +396,7 @@ export async function createAurumDiamondBvhRuntime(options: {
           // The screen-space tier is diagnostic/performance metadata only.
           environmentIntensity: family === "diamante" ? 1.30
             : useEmeraldBvhOptics ? 1 : emeraldProfile?.environmentIntensity ?? rubyProfile?.environmentIntensity ?? sapphireProfile?.environmentIntensity ?? (isEmerald ? 1.5 : isRuby ? 1.0 : isSapphire ? 1.2 : isAmethyst ? 1.35 : isAquamarine ? 1.25 : isCitrine ? 1.2 : isBlueTopaz ? 1.25 : isImperialTopaz ? 1.22 : isParaibaTourmaline ? (activeGemId === "turmalina_paraiba" ? 1.55 : 1.3) : isTanzanite ? 1.25 : isMoissanite ? 1.35 : isZircon ? 1.2 : isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 1.18 : 1.14),
-          // Chromatic splitting is restrained on small white melee to avoid
-          // unstable sub-pixel color fragments that read as moving particles.
-          // Neutral white diamonds keep a unified gamma of 1.0 at every size tier.
+          // Unified dispersion and gamma across center and melee diamonds.
           dispersion: family === "diamante" ? 0.010
             : useEmeraldBvhOptics ? 0 : (emeraldProfile?.dispersion ?? rubyProfile?.dispersion ?? sapphireProfile?.dispersion ?? (isRuby ? 0.001 : isSapphire ? 0.001 : isAmethyst || isAquamarine || isCitrine || isBlueTopaz || isImperialTopaz || isParaibaTourmaline || isTanzanite || isSpinel || isGarnet || isPeridot || isMorganite || isChrysoberyl || isQuartz || isOtherTourmaline ? 0.0002 : isZircon ? 0.001 : isMoissanite ? 0.009 : 0.01)),
           ior: emeraldProfile?.ior ?? rubyProfile?.ior ?? sapphireProfile?.ior ?? (family === "diamante" ? 2.6 : isEmerald ? 1.58 : isRuby ? 1.762 : isSapphire ? 1.762 : isAmethyst ? 1.55 : isAquamarine ? 1.577 : isCitrine || isQuartz ? 1.544 : isBlueTopaz || isImperialTopaz ? 1.63 : isParaibaTourmaline || isOtherTourmaline ? 1.62 : isTanzanite ? 1.695 : isMoissanite ? 2.65 : isSpinel ? 1.718 : isGarnet ? 1.78 : isPeridot ? 1.65 : isMorganite ? 1.58 : isZircon ? 1.92 : isChrysoberyl ? 1.75 : 1.55),
