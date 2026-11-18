@@ -59,12 +59,22 @@ const ensurePhysicalGemMaterial = (material: any): THREE.MeshPhysicalMaterial =>
 // itself when a model contains side stones but its center diamond is unnamed.
 // Only a central, compact candidate that outranks explicitly named side stones
 // is inferred. Metal-classified meshes are never eligible in mixed assemblies.
-export const inferGemMeshes = (model: THREE.Object3D): number => {
+export const inferGemMeshes = (
+  model: THREE.Object3D,
+  options: { allowCentralInferenceAlongsideExplicitGems?: boolean } = {},
+): number => {
   const meshes: THREE.Mesh[] = [];
   model.traverse((object) => {
     if (object instanceof THREE.Mesh && object.visible && object.geometry?.getAttribute("position")) meshes.push(object);
   });
   const explicitlyIdentified = new Set(meshes.filter((mesh) => classifyMesh(mesh) === "gema"));
+  const allowMixedInference = options.allowCentralInferenceAlongsideExplicitGems === true;
+  if (explicitlyIdentified.size > 0 && !allowMixedInference) {
+    console.info("[PUBLIC VIEWER][GEM AUDIT] Gemas explícitas detectadas; se conserva el comportamiento de no inferencia geométrica.", {
+      explicitlyIdentified: explicitlyIdentified.size,
+    });
+    return 0;
+  }
 
   model.updateMatrixWorld(true);
   const modelBounds = new THREE.Box3().setFromObject(model);
@@ -76,9 +86,9 @@ export const inferGemMeshes = (model: THREE.Object3D): number => {
   model.traverse((object) => {
     if (!(object instanceof THREE.Mesh) || !object.visible || !object.geometry?.getAttribute("position")) return;
     const explicit = explicitlyIdentified.has(object);
-    // Explicit gems remain candidates and win when they are already the central
-    // stone. Explicit metals are never eligible for geometric inference.
-    if (classifyMesh(object) === "metal") return;
+    // In mixed-inference mode, metals are never eligible; explicit gems remain
+    // candidates and win when they are already the central stone.
+    if (allowMixedInference && explicitlyIdentified.size > 0 && classifyMesh(object) === "metal") return;
     const materials = Array.isArray(object.material) ? object.material : [object.material];
     if (materials.length !== 1) return;
     object.updateWorldMatrix(true, false);
